@@ -9,24 +9,19 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.trace.TraceIdGenerator;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayErrorCode;
+import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 
 /**
@@ -173,20 +168,9 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
     return false;
   }
 
-  /** 返回 401 未提供 API Key */
+  /** 返回 401 未提供 API Key（P0-D1：统一错误响应写出器） */
   private Mono<Void> rejectMissingApiKey(ServerWebExchange exchange) {
-    ServerHttpResponse response = exchange.getResponse();
-    response.setStatusCode(HttpStatus.UNAUTHORIZED);
-    response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-
-    String traceId = TraceIdGenerator.generateSortableTraceId();
-    BaseResponse<Void> body =
-        BaseResponse.error(BaseResultCode.UNAUTHORIZED, "API Key 缺失，请提供 X-API-Key 或 api_key 参数");
-    body.assignTraceId(traceId);
-    response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
-
-    byte[] bytes = YdszJson.toJsonBytes(body);
-    DataBuffer buffer = response.bufferFactory().wrap(bytes);
+    String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
 
     // P1-3: API Key 缺失 → sentry 告警收敛（P2 安全事件）
     SentryObservation.alert(
@@ -199,22 +183,17 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
             .labels(Map.of("path", exchange.getRequest().getURI().getPath()))
             .build());
     log.warn("[ApiKeyAuth] API Key 缺失 path={}", exchange.getRequest().getURI().getPath());
-    return response.writeWith(Mono.just(buffer));
+    return GatewayErrorWriter.write(
+        exchange,
+        HttpStatus.UNAUTHORIZED,
+        GatewayErrorCode.API_KEY_MISSING,
+        GatewayErrorCode.API_KEY_MISSING.getMessageKey(),
+        traceId);
   }
 
-  /** 返回 403 API Key 无效 */
+  /** 返回 403 API Key 无效（P0-D1：统一错误响应写出器） */
   private Mono<Void> rejectInvalidApiKey(ServerWebExchange exchange, String apiKey) {
-    ServerHttpResponse response = exchange.getResponse();
-    response.setStatusCode(HttpStatus.FORBIDDEN);
-    response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-
-    String traceId = TraceIdGenerator.generateSortableTraceId();
-    BaseResponse<Void> body = BaseResponse.error(BaseResultCode.FORBIDDEN, "API Key 无效");
-    body.assignTraceId(traceId);
-    response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
-
-    byte[] bytes = YdszJson.toJsonBytes(body);
-    DataBuffer buffer = response.bufferFactory().wrap(bytes);
+    String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
 
     // P1-3: API Key 无效 → sentry 告警收敛（P1 安全事件）
     SentryObservation.alert(
@@ -235,7 +214,12 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
         "[ApiKeyAuth] API Key 无效 key={} path={}",
         maskApiKey(apiKey),
         exchange.getRequest().getURI().getPath());
-    return response.writeWith(Mono.just(buffer));
+    return GatewayErrorWriter.write(
+        exchange,
+        HttpStatus.FORBIDDEN,
+        GatewayErrorCode.API_KEY_INVALID,
+        GatewayErrorCode.API_KEY_INVALID.getMessageKey(),
+        traceId);
   }
 
   /** API Key 脱敏 */

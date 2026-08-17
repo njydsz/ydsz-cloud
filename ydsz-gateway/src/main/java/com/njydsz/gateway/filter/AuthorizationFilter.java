@@ -9,21 +9,17 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.gateway.config.AuthorizationProperties;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayErrorCode;
+import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.PathGuard;
 
@@ -180,24 +176,18 @@ public class AuthorizationFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * P3-7: 返回 403 禁止访问响应
+   * P3-7: 返回 403 禁止访问响应（P0-D1：统一错误响应写出器）
    *
    * @param exchange 服务器 Web 交换上下文
    * @param requiredRoles 所需角色列表（用于日志）
    * @return 完成信号 Mono
    */
   private Mono<Void> rejectForbidden(ServerWebExchange exchange, List<String> requiredRoles) {
-    ServerHttpResponse response = exchange.getResponse();
-    response.setStatusCode(HttpStatus.FORBIDDEN);
-    response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-
-    BaseResponse<Void> body =
-        BaseResponse.error(
-            BaseResultCode.FORBIDDEN,
-            FORBIDDEN_MESSAGE + " (需要角色: " + String.join(",", requiredRoles) + ")");
-    byte[] bytes = YdszJson.toJsonBytes(body);
-    DataBuffer buffer = response.bufferFactory().wrap(bytes);
-    return response.writeWith(Mono.just(buffer));
+    String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
+    String message =
+        FORBIDDEN_MESSAGE + " (需要角色: " + String.join(",", requiredRoles) + ")";
+    return GatewayErrorWriter.write(
+        exchange, HttpStatus.FORBIDDEN, GatewayErrorCode.FORBIDDEN, message, traceId);
   }
 
   /**

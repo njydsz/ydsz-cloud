@@ -20,6 +20,8 @@ import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayErrorCode;
+import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.InternalHeaderSigner;
@@ -143,14 +145,14 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
     // P0-4: Origin 校验（防 WebSocket 跨域劫持）
     if (!checkOrigin(request)) {
       log.warn("[WsAuth] WebSocket Origin 校验失败 path={}", path);
-      return rejectWebSocket(exchange, HttpStatus.FORBIDDEN);
+      return rejectWebSocket(exchange, HttpStatus.FORBIDDEN, GatewayErrorCode.ORIGIN_FORBIDDEN);
     }
 
     // 提取 Token
     String jwt = extractToken(request);
     if (jwt == null || jwt.isBlank()) {
       log.warn("[WsAuth] WebSocket 握手缺少 Token path={}", path);
-      return rejectWebSocket(exchange, HttpStatus.UNAUTHORIZED);
+      return rejectWebSocket(exchange, HttpStatus.UNAUTHORIZED, GatewayErrorCode.UNAUTHORIZED);
     }
 
     // 校验 Token（P0-C1：验签发布到 boundedElastic，避免阻塞 Netty EventLoop）
@@ -159,7 +161,8 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
         .flatMap(userInfo -> {
           if (userInfo == null) {
             log.warn("[WsAuth] WebSocket 握手 Token 无效 path={}", path);
-            return rejectWebSocket(exchange, HttpStatus.UNAUTHORIZED);
+            return rejectWebSocket(
+                exchange, HttpStatus.UNAUTHORIZED, GatewayErrorCode.TOKEN_INVALID);
           }
 
           // 提取用户信息
@@ -179,7 +182,8 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
                   allowed -> {
                     if (!allowed) {
                       log.warn("[WsAuth] WebSocket 连接数超限拒绝 userId={} path={}", userIdStr, path);
-                      return rejectWebSocket(exchange, HttpStatus.SERVICE_UNAVAILABLE);
+                      return rejectWebSocket(
+                          exchange, HttpStatus.SERVICE_UNAVAILABLE, GatewayErrorCode.SERVICE_UNAVAILABLE);
                     }
 
                     // 生成签名（与 AuthGlobalFilter 一致）
@@ -318,17 +322,20 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * 拒绝 WebSocket 握手
+   * 拒绝 WebSocket 握手（P0-D1：统一错误响应写出器）。
    *
-   * <p>WebSocket 握手阶段拒绝，浏览器会触发 onerror 回调，不建立连接。
+   * <p>WebSocket 握手阶段拒绝，浏览器会触发 onerror 回调，不建立连接。 响应携带统一 JSON body 与 {@code X-Trace-Id}，便于排障。
    *
    * @param exchange 服务器 Web 交换上下文
-   * @param status HTTP 状态码（401/403）
+   * @param status HTTP 状态码（401/403/503）
+   * @param errorCode 网关业务错误码
    * @return 完成信号 Mono
    */
-  private Mono<Void> rejectWebSocket(ServerWebExchange exchange, HttpStatus status) {
-    exchange.getResponse().setStatusCode(status);
-    return exchange.getResponse().setComplete();
+  private Mono<Void> rejectWebSocket(
+      ServerWebExchange exchange, HttpStatus status, GatewayErrorCode errorCode) {
+    String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
+    return GatewayErrorWriter.write(
+        exchange, status, errorCode, errorCode.getMessageKey(), traceId);
   }
 
   /**

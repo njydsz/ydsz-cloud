@@ -6,20 +6,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.trace.TraceIdGenerator;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayErrorCode;
+import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 
 /**
@@ -101,7 +96,10 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
     // 检查 Content-Type（POST/PUT/PATCH 必须指定）
     String contentType = request.getHeaders().getFirst("Content-Type");
     if (strictContentType && (contentType == null || contentType.isBlank())) {
-      return rejectPayload(exchange, "Content-Type 缺失，POST/PUT/PATCH 请求必须指定 Content-Type");
+      return rejectPayload(
+          exchange,
+          GatewayErrorCode.CONTENT_TYPE_MISSING,
+          "Content-Type 缺失，POST/PUT/PATCH 请求必须指定 Content-Type");
     }
 
     // 检查请求体大小
@@ -110,6 +108,7 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
     if (contentLength > maxBytes) {
       return rejectPayload(
           exchange,
+          GatewayErrorCode.PAYLOAD_TOO_LARGE,
           "请求体过大 (" + (contentLength / BYTES_PER_MB) + "MB)，超过限制 " + maxBodySizeMb + "MB");
     }
 
@@ -132,25 +131,16 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
     return "POST".equals(method) || "PUT".equals(method) || "PATCH".equals(method);
   }
 
-  /** 返回 413 请求体过大或 400 参数错误 */
-  private Mono<Void> rejectPayload(ServerWebExchange exchange, String message) {
-    ServerHttpResponse response = exchange.getResponse();
-    response.setStatusCode(HttpStatus.BAD_REQUEST);
-    response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-
-    String traceId = TraceIdGenerator.generateSortableTraceId();
-    BaseResponse<Void> body = BaseResponse.error(BaseResultCode.BAD_REQUEST, message);
-    body.assignTraceId(traceId);
-    response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
-
-    byte[] bytes = YdszJson.toJsonBytes(body);
-    DataBuffer buffer = response.bufferFactory().wrap(bytes);
+  /** 返回 4xx 请求体校验失败响应（P0-D1：统一错误响应写出器）。 */
+  private Mono<Void> rejectPayload(
+      ServerWebExchange exchange, GatewayErrorCode errorCode, String message) {
+    String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
 
     log.warn(
         "[PayloadValidation] 请求体校验失败 path={} reason={}",
         exchange.getRequest().getURI().getPath(),
         message);
-    return response.writeWith(Mono.just(buffer));
+    return GatewayErrorWriter.write(exchange, HttpStatus.BAD_REQUEST, errorCode, message, traceId);
   }
 
   /**

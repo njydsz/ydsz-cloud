@@ -1,5 +1,7 @@
 package com.njydsz.gateway.filter;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -11,21 +13,18 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayErrorCode;
+import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.GatewayMetrics;
@@ -332,7 +331,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * 返回 429 限流响应。
+   * 返回 429 限流响应（P0-D1：统一错误响应写出器）。
    *
    * @param exchange 服务器 Web 交换上下文
    * @param dimension 限流维度
@@ -343,31 +342,49 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
    */
   private Mono<Void> rejectWithRateLimit(
       ServerWebExchange exchange, String dimension, String identity, int limit, int resetSeconds) {
-    ServerHttpResponse response = exchange.getResponse();
-    response.setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-    response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-
+    // 限流响应头（X-RateLimit-* / Retry-After / 绝对时间戳）
     if (properties.getResponseHeaders().isEnabled()) {
+      ServerHttpResponse response = exchange.getResponse();
       response.getHeaders().add("X-RateLimit-Limit", String.valueOf(limit));
       response.getHeaders().add("X-RateLimit-Remaining", "0");
       response.getHeaders().add("X-RateLimit-Reset", String.valueOf(resetSeconds));
+      // E2: Retry-After 同时提供相对秒数和绝对时间戳（RFC 9110 / ISO 8601），便于客户端精确等待
       response.getHeaders().add("Retry-After", String.valueOf(resetSeconds));
+      Instant resetAt = Instant.now().plus(resetSeconds, ChronoUnit.SECONDS);
+      response.getHeaders().add("X-RateLimit-Reset-Time", resetAt.toString());
     }
 
     if (gatewayMetrics != null) {
       gatewayMetrics.incrementRatelimitTriggered(dimension, exchange.getRequest().getURI().getPath());
     }
 
-    BaseResponse<Void> body =
-        BaseResponse.error(
-            BaseResultCode.TOO_MANY_REQUESTS,
-            "请求过于频繁，请稍后重试 (" + dimension + "=" + maskIdentity(identity) + ")");
-    byte[] bytes = YdszJson.toJsonBytes(body);
-    DataBuffer buffer = response.bufferFactory().wrap(bytes);
-
+    GatewayErrorCode errorCode = resolveRateLimitErrorCode(dimension);
     log.info("[RateLimit] 限流触发: dimension={} identity={} path={} reset={}s",
         dimension, maskIdentity(identity), exchange.getRequest().getURI().getPath(), resetSeconds);
-    return response.writeWith(Mono.just(buffer));
+    return GatewayErrorWriter.write(
+        exchange,
+        HttpStatus.TOO_MANY_REQUESTS,
+        errorCode,
+        errorCode.getMessageKey(),
+        exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID));
+  }
+
+  /**
+   * 按限流维度解析业务错误码。
+   *
+   * @param dimension 限流维度（IP / USER / TENANT）
+   * @return 对应错误码，未知维度返回通用限流错误码
+   */
+  private GatewayErrorCode resolveRateLimitErrorCode(String dimension) {
+    if (dimension == null) {
+      return GatewayErrorCode.RATE_LIMITED;
+    }
+    return switch (dimension.toUpperCase()) {
+      case "IP" -> GatewayErrorCode.RATE_LIMITED_IP;
+      case "USER" -> GatewayErrorCode.RATE_LIMITED_USER;
+      case "TENANT" -> GatewayErrorCode.RATE_LIMITED_TENANT;
+      default -> GatewayErrorCode.RATE_LIMITED;
+    };
   }
 
   /** 白名单路径不限流 */
