@@ -98,15 +98,17 @@
 | `ASMFieldAccessor` | ASM 字段访问器（动态生成 Getter / Setter / Instantiator 字节码） |
 | `FieldGetter` / `FieldSetter` / `ObjectInstantiator` | 字段访问接口（直接 getfield / putfiled / new，跳过反射） |
 | `ClassMetadataCache` | 类元数据缓存（读写分离缓存 `@ExcelProperty` 解析结果） |
-| `ReflectCache` | 反射缓存（Field / MethodHandle / ASM Getter / Setter / Instantiator 复合缓存） |
+| `ReflectCache` | 反射缓存（Field / MethodHandle / Getter / Setter / Instantiator 复合缓存） |
 
-性能对比（百万次访问）：
+性能对比（百万次访问，MethodHandle 实现实测口径）：
 
 | 访问方式 | 耗时 | 性能倍数 |
 |---|---|---|
 | Native Reflection | ~3000ms | 1x |
 | MethodHandle | ~500ms | ~6x |
-| ASM Bytecode | ~100ms | ~30x |
+
+> 说明：字段访问器基于 Java 原生 MethodHandle 实现（`ASMFieldAccessor` 为历史命名，实际不依赖 ASM 字节码），
+> 性能数据为方法内注释自述口径，未做独立 JMH 基准验证，仅作相对参考。
 
 安全机制：
 
@@ -337,7 +339,7 @@ ConverterRegistry.registerCustomConverter(new MyTypeConverter());
 |---|---|---|
 | 大文件读（>10MB） | `use-fast-reader: true` + `streaming-parse-threshold-mb: 10` | SuperFastExcelReader 内存占用仅 ~50MB，POI 用户模式 ~500MB |
 | 大文件写（>10万行） | `use-fast-writer: true` | SuperFastExcelWriter 绕过 POI 对象模型，1MB 行级缓冲 |
-| 字段反射热点 | 默认启用 ASM（无需配置） | ASM Getter 比反射快 30 倍 |
+| 字段反射热点 | 默认启用 MethodHandle 快速路径（无需配置） | MethodHandle Getter 比原生反射快约 6 倍 |
 
 ASM 加速启用条件：
 

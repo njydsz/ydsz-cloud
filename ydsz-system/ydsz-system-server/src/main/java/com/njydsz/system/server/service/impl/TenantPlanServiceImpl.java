@@ -19,8 +19,8 @@ import com.njydsz.system.domain.entity.Tenant;
 import com.njydsz.system.domain.entity.TenantPlan;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.TenantPlanVO;
-import com.njydsz.system.infra.repository.TenantRepository;
 import com.njydsz.system.infra.repository.TenantPlanRepository;
+import com.njydsz.system.infra.repository.TenantRepository;
 import com.njydsz.system.server.service.TenantPlanService;
 
 /**
@@ -85,7 +85,10 @@ public class TenantPlanServiceImpl implements TenantPlanService {
       wrapper.eq(TenantPlan::getStatus, status);
     }
     wrapper.orderByAsc(TenantPlan::getSortOrder);
-    IPage<TenantPlan> page = tenantPlanRepository.getTenantPlanMapper().selectPage(new Page<>(pageNum, pageSize), wrapper);
+    IPage<TenantPlan> page =
+        tenantPlanRepository
+            .getTenantPlanMapper()
+            .selectPage(new Page<>(pageNum, pageSize), wrapper);
     return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
   }
 
@@ -111,7 +114,7 @@ public class TenantPlanServiceImpl implements TenantPlanService {
    *
    * <p>写入前校验 {@code planCode} 全局唯一性。
    *
-   * @param dto 套餐 DTO
+   * @param vo 套餐 DTO
    * @return 新建套餐主键 ID
    */
   @Override
@@ -134,7 +137,7 @@ public class TenantPlanServiceImpl implements TenantPlanService {
    *
    * <p>更新时校验 {@code planCode} 唯一性（排除自身）。
    *
-   * @param dto 套餐 DTO（{@code id} 必填）
+   * @param vo 套餐 DTO（{@code id} 必填）
    * @return 是否成功
    */
   @Override
@@ -175,7 +178,7 @@ public class TenantPlanServiceImpl implements TenantPlanService {
   /**
    * DTO → DO 转换（私有）
    *
-   * @param dto 套餐 DTO
+   * @param vo 套餐 DTO
    * @return 套餐 Entity
    */
   private TenantPlan toEntity(TenantPlanVO vo) {
@@ -187,7 +190,6 @@ public class TenantPlanServiceImpl implements TenantPlanService {
     entity.setSortOrder(vo.getSortOrder());
     entity.setQuotaJson(vo.getQuotaJson());
     entity.setFeatureJson(vo.getFeatureJson());
-    entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
     return entity;
   }
 }

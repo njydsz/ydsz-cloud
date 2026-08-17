@@ -53,6 +53,22 @@ public class RedisMultiLock implements DistributedLocker {
   /** 剩余时间错误码（键不存在或获取失败） */
   private static final long REMAIN_TIME_ERROR = -2L;
 
+  /**
+   * 安全续期 Lua 脚本：仅当 key 的当前值等于持有者 value 时刷新过期时间。
+   *
+   * <p>返回值 1 表示续期成功，0 表示 value 不匹配（锁已被抢占），nil 表示 key 不存在。
+   */
+  private static final org.springframework.data.redis.core.script.DefaultRedisScript<Long> RENEW_SCRIPT;
+
+  static {
+    RENEW_SCRIPT = new org.springframework.data.redis.core.script.DefaultRedisScript<>();
+    RENEW_SCRIPT.setScriptText(
+        "if redis.call('get', KEYS[1]) == ARGV[1] then "
+            + "return redis.call('pexpire', KEYS[1], ARGV[2]) "
+            + "else return 0 end");
+    RENEW_SCRIPT.setResultType(Long.class);
+  }
+
   /** 默认最大续期次数（约 10 分钟） */
   private static final int DEFAULT_MAX_RENEW_COUNT = 30;
 
@@ -423,6 +439,17 @@ public class RedisMultiLock implements DistributedLocker {
    * @param timeUnit 时间单位
    * @return true-全部续期成功
    */
+  /**
+   * 续期所有子锁。
+   *
+   * <p>通过 Lua 脚本原子校验锁持有者后续期（安全续期）：仅当 key 的当前值等于 本锁持有的 value 时才刷新过期时间， 避免续期到被抢占后的其他锁
+   * （裸 {@code EXPIRE} 无持有者校验的隐患）。
+   *
+   * @param lockKey 锁 key
+   * @param leaseTime 租约时长
+   * @param timeUnit 时间单位
+   * @return 全部续期成功返回 true；任一失败返回 false
+   */
   private boolean renewAllLocks(String lockKey, long leaseTime, TimeUnit timeUnit) {
     long leaseTimeMs = timeUnit.toMillis(leaseTime);
     for (int i = 0; i < locks.size(); i++) {
@@ -432,8 +459,8 @@ public class RedisMultiLock implements DistributedLocker {
         return false;
       }
       try {
-        Boolean success = stringRedisTemplate.expire(subLockKey, Duration.ofMillis(leaseTimeMs));
-        if (!Boolean.TRUE.equals(success)) {
+        Long renewed = stringRedisTemplate.execute(RENEW_SCRIPT, List.of(subLockKey), lockValue, leaseTimeMs);
+        if (!Long.valueOf(1L).equals(renewed)) {
           return false;
         }
       } catch (Exception e) {

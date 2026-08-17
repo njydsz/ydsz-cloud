@@ -144,8 +144,9 @@ public class AuditAutoConfiguration {
    *
    * <p>与主业务线程池隔离，避免审计 IO 影响核心链路。
    *
-   * <p>拒绝策略说明：使用 {@link ThreadPoolExecutor.DiscardOldestPolicy}，当队列满时丢弃队列头部最旧日志， 保证最新的审计日志优先入队，避免
-   * {@link ThreadPoolExecutor.CallerRunsPolicy} 阻塞主业务线程。
+   * <p>拒绝策略说明：默认使用 {@link ThreadPoolExecutor.CallerRunsPolicy}，当队列满时由调用线程阻塞等待
+   * （超时后走磁盘兜底），保证审计留痕完整、不静默丢失。 业务方可通过配置 {@code ydsz.audit.async.reject-policy}
+   * 改为丢弃策略以提升吞吐。
    *
    * <p>通过 {@code @ConditionalOnMissingBean} 允许业务方通过 {@code ydsz.thread.pools.auditAsyncExecutor}
    * 注入统一管理线程池覆盖本默认实现。
@@ -167,12 +168,12 @@ public class AuditAutoConfiguration {
     executor.setQueueCapacity(queueCapacity);
     // 符合云顶编码规范 15.4.4 命名约定：ydsz-{module}-{biz}-
     executor.setThreadNamePrefix("ydsz-audit-async-");
-    executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardOldestPolicy());
+    executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
     executor.setWaitForTasksToCompleteOnShutdown(true);
     executor.setAwaitTerminationSeconds((int) properties.getAsync().getShutdownTimeout());
     executor.initialize();
     LOG.info(
-        "初始化审计异步线程池: core={}, max={}, queue={}, rejectPolicy=DiscardOldest",
+        "初始化审计异步线程池: core={}, max={}, queue={}, rejectPolicy={}",
         corePoolSize,
         maxPoolSize,
         queueCapacity);

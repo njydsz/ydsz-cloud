@@ -66,6 +66,9 @@ public enum SystemExceptionCode implements ExceptionCode {
   // ==================== B96001-B96099 实体版本（通用） ====================
   ENTITY_VERSION_NOT_FOUND("B96001", "system.entity.version.not.found", 404); // 实体版本不存在
 
+  /** HTTP 状态码：客户端参数错误 */
+  private static final int HTTP_BAD_REQUEST = 400;
+
   /** 错误码 */
   private final String code;
 
@@ -76,7 +79,7 @@ public enum SystemExceptionCode implements ExceptionCode {
   private final int httpStatus;
 
   SystemExceptionCode(String code, String key) {
-    this(code, key, 400);
+    this(code, key, HTTP_BAD_REQUEST);
   }
 
   SystemExceptionCode(String code, String key, int httpStatus) {

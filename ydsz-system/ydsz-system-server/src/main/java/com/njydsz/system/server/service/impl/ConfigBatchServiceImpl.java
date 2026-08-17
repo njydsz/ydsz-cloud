@@ -22,10 +22,13 @@ import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.search.SearchIndexSyncer;
@@ -61,6 +64,9 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   private static final double MAX_NUMBER = 1e15;
   private static final Pattern BOOLEAN_PATTERN =
       Pattern.compile("^(true|false|TRUE|FALSE|True|False)$");
+
+  /** 日志截断最大长度 */
+  private static final int MAX_LOG_ABBREVIATE_LENGTH = 128;
 
   /** 配置仓储（用于批量插入 + 唯一性校验） */
   private final ConfigRepository configRepository;
@@ -102,7 +108,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public Map<String, Object> batchSave(List<com.njydsz.system.domain.vo.ConfigVO> items) {
+  public Map<String, Object> batchSave(List<ConfigVO> items) {
     if (items == null || items.isEmpty()) {
       throw BusinessException.of(SystemExceptionCode.PARAM_ERROR).data("reason", "配置列表不能为空");
     }
@@ -119,7 +125,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
     // 4. 单次快照：按 configGroup 分组，每个 configGroup 只生成一个版本快照
     Set<String> configGroups =
         items.stream()
-            .map(com.njydsz.system.domain.vo.ConfigVO::getConfigGroup)
+            .map(ConfigVO::getConfigGroup)
             .collect(Collectors.toSet());
     String version = "v" + System.currentTimeMillis();
     for (String configGroup : configGroups) {
@@ -157,10 +163,10 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
    * @param items 配置列表
    * @throws BusinessException 当批量数据中存在重复项时抛出
    */
-  private void validateInnerDuplication(List<com.njydsz.system.domain.vo.ConfigVO> items) {
+  private void validateInnerDuplication(List<ConfigVO> items) {
     Set<String> innerKeySet = new HashSet<>();
     for (int i = 0; i < items.size(); i++) {
-      com.njydsz.system.domain.vo.ConfigVO item = items.get(i);
+      ConfigVO item = items.get(i);
       String key = item.getConfigGroup() + "/" + item.getConfigKey();
       if (!innerKeySet.add(key)) {
         throw BusinessException.of(SystemExceptionCode.CONFIG_KEY_DUPLICATE)
@@ -176,7 +182,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
    *
    * @param item 配置 VO
    */
-  private void validateItem(com.njydsz.system.domain.vo.ConfigVO item) {
+  private void validateItem(ConfigVO item) {
     validateValueType(item.getValueType());
     validateConfigValue(item.getConfigKey(), item.getConfigValue(), item.getValueType());
   }
@@ -190,9 +196,9 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
    * @param items 配置列表
    * @throws BusinessException 当某条数据已存在时抛出
    */
-  private void validateDbUniqueness(List<com.njydsz.system.domain.vo.ConfigVO> items) {
+  private void validateDbUniqueness(List<ConfigVO> items) {
     for (int i = 0; i < items.size(); i++) {
-      com.njydsz.system.domain.vo.ConfigVO item = items.get(i);
+      ConfigVO item = items.get(i);
       if (configRepository.existsByGroupAndKey(item.getConfigGroup(), item.getConfigKey())) {
         throw BusinessException.of(SystemExceptionCode.CONFIG_KEY_DUPLICATE)
             .data(
@@ -240,14 +246,16 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
     List<Config> snapshot =
         configRepository.getConfigMapper().selectList(
             new QueryWrapper<Config>().eq("config_group", configGroup).eq("deleted", 0));
-    String snapshotJson = com.njydsz.common.json.YdszJson.toJson(snapshot);
+    String snapshotJson = YdszJson.toJson(snapshot);
     entityVersionService.createVersion(
-        EntityVersionService.RESOURCE_TYPE_CONFIG,
-        configGroup,
-        configGroup,
-        version,
-        changeLog,
-        snapshotJson);
+        EntityVersionCreateDTO.builder()
+            .resourceType(EntityVersionService.RESOURCE_TYPE_CONFIG)
+            .resourceKey(configGroup)
+            .resourceGroup(configGroup)
+            .version(version)
+            .changeLog(changeLog)
+            .snapshotJson(snapshotJson)
+            .build());
   }
 
   /**
@@ -261,7 +269,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
    * @param vo 配置 VO
    * @return 配置实体（含预生成 ID 和审计字段）
    */
-  private Config toEntityWithId(com.njydsz.system.domain.vo.ConfigVO vo) {
+  private Config toEntityWithId(ConfigVO vo) {
     Config entity = new Config();
     entity.setId(com.baomidou.mybatisplus.core.toolkit.IdWorker.getIdStr());
     entity.setConfigGroup(vo.getConfigGroup());
@@ -365,24 +373,10 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
     try {
       ConfigValueType type = ConfigValueType.valueOf(valueType.toUpperCase());
       return switch (type) {
-        case STRING ->
-            configValue.length() > MAX_STRING_LENGTH ? "字符串长度超过限制 " + MAX_STRING_LENGTH : null;
-        case NUMBER -> {
-          double v = Double.parseDouble(configValue.trim());
-          if (v < MIN_NUMBER || v > MAX_NUMBER) {
-            yield "数值超出范围 [" + MIN_NUMBER + ", " + MAX_NUMBER + "]";
-          }
-          yield null;
-        }
-        case BOOLEAN ->
-            BOOLEAN_PATTERN.matcher(configValue.trim()).matches() ? null : "布尔值必须是 true/false";
-        case JSON -> {
-          if (configValue.length() > MAX_JSON_LENGTH) {
-            yield "JSON 长度超过限制 " + MAX_JSON_LENGTH;
-          }
-          parseJsonLoose(configValue);
-          yield null;
-        }
+        case STRING -> validateStringValue(configValue);
+        case NUMBER -> validateNumberValue(configValue);
+        case BOOLEAN -> validateBooleanValue(configValue);
+        case JSON -> validateJsonValue(configValue);
       };
     } catch (NumberFormatException e) {
       return "数值格式非法";
@@ -391,6 +385,38 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
     } catch (Exception e) {
       return e.getMessage() != null ? e.getMessage() : "校验异常";
     }
+  }
+
+  /** 校验 STRING 类型长度（私有）。 */
+  private static String validateStringValue(String configValue) {
+    return configValue.length() > MAX_STRING_LENGTH
+        ? "字符串长度超过限制 " + MAX_STRING_LENGTH
+        : null;
+  }
+
+  /** 校验 NUMBER 类型可解析性与范围（私有）。 */
+  private static String validateNumberValue(String configValue) {
+    double v = Double.parseDouble(configValue.trim());
+    if (v < MIN_NUMBER || v > MAX_NUMBER) {
+      return "数值超出范围 [" + MIN_NUMBER + ", " + MAX_NUMBER + "]";
+    }
+    return null;
+  }
+
+  /** 校验 BOOLEAN 类型取值（私有）。 */
+  private static String validateBooleanValue(String configValue) {
+    return BOOLEAN_PATTERN.matcher(configValue.trim()).matches()
+        ? null
+        : "布尔值必须是 true/false";
+  }
+
+  /** 校验 JSON 类型合法性与长度（私有）。 */
+  private static String validateJsonValue(String configValue) {
+    if (configValue.length() > MAX_JSON_LENGTH) {
+      return "JSON 长度超过限制 " + MAX_JSON_LENGTH;
+    }
+    parseJsonLoose(configValue);
+    return null;
   }
 
   /**
@@ -420,10 +446,13 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
     if (value == null) {
       return "null";
     }
-    if (value.length() <= 128) {
+    if (value.length() <= MAX_LOG_ABBREVIATE_LENGTH) {
       return value;
     }
-    return value.substring(0, 128) + "...(truncated, len=" + value.length() + ")";
+    return value.substring(0, MAX_LOG_ABBREVIATE_LENGTH)
+        + "...(truncated, len="
+        + value.length()
+        + ")";
   }
 
   /**

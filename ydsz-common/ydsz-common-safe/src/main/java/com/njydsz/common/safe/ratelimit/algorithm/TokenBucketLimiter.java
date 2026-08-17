@@ -44,6 +44,12 @@ public class TokenBucketLimiter implements RateLimiter {
   /** 资源 → 桶 */
   private final ConcurrentHashMap<String, TokenBucket> buckets = new ConcurrentHashMap<>();
 
+  /** 桶数量上限：防止资源 key 无限增长导致内存泄漏 */
+  private static final int MAX_BUCKETS = 10_000;
+
+  /** 空闲淘汰阈值：超过该时长（毫秒）未访问的桶将被惰性清理 */
+  private static final long IDLE_EXPIRE_MILLIS = 5 * 60_000L;
+
   private final RateLimitRule rule;
 
   public TokenBucketLimiter(RateLimitRule rule) {
@@ -54,8 +60,33 @@ public class TokenBucketLimiter implements RateLimiter {
   @Override
   public RateLimitDecision tryAcquire(RateLimitContext context) {
     String key = context.getResource();
-    TokenBucket bucket = buckets.computeIfAbsent(key, k -> new TokenBucket(rule));
+    TokenBucket bucket = buckets.computeIfAbsent(key, k -> createBucket(k));
     return bucket.tryAcquire();
+  }
+
+  /**
+   * 创建新桶，并在桶数量超限时惰性清理空闲桶，防止资源 key 爆炸导致内存泄漏。
+   *
+   * @param key 资源 key
+   * @return 新令牌桶
+   */
+  private TokenBucket createBucket(String key) {
+    if (buckets.size() >= MAX_BUCKETS) {
+      evictIdleBuckets();
+    }
+    return new TokenBucket(rule);
+  }
+
+  /**
+   * 惰性清理超过空闲阈值的桶（O(n) 扫描，仅在桶数超限时触发）。
+   */
+  private void evictIdleBuckets() {
+    long now = System.currentTimeMillis();
+    buckets.entrySet().removeIf(entry -> now - entry.getValue().getLastAccessMillis() > IDLE_EXPIRE_MILLIS);
+    log.warn(
+        "令牌桶数量达到上限 {}，已惰性清理空闲桶，剩余 {}",
+        MAX_BUCKETS,
+        buckets.size());
   }
 
   @Override
@@ -103,6 +134,9 @@ public class TokenBucketLimiter implements RateLimiter {
     /** 当前令牌数（以纳秒为单位存储，避免浮点运算） */
     private volatile long tokensNanos;
 
+    /** 上次访问时间（毫秒），用于空闲淘汰 */
+    private volatile long lastAccessMillis;
+
     TokenBucket(RateLimitRule rule) {
       this.capacity = rule.getBurstCapacity();
       this.refillRate = rule.getThreshold();
@@ -111,6 +145,16 @@ public class TokenBucketLimiter implements RateLimiter {
       this.lastRefillNanos = this.startNanos;
       // 启动时桶满
       this.tokensNanos = this.capacity * NANOS_PER_TOKEN;
+      this.lastAccessMillis = System.currentTimeMillis();
+    }
+
+    /**
+     * 获取最近访问时间（毫秒）。
+     *
+     * @return 最近访问时间戳
+     */
+    long getLastAccessMillis() {
+      return lastAccessMillis;
     }
 
     /**
@@ -127,6 +171,7 @@ public class TokenBucketLimiter implements RateLimiter {
      */
     RateLimitDecision tryAcquire() {
       long now = System.nanoTime();
+      lastAccessMillis = System.currentTimeMillis();
 
       // 第一阶段：乐观读获取当前状态
       long stamp = lock.tryOptimisticRead();

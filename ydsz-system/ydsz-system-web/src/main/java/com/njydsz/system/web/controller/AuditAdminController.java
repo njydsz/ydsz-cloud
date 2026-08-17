@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.core.AuditQueryService;
 import com.njydsz.common.audit.domain.AuditLog;
-import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.web.version.ApiVersion;
 
 /**
@@ -48,6 +48,12 @@ import com.njydsz.common.web.version.ApiVersion;
 @ApiVersion("1")
 @Tag(name = "审计日志管理", description = "审计日志查询（运营/管理后台）")
 public class AuditAdminController {
+
+  /** 默认每页条数 */
+  private static final int DEFAULT_PAGE_SIZE = 20;
+
+  /** 每页条数上限 */
+  private static final int MAX_PAGE_SIZE = 100;
 
   private final AuditQueryService auditQueryService;
 
@@ -154,10 +160,10 @@ public class AuditAdminController {
    */
   private int normalizePageSize(int size) {
     if (size < 1) {
-      return 20;
+      return DEFAULT_PAGE_SIZE;
     }
-    if (size > 100) {
-      return 100;
+    if (size > MAX_PAGE_SIZE) {
+      return MAX_PAGE_SIZE;
     }
     return size;
   }

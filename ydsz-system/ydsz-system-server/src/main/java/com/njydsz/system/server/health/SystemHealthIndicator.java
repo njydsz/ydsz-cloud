@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.boot.health.contributor.Status;
 
 import com.njydsz.common.jdbc.health.DataSourceHealthIndicator;
 import com.njydsz.common.redis.health.RedisHealthIndicator;
@@ -81,7 +82,7 @@ public class SystemHealthIndicator extends AbstractModuleHealthIndicator {
       Health redisResult = redisHealth.health();
       builder.withDetail("redis", redisResult.getStatus().getCode().toUpperCase());
       redisResult.getDetails().forEach((k, v) -> builder.withDetail("redis." + k, v));
-      if (!redisResult.getStatus().equals(org.springframework.boot.health.contributor.Status.UP)) {
+      if (!redisResult.getStatus().equals(Status.UP)) {
         builder.down();
       }
     } else {
@@ -94,7 +95,7 @@ public class SystemHealthIndicator extends AbstractModuleHealthIndicator {
       Health dsResult = dsHealth.health();
       builder.withDetail("datasource", dsResult.getStatus().getCode().toUpperCase());
       dsResult.getDetails().forEach((k, v) -> builder.withDetail("datasource." + k, v));
-      if (!dsResult.getStatus().equals(org.springframework.boot.health.contributor.Status.UP)) {
+      if (!dsResult.getStatus().equals(Status.UP)) {
         builder.down();
       }
     } else {

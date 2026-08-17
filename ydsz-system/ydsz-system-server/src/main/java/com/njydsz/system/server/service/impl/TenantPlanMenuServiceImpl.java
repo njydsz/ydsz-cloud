@@ -3,6 +3,7 @@ package com.njydsz.system.server.service.impl;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -59,7 +60,7 @@ public class TenantPlanMenuServiceImpl implements TenantPlanMenuService {
     wrapper.eq(TenantPlanMenu::getPlanId, planId);
     return tenantPlanMenuRepository.getTenantPlanMenuMapper().selectList(wrapper).stream()
         .map(SystemConverter.INSTANT::entityToVO)
-        .collect(java.util.stream.Collectors.toList());
+        .collect(Collectors.toList());
   }
 
   /**

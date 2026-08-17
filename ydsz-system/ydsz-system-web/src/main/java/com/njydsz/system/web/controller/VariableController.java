@@ -121,7 +121,7 @@ public class VariableController {
    *
    * <p>幂等保护 5 秒；限流 50 QPS；写审计日志。
    *
-   * @param dto 变量 DTO
+   * @param vo 变量 DTO
    * @return 新创建的变量 ID
    */
   @Audit(
@@ -142,7 +142,7 @@ public class VariableController {
    *
    * <p>幂等保护 5 秒；限流 50 QPS；写审计日志。
    *
-   * @param dto 变量 DTO
+   * @param vo 变量 DTO
    * @return 是否成功
    */
   @Audit(

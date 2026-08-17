@@ -170,8 +170,8 @@ public class AppInfoServiceImpl implements AppInfoService {
    *       期间所有请求直接拒绝，有效防止暴力破解 / DoS
    * </ul>
    *
-   * <p><b>性能说明：</b>BCrypt 校验约 100ms（strength=10），<b>不建议</b>在网关同步阻塞路径高频调用。 开启 Redis 缓存后，命中缓存的请求延迟 <
-   * 2ms。
+   * <p><b>性能说明：</b>BCrypt 校验约 100ms（strength=10），<b>不建议</b>在网关同步阻塞路径高频调用。 开启 Redis 缓存后，命中缓存的请求延迟在
+   * 2ms 以内。
    *
    * @param appKey 应用 Key（明文，对应 {@code app_key} 列）
    * @param appSecret 应用密钥明文
@@ -183,27 +183,17 @@ public class AppInfoServiceImpl implements AppInfoService {
       return false;
     }
 
-    // 1. 失败锁定检查：连续失败 ≥ maxFailCount 次则直接拒绝
     String failKey = FAIL_COUNT_PREFIX + appKey;
-    String failCountStr = redisStringOps.get(failKey, String.class);
-    if (failCountStr != null) {
-      try {
-        int failCount = Integer.parseInt(failCountStr);
-        if (failCount >= maxFailCount) {
-          log.warn(
-              "应用校验锁定中: appKey={}, 连续失败次数={}, 锁定 {}s", appKey, failCount, failLockTtlSeconds);
-          metrics.recordAppValidateFail();
-          return false;
-        }
-      } catch (NumberFormatException ignored) {
-        // 解析失败时放行，由后续 BCrypt 兜底校验
-      }
+    String cacheKey = VALIDATE_CACHE_PREFIX + appKey;
+
+    // 1. 失败锁定检查：连续失败 ≥ maxFailCount 次则直接拒绝
+    if (isLocked(appKey, failKey)) {
+      metrics.recordAppValidateFail();
+      return false;
     }
 
     // 2. Redis 缓存命中：已校验成功的 appKey 跳过 BCrypt
-    String cacheKey = VALIDATE_CACHE_PREFIX + appKey;
-    String cached = redisStringOps.get(cacheKey, String.class);
-    if ("true".equals(cached)) {
+    if (isCachedValid(cacheKey)) {
       metrics.recordAppValidateSuccess();
       return true;
     }
@@ -228,6 +218,42 @@ public class AppInfoServiceImpl implements AppInfoService {
       handleValidateFail(appKey, failKey, "密钥不匹配");
     }
     return matched;
+  }
+
+  /**
+   * 判断应用是否处于失败锁定状态（私有）。
+   *
+   * @param appKey 应用 Key
+   * @param failKey 失败计数 Redis key
+   * @return 连续失败次数达到阈值时返回 {@code true}
+   */
+  private boolean isLocked(String appKey, String failKey) {
+    String failCountStr = redisStringOps.get(failKey, String.class);
+    if (failCountStr == null) {
+      return false;
+    }
+    try {
+      int failCount = Integer.parseInt(failCountStr);
+      if (failCount >= maxFailCount) {
+        log.warn(
+            "应用校验锁定中: appKey={}, 连续失败次数={}, 锁定 {}s", appKey, failCount, failLockTtlSeconds);
+        return true;
+      }
+    } catch (NumberFormatException ignored) {
+      // 解析失败时放行，由后续 BCrypt 兜底校验
+    }
+    return false;
+  }
+
+  /**
+   * 判断校验结果缓存是否命中（私有）。
+   *
+   * @param cacheKey 校验缓存 Redis key
+   * @return 命中（已校验成功）返回 {@code true}
+   */
+  private boolean isCachedValid(String cacheKey) {
+    String cached = redisStringOps.get(cacheKey, String.class);
+    return "true".equals(cached);
   }
 
   /**

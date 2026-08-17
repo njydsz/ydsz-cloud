@@ -5,6 +5,7 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -98,12 +99,9 @@ public class GlobalSearchController {
    * @param keyword 搜索关键字（必填）
    * @param page 页码（默认 1）
    * @param pageSize 每页条数（默认 20）
-   * @param userId 当前用户 ID（来自请求头 {@code X-User-Id}）
-   * @param tenantId 当前租户 ID（来自请求头 {@code X-Tenant-Id}，用于多租户隔离）
-   * @param rolesHeader 用户角色列表（逗号分隔，来自请求头 {@code X-User-Roles}）
-   * @param deptId 用户部门 ID（来自请求头 {@code X-User-Dept}）
-   * @param adminHeader 是否管理员（{@code true} / {@code false}，来自请求头 {@code X-User-Admin}）
    * @param typesParam 限定搜索的实体类型列表（逗号分隔，可选；不指定时搜索全部类型）
+   * @param request HTTP 请求（从中提取用户上下文请求头：{@code X-User-Id} / {@code X-Tenant-Id} /
+   *     {@code X-User-Roles} / {@code X-User-Dept} / {@code X-User-Admin}）
    * @return 搜索响应（含分页结果、各类型的命中数、聚合信息等）
    */
   @GetMapping
@@ -113,16 +111,17 @@ public class GlobalSearchController {
       @RequestParam String keyword,
       @RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "20") int pageSize,
-      @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId,
-      @RequestHeader(value = DataPermissionHeaderConstants.X_TENANT_ID, required = false)
-          String tenantId,
-      @RequestHeader(value = AuthHeaderConstants.X_USER_ROLES, required = false) String rolesHeader,
-      @RequestHeader(value = "X-User-Dept", required = false) String deptId,
-      @RequestHeader(value = "X-User-Admin", required = false) String adminHeader,
-      @RequestParam(value = "types", required = false) String typesParam) {
+      @RequestParam(value = "types", required = false) String typesParam,
+      HttpServletRequest request) {
 
     // pageSize 服务端硬上限截断，防止深度分页 OOM
     int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
+    String userId = request.getHeader(AuthHeaderConstants.X_USER_ID);
+    String tenantId = request.getHeader(DataPermissionHeaderConstants.X_TENANT_ID);
+    String rolesHeader = request.getHeader(AuthHeaderConstants.X_USER_ROLES);
+    String deptId = request.getHeader(USER_DEPT_HEADER);
+    String adminHeader = request.getHeader(USER_ADMIN_HEADER);
+
     SearchRequest.SearchRequestBuilder builder =
         SearchRequest.builder()
             .keyword(keyword)
@@ -196,4 +195,10 @@ public class GlobalSearchController {
 
   /** 分页安全上限：防止 pageSize=999999 导致深度分页 OOM */
   private static final int MAX_PAGE_SIZE = 500;
+
+  /** 用户部门请求头 */
+  private static final String USER_DEPT_HEADER = "X-User-Dept";
+
+  /** 是否管理员请求头 */
+  private static final String USER_ADMIN_HEADER = "X-User-Admin";
 }

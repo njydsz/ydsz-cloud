@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
@@ -49,10 +50,15 @@ public class SagaOrchestrator extends AbstractTransactionManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(SagaOrchestrator.class);
 
-  /** 步骤超时控制的共享调度线程池（单线程，按步骤提交延迟任务） */
+  /**
+   * 步骤超时控制的共享执行线程池。
+   *
+   * <p>按可用核数上限（最多 8）创建有界线程池，避免单线程调度池下 长耗时步骤串行阻塞其他 SAGA 步骤的超时控制。
+   */
   // CHECKSTYLE.OFF: ThreadPoolCreate - SAGA 步骤超时控制专用短生命周期调度池，随 JVM 关闭
   private static final ScheduledExecutorService TIMEOUT_SCHEDULER =
-      Executors.newSingleThreadScheduledExecutor(
+      Executors.newScheduledThreadPool(
+          Math.max(2, Math.min(Runtime.getRuntime().availableProcessors(), 8)),
           r -> {
             Thread t = new Thread(r, "saga-step-timeout");
             t.setDaemon(true);
@@ -356,7 +362,10 @@ public class SagaOrchestrator extends AbstractTransactionManager {
             e);
         if (attempt < maxRetries) {
           try {
-            Thread.sleep(intervalMs);
+            // 指数退避 + 随机抖动，避免多步骤同时重试造成补偿风暴
+            long backoff = Math.min(intervalMs << Math.min(attempt, 5), 60_000L);
+            long jitter = ThreadLocalRandom.current().nextLong(0, backoff / 4 + 1);
+            Thread.sleep(backoff + jitter);
           } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
             break;

@@ -90,7 +90,9 @@ public class InternalApiController {
    * @return 字典项展示值；不存在时返回 {@code null}（包装在 {@link BaseResponse} 中）
    */
   @RateLimit(resource = "system.internalapi.getDictItem", threshold = 50)
-  @Idempotent(key = "'ydsz:system:internal-api:get-dict-item:' + #request.typeCode + ':' + #request.itemCode", ttlSeconds = 5)
+  @Idempotent(
+      key = "'ydsz:system:internal-api:get-dict-item:' + #request.typeCode + ':' + #request.itemCode",
+      ttlSeconds = 5)
   @PostMapping("/dict/item")
   public BaseResponse<String> getDictItem(@RequestBody DictItemGetRequest request) {
     DictItemVO vo =
@@ -133,7 +135,10 @@ public class InternalApiController {
    * @return 校验通过返回 {@code true}；应用不存在 / 未启用 / 密钥不匹配返回 {@code false} （包装在 {@link BaseResponse} 中）
    */
   @RateLimit(resource = "system.internalapi.validateClient", threshold = 50)
-  @Idempotent(key = "'ydsz:system:internal-api:validate-client:' + #request.appKey + ':' + #request.appSecret.hashCode()", ttlSeconds = 5)
+  @Idempotent(
+      key =
+          "'ydsz:system:internal-api:validate-client:' + #request.appKey + ':' + #request.appSecret.hashCode()",
+      ttlSeconds = 5)
   @PostMapping("/app/validate")
   public BaseResponse<Boolean> validateClient(@RequestBody AppValidateRequest request) {
     return BaseResponse.success(

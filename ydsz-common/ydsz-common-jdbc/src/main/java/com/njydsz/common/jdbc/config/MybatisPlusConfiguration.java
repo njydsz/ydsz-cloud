@@ -35,6 +35,7 @@ import com.njydsz.common.jdbc.interceptor.SqlTraceInnerInterceptor;
 import com.njydsz.common.jdbc.monitor.SqlAstCache;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.common.jdbc.permission.DataScopeIdExpander;
+import com.njydsz.common.jdbc.permission.NoopDataScopeIdExpander;
 import com.njydsz.common.jdbc.spi.InnerInterceptorProvider;
 
 /**
@@ -105,6 +106,20 @@ public class MybatisPlusConfiguration {
     this.sqlFirewallProperties = sqlFirewallProperties;
     this.spiInterceptorProviders = spiInterceptorProviders;
     this.sqlAstCache = sqlAstCache;
+  }
+
+  /**
+   * 注册默认数据范围 ID 扩展器。
+   *
+   * <p>业务模块未提供自定义 {@link DataScopeIdExpander} 时，使用 {@link NoopDataScopeIdExpander}
+   * 兜底（原样返回，不扩展下级），保证接口有落地、行为可预期。
+   *
+   * @return 默认 ID 扩展器实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(DataScopeIdExpander.class)
+  public DataScopeIdExpander noopDataScopeIdExpander() {
+    return new NoopDataScopeIdExpander();
   }
 
   /**

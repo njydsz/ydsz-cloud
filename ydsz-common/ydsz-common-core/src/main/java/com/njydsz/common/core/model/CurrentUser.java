@@ -1,5 +1,7 @@
 package com.njydsz.common.core.model;
 
+import java.util.Set;
+
 import org.springframework.lang.Nullable;
 
 /**
@@ -61,4 +63,23 @@ public interface CurrentUser {
    */
   @Nullable
   String getTenantId();
+
+  /**
+   * 获取数据权限维度 ID 集合（类型安全扩展点，替代反射调用）。
+   *
+   * <p>默认返回 null（表示当前实现不提供该维度）。 上层实现（如 auth 模块的 {@code AuthInfo}）按需覆盖：
+   *
+   * <ul>
+   *   <li>{@code companyIds} → 有权限的公司 ID 集合
+   *   <li>{@code deptIds} → 有权限的部门 ID 集合
+   * </ul>
+   *
+   * @param claim 维度标识（companyIds / deptIds / projectIds / regionIds）
+   * @return 权限 ID 集合；不支持或不存在返回 null
+   * @since 2.1.0
+   */
+  @Nullable
+  default Set<String> getPermissionIds(String claim) {
+    return null;
+  }
 }

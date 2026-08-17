@@ -15,7 +15,6 @@
  *
  * <ul>
  *   <li>从 ydsz-common-util 迁入 {@code ExecutorUtils} 编程式线程池工厂
- *   <li>从 ydsz-common-util 迁入 {@code MeteredThreadPoolExecutor} 可观测线程池执行器
  *   <li>线程池管理能力统一收归本模块，ydsz-common-util 不再提供线程池相关能力
  * </ul>
  *

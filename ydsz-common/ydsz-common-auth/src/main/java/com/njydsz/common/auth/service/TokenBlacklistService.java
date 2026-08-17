@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.auth.config.AuthProperties;
+import com.njydsz.common.auth.util.BloomFilter;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.security.DigestUtils;
@@ -59,6 +60,14 @@ public class TokenBlacklistService {
   private final AuthProperties authProperties;
 
   /**
+   * 本地布隆过滤器（黑名单前置过滤）。
+   *
+   * <p>假阴性为 0：过滤器判定「不在」则一定不在黑名单中，可短路 Redis 查询， 显著降低高 QPS 下每次请求的 Redis hasKey 开销。
+   * 判定「在」时仍需查 Redis 确认（消除误判）。
+   */
+  private final BloomFilter blacklistBloomFilter;
+
+  /**
    * 构造 Token 黑名单服务。
    *
    * @param distributedLocker 分布式锁接口（可为 null，null 时降级为原生 setIfAbsent 操作）
@@ -72,6 +81,8 @@ public class TokenBlacklistService {
     this.distributedLocker = distributedLocker;
     this.redisStringOps = redisStringOps;
     this.authProperties = authProperties;
+    // 预计最多容纳 10 万条黑名单，0.1% 误判率（约 14 哈希、175KB 位数组）
+    this.blacklistBloomFilter = new BloomFilter(100_000, 0.001);
   }
 
   /**
@@ -109,6 +120,8 @@ public class TokenBlacklistService {
     String key = buildBlacklistKey(token);
     long expire = authProperties.getBlacklist().getExpireSeconds();
     redisStringOps.set(key, "1", Duration.ofSeconds(expire));
+    // 同步写入本地布隆过滤器，供后续查询前置过滤
+    blacklistBloomFilter.put(key);
     LOG.info("Token added to blacklist, expires in {}s", expire);
   }
 
@@ -119,7 +132,7 @@ public class TokenBlacklistService {
    *
    * <ol>
    *   <li>开关未启用直接返回 false（零开销）
-   *   <li>Bloom Filter 返回 false → 一定不在黑名单中（无需查 Redis）
+   *   <li>Bloom Filter 返回 false → 一定不在黑名单中（零假阴性，无需查 Redis）
    *   <li>Bloom Filter 返回 true → 可能存在，查 Redis 确认
    * </ol>
    *
@@ -134,6 +147,10 @@ public class TokenBlacklistService {
       return false;
     }
     String key = buildBlacklistKey(token);
+    // Bloom Filter 前置过滤：假阴性为 0，判定不在则直接放行
+    if (!blacklistBloomFilter.mightContain(key)) {
+      return false;
+    }
     return redisStringOps.hasKey(key);
   }
 

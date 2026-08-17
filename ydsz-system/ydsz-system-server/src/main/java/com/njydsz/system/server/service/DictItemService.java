@@ -127,7 +127,7 @@ public interface DictItemService {
    * <p>写入前校验 {@code (tenantId, typeCode, itemCode)} 唯一性； 写入成功后异步调用 {@link
    * DictVersionService#createVersion} 记录变更。
    *
-   * @param dto 字典项 DTO
+   * @param vo 字典项 DTO
    * @return 新建字典项主键 ID
    */
   String save(DictItemVO vo);
@@ -135,7 +135,7 @@ public interface DictItemService {
   /**
    * 更新字典项（自动记录版本快照）
    *
-   * @param dto 字典项 DTO（{@code id} 必填）
+   * @param vo 字典项 DTO（{@code id} 必填）
    * @return 是否成功
    */
   boolean updateById(DictItemVO vo);

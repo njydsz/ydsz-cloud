@@ -1,15 +1,18 @@
 package com.njydsz.system.server.service;
 
+import java.io.InputStream;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
+import com.njydsz.system.domain.vo.ConfigVO;
+import com.njydsz.system.domain.vo.CursorPageResponse;
+import com.njydsz.system.domain.vo.ImportResult;
 
 /**
  * 系统配置 Service 接口
  *
- * <p>提供系统配置（{@code ydsz_config}）的 CRUD、按 key / group 查询、公开配置查询等能力。 集成 Redis 缓存、Micrometer
+ * <p>提供系统配置（{@code ydsz_config}）的 CRUD、按 key / group 查询、公开配置查询、导入导出等能力。 集成 Redis 缓存、Micrometer
  * 指标、缓存穿透防护和配置变更事件。
  *
  * <p><b>核心职责：</b>
@@ -21,6 +24,8 @@ import com.njydsz.system.domain.query.ConfigPageQuery;
  *   <li><b>公开配置</b>：{@link #listPublicConfigs} — 前端「公开配置」接口数据源
  *   <li><b>变更广播</b>：通过 {@code ApplicationEventPublisher} 发布 {@code ConfigChangeEvent}， 订阅者可监听
  *       {@code ydsz.workflow.sla-default-hours} 等关键配置变更
+ *   <li><b>导入导出</b>：{@link #exportConfigs} / {@link #importConfigs} — 环境迁移能力
+ *   <li><b>游标分页</b>：{@link #pageByCursor} — 大数据量连续翻页场景
  * </ul>
  *
  * <p><b>缓存策略：</b>
@@ -52,6 +57,19 @@ public interface ConfigService {
   PageResponse<List<ConfigVO>> page(ConfigPageQuery query);
 
   /**
+   * 游标分页查询系统配置
+   *
+   * <p>基于 ID 的 seek method，避免深度分页 offset 扫描。游标值为上一页最后一条记录的 ID。
+   *
+   * @param configGroup 配置分组（可选）
+   * @param configKey 配置键模糊匹配（可选）
+   * @param pageSize 每页条数（最大 500）
+   * @param cursor 游标（上一页最后一条记录 ID，首次查询传 null）
+   * @return 游标分页响应
+   */
+  CursorPageResponse<ConfigVO> pageByCursor(String configGroup, String configKey, int pageSize, String cursor);
+
+  /**
    * 按 ID 查询配置
    *
    * @param id 主键 ID
@@ -65,7 +83,7 @@ public interface ConfigService {
    * <p>写入前校验 {@code (tenantId, configGroup, configKey)} 唯一性； 自动校验 {@code valueType}（{@link
    * com.njydsz.system.domain.enums.ConfigValueType}）。
    *
-   * @param dto 配置 DTO
+   * @param vo 配置 DTO
    * @return 新建配置主键 ID
    */
   String save(ConfigVO vo);
@@ -75,7 +93,7 @@ public interface ConfigService {
    *
    * <p>更新后失效 Redis 缓存并发布 {@code ConfigChangeEvent}。
    *
-   * @param dto 配置 DTO（{@code id} 必填）
+   * @param vo 配置 DTO（{@code id} 必填）
    * @return 是否成功
    */
   boolean updateById(ConfigVO vo);
@@ -140,4 +158,24 @@ public interface ConfigService {
    * @return 新创建的回滚版本 ID
    */
   String rollbackTo(String resourceKey, String targetVersion, String operatorId);
+
+  /**
+   * 导出配置为 Excel 字节数组
+   *
+   * <p>按配置分组导出，使用 ydsz-common-excel 实现。
+   *
+   * @param configGroup 配置分组（为 null 时导出全部配置）
+   * @return Excel 文件字节数组
+   */
+  byte[] exportConfigs(String configGroup);
+
+  /**
+   * 从 Excel 导入配置
+   *
+   * <p>使用 ydsz-common-excel 读取 Excel 文件，逐条校验后批量插入。 导入前校验 (configGroup, configKey) 唯一性，重复时跳过。
+   *
+   * @param inputStream Excel 文件输入流
+   * @return 导入结果（成功数、失败数、跳过数）
+   */
+  ImportResult importConfigs(InputStream inputStream);
 }

@@ -100,10 +100,6 @@
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-circuitbreaker</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.alibaba.csp</groupId>
-            <artifactId>sentinel-core</artifactId>
-        </dependency>
         <!-- MyBatis（EncryptTypeHandler 需要 BaseTypeHandler） -->
         <dependency>
             <groupId>org.mybatis</groupId>

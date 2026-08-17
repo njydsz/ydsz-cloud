@@ -81,4 +81,47 @@ public interface AuthInfo extends CurrentUser {
    */
   @Nonnull
   Map<String, Set<String>> getEditableColumnsByTable();
+
+  /**
+   * 获取数据权限维度 ID 集合（类型安全扩展点，替代反射调用）。
+   *
+   * <p>覆盖 {@link CurrentUser#getPermissionIds(String)}，支持以下维度：
+   *
+   * <ul>
+   *   <li>{@code companyIds} → {@link #getHasPermissionCompanyIds()}
+   *   <li>{@code deptIds} → {@link #getHasPermissionDeptIds()}
+   *   <li>其他维度返回 null
+   * </ul>
+   *
+   * @param claim 维度标识
+   * @return 权限 ID 集合；不支持或不存在返回 null
+   * @since 2.1.0
+   */
+  @Override
+  @Nullable
+  default Set<String> getPermissionIds(String claim) {
+    if ("companyIds".equals(claim)) {
+      return getHasPermissionCompanyIds();
+    }
+    if ("deptIds".equals(claim)) {
+      return getHasPermissionDeptIds();
+    }
+    return null;
+  }
+
+  /**
+   * 获取有权限的公司 ID 集合。
+   *
+   * @return 公司 ID 集合；无权限返回空集合
+   */
+  @Nonnull
+  Set<String> getHasPermissionCompanyIds();
+
+  /**
+   * 获取有权限的部门 ID 集合。
+   *
+   * @return 部门 ID 集合；无权限返回空集合
+   */
+  @Nonnull
+  Set<String> getHasPermissionDeptIds();
 }

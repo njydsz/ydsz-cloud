@@ -51,23 +51,13 @@ public interface EntityVersionService {
   /**
    * 创建版本快照
    *
-   * <p>由业务 Service 在写操作成功后调用。{@code snapshotJson} 一般为变更前的资源 JSON 字符串。
+   * <p>由业务 Service 在写操作成功后调用。入参聚合为 {@link
+   * com.njydsz.system.domain.dto.EntityVersionCreateDTO}（参数 ≤ 5 个，符合《云顶编码规范》）。
    *
-   * @param resourceType 资源类型（CONFIG/DICT/VARIABLE）
-   * @param resourceKey 资源唯一标识
-   * @param resourceGroup 资源分组（仅 CONFIG 类型使用）
-   * @param version 版本号
-   * @param changeLog 变更说明
-   * @param snapshotJson 资源 JSON 快照（可为 {@code null}）
+   * @param dto 版本创建参数（含资源类型/键/分组/版本号/变更说明/快照）
    * @return 新建版本记录主键 ID
    */
-  String createVersion(
-      String resourceType,
-      String resourceKey,
-      String resourceGroup,
-      String version,
-      String changeLog,
-      String snapshotJson);
+  String createVersion(com.njydsz.system.domain.dto.EntityVersionCreateDTO dto);
 
   /**
    * 回滚资源到指定版本

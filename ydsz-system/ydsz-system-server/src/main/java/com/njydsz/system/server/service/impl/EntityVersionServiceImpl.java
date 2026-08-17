@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.entity.EntityVersion;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.EntityVersionVO;
@@ -57,20 +58,14 @@ public class EntityVersionServiceImpl implements EntityVersionService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String createVersion(
-      String resourceType,
-      String resourceKey,
-      String resourceGroup,
-      String version,
-      String changeLog,
-      String snapshotJson) {
+  public String createVersion(EntityVersionCreateDTO dto) {
     EntityVersion entity = new EntityVersion();
-    entity.setResourceType(resourceType);
-    entity.setResourceKey(resourceKey);
-    entity.setResourceGroup(resourceGroup);
-    entity.setVersion(version);
-    entity.setChangeLog(changeLog);
-    entity.setSnapshotJson(snapshotJson);
+    entity.setResourceType(dto.getResourceType());
+    entity.setResourceKey(dto.getResourceKey());
+    entity.setResourceGroup(dto.getResourceGroup());
+    entity.setVersion(dto.getVersion());
+    entity.setChangeLog(dto.getChangeLog());
+    entity.setSnapshotJson(dto.getSnapshotJson());
     entity.setEffectiveDate(LocalDateTime.now());
     EntityVersion saved = entityVersionRepository.save(entity);
     return saved.getId();

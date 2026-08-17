@@ -22,6 +22,7 @@ import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.common.TreeBuilder;
 import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.entity.DictItem;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.DictItemVO;
@@ -310,7 +311,7 @@ public class DictItemServiceImpl implements DictItemService {
    *   <li>清除该 {@code typeCode} 下的所有缓存
    * </ol>
    *
-   * @param dto 字典项数据
+   * @param vo 字典项数据
    * @return 新创建的字典项 ID
    * @throws IllegalArgumentException {@code (typeCode, itemCode)} 组合已存在时抛出
    */
@@ -348,7 +349,7 @@ public class DictItemServiceImpl implements DictItemService {
    *   <li>更新成功后精准失效该 {@code typeCode} 下的缓存（含 itemCode 变更时的旧 key）
    * </ol>
    *
-   * @param dto 字典项数据（需包含 {@code id}）
+   * @param vo 字典项数据（需包含 {@code id}）
    * @return true=更新成功，false=记录不存在
    */
   @Override
@@ -429,12 +430,13 @@ public class DictItemServiceImpl implements DictItemService {
     List<DictItem> snapshot = dictRepository.getDictItemMapper().listEnabledByTypeCode(typeCode);
     String snapshotJson = YdszJson.toJson(snapshot);
     entityVersionService.createVersion(
-        EntityVersionService.RESOURCE_TYPE_DICT,
-        typeCode,
-        "",
-        SystemVersionUtils.nextVersion(),
-        changeLog,
-        snapshotJson);
+        EntityVersionCreateDTO.builder()
+            .resourceType(EntityVersionService.RESOURCE_TYPE_DICT)
+            .resourceKey(typeCode)
+            .version(SystemVersionUtils.nextVersion())
+            .changeLog(changeLog)
+            .snapshotJson(snapshotJson)
+            .build());
   }
 
   @Override
@@ -452,7 +454,7 @@ public class DictItemServiceImpl implements DictItemService {
           if (snapshotJson != null && !snapshotJson.isBlank()) {
             try {
               List<DictItemVO> snapshotItems =
-                  YdszJson.fromJson(snapshotJson, java.util.List.class, DictItemVO.class);
+                  YdszJson.fromJson(snapshotJson, List.class, DictItemVO.class);
               if (snapshotItems != null && !snapshotItems.isEmpty()) {
                 for (DictItemVO vo : snapshotItems) {
                   DictItem entity = new DictItem();

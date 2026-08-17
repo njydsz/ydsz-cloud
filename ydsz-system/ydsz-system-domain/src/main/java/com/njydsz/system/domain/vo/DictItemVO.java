@@ -1,5 +1,8 @@
 package com.njydsz.system.domain.vo;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -9,8 +12,6 @@ import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.safe.annotation.Xss;
 import com.njydsz.system.domain.common.TreeNode;
-
-import java.util.List;
 
 /**
  * 字典项 VO（兼 DTO）
@@ -118,7 +119,7 @@ public class DictItemVO implements TreeNode<String> {
     } else {
       this.children = children.stream()
           .map(DictItemVO.class::cast)
-          .collect(java.util.stream.Collectors.toList());
+          .collect(Collectors.toList());
     }
   }
 }

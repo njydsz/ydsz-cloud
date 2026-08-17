@@ -53,7 +53,7 @@ public interface TenantPlanService {
   /**
    * 创建套餐
    *
-   * @param dto 套餐 DTO
+   * @param vo 套餐 DTO
    * @return 新建套餐主键 ID
    */
   String save(TenantPlanVO vo);
@@ -61,7 +61,7 @@ public interface TenantPlanService {
   /**
    * 更新套餐
    *
-   * @param dto 套餐 DTO（{@code id} 必填）
+   * @param vo 套餐 DTO（{@code id} 必填）
    * @return 是否成功
    */
   boolean updateById(TenantPlanVO vo);

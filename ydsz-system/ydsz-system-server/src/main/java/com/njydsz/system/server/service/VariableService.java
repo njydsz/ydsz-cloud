@@ -89,7 +89,7 @@ public interface VariableService {
    * <p>写入前校验 {@code (tenantId, variableKey)} 唯一性； 自动校验 {@code valueType}（{@link
    * com.njydsz.system.domain.enums.ConfigValueType}）。
    *
-   * @param dto 变量 DTO
+   * @param vo 变量 DTO
    * @return 新建变量主键 ID
    */
   String save(VariableVO vo);
@@ -99,7 +99,7 @@ public interface VariableService {
    *
    * <p>更新后失效 Redis 缓存。
    *
-   * @param dto 变量 DTO（{@code id} 必填）
+   * @param vo 变量 DTO（{@code id} 必填）
    * @return 是否成功
    */
   boolean updateById(VariableVO vo);

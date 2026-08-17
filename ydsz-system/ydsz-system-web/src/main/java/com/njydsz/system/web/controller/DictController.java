@@ -92,7 +92,7 @@ public class DictController {
    *
    * <p>幂等保护：5 秒内同一请求只能成功一次；限流 50 QPS；写审计日志。
    *
-   * @param dto 字典类型 DTO（含 typeCode、typeName、status 等）
+   * @param vo 字典类型 DTO（含 typeCode、typeName、status 等）
    * @return 新创建的字典类型 ID
    */
   @Audit(
@@ -113,7 +113,7 @@ public class DictController {
    *
    * <p>幂等保护：5 秒内同一请求只能成功一次；限流 50 QPS；写审计日志。
    *
-   * @param dto 字典类型 DTO（必须包含 ID）
+   * @param vo 字典类型 DTO（必须包含 ID）
    * @return 是否成功
    */
   @Audit(

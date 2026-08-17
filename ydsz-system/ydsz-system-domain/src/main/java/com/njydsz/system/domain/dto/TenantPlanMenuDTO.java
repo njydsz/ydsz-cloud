@@ -1,5 +1,7 @@
 package com.njydsz.system.domain.dto;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -22,5 +24,5 @@ public class TenantPlanMenuDTO {
   private String planId;
 
   @Schema(description = "菜单 ID 列表")
-  private java.util.List<String> menuIds;
+  private List<String> menuIds;
 }

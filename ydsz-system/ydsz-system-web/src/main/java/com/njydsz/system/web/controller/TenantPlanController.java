@@ -101,7 +101,7 @@ public class TenantPlanController {
   /**
    * 创建套餐
    *
-   * @param dto 套餐 DTO
+   * @param vo 套餐 DTO
    * @param userId 当前用户 ID
    * @return 新创建的套餐 ID
    */

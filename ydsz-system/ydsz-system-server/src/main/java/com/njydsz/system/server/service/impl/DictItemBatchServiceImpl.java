@@ -20,6 +20,7 @@ import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.entity.DictItem;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.DictItemVO;
@@ -209,12 +210,13 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
     List<DictItem> snapshot = dictRepository.getDictItemMapper().listEnabledByTypeCode(typeCode);
     String snapshotJson = YdszJson.toJson(snapshot);
     entityVersionService.createVersion(
-        EntityVersionService.RESOURCE_TYPE_DICT,
-        typeCode,
-        "",
-        version,
-        changeLog,
-        snapshotJson);
+        EntityVersionCreateDTO.builder()
+            .resourceType(EntityVersionService.RESOURCE_TYPE_DICT)
+            .resourceKey(typeCode)
+            .version(version)
+            .changeLog(changeLog)
+            .snapshotJson(snapshotJson)
+            .build());
   }
 
   /**

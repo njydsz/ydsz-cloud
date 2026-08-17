@@ -213,11 +213,14 @@ public class AuditProperties {
     private int threadMaxSize = 4;
 
     /**
-     * 队列满时的拒绝策略（默认 DISCARD_OLDEST）
+     * 队列满时的拒绝策略（默认 CALLER_RUNS）
+     *
+     * <p>默认采用 CALLER_RUNS（调用者阻塞等待 + 超时后磁盘兜底），保证审计留痕完整、不静默丢失。
+     * 如对审计实时性要求高于完整性，可改为 DISCARD_OLDEST（丢弃最旧日志）或 DISCARD_NEWEST（丢弃最新日志）。
      *
      * <p>可选值：DISCARD_OLDEST（丢弃最旧日志）、DISCARD_NEWEST（丢弃最新日志）、CALLER_RUNS（调用者阻塞等待）
      */
-    private String rejectPolicy = "DISCARD_OLDEST";
+    private String rejectPolicy = "CALLER_RUNS";
 
     /** 优雅停机超时时间（秒，默认 30s） */
     private long shutdownTimeout = 30;

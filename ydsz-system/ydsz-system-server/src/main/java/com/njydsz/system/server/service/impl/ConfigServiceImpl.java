@@ -1,5 +1,7 @@
 package com.njydsz.system.server.service.impl;
 
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -13,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,15 +24,21 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
+import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.ConfigPageQuery;
+import com.njydsz.system.domain.vo.ConfigExcelVO;
 import com.njydsz.system.domain.vo.ConfigVO;
+import com.njydsz.system.domain.vo.CursorPageResponse;
+import com.njydsz.system.domain.vo.ImportResult;
 import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.config.SystemProperties;
@@ -98,6 +107,12 @@ public class ConfigServiceImpl implements ConfigService {
   private static final Pattern BOOLEAN_PATTERN =
       Pattern.compile("^(true|false|TRUE|FALSE|True|False)$");
 
+  /** 游标分页页大小上限 */
+  private static final int MAX_CURSOR_PAGE_SIZE = 500;
+
+  /** 日志截断最大长度 */
+  private static final int MAX_LOG_ABBREVIATE_LENGTH = 128;
+
   // ============================== 依赖注入 ==============================
 
   /** 系统配置仓储 */
@@ -124,6 +139,9 @@ public class ConfigServiceImpl implements ConfigService {
   /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
   private final SearchIndexSyncer searchIndexSyncer;
 
+  /** Excel 导出辅助类（用于配置导入导出） */
+  private final ExcelExportHelper excelExportHelper;
+
   // ============================== CRUD ==============================
 
   @Override
@@ -135,21 +153,93 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
+  public CursorPageResponse<ConfigVO> pageByCursor(
+      String configGroup, String configKey, int pageSize, String cursor) {
+    // 1. 校验并归一化页大小
+    int safePageSize = Math.min(Math.max(pageSize, 1), MAX_CURSOR_PAGE_SIZE);
+
+    // 2. 构建查询条件（seek method：ID > cursor）
+    QueryWrapper<Config> wrapper = buildCursorWrapper(configGroup, configKey, cursor);
+    wrapper.orderByAsc("id");
+    wrapper.last("LIMIT " + safePageSize);
+
+    // 3. 查询数据
+    List<Config> entities = configRepository.getConfigMapper().selectList(wrapper);
+    List<ConfigVO> records =
+        entities.stream()
+            .map(SystemConverter.INSTANT::entityToVO)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+
+    // 4. 计算下一页游标（本页满且存在后续数据时）
+    String nextCursor = null;
+    if (records.size() == safePageSize) {
+      Config lastEntity = entities.get(entities.size() - 1);
+      if (hasMoreData(configGroup, configKey, lastEntity.getId())) {
+        nextCursor = lastEntity.getId();
+      }
+    }
+
+    return CursorPageResponse.of(records, nextCursor);
+  }
+
+  /**
+   * 构建游标分页查询条件（私有）。
+   *
+   * @param configGroup 配置分组（可选）
+   * @param configKey 配置键（可选，模糊）
+   * @param cursor 上一页游标（可选）
+   * @return 查询包装器（含 deleted=0 与过滤条件）
+   */
+  private QueryWrapper<Config> buildCursorWrapper(
+      String configGroup, String configKey, String cursor) {
+    QueryWrapper<Config> wrapper = new QueryWrapper<>();
+    wrapper.eq("deleted", 0);
+    if (configGroup != null && !configGroup.isBlank()) {
+      wrapper.eq("config_group", configGroup);
+    }
+    if (configKey != null && !configKey.isBlank()) {
+      wrapper.like("config_key", configKey);
+    }
+    if (cursor != null && !cursor.isBlank()) {
+      wrapper.gt("id", cursor);
+    }
+    return wrapper;
+  }
+
+  /**
+   * 判断游标之后是否还有更多数据（私有）。
+   *
+   * @param configGroup 配置分组（可选）
+   * @param configKey 配置键（可选）
+   * @param lastId 本页最后一条记录 ID
+   * @return 存在后续数据返回 {@code true}
+   */
+  private boolean hasMoreData(String configGroup, String configKey, String lastId) {
+    QueryWrapper<Config> countWrapper = buildCursorWrapper(configGroup, configKey, lastId);
+    Long moreCount = configRepository.getConfigMapper().selectCount(countWrapper);
+    return moreCount != null && moreCount > 0;
+  }
+
+  @Override
   public ConfigVO getById(String id) {
     Config entity = configRepository.getConfigMapper().selectById(id);
     return SystemConverter.INSTANT.entityToVO(entity);
   }
 
   @Override
-  @CacheEvict(
-      value = CacheConstants.SYSTEM_CONFIG_CACHE,
-      key = "@cacheKeyBuilder.configValue(#vo.configKey)")
-  @CacheEvict(
-      value = CacheConstants.SYSTEM_CONFIG_CACHE,
-      key = "@cacheKeyBuilder.configGroup(#vo.configGroup)")
-  @CacheEvict(
-      value = CacheConstants.SYSTEM_CONFIG_CACHE,
-      key = "@cacheKeyBuilder.configPublic()")
+  @Caching(
+      evict = {
+        @CacheEvict(
+            value = CacheConstants.SYSTEM_CONFIG_CACHE,
+            key = "@cacheKeyBuilder.configValue(#vo.configKey)"),
+        @CacheEvict(
+            value = CacheConstants.SYSTEM_CONFIG_CACHE,
+            key = "@cacheKeyBuilder.configGroup(#vo.configGroup)"),
+        @CacheEvict(
+            value = CacheConstants.SYSTEM_CONFIG_CACHE,
+            key = "@cacheKeyBuilder.configPublic()")
+      })
   @Transactional(rollbackFor = Exception.class)
   public String save(ConfigVO vo) {
     Config entity = toEntity(vo);
@@ -164,15 +254,18 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  @CacheEvict(
-      value = CacheConstants.SYSTEM_CONFIG_CACHE,
-      key = "@cacheKeyBuilder.configValue(#vo.configKey)")
-  @CacheEvict(
-      value = CacheConstants.SYSTEM_CONFIG_CACHE,
-      key = "@cacheKeyBuilder.configGroup(#vo.configGroup)")
-  @CacheEvict(
-      value = CacheConstants.SYSTEM_CONFIG_CACHE,
-      key = "@cacheKeyBuilder.configPublic()")
+  @Caching(
+      evict = {
+        @CacheEvict(
+            value = CacheConstants.SYSTEM_CONFIG_CACHE,
+            key = "@cacheKeyBuilder.configValue(#vo.configKey)"),
+        @CacheEvict(
+            value = CacheConstants.SYSTEM_CONFIG_CACHE,
+            key = "@cacheKeyBuilder.configGroup(#vo.configGroup)"),
+        @CacheEvict(
+            value = CacheConstants.SYSTEM_CONFIG_CACHE,
+            key = "@cacheKeyBuilder.configPublic()")
+      })
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(ConfigVO vo) {
     Config entity = toEntity(vo);
@@ -189,12 +282,14 @@ public class ConfigServiceImpl implements ConfigService {
       }
       // 创建版本快照（与配置变更同一事务）
       entityVersionService.createVersion(
-          EntityVersionService.RESOURCE_TYPE_CONFIG,
-          entity.getConfigKey(),
-          entity.getConfigGroup(),
-          SystemVersionUtils.nextVersion(),
-          "更新配置: " + entity.getConfigKey(),
-          snapshotJson);
+          EntityVersionCreateDTO.builder()
+              .resourceType(EntityVersionService.RESOURCE_TYPE_CONFIG)
+              .resourceKey(entity.getConfigKey())
+              .resourceGroup(entity.getConfigGroup())
+              .version(SystemVersionUtils.nextVersion())
+              .changeLog("更新配置: " + entity.getConfigKey())
+              .snapshotJson(snapshotJson)
+              .build());
       publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
       indexUpsert(entity);
     }
@@ -213,12 +308,14 @@ public class ConfigServiceImpl implements ConfigService {
       evictConfigCaches(entity.getConfigKey(), entity.getConfigGroup());
       // 创建版本快照（与配置变更同一事务）
       entityVersionService.createVersion(
-          EntityVersionService.RESOURCE_TYPE_CONFIG,
-          entity.getConfigKey(),
-          entity.getConfigGroup(),
-          SystemVersionUtils.nextVersion(),
-          "删除配置: " + entity.getConfigKey(),
-          snapshotJson);
+          EntityVersionCreateDTO.builder()
+              .resourceType(EntityVersionService.RESOURCE_TYPE_CONFIG)
+              .resourceKey(entity.getConfigKey())
+              .resourceGroup(entity.getConfigGroup())
+              .version(SystemVersionUtils.nextVersion())
+              .changeLog("删除配置: " + entity.getConfigKey())
+              .snapshotJson(snapshotJson)
+              .build());
       publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
       indexDelete(id);
     }
@@ -454,24 +551,10 @@ public class ConfigServiceImpl implements ConfigService {
     try {
       ConfigValueType type = ConfigValueType.valueOf(valueType.toUpperCase());
       return switch (type) {
-        case STRING ->
-            configValue.length() > MAX_STRING_LENGTH ? "字符串长度超过限制 " + MAX_STRING_LENGTH : null;
-        case NUMBER -> {
-          double v = Double.parseDouble(configValue.trim());
-          if (v < MIN_NUMBER || v > MAX_NUMBER) {
-            yield "数值超出范围 [" + MIN_NUMBER + ", " + MAX_NUMBER + "]";
-          }
-          yield null;
-        }
-        case BOOLEAN ->
-            BOOLEAN_PATTERN.matcher(configValue.trim()).matches() ? null : "布尔值必须是 true/false";
-        case JSON -> {
-          if (configValue.length() > MAX_JSON_LENGTH) {
-            yield "JSON 长度超过限制 " + MAX_JSON_LENGTH;
-          }
-          parseJsonLoose(configValue);
-          yield null;
-        }
+        case STRING -> validateStringValue(configValue);
+        case NUMBER -> validateNumberValue(configValue);
+        case BOOLEAN -> validateBooleanValue(configValue);
+        case JSON -> validateJsonValue(configValue);
       };
     } catch (NumberFormatException e) {
       return "数值格式非法";
@@ -480,6 +563,38 @@ public class ConfigServiceImpl implements ConfigService {
     } catch (Exception e) {
       return e.getMessage() != null ? e.getMessage() : "校验异常";
     }
+  }
+
+  /** 校验 STRING 类型长度（私有）。 */
+  private static String validateStringValue(String configValue) {
+    return configValue.length() > MAX_STRING_LENGTH
+        ? "字符串长度超过限制 " + MAX_STRING_LENGTH
+        : null;
+  }
+
+  /** 校验 NUMBER 类型可解析性与范围（私有）。 */
+  private static String validateNumberValue(String configValue) {
+    double v = Double.parseDouble(configValue.trim());
+    if (v < MIN_NUMBER || v > MAX_NUMBER) {
+      return "数值超出范围 [" + MIN_NUMBER + ", " + MAX_NUMBER + "]";
+    }
+    return null;
+  }
+
+  /** 校验 BOOLEAN 类型取值（私有）。 */
+  private static String validateBooleanValue(String configValue) {
+    return BOOLEAN_PATTERN.matcher(configValue.trim()).matches()
+        ? null
+        : "布尔值必须是 true/false";
+  }
+
+  /** 校验 JSON 类型合法性与长度（私有）。 */
+  private static String validateJsonValue(String configValue) {
+    if (configValue.length() > MAX_JSON_LENGTH) {
+      return "JSON 长度超过限制 " + MAX_JSON_LENGTH;
+    }
+    parseJsonLoose(configValue);
+    return null;
   }
 
   /**
@@ -509,10 +624,13 @@ public class ConfigServiceImpl implements ConfigService {
     if (value == null) {
       return "null";
     }
-    if (value.length() <= 128) {
+    if (value.length() <= MAX_LOG_ABBREVIATE_LENGTH) {
       return value;
     }
-    return value.substring(0, 128) + "...(truncated, len=" + value.length() + ")";
+    return value.substring(0, MAX_LOG_ABBREVIATE_LENGTH)
+        + "...(truncated, len="
+        + value.length()
+        + ")";
   }
 
   /**
@@ -583,6 +701,227 @@ public class ConfigServiceImpl implements ConfigService {
           evictConfigPublic();
           publishConfigChangedEvent(resourceKey, snapshotGroup);
         });
+  }
+
+  // ============================== 导入导出 ==============================
+
+  @Override
+  public byte[] exportConfigs(String configGroup) {
+    // 1. 查询配置数据（含分组过滤）
+    List<Config> configs = loadConfigsForExport(configGroup);
+
+    // 2. 转换为 Excel VO 并导出
+    List<ConfigExcelVO> excelRows =
+        configs.stream().map(this::toExcelVO).collect(Collectors.toList());
+    return excelRows.isEmpty()
+        ? new byte[0]
+        : excelExportHelper.export("系统配置", ConfigExcelVO.class, excelRows);
+  }
+
+  /**
+   * 加载导出配置数据（私有）。
+   *
+   * @param configGroup 配置分组（为空时导出全部）
+   * @return 未删除配置列表（按分组/排序）
+   */
+  private List<Config> loadConfigsForExport(String configGroup) {
+    com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Config> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Config>()
+            .eq("deleted", 0);
+    if (configGroup != null && !configGroup.isBlank()) {
+      wrapper.eq("config_group", configGroup).orderByAsc("sort_order");
+    } else {
+      wrapper.orderByAsc("config_group", "sort_order");
+    }
+    return configRepository.getConfigMapper().selectList(wrapper);
+  }
+
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public ImportResult importConfigs(InputStream inputStream) {
+    // 1. 读取 Excel 文件
+    List<ConfigExcelVO> excelRows = readExcel(inputStream);
+    if (excelRows.isEmpty()) {
+      return ImportResult.builder()
+          .totalCount(0)
+          .successCount(0)
+          .failCount(0)
+          .skipCount(0)
+          .message("Excel 文件为空")
+          .build();
+    }
+
+    // 2. 逐条校验并转换（必填 / 值类型 / DB 唯一性）
+    List<String> errors = new ArrayList<>();
+    List<ConfigVO> validItems = new ArrayList<>();
+    int skipCount = 0;
+    for (int i = 0; i < excelRows.size(); i++) {
+      String error = validateExcelRow(excelRows.get(i), i + 2);
+      if (error != null) {
+        errors.add(error);
+        skipCount++;
+      } else {
+        validItems.add(toConfigVO(excelRows.get(i)));
+      }
+    }
+
+    // 3. 批量保存有效数据
+    int successCount = saveValidItems(validItems, errors);
+
+    // 4. 构建导入结果
+    return ImportResult.builder()
+        .totalCount(excelRows.size())
+        .successCount(successCount)
+        .failCount(excelRows.size() - successCount - skipCount)
+        .skipCount(skipCount)
+        .errors(errors)
+        .message(
+            String.format(
+                "导入完成: 成功 %d 条, 跳过 %d 条, 失败 %d 条",
+                successCount, skipCount, excelRows.size() - successCount - skipCount))
+        .build();
+  }
+
+  /**
+   * 读取 Excel 配置数据（私有）。
+   *
+   * @param inputStream Excel 输入流
+   * @return 配置 Excel 行列表
+   */
+  private List<ConfigExcelVO> readExcel(InputStream inputStream) {
+    try {
+      List<ConfigExcelVO> rows =
+          ExcelFacade.read(inputStream, ConfigExcelVO.class).sheet(0).doReadAll();
+      return rows != null ? rows : List.of();
+    } catch (Exception e) {
+      log.warn("[ConfigService] Excel 读取失败: {}", e.getMessage());
+      throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
+          .data("reason", "Excel 文件读取失败: " + e.getMessage());
+    }
+  }
+
+  /**
+   * 校验单条 Excel 行（私有）。
+   *
+   * <p>校验必填字段、值类型、DB 唯一性；通过返回 null，否则返回错误描述。
+   *
+   * @param excelRow Excel 行数据
+   * @param rowNum Excel 行号（从 2 开始，第 1 行为表头）
+   * @return 错误描述；校验通过返回 null
+   */
+  private String validateExcelRow(ConfigExcelVO excelRow, int rowNum) {
+    String requiredError = validateRequiredFields(excelRow, rowNum);
+    if (requiredError != null) {
+      return requiredError;
+    }
+    String typeError = validateExcelValueType(excelRow, rowNum);
+    if (typeError != null) {
+      return typeError;
+    }
+    if (configRepository.existsByGroupAndKey(excelRow.getConfigGroup(), excelRow.getConfigKey())) {
+      return "第 " + rowNum + " 行: 配置已存在("
+          + excelRow.getConfigGroup() + "/" + excelRow.getConfigKey() + ")";
+    }
+    return null;
+  }
+
+  /**
+   * 校验 Excel 行必填字段（私有）。
+   *
+   * @param excelRow Excel 行数据
+   * @param rowNum Excel 行号
+   * @return 错误描述；通过返回 null
+   */
+  private String validateRequiredFields(ConfigExcelVO excelRow, int rowNum) {
+    if (excelRow.getConfigGroup() == null || excelRow.getConfigGroup().isBlank()) {
+      return "第 " + rowNum + " 行: 配置分组不能为空";
+    }
+    if (excelRow.getConfigKey() == null || excelRow.getConfigKey().isBlank()) {
+      return "第 " + rowNum + " 行: 配置键不能为空";
+    }
+    if (excelRow.getConfigValue() == null || excelRow.getConfigValue().isBlank()) {
+      return "第 " + rowNum + " 行: 配置值不能为空";
+    }
+    return null;
+  }
+
+  /**
+   * 校验 Excel 行值类型（私有）。
+   *
+   * @param excelRow Excel 行数据
+   * @param rowNum Excel 行号
+   * @return 错误描述；通过返回 null
+   */
+  private String validateExcelValueType(ConfigExcelVO excelRow, int rowNum) {
+    if (excelRow.getValueType() == null || excelRow.getValueType().isBlank()) {
+      return null;
+    }
+    try {
+      ConfigValueType.validate(excelRow.getValueType());
+      return null;
+    } catch (IllegalArgumentException e) {
+      return "第 " + rowNum + " 行: 值类型不合法: " + excelRow.getValueType();
+    }
+  }
+
+  /**
+   * Excel 行转换为配置 VO（私有）。
+   *
+   * @param excelRow Excel 行数据
+   * @return 配置 VO
+   */
+  private ConfigVO toConfigVO(ConfigExcelVO excelRow) {
+    ConfigVO vo = new ConfigVO();
+    vo.setConfigGroup(excelRow.getConfigGroup());
+    vo.setConfigKey(excelRow.getConfigKey());
+    vo.setConfigValue(excelRow.getConfigValue());
+    vo.setValueType(excelRow.getValueType());
+    vo.setDefaultValue(excelRow.getDefaultValue());
+    vo.setDescription(excelRow.getDescription());
+    vo.setIsPublic(excelRow.getIsPublic());
+    vo.setSortOrder(excelRow.getSortOrder());
+    vo.setStatus(excelRow.getStatus());
+    return vo;
+  }
+
+  /**
+   * 批量保存有效配置（私有）。
+   *
+   * @param validItems 校验通过的配置列表
+   * @param errors 错误收集器（保存失败时追加）
+   * @return 保存成功条数
+   */
+  private int saveValidItems(List<ConfigVO> validItems, List<String> errors) {
+    int successCount = 0;
+    for (ConfigVO vo : validItems) {
+      try {
+        save(vo);
+        successCount++;
+      } catch (Exception e) {
+        errors.add("保存失败(" + vo.getConfigGroup() + "/" + vo.getConfigKey() + "): " + e.getMessage());
+      }
+    }
+    return successCount;
+  }
+
+  /**
+   * Config 实体转换为 Excel VO
+   *
+   * @param entity 配置实体
+   * @return Excel VO
+   */
+  private ConfigExcelVO toExcelVO(Config entity) {
+    ConfigExcelVO vo = new ConfigExcelVO();
+    vo.setConfigGroup(entity.getConfigGroup());
+    vo.setConfigKey(entity.getConfigKey());
+    vo.setConfigValue(entity.getConfigValue());
+    vo.setValueType(entity.getValueType());
+    vo.setDefaultValue(entity.getDefaultValue());
+    vo.setDescription(entity.getDescription());
+    vo.setIsPublic(entity.getIsPublic());
+    vo.setSortOrder(entity.getSortOrder());
+    vo.setStatus(entity.getStatus());
+    return vo;
   }
 
   /**

@@ -69,6 +69,12 @@
             <artifactId>ydsz-common-excel</artifactId>
         </dependency>
 
+        <!-- PII 检测复用脱敏枚举（SensitiveType / SensitiveUtil） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
+        </dependency>
+
         <!-- Apache Tika (MIME 类型检测) -->
         <dependency>
             <groupId>org.apache.tika</groupId>

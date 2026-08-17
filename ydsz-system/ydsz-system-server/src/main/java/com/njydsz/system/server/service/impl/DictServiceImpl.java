@@ -142,7 +142,7 @@ public class DictServiceImpl implements DictService {
    *
    * <p><b>注意：</b>本方法仅创建类型，<b>不挂载字典项</b>，字典项需通过 {@link DictItemServiceImpl#save} 单独添加。
    *
-   * @param dto 字典类型数据
+   * @param vo 字典类型数据
    * @return 新创建的字典类型 ID
    * @throws IllegalArgumentException {@code typeCode} 已存在时抛出
    */
@@ -169,7 +169,7 @@ public class DictServiceImpl implements DictService {
    *
    * <p><b>注意：</b>更新 {@code typeCode} 会导致所有依赖该编码的下游缓存失效， 调用方需主动清理 {@code ydsz:dict:*} 相关 Redis key。
    *
-   * @param dto 字典类型数据（需包含 {@code id}）
+   * @param vo 字典类型数据（需包含 {@code id}）
    * @return true=更新成功，false=记录不存在
    * @throws IllegalArgumentException {@code typeCode} 已被其他类型占用时抛出
    */

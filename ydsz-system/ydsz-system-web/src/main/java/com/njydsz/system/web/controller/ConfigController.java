@@ -1,10 +1,12 @@
 package com.njydsz.system.web.controller;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,18 +16,23 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.excel.spring.ExcelWebSupport;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.ConfigBatchDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
+import com.njydsz.system.domain.vo.CursorPageResponse;
+import com.njydsz.system.domain.vo.ImportResult;
 import com.njydsz.system.server.service.ConfigBatchService;
 import com.njydsz.system.server.service.ConfigService;
 
@@ -54,7 +61,7 @@ import com.njydsz.system.server.service.ConfigService;
  * @since 1.0.0
  * @see com.njydsz.system.server.service.ConfigService 配置业务逻辑
  */
-@Tag(name = "系统配置", description = "系统参数配置 CRUD + 按键查询 + 分组批量查询 + 批量操作")
+@Tag(name = "系统配置", description = "系统参数配置 CRUD + 按键查询 + 分组批量查询 + 批量操作 + 导入导出")
 @RestController
 @RequestMapping("/api/v1/config")
 @RequiredArgsConstructor
@@ -62,6 +69,7 @@ public class ConfigController {
 
   private final ConfigService configService;
   private final ConfigBatchService configBatchService;
+  private final ExcelWebSupport excelWebSupport;
 
   // ============================== CRUD 端点 ==============================
 
@@ -77,6 +85,27 @@ public class ConfigController {
   @GetMapping("/page")
   public PageResponse<List<ConfigVO>> page(ConfigPageQuery query) {
     return configService.page(query);
+  }
+
+  /**
+   * 游标分页查询系统配置
+   *
+   * <p>基于 ID 的 seek method 分页，避免深度分页 offset 扫描开销。 适合大数据量连续翻页场景。
+   *
+   * @param configGroup 配置分组（可选）
+   * @param configKey 配置键模糊匹配（可选）
+   * @param pageSize 每页条数（默认 20，最大 500）
+   * @param cursor 游标（上一页最后一条记录 ID，首次查询不传）
+   * @return 游标分页响应
+   */
+  @Operation(summary = "游标分页查询")
+  @GetMapping("/cursor")
+  public BaseResponse<CursorPageResponse<ConfigVO>> pageByCursor(
+      @RequestParam(required = false) String configGroup,
+      @RequestParam(required = false) String configKey,
+      @RequestParam(defaultValue = "20") int pageSize,
+      @RequestParam(required = false) String cursor) {
+    return BaseResponse.success(configService.pageByCursor(configGroup, configKey, pageSize, cursor));
   }
 
   /**
@@ -99,7 +128,7 @@ public class ConfigController {
    * <p>创建后会自动失效 Redis 缓存（{@code ydsz:system:ConfigController:save:lock}）， 并通过 {@code
    * ConfigChangeEvent} 广播变更。
    *
-   * @param dto 配置 DTO（含 configKey / configValue / configGroup / valueType / isPublic）
+   * @param vo 配置 DTO（含 configKey / configValue / configGroup / valueType / isPublic）
    * @return 新创建的配置 ID
    */
   @Audit(
@@ -122,7 +151,7 @@ public class ConfigController {
    *
    * <p>更新后会自动失效 Redis 缓存，并通过 {@code ConfigChangeEvent} 广播变更， 业务方可通过订阅事件感知配置变更。
    *
-   * @param dto 配置 DTO（必须包含 ID）
+   * @param vo 配置 DTO（必须包含 ID）
    * @return 是否成功
    */
   @Audit(
@@ -247,5 +276,75 @@ public class ConfigController {
   @GetMapping("/public")
   public BaseResponse<List<ConfigVO>> listPublicConfigs() {
     return BaseResponse.success(configService.listPublicConfigs());
+  }
+
+  // ============================== 导入导出端点 ==============================
+
+  /**
+   * 导出配置为 Excel
+   *
+   * <p>按配置分组导出（可选，不传则导出全部配置），使用 ydsz-common-excel 生成 Excel 文件。
+   *
+   * @param configGroup 配置分组（可选，为空则导出全部）
+   * @param response HTTP 响应
+   * @throws IOException 写入失败时抛出
+   */
+  @Audit(
+      module = "系统配置",
+      type = AuditType.OPERATION,
+      action = AuditAction.EXPORT,
+      content = "'导出配置: ' + #configGroup")
+  @Operation(summary = "导出配置", description = "按分组导出配置为 Excel 文件")
+  @GetMapping("/export")
+  public void exportConfigs(
+      @RequestParam(required = false) String configGroup,
+      HttpServletResponse response)
+      throws IOException {
+    byte[] bytes = configService.exportConfigs(configGroup);
+    String filename =
+        "config_" + (configGroup != null ? configGroup : "all") + "_" + System.currentTimeMillis() + ".xlsx";
+    excelWebSupport.writeBytes(response, bytes, filename);
+  }
+
+  /**
+   * 从 Excel 导入配置
+   *
+   * <p>使用 ydsz-common-excel 读取 Excel 文件，逐条校验后批量插入。 导入前校验 (configGroup, configKey) 唯一性，重复时跳过。
+   *
+   * @param file Excel 文件（.xlsx）
+   * @return 导入结果（成功数、失败数、跳过数）
+   */
+  @Audit(
+      module = "系统配置",
+      type = AuditType.OPERATION,
+      action = AuditAction.IMPORT,
+      content = "'导入配置: ' + #file.originalFilename")
+  @Operation(summary = "导入配置", description = "从 Excel 文件导入配置")
+  @RateLimit(resource = "system.config.import", threshold = 5)
+  @PostMapping("/import")
+  public BaseResponse<ImportResult> importConfigs(@RequestParam("file") MultipartFile file) {
+    if (file == null || file.isEmpty()) {
+      return BaseResponse.success(
+          ImportResult.builder()
+              .totalCount(0)
+              .successCount(0)
+              .failCount(0)
+              .skipCount(0)
+              .message("文件不能为空")
+              .build());
+    }
+    try {
+      ImportResult result = configService.importConfigs(file.getInputStream());
+      return BaseResponse.success(result);
+    } catch (Exception e) {
+      return BaseResponse.success(
+          ImportResult.builder()
+              .totalCount(0)
+              .successCount(0)
+              .failCount(0)
+              .skipCount(0)
+              .message("导入失败: " + e.getMessage())
+              .build());
+    }
   }
 }

@@ -10,8 +10,6 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.core.IndexDocument;
-import com.njydsz.common.search.core.SearchField;
-import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.system.domain.entity.DictItem;
@@ -25,10 +23,9 @@ import com.njydsz.system.infra.mapper.DictItemMapper;
  * <p><b>字段映射：</b>
  *
  * <ul>
- *   <li>{@code itemCode} → {@code title}（{@code FieldType.KEYWORD}，权重 3.0）
- *   <li>{@code typeCode} → {@code subtitle}（{@code FieldType.KEYWORD}，权重 2.0，可聚合）
- *   <li>{@code itemValue + description} → {@code content}（{@code FieldType.TEXT}，权重 1.0）
- *   <li>{@code status} → 状态（可排序 / 可聚合，不可搜索）
+ *   <li>{@code itemCode} → {@code title}（字典项编码）
+ *   <li>{@code typeCode} → {@code subtitle}（字典类型）
+ *   <li>{@code itemValue + description} → {@code content}（全文检索）
  * </ul>
  *
  * <p><b>权限语义：</b>字典项为业务基础数据（无敏感字段），登录用户均可检索，不做额外过滤； 租户隔离由搜索服务层按
@@ -54,16 +51,6 @@ public class DictItemSearchProvider implements SearchProvider<DictItem> {
   @Override
   public String getType() {
     return "dict";
-  }
-
-  /**
-   * 获取搜索类型中文标签。
-   *
-   * @return 固定返回 {@code "数据字典"}，用于前端搜索结果分类展示
-   */
-  @Override
-  public String getTypeLabel() {
-    return "数据字典";
   }
 
   /**
@@ -110,51 +97,6 @@ public class DictItemSearchProvider implements SearchProvider<DictItem> {
   }
 
   /**
-   * 声明可搜索字段 schema。
-   *
-   * @return 可搜索字段列表
-   */
-  @Override
-  public List<SearchField> getSearchableFields() {
-    return List.of(
-        SearchField.builder()
-            .name("title")
-            .label("字典项编码")
-            .type(FieldType.KEYWORD)
-            .weight(3.0f)
-            .searchable(true)
-            .highlightable(true)
-            .sortable(true)
-            .build(),
-        SearchField.builder()
-            .name("subtitle")
-            .label("字典类型")
-            .type(FieldType.KEYWORD)
-            .weight(2.0f)
-            .searchable(true)
-            .highlightable(true)
-            .aggregatable(true)
-            .build(),
-        SearchField.builder()
-            .name("content")
-            .label("展示值/描述")
-            .type(FieldType.TEXT)
-            .weight(1.0f)
-            .searchable(true)
-            .highlightable(true)
-            .build(),
-        SearchField.builder()
-            .name("status")
-            .label("状态")
-            .type(FieldType.KEYWORD)
-            .weight(0.5f)
-            .searchable(false)
-            .aggregatable(true)
-            .sortable(true)
-            .build());
-  }
-
-  /**
    * 计算当前上下文的搜索过滤条件。
    *
    * <p>字典项为业务基础数据，登录用户均可检索，不返回额外过滤条件。
@@ -168,30 +110,18 @@ public class DictItemSearchProvider implements SearchProvider<DictItem> {
   }
 
   /**
-   * 加载指定租户下的全部字典项 ID（用于全量重建索引）。
+   * 加载指定租户下的全部字典项实体（用于全量重建索引）。
    *
    * @param tenantId 租户 ID（null 或空表示全量）
-   * @return 未删除字典项 ID 列表
+   * @return 未删除字典项实体列表
    */
   @Override
-  public List<String> getAllDocumentIds(String tenantId) {
+  public List<DictItem> loadAll(String tenantId) {
     LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
-    wrapper.select(DictItem::getId);
     wrapper.eq(DictItem::getDeleted, 0);
     if (tenantId != null && !tenantId.isBlank()) {
       wrapper.eq(DictItem::getTenantId, tenantId);
     }
-    return dictItemMapper.selectList(wrapper).stream().map(DictItem::getId).toList();
-  }
-
-  /**
-   * 按 ID 加载字典项实体。
-   *
-   * @param id 字典项 ID
-   * @return 字典项实体；不存在或已删除时返回 null
-   */
-  @Override
-  public DictItem loadById(String id) {
-    return dictItemMapper.selectById(id);
+    return dictItemMapper.selectList(wrapper);
   }
 }

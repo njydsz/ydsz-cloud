@@ -228,35 +228,36 @@ public class TenantContextWebFilter implements Filter {
     if (!(authObj instanceof CurrentUser auth)) {
       return null;
     }
-    switch (claim) {
-      case "tenantId":
+    switch (claim) {      case "tenantId":
         return auth.getTenantId();
       case "uniqueId":
       case "userId":
         return auth.getUniqueId();
       case "companyIds":
       case "deptIds":
-        // 权限 ID 集合适用于 auth 模块的 YdszAuthInfo，通过反射获取
-        return invokeGetPermissionIds(authObj, claim);
+      case "projectIds":
+      case "regionIds":
+        // 类型安全 SPI：通过 CurrentUser.getPermissionIds 获取权限 ID 集合（auth 模块实现覆盖）
+        return invokeGetPermissionIds(auth, claim);
       default:
         return null;
     }
   }
 
   /**
-   * 通过反射获取权限 ID 集合（避免编译期对 auth 模块的依赖）。
+   * 通过类型安全接口获取权限 ID 集合。
    *
-   * @param authObj 认证信息对象
-   * @param claim claim 名（companyIds 或 deptIds）
+   * <p>调用 {@link CurrentUser#getPermissionIds(String)}（auth 模块 {@code AuthInfo} 覆盖实现），
+   * 替代早期基于反射拼方法名的脆弱实现。
+   *
+   * @param auth 认证信息对象（CurrentUser 契约）
+   * @param claim claim 名（companyIds / deptIds / projectIds / regionIds）
    * @return 逗号拼接的 ID 集合；不可用时返回 null
    */
-  private String invokeGetPermissionIds(Object authObj, String claim) {
+  private String invokeGetPermissionIds(CurrentUser auth, String claim) {
     try {
-      String methodName =
-          "getHasPermission" + claim.substring(0, 1).toUpperCase() + claim.substring(1);
-      java.lang.reflect.Method method = authObj.getClass().getMethod(methodName);
-      Object result = method.invoke(authObj);
-      if (result instanceof Set<?> ids && !ids.isEmpty()) {
+      java.util.Set<String> ids = auth.getPermissionIds(claim);
+      if (ids != null && !ids.isEmpty()) {
         return String.join(",", ids.stream().map(Object::toString).toList());
       }
     } catch (Exception e) {

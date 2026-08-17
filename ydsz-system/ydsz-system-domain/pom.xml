@@ -60,5 +60,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+        <!-- ydsz-common-excel：导出 VO 使用 @ExcelProperty 注解（《云顶编码规范》20.6） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-excel</artifactId>
+        </dependency>
     </dependencies>
 </project>

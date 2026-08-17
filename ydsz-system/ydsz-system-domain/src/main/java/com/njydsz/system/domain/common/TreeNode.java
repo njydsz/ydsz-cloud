@@ -24,15 +24,31 @@ import java.util.List;
  */
 public interface TreeNode<ID> {
 
-  /** 获取节点唯一标识 */
+  /**
+   * 获取节点唯一标识。
+   *
+   * @return 节点 ID
+   */
   ID getId();
 
-  /** 获取父级节点 ID，根节点返回 null 或 "0" */
+  /**
+   * 获取父级节点 ID。
+   *
+   * @return 父节点 ID，根节点返回 null 或 "0"
+   */
   ID getParentId();
 
-  /** 获取子节点列表 */
+  /**
+   * 获取子节点列表。
+   *
+   * @return 子节点列表，无子节点返回空列表
+   */
   List<? extends TreeNode<ID>> getChildren();
 
-  /** 设置子节点列表 */
+  /**
+   * 设置子节点列表。
+   *
+   * @param children 子节点列表
+   */
   void setChildren(List<? extends TreeNode<ID>> children);
 }

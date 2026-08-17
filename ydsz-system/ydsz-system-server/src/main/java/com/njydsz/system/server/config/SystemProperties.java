@@ -27,6 +27,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.system")
 public class SystemProperties {
 
+  /** 默认配置缓存 TTL（分钟） */
+  private static final int DEFAULT_CACHE_TTL_MINUTES = 5;
+
+  /** 默认字典缓存 TTL（分钟） */
+  private static final int DEFAULT_DICT_CACHE_TTL_MINUTES = 10;
+
   /** 是否启用系统模块健康检查（影响 {@code /actuator/health} 是否暴露 system 详情） */
   private boolean healthEnabled = true;
 
@@ -42,6 +48,9 @@ public class SystemProperties {
   /** 应用密钥配置（{@code ydsz.system.app.*}） */
   private App app = new App();
 
+  /** 系统版本号（用于前端展示，对应 ydsz.system.version） */
+  private String version = "1.0.0";
+
   /** 配置缓存配置。 */
   @Data
   public static class ConfigCache {
@@ -51,7 +60,7 @@ public class SystemProperties {
     /**
      * 配置缓存 TTL（分钟），影响 {@code ConfigServiceImpl.getConfigValue/getConfigsByGroup/listPublicConfigs}
      */
-    private int cacheTtlMinutes = 5;
+    private int cacheTtlMinutes = DEFAULT_CACHE_TTL_MINUTES;
   }
 
   /** 字典缓存配置。 */
@@ -61,7 +70,7 @@ public class SystemProperties {
     private boolean enabled = true;
 
     /** 字典缓存 TTL（分钟），影响 {@code DictItemServiceImpl} 所有缓存命中路径 */
-    private int cacheTtlMinutes = 10;
+    private int cacheTtlMinutes = DEFAULT_DICT_CACHE_TTL_MINUTES;
   }
 
   /** 系统变量缓存配置。 */
@@ -71,7 +80,7 @@ public class SystemProperties {
     private boolean enabled = true;
 
     /** 系统变量缓存 TTL（分钟）。 */
-    private int cacheTtlMinutes = 5;
+    private int cacheTtlMinutes = DEFAULT_CACHE_TTL_MINUTES;
   }
 
   /** 应用密钥配置。 */

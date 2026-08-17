@@ -44,6 +44,15 @@ import com.njydsz.system.server.health.SystemHealthIndicator;
 @EnableConfigurationProperties(SystemProperties.class)
 public class SystemConfiguration {
 
+  /** BCrypt 加密强度下限（4） */
+  private static final int BCRYPT_MIN_STRENGTH = 4;
+
+  /** BCrypt 加密强度上限（31） */
+  private static final int BCRYPT_MAX_STRENGTH = 31;
+
+  /** BCrypt 默认加密强度（10） */
+  private static final int BCRYPT_DEFAULT_STRENGTH = 10;
+
   /**
    * BCrypt 密码编码器 Bean
    *
@@ -57,8 +66,8 @@ public class SystemConfiguration {
   @Bean
   public BCryptPasswordEncoder bCryptPasswordEncoder(SystemProperties properties) {
     int strength = properties.getApp().getBcryptStrength();
-    if (strength < 4 || strength > 31) {
-      strength = 10;
+    if (strength < BCRYPT_MIN_STRENGTH || strength > BCRYPT_MAX_STRENGTH) {
+      strength = BCRYPT_DEFAULT_STRENGTH;
     }
     return new BCryptPasswordEncoder(strength);
   }

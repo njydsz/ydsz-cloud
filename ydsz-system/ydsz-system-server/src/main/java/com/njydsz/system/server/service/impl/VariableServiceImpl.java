@@ -24,6 +24,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.entity.Variable;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -236,7 +237,7 @@ public class VariableServiceImpl implements VariableService {
    *   <li>精准失效该 {@code variableKey} 对应的缓存
    * </ol>
    *
-   * @param dto 变量数据
+   * @param vo 变量数据
    * @return 新创建的变量 ID
    */
   @Override
@@ -266,7 +267,7 @@ public class VariableServiceImpl implements VariableService {
    *
    * <p><b>注意：</b>更新 {@code variableKey} 会导致所有依赖该键的下游缓存失效， 调用方需主动清理相关业务缓存。
    *
-   * @param dto 变量数据（需包含 {@code id}）
+   * @param vo 变量数据（需包含 {@code id}）
    * @return true=更新成功，false=记录不存在
    */
   @Override
@@ -288,12 +289,13 @@ public class VariableServiceImpl implements VariableService {
       }
       // 创建版本快照（与变量变更同一事务）
       entityVersionService.createVersion(
-          EntityVersionService.RESOURCE_TYPE_VARIABLE,
-          entity.getVariableKey(),
-          "",
-          SystemVersionUtils.nextVersion(),
-          "更新变量: " + entity.getVariableKey(),
-          snapshotJson);
+          EntityVersionCreateDTO.builder()
+              .resourceType(EntityVersionService.RESOURCE_TYPE_VARIABLE)
+              .resourceKey(entity.getVariableKey())
+              .version(SystemVersionUtils.nextVersion())
+              .changeLog("更新变量: " + entity.getVariableKey())
+              .snapshotJson(snapshotJson)
+              .build());
       publishVariableChangedEvent(entity.getVariableKey(), "更新变量");
       searchIndexSyncer.upsert("variable", entity);
     }
@@ -327,12 +329,13 @@ public class VariableServiceImpl implements VariableService {
       evictVariable(entity.getVariableKey());
       // 创建版本快照（与变量变更同一事务）
       entityVersionService.createVersion(
-          EntityVersionService.RESOURCE_TYPE_VARIABLE,
-          entity.getVariableKey(),
-          "",
-          SystemVersionUtils.nextVersion(),
-          "删除变量: " + entity.getVariableKey(),
-          snapshotJson);
+          EntityVersionCreateDTO.builder()
+              .resourceType(EntityVersionService.RESOURCE_TYPE_VARIABLE)
+              .resourceKey(entity.getVariableKey())
+              .version(SystemVersionUtils.nextVersion())
+              .changeLog("删除变量: " + entity.getVariableKey())
+              .snapshotJson(snapshotJson)
+              .build());
       publishVariableChangedEvent(entity.getVariableKey(), "删除变量");
       searchIndexSyncer.delete("variable", id);
     }

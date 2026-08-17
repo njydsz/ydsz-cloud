@@ -3,11 +3,10 @@ package com.njydsz.system.web.controller;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.validation.Valid;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -185,7 +184,7 @@ public class DictItemController {
    * <p>创建后自动创建字典版本快照（{@code ydsz_dict_version}），用于变更回滚。 业务方需保证 {@code (typeCode, itemCode)}
    * 组合唯一，否则返回业务异常。
    *
-   * @param dto 字典项 DTO（含 typeCode / itemCode / itemLabel / sortOrder / status / parentId）
+   * @param vo 字典项 DTO（含 typeCode / itemCode / itemLabel / sortOrder / status / parentId）
    * @return 新创建的字典项 ID
    */
   @Audit(
@@ -209,7 +208,7 @@ public class DictItemController {
    * <p>更新后自动创建字典版本快照，旧版本可由 {@link DictVersionController} 回滚。 业务方可通过本接口禁用字典项（{@code
    * status=DISABLED}），无需删除以保留历史引用。
    *
-   * @param dto 字典项 DTO（必须包含 ID）
+   * @param vo 字典项 DTO（必须包含 ID）
    * @return 是否成功
    */
   @Audit(

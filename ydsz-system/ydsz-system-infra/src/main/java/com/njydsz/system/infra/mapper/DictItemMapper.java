@@ -27,8 +27,8 @@ import com.njydsz.system.domain.entity.DictItem;
  *
  * <p><b>逻辑删除：</b>实体配置了 {@code @TableLogic} 字段 {@code deleted}，删除为逻辑删除（{@code deleted=1}）。
  *
- * <p><b>索引利用：</b>{@code (type_code, item_code)} 命中 {@code idx_type_item} 唯一索引； 启用状态过滤后剩余数据量小（一般 <
- * 100 条），无需额外分页。
+ * <p><b>索引利用：</b>{@code (type_code, item_code)} 命中 {@code idx_type_item} 唯一索引； 启用状态过滤后剩余数据量小（一般 100
+ * 条以内），无需额外分页。
  *
  * @author ydsz-team
  * @since 1.0.0

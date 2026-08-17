@@ -21,7 +21,10 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.TokenBlacklistService;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * JWT Token 服务实现
@@ -84,6 +87,14 @@ public class JwtTokenService implements TokenService {
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
+  /**
+   * JWT 解析结果本地缓存（按 token 的 SHA-256 哈希缓存签名验证后的 Claims）。
+   *
+   * <p>避免每次请求都执行 HMAC 签名验证：高 QPS 场景下将验签开销从「每请求一次」降为「每 TTL 窗口一次」。
+   * 缓存上限 10 万条、过期 5 分钟，与 access_token 有效期（默认 2 小时）相比足够短， 不会造成令牌撤销延迟。
+   */
+  private final Cache<String, Claims> claimsCache;
+
   public JwtTokenService(
       TokenProperties tokenProperties,
       @Autowired(required = false) TokenBlacklistService tokenBlacklistService,
@@ -101,6 +112,12 @@ public class JwtTokenService implements TokenService {
       throw new IllegalStateException("ydsz.auth.token.secret-key 不能为空，请在配置文件中设置 JWT 签名密钥");
     }
     this.secretKey = Keys.hmacShaKeyFor(secretKeyRaw.getBytes(StandardCharsets.UTF_8));
+    this.claimsCache =
+        YdszCache.<String, Claims>newBuilder()
+            .name("auth:jwt-claims")
+            .maximumSize(100_000)
+            .expireAfterWrite(5, java.util.concurrent.TimeUnit.MINUTES)
+            .build();
   }
 
   @Override
@@ -279,6 +296,12 @@ public class JwtTokenService implements TokenService {
     if (dotCount != 2) {
       throw new IllegalArgumentException("Invalid JWT format: expected 2 dots, found " + dotCount);
     }
+    // 本地缓存命中直接返回，避免重复 HMAC 验签
+    String cacheKey = DigestUtils.sha256Hex(token);
+    Claims cached = claimsCache.getIfPresent(cacheKey);
+    if (cached != null) {
+      return cached;
+    }
     JwtParserBuilder parserBuilder = Jwts.parser().verifyWith(secretKey);
     // 校验 issuer 防止跨服务令牌混淆
     String issuer = tokenProperties.getIssuer();
@@ -298,6 +321,8 @@ public class JwtTokenService implements TokenService {
       // 注意：require("aud", audience) 要求 token 中 aud 字段精确匹配配置值
       parserBuilder.require("aud", audience);
     }
-    return parserBuilder.build().parseSignedClaims(token).getPayload();
+    Claims claims = parserBuilder.build().parseSignedClaims(token).getPayload();
+    claimsCache.put(cacheKey, claims);
+    return claims;
   }
 }

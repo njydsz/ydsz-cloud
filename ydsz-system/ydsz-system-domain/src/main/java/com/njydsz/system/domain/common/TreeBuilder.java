@@ -120,7 +120,12 @@ public final class TreeBuilder {
     return children;
   }
 
-  /** 二元函数接口（Java 8 兼容）。 */
+  /**
+   * 二元消费者接口（Java 8 兼容，替代 java.util.function.BiConsumer 避免受检异常限制）。
+   *
+   * @param <T> 第一个操作数类型
+   * @param <U> 第二个操作数类型
+   */
   @FunctionalInterface
   public interface BiConsumer<T, U> {
     void accept(T t, U u);
