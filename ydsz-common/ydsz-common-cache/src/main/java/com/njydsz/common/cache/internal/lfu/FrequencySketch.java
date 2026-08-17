@@ -33,10 +33,16 @@ public final class FrequencySketch {
 
   private volatile long[] table;
   private int resetMask;
+  /** 计数器索引掩码：{@code table.length * countersPerLong - 1}，用于哈希探测定位计数器索引 */
+  private int indexMask;
   private int counterMask = 0xf;
   private int maxCount = 15;
   private long resetHalveMask = 0x7777777777777777L;
   private int counterShift = 2;
+  /** 每个 long 可承载的计数器个数（4bit 为 16，8bit 为 8） */
+  private int countersPerLong = 16;
+  /** 定位 long 槽所需移位位数（4bit 为 4，8bit 为 3） */
+  private int countersPerLongShift = 4;
 
   public FrequencySketch() {
     ensureCapacity(1024);
@@ -57,11 +63,15 @@ public final class FrequencySketch {
       maxCount = 15;
       resetHalveMask = 0x7777777777777777L;
       counterShift = 2;
+      countersPerLong = 16;
+      countersPerLongShift = 4;
     } else if (bitSize == 8) {
       counterMask = 0xff;
       maxCount = 255;
       resetHalveMask = 0x7f7f7f7f7f7f7f7fL;
       counterShift = 3;
+      countersPerLong = 8;
+      countersPerLongShift = 3;
     } else {
       throw new IllegalArgumentException("不支持位宽: " + bitSize + "，仅支持 4 或 8");
     }
@@ -70,8 +80,8 @@ public final class FrequencySketch {
   /**
    * 按缓存容量扩容频率表，使草图规模与缓存条目数相匹配。
    *
-   * <p>表长按 {@code maximum / 64} 换算（每个 long 槽位承载多个计数器）， 并向上取整到 2 的幂次以便用位掩码替代取模，下限 64、上限受 {@code
-   * maximumSize} 约束不小于 1024，避免小缓存也出现过高的哈希碰撞率。
+   * <p>表长按 {@code maximum} 分配（每个 long 承载 16 个 4bit 计数器，提供 16 倍采样率以抑制哈希碰撞）， 并向上取整到
+   * 2 的幂次以便用位掩码替代取模，下限 1024、上限受 {@code maximumSize} 约束，避免小缓存也出现过高的哈希碰撞率。
    *
    * <p>仅在新容量<b>大于</b>现有表长时才重建；缩容请求会被忽略， 因为缩容带来的碰撞率上升得不偿失。
    *
@@ -92,10 +102,13 @@ public final class FrequencySketch {
     size = Math.max(64, size);
     table = new long[size];
     resetMask = size - 1;
+    indexMask = size * countersPerLong - 1;
   }
 
   private int maximumSize(long maximum) {
-    long count = (long) (maximum / 64.0);
+    // 表长按 maximum 分配：每个 long 承载 countersPerLong 个计数器，
+    // 提供 countersPerLong 倍采样率（4bit 为 16 倍），与 Caffeine 实现保持一致
+    long count = maximum;
     return (int) Math.min(Integer.MAX_VALUE, Math.max(1024, count));
   }
 
@@ -112,9 +125,9 @@ public final class FrequencySketch {
    * @param e 被访问的元素（通常是缓存 key）；为 {@code null} 时按哈希 0 处理
    */
   public void increment(Object e) {
-    int start = hash(e) & resetMask;
-    int increment = hash2(e) & resetMask;
-    // 保证增量与表长（2 的幂）互质：若为偶数或 0，强制置为奇数增量
+    int start = hash(e) & indexMask;
+    int increment = hash2(e) & indexMask;
+    // 保证增量与计数器索引空间（2 的幂）互质：若为偶数或 0，强制置为奇数增量
     // 避免 4 路探测退化为更少槽位，导致 Count-Min Sketch 质量下降
     if ((increment & 1) == 0 || increment == 0) {
       increment = (increment | 1) + 1;
@@ -124,7 +137,7 @@ public final class FrequencySketch {
     }
 
     for (int i = 0; i < 4; i++) {
-      int index = (start + i * increment) & resetMask;
+      int index = (start + i * increment) & indexMask;
       incrementSlot(index);
     }
   }
@@ -132,20 +145,21 @@ public final class FrequencySketch {
   /**
    * 对指定槽位计数器执行 CAS 自增（饱和则丢弃）
    *
-   * @param index 槽位索引
+   * @param index 计数器索引（低位定位 long 内计数器，高位定位 long 槽）
    */
   private void incrementSlot(int index) {
-    int offset = (index & 3) << counterShift;
+    int offset = (index & (countersPerLong - 1)) << counterShift;
+    int slotIndex = index >>> countersPerLongShift;
     long slot;
     int count;
     do {
-      slot = (long) TABLE_VARHANDLE.getVolatile(table, index >>> counterShift);
+      slot = (long) TABLE_VARHANDLE.getVolatile(table, slotIndex);
       count = (int) ((slot >>> offset) & counterMask);
       if (count >= maxCount) {
         break;
       }
     } while (!TABLE_VARHANDLE.compareAndSet(
-        table, index >>> counterShift, slot, slot + (1L << offset)));
+        table, slotIndex, slot, slot + (1L << offset)));
   }
 
   /**
@@ -162,15 +176,23 @@ public final class FrequencySketch {
    * @return 频率估计值，取值范围 {@code [0, maxCount]}（4bit 上限 15，8bit 上限 255）
    */
   public int frequency(Object e) {
-    int start = hash(e) & resetMask;
-    int increment = hash2(e) & resetMask;
+    int start = hash(e) & indexMask;
+    int increment = hash2(e) & indexMask;
+    // 与 increment 保持一致的互质处理，保证探测路径一致
+    if ((increment & 1) == 0 || increment == 0) {
+      increment = (increment | 1) + 1;
+      if ((increment & 1) == 0) {
+        increment = 1;
+      }
+    }
 
     int min = Integer.MAX_VALUE;
 
     for (int i = 0; i < 4; i++) {
-      int index = (start + i * increment) & resetMask;
-      int offset = (index & 3) << counterShift;
-      long slot = (long) TABLE_VARHANDLE.getVolatile(table, index >>> counterShift);
+      int index = (start + i * increment) & indexMask;
+      int offset = (index & (countersPerLong - 1)) << counterShift;
+      int slotIndex = index >>> countersPerLongShift;
+      long slot = (long) TABLE_VARHANDLE.getVolatile(table, slotIndex);
       int count = (int) ((slot >>> offset) & counterMask);
       if (count < min) {
         min = count;

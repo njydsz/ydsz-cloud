@@ -143,7 +143,7 @@ public class TokenBlacklistService {
    * <p>当 {@link DistributedLocker} 可用时，使用其 {@code tryLock} 实现（Lua 原子操作 + WatchDog 续期）； 否则降级为原生
    * {@code setIfAbsent} 操作。确保同一 refresh_token 在并发场景下 只能有一个请求成功刷新，防止重放攻击窗口。
    *
-   * <p><b>降级策略：</b>Redis 异常时默认放行刷新请求（fail-open），避免 Redis 抖动 导致所有用户都无法刷新 token；安全风险可由短 TTL 缓解。
+   * <p><b>降级策略：</b>Redis 异常时拒绝刷新请求（fail-closed），避免并发重放攻击窗口； 用户可稍后重试，安全优先于可用性。
    *
    * @param refreshToken 刷新令牌
    * @return 获锁成功返回 true，获取失败（已有其他请求正在刷新）返回 false
@@ -176,8 +176,9 @@ public class TokenBlacklistService {
       LOG.warn("获取刷新锁失败 (fallback)，已有其他请求正在刷新同一 token");
       return false;
     } catch (Exception e) {
-      LOG.error("获取刷新锁异常，降级为允许刷新: {}", e.getMessage());
-      return true;
+      // fail-closed：Redis 异常时拒绝本次刷新，防止并发重放；用户可稍后重试
+      LOG.error("获取刷新锁异常，拒绝刷新请求以规避并发重放风险: {}", e.getMessage());
+      return false;
     }
   }
 

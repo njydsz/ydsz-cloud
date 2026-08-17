@@ -318,7 +318,7 @@ public class RedisConnectionFactoryConfigurer {
         && properties.getCluster().getNodes() != null
         && !properties.getCluster().getNodes().isEmpty()) {
       // Lettuce 7.x: 自适应刷新触发器默认全部启用（DEFAULT_ADAPTIVE_REFRESH_TRIGGERS），
-      // 无需显式调用 enableAdaptiveRefreshTrigger（已弃用），仅需配置周期刷新
+      // 仅需配置周期刷新
       ClusterTopologyRefreshOptions topologyRefreshOptions =
           ClusterTopologyRefreshOptions.builder()
               .enablePeriodicRefresh(Duration.ofSeconds(DEFAULT_TOPOLOGY_REFRESH_SECONDS))

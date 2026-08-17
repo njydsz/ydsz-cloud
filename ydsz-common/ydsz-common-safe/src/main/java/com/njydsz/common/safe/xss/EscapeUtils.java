@@ -195,7 +195,8 @@ public class EscapeUtils {
   /**
    * 清理内容中的 XSS 攻击代码（默认策略）
    *
-   * <p>先过滤危险协议（javascript:、data:、vbscript:），再通过 HTMLFilter 清洗。
+   * <p>先过滤危险协议（javascript:、data:、vbscript:），再委托 OWASP Java HTML Sanitizer
+   * 的 STANDARD 策略清洗，替代早期基于自定义正则的 {@link HTMLFilter} 实现，提供业界标准级防护。
    *
    * @param content 待清理的内容
    * @return 清理后的内容
@@ -205,7 +206,7 @@ public class EscapeUtils {
       return content;
     }
     String filtered = filterDangerousProtocols(content);
-    return new HTMLFilter().filter(filtered);
+    return OwaspXssCleaner.clean(filtered);
   }
 
   /**
@@ -241,7 +242,7 @@ public class EscapeUtils {
   /**
    * 使用宽松策略清理内容中的 XSS 攻击代码
    *
-   * <p>保留格式化+图片+链接+样式+表格，适用于富文本编辑器场景。
+   * <p>保留格式化+图片+链接+样式+表格，适用于富文本编辑器场景（OWASP RELAXED 策略）。
    *
    * @param content 待清理的内容
    * @return 清理后的内容
@@ -250,13 +251,13 @@ public class EscapeUtils {
     if (StringUtils.isEmpty(content)) {
       return content;
     }
-    return HTMLFilter.Builder.relaxed().build().filter(content);
+    return OwaspXssCleaner.clean(content, XssPolicyFactory.Policy.RELAXED);
   }
 
   /**
    * 使用标准策略清理内容中的 XSS 攻击代码
    *
-   * <p>保留基本格式化标签（b/i/em/strong/a 等），适用于普通表单场景。
+   * <p>保留基本格式化标签（b/i/em/strong/a 等），适用于普通表单场景（OWASP STANDARD 策略）。
    *
    * @param content 待清理的内容
    * @return 清理后的内容
@@ -265,13 +266,13 @@ public class EscapeUtils {
     if (StringUtils.isEmpty(content)) {
       return content;
     }
-    return HTMLFilter.Builder.standard().build().filter(content);
+    return OwaspXssCleaner.clean(content, XssPolicyFactory.Policy.STANDARD);
   }
 
   /**
    * 使用严格策略清理内容中的 XSS 攻击代码
    *
-   * <p>仅保留纯文本，移除所有 HTML 标签，适用于 API 接口场景。
+   * <p>仅保留纯文本，移除所有 HTML 标签，适用于 API 接口场景（OWASP STRICT 策略）。
    *
    * @param content 待清理的内容
    * @return 清理后的内容
@@ -280,7 +281,7 @@ public class EscapeUtils {
     if (StringUtils.isEmpty(content)) {
       return content;
     }
-    return HTMLFilter.Builder.strict().build().filter(content);
+    return OwaspXssCleaner.clean(content, XssPolicyFactory.Policy.STRICT);
   }
 
   /**
@@ -671,82 +672,14 @@ public class EscapeUtils {
   /**
    * 检查内容是否包含潜在的 XSS 攻击
    *
-   * <p>检测以下 XSS 攻击模式：
-   *
-   * <ul>
-   *   <li>script 标签
-   *   <li>javascript:、vbscript: 协议
-   *   <li>事件处理器（onclick、onload 等）
-   *   <li>iframe、object、embed 等危险标签
-   *   <li>eval、alert、prompt、confirm 等危险函数
-   * </ul>
+   * <p>委托 {@link OwaspXssCleaner#containsXSS}，以 OWASP sanitizer 的清洗结果为准：
+   * 若清洗前后内容不一致，判定存在潜在 XSS。与 {@link #clean(String)} 的清洗口径保持一致。
    *
    * @param content 待检查的内容
    * @return 检测到 XSS 返回 true，否则返回 false
    */
   public static boolean containsXSS(String content) {
-    if (StringUtils.isEmpty(content)) {
-      return false;
-    }
-
-    String lowerCase = content.toLowerCase();
-
-    String[] xssPatterns = {
-      "<script",
-      "</script>",
-      "javascript:",
-      "vbscript:",
-      "onload=",
-      "onerror=",
-      "onclick=",
-      "onmouseover=",
-      "onmouseout=",
-      "onfocus=",
-      "onblur=",
-      "onchange=",
-      "onsubmit=",
-      "onreset=",
-      "onmouseenter=",
-      "onmouseleave=",
-      "onkeydown=",
-      "onkeyup=",
-      "onkeypress=",
-      "expression(",
-      "url(",
-      "<iframe",
-      "</iframe>",
-      "<object",
-      "</object>",
-      "<embed",
-      "</embed>",
-      "<applet",
-      "</applet>",
-      "<meta",
-      "<link",
-      "eval\\(",
-      "alert\\(",
-      "prompt\\(",
-      "confirm\\(",
-      "document\\.",
-      "window\\.",
-      "navigator\\.",
-      "cookie",
-      "localstorage",
-      "sessionstorage"
-    };
-
-    for (String pattern : xssPatterns) {
-      if (lowerCase.contains(pattern)) {
-        return true;
-      }
-    }
-
-    Pattern eventPattern = Pattern.compile("on\\w+\\s*=");
-    if (eventPattern.matcher(lowerCase).find()) {
-      return true;
-    }
-
-    return false;
+    return OwaspXssCleaner.containsXSS(content);
   }
 
   /**
