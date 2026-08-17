@@ -1,5 +1,6 @@
 package com.njydsz.system.server.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
 import com.njydsz.system.domain.entity.TenantPlanMenu;
@@ -27,6 +30,9 @@ import com.njydsz.system.server.service.TenantPlanMenuService;
  *   <li><b>查询</b>：{@link #listByPlanId} — 查询指定套餐关联的菜单列表
  *   <li><b>批量更新</b>：{@link #updatePlanMenus} — 为套餐批量配置菜单权限（先删后插，事务保证）
  * </ul>
+ *
+ * <p><b>P1-2 优化：</b>批量插入由 N 次单条 INSERT 改为 1 次批量 INSERT（{@code TenantPlanMenuMapper#insertBatch}），
+ * 消除逐条写入的 N 次 DB 往返。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -71,7 +77,7 @@ public class TenantPlanMenuServiceImpl implements TenantPlanMenuService {
     deleteWrapper.eq(TenantPlanMenu::getPlanId, dto.getPlanId());
     tenantPlanMenuRepository.getTenantPlanMenuMapper().delete(deleteWrapper);
 
-    // 2. 批量插入新关联
+    // 2. 批量插入新关联（1 次 SQL 替代 N 次单条 INSERT）
     if (dto.getMenuIds() == null || dto.getMenuIds().isEmpty()) {
       log.info("套餐[{}]菜单配置已清空", dto.getPlanId());
       return;
@@ -79,12 +85,31 @@ public class TenantPlanMenuServiceImpl implements TenantPlanMenuService {
     List<TenantPlanMenu> entities = new ArrayList<>(dto.getMenuIds().size());
     for (String menuId : dto.getMenuIds()) {
       TenantPlanMenu entity = new TenantPlanMenu();
+      entity.setId(com.baomidou.mybatisplus.core.toolkit.IdWorker.getIdStr());
       entity.setPlanId(dto.getPlanId());
       entity.setMenuId(menuId);
+      entity.setTenantId(TenantContextHolder.getTenantId());
+      entity.setDeleted(0);
+      entity.setCreatedAt(LocalDateTime.now());
+      entity.setCreatedBy(getCurrentUserId());
       entities.add(entity);
     }
-    // 使用 MP 批量插入
-    entities.forEach(tenantPlanMenuRepository.getTenantPlanMenuMapper()::insert);
+    tenantPlanMenuRepository.getTenantPlanMenuMapper().insertBatch(entities);
     log.info("套餐[{}]菜单配置已更新, 菜单数量={}", dto.getPlanId(), dto.getMenuIds().size());
+  }
+
+  /**
+   * 获取当前用户 ID（私有）。
+   *
+   * <p>从 RequestContext 获取当前操作人 ID，未登录时返回 "system"。
+   *
+   * @return 当前用户 ID
+   */
+  private String getCurrentUserId() {
+    try {
+      return RequestContext.getUserId();
+    } catch (Exception e) {
+      return "system";
+    }
   }
 }

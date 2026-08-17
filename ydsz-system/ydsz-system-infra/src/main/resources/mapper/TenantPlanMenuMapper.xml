@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.system.infra.mapper.TenantPlanMenuMapper">
+
+    <!--
+        批量插入套餐-菜单关联（一次 SQL 批量写入）
+
+        用于 TenantPlanMenuServiceImpl.updatePlanMenus 场景，将 N 次单条 INSERT 合并为 1 次批量 INSERT。
+        id/审计字段需由调用方预先填充（批量 XML 不走 MyBatis-Plus 拦截器，与 DictItemMapper.insertBatch 一致）。
+    -->
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO ydsz_tenant_plan_menu (
+            id, plan_id, menu_id,
+            tenant_id, deleted, created_at, created_by
+        ) VALUES
+        <foreach collection="items" item="item" separator=",">
+            (
+                #{item.id}, #{item.planId}, #{item.menuId},
+                #{item.tenantId}, #{item.deleted}, #{item.createdAt}, #{item.createdBy}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

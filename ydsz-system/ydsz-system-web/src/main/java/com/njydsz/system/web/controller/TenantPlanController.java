@@ -69,7 +69,8 @@ public class TenantPlanController {
       @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
       @Parameter(description = "套餐名称模糊搜索") @RequestParam(required = false) String planName,
       @Parameter(description = "状态") @RequestParam(required = false) String status) {
-    return planService.page(normalizePageNum(pageNum), normalizePageSize(pageSize), planName, status);
+    int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
+    return planService.page(pageNum, safePageSize, planName, status);
   }
 
   /**
@@ -194,4 +195,6 @@ public class TenantPlanController {
     return BaseResponse.success(null);
   }
 
+  /** 分页安全上限 */
+  private static final int MAX_PAGE_SIZE = 500;
 }

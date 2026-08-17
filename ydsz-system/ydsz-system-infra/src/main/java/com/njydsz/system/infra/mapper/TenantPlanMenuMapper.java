@@ -1,7 +1,10 @@
 package com.njydsz.system.infra.mapper;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import com.njydsz.system.domain.entity.TenantPlanMenu;
 
@@ -29,4 +32,17 @@ import com.njydsz.system.domain.entity.TenantPlanMenu;
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface TenantPlanMenuMapper extends BaseMapper<TenantPlanMenu> {}
+public interface TenantPlanMenuMapper extends BaseMapper<TenantPlanMenu> {
+
+  /**
+   * 批量插入套餐-菜单关联（一次 SQL 批量写入）。
+   *
+   * <p>用于 {@code TenantPlanMenuServiceImpl.updatePlanMenus}，将 N 次单条 INSERT 合并为 1 次批量
+   * INSERT，消除逐条写入的 N 次 DB 往返。审计字段（{@code id}/{@code createdAt}/{@code createdBy}/{@code
+   * tenantId}）需由调用方预先填充（批量 XML 不走 MyBatis-Plus 拦截器）。
+   *
+   * @param items 关联实体列表
+   * @return 插入的记录数
+   */
+  int insertBatch(@Param("items") List<TenantPlanMenu> items);
+}

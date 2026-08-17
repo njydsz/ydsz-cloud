@@ -126,12 +126,6 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 | common-lock | `LockStrategy` | 分布式锁策略工厂 | `@ConditionalOnMissingBean` |
 | common-lock | `IdempotentStrategy` | 幂等键策略 | `@ConditionalOnMissingBean` |
 | common-lock | `DistributedLocker` | 分布式锁核心契约 | 由 `LockStrategy` 间接扩展 |
-| common-cache | `CacheLoader<K,V>` | 缓存回源加载 | `@Component` |
-| common-cache | `CacheWriter<K,V>` | Write-Through/Write-Behind 回写 | `@Component` |
-| common-cache | `Expiry<K,V>` | 自定义 TTL/TTI 过期 | `@Component` |
-| common-cache | `Weigher<K,V>` | 条目权重计算 | `@Component` |
-| common-cache | `RemovalListener<K,V>` | 条目驱逐/失效回调 | `@Component` |
-| common-cache | `CacheInvalidationBroadcaster` | 多级缓存跨节点广播 | `@ConditionalOnMissingBean` |
 
 ### L5 业务服务层（认证/安全/链路）
 
@@ -181,7 +175,7 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 | common-queue | `MessageTraceRecorder` | 消息轨迹记录 | `@ConditionalOnMissingBean` |
 | common-queue | `RetryPolicy` | 消息重试退避策略 | `@Component` |
 
-### L5 业务服务层（文档/Excel/网络/搜索/事件/事务/监控）
+### L5 业务服务层（文档/网络/搜索/事件/事务/监控）
 
 | 子模块 | 扩展点接口 | 职责 | 注册方式 |
 |---|---|---|---|
@@ -190,9 +184,6 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 | common-docs | `DocumentSecurityScanner` | 文档安全扫描 | `@Component` |
 | common-docs | `PiiDetector` | PII 检测 | `PiiDetectorComposite` 自动聚合 |
 | common-docs | `OcrEngine` | OCR 引擎（Tesseract 等） | `@ConditionalOnMissingBean` |
-| common-excel | `CellValueConverter` **SPI** | 单元格值转换器（支持 `priority()`） | `ConverterRegistry.registerCustomConverter()` |
-| common-excel | `ReadHandler` / `ReadListener` | Excel 读取回调 | `@Component` |
-| common-excel | `TabularRowMapper` | 行映射器 | `@Component` |
 | common-netty | `ChannelEventListener` | Channel 事件回调 | `List<ChannelEventListener>` 自动收集 |
 | common-socket | `MessageSerializer` | WebSocket 消息序列化（JSON/Protobuf） | `@ConditionalOnMissingBean` |
 | common-socket | `OfflineMessageStore` **SPI** | 离线消息存储（Redis/DB） | `@ConditionalOnMissingBean` |
@@ -291,32 +282,32 @@ deploy\windows\scripts\import-nacos-config.bat ydsz dev
 ```
 ydsz-common/
 ├── pom.xml                    # 聚合 POM（packaging=pom）
-├── ydsz-common-core/     # L1 基础设施层
-├── ydsz-common-util/     # L2 工具模块层
-├── ydsz-common-json/     # L2 工具模块层（高性能 JSON 引擎）
-├── ydsz-common-domain/   # L3 基础服务层
-├── ydsz-common-exception/# L3 基础服务层
-├── ydsz-common-jdbc/     # L4 基础数据层
-├── ydsz-common-redis/    # L4 基础数据层
-├── ydsz-common-lock/     # L4 基础数据层
-├── ydsz-common-cache/    # L4 基础数据层（高性能多策略本地缓存）
+├── ydsz-common-json/     # L1 工具模块层（高性能 JSON 引擎）
+├── ydsz-common-util/     # L1 工具模块层（工具类）
+├── ydsz-common-cache/    # L1 工具模块层（高性能多策略本地缓存）
+├── ydsz-common-excel/    # L1 工具模块层（高性能 Excel 读写）
+├── ydsz-common-core/     # L2 基础设施层（统一响应/上下文/TraceId）
+├── ydsz-common-domain/   # L3 基础服务层（分页/树/类型化 ID）
+├── ydsz-common-exception/# L3 基础服务层（统一异常/错误码/i18n）
+├── ydsz-common-jdbc/     # L4 基础数据层（MyBatis-Plus 增强/数据权限）
+├── ydsz-common-redis/    # L4 基础数据层（Redis 门面 ops/限流器）
+├── ydsz-common-lock/     # L4 基础数据层（分布式锁/幂等）
 ├── ydsz-common-thread/   # L4 基础数据层（共享线程池自动配置）
 ├── ydsz-common-tenant/   # L4 基础数据层（多租户隔离）
-├── ydsz-common-auth/     # L5 业务服务层
-├── ydsz-common-safe/     # L5 业务服务层
-├── ydsz-common-feign/    # L5 业务服务层
-├── ydsz-common-audit/    # L5 业务服务层
-├── ydsz-common-file/     # L5 业务服务层
-├── ydsz-common-notify/   # L5 业务服务层
-├── ydsz-common-queue/    # L5 业务服务层
-├── ydsz-common-docs/     # L5 业务服务层（文档解析/安全/PII/水印/脱敏/OCR）
-├── ydsz-common-excel/    # L5 业务服务层（高性能 Excel 读写）
-├── ydsz-common-netty/    # L5 业务服务层（Netty TCP 通信）
-├── ydsz-common-socket/   # L5 业务服务层（WebSocket 实时推送）
-├── ydsz-common-search/   # L5 业务服务层（统一搜索引擎）
+├── ydsz-common-auth/     # L5 业务服务层（JWT/RBAC/数据权限）
+├── ydsz-common-safe/     # L5 业务服务层（脱敏/限流/CSRF/API 签名）
+├── ydsz-common-feign/    # L5 业务服务层（OpenFeign 增强）
+├── ydsz-common-audit/    # L5 业务服务层（操作审计）
+├── ydsz-common-notify/   # L5 业务服务层（通知渠道）
+├── ydsz-common-queue/    # L5 业务服务层（MQ 抽象）
 ├── ydsz-common-event/    # L5 业务服务层（事务性 Outbox）
-├── ydsz-common-config/   # L5 业务服务层（敏感配置加密）
+├── ydsz-common-config/   # L5 业务服务层（配置变更桥接）
 ├── ydsz-common-seata/    # L5 业务服务层（Seata 分布式事务）
+├── ydsz-common-socket/   # L5 业务服务层（WebSocket 实时推送）
+├── ydsz-common-netty/    # L5 业务服务层（Netty TCP 通信）
+├── ydsz-common-file/     # L5 业务服务层（多存储平台/分片上传）
+├── ydsz-common-docs/     # L5 业务服务层（文档解析/安全/PII/OCR）
+├── ydsz-common-search/   # L5 业务服务层（统一搜索引擎）
 ├── ydsz-common-sentry/   # L5 业务服务层（统一系统指标监控）
 ├── ydsz-common-base/     # L6 应用层（HTTP 公共基座）
 ├── ydsz-common-web/      # L6 应用层（PC Web 端基座）

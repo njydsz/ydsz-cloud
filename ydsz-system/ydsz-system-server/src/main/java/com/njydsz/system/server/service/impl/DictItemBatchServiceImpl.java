@@ -36,12 +36,12 @@ import com.njydsz.system.server.service.EntityVersionService;
  *
  * <ul>
  *   <li>批量插入：N 次单条 INSERT → 1 次批量 INSERT（{@link DictItemMapper#insertBatch}）
+ *   <li>批量唯一性校验：N 次 {@code selectCount} → 1 次 {@code IN} 查询 + 内存比对（消除 N+1）
  *   <li>单次快照：N 次版本快照 → 每个 typeCode 1 次快照（批量前一次性抓取）
- *   <li>统一缓存失效：使用 {@link CacheManager} 清空本地缓存（{@link CacheConstants#SYSTEM_DICT_ITEM_CACHE}）， 与
- *       {@link DictItemServiceImpl} 的 {@code @CacheEvict(allEntries = true)} 行为一致
+ *   <li>精准缓存失效：按涉及 typeCode 逐一失效列表缓存（替代全量清空，避免缓存击穿）
  * </ul>
  *
- * <p><b>SQL 优化效果：</b>500 条数据从原来的 2000+ SQL 降低到 ~10 SQL（1 次唯一性校验 + 1 次快照 + 1 次批量插入 + 若干缓存失效）。
+ * <p><b>SQL 优化效果：</b>500 条数据从原来的 2000+ SQL 降低到 ~7 SQL（1 次唯一性校验 + 每组 1 次快照 + 1 次批量插入 + 每组 1 次缓存失效）。
  *
  * @author ydsz-team
  * @since 1.1.0
@@ -57,8 +57,11 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
   /** 统一实体版本服务（用于创建批量快照） */
   private final EntityVersionService entityVersionService;
 
-  /** Spring Cache 管理器（用于失效本地缓存，与 {@link DictItemServiceImpl} 的 @CacheEvict 行为一致） */
+  /** Spring Cache 管理器（用于按 key 精准失效缓存） */
   private final CacheManager cacheManager;
+
+  /** 租户感知缓存键构造器（手动 evict 使用） */
+  private final com.njydsz.system.server.cache.CacheKeyBuilder cacheKeyBuilder;
 
   /**
    * 批量新增字典项
