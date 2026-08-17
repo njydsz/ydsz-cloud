@@ -137,12 +137,12 @@ public class GatewayRouteConfig {
                         "/api/v1/userinfo/**",
                         "/api/internal/**",
                         "/feign/**")
-                    .order(1000)
+                    .customize(routeBuilder -> routeBuilder.order(1000))
                     .uri("lb://ydsz-userinfo"))
         // ===== 业务服务 =====
         .route(
             "ydsz-workflow",
-            r -> r.path("/api/v1/workflow/**").order(1000).uri("lb://ydsz-workflow"))
+            r -> r.path("/api/v1/workflow/**").customize(routeBuilder -> routeBuilder.order(1000)).uri("lb://ydsz-workflow"))
         .route(
             "ydsz-system",
             r ->
@@ -153,21 +153,21 @@ public class GatewayRouteConfig {
                         "/api/v1/variable/**",
                         "/api/v1/system/**",
                         "/api/v1/search/**")
-                    .order(1000)
+                    .customize(routeBuilder -> routeBuilder.order(1000))
                     .uri("lb://ydsz-system"))
         .route(
             "ydsz-message",
-            r -> r.path("/api/v1/message/**").order(1000).uri("lb://ydsz-message"))
+            r -> r.path("/api/v1/message/**").customize(routeBuilder -> routeBuilder.order(1000)).uri("lb://ydsz-message"))
         .route(
             "ydsz-cronjob",
-            r -> r.path("/api/v1/cronjob/**").order(1000).uri("lb://ydsz-cronjob"))
+            r -> r.path("/api/v1/cronjob/**").customize(routeBuilder -> routeBuilder.order(1000)).uri("lb://ydsz-cronjob"))
         .route(
             "ydsz-literule",
-            r -> r.path("/api/v1/literule/**").order(1000).uri("lb://ydsz-literule"))
-        .route("ydsz-agent", r -> r.path("/api/v1/agent/**").order(1000).uri("lb://ydsz-agent"))
+            r -> r.path("/api/v1/literule/**").customize(routeBuilder -> routeBuilder.order(1000)).uri("lb://ydsz-literule"))
+        .route("ydsz-agent", r -> r.path("/api/v1/agent/**").customize(routeBuilder -> routeBuilder.order(1000)).uri("lb://ydsz-agent"))
         .route(
             "ydsz-nextwiki",
-            r -> r.path("/api/v1/nextwiki/**").order(1000).uri("lb://ydsz-nextwiki"))
+            r -> r.path("/api/v1/nextwiki/**").customize(routeBuilder -> routeBuilder.order(1000)).uri("lb://ydsz-nextwiki"))
         .build();
   }
 }

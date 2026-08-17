@@ -20,12 +20,12 @@
 |---|---|
 | **登录认证** | 账号密码 + 图形验证码 + LDAP/ADFS 域认证 |
 | **Token 管理** | JWT 签发 / 刷新 / 失效（common-auth TokenService） |
-| **账号安全** | 登录失败计数 + 自动锁定（5 次失败锁 30 分钟） + 密码策略校验 |
+| **账号安全** | 登录失败计数 + 自动锁定（5 次失败锁 30 分钟） + 密码策略校验 + 弱口令字典 + 风险评分 + 密码历史（防重用） |
 | **RBAC** | 用户 / 角色 / 权限 6 要素（用户-角色-权限关联表精确查询） |
 | **组织架构** | 部门树形结构 + 公司 + 岗位 |
 | **菜单权限** | 菜单树 + 按钮/API 权限码分类 |
-| **OAuth2** | 授权码模式（authorize + token 端点） |
-| **用户字段** | 用户自定义字段扩展（`ydsz_user_field`） |
+| **OAuth2** | 授权码模式（authorize + token 端点）+ PKCE |
+| **登录历史** | 登录/密码变更历史（`ydsz_user_login_history` / `ydsz_user_password_history`） |
 | **国际化** | 语言 CRUD（`ydsz_language`） |
 | **全局搜索** | `UserinfoSearchController` 基于用户/部门/角色维度 |
 
@@ -36,11 +36,11 @@ ydsz-userinfo/
 ├── pom.xml
 ├── ydsz-userinfo-api/                 # API 层：Feign Client + Fallback
 │   └── src/main/java/com/njydsz/userinfo/api/
-│       ├── client/                    # UserServiceClient / OrgQueryClient
+│       ├── client/                    # OrgQueryClient（15 个方法）
 │       └── fallback/                  # Feign 降级实现
 ├── ydsz-userinfo-domain/              # 领域层：Entity + DTO + VO
 │   └── src/main/java/com/njydsz/userinfo/domain/
-│       ├── entity/                    # 实体（13 个，无 DO 后缀，符合 entity-naming 规范）
+│       ├── entity/                    # 实体（14 个，无 DO 后缀，符合 entity-naming 规范）
 │       │   ├── UserAccount.java       # 用户账号
 │       │   ├── Role.java              # 角色
 │       │   ├── RolePermission.java    # 角色-权限关联
@@ -52,17 +52,22 @@ ydsz-userinfo/
 │       │   ├── Post.java              # 岗位
 │       │   ├── UserDept.java          # 用户-部门关联
 │       │   ├── UserPost.java          # 用户-岗位关联
-│       │   ├── UserField.java         # 用户自定义字段
+│       │   ├── UserLoginHistory.java  # 登录历史
+│       │   ├── UserPasswordHistory.java # 密码变更历史
 │       │   └── Language.java          # 语言
-│       ├── dto/                       # post/put 子目录 + 7 个查询/操作 DTO
-│       ├── query/                     # 分页查询对象（6 个）
+│       ├── dto/                       # create/update 子目录 + 查询/操作 DTO
+│       ├── query/                     # 分页查询对象（5 个）
 │       └── vo/                        # 视图对象（10 个，含 TreeVO）
 ├── ydsz-userinfo-infra/               # 基础设施层：Mapper + Repository
 │   └── src/main/java/com/njydsz/userinfo/infra/mapper/
 ├── ydsz-userinfo-server/              # 应用层：Service + Config + Health
 │   └── src/main/java/com/njydsz/userinfo/server/
+│       ├── auth/                      # 认证/风控（RiskScoringService / WeakPasswordDictionary / LoginAttemptContext 等）
 │       ├── config/                    # UserInfoProperties + UserInfoConfiguration
-│       ├── service/                   # Auth/RBAC/Org/Menu/OAuth2 Service
+│       ├── service/                   # Auth/RBAC/Org/Menu/OAuth2/Excel/登录历史 Service
+│       ├── search/                    # UserinfoSearchProvider
+│       ├── event/                     # UserDomainEventPublisher
+│       ├── metrics/                   # UserInfoMetrics
 │       └── health/                    # UserInfoHealthIndicator
 └── ydsz-userinfo-web/                 # Web 层：Controller + Bootstrap
     └── src/main/java/com/njydsz/userinfo/web/
@@ -87,7 +92,8 @@ ydsz-userinfo/
 | 路径前缀 | 作用 |
 |---|---|
 | `/api/v1/auth/login` `/logout` `/refresh` | 登录/登出/Token 刷新 |
-| `/api/v1/user` | 用户 CRUD + 分页 + 密码管理 + 角色分配 |
+| `/api/v1/user` | 用户 CRUD + 分页 + 密码管理 + 角色分配 + 批量操作 + Excel 导入导出 |
+| `/api/v1/user/{userId}/login-history` | 用户登录历史查询 |
 | `/api/v1/role` | 角色 CRUD + 权限分配 |
 | `/api/v1/dept` | 部门 CRUD + 树形结构 |
 | `/api/v1/menu` | 菜单 CRUD + 树形结构 |
@@ -95,9 +101,9 @@ ydsz-userinfo/
 | `/api/v1/post` | 岗位 CRUD |
 | `/api/v1/language` | 语言 CRUD |
 | `/api/v1/captcha` | 图形验证码生成/校验 |
-| `/api/v1/oauth2/authorize` `/token` | OAuth2 授权码模式 |
+| `/api/v1/oauth2/authorize` `/token` | OAuth2 授权码模式（支持 PKCE） |
 | `/api/v1/userinfo/search` | 用户/部门/角色搜索 |
-| `/api/internal/user/query` `/dept/tree` | 内部 Feign 调用接口 |
+| `/api/internal/*` | 内部 Feign 调用接口（用户查询/部门树/审批人缓存等 15 个端点） |
 
 ## 数据库表设计
 
@@ -114,34 +120,36 @@ ydsz-userinfo/
 | `ydsz_post` | 岗位 |
 | `ydsz_user_dept` | 用户-部门关联 |
 | `ydsz_user_post` | 用户-岗位关联 |
-| `ydsz_user_field` | 用户自定义字段 |
+| `ydsz_user_login_history` | 登录历史 |
+| `ydsz_user_password_history` | 密码变更历史 |
 | `ydsz_language` | 语言 |
-| `ydsz_login_audit` | 登录审计（物理表在 ydsz-system） |
-| `ydsz_user_session` | 用户会话（Redis 存储） |
-| `ydsz_user_2fa` | 双因子认证密钥 |
+| `sys_audit_log` | 审计日志（物理表在 common-audit，写操作经 @Audit 记录） |
+| `ydsz_user_session` | 用户会话（Redis 存储，`userinfo:session:user:{userId}`） |
 
 ## 安全特性
 
 | 特性 | 说明 |
 |---|---|
-| **密码加密** | BCrypt（PasswordEncoder） |
-| **密码策略** | 最少 8 位 + 大小写/数字/特殊字符 3 选 4 + 禁止连续重复 + 禁止包含用户名 |
+| **密码加密** | BCrypt（PasswordEncoder，强度可配置） |
+| **密码策略** | 最少 8 位 + 大小写/数字/特殊字符 3 选 4 + 禁止连续重复 + 禁止包含用户名 + 弱口令字典校验 + 密码历史（防近期重用） |
 | **账号锁定** | 5 次密码错误自动锁定 30 分钟，登录成功自动解锁 |
-| **JWT 黑名单** | 登出后 Token 加入 Redis 黑名单（Bloom Filter 前置过滤） |
-| **OAuth2** | 标准授权码模式，授权码 5 分钟有效，一次性使用 |
+| **JWT 黑名单** | 登出后 Token 加入 Redis 黑名单（SHA-256 摘要 + 分布式锁，common-auth TokenBlacklistService） |
+| **OAuth2** | 标准授权码模式 + PKCE，授权码 5 分钟有效，一次性使用 |
 | **验证码** | 4 位字母数字混合，Base64 PNG 图片，5 分钟有效 |
 | **LDAP** | 可选 LDAP/ADFS 域认证（@ConfigurationProperties 配置注入） |
-| **指标埋点** | Micrometer 计数器/计时器（登录成功/失败/认证耗时） |
+| **登录风控** | 风险评分（RiskScoringService）+ 登录尝试上下文（LoginAttemptContext） |
+| **指标埋点** | Micrometer 计数器/计时器（登录成功/失败/认证耗时/在线会话数） |
 | **健康检查** | Redis + JWT + 数据库连通性 + 用户/角色计数 |
 
 ## Feign 接口
 
-| 客户端 | 方法 | 返回类型 |
+| 客户端 | 方法（节选） | 返回类型 |
 |---|---|---|
-| `UserServiceClient` | `getUserInfo(userId)` | `BaseResponse<UserAccountVO>` |
 | `OrgQueryClient` | `queryUserById(userId)` | `BaseResponse<UserAccountVO>` |
+| `OrgQueryClient` | `getUserInfo(userId)` | `BaseResponse<UserAccountVO>` |
 | `OrgQueryClient` | `getDeptTree()` | `BaseResponse<List<DepartmentTreeVO>>` |
-| `OrgQueryClient` | `getDeptList()` | `BaseResponse<List<DepartmentTreeVO>>` |
+| `OrgQueryClient` | `getDeptList()` | `BaseResponse<List<DepartmentVO>>` |
+| `OrgQueryClient` | `listUserIdsByRoleCode` / `getLeaderByUserId` / batch-names 等 | 共 15 个方法 |
 
 ## 启动顺序
 
@@ -157,6 +165,20 @@ mvn -pl ydsz-userinfo spring-boot:run
 
 ```yaml
 ydsz:
+  userinfo:
+    health-enabled: true
+    token-ttl-seconds: 7200
+    max-login-fail-count: 5
+    lock-duration-minutes: 30
+    captcha-enabled: true
+    password-min-length: 8
+    password-max-length: 32
+    password-min-category-count: 3
+    bcrypt-strength: 10
+    oauth2-clients:
+      - client-id: "demo"
+        client-secret: "..."
+    password-history-count: 5
   auth:
     token:
       enabled: true
@@ -168,16 +190,22 @@ ydsz:
       host: 10.248.3.56
       port: 389
       domain: "@ydszsoft"
-  userinfo:
-    health-enabled: true
 ```
 
-### 配置项
+### 配置项（节选，`ydsz.userinfo.*`）
 
 | 配置项 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.userinfo.health-enabled` | `true` | 是否启用健康检查 |
-| `ydsz.auth.token.enabled` | `true` | 是否启用 JWT Token 服务 |
+| `ydsz.userinfo.token-ttl-seconds` | `7200` | 会话 Token 有效期（秒） |
+| `ydsz.userinfo.max-login-fail-count` | `5` | 连续失败锁定阈值 |
+| `ydsz.userinfo.lock-duration-minutes` | `30` | 锁定时长（分钟） |
+| `ydsz.userinfo.captcha-enabled` | `true` | 是否启用图形验证码 |
+| `ydsz.userinfo.password-min-length` | `8` | 密码最小长度 |
+| `ydsz.userinfo.password-min-category-count` | `3` | 密码字符类别数下限 |
+| `ydsz.userinfo.password-history-count` | `5` | 禁止重用的历史密码条数 |
+| `ydsz.userinfo.bcrypt-strength` | `10` | BCrypt 强度（4-31） |
+| `ydsz.userinfo.oauth2-clients` | `[]` | OAuth2 客户端注册（client-id/secret） |
 | `ydsz.auth.token.secret-key` | （必填） | JWT 签名密钥（至少 32 字符） |
 | `ydsz.auth.token.access-token-expire-seconds` | `7200` | Access Token 有效期（秒） |
 | `ydsz.auth.token.refresh-token-expire-seconds` | `604800` | Refresh Token 有效期（秒） |

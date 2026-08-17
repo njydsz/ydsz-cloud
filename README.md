@@ -72,13 +72,13 @@
 ydsz-cloud/
 ├── ydsz-common/              # 🧱 公共能力底座（30 子模块，不独立部署）
 │   ├── ydsz-common-core      # L1：统一响应 / TraceId / 特性开关
-│   ├── ydsz-common-util      # L2：99 工具类（加密 / IP / 雪花ID）
+│   ├── ydsz-common-util      # L2：30+ 工具类（加密 / IP / 雪花ID）
 │   ├── ydsz-common-json      # L2：高性能 JSON 引擎（ASM / SIMD）
 │   ├── ydsz-common-domain    # L3：DDD 基类 / 领域事件
 │   ├── ydsz-common-exception # L3：统一异常 / RFC 7807 ProblemDetail
 │   ├── ydsz-common-jdbc      # L4：MyBatis-Plus 增强 / 行权限
-│   ├── ydsz-common-redis     # L4：Redis 操作封装（15 种 ops）
-│   ├── ydsz-common-lock      # L4：分布式锁（4 种实现）/ 幂等
+│   ├── ydsz-common-redis     # L4：Redis 操作封装（9 类 ops）
+│   ├── ydsz-common-lock      # L4：分布式锁（可重入/公平/联锁/读写/信号量）/ 幂等
 │   ├── ydsz-common-cache     # L4：多策略本地缓存（W-TinyLFU）
 │   ├── ydsz-common-thread    # L4：共享线程池
 │   ├── ydsz-common-tenant    # L4：多租户隔离
@@ -87,8 +87,8 @@ ydsz-cloud/
 │   ├── ydsz-common-feign     # L5：OpenFeign + Resilience4j
 │   ├── ydsz-common-audit     # L5：操作日志 / Disruptor 批写
 │   ├── ydsz-common-file      # L5：7 种存储平台 / 分片 / 秒传
-│   ├── ydsz-common-notify    # L5：5 种通知渠道抽象
-│   ├── ydsz-common-queue     # L5：5 种 MQ 抽象
+│   ├── ydsz-common-notify    # L5：6 种通知渠道抽象
+│   ├── ydsz-common-queue     # L5：6 种 MQ 抽象（Stream/Kafka/Rocket/List/PubSub/Rabbit）
 │   ├── ydsz-common-docs      # L5：8 种文档解析 / OCR
 │   ├── ydsz-common-excel     # L5：高性能 Excel 读写
 │   ├── ydsz-common-netty     # L5：TCP 通信
@@ -103,8 +103,8 @@ ydsz-cloud/
 │   └── ydsz-common-app       # L6：移动端 App 基座（API 签名）
 │
 ├── ydsz-gateway/             # 🚪 API 网关 :9000（WebFlux 反应式）
-├── ydsz-userinfo/            # 👤 用户信息中心 :9001（登录 / RBAC / 组织架构 / OAuth2）
-├── ydsz-system/              # ⚙️ 系统基础服务 :9002（参数 / 字典 / 多租户）
+├── ydsz-userinfo/            # 👤 用户信息中心 :9002（登录 / RBAC / 组织架构 / OAuth2）
+├── ydsz-system/              # ⚙️ 系统基础服务 :9001（参数 / 字典 / 多租户）
 ├── ydsz-nextwiki/            # 📁 网盘知识库 :9003（文件管理 / Office 预览 / WOPI）
 ├── ydsz-message/             # 📨 消息通知引擎 :9004（12 渠道 / DAG 编排 / 灰度）
 ├── ydsz-workflow/            # 🔀 工作流引擎 :9005（BPMN 2.0 / DMN 决策表）
@@ -117,15 +117,15 @@ ydsz-cloud/
 
 | 模块 | 核心能力 |
 |------|----------|
-| **ydsz-gateway** | 路由分发 · JWT 鉴权 · CORS · IP 黑白名单 · 灰度路由（加权轮询） · Sentinel 限流熔断 · WebSocket 转发 · W3C 链路追踪 |
+| **ydsz-gateway** | 路由分发 · JWT 鉴权 · CORS · IP 黑白名单（统一 IpAccessControl） · 灰度路由（权重加权 + 比例分流） · Redis+Lua 令牌桶限流 · WebSocket 握手认证 · API 版本协商 · 网关层 RBAC · W3C 链路追踪 |
 | **ydsz-userinfo** | 登录认证（密码 + 验证码 + LDAP/ADFS） · JWT Token · RBAC 6 要素 · 部门树 · OAuth2 授权码 · 登录锁定（5 次/30 min） · 国际化 |
 | **ydsz-system** | 系统参数（Redis 缓存 + 穿透防护） · 数据字典（树形 + 版本快照） · OAuth2 应用注册 · 多租户（租户 + 套餐 + 权限） · 全局搜索 |
 | **ydsz-nextwiki** | 文件秒传（SHA-256） · 版本控制（20 版本） · 分享 + ACL · 全文搜索 · Office 预览（LibreOffice → PDF） · WOPI（OnlyOffice/Collabora） · ClamAV 病毒扫描 · OCR · AI 摘要 |
-| **ydsz-message** | 12 大通知渠道 · 模板（i18n + 版本） · 用户偏好 · 条件路由 + 通道降级链 · DAG 编排 · 灰度 · 敏感词过滤（DFA） · RocketMQ 死信 |
-| **ydsz-workflow** | YDSZ-Flow v2 + BPMN 2.0 · 8 种节点 · 定时器 · SLA · 灰度发布 · bpmn-js 设计器 · DMN 决策表 · 50 步模拟运行 |
-| **ydsz-cronjob** | Leader 选举 · 多分区调度 · Cron + 固定频率 + 精准（时间轮） · 分片广播 · 故障转移 · DAG 编排 · 胶水代码编辑 · 自愈系统 |
-| **ydsz-literule** | 7 种规则类型 · 自研 LiteExpr 引擎（AST + 沙箱） · Caffeine L1 + Redis L2 缓存 · 热加载 · 版本 Diff + 回滚 · Dry-Run 仿真 · A/B 测试 · 规则市场 |
-| **ydsz-agent** | 5 种 Agent 执行器 · LLM Provider 抽象（OpenAI 兼容） · 同步/流式对话（SSE） · RAG · DAG 编排 · Tool Calling · 安全护栏（PII + Prompt 注入检测） |
+| **ydsz-message** | 12 种通知渠道（枚举） · 模板（i18n + 版本） · 用户偏好 · 条件路由 + 通道降级链 · 模板灰度标记 · 敏感词过滤（DFA） · RocketMQ 死信 |
+| **ydsz-workflow** | YDSZ-Flow + BPMN 2.0 · 11 种节点类型 · 定时器 · SLA · 设计器 · DMN 决策表 · 审批/委派/评论/嵌入式审批面板 |
+| **ydsz-cronjob** | Leader 选举 · 多分区调度 · Cron + 固定频率 + 固定延迟 + API 触发 · 分片广播 · 故障转移 · DAG 编排 · 胶水代码编辑 · 异常自愈 |
+| **ydsz-literule** | 6 种规则类型 · 自研 LiteExpr 引擎（AST + 沙箱） · 热加载 · 版本 Diff + 回滚 · Dry-Run 仿真 · A/B 测试 · 规则包/市场 · CEP 引擎 |
+| **ydsz-agent** | 6 种 Agent 执行器 · LLM Provider 抽象（OpenAI 兼容） · 同步/流式对话（SSE） · RAG · DAG 编排 · Tool Calling / MCP 工具 · 安全护栏（PII + Prompt 注入检测） |
 
 ---
 

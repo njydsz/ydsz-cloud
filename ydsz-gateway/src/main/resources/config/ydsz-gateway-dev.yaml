@@ -93,7 +93,7 @@ ydsz:
       allowed-origin: ${YDSZ_GATEWAY_CORS_ALLOWED_ORIGIN:http://localhost:5173}
       allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
       allowed-headers: "*"
-      exposed-headers: X-Trace-Id,X-Request-Id,X-RateLimit-Limit,X-RateLimit-Remaining,X-RateLimit-Reset,Retry-After,X-API-Version
+      exposed-headers: X-Trace-Id,X-Request-Id,X-RateLimit-Limit,X-RateLimit-Remaining,X-RateLimit-Reset,X-RateLimit-Reset-Time,Retry-After,X-API-Version
       allow-credentials: true
       max-age-seconds: 3600
       enabled: true

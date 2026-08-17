@@ -264,6 +264,9 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
   /**
    * Origin 匹配（支持通配符 *）
    *
+   * <p>安全实现：使用 {@link java.util.regex.Pattern#quote} 转义非通配符部分，
+   * 避免正则注入攻击（如 allowed 中含 {@code + ? ( ) [ ]} 等正则元字符时被错误解析）。
+   *
    * @param origin 客户端 Origin
    * @param allowed 配置的允许 Origin（可含 *）
    * @return true=匹配
@@ -272,10 +275,18 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
     if (allowed.equals("*")) {
       return true;
     }
-    // 简单通配符匹配（如 https://*.example.com）
+    // 通配符匹配（如 https://*.example.com）— 安全转义避免正则注入
     if (allowed.contains("*")) {
-      String regex = allowed.replace(".", "\\.").replace("*", ".*");
-      return origin.matches(regex);
+      // 按 * 分段，逐段 quote 转义后用 .* 替换通配符
+      String[] parts = allowed.split("\\*", -1);
+      StringBuilder regex = new StringBuilder();
+      for (int i = 0; i < parts.length; i++) {
+        if (i > 0) {
+          regex.append(".*");
+        }
+        regex.append(java.util.regex.Pattern.quote(parts[i]));
+      }
+      return origin.matches(regex.toString());
     }
     return allowed.equals(origin);
   }

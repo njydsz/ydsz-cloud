@@ -17,22 +17,24 @@
 
 本模块是 YDSZ 的**统一通知中心**，采用 5 层 DDD 架构，从 `ydsz-system` 拆分出来作为独立大厂级通知引擎。
 
-### 1. 12 大渠道
+### 1. 12 种通知渠道（`MessageChannelEnum`）
 
-| 渠道 | 协议 | 默认 Provider |
+| 渠道 | 协议 | Provider |
 |---|---|---|
-| **SMS** 短信 | 阿里云 / 腾讯云 / 华为云 | `mock`（开发） / `aliyun`（生产） |
-| **EMAIL** 邮件 | SMTP（SSL/STARTTLS） | 内置 |
-| **PUSH** 推送 | 个推 Getui / 极光 / 友盟 | `mock` / `getui` |
-| **INAPP** 站内 | WebSocket | 内置 |
+| **SMS** 短信 | 阿里云短信 | `mock`（开发） / `aliyun`（生产） |
+| **EMAIL** 邮件 | SMTP（SSL/STARTTLS） | 内置（支持 DKIM/退信追踪） |
+| **PUSH** 推送 | 个推 Getui / 自研 TCP（common-netty） | `mock` / `getui` |
+| **INAPP** 站内 | WebSocket（common-socket） | 内置 |
 | **WEBHOOK** 通用 | HTTP/HTTPS | 内置 |
 | **DINGTALK** 钉钉 | 群机器人 + 加签 | 内置 |
+| **DINGTALK_WORK** 钉钉企业应用 | 应用消息 | 内置 |
 | **WECOM** 企业微信 | 群机器人 | 内置 |
+| **WECOM_APP** 企业微信应用 | 应用消息 | 内置 |
 | **FEISHU** 飞书 | 群机器人 + 加签 | 内置 |
-| **WX_MINI** 微信小程序 | 订阅消息 | `mock` / `wechat` |
-| **ALIPAY_MINI** 支付宝小程序 | 模板消息 | `mock` / `alipay` |
-| **TCP** TCP 推送 | 长连接 | 内置 |
-| **WECHAT_WORK** 企业微信应用 | 应用消息 | 内置 |
+| **WX_MINI** 微信小程序 | 订阅消息 | `mock` / 内置 |
+| **ALIPAY_MINI** 支付宝小程序 | 模板消息 | `mock` / 内置 |
+
+> 说明：TCP 长连接推送是 PUSH 渠道的底层扩展（`TcpPushChannel`，`ydsz.message.tcp-push.enabled=true`），并非独立枚举渠道；渠道实现 Bean 共 13 个（含 TcpPushChannel），由 `ChannelRouter` 路由。
 
 ### 2. 核心能力
 
@@ -41,45 +43,42 @@
 | 模板管理 | i18n / 版本 / 审核 / 场景 / `${var}` 嵌套变量 + `{{#if}}` 条件 + `{{#each}}` 循环 + 管道过滤器 |
 | 站内通知 | 优先级 / 聚合 / 撤回 / 跳转 |
 | 用户偏好 | 免打扰 / 频率上限 / 聚合 / 语言 |
-| 订阅管理 | 主题级订阅 / 退订 |
+| 订阅管理 | 主题级订阅 / 退订（退订中心） |
 | 消息路由 | 条件路由 / 通道降级 / 多级降级链 |
-| 限流 | Redisson 令牌桶 + Resilience4j / receiver/template/tenant 多维限流 |
-| 灰度 | 按用户标签 / 比例灰度 / A/B 自动胜出 |
+| 限流 | Redis 令牌桶（Redisson）+ Resilience4j / receiver/template/tenant 多维限流 |
+| 灰度 | 模板灰度标记（canaryFlag，按用户标签 / 比例） |
 | 异步 | RocketMQ 生产/消费/死信 + Redis SET NX EX 幂等 |
 | 回执 | 送达 / 已读 / 点击 / 失败 / 超时（5min 主动拉取 + 30min 超时补偿） |
-| 消息编排 | DAG 拓扑排序 / 条件分支 / 失败策略 / 流程级超时控制 |
 | 智能定时 | 用户活跃度画像 + DND 免打扰 + 时区感知 |
-| 批量发送 | ParallelBatchSender 通道级线程池 + Semaphore 流控 |
+| 批量发送 | MQ 异步批量（批次任务 + 进度推送） |
 | 跨渠道抑制 | bizType + bizId + receiver + channel 维度 |
 | 退信处理 | 邮件退信黑名单 + 自动拦截 |
 | 配额管理 | Sender 维度配额 / 通道级计数 |
 | 敏感词过滤 | DFA 字典树算法 O(n) |
-| 监控 | MessageServiceMetrics (Timer P50/P90/P99 + Counter) + MessageHealthIndicator |
+| 监控 | MessageMetrics（Micrometer Counter + Timer）+ MessageHealthIndicator |
 
-### 3. 关键 Controller
+### 3. 关键 Controller（均位于 `/api/v1/message` 前缀下，共 21 个）
 
 | 路径前缀 | 作用 |
 |---|---|
-| `/message/send` | 发送消息（同步 / 异步 / 事务消息 / 批量） |
-| `/message/template` | 模板管理 |
-| `/message/preference` | 用户偏好 |
-| `/message/subscription` | 订阅管理 |
-| `/message/notification/inbox` | 站内通知收件箱 |
-| `/message/canary` | 灰度发布 |
-| `/message/stats` | 发送统计 |
-| `/message/dead-letter` | 死信队列 |
-| `/message/orchestration` | 消息编排 |
-| `/notification/inbox` | 前端通知中心（V2 路由） |
+| `/api/v1/message/send` | 发送消息（同步 / 异步 / 事务消息 / 批量 / 撤回 / 追踪） |
+| `/api/v1/message/template` | 模板管理（含版本 / 预览 / 测试） |
+| `/api/v1/message/preference` | 用户偏好 |
+| `/api/v1/message/subscription` | 订阅管理 / 退订 |
+| `/api/v1/message/notifications/inbox` | 站内通知收件箱（前端通知中心） |
+| `/api/v1/message/stats` | 发送统计 |
+| `/api/v1/message/deadLetter` | 死信队列（驼峰命名） |
+| `/api/v1/message/route-rule` | 条件路由规则 |
+| `/api/v1/message/user-channels` | 用户渠道设置 |
+| `/api/v1/message/feedback` `/trace` `/read-status` `/read-receipt` `/archive/search` `/aggregate` `/recall` | 反馈 / 追踪 / 已读状态 / 回执 / 归档检索 / 聚合 / 撤回 等 |
 
 ## 数据库表设计
 
-本模块在 `deploy/sql/V1.0.0.sql` 中持有 **24 张表**，覆盖消息生命周期 + 模板 + 偏好 + 订阅 + 灰度 + 站内 + 回执。
+实体 `@TableName` 共映射 **15 张表**（DDL 由各部署环境统一维护，不在模块内）：
 
 | 业务域 | 表名 | 说明 |
 |---|---|---|
 | **消息日志** | `ydsz_msg_log` | 消息发送主日志（按月分区） |
-| | `ydsz_msg_log_default` | 消息日志默认分区 |
-| | `ydsz_msg_log_yYYYYmMM` | 消息日志月度分区模板 |
 | **批量发送** | `ydsz_msg_batch` | 批量发送批次（聚合任务） |
 | **聚合** | `ydsz_msg_aggregate` | 站内通知聚合（同类合并） |
 | **站内通知** | `ydsz_msg_notification` | 站内收件箱（前端通知中心） |
@@ -89,7 +88,11 @@
 | **用户偏好** | `ydsz_msg_preference` | 用户偏好（免打扰/频率/语言） |
 | **订阅** | `ydsz_msg_subscription` | 主题订阅（用户×主题×渠道） |
 | **路由规则** | `ydsz_msg_route_rule` | 条件路由 + 通道降级 |
-| **灰度** | `ydsz_msg_canary` | 灰度发布策略（按用户标签/比例） |
+| **追踪** | `ydsz_msg_trace` | 消息全链路追踪 |
+| **离线** | `ydsz_msg_offline` | 离线消息 |
+| **反馈** | `ydsz_msg_feedback` | 用户反馈 |
+| **用户渠道** | `ydsz_msg_user_channel` | 用户×渠道设置 |
+| **变量源** | `ydsz_msg_variable_source` | 模板变量数据源 |
 
 ## 目录结构
 
@@ -115,25 +118,22 @@ ydsz-message/
 ├── ydsz-message-server/       # 服务层（Service + Consumer + Producer + Config + Health）
 │   └── src/main/
 │       ├── java/com/njydsz/message/server/
-│       │   ├── channel/      # 12 渠道实现 + ChannelRouter
+│       │   ├── channel/      # 13 个渠道实现（含 TcpPushChannel）+ ChannelRouter
 │       │   ├── config/        # AutoConfiguration + Properties + WebSocketConfig
-│       │   ├── consumer/      # RocketMQ 消费者（MessageConsumer + BatchMessageConsumer + DlqConsumer）
+│       │   ├── consumer/      # RocketMQ 消费者（MessageConsumer + BatchMessageConsumer + MessageDlqConsumer）
 │       │   ├── filter/        # DFA 敏感词过滤器
 │       │   ├── health/        # MessageHealthIndicator
 │       │   ├── metric/        # MessageMetrics (Prometheus)
-│       │   ├── metrics/       # MessageServiceMetrics (P50/P90/P99 + Counter)
 │       │   ├── producer/      # RocketMQ 生产者
 │       │   ├── realtime/      # 实时推送服务（委托 common-socket）
-│       │   ├── service/       # 43+ Service 实现
+│       │   ├── service/       # 76 个 Service 文件（含 23 个 *ServiceImpl）
 │       │   │   ├── batch/     # 批量 + 聚合
-│       │   │   ├── canary/    # 灰度
 │       │   │   ├── config/    # 偏好 + 订阅 + 路由 + 变量
 │       │   │   ├── core/      # 发送 + 去重 + 限流 + 追踪 + 定时
-│       │   │   ├── impl/      # 实现 + 编排 + 跨渠道抑制 + 退信 + 配额 + DND
+│       │   │   ├── impl/      # 实现 + 跨渠道抑制 + 退信 + 配额 + DND
 │       │   │   ├── receipt/   # 回执 + 撤回
 │       │   │   └── template/  # 模板引擎 + 渲染
 │       │   ├── template/      # DefaultTemplateEngine + RichMediaRenderer
-│       │   └── tracing/       # MessageTraceContext
 │       └── resources/
 │           ├── META-INF/
 │           │   ├── spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
@@ -251,7 +251,7 @@ ydsz-message/
 
 ## 启动顺序
 
-依赖 `common` + `nacos` + `rocketmq`，**应在 `userinfo` / `system` / `project` 之后**启动（业务服务通过 Feign 调用本服务）。
+依赖 `common` + `nacos` + `rocketmq`，**应在 `userinfo` / `system` 之后**启动（业务服务通过 Feign 调用本服务）。
 
 ## 常见问题
 

@@ -186,22 +186,83 @@ public class CachedJwtValidator {
   }
 
   /**
-   * 执行实际 JWT 解析（作为 CacheProtectionGuard 的加载器）。
+   * 执行实际 JWT 解析并构建缓存条目（作为 CacheProtectionGuard 的加载器）。
    *
-   * <p>防击穿保证同一 key 并发时该方法仅被调用一次；返回 {@code Optional.empty()} 表示无效 Token。
+   * <p>防击穿保证同一 key 并发时该方法仅被调用一次。返回的 {@link JwtCacheEntry} 包含 UserInfo 和 Token
+   * 过期时间，用于自适应 TTL 判断。返回 {@code null} 表示无效 Token。
    *
    * @param jwt JWT Token 字符串
-   * @return 解析结果包装，无效返回 empty
+   * @return 缓存条目（含过期时间），无效返回 null
    */
-  private Optional<UserInfo> parseToken(String jwt) {
+  private JwtCacheEntry parseTokenToEntry(String jwt) {
     if (!tokenService.validateAccessToken(jwt)) {
-      return Optional.empty();
+      return null;
     }
     try {
-      return Optional.ofNullable(tokenService.parseAccessToken(jwt));
+      UserInfo userInfo = tokenService.parseAccessToken(jwt);
+      if (userInfo == null) {
+        return null;
+      }
+      long expiration = extractExpiration(jwt);
+      return new JwtCacheEntry(userInfo, expiration);
     } catch (Exception e) {
       log.warn("[JwtCache] 解析 JWT 失败: {}", e.getMessage());
-      return Optional.empty();
+      return null;
+    }
+  }
+
+  /**
+   * 从 JWT Token 中提取过期时间（exp claim）。
+   *
+   * <p>使用 JJWT 解析 payload，无需完整验签（验签已在 validateAccessToken 完成）。
+   *
+   * @param jwt JWT Token
+   * @return 过期时间（epoch 毫秒），解析失败返回 0
+   */
+  private long extractExpiration(String jwt) {
+    try {
+      String[] parts = jwt.split("\\.");
+      if (parts.length < 2) {
+        return 0L;
+      }
+      String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+      com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+      com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(payload);
+      JsonNode expNode = node.get("exp");
+      if (expNode != null && expNode.isNumber()) {
+        return expNode.longValue() * 1_000L;
+      }
+      return 0L;
+    } catch (Exception e) {
+      log.debug("[JwtCache] 提取 Token 过期时间失败: {}", e.getMessage());
+      return 0L;
+    }
+  }
+
+  /**
+   * JWT 缓存条目（包含用户信息和 Token 过期时间）。
+   *
+   * <p>用于实现自适应 TTL：当 Token 即将过期时，即使缓存未过期也视为缓存未命中，
+   * 避免缓存穿透到已失效的 Token。
+   *
+   * @param userInfo 用户信息（null 表示无效 Token）
+   * @param expirationAtEpochMs Token 过期时间戳（epoch 毫秒），0 表示未知
+   */
+  private record JwtCacheEntry(UserInfo userInfo, long expirationAtEpochMs) {
+
+    /**
+     * 检查 Token 是否即将过期。
+     *
+     * @param bufferSeconds 过期前提前失效的缓冲时间（秒）
+     * @return true=即将过期（应视为缓存未命中）
+     */
+    boolean isExpiringSoon(long bufferSeconds) {
+      if (expirationAtEpochMs <= 0) {
+        // 未知过期时间，依赖缓存 TTL 兜底
+        return false;
+      }
+      long bufferMs = bufferSeconds * 1_000L;
+      return System.currentTimeMillis() + bufferMs >= expirationAtEpochMs;
     }
   }
 
