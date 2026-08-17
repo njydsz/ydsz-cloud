@@ -22,7 +22,6 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.server.service.DictService;

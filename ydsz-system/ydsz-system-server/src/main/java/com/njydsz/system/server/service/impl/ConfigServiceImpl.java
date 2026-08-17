@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.infra.repository.ConfigRepository;
+import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.search.SearchIndexSyncer;
@@ -113,10 +115,10 @@ public class ConfigServiceImpl implements ConfigService {
   private final EntityVersionService entityVersionService;
 
   /** Spring Cache 管理器（用于按 key 精准失效缓存，替代 allEntries 全量清空） */
-  private final org.springframework.cache.CacheManager cacheManager;
+  private final CacheManager cacheManager;
 
   /** 租户感知缓存键构造器（SpEL 与手动 evict 共用） */
-  private final com.njydsz.system.server.cache.CacheKeyBuilder cacheKeyBuilder;
+  private final CacheKeyBuilder cacheKeyBuilder;
 
   /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
   private final SearchIndexSyncer searchIndexSyncer;

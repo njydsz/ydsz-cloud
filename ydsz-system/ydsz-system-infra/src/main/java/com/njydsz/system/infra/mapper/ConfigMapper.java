@@ -1,5 +1,7 @@
 package com.njydsz.system.infra.mapper;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -45,4 +47,18 @@ public interface ConfigMapper extends BaseMapper<Config> {
   @Select(
       "SELECT * FROM ydsz_config WHERE config_key = #{configKey} AND deleted = 0 AND status = 'ENABLED' LIMIT 1")
   Config selectByConfigKey(@Param("configKey") String configKey);
+
+  /**
+   * 批量插入配置项（一次 SQL 批量写入）
+   *
+   * <p>用于 {@code ConfigBatchServiceImpl.batchSave} 场景，将 N 次单条 INSERT 合并为 1 次批量 INSERT， 显著降低 DB
+   * 往返开销。单批建议 ≤ 500 条，超过时分批调用。
+   *
+   * <p><b>注意：</b>本方法通过 XML 映射文件实现，{@code id} 字段由调用方预先设置（通过 IdentifierGenerator 生成雪花 ID），
+   * 不会触发 MyBatis-Plus 的 @TableId 自动填充（批量 XML 不走 MP 拦截器）。
+   *
+   * @param items 配置实体列表
+   * @return 插入的记录数
+   */
+  int insertBatch(@Param("items") List<Config> items);
 }

@@ -1,14 +1,16 @@
 package com.njydsz.system.server.config;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import com.njydsz.common.jdbc.health.DataSourceHealthIndicator;
+import com.njydsz.common.redis.health.RedisHealthIndicator;
 import com.njydsz.system.server.health.SystemHealthIndicator;
 
 /**
@@ -66,8 +68,8 @@ public class SystemConfiguration {
   @ConditionalOnClass(HealthIndicator.class)
   @ConditionalOnMissingBean(SystemHealthIndicator.class)
   public SystemHealthIndicator systemHealthIndicator(
-      ObjectProvider<com.njydsz.common.redis.health.RedisHealthIndicator> redisHealthIndicatorProvider,
-      ObjectProvider<com.njydsz.common.jdbc.health.DataSourceHealthIndicator> dataSourceHealthIndicatorProvider) {
+      ObjectProvider<RedisHealthIndicator> redisHealthIndicatorProvider,
+      ObjectProvider<DataSourceHealthIndicator> dataSourceHealthIndicatorProvider) {
     return new SystemHealthIndicator(redisHealthIndicatorProvider, dataSourceHealthIndicatorProvider);
   }
 }

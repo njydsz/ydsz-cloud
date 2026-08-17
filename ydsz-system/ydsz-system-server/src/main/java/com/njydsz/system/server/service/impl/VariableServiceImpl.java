@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,9 @@ import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.infra.repository.VariableRepository;
+import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.metrics.SystemMetrics;
+import com.njydsz.system.server.search.SearchIndexSyncer;
 import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.service.VariableService;
 
@@ -120,10 +123,13 @@ public class VariableServiceImpl implements VariableService {
   private final EntityVersionService entityVersionService;
 
   /** Spring Cache 管理器（用于按 key 精准失效缓存） */
-  private final org.springframework.cache.CacheManager cacheManager;
+  private final CacheManager cacheManager;
 
   /** 租户感知缓存键构造器（SpEL 与手动 evict 共用） */
-  private final com.njydsz.system.server.cache.CacheKeyBuilder cacheKeyBuilder;
+  private final CacheKeyBuilder cacheKeyBuilder;
+
+  /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
+  private final SearchIndexSyncer searchIndexSyncer;
 
   /** 统一领域事件发布门面 */
   private final DomainEventPublisher eventPublisher;
@@ -241,6 +247,7 @@ public class VariableServiceImpl implements VariableService {
     validateValueType(vo.getValueType());
     Variable entity = toEntity(vo);
     variableRepository.getVariableMapper().insert(entity);
+    searchIndexSyncer.upsert("variable", entity);
     publishVariableChangedEvent(entity.getVariableKey(), "创建变量");
     return entity.getId();
   }
@@ -287,6 +294,7 @@ public class VariableServiceImpl implements VariableService {
           "更新变量: " + entity.getVariableKey(),
           snapshotJson);
       publishVariableChangedEvent(entity.getVariableKey(), "更新变量");
+      searchIndexSyncer.upsert("variable", entity);
     }
     return updated;
   }
@@ -325,6 +333,7 @@ public class VariableServiceImpl implements VariableService {
           "删除变量: " + entity.getVariableKey(),
           snapshotJson);
       publishVariableChangedEvent(entity.getVariableKey(), "删除变量");
+      searchIndexSyncer.delete("variable", id);
     }
     return removed;
   }
@@ -367,6 +376,7 @@ public class VariableServiceImpl implements VariableService {
                 currentVariable.setDescription(snapshotVO.getDescription());
                 currentVariable.setStatus(snapshotVO.getStatus());
                 variableRepository.getVariableMapper().updateById(currentVariable);
+                searchIndexSyncer.upsert("variable", currentVariable);
               } else {
                 Variable newVariable = new Variable();
                 newVariable.setVariableKey(snapshotVO.getVariableKey());
@@ -375,6 +385,7 @@ public class VariableServiceImpl implements VariableService {
                 newVariable.setDescription(snapshotVO.getDescription());
                 newVariable.setStatus(snapshotVO.getStatus());
                 variableRepository.getVariableMapper().insert(newVariable);
+                searchIndexSyncer.upsert("variable", newVariable);
               }
             } catch (Exception e) {
               throw BusinessException.of(SystemExceptionCode.SNAPSHOT_PARSE_ERROR)

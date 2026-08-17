@@ -19,7 +19,6 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.system.domain.converter.SystemConverter;
-import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.domain.entity.DictType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.DictPageQuery;
