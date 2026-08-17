@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.entity.TrashItem;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.infra.entity.TrashItemDO;
 import com.njydsz.nextwiki.domain.enums.NextwikiEnums.TrashStatus;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
@@ -34,28 +34,28 @@ public class TrashDomainService {
 
   private final ApplicationEventPublisher eventPublisher;
 
-  private static final int RETENTION_DAYS = TrashItem.DEFAULT_RETENTION_DAYS;
+  private static final int RETENTION_DAYS = TrashItemDO.DEFAULT_RETENTION_DAYS;
 
   /**
    * 将文件移入回收站：构造回收站条目（纯领域对象创建，不涉及持久化）。
    *
-   * <p>server 层负责将返回的 {@link TrashItem} 通过 repository 持久化。
+   * <p>server 层负责将返回的 {@link TrashItemDO} 通过 repository 持久化。
    *
-   * @param fileNode 待删除的文件节点
+   * @param FileNodeDO 待删除的文件节点
    * @param userId 操作人 ID
    * @return 新建的回收站条目（未持久化）
    */
-  public TrashItem moveToTrash(FileNode fileNode, String userId) {
+  public TrashItemDO moveToTrash(FileNodeDO FileNodeDO, String userId) {
     LocalDateTime now = LocalDateTime.now();
-    TrashItem trashItem =
-        TrashItem.builder()
+    TrashItemDO TrashItemDO =
+        TrashItemDO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
-            .fileNodeId(fileNode.getId())
-            .originalName(fileNode.getName())
-            .originalPath(fileNode.getPath())
-            .originalParentId(fileNode.getParentId())
-            .nodeType(fileNode.getNodeType())
-            .size(fileNode.getSize())
+            .fileNodeId(FileNodeDO.getId())
+            .originalName(FileNodeDO.getName())
+            .originalPath(FileNodeDO.getPath())
+            .originalParentId(FileNodeDO.getParentId())
+            .nodeType(FileNodeDO.getNodeType())
+            .size(FileNodeDO.getSize())
             .deletedTime(now)
             .purgeTime(now.plusDays(RETENTION_DAYS))
             .status(TrashStatus.IN_TRASH.getCode())
@@ -63,69 +63,69 @@ public class TrashDomainService {
             .deleted(0)
             .build();
 
-    trashItem.setCreatedBy(userId);
-    trashItem.setCreatedAt(now);
-    trashItem.setUpdatedBy(userId);
-    trashItem.setUpdatedAt(now);
+    TrashItemDO.setCreatedBy(userId);
+    TrashItemDO.setCreatedAt(now);
+    TrashItemDO.setUpdatedBy(userId);
+    TrashItemDO.setUpdatedAt(now);
 
-    return trashItem;
+    return TrashItemDO;
   }
 
   /**
    * 从回收站恢复：校验状态合法性、执行状态迁移、发布恢复事件。
    *
-   * <p>server 层负责通过 repository 查询 {@link TrashItem} 与 {@link FileNode} 并传入本方法， 再通过 repository 持久化状态变更。
+   * <p>server 层负责通过 repository 查询 {@link TrashItemDO} 与 {@link FileNodeDO} 并传入本方法， 再通过 repository 持久化状态变更。
    *
-   * @param trashItem 待恢复的回收站条目
-   * @param fileNode 对应的文件节点（可能为 {@code null}，表示原节点已不存在）
+   * @param TrashItemDO 待恢复的回收站条目
+   * @param FileNodeDO 对应的文件节点（可能为 {@code null}，表示原节点已不存在）
    * @param userId 操作人 ID
    * @throws BusinessException 状态不允许恢复时抛出 {@link NextwikiExceptionCode#TRASH_INVALID_STATUS}
    */
-  public void restore(TrashItem trashItem, FileNode fileNode, String userId) {
-    TrashStatus currentStatus = TrashStatus.fromCode(trashItem.getStatus());
+  public void restore(TrashItemDO TrashItemDO, FileNodeDO FileNodeDO, String userId) {
+    TrashStatus currentStatus = TrashStatus.fromCode(TrashItemDO.getStatus());
     if (currentStatus == null || !currentStatus.canTransitTo(TrashStatus.RESTORED)) {
       throw BusinessException.of(NextwikiExceptionCode.TRASH_INVALID_STATUS)
-          .data("trashItemId", trashItem.getId())
-          .data("status", trashItem.getStatus());
+          .data("trashItemId", TrashItemDO.getId())
+          .data("status", TrashItemDO.getStatus());
     }
 
-    trashItem.setStatus(TrashStatus.RESTORED.getCode());
-    trashItem.setUpdatedBy(userId);
-    trashItem.setUpdatedAt(LocalDateTime.now());
+    TrashItemDO.setStatus(TrashStatus.RESTORED.getCode());
+    TrashItemDO.setUpdatedBy(userId);
+    TrashItemDO.setUpdatedAt(LocalDateTime.now());
 
     eventPublisher.publishEvent(
         FileOperatedEvent.builder()
             .operation(FileOperatedEvent.OP_RESTORE)
-            .fileNodeId(trashItem.getFileNodeId())
-            .fileName(trashItem.getOriginalName())
-            .nodeType(trashItem.getNodeType())
+            .fileNodeId(TrashItemDO.getFileNodeId())
+            .fileName(TrashItemDO.getOriginalName())
+            .nodeType(TrashItemDO.getNodeType())
             .operatorId(userId)
             .operatedAt(LocalDateTime.now())
             .build());
 
     log.info(
         "[TrashDomainService] 恢复文件: trashItemId={}, fileNodeId={}",
-        trashItem.getId(),
-        trashItem.getFileNodeId());
+        TrashItemDO.getId(),
+        TrashItemDO.getFileNodeId());
   }
 
   /**
    * 永久删除：执行状态迁移。
    *
-   * <p>server 层负责通过 repository 查询 {@link TrashItem} 并传入本方法， 再通过 repository 持久化状态变更与物理删除文件节点。
+   * <p>server 层负责通过 repository 查询 {@link TrashItemDO} 并传入本方法， 再通过 repository 持久化状态变更与物理删除文件节点。
    *
-   * @param trashItem 待永久删除的回收站条目
+   * @param TrashItemDO 待永久删除的回收站条目
    * @param userId 操作人 ID
    */
-  public void purge(TrashItem trashItem, String userId) {
-    trashItem.setStatus(TrashStatus.PURGED.getCode());
-    trashItem.setUpdatedBy(userId);
-    trashItem.setUpdatedAt(LocalDateTime.now());
+  public void purge(TrashItemDO TrashItemDO, String userId) {
+    TrashItemDO.setStatus(TrashStatus.PURGED.getCode());
+    TrashItemDO.setUpdatedBy(userId);
+    TrashItemDO.setUpdatedAt(LocalDateTime.now());
 
     log.info(
         "[TrashDomainService] 永久删除: trashItemId={}, fileNodeId={}",
-        trashItem.getId(),
-        trashItem.getFileNodeId());
+        TrashItemDO.getId(),
+        TrashItemDO.getFileNodeId());
   }
 
   /**
@@ -137,9 +137,9 @@ public class TrashDomainService {
    * @param userId 操作人 ID（通常为系统用户）
    * @return 成功清理的条目数
    */
-  public int cleanupExpiredItems(List<TrashItem> expiredItems, String userId) {
+  public int cleanupExpiredItems(List<TrashItemDO> expiredItems, String userId) {
     int cleaned = 0;
-    for (TrashItem item : expiredItems) {
+    for (TrashItemDO item : expiredItems) {
       try {
         purge(item, userId);
         cleaned++;

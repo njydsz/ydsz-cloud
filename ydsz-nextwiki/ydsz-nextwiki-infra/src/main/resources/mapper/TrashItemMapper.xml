@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.TrashItemMapper">
 
-    <resultMap id="TrashItemResult" type="com.njydsz.nextwiki.domain.entity.TrashItem">
+    <resultMap id="TrashItemResult" type="com.njydsz.nextwiki.infra.entity.TrashItemDO">
         <id column="id" property="id"/>
         <result column="file_node_id" property="fileNodeId"/>
         <result column="original_name" property="originalName"/>

@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 菜单新增请求 DTO。
  *
- * <p>对应后端 {@code POST /api/v1/menu} 请求体。 支持目录（DIR）、菜单（MENU）、按钮（BUTTON）三种类型的新增， 新增后自动纳入 RBAC 权限体系。
+ * <p>对应后端 {@code PostDO /api/v1/MenuDO} 请求体。 支持目录（DIR）、菜单（MenuDO）、按钮（BUTTON）三种类型的新增， 新增后自动纳入 RBAC 权限体系。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -38,18 +38,18 @@ public class MenuCreateDTO implements Serializable {
   @Xss(message = "menuCode包含非法内容")
   private String menuCode;
 
-  /** 菜单类型（DIR=目录 / MENU=菜单 / BUTTON=按钮） */
+  /** 菜单类型（DIR=目录 / MenuDO=菜单 / BUTTON=按钮） */
   @NotBlank(message = "菜单类型不能为空")
   @Size(max = 20, message = "菜单类型长度不能超过 20 个字符")
   @Xss(message = "menuType包含非法内容")
   private String menuType;
 
-  /** 前端路由路径（menuType=MENU 时必填） */
+  /** 前端路由路径（menuType=MenuDO 时必填） */
   @Size(max = 255, message = "路径长度不能超过 255 个字符")
   @Xss(message = "path包含非法内容")
   private String path;
 
-  /** 前端组件路径（menuType=MENU 时必填，如 {@code "system/user/index"}） */
+  /** 前端组件路径（menuType=MenuDO 时必填，如 {@code "system/user/index"}） */
   @Size(max = 255, message = "组件路径长度不能超过 255 个字符")
   @Xss(message = "component包含非法内容")
   private String component;

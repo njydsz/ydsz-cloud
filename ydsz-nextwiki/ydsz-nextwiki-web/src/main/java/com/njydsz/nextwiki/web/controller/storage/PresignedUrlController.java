@@ -1,7 +1,7 @@
 package com.njydsz.nextwiki.web.controller.storage;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.TagDO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +43,7 @@ import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
 @RestController
 @RequestMapping("/api/v1/nextwiki/storage")
 @RequiredArgsConstructor
-@Tag(name = "存储直传", description = "Presigned URL 生成、直传凭证")
+@TagDO(name = "存储直传", description = "Presigned URL 生成、直传凭证")
 public class PresignedUrlController {
 
   /** 文件存储实现 */

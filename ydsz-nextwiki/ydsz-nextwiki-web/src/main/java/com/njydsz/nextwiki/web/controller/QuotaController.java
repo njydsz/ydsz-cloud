@@ -1,7 +1,7 @@
 package com.njydsz.nextwiki.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.TagDO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
-import com.njydsz.nextwiki.domain.entity.StorageQuota;
+import com.njydsz.nextwiki.infra.entity.StorageQuotaDO;
 import com.njydsz.nextwiki.server.service.QuotaApplicationService;
 
 /**
@@ -76,7 +76,7 @@ import com.njydsz.nextwiki.server.service.QuotaApplicationService;
 @RestController
 @RequestMapping("/api/v1/nextwiki/quota")
 @RequiredArgsConstructor
-@Tag(name = "存储配额", description = "配额查询、设置、校验（支持 user/tenant/project 维度）")
+@TagDO(name = "存储配额", description = "配额查询、设置、校验（支持 user/tenant/project 维度）")
 public class QuotaController {
 
   /** 配额应用服务（封装配额查询 + 设置 + 实时校验） */
@@ -89,12 +89,12 @@ public class QuotaController {
    *
    * @param scopeType 作用域类型（user/tenant/project）
    * @param scopeId 作用域 ID（用户 ID / 租户 ID / 项目 ID）
-   * @return 统一响应结果，data 为 {@link StorageQuota}
+   * @return 统一响应结果，data 为 {@link StorageQuotaDO}
    */
   @GetMapping("/info")
   @Operation(summary = "查询配额使用情况")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_QUOTA_VIEW)
-  public BaseResponse<StorageQuota> getQuota(
+  public BaseResponse<StorageQuotaDO> getQuota(
       @RequestParam(defaultValue = "user") String scopeType, @RequestParam String scopeId) {
     return BaseResponse.success(quotaApplicationService.getQuotaInfo(scopeType, scopeId));
   }
@@ -106,16 +106,16 @@ public class QuotaController {
    *
    * @param request 设置请求（scopeType / scopeId / quotaLimit / fileCountLimit）
    * @param userId 操作人 ID（用于审计）
-   * @return 统一响应结果，data 为设置后的 {@link StorageQuota}
+   * @return 统一响应结果，data 为设置后的 {@link StorageQuotaDO}
    */
   @Idempotent(key = "ydsz:nextwiki:QuotaController:setQuota:lock", ttlSeconds = 5)
   @PostMapping("/set")
   @Operation(summary = "设置配额（管理员）")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_QUOTA_SET)
-  public BaseResponse<StorageQuota> setQuota(
+  public BaseResponse<StorageQuotaDO> setQuota(
       @Valid @RequestBody NextwikiDTOs.SetQuotaRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    StorageQuota quota =
+    StorageQuotaDO quota =
         quotaApplicationService.setQuota(
             request.getScopeType(),
             request.getScopeId(),

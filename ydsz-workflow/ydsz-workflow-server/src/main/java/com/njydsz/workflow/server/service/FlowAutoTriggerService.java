@@ -2,7 +2,7 @@ package com.njydsz.workflow.server.service;
 
 import java.util.List;
 
-import com.njydsz.workflow.domain.entity.FlowAutoTrigger;
+import com.njydsz.workflow.infra.entity.FlowAutoTriggerDO;
 
 /**
  * 流程自动触发服务。
@@ -48,7 +48,7 @@ public interface FlowAutoTriggerService {
    *
    * @return 触发规则列表
    */
-  List<FlowAutoTrigger> listAll();
+  List<FlowAutoTriggerDO> listAll();
 
   /**
    * 按 ID 删除触发规则（逻辑删除）

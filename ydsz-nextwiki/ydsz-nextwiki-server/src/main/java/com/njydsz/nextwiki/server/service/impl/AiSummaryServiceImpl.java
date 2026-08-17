@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs.SummaryResult;
-import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 import com.njydsz.nextwiki.server.service.AiSummaryService;
 
@@ -54,8 +54,8 @@ public class AiSummaryServiceImpl implements AiSummaryService {
     }
 
     // 校验文件节点
-    FileNode fileNode = fileNodeRepository.findById(fileNodeId);
-    if (fileNode == null) {
+    FileNodeDO FileNodeDO = fileNodeRepository.findById(fileNodeId);
+    if (FileNodeDO == null) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND)
           .data("fileNodeId", fileNodeId);
     }
@@ -73,7 +73,7 @@ public class AiSummaryServiceImpl implements AiSummaryService {
         String.format(
             "【AI 摘要预留】文件 %s 的 %s 功能尚未对接 LLM 服务，"
                 + "请配置 nextwiki.ai.llm-api-url 和 nextwiki.ai.llm-api-key 后启用。",
-            fileNode.getName(), type);
+            FileNodeDO.getName(), type);
 
     int actualLength = maxLength != null ? maxLength : DEFAULT_MAX_LENGTH;
 

@@ -23,7 +23,7 @@ public class MenuPageQuery extends PageQuery {
   /** 菜单名称，模糊查询 */
   private String menuName;
 
-  /** 菜单类型过滤：DIRECTORY/MENU/BUTTON */
+  /** 菜单类型过滤：DIRECTORY/MenuDO/BUTTON */
   private String menuType;
 
   /** 状态过滤：ENABLE/DISABLE */

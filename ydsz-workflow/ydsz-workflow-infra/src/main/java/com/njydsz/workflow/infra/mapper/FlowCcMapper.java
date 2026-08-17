@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.domain.entity.FlowCc;
+import com.njydsz.workflow.infra.entity.FlowCcDO;
 
 /**
  * 流程抄送 Mapper
@@ -29,12 +29,12 @@ import com.njydsz.workflow.domain.entity.FlowCc;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.domain.entity.FlowCc 抄送实体
+ * @see com.njydsz.workflow.infra.entity.FlowCcDO 抄送实体
  * @see com.njydsz.workflow.server.service.FlowCcService 抄送 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowCcMapper extends BaseMapper<FlowCc> {
+public interface FlowCcMapper extends BaseMapper<FlowCcDO> {
 
   /**
    * 查"抄送我的"（分页）
@@ -46,7 +46,7 @@ public interface FlowCcMapper extends BaseMapper<FlowCc> {
    * @param offset 分页偏移
    * @param limit 每页大小
    */
-  List<FlowCc> selectCcByUserPage(
+  List<FlowCcDO> selectCcByUserPage(
       @Param("tenantId") String tenantId,
       @Param("ccUserId") String ccUserId,
       @Param("readStatus") String readStatus,
@@ -84,6 +84,6 @@ public interface FlowCcMapper extends BaseMapper<FlowCc> {
       @Param("readAt") LocalDateTime readAt);
 
   /** 查实例的抄送列表 */
-  List<FlowCc> selectByInstanceId(
+  List<FlowCcDO> selectByInstanceId(
       @Param("tenantId") String tenantId, @Param("instanceId") String instanceId);
 }

@@ -5,7 +5,7 @@ import lombok.Data;
 /**
  * 角色 VO，用于 Controller 返回，不包含 deleted、createdBy 等内部维护字段。
  *
- * <p>由 {@code UserInfoConverter.entityToVO()} 从 {@code Role} 实体转换而来。
+ * <p>由 {@code UserInfoConverter.entityToVO()} 从 {@code RoleDO} 实体转换而来。
  *
  * @author ydsz-team
  * @since 1.0.0

@@ -14,7 +14,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.event.AuditEvent;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
-import com.njydsz.nextwiki.infra.repository.ShareLinkRepository;
+import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
 import com.njydsz.nextwiki.server.service.ContentExtractionApplicationService;
 
@@ -179,8 +179,8 @@ public class FileOperatedEventListener {
 
     try {
       // 查询分享链接详情，获取被分享者信息
-      var shareLink = shareLinkRepository.findByShareCode(shareCode);
-      if (shareLink == null) {
+      var ShareLinkDO = shareLinkRepository.findByShareCode(shareCode);
+      if (ShareLinkDO == null) {
         log.warn("[FileOperatedEventListener] 分享链接不存在: shareCode={}", shareCode);
         return;
       }

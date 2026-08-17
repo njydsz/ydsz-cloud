@@ -13,11 +13,11 @@ import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
-import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.entity.Tag;
-import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
-import com.njydsz.nextwiki.infra.repository.SearchIndexRepository;
-import com.njydsz.nextwiki.infra.repository.TagRepository;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.infra.entity.TagDO;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
+import com.njydsz.nextwiki.domain.repository.TagRepository;
 
 /**
  * 知识库文件搜索提供者
@@ -39,7 +39,7 @@ import com.njydsz.nextwiki.infra.repository.TagRepository;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class WikiSearchProvider implements SearchProvider<FileNode> {
+public class WikiSearchProvider implements SearchProvider<FileNodeDO> {
 
   private final FileNodeRepository fileNodeRepository;
   private final SearchIndexRepository searchIndexRepository;
@@ -56,16 +56,16 @@ public class WikiSearchProvider implements SearchProvider<FileNode> {
   }
 
   @Override
-  public IndexDocument toIndexDocument(FileNode node) {
+  public IndexDocument toIndexDocument(FileNodeDO node) {
     if (node == null || node.getId() == null) {
       return null;
     }
 
     List<String> tagNames = List.of();
     try {
-      List<Tag> tags = tagRepository.findByFileNodeId(node.getId());
+      List<TagDO> tags = tagRepository.findByFileNodeId(node.getId());
       if (tags != null && !tags.isEmpty()) {
-        tagNames = tags.stream().map(Tag::getName).filter(n -> n != null && !n.isBlank()).toList();
+        tagNames = tags.stream().map(TagDO::getName).filter(n -> n != null && !n.isBlank()).toList();
       }
     } catch (Exception e) {
       log.debug("[WikiSearchProvider] 加载标签失败: nodeId={}", node.getId(), e);
@@ -73,7 +73,7 @@ public class WikiSearchProvider implements SearchProvider<FileNode> {
 
     // 填充全文内容：优先使用内存传递的提取内容（searchableContent），
     // 否则仅索引元数据（文件名/路径/标签）。
-    // searchableContent 由 ContentExtractionApplicationService 解析后设置在 FileNode 上，
+    // searchableContent 由 ContentExtractionApplicationService 解析后设置在 FileNodeDO 上，
     // 仅在索引同步流程中有效，不持久化到数据库。
     String content = node.getSearchableContent();
 
@@ -132,7 +132,7 @@ public class WikiSearchProvider implements SearchProvider<FileNode> {
         SearchField.builder()
             .name("tags")
             .label("标签")
-            .type(FieldType.TAG)
+            .type(FieldType.TagDO)
             .weight(1.5f)
             .searchable(true)
             .aggregatable(true)
@@ -179,7 +179,7 @@ public class WikiSearchProvider implements SearchProvider<FileNode> {
   }
 
   @Override
-  public FileNode loadById(String id) {
+  public FileNodeDO loadById(String id) {
     return fileNodeRepository.findById(id);
   }
 }

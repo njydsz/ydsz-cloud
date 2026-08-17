@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.impl.CountersignStrategy;
@@ -38,7 +38,7 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
   }
 
   @Override
-  public void onUserPassed(FlowRunTask task, FlowTaskOperateDTO dto) {
+  public void onUserPassed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
     int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
     task.setApproveFinished(finished);
     int updated = taskMapper.updateById(task);
@@ -54,7 +54,7 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
   }
 
   @Override
-  public boolean shouldAdvance(FlowRunTask task) {
+  public boolean shouldAdvance(FlowRunTaskDO task) {
     int finished = task.getApproveFinished() == null ? 0 : task.getApproveFinished();
     int required = task.getApproveCount() == null ? 1 : task.getApproveCount();
     return finished >= required;

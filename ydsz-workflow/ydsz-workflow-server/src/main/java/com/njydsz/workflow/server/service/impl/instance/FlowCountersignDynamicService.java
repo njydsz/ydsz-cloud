@@ -8,7 +8,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 
 /**
@@ -42,7 +42,7 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see FlowRunTask 运行时任务实体（持有 approveCount 字段）
+ * @see FlowRunTaskDO 运行时任务实体（持有 approveCount 字段）
  * @see CountersignStrategy 会签策略接口
  * @see SysException 业务异常
  */
@@ -79,7 +79,7 @@ public class FlowCountersignDynamicService {
           .build();
     }
 
-    FlowRunTask task = taskMapper.selectById(taskId);
+    FlowRunTaskDO task = taskMapper.selectById(taskId);
     if (task == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)

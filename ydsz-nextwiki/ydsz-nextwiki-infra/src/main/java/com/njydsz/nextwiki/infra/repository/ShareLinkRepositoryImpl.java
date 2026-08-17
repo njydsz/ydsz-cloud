@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.nextwiki.domain.entity.ShareLink;
-import com.njydsz.nextwiki.infra.repository.ShareLinkRepository;
+import com.njydsz.nextwiki.infra.entity.ShareLinkDO;
+import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.infra.mapper.ShareLinkMapper;
 
 /**
@@ -25,13 +25,13 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
   /**
    * 插入新建的分享链接记录（初次创建分享时调用）。
    *
-   * @param shareLink 待持久化的分享链接实体（含 fileNodeId、分享码、类型、过期等）
+   * @param ShareLinkDO 待持久化的分享链接实体（含 fileNodeId、分享码、类型、过期等）
    * @return 已落库的分享链接实体（含自增主键）
    */
   @Override
-  public ShareLink save(ShareLink shareLink) {
-    shareLinkMapper.insert(shareLink);
-    return shareLink;
+  public ShareLinkDO save(ShareLinkDO ShareLinkDO) {
+    shareLinkMapper.insert(ShareLinkDO);
+    return ShareLinkDO;
   }
 
   /**
@@ -41,7 +41,7 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
    * @return 分享链接实体；不存在则返回 null
    */
   @Override
-  public ShareLink findById(String id) {
+  public ShareLinkDO findById(String id) {
     return shareLinkMapper.selectById(id);
   }
 
@@ -52,7 +52,7 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
    * @return 命中的分享链接实体；不存在则返回 null
    */
   @Override
-  public ShareLink findByShareCode(String shareCode) {
+  public ShareLinkDO findByShareCode(String shareCode) {
     return shareLinkMapper.selectByShareCode(shareCode);
   }
 
@@ -63,7 +63,7 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
    * @return 分享链接列表
    */
   @Override
-  public List<ShareLink> findByFileNodeId(String fileNodeId) {
+  public List<ShareLinkDO> findByFileNodeId(String fileNodeId) {
     return shareLinkMapper.selectByFileNodeId(fileNodeId);
   }
 
@@ -74,7 +74,7 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
    * @return 有效分享链接列表
    */
   @Override
-  public List<ShareLink> findActiveSharesByUserId(String userId) {
+  public List<ShareLinkDO> findActiveSharesByUserId(String userId) {
     return shareLinkMapper.selectActiveSharesByUserId(userId);
   }
 
@@ -82,21 +82,21 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
    * 乐观锁更新分享链接；未携带 revision 时退化为普通更新，受影响行数为 0 抛出 {@link OptimisticLockingFailureException}，成功后
    * revision 自增 1。
    *
-   * @param shareLink 待更新的分享链接实体（必须携带 id）
+   * @param ShareLinkDO 待更新的分享链接实体（必须携带 id）
    */
   @Override
-  public void update(ShareLink shareLink) {
-    if (shareLink.getRevision() == null) {
+  public void update(ShareLinkDO ShareLinkDO) {
+    if (ShareLinkDO.getRevision() == null) {
       // 兜底：未携带 revision 时退化为普通更新，避免业务阻断
-      shareLinkMapper.updateById(shareLink);
+      shareLinkMapper.updateById(ShareLinkDO);
       return;
     }
-    int affected = shareLinkMapper.updateWithRevision(shareLink);
+    int affected = shareLinkMapper.updateWithRevision(ShareLinkDO);
     if (affected == 0) {
       throw new OptimisticLockingFailureException(
-          "ShareLink 乐观锁更新失败，id=" + shareLink.getId() + ", revision=" + shareLink.getRevision());
+          "ShareLink 乐观锁更新失败，id=" + ShareLinkDO.getId() + ", revision=" + ShareLinkDO.getRevision());
     }
-    shareLink.setRevision(shareLink.getRevision() + 1);
+    ShareLinkDO.setRevision(ShareLinkDO.getRevision() + 1);
   }
 
   /**
@@ -126,7 +126,7 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
    * @return 即将到期的分享链接列表（未发送过提醒的）
    */
   @Override
-  public List<ShareLink> findExpiringShares(int withinHours) {
+  public List<ShareLinkDO> findExpiringShares(int withinHours) {
     return shareLinkMapper.selectExpiringShares(withinHours);
   }
 }

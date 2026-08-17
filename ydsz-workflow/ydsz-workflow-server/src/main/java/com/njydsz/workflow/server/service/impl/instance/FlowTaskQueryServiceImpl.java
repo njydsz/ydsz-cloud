@@ -19,8 +19,8 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.constant.DataSourceConstants;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
-import com.njydsz.workflow.domain.entity.FlowHisTask;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -61,8 +61,8 @@ import com.njydsz.workflow.infra.mapper.FlowUserMapper;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowTaskServiceImpl 任务服务门面
- * @see FlowRunTask 运行时任务实体
- * @see FlowHisTask 历史任务实体
+ * @see FlowRunTaskDO 运行时任务实体
+ * @see FlowHisTaskDO 历史任务实体
  */
 @Slf4j
 @Service
@@ -88,7 +88,7 @@ public class FlowTaskQueryServiceImpl {
    * @param taskId 任务 ID
    * @return 任务 DO，不存在返回 null
    */
-  public FlowRunTask getById(String taskId) {
+  public FlowRunTaskDO getById(String taskId) {
     // P2-20: 任务详情查询，委托 BaseMapper 自带 selectById
     if (taskId == null) {
       return null;
@@ -99,13 +99,13 @@ public class FlowTaskQueryServiceImpl {
   // ============================== 列表查询 ==============================
 
   /** 查实例的当前 PENDING 任务 */
-  public List<FlowRunTask> listPendingByInstance(String instanceId) {
+  public List<FlowRunTaskDO> listPendingByInstance(String instanceId) {
     return taskMapper.selectPendingByInstance(instanceId);
   }
 
   /** 查用户的待办 */
   @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
-  public List<FlowRunTask> listTodoByAssignee(String assigneeId, String tenantId) {
+  public List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, String tenantId) {
     // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
     return taskMapper.selectTodoByAssignee(assigneeId, tid);
@@ -120,18 +120,18 @@ public class FlowTaskQueryServiceImpl {
    * @param tenantId 租户 ID（可空，默认 "1"）
    */
   @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
-  public List<FlowRunTask> listTodoByUser(
+  public List<FlowRunTaskDO> listTodoByUser(
       String userId, List<String> roleCodes, List<String> deptIds, String tenantId) {
     // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    Set<FlowRunTask> result = new LinkedHashSet<>();
+    Set<FlowRunTaskDO> result = new LinkedHashSet<>();
     // 1. 直接分配给该用户的任务
     result.addAll(taskMapper.selectTodoByAssignee(String.valueOf(userId), tid));
     // 2. 通过 ydsz_flow_user 关联的任务
     List<Long> taskIds = userMapper.selectTaskIdsByUser(String.valueOf(userId), tid);
     if (taskIds != null && !taskIds.isEmpty()) {
       for (Long tid2 : taskIds) {
-        FlowRunTask t = taskMapper.selectById(tid2);
+        FlowRunTaskDO t = taskMapper.selectById(tid2);
         if (t != null && !FlowTaskStatus.valueOf(t.getTaskStatus()).isFinished()) {
           result.add(t);
         }
@@ -153,13 +153,13 @@ public class FlowTaskQueryServiceImpl {
 
   /** 查用户的已办 */
   @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
-  public List<FlowRunTask> listDoneByAssignee(String assigneeId, String tenantId) {
+  public List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, String tenantId) {
     // P0-3: 改查历史表
     // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    List<FlowHisTask> hisTasks = hisTaskMapper.selectDoneByAssignee(assigneeId, tid);
-    List<FlowRunTask> result = new ArrayList<>();
-    for (FlowHisTask his : hisTasks) {
+    List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectDoneByAssignee(assigneeId, tid);
+    List<FlowRunTaskDO> result = new ArrayList<>();
+    for (FlowHisTaskDO his : hisTasks) {
       result.add(hisToTask(his));
     }
     return result;
@@ -168,30 +168,30 @@ public class FlowTaskQueryServiceImpl {
   // ============================== 分页查询 ==============================
 
   /** P2-17: 查用户的待办（真分页：SQL LIMIT/OFFSET） */
-  public PageResponse<List<FlowRunTask>> listTodoByAssigneePage(
+  public PageResponse<List<FlowRunTaskDO>> listTodoByAssigneePage(
       String assigneeId, String tenantId, int page, int size) {
     // P2-17: 真分页（SQL LIMIT/OFFSET）
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
     int safePage = Math.max(1, page);
     int safeSize = size > 0 ? size : 20;
     int offset = (safePage - 1) * safeSize;
-    List<FlowRunTask> list = taskMapper.selectTodoByAssigneePage(assigneeId, tid, offset, safeSize);
+    List<FlowRunTaskDO> list = taskMapper.selectTodoByAssigneePage(assigneeId, tid, offset, safeSize);
     long total = taskMapper.countTodoByAssignee(assigneeId, tid);
     return PageResponse.success(total, (long) safePage, (long) safeSize, list);
   }
 
   /** P2-17: 查用户的已办（真分页：SQL LIMIT/OFFSET） */
-  public PageResponse<List<FlowRunTask>> listDoneByAssigneePage(
+  public PageResponse<List<FlowRunTaskDO>> listDoneByAssigneePage(
       String assigneeId, String tenantId, int page, int size) {
     // P2-17: 真分页（SQL LIMIT/OFFSET） — 走历史表
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
     int safePage = Math.max(1, page);
     int safeSize = size > 0 ? size : 20;
     int offset = (safePage - 1) * safeSize;
-    List<FlowHisTask> hisTasks =
+    List<FlowHisTaskDO> hisTasks =
         hisTaskMapper.selectDoneByAssigneePage(assigneeId, tid, offset, safeSize);
-    List<FlowRunTask> list = new ArrayList<>();
-    for (FlowHisTask his : hisTasks) {
+    List<FlowRunTaskDO> list = new ArrayList<>();
+    for (FlowHisTaskDO his : hisTasks) {
       list.add(hisToTask(his));
     }
     long total = hisTaskMapper.countDoneByAssignee(assigneeId, tid);
@@ -199,7 +199,7 @@ public class FlowTaskQueryServiceImpl {
   }
 
   /** P2-33: 已办多维筛选分页查询（真分页：SQL LIMIT/OFFSET） */
-  public PageResponse<List<FlowRunTask>> listDoneByAssigneePageMulti(
+  public PageResponse<List<FlowRunTaskDO>> listDoneByAssigneePageMulti(
       String assigneeId,
       String businessType,
       String flowCode,
@@ -212,11 +212,11 @@ public class FlowTaskQueryServiceImpl {
     int safePage = Math.max(1, page);
     int safeSize = size > 0 ? size : 20;
     int offset = (safePage - 1) * safeSize;
-    List<FlowHisTask> hisTasks =
+    List<FlowHisTaskDO> hisTasks =
         hisTaskMapper.selectDonePage(
             assigneeId, businessType, flowCode, startTime, endTime, tid, offset, safeSize);
-    List<FlowRunTask> list = new ArrayList<>();
-    for (FlowHisTask his : hisTasks) {
+    List<FlowRunTaskDO> list = new ArrayList<>();
+    for (FlowHisTaskDO his : hisTasks) {
       list.add(hisToTask(his));
     }
     long total =
@@ -232,7 +232,7 @@ public class FlowTaskQueryServiceImpl {
   }
 
   /** P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED） */
-  public List<FlowRunTask> listOverdue(String assigneeId, String tenantId) {
+  public List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId) {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
     return taskMapper.selectOverdue(assigneeId, tid);
   }
@@ -246,15 +246,15 @@ public class FlowTaskQueryServiceImpl {
   /** P2-4: 统计待办任务总数（PENDING + CLAIMED） */
   public long countPending(String tenantId) {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    LambdaQueryWrapper<FlowRunTask> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(FlowRunTask::getTenantId, tid).in(FlowRunTask::getTaskStatus, "PENDING", "CLAIMED");
+    LambdaQueryWrapper<FlowRunTaskDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(FlowRunTaskDO::getTenantId, tid).in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED");
     return taskMapper.selectCount(wrapper);
   }
 
   // ============================== 视图转换 ==============================
 
   /** 转视图 */
-  public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTask task) {
+  public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskDO task) {
     if (task == null) {
       return null;
     }
@@ -281,8 +281,8 @@ public class FlowTaskQueryServiceImpl {
   // ============================== 私有辅助 ==============================
 
   /** 将历史任务 DO 转换为待办任务 DO（用于已办查询结果统一） */
-  private FlowRunTask hisToTask(FlowHisTask his) {
-    FlowRunTask t = new FlowRunTask();
+  private FlowRunTaskDO hisToTask(FlowHisTaskDO his) {
+    FlowRunTaskDO t = new FlowRunTaskDO();
     t.setId(his.getTaskId());
     t.setInstanceId(his.getInstanceId());
     t.setFlowCode(his.getFlowCode());

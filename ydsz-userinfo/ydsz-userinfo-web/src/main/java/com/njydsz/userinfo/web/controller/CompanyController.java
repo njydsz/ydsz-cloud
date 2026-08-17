@@ -31,9 +31,9 @@ import com.njydsz.userinfo.server.service.CompanyService;
  * 公司 Controller
  *
  * <p>提供公司的完整管理能力（CRUD）。 支持集团-子公司多级架构（{@code parentId="0"} = 顶级公司）， 一个公司可包含多个部门（通过 {@code
- * CompanyDept} 维护）。
+ * CompanyDeptDO} 维护）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/company}
+ * <p><b>接口路径：</b>{@code /api/v1/CompanyDO}
  *
  * <p><b>核心能力：</b>
  *
@@ -63,10 +63,10 @@ import com.njydsz.userinfo.server.service.CompanyService;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.userinfo.server.service.CompanyService 公司业务逻辑
- * @see com.njydsz.userinfo.domain.entity.Company 公司实体
+ * @see com.njydsz.userinfo.infra.entity.CompanyDO 公司实体
  */
 @RestController
-@RequestMapping("/api/v1/company")
+@RequestMapping("/api/v1/CompanyDO")
 @RequiredArgsConstructor
 @Tag(name = "公司管理", description = "公司 CRUD")
 public class CompanyController {
@@ -127,7 +127,7 @@ public class CompanyController {
    * @param dto 公司创建 DTO（companyCode / companyName / parentId / contactPhone / address）
    * @return 新创建的公司 ID
    */
-  @RateLimit(resource = "userinfo.company.create", threshold = 50)
+  @RateLimit(resource = "userinfo.CompanyDO.create", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:CompanyController:create:lock", ttlSeconds = 5)
   @PostMapping
   @Operation(summary = "创建公司")
@@ -151,7 +151,7 @@ public class CompanyController {
       action = AuditAction.UPDATE,
       content = "'更新公司: ' + #dto.id")
   @Idempotent(key = "ydsz:userinfo:CompanyController:update:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.company.update", threshold = 50)
+  @RateLimit(resource = "userinfo.CompanyDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新公司")
   public BaseResponse<Boolean> update(@Valid @RequestBody CompanyUpdateDTO dto) {
@@ -181,7 +181,7 @@ public class CompanyController {
       type = AuditType.OPERATION,
       action = AuditAction.DELETE,
       content = "'删除公司: ' + #id")
-  @RateLimit(resource = "userinfo.company.remove", threshold = 50)
+  @RateLimit(resource = "userinfo.CompanyDO.remove", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:CompanyController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除公司")

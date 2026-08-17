@@ -19,13 +19,13 @@ import com.njydsz.userinfo.domain.dto.update.LanguageUpdateDTO;
 import com.njydsz.userinfo.domain.dto.update.MenuUpdateDTO;
 import com.njydsz.userinfo.domain.dto.update.PostUpdateDTO;
 import com.njydsz.userinfo.domain.dto.update.RoleUpdateDTO;
-import com.njydsz.userinfo.domain.entity.Company;
-import com.njydsz.userinfo.domain.entity.Department;
-import com.njydsz.userinfo.domain.entity.Language;
-import com.njydsz.userinfo.domain.entity.Menu;
-import com.njydsz.userinfo.domain.entity.Post;
-import com.njydsz.userinfo.domain.entity.Role;
-import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.infra.entity.CompanyDO;
+import com.njydsz.userinfo.infra.entity.DepartmentDO;
+import com.njydsz.userinfo.infra.entity.LanguageDO;
+import com.njydsz.userinfo.infra.entity.MenuDO;
+import com.njydsz.userinfo.infra.entity.PostDO;
+import com.njydsz.userinfo.infra.entity.RoleDO;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
@@ -56,11 +56,11 @@ public interface UserInfoConverter {
    * <p>在类加载时通过 {@link org.mapstruct.factory.Mappers#getMapper(Class)} 创建并缓存， 全局共享同一实例。MapStruct
    * 编译期生成的实现为<b>无状态、线程安全</b>， 可被 Controller / Service 多线程并发复用，无需每次 new。
    *
-   * <p>典型用法：{@code UserInfoConverter.INSTANT.entityToVO(company)}。
+   * <p>典型用法：{@code UserInfoConverter.INSTANT.entityToVO(CompanyDO)}。
    */
   UserInfoConverter INSTANT = Mappers.getMapper(UserInfoConverter.class);
 
-  // ===== Company =====
+  // ===== CompanyDO =====
 
   /**
    * 公司实体 → 公司 VO
@@ -68,7 +68,7 @@ public interface UserInfoConverter {
    * @param entity 公司实体
    * @return 公司 VO（不含 deleted/createdBy 等内部字段）
    */
-  CompanyVO entityToVO(Company entity);
+  CompanyVO entityToVO(CompanyDO entity);
 
   /**
    * 公司实体列表 → 公司 VO 列表
@@ -76,7 +76,7 @@ public interface UserInfoConverter {
    * @param entities 公司实体列表
    * @return 公司 VO 列表
    */
-  List<CompanyVO> companyListToVO(List<Company> entities);
+  List<CompanyVO> companyListToVO(List<CompanyDO> entities);
 
   /**
    * 公司实体 → 公司树形 VO（含 children 字段）
@@ -84,7 +84,7 @@ public interface UserInfoConverter {
    * @param entity 公司实体
    * @return 公司树形 VO
    */
-  CompanyTreeVO entityToTreeVO(Company entity);
+  CompanyTreeVO entityToTreeVO(CompanyDO entity);
 
   /**
    * 公司实体列表 → 公司树形 VO 列表
@@ -92,7 +92,7 @@ public interface UserInfoConverter {
    * @param entities 公司实体列表
    * @return 公司树形 VO 列表
    */
-  List<CompanyTreeVO> companyTreeListToVO(List<Company> entities);
+  List<CompanyTreeVO> companyTreeListToVO(List<CompanyDO> entities);
 
   /**
    * 公司新增 DTO → 公司实体
@@ -111,7 +111,7 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Company postDtoToEntity(CompanyCreateDTO dto);
+  CompanyDO postDtoToEntity(CompanyCreateDTO dto);
 
   /**
    * 公司修改 DTO → 公司实体
@@ -126,9 +126,9 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Company putDtoToEntity(CompanyUpdateDTO dto);
+  CompanyDO putDtoToEntity(CompanyUpdateDTO dto);
 
-  // ===== Department =====
+  // ===== DepartmentDO =====
 
   /**
    * 部门实体 → 部门 VO（扁平结构）
@@ -136,7 +136,7 @@ public interface UserInfoConverter {
    * @param entity 部门实体
    * @return 部门 VO
    */
-  DepartmentVO entityToVO(Department entity);
+  DepartmentVO entityToVO(DepartmentDO entity);
 
   /**
    * 部门实体列表 → 部门 VO 列表
@@ -144,7 +144,7 @@ public interface UserInfoConverter {
    * @param entities 部门实体列表
    * @return 部门 VO 列表
    */
-  List<DepartmentVO> departmentListToVO(List<Department> entities);
+  List<DepartmentVO> departmentListToVO(List<DepartmentDO> entities);
 
   /**
    * 部门实体 → 部门树形 VO（含 children 字段）
@@ -152,7 +152,7 @@ public interface UserInfoConverter {
    * @param entity 部门实体
    * @return 部门树形 VO
    */
-  DepartmentTreeVO entityToTreeVO(Department entity);
+  DepartmentTreeVO entityToTreeVO(DepartmentDO entity);
 
   /**
    * 部门实体列表 → 部门树形 VO 列表
@@ -160,7 +160,7 @@ public interface UserInfoConverter {
    * @param entities 部门实体列表
    * @return 部门树形 VO 列表
    */
-  List<DepartmentTreeVO> departmentTreeListToVO(List<Department> entities);
+  List<DepartmentTreeVO> departmentTreeListToVO(List<DepartmentDO> entities);
 
   /**
    * 部门新增 DTO → 部门实体
@@ -176,7 +176,7 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Department postDtoToEntity(DepartmentCreateDTO dto);
+  DepartmentDO postDtoToEntity(DepartmentCreateDTO dto);
 
   /**
    * 部门修改 DTO → 部门实体
@@ -189,9 +189,9 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Department putDtoToEntity(DepartmentUpdateDTO dto);
+  DepartmentDO putDtoToEntity(DepartmentUpdateDTO dto);
 
-  // ===== Language =====
+  // ===== LanguageDO =====
 
   /**
    * 语言实体 → 语言 VO
@@ -199,7 +199,7 @@ public interface UserInfoConverter {
    * @param entity 语言实体
    * @return 语言 VO
    */
-  LanguageVO entityToVO(Language entity);
+  LanguageVO entityToVO(LanguageDO entity);
 
   /**
    * 语言实体列表 → 语言 VO 列表
@@ -207,7 +207,7 @@ public interface UserInfoConverter {
    * @param entities 语言实体列表
    * @return 语言 VO 列表
    */
-  List<LanguageVO> languageListToVO(List<Language> entities);
+  List<LanguageVO> languageListToVO(List<LanguageDO> entities);
 
   /**
    * 语言新增 DTO → 语言实体
@@ -223,7 +223,7 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Language postDtoToEntity(LanguageCreateDTO dto);
+  LanguageDO postDtoToEntity(LanguageCreateDTO dto);
 
   /**
    * 语言修改 DTO → 语言实体
@@ -236,9 +236,9 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Language putDtoToEntity(LanguageUpdateDTO dto);
+  LanguageDO putDtoToEntity(LanguageUpdateDTO dto);
 
-  // ===== Menu =====
+  // ===== MenuDO =====
 
   /**
    * 菜单实体 → 菜单 VO（扁平结构）
@@ -246,7 +246,7 @@ public interface UserInfoConverter {
    * @param entity 菜单实体
    * @return 菜单 VO
    */
-  MenuVO entityToVO(Menu entity);
+  MenuVO entityToVO(MenuDO entity);
 
   /**
    * 菜单实体列表 → 菜单 VO 列表
@@ -254,7 +254,7 @@ public interface UserInfoConverter {
    * @param entities 菜单实体列表
    * @return 菜单 VO 列表
    */
-  List<MenuVO> menuListToVO(List<Menu> entities);
+  List<MenuVO> menuListToVO(List<MenuDO> entities);
 
   /**
    * 菜单实体 → 菜单树形 VO（含 children 字段）
@@ -262,7 +262,7 @@ public interface UserInfoConverter {
    * @param entity 菜单实体
    * @return 菜单树形 VO
    */
-  MenuTreeVO entityToMenuTreeVO(Menu entity);
+  MenuTreeVO entityToMenuTreeVO(MenuDO entity);
 
   /**
    * 菜单实体列表 → 菜单树形 VO 列表
@@ -270,7 +270,7 @@ public interface UserInfoConverter {
    * @param entities 菜单实体列表
    * @return 菜单树形 VO 列表
    */
-  List<MenuTreeVO> menuTreeListToVO(List<Menu> entities);
+  List<MenuTreeVO> menuTreeListToVO(List<MenuDO> entities);
 
   /**
    * 菜单新增 DTO → 菜单实体
@@ -286,7 +286,7 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Menu postDtoToEntity(MenuCreateDTO dto);
+  MenuDO postDtoToEntity(MenuCreateDTO dto);
 
   /**
    * 菜单修改 DTO → 菜单实体
@@ -299,9 +299,9 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Menu putDtoToEntity(MenuUpdateDTO dto);
+  MenuDO putDtoToEntity(MenuUpdateDTO dto);
 
-  // ===== Post =====
+  // ===== PostDO =====
 
   /**
    * 岗位实体 → 岗位 VO
@@ -309,7 +309,7 @@ public interface UserInfoConverter {
    * @param entity 岗位实体
    * @return 岗位 VO
    */
-  PostVO entityToVO(Post entity);
+  PostVO entityToVO(PostDO entity);
 
   /**
    * 岗位实体列表 → 岗位 VO 列表
@@ -317,7 +317,7 @@ public interface UserInfoConverter {
    * @param entities 岗位实体列表
    * @return 岗位 VO 列表
    */
-  List<PostVO> postListToVO(List<Post> entities);
+  List<PostVO> postListToVO(List<PostDO> entities);
 
   /**
    * 岗位新增 DTO → 岗位实体
@@ -333,7 +333,7 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Post postDtoToEntity(PostCreateDTO dto);
+  PostDO postDtoToEntity(PostCreateDTO dto);
 
   /**
    * 岗位修改 DTO → 岗位实体
@@ -346,9 +346,9 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Post putDtoToEntity(PostUpdateDTO dto);
+  PostDO putDtoToEntity(PostUpdateDTO dto);
 
-  // ===== Role =====
+  // ===== RoleDO =====
 
   /**
    * 角色实体 → 角色 VO
@@ -356,7 +356,7 @@ public interface UserInfoConverter {
    * @param entity 角色实体
    * @return 角色 VO
    */
-  RoleVO entityToVO(Role entity);
+  RoleVO entityToVO(RoleDO entity);
 
   /**
    * 角色实体列表 → 角色 VO 列表
@@ -364,7 +364,7 @@ public interface UserInfoConverter {
    * @param entities 角色实体列表
    * @return 角色 VO 列表
    */
-  List<RoleVO> roleListToVO(List<Role> entities);
+  List<RoleVO> roleListToVO(List<RoleDO> entities);
 
   /**
    * 角色新增 DTO → 角色实体
@@ -380,7 +380,7 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Role postDtoToEntity(RoleCreateDTO dto);
+  RoleDO postDtoToEntity(RoleCreateDTO dto);
 
   /**
    * 角色修改 DTO → 角色实体
@@ -393,9 +393,9 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Role putDtoToEntity(RoleUpdateDTO dto);
+  RoleDO putDtoToEntity(RoleUpdateDTO dto);
 
-  // ===== UserAccount =====
+  // ===== UserAccountDO =====
 
   /**
    * 用户账号实体 → 用户账号 VO
@@ -405,7 +405,7 @@ public interface UserInfoConverter {
    * @param entity 用户账号实体
    * @return 用户账号 VO（已脱敏）
    */
-  UserAccountVO entityToVO(UserAccount entity);
+  UserAccountVO entityToVO(UserAccountDO entity);
 
   /**
    * 用户账号实体列表 → 用户账号 VO 列表
@@ -413,7 +413,7 @@ public interface UserInfoConverter {
    * @param entities 用户账号实体列表
    * @return 用户账号 VO 列表（已脱敏）
    */
-  List<UserAccountVO> userAccountListToVO(List<UserAccount> entities);
+  List<UserAccountVO> userAccountListToVO(List<UserAccountDO> entities);
 
   /**
    * 用户创建 DTO → 用户账号实体
@@ -431,9 +431,9 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  UserAccount createDtoToEntity(UserAccountCreateDTO dto);
+  UserAccountDO createDtoToEntity(UserAccountCreateDTO dto);
 
-  // ===== UserAccount → LoginVO.UserInfoVO =====
+  // ===== UserAccountDO → LoginVO.UserInfoVO =====
   /**
    * 用户实体 → 登录响应中的用户基本信息 VO。
    *
@@ -453,5 +453,5 @@ public interface UserInfoConverter {
   @Mapping(target = "userId", source = "id")
   @Mapping(target = "roleCode", ignore = true)
   @Mapping(target = "roleName", ignore = true)
-  LoginVO.UserInfoVO entityToUserInfoVO(UserAccount entity);
+  LoginVO.UserInfoVO entityToUserInfoVO(UserAccountDO entity);
 }

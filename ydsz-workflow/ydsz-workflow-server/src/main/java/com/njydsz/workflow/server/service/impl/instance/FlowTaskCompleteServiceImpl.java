@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
 
 /**
  * 流程任务完成服务实现。
@@ -51,7 +51,7 @@ public class FlowTaskCompleteServiceImpl {
 
   /** 创建任务（向后兼容重载） */
   @Transactional(rollbackFor = Exception.class)
-  public String createTask(String instanceId, FlowNode node, Map<String, Object> variables) {
+  public String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables) {
     return createService.createTask(instanceId, node, variables);
   }
 
@@ -59,7 +59,7 @@ public class FlowTaskCompleteServiceImpl {
   @Transactional(rollbackFor = Exception.class)
   public String createTask(
       String instanceId,
-      FlowNode node,
+      FlowNodeDO node,
       Map<String, Object> variables,
       List<String> explicitAssignees) {
     return createService.createTask(instanceId, node, variables, explicitAssignees);

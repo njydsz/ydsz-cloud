@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.workflow.domain.entity.FlowHisTask;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -45,7 +45,7 @@ public class FlowTaskArchiveService {
    * @param task 任务（会被原地修改状态/时间/时长）
    * @param comment 审批意见
    */
-  public void completeAndArchive(FlowRunTask task, String comment) {
+  public void completeAndArchive(FlowRunTaskDO task, String comment) {
     LocalDateTime now = LocalDateTime.now();
     Long durationMs =
         task.getCreatedAt() == null ? null : Duration.between(task.getCreatedAt(), now).toMillis();
@@ -72,8 +72,8 @@ public class FlowTaskArchiveService {
    * @param src 源任务
    * @param finalStatus 归档时的最终状态（用于历史表 taskStatus 字段）
    */
-  public void archiveToHistory(FlowRunTask src, FlowTaskStatus finalStatus) {
-    FlowHisTask his = new FlowHisTask();
+  public void archiveToHistory(FlowRunTaskDO src, FlowTaskStatus finalStatus) {
+    FlowHisTaskDO his = new FlowHisTaskDO();
     his.setInstanceId(src.getInstanceId());
     his.setTaskId(src.getId());
     his.setFlowCode(src.getFlowCode());

@@ -104,7 +104,7 @@ ydsz:
     monitoring-enabled: true
     warmup-classes:
       - com.njydsz.userinfo.domain.vo.LoginVO
-      - com.njydsz.userinfo.domain.entity.UserAccount
+      - com.njydsz.userinfo.infra.entity.UserAccountDO
 
   # P0: JDBC 安全加固（ydsz-common-jdbc）
   jdbc:

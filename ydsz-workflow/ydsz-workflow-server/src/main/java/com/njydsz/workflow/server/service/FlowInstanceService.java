@@ -7,8 +7,8 @@ import java.util.Map;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
-import com.njydsz.workflow.domain.entity.FlowInstance;
-import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
 
 /**
  * 流程实例 Service
@@ -38,7 +38,7 @@ import com.njydsz.workflow.domain.entity.FlowNode;
  *
  * <ul>
  *   <li>「我的发起」「我的待办」使用 {@code ydsz_flow_instance} 复合索引（{@code idx_initiator}）
- *   <li>待办列表使用 {@link FlowRunTask} 索引（{@code idx_assignee}）避免 JOIN
+ *   <li>待办列表使用 {@link FlowRunTaskDO} 索引（{@code idx_assignee}）避免 JOIN
  *   <li>实例详情通过冗余字段（{@code initiatorName/currentNodeName}）减少 JOIN
  * </ul>
  *
@@ -54,7 +54,7 @@ public interface FlowInstanceService {
    *
    * <p>幂等性保证：基于 {@code (businessType, businessId)} 唯一索引，同一业务单据 重复调用时返回原实例 ID，不会产生新实例。
    *
-   * <p>启动过程：① 解析流程定义 + 起始节点；② 创建实例（{@link FlowInstance}）； ③ 在起始节点创建待办；④ 发布 {@code FlowStartedEvent}
+   * <p>启动过程：① 解析流程定义 + 起始节点；② 创建实例（{@link FlowInstanceDO}）； ③ 在起始节点创建待办；④ 发布 {@code FlowStartedEvent}
    * 事件。
    *
    * @param dto 启动参数（flowCode / businessType / businessId / variables / starterId）
@@ -95,7 +95,7 @@ public interface FlowInstanceService {
    * @param id 实例 ID
    * @return 流程实例 DO，不存在返回 null
    */
-  FlowInstance getById(String id);
+  FlowInstanceDO getById(String id);
 
   /**
    * 业务关联查询（通过业务类型 + 业务 ID 查实例）
@@ -106,7 +106,7 @@ public interface FlowInstanceService {
    * @param businessId 业务 ID
    * @return 流程实例 DO，未发起时返回 null
    */
-  FlowInstance getByBusiness(String businessType, String businessId);
+  FlowInstanceDO getByBusiness(String businessType, String businessId);
 
   /**
    * 终止流程（管理员强制终止）
@@ -167,7 +167,7 @@ public interface FlowInstanceService {
    * @return 流程实例视图 VO
    */
   FlowInstanceViewDTO toView(
-      FlowInstance instance, List<FlowInstanceViewDTO.FlowTaskViewDTO> currentTasks);
+      FlowInstanceDO instance, List<FlowInstanceViewDTO.FlowTaskViewDTO> currentTasks);
 
   /**
    * 发起人维度查询（我的发起）
@@ -176,7 +176,7 @@ public interface FlowInstanceService {
    * @param flowStatus 流程状态过滤（RUNNING / COMPLETED / REJECTED / TERMINATED，null 表示全部）
    * @return 该发起人指定状态的实例列表
    */
-  List<FlowInstance> listByInitiator(String initiatorId, String flowStatus);
+  List<FlowInstanceDO> listByInitiator(String initiatorId, String flowStatus);
 
   /**
    * P1-8: 撤回流程（仅发起人可撤回，仅运行中可撤回，下一节点未被处理才可撤回）
@@ -263,7 +263,7 @@ public interface FlowInstanceService {
    * @param pageSize 每页大小
    * @return 分页结果
    */
-  PageResponse<List<FlowInstance>> page(
+  PageResponse<List<FlowInstanceDO>> page(
       String businessType,
       String initiatorId,
       String flowStatus,
@@ -306,7 +306,7 @@ public interface FlowInstanceService {
    * @param variables 流程变量
    */
   void generateTasksForNodes(
-      String instanceId, List<FlowNode> nextNodes, Map<String, Object> variables);
+      String instanceId, List<FlowNodeDO> nextNodes, Map<String, Object> variables);
 
   /**
    * GAP-V2-02: 获取表单渲染数据 — 根据当前任务所在节点返回字段权限配置

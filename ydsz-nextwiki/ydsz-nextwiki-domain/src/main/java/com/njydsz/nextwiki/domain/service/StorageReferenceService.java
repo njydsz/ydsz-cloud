@@ -3,7 +3,7 @@ package com.njydsz.nextwiki.domain.service;
 /**
  * 存储引用计数服务。
  *
- * <p>维护 storageKey → 引用计数的映射。秒传、复制场景下多 FileNode 共享同一 storageKey，
+ * <p>维护 storageKey → 引用计数的映射。秒传、复制场景下多 FileNodeDO 共享同一 storageKey，
  * 需通过引用计数确保物理对象仅在最后一个引用移除后才被安全删除，避免悬空引用/误删。
  *
  * <p>实现类应保证原子性：并发场景下 {@link #increment} / {@link #decrement} 需通过 Redis INCR/DECR 等原子操作保证计数准确。

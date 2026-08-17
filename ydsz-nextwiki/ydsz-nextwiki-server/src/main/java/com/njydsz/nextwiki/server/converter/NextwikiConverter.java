@@ -3,13 +3,13 @@ package com.njydsz.nextwiki.server.converter;
 import java.util.Collections;
 import java.util.List;
 
-import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 
 /**
  * NextWiki 实体 ↔ VO 转换器。
  *
- * <p>采用单例 + 手动映射方式，避免引入 MapStruct 编译期依赖。 当前仅提供 {@link FileNode} → {@link FileNodeVO} 的转换；
+ * <p>采用单例 + 手动映射方式，避免引入 MapStruct 编译期依赖。 当前仅提供 {@link FileNodeDO} → {@link FileNodeVO} 的转换；
  * 后续如需新增其他实体转换，可在此类中扩展对应方法。
  *
  * <p><b>字段映射说明：</b>
@@ -33,14 +33,14 @@ public final class NextwikiConverter {
   private NextwikiConverter() {}
 
   /**
-   * 将 {@link FileNode} 实体转换为 {@link FileNodeVO} 视图对象。
+   * 将 {@link FileNodeDO} 实体转换为 {@link FileNodeVO} 视图对象。
    *
    * <p>仅做扁平字段映射，不递归加载子节点与标签列表。
    *
    * @param entity 文件节点实体，为 {@code null} 时返回 {@code null}
    * @return 文件节点 VO，或 {@code null}
    */
-  public FileNodeVO entityToVO(FileNode entity) {
+  public FileNodeVO entityToVO(FileNodeDO entity) {
     if (entity == null) {
       return null;
     }

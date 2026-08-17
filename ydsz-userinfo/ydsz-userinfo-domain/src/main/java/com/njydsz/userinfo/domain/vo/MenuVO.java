@@ -25,7 +25,7 @@ public class MenuVO {
   /** 菜单编码，全局唯一 */
   private String menuCode;
 
-  /** 菜单类型：DIRECTORY-目录、MENU-菜单、BUTTON-按钮 */
+  /** 菜单类型：DIRECTORY-目录、MenuDO-菜单、BUTTON-按钮 */
   private String menuType;
 
   /** 前端路由路径 */

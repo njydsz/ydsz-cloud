@@ -11,10 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.nextwiki.domain.entity.FileAcl;
-import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.infra.entity.FileAclDO;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.service.FilePermissionDomainService;
 
 /**
@@ -44,16 +44,16 @@ public class FilePermissionService {
   private final FilePermissionDomainService filePermissionDomainService;
 
   /** 权限位：读取 */
-  public static final int PERM_READ = FileAcl.PERM_READ;
+  public static final int PERM_READ = FileAclDO.PERM_READ;
 
   /** 权限位：写入 */
-  public static final int PERM_WRITE = FileAcl.PERM_WRITE;
+  public static final int PERM_WRITE = FileAclDO.PERM_WRITE;
 
   /** 权限位：删除 */
-  public static final int PERM_DELETE = FileAcl.PERM_DELETE;
+  public static final int PERM_DELETE = FileAclDO.PERM_DELETE;
 
   /** 权限位：分享 */
-  public static final int PERM_SHARE = FileAcl.PERM_SHARE;
+  public static final int PERM_SHARE = FileAclDO.PERM_SHARE;
 
   /**
    * 校验读取权限（{@link #PERM_READ}）。
@@ -123,7 +123,7 @@ public class FilePermissionService {
    * @complexity O(1)（一次节点查询 + 一次 ACL 缓存查询 + O(acls) 遍历）
    */
   public void checkPermission(String nodeId, String userId, int permission, String action) {
-    FileNode node = fileNodeRepository.findById(nodeId);
+    FileNodeDO node = fileNodeRepository.findById(nodeId);
     if (node == null) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
     }
@@ -134,9 +134,9 @@ public class FilePermissionService {
     }
 
     // ACL 权限校验（结果走缓存）
-    List<FileAcl> acls = getEffectiveAcls(nodeId, userId);
+    List<FileAclDO> acls = getEffectiveAcls(nodeId, userId);
     boolean hasPermission = false;
-    for (FileAcl acl : acls) {
+    for (FileAclDO acl : acls) {
       if (acl.hasPermission(permission)) {
         hasPermission = true;
         break;
@@ -165,7 +165,7 @@ public class FilePermissionService {
       cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE,
       key = "#fileNodeId + ':' + #userId",
       condition = "#userId != null")
-  public List<FileAcl> getEffectiveAcls(String fileNodeId, String userId) {
+  public List<FileAclDO> getEffectiveAcls(String fileNodeId, String userId) {
     return filePermissionDomainService.findEffectiveAcls(fileNodeId, userId);
   }
 
@@ -182,7 +182,7 @@ public class FilePermissionService {
    */
   @Transactional(rollbackFor = Exception.class)
   @CacheEvict(cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE, allEntries = true)
-  public FileAcl grantPermission(
+  public FileAclDO grantPermission(
       String fileNodeId,
       String granteeType,
       String granteeId,
@@ -202,7 +202,7 @@ public class FilePermissionService {
    */
   @Transactional(rollbackFor = Exception.class)
   @CacheEvict(cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE, allEntries = true)
-  public FileAcl setOwner(String fileNodeId, String userId) {
+  public FileAclDO setOwner(String fileNodeId, String userId) {
     return filePermissionDomainService.setOwner(fileNodeId, userId);
   }
 }

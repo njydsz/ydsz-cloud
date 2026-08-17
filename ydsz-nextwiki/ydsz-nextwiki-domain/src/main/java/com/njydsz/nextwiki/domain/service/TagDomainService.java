@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.entity.FileTag;
-import com.njydsz.nextwiki.domain.entity.Tag;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.infra.entity.FileTagDO;
+import com.njydsz.nextwiki.infra.entity.TagDO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 
 /**
@@ -42,7 +42,7 @@ public class TagDomainService {
    * @param existingTag server 层按名称查询到的已存在标签，为 null 表示不存在
    * @return 新建的标签实体（由 server 层持久化）
    */
-  public Tag createTag(String name, String color, String userId, Tag existingTag) {
+  public TagDO createTag(String name, String color, String userId, TagDO existingTag) {
     if (name == null || name.trim().isEmpty()) {
       throw new BusinessException(NextwikiExceptionCode.TAG_NAME_EMPTY);
     }
@@ -51,8 +51,8 @@ public class TagDomainService {
       throw BusinessException.of(NextwikiExceptionCode.TAG_ALREADY_EXISTS).data("name", name);
     }
 
-    Tag tag =
-        Tag.builder()
+    TagDO TagDO =
+        TagDO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
             .name(name.trim())
             .color(color != null ? color : "#1890ff")
@@ -62,11 +62,11 @@ public class TagDomainService {
             .deleted(0)
             .build();
 
-    tag.setCreatedBy(userId);
-    tag.setUpdatedBy(userId);
+    TagDO.setCreatedBy(userId);
+    TagDO.setUpdatedBy(userId);
 
     log.info("[TagDomainService] 创建标签: name={}, userId={}", name, userId);
-    return tag;
+    return TagDO;
   }
 
   /**
@@ -77,7 +77,7 @@ public class TagDomainService {
    * @param allTags server 层查询到的全量标签列表
    * @return 标签列表
    */
-  public List<Tag> getAllTags(List<Tag> allTags) {
+  public List<TagDO> getAllTags(List<TagDO> allTags) {
     return allTags != null ? allTags : List.of();
   }
 
@@ -90,65 +90,65 @@ public class TagDomainService {
    * @param fileTags server 层查询到的文件标签列表
    * @return 标签列表
    */
-  public List<Tag> getFileTags(String fileNodeId, List<Tag> fileTags) {
+  public List<TagDO> getFileTags(String fileNodeId, List<TagDO> fileTags) {
     return fileTags != null ? fileTags : List.of();
   }
 
   /**
    * 批量绑定标签到文件。
    *
-   * <p>纯领域逻辑：校验文件存在性、过滤已绑定标签、生成待创建的关联实体。 返回的 FileTag 列表由 server 层持久化并更新标签使用计数。
+   * <p>纯领域逻辑：校验文件存在性、过滤已绑定标签、生成待创建的关联实体。 返回的 FileTagDO 列表由 server 层持久化并更新标签使用计数。
    *
    * @param fileNodeId 文件节点ID
    * @param tagIds 待绑定的标签ID列表
    * @param userId 操作用户ID
-   * @param fileNode server 层查询到的文件节点实体
+   * @param FileNodeDO server 层查询到的文件节点实体
    * @param tags server 层查询到的标签实体列表
    * @param existingFileTags server 层查询到的文件已有标签关联列表
-   * @return 待创建的 FileTag 关联实体列表（由 server 层持久化并更新使用计数）
+   * @return 待创建的 FileTagDO 关联实体列表（由 server 层持久化并更新使用计数）
    */
-  public List<FileTag> batchBindTags(
+  public List<FileTagDO> batchBindTags(
       String fileNodeId,
       List<String> tagIds,
       String userId,
-      FileNode fileNode,
-      List<Tag> tags,
-      List<FileTag> existingFileTags) {
+      FileNodeDO FileNodeDO,
+      List<TagDO> tags,
+      List<FileTagDO> existingFileTags) {
     if (tagIds == null || tagIds.isEmpty()) {
       return List.of();
     }
 
-    if (fileNode == null) {
+    if (FileNodeDO == null) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND)
           .data("fileNodeId", fileNodeId);
     }
 
     List<String> existingTagIds =
         existingFileTags != null
-            ? existingFileTags.stream().map(FileTag::getTagId).collect(Collectors.toList())
+            ? existingFileTags.stream().map(FileTagDO::getTagId).collect(Collectors.toList())
             : List.of();
 
-    List<FileTag> toCreate = new ArrayList<>();
+    List<FileTagDO> toCreate = new ArrayList<>();
 
     for (String tagId : tagIds) {
       if (existingTagIds.contains(tagId)) {
         continue;
       }
 
-      Tag tag =
+      TagDO TagDO =
           tags != null
               ? tags.stream().filter(t -> tagId.equals(t.getId())).findFirst().orElse(null)
               : null;
-      if (tag == null) {
+      if (TagDO == null) {
         log.warn("[TagDomainService] 标签不存在，跳过: tagId={}", tagId);
         continue;
       }
 
-      FileTag fileTag =
-          FileTag.builder().fileNodeId(fileNodeId).tagId(tagId).build();
-      fileTag.setCreatedBy(userId);
-      fileTag.setUpdatedBy(userId);
-      toCreate.add(fileTag);
+      FileTagDO FileTagDO =
+          FileTagDO.builder().fileNodeId(fileNodeId).tagId(tagId).build();
+      FileTagDO.setCreatedBy(userId);
+      FileTagDO.setUpdatedBy(userId);
+      toCreate.add(FileTagDO);
     }
 
     log.info(
@@ -162,43 +162,43 @@ public class TagDomainService {
    * <p>纯领域逻辑：优先匹配文件名/_suffix 包含关系，不足 5 个时按使用频率补充已有标签。
    *
    * @param fileNodeId 文件节点ID
-   * @param fileNode server 层查询到的文件节点实体
+   * @param FileNodeDO server 层查询到的文件节点实体
    * @param allTags server 层查询到的全量标签列表
    * @param existingTags server 层查询到的文件已有标签列表
    * @return 推荐标签列表（最多 5 个）
    */
-  public List<Tag> recommendTags(
-      String fileNodeId, FileNode fileNode, List<Tag> allTags, List<Tag> existingTags) {
-    if (fileNode == null) {
+  public List<TagDO> recommendTags(
+      String fileNodeId, FileNodeDO FileNodeDO, List<TagDO> allTags, List<TagDO> existingTags) {
+    if (FileNodeDO == null) {
       return List.of();
     }
 
-    List<Tag> all = allTags != null ? allTags : List.of();
-    List<Tag> recommended = new ArrayList<>();
+    List<TagDO> all = allTags != null ? allTags : List.of();
+    List<TagDO> recommended = new ArrayList<>();
 
-    String fileName = fileNode.getName() != null ? fileNode.getName().toLowerCase() : "";
-    String suffix = fileNode.getSuffix() != null ? fileNode.getSuffix().toLowerCase() : "";
+    String fileName = FileNodeDO.getName() != null ? FileNodeDO.getName().toLowerCase() : "";
+    String suffix = FileNodeDO.getSuffix() != null ? FileNodeDO.getSuffix().toLowerCase() : "";
 
-    for (Tag tag : all) {
-      String tagName = tag.getName() != null ? tag.getName().toLowerCase() : "";
+    for (TagDO TagDO : all) {
+      String tagName = TagDO.getName() != null ? TagDO.getName().toLowerCase() : "";
       if (fileName.contains(tagName) || tagName.contains(suffix)) {
-        recommended.add(tag);
+        recommended.add(TagDO);
       }
     }
 
     if (recommended.size() < 5) {
       List<String> existingIds =
           existingTags != null
-              ? existingTags.stream().map(Tag::getId).collect(Collectors.toList())
+              ? existingTags.stream().map(TagDO::getId).collect(Collectors.toList())
               : List.of();
 
-      for (Tag tag : all) {
+      for (TagDO TagDO : all) {
         if (recommended.size() >= 5) {
           break;
         }
-        if (!existingIds.contains(tag.getId()) && !recommended.contains(tag)) {
-          if (tag.getUsageCount() != null && tag.getUsageCount() > 0) {
-            recommended.add(tag);
+        if (!existingIds.contains(TagDO.getId()) && !recommended.contains(TagDO)) {
+          if (TagDO.getUsageCount() != null && TagDO.getUsageCount() > 0) {
+            recommended.add(TagDO);
           }
         }
       }

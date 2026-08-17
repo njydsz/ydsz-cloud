@@ -20,8 +20,8 @@ import org.xml.sax.InputSource;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.workflow.domain.entity.FlowNode;
-import com.njydsz.workflow.domain.entity.FlowSkip;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.infra.entity.FlowSkipDO;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowSkipType;
@@ -116,8 +116,8 @@ public class BpmnXmlParser {
     }
 
     // 解析所有 BPMN 节点元素
-    List<FlowNode> nodes = new ArrayList<>();
-    List<FlowSkip> skips = new ArrayList<>();
+    List<FlowNodeDO> nodes = new ArrayList<>();
+    List<FlowSkipDO> skips = new ArrayList<>();
     NodeList children = process.getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
       Node node = children.item(i);
@@ -129,12 +129,12 @@ public class BpmnXmlParser {
         local = elem.getNodeName();
       }
       if (isFlowNode(local)) {
-        FlowNode nodeDo = parseNode(elem, local);
+        FlowNodeDO nodeDo = parseNode(elem, local);
         if (nodeDo != null) {
           nodes.add(nodeDo);
         }
       } else if ("sequenceFlow".equalsIgnoreCase(local)) {
-        FlowSkip skip = parseSkip(elem);
+        FlowSkipDO skip = parseSkip(elem);
         if (skip != null) {
           skips.add(skip);
         }
@@ -142,12 +142,12 @@ public class BpmnXmlParser {
     }
 
     // 补全 skip.nextNodeType
-    Map<String, FlowNode> nodeByCode = new HashMap<>();
-    for (FlowNode n : nodes) {
+    Map<String, FlowNodeDO> nodeByCode = new HashMap<>();
+    for (FlowNodeDO n : nodes) {
       nodeByCode.put(n.getNodeCode(), n);
     }
-    for (FlowSkip s : skips) {
-      FlowNode target = nodeByCode.get(s.getNextNodeCode());
+    for (FlowSkipDO s : skips) {
+      FlowNodeDO target = nodeByCode.get(s.getNextNodeCode());
       if (target != null) {
         s.setNextNodeType(target.getNodeType());
       }
@@ -239,9 +239,9 @@ public class BpmnXmlParser {
         || "complexGateway".equalsIgnoreCase(localName);
   }
 
-  /** 解析节点：BPMN 元素 → FlowNode */
-  private FlowNode parseNode(Element elem, String localName) {
-    FlowNode node = new FlowNode();
+  /** 解析节点：BPMN 元素 → FlowNodeDO */
+  private FlowNodeDO parseNode(Element elem, String localName) {
+    FlowNodeDO node = new FlowNodeDO();
     node.setNodeCode(elem.getAttribute("id"));
     node.setNodeName(elem.getAttribute("name"));
     if (node.getNodeName() == null || node.getNodeName().isBlank()) {
@@ -536,7 +536,7 @@ public class BpmnXmlParser {
   }
 
   /** 解析 userTask 的多实例（会签）配置 */
-  private void parseMultiInstance(Element userTask, FlowNode node, Map<String, Object> ext) {
+  private void parseMultiInstance(Element userTask, FlowNodeDO node, Map<String, Object> ext) {
     NodeList children = userTask.getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
       Node n = children.item(i);
@@ -594,9 +594,9 @@ public class BpmnXmlParser {
     }
   }
 
-  /** 解析 sequenceFlow：BPMN 边 → FlowSkip */
-  private FlowSkip parseSkip(Element elem) {
-    FlowSkip skip = new FlowSkip();
+  /** 解析 sequenceFlow：BPMN 边 → FlowSkipDO */
+  private FlowSkipDO parseSkip(Element elem) {
+    FlowSkipDO skip = new FlowSkipDO();
     skip.setSkipName(elem.getAttribute("name"));
     skip.setSkipType(FlowSkipType.PASS.name());
     // sequenceFlow 自身 id 作为 skip 唯一标识
@@ -673,7 +673,7 @@ public class BpmnXmlParser {
 
   // ============== 工具方法 ==============
 
-  private Map<String, Object> readOrInitExt(FlowNode node) {
+  private Map<String, Object> readOrInitExt(FlowNodeDO node) {
     Map<String, Object> map = new HashMap<>();
     String ext = node.getExt();
     if (ext != null && !ext.isBlank() && !"{}".equals(ext.trim())) {

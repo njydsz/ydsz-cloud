@@ -11,7 +11,7 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.workflow.domain.entity.FlowTemplate;
+import com.njydsz.workflow.infra.entity.FlowTemplateDO;
 import com.njydsz.workflow.infra.mapper.FlowTemplateMapper;
 
 /**
@@ -23,7 +23,7 @@ import com.njydsz.workflow.infra.mapper.FlowTemplateMapper;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class WorkflowSearchProvider implements SearchProvider<FlowTemplate> {
+public class WorkflowSearchProvider implements SearchProvider<FlowTemplateDO> {
 
   private final FlowTemplateMapper flowTemplateMapper;
 
@@ -38,7 +38,7 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplate> {
   }
 
   @Override
-  public IndexDocument toIndexDocument(FlowTemplate entity) {
+  public IndexDocument toIndexDocument(FlowTemplateDO entity) {
     if (entity == null || entity.getId() == null) {
       return null;
     }
@@ -95,7 +95,7 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplate> {
   }
 
   @Override
-  public FlowTemplate loadById(String id) {
+  public FlowTemplateDO loadById(String id) {
     return flowTemplateMapper.selectById(id);
   }
 }

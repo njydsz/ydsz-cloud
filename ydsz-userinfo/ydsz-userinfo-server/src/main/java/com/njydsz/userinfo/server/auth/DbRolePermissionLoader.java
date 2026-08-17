@@ -18,12 +18,12 @@ import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.auth.service.RolePermissionLoader;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.domain.entity.Menu;
-import com.njydsz.userinfo.domain.entity.Role;
-import com.njydsz.userinfo.domain.entity.RolePermission;
-import com.njydsz.userinfo.infra.repository.MenuRepository;
-import com.njydsz.userinfo.infra.repository.RolePermissionRepository;
-import com.njydsz.userinfo.infra.repository.RoleRepository;
+import com.njydsz.userinfo.infra.entity.MenuDO;
+import com.njydsz.userinfo.infra.entity.RoleDO;
+import com.njydsz.userinfo.infra.entity.RolePermissionDO;
+import com.njydsz.userinfo.domain.repository.MenuRepository;
+import com.njydsz.userinfo.domain.repository.RolePermissionRepository;
+import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
@@ -35,7 +35,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  * <p><b>缓存策略（P0-1 修复）：</b>
  *
  * <ul>
- *   <li>DB 查询结果写入 Redis（key {@code userinfo:permission:role:{roleCode}}，TTL 由
+ *   <li>DB 查询结果写入 Redis（key {@code userinfo:permission:RoleDO:{roleCode}}，TTL 由
  *       {@code ydsz.userinfo.permission-cache-ttl-seconds} 外部化配置，默认 10 分钟）
  *   <li>菜单/角色/权限分配变更时调用 {@link #invalidate(String)} / {@link #invalidateAll()}
  *       主动失效，保证权限变更即时生效，不再依赖 TTL 自然过期
@@ -50,11 +50,11 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 @RequiredArgsConstructor
 public class DbRolePermissionLoader implements RolePermissionLoader {
 
-  /** 权限分类数（MENU / BUTTON / API 三类）。 */
+  /** 权限分类数（MenuDO / BUTTON / API 三类）。 */
   private static final int PERMISSION_CATEGORY_COUNT = 3;
 
   /** 角色权限缓存 Redis Key 前缀。 */
-  private static final String CACHE_KEY_PREFIX = "userinfo:permission:role:";
+  private static final String CACHE_KEY_PREFIX = "userinfo:permission:RoleDO:";
 
   private final MenuRepository menuRepository;
   private final RoleRepository roleRepository;
@@ -75,12 +75,12 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
       if (cached != null && !cached.isBlank()) {
         RolePermissions permissions = deserialize(cached);
         if (permissions != null) {
-          log.debug("Role permissions loaded from cache: roleCode={}", roleCode);
+          log.debug("RoleDO permissions loaded from cache: roleCode={}", roleCode);
           return permissions;
         }
       }
     } catch (Exception e) {
-      log.warn("Failed to read role permissions cache, fallback to DB: roleCode={}, error={}",
+      log.warn("Failed to read RoleDO permissions cache, fallback to DB: roleCode={}, error={}",
           roleCode, e.getMessage());
     }
 
@@ -92,7 +92,7 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
       redisStringOps.set(cacheKey, serialize(permissions),
           java.time.Duration.ofSeconds(properties.getPermissionCacheTtlSeconds()));
     } catch (Exception e) {
-      log.warn("Failed to cache role permissions: roleCode={}, error={}", roleCode, e.getMessage());
+      log.warn("Failed to cache RoleDO permissions: roleCode={}, error={}", roleCode, e.getMessage());
     }
 
     return permissions;
@@ -106,25 +106,25 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
    */
   private RolePermissions loadFromDb(String roleCode) {
     // 1. 按 roleCode 查询角色 ID
-    LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
-    roleWrapper.eq(Role::getRoleCode, roleCode);
-    Role role = roleRepository.findByRoleCode(roleCode);
+    LambdaQueryWrapper<RoleDO> roleWrapper = new LambdaQueryWrapper<>();
+    roleWrapper.eq(RoleDO::getRoleCode, roleCode);
+    RoleDO RoleDO = roleRepository.findByRoleCode(roleCode);
 
-    if (role == null) {
-      log.debug("Role not found for roleCode: {}", roleCode);
+    if (RoleDO == null) {
+      log.debug("RoleDO not found for roleCode: {}", roleCode);
       return RolePermissions.empty();
     }
 
     // 2. 按 roleId 查询 role_permission 关联表
     // 2. 按 roleId 查询 role_permission 关联表
-    List<String> permissionIds = rolePermissionRepository.findMenuIdsByRoleId(role.getId());
+    List<String> permissionIds = rolePermissionRepository.findMenuIdsByRoleId(RoleDO.getId());
 
     if (permissionIds.isEmpty()) {
       return RolePermissions.empty();
     }
 
     // 3. 查询权限/菜单详情
-    List<Menu> menus = menuRepository.findByIds(permissionIds).stream()
+    List<MenuDO> menus = menuRepository.findByIds(permissionIds).stream()
         .filter(m -> m.getDeleted() == 0 && "ENABLED".equals(m.getStatus()))
         .collect(Collectors.toList());
 
@@ -132,7 +132,7 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
     Map<String, Set<String>> categorized = categorizePermissions(menus);
 
     return new RolePermissions(
-        Collections.unmodifiableSet(categorized.get("MENU")),
+        Collections.unmodifiableSet(categorized.get("MenuDO")),
         Collections.unmodifiableSet(categorized.get("BUTTON")),
         Collections.unmodifiableSet(categorized.get("API")));
   }
@@ -148,9 +148,9 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
     }
     try {
       redisStringOps.del(buildCacheKey(roleCode));
-      log.debug("Role permissions cache evicted: roleCode={}", roleCode);
+      log.debug("RoleDO permissions cache evicted: roleCode={}", roleCode);
     } catch (Exception e) {
-      log.warn("Failed to evict role permissions cache: roleCode={}, error={}",
+      log.warn("Failed to evict RoleDO permissions cache: roleCode={}, error={}",
           roleCode, e.getMessage());
     }
   }
@@ -161,9 +161,9 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
   public void invalidateAll() {
     try {
       redisStringOps.delByPattern(CACHE_KEY_PREFIX + "*");
-      log.info("All role permissions cache evicted");
+      log.info("All RoleDO permissions cache evicted");
     } catch (Exception e) {
-      log.warn("Failed to evict all role permissions cache: {}", e.getMessage());
+      log.warn("Failed to evict all RoleDO permissions cache: {}", e.getMessage());
     }
   }
 
@@ -172,14 +172,14 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
   }
 
   /**
-   * 序列化权限集合为 JSON（{@code {"menu":[],"button":[],"api":[]}}）。
+   * 序列化权限集合为 JSON（{@code {"MenuDO":[],"button":[],"api":[]}}）。
    *
    * @param permissions 权限集合
    * @return JSON 字符串
    */
   private String serialize(RolePermissions permissions) {
     Map<String, Object> map = new HashMap<>(PERMISSION_CATEGORY_COUNT);
-    map.put("menu", permissions.getMenuPermissions());
+    map.put("MenuDO", permissions.getMenuPermissions());
     map.put("button", permissions.getButtonPermissions());
     map.put("api", permissions.getApiPermissions());
     return YdszJson.toJson(map);
@@ -198,7 +198,7 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
       if (map == null) {
         return null;
       }
-      Set<String> menuPerms = toStringSet(map.get("menu"));
+      Set<String> menuPerms = toStringSet(map.get("MenuDO"));
       Set<String> buttonPerms = toStringSet(map.get("button"));
       Set<String> apiPerms = toStringSet(map.get("api"));
       return new RolePermissions(
@@ -206,7 +206,7 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
           Collections.unmodifiableSet(buttonPerms),
           Collections.unmodifiableSet(apiPerms));
     } catch (Exception e) {
-      log.warn("Failed to parse role permissions cache json: {}", e.getMessage());
+      log.warn("Failed to parse RoleDO permissions cache json: {}", e.getMessage());
       return null;
     }
   }
@@ -228,19 +228,19 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
    * 按菜单类型分类权限码。
    *
    * @param menus 菜单列表
-   * @return 分类后的权限码映射（MENU/BUTTON/API）
+   * @return 分类后的权限码映射（MenuDO/BUTTON/API）
    */
-  private Map<String, Set<String>> categorizePermissions(List<Menu> menus) {
+  private Map<String, Set<String>> categorizePermissions(List<MenuDO> menus) {
     Set<String> menuPerms = new HashSet<>();
     Set<String> buttonPerms = new HashSet<>();
     Set<String> apiPerms = new HashSet<>();
 
-    for (Menu menu : menus) {
-      String permCode = menu.getPermissionCode();
+    for (MenuDO MenuDO : menus) {
+      String permCode = MenuDO.getPermissionCode();
       if (permCode == null || permCode.isBlank()) {
         continue;
       }
-      String type = menu.getMenuType();
+      String type = MenuDO.getMenuType();
       if ("BUTTON".equals(type)) {
         buttonPerms.add(permCode);
       } else if ("API".equals(type)) {
@@ -250,7 +250,7 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
       }
     }
     Map<String, Set<String>> result = new HashMap<>(PERMISSION_CATEGORY_COUNT);
-    result.put("MENU", menuPerms);
+    result.put("MenuDO", menuPerms);
     result.put("BUTTON", buttonPerms);
     result.put("API", apiPerms);
     return result;

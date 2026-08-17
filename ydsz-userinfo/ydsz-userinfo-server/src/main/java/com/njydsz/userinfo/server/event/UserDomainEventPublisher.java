@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.publish.DomainEventPublisher;
-import com.njydsz.userinfo.domain.entity.Department;
-import com.njydsz.userinfo.domain.entity.Role;
-import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.infra.entity.DepartmentDO;
+import com.njydsz.userinfo.infra.entity.RoleDO;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.event.UserDomainEvent;
 import com.njydsz.userinfo.domain.event.UserDomainEventType;
 
@@ -39,7 +39,7 @@ public class UserDomainEventPublisher {
    *
    * @param user 新建的用户实体
    */
-  public void publishUserCreated(UserAccount user) {
+  public void publishUserCreated(UserAccountDO user) {
     if (user == null) {
       return;
     }
@@ -58,7 +58,7 @@ public class UserDomainEventPublisher {
    *
    * @param user 更新后的用户实体
    */
-  public void publishUserUpdated(UserAccount user) {
+  public void publishUserUpdated(UserAccountDO user) {
     if (user == null) {
       return;
     }
@@ -119,22 +119,22 @@ public class UserDomainEventPublisher {
   /**
    * 发布角色实体变更事件。
    *
-   * @param role 角色实体
+   * @param RoleDO 角色实体
    * @param action 操作类型（CREATED / UPDATED / DELETED）
    */
-  public void publishRoleEntityChanged(Role role, String action) {
-    if (role == null) {
+  public void publishRoleEntityChanged(RoleDO RoleDO, String action) {
+    if (RoleDO == null) {
       return;
     }
     publish(
         UserDomainEventType.ROLE_CHANGED,
-        role.getId(),
-        "ROLE",
+        RoleDO.getId(),
+        "RoleDO",
         new UserDomainEvent(
             UserDomainEventType.ROLE_CHANGED,
-            role.getId(),
-            "ROLE",
-            Map.of("roleId", role.getId(), "roleCode", orEmpty(role.getRoleCode()), "action", action)));
+            RoleDO.getId(),
+            "RoleDO",
+            Map.of("roleId", RoleDO.getId(), "roleCode", orEmpty(RoleDO.getRoleCode()), "action", action)));
   }
 
   /**
@@ -143,18 +143,18 @@ public class UserDomainEventPublisher {
    * @param dept 部门实体
    * @param action 操作类型（CREATED / UPDATED / DELETED）
    */
-  public void publishDepartmentChanged(Department dept, String action) {
+  public void publishDepartmentChanged(DepartmentDO dept, String action) {
     if (dept == null) {
       return;
     }
     publish(
         UserDomainEventType.ORG_STRUCTURE_CHANGED,
         dept.getId(),
-        "DEPARTMENT",
+        "DepartmentDO",
         new UserDomainEvent(
             UserDomainEventType.ORG_STRUCTURE_CHANGED,
             dept.getId(),
-            "DEPARTMENT",
+            "DepartmentDO",
             Map.of(
                 "deptId",
                 dept.getId(),

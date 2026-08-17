@@ -18,10 +18,10 @@ import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.create.PostCreateDTO;
 import com.njydsz.userinfo.domain.dto.update.PostUpdateDTO;
-import com.njydsz.userinfo.domain.entity.Post;
+import com.njydsz.userinfo.infra.entity.PostDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.PostVO;
-import com.njydsz.userinfo.infra.repository.PostRepository;
+import com.njydsz.userinfo.domain.repository.PostRepository;
 import com.njydsz.userinfo.server.service.PostService;
 
 /**
@@ -45,7 +45,7 @@ import com.njydsz.userinfo.server.service.PostService;
  * @author ydsz-team
  * @since 1.0.0
  * @see PostService Service 接口
- * @see Post 岗位实体
+ * @see PostDO 岗位实体
  * @see com.njydsz.userinfo.web.controller.PostController 岗位 Controller
  */
 @Slf4j
@@ -63,7 +63,7 @@ public class PostServiceImpl implements PostService {
    */
   @Override
   public PostVO getById(String id) {
-    Post entity = postRepository.findById(id);
+    PostDO entity = postRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND);
     }
@@ -77,8 +77,8 @@ public class PostServiceImpl implements PostService {
    */
   @Override
   public List<PostVO> list() {
-    LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
-    wrapper.orderByDesc(Post::getSortOrder);
+    LambdaQueryWrapper<PostDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.orderByDesc(PostDO::getSortOrder);
     return postRepository.list(wrapper).stream()
         .map(UserInfoConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
@@ -95,18 +95,18 @@ public class PostServiceImpl implements PostService {
   @Transactional(rollbackFor = Exception.class)
   public String create(PostCreateDTO dto) {
     // 编码唯一性校验
-    LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Post::getPostCode, dto.getPostCode());
+    LambdaQueryWrapper<PostDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(PostDO::getPostCode, dto.getPostCode());
     if (postRepository.count(wrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.POST_CODE_DUPLICATE);
     }
 
-    Post entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
+    PostDO entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
     if (entity.getStatus() == null) {
       entity.setStatus("ENABLED");
     }
     postRepository.insert(entity);
-    log.info("Post created: code={}, id={}", entity.getPostCode(), entity.getId());
+    log.info("PostDO created: code={}, id={}", entity.getPostCode(), entity.getId());
     return entity.getId();
   }
 
@@ -120,7 +120,7 @@ public class PostServiceImpl implements PostService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(PostUpdateDTO dto) {
-    Post entity = postRepository.findById(dto.getId());
+    PostDO entity = postRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND);
     }
@@ -136,7 +136,7 @@ public class PostServiceImpl implements PostService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Post entity = postRepository.findById(id);
+    PostDO entity = postRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND);
     }
@@ -154,12 +154,12 @@ public class PostServiceImpl implements PostService {
       return Collections.emptyMap();
     }
 
-    LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
-    wrapper.in(Post::getId, postIds);
-    wrapper.select(Post::getId, Post::getPostName);
+    LambdaQueryWrapper<PostDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.in(PostDO::getId, postIds);
+    wrapper.select(PostDO::getId, PostDO::getPostName);
 
     return postRepository.list(wrapper).stream()
         .collect(
-            Collectors.toMap(Post::getId, Post::getPostName, (v1, v2) -> v1, LinkedHashMap::new));
+            Collectors.toMap(PostDO::getId, PostDO::getPostName, (v1, v2) -> v1, LinkedHashMap::new));
   }
 }

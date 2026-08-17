@@ -17,8 +17,8 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
-import com.njydsz.workflow.domain.entity.FlowInstance;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowEventListener;
@@ -85,7 +85,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         instanceId,
         variables == null ? Collections.emptySet() : variables.keySet());
     // P0-7: 流程启动 → 发布立项状态联动事件（markProcessing）到 MQ
-    FlowInstance instance = instanceId == null ? null : instanceMapper.selectById(instanceId);
+    FlowInstanceDO instance = instanceId == null ? null : instanceMapper.selectById(instanceId);
     String initiationId = resolveInitiationId(instance);
     if (initiationId != null) {
       publishInitiationStatusSync(initiationId, ACTION_MARK_PROCESSING, instanceId, instance);
@@ -98,7 +98,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (taskId == null) {
       return;
     }
-    FlowRunTask task = taskMapper.selectById(taskId);
+    FlowRunTaskDO task = taskMapper.selectById(taskId);
     if (task == null) {
       return;
     }
@@ -130,7 +130,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (instanceId == null) {
       return;
     }
-    FlowInstance instance = instanceMapper.selectById(instanceId);
+    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
     if (instance == null || instance.getInitiatorId() == null) {
       return;
     }
@@ -169,7 +169,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (instanceId == null) {
       return;
     }
-    FlowInstance instance = instanceMapper.selectById(instanceId);
+    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
     if (instance == null || instance.getInitiatorId() == null) {
       return;
     }
@@ -211,7 +211,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (instanceId == null) {
       return;
     }
-    FlowInstance instance = instanceMapper.selectById(instanceId);
+    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
     String initiationId = resolveInitiationId(instance);
     if (initiationId != null) {
       publishInitiationStatusSync(initiationId, ACTION_MARK_PROCESSING, instanceId, instance);
@@ -247,7 +247,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (instanceId == null) {
       return;
     }
-    List<FlowRunTask> pending = taskMapper.selectPendingByInstance(instanceId);
+    List<FlowRunTaskDO> pending = taskMapper.selectPendingByInstance(instanceId);
     List<String> receivers =
         pending == null
             ? Collections.emptyList()
@@ -256,7 +256,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
-    FlowInstance instance = instanceMapper.selectById(instanceId);
+    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
     String flowName = instance == null ? "" : nullSafe(instance.getFlowName());
     String title = "审批催办";
     String content = String.format("【%s】 您有一个待办任务被催办，请尽快处理", flowName);
@@ -269,7 +269,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (instanceId == null) {
       return;
     }
-    FlowInstance instance = instanceMapper.selectById(instanceId);
+    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
     if (instance == null || instance.getInitiatorId() == null) {
       return;
     }
@@ -292,7 +292,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (instanceId == null) {
       return;
     }
-    List<FlowRunTask> pending = taskMapper.selectPendingByInstance(instanceId);
+    List<FlowRunTaskDO> pending = taskMapper.selectPendingByInstance(instanceId);
     List<String> receivers =
         pending == null
             ? Collections.emptyList()
@@ -301,7 +301,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
-    FlowInstance instance = instanceMapper.selectById(instanceId);
+    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
     String flowName = instance == null ? "" : nullSafe(instance.getFlowName());
     String title = "审批已撤回";
     String content = String.format("【%s】 该流程已被发起人撤回", flowName);
@@ -315,7 +315,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (taskId == null || toUserId == null) {
       return;
     }
-    FlowRunTask task = taskMapper.selectById(taskId);
+    FlowRunTaskDO task = taskMapper.selectById(taskId);
     if (task == null) {
       return;
     }
@@ -336,7 +336,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (taskId == null || toUserId == null) {
       return;
     }
-    FlowRunTask task = taskMapper.selectById(taskId);
+    FlowRunTaskDO task = taskMapper.selectById(taskId);
     if (task == null) {
       return;
     }
@@ -357,7 +357,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (taskId == null) {
       return;
     }
-    FlowRunTask task = taskMapper.selectById(taskId);
+    FlowRunTaskDO task = taskMapper.selectById(taskId);
     if (task == null) {
       return;
     }
@@ -387,7 +387,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
    * @param instance 流程实例（可空）
    * @return 立项 ID，解析失败返回 null
    */
-  private String resolveInitiationId(FlowInstance instance) {
+  private String resolveInitiationId(FlowInstanceDO instance) {
     if (instance == null) {
       return null;
     }
@@ -428,7 +428,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
       String initiationId,
       String action,
       String instanceId,
-      FlowInstance instance,
+      FlowInstanceDO instance,
       String... reason) {
     if (queuePublisher == null || initiationId == null || action == null) {
       return;

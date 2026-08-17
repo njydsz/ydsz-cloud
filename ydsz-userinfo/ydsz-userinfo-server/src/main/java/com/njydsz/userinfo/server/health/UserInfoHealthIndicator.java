@@ -11,10 +11,10 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
-import com.njydsz.userinfo.domain.entity.Role;
-import com.njydsz.userinfo.domain.entity.UserAccount;
-import com.njydsz.userinfo.infra.repository.RoleRepository;
-import com.njydsz.userinfo.infra.repository.UserAccountRepository;
+import com.njydsz.userinfo.infra.entity.RoleDO;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
+import com.njydsz.userinfo.domain.repository.RoleRepository;
+import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 
 /**
  * 用户信息中心健康检查指标。
@@ -58,14 +58,14 @@ public class UserInfoHealthIndicator extends AbstractModuleHealthIndicator {
     }
 
     // 用户表探针
-    LambdaQueryWrapper<UserAccount> userWrapper = new LambdaQueryWrapper<>();
-    userWrapper.eq(UserAccount::getDeleted, 0);
+    LambdaQueryWrapper<UserAccountDO> userWrapper = new LambdaQueryWrapper<>();
+    userWrapper.eq(UserAccountDO::getDeleted, 0);
     checkTableProbeWithValue(
         builder, "userCount", () -> userAccountRepository.count(userWrapper));
 
     // 角色表探针
-    LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
-    roleWrapper.eq(Role::getDeleted, 0);
+    LambdaQueryWrapper<RoleDO> roleWrapper = new LambdaQueryWrapper<>();
+    roleWrapper.eq(RoleDO::getDeleted, 0);
     checkTableProbeWithValue(builder, "roleCount", () -> roleRepository.count(roleWrapper));
   }
 }

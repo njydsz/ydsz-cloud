@@ -8,7 +8,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.TagDO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +31,9 @@ import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.util.ClientIpResolver;
-import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService.DownloadContext;
@@ -98,7 +98,7 @@ import com.njydsz.nextwiki.server.service.DownloadApplicationService.SignedDownl
 @RestController
 @RequestMapping("/api/v1/nextwiki/download")
 @RequiredArgsConstructor
-@Tag(name = "文件下载", description = "文件下载、签名URL生成、限流防盗链、Range 断点续传")
+@TagDO(name = "文件下载", description = "文件下载、签名URL生成、限流防盗链、Range 断点续传")
 public class DownloadController {
 
   /** 下载应用服务（封装下载上下文准备、签名 URL 生成、限流等） */
@@ -129,7 +129,7 @@ public class DownloadController {
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
       HttpServletResponse response) {
 
-    FileNode folder = fileNodeRepository.findById(folderId);
+    FileNodeDO folder = fileNodeRepository.findById(folderId);
     if (folder == null || !folder.isFolder()) {
       throw new BusinessException(NextwikiExceptionCode.FILE_NOT_FOUND);
     }
@@ -162,13 +162,13 @@ public class DownloadController {
    * @param basePath 当前 ZIP 条目的父路径（递归累加）
    */
   private void downloadFolderRecursive(
-      FileNode folder, ZipOutputStream zos, String userId, String basePath) {
-    List<FileNode> children = fileNodeRepository.findChildren(folder.getId());
+      FileNodeDO folder, ZipOutputStream zos, String userId, String basePath) {
+    List<FileNodeDO> children = fileNodeRepository.findChildren(folder.getId());
     if (children == null) return;
 
     IFileStorage storage = downloadApplicationService.resolveStorageForDownload();
 
-    for (FileNode child : children) {
+    for (FileNodeDO child : children) {
       String entryPath = basePath.isEmpty() ? child.getName() : basePath + "/" + child.getName();
       if (child.isFolder()) {
         try {
@@ -230,19 +230,19 @@ public class DownloadController {
       throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
     }
 
-    FileNode fileNode = context.getFileNode();
+    FileNodeDO FileNodeDO = context.getFileNode();
 
     // P0-3: 支持 HTTP Range 断点续传
     String rangeHeader = request.getHeader("Range");
     if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
-      handleRangeDownload(storage, fileNode, rangeHeader, response);
+      handleRangeDownload(storage, FileNodeDO, rangeHeader, response);
     } else {
-      setDownloadHeaders(response, fileNode.getName(), fileNode.getMimeType());
-      if (fileNode.getSize() != null) {
-        response.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(fileNode.getSize()));
+      setDownloadHeaders(response, FileNodeDO.getName(), FileNodeDO.getMimeType());
+      if (FileNodeDO.getSize() != null) {
+        response.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(FileNodeDO.getSize()));
       }
       response.setHeader(HttpHeaders.ACCEPT_RANGES, "bytes");
-      storage.download(fileNode.getBucketName(), fileNode.getStorageKey(), response);
+      storage.download(FileNodeDO.getBucketName(), FileNodeDO.getStorageKey(), response);
     }
 
     nextwikiMetrics.recordDownload();
@@ -261,13 +261,13 @@ public class DownloadController {
    * Requested Range Not Satisfiable。
    *
    * @param storage 文件存储抽象
-   * @param fileNode 文件节点（含 size / storageKey / mimeType 等）
+   * @param FileNodeDO 文件节点（含 size / storageKey / mimeType 等）
    * @param rangeHeader HTTP Range 头（含 {@code bytes=} 前缀）
    * @param response HTTP 响应
    */
   private void handleRangeDownload(
-      IFileStorage storage, FileNode fileNode, String rangeHeader, HttpServletResponse response) {
-    long fileSize = fileNode.getSize() != null ? fileNode.getSize() : 0;
+      IFileStorage storage, FileNodeDO FileNodeDO, String rangeHeader, HttpServletResponse response) {
+    long fileSize = FileNodeDO.getSize() != null ? FileNodeDO.getSize() : 0;
     String rangeValue = rangeHeader.substring(6); // strip "bytes="
     String[] parts = rangeValue.split("-");
     long start = 0;
@@ -294,9 +294,9 @@ public class DownloadController {
     response.setHeader(HttpHeaders.CONTENT_RANGE, "bytes " + start + "-" + end + "/" + fileSize);
     response.setHeader(HttpHeaders.ACCEPT_RANGES, "bytes");
     response.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength));
-    setDownloadHeaders(response, fileNode.getName(), fileNode.getMimeType());
+    setDownloadHeaders(response, FileNodeDO.getName(), FileNodeDO.getMimeType());
     try (InputStream is =
-        storage.downloadAsStream(fileNode.getBucketName(), fileNode.getStorageKey())) {
+        storage.downloadAsStream(FileNodeDO.getBucketName(), FileNodeDO.getStorageKey())) {
       long skipped = is.skip(start);
       if (skipped < start) {
         log.warn("[DownloadController] skip 不足: start={}, skipped={}", start, skipped);
@@ -314,7 +314,7 @@ public class DownloadController {
       }
       response.getOutputStream().flush();
     } catch (Exception e) {
-      log.error("[DownloadController] Range 下载失败: nodeId={}", fileNode.getId(), e);
+      log.error("[DownloadController] Range 下载失败: nodeId={}", FileNodeDO.getId(), e);
       throw new BusinessException(NextwikiExceptionCode.FILE_DOWNLOAD_FAILED);
     }
   }

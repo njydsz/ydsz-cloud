@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.infra.repository.UserAccountRepository;
+import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 
 /**
  * 敏感操作二次认证服务。
@@ -58,7 +58,7 @@ public class SensitiveVerifyService {
       throw new BusinessException(UserInfoExceptionCode.SENSITIVE_VERIFY_REQUIRED);
     }
 
-    UserAccount user = userAccountRepository.findById(userId);
+    UserAccountDO user = userAccountRepository.findById(userId);
     if (user == null) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }

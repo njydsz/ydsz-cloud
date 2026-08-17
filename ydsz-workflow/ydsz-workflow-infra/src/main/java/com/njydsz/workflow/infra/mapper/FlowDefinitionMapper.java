@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.domain.entity.FlowDefinition;
+import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 
 /**
  * 流程定义 Mapper
@@ -30,21 +30,21 @@ import com.njydsz.workflow.domain.entity.FlowDefinition;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.domain.entity.FlowDefinition 流程定义实体
+ * @see com.njydsz.workflow.infra.entity.FlowDefinitionDO 流程定义实体
  * @see com.njydsz.workflow.server.service.FlowDefinitionService 流程定义 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowDefinitionMapper extends BaseMapper<FlowDefinition> {
+public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
 
   /** 根据 flowCode + version 查最新已发布版本 */
-  FlowDefinition selectPublished(
+  FlowDefinitionDO selectPublished(
       @Param("flowCode") String flowCode,
       @Param("version") String version,
       @Param("tenantId") String tenantId);
 
   /** 根据 flowCode 查最新版本（不区分发布状态） */
-  FlowDefinition selectLatestByCode(
+  FlowDefinitionDO selectLatestByCode(
       @Param("flowCode") String flowCode, @Param("tenantId") String tenantId);
 
   /** 发布（更新 is_publish） */
@@ -79,7 +79,7 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinition> {
    * @param tenantId 租户 ID
    * @return 灰度中定义列表（按 version desc）
    */
-  List<FlowDefinition> selectCanaryingByCode(
+  List<FlowDefinitionDO> selectCanaryingByCode(
       @Param("flowCode") String flowCode, @Param("tenantId") String tenantId);
 
   /**
@@ -89,7 +89,7 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinition> {
    * @param tenantId 租户 ID
    * @return 所有定义列表
    */
-  List<FlowDefinition> selectByFlowCode(
+  List<FlowDefinitionDO> selectByFlowCode(
       @Param("flowCode") String flowCode, @Param("tenantId") String tenantId);
 
   /**

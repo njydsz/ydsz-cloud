@@ -14,8 +14,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
-import com.njydsz.nextwiki.domain.entity.StorageQuota;
-import com.njydsz.nextwiki.infra.repository.StorageQuotaRepository;
+import com.njydsz.nextwiki.infra.entity.StorageQuotaDO;
+import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
 
 /**
  * NextWiki Micrometer 指标采集。
@@ -29,7 +29,7 @@ import com.njydsz.nextwiki.infra.repository.StorageQuotaRepository;
  *       file_delete_total} / {@code share_create_total} / {@code search_total} / {@code
  *       preview_generate_total}
  *   <li>Timer — 操作耗时：{@code file_upload_duration} / {@code file_download_duration} / {@code
- *       operation_duration}（通用，带 operation tag 区分）
+ *       operation_duration}（通用，带 operation TagDO 区分）
  *   <li>DistributionSummary — 值分布：{@code file_upload_size_bytes}（上传文件大小）/ {@code
  *       file_download_size_bytes}（下载文件大小）
  * </ul>
@@ -75,7 +75,7 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
     this.operationTimer = Timer.builder("ydsz_nextwiki_operation_duration")
             .description("通用操作耗时（毫秒），由 operation tag 区分类型")
             .publishPercentiles(0.5, 0.95, 0.99)
-            .tag("operation", "unknown")
+            .TagDO("operation", "unknown")
             .register(meterRegistry);
     this.uploadSizeSummary = DistributionSummary.builder("ydsz_nextwiki_file_upload_size_bytes")
             .description("上传文件大小分布（字节）")
@@ -197,7 +197,7 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
   }
 
   /**
-   * 记录通用操作耗时（带 operation tag 区分）。
+   * 记录通用操作耗时（带 operation TagDO 区分）。
    *
    * @param operation 操作名（如 share_create、permission_check）
    * @param durationMs 耗时毫秒数
@@ -269,7 +269,7 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
    */
   public void refreshQuotaGauge(String scopeType, String scopeId) {
     try {
-      StorageQuota quota = quotaRepository.findByScope(scopeType, scopeId);
+      StorageQuotaDO quota = quotaRepository.findByScope(scopeType, scopeId);
       if (quota != null && quota.getQuotaUsed() != null) {
         quotaUsageCached.set(quota.getQuotaUsed());
       }

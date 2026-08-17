@@ -22,7 +22,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
-import com.njydsz.nextwiki.domain.entity.Tag;
+import com.njydsz.nextwiki.infra.entity.TagDO;
 import com.njydsz.nextwiki.server.service.TagApplicationService;
 
 /**
@@ -85,9 +85,9 @@ import com.njydsz.nextwiki.server.service.TagApplicationService;
 @RestController
 @RequestMapping("/api/v1/nextwiki/tags")
 @RequiredArgsConstructor
-@io.swagger.v3.oas.annotations.tags.Tag(
+@io.swagger.v3.oas.annotations.tags.TagDO(
     name = "标签管理",
-    description = "标签创建、绑定、智能推荐") // FQN-OK: name conflict with Tag entity
+    description = "标签创建、绑定、智能推荐") // FQN-OK: name conflict with TagDO entity
 public class TagController {
 
   /** 标签应用服务（封装标签 CRUD + 绑定 + 推荐） */
@@ -100,7 +100,7 @@ public class TagController {
    *
    * @param request 创建标签请求（name / color）
    * @param userId 当前用户 ID
-   * @return 统一响应结果，data 为新创建的 {@link Tag}
+   * @return 统一响应结果，data 为新创建的 {@link TagDO}
    */
   @Audit(
       module = "标签管理",
@@ -111,11 +111,11 @@ public class TagController {
   @PostMapping
   @Operation(summary = "创建标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_CREATE)
-  public BaseResponse<Tag> createTag(
+  public BaseResponse<TagDO> createTag(
       @RequestBody NextwikiDTOs.CreateTagRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    Tag tag = tagApplicationService.createTag(request.getName(), request.getColor(), userId);
-    return BaseResponse.success(tag);
+    TagDO TagDO = tagApplicationService.createTag(request.getName(), request.getColor(), userId);
+    return BaseResponse.success(TagDO);
   }
 
   /**
@@ -123,12 +123,12 @@ public class TagController {
    *
    * <p>返回全局可见的标签集合，供前端"标签选择器"组件渲染。
    *
-   * @return 统一响应结果，data 为 {@link Tag} 列表
+   * @return 统一响应结果，data 为 {@link TagDO} 列表
    */
   @GetMapping
   @Operation(summary = "查询所有标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
-  public BaseResponse<List<Tag>> listTags() {
+  public BaseResponse<List<TagDO>> listTags() {
     return BaseResponse.success(tagApplicationService.getAllTags());
   }
 
@@ -161,12 +161,12 @@ public class TagController {
    * 查询指定文件已绑定的所有标签。
    *
    * @param fileNodeId 文件节点 ID
-   * @return 统一响应结果，data 为 {@link Tag} 列表
+   * @return 统一响应结果，data 为 {@link TagDO} 列表
    */
   @GetMapping("/file/{fileNodeId}")
   @Operation(summary = "查询文件的标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
-  public BaseResponse<List<Tag>> getFileTags(@PathVariable String fileNodeId) {
+  public BaseResponse<List<TagDO>> getFileTags(@PathVariable String fileNodeId) {
     return BaseResponse.success(tagApplicationService.getFileTags(fileNodeId));
   }
 
@@ -176,12 +176,12 @@ public class TagController {
    * <p>通常基于文件标题/正文/AI Summary 做关键词提取，匹配现有标签库， 返回 TopN 推荐结果。建议前端在用户上传后自动调用此接口预填标签。
    *
    * @param fileNodeId 文件节点 ID
-   * @return 统一响应结果，data 为推荐的 {@link Tag} 列表
+   * @return 统一响应结果，data 为推荐的 {@link TagDO} 列表
    */
   @GetMapping("/recommend/{fileNodeId}")
   @Operation(summary = "推荐标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
-  public BaseResponse<List<Tag>> recommendTags(@PathVariable String fileNodeId) {
+  public BaseResponse<List<TagDO>> recommendTags(@PathVariable String fileNodeId) {
     return BaseResponse.success(tagApplicationService.recommendTags(fileNodeId));
   }
 }

@@ -13,8 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.infra.repository.RoleRepository;
-import com.njydsz.userinfo.infra.repository.UserAccountRepository;
+import com.njydsz.userinfo.domain.repository.RoleRepository;
+import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.server.health.UserInfoHealthIndicator;
 
 /**

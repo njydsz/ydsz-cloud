@@ -24,11 +24,11 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowAssigneeDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
-import com.njydsz.workflow.domain.entity.FlowInstance;
-import com.njydsz.workflow.domain.entity.FlowNode;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
-import com.njydsz.workflow.domain.entity.FlowUser;
+import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
+import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowUserDO;
 import com.njydsz.workflow.domain.enums.FlowAssigneeType;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
@@ -129,8 +129,8 @@ import com.njydsz.workflow.server.service.instance.AssigneeResolutionService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowTaskServiceImpl 任务门面（拆分入口）
- * @see FlowRunTask 运行时任务实体
- * @see FlowNode 流程节点实体
+ * @see FlowRunTaskDO 运行时任务实体
+ * @see FlowNodeDO 流程节点实体
  * @see FlowAdvancer 流程推进引擎
  * @see FlowSlaService SLA 服务
  * @see FlowDelegateAuthService 委派代理服务
@@ -210,7 +210,7 @@ public class FlowTaskCreateService {
 
   /** 创建任务（向后兼容重载） */
   @Transactional(rollbackFor = Exception.class)
-  public String createTask(String instanceId, FlowNode node, Map<String, Object> variables) {
+  public String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables) {
     return createTask(instanceId, node, variables, null);
   }
 
@@ -223,10 +223,10 @@ public class FlowTaskCreateService {
   @Transactional(rollbackFor = Exception.class)
   public String createTask(
       String instanceId,
-      FlowNode node,
+      FlowNodeDO node,
       Map<String, Object> variables,
       List<String> explicitAssignees) {
-    FlowInstance instance = lookupInstance(instanceId);
+    FlowInstanceDO instance = lookupInstance(instanceId);
 
     // 特殊节点创建路径（提前返回）
     if (isNodeType(node, FlowNodeType.SERVICE)) {
@@ -263,7 +263,7 @@ public class FlowTaskCreateService {
    * @param earlyReturnTaskId 提前返回的任务 ID（null 表示需继续 postCreateTask）
    * @param task 已持久化的任务实体（null 表示已有提前返回）
    */
-  private record TaskBuildResult(String earlyReturnTaskId, FlowRunTask task) {}
+  private record TaskBuildResult(String earlyReturnTaskId, FlowRunTaskDO task) {}
 
   /**
    * 构建标准审批节点的任务实体（含持久化）。
@@ -272,8 +272,8 @@ public class FlowTaskCreateService {
    * 自动去重命中）时， 通过 {@link TaskBuildResult#earlyReturnTaskId} 传递结果。
    */
   private TaskBuildResult buildTaskEntities(
-      FlowInstance instance,
-      FlowNode node,
+      FlowInstanceDO instance,
+      FlowNodeDO node,
       Map<String, Object> variables,
       List<String> explicitAssignees) {
     String instanceId = instance.getId();
@@ -291,7 +291,7 @@ public class FlowTaskCreateService {
       userIds = applyCrossNodeDedup(userIds, instanceId, node);
     }
 
-    FlowRunTask task = buildBaseTask(instance, node, performType, userIds.size());
+    FlowRunTaskDO task = buildBaseTask(instance, node, performType, userIds.size());
 
     if (userIds.isEmpty()) {
       // 跨节点去重后候选人为空 — 自动跳过该节点
@@ -337,7 +337,7 @@ public class FlowTaskCreateService {
    * <p>前置条件：{@code task} 已持久化且 ydsz_flow_user 已写入。
    */
   private String postCreateTask(
-      FlowRunTask task, FlowInstance instance, FlowNode node, Map<String, Object> variables) {
+      FlowRunTaskDO task, FlowInstanceDO instance, FlowNodeDO node, Map<String, Object> variables) {
     // P1-4: 应用长期授权委派
     applyDelegateRedirect(task, instance, node);
     // P0-1: 事件发布
@@ -354,8 +354,8 @@ public class FlowTaskCreateService {
 
   // ============================== 内部方法 ==============================
 
-  private FlowInstance lookupInstance(String instanceId) {
-    FlowInstance instance = instanceService.getById(instanceId);
+  private FlowInstanceDO lookupInstance(String instanceId) {
+    FlowInstanceDO instance = instanceService.getById(instanceId);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -366,14 +366,14 @@ public class FlowTaskCreateService {
     return instance;
   }
 
-  private boolean isNodeType(FlowNode node, FlowNodeType type) {
+  private boolean isNodeType(FlowNodeDO node, FlowNodeType type) {
     return node != null && node.getNodeType() != null && node.getNodeType() == type.getCode();
   }
 
   /** 构建基础任务对象（设置通用字段）。 */
-  private FlowRunTask buildBaseTask(
-      FlowInstance instance, FlowNode node, FlowPerformType performType, int approveCount) {
-    FlowRunTask task = new FlowRunTask();
+  private FlowRunTaskDO buildBaseTask(
+      FlowInstanceDO instance, FlowNodeDO node, FlowPerformType performType, int approveCount) {
+    FlowRunTaskDO task = new FlowRunTaskDO();
     task.setInstanceId(instance.getId());
     task.setFlowCode(instance.getFlowCode());
     task.setDefinitionId(instance.getDefinitionId());
@@ -408,7 +408,7 @@ public class FlowTaskCreateService {
 
   /** 跨节点去重后候选人为空 — 自动跳过该节点。 */
   private String handleAutoDedupSkip(
-      FlowRunTask task, FlowInstance instance, FlowNode node, Map<String, Object> variables) {
+      FlowRunTaskDO task, FlowInstanceDO instance, FlowNodeDO node, Map<String, Object> variables) {
     task.setAssigneeType(FlowAssigneeType.USER.name());
     task.setAssigneeId("0");
     task.setAssigneeName("SYSTEM_DEDUP_SKIP");
@@ -437,7 +437,7 @@ public class FlowTaskCreateService {
    * </ul>
    */
   private String handleEmptyAssignee(
-      FlowRunTask task, FlowInstance instance, FlowNode node, Map<String, Object> variables) {
+      FlowRunTaskDO task, FlowInstanceDO instance, FlowNodeDO node, Map<String, Object> variables) {
     Map<String, Object> extConfig = parseExtConfig(node.getExt());
     String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", DEFAULT_EMPTY_STRATEGY);
 
@@ -465,7 +465,7 @@ public class FlowTaskCreateService {
 
   /** AUTO_PASS 策略：标记任务为已完成（自动通过），归档并推进到下一节点。 */
   private String handleAutoPass(
-      FlowRunTask task, FlowInstance instance, FlowNode node, Map<String, Object> variables) {
+      FlowRunTaskDO task, FlowInstanceDO instance, FlowNodeDO node, Map<String, Object> variables) {
     task.setAssigneeType(FlowAssigneeType.USER.name());
     task.setAssigneeId("0");
     task.setAssigneeName("SYSTEM_AUTO_PASS");
@@ -487,9 +487,9 @@ public class FlowTaskCreateService {
    * @param logMsg 日志模板（包含 3 个 {} 占位符：instanceId, nodeCode, userId）
    */
   private String assignToFallbackUser(
-      FlowRunTask task,
-      FlowInstance instance,
-      FlowNode node,
+      FlowRunTaskDO task,
+      FlowInstanceDO instance,
+      FlowNodeDO node,
       String userId,
       String fallbackName,
       String logMsg) {
@@ -503,7 +503,7 @@ public class FlowTaskCreateService {
 
   /** FALLBACK 策略：回退到原有 resolveAssignee 逻辑。 */
   private String fallbackToResolveAssignee(
-      FlowRunTask task, FlowInstance instance, FlowNode node, Map<String, Object> variables) {
+      FlowRunTaskDO task, FlowInstanceDO instance, FlowNodeDO node, Map<String, Object> variables) {
     taskMapper.insert(task);
     resolveAssignee(task, node, variables, null, instance);
     taskMapper.updateById(task);
@@ -534,7 +534,7 @@ public class FlowTaskCreateService {
    * <p>兼容旧配置：enabled + whenInitiatorIsApprover + expr 单条规则格式。
    */
   private void tryAutoApprove(
-      FlowInstance instance, FlowNode node, FlowRunTask task, Map<String, Object> variables) {
+      FlowInstanceDO instance, FlowNodeDO node, FlowRunTaskDO task, Map<String, Object> variables) {
     Map<String, Object> cfg = checkAutoApproveConditions(node, task);
     if (cfg == null) {
       return;
@@ -550,7 +550,7 @@ public class FlowTaskCreateService {
    *
    * @return 自动审批配置 Map（满足所有条件时返回），不满足时返回 null
    */
-  private Map<String, Object> checkAutoApproveConditions(FlowNode node, FlowRunTask task) {
+  private Map<String, Object> checkAutoApproveConditions(FlowNodeDO node, FlowRunTaskDO task) {
     if (node.getExt() == null || node.getExt().isBlank()) {
       return null;
     }
@@ -585,7 +585,7 @@ public class FlowTaskCreateService {
    * <p>将基础流程变量与 _initiatorId / _assigneeId / _nodeCode 三个内置变量合并， 供规则求值时使用。
    */
   private Map<String, Object> buildAutoApproveContext(
-      FlowInstance instance, FlowRunTask task, FlowNode node, Map<String, Object> variables) {
+      FlowInstanceDO instance, FlowRunTaskDO task, FlowNodeDO node, Map<String, Object> variables) {
     Map<String, Object> env = new HashMap<>();
     if (variables != null) {
       env.putAll(variables);
@@ -605,9 +605,9 @@ public class FlowTaskCreateService {
   private void executeAutoApprove(
       Map<String, Object> cfg,
       Map<String, Object> env,
-      FlowInstance instance,
-      FlowNode node,
-      FlowRunTask task,
+      FlowInstanceDO instance,
+      FlowNodeDO node,
+      FlowRunTaskDO task,
       Map<String, Object> variables) {
     // P0-4: 优先使用 rules 数组（新配置）
     Object rulesObj = cfg.get("rules");
@@ -666,7 +666,7 @@ public class FlowTaskCreateService {
    * @return "PASS" / "REJECT" / null（未命中）
    */
   private String evaluateAutoApproveRule(
-      Map<String, Object> rule, FlowInstance instance, FlowRunTask task, Map<String, Object> env) {
+      Map<String, Object> rule, FlowInstanceDO instance, FlowRunTaskDO task, Map<String, Object> env) {
     String type = String.valueOf(rule.getOrDefault("type", "")).toUpperCase();
     String action = String.valueOf(rule.getOrDefault("action", "PASS")).toUpperCase();
     boolean matched = false;
@@ -722,9 +722,9 @@ public class FlowTaskCreateService {
   /** P0-4: 执行自动审批动作（PASS / REJECT） */
   private void executeAutoAction(
       String action,
-      FlowInstance instance,
-      FlowNode node,
-      FlowRunTask task,
+      FlowInstanceDO instance,
+      FlowNodeDO node,
+      FlowRunTaskDO task,
       Map<String, Object> variables,
       Map<String, Object> ruleCfg) {
     FlowTaskOperateDTO autoDto = new FlowTaskOperateDTO();
@@ -774,12 +774,12 @@ public class FlowTaskCreateService {
 
   /** 写入 ydsz_flow_user 记录 */
   private void insertFlowUser(
-      FlowRunTask task,
-      FlowInstance instance,
-      FlowNode node,
+      FlowRunTaskDO task,
+      FlowInstanceDO instance,
+      FlowNodeDO node,
       String uid,
       Map<String, Integer> userWeights) {
-    FlowUser fu = new FlowUser();
+    FlowUserDO fu = new FlowUserDO();
     fu.setTaskId(task.getId());
     fu.setInstanceId(instance.getId());
     fu.setNodeCode(node.getNodeCode());
@@ -796,8 +796,8 @@ public class FlowTaskCreateService {
 
   /** P0-4: 创建逐级审批任务（精简为 PARALLEL 模式） */
   private String createLevelApprovalTask(
-      FlowInstance instance, FlowNode node, Map<String, Object> variables, List<String> approvers) {
-    FlowRunTask task = buildBaseTask(instance, node, FlowPerformType.PARALLEL, approvers.size());
+      FlowInstanceDO instance, FlowNodeDO node, Map<String, Object> variables, List<String> approvers) {
+    FlowRunTaskDO task = buildBaseTask(instance, node, FlowPerformType.PARALLEL, approvers.size());
     task.setAssigneeType(FlowAssigneeType.USER.name());
     task.setAssigneeId(approvers.get(0));
     task.setAssigneeName("USER:" + approvers.get(0));
@@ -825,10 +825,10 @@ public class FlowTaskCreateService {
 
   /** P0-4: 逐级审批人为空时走 emptyStrategy 兜底 */
   private String createTaskWithEmptyAssignee(
-      FlowInstance instance, FlowNode node, Map<String, Object> variables) {
+      FlowInstanceDO instance, FlowNodeDO node, Map<String, Object> variables) {
     Map<String, Object> extConfig = parseExtConfig(node.getExt());
     String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", DEFAULT_EMPTY_STRATEGY);
-    FlowRunTask task = buildBaseTask(instance, node, FlowPerformType.OR, 1);
+    FlowRunTaskDO task = buildBaseTask(instance, node, FlowPerformType.OR, 1);
 
     switch (emptyStrategy) {
       case "AUTO_PASS":
@@ -881,8 +881,8 @@ public class FlowTaskCreateService {
 
   /** GAP-P2-10: FOREACH 循环节点 — 对集合中每个元素创建独立 task */
   private String createForeachTasks(
-      FlowInstance instance,
-      FlowNode node,
+      FlowInstanceDO instance,
+      FlowNodeDO node,
       Map<String, Object> variables,
       List<String> explicitAssignees) {
     List<String> elements =
@@ -895,7 +895,7 @@ public class FlowTaskCreateService {
       String emptyStrategy =
           (String) extConfig.getOrDefault("emptyStrategy", DEFAULT_EMPTY_STRATEGY);
       if ("AUTO_PASS".equals(emptyStrategy)) {
-        FlowRunTask autoTask = buildForeachTask(instance, node, "0", "SYSTEM_AUTO_PASS", "0");
+        FlowRunTaskDO autoTask = buildForeachTask(instance, node, "0", "SYSTEM_AUTO_PASS", "0");
         autoTask.setTaskStatus(FlowTaskStatus.COMPLETED.name());
         autoTask.setFinishAt(LocalDateTime.now());
         autoTask.setDurationMs(0L);
@@ -913,7 +913,7 @@ public class FlowTaskCreateService {
 
     String firstTaskId = null;
     for (String element : elements) {
-      FlowRunTask task = buildForeachTask(instance, node, element, "USER:" + element, element);
+      FlowRunTaskDO task = buildForeachTask(instance, node, element, "USER:" + element, element);
       taskMapper.insert(task);
       insertFlowUser(task, instance, node, element, null);
       if (flowMetrics != null) {
@@ -937,13 +937,13 @@ public class FlowTaskCreateService {
   }
 
   /** GAP-P2-10: 构建 FOREACH 子任务 */
-  private FlowRunTask buildForeachTask(
-      FlowInstance instance,
-      FlowNode node,
+  private FlowRunTaskDO buildForeachTask(
+      FlowInstanceDO instance,
+      FlowNodeDO node,
       String assigneeId,
       String assigneeName,
       String iterVar) {
-    FlowRunTask task = new FlowRunTask();
+    FlowRunTaskDO task = new FlowRunTaskDO();
     task.setInstanceId(instance.getId());
     task.setFlowCode(instance.getFlowCode());
     task.setDefinitionId(instance.getDefinitionId());
@@ -978,7 +978,7 @@ public class FlowTaskCreateService {
    *
    * <p>P1-7 增强：使用 {@code resolveDelegateChain} 递归解析 A→B→C 链式委派， 最终将任务分配给链路末端的代理人。
    */
-  private void applyDelegateRedirect(FlowRunTask task, FlowInstance instance, FlowNode node) {
+  private void applyDelegateRedirect(FlowRunTaskDO task, FlowInstanceDO instance, FlowNodeDO node) {
     try {
       if (delegateAuthService == null) {
         return;
@@ -997,7 +997,7 @@ public class FlowTaskCreateService {
         return;
       }
       // 仍需匹配首条授权规则用于审计记录
-      FlowDelegateAuth matched =
+      FlowDelegateAuthDO matched =
           delegateAuthService.matchAuth(
               instance.getTenantId(), currentUserId, instance.getFlowCode(), node.getNodeCode());
       task.setAssignorId(currentUserId);
@@ -1032,7 +1032,7 @@ public class FlowTaskCreateService {
 
   /** AUTO_PASS 后推进到下一节点（含递归深度保护） */
   private void advanceAfterAutoPass(
-      FlowInstance instance, FlowNode node, Map<String, Object> variables) {
+      FlowInstanceDO instance, FlowNodeDO node, Map<String, Object> variables) {
     int depth = AUTO_PASS_DEPTH.get();
     if (depth >= MAX_AUTO_PASS_DEPTH) {
       log.warn("[Flow] AUTO_PASS 递归深度超限: depth={} instanceId={}", depth, instance.getId());
@@ -1043,7 +1043,7 @@ public class FlowTaskCreateService {
     }
     AUTO_PASS_DEPTH.set(depth + 1);
     try {
-      List<FlowNode> nextNodes =
+      List<FlowNodeDO> nextNodes =
           advancer.advance(instance, node.getNodeCode(), "PASS", null, variables);
       if (nextNodes.isEmpty()) {
         instanceService.complete(instance.getId(), node.getNodeCode());
@@ -1057,7 +1057,7 @@ public class FlowTaskCreateService {
   }
 
   /** 更新实例当前节点 */
-  private void updateInstanceNode(FlowInstance instance, List<FlowNode> nextNodes) {
+  private void updateInstanceNode(FlowInstanceDO instance, List<FlowNodeDO> nextNodes) {
     if (!nextNodes.isEmpty() && nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {
       instanceMapper.updateStatus(
           instance.getId(),
@@ -1072,7 +1072,7 @@ public class FlowTaskCreateService {
   // ============================== 通用辅助方法 ==============================
 
   /** P1-1: 从 node.ext.priority 读取优先级（默认 50） */
-  private void applyPriority(FlowRunTask task, FlowNode node) {
+  private void applyPriority(FlowRunTaskDO task, FlowNodeDO node) {
     Map<String, Object> nodeExt = parseExtConfig(node.getExt());
     Object priorityVal = nodeExt.get("priority");
     if (priorityVal instanceof Number n) {
@@ -1089,7 +1089,7 @@ public class FlowTaskCreateService {
   }
 
   /** 解析 node.ext.votePassRate，配置通过率阈值 */
-  private void applyVoteConfig(FlowRunTask task, FlowNode node) {
+  private void applyVoteConfig(FlowRunTaskDO task, FlowNodeDO node) {
     Map<String, Object> ext = parseExtConfig(node.getExt());
     Object rate = ext.get("votePassRate");
     if (rate instanceof Number n) {
@@ -1121,8 +1121,8 @@ public class FlowTaskCreateService {
 
   /** P0-4: 展开逐级审批的上级列表 */
   private List<String> expandLevelApprovers(
-      FlowInstance instance,
-      FlowNode node,
+      FlowInstanceDO instance,
+      FlowNodeDO node,
       Map<String, Object> variables,
       List<String> explicitAssignees) {
     if (explicitAssignees != null && !explicitAssignees.isEmpty()) {
@@ -1168,22 +1168,22 @@ public class FlowTaskCreateService {
 
   /** GAP-V2-05: 审批人自动去重检查 */
   private String tryAutoDedup(
-      FlowRunTask task,
-      FlowInstance instance,
-      FlowNode node,
+      FlowRunTaskDO task,
+      FlowInstanceDO instance,
+      FlowNodeDO node,
       Map<String, Object> variables,
       String currentAssigneeId) {
     try {
-      LambdaQueryWrapper<FlowRunTask> qw = new LambdaQueryWrapper<>();
-      qw.eq(FlowRunTask::getInstanceId, instance.getId())
-          .eq(FlowRunTask::getTaskStatus, FlowTaskStatus.COMPLETED.name())
-          .orderByDesc(FlowRunTask::getId)
+      LambdaQueryWrapper<FlowRunTaskDO> qw = new LambdaQueryWrapper<>();
+      qw.eq(FlowRunTaskDO::getInstanceId, instance.getId())
+          .eq(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.COMPLETED.name())
+          .orderByDesc(FlowRunTaskDO::getId)
           .last("LIMIT 1");
-      List<FlowRunTask> prevTasks = taskMapper.selectList(qw);
+      List<FlowRunTaskDO> prevTasks = taskMapper.selectList(qw);
       if (prevTasks.isEmpty()) {
         return null;
       }
-      FlowRunTask prevTask = prevTasks.get(0);
+      FlowRunTaskDO prevTask = prevTasks.get(0);
       String prevAssigneeId = prevTask.getAssigneeId();
       if (prevAssigneeId == null
           || !prevAssigneeId.equals(currentAssigneeId)
@@ -1215,15 +1215,15 @@ public class FlowTaskCreateService {
   }
 
   /** P1-5: 跨节点办理人去重 */
-  private List<String> applyCrossNodeDedup(List<String> userIds, String instanceId, FlowNode node) {
+  private List<String> applyCrossNodeDedup(List<String> userIds, String instanceId, FlowNodeDO node) {
     try {
       // 查询实例下已审批过的人员（COMPLETED 状态）
-      LambdaQueryWrapper<FlowRunTask> qw = new LambdaQueryWrapper<>();
-      qw.eq(FlowRunTask::getInstanceId, instanceId)
-          .eq(FlowRunTask::getTaskStatus, FlowTaskStatus.COMPLETED.name());
-      List<FlowRunTask> done = taskMapper.selectList(qw);
+      LambdaQueryWrapper<FlowRunTaskDO> qw = new LambdaQueryWrapper<>();
+      qw.eq(FlowRunTaskDO::getInstanceId, instanceId)
+          .eq(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.COMPLETED.name());
+      List<FlowRunTaskDO> done = taskMapper.selectList(qw);
       Set<String> excluded = new HashSet<>();
-      for (FlowRunTask t : done) {
+      for (FlowRunTaskDO t : done) {
         if (t.getAssigneeId() != null && !"SYSTEM_AUTO_PASS".equals(t.getAssigneeName())) {
           excluded.add(t.getAssigneeId());
         }
@@ -1254,7 +1254,7 @@ public class FlowTaskCreateService {
   }
 
   /** P1-5: 判断节点是否启用跨节点去重 */
-  private boolean isAutoDedupEnabled(FlowNode node) {
+  private boolean isAutoDedupEnabled(FlowNodeDO node) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
       return false;
     }
@@ -1274,7 +1274,7 @@ public class FlowTaskCreateService {
   }
 
   /** 解析会签类型 */
-  private FlowPerformType resolvePerformType(FlowNode node) {
+  private FlowPerformType resolvePerformType(FlowNodeDO node) {
     if (node.getExt() != null) {
       try {
         Map<?, ?> ext = YdszJson.parseMap(node.getExt());
@@ -1296,7 +1296,7 @@ public class FlowTaskCreateService {
    * _selfSelect_<nodeCode>}），无需在 permissionFlag 中显式配置 {@code self_select:} 前缀。自选变量为空时回退到
    * permissionFlag 解析。
    */
-  private List<String> expandAssignees(FlowNode node, Map<String, Object> variables) {
+  private List<String> expandAssignees(FlowNodeDO node, Map<String, Object> variables) {
     Map<String, Object> nodeExt = parseExtConfig(node.getExt());
 
     // P0-2: 节点 ext 配置 selfSelect=true 时，优先读取自选审批人
@@ -1468,11 +1468,11 @@ public class FlowTaskCreateService {
   }
 
   private void resolveAssignee(
-      FlowRunTask task,
-      FlowNode node,
+      FlowRunTaskDO task,
+      FlowNodeDO node,
       Map<String, Object> variables,
       FlowAssigneeDTO explicit,
-      FlowInstance instance) {
+      FlowInstanceDO instance) {
     assigneeResolutionService.resolveAssignee(task, node, variables, explicit, instance);
   }
 
@@ -1482,7 +1482,7 @@ public class FlowTaskCreateService {
    * <p>创建 COMPLETED/TIMEOUT 任务记录（仅用于审计追溯），归档，审计。 成功时推进到下一节点；失败时优先触发 error boundary 事件，否则标记实例异常。
    */
   private String executeServiceNode(
-      FlowInstance instance, FlowNode node, Map<String, Object> variables) {
+      FlowInstanceDO instance, FlowNodeDO node, Map<String, Object> variables) {
     // 1. 执行服务节点逻辑
     FlowServiceNodeExecutor.ServiceExecutionResult result;
     try {
@@ -1499,7 +1499,7 @@ public class FlowTaskCreateService {
     }
 
     // 2. 创建任务记录（用于审计追溯）
-    FlowRunTask task = new FlowRunTask();
+    FlowRunTaskDO task = new FlowRunTaskDO();
     task.setInstanceId(instance.getId());
     task.setFlowCode(instance.getFlowCode());
     task.setDefinitionId(instance.getDefinitionId());
@@ -1581,16 +1581,16 @@ public class FlowTaskCreateService {
 
   /** P0-2: 触发附着在 serviceNode 上的 error boundary 事件 */
   private boolean triggerErrorBoundaryIfExists(
-      FlowInstance instance, FlowNode serviceNode, String errorMsg) {
+      FlowInstanceDO instance, FlowNodeDO serviceNode, String errorMsg) {
     if (eventSubscriptionService == null) {
       return false;
     }
     try {
-      List<FlowNode> allNodes = nodeMapper.selectByDefinitionId(instance.getDefinitionId());
+      List<FlowNodeDO> allNodes = nodeMapper.selectByDefinitionId(instance.getDefinitionId());
       if (allNodes == null || allNodes.isEmpty()) {
         return false;
       }
-      List<FlowNode> errorBoundaries =
+      List<FlowNodeDO> errorBoundaries =
           allNodes.stream()
               .filter(
                   n -> {
@@ -1607,7 +1607,7 @@ public class FlowTaskCreateService {
       if (errorBoundaries.isEmpty()) {
         return false;
       }
-      for (FlowNode boundary : errorBoundaries) {
+      for (FlowNodeDO boundary : errorBoundaries) {
         Map<String, Object> ext = parseExtConfig(boundary.getExt());
         String errorRef = (String) ext.getOrDefault("errorRef", "SERVICE_ERROR");
         eventSubscriptionService.throwError(

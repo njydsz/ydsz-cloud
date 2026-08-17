@@ -7,9 +7,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.entity.Post;
+import com.njydsz.userinfo.domain.repository.PostRepository;
+import com.njydsz.userinfo.infra.entity.PostDO;
 import com.njydsz.userinfo.infra.mapper.PostMapper;
-import com.njydsz.userinfo.infra.repository.PostRepository;
 
 /**
  * 岗位 Repository 实现
@@ -26,34 +26,34 @@ public class PostRepositoryImpl implements PostRepository {
   private final PostMapper postMapper;
 
   @Override
-  public Post findById(String id) {
+  public PostDO findById(String id) {
     return postMapper.selectById(id);
   }
 
   @Override
-  public Post findByPostCode(String postCode) {
-    LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Post::getPostCode, postCode);
+  public PostDO findByPostCode(String postCode) {
+    LambdaQueryWrapper<PostDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(PostDO::getPostCode, postCode);
     return postMapper.selectOne(wrapper);
   }
 
   @Override
-  public List<Post> list(LambdaQueryWrapper<Post> wrapper) {
+  public List<PostDO> list(LambdaQueryWrapper<PostDO> wrapper) {
     return postMapper.selectList(wrapper);
   }
 
   @Override
-  public List<Post> listByIds(Collection<String> ids) {
+  public List<PostDO> listByIds(Collection<String> ids) {
     return postMapper.selectBatchIds(ids);
   }
 
   @Override
-  public int insert(Post entity) {
+  public int insert(PostDO entity) {
     return postMapper.insert(entity);
   }
 
   @Override
-  public int updateById(Post entity) {
+  public int updateById(PostDO entity) {
     return postMapper.updateById(entity);
   }
 
@@ -63,7 +63,7 @@ public class PostRepositoryImpl implements PostRepository {
   }
 
   @Override
-  public long count(LambdaQueryWrapper<Post> wrapper) {
+  public long count(LambdaQueryWrapper<PostDO> wrapper) {
     return postMapper.selectCount(wrapper);
   }
 }

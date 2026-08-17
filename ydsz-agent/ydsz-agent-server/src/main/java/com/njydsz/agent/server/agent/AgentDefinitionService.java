@@ -3,7 +3,7 @@ package com.njydsz.agent.server.agent;
 import java.util.List;
 
 import com.njydsz.agent.domain.agent.AgentDefinition;
-import com.njydsz.agent.domain.entity.AgentDefinitionDO;
+import com.njydsz.agent.infra.entity.AgentDefinitionDO;
 
 /**
  * Agent 定义 Service 接口

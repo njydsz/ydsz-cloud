@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 部门新增请求 DTO。
  *
- * <p>对应后端 {@code POST /api/v1/department} 请求体。 新增时需要指定所属父级部门、部门编码名称、排序及初始状态。
+ * <p>对应后端 {@code PostDO /api/v1/DepartmentDO} 请求体。 新增时需要指定所属父级部门、部门编码名称、排序及初始状态。
  *
  * @author ydsz-team
  * @since 1.0.0

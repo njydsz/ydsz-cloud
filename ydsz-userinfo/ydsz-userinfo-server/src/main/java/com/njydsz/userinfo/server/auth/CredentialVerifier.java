@@ -11,7 +11,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.alert.SecurityEvent;
 import com.njydsz.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.common.safe.alert.SecurityEventType;
-import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
@@ -54,7 +54,7 @@ public class CredentialVerifier {
    * @param userAgent 用户代理
    * @throws BusinessException 密码校验失败时抛出
    */
-  public void verify(UserAccount user, String password, String loginIp, String userAgent) {
+  public void verify(UserAccountDO user, String password, String loginIp, String userAgent) {
     String username = user.getUsername();
     boolean passwordMatched = passwordEncoder.matches(password, user.getPassword());
     if (!passwordMatched) {
@@ -85,7 +85,7 @@ public class CredentialVerifier {
    *
    * @param user 登录失败的用户账号
    */
-  private void recordLoginFailure(UserAccount user) {
+  private void recordLoginFailure(UserAccountDO user) {
     userAccountMapper.increaseLoginFailCount(
         user.getId(), properties.getMaxLoginFailCount(), properties.getLockDurationMinutes());
     // 同步内存状态（原子 SQL 不返回更新后的实体，通过领域方法模拟）

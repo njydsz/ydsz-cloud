@@ -13,8 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.workflow.domain.entity.FlowNode;
-import com.njydsz.workflow.domain.entity.FlowSkip;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.infra.entity.FlowSkipDO;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 
 /**
@@ -47,14 +47,14 @@ public class FlowGraphValidator {
    * @param skips 跳转列表
    * @throws IllegalArgumentException 图结构不合法时抛出
    */
-  public void validate(List<FlowNode> nodes, List<FlowSkip> skips) {
+  public void validate(List<FlowNodeDO> nodes, List<FlowSkipDO> skips) {
     if (nodes == null || nodes.isEmpty()) {
       throw new IllegalArgumentException("流程定义节点列表为空");
     }
 
     // 1. 构建节点索引
-    Map<String, FlowNode> nodeMap = new HashMap<>();
-    for (FlowNode node : nodes) {
+    Map<String, FlowNodeDO> nodeMap = new HashMap<>();
+    for (FlowNodeDO node : nodes) {
       String code = node.getNodeCode();
       if (!StringUtils.hasText(code)) {
         throw new IllegalArgumentException("存在 nodeCode 为空的节点");
@@ -66,7 +66,7 @@ public class FlowGraphValidator {
     }
 
     // 2. 检查 START / END 节点
-    List<FlowNode> startNodes =
+    List<FlowNodeDO> startNodes =
         nodes.stream().filter(n -> FlowNodeType.START.getCode() == n.getNodeType()).toList();
     if (startNodes.isEmpty()) {
       throw new IllegalArgumentException("流程定义缺少开始节点（nodeType=0）");
@@ -92,7 +92,7 @@ public class FlowGraphValidator {
 
     Set<String> validSkips = new HashSet<>();
     if (skips != null) {
-      for (FlowSkip skip : skips) {
+      for (FlowSkipDO skip : skips) {
         String source = extractSourceRef(skip);
         String target = skip.getNextNodeCode();
 
@@ -123,7 +123,7 @@ public class FlowGraphValidator {
     Set<String> reachable = bfs(startCode, outEdges);
     List<String> unreachable =
         nodes.stream()
-            .map(FlowNode::getNodeCode)
+            .map(FlowNodeDO::getNodeCode)
             .filter(code -> !reachable.contains(code))
             .toList();
     if (!unreachable.isEmpty()) {
@@ -134,7 +134,7 @@ public class FlowGraphValidator {
     List<String> endNodes =
         nodes.stream()
             .filter(n -> FlowNodeType.END.getCode() == n.getNodeType())
-            .map(FlowNode::getNodeCode)
+            .map(FlowNodeDO::getNodeCode)
             .toList();
     Set<String> canReachEnd = new HashSet<>();
     for (String endCode : endNodes) {
@@ -143,7 +143,7 @@ public class FlowGraphValidator {
     List<String> cannotReachEnd =
         nodes.stream()
             .filter(n -> FlowNodeType.END.getCode() != n.getNodeType())
-            .map(FlowNode::getNodeCode)
+            .map(FlowNodeDO::getNodeCode)
             .filter(code -> !canReachEnd.contains(code))
             .toList();
     if (!cannotReachEnd.isEmpty()) {
@@ -151,7 +151,7 @@ public class FlowGraphValidator {
     }
 
     // 6. 孤立节点检查
-    for (FlowNode node : nodes) {
+    for (FlowNodeDO node : nodes) {
       String code = node.getNodeCode();
       int type = node.getNodeType();
       if (type != FlowNodeType.START.getCode() && inEdges.get(code).isEmpty()) {
@@ -188,11 +188,11 @@ public class FlowGraphValidator {
   }
 
   /**
-   * 从 FlowSkip.ext 中提取 sourceRef
+   * 从 FlowSkipDO.ext 中提取 sourceRef
    *
    * <p>委托 {@link FlowSkipUtils#extractSourceNodeCode} 统一实现，避免三处重复。
    */
-  private String extractSourceRef(FlowSkip skip) {
+  private String extractSourceRef(FlowSkipDO skip) {
     return FlowSkipUtils.extractSourceNodeCode(skip);
   }
 

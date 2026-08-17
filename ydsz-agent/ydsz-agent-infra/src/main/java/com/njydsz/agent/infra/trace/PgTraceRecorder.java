@@ -10,8 +10,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.agent.domain.entity.AgentTraceDO;
-import com.njydsz.agent.domain.entity.AgentTraceStepDO;
+import com.njydsz.agent.infra.entity.AgentTraceDO;
+import com.njydsz.agent.infra.entity.AgentTraceStepDO;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.infra.mapper.AgentTraceMapper;
 import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;

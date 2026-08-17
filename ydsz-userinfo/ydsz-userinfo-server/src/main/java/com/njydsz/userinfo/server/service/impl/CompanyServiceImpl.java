@@ -19,11 +19,11 @@ import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.create.CompanyCreateDTO;
 import com.njydsz.userinfo.domain.dto.update.CompanyUpdateDTO;
-import com.njydsz.userinfo.domain.entity.Company;
+import com.njydsz.userinfo.infra.entity.CompanyDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
-import com.njydsz.userinfo.infra.repository.CompanyRepository;
+import com.njydsz.userinfo.domain.repository.CompanyRepository;
 import com.njydsz.userinfo.server.service.CompanyService;
 
 /**
@@ -45,7 +45,7 @@ import com.njydsz.userinfo.server.service.CompanyService;
  * @author ydsz-team
  * @since 1.0.0
  * @see CompanyService Service 接口
- * @see Company 公司实体
+ * @see CompanyDO 公司实体
  */
 @Slf4j
 @Service
@@ -56,7 +56,7 @@ public class CompanyServiceImpl implements CompanyService {
 
   @Override
   public CompanyVO getById(String id) {
-    Company entity = companyRepository.findById(id);
+    CompanyDO entity = companyRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND);
     }
@@ -65,8 +65,8 @@ public class CompanyServiceImpl implements CompanyService {
 
   @Override
   public List<CompanyVO> list() {
-    LambdaQueryWrapper<Company> wrapper = new LambdaQueryWrapper<>();
-    wrapper.orderByDesc(Company::getCreatedAt);
+    LambdaQueryWrapper<CompanyDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.orderByDesc(CompanyDO::getCreatedAt);
     return companyRepository.list(wrapper).stream()
         .map(UserInfoConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
@@ -82,9 +82,9 @@ public class CompanyServiceImpl implements CompanyService {
    */
   @Override
   public List<CompanyTreeVO> tree() {
-    List<Company> all =
+    List<CompanyDO> all =
         companyRepository.list(
-            new LambdaQueryWrapper<Company>().eq(Company::getDeleted, 0));
+            new LambdaQueryWrapper<CompanyDO>().eq(CompanyDO::getDeleted, 0));
     if (all.isEmpty()) {
       return List.of();
     }
@@ -102,25 +102,25 @@ public class CompanyServiceImpl implements CompanyService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String create(CompanyCreateDTO dto) {
-    LambdaQueryWrapper<Company> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Company::getCompanyCode, dto.getCompanyCode());
+    LambdaQueryWrapper<CompanyDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(CompanyDO::getCompanyCode, dto.getCompanyCode());
     if (companyRepository.count(wrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.COMPANY_CODE_DUPLICATE);
     }
 
-    Company entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
+    CompanyDO entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
     if (entity.getStatus() == null) {
       entity.setStatus("ENABLED");
     }
     companyRepository.insert(entity);
-    log.info("Company created: code={}, id={}", entity.getCompanyCode(), entity.getId());
+    log.info("CompanyDO created: code={}, id={}", entity.getCompanyCode(), entity.getId());
     return entity.getId();
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(CompanyUpdateDTO dto) {
-    Company entity = companyRepository.findById(dto.getId());
+    CompanyDO entity = companyRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND);
     }
@@ -131,7 +131,7 @@ public class CompanyServiceImpl implements CompanyService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Company entity = companyRepository.findById(id);
+    CompanyDO entity = companyRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND);
     }
@@ -151,11 +151,11 @@ public class CompanyServiceImpl implements CompanyService {
     if (distinctIds.isEmpty()) {
       return Collections.emptyMap();
     }
-    List<Company> companies = companyRepository.listByIds(distinctIds);
+    List<CompanyDO> companies = companyRepository.listByIds(distinctIds);
     Map<String, String> result = new LinkedHashMap<>(companies.size());
-    for (Company company : companies) {
-      if (company.getCompanyName() != null && !company.getCompanyName().isBlank()) {
-        result.put(company.getId(), company.getCompanyName());
+    for (CompanyDO CompanyDO : companies) {
+      if (CompanyDO.getCompanyName() != null && !CompanyDO.getCompanyName().isBlank()) {
+        result.put(CompanyDO.getId(), CompanyDO.getCompanyName());
       }
     }
     return result;

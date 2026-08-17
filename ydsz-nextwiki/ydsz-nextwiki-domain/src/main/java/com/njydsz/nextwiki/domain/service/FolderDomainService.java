@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 
 /**
@@ -39,16 +39,16 @@ public class FolderDomainService {
   /**
    * 构建目录节点（纯领域逻辑，不执行持久化）。
    *
-   * <p>由 server 层传入父目录与同级子节点列表，本方法完成同名校验、路径计算与实体构建。 返回的 {@link FileNode} 实例需由 server 层持久化。
+   * <p>由 server 层传入父目录与同级子节点列表，本方法完成同名校验、路径计算与实体构建。 返回的 {@link FileNodeDO} 实例需由 server 层持久化。
    *
    * @param parent 父目录节点（已由 server 层解析）
    * @param siblings 父目录下全部子节点（用于同名校验与排序号计算）
    * @param name 新目录名称
    * @param userId 操作人 ID
-   * @return 构建完成的 {@link FileNode} 实例（未持久化）
+   * @return 构建完成的 {@link FileNodeDO} 实例（未持久化）
    * @throws BusinessException 同名目录已存在时抛出
    */
-  public FileNode createFolder(FileNode parent, List<FileNode> siblings, String name, String userId) {
+  public FileNodeDO createFolder(FileNodeDO parent, List<FileNodeDO> siblings, String name, String userId) {
     // 检查同名目录
     boolean nameExists =
         siblings.stream().anyMatch(c -> c.getName().equalsIgnoreCase(name) && c.isFolder());
@@ -59,12 +59,12 @@ public class FolderDomainService {
     String path = buildPath(parent.getPath(), name);
     int level = parent.getLevel() + 1;
 
-    FileNode folder =
-        FileNode.builder()
+    FileNodeDO folder =
+        FileNodeDO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
             .parentId(parent.getId())
             .name(name)
-            .nodeType(FileNode.TYPE_FOLDER)
+            .nodeType(FileNodeDO.TYPE_FOLDER)
             .size(0L)
             .path(path)
             .level(level)
@@ -94,11 +94,11 @@ public class FolderDomainService {
    * @param targetParent 目标父目录节点（已由 server 层加载）
    * @param targetSiblings 目标父目录下全部子节点（用于排序号计算）
    * @param userId 操作人 ID
-   * @return 更新后的 {@link FileNode} 实例（未持久化）
+   * @return 更新后的 {@link FileNodeDO} 实例（未持久化）
    * @throws BusinessException 目标为自身/子树，或目标不是目录时抛出
    */
-  public FileNode move(
-      FileNode node, FileNode targetParent, List<FileNode> targetSiblings, String userId) {
+  public FileNodeDO move(
+      FileNodeDO node, FileNodeDO targetParent, List<FileNodeDO> targetSiblings, String userId) {
     if (targetParent == null || !targetParent.isFolder()) {
       throw new BusinessException(NextwikiExceptionCode.FILE_PARENT_NOT_FOLDER);
     }
@@ -132,9 +132,9 @@ public class FolderDomainService {
    * @param parent 节点的父目录（用于路径计算；根节点可为 null）
    * @param newName 新名称
    * @param userId 操作人 ID
-   * @return 更新后的 {@link FileNode} 实例（未持久化）
+   * @return 更新后的 {@link FileNodeDO} 实例（未持久化）
    */
-  public FileNode rename(FileNode node, FileNode parent, String newName, String userId) {
+  public FileNodeDO rename(FileNodeDO node, FileNodeDO parent, String newName, String userId) {
     String oldName = node.getName();
     String newPath = parent != null ? buildPath(parent.getPath(), newName) : "/" + newName + "/";
 
@@ -154,7 +154,7 @@ public class FolderDomainService {
    * @param descendants 目录的全部后代节点（不含目录自身；已由 server 层加载）
    * @return 统计结果
    */
-  public FolderStats getStats(FileNode folder, List<FileNode> descendants) {
+  public FolderStats getStats(FileNodeDO folder, List<FileNodeDO> descendants) {
     if (folder == null || !folder.isFolder()) {
       return new FolderStats(0, 0, 0);
     }
@@ -163,7 +163,7 @@ public class FolderDomainService {
     int folderCount = 0;
     long totalSize = 0;
 
-    for (FileNode desc : descendants) {
+    for (FileNodeDO desc : descendants) {
       if (desc.isFile()) {
         fileCount++;
         totalSize += desc.getSize() != null ? desc.getSize() : 0;
@@ -201,7 +201,7 @@ public class FolderDomainService {
    * @param ancestor 祖先节点
    * @return {@code true} 表示 candidate 是 ancestor 的后代或自身
    */
-  private boolean isDescendantOf(FileNode candidate, FileNode ancestor) {
+  private boolean isDescendantOf(FileNodeDO candidate, FileNodeDO ancestor) {
     if (candidate.getId().equals(ancestor.getId())) {
       return true;
     }

@@ -3,7 +3,7 @@ package com.njydsz.nextwiki.web.controller;
 import java.util.Set;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.TagDO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -94,7 +94,7 @@ import com.njydsz.nextwiki.server.service.ChunkUploadApplicationService;
 @RequestMapping("/api/v1/nextwiki/files")
 @RequiredArgsConstructor
 @Validated
-@Tag(name = "网盘文件分片上传", description = "大文件分片上传、断点续传、合并/取消/查询")
+@TagDO(name = "网盘文件分片上传", description = "大文件分片上传、断点续传、合并/取消/查询")
 public class FileChunkController {
 
   /** 分片上传服务（封装大文件分片上传 + 断点续传） */

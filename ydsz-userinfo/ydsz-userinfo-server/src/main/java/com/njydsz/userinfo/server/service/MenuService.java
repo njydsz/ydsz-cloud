@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.njydsz.userinfo.domain.dto.create.MenuCreateDTO;
 import com.njydsz.userinfo.domain.dto.update.MenuUpdateDTO;
-import com.njydsz.userinfo.domain.entity.Menu;
+import com.njydsz.userinfo.infra.entity.MenuDO;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 
@@ -15,7 +15,7 @@ import com.njydsz.userinfo.domain.vo.MenuVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see Menu 菜单实体
+ * @see MenuDO 菜单实体
  */
 public interface MenuService {
 

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.TagDO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +21,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
 import com.njydsz.nextwiki.server.service.AiSummaryApplicationService;
 import com.njydsz.nextwiki.server.service.StorageAnalysisApplicationService;
 
@@ -85,7 +85,7 @@ import com.njydsz.nextwiki.server.service.StorageAnalysisApplicationService;
 @RestController
 @RequestMapping("/api/v1/nextwiki/analysis")
 @RequiredArgsConstructor
-@Tag(name = "存储分析与AI摘要", description = "存储统计报表、文档智能摘要（LLM）")
+@TagDO(name = "存储分析与AI摘要", description = "存储统计报表、文档智能摘要（LLM）")
 public class AnalysisController {
 
   /** 存储分析应用服务（封装存储统计 + 大文件识别） */
@@ -133,12 +133,12 @@ public class AnalysisController {
    *
    * @param userId 当前用户 ID
    * @param limit 返回数量上限（默认 10，建议不超过 100）
-   * @return 统一响应结果，data 为 {@link FileNode} 列表
+   * @return 统一响应结果，data 为 {@link FileNodeDO} 列表
    */
   @GetMapping("/top-large-files")
   @Operation(summary = "大文件 Top-N")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
-  public BaseResponse<List<FileNode>> topLargeFiles(
+  public BaseResponse<List<FileNodeDO>> topLargeFiles(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
       @RequestParam(defaultValue = "10") int limit) {
     return BaseResponse.success(storageAnalysisService.topLargeFiles(userId, limit));

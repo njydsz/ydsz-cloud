@@ -15,8 +15,8 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.workflow.domain.entity.FlowHisTask;
-import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
+import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.server.service.FlowExportService;
@@ -80,8 +80,8 @@ import com.njydsz.workflow.server.service.FlowExportService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowExportService 接口定义
- * @see com.njydsz.workflow.domain.entity.FlowInstance 流程实例实体
- * @see com.njydsz.workflow.domain.entity.FlowHisTask 历史任务实体
+ * @see com.njydsz.workflow.infra.entity.FlowInstanceDO 流程实例实体
+ * @see com.njydsz.workflow.infra.entity.FlowHisTaskDO 历史任务实体
  */
 @Slf4j
 @Service
@@ -95,8 +95,8 @@ public class FlowExportServiceImpl implements FlowExportService {
 
   @Override
   public String exportHtml(String instanceId, String userId, String userName) {
-    FlowInstance instance = loadInstance(instanceId);
-    List<FlowHisTask> history = loadHistory(instanceId);
+    FlowInstanceDO instance = loadInstance(instanceId);
+    List<FlowHisTaskDO> history = loadHistory(instanceId);
     Map<String, Object> formData = parseVariables(instance.getVariable());
     String watermark = buildWatermark(userName != null ? userName : userId);
 
@@ -164,7 +164,7 @@ public class FlowExportServiceImpl implements FlowExportService {
     if (history.isEmpty()) {
       html.append("<div class=\"timeline-item\" style=\"color:#999;\">暂无审批记录</div>");
     } else {
-      for (FlowHisTask task : history) {
+      for (FlowHisTaskDO task : history) {
         html.append("<div class=\"timeline-item\">");
         html.append("<span class=\"timeline-node\">")
             .append(escapeHtml(task.getNodeName() != null ? task.getNodeName() : "-"))
@@ -217,8 +217,8 @@ public class FlowExportServiceImpl implements FlowExportService {
 
   // ============================== 辅助方法 ==============================
 
-  private FlowInstance loadInstance(String instanceId) {
-    FlowInstance instance = instanceMapper.selectById(instanceId);
+  private FlowInstanceDO loadInstance(String instanceId) {
+    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -228,8 +228,8 @@ public class FlowExportServiceImpl implements FlowExportService {
     return instance;
   }
 
-  private List<FlowHisTask> loadHistory(String instanceId) {
-    List<FlowHisTask> history = hisTaskMapper.selectByInstanceId(instanceId);
+  private List<FlowHisTaskDO> loadHistory(String instanceId) {
+    List<FlowHisTaskDO> history = hisTaskMapper.selectByInstanceId(instanceId);
     return history != null ? history : new ArrayList<>();
   }
 

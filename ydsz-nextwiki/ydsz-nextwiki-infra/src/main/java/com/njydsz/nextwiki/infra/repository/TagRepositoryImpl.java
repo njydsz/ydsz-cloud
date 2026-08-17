@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.entity.FileTag;
-import com.njydsz.nextwiki.domain.entity.Tag;
-import com.njydsz.nextwiki.infra.repository.TagRepository;
+import com.njydsz.nextwiki.infra.entity.FileTagDO;
+import com.njydsz.nextwiki.infra.entity.TagDO;
+import com.njydsz.nextwiki.domain.repository.TagRepository;
 import com.njydsz.nextwiki.infra.mapper.TagMapper;
 
 /**
@@ -29,13 +29,13 @@ public class TagRepositoryImpl implements TagRepository {
   /**
    * 插入新标签记录（首次创建标签时调用）。
    *
-   * @param tag 待持久化的标签实体（含 name、color 等）
+   * @param TagDO 待持久化的标签实体（含 name、color 等）
    * @return 已落库的标签实体（含自增主键）
    */
   @Override
-  public Tag save(Tag tag) {
-    tagMapper.insert(tag);
-    return tag;
+  public TagDO save(TagDO TagDO) {
+    tagMapper.insert(TagDO);
+    return TagDO;
   }
 
   /**
@@ -45,7 +45,7 @@ public class TagRepositoryImpl implements TagRepository {
    * @return 标签实体；不存在则返回 null
    */
   @Override
-  public Tag findById(String id) {
+  public TagDO findById(String id) {
     return tagMapper.selectById(id);
   }
 
@@ -56,7 +56,7 @@ public class TagRepositoryImpl implements TagRepository {
    * @return 命中的标签实体；不存在则返回 null
    */
   @Override
-  public Tag findByName(String name) {
+  public TagDO findByName(String name) {
     return tagMapper.selectByName(name);
   }
 
@@ -66,7 +66,7 @@ public class TagRepositoryImpl implements TagRepository {
    * @return 标签列表
    */
   @Override
-  public List<Tag> findAll() {
+  public List<TagDO> findAll() {
     return tagMapper.selectAll();
   }
 
@@ -77,7 +77,7 @@ public class TagRepositoryImpl implements TagRepository {
    * @return 标签列表
    */
   @Override
-  public List<Tag> findByFileNodeId(String fileNodeId) {
+  public List<TagDO> findByFileNodeId(String fileNodeId) {
     return tagMapper.selectByFileNodeId(fileNodeId);
   }
 
@@ -89,15 +89,15 @@ public class TagRepositoryImpl implements TagRepository {
    */
   @Override
   public void bindTag(String fileNodeId, String tagId) {
-    FileTag fileTag =
-        FileTag.builder()
+    FileTagDO FileTagDO =
+        FileTagDO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
             .fileNodeId(fileNodeId)
             .tagId(tagId)
             .revision(0)
             .deleted(0)
             .build();
-    tagMapper.insertFileTag(fileTag);
+    tagMapper.insertFileTag(FileTagDO);
   }
 
   /**
@@ -128,7 +128,7 @@ public class TagRepositoryImpl implements TagRepository {
    * @return 文件-标签关联列表
    */
   @Override
-  public List<FileTag> findFileTagsByFileNodeId(String fileNodeId) {
+  public List<FileTagDO> findFileTagsByFileNodeId(String fileNodeId) {
     return tagMapper.selectFileTagsByFileNodeId(fileNodeId);
   }
 

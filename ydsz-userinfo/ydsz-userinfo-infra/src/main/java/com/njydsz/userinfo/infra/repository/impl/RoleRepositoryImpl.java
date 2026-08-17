@@ -9,9 +9,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.entity.Role;
+import com.njydsz.userinfo.domain.repository.RoleRepository;
+import com.njydsz.userinfo.infra.entity.RoleDO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
-import com.njydsz.userinfo.infra.repository.RoleRepository;
 
 /**
  * 角色 Repository 实现
@@ -28,39 +28,39 @@ public class RoleRepositoryImpl implements RoleRepository {
   private final RoleMapper roleMapper;
 
   @Override
-  public Role findById(String id) {
+  public RoleDO findById(String id) {
     return roleMapper.selectById(id);
   }
 
   @Override
-  public Role findByRoleCode(String roleCode) {
-    LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Role::getRoleCode, roleCode);
+  public RoleDO findByRoleCode(String roleCode) {
+    LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(RoleDO::getRoleCode, roleCode);
     return roleMapper.selectOne(wrapper);
   }
 
   @Override
-  public List<Role> findByIds(Collection<String> ids) {
+  public List<RoleDO> findByIds(Collection<String> ids) {
     return roleMapper.selectBatchIds(ids);
   }
 
   @Override
-  public List<Role> list(LambdaQueryWrapper<Role> wrapper) {
+  public List<RoleDO> list(LambdaQueryWrapper<RoleDO> wrapper) {
     return roleMapper.selectList(wrapper);
   }
 
   @Override
-  public Page<Role> page(Page<Role> page, LambdaQueryWrapper<Role> wrapper) {
+  public Page<RoleDO> page(Page<RoleDO> page, LambdaQueryWrapper<RoleDO> wrapper) {
     return roleMapper.selectPage(page, wrapper);
   }
 
   @Override
-  public int insert(Role entity) {
+  public int insert(RoleDO entity) {
     return roleMapper.insert(entity);
   }
 
   @Override
-  public int updateById(Role entity) {
+  public int updateById(RoleDO entity) {
     return roleMapper.updateById(entity);
   }
 
@@ -70,12 +70,12 @@ public class RoleRepositoryImpl implements RoleRepository {
   }
 
   @Override
-  public int delete(LambdaQueryWrapper<Role> wrapper) {
+  public int delete(LambdaQueryWrapper<RoleDO> wrapper) {
     return roleMapper.delete(wrapper);
   }
 
   @Override
-  public long count(LambdaQueryWrapper<Role> wrapper) {
+  public long count(LambdaQueryWrapper<RoleDO> wrapper) {
     return roleMapper.selectCount(wrapper);
   }
 }

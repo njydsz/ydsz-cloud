@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.userinfo.domain.entity.CompanyDept;
-import com.njydsz.userinfo.infra.repository.CompanyDeptRepository;
+import com.njydsz.userinfo.infra.entity.CompanyDeptDO;
+import com.njydsz.userinfo.domain.repository.CompanyDeptRepository;
 import com.njydsz.userinfo.server.service.CompanyDeptService;
 
 /**
@@ -30,8 +30,8 @@ public class CompanyDeptServiceImpl implements CompanyDeptService {
   private final CompanyDeptRepository companyDeptRepository;
 
   @Override
-  public CompanyDept getById(String id) {
-    CompanyDept entity = companyDeptRepository.findById(id);
+  public CompanyDeptDO getById(String id) {
+    CompanyDeptDO entity = companyDeptRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       return null;
     }
@@ -39,22 +39,22 @@ public class CompanyDeptServiceImpl implements CompanyDeptService {
   }
 
   @Override
-  public List<CompanyDept> list() {
-    LambdaQueryWrapper<CompanyDept> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(CompanyDept::getDeleted, 0);
+  public List<CompanyDeptDO> list() {
+    LambdaQueryWrapper<CompanyDeptDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(CompanyDeptDO::getDeleted, 0);
     return companyDeptRepository.list(wrapper);
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String save(CompanyDept entity) {
+  public String save(CompanyDeptDO entity) {
     companyDeptRepository.insert(entity);
     return entity.getId();
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean updateById(CompanyDept entity) {
+  public boolean updateById(CompanyDeptDO entity) {
     return companyDeptRepository.updateById(entity) > 0;
   }
 

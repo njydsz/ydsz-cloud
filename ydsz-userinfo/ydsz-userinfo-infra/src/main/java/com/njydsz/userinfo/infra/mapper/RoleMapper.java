@@ -3,7 +3,7 @@ package com.njydsz.userinfo.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.userinfo.domain.entity.Role;
+import com.njydsz.userinfo.infra.entity.RoleDO;
 
 /**
  * 角色 Mapper 接口
@@ -25,9 +25,9 @@ import com.njydsz.userinfo.domain.entity.Role;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.userinfo.domain.entity.Role 角色实体（含 dataScope 数据权限范围字段）
+ * @see com.njydsz.userinfo.infra.entity.RoleDO 角色实体（含 dataScope 数据权限范围字段）
  * @see com.njydsz.userinfo.infra.mapper.RolePermissionMapper 角色-权限关联 Mapper
  * @see com.njydsz.userinfo.infra.mapper.UserRoleMapper 用户-角色关联 Mapper
  */
 @Mapper
-public interface RoleMapper extends BaseMapper<Role> {}
+public interface RoleMapper extends BaseMapper<RoleDO> {}

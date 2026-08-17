@@ -3,7 +3,7 @@ package com.njydsz.nextwiki.web.controller.ai;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.TagDO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +43,7 @@ import com.njydsz.nextwiki.server.service.AiSummaryService;
 @RestController
 @RequestMapping("/api/v1/nextwiki/ai")
 @RequiredArgsConstructor
-@Tag(name = "AI 智能能力", description = "文件智能摘要、关键词提取等 AI 能力（预留接口）")
+@TagDO(name = "AI 智能能力", description = "文件智能摘要、关键词提取等 AI 能力（预留接口）")
 public class AiController {
 
   /** AI 摘要服务 */

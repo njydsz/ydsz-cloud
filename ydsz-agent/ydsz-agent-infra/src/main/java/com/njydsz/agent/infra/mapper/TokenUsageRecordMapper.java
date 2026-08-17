@@ -2,7 +2,7 @@ package com.njydsz.agent.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-import com.njydsz.agent.domain.entity.TokenUsageRecordDO;
+import com.njydsz.agent.infra.entity.TokenUsageRecordDO;
 
 /**
  * Token 用量记录 Mapper

@@ -13,7 +13,7 @@ import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 /**
  * 用户创建请求 DTO。
  *
- * <p>用于 {@code POST /api/v1/user} 接口，创建系统用户账号。 创建后账号默认状态为「启用」，密码经 BCrypt 加密后存储。
+ * <p>用于 {@code PostDO /api/v1/user} 接口，创建系统用户账号。 创建后账号默认状态为「启用」，密码经 BCrypt 加密后存储。
  *
  * <p><b>校验规则：</b>
  *

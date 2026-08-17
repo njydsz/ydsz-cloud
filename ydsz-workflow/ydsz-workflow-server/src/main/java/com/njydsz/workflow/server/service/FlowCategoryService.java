@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
-import com.njydsz.workflow.domain.entity.FlowCategory;
+import com.njydsz.workflow.infra.entity.FlowCategoryDO;
 import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
 
 /**
@@ -29,7 +29,7 @@ import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.workflow.server.service.impl.FlowCategoryServiceImpl 实现类
- * @see com.njydsz.workflow.domain.entity.FlowDefinition 流程定义（{@code category} 字段引用本表分类编码）
+ * @see com.njydsz.workflow.infra.entity.FlowDefinitionDO 流程定义（{@code category} 字段引用本表分类编码）
  */
 public interface FlowCategoryService {
 
@@ -39,7 +39,7 @@ public interface FlowCategoryService {
    * @param tenantId 租户 ID
    * @return 分类列表（扁平结构）
    */
-  List<FlowCategory> listAll(String tenantId);
+  List<FlowCategoryDO> listAll(String tenantId);
 
   /**
    * 查询全部分类（树形结构，使用 TreeBuilder 构建）

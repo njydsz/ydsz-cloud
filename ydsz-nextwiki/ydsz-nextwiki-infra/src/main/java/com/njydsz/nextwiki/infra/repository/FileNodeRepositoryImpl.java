@@ -15,8 +15,8 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
 
 /**
@@ -36,12 +36,12 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   private final FileNodeMapper fileNodeMapper;
 
   @Override
-  public FileNode findById(String id) {
+  public FileNodeDO findById(String id) {
     return fileNodeMapper.selectById(id);
   }
 
   @Override
-  public List<FileNode> findChildren(String parentId) {
+  public List<FileNodeDO> findChildren(String parentId) {
     return fileNodeMapper.selectChildren(parentId, TenantContextHolder.getTenantId());
   }
 
@@ -51,16 +51,16 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public PageResponse<List<FileNode>> findPageChildren(
+  public PageResponse<List<FileNodeDO>> findPageChildren(
       String parentId, String nodeType, String sortBy, String sortDir, int page, int pageSize) {
-    Page<FileNode> pageParam = new Page<>(page, pageSize);
-    IPage<FileNode> result =
+    Page<FileNodeDO> pageParam = new Page<>(page, pageSize);
+    IPage<FileNodeDO> result =
         fileNodeMapper.selectPageByParentId(pageParam, parentId, nodeType, sortBy, sortDir);
     return PageResponses.success(result);
   }
 
   @Override
-  public List<FileNode> findByPathPrefix(String pathPrefix) {
+  public List<FileNodeDO> findByPathPrefix(String pathPrefix) {
     return fileNodeMapper.selectByPathPrefix(pathPrefix);
   }
 
@@ -77,7 +77,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public FileNode save(FileNode node) {
+  public FileNodeDO save(FileNodeDO node) {
     if (node.getId() == null || node.getId().isEmpty()) {
       node.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
     }
@@ -86,12 +86,12 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public int saveBatch(List<FileNode> nodes) {
+  public int saveBatch(List<FileNodeDO> nodes) {
     if (nodes == null || nodes.isEmpty()) {
       return 0;
     }
     int count = 0;
-    for (FileNode node : nodes) {
+    for (FileNodeDO node : nodes) {
       if (node.getId() == null || node.getId().isEmpty()) {
         node.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
       }
@@ -102,7 +102,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public void update(FileNode node) {
+  public void update(FileNodeDO node) {
     if (node.getRevision() == null) {
       // 兜底：未携带 revision 时退化为普通更新，避免业务阻断
       fileNodeMapper.updateById(node);
@@ -133,7 +133,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public List<FileNode> findByIds(List<String> ids) {
+  public List<FileNodeDO> findByIds(List<String> ids) {
     return fileNodeMapper.selectBatchIds(ids);
   }
 
@@ -143,7 +143,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public List<FileNode> searchByName(String keyword, String createdBy) {
+  public List<FileNodeDO> searchByName(String keyword, String createdBy) {
     return fileNodeMapper.searchByName(keyword, createdBy, TenantContextHolder.getTenantId());
   }
 
@@ -164,7 +164,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public List<FileNode> findTopLargeFilesByUser(String userId, int limit) {
+  public List<FileNodeDO> findTopLargeFilesByUser(String userId, int limit) {
     return fileNodeMapper.findTopLargeFilesByUser(userId, limit);
   }
 
@@ -174,18 +174,18 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public FileNode findOrCreateRoot(String userId) {
-    FileNode root = fileNodeMapper.selectRootByUser(userId, TenantContextHolder.getTenantId());
+  public FileNodeDO findOrCreateRoot(String userId) {
+    FileNodeDO root = fileNodeMapper.selectRootByUser(userId, TenantContextHolder.getTenantId());
     if (root != null) {
       return root;
     }
 
     root =
-        FileNode.builder()
+        FileNodeDO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
             .parentId("0")
             .name("root")
-            .nodeType(FileNode.TYPE_FOLDER)
+            .nodeType(FileNodeDO.TYPE_FOLDER)
             .size(0L)
             .path("/")
             .level(0)
@@ -209,7 +209,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public FileNode findByFileHash(String fileHash) {
+  public FileNodeDO findByFileHash(String fileHash) {
     if (fileHash == null || fileHash.isEmpty()) {
       return null;
     }
@@ -217,19 +217,19 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public List<FileNode> findByNameAndParent(String name, String parentId, String createdBy) {
+  public List<FileNodeDO> findByNameAndParent(String name, String parentId, String createdBy) {
     return fileNodeMapper.findByNameAndParent(
         name, parentId, createdBy, TenantContextHolder.getTenantId());
   }
 
   @Override
-  public List<FileNode> findAllDescendantsByPath(String folderPath) {
+  public List<FileNodeDO> findAllDescendantsByPath(String folderPath) {
     return fileNodeMapper.selectAllDescendantsByPath(folderPath);
   }
 
   @Override
-  public List<FileNode> findAllDescendants(String folderId) {
-    FileNode folder = fileNodeMapper.selectById(folderId);
+  public List<FileNodeDO> findAllDescendants(String folderId) {
+    FileNodeDO folder = fileNodeMapper.selectById(folderId);
     if (folder == null || !folder.isFolder()) {
       return new ArrayList<>();
     }
@@ -241,7 +241,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public List<FileNode> findDescendantsByPage(String folderPath, int offset, int limit) {
+  public List<FileNodeDO> findDescendantsByPage(String folderPath, int offset, int limit) {
     if (folderPath == null || folderPath.isEmpty()) {
       return new ArrayList<>();
     }
@@ -257,7 +257,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public List<FileNode> findColdCandidates(
+  public List<FileNodeDO> findColdCandidates(
       LocalDateTime threshold, String excludeSuffixes, int limit) {
     List<String> excludeList = null;
     if (excludeSuffixes != null && !excludeSuffixes.isEmpty()) {

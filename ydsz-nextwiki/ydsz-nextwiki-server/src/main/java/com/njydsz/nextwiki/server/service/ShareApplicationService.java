@@ -8,13 +8,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.nextwiki.domain.entity.ShareAccessLog;
-import com.njydsz.nextwiki.domain.entity.ShareLink;
-import com.njydsz.nextwiki.domain.entity.ShareRecipient;
+import com.njydsz.nextwiki.infra.entity.ShareAccessLogDO;
+import com.njydsz.nextwiki.infra.entity.ShareLinkDO;
+import com.njydsz.nextwiki.infra.entity.ShareRecipientDO;
 import com.njydsz.nextwiki.domain.service.ShareAccessLogDomainService;
 import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
-import com.njydsz.nextwiki.infra.repository.ShareAccessLogRepository;
-import com.njydsz.nextwiki.infra.repository.ShareRecipientRepository;
+import com.njydsz.nextwiki.domain.repository.ShareAccessLogRepository;
+import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
 
 /**
  * 分享应用服务。
@@ -46,14 +46,14 @@ public class ShareApplicationService {
    * @param expireTime 过期时间（可为空表示永不过期）
    * @param maxAccessCount 最大访问次数（可为空表示不限）
    * @param userId 创建者 ID
-   * @return 分享链接实体 {@link ShareLink}
+   * @return 分享链接实体 {@link ShareLinkDO}
    * @throws 由 {@link ShareLinkDomainService} 在节点不存在/无权限时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    * @complexity O(1)（一次分享记录写入）
    * @note 委托 {@link ShareLinkDomainService} 实现；创建后通常由事件/通知触达被分享方
    */
   @Transactional(rollbackFor = Exception.class)
-  public ShareLink createShare(
+  public ShareLinkDO createShare(
       String fileNodeId,
       String shareType,
       String password,
@@ -75,10 +75,10 @@ public class ShareApplicationService {
    * @param targetUserIds 目标用户 ID 列表（可为空；非空时创建定向分享）
    * @param title 分享标题（可为空）
    * @param userId 创建者 ID
-   * @return 分享链接实体 {@link ShareLink}
+   * @return 分享链接实体 {@link ShareLinkDO}
    */
   @Transactional(rollbackFor = Exception.class)
-  public ShareLink createShareWithTargets(
+  public ShareLinkDO createShareWithTargets(
       String fileNodeId,
       String shareType,
       String password,
@@ -99,11 +99,11 @@ public class ShareApplicationService {
    * @param shareCode 分享码（分享链接唯一标识）
    * @param extractCode 提取码（可为空；与分享码配合用于 LIMITED 类型）
    * @param password 访问密码（可为空；PUBLIC 类型忽略）
-   * @return 分享链接实体 {@link ShareLink}；任一校验不通过返回 {@code null}
+   * @return 分享链接实体 {@link ShareLinkDO}；任一校验不通过返回 {@code null}
    * @complexity O(1)（一次分享记录查询 + 内存校验）
    * @note 无事务边界；验证失败时抛业务异常
    */
-  public ShareLink verifyAccess(String shareCode, String extractCode, String password) {
+  public ShareLinkDO verifyAccess(String shareCode, String extractCode, String password) {
     return shareLinkDomainService.verifyAccess(shareCode, extractCode, password);
   }
 
@@ -127,11 +127,11 @@ public class ShareApplicationService {
    * 查询某用户创建的全部分享链接列表。
    *
    * @param userId 用户 ID
-   * @return 分享链接列表 {@link ShareLink}（可能为空，非 {@code null}）
+   * @return 分享链接列表 {@link ShareLinkDO}（可能为空，非 {@code null}）
    * @complexity O(1)（一次按用户查询）
    * @note 只读，无事务边界
    */
-  public List<ShareLink> findByUserId(String userId) {
+  public List<ShareLinkDO> findByUserId(String userId) {
     return shareLinkDomainService.findByUserId(userId);
   }
 
@@ -142,7 +142,7 @@ public class ShareApplicationService {
    * @param limit 返回条数限制
    * @return 访问日志列表
    */
-  public List<ShareAccessLog> getAccessLogs(String shareId, int limit) {
+  public List<ShareAccessLogDO> getAccessLogs(String shareId, int limit) {
     return shareAccessLogRepository.findByShareId(shareId, limit);
   }
 
@@ -152,7 +152,7 @@ public class ShareApplicationService {
    * @param shareId 分享链接 ID
    * @return 目标用户列表
    */
-  public List<ShareRecipient> getRecipients(String shareId) {
+  public List<ShareRecipientDO> getRecipients(String shareId) {
     return shareRecipientRepository.findByShareId(shareId);
   }
 
@@ -162,7 +162,7 @@ public class ShareApplicationService {
    * @param userId 用户 ID
    * @return 分享接收记录列表
    */
-  public List<ShareRecipient> getReceivedShares(String userId) {
+  public List<ShareRecipientDO> getReceivedShares(String userId) {
     return shareRecipientRepository.findByRecipientId(userId);
   }
 
@@ -193,7 +193,7 @@ public class ShareApplicationService {
       String status,
       String failReason) {
     try {
-      ShareAccessLog accessLog =
+      ShareAccessLogDO accessLog =
           shareAccessLogDomainService.buildAccessLog(
               shareId, shareCode, fileNodeId, visitorId, visitorIp, userAgent, accessType, status,
               failReason);

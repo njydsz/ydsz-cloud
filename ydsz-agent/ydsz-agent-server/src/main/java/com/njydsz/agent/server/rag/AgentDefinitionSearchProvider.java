@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.agent.domain.entity.AgentDefinitionDO;
-import com.njydsz.agent.infra.repository.AgentDefinitionRepository;
+import com.njydsz.agent.domain.repository.AgentDefinitionRepository;
+import com.njydsz.agent.infra.entity.AgentDefinitionDO;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;

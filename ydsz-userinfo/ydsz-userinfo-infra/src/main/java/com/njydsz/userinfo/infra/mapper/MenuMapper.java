@@ -3,7 +3,7 @@ package com.njydsz.userinfo.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.userinfo.domain.entity.Menu;
+import com.njydsz.userinfo.infra.entity.MenuDO;
 
 /**
  * 菜单/权限 Mapper 接口
@@ -27,8 +27,8 @@ import com.njydsz.userinfo.domain.entity.Menu;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.userinfo.domain.entity.Menu 菜单实体（含 permCode 字段）
+ * @see com.njydsz.userinfo.infra.entity.MenuDO 菜单实体（含 permCode 字段）
  * @see com.njydsz.userinfo.infra.mapper.RolePermissionMapper 角色-权限关联 Mapper
  */
 @Mapper
-public interface MenuMapper extends BaseMapper<Menu> {}
+public interface MenuMapper extends BaseMapper<MenuDO> {}

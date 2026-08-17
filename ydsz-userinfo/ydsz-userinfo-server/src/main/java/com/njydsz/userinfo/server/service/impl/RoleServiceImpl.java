@@ -27,14 +27,14 @@ import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.create.RoleCreateDTO;
 import com.njydsz.userinfo.domain.dto.update.RoleUpdateDTO;
-import com.njydsz.userinfo.domain.entity.Role;
-import com.njydsz.userinfo.domain.entity.RolePermission;
-import com.njydsz.userinfo.domain.entity.UserRole;
+import com.njydsz.userinfo.infra.entity.RoleDO;
+import com.njydsz.userinfo.infra.entity.RolePermissionDO;
+import com.njydsz.userinfo.infra.entity.UserRoleDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.RoleVO;
-import com.njydsz.userinfo.infra.repository.RolePermissionRepository;
-import com.njydsz.userinfo.infra.repository.RoleRepository;
-import com.njydsz.userinfo.infra.repository.UserRoleRepository;
+import com.njydsz.userinfo.domain.repository.RolePermissionRepository;
+import com.njydsz.userinfo.domain.repository.RoleRepository;
+import com.njydsz.userinfo.domain.repository.UserRoleRepository;
 import com.njydsz.userinfo.server.auth.DbRolePermissionLoader;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.RoleService;
@@ -69,7 +69,7 @@ import com.njydsz.userinfo.server.service.RoleService;
  * @author ydsz-team
  * @since 1.0.0
  * @see RoleService Service 接口
- * @see Role 角色实体
+ * @see RoleDO 角色实体
  * @see com.njydsz.userinfo.web.controller.RoleController 角色 Controller
  */
 @Slf4j
@@ -78,7 +78,7 @@ import com.njydsz.userinfo.server.service.RoleService;
 public class RoleServiceImpl implements RoleService {
 
   /** 角色权限缓存 Redis key 前缀 */
-  private static final String CACHE_KEY_ROLE_PERMISSIONS_PREFIX = "userinfo:role:permissions:";
+  private static final String CACHE_KEY_ROLE_PERMISSIONS_PREFIX = "userinfo:RoleDO:permissions:";
 
   /** 角色权限缓存过期时间（秒）：10 分钟 */
   private static final long CACHE_TTL_ROLE_PERMISSIONS = 600;
@@ -114,7 +114,7 @@ public class RoleServiceImpl implements RoleService {
    */
   @Override
   public RoleVO getById(String id) {
-    Role entity = roleRepository.findById(id);
+    RoleDO entity = roleRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND);
     }
@@ -129,19 +129,19 @@ public class RoleServiceImpl implements RoleService {
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public Page<RoleVO> page(RolePageQueryDTO query) {
-    Page<Role> page = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
-    LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
+    Page<RoleDO> page = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
+    LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
     if (query.getRoleCode() != null && !query.getRoleCode().isBlank()) {
-      wrapper.like(Role::getRoleCode, query.getRoleCode());
+      wrapper.like(RoleDO::getRoleCode, query.getRoleCode());
     }
     if (query.getRoleName() != null && !query.getRoleName().isBlank()) {
-      wrapper.like(Role::getRoleName, query.getRoleName());
+      wrapper.like(RoleDO::getRoleName, query.getRoleName());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(Role::getStatus, query.getStatus());
+      wrapper.eq(RoleDO::getStatus, query.getStatus());
     }
-    wrapper.orderByAsc(Role::getSortOrder);
-    Page<Role> result = roleRepository.page(page, wrapper);
+    wrapper.orderByAsc(RoleDO::getSortOrder);
+    Page<RoleDO> result = roleRepository.page(page, wrapper);
     Page<RoleVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
     List<RoleVO> voList =
         result.getRecords().stream()
@@ -159,8 +159,8 @@ public class RoleServiceImpl implements RoleService {
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public List<RoleVO> list() {
-    LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
-    wrapper.orderByAsc(Role::getSortOrder);
+    LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.orderByAsc(RoleDO::getSortOrder);
     return roleRepository.list(wrapper).stream()
         .map(UserInfoConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
@@ -178,13 +178,13 @@ public class RoleServiceImpl implements RoleService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String create(RoleCreateDTO dto) {
-    LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Role::getRoleCode, dto.getRoleCode());
+    LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(RoleDO::getRoleCode, dto.getRoleCode());
     if (roleRepository.count(wrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_CODE_DUPLICATE);
     }
 
-    Role entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
+    RoleDO entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
     if (entity.getStatus() == null) {
       entity.setStatus("ENABLED");
     }
@@ -192,7 +192,7 @@ public class RoleServiceImpl implements RoleService {
       entity.setBuiltIn(false);
     }
     roleRepository.insert(entity);
-    log.info("Role created: code={}, id={}", entity.getRoleCode(), entity.getId());
+    log.info("RoleDO created: code={}, id={}", entity.getRoleCode(), entity.getId());
     eventPublisher.publishRoleEntityChanged(entity, "CREATED");
     return entity.getId();
   }
@@ -207,7 +207,7 @@ public class RoleServiceImpl implements RoleService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(RoleUpdateDTO dto) {
-    Role entity = roleRepository.findById(dto.getId());
+    RoleDO entity = roleRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND);
     }
@@ -236,7 +236,7 @@ public class RoleServiceImpl implements RoleService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Role entity = roleRepository.findById(id);
+    RoleDO entity = roleRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND);
     }
@@ -244,14 +244,14 @@ public class RoleServiceImpl implements RoleService {
       throw new BusinessException(UserInfoExceptionCode.ROLE_BUILTIN_CANNOT_DELETE);
     }
 
-    LambdaQueryWrapper<UserRole> urWrapper = new LambdaQueryWrapper<>();
-    urWrapper.eq(UserRole::getRoleId, id);
+    LambdaQueryWrapper<UserRoleDO> urWrapper = new LambdaQueryWrapper<>();
+    urWrapper.eq(UserRoleDO::getRoleId, id);
     if (userRoleRepository.count(urWrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_HAS_USERS);
     }
 
-    LambdaQueryWrapper<RolePermission> rpWrapper = new LambdaQueryWrapper<>();
-    rpWrapper.eq(RolePermission::getRoleId, id);
+    LambdaQueryWrapper<RolePermissionDO> rpWrapper = new LambdaQueryWrapper<>();
+    rpWrapper.eq(RolePermissionDO::getRoleId, id);
     rolePermissionRepository.delete(rpWrapper);
 
     boolean result = roleRepository.deleteById(id) > 0;
@@ -278,33 +278,33 @@ public class RoleServiceImpl implements RoleService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean assignPermissions(String roleId, List<String> permissionIds) {
-    Role role = roleRepository.findById(roleId);
-    if (role == null || role.getDeleted() == 1) {
+    RoleDO RoleDO = roleRepository.findById(roleId);
+    if (RoleDO == null || RoleDO.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND);
     }
 
-    LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(RolePermission::getRoleId, roleId);
+    LambdaQueryWrapper<RolePermissionDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(RolePermissionDO::getRoleId, roleId);
     rolePermissionRepository.delete(wrapper);
 
     // 批量插入（替代 N+1 循环）
-    List<RolePermission> list = new ArrayList<>(permissionIds.size());
+    List<RolePermissionDO> list = new ArrayList<>(permissionIds.size());
     for (String permId : permissionIds) {
-      RolePermission rp = new RolePermission();
+      RolePermissionDO rp = new RolePermissionDO();
       rp.setId(String.valueOf(snowflakeIdGenerator.nextId()));
       rp.setRoleId(roleId);
       rp.setPermissionId(permId);
-      rp.setTenantId(role.getTenantId());
+      rp.setTenantId(RoleDO.getTenantId());
       list.add(rp);
     }
     if (!list.isEmpty()) {
       rolePermissionRepository.batchInsert(list);
     }
-    log.info("Permissions assigned to role {}: {}", roleId, permissionIds.size());
+    log.info("Permissions assigned to RoleDO {}: {}", roleId, permissionIds.size());
 
     // 权限分配后失效缓存
     evictRolePermissionCache(roleId);
-    invalidatePermissionCache(role.getRoleCode());
+    invalidatePermissionCache(RoleDO.getRoleCode());
 
     return true;
   }
@@ -345,12 +345,12 @@ public class RoleServiceImpl implements RoleService {
       if (cachedJson != null && !cachedJson.isBlank()) {
         List<String> cached = YdszJson.fromJson(cachedJson, List.class, String.class);
         if (cached != null) {
-          log.debug("Role permissions loaded from cache: roleId={}", roleId);
+          log.debug("RoleDO permissions loaded from cache: roleId={}", roleId);
           return cached;
         }
       }
     } catch (Exception e) {
-      log.warn("Failed to load role permissions from cache, fallback to DB: {}", e.getMessage());
+      log.warn("Failed to load RoleDO permissions from cache, fallback to DB: {}", e.getMessage());
     }
 
     // 2. 缓存未命中，查询数据库
@@ -361,7 +361,7 @@ public class RoleServiceImpl implements RoleService {
       String json = YdszJson.toJson(permissionIds);
       redisStringOps.set(cacheKey, json, Duration.ofSeconds(CACHE_TTL_ROLE_PERMISSIONS));
     } catch (Exception e) {
-      log.warn("Failed to cache role permissions: {}", e.getMessage());
+      log.warn("Failed to cache RoleDO permissions: {}", e.getMessage());
     }
 
     return permissionIds;
@@ -380,9 +380,9 @@ public class RoleServiceImpl implements RoleService {
     }
     try {
       redisStringOps.del(CACHE_KEY_ROLE_PERMISSIONS_PREFIX + roleId);
-      log.debug("Role permission cache evicted: roleId={}", roleId);
+      log.debug("RoleDO permission cache evicted: roleId={}", roleId);
     } catch (Exception e) {
-      log.warn("Failed to evict role permission cache: {}", e.getMessage());
+      log.warn("Failed to evict RoleDO permission cache: {}", e.getMessage());
     }
   }
 
@@ -390,7 +390,7 @@ public class RoleServiceImpl implements RoleService {
    * 批量查询角色 ID → 角色名映射。
    *
    * <p>实现：{@link com.baomidou.mybatisplus.core.mapper.BaseMapper#selectBatchIds(Collection)} 单条 SQL
-   * 完成（已自动追加 {@code deleted = 0} 条件，因 {@link Role#getDeleted()} 标注了 {@link
+   * 完成（已自动追加 {@code deleted = 0} 条件，因 {@link RoleDO#getDeleted()} 标注了 {@link
    * com.baomidou.mybatisplus.annotation.TableLogic}）。
    */
   @Override
@@ -406,11 +406,11 @@ public class RoleServiceImpl implements RoleService {
     if (distinctIds.isEmpty()) {
       return Collections.emptyMap();
     }
-    List<Role> roles = roleRepository.findByIds(distinctIds);
+    List<RoleDO> roles = roleRepository.findByIds(distinctIds);
     Map<String, String> result = new LinkedHashMap<>(roles.size());
-    for (Role role : roles) {
-      if (role.getRoleName() != null && !role.getRoleName().isBlank()) {
-        result.put(role.getId(), role.getRoleName());
+    for (RoleDO RoleDO : roles) {
+      if (RoleDO.getRoleName() != null && !RoleDO.getRoleName().isBlank()) {
+        result.put(RoleDO.getId(), RoleDO.getRoleName());
       }
     }
     return result;

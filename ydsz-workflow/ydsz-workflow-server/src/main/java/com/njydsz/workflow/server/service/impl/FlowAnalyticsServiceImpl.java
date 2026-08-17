@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -90,8 +90,8 @@ import com.njydsz.workflow.server.service.FlowAnalyticsService;
  * @see FlowAnalyticsService 接口定义
  * @see FlowEfficiencyService 效率分析服务（与本服务数据有重叠但视角不同）
  * @see TenantContext 租户上下文
- * @see com.njydsz.workflow.domain.entity.FlowRunTask 运行时任务实体
- * @see com.njydsz.workflow.domain.entity.FlowHisTask 历史任务实体
+ * @see com.njydsz.workflow.infra.entity.FlowRunTaskDO 运行时任务实体
+ * @see com.njydsz.workflow.infra.entity.FlowHisTaskDO 历史任务实体
  */
 @Slf4j
 @Service
@@ -124,23 +124,23 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     // 待办数 + 超期数（run_task 表，无法与 his_task 合并查询）
     long pendingCount =
         runTaskMapper.selectCount(
-            new LambdaQueryWrapper<FlowRunTask>()
-                .eq(FlowRunTask::getTenantId, tid)
-                .eq(FlowRunTask::getDeleted, 0)
+            new LambdaQueryWrapper<FlowRunTaskDO>()
+                .eq(FlowRunTaskDO::getTenantId, tid)
+                .eq(FlowRunTaskDO::getDeleted, 0)
                 .in(
-                    FlowRunTask::getTaskStatus,
+                    FlowRunTaskDO::getTaskStatus,
                     FlowTaskStatus.PENDING.name(),
                     FlowTaskStatus.CLAIMED.name()));
     long overdueCount =
         runTaskMapper.selectCount(
-            new LambdaQueryWrapper<FlowRunTask>()
-                .eq(FlowRunTask::getTenantId, tid)
-                .eq(FlowRunTask::getDeleted, 0)
+            new LambdaQueryWrapper<FlowRunTaskDO>()
+                .eq(FlowRunTaskDO::getTenantId, tid)
+                .eq(FlowRunTaskDO::getDeleted, 0)
                 .in(
-                    FlowRunTask::getTaskStatus,
+                    FlowRunTaskDO::getTaskStatus,
                     FlowTaskStatus.PENDING.name(),
                     FlowTaskStatus.CLAIMED.name())
-                .lt(FlowRunTask::getDueAt, LocalDateTime.now()));
+                .lt(FlowRunTaskDO::getDueAt, LocalDateTime.now()));
 
     Map<String, Object> result = new LinkedHashMap<>();
     result.put("totalTasks", totalHis);

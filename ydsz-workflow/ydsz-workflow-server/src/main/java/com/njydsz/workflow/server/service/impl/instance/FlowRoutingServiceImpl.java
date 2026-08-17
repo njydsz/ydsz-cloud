@@ -18,9 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.expr.ExpressionEvaluator;
-import com.njydsz.workflow.domain.entity.FlowAuditLog;
-import com.njydsz.workflow.domain.entity.FlowInstance;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
+import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
@@ -167,7 +167,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
       return Collections.emptyList();
     }
 
-    FlowInstance instance = instanceMapper.selectById(instanceId);
+    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
     if (instance == null) {
       log.warn("[FlowRoute] 实例不存在，跳过异常检测: instanceId={}", instanceId);
       return Collections.emptyList();
@@ -216,12 +216,12 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
    * <p>遍历实例下所有任务，筛选出 dueAt 已过期且任务状态未完成的记录。
    */
   private void detectTimeout(String instanceId, List<Map<String, Object>> anomalies) {
-    List<FlowRunTask> tasks = taskMapper.selectByInstanceId(instanceId);
+    List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
     if (tasks == null || tasks.isEmpty()) {
       return;
     }
     LocalDateTime now = LocalDateTime.now();
-    for (FlowRunTask task : tasks) {
+    for (FlowRunTaskDO task : tasks) {
       if (task.getDueAt() == null) {
         continue;
       }
@@ -261,12 +261,12 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
    * <p>以任务的创建时间（createdAt）为起点，计算停留时长。 仅检测未完成的任务。
    */
   private void detectStuck(String instanceId, List<Map<String, Object>> anomalies) {
-    List<FlowRunTask> tasks = taskMapper.selectByInstanceId(instanceId);
+    List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
     if (tasks == null || tasks.isEmpty()) {
       return;
     }
     LocalDateTime now = LocalDateTime.now();
-    for (FlowRunTask task : tasks) {
+    for (FlowRunTaskDO task : tasks) {
       if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
         continue;
       }
@@ -303,7 +303,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
    * <p>统计审计日志中 action=REJECT 的记录，按节点编码分组计数。 任意节点驳回次数超过 3 次即视为循环审批异常。
    */
   private void detectLoop(String instanceId, List<Map<String, Object>> anomalies) {
-    List<FlowAuditLog> logs = auditLogMapper.selectByInstanceId(instanceId);
+    List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(instanceId);
     if (logs == null || logs.isEmpty()) {
       return;
     }
@@ -315,7 +315,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
             .filter(log -> log.getNodeCode() != null)
             .collect(
                 Collectors.groupingBy(
-                    FlowAuditLog::getNodeCode, LinkedHashMap::new, Collectors.counting()));
+                    FlowAuditLogDO::getNodeCode, LinkedHashMap::new, Collectors.counting()));
 
     // 筛选驳回次数超过阈值的节点
     for (Map.Entry<String, Long> entry : rejectCountByNode.entrySet()) {
@@ -325,7 +325,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
             logs.stream()
                 .filter(log -> entry.getKey().equals(log.getNodeCode()))
                 .filter(log -> log.getNodeName() != null)
-                .map(FlowAuditLog::getNodeName)
+                .map(FlowAuditLogDO::getNodeName)
                 .findFirst()
                 .orElse(entry.getKey());
 

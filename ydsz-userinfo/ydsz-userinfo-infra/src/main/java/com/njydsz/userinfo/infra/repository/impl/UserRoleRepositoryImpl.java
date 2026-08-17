@@ -7,9 +7,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.entity.UserRole;
+import com.njydsz.userinfo.domain.repository.UserRoleRepository;
+import com.njydsz.userinfo.infra.entity.UserRoleDO;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
-import com.njydsz.userinfo.infra.repository.UserRoleRepository;
 
 /**
  * 用户-角色关联 Repository 实现
@@ -26,58 +26,58 @@ public class UserRoleRepositoryImpl implements UserRoleRepository {
   private final UserRoleMapper userRoleMapper;
 
   @Override
-  public List<UserRole> findByUserId(String userId) {
-    LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserRole::getUserId, userId);
+  public List<UserRoleDO> findByUserId(String userId) {
+    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRoleDO::getUserId, userId);
     return userRoleMapper.selectList(wrapper);
   }
 
   @Override
   public List<String> findRoleIdsByUserId(String userId) {
-    LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserRole::getUserId, userId);
+    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRoleDO::getUserId, userId);
     return userRoleMapper.selectList(wrapper).stream()
-        .map(UserRole::getRoleId)
+        .map(UserRoleDO::getRoleId)
         .collect(Collectors.toList());
   }
 
   @Override
-  public UserRole findByUserIdAndRoleId(String userId, String roleId) {
-    LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserRole::getUserId, userId);
-    wrapper.eq(UserRole::getRoleId, roleId);
+  public UserRoleDO findByUserIdAndRoleId(String userId, String roleId) {
+    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRoleDO::getUserId, userId);
+    wrapper.eq(UserRoleDO::getRoleId, roleId);
     return userRoleMapper.selectOne(wrapper);
   }
 
   @Override
-  public List<UserRole> list(LambdaQueryWrapper<UserRole> wrapper) {
+  public List<UserRoleDO> list(LambdaQueryWrapper<UserRoleDO> wrapper) {
     return userRoleMapper.selectList(wrapper);
   }
 
   @Override
-  public int insert(UserRole entity) {
+  public int insert(UserRoleDO entity) {
     return userRoleMapper.insert(entity);
   }
 
   @Override
-  public int batchInsert(List<UserRole> list) {
+  public int batchInsert(List<UserRoleDO> list) {
     return userRoleMapper.batchInsert(list);
   }
 
   @Override
   public int deleteByUserId(String userId) {
-    LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserRole::getUserId, userId);
+    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRoleDO::getUserId, userId);
     return userRoleMapper.delete(wrapper);
   }
 
   @Override
-  public int delete(LambdaQueryWrapper<UserRole> wrapper) {
+  public int delete(LambdaQueryWrapper<UserRoleDO> wrapper) {
     return userRoleMapper.delete(wrapper);
   }
 
   @Override
-  public long count(LambdaQueryWrapper<UserRole> wrapper) {
+  public long count(LambdaQueryWrapper<UserRoleDO> wrapper) {
     return userRoleMapper.selectCount(wrapper);
   }
 }

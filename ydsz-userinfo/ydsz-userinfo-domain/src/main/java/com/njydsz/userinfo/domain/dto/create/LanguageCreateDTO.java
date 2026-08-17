@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 语言新增请求 DTO。
  *
- * <p>对应后端 {@code POST /api/v1/language} 请求体。 新增语言后自动加入前端语言切换器，系统全局仅允许一个默认语言。
+ * <p>对应后端 {@code PostDO /api/v1/LanguageDO} 请求体。 新增语言后自动加入前端语言切换器，系统全局仅允许一个默认语言。
  *
  * @author ydsz-team
  * @since 1.0.0

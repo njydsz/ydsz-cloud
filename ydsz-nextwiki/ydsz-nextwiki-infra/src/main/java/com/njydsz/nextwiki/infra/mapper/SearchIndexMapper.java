@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.nextwiki.domain.entity.SearchIndex;
+import com.njydsz.nextwiki.infra.entity.SearchIndexDO;
 
 /**
  * 搜索索引 Mapper
@@ -30,24 +30,24 @@ import com.njydsz.nextwiki.domain.entity.SearchIndex;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.nextwiki.domain.entity.SearchIndex 搜索索引实体
+ * @see com.njydsz.nextwiki.infra.entity.SearchIndexDO 搜索索引实体
  * @see com.njydsz.nextwiki.server.service.SearchIndexService 搜索 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface SearchIndexMapper extends BaseMapper<SearchIndex> {
+public interface SearchIndexMapper extends BaseMapper<SearchIndexDO> {
 
   /** 新增或更新索引（PostgreSQL ON CONFLICT 语义） */
-  int upsert(@Param("index") SearchIndex index);
+  int upsert(@Param("index") SearchIndexDO index);
 
   /** 根据文件节点ID删除索引（物理删除） */
   int deleteByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
   /** 根据文件节点ID查询索引 */
-  SearchIndex selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
+  SearchIndexDO selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
   /** 查询所有未删除的索引记录 */
-  List<SearchIndex> selectAll();
+  List<SearchIndexDO> selectAll();
 
   /**
    * 查询所有未删除的文件节点ID（用于索引重建）
@@ -73,11 +73,11 @@ public interface SearchIndexMapper extends BaseMapper<SearchIndex> {
    * @param page MyBatis-Plus 分页对象
    * @param keyword 搜索关键词
    * @param createdBy 创建人（权限过滤）
-   * @param scope 搜索范围：all / filename / content / tag
+   * @param scope 搜索范围：all / filename / content / TagDO
    * @return 分页结果
    */
-  IPage<SearchIndex> searchPage(
-      IPage<SearchIndex> page,
+  IPage<SearchIndexDO> searchPage(
+      IPage<SearchIndexDO> page,
       @Param("keyword") String keyword,
       @Param("createdBy") String createdBy,
       @Param("scope") String scope);

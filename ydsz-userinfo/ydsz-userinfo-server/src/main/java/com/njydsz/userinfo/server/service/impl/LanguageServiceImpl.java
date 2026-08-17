@@ -19,11 +19,11 @@ import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.create.LanguageCreateDTO;
 import com.njydsz.userinfo.domain.dto.update.LanguageUpdateDTO;
-import com.njydsz.userinfo.domain.entity.Language;
+import com.njydsz.userinfo.infra.entity.LanguageDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
-import com.njydsz.userinfo.infra.repository.LanguageRepository;
+import com.njydsz.userinfo.domain.repository.LanguageRepository;
 import com.njydsz.userinfo.server.service.LanguageService;
 
 /**
@@ -43,15 +43,15 @@ public class LanguageServiceImpl implements LanguageService {
 
   @Override
   public PageResponse<List<LanguageVO>> page(LanguagePageQuery query) {
-    QueryWrapper<Language> wrapper = buildQueryWrapper(query);
-    Page<Language> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
-    IPage<Language> result = languageRepository.page(mpPage, wrapper);
+    QueryWrapper<LanguageDO> wrapper = buildQueryWrapper(query);
+    Page<LanguageDO> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
+    IPage<LanguageDO> result = languageRepository.page(mpPage, wrapper);
     return PageResponses.success(result, UserInfoConverter.INSTANT::entityToVO);
   }
 
   @Override
   public LanguageVO getById(String id) {
-    Language entity = languageRepository.findById(id);
+    LanguageDO entity = languageRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND);
     }
@@ -60,8 +60,8 @@ public class LanguageServiceImpl implements LanguageService {
 
   @Override
   public List<LanguageVO> list() {
-    LambdaQueryWrapper<Language> wrapper = new LambdaQueryWrapper<>();
-    wrapper.orderByDesc(Language::getSortOrder);
+    LambdaQueryWrapper<LanguageDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.orderByDesc(LanguageDO::getSortOrder);
     return languageRepository.list(wrapper).stream()
         .map(UserInfoConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
@@ -70,7 +70,7 @@ public class LanguageServiceImpl implements LanguageService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String create(LanguageCreateDTO dto) {
-    Language entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
+    LanguageDO entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
     if (entity.getStatus() == null) {
       entity.setStatus("ENABLED");
     }
@@ -81,7 +81,7 @@ public class LanguageServiceImpl implements LanguageService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(LanguageUpdateDTO dto) {
-    Language entity = languageRepository.findById(dto.getId());
+    LanguageDO entity = languageRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND);
     }
@@ -92,15 +92,15 @@ public class LanguageServiceImpl implements LanguageService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Language entity = languageRepository.findById(id);
+    LanguageDO entity = languageRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND);
     }
     return languageRepository.deleteById(id) > 0;
   }
 
-  private QueryWrapper<Language> buildQueryWrapper(LanguagePageQuery query) {
-    QueryWrapper<Language> wrapper = new QueryWrapper<>();
+  private QueryWrapper<LanguageDO> buildQueryWrapper(LanguagePageQuery query) {
+    QueryWrapper<LanguageDO> wrapper = new QueryWrapper<>();
     if (query.getLanguageCode() != null && !query.getLanguageCode().isBlank()) {
       wrapper.like("language_code", query.getLanguageCode());
     }

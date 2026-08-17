@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.nextwiki.domain.entity.StorageQuota;
-import com.njydsz.nextwiki.infra.repository.StorageQuotaRepository;
+import com.njydsz.nextwiki.infra.entity.StorageQuotaDO;
+import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
 import com.njydsz.nextwiki.infra.mapper.StorageQuotaMapper;
 
 /**
@@ -28,7 +28,7 @@ public class StorageQuotaRepositoryImpl implements StorageQuotaRepository {
    * @return 已持久化的配额实体
    */
   @Override
-  public StorageQuota save(StorageQuota quota) {
+  public StorageQuotaDO save(StorageQuotaDO quota) {
     if (quota.getId() == null) {
       storageQuotaMapper.insert(quota);
     } else {
@@ -54,7 +54,7 @@ public class StorageQuotaRepositoryImpl implements StorageQuotaRepository {
    * @return 配额实体；不存在则返回 null
    */
   @Override
-  public StorageQuota findById(String id) {
+  public StorageQuotaDO findById(String id) {
     return storageQuotaMapper.selectById(id);
   }
 
@@ -66,7 +66,7 @@ public class StorageQuotaRepositoryImpl implements StorageQuotaRepository {
    * @return 命中的配额实体；不存在则返回 null
    */
   @Override
-  public StorageQuota findByScope(String scopeType, String scopeId) {
+  public StorageQuotaDO findByScope(String scopeType, String scopeId) {
     return storageQuotaMapper.selectByScope(scopeType, scopeId);
   }
 

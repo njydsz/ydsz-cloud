@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.workflow.domain.entity.FlowAuditLog;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
@@ -42,7 +42,7 @@ public class FlowTaskAuditService {
    * @param task 当前任务（assignorId=授权人，assigneeId=被委派人）
    * @param action 动作类型（CLAIM/PASS/DELEGATE_RETURN/...）
    */
-  public void logDelegateOperation(FlowRunTask task, String action) {
+  public void logDelegateOperation(FlowRunTaskDO task, String action) {
     if (task == null || auditLogMapper == null) {
       return;
     }
@@ -52,7 +52,7 @@ public class FlowTaskAuditService {
       if (ownerId == null || delegateId == null) {
         return; // 非代理场景
       }
-      FlowAuditLog logEntry = new FlowAuditLog();
+      FlowAuditLogDO logEntry = new FlowAuditLogDO();
       logEntry.setTenantId(task.getTenantId());
       logEntry.setInstanceId(task.getInstanceId());
       logEntry.setTaskId(task.getId());

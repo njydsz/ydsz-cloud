@@ -36,18 +36,18 @@ import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
  * <p><b>核心能力分组：</b>
  *
  * <ul>
- *   <li><b>用户查询</b>：{@code /user/info}、{@code /user/leader}、{@code /user/role-codes}、 {@code
- *       /user/dept-ids}、{@code /user/list-by-role}、{@code /user/list-by-position}
+ *   <li><b>用户查询</b>：{@code /user/info}、{@code /user/leader}、{@code /user/RoleDO-codes}、 {@code
+ *       /user/dept-ids}、{@code /user/list-by-RoleDO}、{@code /user/list-by-position}
  *   <li><b>部门查询</b>：{@code /dept/tree}、{@code /dept/list}、 {@code /dept/leader-by-id}、{@code
  *       /dept/leader-by-code}
  *   <li><b>NameAssembler 批量富化</b>：{@code /user/batch-names}、 {@code /dept/batch-names}、{@code
- *       /role/batch-names}、{@code /post/batch-names}、{@code /company/batch-names}
+ *       /RoleDO/batch-names}、{@code /PostDO/batch-names}、{@code /CompanyDO/batch-names}
  * </ul>
  *
  * <p><b>工作流联动说明：</b>
  *
  * <ul>
- *   <li>{@code role:xxx} 节点 → 调用 {@code /user/list-by-role}
+ *   <li>{@code RoleDO:xxx} 节点 → 调用 {@code /user/list-by-RoleDO}
  *   <li>{@code position:xxx} 节点 → 调用 {@code /user/list-by-position}
  *   <li>{@code leader:xxx} 节点 → 调用 {@code /user/leader}
  *   <li>{@code dept:数字} 节点 → 调用 {@code /dept/leader-by-id}
@@ -127,15 +127,15 @@ public class InternalApiController {
   /**
    * 按角色编码查询用户 ID 列表
    *
-   * <p>对应工作流节点表达式 {@code role:xxx} 的展开逻辑。
+   * <p>对应工作流节点表达式 {@code RoleDO:xxx} 的展开逻辑。
    *
    * <p>工作流引擎在计算审批人时调用该接口，将角色编码解析为具体用户 ID 列表。
    *
    * @param roleCode 角色编码（如 {@code PM} / {@code FINANCE}）
    * @return 该角色下的用户 ID 列表；角色不存在时返回空列表
    */
-  @GetMapping("/user/list-by-role")
-  @Operation(summary = "按角色编码查询用户 ID 列表（工作流 role:xxx 展开，带缓存）")
+  @GetMapping("/user/list-by-RoleDO")
+  @Operation(summary = "按角色编码查询用户 ID 列表（工作流 RoleDO:xxx 展开，带缓存）")
   public BaseResponse<List<String>> listUserIdsByRole(@RequestParam String roleCode) {
     return BaseResponse.success(workflowCacheService.listUserIdsByRoleCode(roleCode));
   }
@@ -148,7 +148,7 @@ public class InternalApiController {
    * @param userId 用户 ID
    * @return 用户的角色编码列表；用户无角色时返回空列表
    */
-  @GetMapping("/user/role-codes")
+  @GetMapping("/user/RoleDO-codes")
   @Operation(summary = "查询用户拥有的角色编码列表（工作流待办反查）")
   public BaseResponse<List<String>> listRoleCodesByUserId(@RequestParam String userId) {
     return BaseResponse.success(userAccountService.listRoleCodesByUserId(userId));
@@ -272,7 +272,7 @@ public class InternalApiController {
    * @param roleIds 角色 ID 列表（建议 ≤ 500）
    * @return roleId → 角色名 映射
    */
-  @PostMapping("/role/batch-names")
+  @PostMapping("/RoleDO/batch-names")
   @Operation(summary = "批量查询角色 ID → 角色名映射（NameAssembler 富化用）")
   public BaseResponse<Map<String, String>> batchRoleNames(@RequestBody List<String> roleIds) {
     return BaseResponse.success(roleService.batchNamesByIds(roleIds));
@@ -284,7 +284,7 @@ public class InternalApiController {
    * @param postIds 岗位 ID 列表（建议 ≤ 500）
    * @return postId → 岗位名 映射
    */
-  @PostMapping("/post/batch-names")
+  @PostMapping("/PostDO/batch-names")
   @Operation(summary = "批量查询岗位 ID → 岗位名映射（NameAssembler 富化用）")
   public BaseResponse<Map<String, String>> batchPostNames(@RequestBody List<String> postIds) {
     return BaseResponse.success(postService.batchNamesByIds(postIds));
@@ -296,7 +296,7 @@ public class InternalApiController {
    * @param companyIds 公司 ID 列表（建议 ≤ 500）
    * @return companyId → 公司名 映射
    */
-  @PostMapping("/company/batch-names")
+  @PostMapping("/CompanyDO/batch-names")
   @Operation(summary = "批量查询公司 ID → 公司名映射（NameAssembler 富化用）")
   public BaseResponse<Map<String, String>> batchCompanyNames(@RequestBody List<String> companyIds) {
     return BaseResponse.success(companyService.batchNamesByIds(companyIds));

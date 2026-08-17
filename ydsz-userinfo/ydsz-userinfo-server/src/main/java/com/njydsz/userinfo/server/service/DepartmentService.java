@@ -6,7 +6,7 @@ import java.util.Map;
 
 import com.njydsz.userinfo.domain.dto.create.DepartmentCreateDTO;
 import com.njydsz.userinfo.domain.dto.update.DepartmentUpdateDTO;
-import com.njydsz.userinfo.domain.entity.Department;
+import com.njydsz.userinfo.infra.entity.DepartmentDO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 
@@ -19,7 +19,7 @@ import com.njydsz.userinfo.domain.vo.DepartmentVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see Department 部门实体
+ * @see DepartmentDO 部门实体
  */
 public interface DepartmentService {
 

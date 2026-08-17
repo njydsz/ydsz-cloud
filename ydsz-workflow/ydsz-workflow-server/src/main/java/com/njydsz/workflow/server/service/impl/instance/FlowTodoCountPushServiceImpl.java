@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.socket.push.RealtimePushTemplate;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 
@@ -75,7 +75,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
   }
 
   @Override
-  public void pushTaskAssigned(FlowRunTask task) {
+  public void pushTaskAssigned(FlowRunTaskDO task) {
     if (task == null) {
       return;
     }
@@ -108,7 +108,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
   }
 
   @Override
-  public void pushTaskCompleted(FlowRunTask task, String operatorUserId) {
+  public void pushTaskCompleted(FlowRunTaskDO task, String operatorUserId) {
     if (task == null) {
       return;
     }
@@ -133,7 +133,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
   }
 
   @Override
-  public void pushTaskRejected(FlowRunTask task, String operatorUserId, String reason) {
+  public void pushTaskRejected(FlowRunTaskDO task, String operatorUserId, String reason) {
     if (task == null) {
       return;
     }

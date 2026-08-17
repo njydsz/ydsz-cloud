@@ -35,7 +35,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
@@ -118,7 +118,7 @@ public class FlowDefinitionController {
    * @return 统一响应结果，包含流程定义 ID
    */
   @Idempotent(key = "ydsz:workflow:FlowDefinitionController:deploy:lock", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowdefinition.deploy", threshold = 50)
+  @RateLimit(resource = "workflow.FlowDefinitionDO.deploy", threshold = 50)
   @PostMapping("/definition/deploy")
   @Audit(
       module = "流程定义",
@@ -191,7 +191,7 @@ public class FlowDefinitionController {
    * @return 统一响应结果
    */
   @Idempotent(key = "ydsz:workflow:FlowDefinitionController:deprecate:lock", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowdefinition.deprecate", threshold = 50)
+  @RateLimit(resource = "workflow.FlowDefinitionDO.deprecate", threshold = 50)
   @PostMapping("/definition/{id}/deprecate")
   @Audit(
       module = "流程定义",
@@ -303,7 +303,7 @@ public class FlowDefinitionController {
    * @return 统一响应结果
    */
   @Idempotent(key = "ydsz:workflow:FlowDefinitionController:enable:lock", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowdefinition.enable", threshold = 50)
+  @RateLimit(resource = "workflow.FlowDefinitionDO.enable", threshold = 50)
   @PostMapping("/definition/{id}/enable")
   @Audit(
       module = "流程定义",
@@ -324,7 +324,7 @@ public class FlowDefinitionController {
    * @return 统一响应结果
    */
   @Idempotent(key = "ydsz:workflow:FlowDefinitionController:disable:lock", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowdefinition.disable", threshold = 50)
+  @RateLimit(resource = "workflow.FlowDefinitionDO.disable", threshold = 50)
   @PostMapping("/definition/{id}/disable")
   @Audit(
       module = "流程定义",
@@ -392,7 +392,7 @@ public class FlowDefinitionController {
   @Idempotent(
       key = "ydsz:workflow:FlowDefinitionController:updateNodeCoordinate:lock",
       ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowdefinition.updateNodeCoordinate", threshold = 50)
+  @RateLimit(resource = "workflow.FlowDefinitionDO.updateNodeCoordinate", threshold = 50)
   @PostMapping("/definition/{definitionId}/node/{nodeCode}/coordinate")
   @Audit(
       module = "流程定义",
@@ -417,7 +417,7 @@ public class FlowDefinitionController {
    * @return 统一响应结果
    */
   @Idempotent(key = "ydsz:workflow:FlowDefinitionController:updateDefinition:lock", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowdefinition.updateDefinition", threshold = 50)
+  @RateLimit(resource = "workflow.FlowDefinitionDO.updateDefinition", threshold = 50)
   @PutMapping("/definition/{id}")
   @Audit(
       module = "流程定义",
@@ -610,7 +610,7 @@ public class FlowDefinitionController {
       content = "'slaProcess'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
   public BaseResponse<Boolean> slaProcess(@PathVariable String taskId) {
-    FlowRunTask task = taskService.getById(taskId);
+    FlowRunTaskDO task = taskService.getById(taskId);
     if (task == null) {
       return BaseResponse.error(BaseResultCode.NOT_FOUND, "任务不存在: " + taskId);
     }

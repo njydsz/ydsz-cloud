@@ -9,7 +9,7 @@ import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
-import com.njydsz.nextwiki.infra.repository.TrashItemRepository;
+import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
 
 /**
  * NextWiki 定时任务

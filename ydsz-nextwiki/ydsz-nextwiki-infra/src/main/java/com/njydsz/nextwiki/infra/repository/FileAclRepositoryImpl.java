@@ -5,8 +5,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.nextwiki.domain.entity.FileAcl;
-import com.njydsz.nextwiki.infra.repository.FileAclRepository;
+import com.njydsz.nextwiki.infra.entity.FileAclDO;
+import com.njydsz.nextwiki.domain.repository.FileAclRepository;
 import com.njydsz.nextwiki.infra.mapper.FileAclMapper;
 
 /**
@@ -28,7 +28,7 @@ public class FileAclRepositoryImpl implements FileAclRepository {
    * @return 已落库的 ACL 实体（含自增主键等数据库回填字段）
    */
   @Override
-  public FileAcl save(FileAcl acl) {
+  public FileAclDO save(FileAclDO acl) {
     fileAclMapper.insert(acl);
     return acl;
   }
@@ -40,7 +40,7 @@ public class FileAclRepositoryImpl implements FileAclRepository {
    * @return 该节点下的 ACL 规则列表（可能为空；已逻辑删除记录由拦截器自动过滤）
    */
   @Override
-  public List<FileAcl> findByFileNodeId(String fileNodeId) {
+  public List<FileAclDO> findByFileNodeId(String fileNodeId) {
     return fileAclMapper.selectByFileNodeId(fileNodeId);
   }
 
@@ -53,7 +53,7 @@ public class FileAclRepositoryImpl implements FileAclRepository {
    * @return 命中的 ACL 规则列表
    */
   @Override
-  public List<FileAcl> findByFileNodeIdAndGrantee(
+  public List<FileAclDO> findByFileNodeIdAndGrantee(
       String fileNodeId, String granteeType, String granteeId) {
     return fileAclMapper.selectByFileNodeIdAndGrantee(fileNodeId, granteeType, granteeId);
   }
@@ -77,7 +77,7 @@ public class FileAclRepositoryImpl implements FileAclRepository {
    * @return 命中有效权限的 ACL 列表
    */
   @Override
-  public List<FileAcl> findEffectivePermissions(
+  public List<FileAclDO> findEffectivePermissions(
       String fileNodeId, String userId, List<String> roleIds) {
     return fileAclMapper.selectEffectivePermissions(fileNodeId, userId, roleIds);
   }
@@ -88,7 +88,7 @@ public class FileAclRepositoryImpl implements FileAclRepository {
    * @param acls 待保存的 ACL 列表
    */
   @Override
-  public void batchSave(List<FileAcl> acls) {
+  public void batchSave(List<FileAclDO> acls) {
     if (acls != null && !acls.isEmpty()) {
       fileAclMapper.batchInsert(acls);
     }

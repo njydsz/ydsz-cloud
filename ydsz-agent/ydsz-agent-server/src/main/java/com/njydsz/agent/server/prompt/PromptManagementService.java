@@ -12,10 +12,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.agent.domain.entity.PromptTemplateDO;
-import com.njydsz.agent.domain.entity.PromptVersionDO;
-import com.njydsz.agent.infra.repository.PromptTemplateRepository;
-import com.njydsz.agent.infra.repository.PromptVersionRepository;
+import com.njydsz.agent.domain.repository.PromptTemplateRepository;
+import com.njydsz.agent.domain.repository.PromptVersionRepository;
+import com.njydsz.agent.infra.entity.PromptTemplateDO;
+import com.njydsz.agent.infra.entity.PromptVersionDO;
 
 /**
  * Prompt 管理服务

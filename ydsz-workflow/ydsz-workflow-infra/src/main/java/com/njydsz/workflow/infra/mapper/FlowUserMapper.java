@@ -7,14 +7,14 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.domain.entity.FlowUser;
+import com.njydsz.workflow.infra.entity.FlowUserDO;
 
 /**
  * 流程用户 Mapper
  *
  * <p>对应数据表 <code>ydsz_flow_user</code>，记录会签/或签场景下每个任务的处理人与处理状态。
  *
- * <p>会签模式下多个 FlowUser 关联同一任务；或签模式下任何一个人处理完即视为任务完成。
+ * <p>会签模式下多个 FlowUserDO 关联同一任务；或签模式下任何一个人处理完即视为任务完成。
  *
  * <p><b>主要索引：</b>
  *
@@ -29,15 +29,15 @@ import com.njydsz.workflow.domain.entity.FlowUser;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.domain.entity.FlowUser 流程用户实体
+ * @see com.njydsz.workflow.infra.entity.FlowUserDO 流程用户实体
  * @see com.njydsz.workflow.server.service.FlowTaskService 待办 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowUserMapper extends BaseMapper<FlowUser> {
+public interface FlowUserMapper extends BaseMapper<FlowUserDO> {
 
   /** 查某 task 的所有用户 */
-  List<FlowUser> selectByTaskId(@Param("taskId") String taskId);
+  List<FlowUserDO> selectByTaskId(@Param("taskId") String taskId);
 
   /** 标记用户已处理 */
   int markProcessed(
@@ -47,7 +47,7 @@ public interface FlowUserMapper extends BaseMapper<FlowUser> {
       @Param("processAt") LocalDateTime processAt);
 
   /** 查某实例某节点未处理的用户（会签场景） */
-  List<FlowUser> selectUnprocessedByInstanceAndNode(
+  List<FlowUserDO> selectUnprocessedByInstanceAndNode(
       @Param("instanceId") String instanceId, @Param("nodeCode") String nodeCode);
 
   /** 查某用户待办关联的任务 ID（通过 ydsz_flow_user 表） */
@@ -55,5 +55,5 @@ public interface FlowUserMapper extends BaseMapper<FlowUser> {
       @Param("userId") String userId, @Param("tenantId") String tenantId);
 
   /** 批量插入 */
-  int batchInsert(@Param("list") List<FlowUser> list);
+  int batchInsert(@Param("list") List<FlowUserDO> list);
 }

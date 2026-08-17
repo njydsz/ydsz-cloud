@@ -17,10 +17,10 @@ import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.workflow.domain.dto.FlowCcQueryDTO;
-import com.njydsz.workflow.domain.entity.FlowCc;
-import com.njydsz.workflow.domain.entity.FlowInstance;
-import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
+import com.njydsz.workflow.infra.entity.FlowCcDO;
+import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.mapper.FlowCcMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.server.engine.FlowAssigneeResolver;
@@ -60,7 +60,7 @@ import com.njydsz.workflow.server.service.FlowCcService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowCcService 接口定义
- * @see FlowCc 抄送实体
+ * @see FlowCcDO 抄送实体
  * @see FlowAssigneeResolver 审批人解析器（{@code role:/dept:} 展开）
  * @see FlowVariableStrategy 变量解析策略（SpEL 表达式）
  */
@@ -104,17 +104,17 @@ public class FlowCcServiceImpl implements FlowCcService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public void handleCcNode(String instanceId, FlowNode node, Map<String, Object> variables) {
+  public void handleCcNode(String instanceId, FlowNodeDO node, Map<String, Object> variables) {
     try {
       if (instanceId == null || node == null) {
-        log.warn("[FlowCc] handleCcNode 参数为空: instanceId={} node={}", instanceId, node == null);
+        log.warn("[FlowCcDO] handleCcNode 参数为空: instanceId={} node={}", instanceId, node == null);
         return;
       }
 
       // 1. 获取流程实例（取 flowCode/flowName/businessKey 等冗余字段）
-      FlowInstance instance = instanceMapper.selectById(instanceId);
+      FlowInstanceDO instance = instanceMapper.selectById(instanceId);
       if (instance == null) {
-        log.warn("[FlowCc] 流程实例不存在: instanceId={}", instanceId);
+        log.warn("[FlowCcDO] 流程实例不存在: instanceId={}", instanceId);
         return;
       }
 
@@ -122,7 +122,7 @@ public class FlowCcServiceImpl implements FlowCcService {
       String permissionFlag = node.getPermissionFlag();
       if (!StringUtils.hasText(permissionFlag)) {
         log.warn(
-            "[FlowCc] 抄送节点无 permissionFlag: instanceId={} nodeCode={}",
+            "[FlowCcDO] 抄送节点无 permissionFlag: instanceId={} nodeCode={}",
             instanceId,
             node.getNodeCode());
         return;
@@ -145,33 +145,33 @@ public class FlowCcServiceImpl implements FlowCcService {
 
       if (userIds.isEmpty()) {
         log.warn(
-            "[FlowCc] 抄送节点展开后无接收人: instanceId={} nodeCode={} permissionFlag={}",
+            "[FlowCcDO] 抄送节点展开后无接收人: instanceId={} nodeCode={} permissionFlag={}",
             instanceId,
             node.getNodeCode(),
             permissionFlag);
         return;
       }
 
-      // 4. 为每个 userId 写入 FlowCc
+      // 4. 为每个 userId 写入 FlowCcDO
       LocalDateTime now = LocalDateTime.now();
       String traceId = TracerUtils.getOrCreateTraceId();
       int insertCount = 0;
       for (String userId : userIds) {
-        FlowCc cc = buildCcDO(instance, node, userId, now, traceId);
+        FlowCcDO cc = buildCcDO(instance, node, userId, now, traceId);
         ccMapper.insert(cc);
         insertCount++;
       }
 
       // 5. 日志
       log.info(
-          "[FlowCc] 抄送节点处理完成: instanceId={} nodeCode={} ccCount={} traceId={}",
+          "[FlowCcDO] 抄送节点处理完成: instanceId={} nodeCode={} ccCount={} traceId={}",
           instanceId,
           node.getNodeCode(),
           insertCount,
           traceId);
     } catch (Exception e) {
       log.error(
-          "[FlowCc] 抄送节点处理异常: instanceId={} nodeCode={} err={}",
+          "[FlowCcDO] 抄送节点处理异常: instanceId={} nodeCode={} err={}",
           instanceId,
           node != null ? node.getNodeCode() : "null",
           e.getMessage(),
@@ -194,7 +194,7 @@ public class FlowCcServiceImpl implements FlowCcService {
    */
   @Override
   @Transactional(readOnly = true)
-  public List<FlowCc> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query) {
+  public List<FlowCcDO> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query) {
     try {
       if (userId == null || query == null) {
         return List.of();
@@ -205,7 +205,7 @@ public class FlowCcServiceImpl implements FlowCcService {
       return ccMapper.selectCcByUserPage(
           tenantId, userId, query.getReadStatus(), query.getFlowCode(), offset, size);
     } catch (Exception e) {
-      log.error("[FlowCc] pageMyCc 异常: userId={} err={}", userId, e.getMessage(), e);
+      log.error("[FlowCcDO] pageMyCc 异常: userId={} err={}", userId, e.getMessage(), e);
       return List.of();
     }
   }
@@ -227,7 +227,7 @@ public class FlowCcServiceImpl implements FlowCcService {
       }
       return ccMapper.countCcByUser(tenantId, userId, query.getReadStatus(), query.getFlowCode());
     } catch (Exception e) {
-      log.error("[FlowCc] countMyCc 异常: userId={} err={}", userId, e.getMessage(), e);
+      log.error("[FlowCcDO] countMyCc 异常: userId={} err={}", userId, e.getMessage(), e);
       return 0L;
     }
   }
@@ -248,7 +248,7 @@ public class FlowCcServiceImpl implements FlowCcService {
    */
   @Override
   @Transactional(readOnly = true)
-  public BaseResponse<List<FlowCc>> listCcByUser(
+  public BaseResponse<List<FlowCcDO>> listCcByUser(
       String userId,
       String readStatus,
       String flowCode,
@@ -263,12 +263,12 @@ public class FlowCcServiceImpl implements FlowCcService {
       int size = (int) Math.min(Math.max(pageSize, 1), PageConstants.MAX_PAGE_SIZE);
       int offset = (page - 1) * size;
 
-      List<FlowCc> list =
+      List<FlowCcDO> list =
           ccMapper.selectCcByUserPage(tenantId, userId, readStatus, flowCode, offset, size);
       long total = ccMapper.countCcByUser(tenantId, userId, readStatus, flowCode);
       return PageResponse.success(total, (long) page, (long) size, list);
     } catch (Exception e) {
-      log.error("[FlowCc] 分页查询异常: userId={} err={}", userId, e.getMessage(), e);
+      log.error("[FlowCcDO] 分页查询异常: userId={} err={}", userId, e.getMessage(), e);
       return PageResponse.success(0L, 0L, 0L, Collections.emptyList());
     }
   }
@@ -293,9 +293,9 @@ public class FlowCcServiceImpl implements FlowCcService {
         return;
       }
       int n = ccMapper.markRead(ccId, userId, LocalDateTime.now());
-      log.info("[FlowCc] 标记已读: ccId={} userId={} affected={}", ccId, userId, n);
+      log.info("[FlowCcDO] 标记已读: ccId={} userId={} affected={}", ccId, userId, n);
     } catch (Exception e) {
-      log.error("[FlowCc] 标记已读异常: ccId={} userId={} err={}", ccId, userId, e.getMessage(), e);
+      log.error("[FlowCcDO] 标记已读异常: ccId={} userId={} err={}", ccId, userId, e.getMessage(), e);
     }
   }
 
@@ -314,11 +314,11 @@ public class FlowCcServiceImpl implements FlowCcService {
         return 0;
       }
       int n = ccMapper.markAllRead(tenantId, userId, LocalDateTime.now());
-      log.info("[FlowCc] 全部已读: userId={} tenantId={} affected={}", userId, tenantId, n);
+      log.info("[FlowCcDO] 全部已读: userId={} tenantId={} affected={}", userId, tenantId, n);
       return n;
     } catch (Exception e) {
       log.error(
-          "[FlowCc] 全部已读异常: userId={} tenantId={} err={}", userId, tenantId, e.getMessage(), e);
+          "[FlowCcDO] 全部已读异常: userId={} tenantId={} err={}", userId, tenantId, e.getMessage(), e);
       return 0;
     }
   }
@@ -344,7 +344,7 @@ public class FlowCcServiceImpl implements FlowCcService {
       return ccMapper.countCcUnreadByUser(tenantId, userId);
     } catch (Exception e) {
       log.error(
-          "[FlowCc] 未读数查询异常: userId={} tenantId={} err={}", userId, tenantId, e.getMessage(), e);
+          "[FlowCcDO] 未读数查询异常: userId={} tenantId={} err={}", userId, tenantId, e.getMessage(), e);
       return 0L;
     }
   }
@@ -362,7 +362,7 @@ public class FlowCcServiceImpl implements FlowCcService {
    */
   @Override
   @Transactional(readOnly = true)
-  public List<FlowCc> listByInstance(String instanceId, String tenantId) {
+  public List<FlowCcDO> listByInstance(String instanceId, String tenantId) {
     try {
       if (instanceId == null) {
         return List.of();
@@ -370,7 +370,7 @@ public class FlowCcServiceImpl implements FlowCcService {
       return ccMapper.selectByInstanceId(tenantId, instanceId);
     } catch (Exception e) {
       log.error(
-          "[FlowCc] 实例抄送列表查询异常: instanceId={} tenantId={} err={}",
+          "[FlowCcDO] 实例抄送列表查询异常: instanceId={} tenantId={} err={}",
           instanceId,
           tenantId,
           e.getMessage(),
@@ -427,14 +427,14 @@ public class FlowCcServiceImpl implements FlowCcService {
         }
       }
     } catch (Exception e) {
-      log.warn("[FlowCc] 展开 token 异常: token={} err={}", token, e.getMessage());
+      log.warn("[FlowCcDO] 展开 token 异常: token={} err={}", token, e.getMessage());
     }
   }
 
-  /** 构建 FlowCc 记录 */
-  private FlowCc buildCcDO(
-      FlowInstance instance, FlowNode node, String userId, LocalDateTime now, String traceId) {
-    FlowCc cc = new FlowCc();
+  /** 构建 FlowCcDO 记录 */
+  private FlowCcDO buildCcDO(
+      FlowInstanceDO instance, FlowNodeDO node, String userId, LocalDateTime now, String traceId) {
+    FlowCcDO cc = new FlowCcDO();
     cc.setTenantId(instance.getTenantId());
     cc.setInstanceId(instance.getId());
     cc.setNodeCode(node.getNodeCode());

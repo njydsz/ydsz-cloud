@@ -7,9 +7,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.entity.UserPost;
+import com.njydsz.userinfo.domain.repository.UserPostRepository;
+import com.njydsz.userinfo.infra.entity.UserPostDO;
 import com.njydsz.userinfo.infra.mapper.UserPostMapper;
-import com.njydsz.userinfo.infra.repository.UserPostRepository;
 
 /**
  * 用户-岗位关联 Repository 实现
@@ -26,45 +26,45 @@ public class UserPostRepositoryImpl implements UserPostRepository {
   private final UserPostMapper userPostMapper;
 
   @Override
-  public UserPost findById(String id) {
+  public UserPostDO findById(String id) {
     return userPostMapper.selectById(id);
   }
 
   @Override
-  public List<UserPost> findByUserId(String userId) {
-    LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserPost::getUserId, userId);
+  public List<UserPostDO> findByUserId(String userId) {
+    LambdaQueryWrapper<UserPostDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserPostDO::getUserId, userId);
     return userPostMapper.selectList(wrapper);
   }
 
   @Override
   public List<String> findPostIdsByUserId(String userId) {
-    LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserPost::getUserId, userId);
+    LambdaQueryWrapper<UserPostDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserPostDO::getUserId, userId);
     return userPostMapper.selectList(wrapper).stream()
-        .map(UserPost::getPostId)
+        .map(UserPostDO::getPostId)
         .collect(Collectors.toList());
   }
 
   @Override
-  public List<UserPost> list(LambdaQueryWrapper<UserPost> wrapper) {
+  public List<UserPostDO> list(LambdaQueryWrapper<UserPostDO> wrapper) {
     return userPostMapper.selectList(wrapper);
   }
 
   @Override
-  public int insert(UserPost entity) {
+  public int insert(UserPostDO entity) {
     return userPostMapper.insert(entity);
   }
 
   @Override
-  public int updateById(UserPost entity) {
+  public int updateById(UserPostDO entity) {
     return userPostMapper.updateById(entity);
   }
 
   @Override
   public int deleteByUserId(String userId) {
-    LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserPost::getUserId, userId);
+    LambdaQueryWrapper<UserPostDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserPostDO::getUserId, userId);
     return userPostMapper.delete(wrapper);
   }
 
@@ -74,7 +74,7 @@ public class UserPostRepositoryImpl implements UserPostRepository {
   }
 
   @Override
-  public int delete(LambdaQueryWrapper<UserPost> wrapper) {
+  public int delete(LambdaQueryWrapper<UserPostDO> wrapper) {
     return userPostMapper.delete(wrapper);
   }
 }

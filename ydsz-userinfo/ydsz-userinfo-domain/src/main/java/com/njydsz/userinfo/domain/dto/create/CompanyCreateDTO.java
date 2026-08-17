@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 公司新增请求 DTO。
  *
- * <p>对应后端 {@code POST /api/v1/company} 请求体。 新增时需要填写公司基本信息、联系信息及初始状态。
+ * <p>对应后端 {@code PostDO /api/v1/CompanyDO} 请求体。 新增时需要填写公司基本信息、联系信息及初始状态。
  *
  * @author ydsz-team
  * @since 1.0.0

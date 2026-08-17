@@ -9,7 +9,7 @@ import lombok.Data;
 /**
  * 流程实例视图对象
  *
- * <p>用于 Controller 层返回流程实例数据，对应实体 {@link com.njydsz.workflow.domain.entity.FlowInstance}。
+ * <p>用于 Controller 层返回流程实例数据，对应实体 {@link com.njydsz.workflow.infra.entity.FlowInstanceDO}。
  *
  * @author ydsz-team
  * @since 1.0.0

@@ -29,16 +29,16 @@ import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
-import com.njydsz.userinfo.domain.entity.UserAccount;
-import com.njydsz.userinfo.domain.entity.UserDept;
-import com.njydsz.userinfo.domain.entity.UserRole;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
+import com.njydsz.userinfo.infra.entity.UserDeptDO;
+import com.njydsz.userinfo.infra.entity.UserRoleDO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
-import com.njydsz.userinfo.infra.repository.RoleRepository;
-import com.njydsz.userinfo.infra.repository.UserAccountRepository;
-import com.njydsz.userinfo.infra.repository.UserDeptRepository;
-import com.njydsz.userinfo.infra.repository.UserRoleRepository;
+import com.njydsz.userinfo.domain.repository.RoleRepository;
+import com.njydsz.userinfo.domain.repository.UserAccountRepository;
+import com.njydsz.userinfo.domain.repository.UserDeptRepository;
+import com.njydsz.userinfo.domain.repository.UserRoleRepository;
 import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.auth.UserPasswordHistoryService;
@@ -89,7 +89,7 @@ import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
  * @author ydsz-team
  * @since 1.0.0
  * @see UserAccountService Service 接口
- * @see UserAccount 用户实体
+ * @see UserAccountDO 用户实体
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller
  */
 @Slf4j
@@ -142,7 +142,7 @@ public class UserAccountServiceImpl implements UserAccountService {
    */
   @Override
   public UserAccountVO getById(String id) {
-    UserAccount entity = userAccountRepository.findById(id);
+    UserAccountDO entity = userAccountRepository.findById(id);
     if (entity == null) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
@@ -160,11 +160,11 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "id")
   public Page<UserAccountVO> page(UserAccountPageQueryDTO query) {
-    Page<UserAccount> page = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
-    LambdaQueryWrapper<UserAccount> wrapper = buildPageQueryWrapper(query);
-    wrapper.orderByDesc(UserAccount::getCreatedAt);
+    Page<UserAccountDO> page = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
+    LambdaQueryWrapper<UserAccountDO> wrapper = buildPageQueryWrapper(query);
+    wrapper.orderByDesc(UserAccountDO::getCreatedAt);
 
-    Page<UserAccount> result = userAccountRepository.page(page, wrapper);
+    Page<UserAccountDO> result = userAccountRepository.page(page, wrapper);
     Page<UserAccountVO> voPage =
         new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
     List<UserAccountVO> voList =
@@ -181,16 +181,16 @@ public class UserAccountServiceImpl implements UserAccountService {
    * @param query 分页查询参数
    * @return 填充好条件的 QueryWrapper
    */
-  private LambdaQueryWrapper<UserAccount> buildPageQueryWrapper(UserAccountPageQueryDTO query) {
-    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+  private LambdaQueryWrapper<UserAccountDO> buildPageQueryWrapper(UserAccountPageQueryDTO query) {
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
 
-    applyLikeIfPresent(wrapper, UserAccount::getUsername, query.getUsername());
-    applyLikeIfPresent(wrapper, UserAccount::getRealName, query.getRealName());
-    applyLikeIfPresent(wrapper, UserAccount::getPhone, query.getPhone());
-    applyLikeIfPresent(wrapper, UserAccount::getEmail, query.getEmail());
+    applyLikeIfPresent(wrapper, UserAccountDO::getUsername, query.getUsername());
+    applyLikeIfPresent(wrapper, UserAccountDO::getRealName, query.getRealName());
+    applyLikeIfPresent(wrapper, UserAccountDO::getPhone, query.getPhone());
+    applyLikeIfPresent(wrapper, UserAccountDO::getEmail, query.getEmail());
     applyStatusIfPresent(wrapper, query.getStatus());
-    applyEqIfPresent(wrapper, UserAccount::getUserType, query.getUserType());
-    applyEqIfPresent(wrapper, UserAccount::getCompanyId, query.getCompanyId());
+    applyEqIfPresent(wrapper, UserAccountDO::getUserType, query.getUserType());
+    applyEqIfPresent(wrapper, UserAccountDO::getCompanyId, query.getCompanyId());
     return wrapper;
   }
 
@@ -200,11 +200,11 @@ public class UserAccountServiceImpl implements UserAccountService {
    * @param wrapper QueryWrapper
    * @param status  状态字符串（{@code "ENABLED"}/{@code "DISABLED"}，可为 null）
    */
-  private void applyStatusIfPresent(LambdaQueryWrapper<UserAccount> wrapper, String status) {
+  private void applyStatusIfPresent(LambdaQueryWrapper<UserAccountDO> wrapper, String status) {
     if (status != null && !status.isBlank()) {
       EnableStatusEnum statusEnum = EnableStatusEnum.parse(status);
       if (statusEnum != null) {
-        wrapper.eq(UserAccount::getStatus, statusEnum);
+        wrapper.eq(UserAccountDO::getStatus, statusEnum);
       }
     }
   }
@@ -217,7 +217,7 @@ public class UserAccountServiceImpl implements UserAccountService {
    * @param value 查询值（可为 null 或空白）
    */
   private void applyLikeIfPresent(
-      LambdaQueryWrapper<UserAccount> wrapper, SFunction<UserAccount, String> column, String value) {
+      LambdaQueryWrapper<UserAccountDO> wrapper, SFunction<UserAccountDO, String> column, String value) {
     if (value != null && !value.isBlank()) {
       wrapper.like(column, value);
     }
@@ -231,7 +231,7 @@ public class UserAccountServiceImpl implements UserAccountService {
    * @param value 查询值（可为 null 或空白）
    */
   private void applyEqIfPresent(
-      LambdaQueryWrapper<UserAccount> wrapper, SFunction<UserAccount, String> column, String value) {
+      LambdaQueryWrapper<UserAccountDO> wrapper, SFunction<UserAccountDO, String> column, String value) {
     if (value != null && !value.isBlank()) {
       wrapper.eq(column, value);
     }
@@ -245,8 +245,8 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "id")
   public List<UserAccountVO> list() {
-    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
-    wrapper.orderByDesc(UserAccount::getCreatedAt);
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.orderByDesc(UserAccountDO::getCreatedAt);
     return userAccountRepository.list(wrapper).stream()
         .map(UserInfoConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
@@ -264,8 +264,8 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String create(UserAccountCreateDTO dto) {
-    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccount::getUsername, dto.getUsername());
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccountDO::getUsername, dto.getUsername());
     if (userAccountRepository.count(wrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.USERNAME_DUPLICATE);
     }
@@ -273,7 +273,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     // 密码策略校验
     passwordPolicyValidator.validate(dto.getPassword(), dto.getUsername());
 
-    UserAccount entity = UserInfoConverter.INSTANT.createDtoToEntity(dto);
+    UserAccountDO entity = UserInfoConverter.INSTANT.createDtoToEntity(dto);
     String passwordHash = passwordEncoder.encode(dto.getPassword());
     entity.setPassword(passwordHash);
     entity.setStatusEnum(EnableStatusEnum.ENABLED);
@@ -303,7 +303,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(UserAccountUpdateDTO dto) {
-    UserAccount entity = userAccountRepository.findById(dto.getId());
+    UserAccountDO entity = userAccountRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
@@ -333,7 +333,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    UserAccount entity = userAccountRepository.findById(id);
+    UserAccountDO entity = userAccountRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
@@ -359,7 +359,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean changePassword(ChangePasswordDTO dto) {
-    UserAccount entity = userAccountRepository.findById(dto.getUserId());
+    UserAccountDO entity = userAccountRepository.findById(dto.getUserId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
@@ -400,7 +400,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean resetPassword(ResetPasswordDTO dto) {
-    UserAccount entity = userAccountRepository.findById(dto.getUserId());
+    UserAccountDO entity = userAccountRepository.findById(dto.getUserId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
@@ -437,19 +437,19 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean assignRoles(String userId, List<String> roleIds) {
-    UserAccount entity = userAccountRepository.findById(userId);
+    UserAccountDO entity = userAccountRepository.findById(userId);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
 
-    LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserRole::getUserId, userId);
+    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRoleDO::getUserId, userId);
     userRoleRepository.delete(wrapper);
 
     // 批量插入（替代 N+1 循环）
-    List<UserRole> list = new ArrayList<>(roleIds.size());
+    List<UserRoleDO> list = new ArrayList<>(roleIds.size());
     for (String roleId : roleIds) {
-      UserRole ur = new UserRole();
+      UserRoleDO ur = new UserRoleDO();
       ur.setId(String.valueOf(snowflakeIdGenerator.nextId()));
       ur.setUserId(userId);
       ur.setRoleId(roleId);
@@ -461,8 +461,8 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
     log.info("Roles assigned to user {}: {}", userId, roleIds);
 
-    // P0-2: 角色分配变更会影响 role:xxx 审批人展开缓存，按角色编码逐个失效。
-    // 原实现仅删除 leader 缓存（key 维度错误），导致 role:xxx 旧名单残留。
+    // P0-2: 角色分配变更会影响 RoleDO:xxx 审批人展开缓存，按角色编码逐个失效。
+    // 原实现仅删除 leader 缓存（key 维度错误），导致 RoleDO:xxx 旧名单残留。
     evictWorkflowCache(userId);
 
     // P1-1: 角色分配变更后，失效该用户的角色缓存
@@ -488,7 +488,7 @@ public class UserAccountServiceImpl implements UserAccountService {
       return;
     }
     try {
-      // 角色分配变更后，全部 role:xxx 缓存都可能过期（角色成员已变化），全量失效最安全
+      // 角色分配变更后，全部 RoleDO:xxx 缓存都可能过期（角色成员已变化），全量失效最安全
       workflowCache.evictRoleCache(null);
       // 用户角色变化不影响 leader，但用户可能同时被移出审批链，连带失效 leader 缓存
       workflowCache.evictUserCache(userId);
@@ -519,14 +519,14 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (roleCode == null || roleCode.isBlank()) {
       return Collections.emptyList();
     }
-    com.njydsz.userinfo.domain.entity.Role role = roleRepository.findByRoleCode(roleCode);
-    if (role == null) {
+    com.njydsz.userinfo.infra.entity.RoleDO RoleDO = roleRepository.findByRoleCode(roleCode);
+    if (RoleDO == null) {
       return Collections.emptyList();
     }
-    LambdaQueryWrapper<UserRole> userRoleWrapper = new LambdaQueryWrapper<>();
-    userRoleWrapper.eq(UserRole::getRoleId, role.getId());
+    LambdaQueryWrapper<UserRoleDO> userRoleWrapper = new LambdaQueryWrapper<>();
+    userRoleWrapper.eq(UserRoleDO::getRoleId, RoleDO.getId());
     return userRoleRepository.list(userRoleWrapper).stream()
-        .map(UserRole::getUserId)
+        .map(UserRoleDO::getUserId)
         .distinct()
         .collect(Collectors.toList());
   }
@@ -545,10 +545,10 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (roleIds.isEmpty()) {
       return Collections.emptyList();
     }
-    LambdaQueryWrapper<com.njydsz.userinfo.domain.entity.Role> roleWrapper = new LambdaQueryWrapper<>();
-    roleWrapper.in(com.njydsz.userinfo.domain.entity.Role::getId, roleIds);
+    LambdaQueryWrapper<com.njydsz.userinfo.infra.entity.RoleDO> roleWrapper = new LambdaQueryWrapper<>();
+    roleWrapper.in(com.njydsz.userinfo.infra.entity.RoleDO::getId, roleIds);
     return roleRepository.list(roleWrapper).stream()
-        .map(com.njydsz.userinfo.domain.entity.Role::getRoleCode)
+        .map(com.njydsz.userinfo.infra.entity.RoleDO::getRoleCode)
         .filter(c -> c != null && !c.isBlank())
         .distinct()
         .collect(Collectors.toList());
@@ -576,7 +576,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (userId == null || userId.isBlank()) {
       return null;
     }
-    UserAccount entity = userAccountRepository.findById(userId);
+    UserAccountDO entity = userAccountRepository.findById(userId);
     if (entity == null || entity.getDeleted() == 1) {
       return null;
     }
@@ -593,10 +593,10 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (positionCode == null || positionCode.isBlank()) {
       return Collections.emptyList();
     }
-    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccount::getPositionCode, positionCode);
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccountDO::getPositionCode, positionCode);
     return userAccountRepository.list(wrapper).stream()
-        .map(UserAccount::getId)
+        .map(UserAccountDO::getId)
         .distinct()
         .collect(Collectors.toList());
   }
@@ -652,9 +652,9 @@ public class UserAccountServiceImpl implements UserAccountService {
    * @return userId → realName 映射
    */
   private Map<String, String> batchUserNamesInternal(List<String> userIds) {
-    List<UserAccount> users = userAccountRepository.listByIds(userIds);
+    List<UserAccountDO> users = userAccountRepository.listByIds(userIds);
     Map<String, String> result = new LinkedHashMap<>(users.size());
-    for (UserAccount user : users) {
+    for (UserAccountDO user : users) {
       if (user.getRealName() != null && !user.getRealName().isBlank()) {
         result.put(user.getId(), user.getRealName());
       }
@@ -675,7 +675,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
     int count = 0;
     for (String id : ids) {
-      UserAccount entity = userAccountRepository.findById(id);
+      UserAccountDO entity = userAccountRepository.findById(id);
       if (entity == null || entity.getDeleted() == 1) {
         throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
       }
@@ -702,7 +702,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
     int count = 0;
     for (String id : ids) {
-      UserAccount entity = userAccountRepository.findById(id);
+      UserAccountDO entity = userAccountRepository.findById(id);
       if (entity == null || entity.getDeleted() == 1) {
         throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
       }
@@ -729,7 +729,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
     int count = 0;
     for (String id : ids) {
-      UserAccount entity = userAccountRepository.findById(id);
+      UserAccountDO entity = userAccountRepository.findById(id);
       if (entity == null || entity.getDeleted() == 1) {
         throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
       }
@@ -745,7 +745,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     return count;
   }
 
-  private void indexUpsert(UserAccount entity) {
+  private void indexUpsert(UserAccountDO entity) {
     SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
     if (bridge != null) {
       bridge.indexUpsert("user", entity);

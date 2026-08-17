@@ -41,7 +41,7 @@ public class UserDomainEvent extends DomainEvent {
    *
    * @param eventType 事件类型枚举（{@link UserDomainEventType}）
    * @param aggregateId 聚合根 ID
-   * @param aggregateType 聚合根类型（USER / ROLE / DEPARTMENT）
+   * @param aggregateType 聚合根类型（USER / RoleDO / DepartmentDO）
    * @param metadata 扩展元数据
    */
   public UserDomainEvent(

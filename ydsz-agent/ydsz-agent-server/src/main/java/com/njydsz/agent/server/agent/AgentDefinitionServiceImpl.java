@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.agent.domain.agent.AgentDefinition;
-import com.njydsz.agent.domain.entity.AgentDefinitionDO;
-import com.njydsz.agent.infra.repository.AgentDefinitionRepository;
+import com.njydsz.agent.domain.repository.AgentDefinitionRepository;
+import com.njydsz.agent.infra.entity.AgentDefinitionDO;
 import com.njydsz.common.json.YdszJson;
 
 /**

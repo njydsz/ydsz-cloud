@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.domain.entity.FlowSkip;
+import com.njydsz.workflow.infra.entity.FlowSkipDO;
 
 /**
  * 节点跳转 Mapper
@@ -29,24 +29,24 @@ import com.njydsz.workflow.domain.entity.FlowSkip;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.domain.entity.FlowSkip 节点跳转实体
+ * @see com.njydsz.workflow.infra.entity.FlowSkipDO 节点跳转实体
  * @see com.njydsz.workflow.server.engine.FlowEngine 流程引擎
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowSkipMapper extends BaseMapper<FlowSkip> {
+public interface FlowSkipMapper extends BaseMapper<FlowSkipDO> {
 
   /** 查某定义的全部跳转 */
-  List<FlowSkip> selectByDefinitionId(@Param("definitionId") String definitionId);
+  List<FlowSkipDO> selectByDefinitionId(@Param("definitionId") String definitionId);
 
   /** 查某节点的出发跳转 */
-  List<FlowSkip> selectByNodeCode(
+  List<FlowSkipDO> selectByNodeCode(
       @Param("definitionId") String definitionId,
       @Param("nodeCode") String nodeCode,
       @Param("skipType") String skipType);
 
   /** 查指向某节点的跳转（用于退回时找前驱） */
-  List<FlowSkip> selectByNextNode(
+  List<FlowSkipDO> selectByNextNode(
       @Param("definitionId") String definitionId, @Param("nextNodeCode") String nextNodeCode);
 
   /** 删除某定义的全部跳转 */

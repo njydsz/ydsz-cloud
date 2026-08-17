@@ -26,13 +26,13 @@ import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.create.DepartmentCreateDTO;
 import com.njydsz.userinfo.domain.dto.update.DepartmentUpdateDTO;
-import com.njydsz.userinfo.domain.entity.Department;
-import com.njydsz.userinfo.domain.entity.UserDept;
+import com.njydsz.userinfo.infra.entity.DepartmentDO;
+import com.njydsz.userinfo.infra.entity.UserDeptDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
-import com.njydsz.userinfo.infra.repository.DepartmentRepository;
-import com.njydsz.userinfo.infra.repository.UserDeptRepository;
+import com.njydsz.userinfo.domain.repository.DepartmentRepository;
+import com.njydsz.userinfo.domain.repository.UserDeptRepository;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.DepartmentService;
 import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
@@ -68,7 +68,7 @@ import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
  * @author ydsz-team
  * @since 1.0.0
  * @see DepartmentService Service 接口
- * @see Department 部门实体
+ * @see DepartmentDO 部门实体
  */
 @Slf4j
 @Service
@@ -122,7 +122,7 @@ public class DepartmentServiceImpl implements DepartmentService {
    */
   @Override
   public DepartmentVO getById(String id) {
-    Department entity = departmentRepository.findById(id);
+    DepartmentDO entity = departmentRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_NOT_FOUND);
     }
@@ -136,8 +136,8 @@ public class DepartmentServiceImpl implements DepartmentService {
    */
   @Override
   public List<DepartmentVO> list() {
-    LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
-    wrapper.orderByDesc(Department::getSortOrder);
+    LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.orderByDesc(DepartmentDO::getSortOrder);
     return departmentRepository.list(wrapper).stream()
         .map(UserInfoConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
@@ -155,13 +155,13 @@ public class DepartmentServiceImpl implements DepartmentService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String create(DepartmentCreateDTO dto) {
-    LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Department::getDeptCode, dto.getDeptCode());
+    LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(DepartmentDO::getDeptCode, dto.getDeptCode());
     if (departmentRepository.count(wrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_CODE_DUPLICATE);
     }
 
-    Department entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
+    DepartmentDO entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
     if (entity.getStatus() == null) {
       entity.setStatus("ENABLED");
     }
@@ -169,7 +169,7 @@ public class DepartmentServiceImpl implements DepartmentService {
       entity.setParentId("0");
     }
     departmentRepository.insert(entity);
-    log.info("Department created: code={}, id={}", entity.getDeptCode(), entity.getId());
+    log.info("DepartmentDO created: code={}, id={}", entity.getDeptCode(), entity.getId());
 
     // 部门变更后失效缓存
     evictDeptTreeCache();
@@ -191,7 +191,7 @@ public class DepartmentServiceImpl implements DepartmentService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(DepartmentUpdateDTO dto) {
-    Department entity = departmentRepository.findById(dto.getId());
+    DepartmentDO entity = departmentRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_NOT_FOUND);
     }
@@ -221,19 +221,19 @@ public class DepartmentServiceImpl implements DepartmentService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Department entity = departmentRepository.findById(id);
+    DepartmentDO entity = departmentRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_NOT_FOUND);
     }
 
-    LambdaQueryWrapper<Department> childWrapper = new LambdaQueryWrapper<>();
-    childWrapper.eq(Department::getParentId, id);
+    LambdaQueryWrapper<DepartmentDO> childWrapper = new LambdaQueryWrapper<>();
+    childWrapper.eq(DepartmentDO::getParentId, id);
     if (departmentRepository.count(childWrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_HAS_CHILDREN);
     }
 
-    LambdaQueryWrapper<UserDept> udWrapper = new LambdaQueryWrapper<>();
-    udWrapper.eq(UserDept::getDeptId, id);
+    LambdaQueryWrapper<UserDeptDO> udWrapper = new LambdaQueryWrapper<>();
+    udWrapper.eq(UserDeptDO::getDeptId, id);
     if (userDeptRepository.count(udWrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_HAS_USERS);
     }
@@ -269,7 +269,7 @@ public class DepartmentServiceImpl implements DepartmentService {
       List<DepartmentTreeVO> cached =
           YdszJson.fromJson(cachedJson, List.class, DepartmentTreeVO.class);
       if (cached != null) {
-        log.debug("Department tree loaded from L1 cache");
+        log.debug("DepartmentDO tree loaded from L1 cache");
         return cached;
       }
     }
@@ -281,20 +281,20 @@ public class DepartmentServiceImpl implements DepartmentService {
         List<DepartmentTreeVO> cached =
             YdszJson.fromJson(cachedJson, List.class, DepartmentTreeVO.class);
         if (cached != null) {
-          log.debug("Department tree loaded from L2 cache");
+          log.debug("DepartmentDO tree loaded from L2 cache");
           // 回填 L1 缓存
           l1Cache.put(l1Key, cachedJson);
           return cached;
         }
       }
     } catch (Exception e) {
-      log.warn("Failed to load department tree from L2 cache, fallback to DB: {}", e.getMessage());
+      log.warn("Failed to load DepartmentDO tree from L2 cache, fallback to DB: {}", e.getMessage());
     }
 
     // 3. 缓存未命中，查询数据库
-    List<Department> all =
+    List<DepartmentDO> all =
         departmentRepository.list(
-            new LambdaQueryWrapper<Department>().eq(Department::getDeleted, 0));
+            new LambdaQueryWrapper<DepartmentDO>().eq(DepartmentDO::getDeleted, 0));
     if (all.isEmpty()) {
       return List.of();
     }
@@ -316,7 +316,7 @@ public class DepartmentServiceImpl implements DepartmentService {
       // 写入 L2
       redisStringOps.set(CACHE_KEY_DEPT_TREE, json, Duration.ofSeconds(CACHE_TTL_DEPT_TREE));
     } catch (Exception e) {
-      log.warn("Failed to cache department tree: {}", e.getMessage());
+      log.warn("Failed to cache DepartmentDO tree: {}", e.getMessage());
     }
 
     return tree;
@@ -333,9 +333,9 @@ public class DepartmentServiceImpl implements DepartmentService {
       l1Cache.invalidate(CACHE_KEY_DEPT_TREE);
       // 清除 L2 Redis 缓存
       redisStringOps.del(CACHE_KEY_DEPT_TREE);
-      log.debug("Department tree cache evicted (L1 + L2)");
+      log.debug("DepartmentDO tree cache evicted (L1 + L2)");
     } catch (Exception e) {
-      log.warn("Failed to evict department tree cache: {}", e.getMessage());
+      log.warn("Failed to evict DepartmentDO tree cache: {}", e.getMessage());
     }
   }
 
@@ -347,7 +347,7 @@ public class DepartmentServiceImpl implements DepartmentService {
    *
    * @param entity 已变更的部门实体（含 ID）
    */
-  private void evictDeptLeaderWorkflowCache(Department entity) {
+  private void evictDeptLeaderWorkflowCache(DepartmentDO entity) {
     WorkflowApproverCacheService workflowCache = workflowCacheProvider.getIfAvailable();
     if (workflowCache == null) {
       return;
@@ -372,7 +372,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     if (deptId == null || deptId.isBlank()) {
       return null;
     }
-    Department entity = departmentRepository.findById(deptId);
+    DepartmentDO entity = departmentRepository.findById(deptId);
     if (entity == null || entity.getDeleted() == 1) {
       return null;
     }
@@ -389,8 +389,8 @@ public class DepartmentServiceImpl implements DepartmentService {
     if (deptCode == null || deptCode.isBlank()) {
       return null;
     }
-    LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
-    Department entity = departmentRepository.findByDeptCode(deptCode);
+    LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
+    DepartmentDO entity = departmentRepository.findByDeptCode(deptCode);
     if (entity == null) {
       return null;
     }
@@ -401,7 +401,7 @@ public class DepartmentServiceImpl implements DepartmentService {
    * 批量查询部门 ID → 部门名映射。
    *
    * <p>实现：{@link com.baomidou.mybatisplus.core.mapper.BaseMapper#selectBatchIds(Collection)} 单条 SQL
-   * 完成（已自动追加 {@code deleted = 0} 条件，因 {@link Department#getDeleted()} 标注了 {@link
+   * 完成（已自动追加 {@code deleted = 0} 条件，因 {@link DepartmentDO#getDeleted()} 标注了 {@link
    * com.baomidou.mybatisplus.annotation.TableLogic}）。
    */
   @Override
@@ -417,9 +417,9 @@ public class DepartmentServiceImpl implements DepartmentService {
     if (distinctIds.isEmpty()) {
       return Collections.emptyMap();
     }
-    List<Department> depts = departmentRepository.listByIds(distinctIds);
+    List<DepartmentDO> depts = departmentRepository.listByIds(distinctIds);
     Map<String, String> result = new LinkedHashMap<>(depts.size());
-    for (Department dept : depts) {
+    for (DepartmentDO dept : depts) {
       if (dept.getDeptName() != null && !dept.getDeptName().isBlank()) {
         result.put(dept.getId(), dept.getDeptName());
       }

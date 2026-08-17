@@ -11,8 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.userinfo.domain.entity.UserPasswordHistory;
-import com.njydsz.userinfo.infra.repository.UserPasswordHistoryRepository;
+import com.njydsz.userinfo.infra.entity.UserPasswordHistoryDO;
+import com.njydsz.userinfo.domain.repository.UserPasswordHistoryRepository;
 
 /**
  * 密码历史服务实现
@@ -46,16 +46,16 @@ public class UserPasswordHistoryServiceImpl implements UserPasswordHistoryServic
     }
 
     // 查询最近 N 条历史密码（按创建时间倒序）
-    LambdaQueryWrapper<UserPasswordHistory> wrapper = new LambdaQueryWrapper<>();
+    LambdaQueryWrapper<UserPasswordHistoryDO> wrapper = new LambdaQueryWrapper<>();
     wrapper
-        .eq(UserPasswordHistory::getUserId, userId)
-        .orderByDesc(UserPasswordHistory::getCreatedAt)
+        .eq(UserPasswordHistoryDO::getUserId, userId)
+        .orderByDesc(UserPasswordHistoryDO::getCreatedAt)
         .last("LIMIT " + historyCount);
 
-    List<UserPasswordHistory> historyList = passwordHistoryRepository.list(wrapper);
+    List<UserPasswordHistoryDO> historyList = passwordHistoryRepository.list(wrapper);
 
     // 逐条比对（BCrypt matches）
-    for (UserPasswordHistory history : historyList) {
+    for (UserPasswordHistoryDO history : historyList) {
       if (passwordEncoder.matches(newPassword, history.getPasswordHash())) {
         log.info("Password reuse detected for user: {}", userId);
         return true;
@@ -71,7 +71,7 @@ public class UserPasswordHistoryServiceImpl implements UserPasswordHistoryServic
     }
 
     // 插入新记录
-    UserPasswordHistory record = new UserPasswordHistory();
+    UserPasswordHistoryDO record = new UserPasswordHistoryDO();
     record.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     record.setUserId(userId);
     record.setPasswordHash(passwordHash);
@@ -92,8 +92,8 @@ public class UserPasswordHistoryServiceImpl implements UserPasswordHistoryServic
     if (userId == null) {
       return;
     }
-    LambdaQueryWrapper<UserPasswordHistory> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserPasswordHistory::getUserId, userId);
+    LambdaQueryWrapper<UserPasswordHistoryDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserPasswordHistoryDO::getUserId, userId);
     passwordHistoryRepository.delete(wrapper);
     log.info("Password history cleared for user: {}", userId);
   }
@@ -108,8 +108,8 @@ public class UserPasswordHistoryServiceImpl implements UserPasswordHistoryServic
    */
   private void cleanupOldRecords(String userId, int keepCount) {
     // 查询需要删除的旧记录 ID
-    LambdaQueryWrapper<UserPasswordHistory> countWrapper = new LambdaQueryWrapper<>();
-    countWrapper.eq(UserPasswordHistory::getUserId, userId);
+    LambdaQueryWrapper<UserPasswordHistoryDO> countWrapper = new LambdaQueryWrapper<>();
+    countWrapper.eq(UserPasswordHistoryDO::getUserId, userId);
     int totalCount = Math.toIntExact(passwordHistoryRepository.count(countWrapper));
 
     if (totalCount <= keepCount) {
@@ -117,16 +117,16 @@ public class UserPasswordHistoryServiceImpl implements UserPasswordHistoryServic
     }
 
     // 查询需要删除的 ID（超出 keepCount 的旧记录）
-    LambdaQueryWrapper<UserPasswordHistory> deleteWrapper = new LambdaQueryWrapper<>();
+    LambdaQueryWrapper<UserPasswordHistoryDO> deleteWrapper = new LambdaQueryWrapper<>();
     deleteWrapper
-        .eq(UserPasswordHistory::getUserId, userId)
-        .orderByDesc(UserPasswordHistory::getCreatedAt)
+        .eq(UserPasswordHistoryDO::getUserId, userId)
+        .orderByDesc(UserPasswordHistoryDO::getCreatedAt)
         .last("LIMIT 100 OFFSET " + keepCount);
 
-    List<UserPasswordHistory> oldRecords = passwordHistoryRepository.list(deleteWrapper);
+    List<UserPasswordHistoryDO> oldRecords = passwordHistoryRepository.list(deleteWrapper);
     if (!oldRecords.isEmpty()) {
       List<String> idsToDelete =
-          oldRecords.stream().map(UserPasswordHistory::getId).collect(Collectors.toList());
+          oldRecords.stream().map(UserPasswordHistoryDO::getId).collect(Collectors.toList());
       passwordHistoryRepository.deleteByIds(idsToDelete);
       log.debug("Cleaned up {} old password records for user: {}", oldRecords.size(), userId);
     }

@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 公司修改请求 DTO。
  *
- * <p>对应后端 {@code PUT /api/v1/company} 请求体。 修改时 {@link #id} 必填，其余字段按需填写，未传字段保持原值不变。
+ * <p>对应后端 {@code PUT /api/v1/CompanyDO} 请求体。 修改时 {@link #id} 必填，其余字段按需填写，未传字段保持原值不变。
  *
  * @author ydsz-team
  * @since 1.0.0

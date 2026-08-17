@@ -6,9 +6,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.entity.UserLoginHistory;
+import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
+import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
 import com.njydsz.userinfo.infra.mapper.UserLoginHistoryMapper;
-import com.njydsz.userinfo.infra.repository.UserLoginHistoryRepository;
 
 /**
  * 用户登录历史 Repository 实现
@@ -25,31 +25,31 @@ public class UserLoginHistoryRepositoryImpl implements UserLoginHistoryRepositor
   private final UserLoginHistoryMapper userLoginHistoryMapper;
 
   @Override
-  public int insert(UserLoginHistory entity) {
+  public int insert(UserLoginHistoryDO entity) {
     return userLoginHistoryMapper.insert(entity);
   }
 
   @Override
   public int countRecentFailures(String userId, int windowMinutes) {
-    LambdaQueryWrapper<UserLoginHistory> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserLoginHistory::getUserId, userId);
-    wrapper.eq(UserLoginHistory::getLoginResult, "FAILED");
-    wrapper.ge(UserLoginHistory::getCreatedAt,
+    LambdaQueryWrapper<UserLoginHistoryDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserLoginHistoryDO::getUserId, userId);
+    wrapper.eq(UserLoginHistoryDO::getLoginResult, "FAILED");
+    wrapper.ge(UserLoginHistoryDO::getCreatedAt,
         java.time.LocalDateTime.now().minusMinutes(windowMinutes));
     return Math.toIntExact(userLoginHistoryMapper.selectCount(wrapper));
   }
 
   @Override
-  public List<UserLoginHistory> findRecentByUserId(String userId, int limit) {
-    LambdaQueryWrapper<UserLoginHistory> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserLoginHistory::getUserId, userId);
-    wrapper.orderByDesc(UserLoginHistory::getCreatedAt);
+  public List<UserLoginHistoryDO> findRecentByUserId(String userId, int limit) {
+    LambdaQueryWrapper<UserLoginHistoryDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserLoginHistoryDO::getUserId, userId);
+    wrapper.orderByDesc(UserLoginHistoryDO::getCreatedAt);
     wrapper.last("LIMIT " + Math.min(limit, 100));
     return userLoginHistoryMapper.selectList(wrapper);
   }
 
   @Override
-  public List<UserLoginHistory> list(LambdaQueryWrapper<UserLoginHistory> wrapper) {
+  public List<UserLoginHistoryDO> list(LambdaQueryWrapper<UserLoginHistoryDO> wrapper) {
     return userLoginHistoryMapper.selectList(wrapper);
   }
 }

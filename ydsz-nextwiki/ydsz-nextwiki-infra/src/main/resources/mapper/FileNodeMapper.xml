@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.FileNodeMapper">
 
-    <resultMap id="FileNodeResult" type="com.njydsz.nextwiki.domain.entity.FileNode">
+    <resultMap id="FileNodeResult" type="com.njydsz.nextwiki.infra.entity.FileNodeDO">
         <id column="id" property="id"/>
         <result column="parent_id" property="parentId"/>
         <result column="name" property="name"/>

@@ -37,11 +37,11 @@ import com.njydsz.userinfo.server.service.RoleService;
  * <p>提供角色的完整管理能力（CRUD）、角色权限分配/撤销、角色-用户关联查询。 角色是 RBAC（基于角色的访问控制）模型的核心实体，连接用户与权限：
  *
  * <pre>
- *   UserAccount (N) ──── UserRole (中间表) ──── Role (1) ──── RoleMenu (中间表) ──── Menu (N)
+ *   UserAccountDO (N) ──── UserRoleDO (中间表) ──── RoleDO (1) ──── RoleMenu (中间表) ──── MenuDO (N)
  *   用户                         角色                           角色拥有的菜单权限
  * </pre>
  *
- * <p><b>接口路径：</b>{@code /api/v1/role}
+ * <p><b>接口路径：</b>{@code /api/v1/RoleDO}
  *
  * <p><b>核心能力：</b>
  *
@@ -72,7 +72,7 @@ import com.njydsz.userinfo.server.service.RoleService;
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（角色授予目标）
  */
 @RestController
-@RequestMapping("/api/v1/role")
+@RequestMapping("/api/v1/RoleDO")
 @RequiredArgsConstructor
 @Tag(name = "角色管理", description = "角色 CRUD、权限分配")
 public class RoleController {
@@ -139,7 +139,7 @@ public class RoleController {
       action = AuditAction.CREATE,
       content = "'创建角色: ' + #dto.roleName")
   @Idempotent(key = "ydsz:userinfo:RoleController:create:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.role.create", threshold = 50)
+  @RateLimit(resource = "userinfo.RoleDO.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建角色")
   public BaseResponse<String> create(@Valid @RequestBody RoleCreateDTO dto) {
@@ -163,7 +163,7 @@ public class RoleController {
       action = AuditAction.UPDATE,
       content = "'更新角色: ' + #dto.id")
   @Idempotent(key = "ydsz:userinfo:RoleController:update:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.role.update", threshold = 50)
+  @RateLimit(resource = "userinfo.RoleDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新角色")
   public BaseResponse<Boolean> update(@Valid @RequestBody RoleUpdateDTO dto) {
@@ -192,7 +192,7 @@ public class RoleController {
       type = AuditType.OPERATION,
       action = AuditAction.DELETE,
       content = "'删除角色: ' + #id")
-  @RateLimit(resource = "userinfo.role.remove", threshold = 50)
+  @RateLimit(resource = "userinfo.RoleDO.remove", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:RoleController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除角色")
@@ -217,7 +217,7 @@ public class RoleController {
       action = AuditAction.UPDATE,
       content = "'分配角色权限: ' + #roleId")
   @Idempotent(key = "ydsz:userinfo:RoleController:assignPermissions:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.role.assignPermissions", threshold = 50)
+  @RateLimit(resource = "userinfo.RoleDO.assignPermissions", threshold = 50)
   @PostMapping("/{roleId}/permissions")
   @Operation(summary = "分配角色权限")
   public BaseResponse<Boolean> assignPermissions(

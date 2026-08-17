@@ -25,7 +25,7 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -464,7 +464,7 @@ public class FlowMonitorDashboardController {
 
     if (instanceId instanceof Number n) {
       try {
-        FlowInstance inst = instanceService.getById(String.valueOf(n.longValue()));
+        FlowInstanceDO inst = instanceService.getById(String.valueOf(n.longValue()));
         if (inst != null) {
           item.put("flowCode", inst.getFlowCode());
           item.put("flowName", inst.getFlowName());

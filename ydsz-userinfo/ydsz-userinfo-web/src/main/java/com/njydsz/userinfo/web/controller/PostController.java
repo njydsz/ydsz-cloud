@@ -31,7 +31,7 @@ import com.njydsz.userinfo.server.service.PostService;
  *
  * <p>提供岗位的完整管理能力（CRUD）。 岗位是「职责维度」，描述用户做什么事（如 PM、DEV、QA），区别于角色（权限维度）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/post}
+ * <p><b>接口路径：</b>{@code /api/v1/PostDO}
  *
  * <p><b>核心能力：</b>
  *
@@ -55,11 +55,11 @@ import com.njydsz.userinfo.server.service.PostService;
  * @author ydsz-team
  * @since 1.0.0
  * @see PostService 岗位业务逻辑
- * @see com.njydsz.userinfo.domain.entity.Post 岗位实体
+ * @see com.njydsz.userinfo.infra.entity.PostDO 岗位实体
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（兼任岗位维护）
  */
 @RestController
-@RequestMapping("/api/v1/post")
+@RequestMapping("/api/v1/PostDO")
 @RequiredArgsConstructor
 @Tag(name = "岗位管理", description = "岗位 CRUD")
 public class PostController {
@@ -113,7 +113,7 @@ public class PostController {
       action = AuditAction.CREATE,
       content = "'创建岗位: ' + #dto.postName")
   @Idempotent(key = "ydsz:userinfo:PostController:create:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.post.create", threshold = 50)
+  @RateLimit(resource = "userinfo.PostDO.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建岗位")
   public BaseResponse<String> create(@Valid @RequestBody PostCreateDTO dto) {
@@ -138,7 +138,7 @@ public class PostController {
       action = AuditAction.UPDATE,
       content = "'更新岗位: ' + #dto.id")
   @Idempotent(key = "ydsz:userinfo:PostController:update:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.post.update", threshold = 50)
+  @RateLimit(resource = "userinfo.PostDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新岗位")
   public BaseResponse<Boolean> update(@Valid @RequestBody PostUpdateDTO dto) {
@@ -167,7 +167,7 @@ public class PostController {
       type = AuditType.OPERATION,
       action = AuditAction.DELETE,
       content = "'删除岗位: ' + #id")
-  @RateLimit(resource = "userinfo.post.remove", threshold = 50)
+  @RateLimit(resource = "userinfo.PostDO.remove", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:PostController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除岗位")

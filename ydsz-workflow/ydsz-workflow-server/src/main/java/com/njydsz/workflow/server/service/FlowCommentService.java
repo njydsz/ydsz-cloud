@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.njydsz.workflow.domain.dto.FlowCommentCreateDTO;
 import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
-import com.njydsz.workflow.domain.entity.FlowComment;
-import com.njydsz.workflow.domain.entity.FlowQuickComment;
+import com.njydsz.workflow.infra.entity.FlowCommentDO;
+import com.njydsz.workflow.infra.entity.FlowQuickCommentDO;
 
 /**
  * P2-2: 流程评论 Service（含常用语能力）
@@ -28,8 +28,8 @@ import com.njydsz.workflow.domain.entity.FlowQuickComment;
  * <p><b>与审计日志的区别：</b>
  *
  * <ul>
- *   <li>评论（{@link FlowComment}）：用户视角，可修改可删除
- *   <li>审计日志（{@code FlowAuditLog}）：系统视角，不可修改不可删除
+ *   <li>评论（{@link FlowCommentDO}）：用户视角，可修改可删除
+ *   <li>审计日志（{@code FlowAuditLogDO}）：系统视角，不可修改不可删除
  * </ul>
  *
  * <p><b>事务边界：</b>{@link #addComment} 开启 {@code @Transactional}， 确保「评论写入 + @通知 + 提及人索引」原子性。
@@ -45,7 +45,7 @@ import com.njydsz.workflow.domain.entity.FlowQuickComment;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.workflow.server.service.impl.FlowCommentServiceImpl 实现类
- * @see FlowAuditLog 流程审计日志
+ * @see FlowAuditLogDO 流程审计日志
  */
 public interface FlowCommentService {
 
@@ -71,7 +71,7 @@ public interface FlowCommentService {
    * @param instanceId 实例 ID
    * @return 全部评论列表
    */
-  List<FlowComment> listByInstance(String tenantId, String instanceId);
+  List<FlowCommentDO> listByInstance(String tenantId, String instanceId);
 
   /**
    * 查询实例下全部一级评论（按创建时间正序，不含回复）。
@@ -80,7 +80,7 @@ public interface FlowCommentService {
    * @param instanceId 实例 ID
    * @return 一级评论列表
    */
-  List<FlowComment> listRootComments(String tenantId, String instanceId);
+  List<FlowCommentDO> listRootComments(String tenantId, String instanceId);
 
   /**
    * 查询指定父评论下的全部回复（按创建时间正序）。
@@ -88,7 +88,7 @@ public interface FlowCommentService {
    * @param parentCommentId 父评论 ID
    * @return 回复列表
    */
-  List<FlowComment> listReplies(String parentCommentId);
+  List<FlowCommentDO> listReplies(String parentCommentId);
 
   /**
    * 删除评论（软删除）。
@@ -112,7 +112,7 @@ public interface FlowCommentService {
    * @param tenantId 租户 ID
    * @return 常用语列表（已合并 + 已排序），无数据返回空列表
    */
-  List<FlowQuickComment> listQuickComments(String userId, String tenantId);
+  List<FlowQuickCommentDO> listQuickComments(String userId, String tenantId);
 
   /**
    * 创建用户自定义常用语。

@@ -33,7 +33,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowTaskStatus 任务级状态枚举
- * @see com.njydsz.workflow.domain.entity.FlowInstance 流程实例实体
+ * @see com.njydsz.workflow.infra.entity.FlowInstanceDO 流程实例实体
  */
 public enum FlowInstanceStatus implements BaseStatusEnum<FlowInstanceStatus> {
 

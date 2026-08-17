@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 角色新增请求 DTO。
  *
- * <p>对应后端 {@code POST /api/v1/role} 请求体。 新增角色后自动纳入 RBAC 权限体系，通过 {@link #roleCode} 被各业务模块引用。
+ * <p>对应后端 {@code PostDO /api/v1/RoleDO} 请求体。 新增角色后自动纳入 RBAC 权限体系，通过 {@link #roleCode} 被各业务模块引用。
  *
  * @author ydsz-team
  * @since 1.0.0

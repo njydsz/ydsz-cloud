@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
-import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 
 /**
  * 文件下载服务。
@@ -36,7 +36,7 @@ public class DownloadApplicationService {
   /**
    * 准备下载：校验文件存在性 → 限流 → 解析存储。
    *
-   * <p>仅组装下载所需的 {@link DownloadContext}（FileNode + IFileStorage），不实际传输字节， 真正的流式下载由 Controller 持有
+   * <p>仅组装下载所需的 {@link DownloadContext}（FileNodeDO + IFileStorage），不实际传输字节， 真正的流式下载由 Controller 持有
    * storage 后执行。
    *
    * @param nodeId 文件节点 ID
@@ -49,8 +49,8 @@ public class DownloadApplicationService {
    * @concurrency 限流基于 Redis 固定窗口，天然支持多实例；结果不可缓存
    */
   public DownloadContext prepareDownload(String nodeId, String userId, String ip) {
-    FileNode fileNode = fileNodeRepository.findById(nodeId);
-    if (fileNode == null || !fileNode.isFile()) {
+    FileNodeDO FileNodeDO = fileNodeRepository.findById(nodeId);
+    if (FileNodeDO == null || !FileNodeDO.isFile()) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
     }
 
@@ -62,7 +62,7 @@ public class DownloadApplicationService {
     }
 
     IFileStorage storage = resolveStorage();
-    return DownloadContext.builder().fileNode(fileNode).storage(storage).build();
+    return DownloadContext.builder().FileNodeDO(FileNodeDO).storage(storage).build();
   }
 
   /**
@@ -79,11 +79,11 @@ public class DownloadApplicationService {
    * @note 无事务边界；URL 有效期由 {@code nextwiki.download.signed-url-expire-seconds} 控制
    */
   public String generateSignedUrl(String nodeId, String userId, String ip) {
-    FileNode fileNode = fileNodeRepository.findById(nodeId);
-    if (fileNode == null || !fileNode.isFile()) {
+    FileNodeDO FileNodeDO = fileNodeRepository.findById(nodeId);
+    if (FileNodeDO == null || !FileNodeDO.isFile()) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
     }
-    return rateLimitService.generateSignedDownloadUrl(fileNode.getStorageKey(), userId, ip);
+    return rateLimitService.generateSignedDownloadUrl(FileNodeDO.getStorageKey(), userId, ip);
   }
 
   /**
@@ -132,7 +132,7 @@ public class DownloadApplicationService {
   @Builder
   public static class DownloadContext {
     /** 待下载文件节点（含 storageKey、大小、后缀等元数据） */
-    private FileNode fileNode;
+    private FileNodeDO FileNodeDO;
 
     /** 文件存储实例，未配置时为 {@code null} */
     private IFileStorage storage;

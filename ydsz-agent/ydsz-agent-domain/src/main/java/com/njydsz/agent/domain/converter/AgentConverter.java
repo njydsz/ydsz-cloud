@@ -8,7 +8,7 @@ import org.mapstruct.factory.Mappers;
 
 import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
 import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
-import com.njydsz.agent.domain.entity.AgentDefinitionDO;
+import com.njydsz.agent.infra.entity.AgentDefinitionDO;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 
 /**

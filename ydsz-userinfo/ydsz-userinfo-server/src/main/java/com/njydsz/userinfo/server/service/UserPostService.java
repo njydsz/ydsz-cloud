@@ -2,7 +2,7 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
-import com.njydsz.userinfo.domain.entity.UserPost;
+import com.njydsz.userinfo.infra.entity.UserPostDO;
 
 /**
  * 用户-岗位 Service 接口
@@ -20,7 +20,7 @@ import com.njydsz.userinfo.domain.entity.UserPost;
  *
  * <ul>
  *   <li>用户管理页面维护「兼任岗位」字段（多选）
- *   <li>审批人展开：{@code position:PM} 触发时匹配 {@code UserPost} 中间表所有岗位
+ *   <li>审批人展开：{@code position:PM} 触发时匹配 {@code UserPostDO} 中间表所有岗位
  *   <li>工时统计：按岗位统计工作量与产出
  * </ul>
  *
@@ -29,9 +29,9 @@ import com.njydsz.userinfo.domain.entity.UserPost;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see UserPost 用户-岗位关联实体
- * @see com.njydsz.userinfo.domain.entity.UserAccount 用户实体
- * @see com.njydsz.userinfo.domain.entity.Post 岗位实体
+ * @see UserPostDO 用户-岗位关联实体
+ * @see com.njydsz.userinfo.infra.entity.UserAccountDO 用户实体
+ * @see com.njydsz.userinfo.infra.entity.PostDO 岗位实体
  */
 public interface UserPostService {
 
@@ -41,14 +41,14 @@ public interface UserPostService {
    * @param id 主键 ID
    * @return 用户-岗位关联实体，不存在时返回 null
    */
-  UserPost getById(String id);
+  UserPostDO getById(String id);
 
   /**
    * 查询全部用户-岗位关联。
    *
    * @return 关联列表
    */
-  List<UserPost> list();
+  List<UserPostDO> list();
 
   /**
    * 创建用户-岗位关联。
@@ -58,7 +58,7 @@ public interface UserPostService {
    * @param entity 用户-岗位关联实体
    * @return 新关联主键 ID
    */
-  String save(UserPost entity);
+  String save(UserPostDO entity);
 
   /**
    * 更新用户-岗位关联。
@@ -66,7 +66,7 @@ public interface UserPostService {
    * @param entity 用户-岗位关联实体（含 ID）
    * @return true=成功
    */
-  boolean updateById(UserPost entity);
+  boolean updateById(UserPostDO entity);
 
   /**
    * 删除用户-岗位关联。

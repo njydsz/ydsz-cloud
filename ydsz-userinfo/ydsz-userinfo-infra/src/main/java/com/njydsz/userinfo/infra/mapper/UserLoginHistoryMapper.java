@@ -3,7 +3,7 @@ package com.njydsz.userinfo.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.userinfo.domain.entity.UserLoginHistory;
+import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
 
 /**
  * 用户登录历史 Mapper 接口
@@ -22,4 +22,4 @@ import com.njydsz.userinfo.domain.entity.UserLoginHistory;
  * @since 1.0.0
  */
 @Mapper
-public interface UserLoginHistoryMapper extends BaseMapper<UserLoginHistory> {}
+public interface UserLoginHistoryMapper extends BaseMapper<UserLoginHistoryDO> {}

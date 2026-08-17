@@ -11,8 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowDelegateAuthMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -83,8 +83,8 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowAssigneeLeaveHandler 接口定义
- * @see FlowRunTask 运行时任务实体
- * @see FlowDelegateAuth 长期授权委派实体
+ * @see FlowRunTaskDO 运行时任务实体
+ * @see FlowDelegateAuthDO 长期授权委派实体
  * @see FlowTaskService 流程任务服务（转交通道）
  * @see FlowDelegateAuthService 委派代理服务
  */
@@ -167,15 +167,15 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
     }
 
     // 2. 查询待办任务
-    LambdaQueryWrapper<FlowRunTask> wrapper =
-        new LambdaQueryWrapper<FlowRunTask>()
-            .eq(FlowRunTask::getAssigneeId, userId)
-            .eq(FlowRunTask::getDeleted, 0)
+    LambdaQueryWrapper<FlowRunTaskDO> wrapper =
+        new LambdaQueryWrapper<FlowRunTaskDO>()
+            .eq(FlowRunTaskDO::getAssigneeId, userId)
+            .eq(FlowRunTaskDO::getDeleted, 0)
             .in(
-                FlowRunTask::getTaskStatus,
+                FlowRunTaskDO::getTaskStatus,
                 FlowTaskStatus.PENDING.name(),
                 FlowTaskStatus.CLAIMED.name());
-    List<FlowRunTask> tasks = taskMapper.selectList(wrapper);
+    List<FlowRunTaskDO> tasks = taskMapper.selectList(wrapper);
 
     if (tasks.isEmpty()) {
       log.info("[LeaveHandler] 无待办需要转交: userId={}", userId);
@@ -185,7 +185,7 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
     // 3. 逐个转交
     int successCount = 0;
     String reason = "RESIGN".equals(leaveType) ? "审批人离职自动转交" : "审批人调岗自动转交";
-    for (FlowRunTask task : tasks) {
+    for (FlowRunTaskDO task : tasks) {
       try {
         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
         dto.setTaskId(task.getId());
@@ -262,22 +262,22 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
    * </ul>
    *
    * @param userId 授权人 ID
-   * @return 代理人 ID（{@link FlowDelegateAuth#getDelegateUserId()}）；无有效授权时返回 {@code null}
+   * @return 代理人 ID（{@link FlowDelegateAuthDO#getDelegateUserId()}）；无有效授权时返回 {@code null}
    */
   private String findActiveDelegate(String userId) {
     LocalDateTime now = LocalDateTime.now();
-    LambdaQueryWrapper<FlowDelegateAuth> wrapper =
-        new LambdaQueryWrapper<FlowDelegateAuth>()
-            .eq(FlowDelegateAuth::getOwnerUserId, userId)
-            .eq(FlowDelegateAuth::getAuthStatus, "ACTIVE")
-            .le(FlowDelegateAuth::getStartTime, now)
+    LambdaQueryWrapper<FlowDelegateAuthDO> wrapper =
+        new LambdaQueryWrapper<FlowDelegateAuthDO>()
+            .eq(FlowDelegateAuthDO::getOwnerUserId, userId)
+            .eq(FlowDelegateAuthDO::getAuthStatus, "ACTIVE")
+            .le(FlowDelegateAuthDO::getStartTime, now)
             .and(
                 w ->
-                    w.isNull(FlowDelegateAuth::getEndTime)
+                    w.isNull(FlowDelegateAuthDO::getEndTime)
                         .or()
-                        .ge(FlowDelegateAuth::getEndTime, now))
+                        .ge(FlowDelegateAuthDO::getEndTime, now))
             .last("LIMIT 1");
-    FlowDelegateAuth auth = delegateAuthMapper.selectOne(wrapper);
+    FlowDelegateAuthDO auth = delegateAuthMapper.selectOne(wrapper);
     return auth != null ? auth.getDelegateUserId() : null;
   }
 }

@@ -16,7 +16,7 @@ import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.userinfo.domain.dto.MfaOperationDTO;
 import com.njydsz.userinfo.domain.dto.UserProfileUpdateDTO;
-import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.vo.MfaSetupVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
@@ -53,7 +53,7 @@ public class UserProfileController {
   @Operation(summary = "获取当前用户资料")
   public BaseResponse<UserAccountVO> getCurrentUserProfile() {
     String userId = RequestContext.getUserId();
-    UserAccount user = userAccountMapper.selectById(userId);
+    UserAccountDO user = userAccountMapper.selectById(userId);
     if (user == null) {
       return BaseResponse.success(null);
     }
@@ -72,7 +72,7 @@ public class UserProfileController {
   @Operation(summary = "更新当前用户资料")
   public BaseResponse<Boolean> updateCurrentUserProfile(@RequestBody UserProfileUpdateDTO dto) {
     String userId = RequestContext.getUserId();
-    UserAccount user = userAccountMapper.selectById(userId);
+    UserAccountDO user = userAccountMapper.selectById(userId);
     if (user == null) {
       return BaseResponse.success(false);
     }
@@ -120,7 +120,7 @@ public class UserProfileController {
     String avatarUrl = String.format("https://file.ydsz.com/avatar/%s/%s", userId, file.getOriginalFilename());
 
     // 更新用户头像 URL
-    UserAccount user = userAccountMapper.selectById(userId);
+    UserAccountDO user = userAccountMapper.selectById(userId);
     if (user != null) {
       user.setAvatar(avatarUrl);
       userAccountMapper.updateById(user);
@@ -155,7 +155,7 @@ public class UserProfileController {
   @Operation(summary = "发起 MFA 绑定", description = "返回 TOTP 密钥与 otpauth URI（二维码）")
   public BaseResponse<MfaSetupVO> setupMfa() {
     String userId = RequestContext.getUserId();
-    UserAccount user = userAccountMapper.selectById(userId);
+    UserAccountDO user = userAccountMapper.selectById(userId);
     return BaseResponse.success(mfaService.setup(userId, user != null ? user.getUsername() : userId));
   }
 

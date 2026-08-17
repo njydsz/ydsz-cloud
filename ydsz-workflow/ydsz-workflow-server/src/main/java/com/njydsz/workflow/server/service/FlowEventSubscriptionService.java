@@ -3,8 +3,8 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.workflow.domain.entity.FlowEventSubscription;
-import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
 
 /**
  * 流程事件订阅服务。
@@ -26,7 +26,7 @@ public interface FlowEventSubscriptionService {
    * @return 订阅 ID
    */
   String createSubscription(
-      String instanceId, FlowNode node, Map<String, Object> variables, String boundaryTaskId);
+      String instanceId, FlowNodeDO node, Map<String, Object> variables, String boundaryTaskId);
 
   /**
    * 关联消息 — 匹配 WAITING 的 MESSAGE 订阅并触发
@@ -57,8 +57,8 @@ public interface FlowEventSubscriptionService {
   int cancelByInstance(String instanceId, String reason);
 
   /** 查询实例的事件订阅列表 */
-  List<FlowEventSubscription> listByInstance(String instanceId);
+  List<FlowEventSubscriptionDO> listByInstance(String instanceId);
 
   /** 判断节点是否为事件捕获节点（ext JSON 中包含 eventCatch: true） */
-  boolean isEventCatchNode(FlowNode node);
+  boolean isEventCatchNode(FlowNodeDO node);
 }

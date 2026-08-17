@@ -15,10 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.workflow.domain.entity.FlowHisInstance;
-import com.njydsz.workflow.domain.entity.FlowHisTask;
-import com.njydsz.workflow.domain.entity.FlowInstance;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowHisInstanceDO;
+import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
+import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.infra.mapper.FlowHisInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
@@ -104,8 +104,8 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
  * @since 1.0.0
  * @see FlowHistoryArchiveService 接口定义
  * @see com.njydsz.workflow.server.config.FlowProperties.History 历史数据配置
- * @see com.njydsz.workflow.domain.entity.FlowHisInstance 历史实例实体
- * @see com.njydsz.workflow.domain.entity.FlowHisTask 历史任务实体
+ * @see com.njydsz.workflow.infra.entity.FlowHisInstanceDO 历史实例实体
+ * @see com.njydsz.workflow.infra.entity.FlowHisTaskDO 历史任务实体
  */
 @Slf4j
 @Service
@@ -143,18 +143,18 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
 
     // 查询候选实例：已结束 + 结束时间超过阈值
     LocalDateTime threshold = LocalDateTime.now().minusDays(days);
-    LambdaQueryWrapper<FlowInstance> wrapper = new LambdaQueryWrapper<>();
+    LambdaQueryWrapper<FlowInstanceDO> wrapper = new LambdaQueryWrapper<>();
     wrapper
         .in(
-            FlowInstance::getFlowStatus,
+            FlowInstanceDO::getFlowStatus,
             FlowInstanceStatus.COMPLETED.name(),
             FlowInstanceStatus.TERMINATED.name(),
             FlowInstanceStatus.REJECTED.name())
-        .lt(FlowInstance::getEndAt, threshold)
-        .orderByAsc(FlowInstance::getEndAt)
+        .lt(FlowInstanceDO::getEndAt, threshold)
+        .orderByAsc(FlowInstanceDO::getEndAt)
         .last("LIMIT " + batch);
 
-    List<FlowInstance> candidates;
+    List<FlowInstanceDO> candidates;
     try {
       candidates = instanceMapper.selectList(wrapper);
     } catch (Exception e) {
@@ -180,7 +180,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     int errors = 0;
     List<String> archivedIds = new ArrayList<>();
 
-    for (FlowInstance instance : candidates) {
+    for (FlowInstanceDO instance : candidates) {
       if (System.currentTimeMillis() - start > maxMs) {
         log.warn(
             "[FlowHistoryArchive] 达到耗时上限，剩余 {} 个待下次处理",
@@ -254,7 +254,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     LocalDateTime threshold = LocalDateTime.now().minusDays(days);
 
     // 1. 查询待清理的归档实例
-    List<FlowHisInstance> candidates;
+    List<FlowHisInstanceDO> candidates;
     try {
       // 每批最多 500 条，避免单次事务过大
       candidates = hisInstanceMapper.selectByArchivedAtBefore(threshold, 500);
@@ -275,11 +275,11 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     }
 
     // 2. 批量删除 his_instance
-    List<String> instanceIds = candidates.stream().map(FlowHisInstance::getId).toList();
+    List<String> instanceIds = candidates.stream().map(FlowHisInstanceDO::getId).toList();
     int purgedInstances = 0;
     try {
-      LambdaQueryWrapper<FlowHisInstance> insWrapper = new LambdaQueryWrapper<>();
-      insWrapper.in(FlowHisInstance::getId, instanceIds);
+      LambdaQueryWrapper<FlowHisInstanceDO> insWrapper = new LambdaQueryWrapper<>();
+      insWrapper.in(FlowHisInstanceDO::getId, instanceIds);
       purgedInstances = hisInstanceMapper.delete(insWrapper);
     } catch (Exception e) {
       log.error("[FlowHistoryPurge] 清理 his_instance 失败: {}", e.getMessage(), e);
@@ -315,22 +315,22 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
    * @return true=归档成功；false=任务未全部归档（不安全迁移）
    */
   @Transactional(rollbackFor = Exception.class)
-  public boolean archiveOne(FlowInstance instance) {
+  public boolean archiveOne(FlowInstanceDO instance) {
     String instanceId = instance.getId();
 
     // 1. 校验所有任务都已归档到 his_task
-    List<FlowRunTask> tasks = taskMapper.selectByInstanceId(instanceId);
-    List<FlowHisTask> hisTasks = hisTaskMapper.selectByInstanceId(instanceId);
+    List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
+    List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(instanceId);
     Set<String> archivedTaskIds = new HashSet<>();
     if (hisTasks != null) {
-      for (FlowHisTask his : hisTasks) {
+      for (FlowHisTaskDO his : hisTasks) {
         if (his.getTaskId() != null) {
           archivedTaskIds.add(his.getTaskId());
         }
       }
     }
     if (tasks != null) {
-      for (FlowRunTask task : tasks) {
+      for (FlowRunTaskDO task : tasks) {
         if (task.getId() != null
             && !archivedTaskIds.contains(task.getId())
             && !isTerminalTaskStatus(task.getTaskStatus())) {
@@ -345,7 +345,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     }
 
     // 2. 写入归档表（his_instance，variable 以 JSON blob 存储）
-    FlowHisInstance hisInstance = toHisInstance(instance);
+    FlowHisInstanceDO hisInstance = toHisInstance(instance);
     hisInstanceMapper.insert(hisInstance);
 
     log.info(
@@ -359,8 +359,8 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
   }
 
   /** 主表 DO → 归档表 DO */
-  private FlowHisInstance toHisInstance(FlowInstance ins) {
-    FlowHisInstance his = new FlowHisInstance();
+  private FlowHisInstanceDO toHisInstance(FlowInstanceDO ins) {
+    FlowHisInstanceDO his = new FlowHisInstanceDO();
     his.setId(ins.getId()); // 保留原 ID，方便按业务 ID 反查
     his.setFlowCode(ins.getFlowCode());
     his.setFlowName(ins.getFlowName());

@@ -15,7 +15,7 @@ import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
@@ -62,7 +62,7 @@ public class SessionManager {
    * @param roleNames 角色名称（逗号分隔）
    */
   public void createSession(
-      String accessToken, String refreshToken, UserAccount user, String roleCodes,
+      String accessToken, String refreshToken, UserAccountDO user, String roleCodes,
       String roleNames) {
     Map<String, Object> sessionInfo = buildSessionInfo(
         user.getId(), user.getUsername(), roleCodes, roleNames, user.getTenantId(), refreshToken);

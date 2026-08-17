@@ -6,9 +6,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.entity.CompanyDept;
+import com.njydsz.userinfo.domain.repository.CompanyDeptRepository;
+import com.njydsz.userinfo.infra.entity.CompanyDeptDO;
 import com.njydsz.userinfo.infra.mapper.CompanyDeptMapper;
-import com.njydsz.userinfo.infra.repository.CompanyDeptRepository;
 
 /**
  * 公司-部门关联 Repository 实现
@@ -25,36 +25,36 @@ public class CompanyDeptRepositoryImpl implements CompanyDeptRepository {
   private final CompanyDeptMapper companyDeptMapper;
 
   @Override
-  public CompanyDept findById(String id) {
+  public CompanyDeptDO findById(String id) {
     return companyDeptMapper.selectById(id);
   }
 
   @Override
-  public List<CompanyDept> findByCompanyId(String companyId) {
-    LambdaQueryWrapper<CompanyDept> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(CompanyDept::getCompanyId, companyId);
+  public List<CompanyDeptDO> findByCompanyId(String companyId) {
+    LambdaQueryWrapper<CompanyDeptDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(CompanyDeptDO::getCompanyId, companyId);
     return companyDeptMapper.selectList(wrapper);
   }
 
   @Override
-  public CompanyDept findByDeptId(String deptId) {
-    LambdaQueryWrapper<CompanyDept> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(CompanyDept::getDeptId, deptId);
+  public CompanyDeptDO findByDeptId(String deptId) {
+    LambdaQueryWrapper<CompanyDeptDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(CompanyDeptDO::getDeptId, deptId);
     return companyDeptMapper.selectOne(wrapper);
   }
 
   @Override
-  public List<CompanyDept> list(LambdaQueryWrapper<CompanyDept> wrapper) {
+  public List<CompanyDeptDO> list(LambdaQueryWrapper<CompanyDeptDO> wrapper) {
     return companyDeptMapper.selectList(wrapper);
   }
 
   @Override
-  public int insert(CompanyDept entity) {
+  public int insert(CompanyDeptDO entity) {
     return companyDeptMapper.insert(entity);
   }
 
   @Override
-  public int updateById(CompanyDept entity) {
+  public int updateById(CompanyDeptDO entity) {
     return companyDeptMapper.updateById(entity);
   }
 
@@ -65,13 +65,13 @@ public class CompanyDeptRepositoryImpl implements CompanyDeptRepository {
 
   @Override
   public int deleteByCompanyId(String companyId) {
-    LambdaQueryWrapper<CompanyDept> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(CompanyDept::getCompanyId, companyId);
+    LambdaQueryWrapper<CompanyDeptDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(CompanyDeptDO::getCompanyId, companyId);
     return companyDeptMapper.delete(wrapper);
   }
 
   @Override
-  public int delete(LambdaQueryWrapper<CompanyDept> wrapper) {
+  public int delete(LambdaQueryWrapper<CompanyDeptDO> wrapper) {
     return companyDeptMapper.delete(wrapper);
   }
 }

@@ -26,7 +26,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
-import com.njydsz.workflow.domain.entity.FlowCategory;
+import com.njydsz.workflow.infra.entity.FlowCategoryDO;
 import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
 import com.njydsz.workflow.domain.vo.FlowCategoryVO;
 import com.njydsz.workflow.server.service.FlowCategoryService;
@@ -55,7 +55,7 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowCategoryService 分类服务
- * @see FlowCategory 分类实体
+ * @see FlowCategoryDO 分类实体
  * @see FlowCategoryDTO 分类 DTO
  */
 @Slf4j
@@ -116,7 +116,7 @@ public class FlowCategoryController {
    * @return 新建分类 ID
    */
   @Idempotent(key = "ydsz:workflow:FlowCategoryController:create:lock", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowcategory.create", threshold = 50)
+  @RateLimit(resource = "workflow.FlowCategoryDO.create", threshold = 50)
   @PostMapping
   @Audit(
       module = "流程分类",
@@ -141,7 +141,7 @@ public class FlowCategoryController {
    * @return 空响应
    */
   @Idempotent(key = "ydsz:workflow:FlowCategoryController:update:lock", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowcategory.update", threshold = 50)
+  @RateLimit(resource = "workflow.FlowCategoryDO.update", threshold = 50)
   @PutMapping
   @Audit(
       module = "流程分类",
@@ -172,7 +172,7 @@ public class FlowCategoryController {
    * @return 空响应
    */
   @Idempotent(key = "ydsz:workflow:FlowCategoryController:delete:lock", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowcategory.delete", threshold = 50)
+  @RateLimit(resource = "workflow.FlowCategoryDO.delete", threshold = 50)
   @DeleteMapping("/{id}")
   @Audit(
       module = "流程分类",

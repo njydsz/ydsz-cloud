@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 岗位新增请求 DTO。
  *
- * <p>对应后端 {@code POST /api/v1/post} 请求体。 岗位是职责维度（PM / DEV / QA / SA），与部门（组织归属）、角色（权限集合）正交。
+ * <p>对应后端 {@code PostDO /api/v1/PostDO} 请求体。 岗位是职责维度（PM / DEV / QA / SA），与部门（组织归属）、角色（权限集合）正交。
  *
  * @author ydsz-team
  * @since 1.0.0

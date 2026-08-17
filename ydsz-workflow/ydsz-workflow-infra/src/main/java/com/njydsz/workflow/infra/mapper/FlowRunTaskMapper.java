@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 
 /**
  * 待办任务运行态 Mapper
@@ -31,25 +31,25 @@ import com.njydsz.workflow.domain.entity.FlowRunTask;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.domain.entity.FlowRunTask 待办任务实体
+ * @see com.njydsz.workflow.infra.entity.FlowRunTaskDO 待办任务实体
  * @see com.njydsz.workflow.server.service.FlowTaskService 待办 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
+public interface FlowRunTaskMapper extends BaseMapper<FlowRunTaskDO> {
 
   /** 根据实例 ID 查所有任务 */
-  List<FlowRunTask> selectByInstanceId(@Param("instanceId") String instanceId);
+  List<FlowRunTaskDO> selectByInstanceId(@Param("instanceId") String instanceId);
 
   /** 查某实例的当前 PENDING 任务 */
-  List<FlowRunTask> selectPendingByInstance(@Param("instanceId") String instanceId);
+  List<FlowRunTaskDO> selectPendingByInstance(@Param("instanceId") String instanceId);
 
   /** 查某节点 PENDING 任务 */
-  List<FlowRunTask> selectPendingByNode(
+  List<FlowRunTaskDO> selectPendingByNode(
       @Param("instanceId") String instanceId, @Param("nodeCode") String nodeCode);
 
   /** 查用户的待办 */
-  List<FlowRunTask> selectTodoByAssignee(
+  List<FlowRunTaskDO> selectTodoByAssignee(
       @Param("assigneeId") String assigneeId, @Param("tenantId") String tenantId);
 
   /**
@@ -60,7 +60,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * @param offset 偏移量（从 0 开始）
    * @param limit 每页大小
    */
-  List<FlowRunTask> selectTodoByAssigneePage(
+  List<FlowRunTaskDO> selectTodoByAssigneePage(
       @Param("assigneeId") String assigneeId,
       @Param("tenantId") String tenantId,
       @Param("offset") int offset,
@@ -86,7 +86,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * @param limit 每页大小
    * @return 下一页任务列表
    */
-  List<FlowRunTask> selectTodoByAssigneeCursor(
+  List<FlowRunTaskDO> selectTodoByAssigneeCursor(
       @Param("assigneeId") String assigneeId,
       @Param("tenantId") String tenantId,
       @Param("lastPriority") Integer lastPriority,
@@ -95,7 +95,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
       @Param("limit") int limit);
 
   /** 查用户已办 */
-  List<FlowRunTask> selectDoneByAssignee(
+  List<FlowRunTaskDO> selectDoneByAssignee(
       @Param("assigneeId") String assigneeId, @Param("tenantId") String tenantId);
 
   /** 标记任务完成 */
@@ -167,7 +167,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * @param tenantId 租户 ID（可空）
    * @return 超期任务列表
    */
-  List<FlowRunTask> selectOverdue(
+  List<FlowRunTaskDO> selectOverdue(
       @Param("assigneeId") String assigneeId, @Param("tenantId") String tenantId);
 
   /**
@@ -187,7 +187,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * @param limit 单次扫描上限
    * @return 候选 SLA 任务列表
    */
-  List<FlowRunTask> selectSlaCandidates(@Param("limit") int limit);
+  List<FlowRunTaskDO> selectSlaCandidates(@Param("limit") int limit);
 
   /**
    * P2-7: 超期任务 Top N 排行 — 按超期时长降序返回最严重的超期任务。

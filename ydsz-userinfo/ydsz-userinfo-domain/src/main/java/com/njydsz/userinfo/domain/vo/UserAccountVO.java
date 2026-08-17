@@ -6,13 +6,13 @@ import lombok.Data;
 
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
-import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 
 /**
  * 用户账号 VO，用于 Controller 返回，不包含密码、盐值等敏感字段。
  *
- * <p>由 {@code UserInfoConverter.entityToVO()} 从 {@code UserAccount} 实体转换而来， 供前端展示和跨模块查询使用。
+ * <p>由 {@code UserInfoConverter.entityToVO()} 从 {@code UserAccountDO} 实体转换而来， 供前端展示和跨模块查询使用。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -77,7 +77,7 @@ public class UserAccountVO {
    * @param entity 用户账号实体
    * @return 用户 VO
    */
-  public static UserAccountVO fromEntity(UserAccount entity) {
+  public static UserAccountVO fromEntity(UserAccountDO entity) {
     if (entity == null) {
       return null;
     }

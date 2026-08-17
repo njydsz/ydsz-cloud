@@ -9,7 +9,7 @@ import com.njydsz.common.domain.query.PageQuery;
 /**
  * 角色分页查询参数 DTO。
  *
- * <p>用于 {@code GET /api/v1/role/page} 接口，支持多条件组合筛选角色列表。 继承 {@link PageQuery} 获取分页参数（{@code pageNum}
+ * <p>用于 {@code GET /api/v1/RoleDO/page} 接口，支持多条件组合筛选角色列表。 继承 {@link PageQuery} 获取分页参数（{@code pageNum}
  * / {@code pageSize}）。
  *
  * <p><b>筛选条件：</b>所有字段均为可选，未传则不作为筛选条件。

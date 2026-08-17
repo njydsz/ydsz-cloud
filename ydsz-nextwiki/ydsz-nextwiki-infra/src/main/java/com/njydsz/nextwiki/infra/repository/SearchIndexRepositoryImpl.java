@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
-import com.njydsz.nextwiki.domain.entity.SearchIndex;
-import com.njydsz.nextwiki.infra.repository.SearchIndexRepository;
+import com.njydsz.nextwiki.infra.entity.SearchIndexDO;
+import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.infra.mapper.SearchIndexMapper;
 
 /**
@@ -31,7 +31,7 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
    * @param index 搜索索引实体（含 fileNodeId、标题、内容、标签等可被检索字段）
    */
   @Override
-  public void upsert(SearchIndex index) {
+  public void upsert(SearchIndexDO index) {
     searchIndexMapper.upsert(index);
   }
 
@@ -52,7 +52,7 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
    * @return 索引实体；不存在则返回 null
    */
   @Override
-  public SearchIndex findByFileNodeId(String fileNodeId) {
+  public SearchIndexDO findByFileNodeId(String fileNodeId) {
     return searchIndexMapper.selectByFileNodeId(fileNodeId);
   }
 
@@ -62,7 +62,7 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
    * @return 索引实体列表
    */
   @Override
-  public List<SearchIndex> findAll() {
+  public List<SearchIndexDO> findAll() {
     return searchIndexMapper.selectAll();
   }
 
@@ -79,20 +79,20 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
 
   /**
    * 分页搜索索引：将 MyBatis-Plus 的分页结果封装为统一的 {@link PageResponse}。 keyword 为空时退化为按权限（createdBy）列示，scope
-   * 控制检索维度（all/filename/content/tag）。
+   * 控制检索维度（all/filename/content/TagDO）。
    *
    * @param keyword 搜索关键词
    * @param createdBy 创建人（权限过滤，避免跨用户检索）
-   * @param scope 搜索范围：all / filename / content / tag
+   * @param scope 搜索范围：all / filename / content / TagDO
    * @param page 页码（从 1 开始）
    * @param pageSize 每页大小
    * @return 统一分页结果，含命中的索引实体列表与总数
    */
   @Override
-  public PageResponse<List<SearchIndex>> searchPage(
+  public PageResponse<List<SearchIndexDO>> searchPage(
       String keyword, String createdBy, String scope, int page, int pageSize) {
-    Page<SearchIndex> pageParam = new Page<>(page, pageSize);
-    IPage<SearchIndex> result = searchIndexMapper.searchPage(pageParam, keyword, createdBy, scope);
+    Page<SearchIndexDO> pageParam = new Page<>(page, pageSize);
+    IPage<SearchIndexDO> result = searchIndexMapper.searchPage(pageParam, keyword, createdBy, scope);
     return PageResponses.success(result);
   }
 }

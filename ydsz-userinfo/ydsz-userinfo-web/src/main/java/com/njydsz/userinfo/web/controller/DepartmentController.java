@@ -104,7 +104,7 @@ public class DepartmentController {
    * @param dto 部门创建 DTO（deptCode / deptName / parentId / sortOrder / status）
    * @return 新创建的部门 ID
    */
-  @RateLimit(resource = "userinfo.department.create", threshold = 50)
+  @RateLimit(resource = "userinfo.DepartmentDO.create", threshold = 50)
   @Audit(
       module = "部门管理",
       type = AuditType.OPERATION,
@@ -129,7 +129,7 @@ public class DepartmentController {
    * @param dto 部门更新 DTO（必须包含 ID）
    * @return 是否成功
    */
-  @RateLimit(resource = "userinfo.department.update", threshold = 50)
+  @RateLimit(resource = "userinfo.DepartmentDO.update", threshold = 50)
   @Audit(
       module = "部门管理",
       type = AuditType.OPERATION,
@@ -159,7 +159,7 @@ public class DepartmentController {
    * @param id 部门 ID
    * @return 是否成功
    */
-  @RateLimit(resource = "userinfo.department.remove", threshold = 50)
+  @RateLimit(resource = "userinfo.DepartmentDO.remove", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:DepartmentController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除部门")

@@ -3,7 +3,7 @@ package com.njydsz.nextwiki.web.controller;
 import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.TagDO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,9 +21,9 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.service.FilePermissionService;
 
 /**
@@ -88,7 +88,7 @@ import com.njydsz.nextwiki.server.service.FilePermissionService;
 @RestController
 @RequestMapping("/api/v1/nextwiki/files")
 @RequiredArgsConstructor
-@Tag(name = "文件锁定", description = "Check-out/Check-in 防并发编辑（P0-R3 修复后使用 status 字段）")
+@TagDO(name = "文件锁定", description = "Check-out/Check-in 防并发编辑（P0-R3 修复后使用 status 字段）")
 public class FileLockController {
 
   /** 文件节点仓储（用于查询/更新文件状态） */
@@ -118,7 +118,7 @@ public class FileLockController {
     // P2-R2: 权限检查
     permissionService.checkWrite(nodeId, userId);
 
-    FileNode node = fileNodeRepository.findById(nodeId);
+    FileNodeDO node = fileNodeRepository.findById(nodeId);
     if (node == null || !node.isFile()) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
     }
@@ -159,7 +159,7 @@ public class FileLockController {
     // P2-R2: 权限检查
     permissionService.checkWrite(nodeId, userId);
 
-    FileNode node = fileNodeRepository.findById(nodeId);
+    FileNodeDO node = fileNodeRepository.findById(nodeId);
     if (node == null) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
     }

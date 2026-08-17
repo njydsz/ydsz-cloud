@@ -5,7 +5,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
 /**
  * 启用/停用状态枚举（通用）。
  *
- * <p>对应 Role / Menu / Department / Company / Post / Language 等实体的 {@code status} 字段（存储值 {@code
+ * <p>对应 RoleDO / MenuDO / DepartmentDO / CompanyDO / PostDO / LanguageDO 等实体的 {@code status} 字段（存储值 {@code
  * "ENABLED" / "DISABLED"}）， 实现 {@link BaseStatusEnum} 契约，提供统一的状态流转校验。
  *
  * <p><b>状态流转：</b>{@code ENABLED ⇄ DISABLED}（双向可切换，均非终态）。
@@ -27,7 +27,7 @@ public enum EnableStatusEnum implements BaseStatusEnum<EnableStatusEnum> {
    *
    * <ul>
    *   <li>标准格式：{@code "ENABLED"} / {@code "DISABLED"}（所有实体统一使用此格式）
-   *   <li>遗留格式：{@code "0"}（禁用）/ {@code "1"}（启用）—— UserAccount 表的历史兼容，新代码应使用枚举字面量
+   *   <li>遗留格式：{@code "0"}（禁用）/ {@code "1"}（启用）—— UserAccountDO 表的历史兼容，新代码应使用枚举字面量
    * </ul>
    *
    * @param value 状态字符串（如 "ENABLED"、"0"、"1"）
@@ -37,7 +37,7 @@ public enum EnableStatusEnum implements BaseStatusEnum<EnableStatusEnum> {
     if (value == null || value.isBlank()) {
       return null;
     }
-    // 遗留 0/1 兼容（UserAccount 表历史数据）
+    // 遗留 0/1 兼容（UserAccountDO 表历史数据）
     if ("0".equals(value)) {
       return DISABLED;
     }

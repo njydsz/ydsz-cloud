@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.nextwiki.domain.entity.TrashItem;
-import com.njydsz.nextwiki.infra.repository.TrashItemRepository;
+import com.njydsz.nextwiki.infra.entity.TrashItemDO;
+import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
 import com.njydsz.nextwiki.infra.mapper.TrashItemMapper;
 
 /**
@@ -25,13 +25,13 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
   /**
    * 插入回收站条目（文件/文件夹被删除并移入回收站时调用，记录原路径以便恢复）。
    *
-   * @param trashItem 待持久化的回收站实体（含 fileNodeId、originalPath、expireTime 等）
+   * @param TrashItemDO 待持久化的回收站实体（含 fileNodeId、originalPath、expireTime 等）
    * @return 已落库的回收站实体（含自增主键）
    */
   @Override
-  public TrashItem save(TrashItem trashItem) {
-    trashItemMapper.insert(trashItem);
-    return trashItem;
+  public TrashItemDO save(TrashItemDO TrashItemDO) {
+    trashItemMapper.insert(TrashItemDO);
+    return TrashItemDO;
   }
 
   /**
@@ -41,7 +41,7 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
    * @return 回收站实体；不存在则返回 null
    */
   @Override
-  public TrashItem findById(String id) {
+  public TrashItemDO findById(String id) {
     return trashItemMapper.selectById(id);
   }
 
@@ -52,7 +52,7 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
    * @return 命中的回收站实体；不存在则返回 null
    */
   @Override
-  public TrashItem findByFileNodeId(String fileNodeId) {
+  public TrashItemDO findByFileNodeId(String fileNodeId) {
     return trashItemMapper.findByFileNodeId(fileNodeId);
   }
 
@@ -63,7 +63,7 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
    * @return 活跃回收站条目列表
    */
   @Override
-  public List<TrashItem> findActiveTrash(String userId) {
+  public List<TrashItemDO> findActiveTrash(String userId) {
     return trashItemMapper.findActiveTrash(userId);
   }
 
@@ -74,7 +74,7 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
    * @return 已过期待清理的回收站条目列表
    */
   @Override
-  public List<TrashItem> findExpiredItems(int limit) {
+  public List<TrashItemDO> findExpiredItems(int limit) {
     return trashItemMapper.findExpiredItems(limit);
   }
 
@@ -82,21 +82,21 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
    * 乐观锁更新回收站条目；未携带 revision 时退化为普通更新，受影响行数为 0 抛出 {@link OptimisticLockingFailureException}，成功后
    * revision 自增 1。
    *
-   * @param trashItem 待更新的回收站实体（必须携带 id）
+   * @param TrashItemDO 待更新的回收站实体（必须携带 id）
    */
   @Override
-  public void update(TrashItem trashItem) {
-    if (trashItem.getRevision() == null) {
+  public void update(TrashItemDO TrashItemDO) {
+    if (TrashItemDO.getRevision() == null) {
       // 兜底：未携带 revision 时退化为普通更新，避免业务阻断
-      trashItemMapper.updateById(trashItem);
+      trashItemMapper.updateById(TrashItemDO);
       return;
     }
-    int affected = trashItemMapper.updateWithRevision(trashItem);
+    int affected = trashItemMapper.updateWithRevision(TrashItemDO);
     if (affected == 0) {
       throw new OptimisticLockingFailureException(
-          "TrashItem 乐观锁更新失败，id=" + trashItem.getId() + ", revision=" + trashItem.getRevision());
+          "TrashItem 乐观锁更新失败，id=" + TrashItemDO.getId() + ", revision=" + TrashItemDO.getRevision());
     }
-    trashItem.setRevision(trashItem.getRevision() + 1);
+    TrashItemDO.setRevision(TrashItemDO.getRevision() + 1);
   }
 
   /**

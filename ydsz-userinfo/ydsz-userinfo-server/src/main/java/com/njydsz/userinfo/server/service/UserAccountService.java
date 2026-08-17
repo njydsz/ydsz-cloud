@@ -11,7 +11,7 @@ import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
-import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
 /**
@@ -42,7 +42,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see UserAccount 用户实体
+ * @see UserAccountDO 用户实体
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller
  * @see com.njydsz.userinfo.api.UserAccountClient Feign Client 接口
  */
@@ -148,7 +148,7 @@ public interface UserAccountService {
   List<String> getUserRoleIds(String userId);
 
   /**
-   * 按角色编码查询用户 ID 列表（供 Feign 跨服务调用，支持工作流 role:xxx 审批人展开）。
+   * 按角色编码查询用户 ID 列表（供 Feign 跨服务调用，支持工作流 RoleDO:xxx 审批人展开）。
    *
    * @param roleCode 角色编码（如 {@code ROLE_ADMIN}）
    * @return 用户 ID 列表（String 形式）

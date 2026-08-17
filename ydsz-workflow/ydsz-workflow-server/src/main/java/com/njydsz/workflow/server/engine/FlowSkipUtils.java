@@ -5,12 +5,12 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.workflow.domain.entity.FlowSkip;
+import com.njydsz.workflow.infra.entity.FlowSkipDO;
 
 /**
- * 流程跳转边（FlowSkip）工具类
+ * 流程跳转边（FlowSkipDO）工具类
  *
- * <p>集中提供 {@link FlowSkip} 的 ext JSON 字段解析方法，避免各模块重复实现。
+ * <p>集中提供 {@link FlowSkipDO} 的 ext JSON 字段解析方法，避免各模块重复实现。
  *
  * <p>skip 表无 source_node_code 列，源节点编码冗余存储在 ext JSON 的 {@code sourceRef} 字段 （见
  * FlowDefinitionServiceImpl 部署逻辑）。本工具提供唯一规范的读取入口。
@@ -26,7 +26,7 @@ public final class FlowSkipUtils {
   }
 
   /**
-   * 从 FlowSkip.ext JSON 中提取 sourceRef（入边源节点编码）
+   * 从 FlowSkipDO.ext JSON 中提取 sourceRef（入边源节点编码）
    *
    * <p>统一替代 {@code DefaultFlowAdvancer#extractSourceNodeCode}、 {@code
    * FlowGraphValidator#extractSourceRef}、{@code FlowDefinitionCacheService#extractSourceRef}
@@ -35,7 +35,7 @@ public final class FlowSkipUtils {
    * @param skip 跳转边
    * @return 源节点编码，不存在或解析失败时返回 null
    */
-  public static String extractSourceNodeCode(FlowSkip skip) {
+  public static String extractSourceNodeCode(FlowSkipDO skip) {
     if (skip == null || skip.getExt() == null || skip.getExt().isBlank()) {
       return null;
     }
@@ -53,13 +53,13 @@ public final class FlowSkipUtils {
   }
 
   /**
-   * 从 FlowSkip.ext JSON 中提取指定字段
+   * 从 FlowSkipDO.ext JSON 中提取指定字段
    *
    * @param skip 跳转边
    * @param fieldName ext JSON 中的字段名
    * @return 字段值字符串，不存在或解析失败时返回 null
    */
-  public static String extractExtField(FlowSkip skip, String fieldName) {
+  public static String extractExtField(FlowSkipDO skip, String fieldName) {
     if (skip == null
         || skip.getExt() == null
         || skip.getExt().isBlank()

@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.nextwiki.domain.entity.ShareLink;
+import com.njydsz.nextwiki.infra.entity.ShareLinkDO;
 import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
 
 /**
@@ -38,7 +38,7 @@ public class ShareExpiryReminderTask {
   @Scheduled(cron = "0 0 * * * *")
   public void scanExpiringShares() {
     try {
-      List<ShareLink> expiringShares = shareLinkDomainService.findExpiringShares(EXPIRY_REMINDER_HOURS);
+      List<ShareLinkDO> expiringShares = shareLinkDomainService.findExpiringShares(EXPIRY_REMINDER_HOURS);
 
       if (expiringShares == null || expiringShares.isEmpty()) {
         return;
@@ -46,7 +46,7 @@ public class ShareExpiryReminderTask {
 
       log.info("[ShareExpiryReminder] 发现即将到期的分享链接: count={}", expiringShares.size());
 
-      for (ShareLink share : expiringShares) {
+      for (ShareLinkDO share : expiringShares) {
         // 标记提醒已发送（避免重复提醒）
         shareLinkDomainService.markReminderSent(share.getId());
         log.info(

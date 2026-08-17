@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-workflow-infra</artifactId>
+            <artifactId>ydsz-workflow-domain</artifactId>
         </dependency>
         <!-- App 端基座模块（移动端接口能力） -->
         <dependency>

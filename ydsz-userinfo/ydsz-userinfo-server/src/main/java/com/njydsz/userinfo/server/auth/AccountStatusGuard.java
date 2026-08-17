@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
@@ -23,7 +23,7 @@ import com.njydsz.userinfo.server.service.LoginHistoryService;
  *
  * @author ydsz-team
  * @since 1.1.0
- * @see UserAccount 用户账号实体
+ * @see UserAccountDO 用户账号实体
  */
 @Slf4j
 @Component
@@ -43,10 +43,10 @@ public class AccountStatusGuard {
    * @return 有效的用户账号实体
    * @throws BusinessException 用户不存在、已禁用或已锁定时抛出
    */
-  public UserAccount findValidUser(String username, String loginIp, String userAgent) {
-    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccount::getUsername, username);
-    UserAccount user = userAccountMapper.selectOne(wrapper);
+  public UserAccountDO findValidUser(String username, String loginIp, String userAgent) {
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccountDO::getUsername, username);
+    UserAccountDO user = userAccountMapper.selectOne(wrapper);
 
     if (user == null) {
       loginHistoryService.recordLoginAttempt(

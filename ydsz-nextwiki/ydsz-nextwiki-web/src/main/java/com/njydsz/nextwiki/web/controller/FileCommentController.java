@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.TagDO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,8 +25,8 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.entity.FileComment;
-import com.njydsz.nextwiki.infra.repository.FileCommentRepository;
+import com.njydsz.nextwiki.infra.entity.FileCommentDO;
+import com.njydsz.nextwiki.domain.repository.FileCommentRepository;
 
 /**
  * 文件评论 REST API Controller（P1-5）。
@@ -92,7 +92,7 @@ import com.njydsz.nextwiki.infra.repository.FileCommentRepository;
 @RestController
 @RequestMapping("/api/v1/nextwiki/comments")
 @RequiredArgsConstructor
-@Tag(name = "文件评论", description = "文件级评论、回复、批注、解决标记")
+@TagDO(name = "文件评论", description = "文件级评论、回复、批注、解决标记")
 public class FileCommentController {
 
   /** 分布式 ID 生成器 */
@@ -107,12 +107,12 @@ public class FileCommentController {
    * <p>返回所有未删除的评论，包括顶级评论和它们的回复（前端自行组装树形结构）。
    *
    * @param fileNodeId 文件节点 ID
-   * @return 统一响应结果，data 为 {@link FileComment} 列表
+   * @return 统一响应结果，data 为 {@link FileCommentDO} 列表
    */
   @GetMapping("/file/{fileNodeId}")
   @Operation(summary = "查询文件的评论列表")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VIEW)
-  public BaseResponse<List<FileComment>> listComments(@PathVariable String fileNodeId) {
+  public BaseResponse<List<FileCommentDO>> listComments(@PathVariable String fileNodeId) {
     return BaseResponse.success(commentRepository.findByFileNodeId(fileNodeId));
   }
 
@@ -130,7 +130,7 @@ public class FileCommentController {
    *
    * @param request 评论请求（fileNodeId / content / parentCommentId / position）
    * @param userId 评论人 ID
-   * @return 统一响应结果，data 为保存后的 {@link FileComment}
+   * @return 统一响应结果，data 为保存后的 {@link FileCommentDO}
    */
   @Audit(
       module = "文件评论",
@@ -141,12 +141,12 @@ public class FileCommentController {
   @PostMapping
   @Operation(summary = "添加评论/回复")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-  public BaseResponse<FileComment> addComment(
+  public BaseResponse<FileCommentDO> addComment(
       @RequestBody AddCommentRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
-    FileComment comment =
-        FileComment.builder()
+    FileCommentDO comment =
+        FileCommentDO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
             .fileNodeId(request.getFileNodeId())
             .content(request.getContent())
@@ -162,7 +162,7 @@ public class FileCommentController {
     comment.setUpdatedBy(userId);
     comment.setUpdatedAt(LocalDateTime.now());
 
-    FileComment saved = commentRepository.save(comment);
+    FileCommentDO saved = commentRepository.save(comment);
     log.info(
         "[FileCommentController] 添加评论: fileNodeId={}, commentId={}",
         request.getFileNodeId(),

@@ -31,16 +31,16 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.entity.FileVersion;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.infra.entity.FileVersionDO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 import com.njydsz.nextwiki.domain.service.FolderDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
-import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
-import com.njydsz.nextwiki.infra.repository.FileVersionRepository;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 /**
@@ -53,7 +53,7 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  * <ol>
  *   <li>初始化：生成 uploadId，记录文件元数据到 Redis
  *   <li>上传分片：将分片写入临时目录，记录已上传分片号
- *   <li>完成合并：按分片顺序合并为完整文件，上传到存储，创建 FileNode
+ *   <li>完成合并：按分片顺序合并为完整文件，上传到存储，创建 FileNodeDO
  *   <li>取消：清理临时文件和 Redis 记录
  * </ol>
  *
@@ -213,7 +213,7 @@ public class ChunkUploadApplicationService {
   /**
    * 完成分片上传：校验完整性 → 合并分片 → 上传存储 → 建节点（含秒传去重）。
    *
-   * <p>先核对已上传分片数与声明总数一致，再按序合并临时分片、计算 SHA-256 做秒传去重， 命中已有文件则复用其存储键（仅新增节点与配额）；否则上传对象存储并创建 FileNode。
+   * <p>先核对已上传分片数与声明总数一致，再按序合并临时分片、计算 SHA-256 做秒传去重， 命中已有文件则复用其存储键（仅新增节点与配额）；否则上传对象存储并创建 FileNodeDO。
    * 成功后发布上传事件（驱动内容提取/索引/审计），并在 {@code finally} 清理临时文件与 Redis 会话。
    *
    * @param uploadId 会话 ID
@@ -267,15 +267,15 @@ public class ChunkUploadApplicationService {
 
       // P0-R2: 秒传去重检查
       if (fileHash != null) {
-        FileNode existing = fileNodeRepository.findByFileHash(fileHash);
+        FileNodeDO existing = fileNodeRepository.findByFileHash(fileHash);
         if (existing != null) {
           log.info(
               "[ChunkUploadApplicationService] 秒传命中: hash={}, existingId={}",
               fileHash,
               existing.getId());
-          FileNode deduped = buildDedupedNode(session, existing, fileHash, userId);
-          FileNode saved = fileNodeRepository.save(deduped);
-          List<FileVersion> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+          FileNodeDO deduped = buildDedupedNode(session, existing, fileHash, userId);
+          FileNodeDO saved = fileNodeRepository.save(deduped);
+          List<FileVersionDO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
           FileVersionDomainService.VersionCreateResult versionResult =
               versionDomainService.createVersion(
                   saved,
@@ -306,7 +306,7 @@ public class ChunkUploadApplicationService {
       FileStorage stored = storage.upload(null, storageKey, multipartFile);
 
       // P0-R2: 解析父目录获取正确 path/level（不再硬编码 "/" 和 1）
-      FileNode parent = resolveParent(session.getParentId(), userId);
+      FileNodeDO parent = resolveParent(session.getParentId(), userId);
       String parentPath = parent.getPath() != null ? parent.getPath() : "/";
       String path =
           parentPath.endsWith("/")
@@ -314,12 +314,12 @@ public class ChunkUploadApplicationService {
               : parentPath + "/" + session.getFileName() + "/";
       int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
 
-      FileNode fileNode =
-          FileNode.builder()
+      FileNodeDO FileNodeDO =
+          FileNodeDO.builder()
               .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
               .parentId(parent.getId())
               .name(session.getFileName())
-              .nodeType(FileNode.TYPE_FILE)
+              .nodeType(FileNodeDO.TYPE_FILE)
               .suffix(extractSuffix(session.getFileName()))
               .size(stored.getSize())
               .storageKey(storageKey)
@@ -337,12 +337,12 @@ public class ChunkUploadApplicationService {
               .deleted(0)
               .revision(0)
               .build();
-      fileNode.setCreatedBy(userId);
-      fileNode.setUpdatedBy(userId);
+      FileNodeDO.setCreatedBy(userId);
+      FileNodeDO.setUpdatedBy(userId);
 
-      FileNode saved = fileNodeRepository.save(fileNode);
+      FileNodeDO saved = fileNodeRepository.save(FileNodeDO);
 
-      List<FileVersion> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+      List<FileVersionDO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
       FileVersionDomainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
               saved,
@@ -488,9 +488,9 @@ public class ChunkUploadApplicationService {
 
   /** 清理超出保留数量的旧版本 */
   private void cleanupExcessVersions(String fileNodeId) {
-    List<FileVersion> allVersions = versionRepository.findByFileNodeId(fileNodeId);
-    List<FileVersion> toDelete = versionDomainService.findVersionsToCleanup(allVersions);
-    for (FileVersion v : toDelete) {
+    List<FileVersionDO> allVersions = versionRepository.findByFileNodeId(fileNodeId);
+    List<FileVersionDO> toDelete = versionDomainService.findVersionsToCleanup(allVersions);
+    for (FileVersionDO v : toDelete) {
       versionRepository.deleteById(v.getId());
     }
     if (!toDelete.isEmpty()) {
@@ -529,11 +529,11 @@ public class ChunkUploadApplicationService {
 
   // P0-R2: 新增辅助方法
 
-  private FileNode resolveParent(String parentId, String userId) {
+  private FileNodeDO resolveParent(String parentId, String userId) {
     if (parentId == null || parentId.isEmpty() || "0".equals(parentId)) {
       return fileNodeRepository.findOrCreateRoot(userId);
     }
-    FileNode parent = fileNodeRepository.findById(parentId);
+    FileNodeDO parent = fileNodeRepository.findById(parentId);
     if (parent == null) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_FOLDER_NOT_FOUND)
           .data("parentId", parentId);
@@ -550,9 +550,9 @@ public class ChunkUploadApplicationService {
     }
   }
 
-  private FileNode buildDedupedNode(
-      ChunkUploadSession session, FileNode existing, String fileHash, String userId) {
-    FileNode parent = resolveParent(session.getParentId(), userId);
+  private FileNodeDO buildDedupedNode(
+      ChunkUploadSession session, FileNodeDO existing, String fileHash, String userId) {
+    FileNodeDO parent = resolveParent(session.getParentId(), userId);
     String parentPath = parent.getPath() != null ? parent.getPath() : "/";
     String path =
         parentPath.endsWith("/")
@@ -560,12 +560,12 @@ public class ChunkUploadApplicationService {
             : parentPath + "/" + session.getFileName() + "/";
     int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
 
-    FileNode node =
-        FileNode.builder()
+    FileNodeDO node =
+        FileNodeDO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
             .parentId(parent.getId())
             .name(session.getFileName())
-            .nodeType(FileNode.TYPE_FILE)
+            .nodeType(FileNodeDO.TYPE_FILE)
             .suffix(extractSuffix(session.getFileName()))
             .size(existing.getSize())
             .storageKey(existing.getStorageKey())
@@ -589,7 +589,7 @@ public class ChunkUploadApplicationService {
     return node;
   }
 
-  private void publishUploadEvent(FileNode saved, String userId) {
+  private void publishUploadEvent(FileNodeDO saved, String userId) {
     eventPublisher.publishEvent(
         FileOperatedEvent.builder()
             .operation(FileOperatedEvent.OP_UPLOAD)

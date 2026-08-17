@@ -5,7 +5,7 @@ import java.util.List;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowAttachmentDTO;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
-import com.njydsz.workflow.domain.entity.FlowAttachment;
+import com.njydsz.workflow.infra.entity.FlowAttachmentDO;
 
 /**
  * 流程附件服务 — 审批过程中的文件上传、下载与关联管理
@@ -58,7 +58,7 @@ public interface FlowAttachmentService {
    * @param taskId 任务 ID
    * @return 附件列表
    */
-  List<FlowAttachment> listByTask(String taskId);
+  List<FlowAttachmentDO> listByTask(String taskId);
 
   /**
    * 查询实例关联的附件列表
@@ -66,7 +66,7 @@ public interface FlowAttachmentService {
    * @param instanceId 实例 ID
    * @return 附件列表
    */
-  List<FlowAttachment> listByInstance(String instanceId);
+  List<FlowAttachmentDO> listByInstance(String instanceId);
 
   /**
    * 删除附件（逻辑删除）

@@ -3,7 +3,7 @@ package com.njydsz.nextwiki.web.controller;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.TagDO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
-import com.njydsz.nextwiki.domain.entity.FileVersion;
+import com.njydsz.nextwiki.infra.entity.FileVersionDO;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.service.BatchTaskService;
 import com.njydsz.nextwiki.server.service.BatchTaskService.BatchTaskStatus;
@@ -87,7 +87,7 @@ import com.njydsz.nextwiki.server.service.FileApplicationService;
 @RequestMapping("/api/v1/nextwiki/files")
 @RequiredArgsConstructor
 @Validated
-@Tag(name = "网盘文件批量与版本管理", description = "批量删除/移动、版本历史/回滚、星标切换")
+@TagDO(name = "网盘文件批量与版本管理", description = "批量删除/移动、版本历史/回滚、星标切换")
 public class FileBatchController {
 
   /** 文件应用服务（封装批量操作/版本管理/星标等业务编排） */
@@ -155,12 +155,12 @@ public class FileBatchController {
    * <p>按版本号倒序返回全部历史版本，每条记录包含版本号、大小、上传人、上传时间、备注等。 当前最新版本固定在列表首位。
    *
    * @param nodeId 文件节点 ID
-   * @return 统一响应结果，data 为 {@link FileVersion} 列表
+   * @return 统一响应结果，data 为 {@link FileVersionDO} 列表
    */
   @GetMapping("/{nodeId}/versions")
   @Operation(summary = "获取版本历史")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION_VIEW)
-  public BaseResponse<List<FileVersion>> getVersionHistory(@PathVariable String nodeId) {
+  public BaseResponse<List<FileVersionDO>> getVersionHistory(@PathVariable String nodeId) {
     return BaseResponse.success(fileApplicationService.getVersionHistory(nodeId));
   }
 

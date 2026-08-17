@@ -19,10 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.workflow.domain.entity.FlowAuditLog;
-import com.njydsz.workflow.domain.entity.FlowHisTask;
-import com.njydsz.workflow.domain.entity.FlowInstance;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
+import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
+import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
@@ -105,9 +105,9 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowEfficiencyService 接口定义
- * @see com.njydsz.workflow.domain.entity.FlowHisTask 历史任务实体
- * @see com.njydsz.workflow.domain.entity.FlowAuditLog 审计日志实体
- * @see com.njydsz.workflow.domain.entity.FlowRunTask 运行时任务实体
+ * @see com.njydsz.workflow.infra.entity.FlowHisTaskDO 历史任务实体
+ * @see com.njydsz.workflow.infra.entity.FlowAuditLogDO 审计日志实体
+ * @see com.njydsz.workflow.infra.entity.FlowRunTaskDO 运行时任务实体
  * @see FlowTaskAuditService 任务审计服务（提供「委派」「代批」审计数据）
  */
 @Slf4j
@@ -151,14 +151,14 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   public Map<String, Object> efficiencyStats(String tenantId, String startTime, String endTime) {
     Map<String, Object> result = new LinkedHashMap<>();
     try {
-      List<FlowHisTask> records = queryHisTasks(tenantId, startTime, endTime, null);
+      List<FlowHisTaskDO> records = queryHisTasks(tenantId, startTime, endTime, null);
       long totalCount = records.size();
 
       // 平均耗时
       double avgDurationMs =
           records.stream()
               .filter(r -> r.getDurationMs() != null && r.getDurationMs() > 0)
-              .mapToLong(FlowHisTask::getDurationMs)
+              .mapToLong(FlowHisTaskDO::getDurationMs)
               .average()
               .orElse(0.0);
 
@@ -202,17 +202,17 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
    */
   private long countDelegateActions(String tenantId, String startTime, String endTime) {
     try {
-      LambdaQueryWrapper<FlowAuditLog> wrapper = new LambdaQueryWrapper<>();
-      wrapper.eq(FlowAuditLog::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY);
+      LambdaQueryWrapper<FlowAuditLogDO> wrapper = new LambdaQueryWrapper<>();
+      wrapper.eq(FlowAuditLogDO::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY);
       if (tenantId != null) {
-        wrapper.eq(FlowAuditLog::getTenantId, tenantId);
+        wrapper.eq(FlowAuditLogDO::getTenantId, tenantId);
       }
-      wrapper.in(FlowAuditLog::getAction, "PASS", "REJECT");
+      wrapper.in(FlowAuditLogDO::getAction, "PASS", "REJECT");
       if (StringUtils.hasText(startTime)) {
-        wrapper.ge(FlowAuditLog::getCreatedAt, LocalDateTime.parse(startTime, DT_FMT));
+        wrapper.ge(FlowAuditLogDO::getCreatedAt, LocalDateTime.parse(startTime, DT_FMT));
       }
       if (StringUtils.hasText(endTime)) {
-        wrapper.le(FlowAuditLog::getCreatedAt, LocalDateTime.parse(endTime, DT_FMT));
+        wrapper.le(FlowAuditLogDO::getCreatedAt, LocalDateTime.parse(endTime, DT_FMT));
       }
       return auditLogMapper.selectCount(wrapper);
     } catch (Exception e) {
@@ -250,22 +250,22 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   public List<Map<String, Object>> approverRanking(
       String tenantId, String startTime, String endTime, int limit) {
     try {
-      List<FlowHisTask> records = queryHisTasks(tenantId, startTime, endTime, null);
+      List<FlowHisTaskDO> records = queryHisTasks(tenantId, startTime, endTime, null);
       if (records.isEmpty()) {
         return List.of();
       }
 
       // 按 assigneeId 分组聚合
-      Map<String, List<FlowHisTask>> byAssignee =
+      Map<String, List<FlowHisTaskDO>> byAssignee =
           records.stream()
               .filter(r -> StringUtils.hasText(r.getAssigneeId()))
-              .collect(Collectors.groupingBy(FlowHisTask::getAssigneeId));
+              .collect(Collectors.groupingBy(FlowHisTaskDO::getAssigneeId));
 
       int top = limit > 0 ? limit : 10;
       return byAssignee.entrySet().stream()
           .map(
               entry -> {
-                List<FlowHisTask> tasks = entry.getValue();
+                List<FlowHisTaskDO> tasks = entry.getValue();
                 Map<String, Object> row = new LinkedHashMap<>();
                 row.put("assigneeId", entry.getKey());
                 row.put("assigneeName", tasks.get(0).getAssigneeName());
@@ -273,7 +273,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
                 double avgMs =
                     tasks.stream()
                         .filter(t -> t.getDurationMs() != null && t.getDurationMs() > 0)
-                        .mapToLong(FlowHisTask::getDurationMs)
+                        .mapToLong(FlowHisTaskDO::getDurationMs)
                         .average()
                         .orElse(0.0);
                 row.put("avgDurationMs", Math.round(avgMs));
@@ -295,7 +295,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   public List<Map<String, Object>> approvalTrend(
       String tenantId, String interval, String startTime, String endTime) {
     try {
-      List<FlowHisTask> records = queryHisTasks(tenantId, startTime, endTime, null);
+      List<FlowHisTaskDO> records = queryHisTasks(tenantId, startTime, endTime, null);
       if (records.isEmpty()) {
         return List.of();
       }
@@ -303,8 +303,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
       String gran = (interval == null || interval.isBlank()) ? "DAY" : interval.toUpperCase();
 
       // 按粒度分组
-      Map<String, List<FlowHisTask>> grouped = new LinkedHashMap<>();
-      for (FlowHisTask task : records) {
+      Map<String, List<FlowHisTaskDO>> grouped = new LinkedHashMap<>();
+      for (FlowHisTaskDO task : records) {
         if (task.getFinishAt() == null) {
           continue;
         }
@@ -314,15 +314,15 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
       // 聚合输出
       List<Map<String, Object>> result = new ArrayList<>();
-      for (Map.Entry<String, List<FlowHisTask>> entry : grouped.entrySet()) {
-        List<FlowHisTask> tasks = entry.getValue();
+      for (Map.Entry<String, List<FlowHisTaskDO>> entry : grouped.entrySet()) {
+        List<FlowHisTaskDO> tasks = entry.getValue();
         Map<String, Object> row = new LinkedHashMap<>();
         row.put("timeLabel", entry.getKey());
         row.put("count", tasks.size());
         double avgMs =
             tasks.stream()
                 .filter(t -> t.getDurationMs() != null && t.getDurationMs() > 0)
-                .mapToLong(FlowHisTask::getDurationMs)
+                .mapToLong(FlowHisTaskDO::getDurationMs)
                 .average()
                 .orElse(0.0);
         row.put("avgDurationMs", Math.round(avgMs));
@@ -346,15 +346,15 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   // ============================== 私有方法 ==============================
 
   /** 查询历史任务（带时间范围过滤） */
-  private List<FlowHisTask> queryHisTasks(
+  private List<FlowHisTaskDO> queryHisTasks(
       String tenantId, String startTime, String endTime, String flowCode) {
-    LambdaQueryWrapper<FlowHisTask> wrapper = new LambdaQueryWrapper<>();
+    LambdaQueryWrapper<FlowHisTaskDO> wrapper = new LambdaQueryWrapper<>();
     wrapper
-        .eq(tenantId != null, FlowHisTask::getTenantId, tenantId)
-        .eq(StringUtils.hasText(flowCode), FlowHisTask::getFlowCode, flowCode)
-        .ge(StringUtils.hasText(startTime), FlowHisTask::getFinishAt, parseDateTime(startTime))
-        .le(StringUtils.hasText(endTime), FlowHisTask::getFinishAt, parseDateTime(endTime))
-        .orderByDesc(FlowHisTask::getFinishAt)
+        .eq(tenantId != null, FlowHisTaskDO::getTenantId, tenantId)
+        .eq(StringUtils.hasText(flowCode), FlowHisTaskDO::getFlowCode, flowCode)
+        .ge(StringUtils.hasText(startTime), FlowHisTaskDO::getFinishAt, parseDateTime(startTime))
+        .le(StringUtils.hasText(endTime), FlowHisTaskDO::getFinishAt, parseDateTime(endTime))
+        .orderByDesc(FlowHisTaskDO::getFinishAt)
         .last("LIMIT " + MAX_QUERY_LIMIT);
     return hisTaskMapper.selectList(wrapper);
   }
@@ -460,22 +460,22 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     LocalDateTime threshold = LocalDateTime.now().minusHours(effectiveStuckHours);
 
     // 查询未完成且创建时间超过阈值的任务
-    LambdaQueryWrapper<FlowRunTask> wrapper = new LambdaQueryWrapper<>();
+    LambdaQueryWrapper<FlowRunTaskDO> wrapper = new LambdaQueryWrapper<>();
     wrapper
-        .eq(tenantId != null, FlowRunTask::getTenantId, tenantId)
-        .in(FlowRunTask::getTaskStatus, "PENDING", "CLAIMED")
-        .lt(FlowRunTask::getCreatedAt, threshold)
-        .orderByAsc(FlowRunTask::getCreatedAt)
+        .eq(tenantId != null, FlowRunTaskDO::getTenantId, tenantId)
+        .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
+        .lt(FlowRunTaskDO::getCreatedAt, threshold)
+        .orderByAsc(FlowRunTaskDO::getCreatedAt)
         .last("LIMIT " + effectiveLimit);
 
-    List<FlowRunTask> stuckTasks = taskMapper.selectList(wrapper);
+    List<FlowRunTaskDO> stuckTasks = taskMapper.selectList(wrapper);
     if (stuckTasks == null || stuckTasks.isEmpty()) {
       return List.of();
     }
 
     LocalDateTime now = LocalDateTime.now();
     List<Map<String, Object>> result = new ArrayList<>();
-    for (FlowRunTask task : stuckTasks) {
+    for (FlowRunTaskDO task : stuckTasks) {
       long hours =
           task.getCreatedAt() != null
               ? Duration.between(task.getCreatedAt(), now).toHours()
@@ -509,28 +509,28 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   @Override
   public List<Map<String, Object>> detectHighRejectionNodes(String tenantId) {
     // 查询最近 100 个历史任务（按完成时间倒序）
-    LambdaQueryWrapper<FlowHisTask> wrapper = new LambdaQueryWrapper<>();
+    LambdaQueryWrapper<FlowHisTaskDO> wrapper = new LambdaQueryWrapper<>();
     wrapper
-        .eq(tenantId != null, FlowHisTask::getTenantId, tenantId)
-        .orderByDesc(FlowHisTask::getFinishAt)
+        .eq(tenantId != null, FlowHisTaskDO::getTenantId, tenantId)
+        .orderByDesc(FlowHisTaskDO::getFinishAt)
         .last("LIMIT " + HIGH_REJECTION_SAMPLE_SIZE);
 
-    List<FlowHisTask> recentTasks = hisTaskMapper.selectList(wrapper);
+    List<FlowHisTaskDO> recentTasks = hisTaskMapper.selectList(wrapper);
     if (recentTasks == null || recentTasks.isEmpty()) {
       return List.of();
     }
 
     // 按节点编码分组统计
-    Map<String, List<FlowHisTask>> byNode =
+    Map<String, List<FlowHisTaskDO>> byNode =
         recentTasks.stream()
             .filter(t -> t.getNodeCode() != null)
             .collect(
                 Collectors.groupingBy(
-                    FlowHisTask::getNodeCode, LinkedHashMap::new, Collectors.toList()));
+                    FlowHisTaskDO::getNodeCode, LinkedHashMap::new, Collectors.toList()));
 
     List<Map<String, Object>> result = new ArrayList<>();
-    for (Map.Entry<String, List<FlowHisTask>> entry : byNode.entrySet()) {
-      List<FlowHisTask> tasks = entry.getValue();
+    for (Map.Entry<String, List<FlowHisTaskDO>> entry : byNode.entrySet()) {
+      List<FlowHisTaskDO> tasks = entry.getValue();
       int total = tasks.size();
       // 样本过少不报告，避免误报
       if (total < HIGH_REJECTION_MIN_SAMPLE) {
@@ -545,7 +545,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
         String nodeName =
             tasks.stream()
                 .filter(t -> t.getNodeName() != null)
-                .map(FlowHisTask::getNodeName)
+                .map(FlowHisTaskDO::getNodeName)
                 .findFirst()
                 .orElse(entry.getKey());
 
@@ -594,22 +594,22 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     LocalDateTime threshold = LocalDateTime.now().minusDays(effectiveLongRunningDays);
 
     // 查询运行中且启动时间超过阈值的实例
-    LambdaQueryWrapper<FlowInstance> wrapper = new LambdaQueryWrapper<>();
+    LambdaQueryWrapper<FlowInstanceDO> wrapper = new LambdaQueryWrapper<>();
     wrapper
-        .eq(tenantId != null, FlowInstance::getTenantId, tenantId)
-        .eq(FlowInstance::getFlowStatus, "RUNNING")
-        .lt(FlowInstance::getStartAt, threshold)
-        .orderByAsc(FlowInstance::getStartAt)
+        .eq(tenantId != null, FlowInstanceDO::getTenantId, tenantId)
+        .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
+        .lt(FlowInstanceDO::getStartAt, threshold)
+        .orderByAsc(FlowInstanceDO::getStartAt)
         .last("LIMIT " + effectiveLimit);
 
-    List<FlowInstance> longRunningInstances = instanceMapper.selectList(wrapper);
+    List<FlowInstanceDO> longRunningInstances = instanceMapper.selectList(wrapper);
     if (longRunningInstances == null || longRunningInstances.isEmpty()) {
       return List.of();
     }
 
     LocalDateTime now = LocalDateTime.now();
     List<Map<String, Object>> result = new ArrayList<>();
-    for (FlowInstance instance : longRunningInstances) {
+    for (FlowInstanceDO instance : longRunningInstances) {
       long days =
           instance.getStartAt() != null
               ? Duration.between(instance.getStartAt(), now).toDays()

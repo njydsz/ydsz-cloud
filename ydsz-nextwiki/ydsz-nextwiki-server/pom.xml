@@ -14,6 +14,10 @@
     <dependencies>
         <dependency>
             <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-nextwiki-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-nextwiki-infra</artifactId>
         </dependency>
         <!-- App 端基座模块（移动端接口能力） -->

@@ -11,8 +11,8 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.entity.FileVersion;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.infra.entity.FileVersionDO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 
 /**
@@ -46,11 +46,11 @@ public class FileVersionDomainService {
   /**
    * 创建新版本（文件上传/更新时调用）
    *
-   * <p>由 server 层查询 {@link FileNode} 和现有版本列表后传入，本方法仅执行领域逻辑： 计算下一版本号、构建版本记录、更新文件节点当前版本信息。
+   * <p>由 server 层查询 {@link FileNodeDO} 和现有版本列表后传入，本方法仅执行领域逻辑： 计算下一版本号、构建版本记录、更新文件节点当前版本信息。
    *
    * <p>返回的 {@link VersionCreateResult} 包含待持久化的新版本和更新后的文件节点， 由 server 层在同一事务中完成持久化与旧版本失效标记。
    *
-   * @param fileNode 文件节点（由 server 层查询传入，不可为 {@code null}）
+   * @param FileNodeDO 文件节点（由 server 层查询传入，不可为 {@code null}）
    * @param existingVersions 当前所有版本列表（由 server 层查询传入，可为空，不可为 {@code null}）
    * @param storageKey 存储对象键
    * @param size 文件大小（字节）
@@ -62,17 +62,17 @@ public class FileVersionDomainService {
    * @throws BusinessException 文件节点不存在或不是文件类型时抛出
    */
   public VersionCreateResult createVersion(
-      FileNode fileNode,
-      List<FileVersion> existingVersions,
+      FileNodeDO FileNodeDO,
+      List<FileVersionDO> existingVersions,
       String storageKey,
       Long size,
       String fileHash,
       String mimeType,
       String remark,
       String userId) {
-    if (fileNode == null || !fileNode.isFile()) {
+    if (FileNodeDO == null || !FileNodeDO.isFile()) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND)
-          .data("fileNodeId", fileNode != null ? fileNode.getId() : null);
+          .data("fileNodeId", FileNodeDO != null ? FileNodeDO.getId() : null);
     }
 
     // 取当前最大版本号
@@ -83,10 +83,10 @@ public class FileVersionDomainService {
                 .orElse(0)
             + 1;
 
-    FileVersion version =
-        FileVersion.builder()
+    FileVersionDO version =
+        FileVersionDO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
-            .fileNodeId(fileNode.getId())
+            .fileNodeId(FileNodeDO.getId())
             .versionNumber(nextVersion)
             .storageKey(storageKey)
             .size(size)
@@ -103,28 +103,28 @@ public class FileVersionDomainService {
     version.setUpdatedBy(userId);
 
     // 更新文件节点的当前版本信息
-    fileNode.setCurrentVersion(nextVersion);
-    fileNode.setStorageKey(storageKey);
-    fileNode.setSize(size);
-    fileNode.setFileHash(fileHash);
-    fileNode.setMimeType(mimeType);
-    fileNode.setUpdatedBy(userId);
+    FileNodeDO.setCurrentVersion(nextVersion);
+    FileNodeDO.setStorageKey(storageKey);
+    FileNodeDO.setSize(size);
+    FileNodeDO.setFileHash(fileHash);
+    FileNodeDO.setMimeType(mimeType);
+    FileNodeDO.setUpdatedBy(userId);
 
     log.info(
         "[FileVersionDomainService] 创建版本: fileNodeId={}, version={}",
-        fileNode.getId(),
+        FileNodeDO.getId(),
         nextVersion);
-    return new VersionCreateResult(version, fileNode);
+    return new VersionCreateResult(version, FileNodeDO);
   }
 
   /**
    * 回滚到指定版本
    *
-   * <p>由 server 层查询 {@link FileNode}、目标版本和现有版本列表后传入，本方法仅执行领域逻辑： 校验目标版本、计算下一版本号、构建回滚版本记录、更新文件节点。
+   * <p>由 server 层查询 {@link FileNodeDO}、目标版本和现有版本列表后传入，本方法仅执行领域逻辑： 校验目标版本、计算下一版本号、构建回滚版本记录、更新文件节点。
    *
    * <p>返回的 {@link VersionRollbackResult} 包含待持久化的新版本、更新后的文件节点和目标版本号， 由 server 层在同一事务中完成持久化与事件发布。
    *
-   * @param fileNode 文件节点（由 server 层查询传入，不可为 {@code null}）
+   * @param FileNodeDO 文件节点（由 server 层查询传入，不可为 {@code null}）
    * @param targetVersion 目标版本（由 server 层查询传入，不可为 {@code null}）
    * @param existingVersions 当前所有版本列表（由 server 层查询传入，可为空，不可为 {@code null}）
    * @param userId 操作人 ID
@@ -132,13 +132,13 @@ public class FileVersionDomainService {
    * @throws BusinessException 文件节点不存在或目标版本不存在时抛出
    */
   public VersionRollbackResult rollback(
-      FileNode fileNode,
-      FileVersion targetVersion,
-      List<FileVersion> existingVersions,
+      FileNodeDO FileNodeDO,
+      FileVersionDO targetVersion,
+      List<FileVersionDO> existingVersions,
       String userId) {
-    if (fileNode == null || !fileNode.isFile()) {
+    if (FileNodeDO == null || !FileNodeDO.isFile()) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND)
-          .data("fileNodeId", fileNode != null ? fileNode.getId() : null);
+          .data("fileNodeId", FileNodeDO != null ? FileNodeDO.getId() : null);
     }
 
     if (targetVersion == null) {
@@ -153,10 +153,10 @@ public class FileVersionDomainService {
                 .orElse(0)
             + 1;
 
-    FileVersion rollbackVersion =
-        FileVersion.builder()
+    FileVersionDO rollbackVersion =
+        FileVersionDO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
-            .fileNodeId(fileNode.getId())
+            .fileNodeId(FileNodeDO.getId())
             .versionNumber(nextVersion)
             .storageKey(targetVersion.getStorageKey())
             .size(targetVersion.getSize())
@@ -173,19 +173,19 @@ public class FileVersionDomainService {
     rollbackVersion.setUpdatedBy(userId);
 
     // 更新文件节点
-    fileNode.setCurrentVersion(nextVersion);
-    fileNode.setStorageKey(targetVersion.getStorageKey());
-    fileNode.setSize(targetVersion.getSize());
-    fileNode.setFileHash(targetVersion.getFileHash());
-    fileNode.setMimeType(targetVersion.getMimeType());
-    fileNode.setUpdatedBy(userId);
+    FileNodeDO.setCurrentVersion(nextVersion);
+    FileNodeDO.setStorageKey(targetVersion.getStorageKey());
+    FileNodeDO.setSize(targetVersion.getSize());
+    FileNodeDO.setFileHash(targetVersion.getFileHash());
+    FileNodeDO.setMimeType(targetVersion.getMimeType());
+    FileNodeDO.setUpdatedBy(userId);
 
     log.info(
         "[FileVersionDomainService] 版本回滚: fileNodeId={}, targetVersion={}, newVersion={}",
-        fileNode.getId(),
+        FileNodeDO.getId(),
         targetVersion.getVersionNumber(),
         nextVersion);
-    return new VersionRollbackResult(rollbackVersion, fileNode, targetVersion.getVersionNumber());
+    return new VersionRollbackResult(rollbackVersion, FileNodeDO, targetVersion.getVersionNumber());
   }
 
   /**
@@ -196,7 +196,7 @@ public class FileVersionDomainService {
    * @param allVersions 所有版本列表（包含新创建的，不可为 {@code null}）
    * @return 需要删除的版本列表；若未超限返回空列表
    */
-  public List<FileVersion> findVersionsToCleanup(List<FileVersion> allVersions) {
+  public List<FileVersionDO> findVersionsToCleanup(List<FileVersionDO> allVersions) {
     if (allVersions.size() <= MAX_VERSIONS) {
       return Collections.emptyList();
     }
@@ -216,7 +216,7 @@ public class FileVersionDomainService {
    * @param newVersion 待持久化的新版本实体
    * @param updatedFileNode 待持久化的更新后文件节点
    */
-  public record VersionCreateResult(FileVersion newVersion, FileNode updatedFileNode) {}
+  public record VersionCreateResult(FileVersionDO newVersion, FileNodeDO updatedFileNode) {}
 
   /**
    * 版本回滚的结果
@@ -226,5 +226,5 @@ public class FileVersionDomainService {
    * @param targetVersionNumber 目标版本号（用于事件发布）
    */
   public record VersionRollbackResult(
-      FileVersion newVersion, FileNode updatedFileNode, Integer targetVersionNumber) {}
+      FileVersionDO newVersion, FileNodeDO updatedFileNode, Integer targetVersionNumber) {}
 }

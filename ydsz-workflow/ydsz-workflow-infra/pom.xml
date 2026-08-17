@@ -16,5 +16,20 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-workflow-domain</artifactId>
         </dependency>
+        <!-- ydsz-common-jdbc: MpBaseEntity 基类（FlowInstanceDO 等实体继承） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-jdbc</artifactId>
+        </dependency>
+        <!-- mybatis-plus-annotation: @TableName/@TableField 注解 -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-annotation</artifactId>
+        </dependency>
+        <!-- swagger-annotations-jakarta: @JsonView 等注解 -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+        </dependency>
     </dependencies>
 </project>

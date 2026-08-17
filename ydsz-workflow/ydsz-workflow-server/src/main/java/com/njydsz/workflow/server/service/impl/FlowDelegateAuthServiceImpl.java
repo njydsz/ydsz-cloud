@@ -21,8 +21,8 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.workflow.domain.entity.FlowAuditLog;
-import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
+import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
+import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowDelegateAuthMapper;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
@@ -90,7 +90,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowDelegateAuthService 接口定义
- * @see com.njydsz.workflow.domain.entity.FlowDelegateAuth 委派代理实体
+ * @see com.njydsz.workflow.infra.entity.FlowDelegateAuthDO 委派代理实体
  * @see FlowOfflineAutoForwardService 离线自动转交服务（与委派不同：离线是自动转交，委派是主动授权）
  * @see FlowTaskAuditService 任务审计服务
  */
@@ -127,7 +127,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String create(FlowDelegateAuth auth) {
+  public String create(FlowDelegateAuthDO auth) {
     if (auth == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.BAD_REQUEST)
@@ -261,7 +261,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
           .message("error.workflow.msg_7804c8f2")
           .build();
     }
-    FlowDelegateAuth auth = authMapper.selectById(authId);
+    FlowDelegateAuthDO auth = authMapper.selectById(authId);
     if (auth == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -307,7 +307,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
           .message("error.workflow.msg_7678ad83")
           .build();
     }
-    FlowDelegateAuth auth = authMapper.selectById(authId);
+    FlowDelegateAuthDO auth = authMapper.selectById(authId);
     if (auth == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -341,7 +341,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   @Transactional(readOnly = true)
-  public List<FlowDelegateAuth> listMine(String ownerUserId, String tenantId, String status) {
+  public List<FlowDelegateAuthDO> listMine(String ownerUserId, String tenantId, String status) {
     if (ownerUserId == null) {
       return List.of();
     }
@@ -359,7 +359,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   @Transactional(readOnly = true)
-  public List<FlowDelegateAuth> listAsDelegate(
+  public List<FlowDelegateAuthDO> listAsDelegate(
       String delegateUserId, String tenantId, String status) {
     if (delegateUserId == null) {
       return List.of();
@@ -382,7 +382,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   @Transactional(readOnly = true)
-  public FlowDelegateAuth matchAuth(
+  public FlowDelegateAuthDO matchAuth(
       String tenantId, String ownerUserId, String flowCode, String nodeCode) {
     if (tenantId == null || ownerUserId == null) {
       return null;
@@ -457,13 +457,13 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
     int safePage = Math.max(1, page);
     int safeSize = size > 0 ? size : 20;
-    LambdaQueryWrapper<FlowAuditLog> wrapper = new LambdaQueryWrapper<>();
+    LambdaQueryWrapper<FlowAuditLogDO> wrapper = new LambdaQueryWrapper<>();
     wrapper
-        .eq(FlowAuditLog::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY)
-        .eq(FlowAuditLog::getOperatorId, delegateUserId)
-        .orderByDesc(FlowAuditLog::getCreatedAt)
+        .eq(FlowAuditLogDO::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY)
+        .eq(FlowAuditLogDO::getOperatorId, delegateUserId)
+        .orderByDesc(FlowAuditLogDO::getCreatedAt)
         .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
-    List<FlowAuditLog> list = auditLogMapper.selectList(wrapper);
+    List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
     return PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
   }
 
@@ -486,13 +486,13 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
     int safePage = Math.max(1, page);
     int safeSize = size > 0 ? size : 20;
-    LambdaQueryWrapper<FlowAuditLog> wrapper = new LambdaQueryWrapper<>();
+    LambdaQueryWrapper<FlowAuditLogDO> wrapper = new LambdaQueryWrapper<>();
     wrapper
-        .eq(FlowAuditLog::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY)
-        .eq(FlowAuditLog::getTargetId, ownerUserId)
-        .orderByDesc(FlowAuditLog::getCreatedAt)
+        .eq(FlowAuditLogDO::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY)
+        .eq(FlowAuditLogDO::getTargetId, ownerUserId)
+        .orderByDesc(FlowAuditLogDO::getCreatedAt)
         .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
-    List<FlowAuditLog> list = auditLogMapper.selectList(wrapper);
+    List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
     return PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
   }
 
@@ -533,7 +533,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     int depth = 0;
 
     while (depth < MAX_CHAIN_DEPTH) {
-      FlowDelegateAuth matched = matchAuth(tenantId, currentUserId, flowCode, nodeCode);
+      FlowDelegateAuthDO matched = matchAuth(tenantId, currentUserId, flowCode, nodeCode);
       if (matched == null) {
         // 无进一步委派，当前用户即为最终代理人
         break;

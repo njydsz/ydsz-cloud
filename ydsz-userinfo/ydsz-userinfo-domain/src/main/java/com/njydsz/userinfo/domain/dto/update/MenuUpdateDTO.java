@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 菜单修改请求 DTO。
  *
- * <p>对应后端 {@code PUT /api/v1/menu} 请求体。 修改时 {@link #id} 必填，其余字段按需填写，未传字段保持原值不变。
+ * <p>对应后端 {@code PUT /api/v1/MenuDO} 请求体。 修改时 {@link #id} 必填，其余字段按需填写，未传字段保持原值不变。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -43,7 +43,7 @@ public class MenuUpdateDTO implements Serializable {
   @Xss(message = "menuCode包含非法内容")
   private String menuCode;
 
-  /** 菜单类型（DIR=目录 / MENU=菜单 / BUTTON=按钮） */
+  /** 菜单类型（DIR=目录 / MenuDO=菜单 / BUTTON=按钮） */
   @NotBlank(message = "菜单类型不能为空")
   @Size(max = 20, message = "菜单类型长度不能超过 20 个字符")
   @Xss(message = "menuType包含非法内容")

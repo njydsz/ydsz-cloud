@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.domain.entity.FlowTimer;
+import com.njydsz.workflow.infra.entity.FlowTimerDO;
 
 /**
  * 工作流定时器 Mapper
@@ -30,12 +30,12 @@ import com.njydsz.workflow.domain.entity.FlowTimer;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.domain.entity.FlowTimer 定时器实体
+ * @see com.njydsz.workflow.infra.entity.FlowTimerDO 定时器实体
  * @see com.njydsz.workflow.server.scheduler.FlowTimerScheduler 定时器调度器
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowTimerMapper extends BaseMapper<FlowTimer> {
+public interface FlowTimerMapper extends BaseMapper<FlowTimerDO> {
 
   /**
    * 扫描到点的 PENDING 定时器（status = PENDING AND fire_at <= now AND deleted = 0）
@@ -43,7 +43,7 @@ public interface FlowTimerMapper extends BaseMapper<FlowTimer> {
    * @param now 当前时间
    * @param limit 单次扫描上限
    */
-  List<FlowTimer> selectDueTimers(@Param("now") LocalDateTime now, @Param("limit") int limit);
+  List<FlowTimerDO> selectDueTimers(@Param("now") LocalDateTime now, @Param("limit") int limit);
 
   /**
    * 关闭某 userTask 关联的所有 BOUNDARY 定时器（CANCELLED）

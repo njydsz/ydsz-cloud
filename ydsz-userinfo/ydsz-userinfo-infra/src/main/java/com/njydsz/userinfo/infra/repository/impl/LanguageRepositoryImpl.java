@@ -9,9 +9,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.entity.Language;
+import com.njydsz.userinfo.domain.repository.LanguageRepository;
+import com.njydsz.userinfo.infra.entity.LanguageDO;
 import com.njydsz.userinfo.infra.mapper.LanguageMapper;
-import com.njydsz.userinfo.infra.repository.LanguageRepository;
 
 /**
  * 语言配置 Repository 实现
@@ -28,41 +28,41 @@ public class LanguageRepositoryImpl implements LanguageRepository {
   private final LanguageMapper languageMapper;
 
   @Override
-  public Language findById(String id) {
+  public LanguageDO findById(String id) {
     return languageMapper.selectById(id);
   }
 
   @Override
-  public Language findByLanguageCode(String languageCode) {
-    LambdaQueryWrapper<Language> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Language::getLanguageCode, languageCode);
+  public LanguageDO findByLanguageCode(String languageCode) {
+    LambdaQueryWrapper<LanguageDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(LanguageDO::getLanguageCode, languageCode);
     return languageMapper.selectOne(wrapper);
   }
 
   @Override
-  public Language findDefault() {
-    LambdaQueryWrapper<Language> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Language::getIsDefault, true);
+  public LanguageDO findDefault() {
+    LambdaQueryWrapper<LanguageDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(LanguageDO::getIsDefault, true);
     return languageMapper.selectOne(wrapper);
   }
 
   @Override
-  public IPage<Language> page(Page<Language> page, QueryWrapper<Language> wrapper) {
+  public IPage<LanguageDO> page(Page<LanguageDO> page, QueryWrapper<LanguageDO> wrapper) {
     return languageMapper.selectPage(page, wrapper);
   }
 
   @Override
-  public List<Language> list(LambdaQueryWrapper<Language> wrapper) {
+  public List<LanguageDO> list(LambdaQueryWrapper<LanguageDO> wrapper) {
     return languageMapper.selectList(wrapper);
   }
 
   @Override
-  public int insert(Language entity) {
+  public int insert(LanguageDO entity) {
     return languageMapper.insert(entity);
   }
 
   @Override
-  public int updateById(Language entity) {
+  public int updateById(LanguageDO entity) {
     return languageMapper.updateById(entity);
   }
 
@@ -72,7 +72,7 @@ public class LanguageRepositoryImpl implements LanguageRepository {
   }
 
   @Override
-  public long count(LambdaQueryWrapper<Language> wrapper) {
+  public long count(LambdaQueryWrapper<LanguageDO> wrapper) {
     return languageMapper.selectCount(wrapper);
   }
 }

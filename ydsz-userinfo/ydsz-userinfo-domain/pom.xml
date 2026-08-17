@@ -32,22 +32,15 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-safe</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-jdbc</artifactId>
-        </dependency>
         <!-- ydsz-common-excel（UserImportDTO 等使用 @ExcelProperty 注解） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-excel</artifactId>
         </dependency>
+        <!-- Repository 接口引用 infra 层 DO 实体，编译期依赖 -->
         <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-annotation</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-annotations-jakarta</artifactId>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-userinfo-infra</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>

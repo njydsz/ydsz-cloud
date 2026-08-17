@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
- * FlowUser 视图对象。
+ * FlowUserDO 视图对象。
  *
  * @author ydsz-team
  * @since 1.0.0

@@ -16,9 +16,9 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowInstance;
-import com.njydsz.workflow.domain.entity.FlowNode;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
@@ -104,7 +104,7 @@ public class FlowTaskPassService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void pass(FlowTaskOperateDTO dto) {
-    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(BaseResultCode.BAD_REQUEST)
@@ -114,7 +114,7 @@ public class FlowTaskPassService {
     }
     Map<String, Object> variables =
         dto.getVariables() == null ? Collections.emptyMap() : dto.getVariables();
-    FlowInstance instance = instanceMapper.selectById(task.getInstanceId());
+    FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
     Map<String, Object> mergedVars = mergeVariables(instance, variables);
 
     // P0-2: 表单字段权限校验
@@ -186,7 +186,7 @@ public class FlowTaskPassService {
   }
 
   /** 委派回归处理：被委派人通过后任务回到原办理人 */
-  private void handleDelegateReturn(FlowRunTask task, FlowTaskOperateDTO dto) {
+  private void handleDelegateReturn(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
     auditService.logDelegateOperation(task, "DELEGATE_RETURN");
     task.setAssigneeId(String.valueOf(task.getAssignorId()));
     task.setAssigneeName(task.getAssignorName());
@@ -201,8 +201,8 @@ public class FlowTaskPassService {
 
   /** 表单字段权限校验 + P0-3 表单 Schema 校验 */
   private void validateFormFieldPerms(
-      FlowRunTask task, Map<String, Object> variables, FlowInstance instance) {
-    FlowNode formNode = nodeMapper.selectByCode(task.getDefinitionId(), task.getNodeCode());
+      FlowRunTaskDO task, Map<String, Object> variables, FlowInstanceDO instance) {
+    FlowNodeDO formNode = nodeMapper.selectByCode(task.getDefinitionId(), task.getNodeCode());
     if (formNode == null) {
       return;
     }
@@ -224,12 +224,12 @@ public class FlowTaskPassService {
 
   /** 流程推进 */
   private void advanceProcess(
-      FlowInstance instance,
-      FlowRunTask task,
+      FlowInstanceDO instance,
+      FlowRunTaskDO task,
       Map<String, Object> vars,
       FlowPerformType performType,
       FlowTaskOperateDTO dto) {
-    List<FlowNode> nextNodes = advancer.advance(instance, task.getNodeCode(), "PASS", null, vars);
+    List<FlowNodeDO> nextNodes = advancer.advance(instance, task.getNodeCode(), "PASS", null, vars);
     instanceService.generateTasksForNodes(task.getInstanceId(), nextNodes, vars);
     updateInstanceNode(instance, nextNodes);
     notificationService.fireTaskCompleted(task.getId(), "PASS", vars);
@@ -244,7 +244,7 @@ public class FlowTaskPassService {
   }
 
   /** 更新实例当前节点 */
-  private void updateInstanceNode(FlowInstance instance, List<FlowNode> nextNodes) {
+  private void updateInstanceNode(FlowInstanceDO instance, List<FlowNodeDO> nextNodes) {
     if (!nextNodes.isEmpty() && nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {
       instanceMapper.updateStatus(
           instance.getId(),
@@ -257,7 +257,7 @@ public class FlowTaskPassService {
   }
 
   /** 合并流程变量：实例已有变量 + dto 增量 */
-  private Map<String, Object> mergeVariables(FlowInstance instance, Map<String, Object> extra) {
+  private Map<String, Object> mergeVariables(FlowInstanceDO instance, Map<String, Object> extra) {
     if (instance == null || !StringUtils.hasText(instance.getVariable())) {
       return extra == null ? Collections.emptyMap() : extra;
     }

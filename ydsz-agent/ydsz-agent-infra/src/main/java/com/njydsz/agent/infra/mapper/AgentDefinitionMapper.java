@@ -2,7 +2,7 @@ package com.njydsz.agent.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-import com.njydsz.agent.domain.entity.AgentDefinitionDO;
+import com.njydsz.agent.infra.entity.AgentDefinitionDO;
 
 /**
  * Agent 定义 Mapper
@@ -24,7 +24,7 @@ import com.njydsz.agent.domain.entity.AgentDefinitionDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.agent.domain.entity.AgentDefinitionDO Agent 定义实体
+ * @see com.njydsz.agent.infra.entity.AgentDefinitionDO Agent 定义实体
  * @see com.njydsz.agent.server.service.AgentDefinitionService Agent Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

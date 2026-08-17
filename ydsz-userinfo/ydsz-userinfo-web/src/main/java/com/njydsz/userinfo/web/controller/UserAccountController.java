@@ -40,7 +40,7 @@ import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserImportResultDTO;
-import com.njydsz.userinfo.domain.entity.UserLoginHistory;
+import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.auth.SensitiveVerifyService;
@@ -80,7 +80,7 @@ import com.njydsz.userinfo.server.service.UserExcelService;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.userinfo.server.service.UserAccountService 用户业务逻辑
- * @see com.njydsz.userinfo.domain.entity.UserAccount 用户实体
+ * @see com.njydsz.userinfo.infra.entity.UserAccountDO 用户实体
  */
 @Slf4j
 @RestController
@@ -157,7 +157,7 @@ public class UserAccountController {
       content = "'创建用户: ' + #dto.username",
       excludeParams = {"password"})
   @Idempotent(key = "ydsz:userinfo:UserAccountController:create:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.useraccount.create", threshold = 50)
+  @RateLimit(resource = "userinfo.UserAccountDO.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建用户")
   public BaseResponse<String> create(@Valid @RequestBody UserAccountCreateDTO dto) {
@@ -182,7 +182,7 @@ public class UserAccountController {
       action = AuditAction.UPDATE,
       content = "'更新用户: ' + #dto.id")
   @Idempotent(key = "ydsz:userinfo:UserAccountController:update:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.useraccount.update", threshold = 50)
+  @RateLimit(resource = "userinfo.UserAccountDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新用户信息")
   public BaseResponse<Boolean> update(@Valid @RequestBody UserAccountUpdateDTO dto) {
@@ -204,7 +204,7 @@ public class UserAccountController {
       type = AuditType.OPERATION,
       action = AuditAction.DELETE,
       content = "'删除用户: ' + #id")
-  @RateLimit(resource = "userinfo.useraccount.remove", threshold = 50)
+  @RateLimit(resource = "userinfo.UserAccountDO.remove", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:UserAccountController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除用户")
@@ -229,7 +229,7 @@ public class UserAccountController {
       content = "'修改密码'",
       excludeParams = {"oldPassword", "newPassword"})
   @Idempotent(key = "ydsz:userinfo:UserAccountController:changePassword:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.useraccount.changePassword", threshold = 50)
+  @RateLimit(resource = "userinfo.UserAccountDO.changePassword", threshold = 50)
   @PostMapping("/change-password")
   @Operation(summary = "修改密码")
   public BaseResponse<Boolean> changePassword(@Valid @RequestBody ChangePasswordDTO dto) {
@@ -249,7 +249,7 @@ public class UserAccountController {
    * @return 是否成功
    */
   @SensitiveOperation("重置密码")
-  @RateLimit(resource = "userinfo.useraccount.resetPassword", threshold = 50)
+  @RateLimit(resource = "userinfo.UserAccountDO.resetPassword", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:UserAccountController:resetPassword:lock", ttlSeconds = 5)
   @PostMapping("/reset-password")
   @Operation(summary = "重置密码（管理员）")
@@ -269,7 +269,7 @@ public class UserAccountController {
    * @param dto 分配角色 DTO（roleIds 列表）
    * @return 是否成功
    */
-  @RateLimit(resource = "userinfo.useraccount.assignRoles", threshold = 50)
+  @RateLimit(resource = "userinfo.UserAccountDO.assignRoles", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:UserAccountController:assignRoles:lock", ttlSeconds = 5)
   @PostMapping("/{userId}/roles")
   @Operation(summary = "分配用户角色")
@@ -310,7 +310,7 @@ public class UserAccountController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'批量导入用户'")
-  @RateLimit(resource = "userinfo.useraccount.import", threshold = 10)
+  @RateLimit(resource = "userinfo.UserAccountDO.import", threshold = 10)
   @PostMapping("/import")
   @Operation(summary = "批量导入用户（Excel）")
   public BaseResponse<UserImportResultDTO> importUsers(
@@ -400,7 +400,7 @@ public class UserAccountController {
    */
   @GetMapping("/{userId}/login-history")
   @Operation(summary = "查询用户最近登录历史（安全审计）")
-  public BaseResponse<List<UserLoginHistory>> getLoginHistory(
+  public BaseResponse<List<UserLoginHistoryDO>> getLoginHistory(
       @PathVariable String userId,
       @org.springframework.web.bind.annotation.RequestParam(defaultValue = "20") int limit) {
     return BaseResponse.success(loginHistoryService.getRecentLogins(userId, limit));
@@ -420,7 +420,7 @@ public class UserAccountController {
       action = AuditAction.DELETE,
       content = "'批量删除用户: ' + #dto.ids.size() + ' 个'")
   @Idempotent(key = "ydsz:userinfo:UserAccountController:batchRemove:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.useraccount.batchRemove", threshold = 30)
+  @RateLimit(resource = "userinfo.UserAccountDO.batchRemove", threshold = 30)
   @PostMapping("/batch-remove")
   @Operation(summary = "批量删除用户")
   public BaseResponse<Integer> batchRemove(@Valid @RequestBody BatchUserStatusDTO dto) {
@@ -441,7 +441,7 @@ public class UserAccountController {
       action = AuditAction.UPDATE,
       content = "'批量启用用户: ' + #dto.ids.size() + ' 个'")
   @Idempotent(key = "ydsz:userinfo:UserAccountController:batchEnable:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.useraccount.batchEnable", threshold = 30)
+  @RateLimit(resource = "userinfo.UserAccountDO.batchEnable", threshold = 30)
   @PostMapping("/batch-enable")
   @Operation(summary = "批量启用用户")
   public BaseResponse<Integer> batchEnable(@Valid @RequestBody BatchUserStatusDTO dto) {
@@ -463,7 +463,7 @@ public class UserAccountController {
       content = "'批量禁用用户: ' + #dto.ids.size() + ' 个'")
   @SensitiveOperation("批量禁用用户")
   @Idempotent(key = "ydsz:userinfo:UserAccountController:batchDisable:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.useraccount.batchDisable", threshold = 30)
+  @RateLimit(resource = "userinfo.UserAccountDO.batchDisable", threshold = 30)
   @PostMapping("/batch-disable")
   @Operation(summary = "批量禁用用户")
   public BaseResponse<Integer> batchDisable(@Valid @RequestBody BatchUserStatusDTO dto) {

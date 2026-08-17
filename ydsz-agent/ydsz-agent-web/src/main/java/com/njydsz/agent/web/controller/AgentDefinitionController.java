@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.agent.domain.converter.AgentConverter;
 import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
 import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
-import com.njydsz.agent.domain.entity.AgentDefinitionDO;
+import com.njydsz.agent.infra.entity.AgentDefinitionDO;
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.server.agent.AgentDefinitionService;

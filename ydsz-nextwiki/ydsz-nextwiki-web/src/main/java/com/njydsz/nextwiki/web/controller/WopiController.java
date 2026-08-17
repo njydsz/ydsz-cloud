@@ -7,7 +7,7 @@ import java.security.MessageDigest;
 import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.TagDO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +26,9 @@ import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.common.file.util.FileOps;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 /**
@@ -91,7 +91,7 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
 @RestController
 @RequestMapping("/api/v1/nextwiki/wopi")
 @RequiredArgsConstructor
-@Tag(name = "WOPI 协议", description = "在线协同编辑 WOPI 接口（OnlyOffice / Collabora 集成）")
+@TagDO(name = "WOPI 协议", description = "在线协同编辑 WOPI 接口（OnlyOffice / Collabora 集成）")
 public class WopiController {
 
   /** 文件节点仓储（用于查询/更新文件） */
@@ -115,24 +115,24 @@ public class WopiController {
     // P1-R5: WOPI Token 验证
     validateWopiToken(authToken);
 
-    FileNode fileNode = fileNodeRepository.findById(fileId);
-    if (fileNode == null || !fileNode.isFile()) {
+    FileNodeDO FileNodeDO = fileNodeRepository.findById(fileId);
+    if (FileNodeDO == null || !FileNodeDO.isFile()) {
       return WopiCheckFileInfoResponse.error("file not found");
     }
 
     return WopiCheckFileInfoResponse.builder()
-        .baseFileName(fileNode.getName())
-        .ownerId(fileNode.getCreatedBy() != null ? fileNode.getCreatedBy() : "")
-        .size(fileNode.getSize() != null ? fileNode.getSize() : 0)
+        .baseFileName(FileNodeDO.getName())
+        .ownerId(FileNodeDO.getCreatedBy() != null ? FileNodeDO.getCreatedBy() : "")
+        .size(FileNodeDO.getSize() != null ? FileNodeDO.getSize() : 0)
         .userId(userId != null ? userId : "guest")
         .userFriendlyName(userId != null ? userId : "Guest")
-        .version(fileNode.getCurrentVersion() != null ? fileNode.getCurrentVersion() : 1)
+        .version(FileNodeDO.getCurrentVersion() != null ? FileNodeDO.getCurrentVersion() : 1)
         .userCanWrite(true)
         .supportsUpdate(true)
         .supportsLocks(true)
         .lastModifiedTime(
-            fileNode.getUpdatedAt() != null
-                ? fileNode.getUpdatedAt().toString()
+            FileNodeDO.getUpdatedAt() != null
+                ? FileNodeDO.getUpdatedAt().toString()
                 : LocalDateTime.now().toString())
         .build();
   }
@@ -147,8 +147,8 @@ public class WopiController {
     // P1-R5: WOPI Token 验证
     validateWopiToken(authToken);
 
-    FileNode fileNode = fileNodeRepository.findById(fileId);
-    if (fileNode == null || fileNode.getStorageKey() == null) {
+    FileNodeDO FileNodeDO = fileNodeRepository.findById(fileId);
+    if (FileNodeDO == null || FileNodeDO.getStorageKey() == null) {
       return new byte[0];
     }
 
@@ -159,7 +159,7 @@ public class WopiController {
 
     try {
       return storage
-          .downloadAsStream(fileNode.getBucketName(), fileNode.getStorageKey())
+          .downloadAsStream(FileNodeDO.getBucketName(), FileNodeDO.getStorageKey())
           .readAllBytes();
     } catch (Exception e) {
       log.error("[WopiController] GetFile 失败: fileId={}", fileId, e);
@@ -181,17 +181,17 @@ public class WopiController {
     // P1-R5: WOPI Token 验证
     validateWopiToken(authToken);
 
-    FileNode fileNode = fileNodeRepository.findById(fileId);
-    if (fileNode == null) {
+    FileNodeDO FileNodeDO = fileNodeRepository.findById(fileId);
+    if (FileNodeDO == null) {
       return WopiPutFileResponse.error("file not found");
     }
 
     // P1-R5: 锁定状态检查——如果文件被锁定，只允许锁持有者保存
-    if ("locked".equals(fileNode.getStatus()) && !userId.equals(fileNode.getUpdatedBy())) {
+    if ("locked".equals(FileNodeDO.getStatus()) && !userId.equals(FileNodeDO.getUpdatedBy())) {
       log.warn(
           "[WopiController] 文件被其他用户锁定，拒绝保存: fileId={}, lockedBy={}",
           fileId,
-          fileNode.getUpdatedBy());
+          FileNodeDO.getUpdatedBy());
       return WopiPutFileResponse.error("file is locked by another user");
     }
 
@@ -201,16 +201,16 @@ public class WopiController {
     }
 
     try {
-      String storageKey = fileNode.getStorageKey();
+      String storageKey = FileNodeDO.getStorageKey();
       MultipartFile multipartFile =
           FileOps.toMultipartFile(
-              writeTempFile(content), fileNode.getName(), fileNode.getMimeType());
+              writeTempFile(content), FileNodeDO.getName(), FileNodeDO.getMimeType());
       storage.upload(null, storageKey, multipartFile);
 
-      fileNode.setSize((long) content.length);
-      fileNode.setUpdatedBy(userId);
-      fileNode.setUpdatedAt(LocalDateTime.now());
-      fileNodeRepository.update(fileNode);
+      FileNodeDO.setSize((long) content.length);
+      FileNodeDO.setUpdatedBy(userId);
+      FileNodeDO.setUpdatedAt(LocalDateTime.now());
+      fileNodeRepository.update(FileNodeDO);
 
       log.info("[WopiController] PutFile 成功: fileId={}, size={}", fileId, content.length);
       return WopiPutFileResponse.ok();
@@ -232,15 +232,15 @@ public class WopiController {
 
     validateWopiToken(authToken);
 
-    FileNode fileNode = fileNodeRepository.findById(fileId);
-    if (fileNode == null) {
+    FileNodeDO FileNodeDO = fileNodeRepository.findById(fileId);
+    if (FileNodeDO == null) {
       return WopiPutFileResponse.error("file not found");
     }
 
-    fileNode.setStatus("locked");
-    fileNode.setUpdatedBy(userId);
-    fileNode.setUpdatedAt(LocalDateTime.now());
-    fileNodeRepository.update(fileNode);
+    FileNodeDO.setStatus("locked");
+    FileNodeDO.setUpdatedBy(userId);
+    FileNodeDO.setUpdatedAt(LocalDateTime.now());
+    fileNodeRepository.update(FileNodeDO);
 
     return WopiPutFileResponse.ok();
   }
@@ -256,13 +256,13 @@ public class WopiController {
 
     validateWopiToken(authToken);
 
-    FileNode fileNode = fileNodeRepository.findById(fileId);
-    if (fileNode == null) {
+    FileNodeDO FileNodeDO = fileNodeRepository.findById(fileId);
+    if (FileNodeDO == null) {
       return WopiPutFileResponse.error("file not found");
     }
 
-    fileNode.setStatus("active");
-    fileNodeRepository.update(fileNode);
+    FileNodeDO.setStatus("active");
+    fileNodeRepository.update(FileNodeDO);
 
     return WopiPutFileResponse.ok();
   }

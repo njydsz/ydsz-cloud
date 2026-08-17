@@ -2,7 +2,7 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
-import com.njydsz.userinfo.domain.entity.UserDept;
+import com.njydsz.userinfo.infra.entity.UserDeptDO;
 
 /**
  * 用户-部门 Service 接口
@@ -20,8 +20,8 @@ import com.njydsz.userinfo.domain.entity.UserDept;
  *
  * <ul>
  *   <li>用户管理页面维护「所属部门」字段（支持多选 + 标记主部门）
- *   <li>审批人展开：{@code dept:xxx} 触发时匹配 {@code UserDept} 中间表所有部门
- *   <li>数据权限：{@code Role.dataScope} 配合部门树实现隔离
+ *   <li>审批人展开：{@code dept:xxx} 触发时匹配 {@code UserDeptDO} 中间表所有部门
+ *   <li>数据权限：{@code RoleDO.dataScope} 配合部门树实现隔离
  * </ul>
  *
  * <p><b>事务：</b>所有写操作（{@code save/updateById/removeById}）开启 {@code @Transactional(rollbackFor =
@@ -29,9 +29,9 @@ import com.njydsz.userinfo.domain.entity.UserDept;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see UserDept 用户-部门关联实体
- * @see com.njydsz.userinfo.domain.entity.UserAccount 用户实体
- * @see com.njydsz.userinfo.domain.entity.Department 部门实体
+ * @see UserDeptDO 用户-部门关联实体
+ * @see com.njydsz.userinfo.infra.entity.UserAccountDO 用户实体
+ * @see com.njydsz.userinfo.infra.entity.DepartmentDO 部门实体
  */
 public interface UserDeptService {
 
@@ -41,14 +41,14 @@ public interface UserDeptService {
    * @param id 主键 ID
    * @return 用户-部门关联实体，不存在时返回 null
    */
-  UserDept getById(String id);
+  UserDeptDO getById(String id);
 
   /**
    * 查询全部用户-部门关联。
    *
    * @return 关联列表
    */
-  List<UserDept> list();
+  List<UserDeptDO> list();
 
   /**
    * 创建用户-部门关联。
@@ -58,7 +58,7 @@ public interface UserDeptService {
    * @param entity 用户-部门关联实体
    * @return 新关联主键 ID
    */
-  String save(UserDept entity);
+  String save(UserDeptDO entity);
 
   /**
    * 更新用户-部门关联。
@@ -68,7 +68,7 @@ public interface UserDeptService {
    * @param entity 用户-部门关联实体（含 ID）
    * @return true=成功
    */
-  boolean updateById(UserDept entity);
+  boolean updateById(UserDeptDO entity);
 
   /**
    * 删除用户-部门关联。

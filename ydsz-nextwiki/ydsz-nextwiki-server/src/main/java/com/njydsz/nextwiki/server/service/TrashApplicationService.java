@@ -8,12 +8,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.entity.TrashItem;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.infra.entity.TrashItemDO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
-import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
-import com.njydsz.nextwiki.infra.repository.TrashItemRepository;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
 
 /**
  * 回收站应用服务。
@@ -39,11 +39,11 @@ public class TrashApplicationService {
    * 查询用户回收站列表。
    *
    * @param userId 用户 ID
-   * @return 回收站项目列表 {@link TrashItem}（可能为空，非 {@code null}）
+   * @return 回收站项目列表 {@link TrashItemDO}（可能为空，非 {@code null}）
    * @complexity O(1)（一次按用户查询）
    * @note 只读，无事务边界
    */
-  public List<TrashItem> listTrash(String userId) {
+  public List<TrashItemDO> listTrash(String userId) {
     return trashItemRepository.findActiveTrash(userId);
   }
 
@@ -60,20 +60,20 @@ public class TrashApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void restore(String trashItemId, String userId) {
-    TrashItem trashItem = trashItemRepository.findById(trashItemId);
-    if (trashItem == null) {
+    TrashItemDO TrashItemDO = trashItemRepository.findById(trashItemId);
+    if (TrashItemDO == null) {
       throw BusinessException.of(NextwikiExceptionCode.TRASH_NOT_FOUND)
           .data("trashItemId", trashItemId);
     }
 
-    FileNode fileNode = fileNodeRepository.findById(trashItem.getFileNodeId());
+    FileNodeDO FileNodeDO = fileNodeRepository.findById(TrashItemDO.getFileNodeId());
 
-    trashDomainService.restore(trashItem, fileNode, userId);
+    trashDomainService.restore(TrashItemDO, FileNodeDO, userId);
 
-    if (fileNode != null) {
-      fileNodeRepository.restore(trashItem.getFileNodeId());
+    if (FileNodeDO != null) {
+      fileNodeRepository.restore(TrashItemDO.getFileNodeId());
     }
-    trashItemRepository.update(trashItem);
+    trashItemRepository.update(TrashItemDO);
   }
 
   /**
@@ -111,16 +111,16 @@ public class TrashApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void purge(String trashItemId, String userId) {
-    TrashItem trashItem = trashItemRepository.findById(trashItemId);
-    if (trashItem == null) {
+    TrashItemDO TrashItemDO = trashItemRepository.findById(trashItemId);
+    if (TrashItemDO == null) {
       throw BusinessException.of(NextwikiExceptionCode.TRASH_NOT_FOUND)
           .data("trashItemId", trashItemId);
     }
 
-    trashDomainService.purge(trashItem, userId);
+    trashDomainService.purge(TrashItemDO, userId);
 
-    fileNodeRepository.physicalDelete(trashItem.getFileNodeId());
-    trashItemRepository.update(trashItem);
+    fileNodeRepository.physicalDelete(TrashItemDO.getFileNodeId());
+    trashItemRepository.update(TrashItemDO);
   }
 
   /**
@@ -135,8 +135,8 @@ public class TrashApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void emptyTrash(String userId) {
-    List<TrashItem> items = trashItemRepository.findActiveTrash(userId);
-    for (TrashItem item : items) {
+    List<TrashItemDO> items = trashItemRepository.findActiveTrash(userId);
+    for (TrashItemDO item : items) {
       try {
         trashDomainService.purge(item, userId);
         fileNodeRepository.physicalDelete(item.getFileNodeId());

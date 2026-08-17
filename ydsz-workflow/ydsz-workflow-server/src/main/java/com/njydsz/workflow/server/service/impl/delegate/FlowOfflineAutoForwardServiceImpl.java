@@ -11,8 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowDelegateAuthMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -96,7 +96,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowOfflineAutoForwardService 接口定义
- * @see com.njydsz.workflow.domain.entity.FlowDelegateAuth 委派代理实体（优先使用其配置）
+ * @see com.njydsz.workflow.infra.entity.FlowDelegateAuthDO 委派代理实体（优先使用其配置）
  * @see FlowTaskService 流程任务服务（转交后触发新的待办）
  * @see com.njydsz.workflow.server.service.FlowDelegateAuthService 委派代理服务
  */
@@ -117,7 +117,7 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
   /**
    * 根据授权 ID 自动转交待办
    *
-   * <p>查询 {@link FlowDelegateAuth} 授权配置，校验：
+   * <p>查询 {@link FlowDelegateAuthDO} 授权配置，校验：
    *
    * <ul>
    *   <li>授权状态为 {@code ACTIVE}
@@ -135,7 +135,7 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
     if (!StringUtils.hasText(authId)) {
       return 0;
     }
-    FlowDelegateAuth auth = delegateAuthMapper.selectById(authId);
+    FlowDelegateAuthDO auth = delegateAuthMapper.selectById(authId);
     if (auth == null) {
       log.warn("[OfflineForward] 代理授权不存在: authId={}", authId);
       return 0;
@@ -213,29 +213,29 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
       String reason,
       String operatorId) {
     // 查询原办理人名下的待办
-    LambdaQueryWrapper<FlowRunTask> wrapper =
-        new LambdaQueryWrapper<FlowRunTask>()
-            .eq(FlowRunTask::getAssigneeId, userId)
-            .eq(FlowRunTask::getDeleted, 0)
+    LambdaQueryWrapper<FlowRunTaskDO> wrapper =
+        new LambdaQueryWrapper<FlowRunTaskDO>()
+            .eq(FlowRunTaskDO::getAssigneeId, userId)
+            .eq(FlowRunTaskDO::getDeleted, 0)
             .in(
-                FlowRunTask::getTaskStatus,
+                FlowRunTaskDO::getTaskStatus,
                 FlowTaskStatus.PENDING.name(),
                 FlowTaskStatus.CLAIMED.name());
     if (StringUtils.hasText(flowCode)) {
-      wrapper.eq(FlowRunTask::getFlowCode, flowCode);
+      wrapper.eq(FlowRunTaskDO::getFlowCode, flowCode);
     }
     if (StringUtils.hasText(tenantId)) {
-      wrapper.eq(FlowRunTask::getTenantId, tenantId);
+      wrapper.eq(FlowRunTaskDO::getTenantId, tenantId);
     }
 
-    List<FlowRunTask> tasks = taskMapper.selectList(wrapper);
+    List<FlowRunTaskDO> tasks = taskMapper.selectList(wrapper);
     if (tasks.isEmpty()) {
       log.info("[OfflineForward] 无待办需要转发: userId={} flowCode={}", userId, flowCode);
       return 0;
     }
 
     int successCount = 0;
-    for (FlowRunTask task : tasks) {
+    for (FlowRunTaskDO task : tasks) {
       try {
         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
         dto.setTaskId(task.getId());

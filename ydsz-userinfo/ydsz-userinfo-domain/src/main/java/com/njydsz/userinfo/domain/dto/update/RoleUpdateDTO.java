@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 角色修改请求 DTO。
  *
- * <p>对应后端 {@code PUT /api/v1/role} 请求体。 修改时 {@link #id} 必填，内置角色（{@code builtIn=true}）禁止修改 {@code
+ * <p>对应后端 {@code PUT /api/v1/RoleDO} 请求体。 修改时 {@link #id} 必填，内置角色（{@code builtIn=true}）禁止修改 {@code
  * roleCode}。
  *
  * @author ydsz-team

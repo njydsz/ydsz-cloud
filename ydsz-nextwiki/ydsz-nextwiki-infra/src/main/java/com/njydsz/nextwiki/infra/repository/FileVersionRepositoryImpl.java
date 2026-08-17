@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.nextwiki.domain.entity.FileVersion;
-import com.njydsz.nextwiki.infra.repository.FileVersionRepository;
+import com.njydsz.nextwiki.infra.entity.FileVersionDO;
+import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
 import com.njydsz.nextwiki.infra.mapper.FileVersionMapper;
 
 /**
@@ -29,7 +29,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
    * @return 已落库的版本实体（含自增主键）
    */
   @Override
-  public FileVersion save(FileVersion version) {
+  public FileVersionDO save(FileVersionDO version) {
     fileVersionMapper.insert(version);
     return version;
   }
@@ -41,7 +41,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
    * @param version 待更新的版本实体（必须携带 id；revision 缺失时走兜底逻辑）
    */
   @Override
-  public void update(FileVersion version) {
+  public void update(FileVersionDO version) {
     if (version.getRevision() == null) {
       // 兜底：未携带 revision 时退化为普通更新，避免业务阻断
       fileVersionMapper.updateById(version);
@@ -62,7 +62,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
    * @return 版本记录列表（可能为空）
    */
   @Override
-  public List<FileVersion> findByFileNodeId(String fileNodeId) {
+  public List<FileVersionDO> findByFileNodeId(String fileNodeId) {
     return fileVersionMapper.selectByFileNodeId(fileNodeId);
   }
 
@@ -74,7 +74,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
    * @return 命中的版本实体；不存在则返回 null
    */
   @Override
-  public FileVersion findByFileNodeIdAndVersion(String fileNodeId, Integer versionNumber) {
+  public FileVersionDO findByFileNodeIdAndVersion(String fileNodeId, Integer versionNumber) {
     return fileVersionMapper.selectByVersion(fileNodeId, versionNumber);
   }
 
@@ -85,7 +85,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
    * @return 当前激活版本；不存在则返回 null
    */
   @Override
-  public FileVersion findActiveVersion(String fileNodeId) {
+  public FileVersionDO findActiveVersion(String fileNodeId) {
     return fileVersionMapper.selectActiveVersion(fileNodeId);
   }
 
@@ -141,7 +141,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
    * @return 最旧版本列表
    */
   @Override
-  public List<FileVersion> findOldestVersions(String fileNodeId, int limit) {
+  public List<FileVersionDO> findOldestVersions(String fileNodeId, int limit) {
     return fileVersionMapper.selectOldestVersions(fileNodeId, limit);
   }
 }

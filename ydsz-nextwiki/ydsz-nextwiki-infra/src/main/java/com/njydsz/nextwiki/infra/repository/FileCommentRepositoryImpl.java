@@ -6,8 +6,8 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.nextwiki.domain.entity.FileComment;
-import com.njydsz.nextwiki.infra.repository.FileCommentRepository;
+import com.njydsz.nextwiki.infra.entity.FileCommentDO;
+import com.njydsz.nextwiki.domain.repository.FileCommentRepository;
 
 /**
  * 文件评论仓储 stub 实现（P1-5 占位）。
@@ -30,29 +30,29 @@ import com.njydsz.nextwiki.infra.repository.FileCommentRepository;
 public class FileCommentRepositoryImpl implements FileCommentRepository {
 
   @Override
-  public FileComment save(FileComment comment) {
+  public FileCommentDO save(FileCommentDO comment) {
     log.warn(
         "[FileCommentRepositoryImpl] 评论功能未实现，save 调用被拒绝: fileNodeId={}", comment.getFileNodeId());
     throw new UnsupportedOperationException("文件评论功能尚未实现");
   }
 
   @Override
-  public FileComment findById(String id) {
+  public FileCommentDO findById(String id) {
     return null;
   }
 
   @Override
-  public List<FileComment> findByFileNodeId(String fileNodeId) {
+  public List<FileCommentDO> findByFileNodeId(String fileNodeId) {
     return Collections.emptyList();
   }
 
   @Override
-  public List<FileComment> findReplies(String parentCommentId) {
+  public List<FileCommentDO> findReplies(String parentCommentId) {
     return Collections.emptyList();
   }
 
   @Override
-  public void update(FileComment comment) {
+  public void update(FileCommentDO comment) {
     log.warn("[FileCommentRepositoryImpl] 评论功能未实现，update 调用被拒绝: id={}", comment.getId());
     throw new UnsupportedOperationException("文件评论功能尚未实现");
   }

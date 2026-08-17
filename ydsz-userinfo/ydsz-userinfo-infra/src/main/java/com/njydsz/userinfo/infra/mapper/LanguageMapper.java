@@ -3,7 +3,7 @@ package com.njydsz.userinfo.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.userinfo.domain.entity.Language;
+import com.njydsz.userinfo.infra.entity.LanguageDO;
 
 /**
  * 语言配置 Mapper 接口
@@ -28,7 +28,7 @@ import com.njydsz.userinfo.domain.entity.Language;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.userinfo.domain.entity.Language 语言实体
+ * @see com.njydsz.userinfo.infra.entity.LanguageDO 语言实体
  */
 @Mapper
-public interface LanguageMapper extends BaseMapper<Language> {}
+public interface LanguageMapper extends BaseMapper<LanguageDO> {}

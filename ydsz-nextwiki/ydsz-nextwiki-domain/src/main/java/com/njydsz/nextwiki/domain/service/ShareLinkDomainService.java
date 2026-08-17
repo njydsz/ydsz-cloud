@@ -12,9 +12,9 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.entity.ShareLink;
-import com.njydsz.nextwiki.domain.entity.ShareRecipient;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.infra.entity.ShareLinkDO;
+import com.njydsz.nextwiki.infra.entity.ShareRecipientDO;
 import com.njydsz.nextwiki.domain.enums.NextwikiEnums.ShareStatus;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 
@@ -57,7 +57,7 @@ public class ShareLinkDomainService {
   /**
    * 创建分享链接（基础版，公开分享）。
    *
-   * @param fileNode       文件节点实体（由 server 层查询后传入）
+   * @param FileNodeDO       文件节点实体（由 server 层查询后传入）
    * @param shareType      分享类型（view/download/edit）
    * @param password       访问密码（可为空）
    * @param expireTime     过期时间（可为空）
@@ -66,19 +66,19 @@ public class ShareLinkDomainService {
    * @return 分享链接实体与接收者列表
    */
   public CreateShareResult createShare(
-      FileNode fileNode,
+      FileNodeDO FileNodeDO,
       String shareType,
       String password,
       LocalDateTime expireTime,
       Integer maxAccessCount,
       String userId) {
-    return createShare(fileNode, shareType, password, expireTime, maxAccessCount, null, null, userId);
+    return createShare(FileNodeDO, shareType, password, expireTime, maxAccessCount, null, null, userId);
   }
 
   /**
    * 创建分享链接（增强版，支持定向分享和自定义标题）。
    *
-   * @param fileNode       文件节点实体（由 server 层查询后传入）
+   * @param FileNodeDO       文件节点实体（由 server 层查询后传入）
    * @param shareType      分享类型（view/download/edit）
    * @param password       访问密码（可为空）
    * @param expireTime     过期时间（可为空）
@@ -89,7 +89,7 @@ public class ShareLinkDomainService {
    * @return 分享链接实体与接收者列表
    */
   public CreateShareResult createShare(
-      FileNode fileNode,
+      FileNodeDO FileNodeDO,
       String shareType,
       String password,
       LocalDateTime expireTime,
@@ -97,7 +97,7 @@ public class ShareLinkDomainService {
       List<String> targetUserIds,
       String title,
       String userId) {
-    String fileNodeId = fileNode.getId();
+    String fileNodeId = FileNodeDO.getId();
 
     // 生成分享码和提取码
     String shareCode = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
@@ -107,8 +107,8 @@ public class ShareLinkDomainService {
     String shareTargetType =
         (targetUserIds != null && !targetUserIds.isEmpty()) ? "USER" : "PUBLIC";
 
-    ShareLink shareLink =
-        ShareLink.builder()
+    ShareLinkDO ShareLinkDO =
+        ShareLinkDO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
             .fileNodeId(fileNodeId)
             .shareCode(shareCode)
@@ -127,17 +127,17 @@ public class ShareLinkDomainService {
             .deleted(0)
             .build();
 
-    shareLink.setCreatedBy(userId);
-    shareLink.setUpdatedBy(userId);
+    ShareLinkDO.setCreatedBy(userId);
+    ShareLinkDO.setUpdatedBy(userId);
 
     // 处理定向分享目标用户
-    List<ShareRecipient> recipients = new java.util.ArrayList<>();
+    List<ShareRecipientDO> recipients = new java.util.ArrayList<>();
     if (targetUserIds != null && !targetUserIds.isEmpty()) {
       for (String targetUserId : targetUserIds) {
-        ShareRecipient recipient =
-            ShareRecipient.builder()
+        ShareRecipientDO recipient =
+            ShareRecipientDO.builder()
                 .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
-                .shareId(shareLink.getId())
+                .shareId(ShareLinkDO.getId())
                 .recipientType("USER")
                 .recipientId(targetUserId)
                 .status("ACTIVE")
@@ -159,7 +159,7 @@ public class ShareLinkDomainService {
         fileNodeId,
         shareCode,
         shareTargetType);
-    return new CreateShareResult(shareLink, recipients);
+    return new CreateShareResult(ShareLinkDO, recipients);
   }
 
   // ==================== 验证访问 ====================
@@ -170,14 +170,14 @@ public class ShareLinkDomainService {
    * <p>注意：本方法仅执行领域验证逻辑，不执行持久化操作。若状态变更为 EXPIRED，调用方（server 层）
    * 应通过 Repository 更新实体。
    *
-   * @param shareLink  分享链接实体（由 server 层查询后传入）
+   * @param ShareLinkDO  分享链接实体（由 server 层查询后传入）
    * @param extractCode 提取码
    * @param password   访问密码
    * @return 验证通过的分享链接实体（状态可能已更新为 EXPIRED）
    * @throws BusinessException 链接不存在/过期/访问受限/密码错误/提取码错误/已锁定时抛出
    */
-  public ShareLink verifyAccess(ShareLink shareLink, String extractCode, String password) {
-    String shareCode = shareLink.getShareCode();
+  public ShareLinkDO verifyAccess(ShareLinkDO ShareLinkDO, String extractCode, String password) {
+    String shareCode = ShareLinkDO.getShareCode();
 
     // 防暴力破解——检查失败次数是否超限
     String failKey = KEY_SHARE_FAIL + shareCode;
@@ -187,33 +187,33 @@ public class ShareLinkDomainService {
       throw new BusinessException(NextwikiExceptionCode.SHARE_LOCKED);
     }
 
-    ShareStatus currentStatus = ShareStatus.fromCode(shareLink.getStatus());
+    ShareStatus currentStatus = ShareStatus.fromCode(ShareLinkDO.getStatus());
     if (currentStatus == null || currentStatus.isTerminal()) {
       throw new BusinessException(NextwikiExceptionCode.SHARE_EXPIRED);
     }
 
-    if (shareLink.getExpireTime() != null
-        && shareLink.getExpireTime().isBefore(LocalDateTime.now())) {
+    if (ShareLinkDO.getExpireTime() != null
+        && ShareLinkDO.getExpireTime().isBefore(LocalDateTime.now())) {
       if (currentStatus.canTransitTo(ShareStatus.EXPIRED)) {
-        shareLink.setStatus(ShareStatus.EXPIRED.getCode());
+        ShareLinkDO.setStatus(ShareStatus.EXPIRED.getCode());
       }
       throw new BusinessException(NextwikiExceptionCode.SHARE_EXPIRED);
     }
 
-    if (shareLink.getMaxAccessCount() != null
-        && shareLink.getAccessCount() != null
-        && shareLink.getAccessCount() >= shareLink.getMaxAccessCount()) {
+    if (ShareLinkDO.getMaxAccessCount() != null
+        && ShareLinkDO.getAccessCount() != null
+        && ShareLinkDO.getAccessCount() >= ShareLinkDO.getMaxAccessCount()) {
       throw new BusinessException(NextwikiExceptionCode.SHARE_ACCESS_LIMIT);
     }
 
     boolean verifyFailed = false;
 
-    if (shareLink.getExtractCode() != null && !shareLink.getExtractCode().equals(extractCode)) {
+    if (ShareLinkDO.getExtractCode() != null && !ShareLinkDO.getExtractCode().equals(extractCode)) {
       verifyFailed = true;
     }
 
-    if (!verifyFailed && shareLink.getPassword() != null && !shareLink.getPassword().isEmpty()) {
-      if (password == null || !passwordEncoder.matches(password, shareLink.getPassword())) {
+    if (!verifyFailed && ShareLinkDO.getPassword() != null && !ShareLinkDO.getPassword().isEmpty()) {
+      if (password == null || !passwordEncoder.matches(password, ShareLinkDO.getPassword())) {
         verifyFailed = true;
       }
     }
@@ -226,7 +226,7 @@ public class ShareLinkDomainService {
       }
       log.warn("[ShareLinkDomainService] 验证失败: shareCode={}, failCount={}", shareCode, failCount);
       throw new BusinessException(
-          shareLink.getExtractCode() != null
+          ShareLinkDO.getExtractCode() != null
               ? NextwikiExceptionCode.SHARE_EXTRACT_CODE_ERROR
               : NextwikiExceptionCode.SHARE_PASSWORD_ERROR);
     }
@@ -234,7 +234,7 @@ public class ShareLinkDomainService {
     // 验证成功，清除失败计数
     stringOps.del(failKey);
 
-    return shareLink;
+    return ShareLinkDO;
   }
 
   // ==================== 撤销分享 ====================
@@ -244,13 +244,13 @@ public class ShareLinkDomainService {
    *
    * <p>注意：本方法仅修改实体状态，持久化由 server 层负责。
    *
-   * @param shareLink 分享链接实体（由 server 层查询后传入）
+   * @param ShareLinkDO 分享链接实体（由 server 层查询后传入）
    * @param userId    操作人 ID
    */
-  public void revoke(ShareLink shareLink, String userId) {
-    shareLink.setStatus(ShareStatus.REVOKED.getCode());
-    shareLink.setUpdatedBy(userId);
-    log.info("[ShareLinkDomainService] 撤销分享: shareId={}, userId={}", shareLink.getId(), userId);
+  public void revoke(ShareLinkDO ShareLinkDO, String userId) {
+    ShareLinkDO.setStatus(ShareStatus.REVOKED.getCode());
+    ShareLinkDO.setUpdatedBy(userId);
+    log.info("[ShareLinkDomainService] 撤销分享: shareId={}, userId={}", ShareLinkDO.getId(), userId);
   }
 
   // ==================== 到期提醒 ====================
@@ -262,7 +262,7 @@ public class ShareLinkDomainService {
    * @param withinHours 多少小时内即将到期
    * @return 即将到期的分享链接列表
    */
-  public List<ShareLink> findExpiringShares(List<ShareLink> shareLinks, int withinHours) {
+  public List<ShareLinkDO> findExpiringShares(List<ShareLinkDO> shareLinks, int withinHours) {
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime threshold = now.plusHours(withinHours);
     return shareLinks.stream()
@@ -279,10 +279,10 @@ public class ShareLinkDomainService {
    *
    * <p>注意：本方法仅修改实体状态，持久化由 server 层负责。
    *
-   * @param shareLink 分享链接实体（由 server 层查询后传入）
+   * @param ShareLinkDO 分享链接实体（由 server 层查询后传入）
    */
-  public void markReminderSent(ShareLink shareLink) {
-    shareLink.setReminderSent(true);
+  public void markReminderSent(ShareLinkDO ShareLinkDO) {
+    ShareLinkDO.setReminderSent(true);
   }
 
   // ==================== 查询过滤 ====================
@@ -294,7 +294,7 @@ public class ShareLinkDomainService {
    * @param userId     用户 ID
    * @return 该用户的有效分享链接列表
    */
-  public List<ShareLink> findByUserId(List<ShareLink> shareLinks, String userId) {
+  public List<ShareLinkDO> findByUserId(List<ShareLinkDO> shareLinks, String userId) {
     return shareLinks.stream()
         .filter(link -> ShareStatus.ACTIVE.getCode().equals(link.getStatus()))
         .filter(link -> userId.equals(link.getCreatedBy()))
@@ -318,8 +318,8 @@ public class ShareLinkDomainService {
   /**
    * 创建分享链接的结果。
    *
-   * @param shareLink  分享链接实体
+   * @param ShareLinkDO  分享链接实体
    * @param recipients 定向分享接收者列表（公开分享时为空列表）
    */
-  public record CreateShareResult(ShareLink shareLink, List<ShareRecipient> recipients) {}
+  public record CreateShareResult(ShareLinkDO ShareLinkDO, List<ShareRecipientDO> recipients) {}
 }

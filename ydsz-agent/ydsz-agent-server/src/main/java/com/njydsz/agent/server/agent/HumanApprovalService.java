@@ -12,8 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.agent.domain.entity.AgentApprovalDO;
-import com.njydsz.agent.infra.repository.AgentApprovalRepository;
+import com.njydsz.agent.domain.repository.AgentApprovalRepository;
+import com.njydsz.agent.infra.entity.AgentApprovalDO;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;

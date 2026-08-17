@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.auth.util.TotpAuthenticator;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.MfaSetupVO;
 
@@ -173,7 +173,7 @@ public class MfaService {
    * @param mfaCode 用户提交的动态码（TOTP 或短信验证码）
    * @throws BusinessException 动态码缺失、错误或用户无法完成 MFA 时抛出
    */
-  public void validateLoginMfa(UserAccount user, String mfaCode) {
+  public void validateLoginMfa(UserAccountDO user, String mfaCode) {
     String userId = user.getId();
     String secret = readSecret(SECRET_KEY_PREFIX + userId);
     if (secret != null && isMfaEnabled(userId)) {

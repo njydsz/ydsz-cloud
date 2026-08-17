@@ -1,7 +1,7 @@
 package com.njydsz.nextwiki.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.TagDO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -75,7 +75,7 @@ import com.njydsz.nextwiki.server.service.BatchImportApplicationService;
 @RestController
 @RequestMapping("/api/v1/nextwiki/import")
 @RequiredArgsConstructor
-@Tag(name = "批量导入", description = "批量文件上传、ZIP 压缩包导入（自动解压保留目录结构）")
+@TagDO(name = "批量导入", description = "批量文件上传、ZIP 压缩包导入（自动解压保留目录结构）")
 public class BatchImportController {
 
   /** 批量导入应用服务（封装批量上传 + ZIP 解压导入） */

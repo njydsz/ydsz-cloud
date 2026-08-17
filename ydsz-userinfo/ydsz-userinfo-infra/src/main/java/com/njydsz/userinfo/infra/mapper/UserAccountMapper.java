@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
 
 /**
  * 用户账号 Mapper 接口
@@ -33,11 +33,11 @@ import com.njydsz.userinfo.domain.entity.UserAccount;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.userinfo.domain.entity.UserAccount 用户实体
+ * @see com.njydsz.userinfo.infra.entity.UserAccountDO 用户实体
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface UserAccountMapper extends BaseMapper<UserAccount> {
+public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
 
   /**
    * 原子递增登录失败次数，并在达到阈值时同步设置账号锁定时间。

@@ -7,9 +7,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.entity.Menu;
+import com.njydsz.userinfo.domain.repository.MenuRepository;
+import com.njydsz.userinfo.infra.entity.MenuDO;
 import com.njydsz.userinfo.infra.mapper.MenuMapper;
-import com.njydsz.userinfo.infra.repository.MenuRepository;
 
 /**
  * 菜单/权限 Repository 实现
@@ -26,34 +26,34 @@ public class MenuRepositoryImpl implements MenuRepository {
   private final MenuMapper menuMapper;
 
   @Override
-  public Menu findById(String id) {
+  public MenuDO findById(String id) {
     return menuMapper.selectById(id);
   }
 
   @Override
-  public List<Menu> findByIds(Collection<String> ids) {
+  public List<MenuDO> findByIds(Collection<String> ids) {
     return menuMapper.selectBatchIds(ids);
   }
 
   @Override
-  public List<Menu> findByParentId(String parentId) {
-    LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Menu::getParentId, parentId);
+  public List<MenuDO> findByParentId(String parentId) {
+    LambdaQueryWrapper<MenuDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(MenuDO::getParentId, parentId);
     return menuMapper.selectList(wrapper);
   }
 
   @Override
-  public List<Menu> list(LambdaQueryWrapper<Menu> wrapper) {
+  public List<MenuDO> list(LambdaQueryWrapper<MenuDO> wrapper) {
     return menuMapper.selectList(wrapper);
   }
 
   @Override
-  public int insert(Menu entity) {
+  public int insert(MenuDO entity) {
     return menuMapper.insert(entity);
   }
 
   @Override
-  public int updateById(Menu entity) {
+  public int updateById(MenuDO entity) {
     return menuMapper.updateById(entity);
   }
 
@@ -63,12 +63,12 @@ public class MenuRepositoryImpl implements MenuRepository {
   }
 
   @Override
-  public int delete(LambdaQueryWrapper<Menu> wrapper) {
+  public int delete(LambdaQueryWrapper<MenuDO> wrapper) {
     return menuMapper.delete(wrapper);
   }
 
   @Override
-  public long count(LambdaQueryWrapper<Menu> wrapper) {
+  public long count(LambdaQueryWrapper<MenuDO> wrapper) {
     return menuMapper.selectCount(wrapper);
   }
 }

@@ -8,9 +8,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.domain.repository.UserAccountRepository;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
-import com.njydsz.userinfo.infra.repository.UserAccountRepository;
 
 /**
  * 用户账号 Repository 实现
@@ -27,19 +27,19 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   private final UserAccountMapper userAccountMapper;
 
   @Override
-  public UserAccount findById(String id) {
+  public UserAccountDO findById(String id) {
     return userAccountMapper.selectById(id);
   }
 
   @Override
-  public UserAccount findByUsername(String username) {
-    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccount::getUsername, username);
+  public UserAccountDO findByUsername(String username) {
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccountDO::getUsername, username);
     return userAccountMapper.selectOne(wrapper);
   }
 
   @Override
-  public UserAccount save(UserAccount entity) {
+  public UserAccountDO save(UserAccountDO entity) {
     if (entity.getId() == null || entity.getId().isBlank()) {
       userAccountMapper.insert(entity);
     } else {
@@ -49,12 +49,12 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   }
 
   @Override
-  public int insert(UserAccount entity) {
+  public int insert(UserAccountDO entity) {
     return userAccountMapper.insert(entity);
   }
 
   @Override
-  public int updateById(UserAccount entity) {
+  public int updateById(UserAccountDO entity) {
     return userAccountMapper.updateById(entity);
   }
 
@@ -64,36 +64,36 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   }
 
   @Override
-  public Page<UserAccount> page(Page<UserAccount> page, LambdaQueryWrapper<UserAccount> wrapper) {
+  public Page<UserAccountDO> page(Page<UserAccountDO> page, LambdaQueryWrapper<UserAccountDO> wrapper) {
     return userAccountMapper.selectPage(page, wrapper);
   }
 
   @Override
-  public List<UserAccount> list(LambdaQueryWrapper<UserAccount> wrapper) {
+  public List<UserAccountDO> list(LambdaQueryWrapper<UserAccountDO> wrapper) {
     return userAccountMapper.selectList(wrapper);
   }
 
   @Override
-  public List<UserAccount> listByIds(Collection<String> ids) {
+  public List<UserAccountDO> listByIds(Collection<String> ids) {
     return userAccountMapper.selectBatchIds(ids);
   }
 
   @Override
-  public long count(LambdaQueryWrapper<UserAccount> wrapper) {
+  public long count(LambdaQueryWrapper<UserAccountDO> wrapper) {
     return userAccountMapper.selectCount(wrapper);
   }
 
   @Override
   public boolean existsByUsername(String username) {
-    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccount::getUsername, username);
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccountDO::getUsername, username);
     return userAccountMapper.selectCount(wrapper) > 0;
   }
 
   @Override
   public long countByTenantId(String tenantId) {
-    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccount::getTenantId, tenantId);
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccountDO::getTenantId, tenantId);
     return userAccountMapper.selectCount(wrapper);
   }
 

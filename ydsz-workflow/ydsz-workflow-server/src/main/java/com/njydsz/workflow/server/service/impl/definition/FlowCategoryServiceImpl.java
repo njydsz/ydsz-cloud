@@ -17,8 +17,8 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
-import com.njydsz.workflow.domain.entity.FlowCategory;
-import com.njydsz.workflow.domain.entity.FlowDefinition;
+import com.njydsz.workflow.infra.entity.FlowCategoryDO;
+import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
 import com.njydsz.workflow.infra.mapper.FlowCategoryMapper;
 import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
@@ -69,7 +69,7 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
  *
  * <pre>{@code
  * // 查询全部分类
- * List<FlowCategory> list = flowCategoryService.listAll(tenantId);
+ * List<FlowCategoryDO> list = flowCategoryService.listAll(tenantId);
  *
  * // 查询分类树形结构
  * List<FlowCategoryTreeVO> tree = flowCategoryService.tree(tenantId);
@@ -85,9 +85,9 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowCategoryService 接口定义
- * @see FlowCategory 分类实体
+ * @see FlowCategoryDO 分类实体
  * @see FlowCategoryDTO 分类 DTO
- * @see FlowDefinition 流程定义（{@code category} 字段引用本表 ID）
+ * @see FlowDefinitionDO 流程定义（{@code category} 字段引用本表 ID）
  */
 @Slf4j
 @Service
@@ -110,13 +110,13 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
    * @return 分类列表（按 sortNum 升序），无数据返回空列表
    */
   @Override
-  public List<FlowCategory> listAll(String tenantId) {
+  public List<FlowCategoryDO> listAll(String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
-    List<FlowCategory> list =
+    List<FlowCategoryDO> list =
         categoryMapper.selectList(
-            new LambdaQueryWrapper<FlowCategory>()
-                .eq(FlowCategory::getTenantId, tid)
-                .eq(FlowCategory::getDeleted, 0));
+            new LambdaQueryWrapper<FlowCategoryDO>()
+                .eq(FlowCategoryDO::getTenantId, tid)
+                .eq(FlowCategoryDO::getDeleted, 0));
     list.sort(Comparator.comparingInt(c -> c.getSortNum() == null ? 0 : c.getSortNum()));
     return list;
   }
@@ -131,7 +131,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
    */
   @Override
   public List<FlowCategoryTreeVO> tree(String tenantId) {
-    List<FlowCategory> all = listAll(tenantId);
+    List<FlowCategoryDO> all = listAll(tenantId);
     if (all.isEmpty()) {
       return List.of();
     }
@@ -153,7 +153,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
    *
    * <ol>
    *   <li>校验同租户下 {@code categoryCode} 唯一性
-   *   <li>构建 {@link FlowCategory} 实体，{@code sortNum} 为空时默认 {@code 0}
+   *   <li>构建 {@link FlowCategoryDO} 实体，{@code sortNum} 为空时默认 {@code 0}
    *   <li>写入数据库并返回新 ID
    * </ol>
    *
@@ -169,10 +169,10 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
     Long count =
         categoryMapper.selectCount(
-            new LambdaQueryWrapper<FlowCategory>()
-                .eq(FlowCategory::getCategoryCode, dto.getCategoryCode())
-                .eq(FlowCategory::getTenantId, tid)
-                .eq(FlowCategory::getDeleted, 0));
+            new LambdaQueryWrapper<FlowCategoryDO>()
+                .eq(FlowCategoryDO::getCategoryCode, dto.getCategoryCode())
+                .eq(FlowCategoryDO::getTenantId, tid)
+                .eq(FlowCategoryDO::getDeleted, 0));
     if (count != null && count > 0) {
       throw SysException.builder()
           .resultCode(BaseResultCode.BAD_REQUEST)
@@ -181,7 +181,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
           .build();
     }
 
-    FlowCategory category = new FlowCategory();
+    FlowCategoryDO category = new FlowCategoryDO();
     category.setCategoryCode(dto.getCategoryCode());
     category.setCategoryName(dto.getCategoryName());
     category.setParentId(dto.getParentId());
@@ -191,7 +191,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     category.setTenantId(tid);
     categoryMapper.insert(category);
     log.info(
-        "[FlowCategory] 新增分类: code={} name={} id={}",
+        "[FlowCategoryDO] 新增分类: code={} name={} id={}",
         category.getCategoryCode(),
         category.getCategoryName(),
         category.getId());
@@ -216,7 +216,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
           .message("error.workflow.msg_id_required")
           .build();
     }
-    FlowCategory existing = categoryMapper.selectById(dto.getId());
+    FlowCategoryDO existing = categoryMapper.selectById(dto.getId());
     if (existing == null || existing.getDeleted() == 1) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -247,7 +247,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
    *
    * <ul>
    *   <li>校验是否有<b>子分类</b>（{@code parentId} 指向当前分类）
-   *   <li>校验是否有关联的<b>流程定义</b>（{@code FlowDefinition.category} 引用当前分类）
+   *   <li>校验是否有关联的<b>流程定义</b>（{@code FlowDefinitionDO.category} 引用当前分类）
    * </ul>
    *
    * 任一校验不通过立即抛异常阻断。校验通过后置 {@code deleted=1}（逻辑删除），保留审计轨迹。
@@ -260,16 +260,16 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void delete(String id) {
-    FlowCategory existing = categoryMapper.selectById(id);
+    FlowCategoryDO existing = categoryMapper.selectById(id);
     if (existing == null || existing.getDeleted() == 1) {
       return;
     }
     // 校验是否有子分类
     Long childCount =
         categoryMapper.selectCount(
-            new LambdaQueryWrapper<FlowCategory>()
-                .eq(FlowCategory::getParentId, id)
-                .eq(FlowCategory::getDeleted, 0));
+            new LambdaQueryWrapper<FlowCategoryDO>()
+                .eq(FlowCategoryDO::getParentId, id)
+                .eq(FlowCategoryDO::getDeleted, 0));
     if (childCount != null && childCount > 0) {
       throw SysException.builder()
           .resultCode(BaseResultCode.BAD_REQUEST)
@@ -279,9 +279,9 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     // 校验是否有关联的流程定义
     Long defCount =
         definitionMapper.selectCount(
-            new LambdaQueryWrapper<FlowDefinition>()
-                .eq(FlowDefinition::getCategory, id)
-                .eq(FlowDefinition::getDeleted, 0));
+            new LambdaQueryWrapper<FlowDefinitionDO>()
+                .eq(FlowDefinitionDO::getCategory, id)
+                .eq(FlowDefinitionDO::getDeleted, 0));
     if (defCount != null && defCount > 0) {
       throw SysException.builder()
           .resultCode(BaseResultCode.BAD_REQUEST)

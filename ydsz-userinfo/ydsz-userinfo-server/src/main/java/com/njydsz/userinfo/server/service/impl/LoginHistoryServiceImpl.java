@@ -11,8 +11,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.userinfo.domain.entity.UserLoginHistory;
-import com.njydsz.userinfo.infra.repository.UserLoginHistoryRepository;
+import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
+import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
 import com.njydsz.userinfo.server.auth.LoginAttemptCounterService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.service.LoginAttemptContext;
@@ -67,7 +67,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
 
     // DB 维度：登录历史落库（审计留存），失败不影响主流程
     try {
-      UserLoginHistory history = new UserLoginHistory();
+      UserLoginHistoryDO history = new UserLoginHistoryDO();
       history.setId(String.valueOf(snowflakeIdGenerator.nextId()));
       history.setUserId(context.userId());
       history.setUsername(context.username());
@@ -105,16 +105,16 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
   }
 
   @Override
-  public List<UserLoginHistory> getRecentLogins(String userId, int limit) {
+  public List<UserLoginHistoryDO> getRecentLogins(String userId, int limit) {
     if (userId == null || userId.isBlank()) {
       return List.of();
     }
 
     try {
-      LambdaQueryWrapper<UserLoginHistory> wrapper = new LambdaQueryWrapper<>();
+      LambdaQueryWrapper<UserLoginHistoryDO> wrapper = new LambdaQueryWrapper<>();
       wrapper
-          .eq(UserLoginHistory::getUserId, userId)
-          .orderByDesc(UserLoginHistory::getCreatedAt)
+          .eq(UserLoginHistoryDO::getUserId, userId)
+          .orderByDesc(UserLoginHistoryDO::getCreatedAt)
           .last("LIMIT " + Math.min(limit, 100));
 
       return loginHistoryRepository.list(wrapper);

@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
 
 /**
  * 流程节点 Mapper
@@ -28,25 +28,25 @@ import com.njydsz.workflow.domain.entity.FlowNode;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.domain.entity.FlowNode 流程节点实体
+ * @see com.njydsz.workflow.infra.entity.FlowNodeDO 流程节点实体
  * @see com.njydsz.workflow.server.service.FlowNodeService 流程节点 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowNodeMapper extends BaseMapper<FlowNode> {
+public interface FlowNodeMapper extends BaseMapper<FlowNodeDO> {
 
   /** 根据定义 ID 查全部节点 */
-  List<FlowNode> selectByDefinitionId(@Param("definitionId") String definitionId);
+  List<FlowNodeDO> selectByDefinitionId(@Param("definitionId") String definitionId);
 
   /** 根据 definitionId + nodeCode 查单节点 */
-  FlowNode selectByCode(
+  FlowNodeDO selectByCode(
       @Param("definitionId") String definitionId, @Param("nodeCode") String nodeCode);
 
   /** 查开始节点 */
-  FlowNode selectStartNode(@Param("definitionId") String definitionId);
+  FlowNodeDO selectStartNode(@Param("definitionId") String definitionId);
 
   /** 查结束节点列表 */
-  List<FlowNode> selectEndNodes(@Param("definitionId") String definitionId);
+  List<FlowNodeDO> selectEndNodes(@Param("definitionId") String definitionId);
 
   /** 删除某定义的全部节点（重定义时用） */
   int deleteByDefinitionId(@Param("definitionId") String definitionId);

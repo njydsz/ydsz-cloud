@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.userinfo.domain.entity.UserPost;
-import com.njydsz.userinfo.infra.repository.UserPostRepository;
+import com.njydsz.userinfo.infra.entity.UserPostDO;
+import com.njydsz.userinfo.domain.repository.UserPostRepository;
 import com.njydsz.userinfo.server.service.UserPostService;
 
 /**
@@ -30,8 +30,8 @@ public class UserPostServiceImpl implements UserPostService {
   private final UserPostRepository userPostRepository;
 
   @Override
-  public UserPost getById(String id) {
-    UserPost entity = userPostRepository.findById(id);
+  public UserPostDO getById(String id) {
+    UserPostDO entity = userPostRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       return null;
     }
@@ -39,22 +39,22 @@ public class UserPostServiceImpl implements UserPostService {
   }
 
   @Override
-  public List<UserPost> list() {
-    LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserPost::getDeleted, 0);
+  public List<UserPostDO> list() {
+    LambdaQueryWrapper<UserPostDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserPostDO::getDeleted, 0);
     return userPostRepository.list(wrapper);
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String save(UserPost entity) {
+  public String save(UserPostDO entity) {
     userPostRepository.insert(entity);
     return entity.getId();
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean updateById(UserPost entity) {
+  public boolean updateById(UserPostDO entity) {
     return userPostRepository.updateById(entity) > 0;
   }
 

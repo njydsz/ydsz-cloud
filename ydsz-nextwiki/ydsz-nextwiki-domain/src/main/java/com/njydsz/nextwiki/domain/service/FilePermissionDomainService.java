@@ -7,8 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.entity.FileAcl;
-import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.infra.entity.FileAclDO;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
 
 /**
  * 文件权限领域服务。
@@ -51,10 +51,10 @@ public class FilePermissionDomainService {
    * @param userId        操作人 ID
    * @return 构建完成的 ACL 实体（未持久化）
    */
-  public FileAcl buildAcl(
+  public FileAclDO buildAcl(
       String fileNodeId, String granteeType, String granteeId, int permissionMask, String userId) {
-    FileAcl acl =
-        FileAcl.builder()
+    FileAclDO acl =
+        FileAclDO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
             .fileNodeId(fileNodeId)
             .granteeType(granteeType)
@@ -85,8 +85,8 @@ public class FilePermissionDomainService {
    * @param userId     用户 ID
    * @return 构建完成的 ACL 实体（未持久化）
    */
-  public FileAcl buildOwnerAcl(String fileNodeId, String userId) {
-    return buildAcl(fileNodeId, "user", userId, FileAcl.PERM_ALL, userId);
+  public FileAclDO buildOwnerAcl(String fileNodeId, String userId) {
+    return buildAcl(fileNodeId, "user", userId, FileAclDO.PERM_ALL, userId);
   }
 
   /**
@@ -95,21 +95,21 @@ public class FilePermissionDomainService {
    * <p>所有者（createdBy == userId）直接放行；否则遍历有效 ACL 列表，
    * 任一含目标权限位即通过。
    *
-   * @param fileNode 文件节点实体（由 server 层查询传入，可为 null）
+   * @param FileNodeDO 文件节点实体（由 server 层查询传入，可为 null）
    * @param userId   用户 ID
    * @param acls     有效 ACL 列表（由 server 层查询传入，含继承）
    * @param permission 目标权限位
    * @return true 表示拥有权限
    */
-  public boolean checkPermission(FileNode fileNode, String userId, List<FileAcl> acls, int permission) {
+  public boolean checkPermission(FileNodeDO FileNodeDO, String userId, List<FileAclDO> acls, int permission) {
     // 所有者短路判断
-    if (fileNode != null && userId.equals(fileNode.getCreatedBy())) {
+    if (FileNodeDO != null && userId.equals(FileNodeDO.getCreatedBy())) {
       return true;
     }
 
     // ACL 位运算校验
     if (acls != null) {
-      for (FileAcl acl : acls) {
+      for (FileAclDO acl : acls) {
         if (acl.hasPermission(permission)) {
           return true;
         }

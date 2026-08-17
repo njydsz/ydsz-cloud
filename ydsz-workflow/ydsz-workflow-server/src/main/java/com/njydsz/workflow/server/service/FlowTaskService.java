@@ -7,13 +7,13 @@ import java.util.Map;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowNode;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 
 /**
  * 待办任务 Service
  *
- * <p>流程任务（{@link FlowRunTask}）是工作流引擎的<b>调度核心</b>，本 Service 负责任务的整个生命周期：
+ * <p>流程任务（{@link FlowRunTaskDO}）是工作流引擎的<b>调度核心</b>，本 Service 负责任务的整个生命周期：
  * 创建、查询、签收、通过、驳回、转办、委派、加签/减签等。
  *
  * <p><b>核心职责：</b>
@@ -35,7 +35,7 @@ import com.njydsz.workflow.domain.entity.FlowRunTask;
  * <ul>
  *   <li>悲观锁：{@code pass/reject} 时 {@code SELECT ... FOR UPDATE} 锁任务行，避免并发办理
  *   <li>分布式锁：跨实例的全局锁（如「同发起人同时只能有一个流程」场景）由 {@code Redisson} 实现
- *   <li>乐观锁：{@link FlowRunTask} 继承 {@code MpBaseEntity.revision}，并发更新自动重试
+ *   <li>乐观锁：{@link FlowRunTaskDO} 继承 {@code MpBaseEntity.revision}，并发更新自动重试
  * </ul>
  *
  * <p><b>性能优化：</b>
@@ -56,7 +56,7 @@ public interface FlowTaskService {
   /**
    * 创建任务（流程推进到审批节点时由路由引擎调用）
    *
-   * <p>根据流程节点 {@code node} 解析审批人（角色/部门/岗位/直属上级/Spec 表达式）， 写入 {@link FlowRunTask} 表。会签节点（{@code
+   * <p>根据流程节点 {@code node} 解析审批人（角色/部门/岗位/直属上级/Spec 表达式）， 写入 {@link FlowRunTaskDO} 表。会签节点（{@code
    * performType=ALL/PARALLEL}）按 {@code approvers} 数量 生成多条子任务，单人节点生成单条任务。
    *
    * @param instanceId 流程实例 ID
@@ -65,7 +65,7 @@ public interface FlowTaskService {
    * @param variables 流程变量（用于解析审批人 Spec 表达式，如 ${starter}）
    * @return 新创建的任务 ID（单人节点）或首个任务 ID（会签节点）
    */
-  String createTask(String instanceId, FlowNode node, Map<String, Object> variables);
+  String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables);
 
   /**
    * P2-20: 按 ID 查任务（任务详情查询）
@@ -73,7 +73,7 @@ public interface FlowTaskService {
    * @param taskId 任务 ID
    * @return 任务 DO，不存在返回 null
    */
-  FlowRunTask getById(String taskId);
+  FlowRunTaskDO getById(String taskId);
 
   /**
    * 签收任务（多人任务转单人办理）
@@ -144,7 +144,7 @@ public interface FlowTaskService {
    * @param instanceId 流程实例 ID
    * @return 当前所有 PENDING 状态的任务列表（含 CLAIMED）
    */
-  List<FlowRunTask> listPendingByInstance(String instanceId);
+  List<FlowRunTaskDO> listPendingByInstance(String instanceId);
 
   /**
    * 查用户的待办（不分页）
@@ -153,7 +153,7 @@ public interface FlowTaskService {
    * @param tenantId 租户 ID
    * @return 用户的待办任务列表
    */
-  List<FlowRunTask> listTodoByAssignee(String assigneeId, String tenantId);
+  List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, String tenantId);
 
   /**
    * P2-17: 查用户的待办（真分页：SQL LIMIT/OFFSET）
@@ -164,7 +164,7 @@ public interface FlowTaskService {
    * @param size 每页大小
    * @return 分页结果
    */
-  PageResponse<List<FlowRunTask>> listTodoByAssigneePage(
+  PageResponse<List<FlowRunTaskDO>> listTodoByAssigneePage(
       String assigneeId, String tenantId, int page, int size);
 
   /**
@@ -174,7 +174,7 @@ public interface FlowTaskService {
    * @param tenantId 租户 ID
    * @return 用户的已办任务列表（按完成时间倒序）
    */
-  List<FlowRunTask> listDoneByAssignee(String assigneeId, String tenantId);
+  List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, String tenantId);
 
   /**
    * P2-17: 查用户的已办（真分页：SQL LIMIT/OFFSET）
@@ -185,7 +185,7 @@ public interface FlowTaskService {
    * @param size 每页大小
    * @return 分页结果
    */
-  PageResponse<List<FlowRunTask>> listDoneByAssigneePage(
+  PageResponse<List<FlowRunTaskDO>> listDoneByAssigneePage(
       String assigneeId, String tenantId, int page, int size);
 
   /**
@@ -196,7 +196,7 @@ public interface FlowTaskService {
    * @param deptIds 用户所属部门 ID（字符串形式，可空）
    * @param tenantId 租户 ID（可空，默认 1L）
    */
-  List<FlowRunTask> listTodoByUser(
+  List<FlowRunTaskDO> listTodoByUser(
       String userId, List<String> roleCodes, List<String> deptIds, String tenantId);
 
   /**
@@ -341,7 +341,7 @@ public interface FlowTaskService {
    * @param task 任务 DO
    * @return 任务视图 VO（含基础字段 + 富化字段）
    */
-  FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTask task);
+  FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskDO task);
 
   /**
    * P2-31: 按节点统计平均耗时（GROUP BY node_code, node_name）
@@ -359,7 +359,7 @@ public interface FlowTaskService {
    * @param tenantId 租户 ID（可空）
    * @return 超期任务列表
    */
-  List<FlowRunTask> listOverdue(String assigneeId, String tenantId);
+  List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId);
 
   /**
    * P2-32: 统计超期任务数量
@@ -391,7 +391,7 @@ public interface FlowTaskService {
    * @param size 每页大小
    * @return 分页结果
    */
-  PageResponse<List<FlowRunTask>> listDoneByAssigneePageMulti(
+  PageResponse<List<FlowRunTaskDO>> listDoneByAssigneePageMulti(
       String assigneeId,
       String businessType,
       String flowCode,

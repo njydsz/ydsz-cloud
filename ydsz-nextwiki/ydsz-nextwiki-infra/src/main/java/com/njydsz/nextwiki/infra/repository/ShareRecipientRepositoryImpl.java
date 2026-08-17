@@ -5,8 +5,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.nextwiki.domain.entity.ShareRecipient;
-import com.njydsz.nextwiki.infra.repository.ShareRecipientRepository;
+import com.njydsz.nextwiki.infra.entity.ShareRecipientDO;
+import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
 import com.njydsz.nextwiki.infra.mapper.ShareRecipientMapper;
 
 /**
@@ -22,19 +22,19 @@ public class ShareRecipientRepositoryImpl implements ShareRecipientRepository {
   private final ShareRecipientMapper shareRecipientMapper;
 
   @Override
-  public void saveBatch(List<ShareRecipient> recipients) {
-    for (ShareRecipient recipient : recipients) {
+  public void saveBatch(List<ShareRecipientDO> recipients) {
+    for (ShareRecipientDO recipient : recipients) {
       shareRecipientMapper.insert(recipient);
     }
   }
 
   @Override
-  public List<ShareRecipient> findByShareId(String shareId) {
+  public List<ShareRecipientDO> findByShareId(String shareId) {
     return shareRecipientMapper.selectByShareId(shareId);
   }
 
   @Override
-  public List<ShareRecipient> findByRecipientId(String recipientId) {
+  public List<ShareRecipientDO> findByRecipientId(String recipientId) {
     return shareRecipientMapper.selectByRecipientId(recipientId);
   }
 

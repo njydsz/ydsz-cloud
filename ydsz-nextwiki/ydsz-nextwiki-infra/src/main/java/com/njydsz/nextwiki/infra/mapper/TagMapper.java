@@ -10,8 +10,8 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.nextwiki.domain.entity.FileTag;
-import com.njydsz.nextwiki.domain.entity.Tag;
+import com.njydsz.nextwiki.infra.entity.FileTagDO;
+import com.njydsz.nextwiki.infra.entity.TagDO;
 
 /**
  * 标签 Mapper
@@ -32,12 +32,12 @@ import com.njydsz.nextwiki.domain.entity.Tag;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.nextwiki.domain.entity.Tag 标签实体
+ * @see com.njydsz.nextwiki.infra.entity.TagDO 标签实体
  * @see com.njydsz.nextwiki.server.service.TagService 标签 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface TagMapper extends BaseMapper<Tag> {
+public interface TagMapper extends BaseMapper<TagDO> {
 
   /**
    * 按标签名精确查询（命中 uk_tag_name 唯一索引）；租户隔离由拦截器自动注入。
@@ -45,14 +45,14 @@ public interface TagMapper extends BaseMapper<Tag> {
    * @param name 标签名称
    * @return 命中的标签实体；不存在则返回 null
    */
-  Tag selectByName(@Param("name") String name);
+  TagDO selectByName(@Param("name") String name);
 
   /**
    * 查询当前租户下的全部标签。
    *
    * @return 标签列表
    */
-  List<Tag> selectAll();
+  List<TagDO> selectAll();
 
   /**
    * 查询指定文件节点已绑定的全部标签。
@@ -60,18 +60,18 @@ public interface TagMapper extends BaseMapper<Tag> {
    * @param fileNodeId 文件节点 ID
    * @return 标签列表
    */
-  List<Tag> selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
+  List<TagDO> selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
   /**
    * 插入文件-标签关联记录（中间表 nw_file_tag）。
    *
-   * @param fileTag 关联实体（id/fileNodeId/tagId/createdBy/updatedBy 由调用方填充，revision/deleted 默认 0）
+   * @param FileTagDO 关联实体（id/fileNodeId/tagId/createdBy/updatedBy 由调用方填充，revision/deleted 默认 0）
    * @return 受影响行数
    */
   @Insert(
       "INSERT INTO nw_file_tag (id, file_node_id, tag_id, created_by, created_at, updated_by, updated_at, revision, deleted) "
           + "VALUES (#{id}, #{fileNodeId}, #{tagId}, #{createdBy}, NOW(), #{updatedBy}, NOW(), 0, 0)")
-  int insertFileTag(FileTag fileTag);
+  int insertFileTag(FileTagDO FileTagDO);
 
   /**
    * 删除指定文件节点与指定标签的单条关联。
@@ -98,7 +98,7 @@ public interface TagMapper extends BaseMapper<Tag> {
    * @param fileNodeId 文件节点 ID
    * @return 关联记录列表
    */
-  List<FileTag> selectFileTagsByFileNodeId(@Param("fileNodeId") String fileNodeId);
+  List<FileTagDO> selectFileTagsByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
   /**
    * 标签使用计数 +1（绑定标签时调用），原子自增避免并发计数偏差。

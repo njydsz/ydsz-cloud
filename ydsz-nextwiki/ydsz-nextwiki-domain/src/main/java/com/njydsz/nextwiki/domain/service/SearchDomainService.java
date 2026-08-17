@@ -11,9 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.entity.SearchIndex;
-import com.njydsz.nextwiki.domain.entity.Tag;
+import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.infra.entity.SearchIndexDO;
+import com.njydsz.nextwiki.infra.entity.TagDO;
 import com.njydsz.nextwiki.domain.vo.SearchResultVO;
 
 /**
@@ -74,7 +74,7 @@ public class SearchDomainService {
    * @return 搜索结果
    */
   public SearchResultVO search(
-      List<SearchIndex> indices, long total, String keyword, int page, int pageSize) {
+      List<SearchIndexDO> indices, long total, String keyword, int page, int pageSize) {
     long startTime = System.currentTimeMillis();
 
     log.info(
@@ -85,14 +85,14 @@ public class SearchDomainService {
         pageSize);
 
     List<SearchResultVO.SearchHitVO> hits = new ArrayList<>();
-    for (SearchIndex index : indices) {
+    for (SearchIndexDO index : indices) {
       float score = calculateScore(index, keyword);
       hits.add(
           SearchResultVO.SearchHitVO.builder()
               .fileNodeId(index.getFileNodeId())
               .name(index.getName())
               .path(index.getPath())
-              .nodeType(FileNode.TYPE_FILE)
+              .nodeType(FileNodeDO.TYPE_FILE)
               .suffix(index.getSuffix())
               .size(index.getSize())
               .highlight(buildHighlight(index.getName(), keyword))
@@ -117,7 +117,7 @@ public class SearchDomainService {
   /**
    * 构建搜索索引实体（纯领域逻辑，数据由 server 层传入）
    *
-   * <p>根据文件节点和标签数据，构建 {@link SearchIndex} 实体。 实体持久化由 server 层通过 {@code SearchIndexRepository} 完成。
+   * <p>根据文件节点和标签数据，构建 {@link SearchIndexDO} 实体。 实体持久化由 server 层通过 {@code SearchIndexRepository} 完成。
    *
    * @param node 文件节点实体（由 server 层查询传入，须保证非 null 且未删除）
    * @param tags 文件关联的标签列表（由 server 层查询传入，可为 null 或空）
@@ -125,13 +125,13 @@ public class SearchDomainService {
    * @param userId 操作人ID
    * @return 构建完成的搜索索引实体
    */
-  public SearchIndex buildSearchIndex(
-      FileNode node, List<Tag> tags, String content, String userId) {
+  public SearchIndexDO buildSearchIndex(
+      FileNodeDO node, List<TagDO> tags, String content, String userId) {
     log.info("[SearchDomainService] 构建搜索索引: fileNodeId={}", node.getId());
 
     String tagNames =
         tags != null && !tags.isEmpty()
-            ? tags.stream().map(Tag::getName).collect(Collectors.joining(","))
+            ? tags.stream().map(TagDO::getName).collect(Collectors.joining(","))
             : null;
 
     // 构建可搜索内容
@@ -149,8 +149,8 @@ public class SearchDomainService {
       searchableContent.append(' ').append(tagNames);
     }
 
-    SearchIndex index =
-        SearchIndex.builder()
+    SearchIndexDO index =
+        SearchIndexDO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
             .fileNodeId(node.getId())
             .name(node.getName())
@@ -173,7 +173,7 @@ public class SearchDomainService {
   // ==================== 私有方法 ====================
 
   /** 计算搜索得分（0-1 之间，越高越相关） */
-  private float calculateScore(SearchIndex index, String keyword) {
+  private float calculateScore(SearchIndexDO index, String keyword) {
     if (keyword == null || keyword.isEmpty()) {
       return 1.0f;
     }

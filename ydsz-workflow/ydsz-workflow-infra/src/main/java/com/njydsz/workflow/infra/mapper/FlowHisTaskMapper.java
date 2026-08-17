@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.domain.entity.FlowHisTask;
+import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
 
 /**
  * 历史任务 Mapper
@@ -31,15 +31,15 @@ import com.njydsz.workflow.domain.entity.FlowHisTask;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.domain.entity.FlowHisTask 历史任务实体
+ * @see com.njydsz.workflow.infra.entity.FlowHisTaskDO 历史任务实体
  * @see com.njydsz.workflow.server.service.FlowTaskHistoryService 已办 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowHisTaskMapper extends BaseMapper<FlowHisTask> {
+public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
 
   /** 查用户已办（历史） */
-  List<FlowHisTask> selectDoneByAssignee(
+  List<FlowHisTaskDO> selectDoneByAssignee(
       @Param("assigneeId") String assigneeId, @Param("tenantId") String tenantId);
 
   /**
@@ -50,7 +50,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTask> {
    * @param offset 偏移量（从 0 开始）
    * @param limit 每页大小
    */
-  List<FlowHisTask> selectDoneByAssigneePage(
+  List<FlowHisTaskDO> selectDoneByAssigneePage(
       @Param("assigneeId") String assigneeId,
       @Param("tenantId") String tenantId,
       @Param("offset") int offset,
@@ -61,7 +61,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTask> {
       @Param("assigneeId") String assigneeId, @Param("tenantId") String tenantId);
 
   /** 查某实例的所有历史 */
-  List<FlowHisTask> selectByInstanceId(@Param("instanceId") String instanceId);
+  List<FlowHisTaskDO> selectByInstanceId(@Param("instanceId") String instanceId);
 
   /**
    * P2-31: 按节点统计平均耗时（GROUP BY node_code, node_name）
@@ -85,7 +85,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTask> {
    * @param offset 偏移量（从 0 开始）
    * @param limit 每页大小
    */
-  List<FlowHisTask> selectDonePage(
+  List<FlowHisTaskDO> selectDonePage(
       @Param("assigneeId") String assigneeId,
       @Param("businessType") String businessType,
       @Param("flowCode") String flowCode,

@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.nextwiki.domain.entity.FileAcl;
+import com.njydsz.nextwiki.infra.entity.FileAclDO;
 
 /**
  * 文件权限 ACL Mapper
@@ -29,12 +29,12 @@ import com.njydsz.nextwiki.domain.entity.FileAcl;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.nextwiki.domain.entity.FileAcl 文件权限实体
+ * @see com.njydsz.nextwiki.infra.entity.FileAclDO 文件权限实体
  * @see com.njydsz.nextwiki.server.service.FileAclService 文件权限 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FileAclMapper extends BaseMapper<FileAcl> {
+public interface FileAclMapper extends BaseMapper<FileAclDO> {
 
   /**
    * 查询指定文件节点下的全部 ACL 规则。
@@ -42,7 +42,7 @@ public interface FileAclMapper extends BaseMapper<FileAcl> {
    * @param fileNodeId 文件节点 ID
    * @return 该节点下的 ACL 规则列表（可能为空；已逻辑删除记录由拦截器自动过滤）
    */
-  List<FileAcl> selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
+  List<FileAclDO> selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
   /**
    * 精确查询某文件节点下、某授权主体（用户/角色/组）的 ACL 规则，供鉴权判定使用。
@@ -52,7 +52,7 @@ public interface FileAclMapper extends BaseMapper<FileAcl> {
    * @param granteeId 主体 ID
    * @return 命中的 ACL 规则列表
    */
-  List<FileAcl> selectByFileNodeIdAndGrantee(
+  List<FileAclDO> selectByFileNodeIdAndGrantee(
       @Param("fileNodeId") String fileNodeId,
       @Param("granteeType") String granteeType,
       @Param("granteeId") String granteeId);
@@ -67,7 +67,7 @@ public interface FileAclMapper extends BaseMapper<FileAcl> {
   int deleteByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
   /** 查询有效权限（含继承自父目录的权限） */
-  List<FileAcl> selectEffectivePermissions(
+  List<FileAclDO> selectEffectivePermissions(
       @Param("fileNodeId") String fileNodeId,
       @Param("userId") String userId,
       @Param("roleIds") List<String> roleIds);
@@ -78,5 +78,5 @@ public interface FileAclMapper extends BaseMapper<FileAcl> {
    * @param acls 待插入的 ACL 列表
    * @return 受影响行数
    */
-  int batchInsert(@Param("acls") List<FileAcl> acls);
+  int batchInsert(@Param("acls") List<FileAclDO> acls);
 }

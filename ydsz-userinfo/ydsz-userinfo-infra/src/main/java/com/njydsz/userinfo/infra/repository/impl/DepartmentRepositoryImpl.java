@@ -7,9 +7,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.entity.Department;
+import com.njydsz.userinfo.domain.repository.DepartmentRepository;
+import com.njydsz.userinfo.infra.entity.DepartmentDO;
 import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
-import com.njydsz.userinfo.infra.repository.DepartmentRepository;
 
 /**
  * 部门 Repository 实现
@@ -26,41 +26,41 @@ public class DepartmentRepositoryImpl implements DepartmentRepository {
   private final DepartmentMapper departmentMapper;
 
   @Override
-  public Department findById(String id) {
+  public DepartmentDO findById(String id) {
     return departmentMapper.selectById(id);
   }
 
   @Override
-  public List<Department> findByParentId(String parentId) {
-    LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Department::getParentId, parentId);
+  public List<DepartmentDO> findByParentId(String parentId) {
+    LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(DepartmentDO::getParentId, parentId);
     return departmentMapper.selectList(wrapper);
   }
 
   @Override
-  public Department findByDeptCode(String deptCode) {
-    LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Department::getDeptCode, deptCode);
+  public DepartmentDO findByDeptCode(String deptCode) {
+    LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(DepartmentDO::getDeptCode, deptCode);
     return departmentMapper.selectOne(wrapper);
   }
 
   @Override
-  public List<Department> list(LambdaQueryWrapper<Department> wrapper) {
+  public List<DepartmentDO> list(LambdaQueryWrapper<DepartmentDO> wrapper) {
     return departmentMapper.selectList(wrapper);
   }
 
   @Override
-  public List<Department> listByIds(Collection<String> ids) {
+  public List<DepartmentDO> listByIds(Collection<String> ids) {
     return departmentMapper.selectBatchIds(ids);
   }
 
   @Override
-  public int insert(Department entity) {
+  public int insert(DepartmentDO entity) {
     return departmentMapper.insert(entity);
   }
 
   @Override
-  public int updateById(Department entity) {
+  public int updateById(DepartmentDO entity) {
     return departmentMapper.updateById(entity);
   }
 
@@ -70,12 +70,12 @@ public class DepartmentRepositoryImpl implements DepartmentRepository {
   }
 
   @Override
-  public int delete(LambdaQueryWrapper<Department> wrapper) {
+  public int delete(LambdaQueryWrapper<DepartmentDO> wrapper) {
     return departmentMapper.delete(wrapper);
   }
 
   @Override
-  public long count(LambdaQueryWrapper<Department> wrapper) {
+  public long count(LambdaQueryWrapper<DepartmentDO> wrapper) {
     return departmentMapper.selectCount(wrapper);
   }
 }

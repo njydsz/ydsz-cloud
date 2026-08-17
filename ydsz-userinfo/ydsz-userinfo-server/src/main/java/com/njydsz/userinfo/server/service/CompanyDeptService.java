@@ -2,7 +2,7 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
-import com.njydsz.userinfo.domain.entity.CompanyDept;
+import com.njydsz.userinfo.infra.entity.CompanyDeptDO;
 
 /**
  * 公司-部门 Service 接口
@@ -29,9 +29,9 @@ import com.njydsz.userinfo.domain.entity.CompanyDept;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see CompanyDept 公司-部门关联实体
- * @see com.njydsz.userinfo.domain.entity.Company 公司实体
- * @see com.njydsz.userinfo.domain.entity.Department 部门实体
+ * @see CompanyDeptDO 公司-部门关联实体
+ * @see com.njydsz.userinfo.infra.entity.CompanyDO 公司实体
+ * @see com.njydsz.userinfo.infra.entity.DepartmentDO 部门实体
  */
 public interface CompanyDeptService {
 
@@ -41,14 +41,14 @@ public interface CompanyDeptService {
    * @param id 主键 ID
    * @return 公司-部门关联实体，不存在时返回 null
    */
-  CompanyDept getById(String id);
+  CompanyDeptDO getById(String id);
 
   /**
    * 查询全部公司-部门关联。
    *
    * @return 关联列表
    */
-  List<CompanyDept> list();
+  List<CompanyDeptDO> list();
 
   /**
    * 创建公司-部门关联。
@@ -58,7 +58,7 @@ public interface CompanyDeptService {
    * @param entity 公司-部门关联实体
    * @return 新关联主键 ID
    */
-  String save(CompanyDept entity);
+  String save(CompanyDeptDO entity);
 
   /**
    * 更新公司-部门关联。
@@ -66,7 +66,7 @@ public interface CompanyDeptService {
    * @param entity 公司-部门关联实体（含 ID）
    * @return true=成功
    */
-  boolean updateById(CompanyDept entity);
+  boolean updateById(CompanyDeptDO entity);
 
   /**
    * 删除公司-部门关联。

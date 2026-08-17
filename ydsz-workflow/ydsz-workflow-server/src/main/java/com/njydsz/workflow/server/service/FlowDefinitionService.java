@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
-import com.njydsz.workflow.domain.entity.FlowDefinition;
+import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 
 /**
  * 流程定义 Service
@@ -94,7 +94,7 @@ public interface FlowDefinitionService {
    * @param tenantId 租户 ID
    * @return 已发布的流程定义 DO，未发布或不存在时返回 null
    */
-  FlowDefinition getPublished(String flowCode, String version, String tenantId);
+  FlowDefinitionDO getPublished(String flowCode, String version, String tenantId);
 
   /**
    * 按编码查询最新版本流程定义（不区分发布状态）
@@ -103,7 +103,7 @@ public interface FlowDefinitionService {
    * @param tenantId 租户 ID
    * @return 最新版本流程定义 DO
    */
-  FlowDefinition getLatestByCode(String flowCode, String tenantId);
+  FlowDefinitionDO getLatestByCode(String flowCode, String tenantId);
 
   /**
    * 分页查询流程定义列表
@@ -114,7 +114,7 @@ public interface FlowDefinitionService {
    * @param flowCode 流程编码模糊过滤（可空）
    * @return 流程定义列表（按更新时间倒序）
    */
-  List<FlowDefinition> page(int pageNo, int pageSize, String category, String flowCode);
+  List<FlowDefinitionDO> page(int pageNo, int pageSize, String category, String flowCode);
 
   /**
    * P2-21: 流程定义详情查询（含节点 + 跳转）

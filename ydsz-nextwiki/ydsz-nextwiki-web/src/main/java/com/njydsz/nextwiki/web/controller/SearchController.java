@@ -3,7 +3,7 @@ package com.njydsz.nextwiki.web.controller;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.TagDO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ import com.njydsz.nextwiki.server.service.SearchApplicationService;
  * <p>提供网盘文件的综合搜索能力，支持多维度（文件名/路径/标签/内容）搜索：
  *
  * <ul>
- *   <li>{@code POST /search} - 综合搜索（支持 scope 限定：name/content/tag/all）
+ *   <li>{@code POST /search} - 综合搜索（支持 scope 限定：name/content/TagDO/all）
  *   <li>{@code POST /search/rebuild} - 重建全量索引（运维/修复用）
  * </ul>
  *
@@ -78,7 +78,7 @@ import com.njydsz.nextwiki.server.service.SearchApplicationService;
 @RestController
 @RequestMapping("/api/v1/nextwiki/search")
 @RequiredArgsConstructor
-@Tag(name = "全文搜索", description = "文件名/内容/标签综合搜索，支持 ES 全文检索与 DB LIKE 降级")
+@TagDO(name = "全文搜索", description = "文件名/内容/标签综合搜索，支持 ES 全文检索与 DB LIKE 降级")
 public class SearchController {
 
   /** 搜索应用服务（封装搜索逻辑 + 索引管理 + 降级策略） */

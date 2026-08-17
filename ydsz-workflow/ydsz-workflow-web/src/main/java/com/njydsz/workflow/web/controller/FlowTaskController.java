@@ -33,12 +33,12 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
-import com.njydsz.workflow.domain.dto.FlowCcQueryDTO;
+import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.dto.post.FlowDelegateAuthPostDTO;
-import com.njydsz.workflow.domain.entity.FlowAuditLog;
-import com.njydsz.workflow.domain.entity.FlowCc;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
+import com.njydsz.workflow.infra.entity.FlowCcDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
@@ -88,7 +88,7 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
  * @see FlowTaskService 任务服务门面
  * @see WorkflowFacade 工作流门面（业务编排）
  * @see FlowTaskOperateDTO 任务操作 DTO
- * @see FlowRunTask 运行时任务实体
+ * @see FlowRunTaskDO 运行时任务实体
  */
 @Slf4j
 @RestController
@@ -208,7 +208,7 @@ public class FlowTaskController {
    */
   @GetMapping("/task/{taskId}/rejectableNodes")
   public BaseResponse<List<Map<String, Object>>> rejectableNodes(@PathVariable String taskId) {
-    FlowRunTask task = taskService.getById(taskId);
+    FlowRunTaskDO task = taskService.getById(taskId);
     if (task == null) {
       return BaseResponse.success(List.of());
     }
@@ -501,7 +501,7 @@ public class FlowTaskController {
       @RequestParam(required = false) LocalDateTime endTime) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    PageResponse<List<FlowRunTask>> pageResult =
+    PageResponse<List<FlowRunTaskDO>> pageResult =
         taskService.pageTodo(userId, tenantId, flowCode, businessType, startTime, endTime, page, size);
     List<FlowRunTaskVO> vos = WorkflowConverter.INSTANT.flowRunTaskListToVO(pageResult.getData());
     return PageResponse.success(
@@ -529,7 +529,7 @@ public class FlowTaskController {
       @RequestParam(required = false) LocalDateTime endTime) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    PageResponse<List<FlowRunTask>> pageResult =
+    PageResponse<List<FlowRunTaskDO>> pageResult =
         taskService.pageDone(userId, tenantId, flowCode, businessType, startTime, endTime, page, size);
     List<FlowRunTaskVO> vos = WorkflowConverter.INSTANT.flowRunTaskListToVO(pageResult.getData());
     return PageResponse.success(
@@ -546,7 +546,7 @@ public class FlowTaskController {
   public BaseResponse<List<FlowRunTaskVO>> overdue() {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    List<FlowRunTask> tasks = taskService.listOverdue(userId, tenantId);
+    List<FlowRunTaskDO> tasks = taskService.listOverdue(userId, tenantId);
     return BaseResponse.success(WorkflowConverter.INSTANT.flowRunTaskListToVO(tasks));
   }
 
@@ -573,7 +573,7 @@ public class FlowTaskController {
       @RequestParam(required = false) String keyword) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    PageResponse<List<FlowRunTask>> pageResult =
+    PageResponse<List<FlowRunTaskDO>> pageResult =
         taskService.pageDoneSearch(
             userId, tenantId, flowCode, businessType, startTime, endTime, keyword, page, size);
     List<FlowRunTaskVO> vos = WorkflowConverter.INSTANT.flowRunTaskListToVO(pageResult.getData());
@@ -853,7 +853,7 @@ public class FlowTaskController {
       @PathVariable String instanceId,
       @RequestParam(defaultValue = "1") @Min(1) int pageNo,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-    List<FlowAuditLog> logs = auditLogMapper.selectByInstanceId(instanceId);
+    List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(instanceId);
     List<Map<String, Object>> filtered =
         logs == null
             ? List.of()
@@ -882,7 +882,7 @@ public class FlowTaskController {
       @PathVariable String taskId,
       @RequestParam(defaultValue = "1") @Min(1) int pageNo,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-    List<FlowAuditLog> logs = auditLogMapper.selectByTaskId(taskId);
+    List<FlowAuditLogDO> logs = auditLogMapper.selectByTaskId(taskId);
     List<Map<String, Object>> filtered =
         logs == null
             ? List.of()
@@ -898,7 +898,7 @@ public class FlowTaskController {
   }
 
   /** 将审计日志转换为加签视图 VO */
-  private Map<String, Object> toCountersignVO(FlowAuditLog log) {
+  private Map<String, Object> toCountersignVO(FlowAuditLogDO log) {
     Map<String, Object> vo = new LinkedHashMap<>();
     vo.put("id", log.getId());
     vo.put("instanceId", log.getInstanceId());
@@ -1044,7 +1044,7 @@ public class FlowTaskController {
    * @return 抄送分页结果
    */
   @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
-  @RateLimit(resource = "workflow.flowcc.pageCc", threshold = 50)
+  @RateLimit(resource = "workflow.FlowCcDO.pageCc", threshold = 50)
   @Idempotent(key = "ydsz:workflow:FlowTaskController:pageCc:lock", ttlSeconds = 5)
   @PostMapping("/cc/page")
   @Audit(
@@ -1053,7 +1053,7 @@ public class FlowTaskController {
       action = AuditAction.CREATE,
       content = "'pageCc'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
-  public BaseResponse<List<FlowCc>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
+  public BaseResponse<List<FlowCcDO>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     String userId = AuthContextUtils.getUserId();
     int pageNo = query.getPageNum();
@@ -1081,7 +1081,7 @@ public class FlowTaskController {
    * @return 操作结果
    */
   @Idempotent(key = "ydsz:workflow:FlowTaskController:ccMarkRead:lock", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowcc.ccMarkRead", threshold = 50)
+  @RateLimit(resource = "workflow.FlowCcDO.ccMarkRead", threshold = 50)
   @PostMapping("/cc/{id}/read")
   @Audit(
       module = "流程抄送",
@@ -1101,7 +1101,7 @@ public class FlowTaskController {
    * @return 已标记已读的记录数
    */
   @Idempotent(key = "ydsz:workflow:FlowTaskController:ccMarkAllRead:lock", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowcc.ccMarkAllRead", threshold = 50)
+  @RateLimit(resource = "workflow.FlowCcDO.ccMarkAllRead", threshold = 50)
   @PostMapping("/cc/readAll")
   @Audit(
       module = "流程抄送",
@@ -1149,7 +1149,7 @@ public class FlowTaskController {
    * @return 空响应
    */
   @Idempotent(key = "ydsz:workflow:FlowTaskController:delete:lock", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowattachment.delete", threshold = 50)
+  @RateLimit(resource = "workflow.FlowAttachmentDO.delete", threshold = 50)
   @DeleteMapping("/attachment/{attachmentId}")
   @Audit(
       module = "流程附件",

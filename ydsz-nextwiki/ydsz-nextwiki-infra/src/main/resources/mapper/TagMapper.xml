@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.TagMapper">
 
-    <resultMap id="TagResult" type="com.njydsz.nextwiki.domain.entity.Tag">
+    <resultMap id="TagResult" type="com.njydsz.nextwiki.infra.entity.TagDO">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
         <result column="color" property="color"/>
@@ -18,7 +18,7 @@
         <result column="deleted" property="deleted"/>
     </resultMap>
 
-    <resultMap id="FileTagResult" type="com.njydsz.nextwiki.domain.entity.FileTag">
+    <resultMap id="FileTagResult" type="com.njydsz.nextwiki.infra.entity.FileTagDO">
         <id column="id" property="id"/>
         <result column="file_node_id" property="fileNodeId"/>
         <result column="tag_id" property="tagId"/>

@@ -19,9 +19,9 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
-import com.njydsz.workflow.domain.entity.FlowDefinition;
-import com.njydsz.workflow.domain.entity.FlowInstance;
-import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
+import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.server.config.FlowProperties;
@@ -130,7 +130,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String startSubProcess(
-      FlowInstance parentInstance, FlowNode callActivityNode, Map<String, Object> variables) {
+      FlowInstanceDO parentInstance, FlowNodeDO callActivityNode, Map<String, Object> variables) {
     if (parentInstance == null || callActivityNode == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.BAD_REQUEST)
@@ -146,7 +146,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
           .build();
     }
     // 2. 校验子流程定义存在且已发布
-    FlowDefinition subDef =
+    FlowDefinitionDO subDef =
         definitionService.getPublished(subFlowCode, null, parentInstance.getTenantId());
     if (subDef == null) {
       throw SysException.builder()
@@ -213,7 +213,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (childInstanceId == null) {
       return;
     }
-    FlowInstance child = instanceMapper.selectById(childInstanceId);
+    FlowInstanceDO child = instanceMapper.selectById(childInstanceId);
     if (child == null) {
       log.warn("[SubProcess] 子实例不存在: id={}", childInstanceId);
       return;
@@ -224,7 +224,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
       // 非子流程场景
       return;
     }
-    FlowInstance parent = instanceMapper.selectById(parentId);
+    FlowInstanceDO parent = instanceMapper.selectById(parentId);
     if (parent == null) {
       log.warn("[SubProcess] 父实例不存在: id={}", parentId);
       return;
@@ -252,7 +252,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     }
     // 推进父流程到 callActivity 节点的下一节点
     Map<String, Object> variables = parseVariables(parent.getVariable());
-    List<FlowNode> nextNodes = advancer.advance(parent, parentNodeCode, "PASS", null, variables);
+    List<FlowNodeDO> nextNodes = advancer.advance(parent, parentNodeCode, "PASS", null, variables);
     if (nextNodes.isEmpty()) {
       // 父流程无下一节点：完成
       instanceService.complete(parent.getId(), parentNodeCode);
@@ -263,7 +263,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     }
     ((FlowInstanceServiceImpl) instanceService)
         .generateTasksForNodes(parent.getId(), nextNodes, variables);
-    FlowNode first = nextNodes.get(0);
+    FlowNodeDO first = nextNodes.get(0);
     instanceMapper.updateStatus(
         parent.getId(),
         parent.getFlowStatus(),
@@ -282,7 +282,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (childInstanceId == null) {
       return;
     }
-    FlowInstance child = instanceMapper.selectById(childInstanceId);
+    FlowInstanceDO child = instanceMapper.selectById(childInstanceId);
     if (child == null) {
       return;
     }
@@ -291,7 +291,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (parentId == null || parentNodeCode == null) {
       return;
     }
-    FlowInstance parent = instanceMapper.selectById(parentId);
+    FlowInstanceDO parent = instanceMapper.selectById(parentId);
     if (parent == null) {
       return;
     }
@@ -321,12 +321,12 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<FlowInstance> listChildren(String parentInstanceId) {
+  public List<FlowInstanceDO> listChildren(String parentInstanceId) {
     if (parentInstanceId == null) {
       return List.of();
     }
     return instanceMapper.selectList(
-        new QueryWrapper<FlowInstance>()
+        new QueryWrapper<FlowInstanceDO>()
             .eq("parent_instance_id", parentInstanceId)
             .eq("deleted", 0)
             .orderByDesc("start_at"));
@@ -334,7 +334,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
 
   @Override
   public FlowStartProcessDTO buildSubProcessStartDTO(
-      FlowInstance parentInstance, String subFlowCode, Map<String, Object> variables) {
+      FlowInstanceDO parentInstance, String subFlowCode, Map<String, Object> variables) {
     FlowStartProcessDTO dto = new FlowStartProcessDTO();
     dto.setFlowCode(subFlowCode);
     dto.setTitle(
@@ -360,7 +360,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (childInstanceId == null) {
       return new HashMap<>();
     }
-    FlowInstance child = instanceMapper.selectById(childInstanceId);
+    FlowInstanceDO child = instanceMapper.selectById(childInstanceId);
     if (child == null) {
       log.warn("[SubProcess] getSubProcessContext 子实例不存在: id={}", childInstanceId);
       return new HashMap<>();
@@ -395,8 +395,8 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (parentInstanceId == null) {
       return tree;
     }
-    List<FlowInstance> children = listChildren(parentInstanceId);
-    for (FlowInstance child : children) {
+    List<FlowInstanceDO> children = listChildren(parentInstanceId);
+    for (FlowInstanceDO child : children) {
       Map<String, Object> node = new LinkedHashMap<>();
       node.put("instanceId", child.getId());
       node.put("instanceName", child.getTitle());
@@ -415,7 +415,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   // ============== 私有方法 ==============
 
   /** 从节点 ext JSON 提取子流程编码 */
-  private String extractSubFlowCode(FlowNode node) {
+  private String extractSubFlowCode(FlowNodeDO node) {
     if (node.getExt() == null || node.getExt().isBlank()) {
       return null;
     }
@@ -434,7 +434,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   }
 
   /** 从节点 ext JSON 提取子流程超时小时数 */
-  private Double extractSubProcessTimeout(FlowNode node) {
+  private Double extractSubProcessTimeout(FlowNodeDO node) {
     if (node.getExt() == null || node.getExt().isBlank()) {
       return null;
     }
@@ -469,7 +469,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     // 防止无限循环：上限 = 配置最大深度 + 10 安全余量
     int maxIterations = flowProperties.getSubProcess().getMaxNestingDepth() + 10;
     while (currentId != null && depth < maxIterations) {
-      FlowInstance instance = instanceMapper.selectById(currentId);
+      FlowInstanceDO instance = instanceMapper.selectById(currentId);
       if (instance == null) {
         break;
       }

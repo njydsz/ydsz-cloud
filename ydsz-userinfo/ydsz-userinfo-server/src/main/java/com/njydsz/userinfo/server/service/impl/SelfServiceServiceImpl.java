@@ -14,7 +14,7 @@ import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.userinfo.domain.dto.ForgotPasswordDTO;
 import com.njydsz.userinfo.domain.dto.SelfRegisterDTO;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
-import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
@@ -83,8 +83,8 @@ public class SelfServiceServiceImpl implements SelfServiceService {
     }
 
     // 2. 用户名唯一性校验
-    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccount::getUsername, dto.getUsername());
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccountDO::getUsername, dto.getUsername());
     if (userAccountMapper.selectCount(wrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.USERNAME_DUPLICATE);
     }
@@ -94,7 +94,7 @@ public class SelfServiceServiceImpl implements SelfServiceService {
 
     // 4. 创建用户（启用状态，默认租户）
     String passwordHash = passwordEncoder.encode(dto.getPassword());
-    UserAccount user = new UserAccount();
+    UserAccountDO user = new UserAccountDO();
     user.setUsername(dto.getUsername());
     user.setRealName(dto.getRealName());
     user.setPassword(passwordHash);
@@ -127,9 +127,9 @@ public class SelfServiceServiceImpl implements SelfServiceService {
   @Transactional(rollbackFor = Exception.class)
   public boolean forgotPassword(ForgotPasswordDTO dto) {
     // 1. 查询用户
-    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccount::getUsername, dto.getUsername());
-    UserAccount user = userAccountMapper.selectOne(wrapper);
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccountDO::getUsername, dto.getUsername());
+    UserAccountDO user = userAccountMapper.selectOne(wrapper);
     if (user == null) {
       throw new BusinessException(UserInfoExceptionCode.FORGOT_PASSWORD_USER_NOT_FOUND);
     }
@@ -169,7 +169,7 @@ public class SelfServiceServiceImpl implements SelfServiceService {
     return true;
   }
 
-  private void indexUpsert(UserAccount entity) {
+  private void indexUpsert(UserAccountDO entity) {
     SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
     if (bridge != null) {
       bridge.indexUpsert("user", entity);

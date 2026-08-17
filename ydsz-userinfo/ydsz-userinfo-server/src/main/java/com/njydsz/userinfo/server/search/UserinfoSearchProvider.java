@@ -15,8 +15,8 @@ import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
-import com.njydsz.userinfo.domain.entity.UserAccount;
-import com.njydsz.userinfo.infra.repository.UserAccountRepository;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
+import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 
 /**
  * 用户搜索提供者
@@ -39,7 +39,7 @@ import com.njydsz.userinfo.infra.repository.UserAccountRepository;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class UserinfoSearchProvider implements SearchProvider<UserAccount> {
+public class UserinfoSearchProvider implements SearchProvider<UserAccountDO> {
 
   private final UserAccountRepository userAccountRepository;
 
@@ -65,7 +65,7 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccount> {
   }
 
   @Override
-  public IndexDocument toIndexDocument(UserAccount entity) {
+  public IndexDocument toIndexDocument(UserAccountDO entity) {
     if (entity == null || entity.getId() == null) {
       return null;
     }
@@ -166,16 +166,16 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccount> {
   }
 
   public List<String> getAllDocumentIds(String tenantId) {
-    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
-    wrapper.select(UserAccount::getId);
-    wrapper.eq(UserAccount::getDeleted, 0);
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.select(UserAccountDO::getId);
+    wrapper.eq(UserAccountDO::getDeleted, 0);
     if (tenantId != null && !tenantId.isBlank()) {
-      wrapper.eq(UserAccount::getTenantId, tenantId);
+      wrapper.eq(UserAccountDO::getTenantId, tenantId);
     }
-    return userAccountRepository.list(wrapper).stream().map(UserAccount::getId).toList();
+    return userAccountRepository.list(wrapper).stream().map(UserAccountDO::getId).toList();
   }
 
-  public UserAccount loadById(String id) {
+  public UserAccountDO loadById(String id) {
     return userAccountRepository.findById(id);
   }
 }

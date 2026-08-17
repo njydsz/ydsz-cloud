@@ -7,9 +7,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.entity.Company;
+import com.njydsz.userinfo.domain.repository.CompanyRepository;
+import com.njydsz.userinfo.infra.entity.CompanyDO;
 import com.njydsz.userinfo.infra.mapper.CompanyMapper;
-import com.njydsz.userinfo.infra.repository.CompanyRepository;
 
 /**
  * 公司 Repository 实现
@@ -26,34 +26,34 @@ public class CompanyRepositoryImpl implements CompanyRepository {
   private final CompanyMapper companyMapper;
 
   @Override
-  public Company findById(String id) {
+  public CompanyDO findById(String id) {
     return companyMapper.selectById(id);
   }
 
   @Override
-  public Company findByCompanyCode(String companyCode) {
-    LambdaQueryWrapper<Company> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Company::getCompanyCode, companyCode);
+  public CompanyDO findByCompanyCode(String companyCode) {
+    LambdaQueryWrapper<CompanyDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(CompanyDO::getCompanyCode, companyCode);
     return companyMapper.selectOne(wrapper);
   }
 
   @Override
-  public List<Company> list(LambdaQueryWrapper<Company> wrapper) {
+  public List<CompanyDO> list(LambdaQueryWrapper<CompanyDO> wrapper) {
     return companyMapper.selectList(wrapper);
   }
 
   @Override
-  public List<Company> listByIds(Collection<String> ids) {
+  public List<CompanyDO> listByIds(Collection<String> ids) {
     return companyMapper.selectBatchIds(ids);
   }
 
   @Override
-  public int insert(Company entity) {
+  public int insert(CompanyDO entity) {
     return companyMapper.insert(entity);
   }
 
   @Override
-  public int updateById(Company entity) {
+  public int updateById(CompanyDO entity) {
     return companyMapper.updateById(entity);
   }
 
@@ -63,7 +63,7 @@ public class CompanyRepositoryImpl implements CompanyRepository {
   }
 
   @Override
-  public long count(LambdaQueryWrapper<Company> wrapper) {
+  public long count(LambdaQueryWrapper<CompanyDO> wrapper) {
     return companyMapper.selectCount(wrapper);
   }
 }

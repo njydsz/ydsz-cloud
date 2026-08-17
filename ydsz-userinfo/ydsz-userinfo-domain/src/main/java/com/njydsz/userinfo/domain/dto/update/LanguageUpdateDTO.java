@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 语言修改请求 DTO。
  *
- * <p>对应后端 {@code PUT /api/v1/language} 请求体。 修改时 {@link #id} 必填，修改 {@code isDefault} 时 Service
+ * <p>对应后端 {@code PUT /api/v1/LanguageDO} 请求体。 修改时 {@link #id} 必填，修改 {@code isDefault} 时 Service
  * 层自动处理新旧默认语言切换。
  *
  * @author ydsz-team

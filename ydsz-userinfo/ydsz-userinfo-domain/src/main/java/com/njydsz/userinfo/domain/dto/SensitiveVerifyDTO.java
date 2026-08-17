@@ -9,7 +9,7 @@ import lombok.Data;
 /**
  * 敏感操作二次认证请求 DTO。
  *
- * <p>用于 {@code POST /api/v1/user/sensitive-verify} 接口，管理员在执行敏感操作前 通过密码确认身份。验证通过后，后端在 Redis 写入一条短期有效（5 分钟）的标记。
+ * <p>用于 {@code PostDO /api/v1/user/sensitive-verify} 接口，管理员在执行敏感操作前 通过密码确认身份。验证通过后，后端在 Redis 写入一条短期有效（5 分钟）的标记。
  *
  * <p><b>安全说明：</b>
  *

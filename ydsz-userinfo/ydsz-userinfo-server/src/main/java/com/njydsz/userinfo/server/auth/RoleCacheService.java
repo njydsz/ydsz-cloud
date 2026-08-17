@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.domain.entity.Role;
-import com.njydsz.userinfo.domain.entity.UserRole;
+import com.njydsz.userinfo.infra.entity.RoleDO;
+import com.njydsz.userinfo.infra.entity.UserRoleDO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
@@ -25,12 +25,12 @@ import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
  * <p>负责用户 → 角色列表的加载与缓存（Redis，TTL 10 分钟），角色分配变更时主动失效。 从 {@link AuthServiceImpl}
  * 拆分（P0-5），聚焦「角色加载与缓存一致性」单一职责。
  *
- * <p><b>Redis Key 设计：</b>{@code userinfo:roles:{userId}} → Hash{roles: List&lt;Role&gt;}
+ * <p><b>Redis Key 设计：</b>{@code userinfo:roles:{userId}} → Hash{roles: List&lt;RoleDO&gt;}
  *
  * @author ydsz-team
  * @since 1.1.0
- * @see UserRole 用户-角色关联实体
- * @see Role 角色实体
+ * @see UserRoleDO 用户-角色关联实体
+ * @see RoleDO 角色实体
  */
 @Slf4j
 @Component
@@ -56,11 +56,11 @@ public class RoleCacheService {
    * @param userId 用户 ID
    * @return 用户持有的有效角色列表，无角色时返回空列表
    */
-  public List<Role> loadUserRoles(String userId) {
+  public List<RoleDO> loadUserRoles(String userId) {
     // 1. 尝试从 Redis 缓存读取
     String cacheKey = USER_ROLES_KEY_PREFIX + userId;
     try {
-      List<Role> cachedRoles = redisHashOps.hGet(cacheKey, "roles", List.class);
+      List<RoleDO> cachedRoles = redisHashOps.hGet(cacheKey, "roles", List.class);
       if (cachedRoles != null && !cachedRoles.isEmpty()) {
         log.debug("User roles cache hit: userId={}", userId);
         userInfoMetrics.recordCacheResult("roles_cache_total", "hit");
@@ -72,7 +72,7 @@ public class RoleCacheService {
 
     // 2. 缓存未命中，查询数据库
     userInfoMetrics.recordCacheResult("roles_cache_total", "miss");
-    List<Role> roles = loadUserRolesFromDb(userId);
+    List<RoleDO> roles = loadUserRolesFromDb(userId);
 
     // 3. 写入 Redis 缓存
     if (!roles.isEmpty()) {
@@ -110,17 +110,17 @@ public class RoleCacheService {
    * @param userId 用户 ID
    * @return 用户持有的有效角色列表
    */
-  private List<Role> loadUserRolesFromDb(String userId) {
-    LambdaQueryWrapper<UserRole> urWrapper = new LambdaQueryWrapper<>();
-    urWrapper.eq(UserRole::getUserId, userId);
-    List<UserRole> userRoles = userRoleMapper.selectList(urWrapper);
+  private List<RoleDO> loadUserRolesFromDb(String userId) {
+    LambdaQueryWrapper<UserRoleDO> urWrapper = new LambdaQueryWrapper<>();
+    urWrapper.eq(UserRoleDO::getUserId, userId);
+    List<UserRoleDO> userRoles = userRoleMapper.selectList(urWrapper);
     if (userRoles.isEmpty()) {
       return List.of();
     }
-    List<String> roleIds = userRoles.stream().map(UserRole::getRoleId).collect(Collectors.toList());
-    LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
-    roleWrapper.in(Role::getId, roleIds);
-    roleWrapper.eq(Role::getStatus, "ENABLED");
+    List<String> roleIds = userRoles.stream().map(UserRoleDO::getRoleId).collect(Collectors.toList());
+    LambdaQueryWrapper<RoleDO> roleWrapper = new LambdaQueryWrapper<>();
+    roleWrapper.in(RoleDO::getId, roleIds);
+    roleWrapper.eq(RoleDO::getStatus, "ENABLED");
     return roleMapper.selectList(roleWrapper);
   }
 }

@@ -1,7 +1,7 @@
 package com.njydsz.workflow.server.service.impl;
 
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 
 /**
@@ -54,7 +54,7 @@ import com.njydsz.workflow.domain.enums.FlowPerformType;
  * @see FlowPerformType 会签类型枚举
  * @see CountersignStrategyFactory 策略工厂
  * @see FlowTaskPassService 主流程（策略调用方）
- * @see FlowRunTask 运行时任务实体
+ * @see FlowRunTaskDO 运行时任务实体
  * @see FlowTaskOperateDTO 任务操作 DTO
  */
 public interface CountersignStrategy {
@@ -67,7 +67,7 @@ public interface CountersignStrategy {
    *
    * <p>默认无操作；子类可按需重写。
    */
-  default void preCheck(FlowRunTask task, FlowTaskOperateDTO dto) {
+  default void preCheck(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
     // 默认 no-op
   }
 
@@ -76,13 +76,13 @@ public interface CountersignStrategy {
    *
    * <p>主流程在调用本方法前已完成"完成当前 task 并归档"动作；本方法负责 更新会签维度的状态（如并行计数器）。
    */
-  void onUserPassed(FlowRunTask task, FlowTaskOperateDTO dto);
+  void onUserPassed(FlowRunTaskDO task, FlowTaskOperateDTO dto);
 
   /** 是否满足推进条件（达到完成阈值）。 */
-  boolean shouldAdvance(FlowRunTask task);
+  boolean shouldAdvance(FlowRunTaskDO task);
 
   /** 推进前的清理动作（如 PARALLEL 完成后 skip 同节点其他 PENDING 任务）。 */
-  default void onAdvance(FlowRunTask task, FlowTaskOperateDTO dto) {
+  default void onAdvance(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
     // 默认 no-op
   }
 }

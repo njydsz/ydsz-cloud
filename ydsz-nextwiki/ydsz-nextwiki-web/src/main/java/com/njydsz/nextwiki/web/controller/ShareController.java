@@ -3,7 +3,7 @@ package com.njydsz.nextwiki.web.controller;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.TagDO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,9 +28,9 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
-import com.njydsz.nextwiki.domain.entity.ShareAccessLog;
-import com.njydsz.nextwiki.domain.entity.ShareLink;
-import com.njydsz.nextwiki.domain.entity.ShareRecipient;
+import com.njydsz.nextwiki.infra.entity.ShareAccessLogDO;
+import com.njydsz.nextwiki.infra.entity.ShareLinkDO;
+import com.njydsz.nextwiki.infra.entity.ShareRecipientDO;
 import com.njydsz.nextwiki.server.service.ShareApplicationService;
 
 /**
@@ -65,7 +65,7 @@ import com.njydsz.nextwiki.server.service.ShareApplicationService;
 @RestController
 @RequestMapping("/api/v1/nextwiki/shares")
 @RequiredArgsConstructor
-@Tag(name = "文件分享", description = "创建分享链接、验证访问、撤销分享、访问日志、定向分享")
+@TagDO(name = "文件分享", description = "创建分享链接、验证访问、撤销分享、访问日志、定向分享")
 public class ShareController {
 
   /** 分享应用服务（封装分享链接的 CRUD + 验证 + 撤销） */
@@ -78,7 +78,7 @@ public class ShareController {
    *
    * @param request 创建分享请求
    * @param userId 当前用户 ID
-   * @return 统一响应结果，data 为 {@link ShareLink}
+   * @return 统一响应结果，data 为 {@link ShareLinkDO}
    */
   @Audit(
       module = "分享管理",
@@ -89,11 +89,11 @@ public class ShareController {
   @PostMapping
   @Operation(summary = "创建分享链接")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_CREATE)
-  public BaseResponse<ShareLink> createShare(
+  public BaseResponse<ShareLinkDO> createShare(
       @Valid @RequestBody NextwikiDTOs.CreateShareRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
-    ShareLink result;
+    ShareLinkDO result;
     // 有目标用户时使用定向分享模式
     if (request.getTargetUserIds() != null && !request.getTargetUserIds().isEmpty()) {
       result =
@@ -122,7 +122,7 @@ public class ShareController {
   /**
    * 验证分享链接的访问权限。
    *
-   * <p>对外公开接口（无需登录），传入 shareCode + 提取码 + 密码进行三重校验。 验证通过后返回 {@link ShareLink}，同时记录访问日志。
+   * <p>对外公开接口（无需登录），传入 shareCode + 提取码 + 密码进行三重校验。 验证通过后返回 {@link ShareLinkDO}，同时记录访问日志。
    *
    * @param request 验证请求（shareCode / extractCode / password）
    * @param httpRequest HTTP 请求（用于获取 IP 和 UA）
@@ -138,9 +138,9 @@ public class ShareController {
   @PostMapping("/verify")
   @Operation(summary = "验证分享链接访问权限")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_VERIFY)
-  public BaseResponse<ShareLink> verifyAccess(
+  public BaseResponse<ShareLinkDO> verifyAccess(
       @Valid @RequestBody NextwikiDTOs.VerifyShareRequest request, HttpServletRequest httpRequest) {
-    ShareLink result =
+    ShareLinkDO result =
         shareApplicationService.verifyAccess(
             request.getShareCode(), request.getExtractCode(), request.getPassword());
 
@@ -190,12 +190,12 @@ public class ShareController {
    * 查询当前用户创建的所有分享链接。
    *
    * @param userId 当前用户 ID
-   * @return 统一响应结果，data 为 {@link ShareLink} 列表
+   * @return 统一响应结果，data 为 {@link ShareLinkDO} 列表
    */
   @GetMapping("/my")
   @Operation(summary = "查询我的分享列表")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_LIST)
-  public BaseResponse<List<ShareLink>> myShares(
+  public BaseResponse<List<ShareLinkDO>> myShares(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     return BaseResponse.success(shareApplicationService.findByUserId(userId));
   }
@@ -211,7 +211,7 @@ public class ShareController {
   @GetMapping("/{shareId}/logs")
   @Operation(summary = "查询分享访问日志")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_LOG_VIEW)
-  public BaseResponse<List<ShareAccessLog>> getAccessLogs(
+  public BaseResponse<List<ShareAccessLogDO>> getAccessLogs(
       @PathVariable String shareId,
       @RequestParam(defaultValue = "50") int limit,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
@@ -228,7 +228,7 @@ public class ShareController {
   @GetMapping("/{shareId}/recipients")
   @Operation(summary = "查询分享目标用户")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_VIEW)
-  public BaseResponse<List<ShareRecipient>> getRecipients(
+  public BaseResponse<List<ShareRecipientDO>> getRecipients(
       @PathVariable String shareId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     return BaseResponse.success(shareApplicationService.getRecipients(shareId));
   }
@@ -242,7 +242,7 @@ public class ShareController {
   @GetMapping("/received")
   @Operation(summary = "查询我收到的分享")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_LIST)
-  public BaseResponse<List<ShareRecipient>> getReceivedShares(
+  public BaseResponse<List<ShareRecipientDO>> getReceivedShares(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     return BaseResponse.success(shareApplicationService.getReceivedShares(userId));
   }

@@ -8,8 +8,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.workflow.domain.entity.FlowInstance;
-import com.njydsz.workflow.infra.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 
 /**
@@ -29,7 +29,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   private final FlowInstanceMapper instanceMapper;
 
   @Override
-  public FlowInstance save(FlowInstance instance) {
+  public FlowInstanceDO save(FlowInstanceDO instance) {
     if (instance.getId() == null) {
       instanceMapper.insert(instance);
     } else {
@@ -39,55 +39,55 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   @Override
-  public Optional<FlowInstance> findById(String id) {
+  public Optional<FlowInstanceDO> findById(String id) {
     return Optional.ofNullable(instanceMapper.selectById(id));
   }
 
   @Override
-  public Optional<FlowInstance> findByBusiness(String businessType, String businessId) {
+  public Optional<FlowInstanceDO> findByBusiness(String businessType, String businessId) {
     return instanceMapper
         .selectList(
-            new LambdaQueryWrapper<FlowInstance>()
-                .eq(FlowInstance::getBusinessType, businessType)
-                .eq(FlowInstance::getBusinessId, businessId)
-                .eq(FlowInstance::getDeleted, 0)
+            new LambdaQueryWrapper<FlowInstanceDO>()
+                .eq(FlowInstanceDO::getBusinessType, businessType)
+                .eq(FlowInstanceDO::getBusinessId, businessId)
+                .eq(FlowInstanceDO::getDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst();
   }
 
   @Override
-  public List<FlowInstance> findByInitiatorId(String initiatorId) {
+  public List<FlowInstanceDO> findByInitiatorId(String initiatorId) {
     return instanceMapper.selectList(
-        new LambdaQueryWrapper<FlowInstance>()
-            .eq(FlowInstance::getInitiatorId, initiatorId)
-            .eq(FlowInstance::getDeleted, 0)
-            .orderByDesc(FlowInstance::getCreatedAt));
+        new LambdaQueryWrapper<FlowInstanceDO>()
+            .eq(FlowInstanceDO::getInitiatorId, initiatorId)
+            .eq(FlowInstanceDO::getDeleted, 0)
+            .orderByDesc(FlowInstanceDO::getCreatedAt));
   }
 
   @Override
-  public List<FlowInstance> findChildren(String parentInstanceId) {
+  public List<FlowInstanceDO> findChildren(String parentInstanceId) {
     return instanceMapper.selectList(
-        new LambdaQueryWrapper<FlowInstance>()
-            .eq(FlowInstance::getParentInstanceId, parentInstanceId)
-            .eq(FlowInstance::getDeleted, 0));
+        new LambdaQueryWrapper<FlowInstanceDO>()
+            .eq(FlowInstanceDO::getParentInstanceId, parentInstanceId)
+            .eq(FlowInstanceDO::getDeleted, 0));
   }
 
   @Override
   public long countByStatus(String flowStatus) {
     return instanceMapper.selectCount(
-        new LambdaQueryWrapper<FlowInstance>()
-            .eq(FlowInstance::getFlowStatus, flowStatus)
-            .eq(FlowInstance::getDeleted, 0));
+        new LambdaQueryWrapper<FlowInstanceDO>()
+            .eq(FlowInstanceDO::getFlowStatus, flowStatus)
+            .eq(FlowInstanceDO::getDeleted, 0));
   }
 
   @Override
-  public List<FlowInstance> findSuspendedBefore(LocalDateTime before, int limit) {
+  public List<FlowInstanceDO> findSuspendedBefore(LocalDateTime before, int limit) {
     return instanceMapper.selectList(
-        new LambdaQueryWrapper<FlowInstance>()
-            .eq(FlowInstance::getFlowStatus, "SUSPENDED")
-            .le(FlowInstance::getUpdatedAt, before)
-            .eq(FlowInstance::getDeleted, 0)
+        new LambdaQueryWrapper<FlowInstanceDO>()
+            .eq(FlowInstanceDO::getFlowStatus, "SUSPENDED")
+            .le(FlowInstanceDO::getUpdatedAt, before)
+            .eq(FlowInstanceDO::getDeleted, 0)
             .last("LIMIT " + limit));
   }
 

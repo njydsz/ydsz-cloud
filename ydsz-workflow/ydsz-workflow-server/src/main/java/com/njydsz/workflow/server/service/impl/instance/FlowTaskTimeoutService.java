@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
@@ -43,7 +43,7 @@ public class FlowTaskTimeoutService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void timeoutTask(String taskId, String reason) {
-    FlowRunTask task = support.getTaskOrThrow(taskId);
+    FlowRunTaskDO task = support.getTaskOrThrow(taskId);
     String status = task.getTaskStatus();
     if (!FlowTaskStatus.PENDING.name().equals(status)
         && !FlowTaskStatus.CLAIMED.name().equals(status)) {
@@ -79,7 +79,7 @@ public class FlowTaskTimeoutService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void suspendTask(String taskId, String operatorId, String reason) {
-    FlowRunTask task = support.getTaskOrThrow(taskId);
+    FlowRunTaskDO task = support.getTaskOrThrow(taskId);
     String status = task.getTaskStatus();
     if (!FlowTaskStatus.PENDING.name().equals(status)
         && !FlowTaskStatus.CLAIMED.name().equals(status)) {
@@ -103,7 +103,7 @@ public class FlowTaskTimeoutService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void activateTask(String taskId, String operatorId) {
-    FlowRunTask task = support.getTaskOrThrow(taskId);
+    FlowRunTaskDO task = support.getTaskOrThrow(taskId);
     String status = task.getTaskStatus();
     if (!FlowTaskStatus.SUSPENDED.name().equals(status)) {
       throw SysException.builder()
