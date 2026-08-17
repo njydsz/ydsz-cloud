@@ -3,18 +3,21 @@
 > 对标对象：Spring Cloud Gateway 官方最佳实践、Kong / APISIX、阿里云 API 网关 / 美团 Shepherd、以及本项目声明对齐的若依/Pig/SpringBlade 等平台与阿里巴巴 Java 开发手册。
 > 分析范围：`ydsz-gateway` 模块最新代码（`src/main/java` + `src/main/resources`），不含 `target/` 编译产物。
 
+> **更新记录（2026-08-17）**：本报告全部 P0–P3 建议已按优先级落地完成，`mvn clean test` 通过（25 个单元测试全绿）。
+> 落地详情见文末「四、落地清单与状态」。
+
 ---
 
 ## 一、现状速览
 
 | 维度 | 现状 |
 |---|---|
-| 技术栈 | Spring Boot 4.1 + Spring Cloud Gateway（WebFlux/Reactor Netty）+ Nacos（注册/配置）+ Redis Reactive + Reactor LoadBalancer |
-| 过滤器链 | 12 个 GlobalFilter，顺序由 `GatewayFilterOrder` 统一管理（W3C Trace → AccessLog → IP 控制 → Payload 校验 → WebSocket Auth → Auth → Authorization → API Key → Gray → RateLimit → Audit → ApiVersionHeader） |
-| 核心能力 | JWT 鉴权（Caffeine 缓存 + 黑名单）、内部头 HMAC 签名、多维令牌桶限流、IP 黑白名单（两级缓存）、灰度路由（加权选择 + 一致性哈希）、W3C 链路追踪、安全响应头、API 版本协商、告警聚合、Prometheus 指标 |
-| 工程质量 | 依赖细粒度收敛（reactive 栈不引 servlet）、`@ConditionalOnProperty` 开关化、`ObjectProvider` 降级注入、错误码体系、路径穿越多层防护 |
+| 技术栈 | Spring Boot 4.1 + Spring Cloud Gateway（WebFlux/Reactor Netty）+ Nacos（注册/配置）+ Redis Reactive + Reactor LoadBalancer + Resilience4j |
+| 过滤器链 | 14 个 GlobalFilter，顺序由 `GatewayFilterOrder` 统一管理（W3C Trace → AccessLog → IP 控制 → Payload 校验 → WebSocket Auth → Auth → Authorization → API Key → Gray → RateLimit → Audit → CircuitBreaker → ApiVersionHeader + GrayResponseHeader） |
+| 核心能力 | JWT 鉴权（Caffeine 缓存 + 自适应 TTL + 验签切出事件循环）、内部头 HMAC 签名、五维令牌桶限流、IP 黑白名单（两级缓存）、灰度路由（加权随机 + 一致性哈希）、Resilience4j 熔断、W3C 链路追踪、安全响应头、API 版本协商、统一错误响应、Prometheus 指标 |
+| 工程质量 | 依赖细粒度收敛（reactive 栈不引 servlet）、`@ConditionalOnProperty` 开关化（与配置契约对齐）、`ObjectProvider` 降级注入、统一错误码写出器、路径穿越双层防护、核心逻辑单测 |
 
-**整体评价**：单就「自研网关」而言，安全纵深与工程化程度高于多数开源竞品，但存在**明显的"文档 vs 实现"漂移**、**统一错误码/告警等"半成品"能力**、以及**部分被注释与枚举"预订"但未落地的能力**（熔断、Sentinel、响应缓存）。核心风险集中在**路由配置三源混乱**、**JWT 校验阻塞事件循环**、**无熔断**三点。
+**整体评价（修复后）**：路由源已收敛为 Nacos 单一入口，熔断/响应缓存等"预订未落地"能力已补齐或诚实删减，错误响应全局统一，JWT 验签不再阻塞事件循环，关键路径穿越漏洞（`//`、null 字节、`.%2f` 混合编码绕过）已修复并由单测锁定。网关从"看起来完备"提升到"经得起生产验证"。
 
 ---
 
@@ -134,29 +137,40 @@
 
 ## 三、落地优先级汇总（Roadmap）
 
-| 优先级 | 编号 | 事项 | 工作量 | 收益 |
+> ✅ = 已完成（2026-08-17 全部完成）；标注了落地文件。
+
+| 优先级 | 编号 | 事项 | 状态 | 落地说明 |
 |---|---|---|---|---|
-| **P0** | A1 | 路由源收敛为单一 Nacos 动态路由，修正开关/DataId | 中 | 消除路由配置混乱与隐性失效 |
-| **P0** | A2 | 补 Resilience4j 熔断 + `CircuitBreakerGlobalFilter` | 中 | 补齐网关核心短板，防雪崩 |
-| **P0** | C1 | JWT 验签切出 event-loop（boundedElastic） | 小 | 高并发下吞吐/稳定性关键 |
-| **P0** | D1 | 统一错误响应写出器，收编 7 个过滤器拒绝路径 | 中 | 前端错误处理可统一，消除不一致 |
-| **P0** | A3 | 补齐核心逻辑单元测试 | 中 | 守住重构/安全回归底线 |
-| P1 | A4 | 配置命名统一 + 对齐开关 + 删死配置 | 小 | 消除"看起来能关但关不掉" |
-| P1 | A5 | GatewayAlertService 线程池改托管 | 小 | 合规（规范 15.4.1） |
-| P1 | B1 | API Key 哈希存储 + 预解析 | 小 | 安全 + 性能 |
-| P1 | B2 | 明确/实现 payload 深度校验，去重大小校验 | 中 | 真实 WAF 能力或诚实删减 |
-| P1 | C2 | 访问日志改结构化 + 转义 + 采样 | 小 | 日志安全 + 降本 |
-| P1 | C3 | 连接池指标接真实 metrics | 小 | 可观测性真实可用 |
-| P1 | D2 | 错误消息改 i18n key | 小 | 多语言一致性 |
-| P1 | D3 | WebSocket 拒绝响应带 body + traceId | 小 | 排障体验 |
-| P1 | E4 | AuditLogFilter 改走可信代理 IP 解析 | 小 | 修复审计 IP 伪造隐患 |
-| P2 | B3/B4/B5 | 灰度命名/SSE 超时/路由审计 | 中 | 完善灰度与流式支持 |
-| P2 | C4 | 限流本地兜底落地或删死代码 | 小 | 消除误导 |
-| P2 | D4/E1/E2 | 告警去重/版本协商/网关 RBAC 精简 | 小 | 减少维护负担 |
-| P3 | E3 | 清理死代码、指标标签预建 | 小 | 代码整洁 |
+| **P0** | A1 | 路由源收敛为单一 Nacos 动态路由，修正开关/DataId | ✅ | `GatewayRouteConfig` 默认启用动态路由；Java 兜底路由 order=1000 降级；`bootstrap.yml` 移除 yaml 路由共享配置；`routes-nacos.yaml` 改为 JSON 数组模板；四套环境 yaml 显式开启 |
+| **P0** | A2 | 补 Resilience4j 熔断 + `CircuitBreakerGlobalFilter` | ✅ | 新增 `CircuitBreakerGlobalFilter`（按路由隔离、豁免探针路径、接通状态指标）；pom 引入 resilience4j-reactor/circuitbreaker |
+| **P0** | C1 | JWT 验签切出 event-loop（boundedElastic） | ✅ | `CachedJwtValidator#validateAndParseReactive` + `AuthGlobalFilter`/`WebSocketAuthFilter` 改用响应式验签 |
+| **P0** | D1 | 统一错误响应写出器，收编 7 个过滤器拒绝路径 | ✅ | 新增 `GatewayErrorWriter`（bizCode + ProblemDetail + Link + traceId）；收编 Auth/RateLimit/IP/Payload/ApiKey/Authorization/WebSocket 拒绝路径 |
+| **P0** | A3 | 补齐核心逻辑单元测试 | ✅ | 新增 4 个测试类（PathGuard/InternalHeaderSigner/GatewayErrorCode/GrayLoadBalancer），25 用例全绿；**并发现修复 PathGuard 3 个真实绕过漏洞**（`//`、null 字节、`.%2f` 混合编码） |
+| P1 | A4 | 配置命名统一 + 对齐开关 + 删死配置 | ✅ | filter 开关与 `@ConditionalOnProperty` 对齐（ip-access-control / api-key-auth / access-log / circuit-breaker）；删除 `response-cache`、`max-json-depth`、Sentinel 死配置；重写 `additional-spring-configuration-metadata.json` |
+| P1 | A5 | GatewayAlertService 线程池改托管 | ✅ | 删除自建线程池的 `GatewayAlertService`，告警直接走 `SentryObservation`（由 common-sentry `AlertConverger` 收敛） |
+| P1 | B1 | API Key 哈希存储 + 预解析 | ✅ | `ApiKeyAuthFilter` 配置预解析 + SHA-256 摘要比对（对标 Kong/APISIX） |
+| P1 | B2 | 明确/实现 payload 深度校验，去重大小校验 | ✅ | 删除死配置 `max-json-depth`，明确网关层只做大小 + Content-Type 传输层防护 |
+| P1 | C2 | 访问日志改结构化 + 转义 + 采样 | ✅ | `AccessLogGlobalFilter` 增加 JSON 转义（防日志注入）+ 采样率配置（`access-log.sample-rate`，4xx/5xx 全量） |
+| P1 | C3 | 连接池指标接真实 metrics | ✅ | `GatewayHttpClientConfig` 启用 Reactor Netty `metrics(true)`，删除恒为 0 的假 Gauge |
+| P1 | D2 | 错误消息改 i18n key | ✅ | 各过滤器错误消息统一走 `GatewayErrorCode#getMessageKey`（Authorization/RateLimit/ApiKey 等） |
+| P1 | D3 | WebSocket 拒绝响应带 body + traceId | ✅ | `WebSocketAuthFilter#rejectWebSocket` 复用统一错误写出器 |
+| P1 | E4 | AuditLogFilter 改走可信代理 IP 解析 | ✅ | `AuditLogFilter#extractClientIp` 复用 `GatewayIpUtils`，修复审计 IP 可伪造隐患 |
+| P2 | B3/B4/B5 | 灰度命名/SSE 超时/路由审计 | ✅ | B3：`GrayLoadBalancer` 注释如实改为"加权随机"；B4：agent 路由 `response-timeout=120s`（Nacos 模板 + Java 兜底）；B5：Nacos 路由变更审计日志（变更前后路由数 + 时间戳） |
+| P2 | C4 | 限流本地兜底落地或删死代码 | ✅ | 删除 `localBucketTokens` 死字段 + 修正误导日志；**并补齐并行改造遗留的五维度限流**（IP/用户/租户/应用/接口，Lua 脚本与 Java 参数对齐） |
+| P2 | D4/E1/E2 | 告警去重/版本协商/网关 RBAC 精简 | ✅ | D4：删除重复告警聚合（交 AlertConverger）；E1/E2：`authorization.enabled=false` 显式默认关闭，README 说明边界 |
+| P3 | E3 | 清理死代码、指标标签预建 | ✅ | 删除 `GatewayMetrics.GaugeRef` 死代码；熔断配置项通过 `@Value` 可配置化 |
 
 ---
 
 ## 四、结论
 
-`ydsz-gateway` 的**安全纵深与工程化意识**在同类开源项目中处于上游（路径穿越多层防护、内部头 HMAC、可信代理链、JWT 缓存防击穿/穿透、错误码体系、优雅停机、安全响应头），但当前**最大短板不在"缺能力"，而在"能力与声明不一致"**：熔断/Sentinel/响应缓存/JSON 深度校验/JWT 本地兜底限流等多项能力只存在于注释、枚举、配置项或 README 中，实际未落地或半落地。建议优先解决 P0 的 5 项（路由源收敛、熔断、JWT 出事件循环、错误响应统一、补测试），再按 Roadmap 逐项推进，即可把网关从"看起来完备"提升到"经得起生产验证"。
+`ydsz-gateway` 的**安全纵深与工程化意识**在同类开源项目中处于上游。本次按优先级完成全部 P0–P3 落地后，此前"能力与声明不一致"的短板已消除：
+
+- **熔断从无到有**（Resilience4j 按路由隔离，防下游雪崩）；
+- **路由配置三源混乱收敛为 Nacos 单一入口**（JSON 模板 + 显式开关 + Java 兜底降级）；
+- **JWT 验签切出事件循环**，高并发冷缓存不再阻塞 Netty；
+- **错误响应全局统一**（7 个过滤器拒绝路径收编至 `GatewayErrorWriter`）；
+- **核心逻辑有测试兜底**（25 用例），并借测试修复了 PathGuard 的 3 个真实绕过漏洞；
+- 连接池指标、访问日志转义/采样、API Key 哈希、审计 IP 可信解析、五维限流等 P1/P2/P3 项全部落地。
+
+剩余可选项（非阻塞）：若需平滑加权轮询语义可替换 Alias Method 为 Nginx 平滑 WRR；如引入 Sentinel 可复用配置元数据中的命名空间。`mvn clean test`（`-pl ydsz-gateway`）已验证通过。

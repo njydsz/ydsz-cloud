@@ -29,7 +29,7 @@
 | `MessageSubscriberHelper` | 订阅者辅助工具，提供 `subscribeMessage` / `subscribeOnce` 等组合操作 |
 | `AbstractMessageQueue` | 抽象消息队列基类，封装通用属性与生命周期 |
 | `MessageQueueFactory` | 队列工厂实现，按类型创建队列、追踪已创建实例、统一 `close()` 优雅关闭 |
-| `QueueType` | 队列类型枚举：`STREAM` / `KAFKA` / `ROCKET` 为推荐引擎，`LIST` / `PUBSUB` / `RABBIT` 已废弃 |
+| `QueueType` | 队列类型枚举：`STREAM` / `KAFKA` / `ROCKET` 为推荐引擎，`LIST` / `PUBSUB` / `RABBIT` 为兼容引擎（javadoc 建议优先使用推荐引擎，无 @Deprecated 标注） |
 | `QueueMessage` | 统一消息模型，含 body / headers / traceId / retryCount / messageGroupKey |
 | `@EnableQueue` | 启用注解，`@Import(QueueConfiguration.class)` |
 
@@ -82,7 +82,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `MessageMetrics` | 消息指标采集（发送数 / 消费数 / 延迟 / 错误率） |
+| `QueueMetrics` | 消息指标采集（发送数 / 消费数 / 延迟 / 错误率） |
 | `QueueHealthIndicator` | 健康检查：Redis 类型执行 PING，非 Redis 类型 TCP 端口探测 |
 
 ## 接入方式
@@ -322,17 +322,16 @@ dedupSubscriber.subscribeAsync(handler);
 | 已移除项 | 替代方案 |
 |---|---|
 | `CircuitBreakerPublisher` / `QueueCircuitBreaker` | Resilience4j CircuitBreaker |
-| `MessageTraceRecorder` / `MessageTracer` / `MessageTraceAspect` | OpenTelemetry / Spring Cloud Sleuth |
-| `MessageCompressor`（自动 GZIP） | 不推荐压缩，协议层压缩由 MQ 引擎提供 |
-| `QueueManager`（全局队列注册） | Spring ApplicationContext.getBean |
-| `QueueMetricsBinder`（Prometheus 桥接） | Micrometer native metrics |
+| `MessageTraceAspect` | OpenTelemetry / Spring Cloud Sleuth |
 | `MultiMQTopology` | Nacos / Spring Cloud Config |
 | `JsonSchemaValidator`（配置校验） | Spring Boot `@Validated` + JSR-303 |
+
+> 注意：`MessageTracer` / `MessageCompressor` / `QueueManager` / `QueueMetricsBinder` 4 个组件**仍然存在**（保留实现），未在本次移除清单中。
 
 ## 注意事项
 
 1. **Redis 连接复用**：推荐引入 `ydsz-common-redis` 复用连接池
-2. **死信队列降级**：`RedisService` 不可用时返回 `NoOpDeadLetterQueueService`，死信功能静默失效
+2. **死信队列降级**：Redis 不可用时返回 `NoOpDeadLetterQueueService`，死信功能静默失效
 3. **顺序消息**：仅 Kafka / RocketMQ 原生支持分区顺序；Redis Stream 通过 `messageGroupKey` 在客户端模拟
 4. **延迟消息**：仅 RocketMQ 原生支持 18 级延迟；其他引擎调用 `publishDelayed` 等同于立即发送
 5. **Payload 限制**：`QueueMessage.fromPayload` 限制最大 16MB

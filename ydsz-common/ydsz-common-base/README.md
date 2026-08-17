@@ -30,7 +30,6 @@
 |---|---|
 | `BaseTimezoneConfiguration` | 时区配置抽象基类，`@PostConstruct` 强制将 JVM 默认时区设置为配置值（默认 `Asia/Shanghai`，UTC+8），保证全局时间一致性；通过 `ydsz.base.timezone` 自定义 |
 | `BaseI18nConfiguration` | 国际化配置抽象基类，子类覆盖 `getBasenames()` 接入不同 i18n 资源文件；默认 `Accept-Language` 解析，支持 `zh_CN` 和 `en_US`，缺失 key 时回退到 code 而非抛异常 |
-| `I18nAutoConfiguration` | 国际化消息自动配置，注册 `MessageSource` Bean（basename=`i18n/messages`，UTF-8 编码，默认简体中文）；`@ConditionalOnMissingBean` 允许子模块覆盖 |
 
 ### 3. 过滤器链
 
@@ -47,7 +46,6 @@
 | 类 | 说明 |
 |---|---|
 | `BaseRequestLogInterceptor` | 请求日志拦截器抽象基类，子类覆盖 `resolveRequestId(HttpServletRequest)` 和 `getLogger()`；`preHandle` 输出入口日志（method/uri/ip/ua），`afterCompletion` 输出完成日志（status/time/error），慢请求升级为 WARN；支持采样率跳过 |
-| `BaseHttpInterceptor` | HTTP 通用拦截器（占位拦截器），作为拦截器链末端默认实现；`RequestHolder.remove()` 由 `BaseAuthFilter.doFilterInternal()` 的 finally 块负责清理，本类不再重复调用 |
 | `RequestIdResolver` | 请求 ID 解析器接口，统一定义 `resolveRequestId(HttpServletRequest)` 方法签名，供 Filter 和 Interceptor 共享 |
 
 ### 5. 全局响应包装
@@ -93,7 +91,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `AbstractModuleMetrics` | 模块指标抽象基类，统一管理 Micrometer 指标命名前缀；提供 `counter`/`timer`/`gauge`/`gaugeRef`/`incrementCounter`/`recordTimer` 方法，自动拼接模块前缀避免硬编码；使用 `ConcurrentHashMap` 缓存 Counter/Timer 实例避免重复构建 Builder |
+| `AbstractMetricsHolder` | 模块指标工具类，提供静态方法 `registerCounter` / `registerTimer` / `recordDuration`，统一管理 Micrometer 指标命名与实例缓存 |
 
 ### 11. 常量与认证上下文基类
 
@@ -122,7 +120,6 @@ Interceptor 与 Advice 顺序：
 
 | 顺序 | 组件 | 说明 |
 |---|---|---|
-| 0 | `BaseHttpInterceptor` | 跨域/字符编码基础设置 |
 | 10 | `BaseRequestLogInterceptor` | 请求/响应日志 |
 | 0 | `GlobalResponseAdvice` | 统一响应包装（最先） |
 | 10 | `BaseExceptionHandler` | 业务异常 |
@@ -301,25 +298,13 @@ public class PdfDocExporter extends AbstractDocExporter {
 ### 6. 自定义模块指标
 
 ```java
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
+import com.njydsz.common.base.metrics.AbstractMetricsHolder;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.springframework.stereotype.Component;
 
-@Component
-public class FlowMetrics extends AbstractModuleMetrics {
-
-    public FlowMetrics(MeterRegistry registry) {
-        super(registry, "ydsz_flow_");
-    }
-
-    public void incInstanceCreated(String flowCode) {
-        incrementCounter("instance_created_total", "flow_code", safe(flowCode));
-    }
-
-    public void recordInstanceDuration(String flowCode, long durationMs) {
-        recordTimer("instance_duration_ms", durationMs, "flow_code", safe(flowCode));
-    }
-}
+// 静态方法注册指标（计数器/计时器），自动管理命名与实例缓存
+AbstractMetricsHolder.registerCounter(registry, "ydsz_flow_", "eval_total");
+AbstractMetricsHolder.registerTimer(registry, "ydsz_flow_", "eval_duration_ms");
+AbstractMetricsHolder.recordDuration(registry, "ydsz_flow_", "eval_duration_ms", durationMs);
 ```
 
 ## SPI 扩展点
@@ -345,7 +330,7 @@ public class FlowMetrics extends AbstractModuleMetrics {
 | `BaseRequestIdResponseFilter` | 请求 ID 解析逻辑 | `common-web`、`common-app`（优先 `RequestHolder`，兜底 `RequestIdGenerator`） |
 | `BaseRequestLogInterceptor` | 请求 ID 解析与日志实例 | `common-web`、`common-app` |
 | `BaseAuthInfo` | 服务类型编码 | `common-web`（"WEB"）、`common-app`（`ServiceType.APP_SERVICE`） |
-| `AbstractModuleMetrics` | 模块指标前缀 | 各业务模块（如 `FlowMetrics` 前缀=`ydsz_flow_`） |
+| `AbstractMetricsHolder` | 模块指标工具（静态方法） | 各业务模块（如前缀=`ydsz_flow_`） |
 | `AbstractDocExporter` | HTML/Markdown 内容生成 | `DefaultDocExporter`、`MarkdownDocExporter` |
 
 ## 健康检查
@@ -371,15 +356,15 @@ public class FlowMetrics extends AbstractModuleMetrics {
 
 ## 注意事项
 
-1. **抽象基类设计**：本模块的所有 MVC 配置类、Properties、Filter、Interceptor、Advice 均为抽象基类或接口，不可直接使用。子模块（`common-web`/`common-app`）通过继承并提供具体 `@ConfigurationProperties` 前缀实现差异化装配。
+1. **抽象基类设计**：本模块以抽象基类 / 接口为主（MVC 配置类、CORS/时区/I18n 等），子模块（`common-web`/`common-app`）通过继承并提供具体 `@ConfigurationProperties` 前缀实现差异化装配；同时内置若干可直接使用的具体组件（`TraceFilter` / `SecurityHeadersFilter` / `RequestContextCleanupFilter` / `ConfigRegistryEndpoint` / `DocExporter` 系列 / 健康指示器 / 幂等与限流拦截器）。
 2. **`SecurityHeadersFilter` 兜底机制**：Bean 名统一为 `securityHeaderFilter`，通过 `@ConditionalOnMissingBean(name="securityHeaderFilter")` 保证当项目中已存在 web/app/safe 模块注册的同名安全头过滤器时，本兜底实现自动退出，避免重复注册。
 3. **`TraceFilter` MDC 清理策略**：本 Filter 不在 finally 中清理 MDC，统一由 `RequestContextCleanupFilter`（`LOWEST_PRECEDENCE`，最外层 Filter）在请求结束时调用 `MDC.clear()` 清理，确保后续 Filter 的后处理日志仍能使用 traceId。
 4. **文档功能默认关闭**：出于安全考虑，`ydsz.doc.enabled` 默认为 `false`。生产环境建议保持关闭，或配合 `ydsz.doc.production-enabled=true` + `ydsz.doc.basic-auth.enabled=true` 进行认证保护。
 5. **CORS 安全校验**：`BaseCorsProperties.validateSecurity()` 在启动时检测不安全组合（`allowCredentials=true` 且 `*`、来源为空、过度开放），输出 WARN 日志。生产环境建议显式指定允许的域名、方法、头。
 6. **`ConfigRegistryEndpoint` 安全**：此端点暴露所有 `ydsz.*` 配置信息，生产环境应通过 `management.endpoint.config-registry.exposure` 控制访问权限，建议仅限内网访问。
 7. **横切点顺序约定**：所有 Filter 的 `order` 值定义在 `FilterOrder` 常量类中，Interceptor 的 `order` 值定义在 `InterceptorOrder` 中，Advice 的 `order` 值定义在 `AdviceOrder` 中；修改任何数字前请先更新 `docs/BASE_INTERCEPTOR_ORDER.md` 文档。
-8. **`BaseAuthFilter` 清理职责**：`RequestHolder.remove()` 由 `BaseAuthFilter.doFilterInternal()` 的 finally 块负责清理，`BaseHttpInterceptor` 仅作为占位拦截器，不再重复调用清理逻辑。
-9. **`AbstractModuleMetrics` 前缀管理**：各业务模块的 Metrics 类继承本基类，通过构造器传入模块前缀（如 `ydsz_flow_`、`ydsz_msg_`），自动拼接到所有指标名称前，避免各模块硬编码重复字符串。
+8. **`BaseAuthFilter` 清理职责**：`RequestHolder.remove()` 由 `BaseAuthFilter.doFilterInternal()` 的 finally 块负责清理。
+9. **`AbstractMetricsHolder` 指标工具**：通过静态方法注册指标，传入模块前缀（如 `ydsz_flow_`）自动统一命名，避免各模块硬编码重复字符串。
 
 ## 变更记录
 

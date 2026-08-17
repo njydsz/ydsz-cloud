@@ -43,18 +43,15 @@
 
 | 类 | 说明 |
 |---|---|
-| `AuditStorage` | 存储策略接口（save / saveBatch / getType / isAvailable） |
-| `DefaultAuditStorage` | 默认存储（控制台日志输出，无 DataSource 时降级使用） |
-| `JdbcAuditStorage` | JDBC 存储（数据库持久化，对齐 `ydsz_operation_log` 表结构，支持分表） |
+| `AuditWriter` | 存储抽象接口（save / saveBatch / getType / isAvailable） |
+| `DefaultAuditStorage` | 默认存储（控制台日志输出，无 DataSource 时降级使用），实现 `AuditWriter` |
+| `JdbcAuditStorage` | JDBC 存储（数据库持久化，对齐 `sys_audit_log` 表结构，支持分表），实现 `AuditWriter` |
 
-### 5. 分表策略
+### 5. 分表解析
 
 | 类 | 说明 |
 |---|---|
-| `TableShardingStrategy` | 分表策略接口（getTableName / getShardType / getTableNamesInRange） |
-| `YearlyShardingStrategy` | 按年分表（表名后缀 yyyy） |
-| `MonthlyShardingStrategy` | 按月分表（表名后缀 yyyyMM，默认） |
-| `DailyShardingStrategy` | 按日分表（表名后缀 yyyyMMdd） |
+| `TableNameResolver` | 分表解析器（替代原 `TableShardingStrategy` 族，按日/月/年策略解析目标表名） |
 
 ### 6. 变更差异计算
 
@@ -68,10 +65,11 @@
 
 ### 7. 敏感字段脱敏
 
-| 类 / 注解 | 说明 |
+| 类 | 说明 |
 |---|---|
-| `SensitiveFieldMask` | 敏感字段脱敏处理器（参数名 + 字段名双维度） |
-| `@MaskField` | 脱敏字段注解（标记需要脱敏的字段） |
+| `SensitiveFieldMask` | 敏感字段脱敏处理器（参数名 + 字段名双维度，`AuditProperties.sensitiveParams` 配置） |
+
+> 说明：`@MaskField` 注解未提供，脱敏按参数名/字段名规则处理。
 
 ### 8. 审计查询与可观测性
 
@@ -87,9 +85,8 @@
 | 类 | 说明 |
 |---|---|
 | `AuditLog` | 审计日志实体（对齐 `sys_audit_log` 表） |
-| `AuditEvent` | 通用审计事件（携带 `AuditLog`） |
-| `OperationLogEvent` | 操作日志事件（对齐 `ydsz_operation_log`，含 beforeData / afterData 变更差异） |
-| `DataExportAuditEvent` | 数据导出审计事件（对齐 `ydsz_data_export_audit`） |
+| `OperationLogEvent` | 操作日志事件（含 beforeData / afterData 变更差异） |
+| `DataExportAuditEvent` | 数据导出审计事件 |
 | `AuditContext` | 审计上下文（traceId / tenantId / userId） |
 | `AuditType` | 审计类型枚举（OPERATION / LOGIN / DATA / PERMISSION / CONFIG / FILE / API / SYSTEM / CUSTOM） |
 | `AuditAction` | 审计操作枚举（CREATE / UPDATE / DELETE / QUERY / IMPORT / EXPORT / LOGIN / GRANT 等 24 种） |
@@ -100,7 +97,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `AuditEventListener` | 审计事件监听器（同步监听 `AuditEvent`，委托 `AuditRecorder` 异步批量写入） |
+| `AuditEventListener` | 审计事件监听器（同步监听 `OperationLogEvent` / `DataExportAuditEvent`，委托 `AuditRecorder` 异步批量写入） |
 | `auditAsyncExecutor` | 审计专用异步线程池（与主业务线程池隔离，避免审计 IO 影响核心链路） |
 
 ## 接入方式
@@ -129,9 +126,9 @@ ydsz:
       enabled: true
       type: monthly                      # yearly / monthly / daily
     async:
-      batch-size: 100
+      thread-core-size: 2
       queue-capacity: 10000
-      wait-strategy: blocking            # blocking / sleeping / yielding
+      batch-interval-millis: 3000
 ```
 
 ### 3. 代码启用
@@ -159,29 +156,27 @@ public class Application {
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `enabled` | true | 是否启用审计模块（关闭后切面直接放行） |
-| `app-id` | 空 | 应用 ID（多应用场景区分审计数据归属） |
-| `app-code` | 空 | 应用编码 |
-| `app-name` | 空 | 应用名称 |
-| `storage-type` | DEFAULT | 存储策略类型：`DEFAULT` / `LOCAL` / `REMOTE` / `MQ` |
+| `app-key` | 空 | 应用标识（应用 ID/编码/名称已合并为单一 app-key，区分审计数据归属） |
+| `storage-type` | LOCAL | 存储策略类型：`DEFAULT` / `LOCAL` / `REMOTE` / `MQ` |
 | `record-request` | true | 是否记录请求参数 |
 | `record-response` | false | 是否记录响应结果（默认关闭，响应体可能含敏感数据） |
 | `record-async` | true | 是否异步记录 |
 | `sensitive-params` | password,token,secret,apiKey 等 11 个 | 敏感参数名称列表（命中名称的参数不序列化） |
 | `ip-location-enabled` | false | 是否启用 IP 归属地解析 |
 | `user-agent-enabled` | false | 是否启用 User-Agent 解析 |
-| `batch-flush-interval` | 3000 | 批量刷新间隔（毫秒） |
-| `async-reject-policy` | DISCARD_OLDEST | 队列满拒绝策略：`DISCARD_OLDEST` / `DISCARD_NEWEST` / `CALLER_RUNS` |
-| `async-shutdown-timeout` | 30 | 优雅停机超时（秒） |
+| `async.batch-interval-millis` | 3000 | 批量刷新间隔（毫秒） |
+| `async.reject-policy` | DISCARD_OLDEST | 队列满拒绝策略：`DISCARD_OLDEST` / `DISCARD_NEWEST` / `CALLER_RUNS` |
+| `async.shutdown-timeout` | 30 | 优雅停机超时（秒） |
 | `mask-enabled` | true | 是否启用敏感字段脱敏 |
 | `retention-days` | 90 | 审计日志保留天数 |
 
-### 异步线程池（`ydsz.audit`）
+### 异步线程池（`ydsz.audit.async`）
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `core-pool-size` | 2 | 异步记录线程池核心线程数 |
-| `max-pool-size` | 4 | 异步记录线程池最大线程数 |
-| `executor-queue-capacity` | 200 | 异步记录线程池等待队列容量 |
+| `async.thread-core-size` | 2 | 异步记录线程池核心线程数 |
+| `async.thread-max-size` | 4 | 异步记录线程池最大线程数 |
+| `async.queue-capacity` | 200 | 异步记录线程池等待队列容量 |
 
 ### 分表（`ydsz.audit.sharding`）
 
@@ -295,8 +290,8 @@ eventPublisher.publishEvent(
 | SPI 接口 | 用途 | 实现方 |
 |---|---|---|
 | `AuditRecorder` | 审计记录器抽象（同步 / 异步 / 批量） | `DefaultAuditRecorder`（同步）、`AsyncAuditRecorder`（LinkedBlockingQueue） |
-| `AuditStorage` | 审计存储策略抽象 | `DefaultAuditStorage`（控制台输出）、`JdbcAuditStorage`（JDBC 持久化） |
-| `TableShardingStrategy` | 分表策略抽象 | `YearlyShardingStrategy`、`MonthlyShardingStrategy`（默认）、`DailyShardingStrategy` |
+| `AuditWriter` | 审计存储抽象 | `DefaultAuditStorage`（控制台输出）、`JdbcAuditStorage`（JDBC 持久化） |
+| `TableNameResolver` | 分表解析（日/月/年） | 内置按策略解析 |
 | `AuditQueryService` | 审计日志查询服务抽象 | `DefaultAuditQueryService`（JDBC + 跨分表 UNION ALL） |
 
 ## 健康检查
@@ -325,13 +320,13 @@ eventPublisher.publishEvent(
 
 ## 注意事项
 
-1. **存储降级**：classpath 中无 `DataSource` 时，`AuditStorage` 自动降级为 `DefaultAuditStorage`（控制台输出），生产环境务必配置 JDBC 存储。
+1. **存储降级**：classpath 中无 `DataSource` 时，`AuditWriter` 自动降级为 `DefaultAuditStorage`（控制台输出），生产环境务必配置 JDBC 存储。
 4. **分表键固定为时间戳**：分表策略根据操作时间计算目标表名，跨分表查询走 `getTableNamesInRange` 枚举后 UNION ALL 合并。
-5. **敏感参数双维度脱敏**：`AuditProperties.sensitiveParams`（参数名维度）+ `@MaskField`（字段名维度）共同生效，默认覆盖 password / token / secret / apiKey / privateKey 等 11 个常见敏感词。
+5. **敏感参数双维度脱敏**：`AuditProperties.sensitiveParams`（参数名维度）+ `SensitiveFieldMask`（字段名维度）共同生效，默认覆盖 password / token / secret / apiKey / privateKey 等 11 个常见敏感词。
 6. **优雅停机**：`AuditAutoConfiguration` 通过 `@PreDestroy` 调用 `AsyncAuditRecorder.shutdown()`，确保队列中剩余日志全部写入；超时由 `async-shutdown-timeout` 控制。
 7. **队列满拒绝策略**：默认 `DISCARD_OLDEST`（丢弃最旧日志），可配置为 `DISCARD_NEWEST` 或 `CALLER_RUNS`（调用者阻塞等待）。健康检查会累计 `droppedCount`。
 8. **审计专用线程池隔离**：`auditAsyncExecutor` 与主业务线程池隔离，避免审计 IO 阻塞核心链路；线程名前缀 `audit-async-`。
-9. **事件驱动解耦**：`AuditEventListener` 同步监听 `AuditEvent`，委托 `AuditRecorder` 异步批量写入。业务方也可手动 `publishEvent(OperationLogEvent)` / `publishEvent(DataExportAuditEvent)` 触发审计，无需 `@Audit` 注解。
+9. **事件驱动解耦**：`AuditEventListener` 同步监听 `OperationLogEvent` / `DataExportAuditEvent`，委托 `AuditRecorder` 异步批量写入。业务方也可手动 `publishEvent(OperationLogEvent)` / `publishEvent(DataExportAuditEvent)` 触发审计，无需 `@Audit` 注解。
 10. **可选依赖降级**：`spring-jdbc` / `micrometer-core` / `spring-boot-actuator` / `spring-boot-health` 均为 optional，未引入时对应能力自动降级或不可用。
 
 ## 变更记录

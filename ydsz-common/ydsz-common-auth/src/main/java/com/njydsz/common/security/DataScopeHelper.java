@@ -1,5 +1,7 @@
 package com.njydsz.common.security;
 
+import java.util.regex.Pattern;
+
 import com.njydsz.common.auth.context.AuthContextUtils;
 
 /**
@@ -71,6 +73,10 @@ public final class DataScopeHelper {
       return "";
     }
     String prefix = tableAlias == null || tableAlias.isBlank() ? "" : tableAlias;
+    // 列名/别名白名单校验：仅允许标准 SQL 标识符（含可选尾部点号），杜绝拼接注入面
+    validateSqlIdentifier(deptColumn == null ? "dept_id" : deptColumn, "deptColumn");
+    validateSqlIdentifier(userColumn == null ? "created_by" : userColumn, "userColumn");
+    validateTableAlias(tableAlias);
     String deptCol = prefix + (deptColumn == null ? "dept_id" : deptColumn);
     String userCol = prefix + (userColumn == null ? "created_by" : userColumn);
     String userId = loginUser.getUserId();
@@ -129,5 +135,44 @@ public final class DataScopeHelper {
       return "";
     }
     return value.replaceAll("[^a-zA-Z0-9_-]", "");
+  }
+
+  /** SQL 标识符白名单模式：字母/下划线开头，后跟字母/数字/下划线（列名、字段名） */
+  private static final Pattern SQL_IDENTIFIER_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
+
+  /** 表别名白名单模式：合法标识符后跟可选点号（如 t1、t1.） */
+  private static final Pattern TABLE_ALIAS_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*\\.?$");
+
+  /**
+   * 校验 SQL 列名/字段名为合法标识符（fail-closed）。
+   *
+   * <p>数据权限列名通常来源于注解常量，此处作为纵深防御， 防止列名被外部输入污染后拼接进 SQL 造成注入。 不合法时抛出
+   * {@link IllegalArgumentException}，拒绝执行而非静默放行。
+   *
+   * @param column 列名
+   * @param paramName 参数名（用于异常信息）
+   * @throws IllegalArgumentException 列名不合法时抛出
+   */
+  private static void validateSqlIdentifier(String column, String paramName) {
+    if (column == null || !SQL_IDENTIFIER_PATTERN.matcher(column).matches()) {
+      throw new IllegalArgumentException(
+          "数据权限参数非法: " + paramName + " 必须是合法 SQL 标识符, 实际值: " + column);
+    }
+  }
+
+  /**
+   * 校验表别名为合法标识符（可带尾部点号，fail-closed）。
+   *
+   * @param tableAlias 表别名
+   * @throws IllegalArgumentException 别名不合法时抛出
+   */
+  private static void validateTableAlias(String tableAlias) {
+    if (tableAlias == null || tableAlias.isBlank()) {
+      return;
+    }
+    if (!TABLE_ALIAS_PATTERN.matcher(tableAlias).matches()) {
+      throw new IllegalArgumentException(
+          "数据权限参数非法: tableAlias 必须是合法 SQL 标识符(可带尾部点号), 实际值: " + tableAlias);
+    }
   }
 }
