@@ -16,6 +16,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-userinfo-infra</artifactId>
         </dependency>
+        <!-- App 端基座模块（移动端接口能力） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-userinfo-app</artifactId>
+        </dependency>
         <!-- P2-3: 显式声明 common-util（LdapAuthenticationProvider 使用工具类） -->
         <dependency>
             <groupId>com.njydsz</groupId>

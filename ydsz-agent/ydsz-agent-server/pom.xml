@@ -16,6 +16,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-agent-infra</artifactId>
         </dependency>
+        <!-- App 端基座模块（移动端接口能力） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-agent-app</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-jdbc</artifactId>

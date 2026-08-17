@@ -28,6 +28,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-message-infra</artifactId>
         </dependency>
+        <!-- App 端基座模块（移动端接口能力） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-message-app</artifactId>
+        </dependency>
         <!-- P2-3: 显式声明 common-util（多渠道发送使用 FileTypeUtils/DateUtils 等工具类） -->
         <dependency>
             <groupId>com.njydsz</groupId>
