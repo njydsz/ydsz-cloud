@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
 import com.njydsz.agent.domain.guardrail.InputGuardrail;
 import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.domain.json.AgentJsonModule;
@@ -25,6 +26,7 @@ import com.njydsz.agent.domain.rag.TextChunker;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
 import com.njydsz.agent.infra.llm.CachedLlmClient;
@@ -45,7 +47,6 @@ import com.njydsz.agent.infra.rag.SimpleTextChunker;
 import com.njydsz.agent.infra.tool.DefaultToolRegistry;
 import com.njydsz.agent.infra.tool.McpToolAdapter;
 import com.njydsz.agent.infra.tool.SseMcpClientProvider;
-import com.njydsz.agent.infra.tool.Text2SqlTool;
 import com.njydsz.agent.infra.tool.ToolAnnotationScanner;
 import com.njydsz.agent.infra.trace.InMemoryTraceRecorder;
 import com.njydsz.agent.infra.trace.PgTraceRecorder;
@@ -266,13 +267,18 @@ public class AgentAutoConfiguration {
   /**
    * 装配提示词注入防护（输入侧护栏）。
    *
-   * <p>在用户输入进入 Prompt 之前拦截"忽略以上指令"一类的越权诱导，防止系统提示被覆盖。 注意 {@link ConditionalOnMissingBean} 作用于 {@link
-   * InputGuardrail} 类型： 一旦业务侧自定义了任意输入护栏，本默认护栏<b>不会再注册</b>，需自行保留注入防护能力。
+   * <p>P1-3 重构：默认关闭，仅当 {@code ydsz.agent.guardrail.promptInjectionEnabled=true} 时注册。
+   *
+   * <p>Prompt 注入检测基于正则模式匹配，存在较高误杀率且易被绕过；在 RateLimit + Audit 已覆盖核心安全需求的场景下价值有限。
+   * 如业务确需注入检测（如面向公网 C 端场景），可显式开启。
+   *
+   * <p>注意 {@link ConditionalOnMissingBean} 作用于 {@link InputGuardrail} 类型： 一旦业务侧自定义了任意输入护栏，本默认护栏<b>不会再注册</b>，需自行保留注入防护能力。
    *
    * @return 输入护栏实例
    */
   @Bean
   @ConditionalOnMissingBean(InputGuardrail.class)
+  @ConditionalOnProperty(prefix = "ydsz.agent.guardrail", name = "promptInjectionEnabled", havingValue = "true")
   public InputGuardrail promptInjectionGuardrail() {
     return new PromptInjectionGuardrail();
   }
@@ -469,35 +475,9 @@ public class AgentAutoConfiguration {
             toolDef ->
                 toolRegistry.register(
                     toolDef.getName(),
-                    call -> adapter.executeTool(toolDef.getName(), call.getArguments())));
+                    call -> adapter.executeTool(toolDef.getName(), YdszJson.toJson(call))));
     log.info("[Agent] MCP 工具注册完成, serverCount={}", properties.getMcp().getServers().size());
     return adapter;
-  }
-
-  /**
-   * 装配 Text2SQL 工具，将自然语言转换为 SQL 查询并执行。
-   *
-   * <p>仅当 {@code ydsz.agent.text2sql.enabled=true} 时生效。 注册为名为 {@code text2sql_query} 的工具，LLM 可通过
-   * Function Calling 调用。
-   *
-   * @param properties Agent 配置，提供 Text2SQL 开关
-   * @param toolRegistry 目标工具注册中心
-   * @param jdbcTemplate JDBC 模板，用于执行查询
-   * @param llmClient LLM 客户端，用于生成 SQL
-   * @return Text2SQL 工具 Bean
-   */
-  @Bean
-  @ConditionalOnProperty(prefix = "ydsz.agent.text2sql", name = "enabled", havingValue = "true")
-  public Text2SqlTool text2sqlTool(
-      AgentProperties properties,
-      ToolRegistry toolRegistry,
-      JdbcTemplate jdbcTemplate,
-      LlmClient llmClient) {
-    Text2SqlTool tool =
-        new Text2SqlTool(jdbcTemplate, llmClient, properties.getLlm().getDefaultModel());
-    toolRegistry.register("text2sql_query", call -> tool.execute(call.getArguments()));
-    log.info("[Agent] Text2SQL 工具已注册: text2sql_query");
-    return tool;
   }
 
   /**
@@ -527,7 +507,8 @@ public class AgentAutoConfiguration {
       TraceRecorder traceRecorder,
       AgentMetrics agentMetrics,
       CostAnalysisService costAnalysisService,
-      GuardrailService guardrailService) {
+      GuardrailService guardrailService,
+      PromptTemplateProvider promptTemplateProvider) {
     return new AgentFactory(
         llmClient,
         memory,
@@ -537,7 +518,8 @@ public class AgentAutoConfiguration {
         traceRecorder,
         agentMetrics,
         costAnalysisService,
-        guardrailService);
+        guardrailService,
+        promptTemplateProvider);
   }
 
   /**

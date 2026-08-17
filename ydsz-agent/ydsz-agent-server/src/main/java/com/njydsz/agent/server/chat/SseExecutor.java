@@ -3,6 +3,7 @@ package com.njydsz.agent.server.chat;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -106,7 +107,7 @@ public class SseExecutor {
   }
 
   /** 执行流式任务核心逻辑 */
-  private void doExecute(Consumer<Consumer<SseChunk>> task, var heartbeatFuture) {
+  private void doExecute(Consumer<Consumer<SseChunk>> task, ScheduledFuture<?> heartbeatFuture) {
     try {
       task.accept(chunk -> sendChunk(chunk));
       if (active.get()) {
@@ -188,7 +189,7 @@ public class SseExecutor {
   }
 
   /** 清理资源：停止心跳 + 中断执行线程 */
-  private void cleanup(var heartbeatFuture, Thread executionThread) {
+  private void cleanup(ScheduledFuture<?> heartbeatFuture, Thread executionThread) {
     active.set(false);
     heartbeatFuture.cancel(true);
     if (executionThread != null && executionThread.isAlive() && !executionThread.equals(Thread.currentThread())) {

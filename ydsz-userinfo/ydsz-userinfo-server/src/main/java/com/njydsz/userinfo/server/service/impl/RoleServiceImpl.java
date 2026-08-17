@@ -24,8 +24,8 @@ import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
-import com.njydsz.userinfo.domain.dto.post.RolePostDTO;
-import com.njydsz.userinfo.domain.dto.put.RolePutDTO;
+import com.njydsz.userinfo.domain.dto.create.RoleCreateDTO;
+import com.njydsz.userinfo.domain.dto.update.RoleUpdateDTO;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.RolePermission;
 import com.njydsz.userinfo.domain.entity.UserRole;
@@ -169,7 +169,7 @@ public class RoleServiceImpl implements RoleService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String create(RolePostDTO dto) {
+  public String create(RoleCreateDTO dto) {
     LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Role::getRoleCode, dto.getRoleCode());
     if (roleMapper.selectCount(wrapper) > 0) {
@@ -198,7 +198,7 @@ public class RoleServiceImpl implements RoleService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean update(RolePutDTO dto) {
+  public boolean update(RoleUpdateDTO dto) {
     Role entity = roleMapper.selectById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND);

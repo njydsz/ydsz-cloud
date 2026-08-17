@@ -85,6 +85,18 @@ public class PgTraceRecorder implements TraceRecorder {
       Object input,
       Object output,
       long durationMs) {
+    recordStep(traceId, stepType, content, input, output, durationMs, 0.0);
+  }
+
+  @Override
+  public void recordStep(
+      String traceId,
+      String stepType,
+      String content,
+      Object input,
+      Object output,
+      long durationMs,
+      double cost) {
     int nextIndex =
         stepIndexes.computeIfAbsent(traceId, k -> new AtomicInteger(0)).getAndIncrement();
     String inputJson = truncateJson(toJsonString(input));
@@ -99,14 +111,16 @@ public class PgTraceRecorder implements TraceRecorder {
             .inputJson(inputJson)
             .outputJson(outputJson)
             .durationMs(durationMs)
+            .cost(cost)
             .build();
     traceStepMapper.insert(step);
     LOG.debug(
-        "[Trace] 记录步骤: traceId={}, step={}, type={}, {}ms",
+        "[Trace] 记录步骤: traceId={}, step={}, type={}, {}ms, cost=${}",
         traceId,
         nextIndex,
         stepType,
-        durationMs);
+        durationMs,
+        cost);
   }
 
   @Override
@@ -194,6 +208,7 @@ public class PgTraceRecorder implements TraceRecorder {
         step.getInputJson(),
         step.getOutputJson(),
         step.getDurationMs() != null ? step.getDurationMs() : 0L,
+        step.getCost() != null ? step.getCost() : 0.0,
         LocalDateTime.now());
   }
 }

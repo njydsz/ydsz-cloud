@@ -43,4 +43,7 @@ public class AgentTraceStepDO {
 
   /** 耗时（毫秒） */
   private Long durationMs;
+
+  /** Token 成本（ USD，精确到 6 位小数；非 LLM 调用步骤为 0） */
+  private Double cost;
 }

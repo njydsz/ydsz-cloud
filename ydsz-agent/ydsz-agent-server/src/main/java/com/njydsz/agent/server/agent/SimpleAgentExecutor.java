@@ -11,6 +11,7 @@ import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
@@ -58,6 +59,9 @@ public class SimpleAgentExecutor implements AgentExecutor {
   /** 护栏编排服务（统一驱动输入/输出护栏，消除重复逻辑） */
   private final GuardrailService guardrailService;
 
+  /** Prompt 模板提供者（加载外部化模板，替代硬编码 Prompt） */
+  private final PromptTemplateProvider promptTemplateProvider;
+
   public SimpleAgentExecutor(
       LlmClient llmClient,
       ConversationMemory memory,
@@ -65,7 +69,8 @@ public class SimpleAgentExecutor implements AgentExecutor {
       TraceRecorder traceRecorder,
       AgentMetrics agentMetrics,
       CostAnalysisService costAnalysisService,
-      GuardrailService guardrailService) {
+      GuardrailService guardrailService,
+      PromptTemplateProvider promptTemplateProvider) {
     this.llmClient = llmClient;
     this.memory = memory;
     this.properties = properties;
@@ -73,6 +78,7 @@ public class SimpleAgentExecutor implements AgentExecutor {
     this.agentMetrics = agentMetrics;
     this.costAnalysisService = costAnalysisService;
     this.guardrailService = guardrailService;
+    this.promptTemplateProvider = promptTemplateProvider;
   }
 
   /**
@@ -102,10 +108,7 @@ public class SimpleAgentExecutor implements AgentExecutor {
     }
 
     List<ChatMessage> messages = new ArrayList<>();
-    String systemPrompt =
-        request.getSystemPrompt() != null
-            ? request.getSystemPrompt()
-            : "你是 YDSZ 项目管理信息系统的智能助手。请用中文回答。";
+    String systemPrompt = resolveSystemPrompt(request, properties.getDefaultSystemPrompt());
     messages.add(ChatMessage.system(systemPrompt));
     messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
     messages.add(ChatMessage.user(userInput, convId));
@@ -198,10 +201,7 @@ public class SimpleAgentExecutor implements AgentExecutor {
     }
 
     List<ChatMessage> messages = new ArrayList<>();
-    String systemPrompt =
-        request.getSystemPrompt() != null
-            ? request.getSystemPrompt()
-            : "你是 YDSZ 项目管理信息系统的智能助手。请用中文回答。";
+    String systemPrompt = resolveSystemPrompt(request, properties.getDefaultSystemPrompt());
     messages.add(ChatMessage.system(systemPrompt));
     messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
     messages.add(ChatMessage.user(userInput, convId));
@@ -287,5 +287,26 @@ public class SimpleAgentExecutor implements AgentExecutor {
   @Override
   public boolean supports(String type) {
     return "chat".equalsIgnoreCase(type) || "simple".equalsIgnoreCase(type);
+  }
+
+  /**
+   * 解析系统 Prompt 优先级：请求级 > 模板编码 > 配置默认值
+   *
+   * @param request 执行请求
+   * @param fallback 最终回退值
+   * @return 实际使用的系统 Prompt
+   */
+  private String resolveSystemPrompt(AgentExecutionRequest request, String fallback) {
+    if (request.getSystemPrompt() != null && !request.getSystemPrompt().isBlank()) {
+      return request.getSystemPrompt();
+    }
+    if (promptTemplateProvider != null) {
+      String templateCode = properties.getPromptTemplate().getDefaultSystemCode();
+      String templateContent = promptTemplateProvider.load(templateCode);
+      if (templateContent != null) {
+        return templateContent;
+      }
+    }
+    return fallback;
   }
 }

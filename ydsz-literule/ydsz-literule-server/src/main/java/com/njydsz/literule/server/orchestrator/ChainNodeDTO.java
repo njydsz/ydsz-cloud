@@ -56,7 +56,7 @@ public class ChainNodeDTO implements Serializable {
   /** 引用的规则类别（EVM / COST / BENCH 等，用于前端按类别着色） */
   private String category;
 
-  /** 子链类型（nodeType=CHAIN 时有效，对应 {@link RuleChainType}：THEN/WHEN/IF/ELIF/SWITCH/FOR/WHILE/BREAK） */
+  /** 子链类型（nodeType=CHAIN 时有效，对应 {@link RuleChainType}：THEN/WHEN/IF/ELIF/SWITCH） */
   private String chainType;
 
   /** 父节点 ID（嵌套链时使用，根节点为 null） */
@@ -73,9 +73,6 @@ public class ChainNodeDTO implements Serializable {
 
   /** 业务扩展字段（如分支条件、循环变量名等，按 chainType 解释） */
   private Map<String, Object> metadata;
-
-  /** 是否启用断点（P2-3 断点调试，前端可勾选） */
-  @Builder.Default private boolean breakpoint = false;
 
   /**
    * 节点位置坐标

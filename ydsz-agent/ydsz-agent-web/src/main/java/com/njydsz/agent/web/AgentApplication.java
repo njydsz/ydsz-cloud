@@ -23,13 +23,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAuth
 @EnableYdszSafe
 @EnableYdszAudit
-@EnableYdszFeign(
-    basePackages = {
-      "com.njydsz.agent.api",
-      "com.njydsz.common.feign",
-      "com.njydsz.userinfo.api",
-      "com.njydsz.nextwiki.api"
-    })
+@EnableYdszFeign
 @MapperScan("com.njydsz.agent.infra.mapper")
 public class AgentApplication {
 

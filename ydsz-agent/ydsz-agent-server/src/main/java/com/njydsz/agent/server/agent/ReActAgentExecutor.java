@@ -11,6 +11,7 @@ import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
@@ -18,12 +19,14 @@ import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.model.ToolCall;
 import com.njydsz.agent.domain.model.ToolDefinition;
+import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
+import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -74,6 +77,12 @@ public class ReActAgentExecutor implements AgentExecutor {
   /** 护栏编排服务（统一驱动输入/输出护栏，消除重复逻辑） */
   private final GuardrailService guardrailService;
 
+  /** Prompt 模板提供者（加载外部化模板，替代硬编码 Prompt） */
+  private final PromptTemplateProvider promptTemplateProvider;
+
+  /** RAG 检索服务（可选，为 null 时不启用知识增强） */
+  private final RagService ragService;
+
   public ReActAgentExecutor(
       LlmClient llmClient,
       ConversationMemory memory,
@@ -82,7 +91,9 @@ public class ReActAgentExecutor implements AgentExecutor {
       TraceRecorder traceRecorder,
       AgentMetrics agentMetrics,
       CostAnalysisService costAnalysisService,
-      GuardrailService guardrailService) {
+      GuardrailService guardrailService,
+      PromptTemplateProvider promptTemplateProvider,
+      RagService ragService) {
     this.llmClient = llmClient;
     this.memory = memory;
     this.toolRegistry = toolRegistry;
@@ -91,6 +102,8 @@ public class ReActAgentExecutor implements AgentExecutor {
     this.agentMetrics = agentMetrics;
     this.costAnalysisService = costAnalysisService;
     this.guardrailService = guardrailService;
+    this.promptTemplateProvider = promptTemplateProvider;
+    this.ragService = ragService;
   }
 
   @Override
@@ -111,7 +124,7 @@ public class ReActAgentExecutor implements AgentExecutor {
     }
 
     List<ChatMessage> messages = new ArrayList<>();
-    messages.add(ChatMessage.system(buildSystemPrompt(request)));
+    messages.add(ChatMessage.system(buildSystemPrompt(request, userInput)));
     messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
     messages.add(ChatMessage.user(userInput, convId));
 
@@ -236,7 +249,7 @@ public class ReActAgentExecutor implements AgentExecutor {
     }
 
     List<ChatMessage> messages = new ArrayList<>();
-    messages.add(ChatMessage.system(buildSystemPrompt(request)));
+    messages.add(ChatMessage.system(buildSystemPrompt(request, userInput)));
     messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
     messages.add(ChatMessage.user(userInput, convId));
 
@@ -335,15 +348,36 @@ public class ReActAgentExecutor implements AgentExecutor {
 
   @Override
   public boolean supports(String type) {
-    return "react".equalsIgnoreCase(type) || "react_agent".equalsIgnoreCase(type);
+    return "react".equalsIgnoreCase(type) || "react_agent".equalsIgnoreCase(type)
+        || "rag".equalsIgnoreCase(type);
   }
 
-  private String buildSystemPrompt(AgentExecutionRequest request) {
+  /**
+   * 构建系统 Prompt（含可选 RAG 知识增强）。
+   *
+   * <p>当 {@link #ragService} 不为 null 时，会根据用户输入检索知识库，将检索到的上下文注入 System Prompt。
+   *
+   * @param request 执行请求
+   * @param userInput 用户输入（用于 RAG 检索）
+   * @return 构建后的系统 Prompt
+   */
+  private String buildSystemPrompt(AgentExecutionRequest request, String userInput) {
     StringBuilder sb = new StringBuilder();
-    if (request.getSystemPrompt() != null) {
+    if (request.getSystemPrompt() != null && !request.getSystemPrompt().isBlank()) {
       sb.append(request.getSystemPrompt());
     } else {
-      sb.append("你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。");
+      String templateContent = promptTemplateProvider != null
+          ? promptTemplateProvider.load(properties.getPromptTemplate().getReactSystemCode())
+          : null;
+      sb.append(templateContent != null ? templateContent
+          : "你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。");
+    }
+    // P1-1: RAG 知识增强（可选）
+    if (ragService != null && userInput != null && !userInput.isBlank()) {
+      String ragContext = retrieveRagContext(userInput, request);
+      if (ragContext != null && !ragContext.isBlank()) {
+        sb.append("\n\n").append(ragContext);
+      }
     }
     if (toolRegistry.size() > 0) {
       sb.append("\n\n你可以使用以下工具：\n");
@@ -357,6 +391,26 @@ public class ReActAgentExecutor implements AgentExecutor {
       sb.append("\n请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。");
     }
     return sb.toString();
+  }
+
+  /**
+   * 检索 RAG 上下文（内部方法，失败时返回 null 而非抛出异常）。
+   *
+   * @param userInput 用户输入
+   * @param request 执行请求（用于 trace 记录）
+   * @return RAG 上下文字符串，检索失败时返回 null
+   */
+  private String retrieveRagContext(String userInput, AgentExecutionRequest request) {
+    try {
+      List<TextChunk> chunks = ragService.retrieve(userInput);
+      if (chunks.isEmpty()) {
+        return null;
+      }
+      return ragService.buildContext(chunks);
+    } catch (Exception e) {
+      LOG.warn("[ReAct] RAG 检索失败，跳过知识增强: {}", e.getMessage());
+      return null;
+    }
   }
 
   private ChatResponse buildRejectedResponse(String reason) {

@@ -8,9 +8,11 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.json.JsonUtils;
 import com.njydsz.common.notify.core.NotifyService;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.nextwiki.domain.event.AuditEvent;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
@@ -28,8 +30,9 @@ import com.njydsz.nextwiki.server.service.ContentExtractionApplicationService;
  *   <li>内容提取与索引（上传后异步触发）
  * </ul>
  *
- * <p><b>审计策略：</b>采用「日志外采 + ELK/Loki 检索」模式，审计信息以结构化 JSON 格式输出到应用日志，由日志采集管道（Filebeat/Fluentd）推送到日志平台。
- * 不再使用数据库落库方案（原 P2-6 已废弃）。
+ * <p><b>审计策略：</b>采用「日志外采 + ELK/Loki 检索」模式，审计信息以结构化 JSON 格式输出到应用日志，
+ * 由日志采集管道（Filebeat/Fluentd）推送到日志平台。使用 {@link JsonUtils} 序列化，
+ * 避免字符串拼接导致的 JSON 注入风险。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -88,26 +91,25 @@ public class FileOperatedEventListener {
   /**
    * 输出结构化审计日志（JSON 格式，供 ELK/Loki 采集检索）。
    *
-   * <p>日志字段包含操作类型、文件节点、操作人、时间戳、结果等关键维度， 可通过日志平台的全文检索和聚合分析实现审计追溯。
+   * <p>使用 {@link AuditEvent} 记录类 + {@link JsonUtils} 序列化，自动转义特殊字符，
+   * 防止文件名包含双引号等字符破坏 JSON 结构。
    *
    * @param event 文件操作领域事件
    */
   private void persistAuditLog(FileOperatedEvent event) {
-    log.info(
-        "{\"audit\":true,\"operation\":\"{}\",\"fileNodeId\":\"{}\",\"fileName\":\"{}\","
-            + "\"nodeType\":\"{}\",\"operatorId\":\"{}\",\"operatedAt\":\"{}\","
-            + "\"storageKey\":\"{}\",\"bucketName\":\"{}\",\"extra\":\"{}\","
-            + "\"result\":\"success\",\"eventId\":\"{}\"}",
+    AuditEvent auditEvent = AuditEvent.success(
         event.getOperation(),
         event.getFileNodeId(),
-        event.getFileName() != null ? event.getFileName() : "",
-        event.getNodeType() != null ? event.getNodeType() : "",
+        event.getFileName(),
+        event.getNodeType(),
         event.getOperatorId(),
-        event.getOperatedAt() != null ? event.getOperatedAt() : LocalDateTime.now(),
-        event.getStorageKey() != null ? event.getStorageKey() : "",
-        event.getBucketName() != null ? event.getBucketName() : "",
-        event.getExtra() != null ? event.getExtra() : "",
-        snowflakeIdGenerator.nextId());
+        event.getOperatedAt(),
+        event.getStorageKey(),
+        event.getBucketName(),
+        event.getExtra(),
+        String.valueOf(snowflakeIdGenerator.nextId()));
+    // 使用 JSON 序列化，自动转义特殊字符
+    log.info("{}", JsonUtils.toJson(auditEvent));
   }
 
   /**

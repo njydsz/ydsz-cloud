@@ -1,38 +1,37 @@
 package com.njydsz.gateway.config;
 
+import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
+import com.njydsz.common.sentry.SentryService;
+import com.njydsz.common.sentry.spi.MetricsCollector;
+import com.njydsz.common.sentry.metrics.MicrometerMetricsCollector;
 
 /**
  * 网关自定义 Prometheus 指标。
  *
- * <p>继承 {@link SentryMetricsAdapter}，统一指标前缀 {@code ydsz_gateway_}， 消除手动 ConcurrentHashMap
- * Counter/Timer 缓存（Micrometer 内部已缓存）。
+ * <p>使用组合模式注入 {@link SentryService}，通过 {@link MetricsCollector} SPI 注册指标，
+ * 解除与 {@code SentryMetricsAdapter} 的继承耦合。
  *
  * <h3>指标清单（Prometheus 指标名 = 前缀 + 名称）</h3>
  *
  * <ul>
- *   <li>{@code ydsz_gateway_request_duration_seconds} — 按路由分桶的请求延迟（P50/P95/P99）
+ *   <li>{@code ydsz_gateway_request_duration_seconds} — 按路由分桶的请求延迟
  *   <li>{@code ydsz_gateway_request_total} — 请求总数计数器（route/method/status 标签）
  *   <li>{@code ydsz_gateway_ratelimit_triggered_total} — 限流触发计数器（dimension/route 标签）
  *   <li>{@code ydsz_gateway_jwt_validation_duration_seconds} — JWT 校验耗时（cached 标签）
  *   <li>{@code ydsz_gateway_circuit_breaker_state} — 熔断器状态（0=closed, 1=open, 2=half-open）
  * </ul>
- *
- * <p><b>命名变更说明</b>：原 {@code gateway_*} 指标名统一加 {@code ydsz_} 前缀， 与 FlowMetrics({@code
- * ydsz_flow_*})、CronjobMetrics({@code ydsz_cronjob_*}) 等保持一致。 Grafana 看板需同步更新指标名。
- *
- * <p><b>v2.1.0 变更</b>：删除 MeterRegistry 构造参数，改为继承 SentryMetricsAdapter 通过 MetricsCollector SPI
- * 注册指标，符合《云顶编码规范》第 27.2.1 节。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -40,137 +39,142 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 @Slf4j
 @Component
 @ConditionalOnClass(MeterRegistry.class)
-public class GatewayMetrics extends SentryMetricsAdapter {
+public class GatewayMetrics {
 
-  /** 按 routeId 维护的熔断器状态引用（AtomicInteger 可变，Gauge 回调能读到最新值） */
+  /** 指标前缀 */
+  private static final String PREFIX = "ydsz_gateway_";
+
+  /** 按 routeId 维护的熔断器状态引用 */
   private final ConcurrentMap<String, AtomicInteger> breakerStates = new ConcurrentHashMap<>();
 
-  /** P1-2: 本地兜底限流配额引用（Gauge 读取最新值） */
+  /** 本地兜底限流配额引用 */
   private final AtomicInteger fallbackQuotaRef = new AtomicInteger(0);
+
+  /** SentryService 提供者（可选，Sentry 模块未装配时降级为空操作） */
+  private final ObjectProvider<SentryService> sentryServiceProvider;
 
   /**
    * 构造网关指标组件。
    *
-   * <p>委托基类 {@link SentryMetricsAdapter} 以 {@code ydsz_gateway_} 为前缀注册指标。
+   * @param sentryServiceProvider SentryService 提供者（可选）
    */
-  public GatewayMetrics() {
-    super("ydsz_gateway_");
+  public GatewayMetrics(ObjectProvider<SentryService> sentryServiceProvider) {
+    this.sentryServiceProvider = sentryServiceProvider;
     log.info("[GatewayMetrics] 自定义 Prometheus 指标初始化完成");
   }
 
-  /** 记录请求延迟（使用基类 timer() 方法）。 */
+  /**
+   * 获取 MetricsCollector 实例。
+   *
+   * @return MetricsCollector 实例，可能为 null
+   */
+  private MetricsCollector getMetricsCollector() {
+    SentryService service = sentryServiceProvider.getIfAvailable();
+    if (service == null) {
+      return null;
+    }
+    return service.getMetricsCollector();
+  }
+
+  /**
+   * 获取 Micrometer MeterRegistry。
+   *
+   * @return MeterRegistry 或 null
+   */
+  private MeterRegistry getMicrometerRegistry() {
+    MetricsCollector collector = getMetricsCollector();
+    if (collector instanceof MicrometerMetricsCollector micrometer) {
+      return micrometer.getMeterRegistry();
+    }
+    return null;
+  }
+
+  /** 记录请求延迟。 */
   public void recordRequestDuration(String routeId, String method, int status, long durationMs) {
-    recordTimer(
-        "request_duration_seconds",
-        durationMs,
-        "route",
-        safe(routeId),
-        "method",
-        safe(method),
-        "status",
-        String.valueOf(status));
+    MetricsCollector collector = getMetricsCollector();
+    if (collector != null) {
+      collector.recordTimer(PREFIX + "request_duration_seconds", null,
+          toMap("route", safe(routeId), "method", safe(method), "status", String.valueOf(status)),
+          Duration.ofMillis(durationMs));
+    }
   }
 
   /** 增加请求计数。 */
   public void incrementRequestTotal(String routeId, String method, int status) {
-    incrementCounter(
-        "request_total",
-        "route",
-        safe(routeId),
-        "method",
-        safe(method),
-        "status",
-        String.valueOf(status));
+    MetricsCollector collector = getMetricsCollector();
+    if (collector != null) {
+      collector.incrementCounter(PREFIX + "request_total", null,
+          toMap("route", safe(routeId), "method", safe(method), "status", String.valueOf(status)), 1.0);
+    }
   }
 
   /** 增加限流触发计数。 */
   public void incrementRatelimitTriggered(String dimension, String routeId) {
-    incrementCounter(
-        "ratelimit_triggered_total", "dimension", safe(dimension), "route", safe(routeId));
-  }
-
-  /**
-   * 增加限流本地兜底计数（Redis 不可用时的降级模式）。
-   *
-   * <p>P1-2: 用于监控 Redis 故障期间限流降级频率， 指标 {@code ydsz_gateway_ratelimit_fallback_total}，Grafana 可据此告警
-   * "限流降级中，请检查 Redis"。
-   */
-  public void incrementRatelimitFallback() {
-    incrementCounter("ratelimit_fallback_total");
-  }
-
-  /**
-   * 上报本地兜底令牌桶的自适应配额（按实例数分摊后的 QPS）。
-   *
-   * <p>P1-2: Gauge 指标 {@code ydsz_gateway_ratelimit_fallback_quota}， 便于确认 Redis 故障期间的实际限流阈值。首次调用注册
-   * Gauge，后续仅更新引用值。
-   *
-   * @param quota 自适应分摊后的本地 QPS 配额
-   */
-  public void setRatelimitFallbackQuota(int quota) {
-    if (fallbackQuotaRef.getAndSet(quota) == 0) {
-      // 首次注册 Gauge（幂等：Micrometer 对同名称+标签的重复注册会合并）
-      gaugeRef("ratelimit_fallback_quota", fallbackQuotaRef, AtomicInteger::doubleValue);
+    MetricsCollector collector = getMetricsCollector();
+    if (collector != null) {
+      collector.incrementCounter(PREFIX + "ratelimit_triggered_total", null,
+          toMap("dimension", safe(dimension), "route", safe(routeId)), 1.0);
     }
   }
 
-  /**
-   * 记录 JWT 校验耗时。
-   *
-   * @param durationMs 耗时（毫秒）
-   * @param cached 是否命中缓存
-   */
-  public void recordJwtValidationDuration(long durationMs, boolean cached) {
-    recordTimer("jwt_validation_duration_seconds", durationMs, "cached", String.valueOf(cached));
+  /** 增加限流本地兜底计数。 */
+  public void incrementRatelimitFallback() {
+    MetricsCollector collector = getMetricsCollector();
+    if (collector != null) {
+      collector.incrementCounter(PREFIX + "ratelimit_fallback_total", null, null, 1.0);
+    }
   }
 
-  /**
-   * 设置熔断器状态。
-   *
-   * <p>使用 AtomicInteger 可变引用，Gauge 回调时通过 {@code get()} 读取最新状态值。
-   *
-   * @param routeId 路由 ID
-   * @param state 状态（0=closed, 1=open, 2=half-open）
-   */
+  /** 上报本地兜底令牌桶的自适应配额。 */
+  public void setRatelimitFallbackQuota(int quota) {
+    if (fallbackQuotaRef.getAndSet(quota) == 0) {
+      MeterRegistry registry = getMicrometerRegistry();
+      if (registry != null) {
+        registry.gauge(PREFIX + "ratelimit_fallback_quota", fallbackQuotaRef, AtomicInteger::doubleValue);
+      }
+    }
+  }
+
+  /** 记录 JWT 校验耗时。 */
+  public void recordJwtValidationDuration(long durationMs, boolean cached) {
+    MetricsCollector collector = getMetricsCollector();
+    if (collector != null) {
+      collector.recordTimer(PREFIX + "jwt_validation_duration_seconds", null,
+          toMap("cached", String.valueOf(cached)), Duration.ofMillis(durationMs));
+    }
+  }
+
+  /** 设置熔断器状态。 */
   public void setCircuitBreakerState(String routeId, int state) {
-    AtomicInteger ref =
-        breakerStates.computeIfAbsent(
-            routeId,
-            k -> {
-              AtomicInteger holder = new AtomicInteger(state);
-              // 通过 Adapter 提供的 gaugeRef 注册 Gauge
-              gaugeRef(
-                  "circuit_breaker_state", holder, AtomicInteger::doubleValue, "route", safe(k));
-              return holder;
-            });
+    AtomicInteger ref = breakerStates.computeIfAbsent(routeId, k -> {
+      AtomicInteger holder = new AtomicInteger(state);
+      MeterRegistry registry = getMicrometerRegistry();
+      if (registry != null) {
+        registry.gauge(PREFIX + "circuit_breaker_state", io.micrometer.core.instrument.Tags.of("route", safe(k)),
+            holder, AtomicInteger::doubleValue);
+      }
+      return holder;
+    });
     ref.set(state);
   }
 
   /**
-   * P0-3: 注册 JWT 缓存命中/未命中计数器到 Prometheus。
-   *
-   * <p>指标名：
-   *
-   * <ul>
-   *   <li>{@code ydsz_gateway_jwt_cache_hit_rate} — 缓存命中次数
-   *   <li>{@code ydsz_gateway_jwt_cache_miss_total} — 缓存未命中次数
-   * </ul>
-   *
-   * 命中率 = hit / (hit + miss)，Grafana 可通过 {@code rate()} 计算实时命中率。
+   * 注册 JWT 缓存命中/未命中计数器到 Prometheus。
    *
    * @param hitCounter 命中计数器引用
    * @param missCounter 未命中计数器引用
    */
   public void registerJwtCacheCounters(AtomicLong hitCounter, AtomicLong missCounter) {
-    gaugeRef("jwt_cache_hit_rate", hitCounter, AtomicLong::doubleValue);
-    gaugeRef("jwt_cache_miss_total", missCounter, AtomicLong::doubleValue);
-    log.info("[GatewayMetrics] JWT 缓存命中/未命中 Prometheus 指标已注册");
+    MeterRegistry registry = getMicrometerRegistry();
+    if (registry != null) {
+      registry.gauge(PREFIX + "jwt_cache_hit_rate", hitCounter, AtomicLong::doubleValue);
+      registry.gauge(PREFIX + "jwt_cache_miss_total", missCounter, AtomicLong::doubleValue);
+      log.info("[GatewayMetrics] JWT 缓存命中/未命中 Prometheus 指标已注册");
+    }
   }
 
   /**
-   * 获取 JWT 缓存命中率（需要在 CachedJwtValidator 已初始化后调用）。
-   *
-   * <p>该方法由 CachedJwtValidator 通过回调获取，不直接暴露 Counter。
+   * 计算 JWT 缓存命中率。
    *
    * @param hitCounter 命中计数器引用
    * @param missCounter 未命中计数器引用
@@ -180,5 +184,49 @@ public class GatewayMetrics extends SentryMetricsAdapter {
     long hits = hitCounter.get();
     long total = hits + missCounter.get();
     return total > 0 ? (double) hits / total : -1.0;
+  }
+
+  /**
+   * Null 安全的字符串处理。
+   *
+   * @param value 原始值（可为 null）
+   * @return 非 null 字符串
+   */
+  private static String safe(String value) {
+    return (value == null || value.isEmpty()) ? "unknown" : value;
+  }
+
+  /**
+   * 将标签键值对转换为 Map。
+   *
+   * @param keyValuePairs 标签键值对（k1, v1, k2, v2...）
+   * @return 标签 Map
+   */
+  private static java.util.Map<String, String> toMap(String... keyValuePairs) {
+    if (keyValuePairs == null || keyValuePairs.length == 0) {
+      return java.util.Collections.emptyMap();
+    }
+    java.util.Map<String, String> map = new java.util.HashMap<>();
+    for (int i = 0; i < keyValuePairs.length - 1; i += 2) {
+      map.put(keyValuePairs[i], keyValuePairs[i + 1]);
+    }
+    return map;
+  }
+
+  /** 用于 Gauge 注册的引用 holder（避免 Micrometer API 直接暴露） */
+  private static final class GaugeRef<N> {
+    private final AtomicReference<Double> value;
+
+    GaugeRef(N reference, java.util.function.ToDoubleFunction<N> extractor) {
+      this.value = new AtomicReference<>(extractor.applyAsDouble(reference));
+    }
+
+    void update(N reference, java.util.function.ToDoubleFunction<N> extractor) {
+      value.set(extractor.applyAsDouble(reference));
+    }
+
+    double get() {
+      return value.get();
+    }
   }
 }

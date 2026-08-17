@@ -60,9 +60,6 @@ public class RedissonLeaderElector implements LeaderElector {
   private final RedissonClient redissonClient;
   private final CronjobProperties cronjobProperties;
 
-  /** P0-3: Fencing Token 管理器（可选注入） */
-  private final ObjectProvider<FencingTokenManager> fencingTokenManagerProvider;
-
   /** 当前节点持有的 Leader 锁（role -> RLock） */
   private final Map<String, RLock> heldLocks = new ConcurrentHashMap<>();
 
@@ -110,11 +107,6 @@ public class RedissonLeaderElector implements LeaderElector {
         // P0-3: 写入 Leader 持有者标识，供 getCurrentLeader 返回真实节点
         String holderKey = HOLDER_KEY_PREFIX + role;
         redissonClient.<String>getBucket(holderKey).set(nodeId, lease);
-        // P0-3: 获取新的 Fencing Token，防止旧 Leader 脑裂写
-        FencingTokenManager fencingManager = fencingTokenManagerProvider.getIfAvailable();
-        if (fencingManager != null) {
-          fencingManager.acquireNewToken(role);
-        }
         log.info(
             "[LeaderElector] 抢占 Leader 成功: role={} lease={}ms nodeId={}",
             role,
@@ -192,14 +184,9 @@ public class RedissonLeaderElector implements LeaderElector {
     if (lock != null && lock.isHeldByCurrentThread()) {
       try {
         lock.unlock();
-        // P0-3: 清理 holder key
+        // 清理 holder key
         String holderKey = HOLDER_KEY_PREFIX + role;
         redissonClient.getBucket(holderKey).delete();
-        // P0-3: 清除本地 Fencing Token
-        FencingTokenManager fencingManager = fencingTokenManagerProvider.getIfAvailable();
-        if (fencingManager != null) {
-          fencingManager.clearToken();
-        }
         log.info("[LeaderElector] 释放 Leader: role={}", role);
       } catch (Exception e) {
         log.warn("[LeaderElector] 释放 Leader 失败: role={} reason={}", role, e.getMessage());

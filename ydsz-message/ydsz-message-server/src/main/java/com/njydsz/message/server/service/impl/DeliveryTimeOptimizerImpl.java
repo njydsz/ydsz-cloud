@@ -1,85 +1,46 @@
 package com.njydsz.message.server.service.impl.core;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.ZoneId;
+import java.util.TimeZone;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.redis.service.ops.RedisHashOps;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.core.DeliveryTimeOptimizer;
 
 /**
- * P1-1: 智能推送时间优化器实现。
+ * 送达时间优化器实现。
  *
- * <p>基于 Redis 存储用户活跃度画像：
- *
- * <ul>
- *   <li>活跃度 Bitmap: {@code ydsz:activity:{userId}} → Bitmap(24*7=168 bits, hour-of-week)
- *   <li>活跃计数: {@code ydsz:activity:count:{userId}} → 最近 7 天活跃次数
- *   <li>小时维度计数: {@code ydsz:activity:hourly:{userId}} → Hash(hour→count, 0-23)
- * </ul>
+ * <p>基于用户时区的固定时段推荐最佳发送时机，仅对 LOW 优先级的营销消息生效。 删除 Redis 画像逻辑，简化为基于时区的时段判断，降低 Redis 存储成本和运维复杂度。
  *
  * <p>推荐策略：
  *
- * <ol>
- *   <li>统计用户每小时活跃次数，找出最高活跃时段
- *   <li>如果当前时间在活跃时段内（±1小时），返回当前时间
- *   <li>否则返回今天内最近下一个活跃时段的开始时间
- *   <li>如果今天没有更多活跃时段，返回明天的最高活跃时段
- * </ol>
+ * <ul>
+ *   <li>在推荐发送时段内（默认 10:00-20:00）返回当前时间
+ *   <li>在时段之前返回当天时段开始时间
+ *   <li>在时段之后返回次日时段开始时间
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
 
-  /** Redis Hash 操作（用户活跃度画像） */
-  private final RedisHashOps redisHashOps;
+  /** 推荐发送时段开始小时（默认 10:00） */
+  private static final int RECOMMENDED_START_HOUR = 10;
 
-  /** Redis String 操作（活跃计数等） */
-  private final RedisStringOps redisStringOps;
+  /** 推荐发送时段结束小时（默认 20:00） */
+  private static final int RECOMMENDED_END_HOUR = 20;
 
-  /** Redis key 前缀 */
-  private static final String ACTIVITY_HOURLY_PREFIX = "ydsz:activity:hourly:";
+  private final MessageProperties messageProperties;
 
-  private static final String ACTIVITY_COUNT_PREFIX = "ydsz:activity:count:";
-
-  /** 默认活跃评分有效期（天） */
-  private static final int ACTIVITY_EXPIRE_DAYS = 7;
-
-  @Override
-  public void recordActivity(String userId, String channel) {
-    if (!StringUtils.hasText(userId)) {
-      return;
-    }
-    try {
-      LocalDateTime now = LocalDateTime.now();
-      String hourKey = String.valueOf(now.getHour());
-
-      // 更新小时维度活跃计数（Hash: hour → count）
-      String hourlyKey = ACTIVITY_HOURLY_PREFIX + userId;
-      redisHashOps.hIncr(hourlyKey, hourKey, 1L);
-      redisStringOps.expire(hourlyKey, Duration.ofDays(ACTIVITY_EXPIRE_DAYS));
-
-      // 更新总活跃计数
-      String countKey = ACTIVITY_COUNT_PREFIX + userId;
-      redisStringOps.incr(countKey, 1);
-      redisStringOps.expire(countKey, Duration.ofDays(ACTIVITY_EXPIRE_DAYS));
-
-      log.debug(
-          "[DeliveryTime] 记录活跃: userId={} hour={} channel={}", userId, now.getHour(), channel);
-    } catch (Exception e) {
-      log.warn("[DeliveryTime] 记录活跃失败,降级忽略: userId={} err={}", userId, e.getMessage(), e);
-    }
+  public DeliveryTimeOptimizerImpl(MessageProperties messageProperties) {
+    this.messageProperties = messageProperties;
   }
 
   @Override
@@ -88,72 +49,44 @@ public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
       return null;
     }
     try {
-      String hourlyKey = ACTIVITY_HOURLY_PREFIX + userId;
-      Map<String, String> hourlyCounts = redisHashOps.hGetAll(hourlyKey);
-      if (hourlyCounts == null || hourlyCounts.isEmpty()) {
-        return null; // 无活跃数据
-      }
-
-      // 解析并找出最活跃的时段
-      Map<Integer, Long> hourCounts = new HashMap<>();
-      int bestHour = -1;
-      long bestCount = 0;
-      for (Map.Entry<String, String> entry : hourlyCounts.entrySet()) {
-        try {
-          int hour = Integer.parseInt(String.valueOf(entry.getKey()));
-          long count = Long.parseLong(String.valueOf(entry.getValue()));
-          hourCounts.put(hour, count);
-          if (count > bestCount) {
-            bestCount = count;
-            bestHour = hour;
-          }
-        } catch (NumberFormatException ignored) {
-          // 跳过无效数据
-        }
-      }
-
-      if (bestHour < 0) {
-        return null;
-      }
-
-      LocalDateTime now = LocalDateTime.now();
+      // 获取用户时区，未知时区使用系统默认时区
+      ZoneId userZone = resolveUserZone(userId);
+      LocalDateTime now = LocalDateTime.now(userZone);
       int currentHour = now.getHour();
 
-      // 如果当前时间在最佳时段 ±1 小时内，返回当前时间
-      if (Math.abs(currentHour - bestHour) <= 1) {
+      // 在推荐时段内，返回当前时间
+      if (currentHour >= RECOMMENDED_START_HOUR && currentHour < RECOMMENDED_END_HOUR) {
+        log.debug("[DeliveryTime] 当前在推荐时段内,立即发送: userId={} hour={}", userId, currentHour);
         return now;
       }
 
-      // 如果最佳时段在今天还未到来，返回今天的最佳时段
-      if (bestHour > currentHour) {
-        return now.toLocalDate().atTime(bestHour, 0);
+      // 在时段之前，返回今天时段开始时间
+      if (currentHour < RECOMMENDED_START_HOUR) {
+        LocalDateTime scheduledAt = now.toLocalDate().atTime(RECOMMENDED_START_HOUR, 0);
+        log.debug("[DeliveryTime] 推荐今天时段开始: userId={} scheduledAt={}", userId, scheduledAt);
+        return scheduledAt;
       }
 
-      // 否则返回明天的最佳时段
-      return now.toLocalDate().plusDays(1).atTime(bestHour, 0);
+      // 在时段之后，返回明天时段开始时间
+      LocalDateTime scheduledAt = now.toLocalDate().plusDays(1).atTime(RECOMMENDED_START_HOUR, 0);
+      log.debug("[DeliveryTime] 推荐明天时段开始: userId={} scheduledAt={}", userId, scheduledAt);
+      return scheduledAt;
     } catch (Exception e) {
-      log.warn("[DeliveryTime] 获取最佳推送时间失败: userId={} err={}", userId, e.getMessage(), e);
+      log.warn("[DeliveryTime] 获取最佳推送时间失败,降级立即发送: userId={} err={}", userId, e.getMessage());
       return null;
     }
   }
 
-  @Override
-  public int getActivityScore(String userId) {
-    if (!StringUtils.hasText(userId)) {
-      return 0;
-    }
-    try {
-      String countKey = ACTIVITY_COUNT_PREFIX + userId;
-      String countStr = redisStringOps.get(countKey, String.class);
-      if (countStr == null) {
-        return 0;
-      }
-      long count = Long.parseLong(countStr);
-      // 活跃度评分公式：min(count * 5, 100)，即 20 次活跃即满分
-      return (int) Math.min(count * 5, 100);
-    } catch (Exception e) {
-      log.warn("[DeliveryTime] 获取活跃度评分失败: userId={} err={}", userId, e.getMessage(), e);
-      return 0;
-    }
+  /**
+   * 解析用户时区。
+   *
+   * <p>实际项目中可从用户偏好或租户配置获取，当前简化为系统默认时区。
+   *
+   * @param userId 用户 ID
+   * @return 用户时区
+   */
+  private ZoneId resolveUserZone(String userId) {
+    // TODO: 后续可从 UserChannelBindingService 或租户配置获取用户时区
+    return TimeZone.getDefault().toZoneId();
   }
 }

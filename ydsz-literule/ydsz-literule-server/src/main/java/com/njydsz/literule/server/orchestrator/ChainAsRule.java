@@ -52,7 +52,7 @@ public class ChainAsRule implements Rule {
 
   @Override
   public RuleResult evaluate(RuleContext context) {
-    // 嵌套子链评估时不需要 ExpressionEngine（THEN/WHEN/FOR/WHILE 不需要）
+    // 嵌套子链评估时不需要 ExpressionEngine（THEN/WHEN 不需要）
     // 仅 IF/ELIF/SWITCH 需要 evaluator，此处使用 null 降级
     List<RuleResult> results;
     try {

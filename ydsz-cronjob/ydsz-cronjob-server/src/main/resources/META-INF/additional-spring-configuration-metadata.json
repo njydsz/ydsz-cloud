@@ -186,14 +186,49 @@
       "description": "远程派发失败时是否降级到 Leader 本地执行，默认 true。"
     },
     {
-      "name": "ydsz.cronjob.failover.enabled",
+      "name": "ydsz.cronjob.anomaly-recovery.failover-enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用故障转移扫描，默认 true。"
+      "description": "是否启用故障转移扫描（检测下线节点任务），默认 true。"
     },
     {
-      "name": "ydsz.cronjob.failover.scan-interval-seconds",
+      "name": "ydsz.cronjob.anomaly-recovery.self-healing-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用自愈系统（卡死修复 + AUTO_PAUSED 恢复），默认 false。"
+    },
+    {
+      "name": "ydsz.cronjob.anomaly-recovery.scan-interval-seconds",
       "type": "java.lang.Integer",
-      "description": "故障转移扫描间隔（秒），默认 30。"
+      "description": "异常修复扫描间隔（秒），默认 30。"
+    },
+    {
+      "name": "ydsz.cronjob.anomaly-recovery.scan-node-limit",
+      "type": "java.lang.Integer",
+      "description": "单批最多扫描节点数，默认 10。"
+    },
+    {
+      "name": "ydsz.cronjob.anomaly-recovery.failover-task-limit",
+      "type": "java.lang.Integer",
+      "description": "单节点最多转移任务数，默认 50。"
+    },
+    {
+      "name": "ydsz.cronjob.anomaly-recovery.stuck-threshold-seconds",
+      "type": "java.lang.Integer",
+      "description": "RUNNING 状态无更新超时阈值（秒），默认 300。"
+    },
+    {
+      "name": "ydsz.cronjob.anomaly-recovery.max-heal-per-scan",
+      "type": "java.lang.Integer",
+      "description": "单次扫描最大修复任务数，默认 20。"
+    },
+    {
+      "name": "ydsz.cronjob.anomaly-recovery.auto-redispatch",
+      "type": "java.lang.Boolean",
+      "description": "是否自动重新派发修复后的任务，默认 true。"
+    },
+    {
+      "name": "ydsz.cronjob.anomaly-recovery.max-redispatch-retries",
+      "type": "java.lang.Integer",
+      "description": "重新派发最大重试次数，默认 3。"
     },
     {
       "name": "ydsz.cronjob.log-retention.retention-days",
@@ -221,21 +256,6 @@
       "description": "最大并行子任务数，默认 8。"
     },
     {
-      "name": "ydsz.cronjob.precise-scheduling.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用精准调度（时间轮预加载），默认 false。"
-    },
-    {
-      "name": "ydsz.cronjob.precise-scheduling.pre-load-window-seconds",
-      "type": "java.lang.Integer",
-      "description": "预加载窗口（秒），默认 10。"
-    },
-    {
-      "name": "ydsz.cronjob.precise-scheduling.fast-scan-interval-ms",
-      "type": "java.lang.Long",
-      "description": "快速扫描间隔（毫秒），默认 1000。"
-    },
-    {
       "name": "ydsz.cronjob.adaptive-batch.enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用自适应批量调度，默认 false。"
@@ -249,36 +269,6 @@
       "name": "ydsz.cronjob.adaptive-batch.max-batch-size",
       "type": "java.lang.Integer",
       "description": "最大批量大小，默认 1000。"
-    },
-    {
-      "name": "ydsz.cronjob.alert-dedup.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用告警智能降噪，默认 false。"
-    },
-    {
-      "name": "ydsz.cronjob.alert-dedup.aggregate-window-seconds",
-      "type": "java.lang.Integer",
-      "description": "告警聚合窗口（秒），默认 60。"
-    },
-    {
-      "name": "ydsz.cronjob.self-healing.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用自愈系统，默认 false。"
-    },
-    {
-      "name": "ydsz.cronjob.self-healing.scan-interval-seconds",
-      "type": "java.lang.Integer",
-      "description": "自愈扫描间隔（秒），默认 60。"
-    },
-    {
-      "name": "ydsz.cronjob.self-healing.stuck-threshold-seconds",
-      "type": "java.lang.Integer",
-      "description": "RUNNING 状态无更新超时阈值（秒），默认 300。"
-    },
-    {
-      "name": "ydsz.cronjob.self-healing.max-redispatch-retries",
-      "type": "java.lang.Integer",
-      "description": "重新派发最大重试次数，默认 3。"
     },
     {
       "name": "ydsz.cronjob.sandbox.enabled",

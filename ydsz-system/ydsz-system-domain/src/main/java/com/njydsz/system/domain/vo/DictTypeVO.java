@@ -1,12 +1,18 @@
 package com.njydsz.system.domain.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
- * 字典类型 VO
+ * 字典类型 VO（兼 DTO）
  *
- * <p>对应 {@code ydsz_dict_type} 表的展示视图，是「字典中心」列表 / 详情接口的返回值类型。 由 {@link
+ * <p>对应 {@code ydsz_dict_type} 表的展示视图和写入参数，是「字典中心」列表 / 详情 / 创建 / 更新接口的通用载体。 由 {@link
  * com.njydsz.system.domain.converter.SystemConverter} 从 {@link
  * com.njydsz.system.domain.entity.DictType} 实体转换而来。
  *
@@ -30,22 +36,30 @@ import lombok.Data;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.system.domain.entity.DictType 字典类型实体
- * @see com.njydsz.system.domain.dto.DictTypeDTO 字典类型 DTO
  * @see DictItemVO 字典项 VO
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @Schema(description = "字典类型视图对象")
 public class DictTypeVO {
 
-  @Schema(description = "主键 ID")
+  @Schema(description = "主键 ID（更新时必填）")
   private String id;
 
+  @NotBlank(message = "字典类型编码不能为空")
+  @Size(max = 64, message = "字典类型编码长度不能超过64")
+  @Xss(message = "字典类型编码包含非法内容")
   @Schema(description = "字典类型编码")
   private String typeCode;
 
+  @NotBlank(message = "字典类型名称不能为空")
+  @Size(max = 128, message = "字典类型名称长度不能超过128")
+  @Xss(message = "字典类型名称包含非法内容")
   @Schema(description = "字典类型名称")
   private String typeName;
 
+  @Xss(message = "字典类型业务说明包含非法内容")
   @Schema(description = "字典类型业务说明")
   private String description;
 

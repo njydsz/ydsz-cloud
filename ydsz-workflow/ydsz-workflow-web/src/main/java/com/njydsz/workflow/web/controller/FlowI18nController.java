@@ -69,11 +69,10 @@ public class FlowI18nController {
    *
    * <ul>
    *   <li>{@code FlowTaskStatus} — 任务状态（PENDING/CLAIMED/COMPLETED/REJECTED/...）
-   *   <li>{@code FlowInstanceStatus} — 实例状态（RUNNING/COMPLETED/REJECTED/...）
-   *   <li>{@code FlowNodeType} — 节点类型（USER_TASK/SERVICE_TASK/GATEWAY/...）
-   *   <li>{@code FlowDelegateScope} — 委派范围（ALL/FLOW/NODE/ROLE）
-   *   <li>{@code FlowCanaryStrategy} — 灰度策略（USER_HASH/RANDOM/WHITELIST）
-   * </ul>
+ *   <li>{@code FlowInstanceStatus} — 实例状态（RUNNING/COMPLETED/REJECTED/...）
+ *   <li>{@code FlowNodeType} — 节点类型（USER_TASK/SERVICE_TASK/GATEWAY/...）
+ *   <li>{@code FlowDelegateScope} — 委派范围（ALL/FLOW/NODE/ROLE）
+ * </ul>
    *
    * @param enumType 枚举类型（FlowTaskStatus / FlowInstanceStatus / FlowNodeType 等）
    * @param locale 语言（zh_CN/en_US），为空默认 zh_CN

@@ -379,10 +379,7 @@ public final class RuleDslParser {
             .condition(asString(map.get("condition")))
             .step(asString(map.get("step")))
             .defaultRule(asString(map.get("default")))
-            .branchKey(asString(map.get("branch_key")))
-            .iterable(asString(map.get("iterable")))
-            .var(asString(map.get("var")))
-            .maxIterations(intOrDefault(map.get("max_iterations"), 100));
+            .branchKey(asString(map.get("branch_key")));
     // steps
     Object stepsObj = map.get("steps");
     if (stepsObj instanceof List<?> sl) {
@@ -479,25 +476,6 @@ public final class RuleDslParser {
         }
         if (entry.getBranches() == null || entry.getBranches().isEmpty()) {
           throw new IllegalArgumentException("SWITCH 链 " + entry.getName() + " 缺少 branches");
-        }
-      }
-      case "FOR" -> {
-        if (entry.getIterable() == null || entry.getIterable().isBlank()) {
-          throw new IllegalArgumentException("FOR 链 " + entry.getName() + " 缺少 iterable");
-        }
-        if (entry.getVar() == null || entry.getVar().isBlank()) {
-          throw new IllegalArgumentException("FOR 链 " + entry.getName() + " 缺少 var");
-        }
-        if (entry.getStep() == null || entry.getStep().isBlank()) {
-          throw new IllegalArgumentException("FOR 链 " + entry.getName() + " 缺少 step");
-        }
-      }
-      case "WHILE" -> {
-        if (entry.getCondition() == null || entry.getCondition().isBlank()) {
-          throw new IllegalArgumentException("WHILE 链 " + entry.getName() + " 缺少 condition");
-        }
-        if (entry.getStep() == null || entry.getStep().isBlank()) {
-          throw new IllegalArgumentException("WHILE 链 " + entry.getName() + " 缺少 step");
         }
       }
       default ->

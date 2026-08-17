@@ -21,8 +21,8 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.userinfo.domain.dto.post.MenuPostDTO;
-import com.njydsz.userinfo.domain.dto.put.MenuPutDTO;
+import com.njydsz.userinfo.domain.dto.create.MenuCreateDTO;
+import com.njydsz.userinfo.domain.dto.update.MenuUpdateDTO;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 import com.njydsz.userinfo.server.service.MenuService;
@@ -140,7 +140,7 @@ public class MenuController {
   @RateLimit(resource = "userinfo.menu.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建菜单")
-  public BaseResponse<String> create(@Valid @RequestBody MenuPostDTO dto) {
+  public BaseResponse<String> create(@Valid @RequestBody MenuCreateDTO dto) {
     return BaseResponse.success(service.create(dto));
   }
 
@@ -165,7 +165,7 @@ public class MenuController {
   @RateLimit(resource = "userinfo.menu.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新菜单")
-  public BaseResponse<Boolean> update(@Valid @RequestBody MenuPutDTO dto) {
+  public BaseResponse<Boolean> update(@Valid @RequestBody MenuUpdateDTO dto) {
     return BaseResponse.success(service.update(dto));
   }
 

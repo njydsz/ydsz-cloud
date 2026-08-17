@@ -26,9 +26,19 @@ import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
- * DAG 编排执行器
+ * DAG 编排执行器（Node + Edge + State 图引擎）
  *
- * <p>根据 {@link AgentDag} 描述的有向无环图，并行执行无依赖的节点， 串行执行有依赖的节点。每个节点是一次 LLM 调用。
+ * <p>P2-1 重构：统一的图执行引擎，替代原 DAG + Router 两种执行器。 基于 Node（执行单元）+ Edge（依赖边）+ State（节点结果状态）模式，支持：
+ *
+ * <ul>
+ *   <li>并行执行无依赖节点
+ *   <li>串行执行有依赖节点（Edge 定义依赖关系）
+ *   <li>条件分支（CONDITION 节点，Edge 由条件结果选择）
+ *   <li>循环迭代（LOOP 节点，Edge 回指形成环）
+ *   <li>节点间数据传递（State：上游输出 → 下游输入）
+ * </ul>
+ *
+ * <p>相比 RouterAgentExecutor（LLM 意图路由），本引擎通过 YAML DSL 显式定义执行图， 行为确定、可观测、可回放，无额外 LLM 调用成本。
  *
  * <p>支持：
  *

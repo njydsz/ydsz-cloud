@@ -200,7 +200,7 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
   /**
    * P1-4: 查询所有 RUNNING 状态日志的执行节点 ID（去重，故障转移扫描用）。
    *
-   * <p>用于 {@link com.njydsz.cronjob.server.core.dispatch.FailoverScanner} 扫描 有 RUNNING
+   * <p>用于 {@link com.njydsz.cronjob.server.core.healing.AnomalyRecoveryScanner} 扫描 有 RUNNING
    * 任务但可能已下线的节点。对比在线节点列表后找出下线节点。
    *
    * @return 有 RUNNING 任务的节点 ID 列表（去重）；无记录时返回空列表

@@ -15,10 +15,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * 消息引擎全局配置（prefix = {@code ydsz.message}）。
+ * 消息引擎全局配置（prefix = {@code ydsz.message}）。 *
+ * <p>绑定 {@code application.yml} 中 {@code ydsz.message.*} 配置项，包含通道开关、默认优先级、聚合 / 重试扫描间隔、全局频率上限、
+ * 多维度限流等。
  *
- * <p>绑定 {@code application.yml} 中 {@code ydsz.message.*} 配置项， 包含通道开关、默认优先级、聚合 / 重试扫描间隔、全局频率上限、
- * 多维度限流（P2-5: receiver/templateCode/tenant）等。
+ * <p><b>配置分级：</b>
+ *
+ * <ul>
+ *   <li><b>核心配置</b>：channelEnabled、defaultPriority、aggregateScanIntervalMs、retryScanIntervalMs —
+ *       启动必需，无默认值或默认值可能不适合生产环境
+ *   <li><b>高级配置</b>：rateLimit、dedup、cost、sms、push 等 — 可选，有合理默认值，按需调整
+ * </ul>
  *
  * <p>P0-3: 从 @Component 改为纯 @ConfigurationProperties， 由 {@link MessageAutoConfiguration}
  * 通过 @EnableConfigurationProperties 注册。
@@ -525,20 +532,11 @@ public class MessageProperties {
   /** 敏感词过滤配置 */
   private SensitiveFilterConfig sensitiveFilter = new SensitiveFilterConfig();
 
-  /** AI 内容优化配置 */
-  private AiConfig ai = new AiConfig();
-
   /** 消息归档配置 */
   private ArchiveConfig archive = new ArchiveConfig();
 
   /** 通道抑制窗口（秒），默认 300s */
   private long suppressWindowSeconds = 300L;
-
-  /** 追踪像素配置 */
-  private TrackingConfig tracking = new TrackingConfig();
-
-  /** 短链配置 */
-  private ShortlinkConfig shortlink = new ShortlinkConfig();
 
   /** 单发送人每日发送上限（0 表示不限） */
   private long senderDailyLimit = 10000L;
@@ -561,17 +559,6 @@ public class MessageProperties {
   }
 
   /**
-   * AI 内容优化配置。
-   *
-   * <p>通过 LLM 对消息内容进行智能优化（如语气调整、摘要生成）， 未配置时降级为跳过 AI 优化。
-   */
-  @Data
-  public static class AiConfig {
-    /** AI 内容优化开关 */
-    private boolean enabled = false;
-  }
-
-  /**
    * 消息归档配置。
    *
    * <p>控制消息是否同步归档到 Elasticsearch 以支持全文搜索， 未启用时仅落库 PostgreSQL。
@@ -582,25 +569,4 @@ public class MessageProperties {
     private boolean esEnabled = false;
   }
 
-  /**
-   * 追踪像素配置。
-   *
-   * <p>用于邮件已读回执：在邮件中嵌入 1x1 透明图片， 收件人打开邮件时触发 HTTP 请求回传已读状态。
-   */
-  @Data
-  public static class TrackingConfig {
-    /** 追踪像素 base URL */
-    private String baseUrl = "https://ydsz.example.com";
-  }
-
-  /**
-   * 短链配置。
-   *
-   * <p>将长 URL 转换为短链，节省短信 / 推送字符数。
-   */
-  @Data
-  public static class ShortlinkConfig {
-    /** 短链 base URL */
-    private String baseUrl = "https://s.ydsz.example.com";
-  }
 }

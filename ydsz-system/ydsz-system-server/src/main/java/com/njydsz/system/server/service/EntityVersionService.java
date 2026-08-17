@@ -1,0 +1,113 @@
+package com.njydsz.system.server.service;
+
+import java.util.List;
+
+import com.njydsz.system.domain.vo.EntityVersionVO;
+
+/**
+ * 统一实体版本 Service 接口
+ *
+ * <p>为 Config/Dict/Variable 提供统一的变更版本记录和查询能力，替代原有的三套独立版本服务
+ * （ConfigVersionService/DictVersionService/VariableVersionService）。
+ *
+ * <p><b>核心职责：</b>
+ *
+ * <ul>
+ *   <li><b>版本记录</b>：{@link #createVersion} — 资源增删改时自动调用，记录变更前的快照
+ *   <li><b>历史查询</b>：{@link #listByResourceTypeAndKey} — 管理后台「版本管理」数据源
+ *   <li><b>回滚支持</b>：{@link #rollbackTo} — 一键回滚到任意历史版本
+ * </ul>
+ *
+ * <p><b>版本生成策略：</b>版本号由调用方传入，推荐格式 {@code "v" + System.currentTimeMillis()}。
+ *
+ * <p><b>多租户：</b>所有方法自动按当前 {@code TenantContext} 隔离。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public interface EntityVersionService {
+
+  /** 资源类型：系统配置 */
+  String RESOURCE_TYPE_CONFIG = "CONFIG";
+
+  /** 资源类型：字典 */
+  String RESOURCE_TYPE_DICT = "DICT";
+
+  /** 资源类型：系统变量 */
+  String RESOURCE_TYPE_VARIABLE = "VARIABLE";
+
+  /**
+   * 按资源类型 + 资源键查询版本历史
+   *
+   * <p>返回该资源下所有版本记录，按 {@code effectiveDate} 倒序。
+   *
+   * @param resourceType 资源类型（CONFIG/DICT/VARIABLE）
+   * @param resourceKey 资源唯一标识
+   * @return 版本列表（按生效时间倒序）
+   */
+  List<EntityVersionVO> listByResourceTypeAndKey(String resourceType, String resourceKey);
+
+  /**
+   * 创建版本快照
+   *
+   * <p>由业务 Service 在写操作成功后调用。{@code snapshotJson} 一般为变更前的资源 JSON 字符串。
+   *
+   * @param resourceType 资源类型（CONFIG/DICT/VARIABLE）
+   * @param resourceKey 资源唯一标识
+   * @param resourceGroup 资源分组（仅 CONFIG 类型使用）
+   * @param version 版本号
+   * @param changeLog 变更说明
+   * @param snapshotJson 资源 JSON 快照（可为 {@code null}）
+   * @return 新建版本记录主键 ID
+   */
+  String createVersion(
+      String resourceType,
+      String resourceKey,
+      String resourceGroup,
+      String version,
+      String changeLog,
+      String snapshotJson);
+
+  /**
+   * 回滚资源到指定版本
+   *
+   * <p>执行链路：
+   *
+   * <ol>
+   *   <li>校验目标版本是否存在且未删除
+   *   <li>执行回滚回调（由调用方提供，实现资源重建逻辑）
+   *   <li>创建新版本记录（标记回滚来源，保持完整审计链）
+   * </ol>
+   *
+   * <p><b>审计设计：</b>回滚操作创建一个<b>新版本</b>而非覆盖历史，保持不可变记录原则。
+   *
+   * @param resourceType 资源类型（CONFIG/DICT/VARIABLE）
+   * @param resourceKey 资源唯一标识
+   * @param targetVersion 目标版本号
+   * @param operatorId 操作人 ID（审计用途）
+   * @param rollbackCallback 回滚回调（反序列化快照并重建资源）
+   * @return 新创建的回滚版本 ID
+   * @throws com.njydsz.common.exception.custom.BusinessException 版本不存在时抛出
+   */
+  String rollbackTo(
+      String resourceType,
+      String resourceKey,
+      String targetVersion,
+      String operatorId,
+      RollbackCallback rollbackCallback);
+
+  /**
+   * 回滚回调接口
+   *
+   * <p>由业务方实现，负责从快照 JSON 反序列化并重建资源。
+   */
+  @FunctionalInterface
+  interface RollbackCallback {
+    /**
+     * 执行回滚逻辑
+     *
+     * @param snapshotJson 目标版本的快照 JSON
+     */
+    void execute(String snapshotJson);
+  }
+}

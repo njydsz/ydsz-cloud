@@ -3,12 +3,14 @@ package com.njydsz.system.server.health;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
 
+import com.njydsz.common.jdbc.health.DataSourceHealthIndicator;
 import com.njydsz.common.redis.health.RedisHealthIndicator;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
-import com.njydsz.system.infra.mapper.ConfigMapper;
-import com.njydsz.system.infra.mapper.DictItemMapper;
 
 /**
  * 系统模块健康检查 Indicator
@@ -19,11 +21,8 @@ import com.njydsz.system.infra.mapper.DictItemMapper;
  * <p><b>检查项：</b>
  *
  * <ul>
- *   <li><b>Redis 连通性</b> — 通过 {@link RedisCallback} 执行 {@code PING} 命令， 验证 Redis 服务可达且响应正常
- *   <li><b>配置表可达性</b> — 通过 {@code configMapper.selectByConfigKey("__health_probe__")} 探针 SQL 验证
- *       {@code ydsz_config} 表可读
- *   <li><b>字典表可达性</b> — 通过 {@code dictItemMapper.selectByTypeAndCode(...)} 探针 验证 {@code
- *       ydsz_dict_item} 表可读
+ *   <li><b>Redis 连通性</b> — 通过 {@link RedisHealthIndicator} 执行 {@code PING} 命令， 验证 Redis 服务可达且响应正常
+ *   <li><b>数据源连通性</b> — 通过 {@link DataSourceHealthIndicator} 检查 HikariCP 连接池状态和数据库可达性
  * </ul>
  *
  * <p><b>启用条件：</b>
@@ -37,7 +36,7 @@ import com.njydsz.system.infra.mapper.DictItemMapper;
  * <p><b>性能考量：</b>
  *
  * <ul>
- *   <li>使用占位符（{@code __health_probe__}）作为探针参数，<b>命中索引但不返回数据</b>， 避免 COUNT(*) 扫描
+ *   <li>使用轻量级探针，<b>命中索引但不返回数据</b>，避免 COUNT(*) 扫描
  *   <li>{@link com.njydsz.common.web.health.AbstractModuleHealthIndicator#checkTableProbe} 框架
  *       自动捕获异常并转换为 {@code Health.down()}，不会因探针失败抛出未处理异常
  *   <li>整体执行耗时应 < 50ms（受 Redis / DB 网络延迟影响）
@@ -49,7 +48,7 @@ import com.njydsz.system.infra.mapper.DictItemMapper;
  * @since 1.0.0
  * @see org.springframework.boot.health.contributor.HealthIndicator Spring Boot 健康检查接口
  * @see com.njydsz.common.web.health.AbstractModuleHealthIndicator 通用健康检查基类
- * @see org.springframework.data.redis.core.RedisTemplate Redis 模板
+ * @see com.njydsz.common.jdbc.health.DataSourceHealthIndicator 数据源健康检查
  */
 @Slf4j
 @ConditionalOnClass(HealthIndicator.class)
@@ -64,21 +63,19 @@ public class SystemHealthIndicator extends AbstractModuleHealthIndicator {
   /** Redis 健康检查（由 common-redis 提供） */
   private final ObjectProvider<RedisHealthIndicator> redisHealthIndicatorProvider;
 
-  /** 配置表 Mapper（用于配置表探针） */
-  private final ConfigMapper configMapper;
-
-  /** 字典项 Mapper（用于字典表探针） */
-  private final DictItemMapper dictItemMapper;
+  /** 数据源健康检查（由 common-jdbc 提供） */
+  private final ObjectProvider<DataSourceHealthIndicator> dataSourceHealthIndicatorProvider;
 
   /**
    * 执行系统模块健康检查
    *
-   * <p>按顺序检查：① Redis 连通性 → ② 配置表可达性 → ③ 字典表可达性。 任意一项失败，整体健康状态降级为 {@code DOWN}，但<b>不会中断</b>后续检查项。
+   * <p>按顺序检查：① Redis 连通性 → ② 数据源连通性。 任意一项失败，整体健康状态降级为 {@code DOWN}，但<b>不会中断</b>后续检查项。
    *
    * <p>所有检查结果（耗时、状态、错误信息）写入 {@link Health.Builder}， 由 Actuator 在 {@code /actuator/health} 端点统一返回。
    */
   @Override
   protected void doHealthCheck(Health.Builder builder) {
+    // 1. Redis 健康检查
     RedisHealthIndicator redisHealth = redisHealthIndicatorProvider.getIfAvailable();
     if (redisHealth != null) {
       Health redisResult = redisHealth.health();
@@ -90,10 +87,18 @@ public class SystemHealthIndicator extends AbstractModuleHealthIndicator {
     } else {
       checkRedisNotConfigured(builder);
     }
-    checkTableProbe(builder, "config", () -> configMapper.selectByConfigKey("__health_probe__"));
-    checkTableProbe(
-        builder,
-        "dict",
-        () -> dictItemMapper.selectByTypeAndCode("__health_probe__", "__health_probe__"));
+
+    // 2. 数据源健康检查
+    DataSourceHealthIndicator dsHealth = dataSourceHealthIndicatorProvider.getIfAvailable();
+    if (dsHealth != null) {
+      Health dsResult = dsHealth.health();
+      builder.withDetail("datasource", dsResult.getStatus().getCode().toUpperCase());
+      dsResult.getDetails().forEach((k, v) -> builder.withDetail("datasource." + k, v));
+      if (!dsResult.getStatus().equals(org.springframework.boot.health.contributor.Status.UP)) {
+        builder.down();
+      }
+    } else {
+      builder.withDetail("datasource", "UNKNOWN - not configured");
+    }
   }
 }

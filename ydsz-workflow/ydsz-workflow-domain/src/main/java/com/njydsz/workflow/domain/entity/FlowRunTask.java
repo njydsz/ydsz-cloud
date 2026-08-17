@@ -27,18 +27,17 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li>{@code instanceId}：所属流程实例 ID
  *   <li>{@code nodeCode} / {@code nodeType}：节点信息（流程图定位）
  *   <li>{@code assigneeType}：办理人类型（{@code USER} / {@code ROLE} / {@code DEPT} / {@code POST}）
- *   <li>{@code performType}：会签类型（{@code SINGLE} / {@code ALL} / {@code ANY} / {@code VOTE}）
+ *   <li>{@code performType}：会签类型（{@code OR} / {@code SEQUENTIAL} / {@code PARALLEL} / {@code FOREACH_PARALLEL}）
  *   <li>{@code taskStatus}：任务状态（{@link com.njydsz.workflow.domain.enums.FlowTaskStatus}）
  * </ul>
  *
  * <p><b>会签机制：</b>
  *
  * <ul>
- *   <li>{@code SINGLE}：单人决策（任意一人办理即推进）
- *   <li>{@code ALL}：会签（所有人同意才推进）
- *   <li>{@code ANY}：或签（任一人同意即推进）
- *   <li>{@code VOTE}：票签（按 {@code votePassRate} 比例通过，{@code approveFinished / approveCount >=
- *       votePassRate}）
+ *   <li>{@code OR}：或签（任一人同意即推进）
+ *   <li>{@code PARALLEL}：并行会签（所有人同意才推进）
+ *   <li>{@code SEQUENTIAL}：顺序会签（按顺序逐一审批，全部通过才推进）
+ *   <li>{@code FOREACH_PARALLEL}：FOREACH 并行（每个集合元素对应独立 task，全部完成才推进）
  * </ul>
  *
  * <p><b>SLA 催办（P1-6）：</b>
@@ -132,13 +131,13 @@ public class FlowRunTask extends MpBaseEntity<String> {
   /** 会签类型（{@link com.njydsz.workflow.domain.enums.FlowPerformType}.name） */
   private String performType;
 
-  /** 会签所需通过人数（{@code ALL/VOTE} 模式：会签总人数） */
+  /** 会签所需通过人数（{@code PARALLEL/SEQUENTIAL} 模式：会签总人数） */
   private Integer approveCount;
 
   /** 会签当前已通过人数 */
   private Integer approveFinished;
 
-  /** VOTE 模式通过率阈值（{@code 0~1}，默认 {@code 0.5} 表示过半数） */
+  /** 通过率阈值（{@code 0~1}，默认 {@code 0.5} 表示过半数） */
   private BigDecimal votePassRate;
 
   /** 任务状态（{@link com.njydsz.workflow.domain.enums.FlowTaskStatus}.name） */

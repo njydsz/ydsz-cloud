@@ -19,8 +19,6 @@ import com.njydsz.workflow.domain.entity.FlowCcRule;
 import com.njydsz.workflow.domain.entity.FlowComment;
 import com.njydsz.workflow.domain.entity.FlowDefinition;
 import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
-import com.njydsz.workflow.domain.entity.FlowDmnDecision;
-import com.njydsz.workflow.domain.entity.FlowDmnRule;
 import com.njydsz.workflow.domain.entity.FlowEventSubscription;
 import com.njydsz.workflow.domain.entity.FlowHisInstance;
 import com.njydsz.workflow.domain.entity.FlowHisTask;
@@ -44,8 +42,6 @@ import com.njydsz.workflow.domain.vo.FlowCcVO;
 import com.njydsz.workflow.domain.vo.FlowCommentVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
-import com.njydsz.workflow.domain.vo.FlowDmnDecisionVO;
-import com.njydsz.workflow.domain.vo.FlowDmnRuleVO;
 import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
 import com.njydsz.workflow.domain.vo.FlowHisInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
@@ -64,7 +60,7 @@ import com.njydsz.workflow.domain.vo.StringVO;
 /**
  * workflow 模块统一 MapStruct 转换器。
  *
- * <p>承担工作流模块所有 Entity ↔ VO、DTO → Entity 的类型转换，遵循单一转换器模式。 覆盖流程定义、流程实例、任务、审批日志、委托授权、DMN 决策等核心实体的转换。
+ * <p>承担工作流模块所有 Entity ↔ VO、DTO → Entity 的类型转换，遵循单一转换器模式。 覆盖流程定义、流程实例、任务、审批日志、委托授权等核心实体的转换。
  *
  * <p><b>设计要点：</b>
  *
@@ -132,16 +128,6 @@ public interface WorkflowConverter {
   FlowDelegateAuthVO entityToVO(FlowDelegateAuth entity);
 
   List<FlowDelegateAuthVO> flowDelegateAuthListToVO(List<FlowDelegateAuth> entities);
-
-  // ===== FlowDmnDecision =====
-  FlowDmnDecisionVO entityToVO(FlowDmnDecision entity);
-
-  List<FlowDmnDecisionVO> flowDmnDecisionListToVO(List<FlowDmnDecision> entities);
-
-  // ===== FlowDmnRule =====
-  FlowDmnRuleVO entityToVO(FlowDmnRule entity);
-
-  List<FlowDmnRuleVO> flowDmnRuleListToVO(List<FlowDmnRule> entities);
 
   // ===== FlowEventSubscription =====
   FlowEventSubscriptionVO entityToVO(FlowEventSubscription entity);

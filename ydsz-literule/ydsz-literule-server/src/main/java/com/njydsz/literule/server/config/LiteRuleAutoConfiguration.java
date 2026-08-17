@@ -45,8 +45,6 @@ import com.njydsz.literule.server.benchmark.RuleStressTestService;
 import com.njydsz.literule.server.cache.CachingRuleConfigProvider;
 import com.njydsz.literule.server.cep.CEPEngine;
 import com.njydsz.literule.server.core.AsyncTraceRecorder;
-import com.njydsz.literule.server.core.BreakpointHook;
-import com.njydsz.literule.server.core.DefaultBreakpointHook;
 import com.njydsz.literule.server.core.DefaultRuleEngine;
 import com.njydsz.literule.server.core.EvaluationResultCache;
 import com.njydsz.literule.server.core.InMemoryRuleMetrics;
@@ -54,8 +52,6 @@ import com.njydsz.literule.server.core.MicrometerRuleMetrics;
 import com.njydsz.literule.server.core.ParallelRuleEvaluator;
 import com.njydsz.literule.server.core.RuleCanaryRouter;
 import com.njydsz.literule.server.core.RuleCircuitBreaker;
-import com.njydsz.literule.server.core.RuleDocumentationService;
-import com.njydsz.literule.server.core.RuleEffectivenessService;
 import com.njydsz.literule.server.core.RuleLifecycleService;
 import com.njydsz.literule.server.core.RuleMetrics;
 import com.njydsz.literule.server.core.RuleTimeoutExecutor;
@@ -161,7 +157,6 @@ public class LiteRuleAutoConfiguration {
       LiteRuleProperties properties,
       ObjectProvider<TraceRecorder> traceDelegateProvider,
       ObjectProvider<ExpressionEngine> evaluatorProvider,
-      ObjectProvider<BreakpointHook> breakpointHookProvider,
       ObjectProvider<ModelInputRegistry> modelRegistryProvider,
       ObjectProvider<FactProviderRegistry> factRegistryProvider,
       ObjectProvider<RuleActionDispatcher> actionDispatcherProvider,
@@ -174,7 +169,6 @@ public class LiteRuleAutoConfiguration {
     // P3-3: 拆分为独立配置方法，提升可读性
     configureOptionalDependencies(
         engine,
-        breakpointHookProvider,
         factRegistryProvider,
         actionDispatcherProvider,
         parallelEvaluatorProvider,
@@ -202,14 +196,13 @@ public class LiteRuleAutoConfiguration {
     }
 
     log.info(
-        "[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}, canary={}, breakpoint={}, model={}, slowRuleThreshold={}ms）",
+        "[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}, canary={}, model={}, slowRuleThreshold={}ms）",
         properties.isStatsEnabled(),
         properties.isTraceEnabled(),
         properties.getRuleTimeoutMs(),
         properties.getCircuitBreakerMinEvaluations() > 0,
         engine.getMetrics() != null,
         engine.getCanaryRouter() != null,
-        engine.getBreakpointHook() != null,
         engine.getModelInputRegistry() != null,
         properties.getPerformance().getSlowRuleThresholdMs());
     return engine;
@@ -218,17 +211,11 @@ public class LiteRuleAutoConfiguration {
   /** 配置可选依赖（P3-3 提取） */
   private void configureOptionalDependencies(
       DefaultRuleEngine engine,
-      ObjectProvider<BreakpointHook> breakpointHookProvider,
       ObjectProvider<FactProviderRegistry> factRegistryProvider,
       ObjectProvider<RuleActionDispatcher> actionDispatcherProvider,
       ObjectProvider<ParallelRuleEvaluator> parallelEvaluatorProvider,
       ObjectProvider<ModelInputRegistry> modelRegistryProvider,
       LiteRuleProperties properties) {
-    BreakpointHook bpHook = breakpointHookProvider.getIfAvailable();
-    if (bpHook != null) {
-      engine.setBreakpointHook(bpHook);
-    }
-
     FactProviderRegistry factRegistry = factRegistryProvider.getIfAvailable();
     if (factRegistry != null) {
       engine.setFactProviderRegistry(factRegistry);
@@ -743,35 +730,6 @@ public class LiteRuleAutoConfiguration {
   }
 
   // ------------------------------------------------------------------
-  // 断点调试器（P0-3 落地）
-  // ------------------------------------------------------------------
-
-  /**
-   * 默认断点调试器 Bean
-   *
-   * <p>装配后自动注入到 {@link DefaultRuleEngine}， 业务侧可通过 {@code /execution/rules/breakpoints} REST API
-   * 管理断点与下发调试指令。
-   *
-   * <p>可通过 {@code ydsz.literule.debug.enabled=false} 关闭。
-   *
-   * @return DefaultBreakpointHook 实例
-   * @since 1.0.0
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  @ConditionalOnProperty(
-      prefix = "ydsz.literule.debug",
-      name = "enabled",
-      havingValue = "true",
-      matchIfMissing = true)
-  public DefaultBreakpointHook defaultBreakpointHook(LiteRuleProperties properties) {
-    long suspendTimeout = properties.getDebug().getSuspendTimeoutSeconds();
-    DefaultBreakpointHook hook = new DefaultBreakpointHook(suspendTimeout);
-    log.info("[LiteRule-Debug] 断点调试器已初始化（suspendTimeout={}s）", suspendTimeout);
-    return hook;
-  }
-
-  // ------------------------------------------------------------------
   // P0-4 健康检查（@Bean 注册，替代 @Component）
   // ------------------------------------------------------------------
 
@@ -1169,33 +1127,6 @@ public class LiteRuleAutoConfiguration {
   }
 
   // ------------------------------------------------------------------
-  // P2-2 规则效果评估体系
-  // ------------------------------------------------------------------
-
-  /**
-   * 规则效果评估服务（P2-2）
-   *
-   * <p>提供基于人工反馈标注的规则 Precision/Recall/F1 指标计算， 支持滑动时间窗口、全局/单规则维度报告生成。
-   *
-   * <p>默认 7 天滑动窗口，可通过 {@code ydsz.literule.effectiveness.window-days} 配置。
-   *
-   * @return RuleEffectivenessService 实例
-   * @since 1.0.0
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  @ConditionalOnProperty(
-      prefix = "ydsz.literule.effectiveness",
-      name = "enabled",
-      havingValue = "true",
-      matchIfMissing = true)
-  public RuleEffectivenessService ruleEffectivenessService() {
-    RuleEffectivenessService service = new RuleEffectivenessService();
-    log.info("[LiteRule-Effectiveness] 规则效果评估服务已初始化（window=7天）");
-    return service;
-  }
-
-  // ------------------------------------------------------------------
   // P2-3 高性能优化（评估结果缓存 + 规则分组并行评估）
   // ------------------------------------------------------------------
 
@@ -1279,46 +1210,6 @@ public class LiteRuleAutoConfiguration {
         properties.getLifecycle().getHighErrorRateThreshold(),
         properties.getLifecycle().getStaleDisabledDays(),
         properties.getLifecycle().getLowImpactTriggerRate());
-    return service;
-  }
-
-  // ------------------------------------------------------------------
-  // P3-2 规则文档自动生成
-  // ------------------------------------------------------------------
-
-  /**
-   * 规则文档自动生成服务（P3-2）
-   *
-   * <p>当存在 {@link RuleConfigProvider} 时自动装配， 从规则元数据、版本历史、执行统计自动生成结构化文档， 支持 Markdown / HTML 输出格式。
-   *
-   * <p>可通过 {@code ydsz.literule.lifecycle.enabled=false} 关闭（复用生命周期开关）。
-   *
-   * @param configProvider 规则配置提供者
-   * @param ruleEngine 规则引擎
-   * @param versionRepoProvider 版本仓库（可选）
-   * @param effectivenessServiceProvider 效果评估服务（可选）
-   * @return RuleDocumentationService 实例
-   * @since 1.0.0
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  @ConditionalOnBean(RuleConfigProvider.class)
-  public RuleDocumentationService ruleDocumentationService(
-      RuleConfigProvider configProvider,
-      RuleEngine ruleEngine,
-      ObjectProvider<RuleVersionRepository> versionRepoProvider,
-      ObjectProvider<RuleEffectivenessService> effectivenessServiceProvider) {
-    RuleDocumentationService service =
-        new RuleDocumentationService(
-            configProvider, ruleEngine, versionRepoProvider.getIfAvailable());
-    RuleEffectivenessService effectivenessService = effectivenessServiceProvider.getIfAvailable();
-    if (effectivenessService != null) {
-      service.setEffectivenessService(effectivenessService);
-    }
-    log.info(
-        "[LiteRule-DocGen] 规则文档自动生成服务已初始化（versionRepo={}, effectiveness={}）",
-        versionRepoProvider.getIfAvailable() != null,
-        effectivenessService != null);
     return service;
   }
 

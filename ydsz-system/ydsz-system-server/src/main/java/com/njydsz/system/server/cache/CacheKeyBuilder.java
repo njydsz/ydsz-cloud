@@ -7,8 +7,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
 /**
  * 缓存键构造器（Spring Cache SpEL 调用入口）。
  *
- * <p>为系统模块的 {@code @Cacheable} / {@code @CacheEvict} SpEL 表达式提供租户感知的缓存键生成能力， 替代 {@link
- * SystemCacheKeys} 在 Spring Cache 场景下的直接调用。
+ * <p>为系统模块的 {@code @Cacheable} / {@code @CacheEvict} SpEL 表达式提供租户感知的缓存键生成能力。
  *
  * <p>使用方式（SpEL）：
  *
@@ -20,7 +19,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * public String getConfigValue(String configKey) { ... }
  * }</pre>
  *
- * <p>所有生成的键均包含租户命名空间前缀，与 {@link SystemCacheKeys} 保持一致的键结构。
+ * <p>所有生成的键均包含租户命名空间前缀，格式 {@code {prefix}:{tenantId}:{key}}。
  *
  * @author ydsz-team
  * @since 1.0.0

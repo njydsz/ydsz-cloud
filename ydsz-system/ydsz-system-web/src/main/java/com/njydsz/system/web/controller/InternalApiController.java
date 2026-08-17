@@ -1,7 +1,6 @@
 package com.njydsz.system.web.controller;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -15,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.system.api.dto.AppValidateRequest;
+import com.njydsz.system.api.dto.ConfigGetRequest;
+import com.njydsz.system.api.dto.DictItemGetRequest;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.server.service.AppInfoService;
 import com.njydsz.system.server.service.ConfigService;
@@ -73,8 +75,8 @@ public class InternalApiController {
   @RateLimit(resource = "system.internalapi.getConfig", threshold = 50)
   @Idempotent(key = "'ydsz:system:internal-api:get-config:' + #request.key", ttlSeconds = 5)
   @PostMapping("/config/get")
-  public BaseResponse<String> getConfig(@RequestBody Map<String, String> request) {
-    return BaseResponse.success(configService.getConfigValue(request.get("key")));
+  public BaseResponse<String> getConfig(@RequestBody ConfigGetRequest request) {
+    return BaseResponse.success(configService.getConfigValue(request.getKey()));
   }
 
   /**
@@ -90,9 +92,9 @@ public class InternalApiController {
   @RateLimit(resource = "system.internalapi.getDictItem", threshold = 50)
   @Idempotent(key = "'ydsz:system:internal-api:get-dict-item:' + #request.typeCode + ':' + #request.itemCode", ttlSeconds = 5)
   @PostMapping("/dict/item")
-  public BaseResponse<String> getDictItem(@RequestBody Map<String, String> request) {
+  public BaseResponse<String> getDictItem(@RequestBody DictItemGetRequest request) {
     DictItemVO vo =
-        dictItemService.getByTypeAndCode(request.get("typeCode"), request.get("itemCode"));
+        dictItemService.getByTypeAndCode(request.getTypeCode(), request.getItemCode());
     return BaseResponse.success(vo == null ? null : vo.getItemValue());
   }
 
@@ -133,8 +135,8 @@ public class InternalApiController {
   @RateLimit(resource = "system.internalapi.validateClient", threshold = 50)
   @Idempotent(key = "'ydsz:system:internal-api:validate-client:' + #request.appKey + ':' + #request.appSecret.hashCode()", ttlSeconds = 5)
   @PostMapping("/app/validate")
-  public BaseResponse<Boolean> validateClient(@RequestBody Map<String, String> request) {
+  public BaseResponse<Boolean> validateClient(@RequestBody AppValidateRequest request) {
     return BaseResponse.success(
-        appInfoService.validateClient(request.get("appKey"), request.get("appSecret")));
+        appInfoService.validateClient(request.getAppKey(), request.getAppSecret()));
   }
 }

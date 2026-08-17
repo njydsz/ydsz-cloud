@@ -7,18 +7,18 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
-import com.njydsz.userinfo.domain.dto.post.CompanyPostDTO;
-import com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO;
-import com.njydsz.userinfo.domain.dto.post.LanguagePostDTO;
-import com.njydsz.userinfo.domain.dto.post.MenuPostDTO;
-import com.njydsz.userinfo.domain.dto.post.PostPostDTO;
-import com.njydsz.userinfo.domain.dto.post.RolePostDTO;
-import com.njydsz.userinfo.domain.dto.put.CompanyPutDTO;
-import com.njydsz.userinfo.domain.dto.put.DepartmentPutDTO;
-import com.njydsz.userinfo.domain.dto.put.LanguagePutDTO;
-import com.njydsz.userinfo.domain.dto.put.MenuPutDTO;
-import com.njydsz.userinfo.domain.dto.put.PostPutDTO;
-import com.njydsz.userinfo.domain.dto.put.RolePutDTO;
+import com.njydsz.userinfo.domain.dto.create.CompanyCreateDTO;
+import com.njydsz.userinfo.domain.dto.create.DepartmentCreateDTO;
+import com.njydsz.userinfo.domain.dto.create.LanguageCreateDTO;
+import com.njydsz.userinfo.domain.dto.create.MenuCreateDTO;
+import com.njydsz.userinfo.domain.dto.create.PostCreateDTO;
+import com.njydsz.userinfo.domain.dto.create.RoleCreateDTO;
+import com.njydsz.userinfo.domain.dto.update.CompanyUpdateDTO;
+import com.njydsz.userinfo.domain.dto.update.DepartmentUpdateDTO;
+import com.njydsz.userinfo.domain.dto.update.LanguageUpdateDTO;
+import com.njydsz.userinfo.domain.dto.update.MenuUpdateDTO;
+import com.njydsz.userinfo.domain.dto.update.PostUpdateDTO;
+import com.njydsz.userinfo.domain.dto.update.RoleUpdateDTO;
 import com.njydsz.userinfo.domain.entity.Company;
 import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.entity.Language;
@@ -94,7 +94,7 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Company postDtoToEntity(CompanyPostDTO dto);
+  Company postDtoToEntity(CompanyCreateDTO dto);
 
   /**
    * 公司修改 DTO → 公司实体
@@ -109,7 +109,7 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Company putDtoToEntity(CompanyPutDTO dto);
+  Company putDtoToEntity(CompanyUpdateDTO dto);
 
   // ===== Department =====
 
@@ -159,7 +159,7 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Department postDtoToEntity(DepartmentPostDTO dto);
+  Department postDtoToEntity(DepartmentCreateDTO dto);
 
   /**
    * 部门修改 DTO → 部门实体
@@ -172,7 +172,7 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Department putDtoToEntity(DepartmentPutDTO dto);
+  Department putDtoToEntity(DepartmentUpdateDTO dto);
 
   // ===== Language =====
 
@@ -206,7 +206,7 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Language postDtoToEntity(LanguagePostDTO dto);
+  Language postDtoToEntity(LanguageCreateDTO dto);
 
   /**
    * 语言修改 DTO → 语言实体
@@ -219,7 +219,7 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Language putDtoToEntity(LanguagePutDTO dto);
+  Language putDtoToEntity(LanguageUpdateDTO dto);
 
   // ===== Menu =====
 
@@ -269,7 +269,7 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Menu postDtoToEntity(MenuPostDTO dto);
+  Menu postDtoToEntity(MenuCreateDTO dto);
 
   /**
    * 菜单修改 DTO → 菜单实体
@@ -282,7 +282,7 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Menu putDtoToEntity(MenuPutDTO dto);
+  Menu putDtoToEntity(MenuUpdateDTO dto);
 
   // ===== Post =====
 
@@ -316,7 +316,7 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Post postDtoToEntity(PostPostDTO dto);
+  Post postDtoToEntity(PostCreateDTO dto);
 
   /**
    * 岗位修改 DTO → 岗位实体
@@ -329,7 +329,7 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Post putDtoToEntity(PostPutDTO dto);
+  Post putDtoToEntity(PostUpdateDTO dto);
 
   // ===== Role =====
 
@@ -363,7 +363,7 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Role postDtoToEntity(RolePostDTO dto);
+  Role postDtoToEntity(RoleCreateDTO dto);
 
   /**
    * 角色修改 DTO → 角色实体
@@ -376,7 +376,7 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  Role putDtoToEntity(RolePutDTO dto);
+  Role putDtoToEntity(RoleUpdateDTO dto);
 
   // ===== UserAccount =====
 

@@ -17,8 +17,6 @@ import lombok.NoArgsConstructor;
  *   <li><b>THEN</b> - 顺序流：source 执行完毕后执行 target
  *   <li><b>IF_BRANCH</b> - 条件分支：source 是 IF/ELIF 节点，target 是分支动作节点， condition 字段携带分支条件表达式
  *   <li><b>SWITCH_BRANCH</b> - 分支选择：source 是 SWITCH 节点，target 是分支节点， branchValue 字段携带分支 key
- *   <li><b>FOR_ITER</b> - 循环迭代：source 是 FOR 节点，target 是循环体节点
- *   <li><b>WHILE_ITER</b> - 条件循环：source 是 WHILE 节点，target 是循环体节点
  *   <li><b>DEFAULT_BRANCH</b> - 默认分支：SWITCH/ELIF 未命中时执行的兜底分支
  *   <li><b>GROUP_MEMBER</b> - 组成员：source 是 GROUP 节点，target 是组成员节点
  * </ul>
@@ -46,7 +44,7 @@ public class ChainEdgeDTO implements Serializable {
   private String targetNodeId;
 
   /**
-   * 边类型：THEN / IF_BRANCH / SWITCH_BRANCH / FOR_ITER / WHILE_ITER / DEFAULT_BRANCH / GROUP_MEMBER
+   * 边类型：THEN / IF_BRANCH / SWITCH_BRANCH / DEFAULT_BRANCH / GROUP_MEMBER
    */
   private String edgeType;
 
@@ -79,20 +77,8 @@ public class ChainEdgeDTO implements Serializable {
     public static final String IF_BRANCH = "IF_BRANCH";
     public static final String ELIF_BRANCH = "ELIF_BRANCH";
     public static final String SWITCH_BRANCH = "SWITCH_BRANCH";
-    public static final String FOR_ITER = "FOR_ITER";
-    public static final String WHILE_ITER = "WHILE_ITER";
     public static final String DEFAULT_BRANCH = "DEFAULT_BRANCH";
     public static final String GROUP_MEMBER = "GROUP_MEMBER";
-    public static final String BREAK = "BREAK";
-
-    /** CATCH/RETRY 主节点边：source 是 CATCH/RETRY 链节点，target 是主节点 */
-    public static final String PRIMARY = "PRIMARY";
-
-    /** CATCH 补偿节点边：source 是 CATCH 链节点，target 是补偿节点 */
-    public static final String CATCH_COMPENSATION = "CATCH_COMPENSATION";
-
-    /** RETRY 回滚节点边：source 是 RETRY 链节点，target 是回滚补偿节点 */
-    public static final String RETRY_ROLLBACK = "RETRY_ROLLBACK";
 
     private EdgeType() {}
   }

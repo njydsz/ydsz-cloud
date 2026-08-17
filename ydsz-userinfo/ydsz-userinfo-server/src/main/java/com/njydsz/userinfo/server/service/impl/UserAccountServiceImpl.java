@@ -691,7 +691,7 @@ public class UserAccountServiceImpl implements UserAccountService {
       if (entity == null || entity.getDeleted() == 1) {
         throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
       }
-      entity.setStatusEnum(EnableStatusEnum.ENABLED);
+      entity.enable();
       if (userAccountMapper.updateById(entity) > 0) {
         indexUpsert(entity);
         eventPublisher.publishUserUpdated(entity);
@@ -718,7 +718,7 @@ public class UserAccountServiceImpl implements UserAccountService {
       if (entity == null || entity.getDeleted() == 1) {
         throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
       }
-      entity.setStatusEnum(EnableStatusEnum.DISABLED);
+      entity.disable();
       if (userAccountMapper.updateById(entity) > 0) {
         indexUpsert(entity);
         eventPublisher.publishUserUpdated(entity);

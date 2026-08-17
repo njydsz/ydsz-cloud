@@ -22,9 +22,8 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.system.domain.dto.ConfigDTO;
-import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
+import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.server.service.ConfigService;
 
 /**
@@ -73,12 +72,7 @@ public class ConfigController {
   @Operation(summary = "分页查询")
   @GetMapping("/page")
   public PageResponse<List<ConfigVO>> page(ConfigPageQuery query) {
-    PageResponse<List<ConfigVO>> result = configService.page(query);
-    return PageResponse.success(
-        result.getTotal(),
-        (long) result.getPageNum(),
-        (long) result.getPageSize(),
-        result.getData());
+    return configService.page(query);
   }
 
   /**
@@ -108,13 +102,13 @@ public class ConfigController {
       module = "系统配置",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'创建配置: ' + #dto.configKey")
+      content = "'创建配置: ' + #vo.configKey")
   @Operation(summary = "创建配置")
   @RateLimit(resource = "system.config.save", threshold = 50)
   @Idempotent(key = "ydsz:system:config:save:#userId", ttlSeconds = 5)
   @PostMapping
-  public BaseResponse<String> save(@Valid @RequestBody ConfigDTO dto) {
-    return BaseResponse.success(configService.save(dto));
+  public BaseResponse<String> save(@Valid @RequestBody ConfigVO vo) {
+    return BaseResponse.success(configService.save(vo));
   }
 
   /**
@@ -131,13 +125,13 @@ public class ConfigController {
       module = "系统配置",
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
-      content = "'更新配置: ' + #dto.configKey")
+      content = "'更新配置: ' + #vo.configKey")
   @Operation(summary = "更新配置")
   @RateLimit(resource = "system.config.update", threshold = 50)
   @Idempotent(key = "ydsz:system:config:update:#userId", ttlSeconds = 5)
   @PutMapping
-  public BaseResponse<Boolean> update(@Valid @RequestBody ConfigDTO dto) {
-    return BaseResponse.success(configService.updateById(dto));
+  public BaseResponse<Boolean> update(@Valid @RequestBody ConfigVO vo) {
+    return BaseResponse.success(configService.updateById(vo));
   }
 
   /**

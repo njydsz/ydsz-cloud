@@ -1,8 +1,6 @@
 package com.njydsz.cronjob.server.config;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -55,9 +53,6 @@ public class CronjobProperties {
   /** 任务扫描器配置（P1 阶段新增） */
   private Scanner scanner = new Scanner();
 
-  /** P0-2: 精准调度配置 */
-  private PreciseScheduling preciseScheduling = new PreciseScheduling();
-
   /** 执行器配置（P1 阶段新增） */
   private Executor executor = new Executor();
 
@@ -76,17 +71,11 @@ public class CronjobProperties {
   /** P1-1: 节点发现策略配置（Nacos 服务发现 / 心跳表） */
   private NodeDiscovery nodeDiscovery = new NodeDiscovery();
 
-  /** P1-4: 失败自动转移（FailoverScanner）配置 */
-  private Failover failover = new Failover();
-
   /** P2-2: 日志归档清理配置 */
   private LogRetention logRetention = new LogRetention();
 
   /** P0-1: MapReduce 分布式并行执行配置 */
   private MapReduce mapReduce = new MapReduce();
-
-  /** P3-12: 跨集群调度配置 */
-  private Clusters clusters = new Clusters();
 
   /**
    * 集群级配置（P0-1 新增）。
@@ -128,11 +117,8 @@ public class CronjobProperties {
   /** P1-1: 自适应批量调度配置 */
   private AdaptiveBatch adaptiveBatch = new AdaptiveBatch();
 
-  /** P1-3: 告警智能降噪配置 */
-  private AlertDedup alertDedup = new AlertDedup();
-
-  /** P3-2: 自愈系统配置 */
-  private SelfHealing selfHealing = new SelfHealing();
+  /** P1-4: 异常修复统一配置（合并原 Failover + SelfHealing） */
+  private AnomalyRecovery anomalyRecovery = new AnomalyRecovery();
 
   /** SpEL 表达式缓存配置（P1-2: 硬编码值迁移至 YAML）。 */
   private Spel spel = new Spel();
@@ -342,6 +328,14 @@ public class CronjobProperties {
 
     /** P2-5: 每个租户/分组独立线程池的队列容量 */
     private int tenantPoolQueueCapacity = 200;
+
+    /**
+     * P2-5: 分桶隔离的桶数量（默认 8）。
+     *
+     * <p>使用固定数量的分桶池，通过哈希将租户/分组映射到对应分桶，避免无限创建线程池导致的资源耗尽问题。
+     * 仅当 {@code isolationStrategy} 为 {@code tenant} 或 {@code job_group} 时生效。
+     */
+    private int isolationBuckets = 8;
   }
 
   /**
@@ -468,39 +462,6 @@ public class CronjobProperties {
   }
 
   /**
-   * P1-4: 失败自动转移配置（FailoverScanner）。
-   *
-   * <p>当执行器节点宕机后，Leader 节点定时扫描该节点上 RUNNING 状态的任务日志， 标记为 FAILED 后以 triggerType=FAILOVER 重新派发任务。
-   *
-   * <h3>工作流程</h3>
-   *
-   * <ol>
-   *   <li>获取在线节点列表（Nacos 或 DB 心跳表）
-   *   <li>查询所有 RUNNING 日志的 exec_node_id，找出不在在线列表中的下线节点
-   *   <li>对每个下线节点：
-   *       <ul>
-   *         <li>调用 selectRunningByNode 获取 RUNNING 日志
-   *         <li>调用 markFailedByNodeOffline 标记为 FAILED
-   *         <li>对每条失败日志，若任务仍为 NORMAL 状态，重新派发（triggerType=FAILOVER）
-   *       </ul>
-   * </ol>
-   */
-  @Data
-  public static class Failover {
-    /** 是否启用故障转移扫描 */
-    private boolean enabled = true;
-
-    /** 扫描间隔（秒） */
-    private int scanIntervalSeconds = 30;
-
-    /** 单批最多扫描节点数 */
-    private int scanNodeLimit = 10;
-
-    /** 单节点最多转移任务数 */
-    private int failoverTaskLimit = 50;
-  }
-
-  /**
    * P2-2: 日志归档清理配置。
    *
    * <p>控制 {@link com.njydsz.cronjob.server.core.cleaner.LogCleaner} 的清理行为：
@@ -549,60 +510,6 @@ public class CronjobProperties {
 
     /** 远程子任务派发失败时是否降级本地执行 */
     private boolean fallbackToLocal = true;
-  }
-
-  /**
-   * P0-2: 精准调度配置。
-   *
-   * <p>通过时间轮预加载机制提升 CRON 任务调度精度：
-   *
-   * <ul>
-   *   <li>{@link #isEnabled}: 是否启用精准调度（false=仅依赖 JobScanner 轮询，向后兼容）
-   *   <li>{@link #getPreLoadWindowSeconds}: 预加载窗口（秒），提前加载窗口内到期的任务
-   *   <li>{@link #getFastScanIntervalMs}: 快速扫描间隔（毫秒，默认 1s）
-   *   <li>{@link #getTimeWheelSlots}: 时间轮槽数（默认 60，对应 60 秒）
-   * </ul>
-   *
-   * <p>启用后，CRON 任务的触发精度从 ±5s（扫描间隔）提升到 ±0.1s（时间轮精度）。
-   */
-  @Data
-  public static class PreciseScheduling {
-    /** 是否启用精准调度（false=仅依赖 JobScanner 轮询，向后兼容） */
-    private boolean enabled = false;
-
-    /** 预加载窗口（秒），提前加载窗口内到期的任务到时间轮 */
-    private int preLoadWindowSeconds = 10;
-
-    /** 快速扫描间隔（毫秒，默认 1s） */
-    private long fastScanIntervalMs = 1000;
-
-    /** 时间轮槽数（默认 60，对应 60 秒一圈） */
-    private int timeWheelSlots = 60;
-
-    /** 精准调度线程池大小 */
-    private int poolSize = 4;
-  }
-
-  /**
-   * P3-12: 跨集群调度配置。
-   *
-   * <p>支持将任务派发到其他集群的执行器节点，实现多集群统一调度。 任务的 {@code cluster} 字段指定目标集群（null=本地集群）。
-   *
-   * <p>配置示例（application.yml）:
-   *
-   * <pre>{@code
-   * ydsz:
-   *   cronjob:
-   *     clusters:
-   *       endpoints:
-   *         cluster-bj: http://10.0.1.10:8080
-   *         cluster-sh: http://10.0.2.10:8080
-   * }</pre>
-   */
-  @Data
-  public static class Clusters {
-    /** 集群端点配置: clusterName -> baseUrl */
-    private Map<String, String> endpoints = new HashMap<>();
   }
 
   /**
@@ -760,51 +667,34 @@ public class CronjobProperties {
   }
 
   /**
-   * P1-3: 告警智能降噪与聚合配置。
+   * P1-4: 异常修复统一配置（合并原 Failover + SelfHealing）。
    *
-   * <p>对同一任务/同组任务的告警进行时间窗口内聚合，避免告警风暴。 支持基于告警频次的自动升降级：短时间内多次告警升级通知渠道， 长时间无告警后自动恢复降级。
-   *
-   * <p>对标 SchedulerX 的告警降噪和 PowerJob 的告警聚合能力。
-   */
-  @Data
-  public static class AlertDedup {
-    /** 是否启用告警降噪（false=使用原有冷却窗口逻辑，向后兼容） */
-    private boolean enabled = false;
-
-    /** 聚合窗口（秒，窗口内同规则的告警合并为一条） */
-    private int aggregateWindowSeconds = 60;
-
-    /** 窗口内最大聚合告警数（超过此数触发升级通知） */
-    private int maxAggregateCount = 5;
-
-    /** 升级通知通道（如 "sms,phone"，在原有 channels 基础上追加） */
-    private String escalateChannels = "sms";
-
-    /** 降级冷却时间（秒，无告警后恢复原始通道） */
-    private long downgradeCooldownSeconds = 3600;
-  }
-
-  /**
-   * P3-2: 自愈系统配置。
-   *
-   * <p>定时检测异常状态的任务并自动修复：
+   * <p>控制 {@link com.njydsz.cronjob.server.core.healing.AnomalyRecoveryScanner} 的扫描行为：
    *
    * <ul>
-   *   <li>RUNNING 状态超时未更新 → 标记 FAILED 并重新派发
-   *   <li>AUTO_PAUSED 状态到达恢复时间 → 自动恢复为 NORMAL
-   *   <li>连续失败任务 → 触发降级通知
-   *   <li>孤儿任务（所属节点下线但日志仍 RUNNING） → 清理并转移
+   *   <li>故障转移：检测下线节点上的 RUNNING 任务并重新派发
+   *   <li>卡死修复：修复 RUNNING 状态超过阈值的任务
+   *   <li>AUTO_PAUSED 恢复：到达恢复时间后自动恢复为 NORMAL
    * </ul>
    *
-   * <p>对标 PowerJob 的自愈能力和 SchedulerX 的自动恢复机制。
+   * <p>对标 XXL-Job 的失败重试 + 分片任务转移、PowerJob 的自愈能力、SchedulerX 的自动恢复机制。
    */
   @Data
-  public static class SelfHealing {
-    /** 是否启用自愈系统（false=不启用，向后兼容） */
-    private boolean enabled = false;
+  public static class AnomalyRecovery {
+    /** 是否启用故障转移扫描（检测下线节点任务） */
+    private boolean failoverEnabled = true;
 
-    /** 检测间隔（秒，默认 60s） */
-    private int scanIntervalSeconds = 60;
+    /** 是否启用自愈系统（卡死修复 + AUTO_PAUSED 恢复） */
+    private boolean selfHealingEnabled = false;
+
+    /** 扫描间隔（秒，默认 30s） */
+    private int scanIntervalSeconds = 30;
+
+    /** 单批最多扫描节点数 */
+    private int scanNodeLimit = 10;
+
+    /** 单节点最多转移任务数 */
+    private int failoverTaskLimit = 50;
 
     /** RUNNING 状态无更新超时阈值（秒，超过此值视为卡死） */
     private int stuckThresholdSeconds = 300;

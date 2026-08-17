@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.nextwiki.domain.entity.ShareLink;
-import com.njydsz.nextwiki.domain.service.ShareDomainService;
+import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
 
 /**
  * 分享链接到期提醒定时任务。
@@ -28,7 +28,7 @@ public class ShareExpiryReminderTask {
   /** 到期提醒提前小时数 */
   private static final int EXPIRY_REMINDER_HOURS = 24;
 
-  private final ShareDomainService shareDomainService;
+  private final ShareLinkDomainService shareLinkDomainService;
 
   /**
    * 扫描即将到期的分享链接并触发提醒。
@@ -38,7 +38,7 @@ public class ShareExpiryReminderTask {
   @Scheduled(cron = "0 0 * * * *")
   public void scanExpiringShares() {
     try {
-      List<ShareLink> expiringShares = shareDomainService.findExpiringShares(EXPIRY_REMINDER_HOURS);
+      List<ShareLink> expiringShares = shareLinkDomainService.findExpiringShares(EXPIRY_REMINDER_HOURS);
 
       if (expiringShares == null || expiringShares.isEmpty()) {
         return;
@@ -48,7 +48,7 @@ public class ShareExpiryReminderTask {
 
       for (ShareLink share : expiringShares) {
         // 标记提醒已发送（避免重复提醒）
-        shareDomainService.markReminderSent(share.getId());
+        shareLinkDomainService.markReminderSent(share.getId());
         log.info(
             "[ShareExpiryReminder] 分享即将到期: shareId={}, shareCode={}, expireTime={}",
             share.getId(),

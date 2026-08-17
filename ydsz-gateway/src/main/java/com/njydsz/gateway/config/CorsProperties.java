@@ -28,7 +28,7 @@ import com.njydsz.common.core.constant.HeaderConstants;
  * }</pre>
  *
  * <p><b>凭据模式与通配符互斥校验：</b> 当 {@code allow-credentials=true} 时，{@code allowed-origin} 不得为 {@code *}，
- * 必须在 {@link GatewayCorsConfig#corsWebFilter(CorsProperties)} 中校验。
+ * 必须在 {@link GatewayFilterConfig#corsWebFilter(CorsProperties)} 中校验。
  *
  * @author ydsz-team
  * @since 2.0.0

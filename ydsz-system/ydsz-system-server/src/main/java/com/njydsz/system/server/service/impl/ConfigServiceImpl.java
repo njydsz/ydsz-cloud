@@ -27,7 +27,7 @@ import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.system.domain.converter.SystemConverter;
-import com.njydsz.system.domain.dto.ConfigDTO;
+import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -37,7 +37,7 @@ import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.ConfigService;
-import com.njydsz.system.server.service.ConfigVersionService;
+import com.njydsz.system.server.service.EntityVersionService;
 
 /**
  * 系统配置 Service 实现
@@ -57,7 +57,7 @@ import com.njydsz.system.server.service.ConfigVersionService;
  *   <li><b>变更广播</b>：通过 {@link DomainEventPublisher} 将 {@code CONFIG_CHANGED} 事件写入 Outbox 表， 与
  *       config 表写入共享同一事务（事务提交后由 {@code OutboxProcessor} 异步投递）， 订阅者可监听 {@code
  *       ydsz.workflow.sla-default-hours} 等关键配置变更
- *   <li><b>版本快照</b>：通过 {@link ConfigVersionService} 在写操作（{@code updateById} / {@code
+ *   <li><b>版本快照</b>：通过 {@link EntityVersionService} 在写操作（{@code updateById} / {@code
  *       removeById}）时记录变更前快照， 支持版本回滚与变更审计
  *   <li><b>搜索同步</b>：通过 {@link SearchIndexEventBridge} 同步配置变更到 ES 索引
  *   <li><b>指标埋点</b>：通过 {@link com.njydsz.system.server.metrics.SystemMetrics} 暴露 Prometheus 指标
@@ -112,8 +112,8 @@ public class ConfigServiceImpl implements ConfigService {
   /** 统一领域事件发布门面 */
   private final DomainEventPublisher eventPublisher;
 
-  /** 配置版本服务（写操作时创建版本快照） */
-  private final ConfigVersionService configVersionService;
+  /** 统一实体版本服务（写操作时创建版本快照） */
+  private final EntityVersionService entityVersionService;
 
   private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
 
@@ -136,8 +136,8 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   @CacheEvict(value = CacheConstants.SYSTEM_CONFIG_CACHE, allEntries = true)
   @Transactional(rollbackFor = Exception.class)
-  public String save(ConfigDTO dto) {
-    Config entity = toEntity(dto);
+  public String save(ConfigVO vo) {
+    Config entity = toEntity(vo);
     validateValueType(entity.getValueType());
     checkDuplicateKey(entity);
     validateConfigValue(entity.getConfigKey(), entity.getConfigValue(), entity.getValueType());
@@ -151,8 +151,8 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   @CacheEvict(value = CacheConstants.SYSTEM_CONFIG_CACHE, allEntries = true)
   @Transactional(rollbackFor = Exception.class)
-  public boolean updateById(ConfigDTO dto) {
-    Config entity = toEntity(dto);
+  public boolean updateById(ConfigVO vo) {
+    Config entity = toEntity(vo);
     validateValueType(entity.getValueType());
     validateConfigValue(entity.getConfigKey(), entity.getConfigValue(), entity.getValueType());
     // 版本快照：查询变更前状态
@@ -167,7 +167,8 @@ public class ConfigServiceImpl implements ConfigService {
     boolean updated = configRepository.getConfigMapper().updateById(entity) > 0;
     if (updated) {
       // 创建版本快照（与配置变更同一事务）
-      configVersionService.createVersion(
+      entityVersionService.createVersion(
+          EntityVersionService.RESOURCE_TYPE_CONFIG,
           entity.getConfigKey(),
           entity.getConfigGroup(),
           "v" + System.currentTimeMillis(),
@@ -189,7 +190,8 @@ public class ConfigServiceImpl implements ConfigService {
     boolean removed = configRepository.getConfigMapper().deleteById(id) > 0;
     if (removed && entity != null) {
       // 创建版本快照（与配置变更同一事务）
-      configVersionService.createVersion(
+      entityVersionService.createVersion(
+          EntityVersionService.RESOURCE_TYPE_CONFIG,
           entity.getConfigKey(),
           entity.getConfigGroup(),
           "v" + System.currentTimeMillis(),
@@ -314,21 +316,21 @@ public class ConfigServiceImpl implements ConfigService {
    * @param dto 配置 DTO（为 null 时返回 null）
    * @return 转换后的实体
    */
-  private Config toEntity(ConfigDTO dto) {
-    if (dto == null) {
+  private Config toEntity(ConfigVO vo) {
+    if (vo == null) {
       return null;
     }
     Config entity = new Config();
-    entity.setId(dto.getId());
-    entity.setConfigGroup(dto.getConfigGroup());
-    entity.setConfigKey(dto.getConfigKey());
-    entity.setConfigValue(dto.getConfigValue());
-    entity.setValueType(dto.getValueType());
-    entity.setDefaultValue(dto.getDefaultValue());
-    entity.setDescription(dto.getDescription());
-    entity.setIsPublic(dto.getIsPublic());
-    entity.setSortOrder(dto.getSortOrder());
-    entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
+    entity.setId(vo.getId());
+    entity.setConfigGroup(vo.getConfigGroup());
+    entity.setConfigKey(vo.getConfigKey());
+    entity.setConfigValue(vo.getConfigValue());
+    entity.setValueType(vo.getValueType());
+    entity.setDefaultValue(vo.getDefaultValue());
+    entity.setDescription(vo.getDescription());
+    entity.setIsPublic(vo.getIsPublic());
+    entity.setSortOrder(vo.getSortOrder());
+    entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
     return entity;
   }
 
@@ -336,7 +338,7 @@ public class ConfigServiceImpl implements ConfigService {
    * 校验配置值类型合法性。
    *
    * <p>委托 {@link ConfigValueType#validate} 完成，非法类型将抛出 {@link BusinessException}
-   *（{@link SystemExceptionCode#CONFIG_VALUE_TYPE_INVALID}）阻止脏数据落库。
+   *（{@link SystemExceptionCode#VALUE_TYPE_INVALID}）阻止脏数据落库。
    *
    * @param valueType 值类型字符串
    */
@@ -344,7 +346,7 @@ public class ConfigServiceImpl implements ConfigService {
     try {
       ConfigValueType.validate(valueType);
     } catch (IllegalArgumentException e) {
-      throw BusinessException.of(SystemExceptionCode.CONFIG_VALUE_TYPE_INVALID)
+      throw BusinessException.of(SystemExceptionCode.VALUE_TYPE_INVALID)
           .data("valueType", valueType);
     }
   }
@@ -481,6 +483,59 @@ public class ConfigServiceImpl implements ConfigService {
           .data("configGroup", entity.getConfigGroup())
           .data("configKey", entity.getConfigKey());
     }
+  }
+
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public String rollbackTo(String resourceKey, String targetVersion, String operatorId) {
+    // 1. 执行回滚（通过 EntityVersionService 回调机制）
+    return entityVersionService.rollbackTo(
+        EntityVersionService.RESOURCE_TYPE_CONFIG,
+        resourceKey,
+        targetVersion,
+        operatorId,
+        snapshotJson -> {
+          // 2. 反序列化快照并更新配置项
+          if (snapshotJson != null && !snapshotJson.isBlank()) {
+            try {
+              ConfigVO snapshotVO = YdszJson.fromJson(snapshotJson, ConfigVO.class);
+              Config currentConfig =
+                  configRepository
+                      .getConfigMapper()
+                      .selectOne(
+                          new QueryWrapper<Config>()
+                              .eq("config_key", resourceKey)
+                              .eq("deleted", 0));
+              if (currentConfig != null) {
+                currentConfig.setConfigValue(snapshotVO.getConfigValue());
+                currentConfig.setValueType(snapshotVO.getValueType());
+                currentConfig.setDefaultValue(snapshotVO.getDefaultValue());
+                currentConfig.setDescription(snapshotVO.getDescription());
+                currentConfig.setIsPublic(snapshotVO.getIsPublic());
+                currentConfig.setSortOrder(snapshotVO.getSortOrder());
+                currentConfig.setStatus(snapshotVO.getStatus());
+                configRepository.getConfigMapper().updateById(currentConfig);
+              } else {
+                Config newConfig = new Config();
+                newConfig.setConfigGroup(snapshotVO.getConfigGroup());
+                newConfig.setConfigKey(snapshotVO.getConfigKey());
+                newConfig.setConfigValue(snapshotVO.getConfigValue());
+                newConfig.setValueType(snapshotVO.getValueType());
+                newConfig.setDefaultValue(snapshotVO.getDefaultValue());
+                newConfig.setDescription(snapshotVO.getDescription());
+                newConfig.setIsPublic(snapshotVO.getIsPublic());
+                newConfig.setSortOrder(snapshotVO.getSortOrder());
+                newConfig.setStatus(snapshotVO.getStatus());
+                configRepository.getConfigMapper().insert(newConfig);
+              }
+            } catch (Exception e) {
+              throw BusinessException.of(SystemExceptionCode.SNAPSHOT_PARSE_ERROR)
+                  .data("reason", e.getMessage());
+            }
+          }
+          // 3. 失效缓存并发布变更事件
+          publishConfigChangedEvent(resourceKey, null);
+        });
   }
 
   /**

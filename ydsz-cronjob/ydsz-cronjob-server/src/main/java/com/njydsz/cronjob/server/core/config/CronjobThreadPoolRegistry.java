@@ -55,17 +55,8 @@ public class CronjobThreadPoolRegistry {
   /** 失败重试调度线程池（DefaultTaskDispatcher 重试调度器） */
   public static final String RETRY_SCHEDULER = "cronjob-retry-scheduler";
 
-  /** 精准调度线程池（PreciseSchedulingManager 时间轮调度） */
-  public static final String PRECISE_SCHEDULER = "cronjob-precise-scheduler";
-
-  /** 二级调度线程池（SecondLevelScheduler FIXED_RATE/FIXED_DELAY） */
-  public static final String SECOND_LEVEL_SCHEDULER = "cronjob-second-level-scheduler";
-
   /** 租户隔离线程池前缀（实际注册名: tenant-isolation-{tenantId/jobGroup}） */
   public static final String TENANT_ISOLATION_PREFIX = "tenant-isolation-";
-
-  /** 精准调度扫描线程池（PreciseSchedulingManager 快速扫描） */
-  public static final String PRECISE_FAST_SCAN = "cronjob-precise-fast-scan";
 
   /**
    * 注册一个线程池。

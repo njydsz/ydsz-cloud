@@ -15,7 +15,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.system.domain.converter.SystemConverter;
-import com.njydsz.system.domain.dto.TenantPlanDTO;
+import com.njydsz.system.domain.vo.TenantPlanVO;
 import com.njydsz.system.domain.entity.Tenant;
 import com.njydsz.system.domain.entity.TenantPlan;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -117,16 +117,16 @@ public class TenantPlanServiceImpl implements TenantPlanService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String save(TenantPlanDTO dto) {
+  public String save(TenantPlanVO vo) {
     LambdaQueryWrapper<TenantPlan> checkWrapper = new LambdaQueryWrapper<>();
-    checkWrapper.eq(TenantPlan::getPlanCode, dto.getPlanCode());
+    checkWrapper.eq(TenantPlan::getPlanCode, vo.getPlanCode());
     if (tenantPlanRepository.getTenantPlanMapper().selectCount(checkWrapper) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_CODE_DUPLICATE)
-          .data("planCode", dto.getPlanCode());
+          .data("planCode", vo.getPlanCode());
     }
-    TenantPlan entity = toEntity(dto);
+    TenantPlan entity = toEntity(vo);
     tenantPlanRepository.getTenantPlanMapper().insert(entity);
-    log.info("创建套餐成功: planCode={}, planId={}", dto.getPlanCode(), entity.getId());
+    log.info("创建套餐成功: planCode={}, planId={}", vo.getPlanCode(), entity.getId());
     return entity.getId();
   }
 
@@ -140,15 +140,15 @@ public class TenantPlanServiceImpl implements TenantPlanService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean updateById(TenantPlanDTO dto) {
+  public boolean updateById(TenantPlanVO vo) {
     LambdaQueryWrapper<TenantPlan> checkWrapper = new LambdaQueryWrapper<>();
-    checkWrapper.eq(TenantPlan::getPlanCode, dto.getPlanCode());
-    checkWrapper.ne(TenantPlan::getId, dto.getId());
+    checkWrapper.eq(TenantPlan::getPlanCode, vo.getPlanCode());
+    checkWrapper.ne(TenantPlan::getId, vo.getId());
     if (tenantPlanRepository.getTenantPlanMapper().selectCount(checkWrapper) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_CODE_DUPLICATE)
-          .data("planCode", dto.getPlanCode());
+          .data("planCode", vo.getPlanCode());
     }
-    TenantPlan entity = toEntity(dto);
+    TenantPlan entity = toEntity(vo);
     return tenantPlanRepository.getTenantPlanMapper().updateById(entity) > 0;
   }
 
@@ -179,13 +179,13 @@ public class TenantPlanServiceImpl implements TenantPlanService {
    * @param dto 套餐 DTO
    * @return 套餐 Entity
    */
-  private TenantPlan toEntity(TenantPlanDTO dto) {
+  private TenantPlan toEntity(TenantPlanVO vo) {
     TenantPlan entity = new TenantPlan();
-    entity.setId(dto.getId());
-    entity.setPlanCode(dto.getPlanCode());
-    entity.setPlanName(dto.getPlanName());
-    entity.setDescription(dto.getDescription());
-    entity.setSortOrder(dto.getSortOrder());
+    entity.setId(vo.getId());
+    entity.setPlanCode(vo.getPlanCode());
+    entity.setPlanName(vo.getPlanName());
+    entity.setDescription(vo.getDescription());
+    entity.setSortOrder(vo.getSortOrder());
     return entity;
   }
 }

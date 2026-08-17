@@ -22,8 +22,9 @@ import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.system.domain.vo.DictVersionVO;
-import com.njydsz.system.server.service.DictVersionService;
+import com.njydsz.system.domain.vo.EntityVersionVO;
+import com.njydsz.system.server.service.DictItemService;
+import com.njydsz.system.server.service.EntityVersionService;
 
 /**
  * 字典版本 Controller
@@ -52,8 +53,8 @@ import com.njydsz.system.server.service.DictVersionService;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.server.service.DictVersionService 字典版本业务逻辑
- * @see com.njydsz.system.domain.entity.DictVersion 字典版本实体
+ * @see com.njydsz.system.server.service.EntityVersionService 统一实体版本业务逻辑
+ * @see com.njydsz.system.domain.entity.EntityVersion 实体版本
  */
 @Tag(name = "字典版本", description = "字典变更历史查询 + 一键回滚")
 @RestController
@@ -61,7 +62,9 @@ import com.njydsz.system.server.service.DictVersionService;
 @RequiredArgsConstructor
 public class DictVersionController {
 
-  private final DictVersionService service;
+  private final EntityVersionService entityVersionService;
+
+  private final DictItemService dictItemService;
 
   /**
    * 按字典类型编码查询版本历史。
@@ -73,8 +76,10 @@ public class DictVersionController {
    */
   @Operation(summary = "按类型编码查询版本历史")
   @GetMapping("/{typeCode}")
-  public BaseResponse<List<DictVersionVO>> listByTypeCode(@PathVariable String typeCode) {
-    return BaseResponse.success(service.listByTypeCode(typeCode));
+  public BaseResponse<List<EntityVersionVO>> listByTypeCode(@PathVariable String typeCode) {
+    return BaseResponse.success(
+        entityVersionService.listByResourceTypeAndKey(
+            EntityVersionService.RESOURCE_TYPE_DICT, typeCode));
   }
 
   /**
@@ -116,6 +121,7 @@ public class DictVersionController {
       @Parameter(description = "操作人 ID")
           @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false)
           String operatorId) {
-    return BaseResponse.success(service.rollbackTo(typeCode, targetVersion, operatorId));
+    return BaseResponse.success(
+        dictItemService.rollbackTo(typeCode, targetVersion, operatorId));
   }
 }

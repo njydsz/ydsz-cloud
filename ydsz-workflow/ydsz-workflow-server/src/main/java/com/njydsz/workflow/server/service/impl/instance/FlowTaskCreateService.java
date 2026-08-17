@@ -1088,7 +1088,7 @@ public class FlowTaskCreateService {
     }
   }
 
-  /** P1-5: 解析 node.ext.votePassRate / userWeights，配置加权票签 */
+  /** 解析 node.ext.votePassRate，配置通过率阈值 */
   private void applyVoteConfig(FlowRunTask task, FlowNode node) {
     Map<String, Object> ext = parseExtConfig(node.getExt());
     Object rate = ext.get("votePassRate");
@@ -1103,7 +1103,7 @@ public class FlowTaskCreateService {
     }
   }
 
-  /** P1-5: 解析 node.ext.userWeights */
+  /** 解析 node.ext.userWeights，获取加权投票权重映射 */
   private Map<String, Integer> parseUserWeights(String ext) {
     Map<String, Object> config = parseExtConfig(ext);
     Object weights = config.get("userWeights");

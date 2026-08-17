@@ -186,6 +186,34 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
   List<FileNode> selectAllDescendantsByPath(@Param("folderPath") String folderPath);
 
   /**
+   * 分页查询文件夹的后代节点（用于分批复制场景，避免一次全量加载 OOM）。
+   *
+   * <p>结果按 level 升序、sort 升序排列，确保父节点先于子节点返回。
+   *
+   * @param folderPath 文件夹路径（需以 {@code /} 结尾）
+   * @param offset 偏移量（从 0 开始）
+   * @param limit 每页大小
+   * @return 后代节点分页列表
+   */
+  @Select(
+      "SELECT * FROM nw_file_node WHERE path LIKE CONCAT(#{folderPath}, '%') "
+          + "AND deleted = 0 ORDER BY level ASC, sort ASC LIMIT #{limit} OFFSET #{offset}")
+  List<FileNode> selectDescendantsByPage(
+      @Param("folderPath") String folderPath,
+      @Param("offset") int offset,
+      @Param("limit") int limit);
+
+  /**
+   * 统计文件夹的后代节点数量（不含文件夹自身）。
+   *
+   * @param folderPath 文件夹路径
+   * @return 后代节点总数
+   */
+  @Select(
+      "SELECT COUNT(*) FROM nw_file_node WHERE path LIKE CONCAT(#{folderPath}, '%') AND deleted = 0")
+  int countDescendantsByPath(@Param("folderPath") String folderPath);
+
+  /**
    * 查询冷数据候选（长期未访问的文件）。
    *
    * @param threshold 时间阈值（updated_at 早于此时间的文件）

@@ -11,12 +11,16 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.nextwiki.domain.entity.ShareAccessLog;
 import com.njydsz.nextwiki.domain.entity.ShareLink;
 import com.njydsz.nextwiki.domain.entity.ShareRecipient;
-import com.njydsz.nextwiki.domain.service.ShareDomainService;
+import com.njydsz.nextwiki.domain.service.ShareAccessLogDomainService;
+import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
 
 /**
  * 分享应用服务。
  *
  * <p>创建/校验/撤销分享链接，管理访问日志与目标用户。
+ *
+ * <p>按职责拆分为 {@link ShareLinkDomainService}（链接生命周期）和 {@link
+ * ShareAccessLogDomainService}（日志记录查询）两个领域服务。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -26,8 +30,8 @@ import com.njydsz.nextwiki.domain.service.ShareDomainService;
 @RequiredArgsConstructor
 public class ShareApplicationService {
 
-  /** 分享领域服务 */
-  private final ShareDomainService shareDomainService;
+  private final ShareLinkDomainService shareLinkDomainService;
+  private final ShareAccessLogDomainService shareAccessLogDomainService;
 
   /**
    * 创建文件分享链接。
@@ -39,10 +43,10 @@ public class ShareApplicationService {
    * @param maxAccessCount 最大访问次数（可为空表示不限）
    * @param userId 创建者 ID
    * @return 分享链接实体 {@link ShareLink}
-   * @throws 由 {@link ShareDomainService} 在节点不存在/无权限时抛出的业务异常
+   * @throws 由 {@link ShareLinkDomainService} 在节点不存在/无权限时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    * @complexity O(1)（一次分享记录写入）
-   * @note 委托 {@link ShareDomainService} 实现；创建后通常由事件/通知触达被分享方
+   * @note 委托 {@link ShareLinkDomainService} 实现；创建后通常由事件/通知触达被分享方
    */
   @Transactional(rollbackFor = Exception.class)
   public ShareLink createShare(
@@ -52,7 +56,7 @@ public class ShareApplicationService {
       LocalDateTime expireTime,
       Integer maxAccessCount,
       String userId) {
-    return shareDomainService.createShare(
+    return shareLinkDomainService.createShare(
         fileNodeId, shareType, password, expireTime, maxAccessCount, userId);
   }
 
@@ -79,7 +83,7 @@ public class ShareApplicationService {
       List<String> targetUserIds,
       String title,
       String userId) {
-    return shareDomainService.createShare(
+    return shareLinkDomainService.createShare(
         fileNodeId, shareType, password, expireTime, maxAccessCount, targetUserIds, title, userId);
   }
 
@@ -93,10 +97,10 @@ public class ShareApplicationService {
    * @param password 访问密码（可为空；PUBLIC 类型忽略）
    * @return 分享链接实体 {@link ShareLink}；任一校验不通过返回 {@code null}
    * @complexity O(1)（一次分享记录查询 + 内存校验）
-   * @note 无事务边界；返回 {@code null} 表示验证失败，由调用方决定提示
+   * @note 无事务边界；验证失败时抛业务异常
    */
   public ShareLink verifyAccess(String shareCode, String extractCode, String password) {
-    return shareDomainService.verifyAccess(shareCode, extractCode, password);
+    return shareLinkDomainService.verifyAccess(shareCode, extractCode, password);
   }
 
   /**
@@ -105,14 +109,14 @@ public class ShareApplicationService {
    * @param shareId 分享 ID
    * @param userId 操作者 ID（需具备该分享的撤销权限）
    * @return 无返回值
-   * @throws 由 {@link ShareDomainService} 在分享不存在/无权限时抛出的业务异常
+   * @throws 由 {@link ShareLinkDomainService} 在分享不存在/无权限时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    * @complexity O(1)（一次分享状态更新）
    * @note 撤销后原分享码不可再访问；已发出的访问不再有效
    */
   @Transactional(rollbackFor = Exception.class)
   public void revoke(String shareId, String userId) {
-    shareDomainService.revoke(shareId, userId);
+    shareLinkDomainService.revoke(shareId, userId);
   }
 
   /**
@@ -124,7 +128,7 @@ public class ShareApplicationService {
    * @note 只读，无事务边界
    */
   public List<ShareLink> findByUserId(String userId) {
-    return shareDomainService.findByUserId(userId);
+    return shareLinkDomainService.findByUserId(userId);
   }
 
   /**
@@ -135,7 +139,7 @@ public class ShareApplicationService {
    * @return 访问日志列表
    */
   public List<ShareAccessLog> getAccessLogs(String shareId, int limit) {
-    return shareDomainService.getAccessLogs(shareId, limit);
+    return shareAccessLogDomainService.getAccessLogs(shareId, limit);
   }
 
   /**
@@ -145,7 +149,7 @@ public class ShareApplicationService {
    * @return 目标用户列表
    */
   public List<ShareRecipient> getRecipients(String shareId) {
-    return shareDomainService.getRecipients(shareId);
+    return shareAccessLogDomainService.getRecipients(shareId);
   }
 
   /**
@@ -155,7 +159,7 @@ public class ShareApplicationService {
    * @return 分享接收记录列表
    */
   public List<ShareRecipient> getReceivedShares(String userId) {
-    return shareDomainService.getReceivedShares(userId);
+    return shareAccessLogDomainService.getReceivedShares(userId);
   }
 
   /**
@@ -181,15 +185,8 @@ public class ShareApplicationService {
       String accessType,
       String status,
       String failReason) {
-    shareDomainService.recordAccessLog(
-        shareId,
-        shareCode,
-        fileNodeId,
-        visitorId,
-        visitorIp,
-        userAgent,
-        accessType,
-        status,
+    shareAccessLogDomainService.recordAccessLog(
+        shareId, shareCode, fileNodeId, visitorId, visitorIp, userAgent, accessType, status,
         failReason);
   }
 }

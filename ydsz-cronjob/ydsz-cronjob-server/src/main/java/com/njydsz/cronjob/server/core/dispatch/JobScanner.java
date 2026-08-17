@@ -32,7 +32,6 @@ import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.cronjob.server.core.leader.PartitionLeaderManager;
-import com.njydsz.cronjob.server.core.scheduler.AdaptiveBatchScheduler;
 import com.njydsz.cronjob.server.core.scheduler.CalendarScheduleFilter;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
@@ -84,9 +83,6 @@ public class JobScanner {
   /** P2-9: 分区 Leader 管理器（可选注入，仅分区调度启用时存在） */
   private final ObjectProvider<PartitionLeaderManager> partitionLeaderManagerProvider;
 
-  /** P1-1: 自适应批量调度器（可选注入，启用时动态调整 batchSize） */
-  private final ObjectProvider<AdaptiveBatchScheduler> adaptiveBatchSchedulerProvider;
-
   /** P0-7b: 日历调度过滤器（可选注入，启用时按工作日/节假日过滤派发） */
   private final ObjectProvider<CalendarScheduleFilter> calendarScheduleFilterProvider;
 
@@ -94,12 +90,6 @@ public class JobScanner {
 
   /** 扫描执行中标志（避免上次扫描未完成时重叠触发） */
   private final AtomicBoolean scanning = new AtomicBoolean(false);
-
-  /** P3-D4: 上次扫描时间戳，用于精准调度模式下降频控制 */
-  private volatile long lastScanTimeMs = 0L;
-
-  /** P3-D4: 精准调度启用时兜底扫描间隔（30s），减少无效 DB 查询 */
-  private static final long PRECISE_MODE_FALLBACK_INTERVAL_MS = 30_000L;
 
   /** Leader 角色（从配置读取，便于多套调度集群隔离） */
   private String leaderRole;
@@ -205,21 +195,6 @@ public class JobScanner {
       log.debug("[JobScanner] 上次扫描尚未完成, 跳过本次执行");
       return;
     }
-    // P3-D4: 启用精准调度时，JobScanner 降频为兜底扫描（30s），
-    // 减少无效 DB 查询（精准调度器 PreciseSchedulingManager 已处理窗口内任务）
-    if (cronjobProperties.getPreciseScheduling() != null
-        && cronjobProperties.getPreciseScheduling().isEnabled()) {
-      long lastScanAge = System.currentTimeMillis() - lastScanTimeMs;
-      if (lastScanAge < PRECISE_MODE_FALLBACK_INTERVAL_MS) {
-        log.debug(
-            "[JobScanner] 精准调度已启用, 兜底扫描降频: age={}ms threshold={}ms",
-            lastScanAge,
-            PRECISE_MODE_FALLBACK_INTERVAL_MS);
-        scanning.set(false);
-        return;
-      }
-    }
-    lastScanTimeMs = System.currentTimeMillis();
     // P6-2: 更新扫描中状态指标
     CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
     if (metrics != null) {
@@ -255,8 +230,7 @@ public class JobScanner {
    */
   private void doScan() {
     LocalDateTime now = LocalDateTime.now();
-    // P1-1: 支持自适应 batchSize（AdaptiveBatchScheduler 启用时动态调整）
-    int batchSize = resolveBatchSize();
+    int batchSize = cronjobProperties.getScanner().getBatchSize();
     List<Job> dueJobs = jobTransactionService.acquireDueJobs(now, batchSize);
     // P6-2: 更新上次扫描到的待触发任务数指标
     CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
@@ -470,21 +444,6 @@ public class JobScanner {
   /** 暴露 Leader 角色（仅供测试断言使用）。 */
   String getLeaderRole() {
     return leaderRole;
-  }
-
-  /**
-   * P1-1: 解析当前扫描的 batchSize。
-   *
-   * <p>当 AdaptiveBatchScheduler 启用时，返回自适应调整后的 batchSize； 否则返回配置的固定 batchSize。
-   *
-   * @return 当前扫描使用的 batchSize
-   */
-  private int resolveBatchSize() {
-    AdaptiveBatchScheduler adaptive = adaptiveBatchSchedulerProvider.getIfAvailable();
-    if (adaptive != null) {
-      return adaptive.getCurrentBatchSize();
-    }
-    return cronjobProperties.getScanner().getBatchSize();
   }
 
   /** 计算任务 Misfire 宽容窗口（仅供测试断言使用）。 */

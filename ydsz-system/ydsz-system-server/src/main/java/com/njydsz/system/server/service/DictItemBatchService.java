@@ -3,7 +3,7 @@ package com.njydsz.system.server.service;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.system.domain.dto.DictItemDTO;
+import com.njydsz.system.domain.vo.DictItemVO;
 
 /**
  * 字典项批量操作 Service 接口
@@ -25,5 +25,5 @@ public interface DictItemBatchService {
    * @param items 字典项列表
    * @return 操作结果 {successCount, failCount, versionId}
    */
-  Map<String, Object> batchSave(List<DictItemDTO> items);
+  Map<String, Object> batchSave(List<DictItemVO> items);
 }

@@ -1,36 +1,38 @@
 package com.njydsz.agent.web.controller;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.annotation.PreDestroy;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.njydsz.agent.api.dto.AgentExecutionRequestDTO;
+import com.njydsz.agent.api.dto.ChatRequestDTO;
 import com.njydsz.agent.api.dto.ChatResponseDTO;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
+import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.server.agent.AgentFactory;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
+import com.njydsz.agent.server.chat.ChatService;
+import com.njydsz.agent.server.chat.SseExecutor;
+import com.njydsz.agent.server.chat.SseExecutor.SseChunk;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -41,17 +43,20 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
- * Agent 执行 Controller（同步 / SSE 流式执行）
+ * Agent 统一入口 Controller（执行 + 对话 + 历史）
  *
- * <p>提供 Agent 的核心执行能力，对外暴露智能体（Agent）的同步与流式调用入口：
+ * <p>P1-2 重构：合并原 {@code ChatController} 至此，形成单入口 API 体系：
  *
  * <ul>
  *   <li>{@code POST /api/v1/agent/execute} - 同步执行 Agent，等待完整响应后返回
  *   <li>{@code POST /api/v1/agent/execute/stream} - SSE 流式执行 Agent，逐 chunk 推送 LLM 响应
+ *   <li>{@code POST /api/v1/agent/chat} - 同步对话
+ *   <li>{@code POST /api/v1/agent/chat/stream} - SSE 流式对话
+ *   <li>{@code GET /api/v1/agent/history} - 获取对话历史
+ *   <li>{@code DELETE /api/v1/agent/history} - 清除对话历史
  * </ul>
  *
- * <p><b>拆分说明：</b>本类从原 {@code AgentController} 拆分而来，仅保留 Agent 执行相关接口。 可用模型 / 已注册工具等元数据查询接口见 {@link
- * AgentMetadataController}。
+ * <p>可用模型 / 已注册工具等元数据查询接口见 {@link AgentMetadataController}。
  *
  * <h3>核心能力</h3>
  *
@@ -64,19 +69,9 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  * <h3>SSE 实现细节</h3>
  *
  * <ul>
- *   <li>使用虚拟线程（{@code Thread.startVirtualThread}）承载流式执行，避免阻塞 Web 容器线程
- *   <li>心跳线程每 {@value #HEARTBEAT_INTERVAL_SECONDS} 秒发送 {@code keep-alive} 注释帧保活
+ *   <li>使用 {@link SseExecutor} 统一封装心跳保活、虚拟线程、断连检测、cleanup 逻辑
+ *   <li>使用虚拟线程承载流式执行，节省线程资源
  *   <li>客户端断开时通过 {@code active} 标志中断执行，节省 LLM Token
- *   <li>SSE 超时 {@value #SSE_TIMEOUT} 毫秒（2 分钟），超时后自动 cleanup
- * </ul>
- *
- * <h3>安全与稳定性</h3>
- *
- * <ul>
- *   <li>所有写操作均加 {@link Idempotent} 防重（5s TTL）
- *   <li>所有写操作均加 {@link RateLimit} 限流（50 QPS）
- *   <li>所有写操作均加 {@link Audit} 异步落库审计日志
- *   <li>执行异常时调用 {@link AgentRequestGuard#releaseIdempotent} 主动释放幂等锁
  * </ul>
  *
  * <h3>架构位置</h3>
@@ -85,7 +80,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  *   前端 Chat UI / Agent 调用方
  *     → ydsz-gateway
  *       → ydsz-agent-web（本 Controller）
- *         → ydsz-agent-server.AgentFactory
+ *         → ydsz-agent-server.AgentFactory / ChatService
  *           → LlmClient（OpenAI / Claude / 通义千问 / 文心一言 ...）
  * </pre>
  *
@@ -99,35 +94,19 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @RestController
 @RequestMapping("/api/v1/agent")
 @RequiredArgsConstructor
-@Tag(name = "Agent 执行", description = "Agent 同步 / SSE 流式执行")
+@Tag(name = "Agent 统一入口", description = "Agent 执行 / 对话 / 历史")
 public class AgentController {
 
   private static final Logger LOG = LoggerFactory.getLogger(AgentController.class);
 
-  /** SSE 超时时间（毫秒） */
-  private static final long SSE_TIMEOUT = 120_000L;
-
-  /** 心跳间隔（秒） */
-  private static final long HEARTBEAT_INTERVAL_SECONDS = 15L;
-
   /** Agent 工厂（根据 agentCode 创建/缓存执行器） */
   private final AgentFactory agentFactory;
 
+  /** 对话服务（封装同步/流式对话、历史读写） */
+  private final ChatService chatService;
+
   /** 请求守卫（幂等 + 限流 + 业务校验） */
   private final AgentRequestGuard requestGuard;
-
-  /** 心跳调度器（虚拟线程工厂创建，JVM 关闭时自动停止） */
-  private final ScheduledExecutorService heartbeatScheduler =
-      new ScheduledThreadPoolExecutor(
-          2,
-          Thread.ofVirtual().name("agent-exec-heartbeat-", 0).factory(),
-          new ThreadPoolExecutor.CallerRunsPolicy());
-
-  /** 容器关闭时停止心跳调度器。 */
-  @PreDestroy
-  public void destroy() {
-    heartbeatScheduler.shutdownNow();
-  }
 
   /**
    * 同步执行 Agent，等待完整响应后返回。
@@ -172,10 +151,10 @@ public class AgentController {
    * <p>实现细节：
    *
    * <ul>
-   *   <li>每 {@value #HEARTBEAT_INTERVAL_SECONDS} 秒发送 {@code keep-alive} 注释帧保活，防止中间代理断连
+   *   <li>使用 {@link SseExecutor} 统一封装心跳保活、虚拟线程、断连检测、cleanup 逻辑
+   *   <li>每 15 秒发送 {@code keep-alive} 注释帧保活，防止中间代理断连
    *   <li>使用虚拟线程承载 LLM 调用，节省线程资源
    *   <li>客户端断开后通过 {@code active} 标志终止 LLM 调用，节省 Token 成本
-   *   <li>SSE 超时 {@value #SSE_TIMEOUT} 毫秒后自动 cleanup
    *   <li>事件类型：{@code chunk}（增量内容）/ {@code done}（正常结束）/ {@code error}（异常结束）
    * </ul>
    *
@@ -195,96 +174,188 @@ public class AgentController {
   public SseEmitter executeStream(@Valid @RequestBody AgentExecutionRequestDTO request) {
     LOG.info("[Agent-API] 流式执行请求: agentCode={}", request.getAgentCode());
     requestGuard.check(request.getRequestId(), null);
-    SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
+    SseEmitter emitter = new SseEmitter();
+    SseExecutor executor = new SseExecutor(emitter);
     AgentExecutionRequest execReq = toExecutionRequest(request);
-    AtomicBoolean active = new AtomicBoolean(true);
 
-    var heartbeatFuture =
-        heartbeatScheduler.scheduleAtFixedRate(
-            () -> {
-              if (active.get()) {
-                try {
-                  emitter.send(SseEmitter.event().comment("keep-alive"));
-                } catch (IOException e) {
-                  active.set(false);
-                }
-              }
-            },
-            HEARTBEAT_INTERVAL_SECONDS,
-            HEARTBEAT_INTERVAL_SECONDS,
-            TimeUnit.SECONDS);
-
-    Thread virtualThread =
-        Thread.startVirtualThread(
-            () -> {
-              try {
-                agentFactory
-                    .getDefaultExecutor()
-                    .executeStream(
-                        execReq,
-                        chunk -> {
-                          if (!active.get()) {
-                            throw new RuntimeException("SSE 连接已断开，终止 Agent 执行");
-                          }
-                          try {
-                            Map<String, Object> chunkData = new HashMap<>();
-                            chunkData.put(
-                                "content",
-                                chunk.getDeltaContent() != null ? chunk.getDeltaContent() : "");
-                            chunkData.put("finished", chunk.isFinished());
-                            if (chunk.hasToolCalls()) {
-                              chunkData.put("toolCalls", chunk.getDeltaToolCalls());
-                            }
-                            emitter.send(SseEmitter.event().data(chunkData).name("chunk"));
-                          } catch (IOException e) {
-                            active.set(false);
-                            LOG.warn("[Agent-API] SSE 发送失败，标记连接断开: {}", e.getMessage());
-                          }
-                        });
-                if (active.get()) {
-                  emitter.send(
-                      SseEmitter.event()
-                          .data(Map.of("content", "", "finished", true))
-                          .name("done"));
-                  emitter.complete();
-                }
-              } catch (Exception e) {
-                LOG.error("[Agent-API] 流式执行异常: {}", e.getMessage(), e);
-                if (active.get()) {
-                  try {
-                    emitter.send(
-                        SseEmitter.event()
-                            .data(
-                                Map.of(
-                                    "error",
-                                    e.getMessage() != null ? e.getMessage() : "未知错误",
-                                    "finished",
-                                    true))
-                            .name("error"));
-                  } catch (IOException ignored) {
-                    // 客户端已断开，忽略
-                  }
-                  emitter.completeWithError(e);
-                }
-              }
-            });
-
-    Runnable cleanup =
-        () -> {
-          active.set(false);
-          heartbeatFuture.cancel(true);
-          if (virtualThread.isAlive()) {
-            virtualThread.interrupt();
-          }
-        };
-    emitter.onTimeout(cleanup);
-    emitter.onError(e -> cleanup.run());
-    emitter.onCompletion(cleanup);
+    executor.execute(
+        chunkConsumer ->
+            agentFactory
+                .getDefaultExecutor()
+                .executeStream(
+                    execReq,
+                    chunk -> {
+                      if (chunk.hasContent()) {
+                        chunkConsumer.accept(
+                            SseChunk.content(
+                                chunk.getDeltaContent(),
+                                chunk.getFinishReason(),
+                                chunk.getDeltaToolCalls()));
+                      } else if (chunk.isFinished()) {
+                        chunkConsumer.accept(SseChunk.finish(chunk.getFinishReason()));
+                      } else {
+                        // 工具调用等非文本 chunk 原样转发
+                        chunkConsumer.accept(
+                            SseChunk.content(
+                                chunk.getDeltaContent(),
+                                chunk.getFinishReason(),
+                                chunk.getDeltaToolCalls()));
+                      }
+                    }));
 
     return emitter;
   }
 
-  /** DTO → 内部执行请求转换。 */
+  // ==========================================================================
+  // P1-2: 对话接口（从 ChatController 合并）
+  // ==========================================================================
+
+  /**
+   * 同步对话。
+   *
+   * <p>等待 LLM 返回完整响应后返回，适用于非实时对话场景（自动化问答、批处理对话等）。
+   *
+   * @param request 对话请求体（含 conversationId / message / systemPrompt / requestId）
+   * @return 统一响应结果，data 为 {@link ChatResponseDTO}（含 content/model/usage）
+   */
+  @AuthApiPermission(apiCodes = PermissionCodes.AGENT_CHAT)
+  @Audit(
+      module = "对话管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'chat'")
+  @Idempotent(key = "ydsz:agent:ChatController:chat:lock", ttlSeconds = 5)
+  @RateLimit(resource = "agent.chat.chat", threshold = 50)
+  @PostMapping("/chat")
+  @Operation(summary = "同步对话", description = "等待 LLM 返回完整响应后返回")
+  public BaseResponse<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
+    LOG.info(
+        "[Chat-API] 同步对话请求: convId={}, msgLen={}",
+        request.getConversationId(),
+        request.getMessage().length());
+    requestGuard.check(request.getRequestId(), null);
+    try {
+      ChatResponse response =
+          chatService.chat(
+              request.getConversationId(), request.getMessage(), request.getSystemPrompt());
+      ChatResponseDTO dto = toDTO(response);
+      return BaseResponse.success(dto);
+    } catch (Exception e) {
+      requestGuard.releaseIdempotent(request.getRequestId());
+      throw e;
+    }
+  }
+
+  /**
+   * 流式对话（SSE 实时推送）。
+   *
+   * <p>基于 Server-Sent Events 逐 token 推送 LLM 响应内容，适用于实时聊天场景。
+   *
+   * @param request 对话请求体
+   * @return SseEmitter（Spring MVC 的 SSE 句柄）
+   */
+  @AuthApiPermission(apiCodes = PermissionCodes.AGENT_CHAT)
+  @Audit(
+      module = "对话管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'chatStream'")
+  @Idempotent(key = "ydsz:agent:ChatController:chatStream:lock", ttlSeconds = 5)
+  @RateLimit(resource = "agent.chat.chatStream", threshold = 50)
+  @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  @Operation(summary = "流式对话（SSE）", description = "逐 token 推送 LLM 响应")
+  public SseEmitter chatStream(@Valid @RequestBody ChatRequestDTO request) {
+    LOG.info("[Chat-API] 流式对话请求: convId={}", request.getConversationId());
+    requestGuard.check(request.getRequestId(), null);
+    SseEmitter emitter = new SseEmitter();
+    SseExecutor executor = new SseExecutor(emitter);
+
+    executor.execute(
+        chunkConsumer ->
+            chatService.stream(
+                request.getConversationId(),
+                request.getMessage(),
+                request.getSystemPrompt(),
+                chunk -> {
+                  if (chunk.hasContent()) {
+                    chunkConsumer.accept(
+                        SseChunk.content(
+                            chunk.getDeltaContent(),
+                            chunk.getFinishReason(),
+                            chunk.getDeltaToolCalls()));
+                  } else if (chunk.isFinished()) {
+                    chunkConsumer.accept(SseChunk.finish(chunk.getFinishReason()));
+                  } else {
+                    // 工具调用等非文本 chunk 原样转发
+                    chunkConsumer.accept(
+                        SseChunk.content(
+                            chunk.getDeltaContent(),
+                            chunk.getFinishReason(),
+                            chunk.getDeltaToolCalls()));
+                  }
+                }));
+
+    return emitter;
+  }
+
+  /**
+   * 获取指定 conversationId 的对话历史。
+   *
+   * @param conversationId 会话 ID
+   * @return 统一响应结果，data 为对话消息列表
+   */
+  @AuthApiPermission(apiCodes = PermissionCodes.AGENT_CHAT)
+  @Audit(
+      module = "对话管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.QUERY,
+      content = "'history: ' + #conversationId")
+  @GetMapping("/history")
+  @Operation(summary = "获取对话历史")
+  public BaseResponse<List<Map<String, Object>>> history(@RequestParam String conversationId) {
+    List<ChatMessage> messages = chatService.getHistory(conversationId);
+    List<Map<String, Object>> result = new ArrayList<>();
+    for (ChatMessage msg : messages) {
+      result.add(
+          Map.of(
+              "id",
+              msg.getId(),
+              "role",
+              msg.getRole().getApiValue(),
+              "content",
+              msg.getContent() != null ? msg.getContent() : "",
+              "createdAt",
+              msg.getCreatedAt() != null ? msg.getCreatedAt().toString() : ""));
+    }
+    return BaseResponse.success(result);
+  }
+
+  /**
+   * 清除指定 conversationId 的对话历史。
+   *
+   * @param conversationId 会话 ID
+   * @return 统一响应结果
+   */
+  @AuthApiPermission(apiCodes = PermissionCodes.AGENT_CHAT)
+  @Audit(
+      module = "对话管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.DELETE,
+      content = "'clearHistory'")
+  @Idempotent(key = "ydsz:agent:ChatController:clearHistory:lock", ttlSeconds = 5)
+  @RateLimit(resource = "agent.chat.clearHistory", threshold = 50)
+  @DeleteMapping("/history")
+  @Operation(summary = "清除对话历史")
+  public BaseResponse<Void> clearHistory(@RequestParam String conversationId) {
+    chatService.clearHistory(conversationId);
+    return BaseResponse.success();
+  }
+
+  // ==========================================================================
+  // 内部方法
+  // ==========================================================================
+
+  /** ChatResponse → ChatResponseDTO 转换（Agent 执行用）。 */
   private AgentExecutionRequest toExecutionRequest(AgentExecutionRequestDTO dto) {
     return AgentExecutionRequest.builder()
         .conversationId(dto.getConversationId())

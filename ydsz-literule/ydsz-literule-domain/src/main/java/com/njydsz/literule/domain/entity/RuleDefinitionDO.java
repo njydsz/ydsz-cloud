@@ -152,7 +152,6 @@ public class RuleDefinitionDO extends MpBaseEntity<String> {
    *
    * @return 状态枚举，无法解析时返回 null
    */
-  @TableField(exist = false)
   public RuleStatusEnum getStatusEnum() {
     return RuleStatusEnum.parse(this.status);
   }

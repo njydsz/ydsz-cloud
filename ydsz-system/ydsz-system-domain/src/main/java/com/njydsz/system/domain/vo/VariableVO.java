@@ -1,12 +1,18 @@
 package com.njydsz.system.domain.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
- * 系统变量 VO
+ * 系统变量 VO（兼 DTO）
  *
- * <p>对应 {@code ydsz_variable} 表的展示视图，是「系统变量中心」列表 / 详情接口的返回值类型。 由 {@link
+ * <p>对应 {@code ydsz_variable} 表的展示视图和写入参数，是「系统变量中心」列表 / 详情 / 创建 / 更新接口的通用载体。 由 {@link
  * com.njydsz.system.domain.converter.SystemConverter} 从 {@link
  * com.njydsz.system.domain.entity.Variable} 实体转换而来。
  *
@@ -34,25 +40,32 @@ import lombok.Data;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.system.domain.entity.Variable 系统变量实体
- * @see com.njydsz.system.domain.dto.VariableDTO 系统变量 DTO
  * @see ConfigVO 系统配置 VO（按分组的同类结构）
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @Schema(description = "系统变量视图对象")
 public class VariableVO {
 
-  @Schema(description = "主键 ID")
+  @Schema(description = "主键 ID（更新时必填）")
   private String id;
 
+  @NotBlank(message = "变量键不能为空")
+  @Size(max = 128, message = "变量键长度不能超过128")
+  @Xss(message = "变量键包含非法内容")
   @Schema(description = "变量键")
   private String variableKey;
 
+  @Xss(message = "变量值包含非法内容")
   @Schema(description = "变量值")
   private String variableValue;
 
+  @NotBlank(message = "值类型不能为空")
   @Schema(description = "值类型: STRING/NUMBER/BOOLEAN/JSON")
   private String valueType;
 
+  @Xss(message = "变量说明包含非法内容")
   @Schema(description = "变量说明")
   private String description;
 

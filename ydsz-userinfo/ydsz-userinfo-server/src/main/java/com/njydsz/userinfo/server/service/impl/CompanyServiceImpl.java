@@ -16,8 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
-import com.njydsz.userinfo.domain.dto.post.CompanyPostDTO;
-import com.njydsz.userinfo.domain.dto.put.CompanyPutDTO;
+import com.njydsz.userinfo.domain.dto.create.CompanyCreateDTO;
+import com.njydsz.userinfo.domain.dto.update.CompanyUpdateDTO;
 import com.njydsz.userinfo.domain.entity.Company;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
@@ -71,7 +71,7 @@ public class CompanyServiceImpl implements CompanyService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String create(CompanyPostDTO dto) {
+  public String create(CompanyCreateDTO dto) {
     LambdaQueryWrapper<Company> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Company::getCompanyCode, dto.getCompanyCode());
     if (companyMapper.selectCount(wrapper) > 0) {
@@ -89,7 +89,7 @@ public class CompanyServiceImpl implements CompanyService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean update(CompanyPutDTO dto) {
+  public boolean update(CompanyUpdateDTO dto) {
     Company entity = companyMapper.selectById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND);

@@ -3,9 +3,8 @@ package com.njydsz.system.server.service;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.system.domain.dto.ConfigDTO;
-import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
+import com.njydsz.system.domain.query.ConfigPageQuery;
 
 /**
  * 系统配置 Service 接口
@@ -69,7 +68,7 @@ public interface ConfigService {
    * @param dto 配置 DTO
    * @return 新建配置主键 ID
    */
-  String save(ConfigDTO dto);
+  String save(ConfigVO vo);
 
   /**
    * 更新配置
@@ -79,7 +78,7 @@ public interface ConfigService {
    * @param dto 配置 DTO（{@code id} 必填）
    * @return 是否成功
    */
-  boolean updateById(ConfigDTO dto);
+  boolean updateById(ConfigVO vo);
 
   /**
    * 删除配置
@@ -121,4 +120,24 @@ public interface ConfigService {
    * @return 公开配置列表
    */
   List<ConfigVO> listPublicConfigs();
+
+  /**
+   * 回滚配置到指定版本
+   *
+   * <p>执行链路：
+   *
+   * <ol>
+   *   <li>校验目标版本是否存在
+   *   <li>查询当前配置项作为回滚前快照（用于审计）
+   *   <li>从目标快照更新配置项
+   *   <li>创建新版本记录（标记回滚来源）
+   *   <li>失效缓存并发布变更事件
+   * </ol>
+   *
+   * @param resourceKey 配置键
+   * @param targetVersion 目标版本号
+   * @param operatorId 操作人 ID
+   * @return 新创建的回滚版本 ID
+   */
+  String rollbackTo(String resourceKey, String targetVersion, String operatorId);
 }

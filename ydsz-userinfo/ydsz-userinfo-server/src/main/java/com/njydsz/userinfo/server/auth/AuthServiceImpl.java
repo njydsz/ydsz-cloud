@@ -20,9 +20,7 @@ import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.publish.DomainEventPublisher;
+import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
@@ -120,8 +118,8 @@ public class AuthServiceImpl implements AuthService {
   /** LDAP 认证提供者（可选依赖，未配置时为 null） */
   private final ObjectProvider<LdapAuthenticationProvider> ldapProviderProvider;
 
-  /** 统一领域事件发布门面 */
-  private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
+  /** 用户模块领域事件发布器 */
+  private final UserDomainEventPublisher userDomainEventPublisher;
 
   /** 登录历史服务（记录登录尝试，IP 封禁检查） */
   private final LoginHistoryService loginHistoryService;
@@ -179,7 +177,7 @@ public class AuthServiceImpl implements AuthService {
         userAgent);
     userInfoMetrics.recordLoginSuccess();
     userInfoMetrics.stopTimer(sample);
-    publishEvent(DomainEventTypes.USER_LOGIN, user.getId(), user);
+    userDomainEventPublisher.publishUserLogin(user.getId());
 
     return buildLoginResult(user, roles, accessToken);
   }
@@ -249,7 +247,7 @@ public class AuthServiceImpl implements AuthService {
       throw new BusinessException(UserInfoExceptionCode.USER_DISABLED);
     }
 
-    if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(LocalDateTime.now())) {
+    if (user.isLocked()) {
       loginHistoryService.recordLoginAttempt(
           new LoginAttemptContext(user.getId(), username, loginIp),
           "FAILED",
@@ -596,23 +594,30 @@ public class AuthServiceImpl implements AuthService {
    * 记录登录失败：原子自增失败计数，达到阈值时由 SQL 原子设置锁定时间。
    *
    * <p>P0-1: 改为数据库原子自增（{@code login_fail_count = login_fail_count + 1}），
-   * 消除先读后写（read-modify-write）的并发竞态——并发失败时计数不再丢失， 锁定阈值不可被并发击穿。
+   * 消除先读后写（read-modify-write）的并发竞态——并发失败时计数不再丢失，锁定阈值不可被并发击穿。
+   *
+   * <p>原子 SQL 执行后，同步更新内存实体状态（通过领域方法），保持聚合根一致性。
    *
    * @param user 登录失败的用户账号
    */
   private void recordLoginFailure(UserAccount user) {
     userAccountMapper.increaseLoginFailCount(
         user.getId(), properties.getMaxLoginFailCount(), properties.getLockDurationMinutes());
+    // 同步内存状态（原子 SQL 不返回更新后的实体，通过领域方法模拟）
+    user.recordLoginFailure(properties.getMaxLoginFailCount(), properties.getLockDurationMinutes());
     log.warn("User [{}] login failed, fail count incremented atomically", user.getUsername());
   }
 
   /**
    * 更新登录成功信息：原子重置失败计数、清除锁定时间、记录最后登录时间/IP。
    *
+   * <p>先通过领域方法更新内存状态，再调用 Mapper 原子更新数据库，保持聚合根与持久化层一致。
+   *
    * @param user 登录成功的用户账号
    * @param loginIp 登录来源 IP
    */
   private void updateLoginSuccess(UserAccount user, String loginIp) {
+    user.recordLoginSuccess(loginIp);
     userAccountMapper.resetLoginSuccess(user.getId(), loginIp);
   }
 
@@ -642,31 +647,6 @@ public class AuthServiceImpl implements AuthService {
             userAgent,
             "Failed login for user: " + username,
             SecurityEvent.Severity.MEDIUM));
-  }
-
-  /**
-   * 发布领域事件到 Outbox（可选依赖，不存在时安全降级）
-   *
-   * @param eventType 事件类型（如 {@code USER_CREATED}）
-   * @param aggregateId 聚合根 ID
-   * @param payload 事件负载数据
-   */
-  private void publishEvent(String eventType, String aggregateId, Object payload) {
-    DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
-    if (publisher == null) {
-      log.debug(
-          "DomainEventPublisher not available, skipping event: type={}, id={}",
-          eventType,
-          aggregateId);
-      return;
-    }
-    publisher.publish(
-        DomainEvent.builder()
-            .aggregateType("UserAccount")
-            .aggregateId(aggregateId)
-            .eventType(eventType)
-            .metadata("payload", payload)
-            .build());
   }
 
   /**

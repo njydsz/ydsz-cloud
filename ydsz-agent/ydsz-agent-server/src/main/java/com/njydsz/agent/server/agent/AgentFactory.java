@@ -10,6 +10,7 @@ import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
@@ -60,6 +61,9 @@ public class AgentFactory {
   /** 护栏编排服务（统一驱动输入/输出护栏，消除各执行器重复逻辑） */
   private final GuardrailService guardrailService;
 
+  /** Prompt 模板提供者（加载外部化模板） */
+  private final PromptTemplateProvider promptTemplateProvider;
+
   /** 执行器缓存（key=Agent 类型） */
   private final Map<String, AgentExecutor> executorCache = new ConcurrentHashMap<>();
 
@@ -72,7 +76,8 @@ public class AgentFactory {
       TraceRecorder traceRecorder,
       AgentMetrics agentMetrics,
       CostAnalysisService costAnalysisService,
-      GuardrailService guardrailService) {
+      GuardrailService guardrailService,
+      PromptTemplateProvider promptTemplateProvider) {
     this.llmClient = llmClient;
     this.memory = memory;
     this.toolRegistry = toolRegistry;
@@ -82,6 +87,7 @@ public class AgentFactory {
     this.agentMetrics = agentMetrics;
     this.costAnalysisService = costAnalysisService;
     this.guardrailService = guardrailService;
+    this.promptTemplateProvider = promptTemplateProvider;
   }
 
   /**
@@ -112,7 +118,8 @@ public class AgentFactory {
     LOG.info("[Agent-Factory] 创建执行器: type={}", type);
 
     return switch (type.toUpperCase()) {
-      case "REACT", "REACT_AGENT" ->
+      case "REACT", "REACT_AGENT", "RAG" ->
+          // P1-1: RAG 合并到 ReAct（ragService 不为 null 时自动启用知识增强）
           new ReActAgentExecutor(
               llmClient,
               memory,
@@ -121,7 +128,9 @@ public class AgentFactory {
               traceRecorder,
               agentMetrics,
               costAnalysisService,
-              guardrailService);
+              guardrailService,
+              promptTemplateProvider,
+              ragService);
       case "CHAT" ->
           new SimpleAgentExecutor(
               llmClient,
@@ -130,18 +139,10 @@ public class AgentFactory {
               traceRecorder,
               agentMetrics,
               costAnalysisService,
-              guardrailService);
-      case "RAG" ->
-          new RagAgentExecutor(
-              llmClient,
-              memory,
-              properties,
-              ragService,
-              traceRecorder,
-              agentMetrics,
-              costAnalysisService,
-              guardrailService);
-      case "PLAN_EXECUTE" ->
+              guardrailService,
+              promptTemplateProvider);
+      case "WORKFLOW", "PLAN_EXECUTE", "ROUTER", "SUPERVISOR", "DAG" ->
+          // P1-1: 统一工作流执行器（替代 PlanExecute/Router/Supervisor/DAG）
           new PlanExecuteAgentExecutor(
               llmClient,
               memory,
@@ -150,28 +151,8 @@ public class AgentFactory {
               traceRecorder,
               agentMetrics,
               costAnalysisService,
-              guardrailService);
-      case "ROUTER" ->
-          new RouterAgentExecutor(
-              llmClient,
-              memory,
-              toolRegistry,
-              properties,
-              traceRecorder,
-              agentMetrics,
-              costAnalysisService,
               guardrailService,
-              this);
-      case "SUPERVISOR" ->
-          new SupervisorAgentExecutor(
-              llmClient,
-              memory,
-              properties,
-              traceRecorder,
-              agentMetrics,
-              costAnalysisService,
-              guardrailService,
-              this);
+              promptTemplateProvider);
       default -> {
         LOG.warn("[Agent-Factory] 未知 Agent 类型: {}，回退到 ReAct", type);
         yield new ReActAgentExecutor(
@@ -182,7 +163,9 @@ public class AgentFactory {
             traceRecorder,
             agentMetrics,
             costAnalysisService,
-            guardrailService);
+            guardrailService,
+            promptTemplateProvider,
+            ragService);
       }
     };
   }

@@ -10,9 +10,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
@@ -67,12 +69,24 @@ public class GatewayAlertService {
             return t;
           });
 
+  /** NotifyHelper 提供者（可选） */
+  private final ObjectProvider<NotifyHelper> notifyHelperProvider;
+
+  /** 告警目标 DingTalk Webhook URL */
+  private final String alertWebhookUrl;
+
   /**
    * 构造网关告警服务
    *
    * <p>启动定时 flush 任务，每 30 秒检查并发送窗口期内的聚合告警。
+   *
+   * @param notifyHelperProvider 通知辅助类（可选）
+   * @param alertWebhookUrl 告警目标 DingTalk Webhook URL
    */
-  public GatewayAlertService() {
+  public GatewayAlertService(
+      ObjectProvider<NotifyHelper> notifyHelperProvider, String alertWebhookUrl) {
+    this.notifyHelperProvider = notifyHelperProvider;
+    this.alertWebhookUrl = alertWebhookUrl;
     scheduler.scheduleAtFixedRate(this::flushAggregatedAlerts, 30, 30, TimeUnit.SECONDS);
     log.info("[GatewayAlert] 告警聚合服务初始化完成，聚合窗口={}s", AGGREGATION_WINDOW_SECONDS);
   }

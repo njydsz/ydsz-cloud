@@ -124,7 +124,7 @@ public class ShardRebalanceListener {
       log.info("[ShardRebalance] 节点上线: {}", added);
     }
     if (!removed.isEmpty()) {
-      log.warn("[ShardRebalance] 节点下线: {}（FailoverScanner 将自动转移其任务）", removed);
+      log.warn("[ShardRebalance] 节点下线: {}（AnomalyRecoveryScanner 将自动转移其任务）", removed);
     }
 
     // 记录变更历史

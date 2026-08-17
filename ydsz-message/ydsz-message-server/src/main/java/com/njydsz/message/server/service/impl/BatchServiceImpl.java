@@ -16,6 +16,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
@@ -29,7 +30,6 @@ import com.njydsz.message.server.event.DomainEventPublisher;
 import com.njydsz.message.server.service.SseEmitterService;
 import com.njydsz.message.server.service.batch.BatchService;
 import com.njydsz.message.server.service.core.MessageService;
-import com.njydsz.message.server.service.impl.ParallelBatchSender;
 
 /**
  * 消息批次服务实现。
@@ -64,9 +64,6 @@ public class BatchServiceImpl implements BatchService {
 
   /** 消息发送服务（逐条发送） */
   private final MessageService messageService;
-
-  /** P1-3: 并行批量发送器 */
-  private final ParallelBatchSender parallelBatchSender;
 
   /** P1-E2: SSE 发射器服务（批次进度推送） */
   private final SseEmitterService sseEmitterService;
@@ -174,7 +171,7 @@ public class BatchServiceImpl implements BatchService {
   /**
    * 异步执行批次发送（在 {@code messageBatchExecutor} 线程池执行）。
    *
-   * <p>由 {@link #submitBatch} 在 {@code async=true}（默认）时调用；内部委托 {@link #doExecuteBatch} 完成状态推进与并行发送。
+   * <p>由 {@link #submitBatch} 在 {@code async=true}（默认）时调用；内部委托 {@link #doExecuteBatch} 完成状态推进与发送。
    * 注意：本方法通过 Spring {@code @Async} 代理生效，<strong>务必经注入的 Bean
    * 调用</strong>，同类内直接调用（self-invocation）不会触发异步。
    *
@@ -252,7 +249,7 @@ public class BatchServiceImpl implements BatchService {
   /**
    * 执行批次发送核心逻辑。
    *
-   * <p>P1-3: 使用 ParallelBatchSender 并行发送，避免单线程逐条发送的性能瓶颈。 P1-A3: 支持断点续传（incremental=true）时增量累加计数。
+   * <p>逐条串行发送，避免并行发送的线程切换开销和复杂错误处理。 P1-A3: 支持断点续传（incremental=true）时增量累加计数。
    *
    * @param batchId 批次 ID
    * @param requests 消息请求列表
@@ -272,10 +269,25 @@ public class BatchServiceImpl implements BatchService {
     }
     msgBatchMapper.updateById(batch);
 
-    // P1-3: 使用并行批量发送器
-    String channel = batch.getChannel() != null ? batch.getChannel() : "INAPP";
-    BatchSendResult batchResult =
-        parallelBatchSender.sendBatch(requests, channel, messageService::send);
+    // 逐条串行发送
+    int success = 0;
+    int failure = 0;
+    int skipped = 0;
+    for (MessageRequest request : requests) {
+      try {
+        MessageResult result = messageService.send(request);
+        if (result != null && result.isSuccess()) {
+          success++;
+        } else {
+          failure++;
+        }
+      } catch (Exception e) {
+        failure++;
+        log.warn("[Batch] 单条发送失败: msgId={} err={}", request.getMessageId(), e.getMessage());
+      }
+    }
+
+    BatchSendResult batchResult = new BatchSendResult(batchId, requests.size(), success, failure, skipped);
 
     // P1-A3: 断点续传时增量累加计数，首次执行时直接覆盖
     if (incremental) {

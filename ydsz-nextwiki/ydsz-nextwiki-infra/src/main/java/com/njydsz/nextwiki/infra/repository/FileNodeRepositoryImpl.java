@@ -86,6 +86,22 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
+  public int saveBatch(List<FileNode> nodes) {
+    if (nodes == null || nodes.isEmpty()) {
+      return 0;
+    }
+    int count = 0;
+    for (FileNode node : nodes) {
+      if (node.getId() == null || node.getId().isEmpty()) {
+        node.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+      }
+      fileNodeMapper.insert(node);
+      count++;
+    }
+    return count;
+  }
+
+  @Override
   public void update(FileNode node) {
     if (node.getRevision() == null) {
       // 兜底：未携带 revision 时退化为普通更新，避免业务阻断
@@ -222,6 +238,22 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
       return new ArrayList<>();
     }
     return fileNodeMapper.selectAllDescendantsByPath(path);
+  }
+
+  @Override
+  public List<FileNode> findDescendantsByPage(String folderPath, int offset, int limit) {
+    if (folderPath == null || folderPath.isEmpty()) {
+      return new ArrayList<>();
+    }
+    return fileNodeMapper.selectDescendantsByPage(folderPath, offset, limit);
+  }
+
+  @Override
+  public int countDescendants(String folderPath) {
+    if (folderPath == null || folderPath.isEmpty()) {
+      return 0;
+    }
+    return fileNodeMapper.countDescendantsByPath(folderPath);
   }
 
   @Override

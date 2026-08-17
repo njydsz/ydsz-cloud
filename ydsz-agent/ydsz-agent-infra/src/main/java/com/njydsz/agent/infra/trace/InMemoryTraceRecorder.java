@@ -60,6 +60,18 @@ public class InMemoryTraceRecorder implements TraceRecorder {
       Object input,
       Object output,
       long durationMs) {
+    recordStep(traceId, stepType, content, input, output, durationMs, 0.0);
+  }
+
+  @Override
+  public void recordStep(
+      String traceId,
+      String stepType,
+      String content,
+      Object input,
+      Object output,
+      long durationMs,
+      double cost) {
     List<TraceStep> steps = traces.get(traceId);
     if (steps == null) {
       steps = new ArrayList<>();
@@ -77,9 +89,15 @@ public class InMemoryTraceRecorder implements TraceRecorder {
             inputJson,
             outputJson,
             durationMs,
+            cost,
             LocalDateTime.now()));
     LOG.debug(
-        "[Trace] 记录步骤: traceId={}, step={}, type={}, {}ms", traceId, index, stepType, durationMs);
+        "[Trace] 记录步骤: traceId={}, step={}, type={}, {}ms, cost=${}",
+        traceId,
+        index,
+        stepType,
+        durationMs,
+        cost);
   }
 
   @Override

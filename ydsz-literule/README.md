@@ -51,7 +51,7 @@ ydsz-literule/
 | 能力 | 说明 | 关键类 |
 |---|---|---|
 | **LiteExpr 表达式引擎** | 2.0.0 起自研，零外部依赖；含词法/语法分析、AST 编译缓存、常量折叠、短路求值、AST 级安全沙箱 | `AviatorExpressionEngine` / `LiteExprCompiler` / `TreeInterpreter` / `LiteExprSandbox` |
-| **规则链编排** | 8 种语义：THEN/WHEN/IF/ELIF/SWITCH/FOR/WHILE/BREAK，支持 DSL + DAG 可视化画布 | `RuleChain` / `RuleChainGraph` / `RuleChainDslParser` |
+| **规则链编排** | 5 种语义：THEN/WHEN/IF/ELIF/SWITCH，支持 DSL + DAG 可视化画布 | `RuleChain` / `RuleChainGraph` / `RuleChainDslParser` |
 | **多级缓存** | Caffeine（L1 本地）+ Redis（L2 分布式）装饰器模式 | `CachingRuleConfigProvider` |
 | **热加载** | DB / Nacos / Apollo / ZooKeeper / Redis / File 多源动态刷新 | `RuleHotReloader` / `RuleSourceManager` |
 | **版本管理** | 版本快照 + Diff + 一键回滚 | `RuleVersionRepository` / `RuleVersionDiffService` |
@@ -65,7 +65,6 @@ ydsz-literule/
 | **规则依赖** | 依赖关系管理 + 级联禁用预览 | `RuleDependencyProvider` |
 | **规则模板市场** | 模板分类 / 行业模板 / 一键导入 | `RuleTemplateProvider` |
 | **规则包市场** | 规则集打包 / 版本管理 / 批量更新 / 评分 | `RulePackProvider` |
-| **断点调试** | IDE 风格在线调试：断点设置 / 单步 / 快照 / 恢复 | `DefaultBreakpointHook` / `BreakpointHook` |
 | **业务测试用例** | 独立于 JUnit 的回归测试体系，存储 facts + expected，支持批量运行 | `RuleTestRunner` / `RuleTestCaseDO` |
 | **压测** | QPS / P50 / P95 / P99 测量 | `RuleStressTestService` |
 | **规则生命周期** | 休眠检测 / 高错误率检测 / 退役建议 / 一键回滚 | `RuleLifecycleService` |
@@ -97,7 +96,7 @@ com.njydsz.literule.server
 ├── calc/            # 计算类（通用计算工具，业务算法已移出）
 ├── cep/             # 复杂事件处理（CEPEngine / CEPPattern）
 ├── config/          # 自动配置 + 注解注册 + ABTest + 热加载 + 冲突检测
-├── core/            # 引擎核心（DefaultRuleEngine / InferenceEngine / 熔断 / 超时 / 灰度 / 索引 / 生命周期 / 效果评估 / 文档生成 / 断点 / 异步 Trace / Micrometer 指标 / 并行评估 / 结果缓存）
+├── core/            # 引擎核心（DefaultRuleEngine / InferenceEngine / 熔断 / 超时 / 灰度 / 索引 / 生命周期 / 效果评估 / 文档生成 / 异步 Trace / Micrometer 指标 / 并行评估 / 结果缓存）
 ├── distributed/     # 分布式（一致性哈希分片 + Redis 节点注册 + Pub/Sub 广播）
 ├── dsl/             # DSL 解析（规则 DSL + 规则链 DSL）
 ├── expr/            # LiteExpr 表达式引擎（词法 / 语法 / 编译缓存 / 求值 / 沙箱 / 函数注册 / 变量注册 / 校验 / 预览 / Trace）
@@ -118,7 +117,6 @@ com.njydsz.literule.server
 | Controller | 路径前缀 | 主要端点 |
 |---|---|---|
 | `RuleAdminController` | `/ruleEngine/rules` | 规则 CRUD / 启停 / 版本 / 回滚 / Dry-run / 表达式校验 / A-B 测试 / 多级审批 / Trace / 决策表 / 测试用例 / 模板市场 / 冲突检测 / 规则链画布 / 规则依赖 / 目录树 / 规则包市场 / 导入导出 / 批量操作 / 函数市场 / 压测 / 统计（50+ 端点） |
-| `BreakpointController` | `/ruleEngine/breakpoints` | 断点设置 / 恢复 / 单步 / 挂起查询 / 快照管理 |
 | `CEPController` | `/ruleEngine/cep` | 模式管理 / 事件推送 / 命中查询 / 统计 / 模式测试 |
 | `RuleAuditLogController` | `/ruleEngine/audit` | 最近 / 按规则 / 按操作人 / 按操作 / 按时间范围 |
 | `RuleDashboardController` | `/ruleEngine/dashboard` | 概览 / 趋势 / 分布 / Top 规则 / 实时 |

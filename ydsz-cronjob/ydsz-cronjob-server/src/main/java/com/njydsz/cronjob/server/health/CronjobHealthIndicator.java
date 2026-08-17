@@ -125,12 +125,11 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
     schedulerInfo.put("scanIntervalMs", cronjobProperties.getScanner().getIntervalMs());
     schedulerInfo.put("maxBatchSize", cronjobProperties.getScanner().getBatchSize());
     schedulerInfo.put("lockTtlSeconds", cronjobProperties.getScanner().getLockTtlSeconds());
-    schedulerInfo.put("failoverEnabled", cronjobProperties.getFailover().isEnabled());
+    schedulerInfo.put("failoverEnabled", cronjobProperties.getAnomalyRecovery().isFailoverEnabled());
     schedulerInfo.put("timeoutMonitorEnabled", cronjobProperties.getLeader().isEnabled());
     schedulerInfo.put(
         "selfHealingEnabled",
-        cronjobProperties.getSelfHealing() != null
-            && cronjobProperties.getSelfHealing().isEnabled());
+        cronjobProperties.getAnomalyRecovery().isSelfHealingEnabled());
     builder.withDetail("scheduler", schedulerInfo);
 
     // 5. Metrics 可用性

@@ -7,26 +7,23 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 
-import com.njydsz.common.redis.health.RedisHealthIndicator;
 import com.njydsz.gateway.filter.AuthGlobalFilter;
 
 /**
- * 网关健康指标
+ * 网关健康指标。
  *
- * <p>报告网关核心依赖和能力的运行状态，对标大厂网关健康检查标准。
+ * <p>报告网关核心依赖和能力的运行状态。
  *
  * <h3>检查项</h3>
  *
  * <ul>
  *   <li>Redis 连通性（限流、黑名单、JWT 黑名单依赖）
- *   <li>JWT 缓存命中率
  *   <li>安全头是否启用
  *   <li>限流是否启用
- *   <li>IP 白名单是否启用
- *   <li>IP 黑名单缓存大小
- *   <li>动态路由是否启用
- *   <li>灰度负载均衡是否启用
+ *   <li>IP 黑白名单是否启用
+ *   <li>网关指标
  * </ul>
  *
  * @since 1.0.0
@@ -35,36 +32,36 @@ import com.njydsz.gateway.filter.AuthGlobalFilter;
 @Slf4j
 public class GatewayHealthIndicator implements HealthIndicator {
 
-  private final ObjectProvider<RedisHealthIndicator> redisHealthIndicatorProvider;
+  private final ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider;
   private final ObjectProvider<SecurityHeadersProperties> securityHeadersProvider;
   private final ObjectProvider<RateLimitProperties> rateLimitPropertiesProvider;
-  private final ObjectProvider<IpWhitelistProperties> ipWhitelistProvider;
+  private final ObjectProvider<IpAccessControlProperties> ipAccessControlProvider;
   private final ObjectProvider<AuthGlobalFilter> authFilterProvider;
   private final ObjectProvider<GatewayMetrics> gatewayMetricsProvider;
 
   /**
-   * 构造网关健康指标
+   * 构造网关健康指标。
    *
    * <p>使用 {@link ObjectProvider} 实现可选依赖，当某个 Bean 不存在时不影响健康检查。
    *
-   * @param redisTemplateProvider Redis 响应式模板（可选）
+   * @param redisTemplateProvider Reactive Redis 客户端（可选）
    * @param securityHeadersProvider 安全响应头配置（可选）
    * @param rateLimitPropertiesProvider 限流配置（可选）
-   * @param ipWhitelistProvider IP 白名单配置（可选）
+   * @param ipAccessControlProvider IP 访问控制配置（可选）
    * @param authFilterProvider 认证过滤器（可选）
    * @param gatewayMetricsProvider 网关指标（可选）
    */
   public GatewayHealthIndicator(
-      ObjectProvider<RedisHealthIndicator> redisHealthIndicatorProvider,
+      ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider,
       ObjectProvider<SecurityHeadersProperties> securityHeadersProvider,
       ObjectProvider<RateLimitProperties> rateLimitPropertiesProvider,
-      ObjectProvider<IpWhitelistProperties> ipWhitelistProvider,
+      ObjectProvider<IpAccessControlProperties> ipAccessControlProvider,
       ObjectProvider<AuthGlobalFilter> authFilterProvider,
       ObjectProvider<GatewayMetrics> gatewayMetricsProvider) {
-    this.redisHealthIndicatorProvider = redisHealthIndicatorProvider;
+    this.redisTemplateProvider = redisTemplateProvider;
     this.securityHeadersProvider = securityHeadersProvider;
     this.rateLimitPropertiesProvider = rateLimitPropertiesProvider;
-    this.ipWhitelistProvider = ipWhitelistProvider;
+    this.ipAccessControlProvider = ipAccessControlProvider;
     this.authFilterProvider = authFilterProvider;
     this.gatewayMetricsProvider = gatewayMetricsProvider;
   }
@@ -72,8 +69,8 @@ public class GatewayHealthIndicator implements HealthIndicator {
   /**
    * 汇总网关核心依赖与能力的运行状态。
    *
-   * <p>逐个探测 Redis 连通性、安全响应头、限流、IP 白名单、认证过滤器、灰度等， 各项均通过 {@link ObjectProvider#getIfAvailable()}
-   * 可选获取，缺失项标记 NOT_CONFIGURED 不影响整体。 任一关键项（如鉴权过滤器）不可用时整体健康状态降级为 DOWN。
+   * <p>逐个探测 Redis 连通性、安全响应头、限流、IP 访问控制、网关指标等，各项均通过 {@link ObjectProvider#getIfAvailable()}
+   * 可选获取，缺失项标记 NOT_CONFIGURED 不影响整体。任一关键项（如鉴权过滤器）不可用时整体健康状态降级为 DOWN。
    *
    * @return 包含各项 detail 的健康快照
    */
@@ -83,15 +80,16 @@ public class GatewayHealthIndicator implements HealthIndicator {
     boolean healthy = true;
 
     // Redis 连通性检查
-    RedisHealthIndicator redisHealth = redisHealthIndicatorProvider.getIfAvailable();
-    if (redisHealth != null) {
-      Health redisHealthResult = redisHealth.health();
-      String redisStatus = redisHealthResult.getStatus().getCode();
-      details.put("redis.status", redisStatus.toUpperCase());
-      if ("DOWN".equals(redisStatus)) {
+    ReactiveStringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
+    if (redisTemplate != null) {
+      try {
+        // 简单 Ping 检查
+        redisTemplate.getConnectionFactory().getReactiveConnection().ping().block();
+        details.put("redis.status", "UP");
+      } catch (Exception e) {
         healthy = false;
-        details.put(
-            "redis.error", redisHealthResult.getDetails().getOrDefault("reason", "unknown"));
+        details.put("redis.status", "DOWN");
+        details.put("redis.error", e.getMessage());
       }
     } else {
       details.put("redis.status", "NOT_CONFIGURED");
@@ -113,20 +111,19 @@ public class GatewayHealthIndicator implements HealthIndicator {
       details.put("rateLimit.enabled", rateLimit.isEnabled());
       details.put("rateLimit.perIp.enabled", rateLimit.getPerIp().isEnabled());
       details.put("rateLimit.perUser.enabled", rateLimit.getPerUser().isEnabled());
-      details.put("rateLimit.perTenant.enabled", rateLimit.getPerTenant().isEnabled());
     } else {
       details.put("rateLimit.enabled", "NOT_CONFIGURED");
     }
 
-    // IP 白名单状态
-    IpWhitelistProperties ipWhitelist = ipWhitelistProvider.getIfAvailable();
-    if (ipWhitelist != null) {
-      details.put("ipWhitelist.enabled", ipWhitelist.isIpWhitelistEnabled());
-      boolean hasWhitelist =
-          ipWhitelist.getIpWhitelist() != null && !ipWhitelist.getIpWhitelist().isBlank();
-      details.put("ipWhitelist.configured", hasWhitelist);
+    // IP 访问控制状态
+    IpAccessControlProperties ipControl = ipAccessControlProvider.getIfAvailable();
+    if (ipControl != null) {
+      details.put("ipAccessControl.blacklistEnabled", ipControl.isBlacklistEnabled());
+      details.put("ipAccessControl.whitelistEnabled", ipControl.isWhitelistEnabled());
+      boolean hasWhitelist = ipControl.getWhitelist() != null && !ipControl.getWhitelist().isBlank();
+      details.put("ipAccessControl.whitelistConfigured", hasWhitelist);
     } else {
-      details.put("ipWhitelist.enabled", "NOT_CONFIGURED");
+      details.put("ipAccessControl.status", "NOT_CONFIGURED");
     }
 
     // 认证过滤器状态

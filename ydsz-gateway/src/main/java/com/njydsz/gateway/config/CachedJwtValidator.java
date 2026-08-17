@@ -1,12 +1,12 @@
 package com.njydsz.gateway.config;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.model.UserInfo;
@@ -17,7 +17,7 @@ import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 
 /**
- * JWT 校验结果本地缓存（简化版）。
+ * JWT 校验结果本地缓存。
  *
  * <p>使用 ydsz-common-cache 本地缓存 JWT 解析结果，避免每个请求重复执行 JWT 解析的 CPU 开销。
  *
@@ -25,15 +25,15 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
  *
  * <ul>
  *   <li>缓存键: JWT Token 字符串
- *   <li>缓存值: UserInfo 解析结果（或 INVALID 标记）
- *   <li>TTL: 10 秒（通过配置项 {@code ydsz.gateway.jwt.cache-ttl-seconds} 调整）
+ *   <li>缓存值: Optional&lt;UserInfo&gt; 解析结果（空表示无效 Token）
+ *   <li>TTL: 可配置（默认 10 秒）
  *   <li>最大容量: 10,000 条（防止内存溢出）
  * </ul>
  *
  * <h3>防护机制</h3>
  *
  * <ul>
- *   <li>防击穿: 使用 {@code Cache.getWithProtection} 保证同一 Token 并发请求仅一个线程执行 JWT 解析
+ *   <li>防击穿: 使用 {@code Cache#getWithProtection} 保证同一 Token 并发请求仅一个线程执行 JWT 解析
  *   <li>防穿透: 无效 Token 以空值占位符短时缓存（2-5s 随机抖动）
  * </ul>
  *
@@ -81,14 +81,12 @@ public class CachedJwtValidator {
    *
    * @param tokenService Token 服务
    * @param gatewayMetrics 网关指标组件（可选，用于记录 JWT 校验耗时）
-   * @param redisTemplateProvider Reactive Redis 模板提供者（保留用于兼容性，不再使用 Stream）
-   * @param cacheTtlSeconds 缓存 TTL（秒）
+   * @param cacheTtlSeconds 缓存 TTL（秒），通过配置注入
    */
   public CachedJwtValidator(
       TokenService tokenService,
       GatewayMetrics gatewayMetrics,
-      ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider,
-      long cacheTtlSeconds) {
+      @Value("${ydsz.gateway.jwt.cache-ttl-seconds:10}") long cacheTtlSeconds) {
     this.tokenService = tokenService;
     this.gatewayMetrics = gatewayMetrics;
     this.cacheTtlSeconds = cacheTtlSeconds;
@@ -96,7 +94,7 @@ public class CachedJwtValidator {
         YdszCache.<String, Optional<UserInfo>>newBuilder()
             .type(CacheType.STRIPED)
             .name("gateway:jwt-validation")
-            .expireAfterWrite(java.util.concurrent.TimeUnit.SECONDS, cacheTtlSeconds)
+            .expireAfterWrite(cacheTtlSeconds, TimeUnit.SECONDS)
             .maximumSize(CACHE_MAX_SIZE)
             .recordStats()
             .build();
@@ -123,7 +121,7 @@ public class CachedJwtValidator {
    * 校验并解析 JWT Token（带缓存 + 防击穿/防穿透）。
    *
    * <p>优先从 Caffeine 缓存读取解析结果；缓存未命中时通过 {@link
-   * com.njydsz.common.cache.api.CacheProtectionGuard#getWithProtection} 执行解析。
+   * com.njydsz.common.cache.api.Cache#getWithProtection} 执行解析。
    *
    * @param jwt JWT Token 字符串
    * @return UserInfo 解析结果，Token 无效时返回 null
@@ -147,8 +145,7 @@ public class CachedJwtValidator {
     // 缓存未命中，使用带防护的加载（防击穿 + 防穿透）
     cacheMissCount.incrementAndGet();
     startTime = System.currentTimeMillis();
-    Optional<UserInfo> result =
-        claimsCache.getWithProtection(jwt, this::parseToken, NULL_CACHE_MIN_MS, NULL_CACHE_MAX_MS);
+    Optional<UserInfo> result = claimsCache.getWithProtection(jwt, this::parseToken, NULL_CACHE_MIN_MS, NULL_CACHE_MAX_MS);
     duration = System.currentTimeMillis() - startTime;
 
     recordMetrics(duration, false);
@@ -212,13 +209,14 @@ public class CachedJwtValidator {
    * @param cached 是否命中缓存
    */
   private void recordMetrics(long durationMs, boolean cached) {
-    if (gatewayMetrics != null) {
-      try {
-        gatewayMetrics.recordJwtValidationDuration(durationMs, cached);
-      } catch (Exception e) {
-        // 指标记录失败不影响主流程
-        log.debug("[JwtCache] 记录指标失败: {}", e.getMessage());
-      }
+    if (gatewayMetrics == null) {
+      return;
+    }
+    try {
+      gatewayMetrics.recordJwtValidationDuration(durationMs, cached);
+    } catch (Exception e) {
+      // 指标记录失败不影响主流程
+      log.debug("[JwtCache] 记录指标失败: {}", e.getMessage());
     }
   }
 

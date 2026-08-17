@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO;
-import com.njydsz.userinfo.domain.dto.put.DepartmentPutDTO;
+import com.njydsz.userinfo.domain.dto.create.DepartmentCreateDTO;
+import com.njydsz.userinfo.domain.dto.update.DepartmentUpdateDTO;
 import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
@@ -51,7 +51,7 @@ public interface DepartmentService {
    * @param dto 部门创建 DTO
    * @return 新部门 ID
    */
-  String create(DepartmentPostDTO dto);
+  String create(DepartmentCreateDTO dto);
 
   /**
    * 更新部门。
@@ -59,7 +59,7 @@ public interface DepartmentService {
    * @param dto 部门更新 DTO（含 ID）
    * @return true=成功
    */
-  boolean update(DepartmentPutDTO dto);
+  boolean update(DepartmentUpdateDTO dto);
 
   /**
    * 删除部门（逻辑删除）。

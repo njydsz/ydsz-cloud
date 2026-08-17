@@ -1,6 +1,7 @@
 package com.njydsz.gateway.filter;
 
-import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
@@ -144,9 +145,9 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * 轨道 1：输出 SLF4J 结构化日志
+   * 轨道 1：输出 SLF4J 结构化日志（key=value 格式，ELK/Loki 原生解析）。
    *
-   * <p>使用 StringBuilder 手动构建 JSON，避免 Map + 反射开销。
+   * <p>使用 SLF4J key=value 格式替代手动 JSON 拼接，避免转义漏洞，日志平台可直接按字段检索。
    *
    * @param exchange 服务器 Web 交换上下文
    * @param method HTTP 方法
@@ -169,37 +170,64 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
       userAgent = userAgent.substring(0, 100);
     }
 
-    // 脱敏路径（移除敏感信息）
-    String sanitizedPath = sanitizePath(path);
-
     // 敏感级别：HIGH（高敏感操作）/ MEDIUM（一般写操作）/ LOW（安全事件如 401）
     String sensitivity = resolveSensitivity(method, path, statusCode);
 
-    // 构建结构化 JSON 日志
-    // 格式参考：OWASP AppSensor / NIST SP 800-92 审计日志规范
-    StringBuilder sb = new StringBuilder(300);
-    sb.append("{\"eventType\":\"AUDIT\"");
-    sb.append(",\"timestamp\":\"").append(Instant.now().toString()).append("\"");
-    sb.append(",\"traceId\":\"").append(safeJson(traceId)).append("\"");
-    sb.append(",\"userId\":\"").append(safeJson(userId)).append("\"");
-    sb.append(",\"tenantId\":\"").append(safeJson(tenantId)).append("\"");
-    sb.append(",\"clientIp\":\"").append(safeJson(clientIp)).append("\"");
-    sb.append(",\"method\":\"").append(method.name()).append("\"");
-    sb.append(",\"path\":\"").append(safeJson(sanitizedPath)).append("\"");
-    sb.append(",\"statusCode\":").append(statusCode);
-    sb.append(",\"durationMs\":").append(duration);
-    sb.append(",\"userAgent\":\"").append(safeJson(userAgent)).append("\"");
-    sb.append(",\"sensitivity\":\"").append(sensitivity).append("\"");
-    sb.append("}");
+    // 脱敏路径（移除敏感信息）
+    String sanitizedPath = sanitizePath(path);
 
-    String auditLog = sb.toString();
+    // 使用 SLF4J key=value 结构化格式（日志平台原生解析）
+    Map<String, String> fields = new HashMap<>();
+    fields.put("eventType", "AUDIT");
+    fields.put("traceId", safeValue(traceId));
+    fields.put("userId", safeValue(userId));
+    fields.put("tenantId", safeValue(tenantId));
+    fields.put("clientIp", safeValue(clientIp));
+    fields.put("method", method.name());
+    fields.put("path", sanitizedPath);
+    fields.put("status", String.valueOf(statusCode));
+    fields.put("durationMs", String.valueOf(duration));
+    fields.put("userAgent", safeValue(userAgent));
+    fields.put("sensitivity", sensitivity);
+
+    // 格式: eventType=AUDIT traceId=xxx userId=xxx ...
+    String structuredLog = formatKeyValueLog(fields);
 
     // 按敏感级别和响应状态选择日志级别
     if ("HIGH".equals(sensitivity) || statusCode == 401 || statusCode == 403) {
-      log.warn(auditLog);
+      log.warn(structuredLog);
     } else {
-      log.info(auditLog);
+      log.info(structuredLog);
     }
+  }
+
+  /**
+   * 将字段 Map 格式化为 key=value 结构化日志字符串。
+   *
+   * <p>符合 ELK/Loki 结构化日志标准格式，可直接按字段检索聚合。
+   *
+   * @param fields 日志字段映射
+   * @return key=value 格式字符串
+   */
+  private String formatKeyValueLog(Map<String, String> fields) {
+    StringBuilder sb = new StringBuilder();
+    fields.forEach((key, value) -> {
+      if (sb.length() > 0) {
+        sb.append(' ');
+      }
+      sb.append(key).append('=').append(value);
+    });
+    return sb.toString();
+  }
+
+  /**
+   * Null 安全的值处理。
+   *
+   * @param value 原始值（可为 null）
+   * @return 非 null 字符串
+   */
+  private String safeValue(String value) {
+    return (value == null || value.isEmpty()) ? "-" : value;
   }
 
   /**
@@ -329,23 +357,6 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
             "/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(/|$)", "/{uuid}$1");
   }
 
-  /**
-   * JSON 字符串转义（防止日志注入）
-   *
-   * @param input 输入字符串
-   * @return 转义后的字符串（null 返回空字符串）
-   */
-  private String safeJson(String input) {
-    if (input == null) {
-      return "";
-    }
-    return input
-        .replace("\\", "\\\\")
-        .replace("\"", "\\\"")
-        .replace("\n", "\\n")
-        .replace("\r", "\\r")
-        .replace("\t", "\\t");
-  }
 
   /**
    * 过滤器顺序：+35，在限流(+30)之后
@@ -356,6 +367,6 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
    */
   @Override
   public int getOrder() {
-    return GatewayFilterOrder.auditLog.getOrder();
+    return GatewayFilterOrder.AUDIT_LOG.getOrder();
   }
 }

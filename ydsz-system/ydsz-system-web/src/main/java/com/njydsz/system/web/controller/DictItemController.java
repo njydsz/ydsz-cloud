@@ -27,7 +27,6 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.DictItemBatchDTO;
-import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.server.service.DictItemBatchService;
 import com.njydsz.system.server.service.DictItemService;
@@ -96,10 +95,7 @@ public class DictItemController {
       @Parameter(description = "状态") @RequestParam(required = false) String status) {
     // pageSize 服务端硬上限截断，防止深度分页 OOM
     int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
-    PageResponse<List<DictItemVO>> page =
-        service.page(pageNum, safePageSize, typeCode, itemCode, status);
-    return PageResponse.success(
-        page.getTotal(), page.getPageNum(), page.getPageSize(), page.getData());
+    return service.page(pageNum, safePageSize, typeCode, itemCode, status);
   }
 
   /**
@@ -166,6 +162,22 @@ public class DictItemController {
   }
 
   /**
+   * 构建字典项树形结构。
+   *
+   * <p>将指定类型编码下的所有字典项构建为树形结构，根节点的父级 ID 为 "0"。
+   *
+   * <p>典型场景：级联选择器（{@code el-cascader}）数据源、树形字典渲染。
+   *
+   * @param typeCode 字典类型编码（如 "region" 行政区划）
+   * @return 树形结构根节点列表（含递归子节点）
+   */
+  @Operation(summary = "构建字典项树形结构")
+  @GetMapping("/tree/{typeCode}")
+  public BaseResponse<List<DictItemVO>> buildTree(@PathVariable String typeCode) {
+    return BaseResponse.success(service.buildTree(typeCode));
+  }
+
+  /**
    * 创建字典项
    *
    * <p>幂等保护 5 秒；限流 50 QPS；写审计日志。
@@ -180,13 +192,13 @@ public class DictItemController {
       module = "字典管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'创建字典项: ' + #dto.typeCode + '/' + #dto.itemCode")
+      content = "'创建字典项: ' + #vo.typeCode + '/' + #vo.itemCode")
   @Operation(summary = "创建字典项")
   @RateLimit(resource = "system.dictitem.save", threshold = 50)
   @Idempotent(key = "ydsz:system:dict-item:save:#userId", ttlSeconds = 5)
   @PostMapping
-  public BaseResponse<String> save(@Valid @RequestBody DictItemDTO dto) {
-    return BaseResponse.success(service.save(dto));
+  public BaseResponse<String> save(@Valid @RequestBody DictItemVO vo) {
+    return BaseResponse.success(service.save(vo));
   }
 
   /**
@@ -204,13 +216,13 @@ public class DictItemController {
       module = "字典管理",
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
-      content = "'更新字典项: ' + #dto.typeCode + '/' + #dto.itemCode")
+      content = "'更新字典项: ' + #vo.typeCode + '/' + #vo.itemCode")
   @Operation(summary = "更新字典项")
   @RateLimit(resource = "system.dictitem.update", threshold = 50)
   @Idempotent(key = "ydsz:system:dict-item:update:#userId", ttlSeconds = 5)
   @PutMapping
-  public BaseResponse<Boolean> update(@Valid @RequestBody DictItemDTO dto) {
-    return BaseResponse.success(service.updateById(dto));
+  public BaseResponse<Boolean> update(@Valid @RequestBody DictItemVO vo) {
+    return BaseResponse.success(service.updateById(vo));
   }
 
   /**

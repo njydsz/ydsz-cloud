@@ -16,8 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
-import com.njydsz.userinfo.domain.dto.post.PostPostDTO;
-import com.njydsz.userinfo.domain.dto.put.PostPutDTO;
+import com.njydsz.userinfo.domain.dto.create.PostCreateDTO;
+import com.njydsz.userinfo.domain.dto.update.PostUpdateDTO;
 import com.njydsz.userinfo.domain.entity.Post;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.PostVO;
@@ -93,7 +93,7 @@ public class PostServiceImpl implements PostService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String create(PostPostDTO dto) {
+  public String create(PostCreateDTO dto) {
     // 编码唯一性校验
     LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Post::getPostCode, dto.getPostCode());
@@ -119,7 +119,7 @@ public class PostServiceImpl implements PostService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean update(PostPutDTO dto) {
+  public boolean update(PostUpdateDTO dto) {
     Post entity = mapper.selectById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND);

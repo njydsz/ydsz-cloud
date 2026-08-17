@@ -21,8 +21,8 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO;
-import com.njydsz.userinfo.domain.dto.put.DepartmentPutDTO;
+import com.njydsz.userinfo.domain.dto.create.DepartmentCreateDTO;
+import com.njydsz.userinfo.domain.dto.update.DepartmentUpdateDTO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.server.service.DepartmentService;
@@ -113,7 +113,7 @@ public class DepartmentController {
   @Idempotent(key = "ydsz:userinfo:DepartmentController:create:lock", ttlSeconds = 5)
   @PostMapping
   @Operation(summary = "创建部门")
-  public BaseResponse<String> create(@Valid @RequestBody DepartmentPostDTO dto) {
+  public BaseResponse<String> create(@Valid @RequestBody DepartmentCreateDTO dto) {
     return BaseResponse.success(service.create(dto));
   }
 
@@ -138,7 +138,7 @@ public class DepartmentController {
   @Idempotent(key = "ydsz:userinfo:DepartmentController:update:lock", ttlSeconds = 5)
   @PutMapping
   @Operation(summary = "更新部门")
-  public BaseResponse<Boolean> update(@Valid @RequestBody DepartmentPutDTO dto) {
+  public BaseResponse<Boolean> update(@Valid @RequestBody DepartmentUpdateDTO dto) {
     return BaseResponse.success(service.update(dto));
   }
 

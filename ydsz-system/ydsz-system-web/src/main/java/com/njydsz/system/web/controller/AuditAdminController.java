@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.core.AuditQueryService;
 import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.web.version.ApiVersion;
 
 /**
@@ -140,7 +141,7 @@ public class AuditAdminController {
       @Parameter(description = "审计记录 ID") @PathVariable String id) {
     AuditLog log = auditQueryService.getById(id);
     if (log == null) {
-      return BaseResponse.fail("审计日志不存在");
+      return BaseResponse.error(BaseResultCode.NOT_FOUND.getCode(), "审计日志不存在");
     }
     return BaseResponse.success(log);
   }

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -76,9 +77,7 @@ public class TenantController {
       @Parameter(description = "状态") @RequestParam(required = false) String status) {
     // pageSize 服务端硬上限截断，防止深度分页 OOM
     int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
-    PageResponse<List<TenantVO>> page = service.page(pageNum, safePageSize, tenantName, status);
-    return PageResponse.success(
-        page.getTotal(), page.getPageNum(), page.getPageSize(), page.getData());
+    return service.page(pageNum, safePageSize, tenantName, status);
   }
 
   /**

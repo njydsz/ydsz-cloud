@@ -24,7 +24,7 @@ import com.njydsz.workflow.domain.entity.FlowRunTask;
  *   <li><b>任务流转</b>：转办（{@link #transfer}）/ 委派（{@link #delegate}）/ 加签减签
  *   <li><b>任务查询</b>：按实例 / 按办理人 / 分页 / 待办智能排序
  *   <li><b>催办与超时</b>：催办、加签、SLA 超时处理
- *   <li><b>会签策略</b>：单人/会签/或签/票签/加权票签（{@code CountersignStrategy}）
+ *   <li><b>会签策略</b>：或签/顺序会签/并行会签/FOREACH并行（{@code CountersignStrategy}）
  * </ul>
  *
  * <p><b>事务边界：</b>所有办理动作（{@code pass/reject/transfer/delegate/claim}）开启

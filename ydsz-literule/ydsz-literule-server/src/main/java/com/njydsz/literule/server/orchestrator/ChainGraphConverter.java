@@ -99,12 +99,6 @@ public final class ChainGraphConverter {
       case IF -> extractIf(chain, parentId, nodeSeq, nodes, edges);
       case ELIF -> extractElif(chain, parentId, nodeSeq, nodes, edges);
       case SWITCH -> extractSwitch(chain, parentId, nodeSeq, nodes, edges);
-      case FOR -> extractFor(chain, parentId, nodeSeq, nodes, edges);
-      case WHILE -> extractWhile(chain, parentId, nodeSeq, nodes, edges);
-      case BREAK -> {
-        // BREAK 链无子节点
-      }
-      case CATCH, RETRY -> extractCatchOrRetry(chain, parentId, nodeSeq, nodes, edges);
     }
   }
 
@@ -285,170 +279,6 @@ public final class ChainGraphConverter {
     }
   }
 
-  /**
-   * 提取 FOR 链：循环
-   *
-   * <p>P0-1 增强：使用真实 {@code iterableExpression} 与 {@code iterationVar} 填充 metadata。
-   */
-  private static void extractFor(
-      RuleChain chain,
-      String parentId,
-      AtomicInteger nodeSeq,
-      List<ChainNodeDTO> nodes,
-      List<ChainEdgeDTO> edges) {
-    List<RuleNode> ruleNodes = chain.getNodes();
-    if (ruleNodes == null || ruleNodes.isEmpty()) return;
-    String iterable = chain.getIterableExpression();
-    String iterVar = chain.getIterationVar();
-    for (RuleNode rn : ruleNodes) {
-      String nodeId = "node-" + nodeSeq.incrementAndGet();
-      ChainNodeDTO node = ruleNodeToDTO(rn, nodeId, parentId);
-      Map<String, Object> meta = new LinkedHashMap<>();
-      if (iterable != null) {
-        meta.put("iterableExpression", iterable);
-      }
-      if (iterVar != null) {
-        meta.put("iterationVar", iterVar);
-      }
-      if (!meta.isEmpty()) {
-        node.setMetadata(meta);
-      }
-      nodes.add(node);
-      edges.add(
-          ChainEdgeDTO.builder()
-              .edgeId("edge-" + nodeSeq.incrementAndGet())
-              .sourceNodeId(parentId)
-              .targetNodeId(nodeId)
-              .edgeType(ChainEdgeDTO.EdgeType.FOR_ITER)
-              .build());
-    }
-  }
-
-  /**
-   * 提取 WHILE 链：条件循环
-   *
-   * <p>P0-1 增强：在 metadata 中携带 maxIterations，便于前端配置面板展示。
-   */
-  private static void extractWhile(
-      RuleChain chain,
-      String parentId,
-      AtomicInteger nodeSeq,
-      List<ChainNodeDTO> nodes,
-      List<ChainEdgeDTO> edges) {
-    List<RuleNode> ruleNodes = chain.getNodes();
-    if (ruleNodes == null || ruleNodes.isEmpty()) return;
-    String condition = chain.getConditionExpression();
-    int maxIter = chain.getMaxIterations();
-    for (RuleNode rn : ruleNodes) {
-      String nodeId = "node-" + nodeSeq.incrementAndGet();
-      ChainNodeDTO node = ruleNodeToDTO(rn, nodeId, parentId);
-      if (maxIter > 0) {
-        Map<String, Object> meta =
-            node.getMetadata() != null
-                ? new LinkedHashMap<>(node.getMetadata())
-                : new LinkedHashMap<>();
-        meta.put("maxIterations", maxIter);
-        node.setMetadata(meta);
-      }
-      nodes.add(node);
-      edges.add(
-          ChainEdgeDTO.builder()
-              .edgeId("edge-" + nodeSeq.incrementAndGet())
-              .sourceNodeId(parentId)
-              .targetNodeId(nodeId)
-              .edgeType(ChainEdgeDTO.EdgeType.WHILE_ITER)
-              .condition(condition)
-              .label(condition)
-              .build());
-    }
-  }
-
-  /**
-   * 提取 CATCH/RETRY 链：主节点 + 补偿/回滚节点（2.0.0）
-   *
-   * <p>CATCH 语义：执行主节点，异常时执行补偿节点。 RETRY 语义：执行主节点失败时自动重试，重试耗尽后执行回滚补偿节点。
-   *
-   * <p>提取两个节点：
-   *
-   * <ul>
-   *   <li>主节点（primaryNode）- 使用 PRIMARY 边类型连接
-   *   <li>补偿/回滚节点（catchNode）- 使用 CATCH_COMPENSATION / RETRY_ROLLBACK 边类型连接
-   * </ul>
-   *
-   * RETRY 链会在主节点 metadata 中携带 maxRetries 与 retryIntervalMs，便于前端配置面板展示。
-   */
-  private static void extractCatchOrRetry(
-      RuleChain chain,
-      String parentId,
-      AtomicInteger nodeSeq,
-      List<ChainNodeDTO> nodes,
-      List<ChainEdgeDTO> edges) {
-    RuleNode primaryNode = chain.getPrimaryNode();
-    RuleNode catchNode = chain.getCatchNode();
-    boolean isRetry = chain.getChainType() == RuleChainType.RETRY;
-
-    // 提取主节点
-    if (primaryNode != null) {
-      String nodeId = "node-" + nodeSeq.incrementAndGet();
-      ChainNodeDTO node = ruleNodeToDTO(primaryNode, nodeId, parentId);
-      Map<String, Object> meta =
-          node.getMetadata() != null
-              ? new LinkedHashMap<>(node.getMetadata())
-              : new LinkedHashMap<>();
-      meta.put("primary", true);
-      if (isRetry) {
-        int maxRetries = chain.getMaxRetries();
-        long retryIntervalMs = chain.getRetryIntervalMs();
-        if (maxRetries > 0) {
-          meta.put("maxRetries", maxRetries);
-        }
-        if (retryIntervalMs > 0) {
-          meta.put("retryIntervalMs", retryIntervalMs);
-        }
-      }
-      node.setMetadata(meta);
-      if (node.getLabel() == null) {
-        node.setLabel(isRetry ? "RETRY 主节点" : "CATCH 主节点");
-      }
-      nodes.add(node);
-      edges.add(
-          ChainEdgeDTO.builder()
-              .edgeId("edge-" + nodeSeq.incrementAndGet())
-              .sourceNodeId(parentId)
-              .targetNodeId(nodeId)
-              .edgeType(ChainEdgeDTO.EdgeType.PRIMARY)
-              .label("primary")
-              .build());
-    }
-
-    // 提取补偿/回滚节点
-    if (catchNode != null) {
-      String nodeId = "node-" + nodeSeq.incrementAndGet();
-      ChainNodeDTO node = ruleNodeToDTO(catchNode, nodeId, parentId);
-      Map<String, Object> meta =
-          node.getMetadata() != null
-              ? new LinkedHashMap<>(node.getMetadata())
-              : new LinkedHashMap<>();
-      meta.put(isRetry ? "rollback" : "compensation", true);
-      node.setMetadata(meta);
-      if (node.getLabel() == null) {
-        node.setLabel(isRetry ? "RETRY 回滚节点" : "CATCH 补偿节点");
-      }
-      nodes.add(node);
-      edges.add(
-          ChainEdgeDTO.builder()
-              .edgeId("edge-" + nodeSeq.incrementAndGet())
-              .sourceNodeId(parentId)
-              .targetNodeId(nodeId)
-              .edgeType(
-                  isRetry
-                      ? ChainEdgeDTO.EdgeType.RETRY_ROLLBACK
-                      : ChainEdgeDTO.EdgeType.CATCH_COMPENSATION)
-              .label(isRetry ? "rollback" : "compensation")
-              .build());
-    }
-  }
-
   /** RuleNode → ChainNodeDTO 转换 */
   private static ChainNodeDTO ruleNodeToDTO(RuleNode rn, String nodeId, String parentId) {
     ChainNodeDTO.ChainNodeDTOBuilder b =
@@ -490,8 +320,8 @@ public final class ChainGraphConverter {
   /**
    * 将画布图还原为可执行的 RuleChain
    *
-   * <p>P0-1 增强：支持全部 8 种链类型（THEN/WHEN/IF/ELIF/SWITCH/FOR/WHILE/BREAK）。
-   * 复杂链（IF/ELIF/SWITCH/FOR/WHILE/BREAK）的条件/分支/迭代元数据从画布节点的 metadata 还原。
+   * <p>P0-1 增强：支持全部 5 种链类型（THEN/WHEN/IF/ELIF/SWITCH）。
+   * 复杂链（IF/ELIF/SWITCH）的条件/分支元数据从画布节点的 metadata 还原。
    *
    * @param graph 画布图
    * @param resolver 规则解析器
@@ -595,39 +425,6 @@ public final class ChainGraphConverter {
           }
           return RuleChain.switchOn(branchKey, branchMap, defaultRule);
         }
-      case "FOR":
-        {
-          String iterable = "items";
-          String iterVar = "item";
-          Map<String, Object> meta = root.getMetadata();
-          if (meta != null) {
-            if (meta.get("iterableExpression") != null) {
-              iterable = String.valueOf(meta.get("iterableExpression"));
-            }
-            if (meta.get("iterationVar") != null) {
-              iterVar = String.valueOf(meta.get("iterationVar"));
-            }
-          }
-          Rule action = firstChildRule(children, graph, resolver);
-          return action != null ? RuleChain.forEach(iterable, iterVar, action) : null;
-        }
-      case "WHILE":
-        {
-          String condition = "true";
-          ChainEdgeDTO firstEdge = findFirstEdge(graph, root.getNodeId());
-          if (firstEdge != null && firstEdge.getCondition() != null) {
-            condition = firstEdge.getCondition();
-          }
-          int maxIter = 100;
-          Map<String, Object> meta = root.getMetadata();
-          if (meta != null && meta.get("maxIterations") instanceof Number n) {
-            maxIter = n.intValue();
-          }
-          Rule action = firstChildRule(children, graph, resolver);
-          return action != null ? RuleChain.whileDo(condition, action, maxIter) : null;
-        }
-      case "BREAK":
-        return RuleChain.breakChain();
       default:
         return buildSequenceChain(children, graph, resolver, false);
     }

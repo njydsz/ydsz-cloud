@@ -110,8 +110,7 @@ public class FlowI18nServiceImpl implements FlowI18nService {
     // FlowPerformType
     register("FlowPerformType", "SEQ", "依次审批", "Sequential");
     register("FlowPerformType", "ALL", "会签（全部通过）", "Counter-sign (All)");
-    register("FlowPerformType", "VOTE", "投票（按比例）", "Vote (by ratio)");
-    register("FlowPerformType", "WEIGHTED_VOTE", "加权投票", "Weighted Vote");
+    register("FlowPerformType", "FOREACH_PARALLEL", "FOREACH并行", "FOREACH Parallel");
     register("FlowPerformType", "FIRST", "首签（任一通过）", "First Pass");
 
     // FlowAssigneeType

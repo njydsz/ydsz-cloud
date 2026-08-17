@@ -178,9 +178,9 @@ public class Job extends MpBaseEntity<String> {
   private String timezone;
 
   /**
-   * 目标集群名称（P3-12 跨集群调度）。
+   * 目标集群名称（预留字段）。
    *
-   * <p>null 或空表示本地集群（默认）； 非 null 时任务通过 {@code CrossClusterDispatcher} 派发到指定集群执行。
+   * <p>null 或空表示本地集群（默认）；非 null 时任务将在指定集群执行。
    */
   private String cluster;
 

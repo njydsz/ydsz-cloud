@@ -29,15 +29,6 @@ public class RuleResult implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  /**
-   * BREAK 信号编码（循环终止专用）
-   *
-   * <p>统一常量定义，替代原硬编码魔法字符串 "BREAK"， 避免与真实规则编码冲突。
-   *
-   * @since 1.0.0
-   */
-  public static final String BREAK_CODE = "__BREAK__";
-
   /** 结果 ID */
   @Builder.Default private String resultId = IdGenerator.nextIdStr();
 

@@ -4,8 +4,10 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
@@ -13,7 +15,7 @@ import com.njydsz.nextwiki.domain.entity.FileAcl;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.domain.service.ShareDomainService;
+import com.njydsz.nextwiki.domain.service.FilePermissionDomainService;
 
 /**
  * 文件权限校验服务
@@ -28,6 +30,8 @@ import com.njydsz.nextwiki.domain.service.ShareDomainService;
  *   <li>分享文件需验证分享链接权限
  * </ul>
  *
+ * <p>缓存控制（{@code @Cacheable}/{@code @CacheEvict}）统一在 server 层管理，领域层保持纯粹。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -37,7 +41,7 @@ import com.njydsz.nextwiki.domain.service.ShareDomainService;
 public class FilePermissionService {
 
   private final FileNodeRepository fileNodeRepository;
-  private final ShareDomainService shareDomainService;
+  private final FilePermissionDomainService filePermissionDomainService;
 
   /** 权限位：读取 */
   public static final int PERM_READ = FileAcl.PERM_READ;
@@ -117,7 +121,6 @@ public class FilePermissionService {
    * @return 无返回值
    * @throws BusinessException 节点不存在（FILE_NOT_FOUND）或无权限（PERMISSION_DENIED）时抛出
    * @complexity O(1)（一次节点查询 + 一次 ACL 缓存查询 + O(acls) 遍历）
-   * @note 无事务边界；ACL 查询结果经 {@code @Cacheable} 缓存，变更由 ShareDomainService 清除
    */
   public void checkPermission(String nodeId, String userId, int permission, String action) {
     FileNode node = fileNodeRepository.findById(nodeId);
@@ -149,13 +152,13 @@ public class FilePermissionService {
   }
 
   /**
-   * 查询用户对文件节点的有效 ACL 列表（结果缓存）
+   * 查询用户对文件节点的有效 ACL 列表（结果缓存）。
    *
-   * <p>缓存名 {@code nextwiki:file:acl}，key 为 {@code fileNodeId:userId}。 当 ACL 发生变更（授予/撤销）或配额发生变更时，由
-   * {@code ShareDomainService} / {@code QuotaDomainService} 通过 {@code @CacheEvict} 清除。
+   * <p>缓存名 {@code nextwiki:file:acl}，key 为 {@code fileNodeId:userId}。 当 ACL 发生变更（授予/撤销）时，由
+   * {@link #grantPermission} 通过 {@code @CacheEvict(allEntries = true)} 清除。
    *
-   * @param fileNodeId 文件节点ID
-   * @param userId 用户ID
+   * @param fileNodeId 文件节点 ID
+   * @param userId 用户 ID
    * @return 有效 ACL 列表，可能为空
    */
   @Cacheable(
@@ -163,6 +166,43 @@ public class FilePermissionService {
       key = "#fileNodeId + ':' + #userId",
       condition = "#userId != null")
   public List<FileAcl> getEffectiveAcls(String fileNodeId, String userId) {
-    return shareDomainService.checkPermissionAcls(fileNodeId, userId);
+    return filePermissionDomainService.findEffectiveAcls(fileNodeId, userId);
+  }
+
+  /**
+   * 授予文件 ACL 权限（带缓存清除）。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @param granteeType 授权对象类型（user/role）
+   * @param granteeId 授权对象 ID
+   * @param permissionMask 权限位掩码
+   * @param userId 操作者 ID
+   * @return 创建的 ACL 实体
+   * @transaction {@code @Transactional(rollbackFor = Exception.class)}
+   */
+  @Transactional(rollbackFor = Exception.class)
+  @CacheEvict(cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE, allEntries = true)
+  public FileAcl grantPermission(
+      String fileNodeId,
+      String granteeType,
+      String granteeId,
+      int permissionMask,
+      String userId) {
+    return filePermissionDomainService.grantPermission(
+        fileNodeId, granteeType, granteeId, permissionMask, userId);
+  }
+
+  /**
+   * 设置文件所有者（带缓存清除）。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @param userId 所有者用户 ID
+   * @return 创建的 ACL 实体
+   * @transaction {@code @Transactional(rollbackFor = Exception.class)}
+   */
+  @Transactional(rollbackFor = Exception.class)
+  @CacheEvict(cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE, allEntries = true)
+  public FileAcl setOwner(String fileNodeId, String userId) {
+    return filePermissionDomainService.setOwner(fileNodeId, userId);
   }
 }

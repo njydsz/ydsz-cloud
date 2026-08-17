@@ -89,9 +89,7 @@ public class AppInfoController {
       @Parameter(description = "状态") @RequestParam(required = false) String status) {
     // pageSize 服务端硬上限截断，防止深度分页 OOM
     int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
-    PageResponse<List<AppInfoVO>> page = service.page(pageNum, safePageSize, appName, status);
-    return PageResponse.success(
-        page.getTotal(), page.getPageNum(), page.getPageSize(), page.getData());
+    return service.page(pageNum, safePageSize, appName, status);
   }
 
   /**

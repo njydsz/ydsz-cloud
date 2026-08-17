@@ -14,10 +14,6 @@ public enum FlowPerformType {
   SEQUENTIAL,
   /** 并行会签：所有办理人全部通过才推进 */
   PARALLEL,
-  /** 票签：通过率达到 approveCount / 总数 阈值才推进 */
-  VOTE,
-  /** P1-5: 加权票签 — 按办理人 weight 累加，权重达到阈值才推进 */
-  WEIGHTED_VOTE,
   /**
    * GAP-P2-10: FOREACH 并行循环 — 每个集合元素对应一条独立 task，全部完成才推进
    *

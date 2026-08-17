@@ -1,7 +1,5 @@
 package com.njydsz.system.api.fallback;
 
-import java.util.Map;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -9,6 +7,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.system.api.client.AppInfoClient;
+import com.njydsz.system.api.dto.AppValidateRequest;
 
 /**
  * {@link AppInfoClient} 的 FallbackFactory。
@@ -28,10 +27,10 @@ public class AppInfoClientFallback implements FallbackFactory<AppInfoClient> {
     log.warn("[AppInfoClient] 降级触发: {}", cause.getMessage());
     return new AppInfoClient() {
       @Override
-      public BaseResponse<Boolean> validateClient(Map<String, String> request) {
+      public BaseResponse<Boolean> validateClient(AppValidateRequest request) {
         log.warn(
             "[AppInfoClient] validateClient 降级: appKey={}, reason=系统管理服务不可用",
-            request == null ? null : request.get("appKey"));
+            request == null ? null : request.getAppKey());
         return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "系统管理服务不可用");
       }
     };

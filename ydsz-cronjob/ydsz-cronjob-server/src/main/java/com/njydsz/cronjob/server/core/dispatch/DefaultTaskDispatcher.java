@@ -74,7 +74,6 @@ import com.njydsz.cronjob.server.core.executor.TenantAwareExecutorPool;
 import com.njydsz.cronjob.server.core.handler.GlueJobHandler;
 import com.njydsz.cronjob.server.core.handler.HttpJobHandler;
 import com.njydsz.cronjob.server.core.handler.ScriptJobHandler;
-import com.njydsz.cronjob.server.core.leader.FencingTokenManager;
 import com.njydsz.cronjob.server.core.logger.JobLoggerImpl;
 import com.njydsz.cronjob.server.core.logger.LogStreamManager;
 import com.njydsz.cronjob.server.core.map.MapTaskExecutor;
@@ -161,9 +160,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /** P2-5: 租户感知线程池（可选注入，未配置或 isolation-strategy=none 时使用全局池） */
   private final ObjectProvider<TenantAwareExecutorPool> tenantAwareExecutorPoolProvider;
 
-  /** P3-12: 跨集群调度器（可选注入，未配置时跨集群任务降级到本地执行） */
-  private final ObjectProvider<CrossClusterDispatcher> crossClusterDispatcherProvider;
-
   /** P3-13: WebHook 事件分发器（可选注入，未配置时不推送事件通知） */
   private final ObjectProvider<WebhookEventDispatcher> webhookEventDispatcherProvider;
 
@@ -173,14 +169,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /** P0-2: SSE 实时日志推送管理器（可选注入，未配置时仅写 DB） */
   private final ObjectProvider<LogStreamManager> logStreamManagerProvider;
 
-  /** P0-8: 优先级抢占式调度器（可选注入，线程池满时抢占低优先级任务） */
-  private final ObjectProvider<PreemptiveScheduler> preemptiveSchedulerProvider;
-
   /** 统一领域事件发布门面（可选依赖，未配置时安全降级） */
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
-
-  /** P0-1: Fencing Token 管理器（可选注入，用于防脑裂校验） */
-  private final ObjectProvider<FencingTokenManager> fencingTokenManagerProvider;
 
   /** P0-2: 全局并发控制器（可选注入，用于限制集群总并发） */
   private final ObjectProvider<GlobalConcurrencyController> globalConcurrencyControllerProvider;
@@ -278,18 +268,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    */
   @Override
   public String dispatch(Job job, String executorNode, String triggerType) {
-    // P0-1: Fencing Token 校验（防脑裂）— 当前节点 Token 过期时拒绝派发
-    if (!validateFencingToken()) {
-      log.warn(
-          "[Dispatcher] Fencing Token 无效, 拒绝派发: key={} triggerType={}",
-          job.getJobKey(),
-          triggerType);
-      return null;
-    }
-    // P3-12: 跨集群调度 — 任务指定了目标集群时，通过 CrossClusterDispatcher 派发
-    if (job.getCluster() != null && !job.getCluster().isBlank()) {
-      return dispatchToCluster(job, triggerType);
-    }
     // 当前实现：executorNode 参数忽略，始终本地执行（P3 阶段扩展远程派发）
     boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
     // P1-2: CONCURRENT 策略不加锁
@@ -364,8 +342,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         executor = taskExecutorPool;
       }
       final ExecutorService finalExecutor = executor;
-      // P0-8: 线程池满时尝试抢占低优先级任务
-      tryPreemptIfPoolFull(finalExecutor, job);
       // P0-3: 包装为 PriorityRunnable 实现优先级调度
       PriorityRunnable priorityTask =
           new PriorityRunnable(
@@ -400,64 +376,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       return executeJob(job, holdLock, triggerType, retryCount);
     }
     return null;
-  }
-
-  /**
-   * P0-8: 线程池满时尝试抢占低优先级任务，为高优先级任务腾出执行资源。
-   *
-   * <p>仅当线程池为 {@link ThreadPoolExecutor} 且活跃线程数已达最大线程数时触发。 抢占成功后不保证立即有空闲线程（中断到线程释放有延迟），仅作为尽力而为的优化。
-   * 抢占失败不影响后续正常提交（可能排队等待）。
-   *
-   * @param executor 当前执行器
-   * @param job 待派发任务
-   */
-  private void tryPreemptIfPoolFull(ExecutorService executor, Job job) {
-    if (!(executor instanceof ThreadPoolExecutor tpe)) {
-      return;
-    }
-    // 线程池未满，无需抢占
-    if (tpe.getActiveCount() < tpe.getMaximumPoolSize()) {
-      return;
-    }
-    PreemptiveScheduler preemptiveScheduler = preemptiveSchedulerProvider.getIfAvailable();
-    if (preemptiveScheduler == null) {
-      return;
-    }
-    int priority = (job.getPriority() != null) ? job.getPriority() : 5;
-    try {
-      boolean preempted = preemptiveScheduler.tryPreempt(priority, nodeId);
-      if (preempted) {
-        log.info("[Dispatcher] 抢占成功, 高优先级任务即将提交: key={} priority={}", job.getJobKey(), priority);
-      }
-    } catch (Exception e) {
-      log.debug("[Dispatcher] 抢占尝试异常, 不影响正常派发: key={} reason={}", job.getJobKey(), e.getMessage());
-    }
-  }
-
-  /**
-   * P0-1: 校验当前节点持有的 Fencing Token 是否仍然有效（防脑裂）。
-   *
-   * <p>通过 {@link FencingTokenManager#isCurrentTokenValid(String)} 对比本地 Token 与 Redis 中的最新
-   * Token。Token 无效时说明已发生 Leader 切换，当前节点应拒绝派发， 防止多实例同时认为自己是主节点导致任务重复执行。
-   *
-   * <p>FencingTokenManager 未注册时降级放行（兼容非 Leader 选举模式）。
-   *
-   * @return true Token 有效或 FencingTokenManager 不可用（降级放行）；false Token 过期
-   */
-  private boolean validateFencingToken() {
-    FencingTokenManager fencingManager = fencingTokenManagerProvider.getIfAvailable();
-    if (fencingManager == null) {
-      return true;
-    }
-    String role = cronjobProperties.getLeader().getRole();
-    boolean valid = fencingManager.isCurrentTokenValid(role);
-    if (!valid) {
-      log.warn(
-          "[Dispatcher] Fencing Token 校验失败: role={} currentToken={}",
-          role,
-          fencingManager.getCurrentToken());
-    }
-    return valid;
   }
 
   /**
@@ -1225,62 +1143,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     if (!success) {
       scheduleRetryIfNeeded(job, holdLock, triggerType, retryCount);
     }
-  }
-
-  /**
-   * P3-12: 跨集群派发任务。
-   *
-   * <p>当任务的 {@code cluster} 字段指定了目标集群时，通过 {@link CrossClusterDispatcher} 将任务 HTTP 派发到目标集群的执行器节点。
-   *
-   * <p>降级策略：CrossClusterDispatcher 不可用或目标集群端点未配置时， 降级到本地执行（记录警告日志）。
-   *
-   * @param job 任务定义（含 cluster 字段）
-   * @param triggerType 触发类型
-   * @return 执行日志 ID；降级本地执行时返回本地 logId
-   */
-  private String dispatchToCluster(Job job, String triggerType) {
-    CrossClusterDispatcher clusterDispatcher = crossClusterDispatcherProvider.getIfAvailable();
-    if (clusterDispatcher == null) {
-      log.warn(
-          "[Dispatcher] CrossClusterDispatcher 未注册, 降级本地执行: key={} cluster={}",
-          job.getJobKey(),
-          job.getCluster());
-      return dispatchLocalFallback(job, triggerType);
-    }
-    if (!clusterDispatcher.isClusterAvailable(job.getCluster())) {
-      log.warn(
-          "[Dispatcher] 集群端点未配置, 降级本地执行: key={} cluster={}", job.getJobKey(), job.getCluster());
-      return dispatchLocalFallback(job, triggerType);
-    }
-    RemoteTaskRequest request =
-        new RemoteTaskRequest(job, triggerType, -1, 1, TracerUtils.getTraceId());
-    String logId = clusterDispatcher.dispatchToCluster(job.getCluster(), request);
-    if (logId == null) {
-      log.warn(
-          "[Dispatcher] 跨集群派发失败, 降级本地执行: key={} cluster={}", job.getJobKey(), job.getCluster());
-      return dispatchLocalFallback(job, triggerType);
-    }
-    log.info(
-        "[Dispatcher] 跨集群派发成功: key={} cluster={} logId={}",
-        job.getJobKey(),
-        job.getCluster(),
-        logId);
-    return logId;
-  }
-
-  /** P3-12: 跨集群降级时的本地执行入口。 */
-  private String dispatchLocalFallback(Job job, String triggerType) {
-    boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
-    if ("CONCURRENT".equals(job.getBlockStrategy())) {
-      holdLock = false;
-    }
-    if (isShardedJob(job)) {
-      return executeShardedJob(job, holdLock, triggerType);
-    }
-    if (TRIGGER_MANUAL.equals(triggerType)) {
-      return executeJob(job, holdLock, triggerType, 0);
-    }
-    return dispatchAsync(job, holdLock, triggerType, 0);
   }
 
   /**

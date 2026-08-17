@@ -16,7 +16,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.system.domain.converter.SystemConverter;
-import com.njydsz.system.domain.dto.DictTypeDTO;
+import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.domain.entity.DictType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.DictPageQuery;
@@ -66,14 +66,14 @@ import com.njydsz.system.server.service.DictService;
  *
  * <pre>{@code
  * // 管理后台新增字典类型
- * String typeId = dictService.save(DictTypeDTO.builder()
+ * String typeId = dictService.save(DictTypeVO.builder()
  *     .typeCode("user_status")
  *     .typeName("用户状态")
  *     .description("在职 / 离职 / 休假等状态枚举")
  *     .build());
  *
  * // 然后挂载字典项
- * dictItemService.save(DictItemDTO.builder()
+ * dictItemService.save(DictItemVO.builder()
  *     .typeCode("user_status").itemCode("ACTIVE").itemValue("在职").build());
  * }</pre>
  *
@@ -142,8 +142,8 @@ public class DictServiceImpl implements DictService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String save(DictTypeDTO dto) {
-    DictType entity = toEntity(dto);
+  public String save(DictTypeVO vo) {
+    DictType entity = toEntity(vo);
     checkDuplicateTypeCode(entity);
     dictRepository.getDictTypeMapper().insert(entity);
     return entity.getId();
@@ -168,8 +168,8 @@ public class DictServiceImpl implements DictService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean updateById(DictTypeDTO dto) {
-    DictType entity = toEntity(dto);
+  public boolean updateById(DictTypeVO vo) {
+    DictType entity = toEntity(vo);
     checkDuplicateTypeCode(entity);
     return dictRepository.getDictTypeMapper().updateById(entity) > 0;
   }
@@ -262,16 +262,16 @@ public class DictServiceImpl implements DictService {
    * @param dto 数据传输对象
    * @return 数据库实体
    */
-  private DictType toEntity(DictTypeDTO dto) {
-    if (dto == null) {
+  private DictType toEntity(DictTypeVO vo) {
+    if (vo == null) {
       return null;
     }
     DictType entity = new DictType();
-    entity.setId(dto.getId());
-    entity.setTypeCode(dto.getTypeCode());
-    entity.setTypeName(dto.getTypeName());
-    entity.setDescription(dto.getDescription());
-    entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
+    entity.setId(vo.getId());
+    entity.setTypeCode(vo.getTypeCode());
+    entity.setTypeName(vo.getTypeName());
+    entity.setDescription(vo.getDescription());
+    entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
     return entity;
   }
 

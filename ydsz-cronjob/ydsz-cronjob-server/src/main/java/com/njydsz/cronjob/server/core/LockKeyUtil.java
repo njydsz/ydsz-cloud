@@ -12,7 +12,7 @@ package com.njydsz.cronjob.server.core;
  *   <li>分片任务：{@code ydsz:job:lock:{jobKey}:shard:{shardIndex}}
  * </ul>
  *
- * <p>所有需要构造或释放任务锁的组件（DefaultTaskDispatcher / FailoverScanner / TimeoutMonitor / SelfHealingScanner
+ * <p>所有需要构造或释放任务锁的组件（DefaultTaskDispatcher / AnomalyRecoveryScanner / TimeoutMonitor
  * / JobNodeReaper / JobServiceImpl 等） 都应通过本工具类构造锁 key，禁止在业务代码中直接拼接。
  *
  * @author ydsz-team
@@ -29,8 +29,8 @@ public final class LockKeyUtil {
   /**
    * 释放分布式锁的 Lua 脚本（CAS 删除，确保只有持有者能释放）。
    *
-   * <p>所有需要释放任务锁的组件（DefaultTaskDispatcher / FailoverScanner / TimeoutMonitor /
-   * SelfHealingScanner）都应使用此常量，禁止各自定义重复脚本。
+ * <p>所有需要释放任务锁的组件（DefaultTaskDispatcher / AnomalyRecoveryScanner / TimeoutMonitor）
+ * 都应使用此常量，禁止各自定义重复脚本。
    */
   public static final String RELEASE_LOCK_SCRIPT =
       "if redis.call('get', KEYS[1]) == ARGV[1] then "

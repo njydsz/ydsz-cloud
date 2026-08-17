@@ -50,9 +50,9 @@ import com.njydsz.workflow.domain.enums.FlowSkipType;
  *   <li>flowable:priority - 任务优先级（1-100）
  *   <li>flowable:async - 是否异步执行（true/false）
  *   <li>flowable:assigneeType - 办理人类型（SELF_SELECT/MULTI_LEADER/...）
- *   <li>flowable:performType - 会签类型（OR/SEQUENTIAL/PARALLEL/VOTE）
- *   <li>flowable:approveCount - 会签通过人数/票数
- *   <li>flowable:approveRate - VOTE 通过率（0-100）
+ *   <li>flowable:performType - 会签类型（OR/SEQUENTIAL/PARALLEL/FOREACH_PARALLEL）
+ *   <li>flowable:approveCount - 会签通过人数
+ *   <li>flowable:approveRate - 通过率（0-100）
  *   <li>flowable:weight - 加权值
  *   <li>flowable:timeoutStrategy - 超时策略（PASS/REJECT/NOTIFY/ESCALATE）
  *   <li>flowable:timeout - 超时时长（如 24h/2d）

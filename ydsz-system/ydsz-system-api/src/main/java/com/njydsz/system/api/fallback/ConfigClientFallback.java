@@ -1,7 +1,5 @@
 package com.njydsz.system.api.fallback;
 
-import java.util.Map;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -9,6 +7,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.system.api.client.ConfigClient;
+import com.njydsz.system.api.dto.ConfigGetRequest;
 
 /**
  * {@link ConfigClient} 的 FallbackFactory。
@@ -28,10 +27,10 @@ public class ConfigClientFallback implements FallbackFactory<ConfigClient> {
     log.warn("[ConfigClient] 降级触发: {}", cause.getMessage());
     return new ConfigClient() {
       @Override
-      public BaseResponse<String> getConfig(Map<String, String> request) {
+      public BaseResponse<String> getConfig(ConfigGetRequest request) {
         log.warn(
             "[ConfigClient] getConfig 降级: key={}, reason=系统管理服务不可用",
-            request == null ? null : request.get("key"));
+            request == null ? null : request.getKey());
         return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "系统管理服务不可用");
       }
     };

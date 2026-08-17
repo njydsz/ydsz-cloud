@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -122,14 +123,17 @@ public class AppInfoServiceImpl implements AppInfoService {
   /** 失败计数键前缀（连续失败锁定） */
   private static final String FAIL_COUNT_PREFIX = "ydsz:system:app:fail:";
 
-  /** 校验缓存 TTL（秒），5 分钟 */
-  private static final long VALIDATE_CACHE_TTL_SECONDS = 300L;
+  /** 校验缓存 TTL（秒），默认 5 分钟，可通过 ydzs.system.app.validate-cache-ttl 配置覆盖 */
+  @Value("${ydsz.system.app.validate-cache-ttl:300}")
+  private long validateCacheTtlSeconds;
 
-  /** 连续失败锁定阈值 */
-  private static final int MAX_FAIL_COUNT = 5;
+  /** 连续失败锁定阈值，默认 5 次，可通过 ydzs.system.app.max-fail-count 配置覆盖 */
+  @Value("${ydsz.system.app.max-fail-count:5}")
+  private int maxFailCount;
 
-  /** 失败锁定 TTL（秒），30 分钟 */
-  private static final long FAIL_LOCK_TTL_SECONDS = 1800L;
+  /** 失败锁定 TTL（秒），默认 30 分钟，可通过 ydzs.system.app.fail-lock-ttl 配置覆盖 */
+  @Value("${ydsz.system.app.fail-lock-ttl:1800}")
+  private long failLockTtlSeconds;
 
   /**
    * 根据主键查询应用（不走缓存，直接走 DB）
@@ -151,7 +155,7 @@ public class AppInfoServiceImpl implements AppInfoService {
    * <p>执行链路：
    *
    * <ol>
-   *   <li><b>失败锁定检查</b>：若连续失败次数 ≥ {@value #MAX_FAIL_COUNT}，直接拒绝（防爆破）
+   *   <li><b>失败锁定检查</b>：若连续失败次数 ≥ maxFailCount，直接拒绝（防爆破）
    *   <li><b>Redis 缓存命中</b>：命中校验缓存时跳过 BCrypt，直接返回 true
    *   <li>按 {@code appKey} 查询应用（仅 {@code status=ENABLED}）
    *   <li>应用不存在 / 密钥为空 → 校验失败，累加失败计数
@@ -180,15 +184,15 @@ public class AppInfoServiceImpl implements AppInfoService {
       return false;
     }
 
-    // 1. 失败锁定检查：连续失败 ≥ MAX_FAIL_COUNT 次则直接拒绝
+    // 1. 失败锁定检查：连续失败 ≥ maxFailCount 次则直接拒绝
     String failKey = FAIL_COUNT_PREFIX + appKey;
     String failCountStr = redisStringOps.get(failKey, String.class);
     if (failCountStr != null) {
       try {
         int failCount = Integer.parseInt(failCountStr);
-        if (failCount >= MAX_FAIL_COUNT) {
+        if (failCount >= maxFailCount) {
           log.warn(
-              "应用校验锁定中: appKey={}, 连续失败次数={}, 锁定 {}s", appKey, failCount, FAIL_LOCK_TTL_SECONDS);
+              "应用校验锁定中: appKey={}, 连续失败次数={}, 锁定 {}s", appKey, failCount, failLockTtlSeconds);
           metrics.recordAppValidateFail();
           return false;
         }
@@ -218,7 +222,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     boolean matched = passwordEncoder.matches(appSecret, app.getAppSecret());
     if (matched) {
       // 校验成功：缓存结果、重置失败计数
-      redisStringOps.set(cacheKey, "true", VALIDATE_CACHE_TTL_SECONDS);
+      redisStringOps.set(cacheKey, "true", validateCacheTtlSeconds);
       redisStringOps.del(failKey);
       metrics.recordAppValidateSuccess();
     } else {
@@ -236,9 +240,9 @@ public class AppInfoServiceImpl implements AppInfoService {
    */
   private void handleValidateFail(String appKey, String failKey, String reason) {
     long count = redisStringOps.incr(failKey, 1);
-    redisStringOps.expire(failKey, FAIL_LOCK_TTL_SECONDS);
+    redisStringOps.expire(failKey, failLockTtlSeconds);
     metrics.recordAppValidateFail();
-    log.warn("应用校验失败: appKey={}, {}, 连续失败次数={}/{}", appKey, reason, count, MAX_FAIL_COUNT);
+    log.warn("应用校验失败: appKey={}, {}, 连续失败次数={}/{}", appKey, reason, count, maxFailCount);
   }
 
   /**

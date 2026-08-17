@@ -101,7 +101,7 @@ public class FlowHisTask extends MpBaseIdEntity<String> {
   /** 会签当前已通过人数 */
   private Integer approveFinished;
 
-  /** VOTE 模式通过率阈值（{@code 0~1}，从源 task 复制） */
+  /** 通过率阈值（{@code 0~1}，从源 task 复制） */
   private BigDecimal votePassRate;
 
   /** 任务状态（终态：{@code APPROVED} / {@code REJECTED} / {@code CANCELED} / {@code DELEGATED}） */

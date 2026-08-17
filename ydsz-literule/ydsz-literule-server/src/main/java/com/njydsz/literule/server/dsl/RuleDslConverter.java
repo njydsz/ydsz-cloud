@@ -162,16 +162,6 @@ public final class RuleDslConverter {
               entry.getCondition(), resolveRule(entry.getStep(), ruleMap, entry.getName()));
       case "ELIF" -> buildElifChain(entry, ruleMap);
       case "SWITCH" -> buildSwitchChain(entry, ruleMap);
-      case "FOR" ->
-          RuleChain.forEach(
-              entry.getIterable(),
-              entry.getVar(),
-              resolveRule(entry.getStep(), ruleMap, entry.getName()));
-      case "WHILE" ->
-          RuleChain.whileDo(
-              entry.getCondition(),
-              resolveRule(entry.getStep(), ruleMap, entry.getName()),
-              entry.getMaxIterations() != null ? entry.getMaxIterations() : 100);
       default -> throw new IllegalArgumentException("未知链类型: " + type);
     };
   }

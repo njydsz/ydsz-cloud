@@ -14,6 +14,7 @@ import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.agent.ExecutionPlan;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
@@ -40,6 +41,8 @@ import com.njydsz.common.util.id.IdGenerator;
  *   <li><b>Synthesize</b> — 汇总所有步骤结果，生成最终回复
  * </ol>
  *
+ * <p><b>流式支持</b>：逐步骤推送进度（step 级流式），用户可见每个步骤的执行结果。 与简单同步执行后包装为流式不同，本执行器在步骤执行完成后立即推送中间结果。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -49,6 +52,13 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
   // 解析 LLM 返回的编号步骤列表：匹配行首「数字 + 分隔符(.、)、])」+ 步骤描述
   private static final Pattern STEP_PATTERN = Pattern.compile("(?m)^\\s*(\\d+)[.、)\\]]\\s*(.+)");
 
+  /** 步骤进度消息模板 */
+  private static final String STEP_PROGRESS_TEMPLATE = "[步骤 %d/%d] %s\n结果: %s";
+  /** 规划完成消息模板 */
+  private static final String PLAN_READY_TEMPLATE = "[规划完成] 共 %d 个步骤\n";
+  /** 最终汇总提示 */
+  private static final String SYNTHESIZING_MESSAGE = "[汇总中] 正在整理最终回复...\n";
+
   private final LlmClient llmClient;
   private final ConversationMemory memory;
   private final ToolRegistry toolRegistry;
@@ -57,6 +67,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
   private final AgentMetrics agentMetrics;
   private final CostAnalysisService costAnalysisService;
   private final GuardrailService guardrailService;
+  private final PromptTemplateProvider promptTemplateProvider;
 
   public PlanExecuteAgentExecutor(
       LlmClient llmClient,
@@ -66,7 +77,8 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
       TraceRecorder traceRecorder,
       AgentMetrics agentMetrics,
       CostAnalysisService costAnalysisService,
-      GuardrailService guardrailService) {
+      GuardrailService guardrailService,
+      PromptTemplateProvider promptTemplateProvider) {
     this.llmClient = llmClient;
     this.memory = memory;
     this.toolRegistry = toolRegistry;
@@ -75,6 +87,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
     this.agentMetrics = agentMetrics;
     this.costAnalysisService = costAnalysisService;
     this.guardrailService = guardrailService;
+    this.promptTemplateProvider = promptTemplateProvider;
   }
 
   @Override
@@ -239,13 +252,171 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
         List.of());
   }
 
+  /**
+   * 流式执行 Plan-Execute（step 级流式）。
+   *
+   * <p>与 {@link #execute} 同步执行后包装为流式不同，本方法在步骤执行完成后立即推送中间结果， 用户可实时看到每个步骤的执行进度。推送顺序：
+   *
+   * <ol>
+   *   <li>规划完成消息（步骤数）
+   *   <li>每个步骤的结果（步骤描述 + 执行结果）
+   *   <li>最终汇总结果
+   * </ol>
+   */
   @Override
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
-    ChatResponse response = execute(request);
+    String convId =
+        request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
+    String traceId = traceRecorder.startTrace(convId, "PLAN_EXECUTE_STREAM");
+    LOG.info("[Plan-Execute-Stream] 开始: convId={}, traceId={}", convId, traceId);
+
+    String responseId = IdGenerator.nextIdStr();
+    String model = properties.getLlm().getDefaultModel();
+
+    long planStart = System.currentTimeMillis();
+    ExecutionPlan plan = generatePlan(request.getUserInput(), convId);
+    long planDuration = System.currentTimeMillis() - planStart;
+    traceRecorder.recordStep(
+        traceId,
+        "PLAN_GENERATE",
+        "Generated plan with " + plan.getSteps().size() + " steps",
+        request.getUserInput(),
+        plan,
+        planDuration);
+
+    // 推送规划完成消息
     chunkConsumer.accept(
-        ChatChunk.content(response.getId(), response.getModel(), response.getContent()));
-    chunkConsumer.accept(
-        ChatChunk.finish(response.getId(), response.getModel(), "stop", response.getUsage()));
+        ChatChunk.content(
+            responseId,
+            model,
+            PLAN_READY_TEMPLATE.formatted(plan.getSteps().size())));
+    LOG.info("[Plan-Execute-Stream] 计划生成: steps={}", plan.getSteps().size());
+
+    plan.markExecuting();
+    List<String> stepResults = new ArrayList<>();
+    TokenUsage totalUsage = TokenUsage.zero();
+    int maxReplans = 2;
+    int replanCount = 0;
+
+    int stepIdx = 0;
+    while (stepIdx < plan.getSteps().size()) {
+      ExecutionPlan.PlanStep step = plan.getSteps().get(stepIdx);
+      step.markExecuting();
+
+      ChatRequest stepRequest =
+          ChatRequest.builder()
+              .model(model)
+              .messages(
+                  List.of(
+                      ChatMessage.system("你是 YDSZ 智能助手，正在执行一个多步任务的某一步。请简洁回答。"),
+                      ChatMessage.user(
+                          "任务目标: "
+                              + plan.getGoal()
+                              + "\n当前步骤: "
+                              + step.getDescription()
+                              + "\n已完成的步骤结果: "
+                              + String.join("; ", stepResults),
+                          null)))
+              .temperature(properties.getLlm().getTemperature())
+              .maxTokens(properties.getLlm().getMaxTokens())
+              .build();
+
+      long stepStart = System.currentTimeMillis();
+      ChatResponse stepResponse;
+      try {
+        stepResponse = llmClient.chat(stepRequest);
+      } catch (Exception e) {
+        long stepDuration = System.currentTimeMillis() - stepStart;
+        traceRecorder.recordStep(
+            traceId,
+            "STEP_FAILED",
+            "Step " + (stepIdx + 1) + " failed: " + step.getDescription(),
+            stepRequest,
+            e.getMessage(),
+            stepDuration);
+        step.markFailed();
+
+        if (replanCount < maxReplans) {
+          replanCount++;
+          List<ExecutionPlan.PlanStep> newSteps =
+              regeneratePlan(
+                  plan.getGoal(), stepResults, step.getDescription(), e.getMessage(), convId);
+          if (!newSteps.isEmpty()) {
+            plan.replaceRemainingSteps(stepIdx, newSteps);
+            continue;
+          }
+        }
+        chunkConsumer.accept(
+            ChatChunk.content(
+                responseId, model, "\n[错误] 步骤执行失败: " + e.getMessage()));
+        chunkConsumer.accept(ChatChunk.finish(responseId, model, "error", totalUsage));
+        traceRecorder.endTrace(traceId, "FAILED");
+        throw e;
+      }
+      long stepDuration = System.currentTimeMillis() - stepStart;
+
+      agentMetrics.recordLlmCall(llmClient.getProvider(), model, stepDuration, stepResponse, null);
+      if (stepResponse.getUsage() != null && costAnalysisService != null) {
+        costAnalysisService.recordUsage(convId, model, stepResponse.getUsage());
+      }
+      traceRecorder.recordStep(
+          traceId,
+          "STEP_EXECUTE",
+          "Step " + (stepIdx + 1) + ": " + step.getDescription(),
+          stepRequest,
+          stepResponse,
+          stepDuration);
+
+      if (stepResponse.getUsage() != null) {
+        totalUsage = totalUsage.add(stepResponse.getUsage());
+      }
+      stepResults.add(stepResponse.getContent());
+      step.markCompleted();
+
+      // 推送本步骤结果
+      String stepMsg =
+          STEP_PROGRESS_TEMPLATE.formatted(
+              stepIdx + 1,
+              plan.getSteps().size(),
+              step.getDescription(),
+              truncate(stepResponse.getContent(), 200));
+      chunkConsumer.accept(ChatChunk.content(responseId, model, stepMsg));
+
+      stepIdx++;
+    }
+
+    // 推送汇总提示
+    chunkConsumer.accept(ChatChunk.content(responseId, model, SYNTHESIZING_MESSAGE));
+
+    long synthStart = System.currentTimeMillis();
+    ChatResponse finalResponse = synthesize(plan, stepResults, convId);
+    long synthDuration = System.currentTimeMillis() - synthStart;
+    agentMetrics.recordLlmCall(
+        llmClient.getProvider(), model, synthDuration, finalResponse, null);
+    if (finalResponse.getUsage() != null && costAnalysisService != null) {
+      costAnalysisService.recordUsage(convId, model, finalResponse.getUsage());
+    }
+    traceRecorder.recordStep(
+        traceId, "SYNTHESIZE", "Final synthesis", plan, finalResponse, synthDuration);
+    if (finalResponse.getUsage() != null) {
+      totalUsage = totalUsage.add(finalResponse.getUsage());
+    }
+    plan.markCompleted();
+    traceRecorder.endTrace(traceId, "SUCCESS");
+
+    memory.save(convId, ChatMessage.user(request.getUserInput(), convId));
+    memory.save(convId, ChatMessage.assistant(finalResponse.getContent(), convId, totalUsage));
+
+    // 推送最终汇总结果
+    chunkConsumer.accept(ChatChunk.content(responseId, model, "\n" + finalResponse.getContent()));
+    chunkConsumer.accept(ChatChunk.finish(responseId, model, "stop", totalUsage));
+
+    LOG.info(
+        "[Plan-Execute-Stream] 完成: convId={}, steps={}, tokens={}, traceId={}",
+        convId,
+        plan.getSteps().size(),
+        totalUsage.getTotalTokens(),
+        traceId);
   }
 
   @Override
@@ -384,5 +555,13 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
             .build();
 
     return llmClient.chat(synReq);
+  }
+
+  /** 截断过长的文本，避免 SSE 消息体过大 */
+  private String truncate(String text, int maxLen) {
+    if (text == null) {
+      return "";
+    }
+    return text.length() > maxLen ? text.substring(0, maxLen) + "..." : text;
   }
 }

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,7 +26,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.system.domain.dto.TenantPlanDTO;
+import com.njydsz.system.domain.vo.TenantPlanVO;
 import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
 import com.njydsz.system.domain.vo.TenantPlanMenuVO;
 import com.njydsz.system.domain.vo.TenantPlanVO;
@@ -69,10 +70,7 @@ public class TenantPlanController {
       @Parameter(description = "套餐名称模糊搜索") @RequestParam(required = false) String planName,
       @Parameter(description = "状态") @RequestParam(required = false) String status) {
     int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
-    PageResponse<List<TenantPlanVO>> page =
-        planService.page(pageNum, safePageSize, planName, status);
-    return PageResponse.success(
-        page.getTotal(), page.getPageNum(), page.getPageSize(), page.getData());
+    return planService.page(pageNum, safePageSize, planName, status);
   }
 
   /**
@@ -117,15 +115,15 @@ public class TenantPlanController {
   @Idempotent(key = "ydsz:system:tenant-plan:save:#userId", ttlSeconds = 5)
   @PostMapping
   public BaseResponse<String> save(
-      @Valid @RequestBody TenantPlanDTO dto,
+      @Valid @RequestBody TenantPlanVO vo,
       @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId) {
-    return BaseResponse.success(planService.save(dto));
+    return BaseResponse.success(planService.save(vo));
   }
 
   /**
    * 更新套餐
    *
-   * @param dto 套餐 DTO（必须包含 ID）
+   * @param vo 套餐 VO（必须包含 ID）
    * @param userId 当前用户 ID
    * @return 是否成功
    */
@@ -133,15 +131,15 @@ public class TenantPlanController {
       module = "租户套餐管理",
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
-      content = "'更新套餐: ' + #dto.planCode")
+      content = "'更新套餐: ' + #vo.planCode")
   @Operation(summary = "更新套餐")
   @RateLimit(resource = "system.tenantplan.update", threshold = 50)
   @Idempotent(key = "ydsz:system:tenant-plan:update:#userId", ttlSeconds = 5)
   @PutMapping
   public BaseResponse<Boolean> update(
-      @Valid @RequestBody TenantPlanDTO dto,
+      @Valid @RequestBody TenantPlanVO vo,
       @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId) {
-    return BaseResponse.success(planService.updateById(dto));
+    return BaseResponse.success(planService.updateById(vo));
   }
 
   /**

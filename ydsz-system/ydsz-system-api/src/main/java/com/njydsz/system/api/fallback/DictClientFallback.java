@@ -1,7 +1,6 @@
 package com.njydsz.system.api.fallback;
 
 import java.util.List;
-import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -10,6 +9,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.system.api.client.DictClient;
+import com.njydsz.system.api.dto.DictItemGetRequest;
 
 /**
  * {@link DictClient} 的 FallbackFactory。
@@ -28,11 +28,11 @@ public class DictClientFallback implements FallbackFactory<DictClient> {
     log.warn("[DictClient] 降级触发: {}", cause.getMessage());
     return new DictClient() {
       @Override
-      public BaseResponse<String> getDictItem(Map<String, String> request) {
+      public BaseResponse<String> getDictItem(DictItemGetRequest request) {
         log.warn(
             "[DictClient] getDictItem 降级: typeCode={}, itemCode={}, reason=系统管理服务不可用",
-            request == null ? null : request.get("typeCode"),
-            request == null ? null : request.get("itemCode"));
+            request == null ? null : request.getTypeCode(),
+            request == null ? null : request.getItemCode());
         return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "系统管理服务不可用");
       }
 

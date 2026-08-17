@@ -24,8 +24,8 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
-import com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO;
-import com.njydsz.userinfo.domain.dto.put.DepartmentPutDTO;
+import com.njydsz.userinfo.domain.dto.create.DepartmentCreateDTO;
+import com.njydsz.userinfo.domain.dto.update.DepartmentUpdateDTO;
 import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.entity.UserDept;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -154,7 +154,7 @@ public class DepartmentServiceImpl implements DepartmentService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String create(DepartmentPostDTO dto) {
+  public String create(DepartmentCreateDTO dto) {
     LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Department::getDeptCode, dto.getDeptCode());
     if (departmentMapper.selectCount(wrapper) > 0) {
@@ -190,7 +190,7 @@ public class DepartmentServiceImpl implements DepartmentService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean update(DepartmentPutDTO dto) {
+  public boolean update(DepartmentUpdateDTO dto) {
     Department entity = departmentMapper.selectById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_NOT_FOUND);

@@ -69,6 +69,15 @@ public interface FileNodeRepository {
   FileNode save(FileNode node);
 
   /**
+   * 批量保存文件节点（用于分批复制场景，单次插入多条）。
+   *
+   * @param nodes 待保存的节点列表
+   * @return 实际插入条数
+   * @since 1.0.0
+   */
+  int saveBatch(List<FileNode> nodes);
+
+  /**
    * 更新文件节点（带 revision 乐观锁）
    *
    * @throws OptimisticLockingFailureException 乐观锁冲突时抛出
@@ -126,6 +135,28 @@ public interface FileNodeRepository {
    * @return 全部后代节点列表（不含文件夹自身），按层级升序排列
    */
   List<FileNode> findAllDescendantsByPath(String folderPath);
+
+  /**
+   * 分页查询文件夹的后代节点（用于分批复制场景，避免一次全量加载 OOM）。
+   *
+   * <p>结果按层级升序排列，确保父节点先于子节点返回。
+   *
+   * @param folderPath 文件夹路径（如 {@code /root/documents/}）
+   * @param offset 偏移量（从 0 开始）
+   * @param limit 每页大小
+   * @return 后代节点分页列表
+   * @since 1.0.0
+   */
+  List<FileNode> findDescendantsByPage(String folderPath, int offset, int limit);
+
+  /**
+   * 统计文件夹的后代节点数量（文件 + 文件夹）。
+   *
+   * @param folderPath 文件夹路径
+   * @return 后代节点总数（不含文件夹自身）
+   * @since 1.0.0
+   */
+  int countDescendants(String folderPath);
 
   /**
    * 根据文件夹 ID 查询其下全部后代节点（便捷方法，内部通过路径前缀匹配）。

@@ -30,32 +30,25 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
 /**
  * 秒级调度器（P0-3）。
  *
- * <p>用于调度 {@link ScheduleType#FIXED_RATE} 和 {@link ScheduleType#FIXED_DELAY} 类型的任务， 弥补 {@code
- * JobScanner}（仅扫描 CRON 类型）与 Spring {@code CronTrigger}（仅支持 Cron 表达式） 无法覆盖固定频率/固定延迟调度场景的不足。对标
- * PowerJob 的 FixedRate / FixedDelay 调度方式。
+ * <p>用于调度 {@link ScheduleType#FIXED_RATE} 和 {@link ScheduleType#FIXED_DELAY}类型的任务。
  *
- * <h3>启用条件</h3>
+ * <p><b>已废弃</b>：固定频率/延迟任务建议使用 CRON 表达式（如 {@code */5 * * * * ?} 表示每 5 秒执行），
+ * 由 {@link com.njydsz.cronjob.server.core.dispatch.JobScanner} 统一调度。
+ * 本类保留用于向后兼容已有 FIXED_RATE/FIXED_DELAY 任务，将在后续版本移除。
  *
- * <ul>
- *   <li>Leader 模式启用（{@code @ConditionalOnBean(LeaderElector.class)}）
- *   <li>仅 Leader 节点实际执行任务派发（Follower 节点注册但不派发，避免重复执行）
- * </ul>
- *
- * <h3>调度语义</h3>
+ * <h3>迁移指引</h3>
  *
  * <ul>
- *   <li>{@link ScheduleType#FIXED_RATE}: {@code scheduleAtFixedRate(task, 0, fixedRateMs,
- *       MILLISECONDS)} 每 N 毫秒执行一次，不等上次完成（可能重叠，由分布式锁兜底互斥）
- *   <li>{@link ScheduleType#FIXED_DELAY}: {@code scheduleWithFixedDelay(task, 0, fixedDelayMs,
- *       MILLISECONDS)} 上次执行完成后等待 N 毫秒再执行下一次
+ *   <li>FIXED_RATE：将 {@code fixedRateMs} 转换为 CRON 表达式</li>
+ *   <li>FIXED_DELAY：将 {@code fixedDelayMs} 转换为 CRON 表达式</li>
+ *   <li>示例：每 30 秒执行 → CRON: {@code */30 * * * * ?}</li>
  * </ul>
  *
- * <p>任务执行时通过 {@link TaskDispatcher#dispatch} 派发，triggerType={@link
- * DefaultTaskDispatcher#TRIGGER_CRON}， 复用现有的分布式锁、日志、重试、告警等基础设施。
- *
+ * @deprecated 使用 CRON 表达式替代固定频率/延迟调度，由 JobScanner 统一处理
  * @author ydsz-team
  * @since 1.0.0
  */
+@Deprecated
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
@@ -83,6 +76,9 @@ public class SecondLevelScheduler {
   /** 已注册的调度任务: jobId -> ScheduledFuture */
   private final Map<String, ScheduledFuture<?>> scheduledMap = new ConcurrentHashMap<>();
 
+  /** 线程池注册表中的注册名 */
+  private static final String POOL_REGISTRY_NAME = "cronjob-second-level-scheduler";
+
   /** Leader 角色（从配置读取，便于多套调度集群隔离） */
   private String leaderRole;
 
@@ -90,6 +86,8 @@ public class SecondLevelScheduler {
   @PostConstruct
   public void init() {
     this.leaderRole = cronjobProperties.getLeader().getRole();
+    log.warn(
+        "[SecondLevelScheduler] 已废弃: 固定频率/延迟任务请使用 CRON 表达式, 由 JobScanner 统一调度");
     int poolSize = Math.max(2, cronjobProperties.getSchedulerPoolSize());
     this.scheduler =
         new ScheduledThreadPoolExecutor(
@@ -110,10 +108,8 @@ public class SecondLevelScheduler {
     if (registry == null || scheduler == null) {
       return;
     }
-    registry.register(
-        CronjobThreadPoolRegistry.SECOND_LEVEL_SCHEDULER, (ThreadPoolExecutor) scheduler);
-    log.info(
-        "[SecondLevelScheduler] 线程池已注册到注册表: {}", CronjobThreadPoolRegistry.SECOND_LEVEL_SCHEDULER);
+    registry.register(POOL_REGISTRY_NAME, (ThreadPoolExecutor) scheduler);
+    log.info("[SecondLevelScheduler] 线程池已注册到注册表: {}", POOL_REGISTRY_NAME);
   }
 
   /** 优雅关闭线程池。 */

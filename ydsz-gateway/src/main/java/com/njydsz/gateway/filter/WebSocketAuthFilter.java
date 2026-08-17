@@ -1,7 +1,6 @@
 package com.njydsz.gateway.filter;
 
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -46,8 +45,7 @@ import com.njydsz.gateway.config.PathGuard;
  *   <li>仅对 WebSocket 升级请求（Upgrade: websocket）生效
  *   <li>P0-4: Origin 校验（防 CSRF / 跨域 WebSocket 劫持）
  *   <li>提取 Token → 校验 → 注入 X-User-* 内部头
- *   <li>P0-1: 注入 X-Internal-Sig + X-Internal-Ts + X-Internal-Nonce 签名头 （与 AuthGlobalFilter
- *       一致，下游可统一校验）
+ *   <li>P0-1: 注入 X-Internal-Sig 签名头（与 AuthGlobalFilter 一致，下游可统一校验）
  *   <li>校验失败返回 401（在握手阶段拒绝，不建立连接）
  * </ol>
  *
@@ -55,8 +53,6 @@ import com.njydsz.gateway.config.PathGuard;
  *
  * <p>历史版本仅注入用户信息头，未注入签名头，导致 WebSocket 请求可被下游伪造。 本版本复用 {@link InternalHeaderSigner} 生成 HMAC 签名，与
  * AuthGlobalFilter 共用密钥与算法。
- *
- * <h3>P0-4 Origin 校验</h3>
  *
  * <p>WebSocket 不受 SOP / CORS 约束，攻击者可通过构造恶意页面发起 WebSocket 跨域连接 携带受害者 Cookie/Token。本版本校验 Origin
  * 是否在允许列表中，仅放行可信域。
@@ -116,8 +112,7 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
    * WebSocket 独立认证过滤器：处理升级握手中的 Token 校验与内部头注入。
    *
    * <p>仅对 {@code /ws} 前缀且 {@code Upgrade: websocket} 的请求生效；先做 Origin 校验（P0-4 防跨域劫持）， 再从查询参数 /
-   * Sec-WebSocket-Protocol / Authorization 提取 Token 并校验， 通过后注入 X-User-* 与签名头（X-Internal-Sig / Ts /
-   * Nonce），标记已认证后放行。
+   * Sec-WebSocket-Protocol / Authorization 提取 Token 并校验， 通过后注入 X-User-* 与签名头（X-Internal-Sig），标记已认证后放行。
    *
    * @param exchange 服务器 Web 交换上下文
    * @param chain 网关过滤器链
@@ -169,42 +164,25 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
     // P0-9: traceId 统一由网关生成（不信任客户端传入的 X-Trace-Id）
     String traceId = TraceIdGenerator.generateSortableTraceId();
 
-    // P0-1 + P0-6: 生成 nonce 与签名（与 AuthGlobalFilter 一致）
-    String nonce = UUID.randomUUID().toString().replace("-", "");
-    long tsSeconds = System.currentTimeMillis() / 1000L;
-    String sig =
-        InternalHeaderSigner.sign(
-            internalSignSecret,
-            traceId,
-            userIdStr,
-            usernameStr,
-            rolesStr,
-            permsStr,
-            tsSeconds,
-            nonce);
+    // 生成签名（与 AuthGlobalFilter 一致）
+    String sig = InternalHeaderSigner.sign(
+        internalSignSecret, traceId, userIdStr, usernameStr, rolesStr, permsStr);
 
     // 注入用户信息头 + 签名头（先剥离客户端伪造的内部头）
-    ServerHttpRequest mutated =
-        request
-            .mutate()
-            .headers(
-                h -> {
-                  // P0-1: 先剥离客户端伪造的内部头（与 AuthGlobalFilter 一致）
-                  for (String name : PathGuard.internalHeaders()) {
-                    h.remove(name);
-                  }
-                  // 注入网关签发的内部头
-                  h.set(GatewayConstants.HEADER_TRACE_ID, traceId);
-                  h.set(GatewayConstants.HEADER_USER_ID, userIdStr);
-                  h.set(GatewayConstants.HEADER_USERNAME, usernameStr);
-                  h.set(GatewayConstants.HEADER_USER_ROLES, rolesStr);
-                  h.set(GatewayConstants.HEADER_USER_PERMISSIONS, permsStr);
-                  // P0-1: 注入签名头（防伪造 + 防重放）
-                  h.set(GatewayConstants.HEADER_INTERNAL_SIG, sig);
-                  h.set(GatewayConstants.HEADER_INTERNAL_TS, String.valueOf(tsSeconds));
-                  h.set(GatewayConstants.HEADER_INTERNAL_NONCE, nonce);
-                })
-            .build();
+    ServerHttpRequest mutated = request.mutate().headers(h -> {
+      // P0-1: 先剥离客户端伪造的内部头（与 AuthGlobalFilter 一致）
+      for (String name : PathGuard.internalHeaders()) {
+        h.remove(name);
+      }
+      // 注入网关签发的内部头
+      h.set(GatewayConstants.HEADER_TRACE_ID, traceId);
+      h.set(GatewayConstants.HEADER_USER_ID, userIdStr);
+      h.set(GatewayConstants.HEADER_USERNAME, usernameStr);
+      h.set(GatewayConstants.HEADER_USER_ROLES, rolesStr);
+      h.set(GatewayConstants.HEADER_USER_PERMISSIONS, permsStr);
+      // P0-1: 注入签名头（防伪造）
+      h.set(GatewayConstants.HEADER_INTERNAL_SIG, sig);
+    }).build();
 
     exchange.getAttributes().put(ATTR_WS_AUTHENTICATED, true);
     // P0-9: traceId 统一写入响应头

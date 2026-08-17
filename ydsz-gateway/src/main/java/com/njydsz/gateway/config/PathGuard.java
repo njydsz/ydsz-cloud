@@ -3,6 +3,7 @@ package com.njydsz.gateway.config;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -40,8 +41,6 @@ public final class PathGuard {
           GatewayConstants.HEADER_USER_ROLES,
           GatewayConstants.HEADER_USER_PERMISSIONS,
           GatewayConstants.HEADER_INTERNAL_SIG,
-          GatewayConstants.HEADER_INTERNAL_TS,
-          GatewayConstants.HEADER_INTERNAL_NONCE,
           GatewayConstants.HEADER_TENANT_ID,
           HeaderConstants.X_FORWARDED_FOR,
           "X-Real-IP");
@@ -203,5 +202,45 @@ public final class PathGuard {
    */
   public static Set<String> internalHeaders() {
     return INTERNAL_HEADERS;
+  }
+
+  /**
+   * 判断路径是否为白名单路径（跳过鉴权）。
+   *
+   * <p>内置默认白名单包含健康检查、认证入口等无需鉴权的端点。 业务模块可通过 {@link #matchWhiteList(String, Set)} 自定义白名单。
+   *
+   * @param path 请求路径
+   * @return true 如果路径匹配默认白名单
+   */
+  public static boolean isWhiteList(String path) {
+    // 默认白名单：健康检查、认证入口、Actuator 端点
+    return DEFAULT_WHITELIST.stream().anyMatch(
+        pattern -> pathMatch(path, pattern));
+  }
+
+  /** 默认白名单路径（无需鉴权的端点） */
+  private static final List<String> DEFAULT_WHITELIST = List.of(
+      "/actuator/**",
+      "/auth/**",
+      "/api/v1/auth/**",
+      "/login",
+      "/error");
+
+  /**
+   * 路径模式匹配（支持 Ant 风格通配符）。
+   *
+   * @param path 请求路径
+   * @param pattern 匹配模式
+   * @return true 如果匹配
+   */
+  private static boolean pathMatch(String path, String pattern) {
+    if (path == null || pattern == null) {
+      return false;
+    }
+    if (pattern.endsWith("/**")) {
+      String prefix = pattern.substring(0, pattern.length() - 3);
+      return path.startsWith(prefix);
+    }
+    return path.equals(pattern);
   }
 }

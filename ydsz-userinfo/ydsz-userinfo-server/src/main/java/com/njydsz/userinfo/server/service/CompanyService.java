@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.userinfo.domain.dto.post.CompanyPostDTO;
-import com.njydsz.userinfo.domain.dto.put.CompanyPutDTO;
+import com.njydsz.userinfo.domain.dto.create.CompanyCreateDTO;
+import com.njydsz.userinfo.domain.dto.update.CompanyUpdateDTO;
 import com.njydsz.userinfo.domain.entity.Company;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 
@@ -53,7 +53,7 @@ public interface CompanyService {
    * @param dto 公司创建 DTO
    * @return 新公司 ID
    */
-  String create(CompanyPostDTO dto);
+  String create(CompanyCreateDTO dto);
 
   /**
    * 更新公司。
@@ -61,7 +61,7 @@ public interface CompanyService {
    * @param dto 公司更新 DTO（含 ID）
    * @return true=成功
    */
-  boolean update(CompanyPutDTO dto);
+  boolean update(CompanyUpdateDTO dto);
 
   /**
    * 删除公司（逻辑删除）。

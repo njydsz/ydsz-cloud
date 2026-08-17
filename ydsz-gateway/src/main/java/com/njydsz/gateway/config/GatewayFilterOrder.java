@@ -3,11 +3,10 @@ package com.njydsz.gateway.config;
 import org.springframework.core.Ordered;
 
 /**
- * 网关过滤器执行顺序统一常量（Q3 治理）。
+ * 网关过滤器执行顺序统一常量。
  *
- * <p>历史版本所有 {@link org.springframework.cloud.gateway.filter.GlobalFilter} 通过魔法数字 {@code
- * Ordered.HIGHEST_PRECEDENCE + N} 各自维护顺序， 曾出现 {@code PayloadValidationFilter} 与 {@code
- * IpBlacklistFilter} 同为 {@code +3} 的顺序冲突。本枚举将全部过滤器的偏移量集中管理， 并保证偏移量全局唯一，消除隐性顺序炸弹。
+ * <p>所有 {@link org.springframework.cloud.gateway.filter.GlobalFilter} 通过本枚举统一管理顺序偏移量，
+ * 保证偏移量全局唯一，消除隐性顺序冲突。
  *
  * <p><b>使用方式：</b>过滤器 {@code getOrder()} 统一返回 {@code GatewayFilterOrder.XXX.getOrder()}，禁止再使用魔法数字。
  *
@@ -16,19 +15,16 @@ import org.springframework.core.Ordered;
  * <pre>
  *   0   W3CTraceContextFilter     链路追踪（最先）
  *   1   AccessLogGlobalFilter     访问日志
- *   3   IpBlacklistFilter         IP 黑名单
- *   4   PayloadValidationFilter   请求体校验（原 +3 与黑名单冲突，调整至 +4）
- *   5   IpWhitelistFilter         IP 白名单
+ *   3   IpAccessControlFilter     IP 访问控制（黑名单 + 白名单）
+ *   4   PayloadValidationFilter   请求体校验
  *   8   WebSocketAuthFilter       WebSocket 认证
  *   10  AuthGlobalFilter          主鉴权 + 内部头注入
- *   12  AuthorizationFilter       网关层粗粒度鉴权（RBAC）（P3-7）
+ *   12  AuthorizationFilter       网关层粗粒度鉴权（RBAC）
  *   15  ApiKeyAuthFilter          API Key 认证
  *   20  GrayLoadBalancerRequestFilter 灰度标识注入
- *   25  ResponseCacheFilter       响应缓存
- *   28  IdempotencyFilter         幂等性检查（P3-7）
  *   30  RateLimitFilter           限流
  *   35  AuditLogFilter            审计日志
- *   45  CircuitBreakerGlobalFilter 熔断（+100 之前、转发之前生效）
+ *   45  CircuitBreakerGlobalFilter 熔断
  *   200 ApiVersionHeaderFilter    API 版本响应头（响应阶段）
  * </pre>
  *
@@ -41,26 +37,20 @@ public enum GatewayFilterOrder {
   W3C_TRACE(0),
   /** 访问日志过滤器 */
   ACCESS_LOG(1),
-  /** IP 黑名单过滤器 */
-  IP_BLACKLIST(3),
+  /** IP 访问控制过滤器（黑名单 + 白名单） */
+  IP_ACCESS_CONTROL(3),
   /** 请求体安全校验过滤器 */
   PAYLOAD_VALIDATION(4),
-  /** IP 白名单过滤器 */
-  IP_WHITELIST(5),
   /** WebSocket 认证过滤器 */
   WEBSOCKET_AUTH(8),
   /** 主鉴权过滤器 */
   AUTH(10),
-  /** 网关层粗粒度鉴权（RBAC）过滤器（P3-7） */
+  /** 网关层粗粒度鉴权（RBAC）过滤器 */
   AUTHORIZATION(12),
   /** API Key 认证过滤器 */
   API_KEY_AUTH(15),
   /** 灰度路由标识注入过滤器 */
   GRAY_LOADBALANCER(20),
-  /** 响应缓存过滤器 */
-  RESPONSE_CACHE(25),
-  /** 幂等性检查过滤器（P3-7） */
-  IDEMPOTENCY(28),
   /** 限流过滤器 */
   RATE_LIMIT(30),
   /** 审计日志过滤器 */

@@ -15,6 +15,7 @@ import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
@@ -101,6 +102,9 @@ public class SupervisorAgentExecutor implements AgentExecutor {
   /** Agent 工厂 */
   private final AgentFactory agentFactory;
 
+  /** Prompt 模板提供者（加载外部化模板） */
+  private final PromptTemplateProvider promptTemplateProvider;
+
   public SupervisorAgentExecutor(
       LlmClient llmClient,
       ConversationMemory memory,
@@ -109,6 +113,7 @@ public class SupervisorAgentExecutor implements AgentExecutor {
       AgentMetrics agentMetrics,
       CostAnalysisService costAnalysisService,
       GuardrailService guardrailService,
+      PromptTemplateProvider promptTemplateProvider,
       AgentFactory agentFactory) {
     this.llmClient = llmClient;
     this.memory = memory;
@@ -117,6 +122,7 @@ public class SupervisorAgentExecutor implements AgentExecutor {
     this.agentMetrics = agentMetrics;
     this.costAnalysisService = costAnalysisService;
     this.guardrailService = guardrailService;
+    this.promptTemplateProvider = promptTemplateProvider;
     this.agentFactory = agentFactory;
   }
 
@@ -325,9 +331,11 @@ public class SupervisorAgentExecutor implements AgentExecutor {
       }
       List<SubTask> tasks = new ArrayList<>(taskList.size());
       for (Object item : taskList) {
-        if (!(item instanceof Map<?, ?> map)) {
+        if (!(item instanceof Map)) {
           continue;
         }
+        @SuppressWarnings("unchecked")
+        Map<String, Object> map = (Map<String, Object>) item;
         int id = parseTaskId(map.get("id"));
         String type = String.valueOf(map.getOrDefault("type", "REACT")).trim().toUpperCase();
         String description = String.valueOf(map.getOrDefault("description", ""));

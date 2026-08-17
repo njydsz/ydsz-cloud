@@ -43,14 +43,10 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   PASSWORD_INCORRECT("B30002", "userinfo.password.incorrect"),
   /** 用户已停用 */
   USER_DISABLED("B30003", "userinfo.user.disabled", 403),
-  /** 用户已被锁定 */
-  USER_LOCKED("B30004", "userinfo.user.locked", 403),
   /** 用户名已存在 */
   USERNAME_DUPLICATE("B30005", "userinfo.username.duplicate"),
   /** 账号已锁定，请稍后再试 */
   ACCOUNT_LOCKED("A20110", "userinfo.account.locked", 401),
-  /** 账号已被永久锁定，请联系管理员 */
-  ACCOUNT_LOCKED_PERMANENT("B30006", "userinfo.account.locked.permanent", 403),
   /** 验证码无效或已过期 */
   CAPTCHA_INVALID("B30007", "userinfo.captcha.invalid"),
   /** 请输入验证码 */
@@ -71,10 +67,6 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   PASSWORD_REUSED("B30013", "userinfo.password.reused"),
   /** IP 登录失败次数过多被临时封禁 */
   IP_BLOCKED("B30019", "userinfo.login.ip.blocked", 403),
-  /** 会话已过期 */
-  SESSION_EXPIRED("B30014", "userinfo.session.expired", 401),
-  /** 会话不存在 */
-  SESSION_NOT_FOUND("B30015", "userinfo.session.not.found", 401),
   /** Token 无效 */
   TOKEN_INVALID("A20003", "userinfo.token.invalid", 401),
   /** 授权码无效或已过期 */

@@ -1,0 +1,46 @@
+package com.njydsz.userinfo.domain.dto.create;
+
+import java.io.Serial;
+import java.io.Serializable;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
+
+/**
+ * 语言新增请求 DTO。
+ *
+ * <p>对应后端 {@code POST /api/v1/language} 请求体。 新增语言后自动加入前端语言切换器，系统全局仅允许一个默认语言。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@Data
+public class LanguageCreateDTO implements Serializable {
+
+  @Serial private static final long serialVersionUID = 1L;
+
+  /** 语言编码（ISO 639-1 + ISO 3166-1，如 {@code zh-CN} / {@code en-US}） */
+  @NotBlank(message = "语言编码不能为空")
+  @Size(max = 20, message = "语言编码长度不能超过 20 个字符")
+  @Xss(message = "languageCode包含非法内容")
+  private String languageCode;
+
+  /** 语言名称（前端展示，如「简体中文」/「English」） */
+  @NotBlank(message = "语言名称不能为空")
+  @Size(max = 64, message = "语言名称长度不能超过 64 个字符")
+  @Xss(message = "languageName包含非法内容")
+  private String languageName;
+
+  /** 是否默认语言（{@code 1=是}，全局仅允许一个默认语言） */
+  private Integer isDefault;
+
+  /** 排序序号（升序，决定语言切换器展示顺序） */
+  private Integer sortOrder;
+
+  /** 启用状态（{@code "ENABLED"} / {@code "DISABLED"}） */
+  @Xss(message = "status包含非法内容")
+  private String status;
+}

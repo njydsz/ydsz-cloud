@@ -19,7 +19,6 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.server.channel.MessageChannel;
-import com.njydsz.message.server.service.receipt.ReadReceiptService;
 
 /**
  * 邮件通道实现。
@@ -44,25 +43,19 @@ public class EmailChannel implements MessageChannel {
   @Value("${spring.mail.username:noreply@example.com}")
   private String from;
 
-  /** P2-14: 已读回执服务（可选注入） */
-  private final ReadReceiptService readReceiptService;
-
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
   /**
-   * 构造方法，邮件发送器与回执服务可选注入。
+   * 构造方法。
    *
    * @param mailSender JavaMail 发送器
-   * @param readReceiptService 已读回执服务（P2-14）
    * @param snowflakeIdGenerator 分布式 ID 生成器
    */
   public EmailChannel(
       @Autowired(required = false) JavaMailSender mailSender,
-      @Autowired(required = false) ReadReceiptService readReceiptService,
       SnowflakeIdGenerator snowflakeIdGenerator) {
     this.mailSender = mailSender;
-    this.readReceiptService = readReceiptService;
     this.snowflakeIdGenerator = snowflakeIdGenerator;
   }
 
@@ -103,10 +96,6 @@ public class EmailChannel implements MessageChannel {
       String subject = request.getSubject() == null ? "YDSZ 通知" : request.getSubject();
       String content = request.getContent();
       boolean isHtml = content != null && content.contains("<");
-      // P2-14: HTML 邮件注入追踪像素
-      if (isHtml && readReceiptService != null && StringUtils.hasText(request.getMessageId())) {
-        content = readReceiptService.injectEmailTrackingPixel(content, request.getMessageId());
-      }
       if (isHtml) {
         MimeMessage mime = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mime, true, "UTF-8");

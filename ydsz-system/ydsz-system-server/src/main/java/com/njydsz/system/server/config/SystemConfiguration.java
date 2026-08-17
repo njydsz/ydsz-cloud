@@ -6,11 +6,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import com.njydsz.system.infra.mapper.ConfigMapper;
-import com.njydsz.system.infra.mapper.DictItemMapper;
 import com.njydsz.system.server.health.SystemHealthIndicator;
 
 /**
@@ -68,9 +66,8 @@ public class SystemConfiguration {
   @ConditionalOnClass(HealthIndicator.class)
   @ConditionalOnMissingBean(SystemHealthIndicator.class)
   public SystemHealthIndicator systemHealthIndicator(
-      RedisTemplate<String, Object> redisTemplate,
-      ConfigMapper configMapper,
-      DictItemMapper dictItemMapper) {
-    return new SystemHealthIndicator(redisTemplate, configMapper, dictItemMapper);
+      ObjectProvider<com.njydsz.common.redis.health.RedisHealthIndicator> redisHealthIndicatorProvider,
+      ObjectProvider<com.njydsz.common.jdbc.health.DataSourceHealthIndicator> dataSourceHealthIndicatorProvider) {
+    return new SystemHealthIndicator(redisHealthIndicatorProvider, dataSourceHealthIndicatorProvider);
   }
 }

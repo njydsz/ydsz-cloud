@@ -22,7 +22,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.system.domain.dto.DictTypeDTO;
+import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.server.service.DictService;
@@ -73,12 +73,7 @@ public class DictController {
   @Operation(summary = "分页查询")
   @GetMapping("/page")
   public PageResponse<List<DictTypeVO>> page(DictPageQuery query) {
-    PageResponse<List<DictTypeVO>> result = dictService.page(query);
-    return PageResponse.success(
-        result.getTotal(),
-        (long) result.getPageNum(),
-        (long) result.getPageSize(),
-        result.getData());
+    return dictService.page(query);
   }
 
   /**
@@ -105,13 +100,13 @@ public class DictController {
       module = "字典管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'创建字典类型: ' + #dto.typeCode")
+      content = "'创建字典类型: ' + #vo.typeCode")
   @Operation(summary = "创建字典类型")
   @RateLimit(resource = "system.dict.save", threshold = 50)
   @Idempotent(key = "ydsz:system:dict:save:#userId", ttlSeconds = 5)
   @PostMapping
-  public BaseResponse<String> save(@Valid @RequestBody DictTypeDTO dto) {
-    return BaseResponse.success(dictService.save(dto));
+  public BaseResponse<String> save(@Valid @RequestBody DictTypeVO vo) {
+    return BaseResponse.success(dictService.save(vo));
   }
 
   /**
@@ -126,13 +121,13 @@ public class DictController {
       module = "字典管理",
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
-      content = "'更新字典类型: ' + #dto.typeCode")
+      content = "'更新字典类型: ' + #vo.typeCode")
   @Operation(summary = "更新字典类型")
   @RateLimit(resource = "system.dict.update", threshold = 50)
   @Idempotent(key = "ydsz:system:dict:update:#userId", ttlSeconds = 5)
   @PutMapping
-  public BaseResponse<Boolean> update(@Valid @RequestBody DictTypeDTO dto) {
-    return BaseResponse.success(dictService.updateById(dto));
+  public BaseResponse<Boolean> update(@Valid @RequestBody DictTypeVO vo) {
+    return BaseResponse.success(dictService.updateById(vo));
   }
 
   /**

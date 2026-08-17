@@ -11,6 +11,7 @@ import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
@@ -62,6 +63,9 @@ public class RagAgentExecutor implements AgentExecutor {
   /** 护栏编排服务（统一驱动输入/输出护栏，消除重复逻辑） */
   private final GuardrailService guardrailService;
 
+  /** Prompt 模板提供者（加载外部化模板） */
+  private final PromptTemplateProvider promptTemplateProvider;
+
   public RagAgentExecutor(
       LlmClient llmClient,
       ConversationMemory memory,
@@ -70,7 +74,8 @@ public class RagAgentExecutor implements AgentExecutor {
       TraceRecorder traceRecorder,
       AgentMetrics agentMetrics,
       CostAnalysisService costAnalysisService,
-      GuardrailService guardrailService) {
+      GuardrailService guardrailService,
+      PromptTemplateProvider promptTemplateProvider) {
     this.llmClient = llmClient;
     this.memory = memory;
     this.properties = properties;
@@ -79,6 +84,7 @@ public class RagAgentExecutor implements AgentExecutor {
     this.agentMetrics = agentMetrics;
     this.costAnalysisService = costAnalysisService;
     this.guardrailService = guardrailService;
+    this.promptTemplateProvider = promptTemplateProvider;
   }
 
   /**

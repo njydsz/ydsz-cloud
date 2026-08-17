@@ -22,8 +22,9 @@ import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.system.domain.vo.VariableVersionVO;
-import com.njydsz.system.server.service.VariableVersionService;
+import com.njydsz.system.domain.vo.EntityVersionVO;
+import com.njydsz.system.server.service.EntityVersionService;
+import com.njydsz.system.server.service.VariableService;
 
 /**
  * 变量版本 Controller
@@ -43,8 +44,8 @@ import com.njydsz.system.server.service.VariableVersionService;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.server.service.VariableVersionService 变量版本业务逻辑
- * @see com.njydsz.system.domain.entity.VariableVersion 变量版本实体
+ * @see com.njydsz.system.server.service.EntityVersionService 统一实体版本业务逻辑
+ * @see com.njydsz.system.domain.entity.EntityVersion 实体版本
  */
 @Tag(name = "变量版本", description = "变量变更历史查询 + 一键回滚")
 @RestController
@@ -52,7 +53,9 @@ import com.njydsz.system.server.service.VariableVersionService;
 @RequiredArgsConstructor
 public class VariableVersionController {
 
-  private final VariableVersionService service;
+  private final EntityVersionService entityVersionService;
+
+  private final VariableService variableService;
 
   /**
    * 按变量键查询版本历史
@@ -64,8 +67,10 @@ public class VariableVersionController {
    */
   @Operation(summary = "按变量键查询版本历史")
   @GetMapping("/{resourceKey}")
-  public BaseResponse<List<VariableVersionVO>> listByResourceKey(@PathVariable String resourceKey) {
-    return BaseResponse.success(service.listByResourceKey(resourceKey));
+  public BaseResponse<List<EntityVersionVO>> listByResourceKey(@PathVariable String resourceKey) {
+    return BaseResponse.success(
+        entityVersionService.listByResourceTypeAndKey(
+            EntityVersionService.RESOURCE_TYPE_VARIABLE, resourceKey));
   }
 
   /**
@@ -107,6 +112,7 @@ public class VariableVersionController {
       @Parameter(description = "操作人 ID")
           @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false)
           String operatorId) {
-    return BaseResponse.success(service.rollbackTo(resourceKey, targetVersion, operatorId));
+    return BaseResponse.success(
+        variableService.rollbackTo(resourceKey, targetVersion, operatorId));
   }
 }

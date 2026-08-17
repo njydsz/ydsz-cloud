@@ -1,69 +1,45 @@
 package com.njydsz.nextwiki.domain.service;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.cache.constant.CacheConstants;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.entity.FileAcl;
-import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.domain.entity.ShareAccessLog;
 import com.njydsz.nextwiki.domain.entity.ShareLink;
 import com.njydsz.nextwiki.domain.entity.ShareRecipient;
-import com.njydsz.nextwiki.domain.enums.NextwikiEnums.ShareStatus;
-import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
-import com.njydsz.nextwiki.domain.repository.FileAclRepository;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.domain.repository.ShareAccessLogRepository;
-import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
-import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
 
 /**
- * NextWiki 分享领域服务。
+ * NextWiki 分享领域服务（已废弃）。
  *
- * <p>分享链接生成、权限校验。
+ * <p>该类已按单一职责原则拆分为以下三个独立领域服务：
+ *
+ * <ul>
+ *   <li>{@link ShareLinkDomainService} — 分享链接创建、验证、撤销、到期管理
+ *   <li>{@link FilePermissionDomainService} — 文件 ACL 权限授予与校验
+ *   <li>{@link ShareAccessLogDomainService} — 分享访问日志记录与查询
+ * </ul>
+ *
+ * <p>保留本类的唯一原因是为平滑过渡：调用方更新依赖期间调用本类方法将抛出 {@link
+ * UnsupportedOperationException}，提示迁移至新类。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 已拆分为 {@link ShareLinkDomainService}、{@link FilePermissionDomainService}、{@link
+ *     ShareAccessLogDomainService}，请使用新类替换
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
+@Deprecated
 public class ShareDomainService {
 
-  /** 分布式 ID 生成器 */
-  private final SnowflakeIdGenerator snowflakeIdGenerator;
-
-  private final ShareLinkRepository shareLinkRepository;
-  private final FileAclRepository fileAclRepository;
-  private final FileNodeRepository fileNodeRepository;
-  private final ApplicationEventPublisher eventPublisher;
-  private final RedisStringOps stringOps;
-
-  private final BCryptPasswordEncoder passwordEncoder;
-  private final ShareAccessLogRepository shareAccessLogRepository;
-  private final ShareRecipientRepository shareRecipientRepository;
-
-  /** P0-4: 防暴力破解配置 */
-  private static final String KEY_SHARE_FAIL = "nextwiki:share:fail:";
-
-  private static final int MAX_FAIL_COUNT = 5;
-  private static final long LOCK_DURATION_MINUTES = 30;
-
-  /** 创建分享链接 */
-  @Transactional(rollbackFor = Exception.class)
+  /**
+   * @deprecated 使用 {@link ShareLinkDomainService#createShare(String, String, String,
+   *     LocalDateTime, Integer, String)} 替代
+   */
+  @Deprecated
   public ShareLink createShare(
       String fileNodeId,
       String shareType,
@@ -71,24 +47,14 @@ public class ShareDomainService {
       LocalDateTime expireTime,
       Integer maxAccessCount,
       String userId) {
-    return createShare(
-        fileNodeId, shareType, password, expireTime, maxAccessCount, null, null, userId);
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 ShareLinkDomainService#createShare");
   }
 
   /**
-   * 创建分享链接（增强版，支持定向分享和自定义标题）。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @param shareType 分享类型（view/download/edit）
-   * @param password 访问密码（可为空）
-   * @param expireTime 过期时间（可为空）
-   * @param maxAccessCount 最大访问次数（可为空）
-   * @param targetUserIds 目标用户 ID 列表（定向分享，可为空）
-   * @param title 分享标题（可为空）
-   * @param userId 创建者 ID
-   * @return 分享链接实体
+   * @deprecated 使用 {@link ShareLinkDomainService} 八参数 {@code createShare} 替代
    */
-  @Transactional(rollbackFor = Exception.class)
+  @Deprecated
   public ShareLink createShare(
       String fileNodeId,
       String shareType,
@@ -98,175 +64,23 @@ public class ShareDomainService {
       List<String> targetUserIds,
       String title,
       String userId) {
-    FileNode fileNode = fileNodeRepository.findById(fileNodeId);
-    if (fileNode == null) {
-      throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND)
-          .data("fileNodeId", fileNodeId);
-    }
-
-    // 生成分享码和提取码
-    String shareCode = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
-    String extractCode = generateExtractCode();
-
-    // 确定分享目标类型
-    String shareTargetType =
-        (targetUserIds != null && !targetUserIds.isEmpty()) ? "USER" : "PUBLIC";
-
-    ShareLink shareLink =
-        ShareLink.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
-            .fileNodeId(fileNodeId)
-            .shareCode(shareCode)
-            .extractCode(extractCode)
-            .shareType(shareType)
-            .expireTime(expireTime)
-            .maxAccessCount(maxAccessCount)
-            .accessCount(0)
-            .status(ShareStatus.ACTIVE.getCode())
-            .password(
-                password != null && !password.isEmpty() ? passwordEncoder.encode(password) : null)
-            .shareTargetType(shareTargetType)
-            .reminderSent(false)
-            .title(title)
-            .revision(0)
-            .deleted(0)
-            .build();
-
-    shareLink.setCreatedBy(userId);
-    shareLink.setUpdatedBy(userId);
-
-    ShareLink saved = shareLinkRepository.save(shareLink);
-
-    // 处理定向分享目标用户
-    if (targetUserIds != null && !targetUserIds.isEmpty()) {
-      List<ShareRecipient> recipients = new ArrayList<>();
-      for (String targetUserId : targetUserIds) {
-        ShareRecipient recipient =
-            ShareRecipient.builder()
-                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
-                .shareId(saved.getId())
-                .recipientType("USER")
-                .recipientId(targetUserId)
-                .status("ACTIVE")
-                .deleted(0)
-                .build();
-        recipient.setCreatedBy(userId);
-        recipient.setUpdatedBy(userId);
-        recipients.add(recipient);
-      }
-      shareRecipientRepository.saveBatch(recipients);
-      log.info(
-          "[ShareDomainService] 创建定向分享: fileNodeId={}, shareCode={}, recipients={}",
-          fileNodeId,
-          shareCode,
-          targetUserIds.size());
-    }
-
-    // 更新文件节点的共享状态
-    fileNode.setShareStatus("shared");
-    fileNode.setUpdatedBy(userId);
-    fileNodeRepository.update(fileNode);
-
-    eventPublisher.publishEvent(
-        FileOperatedEvent.builder()
-            .operation(FileOperatedEvent.OP_SHARE)
-            .fileNodeId(fileNodeId)
-            .fileName(fileNode.getName())
-            .nodeType(fileNode.getNodeType())
-            .operatorId(userId)
-            .operatedAt(LocalDateTime.now())
-            .extra(shareCode)
-            .build());
-
-    log.info(
-        "[ShareDomainService] 创建分享: fileNodeId={}, shareCode={}, target={}",
-        fileNodeId,
-        shareCode,
-        shareTargetType);
-    return saved;
-  }
-
-  /** 验证分享链接访问 */
-  public ShareLink verifyAccess(String shareCode, String extractCode, String password) {
-    // P0-4: 防暴力破解——检查失败次数是否超限
-    String failKey = KEY_SHARE_FAIL + shareCode;
-    String failCountStr = stringOps.get(failKey, String.class);
-    if (failCountStr != null && Integer.parseInt(failCountStr) >= MAX_FAIL_COUNT) {
-      log.warn("[ShareDomainService] 分享链接已被临时锁定: shareCode={}", shareCode);
-      throw new BusinessException(NextwikiExceptionCode.SHARE_LOCKED);
-    }
-
-    ShareLink shareLink = shareLinkRepository.findByShareCode(shareCode);
-    if (shareLink == null) {
-      throw new BusinessException(NextwikiExceptionCode.SHARE_NOT_FOUND);
-    }
-
-    ShareStatus currentStatus = ShareStatus.fromCode(shareLink.getStatus());
-    if (currentStatus == null || currentStatus.isTerminal()) {
-      throw new BusinessException(NextwikiExceptionCode.SHARE_EXPIRED);
-    }
-
-    if (shareLink.getExpireTime() != null
-        && shareLink.getExpireTime().isBefore(LocalDateTime.now())) {
-      if (currentStatus.canTransitTo(ShareStatus.EXPIRED)) {
-        shareLink.setStatus(ShareStatus.EXPIRED.getCode());
-        shareLinkRepository.update(shareLink);
-      }
-      throw new BusinessException(NextwikiExceptionCode.SHARE_EXPIRED);
-    }
-
-    if (shareLink.getMaxAccessCount() != null
-        && shareLink.getAccessCount() != null
-        && shareLink.getAccessCount() >= shareLink.getMaxAccessCount()) {
-      throw new BusinessException(NextwikiExceptionCode.SHARE_ACCESS_LIMIT);
-    }
-
-    boolean verifyFailed = false;
-
-    if (shareLink.getExtractCode() != null && !shareLink.getExtractCode().equals(extractCode)) {
-      verifyFailed = true;
-    }
-
-    if (!verifyFailed && shareLink.getPassword() != null && !shareLink.getPassword().isEmpty()) {
-      if (password == null || !passwordEncoder.matches(password, shareLink.getPassword())) {
-        verifyFailed = true;
-      }
-    }
-
-    if (verifyFailed) {
-      // 记录失败次数
-      Long failCount = stringOps.incr(failKey, 1);
-      if (failCount != null && failCount == 1) {
-        stringOps.expire(failKey, Duration.ofMinutes(LOCK_DURATION_MINUTES));
-      }
-      log.warn("[ShareDomainService] 验证失败: shareCode={}, failCount={}", shareCode, failCount);
-      throw new BusinessException(
-          shareLink.getExtractCode() != null
-              ? NextwikiExceptionCode.SHARE_EXTRACT_CODE_ERROR
-              : NextwikiExceptionCode.SHARE_PASSWORD_ERROR);
-    }
-
-    // 验证成功，清除失败计数
-    stringOps.del(failKey);
-
-    shareLinkRepository.incrementAccessCount(shareLink.getId());
-
-    return shareLink;
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 ShareLinkDomainService#createShare");
   }
 
   /**
-   * 记录分享链接访问日志。
-   *
-   * @param shareId 分享链接 ID
-   * @param shareCode 分享码
-   * @param fileNodeId 文件节点 ID
-   * @param visitorId 访问者 ID（可为空）
-   * @param visitorIp 访问者 IP
-   * @param userAgent User-Agent
-   * @param accessType 访问类型（VIEW/DOWNLOAD/EDIT）
-   * @param status 访问状态（SUCCESS/FAIL）
-   * @param failReason 失败原因
+   * @deprecated 使用 {@link ShareLinkDomainService#verifyAccess(String, String, String)} 替代
    */
+  @Deprecated
+  public ShareLink verifyAccess(String shareCode, String extractCode, String password) {
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 ShareLinkDomainService#verifyAccess");
+  }
+
+  /**
+   * @deprecated 使用 {@link ShareAccessLogDomainService#recordAccessLog} 替代
+   */
+  @Deprecated
   public void recordAccessLog(
       String shareId,
       String shareCode,
@@ -277,179 +91,108 @@ public class ShareDomainService {
       String accessType,
       String status,
       String failReason) {
-    try {
-      ShareAccessLog log =
-          ShareAccessLog.builder()
-              .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
-              .shareId(shareId)
-              .shareCode(shareCode)
-              .fileNodeId(fileNodeId)
-              .visitorId(visitorId)
-              .visitorIp(visitorIp)
-              .userAgent(userAgent)
-              .accessType(accessType)
-              .accessStatus(status)
-              .failReason(failReason)
-              .accessTime(LocalDateTime.now())
-              .deleted(0)
-              .build();
-      shareAccessLogRepository.save(log);
-    } catch (Exception e) {
-      // 访问日志记录失败不应影响主流程
-      log.warn("[ShareDomainService] 记录访问日志失败: shareCode={}, error={}", shareCode, e.getMessage());
-    }
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 ShareAccessLogDomainService#recordAccessLog");
   }
 
   /**
-   * 查询即将到期的分享链接（用于到期提醒）。
-   *
-   * @param withinHours 多少小时内即将到期
-   * @return 即将到期的分享链接列表
+   * @deprecated 使用 {@link ShareLinkDomainService#findExpiringShares(int)} 替代
    */
+  @Deprecated
   public List<ShareLink> findExpiringShares(int withinHours) {
-    // 这里通过遍历所有活跃分享链接来查找即将到期的
-    // 生产环境可通过定时任务 + 数据库查询优化
-    return shareLinkRepository.findExpiringShares(withinHours);
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 ShareLinkDomainService#findExpiringShares");
   }
 
   /**
-   * 标记分享链接的到期提醒已发送。
-   *
-   * @param shareId 分享链接 ID
+   * @deprecated 使用 {@link ShareLinkDomainService#markReminderSent(String)} 替代
    */
+  @Deprecated
   public void markReminderSent(String shareId) {
-    ShareLink shareLink = shareLinkRepository.findById(shareId);
-    if (shareLink != null) {
-      shareLink.setReminderSent(true);
-      shareLinkRepository.update(shareLink);
-    }
-  }
-
-  /** 撤销分享 */
-  @Transactional(rollbackFor = Exception.class)
-  public void revoke(String shareId, String userId) {
-    ShareLink shareLink = shareLinkRepository.findById(shareId);
-    if (shareLink == null) {
-      throw new BusinessException(NextwikiExceptionCode.SHARE_NOT_FOUND);
-    }
-    shareLinkRepository.revoke(shareId);
-    log.info("[ShareDomainService] 撤销分享: shareId={}, userId={}", shareId, userId);
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 ShareLinkDomainService#markReminderSent");
   }
 
   /**
-   * 授予文件 ACL 权限
-   *
-   * <p>授予后清除 {@code nextwiki:file:acl} 缓存中该 (fileNodeId, granteeId) 维度的条目， 避免校验逻辑继续读到旧的 ACL
-   * 列表。{@code allEntries = true} 是因为 ACL 变更可能 影响多个用户对该节点的有效权限（例如继承传播），简单全量清除最稳妥。
+   * @deprecated 使用 {@link ShareLinkDomainService#revoke(String, String)} 替代
    */
-  @CacheEvict(cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE, allEntries = true)
+  @Deprecated
+  public void revoke(String shareId, String userId) {
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 ShareLinkDomainService#revoke");
+  }
+
+  /**
+   * @deprecated 使用 {@link FilePermissionDomainService#grantPermission} 替代
+   */
+  @Deprecated
   public FileAcl grantPermission(
       String fileNodeId, String granteeType, String granteeId, int permissionMask, String userId) {
-    FileAcl acl =
-        FileAcl.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
-            .fileNodeId(fileNodeId)
-            .granteeType(granteeType)
-            .granteeId(granteeId)
-            .permissionMask(permissionMask)
-            .inherited(false)
-            .owner(false)
-            .revision(0)
-            .deleted(0)
-            .build();
-
-    acl.setCreatedBy(userId);
-    acl.setUpdatedBy(userId);
-
-    FileAcl saved = fileAclRepository.save(acl);
-    log.info(
-        "[ShareDomainService] 授予权限: fileNodeId={}, granteeType={}, granteeId={}, mask={}",
-        fileNodeId,
-        granteeType,
-        granteeId,
-        permissionMask);
-    return saved;
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 FilePermissionDomainService#grantPermission");
   }
 
-  /** 检查用户是否拥有指定权限 */
+  /**
+   * @deprecated 使用 {@link FilePermissionDomainService#checkPermission} 替代
+   */
+  @Deprecated
   public boolean checkPermission(
       String fileNodeId, String userId, List<String> roleIds, int permission) {
-    // 查询文件所有者
-    FileNode fileNode = fileNodeRepository.findById(fileNodeId);
-    if (fileNode != null && userId.equals(fileNode.getCreatedBy())) {
-      return true;
-    }
-
-    // 查询 ACL
-    List<FileAcl> acls = fileAclRepository.findEffectivePermissions(fileNodeId, userId, roleIds);
-    for (FileAcl acl : acls) {
-      if (acl.hasPermission(permission)) {
-        return true;
-      }
-    }
-    return false;
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 FilePermissionDomainService#checkPermission");
   }
 
   /**
-   * 查询用户对文件节点的有效 ACL 列表（不含所有者短路判断）
-   *
-   * <p>该方法仅做数据库查询，缓存由调用方 {@code FilePermissionService.getEffectiveAcls} 通过 {@code @Cacheable}
-   * 控制。这里保持纯粹的领域查询职责。
-   *
-   * @param fileNodeId 文件节点ID
-   * @param userId 用户ID
-   * @return 有效 ACL 列表（含继承），可能为空
+   * @deprecated 使用 {@link FilePermissionDomainService#findEffectiveAcls} 替代
    */
+  @Deprecated
   public List<FileAcl> checkPermissionAcls(String fileNodeId, String userId) {
-    return fileAclRepository.findEffectivePermissions(fileNodeId, userId, List.of());
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 FilePermissionDomainService#findEffectiveAcls");
   }
 
-  /** 查询用户的分享列表 */
+  /**
+   * @deprecated 使用 {@link ShareLinkDomainService#findByUserId(String)} 替代
+   */
+  @Deprecated
   public List<ShareLink> findByUserId(String userId) {
-    return shareLinkRepository.findActiveSharesByUserId(userId);
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 ShareLinkDomainService#findByUserId");
   }
 
   /**
-   * 查询分享链接的访问日志。
-   *
-   * @param shareId 分享链接 ID
-   * @param limit 返回条数限制
-   * @return 访问日志列表
+   * @deprecated 使用 {@link ShareAccessLogDomainService#getAccessLogs} 替代
    */
+  @Deprecated
   public List<ShareAccessLog> getAccessLogs(String shareId, int limit) {
-    return shareAccessLogRepository.findByShareId(shareId, limit);
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 ShareAccessLogDomainService#getAccessLogs");
   }
 
   /**
-   * 查询分享链接的目标用户列表。
-   *
-   * @param shareId 分享链接 ID
-   * @return 目标用户列表
+   * @deprecated 使用 {@link ShareAccessLogDomainService#getRecipients} 替代
    */
+  @Deprecated
   public List<ShareRecipient> getRecipients(String shareId) {
-    return shareRecipientRepository.findByShareId(shareId);
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 ShareAccessLogDomainService#getRecipients");
   }
 
   /**
-   * 查询用户作为接收者的分享列表。
-   *
-   * @param recipientId 接收者用户 ID
-   * @return 分享接收记录列表
+   * @deprecated 使用 {@link ShareAccessLogDomainService#getReceivedShares} 替代
    */
+  @Deprecated
   public List<ShareRecipient> getReceivedShares(String recipientId) {
-    return shareRecipientRepository.findByRecipientId(recipientId);
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 ShareAccessLogDomainService#getReceivedShares");
   }
 
-  /** 设置文件所有者 */
+  /**
+   * @deprecated 使用 {@link FilePermissionDomainService#setOwner} 替代
+   */
+  @Deprecated
   public FileAcl setOwner(String fileNodeId, String userId) {
-    return grantPermission(fileNodeId, "user", userId, FileAcl.PERM_ALL, userId);
-  }
-
-  // ==================== 私有方法 ====================
-
-  /** 生成 4 位数字提取码 */
-  private String generateExtractCode() {
-    int code = (int) (Math.random() * 9000) + 1000;
-    return String.valueOf(code);
+    throw new UnsupportedOperationException(
+        "ShareDomainService 已废弃，请使用 FilePermissionDomainService#setOwner");
   }
 }

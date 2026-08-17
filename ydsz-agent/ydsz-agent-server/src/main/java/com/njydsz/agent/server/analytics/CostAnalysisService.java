@@ -70,9 +70,9 @@ public class CostAnalysisService {
           TokenUsageRecordDO.builder()
               .conversationId(conversationId)
               .modelName(modelName)
-              .promptTokens(usage.getPromptTokens())
-              .completionTokens(usage.getCompletionTokens())
-              .totalTokens(usage.getTotalTokens())
+              .promptTokens((long) usage.getPromptTokens())
+              .completionTokens((long) usage.getCompletionTokens())
+              .totalTokens((long) usage.getTotalTokens())
               .build();
       usageRecordMapper.insert(record);
     } catch (Exception e) {

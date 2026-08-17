@@ -1,7 +1,6 @@
 package com.njydsz.system.api.client;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.FeignClientConstants;
+import com.njydsz.system.api.dto.DictItemGetRequest;
 import com.njydsz.system.api.fallback.DictClientFallback;
 
 /**
@@ -33,7 +33,7 @@ public interface DictClient {
    * @return 字典项值（itemValue 字段）；不存在时返回 null
    */
   @PostMapping(FeignClientConstants.SYSTEM_PATH_DICT_ITEM)
-  BaseResponse<String> getDictItem(@RequestBody Map<String, String> request);
+  BaseResponse<String> getDictItem(@RequestBody DictItemGetRequest request);
 
   /**
    * 按字典类型编码查询全部字典项列表（走缓存）。

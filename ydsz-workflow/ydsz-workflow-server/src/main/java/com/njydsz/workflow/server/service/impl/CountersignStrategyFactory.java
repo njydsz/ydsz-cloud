@@ -14,7 +14,7 @@ import com.njydsz.workflow.domain.enums.FlowPerformType;
 /**
  * 会签策略工厂。
  *
- * <p>封装会签/或签/票决/顺序会签/加权票决等策略的创建与查找，
+ * <p>封装或签/顺序会签/并行会签/FOREACH 并行等策略的创建与查找，
  *
  * <p>对外暴露 {@code getStrategy(String type)} 接口，根据节点配置返回对应策略实例。
  *

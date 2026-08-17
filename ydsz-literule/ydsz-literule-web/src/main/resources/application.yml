@@ -131,10 +131,6 @@ ydsz:
     # ---------- CEP 引擎 ----------
     cep:
       enabled: true
-    # ---------- 断点调试 ----------
-    debug:
-      enabled: true
-      suspend-timeout-seconds: 60
 
   # P0: JDBC 安全加固（ydsz-common-jdbc）
   jdbc:

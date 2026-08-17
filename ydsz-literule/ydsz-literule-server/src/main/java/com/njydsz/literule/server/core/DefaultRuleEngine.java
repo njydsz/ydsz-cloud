@@ -89,9 +89,6 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
   /** 是否启用灰度路由（与 canaryRouter 双重判断） */
   private volatile boolean canaryEnabled = true;
 
-  /** 断点调试 Hook（可选，1.4.0 起支持 P2-3） */
-  private volatile BreakpointHook breakpointHook;
-
   /**
    * 模型输入注册表（可选，1.8.0 起 P3-1 规则+模型融合）
    *
@@ -121,7 +118,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
   /**
    * 并行规则评估器（可选，2.2.0 起 P2-2 大规则量并行优化）
    *
-   * <p>非 null 且候选规则数 ≥ {@link #parallelThreshold} 且无断点时， 引擎将候选规则按互斥组分组并行评估，组内串行保持互斥语义。 并行评估期间通过
+   * <p>非 null 且候选规则数 ≥ {@link #parallelThreshold} 时， 引擎将候选规则按互斥组分组并行评估，组内串行保持互斥语义。 并行评估期间通过
    * {@link #withMdcTraceId} 为每个工作线程传播 MDC traceId。 默认 null（串行评估，向后兼容）。
    */
   private volatile ParallelRuleEvaluator parallelEvaluator;
@@ -263,11 +260,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    *   <li>索引模式下按租户+环境+场景+互斥组+字段过滤候选规则； 非索引模式线性遍历并逐条过滤
    *   <li>互斥组短路：同组已有规则命中则跳过后续规则
    *   <li>熔断检查：已被熔断的规则跳过评估
-   *   <li>（可选）断点调试回调：onBeforeEvaluate
    *   <li>灰度路由：按 canaryRatio 分流到候选版本
    *   <li>执行规则评估（可选超时控制）
    *   <li>记录统计、监控指标、熔断结果、执行轨迹
-   *   <li>（可选）断点调试回调：onAfterEvaluate
    * </ol>
    *
    * <p>结果按严重度倒序排列（RED → YELLOW → INFO）。 单规则异常不影响其他规则评估（异常隔离）。
@@ -396,7 +391,6 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    *   <li>租户/环境/场景过滤（非索引模式）
    *   <li>互斥组短路
    *   <li>熔断检查
-   *   <li>断点调试回调（onBeforeEvaluate/onAfterEvaluate）
    *   <li>执行规则评估并记录统计/监控/熔断/轨迹
    * </ol>
    *
@@ -443,27 +437,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         continue;
       }
 
-      // 断点调试（P2-3）：评估前回调
-      BreakpointHook bpHook = this.breakpointHook;
-      boolean hasBreakpoint = bpHook != null && bpHook.hasBreakpoint(rule.getCode());
-      Map<String, Object> bpFactsSnapshot = null;
-      if (hasBreakpoint) {
-        BreakpointHook.BreakpointAction action =
-            executeBreakpointBeforeEvaluation(bpHook, rule, context, scenario);
-        if (action == BreakpointHook.BreakpointAction.STEP_OVER) {
-          continue;
-        }
-        bpFactsSnapshot = new LinkedHashMap<>(context.getFacts());
-      }
-
       // 执行评估并记录统计/监控/熔断/轨迹
       RuleEvaluationOutcome outcome =
           executeAndRecordRuleEvaluation(rule, context, scenario, "[LiteRule]");
-
-      // 断点调试（P2-3）：评估后回调
-      if (hasBreakpoint) {
-        executeBreakpointAfterEvaluation(bpHook, rule, context, scenario, outcome, bpFactsSnapshot);
-      }
 
       if (outcome.isTriggered) {
         state.triggered.add(outcome.result);
@@ -475,77 +451,6 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     }
 
     return state;
-  }
-
-  /**
-   * 执行断点调试 onBeforeEvaluate 回调
-   *
-   * @param hook 断点 Hook
-   * @param rule 当前规则
-   * @param context 评估上下文
-   * @param scenario 场景
-   * @return 断点动作（STEP_OVER 表示跳过当前规则）
-   */
-  private BreakpointHook.BreakpointAction executeBreakpointBeforeEvaluation(
-      BreakpointHook hook, Rule rule, RuleContext context, String scenario) {
-    final BreakpointHook finalHook = Objects.requireNonNull(hook, "breakpointHook");
-    try {
-      Map<String, Object> factsSnapshot = new LinkedHashMap<>(context.getFacts());
-      BreakpointHook.BreakpointContext beforeCtx =
-          new BreakpointHook.BreakpointContext(
-              "BEFORE",
-              context.getTraceId(),
-              rule.getCode(),
-              rule.getName(),
-              scenario,
-              factsSnapshot);
-      BreakpointHook.BreakpointAction action = finalHook.onBeforeEvaluate(beforeCtx);
-      if (log.isDebugEnabled()) {
-        log.debug("[LiteRule] 规则 {} 命中断点 onBeforeEvaluate action={}", rule.getCode(), action);
-      }
-      return action;
-    } catch (Exception e) {
-      log.debug("[LiteRule] 断点 onBeforeEvaluate 异常: {}", e.getMessage());
-      return null;
-    }
-  }
-
-  /**
-   * 执行断点调试 onAfterEvaluate 回调
-   *
-   * @param hook 断点 Hook
-   * @param rule 当前规则
-   * @param context 评估上下文
-   * @param scenario 场景
-   * @param outcome 评估结果
-   * @param bpFactsSnapshot 事实快照
-   */
-  private void executeBreakpointAfterEvaluation(
-      BreakpointHook hook,
-      Rule rule,
-      RuleContext context,
-      String scenario,
-      RuleEvaluationOutcome outcome,
-      Map<String, Object> bpFactsSnapshot) {
-    final BreakpointHook finalHook = Objects.requireNonNull(hook, "breakpointHook");
-    try {
-      BreakpointHook.BreakpointContext afterCtx =
-          new BreakpointHook.BreakpointContext(
-              "AFTER",
-              context.getTraceId(),
-              rule.getCode(),
-              rule.getName(),
-              scenario,
-              bpFactsSnapshot);
-      afterCtx.setResult(outcome.result);
-      afterCtx.setElapsedMs(outcome.elapsedMs);
-      if (outcome.caughtException != null) {
-        afterCtx.setException(outcome.caughtException);
-      }
-      finalHook.onAfterEvaluate(afterCtx);
-    } catch (Exception e) {
-      log.debug("[LiteRule] 断点 onAfterEvaluate 异常: {}", e.getMessage());
-    }
   }
 
   /**
@@ -771,7 +676,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    * <ul>
    *   <li>返回全部规则结果（含 triggered=false 的未触发结果）
    *   <li>不记录执行统计、监控指标和执行轨迹
-   *   <li>不执行熔断、灰度、断点调试逻辑
+   *   <li>不执行熔断、灰度逻辑
    *   <li>同样遵循租户隔离和环境隔离
    *   <li>同样设置 MDC traceId，确保仿真日志可追踪
    * </ul>
@@ -1119,29 +1024,6 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
   }
 
   /**
-   * 设置断点调试 Hook（P2-3）
-   *
-   * @param breakpointHook 断点 Hook；null 表示禁用断点调试
-   * @since 1.0.0
-   */
-  public void setBreakpointHook(BreakpointHook breakpointHook) {
-    this.breakpointHook = breakpointHook;
-    if (breakpointHook != null) {
-      log.info("[LiteRule] 断点调试 Hook 已注入: {}", breakpointHook.getClass().getSimpleName());
-    }
-  }
-
-  /**
-   * 获取断点调试 Hook（P2-3）
-   *
-   * @return 断点 Hook；未配置返回 null
-   * @since 1.0.0
-   */
-  public BreakpointHook getBreakpointHook() {
-    return breakpointHook;
-  }
-
-  /**
    * 设置模型输入注册表（P3-1 规则+模型融合）
    *
    * <p>注入后，引擎在 {@link #evaluate} 前会调用注册表获取模型输出， 合并到 {@link RuleContext} 的 facts 中。null
@@ -1230,7 +1112,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
   /**
    * 设置并行规则评估器（P2-2）
    *
-   * <p>设置后，当候选规则数 ≥ {@link #parallelThreshold} 且无断点时， 引擎自动切换为并行评估模式。
+   * <p>设置后，当候选规则数 ≥ {@link #parallelThreshold} 时， 引擎自动切换为并行评估模式。
    *
    * @param parallelEvaluator 并行评估器；null 表示始终串行
    * @since 1.0.0
@@ -1273,7 +1155,6 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    * <ul>
    *   <li>并行评估器已注入（{@code parallelEvaluator != null}）
    *   <li>候选规则数 ≥ {@link #parallelThreshold}
-   *   <li>无断点调试 Hook（断点要求串行执行，无法并行化）
    * </ul>
    *
    * @param candidateRules 候选规则列表
@@ -1282,8 +1163,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    */
   private boolean shouldUseParallelEvaluation(List<Rule> candidateRules) {
     return parallelEvaluator != null
-        && candidateRules.size() >= parallelThreshold
-        && breakpointHook == null;
+        && candidateRules.size() >= parallelThreshold;
   }
 
   /**
@@ -1328,7 +1208,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    *   <li>异步执行轨迹记录
    * </ol>
    *
-   * <p>串行路径额外处理断点调试回调（before/after），并行路径额外处理 熔断器预检查和 MDC 传播，这些由各自路径自行实现。
+   * <p>串行路径额外处理灰度路由，并行路径额外处理 熔断器预检查和 MDC 传播，这些由各自路径自行实现。
    *
    * @param rule 规则
    * @param context 规则上下文
@@ -1440,7 +1320,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    * <p>将候选规则委托给 {@link ParallelRuleEvaluator#evaluateParallel}， 按互斥组分组并行评估。每个工作线程通过 {@link
    * #withMdcTraceId} 传播 MDC traceId，确保并行评估期间日志可追踪。
    *
-   * <p>并行路径不支持断点调试（已由 {@link #shouldUseParallelEvaluation} 排除）。 互斥组短路由 {@link
+   * <p>互斥组短路由 {@link
    * ParallelRuleEvaluator} 内部处理。
    *
    * @param candidateRules 候选规则列表
@@ -1482,7 +1362,6 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    * <p>与串行路径的差异：
    *
    * <ul>
-   *   <li>不含断点调试（并行模式不支持）
    *   <li>不含互斥组跟踪（由 ParallelRuleEvaluator 处理）
    *   <li>含 MDC traceId 传播（工作线程需要显式设置）
    * </ul>

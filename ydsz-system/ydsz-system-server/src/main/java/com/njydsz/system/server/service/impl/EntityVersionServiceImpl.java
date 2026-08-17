@@ -1,0 +1,124 @@
+package com.njydsz.system.server.service.impl;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.domain.entity.EntityVersion;
+import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.vo.EntityVersionVO;
+import com.njydsz.system.infra.repository.EntityVersionRepository;
+import com.njydsz.system.server.service.EntityVersionService;
+
+/**
+ * 统一实体版本 Service 实现
+ *
+ * <p>对 {@link EntityVersionService} 接口的完整实现，为 Config/Dict/Variable 提供统一的版本管理能力。
+ * 替代原有的三套独立版本服务实现（ConfigVersionServiceImpl/DictVersionServiceImpl/
+ * VariableVersionServiceImpl）。
+ *
+ * <p><b>核心职责：</b>
+ *
+ * <ul>
+ *   <li><b>版本查询</b>：按资源类型 + 资源键查询历史版本
+ *   <li><b>版本创建</b>：业务 Service 写操作成功后调用
+ *   <li><b>版本回滚</b>：通过回调接口实现资源重建
+ * </ul>
+ *
+ * <p><b>事务边界：</b>所有写方法 {@code @Transactional(rollbackFor = Exception.class)}；
+ * 读方法不开启事务，依赖 MyBatis 自动提交。
+ *
+ * <p><b>多租户：</b>所有方法自动按当前 {@code TenantContext} 隔离，租户过滤由 MyBatis 拦截器注入。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class EntityVersionServiceImpl implements EntityVersionService {
+
+  private final EntityVersionRepository entityVersionRepository;
+
+  @Override
+  public List<EntityVersionVO> listByResourceTypeAndKey(String resourceType, String resourceKey) {
+    return entityVersionRepository.findByTypeAndKey(resourceType, resourceKey).stream()
+        .map(SystemConverter.INSTANT::entityVersionToVO)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public String createVersion(
+      String resourceType,
+      String resourceKey,
+      String resourceGroup,
+      String version,
+      String changeLog,
+      String snapshotJson) {
+    EntityVersion entity = new EntityVersion();
+    entity.setResourceType(resourceType);
+    entity.setResourceKey(resourceKey);
+    entity.setResourceGroup(resourceGroup);
+    entity.setVersion(version);
+    entity.setChangeLog(changeLog);
+    entity.setSnapshotJson(snapshotJson);
+    entity.setEffectiveDate(LocalDateTime.now());
+    EntityVersion saved = entityVersionRepository.save(entity);
+    return saved.getId();
+  }
+
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public String rollbackTo(
+      String resourceType,
+      String resourceKey,
+      String targetVersion,
+      String operatorId,
+      RollbackCallback rollbackCallback) {
+    // 1. 查询目标版本
+    EntityVersion targetVersionEntity =
+        entityVersionRepository
+            .findByTypeAndKeyAndVersion(resourceType, resourceKey, targetVersion)
+            .orElseThrow(
+                () ->
+                    BusinessException.of(SystemExceptionCode.ENTITY_VERSION_NOT_FOUND)
+                        .data("resourceType", resourceType)
+                        .data("resourceKey", resourceKey)
+                        .data("version", targetVersion));
+
+    // 2. 执行回滚回调（由业务方实现资源重建逻辑）
+    String snapshotJson = targetVersionEntity.getSnapshotJson();
+    if (snapshotJson != null && !snapshotJson.isBlank()) {
+      rollbackCallback.execute(snapshotJson);
+    }
+
+    // 3. 创建新版本（标记回滚来源）
+    String newVersion = "v" + System.currentTimeMillis();
+    String changeLog = String.format("回滚自 %s by %s", targetVersion, operatorId);
+    EntityVersion newVersionEntity = new EntityVersion();
+    newVersionEntity.setResourceType(resourceType);
+    newVersionEntity.setResourceKey(resourceKey);
+    newVersionEntity.setResourceGroup(targetVersionEntity.getResourceGroup());
+    newVersionEntity.setVersion(newVersion);
+    newVersionEntity.setChangeLog(changeLog);
+    newVersionEntity.setSnapshotJson(snapshotJson);
+    newVersionEntity.setEffectiveDate(LocalDateTime.now());
+    entityVersionRepository.save(newVersionEntity);
+
+    log.info(
+        "[EntityVersion] 回滚完成: resourceType={}, resourceKey={}, targetVersion={}, newVersion={}",
+        resourceType,
+        resourceKey,
+        targetVersion,
+        newVersion);
+    return newVersionEntity.getId();
+  }
+}

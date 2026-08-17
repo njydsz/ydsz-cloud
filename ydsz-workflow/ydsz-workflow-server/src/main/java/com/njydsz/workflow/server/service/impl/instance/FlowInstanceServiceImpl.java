@@ -64,7 +64,6 @@ import com.njydsz.workflow.server.engine.FlowVariableStrategy;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
-import com.njydsz.workflow.server.service.FlowCanaryService;
 import com.njydsz.workflow.server.service.FlowCcService;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
@@ -89,7 +88,6 @@ import com.njydsz.workflow.server.service.FlowTimerService;
  *       #batchTerminate}（单失败不影响其它）
  *   <li><b>查询能力</b>：按 ID / 按业务关联 / 按发起人 / 按状态 / 按租户 / 待办聚合 / 分页
  *   <li><b>子流程级联</b>：父流程终止时自动终止全部子流程（{@link FlowSubProcessService}）
- *   <li><b>灰度发布</b>：{@link #start} 通过 {@link FlowCanaryService#resolveEffectiveDefinition} 切流
  *   <li><b>三方同步</b>：终止 / 撤回时通过 {@link FlowThirdPartySyncService} 通知钉钉 / 飞书 / 企微
  *   <li><b>事件总线</b>：{@link ApplicationEventPublisher} 异步广播 {@code onInstanceStart / onError} 等
  *   <li><b>幂等性</b>：{@link #start} 基于 {@code (businessType, businessId, tenantId)} 复合唯一索引
@@ -127,7 +125,6 @@ import com.njydsz.workflow.server.service.FlowTimerService;
  * @see FlowInstanceService 接口定义
  * @see FlowInstance 流程实例实体
  * @see FlowAdvancer 流程推进引擎
- * @see FlowCanaryService 灰度发布服务
  * @see FlowSubProcessService 子流程服务
  * @see FlowThirdPartySyncService 三方审批同步服务
  */
@@ -141,9 +138,6 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
   /** 流程定义服务，启动实例时解析流程定义节点和跳转 */
   private final FlowDefinitionService definitionService;
-
-  /** P3-1: 灰度发布服务（启动流程时按 canary 配置切流） */
-  private final FlowCanaryService canaryService;
 
   /** 流程推进引擎，负责节点推进/跳转/网关条件求值 */
   private final FlowAdvancer advancer;
@@ -230,7 +224,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
    * <ol>
    *   <li><b>参数校验</b>：{@code flowCode / businessType / businessId} 必填
    *   <li><b>幂等检查</b>：按 {@code (tenantId, businessType, businessId)} 查已存在活跃实例，存在则直接返回其 ID（防重）
-   *   <li><b>灰度解析</b>：{@link FlowCanaryService#resolveEffectiveDefinition} 按灰度规则选择稳定版或灰度版定义
+   *   <li><b>定义解析</b>：通过 {@link FlowDefinitionService#getPublished} 查询最新已发布流程定义
    *   <li><b>变量策略</b>：通过 {@link FlowVariableStrategy} 注入发起人、业务变量、审批人解析参数
    *   <li><b>实例落库</b>：{@code ydsz_flow_instance} 写入，{@code flowStatus=RUNNING}
    *   <li><b>推进到开始节点</b>：通过 {@link FlowAdvancer} 计算下一节点并创建首个待办任务
@@ -273,14 +267,12 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
       return existing.getId();
     }
 
-    // 1. 查定义
-    // P3-1: 灰度发布 - 启动时按 canary 配置切流到稳定版或灰度版
+    // 1. 查定义 - 直接查询最新已发布流程定义
     FlowDefinition def =
-        canaryService.resolveEffectiveDefinition(
+        definitionService.getPublished(
             dto.getFlowCode(),
-            StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : "1.0",
-            tenantId,
-            dto.getInitiatorId());
+            StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : null,
+            tenantId);
     if (def == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)

@@ -44,6 +44,28 @@ public interface TraceRecorder {
       long durationMs);
 
   /**
+   * 记录一个执行步骤（含成本）。
+   *
+   * <p>P2 增强：增加 cost 参数，用于在链路中直接体现每次 LLM 调用的 Token 成本， 便于按步骤分析成本分布。非 LLM 调用步骤传入 0 即可。
+   *
+   * @param traceId 链路 ID
+   * @param stepType 步骤类型（LLM_CALL / TOOL_CALL / THOUGHT / OBSERVATION）
+   * @param content 步骤内容
+   * @param input 步骤输入
+   * @param output 步骤输出
+   * @param durationMs 耗时（毫秒）
+   * @param cost Token 成本（USD，精确到 6 位小数）
+   */
+  void recordStep(
+      String traceId,
+      String stepType,
+      String content,
+      Object input,
+      Object output,
+      long durationMs,
+    double cost);
+
+  /**
    * 结束执行链路
    *
    * @param traceId 链路 ID
@@ -82,6 +104,9 @@ public interface TraceRecorder {
     /** 耗时（毫秒） */
     private final long durationMs;
 
+    /** Token 成本（USD，精确到 6 位小数；非 LLM 调用步骤为 0） */
+    private final double cost;
+
     /** 创建时间 */
     private final LocalDateTime createdAt;
 
@@ -94,6 +119,19 @@ public interface TraceRecorder {
         Object output,
         long durationMs,
         LocalDateTime createdAt) {
+      this(traceId, stepIndex, stepType, content, input, output, durationMs, 0.0, createdAt);
+    }
+
+    public TraceStep(
+        String traceId,
+        int stepIndex,
+        String stepType,
+        String content,
+        Object input,
+        Object output,
+        long durationMs,
+        double cost,
+        LocalDateTime createdAt) {
       this.traceId = traceId;
       this.stepIndex = stepIndex;
       this.stepType = stepType;
@@ -101,6 +139,7 @@ public interface TraceRecorder {
       this.input = input;
       this.output = output;
       this.durationMs = durationMs;
+      this.cost = cost;
       this.createdAt = createdAt;
     }
 
@@ -130,6 +169,10 @@ public interface TraceRecorder {
 
     public long getDurationMs() {
       return durationMs;
+    }
+
+    public double getCost() {
+      return cost;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -1,6 +1,9 @@
 package com.njydsz.nextwiki.server.service;
 
+import java.net.URI;
 import java.time.Duration;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import lombok.Builder;
 import lombok.Data;
@@ -29,13 +32,13 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  * <p><b>防盗链：</b>
  *
  * <ul>
- *   <li>Referer 校验
+ *   <li>Referer 校验（正则精确域名匹配）
  *   <li>签名 URL（时效性 + IP 绑定）
  *   <li>Token 验证
  * </ul>
  *
- * <p><b>原子性保证：</b>限流逻辑统一使用 {@link RedisRateLimiter#tryAcquireFixedWindow}， 底层基于 Redis Lua 脚本（INCR +
- * EXPIRE 在同一个脚本中执行），避免原 INCR 后 EXPIRE 失败 导致 key 永不过期的限流卡死 bug。
+ * <p><b>原子性保证：</b>限流逻辑统一使用 {@link RedisRateLimiter#tryAcquireFixedWindow}， 底层基于 Redis Lua 脚本（INCR
+ * + EXPIRE 在同一个脚本中执行），避免原 INCR 后 EXPIRE 失败 导致 key 永不过期的限流卡死 bug。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -45,10 +48,6 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
 @RequiredArgsConstructor
 public class DownloadRateLimitService {
 
-  private final RedisStringOps stringOps;
-  private final RedisRateLimiter redisRateLimiter;
-  private final NextwikiProperties properties;
-
   /** Redis Key 前缀 */
   private static final String KEY_USER_RATE = "nextwiki:rate:user:";
 
@@ -57,6 +56,19 @@ public class DownloadRateLimitService {
 
   /** 限流时间窗口：1 分钟 */
   private static final Duration RATE_WINDOW = Duration.ofMinutes(1);
+
+  /**
+   * 域名匹配正则模板：精确匹配主域名及其子域名。
+   *
+   * <p>如 allowedDomain 为 {@code example.com} 时，匹配 {@code example.com}、{@code www.example.com}、{@code
+   * cdn.example.com}，但不匹配 {@code evil-example.com}。
+   */
+  private static final String DOMAIN_REGEX_TEMPLATE =
+      "^(https?://)?([a-zA-Z0-9-]+\\.)*%s(:[0-9]+)?(/.*)?$";
+
+  private final RedisStringOps stringOps;
+  private final RedisRateLimiter redisRateLimiter;
+  private final NextwikiProperties properties;
 
   /**
    * 检查下载限流（用户级 + IP 级双重固定窗口限流）。
@@ -94,22 +106,60 @@ public class DownloadRateLimitService {
   }
 
   /**
-   * 验证 Referer 防盗链（子域名/路径包含即放行）。
+   * 验证 Referer 防盗链（正则精确域名匹配）。
    *
-   * <p>空 Referer 直接拒绝（防止无来源直链盗刷）；匹配规则为 {@code referer.contains(allowedDomain)}，
-   * 属宽松前缀/包含匹配，生产环境建议收紧为正则或精确域名。
+   * <p>解析 {@code Referer} 头的 host，与配置的允许域名列表逐一正则匹配（精确匹配主域名及其子域名，防止 {@code
+   * evil-example.com} 绕过 {@code example.com} 的校验）。空 Referer 是否允许由配置决定（{@code
+   * nextwiki.download.allow-empty-referer}）。
+   *
+   * @param referer 请求 Referer 头
+   * @param allowedDomains 允许的来源域名列表（如 {@code ["example.com", "cdn.example.com"]}）
+   * @return 是否通过防盗链校验
+   * @complexity O(n)（n 为 allowedDomains 数量；URL 解析 + 正则匹配）
+   * @security 仅作基础来源校验，不替代签名 URL 的强校验
+   */
+  public boolean verifyReferer(String referer, List<String> allowedDomains) {
+    // 空 Referer 按配置决定
+    if (referer == null || referer.isEmpty()) {
+      boolean allowEmpty = properties.getDownload().isAllowEmptyReferer();
+      if (!allowEmpty) {
+        log.warn("[DownloadRateLimitService] 空 Referer，拒绝访问");
+      }
+      return allowEmpty;
+    }
+
+    // 解析 Referer 的 host
+    String refererHost = extractHost(referer);
+    if (refererHost == null) {
+      log.warn("[DownloadRateLimitService] 无法解析 Referer host: {}", referer);
+      return false;
+    }
+
+    // 逐一正则匹配允许域名
+    for (String allowedDomain : allowedDomains) {
+      if (matchesDomain(refererHost, allowedDomain)) {
+        return true;
+      }
+    }
+
+    log.warn(
+        "[DownloadRateLimitService] Referer 校验失败: refererHost={}, allowedDomains={}",
+        refererHost,
+        allowedDomains);
+    return false;
+  }
+
+  /**
+   * 验证单个域名的 Referer（向后兼容，内部委托 {@link #verifyReferer(String, List)}）。
    *
    * @param referer 请求 Referer 头
    * @param allowedDomain 允许的来源域名（如 {@code example.com}）
    * @return 是否通过防盗链校验
-   * @complexity O(1)（字符串包含判断）
-   * @security 仅作基础来源校验，不替代签名 URL 的强校验
+   * @deprecated 使用 {@link #verifyReferer(String, List)} 替代，支持多域名配置
    */
+  @Deprecated
   public boolean verifyReferer(String referer, String allowedDomain) {
-    if (referer == null || referer.isEmpty()) {
-      return false;
-    }
-    return referer.contains(allowedDomain);
+    return verifyReferer(referer, List.of(allowedDomain));
   }
 
   /**
@@ -163,6 +213,53 @@ public class DownloadRateLimitService {
     return storageKey;
   }
 
+  /**
+   * 解析 Referer 头中的主机名。
+   *
+   * @param referer Referer 头值
+   * @return host（如 {@code www.example.com}）；解析失败返回 {@code null}
+   */
+  private String extractHost(String referer) {
+    try {
+      URI uri = URI.create(referer);
+      String host = uri.getHost();
+      if (host != null) {
+        return host.toLowerCase();
+      }
+      // 处理无 scheme 的情况（如 //example.com/path）
+      String lower = referer.toLowerCase();
+      if (lower.startsWith("//")) {
+        String remainder = lower.substring(2);
+        int slashIdx = remainder.indexOf('/');
+        return slashIdx > 0 ? remainder.substring(0, slashIdx) : remainder;
+      }
+      return null;
+    } catch (Exception e) {
+      log.warn("[DownloadRateLimitService] Referer 解析异常: {}", referer);
+      return null;
+    }
+  }
+
+  /**
+   * 判断 Referer host 是否匹配允许的域名。
+   *
+   * <p>精确匹配主域名及其子域名（如 example.com 匹配 www.example.com），但不匹配包含该字符串的其他域名（如
+   * evil-example.com）。
+   *
+   * @param refererHost 从 Referer 提取的 host
+   * @param allowedDomain 允许的域名（如 {@code example.com}）
+   * @return 是否匹配
+   */
+  private boolean matchesDomain(String refererHost, String allowedDomain) {
+    if (refererHost == null || allowedDomain == null || allowedDomain.isEmpty()) {
+      return false;
+    }
+    // 精确主域名及其子域名匹配
+    String regex =
+        String.format(DOMAIN_REGEX_TEMPLATE, Pattern.quote(allowedDomain.toLowerCase()));
+    return Pattern.matches(regex, refererHost);
+  }
+
   /** 限流结果 */
   @Data
   @Builder
@@ -194,7 +291,7 @@ public class DownloadRateLimitService {
      * @return 拒绝结果，{@code allowed=false}
      */
     public static RateLimitResult blocked(String message) {
-      return RateLimitResult.builder().allowed(false).message(message).build();
+      return RateLimitResult.builder().allowed(false).message(message);
     }
   }
 }

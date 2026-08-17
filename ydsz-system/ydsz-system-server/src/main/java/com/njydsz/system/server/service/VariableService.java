@@ -3,7 +3,6 @@ package com.njydsz.system.server.service;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.vo.VariableVO;
 
 /**
@@ -93,7 +92,7 @@ public interface VariableService {
    * @param dto 变量 DTO
    * @return 新建变量主键 ID
    */
-  String save(VariableDTO dto);
+  String save(VariableVO vo);
 
   /**
    * 更新系统变量
@@ -103,7 +102,7 @@ public interface VariableService {
    * @param dto 变量 DTO（{@code id} 必填）
    * @return 是否成功
    */
-  boolean updateById(VariableDTO dto);
+  boolean updateById(VariableVO vo);
 
   /**
    * 删除系统变量（逻辑删除）
@@ -114,4 +113,24 @@ public interface VariableService {
    * @return 是否成功
    */
   boolean removeById(String id);
+
+  /**
+   * 回滚变量到指定版本
+   *
+   * <p>执行链路：
+   *
+   * <ol>
+   *   <li>校验目标版本是否存在
+   *   <li>查询当前变量作为回滚前快照（用于审计）
+   *   <li>从目标快照更新变量
+   *   <li>创建新版本记录（标记回滚来源）
+   *   <li>失效缓存
+   * </ol>
+   *
+   * @param resourceKey 变量键
+   * @param targetVersion 目标版本号
+   * @param operatorId 操作人 ID
+   * @return 新创建的回滚版本 ID
+   */
+  String rollbackTo(String resourceKey, String targetVersion, String operatorId);
 }

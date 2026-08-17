@@ -46,7 +46,10 @@ public enum LiteruleExceptionCode implements ExceptionCode {
   // ==================== B93301-B93399 测试用例/DSL ====================
   TEST_CASE_NOT_FOUND("B93301", "literule.test.case.not.found", 404),
   DSL_PARSE_ERROR("B93302", "literule.dsl.parse.error"),
-  VARIABLE_DEF_NOT_FOUND("B93303", "literule.variable.def.not.found", 404);
+  VARIABLE_DEF_NOT_FOUND("B93303", "literule.variable.def.not.found", 404),
+
+  // ==================== B93401-B93499 模型调用 ====================
+  MODEL_INVOCATION_ERROR("B93401", "literule.model.invocation.error");
 
   /** 错误码 */
   private final String code;

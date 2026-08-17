@@ -6,9 +6,9 @@ import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.gateway.constant.InternalSignatureHeaderConstants;
 
 /**
- * 网关层内部常量定义
+ * 网关层内部常量定义。
  *
- * <p>网关与下游服务之间约定的内部请求头常量。 网关负责注入这些头，下游服务通过 {@code BaseAuthFilter} 解析。
+ * <p>网关与下游服务之间约定的内部请求头常量。网关负责注入这些头，下游服务通过 {@code BaseAuthFilter} 解析。
  *
  * <h3>使用约束</h3>
  *
@@ -18,9 +18,6 @@ import com.njydsz.gateway.constant.InternalSignatureHeaderConstants;
  *   <li>新增内部头时必须同步更新 PathGuard 列表 + 下游 BaseAuthFilter 解析逻辑
  *   <li>下游服务信任网关的前提是 {@link com.njydsz.gateway.config.InternalHeaderSigner} 签名校验通过
  * </ul>
- *
- * <p><b>常量治理（v1.2.0）：</b>所有原来硬编码的请求头字符串已改为委托 {@link HeaderConstants} 中的权威定义，
- * 消除跨模块重复声明，确保请求头键名全局唯一可控。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -48,18 +45,6 @@ public final class GatewayConstants {
 
   /** 内部头签名请求头（委托 {@link InternalSignatureHeaderConstants#X_INTERNAL_SIG}） */
   public static final String HEADER_INTERNAL_SIG = InternalSignatureHeaderConstants.X_INTERNAL_SIG;
-
-  /** 内部头签名时间戳请求头（委托 {@link InternalSignatureHeaderConstants#X_INTERNAL_TS}） */
-  public static final String HEADER_INTERNAL_TS = InternalSignatureHeaderConstants.X_INTERNAL_TS;
-
-  /**
-   * 内部头签名 nonce 请求头（P0-6 防重放）（委托 {@link HeaderConstants#X_INTERNAL_NONCE}）。
-   *
-   * <p>网关为每个请求生成唯一 nonce，纳入 HMAC 签名 payload 后透传给下游。 下游服务使用 {@code
-   * NonceCache.verifyAndConsume(nonce)} 校验是否重复， 配合时间戳窗口形成"一次性签名"机制。
-   */
-  public static final String HEADER_INTERNAL_NONCE =
-      InternalSignatureHeaderConstants.X_INTERNAL_NONCE;
 
   /** 租户 ID 请求头（委托 {@link DataPermissionHeaderConstants#X_TENANT_ID}） */
   public static final String HEADER_TENANT_ID = DataPermissionHeaderConstants.X_TENANT_ID;

@@ -3,9 +3,8 @@ package com.njydsz.system.server.service;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.system.domain.dto.DictTypeDTO;
-import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.system.domain.vo.DictTypeVO;
+import com.njydsz.system.domain.query.DictPageQuery;
 
 /**
  * 字典类型 Service 接口
@@ -57,7 +56,7 @@ public interface DictService {
    * @return 新建字典类型主键 ID
    * @throws com.njydsz.common.exception.BizException 当 {@code typeCode} 已存在时抛出
    */
-  String save(DictTypeDTO dto);
+  String save(DictTypeVO vo);
 
   /**
    * 更新字典类型
@@ -67,7 +66,7 @@ public interface DictService {
    * @param dto 字典类型 DTO（{@code id} 必填）
    * @return 是否成功
    */
-  boolean updateById(DictTypeDTO dto);
+  boolean updateById(DictTypeVO vo);
 
   /**
    * 删除字典类型

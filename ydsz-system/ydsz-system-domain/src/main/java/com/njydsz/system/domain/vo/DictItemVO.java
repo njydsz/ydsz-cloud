@@ -1,13 +1,22 @@
 package com.njydsz.system.domain.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.safe.annotation.Xss;
+import com.njydsz.system.domain.common.TreeNode;
+
+import java.util.List;
 
 /**
- * 字典项 VO
+ * 字典项 VO（兼 DTO）
  *
- * <p>对应 {@code ydsz_dict_item} 表的展示视图，是「字典中心」列表 / 详情接口的返回值类型， 也是前端下拉框、单选框、级联选择器、Tag
- * 组件的<b>核心数据载体</b>。
+ * <p>对应 {@code ydsz_dict_item} 表的展示视图和写入参数，是「字典中心」列表 / 详情 / 创建 / 更新接口的通用载体，
+ * 也是前端下拉框、单选框、级联选择器、Tag 组件的<b>核心数据载体</b>。
  *
  * <p>由 {@link com.njydsz.system.domain.converter.SystemConverter} 从 {@link
  * com.njydsz.system.domain.entity.DictItem} 实体转换而来。
@@ -36,22 +45,32 @@ import lombok.Data;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.system.domain.entity.DictItem 字典项实体
- * @see com.njydsz.system.domain.dto.DictItemDTO 字典项 DTO
  * @see DictTypeVO 字典类型 VO
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @Schema(description = "字典项视图对象")
-public class DictItemVO {
+public class DictItemVO implements TreeNode<String> {
 
-  @Schema(description = "主键 ID")
+  @Schema(description = "主键 ID（更新时必填）")
   private String id;
 
+  @NotBlank(message = "字典类型编码不能为空")
+  @Size(max = 64, message = "字典类型编码长度不能超过64")
+  @Xss(message = "字典类型编码包含非法内容")
   @Schema(description = "所属字典类型编码")
   private String typeCode;
 
+  @NotBlank(message = "字典项编码不能为空")
+  @Size(max = 64, message = "字典项编码长度不能超过64")
+  @Xss(message = "字典项编码包含非法内容")
   @Schema(description = "字典项编码")
   private String itemCode;
 
+  @NotBlank(message = "字典项展示值不能为空")
+  @Size(max = 255, message = "字典项展示值长度不能超过255")
+  @Xss(message = "字典项展示值包含非法内容")
   @Schema(description = "字典项展示值")
   private String itemValue;
 
@@ -61,12 +80,45 @@ public class DictItemVO {
   @Schema(description = "父级字典项 ID（0=根）")
   private String parentId;
 
+  @Xss(message = "字典项业务说明包含非法内容")
   @Schema(description = "字典项业务说明")
   private String description;
 
+  @Xss(message = "扩展属性包含非法内容")
   @Schema(description = "扩展属性 JSON")
   private String extJson;
 
   @Schema(description = "启用状态: ENABLED/DISABLED")
   private String status;
+
+  /** 子节点列表（树形结构） */
+  @Schema(description = "子节点列表")
+  private List<DictItemVO> children;
+
+  @Override
+  public String getId() {
+    return id;
+  }
+
+  @Override
+  public String getParentId() {
+    return parentId;
+  }
+
+  @Override
+  public List<DictItemVO> getChildren() {
+    return children;
+  }
+
+  @Override
+  public void setChildren(List<? extends TreeNode<String>> children) {
+    // 安全类型转换：DictItemVO 的 children 字段类型是 List<DictItemVO>
+    if (children == null) {
+      this.children = null;
+    } else {
+      this.children = children.stream()
+          .map(DictItemVO.class::cast)
+          .collect(java.util.stream.Collectors.toList());
+    }
+  }
 }

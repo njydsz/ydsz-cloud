@@ -45,6 +45,9 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
  *   <li>所有节点完成后，更新 DAG 实例终态（SUCCESS/FAILED/PARTIAL_SUCCESS）
  * </ol>
  *
+ * <p><b>精简方向</b>：当前仅推荐使用 TASK 类型和线性依赖的 DAG。控制节点（CONDITION/LOOP/PARALLEL_GATEWAY）
+ * 已标记废弃，将在后续版本移除，建议使用工作流引擎（如 Flowable/Camunda）替代复杂编排场景。
+ *
  * <h3>跨节点上下文传递（P2-5）</h3>
  *
  * <p>节点执行结果写入 DAG 实例级上下文（{@code contextJson}）， 后继节点可通过 {@link JobDagInstanceMapper#updateContext}

@@ -203,6 +203,9 @@ public class NextwikiProperties {
 
     /** 签名 URL 有效期（秒），默认 1 小时 */
     private long signedUrlExpireSeconds = 3600L;
+
+    /** 是否允许空 Referer（如浏览器直接访问）；默认 false（拒绝空 Referer 防直链盗刷） */
+    private boolean allowEmptyReferer = false;
   }
 
   /**

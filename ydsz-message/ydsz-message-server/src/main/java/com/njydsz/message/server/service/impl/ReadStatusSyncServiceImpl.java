@@ -20,7 +20,6 @@ import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
 import com.njydsz.message.server.realtime.RealtimePushService;
-import com.njydsz.message.server.service.core.DeliveryTimeOptimizer;
 import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
 
 /**
@@ -46,9 +45,6 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
 
   /** 实时推送服务（已读状态变更通知） */
   private final RealtimePushService realtimePushService;
-
-  /** 智能推送时间优化器（记录用户活跃行为） */
-  private final DeliveryTimeOptimizer deliveryTimeOptimizer;
 
   /**
    * 标记单条消息已读。
@@ -87,8 +83,6 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
           userId,
           "MESSAGE_READ",
           Map.of("msgId", msgId, "status", "READ", "timestamp", System.currentTimeMillis()));
-      // 记录用户活跃行为（供智能推送时间优化使用）
-      deliveryTimeOptimizer.recordActivity(userId, null);
       log.info("[ReadStatus] 消息已读: msgId={} user={}", msgId, userId);
     }
     return updated > 0;
@@ -125,7 +119,6 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
           userId,
           "MESSAGE_READ_BATCH",
           Map.of("msgIds", msgIds, "count", updated, "timestamp", System.currentTimeMillis()));
-      deliveryTimeOptimizer.recordActivity(userId, null);
       log.info("[ReadStatus] 批量消息已读: user={} count={}", userId, updated);
     }
     return updated;
@@ -163,7 +156,6 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     if (updated > 0) {
       realtimePushService.pushToUser(
           userId, "NOTIFICATION_READ", Map.of("notificationId", notificationId, "status", "READ"));
-      deliveryTimeOptimizer.recordActivity(userId, "INAPP");
       log.info("[ReadStatus] 通知已读: id={} user={}", notificationId, userId);
     }
     return updated > 0;
@@ -201,7 +193,6 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
           userId,
           "NOTIFICATION_READ_ALL",
           Map.of("count", updated, "bizType", bizType == null ? "ALL" : bizType));
-      deliveryTimeOptimizer.recordActivity(userId, "INAPP");
       log.info("[ReadStatus] 全部通知已读: user={} bizType={} count={}", userId, bizType, updated);
     }
     return updated;

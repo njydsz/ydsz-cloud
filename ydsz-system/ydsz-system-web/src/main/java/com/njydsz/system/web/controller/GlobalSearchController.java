@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,6 +37,7 @@ import com.njydsz.common.search.service.UnifiedSearchService;
  *   GET  /api/v1/search             - 全局搜索（跨模块聚合）
  *   GET  /api/v1/search/suggest     - 搜索自动补全建议
  *   GET  /api/v1/search/did-you-mean - "您是不是要找"纠错建议
+ *   POST /api/v1/search/rebuild     - 重建搜索索引缓存
  * </pre>
  *
  * <p><b>核心职责：</b>
@@ -106,7 +108,6 @@ public class GlobalSearchController {
    */
   @GetMapping
   @Operation(summary = "全局搜索", description = "跨所有模块的统一搜索")
-  @Audit(action = AuditAction.QUERY, module = "SYSTEM", content = "全局搜索")
   @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_SEARCH)
   public BaseResponse<SearchResponse> search(
       @RequestParam String keyword,
@@ -171,6 +172,26 @@ public class GlobalSearchController {
   @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_SEARCH)
   public BaseResponse<SearchSuggestion> didYouMean(@RequestParam String keyword) {
     return BaseResponse.success(unifiedSearchService.didYouMean(keyword));
+  }
+
+  /**
+   * 重建搜索索引缓存
+   *
+   * <p>清空 {@link UnifiedSearchService} 的本地缓存，强制下次查询重新从 ES / DB 加载最新数据。
+   *
+   * <p>典型场景：① 大批量数据导入后立即使搜索结果生效；② ES 索引切换 / 重建后清缓存； ③ 紧急修复搜索结果不一致。
+   *
+   * @param userId 操作用户 ID（来自请求头 {@code X-User-Id}，仅用于审计日志记录）
+   * @return 空响应
+   */
+  @PostMapping("/rebuild")
+  @Operation(summary = "重建搜索索引缓存", description = "清空搜索本地缓存，强制下次查询重新加载")
+  @Audit(action = AuditAction.UPDATE, module = "SYSTEM", content = "重建搜索索引缓存")
+  public BaseResponse<Void> rebuildIndex(
+      @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId) {
+    unifiedSearchService.clearCache();
+    log.info("[GlobalSearch] 索引缓存已清除, userId={}", userId);
+    return BaseResponse.success();
   }
 
   /** 分页安全上限：防止 pageSize=999999 导致深度分页 OOM */

@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,12 +20,12 @@ import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.system.domain.dto.DictItemDTO;
+import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.entity.DictItem;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.infra.repository.DictRepository;
 import com.njydsz.system.server.service.DictItemBatchService;
-import com.njydsz.system.server.service.DictVersionService;
+import com.njydsz.system.server.service.EntityVersionService;
 
 /**
  * 字典项批量操作 Service 实现
@@ -52,14 +51,11 @@ import com.njydsz.system.server.service.DictVersionService;
 @RequiredArgsConstructor
 public class DictItemBatchServiceImpl implements DictItemBatchService {
 
-  /** MyBatis-Plus SqlSessionFactory（用于获取 IdentifierGenerator 预生成主键） */
-  private final SqlSessionFactory sqlSessionFactory;
-
   /** 字典仓储（用于批量插入 + 唯一性校验） */
   private final DictRepository dictRepository;
 
-  /** 字典版本服务（用于创建批量快照） */
-  private final DictVersionService dictVersionService;
+  /** 统一实体版本服务（用于创建批量快照） */
+  private final EntityVersionService entityVersionService;
 
   /** Spring Cache 管理器（用于失效本地缓存，与 {@link DictItemServiceImpl} 的 @CacheEvict 行为一致） */
   private final CacheManager cacheManager;
@@ -87,7 +83,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public Map<String, Object> batchSave(List<DictItemDTO> items) {
+  public Map<String, Object> batchSave(List<DictItemVO> items) {
     if (items == null || items.isEmpty()) {
       throw BusinessException.of(SystemExceptionCode.PARAM_ERROR).data("reason", "字典项列表不能为空");
     }
@@ -100,7 +96,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
 
     // 3. 单次快照：按 typeCode 分组，每个 typeCode 只生成一个版本快照
     Set<String> typeCodes =
-        items.stream().map(DictItemDTO::getTypeCode).collect(Collectors.toSet());
+        items.stream().map(DictItemVO::getTypeCode).collect(Collectors.toSet());
     String version = "v" + System.currentTimeMillis();
     for (String typeCode : typeCodes) {
       createSnapshotVersion(typeCode, version, "批量新增字典项");
@@ -130,10 +126,10 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
    * @param items 字典项列表
    * @throws BusinessException 当批量数据中存在重复项时抛出
    */
-  private void validateInnerDuplication(List<DictItemDTO> items) {
+  private void validateInnerDuplication(List<DictItemVO> items) {
     Set<String> innerKeySet = new HashSet<>();
     for (int i = 0; i < items.size(); i++) {
-      DictItemDTO item = items.get(i);
+      DictItemVO item = items.get(i);
       String key = item.getTypeCode() + "/" + item.getItemCode();
       if (!innerKeySet.add(key)) {
         throw BusinessException.of(SystemExceptionCode.DICT_ITEM_CODE_DUPLICATE)
@@ -150,9 +146,9 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
    * @param items 字典项列表
    * @throws BusinessException 当某条数据已存在时抛出
    */
-  private void validateDbUniqueness(List<DictItemDTO> items) {
+  private void validateDbUniqueness(List<DictItemVO> items) {
     int index = 0;
-    for (DictItemDTO item : items) {
+    for (DictItemVO item : items) {
       index++;
       QueryWrapper<DictItem> checkWrapper = new QueryWrapper<>();
       checkWrapper.eq("type_code", item.getTypeCode()).eq("item_code", item.getItemCode());
@@ -178,7 +174,13 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
   private void createSnapshotVersion(String typeCode, String version, String changeLog) {
     List<DictItem> snapshot = dictRepository.getDictItemMapper().listEnabledByTypeCode(typeCode);
     String snapshotJson = YdszJson.toJson(snapshot);
-    dictVersionService.createVersion(typeCode, version, changeLog, snapshotJson);
+    entityVersionService.createVersion(
+        EntityVersionService.RESOURCE_TYPE_DICT,
+        typeCode,
+        "",
+        version,
+        changeLog,
+        snapshotJson);
   }
 
   /**
@@ -192,19 +194,17 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
    * @param dto 字典项 DTO
    * @return 字典项实体（含预生成 ID 和审计字段）
    */
-  private DictItem toEntityWithId(DictItemDTO dto) {
+  private DictItem toEntityWithId(DictItemVO vo) {
     DictItem entity = new DictItem();
-    Object generatedId =
-        sqlSessionFactory.getConfiguration().getGlobalConfig().getIdentifierGenerator().nextId(dto);
-    entity.setId(generatedId != null ? generatedId.toString() : null);
-    entity.setTypeCode(dto.getTypeCode());
-    entity.setItemCode(dto.getItemCode());
-    entity.setItemValue(dto.getItemValue());
-    entity.setSortOrder(dto.getSortOrder());
-    entity.setParentId(dto.getParentId());
-    entity.setDescription(dto.getDescription());
-    entity.setExtJson(dto.getExtJson());
-    entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
+    entity.setId(com.baomidou.mybatisplus.core.toolkit.IdWorker.getIdStr());
+    entity.setTypeCode(vo.getTypeCode());
+    entity.setItemCode(vo.getItemCode());
+    entity.setItemValue(vo.getItemValue());
+    entity.setSortOrder(vo.getSortOrder());
+    entity.setParentId(vo.getParentId());
+    entity.setDescription(vo.getDescription());
+    entity.setExtJson(vo.getExtJson());
+    entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
     entity.setDeleted(0);
     entity.setRevision(0);
     entity.setCreatedAt(LocalDateTime.now());

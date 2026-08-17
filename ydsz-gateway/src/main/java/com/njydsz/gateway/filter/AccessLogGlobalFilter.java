@@ -61,7 +61,7 @@ import com.njydsz.gateway.config.GatewayMetrics;
  *
  * <h3>执行顺序</h3>
  *
- * <p>{@code HIGHEST_PRECEDENCE + 1}，在 {@link IpWhitelistFilter}(+5) 和 {@link AuthGlobalFilter}(+10)
+ * <p>{@code HIGHEST_PRECEDENCE + 1}，在 {@link IpAccessControlFilter}(+3) 和 {@link AuthGlobalFilter}(+10)
  * 之前执行，确保记录所有请求（含被拒绝的请求）。
  *
  * <h3>日志级别</h3>

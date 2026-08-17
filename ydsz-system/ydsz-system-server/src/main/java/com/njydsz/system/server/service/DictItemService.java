@@ -3,7 +3,6 @@ package com.njydsz.system.server.service;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.vo.DictItemVO;
 
 /**
@@ -82,6 +81,23 @@ public interface DictItemService {
   List<DictItemVO> listChildren(String parentId);
 
   /**
+   * 构建字典项树形结构。
+   *
+   * <p>将指定类型编码下的所有字典项构建为树形结构，根节点的父级 ID 为 "0"。
+   *
+   * <p>使用示例：
+   *
+   * <pre>{@code
+   * List<DictItemVO> tree = dictItemService.buildTree("region");
+   * // 返回省级列表，每个省级节点包含 cities 子节点，每个市级节点包含 districts 子节点
+   * }</pre>
+   *
+   * @param typeCode 字典类型编码
+   * @return 树形结构根节点列表
+   */
+  List<DictItemVO> buildTree(String typeCode);
+
+  /**
    * 分页查询字典项（支持搜索过滤）
    *
    * <p>管理后台「字典项管理」列表数据源；不走缓存（数据量可控）。
@@ -114,7 +130,7 @@ public interface DictItemService {
    * @param dto 字典项 DTO
    * @return 新建字典项主键 ID
    */
-  String save(DictItemDTO dto);
+  String save(DictItemVO vo);
 
   /**
    * 更新字典项（自动记录版本快照）
@@ -122,7 +138,7 @@ public interface DictItemService {
    * @param dto 字典项 DTO（{@code id} 必填）
    * @return 是否成功
    */
-  boolean updateById(DictItemDTO dto);
+  boolean updateById(DictItemVO vo);
 
   /**
    * 删除字典项（自动记录版本快照）
@@ -131,4 +147,24 @@ public interface DictItemService {
    * @return 是否成功
    */
   boolean removeById(String id);
+
+  /**
+   * 回滚字典到指定版本
+   *
+   * <p>执行链路：
+   *
+   * <ol>
+   *   <li>校验目标版本是否存在
+   *   <li>物理删除当前字典项
+   *   <li>从目标快照重建字典项
+   *   <li>创建新版本记录（标记回滚来源）
+   *   <li>失效缓存
+   * </ol>
+   *
+   * @param typeCode 字典类型编码
+   * @param targetVersion 目标版本号
+   * @param operatorId 操作人 ID
+   * @return 新创建的回滚版本 ID
+   */
+  String rollbackTo(String typeCode, String targetVersion, String operatorId);
 }

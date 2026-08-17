@@ -21,8 +21,8 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.userinfo.domain.dto.post.CompanyPostDTO;
-import com.njydsz.userinfo.domain.dto.put.CompanyPutDTO;
+import com.njydsz.userinfo.domain.dto.create.CompanyCreateDTO;
+import com.njydsz.userinfo.domain.dto.update.CompanyUpdateDTO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.server.service.CompanyService;
 
@@ -115,7 +115,7 @@ public class CompanyController {
   @Idempotent(key = "ydsz:userinfo:CompanyController:create:lock", ttlSeconds = 5)
   @PostMapping
   @Operation(summary = "创建公司")
-  public BaseResponse<String> create(@Valid @RequestBody CompanyPostDTO dto) {
+  public BaseResponse<String> create(@Valid @RequestBody CompanyCreateDTO dto) {
     return BaseResponse.success(service.create(dto));
   }
 
@@ -138,7 +138,7 @@ public class CompanyController {
   @RateLimit(resource = "userinfo.company.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新公司")
-  public BaseResponse<Boolean> update(@Valid @RequestBody CompanyPutDTO dto) {
+  public BaseResponse<Boolean> update(@Valid @RequestBody CompanyUpdateDTO dto) {
     return BaseResponse.success(service.update(dto));
   }
 

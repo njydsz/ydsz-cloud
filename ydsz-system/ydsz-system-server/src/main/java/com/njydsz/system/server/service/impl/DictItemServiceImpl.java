@@ -18,15 +18,16 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.system.domain.common.TreeBuilder;
 import com.njydsz.system.domain.converter.SystemConverter;
-import com.njydsz.system.domain.dto.DictItemDTO;
+import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.entity.DictItem;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.infra.repository.DictRepository;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.DictItemService;
-import com.njydsz.system.server.service.DictVersionService;
+import com.njydsz.system.server.service.EntityVersionService;
 
 /**
  * 字典项 Service 实现
@@ -42,7 +43,7 @@ import com.njydsz.system.server.service.DictVersionService;
  *   <li><b>缓存读</b>：{@link #getByTypeAndCode}（单 key） / {@link #listEnabledByTypeCode}（列表） — 走
  *       ydsz-common-cache 本地缓存 + Spring Cache {@code @Cacheable} 注解
  *   <li><b>树形结构</b>：{@link #listChildren} — 支持「省 / 市 / 区县」三级级联、行政区划、组织架构等场景
- *   <li><b>版本快照</b>：写操作成功后<b>同步</b>调用 {@link DictVersionService#createVersion} 记录变更前的全量字典项 JSON 快照
+ *   <li><b>版本快照</b>：写操作成功后<b>同步</b>调用 {@link EntityVersionService#createVersion} 记录变更前的全量字典项 JSON 快照
  *   <li><b>唯一性校验</b>：保存前校验 {@code (typeCode, itemCode)} 组合唯一性
  * </ul>
  *
@@ -88,7 +89,7 @@ import com.njydsz.system.server.service.DictVersionService;
  * List<DictItemVO> citiesOfZJ = dictItemService.listChildren(provinces.get(0).getId());
  *
  * // 管理后台新增字典项（自动创建版本快照）
- * String id = dictItemService.save(DictItemDTO.builder()
+ * String id = dictItemService.save(DictItemVO.builder()
  *     .typeCode("user_status").itemCode("RESIGNED")
  *     .itemValue("离职").sortOrder(40).build());
  * }</pre>
@@ -97,7 +98,7 @@ import com.njydsz.system.server.service.DictVersionService;
  * @since 1.0.0
  * @see DictItemService 字典项 Service 接口
  * @see DictServiceImpl 字典类型 Service 实现
- * @see DictVersionService 字典版本 Service（写操作触发版本快照）
+ * @see EntityVersionService 统一实体版本 Service（写操作触发版本快照）
  * @see com.njydsz.system.domain.entity.DictItem 字典项实体
  */
 @Slf4j
@@ -111,8 +112,8 @@ public class DictItemServiceImpl implements DictItemService {
   /** 系统监控指标采集器 */
   private final SystemMetrics metrics;
 
-  /** 字典版本服务，用于记录变更快照 */
-  private final DictVersionService dictVersionService;
+  /** 统一实体版本服务，用于记录变更快照 */
+  private final EntityVersionService entityVersionService;
 
   /**
    * 根据主键查询字典项（不走缓存，直接走 DB）
@@ -216,6 +217,29 @@ public class DictItemServiceImpl implements DictItemService {
   }
 
   /**
+   * 构建字典项树形结构。
+   *
+   * <p>将指定类型编码下的所有字典项构建为树形结构，根节点的父级 ID 为 "0"。
+   *
+   * <p>本方法<b>不走缓存</b>，由调用方按需缓存；树形结构变化频次低，建议调用方做本地缓存。
+   *
+   * @param typeCode 字典类型编码
+   * @return 树形结构根节点列表
+   */
+  @Override
+  public List<DictItemVO> buildTree(String typeCode) {
+    // 查询指定类型的所有字典项
+    QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
+    wrapper.eq("type_code", typeCode).orderByAsc("sort_order");
+    List<DictItemVO> flatList = dictRepository.getDictItemMapper().selectList(wrapper).stream()
+        .map(SystemConverter.INSTANT::entityToVO)
+        .collect(Collectors.toList());
+
+    // 使用 TreeBuilder 构建树形结构
+    return TreeBuilder.build(flatList, "0");
+  }
+
+  /**
    * 分页查询字典项（管理后台列表页）
    *
    * <p>支持按 {@code typeCode} 精确匹配、{@code itemCode} 模糊匹配、{@code status} 精确匹配进行过滤， 按 {@code
@@ -280,18 +304,18 @@ public class DictItemServiceImpl implements DictItemService {
   @Override
   @CacheEvict(value = CacheConstants.SYSTEM_DICT_ITEM_CACHE, allEntries = true)
   @Transactional(rollbackFor = Exception.class)
-  public String save(DictItemDTO dto) {
+  public String save(DictItemVO vo) {
     // 唯一性校验：(typeCode, itemCode) 组合不能重复
     QueryWrapper<DictItem> checkWrapper = new QueryWrapper<>();
-    checkWrapper.eq("type_code", dto.getTypeCode()).eq("item_code", dto.getItemCode());
+    checkWrapper.eq("type_code", vo.getTypeCode()).eq("item_code", vo.getItemCode());
     if (dictRepository.getDictItemMapper().selectCount(checkWrapper) > 0) {
       throw BusinessException.of(SystemExceptionCode.DICT_ITEM_CODE_DUPLICATE)
-          .data("typeCode", dto.getTypeCode())
-          .data("itemCode", dto.getItemCode());
+          .data("typeCode", vo.getTypeCode())
+          .data("itemCode", vo.getItemCode());
     }
     // 写操作前抓取「变更前」快照，支持后续版本回滚
-    createSnapshotVersion(dto.getTypeCode(), "新增字典项: " + dto.getItemCode());
-    DictItem entity = toEntity(dto);
+    createSnapshotVersion(vo.getTypeCode(), "新增字典项: " + vo.getItemCode());
+    DictItem entity = toEntity(vo);
     dictRepository.getDictItemMapper().insert(entity);
     return entity.getId();
   }
@@ -314,10 +338,10 @@ public class DictItemServiceImpl implements DictItemService {
   @Override
   @CacheEvict(value = CacheConstants.SYSTEM_DICT_ITEM_CACHE, allEntries = true)
   @Transactional(rollbackFor = Exception.class)
-  public boolean updateById(DictItemDTO dto) {
+  public boolean updateById(DictItemVO vo) {
     // 写操作前抓取「变更前」快照，支持后续版本回滚
-    createSnapshotVersion(dto.getTypeCode(), "更新字典项: " + dto.getItemCode());
-    DictItem entity = toEntity(dto);
+    createSnapshotVersion(vo.getTypeCode(), "更新字典项: " + vo.getItemCode());
+    DictItem entity = toEntity(vo);
     return dictRepository.getDictItemMapper().updateById(entity) > 0;
   }
 
@@ -366,8 +390,51 @@ public class DictItemServiceImpl implements DictItemService {
     }
     List<DictItem> snapshot = dictRepository.getDictItemMapper().listEnabledByTypeCode(typeCode);
     String snapshotJson = YdszJson.toJson(snapshot);
-    dictVersionService.createVersion(
-        typeCode, "v" + System.currentTimeMillis(), changeLog, snapshotJson);
+    entityVersionService.createVersion(
+        EntityVersionService.RESOURCE_TYPE_DICT,
+        typeCode,
+        "",
+        "v" + System.currentTimeMillis(),
+        changeLog,
+        snapshotJson);
+  }
+
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public String rollbackTo(String typeCode, String targetVersion, String operatorId) {
+    return entityVersionService.rollbackTo(
+        EntityVersionService.RESOURCE_TYPE_DICT,
+        typeCode,
+        targetVersion,
+        operatorId,
+        snapshotJson -> {
+          // 1. 物理删除当前字典项
+          dictRepository.getDictItemMapper().physicalDeleteByTypeCode(typeCode);
+          // 2. 反序列化目标快照并重建字典项
+          if (snapshotJson != null && !snapshotJson.isBlank()) {
+            try {
+              List<DictItemVO> snapshotItems =
+                  YdszJson.fromJson(snapshotJson, java.util.List.class, DictItemVO.class);
+              if (snapshotItems != null && !snapshotItems.isEmpty()) {
+                for (DictItemVO vo : snapshotItems) {
+                  DictItem entity = new DictItem();
+                  entity.setTypeCode(vo.getTypeCode());
+                  entity.setItemCode(vo.getItemCode());
+                  entity.setItemValue(vo.getItemValue());
+                  entity.setSortOrder(vo.getSortOrder());
+                  entity.setParentId(vo.getParentId());
+                  entity.setDescription(vo.getDescription());
+                  entity.setExtJson(vo.getExtJson());
+                  entity.setStatus(vo.getStatus());
+                  dictRepository.getDictItemMapper().insert(entity);
+                }
+              }
+            } catch (Exception e) {
+              throw BusinessException.of(SystemExceptionCode.SNAPSHOT_PARSE_ERROR)
+                  .data("reason", e.getMessage());
+            }
+          }
+        });
   }
 
   /**
@@ -378,17 +445,17 @@ public class DictItemServiceImpl implements DictItemService {
    * @param dto 数据传输对象
    * @return 数据库实体
    */
-  private DictItem toEntity(DictItemDTO dto) {
+  private DictItem toEntity(DictItemVO vo) {
     DictItem entity = new DictItem();
-    entity.setId(dto.getId());
-    entity.setTypeCode(dto.getTypeCode());
-    entity.setItemCode(dto.getItemCode());
-    entity.setItemValue(dto.getItemValue());
-    entity.setSortOrder(dto.getSortOrder());
-    entity.setParentId(dto.getParentId());
-    entity.setDescription(dto.getDescription());
-    entity.setExtJson(dto.getExtJson());
-    entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
+    entity.setId(vo.getId());
+    entity.setTypeCode(vo.getTypeCode());
+    entity.setItemCode(vo.getItemCode());
+    entity.setItemValue(vo.getItemValue());
+    entity.setSortOrder(vo.getSortOrder());
+    entity.setParentId(vo.getParentId());
+    entity.setDescription(vo.getDescription());
+    entity.setExtJson(vo.getExtJson());
+    entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
     return entity;
   }
 }

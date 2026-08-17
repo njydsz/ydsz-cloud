@@ -276,11 +276,6 @@ public final class RuleDslExporter {
     if (entry.getDefaultRule() != null) m.put("default", entry.getDefaultRule());
     if (entry.getBranchKey() != null) m.put("branch_key", entry.getBranchKey());
     if (entry.getBranches() != null) m.put("branches", entry.getBranches());
-    if (entry.getIterable() != null) m.put("iterable", entry.getIterable());
-    if (entry.getVar() != null) m.put("var", entry.getVar());
-    if (entry.getMaxIterations() != null && entry.getMaxIterations() != 100) {
-      m.put("max_iterations", entry.getMaxIterations());
-    }
     return m;
   }
 }

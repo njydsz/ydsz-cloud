@@ -117,9 +117,9 @@ public class UserAccount extends MpBaseEntity<String> {
   private String positionCode;
 
   /**
-   * 获取状态枚举（从 String "0"/"1" 解析）。
+   * 获取状态枚举。
    *
-   * <p>{@code "1"} → {@link EnableStatusEnum#ENABLED}，{@code "0"} → {@link EnableStatusEnum#DISABLED}。
+   * <p>兼容 "0"/"1"（DB 存储）和 "ENABLED"/"DISABLED"（枚举字面量）两种格式。
    *
    * @return 状态枚举，无法解析时返回 null
    */
@@ -128,7 +128,7 @@ public class UserAccount extends MpBaseEntity<String> {
   }
 
   /**
-   * 从枚举设置状态（转为 String "0"/"1" 存储）。
+   * 从枚举设置状态。
    *
    * @param statusEnum 状态枚举，为 null 时清除状态
    */
@@ -138,5 +138,89 @@ public class UserAccount extends MpBaseEntity<String> {
     } else {
       this.status = statusEnum == EnableStatusEnum.ENABLED ? "1" : "0";
     }
+  }
+
+  // ==================== 领域行为（Domain Behavior）====================
+
+  /**
+   * 启用账号。
+   *
+   * <p>将状态设为 {@link EnableStatusEnum#ENABLED}，清除锁定信息。
+   */
+  public void enable() {
+    setStatusEnum(EnableStatusEnum.ENABLED);
+    this.lockedUntil = null;
+    this.loginFailCount = 0;
+  }
+
+  /**
+   * 禁用账号。
+   *
+   * <p>将状态设为 {@link EnableStatusEnum#DISABLED}。禁用后用户无法登录，但不清除锁定信息（如存在）。
+   */
+  public void disable() {
+    setStatusEnum(EnableStatusEnum.DISABLED);
+  }
+
+  /**
+   * 解锁账号。
+   *
+   * <p>清除锁定截止时间、重置登录失败计数。仅当账号已锁定时调用（由 Service 层判断）。
+   */
+  public void unlock() {
+    this.lockedUntil = null;
+    this.loginFailCount = 0;
+  }
+
+  /**
+   * 判断当前是否处于锁定状态。
+   *
+   * <p>当 {@link #lockedUntil} 非空且晚于当前时间时，账号处于锁定状态。锁定过期后自动解除（无需显式调用 {@link #unlock()}）。
+   *
+   * @return true 表示当前被锁定
+   */
+  public boolean isLocked() {
+    return this.lockedUntil != null && this.lockedUntil.isAfter(LocalDateTime.now());
+  }
+
+  /**
+   * 判断当前是否允许认证（登录）。
+   *
+   * <p>前置条件：账号存在、已启用、未锁定。
+   *
+   * @return true 表示允许尝试认证
+   */
+  public boolean canAuthenticate() {
+    return getStatusEnum() == EnableStatusEnum.ENABLED && !isLocked();
+  }
+
+  /**
+   * 记录一次登录失败。
+   *
+   * <p>递增登录失败计数；若达到 {@code maxFailCount} 阈值，自动设置锁定时间戳（当前时间 + {@code lockDurationMinutes} 分钟）。
+   *
+   * @param maxLoginFailCount 触发锁定的最大失败次数（正整数）
+   * @param lockDurationMinutes 锁定时长（分钟，正整数）
+   */
+  public void recordLoginFailure(int maxLoginFailCount, int lockDurationMinutes) {
+    int current = this.loginFailCount != null ? this.loginFailCount : 0;
+    this.loginFailCount = current + 1;
+    if (this.loginFailCount >= maxLoginFailCount) {
+      this.lockedUntil = LocalDateTime.now().plusMinutes(lockDurationMinutes);
+    }
+  }
+
+  /**
+   * 记录一次登录成功。
+   *
+   * <p>重置登录失败计数、清除锁定截止时间、更新最近登录 IP。由 Service 层在认证通过后调用。
+   *
+   * @param loginIp 登录来源 IP
+   */
+  public void recordLoginSuccess(String loginIp) {
+    this.loginFailCount = 0;
+    this.lockedUntil = null;
+    this.lastLoginAt = LocalDateTime.now();
+    this.lastLoginIp = loginIp;
   }
 }

@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.expr.ExpressionEvaluator;
-import com.njydsz.literule.api.spi.DecisionTableEvalProvider;
 import com.njydsz.workflow.domain.entity.FlowAuditLog;
 import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
@@ -66,7 +65,6 @@ import com.njydsz.workflow.server.service.FlowRoutingService;
  *   <li>支持「金额路由」：{@code amount > 1000000 → 需 CEO 审批}
  *   <li>支持「申请人路由」：{@code initiator.dept == 'FINANCE' → 财务总监审批}
  *   <li>支持「紧急度路由」：{@code priority == 'URGENT' → 跳过非关键审批人}
- *   <li>支持「规则路由」：通过决策表（DMN）批量配置路由规则
  * </ul>
  *
  * <p><b>事务边界：</b>
@@ -90,7 +88,6 @@ import com.njydsz.workflow.server.service.FlowRoutingService;
  * @see FlowRoutingService 接口定义
  * @see com.njydsz.literule.api.RuleEngine 规则引擎
  * @see com.njydsz.literule.api.expr.ExpressionEvaluator Aviator 表达式评估器
- * @see com.njydsz.literule.api.spi.DecisionTableEvalProvider 决策表评估提供者
  */
 @Slf4j
 @Service
@@ -109,26 +106,15 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
   /** 流程实例 Mapper，查询运行中实例状态 */
   private final FlowInstanceMapper instanceMapper;
 
-  /** DMN 决策表评估提供者（SPI 可选依赖，未注入时 DMN 路由不可用，回退到 Aviator 评估） */
-  private final DecisionTableEvalProvider decisionTableEvalProvider;
-
-  /**
-   * 构造注入：使用 {@link ObjectProvider} 支持可选依赖 {@link DecisionTableEvalProvider}。
-   *
-   * <p>通过 SPI 接口注入，解除 workflow 对 project 模块的编译期硬依赖； project 模块的 {@code DecisionTableEvalService}
-   * 已实现该 SPI，由 Spring 自动装配。
-   */
   public FlowRoutingServiceImpl(
       ExpressionEvaluator expressionEvaluator,
       FlowRunTaskMapper taskMapper,
       FlowAuditLogMapper auditLogMapper,
-      FlowInstanceMapper instanceMapper,
-      ObjectProvider<DecisionTableEvalProvider> decisionTableEvalProviderObjectProvider) {
+      FlowInstanceMapper instanceMapper) {
     this.expressionEvaluator = expressionEvaluator;
     this.taskMapper = taskMapper;
     this.auditLogMapper = auditLogMapper;
     this.instanceMapper = instanceMapper;
-    this.decisionTableEvalProvider = decisionTableEvalProviderObjectProvider.getIfAvailable();
   }
 
   // ============================== 路由评估 ==============================
@@ -138,11 +124,6 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
     if (conditionExpression == null || conditionExpression.isBlank()) {
       log.debug("[FlowRoute] 路由表达式为空，返回 null");
       return null;
-    }
-    // DMN 决策表路由：表达式以 "dmn:" 开头时，冒号后为决策表编码
-    if (conditionExpression.startsWith("dmn:")) {
-      String tableCode = conditionExpression.substring(4).trim();
-      return evaluateRouteByDmn(tableCode, variables);
     }
     try {
       RuleContext context = buildContext(variables, "FLOW_ROUTE");
@@ -156,43 +137,6 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
       return nodeCode;
     } catch (Exception e) {
       log.warn("[FlowRoute] 路由表达式评估失败: expr={}, err={}", conditionExpression, e.getMessage());
-      return null;
-    }
-  }
-
-  /**
-   * 基于 DMN 决策表的路由评估
-   *
-   * <p>调用 {@link DecisionTableEvalProvider} SPI 评估决策表， 取首条命中行的第一个动作值作为目标节点编码。
-   *
-   * <p>当 DecisionTableEvalProvider 未注入（如分服务部署、project 模块未引入）时， 记录告警并返回 null，路由交由上层兜底处理。
-   *
-   * @param tableCode 决策表编码
-   * @param variables 流程变量（作为决策表事实数据）
-   * @return 目标节点编码；评估失败或无命中时返回 null
-   */
-  private String evaluateRouteByDmn(String tableCode, Map<String, Object> variables) {
-    if (decisionTableEvalProvider == null) {
-      log.warn("[FlowRoute] DMN 路由不可用（DecisionTableEvalProvider 未注入）: tableCode={}", tableCode);
-      return null;
-    }
-    try {
-      List<Map<String, Object>> results = decisionTableEvalProvider.evaluate(tableCode, variables);
-      if (results == null || results.isEmpty()) {
-        log.warn("[FlowRoute] DMN 路由无匹配结果: tableCode={}", tableCode);
-        return null;
-      }
-      Map<String, Object> first = results.get(0);
-      if (first == null || first.isEmpty()) {
-        return null;
-      }
-      // 取第一个动作值作为目标节点编码
-      Object target = first.values().iterator().next();
-      String nodeCode = target == null ? null : target.toString();
-      log.info("[FlowRoute] DMN 路由命中: tableCode={} -> nodeCode={}", tableCode, nodeCode);
-      return nodeCode;
-    } catch (Exception e) {
-      log.warn("[FlowRoute] DMN 路由评估失败: tableCode={}, err={}", tableCode, e.getMessage());
       return null;
     }
   }

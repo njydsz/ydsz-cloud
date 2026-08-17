@@ -1,4 +1,4 @@
-com.njydsz.gateway.config.GatewayErrorConfig
+com.njydsz.gateway.config.GatewayFilterConfig
 com.njydsz.gateway.config.GatewayHttpClientConfig
-com.njydsz.gateway.config.NacosRouteConfig
+com.njydsz.gateway.config.GatewayRouteConfig
 com.njydsz.gateway.loadbalancer.GrayLoadBalancerConfig

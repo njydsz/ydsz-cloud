@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
+
 /**
  * Agent 模块配置属性
  *
@@ -40,6 +42,12 @@ public class AgentProperties {
 
   /** LLM 语义缓存配置 */
   private Cache cache = new Cache();
+
+  /** Prompt 模板配置 */
+  private PromptTemplate promptTemplate = new PromptTemplate();
+
+  /** 护栏配置 */
+  private Guardrail guardrail = new Guardrail();
 
   public boolean isEnabled() {
     return enabled;
@@ -103,6 +111,22 @@ public class AgentProperties {
 
   public void setCache(Cache cache) {
     this.cache = cache;
+  }
+
+  public PromptTemplate getPromptTemplate() {
+    return promptTemplate;
+  }
+
+  public void setPromptTemplate(PromptTemplate promptTemplate) {
+    this.promptTemplate = promptTemplate;
+  }
+
+  public Guardrail getGuardrail() {
+    return guardrail;
+  }
+
+  public void setGuardrail(Guardrail guardrail) {
+    this.guardrail = guardrail;
   }
 
   /** LLM 相关配置组（默认 Provider、模型、密钥、价格等）。 */
@@ -534,6 +558,46 @@ public class AgentProperties {
     }
   }
 
+  /**
+   * Prompt 模板配置组
+   *
+   * <p>配置默认使用的 Prompt 模板编码，运行时由 {@link PromptTemplateProvider} 从数据库加载。
+   */
+  public static class PromptTemplate {
+    /** 默认系统 Prompt 模板编码 */
+    private String defaultSystemCode = "DEFAULT_SYSTEM";
+
+    /** ReAct 模式 Prompt 模板编码 */
+    private String reactSystemCode = "REACT_SYSTEM";
+
+    /** Plan-Execute 模式 Prompt 模板编码 */
+    private String planSystemCode = "PLAN_SYSTEM";
+
+    public String getDefaultSystemCode() {
+      return defaultSystemCode;
+    }
+
+    public void setDefaultSystemCode(String defaultSystemCode) {
+      this.defaultSystemCode = defaultSystemCode;
+    }
+
+    public String getReactSystemCode() {
+      return reactSystemCode;
+    }
+
+    public void setReactSystemCode(String reactSystemCode) {
+      this.reactSystemCode = reactSystemCode;
+    }
+
+    public String getPlanSystemCode() {
+      return planSystemCode;
+    }
+
+    public void setPlanSystemCode(String planSystemCode) {
+      this.planSystemCode = planSystemCode;
+    }
+  }
+
   /** MCP Server 连接信息 */
   public static class ServerInfo {
     /** Server 名称（唯一标识） */
@@ -589,6 +653,29 @@ public class AgentProperties {
 
     public void setEnabled(boolean enabled) {
       this.enabled = enabled;
+    }
+  }
+
+  /**
+   * 护栏配置组
+   *
+   * <p>P1-3 重构：PromptInjection 降级为可选护栏，默认关闭，需显式开启。 核心护栏（AgentRequestGuard 幂等 + 限流、PiiMaskingGuardrail 输出脱敏）不受影响。
+   */
+  public static class Guardrail {
+    /**
+     * 是否启用 Prompt 注入检测护栏。
+     *
+     * <p>默认关闭。Prompt 注入检测基于正则模式匹配，存在较高误杀率且易被绕过， 在 RateLimit + Audit 已覆盖核心安全需求的场景下价值有限。
+     * 如业务确需注入检测（如面向公网 C 端场景），可显式开启：{@code ydsz.agent.guardrail.promptInjectionEnabled=true}。
+     */
+    private boolean promptInjectionEnabled = false;
+
+    public boolean isPromptInjectionEnabled() {
+      return promptInjectionEnabled;
+    }
+
+    public void setPromptInjectionEnabled(boolean promptInjectionEnabled) {
+      this.promptInjectionEnabled = promptInjectionEnabled;
     }
   }
 }

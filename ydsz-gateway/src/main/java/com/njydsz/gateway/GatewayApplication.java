@@ -12,12 +12,11 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
 import com.njydsz.common.notify.helper.NotifyHelper;
-import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.gateway.config.CorsProperties;
 import com.njydsz.gateway.config.GatewayAlertService;
 import com.njydsz.gateway.config.GatewayHealthIndicator;
 import com.njydsz.gateway.config.GatewayMetrics;
-import com.njydsz.gateway.config.IpWhitelistProperties;
+import com.njydsz.gateway.config.IpAccessControlProperties;
 import com.njydsz.gateway.config.RateLimitProperties;
 import com.njydsz.gateway.config.SecurityHeadersProperties;
 import com.njydsz.gateway.filter.AuthGlobalFilter;
@@ -30,9 +29,9 @@ import com.njydsz.gateway.filter.AuthGlobalFilter;
  * <h3>网关职责</h3>
  *
  * <ol>
- *   <li><b>路由转发</b>：基于 Nacos 动态路由 + Java 兜底路由（{@link RouteConfig}）
- *   <li><b>统一鉴权</b>：JWT 校验 + 内部头签名（HMAC-SHA256 + nonce 防重放）
- *   <li><b>多维限流</b>：IP/用户/租户三维令牌桶（自建 RateLimitFilter）
+ *   <li><b>路由转发</b>：基于 Nacos 动态路由 + Java 兜底路由
+ *   <li><b>统一鉴权</b>：JWT 校验 + 内部头签名（HMAC-SHA256）
+ *   <li><b>多维限流</b>：IP/用户二维令牌桶
  *   <li><b>安全防护</b>：IP 黑/白名单 + WebSocket 认证 + Payload 校验 + 安全响应头
  *   <li><b>链路追踪</b>：W3C Trace Context（traceparent）+ X-Trace-Id 兼容
  *   <li><b>灰度发布</b>：基于 Nacos metadata 的灰度路由 + 加权轮询
@@ -44,16 +43,14 @@ import com.njydsz.gateway.filter.AuthGlobalFilter;
  * <pre>
  *   HIGHEST_PRECEDENCE       W3CTraceContextFilter      (生成 traceparent)
  *   HIGHEST_PRECEDENCE + 1   AccessLogGlobalFilter     (结构化访问日志)
- *   HIGHEST_PRECEDENCE + 3   PayloadValidationFilter   (请求体大小校验)
- *   HIGHEST_PRECEDENCE + 3   IpBlacklistFilter         (动态 IP 黑名单)
- *   HIGHEST_PRECEDENCE + 5   IpWhitelistFilter         (IP 白名单)
+ *   HIGHEST_PRECEDENCE + 3   IpAccessControlFilter     (IP 黑名单 + 白名单)
+ *   HIGHEST_PRECEDENCE + 4   PayloadValidationFilter   (请求体大小校验)
  *   HIGHEST_PRECEDENCE + 8   WebSocketAuthFilter       (WebSocket 独立鉴权)
  *   HIGHEST_PRECEDENCE + 10  AuthGlobalFilter          (主鉴权 + 内部头注入)
  *   HIGHEST_PRECEDENCE + 15  ApiKeyAuthFilter          (API Key 备选认证)
  *   HIGHEST_PRECEDENCE + 20  GrayLoadBalancerRequestFilter (灰度标识注入)
- *   HIGHEST_PRECEDENCE + 25  ResponseCacheFilter       (响应缓存，P2-2)
  *   HIGHEST_PRECEDENCE + 30  RateLimitFilter           (令牌桶限流)
- *   HIGHEST_PRECEDENCE + 35  AuditLogFilter            (审计日志，P2-2)
+ *   HIGHEST_PRECEDENCE + 35  AuditLogFilter            (审计日志)
  *   HIGHEST_PRECEDENCE + 100 ReactiveLoadBalancerClientFilter (Spring Cloud LB)
  * </pre>
  *
@@ -65,7 +62,7 @@ import com.njydsz.gateway.filter.AuthGlobalFilter;
 @EnableConfigurationProperties({
   RateLimitProperties.class,
   SecurityHeadersProperties.class,
-  IpWhitelistProperties.class,
+  IpAccessControlProperties.class,
   CorsProperties.class
 })
 public class GatewayApplication {
@@ -91,7 +88,7 @@ public class GatewayApplication {
    * @param redisTemplateProvider Reactive Redis 客户端，用于探测限流/黑名单所依赖的 Redis 连通性；缺失时该检查项跳过
    * @param securityHeadersProvider 安全响应头配置，用于校验安全头策略是否已生效
    * @param rateLimitPropertiesProvider 限流配置，用于上报当前令牌桶阈值
-   * @param ipWhitelistProvider IP 白名单配置，用于上报白名单启用状态与条目数
+   * @param ipAccessControlProvider IP 访问控制配置，用于上报黑白名单启用状态
    * @param authFilterProvider 主鉴权过滤器，用于探测 JWT 密钥等鉴权前置条件
    * @param gatewayMetricsProvider 网关指标采集器，用于输出实时 QPS、错误率等运行指标
    * @return 健康指标实现，由 Actuator 以 {@code gateway} 为 key 聚合到 {@code /actuator/health}
@@ -101,14 +98,14 @@ public class GatewayApplication {
       ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider,
       ObjectProvider<SecurityHeadersProperties> securityHeadersProvider,
       ObjectProvider<RateLimitProperties> rateLimitPropertiesProvider,
-      ObjectProvider<IpWhitelistProperties> ipWhitelistProvider,
+      ObjectProvider<IpAccessControlProperties> ipAccessControlProvider,
       ObjectProvider<AuthGlobalFilter> authFilterProvider,
       ObjectProvider<GatewayMetrics> gatewayMetricsProvider) {
     return new GatewayHealthIndicator(
         redisTemplateProvider,
         securityHeadersProvider,
         rateLimitPropertiesProvider,
-        ipWhitelistProvider,
+        ipAccessControlProvider,
         authFilterProvider,
         gatewayMetricsProvider);
   }
@@ -129,21 +126,6 @@ public class GatewayApplication {
       ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider,
       AuthProperties authProperties) {
     return new ReactiveTokenBlacklistService(redisTemplateProvider, authProperties);
-  }
-
-  /**
-   * 注册 Nonce 防重放缓存，配合内部头 HMAC 签名阻断请求重放攻击。
-   *
-   * <p>复用 ydsz-common-safe 的 NonceCache：网关为每个转发请求生成一次性 nonce 并写入缓存，同时通过 {@code X-Internal-Nonce}
-   * 头透传；下游服务收到后调用 {@code verifyAndConsume()} 做「校验即消费」的双重确认，同一 nonce 二次出现 即判定为重放并拒绝。
-   *
-   * <p><b>线程安全：</b>NonceCache 内部基于并发容器实现，可被所有网关工作线程共享； 条目按签名有效期自动过期，无需外部清理。
-   *
-   * @return 单例 nonce 缓存，全局共享
-   */
-  @Bean
-  public NonceCache nonceCache() {
-    return new NonceCache();
   }
 
   /**

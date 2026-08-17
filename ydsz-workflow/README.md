@@ -30,7 +30,6 @@
 | **SLA 提醒** | P1-P4 SLA 倒计时 + 飞书/钉钉告警 |
 | **审批人去重** | 同一审批人在多级审批中自动合并 |
 | **流程模板** | 模板库 + 版本管理 + 复制/导入/导出 |
-| **灰度发布** | 流程模板 canary 发布 |
 | **流程监控** | 实例状态 / 节点耗时 / 拥堵分析 |
 | **50 步模拟** | 流程图模拟运行（不实际执行任务） |
 | **设计器** | bpmn-js 拖拽设计 + 表单设计 + 表达式编辑 |
@@ -43,12 +42,10 @@
 | `/flow/instance` | 流程实例（发起 / 审批 / 驳回） |
 | `/flow/task` | 审批任务（待办 / 已办） |
 | `/flow/template` | 流程模板 |
-| `/flow/dmn` | DMN 决策表 |
 | `/flow/form` | 表单设计 |
 | `/flow/delegation` | 委托授权 |
 | `/flow/history` | 历史实例 |
 | `/flow/instance-migration` | 实例迁移 |
-| `/flow/canary` | 灰度发布 |
 | `/flow/monitor` | 流程监控 |
 | `/flow/sla` | SLA 规则 |
 | `/flow/simulator` | 流程模拟器 |
@@ -65,7 +62,6 @@
 | | `ydsz_flow_node` | 流程节点（审批/加签/转交/抄送） |
 | | `ydsz_flow_skip` | 跳过规则 |
 | | `ydsz_flow_timer` | 节点/流程超时定时器（cron） |
-| | `ydsz_flow_dmn_table` | DMN 决策表 |
 | **实例** | `ydsz_flow_instance` | 流程实例（运行中） |
 | | `ydsz_flow_his_instance` | 历史实例（已结束） |
 | **任务** | `ydsz_flow_run_task` | 待办/运行任务 |
@@ -145,7 +141,7 @@ ydsz-workflow/
 │       ├── entity/                      # 数据库实体（26 个，无 DO 后缀，符合 entity-naming 规范）
 │       │                                # FlowAdminRole/FlowAttachment/FlowAuditLog/FlowAutoTrigger
 │       │                                # FlowCategory/FlowCc/FlowCcRule/FlowComment/FlowDefinition
-│       │                                # FlowDelegateAuth/FlowDmnDecision/FlowDmnRule/FlowEventSubscription
+│       │                                # FlowDelegateAuth/FlowEventSubscription
 │       │                                # FlowHisInstance/FlowHisTask/FlowInstance/FlowNode
 │       │                                # FlowQuickComment/FlowRunTask/FlowSkip/FlowTemplate
 │       │                                # FlowThirdPartyAccount/FlowThirdPartyLog/FlowTimer/FlowUser

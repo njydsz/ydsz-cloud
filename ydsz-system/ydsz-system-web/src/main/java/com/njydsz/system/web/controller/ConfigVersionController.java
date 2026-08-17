@@ -22,14 +22,15 @@ import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.system.domain.vo.ConfigVersionVO;
-import com.njydsz.system.server.service.ConfigVersionService;
+import com.njydsz.system.domain.vo.EntityVersionVO;
+import com.njydsz.system.server.service.ConfigService;
+import com.njydsz.system.server.service.EntityVersionService;
 
 /**
  * 配置版本 Controller
  *
  * <p>提供配置项变更历史查询和回滚能力。配置版本是配置变更审计与回滚能力的数据基础： 每次配置项发生变更（save / updateById / removeById）时，{@link
- * com.njydsz.system.server.service.impl.ConfigServiceImpl} 会自动创建一条版本快照。
+ * com.njydsz.system.server.service.ConfigServiceImpl} 会自动创建一条版本快照。
  *
  * <p><b>接口路径：</b>{@code /api/v1/config/version}
  *
@@ -43,8 +44,8 @@ import com.njydsz.system.server.service.ConfigVersionService;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.server.service.ConfigVersionService 配置版本业务逻辑
- * @see com.njydsz.system.domain.entity.ConfigVersion 配置版本实体
+ * @see com.njydsz.system.server.service.EntityVersionService 统一实体版本业务逻辑
+ * @see com.njydsz.system.domain.entity.EntityVersion 实体版本
  */
 @Tag(name = "配置版本", description = "配置变更历史查询 + 一键回滚")
 @RestController
@@ -52,7 +53,9 @@ import com.njydsz.system.server.service.ConfigVersionService;
 @RequiredArgsConstructor
 public class ConfigVersionController {
 
-  private final ConfigVersionService service;
+  private final EntityVersionService entityVersionService;
+
+  private final ConfigService configService;
 
   /**
    * 按配置键查询版本历史
@@ -64,8 +67,10 @@ public class ConfigVersionController {
    */
   @Operation(summary = "按配置键查询版本历史")
   @GetMapping("/{resourceKey}")
-  public BaseResponse<List<ConfigVersionVO>> listByResourceKey(@PathVariable String resourceKey) {
-    return BaseResponse.success(service.listByResourceKey(resourceKey));
+  public BaseResponse<List<EntityVersionVO>> listByResourceKey(@PathVariable String resourceKey) {
+    return BaseResponse.success(
+        entityVersionService.listByResourceTypeAndKey(
+            EntityVersionService.RESOURCE_TYPE_CONFIG, resourceKey));
   }
 
   /**
@@ -106,6 +111,7 @@ public class ConfigVersionController {
       @Parameter(description = "操作人 ID")
           @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false)
           String operatorId) {
-    return BaseResponse.success(service.rollbackTo(resourceKey, targetVersion, operatorId));
+    return BaseResponse.success(
+        configService.rollbackTo(resourceKey, targetVersion, operatorId));
   }
 }

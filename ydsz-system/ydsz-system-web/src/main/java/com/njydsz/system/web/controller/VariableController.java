@@ -24,7 +24,6 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.server.service.VariableService;
 
@@ -87,9 +86,7 @@ public class VariableController {
       @Parameter(description = "状态") @RequestParam(required = false) String status) {
     // pageSize 服务端硬上限截断，防止深度分页 OOM
     int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
-    PageResponse<List<VariableVO>> page = service.page(pageNum, safePageSize, variableKey, status);
-    return PageResponse.success(
-        page.getTotal(), page.getPageNum(), page.getPageSize(), page.getData());
+    return service.page(pageNum, safePageSize, variableKey, status);
   }
 
   /**
@@ -130,13 +127,13 @@ public class VariableController {
       module = "系统变量",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'创建变量: ' + #dto.variableKey")
+      content = "'创建变量: ' + #vo.variableKey")
   @Operation(summary = "创建系统变量")
   @RateLimit(resource = "system.variable.save", threshold = 50)
   @Idempotent(key = "ydsz:system:variable:save:#userId", ttlSeconds = 5)
   @PostMapping
-  public BaseResponse<String> save(@Valid @RequestBody VariableDTO dto) {
-    return BaseResponse.success(service.save(dto));
+  public BaseResponse<String> save(@Valid @RequestBody VariableVO vo) {
+    return BaseResponse.success(service.save(vo));
   }
 
   /**
@@ -151,13 +148,13 @@ public class VariableController {
       module = "系统变量",
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
-      content = "'更新变量: ' + #dto.variableKey")
+      content = "'更新变量: ' + #vo.variableKey")
   @Operation(summary = "更新系统变量")
   @RateLimit(resource = "system.variable.update", threshold = 50)
   @Idempotent(key = "ydsz:system:variable:update:#userId", ttlSeconds = 5)
   @PutMapping
-  public BaseResponse<Boolean> update(@Valid @RequestBody VariableDTO dto) {
-    return BaseResponse.success(service.updateById(dto));
+  public BaseResponse<Boolean> update(@Valid @RequestBody VariableVO vo) {
+    return BaseResponse.success(service.updateById(vo));
   }
 
   /**

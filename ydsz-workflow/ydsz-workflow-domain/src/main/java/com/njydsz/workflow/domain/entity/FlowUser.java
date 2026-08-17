@@ -35,8 +35,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li>{@code ADD}：追加处理人（与原审批人并行，任一办完即推进）
  * </ul>
  *
- * <p><b>加权会签（{@code weight}）：</b>用于「票签」模式，{@code VOTE} 模式下 {@code 已通过权重 / 总权重 >= votePassRate}
- * 即判定通过。
+ * <p><b>加权会签（{@code weight}）：</b>用于加权投票场景，{@code 已通过权重 / 总权重 >= votePassRate} 即判定通过。
  *
  * <p><b>索引设计：</b>
  *
