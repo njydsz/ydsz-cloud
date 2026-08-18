@@ -22,6 +22,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -31,6 +32,8 @@ import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.server.service.BatchTaskService;
 import com.njydsz.nextwiki.server.service.BatchTaskService.BatchTaskStatus;
 import com.njydsz.nextwiki.server.service.FileApplicationService;
+import com.njydsz.nextwiki.server.service.VersionDiffApplicationService;
+import com.njydsz.nextwiki.server.service.VersionDiffService;
 
 /**
  * 文件批量操作与版本管理 REST API Controller。
@@ -82,6 +85,7 @@ import com.njydsz.nextwiki.server.service.FileApplicationService;
  * @author ydsz-team
  * @since 1.0.0
  */
+@ApiVersion("v1")
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/nextwiki/files")
@@ -95,6 +99,9 @@ public class FileBatchController {
 
   /** 批量任务异步执行服务 */
   private final BatchTaskService batchTaskService;
+
+  /** 版本对比应用服务 */
+  private final VersionDiffApplicationService versionDiffApplicationService;
 
   /**
    * 批量删除文件/文件夹（移入回收站）。
@@ -190,6 +197,27 @@ public class FileBatchController {
 
     FileNodeVO result = fileApplicationService.rollbackVersion(nodeId, version, userId);
     return BaseResponse.success(result);
+  }
+
+  /**
+   * 对比两个版本的差异（文本文件）。
+   *
+   * <p>仅支持文本类文件（txt、md、json、xml、csv 等），文件大小不超过 1MB。 返回行粒度的差异信息（新增、删除、未变更）。
+   *
+   * @param nodeId 文件节点 ID
+   * @param oldVersion 旧版本号
+   * @param newVersion 新版本号
+   * @return 统一响应结果，data 为 diff 结果（含差异条目 + 统计信息）
+   */
+  @GetMapping("/{nodeId}/versions/diff")
+  @Operation(summary = "对比版本差异")
+  @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION_VIEW)
+  public BaseResponse<VersionDiffService.DiffResult> diffVersions(
+      @PathVariable String nodeId,
+      @RequestParam int oldVersion,
+      @RequestParam int newVersion) {
+    return BaseResponse.success(
+        versionDiffApplicationService.diffVersions(nodeId, oldVersion, newVersion));
   }
 
   /**

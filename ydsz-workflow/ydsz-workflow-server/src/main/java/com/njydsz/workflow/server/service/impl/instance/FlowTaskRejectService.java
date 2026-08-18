@@ -22,15 +22,16 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
+import com.njydsz.workflow.domain.enums.FlowNodeType;
+import com.njydsz.workflow.domain.enums.FlowTaskStatus;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.infra.entity.FlowSkipDO;
-import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
-import com.njydsz.workflow.domain.enums.FlowNodeType;
-import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
@@ -53,11 +54,14 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 @RequiredArgsConstructor
 public class FlowTaskRejectService {
 
-  /** 运行时任务 Mapper，查询/更新任务状态 */
-  private final FlowRunTaskMapper taskMapper;
+  /** 运行时任务仓储，查询/更新任务状态 */
+  private final FlowRunTaskRepository taskRepository;
 
-  /** 流程实例 Mapper，查询实例状态和流程变量 */
-  private final FlowInstanceMapper instanceMapper;
+  /** 流程实例仓储，查询实例状态和流程变量 */
+  private final FlowInstanceRepository instanceRepository;
+
+  /** MapStruct 转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
 
   /** 流程推进引擎，驳回后推进到目标节点 */
   private final FlowAdvancer advancer;
@@ -104,8 +108,11 @@ public class FlowTaskRejectService {
     LocalDateTime now = LocalDateTime.now();
     Long durationMs =
         task.getCreatedAt() == null ? null : Duration.between(task.getCreatedAt(), now).toMillis();
-    taskMapper.completeTask(
-        task.getId(), FlowTaskStatus.REJECTED.name(), dto.getComment(), now, durationMs);
+    task.setTaskStatus(FlowTaskStatus.REJECTED.name());
+    task.setComment(dto.getComment());
+    task.setCompletedAt(now);
+    task.setDurationMs(durationMs);
+    taskRepository.update(converter.entityToVO(task));
     archiveService.archiveToHistory(task, FlowTaskStatus.REJECTED);
 
     // P1-6: 保存驳回附件
@@ -120,7 +127,7 @@ public class FlowTaskRejectService {
         task.getTenantId(),
         task.getProviderTraceId());
 
-    FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
+    FlowInstanceDO instance = instanceRepository.findById(task.getInstanceId()).map(converter::entityToDO).orElse(null);
     Map<String, Object> mergedVars = mergeVariables(instance, dto.getVariables());
 
     // P1-2: 退回到发起人 — 解析 startNode 下游第一个节点作为退回目标
@@ -152,7 +159,7 @@ public class FlowTaskRejectService {
     }
     if (rejectTargets.isEmpty()) {
       // 流程被驳回到终止状态
-      instanceMapper.updateStatus(
+      instanceRepository.updateStatus(
           instance.getId(),
           FlowInstanceStatus.REJECTED.name(),
           null,
@@ -161,7 +168,7 @@ public class FlowTaskRejectService {
           instance.getStartAt() == null
               ? null
               : Duration.between(instance.getStartAt(), now).toMillis());
-      taskMapper.cancelByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
+      taskRepository.updateStatusByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
       notificationService.fireInstanceRejected(instance.getId(), dto.getComment());
       support.audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
       if (flowMetrics != null) {
@@ -173,7 +180,7 @@ public class FlowTaskRejectService {
       return;
     }
     instanceService.generateTasksForNodes(instance.getId(), rejectTargets, mergedVars);
-    instanceMapper.updateStatus(
+    instanceRepository.updateStatus(
         instance.getId(),
         instance.getFlowStatus(),
         rejectTargets.get(0).getNodeCode(),

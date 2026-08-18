@@ -22,9 +22,10 @@ import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.mapper.FlowUserMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.form.FlowFormEngineService;
@@ -52,17 +53,20 @@ import com.njydsz.workflow.server.service.impl.CountersignStrategyFactory;
 @RequiredArgsConstructor
 public class FlowTaskPassService {
 
-  /** 运行时任务 Mapper，查询/更新任务状态 */
-  private final FlowRunTaskMapper taskMapper;
+  /** 运行时任务仓储，查询/更新任务状态 */
+  private final FlowRunTaskRepository taskRepository;
 
-  /** 用户 Mapper，查询审批人用户信息 */
+  /** 用户 Mapper，查询审批人用户信息（markProcessed 暂无 Repository 替代） */
   private final FlowUserMapper userMapper;
 
-  /** 流程实例 Mapper，查询实例状态和流程变量 */
-  private final FlowInstanceMapper instanceMapper;
+  /** 流程实例仓储，查询实例状态和流程变量 */
+  private final FlowInstanceRepository instanceRepository;
 
-  /** 流程节点 Mapper，查询节点配置 */
-  private final FlowNodeMapper nodeMapper;
+  /** 流程节点仓储，查询节点配置 */
+  private final FlowNodeRepository nodeRepository;
+
+  /** MapStruct 转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
 
   /** 流程推进引擎，会签完成后推进到下一节点 */
   private final FlowAdvancer advancer;
@@ -114,7 +118,7 @@ public class FlowTaskPassService {
     }
     Map<String, Object> variables =
         dto.getVariables() == null ? Collections.emptyMap() : dto.getVariables();
-    FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
+    FlowInstanceDO instance = instanceRepository.findById(task.getInstanceId()).map(converter::entityToDO).orElse(null);
     Map<String, Object> mergedVars = mergeVariables(instance, variables);
 
     // P0-2: 表单字段权限校验
@@ -193,7 +197,7 @@ public class FlowTaskPassService {
     task.setAssignorId(null);
     task.setAssignorName(null);
     task.setTaskStatus(FlowTaskStatus.CLAIMED.name());
-    taskMapper.updateById(task);
+    taskRepository.update(converter.entityToVO(task));
     support.audit(
         task, "DELEGATE_RETURN", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
     log.info("[Flow] 委派回归: taskId={} → 原办理人={}", task.getId(), task.getAssigneeId());
@@ -202,7 +206,7 @@ public class FlowTaskPassService {
   /** 表单字段权限校验 + P0-3 表单 Schema 校验 */
   private void validateFormFieldPerms(
       FlowRunTaskDO task, Map<String, Object> variables, FlowInstanceDO instance) {
-    FlowNodeDO formNode = nodeMapper.selectByCode(task.getDefinitionId(), task.getNodeCode());
+    FlowNodeDO formNode = nodeRepository.findByCode(task.getDefinitionId(), task.getNodeCode()).map(converter::entityToDO).orElse(null);
     if (formNode == null) {
       return;
     }
@@ -246,7 +250,7 @@ public class FlowTaskPassService {
   /** 更新实例当前节点 */
   private void updateInstanceNode(FlowInstanceDO instance, List<FlowNodeDO> nextNodes) {
     if (!nextNodes.isEmpty() && nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {
-      instanceMapper.updateStatus(
+      instanceRepository.updateStatus(
           instance.getId(),
           instance.getFlowStatus(),
           nextNodes.get(0).getNodeCode(),

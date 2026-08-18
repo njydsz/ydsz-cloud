@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -329,13 +330,13 @@ public class FlowInstanceLifecycleManager {
         m.put("_terminateReason", reason);
         var = YdszJson.toJson(m);
         // 修复 P2-18: 写回 DB（之前仅改局部变量未持久化）
-        instanceMapper.updateVariable(instanceId, var);
+        instanceRepository.updateVariable(instanceId, var);
       } catch (Exception e) {
         log.warn(
             "[Flow] terminate reason 持久化失败: instanceId={} reason={}", instanceId, e.getMessage());
       }
     }
-    instanceMapper.updateStatus(
+    instanceRepository.updateStatus(
         instanceId, FlowInstanceStatus.TERMINATED.name(), null, null, now, durationMs);
     // 取消所有 PENDING 任务
     taskService.cancelByInstance(instanceId, FlowTaskStatus.CANCELLED.name());
@@ -371,7 +372,7 @@ public class FlowInstanceLifecycleManager {
           .message("error.workflow.msg_543fc92f")
           .build();
     }
-    instanceMapper.updateStatus(
+    instanceRepository.updateStatus(
         instanceId,
         FlowInstanceStatus.SUSPENDED.name(),
         instance.getCurrentNodeCode(),
@@ -379,7 +380,7 @@ public class FlowInstanceLifecycleManager {
         null,
         null);
     // P2-18: 冻结 PENDING/CLAIMED 任务为 FROZEN，禁止办理
-    taskMapper.freezeByInstance(instanceId);
+    taskRepository.freezeByInstance(instanceId);
     log.info("[Flow] 挂起流程: instanceId={}", instanceId);
     // P2-3: Prometheus 指标
     if (flowMetrics != null) {
@@ -406,7 +407,7 @@ public class FlowInstanceLifecycleManager {
           .message("error.workflow.msg_ab594c75")
           .build();
     }
-    instanceMapper.updateStatus(
+    instanceRepository.updateStatus(
         instanceId,
         FlowInstanceStatus.RUNNING.name(),
         instance.getCurrentNodeCode(),
@@ -414,7 +415,7 @@ public class FlowInstanceLifecycleManager {
         null,
         null);
     // P2-18: 解冻 FROZEN 任务，回到 PENDING 可办理
-    taskMapper.unfreezeByInstance(instanceId);
+    taskRepository.unfreezeByInstance(instanceId);
     log.info("[Flow] 激活流程: instanceId={}", instanceId);
     // P2-3: Prometheus 指标
     if (flowMetrics != null) {
@@ -444,7 +445,7 @@ public class FlowInstanceLifecycleManager {
         instance.getStartAt() == null
             ? null
             : Duration.between(instance.getStartAt(), now).toMillis();
-    instanceMapper.updateStatus(
+    instanceRepository.updateStatus(
         instanceId, FlowInstanceStatus.COMPLETED.name(), endNodeCode, null, now, durationMs);
     taskService.cancelByInstance(instanceId, FlowTaskStatus.SKIPPED.name());
     log.info("[Flow] 流程完成: instanceId={} endNode={}", instanceId, endNodeCode);
@@ -498,7 +499,9 @@ public class FlowInstanceLifecycleManager {
           .build();
     }
     // 校验：下一节点未被处理（PENDING 状态的任务可以撤回）
-    List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
+    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
+        .map(converter::entityToDO)
+        .collect(Collectors.toList());
     boolean anyProcessed =
         pendingTasks.stream()
             .anyMatch(
@@ -512,7 +515,7 @@ public class FlowInstanceLifecycleManager {
           .build();
     }
     // 校验：targetNodeCode 必须在可撤回节点列表中
-    List<Map<String, Object>> recallable = hisTaskMapper.listPassedNodes(instanceId);
+    List<Map<String, Object>> recallable = hisTaskRepository.listPassedNodes(instanceId);
     Set<String> recallableCodes = new HashSet<>();
     if (recallable != null) {
       for (Map<String, Object> n : recallable) {
@@ -590,7 +593,9 @@ public class FlowInstanceLifecycleManager {
           .build();
     }
     // 校验：下一节点未被处理（PENDING 状态的任务可以撤回）
-    List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
+    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
+        .map(converter::entityToDO)
+        .collect(Collectors.toList());
     boolean anyProcessed =
         pendingTasks.stream()
             .anyMatch(
@@ -694,7 +699,7 @@ public class FlowInstanceLifecycleManager {
         instance.getStartAt() == null
             ? null
             : Duration.between(instance.getStartAt(), now).toMillis();
-    instanceMapper.updateStatus(
+    instanceRepository.updateStatus(
         instanceId,
         FlowInstanceStatus.ROLLED_BACK.name(),
         instance.getCurrentNodeCode(),
@@ -711,7 +716,7 @@ public class FlowInstanceLifecycleManager {
       rollbackInfo.put("rolledBackAt", now.toString());
       rollbackInfo.put("byAdmin", isAdmin && !isInitiator);
       vars.put("_rollback", rollbackInfo);
-      instanceMapper.updateVariable(instanceId, YdszJson.toJson(vars));
+      instanceRepository.updateVariable(instanceId, YdszJson.toJson(vars));
     } catch (Exception e) {
       log.warn("[Flow] 回滚元信息持久化失败: instanceId={} err={}", instanceId, e.getMessage());
     }
@@ -786,7 +791,7 @@ public class FlowInstanceLifecycleManager {
     instance.setEndAt(null);
     instance.setRejectReason(null);
     instance.setVariable(merged.isEmpty() ? null : YdszJson.toJson(merged));
-    instanceMapper.updateById(instance);
+    instanceRepository.save(converter.doToDto(instance));
     // 5. 记录重审审计（保留原轨迹，仅追加一条 RESUBMIT 记录）
     FlowAuditLogDO audit = new FlowAuditLogDO();
     audit.setInstanceId(instanceId);
@@ -800,7 +805,7 @@ public class FlowInstanceLifecycleManager {
     audit.setTenantId(instance.getTenantId());
     audit.setProviderTraceId(instance.getProviderTraceId());
     audit.setOperatedAt(LocalDateTime.now());
-    auditLogMapper.insert(audit);
+    auditLogRepository.save(converter.entityToVO(audit));
     // 6. 从开始节点重新推进（复用 advancer.start，保留 ydsz_flow_user/his_task 历史）
     try {
       advancer.start(instanceId);
@@ -847,7 +852,7 @@ public class FlowInstanceLifecycleManager {
    */
   @Transactional(rollbackFor = Exception.class)
   public void setDueAt(String instanceId, LocalDateTime dueAt) {
-    instanceMapper.updateDueAt(instanceId, dueAt);
+    instanceRepository.updateDueAt(instanceId, dueAt);
     log.info("[Flow] 设置实例到期时间: instanceId={} dueAt={}", instanceId, dueAt);
   }
 
@@ -867,7 +872,7 @@ public class FlowInstanceLifecycleManager {
     for (FlowNodeDO node : nextNodes) {
       taskService.createTask(instanceId, node, variables);
     }
-    instanceMapper.updateStatus(
+    instanceRepository.updateStatus(
         instanceId,
         instance.getFlowStatus(),
         nextNodes.get(0).getNodeCode(),
@@ -891,7 +896,7 @@ public class FlowInstanceLifecycleManager {
         // P0-2: 如果 ext.timer 存在，注册边界定时器自动触发（timer boundary 语义）
         scheduleBoundaryTimerIfPresent(node, instanceId, boundaryTaskId);
         // 更新实例当前节点为事件捕获节点（流程在此等待事件触发）
-        instanceMapper.updateStatus(
+        instanceRepository.updateStatus(
             instanceId, null, node.getNodeCode(), node.getNodeName(), null, null);
         log.info(
             "[Flow] 事件捕获节点等待触发: instanceId={} node={} type={}",
@@ -913,7 +918,7 @@ public class FlowInstanceLifecycleManager {
               e.getMessage());
         }
         // 抄送节点是穿透节点：自动推进到下游
-        FlowInstanceDO ccInstance = instanceMapper.selectById(instanceId);
+        FlowInstanceDO ccInstance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
         if (ccInstance != null) {
           List<FlowNodeDO> ccNext =
               advancer.advance(ccInstance, node.getNodeCode(), "PASS", null, variables);
@@ -930,10 +935,10 @@ public class FlowInstanceLifecycleManager {
       // P1-3 / fix-1: SUBPROCESS 节点或 ext 中含 callActivityFlowCode 的节点触发子流程
       if (node.getNodeType().equals(FlowNodeType.SUBPROCESS.getCode()) || isCallActivity(node)) {
         try {
-          FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+          FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
           subProcessService.startSubProcess(instance, node, variables);
           // 子流程启动后，父流程"停在" callActivity 节点，更新 currentNodeCode
-          instanceMapper.updateStatus(
+          instanceRepository.updateStatus(
               instanceId,
               instance.getFlowStatus(),
               node.getNodeCode(),
@@ -964,7 +969,7 @@ public class FlowInstanceLifecycleManager {
   // ============================== 私有辅助方法 ==============================
 
   private FlowInstanceDO getByIdOrThrow(String id) {
-    FlowInstanceDO instance = instanceMapper.selectById(id);
+    FlowInstanceDO instance = instanceRepository.findById(id).map(converter::entityToDO).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -1040,7 +1045,7 @@ public class FlowInstanceLifecycleManager {
     audit.setTenantId(instance.getTenantId());
     audit.setProviderTraceId(instance.getProviderTraceId());
     audit.setOperatedAt(LocalDateTime.now());
-    auditLogMapper.insert(audit);
+    auditLogRepository.save(converter.entityToVO(audit));
     log.info("[Flow] 重做为新实例: 原实例={} 新实例={} initiatorId={}", instanceId, newInstanceId, initiatorId);
     return newInstanceId;
   }
@@ -1164,7 +1169,9 @@ public class FlowInstanceLifecycleManager {
         return null;
       }
       // 查找被附着节点的当前 PENDING 任务
-      List<FlowRunTaskDO> tasks = taskMapper.selectPendingByNode(instanceId, attachedToRef);
+      List<FlowRunTaskDO> tasks = taskRepository.findPendingByNode(instanceId, attachedToRef).stream()
+          .map(converter::entityToDO)
+          .collect(Collectors.toList());
       return tasks.isEmpty() ? null : tasks.get(0).getId();
     } catch (Exception e) {
       log.warn(

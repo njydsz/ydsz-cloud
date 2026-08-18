@@ -11,10 +11,11 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
@@ -99,11 +100,14 @@ public class FlowTaskSupport {
 
   // ============================== 依赖注入 ==============================
 
-  /** 运行时任务 Mapper，负责 {@code ydsz_flow_run_task} 表的查询 / 更新 / 状态扭转 */
-  private final FlowRunTaskMapper taskMapper;
+  /** 运行时任务仓储，负责 {@code ydsz_flow_run_task} 表的查询 / 更新 / 状态扭转 */
+  private final FlowRunTaskRepository taskRepository;
 
-  /** 审计日志 Mapper，负责 {@code ydsz_flow_audit_log} 表的写入，承载任务操作审计轨迹 */
-  private final FlowAuditLogMapper auditLogMapper;
+  /** 审计日志仓储，负责 {@code ydsz_flow_audit_log} 表的写入，承载任务操作审计轨迹 */
+  private final FlowAuditLogRepository auditLogRepository;
+
+  /** MapStruct 转换器（DO/VO/DTO 转换） */
+  private final WorkflowConverter converter;
 
   /**
    * 事件监听器列表（Spring 自动注入所有 {@link FlowEventListener} 实现）
@@ -143,7 +147,7 @@ public class FlowTaskSupport {
    *     error.workflow.msg_6541ab08}（i18n 资源键）
    */
   public FlowRunTaskDO getTaskOrThrow(String id) {
-    FlowRunTaskDO task = taskMapper.selectById(id);
+    FlowRunTaskDO task = taskRepository.findById(id).map(converter::entityToDO).orElse(null);
     if (task == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -223,7 +227,7 @@ public class FlowTaskSupport {
       log.setOperatedAt(LocalDateTime.now());
       log.setTenantId(task.getTenantId());
       log.setProviderTraceId(task.getProviderTraceId());
-      auditLogMapper.insert(log);
+      auditLogRepository.save(converter.entityToVO(log));
     } catch (Exception e) {
       FlowTaskSupport.log.warn("[Flow] 审计日志写入失败: {}", e.getMessage());
     }

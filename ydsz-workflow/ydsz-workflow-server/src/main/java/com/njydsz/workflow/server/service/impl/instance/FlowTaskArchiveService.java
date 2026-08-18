@@ -8,11 +8,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.workflow.domain.enums.FlowTaskStatus;
+import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 
 /**
@@ -30,8 +31,9 @@ import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 @RequiredArgsConstructor
 public class FlowTaskArchiveService {
 
-  private final FlowRunTaskMapper taskMapper;
-  private final FlowHisTaskMapper hisTaskMapper;
+  private final FlowRunTaskRepository taskRepository;
+  private final FlowHisTaskRepository hisTaskRepository;
+  private final WorkflowConverter converter;
 
   /** P0-1: 事件订阅服务 — 任务完成时取消关联的边界事件订阅。 使用 @Lazy 避免循环依赖。 */
   @Lazy private final FlowEventSubscriptionService eventSubscriptionService;
@@ -49,12 +51,11 @@ public class FlowTaskArchiveService {
     LocalDateTime now = LocalDateTime.now();
     Long durationMs =
         task.getCreatedAt() == null ? null : Duration.between(task.getCreatedAt(), now).toMillis();
-    taskMapper.completeTask(
-        task.getId(), FlowTaskStatus.COMPLETED.name(), comment, now, durationMs);
     task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
     task.setComment(comment);
     task.setFinishAt(now);
     task.setDurationMs(durationMs);
+    taskRepository.update(converter.entityToVO(task));
     archiveToHistory(task, FlowTaskStatus.COMPLETED);
     // P0-1: 任务完成后取消关联的边界事件订阅
     try {
@@ -103,6 +104,6 @@ public class FlowTaskArchiveService {
     his.setProviderTraceId(src.getProviderTraceId());
     // GAP-P2-10: 归档保留 iter_var，FOREACH 任务审批历史可追溯
     his.setIterVar(src.getIterVar());
-    hisTaskMapper.insert(his);
+    hisTaskRepository.save(converter.entityToVO(his));
   }
 }

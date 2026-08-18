@@ -2,7 +2,8 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
-import com.njydsz.userinfo.infra.entity.CompanyDeptDO;
+import com.njydsz.userinfo.domain.dto.CompanyDeptDTO;
+import com.njydsz.userinfo.domain.vo.CompanyDeptVO;
 
 /**
  * 公司-部门 Service 接口
@@ -39,34 +40,34 @@ public interface CompanyDeptService {
    * 根据 ID 查询公司-部门关联。
    *
    * @param id 主键 ID
-   * @return 公司-部门关联实体，不存在时返回 null
+   * @return 公司-部门关联 VO，不存在时返回 null
    */
-  CompanyDeptDO getById(String id);
+  CompanyDeptVO getById(String id);
 
   /**
    * 查询全部公司-部门关联。
    *
    * @return 关联列表
    */
-  List<CompanyDeptDO> list();
+  List<CompanyDeptVO> list();
 
   /**
    * 创建公司-部门关联。
    *
    * <p>建议业务层校验：同一公司同一部门不可重复关联。
    *
-   * @param entity 公司-部门关联实体
+   * @param dto 公司-部门关联 DTO
    * @return 新关联主键 ID
    */
-  String save(CompanyDeptDO entity);
+  String save(CompanyDeptDTO dto);
 
   /**
    * 更新公司-部门关联。
    *
-   * @param entity 公司-部门关联实体（含 ID）
+   * @param dto 公司-部门关联 DTO（含 ID）
    * @return true=成功
    */
-  boolean updateById(CompanyDeptDO entity);
+  boolean updateById(CompanyDeptDTO dto);
 
   /**
    * 删除公司-部门关联。

@@ -31,6 +31,12 @@ public class CompanyDeptRepositoryImpl implements CompanyDeptRepository {
   private final UserInfoConverter converter;
 
   @Override
+  public List<CompanyDeptVO> list() {
+    List<CompanyDeptDO> entities = companyDeptMapper.selectList(null);
+    return converter.companyDeptListToVO(entities);
+  }
+
+  @Override
   public Optional<CompanyDeptVO> findById(String id) {
     CompanyDeptDO entity = companyDeptMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToVO);

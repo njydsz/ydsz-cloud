@@ -9,9 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 
 /**
@@ -31,9 +32,10 @@ import com.njydsz.workflow.server.metrics.FlowMetrics;
 @RequiredArgsConstructor
 public class FlowTaskClaimService {
 
-  private final FlowRunTaskMapper taskMapper;
+  private final FlowRunTaskRepository taskRepository;
   private final FlowTaskSupport support;
   private final FlowTaskAuditService auditService;
+  private final WorkflowConverter converter;
 
   /** P2-3: Prometheus 指标（可能为 null：测试环境） */
   private final FlowMetrics flowMetrics;
@@ -57,7 +59,7 @@ public class FlowTaskClaimService {
           .build();
     }
     applyClaim(task, userId);
-    taskMapper.updateById(task);
+    taskRepository.update(converter.entityToVO(task));
     support.audit(task, "CLAIM", userId, null, null);
     // P1-4: 记录代理签收日志
     auditService.logDelegateOperation(task, "CLAIM");

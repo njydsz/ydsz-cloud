@@ -6,10 +6,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 
 /**
@@ -30,9 +31,10 @@ public class FlowTaskAuditService {
   /** 委派代理操作的业务类型标识 */
   public static final String BIZ_TYPE_DELEGATE_PROXY = "DELEGATE_PROXY";
 
-  private final FlowAuditLogMapper auditLogMapper;
-  private final FlowInstanceMapper instanceMapper;
+  private final FlowAuditLogRepository auditLogRepository;
+  private final FlowInstanceRepository instanceRepository;
   private final FlowDelegateAuthService delegateAuthService;
+  private final WorkflowConverter converter;
 
   /**
    * 记录委派代理操作日志（CLAIM/DELEGATE_RETURN/PASS 等场景）。
@@ -43,7 +45,7 @@ public class FlowTaskAuditService {
    * @param action 动作类型（CLAIM/PASS/DELEGATE_RETURN/...）
    */
   public void logDelegateOperation(FlowRunTaskDO task, String action) {
-    if (task == null || auditLogMapper == null) {
+    if (task == null) {
       return;
     }
     try {
@@ -67,7 +69,7 @@ public class FlowTaskAuditService {
       LocalDateTime now = LocalDateTime.now();
       logEntry.setCreatedAt(now);
       logEntry.setUpdatedAt(now);
-      auditLogMapper.insert(logEntry);
+      auditLogRepository.save(converter.entityToVO(logEntry));
     } catch (Exception e) {
       FlowTaskAuditService.log.warn(
           "[Flow] 委派代理日志写入失败: taskId={} err={}", task.getId(), e.getMessage());

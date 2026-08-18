@@ -2,14 +2,14 @@ package com.njydsz.userinfo.server.service.impl;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.userinfo.infra.entity.CompanyDeptDO;
+import com.njydsz.userinfo.domain.dto.CompanyDeptDTO;
 import com.njydsz.userinfo.domain.repository.CompanyDeptRepository;
+import com.njydsz.userinfo.domain.vo.CompanyDeptVO;
 import com.njydsz.userinfo.server.service.CompanyDeptService;
 
 /**
@@ -30,37 +30,32 @@ public class CompanyDeptServiceImpl implements CompanyDeptService {
   private final CompanyDeptRepository companyDeptRepository;
 
   @Override
-  public CompanyDeptDO getById(String id) {
-    CompanyDeptDO entity = companyDeptRepository.findById(id);
-    if (entity == null || entity.getDeleted() == 1) {
-      return null;
-    }
-    return entity;
+  public CompanyDeptVO getById(String id) {
+    return companyDeptRepository.findById(id).orElse(null);
   }
 
   @Override
-  public List<CompanyDeptDO> list() {
-    LambdaQueryWrapper<CompanyDeptDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(CompanyDeptDO::getDeleted, 0);
-    return companyDeptRepository.list(wrapper);
+  public List<CompanyDeptVO> list() {
+    return companyDeptRepository.list();
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String save(CompanyDeptDO entity) {
-    companyDeptRepository.insert(entity);
-    return entity.getId();
+  public String save(CompanyDeptDTO dto) {
+    CompanyDeptVO vo = companyDeptRepository.create(dto);
+    return vo.getId();
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean updateById(CompanyDeptDO entity) {
-    return companyDeptRepository.updateById(entity) > 0;
+  public boolean updateById(CompanyDeptDTO dto) {
+    CompanyDeptVO vo = companyDeptRepository.update(dto);
+    return vo != null;
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    return companyDeptRepository.deleteById(id) > 0;
+    return companyDeptRepository.deleteById(id);
   }
 }

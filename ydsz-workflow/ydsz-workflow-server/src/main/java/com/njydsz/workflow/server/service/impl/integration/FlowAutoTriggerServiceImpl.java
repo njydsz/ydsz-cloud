@@ -13,10 +13,12 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
+import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
+import com.njydsz.workflow.domain.repository.FlowAutoTriggerRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowAutoTriggerDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
-import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowAutoTriggerMapper;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
@@ -81,8 +83,17 @@ import com.njydsz.workflow.server.service.FlowRoutingService;
 @RequiredArgsConstructor
 public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
-  /** 自动触发 Mapper，管理 ydsz_flow_auto_trigger 表 */
+  /** 自动触发 Mapper，管理 ydsz_flow_auto_trigger 表（复杂查询暂无 Repository 替代） */
   private final FlowAutoTriggerMapper autoTriggerMapper;
+
+  /** 自动触发仓储，管理 ydsz_flow_auto_trigger 表 CRUD */
+  private final FlowAutoTriggerRepository autoTriggerRepository;
+
+  /** 审计日志仓储，记录自动触发操作轨迹 */
+  private final FlowAuditLogRepository auditLogRepository;
+
+  /** MapStruct 转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
 
   /** 智能路由服务，解析触发条件表达式 */
   private final FlowRoutingService routingService;
@@ -238,7 +249,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
   private void writeAuditLog(
       FlowInstanceDO instance, FlowAutoTriggerDO trigger, boolean success, String comment) {
     try {
-      auditLogMapper.insert(buildAuditLogEntry(instance, trigger, success, comment));
+      auditLogRepository.save(converter.entityToVO(buildAuditLogEntry(instance, trigger, success, comment)));
     } catch (Exception e) {
       log.warn(
           "[FlowAutoTriggerDO] 审计日志写入失败: instanceId={} triggerId={} err={}",
@@ -283,7 +294,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     trigger.setConditionExpression(conditionExpression);
     trigger.setEnabled(1);
     trigger.setSortOrder(0);
-    autoTriggerMapper.insert(trigger);
+    autoTriggerRepository.save(converter.entityToVO(trigger));
     log.info(
         "[FlowAutoTriggerDO] 注册触发规则: id={} source={} target={}",
         trigger.getId(),
@@ -311,21 +322,21 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void deleteById(String id) {
-    autoTriggerMapper.deleteById(id);
+    autoTriggerRepository.deleteById(id);
     log.info("[FlowAutoTriggerDO] 删除触发规则: id={}", id);
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean toggleEnabled(String id) {
-    FlowAutoTriggerDO trigger = autoTriggerMapper.selectById(id);
+    FlowAutoTriggerDO trigger = autoTriggerRepository.findById(id).map(converter::entityToDO).orElse(null);
     if (trigger == null) {
       log.warn("[FlowAutoTriggerDO] 触发规则不存在: id={}", id);
       return false;
     }
     int newEnabled = (trigger.getEnabled() != null && trigger.getEnabled() == 1) ? 0 : 1;
     trigger.setEnabled(newEnabled);
-    autoTriggerMapper.updateById(trigger);
+    autoTriggerRepository.update(converter.entityToVO(trigger));
     log.info("[FlowAutoTriggerDO] 切换触发规则状态: id={} enabled={}", id, newEnabled);
     return newEnabled == 1;
   }

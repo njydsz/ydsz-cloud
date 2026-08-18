@@ -268,6 +268,14 @@ public interface WorkflowConverter {
   /** 流程用户 VO → 流程用户 DO。 */
   FlowUserDO entityToDO(FlowUserVO vo);
 
+  // ===== DO → DTO (updateById 场景) =====
+
+  /** 流程实例 DO → 流程实例 DTO（更新场景）。 */
+  FlowInstanceDTO doToDto(FlowInstanceDO entity);
+
+  /** 运行时任务 DO → 运行时任务 DTO（更新场景，如有需要）。 */
+  com.njydsz.workflow.domain.dto.FlowTaskOperateDTO runTaskDoToDto(FlowRunTaskDO entity);
+
   // ===== String (通用字符串包装) =====
   /** 字符串 → {@link StringVO}（如合并组 ID 包装）。 */
   default StringVO entityToVO(String value) {

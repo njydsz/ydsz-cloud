@@ -2,6 +2,7 @@ package com.njydsz.workflow.server.service.impl.instance;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,10 +10,11 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowUrgeLimiter;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 
@@ -31,10 +33,11 @@ import com.njydsz.workflow.server.metrics.FlowMetrics;
 @RequiredArgsConstructor
 public class FlowTaskUrgeService {
 
-  private final FlowRunTaskMapper taskMapper;
-  private final FlowInstanceMapper instanceMapper;
+  private final FlowRunTaskRepository taskRepository;
+  private final FlowInstanceRepository instanceRepository;
   private final FlowTaskSupport support;
   private final FlowUrgeLimiter urgeLimiter;
+  private final WorkflowConverter converter;
 
   /** P2-3: Prometheus 指标（可能为 null：测试环境） */
   private final FlowMetrics flowMetrics;
@@ -55,7 +58,9 @@ public class FlowTaskUrgeService {
           .message("error.workflow.msg_75474a57")
           .build();
     }
-    List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
+    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
+        .map(converter::entityToDO)
+        .collect(Collectors.toList());
     List<String> urged = new ArrayList<>();
     for (FlowRunTaskDO task : pendingTasks) {
       urged.add(task.getAssigneeId());
@@ -85,7 +90,9 @@ public class FlowTaskUrgeService {
             .build();
       }
     }
-    List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByNode(instanceId, nodeCode);
+    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByNode(instanceId, nodeCode).stream()
+        .map(converter::entityToDO)
+        .collect(Collectors.toList());
     List<String> urged = new ArrayList<>();
     for (FlowRunTaskDO task : pendingTasks) {
       urged.add(task.getAssigneeId());
@@ -105,7 +112,7 @@ public class FlowTaskUrgeService {
       return;
     }
     try {
-      FlowInstanceDO ins = instanceMapper.selectById(instanceId);
+      FlowInstanceDO ins = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
       flowMetrics.incTask(ins != null ? ins.getFlowCode() : "unknown", "", "urged");
     } catch (Exception e) {
       flowMetrics.incTask("unknown", "", "urged");

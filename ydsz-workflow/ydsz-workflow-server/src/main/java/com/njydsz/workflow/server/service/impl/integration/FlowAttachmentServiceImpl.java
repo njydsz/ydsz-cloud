@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +17,9 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowAttachmentDTO;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
+import com.njydsz.workflow.domain.repository.FlowAttachmentRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAttachmentDO;
-import com.njydsz.workflow.infra.mapper.FlowAttachmentMapper;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
 
@@ -92,8 +94,11 @@ import com.njydsz.workflow.server.service.FlowAttachmentService;
 @RequiredArgsConstructor
 public class FlowAttachmentServiceImpl implements FlowAttachmentService {
 
-  /** 审批附件 Mapper，管理 ydsz_flow_attachment 表 */
-  private final FlowAttachmentMapper attachmentMapper;
+  /** 审批附件仓储，管理 ydsz_flow_attachment 表 */
+  private final FlowAttachmentRepository attachmentRepository;
+
+  /** MapStruct 转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
 
   /** P3-3.4: 附件预览配置统一从 FlowProperties 读取 */
   private final FlowProperties flowProperties;
@@ -159,7 +164,10 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
       entities.add(entity);
     }
     if (!entities.isEmpty()) {
-      attachmentMapper.insert(entities);
+      List<com.njydsz.workflow.domain.vo.FlowAttachmentVO> voList = entities.stream()
+          .map(converter::entityToVO)
+          .collect(Collectors.toList());
+      attachmentRepository.saveBatch(voList);
       log.info(
           "[Flow] 审批附件落库: instanceId={} taskId={} count={}", instanceId, taskId, entities.size());
     }
@@ -168,27 +176,31 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public List<FlowAttachmentDO> listByTask(String taskId) {
-    return attachmentMapper.selectByTask(taskId);
+    return attachmentRepository.findByTaskId(taskId).stream()
+        .map(converter::entityToDO)
+        .collect(Collectors.toList());
   }
 
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public List<FlowAttachmentDO> listByInstance(String instanceId) {
-    return attachmentMapper.selectByInstance(instanceId);
+    return attachmentRepository.findByInstanceId(instanceId).stream()
+        .map(converter::entityToDO)
+        .collect(Collectors.toList());
   }
 
   @Override
   public void delete(String attachmentId, String operatorId) {
-    FlowAttachmentDO entity = attachmentMapper.selectById(attachmentId);
+    FlowAttachmentDO entity = attachmentRepository.findById(attachmentId).map(converter::entityToDO).orElse(null);
     if (entity != null && (entity.getDeleted() == null || entity.getDeleted() == 0)) {
-      attachmentMapper.deleteById(attachmentId);
+      attachmentRepository.deleteById(attachmentId);
       log.info("[Flow] 附件删除: attachmentId={} operator={}", attachmentId, operatorId);
     }
   }
 
   @Override
   public FlowAttachmentPreviewVO previewAttachment(String attachmentId) {
-    FlowAttachmentDO attachment = attachmentMapper.selectById(attachmentId);
+    FlowAttachmentDO attachment = attachmentRepository.findById(attachmentId).map(converter::entityToDO).orElse(null);
     if (attachment == null || (attachment.getDeleted() != null && attachment.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)

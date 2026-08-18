@@ -3,6 +3,7 @@ package com.njydsz.workflow.server.service.impl.instance;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,16 +16,17 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
+import com.njydsz.workflow.domain.enums.FlowTaskStatus;
+import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
-import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 
@@ -43,17 +45,20 @@ import com.njydsz.workflow.server.metrics.FlowMetrics;
 @RequiredArgsConstructor
 public class FlowTaskOperateService {
 
-  /** 运行时任务 Mapper，查询/更新任务状态 */
-  private final FlowRunTaskMapper taskMapper;
+  /** 运行时任务仓储，查询/更新任务状态 */
+  private final FlowRunTaskRepository taskRepository;
 
-  /** 历史任务 Mapper，查询已归档任务（撤回时使用） */
-  private final FlowHisTaskMapper hisTaskMapper;
+  /** 历史任务仓储，查询已归档任务（撤回时使用） */
+  private final FlowHisTaskRepository hisTaskRepository;
 
-  /** 流程实例 Mapper，查询实例状态 */
-  private final FlowInstanceMapper instanceMapper;
+  /** 流程实例仓储，查询实例状态 */
+  private final FlowInstanceRepository instanceRepository;
 
-  /** 流程节点 Mapper，查询节点配置（跳转白名单校验） */
-  private final FlowNodeMapper nodeMapper;
+  /** 流程节点仓储，查询节点配置（跳转白名单校验） */
+  private final FlowNodeRepository nodeRepository;
+
+  /** MapStruct 转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
 
   /** 跨子 Service 共享的任务校验/审计/事件辅助 */
   private final FlowTaskSupport support;
@@ -96,7 +101,7 @@ public class FlowTaskOperateService {
     task.setAssignorId(originalAssignorId);
     task.setAssignorName(originalAssignorName);
     task.setTaskStatus(FlowTaskStatus.CLAIMED.name());
-    taskMapper.updateById(task);
+    taskRepository.update(converter.entityToVO(task));
     support.audit(task, "TRANSFER", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
     log.info("[Flow] 转办任务: taskId={} → userId={}", task.getId(), dto.getTargetUserId());
     if (flowMetrics != null) {
@@ -134,7 +139,7 @@ public class FlowTaskOperateService {
     task.setAssigneeId(String.valueOf(dto.getTargetUserId()));
     task.setAssigneeName(dto.getTargetUserName());
     task.setTaskStatus(FlowTaskStatus.DELEGATED.name());
-    taskMapper.updateById(task);
+    taskRepository.update(converter.entityToVO(task));
     support.audit(task, "DELEGATE", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
     log.info(
         "[Flow] 委派任务: taskId={} → 被委派人={} (处理完回到 {})",
@@ -176,7 +181,7 @@ public class FlowTaskOperateService {
           .message("error.workflow.msg_09c299d0")
           .build();
     }
-    FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
+    FlowInstanceDO instance = instanceRepository.findById(task.getInstanceId()).map(converter::entityToDO).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -185,7 +190,7 @@ public class FlowTaskOperateService {
           .build();
     }
     // 校验目标节点存在
-    FlowNodeDO targetNode = nodeMapper.selectByCode(task.getDefinitionId(), dto.getTargetNodeCode());
+    FlowNodeDO targetNode = nodeRepository.findByCode(task.getDefinitionId(), dto.getTargetNodeCode()).map(converter::entityToDO).orElse(null);
     if (targetNode == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -203,9 +208,9 @@ public class FlowTaskOperateService {
     // 完成当前任务
     archiveService.completeAndArchive(task, dto.getComment());
     // 取消同实例其他 PENDING 任务
-    taskMapper.cancelByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
+    taskRepository.updateStatusByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
     // 更新实例当前节点为目标节点
-    instanceMapper.updateStatus(
+    instanceRepository.updateStatus(
         instance.getId(),
         instance.getFlowStatus(),
         targetNode.getNodeCode(),
@@ -241,7 +246,7 @@ public class FlowTaskOperateService {
   @Transactional(rollbackFor = Exception.class)
   public String retract(String hisTaskId, String operatorId, String comment) {
     // 1. 查历史任务
-    FlowHisTaskDO hisTask = hisTaskMapper.selectById(hisTaskId);
+    FlowHisTaskDO hisTask = hisTaskRepository.findById(hisTaskId).map(converter::entityToDO).orElse(null);
     if (hisTask == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -265,7 +270,7 @@ public class FlowTaskOperateService {
           .build();
     }
     // 4. 校验：实例存在且为 RUNNING
-    FlowInstanceDO instance = instanceMapper.selectById(hisTask.getInstanceId());
+    FlowInstanceDO instance = instanceRepository.findById(hisTask.getInstanceId()).map(converter::entityToDO).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -281,7 +286,9 @@ public class FlowTaskOperateService {
           .build();
     }
     // 5. 校验：下一节点待办必须全部为 PENDING
-    List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instance.getId());
+    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instance.getId()).stream()
+        .map(converter::entityToDO)
+        .collect(Collectors.toList());
     boolean anyProcessed =
         pendingTasks.stream()
             .anyMatch(
@@ -295,7 +302,7 @@ public class FlowTaskOperateService {
           .build();
     }
     // 6. 取消下一节点待办
-    taskMapper.cancelByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
+    taskRepository.updateStatusByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
 
     // 7. 重新生成本节点的 PENDING 任务（复用历史任务的元数据）
     FlowRunTaskDO newTask = new FlowRunTaskDO();
@@ -321,10 +328,10 @@ public class FlowTaskOperateService {
     newTask.setTenantId(instance.getTenantId());
     newTask.setProviderTraceId(instance.getProviderTraceId());
     newTask.setComment(comment);
-    taskMapper.insert(newTask);
+    taskRepository.save(converter.entityToVO(newTask));
 
     // 8. 更新实例 currentNodeCode 回退到本节点
-    instanceMapper.updateStatus(
+    instanceRepository.updateStatus(
         instance.getId(), null, hisTask.getNodeCode(), hisTask.getNodeName(), null, null);
 
     // 9. 审计日志
@@ -340,7 +347,7 @@ public class FlowTaskOperateService {
     update.setId(hisTask.getId());
     update.setTaskStatus("RETRACTED");
     update.setComment("已取回" + (StringUtils.hasText(comment) ? "：" + comment : ""));
-    hisTaskMapper.updateById(update);
+    hisTaskRepository.update(converter.entityToVO(update));
 
     // 11. Prometheus 指标
     if (flowMetrics != null) {

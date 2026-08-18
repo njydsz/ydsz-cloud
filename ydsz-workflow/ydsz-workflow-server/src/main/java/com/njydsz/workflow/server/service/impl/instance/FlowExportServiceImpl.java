@@ -15,11 +15,13 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
-import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.server.service.FlowExportService;
+import java.util.stream.Collectors;
 
 /**
  * 审批单导出 Service 实现
@@ -88,8 +90,9 @@ import com.njydsz.workflow.server.service.FlowExportService;
 @RequiredArgsConstructor
 public class FlowExportServiceImpl implements FlowExportService {
 
-  private final FlowInstanceMapper instanceMapper;
-  private final FlowHisTaskMapper hisTaskMapper;
+  private final FlowInstanceRepository instanceRepository;
+  private final FlowHisTaskRepository hisTaskRepository;
+  private final WorkflowConverter converter;
 
   private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -218,7 +221,7 @@ public class FlowExportServiceImpl implements FlowExportService {
   // ============================== 辅助方法 ==============================
 
   private FlowInstanceDO loadInstance(String instanceId) {
-    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+    FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -229,7 +232,7 @@ public class FlowExportServiceImpl implements FlowExportService {
   }
 
   private List<FlowHisTaskDO> loadHistory(String instanceId) {
-    List<FlowHisTaskDO> history = hisTaskMapper.selectByInstanceId(instanceId);
+    List<FlowHisTaskDO> history = hisTaskRepository.findByInstanceId(instanceId).stream().map(converter::entityToDO).collect(Collectors.toList());
     return history != null ? history : new ArrayList<>();
   }
 

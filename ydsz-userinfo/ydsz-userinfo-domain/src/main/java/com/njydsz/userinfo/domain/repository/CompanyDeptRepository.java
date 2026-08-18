@@ -19,6 +19,13 @@ import com.njydsz.userinfo.domain.vo.CompanyDeptVO;
 public interface CompanyDeptRepository {
 
   /**
+   * 查询全部公司-部门关联。
+   *
+   * @return 公司-部门关联列表
+   */
+  List<CompanyDeptVO> list();
+
+  /**
    * 根据 ID 查询公司-部门关联。
    *
    * @param id 关联 ID
