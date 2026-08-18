@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.socket.push.RealtimePushTemplate;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 
 /**
@@ -30,8 +30,8 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 @RequiredArgsConstructor
 public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
 
-  /** 运行时任务 Mapper，统计用户当前待办数 */
-  private final FlowRunTaskMapper taskMapper;
+  /** 运行时任务仓储，统计用户当前待办数 */
+  private final FlowRunTaskRepository taskRepository;
 
   /** P2-7: 统一推送模板，直接推送消息（含集群广播 + 离线补偿 + 过滤 + 审计） */
   private final RealtimePushTemplate pushTemplate;
@@ -57,7 +57,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
       return;
     }
     try {
-      long count = taskMapper.countTodoByAssignee(userId, null);
+      long count = taskRepository.countPendingByAssignee(userId);
       Map<String, Object> data = new HashMap<>();
       data.put("userId", userId);
       data.put("todoCount", count);
@@ -176,7 +176,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
       return;
     }
     try {
-      long count = taskMapper.countTodoByAssignee(userId, null);
+      long count = taskRepository.countPendingByAssignee(userId);
       Map<String, Object> data = new HashMap<>();
       data.put("userId", userId);
       data.put("todoCount", count);

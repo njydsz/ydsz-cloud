@@ -21,6 +21,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -85,6 +86,7 @@ import com.njydsz.nextwiki.server.service.FilePermissionService;
  * @author ydsz-team
  * @since 1.0.0
  */
+@ApiVersion("v1")
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/nextwiki/files")

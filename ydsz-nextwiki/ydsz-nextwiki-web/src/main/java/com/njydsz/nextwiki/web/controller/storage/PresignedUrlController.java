@@ -16,6 +16,7 @@ import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
 
 /**
@@ -39,6 +40,7 @@ import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
  * @author ydsz-team
  * @since 1.0.0
  */
+@ApiVersion("v1")
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/nextwiki/storage")

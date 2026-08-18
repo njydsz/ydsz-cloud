@@ -24,6 +24,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.nextwiki.domain.dto.FileCommentDTO;
 import com.njydsz.nextwiki.domain.repository.FileCommentRepository;
 import com.njydsz.nextwiki.domain.vo.FileCommentVO;
@@ -88,6 +89,7 @@ import com.njydsz.nextwiki.domain.vo.FileCommentVO;
  * @author ydsz-team
  * @since 1.0.0
  */
+@ApiVersion("v1")
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/nextwiki/comments")

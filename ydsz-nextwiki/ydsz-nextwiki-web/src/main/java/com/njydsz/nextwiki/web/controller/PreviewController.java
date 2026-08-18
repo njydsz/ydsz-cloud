@@ -16,6 +16,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.nextwiki.server.service.PreviewApplicationService;
 
 /**
@@ -69,6 +70,7 @@ import com.njydsz.nextwiki.server.service.PreviewApplicationService;
  * @author ydsz-team
  * @since 1.0.0
  */
+@ApiVersion("v1")
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/nextwiki/preview")

@@ -31,6 +31,7 @@ import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.util.ClientIpResolver;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
@@ -94,6 +95,7 @@ import com.njydsz.nextwiki.server.service.DownloadApplicationService.SignedDownl
  * @author ydsz-team
  * @since 1.0.0
  */
+@ApiVersion("v1")
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/nextwiki/download")
