@@ -106,6 +106,7 @@ public class AgentAutoConfiguration {
   @ConditionalOnMissingBean(LlmClient.class)
   public LlmClient llmClient(
       AgentProperties properties,
+      AgentMetrics agentMetrics,
       ObjectProvider<org.springframework.data.redis.core.StringRedisTemplate>
           redisTemplateProvider) {
     LlmClientRouter router = new LlmClientRouter();
@@ -149,7 +150,7 @@ public class AgentAutoConfiguration {
             "[Agent] LLM 语义缓存已启用, ttl={}min, maxSize={}",
             properties.getCache().getTtlMinutes(),
             properties.getCache().getMaxSize());
-        return new CachedLlmClient(router, cache);
+        return new CachedLlmClient(router, cache, agentMetrics);
       }
       log.warn("[Agent] 语义缓存配置为开启但 RedisTemplate 不可用，跳过缓存");
     }

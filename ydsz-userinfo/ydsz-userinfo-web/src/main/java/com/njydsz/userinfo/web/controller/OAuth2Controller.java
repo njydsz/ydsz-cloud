@@ -199,6 +199,7 @@ public class OAuth2Controller {
       @RequestParam String clientId,
       @RequestParam String redirectUri,
       @RequestParam(required = false) String state,
+      @RequestParam(required = false) String scope,
       @RequestParam(required = false) String codeChallenge,
       @RequestParam(required = false) String codeChallengeMethod) {
 
@@ -229,7 +230,22 @@ public class OAuth2Controller {
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_REDIRECT_URI_MISMATCH);
     }
 
-    // 4. 使用 YdszJson 序列化授权码上下文（含 tenantId + PKCE），Redis 存储 5 分钟
+    // 4. P1-3: scope 细粒度授权校验（客户端配置了 allowedScopes 时强制）
+    Set<String> requestedScopes = parseScopes(scope);
+    Set<String> allowedScopes = clientConfig.getAllowedScopes();
+    if (!requestedScopes.isEmpty()
+        && allowedScopes != null
+        && !allowedScopes.isEmpty()
+        && !allowedScopes.containsAll(requestedScopes)) {
+      log.warn(
+          "OAuth2 scope not allowed: clientId={}, requested={}, allowed={}",
+          clientId,
+          requestedScopes,
+          allowedScopes);
+      throw new BusinessException(UserInfoExceptionCode.OAUTH2_SCOPE_INVALID);
+    }
+
+    // 5. 使用 YdszJson 序列化授权码上下文（含 tenantId + PKCE + scope），Redis 存储 5 分钟
     String code = generateAuthorizationCode();
     Map<String, String> contextMap = new HashMap<>();
     contextMap.put("clientId", clientId);
@@ -237,6 +253,7 @@ public class OAuth2Controller {
     contextMap.put("username", userInfo.getUsername());
     contextMap.put("tenantId", userInfo.getTenantId() != null ? userInfo.getTenantId() : "1");
     contextMap.put("redirectUri", redirectUri);
+    contextMap.put("scope", scope != null ? scope : "");
     // PKCE 支持：存储 code_challenge 和 code_challenge_method
     if (codeChallenge != null && !codeChallenge.isBlank()) {
       contextMap.put("codeChallenge", codeChallenge);
@@ -369,7 +386,13 @@ public class OAuth2Controller {
 
     log.info("OAuth2 token issued: clientId={}, userId={}", clientId, userId);
 
-    // 6. 返回标准 OAuth2 响应（RFC 6749 §5.1）
+    // 6. P1-3: 返回实际授权的 scope（授权码上下文中声明的 scope；未声明时回落客户端注册范围）
+    String grantedScope = getString(context, "scope");
+    if (grantedScope == null || grantedScope.isBlank()) {
+      grantedScope = resolveGrantedScope(clientId);
+    }
+
+    // 7. 返回标准 OAuth2 响应（RFC 6749 §5.1）
     return BaseResponse.success(
         Map.of(
             "access_token",
@@ -381,7 +404,7 @@ public class OAuth2Controller {
             "expires_in",
             properties.getTokenTtlSeconds(),
             "scope",
-            "read write"));
+            grantedScope));
   }
 
   /**

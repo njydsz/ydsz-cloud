@@ -75,6 +75,9 @@ public class AgentRuntimeMetrics extends SentryMetricsAdapter {
   /** Gauge 引用，用于动态更新活跃对话数。 */
   private final AtomicReference<Double> activeConversationsRef = new AtomicReference<>(0.0);
 
+  /** 累积消息计数（进程内原子计数，供可观测面板直接读取；P1 修复：面板 totalMessages 此前硬编码为 0） */
+  private final AtomicLong totalMessages = new AtomicLong(0);
+
   /**
    * 构造 Agent 运行态指标采集器。
    *
@@ -234,6 +237,18 @@ public class AgentRuntimeMetrics extends SentryMetricsAdapter {
    */
   public void recordMessage(String role) {
     incrementCounter(METRIC_CONVERSATION_MESSAGES, "role", safe(role));
+    totalMessages.incrementAndGet();
+  }
+
+  /**
+   * 获取进程内累积消息总数。
+   *
+   * <p>供可观测面板展示"总消息数"卡片；进程重启后归零，与 Micrometer 计数器语义一致。
+   *
+   * @return 累积消息条数
+   */
+  public long getTotalMessages() {
+    return totalMessages.get();
   }
 
   // -----------------------------------------------------------------------

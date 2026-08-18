@@ -30,9 +30,6 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableScheduling
 public class SystemApplication {
 
-  /** 私有构造器（启动类不允许实例化，满足工具类规范） */
-  private SystemApplication() {}
-
   /**
    * 系统基础服务启动入口。
    *

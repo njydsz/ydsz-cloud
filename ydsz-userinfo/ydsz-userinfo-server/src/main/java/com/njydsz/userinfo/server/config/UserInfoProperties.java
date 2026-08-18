@@ -3,6 +3,7 @@ package com.njydsz.userinfo.server.config;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -95,6 +96,9 @@ public class UserInfoProperties {
   /** 默认风险等级触发 MFA 的评分阈值（含）。 */
   private static final int DEFAULT_MFA_RISK_THRESHOLD = 60;
 
+  /** 默认单用户最大并发会话数（P1-9，0 表示不限制）。 */
+  private static final int DEFAULT_MAX_SESSIONS_PER_USER = 5;
+
   /** access_token 有效期（秒），默认 2 小时。 */
   private long tokenTtlSeconds = DEFAULT_TOKEN_TTL_SECONDS;
 
@@ -148,6 +152,13 @@ public class UserInfoProperties {
   private int mfaRiskThreshold = DEFAULT_MFA_RISK_THRESHOLD;
 
   /**
+   * 单用户最大并发会话数（P1-9）。
+   *
+   * <p>超过上限时自动踢出最早活跃会话，对标钉钉/飞书"最多 N 端在线"策略。0 表示不限制。
+   */
+  private int maxSessionsPerUser = DEFAULT_MAX_SESSIONS_PER_USER;
+
+  /**
    * OAuth2 客户端配置
    *
    * <p>由 {@link com.njydsz.userinfo.web.controller.OAuth2Controller} 在 {@code /authorize} 和 {@code
@@ -163,6 +174,21 @@ public class UserInfoProperties {
 
     /** 允许的回调地址白名单（RFC 6749 §3.1.2.3）：防止开放重定向攻击 */
     private List<String> redirectUris;
+
+    /**
+     * P1-3: 客户端允许申请的 scope 集合（如 read / write / openid）。
+     *
+     * <p>为 null 或空时表示不限制（兼容存量客户端）；配置后 /authorize 与 /token
+     * 仅返回白名单内的 scope，实现细粒度授权。
+     */
+    private Set<String> allowedScopes;
+
+    /**
+     * P1-3: 客户端允许的 audience（资源标识）集合。
+     *
+     * <p>用于 JWT 中 {@code aud} claim 的声明，标识该 token 可访问的资源服务。
+     */
+    private Set<String> allowedAudiences;
   }
 
   /**

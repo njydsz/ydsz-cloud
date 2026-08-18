@@ -29,6 +29,8 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
 public enum NextwikiExceptionCode implements ExceptionCode {
 
   // 文件相关 W01xxx
+  /** 参数错误 */
+  PARAM_ERROR("W01999", "nextwiki.param.error"),
   /** 文件节点不存在 */
   FILE_NOT_FOUND("W01001", "nextwiki.file.not.found", 404),
   /** 文件名为空 */

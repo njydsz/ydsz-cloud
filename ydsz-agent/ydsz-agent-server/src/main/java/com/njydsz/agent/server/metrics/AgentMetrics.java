@@ -43,6 +43,12 @@ public class AgentMetrics extends SentryMetricsAdapter {
   /** 安全护栏拒绝次数指标名 */
   private static final String METRIC_GUARDRAIL_REJECTIONS = "guardrail_rejections_total";
 
+  /** LLM 缓存命中次数指标名 */
+  private static final String METRIC_CACHE_HITS = "cache_hits_total";
+
+  /** LLM 缓存未命中次数指标名 */
+  private static final String METRIC_CACHE_MISSES = "cache_misses_total";
+
   public AgentMetrics() {
     super("agent_");
   }
@@ -166,5 +172,23 @@ public class AgentMetrics extends SentryMetricsAdapter {
    */
   public void recordGuardrailRejection(String guardName, String direction) {
     incrementCounter(METRIC_GUARDRAIL_REJECTIONS, "guard", guardName, "direction", direction);
+  }
+
+  /**
+   * 记录 LLM 缓存命中。
+   *
+   * @param provider Provider 名称
+   */
+  public void recordCacheHit(String provider) {
+    incrementCounter(METRIC_CACHE_HITS, "provider", provider);
+  }
+
+  /**
+   * 记录 LLM 缓存未命中。
+   *
+   * @param provider Provider 名称
+   */
+  public void recordCacheMiss(String provider) {
+    incrementCounter(METRIC_CACHE_MISSES, "provider", provider);
   }
 }

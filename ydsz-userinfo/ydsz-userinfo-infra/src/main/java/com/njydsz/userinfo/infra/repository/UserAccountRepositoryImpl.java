@@ -13,6 +13,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
+import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
@@ -142,6 +143,26 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   @Override
   public int updatePasswordAndResetFailCount(String id, String newPasswordHash) {
     return userAccountMapper.updatePasswordAndResetFailCount(id, newPasswordHash);
+  }
+
+  @Override
+  public int batchUpdateStatus(Collection<String> ids, EnableStatusEnum status) {
+    if (ids == null || ids.isEmpty()) {
+      return 0;
+    }
+    List<String> idList = new java.util.ArrayList<>(ids);
+    if (status == EnableStatusEnum.ENABLED) {
+      return userAccountMapper.batchEnableByIds(idList);
+    }
+    return userAccountMapper.batchDisableByIds(idList);
+  }
+
+  @Override
+  public int batchDeleteByIds(Collection<String> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return 0;
+    }
+    return userAccountMapper.batchDeleteByIds(new java.util.ArrayList<>(ids));
   }
 
   /**

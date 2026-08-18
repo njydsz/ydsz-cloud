@@ -148,9 +148,13 @@ public class AuthServiceImpl implements AuthService {
   }
 
   /**
-   * 校验图形验证码（全局开关开启或登录风险为 MEDIUM+ 时强制）。
+   * 校验图形验证码（全局开关开启或登录风险为 MEDIUM 时强制）。
    *
-   * <p>风险评分引擎输出 MEDIUM/HIGH 时，即使全局验证码开关关闭，也强制要求图形验证码， 实现「正常用户无感、可疑请求加强验证」的动态认证策略。
+   * <p>风险评分引擎输出 MEDIUM 时，即使全局验证码开关关闭，也强制要求图形验证码，实现
+   * 「正常用户无感、可疑请求加强验证」的动态认证策略。
+   *
+   * <p>P0-10: 仅 MEDIUM 强制图形验证码；HIGH 风险由 {@link #validateMfaIfRequired} 触发 MFA
+   * 强因素校验，避免 HIGH 场景同时要求验证码 + MFA 导致正常用户被双重拦截。
    *
    * @param loginDTO 登录请求 DTO
    * @param risk 登录风险评估结果（可为 null，此时仅按全局开关判断）
@@ -158,7 +162,7 @@ public class AuthServiceImpl implements AuthService {
    */
   private void validateCaptchaIfEnabled(LoginDTO loginDTO, RiskScoringService.RiskScore risk) {
     boolean forceCaptcha =
-        risk != null && risk.requiresAdditionalVerification() && !risk.shouldReject();
+        risk != null && risk.level() == RiskScoringService.RiskLevel.MEDIUM;
     if (properties.isCaptchaEnabled() || forceCaptcha) {
       if (loginDTO.getCaptchaKey() == null || loginDTO.getCaptcha() == null) {
         userInfoMetrics.recordLoginFail();

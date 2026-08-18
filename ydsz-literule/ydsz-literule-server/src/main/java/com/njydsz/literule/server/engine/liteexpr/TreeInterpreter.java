@@ -10,6 +10,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.literule.server.debug.RuleDebugger;
+
 /**
  * LiteExpr AST 树形遍历解释器
  *
@@ -73,6 +75,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   @Override
   public Object visitVariable(VariableNode node) {
+    debugCheckNode(node, "VARIABLE");
     Object value = variables.get(node.name());
     if (traceBuilder != null) {
       traceBuilder.recordVariable(node.name(), value);
@@ -83,6 +86,8 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
   @Override
   public Object visitBinaryOp(BinaryOpNode node) {
     String op = node.operator();
+    // F1 断点调试：比较/逻辑/算术节点求值前挂起（仅调试会话激活时生效）
+    debugCheckNode(node, node.isLogical() ? "LOGICAL" : node.isComparison() ? "COMPARISON" : "ARITHMETIC");
 
     // 短路求值
     if ("&&".equals(op) || "and".equals(op)) {
@@ -164,6 +169,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   @Override
   public Object visitFunctionCall(FunctionCallNode node) {
+    debugCheckNode(node, "FUNCTION_CALL");
     String funcName = node.functionName();
     LiteExprFunction function = functionRegistry.lookup(funcName);
     if (function == null) {
@@ -384,4 +390,33 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   /** 带追踪的求值结果 */
   public record TraceEvalResult(Object value, ExprTraceBuilder.TraceNode traceTree) {}
+
+  // ===== 断点调试集成（F1，零侵入：未配置调试器时为 no-op） =====
+
+  /**
+   * 表达式节点级断点检查（F1 断点调试器）
+   *
+   * <p>在每个关键节点求值前调用，命中时由 {@link DebugSession} 挂起当前求值线程。 未配置调试器或非调试评估时立即返回，无任何开销。
+   *
+   * @param node AST 节点
+   * @param nodeType 节点类型（COMPARISON/LOGICAL/ARITHMETIC/VARIABLE/FUNCTION_CALL）
+   */
+  private void debugCheckNode(ExprNode node, String nodeType) {
+    RuleDebugger debugger = RuleDebugger.get();
+    if (debugger == null) {
+      return;
+    }
+    String ruleCode = RuleDebugger.currentRuleCode();
+    if (ruleCode == null) {
+      return;
+    }
+    try {
+      debugger.checkExpressionBreakpoint(ruleCode, node, nodeType, variables);
+    } catch (Exception e) {
+      // 断点挂起异常不应中断求值（调试器故障隔离）
+      if (e instanceof InterruptedException) {
+        Thread.currentThread().interrupt();
+      }
+    }
+  }
 }

@@ -190,6 +190,9 @@ public interface CronjobConverter {
 
   List<JobWebhookVO> jobWebhookListToVO(List<JobWebhook> entities);
 
+  /** P0-F3: VO → Entity（testWebhook 需要以实体形式发送测试事件） */
+  JobWebhook voToEntity(JobWebhookVO vo);
+
   // ===== JobWebhook PostDTO → Entity =====
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)

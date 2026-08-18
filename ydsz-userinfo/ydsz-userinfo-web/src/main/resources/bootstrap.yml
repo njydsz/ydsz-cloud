@@ -87,6 +87,14 @@ ydsz:
       keys:
         1: ${YDSZ_FIELD_ENC_KEY_V1:}
 
+  # P0-6: 内部接口服务端二次校验（网关白名单之外的最后一道防线）
+  # enabled=true 时 /api/internal/** 必须携带 X-Internal-Call: true 请求头
+  # 各业务模块 Feign 客户端统一注入该头后即可开启（渐进式启用）
+  userinfo:
+    internal-call:
+      enabled: false
+      header-name: X-Internal-Call
+
   # P2-3: API 版本管理机制
   web:
     api-version:

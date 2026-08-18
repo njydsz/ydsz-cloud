@@ -1,9 +1,12 @@
 package com.njydsz.agent.infra.llm;
 
 /**
- * LLM 语义缓存配置常量
+ * LLM 缓存配置常量
  *
- * <p>定义语义缓存的各项阈值参数，可在 application.yml 中通过 {@code ydsz.agent.cache} 前缀覆盖。
+ * <p>定义缓存 key 与默认参数，可在 application.yml 中通过 {@code ydsz.agent.cache} 前缀覆盖。
+ *
+ * <p><b>命名说明</b>：类名保留 "Semantic" 以兼容历史引用，但当前缓存实现为<b>精确哈希匹配</b> （见
+ * {@link SemanticLlmCache} 类注释），未启用语义相似度匹配。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -15,12 +18,6 @@ public final class SemanticCacheConfig {
 
   /** 默认缓存 TTL（分钟） */
   public static final int DEFAULT_TTL_MINUTES = 60;
-
-  /** 默认语义相似度阈值（0.0 ~ 1.0） */
-  public static final double DEFAULT_SIMILARITY_THRESHOLD = 0.95;
-
-  /** 默认最大缓存条目数 */
-  public static final int DEFAULT_MAX_CACHE_SIZE = 500;
 
   /** 缓存 key 拼接分隔符 */
   public static final String KEY_SEPARATOR = "|";

@@ -49,6 +49,9 @@ public class RedisConversationMemory implements ConversationMemory {
   /** 默认最大列表大小 */
   private static final int DEFAULT_MAX_LIST_SIZE = 50;
 
+  /** 剩余 TTL 低于此阈值（秒）时才执行续期，避免活跃长对话被每次 save 无限续期 */
+  private static final long TTL_RENEW_THRESHOLD_SECONDS = 3600L;
+
   /** String 操作组件（expire / delete / hasKey） */
   private final RedisStringOps stringOps;
 
@@ -84,7 +87,11 @@ public class RedisConversationMemory implements ConversationMemory {
     String json = serializeMessage(message);
     collectionOps.rPush(key, json);
     collectionOps.lTrim(key, -maxListSize, -1);
-    stringOps.expire(key, ttlHours * 3600L);
+    // P1 优化：仅当剩余 TTL 低于阈值时才续期，避免活跃长对话被每次 save 无限续期、Redis 内存不释放
+    long remainTtl = stringOps.getExpire(key);
+    if (remainTtl < TTL_RENEW_THRESHOLD_SECONDS) {
+      stringOps.expire(key, ttlHours * 3600L);
+    }
   }
 
   @Override

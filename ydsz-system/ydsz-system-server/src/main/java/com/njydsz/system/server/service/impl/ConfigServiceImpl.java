@@ -177,6 +177,7 @@ public class ConfigServiceImpl implements ConfigService {
   public String save(ConfigVO vo) {
     ConfigDTO dto = toDto(vo);
     checkDuplicateKey(dto);
+    validateConfigValueFormat(dto);
     // 版本快照：新建配置无需快照（变更前不存在）
     configRepository.insert(dto);
     publishConfigChangedEvent(dto.getConfigKey(), dto.getConfigGroup());
@@ -200,6 +201,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(ConfigVO vo) {
     ConfigDTO dto = toDto(vo);
+    validateConfigValueFormat(dto);
     // 版本快照：查询变更前状态
     ConfigVO before = configRepository.findByKeyIgnoreStatus(dto.getConfigKey()).orElse(null);
     String snapshotJson = before != null ? YdszJson.toJson(before) : null;
@@ -397,6 +399,35 @@ public class ConfigServiceImpl implements ConfigService {
           .data("configGroup", dto.getConfigGroup())
           .data("configKey", dto.getConfigKey());
     }
+  }
+
+  /**
+   * 校验配置值格式与声明值类型是否匹配（P1-10 接线：strictValidation 开关 + 告警指标）。
+   *
+   * <p>委托 {@link ConfigValueType#validateFormat} 完成格式权威校验（值类型规则的收敛实现）。
+   * <ul>
+   *   <li>{@code strictValidation=true}（推荐生产）：格式非法直接抛 {@link BusinessException} 阻止脏数据落库
+   *   <li>{@code strictValidation=false}（默认，向后兼容存量非法值）：仅告警放行 + 记录 {@code config_validation_warning_total} 指标
+   * </ul>
+   *
+   * @param dto 待校验的配置 DTO
+   */
+  private void validateConfigValueFormat(ConfigDTO dto) {
+    String formatError = ConfigValueType.validateFormat(dto.getValueType(), dto.getConfigValue());
+    if (formatError == null) {
+      return;
+    }
+    if (properties.getConfig().isStrictValidation()) {
+      throw BusinessException.of(SystemExceptionCode.CONFIG_VALUE_FORMAT_INVALID)
+          .data("configKey", dto.getConfigKey())
+          .data("valueType", dto.getValueType())
+          .data("reason", formatError);
+    }
+    log.warn(
+        "[ConfigService] 配置值格式告警放行（strictValidation=false）: key={}, reason={}",
+        dto.getConfigKey(),
+        formatError);
+    metrics.recordConfigValidationWarning();
   }
 
   @Override

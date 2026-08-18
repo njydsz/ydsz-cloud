@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
@@ -285,10 +286,17 @@ public class UserAccountServiceImpl implements UserAccountService {
    *
    * <p>先删除旧的用户-角色关联，再批量插入新关联（全量覆盖模式）。
    *
+   * <p>P1-7: 加分布式锁防止同一用户并发分配角色导致关联数据丢失。
+   *
    * @throws BusinessException 当用户不存在时抛出
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
+  @YdszDistributedLock(
+      key = "'assignRoles:' + #userId",
+      waitTime = 3,
+      leaseTime = 10,
+      message = "该用户的角色分配操作进行中，请稍后重试")
   public boolean assignRoles(String userId, List<String> roleIds) {
     UserAccountVO user = userAccountRepository.findById(userId)
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND));
@@ -477,83 +485,123 @@ public class UserAccountServiceImpl implements UserAccountService {
    * {@inheritDoc}
    *
    * <p>批量逻辑删除用户，同时清理密码历史记录和发布删除事件。
+   *
+   * <p>P0-9: 批量删除改为单条 {@code UPDATE ... SET deleted = 1 WHERE id IN (...)}，
+   * 替代逐个 {@code findById} + {@code deleteById} 的 N+1 循环。
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public int batchRemoveByIds(List<String> ids) {
-    if (ids == null || ids.isEmpty()) {
+    List<String> distinctIds = distinctNonBlankIds(ids);
+    if (distinctIds.isEmpty()) {
       return 0;
     }
-    int count = 0;
-    for (String id : ids) {
-      UserAccountVO existing = userAccountRepository.findById(id)
-          .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND));
-      if (userAccountRepository.deleteById(id)) {
-        indexDelete(id);
-        passwordHistoryService.clearHistoryByUserId(id);
-        eventPublisher.publishUserDeleted(id, existing.getUsername());
-        count++;
+    // 单次查询校验存在性并获取用户名（替代逐个 findById）
+    Map<String, UserAccountVO> existingMap = collectByIds(distinctIds);
+    if (existingMap.size() != distinctIds.size()) {
+      throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
+    }
+    int affected = userAccountRepository.batchDeleteByIds(distinctIds);
+    if (affected > 0) {
+      for (UserAccountVO existing : existingMap.values()) {
+        indexDelete(existing.getId());
+        passwordHistoryService.clearHistoryByUserId(existing.getId());
+        eventPublisher.publishUserDeleted(existing.getId(), existing.getUsername());
       }
     }
-    return count;
+    return affected;
   }
 
   /**
    * {@inheritDoc}
    *
    * <p>批量启用用户账号。
+   *
+   * <p>P0-9: 批量启用改为单条 {@code UPDATE ... SET status = '1' WHERE id IN (...)}，
+   * 替代逐个 {@code findById} + {@code update} 的 N+1 循环。
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public int batchEnable(List<String> ids) {
-    if (ids == null || ids.isEmpty()) {
+    List<String> distinctIds = distinctNonBlankIds(ids);
+    if (distinctIds.isEmpty()) {
       return 0;
     }
-    int count = 0;
-    for (String id : ids) {
-      userAccountRepository.findById(id)
-          .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND));
-      UserAccountUpdateDTO dto = new UserAccountUpdateDTO();
-      dto.setId(id);
-      dto.setStatus(EnableStatusEnum.ENABLED);
-      UserAccountVO vo = userAccountRepository.update(dto);
-      if (vo != null) {
+    // 单次查询校验存在性并获取用户信息（替代逐个 findById）
+    Map<String, UserAccountVO> existingMap = collectByIds(distinctIds);
+    if (existingMap.size() != distinctIds.size()) {
+      throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
+    }
+    int affected = userAccountRepository.batchUpdateStatus(distinctIds, EnableStatusEnum.ENABLED);
+    if (affected > 0) {
+      for (UserAccountVO vo : existingMap.values()) {
+        vo.setStatus(1);
         indexUpsert(vo);
         eventPublisher.publishUserUpdated(vo);
-        count++;
       }
     }
-    return count;
+    return affected;
   }
 
   /**
    * {@inheritDoc}
    *
    * <p>批量禁用用户账号，同时驱逐全部会话。
+   *
+   * <p>P0-9: 批量禁用改为单条 {@code UPDATE ... SET status = '0' WHERE id IN (...)}，
+   * 替代逐个 {@code findById} + {@code update} 的 N+1 循环。
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public int batchDisable(List<String> ids) {
-    if (ids == null || ids.isEmpty()) {
+    List<String> distinctIds = distinctNonBlankIds(ids);
+    if (distinctIds.isEmpty()) {
       return 0;
     }
-    int count = 0;
-    for (String id : ids) {
-      userAccountRepository.findById(id)
-          .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND));
-      UserAccountUpdateDTO dto = new UserAccountUpdateDTO();
-      dto.setId(id);
-      dto.setStatus(EnableStatusEnum.DISABLED);
-      UserAccountVO vo = userAccountRepository.update(dto);
-      if (vo != null) {
+    // 单次查询校验存在性并获取用户信息（替代逐个 findById）
+    Map<String, UserAccountVO> existingMap = collectByIds(distinctIds);
+    if (existingMap.size() != distinctIds.size()) {
+      throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
+    }
+    int affected = userAccountRepository.batchUpdateStatus(distinctIds, EnableStatusEnum.DISABLED);
+    if (affected > 0) {
+      for (UserAccountVO vo : existingMap.values()) {
+        vo.setStatus(0);
         indexUpsert(vo);
         eventPublisher.publishUserUpdated(vo);
         // 禁用时驱逐全部会话
-        authService.evictAllSessions(id);
-        count++;
+        authService.evictAllSessions(vo.getId());
       }
     }
-    return count;
+    return affected;
+  }
+
+  /**
+   * 去重并过滤空 ID。
+   *
+   * @param ids 原始 ID 列表
+   * @return 去重后的非空 ID 列表
+   */
+  private List<String> distinctNonBlankIds(List<String> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return Collections.emptyList();
+    }
+    return ids.stream()
+        .filter(id -> id != null && !id.isBlank())
+        .distinct()
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * 按 ID 集合批量查询用户并转为 Map。
+   *
+   * @param ids 用户 ID 集合
+   * @return userId → UserAccountVO 映射
+   */
+  private Map<String, UserAccountVO> collectByIds(List<String> ids) {
+    return userAccountRepository.listByIds(ids).stream()
+        .collect(
+            Collectors.toMap(UserAccountVO::getId, vo -> vo, (existing, ignored) -> existing));
   }
 
   private void indexUpsert(UserAccountVO vo) {

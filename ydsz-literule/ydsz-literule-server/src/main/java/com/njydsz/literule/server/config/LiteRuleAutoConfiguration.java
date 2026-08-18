@@ -58,6 +58,7 @@ import com.njydsz.literule.server.core.RuleCircuitBreaker;
 import com.njydsz.literule.server.core.RuleLifecycleService;
 import com.njydsz.literule.server.core.RuleMetrics;
 import com.njydsz.literule.server.core.RuleTimeoutExecutor;
+import com.njydsz.literule.server.debug.RuleDebugger;
 import com.njydsz.literule.server.distributed.RuleConfigOutboxGateway;
 import com.njydsz.literule.server.distributed.RuleConfigOutboxRelay;
 import com.njydsz.literule.server.engine.liteexpr.AviatorExpressionEngine;
@@ -70,18 +71,21 @@ import com.njydsz.literule.server.replay.ExecutionReplayService;
 import com.njydsz.literule.server.sdk.LiteRuleSdk;
 import com.njydsz.literule.server.security.RulePermissionChecker;
 import com.njydsz.literule.server.spi.DbRuleSource;
+import com.njydsz.literule.server.spi.ApolloRuleSource;
 import com.njydsz.literule.server.spi.DecisionTableConfigProvider;
 import com.njydsz.literule.server.spi.DecisionTreeConfigProvider;
 import com.njydsz.literule.server.spi.DefaultAlertActionHandler;
 import com.njydsz.literule.server.spi.FactProvider;
 import com.njydsz.literule.server.spi.FactProviderRegistry;
 import com.njydsz.literule.server.spi.FileRuleSource;
+import com.njydsz.literule.server.spi.NacosRuleSource;
 import com.njydsz.literule.server.spi.RuleActionDispatcher;
 import com.njydsz.literule.server.spi.RuleActionHandler;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.spi.RuleSource;
 import com.njydsz.literule.server.spi.RuleSourceManager;
+import com.njydsz.literule.server.spi.ZookeeperRuleSource;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.server.spi.ScorecardConfigProvider;
 import com.njydsz.literule.server.spi.ScriptConfigProvider;
@@ -653,6 +657,23 @@ public class LiteRuleAutoConfiguration {
   }
 
   /**
+   * 规则断点调试器（F1 断点调试器）
+   *
+   * <p>提供规则级/表达式节点级断点、调试会话挂起/单步/恢复/终止能力， 对标 URule Pro / QLExpress4 断点调试。
+   * 可通过 {@code ydsz.literule.debug.enabled=false} 关闭。
+   *
+   * @param evaluator 表达式求值器（用于条件断点评估）
+   * @return RuleDebugger 实例
+   * @since 1.0.0
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnProperty(prefix = "ydsz.literule.debug", name = "enabled", havingValue = "true", matchIfMissing = true)
+  public RuleDebugger ruleDebugger(ExpressionEngine evaluator) {
+    return new RuleDebugger(evaluator);
+  }
+
+  /**
    * 规则审批流服务（P1-3 多级审批流）
    *
    * <p>当存在 {@link RuleConfigProvider} 时自动装配。默认注册 2 级审批流 （default-2level），消费方可通过 {@link
@@ -853,6 +874,80 @@ public class LiteRuleAutoConfiguration {
   public DbRuleSource dbRuleSource(RuleConfigProvider configProvider) {
     log.info("[LiteRule-Source] 数据库规则数据源已初始化");
     return new DbRuleSource(configProvider);
+  }
+
+  /**
+   * Nacos 规则数据源 Bean（O1 条件装配，消除预留死代码）
+   *
+   * <p>当 {@code ydsz.literule.rule-source.type=nacos} 时自动装配， 从 Nacos 配置中心加载规则定义。
+   * 通过 {@link NacosRuleSource#createConfigListener()} 监听配置变更。
+   *
+   * @param properties 配置属性
+   * @return NacosRuleSource 实例
+   * @since 1.0.0
+   */
+  @Bean
+  @ConditionalOnMissingBean(RuleSource.class)
+  @ConditionalOnProperty(
+      prefix = "ydsz.literule.rule-source",
+      name = "type",
+      havingValue = "nacos")
+  public NacosRuleSource nacosRuleSource(LiteRuleProperties properties) {
+    LiteRuleProperties.NacosConfig cfg = properties.getRuleSource().getNacos();
+    NacosRuleSource source = new NacosRuleSource(cfg.getServerAddr(), cfg.getDataId(), cfg.getGroup());
+    log.info(
+        "[LiteRule-Source] Nacos 规则数据源已初始化（serverAddr={}, dataId={}, group={}）",
+        cfg.getServerAddr(),
+        cfg.getDataId(),
+        cfg.getGroup());
+    return source;
+  }
+
+  /**
+   * Apollo 规则数据源 Bean（O1 条件装配，消除预留死代码）
+   *
+   * <p>当 {@code ydsz.literule.rule-source.type=apollo} 时自动装配， 从 Apollo 配置中心加载规则定义。
+   *
+   * @param properties 配置属性
+   * @return ApolloRuleSource 实例
+   * @since 1.0.0
+   */
+  @Bean
+  @ConditionalOnMissingBean(RuleSource.class)
+  @ConditionalOnProperty(
+      prefix = "ydsz.literule.rule-source",
+      name = "type",
+      havingValue = "apollo")
+  public ApolloRuleSource apolloRuleSource(LiteRuleProperties properties) {
+    LiteRuleProperties.ApolloConfig cfg = properties.getRuleSource().getApollo();
+    ApolloRuleSource source = new ApolloRuleSource(cfg.getNamespace());
+    log.info("[LiteRule-Source] Apollo 规则数据源已初始化（namespace={}）", cfg.getNamespace());
+    return source;
+  }
+
+  /**
+   * ZooKeeper 规则数据源 Bean（O1 条件装配，消除预留死代码）
+   *
+   * <p>当 {@code ydsz.literule.rule-source.type=zookeeper} 时自动装配， 从 ZK 节点加载规则定义。
+   *
+   * @param properties 配置属性
+   * @return ZookeeperRuleSource 实例
+   * @since 1.0.0
+   */
+  @Bean
+  @ConditionalOnMissingBean(RuleSource.class)
+  @ConditionalOnProperty(
+      prefix = "ydsz.literule.rule-source",
+      name = "type",
+      havingValue = "zookeeper")
+  public ZookeeperRuleSource zookeeperRuleSource(LiteRuleProperties properties) {
+    LiteRuleProperties.ZookeeperConfig cfg = properties.getRuleSource().getZookeeper();
+    ZookeeperRuleSource source = new ZookeeperRuleSource(cfg.getConnectString(), cfg.getPath());
+    log.info(
+        "[LiteRule-Source] ZooKeeper 规则数据源已初始化（connectString={}, path={}）",
+        cfg.getConnectString(),
+        cfg.getPath());
+    return source;
   }
 
   /**

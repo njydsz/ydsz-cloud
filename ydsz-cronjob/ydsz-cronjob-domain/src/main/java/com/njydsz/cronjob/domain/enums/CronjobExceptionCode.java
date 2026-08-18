@@ -48,6 +48,7 @@ public enum CronjobExceptionCode implements ExceptionCode {
   // ==================== B92301-B92399 告警规则/Webhook ====================
   ALERT_RULE_NOT_FOUND("B92301", "cronjob.alert.rule.not.found", 404),
   WEBHOOK_NOT_FOUND("B92302", "cronjob.webhook.not.found", 404),
+  WEBHOOK_SEND_FAILED("B92304", "cronjob.webhook.send.failed", 502),
   CONNECTOR_NOT_FOUND("B92303", "cronjob.connector.not.found", 404);
 
   /** 错误码 */

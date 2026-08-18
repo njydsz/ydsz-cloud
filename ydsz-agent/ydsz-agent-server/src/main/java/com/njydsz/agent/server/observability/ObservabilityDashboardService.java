@@ -61,11 +61,12 @@ public class ObservabilityDashboardService {
             .mapToLong(CostAnalysisService.ModelCostStats::totalTokens)
             .sum();
 
-    // 读取当前活跃会话数（Gauge 值）
+    // 读取当前活跃会话数（Gauge 值）与进程内累积消息数（P1 修复：totalMessages 此前硬编码为 0）
     int activeConvs = (int) runtimeMetrics.getActiveConversations();
+    long totalMessages = runtimeMetrics.getTotalMessages();
 
     return new DashboardOverviewDTO(
-        LocalDateTime.now(), totalCostUsd, totalTokens, todayCostByModel, activeConvs, 0L);
+        LocalDateTime.now(), totalCostUsd, totalTokens, todayCostByModel, activeConvs, totalMessages);
   }
 
   /**

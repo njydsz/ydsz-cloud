@@ -25,8 +25,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.security.DigestUtils;
+import com.njydsz.nextwiki.api.dto.NextwikiDTOs.SummaryResult;
+import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.cache.NextwikiCacheService;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
@@ -42,12 +47,15 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  *   <li>中文优化：内置中文停用词过滤 + 改进的分词逻辑
  * </ul>
  *
+ * <p><b>P1-2 修复：</b>本类同时实现 {@link AiSummaryService} 接口（替代原 {@code AiSummaryServiceImpl}
+ * 桩实现），统一 AI 摘要能力入口，消除"接口 + 应用服务 + 桩实现"三套并行的职责重叠。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
 @Service
-public class AiSummaryApplicationService {
+public class AiSummaryApplicationService implements AiSummaryService {
 
   /** 摘要最大句子数 */
   private static final int MAX_SENTENCES = 5;
@@ -79,12 +87,98 @@ public class AiSummaryApplicationService {
   private final RestTemplate nextwikiRestTemplate;
   private final NextwikiProperties properties;
   private final NextwikiCacheService cacheService;
+  private final FileNodeRepository fileNodeRepository;
 
   public AiSummaryApplicationService(RestTemplate restTemplate, NextwikiProperties properties,
-      NextwikiCacheService cacheService) {
+      NextwikiCacheService cacheService, FileNodeRepository fileNodeRepository) {
     this.nextwikiRestTemplate = restTemplate;
     this.properties = properties;
     this.cacheService = cacheService;
+    this.fileNodeRepository = fileNodeRepository;
+  }
+
+  /** 默认摘要最大字数（文件级摘要桩实现使用） */
+  private static final int DEFAULT_MAX_LENGTH = 500;
+
+  /** 支持的摘要类型（文件级摘要桩实现使用） */
+  private static final List<String> SUPPORTED_TYPES = List.of("brief", "detailed", "key_points");
+
+  /**
+   * 生成文件级智能摘要（P1-2：由原 AiSummaryServiceImpl 桩实现迁移合并）。
+   *
+   * <p>当前为桩实现，返回占位摘要；后续对接真实 LLM 时替换内部逻辑为读取文件内容 + LLM 调用。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @param summaryType 摘要类型（brief/detailed/key_points）
+   * @param maxLength 最大摘要字数
+   * @return 摘要结果
+   */
+  @Override
+  public SummaryResult generateSummary(String fileNodeId, String summaryType, Integer maxLength) {
+    if (!isAvailable()) {
+      throw new BusinessException(NextwikiExceptionCode.AI_SERVICE_DISABLED);
+    }
+
+    // 校验文件节点
+    FileNodeVO node = fileNodeRepository.findById(fileNodeId).orElse(null);
+    if (node == null) {
+      throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND)
+          .data("fileNodeId", fileNodeId);
+    }
+
+    // 校验摘要类型
+    String type = (summaryType == null || summaryType.isEmpty()) ? "brief" : summaryType;
+    if (!SUPPORTED_TYPES.contains(type)) {
+      throw BusinessException.of(NextwikiExceptionCode.PARAM_ERROR)
+          .data("summaryType", type)
+          .data("supportedTypes", String.join(",", SUPPORTED_TYPES));
+    }
+
+    // 桩实现：返回占位摘要（后续替换为真实 LLM 调用）
+    String placeholderSummary =
+        String.format(
+            "【AI 摘要预留】文件 %s 的 %s 功能尚未对接 LLM 服务，"
+                + "请配置 nextwiki.ai.llm-api-url 和 nextwiki.ai.llm-api-key 后启用。",
+            node.getName(), type);
+
+    int actualLength = maxLength != null ? maxLength : DEFAULT_MAX_LENGTH;
+
+    SummaryResult result = new SummaryResult();
+    result.setFileNodeId(fileNodeId);
+    result.setSummary(
+        placeholderSummary.substring(0, Math.min(placeholderSummary.length(), actualLength)));
+    result.setSummaryType(type);
+    result.setWordCount(Math.min(placeholderSummary.length(), actualLength));
+    result.setGeneratedAt(java.time.LocalDateTime.now());
+
+    log.info(
+        "[AiSummaryApplicationService] 生成文件级摘要(预留): fileNodeId={}, type={}, length={}",
+        fileNodeId,
+        type,
+        result.getWordCount());
+    return result;
+  }
+
+  /**
+   * 检查 AI 摘要服务是否可用（P1-2：基于 {@code nextwiki.ai.llm-enabled} 配置）。
+   *
+   * @return {@code true} 表示 LLM 已启用且配置了 API 地址
+   */
+  @Override
+  public boolean isAvailable() {
+    return properties.getAi().isLlmEnabled()
+        && properties.getAi().getLlmApiUrl() != null
+        && !properties.getAi().getLlmApiUrl().isEmpty();
+  }
+
+  /**
+   * 获取支持的文件类型列表（P1-2：桩实现）。
+   *
+   * @return 支持的文件后缀名列表
+   */
+  @Override
+  public List<String> getSupportedFileTypes() {
+    return List.of("txt", "md", "pdf", "doc", "docx", "html");
   }
 
   /**

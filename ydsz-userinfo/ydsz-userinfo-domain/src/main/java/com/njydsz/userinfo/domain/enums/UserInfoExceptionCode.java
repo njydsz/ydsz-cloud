@@ -101,6 +101,8 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   IMPORT_READ_FAILED("B30030", "userinfo.import.read.failed"),
   /** 内部接口访问被拒绝（缺少 X-Internal-Call 标记，P0-6） */
   INTERNAL_ACCESS_FORBIDDEN("B30031", "userinfo.internal.access.forbidden", 403),
+  /** OAuth2 scope 超出客户端授权范围（P1-3） */
+  OAUTH2_SCOPE_INVALID("B30032", "userinfo.oauth2.scope.invalid", 401),
 
   // ==================== B31xxx 组织架构 ====================
   /** 部门不存在 */

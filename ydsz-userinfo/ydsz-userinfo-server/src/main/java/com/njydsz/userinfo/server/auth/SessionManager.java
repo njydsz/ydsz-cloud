@@ -176,6 +176,47 @@ public class SessionManager {
     String sessionKey = buildSessionKey(userId);
     redisCollectionOps.sAdd(sessionKey, accessToken);
     redisStringOps.expire(sessionKey, Duration.ofSeconds(properties.getTokenTtlSeconds()));
+
+    // P1-9: 单设备登录限制 —— 超出 maxSessionsPerUser 时踢出最早活跃会话
+    evictExcessSessions(userId, sessionKey);
+  }
+
+  /**
+   * P1-9: 超出单用户会话上限时，吊销最早创建的会话。
+   *
+   * <p>会话索引为 Redis Set（无序），此处按 Set 内顺序吊销超量会话，保证任一时刻
+   * 活跃会话数不超过 {@code ydsz.userinfo.max-sessions-per-user}。上限 ≤ 0 时不限制。
+   *
+   * @param userId 用户 ID
+   * @param sessionKey 会话索引 Key
+   */
+  private void evictExcessSessions(String userId, String sessionKey) {
+    int maxSessions = properties.getMaxSessionsPerUser();
+    if (maxSessions <= 0) {
+      return;
+    }
+    try {
+      Set<String> tokens = redisCollectionOps.sMembers(sessionKey, String.class);
+      long excess = tokens.size() - maxSessions;
+      if (excess <= 0) {
+        return;
+      }
+      log.info(
+          "Session limit exceeded for user {}: active={}, max={}, evicting {}",
+          userId,
+          tokens.size(),
+          maxSessions,
+          excess);
+      for (String token : tokens) {
+        if (excess <= 0) {
+          break;
+        }
+        revokeSession(token);
+        excess--;
+      }
+    } catch (Exception e) {
+      log.warn("Failed to evict excess sessions for user: {}, error={}", userId, e.getMessage());
+    }
   }
 
   private Map<String, Object> buildSessionInfo(

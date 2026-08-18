@@ -2,6 +2,9 @@ package com.njydsz.agent.infra.llm;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -12,9 +15,10 @@ import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
+import com.njydsz.agent.server.metrics.AgentMetrics;
 
 /**
- * 带语义缓存的 LLM 客户端（装饰器模式）
+ * 带缓存的 LLM 客户端（装饰器模式）
  *
  * <p>在调用实际 LLM 之前先查询缓存，命中时直接返回缓存结果， 跳过 LLM 调用以节省成本与延迟。
  *
@@ -23,11 +27,20 @@ import com.njydsz.agent.domain.model.TokenUsage;
  * <ul>
  *   <li>仅缓存 temperature=0 的确定性请求
  *   <li>仅缓存无工具调用的简单对话
- *   <li>缓存 key = SHA-256(model + systemPrompt + userMessage)
+ *   <li>缓存 key = SHA-256(model + systemPrompt + userMessage)，精确匹配（详见 {@link SemanticLlmCache}）
  *   <li>缓存命中时返回包含特殊标记 {@code [cached]} 的响应
  * </ul>
  *
- * <p><b>线程安全</b>：无状态装饰器，委托给被装饰的 {@link LlmClient}。
+ * <p><b>缓存击穿防护（P1 修复）</b>：同一缓存 key 高并发未命中时，仅放行一个线程发起 LLM 调用， 其余线程等待其结果，
+ * 避免全部请求同时打穿到 LLM（Singleflight 语义）。
+ *
+ * <p><b>缓存命中率指标（P1 增强）</b>：通过 {@link AgentMetrics} 上报
+ * {@code agent_cache_hits_total} / {@code agent_cache_misses_total}，便于度量缓存效果。
+ *
+ * <p><b>与安全护栏的交互</b>：输出护栏（PII 脱敏 / 内容拦截）在应用服务层执行， 本装饰器位于 LLM 客户端层，缓存写入的是 LLM
+ * 原始输出；命中缓存后仍会经过服务层输出护栏，不会绕过安全管控。
+ *
+ * <p><b>线程安全</b>：无状态装饰器 + {@link ConcurrentHashMap} 互斥表，可安全并发调用。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -36,15 +49,25 @@ public class CachedLlmClient implements LlmClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(CachedLlmClient.class);
 
+  /** 等待在途 LLM 调用的最大时间（秒），超时后降级为直接调用避免饿死 */
+  private static final long INFLIGHT_WAIT_SECONDS = 30;
+
   /** 被装饰的实际 LLM 客户端 */
   private final LlmClient delegate;
 
   /** 语义缓存实例 */
   private final SemanticLlmCache cache;
 
-  public CachedLlmClient(LlmClient delegate, SemanticLlmCache cache) {
+  /** 指标采集组件（记录缓存命中率） */
+  private final AgentMetrics metrics;
+
+  /** 在途调用表（key=缓存 key，value=对应 LLM 调用结果 Future），用于缓存击穿防护 */
+  private final Map<String, CompletableFuture<ChatResponse>> inflight = new ConcurrentHashMap<>();
+
+  public CachedLlmClient(LlmClient delegate, SemanticLlmCache cache, AgentMetrics metrics) {
     this.delegate = delegate;
     this.cache = cache;
+    this.metrics = metrics;
   }
 
   @Override
@@ -53,24 +76,61 @@ public class CachedLlmClient implements LlmClient {
     // 仅对可缓存请求提取缓存内容；user 消息为空视为提取失败，直接跳过缓存避免 key 恒定的串流风险
     Map.Entry<String, String> cacheContent =
         cacheable ? SemanticLlmCache.extractCacheableContent(request.getMessages()) : null;
-    if (cacheContent != null && !cacheContent.getValue().isBlank()) {
-      SemanticLlmCache.CachedLlmResponse cached =
-          cache.get(request.getModel(), cacheContent.getKey(), cacheContent.getValue());
-      if (cached != null) {
-        LOG.info("[CachedLLM] 缓存命中，跳过 LLM 调用: model={}", request.getModel());
-        return buildCachedResponse(request, cached);
-      }
+    if (cacheContent == null || cacheContent.getValue().isBlank()) {
+      return delegate.chat(request);
     }
 
-    // 缓存未命中或不可缓存，调用实际 LLM
-    ChatResponse response = delegate.chat(request);
+    String model = request.getModel();
+    // 1. 缓存命中直接返回（记录命中指标）
+    SemanticLlmCache.CachedLlmResponse cached =
+        cache.get(model, cacheContent.getKey(), cacheContent.getValue());
+    if (cached != null) {
+      metrics.recordCacheHit(delegate.getProvider());
+      LOG.info("[CachedLLM] 缓存命中，跳过 LLM 调用: model={}", model);
+      return buildCachedResponse(request, cached);
+    }
+    metrics.recordCacheMiss(delegate.getProvider());
 
-    // 写入缓存：仅当可缓存、响应内容非空且提取到有效 user 消息时写入
-    if (cacheable
-        && response.getContent() != null
-        && !response.getContent().isBlank()
-        && cacheContent != null
-        && !cacheContent.getValue().isBlank()) {
+    // 2. 缓存击穿防护：同 key 并发未命中仅放行一个 LLM 调用，其余等待其结果
+    String lockKey = cache.buildKey(model, cacheContent.getKey(), cacheContent.getValue());
+    CompletableFuture<ChatResponse> future = new CompletableFuture<>();
+    CompletableFuture<ChatResponse> existing = inflight.putIfAbsent(lockKey, future);
+    if (existing != null) {
+      // 已有调用在途：等待其结果（带超时兜底，避免极端场景饿死）
+      try {
+        return existing.get(INFLIGHT_WAIT_SECONDS, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return delegate.chat(request);
+      } catch (Exception e) {
+        LOG.warn("[CachedLLM] 等待在途调用超时，降级直接调用: {}", e.getMessage());
+        return doChatAndCache(request, cacheContent);
+      }
+    }
+    try {
+      ChatResponse response = doChatAndCache(request, cacheContent);
+      future.complete(response);
+      return response;
+    } catch (RuntimeException e) {
+      future.completeExceptionally(e);
+      throw e;
+    } finally {
+      inflight.remove(lockKey);
+    }
+  }
+
+  /**
+   * 调用实际 LLM 并在满足条件时写回缓存。
+   *
+   * @param request 聊天请求
+   * @param cacheContent 提取的缓存内容（key=systemPrompt, value=userMessage）
+   * @return LLM 响应
+   */
+  private ChatResponse doChatAndCache(
+      ChatRequest request, Map.Entry<String, String> cacheContent) {
+    ChatResponse response = delegate.chat(request);
+    // 写入缓存：仅当响应内容非空时写入
+    if (response.getContent() != null && !response.getContent().isBlank()) {
       cache.put(
           request.getModel(),
           cacheContent.getKey(),

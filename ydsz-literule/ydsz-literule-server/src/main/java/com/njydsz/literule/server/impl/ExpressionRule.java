@@ -17,6 +17,7 @@ import com.njydsz.literule.api.RuleEnvironment;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.expression.ExpressionEngine;
+import com.njydsz.literule.server.debug.RuleDebugger;
 
 /**
  * 表达式规则：基于 LiteExpr 表达式动态评估
@@ -166,8 +167,16 @@ public class ExpressionRule implements Rule {
    */
   @Override
   public RuleResult evaluate(RuleContext context) {
+    // F1 断点调试：规则级断点检查（未配置调试器时为 no-op）
+    RuleDebugger debugger = RuleDebugger.get();
+    if (debugger != null) {
+      RuleDebugger.enterRule(getCode());
+    }
     long start = System.nanoTime();
     try {
+      if (debugger != null) {
+        debugger.checkRuleBreakpoint(getCode(), context);
+      }
       boolean triggered =
           Boolean.TRUE.equals(evalBooleanCached(definition.getConditionExpression(), context));
       if (!triggered) {
@@ -210,6 +219,11 @@ public class ExpressionRule implements Rule {
           .triggeredAt(LocalDateTime.now())
           .elapsedMs(elapsedMs(start))
           .build();
+    } finally {
+      // F1 断点调试：清理 ThreadLocal 当前规则编码
+      if (debugger != null) {
+        RuleDebugger.exitRule();
+      }
     }
   }
 

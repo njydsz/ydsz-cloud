@@ -207,12 +207,13 @@ public class JobWebhookController {
   @PostMapping("/{id}/test")
   public BaseResponse<Void> testWebhook(@PathVariable String id) {
     // 通过 Repository 查询 Webhook
-    JobWebhook webhook = webhookRepository.findById(id)
+    JobWebhookVO webhookVO = webhookRepository.findById(id)
         .orElse(null);
-    if (webhook == null) {
+    if (webhookVO == null) {
       return BaseResponse.error(CronjobExceptionCode.WEBHOOK_NOT_FOUND, "WebHook not found");
     }
     // P0-F3: 通过 WebhookEventDispatcher 真实发送测试事件（含重试）
+    JobWebhook webhook = CronjobConverter.INSTANT.voToEntity(webhookVO);
     boolean sent = webhookEventDispatcher.sendTest(webhook);
     if (!sent) {
       return BaseResponse.error(
