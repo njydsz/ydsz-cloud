@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.Config;
 import com.njydsz.system.infra.mapper.ConfigMapper;
@@ -87,7 +87,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   }
 
   @Override
-  public IPage<ConfigVO> findByPage(ConfigPageQuery query) {
+  public PageResponse<List<ConfigVO>> findByPage(ConfigPageQuery query) {
     Page<Config> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<Config> wrapper = new QueryWrapper<>();
     if (query.getConfigGroup() != null && !query.getConfigGroup().isBlank()) {
@@ -100,12 +100,9 @@ public class ConfigRepositoryImpl implements ConfigRepository {
       wrapper.eq("status", query.getStatus());
     }
     wrapper.orderByDesc("created_at");
-    IPage<Config> entityPage = configMapper.selectPage(page, wrapper);
-    // DO → VO 转换
-    List<ConfigVO> vos = converter.configListToVO(entityPage.getRecords());
-    Page<ConfigVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-    voPage.setRecords(vos);
-    return voPage;
+    com.baomidou.mybatisplus.core.metadata.IPage<Config> result = configMapper.selectPage(page, wrapper);
+    List<ConfigVO> vos = converter.configListToVO(result.getRecords());
+    return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   @Override

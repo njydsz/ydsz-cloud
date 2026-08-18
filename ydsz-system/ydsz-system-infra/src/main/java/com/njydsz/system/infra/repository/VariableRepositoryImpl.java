@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.Variable;
 import com.njydsz.system.infra.mapper.VariableMapper;
@@ -69,7 +69,7 @@ public class VariableRepositoryImpl implements VariableRepository {
   }
 
   @Override
-  public IPage<VariableVO> findByPage(VariablePageQuery query) {
+  public PageResponse<List<VariableVO>> findByPage(VariablePageQuery query) {
     Page<Variable> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<Variable> wrapper = new QueryWrapper<>();
     if (query.getVariableKey() != null && !query.getVariableKey().isBlank()) {
@@ -79,12 +79,9 @@ public class VariableRepositoryImpl implements VariableRepository {
       wrapper.eq("status", query.getStatus());
     }
     wrapper.orderByDesc("created_at");
-    IPage<Variable> entityPage = variableMapper.selectPage(page, wrapper);
-    // DO → VO 转换
-    List<VariableVO> vos = converter.variableListToVO(entityPage.getRecords());
-    Page<VariableVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-    voPage.setRecords(vos);
-    return voPage;
+    com.baomidou.mybatisplus.core.metadata.IPage<Variable> result = variableMapper.selectPage(page, wrapper);
+    List<VariableVO> vos = converter.variableListToVO(result.getRecords());
+    return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   @Override

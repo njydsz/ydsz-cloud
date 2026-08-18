@@ -1,12 +1,11 @@
 package com.njydsz.system.domain.repository;
 
+import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.TenantDTO;
+import com.njydsz.system.domain.query.TenantPageQuery;
 import com.njydsz.system.domain.vo.TenantVO;
 
 /**
@@ -20,6 +19,7 @@ import com.njydsz.system.domain.vo.TenantVO;
  *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
  *   <li>返回领域 VO（{@link TenantVO}），非 DTO / infra 实体
  *   <li>CUD 入参使用领域 DTO（{@link TenantDTO}），禁止接受 infra 实体
+ *   <li>查询入参使用领域 Query（{@link TenantPageQuery}）或具体字段
  * </ul>
  *
  * @author ydsz-team
@@ -38,20 +38,18 @@ public interface TenantRepository {
   /**
    * 分页查询租户。
    *
-   * @param page 分页参数
-   * @param tenantName 租户名称模糊匹配（可选）
-   * @param status 状态精确匹配（可选）
+   * @param query 分页查询参数
    * @return 分页结果（VO 分页）
    */
-  IPage<TenantVO> findByPage(Page<TenantVO> page, String tenantName, String status);
+  PageResponse<List<TenantVO>> findByPage(TenantPageQuery query);
 
   /**
    * 按条件统计租户数量。
    *
-   * @param wrapper 查询条件（基于 VO 字段构造）
+   * @param query 查询条件
    * @return 租户数量
    */
-  long countByCondition(LambdaQueryWrapper<TenantVO> wrapper);
+  long countByCondition(TenantPageQuery query);
 
   /**
    * 插入租户。

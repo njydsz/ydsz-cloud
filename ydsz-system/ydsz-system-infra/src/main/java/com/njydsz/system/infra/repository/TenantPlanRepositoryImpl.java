@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.TenantPlan;
 import com.njydsz.system.infra.mapper.TenantPlanMapper;
@@ -48,7 +48,7 @@ public class TenantPlanRepositoryImpl implements TenantPlanRepository {
   }
 
   @Override
-  public IPage<TenantPlanVO> findByPage(TenantPlanPageQuery query) {
+  public PageResponse<List<TenantPlanVO>> findByPage(TenantPlanPageQuery query) {
     Page<TenantPlan> page = new Page<>(query.getPageNum(), query.getPageSize());
     LambdaQueryWrapper<TenantPlan> wrapper = new LambdaQueryWrapper<>();
     if (query.getPlanName() != null && !query.getPlanName().isBlank()) {
@@ -58,12 +58,9 @@ public class TenantPlanRepositoryImpl implements TenantPlanRepository {
       wrapper.eq(TenantPlan::getStatus, query.getStatus());
     }
     wrapper.orderByAsc(TenantPlan::getSortOrder);
-    IPage<TenantPlan> entityPage = tenantPlanMapper.selectPage(page, wrapper);
-    // DO → VO 转换
-    List<TenantPlanVO> vos = converter.planListToVO(entityPage.getRecords());
-    Page<TenantPlanVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-    voPage.setRecords(vos);
-    return voPage;
+    com.baomidou.mybatisplus.core.metadata.IPage<TenantPlan> result = tenantPlanMapper.selectPage(page, wrapper);
+    List<TenantPlanVO> vos = converter.planListToVO(result.getRecords());
+    return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   @Override

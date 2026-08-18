@@ -3,7 +3,7 @@ package com.njydsz.system.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.query.AppInfoPageQuery;
@@ -58,7 +58,7 @@ public interface AppInfoRepository {
    * @param query 分页查询参数
    * @return 分页结果（VO 分页）
    */
-  IPage<AppInfoVO> findByPage(AppInfoPageQuery query);
+  PageResponse<List<AppInfoVO>> findByPage(AppInfoPageQuery query);
 
   /**
    * 查询全部应用（不区分状态）。

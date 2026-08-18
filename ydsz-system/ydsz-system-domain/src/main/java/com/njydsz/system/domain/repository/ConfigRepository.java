@@ -3,7 +3,7 @@ package com.njydsz.system.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
@@ -74,7 +74,7 @@ public interface ConfigRepository {
    * @param query 分页查询参数
    * @return 分页结果（VO 分页）
    */
-  IPage<ConfigVO> findByPage(ConfigPageQuery query);
+  PageResponse<List<ConfigVO>> findByPage(ConfigPageQuery query);
 
   /**
    * 插入配置。

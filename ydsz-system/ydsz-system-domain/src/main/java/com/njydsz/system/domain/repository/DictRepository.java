@@ -4,8 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.dto.DictTypeDTO;
@@ -41,7 +40,7 @@ public interface DictRepository {
    * @param query 分页查询参数
    * @return 分页结果（VO 分页）
    */
-  IPage<DictTypeVO> findTypePage(DictPageQuery query);
+  PageResponse<List<DictTypeVO>> findTypePage(DictPageQuery query);
 
   /**
    * 根据主键查询字典类型。
@@ -148,7 +147,7 @@ public interface DictRepository {
    * @param query 分页查询参数
    * @return 分页结果（VO 分页）
    */
-  IPage<DictItemVO> findItemPage(DictItemPageQuery query);
+  PageResponse<List<DictItemVO>> findItemPage(DictItemPageQuery query);
 
   /**
    * 查询全部字典项（不区分状态）。

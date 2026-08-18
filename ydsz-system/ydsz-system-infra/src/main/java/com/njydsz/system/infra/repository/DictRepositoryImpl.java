@@ -5,11 +5,11 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.DictItem;
 import com.njydsz.system.infra.entity.DictType;
@@ -52,7 +52,7 @@ public class DictRepositoryImpl implements DictRepository {
   // ============================== 字典类型 ==============================
 
   @Override
-  public IPage<DictTypeVO> findTypePage(DictPageQuery query) {
+  public PageResponse<List<DictTypeVO>> findTypePage(DictPageQuery query) {
     Page<DictType> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<DictType> wrapper = new QueryWrapper<>();
     if (query.getTypeCode() != null && !query.getTypeCode().isBlank()) {
@@ -65,12 +65,9 @@ public class DictRepositoryImpl implements DictRepository {
       wrapper.eq("status", query.getStatus());
     }
     wrapper.orderByDesc("created_at");
-    IPage<DictType> entityPage = dictTypeMapper.selectPage(page, wrapper);
-    // DO → VO 转换
-    List<DictTypeVO> vos = converter.dictTypeListToVO(entityPage.getRecords());
-    Page<DictTypeVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-    voPage.setRecords(vos);
-    return voPage;
+    com.baomidou.mybatisplus.core.metadata.IPage<DictType> result = dictTypeMapper.selectPage(page, wrapper);
+    List<DictTypeVO> vos = converter.dictTypeListToVO(result.getRecords());
+    return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   @Override
@@ -150,7 +147,7 @@ public class DictRepositoryImpl implements DictRepository {
   }
 
   @Override
-  public IPage<DictItemVO> findItemPage(DictItemPageQuery query) {
+  public PageResponse<List<DictItemVO>> findItemPage(DictItemPageQuery query) {
     Page<DictItem> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
     if (query.getTypeCode() != null && !query.getTypeCode().isBlank()) {
@@ -163,12 +160,9 @@ public class DictRepositoryImpl implements DictRepository {
       wrapper.eq("status", query.getStatus());
     }
     wrapper.orderByDesc("created_at");
-    IPage<DictItem> entityPage = dictItemMapper.selectPage(page, wrapper);
-    // DO → VO 转换
-    List<DictItemVO> vos = converter.dictItemListToVO(entityPage.getRecords());
-    Page<DictItemVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-    voPage.setRecords(vos);
-    return voPage;
+    com.baomidou.mybatisplus.core.metadata.IPage<DictItem> result = dictItemMapper.selectPage(page, wrapper);
+    List<DictItemVO> vos = converter.dictItemListToVO(result.getRecords());
+    return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   @Override

@@ -3,7 +3,7 @@ package com.njydsz.system.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.system.domain.dto.TenantPlanDTO;
 import com.njydsz.system.domain.query.TenantPlanPageQuery;
@@ -43,7 +43,7 @@ public interface TenantPlanRepository {
    * @param query 分页查询参数
    * @return 分页结果（VO 分页）
    */
-  IPage<TenantPlanVO> findByPage(TenantPlanPageQuery query);
+  PageResponse<List<TenantPlanVO>> findByPage(TenantPlanPageQuery query);
 
   /**
    * 按条件查询方案列表。

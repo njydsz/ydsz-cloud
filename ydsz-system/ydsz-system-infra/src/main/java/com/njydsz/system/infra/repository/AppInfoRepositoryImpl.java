@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.AppInfo;
 import com.njydsz.system.infra.mapper.AppInfoMapper;
@@ -59,7 +59,7 @@ public class AppInfoRepositoryImpl implements AppInfoRepository {
   }
 
   @Override
-  public IPage<AppInfoVO> findByPage(AppInfoPageQuery query) {
+  public PageResponse<List<AppInfoVO>> findByPage(AppInfoPageQuery query) {
     Page<AppInfo> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<AppInfo> wrapper = new QueryWrapper<>();
     if (query.getAppName() != null && !query.getAppName().isBlank()) {
@@ -69,12 +69,9 @@ public class AppInfoRepositoryImpl implements AppInfoRepository {
       wrapper.eq("status", query.getStatus());
     }
     wrapper.orderByDesc("created_at");
-    IPage<AppInfo> entityPage = appInfoMapper.selectPage(page, wrapper);
-    // DO → VO 转换
-    List<AppInfoVO> vos = converter.appInfoListToVO(entityPage.getRecords());
-    Page<AppInfoVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-    voPage.setRecords(vos);
-    return voPage;
+    com.baomidou.mybatisplus.core.metadata.IPage<AppInfo> result = appInfoMapper.selectPage(page, wrapper);
+    List<AppInfoVO> vos = converter.appInfoListToVO(result.getRecords());
+    return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   @Override

@@ -3,7 +3,7 @@ package com.njydsz.system.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.query.VariablePageQuery;
@@ -63,7 +63,7 @@ public interface VariableRepository {
    * @param query 分页查询参数
    * @return 分页结果（VO 分页）
    */
-  IPage<VariableVO> findByPage(VariablePageQuery query);
+  PageResponse<List<VariableVO>> findByPage(VariablePageQuery query);
 
   /**
    * 查询全部变量（不区分状态）。

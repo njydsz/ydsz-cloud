@@ -4,16 +4,17 @@ import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.Tenant;
 import com.njydsz.system.infra.mapper.TenantMapper;
 import com.njydsz.system.domain.repository.TenantRepository;
 import com.njydsz.system.domain.dto.TenantDTO;
+import com.njydsz.system.domain.query.TenantPageQuery;
 import com.njydsz.system.domain.vo.TenantVO;
 
 /**
@@ -46,29 +47,31 @@ public class TenantRepositoryImpl implements TenantRepository {
   }
 
   @Override
-  public IPage<TenantVO> findByPage(Page<TenantVO> page, String tenantName, String status) {
-    Page<Tenant> entityPage = new Page<>(page.getCurrent(), page.getSize());
+  public PageResponse<List<TenantVO>> findByPage(TenantPageQuery query) {
+    Page<Tenant> page = new Page<>(query.getPageNum(), query.getPageSize());
     LambdaQueryWrapper<Tenant> wrapper = new LambdaQueryWrapper<>();
-    if (tenantName != null && !tenantName.isBlank()) {
-      wrapper.like(Tenant::getTenantName, tenantName);
+    if (query.getTenantName() != null && !query.getTenantName().isBlank()) {
+      wrapper.like(Tenant::getTenantName, query.getTenantName());
     }
-    if (status != null && !status.isBlank()) {
-      wrapper.eq(Tenant::getStatus, status);
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq(Tenant::getStatus, query.getStatus());
     }
     wrapper.orderByDesc(Tenant::getCreatedAt);
-    IPage<Tenant> result = tenantMapper.selectPage(entityPage, wrapper);
-    // DO → VO 转换
+    com.baomidou.mybatisplus.core.metadata.IPage<Tenant> result = tenantMapper.selectPage(page, wrapper);
     List<TenantVO> vos = converter.tenantListToVO(result.getRecords());
-    Page<TenantVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
-    voPage.setRecords(vos);
-    return voPage;
+    return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   @Override
-  public long countByCondition(LambdaQueryWrapper<TenantVO> wrapper) {
-    // 注意：此处 wrapper 基于 VO 字段，需要适配为 Entity 查询
-    // 简化实现：直接统计全量（实际使用场景需根据 VO 字段构造 Entity 条件）
-    Long count = tenantMapper.selectCount(null);
+  public long countByCondition(TenantPageQuery query) {
+    LambdaQueryWrapper<Tenant> wrapper = new LambdaQueryWrapper<>();
+    if (query.getTenantName() != null && !query.getTenantName().isBlank()) {
+      wrapper.like(Tenant::getTenantName, query.getTenantName());
+    }
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq(Tenant::getStatus, query.getStatus());
+    }
+    Long count = tenantMapper.selectCount(wrapper);
     return count != null ? count : 0L;
   }
 
