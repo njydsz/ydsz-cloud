@@ -4,6 +4,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.micrometer.core.instrument.Counter;
+import lombok.extern.slf4j.Slf4j;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -46,6 +47,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * @since 1.2.0
  * @see MeteredRejectedHandler
  */
+@Slf4j
 public class ThreadPoolMetrics implements MeterBinder {
 
   public static final String DEFAULT_METRIC_PREFIX = "ydsz.executor";

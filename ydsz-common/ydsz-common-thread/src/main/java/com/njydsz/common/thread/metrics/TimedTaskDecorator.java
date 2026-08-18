@@ -3,6 +3,8 @@ package com.njydsz.common.thread.metrics;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.lang.NonNull;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 任务执行耗时追踪装饰器。
  *
@@ -21,6 +23,7 @@ import org.springframework.lang.NonNull;
  * @since 1.4.0
  * @see ThreadPoolTimerMetrics
  */
+@Slf4j
 public class TimedTaskDecorator implements TaskDecorator {
 
   private final String poolName;

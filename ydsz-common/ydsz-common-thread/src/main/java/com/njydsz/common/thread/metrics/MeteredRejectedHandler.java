@@ -3,6 +3,8 @@ package com.njydsz.common.thread.metrics;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 带指标追踪的拒绝策略装饰器。
  *
@@ -23,6 +25,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @since 1.3.0
  * @see ThreadPoolMetrics
  */
+@Slf4j
 public class MeteredRejectedHandler implements RejectedExecutionHandler {
 
   private final RejectedExecutionHandler delegate;
