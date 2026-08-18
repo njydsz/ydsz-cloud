@@ -3,7 +3,9 @@ package com.njydsz.nextwiki.server.converter;
 import java.util.List;
 
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
+import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 
 /**
  * NextWiki 实体 ↔ VO 转换器。
@@ -90,5 +92,85 @@ public final class NextwikiConverter {
         .createdBy(dto.getCreatedBy())
         .updatedBy(dto.getUpdatedBy())
         .build();
+  }
+
+  /**
+   * 将 {@link FileVersionVO} 视图对象转换为 {@link FileVersionDTO} 数据传输对象。
+   *
+   * <p>用于将 Repository 返回的版本 VO 转回 DTO，以便调用领域服务方法。
+   *
+   * @param vo 文件版本 VO，为 {@code null} 时返回 {@code null}
+   * @return 文件版本 DTO，或 {@code null}
+   */
+  public FileVersionDTO versionToDTO(FileVersionVO vo) {
+    if (vo == null) {
+      return null;
+    }
+    return FileVersionDTO.builder()
+        .id(vo.getId())
+        .fileNodeId(vo.getFileNodeId())
+        .versionNumber(vo.getVersionNumber())
+        .storageKey(vo.getStorageKey())
+        .size(vo.getSize())
+        .fileHash(vo.getFileHash())
+        .mimeType(vo.getMimeType())
+        .remark(vo.getRemark())
+        .changeType(vo.getChangeType())
+        .active(vo.getActive())
+        .createdBy(vo.getCreatedBy())
+        .createdAt(vo.getCreatedAt())
+        .build();
+  }
+
+  /**
+   * 将 {@link FileVersionDTO} 数据传输对象转换为 {@link FileVersionVO} 视图对象。
+   *
+   * @param dto 文件版本 DTO，为 {@code null} 时返回 {@code null}
+   * @return 文件版本 VO，或 {@code null}
+   */
+  public FileVersionVO versionToVO(FileVersionDTO dto) {
+    if (dto == null) {
+      return null;
+    }
+    return FileVersionVO.builder()
+        .id(dto.getId())
+        .fileNodeId(dto.getFileNodeId())
+        .versionNumber(dto.getVersionNumber())
+        .storageKey(dto.getStorageKey())
+        .size(dto.getSize())
+        .fileHash(dto.getFileHash())
+        .mimeType(dto.getMimeType())
+        .remark(dto.getRemark())
+        .changeType(dto.getChangeType())
+        .active(dto.getActive())
+        .createdBy(dto.getCreatedBy())
+        .createdAt(dto.getCreatedAt())
+        .build();
+  }
+
+  /**
+   * 将 {@link FileVersionVO} 列表批量转换为 {@link FileVersionDTO} 列表。
+   *
+   * @param vos 文件版本 VO 列表
+   * @return 文件版本 DTO 列表
+   */
+  public List<FileVersionDTO> versionListToDTO(List<FileVersionVO> vos) {
+    if (vos == null || vos.isEmpty()) {
+      return List.of();
+    }
+    return vos.stream().map(this::versionToDTO).collect(java.util.stream.Collectors.toList());
+  }
+
+  /**
+   * 将 {@link FileVersionDTO} 列表批量转换为 {@link FileVersionVO} 列表。
+   *
+   * @param dtos 文件版本 DTO 列表
+   * @return 文件版本 VO 列表
+   */
+  public List<FileVersionVO> versionListToVO(List<FileVersionDTO> dtos) {
+    if (dtos == null || dtos.isEmpty()) {
+      return List.of();
+    }
+    return dtos.stream().map(this::versionToVO).collect(java.util.stream.Collectors.toList());
   }
 }

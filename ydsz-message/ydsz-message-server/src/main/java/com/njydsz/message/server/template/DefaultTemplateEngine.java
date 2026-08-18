@@ -3,6 +3,7 @@ package com.njydsz.message.server.template;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -304,8 +305,7 @@ public class DefaultTemplateEngine implements TemplateEngine {
         return LocalDateTime.parse(str).format(formatter);
       }
       if (value instanceof Long ts) {
-        return new Date(ts)
-            .toInstant()
+        return Instant.ofEpochMilli(ts)
             .atZone(ZoneId.systemDefault())
             .toLocalDateTime()
             .format(formatter);

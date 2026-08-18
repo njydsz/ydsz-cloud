@@ -11,15 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.jdbc.support.PageResponses;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.domain.dto.AppInfoDTO;
-import com.njydsz.system.infra.entity.AppInfo;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.query.AppInfoPageQuery;
 import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.domain.repository.AppInfoRepository;
 import com.njydsz.system.server.metrics.SystemMetrics;
@@ -143,8 +140,7 @@ public class AppInfoServiceImpl implements AppInfoService {
    */
   @Override
   public AppInfoVO getById(String id) {
-    AppInfo entity = appInfoRepository.findById(id).orElse(null);
-    return SystemConverter.INSTANT.entityToVO(entity);
+    return appInfoRepository.findById(id).orElse(null);
   }
 
   /**
@@ -198,7 +194,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     }
 
     // 3. DB 查询 + BCrypt 校验
-    AppInfo app = appInfoRepository.findEnabledByAppKey(appKey).orElse(null);
+    AppInfoVO app = appInfoRepository.findEnabledByAppKey(appKey).orElse(null);
     if (app == null) {
       handleValidateFail(appKey, failKey, "不存在或未启用");
       return false;
@@ -285,8 +281,13 @@ public class AppInfoServiceImpl implements AppInfoService {
   @Override
   public PageResponse<List<AppInfoVO>> page(
       int pageNum, int pageSize, String appName, String status) {
-    IPage<AppInfo> page = appInfoRepository.findByPage(new Page<>(pageNum, pageSize), appName, status);
-    return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
+    AppInfoPageQuery query = AppInfoPageQuery.builder()
+        .pageNum(pageNum)
+        .pageSize(pageSize)
+        .appName(appName)
+        .status(status)
+        .build();
+    return appInfoRepository.findByPage(query);
   }
 
   /**
@@ -302,9 +303,7 @@ public class AppInfoServiceImpl implements AppInfoService {
    */
   @Override
   public List<AppInfoVO> list() {
-    return appInfoRepository.findAll().stream()
-        .map(SystemConverter.INSTANT::entityToVO)
-        .collect(java.util.stream.Collectors.toList());
+    return appInfoRepository.findAll();
   }
 
   /**
@@ -334,12 +333,14 @@ public class AppInfoServiceImpl implements AppInfoService {
       throw BusinessException.of(SystemExceptionCode.APP_KEY_DUPLICATE)
           .data("appKey", dto.getAppKey());
     }
-    AppInfo entity = toEntity(dto);
+    // 预生成 ID
+    dto.setId(IdWorker.getIdStr());
+    // 密钥 BCrypt 加密
     if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {
-      entity.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
+      dto.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
     }
-    appInfoRepository.insert(entity);
-    return entity.getId();
+    appInfoRepository.insert(dto);
+    return dto.getId();
   }
 
   /**
@@ -372,14 +373,13 @@ public class AppInfoServiceImpl implements AppInfoService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(AppInfoDTO dto) {
-    AppInfo entity = toEntity(dto);
     if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {
-      entity.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
+      dto.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
     } else {
-      // 不更新密钥时设为 null，MyBatis-Plus NOT_NULL 策略会跳过此字段
-      entity.setAppSecret(null);
+      // 不更新密钥时设为 null，由 Repository 实现跳过该字段
+      dto.setAppSecret(null);
     }
-    return appInfoRepository.updateById(entity);
+    return appInfoRepository.updateById(dto);
   }
 
   /**
@@ -398,29 +398,4 @@ public class AppInfoServiceImpl implements AppInfoService {
     return appInfoRepository.deleteById(id);
   }
 
-  /**
-   * DTO → DO 转换（私有）
-   *
-   * <p>缺省 {@code status="ENABLED"}，保证新创建的应用默认可用。
-   *
-   * <p><b>注意：</b>本方法<b>不</b>处理密钥加密，由调用方在 {@link #save} / {@link #updateById} 中按需调用 {@code
-   * passwordEncoder.encode}。
-   *
-   * @param dto 应用 DTO
-   * @return 应用 Entity
-   */
-  private AppInfo toEntity(AppInfoDTO dto) {
-    AppInfo entity = new AppInfo();
-    entity.setId(dto.getId());
-    entity.setAppCode(dto.getAppCode());
-    entity.setAppName(dto.getAppName());
-    entity.setAppKey(dto.getAppKey());
-    entity.setAppSecret(dto.getAppSecret());
-    entity.setRedirectUrl(dto.getRedirectUrl());
-    entity.setScopes(dto.getScopes());
-    entity.setBoundIps(dto.getBoundIps());
-    entity.setDescription(dto.getDescription());
-    entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
-    return entity;
-  }
 }

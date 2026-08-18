@@ -194,6 +194,12 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /** P1-5: 幂等锁 key 前缀（防止相同参数的任务重复执行） */
   private static final String IDEMPOTENT_LOCK_PREFIX = "ydsz:job:idempotent:";
 
+  /** 中断等待超时（毫秒）：等待线程响应中断的最长时间 */
+  private static final long INTERRUPT_WAIT_TIMEOUT_MS = 1000L;
+
+  /** 中断轮询间隔（毫秒）：检查线程是否已终止的 sleep 间隔 */
+  private static final long INTERRUPT_POLL_INTERVAL_MS = 10L;
+
   private static DefaultRedisScript<Long> initReleaseScript() {
     DefaultRedisScript<Long> script = new DefaultRedisScript<>();
     script.setScriptText(LockKeyUtil.RELEASE_LOCK_SCRIPT);
@@ -1474,14 +1480,14 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       return false;
     }
     target.interrupt();
-    // 等待最多 1s 让线程响应中断
-    long deadline = System.currentTimeMillis() + 1000;
+    // 等待最多 INTERRUPT_WAIT_TIMEOUT_MS 让线程响应中断
+    long deadline = System.currentTimeMillis() + INTERRUPT_WAIT_TIMEOUT_MS;
     while (System.currentTimeMillis() < deadline) {
       if (!target.isAlive()) {
         return true;
       }
       try {
-        Thread.sleep(10);
+        Thread.sleep(INTERRUPT_POLL_INTERVAL_MS);
       } catch (InterruptedException ie) {
         Thread.currentThread().interrupt();
         break;

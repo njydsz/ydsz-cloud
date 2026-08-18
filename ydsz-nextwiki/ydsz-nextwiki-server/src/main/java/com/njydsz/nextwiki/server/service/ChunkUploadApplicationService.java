@@ -35,6 +35,7 @@ import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
+import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
@@ -345,12 +346,13 @@ public class ChunkUploadApplicationService {
     return transactionTemplate.execute(status -> {
       FileNodeDTO deduped = buildDedupedNode(ctx.session, ctx.dedupExisting, ctx.fileHash, ctx.userId);
       FileNodeDTO saved = fileNodeRepository.save(deduped);
-      List<FileVersionVO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+      List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+          versionRepository.findByFileNodeId(saved.getId()));
       FileNodeVO savedVO = NextwikiConverter.INSTANT.dtoToVO(saved);
       FileVersionDomainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
               savedVO,
-              existingVersions,
+              existingVersionDTOs,
               ctx.dedupExisting.getStorageKey(),
               ctx.dedupExisting.getSize(),
               ctx.fileHash,
@@ -404,12 +406,13 @@ public class ChunkUploadApplicationService {
               .build();
 
       FileNodeDTO saved = fileNodeRepository.save(newNode);
-      List<FileVersionVO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+      List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+          versionRepository.findByFileNodeId(saved.getId()));
       FileNodeVO savedVO = NextwikiConverter.INSTANT.dtoToVO(saved);
       FileVersionDomainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
               savedVO,
-              existingVersions,
+              existingVersionDTOs,
               ctx.storageKey,
               ctx.stored.getSize(),
               ctx.fileHash,
@@ -557,9 +560,10 @@ public class ChunkUploadApplicationService {
 
   /** 清理超出保留数量的旧版本 */
   private void cleanupExcessVersions(String fileNodeId) {
-    List<FileVersionVO> allVersions = versionRepository.findByFileNodeId(fileNodeId);
-    List<FileVersionVO> toDelete = versionDomainService.findVersionsToCleanup(allVersions);
-    for (FileVersionVO v : toDelete) {
+    List<FileVersionDTO> allVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+        versionRepository.findByFileNodeId(fileNodeId));
+    List<FileVersionDTO> toDelete = versionDomainService.findVersionsToCleanup(allVersionDTOs);
+    for (FileVersionDTO v : toDelete) {
       versionRepository.deleteById(v.getId());
     }
     if (!toDelete.isEmpty()) {

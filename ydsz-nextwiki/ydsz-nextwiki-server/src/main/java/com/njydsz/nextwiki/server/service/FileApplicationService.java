@@ -37,6 +37,7 @@ import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -267,11 +268,12 @@ public class FileApplicationService {
       FileNodeVO saved = fileNodeRepository.save(dedupedNode);
       indexUpsert(saved);
       storageReferenceService.increment(ctx.dedupExisting.getStorageKey());
-      List<FileVersionVO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+      List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+          versionRepository.findByFileNodeId(saved.getId()));
       FileVersionDomainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
               saved,
-              existingVersions,
+              existingVersionDTOs,
               ctx.dedupExisting.getStorageKey(),
               ctx.dedupExisting.getSize(),
               ctx.fileHash,
@@ -332,11 +334,12 @@ public class FileApplicationService {
       indexUpsert(saved);
       storageReferenceService.increment(ctx.storageKey);
 
-      List<FileVersionVO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+      List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+          versionRepository.findByFileNodeId(saved.getId()));
       FileVersionDomainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
               saved,
-              existingVersions,
+              existingVersionDTOs,
               ctx.storageKey,
               ctx.uploaded.getSize(),
               ctx.fileHash,
@@ -754,11 +757,12 @@ public class FileApplicationService {
 
     // 文件创建版本引用
     if (source.isFile()) {
-      List<FileVersionVO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+      List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+          versionRepository.findByFileNodeId(saved.getId()));
       FileVersionDomainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
               saved,
-              existingVersions,
+              existingVersionDTOs,
               source.getStorageKey(),
               source.getSize(),
               source.getFileHash(),
@@ -871,11 +875,13 @@ public class FileApplicationService {
     FileNodeVO node = fileNodeRepository.findById(nodeId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
 
-    FileVersionVO target = versionRepository.findByFileNodeIdAndVersion(nodeId, targetVersion);
-    List<FileVersionVO> allVersions = versionRepository.findByFileNodeId(nodeId);
+    FileVersionDTO targetDTO = NextwikiConverter.INSTANT.versionToDTO(
+        versionRepository.findByFileNodeIdAndVersion(nodeId, targetVersion).orElse(null));
+    List<FileVersionDTO> allVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+        versionRepository.findByFileNodeId(nodeId));
 
     FileVersionDomainService.VersionRollbackResult result =
-        versionDomainService.rollback(node, target, allVersions, userId);
+        versionDomainService.rollback(node, targetDTO, allVersionDTOs, userId);
 
     versionRepository.setActiveVersion(nodeId, -1);
     versionRepository.save(result.newVersion());
@@ -953,9 +959,10 @@ public class FileApplicationService {
 
   /** 清理超出保留数量的旧版本 */
   private void cleanupExcessVersions(String fileNodeId) {
-    List<FileVersionVO> allVersions = versionRepository.findByFileNodeId(fileNodeId);
-    List<FileVersionVO> toDelete = versionDomainService.findVersionsToCleanup(allVersions);
-    for (FileVersionVO v : toDelete) {
+    List<FileVersionDTO> allVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+        versionRepository.findByFileNodeId(fileNodeId));
+    List<FileVersionDTO> toDelete = versionDomainService.findVersionsToCleanup(allVersionDTOs);
+    for (FileVersionDTO v : toDelete) {
       versionRepository.deleteById(v.getId());
     }
     if (!toDelete.isEmpty()) {

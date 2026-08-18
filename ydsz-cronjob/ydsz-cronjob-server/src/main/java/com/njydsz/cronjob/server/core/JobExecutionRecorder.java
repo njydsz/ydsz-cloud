@@ -32,6 +32,9 @@ import com.njydsz.cronjob.domain.entity.log.JobLog;
 @Slf4j
 public class JobExecutionRecorder {
 
+  /** 超时错误消息 */
+  private static final String TIMEOUT_ERROR_MESSAGE = "任务执行超时";
+
   /**
    * 创建执行日志记录。
    *
@@ -44,7 +47,7 @@ public class JobExecutionRecorder {
     JobLog logDO = new JobLog();
     logDO.setJobId(jobId);
     logDO.setJobKey(jobKey);
-    logDO.setStatus("PENDING");
+    logDO.setStatus(JobLog.STATUS_PENDING);
     logDO.setTriggerType(triggerType);
     logDO.setCreatedAt(LocalDateTime.now());
     logDO.setDeleted(0);
@@ -61,7 +64,7 @@ public class JobExecutionRecorder {
    */
   public void markRunning(JobLog logDO, String lockHolder, String execNodeId, Long execThreadId) {
     LocalDateTime now = LocalDateTime.now();
-    logDO.setStatus("RUNNING");
+    logDO.setStatus(JobLog.STATUS_RUNNING);
     logDO.setStartTime(now);
     logDO.setLockHolder(lockHolder);
     logDO.setExecNodeId(execNodeId);
@@ -80,7 +83,7 @@ public class JobExecutionRecorder {
    */
   public void markSuccess(JobLog logDO, String resultJson, LocalDateTime handlerEndTime) {
     LocalDateTime now = LocalDateTime.now();
-    logDO.setStatus("SUCCESS");
+    logDO.setStatus(JobLog.STATUS_SUCCESS);
     logDO.setEndTime(now);
     logDO.setResultJson(resultJson);
     // P1-2: 执行轨迹 — Handler 结束时间
@@ -100,7 +103,7 @@ public class JobExecutionRecorder {
    */
   public void markFailed(JobLog logDO, String errorMessage, LocalDateTime handlerEndTime) {
     LocalDateTime now = LocalDateTime.now();
-    logDO.setStatus("FAILED");
+    logDO.setStatus(JobLog.STATUS_FAILED);
     logDO.setEndTime(now);
     logDO.setErrorMessage(errorMessage);
     logDO.setHandlerEndTime(handlerEndTime);
@@ -117,9 +120,9 @@ public class JobExecutionRecorder {
    */
   public void markTimeout(JobLog logDO) {
     LocalDateTime now = LocalDateTime.now();
-    logDO.setStatus("TIMEOUT");
+    logDO.setStatus(JobLog.STATUS_TIMEOUT);
     logDO.setEndTime(now);
-    logDO.setErrorMessage("任务执行超时");
+    logDO.setErrorMessage(TIMEOUT_ERROR_MESSAGE);
     if (logDO.getStartTime() != null) {
       logDO.setDurationMs(Duration.between(logDO.getStartTime(), now).toMillis());
     }

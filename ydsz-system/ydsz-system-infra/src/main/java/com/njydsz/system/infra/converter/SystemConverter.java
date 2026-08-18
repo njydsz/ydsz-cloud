@@ -2,7 +2,15 @@ package com.njydsz.system.infra.converter;
 
 import java.util.List;
 
-import com.njydsz.system.infra.entity.*;
+import com.njydsz.system.infra.entity.AppInfo;
+import com.njydsz.system.infra.entity.Config;
+import com.njydsz.system.infra.entity.DictItem;
+import com.njydsz.system.infra.entity.DictType;
+import com.njydsz.system.infra.entity.EntityVersion;
+import com.njydsz.system.infra.entity.Tenant;
+import com.njydsz.system.infra.entity.TenantPlan;
+import com.njydsz.system.infra.entity.TenantPlanMenu;
+import com.njydsz.system.infra.entity.Variable;
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -132,6 +140,14 @@ public interface SystemConverter {
   @Mapping(target = "updatedAt", ignore = true)
   AppInfo dtoToEntityWithId(AppInfoDTO dto);
 
+  /**
+   * 应用信息 VO → 应用信息 DTO
+   *
+   * @param vo 应用信息 VO
+   * @return 应用信息 DTO
+   */
+  AppInfoDTO voToDto(AppInfoVO vo);
+
   // ===== Config =====
 
   /**
@@ -167,6 +183,14 @@ public interface SystemConverter {
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   Config dtoToEntity(ConfigDTO dto);
+
+  /**
+   * 系统配置 VO → 系统配置 DTO
+   *
+   * @param vo 系统配置 VO
+   * @return 系统配置 DTO
+   */
+  ConfigDTO voToDto(ConfigVO vo);
 
   /**
    * 系统配置 DTO（含 ID）→ 系统配置实体

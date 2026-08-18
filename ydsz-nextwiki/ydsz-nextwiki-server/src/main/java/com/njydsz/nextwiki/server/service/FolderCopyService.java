@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
@@ -254,13 +255,14 @@ public class FolderCopyService {
       FileNodeDTO newNode = newNodes.get(i);
       FileNodeVO source = batchSourceNodes.get(i);
       if (source.isFile()) {
-        List<FileVersionVO> existingVersions = versionRepository.findByFileNodeId(newNode.getId());
+        List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+            versionRepository.findByFileNodeId(newNode.getId()));
         // 将DTO转换为VO用于版本创建
         FileNodeVO newNodeVO = NextwikiConverter.INSTANT.dtoToVO(newNode);
         FileVersionDomainService.VersionCreateResult versionResult =
             versionDomainService.createVersion(
                 newNodeVO,
-                existingVersions,
+                existingVersionDTOs,
                 source.getStorageKey(),
                 source.getSize(),
                 source.getFileHash(),

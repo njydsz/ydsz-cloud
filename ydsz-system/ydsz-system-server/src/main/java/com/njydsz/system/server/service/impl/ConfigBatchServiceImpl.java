@@ -1,6 +1,5 @@
 package com.njydsz.system.server.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,9 +21,9 @@ import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
-import com.njydsz.system.infra.entity.Config;
+import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.repository.ConfigRepository;
@@ -131,20 +130,20 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
       createSnapshotVersion(configGroup, version, "批量创建配置");
     }
 
-    // 5. 预生成 ID + DTO 转 Entity
-    List<Config> entities = items.stream().map(this::toEntityWithId).collect(Collectors.toList());
+    // 5. 预生成 ID + VO 转 DTO
+    List<ConfigDTO> dtos = items.stream().map(this::toDtoWithId).collect(Collectors.toList());
 
     // 6. 批量插入
-    configRepository.insertBatch(entities);
+    configRepository.insertBatch(dtos);
 
     // 7. 精准失效缓存：按涉及 configGroup 逐一失效组缓存 + 公开配置缓存
     configGroups.forEach(this::evictConfigGroup);
     evictConfigPublic();
 
     // 8. 同步搜索索引 + 发布变更事件（异步，不阻塞主流程）
-    entities.forEach(entity -> {
-      searchIndexSyncer.upsert("config", entity);
-      publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
+    dtos.forEach(dto -> {
+      searchIndexSyncer.upsert("config", dto);
+      publishConfigChangedEvent(dto.getConfigKey(), dto.getConfigGroup());
     });
 
     Map<String, Object> result = new HashMap<>();
@@ -242,7 +241,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
    * @param changeLog 变更说明
    */
   private void createSnapshotVersion(String configGroup, String version, String changeLog) {
-    List<Config> snapshot = configRepository.findByGroup(configGroup);
+    List<ConfigVO> snapshot = configRepository.findByGroup(configGroup);
     String snapshotJson = YdszJson.toJson(snapshot);
     entityVersionService.createVersion(
         EntityVersionCreateDTO.builder()
@@ -256,51 +255,21 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   }
 
   /**
-   * DTO 转 Entity + 预生成雪花 ID + 审计字段（私有）
+   * VO 转 DTO + 预生成雪花 ID + 审计字段（私有）
    *
    * <p>批量 XML 插入不走 MyBatis-Plus 拦截器（CombinedFieldFillInterceptor、租户拦截器、 IdentifierGenerator
    * 均不生效），需在此处手动预生成 ID 并填充审计字段。
    *
-   * <p>缺省 {@code status="ENABLED"}、{@code deleted=0}（{@code @TableLogic} 字段用 int 存储）。
+   * <p>缺省 {@code status="ENABLED"}。
    *
    * @param vo 配置 VO
-   * @return 配置实体（含预生成 ID 和审计字段）
+   * @return 配置 DTO（含预生成 ID 和审计字段）
    */
-  private Config toEntityWithId(ConfigVO vo) {
-    Config entity = new Config();
-    entity.setId(com.baomidou.mybatisplus.core.toolkit.IdWorker.getIdStr());
-    entity.setConfigGroup(vo.getConfigGroup());
-    entity.setConfigKey(vo.getConfigKey());
-    entity.setConfigValue(vo.getConfigValue());
-    entity.setValueType(vo.getValueType());
-    entity.setDefaultValue(vo.getDefaultValue());
-    entity.setDescription(vo.getDescription());
-    entity.setIsPublic(vo.getIsPublic());
-    entity.setSortOrder(vo.getSortOrder());
-    entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
-    entity.setDeleted(0);
-    entity.setRevision(0);
-    entity.setCreatedAt(LocalDateTime.now());
-    entity.setUpdatedAt(LocalDateTime.now());
-    entity.setCreatedBy(getCurrentUserId());
-    entity.setUpdatedBy(getCurrentUserId());
-    entity.setTenantId(TenantContextHolder.getTenantId());
-    return entity;
-  }
-
-  /**
-   * 获取当前用户 ID（私有）
-   *
-   * <p>从 RequestContext 获取当前操作人 ID，未登录时返回 "system"。
-   *
-   * @return 当前用户 ID
-   */
-  private String getCurrentUserId() {
-    try {
-      return RequestContext.getUserId();
-    } catch (Exception e) {
-      return "system";
-    }
+  private ConfigDTO toDtoWithId(ConfigVO vo) {
+    ConfigDTO dto = SystemConverter.INSTANT.voToDto(vo);
+    dto.setId(com.baomidou.mybatisplus.core.toolkit.IdWorker.getIdStr());
+    dto.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
+    return dto;
   }
 
   /**

@@ -29,6 +29,15 @@ public class JobNode extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
 
+  /** 节点状态：在线 */
+  public static final String STATUS_ONLINE = "ONLINE";
+
+  /** 节点状态：离线 */
+  public static final String STATUS_OFFLINE = "OFFLINE";
+
+  /** 节点状态：排空退出中 */
+  public static final String STATUS_DRAINING = "DRAINING";
+
   /** 节点 ID（hostname:port 或 hostname:pid） */
   private String nodeId;
 

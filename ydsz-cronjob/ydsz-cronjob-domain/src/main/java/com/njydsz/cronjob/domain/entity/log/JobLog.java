@@ -31,6 +31,21 @@ public class JobLog extends MpBaseIdEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
 
+  /** 执行日志状态：待执行 */
+  public static final String STATUS_PENDING = "PENDING";
+
+  /** 执行日志状态：执行中 */
+  public static final String STATUS_RUNNING = "RUNNING";
+
+  /** 执行日志状态：执行成功 */
+  public static final String STATUS_SUCCESS = "SUCCESS";
+
+  /** 执行日志状态：执行失败 */
+  public static final String STATUS_FAILED = "FAILED";
+
+  /** 执行日志状态：执行超时 */
+  public static final String STATUS_TIMEOUT = "TIMEOUT";
+
   /** 任务 ID */
   private String jobId;
 

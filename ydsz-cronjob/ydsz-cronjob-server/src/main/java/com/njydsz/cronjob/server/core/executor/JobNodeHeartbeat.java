@@ -65,6 +65,9 @@ public class JobNodeHeartbeat {
   /** 当前节点正在执行的任务数（由 TaskExecutor 维护） */
   private final AtomicInteger runningCount = new AtomicInteger(0);
 
+  /** 排空间隔（毫秒）：等待运行中任务完成时的轮询间隔 */
+  private static final long DRAIN_POLL_INTERVAL_MS = 500L;
+
   /** 操作系统 MXBean（用于采集 CPU/内存指标） */
   private final OperatingSystemMXBean osMxBean = ManagementFactory.getOperatingSystemMXBean();
 
@@ -81,7 +84,7 @@ public class JobNodeHeartbeat {
     }
     nodeId = initNodeId();
     JobNode node = buildNodeRecord();
-    node.setStatus("ONLINE");
+    node.setStatus(JobNode.STATUS_ONLINE);
     // upsert：存在则更新，不存在则插入
     JobNode existing = jobNodeMapper.selectById(nodeId);
     if (existing == null) {
@@ -113,7 +116,7 @@ public class JobNodeHeartbeat {
           .set(JobNode::getRunningCount, runningCount.get())
           .set(JobNode::getCpuUsage, collectCpuUsage())
           .set(JobNode::getMemUsagePct, collectMemUsagePct())
-          .set(JobNode::getStatus, "ONLINE");
+          .set(JobNode::getStatus, JobNode.STATUS_ONLINE);
       jobNodeMapper.update(null, wrapper);
     } catch (Exception e) {
       log.warn("[JobNodeHeartbeat] 心跳上报失败: nodeId={} reason={}", nodeId, e.getMessage());
@@ -140,17 +143,17 @@ public class JobNodeHeartbeat {
             "[JobNodeHeartbeat] 标记节点为 DRAINING, 等待 {} 个任务完成: nodeId={}",
             runningCount.get(),
             nodeId);
-        markStatus("DRAINING");
+        markStatus(JobNode.STATUS_DRAINING);
         long deadline = System.currentTimeMillis() + cfg.getDrainTimeoutSeconds() * 1000;
         while (runningCount.get() > 0 && System.currentTimeMillis() < deadline) {
-          Thread.sleep(500);
+          Thread.sleep(DRAIN_POLL_INTERVAL_MS);
         }
       }
-      markStatus("OFFLINE");
+      markStatus(JobNode.STATUS_OFFLINE);
       log.info("[JobNodeHeartbeat] 节点已下线: nodeId={} remainingTasks={}", nodeId, runningCount.get());
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      markStatus("OFFLINE");
+      markStatus(JobNode.STATUS_OFFLINE);
     } catch (Exception e) {
       log.warn("[JobNodeHeartbeat] 下线处理失败: nodeId={} reason={}", nodeId, e.getMessage());
     }

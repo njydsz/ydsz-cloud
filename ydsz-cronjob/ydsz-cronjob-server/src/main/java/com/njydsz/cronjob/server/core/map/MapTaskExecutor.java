@@ -121,6 +121,7 @@ public class MapTaskExecutor {
     } catch (Exception e) {
       MapReduceConfig mrConfig = cronjobProperties.getMapReduce();
       int maxParallel = Math.max(2, mrConfig.getMaxParallelSubTasks());
+      // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
       this.subTaskExecutor =
           new ThreadPoolExecutor(
               maxParallel,
@@ -134,8 +135,9 @@ public class MapTaskExecutor {
                 return t;
               },
               new ThreadPoolExecutor.CallerRunsPolicy());
+      // CHECKSTYLE.ON: RegexpSinglelineJava
       log.warn(
-          "[MapTaskExecutor] 获取 cronjobMapReduceExecutor 失败, 回退自建线程池: reason={}",
+          "[MapTaskExecutor] 获取 cronjobMapReduceExecutor 失败, 回退降级线程池: reason={}",
           e.getMessage());
     }
   }

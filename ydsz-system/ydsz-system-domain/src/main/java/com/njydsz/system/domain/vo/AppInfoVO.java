@@ -3,6 +3,8 @@ package com.njydsz.system.domain.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import com.njydsz.common.json.annotation.JsonIgnore;
+
 /**
  * 应用注册 VO
  *
@@ -46,6 +48,15 @@ public class AppInfoVO {
 
   @Schema(description = "应用 Key（client_id）")
   private String appKey;
+
+  /**
+   * 应用密钥（BCrypt 哈希），仅供内部密钥校验使用。
+   *
+   * <p>标记 {@code @JsonIgnore} 确保序列化时不暴露给前端。
+   */
+  @JsonIgnore
+  @Schema(description = "应用密钥（BCrypt 哈希，内部使用）")
+  private String appSecret;
 
   @Schema(description = "授权回调地址")
   private String redirectUrl;

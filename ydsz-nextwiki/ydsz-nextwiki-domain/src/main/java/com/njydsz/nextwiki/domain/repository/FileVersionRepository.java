@@ -55,6 +55,18 @@ public interface FileVersionRepository {
   Optional<FileVersionVO> findByFileNodeIdAndVersion(FileVersionQuery query);
 
   /**
+   * 查询指定版本（便捷重载）
+   *
+   * @param fileNodeId 文件节点ID
+   * @param versionNumber 版本号
+   * @return 版本 VO；不存在返回 {@code Optional.empty()}
+   */
+  default Optional<FileVersionVO> findByFileNodeIdAndVersion(String fileNodeId, Integer versionNumber) {
+    return findByFileNodeIdAndVersion(
+        FileVersionQuery.builder().fileNodeId(fileNodeId).versionNumber(versionNumber).build());
+  }
+
+  /**
    * 查询当前活跃版本
    *
    * @param fileNodeId 文件节点ID
