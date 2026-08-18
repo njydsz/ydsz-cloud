@@ -4,11 +4,14 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -448,6 +451,7 @@ public class OAuth2Controller {
 
     log.info("OAuth2 refresh token rotated: clientId={}, userId={}", clientId, userInfo.getUserId());
 
+    // P1-3: refresh 流程返回客户端注册范围内可授予的 scope
     return BaseResponse.success(
         Map.of(
             "access_token",
@@ -459,7 +463,41 @@ public class OAuth2Controller {
             "expires_in",
             properties.getTokenTtlSeconds(),
             "scope",
-            "read write"));
+            resolveGrantedScope(clientId)));
+  }
+
+  /**
+   * P1-3: 解析客户端请求的 scope 集合（空格分隔）。
+   *
+   * @param scope scope 字符串，可为 null
+   * @return scope 集合；scope 为空时返回空集合
+   */
+  private Set<String> parseScopes(String scope) {
+    if (scope == null || scope.isBlank()) {
+      return Set.of();
+    }
+    return Arrays.stream(scope.trim().split("\\s+"))
+        .filter(s -> !s.isBlank())
+        .collect(Collectors.toSet());
+  }
+
+  /**
+   * P1-3: 解析客户端可授予的默认 scope（P1-3）。
+   *
+   * <p>客户端配置了 {@code allowedScopes} 时返回其全部授权范围；未配置时兼容存量返回
+   * {@code read write}。
+   *
+   * @param clientId 客户端 ID
+   * @return 可授予的 scope 字符串（空格分隔）
+   */
+  private String resolveGrantedScope(String clientId) {
+    UserInfoProperties.OAuth2Client client = properties.getOauth2Clients().get(clientId);
+    if (client != null
+        && client.getAllowedScopes() != null
+        && !client.getAllowedScopes().isEmpty()) {
+      return String.join(" ", client.getAllowedScopes());
+    }
+    return "read write";
   }
 
   /**

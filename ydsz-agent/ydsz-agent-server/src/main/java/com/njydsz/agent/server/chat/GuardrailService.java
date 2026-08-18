@@ -33,14 +33,36 @@ public class GuardrailService {
 
   private static final Logger LOG = LoggerFactory.getLogger(GuardrailService.class);
 
+  /** 默认输出护栏拒绝文案 */
+  private static final String DEFAULT_REJECTION_MESSAGE = "抱歉，我无法回答这个问题。";
+
   private final List<InputGuardrail> inputGuardrails;
   private final List<OutputGuardrail> outputGuardrails;
   private final AgentMetrics metrics;
+
+  /** 输出护栏拒绝时的兜底文案（P2 修复：原文案硬编码，现支持配置化） */
+  private final String rejectionMessage;
 
   public GuardrailService(
       List<InputGuardrail> inputGuardrails,
       List<OutputGuardrail> outputGuardrails,
       AgentMetrics metrics) {
+    this(inputGuardrails, outputGuardrails, metrics, DEFAULT_REJECTION_MESSAGE);
+  }
+
+  /**
+   * 构造护栏编排服务。
+   *
+   * @param inputGuardrails 输入护栏集合（按优先级排序）
+   * @param outputGuardrails 输出护栏集合（按优先级排序）
+   * @param metrics 指标组件
+   * @param rejectionMessage 输出护栏拒绝文案（可通过配置 {@code ydsz.agent.guardrail.rejection-message} 覆盖）
+   */
+  public GuardrailService(
+      List<InputGuardrail> inputGuardrails,
+      List<OutputGuardrail> outputGuardrails,
+      AgentMetrics metrics,
+      String rejectionMessage) {
     this.inputGuardrails =
         inputGuardrails != null
             ? inputGuardrails.stream()
@@ -54,6 +76,10 @@ public class GuardrailService {
                 .toList()
             : List.of();
     this.metrics = metrics;
+    this.rejectionMessage =
+        rejectionMessage != null && !rejectionMessage.isBlank()
+            ? rejectionMessage
+            : DEFAULT_REJECTION_MESSAGE;
   }
 
   /**
@@ -91,7 +117,8 @@ public class GuardrailService {
       if (result.isRejected()) {
         LOG.warn("[Guardrail] 输出护栏拒绝: guard={}, reason={}", guard.getName(), result.getReason());
         metrics.recordGuardrailRejection(guard.getName(), "output");
-        return "抱歉，我无法回答这个问题。";
+        // P2 修复：拒绝文案可配置（原为硬编码固定文案）
+        return rejectionMessage;
       }
       if (result.getSanitizedInput() != null) {
         sanitized = result.getSanitizedInput();

@@ -46,7 +46,7 @@ public class TagRepositoryImpl implements TagRepository {
   public TagVO save(TagDTO dto) {
     TagDO entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
-      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     tagMapper.insert(entity);
     return converter.entityToVO(entity);
@@ -76,7 +76,7 @@ public class TagRepositoryImpl implements TagRepository {
   public void bindTag(String fileNodeId, String tagId) {
     FileTagDO fileTag =
         FileTagDO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .fileNodeId(fileNodeId)
             .tagId(tagId)
             .build();

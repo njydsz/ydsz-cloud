@@ -157,7 +157,7 @@ public class ChunkUploadApplicationService {
     // 配额校验
     quotaDomainService.checkQuota("user", userId, fileSize);
 
-    String uploadId = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
+    String uploadId = String.valueOf(snowflakeIdGenerator.nextId());
 
     ChunkUploadSession session = new ChunkUploadSession();
     session.setUploadId(uploadId);
@@ -396,7 +396,7 @@ public class ChunkUploadApplicationService {
     return transactionTemplate.execute(status -> {
       FileNodeDTO newNode =
           FileNodeDTO.builder()
-              .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+              .id(String.valueOf(snowflakeIdGenerator.nextId()))
               .parentId(ctx.parent.getId())
               .name(ctx.session.getFileName())
               .nodeType(FileNodeVO.TYPE_FILE)
@@ -600,7 +600,7 @@ public class ChunkUploadApplicationService {
 
   private String generateStorageKey(String userId, String originalFilename) {
     String datePath = LocalDateTime.now().toString().substring(0, 10).replace("-", "/");
-    String uuid = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
+    String uuid = String.valueOf(snowflakeIdGenerator.nextId());
     String suffix = extractSuffix(originalFilename);
     return "wiki/" + userId + "/" + datePath + "/" + uuid + (suffix.isEmpty() ? "" : "." + suffix);
   }
@@ -647,7 +647,7 @@ public class ChunkUploadApplicationService {
 
     FileNodeDTO node =
         FileNodeDTO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .parentId(parent.getId())
             .name(session.getFileName())
             .nodeType(FileNodeVO.TYPE_FILE)

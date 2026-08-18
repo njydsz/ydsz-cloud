@@ -96,7 +96,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   public FileNodeVO save(FileNodeDTO dto) {
     FileNodeDO entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
-      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     fileNodeMapper.insert(entity);
     return converter.entityToVO(entity);
@@ -111,7 +111,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     int count = 0;
     for (FileNodeDO entity : entities) {
       if (entity.getId() == null || entity.getId().isEmpty()) {
-        entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+        entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
       }
       fileNodeMapper.insert(entity);
       count++;
@@ -217,7 +217,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
     root =
         FileNodeDO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .parentId("0")
             .name("root")
             .nodeType(FileNodeDO.TYPE_FOLDER)

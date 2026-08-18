@@ -53,7 +53,7 @@ public class TagDomainService {
 
     TagDTO tagDTO =
         TagDTO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .name(name.trim())
             .color(color != null ? color : "#1890ff")
             .type("manual")

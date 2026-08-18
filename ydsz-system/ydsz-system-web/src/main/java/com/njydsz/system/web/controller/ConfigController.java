@@ -323,7 +323,8 @@ public class ConfigController {
   @Operation(summary = "导入配置", description = "从 Excel 文件导入配置")
   @RateLimit(resource = "system.config.import", threshold = 5)
   @PostMapping("/import")
-  public BaseResponse<ImportResult> importConfigs(@RequestParam("file") MultipartFile file) {
+  public BaseResponse<ImportResult> importConfigs(@RequestParam("file") MultipartFile file)
+      throws IOException {
     if (file == null || file.isEmpty()) {
       return BaseResponse.success(
           ImportResult.builder()
@@ -334,18 +335,10 @@ public class ConfigController {
               .message("文件不能为空")
               .build());
     }
-    try {
-      ImportResult result = configService.importConfigs(file.getInputStream());
-      return BaseResponse.success(result);
-    } catch (Exception e) {
-      return BaseResponse.success(
-          ImportResult.builder()
-              .totalCount(0)
-              .successCount(0)
-              .failCount(0)
-              .skipCount(0)
-              .message("导入失败: " + e.getMessage())
-              .build());
-    }
+    // Service 层返回部分成功明细（成功/跳过/失败条数 + 逐条错误）；
+    // Excel 解析或数据库异常直接抛出，由 common-exception 全局处理器返回错误响应（《云顶编码规范》18.4），
+    // 不在 Controller 内吞异常包装为 success。
+    ImportResult result = configService.importConfigs(file.getInputStream());
+    return BaseResponse.success(result);
   }
 }

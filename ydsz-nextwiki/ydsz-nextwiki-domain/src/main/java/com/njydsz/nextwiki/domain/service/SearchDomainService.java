@@ -155,7 +155,7 @@ public class SearchDomainService {
 
     SearchIndexDTO dto =
         SearchIndexDTO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .fileNodeId(node.getId())
             .name(node.getName())
             .path(node.getPath())

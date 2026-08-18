@@ -334,6 +334,26 @@ public class AuthServiceImpl implements AuthService {
    */
   @Override
   public LoginVO refresh(String refreshToken) {
+    if (refreshToken == null || refreshToken.isBlank()) {
+      throw BusinessException.builder().resultCode(BaseResultCode.UNAUTHORIZED).build();
+    }
+
+    // P1-4: refresh_token 重用检测（RFC 6819 §5.2.2.3）
+    // 若旧 refresh_token 已在黑名单（已被使用并轮换），说明 token 泄露被复用，
+    // 立即链式撤销该用户全部会话，防止攻击者长期滥用 token 家族
+    if (tokenBlacklistService.isBlacklisted(refreshToken)) {
+      UserInfo reusedUser = tokenService.parseRefreshToken(refreshToken);
+      log.warn(
+          "Refresh token reuse detected, revoking all sessions: username={}",
+          reusedUser != null ? reusedUser.getUsername() : "unknown");
+      if (reusedUser != null
+          && reusedUser.getUserId() != null
+          && !reusedUser.getUserId().isBlank()) {
+        sessionManager.evictAllSessions(reusedUser.getUserId());
+      }
+      throw BusinessException.builder().resultCode(BaseResultCode.UNAUTHORIZED).build();
+    }
+
     if (!tokenService.validateRefreshToken(refreshToken)) {
       log.warn("Refresh token validation failed, possible token reuse attack");
       throw BusinessException.builder().resultCode(BaseResultCode.UNAUTHORIZED).build();

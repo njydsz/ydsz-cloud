@@ -102,7 +102,7 @@ public class ShareLinkDomainService {
     String fileNodeId = node.getId();
 
     // 生成分享码和提取码
-    String shareCode = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
+    String shareCode = String.valueOf(snowflakeIdGenerator.nextId());
     String extractCode = generateExtractCode();
 
     // 确定分享目标类型
@@ -111,7 +111,7 @@ public class ShareLinkDomainService {
 
     ShareLinkDTO shareLink =
         ShareLinkDTO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .fileNodeId(fileNodeId)
             .shareCode(shareCode)
             .extractCode(extractCode)
@@ -136,7 +136,7 @@ public class ShareLinkDomainService {
       for (String targetUserId : targetUserIds) {
         ShareRecipientDTO recipient =
             ShareRecipientDTO.builder()
-                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()))
                 .shareId(shareLink.getId())
                 .recipientType("USER")
                 .recipientId(targetUserId)

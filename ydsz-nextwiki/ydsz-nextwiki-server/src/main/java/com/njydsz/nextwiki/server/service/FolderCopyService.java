@@ -68,7 +68,7 @@ public class FolderCopyService {
       String targetParentPath,
       int targetParentLevel,
       String userId) {
-    String newFolderId = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
+    String newFolderId = String.valueOf(snowflakeIdGenerator.nextId());
 
     String folderPath =
         targetParentPath.endsWith("/")
@@ -188,7 +188,7 @@ public class FolderCopyService {
     List<FileNodeDTO> newNodes = new ArrayList<>(batchSourceNodes.size());
 
     for (FileNodeVO source : batchSourceNodes) {
-      String newId = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
+      String newId = String.valueOf(snowflakeIdGenerator.nextId());
       idMapping.put(source.getId(), newId);
 
       // 计算新父节点 ID

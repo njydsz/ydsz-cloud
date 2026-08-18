@@ -42,7 +42,7 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
   public ShareLinkVO save(ShareLinkDTO dto) {
     ShareLinkDO entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
-      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     shareLinkMapper.insert(entity);
     return converter.entityToVO(entity);

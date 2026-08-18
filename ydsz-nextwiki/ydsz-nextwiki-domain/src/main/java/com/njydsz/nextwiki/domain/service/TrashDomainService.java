@@ -50,7 +50,7 @@ public class TrashDomainService {
     LocalDateTime now = LocalDateTime.now();
     TrashItemDTO trashItem =
         TrashItemDTO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .fileNodeId(node.getId())
             .originalName(node.getName())
             .originalPath(node.getPath())

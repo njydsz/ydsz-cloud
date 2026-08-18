@@ -45,7 +45,7 @@ public class ShareRecipientRepositoryImpl implements ShareRecipientRepository {
     List<ShareRecipientDO> entities = converter.shareRecipientDtosToEntities(dtos);
     for (ShareRecipientDO entity : entities) {
       if (entity.getId() == null || entity.getId().isEmpty()) {
-        entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+        entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
       }
       shareRecipientMapper.insert(entity);
     }

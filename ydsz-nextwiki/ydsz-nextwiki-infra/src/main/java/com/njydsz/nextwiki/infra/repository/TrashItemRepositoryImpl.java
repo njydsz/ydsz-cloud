@@ -42,7 +42,7 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
   public TrashItemVO save(TrashItemDTO dto) {
     TrashItemDO entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
-      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     trashItemMapper.insert(entity);
     return converter.entityToVO(entity);
@@ -57,7 +57,7 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
     int count = 0;
     for (TrashItemDO entity : entities) {
       if (entity.getId() == null || entity.getId().isEmpty()) {
-        entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+        entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
       }
       count++;
     }

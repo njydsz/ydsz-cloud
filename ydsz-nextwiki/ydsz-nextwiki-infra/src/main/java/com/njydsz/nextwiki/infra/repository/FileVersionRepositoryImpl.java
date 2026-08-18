@@ -44,7 +44,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
   public FileVersionVO save(FileVersionDTO dto) {
     FileVersionDO entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
-      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     fileVersionMapper.insert(entity);
     return converter.entityToVO(entity);

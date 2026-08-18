@@ -750,7 +750,7 @@ public class FileApplicationService {
 
     FileNodeDTO copyNode =
         FileNodeDTO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .parentId(resolvedParentId)
             .name(newName)
             .nodeType(source.getNodeType())
@@ -1129,7 +1129,7 @@ public class FileApplicationService {
       int level,
       String userId) {
     return FileNodeDTO.builder()
-        .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+        .id(String.valueOf(snowflakeIdGenerator.nextId()))
         .parentId(parentId)
         .name(name)
         .nodeType(FileNodeVO.TYPE_FILE)
@@ -1162,7 +1162,7 @@ public class FileApplicationService {
       int level,
       String userId) {
     return FileNodeDTO.builder()
-        .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+        .id(String.valueOf(snowflakeIdGenerator.nextId()))
         .parentId(parentId)
         .name(name)
         .nodeType(FileNodeVO.TYPE_FILE)
@@ -1209,7 +1209,7 @@ public class FileApplicationService {
 
   private String generateStorageKey(String userId, String originalFilename) {
     String datePath = LocalDateTime.now().toString().substring(0, 10).replace("-", "/");
-    String uuid = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
+    String uuid = String.valueOf(snowflakeIdGenerator.nextId());
     String suffix = extractSuffix(originalFilename);
     return "wiki/" + userId + "/" + datePath + "/" + uuid + (suffix.isEmpty() ? "" : "." + suffix);
   }

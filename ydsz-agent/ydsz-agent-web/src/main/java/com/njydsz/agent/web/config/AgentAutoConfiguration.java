@@ -365,12 +365,13 @@ public class AgentAutoConfiguration {
    * 装配 Agent 请求准入卫士。
    *
    * @param stringOps Redis String 操作组件
+   * @param properties Agent 配置（限流阈值）
    * @return 请求卫士
    */
   @Bean
   @ConditionalOnMissingBean(AgentRequestGuard.class)
-  public AgentRequestGuard agentRequestGuard(RedisStringOps stringOps) {
-    return new AgentRequestGuard(stringOps);
+  public AgentRequestGuard agentRequestGuard(RedisStringOps stringOps, AgentProperties properties) {
+    return new AgentRequestGuard(stringOps, properties.getGuardrail().getMaxRequestsPerMinute());
   }
 
   /**
@@ -379,6 +380,7 @@ public class AgentAutoConfiguration {
    * @param inputGuardrails 输入护栏集合
    * @param outputGuardrails 输出护栏集合
    * @param agentMetrics 指标组件
+   * @param properties Agent 配置（输出护栏拒绝文案）
    * @return 护栏服务
    */
   @Bean
@@ -386,8 +388,10 @@ public class AgentAutoConfiguration {
   public GuardrailService guardrailService(
       List<InputGuardrail> inputGuardrails,
       List<OutputGuardrail> outputGuardrails,
-      AgentMetrics agentMetrics) {
-    return new GuardrailService(inputGuardrails, outputGuardrails, agentMetrics);
+      AgentMetrics agentMetrics,
+      AgentProperties properties) {
+    return new GuardrailService(
+        inputGuardrails, outputGuardrails, agentMetrics, properties.getGuardrail().getRejectionMessage());
   }
 
   /**

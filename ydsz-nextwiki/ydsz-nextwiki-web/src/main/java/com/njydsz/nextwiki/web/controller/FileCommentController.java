@@ -149,7 +149,7 @@ public class FileCommentController {
 
     FileCommentDTO comment =
         FileCommentDTO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .fileNodeId(request.getFileNodeId())
             .content(request.getContent())
             .parentCommentId(request.getParentCommentId())

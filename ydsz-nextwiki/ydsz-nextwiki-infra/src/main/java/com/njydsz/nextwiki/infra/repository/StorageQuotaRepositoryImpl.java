@@ -41,7 +41,7 @@ public class StorageQuotaRepositoryImpl implements StorageQuotaRepository {
   public StorageQuotaVO save(StorageQuotaDTO dto) {
     StorageQuotaDO entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
-      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     storageQuotaMapper.insert(entity);
     return converter.entityToVO(entity);

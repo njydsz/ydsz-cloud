@@ -43,7 +43,7 @@ public class FileAclRepositoryImpl implements FileAclRepository {
   public FileAclVO save(FileAclDTO dto) {
     FileAclDO entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
-      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     fileAclMapper.insert(entity);
     return converter.entityToVO(entity);
@@ -87,7 +87,7 @@ public class FileAclRepositoryImpl implements FileAclRepository {
     List<FileAclDO> entities = converter.fileAclDtosToEntities(dtos);
     for (FileAclDO entity : entities) {
       if (entity.getId() == null || entity.getId().isEmpty()) {
-        entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+        entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
       }
       fileAclMapper.insert(entity);
     }

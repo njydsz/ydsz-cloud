@@ -61,7 +61,7 @@ public class FolderDomainService {
 
     FileNodeVO folder =
         FileNodeVO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .parentId(parent.getId())
             .name(name)
             .nodeType(FileNodeVO.TYPE_FOLDER)

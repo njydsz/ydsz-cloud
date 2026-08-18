@@ -57,7 +57,7 @@ public class ShareAccessLogDomainService {
       String failReason) {
     ShareAccessLogDTO accessLog =
         ShareAccessLogDTO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .shareId(shareId)
             .shareCode(shareCode)
             .fileNodeId(fileNodeId)

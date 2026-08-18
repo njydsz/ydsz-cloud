@@ -85,7 +85,7 @@ public class FileVersionDomainService {
 
     FileVersionDTO version =
         FileVersionDTO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .fileNodeId(node.getId())
             .versionNumber(nextVersion)
             .storageKey(storageKey)
@@ -153,7 +153,7 @@ public class FileVersionDomainService {
 
     FileVersionDTO rollbackVersion =
         FileVersionDTO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .fileNodeId(node.getId())
             .versionNumber(nextVersion)
             .storageKey(targetVersion.getStorageKey())

@@ -63,7 +63,7 @@ public class FilePermissionDomainService {
       String fileNodeId, String granteeType, String granteeId, int permissionMask, String userId) {
     FileAclDTO acl =
         FileAclDTO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .fileNodeId(fileNodeId)
             .granteeType(granteeType)
             .granteeId(granteeId)
