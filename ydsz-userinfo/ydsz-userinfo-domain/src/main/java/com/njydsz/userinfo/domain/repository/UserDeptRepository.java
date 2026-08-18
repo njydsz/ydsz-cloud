@@ -1,15 +1,17 @@
 package com.njydsz.userinfo.domain.repository;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.njydsz.userinfo.infra.entity.UserDeptDO;
+import com.njydsz.userinfo.domain.dto.UserDeptDTO;
+import com.njydsz.userinfo.domain.vo.UserDeptVO;
 
 /**
  * 用户-部门关联 Repository 接口
  *
  * <p>封装用户-部门关联表（{@code ydsz_user_dept}）的数据访问操作。
  *
- * <p>禁止暴露底层 Mapper，所有数据库操作通过本接口进行。
+ * <p>入参为 DTO / 具体字段，返回值为 VO 类型，禁止暴露 MyBatis-Plus 类。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -20,9 +22,9 @@ public interface UserDeptRepository {
    * 根据 ID 查询用户-部门关联。
    *
    * @param id 关联 ID
-   * @return 用户-部门关联实体，不存在时返回 null
+   * @return 用户-部门关联 VO
    */
-  UserDeptDO findById(String id);
+  Optional<UserDeptVO> findById(String id);
 
   /**
    * 根据用户 ID 查询用户-部门关联列表。
@@ -30,7 +32,7 @@ public interface UserDeptRepository {
    * @param userId 用户 ID
    * @return 用户-部门关联列表
    */
-  List<UserDeptDO> findByUserId(String userId);
+  List<UserDeptVO> findByUserId(String userId);
 
   /**
    * 根据用户 ID 查询部门 ID 列表。
@@ -41,29 +43,29 @@ public interface UserDeptRepository {
   List<String> findDeptIdsByUserId(String userId);
 
   /**
-   * 条件查询用户-部门关联列表。
+   * 根据用户 ID 和部门 ID 查询关联。
    *
-   * @param wrapper 查询条件
-   * @return 关联列表
+   * @param userId 用户 ID
+   * @param deptId 部门 ID
+   * @return 用户-部门关联 VO
    */
-  List<UserDeptDO> list(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserDeptDO> wrapper);
+  Optional<UserDeptVO> findByUserIdAndDeptId(String userId, String deptId);
 
   /**
    * 保存用户-部门关联（插入）。
    *
-   * @param entity 用户-部门关联实体
-   * @return 插入影响的行数
+   * @param dto 用户-部门关联 DTO
+   * @return 保存后的关联 VO
    */
-  int insert(UserDeptDO entity);
+  UserDeptVO create(UserDeptDTO dto);
 
   /**
    * 更新用户-部门关联。
    *
-   * @param entity 用户-部门关联实体
-   * @return 更新影响的行数
+   * @param dto 用户-部门关联 DTO
+   * @return 更新后的关联 VO
    */
-  int updateById(UserDeptDO entity);
+  UserDeptVO update(UserDeptDTO dto);
 
   /**
    * 根据用户 ID 删除关联。
@@ -74,28 +76,19 @@ public interface UserDeptRepository {
   int deleteByUserId(String userId);
 
   /**
+   * 根据用户 ID 和部门 ID 删除关联。
+   *
+   * @param userId 用户 ID
+   * @param deptId 部门 ID
+   * @return 删除影响的行数
+   */
+  int deleteByUserIdAndDeptId(String userId, String deptId);
+
+  /**
    * 根据 ID 删除关联（逻辑删除）。
    *
    * @param id 关联 ID
-   * @return 删除影响的行数
+   * @return 是否删除成功
    */
-  int deleteById(String id);
-
-  /**
-   * 条件删除用户-部门关联。
-   *
-   * @param wrapper 删除条件
-   * @return 删除影响的行数
-   */
-  int delete(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserDeptDO> wrapper);
-
-  /**
-   * 统计符合条件的关联数量。
-   *
-   * @param wrapper 查询条件
-   * @return 关联数量
-   */
-  long count(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserDeptDO> wrapper);
+  boolean deleteById(String id);
 }

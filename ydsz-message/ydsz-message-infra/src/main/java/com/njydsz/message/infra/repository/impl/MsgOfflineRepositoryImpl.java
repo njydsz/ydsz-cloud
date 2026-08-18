@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.query.MsgOfflineQuery;
 import com.njydsz.message.domain.repository.MsgOfflineRepository;
 import com.njydsz.message.domain.vo.MsgOfflineVO;
@@ -57,15 +58,13 @@ public class MsgOfflineRepositoryImpl implements MsgOfflineRepository {
   }
 
   @Override
-  public IPage<MsgOfflineVO> findPage(MsgOfflineQuery query) {
+  public PageResponse<List<MsgOfflineVO>> findPage(MsgOfflineQuery query) {
     Page<MsgOfflineDO> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<MsgOfflineDO> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     IPage<MsgOfflineDO> entityPage = msgOfflineMapper.selectPage(page, wrapper);
     List<MsgOfflineVO> vos = converter.offlineDoListToVO(entityPage.getRecords());
-    Page<MsgOfflineVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-    voPage.setRecords(vos);
-    return voPage;
+    return PageResponse.success(entityPage.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   private QueryWrapper<MsgOfflineDO> buildWrapper(MsgOfflineQuery query) {

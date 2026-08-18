@@ -2,12 +2,16 @@ package com.njydsz.userinfo.infra.repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.userinfo.domain.dto.UserPasswordHistoryDTO;
 import com.njydsz.userinfo.domain.repository.UserPasswordHistoryRepository;
+import com.njydsz.userinfo.domain.vo.UserPasswordHistoryVO;
+import com.njydsz.userinfo.infra.converter.UserInfoConverter;
 import com.njydsz.userinfo.infra.entity.UserPasswordHistoryDO;
 import com.njydsz.userinfo.infra.mapper.UserPasswordHistoryMapper;
 
@@ -15,6 +19,7 @@ import com.njydsz.userinfo.infra.mapper.UserPasswordHistoryMapper;
  * 密码历史 Repository 实现
  *
  * <p>基于 MyBatis-Plus 的 {@link UserPasswordHistoryMapper} 实现密码历史的数据访问。
+ * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,19 +29,31 @@ import com.njydsz.userinfo.infra.mapper.UserPasswordHistoryMapper;
 public class UserPasswordHistoryRepositoryImpl implements UserPasswordHistoryRepository {
 
   private final UserPasswordHistoryMapper userPasswordHistoryMapper;
+  private final UserInfoConverter converter;
 
   @Override
-  public int insert(UserPasswordHistoryDO entity) {
-    return userPasswordHistoryMapper.insert(entity);
+  public UserPasswordHistoryVO create(UserPasswordHistoryDTO dto) {
+    UserPasswordHistoryDO entity = converter.dtoToEntity(dto);
+    userPasswordHistoryMapper.insert(entity);
+    return converter.entityToVO(entity);
   }
 
   @Override
-  public List<UserPasswordHistoryDO> findRecentByUserId(String userId, int limit) {
+  public List<UserPasswordHistoryVO> findRecentByUserId(String userId, int limit) {
     LambdaQueryWrapper<UserPasswordHistoryDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserPasswordHistoryDO::getUserId, userId);
     wrapper.orderByDesc(UserPasswordHistoryDO::getCreatedAt);
     wrapper.last("LIMIT " + limit);
-    return userPasswordHistoryMapper.selectList(wrapper);
+    List<UserPasswordHistoryDO> entities = userPasswordHistoryMapper.selectList(wrapper);
+    return converter.userPasswordHistoryListToVO(entities);
+  }
+
+  @Override
+  public List<UserPasswordHistoryVO> findByUserId(String userId) {
+    LambdaQueryWrapper<UserPasswordHistoryDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserPasswordHistoryDO::getUserId, userId);
+    List<UserPasswordHistoryDO> entities = userPasswordHistoryMapper.selectList(wrapper);
+    return converter.userPasswordHistoryListToVO(entities);
   }
 
   @Override
@@ -50,21 +67,6 @@ public class UserPasswordHistoryRepositoryImpl implements UserPasswordHistoryRep
   public long countByUserId(String userId) {
     LambdaQueryWrapper<UserPasswordHistoryDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserPasswordHistoryDO::getUserId, userId);
-    return userPasswordHistoryMapper.selectCount(wrapper);
-  }
-
-  @Override
-  public int delete(LambdaQueryWrapper<UserPasswordHistoryDO> wrapper) {
-    return userPasswordHistoryMapper.delete(wrapper);
-  }
-
-  @Override
-  public List<UserPasswordHistoryDO> list(LambdaQueryWrapper<UserPasswordHistoryDO> wrapper) {
-    return userPasswordHistoryMapper.selectList(wrapper);
-  }
-
-  @Override
-  public long count(LambdaQueryWrapper<UserPasswordHistoryDO> wrapper) {
     return userPasswordHistoryMapper.selectCount(wrapper);
   }
 

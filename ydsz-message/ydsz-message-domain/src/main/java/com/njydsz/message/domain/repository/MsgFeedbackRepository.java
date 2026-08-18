@@ -2,7 +2,7 @@ package com.njydsz.message.domain.repository;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.message.domain.query.MsgFeedbackQuery;
 import com.njydsz.message.domain.vo.MsgFeedbackVO;
@@ -48,5 +48,5 @@ public interface MsgFeedbackRepository {
    * @param query 分页查询参数
    * @return 分页结果（VO 分页）
    */
-  IPage<MsgFeedbackVO> findPage(MsgFeedbackQuery query);
+  PageResponse<List<MsgFeedbackVO>> findPage(MsgFeedbackQuery query);
 }

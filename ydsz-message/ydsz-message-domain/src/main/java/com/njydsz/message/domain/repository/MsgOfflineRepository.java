@@ -2,7 +2,7 @@ package com.njydsz.message.domain.repository;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.message.domain.query.MsgOfflineQuery;
 import com.njydsz.message.domain.vo.MsgOfflineVO;
@@ -63,5 +63,5 @@ public interface MsgOfflineRepository {
    * @param query 分页查询参数
    * @return 分页结果（VO 分页）
    */
-  IPage<MsgOfflineVO> findPage(MsgOfflineQuery query);
+  PageResponse<List<MsgOfflineVO>> findPage(MsgOfflineQuery query);
 }

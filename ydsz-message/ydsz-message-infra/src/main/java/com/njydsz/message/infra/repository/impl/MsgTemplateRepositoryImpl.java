@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.dto.template.TemplateQueryDTO;
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
@@ -61,15 +62,13 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
   }
 
   @Override
-  public IPage<MsgTemplateVO> findPage(TemplateQueryDTO query) {
+  public PageResponse<List<MsgTemplateVO>> findPage(TemplateQueryDTO query) {
     Page<MsgTemplateDO> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<MsgTemplateDO> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     IPage<MsgTemplateDO> entityPage = msgTemplateMapper.selectPage(page, wrapper);
     List<MsgTemplateVO> vos = converter.templateDoListToVO(entityPage.getRecords());
-    Page<MsgTemplateVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-    voPage.setRecords(vos);
-    return voPage;
+    return PageResponse.success(entityPage.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   private QueryWrapper<MsgTemplateDO> buildWrapper(TemplateQueryDTO query) {

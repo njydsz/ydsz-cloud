@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.query.MsgFeedbackQuery;
 import com.njydsz.message.domain.repository.MsgFeedbackRepository;
 import com.njydsz.message.domain.vo.MsgFeedbackVO;
@@ -44,15 +45,13 @@ public class MsgFeedbackRepositoryImpl implements MsgFeedbackRepository {
   }
 
   @Override
-  public IPage<MsgFeedbackVO> findPage(MsgFeedbackQuery query) {
+  public PageResponse<List<MsgFeedbackVO>> findPage(MsgFeedbackQuery query) {
     Page<MsgFeedbackDO> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<MsgFeedbackDO> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     IPage<MsgFeedbackDO> entityPage = msgFeedbackMapper.selectPage(page, wrapper);
     List<MsgFeedbackVO> vos = converter.feedbackDoListToVO(entityPage.getRecords());
-    Page<MsgFeedbackVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-    voPage.setRecords(vos);
-    return voPage;
+    return PageResponse.success(entityPage.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   private QueryWrapper<MsgFeedbackDO> buildWrapper(MsgFeedbackQuery query) {

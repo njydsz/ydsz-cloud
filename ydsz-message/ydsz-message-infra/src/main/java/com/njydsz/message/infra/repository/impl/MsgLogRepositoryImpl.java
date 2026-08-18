@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
@@ -52,15 +53,13 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
   }
 
   @Override
-  public IPage<MsgLogVO> findPage(MessageLogQueryDTO query) {
+  public PageResponse<List<MsgLogVO>> findPage(MessageLogQueryDTO query) {
     Page<MsgLogDO> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<MsgLogDO> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     IPage<MsgLogDO> entityPage = msgLogMapper.selectPage(page, wrapper);
     List<MsgLogVO> vos = converter.logDoListToVO(entityPage.getRecords());
-    Page<MsgLogVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-    voPage.setRecords(vos);
-    return voPage;
+    return PageResponse.success(entityPage.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   @Override

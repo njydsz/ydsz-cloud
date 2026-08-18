@@ -1,15 +1,17 @@
 package com.njydsz.userinfo.domain.repository;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.njydsz.userinfo.infra.entity.UserPostDO;
+import com.njydsz.userinfo.domain.dto.UserPostDTO;
+import com.njydsz.userinfo.domain.vo.UserPostVO;
 
 /**
  * 用户-岗位关联 Repository 接口
  *
  * <p>封装用户-岗位关联表（{@code ydsz_user_post}）的数据访问操作。
  *
- * <p>禁止暴露底层 Mapper，所有数据库操作通过本接口进行。
+ * <p>入参为 DTO / 具体字段，返回值为 VO 类型，禁止暴露 MyBatis-Plus 类。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -20,9 +22,9 @@ public interface UserPostRepository {
    * 根据 ID 查询用户-岗位关联。
    *
    * @param id 关联 ID
-   * @return 用户-岗位关联实体，不存在时返回 null
+   * @return 用户-岗位关联 VO
    */
-  UserPostDO findById(String id);
+  Optional<UserPostVO> findById(String id);
 
   /**
    * 根据用户 ID 查询用户-岗位关联列表。
@@ -30,7 +32,7 @@ public interface UserPostRepository {
    * @param userId 用户 ID
    * @return 用户-岗位关联列表
    */
-  List<UserPostDO> findByUserId(String userId);
+  List<UserPostVO> findByUserId(String userId);
 
   /**
    * 根据用户 ID 查询岗位 ID 列表。
@@ -41,29 +43,21 @@ public interface UserPostRepository {
   List<String> findPostIdsByUserId(String userId);
 
   /**
-   * 条件查询用户-岗位关联列表。
+   * 根据用户 ID 和岗位 ID 查询关联。
    *
-   * @param wrapper 查询条件
-   * @return 关联列表
+   * @param userId 用户 ID
+   * @param postId 岗位 ID
+   * @return 用户-岗位关联 VO
    */
-  List<UserPostDO> list(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserPostDO> wrapper);
+  Optional<UserPostVO> findByUserIdAndPostId(String userId, String postId);
 
   /**
    * 保存用户-岗位关联（插入）。
    *
-   * @param entity 用户-岗位关联实体
-   * @return 插入影响的行数
+   * @param dto 用户-岗位关联 DTO
+   * @return 保存后的关联 VO
    */
-  int insert(UserPostDO entity);
-
-  /**
-   * 更新用户-岗位关联。
-   *
-   * @param entity 用户-岗侣关联实体
-   * @return 更新影响的行数
-   */
-  int updateById(UserPostDO entity);
+  UserPostVO create(UserPostDTO dto);
 
   /**
    * 根据用户 ID 删除关联。
@@ -74,19 +68,19 @@ public interface UserPostRepository {
   int deleteByUserId(String userId);
 
   /**
+   * 根据用户 ID 和岗位 ID 删除关联。
+   *
+   * @param userId 用户 ID
+   * @param postId 岗位 ID
+   * @return 删除影响的行数
+   */
+  int deleteByUserIdAndPostId(String userId, String postId);
+
+  /**
    * 根据 ID 删除关联（逻辑删除）。
    *
    * @param id 关联 ID
-   * @return 删除影响的行数
+   * @return 是否删除成功
    */
-  int deleteById(String id);
-
-  /**
-   * 条件删除用户-岗位关联。
-   *
-   * @param wrapper 删除条件
-   * @return 删除影响的行数
-   */
-  int delete(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserPostDO> wrapper);
+  boolean deleteById(String id);
 }

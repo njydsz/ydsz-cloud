@@ -3,7 +3,7 @@ package com.njydsz.message.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.message.domain.dto.core.NotificationQueryDTO;
 import com.njydsz.message.domain.vo.MsgNotificationVO;
@@ -57,7 +57,7 @@ public interface MsgNotificationRepository {
    * @param query 分页查询参数
    * @return 分页结果（VO 分页）
    */
-  IPage<MsgNotificationVO> findPage(NotificationQueryDTO query);
+  PageResponse<List<MsgNotificationVO>> findPage(NotificationQueryDTO query);
 
   /**
    * 按条件查询站内通知列表。

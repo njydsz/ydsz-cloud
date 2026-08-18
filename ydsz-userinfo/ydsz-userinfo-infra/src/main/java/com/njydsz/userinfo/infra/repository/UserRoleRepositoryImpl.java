@@ -1,13 +1,17 @@
 package com.njydsz.userinfo.infra.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.userinfo.domain.dto.UserRoleDTO;
 import com.njydsz.userinfo.domain.repository.UserRoleRepository;
+import com.njydsz.userinfo.domain.vo.UserRoleVO;
+import com.njydsz.userinfo.infra.converter.UserInfoConverter;
 import com.njydsz.userinfo.infra.entity.UserRoleDO;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 
@@ -15,6 +19,7 @@ import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
  * 用户-角色关联 Repository 实现
  *
  * <p>基于 MyBatis-Plus 的 {@link UserRoleMapper} 实现用户-角色关联的数据访问。
+ * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,12 +29,14 @@ import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 public class UserRoleRepositoryImpl implements UserRoleRepository {
 
   private final UserRoleMapper userRoleMapper;
+  private final UserInfoConverter converter;
 
   @Override
-  public List<UserRoleDO> findByUserId(String userId) {
+  public List<UserRoleVO> findByUserId(String userId) {
     LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserRoleDO::getUserId, userId);
-    return userRoleMapper.selectList(wrapper);
+    List<UserRoleDO> entities = userRoleMapper.selectList(wrapper);
+    return converter.userRoleListToVO(entities);
   }
 
   @Override
@@ -42,26 +49,27 @@ public class UserRoleRepositoryImpl implements UserRoleRepository {
   }
 
   @Override
-  public UserRoleDO findByUserIdAndRoleId(String userId, String roleId) {
+  public Optional<UserRoleVO> findByUserIdAndRoleId(String userId, String roleId) {
     LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserRoleDO::getUserId, userId);
     wrapper.eq(UserRoleDO::getRoleId, roleId);
-    return userRoleMapper.selectOne(wrapper);
+    UserRoleDO entity = userRoleMapper.selectOne(wrapper);
+    return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
-  public List<UserRoleDO> list(LambdaQueryWrapper<UserRoleDO> wrapper) {
-    return userRoleMapper.selectList(wrapper);
+  public UserRoleVO create(UserRoleDTO dto) {
+    UserRoleDO entity = converter.dtoToEntity(dto);
+    userRoleMapper.insert(entity);
+    return converter.entityToVO(entity);
   }
 
   @Override
-  public int insert(UserRoleDO entity) {
-    return userRoleMapper.insert(entity);
-  }
-
-  @Override
-  public int batchInsert(List<UserRoleDO> list) {
-    return userRoleMapper.batchInsert(list);
+  public int batchInsert(List<UserRoleDTO> dtoList) {
+    List<UserRoleDO> entities = dtoList.stream()
+        .map(converter::dtoToEntity)
+        .collect(Collectors.toList());
+    return userRoleMapper.batchInsert(entities);
   }
 
   @Override
@@ -72,12 +80,10 @@ public class UserRoleRepositoryImpl implements UserRoleRepository {
   }
 
   @Override
-  public int delete(LambdaQueryWrapper<UserRoleDO> wrapper) {
+  public int deleteByUserIdAndRoleId(String userId, String roleId) {
+    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRoleDO::getUserId, userId);
+    wrapper.eq(UserRoleDO::getRoleId, roleId);
     return userRoleMapper.delete(wrapper);
-  }
-
-  @Override
-  public long count(LambdaQueryWrapper<UserRoleDO> wrapper) {
-    return userRoleMapper.selectCount(wrapper);
   }
 }

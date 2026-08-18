@@ -1,15 +1,17 @@
 package com.njydsz.userinfo.domain.repository;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.njydsz.userinfo.infra.entity.UserRoleDO;
+import com.njydsz.userinfo.domain.dto.UserRoleDTO;
+import com.njydsz.userinfo.domain.vo.UserRoleVO;
 
 /**
  * 用户-角色关联 Repository 接口
  *
  * <p>封装用户-角色关联表（{@code ydsz_user_role}）的数据访问操作。
  *
- * <p>禁止暴露底层 Mapper，所有数据库操作通过本接口进行。
+ * <p>入参为 DTO / 具体字段，返回值为 VO 类型，禁止暴露 MyBatis-Plus 类。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -22,7 +24,7 @@ public interface UserRoleRepository {
    * @param userId 用户 ID
    * @return 用户-角色关联列表
    */
-  List<UserRoleDO> findByUserId(String userId);
+  List<UserRoleVO> findByUserId(String userId);
 
   /**
    * 根据用户 ID 查询角色 ID 列表。
@@ -37,34 +39,25 @@ public interface UserRoleRepository {
    *
    * @param userId 用户 ID
    * @param roleId 角色 ID
-   * @return 用户-角色关联实体，不存在时返回 null
+   * @return 用户-角色关联 VO
    */
-  UserRoleDO findByUserIdAndRoleId(String userId, String roleId);
-
-  /**
-   * 条件查询用户-角色关联列表。
-   *
-   * @param wrapper 查询条件
-   * @return 关联列表
-   */
-  List<UserRoleDO> list(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserRoleDO> wrapper);
+  Optional<UserRoleVO> findByUserIdAndRoleId(String userId, String roleId);
 
   /**
    * 保存用户-角色关联（插入）。
    *
-   * @param entity 用户-角色关联实体
-   * @return 插入影响的行数
+   * @param dto 用户-角色关联 DTO
+   * @return 保存后的关联 VO
    */
-  int insert(UserRoleDO entity);
+  UserRoleVO create(UserRoleDTO dto);
 
   /**
    * 批量插入用户-角色关联。
    *
-   * @param list 关联列表
+   * @param dtoList 关联 DTO 列表
    * @return 插入行数
    */
-  int batchInsert(List<UserRoleDO> list);
+  int batchInsert(List<UserRoleDTO> dtoList);
 
   /**
    * 根据用户 ID 删除关联。
@@ -75,20 +68,11 @@ public interface UserRoleRepository {
   int deleteByUserId(String userId);
 
   /**
-   * 条件删除用户-角色关联。
+   * 根据用户 ID 和角色 ID 删除关联。
    *
-   * @param wrapper 删除条件
+   * @param userId 用户 ID
+   * @param roleId 角色 ID
    * @return 删除影响的行数
    */
-  int delete(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserRoleDO> wrapper);
-
-  /**
-   * 统计符合条件的关联数量。
-   *
-   * @param wrapper 查询条件
-   * @return 关联数量
-   */
-  long count(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserRoleDO> wrapper);
+  int deleteByUserIdAndRoleId(String userId, String roleId);
 }

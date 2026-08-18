@@ -7,19 +7,46 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
+import com.njydsz.userinfo.domain.dto.CompanyCreateDTO;
 import com.njydsz.userinfo.domain.dto.CompanyDTO;
+import com.njydsz.userinfo.domain.dto.CompanyDeptDTO;
+import com.njydsz.userinfo.domain.dto.CompanyUpdateDTO;
+import com.njydsz.userinfo.domain.dto.DepartmentCreateDTO;
 import com.njydsz.userinfo.domain.dto.DepartmentDTO;
+import com.njydsz.userinfo.domain.dto.DepartmentUpdateDTO;
+import com.njydsz.userinfo.domain.dto.LanguageCreateDTO;
 import com.njydsz.userinfo.domain.dto.LanguageDTO;
+import com.njydsz.userinfo.domain.dto.LanguageUpdateDTO;
+import com.njydsz.userinfo.domain.dto.MenuCreateDTO;
 import com.njydsz.userinfo.domain.dto.MenuDTO;
+import com.njydsz.userinfo.domain.dto.MenuUpdateDTO;
+import com.njydsz.userinfo.domain.dto.PostCreateDTO;
 import com.njydsz.userinfo.domain.dto.PostDTO;
+import com.njydsz.userinfo.domain.dto.PostUpdateDTO;
+import com.njydsz.userinfo.domain.dto.RoleCreateDTO;
 import com.njydsz.userinfo.domain.dto.RoleDTO;
+import com.njydsz.userinfo.domain.dto.RolePermissionDTO;
+import com.njydsz.userinfo.domain.dto.RoleUpdateDTO;
+import com.njydsz.userinfo.domain.dto.UserDeptDTO;
+import com.njydsz.userinfo.domain.dto.UserLoginHistoryDTO;
+import com.njydsz.userinfo.domain.dto.UserPasswordHistoryDTO;
+import com.njydsz.userinfo.domain.dto.UserPostDTO;
+import com.njydsz.userinfo.domain.dto.UserRoleDTO;
+import com.njydsz.userinfo.infra.entity.CompanyDeptDO;
 import com.njydsz.userinfo.infra.entity.CompanyDO;
 import com.njydsz.userinfo.infra.entity.DepartmentDO;
 import com.njydsz.userinfo.infra.entity.LanguageDO;
 import com.njydsz.userinfo.infra.entity.MenuDO;
 import com.njydsz.userinfo.infra.entity.PostDO;
 import com.njydsz.userinfo.infra.entity.RoleDO;
+import com.njydsz.userinfo.infra.entity.RolePermissionDO;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
+import com.njydsz.userinfo.infra.entity.UserDeptDO;
+import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
+import com.njydsz.userinfo.infra.entity.UserPasswordHistoryDO;
+import com.njydsz.userinfo.infra.entity.UserPostDO;
+import com.njydsz.userinfo.infra.entity.UserRoleDO;
+import com.njydsz.userinfo.domain.vo.CompanyDeptVO;
 import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
@@ -29,9 +56,15 @@ import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 import com.njydsz.userinfo.domain.vo.PostVO;
+import com.njydsz.userinfo.domain.vo.RolePermissionVO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.userinfo.domain.vo.UserDeptVO;
+import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
+import com.njydsz.userinfo.domain.vo.UserPasswordHistoryVO;
+import com.njydsz.userinfo.domain.vo.UserPostVO;
+import com.njydsz.userinfo.domain.vo.UserRoleVO;
 
 /**
  * 用户中心模块统一 MapStruct 转换器。
@@ -56,6 +89,35 @@ public interface UserInfoConverter {
   UserInfoConverter INSTANT = Mappers.getMapper(UserInfoConverter.class);
 
   // ===== CompanyDO =====
+
+  /**
+   * 公司创建 DTO → 公司实体
+   *
+   * @param dto 公司创建 DTO
+   * @return 公司实体（未持久化）
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  CompanyDO createDtoToEntity(CompanyCreateDTO dto);
+
+  /**
+   * 公司更新 DTO → 公司实体
+   *
+   * @param dto 公司更新 DTO（含 id）
+   * @return 公司实体（含 id）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  CompanyDO updateDtoToEntity(CompanyUpdateDTO dto);
 
   /**
    * 公司实体 → 公司 VO
@@ -126,6 +188,35 @@ public interface UserInfoConverter {
   // ===== DepartmentDO =====
 
   /**
+   * 部门创建 DTO → 部门实体
+   *
+   * @param dto 部门创建 DTO
+   * @return 部门实体（未持久化）
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  DepartmentDO createDtoToEntity(DepartmentCreateDTO dto);
+
+  /**
+   * 部门更新 DTO → 部门实体
+   *
+   * @param dto 部门更新 DTO（含 id）
+   * @return 部门实体（含 id）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  DepartmentDO updateDtoToEntity(DepartmentUpdateDTO dto);
+
+  /**
    * 部门实体 → 部门 VO（扁平结构）
    *
    * @param entity 部门实体
@@ -189,6 +280,35 @@ public interface UserInfoConverter {
   // ===== LanguageDO =====
 
   /**
+   * 语言创建 DTO → 语言实体
+   *
+   * @param dto 语言创建 DTO
+   * @return 语言实体（未持久化）
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  LanguageDO createDtoToEntity(LanguageCreateDTO dto);
+
+  /**
+   * 语言更新 DTO → 语言实体
+   *
+   * @param dto 语言更新 DTO（含 id）
+   * @return 语言实体（含 id）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  LanguageDO updateDtoToEntity(LanguageUpdateDTO dto);
+
+  /**
    * 语言实体 → 语言 VO
    *
    * @param entity 语言实体
@@ -234,6 +354,35 @@ public interface UserInfoConverter {
   LanguageDO dtoToEntityWithId(LanguageDTO dto);
 
   // ===== MenuDO =====
+
+  /**
+   * 菜单创建 DTO → 菜单实体
+   *
+   * @param dto 菜单创建 DTO
+   * @return 菜单实体（未持久化）
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  MenuDO createDtoToEntity(MenuCreateDTO dto);
+
+  /**
+   * 菜单更新 DTO → 菜单实体
+   *
+   * @param dto 菜单更新 DTO（含 id）
+   * @return 菜单实体（含 id）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  MenuDO updateDtoToEntity(MenuUpdateDTO dto);
 
   /**
    * 菜单实体 → 菜单 VO（扁平结构）
@@ -299,6 +448,35 @@ public interface UserInfoConverter {
   // ===== PostDO =====
 
   /**
+   * 岗位创建 DTO → 岗位实体
+   *
+   * @param dto 岗位创建 DTO
+   * @return 岗位实体（未持久化）
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  PostDO createDtoToEntity(PostCreateDTO dto);
+
+  /**
+   * 岗位更新 DTO → 岗位实体
+   *
+   * @param dto 岗位更新 DTO（含 id）
+   * @return 岗位实体（含 id）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  PostDO updateDtoToEntity(PostUpdateDTO dto);
+
+  /**
    * 岗位实体 → 岗位 VO
    *
    * @param entity 岗位实体
@@ -344,6 +522,35 @@ public interface UserInfoConverter {
   PostDO dtoToEntityWithId(PostDTO dto);
 
   // ===== RoleDO =====
+
+  /**
+   * 角色创建 DTO → 角色实体
+   *
+   * @param dto 角色创建 DTO
+   * @return 角色实体（未持久化）
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  RoleDO createDtoToEntity(RoleCreateDTO dto);
+
+  /**
+   * 角色更新 DTO → 角色实体
+   *
+   * @param dto 角色更新 DTO（含 id）
+   * @return 角色实体（含 id）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  RoleDO updateDtoToEntity(RoleUpdateDTO dto);
 
   /**
    * 角色实体 → 角色 VO
@@ -453,7 +660,248 @@ public interface UserInfoConverter {
    */
   UserAccountCredentialVO entityToCredentialVO(UserAccountDO entity);
 
+  // ===== CompanyDeptDO =====
+
+  /**
+   * 公司-部门关联实体 → VO
+   *
+   * @param entity 公司-部门关联实体
+   * @return 公司-部门关联 VO
+   */
+  CompanyDeptVO entityToVO(CompanyDeptDO entity);
+
+  /**
+   * 公司-部门关联实体列表 → VO 列表
+   *
+   * @param entities 公司-部门关联实体列表
+   * @return 公司-部门关联 VO 列表
+   */
+  List<CompanyDeptVO> companyDeptListToVO(List<CompanyDeptDO> entities);
+
+  /**
+   * 公司-部门关联 DTO → 实体
+   *
+   * @param dto 公司-部门关联 DTO
+   * @return 公司-部门关联实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  CompanyDeptDO dtoToEntity(CompanyDeptDTO dto);
+
+  // ===== RolePermissionDO =====
+
+  /**
+   * 角色-权限关联实体 → VO
+   *
+   * @param entity 角色-权限关联实体
+   * @return 角色-权限关联 VO
+   */
+  RolePermissionVO entityToVO(RolePermissionDO entity);
+
+  /**
+   * 角色-权限关联实体列表 → VO 列表
+   *
+   * @param entities 角色-权限关联实体列表
+   * @return 角色-权限关联 VO 列表
+   */
+  List<RolePermissionVO> rolePermissionListToVO(List<RolePermissionDO> entities);
+
+  /**
+   * 角色-权限关联 DTO → 实体
+   *
+   * @param dto 角色-权限关联 DTO
+   * @return 角色-权限关联实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  RolePermissionDO dtoToEntity(RolePermissionDTO dto);
+
+  // ===== UserRoleDO =====
+
+  /**
+   * 用户-角色关联实体 → VO
+   *
+   * @param entity 用户-角色关联实体
+   * @return 用户-角色关联 VO
+   */
+  UserRoleVO entityToVO(UserRoleDO entity);
+
+  /**
+   * 用户-角色关联实体列表 → VO 列表
+   *
+   * @param entities 用户-角色关联实体列表
+   * @return 用户-角色关联 VO 列表
+   */
+  List<UserRoleVO> userRoleListToVO(List<UserRoleDO> entities);
+
+  /**
+   * 用户-角色关联 DTO → 实体
+   *
+   * @param dto 用户-角色关联 DTO
+   * @return 用户-角色关联实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  UserRoleDO dtoToEntity(UserRoleDTO dto);
+
+  // ===== UserPostDO =====
+
+  /**
+   * 用户-岗位关联实体 → VO
+   *
+   * @param entity 用户-岗位关联实体
+   * @return 用户-岗位关联 VO
+   */
+  UserPostVO entityToVO(UserPostDO entity);
+
+  /**
+   * 用户-岗位关联实体列表 → VO 列表
+   *
+   * @param entities 用户-岗位关联实体列表
+   * @return 用户-岗位关联 VO 列表
+   */
+  List<UserPostVO> userPostListToVO(List<UserPostDO> entities);
+
+  /**
+   * 用户-岗位关联 DTO → 实体
+   *
+   * @param dto 用户-岗位关联 DTO
+   * @return 用户-岗位关联实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  UserPostDO dtoToEntity(UserPostDTO dto);
+
+  // ===== UserDeptDO =====
+
+  /**
+   * 用户-部门关联实体 → VO
+   *
+   * @param entity 用户-部门关联实体
+   * @return 用户-部门关联 VO
+   */
+  UserDeptVO entityToVO(UserDeptDO entity);
+
+  /**
+   * 用户-部门关联实体列表 → VO 列表
+   *
+   * @param entities 用户-部门关联实体列表
+   * @return 用户-部门关联 VO 列表
+   */
+  List<UserDeptVO> userDeptListToVO(List<UserDeptDO> entities);
+
+  /**
+   * 用户-部门关联 DTO → 实体
+   *
+   * @param dto 用户-部门关联 DTO
+   * @return 用户-部门关联实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  UserDeptDO dtoToEntity(UserDeptDTO dto);
+
+  /**
+   * 用户-部门关联 DTO → 实体（更新场景）
+   *
+   * @param dto 用户-部门关联 DTO（含 id）
+   * @return 用户-部门关联实体（含 id）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  UserDeptDO userDeptDtoToEntityWithId(UserDeptDTO dto);
+
+  // ===== UserPasswordHistoryDO =====
+
+  /**
+   * 密码历史实体 → VO
+   *
+   * @param entity 密码历史实体
+   * @return 密码历史 VO
+   */
+  UserPasswordHistoryVO entityToVO(UserPasswordHistoryDO entity);
+
+  /**
+   * 密码历史实体列表 → VO 列表
+   *
+   * @param entities 密码历史实体列表
+   * @return 密码历史 VO 列表
+   */
+  List<UserPasswordHistoryVO> userPasswordHistoryListToVO(List<UserPasswordHistoryDO> entities);
+
+  /**
+   * 密码历史 DTO → 实体
+   *
+   * @param dto 密码历史 DTO
+   * @return 密码历史实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  UserPasswordHistoryDO dtoToEntity(UserPasswordHistoryDTO dto);
+
+  // ===== UserLoginHistoryDO =====
+
+  /**
+   * 登录历史实体 → VO
+   *
+   * @param entity 登录历史实体
+   * @return 登录历史 VO
+   */
+  UserLoginHistoryVO entityToVO(UserLoginHistoryDO entity);
+
+  /**
+   * 登录历史实体列表 → VO 列表
+   *
+   * @param entities 登录历史实体列表
+   * @return 登录历史 VO 列表
+   */
+  List<UserLoginHistoryVO> userLoginHistoryListToVO(List<UserLoginHistoryDO> entities);
+
+  /**
+   * 登录历史 DTO → 实体
+   *
+   * @param dto 登录历史 DTO
+   * @return 登录历史实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  UserLoginHistoryDO dtoToEntity(UserLoginHistoryDTO dto);
+
   // ===== UserAccountDO → LoginVO.UserInfoVO =====
+
   /**
    * 用户实体 → 登录响应中的用户基本信息 VO。
    *

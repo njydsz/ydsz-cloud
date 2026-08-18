@@ -33,4 +33,7 @@ public class DepartmentVO {
 
   /** 状态：ENABLE-启用、DISABLE-禁用 */
   private String status;
+
+  /** 部门负责人用户 ID */
+  private String leaderId;
 }

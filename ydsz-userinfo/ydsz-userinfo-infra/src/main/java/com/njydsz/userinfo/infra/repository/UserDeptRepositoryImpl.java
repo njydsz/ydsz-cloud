@@ -1,13 +1,17 @@
 package com.njydsz.userinfo.infra.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.userinfo.domain.dto.UserDeptDTO;
 import com.njydsz.userinfo.domain.repository.UserDeptRepository;
+import com.njydsz.userinfo.domain.vo.UserDeptVO;
+import com.njydsz.userinfo.infra.converter.UserInfoConverter;
 import com.njydsz.userinfo.infra.entity.UserDeptDO;
 import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 
@@ -15,6 +19,7 @@ import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
  * 用户-部门关联 Repository 实现
  *
  * <p>基于 MyBatis-Plus 的 {@link UserDeptMapper} 实现用户-部门关联的数据访问。
+ * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,17 +29,20 @@ import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 public class UserDeptRepositoryImpl implements UserDeptRepository {
 
   private final UserDeptMapper userDeptMapper;
+  private final UserInfoConverter converter;
 
   @Override
-  public UserDeptDO findById(String id) {
-    return userDeptMapper.selectById(id);
+  public Optional<UserDeptVO> findById(String id) {
+    UserDeptDO entity = userDeptMapper.selectById(id);
+    return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
-  public List<UserDeptDO> findByUserId(String userId) {
+  public List<UserDeptVO> findByUserId(String userId) {
     LambdaQueryWrapper<UserDeptDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserDeptDO::getUserId, userId);
-    return userDeptMapper.selectList(wrapper);
+    List<UserDeptDO> entities = userDeptMapper.selectList(wrapper);
+    return converter.userDeptListToVO(entities);
   }
 
   @Override
@@ -47,18 +55,26 @@ public class UserDeptRepositoryImpl implements UserDeptRepository {
   }
 
   @Override
-  public List<UserDeptDO> list(LambdaQueryWrapper<UserDeptDO> wrapper) {
-    return userDeptMapper.selectList(wrapper);
+  public Optional<UserDeptVO> findByUserIdAndDeptId(String userId, String deptId) {
+    LambdaQueryWrapper<UserDeptDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserDeptDO::getUserId, userId);
+    wrapper.eq(UserDeptDO::getDeptId, deptId);
+    UserDeptDO entity = userDeptMapper.selectOne(wrapper);
+    return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
-  public int insert(UserDeptDO entity) {
-    return userDeptMapper.insert(entity);
+  public UserDeptVO create(UserDeptDTO dto) {
+    UserDeptDO entity = converter.dtoToEntity(dto);
+    userDeptMapper.insert(entity);
+    return converter.entityToVO(entity);
   }
 
   @Override
-  public int updateById(UserDeptDO entity) {
-    return userDeptMapper.updateById(entity);
+  public UserDeptVO update(UserDeptDTO dto) {
+    UserDeptDO entity = converter.userDeptDtoToEntityWithId(dto);
+    userDeptMapper.updateById(entity);
+    return converter.entityToVO(entity);
   }
 
   @Override
@@ -69,17 +85,15 @@ public class UserDeptRepositoryImpl implements UserDeptRepository {
   }
 
   @Override
-  public int deleteById(String id) {
-    return userDeptMapper.deleteById(id);
-  }
-
-  @Override
-  public int delete(LambdaQueryWrapper<UserDeptDO> wrapper) {
+  public int deleteByUserIdAndDeptId(String userId, String deptId) {
+    LambdaQueryWrapper<UserDeptDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserDeptDO::getUserId, userId);
+    wrapper.eq(UserDeptDO::getDeptId, deptId);
     return userDeptMapper.delete(wrapper);
   }
 
   @Override
-  public long count(LambdaQueryWrapper<UserDeptDO> wrapper) {
-    return userDeptMapper.selectCount(wrapper);
+  public boolean deleteById(String id) {
+    return userDeptMapper.deleteById(id) > 0;
   }
 }

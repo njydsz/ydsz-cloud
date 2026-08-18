@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.query.MsgAggregateQuery;
 import com.njydsz.message.domain.repository.MsgAggregateRepository;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
@@ -56,15 +57,13 @@ public class MsgAggregateRepositoryImpl implements MsgAggregateRepository {
   }
 
   @Override
-  public IPage<MsgAggregateVO> findPage(MsgAggregateQuery query) {
+  public PageResponse<List<MsgAggregateVO>> findPage(MsgAggregateQuery query) {
     Page<MsgAggregateDO> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<MsgAggregateDO> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     IPage<MsgAggregateDO> entityPage = msgAggregateMapper.selectPage(page, wrapper);
     List<MsgAggregateVO> vos = converter.aggregateDoListToVO(entityPage.getRecords());
-    Page<MsgAggregateVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-    voPage.setRecords(vos);
-    return voPage;
+    return PageResponse.success(entityPage.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   private QueryWrapper<MsgAggregateDO> buildWrapper(MsgAggregateQuery query) {

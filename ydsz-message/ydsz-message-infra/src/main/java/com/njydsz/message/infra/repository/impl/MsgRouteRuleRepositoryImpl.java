@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.query.MsgRouteRuleQuery;
 import com.njydsz.message.domain.repository.MsgRouteRuleRepository;
 import com.njydsz.message.domain.vo.MsgRouteRuleVO;
@@ -85,7 +86,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
   }
 
   @Override
-  public IPage<MsgRouteRuleVO> findPage(MsgRouteRuleQuery query) {
+  public PageResponse<List<MsgRouteRuleVO>> findPage(MsgRouteRuleQuery query) {
     Page<MsgRouteRuleDO> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<MsgRouteRuleDO> wrapper = new QueryWrapper<>();
     if (query.getRuleCode() != null && !query.getRuleCode().isBlank()) {
@@ -107,9 +108,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
     wrapper.orderByAsc("sort_order");
     IPage<MsgRouteRuleDO> entityPage = msgRouteRuleMapper.selectPage(page, wrapper);
     List<MsgRouteRuleVO> vos = converter.routeRuleDoListToVO(entityPage.getRecords());
-    Page<MsgRouteRuleVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-    voPage.setRecords(vos);
-    return voPage;
+    return PageResponse.success(entityPage.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   private MsgRouteRuleDO voToDO(MsgRouteRuleVO vo) {

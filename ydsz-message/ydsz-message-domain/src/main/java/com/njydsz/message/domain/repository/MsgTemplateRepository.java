@@ -3,7 +3,7 @@ package com.njydsz.message.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.message.domain.dto.template.TemplateQueryDTO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
@@ -73,5 +73,5 @@ public interface MsgTemplateRepository {
    * @param query 分页查询参数
    * @return 分页结果（VO 分页）
    */
-  IPage<MsgTemplateVO> findPage(TemplateQueryDTO query);
+  PageResponse<List<MsgTemplateVO>> findPage(TemplateQueryDTO query);
 }

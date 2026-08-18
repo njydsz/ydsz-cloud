@@ -3,7 +3,7 @@ package com.njydsz.message.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.message.domain.query.MsgSubscriptionQuery;
 import com.njydsz.message.domain.vo.MsgSubscriptionVO;
@@ -73,5 +73,5 @@ public interface MsgSubscriptionRepository {
    * @param query 分页查询参数
    * @return 分页结果（VO 分页）
    */
-  IPage<MsgSubscriptionVO> findPage(MsgSubscriptionQuery query);
+  PageResponse<List<MsgSubscriptionVO>> findPage(MsgSubscriptionQuery query);
 }

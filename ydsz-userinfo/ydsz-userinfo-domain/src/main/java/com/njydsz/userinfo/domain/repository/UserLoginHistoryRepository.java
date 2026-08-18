@@ -2,14 +2,15 @@ package com.njydsz.userinfo.domain.repository;
 
 import java.util.List;
 
-import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
+import com.njydsz.userinfo.domain.dto.UserLoginHistoryDTO;
+import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 
 /**
  * 用户登录历史 Repository 接口
  *
  * <p>封装用户登录历史表（{@code ydsz_user_login_history}）的数据访问操作。
  *
- * <p>禁止暴露底层 Mapper，所有数据库操作通过本接口进行。
+ * <p>入参为 DTO / 具体字段，返回值为 VO 类型，禁止暴露 MyBatis-Plus 类。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -19,10 +20,10 @@ public interface UserLoginHistoryRepository {
   /**
    * 保存登录历史记录（插入）。
    *
-   * @param entity 登录历史实体
-   * @return 插入影响的行数
+   * @param dto 登录历史 DTO
+   * @return 保存后的登录历史 VO
    */
-  int insert(UserLoginHistoryDO entity);
+  UserLoginHistoryVO create(UserLoginHistoryDTO dto);
 
   /**
    * 统计最近指定时间窗口内的登录失败次数。
@@ -40,14 +41,13 @@ public interface UserLoginHistoryRepository {
    * @param limit 返回记录数上限
    * @return 登录历史列表
    */
-  List<UserLoginHistoryDO> findRecentByUserId(String userId, int limit);
+  List<UserLoginHistoryVO> findRecentByUserId(String userId, int limit);
 
   /**
-   * 条件查询登录历史列表。
+   * 根据用户 ID 查询登录历史列表。
    *
-   * @param wrapper 查询条件
+   * @param userId 用户 ID
    * @return 登录历史列表
    */
-  List<UserLoginHistoryDO> list(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserLoginHistoryDO> wrapper);
+  List<UserLoginHistoryVO> findByUserId(String userId);
 }

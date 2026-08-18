@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.dto.core.NotificationQueryDTO;
 import com.njydsz.message.domain.repository.MsgNotificationRepository;
 import com.njydsz.message.domain.vo.MsgNotificationVO;
@@ -53,15 +54,13 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
   }
 
   @Override
-  public IPage<MsgNotificationVO> findPage(NotificationQueryDTO query) {
+  public PageResponse<List<MsgNotificationVO>> findPage(NotificationQueryDTO query) {
     Page<MsgNotificationDO> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<MsgNotificationDO> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     IPage<MsgNotificationDO> entityPage = msgNotificationMapper.selectPage(page, wrapper);
     List<MsgNotificationVO> vos = converter.notificationDoListToVO(entityPage.getRecords());
-    Page<MsgNotificationVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-    voPage.setRecords(vos);
-    return voPage;
+    return PageResponse.success(entityPage.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   @Override

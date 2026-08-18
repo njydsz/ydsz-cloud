@@ -3,7 +3,7 @@ package com.njydsz.message.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.message.domain.vo.MsgLogVO;
@@ -49,7 +49,7 @@ public interface MsgLogRepository {
    * @param query 分页查询参数
    * @return 分页结果（VO 分页）
    */
-  IPage<MsgLogVO> findPage(MessageLogQueryDTO query);
+  PageResponse<List<MsgLogVO>> findPage(MessageLogQueryDTO query);
 
   /**
    * 按条件查询消息发送日志列表。
