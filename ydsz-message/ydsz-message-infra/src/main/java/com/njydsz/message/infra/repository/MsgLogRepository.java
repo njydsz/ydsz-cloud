@@ -85,4 +85,20 @@ public interface MsgLogRepository {
    * @return 影响行数
    */
   int insertBatch(List<MsgLog> entities);
+
+  /**
+   * searchAfter 游标分页查询。
+   *
+   * <p>基于 ID 的有序游标分页，适用于深度分页场景。相比传统的 LIMIT/OFFSET 分页，
+   * 游标分页通过记录上一页最后一条记录的 ID 作为下一页的起始位置，避免 OFFSET 导致的
+   * 全表扫描性能问题。
+   *
+   * <p>返回结果按 ID 升序排列，取 searchAfterId 之后的 pageSize 条记录。
+   *
+   * @param searchAfterId 游标 ID（上一页最后一条记录的 ID），首次查询传 null 或空串
+   * @param pageSize 每页记录数
+   * @param wrapper 查询条件（不含 LIMIT/OFFSET，仅包含 WHERE 子句）
+   * @return 消息日志领域实体列表，按 ID 升序排列
+   */
+  List<MsgLog> searchAfter(String searchAfterId, int pageSize, LambdaQueryWrapper<MsgLog> wrapper);
 }

@@ -476,6 +476,7 @@ public class FlowMonitorDashboardController {
         }
       } catch (Exception e) {
         // 实例查询失败不阻塞，降级使用 detectAnomalies 返回的字段
+        log.warn("[FlowMonitor] 实例查询失败，降级使用异常检测字段: {}", e.getMessage());
       }
     }
     item.putIfAbsent("flowCode", a.get("flowCode"));

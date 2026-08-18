@@ -120,8 +120,9 @@ public class ZookeeperRuleSource implements RuleSource {
         Object createBuilder = client.getClass().getMethod("create").invoke(client);
         createBuilder.getClass().getMethod("creatingParentsIfNeeded").invoke(createBuilder);
         createBuilder.getClass().getMethod("forPath", String.class).invoke(createBuilder, path);
-      } catch (Exception ignored) {
+      } catch (Exception e) {
         // 节点已存在
+        log.debug("[ZookeeperRuleSource] ZNode 已存在，跳过创建: path={}, err={}", path, e.getMessage());
       }
 
       // 注册 NodeCache 监听器

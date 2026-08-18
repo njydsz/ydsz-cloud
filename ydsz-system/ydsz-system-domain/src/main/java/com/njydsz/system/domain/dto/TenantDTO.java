@@ -24,7 +24,6 @@ import com.njydsz.common.safe.annotation.Xss;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.Tenant 租户实体
  */
 @Data
 @Schema(description = "租户创建/更新 DTO")

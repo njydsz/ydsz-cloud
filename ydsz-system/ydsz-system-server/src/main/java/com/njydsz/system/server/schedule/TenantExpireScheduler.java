@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.system.infra.repository.TenantRepository;
+import com.njydsz.system.domain.repository.TenantRepository;
 
 /**
  * 租户到期自动锁定调度任务（P1-3 多租户能力补课）。
@@ -27,7 +27,7 @@ import com.njydsz.system.infra.repository.TenantRepository;
  *
  * @author ydsz-team
  * @since 1.1.0
- * @see com.njydsz.system.infra.repository.TenantRepository 租户仓储
+ * @see TenantRepository 租户仓储
  */
 @Slf4j
 @Component

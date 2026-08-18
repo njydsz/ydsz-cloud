@@ -27,13 +27,13 @@ import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
-import com.njydsz.system.domain.entity.Config;
+import com.njydsz.system.infra.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.ConfigPageQuery;
-import com.njydsz.system.infra.repository.ConfigRepository;
+import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.vo.ConfigExcelVO;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.CursorPageResponse;
@@ -89,7 +89,7 @@ import com.njydsz.system.server.util.SystemVersionUtils;
  * @author ydsz-team
  * @since 1.0.0
  * @see ConfigService 配置 Service 接口
- * @see com.njydsz.system.domain.entity.Config 系统配置实体
+ * @see Config 系统配置实体
  * @see com.njydsz.system.domain.enums.ConfigValueType 值类型枚举
  */
 @Slf4j

@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.infra.mapper;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -104,7 +106,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
             </foreach>
             </script>
             """)
-  int batchEnableByIds(@Param("ids") java.util.List<String> ids);
+  int batchEnableByIds(@Param("ids") List<String> ids);
 
   /**
    * 批量禁用用户账号（P1-3：单条 SQL 替代 N+1 循环）。
@@ -123,7 +125,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
             </foreach>
             </script>
             """)
-  int batchDisableByIds(@Param("ids") java.util.List<String> ids);
+  int batchDisableByIds(@Param("ids") List<String> ids);
 
   /**
    * 批量逻辑删除用户账号（P1-3：单条 SQL 替代 N+1 循环）。
@@ -142,5 +144,5 @@ public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
             </foreach>
             </script>
             """)
-  int batchDeleteByIds(@Param("ids") java.util.List<String> ids);
+  int batchDeleteByIds(@Param("ids") List<String> ids);
 }

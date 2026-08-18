@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.system.domain.entity.DictItem;
+import com.njydsz.system.infra.entity.DictItem;
 
 /**
  * 字典项 Mapper 接口
@@ -32,7 +32,7 @@ import com.njydsz.system.domain.entity.DictItem;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.DictItem 字典项实体
+ * @see DictItem 字典项实体
  * @see com.njydsz.system.server.service.DictItemService 字典项 Service
  */
 @Mapper

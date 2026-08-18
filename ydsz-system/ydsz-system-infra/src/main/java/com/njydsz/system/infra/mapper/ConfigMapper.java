@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.system.domain.entity.Config;
+import com.njydsz.system.infra.entity.Config;
 
 /**
  * 系统配置 Mapper
@@ -29,7 +29,7 @@ import com.njydsz.system.domain.entity.Config;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.Config 配置实体
+ * @see Config 配置实体
  * @see com.njydsz.system.server.service.ConfigService 配置 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

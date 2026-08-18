@@ -1,7 +1,9 @@
 package com.njydsz.userinfo.infra.repository;
 
+import java.util.Collection;
 import java.util.List;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.userinfo.infra.entity.UserPasswordHistoryDO;
 
 /**
@@ -56,7 +58,7 @@ public interface UserPasswordHistoryRepository {
    * @return 删除影响的行数
    */
   int delete(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserPasswordHistoryDO> wrapper);
+      LambdaQueryWrapper<UserPasswordHistoryDO> wrapper);
 
   /**
    * 条件查询密码历史列表。
@@ -65,7 +67,7 @@ public interface UserPasswordHistoryRepository {
    * @return 密码历史列表
    */
   List<UserPasswordHistoryDO> list(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserPasswordHistoryDO> wrapper);
+      LambdaQueryWrapper<UserPasswordHistoryDO> wrapper);
 
   /**
    * 统计符合条件的密码历史数量。
@@ -74,7 +76,7 @@ public interface UserPasswordHistoryRepository {
    * @return 密码历史数量
    */
   long count(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserPasswordHistoryDO> wrapper);
+      LambdaQueryWrapper<UserPasswordHistoryDO> wrapper);
 
   /**
    * 批量删除指定 ID 的密码历史记录。
@@ -82,5 +84,5 @@ public interface UserPasswordHistoryRepository {
    * @param ids 记录 ID 列表
    * @return 删除影响的行数
    */
-  int deleteByIds(java.util.Collection<String> ids);
+  int deleteByIds(Collection<String> ids);
 }

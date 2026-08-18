@@ -1,6 +1,8 @@
 package com.njydsz.cronjob.server.service.impl.dag;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -192,7 +194,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     List<JobDagNodeInstance> nodeInstances = visualization.getNodeInstances();
 
     // 2. 构建 jobKey → nodeStatus 映射
-    java.util.Map<String, String> statusMap = new java.util.HashMap<>(nodeInstances.size());
+    Map<String, String> statusMap = new HashMap<>(nodeInstances.size());
     for (JobDagNodeInstance ni : nodeInstances) {
       if (ni.getJobKey() != null && ni.getNodeStatus() != null) {
         statusMap.put(ni.getJobKey(), ni.getNodeStatus());

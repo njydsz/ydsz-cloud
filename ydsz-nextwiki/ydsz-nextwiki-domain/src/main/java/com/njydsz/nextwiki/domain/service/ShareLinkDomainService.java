@@ -2,7 +2,9 @@ package com.njydsz.nextwiki.domain.service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -131,7 +133,7 @@ public class ShareLinkDomainService {
     ShareLinkDO.setUpdatedBy(userId);
 
     // 处理定向分享目标用户
-    List<ShareRecipientDO> recipients = new java.util.ArrayList<>();
+    List<ShareRecipientDO> recipients = new ArrayList<>();
     if (targetUserIds != null && !targetUserIds.isEmpty()) {
       for (String targetUserId : targetUserIds) {
         ShareRecipientDO recipient =
@@ -271,7 +273,7 @@ public class ShareLinkDomainService {
         .filter(link -> !link.getExpireTime().isBefore(now))
         .filter(link -> link.getExpireTime().isBefore(threshold))
         .filter(link -> link.getReminderSent() == null || !link.getReminderSent())
-        .collect(java.util.stream.Collectors.toList());
+        .collect(Collectors.toList());
   }
 
   /**
@@ -298,7 +300,7 @@ public class ShareLinkDomainService {
     return shareLinks.stream()
         .filter(link -> ShareStatus.ACTIVE.getCode().equals(link.getStatus()))
         .filter(link -> userId.equals(link.getCreatedBy()))
-        .collect(java.util.stream.Collectors.toList());
+        .collect(Collectors.toList());
   }
 
   // ==================== 私有方法 ====================

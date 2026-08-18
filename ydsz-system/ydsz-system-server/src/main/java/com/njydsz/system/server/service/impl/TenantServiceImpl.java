@@ -13,12 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
-import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.domain.dto.TenantDTO;
-import com.njydsz.system.domain.entity.Tenant;
+import com.njydsz.system.infra.entity.Tenant;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.TenantVO;
-import com.njydsz.system.infra.repository.TenantRepository;
+import com.njydsz.system.domain.repository.TenantRepository;
 import com.njydsz.system.server.service.TenantService;
 
 /**
@@ -39,7 +39,7 @@ import com.njydsz.system.server.service.TenantService;
  * @author ydsz-team
  * @since 1.0.0
  * @see TenantService 租户 Service 接口
- * @see com.njydsz.system.domain.entity.Tenant 租户实体
+ * @see com.njydsz.system.infra.entity.Tenant 租户实体
  */
 @Slf4j
 @Service

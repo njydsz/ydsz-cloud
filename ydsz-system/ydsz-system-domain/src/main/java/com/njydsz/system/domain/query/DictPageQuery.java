@@ -30,7 +30,6 @@ import com.njydsz.common.domain.query.PageQuery;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.common.domain.query.PageQuery 父类（分页参数）
- * @see com.njydsz.system.server.service.DictTypeService 字典类型服务
  */
 @Data
 @SuperBuilder

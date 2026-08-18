@@ -54,7 +54,7 @@ import com.njydsz.system.server.service.EntityVersionService;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.system.server.service.EntityVersionService 统一实体版本业务逻辑
- * @see com.njydsz.system.domain.entity.EntityVersion 实体版本
+ * @see com.njydsz.system.infra.entity.EntityVersion 实体版本
  */
 @Tag(name = "字典版本", description = "字典变更历史查询 + 一键回滚")
 @RestController

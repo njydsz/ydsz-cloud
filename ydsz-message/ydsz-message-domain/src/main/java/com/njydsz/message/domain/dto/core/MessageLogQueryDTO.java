@@ -50,4 +50,10 @@ public class MessageLogQueryDTO extends PageQuery {
 
   /** P2-13: 时间范围结束 */
   @Xss private String endTime;
+
+  /** 游标 ID（searchAfter 分页）：上一页最后一条记录的 ID */
+  @Xss private String searchAfterId;
+
+  /** 是否启用 searchAfter 游标分页（true 时优先使用游标分页，忽略 pageNum） */
+  private Boolean useSearchAfter;
 }

@@ -2,6 +2,7 @@ package com.njydsz.cronjob.server.core.dispatch;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +65,7 @@ public class WorkerNodeSelector {
    * @return 选中的 Worker 节点；无可用 Worker 时返回 null
    */
   public JobNode selectWorker() {
-    return selectWorker(java.util.Collections.emptySet());
+    return selectWorker(Collections.emptySet());
   }
 
   /**
@@ -75,7 +76,7 @@ public class WorkerNodeSelector {
    * @param excludedNodeIds 需要排除的节点 ID 集合（已尝试失败的节点）
    * @return 选中的 Worker 节点；无可用 Worker 时返回 null
    */
-  public JobNode selectWorker(java.util.Set<String> excludedNodeIds) {
+  public JobNode selectWorker(Set<String> excludedNodeIds) {
     List<JobNode> onlineNodes = getOnlineNodes();
     if (onlineNodes.isEmpty()) {
       log.debug("[WorkerSelector] 无在线节点");

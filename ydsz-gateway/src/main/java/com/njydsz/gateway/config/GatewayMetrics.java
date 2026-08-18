@@ -1,10 +1,13 @@
 package com.njydsz.gateway.config;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -210,11 +213,11 @@ public class GatewayMetrics {
    * @param keyValuePairs 标签键值对（k1, v1, k2, v2...）
    * @return 标签 Map
    */
-  private static java.util.Map<String, String> toMap(String... keyValuePairs) {
+  private static Map<String, String> toMap(String... keyValuePairs) {
     if (keyValuePairs == null || keyValuePairs.length == 0) {
-      return java.util.Collections.emptyMap();
+      return Collections.emptyMap();
     }
-    java.util.Map<String, String> map = new java.util.HashMap<>();
+    Map<String, String> map = new HashMap<>();
     for (int i = 0; i < keyValuePairs.length - 1; i += 2) {
       map.put(keyValuePairs[i], keyValuePairs[i + 1]);
     }

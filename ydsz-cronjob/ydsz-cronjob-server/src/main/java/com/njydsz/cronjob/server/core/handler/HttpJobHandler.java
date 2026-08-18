@@ -154,7 +154,7 @@ public class HttpJobHandler implements JobHandler {
 
     // 校验响应状态码
     if (!isSuccessStatus(status, successStatus)) {
-      throw new RuntimeException(
+      throw new IllegalStateException(
           "HTTP 请求失败: status=" + status + " url=" + url + " body=" + truncate(responseBody));
     }
 

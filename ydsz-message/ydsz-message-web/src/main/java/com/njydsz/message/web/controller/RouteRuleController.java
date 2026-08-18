@@ -39,7 +39,7 @@ import com.njydsz.message.server.service.config.RouteRuleService;
  * <p>提供<b>消息渠道路由规则</b>的 HTTP API，控制「什么类型的消息走什么渠道」的映射关系。 路由规则按 (消息类型 / 业务类型 / 用户属性)
  * 多维度决策，命中后选取对应渠道发送。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/route/**}
+ * <p><b>接口路径：</b>{@code /api/v1/message/route-rule/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -76,7 +76,7 @@ import com.njydsz.message.server.service.config.RouteRuleService;
  */
 @Tag(name = "路由规则", description = "消息路由规则管理")
 @RestController
-@RequestMapping("/api/v1/message/routeRule")
+@RequestMapping("/api/v1/message/route-rule")
 @RequiredArgsConstructor
 public class RouteRuleController {
 

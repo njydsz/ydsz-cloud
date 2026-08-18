@@ -72,11 +72,11 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
           req.getMessageId(),
           req.getChannel(),
           e.getMessage());
-      throw new RuntimeException("RocketMQ syncSend failed: " + e.getMessage(), e);
+      throw new IllegalStateException("RocketMQ syncSend failed: " + e.getMessage(), e);
     }
     if (result == null || result.getSendStatus() != SendStatus.SEND_OK) {
       String status = result == null ? "null" : result.getSendStatus().name();
-      throw new RuntimeException("RocketMQ syncSend 状态异常: " + status);
+      throw new IllegalStateException("RocketMQ syncSend 状态异常: " + status);
     }
     log.info(
         "[Producer] syncSend OK: msgId={} messageId={} channel={}",
@@ -123,7 +123,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
     } catch (Exception e) {
       log.error(
           "[Producer] asyncSend 提交失败: messageId={} err={}", req.getMessageId(), e.getMessage());
-      throw new RuntimeException("RocketMQ asyncSend 提交失败: " + e.getMessage(), e);
+      throw new IllegalStateException("RocketMQ asyncSend 提交失败: " + e.getMessage(), e);
     }
   }
 
@@ -203,7 +203,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
           "[Producer] sendTransactionMessage 失败: messageId={} err={}",
           req.getMessageId(),
           e.getMessage());
-      throw new RuntimeException("RocketMQ sendTransactionMessage failed: " + e.getMessage(), e);
+      throw new IllegalStateException("RocketMQ sendTransactionMessage failed: " + e.getMessage(), e);
     }
   }
 }

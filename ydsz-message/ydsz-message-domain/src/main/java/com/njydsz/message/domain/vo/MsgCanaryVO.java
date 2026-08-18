@@ -40,6 +40,15 @@ public class MsgCanaryVO implements Serializable {
   /** 实验通道 */
   private String experimentChannel;
 
+  /** A/B 实验名称 */
+  private String experimentName;
+
+  /** A/B 实验组：CONTROL / VARIANT */
+  private String experimentGroup;
+
+  /** A/B 目标指标：DELIVERY_RATE / READ_RATE / CLICK_RATE */
+  private String metricsGoal;
+
   /** 状态（ACTIVE/PAUSED/COMPLETED） */
   private String status;
 

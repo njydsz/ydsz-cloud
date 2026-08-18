@@ -1,9 +1,16 @@
 package com.njydsz.gateway.filter;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
+import jakarta.annotation.PostConstruct;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -93,9 +100,9 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
    *
    * <p>配置文件中仍以明文书写（便于运维管理），运行期仅持有摘要，降低密钥泄露面。
    */
-  @jakarta.annotation.PostConstruct
+  @PostConstruct
   private void initHashedKeys() {
-    Set<String> hashes = new java.util.HashSet<>();
+    Set<String> hashes = new HashSet<>();
     if (validKeyList != null) {
       for (String key : validKeyList) {
         if (key != null && !key.isBlank()) {
@@ -103,7 +110,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
         }
       }
     }
-    this.hashedKeys = java.util.Set.copyOf(hashes);
+    this.hashedKeys = Set.copyOf(hashes);
     log.info("[ApiKeyAuth] 已加载 {} 个 API Key（SHA-256 摘要存储）", hashes.size());
   }
 
@@ -115,11 +122,10 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
    */
   private static String sha256Hex(String value) {
     try {
-      java.security.MessageDigest digest =
-          java.security.MessageDigest.getInstance("SHA-256");
-      byte[] hash = digest.digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-      return java.util.HexFormat.of().formatHex(hash);
-    } catch (java.security.NoSuchAlgorithmException e) {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+      return HexFormat.of().formatHex(hash);
+    } catch (NoSuchAlgorithmException e) {
       throw new IllegalStateException("SHA-256 不可用", e);
     }
   }

@@ -13,7 +13,6 @@ import lombok.Data;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.TenantPlanMenu 套餐-菜单关联实体
  */
 @Data
 @Schema(description = "套餐-菜单关联 DTO")

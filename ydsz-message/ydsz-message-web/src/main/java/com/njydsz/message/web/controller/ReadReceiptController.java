@@ -19,7 +19,7 @@ import com.njydsz.message.server.service.receipt.ReadReceiptService;
  *
  * <p>提供短信短链跳转 HTTP 回调端点，用于无登录态场景下收集用户对消息的「点击」行为数据。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/readReceipt/**}
+ * <p><b>接口路径：</b>{@code /api/v1/message/read-receipt/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -44,7 +44,7 @@ import com.njydsz.message.server.service.receipt.ReadReceiptService;
 @Slf4j
 @Tag(name = "已读回执", description = "短信短链回调")
 @RestController
-@RequestMapping("/api/v1/message/readReceipt")
+@RequestMapping("/api/v1/message/read-receipt")
 @RequiredArgsConstructor
 public class ReadReceiptController {
 

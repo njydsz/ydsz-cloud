@@ -1,7 +1,9 @@
 package com.njydsz.userinfo.infra.repository;
 
+import java.util.Collection;
 import java.util.List;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
 
@@ -75,7 +77,7 @@ public interface UserAccountRepository {
    * @return 分页结果
    */
   Page<UserAccountDO> page(Page<UserAccountDO> page,
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserAccountDO> wrapper);
+      LambdaQueryWrapper<UserAccountDO> wrapper);
 
   /**
    * 条件查询用户列表。
@@ -84,7 +86,7 @@ public interface UserAccountRepository {
    * @return 用户列表
    */
   List<UserAccountDO> list(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserAccountDO> wrapper);
+      LambdaQueryWrapper<UserAccountDO> wrapper);
 
   /**
    * 批量根据 ID 查询用户账号。
@@ -92,7 +94,7 @@ public interface UserAccountRepository {
    * @param ids 用户 ID 集合
    * @return 用户账号列表
    */
-  List<UserAccountDO> listByIds(java.util.Collection<String> ids);
+  List<UserAccountDO> listByIds(Collection<String> ids);
 
   /**
    * 统计符合条件的用户数量。
@@ -101,7 +103,7 @@ public interface UserAccountRepository {
    * @return 用户数量
    */
   long count(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserAccountDO> wrapper);
+      LambdaQueryWrapper<UserAccountDO> wrapper);
 
   /**
    * 判断用户名是否已存在。

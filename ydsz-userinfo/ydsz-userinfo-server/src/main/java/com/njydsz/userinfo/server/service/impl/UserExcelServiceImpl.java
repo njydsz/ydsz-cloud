@@ -2,6 +2,7 @@ package com.njydsz.userinfo.server.service.impl;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -326,7 +327,7 @@ public class UserExcelServiceImpl implements UserExcelService {
    */
   private Map<String, String> queryDeptCodeToIdMap(Set<String> deptCodes) {
     if (deptCodes.isEmpty()) {
-      return new java.util.HashMap<>();
+      return new HashMap<>();
     }
     LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.in(DepartmentDO::getDeptCode, deptCodes).select(DepartmentDO::getDeptCode, DepartmentDO::getId);
@@ -342,7 +343,7 @@ public class UserExcelServiceImpl implements UserExcelService {
    */
   private Map<String, String> queryUsernameToIdMap(Set<String> usernames) {
     if (usernames.isEmpty()) {
-      return new java.util.HashMap<>();
+      return new HashMap<>();
     }
     LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.in(UserAccountDO::getUsername, usernames).select(UserAccountDO::getUsername, UserAccountDO::getId);

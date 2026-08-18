@@ -39,7 +39,7 @@ import com.njydsz.system.domain.vo.ImportResult;
  * @since 1.0.0
  * @see DictService 字典类型 Service
  * @see DictVersionService 字典版本 Service
- * @see com.njydsz.system.domain.entity.DictItem 字典项实体
+ * @see com.njydsz.system.infra.entity.DictItem 字典项实体
  */
 public interface DictItemService {
 

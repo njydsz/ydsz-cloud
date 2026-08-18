@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.system.domain.entity.AppInfo;
+import com.njydsz.system.infra.entity.AppInfo;
 
 /**
  * 应用信息 Mapper
@@ -26,7 +26,7 @@ import com.njydsz.system.domain.entity.AppInfo;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.AppInfo 应用实体
+ * @see AppInfo 应用实体
  * @see com.njydsz.system.server.service.AppInfoService 应用 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

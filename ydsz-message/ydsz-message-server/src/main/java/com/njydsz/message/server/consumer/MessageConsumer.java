@@ -33,6 +33,7 @@ import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.config.MessageProperties;
+import com.njydsz.message.server.health.RedisHealthStatus;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.core.MessageService;
 
@@ -41,6 +42,8 @@ import com.njydsz.message.server.service.core.MessageService;
  *
  * <p>监听 {@link YdszMessageTopics#TOPIC_MESSAGE},基于 Redis SET NX EX 实现消费端幂等防重。 异常处理:SysException
  * 保留锁并落库 FAILED 不重投;系统异常释放锁(Lua 安全释放)并抛出触发重投。
+ *
+ * <p>性能优化:Redis 健康时跳过 DB 二级幂等检查,减少每次消费的 DB 查询开销。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -67,6 +70,7 @@ public class MessageConsumer implements RocketMQListener<String> {
   private final MsgLogRepository msgLogRepository;
   private final MessageMetrics messageMetrics;
   private final MessageProperties messageProperties;
+  private final RedisHealthStatus redisHealthStatus;
 
   /** 当前实例标识(hostname:pid),用于锁值与安全释放 */
   private static final String INSTANCE_ID = initInstanceId();
@@ -105,7 +109,7 @@ public class MessageConsumer implements RocketMQListener<String> {
     // P1-10: 优雅停机检查
     if (shuttingDown.get()) {
       log.warn("[MessageConsumer] 服务正在关闭,拒绝新消息");
-      throw new RuntimeException("Consumer is shutting down");
+      throw new IllegalStateException("Consumer is shutting down");
     }
     if (body == null || body.isBlank()) {
       log.warn("[MessageConsumer] 空消息体,跳过");
@@ -151,8 +155,9 @@ public class MessageConsumer implements RocketMQListener<String> {
             request.getMessageId());
         return;
       }
-      // GAP-1: DB二级幂等检查——Redis宕机恢复后TTL可能已过期，用msg_log表兜底
-      if (StringUtils.hasText(request.getMessageId())) {
+      // GAP-1: DB二级幂等检查——仅在 Redis 异常时启用，避免正常情况下的 DB 查询开销
+      // P1-1: Redis 健康时跳过 DB 幂等兜底，Redis 故障恢复窗口期内启用
+      if (StringUtils.hasText(request.getMessageId()) && !redisHealthStatus.isRedisHealthy()) {
         Long dbCount =
             msgLogRepository.selectCount(
                 new LambdaQueryWrapper<MsgLog>()
@@ -191,7 +196,7 @@ public class MessageConsumer implements RocketMQListener<String> {
       // 系统异常:释放锁(允许重投),抛出触发重试
       log.error("[MessageConsumer] 系统异常: messageId={}", request.getMessageId(), e);
       releaseLock(idempotentKey, idempotentToken);
-      throw new RuntimeException("MessageConsumer failed, will retry", e);
+      throw new IllegalStateException("MessageConsumer failed, will retry", e);
     } finally {
       inFlight.decrementAndGet();
     }

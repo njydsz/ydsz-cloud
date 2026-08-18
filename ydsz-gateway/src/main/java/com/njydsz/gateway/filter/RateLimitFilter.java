@@ -2,6 +2,7 @@ package com.njydsz.gateway.filter;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -286,7 +287,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             "ydsz:ratelimit:api:" + (apiPath != null ? apiPath : ""));
 
     // ARGV[1..15] = 5 维度 × (rate, capacity, enabled)；ARGV[16]=now；ARGV[17]=requested
-    List<Object> args = new java.util.ArrayList<>(17);
+    List<Object> args = new ArrayList<>(17);
     appendDimensionArgs(
         args, properties.getPerIp().getDefaultQps(), properties.getPerIp().getBurstCapacity(), ipEnabled);
     appendDimensionArgs(

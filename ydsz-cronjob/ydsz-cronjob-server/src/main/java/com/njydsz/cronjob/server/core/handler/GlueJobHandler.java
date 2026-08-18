@@ -295,7 +295,7 @@ public class GlueJobHandler implements JobHandler {
     try {
       instance = clazz.getDeclaredConstructor().newInstance();
     } catch (Exception e) {
-      throw new RuntimeException("GLUE 代码实例化失败: " + e.getMessage(), e);
+      throw new IllegalStateException("GLUE 代码实例化失败: " + e.getMessage(), e);
     }
     return invokeExecute(instance, paramsJson);
   }
@@ -315,7 +315,7 @@ public class GlueJobHandler implements JobHandler {
     SandboxScriptExecutor.SandboxResult result =
         executor.execute(sourceCode, "PYTHON", 300, envVars);
     if (!result.success()) {
-      throw new RuntimeException("Python 脚本执行失败: " + result.errorMessage());
+      throw new IllegalStateException("Python 脚本执行失败: " + result.errorMessage());
     }
     return result.output();
   }
@@ -335,7 +335,7 @@ public class GlueJobHandler implements JobHandler {
     SandboxScriptExecutor.SandboxResult result =
         executor.execute(sourceCode, "SHELL", 300, envVars);
     if (!result.success()) {
-      throw new RuntimeException("Shell 脚本执行失败: " + result.errorMessage());
+      throw new IllegalStateException("Shell 脚本执行失败: " + result.errorMessage());
     }
     return result.output();
   }
@@ -356,7 +356,7 @@ public class GlueJobHandler implements JobHandler {
       logToJobLogger("JavaScript 脚本执行完成: result={}", result);
       return result != null ? result.toString() : "null";
     } catch (Exception e) {
-      throw new RuntimeException("JavaScript 脚本执行失败: " + e.getMessage(), e);
+      throw new IllegalStateException("JavaScript 脚本执行失败: " + e.getMessage(), e);
     }
   }
 
@@ -368,7 +368,7 @@ public class GlueJobHandler implements JobHandler {
    * @param jobId 任务 ID
    * @param sourceCode 源代码
    * @return 编译后的 Class
-   * @throws RuntimeException 编译失败时抛出
+   * @throws IllegalStateException 编译失败时抛出
    */
   private synchronized Class<?> compileWithCache(String jobId, String sourceCode) {
     String cacheKey = jobId + ":" + sourceCode.hashCode();
@@ -385,10 +385,10 @@ public class GlueJobHandler implements JobHandler {
     try {
       clazz = classLoader.parseClass(sourceCode);
     } catch (Exception e) {
-      throw new RuntimeException("GLUE 代码编译失败（沙箱安全检查未通过）: " + e.getMessage(), e);
+      throw new IllegalStateException("GLUE 代码编译失败（沙箱安全检查未通过）: " + e.getMessage(), e);
     }
     if (clazz == null) {
-      throw new RuntimeException("GLUE 代码编译失败: 解析结果为空");
+      throw new IllegalStateException("GLUE 代码编译失败: 解析结果为空");
     }
     compiledClassCache.put(cacheKey, clazz);
     classLoaderCache.put(cacheKey, classLoader);
@@ -423,11 +423,11 @@ public class GlueJobHandler implements JobHandler {
       logToJobLogger("GLUE 脚本执行完成: result={}", result);
       return result;
     } catch (NoSuchMethodException e) {
-      throw new RuntimeException(
+      throw new IllegalStateException(
           "GLUE 代码未实现 JobHandler 接口，也未定义 execute(String) 方法: " + instance.getClass().getName(), e);
     } catch (Exception e) {
       Throwable cause = e.getCause() != null ? e.getCause() : e;
-      throw new RuntimeException("GLUE 代码执行失败: " + cause.getMessage(), cause);
+      throw new IllegalStateException("GLUE 代码执行失败: " + cause.getMessage(), cause);
     }
   }
 

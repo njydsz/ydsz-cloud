@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.system.domain.entity.Tenant;
+import com.njydsz.system.infra.entity.Tenant;
 
 /**
  * 租户 Mapper
@@ -29,7 +29,7 @@ import com.njydsz.system.domain.entity.Tenant;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.Tenant 租户实体
+ * @see Tenant 租户实体
  * @see com.njydsz.system.server.service.TenantService 租户 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

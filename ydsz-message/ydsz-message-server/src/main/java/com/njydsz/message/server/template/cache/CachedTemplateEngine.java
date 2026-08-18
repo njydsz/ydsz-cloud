@@ -1,6 +1,15 @@
 package com.njydsz.message.server.template.cache;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -8,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.math.RoundingMode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -213,7 +223,7 @@ public class CachedTemplateEngine implements TemplateEngine {
           if (listValue instanceof Iterable<?> iterable) {
             int index = 0;
             for (Object item : iterable) {
-              Map<String, Object> itemScope = new java.util.HashMap<>(params);
+              Map<String, Object> itemScope = new HashMap<>(params);
               itemScope.put("this", item);
               itemScope.put("@index", index);
               result.append(renderAst(instruction.getBody(), itemScope));
@@ -262,20 +272,19 @@ public class CachedTemplateEngine implements TemplateEngine {
     if (value == null) return "";
     String fmt = pattern.isEmpty() ? "yyyy-MM-dd HH:mm:ss" : pattern;
     try {
-      java.time.format.DateTimeFormatter formatter =
-          java.time.format.DateTimeFormatter.ofPattern(fmt);
-      if (value instanceof java.time.LocalDateTime ldt) return ldt.format(formatter);
-      if (value instanceof java.time.LocalDate ld) return ld.format(formatter);
-      if (value instanceof java.util.Date date)
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern(fmt);
+      if (value instanceof LocalDateTime ldt) return ldt.format(formatter);
+      if (value instanceof LocalDate ld) return ld.format(formatter);
+      if (value instanceof Date date)
         return date.toInstant()
-            .atZone(java.time.ZoneId.systemDefault())
+            .atZone(ZoneId.systemDefault())
             .toLocalDateTime()
             .format(formatter);
-      if (value instanceof String str) return java.time.LocalDateTime.parse(str).format(formatter);
+      if (value instanceof String str) return LocalDateTime.parse(str).format(formatter);
       if (value instanceof Long ts)
-        return new java.util.Date(ts)
+        return new Date(ts)
             .toInstant()
-            .atZone(java.time.ZoneId.systemDefault())
+            .atZone(ZoneId.systemDefault())
             .toLocalDateTime()
             .format(formatter);
     } catch (Exception e) {
@@ -289,10 +298,10 @@ public class CachedTemplateEngine implements TemplateEngine {
     if (value == null) return "";
     String fmt = pattern.isEmpty() ? "#,##0.00" : pattern;
     try {
-      java.text.DecimalFormat df = new java.text.DecimalFormat(fmt);
-      df.setRoundingMode(java.math.RoundingMode.HALF_UP);
+      DecimalFormat df = new DecimalFormat(fmt);
+      df.setRoundingMode(RoundingMode.HALF_UP);
       if (value instanceof Number num) return df.format(num);
-      if (value instanceof String str) return df.format(new java.math.BigDecimal(str));
+      if (value instanceof String str) return df.format(new BigDecimal(str));
     } catch (Exception e) {
       return String.valueOf(value);
     }
@@ -334,7 +343,7 @@ public class CachedTemplateEngine implements TemplateEngine {
     if (value instanceof Boolean b) return b;
     if (value instanceof String s) return !s.isBlank();
     if (value instanceof Number n) return n.doubleValue() != 0d;
-    if (value instanceof java.util.Collection<?> c) return !c.isEmpty();
+    if (value instanceof Collection<?> c) return !c.isEmpty();
     if (value instanceof Map<?, ?> mp) return !mp.isEmpty();
     return true;
   }

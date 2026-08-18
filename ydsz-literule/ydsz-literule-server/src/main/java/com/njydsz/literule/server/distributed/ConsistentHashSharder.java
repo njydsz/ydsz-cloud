@@ -1,5 +1,7 @@
 package com.njydsz.literule.server.distributed;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -158,8 +160,8 @@ public class ConsistentHashSharder {
     byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
     byte[] digest;
     try {
-      digest = DigestUtils.digest(new java.io.ByteArrayInputStream(keyBytes), "MD5");
-    } catch (java.io.IOException e) {
+      digest = DigestUtils.digest(new ByteArrayInputStream(keyBytes), "MD5");
+    } catch (IOException e) {
       throw new IllegalStateException("MD5 摘要计算失败: " + key, e);
     }
     long h = 0;

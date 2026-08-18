@@ -1,4 +1,4 @@
-package com.njydsz.message.server.service.impl.core;
+package com.njydsz.message.server.service.impl;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -105,7 +105,8 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
           String channel = key.substring(6);
           try {
             scores.put(channel, Integer.parseInt(String.valueOf(e.getValue())));
-          } catch (NumberFormatException ignored) {
+          } catch (NumberFormatException e) {
+            log.debug("[ReachStrategy] 通道活跃度评分解析失败，跳过: channel={}, value={}", key, e.getMessage());
           }
         }
       }

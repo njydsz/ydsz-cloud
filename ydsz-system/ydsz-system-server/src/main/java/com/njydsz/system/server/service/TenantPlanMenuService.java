@@ -19,7 +19,7 @@ import com.njydsz.system.domain.vo.TenantPlanMenuVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.TenantPlanMenu 套餐-菜单关联实体
+ * @see com.njydsz.system.infra.entity.TenantPlanMenu 套餐-菜单关联实体
  */
 public interface TenantPlanMenuService {
 

@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.infra.mapper;
 
 import java.util.List;
+import java.util.Map;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
@@ -33,6 +34,6 @@ public interface ShareAccessLogMapper extends BaseMapper<ShareAccessLogDO> {
    * @param days 统计天数
    * @return 每日访问次数
    */
-  List<java.util.Map<String, Object>> countDailyAccess(
+  List<Map<String, Object>> countDailyAccess(
       @Param("shareId") String shareId, @Param("days") int days);
 }

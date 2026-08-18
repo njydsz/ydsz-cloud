@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.system.domain.entity.Config;
+import com.njydsz.system.infra.entity.Config;
 
 /**
  * 系统配置仓储接口（Infra 层契约）。

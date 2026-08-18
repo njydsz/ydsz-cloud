@@ -5,6 +5,7 @@ import java.util.List;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.vo.AppInfoVO;
+import com.njydsz.system.infra.entity.AppInfo;
 
 /**
  * 应用注册 Service 接口
@@ -33,7 +34,7 @@ import com.njydsz.system.domain.vo.AppInfoVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.AppInfo 应用注册实体
+ * @see AppInfo 应用注册实体
  */
 public interface AppInfoService {
 

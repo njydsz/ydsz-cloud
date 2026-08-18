@@ -8,6 +8,7 @@ import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.CursorPageResponse;
 import com.njydsz.system.domain.vo.ImportResult;
+import com.njydsz.system.infra.entity.Config;
 
 /**
  * 系统配置 Service 接口
@@ -41,7 +42,7 @@ import com.njydsz.system.domain.vo.ImportResult;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.Config 系统配置实体
+ * @see Config 系统配置实体
  * @see com.njydsz.system.domain.enums.ConfigValueType 值类型枚举
  */
 public interface ConfigService {

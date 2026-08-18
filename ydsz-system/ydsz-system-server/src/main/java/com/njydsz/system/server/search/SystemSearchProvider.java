@@ -11,8 +11,8 @@ import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
-import com.njydsz.system.domain.entity.Config;
-import com.njydsz.system.infra.repository.ConfigRepository;
+import com.njydsz.system.infra.entity.Config;
+import com.njydsz.system.domain.repository.ConfigRepository;
 
 /**
  * 系统配置搜索提供者

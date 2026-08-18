@@ -11,8 +11,8 @@ import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
-import com.njydsz.system.domain.entity.Variable;
-import com.njydsz.system.infra.repository.VariableRepository;
+import com.njydsz.system.infra.entity.Variable;
+import com.njydsz.system.domain.repository.VariableRepository;
 
 /**
  * 系统变量搜索提供者（P1-5：补齐变量搜索能力）

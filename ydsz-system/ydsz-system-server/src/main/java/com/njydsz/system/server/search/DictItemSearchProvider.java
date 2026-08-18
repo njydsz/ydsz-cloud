@@ -11,8 +11,8 @@ import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
-import com.njydsz.system.domain.entity.DictItem;
-import com.njydsz.system.infra.repository.DictRepository;
+import com.njydsz.system.infra.entity.DictItem;
+import com.njydsz.system.domain.repository.DictRepository;
 
 /**
  * 字典项搜索提供者（P1-5：补齐字典搜索能力）

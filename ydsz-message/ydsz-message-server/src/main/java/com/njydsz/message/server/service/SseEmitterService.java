@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -113,7 +114,7 @@ public class SseEmitterService {
     if (subs == null || subs.isEmpty()) {
       return;
     }
-    List<SseEmitterSubscription> deadSubs = new java.util.ArrayList<>();
+    List<SseEmitterSubscription> deadSubs = new ArrayList<>();
     for (SseEmitterSubscription sub : subs) {
       try {
         sub.emitter().send(SseEmitter.event().name("progress").data(eventData));

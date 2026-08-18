@@ -3,71 +3,22 @@
 #  DataId:    ydsz-message-dev.yaml
 #  Group:     dev
 #  端口:      9004
+#  说明:      以下配置已迁移至 ydsz-message-common.yaml（shared-configs 加载）：
+#             server.* / spring.mail.* / ydsz.json.* / ydsz.message 基础项
+#             ydsz.webhook.* / ydsz.channel.* / rocketmq.* / mybatis-plus.*
+#             resilience4j.* / management.*
+#             本文件仅保留 DEV 环境特有配置
 # =====================================================================
-
-server:
-  port: 9004
-  servlet:
-    context-path: /
 
 spring:
   profiles: dev
-  mail:
-    host: ${MAIL_HOST:smtp.example.com}
-    port: ${MAIL_PORT:465}
-    username: ${MAIL_USER:no-reply@example.com}
-    password: ${MAIL_PASSWORD:}
-    default-encoding: UTF-8
-    properties:
-      mail:
-        smtp:
-          ssl:
-            enable: true
-          auth: true
-          starttls:
-            enable: true
-          connectiontimeout: 10000
-          timeout: 10000
-          writetimeout: 10000
 
-# YDSZ 消息引擎配置
+# YDSZ 消息引擎配置（仅保留 DEV 特有项）
 ydsz:
-  # JSON 引擎配置（替代原 spring.jackson.*，由 ydsz-common-json 读取）
-  json:
-    enabled: true
-    date-format: yyyy-MM-dd HH:mm:ss
-    naming-strategy: LOWER_CAMEL_CASE
-    write-nulls: false
-    monitoring-enabled: true
-    safe-mode: true
-    warmup-classes:
-      - com.njydsz.common.feign.MessageRequest
-      - com.njydsz.message.domain.entity.core.MsgLog
-      - com.njydsz.message.domain.entity.config.MsgRouteRule
-      - com.njydsz.message.domain.entity.config.MsgTemplate
-      - com.njydsz.message.domain.entity.config.MsgCanary
   message:
-    channel-enabled:
-      SMS: true
-      EMAIL: true
-      PUSH: true
-      INAPP: true
-      WEBHOOK: true
-      DINGTALK: true
-      WECOM: true
-      WECOM_APP: true
-      FEISHU: true
-    default-priority: NORMAL
-    aggregate-scan-interval-ms: 60000
-    retry-scan-interval-ms: 30000
-    # P2-5: 消息 TTL（秒），超过此时间的定时消息自动丢弃；0 表示不检查
-    message-ttl-seconds: 3600
-    # P2-6: 全部已读分批大小，避免长事务；0 表示不分批
-    mark-all-read-batch-size: 500
     global-daily-limit: 0
     global-hourly-limit: 0
     sms:
-      provider: ${YDSZ_SMS_PROVIDER:mock}
       aliyun:
         access-key-id: ${YDSZ_SMS_ALIYUN_AK:}
         access-key-secret: ${YDSZ_SMS_ALIYUN_SK:}
@@ -76,7 +27,6 @@ ydsz:
         connect-timeout: 5000
         read-timeout: 10000
     push:
-      provider: ${YDSZ_PUSH_PROVIDER:mock}
       getui:
         app-id: ${YDSZ_PUSH_GETUI_APPID:}
         app-key: ${YDSZ_PUSH_GETUI_APPKEY:}
@@ -84,33 +34,6 @@ ydsz:
         base-url: https://restapi.getui.com
         connect-timeout: 5000
         read-timeout: 10000
-  webhook:
-    default-url: ${YDSZ_WEBHOOK_DEFAULT_URL:}
-    connect-timeout: 5000
-    read-timeout: 10000
-  channel:
-    dingtalk:
-      default-token: ${YDSZ_DINGTALK_TOKEN:}
-      secret: ${YDSZ_DINGTALK_SECRET:}
-      connect-timeout: 5000
-      read-timeout: 10000
-    wechat-work:
-      default-key: ${YDSZ_WECOM_KEY:}
-      connect-timeout: 5000
-      read-timeout: 10000
-    feishu:
-      default-hook: ${YDSZ_FEISHU_HOOK:}
-      secret: ${YDSZ_FEISHU_SECRET:}
-      connect-timeout: 5000
-      read-timeout: 10000
-    wecom-app:
-      enabled: ${YDSZ_WECOM_APP_ENABLED:false}
-      corp-id: ${YDSZ_WECOM_APP_CORPID:}
-      corp-secret: ${YDSZ_WECOM_APP_CORPSECRET:}
-      agent-id: ${YDSZ_WECOM_APP_AGENTID:0}
-      base-url: https://qyapi.weixin.qq.com
-      connect-timeout: 5000
-      read-timeout: 10000
   # P0-1: 统一线程池配置（ydsz-common-thread）
   # 参考：云顶编码规范 15.4 节
   thread:
@@ -212,41 +135,13 @@ ydsz:
         enable-detailed-metrics: true
         task-decorator-bean-names:
           - tenantContextTaskDecorator
+
+# DEV 覆盖 common 的 rocketmq 配置（支持环境变量注入）
 rocketmq:
-  name-server: ${ROCKETMQ_NAME_SERVER:127.0.0.1:9876}
   producer:
     group: ${ROCKETMQ_PRODUCER_GROUP:ydsz-message-producer-group}
-    send-message-timeout: 5000
   consumer:
     enabled: ${ROCKETMQ_CONSUMER_ENABLED:true}
-
-mybatis-plus:
-  mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.njydsz.message.entity
-  configuration:
-    map-underscore-to-camel-case: true
-    cache-enabled: false
-    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-  global-config:
-    banner: false
-    db-config:
-      id-type: AUTO
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
-
-# Resilience4j 限流
-resilience4j:
-  ratelimiter:
-    instances:
-      message-send:
-        limit-for-period: 200
-        limit-refresh-period: 1s
-        timeout-duration: 0
-      message-receipt:
-        limit-for-period: 1000
-        limit-refresh-period: 1s
-        timeout-duration: 0
 
 springdoc:
   api-docs:
@@ -258,16 +153,3 @@ logging:
   level:
     root: INFO
     "[com.njydsz]": DEBUG
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  metrics:
-    tags:
-      application: ${spring.application.name}
-  prometheus:
-    metrics:
-      export:
-        enabled: true

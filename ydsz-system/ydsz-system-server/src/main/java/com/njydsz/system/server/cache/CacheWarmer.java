@@ -14,12 +14,12 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.cache.constant.CacheConstants;
-import com.njydsz.system.domain.converter.SystemConverter;
-import com.njydsz.system.domain.entity.Config;
-import com.njydsz.system.domain.entity.DictItem;
+import com.njydsz.system.infra.converter.SystemConverter;
+import com.njydsz.system.infra.entity.Config;
+import com.njydsz.system.infra.entity.DictItem;
 import com.njydsz.system.domain.vo.DictItemVO;
-import com.njydsz.system.infra.repository.ConfigRepository;
-import com.njydsz.system.infra.repository.DictRepository;
+import com.njydsz.system.domain.repository.ConfigRepository;
+import com.njydsz.system.domain.repository.DictRepository;
 
 /**
  * 缓存预热器 — 应用启动后异步预热高频访问的缓存数据。

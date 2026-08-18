@@ -3,7 +3,7 @@ package com.njydsz.system.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.system.domain.entity.Variable;
+import com.njydsz.system.infra.entity.Variable;
 
 /**
  * 系统变量 Mapper
@@ -24,7 +24,7 @@ import com.njydsz.system.domain.entity.Variable;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.Variable 变量实体
+ * @see Variable 变量实体
  * @see com.njydsz.system.server.service.VariableService 变量 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

@@ -125,8 +125,9 @@ public class ErrorEventSpanProcessor implements SpanProcessor {
     for (ErrorEventListener l : listeners) {
       try {
         l.onErrorEvent(event);
-      } catch (Exception ignored) {
+      } catch (Exception e) {
         // 监听器异常不影响主流程
+        log.debug("[ErrorEvent] 监听器异常: {}", e.getMessage());
       }
     }
   }

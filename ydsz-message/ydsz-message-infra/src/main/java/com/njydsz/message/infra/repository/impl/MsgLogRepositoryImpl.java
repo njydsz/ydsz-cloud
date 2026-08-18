@@ -76,6 +76,24 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
     return entityPage;
   }
 
+  @Override
+  public List<MsgLog> searchAfter(String searchAfterId, int pageSize, LambdaQueryWrapper<MsgLog> wrapper) {
+    if (searchAfterId != null && !searchAfterId.isEmpty()) {
+      wrapper.gt(MsgLog::getId, searchAfterId);
+    }
+    wrapper.orderByAsc(MsgLog::getId).last("LIMIT " + pageSize);
+    return msgLogMapper.selectList(wrapper).stream().map(this::toEntity).toList();
+  }
+
+  @Override
+  public int insertBatch(List<MsgLog> entities) {
+    if (entities == null || entities.isEmpty()) {
+      return 0;
+    }
+    List<MsgLogDO> poList = entities.stream().map(this::toDO).toList();
+    return msgLogMapper.insertBatch(poList);
+  }
+
   // ===== 领域实体 ↔ 数据库实体转换 =====
 
   private MsgLogDO toDO(MsgLog entity) {

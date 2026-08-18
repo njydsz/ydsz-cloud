@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.system.domain.entity.TenantPlanMenu;
+import com.njydsz.system.infra.entity.TenantPlanMenu;
 
 /**
  * 租户套餐-菜单关联 Mapper
@@ -27,7 +27,7 @@ import com.njydsz.system.domain.entity.TenantPlanMenu;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.TenantPlanMenu 套餐-菜单关联实体
+ * @see TenantPlanMenu 套餐-菜单关联实体
  * @see com.njydsz.system.server.service.TenantPlanService 套餐 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

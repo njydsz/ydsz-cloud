@@ -27,15 +27,15 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
-import com.njydsz.system.domain.entity.Variable;
+import com.njydsz.system.infra.entity.Variable;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.ImportResult;
 import com.njydsz.system.domain.vo.VariableExcelVO;
 import com.njydsz.system.domain.vo.VariableVO;
-import com.njydsz.system.infra.repository.VariableRepository;
+import com.njydsz.system.domain.repository.VariableRepository;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.search.SearchIndexSyncer;
@@ -114,7 +114,7 @@ import com.njydsz.system.server.util.SystemVersionUtils;
  * @since 1.0.0
  * @see VariableService 变量 Service 接口
  * @see ConfigServiceImpl 系统配置 Service（能力对齐但定位不同）
- * @see com.njydsz.system.domain.entity.Variable 变量实体
+ * @see com.njydsz.system.infra.entity.Variable 变量实体
  */
 @Slf4j
 @Service

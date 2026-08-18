@@ -47,6 +47,7 @@ public class MeteredRejectedHandler implements RejectedExecutionHandler {
       metrics.incrementRejected();
     } catch (Exception e) {
       // 计数异常不影响原始拒绝策略
+      log.debug("[MeteredRejectedHandler] 拒绝计数异常: {}", e.getMessage());
     }
     delegate.rejectedExecution(r, executor);
   }

@@ -14,13 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
-import com.njydsz.system.domain.converter.SystemConverter;
-import com.njydsz.system.domain.entity.Tenant;
-import com.njydsz.system.domain.entity.TenantPlan;
+import com.njydsz.system.infra.converter.SystemConverter;
+import com.njydsz.system.infra.entity.Tenant;
+import com.njydsz.system.infra.entity.TenantPlan;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.TenantPlanVO;
-import com.njydsz.system.infra.repository.TenantPlanRepository;
-import com.njydsz.system.infra.repository.TenantRepository;
+import com.njydsz.system.domain.repository.TenantPlanRepository;
+import com.njydsz.system.domain.repository.TenantRepository;
 import com.njydsz.system.server.service.TenantPlanService;
 
 /**
@@ -40,7 +40,7 @@ import com.njydsz.system.server.service.TenantPlanService;
  * @author ydsz-team
  * @since 1.0.0
  * @see TenantPlanService 套餐 Service 接口
- * @see com.njydsz.system.domain.entity.TenantPlan 套餐实体
+ * @see com.njydsz.system.infra.entity.TenantPlan 套餐实体
  */
 @Slf4j
 @Service

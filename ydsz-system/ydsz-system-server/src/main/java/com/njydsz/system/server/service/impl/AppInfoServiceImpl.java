@@ -16,12 +16,12 @@ import com.njydsz.common.jdbc.support.PageResponses;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.domain.dto.AppInfoDTO;
-import com.njydsz.system.domain.entity.AppInfo;
+import com.njydsz.system.infra.entity.AppInfo;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.AppInfoVO;
-import com.njydsz.system.infra.repository.AppInfoRepository;
+import com.njydsz.system.domain.repository.AppInfoRepository;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.AppInfoService;
 
@@ -96,7 +96,7 @@ import com.njydsz.system.server.service.AppInfoService;
  * @author ydsz-team
  * @since 1.0.0
  * @see AppInfoService 应用注册 Service 接口
- * @see com.njydsz.system.domain.entity.AppInfo 应用实体
+ * @see AppInfo 应用实体
  */
 @Slf4j
 @Service

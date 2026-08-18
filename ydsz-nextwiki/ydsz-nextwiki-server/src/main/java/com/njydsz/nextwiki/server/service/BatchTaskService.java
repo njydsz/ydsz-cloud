@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.server.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,7 +57,7 @@ public class BatchTaskService {
    * @param userId 操作人 ID
    * @return 任务 ID（用于后续查询执行状态）
    */
-  public String submitBatchDelete(java.util.List<String> nodeIds, String userId) {
+  public String submitBatchDelete(List<String> nodeIds, String userId) {
     String taskId = generateTaskId();
     BatchTaskStatus status = new BatchTaskStatus(taskId, "batch_delete", nodeIds.size());
     taskStore.put(taskId, status);
@@ -74,7 +75,7 @@ public class BatchTaskService {
    * @return 任务 ID（用于后续查询执行状态）
    */
   public String submitBatchMove(
-      java.util.List<String> nodeIds, String targetParentId, String userId) {
+      List<String> nodeIds, String targetParentId, String userId) {
     String taskId = generateTaskId();
     BatchTaskStatus status = new BatchTaskStatus(taskId, "batch_move", nodeIds.size());
     taskStore.put(taskId, status);
@@ -131,7 +132,7 @@ public class BatchTaskService {
    */
   @Async("nextwikiTaskExecutor")
   public void executeAsync(
-      String taskId, java.util.List<String> nodeIds, String userId, String operation) {
+      String taskId, List<String> nodeIds, String userId, String operation) {
     BatchTaskStatus status = taskStore.get(taskId);
     if (status == null) {
       return;

@@ -5,6 +5,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 
 /**
@@ -28,6 +30,8 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
  * @since 1.2.0
  */
 public class SafeFilterChainBuilder {
+
+  private static final Logger LOG = LoggerFactory.getLogger(SafeFilterChainBuilder.class);
 
   private final List<FilterRegistrationDescriptor<?>> descriptors = new ArrayList<>();
 
@@ -73,8 +77,8 @@ public class SafeFilterChainBuilder {
       FilterRegistrationDescriptor<?> prev = sorted.get(i - 1);
       FilterRegistrationDescriptor<?> current = sorted.get(i);
       if (prev.order() == current.order()) {
-        System.err.printf(
-            "[SafeFilterChain] WARN: order conflict between '%s' and '%s' (both order=%d)%n",
+        LOG.warn(
+            "[SafeFilterChain] order conflict between '{}' and '{}' (both order={})",
             prev.name(), current.name(), current.order());
       }
     }

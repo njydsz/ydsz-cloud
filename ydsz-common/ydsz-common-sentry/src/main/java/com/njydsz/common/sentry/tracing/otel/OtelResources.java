@@ -57,8 +57,9 @@ public final class OtelResources {
         try {
           String hostName = InetAddress.getLocalHost().getHostName();
           putIfNotNull(attrs, AttributeKey.stringKey("host.name"), hostName);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
           // 主机名获取失败不影响主流程
+          log.debug("[OtelResources] 主机名获取失败: {}", e.getMessage());
         }
         attrs.put(AttributeKey.stringKey("host.arch"), System.getProperty("os.arch", "unknown"));
       }

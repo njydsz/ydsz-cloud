@@ -1,6 +1,7 @@
 package com.njydsz.gateway.config;
 
 import java.time.Duration;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -167,7 +168,7 @@ public class WebSocketConnectionLimiter {
     }
     String key = buildIpKey(clientIp);
     return redisTemplate
-        .execute(incrScript, java.util.List.of(key), String.valueOf(maxConnectionsPerIp), String.valueOf(counterTtlSeconds))
+        .execute(incrScript, List.of(key), String.valueOf(maxConnectionsPerIp), String.valueOf(counterTtlSeconds))
         .next()
         .map(result -> {
           if (result != null && result == -1L) {
@@ -190,7 +191,7 @@ public class WebSocketConnectionLimiter {
     }
     String key = buildUserKey(userId, clientIp);
     return redisTemplate
-        .execute(incrScript, java.util.List.of(key), String.valueOf(maxConnectionsPerUser), String.valueOf(counterTtlSeconds))
+        .execute(incrScript, List.of(key), String.valueOf(maxConnectionsPerUser), String.valueOf(counterTtlSeconds))
         .next()
         .map(
             result -> {

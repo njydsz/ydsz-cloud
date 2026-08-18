@@ -30,9 +30,6 @@ import lombok.Data;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.AppInfo 应用注册实体
- * @see com.njydsz.system.domain.dto.AppInfoDTO 应用注册 DTO
- * @see com.njydsz.system.domain.converter.SystemConverter 实体 / DTO / VO 转换器
  */
 @Data
 @Schema(description = "应用注册视图对象")

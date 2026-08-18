@@ -107,6 +107,7 @@ public class TimedTaskDecorator implements TaskDecorator {
       }
     } catch (Exception e) {
       // 指标异常静默处理，不影响业务任务
+      log.debug("[TimedTaskDecorator] 指标记录失败: pool={}, err={}", poolName, e.getMessage());
     }
   }
 }

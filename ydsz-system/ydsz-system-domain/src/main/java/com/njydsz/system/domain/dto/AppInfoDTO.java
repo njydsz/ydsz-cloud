@@ -37,7 +37,6 @@ import com.njydsz.common.safe.annotation.Xss;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.AppInfo 应用注册实体
  */
 @Data
 @SuperBuilder

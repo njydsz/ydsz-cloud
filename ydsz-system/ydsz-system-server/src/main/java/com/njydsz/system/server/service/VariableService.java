@@ -42,7 +42,7 @@ import com.njydsz.system.domain.vo.VariableVO;
  * @author ydsz-team
  * @since 1.0.0
  * @see ConfigService 系统配置 Service（按分组的同类结构）
- * @see com.njydsz.system.domain.entity.Variable 系统变量实体
+ * @see com.njydsz.system.infra.entity.Variable 系统变量实体
  */
 public interface VariableService {
 

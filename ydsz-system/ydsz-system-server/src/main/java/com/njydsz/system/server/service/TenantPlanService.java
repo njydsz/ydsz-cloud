@@ -20,7 +20,7 @@ import com.njydsz.system.domain.vo.TenantPlanVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.TenantPlan 套餐实体
+ * @see com.njydsz.system.infra.entity.TenantPlan 套餐实体
  */
 public interface TenantPlanService {
 

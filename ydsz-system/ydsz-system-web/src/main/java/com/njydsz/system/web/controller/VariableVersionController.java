@@ -45,7 +45,7 @@ import com.njydsz.system.server.service.VariableService;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.system.server.service.EntityVersionService 统一实体版本业务逻辑
- * @see com.njydsz.system.domain.entity.EntityVersion 实体版本
+ * @see com.njydsz.system.infra.entity.EntityVersion 实体版本
  */
 @Tag(name = "变量版本", description = "变量变更历史查询 + 一键回滚")
 @RestController

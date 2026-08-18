@@ -1,4 +1,4 @@
-package com.njydsz.message.server.service.impl.core;
+package com.njydsz.message.server.service.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

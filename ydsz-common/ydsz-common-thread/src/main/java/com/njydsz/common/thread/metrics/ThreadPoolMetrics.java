@@ -82,6 +82,7 @@ public class ThreadPoolMetrics implements MeterBinder {
       executor = taskExecutor.getThreadPoolExecutor();
     } catch (Exception e) {
       // 底层 executor 未就绪时跳过注册，避免启动失败
+      log.debug("[ThreadPoolMetrics] executor 未就绪，跳过指标注册: pool={}, err={}", poolName, e.getMessage());
       return;
     }
 

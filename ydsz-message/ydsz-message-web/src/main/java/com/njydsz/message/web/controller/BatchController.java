@@ -162,6 +162,7 @@ public class BatchController {
       initialSnapshot = batchService.getProgress(batchId);
     } catch (Exception e) {
       // 批次不存在时仍返回 emitter，后续 complete 事件会通知错误
+      log.warn("[BatchController] 批次进度查询失败，降级返回空快照: batchId={}, err={}", batchId, e.getMessage());
       initialSnapshot = null;
     }
     return sseEmitterService.subscribe(batchId, initialSnapshot);

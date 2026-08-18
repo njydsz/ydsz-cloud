@@ -145,8 +145,9 @@ public class SpanEvaluationProcessor implements SpanProcessor {
     for (DecisionListener l : listeners) {
       try {
         l.onDecision(span, decision);
-      } catch (Exception ignored) {
+      } catch (Exception e) {
         // 监听器异常不影响主流程
+        log.debug("[SpanEvaluation] 监听器异常: {}", e.getMessage());
       }
     }
   }

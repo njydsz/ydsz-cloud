@@ -24,14 +24,14 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
-import com.njydsz.system.domain.entity.DictItem;
+import com.njydsz.system.infra.entity.DictItem;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.DictItemExcelVO;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.vo.ImportResult;
-import com.njydsz.system.infra.repository.DictRepository;
+import com.njydsz.system.domain.repository.DictRepository;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.search.SearchIndexSyncer;
@@ -109,7 +109,7 @@ import com.njydsz.system.server.util.SystemVersionUtils;
  * @see DictItemService 字典项 Service 接口
  * @see DictServiceImpl 字典类型 Service 实现
  * @see EntityVersionService 统一实体版本 Service（写操作触发版本快照）
- * @see com.njydsz.system.domain.entity.DictItem 字典项实体
+ * @see com.njydsz.system.infra.entity.DictItem 字典项实体
  */
 @Slf4j
 @Service

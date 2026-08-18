@@ -1,5 +1,6 @@
 package com.njydsz.agent.infra.rag;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -166,7 +167,7 @@ public class HybridRetriever {
                   + TABLE_NAME
                   + " "
                   + "WHERE deleted = false AND content ILIKE ? ");
-      List<Object> params = new java.util.ArrayList<>();
+      List<Object> params = new ArrayList<>();
       String pattern = "%" + query.replace("%", "\\%").replace("_", "\\_") + "%";
       params.add(pattern);
       // 多租户：全文检索走 JdbcTemplate，需显式追加租户过滤，避免跨租户召回

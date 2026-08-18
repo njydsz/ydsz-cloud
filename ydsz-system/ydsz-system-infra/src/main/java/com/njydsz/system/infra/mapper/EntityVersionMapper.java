@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.system.domain.entity.EntityVersion;
+import com.njydsz.system.infra.entity.EntityVersion;
 
 /**
  * 统一实体版本管理 Mapper
@@ -20,7 +20,7 @@ import com.njydsz.system.domain.entity.EntityVersion;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.EntityVersion 实体版本实体
+ * @see EntityVersion 实体版本实体
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper

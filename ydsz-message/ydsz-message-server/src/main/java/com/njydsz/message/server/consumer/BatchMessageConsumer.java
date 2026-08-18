@@ -123,7 +123,7 @@ public class BatchMessageConsumer implements RocketMQListener<String> {
         failure);
     // 如果全部失败，抛出异常触发重试
     if (failure > 0 && success == 0) {
-      throw new RuntimeException("Batch consumption all failed: " + failure + " messages");
+      throw new IllegalStateException("Batch consumption all failed: " + failure + " messages");
     }
   }
 }

@@ -1,6 +1,7 @@
 package com.njydsz.agent.server.chat;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -238,7 +239,7 @@ public class SseExecutor {
 
     /** 转换为 Map（用于 SseEmitter.event().data()） */
     public Map<String, Object> toMap() {
-      Map<String, Object> map = new java.util.HashMap<>();
+      Map<String, Object> map = new HashMap<>();
       map.put("content", content != null ? content : "");
       map.put("finished", finished);
       if (finishReason != null) {

@@ -1,5 +1,6 @@
 package com.njydsz.gateway.config;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -232,7 +233,7 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
                       dataId,
                       group,
                       routeCount,
-                      java.time.OffsetDateTime.now());
+                      OffsetDateTime.now());
                   loadRoutesFromNacos();
                   eventPublisher.publishEvent(new RefreshRoutesEvent(this));
                   log.info(

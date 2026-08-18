@@ -52,4 +52,28 @@
         scheduled_at, created_by, created_at, updated_by, updated_at, deleted, tenant_id
     </sql>
 
+    <!-- 批量插入消息日志，提升批量发送场景的 DB 写入性能 -->
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO ydsz_msg_log (
+            id, channel, biz_type, biz_id, receiver, template_code, template_params, content, status,
+            error_message, priority, sender_id, message_group, batch_id, route_rule_id, canary, canary_key,
+            dedup_key, recall_status, recall_at, receipt_status, receipt_at, retry_count, next_retry_at,
+            provider_trace_id, cost_ms, cost, trace_id, msg_id, topic, reconsume_times, parent_msg_id,
+            scheduled_at, created_by, created_at, updated_by, updated_at, deleted, tenant_id
+        ) VALUES
+        <foreach collection="records" item="record" separator=",">
+            (
+                #{record.id}, #{record.channel}, #{record.bizType}, #{record.bizId}, #{record.receiver},
+                #{record.templateCode}, #{record.templateParams}, #{record.content}, #{record.status},
+                #{record.errorMessage}, #{record.priority}, #{record.senderId}, #{record.messageGroup},
+                #{record.batchId}, #{record.routeRuleId}, #{record.canary}, #{record.canaryKey},
+                #{record.dedupKey}, #{record.recallStatus}, #{record.recallAt}, #{record.receiptStatus},
+                #{record.receiptAt}, #{record.retryCount}, #{record.nextRetryAt}, #{record.providerTraceId},
+                #{record.costMs}, #{record.cost}, #{record.traceId}, #{record.msgId}, #{record.topic},
+                #{record.reconsumeTimes}, #{record.parentMsgId}, #{record.scheduledAt}, #{record.createdBy},
+                #{record.createdAt}, #{record.updatedBy}, #{record.updatedAt}, #{record.deleted}, #{record.tenantId}
+            )
+        </foreach>
+    </insert>
+
 </mapper>

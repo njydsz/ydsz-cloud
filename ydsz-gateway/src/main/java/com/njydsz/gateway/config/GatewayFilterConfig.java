@@ -1,7 +1,9 @@
 package com.njydsz.gateway.config;
 
+import java.net.ConnectException;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -288,10 +290,10 @@ public class GatewayFilterConfig {
       if (ex instanceof SysException) {
         return HttpStatus.INTERNAL_SERVER_ERROR;
       }
-      if (ex instanceof java.net.ConnectException) {
+      if (ex instanceof ConnectException) {
         return HttpStatus.BAD_GATEWAY;
       }
-      if (ex instanceof java.util.concurrent.TimeoutException) {
+      if (ex instanceof TimeoutException) {
         return HttpStatus.GATEWAY_TIMEOUT;
       }
       // NotFoundException 来自 spring-cloud-gateway

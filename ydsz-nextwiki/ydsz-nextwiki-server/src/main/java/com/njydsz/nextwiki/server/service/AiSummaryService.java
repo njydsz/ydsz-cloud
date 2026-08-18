@@ -1,5 +1,7 @@
 package com.njydsz.nextwiki.server.service;
 
+import java.util.List;
+
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs.SummaryResult;
 
 /**
@@ -43,5 +45,5 @@ public interface AiSummaryService {
    *
    * @return 支持的文件后缀名列表（如 pdf、docx、txt、md）
    */
-  java.util.List<String> getSupportedFileTypes();
+  List<String> getSupportedFileTypes();
 }

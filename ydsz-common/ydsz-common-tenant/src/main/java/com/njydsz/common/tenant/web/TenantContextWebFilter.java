@@ -262,6 +262,7 @@ public class TenantContextWebFilter implements Filter {
       }
     } catch (Exception e) {
       // 静默降级，返回 null
+      log.debug("[TenantContext] 权限 ID 获取失败，降级返回 null: {}", e.getMessage());
     }
     return null;
   }

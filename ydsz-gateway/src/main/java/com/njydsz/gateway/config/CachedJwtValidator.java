@@ -1,5 +1,6 @@
 package com.njydsz.gateway.config;
 
+import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -226,7 +227,7 @@ public class CachedJwtValidator {
       if (parts.length < 2) {
         return 0L;
       }
-      String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+      String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
       JsonNode node = YdszJson.readTree(payload);
       JsonNode expNode = node.get("exp");
       if (expNode != null && expNode.isNumber()) {

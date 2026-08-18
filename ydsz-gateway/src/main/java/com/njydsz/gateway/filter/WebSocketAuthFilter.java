@@ -1,6 +1,7 @@
 package com.njydsz.gateway.filter;
 
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -284,7 +285,7 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
         if (i > 0) {
           regex.append(".*");
         }
-        regex.append(java.util.regex.Pattern.quote(parts[i]));
+        regex.append(Pattern.quote(parts[i]));
       }
       return origin.matches(regex.toString());
     }

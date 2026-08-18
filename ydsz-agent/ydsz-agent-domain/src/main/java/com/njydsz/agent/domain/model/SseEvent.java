@@ -1,5 +1,6 @@
 package com.njydsz.agent.domain.model;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -147,7 +148,7 @@ public final class SseEvent {
    * @return SSE 事件
    */
   public static SseEvent done(String finishReason, TokenUsage usage) {
-    Map<String, Object> dataMap = new java.util.HashMap<>();
+    Map<String, Object> dataMap = new HashMap<>();
     dataMap.put("finishReason", finishReason);
     if (usage != null) {
       dataMap.put(

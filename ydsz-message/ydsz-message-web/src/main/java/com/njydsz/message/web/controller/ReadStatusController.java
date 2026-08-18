@@ -31,7 +31,7 @@ import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
  * <p>提供<b>全通道消息已读/未读状态管理</b>的 HTTP API，是 P1-3「统一已读状态」的核心入口。 不同通道（站内信 / 短信 / 邮件 / 钉钉 / 飞书 /
  * 企业微信）的已读状态由本 Controller 统一管理， 用户在一个渠道的已读操作会同步到所有渠道的未读计数。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/readStatus/**}
+ * <p><b>接口路径：</b>{@code /api/v1/message/read-status/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -71,7 +71,7 @@ import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
  */
 @Tag(name = "已读状态", description = "消息已读/未读状态同步")
 @RestController
-@RequestMapping("/api/v1/message/readStatus")
+@RequestMapping("/api/v1/message/read-status")
 @RequiredArgsConstructor
 public class ReadStatusController {
 

@@ -6,8 +6,8 @@ import java.util.Optional;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
-import com.njydsz.system.domain.entity.DictItem;
-import com.njydsz.system.domain.entity.DictType;
+import com.njydsz.system.infra.entity.DictItem;
+import com.njydsz.system.infra.entity.DictType;
 
 /**
  * 字典仓储接口（Infra 层契约）。

@@ -66,8 +66,8 @@ import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
  *
  * <ul>
  *   <li>0: 成功
- *   <li>非 0: 失败，抛出 RuntimeException，stderr 作为错误信息
- *   <li>超时: 抛出 RuntimeException，进程被强制销毁
+ *   <li>非 0: 失败，抛出 IllegalStateException，stderr 作为错误信息
+ *   <li>超时: 抛出 IllegalStateException，进程被强制销毁
  * </ul>
  *
  * <p>执行过程中的 stdout 通过 {@link JobExecutionContext} 写入在线日志器（如可用）。
@@ -215,7 +215,7 @@ public class ScriptJobHandler implements JobHandler {
     SandboxScriptExecutor.SandboxResult result =
         sandboxExecutor.execute(scriptContent, language, timeoutSeconds, envVars);
     if (!result.success()) {
-      throw new RuntimeException("沙箱脚本执行失败: " + result.errorMessage());
+      throw new IllegalStateException("沙箱脚本执行失败: " + result.errorMessage());
     }
     return new ScriptResult(
         result.exitCode(),
@@ -264,7 +264,7 @@ public class ScriptJobHandler implements JobHandler {
           process.destroyForcibly();
           stdoutThread.interrupt();
           stderrThread.interrupt();
-          throw new RuntimeException("脚本执行超时: timeoutMs=" + timeoutMs + " language=" + language);
+          throw new IllegalStateException("脚本执行超时: timeoutMs=" + timeoutMs + " language=" + language);
         }
       } else {
         finished = process.waitFor() == 0;
@@ -283,7 +283,7 @@ public class ScriptJobHandler implements JobHandler {
           stderrStr.length());
 
       if (exitCode != 0) {
-        throw new RuntimeException(
+        throw new IllegalStateException(
             "脚本执行失败: exitCode=" + exitCode + " stderr=" + truncate(stderrStr));
       }
 

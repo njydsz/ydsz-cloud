@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
-import com.njydsz.system.domain.entity.EntityVersion;
+import com.njydsz.system.infra.entity.EntityVersion;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.EntityVersionVO;
-import com.njydsz.system.infra.repository.EntityVersionRepository;
+import com.njydsz.system.domain.repository.EntityVersionRepository;
 import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.util.SystemVersionUtils;
 
