@@ -17,8 +17,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.infra.converter.UserInfoConverter;
-import com.njydsz.userinfo.domain.dto.create.LanguageCreateDTO;
-import com.njydsz.userinfo.domain.dto.update.LanguageUpdateDTO;
+import com.njydsz.userinfo.domain.dto.LanguageDTO;
 import com.njydsz.userinfo.infra.entity.LanguageDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
@@ -69,8 +68,8 @@ public class LanguageServiceImpl implements LanguageService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String create(LanguageCreateDTO dto) {
-    LanguageDO entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
+  public String create(LanguageDTO dto) {
+    LanguageDO entity = UserInfoConverter.INSTANT.dtoToEntity(dto);
     if (entity.getStatus() == null) {
       entity.setStatus("ENABLED");
     }
@@ -80,7 +79,7 @@ public class LanguageServiceImpl implements LanguageService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean update(LanguageUpdateDTO dto) {
+  public boolean update(LanguageDTO dto) {
     LanguageDO entity = languageRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND);

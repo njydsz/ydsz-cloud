@@ -2,8 +2,7 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
-import com.njydsz.userinfo.domain.dto.create.MenuCreateDTO;
-import com.njydsz.userinfo.domain.dto.update.MenuUpdateDTO;
+import com.njydsz.userinfo.domain.dto.MenuDTO;
 import com.njydsz.userinfo.infra.entity.MenuDO;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
@@ -44,18 +43,18 @@ public interface MenuService {
   /**
    * 创建菜单。
    *
-   * @param dto 菜单创建 DTO
+   * @param dto 菜单 DTO
    * @return 新菜单 ID
    */
-  String create(MenuCreateDTO dto);
+  String create(MenuDTO dto);
 
   /**
    * 更新菜单。
    *
-   * @param dto 菜单更新 DTO（含 ID）
+   * @param dto 菜单 DTO（含 ID）
    * @return true=成功
    */
-  boolean update(MenuUpdateDTO dto);
+  boolean update(MenuDTO dto);
 
   /**
    * 删除菜单（逻辑删除）。

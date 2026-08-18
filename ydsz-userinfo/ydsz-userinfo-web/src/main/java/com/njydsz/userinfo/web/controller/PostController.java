@@ -21,8 +21,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.userinfo.domain.dto.create.PostCreateDTO;
-import com.njydsz.userinfo.domain.dto.update.PostUpdateDTO;
+import com.njydsz.userinfo.domain.dto.PostDTO;
 import com.njydsz.userinfo.domain.vo.PostVO;
 import com.njydsz.userinfo.server.service.PostService;
 
@@ -116,7 +115,7 @@ public class PostController {
   @RateLimit(resource = "userinfo.PostDO.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建岗位")
-  public BaseResponse<String> create(@Valid @RequestBody PostCreateDTO dto) {
+  public BaseResponse<String> create(@Valid @RequestBody PostDTO dto) {
     return BaseResponse.success(service.create(dto));
   }
 
@@ -141,7 +140,7 @@ public class PostController {
   @RateLimit(resource = "userinfo.PostDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新岗位")
-  public BaseResponse<Boolean> update(@Valid @RequestBody PostUpdateDTO dto) {
+  public BaseResponse<Boolean> update(@Valid @RequestBody PostDTO dto) {
     return BaseResponse.success(service.update(dto));
   }
 

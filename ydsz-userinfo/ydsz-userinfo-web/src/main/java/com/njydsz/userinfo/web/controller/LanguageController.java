@@ -22,8 +22,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.userinfo.domain.dto.create.LanguageCreateDTO;
-import com.njydsz.userinfo.domain.dto.update.LanguageUpdateDTO;
+import com.njydsz.userinfo.domain.dto.LanguageDTO;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
 import com.njydsz.userinfo.server.service.LanguageService;
@@ -138,7 +137,7 @@ public class LanguageController {
   @RateLimit(resource = "userinfo.LanguageDO.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建语言")
-  public BaseResponse<String> create(@Valid @RequestBody LanguageCreateDTO dto) {
+  public BaseResponse<String> create(@Valid @RequestBody LanguageDTO dto) {
     return BaseResponse.success(service.create(dto));
   }
 
@@ -163,7 +162,7 @@ public class LanguageController {
   @RateLimit(resource = "userinfo.LanguageDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新语言")
-  public BaseResponse<Boolean> update(@Valid @RequestBody LanguageUpdateDTO dto) {
+  public BaseResponse<Boolean> update(@Valid @RequestBody LanguageDTO dto) {
     return BaseResponse.success(service.update(dto));
   }
 

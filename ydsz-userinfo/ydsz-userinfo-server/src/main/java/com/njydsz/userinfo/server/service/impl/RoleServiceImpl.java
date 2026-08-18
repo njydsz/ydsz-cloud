@@ -25,8 +25,7 @@ import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.infra.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
-import com.njydsz.userinfo.domain.dto.create.RoleCreateDTO;
-import com.njydsz.userinfo.domain.dto.update.RoleUpdateDTO;
+import com.njydsz.userinfo.domain.dto.RoleDTO;
 import com.njydsz.userinfo.infra.entity.RoleDO;
 import com.njydsz.userinfo.infra.entity.RolePermissionDO;
 import com.njydsz.userinfo.infra.entity.UserRoleDO;
@@ -177,14 +176,14 @@ public class RoleServiceImpl implements RoleService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String create(RoleCreateDTO dto) {
+  public String create(RoleDTO dto) {
     LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(RoleDO::getRoleCode, dto.getRoleCode());
     if (roleRepository.count(wrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_CODE_DUPLICATE);
     }
 
-    RoleDO entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
+    RoleDO entity = UserInfoConverter.INSTANT.dtoToEntity(dto);
     if (entity.getStatus() == null) {
       entity.setStatus("ENABLED");
     }
@@ -206,7 +205,7 @@ public class RoleServiceImpl implements RoleService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean update(RoleUpdateDTO dto) {
+  public boolean update(RoleDTO dto) {
     RoleDO entity = roleRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND);

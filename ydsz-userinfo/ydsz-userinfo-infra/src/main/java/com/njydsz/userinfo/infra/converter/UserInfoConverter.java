@@ -7,18 +7,12 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
-import com.njydsz.userinfo.domain.dto.create.CompanyCreateDTO;
-import com.njydsz.userinfo.domain.dto.create.DepartmentCreateDTO;
-import com.njydsz.userinfo.domain.dto.create.LanguageCreateDTO;
-import com.njydsz.userinfo.domain.dto.create.MenuCreateDTO;
-import com.njydsz.userinfo.domain.dto.create.PostCreateDTO;
-import com.njydsz.userinfo.domain.dto.create.RoleCreateDTO;
-import com.njydsz.userinfo.domain.dto.update.CompanyUpdateDTO;
-import com.njydsz.userinfo.domain.dto.update.DepartmentUpdateDTO;
-import com.njydsz.userinfo.domain.dto.update.LanguageUpdateDTO;
-import com.njydsz.userinfo.domain.dto.update.MenuUpdateDTO;
-import com.njydsz.userinfo.domain.dto.update.PostUpdateDTO;
-import com.njydsz.userinfo.domain.dto.update.RoleUpdateDTO;
+import com.njydsz.userinfo.domain.dto.CompanyDTO;
+import com.njydsz.userinfo.domain.dto.DepartmentDTO;
+import com.njydsz.userinfo.domain.dto.LanguageDTO;
+import com.njydsz.userinfo.domain.dto.MenuDTO;
+import com.njydsz.userinfo.domain.dto.PostDTO;
+import com.njydsz.userinfo.domain.dto.RoleDTO;
 import com.njydsz.userinfo.infra.entity.CompanyDO;
 import com.njydsz.userinfo.infra.entity.DepartmentDO;
 import com.njydsz.userinfo.infra.entity.LanguageDO;
@@ -96,12 +90,12 @@ public interface UserInfoConverter {
   List<CompanyTreeVO> companyTreeListToVO(List<CompanyDO> entities);
 
   /**
-   * 公司新增 DTO → 公司实体
+   * 公司 DTO → 公司实体（创建场景）
    *
    * <p>MpBaseEntity 的自动填充字段（id/deleted/revision/tenantId/createdBy/createdAt/updatedBy/updatedAt）
    * 通过 @Mapping(ignore = true) 忽略，由框架自动填充。
    *
-   * @param dto 公司新增 DTO
+   * @param dto 公司 DTO
    * @return 公司实体（未持久化）
    */
   @Mapping(target = "id", ignore = true)
@@ -112,14 +106,14 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  CompanyDO postDtoToEntity(CompanyCreateDTO dto);
+  CompanyDO dtoToEntity(CompanyDTO dto);
 
   /**
-   * 公司修改 DTO → 公司实体
+   * 公司 DTO → 公司实体（更新场景）
    *
    * <p>保留 id 字段用于定位更新记录，自动填充字段中 updatedBy/updatedAt 由框架更新。
    *
-   * @param dto 公司修改 DTO
+   * @param dto 公司 DTO（含 id）
    * @return 公司实体（含 id，用于条件更新）
    */
   @Mapping(target = "deleted", ignore = true)
@@ -127,7 +121,7 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  CompanyDO putDtoToEntity(CompanyUpdateDTO dto);
+  CompanyDO dtoToEntityWithId(CompanyDTO dto);
 
   // ===== DepartmentDO =====
 
@@ -164,9 +158,9 @@ public interface UserInfoConverter {
   List<DepartmentTreeVO> departmentTreeListToVO(List<DepartmentDO> entities);
 
   /**
-   * 部门新增 DTO → 部门实体
+   * 部门 DTO → 部门实体（创建场景）
    *
-   * @param dto 部门新增 DTO
+   * @param dto 部门 DTO
    * @return 部门实体（未持久化）
    */
   @Mapping(target = "id", ignore = true)
@@ -177,12 +171,12 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  DepartmentDO postDtoToEntity(DepartmentCreateDTO dto);
+  DepartmentDO dtoToEntity(DepartmentDTO dto);
 
   /**
-   * 部门修改 DTO → 部门实体
+   * 部门 DTO → 部门实体（更新场景）
    *
-   * @param dto 部门修改 DTO
+   * @param dto 部门 DTO（含 id）
    * @return 部门实体（含 id）
    */
   @Mapping(target = "deleted", ignore = true)
@@ -190,7 +184,7 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  DepartmentDO putDtoToEntity(DepartmentUpdateDTO dto);
+  DepartmentDO dtoToEntityWithId(DepartmentDTO dto);
 
   // ===== LanguageDO =====
 
@@ -211,9 +205,9 @@ public interface UserInfoConverter {
   List<LanguageVO> languageListToVO(List<LanguageDO> entities);
 
   /**
-   * 语言新增 DTO → 语言实体
+   * 语言 DTO → 语言实体（创建场景）
    *
-   * @param dto 语言新增 DTO
+   * @param dto 语言 DTO
    * @return 语言实体（未持久化）
    */
   @Mapping(target = "id", ignore = true)
@@ -224,12 +218,12 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  LanguageDO postDtoToEntity(LanguageCreateDTO dto);
+  LanguageDO dtoToEntity(LanguageDTO dto);
 
   /**
-   * 语言修改 DTO → 语言实体
+   * 语言 DTO → 语言实体（更新场景）
    *
-   * @param dto 语言修改 DTO
+   * @param dto 语言 DTO（含 id）
    * @return 语言实体（含 id）
    */
   @Mapping(target = "deleted", ignore = true)
@@ -237,7 +231,7 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  LanguageDO putDtoToEntity(LanguageUpdateDTO dto);
+  LanguageDO dtoToEntityWithId(LanguageDTO dto);
 
   // ===== MenuDO =====
 
@@ -274,9 +268,9 @@ public interface UserInfoConverter {
   List<MenuTreeVO> menuTreeListToVO(List<MenuDO> entities);
 
   /**
-   * 菜单新增 DTO → 菜单实体
+   * 菜单 DTO → 菜单实体（创建场景）
    *
-   * @param dto 菜单新增 DTO
+   * @param dto 菜单 DTO
    * @return 菜单实体（未持久化）
    */
   @Mapping(target = "id", ignore = true)
@@ -287,12 +281,12 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  MenuDO postDtoToEntity(MenuCreateDTO dto);
+  MenuDO dtoToEntity(MenuDTO dto);
 
   /**
-   * 菜单修改 DTO → 菜单实体
+   * 菜单 DTO → 菜单实体（更新场景）
    *
-   * @param dto 菜单修改 DTO
+   * @param dto 菜单 DTO（含 id）
    * @return 菜单实体（含 id）
    */
   @Mapping(target = "deleted", ignore = true)
@@ -300,7 +294,7 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  MenuDO putDtoToEntity(MenuUpdateDTO dto);
+  MenuDO dtoToEntityWithId(MenuDTO dto);
 
   // ===== PostDO =====
 
@@ -321,9 +315,9 @@ public interface UserInfoConverter {
   List<PostVO> postListToVO(List<PostDO> entities);
 
   /**
-   * 岗位新增 DTO → 岗位实体
+   * 岗位 DTO → 岗位实体（创建场景）
    *
-   * @param dto 岗位新增 DTO
+   * @param dto 岗位 DTO
    * @return 岗位实体（未持久化）
    */
   @Mapping(target = "id", ignore = true)
@@ -334,12 +328,12 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  PostDO postDtoToEntity(PostCreateDTO dto);
+  PostDO dtoToEntity(PostDTO dto);
 
   /**
-   * 岗位修改 DTO → 岗位实体
+   * 岗位 DTO → 岗位实体（更新场景）
    *
-   * @param dto 岗位修改 DTO
+   * @param dto 岗位 DTO（含 id）
    * @return 岗位实体（含 id）
    */
   @Mapping(target = "deleted", ignore = true)
@@ -347,7 +341,7 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  PostDO putDtoToEntity(PostUpdateDTO dto);
+  PostDO dtoToEntityWithId(PostDTO dto);
 
   // ===== RoleDO =====
 
@@ -368,9 +362,9 @@ public interface UserInfoConverter {
   List<RoleVO> roleListToVO(List<RoleDO> entities);
 
   /**
-   * 角色新增 DTO → 角色实体
+   * 角色 DTO → 角色实体（创建场景）
    *
-   * @param dto 角色新增 DTO
+   * @param dto 角色 DTO
    * @return 角色实体（未持久化）
    */
   @Mapping(target = "id", ignore = true)
@@ -381,12 +375,12 @@ public interface UserInfoConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  RoleDO postDtoToEntity(RoleCreateDTO dto);
+  RoleDO dtoToEntity(RoleDTO dto);
 
   /**
-   * 角色修改 DTO → 角色实体
+   * 角色 DTO → 角色实体（更新场景）
    *
-   * @param dto 角色修改 DTO
+   * @param dto 角色 DTO（含 id）
    * @return 角色实体（含 id）
    */
   @Mapping(target = "deleted", ignore = true)
@@ -394,7 +388,7 @@ public interface UserInfoConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  RoleDO putDtoToEntity(RoleUpdateDTO dto);
+  RoleDO dtoToEntityWithId(RoleDTO dto);
 
   // ===== UserAccountDO =====
 

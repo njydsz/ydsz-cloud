@@ -4,8 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.userinfo.domain.dto.create.CompanyCreateDTO;
-import com.njydsz.userinfo.domain.dto.update.CompanyUpdateDTO;
+import com.njydsz.userinfo.domain.dto.CompanyDTO;
 import com.njydsz.userinfo.infra.entity.CompanyDO;
 import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
@@ -62,18 +61,18 @@ public interface CompanyService {
    *
    * <p>校验：{@code companyCode} 唯一性。
    *
-   * @param dto 公司创建 DTO
+   * @param dto 公司 DTO
    * @return 新公司 ID
    */
-  String create(CompanyCreateDTO dto);
+  String create(CompanyDTO dto);
 
   /**
    * 更新公司。
    *
-   * @param dto 公司更新 DTO（含 ID）
+   * @param dto 公司 DTO（含 ID）
    * @return true=成功
    */
-  boolean update(CompanyUpdateDTO dto);
+  boolean update(CompanyDTO dto);
 
   /**
    * 删除公司（逻辑删除）。

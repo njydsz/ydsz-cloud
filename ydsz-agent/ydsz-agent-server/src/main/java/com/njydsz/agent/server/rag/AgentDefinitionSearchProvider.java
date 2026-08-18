@@ -2,13 +2,14 @@ package com.njydsz.agent.server.rag;
 
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.repository.AgentDefinitionRepository;
-import com.njydsz.agent.infra.entity.AgentDefinitionDO;
+import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
@@ -23,7 +24,7 @@ import com.njydsz.common.search.provider.SearchProvider;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AgentDefinitionSearchProvider implements SearchProvider<AgentDefinitionDO> {
+public class AgentDefinitionSearchProvider implements SearchProvider<AgentDefinitionVO> {
 
   private final AgentDefinitionRepository agentDefinitionRepository;
 
@@ -38,37 +39,34 @@ public class AgentDefinitionSearchProvider implements SearchProvider<AgentDefini
   }
 
   @Override
-  public IndexDocument toIndexDocument(AgentDefinitionDO entity) {
-    if (entity == null || entity.getId() == null) {
+  public IndexDocument toIndexDocument(AgentDefinitionVO vo) {
+    if (vo == null || vo.getId() == null) {
       return null;
     }
     return IndexDocument.builder()
-        .id(entity.getId())
+        .id(vo.getId())
         .type("agent")
-        .title(entity.getAgentName())
-        .subtitle(entity.getAgentType())
-        .content(entity.getDescription())
-        .snippet(entity.getAgentCode())
-        .status(entity.getStatus())
-        .path("/agent/definition/" + entity.getId())
-        .tenantId(entity.getTenantId())
-        .createdBy(entity.getCreatedBy())
+        .title(vo.getAgentName())
+        .subtitle(vo.getAgentType())
+        .content(vo.getDescription())
+        .snippet(vo.getAgentCode())
+        .path("/agent/definition/" + vo.getId())
+        .createdBy(vo.getCreatedBy())
         .createdAt(
-            entity.getCreatedAt() != null
-                ? entity.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()
+            vo.getCreatedAt() != null
+                ? vo.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()
                 : null)
-        .updatedBy(entity.getUpdatedBy())
+        .updatedBy(vo.getUpdatedBy())
         .updatedAt(
-            entity.getUpdatedAt() != null
-                ? entity.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant()
+            vo.getUpdatedAt() != null
+                ? vo.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant()
                 : null)
         .build();
   }
 
   @Override
   public List<SearchField> getSearchableFields() {
-    // 字段权重反映相关性重要性：名称(title 3.0) > 类型(subtitle 2.0) > 描述(content 1.0) > 状态(status 0.5)
-    // status 不进入全文检索(searchable=false)，仅用于聚合筛选
+    // 字段权重反映相关性重要性：名称(title 3.0) > 类型(subtitle 2.0) > 描述(content 1.0)
     return List.of(
         SearchField.builder()
             .name("title")
@@ -93,19 +91,11 @@ public class AgentDefinitionSearchProvider implements SearchProvider<AgentDefini
             .type(FieldType.TEXT)
             .weight(1.0f)
             .searchable(true)
-            .build(),
-        SearchField.builder()
-            .name("status")
-            .label("状态")
-            .type(FieldType.KEYWORD)
-            .weight(0.5f)
-            .searchable(false)
-            .aggregatable(true)
             .build());
   }
 
   @Override
-  public AgentDefinitionDO loadById(String id) {
-    return agentDefinitionRepository.findById(id);
+  public AgentDefinitionVO loadById(String id) {
+    return agentDefinitionRepository.findById(id).orElse(null);
   }
 }

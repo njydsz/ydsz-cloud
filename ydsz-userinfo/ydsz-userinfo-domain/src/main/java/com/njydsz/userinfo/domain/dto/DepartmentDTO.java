@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.dto.update;
+package com.njydsz.userinfo.domain.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -10,36 +10,35 @@ import lombok.Data;
 import com.njydsz.common.safe.annotation.Xss;
 
 /**
- * 部门修改请求 DTO。
+ * 部门请求 DTO。
  *
- * <p>对应后端 {@code PUT /api/v1/DepartmentDO} 请求体。 修改时 {@link #id} 必填，其余字段按需填写，未传字段保持原值不变。
+ * <p>同时用于创建和更新场景：创建时 {@code id} 可不传，更新时 {@code id} 必填。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-public class DepartmentUpdateDTO implements Serializable {
+public class DepartmentDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
-  /** 部门 ID（必填） */
-  @NotBlank(message = "ID不能为空")
+  /** 部门 ID（更新时必填） */
   @Xss(message = "id包含非法内容")
   private String id;
 
-  /** 部门编码（全局唯一） */
+  /** 部门编码（全局唯一，建议格式 {@code DEPT_XXX}） */
   @NotBlank(message = "部门编码不能为空")
   @Size(max = 64, message = "部门编码长度不能超过 64 个字符")
   @Xss(message = "deptCode包含非法内容")
   private String deptCode;
 
-  /** 部门名称 */
+  /** 部门名称（前端展示） */
   @NotBlank(message = "部门名称不能为空")
   @Size(max = 128, message = "部门名称长度不能超过 128 个字符")
   @Xss(message = "deptName包含非法内容")
   private String deptName;
 
-  /** 父部门 ID */
+  /** 父部门 ID（{@code "0"} 表示根部门） */
   @Xss(message = "parentId包含非法内容")
   private String parentId;
 

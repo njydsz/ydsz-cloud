@@ -3,7 +3,7 @@ package com.njydsz.agent.server.agent;
 import java.util.List;
 
 import com.njydsz.agent.domain.agent.AgentDefinition;
-import com.njydsz.agent.infra.entity.AgentDefinitionDO;
+import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 
 /**
  * Agent 定义 Service 接口
@@ -20,40 +20,40 @@ public interface AgentDefinitionService {
    * 根据 ID 获取 Agent 定义
    *
    * @param id 主键 ID
-   * @return Agent 定义 DO
+   * @return Agent 定义 VO
    */
-  AgentDefinitionDO getById(String id);
+  AgentDefinitionVO getById(String id);
 
   /**
    * 根据 code 获取 Agent 定义
    *
    * @param code Agent 编码
-   * @return Agent 定义 DO
+   * @return Agent 定义 VO
    */
-  AgentDefinitionDO getByCode(String code);
+  AgentDefinitionVO getByCode(String code);
 
   /**
    * 列出所有活跃 Agent 定义
    *
-   * @return 活跃 Agent 定义列表
+   * @return 活跃 Agent 定义 VO 列表
    */
-  List<AgentDefinitionDO> listActive();
+  List<AgentDefinitionVO> listActive();
 
   /**
    * 创建 Agent 定义
    *
-   * @param entity Agent 定义 DO
-   * @return 创建后的 Agent 定义 DO
+   * @param vo Agent 定义 VO
+   * @return 创建后的 Agent 定义 VO
    */
-  AgentDefinitionDO create(AgentDefinitionDO entity);
+  AgentDefinitionVO create(AgentDefinitionVO vo);
 
   /**
    * 更新 Agent 定义
    *
-   * @param entity Agent 定义 DO
-   * @return 更新后的 Agent 定义 DO
+   * @param vo Agent 定义 VO
+   * @return 更新后的 Agent 定义 VO
    */
-  AgentDefinitionDO update(AgentDefinitionDO entity);
+  AgentDefinitionVO update(AgentDefinitionVO vo);
 
   /**
    * 逻辑删除
@@ -64,10 +64,10 @@ public interface AgentDefinitionService {
   boolean removeById(String id);
 
   /**
-   * 根据 DO 构建领域对象
+   * 根据 VO 构建领域对象
    *
-   * @param entity Agent 定义 DO
+   * @param vo Agent 定义 VO
    * @return Agent 定义领域对象
    */
-  AgentDefinition toDomain(AgentDefinitionDO entity);
+  AgentDefinition toDomain(AgentDefinitionVO vo);
 }

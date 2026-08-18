@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.dto.create;
+package com.njydsz.userinfo.domain.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -10,17 +10,21 @@ import lombok.Data;
 import com.njydsz.common.safe.annotation.Xss;
 
 /**
- * 角色新增请求 DTO。
+ * 角色请求 DTO。
  *
- * <p>对应后端 {@code PostDO /api/v1/RoleDO} 请求体。 新增角色后自动纳入 RBAC 权限体系，通过 {@link #roleCode} 被各业务模块引用。
+ * <p>同时用于创建和更新场景：创建时 {@code id} 可不传，更新时 {@code id} 必填。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-public class RoleCreateDTO implements Serializable {
+public class RoleDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
+
+  /** 角色 ID（更新时必填） */
+  @Xss(message = "id包含非法内容")
+  private String id;
 
   /** 角色编码（全局唯一，建议格式 {@code ROLE_XXX}） */
   @NotBlank(message = "角色编码不能为空")

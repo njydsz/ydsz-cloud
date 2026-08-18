@@ -6,14 +6,17 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
+import com.njydsz.cronjob.domain.repository.JobAlertRuleRepository;
+import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
-import com.njydsz.cronjob.infra.repository.JobAlertRuleRepository;
 
 /**
- * 告警规则 Repository 实现。
+ * 告警规则 Repository 实现（Infra 层）。
  *
- * <p>委托 {@link JobAlertRuleMapper} 执行数据库操作，封装所有数据访问细节。
+ * <p>实现 {@link JobAlertRuleRepository} 接口，封装 JobAlertRuleMapper 数据访问细节。
+ *
+ * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,24 +27,26 @@ public class JobAlertRuleRepositoryImpl implements JobAlertRuleRepository {
 
   private final JobAlertRuleMapper jobAlertRuleMapper;
 
+  private final CronjobConverter converter;
+
   @Override
-  public List<JobAlertRule> selectAllEnabled() {
-    return jobAlertRuleMapper.selectAllEnabled();
+  public List<JobAlertRuleVO> findAllEnabled() {
+    return converter.jobAlertRuleListToVO(jobAlertRuleMapper.selectAllEnabled());
   }
 
   @Override
-  public List<JobAlertRule> selectByJobIdOrGlobal(String jobId) {
-    return jobAlertRuleMapper.selectByJobIdOrGlobal(jobId);
+  public List<JobAlertRuleVO> findByJobIdOrGlobal(String jobId) {
+    return converter.jobAlertRuleListToVO(jobAlertRuleMapper.selectByJobIdOrGlobal(jobId));
   }
 
   @Override
-  public List<JobAlertRule> selectByAlertType(String alertType) {
-    return jobAlertRuleMapper.selectByAlertType(alertType);
+  public List<JobAlertRuleVO> findByAlertType(String alertType) {
+    return converter.jobAlertRuleListToVO(jobAlertRuleMapper.selectByAlertType(alertType));
   }
 
   @Override
-  public List<JobAlertRule> selectSlaRulesByJobId(String jobId) {
-    return jobAlertRuleMapper.selectSlaRulesByJobId(jobId);
+  public List<JobAlertRuleVO> findSlaRulesByJobId(String jobId) {
+    return converter.jobAlertRuleListToVO(jobAlertRuleMapper.selectSlaRulesByJobId(jobId));
   }
 
   @Override

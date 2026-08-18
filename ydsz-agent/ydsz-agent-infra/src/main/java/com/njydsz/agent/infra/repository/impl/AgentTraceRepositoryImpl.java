@@ -1,10 +1,15 @@
-package com.njydsz.agent.infra.repository;
+package com.njydsz.agent.infra.repository.impl;
+
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.agent.domain.dto.AgentTraceDTO;
 import com.njydsz.agent.domain.repository.AgentTraceRepository;
 import com.njydsz.agent.domain.repository.AgentTraceStepRepository;
+import com.njydsz.agent.domain.vo.AgentTraceVO;
+import com.njydsz.agent.infra.converter.AgentConverter;
 import com.njydsz.agent.infra.entity.AgentTraceDO;
 import com.njydsz.agent.infra.mapper.AgentTraceMapper;
 import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;
@@ -15,6 +20,13 @@ import com.njydsz.agent.infra.trace.PgTraceRecorder;
  *
  * <p>基于 MyBatis-Plus 实现 {@link AgentTraceRepository} 接口。
  *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>通过 {@link AgentConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link AgentConverter} 转换为 DO 后执行数据库操作
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -24,19 +36,23 @@ public class AgentTraceRepositoryImpl implements AgentTraceRepository {
 
   private final AgentTraceMapper agentTraceMapper;
 
+  private final AgentConverter converter;
+
   @Override
-  public void insert(AgentTraceDO entity) {
-    agentTraceMapper.insert(entity);
+  public boolean insert(AgentTraceDTO dto) {
+    AgentTraceDO entity = converter.dtoToEntity(dto);
+    return agentTraceMapper.insert(entity) > 0;
   }
 
   @Override
-  public AgentTraceDO findById(String traceId) {
-    return agentTraceMapper.selectById(traceId);
+  public Optional<AgentTraceVO> findById(String traceId) {
+    return Optional.ofNullable(agentTraceMapper.selectById(traceId)).map(converter::entityToVO);
   }
 
   @Override
-  public void updateById(AgentTraceDO entity) {
-    agentTraceMapper.updateById(entity);
+  public boolean updateById(AgentTraceDTO dto) {
+    AgentTraceDO entity = converter.dtoToEntityWithId(dto);
+    return agentTraceMapper.updateById(entity) > 0;
   }
 
   @Override

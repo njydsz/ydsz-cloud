@@ -24,8 +24,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.infra.converter.UserInfoConverter;
-import com.njydsz.userinfo.domain.dto.create.DepartmentCreateDTO;
-import com.njydsz.userinfo.domain.dto.update.DepartmentUpdateDTO;
+import com.njydsz.userinfo.domain.dto.DepartmentDTO;
 import com.njydsz.userinfo.infra.entity.DepartmentDO;
 import com.njydsz.userinfo.infra.entity.UserDeptDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -154,14 +153,14 @@ public class DepartmentServiceImpl implements DepartmentService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String create(DepartmentCreateDTO dto) {
+  public String create(DepartmentDTO dto) {
     LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(DepartmentDO::getDeptCode, dto.getDeptCode());
     if (departmentRepository.count(wrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_CODE_DUPLICATE);
     }
 
-    DepartmentDO entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
+    DepartmentDO entity = UserInfoConverter.INSTANT.dtoToEntity(dto);
     if (entity.getStatus() == null) {
       entity.setStatus("ENABLED");
     }
@@ -190,7 +189,7 @@ public class DepartmentServiceImpl implements DepartmentService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean update(DepartmentUpdateDTO dto) {
+  public boolean update(DepartmentDTO dto) {
     DepartmentDO entity = departmentRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_NOT_FOUND);

@@ -14,8 +14,7 @@ import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.infra.converter.UserInfoConverter;
-import com.njydsz.userinfo.domain.dto.create.MenuCreateDTO;
-import com.njydsz.userinfo.domain.dto.update.MenuUpdateDTO;
+import com.njydsz.userinfo.domain.dto.MenuDTO;
 import com.njydsz.userinfo.infra.entity.MenuDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
@@ -107,8 +106,8 @@ public class MenuServiceImpl implements MenuService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String create(MenuCreateDTO dto) {
-    MenuDO entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
+  public String create(MenuDTO dto) {
+    MenuDO entity = UserInfoConverter.INSTANT.dtoToEntity(dto);
     if (entity.getStatus() == null) {
       entity.setStatus("ENABLED");
     }
@@ -130,7 +129,7 @@ public class MenuServiceImpl implements MenuService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean update(MenuUpdateDTO dto) {
+  public boolean update(MenuDTO dto) {
     MenuDO entity = menuRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.MENU_NOT_FOUND);

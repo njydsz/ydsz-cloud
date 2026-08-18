@@ -3,8 +3,7 @@ package com.njydsz.userinfo.server.service;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.dto.create.LanguageCreateDTO;
-import com.njydsz.userinfo.domain.dto.update.LanguageUpdateDTO;
+import com.njydsz.userinfo.domain.dto.LanguageDTO;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
 
@@ -44,18 +43,18 @@ public interface LanguageService {
   /**
    * 创建语言。
    *
-   * @param dto 语言创建 DTO
+   * @param dto 语言 DTO
    * @return 新语言 ID
    */
-  String create(LanguageCreateDTO dto);
+  String create(LanguageDTO dto);
 
   /**
    * 更新语言。
    *
-   * @param dto 语言更新 DTO
+   * @param dto 语言 DTO
    * @return true=成功
    */
-  boolean update(LanguageUpdateDTO dto);
+  boolean update(LanguageDTO dto);
 
   /**
    * 删除语言（逻辑删除）。

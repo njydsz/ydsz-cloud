@@ -7,8 +7,7 @@ import java.util.Map;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
-import com.njydsz.userinfo.domain.dto.create.RoleCreateDTO;
-import com.njydsz.userinfo.domain.dto.update.RoleUpdateDTO;
+import com.njydsz.userinfo.domain.dto.RoleDTO;
 import com.njydsz.userinfo.infra.entity.RoleDO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 
@@ -49,18 +48,18 @@ public interface RoleService {
   /**
    * 创建角色。
    *
-   * @param dto 角色创建 DTO
+   * @param dto 角色 DTO
    * @return 新角色 ID
    */
-  String create(RoleCreateDTO dto);
+  String create(RoleDTO dto);
 
   /**
    * 更新角色。
    *
-   * @param dto 角色更新 DTO（含 ID）
+   * @param dto 角色 DTO（含 ID）
    * @return true=成功
    */
-  boolean update(RoleUpdateDTO dto);
+  boolean update(RoleDTO dto);
 
   /**
    * 删除角色（逻辑删除）。

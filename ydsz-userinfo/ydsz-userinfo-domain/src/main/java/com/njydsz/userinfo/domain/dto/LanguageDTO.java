@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.dto.update;
+package com.njydsz.userinfo.domain.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -10,40 +10,38 @@ import lombok.Data;
 import com.njydsz.common.safe.annotation.Xss;
 
 /**
- * 语言修改请求 DTO。
+ * 语言请求 DTO。
  *
- * <p>对应后端 {@code PUT /api/v1/LanguageDO} 请求体。 修改时 {@link #id} 必填，修改 {@code isDefault} 时 Service
- * 层自动处理新旧默认语言切换。
+ * <p>同时用于创建和更新场景：创建时 {@code id} 可不传，更新时 {@code id} 必填。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-public class LanguageUpdateDTO implements Serializable {
+public class LanguageDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
-  /** 语言 ID（必填） */
-  @NotBlank(message = "ID不能为空")
+  /** 语言 ID（更新时必填） */
   @Xss(message = "id包含非法内容")
   private String id;
 
-  /** 语言编码（ISO 639-1） */
+  /** 语言编码（ISO 639-1 + ISO 3166-1，如 {@code zh-CN} / {@code en-US}） */
   @NotBlank(message = "语言编码不能为空")
   @Size(max = 20, message = "语言编码长度不能超过 20 个字符")
   @Xss(message = "languageCode包含非法内容")
   private String languageCode;
 
-  /** 语言名称 */
+  /** 语言名称（前端展示，如「简体中文」/「English」） */
   @NotBlank(message = "语言名称不能为空")
   @Size(max = 64, message = "语言名称长度不能超过 64 个字符")
   @Xss(message = "languageName包含非法内容")
   private String languageName;
 
-  /** 是否默认语言（{@code 1=是}） */
+  /** 是否默认语言（{@code 1=是}，全局仅允许一个默认语言） */
   private Integer isDefault;
 
-  /** 排序序号（升序） */
+  /** 排序序号（升序，决定语言切换器展示顺序） */
   private Integer sortOrder;
 
   /** 启用状态（{@code "ENABLED"} / {@code "DISABLED"}） */

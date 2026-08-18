@@ -3,6 +3,7 @@ package com.njydsz.agent.server.agent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.agent.domain.agent.AgentDefinition;
+import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
+import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
 import com.njydsz.agent.domain.repository.AgentDefinitionRepository;
-import com.njydsz.agent.infra.entity.AgentDefinitionDO;
+import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.common.json.YdszJson;
 
 /**
@@ -31,26 +34,22 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
   /**
    * {@inheritDoc}
    *
-   * @return Agent 定义 DO，不存在或已删除时返回 null
+   * @return Agent 定义 VO，不存在或已删除时返回 null
    */
   @Override
-  public AgentDefinitionDO getById(String id) {
-    AgentDefinitionDO entity = agentDefinitionRepository.findById(id);
-    if (entity == null || Boolean.TRUE.equals(entity.getDeleted())) {
-      return null;
-    }
-    return entity;
+  public AgentDefinitionVO getById(String id) {
+    return agentDefinitionRepository.findById(id).orElse(null);
   }
 
   /**
    * {@inheritDoc}
    *
    * @param code Agent 编码
-   * @return Agent 定义 DO，不存在时返回 null
+   * @return Agent 定义 VO，不存在时返回 null
    */
   @Override
-  public AgentDefinitionDO getByCode(String code) {
-    return agentDefinitionRepository.findByCode(code);
+  public AgentDefinitionVO getByCode(String code) {
+    return agentDefinitionRepository.findByCode(code).orElse(null);
   }
 
   /**
@@ -59,7 +58,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    * @return 状态为 ACTIVE 的 Agent 列表（按创建时间降序）
    */
   @Override
-  public List<AgentDefinitionDO> listActive() {
+  public List<AgentDefinitionVO> listActive() {
     return agentDefinitionRepository.findActive();
   }
 
@@ -72,16 +71,27 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    */
   @Override
   @Transactional
-  public AgentDefinitionDO create(AgentDefinitionDO entity) {
+  public AgentDefinitionVO create(AgentDefinitionVO vo) {
     // 唯一性校验
-    AgentDefinitionDO existing = getByCode(entity.getAgentCode());
+    AgentDefinitionVO existing = getByCode(vo.getAgentCode());
     if (existing != null) {
-      throw new IllegalArgumentException("Agent code already exists: " + entity.getAgentCode());
+      throw new IllegalArgumentException("Agent code already exists: " + vo.getAgentCode());
     }
-    agentDefinitionRepository.insert(entity);
+    // 构建 PostDTO
+    AgentDefinitionPostDTO postDTO = new AgentDefinitionPostDTO();
+    postDTO.setAgentCode(vo.getAgentCode());
+    postDTO.setAgentName(vo.getAgentName());
+    postDTO.setAgentType(vo.getAgentType());
+    postDTO.setDescription(vo.getDescription());
+    postDTO.setSystemPrompt(vo.getSystemPrompt());
+    postDTO.setModelConfig(vo.getModelConfig());
+    postDTO.setToolNames(vo.getToolNames());
+    postDTO.setTemperature(vo.getTemperature());
+    postDTO.setMaxTokens(vo.getMaxTokens());
+    agentDefinitionRepository.insert(postDTO);
     log.info(
-        "[Agent-Def] 创建 Agent: code={}, name={}", entity.getAgentCode(), entity.getAgentName());
-    return entity;
+        "[Agent-Def] 创建 Agent: code={}, name={}", vo.getAgentCode(), vo.getAgentName());
+    return vo;
   }
 
   /**
@@ -91,14 +101,26 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    */
   @Override
   @Transactional
-  public AgentDefinitionDO update(AgentDefinitionDO entity) {
-    AgentDefinitionDO existing = agentDefinitionRepository.findById(entity.getId());
-    if (existing == null || Boolean.TRUE.equals(existing.getDeleted())) {
-      throw new IllegalArgumentException("Agent not found: id=" + entity.getId());
+  public AgentDefinitionVO update(AgentDefinitionVO vo) {
+    AgentDefinitionVO existing = agentDefinitionRepository.findById(vo.getId()).orElse(null);
+    if (existing == null) {
+      throw new IllegalArgumentException("Agent not found: id=" + vo.getId());
     }
-    agentDefinitionRepository.updateById(entity);
-    log.info("[Agent-Def] 更新 Agent: code={}", entity.getAgentCode());
-    return entity;
+    // 构建 PutDTO
+    AgentDefinitionPutDTO putDTO = new AgentDefinitionPutDTO();
+    putDTO.setId(vo.getId());
+    putDTO.setAgentCode(vo.getAgentCode());
+    putDTO.setAgentName(vo.getAgentName());
+    putDTO.setAgentType(vo.getAgentType());
+    putDTO.setDescription(vo.getDescription());
+    putDTO.setSystemPrompt(vo.getSystemPrompt());
+    putDTO.setModelConfig(vo.getModelConfig());
+    putDTO.setToolNames(vo.getToolNames());
+    putDTO.setTemperature(vo.getTemperature());
+    putDTO.setMaxTokens(vo.getMaxTokens());
+    agentDefinitionRepository.updateById(putDTO);
+    log.info("[Agent-Def] 更新 Agent: code={}", vo.getAgentCode());
+    return vo;
   }
 
   /**
@@ -118,34 +140,34 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
   /**
    * {@inheritDoc}
    *
-   * <p>将 DO 转换为领域 AgentDefinition，解析 toolNames（JSON 数组）和 modelConfig（JSON 对象）， agentType 解析失败时降级为
+   * <p>将 VO 转换为领域 AgentDefinition，解析 toolNames（JSON 数组）和 modelConfig（JSON 对象）， agentType 解析失败时降级为
    * CHAT。
    *
-   * @param entity 数据库实体
-   * @return 领域定义对象，entity 为 null 时返回 null
+   * @param vo 视图对象
+   * @return 领域定义对象，vo 为 null 时返回 null
    */
   @Override
-  public AgentDefinition toDomain(AgentDefinitionDO entity) {
-    if (entity == null) {
+  public AgentDefinition toDomain(AgentDefinitionVO vo) {
+    if (vo == null) {
       return null;
     }
     List<String> tools = new ArrayList<>();
-    if (entity.getToolNames() != null && !entity.getToolNames().isBlank()) {
-      List<Object> parsed = YdszJson.parseArray(entity.getToolNames());
+    if (vo.getToolNames() != null && !vo.getToolNames().isBlank()) {
+      List<Object> parsed = YdszJson.parseArray(vo.getToolNames());
       for (Object t : parsed) {
         tools.add(String.valueOf(t));
       }
     }
     // 模型温度默认值 0.7：在创造性与稳定性之间取平衡，缺省时使用
-    double temperature = entity.getTemperature() != null ? entity.getTemperature() : 0.7;
+    double temperature = vo.getTemperature() != null ? vo.getTemperature() : 0.7;
     // 单次对话最大 Token 默认 2048，缺省时使用，避免单请求占用过多额度
-    int maxTokens = entity.getMaxTokens() != null ? entity.getMaxTokens() : 2048;
+    int maxTokens = vo.getMaxTokens() != null ? vo.getMaxTokens() : 2048;
     // 从 modelConfig JSON 中提取 modelId（如果有）
     String modelId = null;
     // 推理最大迭代次数默认 10，限制 ReAct 循环次数防止无限调用工具/超支
     int maxIterations = 10;
-    if (entity.getModelConfig() != null && !entity.getModelConfig().isBlank()) {
-      Map<String, Object> config = YdszJson.parseMap(entity.getModelConfig());
+    if (vo.getModelConfig() != null && !vo.getModelConfig().isBlank()) {
+      Map<String, Object> config = YdszJson.parseMap(vo.getModelConfig());
       modelId = (String) config.get("modelId");
       Object mi = config.get("maxIterations");
       if (mi instanceof Number num) {
@@ -154,16 +176,16 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
     }
     AgentDefinition.Type type;
     try {
-      type = AgentDefinition.Type.valueOf(entity.getAgentType().toUpperCase());
+      type = AgentDefinition.Type.valueOf(vo.getAgentType().toUpperCase());
     } catch (Exception e) {
       type = AgentDefinition.Type.CHAT;
     }
     return new AgentDefinition(
-        entity.getId(),
-        entity.getAgentCode(),
-        entity.getAgentName(),
+        vo.getId(),
+        vo.getAgentCode(),
+        vo.getAgentName(),
         type,
-        entity.getSystemPrompt(),
+        vo.getSystemPrompt(),
         tools,
         temperature,
         maxTokens,

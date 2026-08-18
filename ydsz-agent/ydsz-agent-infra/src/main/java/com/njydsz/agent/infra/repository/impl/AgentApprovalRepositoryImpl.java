@@ -1,13 +1,18 @@
-package com.njydsz.agent.infra.repository;
+package com.njydsz.agent.infra.repository.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.agent.domain.dto.AgentApprovalDTO;
 import com.njydsz.agent.domain.repository.AgentApprovalRepository;
+import com.njydsz.agent.domain.vo.AgentApprovalVO;
+import com.njydsz.agent.infra.converter.AgentConverter;
 import com.njydsz.agent.infra.entity.AgentApprovalDO;
 import com.njydsz.agent.infra.mapper.AgentApprovalMapper;
 
@@ -15,6 +20,13 @@ import com.njydsz.agent.infra.mapper.AgentApprovalMapper;
  * Agent 人工审批请求 Repository 实现
  *
  * <p>基于 MyBatis-Plus 实现 {@link AgentApprovalRepository} 接口。
+ *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>通过 {@link AgentConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link AgentConverter} 转换为 DO 后执行数据库操作
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -25,26 +37,30 @@ public class AgentApprovalRepositoryImpl implements AgentApprovalRepository {
 
   private final AgentApprovalMapper agentApprovalMapper;
 
+  private final AgentConverter converter;
+
   @Override
-  public void insert(AgentApprovalDO entity) {
-    agentApprovalMapper.insert(entity);
+  public boolean insert(AgentApprovalDTO dto) {
+    AgentApprovalDO entity = converter.dtoToEntity(dto);
+    return agentApprovalMapper.insert(entity) > 0;
   }
 
   @Override
-  public AgentApprovalDO findById(String id) {
-    return agentApprovalMapper.selectById(id);
+  public Optional<AgentApprovalVO> findById(String id) {
+    return Optional.ofNullable(agentApprovalMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override
-  public List<AgentApprovalDO> findPending(String status) {
-    return agentApprovalMapper.selectList(
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AgentApprovalDO>()
-            .eq(AgentApprovalDO::getStatus, status)
-            .orderByDesc(AgentApprovalDO::getCreatedAt));
+  public List<AgentApprovalVO> findPending(String status) {
+    return converter.agentApprovalListToVO(
+        agentApprovalMapper.selectList(
+            new LambdaQueryWrapper<AgentApprovalDO>()
+                .eq(AgentApprovalDO::getStatus, status)
+                .orderByDesc(AgentApprovalDO::getCreatedAt)));
   }
 
   @Override
-  public void updateStatus(
+  public boolean updateStatus(
       String id, String status, String approver, String comment, LocalDateTime resolvedAt) {
     AgentApprovalDO update = AgentApprovalDO.builder()
         .id(id)
@@ -53,11 +69,11 @@ public class AgentApprovalRepositoryImpl implements AgentApprovalRepository {
         .comment(comment)
         .resolvedAt(resolvedAt)
         .build();
-    agentApprovalMapper.updateById(update);
+    return agentApprovalMapper.updateById(update) > 0;
   }
 
   @Override
-  public void expirePendingBefore(
+  public int expirePendingBefore(
       String status, LocalDateTime cutoff, String expiredStatus, LocalDateTime now) {
     LambdaUpdateWrapper<AgentApprovalDO> wrapper = new LambdaUpdateWrapper<AgentApprovalDO>()
         .eq(AgentApprovalDO::getStatus, status)
@@ -65,5 +81,6 @@ public class AgentApprovalRepositoryImpl implements AgentApprovalRepository {
         .set(AgentApprovalDO::getStatus, expiredStatus)
         .set(AgentApprovalDO::getResolvedAt, now);
     agentApprovalMapper.update(null, wrapper);
+    return wrapper.getEntity() != null ? 1 : 0;
   }
 }

@@ -1,16 +1,21 @@
 package com.njydsz.cronjob.infra.repository.impl;
 
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
+import com.njydsz.cronjob.domain.repository.GlueCodeRepository;
+import com.njydsz.cronjob.domain.vo.GlueCodeVO;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.infra.mapper.schedule.GlueCodeMapper;
-import com.njydsz.cronjob.infra.repository.GlueCodeRepository;
 
 /**
- * GLUE 脚本 Repository 实现。
+ * GLUE 脚本 Repository 实现（Infra 层）。
  *
- * <p>委托 {@link GlueCodeMapper} 执行数据库操作，封装所有数据访问细节。
+ * <p>实现 {@link GlueCodeRepository} 接口，封装 GlueCodeMapper 数据访问细节。
+ *
+ * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -21,8 +26,11 @@ public class GlueCodeRepositoryImpl implements GlueCodeRepository {
 
   private final GlueCodeMapper glueCodeMapper;
 
+  private final CronjobConverter converter;
+
   @Override
-  public GlueCode selectLatestByJobId(String jobId) {
-    return glueCodeMapper.selectLatestByJobId(jobId);
+  public Optional<GlueCodeVO> findLatestByJobId(String jobId) {
+    return Optional.ofNullable(glueCodeMapper.selectLatestByJobId(jobId))
+        .map(converter::entityToVO);
   }
 }

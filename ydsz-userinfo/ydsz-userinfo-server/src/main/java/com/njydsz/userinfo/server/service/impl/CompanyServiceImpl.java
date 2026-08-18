@@ -17,8 +17,7 @@ import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.infra.converter.UserInfoConverter;
-import com.njydsz.userinfo.domain.dto.create.CompanyCreateDTO;
-import com.njydsz.userinfo.domain.dto.update.CompanyUpdateDTO;
+import com.njydsz.userinfo.domain.dto.CompanyDTO;
 import com.njydsz.userinfo.infra.entity.CompanyDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
@@ -101,14 +100,14 @@ public class CompanyServiceImpl implements CompanyService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String create(CompanyCreateDTO dto) {
+  public String create(CompanyDTO dto) {
     LambdaQueryWrapper<CompanyDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(CompanyDO::getCompanyCode, dto.getCompanyCode());
     if (companyRepository.count(wrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.COMPANY_CODE_DUPLICATE);
     }
 
-    CompanyDO entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
+    CompanyDO entity = UserInfoConverter.INSTANT.dtoToEntity(dto);
     if (entity.getStatus() == null) {
       entity.setStatus("ENABLED");
     }
@@ -119,7 +118,7 @@ public class CompanyServiceImpl implements CompanyService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean update(CompanyUpdateDTO dto) {
+  public boolean update(CompanyDTO dto) {
     CompanyDO entity = companyRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND);

@@ -26,8 +26,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.AssignPermissionsDTO;
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
-import com.njydsz.userinfo.domain.dto.create.RoleCreateDTO;
-import com.njydsz.userinfo.domain.dto.update.RoleUpdateDTO;
+import com.njydsz.userinfo.domain.dto.RoleDTO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.server.service.RoleService;
 
@@ -142,7 +141,7 @@ public class RoleController {
   @RateLimit(resource = "userinfo.RoleDO.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建角色")
-  public BaseResponse<String> create(@Valid @RequestBody RoleCreateDTO dto) {
+  public BaseResponse<String> create(@Valid @RequestBody RoleDTO dto) {
     return BaseResponse.success(service.create(dto));
   }
 
@@ -166,7 +165,7 @@ public class RoleController {
   @RateLimit(resource = "userinfo.RoleDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新角色")
-  public BaseResponse<Boolean> update(@Valid @RequestBody RoleUpdateDTO dto) {
+  public BaseResponse<Boolean> update(@Valid @RequestBody RoleDTO dto) {
     return BaseResponse.success(service.update(dto));
   }
 
