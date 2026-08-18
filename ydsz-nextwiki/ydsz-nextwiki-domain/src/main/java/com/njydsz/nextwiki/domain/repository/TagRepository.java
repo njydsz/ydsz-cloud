@@ -1,12 +1,22 @@
 package com.njydsz.nextwiki.domain.repository;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.njydsz.nextwiki.infra.entity.FileTagDO;
-import com.njydsz.nextwiki.infra.entity.TagDO;
+import com.njydsz.nextwiki.domain.dto.TagDTO;
+import com.njydsz.nextwiki.domain.vo.FileTagVO;
+import com.njydsz.nextwiki.domain.vo.TagVO;
 
 /**
  * 标签仓储接口
+ *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>返回领域 VO（{@link TagVO} / {@link FileTagVO}），非 DTO / infra 实体
+ *   <li>查询入参使用具体字段
+ *   <li>CUD 入参使用领域 DTO（{@link TagDTO}），禁止接受 infra 实体
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -14,89 +24,94 @@ import com.njydsz.nextwiki.infra.entity.TagDO;
 public interface TagRepository {
 
   /**
-   * 保存标签（新增或更新）。
+   * 保存标签（新增或更新）
    *
-   * @param tag 待持久化的标签实体（含名称、颜色、类型等）
-   * @return 持久化后的标签（回填主键）
+   * @param dto 标签 DTO
+   * @return 持久化后的标签 VO
    */
-  TagDO save(TagDO tag);
+  TagVO save(TagDTO dto);
 
   /**
-   * 按 ID 查询标签。
+   * 按 ID 查询标签
    *
-   * @param id 标签 ID
-   * @return 标签实体，不存在时返回 null
+   * @param id 标签ID
+   * @return 标签 VO；不存在返回 {@code Optional.empty()}
    */
-  TagDO findById(String id);
+  Optional<TagVO> findById(String id);
 
   /**
-   * 按名称精确查询标签（用于创建时查重）。
+   * 按名称精确查询标签（用于创建时查重）
    *
    * @param name 标签名称
-   * @return 匹配的标签实体，不存在时返回 null
+   * @return 标签 VO；不存在返回 {@code Optional.empty()}
    */
-  TagDO findByName(String name);
+  Optional<TagVO> findByName(String name);
 
   /**
-   * 查询全部标签（用于标签库展示）。
+   * 查询全部标签（用于标签库展示）
    *
-   * @return 标签列表，无记录时返回空列表
+   * @return 标签 VO 列表
    */
-  List<TagDO> findAll();
+  List<TagVO> findAll();
 
   /**
-   * 查询某文件节点已绑定的全部标签。
+   * 查询某文件节点已绑定的全部标签
    *
-   * @param fileNodeId 文件节点 ID
-   * @return 标签列表，无记录时返回空列表
+   * @param fileNodeId 文件节点ID
+   * @return 标签 VO 列表
    */
-  List<TagDO> findByFileNodeId(String fileNodeId);
+  List<TagVO> findByFileNodeId(String fileNodeId);
 
   /**
-   * 绑定标签到文件（写入 nw_file_tag 关联记录）。
+   * 绑定标签到文件
    *
-   * @param fileNodeId 文件节点 ID
-   * @param tagId 标签 ID
+   * @param fileNodeId 文件节点ID
+   * @param tagId 标签ID
    */
   void bindTag(String fileNodeId, String tagId);
 
   /**
-   * 解绑文件上的单个标签（同时递减标签使用计数）。
+   * 解绑文件上的单个标签
    *
-   * @param fileNodeId 文件节点 ID
-   * @param tagId 标签 ID
+   * @param fileNodeId 文件节点ID
+   * @param tagId 标签ID
    */
   void unbindTag(String fileNodeId, String tagId);
 
   /**
-   * 解绑某文件上的全部标签（删除文件时级联清理关联）。
+   * 解绑某文件上的全部标签
    *
-   * @param fileNodeId 文件节点 ID
+   * @param fileNodeId 文件节点ID
    */
   void unbindAllByFileNodeId(String fileNodeId);
 
   /**
-   * 查询某文件节点的全部标签关联记录（含中间表）。
+   * 查询某文件节点的全部标签关联记录
    *
-   * @param fileNodeId 文件节点 ID
-   * @return 文件-标签关联列表，无记录时返回空列表
+   * @param fileNodeId 文件节点ID
+   * @return 文件-标签关联 VO 列表
    */
-  List<FileTagDO> findFileTagsByFileNodeId(String fileNodeId);
+  List<FileTagVO> findFileTagsByFileNodeId(String fileNodeId);
 
   /**
-   * 递增标签使用计数（绑定标签时调用）。
+   * 递增标签使用计数
    *
-   * @param tagId 标签 ID
+   * @param tagId 标签ID
    */
   void incrementUsage(String tagId);
 
   /**
-   * 递减标签使用计数（解绑标签时调用）。
+   * 递减标签使用计数
    *
-   * @param tagId 标签 ID
+   * @param tagId 标签ID
    */
   void decrementUsage(String tagId);
 
-  /** 按标签名搜索关联的文件节点ID */
+  /**
+   * 按标签名搜索关联的文件节点ID
+   *
+   * @param tagName 标签名
+   * @return 文件节点ID列表
+   */
   List<String> findFileNodeIdsByTagName(String tagName);
 }

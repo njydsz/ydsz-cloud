@@ -8,10 +8,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.infra.converter.WorkflowRepositoryConverter;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 
@@ -24,8 +24,8 @@ import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link WorkflowConverter} 将 DO 转换为 VO 后返回领域层
- *   <li>CUD 入参 DTO 通过 {@link WorkflowConverter} 转换为 DO 后执行数据库操作
+ *   <li>通过 {@link WorkflowRepositoryConverter} 将 DO 转换为 VO 后返回领域层
+ *   <li>CUD 入参 DTO 通过 {@link WorkflowRepositoryConverter} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * <p><b>分层定位：</b>依赖方向为 infra → domain（符合 DDD 依赖倒置原则）， domain 层定义接口契约，infra 层提供适配器实现。
@@ -39,7 +39,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
 
   private final FlowInstanceMapper instanceMapper;
 
-  private final WorkflowConverter converter;
+  private final WorkflowRepositoryConverter converter;
 
   @Override
   public FlowInstanceVO save(FlowInstanceDTO dto) {

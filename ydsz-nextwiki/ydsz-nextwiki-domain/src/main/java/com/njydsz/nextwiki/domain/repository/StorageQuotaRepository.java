@@ -1,9 +1,20 @@
 package com.njydsz.nextwiki.domain.repository;
 
-import com.njydsz.nextwiki.infra.entity.StorageQuotaDO;
+import java.util.Optional;
+
+import com.njydsz.nextwiki.domain.dto.StorageQuotaDTO;
+import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 
 /**
  * 存储配额仓储接口
+ *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>返回领域 VO（{@link StorageQuotaVO}），非 DTO / infra 实体
+ *   <li>查询入参使用具体字段
+ *   <li>CUD 入参使用领域 DTO（{@link StorageQuotaDTO}），禁止接受 infra 实体
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -11,33 +22,49 @@ import com.njydsz.nextwiki.infra.entity.StorageQuotaDO;
 public interface StorageQuotaRepository {
 
   /**
-   * 保存存储配额记录（新增或更新）。
+   * 保存存储配额记录（新增或更新）
    *
-   * @param quota 待持久化的配额实体（含维度、上限、已用量等）
-   * @return 持久化后的配额（回填主键）
+   * @param dto 存储配额 DTO
+   * @return 持久化后的配额 VO
    */
-  StorageQuotaDO save(StorageQuotaDO quota);
+  StorageQuotaVO save(StorageQuotaDTO dto);
 
   /**
-   * 按 ID 查询配额记录。
+   * 按 ID 查询配额记录
    *
-   * @param id 配额记录 ID
-   * @return 配额实体，不存在时返回 null
+   * @param id 配额记录ID
+   * @return 配额 VO；不存在返回 {@code Optional.empty()}
    */
-  StorageQuotaDO findById(String id);
+  Optional<StorageQuotaVO> findById(String id);
 
   /**
-   * 按维度（scopeType + scopeId）查询配额记录，用于上传/删除前的用量校验。
+   * 按维度（scopeType + scopeId）查询配额记录
    *
-   * @param scopeType 配额维度（user/tenant/project）
-   * @param scopeId 维度 ID（用户/租户/项目 ID）
-   * @return 配额实体，不存在时返回 null
+   * @param scopeType 配额维度
+   * @param scopeId 维度ID
+   * @return 配额 VO；不存在返回 {@code Optional.empty()}
    */
-  StorageQuotaDO findByScope(String scopeType, String scopeId);
+  Optional<StorageQuotaVO> findByScope(String scopeType, String scopeId);
 
-  /** 原子增加已使用量 */
+  /**
+   * 原子增加已使用量
+   *
+   * @param scopeType 配额维度
+   * @param scopeId 维度ID
+   * @param bytesDelta 字节变化量
+   * @param fileCountDelta 文件数变化量
+   * @return 受影响行数
+   */
   int addUsage(String scopeType, String scopeId, long bytesDelta, int fileCountDelta);
 
-  /** 原子减少已使用量 */
+  /**
+   * 原子减少已使用量
+   *
+   * @param scopeType 配额维度
+   * @param scopeId 维度ID
+   * @param bytesDelta 字节变化量
+   * @param fileCountDelta 文件数变化量
+   * @return 受影响行数
+   */
   int subtractUsage(String scopeType, String scopeId, long bytesDelta, int fileCountDelta);
 }

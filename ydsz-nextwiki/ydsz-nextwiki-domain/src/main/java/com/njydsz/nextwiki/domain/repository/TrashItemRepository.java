@@ -1,11 +1,21 @@
 package com.njydsz.nextwiki.domain.repository;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.njydsz.nextwiki.infra.entity.TrashItemDO;
+import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
+import com.njydsz.nextwiki.domain.vo.TrashItemVO;
 
 /**
  * 回收站仓储接口
+ *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>返回领域 VO（{@link TrashItemVO}），非 DTO / infra 实体
+ *   <li>查询入参使用具体字段
+ *   <li>CUD 入参使用领域 DTO（{@link TrashItemDTO}），禁止接受 infra 实体
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -13,63 +23,63 @@ import com.njydsz.nextwiki.infra.entity.TrashItemDO;
 public interface TrashItemRepository {
 
   /**
-   * 保存回收站条目（新增或更新）。
+   * 保存回收站条目（新增或更新）
    *
-   * @param trashItem 待持久化的回收站条目（含原节点信息、删除/清理时间等）
-   * @return 持久化后的回收站条目（回填主键）
+   * @param dto 回收站条目 DTO
+   * @return 持久化后的回收站条目 VO
    */
-  TrashItemDO save(TrashItemDO trashItem);
+  TrashItemVO save(TrashItemDTO dto);
 
   /**
-   * 按 ID 查询回收站条目。
+   * 按 ID 查询回收站条目
    *
-   * @param id 回收站条目 ID
-   * @return 回收站条目，不存在时返回 null
+   * @param id 回收站条目ID
+   * @return 回收站条目 VO；不存在返回 {@code Optional.empty()}
    */
-  TrashItemDO findById(String id);
+  Optional<TrashItemVO> findById(String id);
 
   /**
-   * 按原文件节点 ID 查询对应的回收站条目。
+   * 按原文件节点 ID 查询对应的回收站条目
    *
-   * @param fileNodeId 原文件节点 ID
-   * @return 回收站条目，不存在时返回 null
+   * @param fileNodeId 原文件节点ID
+   * @return 回收站条目 VO；不存在返回 {@code Optional.empty()}
    */
-  TrashItemDO findByFileNodeId(String fileNodeId);
+  Optional<TrashItemVO> findByFileNodeId(String fileNodeId);
 
   /**
-   * 查询某用户的全部未清理回收站条目（用于回收站列表）。
+   * 查询某用户的全部未清理回收站条目
    *
-   * @param userId 用户 ID
-   * @return 活跃回收站条目列表，无记录时返回空列表
+   * @param userId 用户ID
+   * @return 活跃回收站条目 VO 列表
    */
-  List<TrashItemDO> findActiveTrash(String userId);
+  List<TrashItemVO> findActiveTrash(String userId);
 
   /**
-   * 分页查询已超过保留期、待永久清理的回收站条目（供定时任务批量清理）。
+   * 分页查询已超过保留期、待永久清理的回收站条目
    *
-   * @param limit 单次最多返回条数（避免一次性加载过多）
-   * @return 待清理条目列表，无记录时返回空列表
+   * @param limit 单次最多返回条数
+   * @return 待清理条目 VO 列表
    */
-  List<TrashItemDO> findExpiredItems(int limit);
+  List<TrashItemVO> findExpiredItems(int limit);
 
   /**
-   * 更新回收站条目（如状态迁移为 restored/purged）。
+   * 更新回收站条目
    *
-   * @param trashItem 待更新的条目（需含主键）
+   * @param dto 回收站条目 DTO
    */
-  void update(TrashItemDO trashItem);
+  void update(TrashItemDTO dto);
 
   /**
-   * 物理删除回收站条目（彻底清理时调用）。
+   * 物理删除回收站条目
    *
-   * @param id 回收站条目 ID
+   * @param id 回收站条目ID
    */
   void deleteById(String id);
 
   /**
-   * 统计某用户的活跃回收站条目数量。
+   * 统计某用户的活跃回收站条目数量
    *
-   * @param userId 用户 ID
+   * @param userId 用户ID
    * @return 活跃条目数量
    */
   int countActiveTrash(String userId);
