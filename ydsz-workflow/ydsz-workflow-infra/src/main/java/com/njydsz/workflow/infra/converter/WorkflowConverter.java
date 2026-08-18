@@ -1,4 +1,4 @@
-package com.njydsz.workflow.domain.converter;
+package com.njydsz.workflow.infra.converter;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -54,18 +54,22 @@ import com.njydsz.workflow.domain.vo.FlowUserVO;
 import com.njydsz.workflow.domain.vo.StringVO;
 
 /**
- * workflow 模块统一 MapStruct 转换器。
+ * workflow 模块统一 MapStruct 转换器（Infra 层）。
  *
- * <p>承担工作流模块所有 Entity ↔ VO、DTO → Entity 的类型转换，遵循单一转换器模式。 覆盖流程定义、流程实例、任务、审批日志、委托授权等核心实体的转换。
+ * <p>承担工作流模块所有 Entity ↔ VO、DTO → Entity 的类型转换，遵循单一转换器模式。
+ * 覆盖流程定义、流程实例、任务、审批日志、委托授权等核心实体的转换。
  *
  * <p><b>设计要点：</b>
  *
  * <ul>
  *   <li>使用 MapStruct 注解处理器，编译期生成实现类，性能优于反射
- *   <li>通过 {@link #INSTANT} 单例访问，零依赖注入
+ *   <li>通过 {@link #INSTANT} 单例访问，由 Spring 注入到 Service/Controller
  *   <li>同名字段自动映射；系统字段通过 @Mapping(ignore = true) 忽略
  *   <li>entityToVO 方向自动排除敏感字段（如密码、Token 等）
  * </ul>
+ *
+ * <p><b>分层定位：</b>位于基础设施层（避免 domain 层反向依赖 infra.entity），
+ * infra 层实现依赖倒置提供 Converter。
  *
  * @author ydsz-team
  * @since 1.0.0

@@ -31,7 +31,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.workflow.WorkflowFacade;
-import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
 import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;

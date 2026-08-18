@@ -24,7 +24,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.infra.entity.FlowCategoryDO;
 import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
