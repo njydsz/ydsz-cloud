@@ -35,6 +35,7 @@ import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
 import com.njydsz.workflow.domain.vo.FlowCategoryVO;
+import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
 import com.njydsz.workflow.domain.vo.FlowCcRuleVO;
 import com.njydsz.workflow.domain.vo.FlowCcVO;
 import com.njydsz.workflow.domain.vo.FlowCommentVO;

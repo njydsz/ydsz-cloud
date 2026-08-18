@@ -1,147 +1,125 @@
 package com.njydsz.nextwiki.infra.repository;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.OptimisticLockingFailureException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.nextwiki.infra.entity.FileVersionDO;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
+import com.njydsz.nextwiki.domain.query.FileVersionQuery;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
+import com.njydsz.nextwiki.domain.vo.FileVersionVO;
+import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
+import com.njydsz.nextwiki.infra.entity.FileVersionDO;
 import com.njydsz.nextwiki.infra.mapper.FileVersionMapper;
 
 /**
  * 文件版本仓储实现
  *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
+ *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class FileVersionRepositoryImpl implements FileVersionRepository {
 
+  private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final FileVersionMapper fileVersionMapper;
+  private final NextwikiConverter converter;
 
-  /**
-   * 插入新版本记录（首次保存或新建版本时调用）。
-   *
-   * @param version 待持久化的版本实体（含 fileNodeId、版本号、内容引用等）
-   * @return 已落库的版本实体（含自增主键）
-   */
   @Override
-  public FileVersionDO save(FileVersionDO version) {
-    fileVersionMapper.insert(version);
-    return version;
-  }
-
-  /**
-   * 乐观锁更新版本；若未携带 revision 则退化为普通更新，更新受影响的行数为 0 时抛出 {@link
-   * OptimisticLockingFailureException}（并发冲突），成功后内存对象 revision 自增 1 以保持一致。
-   *
-   * @param version 待更新的版本实体（必须携带 id；revision 缺失时走兜底逻辑）
-   */
-  @Override
-  public void update(FileVersionDO version) {
-    if (version.getRevision() == null) {
-      // 兜底：未携带 revision 时退化为普通更新，避免业务阻断
-      fileVersionMapper.updateById(version);
-      return;
+  public FileVersionVO save(FileVersionDTO dto) {
+    FileVersionDO entity = converter.dtoToEntity(dto);
+    if (entity.getId() == null || entity.getId().isEmpty()) {
+      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
     }
-    int affected = fileVersionMapper.updateWithRevision(version);
-    if (affected == 0) {
-      throw new OptimisticLockingFailureException(
-          "FileVersion 乐观锁更新失败，id=" + version.getId() + ", revision=" + version.getRevision());
-    }
-    version.setRevision(version.getRevision() + 1);
+    fileVersionMapper.insert(entity);
+    return converter.entityToVO(entity);
   }
 
-  /**
-   * 查询指定文件节点的完整版本历史（按版本号升序）。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @return 版本记录列表（可能为空）
-   */
   @Override
-  public List<FileVersionDO> findByFileNodeId(String fileNodeId) {
-    return fileVersionMapper.selectByFileNodeId(fileNodeId);
+  public void update(FileVersionDTO dto) {
+    FileVersionDO entity = converter.dtoToEntityWithId(dto);
+    fileVersionMapper.updateById(entity);
   }
 
-  /**
-   * 查询指定文件节点下某一具体版本号的内容（用于回滚、版本对比）。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @param versionNumber 版本号（从 1 开始递增）
-   * @return 命中的版本实体；不存在则返回 null
-   */
   @Override
-  public FileVersionDO findByFileNodeIdAndVersion(String fileNodeId, Integer versionNumber) {
-    return fileVersionMapper.selectByVersion(fileNodeId, versionNumber);
+  public List<FileVersionVO> findByFileNodeId(String fileNodeId) {
+    return converter.fileVersionListToVO(fileVersionMapper.selectByFileNodeId(fileNodeId));
   }
 
-  /**
-   * 查询指定文件节点当前激活的版本（is_active = true）。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @return 当前激活版本；不存在则返回 null
-   */
   @Override
-  public FileVersionDO findActiveVersion(String fileNodeId) {
-    return fileVersionMapper.selectActiveVersion(fileNodeId);
+  public Optional<FileVersionVO> findByFileNodeIdAndVersion(FileVersionQuery query) {
+    return Optional.ofNullable(
+            fileVersionMapper.selectByFileNodeIdAndVersion(
+                query.getFileNodeId(), query.getVersionNumber()))
+        .map(converter::entityToVO);
   }
 
-  /**
-   * 切换指定文件节点的激活版本；将 versionNumber 对应的版本置为激活，其余置为非激活。 注意：versionNumber 传入 -1 时表示将全部版本置为非激活（用于清空激活态）。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @param versionNumber 目标激活版本号（-1 表示全部非激活）
-   */
+  @Override
+  public Optional<FileVersionVO> findActiveVersion(String fileNodeId) {
+    return Optional.ofNullable(fileVersionMapper.selectActiveVersion(fileNodeId))
+        .map(converter::entityToVO);
+  }
+
   @Override
   public void setActiveVersion(String fileNodeId, Integer versionNumber) {
     fileVersionMapper.setActiveVersion(fileNodeId, versionNumber);
   }
 
-  /**
-   * 按主键物理删除单条版本记录（不可逆，谨慎调用）。
-   *
-   * @param id 版本记录主键
-   */
   @Override
   public void deleteById(String id) {
     fileVersionMapper.deleteById(id);
   }
 
-  /**
-   * 按保留数量清理旧版本：保留最近 keepCount 个版本（version_number DESC），删除其余历史版本， 用于限制版本无限增长、控制存储成本。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @param keepCount 需保留的版本数量
-   * @return 被删除的版本行数
-   */
   @Override
   public int deleteExcessVersions(String fileNodeId, int keepCount) {
-    return fileVersionMapper.deleteExcessVersions(fileNodeId, keepCount);
+    List<FileVersionDO> excessVersions =
+        fileVersionMapper.selectOldestVersions(
+            fileNodeId, fileVersionMapper.countByFileNodeId(fileNodeId) - keepCount);
+
+    if (excessVersions == null || excessVersions.isEmpty()) {
+      return 0;
+    }
+
+    List<String> ids = new ArrayList<>();
+    for (FileVersionDO v : excessVersions) {
+      ids.add(v.getId());
+    }
+
+    if (!ids.isEmpty()) {
+      fileVersionMapper.deleteBatchIds(ids);
+    }
+
+    log.info(
+        "[FileVersionRepositoryImpl] 已删除 {} 个超出版本上限的旧版本，"
+            + "fileNodeId={}, keepCount={}",
+        ids.size(),
+        fileNodeId,
+        keepCount);
+    return ids.size();
   }
 
-  /**
-   * 统计指定文件节点的版本总数。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @return 版本数量
-   */
   @Override
   public int countByFileNodeId(String fileNodeId) {
     return fileVersionMapper.countByFileNodeId(fileNodeId);
   }
 
-  /**
-   * 查询指定文件节点最旧的 limit 个版本（按版本号升序），供版本清理/归档策略批量选取待删版本。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @param limit 返回数量上限
-   * @return 最旧版本列表
-   */
   @Override
-  public List<FileVersionDO> findOldestVersions(String fileNodeId, int limit) {
-    return fileVersionMapper.selectOldestVersions(fileNodeId, limit);
+  public List<FileVersionVO> findOldestVersions(String fileNodeId, int limit) {
+    return converter.fileVersionListToVO(fileVersionMapper.selectOldestVersions(fileNodeId, limit));
   }
 }

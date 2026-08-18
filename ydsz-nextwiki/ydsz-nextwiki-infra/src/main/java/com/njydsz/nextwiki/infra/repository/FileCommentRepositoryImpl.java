@@ -1,25 +1,29 @@
 package com.njydsz.nextwiki.infra.repository;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.nextwiki.infra.entity.FileCommentDO;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.nextwiki.domain.dto.FileCommentDTO;
 import com.njydsz.nextwiki.domain.repository.FileCommentRepository;
+import com.njydsz.nextwiki.domain.vo.FileCommentVO;
+import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
+import com.njydsz.nextwiki.infra.entity.FileCommentDO;
+import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
 
 /**
- * 文件评论仓储 stub 实现（P1-5 占位）。
+ * 文件评论仓储实现
  *
- * <p>当前评论功能尚未完整实现，本 stub 仅保证 Spring 容器启动成功。 所有写操作抛出 {@link UnsupportedOperationException}，读操作返回空结果。
- *
- * <p>TODO: 待完整实现后替换为真实的 MyBatis-Mapper 驱动实现：
+ * <p><b>设计要点：</b>
  *
  * <ul>
- *   <li>新建 {@code FileCommentMapper} 接口 + 对应 XML
- *   <li>新建数据表 {@code nw_file_comment} DDL
- *   <li>实现树形回复查询、解决标记、软删除级联等逻辑
+ *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
+ *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -27,45 +31,51 @@ import com.njydsz.nextwiki.domain.repository.FileCommentRepository;
  */
 @Slf4j
 @Repository
+@RequiredArgsConstructor
 public class FileCommentRepositoryImpl implements FileCommentRepository {
 
+  private final SnowflakeIdGenerator snowflakeIdGenerator;
+  private final FileNodeMapper fileNodeMapper;
+  private final NextwikiConverter converter;
+
   @Override
-  public FileCommentDO save(FileCommentDO comment) {
-    log.warn(
-        "[FileCommentRepositoryImpl] 评论功能未实现，save 调用被拒绝: fileNodeId={}", comment.getFileNodeId());
-    throw new UnsupportedOperationException("文件评论功能尚未实现");
+  public FileCommentVO save(FileCommentDTO dto) {
+    FileCommentDO entity = converter.dtoToEntity(dto);
+    if (entity.getId() == null || entity.getId().isEmpty()) {
+      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+    }
+    fileNodeMapper.insertFileComment(entity);
+    return converter.entityToVO(entity);
   }
 
   @Override
-  public FileCommentDO findById(String id) {
-    return null;
+  public Optional<FileCommentVO> findById(String id) {
+    return Optional.ofNullable(fileNodeMapper.selectFileCommentById(id)).map(converter::entityToVO);
   }
 
   @Override
-  public List<FileCommentDO> findByFileNodeId(String fileNodeId) {
-    return Collections.emptyList();
+  public List<FileCommentVO> findByFileNodeId(String fileNodeId) {
+    return converter.fileCommentListToVO(fileNodeMapper.selectFileCommentsByFileNodeId(fileNodeId));
   }
 
   @Override
-  public List<FileCommentDO> findReplies(String parentCommentId) {
-    return Collections.emptyList();
+  public List<FileCommentVO> findReplies(String parentCommentId) {
+    return converter.fileCommentListToVO(fileNodeMapper.selectFileCommentReplies(parentCommentId));
   }
 
   @Override
-  public void update(FileCommentDO comment) {
-    log.warn("[FileCommentRepositoryImpl] 评论功能未实现，update 调用被拒绝: id={}", comment.getId());
-    throw new UnsupportedOperationException("文件评论功能尚未实现");
+  public void update(FileCommentDTO dto) {
+    FileCommentDO entity = converter.dtoToEntityWithId(dto);
+    fileNodeMapper.updateFileComment(entity);
   }
 
   @Override
   public void delete(String id) {
-    log.warn("[FileCommentRepositoryImpl] 评论功能未实现，delete 调用被拒绝: id={}", id);
-    throw new UnsupportedOperationException("文件评论功能尚未实现");
+    fileNodeMapper.deleteFileComment(id);
   }
 
   @Override
   public void markResolved(String id, String userId) {
-    log.warn("[FileCommentRepositoryImpl] 评论功能未实现，markResolved 调用被拒绝: id={}", id);
-    throw new UnsupportedOperationException("文件评论功能尚未实现");
+    fileNodeMapper.markFileCommentResolved(id, userId);
   }
 }

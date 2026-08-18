@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.exception.core.BusinessException;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.WorkflowExceptionCode;
@@ -156,9 +156,8 @@ public class FlowInstanceDO extends MpBaseEntity<String> {
   public void transitTo(FlowInstanceStatus target, String operatorId) {
     FlowInstanceStatus current = FlowInstanceStatus.valueOf(flowStatus);
     if (!current.canTransitTo(target)) {
-      throw new BusinessException(
-          WorkflowExceptionCode.INSTANCE_STATUS_INVALID,
-          "流程实例状态流转非法: " + flowStatus + " -> " + target.name());
+      throw BusinessException.of(WorkflowExceptionCode.INSTANCE_STATUS_INVALID)
+          .data("message", "流程实例状态流转非法: " + flowStatus + " -> " + target.name());
     }
     this.flowStatus = target.name();
     if (target.isFinished()) {

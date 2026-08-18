@@ -1,165 +1,115 @@
 package com.njydsz.nextwiki.infra.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.nextwiki.domain.dto.TagDTO;
+import com.njydsz.nextwiki.domain.repository.TagRepository;
+import com.njydsz.nextwiki.domain.vo.FileTagVO;
+import com.njydsz.nextwiki.domain.vo.TagVO;
+import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
 import com.njydsz.nextwiki.infra.entity.FileTagDO;
 import com.njydsz.nextwiki.infra.entity.TagDO;
-import com.njydsz.nextwiki.domain.repository.TagRepository;
 import com.njydsz.nextwiki.infra.mapper.TagMapper;
+import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
 
 /**
  * 标签仓储实现
  *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
+ *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class TagRepositoryImpl implements TagRepository {
 
-  /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
-
   private final TagMapper tagMapper;
+  private final FileNodeMapper fileNodeMapper;
+  private final NextwikiConverter converter;
 
-  /**
-   * 插入新标签记录（首次创建标签时调用）。
-   *
-   * @param TagDO 待持久化的标签实体（含 name、color 等）
-   * @return 已落库的标签实体（含自增主键）
-   */
   @Override
-  public TagDO save(TagDO TagDO) {
-    tagMapper.insert(TagDO);
-    return TagDO;
+  public TagVO save(TagDTO dto) {
+    TagDO entity = converter.dtoToEntity(dto);
+    if (entity.getId() == null || entity.getId().isEmpty()) {
+      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+    }
+    tagMapper.insert(entity);
+    return converter.entityToVO(entity);
   }
 
-  /**
-   * 按主键查询标签。
-   *
-   * @param id 标签主键
-   * @return 标签实体；不存在则返回 null
-   */
   @Override
-  public TagDO findById(String id) {
-    return tagMapper.selectById(id);
+  public Optional<TagVO> findById(String id) {
+    return Optional.ofNullable(tagMapper.selectById(id)).map(converter::entityToVO);
   }
 
-  /**
-   * 按标签名查询（命中 uk_tag_name 唯一索引）；租户隔离由 MyBatis 拦截器自动注入。
-   *
-   * @param name 标签名称
-   * @return 命中的标签实体；不存在则返回 null
-   */
   @Override
-  public TagDO findByName(String name) {
-    return tagMapper.selectByName(name);
+  public Optional<TagVO> findByName(String name) {
+    return Optional.ofNullable(tagMapper.selectByName(name)).map(converter::entityToVO);
   }
 
-  /**
-   * 查询当前租户下的全部标签（用于标签选择器/管理列表）。
-   *
-   * @return 标签列表
-   */
   @Override
-  public List<TagDO> findAll() {
-    return tagMapper.selectAll();
+  public List<TagVO> findAll() {
+    return converter.tagListToVO(tagMapper.selectList(null));
   }
 
-  /**
-   * 查询指定文件节点已绑定的全部标签。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @return 标签列表
-   */
   @Override
-  public List<TagDO> findByFileNodeId(String fileNodeId) {
-    return tagMapper.selectByFileNodeId(fileNodeId);
+  public List<TagVO> findByFileNodeId(String fileNodeId) {
+    return converter.tagListToVO(tagMapper.selectByFileNodeId(fileNodeId));
   }
 
-  /**
-   * 将标签绑定到文件：构建文件-标签关联记录（生成 UUID 主键、revision=0、deleted=0）并插入， 绑定成功后由调用方负责标签 usage_count 自增。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @param tagId 标签 ID
-   */
   @Override
   public void bindTag(String fileNodeId, String tagId) {
-    FileTagDO FileTagDO =
+    FileTagDO fileTag =
         FileTagDO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
             .fileNodeId(fileNodeId)
             .tagId(tagId)
-            .revision(0)
-            .deleted(0)
             .build();
-    tagMapper.insertFileTag(FileTagDO);
+    fileNodeMapper.insertFileTag(fileTag);
   }
 
-  /**
-   * 解除单条文件-标签绑定关系（解绑后由调用方负责 usage_count 自减）。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @param tagId 标签 ID
-   */
   @Override
   public void unbindTag(String fileNodeId, String tagId) {
-    tagMapper.deleteFileTag(fileNodeId, tagId);
+    fileNodeMapper.deleteFileTag(fileNodeId, tagId);
   }
 
-  /**
-   * 解除指定文件节点的全部标签绑定（文件删除/移出回收站时级联清理关联）。
-   *
-   * @param fileNodeId 文件节点 ID
-   */
   @Override
   public void unbindAllByFileNodeId(String fileNodeId) {
-    tagMapper.deleteAllFileTags(fileNodeId);
+    fileNodeMapper.deleteAllFileTagsByFileNodeId(fileNodeId);
   }
 
-  /**
-   * 查询指定文件节点的全部文件-标签关联记录（用于展示已绑定关系）。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @return 文件-标签关联列表
-   */
   @Override
-  public List<FileTagDO> findFileTagsByFileNodeId(String fileNodeId) {
-    return tagMapper.selectFileTagsByFileNodeId(fileNodeId);
+  public List<FileTagVO> findFileTagsByFileNodeId(String fileNodeId) {
+    return converter.fileTagListToVO(fileNodeMapper.selectFileTagsByFileNodeId(fileNodeId));
   }
 
-  /**
-   * 标签使用计数 +1（绑定标签时调用），反映标签热度。
-   *
-   * @param tagId 标签 ID
-   */
   @Override
   public void incrementUsage(String tagId) {
     tagMapper.incrementUsage(tagId);
   }
 
-  /**
-   * 标签使用计数 -1（解绑标签时调用）；SQL 使用 GREATEST(usage_count - 1, 0) 防止计数出现负数。
-   *
-   * @param tagId 标签 ID
-   */
   @Override
   public void decrementUsage(String tagId) {
     tagMapper.decrementUsage(tagId);
   }
 
-  /**
-   * 按标签名模糊匹配，返回关联的文件节点 ID 列表，用于按标签批量检索/聚合文件。
-   *
-   * @param tagName 标签名模糊关键字（LIKE %tagName%）
-   * @return 命中标签所关联的文件节点 ID 列表
-   */
   @Override
   public List<String> findFileNodeIdsByTagName(String tagName) {
-    return tagMapper.findFileNodeIdsByTagName(tagName);
+    return tagMapper.selectFileNodeIdsByTagName(tagName);
   }
 }

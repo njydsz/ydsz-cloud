@@ -1,132 +1,92 @@
 package com.njydsz.nextwiki.infra.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.OptimisticLockingFailureException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.nextwiki.infra.entity.ShareLinkDO;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
+import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
+import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
+import com.njydsz.nextwiki.infra.entity.ShareLinkDO;
 import com.njydsz.nextwiki.infra.mapper.ShareLinkMapper;
 
 /**
  * 分享链接仓储实现
  *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
+ *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class ShareLinkRepositoryImpl implements ShareLinkRepository {
 
+  private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final ShareLinkMapper shareLinkMapper;
+  private final NextwikiConverter converter;
 
-  /**
-   * 插入新建的分享链接记录（初次创建分享时调用）。
-   *
-   * @param ShareLinkDO 待持久化的分享链接实体（含 fileNodeId、分享码、类型、过期等）
-   * @return 已落库的分享链接实体（含自增主键）
-   */
   @Override
-  public ShareLinkDO save(ShareLinkDO ShareLinkDO) {
-    shareLinkMapper.insert(ShareLinkDO);
-    return ShareLinkDO;
-  }
-
-  /**
-   * 按主键查询分享链接。
-   *
-   * @param id 分享链接主键
-   * @return 分享链接实体；不存在则返回 null
-   */
-  @Override
-  public ShareLinkDO findById(String id) {
-    return shareLinkMapper.selectById(id);
-  }
-
-  /**
-   * 按分享码查询分享链接，是外部用户通过分享入口访问文件的鉴权入口。
-   *
-   * @param shareCode 分享码（对外暴露的唯一标识）
-   * @return 命中的分享链接实体；不存在则返回 null
-   */
-  @Override
-  public ShareLinkDO findByShareCode(String shareCode) {
-    return shareLinkMapper.selectByShareCode(shareCode);
-  }
-
-  /**
-   * 查询指定文件节点下创建的全部分享链接（含有效与失效）。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @return 分享链接列表
-   */
-  @Override
-  public List<ShareLinkDO> findByFileNodeId(String fileNodeId) {
-    return shareLinkMapper.selectByFileNodeId(fileNodeId);
-  }
-
-  /**
-   * 查询某用户创建的、当前仍有效的分享链接列表（未过期且未撤销），用于"我的分享"管理页。
-   *
-   * @param userId 分享创建人 ID
-   * @return 有效分享链接列表
-   */
-  @Override
-  public List<ShareLinkDO> findActiveSharesByUserId(String userId) {
-    return shareLinkMapper.selectActiveSharesByUserId(userId);
-  }
-
-  /**
-   * 乐观锁更新分享链接；未携带 revision 时退化为普通更新，受影响行数为 0 抛出 {@link OptimisticLockingFailureException}，成功后
-   * revision 自增 1。
-   *
-   * @param ShareLinkDO 待更新的分享链接实体（必须携带 id）
-   */
-  @Override
-  public void update(ShareLinkDO ShareLinkDO) {
-    if (ShareLinkDO.getRevision() == null) {
-      // 兜底：未携带 revision 时退化为普通更新，避免业务阻断
-      shareLinkMapper.updateById(ShareLinkDO);
-      return;
+  public ShareLinkVO save(ShareLinkDTO dto) {
+    ShareLinkDO entity = converter.dtoToEntity(dto);
+    if (entity.getId() == null || entity.getId().isEmpty()) {
+      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
     }
-    int affected = shareLinkMapper.updateWithRevision(ShareLinkDO);
-    if (affected == 0) {
-      throw new OptimisticLockingFailureException(
-          "ShareLink 乐观锁更新失败，id=" + ShareLinkDO.getId() + ", revision=" + ShareLinkDO.getRevision());
-    }
-    ShareLinkDO.setRevision(ShareLinkDO.getRevision() + 1);
+    shareLinkMapper.insert(entity);
+    return converter.entityToVO(entity);
   }
 
-  /**
-   * 撤销分享链接（使其立即失效，外部访问被拒绝），用于主动终止分享。
-   *
-   * @param id 分享链接主键
-   */
+  @Override
+  public Optional<ShareLinkVO> findById(String id) {
+    return Optional.ofNullable(shareLinkMapper.selectById(id)).map(converter::entityToVO);
+  }
+
+  @Override
+  public Optional<ShareLinkVO> findByShareCode(String shareCode) {
+    return Optional.ofNullable(shareLinkMapper.selectByShareCode(shareCode))
+        .map(converter::entityToVO);
+  }
+
+  @Override
+  public List<ShareLinkVO> findByFileNodeId(String fileNodeId) {
+    return converter.shareLinkListToVO(shareLinkMapper.selectByFileNodeId(fileNodeId));
+  }
+
+  @Override
+  public List<ShareLinkVO> findActiveSharesByUserId(String userId) {
+    return converter.shareLinkListToVO(shareLinkMapper.selectActiveSharesByUserId(userId));
+  }
+
+  @Override
+  public void update(ShareLinkDTO dto) {
+    ShareLinkDO entity = converter.dtoToEntityWithId(dto);
+    shareLinkMapper.updateById(entity);
+  }
+
   @Override
   public void revoke(String id) {
     shareLinkMapper.revoke(id);
   }
 
-  /**
-   * 分享链接被访问时访问计数 +1，用于统计热度与 maxAccessCount 限流判定。
-   *
-   * @param id 分享链接主键
-   */
   @Override
   public void incrementAccessCount(String id) {
     shareLinkMapper.incrementAccessCount(id);
   }
 
-  /**
-   * 查询即将到期的活跃分享链接（用于到期提醒）。
-   *
-   * @param withinHours 多少小时内即将到期
-   * @return 即将到期的分享链接列表（未发送过提醒的）
-   */
   @Override
-  public List<ShareLinkDO> findExpiringShares(int withinHours) {
-    return shareLinkMapper.selectExpiringShares(withinHours);
+  public List<ShareLinkVO> findExpiringShares(int withinHours) {
+    return converter.shareLinkListToVO(shareLinkMapper.selectExpiringShares(withinHours));
   }
 }

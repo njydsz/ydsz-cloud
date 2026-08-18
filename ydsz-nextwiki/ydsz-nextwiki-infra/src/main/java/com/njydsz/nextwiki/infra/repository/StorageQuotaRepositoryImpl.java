@@ -1,98 +1,68 @@
 package com.njydsz.nextwiki.infra.repository;
 
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.OptimisticLockingFailureException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.nextwiki.infra.entity.StorageQuotaDO;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.nextwiki.domain.dto.StorageQuotaDTO;
 import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
+import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
+import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
+import com.njydsz.nextwiki.infra.entity.StorageQuotaDO;
 import com.njydsz.nextwiki.infra.mapper.StorageQuotaMapper;
 
 /**
  * 存储配额仓储实现
  *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
+ *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class StorageQuotaRepositoryImpl implements StorageQuotaRepository {
 
+  private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final StorageQuotaMapper storageQuotaMapper;
+  private final NextwikiConverter converter;
 
-  /**
-   * 新增或更新存储配额：无主键时插入；有主键时按乐观锁更新（revision 缺失退化为普通更新， 并发冲突抛 {@link
-   * OptimisticLockingFailureException}），成功后 revision 自增 1。
-   *
-   * @param quota 配额实体（scopeType/scopeId 定位维度，quotaLimit/fileCountLimit 为上限）
-   * @return 已持久化的配额实体
-   */
   @Override
-  public StorageQuotaDO save(StorageQuotaDO quota) {
-    if (quota.getId() == null) {
-      storageQuotaMapper.insert(quota);
-    } else {
-      if (quota.getRevision() == null) {
-        // 兜底：未携带 revision 时退化为普通更新，避免业务阻断
-        storageQuotaMapper.updateById(quota);
-      } else {
-        int affected = storageQuotaMapper.updateWithRevision(quota);
-        if (affected == 0) {
-          throw new OptimisticLockingFailureException(
-              "StorageQuota 乐观锁更新失败，id=" + quota.getId() + ", revision=" + quota.getRevision());
-        }
-        quota.setRevision(quota.getRevision() + 1);
-      }
+  public StorageQuotaVO save(StorageQuotaDTO dto) {
+    StorageQuotaDO entity = converter.dtoToEntity(dto);
+    if (entity.getId() == null || entity.getId().isEmpty()) {
+      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
     }
-    return quota;
+    storageQuotaMapper.insert(entity);
+    return converter.entityToVO(entity);
   }
 
-  /**
-   * 按主键查询存储配额。
-   *
-   * @param id 配额主键
-   * @return 配额实体；不存在则返回 null
-   */
   @Override
-  public StorageQuotaDO findById(String id) {
-    return storageQuotaMapper.selectById(id);
+  public Optional<StorageQuotaVO> findById(String id) {
+    return Optional.ofNullable(storageQuotaMapper.selectById(id)).map(converter::entityToVO);
   }
 
-  /**
-   * 按配额维度查询配额记录，用于上传/删除前的容量校验。
-   *
-   * @param scopeType 配额维度：user / tenant / project
-   * @param scopeId 维度 ID（对应维度的具体对象 ID）
-   * @return 命中的配额实体；不存在则返回 null
-   */
   @Override
-  public StorageQuotaDO findByScope(String scopeType, String scopeId) {
-    return storageQuotaMapper.selectByScope(scopeType, scopeId);
+  public Optional<StorageQuotaVO> findByScope(String scopeType, String scopeId) {
+    return Optional.ofNullable(storageQuotaMapper.selectByScope(scopeType, scopeId))
+        .map(converter::entityToVO);
   }
 
-  /**
-   * 在指定维度上增量增加已用容量与文件数（上传成功时调用）。值为正，由 SQL 原子自增避免并发计数偏差。
-   *
-   * @param scopeType 配额维度：user / tenant / project
-   * @param scopeId 维度 ID
-   * @param bytesDelta 新增字节数（正数）
-   * @param fileCountDelta 新增文件数（正数）
-   * @return 受影响行数
-   */
   @Override
   public int addUsage(String scopeType, String scopeId, long bytesDelta, int fileCountDelta) {
     return storageQuotaMapper.addUsage(scopeType, scopeId, bytesDelta, fileCountDelta);
   }
 
-  /**
-   * 在指定维度上减量扣减已用容量与文件数（文件删除/移出回收站时调用），与 addUsage 成对出现以维持用量平衡。
-   *
-   * @param scopeType 配额维度：user / tenant / project
-   * @param scopeId 维度 ID
-   * @param bytesDelta 释放字节数（正数）
-   * @param fileCountDelta 释放文件数（正数）
-   * @return 受影响行数
-   */
   @Override
   public int subtractUsage(String scopeType, String scopeId, long bytesDelta, int fileCountDelta) {
     return storageQuotaMapper.subtractUsage(scopeType, scopeId, bytesDelta, fileCountDelta);

@@ -1,96 +1,95 @@
 package com.njydsz.nextwiki.infra.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.nextwiki.infra.entity.FileAclDO;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.nextwiki.domain.dto.FileAclDTO;
+import com.njydsz.nextwiki.domain.query.FileAclQuery;
 import com.njydsz.nextwiki.domain.repository.FileAclRepository;
+import com.njydsz.nextwiki.domain.vo.FileAclVO;
+import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
+import com.njydsz.nextwiki.infra.entity.FileAclDO;
 import com.njydsz.nextwiki.infra.mapper.FileAclMapper;
 
 /**
  * 文件 ACL 仓储实现
  *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
+ *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class FileAclRepositoryImpl implements FileAclRepository {
 
+  private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final FileAclMapper fileAclMapper;
+  private final NextwikiConverter converter;
 
-  /**
-   * 持久化单条文件权限 ACL 记录。
-   *
-   * @param acl 待保存的 ACL 实体（含 fileNodeId、主体类型/ID、权限三元组）
-   * @return 已落库的 ACL 实体（含自增主键等数据库回填字段）
-   */
   @Override
-  public FileAclDO save(FileAclDO acl) {
-    fileAclMapper.insert(acl);
-    return acl;
+  public FileAclVO save(FileAclDTO dto) {
+    FileAclDO entity = converter.dtoToEntity(dto);
+    if (entity.getId() == null || entity.getId().isEmpty()) {
+      entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+    }
+    fileAclMapper.insert(entity);
+    return converter.entityToVO(entity);
   }
 
-  /**
-   * 查询指定文件节点下的全部 ACL 规则。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @return 该节点下的 ACL 规则列表（可能为空；已逻辑删除记录由拦截器自动过滤）
-   */
   @Override
-  public List<FileAclDO> findByFileNodeId(String fileNodeId) {
-    return fileAclMapper.selectByFileNodeId(fileNodeId);
+  public List<FileAclVO> findByFileNodeId(String fileNodeId) {
+    return converter.fileAclListToVO(fileAclMapper.selectByFileNodeId(fileNodeId));
   }
 
-  /**
-   * 精确查询某文件节点下、某授权主体（用户/角色/组）的 ACL 规则，供鉴权判定使用。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @param granteeType 主体类型：user / role / group
-   * @param granteeId 主体 ID
-   * @return 命中的 ACL 规则列表
-   */
   @Override
-  public List<FileAclDO> findByFileNodeIdAndGrantee(
-      String fileNodeId, String granteeType, String granteeId) {
-    return fileAclMapper.selectByFileNodeIdAndGrantee(fileNodeId, granteeType, granteeId);
+  public List<FileAclVO> findByFileNodeIdAndGrantee(FileAclQuery query) {
+    return converter.fileAclListToVO(
+        fileAclMapper.selectByFileNodeIdAndGrantee(
+            query.getFileNodeId(),
+            query.getGranteeType(),
+            query.getGranteeId(),
+            query.getUserId(),
+            query.getRoleIds()));
   }
 
-  /**
-   * 删除指定文件节点下的所有 ACL 规则（随节点删除级联清理，避免残留越权规则）。
-   *
-   * @param fileNodeId 文件节点 ID
-   */
   @Override
   public void deleteByFileNodeId(String fileNodeId) {
     fileAclMapper.deleteByFileNodeId(fileNodeId);
   }
 
-  /**
-   * 查询某用户在某文件节点上的有效权限，含从父目录继承的权限，是权限校验的核心入口。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @param userId 当前用户 ID（用于匹配 user 类 ACL 及后续角色展开）
-   * @param roleIds 用户所属角色 ID 列表（用于匹配 role 类 ACL）
-   * @return 命中有效权限的 ACL 列表
-   */
   @Override
-  public List<FileAclDO> findEffectivePermissions(
-      String fileNodeId, String userId, List<String> roleIds) {
-    return fileAclMapper.selectEffectivePermissions(fileNodeId, userId, roleIds);
+  public List<FileAclVO> findEffectivePermissions(FileAclQuery query) {
+    return converter.fileAclListToVO(
+        fileAclMapper.selectEffectivePermissions(
+            query.getFileNodeId(),
+            query.getUserId(),
+            query.getRoleIds()));
   }
 
-  /**
-   * 批量保存 ACL 规则；入参为 null 或空集合时直接跳过，避免执行无意义的批量插入 SQL。
-   *
-   * @param acls 待保存的 ACL 列表
-   */
   @Override
-  public void batchSave(List<FileAclDO> acls) {
-    if (acls != null && !acls.isEmpty()) {
-      fileAclMapper.batchInsert(acls);
+  public void batchSave(List<FileAclDTO> dtos) {
+    if (dtos == null || dtos.isEmpty()) {
+      return;
+    }
+    List<FileAclDO> entities = converter.fileAclDtosToEntities(dtos);
+    for (FileAclDO entity : entities) {
+      if (entity.getId() == null || entity.getId().isEmpty()) {
+        entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+      }
+      fileAclMapper.insert(entity);
     }
   }
 }

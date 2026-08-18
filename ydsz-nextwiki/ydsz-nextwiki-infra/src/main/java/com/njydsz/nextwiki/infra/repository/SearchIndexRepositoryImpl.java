@@ -1,98 +1,82 @@
 package com.njydsz.nextwiki.infra.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
-import com.njydsz.nextwiki.infra.entity.SearchIndexDO;
+import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
+import com.njydsz.nextwiki.domain.query.SearchIndexQuery;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
+import com.njydsz.nextwiki.domain.vo.SearchIndexVO;
+import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
+import com.njydsz.nextwiki.infra.entity.SearchIndexDO;
 import com.njydsz.nextwiki.infra.mapper.SearchIndexMapper;
 
 /**
  * 搜索索引仓储实现
  *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
+ *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class SearchIndexRepositoryImpl implements SearchIndexRepository {
 
   private final SearchIndexMapper searchIndexMapper;
+  private final NextwikiConverter converter;
 
-  /**
-   * 新增或更新搜索索引记录（幂等操作）：已存在则覆盖、不存在则插入，便于文件版本变更后同步索引。
-   *
-   * @param index 搜索索引实体（含 fileNodeId、标题、内容、标签等可被检索字段）
-   */
   @Override
-  public void upsert(SearchIndexDO index) {
-    searchIndexMapper.upsert(index);
+  public void upsert(SearchIndexDTO dto) {
+    SearchIndexDO entity = converter.dtoToEntity(dto);
+    searchIndexMapper.upsert(entity);
   }
 
-  /**
-   * 物理删除指定文件节点的搜索索引（文件删除/移出回收站彻底清理时调用）。
-   *
-   * @param fileNodeId 文件节点 ID
-   */
   @Override
   public void deleteByFileNodeId(String fileNodeId) {
     searchIndexMapper.deleteByFileNodeId(fileNodeId);
   }
 
-  /**
-   * 查询指定文件节点对应的搜索索引记录。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @return 索引实体；不存在则返回 null
-   */
   @Override
-  public SearchIndexDO findByFileNodeId(String fileNodeId) {
-    return searchIndexMapper.selectByFileNodeId(fileNodeId);
+  public Optional<SearchIndexVO> findByFileNodeId(String fileNodeId) {
+    return Optional.ofNullable(searchIndexMapper.selectByFileNodeId(fileNodeId))
+        .map(converter::entityToVO);
   }
 
-  /**
-   * 查询全部未删除的搜索索引记录，主要用于索引全量重建/校验。
-   *
-   * @return 索引实体列表
-   */
   @Override
-  public List<SearchIndexDO> findAll() {
-    return searchIndexMapper.selectAll();
+  public List<SearchIndexVO> findAll() {
+    return converter.searchIndexListToVO(searchIndexMapper.selectAll());
   }
 
-  /**
-   * 查询待（重建）索引的文件节点 ID 列表；createdBy 为 null 时返回全部用户文件，用于索引重建任务的分页遍历。
-   *
-   * @param createdBy 创建人 ID（传 null 表示不过滤，查询全部）
-   * @return 文件节点 ID 列表（按创建时间升序）
-   */
   @Override
   public List<String> findAllFileNodeIds(String createdBy) {
     return searchIndexMapper.selectAllFileNodeIds(createdBy);
   }
 
-  /**
-   * 分页搜索索引：将 MyBatis-Plus 的分页结果封装为统一的 {@link PageResponse}。 keyword 为空时退化为按权限（createdBy）列示，scope
-   * 控制检索维度（all/filename/content/TagDO）。
-   *
-   * @param keyword 搜索关键词
-   * @param createdBy 创建人（权限过滤，避免跨用户检索）
-   * @param scope 搜索范围：all / filename / content / TagDO
-   * @param page 页码（从 1 开始）
-   * @param pageSize 每页大小
-   * @return 统一分页结果，含命中的索引实体列表与总数
-   */
   @Override
-  public PageResponse<List<SearchIndexDO>> searchPage(
-      String keyword, String createdBy, String scope, int page, int pageSize) {
-    Page<SearchIndexDO> pageParam = new Page<>(page, pageSize);
-    IPage<SearchIndexDO> result = searchIndexMapper.searchPage(pageParam, keyword, createdBy, scope);
-    return PageResponses.success(result);
+  public PageResponse<List<SearchIndexVO>> searchPage(SearchIndexQuery query) {
+    Page<SearchIndexDO> pageParam = new Page<>(query.getPage(), query.getPageSize());
+    IPage<SearchIndexDO> result =
+        searchIndexMapper.searchPage(
+            pageParam, query.getKeyword(), query.getCreatedBy(), query.getScope());
+    List<SearchIndexVO> vos = converter.searchIndexListToVO(result.getRecords());
+    Page<SearchIndexVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
+    voPage.setRecords(vos);
+    return PageResponses.success(voPage);
   }
 }
