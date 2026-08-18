@@ -9,9 +9,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.agent.domain.dto.TokenUsageRecordDTO;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.repository.TokenUsageRecordRepository;
-import com.njydsz.agent.infra.entity.TokenUsageRecordDO;
+import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
 
 /**
  * Token 用量成本分析服务
@@ -65,14 +66,12 @@ public class CostAnalysisService {
       return;
     }
     try {
-      TokenUsageRecordDO record =
-          TokenUsageRecordDO.builder()
-              .conversationId(conversationId)
-              .modelName(modelName)
-              .promptTokens((long) usage.getPromptTokens())
-              .completionTokens((long) usage.getCompletionTokens())
-              .totalTokens((long) usage.getTotalTokens())
-              .build();
+      TokenUsageRecordDTO record = new TokenUsageRecordDTO();
+      record.setConversationId(conversationId);
+      record.setModelName(modelName);
+      record.setPromptTokens((long) usage.getPromptTokens());
+      record.setCompletionTokens((long) usage.getCompletionTokens());
+      record.setTotalTokens((long) usage.getTotalTokens());
       tokenUsageRecordRepository.insert(record);
     } catch (Exception e) {
       // 用量记录失败不应影响主流程，仅记录日志
@@ -90,11 +89,11 @@ public class CostAnalysisService {
    * @return 用量统计汇总
    */
   public ModelUsageStats getStatsByModel(LocalDate start, LocalDate end) {
-    List<TokenUsageRecordDO> records =
+    List<TokenUsageRecordVO> records =
         tokenUsageRecordRepository.findByCreatedAtRange(start.atStartOfDay(), end.atTime(23, 59, 59));
-    long prompt = records.stream().mapToLong(TokenUsageRecordDO::getPromptTokens).sum();
-    long completion = records.stream().mapToLong(TokenUsageRecordDO::getCompletionTokens).sum();
-    long total = records.stream().mapToLong(TokenUsageRecordDO::getTotalTokens).sum();
+    long prompt = records.stream().mapToLong(TokenUsageRecordVO::getPromptTokens).sum();
+    long completion = records.stream().mapToLong(TokenUsageRecordVO::getCompletionTokens).sum();
+    long total = records.stream().mapToLong(TokenUsageRecordVO::getTotalTokens).sum();
     double cost =
         records.stream()
             .mapToDouble(
@@ -139,10 +138,10 @@ public class CostAnalysisService {
    * @return 模型名 → 用量成本统计（保序）
    */
   public Map<String, ModelCostStats> getStatsByModel(LocalDateTime start, LocalDateTime end) {
-    List<TokenUsageRecordDO> records =
+    List<TokenUsageRecordVO> records =
         tokenUsageRecordRepository.findByCreatedAtRange(start, end);
     Map<String, MutableCostStats> agg = new LinkedHashMap<>();
-    for (TokenUsageRecordDO record : records) {
+    for (TokenUsageRecordVO record : records) {
       String model = record.getModelName() != null ? record.getModelName() : "unknown";
       MutableCostStats stats = agg.computeIfAbsent(model, k -> new MutableCostStats());
       stats.promptTokens += record.getPromptTokens();

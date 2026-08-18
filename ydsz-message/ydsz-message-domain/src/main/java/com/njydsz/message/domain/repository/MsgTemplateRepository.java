@@ -1,15 +1,26 @@
-package com.njydsz.message.infra.repository;
+package com.njydsz.message.domain.repository;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.message.domain.entity.template.MsgTemplate;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+
+import com.njydsz.message.domain.dto.template.TemplateQueryDTO;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 
 /**
- * 消息模板 Repository。
+ * 消息模板仓储接口（domain 层契约）。
  *
- * <p>封装 {@code ydsz_msg_template} 表的数据访问操作，为 server 层提供统一的数据访问接口。
+ * <p>定义消息模板的数据访问能力，Infra 层负责实现。
+ *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
+ *   <li>返回领域 VO（{@link MsgTemplateVO}），非 DTO / infra 实体
+ *   <li>查询入参使用领域 Query（{@link TemplateQueryDTO}）或具体字段
+ *   <li>CUD 入参使用领域 VO（{@link MsgTemplateVO}），禁止接受 infra 实体
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -17,51 +28,50 @@ import com.njydsz.message.domain.entity.template.MsgTemplate;
 public interface MsgTemplateRepository {
 
   /**
-   * 插入模板。
+   * 保存消息模板（插入或更新）。
    *
-   * @param entity 模板实体
-   * @return 影响行数
+   * @param vo 消息模板 VO
+   * @return 保存成功返回 {@code true}
    */
-  int insert(MsgTemplate entity);
+  boolean save(MsgTemplateVO vo);
 
   /**
-   * 按 ID 查询模板。
+   * 根据主键查询消息模板。
    *
    * @param id 模板 ID
-   * @return 模板实体，不存在返回 null
+   * @return 消息模板 VO；不存在返回 {@code Optional.empty()}
    */
-  MsgTemplate selectById(String id);
+  Optional<MsgTemplateVO> findById(String id);
 
   /**
-   * 按 ID 更新模板。
+   * 更新消息模板。
    *
-   * @param entity 模板实体
-   * @return 影响行数
+   * @param vo 消息模板 VO
+   * @return 更新成功返回 {@code true}
    */
-  int updateById(MsgTemplate entity);
+  boolean update(MsgTemplateVO vo);
 
   /**
-   * 按 ID 删除模板。
+   * 根据主键删除消息模板。
    *
    * @param id 模板 ID
-   * @return 影响行数
+   * @return 删除成功返回 {@code true}
    */
-  int deleteById(String id);
+  boolean deleteById(String id);
 
   /**
-   * 按条件查询单条模板。
+   * 按条件查询单条消息模板。
    *
-   * @param wrapper 查询条件
-   * @return 模板实体，不存在返回 null
+   * @param query 查询参数
+   * @return 消息模板 VO；不存在返回 {@code Optional.empty()}
    */
-  MsgTemplate selectOne(LambdaQueryWrapper<MsgTemplate> wrapper);
+  Optional<MsgTemplateVO> findOne(TemplateQueryDTO query);
 
   /**
-   * 分页查询模板。
+   * 分页查询消息模板。
    *
-   * @param page 分页参数
-   * @param wrapper 查询条件
-   * @return 分页结果
+   * @param query 分页查询参数
+   * @return 分页结果（VO 分页）
    */
-  Page<MsgTemplate> selectPage(Page<MsgTemplate> page, LambdaQueryWrapper<MsgTemplate> wrapper);
+  IPage<MsgTemplateVO> findPage(TemplateQueryDTO query);
 }

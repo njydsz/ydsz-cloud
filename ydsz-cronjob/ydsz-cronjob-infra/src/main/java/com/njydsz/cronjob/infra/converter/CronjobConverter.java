@@ -2,8 +2,10 @@ package com.njydsz.cronjob.infra.converter;
 
 import java.util.List;
 
+import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.cronjob.domain.dto.post.JobDagPostDTO;
@@ -114,6 +116,30 @@ public interface CronjobConverter {
 
   List<JobDagNodeInstanceVO> jobDagNodeInstanceListToVO(List<JobDagNodeInstance> entities);
 
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobDagNodeInstance voToEntity(JobDagNodeInstanceVO vo);
+
+  @IterableMapping(qualifiedByName = "jobDagNodeInstanceVoToEntity")
+  List<JobDagNodeInstance> jobDagNodeInstanceVOsToEntities(List<JobDagNodeInstanceVO> vos);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Named("jobDagNodeInstanceVoToEntity")
+  JobDagNodeInstance jobDagNodeInstanceVoToEntityInternal(JobDagNodeInstanceVO vo);
+
   // ===== JobDagVersion =====
   JobDagVersionVO entityToVO(JobDagVersion entity);
 
@@ -123,6 +149,16 @@ public interface CronjobConverter {
   JobDailyStatsVO entityToVO(JobDailyStats entity);
 
   List<JobDailyStatsVO> jobDailyStatsListToVO(List<JobDailyStats> entities);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobDailyStats voToEntity(JobDailyStatsVO vo);
 
   // ===== JobHistory =====
   JobHistoryVO entityToVO(JobHistory entity);

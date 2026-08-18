@@ -6,14 +6,17 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.domain.entity.job.JobArtifact;
+import com.njydsz.cronjob.domain.repository.JobArtifactRepository;
+import com.njydsz.cronjob.domain.vo.JobArtifactVO;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.infra.mapper.job.JobArtifactMapper;
-import com.njydsz.cronjob.infra.repository.JobArtifactRepository;
 
 /**
- * 任务产物 Repository 实现。
+ * 任务产物 Repository 实现（Infra 层）。
  *
- * <p>委托 {@link JobArtifactMapper} 执行数据库操作，封装所有数据访问细节。
+ * <p>实现 {@link JobArtifactRepository} 接口，封装 JobArtifactMapper 数据访问细节。
+ *
+ * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,9 +27,11 @@ public class JobArtifactRepositoryImpl implements JobArtifactRepository {
 
   private final JobArtifactMapper jobArtifactMapper;
 
+  private final CronjobConverter converter;
+
   @Override
-  public List<JobArtifact> selectByLogId(String logId) {
-    return jobArtifactMapper.selectByLogId(logId);
+  public List<JobArtifactVO> findByLogId(String logId) {
+    return converter.jobArtifactListToVO(jobArtifactMapper.selectByLogId(logId));
   }
 
   @Override

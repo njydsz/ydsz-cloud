@@ -1,15 +1,26 @@
-package com.njydsz.message.infra.repository;
+package com.njydsz.message.domain.repository;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.message.domain.entity.config.MsgSubscription;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+
+import com.njydsz.message.domain.query.MsgSubscriptionQuery;
+import com.njydsz.message.domain.vo.MsgSubscriptionVO;
 
 /**
- * 消息订阅关系 Repository。
+ * 消息订阅关系仓储接口（domain 层契约）。
  *
- * <p>封装 {@code ydsz_msg_subscription} 表的数据访问操作，为 server 层提供统一的数据访问接口。
+ * <p>定义消息订阅关系的数据访问能力，Infra 层负责实现。
+ *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
+ *   <li>返回领域 VO（{@link MsgSubscriptionVO}），非 DTO / infra 实体
+ *   <li>查询入参使用领域 Query（{@link MsgSubscriptionQuery}）或具体字段
+ *   <li>CUD 入参使用领域 VO（{@link MsgSubscriptionVO}），禁止接受 infra 实体
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -17,51 +28,50 @@ import com.njydsz.message.domain.entity.config.MsgSubscription;
 public interface MsgSubscriptionRepository {
 
   /**
-   * 插入订阅关系。
+   * 保存订阅关系（插入或更新）。
    *
-   * @param entity 订阅实体
-   * @return 影响行数
+   * @param vo 订阅关系 VO
+   * @return 保存成功返回 {@code true}
    */
-  int insert(MsgSubscription entity);
+  boolean save(MsgSubscriptionVO vo);
 
   /**
-   * 按 ID 更新订阅关系。
+   * 更新订阅关系。
    *
-   * @param entity 订阅实体
-   * @return 影响行数
+   * @param vo 订阅关系 VO
+   * @return 更新成功返回 {@code true}
    */
-  int updateById(MsgSubscription entity);
+  boolean update(MsgSubscriptionVO vo);
 
   /**
    * 按条件查询单条订阅关系。
    *
-   * @param wrapper 查询条件
-   * @return 订阅实体，不存在返回 null
+   * @param query 查询参数
+   * @return 订阅关系 VO；不存在返回 {@code Optional.empty()}
    */
-  MsgSubscription selectOne(LambdaQueryWrapper<MsgSubscription> wrapper);
+  Optional<MsgSubscriptionVO> findOne(MsgSubscriptionQuery query);
 
   /**
    * 按条件查询订阅关系列表。
    *
-   * @param wrapper 查询条件
-   * @return 订阅列表
+   * @param query 查询参数
+   * @return 订阅关系 VO 列表
    */
-  List<MsgSubscription> selectList(LambdaQueryWrapper<MsgSubscription> wrapper);
+  List<MsgSubscriptionVO> findList(MsgSubscriptionQuery query);
 
   /**
    * 按条件统计订阅关系数量。
    *
-   * @param wrapper 查询条件
+   * @param query 查询参数
    * @return 数量
    */
-  Long selectCount(LambdaQueryWrapper<MsgSubscription> wrapper);
+  long count(MsgSubscriptionQuery query);
 
   /**
    * 分页查询订阅关系。
    *
-   * @param page 分页参数
-   * @param wrapper 查询条件
-   * @return 分页结果
+   * @param query 分页查询参数
+   * @return 分页结果（VO 分页）
    */
-  Page<MsgSubscription> selectPage(Page<MsgSubscription> page, LambdaQueryWrapper<MsgSubscription> wrapper);
+  IPage<MsgSubscriptionVO> findPage(MsgSubscriptionQuery query);
 }

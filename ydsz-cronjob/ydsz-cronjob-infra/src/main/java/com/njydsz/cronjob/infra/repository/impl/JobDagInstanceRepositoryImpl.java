@@ -2,18 +2,22 @@ package com.njydsz.cronjob.infra.repository.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
+import com.njydsz.cronjob.domain.repository.JobDagInstanceRepository;
+import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagInstanceMapper;
-import com.njydsz.cronjob.infra.repository.JobDagInstanceRepository;
 
 /**
- * DAG 实例 Repository 实现。
+ * DAG 实例 Repository 实现（Infra 层）。
  *
- * <p>委托 {@link JobDagInstanceMapper} 执行数据库操作，封装所有数据访问细节。
+ * <p>实现 {@link JobDagInstanceRepository} 接口，封装 JobDagInstanceMapper 数据访问细节。
+ *
+ * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,19 +28,27 @@ public class JobDagInstanceRepositoryImpl implements JobDagInstanceRepository {
 
   private final JobDagInstanceMapper jobDagInstanceMapper;
 
+  private final CronjobConverter converter;
+
   @Override
-  public List<JobDagInstance> selectByDagId(String dagId, int limit) {
-    return jobDagInstanceMapper.selectByDagId(dagId, limit);
+  public List<JobDagInstanceVO> findByDagId(String dagId, int limit) {
+    return converter.jobDagInstanceListToVO(jobDagInstanceMapper.selectByDagId(dagId, limit));
   }
 
   @Override
-  public List<JobDagInstance> selectByStatus(String status) {
-    return jobDagInstanceMapper.selectByStatus(status);
+  public List<JobDagInstanceVO> findByStatus(String status) {
+    return converter.jobDagInstanceListToVO(jobDagInstanceMapper.selectByStatus(status));
   }
 
   @Override
-  public int casUpdateStatus(String instanceId, String fromStatus, String toStatus, LocalDateTime updatedAt) {
-    return jobDagInstanceMapper.casUpdateStatus(instanceId, fromStatus, toStatus, updatedAt);
+  public Optional<JobDagInstanceVO> findById(String instanceId) {
+    return Optional.ofNullable(jobDagInstanceMapper.selectById(instanceId))
+        .map(converter::entityToVO);
+  }
+
+  @Override
+  public int casUpdateStatus(String instanceId, String fromStatus, String toStatus) {
+    return jobDagInstanceMapper.casUpdateStatus(instanceId, fromStatus, toStatus);
   }
 
   @Override
@@ -56,7 +68,8 @@ public class JobDagInstanceRepositoryImpl implements JobDagInstanceRepository {
       int failedNodes,
       int skippedNodes) {
     return jobDagInstanceMapper.markFinished(
-        instanceId, status, finishedAt, durationMs, errorMessage, totalNodes, successNodes, failedNodes, skippedNodes);
+        instanceId, status, finishedAt, durationMs, errorMessage,
+        totalNodes, successNodes, failedNodes, skippedNodes);
   }
 
   @Override

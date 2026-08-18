@@ -3,18 +3,22 @@ package com.njydsz.cronjob.infra.repository.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.domain.entity.log.JobLog;
+import com.njydsz.cronjob.domain.repository.JobLogRepository;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
-import com.njydsz.cronjob.infra.repository.JobLogRepository;
 
 /**
- * 任务执行日志 Repository 实现。
+ * 任务执行日志 Repository 实现（Infra 层）。
  *
- * <p>委托 {@link JobLogMapper} 执行数据库操作，封装所有数据访问细节。
+ * <p>实现 {@link JobLogRepository} 接口，封装 JobLogMapper 数据访问细节。
+ *
+ * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -25,14 +29,16 @@ public class JobLogRepositoryImpl implements JobLogRepository {
 
   private final JobLogMapper jobLogMapper;
 
+  private final CronjobConverter converter;
+
   @Override
-  public List<JobLog> selectTimedOutLogs(LocalDateTime now, int limit) {
-    return jobLogMapper.selectTimedOutLogs(now, limit);
+  public List<JobLogVO> findTimedOutLogs(LocalDateTime now, int limit) {
+    return converter.jobLogListToVO(jobLogMapper.selectTimedOutLogs(now, limit));
   }
 
   @Override
-  public List<JobLog> selectApproachingSlaLogs(LocalDateTime now, int limit) {
-    return jobLogMapper.selectApproachingSlaLogs(now, limit);
+  public List<JobLogVO> findApproachingSlaLogs(LocalDateTime now, int limit) {
+    return converter.jobLogListToVO(jobLogMapper.selectApproachingSlaLogs(now, limit));
   }
 
   @Override
@@ -41,8 +47,8 @@ public class JobLogRepositoryImpl implements JobLogRepository {
   }
 
   @Override
-  public List<JobLog> selectSlowLogs(LocalDateTime since, int limit) {
-    return jobLogMapper.selectSlowLogs(since, limit);
+  public List<JobLogVO> findSlowLogs(LocalDateTime since, int limit) {
+    return converter.jobLogListToVO(jobLogMapper.selectSlowLogs(since, limit));
   }
 
   @Override
@@ -51,8 +57,8 @@ public class JobLogRepositoryImpl implements JobLogRepository {
   }
 
   @Override
-  public List<JobLog> selectRunningByNode(String nodeId) {
-    return jobLogMapper.selectRunningByNode(nodeId);
+  public List<JobLogVO> findRunningByNode(String nodeId) {
+    return converter.jobLogListToVO(jobLogMapper.selectRunningByNode(nodeId));
   }
 
   @Override
@@ -61,7 +67,7 @@ public class JobLogRepositoryImpl implements JobLogRepository {
   }
 
   @Override
-  public List<String> selectRunningNodeIds() {
+  public List<String> findRunningNodeIds() {
     return jobLogMapper.selectRunningNodeIds();
   }
 
@@ -71,8 +77,8 @@ public class JobLogRepositoryImpl implements JobLogRepository {
   }
 
   @Override
-  public Long selectDurationP95(String jobId, LocalDateTime since) {
-    return jobLogMapper.selectDurationP95(jobId, since);
+  public Optional<Long> findDurationP95(String jobId, LocalDateTime since) {
+    return Optional.ofNullable(jobLogMapper.selectDurationP95(jobId, since));
   }
 
   @Override

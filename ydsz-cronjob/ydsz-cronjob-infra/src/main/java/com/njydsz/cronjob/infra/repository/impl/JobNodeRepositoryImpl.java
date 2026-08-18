@@ -6,14 +6,13 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.domain.entity.job.JobNode;
+import com.njydsz.cronjob.domain.repository.JobNodeRepository;
 import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
-import com.njydsz.cronjob.infra.repository.JobNodeRepository;
 
 /**
- * 调度节点 Repository 实现。
+ * 调度节点 Repository 实现（Infra 层）。
  *
- * <p>委托 {@link JobNodeMapper} 执行数据库操作，封装所有数据访问细节。
+ * <p>实现 {@link JobNodeRepository} 接口，封装 JobNodeMapper 数据访问细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -30,7 +29,7 @@ public class JobNodeRepositoryImpl implements JobNodeRepository {
   }
 
   @Override
-  public List<String> selectStaleOnlineNodeIds(LocalDateTime staleThreshold) {
+  public List<String> findStaleOnlineNodeIds(LocalDateTime staleThreshold) {
     return jobNodeMapper.selectStaleOnlineNodeIds(staleThreshold);
   }
 

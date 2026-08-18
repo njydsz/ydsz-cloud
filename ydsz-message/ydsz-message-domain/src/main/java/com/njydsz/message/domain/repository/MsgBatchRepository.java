@@ -1,14 +1,24 @@
-package com.njydsz.message.infra.repository;
+package com.njydsz.message.domain.repository;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.message.domain.entity.batch.MsgBatch;
+import com.njydsz.message.domain.query.MsgBatchQuery;
+import com.njydsz.message.domain.vo.MsgBatchVO;
 
 /**
- * 消息批次 Repository。
+ * 消息批次仓储接口（domain 层契约）。
  *
- * <p>封装 {@code ydsz_msg_batch} 表的数据访问操作，为 server 层提供统一的数据访问接口。
+ * <p>定义消息批次的数据访问能力，Infra 层负责实现。
+ *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
+ *   <li>返回领域 VO（{@link MsgBatchVO}），非 DTO / infra 实体
+ *   <li>查询入参使用领域 Query（{@link MsgBatchQuery}）或具体字段
+ *   <li>CUD 入参使用领域 VO（{@link MsgBatchVO}），禁止接受 infra 实体
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -16,34 +26,34 @@ import com.njydsz.message.domain.entity.batch.MsgBatch;
 public interface MsgBatchRepository {
 
   /**
-   * 插入消息批次。
+   * 保存消息批次（插入或更新）。
    *
-   * @param entity 批次实体
-   * @return 影响行数
+   * @param vo 批次 VO
+   * @return 保存成功返回 {@code true}
    */
-  int insert(MsgBatch entity);
+  boolean save(MsgBatchVO vo);
 
   /**
-   * 按 ID 查询消息批次。
+   * 根据主键查询消息批次。
    *
    * @param id 批次 ID
-   * @return 批次实体，不存在返回 null
+   * @return 批次 VO；不存在返回 {@code Optional.empty()}
    */
-  MsgBatch selectById(String id);
+  Optional<MsgBatchVO> findById(String id);
 
   /**
-   * 按 ID 更新消息批次。
+   * 更新消息批次。
    *
-   * @param entity 批次实体
-   * @return 影响行数
+   * @param vo 批次 VO
+   * @return 更新成功返回 {@code true}
    */
-  int updateById(MsgBatch entity);
+  boolean update(MsgBatchVO vo);
 
   /**
    * 按条件查询消息批次列表。
    *
-   * @param wrapper 查询条件
-   * @return 批次列表
+   * @param query 查询参数
+   * @return 批次 VO 列表
    */
-  List<MsgBatch> selectList(LambdaQueryWrapper<MsgBatch> wrapper);
+  List<MsgBatchVO> findList(MsgBatchQuery query);
 }

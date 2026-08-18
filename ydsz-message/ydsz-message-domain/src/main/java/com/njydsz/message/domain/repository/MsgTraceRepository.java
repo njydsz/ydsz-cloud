@@ -1,14 +1,23 @@
-package com.njydsz.message.infra.repository;
+package com.njydsz.message.domain.repository;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.message.domain.entity.config.MsgTrace;
+import com.njydsz.message.domain.query.MsgTraceQuery;
+import com.njydsz.message.domain.vo.MsgTraceVO;
 
 /**
- * 消息轨迹 Repository。
+ * 消息轨迹仓储接口（domain 层契约）。
  *
- * <p>封装 {@code ydsz_msg_trace} 表的数据访问操作，为 server 层提供统一的数据访问接口。
+ * <p>定义消息轨迹的数据访问能力，Infra 层负责实现。
+ *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
+ *   <li>返回领域 VO（{@link MsgTraceVO}），非 DTO / infra 实体
+ *   <li>查询入参使用领域 Query（{@link MsgTraceQuery}）或具体字段
+ *   <li>CUD 入参使用领域 VO（{@link MsgTraceVO}），禁止接受 infra 实体
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -16,18 +25,18 @@ import com.njydsz.message.domain.entity.config.MsgTrace;
 public interface MsgTraceRepository {
 
   /**
-   * 插入轨迹记录。
+   * 保存轨迹记录。
    *
-   * @param entity 轨迹实体
-   * @return 影响行数
+   * @param vo 轨迹 VO
+   * @return 保存成功返回 {@code true}
    */
-  int insert(MsgTrace entity);
+  boolean save(MsgTraceVO vo);
 
   /**
    * 按条件查询轨迹列表。
    *
-   * @param wrapper 查询条件
-   * @return 轨迹列表
+   * @param query 查询参数
+   * @return 轨迹 VO 列表
    */
-  List<MsgTrace> selectList(LambdaQueryWrapper<MsgTrace> wrapper);
+  List<MsgTraceVO> findList(MsgTraceQuery query);
 }

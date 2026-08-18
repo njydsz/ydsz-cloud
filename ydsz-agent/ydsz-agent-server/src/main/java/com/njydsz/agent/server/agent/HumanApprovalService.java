@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -12,8 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.agent.domain.dto.AgentApprovalDTO;
 import com.njydsz.agent.domain.repository.AgentApprovalRepository;
-import com.njydsz.agent.infra.entity.AgentApprovalDO;
+import com.njydsz.agent.domain.vo.AgentApprovalVO;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
@@ -91,7 +93,7 @@ public class HumanApprovalService {
 
     // DB 持久化：多实例共享 + 重启恢复
     try {
-      agentApprovalRepository.insert(toDO(request));
+      agentApprovalRepository.insert(toDTO(request));
     } catch (Exception e) {
       LOG.warn("[HITL] 审批请求落库失败: id={}, error={}", approvalId, e.getMessage());
     }
@@ -118,11 +120,11 @@ public class HumanApprovalService {
   /** 获取待审批请求列表（按创建时间倒序）。 */
   public List<ApprovalRequest> listPending() {
     try {
-      List<AgentApprovalDO> dos =
+      List<AgentApprovalVO> vos =
           agentApprovalRepository.findPending(ApprovalStatus.PENDING.name());
-      List<ApprovalRequest> result = new ArrayList<>(dos.size());
-      for (AgentApprovalDO doItem : dos) {
-        result.add(toRequest(doItem));
+      List<ApprovalRequest> result = new ArrayList<>(vos.size());
+      for (AgentApprovalVO vo : vos) {
+        result.add(toRequest(vo));
       }
       return result;
     } catch (Exception e) {
@@ -140,11 +142,11 @@ public class HumanApprovalService {
       return cached;
     }
     try {
-      AgentApprovalDO doItem = agentApprovalRepository.findById(approvalId);
-      if (doItem == null) {
+      Optional<AgentApprovalVO> vo = agentApprovalRepository.findById(approvalId);
+      if (vo.isEmpty()) {
         return null;
       }
-      ApprovalRequest request = toRequest(doItem);
+      ApprovalRequest request = toRequest(vo.get());
       pendingApprovals.put(approvalId, request);
       return request;
     } catch (Exception e) {
@@ -202,11 +204,11 @@ public class HumanApprovalService {
       String approvalId, ApprovalStatus newStatus, String approver, String comment) {
     ApprovalRequest request = pendingApprovals.get(approvalId);
     if (request == null) {
-      AgentApprovalDO doItem = agentApprovalRepository.findById(approvalId);
-      if (doItem == null || !ApprovalStatus.PENDING.name().equals(doItem.getStatus())) {
+      Optional<AgentApprovalVO> vo = agentApprovalRepository.findById(approvalId);
+      if (vo.isEmpty() || !ApprovalStatus.PENDING.name().equals(vo.get().getStatus())) {
         return false;
       }
-      request = toRequest(doItem);
+      request = toRequest(vo.get());
       pendingApprovals.put(approvalId, request);
     }
     if (request.getStatus() != ApprovalStatus.PENDING) {
@@ -242,45 +244,44 @@ public class HumanApprovalService {
     return true;
   }
 
-  /** 将内存请求对象转换为数据库 DO。 */
-  private AgentApprovalDO toDO(ApprovalRequest request) {
-    return AgentApprovalDO.builder()
-        .id(request.getId())
-        .conversationId(request.getConversationId())
-        .traceId(request.getTraceId())
-        .stepDescription(request.getStepDescription())
-        .contextJson(request.getContext() == null ? null : YdszJson.toJson(request.getContext()))
-        .status(request.getStatus().name())
-        .approver(request.getApprover())
-        .comment(request.getComment())
-        .tenantId(resolveTenantId())
-        .createdAt(request.getCreatedAt())
-        .resolvedAt(request.getResolvedAt())
-        .build();
+  /** 将内存请求对象转换为 DTO。 */
+  private AgentApprovalDTO toDTO(ApprovalRequest request) {
+    AgentApprovalDTO dto = new AgentApprovalDTO();
+    dto.setId(request.getId());
+    dto.setConversationId(request.getConversationId());
+    dto.setTraceId(request.getTraceId());
+    dto.setStepDescription(request.getStepDescription());
+    dto.setContextJson(request.getContext() == null ? null : YdszJson.toJson(request.getContext()));
+    dto.setStatus(request.getStatus().name());
+    dto.setApprover(request.getApprover());
+    dto.setComment(request.getComment());
+    dto.setCreatedAt(request.getCreatedAt());
+    dto.setResolvedAt(request.getResolvedAt());
+    return dto;
   }
 
-  /** 将数据库 DO 转换为内存请求对象。 */
+  /** 将 VO 转换为内存请求对象。 */
   @SuppressWarnings("unchecked")
-  private ApprovalRequest toRequest(AgentApprovalDO doItem) {
+  private ApprovalRequest toRequest(AgentApprovalVO vo) {
     Map<String, Object> context = null;
-    if (doItem.getContextJson() != null && !doItem.getContextJson().isBlank()) {
+    if (vo.getContextJson() != null && !vo.getContextJson().isBlank()) {
       try {
-        context = YdszJson.fromJson(doItem.getContextJson(), Map.class);
+        context = YdszJson.fromJson(vo.getContextJson(), Map.class);
       } catch (Exception e) {
-        LOG.warn("[HITL] 审批上下文反序列化失败: id={}", doItem.getId());
+        LOG.warn("[HITL] 审批上下文反序列化失败: id={}", vo.getId());
       }
     }
     ApprovalRequest request =
         new ApprovalRequest(
-            doItem.getId(),
-            doItem.getConversationId(),
-            doItem.getTraceId(),
-            doItem.getStepDescription(),
+            vo.getId(),
+            vo.getConversationId(),
+            vo.getTraceId(),
+            vo.getStepDescription(),
             context);
-    request.setStatus(ApprovalStatus.valueOf(doItem.getStatus()));
-    request.setApprover(doItem.getApprover());
-    request.setComment(doItem.getComment());
-    request.setResolvedAt(doItem.getResolvedAt());
+    request.setStatus(ApprovalStatus.valueOf(vo.getStatus()));
+    request.setApprover(vo.getApprover());
+    request.setComment(vo.getComment());
+    request.setResolvedAt(vo.getResolvedAt());
     return request;
   }
 

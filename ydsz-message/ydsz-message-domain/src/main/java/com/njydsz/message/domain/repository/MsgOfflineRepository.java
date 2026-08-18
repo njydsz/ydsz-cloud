@@ -1,16 +1,25 @@
-package com.njydsz.message.infra.repository;
+package com.njydsz.message.domain.repository;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.IPage;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 
-import com.njydsz.message.domain.entity.config.MsgOffline;
+import com.njydsz.message.domain.query.MsgOfflineQuery;
+import com.njydsz.message.domain.vo.MsgOfflineVO;
 
 /**
- * 离线消息 Repository。
+ * 离线消息仓储接口（domain 层契约）。
  *
- * <p>封装 {@code ydsz_msg_offline} 表的数据访问，提供批量插入、按用户标记已推送等自定义操作。
+ * <p>定义离线消息的数据访问能力，Infra 层负责实现。
+ *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
+ *   <li>返回领域 VO（{@link MsgOfflineVO}），非 DTO / infra 实体
+ *   <li>查询入参使用领域 Query（{@link MsgOfflineQuery}）或具体字段
+ *   <li>CUD 入参使用领域 VO（{@link MsgOfflineVO}），禁止接受 infra 实体
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -18,12 +27,12 @@ import com.njydsz.message.domain.entity.config.MsgOffline;
 public interface MsgOfflineRepository {
 
   /**
-   * 批量插入离线消息。
+   * 批量保存离线消息。
    *
-   * @param list 离线消息实体列表（需预生成 ID）
-   * @return 影响行数
+   * @param list 离线消息 VO 列表
+   * @return 保存成功返回 {@code true}
    */
-  int insertBatch(List<MsgOffline> list);
+  boolean saveBatch(List<MsgOfflineVO> list);
 
   /**
    * 按用户批量标记已推送。
@@ -41,35 +50,18 @@ public interface MsgOfflineRepository {
   int markExpired();
 
   /**
-   * 插入单条离线消息。
+   * 按条件查询离线消息列表。
    *
-   * @param entity 离线消息实体
-   * @return 影响行数
+   * @param query 查询参数
+   * @return 离线消息 VO 列表
    */
-  int insert(MsgOffline entity);
+  List<MsgOfflineVO> findList(MsgOfflineQuery query);
 
   /**
-   * 按条件查询列表。
+   * 分页查询离线消息。
    *
-   * @param wrapper 查询条件
-   * @return 离线消息列表
+   * @param query 分页查询参数
+   * @return 分页结果（VO 分页）
    */
-  List<MsgOffline> selectList(LambdaQueryWrapper<MsgOffline> wrapper);
-
-  /**
-   * 按条件统计数量。
-   *
-   * @param wrapper 查询条件
-   * @return 数量
-   */
-  Long selectCount(LambdaQueryWrapper<MsgOffline> wrapper);
-
-  /**
-   * 分页查询。
-   *
-   * @param page 分页参数
-   * @param wrapper 查询条件
-   * @return 分页结果
-   */
-  IPage<MsgOffline> selectPage(IPage<MsgOffline> page, LambdaQueryWrapper<MsgOffline> wrapper);
+  IPage<MsgOfflineVO> findPage(MsgOfflineQuery query);
 }

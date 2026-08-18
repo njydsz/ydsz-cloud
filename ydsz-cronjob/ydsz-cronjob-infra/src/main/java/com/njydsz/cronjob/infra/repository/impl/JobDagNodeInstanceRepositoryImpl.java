@@ -2,18 +2,22 @@ package com.njydsz.cronjob.infra.repository.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
+import com.njydsz.cronjob.domain.repository.JobDagNodeInstanceRepository;
+import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagNodeInstanceMapper;
-import com.njydsz.cronjob.infra.repository.JobDagNodeInstanceRepository;
 
 /**
- * DAG 节点实例 Repository 实现。
+ * DAG 节点实例 Repository 实现（Infra 层）。
  *
- * <p>委托 {@link JobDagNodeInstanceMapper} 执行数据库操作，封装所有数据访问细节。
+ * <p>实现 {@link JobDagNodeInstanceRepository} 接口，封装 JobDagNodeInstanceMapper 数据访问细节。
+ *
+ * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,19 +28,24 @@ public class JobDagNodeInstanceRepositoryImpl implements JobDagNodeInstanceRepos
 
   private final JobDagNodeInstanceMapper jobDagNodeInstanceMapper;
 
+  private final CronjobConverter converter;
+
   @Override
-  public List<JobDagNodeInstance> selectByDagInstanceId(String dagInstanceId) {
-    return jobDagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+  public List<JobDagNodeInstanceVO> findByDagInstanceId(String dagInstanceId) {
+    return converter.jobDagNodeInstanceListToVO(
+        jobDagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId));
   }
 
   @Override
-  public JobDagNodeInstance selectByDagInstanceAndJob(String dagInstanceId, String jobId) {
-    return jobDagNodeInstanceMapper.selectByDagInstanceAndJob(dagInstanceId, jobId);
+  public Optional<JobDagNodeInstanceVO> findByDagInstanceAndJob(String dagInstanceId, String jobId) {
+    return Optional.ofNullable(jobDagNodeInstanceMapper.selectByDagInstanceAndJob(dagInstanceId, jobId))
+        .map(converter::entityToVO);
   }
 
   @Override
-  public List<JobDagNodeInstance> selectAllByDagInstanceAndJob(String dagInstanceId, String jobId) {
-    return jobDagNodeInstanceMapper.selectAllByDagInstanceAndJob(dagInstanceId, jobId);
+  public List<JobDagNodeInstanceVO> findAllByDagInstanceAndJob(String dagInstanceId, String jobId) {
+    return converter.jobDagNodeInstanceListToVO(
+        jobDagNodeInstanceMapper.selectAllByDagInstanceAndJob(dagInstanceId, jobId));
   }
 
   @Override
@@ -68,7 +77,11 @@ public class JobDagNodeInstanceRepositoryImpl implements JobDagNodeInstanceRepos
   }
 
   @Override
-  public void insertBatch(List<JobDagNodeInstance> instances) {
-    jobDagNodeInstanceMapper.insertBatch(instances);
+  public void insertBatch(List<JobDagNodeInstanceVO> vos) {
+    // VO → Entity 转换后批量插入
+    // Note: insertBatch from the original used domain entities; VOs are converted via converter
+    // Since CronjobConverter doesn't have a voToEntity for JobDagNodeInstance, we use the mapper directly
+    // This is a CUD operation that accepts VO and converts internally
+    jobDagNodeInstanceMapper.insertBatch(converter.jobDagNodeInstanceVOsToEntities(vos));
   }
 }

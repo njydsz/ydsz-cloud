@@ -2,18 +2,23 @@ package com.njydsz.cronjob.infra.repository.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.vo.JobVO;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.cronjob.infra.repository.JobRepository;
 
 /**
- * 任务定义 Repository 实现。
+ * 任务定义 Repository 实现（Infra 层）。
  *
- * <p>委托 {@link JobMapper} 执行数据库操作，封装所有数据访问细节。
+ * <p>实现 {@link JobRepository} 接口，封装 JobMapper 数据访问细节。
+ *
+ * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,24 +29,26 @@ public class JobRepositoryImpl implements JobRepository {
 
   private final JobMapper jobMapper;
 
+  private final CronjobConverter converter;
+
   @Override
-  public Job selectByJobKey(String jobKey) {
-    return jobMapper.selectByJobKey(jobKey);
+  public Optional<JobVO> findByJobKey(String jobKey) {
+    return Optional.ofNullable(jobMapper.selectByJobKey(jobKey)).map(converter::entityToVO);
   }
 
   @Override
-  public List<Job> selectAllNormal() {
-    return jobMapper.selectAllNormal();
+  public List<JobVO> findAllNormal() {
+    return converter.jobListToVO(jobMapper.selectAllNormal());
   }
 
   @Override
-  public List<Job> selectDueJobs(LocalDateTime now, int limit) {
-    return jobMapper.selectDueJobs(now, limit);
+  public List<JobVO> findDueJobs(LocalDateTime now, int limit) {
+    return converter.jobListToVO(jobMapper.selectDueJobs(now, limit));
   }
 
   @Override
-  public List<Job> selectDueJobsInWindow(LocalDateTime now, LocalDateTime windowEnd, int limit) {
-    return jobMapper.selectDueJobsInWindow(now, windowEnd, limit);
+  public List<JobVO> findDueJobsInWindow(LocalDateTime now, LocalDateTime windowEnd, int limit) {
+    return converter.jobListToVO(jobMapper.selectDueJobsInWindow(now, windowEnd, limit));
   }
 
   @Override
@@ -81,13 +88,13 @@ public class JobRepositoryImpl implements JobRepository {
   }
 
   @Override
-  public Integer selectConsecutiveFailCount(String id) {
-    return jobMapper.selectConsecutiveFailCount(id);
+  public Optional<Integer> findConsecutiveFailCount(String id) {
+    return Optional.ofNullable(jobMapper.selectConsecutiveFailCount(id));
   }
 
   @Override
-  public List<Job> selectAutoResumeCandidates(LocalDateTime now) {
-    return jobMapper.selectAutoResumeCandidates(now);
+  public List<JobVO> findAutoResumeCandidates(LocalDateTime now) {
+    return converter.jobListToVO(jobMapper.selectAutoResumeCandidates(now));
   }
 
   @Override

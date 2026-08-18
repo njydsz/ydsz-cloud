@@ -6,14 +6,17 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.domain.entity.job.JobTask;
+import com.njydsz.cronjob.domain.repository.JobTaskRepository;
+import com.njydsz.cronjob.domain.vo.JobTaskVO;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.infra.mapper.job.JobTaskMapper;
-import com.njydsz.cronjob.infra.repository.JobTaskRepository;
 
 /**
- * MapReduce 子任务 Repository 实现。
+ * MapReduce 子任务 Repository 实现（Infra 层）。
  *
- * <p>委托 {@link JobTaskMapper} 执行数据库操作，封装所有数据访问细节。
+ * <p>实现 {@link JobTaskRepository} 接口，封装 JobTaskMapper 数据访问细节。
+ *
+ * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,14 +27,16 @@ public class JobTaskRepositoryImpl implements JobTaskRepository {
 
   private final JobTaskMapper jobTaskMapper;
 
+  private final CronjobConverter converter;
+
   @Override
-  public List<JobTask> selectByLogId(String logId) {
-    return jobTaskMapper.selectByLogId(logId);
+  public List<JobTaskVO> findByLogId(String logId) {
+    return converter.jobTaskListToVO(jobTaskMapper.selectByLogId(logId));
   }
 
   @Override
-  public List<JobTask> selectPendingByLogId(String logId) {
-    return jobTaskMapper.selectPendingByLogId(logId);
+  public List<JobTaskVO> findPendingByLogId(String logId) {
+    return converter.jobTaskListToVO(jobTaskMapper.selectPendingByLogId(logId));
   }
 
   @Override

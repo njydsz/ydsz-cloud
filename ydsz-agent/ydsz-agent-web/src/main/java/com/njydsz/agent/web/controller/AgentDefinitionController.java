@@ -14,10 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.agent.infra.converter.AgentConverter;
 import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
 import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
-import com.njydsz.agent.infra.entity.AgentDefinitionDO;
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.server.agent.AgentDefinitionService;
@@ -88,8 +86,7 @@ public class AgentDefinitionController {
       content = "'list'")
   @GetMapping
   public BaseResponse<List<AgentDefinitionVO>> list() {
-    return BaseResponse.success(
-        AgentConverter.INSTANT.agentDefinitionListToVO(agentDefinitionService.listActive()));
+    return BaseResponse.success(agentDefinitionService.listActive());
   }
 
   /**
@@ -106,11 +103,11 @@ public class AgentDefinitionController {
       content = "'getById: ' + #id")
   @GetMapping("/{id}")
   public BaseResponse<AgentDefinitionVO> getById(@PathVariable String id) {
-    AgentDefinitionDO entity = agentDefinitionService.getById(id);
-    if (entity == null) {
+    AgentDefinitionVO vo = agentDefinitionService.getById(id);
+    if (vo == null) {
       return BaseResponse.error(AgentExceptionCode.AGENT_NOT_FOUND, "Agent not found: " + id);
     }
-    return BaseResponse.success(AgentConverter.INSTANT.entityToVO(entity));
+    return BaseResponse.success(vo);
   }
 
   /**
@@ -130,17 +127,17 @@ public class AgentDefinitionController {
       content = "'getByCode: ' + #code")
   @GetMapping("/code/{code}")
   public BaseResponse<AgentDefinitionVO> getByCode(@PathVariable String code) {
-    AgentDefinitionDO entity = agentDefinitionService.getByCode(code);
-    if (entity == null) {
+    AgentDefinitionVO vo = agentDefinitionService.getByCode(code);
+    if (vo == null) {
       return BaseResponse.error(AgentExceptionCode.AGENT_NOT_FOUND, "Agent not found: " + code);
     }
-    return BaseResponse.success(AgentConverter.INSTANT.entityToVO(entity));
+    return BaseResponse.success(vo);
   }
 
   /**
    * 创建 Agent 定义。
    *
-   * <p>将 DTO 转换为 Entity 后持久化，返回创建后的完整 Agent 定义（带 id / created_at 等）。 业务校验（如 code 唯一性、enabledTools
+   * <p>将 DTO 转换为 VO 后持久化，返回创建后的完整 Agent 定义（带 id / created_at 等）。 业务校验（如 code 唯一性、enabledTools
    * 合法性）由 Service 层完成。
    *
    * @param dto Agent 定义创建请求体
@@ -156,9 +153,17 @@ public class AgentDefinitionController {
   @RateLimit(resource = "agent.agentdefinition.create", threshold = 50)
   @PostMapping
   public BaseResponse<AgentDefinitionVO> create(@Valid @RequestBody AgentDefinitionPostDTO dto) {
-    AgentDefinitionDO entity = AgentConverter.INSTANT.postDtoToEntity(dto);
-    return BaseResponse.success(
-        AgentConverter.INSTANT.entityToVO(agentDefinitionService.create(entity)));
+    AgentDefinitionVO vo = new AgentDefinitionVO();
+    vo.setAgentCode(dto.getAgentCode());
+    vo.setAgentName(dto.getAgentName());
+    vo.setAgentType(dto.getAgentType());
+    vo.setDescription(dto.getDescription());
+    vo.setSystemPrompt(dto.getSystemPrompt());
+    vo.setModelConfig(dto.getModelConfig());
+    vo.setToolNames(dto.getToolNames());
+    vo.setTemperature(dto.getTemperature());
+    vo.setMaxTokens(dto.getMaxTokens());
+    return BaseResponse.success(agentDefinitionService.create(vo));
   }
 
   /**
@@ -179,9 +184,18 @@ public class AgentDefinitionController {
   @Idempotent(key = "ydsz:agent:AgentDefinitionController:update:lock", ttlSeconds = 5)
   @PutMapping
   public BaseResponse<AgentDefinitionVO> update(@Valid @RequestBody AgentDefinitionPutDTO dto) {
-    AgentDefinitionDO entity = AgentConverter.INSTANT.putDtoToEntity(dto);
-    return BaseResponse.success(
-        AgentConverter.INSTANT.entityToVO(agentDefinitionService.update(entity)));
+    AgentDefinitionVO vo = new AgentDefinitionVO();
+    vo.setId(dto.getId());
+    vo.setAgentCode(dto.getAgentCode());
+    vo.setAgentName(dto.getAgentName());
+    vo.setAgentType(dto.getAgentType());
+    vo.setDescription(dto.getDescription());
+    vo.setSystemPrompt(dto.getSystemPrompt());
+    vo.setModelConfig(dto.getModelConfig());
+    vo.setToolNames(dto.getToolNames());
+    vo.setTemperature(dto.getTemperature());
+    vo.setMaxTokens(dto.getMaxTokens());
+    return BaseResponse.success(agentDefinitionService.update(vo));
   }
 
   /**

@@ -2,18 +2,22 @@ package com.njydsz.cronjob.infra.repository.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.domain.entity.dag.JobDag;
+import com.njydsz.cronjob.domain.repository.JobDagRepository;
+import com.njydsz.cronjob.domain.vo.JobDagVO;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
-import com.njydsz.cronjob.infra.repository.JobDagRepository;
 
 /**
- * DAG 工作流定义 Repository 实现。
+ * DAG 工作流定义 Repository 实现（Infra 层）。
  *
- * <p>委托 {@link JobDagMapper} 执行数据库操作，封装所有数据访问细节。
+ * <p>实现 {@link JobDagRepository} 接口，封装 JobDagMapper 数据访问细节。
+ *
+ * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,19 +28,21 @@ public class JobDagRepositoryImpl implements JobDagRepository {
 
   private final JobDagMapper jobDagMapper;
 
+  private final CronjobConverter converter;
+
   @Override
-  public JobDag selectByDagKey(String dagKey) {
-    return jobDagMapper.selectByDagKey(dagKey);
+  public Optional<JobDagVO> findByDagKey(String dagKey) {
+    return Optional.ofNullable(jobDagMapper.selectByDagKey(dagKey)).map(converter::entityToVO);
   }
 
   @Override
-  public List<JobDag> selectCronEnabledDags() {
-    return jobDagMapper.selectCronEnabledDags();
+  public List<JobDagVO> findCronEnabledDags() {
+    return converter.jobDagListToVO(jobDagMapper.selectCronEnabledDags());
   }
 
   @Override
-  public List<JobDag> selectEnabledDags() {
-    return jobDagMapper.selectEnabledDags();
+  public List<JobDagVO> findEnabledDags() {
+    return converter.jobDagListToVO(jobDagMapper.selectEnabledDags());
   }
 
   @Override

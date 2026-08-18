@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -12,10 +13,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.agent.domain.dto.PromptTemplateDTO;
+import com.njydsz.agent.domain.dto.PromptVersionDTO;
 import com.njydsz.agent.domain.repository.PromptTemplateRepository;
 import com.njydsz.agent.domain.repository.PromptVersionRepository;
-import com.njydsz.agent.infra.entity.PromptTemplateDO;
-import com.njydsz.agent.infra.entity.PromptVersionDO;
+import com.njydsz.agent.domain.vo.PromptTemplateVO;
+import com.njydsz.agent.domain.vo.PromptVersionVO;
 
 /**
  * Prompt 管理服务
@@ -77,22 +80,20 @@ public class PromptManagementService {
   @Transactional
   public PromptTemplate create(
       String code, String name, String content, String description, String category) {
-    PromptTemplateDO existing = selectByCode(code);
+    PromptTemplateVO existing = selectByCode(code);
     if (existing != null) {
       throw new IllegalArgumentException("Prompt 模板已存在: " + code);
     }
     LocalDateTime now = LocalDateTime.now();
     // 插入模板主表（初始版本号为 1）
-    PromptTemplateDO templateDO =
-        PromptTemplateDO.builder()
-            .templateCode(code)
-            .templateName(name)
-            .content(content)
-            .description(description)
-            .category(category)
-            .currentVersion(1)
-            .build();
-    templateRepository.insert(templateDO);
+    PromptTemplateDTO templateDTO = new PromptTemplateDTO();
+    templateDTO.setTemplateCode(code);
+    templateDTO.setTemplateName(name);
+    templateDTO.setContent(content);
+    templateDTO.setDescription(description);
+    templateDTO.setCategory(category);
+    templateDTO.setCurrentVersion(1);
+    templateRepository.insert(templateDTO);
     // 插入版本快照
     insertVersion(code, 1, content, "初始版本");
     // 更新缓存
@@ -115,16 +116,22 @@ public class PromptManagementService {
    */
   @Transactional
   public PromptTemplate update(String code, String content) {
-    PromptTemplateDO existing = selectByCode(code);
+    PromptTemplateVO existing = selectByCode(code);
     if (existing == null) {
       throw new IllegalArgumentException("Prompt 模板不存在: " + code);
     }
     int newVersion = existing.getCurrentVersion() + 1;
     LocalDateTime now = LocalDateTime.now();
     // 更新主表版本号与内容
-    existing.setContent(content);
-    existing.setCurrentVersion(newVersion);
-    templateRepository.updateById(existing);
+    PromptTemplateDTO templateDTO = new PromptTemplateDTO();
+    templateDTO.setId(existing.getId());
+    templateDTO.setTemplateCode(existing.getTemplateCode());
+    templateDTO.setTemplateName(existing.getTemplateName());
+    templateDTO.setContent(content);
+    templateDTO.setDescription(existing.getDescription());
+    templateDTO.setCategory(existing.getCategory());
+    templateDTO.setCurrentVersion(newVersion);
+    templateRepository.updateById(templateDTO);
     // 插入新版本快照
     insertVersion(code, newVersion, content, null);
     // 更新缓存
@@ -165,12 +172,13 @@ public class PromptManagementService {
    * @return 版本快照，不存在时返回 null
    */
   public PromptVersion getVersion(String code, int version) {
-    PromptVersionDO versionDO =
+    Optional<PromptVersionVO> versionVO =
         versionRepository.findByTemplateCodeAndVersion(code, version);
-    if (versionDO == null) {
+    if (versionVO.isEmpty()) {
       return null;
     }
-    return new PromptVersion(code, version, versionDO.getContent(), versionDO.getCreatedAt());
+    PromptVersionVO vo = versionVO.get();
+    return new PromptVersion(code, version, vo.getContent(), vo.getCreatedAt());
   }
 
   /**
@@ -190,8 +198,8 @@ public class PromptManagementService {
    * @return 版本快照列表（按版本号升序）
    */
   public List<PromptVersion> listVersions(String code) {
-    List<PromptVersionDO> versionDOs = versionRepository.findByTemplateCode(code);
-    return versionDOs.stream()
+    List<PromptVersionVO> versionVOs = versionRepository.findByTemplateCode(code);
+    return versionVOs.stream()
         .map(v -> new PromptVersion(code, v.getVersion(), v.getContent(), v.getCreatedAt()))
         .collect(Collectors.toList());
   }
@@ -216,7 +224,7 @@ public class PromptManagementService {
    */
   @Transactional
   public void delete(String pCode) {
-    PromptTemplateDO existing = selectByCode(pCode);
+    PromptTemplateVO existing = selectByCode(pCode);
     if (existing != null) {
       templateRepository.deleteById(existing.getId());
       LOG.info("[Prompt] 删除模板: code={}", pCode);
@@ -238,12 +246,18 @@ public class PromptManagementService {
     if (pv == null) {
       throw new IllegalArgumentException("版本不存在: " + targetVersion);
     }
-    PromptTemplateDO existing = selectByCode(code);
+    PromptTemplateVO existing = selectByCode(code);
     int newVersion = existing.getCurrentVersion() + 1;
     LocalDateTime now = LocalDateTime.now();
-    existing.setContent(pv.content());
-    existing.setCurrentVersion(newVersion);
-    templateRepository.updateById(existing);
+    PromptTemplateDTO templateDTO = new PromptTemplateDTO();
+    templateDTO.setId(existing.getId());
+    templateDTO.setTemplateCode(existing.getTemplateCode());
+    templateDTO.setTemplateName(existing.getTemplateName());
+    templateDTO.setContent(pv.content());
+    templateDTO.setDescription(existing.getDescription());
+    templateDTO.setCategory(existing.getCategory());
+    templateDTO.setCurrentVersion(newVersion);
+    templateRepository.updateById(templateDTO);
     insertVersion(code, newVersion, pv.content(), "回滚自版本 " + targetVersion);
     PromptTemplate rolledBack =
         new PromptTemplate(
@@ -288,8 +302,8 @@ public class PromptManagementService {
     if (cacheWarmed) {
       return;
     }
-    List<PromptTemplateDO> allTemplates = templateRepository.findAllActive();
-    for (PromptTemplateDO t : allTemplates) {
+    List<PromptTemplateVO> allTemplates = templateRepository.findAllActive();
+    for (PromptTemplateVO t : allTemplates) {
       templateCache.put(
           t.getTemplateCode(),
           new PromptTemplate(
@@ -308,30 +322,34 @@ public class PromptManagementService {
 
   /** 从数据库加载并缓存指定模板 */
   private PromptTemplate loadAndCache(String code) {
-    PromptTemplateDO templateDO = templateRepository.findByCode(code);
-    if (templateDO == null) {
+    Optional<PromptTemplateVO> templateVO = templateRepository.findByCode(code);
+    if (templateVO.isEmpty()) {
       return null;
     }
+    PromptTemplateVO vo = templateVO.get();
     PromptTemplate template =
         new PromptTemplate(
-            templateDO.getTemplateCode(), templateDO.getTemplateName(),
-            templateDO.getContent(), templateDO.getDescription(),
-            templateDO.getCategory(), templateDO.getCurrentVersion(),
-            templateDO.getCreatedAt(), templateDO.getUpdatedAt());
+            vo.getTemplateCode(), vo.getTemplateName(),
+            vo.getContent(), vo.getDescription(),
+            vo.getCategory(), vo.getCurrentVersion(),
+            vo.getCreatedAt(), vo.getUpdatedAt());
     templateCache.put(code, template);
     return template;
   }
 
+  /** 根据编码查询模板 */
+  private PromptTemplateVO selectByCode(String code) {
+    return templateRepository.findByCode(code).orElse(null);
+  }
+
   /** 插入版本快照记录 */
   private void insertVersion(String code, int version, String content, String changeNote) {
-    PromptVersionDO versionDO =
-        PromptVersionDO.builder()
-            .templateCode(code)
-            .version(version)
-            .content(content)
-            .changeNote(changeNote)
-            .build();
-    versionRepository.insert(versionDO);
+    PromptVersionDTO versionDTO = new PromptVersionDTO();
+    versionDTO.setTemplateCode(code);
+    versionDTO.setVersion(version);
+    versionDTO.setContent(content);
+    versionDTO.setChangeNote(changeNote);
+    versionRepository.insert(versionDTO);
   }
 
   /**
