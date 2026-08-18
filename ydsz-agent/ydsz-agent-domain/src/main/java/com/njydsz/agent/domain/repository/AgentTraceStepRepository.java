@@ -2,7 +2,8 @@ package com.njydsz.agent.domain.repository;
 
 import java.util.List;
 
-import com.njydsz.agent.infra.entity.AgentTraceStepDO;
+import com.njydsz.agent.domain.dto.AgentTraceStepDTO;
+import com.njydsz.agent.domain.vo.AgentTraceStepVO;
 
 /**
  * Agent 执行链路步骤 Repository
@@ -17,15 +18,16 @@ public interface AgentTraceStepRepository {
   /**
    * 插入链路步骤记录
    *
-   * @param entity 链路步骤 DO
+   * @param dto 链路步骤 DTO
+   * @return 插入成功返回 {@code true}
    */
-  void insert(AgentTraceStepDO entity);
+  boolean insert(AgentTraceStepDTO dto);
 
   /**
    * 根据链路 ID 查询步骤列表（按步骤序号升序）
    *
    * @param traceId 链路 ID
-   * @return 链路步骤 DO 列表
+   * @return 链路步骤 VO 列表
    */
-  List<AgentTraceStepDO> findByTraceId(String traceId);
+  List<AgentTraceStepVO> findByTraceId(String traceId);
 }

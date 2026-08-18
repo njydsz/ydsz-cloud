@@ -1,6 +1,9 @@
 package com.njydsz.agent.domain.repository;
 
-import com.njydsz.agent.infra.entity.AgentTraceDO;
+import java.util.Optional;
+
+import com.njydsz.agent.domain.dto.AgentTraceDTO;
+import com.njydsz.agent.domain.vo.AgentTraceVO;
 import com.njydsz.agent.infra.trace.PgTraceRecorder;
 
 /**
@@ -16,24 +19,26 @@ public interface AgentTraceRepository {
   /**
    * 插入链路记录
    *
-   * @param entity 链路 DO
+   * @param dto 链路 DTO
+   * @return 插入成功返回 {@code true}
    */
-  void insert(AgentTraceDO entity);
+  boolean insert(AgentTraceDTO dto);
 
   /**
    * 根据 ID 查询链路记录
    *
    * @param traceId 链路 ID
-   * @return 链路 DO，不存在时返回 null
+   * @return 链路 VO；不存在返回 {@code Optional.empty()}
    */
-  AgentTraceDO findById(String traceId);
+  Optional<AgentTraceVO> findById(String traceId);
 
   /**
    * 根据 ID 更新链路记录
    *
-   * @param entity 链路 DO
+   * @param dto 链路 DTO（含 traceId）
+   * @return 更新成功返回 {@code true}
    */
-  void updateById(AgentTraceDO entity);
+  boolean updateById(AgentTraceDTO dto);
 
   /**
    * 创建 PgTraceRecorder 实例（需要联合 AgentTraceStepRepository）

@@ -1,8 +1,10 @@
 package com.njydsz.agent.domain.repository;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.njydsz.agent.infra.entity.PromptVersionDO;
+import com.njydsz.agent.domain.dto.PromptVersionDTO;
+import com.njydsz.agent.domain.vo.PromptVersionVO;
 
 /**
  * Prompt 模板版本 Repository
@@ -28,24 +30,25 @@ public interface PromptVersionRepository {
   /**
    * 插入 Prompt 版本快照
    *
-   * @param entity Prompt 版本 DO
+   * @param dto Prompt 版本 DTO
+   * @return 插入成功返回 {@code true}
    */
-  void insert(PromptVersionDO entity);
+  boolean insert(PromptVersionDTO dto);
 
   /**
    * 根据模板编码和版本号查询版本记录
    *
    * @param templateCode 模板编码
    * @param version 版本号
-   * @return Prompt 版本 DO，不存在时返回 null
+   * @return Prompt 版本 VO；不存在返回 {@code Optional.empty()}
    */
-  PromptVersionDO findByTemplateCodeAndVersion(String templateCode, int version);
+  Optional<PromptVersionVO> findByTemplateCodeAndVersion(String templateCode, int version);
 
   /**
    * 根据模板编码查询所有版本（按版本号升序）
    *
    * @param templateCode 模板编码
-   * @return Prompt 版本 DO 列表
+   * @return Prompt 版本 VO 列表
    */
-  List<PromptVersionDO> findByTemplateCode(String templateCode);
+  List<PromptVersionVO> findByTemplateCode(String templateCode);
 }

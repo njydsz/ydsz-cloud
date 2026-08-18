@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper.config;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.domain.entity.config.MsgPreference;
+import com.njydsz.message.infra.entity.MsgPreferenceDO;
 
 /**
  * 用户消息偏好 Mapper
@@ -29,4 +29,4 @@ import com.njydsz.message.domain.entity.config.MsgPreference;
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface MsgPreferenceMapper extends BaseMapper<MsgPreference> {}
+public interface MsgPreferenceMapper extends BaseMapper<MsgPreferenceDO> {}

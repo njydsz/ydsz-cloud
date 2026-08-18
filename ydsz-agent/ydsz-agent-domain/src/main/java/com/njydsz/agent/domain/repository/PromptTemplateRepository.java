@@ -1,8 +1,10 @@
 package com.njydsz.agent.domain.repository;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.njydsz.agent.infra.entity.PromptTemplateDO;
+import com.njydsz.agent.domain.dto.PromptTemplateDTO;
+import com.njydsz.agent.domain.vo.PromptTemplateVO;
 
 /**
  * Prompt 模板 Repository
@@ -28,36 +30,39 @@ public interface PromptTemplateRepository {
   /**
    * 插入 Prompt 模板
    *
-   * @param entity Prompt 模板 DO
+   * @param dto Prompt 模板 DTO
+   * @return 插入成功返回 {@code true}
    */
-  void insert(PromptTemplateDO entity);
+  boolean insert(PromptTemplateDTO dto);
 
   /**
    * 根据 ID 更新 Prompt 模板
    *
-   * @param entity Prompt 模板 DO
+   * @param dto Prompt 模板 DTO（含 id）
+   * @return 更新成功返回 {@code true}
    */
-  void updateById(PromptTemplateDO entity);
+  boolean updateById(PromptTemplateDTO dto);
 
   /**
    * 根据 ID 逻辑删除 Prompt 模板
    *
    * @param id 主键 ID
+   * @return 删除成功返回 {@code true}
    */
-  void deleteById(Long id);
+  boolean deleteById(String id);
 
   /**
    * 根据模板编码查询（过滤已删除记录）
    *
    * @param templateCode 模板编码
-   * @return Prompt 模板 DO，不存在或已删除时返回 null
+   * @return Prompt 模板 VO；不存在或已删除返回 {@code Optional.empty()}
    */
-  PromptTemplateDO findByCode(String templateCode);
+  Optional<PromptTemplateVO> findByCode(String templateCode);
 
   /**
    * 查询所有未删除的 Prompt 模板
    *
-   * @return Prompt 模板 DO 列表
+   * @return Prompt 模板 VO 列表
    */
-  List<PromptTemplateDO> findAllActive();
+  List<PromptTemplateVO> findAllActive();
 }

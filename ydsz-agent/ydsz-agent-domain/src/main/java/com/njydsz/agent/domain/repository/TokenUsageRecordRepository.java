@@ -3,7 +3,8 @@ package com.njydsz.agent.domain.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.njydsz.agent.infra.entity.TokenUsageRecordDO;
+import com.njydsz.agent.domain.dto.TokenUsageRecordDTO;
+import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
 
 /**
  * Token 用量记录 Repository
@@ -30,16 +31,17 @@ public interface TokenUsageRecordRepository {
   /**
    * 插入 Token 用量记录
    *
-   * @param record Token 用量记录 DO
+   * @param dto Token 用量记录 DTO
+   * @return 插入成功返回 {@code true}
    */
-  void insert(TokenUsageRecordDO record);
+  boolean insert(TokenUsageRecordDTO dto);
 
   /**
    * 按时间范围查询 Token 用量记录（按创建时间升序）
    *
    * @param startTime 开始时间（含）
    * @param endTime 结束时间（含）
-   * @return Token 用量记录 DO 列表
+   * @return Token 用量记录 VO 列表
    */
-  List<TokenUsageRecordDO> findByCreatedAtRange(LocalDateTime startTime, LocalDateTime endTime);
+  List<TokenUsageRecordVO> findByCreatedAtRange(LocalDateTime startTime, LocalDateTime endTime);
 }

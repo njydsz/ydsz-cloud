@@ -13,7 +13,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.userinfo.infra.entity.RoleDO;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
-import com.njydsz.userinfo.infra.repository.RoleRepository;
+import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.infra.repository.UserAccountRepository;
 
 /**

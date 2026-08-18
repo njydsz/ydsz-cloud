@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper.template;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.domain.entity.template.MsgTemplate;
+import com.njydsz.message.infra.entity.MsgTemplateDO;
 
 /**
  * 消息模板 Mapper
@@ -30,4 +30,4 @@ import com.njydsz.message.domain.entity.template.MsgTemplate;
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface MsgTemplateMapper extends BaseMapper<MsgTemplate> {}
+public interface MsgTemplateMapper extends BaseMapper<MsgTemplateDO> {}

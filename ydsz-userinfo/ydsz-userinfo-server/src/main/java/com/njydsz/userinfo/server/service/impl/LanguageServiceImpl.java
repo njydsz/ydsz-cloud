@@ -23,7 +23,7 @@ import com.njydsz.userinfo.infra.entity.LanguageDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
-import com.njydsz.userinfo.infra.repository.LanguageRepository;
+import com.njydsz.userinfo.domain.repository.LanguageRepository;
 import com.njydsz.userinfo.server.service.LanguageService;
 
 /**

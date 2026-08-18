@@ -20,7 +20,7 @@ import com.njydsz.userinfo.infra.entity.MenuDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
-import com.njydsz.userinfo.infra.repository.MenuRepository;
+import com.njydsz.userinfo.domain.repository.MenuRepository;
 import com.njydsz.userinfo.server.auth.DbRolePermissionLoader;
 import com.njydsz.userinfo.server.service.MenuService;
 

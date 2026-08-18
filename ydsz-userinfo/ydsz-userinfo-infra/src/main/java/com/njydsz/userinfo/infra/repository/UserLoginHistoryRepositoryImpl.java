@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository.impl;
+package com.njydsz.userinfo.infra.repository;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.infra.repository.UserLoginHistoryRepository;
+import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
 import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
 import com.njydsz.userinfo.infra.mapper.UserLoginHistoryMapper;
 

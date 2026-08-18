@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper.config;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.domain.entity.config.MsgSubscription;
+import com.njydsz.message.infra.entity.MsgSubscriptionDO;
 
 /**
  * 消息订阅关系 Mapper
@@ -30,4 +30,4 @@ import com.njydsz.message.domain.entity.config.MsgSubscription;
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface MsgSubscriptionMapper extends BaseMapper<MsgSubscription> {}
+public interface MsgSubscriptionMapper extends BaseMapper<MsgSubscriptionDO> {}

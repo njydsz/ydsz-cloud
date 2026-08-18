@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.userinfo.infra.entity.CompanyDeptDO;
-import com.njydsz.userinfo.infra.repository.CompanyDeptRepository;
+import com.njydsz.userinfo.domain.repository.CompanyDeptRepository;
 import com.njydsz.userinfo.server.service.CompanyDeptService;
 
 /**

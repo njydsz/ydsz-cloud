@@ -27,7 +27,7 @@ import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.infra.converter.UserInfoConverter;
-import com.njydsz.userinfo.infra.repository.DepartmentRepository;
+import com.njydsz.userinfo.domain.repository.DepartmentRepository;
 import com.njydsz.userinfo.infra.repository.UserAccountRepository;
 import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.config.UserInfoProperties;

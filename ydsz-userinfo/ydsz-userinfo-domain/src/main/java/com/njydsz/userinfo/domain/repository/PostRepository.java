@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+package com.njydsz.userinfo.domain.repository;
 
 import java.util.Collection;
 import java.util.List;

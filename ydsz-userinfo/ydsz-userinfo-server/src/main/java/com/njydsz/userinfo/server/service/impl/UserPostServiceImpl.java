@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.userinfo.infra.entity.UserPostDO;
-import com.njydsz.userinfo.infra.repository.UserPostRepository;
+import com.njydsz.userinfo.domain.repository.UserPostRepository;
 import com.njydsz.userinfo.server.service.UserPostService;
 
 /**

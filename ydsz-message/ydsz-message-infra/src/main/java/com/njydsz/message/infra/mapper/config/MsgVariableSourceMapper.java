@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper.config;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.domain.entity.config.MsgVariableSource;
+import com.njydsz.message.infra.entity.MsgVariableSourceDO;
 
 /**
  * 消息变量数据源 Mapper
@@ -29,4 +29,4 @@ import com.njydsz.message.domain.entity.config.MsgVariableSource;
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface MsgVariableSourceMapper extends BaseMapper<MsgVariableSource> {}
+public interface MsgVariableSourceMapper extends BaseMapper<MsgVariableSourceDO> {}

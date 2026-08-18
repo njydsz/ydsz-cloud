@@ -21,7 +21,7 @@ import com.njydsz.userinfo.domain.dto.update.PostUpdateDTO;
 import com.njydsz.userinfo.infra.entity.PostDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.PostVO;
-import com.njydsz.userinfo.infra.repository.PostRepository;
+import com.njydsz.userinfo.domain.repository.PostRepository;
 import com.njydsz.userinfo.server.service.PostService;
 
 /**

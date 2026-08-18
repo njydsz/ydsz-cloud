@@ -1,8 +1,11 @@
 package com.njydsz.agent.domain.repository;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.njydsz.agent.infra.entity.AgentDefinitionDO;
+import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
+import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
+import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 
 /**
  * Agent 定义 Repository
@@ -29,44 +32,46 @@ public interface AgentDefinitionRepository {
    * 根据 ID 查询 Agent 定义
    *
    * @param id 主键 ID
-   * @return Agent 定义 DO，不存在时返回 null
+   * @return Agent 定义 VO；不存在返回 {@code Optional.empty()}
    */
-  AgentDefinitionDO findById(String id);
+  Optional<AgentDefinitionVO> findById(String id);
 
   /**
    * 根据 Agent 编码查询（过滤已删除记录）
    *
    * @param agentCode Agent 编码
-   * @return Agent 定义 DO，不存在或已删除时返回 null
+   * @return Agent 定义 VO；不存在或已删除返回 {@code Optional.empty()}
    */
-  AgentDefinitionDO findByCode(String agentCode);
+  Optional<AgentDefinitionVO> findByCode(String agentCode);
 
   /**
    * 查询活跃 Agent 定义列表（状态为 ACTIVE，过滤已删除记录，按创建时间降序）
    *
-   * @return Agent 定义 DO 列表
+   * @return Agent 定义 VO 列表
    */
-  List<AgentDefinitionDO> findActive();
+  List<AgentDefinitionVO> findActive();
 
   /**
    * 插入 Agent 定义
    *
-   * @param entity Agent 定义 DO
+   * @param dto Agent 定义创建 DTO
+   * @return 插入成功返回 {@code true}
    */
-  void insert(AgentDefinitionDO entity);
+  boolean insert(AgentDefinitionPostDTO dto);
 
   /**
    * 根据 ID 更新 Agent 定义
    *
-   * @param entity Agent 定义 DO
+   * @param dto Agent 定义更新 DTO
+   * @return 更新成功返回 {@code true}
    */
-  void updateById(AgentDefinitionDO entity);
+  boolean updateById(AgentDefinitionPutDTO dto);
 
   /**
    * 根据 ID 逻辑删除 Agent 定义
    *
    * @param id 主键 ID
-   * @return true=删除成功（影响行数 > 0）
+   * @return 删除成功返回 {@code true}
    */
   boolean deleteById(String id);
 }

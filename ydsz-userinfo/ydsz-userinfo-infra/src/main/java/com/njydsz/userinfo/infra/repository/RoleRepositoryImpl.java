@@ -1,15 +1,14 @@
-package com.njydsz.userinfo.infra.repository.impl;
+package com.njydsz.userinfo.infra.repository;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.infra.repository.RoleRepository;
+import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.infra.entity.RoleDO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 

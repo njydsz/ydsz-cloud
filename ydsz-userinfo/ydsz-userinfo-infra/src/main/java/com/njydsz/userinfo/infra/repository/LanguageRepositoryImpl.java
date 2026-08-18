@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository.impl;
+package com.njydsz.userinfo.infra.repository;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.infra.repository.LanguageRepository;
+import com.njydsz.userinfo.domain.repository.LanguageRepository;
 import com.njydsz.userinfo.infra.entity.LanguageDO;
 import com.njydsz.userinfo.infra.mapper.LanguageMapper;
 

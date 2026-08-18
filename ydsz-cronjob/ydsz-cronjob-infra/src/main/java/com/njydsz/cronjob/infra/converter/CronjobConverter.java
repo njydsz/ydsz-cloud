@@ -27,8 +27,10 @@ import com.njydsz.cronjob.domain.entity.job.JobHistory;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.domain.entity.job.JobTask;
 import com.njydsz.cronjob.domain.entity.job.JobWebhook;
+import com.njydsz.cronjob.domain.entity.job.TenantQuota;
 import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
+import com.njydsz.cronjob.domain.vo.TenantQuotaVO;
 import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
 import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.domain.vo.JobArtifactVO;
@@ -66,6 +68,11 @@ import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 public interface CronjobConverter {
 
   CronjobConverter INSTANT = Mappers.getMapper(CronjobConverter.class);
+
+  // ===== TenantQuota =====
+  TenantQuotaVO entityToVO(TenantQuota entity);
+
+  List<TenantQuotaVO> tenantQuotaListToVO(List<TenantQuota> entities);
 
   // ===== GlueCode =====
   GlueCodeVO entityToVO(GlueCode entity);

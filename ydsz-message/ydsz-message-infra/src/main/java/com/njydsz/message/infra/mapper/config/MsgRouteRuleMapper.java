@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper.config;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.domain.entity.config.MsgRouteRule;
+import com.njydsz.message.infra.entity.MsgRouteRuleDO;
 
 /**
  * 消息路由规则 Mapper
@@ -30,4 +30,4 @@ import com.njydsz.message.domain.entity.config.MsgRouteRule;
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface MsgRouteRuleMapper extends BaseMapper<MsgRouteRule> {}
+public interface MsgRouteRuleMapper extends BaseMapper<MsgRouteRuleDO> {}
