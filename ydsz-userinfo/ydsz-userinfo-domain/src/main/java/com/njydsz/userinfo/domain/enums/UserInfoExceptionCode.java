@@ -113,6 +113,8 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   COMPANY_NOT_FOUND("B30105", "userinfo.CompanyDO.not.found", 404),
   /** 公司编码已存在 */
   COMPANY_CODE_DUPLICATE("B30106", "userinfo.CompanyDO.code.duplicate"),
+  /** 用户-部门关联不存在 */
+  USER_DEPT_NOT_FOUND("B30107", "userinfo.UserDeptVO.not.found", 404),
 
   // ==================== B32xxx RBAC ====================
   /** 角色不存在 */

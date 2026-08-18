@@ -15,9 +15,11 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.workflow.domain.repository.FlowCategoryRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.infra.entity.FlowCategoryDO;
+import com.njydsz.workflow.domain.vo.FlowCategoryVO;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
 import com.njydsz.workflow.infra.mapper.FlowCategoryMapper;
@@ -96,6 +98,16 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
 
   /** 流程分类 Mapper，用于分类的增删改查 */
   private final FlowCategoryMapper categoryMapper;
+
+  /**
+   * 流程分类仓储（domain 层契约）。
+   *
+   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #categoryMapper} 访问数据，
+   * 因为仓储返回 {@code FlowCategoryVO} 与 Service 使用的 {@code FlowCategoryDO} 类型不同，
+   * 且部分 Mapper 方法（如 {@code selectCount}）在仓储中暂无等价方法。
+   * 后续应在仓储中补齐对应方法并迁移。
+   */
+  private final FlowCategoryRepository categoryRepository;
 
   /** 流程定义 Mapper，删除分类前校验是否有关联的流程定义 */
   private final FlowDefinitionMapper definitionMapper;
