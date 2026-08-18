@@ -27,6 +27,7 @@ import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.service.FilePermissionService;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 文件锁定 REST API Controller（P1-6 + P0-R3 + P2-R2）。
@@ -115,6 +116,7 @@ public class FileLockController {
   @PostMapping("/{nodeId}/lock")
   @Operation(summary = "锁定文件（Check-out）")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
+  @Transactional(rollbackFor = Exception.class)
   public BaseResponse<Void> lock(
       @PathVariable String nodeId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
@@ -156,6 +158,7 @@ public class FileLockController {
   @PostMapping("/{nodeId}/unlock")
   @Operation(summary = "解锁文件（Check-in）")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
+  @Transactional(rollbackFor = Exception.class)
   public BaseResponse<Void> unlock(
       @PathVariable String nodeId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 

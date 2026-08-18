@@ -153,6 +153,7 @@ public class FileChunkController {
    * @param uploadId 上传任务 ID
    * @param chunkNumber 分片序号（从 0 开始）
    * @param chunk 分片文件
+   * @param userId 当前用户 ID（P0-1：校验分片上传会话归属，防止越权上传）
    * @return 统一响应结果
    */
   @Audit(
@@ -167,8 +168,9 @@ public class FileChunkController {
   public BaseResponse<Void> uploadChunk(
       @PathVariable String uploadId,
       @PathVariable int chunkNumber,
-      @RequestParam("chunk") MultipartFile chunk) {
-    chunkUploadService.uploadChunk(uploadId, chunkNumber, chunk);
+      @RequestParam("chunk") MultipartFile chunk,
+      @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
+    chunkUploadService.uploadChunk(uploadId, chunkNumber, chunk, userId);
     return BaseResponse.success();
   }
 

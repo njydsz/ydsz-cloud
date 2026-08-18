@@ -11,6 +11,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.api.RuleContext;
@@ -63,6 +64,9 @@ public class RuleAdminService {
 
   /** 分布式广播器（可选，配置后支持多实例热加载一致性） */
   private RuleConfigBroadcaster broadcaster;
+
+  /** 事务性 Outbox 服务（可选，配置后规则变更事件同事务落 Outbox 表，广播失败可重试） */
+  private OutboxService outboxService;
 
   /** 搜索索引事件桥接器（可选，用于将规则变更同步到统一搜索索引） */
   private ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
@@ -118,6 +122,19 @@ public class RuleAdminService {
    */
   public void setBroadcaster(RuleConfigBroadcaster broadcaster) {
     this.broadcaster = broadcaster;
+  }
+
+  /**
+   * 设置事务性 Outbox 服务（P0-A1 热更新一致性）
+   *
+   * <p>配置后，规则变更事件的分布式广播改为"同事务写 Outbox 表"， 由 {@code RuleConfigOutboxRelay} 低延迟广播 +
+   * {@code OutboxProcessor} 失败重试， 消除"DB 已提交但广播失败导致其他节点缓存陈旧"的双写不一致。 未配置时降级为直接广播（向后兼容）。
+   *
+   * @param outboxService Outbox 服务实例（可为 null）
+   * @since 1.0.0
+   */
+  public void setOutboxService(OutboxService outboxService) {
+    this.outboxService = outboxService;
   }
 
   /**
@@ -826,9 +843,17 @@ public class RuleAdminService {
   }
 
   /**
-   * 发布规则刷新事件（本地 + 分布式广播）
+   * 发布规则刷新事件（本地 + 分布式广播，P0-A1 引入事务性 Outbox）
    *
-   * <p>先发布本地 Spring 事件触发热加载，再通过广播器通知其他节点。 广播器不可用时仅本地生效（向后兼容）。
+   * <p><b>分布式广播路径（P0-A1 增强）：</b>
+   *
+   * <ol>
+   *   <li>本地 Spring 事件（当前节点热加载，同步执行）
+   *   <li>若配置了 Outbox 服务：同一事务内将事件写入 Outbox 表， 由 {@code RuleConfigOutboxRelay}
+   *       在事务提交后低延迟广播，失败由 {@code OutboxProcessor} 指数退避重试 —— 消除"DB 已提交但广播失败"
+   *       的双写不一致风险
+   *   <li>Outbox 不可用时降级为直接广播（向后兼容）
+   * </ol>
    *
    * @param event 规则变更事件
    * @since 1.0.0
@@ -836,7 +861,22 @@ public class RuleAdminService {
   private void publishRefreshEvent(RuleConfigRefreshEvent event) {
     // 1. 本地事件（当前节点热加载）
     eventPublisher.publishEvent(event);
-    // 2. 分布式广播（其他节点热加载）
+
+    // 2. 分布式广播：优先走事务性 Outbox（同事务落表 + 异步可靠投递）
+    if (outboxService != null) {
+      try {
+        outboxService.appendToOutbox(event);
+        log.debug(
+            "[LiteRule] 规则变更事件已写入 Outbox: ruleCode={}, changeType={}",
+            event.getRuleCode(),
+            event.getChangeType());
+        return;
+      } catch (Exception e) {
+        log.warn("[LiteRule] Outbox 写入失败，降级为直接广播: {}", e.getMessage());
+      }
+    }
+
+    // 3. 降级：Outbox 不可用时直接广播（向后兼容）
     if (broadcaster != null && broadcaster.isAvailable()) {
       try {
         broadcaster.broadcast(event, nodeId);

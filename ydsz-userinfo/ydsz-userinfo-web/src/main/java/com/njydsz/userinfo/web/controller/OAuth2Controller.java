@@ -3,9 +3,13 @@ package com.njydsz.userinfo.web.controller;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +21,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.TokenService;
@@ -25,7 +32,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
@@ -81,9 +88,6 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 @Tag(name = "OAuth2", description = "OAuth2 授权码模式")
 public class OAuth2Controller {
 
-  /** 分布式 ID 生成器 */
-  private final SnowflakeIdGenerator snowflakeIdGenerator;
-
   private final RedisStringOps redisStringOps;
   private final TokenService tokenService;
   private final TokenBlacklistService tokenBlacklistService;
@@ -109,6 +113,52 @@ public class OAuth2Controller {
 
   /** OAuth2 grant_type：refresh_token 轮换 */
   private static final String OAUTH2_GRANT_REFRESH_TOKEN = "refresh_token";
+
+  /** P0-4: 授权码随机数生成器（SecureRandom，128 位熵替代可枚举的雪花 ID） */
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+  /** P0-4: 授权码随机字节长度（32 字节 = 256 位熵，Base64URL 编码后 43 字符） */
+  private static final int CODE_RANDOM_BYTES = 32;
+
+  /**
+   * P0-3: 授权码原子取删 Lua 脚本（GETDEL 语义，防并发重放）。
+   *
+   * <p>授权码必须一次性使用：并发请求携带同一授权码时，仅第一个请求能读到值，
+   * 后续请求 GET 返回 nil，无法二次签发 token。
+   */
+  private static final String GETDEL_CODE_LUA =
+      "local v = redis.call('GET', KEYS[1]) "
+          + "if v then redis.call('DEL', KEYS[1]) end "
+          + "return v";
+
+  /**
+   * P0-3: 原子读取并删除授权码上下文（GETDEL）。
+   *
+   * @param code 授权码
+   * @return 授权码上下文 JSON；不存在或已消费返回 null
+   */
+  private String getAndDeleteCode(String code) {
+    try {
+      return redisStringOps.executeScriptWithShaCache(
+          GETDEL_CODE_LUA,
+          String.class,
+          Collections.singletonList(CODE_KEY_PREFIX + code));
+    } catch (Exception e) {
+      log.error("OAuth2 atomic get-and-delete code failed, code={}", code, e);
+      return null;
+    }
+  }
+
+  /**
+   * P0-4: 生成高强度授权码（RFC 6749 §10.10：至少 128 位随机熵）。
+   *
+   * @return Base64URL 编码的 32 字节随机串（43 字符）
+   */
+  private String generateAuthorizationCode() {
+    byte[] bytes = new byte[CODE_RANDOM_BYTES];
+    SECURE_RANDOM.nextBytes(bytes);
+    return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+  }
 
   /**
    * 获取授权码
@@ -136,6 +186,12 @@ public class OAuth2Controller {
    * @throws BusinessException {@code TOKEN_INVALID} / {@code OAUTH2_CLIENT_INVALID} / {@code
    *     OAUTH2_REDIRECT_URI_MISMATCH}
    */
+  @Audit(
+      module = "OAuth2",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'OAuth2 授权码签发: clientId=' + #clientId + ', redirectUri=' + #redirectUri")
+  @RateLimit(resource = "userinfo.oauth2.authorize", threshold = 20)
   @GetMapping("/authorize")
   @Operation(summary = "获取授权码", description = "需携带已登录的 access_token，生成 OAuth2 授权码，5 分钟有效")
   public BaseResponse<String> authorize(
@@ -162,15 +218,19 @@ public class OAuth2Controller {
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
     }
 
-    // 3. 校验 redirect_uri 在客户端注册白名单中（RFC 6749 §3.1.2.3）
-    if (clientConfig.getRedirectUris() != null
-        && !clientConfig.getRedirectUris().isEmpty()
-        && !clientConfig.getRedirectUris().contains(redirectUri)) {
+    // 3. P0-2: 校验 redirect_uri 必须命中客户端注册白名单（RFC 6749 §3.1.2.3）
+    // 白名单未配置或为空时直接拒绝（防开放重定向），不允许跳过校验
+    List<String> redirectUris = clientConfig.getRedirectUris();
+    if (redirectUris == null || redirectUris.isEmpty() || !redirectUris.contains(redirectUri)) {
+      log.warn(
+          "OAuth2 redirect_uri mismatch or empty whitelist rejected: clientId={}, redirectUri={}",
+          clientId,
+          redirectUri);
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_REDIRECT_URI_MISMATCH);
     }
 
     // 4. 使用 YdszJson 序列化授权码上下文（含 tenantId + PKCE），Redis 存储 5 分钟
-    String code = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
+    String code = generateAuthorizationCode();
     Map<String, String> contextMap = new HashMap<>();
     contextMap.put("clientId", clientId);
     contextMap.put("userId", userInfo.getUserId());
@@ -213,6 +273,12 @@ public class OAuth2Controller {
    * @param codeVerifier PKCE 码验证器（public 客户端 authorization_code 必填）
    * @return 标准 OAuth2 token 响应
    */
+  @Audit(
+      module = "OAuth2",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'OAuth2 token 签发: grantType=' + #grantType + ', clientId=' + #clientId")
+  @RateLimit(resource = "userinfo.oauth2.token", threshold = 20)
   @PostMapping("/token")
   @Operation(
       summary = "用授权码或 refresh_token 换取 Token",
@@ -246,8 +312,9 @@ public class OAuth2Controller {
   private BaseResponse<Map<String, Object>> authorizationCodeGrant(
       String code, String clientId, String clientSecret, String codeVerifier) {
 
-    // 1. 读取并解析授权码上下文
-    String storedContext = redisStringOps.get(CODE_KEY_PREFIX + code, String.class);
+    // 1. P0-3: 原子读取并删除授权码（GETDEL 语义，防并发重放）
+    // 并发携带同一授权码时，仅首个请求能读到上下文，后续请求返回 null 被拒绝
+    String storedContext = getAndDeleteCode(code);
     if (storedContext == null) {
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_CODE_INVALID);
     }
@@ -289,8 +356,7 @@ public class OAuth2Controller {
       }
     }
 
-    // 4. 授权码一次性使用：使用后立即删除
-    redisStringOps.del(CODE_KEY_PREFIX + code);
+    // 4. 授权码已在上方由 GETDEL 原子删除（一次性使用），此处无需再次 DEL
 
     // 5. 重建 UserInfo 并签发新 token
     UserInfo userInfo = new UserInfo();
@@ -382,6 +448,12 @@ public class OAuth2Controller {
    * @param tokenTypeHint 令牌类型提示（access_token / refresh_token，可选）
    * @return 成功响应（RFC 7009 规定撤销成功一律返回 200，不区分 token 是否有效）
    */
+  @Audit(
+      module = "OAuth2",
+      type = AuditType.OPERATION,
+      action = AuditAction.DELETE,
+      content = "'OAuth2 token 撤销: typeHint=' + #tokenTypeHint")
+  @RateLimit(resource = "userinfo.oauth2.revoke", threshold = 20)
   @PostMapping("/revoke")
   @Operation(summary = "撤销 Token", description = "RFC 7009：将 access_token / refresh_token 加入黑名单立即失效")
   public BaseResponse<Void> revoke(
@@ -405,6 +477,7 @@ public class OAuth2Controller {
    * @param clientSecret 客户端密钥
    * @return Token 元数据（active / sub / username / tenantId）
    */
+  @RateLimit(resource = "userinfo.oauth2.introspect", threshold = 100)
   @PostMapping("/introspect")
   @Operation(summary = "校验 Token 元数据", description = "RFC 7662：资源服务器校验 access_token 有效性")
   public BaseResponse<Map<String, Object>> introspect(
@@ -436,6 +509,7 @@ public class OAuth2Controller {
    * @param authorization Authorization 请求头
    * @return 用户信息（sub / preferred_username / tenant_id）
    */
+  @RateLimit(resource = "userinfo.oauth2.userinfo", threshold = 100)
   @GetMapping("/userinfo")
   @Operation(summary = "当前用户信息", description = "OIDC userinfo：携带 access_token 获取用户身份")
   public BaseResponse<Map<String, Object>> userinfo(

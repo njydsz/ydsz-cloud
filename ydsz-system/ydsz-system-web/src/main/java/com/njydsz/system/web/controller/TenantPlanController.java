@@ -112,7 +112,7 @@ public class TenantPlanController {
       content = "'创建套餐: ' + #dto.planCode")
   @Operation(summary = "创建套餐")
   @RateLimit(resource = "system.tenant.plan.save", threshold = 50)
-  @Idempotent(key = "ydsz:system:tenant-plan:save:#userId", ttlSeconds = 5)
+  @Idempotent(key = "'ydsz:system:tenant-plan:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PostMapping
   public BaseResponse<String> save(
       @Valid @RequestBody TenantPlanVO vo,
@@ -134,7 +134,7 @@ public class TenantPlanController {
       content = "'更新套餐: ' + #vo.planCode")
   @Operation(summary = "更新套餐")
   @RateLimit(resource = "system.tenantplan.update", threshold = 50)
-  @Idempotent(key = "ydsz:system:tenant-plan:update:#userId", ttlSeconds = 5)
+  @Idempotent(key = "'ydsz:system:tenant-plan:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PutMapping
   public BaseResponse<Boolean> update(
       @Valid @RequestBody TenantPlanVO vo,
@@ -157,7 +157,7 @@ public class TenantPlanController {
       content = "'删除套餐: ' + #id")
   @Operation(summary = "删除套餐")
   @RateLimit(resource = "system.tenant.plan.remove", threshold = 50)
-  @Idempotent(key = "ydsz:system:tenant-plan:remove:#id", ttlSeconds = 5)
+  @Idempotent(key = "'ydsz:system:tenant-plan:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   public BaseResponse<Boolean> remove(@PathVariable String id) {
     return BaseResponse.success(planService.removeById(id));

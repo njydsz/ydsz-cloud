@@ -17,6 +17,7 @@ import com.njydsz.agent.infra.mapper.AgentTraceMapper;
 import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.safe.sensitive.SensitiveUtil;
 
 /**
  * 数据库执行链路记录器
@@ -163,20 +164,24 @@ public class PgTraceRecorder implements TraceRecorder {
   }
 
   /**
-   * 将对象序列化为 JSON 字符串。
+   * 将对象序列化为 JSON 字符串（入库前统一执行 PII 脱敏）。
+   *
+   * <p>P0 修复：LLM 调用前后的 input/output 可能包含用户手机号、身份证等个人敏感信息， 若原样入库，链路表将成为 PII 泄露通道。此处委托
+   * {@link SensitiveUtil#scanAndMask(String)} 统一脱敏后再落库。
    *
    * @param obj 目标对象
-   * @return JSON 字符串；{@code null} 时返回 {@code null}
+   * @return 脱敏后的 JSON 字符串；{@code null} 时返回 {@code null}
    */
   private String toJsonString(Object obj) {
     if (obj == null) {
       return null;
     }
     try {
-      return YdszJson.toJson(obj);
+      String json = YdszJson.toJson(obj);
+      return SensitiveUtil.scanAndMask(json);
     } catch (Exception e) {
       LOG.warn("[Trace] 序列化失败: {}", e.getMessage());
-      return obj.toString();
+      return SensitiveUtil.scanAndMask(String.valueOf(obj));
     }
   }
 

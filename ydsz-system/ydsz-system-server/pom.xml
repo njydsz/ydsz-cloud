@@ -27,14 +27,6 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-lock</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-feign</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-audit</artifactId>
         </dependency>
         <!-- P0-2: 事务性 Outbox 事件模式 -->
@@ -119,11 +111,6 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-redis</artifactId>
-        </dependency>
-        <!-- P1-5: 统一线程池管理 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-thread</artifactId>
         </dependency>
         <!-- P1-5: 搜索 Provider SPI（系统配置/字典搜索） -->
         <dependency>

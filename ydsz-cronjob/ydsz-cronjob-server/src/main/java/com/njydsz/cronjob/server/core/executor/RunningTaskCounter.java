@@ -2,6 +2,8 @@ package com.njydsz.cronjob.server.core.executor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -30,9 +32,31 @@ public class RunningTaskCounter {
   /** Redis Key：运行中任务数 */
   public static final String RUNNING_COUNT_KEY = "ydsz:job:running:count";
 
+  /** 计数器 TTL（秒）：防异常退出后永久残留，由 {@link #renewTtl()} 定期续期保证长期运行不归零 */
   private static final long INITIAL_TTL_SECONDS = 3600;
 
+  /** 续期间隔（毫秒），默认 10 分钟；TTL 为 1 小时，续期周期远小于 TTL，长期运行计数稳定 */
+  @Value("${ydsz.cronjob.executor.running-counter-renew-ms:600000}")
+  private long renewIntervalMs;
+
   private final RedisStringOps redisStringOps;
+
+  /**
+   * 定时续期计数器 TTL（默认每 10 分钟）。
+   *
+   * <p>解决长期运行场景下计数器因 TTL 到期突然归零的问题： 集群持续运行超过 1 小时不再重启时，首次 INCR 设置的 TTL 到期会让 Gauge 归零。
+   * 通过定期 EXPIRE 续期，只要集群活跃（有任务执行触发 INCR），计数持续有效；
+   * 异常退出（无任何续期）时 TTL 到期自动清理，防止永久残留。EXPIRE 幂等，多节点同时续期无害。
+   */
+  @Scheduled(fixedDelayString = "${ydsz.cronjob.executor.running-counter-renew-ms:600000}")
+  public void renewTtl() {
+    try {
+      redisStringOps.expire(RUNNING_COUNT_KEY, INITIAL_TTL_SECONDS);
+    } catch (Exception e) {
+      // key 不存在时 EXPIRE 返回 0 属正常（异常退出后已清理），仅记录 debug
+      log.debug("[RunningTaskCounter] 续期失败(可能 key 不存在): reason={}", e.getMessage());
+    }
+  }
 
   /**
    * 递增运行中任务数（任务开始执行时调用）。

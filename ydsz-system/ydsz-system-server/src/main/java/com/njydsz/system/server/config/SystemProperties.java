@@ -17,7 +17,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *   <li>{@code ydsz.system.dict.cache-ttl-minutes}：字典缓存 TTL（默认 10）
  *   <li>{@code ydsz.system.variable.cache-ttl-minutes}：变量缓存 TTL（默认 5）
  *   <li>{@code ydsz.system.app.bcrypt-strength}：应用密钥 BCrypt 加密强度（默认 10）
- *   <li>{@code ydsz.system.internal-api-ip-whitelist}：内部 API IP 白名单（空=不限制）
+ *   <li>内部 API IP 白名单已迁移至 {@code ydsz.safe.ip-access.*}（common-safe 统一管控，支持 CIDR），
+ *       不再由本配置类持有
  * </ul>
  *
  * @author ydsz-team

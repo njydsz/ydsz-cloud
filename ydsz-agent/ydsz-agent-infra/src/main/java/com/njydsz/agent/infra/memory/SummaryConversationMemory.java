@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +15,7 @@ import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * 摘要压缩对话记忆
@@ -32,9 +35,16 @@ import com.njydsz.agent.domain.model.ChatResponse;
  *
  * <pre>
  * save() → 检查消息数 → 超过阈值?
- *   YES → load 全部 → 取较早消息 → LLM 摘要 → 用摘要替换 → 清除旧消息 → 保存摘要+最近消息
+ *   YES → 异步压缩：load 全部 → 取较早消息 → LLM 摘要 → 摘要先持久化 → 清除旧消息 → 保存摘要+最近消息
  *   NO  → 直接委托给 delegate
  * </pre>
+ *
+ * <p><b>可靠性（P0 修复）</b>：摘要优先持久化到 Redis（{@code ydsz:agent:summary:{convId}}）， 再执行
+ * {@code clear + save}，即使压缩中途失败或进程重启，摘要仍可恢复上下文，不再丢失历史。
+ *
+ * <p><b>异步压缩（P1 优化）</b>：摘要 LLM 调用在虚拟线程中异步执行，不阻塞用户消息保存路径； 同一会话同时仅允许一个压缩任务在途，避免重复压缩。
+ *
+ * <p><b>线程安全</b>：delegate 记忆并发安全；摘要读取优先 Redis（原子操作），内存 Map 仅作兜底缓存。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -45,6 +55,12 @@ public class SummaryConversationMemory implements ConversationMemory {
 
   /** 摘要前缀 */
   private static final String SUMMARY_PREFIX = "[对话摘要] ";
+
+  /** 摘要 Redis key 前缀（完整 key = 前缀 + conversationId） */
+  private static final String SUMMARY_KEY_PREFIX = "ydsz:agent:summary:";
+
+  /** 摘要 Redis TTL（秒），与对话记忆 TTL 对齐（24 小时） */
+  private static final long SUMMARY_TTL_SECONDS = 24 * 3600L;
 
   /** 委托的记忆实现 */
   private final ConversationMemory delegate;
@@ -67,8 +83,19 @@ public class SummaryConversationMemory implements ConversationMemory {
   /** Token 估算的字符系数（Char/Token） */
   private final double tokenCharRatio;
 
-  /** 对话摘要缓存（conversationId → summary） */
+  /** Redis 摘要存储（可为 null，null 时降级为纯内存缓存） */
+  private final RedisStringOps redisOps;
+
+  /** 正在压缩中的会话集合（防止同一会话并发重复压缩） */
+  private final ConcurrentMap<String, Boolean> compressing = new ConcurrentHashMap<>();
+
+  /** 摘要内存兜底缓存（Redis 不可用时的降级路径） */
   private final ConcurrentMap<String, String> conversationSummaries = new ConcurrentHashMap<>();
+
+  /** 异步压缩虚拟线程池（JDK 21 虚拟线程，规范豁免场景） */
+  // CHECKSTYLE.OFF: ThreadPoolCreate
+  private final ExecutorService summaryExecutor = Executors.newVirtualThreadPerTaskExecutor();
+  // CHECKSTYLE.ON: ThreadPoolCreate
 
   public SummaryConversationMemory(
       ConversationMemory delegate,
@@ -76,15 +103,48 @@ public class SummaryConversationMemory implements ConversationMemory {
       String model,
       int summaryThreshold,
       int keepRecentCount) {
-    this(delegate, llmClient, model, summaryThreshold, keepRecentCount, 4000, 2.5);
+    this(delegate, llmClient, model, summaryThreshold, keepRecentCount, null);
   }
 
+  /**
+   * 构造摘要压缩对话记忆。
+   *
+   * @param delegate 委托的记忆实现，不允许为 {@code null}
+   * @param llmClient LLM 客户端，用于生成摘要
+   * @param model 摘要模型名称
+   * @param summaryThreshold 触发压缩的消息条数阈值
+   * @param keepRecentCount 压缩后保留的最近原始消息条数
+   * @param redisOps Redis String 操作组件（用于摘要持久化；传 {@code null} 时降级为内存缓存）
+   */
   public SummaryConversationMemory(
       ConversationMemory delegate,
       LlmClient llmClient,
       String model,
       int summaryThreshold,
       int keepRecentCount,
+      RedisStringOps redisOps) {
+    this(delegate, llmClient, model, summaryThreshold, keepRecentCount, redisOps, 4000, 2.5);
+  }
+
+  /**
+   * 构造摘要压缩对话记忆（全参）。
+   *
+   * @param delegate 委托的记忆实现，不允许为 {@code null}
+   * @param llmClient LLM 客户端，用于生成摘要
+   * @param model 摘要模型名称
+   * @param summaryThreshold 触发压缩的消息条数阈值
+   * @param keepRecentCount 压缩后保留的最近原始消息条数
+   * @param redisOps Redis String 操作组件（用于摘要持久化；传 {@code null} 时降级为内存缓存）
+   * @param tokenBudget 触发压缩的 Token 预算
+   * @param tokenCharRatio Token 估算的字符系数
+   */
+  public SummaryConversationMemory(
+      ConversationMemory delegate,
+      LlmClient llmClient,
+      String model,
+      int summaryThreshold,
+      int keepRecentCount,
+      RedisStringOps redisOps,
       int tokenBudget,
       double tokenCharRatio) {
     this.delegate = delegate;
@@ -92,6 +152,7 @@ public class SummaryConversationMemory implements ConversationMemory {
     this.model = model;
     this.summaryThreshold = summaryThreshold > 0 ? summaryThreshold : 20;
     this.keepRecentCount = keepRecentCount > 0 ? keepRecentCount : 10;
+    this.redisOps = redisOps;
     this.tokenBudget = tokenBudget > 0 ? tokenBudget : 4000;
     this.tokenCharRatio = tokenCharRatio > 0 ? tokenCharRatio : 2.5;
   }
@@ -102,9 +163,9 @@ public class SummaryConversationMemory implements ConversationMemory {
 
     long count = delegate.count(conversationId);
     int totalTokens = estimateConversationTokens(conversationId);
-    // 消息数超阈值 或 估算 Token 超预算，均触发压缩
+    // 消息数超阈值 或 估算 Token 超预算，均触发压缩（异步执行，不阻塞保存路径）
     if (count > summaryThreshold || totalTokens > tokenBudget) {
-      tryCompress(conversationId);
+      triggerCompress(conversationId);
     }
   }
 
@@ -112,7 +173,7 @@ public class SummaryConversationMemory implements ConversationMemory {
   public List<ChatMessage> load(String conversationId, int maxMessages) {
     List<ChatMessage> messages = new ArrayList<>();
 
-    String summary = conversationSummaries.get(conversationId);
+    String summary = loadSummary(conversationId);
     if (summary != null && !summary.isBlank()) {
       messages.add(ChatMessage.system(SUMMARY_PREFIX + summary));
     }
@@ -125,6 +186,7 @@ public class SummaryConversationMemory implements ConversationMemory {
   public void clear(String conversationId) {
     delegate.clear(conversationId);
     conversationSummaries.remove(conversationId);
+    deleteSummary(conversationId);
   }
 
   @Override
@@ -142,7 +204,7 @@ public class SummaryConversationMemory implements ConversationMemory {
       String conversationId, int tokenBudget, double tokenCharRatio) {
     List<ChatMessage> result = new ArrayList<>();
     // 摘要优先（占用部分预算）
-    String summary = conversationSummaries.get(conversationId);
+    String summary = loadSummary(conversationId);
     if (summary != null && !summary.isBlank()) {
       ChatMessage summaryMsg = ChatMessage.system(SUMMARY_PREFIX + summary);
       result.add(summaryMsg);
@@ -174,7 +236,7 @@ public class SummaryConversationMemory implements ConversationMemory {
    */
   private int estimateConversationTokens(String conversationId) {
     int total = 0;
-    String summary = conversationSummaries.get(conversationId);
+    String summary = loadSummary(conversationId);
     if (summary != null) {
       total += (int) Math.ceil(summary.length() / tokenCharRatio);
     }
@@ -183,6 +245,26 @@ public class SummaryConversationMemory implements ConversationMemory {
       total += estimateTokens(msg, tokenCharRatio);
     }
     return total;
+  }
+
+  /**
+   * 触发异步压缩（同一会话仅允许一个压缩任务在途）。
+   *
+   * @param conversationId 对话 ID
+   */
+  private void triggerCompress(String conversationId) {
+    if (compressing.putIfAbsent(conversationId, Boolean.TRUE) != null) {
+      // 该会话已有压缩任务在途，跳过本次触发避免重复压缩
+      return;
+    }
+    summaryExecutor.execute(
+        () -> {
+          try {
+            tryCompress(conversationId);
+          } finally {
+            compressing.remove(conversationId);
+          }
+        });
   }
 
   /** 压缩对话历史：将较早的消息摘要后替换 */
@@ -197,11 +279,12 @@ public class SummaryConversationMemory implements ConversationMemory {
       List<ChatMessage> oldMessages = allMessages.subList(0, toSummarize);
       List<ChatMessage> recentMessages = allMessages.subList(toSummarize, allMessages.size());
 
-      String existingSummary = conversationSummaries.getOrDefault(conversationId, "");
+      String existingSummary = loadSummary(conversationId);
       String summary = summarizeMessages(conversationId, oldMessages, existingSummary);
 
       if (summary != null && !summary.isBlank()) {
-        conversationSummaries.put(conversationId, summary);
+        // 摘要先持久化（Redis + 内存），再替换消息；即使后续失败，摘要仍可恢复上下文
+        saveSummary(conversationId, summary);
         delegate.clear(conversationId);
         for (ChatMessage msg : recentMessages) {
           delegate.save(conversationId, msg);
@@ -245,8 +328,72 @@ public class SummaryConversationMemory implements ConversationMemory {
     return response.getContent();
   }
 
+  /**
+   * 读取摘要：优先从 Redis 读取（跨进程/重启持久），未命中回退内存兜底缓存。
+   *
+   * @param conversationId 对话 ID
+   * @return 摘要内容；不存在时返回 {@code null}
+   */
+  private String loadSummary(String conversationId) {
+    if (redisOps != null) {
+      try {
+        Object value = redisOps.get(buildSummaryKey(conversationId));
+        if (value != null) {
+          return String.valueOf(value);
+        }
+      } catch (Exception e) {
+        LOG.warn("[Memory-Summary] 摘要读取失败，回退内存缓存: {}", e.getMessage());
+      }
+    }
+    return conversationSummaries.get(conversationId);
+  }
+
+  /**
+   * 持久化摘要：写入 Redis（带 TTL）并更新内存兜底缓存。
+   *
+   * @param conversationId 对话 ID
+   * @param summary 摘要内容
+   */
+  private void saveSummary(String conversationId, String summary) {
+    conversationSummaries.put(conversationId, summary);
+    if (redisOps != null) {
+      try {
+        redisOps.set(buildSummaryKey(conversationId), summary, SUMMARY_TTL_SECONDS);
+      } catch (Exception e) {
+        LOG.warn("[Memory-Summary] 摘要持久化失败，仅保留内存缓存: {}", e.getMessage());
+      }
+    }
+  }
+
+  /**
+   * 删除持久化摘要。
+   *
+   * @param conversationId 对话 ID
+   */
+  private void deleteSummary(String conversationId) {
+    if (redisOps != null) {
+      try {
+        redisOps.del(buildSummaryKey(conversationId));
+      } catch (Exception e) {
+        LOG.warn("[Memory-Summary] 摘要删除失败: {}", e.getMessage());
+      }
+    }
+  }
+
+  /**
+   * 构建摘要 Redis key。
+   *
+   * @param conversationId 对话 ID
+   * @return 完整 Redis key
+   */
+  private String buildSummaryKey(String conversationId) {
+    return SUMMARY_KEY_PREFIX + conversationId;
+  }
+
   private String truncate(String text, int maxLen) {
-    if (text == null) return "";
+    if (text == null) {
+      return "";
+    }
     return text.length() > maxLen ? text.substring(0, maxLen) + "..." : text;
   }
 }

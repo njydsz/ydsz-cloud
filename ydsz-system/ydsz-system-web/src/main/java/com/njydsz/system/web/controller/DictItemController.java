@@ -194,7 +194,7 @@ public class DictItemController {
       content = "'创建字典项: ' + #vo.typeCode + '/' + #vo.itemCode")
   @Operation(summary = "创建字典项")
   @RateLimit(resource = "system.dictitem.save", threshold = 50)
-  @Idempotent(key = "ydsz:system:dict-item:save:#userId", ttlSeconds = 5)
+  @Idempotent(key = "'ydsz:system:dict-item:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PostMapping
   public BaseResponse<String> save(@Valid @RequestBody DictItemVO vo) {
     return BaseResponse.success(service.save(vo));
@@ -218,7 +218,7 @@ public class DictItemController {
       content = "'更新字典项: ' + #vo.typeCode + '/' + #vo.itemCode")
   @Operation(summary = "更新字典项")
   @RateLimit(resource = "system.dictitem.update", threshold = 50)
-  @Idempotent(key = "ydsz:system:dict-item:update:#userId", ttlSeconds = 5)
+  @Idempotent(key = "'ydsz:system:dict-item:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PutMapping
   public BaseResponse<Boolean> update(@Valid @RequestBody DictItemVO vo) {
     return BaseResponse.success(service.updateById(vo));
@@ -241,7 +241,7 @@ public class DictItemController {
       content = "'删除字典项: ' + #id")
   @Operation(summary = "删除字典项")
   @RateLimit(resource = "system.dictitem.remove", threshold = 50)
-  @Idempotent(key = "ydsz:system:dict-item:remove:#id", ttlSeconds = 5)
+  @Idempotent(key = "'ydsz:system:dict-item:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   public BaseResponse<Boolean> remove(@PathVariable String id) {
     return BaseResponse.success(service.removeById(id));
@@ -273,7 +273,7 @@ public class DictItemController {
   @Operation(summary = "批量新增字典项", description = "运营初始化场景，单次最多 500 条")
   @RateLimit(resource = "system.dictitem.batch", threshold = 10)
   @Idempotent(
-      key = "'ydsz:system:dict-item:batch:' + #batchDTO.items.hashCode() + ':' + #userId",
+      key = "'ydsz:system:dict-item:batch:' + #batchDTO.items.hashCode() + ':' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
       ttlSeconds = 30)
   @PostMapping("/batch")
   public BaseResponse<Map<String, Object>> batchSave(

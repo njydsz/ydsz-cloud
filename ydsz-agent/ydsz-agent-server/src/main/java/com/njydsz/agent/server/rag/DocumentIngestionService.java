@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.rag;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,6 +50,9 @@ public class DocumentIngestionService {
   /**
    * 摄入文档
    *
+   * <p>P0 修复：先分块 + 向量化（纯内存操作，失败不破坏旧索引）， 全部成功后才删除旧索引并批量写入，将不一致窗口压缩到最小。
+   * 原实现先 {@code deleteByDocument} 再逐条写入，embedding/写入中途失败会导致旧索引已删、新索引不完整。
+   *
    * @param documentId 文档 ID
    * @param content 文档文本内容
    * @param documentTitle 文档标题
@@ -62,24 +66,27 @@ public class DocumentIngestionService {
         documentTitle,
         content != null ? content.length() : 0);
 
-    vectorStore.deleteByDocument(documentId);
-
     List<TextChunk> chunks = textChunker.chunk(content, documentId, documentTitle, source);
     if (chunks.isEmpty()) {
       LOG.warn("[RAG-Ingest] 分块结果为空: docId={}", documentId);
       return 0;
     }
 
+    // 1. 向量化（纯内存，失败时旧索引保持完整）
+    List<TextChunk> embeddedChunks = new ArrayList<>(chunks.size());
     for (int i = 0; i < chunks.size(); i += EMBED_BATCH_SIZE) {
       int end = Math.min(i + EMBED_BATCH_SIZE, chunks.size());
       List<TextChunk> batch = chunks.subList(i, end);
       List<String> texts = batch.stream().map(TextChunk::getContent).collect(Collectors.toList());
       List<List<Float>> embeddings = embeddingClient.embedBatch(texts);
       for (int j = 0; j < batch.size(); j++) {
-        TextChunk embedded = batch.get(j).withEmbedding(embeddings.get(j));
-        vectorStore.store(embedded);
+        embeddedChunks.add(batch.get(j).withEmbedding(embeddings.get(j)));
       }
     }
+
+    // 2. 全部向量化成功后，删除旧索引并批量写入（单次调用，减少不一致窗口）
+    vectorStore.deleteByDocument(documentId);
+    vectorStore.storeBatch(embeddedChunks);
 
     LOG.info("[RAG-Ingest] 摄入完成: docId={}, chunks={}", documentId, chunks.size());
     return chunks.size();

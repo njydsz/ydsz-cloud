@@ -75,16 +75,17 @@ ydsz:
       threshold: 10
       window-seconds: 60
 
-  # P2-3: 字段级加密（@EncryptField 试点）
-  # 为 UserAccount.realName 提供 AES-256-GCM 字段级加密
-  # ⚠️ 生产环境密钥应通过 Nacos 加密配置或 K8s Secret 注入，禁止硬编码
+    # P2-3: 字段级加密（@EncryptField 试点）
+    # 为 UserAccount.realName 提供 AES-256-GCM 字段级加密
+    # ⚠️ P0-1: 禁止硬编码密钥。密钥通过环境变量 YDSZ_FIELD_ENC_KEY_V1 注入
+    #（Nacos 加密配置或 K8s Secret），未配置时 common-safe 启动 fail-fast，防止默认密钥上线。
     field-encryption:
       enabled: true
       default-key-version: 1
       failure-strategy: THROW
       masked-value: "****"
       keys:
-        1: "fbQujnuiM1o99Ds4mK8VqyeLgRyI25gtL8e+irNglLM="
+        1: ${YDSZ_FIELD_ENC_KEY_V1:}
 
   # P2-3: API 版本管理机制
   web:

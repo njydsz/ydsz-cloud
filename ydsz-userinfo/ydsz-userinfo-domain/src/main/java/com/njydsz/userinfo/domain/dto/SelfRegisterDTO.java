@@ -40,4 +40,12 @@ public class SelfRegisterDTO implements Serializable {
   /** 手机/邮箱验证码 */
   @NotBlank(message = "{userinfo.self.register.verify.code.required}")
   private String verifyCode;
+
+  /** 图形验证码 key（P0-5：防批量注册，前端先调用 /api/v1/captcha 获取） */
+  @NotBlank(message = "{userinfo.self.register.captcha.key.required}")
+  private String captchaKey;
+
+  /** 图形验证码用户输入（P0-5：防批量注册） */
+  @NotBlank(message = "{userinfo.self.register.captcha.required}")
+  private String captcha;
 }

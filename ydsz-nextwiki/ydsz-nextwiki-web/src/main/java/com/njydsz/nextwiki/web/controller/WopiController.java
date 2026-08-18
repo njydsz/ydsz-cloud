@@ -32,6 +32,7 @@ import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * WOPI 协议接口 Controller（P1-4 + P1-R5 + P2-R4）。
@@ -174,6 +175,7 @@ public class WopiController {
   @Idempotent(key = "ydsz:nextwiki:WopiController:putFileContents:lock", ttlSeconds = 5)
   @PostMapping("/files/{fileId}/contents")
   @Operation(summary = "WOPI PutFile", description = "接收编辑器保存的文件内容")
+  @Transactional(rollbackFor = Exception.class)
   public WopiPutFileResponse putFileContents(
       @PathVariable String fileId,
       @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId,
@@ -227,6 +229,7 @@ public class WopiController {
   @Idempotent(key = "ydsz:nextwiki:WopiController:lockFile:lock", ttlSeconds = 5)
   @PostMapping("/files/{fileId}/lock")
   @Operation(summary = "WOPI Lock", description = "锁定文件防止并发编辑")
+  @Transactional(rollbackFor = Exception.class)
   public WopiPutFileResponse lockFile(
       @PathVariable String fileId,
       @RequestHeader(value = "X-WOPI-Lock", required = false) String lockId,
@@ -252,6 +255,7 @@ public class WopiController {
   @Idempotent(key = "ydsz:nextwiki:WopiController:unlockFile:lock", ttlSeconds = 5)
   @PostMapping("/files/{fileId}/unlock")
   @Operation(summary = "WOPI Unlock", description = "解锁文件")
+  @Transactional(rollbackFor = Exception.class)
   public WopiPutFileResponse unlockFile(
       @PathVariable String fileId,
       @RequestHeader(value = "X-WOPI-Lock", required = false) String lockId,

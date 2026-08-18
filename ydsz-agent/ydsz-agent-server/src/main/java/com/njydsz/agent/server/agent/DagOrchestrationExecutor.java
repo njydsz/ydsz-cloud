@@ -102,7 +102,14 @@ public class DagOrchestrationExecutor {
     List<String> sortedNodeIds = topologicalSort(dag);
     Map<String, CompletableFuture<Void>> futureMap = new HashMap<>();
 
+    // LOOP 循环体节点由 LOOP 节点在循环内调度，不参与主图调度，避免双重执行
+    Set<String> loopBodyNodeIds = collectLoopBodyNodeIds(dag);
+
     for (String nodeId : sortedNodeIds) {
+      // 循环体节点跳过主图调度（在 LOOP 节点内由 executeLoopNode 驱动执行）
+      if (loopBodyNodeIds.contains(nodeId)) {
+        continue;
+      }
       AgentDag.Node node = dag.getNodes().get(nodeId);
       List<String> deps = dag.getEdges().getOrDefault(nodeId, List.of());
 
@@ -169,6 +176,12 @@ public class DagOrchestrationExecutor {
       Set<String> completed,
       Set<String> failed,
       String executionId) {
+    // 条件分支：若本节点属于某 CONDITION 节点未选中的分支，则跳过执行
+    if (isBranchSkipped(dag, node, results)) {
+      LOG.info("[DAG] 节点被条件分支排除，跳过: node={}", node.getId());
+      return;
+    }
+
     List<AgentDag.Node> deps = dag.getDependencies(node.getId());
     for (AgentDag.Node dep : deps) {
       if (failed.contains(dep.getId())) {
@@ -234,6 +247,72 @@ public class DagOrchestrationExecutor {
       LOG.error("[DAG] 节点执行失败: id={}, error={}", node.getId(), e.getMessage(), e);
       failed.add(node.getId());
     }
+  }
+
+  /**
+   * 收集所有 LOOP 节点声明的循环体节点 ID。
+   *
+   * <p>这些节点由 LOOP 节点在循环体内调度执行，不应再参与主图调度， 否则会被主图与循环体各执行一次（双重执行 + 结果竞态）。
+   *
+   * @param dag DAG 定义
+   * @return 循环体节点 ID 集合
+   */
+  private static Set<String> collectLoopBodyNodeIds(AgentDag dag) {
+    Set<String> loopBodyNodeIds = new HashSet<>();
+    for (AgentDag.Node node : dag.getNodes().values()) {
+      String nodeType = (String) node.getConfig().getOrDefault("nodeType", "AGENT");
+      if ("LOOP".equalsIgnoreCase(nodeType)) {
+        String loopBody = (String) node.getConfig().getOrDefault("loopBody", "");
+        if (!loopBody.isBlank()) {
+          for (String bodyId : loopBody.split(",")) {
+            loopBodyNodeIds.add(bodyId.trim());
+          }
+        }
+      }
+    }
+    return loopBodyNodeIds;
+  }
+
+  /**
+   * 判断节点是否被条件分支排除。
+   *
+   * <p>遍历所有 CONDITION 节点：若本节点是该 CONDITION 的 trueBranch/falseBranch 之一， 但 CONDITION
+   * 实际选中的分支不是本节点，则本节点应被跳过执行。
+   *
+   * <p>时序保证：拓扑序约束下 CONDITION 节点先于其分支节点执行（分支节点应通过 dependsOn 声明依赖），
+   * 因此读取 {@code __BRANCH__<condId>} 时通常已就绪；若尚未就绪则保守不跳过。
+   *
+   * @param dag DAG 定义
+   * @param node 待判断节点
+   * @param results 节点执行结果映射
+   * @return {@code true} 表示该节点属于未选中的分支，应跳过
+   */
+  private static boolean isBranchSkipped(AgentDag dag, AgentDag.Node node, Map<String, String> results) {
+    for (AgentDag.Node candidate : dag.getNodes().values()) {
+      String nodeType = (String) candidate.getConfig().getOrDefault("nodeType", "AGENT");
+      if (!"CONDITION".equalsIgnoreCase(nodeType)) {
+        continue;
+      }
+      String trueBranch = (String) candidate.getConfig().get("trueBranch");
+      String falseBranch = (String) candidate.getConfig().get("falseBranch");
+      if (trueBranch == null && falseBranch == null) {
+        continue;
+      }
+      // 仅当本节点是某 CONDITION 的分支目标时才需要判断
+      boolean isBranchTarget = node.getId().equals(trueBranch) || node.getId().equals(falseBranch);
+      if (!isBranchTarget) {
+        continue;
+      }
+      String chosen = results.get("__BRANCH__" + candidate.getId());
+      if (chosen == null) {
+        // CONDITION 尚未执行（正常情况下拓扑序已保证其先完成），保守不跳过
+        continue;
+      }
+      if (!node.getId().equals(chosen)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

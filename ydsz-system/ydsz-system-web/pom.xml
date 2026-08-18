@@ -20,6 +20,21 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>
         </dependency>
+        <!-- ydsz-common-lock: @Idempotent 注解（ConfigController 等 10 个 Controller 使用）显式声明，替代 server 传递依赖 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-lock</artifactId>
+        </dependency>
+        <!-- ydsz-common-feign: @EnableYdszFeign（SystemApplication）显式声明，替代 server 传递依赖 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-feign</artifactId>
+        </dependency>
+        <!-- ydsz-common-auth: @EnableYdszAuth + @Idempotent key 中 AuthContextUtils.getUserId()（SpEL 静态调用） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-auth</artifactId>
+        </dependency>
         <!-- ydsz-common-core: explicit declaration for direct usage (was transitive via common-web) -->
         <dependency>
             <groupId>com.njydsz</groupId>

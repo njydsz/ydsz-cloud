@@ -231,33 +231,47 @@ public class CostAnalysisService {
     private final Map<String, Double> prices;
 
     public ModelPriceConfig() {
-      this(
-          Map.of(
-              "gpt-4o", DEFAULT_GPT4O,
-              "gpt-4o-mini", DEFAULT_GPT4O_MINI,
-              "gpt-4-turbo", DEFAULT_GPT4_TURBO,
-              "gpt-3.5-turbo", DEFAULT_GPT35_TURBO,
-              "deepseek-chat", DEFAULT_DEEPSEEK));
+      Map<String, Double> defaultPrices = new LinkedHashMap<>(5);
+      // 注意：子串匹配场景下必须"长键优先"，gpt-4o-mini 需排在 gpt-4o 之前，否则会被错误命中
+      defaultPrices.put("gpt-4o-mini", DEFAULT_GPT4O_MINI);
+      defaultPrices.put("gpt-4o", DEFAULT_GPT4O);
+      defaultPrices.put("gpt-4-turbo", DEFAULT_GPT4_TURBO);
+      defaultPrices.put("gpt-3.5-turbo", DEFAULT_GPT35_TURBO);
+      defaultPrices.put("deepseek-chat", DEFAULT_DEEPSEEK);
+      this.prices = defaultPrices;
     }
 
     public ModelPriceConfig(Map<String, Double> customPrices) {
       if (customPrices != null && !customPrices.isEmpty()) {
-        this.prices = new LinkedHashMap<>(customPrices);
+        // 拷贝为 LinkedHashMap 保序，并在插入时按"键长度降序"排序，保证子串匹配时最长键优先
+        this.prices = customPrices.entrySet().stream()
+            .sorted(Map.Entry.<String, Double>comparingByKey(
+                    (k1, k2) -> Integer.compare(k2.length(), k1.length()))
+                .thenComparing(Map.Entry.comparingByKey()))
+            .collect(
+                java.util.stream.Collectors.toMap(
+                    Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new));
       } else {
-        this.prices =
-            Map.of(
-                "gpt-4o", DEFAULT_GPT4O,
-                "gpt-4o-mini", DEFAULT_GPT4O_MINI,
-                "gpt-4-turbo", DEFAULT_GPT4_TURBO,
-                "gpt-3.5-turbo", DEFAULT_GPT35_TURBO,
-                "deepseek-chat", DEFAULT_DEEPSEEK);
+        Map<String, Double> defaultPrices = new LinkedHashMap<>(5);
+        defaultPrices.put("gpt-4o-mini", DEFAULT_GPT4O_MINI);
+        defaultPrices.put("gpt-4o", DEFAULT_GPT4O);
+        defaultPrices.put("gpt-4-turbo", DEFAULT_GPT4_TURBO);
+        defaultPrices.put("gpt-3.5-turbo", DEFAULT_GPT35_TURBO);
+        defaultPrices.put("deepseek-chat", DEFAULT_DEEPSEEK);
+        this.prices = defaultPrices;
       }
     }
 
     /**
-     * 解析模型单价（USD / 千 Token）
+     * 解析模型单价（USD / 千 Token）。
      *
-     * <p>采用子串包含匹配：{@code gpt-4o-2024-08-06} 可命中 {@code gpt-4o} 配置。 配置项先后顺序有意义，越具体的键应排在越前面。
+     * <p>匹配策略（P0 修复）：
+     *
+     * <ol>
+     *   <li>精确匹配优先：模型名与配置键完全一致时直接命中
+     *   <li>子串匹配兜底：支持 {@code gpt-4o-2024-08-06} 命中 {@code gpt-4o} 这类带版本后缀的模型名；
+     *       遍历时取匹配键中最长者，避免 {@code gpt-4o-mini} 被 {@code gpt-4o} 前缀误命中（价差 16 倍）
+     * </ol>
      *
      * @param model 模型名称，允许为 {@code null} 或空白
      * @return 单价（USD / 千 Token），恒大于 0
@@ -267,10 +281,21 @@ public class CostAnalysisService {
         return FALLBACK_PRICE;
       }
       String lowerModel = model.toLowerCase();
-      for (Map.Entry<String, Double> entry : prices.entrySet()) {
-        if (lowerModel.contains(entry.getKey())) {
-          return entry.getValue();
+      // 1. 精确匹配优先
+      if (prices.containsKey(lowerModel)) {
+        return prices.get(lowerModel);
+      }
+      // 2. 子串匹配：遍历取"最长匹配键"，避免 gpt-4o-mini 被 gpt-4o 前缀误命中
+      String bestMatchKey = null;
+      int bestMatchLength = 0;
+      for (String key : prices.keySet()) {
+        if (lowerModel.contains(key) && key.length() > bestMatchLength) {
+          bestMatchKey = key;
+          bestMatchLength = key.length();
         }
+      }
+      if (bestMatchKey != null) {
+        return prices.get(bestMatchKey);
       }
       return FALLBACK_PRICE;
     }

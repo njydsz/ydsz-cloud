@@ -64,6 +64,13 @@ public class DagController {
 
   private static final Logger LOG = LoggerFactory.getLogger(DagController.class);
 
+  /**
+   * DAG 执行幂等锁 TTL（秒）。
+   *
+   * <p>P0 修复：必须不小于 DAG 编排总超时（300s），否则锁先于执行释放，相同请求可重复提交导致 DAG 重复执行、LLM 成本翻倍。
+   */
+  private static final int EXECUTE_IDEMPOTENT_TTL_SECONDS = 300;
+
   /** DAG DSL 解析器（YAML → AgentDag） */
   private final DagDslParser dslParser;
 
@@ -98,7 +105,7 @@ public class DagController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'execute'")
-  @Idempotent(key = "ydsz:agent:DagController:execute:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:agent:DagController:execute:lock", ttlSeconds = EXECUTE_IDEMPOTENT_TTL_SECONDS)
   @RateLimit(resource = "agent.dag.execute", threshold = 50)
   @PostMapping("/execute")
   public BaseResponse<DagOrchestrationExecutor.DagExecutionResult> execute(

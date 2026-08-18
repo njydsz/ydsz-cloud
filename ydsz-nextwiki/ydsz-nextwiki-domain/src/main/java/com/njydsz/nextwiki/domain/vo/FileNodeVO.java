@@ -83,6 +83,9 @@ public class FileNodeVO implements Serializable {
   @Schema(description = "是否星标")
   private Boolean starred;
 
+  @Schema(description = "节点状态: active / locked / archived（locked 用于 Check-out 防并发编辑）")
+  private String status;
+
   @Schema(description = "共享状态")
   private String shareStatus;
 

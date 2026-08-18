@@ -17,7 +17,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -34,6 +33,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
@@ -191,13 +191,25 @@ public class ChunkUploadApplicationService {
    * @param uploadId 初始化时返回的会话 ID
    * @param chunkNumber 当前分片序号（从 1 开始）
    * @param chunk 分片文件内容
-   * @throws BusinessException 会话不存在、分片为空或超限时抛出
+   * @param userId 操作人 ID（P0-1：校验会话归属，防止越权上传他人会话的分片）
+   * @throws BusinessException 会话不存在、分片为空或超限、会话归属不匹配时抛出
    * @complexity O(1)（磁盘写入 + Redis 集合追加）
    * @concurrency 多个分片可并发上传，最终由 {@link #completeChunkUpload} 串行按序合并
    * @note 仅依赖会话 Redis 状态，单分片幂等可重传（覆盖写同名临时文件）
    */
-  public void uploadChunk(String uploadId, int chunkNumber, MultipartFile chunk) {
-    validateSession(uploadId);
+  public void uploadChunk(String uploadId, int chunkNumber, MultipartFile chunk, String userId) {
+    ChunkUploadSession session = validateSession(uploadId);
+
+    // P0-1: 校验分片上传会话归属，防止任意用户持 uploadId 越权上传分片
+    if (session.getUserId() != null && !session.getUserId().equals(userId)) {
+      log.warn(
+          "[ChunkUploadApplicationService] 分片上传会话归属不匹配，拒绝上传: uploadId={}, sessionUser={}, requestUser={}",
+          uploadId,
+          session.getUserId(),
+          userId);
+      throw BusinessException.of(NextwikiExceptionCode.PERMISSION_DENIED)
+          .data("uploadId", uploadId);
+    }
 
     if (chunk == null || chunk.isEmpty()) {
       throw new BusinessException(NextwikiExceptionCode.FILE_UPLOAD_EMPTY);
