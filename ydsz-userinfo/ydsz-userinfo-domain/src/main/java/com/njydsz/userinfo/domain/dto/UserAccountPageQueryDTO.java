@@ -45,4 +45,10 @@ public class UserAccountPageQueryDTO extends PageQuery {
 
   /** 所属部门 ID（精确匹配） */
   private String deptId;
+
+  /** 直属上级用户 ID（精确匹配） */
+  private String leaderId;
+
+  /** 岗位编码（精确匹配，如 PM/DEV/QA/SA） */
+  private String positionCode;
 }

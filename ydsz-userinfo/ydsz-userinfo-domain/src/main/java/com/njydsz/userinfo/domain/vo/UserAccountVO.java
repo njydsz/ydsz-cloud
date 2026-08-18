@@ -55,6 +55,15 @@ public class UserAccountVO {
   /** 所属公司 ID */
   private String companyId;
 
+  /** 所属部门 ID（关联 ydsz_department.id，支持 dept: 审批人展开） */
+  private String deptId;
+
+  /** 直属上级用户 ID（关联 ydsz_user_account.id，支持 leader: 审批人展开） */
+  private String leaderId;
+
+  /** 岗位编码（如 PM/DEV/QA/SA，支持 position: 审批人展开） */
+  private String positionCode;
+
   /** 租户 ID */
   private String tenantId;
 

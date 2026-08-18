@@ -78,4 +78,16 @@ public interface FlowTemplateRepository {
    * @return 更新后的流程模板 VO
    */
   FlowTemplateVO update(FlowTemplateVO vo);
+
+  /**
+   * 查询分类下的默认模板（最新版本）。
+   *
+   * <p>返回 {@code category = ? AND tenantId = ? AND isLatest = 1} 的模板，
+   * 每个分类下只有一个默认模板（最新版本）。用于流程发起时按分类获取推荐模板。
+   *
+   * @param businessType 业务类型（模板分类）
+   * @param tenantId 租户 ID
+   * @return 默认模板 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<FlowTemplateVO> findDefaultByCategory(String businessType, String tenantId);
 }

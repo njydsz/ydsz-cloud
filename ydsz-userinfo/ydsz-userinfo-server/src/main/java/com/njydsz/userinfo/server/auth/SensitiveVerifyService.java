@@ -1,6 +1,7 @@
 package com.njydsz.userinfo.server.auth;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,9 +11,9 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
+import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 
 /**
  * 敏感操作二次认证服务。
@@ -58,12 +59,13 @@ public class SensitiveVerifyService {
       throw new BusinessException(UserInfoExceptionCode.SENSITIVE_VERIFY_REQUIRED);
     }
 
-    UserAccountDO user = userAccountRepository.findById(userId);
-    if (user == null) {
+    Optional<UserAccountCredentialVO> credentialOpt = userAccountRepository.findCredentialById(userId);
+    if (credentialOpt.isEmpty()) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
 
-    if (!passwordEncoder.matches(password, user.getPassword())) {
+    UserAccountCredentialVO credential = credentialOpt.get();
+    if (!passwordEncoder.matches(password, credential.getPassword())) {
       log.warn("敏感操作二次认证密码错误: userId={}", userId);
       throw new BusinessException(UserInfoExceptionCode.SENSITIVE_VERIFY_PASSWORD_INCORRECT);
     }

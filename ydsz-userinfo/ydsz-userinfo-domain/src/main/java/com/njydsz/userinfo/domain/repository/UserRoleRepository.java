@@ -27,6 +27,14 @@ public interface UserRoleRepository {
   List<UserRoleVO> findByUserId(String userId);
 
   /**
+   * 根据角色 ID 查询用户-角色关联列表。
+   *
+   * @param roleId 角色 ID
+   * @return 用户-角色关联列表
+   */
+  List<UserRoleVO> findByRoleId(String roleId);
+
+  /**
    * 根据用户 ID 查询角色 ID 列表。
    *
    * @param userId 用户 ID

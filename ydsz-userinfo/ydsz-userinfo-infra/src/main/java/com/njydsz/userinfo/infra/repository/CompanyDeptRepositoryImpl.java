@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.userinfo.domain.dto.CompanyDeptDTO;
+import com.njydsz.userinfo.domain.dto.CompanyDeptUpdateDTO;
 import com.njydsz.userinfo.domain.repository.CompanyDeptRepository;
 import com.njydsz.userinfo.domain.vo.CompanyDeptVO;
 import com.njydsz.userinfo.infra.converter.UserInfoConverter;
@@ -71,6 +72,13 @@ public class CompanyDeptRepositoryImpl implements CompanyDeptRepository {
   public CompanyDeptVO create(CompanyDeptDTO dto) {
     CompanyDeptDO entity = converter.dtoToEntity(dto);
     companyDeptMapper.insert(entity);
+    return converter.entityToVO(entity);
+  }
+
+  @Override
+  public CompanyDeptVO update(CompanyDeptUpdateDTO dto) {
+    CompanyDeptDO entity = converter.updateDtoToEntity(dto);
+    companyDeptMapper.updateById(entity);
     return converter.entityToVO(entity);
   }
 

@@ -113,7 +113,7 @@ public class AccountStatusGuard {
     user.setUsername(credential.getUsername());
     user.setPassword(credential.getPassword());
     user.setTenantId(credential.getTenantId());
-    user.setStatus(credential.getStatus());
+    user.setStatus(String.valueOf(credential.getStatus()));
     user.setLoginFailCount(credential.getLoginFailCount());
     user.setLockedUntil(credential.getLockedUntil());
     return user;

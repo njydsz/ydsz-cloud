@@ -28,4 +28,7 @@ public class MenuPageQuery extends PageQuery {
 
   /** 状态过滤：ENABLE/DISABLE */
   private String status;
+
+  /** 父菜单 ID */
+  private String parentId;
 }

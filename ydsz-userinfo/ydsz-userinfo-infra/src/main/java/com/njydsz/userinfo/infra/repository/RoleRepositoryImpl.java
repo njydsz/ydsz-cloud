@@ -1,8 +1,10 @@
 package com.njydsz.userinfo.infra.repository;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -53,6 +55,15 @@ public class RoleRepositoryImpl implements RoleRepository {
   public List<RoleVO> findByIds(Collection<String> ids) {
     List<RoleDO> entities = roleMapper.selectBatchIds(ids);
     return converter.roleListToVO(entities);
+  }
+
+  @Override
+  public List<RoleVO> listByIds(Collection<String> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return Collections.emptyList();
+    }
+    List<RoleDO> list = roleMapper.selectBatchIds(ids);
+    return list.stream().map(converter::entityToVO).collect(Collectors.toList());
   }
 
   @Override

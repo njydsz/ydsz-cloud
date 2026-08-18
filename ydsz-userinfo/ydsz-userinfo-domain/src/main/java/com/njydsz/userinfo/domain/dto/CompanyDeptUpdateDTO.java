@@ -3,22 +3,24 @@ package com.njydsz.userinfo.domain.dto;
 import java.io.Serial;
 import java.io.Serializable;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 /**
- * 公司-部门关联 DTO。
+ * 公司-部门关联更新 DTO。
  *
- * <p>同时用于创建和更新场景：创建时 {@code id} 可不传，更新时 {@code id} 必填。
+ * <p>用于更新公司-部门关联关系。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-public class CompanyDeptDTO implements Serializable {
+public class CompanyDeptUpdateDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
   /** 关联 ID（更新时必填） */
+  @NotBlank(message = "关联 ID 不能为空")
   private String id;
 
   /** 公司 ID */

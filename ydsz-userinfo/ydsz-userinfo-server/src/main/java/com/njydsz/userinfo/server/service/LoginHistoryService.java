@@ -2,7 +2,7 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
-import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
+import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 
 /**
  * 登录历史服务接口
@@ -51,5 +51,5 @@ public interface LoginHistoryService {
    * @param limit 返回记录数上限
    * @return 登录历史列表
    */
-  List<UserLoginHistoryDO> getRecentLogins(String userId, int limit);
+  List<UserLoginHistoryVO> getRecentLogins(String userId, int limit);
 }

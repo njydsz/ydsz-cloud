@@ -1,18 +1,16 @@
 package com.njydsz.userinfo.server.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
+import com.njydsz.userinfo.domain.dto.UserLoginHistoryDTO;
 import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
+import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 import com.njydsz.userinfo.server.auth.LoginAttemptCounterService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.service.LoginAttemptContext;
@@ -50,7 +48,6 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
   private static final int IP_BLOCK_THRESHOLD = 20;
 
   private final UserLoginHistoryRepository loginHistoryRepository;
-  private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final UserInfoProperties properties;
   private final LoginAttemptCounterService loginAttemptCounterService;
 
@@ -67,16 +64,14 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
 
     // DB 维度：登录历史落库（审计留存），失败不影响主流程
     try {
-      UserLoginHistoryDO history = new UserLoginHistoryDO();
-      history.setId(String.valueOf(snowflakeIdGenerator.nextId()));
+      UserLoginHistoryDTO history = new UserLoginHistoryDTO();
       history.setUserId(context.userId());
       history.setUsername(context.username());
       history.setLoginIp(context.loginIp());
       history.setLoginResult(result);
       history.setFailReason(failReason);
       history.setUserAgent(userAgent);
-      history.setCreatedAt(LocalDateTime.now());
-      loginHistoryRepository.insert(history);
+      loginHistoryRepository.create(history);
     } catch (Exception e) {
       // 登录历史记录失败不应影响登录主流程
       log.warn(
@@ -105,19 +100,13 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
   }
 
   @Override
-  public List<UserLoginHistoryDO> getRecentLogins(String userId, int limit) {
+  public List<UserLoginHistoryVO> getRecentLogins(String userId, int limit) {
     if (userId == null || userId.isBlank()) {
       return List.of();
     }
 
     try {
-      LambdaQueryWrapper<UserLoginHistoryDO> wrapper = new LambdaQueryWrapper<>();
-      wrapper
-          .eq(UserLoginHistoryDO::getUserId, userId)
-          .orderByDesc(UserLoginHistoryDO::getCreatedAt)
-          .last("LIMIT " + Math.min(limit, 100));
-
-      return loginHistoryRepository.list(wrapper);
+      return loginHistoryRepository.findRecentByUserId(userId, Math.min(limit, 100));
     } catch (Exception e) {
       log.warn("Failed to query recent logins: userId={}, error={}", userId, e.getMessage());
       return List.of();

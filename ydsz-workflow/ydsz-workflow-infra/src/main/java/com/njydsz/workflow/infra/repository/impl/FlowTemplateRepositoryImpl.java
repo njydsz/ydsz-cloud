@@ -95,4 +95,19 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
     templateMapper.updateById(entity);
     return vo;
   }
+
+  @Override
+  public Optional<FlowTemplateVO> findDefaultByCategory(String businessType, String tenantId) {
+    return templateMapper
+        .selectList(
+            new LambdaQueryWrapper<FlowTemplateDO>()
+                .eq(FlowTemplateDO::getCategory, businessType)
+                .eq(FlowTemplateDO::getTenantId, tenantId)
+                .eq(FlowTemplateDO::getIsLatest, 1)
+                .eq(FlowTemplateDO::getDeleted, 0)
+                .last("LIMIT 1"))
+        .stream()
+        .findFirst()
+        .map(converter::entityToVO);
+  }
 }

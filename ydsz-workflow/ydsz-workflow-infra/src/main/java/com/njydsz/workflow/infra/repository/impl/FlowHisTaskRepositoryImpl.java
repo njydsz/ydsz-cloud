@@ -83,13 +83,11 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
   }
 
   @Override
-  public List<FlowHisTaskVO> findByAssignee(String userId, String tenantId, int limit) {
+  public List<FlowHisTaskVO> findByAssignee(String userId, int limit) {
     return converter.flowHisTaskListToVO(
         hisTaskMapper.selectList(
             new LambdaQueryWrapper<FlowHisTaskDO>()
                 .eq(FlowHisTaskDO::getAssigneeId, userId)
-                .eq(FlowHisTaskDO::getTenantId, tenantId)
-                .eq(FlowHisTaskDO::getDeleted, 0)
                 .orderByDesc(FlowHisTaskDO::getFinishAt)
                 .last("LIMIT " + limit)));
   }

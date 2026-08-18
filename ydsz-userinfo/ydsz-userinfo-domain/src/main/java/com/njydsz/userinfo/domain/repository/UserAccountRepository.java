@@ -57,6 +57,16 @@ public interface UserAccountRepository {
   Optional<UserAccountCredentialVO> findCredentialByUsername(String username);
 
   /**
+   * 根据用户 ID 查询用户认证凭据（含密码哈希、锁定状态）。
+   *
+   * <p>专用于敏感操作二次认证等通过 ID 反查凭据的场景。
+   *
+   * @param id 用户 ID
+   * @return 用户认证凭据 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<UserAccountCredentialVO> findCredentialById(String id);
+
+  /**
    * 创建用户账号。
    *
    * @param dto 用户创建 DTO

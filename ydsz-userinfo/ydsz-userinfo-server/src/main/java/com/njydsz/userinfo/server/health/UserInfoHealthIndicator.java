@@ -1,6 +1,5 @@
 package com.njydsz.userinfo.server.health;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -11,8 +10,8 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
-import com.njydsz.userinfo.infra.entity.RoleDO;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
+import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
+import com.njydsz.userinfo.domain.query.RolePageQuery;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 
@@ -58,14 +57,11 @@ public class UserInfoHealthIndicator extends AbstractModuleHealthIndicator {
     }
 
     // 用户表探针
-    LambdaQueryWrapper<UserAccountDO> userWrapper = new LambdaQueryWrapper<>();
-    userWrapper.eq(UserAccountDO::getDeleted, 0);
     checkTableProbeWithValue(
-        builder, "userCount", () -> userAccountRepository.count(userWrapper));
+        builder, "userCount", () -> userAccountRepository.count(new UserAccountPageQueryDTO()));
 
     // 角色表探针
-    LambdaQueryWrapper<RoleDO> roleWrapper = new LambdaQueryWrapper<>();
-    roleWrapper.eq(RoleDO::getDeleted, 0);
-    checkTableProbeWithValue(builder, "roleCount", () -> roleRepository.count(roleWrapper));
+    checkTableProbeWithValue(
+        builder, "roleCount", () -> roleRepository.countByQuery(new RolePageQuery()));
   }
 }

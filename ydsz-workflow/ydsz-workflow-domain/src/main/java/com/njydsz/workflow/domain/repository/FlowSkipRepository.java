@@ -62,4 +62,15 @@ public interface FlowSkipRepository {
    * @return 更新后的节点跳转 VO
    */
   FlowSkipVO update(FlowSkipVO vo);
+
+  /**
+   * 按流程定义 ID + 节点编码查询节点跳转列表。
+   *
+   * <p>查询从指定节点出发的所有跳转边，用于流程推进时获取当前节点的所有流出路径。
+   *
+   * @param definitionId 流程定义 ID
+   * @param nodeCode 节点编码
+   * @return 节点跳转 VO 列表
+   */
+  List<FlowSkipVO> findByDefinitionIdAndNodeCode(String definitionId, String nodeCode);
 }

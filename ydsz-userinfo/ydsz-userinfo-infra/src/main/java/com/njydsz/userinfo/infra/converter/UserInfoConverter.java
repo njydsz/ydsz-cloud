@@ -11,6 +11,7 @@ import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.dto.CompanyCreateDTO;
 import com.njydsz.userinfo.domain.dto.CompanyDTO;
 import com.njydsz.userinfo.domain.dto.CompanyDeptDTO;
+import com.njydsz.userinfo.domain.dto.CompanyDeptUpdateDTO;
 import com.njydsz.userinfo.domain.dto.CompanyUpdateDTO;
 import com.njydsz.userinfo.domain.dto.DepartmentCreateDTO;
 import com.njydsz.userinfo.domain.dto.DepartmentDTO;
@@ -694,6 +695,21 @@ public interface UserInfoConverter {
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   CompanyDeptDO dtoToEntity(CompanyDeptDTO dto);
+
+  /**
+   * 公司-部门关联更新 DTO → 实体
+   *
+   * <p>保留 id 字段用于定位更新记录，自动填充字段中 updatedBy/updatedAt 由框架更新。
+   *
+   * @param dto 公司-部门关联更新 DTO（含 id）
+   * @return 公司-部门关联实体（含 id）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  CompanyDeptDO updateDtoToEntity(CompanyDeptUpdateDTO dto);
 
   // ===== RolePermissionDO =====
 

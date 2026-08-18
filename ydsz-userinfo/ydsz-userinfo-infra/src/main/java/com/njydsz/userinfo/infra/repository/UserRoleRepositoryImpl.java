@@ -40,6 +40,14 @@ public class UserRoleRepositoryImpl implements UserRoleRepository {
   }
 
   @Override
+  public List<UserRoleVO> findByRoleId(String roleId) {
+    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRoleDO::getRoleId, roleId);
+    List<UserRoleDO> entities = userRoleMapper.selectList(wrapper);
+    return converter.userRoleListToVO(entities);
+  }
+
+  @Override
   public List<String> findRoleIdsByUserId(String userId) {
     LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserRoleDO::getUserId, userId);

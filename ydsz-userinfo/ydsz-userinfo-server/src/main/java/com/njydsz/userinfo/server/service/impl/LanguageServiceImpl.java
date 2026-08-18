@@ -4,13 +4,16 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
+import com.njydsz.userinfo.domain.dto.LanguageCreateDTO;
 import com.njydsz.userinfo.domain.dto.LanguageDTO;
+import com.njydsz.userinfo.domain.dto.LanguageUpdateDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
@@ -52,7 +55,9 @@ public class LanguageServiceImpl implements LanguageService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String create(LanguageDTO dto) {
-    LanguageVO vo = languageRepository.create(dto);
+    LanguageCreateDTO createDTO = new LanguageCreateDTO();
+    BeanUtils.copyProperties(dto, createDTO);
+    LanguageVO vo = languageRepository.create(createDTO);
     return vo.getId();
   }
 
@@ -62,7 +67,9 @@ public class LanguageServiceImpl implements LanguageService {
     LanguageVO existing = languageRepository.findById(dto.getId())
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND));
     BeanUpdateUtil.copyNonNull(dto, existing, "id");
-    LanguageVO vo = languageRepository.update(dto);
+    LanguageUpdateDTO updateDTO = new LanguageUpdateDTO();
+    BeanUtils.copyProperties(dto, updateDTO);
+    LanguageVO vo = languageRepository.update(updateDTO);
     return vo != null;
   }
 

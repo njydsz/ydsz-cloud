@@ -12,8 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.util.bean.BeanUpdateUtil;
+import com.njydsz.userinfo.domain.dto.MenuCreateDTO;
 import com.njydsz.userinfo.domain.dto.MenuDTO;
+import com.njydsz.userinfo.domain.dto.MenuUpdateDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.MenuPageQuery;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
@@ -90,7 +91,9 @@ public class MenuServiceImpl implements MenuService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String create(MenuDTO dto) {
-    MenuVO vo = menuRepository.create(dto);
+    MenuCreateDTO createDTO = new MenuCreateDTO();
+    BeanUtils.copyProperties(dto, createDTO);
+    MenuVO vo = menuRepository.create(createDTO);
     log.info("Menu created: code={}, id={}", dto.getMenuCode(), vo.getId());
     invalidatePermissionCache();
     return vo.getId();
@@ -106,10 +109,11 @@ public class MenuServiceImpl implements MenuService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(MenuDTO dto) {
-    MenuVO existing = menuRepository.findById(dto.getId())
+    menuRepository.findById(dto.getId())
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.MENU_NOT_FOUND));
-    BeanUpdateUtil.copyNonNull(dto, existing, "id");
-    MenuVO vo = menuRepository.update(dto);
+    MenuUpdateDTO updateDTO = new MenuUpdateDTO();
+    BeanUtils.copyProperties(dto, updateDTO);
+    MenuVO vo = menuRepository.update(updateDTO);
     if (vo != null) {
       invalidatePermissionCache();
     }

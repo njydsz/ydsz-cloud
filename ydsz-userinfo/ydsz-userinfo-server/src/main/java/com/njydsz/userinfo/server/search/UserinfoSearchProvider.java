@@ -3,8 +3,8 @@ package com.njydsz.userinfo.server.search;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,8 +15,9 @@ import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
+import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
+import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
 /**
  * 用户搜索提供者
@@ -39,7 +40,7 @@ import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class UserinfoSearchProvider implements SearchProvider<UserAccountDO> {
+public class UserinfoSearchProvider implements SearchProvider<UserAccountVO> {
 
   private final UserAccountRepository userAccountRepository;
 
@@ -65,38 +66,41 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccountDO> {
   }
 
   @Override
-  public IndexDocument toIndexDocument(UserAccountDO entity) {
-    if (entity == null || entity.getId() == null) {
+  public IndexDocument toIndexDocument(UserAccountVO vo) {
+    if (vo == null || vo.getId() == null) {
       return null;
     }
 
     StringBuilder content = new StringBuilder();
-    if (entity.getEmail() != null) {
-      content.append(entity.getEmail());
+    if (vo.getEmail() != null) {
+      content.append(vo.getEmail());
     }
-    if (entity.getPhone() != null) {
-      content.append(' ').append(entity.getPhone());
+    if (vo.getPhone() != null) {
+      content.append(' ').append(vo.getPhone());
+    }
+
+    String statusLabel = null;
+    if (vo.getStatus() != null) {
+      statusLabel = vo.getStatus() == 1 ? "ENABLED" : "DISABLED";
     }
 
     return IndexDocument.builder()
-        .id(entity.getId())
+        .id(vo.getId())
         .type("user")
-        .title(entity.getRealName())
-        .subtitle(entity.getUsername())
+        .title(vo.getRealName())
+        .subtitle(vo.getUsername())
         .content(content.toString())
-        .snippet(entity.getUserType())
-        .status(entity.getStatusEnum() == null ? null : entity.getStatusEnum().name())
-        .path("/user/profile/" + entity.getId())
-        .tenantId(entity.getTenantId())
-        .createdBy(entity.getCreatedBy())
+        .snippet(vo.getUserType())
+        .status(statusLabel)
+        .path("/user/profile/" + vo.getId())
+        .tenantId(vo.getTenantId())
         .createdAt(
-            entity.getCreatedAt() != null
-                ? entity.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()
+            vo.getCreatedAt() != null
+                ? vo.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()
                 : null)
-        .updatedBy(entity.getUpdatedBy())
         .updatedAt(
-            entity.getUpdatedAt() != null
-                ? entity.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant()
+            vo.getUpdatedAt() != null
+                ? vo.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant()
                 : null)
         .build();
   }
@@ -166,16 +170,14 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccountDO> {
   }
 
   public List<String> getAllDocumentIds(String tenantId) {
-    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.select(UserAccountDO::getId);
-    wrapper.eq(UserAccountDO::getDeleted, 0);
-    if (tenantId != null && !tenantId.isBlank()) {
-      wrapper.eq(UserAccountDO::getTenantId, tenantId);
-    }
-    return userAccountRepository.list(wrapper).stream().map(UserAccountDO::getId).toList();
+    UserAccountPageQueryDTO query = new UserAccountPageQueryDTO();
+    query.setTenantId(tenantId);
+    return userAccountRepository.list(query).stream()
+        .map(UserAccountVO::getId)
+        .collect(Collectors.toList());
   }
 
-  public UserAccountDO loadById(String id) {
-    return userAccountRepository.findById(id);
+  public UserAccountVO loadById(String id) {
+    return userAccountRepository.findById(id).orElse(null);
   }
 }

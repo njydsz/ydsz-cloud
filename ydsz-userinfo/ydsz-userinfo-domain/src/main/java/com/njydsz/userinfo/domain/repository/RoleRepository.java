@@ -46,6 +46,9 @@ public interface RoleRepository {
    */
   List<RoleVO> findByIds(Collection<String> ids);
 
+  /** 根据角色ID列表批量查询 */
+  List<RoleVO> listByIds(Collection<String> ids);
+
   /**
    * 分页查询角色列表。
    *

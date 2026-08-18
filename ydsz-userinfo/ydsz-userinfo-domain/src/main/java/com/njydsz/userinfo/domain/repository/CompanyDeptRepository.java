@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.userinfo.domain.dto.CompanyDeptDTO;
+import com.njydsz.userinfo.domain.dto.CompanyDeptUpdateDTO;
 import com.njydsz.userinfo.domain.vo.CompanyDeptVO;
 
 /**
@@ -65,6 +66,14 @@ public interface CompanyDeptRepository {
    * @return 保存后的关联 VO
    */
   CompanyDeptVO create(CompanyDeptDTO dto);
+
+  /**
+   * 更新公司-部门关联。
+   *
+   * @param dto 公司-部门关联更新 DTO（含 id）
+   * @return 更新后的关联 VO
+   */
+  CompanyDeptVO update(CompanyDeptUpdateDTO dto);
 
   /**
    * 根据公司 ID 删除关联。

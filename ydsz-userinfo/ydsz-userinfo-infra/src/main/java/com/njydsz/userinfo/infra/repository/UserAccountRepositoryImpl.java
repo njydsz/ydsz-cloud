@@ -59,6 +59,12 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   }
 
   @Override
+  public Optional<UserAccountCredentialVO> findCredentialById(String id) {
+    UserAccountDO entity = userAccountMapper.selectById(id);
+    return Optional.ofNullable(entity).map(converter::entityToCredentialVO);
+  }
+
+  @Override
   public UserAccountVO create(UserAccountCreateDTO dto) {
     UserAccountDO entity = converter.createDtoToEntity(dto);
     userAccountMapper.insert(entity);
@@ -169,6 +175,12 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
     }
     if (query.getDeptId() != null && !query.getDeptId().isBlank()) {
       wrapper.eq(UserAccountDO::getDeptId, query.getDeptId());
+    }
+    if (query.getLeaderId() != null && !query.getLeaderId().isBlank()) {
+      wrapper.eq(UserAccountDO::getLeaderId, query.getLeaderId());
+    }
+    if (query.getPositionCode() != null && !query.getPositionCode().isBlank()) {
+      wrapper.eq(UserAccountDO::getPositionCode, query.getPositionCode());
     }
     wrapper.orderByAsc(UserAccountDO::getCreatedAt);
     return wrapper;

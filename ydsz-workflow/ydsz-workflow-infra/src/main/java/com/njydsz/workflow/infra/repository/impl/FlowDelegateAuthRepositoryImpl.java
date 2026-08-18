@@ -1,5 +1,6 @@
 package com.njydsz.workflow.infra.repository.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,5 +81,41 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
     FlowDelegateAuthDO entity = converter.entityToDO(vo);
     delegateAuthMapper.updateById(entity);
     return vo;
+  }
+
+  @Override
+  public List<FlowDelegateAuthVO> findActiveByOwner(
+      String ownerId, String tenantId, LocalDateTime now) {
+    return converter.flowDelegateAuthListToVO(
+        delegateAuthMapper.selectList(
+            new LambdaQueryWrapper<FlowDelegateAuthDO>()
+                .eq(FlowDelegateAuthDO::getOwnerUserId, ownerId)
+                .eq(FlowDelegateAuthDO::getTenantId, tenantId)
+                .eq(FlowDelegateAuthDO::getAuthStatus, "ENABLED")
+                .le(FlowDelegateAuthDO::getStartTime, now)
+                .ge(FlowDelegateAuthDO::getEndTime, now)
+                .eq(FlowDelegateAuthDO::getDeleted, 0)));
+  }
+
+  @Override
+  public List<FlowDelegateAuthVO> matchAuth(
+      String ownerId, String flowCode, LocalDateTime now) {
+    return converter.flowDelegateAuthListToVO(
+        delegateAuthMapper.selectList(
+            new LambdaQueryWrapper<FlowDelegateAuthDO>()
+                .eq(FlowDelegateAuthDO::getOwnerUserId, ownerId)
+                .eq(FlowDelegateAuthDO::getFlowCode, flowCode)
+                .eq(FlowDelegateAuthDO::getAuthStatus, "ENABLED")
+                .le(FlowDelegateAuthDO::getStartTime, now)
+                .ge(FlowDelegateAuthDO::getEndTime, now)
+                .eq(FlowDelegateAuthDO::getDeleted, 0)));
+  }
+
+  @Override
+  public void updateStatus(String id, String status) {
+    FlowDelegateAuthDO update = new FlowDelegateAuthDO();
+    update.setAuthStatus(status);
+    update.setId(id);
+    delegateAuthMapper.updateById(update);
   }
 }
