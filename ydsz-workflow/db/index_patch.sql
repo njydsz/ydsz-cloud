@@ -109,6 +109,46 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_timer_fire_status
     ON ydsz_flow_timer (fire_at ASC, status)
     WHERE deleted = 0 AND status = 'PENDING';
 
+-- ----------------------------------------------------------------------------
+-- 7. ydsz_flow_attachment 表索引
+-- ----------------------------------------------------------------------------
+
+-- 7.1 MD5 去重索引（秒传功能）
+-- 覆盖场景：selectByMd5 / 文件秒传查询
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_attachment_md5
+    ON ydsz_flow_attachment (md5)
+    WHERE deleted = 0 AND md5 IS NOT NULL;
+
+-- ----------------------------------------------------------------------------
+-- 8. ydsz_flow_comment 表索引
+-- ----------------------------------------------------------------------------
+
+-- 8.1 租户+实例组合索引（评论列表查询）
+-- 覆盖场景：listByInstance / listRootComments
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_comment_tenant_instance
+    ON ydsz_flow_comment (tenant_id, instance_id, created_at ASC)
+    WHERE deleted = 0;
+
+-- ----------------------------------------------------------------------------
+-- 9. ydsz_flow_user 表索引
+-- ----------------------------------------------------------------------------
+
+-- 9.1 用户任务查询组合索引
+-- 覆盖场景：selectTaskIdsByUser
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_task_query
+    ON ydsz_flow_user (user_id, processed, task_status, tenant_id)
+    WHERE deleted = 0;
+
+-- ----------------------------------------------------------------------------
+-- 10. ydsz_flow_cc 表索引
+-- ----------------------------------------------------------------------------
+
+-- 10.1 抄送人+租户组合索引
+-- 覆盖场景：selectCcByUser / countUnread
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cc_user_tenant
+    ON ydsz_flow_cc (cc_user_id, tenant_id, is_read, created_at DESC)
+    WHERE deleted = 0;
+
 -- ============================================================================
 -- 执行完成后，建议运行 ANALYZE 更新统计信息
 -- ============================================================================
@@ -118,4 +158,8 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_timer_fire_status
 -- ANALYZE ydsz_flow_audit_log;
 -- ANALYZE ydsz_flow_definition;
 -- ANALYZE ydsz_flow_timer;
+-- ANALYZE ydsz_flow_attachment;
+-- ANALYZE ydsz_flow_comment;
+-- ANALYZE ydsz_flow_user;
+-- ANALYZE ydsz_flow_cc;
 -- ============================================================================

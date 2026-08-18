@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.infra.entity.FileAclDO;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.service.FilePermissionDomainService;
@@ -123,7 +123,7 @@ public class FilePermissionService {
    * @complexity O(1)（一次节点查询 + 一次 ACL 缓存查询 + O(acls) 遍历）
    */
   public void checkPermission(String nodeId, String userId, int permission, String action) {
-    FileNodeDO node = fileNodeRepository.findById(nodeId);
+    FileNodeVO node = fileNodeRepository.findById(nodeId).orElse(null);
     if (node == null) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
     }

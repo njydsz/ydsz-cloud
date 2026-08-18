@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
@@ -22,12 +20,11 @@ import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
-import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.system.infra.converter.SystemConverter;
+import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
-import com.njydsz.system.infra.entity.DictItem;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.query.DictItemPageQuery;
 import com.njydsz.system.domain.vo.DictItemExcelVO;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.vo.ImportResult;
@@ -147,8 +144,7 @@ public class DictItemServiceImpl implements DictItemService {
    */
   @Override
   public DictItemVO getById(String id) {
-    DictItem entity = dictRepository.findItemById(id).orElse(null);
-    return SystemConverter.INSTANT.entityToVO(entity);
+    return dictRepository.findItemById(id).orElse(null);
   }
 
   /**
@@ -175,8 +171,7 @@ public class DictItemServiceImpl implements DictItemService {
     long start = System.nanoTime();
     try {
       metrics.recordDictCacheMiss();
-      DictItem entity = dictRepository.findItemByTypeAndCode(typeCode, itemCode).orElse(null);
-      return SystemConverter.INSTANT.entityToVO(entity);
+      return dictRepository.findItemByTypeAndCode(typeCode, itemCode).orElse(null);
     } finally {
       metrics.recordDictQuery(System.nanoTime() - start);
     }
@@ -207,10 +202,7 @@ public class DictItemServiceImpl implements DictItemService {
     long start = System.nanoTime();
     try {
       metrics.recordDictCacheMiss();
-      List<DictItem> entities = dictRepository.findItemsEnabledByTypeCode(typeCode);
-      return entities.stream()
-          .map(SystemConverter.INSTANT::entityToVO)
-          .collect(Collectors.toList());
+      return dictRepository.findItemsEnabledByTypeCode(typeCode);
     } finally {
       metrics.recordDictQuery(System.nanoTime() - start);
     }
@@ -234,9 +226,7 @@ public class DictItemServiceImpl implements DictItemService {
    */
   @Override
   public List<DictItemVO> listChildren(String parentId) {
-    return dictRepository.findItemsByParentId(parentId).stream()
-        .map(SystemConverter.INSTANT::entityToVO)
-        .collect(Collectors.toList());
+    return dictRepository.findItemsByParentId(parentId);
   }
 
   /**
@@ -252,9 +242,7 @@ public class DictItemServiceImpl implements DictItemService {
   @Override
   public List<DictItemVO> buildTree(String typeCode) {
     // 查询指定类型的所有字典项
-    List<DictItemVO> flatList = dictRepository.findItemsByTypeCode(typeCode).stream()
-        .map(SystemConverter.INSTANT::entityToVO)
-        .collect(Collectors.toList());
+    List<DictItemVO> flatList = dictRepository.findItemsByTypeCode(typeCode);
 
     // 使用 TreeBuilder.buildSimple() 构建树形结构（O(n) 迭代，自动填充 level/path）
     return TreeBuilder.buildSimple(
@@ -283,8 +271,14 @@ public class DictItemServiceImpl implements DictItemService {
   @Override
   public PageResponse<List<DictItemVO>> page(
       int pageNum, int pageSize, String typeCode, String itemCode, String status) {
-    IPage<DictItem> page = dictRepository.findItemPage(new Page<>(pageNum, pageSize), typeCode, itemCode, status);
-    return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
+    DictItemPageQuery query = DictItemPageQuery.builder()
+        .pageNum(pageNum)
+        .pageSize(pageSize)
+        .typeCode(typeCode)
+        .itemCode(itemCode)
+        .status(status)
+        .build();
+    return dictRepository.findItemPage(query);
   }
 
   /**
@@ -296,9 +290,7 @@ public class DictItemServiceImpl implements DictItemService {
    */
   @Override
   public List<DictItemVO> list() {
-    return dictRepository.findAllItems().stream()
-        .map(SystemConverter.INSTANT::entityToVO)
-        .collect(Collectors.toList());
+    return dictRepository.findAllItems();
   }
 
   /**
@@ -332,10 +324,10 @@ public class DictItemServiceImpl implements DictItemService {
     }
     // 写操作前抓取「变更前」快照，支持后续版本回滚
     createSnapshotVersion(vo.getTypeCode(), "新增字典项: " + vo.getItemCode());
-    DictItem entity = toEntity(vo);
-    dictRepository.insertItem(entity);
-    searchIndexSyncer.upsert("dict", entity);
-    return entity.getId();
+    DictItemDTO dto = toDto(vo);
+    dictRepository.insertItem(dto);
+    searchIndexSyncer.upsert("dict", dto);
+    return dto.getId();
   }
 
   /**
@@ -361,10 +353,10 @@ public class DictItemServiceImpl implements DictItemService {
   public boolean updateById(DictItemVO vo) {
     // 写操作前抓取「变更前」快照，支持后续版本回滚
     createSnapshotVersion(vo.getTypeCode(), "更新字典项: " + vo.getItemCode());
-    // 查询变更前实体，itemCode/typeCode 变更时旧缓存 key 一并失效
-    DictItem before = dictRepository.findItemById(vo.getId()).orElse(null);
-    DictItem entity = toEntity(vo);
-    boolean updated = dictRepository.updateItemById(entity);
+    // 查询变更前 VO，itemCode/typeCode 变更时旧缓存 key 一并失效
+    DictItemVO before = dictRepository.findItemById(vo.getId()).orElse(null);
+    DictItemDTO dto = toDtoWithId(vo);
+    boolean updated = dictRepository.updateItemById(dto);
     if (updated && before != null) {
       if (!Objects.equals(before.getItemCode(), vo.getItemCode())) {
         evictDictItem(vo.getTypeCode(), before.getItemCode());
@@ -374,7 +366,7 @@ public class DictItemServiceImpl implements DictItemService {
       }
     }
     if (updated) {
-      searchIndexSyncer.upsert("dict", entity);
+      searchIndexSyncer.upsert("dict", dto);
     }
     return updated;
   }
@@ -399,17 +391,17 @@ public class DictItemServiceImpl implements DictItemService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    DictItem entity = dictRepository.findItemById(id).orElse(null);
-    if (entity == null) {
+    DictItemVO vo = dictRepository.findItemById(id).orElse(null);
+    if (vo == null) {
       return false;
     }
     // 写操作前抓取「变更前」快照，支持后续版本回滚
-    createSnapshotVersion(entity.getTypeCode(), "删除字典项: " + entity.getItemCode());
+    createSnapshotVersion(vo.getTypeCode(), "删除字典项: " + vo.getItemCode());
     boolean removed = dictRepository.deleteItemById(id);
     if (removed) {
       // 精准失效单条 item 缓存 + 类型列表缓存（替代 allEntries 全量清空）
-      evictDictItem(entity.getTypeCode(), entity.getItemCode());
-      evictDictList(entity.getTypeCode());
+      evictDictItem(vo.getTypeCode(), vo.getItemCode());
+      evictDictList(vo.getTypeCode());
       searchIndexSyncer.delete("dict", id);
     }
     return removed;
@@ -428,7 +420,7 @@ public class DictItemServiceImpl implements DictItemService {
     if (typeCode == null) {
       return;
     }
-    List<DictItem> snapshot = dictRepository.findItemsEnabledByTypeCode(typeCode);
+    List<DictItemVO> snapshot = dictRepository.findItemsEnabledByTypeCode(typeCode);
     String snapshotJson = YdszJson.toJson(snapshot);
     entityVersionService.createVersion(
         EntityVersionCreateDTO.builder()
@@ -458,18 +450,11 @@ public class DictItemServiceImpl implements DictItemService {
                   YdszJson.fromJson(snapshotJson, List.class, DictItemVO.class);
               if (snapshotItems != null && !snapshotItems.isEmpty()) {
                 for (DictItemVO vo : snapshotItems) {
-                  DictItem entity = new DictItem();
-                  entity.setTypeCode(vo.getTypeCode());
-                  entity.setItemCode(vo.getItemCode());
-                  entity.setItemValue(vo.getItemValue());
-                  entity.setSortOrder(vo.getSortOrder());
-                  entity.setParentId(vo.getParentId());
-                  entity.setDescription(vo.getDescription());
-                  entity.setExtJson(vo.getExtJson());
-                  entity.setStatus(vo.getStatus());
-                  dictRepository.insertItem(entity);
+                  DictItemDTO dto = toDto(vo);
+                  dto.setId(vo.getId());
+                  dictRepository.insertItem(dto);
                   // 回滚重建后同步搜索索引
-                  searchIndexSyncer.upsert("dict", entity);
+                  searchIndexSyncer.upsert("dict", dto);
                 }
               }
             } catch (Exception e) {
@@ -519,18 +504,29 @@ public class DictItemServiceImpl implements DictItemService {
    * @param dto 数据传输对象
    * @return 数据库实体
    */
-  private DictItem toEntity(DictItemVO vo) {
-    DictItem entity = new DictItem();
-    entity.setId(vo.getId());
-    entity.setTypeCode(vo.getTypeCode());
-    entity.setItemCode(vo.getItemCode());
-    entity.setItemValue(vo.getItemValue());
-    entity.setSortOrder(vo.getSortOrder());
-    entity.setParentId(vo.getParentId());
-    entity.setDescription(vo.getDescription());
-    entity.setExtJson(vo.getExtJson());
-    entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
-    return entity;
+  private DictItemDTO toDto(DictItemVO vo) {
+    if (vo == null) {
+      return null;
+    }
+    DictItemDTO dto = new DictItemDTO();
+    dto.setTypeCode(vo.getTypeCode());
+    dto.setItemCode(vo.getItemCode());
+    dto.setItemValue(vo.getItemValue());
+    dto.setSortOrder(vo.getSortOrder());
+    dto.setParentId(vo.getParentId());
+    dto.setDescription(vo.getDescription());
+    dto.setExtJson(vo.getExtJson());
+    dto.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
+    return dto;
+  }
+
+  private DictItemDTO toDtoWithId(DictItemVO vo) {
+    if (vo == null) {
+      return null;
+    }
+    DictItemDTO dto = toDto(vo);
+    dto.setId(vo.getId());
+    return dto;
   }
 
   // ============================== 导入导出 ==============================
@@ -538,7 +534,7 @@ public class DictItemServiceImpl implements DictItemService {
   @Override
   public byte[] exportDictItems(String typeCode) {
     // 1. 查询字典项数据（含类型过滤）
-    List<DictItem> dictItems = loadDictItemsForExport(typeCode);
+    List<DictItemVO> dictItems = loadDictItemsForExport(typeCode);
 
     // 2. 转换为 Excel VO 并导出
     List<DictItemExcelVO> excelRows =
@@ -554,7 +550,7 @@ public class DictItemServiceImpl implements DictItemService {
    * @param typeCode 字典类型编码（为空时导出全部）
    * @return 未删除字典项列表（按类型/排序）
    */
-  private List<DictItem> loadDictItemsForExport(String typeCode) {
+  private List<DictItemVO> loadDictItemsForExport(String typeCode) {
     return dictRepository.findItemsForExport(typeCode);
   }
 
@@ -673,15 +669,15 @@ public class DictItemServiceImpl implements DictItemService {
    * @param entity 字典项实体
    * @return Excel VO
    */
-  private DictItemExcelVO toExcelVO(DictItem entity) {
+  private DictItemExcelVO toExcelVO(DictItemVO item) {
     DictItemExcelVO vo = new DictItemExcelVO();
-    vo.setTypeCode(entity.getTypeCode());
-    vo.setItemCode(entity.getItemCode());
-    vo.setItemValue(entity.getItemValue());
-    vo.setSortOrder(entity.getSortOrder());
-    vo.setParentId(entity.getParentId());
-    vo.setDescription(entity.getDescription());
-    vo.setStatus(entity.getStatus());
+    vo.setTypeCode(item.getTypeCode());
+    vo.setItemCode(item.getItemCode());
+    vo.setItemValue(item.getItemValue());
+    vo.setSortOrder(item.getSortOrder());
+    vo.setParentId(item.getParentId());
+    vo.setDescription(item.getDescription());
+    vo.setStatus(item.getStatus());
     return vo;
   }
 
@@ -697,21 +693,21 @@ public class DictItemServiceImpl implements DictItemService {
       return 0;
     }
     try {
-      List<DictItem> entities = validItems.stream()
-          .map(this::toEntity)
+      List<DictItemDTO> dtos = validItems.stream()
+          .map(this::toDto)
           .collect(Collectors.toList());
       // 逐条插入（使用 insertBatch 需要 XML 支持，此处保持一致性）
-      for (DictItem entity : entities) {
-        dictRepository.insertItem(entity);
+      for (DictItemDTO dto : dtos) {
+        dictRepository.insertItem(dto);
       }
       // 精准失效缓存：按涉及 typeCode 逐一失效
-      entities.stream()
-          .map(DictItem::getTypeCode)
+      dtos.stream()
+          .map(DictItemDTO::getTypeCode)
           .distinct()
           .forEach(this::evictDictList);
       // 同步搜索索引
-      entities.forEach(entity -> searchIndexSyncer.upsert("dict", entity));
-      return entities.size();
+      dtos.forEach(dto -> searchIndexSyncer.upsert("dict", dto));
+      return dtos.size();
     } catch (Exception e) {
       errors.add("批量导入失败: " + e.getMessage());
       return 0;

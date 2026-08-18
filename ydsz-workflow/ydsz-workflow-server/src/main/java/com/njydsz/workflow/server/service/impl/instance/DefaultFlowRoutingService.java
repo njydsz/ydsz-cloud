@@ -10,91 +10,47 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.RuleEngine;
-import com.njydsz.literule.api.expr.ExpressionEvaluator;
+import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.workflow.server.engine.expr.ExpressionEvaluator;
 import com.njydsz.workflow.server.service.FlowRoutingService;
 
 /**
- * 智能路由与异常检测服务实现
+ * 默认流程路由服务实现（引擎自包含）
  *
- * <p>对 {@link FlowRoutingService} 接口的完整实现，是工作流引擎的「智能化」扩展点。 基于 {@code ydsz-literule} 的 {@link
- * RuleEngine} 和 {@link ExpressionEvaluator}（Aviator 引擎）， 提供<b>智能路由条件评估</b>和<b>流程异常检测</b>能力。
+ * <p>基于引擎内置的 {@link ExpressionEvaluator}（默认 Aviator 引擎）提供<b>路由条件评估</b>和<b>异常检测</b>能力。
  *
- * <p><b>核心职责：</b>
- *
- * <ul>
- *   <li><b>条件评估</b>：复杂条件下解析流程分支条件（支持 Aviator 表达式、规则引擎、决策表）
- *   <li><b>异常检测</b>：识别「卡单」「超时」「循环审批」等异常状态，触发告警 / 自动动作
- *   <li><b>智能路由</b>：根据运行时变量（金额、申请人、紧急度）动态选择审批路径， 实现「金额 &gt; 100 万需 CEO 审批」等业务规则
- *   <li><b>规则联动</b>：与规则引擎（{@code ydsz-literule}）联动，规则变更无需重启即可生效
- * </ul>
- *
- * <p><b>条件注入：</b>
- *
- * <ul>
- *   <li>本实现启用 {@link ConditionalOnBean}，<b>仅当</b> Spring 容器中存在 {@link RuleEngine} 和 {@link
- *       ExpressionEvaluator} Bean 时才会被注册
- *   <li>如果 {@code literule} 模块未引入，则回退到 {@code DefaultFlowVariableStrategy}， 仅支持基础 SpEL 表达式（不依赖规则引擎）
- *   <li>这种「能力探测」机制保证核心工作流在 literule 缺失时仍可运行
- * </ul>
- *
- * <p><b>异常检测（{@link #detectAnomalies}）：</b>
- *
- * <ul>
- *   <li><b>超时检测</b>：任务超过 {@code dueAt} 截止时间仍未完成（P0 级异常）
- *   <li><b>卡单检测</b>：任务在同一节点停留超过 24 小时（无任何审批动作）
- *   <li><b>循环审批</b>：审计日志中同一节点被反复驳回（{@code REJECT}）超过 3 次 （疑似无限循环，需人工介入）
- * </ul>
- *
- * <p><b>智能路由（{@link #evaluateRoute}）：</b>
- *
- * <ul>
- *   <li>支持「金额路由」：{@code amount > 1000000 → 需 CEO 审批}
- *   <li>支持「申请人路由」：{@code initiator.dept == 'FINANCE' → 财务总监审批}
- *   <li>支持「紧急度路由」：{@code priority == 'URGENT' → 跳过非关键审批人}
- * </ul>
- *
- * <p><b>事务边界：</b>
- *
- * <ul>
- *   <li>异常检测启用 {@code @Transactional(readOnly = true)}，支持只读副本路由
- *   <li>异常处理动作（如自动催办 / 升级）单独开启写事务
- * </ul>
+ * <p>业务系统如需更强大的规则引擎能力（如规则链、决策表、复杂规则编排），可自行实现 {@link FlowRoutingService} 并注册为
+ * Bean 覆盖本实现。
  *
  * <p><b>设计要点：</b>
  *
  * <ul>
- *   <li><b>规则热更新</b>：通过 Nacos 监听规则变更，无需重启即可应用新规则
- *   <li><b>规则审计</b>：所有规则评估结果写入审计日志，支持「为什么这个流程走了 A 分支」回溯
- *   <li><b>规则降级</b>：规则引擎异常时自动回退到 SpEL 表达式，保证流程不卡死
- *   <li><b>规则沙箱</b>：Aviator 表达式禁止调用 Java 方法，防止恶意规则影响系统
+ *   <li><b>引擎自包含</b>：不依赖外部规则引擎模块，classpath 中有 Aviator 时自动启用表达式求值
+ *   <li><b>能力降级</b>：Aviator 不可用时表达式评估返回 null/false，不影响流程主链路
+ *   <li><b>异常检测</b>：超时/卡单/循环审批检测通过数据库查询实现，不依赖外部模块
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowRoutingService 接口定义
- * @see com.njydsz.literule.api.RuleEngine 规则引擎
- * @see com.njydsz.literule.api.expr.ExpressionEvaluator Aviator 表达式评估器
+ * @see ExpressionEvaluator 表达式求值器 SPI
  */
 @Slf4j
 @Service
-@ConditionalOnBean({RuleEngine.class, ExpressionEvaluator.class})
-public class FlowRoutingServiceImpl implements FlowRoutingService {
+@ConditionalOnMissingBean(FlowRoutingService.class)
+public class DefaultFlowRoutingService implements FlowRoutingService {
 
-  /** 表达式求值器（Aviator 引擎），评估路由条件表达式 */
+  /** 表达式求值器，评估路由条件表达式 */
   private final ExpressionEvaluator expressionEvaluator;
 
   /** 运行时任务 Mapper，查询卡单/超期任务 */
@@ -106,7 +62,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
   /** 流程实例 Mapper，查询运行中实例状态 */
   private final FlowInstanceMapper instanceMapper;
 
-  public FlowRoutingServiceImpl(
+  public DefaultFlowRoutingService(
       ExpressionEvaluator expressionEvaluator,
       FlowRunTaskMapper taskMapper,
       FlowAuditLogMapper auditLogMapper,
@@ -126,8 +82,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
       return null;
     }
     try {
-      RuleContext context = buildContext(variables, "FLOW_ROUTE");
-      Object result = expressionEvaluator.eval(conditionExpression, context);
+      Object result = expressionEvaluator.eval(conditionExpression, variables);
       if (result == null) {
         log.debug("[FlowRoute] 路由表达式评估结果为 null: expr={}", conditionExpression);
         return null;
@@ -147,8 +102,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
       return true;
     }
     try {
-      RuleContext context = buildContext(variables, "FLOW_CONDITION");
-      boolean result = expressionEvaluator.evalBoolean(conditionExpression, context);
+      boolean result = expressionEvaluator.evalBoolean(conditionExpression, variables);
       log.debug("[FlowRoute] 条件评估: expr={} -> {}", conditionExpression, result);
       return result;
     } catch (Exception e) {
@@ -166,26 +120,18 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
     if (instanceId == null) {
       return Collections.emptyList();
     }
-
     FlowInstanceDO instance = instanceMapper.selectById(instanceId);
     if (instance == null) {
       log.warn("[FlowRoute] 实例不存在，跳过异常检测: instanceId={}", instanceId);
       return Collections.emptyList();
     }
-
     List<Map<String, Object>> anomalies = new ArrayList<>();
-
-    // 检测顺序：超时 -> 卡单 -> 循环审批
     detectTimeout(instanceId, anomalies);
     detectStuck(instanceId, anomalies);
     detectLoop(instanceId, anomalies);
-
     if (!anomalies.isEmpty()) {
       log.warn("[FlowRoute] 检测到 {} 项异常: instanceId={}", anomalies.size(), instanceId);
-    } else {
-      log.debug("[FlowRoute] 未检测到异常: instanceId={}", instanceId);
     }
-
     return anomalies;
   }
 
@@ -197,24 +143,6 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
 
   // ============================== 私有方法 ==============================
 
-  /**
-   * 构建 literule 规则上下文
-   *
-   * @param variables 流程变量
-   * @param scenario 业务场景标识
-   * @return RuleContext 实例
-   */
-  private RuleContext buildContext(Map<String, Object> variables, String scenario) {
-    Map<String, Object> facts =
-        variables != null ? new LinkedHashMap<>(variables) : Collections.emptyMap();
-    return RuleContext.of(facts, scenario, "FlowRoutingService");
-  }
-
-  /**
-   * 超时检测：任务超过 dueAt 截止时间仍未完成
-   *
-   * <p>遍历实例下所有任务，筛选出 dueAt 已过期且任务状态未完成的记录。
-   */
   private void detectTimeout(String instanceId, List<Map<String, Object>> anomalies) {
     List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
     if (tasks == null || tasks.isEmpty()) {
@@ -246,20 +174,10 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
                 + overdueMinutes
                 + " 分钟)");
         anomalies.add(anomaly);
-        log.info(
-            "[FlowRoute] 超时检测: taskId={} nodeCode={} overdueMinutes={}",
-            task.getId(),
-            task.getNodeCode(),
-            overdueMinutes);
       }
     }
   }
 
-  /**
-   * 卡单检测：任务在同一节点停留超过 24 小时
-   *
-   * <p>以任务的创建时间（createdAt）为起点，计算停留时长。 仅检测未完成的任务。
-   */
   private void detectStuck(String instanceId, List<Map<String, Object>> anomalies) {
     List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
     if (tasks == null || tasks.isEmpty()) {
@@ -288,27 +206,15 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
             "description",
             "卡单超过 " + hours + " 小时: " + task.getNodeName() + " (创建时间 " + createdAt + ")");
         anomalies.add(anomaly);
-        log.info(
-            "[FlowRoute] 卡单检测: taskId={} nodeCode={} stuckHours={}",
-            task.getId(),
-            task.getNodeCode(),
-            hours);
       }
     }
   }
 
-  /**
-   * 循环审批检测：审计日志中同一节点被反复驳回（REJECT）超过 3 次
-   *
-   * <p>统计审计日志中 action=REJECT 的记录，按节点编码分组计数。 任意节点驳回次数超过 3 次即视为循环审批异常。
-   */
   private void detectLoop(String instanceId, List<Map<String, Object>> anomalies) {
     List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(instanceId);
     if (logs == null || logs.isEmpty()) {
       return;
     }
-
-    // 按 nodeCode 分组统计 REJECT 次数
     Map<String, Long> rejectCountByNode =
         logs.stream()
             .filter(log -> "REJECT".equalsIgnoreCase(log.getAction()))
@@ -316,11 +222,8 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
             .collect(
                 Collectors.groupingBy(
                     FlowAuditLogDO::getNodeCode, LinkedHashMap::new, Collectors.counting()));
-
-    // 筛选驳回次数超过阈值的节点
     for (Map.Entry<String, Long> entry : rejectCountByNode.entrySet()) {
       if (entry.getValue() > 3) {
-        // 获取节点名称（从审计日志中取最近一条的名称）
         String nodeName =
             logs.stream()
                 .filter(log -> entry.getKey().equals(log.getNodeCode()))
@@ -328,7 +231,6 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
                 .map(FlowAuditLogDO::getNodeName)
                 .findFirst()
                 .orElse(entry.getKey());
-
         Map<String, Object> anomaly = new LinkedHashMap<>();
         anomaly.put("type", "LOOP");
         anomaly.put("nodeCode", entry.getKey());
@@ -337,8 +239,6 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
         anomaly.put(
             "description", "节点反复驳回超过 3 次: " + nodeName + " (共 " + entry.getValue() + " 次驳回)");
         anomalies.add(anomaly);
-        log.info(
-            "[FlowRoute] 循环审批检测: nodeCode={} rejectCount={}", entry.getKey(), entry.getValue());
       }
     }
   }

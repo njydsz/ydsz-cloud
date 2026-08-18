@@ -3,6 +3,7 @@ package com.njydsz.literule.domain.vo;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import lombok.Data;
 
@@ -48,6 +49,12 @@ public class RuleExecutionTraceVO implements Serializable {
 
   /** 错误信息（执行异常时填充） */
   private String errorMessage;
+
+  /** 事实数据快照（用于执行回放） */
+  private Map<String, Object> factsSnapshot;
+
+  /** 结果快照 */
+  private Map<String, Object> resultSnapshot;
 
   /** 创建人 */
   private String createdBy;

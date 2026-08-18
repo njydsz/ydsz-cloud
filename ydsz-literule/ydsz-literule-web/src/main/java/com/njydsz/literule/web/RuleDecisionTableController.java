@@ -3,8 +3,8 @@ package com.njydsz.literule.web;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -34,13 +34,12 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.DecisionTableDefinition;
 import com.njydsz.literule.api.spi.DecisionTableEvalProvider;
-import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
-import com.njydsz.literule.domain.entity.DecisionTable;
+import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.literule.domain.repository.DecisionTableRepository;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
-import com.njydsz.literule.infra.mapper.DecisionTableMapper;
 import com.njydsz.literule.server.config.DecisionTableAdminService;
 
 /**
@@ -70,8 +69,8 @@ import com.njydsz.literule.server.config.DecisionTableAdminService;
 @Tag(name = "决策表管理", description = "决策表 CRUD、评估与 Excel 导入导出")
 public class RuleDecisionTableController {
 
-  /** 决策表 Mapper */
-  private final DecisionTableMapper decisionTableMapper;
+  /** 决策表 Repository */
+  private final DecisionTableRepository decisionTableRepository;
 
   /** 决策表管理服务（P0-3）：可选注入，未启用决策表时为空 */
   private final ObjectProvider<DecisionTableAdminService> decisionTableAdminServiceProvider;
@@ -85,17 +84,14 @@ public class RuleDecisionTableController {
   /** 查询全部决策表 */
   @GetMapping("/decision-tables")
   public BaseResponse<List<DecisionTableVO>> listDecisionTables() {
-    return BaseResponse.success(
-        LiteruleConverter.INSTANT.decisionTableListToVO(decisionTableMapper.selectList(null)));
+    return BaseResponse.success(decisionTableRepository.findAll());
   }
 
   /** 查询单条决策表 */
   @GetMapping("/decision-tables/{tableCode}")
   public BaseResponse<DecisionTableVO> getDecisionTable(@PathVariable String tableCode) {
-    DecisionTable dt =
-        decisionTableMapper.selectOne(
-            new LambdaQueryWrapper<DecisionTable>().eq(DecisionTable::getTableCode, tableCode));
-    return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(dt));
+    Optional<DecisionTableVO> result = decisionTableRepository.findByTableCode(tableCode);
+    return BaseResponse.success(result.orElse(null));
   }
 
   /** 保存决策表 */
@@ -109,13 +105,7 @@ public class RuleDecisionTableController {
   @PostMapping("/decision-tables")
   public BaseResponse<DecisionTableVO> saveDecisionTable(
       @Valid @RequestBody DecisionTablePostDTO dto) {
-    DecisionTable decisionTable = LiteruleConverter.INSTANT.postDtoToEntity(dto);
-    if (decisionTable.getId() != null) {
-      decisionTableMapper.updateById(decisionTable);
-    } else {
-      decisionTableMapper.insert(decisionTable);
-    }
-    return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(decisionTable));
+    return BaseResponse.success(decisionTableRepository.save(dto));
   }
 
   /** 删除决策表 */
@@ -128,7 +118,7 @@ public class RuleDecisionTableController {
   @RateLimit(resource = "literule.rule_decision_table.deleteDecisionTable", threshold = 50)
   @DeleteMapping("/decision-tables/{id}")
   public BaseResponse<Void> deleteDecisionTable(@PathVariable String id) {
-    decisionTableMapper.deleteById(id);
+    decisionTableRepository.deleteById(id);
     return BaseResponse.success();
   }
 

@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,15 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
-import com.njydsz.cronjob.domain.entity.LOG.JobDailyStats;
-import com.njydsz.cronjob.domain.entity.LOG.JobLog;
-import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.repository.JobDailyStatsRepository;
+import com.njydsz.cronjob.domain.repository.JobLogRepository;
+import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobDailyStatsVO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
-import com.njydsz.cronjob.infra.mapper.LOG.JobDailyStatsMapper;
-import com.njydsz.cronjob.infra.mapper.LOG.JobLogMapper;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
 /**
@@ -57,16 +52,16 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @RequiredArgsConstructor
 public class JobStatsController {
 
-  /** 每日统计 Mapper */
-  private final JobDailyStatsMapper jobDailyStatsMapper;
+  /** 每日统计 Repository（DDD 分层：Controller 通过 Repository 接口访问） */
+  private final JobDailyStatsRepository jobDailyStatsRepository;
 
-  /** P1-2: 日志 Mapper（仪表盘实时数据查询） */
-  private final JobLogMapper jobLogMapper;
+  /** 日志 Repository（仪表盘实时数据查询） */
+  private final JobLogRepository jobLogRepository;
 
-  /** P1-2: 任务 Mapper（任务总数统计） */
-  private final JobMapper jobMapper;
+  /** 任务 Repository（任务总数统计） */
+  private final JobRepository jobRepository;
 
-  /** P1-2: Prometheus 指标（可选注入） */
+  /** Prometheus 指标（可选注入） */
   private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
 
   /**
@@ -87,9 +82,9 @@ public class JobStatsController {
       @RequestParam String jobId,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+    // 通过 Repository 查询（LocalDate 重载内部转换为 LocalDateTime）
     return BaseResponse.success(
-        CronjobConverter.INSTANT.jobDailyStatsListToVO(
-            jobDailyStatsMapper.selectByJobIdAndDateRange(jobId, startDate, endDate)));
+        jobDailyStatsRepository.findByJobIdAndDateRange(jobId, startDate, endDate));
   }
 
   /**
@@ -114,15 +109,17 @@ public class JobStatsController {
       @RequestParam String jobId,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-    List<JobDailyStats> list =
-        jobDailyStatsMapper.selectByJobIdAndDateRange(jobId, startDate, endDate);
+    // 1. 通过 Repository 查询每日统计 VO 列表
+    List<JobDailyStatsVO> list =
+        jobDailyStatsRepository.findByJobIdAndDateRange(jobId, startDate, endDate);
+    // 2. 累加统计
     long fireCount = 0L;
     long successCount = 0L;
     long failCount = 0L;
     long timeoutCount = 0L;
     long totalDuration = 0L;
     long durationSamples = 0L;
-    for (JobDailyStats s : list) {
+    for (JobDailyStatsVO s : list) {
       if (s.getFireCount() != null) {
         fireCount += s.getFireCount();
       }
@@ -174,47 +171,29 @@ public class JobStatsController {
   @GetMapping("/dashboard")
   public BaseResponse<Map<String, Object>> dashboard() {
     Map<String, Object> dashboard = new HashMap<>();
-    // 1. 任务状态分布
+    // 1. 任务状态分布（通过 Repository 统计）
     Map<String, Object> taskStats = new HashMap<>();
-    taskStats.put("total", jobMapper.selectCount(null));
-    taskStats.put(
-        "normal",
-        jobMapper.selectCount(new LambdaQueryWrapper<Job>().eq(Job::getStatus, "NORMAL")));
-    taskStats.put(
-        "paused",
-        jobMapper.selectCount(new LambdaQueryWrapper<Job>().eq(Job::getStatus, "PAUSED")));
-    taskStats.put(
-        "error", jobMapper.selectCount(new LambdaQueryWrapper<Job>().eq(Job::getStatus, "ERROR")));
-    taskStats.put(
-        "autoPaused",
-        jobMapper.selectCount(new LambdaQueryWrapper<Job>().eq(Job::getStatus, "AUTO_PAUSED")));
+    taskStats.put("total", jobRepository.countAll());
+    taskStats.put("normal", jobRepository.countByStatus("NORMAL"));
+    taskStats.put("paused", jobRepository.countByStatus("PAUSED"));
+    taskStats.put("error", jobRepository.countByStatus("ERROR"));
+    taskStats.put("autoPaused", jobRepository.countByStatus("AUTO_PAUSED"));
     dashboard.put("taskStats", taskStats);
 
-    // 2. 今日执行统计
+    // 2. 今日执行统计（通过 Repository 统计）
     LocalDateTime todayStart = LocalDate.now().atStartOfDay();
     Map<String, Object> todayExec = new HashMap<>();
-    Long todayTotal =
-        jobLogMapper.selectCount(
-            new LambdaQueryWrapper<JobLog>().ge(JobLog::getStartTime, todayStart));
-    Long todaySuccess =
-        jobLogMapper.selectCount(
-            new LambdaQueryWrapper<JobLog>()
-                .ge(JobLog::getStartTime, todayStart)
-                .eq(JobLog::getStatus, "SUCCESS"));
-    Long todayFailed =
-        jobLogMapper.selectCount(
-            new LambdaQueryWrapper<JobLog>()
-                .ge(JobLog::getStartTime, todayStart)
-                .eq(JobLog::getStatus, "FAILED"));
-    Long todayRunning =
-        jobLogMapper.selectCount(new LambdaQueryWrapper<JobLog>().eq(JobLog::getStatus, "RUNNING"));
+    long todayTotal = jobLogRepository.countByStatusAfter(null, todayStart);
+    long todaySuccess = jobLogRepository.countByStatusAfter("SUCCESS", todayStart);
+    long todayFailed = jobLogRepository.countByStatusAfter("FAILED", todayStart);
+    long todayRunning = jobLogRepository.countByStatusAfter("RUNNING", null);
     todayExec.put("total", todayTotal);
     todayExec.put("success", todaySuccess);
     todayExec.put("failed", todayFailed);
     todayExec.put("running", todayRunning);
     todayExec.put(
         "successRate",
-        todayTotal != null && todayTotal > 0
+        todayTotal > 0
             ? String.format("%.1f%%", todaySuccess * 100.0 / todayTotal)
             : "N/A");
     dashboard.put("todayExec", todayExec);
@@ -242,13 +221,8 @@ public class JobStatsController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/recent-failures")
   public BaseResponse<List<JobLogVO>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
-    List<JobLog> logs =
-        jobLogMapper.selectList(
-            new LambdaQueryWrapper<JobLog>()
-                .eq(JobLog::getStatus, "FAILED")
-                .orderByDesc(JobLog::getStartTime)
-                .last("LIMIT " + Math.min(limit, 100)));
-    return BaseResponse.success(CronjobConverter.INSTANT.jobLogListToVO(logs));
+    // 通过 Repository 查询最近失败日志（Repository 内部处理 LIMIT 上限）
+    return BaseResponse.success(jobLogRepository.findRecentFailures(limit));
   }
 
   /**
@@ -270,11 +244,8 @@ public class JobStatsController {
     for (int hour = 0; hour < 24; hour++) {
       LocalDateTime hourStart = queryDate.atTime(hour, 0);
       LocalDateTime hourEnd = queryDate.atTime(hour, 59, 59);
-      Long count =
-          jobLogMapper.selectCount(
-              new LambdaQueryWrapper<JobLog>()
-                  .ge(JobLog::getStartTime, hourStart)
-                  .le(JobLog::getStartTime, hourEnd));
+      // 通过 Repository 统计每小时的执行数量
+      long count = jobLogRepository.countByTimeRange(hourStart, hourEnd);
       Map<String, Object> entry = new HashMap<>();
       entry.put("hour", hour);
       entry.put("count", count);

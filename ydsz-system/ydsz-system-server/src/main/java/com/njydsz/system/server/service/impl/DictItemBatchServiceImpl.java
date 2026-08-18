@@ -1,6 +1,5 @@
 package com.njydsz.system.server.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,12 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.cache.constant.CacheConstants;
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
-import com.njydsz.system.infra.entity.DictItem;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.repository.DictRepository;
@@ -111,17 +108,17 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
       createSnapshotVersion(typeCode, version, "批量新增字典项");
     }
 
-    // 4. 预生成 ID + DTO 转 Entity
-    List<DictItem> entities = items.stream().map(this::toEntityWithId).collect(Collectors.toList());
+    // 4. VO → DTO 转换
+    List<DictItemDTO> dtos = items.stream().map(this::toDto).collect(Collectors.toList());
 
     // 5. 批量插入
-    dictRepository.insertItemsBatch(entities);
+    dictRepository.insertItemsBatch(dtos);
 
     // 6. 精准失效缓存：按涉及 typeCode 逐一失效列表缓存（替代全量清空，避免缓存击穿）
     typeCodes.forEach(this::evictDictList);
 
     // 7. 同步搜索索引（异步，不阻塞主流程）
-    entities.forEach(entity -> searchIndexSyncer.upsert("dict", entity));
+    dtos.forEach(dto -> searchIndexSyncer.upsert("dict", dto));
 
     Map<String, Object> result = new HashMap<>();
     result.put("successCount", items.size());
@@ -204,7 +201,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
    * @param changeLog 变更说明
    */
   private void createSnapshotVersion(String typeCode, String version, String changeLog) {
-    List<DictItem> snapshot = dictRepository.findItemsEnabledByTypeCode(typeCode);
+    List<DictItemVO> snapshot = dictRepository.findItemsEnabledByTypeCode(typeCode);
     String snapshotJson = YdszJson.toJson(snapshot);
     entityVersionService.createVersion(
         EntityVersionCreateDTO.builder()
@@ -217,49 +214,26 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
   }
 
   /**
-   * DTO 转 Entity + 预生成雪花 ID（私有）
+   * VO → DTO 转换（私有）
    *
-   * <p>批量 XML 插入不走 MyBatis-Plus 拦截器（CombinedFieldFillInterceptor、租户拦截器、 IdentifierGenerator
-   * 均不生效），需在此处手动预生成 ID 并填充审计字段。
+   * <p>缺省 {@code status="ENABLED"}。
    *
-   * <p>缺省 {@code status="ENABLED"}、{@code deleted=0}（{@code @TableLogic} 字段用 int 存储）。
-   *
-   * @param dto 字典项 DTO
-   * @return 字典项实体（含预生成 ID 和审计字段）
+   * @param vo 字典项 VO
+   * @return 字典项 DTO
    */
-  private DictItem toEntityWithId(DictItemVO vo) {
-    DictItem entity = new DictItem();
-    entity.setId(com.baomidou.mybatisplus.core.toolkit.IdWorker.getIdStr());
-    entity.setTypeCode(vo.getTypeCode());
-    entity.setItemCode(vo.getItemCode());
-    entity.setItemValue(vo.getItemValue());
-    entity.setSortOrder(vo.getSortOrder());
-    entity.setParentId(vo.getParentId());
-    entity.setDescription(vo.getDescription());
-    entity.setExtJson(vo.getExtJson());
-    entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
-    entity.setDeleted(0);
-    entity.setRevision(0);
-    entity.setCreatedAt(LocalDateTime.now());
-    entity.setUpdatedAt(LocalDateTime.now());
-    entity.setCreatedBy(getCurrentUserId());
-    entity.setUpdatedBy(getCurrentUserId());
-    entity.setTenantId(TenantContextHolder.getTenantId());
-    return entity;
-  }
-
-  /**
-   * 获取当前用户 ID（私有）
-   *
-   * <p>从 RequestContext 获取当前操作人 ID，未登录时返回 "system"。
-   *
-   * @return 当前用户 ID
-   */
-  private String getCurrentUserId() {
-    try {
-      return RequestContext.getUserId();
-    } catch (Exception e) {
-      return "system";
+  private DictItemDTO toDto(DictItemVO vo) {
+    if (vo == null) {
+      return null;
     }
+    DictItemDTO dto = new DictItemDTO();
+    dto.setTypeCode(vo.getTypeCode());
+    dto.setItemCode(vo.getItemCode());
+    dto.setItemValue(vo.getItemValue());
+    dto.setSortOrder(vo.getSortOrder());
+    dto.setParentId(vo.getParentId());
+    dto.setDescription(vo.getDescription());
+    dto.setExtJson(vo.getExtJson());
+    dto.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
+    return dto;
   }
 }

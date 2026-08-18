@@ -79,4 +79,13 @@ public class FileNodeDTO implements Serializable {
 
   @Schema(description = "存储类型：STANDARD / GLACIER / DEEP_ARCHIVE")
   private String storageClass;
+
+  @Schema(description = "创建人（操作人）")
+  private String createdBy;
+
+  @Schema(description = "更新人（操作人）")
+  private String updatedBy;
+
+  @Schema(description = "租户ID")
+  private String tenantId;
 }

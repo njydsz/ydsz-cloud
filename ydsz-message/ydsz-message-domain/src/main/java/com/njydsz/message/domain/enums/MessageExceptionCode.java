@@ -19,6 +19,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  *   <li>B91201-B91299 渠道/路由
  *   <li>B91301-B91399 批量/灰度
  *   <li>B91401-B91499 退订/偏好/反馈
+ *   <li>B91501-B91599 发送管线（限流/去重/DND/抑制/配额）
  * </ul>
  *
  * @author ydsz-team
@@ -55,7 +56,29 @@ public enum MessageExceptionCode implements ExceptionCode {
   // ==================== B91401-B91499 退订/偏好/反馈 ====================
   UNSUBSCRIBE_TOKEN_INVALID("B91401", "message.unsubscribe.token.invalid"),
   PREFERENCE_NOT_FOUND("B91402", "message.preference.not.found", 404),
-  FEEDBACK_NOT_FOUND("B91403", "message.feedback.not.found", 404);
+  FEEDBACK_NOT_FOUND("B91403", "message.feedback.not.found", 404),
+
+  // ==================== B91501-B91599 发送管线（限流/去重/DND/抑制/配额） ====================
+  /** 通道未启用 */
+  CHANNEL_NOT_ENABLED("B91501", "message.channel.not.enabled"),
+  /** 发送限流（通道级 QPS 超限） */
+  SEND_RATE_LIMITED("B91502", "message.send.rate.limit", 429),
+  /** 多维度限流（receiver/template/tenant 超限） */
+  SEND_DIMENSION_LIMITED("B91503", "message.send.dimension.limit", 429),
+  /** 发送频率超限（用户级频率限制） */
+  SEND_FREQUENCY_LIMITED("B91504", "message.send.frequency.limit", 429),
+  /** 发送方配额已用尽 */
+  SEND_QUOTA_EXHAUSTED("B91505", "message.send.quota.exhausted", 429),
+  /** 用户已退订该消息主题 */
+  USER_UNSUBSCRIBED("B91506", "message.user.unsubscribed"),
+  /** 当前为免打扰时段 */
+  DND_PERIOD_ACTIVE("B91507", "message.dnd.period.active"),
+  /** DND 延迟超过最大阈值 */
+  DND_DEFER_EXCEED("B91508", "message.dnd.defer.exceed"),
+  /** 消息重复（已被去重） */
+  MESSAGE_DUPLICATED("B91509", "message.duplicated"),
+  /** 跨渠道抑制 */
+  CHANNEL_SUPPRESSED("B91510", "message.channel.suppressed");
 
   /** 错误码 */
   private final String code;
@@ -66,13 +89,35 @@ public enum MessageExceptionCode implements ExceptionCode {
   /** HTTP 状态码 */
   private final int httpStatus;
 
+  /** 是否可恢复（客户端是否应重试） */
+  private final boolean retryable;
+
+  /** 建议重试等待秒数 */
+  private final int retryAfterSeconds;
+
   MessageExceptionCode(String code, String key) {
-    this(code, key, 400);
+    this(code, key, 400, false, 0);
   }
 
   MessageExceptionCode(String code, String key, int httpStatus) {
+    this(code, key, httpStatus, httpStatus == 429, 0);
+  }
+
+  MessageExceptionCode(String code, String key, int httpStatus, boolean retryable, int retryAfterSeconds) {
     this.code = code;
     this.key = key;
     this.httpStatus = httpStatus;
+    this.retryable = retryable;
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+
+  @Override
+  public boolean retryable() {
+    return retryable;
+  }
+
+  @Override
+  public int retryAfterSeconds() {
+    return retryAfterSeconds;
   }
 }

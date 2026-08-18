@@ -60,11 +60,11 @@ public enum NextwikiExceptionCode implements ExceptionCode {
   /** 下载限流 */
   RATE_LIMIT_EXCEEDED("W01015", "nextwiki.rate.limit.exceeded", 429),
   /** 同名文件冲突 */
-  FILE_NAME_CONFLICT("W01016", "nextwiki.file.name.conflict"),
+  FILE_NAME_CONFLICT("W01016", "nextwiki.file.name.conflict", 409),
   /** 分享验证失败次数过多，已被临时锁定 */
   SHARE_LOCKED("W03006", "nextwiki.share.locked", 429),
   /** 文件已被锁定 */
-  FILE_LOCKED("W01017", "nextwiki.file.locked"),
+  FILE_LOCKED("W01017", "nextwiki.file.locked", 409),
   /** 文件未锁定 */
   FILE_NOT_LOCKED("W01018", "nextwiki.file.not.locked"),
   /** 分片上传未找到 */
@@ -140,7 +140,7 @@ public enum NextwikiExceptionCode implements ExceptionCode {
   /** 系统内部错误 */
   INTERNAL_ERROR("W09001", "nextwiki.internal.error", 500),
   /** 操作正在处理中（锁竞争） */
-  LOCK_BUSY("W09002", "nextwiki.lock.busy");
+  LOCK_BUSY("W09002", "nextwiki.lock.busy", 409);
 
   /** 错误码（业务契约，不应轻易变更） */
   private final String code;

@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
@@ -25,11 +23,9 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.system.infra.converter.SystemConverter;
+import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
-import com.njydsz.system.infra.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.ConfigPageQuery;
@@ -133,10 +129,7 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public PageResponse<List<ConfigVO>> page(ConfigPageQuery query) {
-    Page<Config> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
-    IPage<Config> result =
-        configRepository.findByPage(mpPage, query.getConfigGroup(), query.getConfigKey(), query.getStatus());
-    return PageResponses.success(result, SystemConverter.INSTANT::entityToVO);
+    return configRepository.findByPage(query);
   }
 
   @Override
@@ -146,20 +139,15 @@ public class ConfigServiceImpl implements ConfigService {
     int safePageSize = Math.min(Math.max(pageSize, 1), MAX_CURSOR_PAGE_SIZE);
 
     // 2. 查询数据（seek method：ID > cursor，仓储内部封装 QueryWrapper）
-    List<Config> entities =
-        configRepository.findForCursor(configGroup, configKey, cursor, safePageSize);
     List<ConfigVO> records =
-        entities.stream()
-            .map(SystemConverter.INSTANT::entityToVO)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+        configRepository.findForCursor(configGroup, configKey, cursor, safePageSize);
 
     // 3. 计算下一页游标（本页满且存在后续数据时）
     String nextCursor = null;
     if (records.size() == safePageSize) {
-      Config lastEntity = entities.get(entities.size() - 1);
-      if (configRepository.existsAfterCursor(configGroup, configKey, lastEntity.getId())) {
-        nextCursor = lastEntity.getId();
+      String lastId = records.get(records.size() - 1).getId();
+      if (configRepository.existsAfterCursor(configGroup, configKey, lastId)) {
+        nextCursor = lastId;
       }
     }
 
@@ -168,8 +156,7 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public ConfigVO getById(String id) {
-    Config entity = configRepository.findById(id).orElse(null);
-    return SystemConverter.INSTANT.entityToVO(entity);
+    return configRepository.findById(id).orElse(null);
   }
 
   @Override
@@ -187,15 +174,13 @@ public class ConfigServiceImpl implements ConfigService {
       })
   @Transactional(rollbackFor = Exception.class)
   public String save(ConfigVO vo) {
-    Config entity = toEntity(vo);
-    entity.validate();
-    checkDuplicateKey(entity);
-    validateConfigValueStrictOrWarn(entity);
+    ConfigDTO dto = toDto(vo);
+    checkDuplicateKey(dto);
     // 版本快照：新建配置无需快照（变更前不存在）
-    configRepository.insert(entity);
-    publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
-    indexUpsert(entity);
-    return entity.getId();
+    configRepository.insert(dto);
+    publishConfigChangedEvent(dto.getConfigKey(), dto.getConfigGroup());
+    indexUpsert(dto);
+    return dto.getId();
   }
 
   @Override
@@ -213,30 +198,28 @@ public class ConfigServiceImpl implements ConfigService {
       })
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(ConfigVO vo) {
-    Config entity = toEntity(vo);
-    entity.validate();
-    validateConfigValueStrictOrWarn(entity);
+    ConfigDTO dto = toDto(vo);
     // 版本快照：查询变更前状态
-    Config before = configRepository.findByKeyIgnoreStatus(entity.getConfigKey()).orElse(null);
+    ConfigVO before = configRepository.findByKeyIgnoreStatus(dto.getConfigKey()).orElse(null);
     String snapshotJson = before != null ? YdszJson.toJson(before) : null;
-    boolean updated = configRepository.updateById(entity);
+    boolean updated = configRepository.updateById(dto);
     if (updated) {
       // 分组变更时旧分组缓存一并失效
-      if (before != null && !Objects.equals(before.getConfigGroup(), entity.getConfigGroup())) {
+      if (before != null && !Objects.equals(before.getConfigGroup(), dto.getConfigGroup())) {
         evictConfigGroup(before.getConfigGroup());
       }
       // 创建版本快照（与配置变更同一事务）
       entityVersionService.createVersion(
           EntityVersionCreateDTO.builder()
               .resourceType(EntityVersionService.RESOURCE_TYPE_CONFIG)
-              .resourceKey(entity.getConfigKey())
-              .resourceGroup(entity.getConfigGroup())
+              .resourceKey(dto.getConfigKey())
+              .resourceGroup(dto.getConfigGroup())
               .version(SystemVersionUtils.nextVersion())
-              .changeLog("更新配置: " + entity.getConfigKey())
+              .changeLog("更新配置: " + dto.getConfigKey())
               .snapshotJson(snapshotJson)
               .build());
-      publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
-      indexUpsert(entity);
+      publishConfigChangedEvent(dto.getConfigKey(), dto.getConfigGroup());
+      indexUpsert(dto);
     }
     return updated;
   }
@@ -244,7 +227,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Config entity = configRepository.findById(id).orElse(null);
+    ConfigVO entity = configRepository.findById(id).orElse(null);
     // 版本快照：查询变更前状态
     String snapshotJson = entity != null ? YdszJson.toJson(entity) : null;
     boolean removed = configRepository.deleteById(id);
@@ -272,10 +255,10 @@ public class ConfigServiceImpl implements ConfigService {
    *
    * <p>委托 {@link SearchIndexSyncer}，仅当搜索模块存在时才执行索引 upsert，避免对未启用搜索的环境产生硬依赖。
    *
-   * @param entity 待同步的配置实体
+   * @param dto 待同步的配置 DTO
    */
-  private void indexUpsert(Config entity) {
-    searchIndexSyncer.upsert("config", entity);
+  private void indexUpsert(ConfigDTO dto) {
+    searchIndexSyncer.upsert("config", dto);
   }
 
   /**
@@ -338,7 +321,7 @@ public class ConfigServiceImpl implements ConfigService {
     long start = System.nanoTime();
     try {
       metrics.recordConfigCacheMiss();
-      Config config = configRepository.findEnabledByKey(configKey).orElse(null);
+      ConfigVO config = configRepository.findEnabledByKey(configKey).orElse(null);
       return config != null ? config.getConfigValue() : null;
     } finally {
       metrics.recordConfigRead(System.nanoTime() - start);
@@ -351,10 +334,7 @@ public class ConfigServiceImpl implements ConfigService {
     long start = System.nanoTime();
     try {
       metrics.recordConfigCacheMiss();
-      return configRepository.findEnabledByGroup(configGroup).stream()
-          .map(SystemConverter.INSTANT::entityToVO)
-          .filter(Objects::nonNull)
-          .collect(Collectors.toList());
+      return configRepository.findEnabledByGroup(configGroup);
     } finally {
       metrics.recordConfigRead(System.nanoTime() - start);
     }
@@ -366,10 +346,7 @@ public class ConfigServiceImpl implements ConfigService {
     long start = System.nanoTime();
     try {
       metrics.recordConfigCacheMiss();
-      return configRepository.findPublicEnabled().stream()
-          .map(SystemConverter.INSTANT::entityToVO)
-          .filter(Objects::nonNull)
-          .collect(Collectors.toList());
+      return configRepository.findPublicEnabled();
     } finally {
       metrics.recordConfigRead(System.nanoTime() - start);
     }
@@ -378,61 +355,31 @@ public class ConfigServiceImpl implements ConfigService {
   // ============================== 私有方法 ==============================
 
   /**
-   * 将配置 DTO 转换为持久化实体。
+   * 将配置 VO 转换为仓储层 DTO。
    *
    * <p>未显式指定状态时默认置为 {@code ENABLED}，保证新建配置默认可用。
    *
-   * @param dto 配置 DTO（为 null 时返回 null）
-   * @return 转换后的实体
+   * @param vo 配置 VO（为 null 时返回 null）
+   * @return 转换后的 DTO
    */
-  private Config toEntity(ConfigVO vo) {
+  private ConfigDTO toDto(ConfigVO vo) {
     if (vo == null) {
       return null;
     }
-    Config entity = new Config();
-    entity.setId(vo.getId());
-    entity.setConfigGroup(vo.getConfigGroup());
-    entity.setConfigKey(vo.getConfigKey());
-    entity.setConfigValue(vo.getConfigValue());
-    entity.setValueType(vo.getValueType());
-    entity.setDefaultValue(vo.getDefaultValue());
-    entity.setDescription(vo.getDescription());
-    entity.setIsPublic(vo.getIsPublic());
-    entity.setSortOrder(vo.getSortOrder());
-    entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
-    return entity;
-  }
-
-  /**
-   * 对配置值进行格式校验（值类型合法性由 {@link Config#validate()} 统一校验，此处仅校验值格式）。
-   *
-   * <p><b>严格/告警双模式（P1-6）：</b>
-   *
-   * <ul>
-   *   <li>严格模式（{@code ydsz.system.config.strict-validation=true}）：格式非法抛出
-   *       {@link BusinessException} 阻止保存，保证数据完整性。
-   *   <li>告警模式（默认）：格式非法仅记录告警日志与指标，不阻止保存，兼容存量非法值，逐步收紧。
-   * </ul>
-   *
-   * @param entity 待校验的配置实体
-   */
-  private void validateConfigValueStrictOrWarn(Config entity) {
-    String error = entity.validateValueFormat();
-    if (error == null) {
-      return;
+    ConfigDTO dto = new ConfigDTO();
+    dto.setId(vo.getId());
+    dto.setConfigGroup(vo.getConfigGroup());
+    dto.setConfigKey(vo.getConfigKey());
+    dto.setConfigValue(vo.getConfigValue());
+    dto.setValueType(vo.getValueType());
+    dto.setDefaultValue(vo.getDefaultValue());
+    dto.setDescription(vo.getDescription());
+    dto.setIsPublic(vo.getIsPublic());
+    dto.setSortOrder(vo.getSortOrder());
+    if (dto.getStatus() == null) {
+      dto.setStatus("ENABLED");
     }
-    if (properties.getConfig().isStrictValidation()) {
-      throw BusinessException.of(SystemExceptionCode.VALUE_TYPE_INVALID)
-          .data("configKey", entity.getConfigKey())
-          .data("valueType", entity.getValueType())
-          .data("reason", error);
-    }
-    log.warn(
-        "[ConfigService] 配置值格式校验失败: configKey={}, valueType={}, error={}",
-        entity.getConfigKey(),
-        entity.getValueType(),
-        error);
-    metrics.recordConfigValidationWarning();
+    return dto;
   }
 
   /**
@@ -441,13 +388,13 @@ public class ConfigServiceImpl implements ConfigService {
    * <p>写入前按 {@code (configGroup, configKey)} 唯一性预检， 命中已有记录时抛出 {@link
    * IllegalArgumentException}，避免唯一索引冲突导致写入失败。
    *
-   * @param entity 待校验的配置实体
+   * @param dto 待校验的配置 DTO
    */
-  private void checkDuplicateKey(Config entity) {
-    if (configRepository.existsByGroupAndKey(entity.getConfigGroup(), entity.getConfigKey())) {
+  private void checkDuplicateKey(ConfigDTO dto) {
+    if (configRepository.existsByGroupAndKey(dto.getConfigGroup(), dto.getConfigKey())) {
       throw BusinessException.of(SystemExceptionCode.CONFIG_KEY_DUPLICATE)
-          .data("configGroup", entity.getConfigGroup())
-          .data("configKey", entity.getConfigKey());
+          .data("configGroup", dto.getConfigGroup())
+          .data("configKey", dto.getConfigKey());
     }
   }
 
@@ -467,7 +414,7 @@ public class ConfigServiceImpl implements ConfigService {
             try {
               ConfigVO snapshotVO = YdszJson.fromJson(snapshotJson, ConfigVO.class);
               snapshotGroup = snapshotVO.getConfigGroup();
-              Config currentConfig = configRepository.findByKeyIgnoreStatus(resourceKey).orElse(null);
+              ConfigVO currentConfig = configRepository.findByKeyIgnoreStatus(resourceKey).orElse(null);
               if (currentConfig != null) {
                 currentConfig.setConfigValue(snapshotVO.getConfigValue());
                 currentConfig.setValueType(snapshotVO.getValueType());
@@ -476,9 +423,9 @@ public class ConfigServiceImpl implements ConfigService {
                 currentConfig.setIsPublic(snapshotVO.getIsPublic());
                 currentConfig.setSortOrder(snapshotVO.getSortOrder());
                 currentConfig.setStatus(snapshotVO.getStatus());
-                configRepository.updateById(currentConfig);
+                configRepository.updateById(toDto(currentConfig));
               } else {
-                Config newConfig = new Config();
+                ConfigDTO newConfig = new ConfigDTO();
                 newConfig.setConfigGroup(snapshotVO.getConfigGroup());
                 newConfig.setConfigKey(snapshotVO.getConfigKey());
                 newConfig.setConfigValue(snapshotVO.getConfigValue());
@@ -510,7 +457,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public byte[] exportConfigs(String configGroup) {
     // 1. 查询配置数据（含分组过滤）
-    List<Config> configs = loadConfigsForExport(configGroup);
+    List<ConfigVO> configs = loadConfigsForExport(configGroup);
 
     // 2. 转换为 Excel VO 并导出
     List<ConfigExcelVO> excelRows =
@@ -526,7 +473,7 @@ public class ConfigServiceImpl implements ConfigService {
    * @param configGroup 配置分组（为空时导出全部）
    * @return 未删除配置列表（按分组/排序）
    */
-  private List<Config> loadConfigsForExport(String configGroup) {
+  private List<ConfigVO> loadConfigsForExport(String configGroup) {
     return configRepository.findForExport(configGroup);
   }
 
@@ -682,7 +629,7 @@ public class ConfigServiceImpl implements ConfigService {
    * 批量保存有效配置（私有，使用 insertBatch 消除 N+1）。
    *
    * <p><b>P0-2 优化：</b>将 N 次单条 INSERT 合并为 1 次批量 INSERT，显著减少 DB 往返次数。 批量 XML 不走 MyBatis-Plus 拦截器（租户拦截器、审计字段自动填充均不生效），
-   * 需在此处手动预生成 ID 并填充审计字段。
+   * 需在此处手动预生成 ID；审计字段由仓储层实现内部处理。
    *
    * @param validItems 校验通过的配置列表
    * @param errors 错误收集器（保存失败时追加）
@@ -693,25 +640,25 @@ public class ConfigServiceImpl implements ConfigService {
       return 0;
     }
     try {
-      // 1. DTO 转 Entity，预生成 ID + 填充审计字段
-      List<Config> entities = validItems.stream()
-          .map(this::toEntityWithIdForImport)
+      // 1. VO 转 DTO，预生成 ID
+      List<ConfigDTO> dtos = validItems.stream()
+          .map(this::toDtoForImport)
           .collect(Collectors.toList());
 
       // 2. 批量插入（1 次 SQL 完成全部写入）
-      configRepository.insertBatch(entities);
+      configRepository.insertBatch(dtos);
 
       // 3. 精准失效缓存：按涉及 configGroup 逐一失效
-      entities.stream()
-          .map(Config::getConfigGroup)
+      dtos.stream()
+          .map(ConfigDTO::getConfigGroup)
           .distinct()
           .forEach(this::evictConfigGroup);
       evictConfigPublic();
 
       // 4. 同步搜索索引 + 发布变更事件（异步，不阻塞主流程）
-      entities.forEach(entity -> indexUpsert(entity));
+      dtos.forEach(dto -> indexUpsert(dto));
 
-      return entities.size();
+      return dtos.size();
     } catch (Exception e) {
       errors.add("批量导入失败: " + e.getMessage());
       return 0;
@@ -719,36 +666,29 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   /**
-   * DTO 转 Entity + 预生成雪花 ID + 审计字段（导入场景专用，私有）。
+   * VO 转 DTO + 预生成雪花 ID（导入场景专用，私有）。
    *
    * <p>批量 XML 插入不走 MyBatis-Plus 拦截器（CombinedFieldFillInterceptor、租户拦截器、 IdentifierGenerator
-   * 均不生效），需在此处手动预生成 ID 并填充审计字段。
+   * 均不生效），需在此处手动预生成 ID。审计字段由仓储层实现内部处理。
    *
-   * <p>缺省 {@code status="ENABLED"}、{@code deleted=0}（{@code @TableLogic} 字段用 int 存储）。
+   * <p>缺省 {@code status="ENABLED"}。
    *
    * @param vo 配置 VO
-   * @return 配置实体（含预生成 ID 和审计字段）
+   * @return 配置 DTO（含预生成 ID）
    */
-  private Config toEntityWithIdForImport(ConfigVO vo) {
-    Config entity = new Config();
-    entity.setId(com.baomidou.mybatisplus.core.toolkit.IdWorker.getIdStr());
-    entity.setConfigGroup(vo.getConfigGroup());
-    entity.setConfigKey(vo.getConfigKey());
-    entity.setConfigValue(vo.getConfigValue());
-    entity.setValueType(vo.getValueType());
-    entity.setDefaultValue(vo.getDefaultValue());
-    entity.setDescription(vo.getDescription());
-    entity.setIsPublic(vo.getIsPublic());
-    entity.setSortOrder(vo.getSortOrder());
-    entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
-    entity.setDeleted(0);
-    entity.setRevision(0);
-    entity.setCreatedAt(java.time.LocalDateTime.now());
-    entity.setUpdatedAt(java.time.LocalDateTime.now());
-    entity.setCreatedBy(getCurrentUserId());
-    entity.setUpdatedBy(getCurrentUserId());
-    entity.setTenantId(com.njydsz.common.tenant.TenantContextHolder.getTenantId());
-    return entity;
+  private ConfigDTO toDtoForImport(ConfigVO vo) {
+    ConfigDTO dto = new ConfigDTO();
+    dto.setId(com.baomidou.mybatisplus.core.toolkit.IdWorker.getIdStr());
+    dto.setConfigGroup(vo.getConfigGroup());
+    dto.setConfigKey(vo.getConfigKey());
+    dto.setConfigValue(vo.getConfigValue());
+    dto.setValueType(vo.getValueType());
+    dto.setDefaultValue(vo.getDefaultValue());
+    dto.setDescription(vo.getDescription());
+    dto.setIsPublic(vo.getIsPublic());
+    dto.setSortOrder(vo.getSortOrder());
+    dto.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
+    return dto;
   }
 
   /**
@@ -767,23 +707,23 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   /**
-   * Config 实体转换为 Excel VO
+   * ConfigVO 转换为 Excel VO
    *
-   * @param entity 配置实体
+   * @param vo 配置 VO
    * @return Excel VO
    */
-  private ConfigExcelVO toExcelVO(Config entity) {
-    ConfigExcelVO vo = new ConfigExcelVO();
-    vo.setConfigGroup(entity.getConfigGroup());
-    vo.setConfigKey(entity.getConfigKey());
-    vo.setConfigValue(entity.getConfigValue());
-    vo.setValueType(entity.getValueType());
-    vo.setDefaultValue(entity.getDefaultValue());
-    vo.setDescription(entity.getDescription());
-    vo.setIsPublic(entity.getIsPublic());
-    vo.setSortOrder(entity.getSortOrder());
-    vo.setStatus(entity.getStatus());
-    return vo;
+  private ConfigExcelVO toExcelVO(ConfigVO vo) {
+    ConfigExcelVO excelVO = new ConfigExcelVO();
+    excelVO.setConfigGroup(vo.getConfigGroup());
+    excelVO.setConfigKey(vo.getConfigKey());
+    excelVO.setConfigValue(vo.getConfigValue());
+    excelVO.setValueType(vo.getValueType());
+    excelVO.setDefaultValue(vo.getDefaultValue());
+    excelVO.setDescription(vo.getDescription());
+    excelVO.setIsPublic(vo.getIsPublic());
+    excelVO.setSortOrder(vo.getSortOrder());
+    excelVO.setStatus(vo.getStatus());
+    return excelVO;
   }
 
   /**

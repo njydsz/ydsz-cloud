@@ -33,6 +33,13 @@ public class MessageResult implements Serializable {
   /** 发送状态（SUCCESS / FAILED / UNKNOWN） */
   private String status;
 
+  /**
+   * 错误码（失败时填充，便于前端/客户端识别错误类别）。
+   *
+   * <p>取值来自 {@link com.njydsz.message.domain.enums.MessageExceptionCode#getCode()}， 为 null 表示无细分错误码（兼容旧调用方）。
+   */
+  private String errorCode;
+
   public boolean isSuccess() {
     return success;
   }
@@ -80,9 +87,22 @@ public class MessageResult implements Serializable {
    * @return 失败结果
    */
   public static MessageResult fail(String channel, String errorMessage) {
+    return fail(channel, errorMessage, null);
+  }
+
+  /**
+   * 构建失败结果（带错误码）。
+   *
+   * @param channel 通道（保留参数，当前不使用）
+   * @param errorMessage 错误信息
+   * @param errorCode 错误码（可为 null）
+   * @return 失败结果
+   */
+  public static MessageResult fail(String channel, String errorMessage, String errorCode) {
     MessageResult result = new MessageResult();
     result.success = false;
     result.errorMessage = errorMessage;
+    result.errorCode = errorCode;
     result.status = "FAILED";
     return result;
   }

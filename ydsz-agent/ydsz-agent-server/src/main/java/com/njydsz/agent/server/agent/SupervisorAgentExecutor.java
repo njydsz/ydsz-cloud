@@ -7,12 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
-import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
@@ -24,6 +20,7 @@ import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
+import com.njydsz.agent.server.chat.StreamingPiiMasker;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.json.YdszJson;
@@ -50,12 +47,10 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class SupervisorAgentExecutor implements AgentExecutor {
+public class SupervisorAgentExecutor extends AbstractAgentExecutor {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SupervisorAgentExecutor.class);
-
-  /** 任务分解 Prompt 模板 */
-  private static final String PLAN_PROMPT_TEMPLATE =
+  /** 任务分解 Prompt 模板（默认值，可被数据库模板覆盖） */
+  private static final String DEFAULT_PLAN_PROMPT_TEMPLATE =
       """
             你是 YDSZ 智能助手的任务规划器。请分析用户任务，将其分解为可执行的子任务。
 
@@ -68,7 +63,7 @@ public class SupervisorAgentExecutor implements AgentExecutor {
             用户任务: {task}
 
             请以 JSON 格式输出执行计划（不要 markdown 代码块）：
-            {{"tasks": [{"id": 1, "type": "REACT", "description": "任务描述", "depends_on": []}]}}
+            {"tasks": [{"id": 1, "type": "REACT", "description": "任务描述", "depends_on": []}]}
 
             - id: 任务序号
             - type: Worker 类型（CHAT/REACT/RAG/PLAN_EXECUTE）
@@ -78,32 +73,11 @@ public class SupervisorAgentExecutor implements AgentExecutor {
             最多分解为 3 个子任务。
             """;
 
-  /** LLM 客户端 */
-  private final LlmClient llmClient;
-
-  /** 对话记忆 */
-  private final ConversationMemory memory;
-
-  /** Agent 配置属性 */
-  private final AgentProperties properties;
-
-  /** 链路记录器 */
-  private final TraceRecorder traceRecorder;
-
-  /** Agent 指标采集 */
-  private final AgentMetrics agentMetrics;
-
-  /** 成本分析服务 */
-  private final CostAnalysisService costAnalysisService;
-
-  /** 护栏编排服务 */
-  private final GuardrailService guardrailService;
+  /** 规划阶段系统 Prompt（默认值，可被数据库模板覆盖） */
+  private static final String DEFAULT_PLAN_SYSTEM_PROMPT = "你是任务规划器，只输出 JSON 格式的执行计划。";
 
   /** Agent 工厂 */
   private final AgentFactory agentFactory;
-
-  /** Prompt 模板提供者（加载外部化模板） */
-  private final PromptTemplateProvider promptTemplateProvider;
 
   public SupervisorAgentExecutor(
       LlmClient llmClient,
@@ -115,28 +89,28 @@ public class SupervisorAgentExecutor implements AgentExecutor {
       GuardrailService guardrailService,
       PromptTemplateProvider promptTemplateProvider,
       AgentFactory agentFactory) {
-    this.llmClient = llmClient;
-    this.memory = memory;
-    this.properties = properties;
-    this.traceRecorder = traceRecorder;
-    this.agentMetrics = agentMetrics;
-    this.costAnalysisService = costAnalysisService;
-    this.guardrailService = guardrailService;
-    this.promptTemplateProvider = promptTemplateProvider;
+    super(
+        llmClient,
+        memory,
+        properties,
+        traceRecorder,
+        agentMetrics,
+        costAnalysisService,
+        guardrailService,
+        promptTemplateProvider);
     this.agentFactory = agentFactory;
   }
 
   @Override
   public ChatResponse execute(AgentExecutionRequest request) {
-    String convId =
-        request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
-    String traceId = traceRecorder.startTrace(convId, "SUPERVISOR");
+    String convId = extractConvId(request);
+    String traceId = startTrace(convId, "SUPERVISOR");
     LOG.info("[Supervisor] 开始执行: convId={}, traceId={}", convId, traceId);
 
-    String userInput = guardrailService.applyInputGuardrails(request.getUserInput());
+    String userInput = applyInputGuardrails(request.getUserInput());
     if (userInput == null) {
       traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
-      return buildRejectedResponse();
+      return buildRejectedResponse("您的输入被安全护栏拒绝");
     }
 
     // 1. 任务分解
@@ -244,20 +218,287 @@ public class SupervisorAgentExecutor implements AgentExecutor {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * <p>真实流式执行（非同步执行后模拟）。流式阶段：
+   *
+   * <ol>
+   *   <li><b>规划阶段</b>：推送任务分解结果（子任务列表）
+   *   <li><b>执行阶段</b>：逐子任务流式执行，实时推送每个 Worker 的输出
+   *   <li><b>汇总阶段</b>：流式生成最终总结
+   * </ol>
+   *
+   * <p>每个子任务通过 {@link AgentExecutor#executeStream} 流式执行（若 Worker 支持）； 若 Worker 仅支持同步，则执行完成后推送完整结果。
+   */
   @Override
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
-    // 同步执行后模拟流式输出（Supervisor 模式不适合真正的流式，因为需等待所有子任务完成）
-    ChatResponse response = execute(request);
-    String[] parts = response.getContent().split("(?<=\n)");
-    for (String part : parts) {
-      chunkConsumer.accept(ChatChunk.content(response.getId(), response.getModel(), part));
+    String convId = extractConvId(request);
+    String traceId = startTrace(convId, "SUPERVISOR_STREAM");
+    LOG.info("[Supervisor-Stream] 开始流式执行: convId={}, traceId={}", convId, traceId);
+
+    String responseId = IdGenerator.nextIdStr();
+    String model = properties.getLlm().getDefaultModel();
+
+    String userInput = applyInputGuardrails(request.getUserInput());
+    if (userInput == null) {
+      traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
+      emitRejectionStream(responseId, chunkConsumer);
+      return;
+    }
+
+    // 1. 规划阶段
+    List<SubTask> subTasks = planTasks(userInput, traceId);
+    traceRecorder.recordStep(
+        traceId, "PLAN", "Task plan created", userInput, subTasks.size() + " subtasks", 0);
+    // 推送规划结果
+    chunkConsumer.accept(
+        ChatChunk.content(responseId, model, formatPlanMessage(subTasks)));
+
+    // 2. 流式执行子任务
+    List<String> results = new ArrayList<>(subTasks.size());
+    Map<Integer, String> taskResults = new HashMap<>();
+    TokenUsage[] totalUsage = {TokenUsage.zero()};
+    StreamingPiiMasker streamingMasker = new StreamingPiiMasker();
+    List<SubTask> pending = new ArrayList<>(subTasks);
+    while (!pending.isEmpty()) {
+      boolean progressed = false;
+      Iterator<SubTask> iterator = pending.iterator();
+      while (iterator.hasNext()) {
+        SubTask subTask = iterator.next();
+        if (!subTask.dependsOn().stream().allMatch(taskResults::containsKey)) {
+          continue;
+        }
+        iterator.remove();
+        progressed = true;
+        // 推送子任务开始标记
+        chunkConsumer.accept(
+            ChatChunk.content(
+                responseId, model, String.format("\n\n[执行任务 %d/%d] %s\n",
+                    subTask.id(), subTasks.size(), subTask.description())));
+        // 流式执行子任务
+        String result = executeSubTaskStream(
+            convId, request, subTask, traceId, totalUsage, responseId,
+            model, streamingMasker, chunkConsumer);
+        taskResults.put(subTask.id(), result);
+        results.add(result);
+      }
+      if (!progressed) {
+        LOG.warn("[Supervisor-Stream] 子任务依赖无法满足，按剩余顺序兜底执行: remaining={}",
+            pending.size());
+        for (SubTask subTask : pending) {
+          chunkConsumer.accept(
+              ChatChunk.content(
+                  responseId, model, String.format("\n\n[执行任务 %d/%d] %s\n",
+                      subTask.id(), subTasks.size(), subTask.description())));
+          String result = executeSubTaskStream(
+              convId, request, subTask, traceId, totalUsage, responseId,
+              model, streamingMasker, chunkConsumer);
+          taskResults.put(subTask.id(), result);
+          results.add(result);
+        }
+        break;
+      }
+    }
+
+    // 3. 流式汇总（PII 脱敏已在 synthesizeResultsStreaming 内部处理）
+    chunkConsumer.accept(ChatChunk.content(responseId, model, "\n\n[汇总中]\n"));
+    synthesizeResultsStreaming(
+        userInput, results, convId, responseId, model, streamingMasker, chunkConsumer);
+
+    traceRecorder.endTrace(traceId, "SUCCESS");
+    LOG.info(
+        "[Supervisor-Stream] 流式执行完成: convId={}, subTasks={}, tokens={}",
+        convId, subTasks.size(), totalUsage[0].getTotalTokens());
+    // 推送完成 chunk（冲刷剩余 PII 缓冲）
+    String maskedRest = streamingMasker.flush();
+    if (!maskedRest.isEmpty()) {
+      chunkConsumer.accept(ChatChunk.content(responseId, model, maskedRest));
     }
     chunkConsumer.accept(
-        ChatChunk.finish(
-            response.getId(),
-            response.getModel(),
-            response.getFinishReason(),
-            response.getUsage()));
+        ChatChunk.finish(responseId, model, "stop", totalUsage[0]));
+  }
+
+  /**
+   * 格式化规划消息（推送任务分解结果给前端）。
+   *
+   * @param subTasks 子任务列表
+   * @return 规划描述文本
+   */
+  private String formatPlanMessage(List<SubTask> subTasks) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("[任务规划] 将任务分解为 ").append(subTasks.size()).append(" 个子任务：\n");
+    for (SubTask task : subTasks) {
+      sb.append(String.format("  %d. [%s] %s\n", task.id(), task.type(), task.description()));
+    }
+    return sb.toString();
+  }
+
+  /**
+   * 流式执行单个子任务，实时推送 Worker 输出。
+   *
+   * @param convId 对话 ID
+   * @param request 原始执行请求
+   * @param subTask 子任务定义
+   * @param traceId 链路 ID
+   * @param usageAcc Token 用量累加器
+   * @param responseId 响应 ID
+   * @param model 模型名称
+   * @param streamingMasker PII 脱敏器
+   * @param chunkConsumer 流式消费者
+   * @return 子任务完整结果文本
+   */
+  private String executeSubTaskStream(
+      String convId,
+      AgentExecutionRequest request,
+      SubTask subTask,
+      String traceId,
+      TokenUsage[] usageAcc,
+      String responseId,
+      String model,
+      StreamingPiiMasker streamingMasker,
+      Consumer<ChatChunk> chunkConsumer) {
+    AgentExecutionRequest subRequest =
+        AgentExecutionRequest.builder()
+            .userInput(subTask.description())
+            .conversationId(convId + "-sub-" + subTask.id())
+            .systemPrompt(null)
+            .maxIterations(request.getMaxIterations())
+            .build();
+    AgentExecutor worker = createWorker(subTask.type(), request);
+    StringBuilder resultBuilder = new StringBuilder();
+    try {
+      // 使用流式执行（worker 支持流式则流式，否则回退到同步）
+      worker.executeStream(
+          subRequest,
+          chunk -> {
+            if (chunk.hasContent()) {
+              // PII 脱敏后推送
+              String maskedDelta = streamingMasker.mask(chunk.getDeltaContent());
+              if (!maskedDelta.isEmpty()) {
+                resultBuilder.append(maskedDelta);
+                chunkConsumer.accept(
+                    ChatChunk.content(responseId, model, maskedDelta, chunk.getDeltaToolCalls()));
+              }
+            } else if (chunk.isFinished()) {
+              // 冲刷剩余缓冲
+              String maskedRest = streamingMasker.flush();
+              if (!maskedRest.isEmpty()) {
+                resultBuilder.append(maskedRest);
+                chunkConsumer.accept(ChatChunk.content(responseId, model, maskedRest));
+              }
+              if (chunk.getUsage() != null) {
+                usageAcc[0] = usageAcc[0].add(chunk.getUsage());
+              }
+            } else {
+              chunkConsumer.accept(chunk);
+            }
+          });
+      traceRecorder.recordStep(
+          traceId,
+          "SUB_TASK_DONE",
+          "Sub-task " + subTask.id() + " completed",
+          subTask.description(),
+          resultBuilder.toString(),
+          0);
+    } catch (Exception e) {
+      LOG.error("[Supervisor-Stream] 子任务 {} 执行失败: {}", subTask.id(), e.getMessage());
+      traceRecorder.recordStep(
+          traceId,
+          "SUB_TASK_ERROR",
+          "Sub-task " + subTask.id() + " failed",
+          subTask.description(),
+          e.getMessage(),
+          0);
+      String errorResult = "[子任务 " + subTask.id() + " 执行失败: " + e.getMessage() + "]";
+      resultBuilder.append(errorResult);
+      chunkConsumer.accept(ChatChunk.content(responseId, model, errorResult));
+    }
+    return resultBuilder.toString();
+  }
+
+  /**
+   * 流式汇总子任务结果（通过 LLM 流式生成最终总结）。
+   *
+   * @param originalTask 原始用户任务
+   * @param results 子任务结果列表
+   * @param convId 对话 ID
+   * @param responseId 响应 ID
+   * @param model 模型名称
+   * @param streamingMasker PII 脱敏器
+   * @param chunkConsumer 流式消费者
+   * @return 最终回答文本
+   */
+  private String synthesizeResultsStreaming(
+      String originalTask,
+      List<String> results,
+      String convId,
+      String responseId,
+      String model,
+      StreamingPiiMasker streamingMasker,
+      Consumer<ChatChunk> chunkConsumer) {
+    if (results.isEmpty()) {
+      String msg = "抱歉，无法完成您的任务。";
+      chunkConsumer.accept(ChatChunk.content(responseId, model, msg));
+      return msg;
+    }
+    if (results.size() == 1) {
+      // 单任务：直接流式输出结果
+      chunkConsumer.accept(ChatChunk.content(responseId, model, results.get(0)));
+      return results.get(0);
+    }
+    // 多任务：构建汇总 prompt，通过 LLM 流式生成总结
+    StringBuilder synthesizePrompt = new StringBuilder();
+    synthesizePrompt.append("以下是针对用户请求\"").append(originalTask).append("\"的各子任务执行结果：\n\n");
+    for (int i = 0; i < results.size(); i++) {
+      synthesizePrompt.append("## 任务 ").append(i + 1).append("\n");
+      synthesizePrompt.append(results.get(i)).append("\n\n");
+    }
+    synthesizePrompt.append("请基于以上结果，生成一份简洁、连贯的最终回复（不要重复子任务标题，直接给出总结性回答）：");
+
+    ChatRequest synthesizeRequest =
+        ChatRequest.builder()
+            .model(model)
+            .messages(
+                List.of(
+                    ChatMessage.system("你是结果汇总助手，负责将多个子任务结果整合为连贯的最终回复。"),
+                    ChatMessage.user(synthesizePrompt.toString(), convId)))
+            .temperature(0.5)
+            .maxTokens(properties.getLlm().getMaxTokens())
+            .stream(true)
+            .build();
+
+    StringBuilder finalAnswer = new StringBuilder();
+    try {
+      llmClient.stream(
+          synthesizeRequest,
+          chunk -> {
+            if (chunk.hasContent()) {
+              String maskedDelta = streamingMasker.mask(chunk.getDeltaContent());
+              if (!maskedDelta.isEmpty()) {
+                finalAnswer.append(maskedDelta);
+                chunkConsumer.accept(
+                    ChatChunk.content(responseId, model, maskedDelta, chunk.getDeltaToolCalls()));
+              }
+            } else if (chunk.isFinished()) {
+              String maskedRest = streamingMasker.flush();
+              if (!maskedRest.isEmpty()) {
+                finalAnswer.append(maskedRest);
+                chunkConsumer.accept(ChatChunk.content(responseId, model, maskedRest));
+              }
+              chunkConsumer.accept(chunk);
+            } else {
+              chunkConsumer.accept(chunk);
+            }
+          });
+    } catch (Exception e) {
+      LOG.error("[Supervisor-Stream] 汇总生成失败: {}", e.getMessage());
+      // 降级：直接拼接结果
+      String fallback = String.join("\n\n", results);
+      chunkConsumer.accept(ChatChunk.content(responseId, model, fallback));
+      return fallback;
+    }
+    return finalAnswer.toString();
   }
 
   @Override
@@ -278,13 +519,20 @@ public class SupervisorAgentExecutor implements AgentExecutor {
    * @return 子任务列表（最多 3 个）
    */
   private List<SubTask> planTasks(String userTask, String traceId) {
-    String planPrompt = PLAN_PROMPT_TEMPLATE.replace("{task}", userTask);
+    String planTemplate =
+        promptTemplateProvider.loadOrDefault(
+            properties.getPromptTemplate().getSupervisorPlanCode(), DEFAULT_PLAN_PROMPT_TEMPLATE);
+    String planSystemPrompt =
+        promptTemplateProvider.loadOrDefault(
+            properties.getPromptTemplate().getSupervisorPlanSystemCode(), DEFAULT_PLAN_SYSTEM_PROMPT);
+
+    String planPrompt = planTemplate.replace("{task}", userTask);
     ChatRequest planRequest =
         ChatRequest.builder()
             .model(properties.getLlm().getDefaultModel())
             .messages(
                 List.of(
-                    ChatMessage.system("你是任务规划器，只输出 JSON 格式的执行计划。"),
+                    ChatMessage.system(planSystemPrompt),
                     ChatMessage.user(planPrompt, null)))
             .temperature(0.0)
             .maxTokens(500)
@@ -413,17 +661,6 @@ public class SupervisorAgentExecutor implements AgentExecutor {
             request.getMaxIterations(),
             properties.getLlm().getDefaultModel());
     return agentFactory.getExecutor(def);
-  }
-
-  private ChatResponse buildRejectedResponse() {
-    ChatMessage msg = ChatMessage.assistant("抱歉，您的输入被安全护栏拒绝。", null, TokenUsage.zero());
-    return new ChatResponse(
-        IdGenerator.nextIdStr(),
-        "guardrail",
-        msg,
-        TokenUsage.zero(),
-        "guardrail_rejected",
-        List.of());
   }
 
   /**

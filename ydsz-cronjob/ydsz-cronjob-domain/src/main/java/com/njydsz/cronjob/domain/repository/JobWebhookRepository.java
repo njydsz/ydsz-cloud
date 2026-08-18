@@ -38,4 +38,50 @@ public interface JobWebhookRepository {
    * @return 活跃的 Webhook VO 列表
    */
   List<JobWebhookVO> findActiveByEventAndJob(String eventType, String jobId);
+
+  // ===== Web 层 CRUD 方法（Controller 停止 Mapper 直注） =====
+
+  /**
+   * 新增 WebHook 订阅。
+   *
+   * @param vo Webhook VO
+   * @return 新订阅 ID
+   */
+  String create(JobWebhookVO vo);
+
+  /**
+   * 更新 WebHook 订阅（按 ID 全字段更新）。
+   *
+   * @param vo Webhook VO（必须含 id）
+   */
+  void update(JobWebhookVO vo);
+
+  /**
+   * 逻辑删除 WebHook 订阅。
+   *
+   * @param id Webhook ID
+   * @param updatedAt 更新时间
+   */
+  void deleteById(String id, java.time.LocalDateTime updatedAt);
+
+  /**
+   * 根据 ID 查询 WebHook 详情。
+   *
+   * @param id Webhook ID
+   * @return Webhook VO；不存在返回 {@code Optional.empty()}
+   */
+  java.util.Optional<JobWebhookVO> findById(String id);
+
+  /**
+   * 分页查询 WebHook 订阅列表。
+   *
+   * <p>仅查询 {@code deleted=0} 的订阅，按 created_at 倒序。
+   *
+   * @param pageNum 页码（从 1 开始）
+   * @param size 每页条数
+   * @param eventType 事件类型过滤（可为 null 表示不限）
+   * @param jobKey 任务 KEY 过滤（可为 null 表示不限）
+   * @return 分页结果（records=VO列表, total=总条数）
+   */
+  JobRepository.PageResult<JobWebhookVO> pageBy(int pageNum, int size, String eventType, String jobKey);
 }

@@ -13,6 +13,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
+import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendHandler;
 import com.njydsz.message.server.service.config.UserChannelBindingService;
@@ -49,7 +50,10 @@ public class ChannelResolveHandler implements SendHandler {
     }
     if (!isChannelEnabled(channel)) {
       log.warn("[Message] 通道未启用: {}", channel);
-      ctx.setErrorResult(MessageResult.fail(channel, "通道未启用: " + channel));
+      ctx.setErrorResult(MessageResult.fail(
+          channel,
+          "通道未启用: " + channel,
+          MessageExceptionCode.CHANNEL_NOT_ENABLED.getCode()));
       return false;
     }
     // 解析 userId 到通道原生联系方式

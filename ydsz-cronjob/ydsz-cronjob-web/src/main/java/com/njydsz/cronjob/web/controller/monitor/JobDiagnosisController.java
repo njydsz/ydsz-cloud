@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,11 +18,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.cronjob.server.core.LockKeyUtil;
 import com.njydsz.common.response.BaseResponse;
-import com.njydsz.cronjob.domain.entity.log.JobLog;
-import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.cronjob.domain.repository.JobLogRepository;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
@@ -50,7 +50,8 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @RequiredArgsConstructor
 public class JobDiagnosisController {
 
-  private final JobLogMapper jobLogMapper;
+  /** 日志 Repository（DDD 分层：Controller 通过 Repository 接口查询日志） */
+  private final JobLogRepository jobLogRepository;
   private final CronjobProperties cronjobProperties;
   private final StringRedisTemplate redisTemplate;
 
@@ -82,14 +83,10 @@ public class JobDiagnosisController {
     diagnosis.put("diagnosisTime", LocalDateTime.now().toString());
     diagnosis.put("nodeId", getNodeId());
 
-    // 2. 最近一次执行日志
-    JobLog lastLog =
-        jobLogMapper.selectOne(
-            new LambdaQueryWrapper<JobLog>()
-                .eq(JobLog::getJobKey, jobKey)
-                .orderByDesc(JobLog::getCreatedAt)
-                .last("LIMIT 1"));
-    if (lastLog != null) {
+    // 2. 最近一次执行日志（通过 Repository 查询 VO）
+    Optional<JobLogVO> lastLogOpt = jobLogRepository.findLatestByJobKey(jobKey);
+    if (lastLogOpt.isPresent()) {
+      JobLogVO lastLog = lastLogOpt.get();
       Map<String, Object> lastLogInfo = new HashMap<>(8);
       lastLogInfo.put("logId", lastLog.getId());
       lastLogInfo.put("triggerType", lastLog.getTriggerType());
@@ -105,12 +102,7 @@ public class JobDiagnosisController {
     }
 
     // 3. 最近 5 次执行记录数
-    List<JobLog> recentLogs =
-        jobLogMapper.selectList(
-            new LambdaQueryWrapper<JobLog>()
-                .eq(JobLog::getJobKey, jobKey)
-                .orderByDesc(JobLog::getCreatedAt)
-                .last("LIMIT 5"));
+    List<JobLogVO> recentLogs = jobLogRepository.findByJobKey(jobKey, 5);
     diagnosis.put("recentExecutions", recentLogs.size());
 
     // 4. 当前 Redis 锁状态

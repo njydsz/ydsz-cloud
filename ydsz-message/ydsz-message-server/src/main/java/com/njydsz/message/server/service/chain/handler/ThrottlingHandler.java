@@ -6,10 +6,10 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.constant.SystemConstants;
-import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendHandler;
@@ -26,7 +26,7 @@ import com.njydsz.message.server.service.impl.SenderQuotaService;
  *   <li>发送方配额：bizType 级日/月总量控制</li>
  * </ol>
  *
- * <p>限流触发时抛 {@link SysException}（TOO_MANY_REQUESTS），由上层统一处理。
+ * <p>限流触发时通过 {@link SendContext#setErrorResult} 设置带错误码的失败结果， 由管线统一短路。错误码使用 {@link MessageExceptionCode} 的 B915xx 段。
  *
  * @author ydsz-team
  * @since 1.2.0
@@ -50,28 +50,31 @@ public class ThrottlingHandler implements SendHandler {
     // 1. 通道级 QPS 限流
     if (!guardService.tryAcquire(buildChannelLimitKey(channel, bizType), 1)) {
       messageMetrics.recordSend(channel, "FAILED", 0);
-      throw SysException.builder()
-          .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
-          .message("发送限流，请稍后重试")
-          .build();
+      ctx.setErrorResult(MessageResult.fail(
+          channel,
+          "发送限流，请稍后重试",
+          MessageExceptionCode.SEND_RATE_LIMITED.getCode()));
+      return false;
     }
     // 2. 多维度限流校验
     if (!guardService.checkSendLimit(
         channel, receiver, templateCode, ctx.getTenantId(), request.getPriority())) {
       messageMetrics.recordSend(channel, "RATE_LIMITED", 0);
-      throw SysException.builder()
-          .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
-          .message("多维度限流：receiver/template/tenant 超限")
-          .build();
+      ctx.setErrorResult(MessageResult.fail(
+          channel,
+          "多维度限流：receiver/template/tenant 超限",
+          MessageExceptionCode.SEND_DIMENSION_LIMITED.getCode()));
+      return false;
     }
     // 3. 用户频率校验
     if (StringUtils.hasText(receiver)
         && !guardService.checkFrequency(receiver, channel, bizType)) {
       messageMetrics.recordSend(channel, "FAILED", 0);
-      throw SysException.builder()
-          .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
-          .message("发送频率超限")
-          .build();
+      ctx.setErrorResult(MessageResult.fail(
+          channel,
+          "发送频率超限",
+          MessageExceptionCode.SEND_FREQUENCY_LIMITED.getCode()));
+      return false;
     }
     // 4. 发送方配额校验
     String senderId =
@@ -80,10 +83,11 @@ public class ThrottlingHandler implements SendHandler {
             : SystemConstants.SYSTEM_USER_ID;
     if (!senderQuotaService.checkQuota(senderId, channel)) {
       messageMetrics.recordSend(channel, "QUOTA_EXCEEDED", 0);
-      throw SysException.builder()
-          .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
-          .message("发送方配额已用尽: senderId=" + senderId)
-          .build();
+      ctx.setErrorResult(MessageResult.fail(
+          channel,
+          "发送方配额已用尽: senderId=" + senderId,
+          MessageExceptionCode.SEND_QUOTA_EXHAUSTED.getCode()));
+      return false;
     }
     return true;
   }

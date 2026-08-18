@@ -26,8 +26,8 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
-import com.njydsz.nextwiki.infra.entity.FileVersionDO;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.server.service.BatchTaskService;
 import com.njydsz.nextwiki.server.service.BatchTaskService.BatchTaskStatus;
 import com.njydsz.nextwiki.server.service.FileApplicationService;
@@ -155,12 +155,12 @@ public class FileBatchController {
    * <p>按版本号倒序返回全部历史版本，每条记录包含版本号、大小、上传人、上传时间、备注等。 当前最新版本固定在列表首位。
    *
    * @param nodeId 文件节点 ID
-   * @return 统一响应结果，data 为 {@link FileVersionDO} 列表
+   * @return 统一响应结果，data 为 {@link FileVersionVO} 列表
    */
   @GetMapping("/{nodeId}/versions")
   @Operation(summary = "获取版本历史")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION_VIEW)
-  public BaseResponse<List<FileVersionDO>> getVersionHistory(@PathVariable String nodeId) {
+  public BaseResponse<List<FileVersionVO>> getVersionHistory(@PathVariable String nodeId) {
     return BaseResponse.success(fileApplicationService.getVersionHistory(nodeId));
   }
 

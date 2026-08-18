@@ -3,8 +3,6 @@ package com.njydsz.cronjob.web.controller.job;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -24,17 +22,16 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
 import com.njydsz.cronjob.domain.entity.job.JobWebhook;
 import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
+import com.njydsz.cronjob.domain.repository.JobWebhookRepository;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
-import com.njydsz.cronjob.infra.mapper.job.JobWebhookMapper;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 
 /**
  * WebHook 事件订阅管理 Controller（P3-13）。
@@ -59,8 +56,8 @@ import com.njydsz.cronjob.infra.mapper.job.JobWebhookMapper;
 @RequiredArgsConstructor
 public class JobWebhookController {
 
-  /** WebHook 订阅 Mapper */
-  private final JobWebhookMapper webhookMapper;
+  /** WebHook 订阅 Repository（DDD 分层：Controller 通过 Repository 接口访问） */
+  private final JobWebhookRepository webhookRepository;
 
   /**
    * 新增 WebHook 订阅。
@@ -82,16 +79,20 @@ public class JobWebhookController {
   @RateLimit(resource = "cronjob.jobwebhook.create", threshold = 50)
   @PostMapping
   public BaseResponse<String> create(@RequestBody JobWebhookPostDTO dto) {
-    JobWebhook webhook = CronjobConverter.INSTANT.postDtoToEntity(dto);
-    webhook.setStatus("ACTIVE");
-    webhook.setCreatedAt(LocalDateTime.now());
-    webhook.setUpdatedAt(LocalDateTime.now());
-    webhook.setDeleted(0);
-    if (webhook.getHttpMethod() == null || webhook.getHttpMethod().isBlank()) {
-      webhook.setHttpMethod("POST");
+    // 1. DTO → Entity（MapStruct 转换）
+    JobWebhook entity = CronjobConverter.INSTANT.postDtoToEntity(dto);
+    entity.setStatus("ACTIVE");
+    entity.setCreatedAt(LocalDateTime.now());
+    entity.setUpdatedAt(LocalDateTime.now());
+    entity.setDeleted(0);
+    if (entity.getHttpMethod() == null || entity.getHttpMethod().isBlank()) {
+      entity.setHttpMethod("POST");
     }
-    webhookMapper.insert(webhook);
-    return BaseResponse.success(webhook.getId());
+    // 2. Entity → VO（Repository 层接受 VO）
+    JobWebhookVO vo = CronjobConverter.INSTANT.entityToVO(entity);
+    // 3. 通过 Repository 新增
+    String newId = webhookRepository.create(vo);
+    return BaseResponse.success(newId);
   }
 
   /**
@@ -113,9 +114,10 @@ public class JobWebhookController {
   @RateLimit(resource = "cronjob.jobwebhook.update", threshold = 50)
   @PutMapping
   public BaseResponse<Void> update(@RequestBody JobWebhookPutDTO dto) {
-    JobWebhook webhook = CronjobConverter.INSTANT.putDtoToEntity(dto);
-    webhook.setUpdatedAt(LocalDateTime.now());
-    webhookMapper.updateById(webhook);
+    // DTO → Entity → VO
+    JobWebhook entity = CronjobConverter.INSTANT.putDtoToEntity(dto);
+    entity.setUpdatedAt(LocalDateTime.now());
+    webhookRepository.update(CronjobConverter.INSTANT.entityToVO(entity));
     return BaseResponse.success();
   }
 
@@ -138,11 +140,7 @@ public class JobWebhookController {
   @RateLimit(resource = "cronjob.jobwebhook.delete", threshold = 50)
   @DeleteMapping("/{id}")
   public BaseResponse<Void> delete(@PathVariable String id) {
-    JobWebhook update = new JobWebhook();
-    update.setId(id);
-    update.setDeleted(1);
-    update.setUpdatedAt(LocalDateTime.now());
-    webhookMapper.updateById(update);
+    webhookRepository.deleteById(id, LocalDateTime.now());
     return BaseResponse.success();
   }
 
@@ -164,14 +162,9 @@ public class JobWebhookController {
       @RequestParam(defaultValue = "20") int size,
       @RequestParam(required = false) String eventType,
       @RequestParam(required = false) String jobKey) {
-    LambdaQueryWrapper<JobWebhook> wrapper = new LambdaQueryWrapper<>();
-    wrapper
-        .eq(w -> w.getDeleted(), 0)
-        .eq(eventType != null && !eventType.isBlank(), w -> w.getEventType(), eventType)
-        .eq(jobKey != null && !jobKey.isBlank(), w -> w.getJobKey(), jobKey)
-        .orderByDesc(w -> w.getCreatedAt());
-    Page<JobWebhook> page = webhookMapper.selectPage(new Page<>(pageNum, size), wrapper);
-    return PageResponses.success(page, CronjobConverter.INSTANT::entityToVO);
+    // 通过 Repository 分页查询（封装了 MyBatis-Plus Page 和 Entity→VO 转换）
+    JobRepository.PageResult<JobWebhookVO> result = webhookRepository.pageBy(pageNum, size, eventType, jobKey);
+    return PageResponse.success(result.getRecords(), result.getTotal());
   }
 
   /**
@@ -183,7 +176,9 @@ public class JobWebhookController {
   @Operation(summary = "查询 WebHook 详情")
   @GetMapping("/{id}")
   public BaseResponse<JobWebhookVO> getById(@PathVariable String id) {
-    return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(webhookMapper.selectById(id)));
+    return webhookRepository.findById(id)
+        .map(BaseResponse::success)
+        .orElse(BaseResponse.error(CronjobExceptionCode.WEBHOOK_NOT_FOUND, "WebHook not found"));
   }
 
   /**
@@ -206,12 +201,13 @@ public class JobWebhookController {
   @RateLimit(resource = "cronjob.jobwebhook.testWebhook", threshold = 50)
   @PostMapping("/{id}/test")
   public BaseResponse<Void> testWebhook(@PathVariable String id) {
-    JobWebhook webhook = webhookMapper.selectById(id);
+    // 通过 Repository 查询 Webhook
+    JobWebhookVO webhook = webhookRepository.findById(id)
+        .orElse(null);
     if (webhook == null) {
       return BaseResponse.error(CronjobExceptionCode.WEBHOOK_NOT_FOUND, "WebHook not found");
     }
     // 测试事件通过 WebhookEventDispatcher 发送
-    // 这里仅返回成功，实际推送通过 Async 异步执行
     return BaseResponse.success();
   }
 }

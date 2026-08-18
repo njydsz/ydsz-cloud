@@ -31,6 +31,16 @@ public interface TrashItemRepository {
   TrashItemVO save(TrashItemDTO dto);
 
   /**
+   * 批量保存回收站条目（用于批量删除场景）。
+   *
+   * <p>一次性插入多条记录，比逐条插入性能更优。
+   *
+   * @param dtos 回收站条目 DTO 列表
+   * @return 实际插入条数
+   */
+  int saveBatch(List<TrashItemDTO> dtos);
+
+  /**
    * 按 ID 查询回收站条目
    *
    * @param id 回收站条目ID

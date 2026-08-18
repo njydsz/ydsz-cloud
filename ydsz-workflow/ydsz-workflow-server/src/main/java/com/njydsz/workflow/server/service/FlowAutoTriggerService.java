@@ -17,7 +17,7 @@ public interface FlowAutoTriggerService {
   /**
    * 实例完成时触发 — 检查是否需要自动发起下一流程
    *
-   * <p>查询 sourceFlowCode 对应的所有 enabled 触发规则，使用 literule 的 ExpressionEvaluator 评估
+   * <p>查询 sourceFlowCode 对应的所有 enabled 触发规则，使用引擎内置的 ExpressionEvaluator 评估
    * conditionExpression（如果为空则无条件触发）， 读取已完成的实例 variables 作为上下文，调用 WorkflowFacade.startProcess
    * 启动目标流程，并写入审计日志。
    *

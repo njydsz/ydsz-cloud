@@ -1,11 +1,7 @@
 package com.njydsz.system.server.service.impl;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -19,9 +15,7 @@ import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.jdbc.support.PageResponses;
-import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.DictType;
+import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.system.domain.vo.DictTypeVO;
@@ -112,9 +106,7 @@ public class DictServiceImpl implements DictService {
    */
   @Override
   public PageResponse<List<DictTypeVO>> page(DictPageQuery query) {
-    Page<DictType> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
-    IPage<DictType> result = dictRepository.findTypePage(mpPage, query.getTypeCode(), query.getTypeName(), query.getStatus());
-    return PageResponses.success(result, SystemConverter.INSTANT::entityToVO);
+    return dictRepository.findTypePage(query);
   }
 
   /**
@@ -125,8 +117,7 @@ public class DictServiceImpl implements DictService {
    */
   @Override
   public DictTypeVO getById(String id) {
-    DictType entity = dictRepository.findTypeById(id).orElse(null);
-    return SystemConverter.INSTANT.entityToVO(entity);
+    return dictRepository.findTypeById(id).orElse(null);
   }
 
   /**
@@ -152,11 +143,11 @@ public class DictServiceImpl implements DictService {
       key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
   @Transactional(rollbackFor = Exception.class)
   public String save(DictTypeVO vo) {
-    DictType entity = toEntity(vo);
-    checkDuplicateTypeCode(entity);
-    dictRepository.insertType(entity);
-    publishDictTypeChangedEvent(entity.getTypeCode(), "创建字典类型");
-    return entity.getId();
+    DictTypeDTO dto = toDto(vo);
+    checkDuplicateTypeCode(dto);
+    dictRepository.insertType(dto);
+    publishDictTypeChangedEvent(dto.getTypeCode(), "创建字典类型");
+    return dto.getId();
   }
 
   /**
@@ -182,11 +173,11 @@ public class DictServiceImpl implements DictService {
       key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(DictTypeVO vo) {
-    DictType entity = toEntity(vo);
-    checkDuplicateTypeCode(entity);
-    boolean updated = dictRepository.updateTypeById(entity);
+    DictTypeDTO dto = toDtoWithId(vo);
+    checkDuplicateTypeCode(dto);
+    boolean updated = dictRepository.updateTypeById(dto);
     if (updated) {
-      publishDictTypeChangedEvent(entity.getTypeCode(), "更新字典类型");
+      publishDictTypeChangedEvent(dto.getTypeCode(), "更新字典类型");
     }
     return updated;
   }
@@ -208,20 +199,20 @@ public class DictServiceImpl implements DictService {
       key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    DictType entity = dictRepository.findTypeById(id).orElse(null);
-    if (entity == null) {
+    DictTypeVO vo = dictRepository.findTypeById(id).orElse(null);
+    if (vo == null) {
       return false;
     }
     // 子项校验：若该类型下存在字典项，阻止删除
-    long itemCount = dictRepository.countItemsByTypeCode(entity.getTypeCode());
+    long itemCount = dictRepository.countItemsByTypeCode(vo.getTypeCode());
     if (itemCount > 0) {
       throw BusinessException.of(SystemExceptionCode.DICT_TYPE_HAS_ITEMS)
-          .data("typeCode", entity.getTypeCode())
+          .data("typeCode", vo.getTypeCode())
           .data("itemCount", itemCount);
     }
     boolean removed = dictRepository.deleteTypeById(id);
     if (removed) {
-      publishDictTypeChangedEvent(entity.getTypeCode(), "删除字典类型");
+      publishDictTypeChangedEvent(vo.getTypeCode(), "删除字典类型");
     }
     return removed;
   }
@@ -264,47 +255,58 @@ public class DictServiceImpl implements DictService {
       value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
       key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
   public List<DictTypeVO> listAll() {
-    return dictRepository.findAllTypes().stream()
-        .map(SystemConverter.INSTANT::entityToVO)
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+    return dictRepository.findAllTypes();
   }
 
   // ============================== 私有方法 ==============================
 
   /**
-   * DTO → DO 转换（私有）
+   * VO → DTO 转换（私有，用于新增场景）
    *
    * <p>缺省 {@code status="ENABLED"}，保证新建的字典类型默认可用。
    *
-   * @param dto 数据传输对象
-   * @return 数据库实体
+   * @param vo 字典类型 VO
+   * @return 字典类型 DTO
    */
-  private DictType toEntity(DictTypeVO vo) {
+  private DictTypeDTO toDto(DictTypeVO vo) {
     if (vo == null) {
       return null;
     }
-    DictType entity = new DictType();
-    entity.setId(vo.getId());
-    entity.setTypeCode(vo.getTypeCode());
-    entity.setTypeName(vo.getTypeName());
-    entity.setDescription(vo.getDescription());
-    entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
-    return entity;
+    DictTypeDTO dto = new DictTypeDTO();
+    dto.setTypeCode(vo.getTypeCode());
+    dto.setTypeName(vo.getTypeName());
+    dto.setDescription(vo.getDescription());
+    dto.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
+    return dto;
+  }
+
+  /**
+   * VO → DTO 转换（私有，用于更新场景，保留 ID）
+   *
+   * @param vo 字典类型 VO
+   * @return 字典类型 DTO（含 ID）
+   */
+  private DictTypeDTO toDtoWithId(DictTypeVO vo) {
+    if (vo == null) {
+      return null;
+    }
+    DictTypeDTO dto = toDto(vo);
+    dto.setId(vo.getId());
+    return dto;
   }
 
   /**
    * 唯一性校验（私有）
    *
-   * <p>校验 {@code typeCode} 是否已被其他字典类型占用。 更新场景下排除自身 ID（{@code ne("id", entity.getId())}）。
+   * <p>校验 {@code typeCode} 是否已被其他字典类型占用。 更新场景下排除自身 ID（{@code ne("id", dto.getId())}）。
    *
-   * @param entity 待校验的字典类型实体
+   * @param dto 待校验的字典类型 DTO
    * @throws IllegalArgumentException {@code typeCode} 已存在时抛出
    */
-  private void checkDuplicateTypeCode(DictType entity) {
-    if (dictRepository.existsTypeCode(entity.getTypeCode(), entity.getId())) {
+  private void checkDuplicateTypeCode(DictTypeDTO dto) {
+    if (dictRepository.existsTypeCode(dto.getTypeCode(), dto.getId())) {
       throw BusinessException.of(SystemExceptionCode.DICT_TYPE_CODE_DUPLICATE)
-          .data("typeCode", entity.getTypeCode());
+          .data("typeCode", dto.getTypeCode());
     }
   }
 }

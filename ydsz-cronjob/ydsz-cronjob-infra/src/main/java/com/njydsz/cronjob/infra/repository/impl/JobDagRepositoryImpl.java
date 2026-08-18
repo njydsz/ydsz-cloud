@@ -54,4 +54,11 @@ public class JobDagRepositoryImpl implements JobDagRepository {
   public int updateResultStats(String dagId, boolean success) {
     return jobDagMapper.updateResultStats(dagId, success);
   }
+
+  // ===== Web 层查询方法实现 =====
+
+  @Override
+  public Optional<JobDagVO> findById(String dagId) {
+    return Optional.ofNullable(jobDagMapper.selectById(dagId)).map(converter::entityToVO);
+  }
 }

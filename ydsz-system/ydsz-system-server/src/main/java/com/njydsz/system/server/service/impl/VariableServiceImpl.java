@@ -6,9 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
@@ -25,13 +22,12 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
-import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
-import com.njydsz.system.infra.entity.Variable;
+import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.query.VariablePageQuery;
 import com.njydsz.system.domain.vo.ImportResult;
 import com.njydsz.system.domain.vo.VariableExcelVO;
 import com.njydsz.system.domain.vo.VariableVO;
@@ -114,7 +110,6 @@ import com.njydsz.system.server.util.SystemVersionUtils;
  * @since 1.0.0
  * @see VariableService 变量 Service 接口
  * @see ConfigServiceImpl 系统配置 Service（能力对齐但定位不同）
- * @see com.njydsz.system.infra.entity.Variable 变量实体
  */
 @Slf4j
 @Service
@@ -155,8 +150,7 @@ public class VariableServiceImpl implements VariableService {
    */
   @Override
   public VariableVO getById(String id) {
-    Variable entity = variableRepository.findById(id).orElse(null);
-    return SystemConverter.INSTANT.entityToVO(entity);
+    return variableRepository.findById(id).orElse(null);
   }
 
   /**
@@ -182,8 +176,8 @@ public class VariableServiceImpl implements VariableService {
     long start = System.nanoTime();
     try {
       metrics.recordVariableCacheMiss();
-      Variable entity = variableRepository.findEnabledByKey(variableKey).orElse(null);
-      return entity != null ? entity.getVariableValue() : null;
+      VariableVO vo = variableRepository.findEnabledByKey(variableKey).orElse(null);
+      return vo != null ? vo.getVariableValue() : null;
     } finally {
       metrics.recordVariableRead(System.nanoTime() - start);
     }
@@ -205,8 +199,13 @@ public class VariableServiceImpl implements VariableService {
   @Override
   public PageResponse<List<VariableVO>> page(
       int pageNum, int pageSize, String variableKey, String status) {
-    IPage<Variable> page = variableRepository.findByPage(new Page<>(pageNum, pageSize), variableKey, status);
-    return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
+    VariablePageQuery query = VariablePageQuery.builder()
+        .pageNum(pageNum)
+        .pageSize(pageSize)
+        .variableKey(variableKey)
+        .status(status)
+        .build();
+    return variableRepository.findByPage(query);
   }
 
   /**
@@ -222,9 +221,7 @@ public class VariableServiceImpl implements VariableService {
    */
   @Override
   public List<VariableVO> list() {
-    return variableRepository.findAll().stream()
-        .map(SystemConverter.INSTANT::entityToVO)
-        .collect(Collectors.toList());
+    return variableRepository.findAll();
   }
 
   /**
@@ -248,11 +245,14 @@ public class VariableServiceImpl implements VariableService {
   @Transactional(rollbackFor = Exception.class)
   public String save(VariableVO vo) {
     validateValueType(vo.getValueType());
-    Variable entity = toEntity(vo);
-    variableRepository.insert(entity);
-    searchIndexSyncer.upsert("variable", entity);
-    publishVariableChangedEvent(entity.getVariableKey(), "创建变量");
-    return entity.getId();
+    VariableDTO dto = toDto(vo);
+    if (dto.getStatus() == null) {
+      dto.setStatus("ENABLED");
+    }
+    variableRepository.insert(dto);
+    searchIndexSyncer.upsert("variable", vo);
+    publishVariableChangedEvent(vo.getVariableKey(), "创建变量");
+    return dto.getId();
   }
 
   /**
@@ -278,27 +278,27 @@ public class VariableServiceImpl implements VariableService {
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(VariableVO vo) {
     validateValueType(vo.getValueType());
-    Variable entity = toEntity(vo);
+    VariableDTO dto = toDto(vo);
     // 版本快照：查询变更前状态
-    Variable before = variableRepository.findByKeyIgnoreStatus(entity.getVariableKey()).orElse(null);
+    VariableVO before = variableRepository.findByKeyIgnoreStatus(vo.getVariableKey()).orElse(null);
     String snapshotJson = before != null ? YdszJson.toJson(before) : null;
-    boolean updated = variableRepository.updateById(entity);
+    boolean updated = variableRepository.updateById(dto);
     if (updated) {
       // 变量键变更时，旧键缓存一并失效
-      if (before != null && !Objects.equals(before.getVariableKey(), entity.getVariableKey())) {
+      if (before != null && !Objects.equals(before.getVariableKey(), vo.getVariableKey())) {
         evictVariable(before.getVariableKey());
       }
       // 创建版本快照（与变量变更同一事务）
       entityVersionService.createVersion(
           EntityVersionCreateDTO.builder()
               .resourceType(EntityVersionService.RESOURCE_TYPE_VARIABLE)
-              .resourceKey(entity.getVariableKey())
+              .resourceKey(vo.getVariableKey())
               .version(SystemVersionUtils.nextVersion())
-              .changeLog("更新变量: " + entity.getVariableKey())
+              .changeLog("更新变量: " + vo.getVariableKey())
               .snapshotJson(snapshotJson)
               .build());
-      publishVariableChangedEvent(entity.getVariableKey(), "更新变量");
-      searchIndexSyncer.upsert("variable", entity);
+      publishVariableChangedEvent(vo.getVariableKey(), "更新变量");
+      searchIndexSyncer.upsert("variable", vo);
     }
     return updated;
   }
@@ -322,44 +322,44 @@ public class VariableServiceImpl implements VariableService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Variable entity = variableRepository.findById(id).orElse(null);
-    String snapshotJson = entity != null ? YdszJson.toJson(entity) : null;
+    VariableVO vo = variableRepository.findById(id).orElse(null);
+    String snapshotJson = vo != null ? YdszJson.toJson(vo) : null;
     boolean removed = variableRepository.deleteById(id);
-    if (removed && entity != null) {
+    if (removed && vo != null) {
       // 精准失效该变量键缓存（替代 allEntries 全量清空）
-      evictVariable(entity.getVariableKey());
+      evictVariable(vo.getVariableKey());
       // 创建版本快照（与变量变更同一事务）
       entityVersionService.createVersion(
           EntityVersionCreateDTO.builder()
               .resourceType(EntityVersionService.RESOURCE_TYPE_VARIABLE)
-              .resourceKey(entity.getVariableKey())
+              .resourceKey(vo.getVariableKey())
               .version(SystemVersionUtils.nextVersion())
-              .changeLog("删除变量: " + entity.getVariableKey())
+              .changeLog("删除变量: " + vo.getVariableKey())
               .snapshotJson(snapshotJson)
               .build());
-      publishVariableChangedEvent(entity.getVariableKey(), "删除变量");
+      publishVariableChangedEvent(vo.getVariableKey(), "删除变量");
       searchIndexSyncer.delete("variable", id);
     }
     return removed;
   }
 
   /**
-   * DTO → DO 转换（私有）
+   * VO → DTO 转换（私有）
    *
-   * <p>缺省 {@code status="ENABLED"}，保证新建的变量默认可用。
+   * <p>VariableVO 与 VariableDTO 字段完全一致，直接手动映射。
    *
-   * @param dto 数据传输对象
-   * @return 数据库实体
+   * @param vo 变量 VO
+   * @return 变量 DTO
    */
-  private Variable toEntity(VariableVO vo) {
-    Variable entity = new Variable();
-    entity.setId(vo.getId());
-    entity.setVariableKey(vo.getVariableKey());
-    entity.setVariableValue(vo.getVariableValue());
-    entity.setValueType(vo.getValueType());
-    entity.setDescription(vo.getDescription());
-    entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
-    return entity;
+  private VariableDTO toDto(VariableVO vo) {
+    VariableDTO dto = new VariableDTO();
+    dto.setId(vo.getId());
+    dto.setVariableKey(vo.getVariableKey());
+    dto.setVariableValue(vo.getVariableValue());
+    dto.setValueType(vo.getValueType());
+    dto.setDescription(vo.getDescription());
+    dto.setStatus(vo.getStatus());
+    return dto;
   }
 
   @Override
@@ -374,23 +374,17 @@ public class VariableServiceImpl implements VariableService {
           if (snapshotJson != null && !snapshotJson.isBlank()) {
             try {
               VariableVO snapshotVO = YdszJson.fromJson(snapshotJson, VariableVO.class);
-              Variable currentVariable = variableRepository.findByKeyIgnoreStatus(resourceKey).orElse(null);
-              if (currentVariable != null) {
-                currentVariable.setVariableValue(snapshotVO.getVariableValue());
-                currentVariable.setValueType(snapshotVO.getValueType());
-                currentVariable.setDescription(snapshotVO.getDescription());
-                currentVariable.setStatus(snapshotVO.getStatus());
-                variableRepository.updateById(currentVariable);
-                searchIndexSyncer.upsert("variable", currentVariable);
+              VariableVO currentVariableVO = variableRepository.findByKeyIgnoreStatus(resourceKey).orElse(null);
+              if (currentVariableVO != null) {
+                // 更新现有变量
+                VariableDTO updateDto = toDto(snapshotVO);
+                updateDto.setId(currentVariableVO.getId());
+                variableRepository.updateById(updateDto);
+                searchIndexSyncer.upsert("variable", snapshotVO);
               } else {
-                Variable newVariable = new Variable();
-                newVariable.setVariableKey(snapshotVO.getVariableKey());
-                newVariable.setVariableValue(snapshotVO.getVariableValue());
-                newVariable.setValueType(snapshotVO.getValueType());
-                newVariable.setDescription(snapshotVO.getDescription());
-                newVariable.setStatus(snapshotVO.getStatus());
-                variableRepository.insert(newVariable);
-                searchIndexSyncer.upsert("variable", newVariable);
+                // 原变量已被删除，重新创建
+                variableRepository.insert(toDto(snapshotVO));
+                searchIndexSyncer.upsert("variable", snapshotVO);
               }
             } catch (Exception e) {
               throw BusinessException.of(SystemExceptionCode.SNAPSHOT_PARSE_ERROR)
@@ -437,7 +431,7 @@ public class VariableServiceImpl implements VariableService {
    * 校验变量值类型合法性。
    *
    * <p>委托 {@link ConfigValueType#validate} 完成，非法类型将抛出 {@link BusinessException}
-   *（{@link SystemExceptionCode#VALUE_TYPE_INVALID}）阻止脏数据落库。
+   * （{@link SystemExceptionCode#VALUE_TYPE_INVALID}）阻止脏数据落库。
    *
    * @param valueType 值类型字符串
    */
@@ -455,7 +449,7 @@ public class VariableServiceImpl implements VariableService {
   @Override
   public byte[] exportVariables() {
     // 1. 查询全部变量数据
-    List<Variable> variables = variableRepository.findList(new QueryWrapper<Variable>().eq("deleted", 0).orderByAsc("variable_key"));
+    List<VariableVO> variables = variableRepository.findAll();
 
     // 2. 转换为 Excel VO 并导出
     List<VariableExcelVO> excelRows =
@@ -554,7 +548,7 @@ public class VariableServiceImpl implements VariableService {
       }
     }
     // DB 唯一性校验
-    Variable existing = variableRepository.findByKeyIgnoreStatus(excelRow.getVariableKey()).orElse(null);
+    VariableVO existing = variableRepository.findByKeyIgnoreStatus(excelRow.getVariableKey()).orElse(null);
     if (existing != null) {
       return "第 " + rowNum + " 行: 变量已存在(" + excelRow.getVariableKey() + ")";
     }
@@ -578,19 +572,19 @@ public class VariableServiceImpl implements VariableService {
   }
 
   /**
-   * 变量实体转 Excel VO（私有）。
+   * 变量 VO 转 Excel VO（私有）。
    *
-   * @param entity 变量实体
+   * @param vo 变量 VO
    * @return Excel VO
    */
-  private VariableExcelVO toExcelVO(Variable entity) {
-    VariableExcelVO vo = new VariableExcelVO();
-    vo.setVariableKey(entity.getVariableKey());
-    vo.setVariableValue(entity.getVariableValue());
-    vo.setValueType(entity.getValueType());
-    vo.setDescription(entity.getDescription());
-    vo.setStatus(entity.getStatus());
-    return vo;
+  private VariableExcelVO toExcelVO(VariableVO vo) {
+    VariableExcelVO excelVO = new VariableExcelVO();
+    excelVO.setVariableKey(vo.getVariableKey());
+    excelVO.setVariableValue(vo.getVariableValue());
+    excelVO.setValueType(vo.getValueType());
+    excelVO.setDescription(vo.getDescription());
+    excelVO.setStatus(vo.getStatus());
+    return excelVO;
   }
 
   /**
@@ -605,21 +599,18 @@ public class VariableServiceImpl implements VariableService {
       return 0;
     }
     try {
-      List<Variable> entities = validItems.stream()
-          .map(this::toEntity)
-          .collect(Collectors.toList());
-      // 逐条插入
-      for (Variable entity : entities) {
-        variableRepository.insert(entity);
+      for (VariableVO vo : validItems) {
+        VariableDTO dto = toDto(vo);
+        variableRepository.insert(dto);
       }
       // 精准失效缓存：按涉及 variableKey 逐一失效
-      entities.forEach(entity -> evictVariable(entity.getVariableKey()));
+      validItems.forEach(vo -> evictVariable(vo.getVariableKey()));
       // 同步搜索索引 + 发布变更事件
-      entities.forEach(entity -> {
-        searchIndexSyncer.upsert("variable", entity);
-        publishVariableChangedEvent(entity.getVariableKey(), "导入变量");
+      validItems.forEach(vo -> {
+        searchIndexSyncer.upsert("variable", vo);
+        publishVariableChangedEvent(vo.getVariableKey(), "导入变量");
       });
-      return entities.size();
+      return validItems.size();
     } catch (Exception e) {
       errors.add("批量导入失败: " + e.getMessage());
       return 0;

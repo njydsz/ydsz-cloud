@@ -7,10 +7,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,11 +33,9 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.dto.TestCaseBatchRunDTO;
-import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.dto.post.RuleTestCasePostDTO;
-import com.njydsz.literule.domain.entity.RuleTestCaseDO;
+import com.njydsz.literule.domain.repository.RuleTestCaseRepository;
 import com.njydsz.literule.domain.vo.RuleTestCaseVO;
-import com.njydsz.literule.infra.mapper.RuleTestCaseMapper;
 import com.njydsz.literule.server.config.RuleAdminService;
 
 /**
@@ -65,8 +63,8 @@ import com.njydsz.literule.server.config.RuleAdminService;
 @Tag(name = "规则测试用例", description = "规则回归测试用例管理与批量执行")
 public class RuleTestCaseController {
 
-  /** 规则测试用例 Mapper */
-  private final RuleTestCaseMapper ruleTestCaseMapper;
+  /** 规则测试用例 Repository */
+  private final RuleTestCaseRepository ruleTestCaseRepository;
 
   /** 规则管理服务 */
   private final RuleAdminService ruleAdminService;
@@ -80,13 +78,7 @@ public class RuleTestCaseController {
   @GetMapping("/test-cases")
   public BaseResponse<List<RuleTestCaseVO>> listTestCases(
       @RequestParam(required = false) String ruleCode) {
-    LambdaQueryWrapper<RuleTestCaseDO> wrapper = new LambdaQueryWrapper<>();
-    if (ruleCode != null && !ruleCode.isBlank()) {
-      wrapper.eq(RuleTestCaseDO::getRuleCode, ruleCode);
-    }
-    wrapper.orderByDesc(RuleTestCaseDO::getUpdatedAt);
-    return BaseResponse.success(
-        LiteruleConverter.INSTANT.ruleTestCaseListToVO(ruleTestCaseMapper.selectList(wrapper)));
+    return BaseResponse.success(ruleTestCaseRepository.findByRuleCode(ruleCode));
   }
 
   /**
@@ -104,13 +96,7 @@ public class RuleTestCaseController {
   @RateLimit(resource = "literule.rule_test_case.saveTestCase", threshold = 50)
   @PostMapping("/test-cases")
   public BaseResponse<RuleTestCaseVO> saveTestCase(@Valid @RequestBody RuleTestCasePostDTO dto) {
-    RuleTestCaseDO testCase = LiteruleConverter.INSTANT.postDtoToEntity(dto);
-    if (testCase.getId() != null) {
-      ruleTestCaseMapper.updateById(testCase);
-    } else {
-      ruleTestCaseMapper.insert(testCase);
-    }
-    return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(testCase));
+    return BaseResponse.success(ruleTestCaseRepository.save(dto));
   }
 
   /**
@@ -128,7 +114,7 @@ public class RuleTestCaseController {
   @RateLimit(resource = "literule.rule_test_case.deleteTestCase", threshold = 50)
   @DeleteMapping("/test-cases/{id}")
   public BaseResponse<Void> deleteTestCase(@PathVariable String id) {
-    ruleTestCaseMapper.deleteById(id);
+    ruleTestCaseRepository.deleteById(id);
     return BaseResponse.success();
   }
 
@@ -153,15 +139,16 @@ public class RuleTestCaseController {
       @Valid @RequestBody TestCaseBatchRunDTO dto) {
     List<Long> ids = dto.getIds();
 
-    List<RuleTestCaseDO> testCases;
+    List<RuleTestCaseVO> testCases;
     if (ids == null || ids.isEmpty()) {
       // 执行全部测试用例
-      testCases = ruleTestCaseMapper.selectList(null);
+      testCases = ruleTestCaseRepository.findAll();
     } else {
       testCases =
           ids.stream()
-              .map(ruleTestCaseMapper::selectById)
-              .filter(Objects::nonNull)
+              .map(ruleTestCaseRepository::findById)
+              .filter(Optional::isPresent)
+              .map(Optional::get)
               .collect(Collectors.toList());
     }
 
@@ -173,7 +160,7 @@ public class RuleTestCaseController {
     int passed = 0;
     int failed = 0;
 
-    for (RuleTestCaseDO tc : testCases) {
+    for (RuleTestCaseVO tc : testCases) {
       List<RuleResult> results = ruleAdminService.dryRun(null, tc.getFactsData());
 
       // 获取实际触发的规则编码集合
@@ -213,13 +200,13 @@ public class RuleTestCaseController {
       caseResults.add(caseResult);
     }
 
-    double passRate = (double) passed / testCases.size() * 100;
+    double passRateValue = (double) passed / testCases.size() * 100;
 
     Map<String, Object> report = new LinkedHashMap<>();
     report.put("total", testCases.size());
     report.put("passed", passed);
     report.put("failed", failed);
-    report.put("passRate", String.format("%.1f%%", passRate));
+    report.put("passRate", String.format("%.1f%%", passRateValue));
     report.put("allPassed", failed == 0);
     report.put("caseResults", caseResults);
 

@@ -11,6 +11,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
+import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.domain.event.MessageSkippedEvent;
 import com.njydsz.message.server.event.DomainEventPublisher;
 import com.njydsz.message.server.metric.MessageMetrics;
@@ -57,7 +58,10 @@ public class DedupHandler implements SendHandler {
               "DEDUP",
               ctx.getChannel(),
               ctx.getBizType()));
-      ctx.setErrorResult(MessageResult.fail(ctx.getChannel(), "消息重复,已忽略"));
+      ctx.setErrorResult(MessageResult.fail(
+          ctx.getChannel(),
+          "消息重复,已忽略",
+          MessageExceptionCode.MESSAGE_DUPLICATED.getCode()));
       return false;
     }
     return true;

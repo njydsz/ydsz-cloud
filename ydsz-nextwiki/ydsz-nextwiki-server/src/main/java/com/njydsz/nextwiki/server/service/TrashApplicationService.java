@@ -8,8 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
-import com.njydsz.nextwiki.infra.entity.TrashItemDO;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
+import com.njydsz.nextwiki.domain.vo.TrashItemVO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
@@ -39,11 +40,11 @@ public class TrashApplicationService {
    * 查询用户回收站列表。
    *
    * @param userId 用户 ID
-   * @return 回收站项目列表 {@link TrashItemDO}（可能为空，非 {@code null}）
+   * @return 回收站项目列表（可能为空，非 {@code null}）
    * @complexity O(1)（一次按用户查询）
    * @note 只读，无事务边界
    */
-  public List<TrashItemDO> listTrash(String userId) {
+  public List<TrashItemVO> listTrash(String userId) {
     return trashItemRepository.findActiveTrash(userId);
   }
 
@@ -60,20 +61,19 @@ public class TrashApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void restore(String trashItemId, String userId) {
-    TrashItemDO TrashItemDO = trashItemRepository.findById(trashItemId);
-    if (TrashItemDO == null) {
-      throw BusinessException.of(NextwikiExceptionCode.TRASH_NOT_FOUND)
-          .data("trashItemId", trashItemId);
+    TrashItemVO trashItem = trashItemRepository.findById(trashItemId)
+        .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.TRASH_NOT_FOUND)
+            .data("trashItemId", trashItemId));
+
+    FileNodeVO node = fileNodeRepository.findById(trashItem.getFileNodeId()).orElse(null);
+
+    TrashItemDTO trashDTO = trashItemToDTO(trashItem);
+    trashDomainService.restore(trashDTO, node, userId);
+
+    if (node != null) {
+      fileNodeRepository.restore(trashItem.getFileNodeId());
     }
-
-    FileNodeDO FileNodeDO = fileNodeRepository.findById(TrashItemDO.getFileNodeId());
-
-    trashDomainService.restore(TrashItemDO, FileNodeDO, userId);
-
-    if (FileNodeDO != null) {
-      fileNodeRepository.restore(TrashItemDO.getFileNodeId());
-    }
-    trashItemRepository.update(TrashItemDO);
+    trashItemRepository.update(trashDTO);
   }
 
   /**
@@ -111,16 +111,15 @@ public class TrashApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void purge(String trashItemId, String userId) {
-    TrashItemDO TrashItemDO = trashItemRepository.findById(trashItemId);
-    if (TrashItemDO == null) {
-      throw BusinessException.of(NextwikiExceptionCode.TRASH_NOT_FOUND)
-          .data("trashItemId", trashItemId);
-    }
+    TrashItemVO trashItem = trashItemRepository.findById(trashItemId)
+        .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.TRASH_NOT_FOUND)
+            .data("trashItemId", trashItemId));
 
-    trashDomainService.purge(TrashItemDO, userId);
+    TrashItemDTO trashDTO = trashItemToDTO(trashItem);
+    trashDomainService.purge(trashDTO, userId);
 
-    fileNodeRepository.physicalDelete(TrashItemDO.getFileNodeId());
-    trashItemRepository.update(TrashItemDO);
+    fileNodeRepository.physicalDelete(trashItem.getFileNodeId());
+    trashItemRepository.update(trashDTO);
   }
 
   /**
@@ -135,12 +134,13 @@ public class TrashApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void emptyTrash(String userId) {
-    List<TrashItemDO> items = trashItemRepository.findActiveTrash(userId);
-    for (TrashItemDO item : items) {
+    List<TrashItemVO> items = trashItemRepository.findActiveTrash(userId);
+    for (TrashItemVO item : items) {
       try {
-        trashDomainService.purge(item, userId);
+        TrashItemDTO trashDTO = trashItemToDTO(item);
+        trashDomainService.purge(trashDTO, userId);
         fileNodeRepository.physicalDelete(item.getFileNodeId());
-        trashItemRepository.update(item);
+        trashItemRepository.update(trashDTO);
       } catch (Exception e) {
         log.error("[TrashApplicationService] 清空回收站失败: trashItemId={}", item.getId(), e);
       }
@@ -158,5 +158,20 @@ public class TrashApplicationService {
    */
   public int countActiveTrash(String userId) {
     return trashItemRepository.countActiveTrash(userId);
+  }
+
+  private TrashItemDTO trashItemToDTO(TrashItemVO vo) {
+    TrashItemDTO dto = new TrashItemDTO();
+    dto.setId(vo.getId());
+    dto.setFileNodeId(vo.getFileNodeId());
+    dto.setOriginalName(vo.getOriginalName());
+    dto.setOriginalPath(vo.getOriginalPath());
+    dto.setOriginalParentId(vo.getOriginalParentId());
+    dto.setNodeType(vo.getNodeType());
+    dto.setSize(vo.getSize());
+    dto.setDeletedTime(vo.getDeletedTime());
+    dto.setPurgeTime(vo.getPurgeTime());
+    dto.setStatus(vo.getStatus());
+    return dto;
   }
 }

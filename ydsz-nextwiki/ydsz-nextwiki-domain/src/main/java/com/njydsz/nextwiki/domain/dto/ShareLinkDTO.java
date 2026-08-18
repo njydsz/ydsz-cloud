@@ -59,4 +59,22 @@ public class ShareLinkDTO implements Serializable {
 
   @Schema(description = "分享标题")
   private String title;
+
+  @Schema(description = "是否已发送到期提醒")
+  private Boolean reminderSent;
+
+  @Schema(description = "创建人")
+  private String createdBy;
+
+  @Schema(description = "更新人")
+  private String updatedBy;
+
+  @Schema(description = "创建时间")
+  private LocalDateTime createdAt;
+
+  @Schema(description = "更新时间")
+  private LocalDateTime updatedAt;
+
+  @Schema(description = "租户ID")
+  private String tenantId;
 }

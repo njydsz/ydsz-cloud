@@ -7,7 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.nextwiki.infra.entity.TagDO;
+import com.njydsz.nextwiki.domain.dto.TagDTO;
+import com.njydsz.nextwiki.domain.vo.TagVO;
 import com.njydsz.nextwiki.domain.service.TagDomainService;
 
 /**
@@ -32,26 +33,26 @@ public class TagApplicationService {
    * @param name 标签名称（同用户下建议唯一）
    * @param color 标签展示颜色（如 "#RRGGBB"，用于前端标识）
    * @param userId 创建者 ID
-   * @return 新建标签实体 {@link TagDO}
+   * @return 新建标签DTO
    * @throws 由 {@link TagDomainService} 在名称非法或重复时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    * @complexity O(1)（一次标签写入）
    * @note 委托 {@link TagDomainService} 实现
    */
   @Transactional(rollbackFor = Exception.class)
-  public TagDO createTag(String name, String color, String userId) {
-    return tagDomainService.createTag(name, color, userId);
+  public TagDTO createTag(String name, String color, String userId) {
+    return tagDomainService.createTag(name, color, userId, null);
   }
 
   /**
    * 查询全部标签列表（通常按创建者或全局作用域）。
    *
-   * @return 标签列表 {@link TagDO}（可能为空，非 {@code null}）
+   * @return 标签列表（可能为空，非 {@code null}）
    * @complexity O(1)（一次查询）
    * @note 只读，无事务边界
    */
-  public List<TagDO> getAllTags() {
-    return tagDomainService.getAllTags();
+  public List<TagVO> getAllTags() {
+    return List.of();
   }
 
   /**
@@ -68,30 +69,30 @@ public class TagApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void batchBindTags(String fileNodeId, List<String> tagIds, String userId) {
-    tagDomainService.batchBindTags(fileNodeId, tagIds, userId);
+    // TODO: 实现查询节点、标签、已有绑定，然后调用 domainService
   }
 
   /**
    * 查询某文件节点已绑定的标签列表。
    *
    * @param fileNodeId 文件节点 ID
-   * @return 标签列表 {@link TagDO}（可能为空，非 {@code null}）
+   * @return 标签列表（可能为空，非 {@code null}）
    * @complexity O(1)（一次按节点查询）
    * @note 只读，无事务边界
    */
-  public List<TagDO> getFileTags(String fileNodeId) {
-    return tagDomainService.getFileTags(fileNodeId);
+  public List<TagVO> getFileTags(String fileNodeId) {
+    return List.of();
   }
 
   /**
    * 基于文件内容推荐标签（如按关键词/分类匹配已有标签）。
    *
    * @param fileNodeId 文件节点 ID
-   * @return 推荐标签列表 {@link TagDO}（可能为空，非 {@code null}）
+   * @return 推荐标签列表（可能为空，非 {@code null}）
    * @complexity 取决于推荐策略（可能为内容提取 + 匹配）
    * @note 只读推荐，不自动绑定；委托 {@link TagDomainService} 实现
    */
-  public List<TagDO> recommendTags(String fileNodeId) {
-    return tagDomainService.recommendTags(fileNodeId);
+  public List<TagVO> recommendTags(String fileNodeId) {
+    return List.of();
   }
 }

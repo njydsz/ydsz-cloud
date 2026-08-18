@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
@@ -19,11 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.jdbc.support.PageResponses;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
-import com.njydsz.cronjob.domain.entity.job.JobTask;
+import com.njydsz.cronjob.domain.repository.JobTaskRepository;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
-import com.njydsz.cronjob.infra.mapper.job.JobTaskMapper;
 
 /**
  * MapReduce 子任务查询 Controller（P0-4）。
@@ -50,8 +45,8 @@ import com.njydsz.cronjob.infra.mapper.job.JobTaskMapper;
 @Validated
 public class JobTaskController {
 
-  /** MapReduce 子任务 Mapper */
-  private final JobTaskMapper jobTaskMapper;
+  /** 子任务 Repository（DDD 分层：Controller 通过 Repository 接口查询子任务） */
+  private final JobTaskRepository jobTaskRepository;
 
   /**
    * 查询指定执行日志的子任务列表。
@@ -64,8 +59,8 @@ public class JobTaskController {
   @Operation(summary = "查询子任务列表")
   @GetMapping("/list")
   public BaseResponse<List<JobTaskVO>> list(@RequestParam String logId) {
-    return BaseResponse.success(
-        CronjobConverter.INSTANT.jobTaskListToVO(jobTaskMapper.selectByLogId(logId)));
+    // 通过 Repository 查询（返回 VO 列表）
+    return BaseResponse.success(jobTaskRepository.findByLogId(logId));
   }
 
   /**
@@ -89,14 +84,9 @@ public class JobTaskController {
           @Min(value = 1, message = "{validation.cronjob.msg_15154512}")
           @Max(100)
           int size) {
-    Page<JobTask> pageObj = new Page<>(page, size);
-    LambdaQueryWrapper<JobTask> wrapper = new LambdaQueryWrapper<>();
-    wrapper
-        .eq(JobTask::getLogId, logId)
-        .eq(JobTask::getDeleted, 0)
-        .orderByAsc(JobTask::getCreatedAt);
-    Page<JobTask> result = jobTaskMapper.selectPage(pageObj, wrapper);
-    return PageResponses.success(result, CronjobConverter.INSTANT::entityToVO);
+    // 通过 Repository 分页查询（封装了 MyBatis-Plus Page 和 Entity→VO 转换）
+    JobRepository.PageResult<JobTaskVO> result = jobTaskRepository.pageByLogId(logId, page, size);
+    return PageResponse.success(result.getRecords(), result.getTotal());
   }
 
   /**
@@ -111,22 +101,13 @@ public class JobTaskController {
   @Operation(summary = "查询子任务执行进度")
   @GetMapping("/progress")
   public BaseResponse<Map<String, Object>> progress(@RequestParam String logId) {
-    List<JobTask> all = jobTaskMapper.selectByLogId(logId);
+    // 通过 Repository 统计各状态子任务数量（避免拉取全量列表）
+    int total = jobTaskRepository.countByLogId(logId);
+    int pending = jobTaskRepository.countByLogIdAndStatus(logId, "PENDING");
+    int running = jobTaskRepository.countByLogIdAndStatus(logId, "RUNNING");
+    int success = jobTaskRepository.countByLogIdAndStatus(logId, "SUCCESS");
+    int failed = jobTaskRepository.countByLogIdAndStatus(logId, "FAILED");
     Map<String, Object> result = new HashMap<>();
-    int total = all.size();
-    int pending = 0, running = 0, success = 0, failed = 0;
-    for (JobTask task : all) {
-      String status = task.getStatus();
-      if ("PENDING".equals(status)) {
-        pending++;
-      } else if ("RUNNING".equals(status)) {
-        running++;
-      } else if ("SUCCESS".equals(status)) {
-        success++;
-      } else if ("FAILED".equals(status)) {
-        failed++;
-      }
-    }
     result.put("total", total);
     result.put("pending", pending);
     result.put("running", running);

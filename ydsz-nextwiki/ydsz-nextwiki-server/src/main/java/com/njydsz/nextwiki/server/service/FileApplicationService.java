@@ -6,9 +6,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -16,7 +19,9 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.core.response.PageResponse;
@@ -32,9 +37,8 @@ import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
-import com.njydsz.nextwiki.infra.entity.FileVersionDO;
-import com.njydsz.nextwiki.infra.entity.TrashItemDO;
+import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
+import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
@@ -57,9 +61,9 @@ import com.njydsz.nextwiki.server.converter.NextwikiConverter;
  * <p><b>核心流程：</b>
  *
  * <ul>
- *   <li>上传：安全校验 → 配额校验 → 秒传去重 → 存储上传 → 创建 FileNodeDO → 创建版本 → 事件发布
- *   <li>删除：逻辑删除 FileNodeDO → 移入回收站 → 释放配额 → 删除索引
- *   <li>移动/重命名：更新 FileNodeDO → 递归更新子节点路径 → 事件通知
+ *   <li>上传：安全校验 → 配额校验 → 秒传去重 → 存储上传 → 创建 FileNodeVO → 创建版本 → 事件发布
+ *   <li>删除：逻辑删除 FileNodeVO → 移入回收站 → 释放配额 → 删除索引
+ *   <li>移动/重命名：更新 FileNodeVO → 递归更新子节点路径 → 事件通知
  * </ul>
  *
  * @author ydsz-team
@@ -93,6 +97,21 @@ public class FileApplicationService {
   /** 文件夹复制服务（分批复制子树，每批独立事务） */
   private final FolderCopyService folderCopyService;
 
+  /** 事务管理器（用于创建编程式事务模板） */
+  private final PlatformTransactionManager transactionManager;
+
+  /** 批量任务线程池（使用 ydsz-common-thread 统一管理的 nextwikiTaskExecutor） */
+  @org.springframework.beans.factory.annotation.Qualifier("nextwikiTaskExecutor")
+  private final Executor batchTaskExecutor;
+
+  /** 编程式事务模板（用于精确控制事务边界，将IO操作移出事务） */
+  private TransactionTemplate transactionTemplate;
+
+  @PostConstruct
+  void initTransactionTemplate() {
+    this.transactionTemplate = new TransactionTemplate(transactionManager);
+  }
+
   private static final String LOCK_PREFIX = "nextwiki:lock:folder:";
   private static final long LOCK_LEASE_MS = 30_000L;
   private static final long LOCK_WAIT_MS = 3_000L;
@@ -110,6 +129,8 @@ public class FileApplicationService {
   /**
    * 上传文件（安全校验 → 配额 → 同名策略 → SHA-256 秒传去重 → 存储上传 → 建节点 → 版本 → 事件）。
    *
+   * <p><b>P0-2 事务优化：</b>将 SHA-256 计算、存储上传、病毒扫描等耗时 IO 操作移出事务，仅在短事务中执行数据库操作。
+   *
    * <p>启用病毒扫描时，上传后会先扫描，命中病毒立即删除已上传对象并抛 {@code FILE_VIRUS_DETECTED}。 同名冲突按 {@code
    * nextwiki.upload.conflict-strategy}（KEEP_BOTH/SKIP/OVERWRITE）处理。
    *
@@ -120,78 +141,48 @@ public class FileApplicationService {
    * @param userId 操作人 ID（所有者/配额/审计归属）
    * @return 上传后的文件节点视图 {@link FileNodeVO}（秒传命中时返回去重节点）
    * @throws BusinessException 文件为空/超限/类型禁用（FILE_*）、存储未配置、病毒命中、配额不足时抛出
-   * @transaction 整个方法 {@code @Transactional(rollbackFor = Exception.class)}，节点/版本/配额/索引同事务
    * @complexity 正常路径 O(1)（一次存储上传）；秒传路径 O(1)（一次按哈希查询）；扫描为额外 IO
    * @concurrency 同一文件并发上传受存储幂等影响小；同名 OVERWRITE 由调用方保证串行
-   * @note 计算 SHA-256 与病毒扫描均通过 try-with-resources 关闭 InputStream，避免流泄漏
+   * @note 计算 SHA-256、病毒扫描与存储上传均在事务外执行，仅数据库操作使用短事务
    */
-  @Transactional(rollbackFor = Exception.class)
   public FileNodeVO upload(
       MultipartFile file, String parentId, String rename, String versionRemark, String userId) {
+    // ===== 阶段1：准备阶段（无事务边界） =====
     // 1. 安全校验
     validateUpload(file);
 
     // 2. 配额校验
     quotaDomainService.checkQuota("user", userId, file.getSize());
 
-    // 3. 解析父目录（直接查找，不再用 listChildren 判断）
+    // 3. 解析父目录
     String originalFilename = file.getOriginalFilename();
     String rawName = (rename != null && !rename.isEmpty()) ? rename : originalFilename;
     String fileName = sanitizeFileName(rawName);
     String suffix = extractSuffix(fileName);
 
-    FileNodeDO parent = resolveParentNode(parentId, userId);
+    FileNodeVO parent = resolveParentNode(parentId, userId);
     String resolvedParentId = parent.getId();
     String parentPath = parent.getPath() != null ? parent.getPath() : "/";
 
-    // P0-2: 同名冲突处理策略
-    List<FileNodeDO> existingNodes =
+    // 同名冲突检测（只读查询，不含写操作）
+    List<FileNodeVO> existingNodes =
         fileNodeRepository.findByNameAndParent(fileName, resolvedParentId, userId);
-    if (existingNodes != null && !existingNodes.isEmpty()) {
-      String conflictStrategy = properties.getUpload().getConflictStrategy();
-      String strategy = conflictStrategy != null ? conflictStrategy.toUpperCase() : "KEEP_BOTH";
-      switch (strategy) {
-        case "SKIP" -> {
-          log.info("[FileApplicationService] 同名文件已存在，跳过上传: name={}", fileName);
-          return NextwikiConverter.INSTANT.entityToVO(existingNodes.get(0));
-        }
-        case "OVERWRITE" -> {
-          FileNodeDO existing = existingNodes.get(0);
-          log.info(
-              "[FileApplicationService] 同名文件已存在，覆盖: name={}, existingId={}",
-              fileName,
-              existing.getId());
-          if (existing.getStorageKey() != null) {
-            long refCount = storageReferenceService.decrement(existing.getStorageKey());
-            if (refCount <= 0) {
-              IFileStorage storage = resolveStorage();
-              if (storage != null) {
-                storage.delete(existing.getBucketName(), existing.getStorageKey());
-                log.info("[StorageReference] 覆盖时物理清除存储对象: storageKey={}", existing.getStorageKey());
-              }
-            } else {
-              log.info(
-                  "[StorageReference] 覆盖跳过物理删除，仍有引用: storageKey={}, refCount={}",
-                  existing.getStorageKey(),
-                  refCount);
-            }
-          }
-          if (existing.getSize() != null) {
-            quotaDomainService.subtractUsage("user", userId, existing.getSize(), 1);
-          }
-          fileNodeRepository.physicalDelete(existing.getId());
-        }
-        default -> {
-          fileName = resolveUniqueName(fileName, resolvedParentId, userId);
-        }
-      }
+    String conflictStrategy = properties.getUpload().getConflictStrategy();
+    String strategy = conflictStrategy != null ? conflictStrategy.toUpperCase() : "KEEP_BOTH";
+
+    if (existingNodes != null && !existingNodes.isEmpty() && "SKIP".equals(strategy)) {
+      log.info("[FileApplicationService] 同名文件已存在，跳过上传: name={}", fileName);
+      return existingNodes.get(0);
+    }
+    if (existingNodes != null && !existingNodes.isEmpty() && "KEEP_BOTH".equals(strategy)) {
+      fileName = resolveUniqueName(fileName, resolvedParentId, userId);
     }
 
     String path =
         parentPath.endsWith("/") ? parentPath + fileName + "/" : parentPath + "/" + fileName + "/";
     int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
 
-    // 4. 计算文件哈希（用于秒传去重）—— try-with-resources 确保 InputStream 关闭
+    // 4. 计算文件哈希（IO 操作，在事务外执行）
     String fileHash = null;
     try (InputStream hashStream = file.getInputStream()) {
       fileHash = calculateSha256(hashStream);
@@ -199,112 +190,192 @@ public class FileApplicationService {
       log.warn("[FileApplicationService] SHA-256 计算失败: {}", e.getMessage());
     }
 
-    // 5. 秒传去重：如果已存在相同哈希的文件，直接创建引用
+    // 5. 秒传去重检查（只读查询）
+    FileNodeVO dedupExisting = null;
     if (fileHash != null) {
-      FileNodeDO existing = fileNodeRepository.findByFileHash(fileHash);
-      if (existing != null) {
-        log.info(
-            "[FileApplicationService] 秒传命中: hash={}, existingNodeId={}",
-            fileHash,
-            existing.getId());
-        FileNodeDO dedupedNode =
-            buildDedupedFileNode(
-                resolvedParentId, fileName, suffix, existing, fileHash, path, level, userId);
-        FileNodeDO saved = fileNodeRepository.save(dedupedNode);
-        indexUpsert(saved);
-        storageReferenceService.increment(existing.getStorageKey());
-        List<FileVersionDO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
-        FileVersionDomainService.VersionCreateResult versionResult =
-            versionDomainService.createVersion(
-                saved,
-                existingVersions,
-                existing.getStorageKey(),
-                existing.getSize(),
-                fileHash,
-                existing.getMimeType(),
-                "秒传",
-                userId);
-        versionRepository.setActiveVersion(saved.getId(), -1);
-        versionRepository.save(versionResult.newVersion());
-        fileNodeRepository.update(versionResult.updatedFileNode());
-        cleanupExcessVersions(saved.getId());
-        quotaDomainService.addUsage("user", userId, existing.getSize(), 1);
-        publishUploadEvent(saved, fileName, userId);
-        return NextwikiConverter.INSTANT.entityToVO(saved);
+      dedupExisting = fileNodeRepository.findByFileHash(fileHash).orElse(null);
+    }
+
+    // 6. 存储上传（IO 操作，在事务外执行）
+    FileStorage uploaded = null;
+    String storageKey = null;
+    if (dedupExisting == null) {
+      IFileStorage storage = resolveStorage();
+      if (storage == null) {
+        throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
+      }
+      storageKey = generateStorageKey(userId, fileName);
+      uploaded = storage.upload(null, storageKey, file);
+
+      // 病毒扫描（IO 操作，在事务外执行）
+      if (properties.getVirusScan().isEnabled()) {
+        try (InputStream scanStream = file.getInputStream()) {
+          var scanResult = virusScanApplicationService.scan(scanStream, file.getSize());
+          if (scanResult.isInfected()) {
+            storage.delete(null, storageKey);
+            throw BusinessException.of(NextwikiExceptionCode.FILE_VIRUS_DETECTED)
+                .data("message", scanResult.getMessage());
+          }
+          if (scanResult.isError()) {
+            log.warn("[FileApplicationService] 病毒扫描出错，跳过: {}", scanResult.getMessage());
+          }
+        } catch (IOException e) {
+          log.warn("[FileApplicationService] 病毒扫描失败，跳过: {}", e.getMessage());
+        }
       }
     }
 
-    // 6. 正常上传到存储
-    IFileStorage storage = resolveStorage();
-    if (storage == null) {
-      throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
-    }
-    String storageKey = generateStorageKey(userId, fileName);
-    FileStorage uploaded = storage.upload(null, storageKey, file);
+    // ===== 阶段2：事务阶段（短事务，仅数据库操作） =====
+    UploadPrepareContext ctx =
+        UploadPrepareContext.builder()
+            .resolvedParentId(resolvedParentId)
+            .fileName(fileName)
+            .suffix(suffix)
+            .dedupExisting(dedupExisting)
+            .fileHash(fileHash)
+            .path(path)
+            .level(level)
+            .uploaded(uploaded)
+            .storageKey(storageKey)
+            .versionRemark(versionRemark)
+            .userId(userId)
+            .overwriteTarget("OVERWRITE".equals(strategy) && existingNodes != null && !existingNodes.isEmpty()
+                ? existingNodes.get(0) : null)
+            .build();
 
-    // 病毒扫描（如果启用）—— try-with-resources 确保 InputStream 关闭
-    if (properties.getVirusScan().isEnabled()) {
-      try (InputStream scanStream = file.getInputStream()) {
-        var scanResult = virusScanApplicationService.scan(scanStream, file.getSize());
-        if (scanResult.isInfected()) {
-          storage.delete(null, storageKey);
-          throw BusinessException.of(NextwikiExceptionCode.FILE_VIRUS_DETECTED)
-              .data("message", scanResult.getMessage());
+    if (dedupExisting != null) {
+      return persistDedupedNode(ctx);
+    }
+    return persistNewNode(ctx);
+  }
+
+  /**
+   * 秒传命中时持久化去重节点（短事务）。
+   */
+  private FileNodeVO persistDedupedNode(UploadPrepareContext ctx) {
+    return transactionTemplate.execute(status -> {
+      FileNodeDTO dedupedNode =
+          buildDedupedFileNode(
+              ctx.resolvedParentId,
+              ctx.fileName,
+              ctx.suffix,
+              ctx.dedupExisting,
+              ctx.fileHash,
+              ctx.path,
+              ctx.level,
+              ctx.userId);
+      FileNodeVO saved = fileNodeRepository.save(dedupedNode);
+      indexUpsert(saved);
+      storageReferenceService.increment(ctx.dedupExisting.getStorageKey());
+      List<FileVersionVO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+      FileVersionDomainService.VersionCreateResult versionResult =
+          versionDomainService.createVersion(
+              saved,
+              existingVersions,
+              ctx.dedupExisting.getStorageKey(),
+              ctx.dedupExisting.getSize(),
+              ctx.fileHash,
+              ctx.dedupExisting.getMimeType(),
+              "秒传",
+              ctx.userId);
+      versionRepository.setActiveVersion(saved.getId(), -1);
+      versionRepository.save(versionResult.newVersion());
+      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
+      cleanupExcessVersions(saved.getId());
+      quotaDomainService.addUsage("user", ctx.userId, ctx.dedupExisting.getSize(), 1);
+      publishUploadEvent(saved, ctx.fileName, ctx.userId);
+
+      log.info("[FileApplicationService] 秒传上传成功: name={}, hash={}", ctx.fileName, ctx.fileHash);
+      return saved;
+    });
+  }
+
+  /**
+   * 新文件上传时持久化节点（短事务）。
+   */
+  private FileNodeVO persistNewNode(UploadPrepareContext ctx) {
+    return transactionTemplate.execute(status -> {
+      // 处理 OVERWRITE 策略：删除旧节点的数据库记录
+      if (ctx.overwriteTarget != null) {
+        FileNodeVO existing = ctx.overwriteTarget;
+        if (existing.getStorageKey() != null) {
+          long refCount = storageReferenceService.decrement(existing.getStorageKey());
+          if (refCount <= 0) {
+            IFileStorage storage = resolveStorage();
+            if (storage != null) {
+              storage.delete(existing.getBucketName(), existing.getStorageKey());
+              log.info("[StorageReference] 覆盖时物理清除存储对象: storageKey={}", existing.getStorageKey());
+            }
+          } else {
+            log.info("[StorageReference] 覆盖跳过物理删除，仍有引用: storageKey={}, refCount={}",
+                existing.getStorageKey(), refCount);
+          }
         }
-        if (scanResult.isError()) {
-          log.warn("[FileApplicationService] 病毒扫描出错，跳过: {}", scanResult.getMessage());
+        if (existing.getSize() != null) {
+          quotaDomainService.subtractUsage("user", ctx.userId, existing.getSize(), 1);
         }
-      } catch (IOException e) {
-        log.warn("[FileApplicationService] 病毒扫描失败，跳过: {}", e.getMessage());
+        fileNodeRepository.physicalDelete(existing.getId());
       }
-    }
 
-    // 7. 创建文件节点并持久化
-    FileNodeDO FileNodeDO =
-        buildFileNode(
-            resolvedParentId,
-            fileName,
-            suffix,
-            uploaded,
-            storageKey,
-            fileHash,
-            path,
-            level,
-            userId);
-    FileNodeDO saved = fileNodeRepository.save(FileNodeDO);
-    indexUpsert(saved);
-    storageReferenceService.increment(storageKey);
+      FileNodeDTO nodeDto =
+          buildFileNode(
+              ctx.resolvedParentId,
+              ctx.fileName,
+              ctx.suffix,
+              ctx.uploaded,
+              ctx.storageKey,
+              ctx.fileHash,
+              ctx.path,
+              ctx.level,
+              ctx.userId);
+      FileNodeVO saved = fileNodeRepository.save(nodeDto);
+      indexUpsert(saved);
+      storageReferenceService.increment(ctx.storageKey);
 
-    // 8. 创建版本记录
-    List<FileVersionDO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
-    FileVersionDomainService.VersionCreateResult versionResult =
-        versionDomainService.createVersion(
-            saved,
-            existingVersions,
-            storageKey,
-            file.getSize(),
-            fileHash,
-            uploaded.getMimeType(),
-            versionRemark,
-            userId);
-    versionRepository.setActiveVersion(saved.getId(), -1);
-    versionRepository.save(versionResult.newVersion());
-    fileNodeRepository.update(versionResult.updatedFileNode());
-    cleanupExcessVersions(saved.getId());
+      List<FileVersionVO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+      FileVersionDomainService.VersionCreateResult versionResult =
+          versionDomainService.createVersion(
+              saved,
+              existingVersions,
+              ctx.storageKey,
+              ctx.uploaded.getSize(),
+              ctx.fileHash,
+              ctx.uploaded.getMimeType(),
+              ctx.versionRemark,
+              ctx.userId);
+      versionRepository.setActiveVersion(saved.getId(), -1);
+      versionRepository.save(versionResult.newVersion());
+      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
+      cleanupExcessVersions(saved.getId());
+      quotaDomainService.addUsage("user", ctx.userId, ctx.uploaded.getSize(), 1);
+      publishUploadEvent(saved, ctx.fileName, ctx.userId);
 
-    // 9. 增加配额用量
-    quotaDomainService.addUsage("user", userId, file.getSize(), 1);
+      log.info("[FileApplicationService] 文件上传成功: name={}, size={}, userId={}",
+          ctx.fileName, ctx.uploaded.getSize(), ctx.userId);
+      return saved;
+    });
+  }
 
-    // 10. 发布上传事件
-    publishUploadEvent(saved, fileName, userId);
-
-    log.info(
-        "[FileApplicationService] 文件上传成功: name={}, size={}, userId={}",
-        fileName,
-        file.getSize(),
-        userId);
-
-    return NextwikiConverter.INSTANT.entityToVO(saved);
+  /**
+   * 上传准备阶段的上下文数据（从准备阶段传递到事务阶段）。
+   *
+   * <p>P0-2: 将 IO 操作结果封装为不可变上下文，供事务方法使用，确保事务边界最小化。
+   */
+  @lombok.Builder
+  private static class UploadPrepareContext {
+    private final String resolvedParentId;
+    private final String fileName;
+    private final String suffix;
+    private final FileNodeVO dedupExisting;
+    private final String fileHash;
+    private final String path;
+    private final int level;
+    private final FileStorage uploaded;
+    private final String storageKey;
+    private final String versionRemark;
+    private final String userId;
+    /** OVERWRITE 策略下的待删除节点 */
+    private final FileNodeVO overwriteTarget;
   }
 
   /**
@@ -322,8 +393,12 @@ public class FileApplicationService {
   @Transactional(rollbackFor = Exception.class)
   public FileNodeVO createFolder(String parentId, String name, String userId) {
     String sanitizedName = sanitizeFileName(name);
-    FileNodeDO folder = folderDomainService.createFolder(parentId, sanitizedName, userId);
-    return NextwikiConverter.INSTANT.entityToVO(folder);
+    FileNodeVO parent = resolveParentNode(parentId, userId);
+    List<FileNodeVO> siblings = fileNodeRepository.findChildren(parent.getId());
+    FileNodeVO folder = folderDomainService.createFolder(parent, siblings, sanitizedName, userId);
+    FileNodeVO saved = fileNodeRepository.save(NextwikiConverter.INSTANT.toDTO(folder));
+    publishUploadEvent(saved, sanitizedName, userId);
+    return saved;
   }
 
   /**
@@ -362,26 +437,22 @@ public class FileApplicationService {
       int page,
       int pageSize) {
     // 解析父目录ID（与原 listChildren 保持一致：根目录自动解析）
-    FileNodeDO parent = resolveParentNode(parentId, userId);
+    FileNodeVO parent = resolveParentNode(parentId, userId);
     String resolvedParentId = parent.getId();
 
     // 数据库分页查询（含类型过滤与排序）
-    PageResponse<List<FileNodeDO>> pageResult =
+    PageResponse<List<FileNodeVO>> pageResult =
         fileNodeRepository.findPageChildren(
-            resolvedParentId,
-            type,
-            normalizeSortBy(sortBy),
-            normalizeSortDir(sortDir),
-            page,
-            pageSize);
+            FileNodeQuery.builder()
+                .parentId(resolvedParentId)
+                .nodeType(type)
+                .sortBy(normalizeSortBy(sortBy))
+                .sortDir(normalizeSortDir(sortDir))
+                .page(page)
+                .pageSize(pageSize)
+                .build());
 
-    // DO → VO 转换
-    List<FileNodeVO> vos =
-        pageResult.getData().stream()
-            .map(NextwikiConverter.INSTANT::entityToVO)
-            .collect(Collectors.toList());
-    return PageResponse.success(
-        pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
+    return pageResult;
   }
 
   /**
@@ -403,8 +474,13 @@ public class FileApplicationService {
     DistributedLocker locker = lockStrategy.getLock(LockType.REENTRANT);
     String lockValue = acquireLock(locker, lockKey);
     try {
-      FileNodeDO node = folderDomainService.move(nodeId, targetParentId, userId);
-      return NextwikiConverter.INSTANT.entityToVO(node);
+      FileNodeVO node = fileNodeRepository.findById(nodeId)
+          .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
+      FileNodeVO targetParent = resolveParentNode(targetParentId, userId);
+      List<FileNodeVO> targetSiblings = fileNodeRepository.findChildren(targetParent.getId());
+      FileNodeVO movedNode = folderDomainService.move(node, targetParent, targetSiblings, userId);
+      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(movedNode));
+      return movedNode;
     } finally {
       locker.unlock(lockKey, lockValue);
     }
@@ -431,8 +507,12 @@ public class FileApplicationService {
     DistributedLocker locker = lockStrategy.getLock(LockType.REENTRANT);
     String lockValue = acquireLock(locker, lockKey);
     try {
-      FileNodeDO node = folderDomainService.rename(nodeId, newName, userId);
-      return NextwikiConverter.INSTANT.entityToVO(node);
+      FileNodeVO node = fileNodeRepository.findById(nodeId)
+          .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
+      FileNodeVO parent = resolveParentNode(node.getParentId(), userId);
+      FileNodeVO renamedNode = folderDomainService.rename(node, parent, sanitizeFileName(newName), userId);
+      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(renamedNode));
+      return renamedNode;
     } finally {
       locker.unlock(lockKey, lockValue);
     }
@@ -455,18 +535,16 @@ public class FileApplicationService {
   @Transactional(rollbackFor = Exception.class)
   public void delete(String nodeId, String userId) {
     permissionService.checkDelete(nodeId, userId);
-    FileNodeDO node = fileNodeRepository.findById(nodeId);
-    if (node == null) {
-      throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
-    }
+    FileNodeVO node = fileNodeRepository.findById(nodeId)
+        .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
 
     String lockKey = LOCK_PREFIX + nodeId;
     DistributedLocker locker = lockStrategy.getLock(LockType.REENTRANT);
     String lockValue = acquireLock(locker, lockKey);
     try {
-      folderDomainService.softDelete(nodeId, userId);
-      TrashItemDO TrashItemDO = trashDomainService.moveToTrash(node, userId);
-      trashItemRepository.save(TrashItemDO);
+      fileNodeRepository.softDelete(nodeId, node.getPath());
+      TrashItemDTO trashItem = trashDomainService.moveToTrash(node, userId);
+      trashItemRepository.save(trashItem);
 
       if (node.isFile() && node.getSize() != null) {
         quotaDomainService.subtractUsage("user", userId, node.getSize(), 1);
@@ -497,54 +575,115 @@ public class FileApplicationService {
   }
 
   /**
-   * 批量删除（逐条调用 {@link #delete}，允许部分成功，无整体事务）。
+   * 批量删除（并行处理，允许部分成功，无整体事务）。
    *
-   * <p>单条失败被捕获并记录到 {@code failedItems}，不中断其余节点；适用于前端多选删除场景。
+   * <p>使用 {@link java.util.concurrent.CompletableFuture} 并行处理各节点，提升批量操作吞吐量。
+   * 单条失败被捕获并记录到 {@code failedItems}，不中断其余节点。
    *
    * @param nodeIds 待删除节点 ID 列表
    * @param userId 操作人 ID
    * @return 批量结果 {@link BatchResult}，含成功数与失败明细
-   * @complexity O(nodeIds.size())（逐条删除，串行）
+   * @complexity O(nodeIds.size() / parallelism)（并行删除）
    * @note 无整体事务边界，部分成功部分失败属正常；单条失败不影响其他项
+   * @concurrency 使用 nextwikiTaskExecutor 线程池并行处理
    */
   public BatchResult batchDelete(List<String> nodeIds, String userId) {
+    if (nodeIds == null || nodeIds.isEmpty()) {
+      return new BatchResult(0, List.of());
+    }
+
+    // 批量查询节点，避免 N 次单条查询
+    List<FileNodeVO> nodes = fileNodeRepository.findByIds(nodeIds);
+    Map<String, FileNodeVO> nodeMap = new java.util.HashMap<>();
+    for (FileNodeVO node : nodes) {
+      nodeMap.put(node.getId(), node);
+    }
+
+    // 并行处理各节点删除
+    List<CompletableFuture<String>> futures = nodeIds.stream()
+        .map(nodeId -> CompletableFuture.supplyAsync(() -> {
+          try {
+            FileNodeVO node = nodeMap.get(nodeId);
+            if (node == null) {
+              throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
+            }
+            delete(nodeId, userId);
+            return null; // 成功返回 null
+          } catch (Exception e) {
+            log.error("[FileApplicationService] 批量删除失败: nodeId={}", nodeId, e);
+            return e.getMessage();
+          }
+        }, batchTaskExecutor))
+        .toList();
+
+    // 等待所有任务完成并收集结果
     int success = 0;
     List<BatchResult.FailedItem> failedItems = new ArrayList<>();
-    for (String nodeId : nodeIds) {
+    for (int i = 0; i < futures.size(); i++) {
       try {
-        delete(nodeId, userId);
-        success++;
+        String error = futures.get(i).get();
+        if (error == null) {
+          success++;
+        } else {
+          failedItems.add(new BatchResult.FailedItem(nodeIds.get(i), error));
+        }
       } catch (Exception e) {
-        log.error("[FileApplicationService] 批量删除失败: nodeId={}", nodeId, e);
-        failedItems.add(new BatchResult.FailedItem(nodeId, e.getMessage()));
+        failedItems.add(new BatchResult.FailedItem(nodeIds.get(i), e.getMessage()));
       }
     }
+
     log.info("[FileApplicationService] 批量删除: total={}, success={}", nodeIds.size(), success);
     return new BatchResult(success, failedItems);
   }
 
   /**
-   * 批量移动（逐条调用 {@link #move}，允许部分成功，无整体事务）。
+   * 批量移动（并行处理，允许部分成功，无整体事务）。
+   *
+   * <p>使用 {@link java.util.concurrent.CompletableFuture} 并行处理各节点，提升批量操作吞吐量。
+   * 单条失败被捕获并记录到 {@code failedItems}，不中断其余节点。
    *
    * @param nodeIds 待移动节点 ID 列表
    * @param targetParentId 目标父目录 ID
    * @param userId 操作人 ID
    * @return 批量结果 {@link BatchResult}，含成功数与失败明细
-   * @complexity O(nodeIds.size())（逐条移动，串行）
+   * @complexity O(nodeIds.size() / parallelism)（并行移动）
    * @note 单条失败被捕获并记入失败明细，不影响其余项
+   * @concurrency 使用 nextwikiTaskExecutor 线程池并行处理
    */
   public BatchResult batchMove(List<String> nodeIds, String targetParentId, String userId) {
+    if (nodeIds == null || nodeIds.isEmpty()) {
+      return new BatchResult(0, List.of());
+    }
+
+    // 并行处理各节点移动
+    List<CompletableFuture<String>> futures = nodeIds.stream()
+        .map(nodeId -> CompletableFuture.supplyAsync(() -> {
+          try {
+            move(nodeId, targetParentId, userId);
+            return null; // 成功返回 null
+          } catch (Exception e) {
+            log.error("[FileApplicationService] 批量移动失败: nodeId={}", nodeId, e);
+            return e.getMessage();
+          }
+        }, batchTaskExecutor))
+        .toList();
+
+    // 等待所有任务完成并收集结果
     int success = 0;
     List<BatchResult.FailedItem> failedItems = new ArrayList<>();
-    for (String nodeId : nodeIds) {
+    for (int i = 0; i < futures.size(); i++) {
       try {
-        move(nodeId, targetParentId, userId);
-        success++;
+        String error = futures.get(i).get();
+        if (error == null) {
+          success++;
+        } else {
+          failedItems.add(new BatchResult.FailedItem(nodeIds.get(i), error));
+        }
       } catch (Exception e) {
-        log.error("[FileApplicationService] 批量移动失败: nodeId={}", nodeId, e);
-        failedItems.add(new BatchResult.FailedItem(nodeId, e.getMessage()));
+        failedItems.add(new BatchResult.FailedItem(nodeIds.get(i), e.getMessage()));
       }
     }
+
     log.info("[FileApplicationService] 批量移动: total={}, success={}", nodeIds.size(), success);
     return new BatchResult(success, failedItems);
   }
@@ -566,12 +705,10 @@ public class FileApplicationService {
   @Transactional(rollbackFor = Exception.class)
   public FileNodeVO copy(String nodeId, String targetParentId, String userId) {
     permissionService.checkRead(nodeId, userId);
-    FileNodeDO source = fileNodeRepository.findById(nodeId);
-    if (source == null) {
-      throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
-    }
+    FileNodeVO source = fileNodeRepository.findById(nodeId)
+        .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
 
-    FileNodeDO parent = resolveParentNode(targetParentId, userId);
+    FileNodeVO parent = resolveParentNode(targetParentId, userId);
     String resolvedParentId = parent.getId();
     String parentPath = parent.getPath() != null ? parent.getPath() : "/";
     String newName = source.getName();
@@ -584,8 +721,8 @@ public class FileApplicationService {
       quotaDomainService.checkQuota("user", userId, source.getSize());
     }
 
-    FileNodeDO copyNode =
-        FileNodeDO.builder()
+    FileNodeDTO copyNode =
+        FileNodeDTO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
             .parentId(resolvedParentId)
             .name(newName)
@@ -604,15 +741,11 @@ public class FileApplicationService {
             .previewReady(source.getPreviewReady())
             .starred(false)
             .shareStatus("private")
-            .status("active")
-            .deleted(0)
-            .revision(0)
+            .createdBy(userId)
+            .updatedBy(userId)
             .build();
 
-    copyNode.setCreatedBy(userId);
-    copyNode.setUpdatedBy(userId);
-
-    FileNodeDO saved = fileNodeRepository.save(copyNode);
+    FileNodeVO saved = fileNodeRepository.save(copyNode);
 
     // 文件引用计数 +1（副本共享同一 storageKey）
     if (source.isFile() && source.getStorageKey() != null) {
@@ -621,7 +754,7 @@ public class FileApplicationService {
 
     // 文件创建版本引用
     if (source.isFile()) {
-      List<FileVersionDO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+      List<FileVersionVO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
       FileVersionDomainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
               saved,
@@ -634,7 +767,7 @@ public class FileApplicationService {
               userId);
       versionRepository.setActiveVersion(saved.getId(), -1);
       versionRepository.save(versionResult.newVersion());
-      fileNodeRepository.update(versionResult.updatedFileNode());
+      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
       cleanupExcessVersions(saved.getId());
       if (source.getSize() != null) {
         quotaDomainService.addUsage("user", userId, source.getSize(), 1);
@@ -643,7 +776,7 @@ public class FileApplicationService {
 
     publishUploadEvent(saved, newName, userId);
     log.info("[FileApplicationService] 复制文件: sourceId={}, targetId={}", nodeId, saved.getId());
-    return NextwikiConverter.INSTANT.entityToVO(saved);
+    return saved;
   }
 
   /**
@@ -667,30 +800,28 @@ public class FileApplicationService {
   public FileNodeVO copyFolder(String nodeId, String targetParentId, String userId) {
     // 1. 权限校验 + 源文件夹验证
     permissionService.checkRead(nodeId, userId);
-    FileNodeDO sourceFolder = fileNodeRepository.findById(nodeId);
-    if (sourceFolder == null) {
-      throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
-    }
+    FileNodeVO sourceFolder = fileNodeRepository.findById(nodeId)
+        .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
     if (!sourceFolder.isFolder()) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_PARENT_NOT_FOLDER)
           .data("nodeId", nodeId);
     }
 
     // 2. 目标父目录验证
-    FileNodeDO targetParent = resolveParentNode(targetParentId, userId);
+    FileNodeVO targetParent = resolveParentNode(targetParentId, userId);
     String targetParentPath = targetParent.getPath() != null ? targetParent.getPath() : "/";
     int targetParentLevel = targetParent.getLevel() != null ? targetParent.getLevel() + 1 : 1;
 
     // 3. 配额预校验（仅统计文件）
     String sourcePath = sourceFolder.getPath() != null ? sourceFolder.getPath() : "/";
-    List<FileNodeDO> allDescendants = fileNodeRepository.findAllDescendants(nodeId);
+    List<FileNodeVO> allDescendants = fileNodeRepository.findAllDescendants(nodeId);
     long totalFileBytes =
         allDescendants.stream()
-            .filter(FileNodeDO::isFile)
+            .filter(FileNodeVO::isFile)
             .filter(n -> n.getSize() != null)
-            .mapToLong(FileNodeDO::getSize)
+            .mapToLong(FileNodeVO::getSize)
             .sum();
-    long totalFileCount = allDescendants.stream().filter(FileNodeDO::isFile).count();
+    long totalFileCount = allDescendants.stream().filter(FileNodeVO::isFile).count();
     quotaDomainService.checkQuota("user", userId, totalFileBytes);
 
     // 4. 短事务：创建根文件夹节点
@@ -709,15 +840,17 @@ public class FileApplicationService {
     }
 
     // 7. 发布复制事件
-    FileNodeDO newFolderNode = fileNodeRepository.findById(newFolderId);
-    publishUploadEvent(newFolderNode, sourceFolder.getName(), userId);
+    FileNodeVO newFolderNode = fileNodeRepository.findById(newFolderId).orElse(null);
+    if (newFolderNode != null) {
+      publishUploadEvent(newFolderNode, sourceFolder.getName(), userId);
+    }
     log.info(
         "[FileApplicationService] 复制文件夹完成: sourceId={}, newId={}, descendants={}",
         nodeId,
         newFolderId,
         copied);
 
-    return NextwikiConverter.INSTANT.entityToVO(newFolderNode);
+    return newFolderNode;
   }
 
   /**
@@ -735,20 +868,18 @@ public class FileApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public FileNodeVO rollbackVersion(String nodeId, Integer targetVersion, String userId) {
-    FileNodeDO FileNodeDO = fileNodeRepository.findById(nodeId);
-    if (FileNodeDO == null) {
-      throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
-    }
+    FileNodeVO node = fileNodeRepository.findById(nodeId)
+        .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
 
-    FileVersionDO target = versionRepository.findByFileNodeIdAndVersion(nodeId, targetVersion);
-    List<FileVersionDO> allVersions = versionRepository.findByFileNodeId(nodeId);
+    FileVersionVO target = versionRepository.findByFileNodeIdAndVersion(nodeId, targetVersion);
+    List<FileVersionVO> allVersions = versionRepository.findByFileNodeId(nodeId);
 
     FileVersionDomainService.VersionRollbackResult result =
-        versionDomainService.rollback(FileNodeDO, target, allVersions, userId);
+        versionDomainService.rollback(node, target, allVersions, userId);
 
     versionRepository.setActiveVersion(nodeId, -1);
     versionRepository.save(result.newVersion());
-    fileNodeRepository.update(result.updatedFileNode());
+    fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(result.updatedFileNode()));
 
     // 发布回滚事件
     eventPublisher.publishEvent(
@@ -764,18 +895,18 @@ public class FileApplicationService {
             .extra("rollback to v" + result.targetVersionNumber())
             .build());
 
-    return NextwikiConverter.INSTANT.entityToVO(result.updatedFileNode());
+    return result.updatedFileNode();
   }
 
   /**
    * 获取文件版本历史列表（按版本号升序）。
    *
    * @param nodeId 文件节点 ID
-   * @return 版本记录列表 {@link FileVersionDO}（可能为空，非 {@code null}）
+   * @return 版本记录列表 {@link FileVersionVO}（可能为空，非 {@code null}）
    * @complexity O(1)（一次按节点 ID 查询）
    * @note 只读，无事务边界
    */
-  public List<FileVersionDO> getVersionHistory(String nodeId) {
+  public List<FileVersionVO> getVersionHistory(String nodeId) {
     return versionRepository.findByFileNodeId(nodeId);
   }
 
@@ -789,11 +920,8 @@ public class FileApplicationService {
    * @note 只读，无事务边界；不在此做权限校验，调用方可按需叠加 {@code permissionService}
    */
   public FileNodeVO getFileInfo(String nodeId) {
-    FileNodeDO node = fileNodeRepository.findById(nodeId);
-    if (node == null) {
-      throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
-    }
-    return NextwikiConverter.INSTANT.entityToVO(node);
+    return fileNodeRepository.findById(nodeId)
+        .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
   }
 
   /**
@@ -809,13 +937,11 @@ public class FileApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void toggleStar(String nodeId, String userId) {
-    FileNodeDO node = fileNodeRepository.findById(nodeId);
-    if (node == null) {
-      throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
-    }
+    FileNodeVO node = fileNodeRepository.findById(nodeId)
+        .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
     node.setStarred(node.getStarred() == null || !node.getStarred());
     node.setUpdatedBy(userId);
-    fileNodeRepository.update(node);
+    fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
     log.info(
         "[FileApplicationService] 切换星标: nodeId={}, starred={}, userId={}",
         nodeId,
@@ -827,9 +953,9 @@ public class FileApplicationService {
 
   /** 清理超出保留数量的旧版本 */
   private void cleanupExcessVersions(String fileNodeId) {
-    List<FileVersionDO> allVersions = versionRepository.findByFileNodeId(fileNodeId);
-    List<FileVersionDO> toDelete = versionDomainService.findVersionsToCleanup(allVersions);
-    for (FileVersionDO v : toDelete) {
+    List<FileVersionVO> allVersions = versionRepository.findByFileNodeId(fileNodeId);
+    List<FileVersionVO> toDelete = versionDomainService.findVersionsToCleanup(allVersions);
+    for (FileVersionVO v : toDelete) {
       versionRepository.deleteById(v.getId());
     }
     if (!toDelete.isEmpty()) {
@@ -871,15 +997,13 @@ public class FileApplicationService {
   }
 
   /** 解析父目录节点（直接 findById，不再通过 listChildren 间接判断） */
-  private FileNodeDO resolveParentNode(String parentId, String userId) {
+  private FileNodeVO resolveParentNode(String parentId, String userId) {
     if (parentId == null || parentId.isEmpty() || "0".equals(parentId)) {
       return fileNodeRepository.findOrCreateRoot(userId);
     }
-    FileNodeDO parent = fileNodeRepository.findById(parentId);
-    if (parent == null) {
-      throw BusinessException.of(NextwikiExceptionCode.FILE_FOLDER_NOT_FOUND)
-          .data("parentId", parentId);
-    }
+    FileNodeVO parent = fileNodeRepository.findById(parentId)
+        .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_FOLDER_NOT_FOUND)
+            .data("parentId", parentId));
     if (!parent.isFolder()) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_PARENT_NOT_FOLDER)
           .data("parentId", parentId);
@@ -887,7 +1011,7 @@ public class FileApplicationService {
     return parent;
   }
 
-  private void publishUploadEvent(FileNodeDO saved, String fileName, String userId) {
+  private void publishUploadEvent(FileNodeVO saved, String fileName, String userId) {
     eventPublisher.publishEvent(
         FileOperatedEvent.builder()
             .operation(FileOperatedEvent.OP_UPLOAD)
@@ -929,7 +1053,7 @@ public class FileApplicationService {
     };
   }
 
-  private void indexUpsert(FileNodeDO entity) {
+  private void indexUpsert(FileNodeVO entity) {
     SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
     if (bridge != null) {
       bridge.indexUpsert("wiki", entity);
@@ -958,7 +1082,7 @@ public class FileApplicationService {
     return null;
   }
 
-  private FileNodeDO buildFileNode(
+  private FileNodeDTO buildFileNode(
       String parentId,
       String name,
       String suffix,
@@ -968,75 +1092,61 @@ public class FileApplicationService {
       String path,
       int level,
       String userId) {
-    FileNodeDO node =
-        FileNodeDO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
-            .parentId(parentId)
-            .name(name)
-            .nodeType(FileNodeDO.TYPE_FILE)
-            .suffix(suffix)
-            .size(uploaded.getSize())
-            .storageKey(storageKey)
-            .bucketName(uploaded.getUuidName())
-            .mimeType(uploaded.getMimeType())
-            .path(path)
-            .level(level)
-            .sort(0)
-            .currentVersion(0)
-            .fileHash(fileHash)
-            .previewReady(false)
-            .starred(false)
-            .shareStatus("private")
-            .status("active")
-            .deleted(0)
-            .revision(0)
-            .build();
-
-    node.setCreatedBy(userId);
-    node.setUpdatedBy(userId);
-
-    return node;
+    return FileNodeDTO.builder()
+        .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+        .parentId(parentId)
+        .name(name)
+        .nodeType(FileNodeVO.TYPE_FILE)
+        .suffix(suffix)
+        .size(uploaded.getSize())
+        .storageKey(storageKey)
+        .bucketName(uploaded.getUuidName())
+        .mimeType(uploaded.getMimeType())
+        .path(path)
+        .level(level)
+        .sort(0)
+        .currentVersion(0)
+        .fileHash(fileHash)
+        .previewReady(false)
+        .starred(false)
+        .shareStatus("private")
+        .createdBy(userId)
+        .updatedBy(userId)
+        .build();
   }
 
   /** 构建秒传去重的文件节点（引用已有存储对象，跳过上传） */
-  private FileNodeDO buildDedupedFileNode(
+  private FileNodeDTO buildDedupedFileNode(
       String parentId,
       String name,
       String suffix,
-      FileNodeDO existing,
+      FileNodeVO existing,
       String fileHash,
       String path,
       int level,
       String userId) {
-    FileNodeDO node =
-        FileNodeDO.builder()
-            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
-            .parentId(parentId)
-            .name(name)
-            .nodeType(FileNodeDO.TYPE_FILE)
-            .suffix(suffix)
-            .size(existing.getSize())
-            .storageKey(existing.getStorageKey())
-            .bucketName(existing.getBucketName())
-            .mimeType(existing.getMimeType())
-            .path(path)
-            .level(level)
-            .sort(0)
-            .currentVersion(0)
-            .fileHash(fileHash)
-            .thumbnailKey(existing.getThumbnailKey())
-            .previewReady(existing.getPreviewReady())
-            .starred(false)
-            .shareStatus("private")
-            .status("active")
-            .deleted(0)
-            .revision(0)
-            .build();
-
-    node.setCreatedBy(userId);
-    node.setUpdatedBy(userId);
-
-    return node;
+    return FileNodeDTO.builder()
+        .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+        .parentId(parentId)
+        .name(name)
+        .nodeType(FileNodeVO.TYPE_FILE)
+        .suffix(suffix)
+        .size(existing.getSize())
+        .storageKey(existing.getStorageKey())
+        .bucketName(existing.getBucketName())
+        .mimeType(existing.getMimeType())
+        .path(path)
+        .level(level)
+        .sort(0)
+        .currentVersion(0)
+        .fileHash(fileHash)
+        .thumbnailKey(existing.getThumbnailKey())
+        .previewReady(existing.getPreviewReady())
+        .starred(false)
+        .shareStatus("private")
+        .createdBy(userId)
+        .updatedBy(userId)
+        .build();
   }
 
   /** 生成唯一文件名（用于 KEEP_BOTH 策略） */
@@ -1049,7 +1159,7 @@ public class FileApplicationService {
     int counter = 1;
     String candidate = fileName;
     while (true) {
-      List<FileNodeDO> existing = fileNodeRepository.findByNameAndParent(candidate, parentId, userId);
+      List<FileNodeVO> existing = fileNodeRepository.findByNameAndParent(candidate, parentId, userId);
       if (existing == null || existing.isEmpty()) {
         return candidate;
       }

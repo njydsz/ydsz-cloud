@@ -127,6 +127,10 @@ public class TenantAwareExecutorPool {
   /**
    * 创建一个分桶线程池。
    *
+   * <p><b>注意：</b>此处分桶池按租户/分组哈希隔离，池数量固定（由 {@code executor.isolation-buckets} 控制），
+   * 不属于无限创建场景。如需统一管理可配置 {@code ydsz.thread.pools.cronjobTenant} 并通过
+   * 外部注入替换此方法逻辑。
+   *
    * @param bucketIndex 分桶索引（用于线程命名）
    * @return 新建的线程池
    */
@@ -137,6 +141,7 @@ public class TenantAwareExecutorPool {
     int queueCapacity = Math.max(0, execConfig.getTenantPoolQueueCapacity());
     LinkedBlockingQueue<Runnable> workQueue =
         queueCapacity == 0 ? new LinkedBlockingQueue<>() : new LinkedBlockingQueue<>(queueCapacity);
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 分桶隔离池，桶数量固定且有限
     ThreadPoolExecutor pool =
         new ThreadPoolExecutor(
             corePoolSize,
@@ -150,6 +155,7 @@ public class TenantAwareExecutorPool {
               return t;
             },
             new ThreadPoolExecutor.CallerRunsPolicy());
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     log.debug("[TenantAwarePool] 创建分桶池: index={} core={} max={} queue={}",
         bucketCount, corePoolSize, maxPoolSize, queueCapacity);
     return pool;

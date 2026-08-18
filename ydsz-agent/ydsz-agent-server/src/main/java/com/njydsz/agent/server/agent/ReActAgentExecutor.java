@@ -4,11 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
-import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
@@ -49,36 +45,10 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class ReActAgentExecutor implements AgentExecutor {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ReActAgentExecutor.class);
-
-  /** LLM 客户端 */
-  private final LlmClient llmClient;
-
-  /** 对话记忆 */
-  private final ConversationMemory memory;
+public class ReActAgentExecutor extends AbstractAgentExecutor {
 
   /** 工具注册中心 */
   private final ToolRegistry toolRegistry;
-
-  /** Agent 配置属性 */
-  private final AgentProperties properties;
-
-  /** 链路记录器 */
-  private final TraceRecorder traceRecorder;
-
-  /** Agent 指标采集 */
-  private final AgentMetrics agentMetrics;
-
-  /** 成本分析服务（Token 用量核算，可为 null，调用处已做空判断） */
-  private final CostAnalysisService costAnalysisService;
-
-  /** 护栏编排服务（统一驱动输入/输出护栏，消除重复逻辑） */
-  private final GuardrailService guardrailService;
-
-  /** Prompt 模板提供者（加载外部化模板，替代硬编码 Prompt） */
-  private final PromptTemplateProvider promptTemplateProvider;
 
   /** RAG 检索服务（可选，为 null 时不启用知识增强） */
   private final RagService ragService;
@@ -94,30 +64,30 @@ public class ReActAgentExecutor implements AgentExecutor {
       GuardrailService guardrailService,
       PromptTemplateProvider promptTemplateProvider,
       RagService ragService) {
-    this.llmClient = llmClient;
-    this.memory = memory;
+    super(
+        llmClient,
+        memory,
+        properties,
+        traceRecorder,
+        agentMetrics,
+        costAnalysisService,
+        guardrailService,
+        promptTemplateProvider);
     this.toolRegistry = toolRegistry;
-    this.properties = properties;
-    this.traceRecorder = traceRecorder;
-    this.agentMetrics = agentMetrics;
-    this.costAnalysisService = costAnalysisService;
-    this.guardrailService = guardrailService;
-    this.promptTemplateProvider = promptTemplateProvider;
     this.ragService = ragService;
   }
 
   @Override
   public ChatResponse execute(AgentExecutionRequest request) {
-    String convId =
-        request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
-    String traceId = traceRecorder.startTrace(convId, "REACT");
+    String convId = extractConvId(request);
+    String traceId = startTrace(convId, "REACT");
     LOG.info(
         "[ReAct] 开始执行: convId={}, traceId={}, maxIterations={}",
         convId,
         traceId,
         request.getMaxIterations());
 
-    String userInput = guardrailService.applyInputGuardrails(request.getUserInput());
+    String userInput = applyInputGuardrails(request.getUserInput());
     if (userInput == null) {
       traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
       return buildRejectedResponse("输入被护栏拒绝");
@@ -147,47 +117,18 @@ public class ReActAgentExecutor implements AgentExecutor {
       try {
         response = llmClient.chat(llmRequest);
       } catch (Exception e) {
-        long llmDuration = System.currentTimeMillis() - llmStart;
-        agentMetrics.recordLlmCall(
-            llmClient.getProvider(), properties.getLlm().getDefaultModel(), llmDuration, null, e);
-        traceRecorder.recordStep(
-            traceId,
-            "LLM_CALL_ERROR",
-            "LLM 调用失败 (iteration=" + i + ")",
-            request.getUserInput(),
-            e.getMessage(),
-            llmDuration);
-        traceRecorder.endTrace(traceId, "FAILED");
+        recordLlmError(traceId, "REACT", request, e, llmStart);
         throw e;
       }
-      long llmDuration = System.currentTimeMillis() - llmStart;
 
       if (response.getUsage() != null) {
         totalUsage = totalUsage.add(response.getUsage());
       }
-
-      // P0-3: AgentMetrics 指标采集
-      agentMetrics.recordLlmCall(
-          llmClient.getProvider(),
-          properties.getLlm().getDefaultModel(),
-          llmDuration,
-          response,
-          null);
-
-      // P0-2: CostAnalysisService 成本核算
-      if (response.getUsage() != null && costAnalysisService != null) {
-        costAnalysisService.recordUsage(
-            convId, properties.getLlm().getDefaultModel(), response.getUsage());
-      }
-
-      // P0-1: TraceRecorder 记录 LLM 调用步骤
-      traceRecorder.recordStep(
-          traceId, "LLM_CALL", "ReAct iteration " + (i + 1), messages, response, llmDuration);
+      recordLlmSuccess(convId, traceId, "ReAct iteration " + (i + 1), messages, response, llmStart);
 
       if (!response.hasToolCalls()) {
-        String output = guardrailService.applyOutputGuardrails(response.getContent());
-        memory.save(convId, ChatMessage.user(userInput, convId));
-        memory.save(convId, ChatMessage.assistant(output, convId, response.getUsage()));
+        String output = applyOutputGuardrails(response.getContent());
+        saveConversation(convId, userInput, output, response.getUsage());
         traceRecorder.endTrace(traceId, "SUCCESS");
         LOG.info(
             "[ReAct] 完成: convId={}, iterations={}, tokens={}",
@@ -231,20 +172,18 @@ public class ReActAgentExecutor implements AgentExecutor {
 
   @Override
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
-    String convId =
-        request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
-    String traceId = traceRecorder.startTrace(convId, "REACT_STREAM");
+    String convId = extractConvId(request);
+    String traceId = startTrace(convId, "REACT_STREAM");
     LOG.info("[ReAct-Stream] 开始流式执行: convId={}, traceId={}", convId, traceId);
 
     String responseId = IdGenerator.nextIdStr();
     String model = properties.getLlm().getDefaultModel();
     TokenUsage totalUsage = TokenUsage.zero();
 
-    String userInput = guardrailService.applyInputGuardrails(request.getUserInput());
+    String userInput = applyInputGuardrails(request.getUserInput());
     if (userInput == null) {
       traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
-      chunkConsumer.accept(ChatChunk.content(responseId, model, "抱歉，您的输入被安全护栏拒绝。"));
-      chunkConsumer.accept(ChatChunk.finish(responseId, model, "guardrail_rejected", null));
+      emitRejectionStream(responseId, chunkConsumer);
       return;
     }
 
@@ -271,25 +210,17 @@ public class ReActAgentExecutor implements AgentExecutor {
       try {
         response = llmClient.chat(llmRequest);
       } catch (Exception e) {
-        long llmDuration = System.currentTimeMillis() - llmStart;
-        agentMetrics.recordLlmCall(llmClient.getProvider(), model, llmDuration, null, e);
-        traceRecorder.endTrace(traceId, "FAILED");
+        recordLlmError(traceId, "REACT_STREAM", request, e, llmStart);
         chunkConsumer.accept(
             ChatChunk.content(responseId, model, "[错误] LLM 调用失败: " + e.getMessage()));
         chunkConsumer.accept(ChatChunk.finish(responseId, model, "error", null));
         throw e;
       }
-      long llmDuration = System.currentTimeMillis() - llmStart;
 
       if (response.getUsage() != null) {
         totalUsage = totalUsage.add(response.getUsage());
       }
-      agentMetrics.recordLlmCall(llmClient.getProvider(), model, llmDuration, response, null);
-      if (response.getUsage() != null && costAnalysisService != null) {
-        costAnalysisService.recordUsage(convId, model, response.getUsage());
-      }
-      traceRecorder.recordStep(
-          traceId, "LLM_CALL", "ReAct iteration " + (i + 1), messages, response, llmDuration);
+      recordLlmSuccess(convId, traceId, "ReAct iteration " + (i + 1), messages, response, llmStart);
 
       // P0-6: 推送 LLM 回复内容（Thought / Final Answer）
       if (response.getContent() != null && !response.getContent().isBlank()) {
@@ -298,9 +229,8 @@ public class ReActAgentExecutor implements AgentExecutor {
       }
 
       if (!response.hasToolCalls()) {
-        String output = guardrailService.applyOutputGuardrails(response.getContent());
-        memory.save(convId, ChatMessage.user(userInput, convId));
-        memory.save(convId, ChatMessage.assistant(output, convId, totalUsage));
+        String output = applyOutputGuardrails(response.getContent());
+        saveConversation(convId, userInput, output, totalUsage);
         traceRecorder.endTrace(traceId, "SUCCESS");
         chunkConsumer.accept(ChatChunk.finish(responseId, model, "stop", totalUsage));
         return;
@@ -366,11 +296,12 @@ public class ReActAgentExecutor implements AgentExecutor {
     if (request.getSystemPrompt() != null && !request.getSystemPrompt().isBlank()) {
       sb.append(request.getSystemPrompt());
     } else {
-      String templateContent = promptTemplateProvider != null
-          ? promptTemplateProvider.load(properties.getPromptTemplate().getReactSystemCode())
-          : null;
-      sb.append(templateContent != null ? templateContent
-          : "你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。");
+      String templateContent =
+          promptTemplateProvider.load(properties.getPromptTemplate().getReactSystemCode());
+      sb.append(
+          templateContent != null
+              ? templateContent
+              : "你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。");
     }
     // P1-1: RAG 知识增强（可选）
     if (ragService != null && userInput != null && !userInput.isBlank()) {
@@ -411,17 +342,6 @@ public class ReActAgentExecutor implements AgentExecutor {
       LOG.warn("[ReAct] RAG 检索失败，跳过知识增强: {}", e.getMessage());
       return null;
     }
-  }
-
-  private ChatResponse buildRejectedResponse(String reason) {
-    ChatMessage msg = ChatMessage.assistant("抱歉，" + reason + "。", null, TokenUsage.zero());
-    return new ChatResponse(
-        IdGenerator.nextIdStr(),
-        "guardrail",
-        msg,
-        TokenUsage.zero(),
-        "guardrail_rejected",
-        List.of());
   }
 
   private ChatResponse buildMaxIterationsResponse(String convId, TokenUsage usage) {

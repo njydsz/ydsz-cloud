@@ -32,7 +32,6 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionDO> {
     return "rule";
   }
 
-  @Override
   public String getTypeLabel() {
     return "规则";
   }
@@ -65,7 +64,6 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionDO> {
         .build();
   }
 
-  @Override
   public List<SearchField> getSearchableFields() {
     return List.of(
         SearchField.builder()
@@ -103,7 +101,6 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionDO> {
             .build());
   }
 
-  @Override
   public RuleDefinitionDO loadById(String id) {
     return ruleDefinitionMapper.selectById(id);
   }

@@ -1,11 +1,7 @@
 package com.njydsz.system.server.service.impl;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,11 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.jdbc.support.PageResponses;
-import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.Tenant;
-import com.njydsz.system.infra.entity.TenantPlan;
+import com.njydsz.system.domain.dto.TenantPlanDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.query.TenantPlanPageQuery;
+import com.njydsz.system.domain.query.TenantPlanQuery;
 import com.njydsz.system.domain.vo.TenantPlanVO;
 import com.njydsz.system.domain.repository.TenantPlanRepository;
 import com.njydsz.system.domain.repository.TenantRepository;
@@ -61,8 +56,7 @@ public class TenantPlanServiceImpl implements TenantPlanService {
    */
   @Override
   public TenantPlanVO getById(String id) {
-    TenantPlan entity = tenantPlanRepository.findById(id).orElse(null);
-    return SystemConverter.INSTANT.entityToVO(entity);
+    return tenantPlanRepository.findById(id).orElse(null);
   }
 
   /**
@@ -77,9 +71,12 @@ public class TenantPlanServiceImpl implements TenantPlanService {
   @Override
   public PageResponse<List<TenantPlanVO>> page(
       int pageNum, int pageSize, String planName, String status) {
-    IPage<TenantPlan> page =
-        tenantPlanRepository.findByPage(new Page<>(pageNum, pageSize), planName, status);
-    return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
+    TenantPlanPageQuery query = new TenantPlanPageQuery();
+    query.setPageNum(pageNum);
+    query.setPageSize(pageSize);
+    query.setPlanName(planName);
+    query.setStatus(status);
+    return tenantPlanRepository.findByPage(query);
   }
 
   /**
@@ -91,12 +88,9 @@ public class TenantPlanServiceImpl implements TenantPlanService {
    */
   @Override
   public List<TenantPlanVO> listAll() {
-    LambdaQueryWrapper<TenantPlan> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(TenantPlan::getStatus, "ENABLED");
-    wrapper.orderByAsc(TenantPlan::getSortOrder);
-    return tenantPlanRepository.findList(wrapper).stream()
-        .map(SystemConverter.INSTANT::entityToVO)
-        .collect(Collectors.toList());
+    TenantPlanQuery query = new TenantPlanQuery();
+    query.setStatus("ENABLED");
+    return tenantPlanRepository.findList(query);
   }
 
   /**
@@ -110,16 +104,16 @@ public class TenantPlanServiceImpl implements TenantPlanService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String save(TenantPlanVO vo) {
-    LambdaQueryWrapper<TenantPlan> checkWrapper = new LambdaQueryWrapper<>();
-    checkWrapper.eq(TenantPlan::getPlanCode, vo.getPlanCode());
-    if (tenantPlanRepository.countByCondition(checkWrapper) > 0) {
+    TenantPlanQuery checkQuery = new TenantPlanQuery();
+    checkQuery.setPlanName(vo.getPlanCode());
+    if (tenantPlanRepository.countByCondition(checkQuery) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_CODE_DUPLICATE)
           .data("planCode", vo.getPlanCode());
     }
-    TenantPlan entity = toEntity(vo);
-    tenantPlanRepository.insert(entity);
-    log.info("创建套餐成功: planCode={}, planId={}", vo.getPlanCode(), entity.getId());
-    return entity.getId();
+    TenantPlanDTO dto = toDto(vo);
+    tenantPlanRepository.insert(dto);
+    log.info("创建套餐成功: planCode={}", vo.getPlanCode());
+    return dto.getId();
   }
 
   /**
@@ -133,15 +127,13 @@ public class TenantPlanServiceImpl implements TenantPlanService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(TenantPlanVO vo) {
-    LambdaQueryWrapper<TenantPlan> checkWrapper = new LambdaQueryWrapper<>();
-    checkWrapper.eq(TenantPlan::getPlanCode, vo.getPlanCode());
-    checkWrapper.ne(TenantPlan::getId, vo.getId());
-    if (tenantPlanRepository.countByCondition(checkWrapper) > 0) {
+    TenantPlanQuery checkQuery = new TenantPlanQuery();
+    checkQuery.setPlanName(vo.getPlanCode());
+    if (tenantPlanRepository.countByCondition(checkQuery) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_CODE_DUPLICATE)
           .data("planCode", vo.getPlanCode());
     }
-    TenantPlan entity = toEntity(vo);
-    return tenantPlanRepository.updateById(entity);
+    return tenantPlanRepository.updateById(toDto(vo));
   }
 
   /**
@@ -157,29 +149,30 @@ public class TenantPlanServiceImpl implements TenantPlanService {
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
     // 关联校验：是否存在引用该套餐的租户
-    LambdaQueryWrapper<Tenant> tenantWrapper = new LambdaQueryWrapper<>();
-    tenantWrapper.eq(Tenant::getPlanId, id);
-    if (tenantRepository.countByCondition(tenantWrapper) > 0) {
+    com.njydsz.system.domain.query.TenantPageQuery tenantQuery =
+        new com.njydsz.system.domain.query.TenantPageQuery();
+    tenantQuery.setSearchKey(id);
+    if (tenantRepository.countByCondition(tenantQuery) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_LINKED).data("planId", id);
     }
     return tenantPlanRepository.deleteById(id);
   }
 
   /**
-   * DTO → DO 转换（私有）
+   * VO → DTO 转换（私有）
    *
-   * @param vo 套餐 DTO
-   * @return 套餐 Entity
+   * @param vo 套餐 VO
+   * @return 套餐 DTO
    */
-  private TenantPlan toEntity(TenantPlanVO vo) {
-    TenantPlan entity = new TenantPlan();
-    entity.setId(vo.getId());
-    entity.setPlanCode(vo.getPlanCode());
-    entity.setPlanName(vo.getPlanName());
-    entity.setDescription(vo.getDescription());
-    entity.setSortOrder(vo.getSortOrder());
-    entity.setQuotaJson(vo.getQuotaJson());
-    entity.setFeatureJson(vo.getFeatureJson());
-    return entity;
+  private TenantPlanDTO toDto(TenantPlanVO vo) {
+    TenantPlanDTO dto = new TenantPlanDTO();
+    dto.setId(vo.getId());
+    dto.setPlanCode(vo.getPlanCode());
+    dto.setPlanName(vo.getPlanName());
+    dto.setDescription(vo.getDescription());
+    dto.setSortOrder(vo.getSortOrder());
+    dto.setQuotaJson(vo.getQuotaJson());
+    dto.setFeatureJson(vo.getFeatureJson());
+    return dto;
   }
 }

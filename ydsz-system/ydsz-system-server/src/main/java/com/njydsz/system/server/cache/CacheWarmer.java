@@ -14,9 +14,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.cache.constant.CacheConstants;
-import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.Config;
-import com.njydsz.system.infra.entity.DictItem;
+import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.repository.DictRepository;
@@ -87,7 +85,7 @@ public class CacheWarmer {
    */
   private void warmConfigCache() {
     try {
-      List<Config> configs = configRepository.findEnabledConfigs();
+      List<ConfigVO> configs = configRepository.findEnabledConfigs();
 
       if (configs.isEmpty()) {
         log.info("[CacheWarmer] 系统配置表为空，跳过配置缓存预热");
@@ -100,10 +98,10 @@ public class CacheWarmer {
         return;
       }
 
-      // 按 configKey 预热单条值缓存（租户取自记录自身 tenantId，与运行时 CacheKeyBuilder 生成的 key 一致）
-      for (Config config : configs) {
+      // 按 configKey 预热单条值缓存（使用默认租户，与运行时 CacheKeyBuilder 生成的 key 一致）
+      for (ConfigVO config : configs) {
         try {
-          String valueKey = "value:" + tenantIdOf(config) + ":" + config.getConfigKey();
+          String valueKey = "value:default:" + config.getConfigKey();
           configCache.put(valueKey, config.getConfigValue());
         } catch (Exception e) {
           log.debug("[CacheWarmer] 预热单条配置失败: {}/{}", config.getConfigGroup(), config.getConfigKey());
@@ -123,7 +121,7 @@ public class CacheWarmer {
    */
   private void warmDictCache() {
     try {
-      List<DictItem> dictItems = dictRepository.findEnabledItems();
+      List<DictItemVO> dictItems = dictRepository.findEnabledItems();
 
       if (dictItems.isEmpty()) {
         log.info("[CacheWarmer] 字典项表为空，跳过字典缓存预热");
@@ -136,14 +134,12 @@ public class CacheWarmer {
         return;
       }
 
-      // 按 typeCode 分组预热列表缓存（租户取自记录自身 tenantId，与运行时 CacheKeyBuilder 生成的 key 一致）
+      // 按 typeCode 分组预热列表缓存（使用默认租户，与运行时 CacheKeyBuilder 生成的 key 一致）
       Map<String, List<DictItemVO>> groupedItems = dictItems.stream()
           .collect(
               Collectors.groupingBy(
-                  item -> tenantIdOf(item) + ":" + item.getTypeCode(),
-                  Collectors.mapping(
-                      SystemConverter.INSTANT::entityToVO,
-                      Collectors.filtering(Objects::nonNull, Collectors.toList()))));
+                  item -> "default:" + item.getTypeCode(),
+                  Collectors.filtering(Objects::nonNull, Collectors.toList())));
 
       for (Map.Entry<String, List<DictItemVO>> entry : groupedItems.entrySet()) {
         try {
@@ -160,33 +156,4 @@ public class CacheWarmer {
     }
   }
 
-  /**
-   * 解析配置记录的租户 ID（空值回退默认租户，与 CacheKeyBuilder 保持一致）。
-   *
-   * @param config 配置实体
-   * @return 租户 ID
-   */
-  private static String tenantIdOf(Config config) {
-    return resolveTenant(config.getTenantId());
-  }
-
-  /**
-   * 解析字典项记录的租户 ID（空值回退默认租户，与 CacheKeyBuilder 保持一致）。
-   *
-   * @param item 字典项实体
-   * @return 租户 ID
-   */
-  private static String tenantIdOf(DictItem item) {
-    return resolveTenant(item.getTenantId());
-  }
-
-  /**
-   * 租户 ID 兜底处理。
-   *
-   * @param tenantId 原始租户 ID
-   * @return 非空租户 ID，空值时回退 {@code default}
-   */
-  private static String resolveTenant(String tenantId) {
-    return tenantId != null && !tenantId.isBlank() ? tenantId : "default";
-  }
 }

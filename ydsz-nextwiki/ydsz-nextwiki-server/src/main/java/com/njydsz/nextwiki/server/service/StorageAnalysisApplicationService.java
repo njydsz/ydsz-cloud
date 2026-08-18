@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
 import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
@@ -106,11 +106,11 @@ public class StorageAnalysisApplicationService {
    *
    * @param userId 用户 ID
    * @param limit 返回条数上限（Top-N）
-   * @return 文件节点列表 {@link FileNodeDO}（按大小降序，最多 limit 条）
+   * @return 文件节点列表 {@link FileNodeVO}（按大小降序，最多 limit 条）
    * @complexity O(query)（一次按大小分页排序查询）
    * @note 只读，无事务边界
    */
-  public List<FileNodeDO> topLargeFiles(String userId, int limit) {
+  public List<FileNodeVO> topLargeFiles(String userId, int limit) {
     return fileNodeRepository.findTopLargeFilesByUser(userId, limit);
   }
 

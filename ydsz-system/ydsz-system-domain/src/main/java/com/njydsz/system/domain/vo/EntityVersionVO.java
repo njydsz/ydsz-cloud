@@ -38,4 +38,7 @@ public class EntityVersionVO {
 
   @Schema(description = "生效时间")
   private LocalDateTime effectiveDate;
+
+  @Schema(description = "变更前 JSON 快照（内部使用，不回显前端）")
+  private String snapshotJson;
 }

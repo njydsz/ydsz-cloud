@@ -18,7 +18,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
 /**
  * 组织架构查询 Feign 客户端（供跨服务调用）。
  *
- * <p>覆盖工作流引擎 {@code FeignFlowAssigneeResolver} 所需的 7 类组织关系查询：
+ * <p>提供组织架构关系的 7 类查询能力：
  *
  * <ul>
  *   <li>角色 → 用户 ID 列表（{@link #listUserIdsByRoleCode}）

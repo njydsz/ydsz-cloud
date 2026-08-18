@@ -85,9 +85,8 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
  *   <li><b>冷热分离</b>：归档表可迁移至冷库（如 OSS / 冷数据存储）， 进一步降低存储成本
  * </ul>
  *
- * <p><b>与 {@code FlowHistoryArchiveJobHandler} 的关系：</b> 本类将原本耦合在 {@code
- * FlowHistoryArchiveJobHandler} 中的归档逻辑抽象为独立 Service， 同时新增 {@code purge} 清理能力，配合 {@link
- * FlowProperties.History} 实现「历史数据级别可配」， 是从「硬编码 Job」到「可配置 Service」的架构升级。
+ * <p><b>P2-1 引擎独立化：</b> 本类将归档逻辑抽象为独立 Service，同时新增 {@code purge} 清理能力，配合 {@link
+ * FlowProperties.History} 实现「历史数据级别可配」。 引擎不再内置定时任务 JobHandler，调度能力由业务系统通过 cronjob 引擎自行编排。
  *
  * <p><b>典型使用：</b>
  *

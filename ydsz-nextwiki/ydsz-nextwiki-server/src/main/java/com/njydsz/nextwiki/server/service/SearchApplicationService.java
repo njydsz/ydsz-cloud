@@ -18,7 +18,7 @@ import com.njydsz.common.search.core.SearchEngineRegistry;
 import com.njydsz.common.search.service.SuggestionService;
 import com.njydsz.common.search.service.UnifiedSearchService;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
 import com.njydsz.nextwiki.domain.vo.SearchResultVO;
 
@@ -342,7 +342,7 @@ public class SearchApplicationService {
         .fileNodeId(hit.getId())
         .name(hit.getTitle())
         .path(hit.getSubtitle())
-        .nodeType(FileNodeDO.TYPE_FILE)
+        .nodeType(FileNodeVO.TYPE_FILE)
         .highlight(hit.getHighlight() != null ? hit.getHighlight() : hit.getSnippet())
         .score(hit.getScore())
         .tags(hit.getTags())

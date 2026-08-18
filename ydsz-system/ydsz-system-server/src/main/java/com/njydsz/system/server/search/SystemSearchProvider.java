@@ -1,6 +1,5 @@
 package com.njydsz.system.server.search;
 
-import java.time.ZoneId;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -11,7 +10,7 @@ import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
-import com.njydsz.system.infra.entity.Config;
+import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.repository.ConfigRepository;
 
 /**
@@ -32,13 +31,13 @@ import com.njydsz.system.domain.repository.ConfigRepository;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see Config 系统配置实体
+ * @see ConfigVO 系统配置 VO
  * @see SearchProvider 统一搜索 Provider 接口
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SystemSearchProvider implements SearchProvider<Config> {
+public class SystemSearchProvider implements SearchProvider<ConfigVO> {
 
   private final ConfigRepository configRepository;
 
@@ -55,11 +54,11 @@ public class SystemSearchProvider implements SearchProvider<Config> {
   /**
    * 将 {@link Config} 实体转换为搜索索引文档。
    *
-   * @param entity 系统配置实体（不可为 null，且必须包含 ID）
+   * @param entity 系统配置 VO（不可为 null，且必须包含 ID）
    * @return 索引文档；入参为 null 或 ID 为空时返回 null
    */
   @Override
-  public IndexDocument toIndexDocument(Config entity) {
+  public IndexDocument toIndexDocument(ConfigVO entity) {
     if (entity == null || entity.getId() == null) {
       return null;
     }
@@ -81,17 +80,6 @@ public class SystemSearchProvider implements SearchProvider<Config> {
         .snippet(entity.getDescription())
         .status(entity.getStatus())
         .path("/system/config/" + entity.getId())
-        .tenantId(entity.getTenantId())
-        .createdBy(entity.getCreatedBy())
-        .createdAt(
-            entity.getCreatedAt() != null
-                ? entity.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()
-                : null)
-        .updatedBy(entity.getUpdatedBy())
-        .updatedAt(
-            entity.getUpdatedAt() != null
-                ? entity.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant()
-                : null)
         .build();
   }
 
@@ -125,7 +113,7 @@ public class SystemSearchProvider implements SearchProvider<Config> {
    * @return 未删除配置实体列表
    */
   @Override
-  public List<Config> loadAll(String tenantId) {
+  public List<ConfigVO> loadAll(String tenantId) {
     return configRepository.findByTenantId(tenantId);
   }
 }

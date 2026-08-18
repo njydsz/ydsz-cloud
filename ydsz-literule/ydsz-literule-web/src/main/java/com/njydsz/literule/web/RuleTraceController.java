@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -34,11 +33,9 @@ import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
-import com.njydsz.literule.infra.converter.LiteruleConverter;
-import com.njydsz.literule.domain.entity.RuleExecutionTraceDO;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.literule.domain.repository.RuleExecutionTraceRepository;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
-import com.njydsz.literule.infra.mapper.RuleExecutionTraceMapper;
 import com.njydsz.literule.server.config.RuleAdminService;
 
 /**
@@ -69,8 +66,8 @@ import com.njydsz.literule.server.config.RuleAdminService;
 @Tag(name = "规则执行追踪", description = "执行链路查询、历史回放与变更影响分析")
 public class RuleTraceController {
 
-  /** 规则执行轨迹 Mapper */
-  private final RuleExecutionTraceMapper ruleExecutionTraceMapper;
+  /** 规则执行轨迹 Repository */
+  private final RuleExecutionTraceRepository ruleExecutionTraceRepository;
 
   /** 规则管理服务 */
   private final RuleAdminService ruleAdminService;
@@ -78,12 +75,7 @@ public class RuleTraceController {
   /** 按 traceId 查询执行链路 */
   @GetMapping("/traces/{traceId}")
   public BaseResponse<List<RuleExecutionTraceVO>> getTrace(@PathVariable String traceId) {
-    return BaseResponse.success(
-        LiteruleConverter.INSTANT.ruleExecutionTraceListToVO(
-            ruleExecutionTraceMapper.selectList(
-                new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                    .eq(RuleExecutionTraceDO::getTraceId, traceId)
-                    .orderByAsc(RuleExecutionTraceDO::getId))));
+    return BaseResponse.success(ruleExecutionTraceRepository.findByTraceId(traceId));
   }
 
   /** 按规则编码查询最近链路 */
@@ -91,13 +83,7 @@ public class RuleTraceController {
   public BaseResponse<List<RuleExecutionTraceVO>> getTracesByRule(
       @PathVariable String ruleCode,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit) {
-    return BaseResponse.success(
-        LiteruleConverter.INSTANT.ruleExecutionTraceListToVO(
-            ruleExecutionTraceMapper.selectList(
-                new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                    .eq(RuleExecutionTraceDO::getRuleCode, ruleCode)
-                    .orderByDesc(RuleExecutionTraceDO::getId)
-                    .last("LIMIT " + limit))));
+    return BaseResponse.success(ruleExecutionTraceRepository.findByRuleCode(ruleCode, limit));
   }
 
   /**
@@ -117,11 +103,7 @@ public class RuleTraceController {
   @RateLimit(resource = "literule.rule_trace.replayTrace", threshold = 50)
   @PostMapping("/traces/{traceId}/replay")
   public BaseResponse<Map<String, Object>> replayTrace(@PathVariable String traceId) {
-    List<RuleExecutionTraceDO> traces =
-        ruleExecutionTraceMapper.selectList(
-            new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                .eq(RuleExecutionTraceDO::getTraceId, traceId)
-                .orderByAsc(RuleExecutionTraceDO::getId));
+    List<RuleExecutionTraceVO> traces = ruleExecutionTraceRepository.findByTraceId(traceId);
 
     if (traces.isEmpty()) {
       return BaseResponse.error(
@@ -142,7 +124,7 @@ public class RuleTraceController {
     Set<String> historicalTriggered =
         traces.stream()
             .filter(t -> Boolean.TRUE.equals(t.getTriggered()))
-            .map(RuleExecutionTraceDO::getRuleCode)
+            .map(RuleExecutionTraceVO::getRuleCode)
             .collect(Collectors.toSet());
 
     // 构建当前触发规则编码集合
@@ -231,23 +213,15 @@ public class RuleTraceController {
     LocalDateTime endTime = LocalDateTime.parse(endTimeStr);
 
     // 按时间范围查询历史 trace（可选按 ruleCode 过滤）
-    LambdaQueryWrapper<RuleExecutionTraceDO> wrapper =
-        new LambdaQueryWrapper<RuleExecutionTraceDO>()
-            .ge(RuleExecutionTraceDO::getId, startTimeStr)
-            .lt(RuleExecutionTraceDO::getId, endTimeStr)
-            .orderByDesc(RuleExecutionTraceDO::getId)
-            .last("LIMIT " + limit);
-    if (ruleCode != null && !ruleCode.isBlank()) {
-      wrapper.eq(RuleExecutionTraceDO::getRuleCode, ruleCode);
-    }
-    List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(wrapper);
+    List<RuleExecutionTraceVO> traces =
+        ruleExecutionTraceRepository.findRecentByRuleCode(ruleCode, limit);
 
     // 逐条回放：用当前规则集重新评估
     List<Map<String, Object>> diffs = new ArrayList<>();
     int consistentCount = 0;
     int diffCount = 0;
 
-    for (RuleExecutionTraceDO trace : traces) {
+    for (RuleExecutionTraceVO trace : traces) {
       Map<String, Object> facts = trace.getFactsSnapshot();
       if (facts == null || facts.isEmpty()) {
         continue;
@@ -365,12 +339,8 @@ public class RuleTraceController {
     }
 
     // 查询该规则最近 N 条 trace
-    List<RuleExecutionTraceDO> traces =
-        ruleExecutionTraceMapper.selectList(
-            new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                .eq(RuleExecutionTraceDO::getRuleCode, ruleCode)
-                .orderByDesc(RuleExecutionTraceDO::getId)
-                .last("LIMIT " + limit));
+    List<RuleExecutionTraceVO> traces =
+        ruleExecutionTraceRepository.findRecentByRuleCode(ruleCode, limit);
 
     // 逐条用新表达式重新评估
     List<Map<String, Object>> affectedTraces = new ArrayList<>();
@@ -379,7 +349,7 @@ public class RuleTraceController {
     int addedTriggeredCount = 0;
     int removedTriggeredCount = 0;
 
-    for (RuleExecutionTraceDO trace : traces) {
+    for (RuleExecutionTraceVO trace : traces) {
       Map<String, Object> facts = trace.getFactsSnapshot();
       if (facts == null || facts.isEmpty()) {
         continue;
@@ -491,11 +461,6 @@ public class RuleTraceController {
   @GetMapping("/traces")
   public BaseResponse<List<RuleExecutionTraceVO>> listRecentTraces(
       @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-    return BaseResponse.success(
-        LiteruleConverter.INSTANT.ruleExecutionTraceListToVO(
-            ruleExecutionTraceMapper.selectList(
-                new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                    .orderByDesc(RuleExecutionTraceDO::getId)
-                    .last("LIMIT " + limit))));
+    return BaseResponse.success(ruleExecutionTraceRepository.findRecent(limit));
   }
 }

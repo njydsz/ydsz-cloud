@@ -101,4 +101,68 @@ public class JobRepositoryImpl implements JobRepository {
   public int resumeAutoPaused(String id) {
     return jobMapper.resumeAutoPaused(id);
   }
+
+  // ===== Web 层查询方法实现（Controller 停止 Mapper 直注） =====
+
+  @Override
+  public PageResult<JobVO> pageByGroup(String jobGroup, int page, int size) {
+    // 使用 MyBatis-Plus 分页插件
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> pageObj =
+        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size);
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getDeleted, 0).orderByDesc(Job::getCreatedAt);
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> result =
+        jobMapper.selectPage(pageObj, wrapper);
+    return new PageResult<>(converter.jobListToVO(result.getRecords()), result.getTotal());
+  }
+
+  @Override
+  public List<JobVO> findByGroupAndStatus(String jobGroup, String status) {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getDeleted, 0);
+    if (status != null) {
+      wrapper.eq(Job::getStatus, status);
+    }
+    wrapper.orderByDesc(Job::getCreatedAt);
+    return converter.jobListToVO(jobMapper.selectList(wrapper));
+  }
+
+  @Override
+  public List<String> listDistinctGroups() {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper.eq(Job::getDeleted, 0).select(Job::getJobGroup);
+    return jobMapper.selectList(wrapper).stream()
+        .map(Job::getJobGroup)
+        .filter(g -> g != null && !g.isBlank())
+        .distinct()
+        .sorted()
+        .toList();
+  }
+
+  @Override
+  public long countByGroup(String jobGroup) {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getDeleted, 0);
+    return jobMapper.selectCount(wrapper);
+  }
+
+  @Override
+  public long countByStatus(String status) {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper.eq(Job::getStatus, status).eq(Job::getDeleted, 0);
+    return jobMapper.selectCount(wrapper);
+  }
+
+  @Override
+  public long countAll() {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper.eq(Job::getDeleted, 0);
+    return jobMapper.selectCount(wrapper);
+  }
 }

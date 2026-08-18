@@ -12,13 +12,15 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
-import com.njydsz.nextwiki.infra.entity.FileVersionDO;
+import com.njydsz.nextwiki.domain.vo.FileVersionVO;
+import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.service.StorageReferenceService;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 
 /**
  * 文件夹复制服务。
@@ -60,8 +62,8 @@ public class FolderCopyService {
    */
   @Transactional(rollbackFor = Exception.class)
   public String createRootFolderNode(
-      FileNodeDO sourceFolder,
-      FileNodeDO targetParent,
+      FileNodeVO sourceFolder,
+      FileNodeVO targetParent,
       String targetParentPath,
       int targetParentLevel,
       String userId) {
@@ -72,12 +74,12 @@ public class FolderCopyService {
             ? targetParentPath + sourceFolder.getName() + "/"
             : targetParentPath + "/" + sourceFolder.getName() + "/";
 
-    FileNodeDO newFolderNode =
-        FileNodeDO.builder()
+    FileNodeDTO newFolderNode =
+        FileNodeDTO.builder()
             .id(newFolderId)
             .parentId(targetParent.getId())
             .name(sourceFolder.getName())
-            .nodeType(FileNodeDO.TYPE_FOLDER)
+            .nodeType(FileNodeVO.TYPE_FOLDER)
             .suffix("")
             .size(0L)
             .storageKey(null)
@@ -92,12 +94,10 @@ public class FolderCopyService {
             .previewReady(false)
             .starred(false)
             .shareStatus("private")
-            .status("active")
-            .deleted(0)
-            .revision(0)
+            .createdBy(userId)
+            .updatedBy(userId)
             .build();
-    newFolderNode.setCreatedBy(userId);
-    newFolderNode.setUpdatedBy(userId);
+
     fileNodeRepository.save(newFolderNode);
 
     log.info(
@@ -119,7 +119,7 @@ public class FolderCopyService {
    * @return 成功复制的节点总数
    */
   public int copyDescendantsBatch(
-      String sourcePath, String newFolderId, FileNodeDO targetParentNode, String userId) {
+      String sourcePath, String newFolderId, FileNodeVO targetParentNode, String userId) {
     if (sourcePath == null || sourcePath.isEmpty()) {
       return 0;
     }
@@ -138,7 +138,7 @@ public class FolderCopyService {
 
     while (offset < total) {
       // 分页加载一批后代源节点
-      List<FileNodeDO> batch =
+      List<FileNodeVO> batch =
           fileNodeRepository.findDescendantsByPage(sourcePath, offset, BATCH_SIZE);
       if (batch.isEmpty()) {
         break;
@@ -175,18 +175,18 @@ public class FolderCopyService {
    */
   @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
   public int copyOneBatch(
-      List<FileNodeDO> batchSourceNodes,
+      List<FileNodeVO> batchSourceNodes,
       String newRootFolderId,
-      FileNodeDO targetParentNode,
+      FileNodeVO targetParentNode,
       Map<String, String> idMapping,
       String userId) {
     if (batchSourceNodes == null || batchSourceNodes.isEmpty()) {
       return 0;
     }
 
-    List<FileNodeDO> newNodes = new ArrayList<>(batchSourceNodes.size());
+    List<FileNodeDTO> newNodes = new ArrayList<>(batchSourceNodes.size());
 
-    for (FileNodeDO source : batchSourceNodes) {
+    for (FileNodeVO source : batchSourceNodes) {
       String newId = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
       idMapping.put(source.getId(), newId);
 
@@ -194,7 +194,7 @@ public class FolderCopyService {
       String newParentId = resolveNewParentId(source.getParentId(), newRootFolderId, idMapping);
 
       // 推导新路径与层级
-      FileNodeDO newParentNode = fileNodeRepository.findById(newParentId);
+      FileNodeVO newParentNode = fileNodeRepository.findById(newParentId).orElse(null);
       if (newParentNode == null) {
         // 如果父节点尚未在此批生成，且不在映射中，跳过此节点（下批再处理）
         // 但分页按 level 升序，理论上不会遇到
@@ -212,8 +212,8 @@ public class FolderCopyService {
               ? newParentPath + source.getName() + "/"
               : newParentPath + "/" + source.getName() + "/";
 
-      FileNodeDO newNode =
-          FileNodeDO.builder()
+      FileNodeDTO newNode =
+          FileNodeDTO.builder()
               .id(newId)
               .parentId(newParentId)
               .name(source.getName())
@@ -232,13 +232,10 @@ public class FolderCopyService {
               .previewReady(source.getPreviewReady())
               .starred(false)
               .shareStatus("private")
-              .status("active")
-              .deleted(0)
-              .revision(0)
+              .createdBy(userId)
+              .updatedBy(userId)
               .build();
 
-      newNode.setCreatedBy(userId);
-      newNode.setUpdatedBy(userId);
       newNodes.add(newNode);
 
       // 文件引用计数 +1
@@ -254,13 +251,15 @@ public class FolderCopyService {
 
     // 批量创建版本引用（for files only）
     for (int i = 0; i < newNodes.size(); i++) {
-      FileNodeDO newNode = newNodes.get(i);
-      FileNodeDO source = batchSourceNodes.get(i);
+      FileNodeDTO newNode = newNodes.get(i);
+      FileNodeVO source = batchSourceNodes.get(i);
       if (source.isFile()) {
-        List<FileVersionDO> existingVersions = versionRepository.findByFileNodeId(newNode.getId());
+        List<FileVersionVO> existingVersions = versionRepository.findByFileNodeId(newNode.getId());
+        // 将DTO转换为VO用于版本创建
+        FileNodeVO newNodeVO = NextwikiConverter.INSTANT.dtoToVO(newNode);
         FileVersionDomainService.VersionCreateResult versionResult =
             versionDomainService.createVersion(
-                newNode,
+                newNodeVO,
                 existingVersions,
                 source.getStorageKey(),
                 source.getSize(),
@@ -270,7 +269,7 @@ public class FolderCopyService {
                 userId);
         versionRepository.setActiveVersion(newNode.getId(), -1);
         versionRepository.save(versionResult.newVersion());
-        fileNodeRepository.update(versionResult.updatedFileNode());
+        fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
       }
     }
 

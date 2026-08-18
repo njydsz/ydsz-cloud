@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -18,16 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
-import com.njydsz.cronjob.domain.entity.dag.JobDag;
-import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
-import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
-import com.njydsz.cronjob.domain.entity.log.JobLog;
+import com.njydsz.cronjob.domain.repository.JobDagInstanceRepository;
+import com.njydsz.cronjob.domain.repository.JobDagNodeInstanceRepository;
+import com.njydsz.cronjob.domain.repository.JobDagRepository;
+import com.njydsz.cronjob.domain.repository.JobLogRepository;
+import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
+import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
+import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
-import com.njydsz.cronjob.infra.mapper.dag.JobDagInstanceMapper;
-import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
-import com.njydsz.cronjob.infra.mapper.dag.JobDagNodeInstanceMapper;
-import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.core.dag.DagCytoscapeHelper;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
@@ -77,20 +75,20 @@ import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 @RequiredArgsConstructor
 public class TaskTopologyController {
 
-  /** DAG 实例 Mapper */
-  private final JobDagInstanceMapper dagInstanceMapper;
+  /** DAG 实例 Repository（DDD 分层：Controller 通过 Repository 接口访问） */
+  private final JobDagInstanceRepository dagInstanceRepository;
 
-  /** DAG 节点实例 Mapper */
-  private final JobDagNodeInstanceMapper dagNodeInstanceMapper;
+  /** DAG 节点实例 Repository */
+  private final JobDagNodeInstanceRepository dagNodeInstanceRepository;
 
-  /** DAG 定义 Mapper */
-  private final JobDagMapper dagMapper;
+  /** DAG 定义 Repository */
+  private final JobDagRepository dagRepository;
 
   /** DAG 定义 JSON 编解码器 */
   private final DagDefinitionCodec dagDefinitionCodec;
 
-  /** 任务执行日志 Mapper */
-  private final JobLogMapper jobLogMapper;
+  /** 任务执行日志 Repository */
+  private final JobLogRepository jobLogRepository;
 
   /**
    * 查询 DAG 实例的执行拓扑图数据。
@@ -115,21 +113,24 @@ public class TaskTopologyController {
   @GetMapping("/dagInstance/{dagInstanceId}")
   public BaseResponse<Map<String, Object>> getDagInstanceTopology(
       @PathVariable String dagInstanceId) {
-    // 1. 加载 DAG 实例
-    JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
-    if (instance == null) {
+    // 1. 加载 DAG 实例（通过 Repository 返回 VO）
+    Optional<JobDagInstanceVO> instanceOpt = dagInstanceRepository.findById(dagInstanceId);
+    if (instanceOpt.isEmpty()) {
       log.debug("[TaskTopology] DAG 实例不存在: dagInstanceId={}", dagInstanceId);
       return BaseResponse.success(null);
     }
+    JobDagInstanceVO instance = instanceOpt.get();
 
     // 2. 加载 DAG 定义（dag_definition JSON 字段 → DagDefinition 对象）
-    JobDag dag = dagMapper.selectById(instance.getDagId());
+    Optional<JobDagVO> dagOpt = dagRepository.findById(instance.getDagId());
     DagDefinition definition =
-        dag != null ? dagDefinitionCodec.fromJson(dag.getDagDefinition()) : DagDefinition.empty();
+        dagOpt.isPresent() && dagOpt.get().getDagDefinition() != null
+            ? dagDefinitionCodec.fromJson(dagOpt.get().getDagDefinition())
+            : DagDefinition.empty();
 
-    // 3. 查询节点实例列表（每个节点的实时执行状态）
-    List<JobDagNodeInstance> nodeInstances =
-        dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+    // 3. 查询节点实例列表（通过 Repository 返回 VO 列表）
+    List<JobDagNodeInstanceVO> nodeInstances =
+        dagNodeInstanceRepository.findByDagInstanceId(dagInstanceId);
 
     // 4. 组装拓扑数据（使用 LinkedHashMap 保持 key 顺序）
     Map<String, Object> topology = new LinkedHashMap<>();
@@ -162,24 +163,27 @@ public class TaskTopologyController {
   @GetMapping("/dagInstance/{dagInstanceId}/cytoscape")
   public BaseResponse<Map<String, Object>> getDagInstanceCytoscape(
       @PathVariable String dagInstanceId) {
-    // 1. 加载 DAG 实例
-    JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
-    if (instance == null) {
+    // 1. 加载 DAG 实例（通过 Repository）
+    Optional<JobDagInstanceVO> instanceOpt = dagInstanceRepository.findById(dagInstanceId);
+    if (instanceOpt.isEmpty()) {
       log.debug("[TaskTopology] DAG 实例不存在: dagInstanceId={}", dagInstanceId);
       return BaseResponse.success(null);
     }
+    JobDagInstanceVO instance = instanceOpt.get();
 
-    // 2. 加载 DAG 定义
-    JobDag dag = dagMapper.selectById(instance.getDagId());
+    // 2. 加载 DAG 定义（通过 Repository）
+    Optional<JobDagVO> dagOpt = dagRepository.findById(instance.getDagId());
     DagDefinition definition =
-        dag != null ? dagDefinitionCodec.fromJson(dag.getDagDefinition()) : DagDefinition.empty();
+        dagOpt.isPresent() && dagOpt.get().getDagDefinition() != null
+            ? dagDefinitionCodec.fromJson(dagOpt.get().getDagDefinition())
+            : DagDefinition.empty();
 
-    // 3. 查询节点实例并构建状态映射
-    List<JobDagNodeInstance> nodeInstances =
-        dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+    // 3. 查询节点实例并构建状态映射（通过 Repository 返回 VO 列表）
+    List<JobDagNodeInstanceVO> nodeInstances =
+        dagNodeInstanceRepository.findByDagInstanceId(dagInstanceId);
     Map<String, String> statusMap = new HashMap<>();
     Map<String, Long> durationMap = new HashMap<>();
-    for (JobDagNodeInstance ni : nodeInstances) {
+    for (JobDagNodeInstanceVO ni : nodeInstances) {
       if (ni.getJobKey() != null && ni.getNodeStatus() != null) {
         statusMap.put(ni.getJobKey(), ni.getNodeStatus());
       }
@@ -210,15 +214,7 @@ public class TaskTopologyController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/jobHistory/{jobKey}")
   public BaseResponse<List<JobLogVO>> getJobExecutionHistory(@PathVariable String jobKey) {
-    // 构造查询条件：jobKey 精确匹配 + 未逻辑删除 + 按 created_at 倒序 + LIMIT 20
-    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
-    wrapper
-        .eq(JobLog::getJobKey, jobKey)
-        .eq(JobLog::getDeleted, 0)
-        .orderByDesc(JobLog::getCreatedAt)
-        .last("LIMIT 20");
-    // Entity → VO 转换
-    return BaseResponse.success(
-        CronjobConverter.INSTANT.jobLogListToVO(jobLogMapper.selectList(wrapper)));
+    // 通过 Repository 查询最近 20 条执行日志（LIMIT 20 在 Repository 层控制）
+    return BaseResponse.success(jobLogRepository.findByJobKey(jobKey, 20));
   }
 }

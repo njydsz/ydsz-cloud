@@ -85,6 +85,7 @@ public class FlowMonitorDashboardController {
    *
    * @return 概览统计数据：runningCount/todayNewCount/pendingTaskCount/overdueTaskCount/todayCompletedCount
    */
+  @Operation(summary = "监控概览")
   @GetMapping("/monitor/overview")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
   public BaseResponse<Map<String, Object>> monitorOverview() {
@@ -101,6 +102,7 @@ public class FlowMonitorDashboardController {
    * @param pageSize 每页大小
    * @return 分页异常实例列表
    */
+  @Operation(summary = "异常流程列表")
   @GetMapping("/monitor/anomaly")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
   public BaseResponse<List<Map<String, Object>>> monitorAnomaly(
@@ -150,6 +152,7 @@ public class FlowMonitorDashboardController {
    * @param days 统计天数（默认 7，可选 30）
    * @return 趋势列表
    */
+  @Operation(summary = "实例趋势")
   @GetMapping("/monitor/instanceTrend")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
   public BaseResponse<List<Map<String, Object>>> monitorInstanceTrend(
@@ -166,6 +169,7 @@ public class FlowMonitorDashboardController {
    * @param endTime finish_at 上界（可空）
    * @return 审批人排名列表
    */
+  @Operation(summary = "审批人效率排名")
   @GetMapping("/monitor/approverEfficiency")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
   public BaseResponse<List<Map<String, Object>>> monitorApproverEfficiency(
@@ -204,6 +208,7 @@ public class FlowMonitorDashboardController {
    * @param endTime start_at 上界（可空）
    * @return 分布列表
    */
+  @Operation(summary = "流程类型分布")
   @GetMapping("/monitor/flowTypeDistribution")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
   public BaseResponse<List<Map<String, Object>>> monitorFlowTypeDistribution(
@@ -361,6 +366,7 @@ public class FlowMonitorDashboardController {
    * @param endTime 结束时间（可选）
    * @return 统计结果
    */
+  @Operation(summary = "审批效率统计")
   @GetMapping("/efficiency/stats")
   public BaseResponse<Map<String, Object>> efficiencyStats(
       @RequestParam(required = false) String startTime,
@@ -376,6 +382,7 @@ public class FlowMonitorDashboardController {
    * @param limit 返回条数上限
    * @return 瓶颈节点列表
    */
+  @Operation(summary = "节点瓶颈排名")
   @GetMapping("/efficiency/bottleneck")
   public BaseResponse<List<Map<String, Object>>> bottleneckRanking(
       @RequestParam(required = false) String flowCode,
@@ -392,6 +399,7 @@ public class FlowMonitorDashboardController {
    * @param limit 返回条数上限
    * @return 审批人排名列表
    */
+  @Operation(summary = "审批人效率排名")
   @GetMapping("/efficiency/approverRanking")
   public BaseResponse<List<Map<String, Object>>> approverRanking(
       @RequestParam(required = false) String startTime,
@@ -410,6 +418,7 @@ public class FlowMonitorDashboardController {
    * @param endTime 结束时间（可选）
    * @return 趋势列表
    */
+  @Operation(summary = "审批趋势")
   @GetMapping("/efficiency/trend")
   public BaseResponse<List<Map<String, Object>>> approvalTrend(
       @RequestParam(defaultValue = "DAY") String interval,

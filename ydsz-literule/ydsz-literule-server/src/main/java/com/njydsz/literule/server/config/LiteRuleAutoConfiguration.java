@@ -30,7 +30,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
-import com.njydsz.cronjob.api.client.CronjobServiceClient;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.domain.model.MockModelInputProvider;
@@ -65,7 +64,6 @@ import com.njydsz.literule.server.orchestrator.RuleChain;
 import com.njydsz.literule.server.replay.ExecutionReplayService;
 import com.njydsz.literule.server.sdk.LiteRuleSdk;
 import com.njydsz.literule.server.security.RulePermissionChecker;
-import com.njydsz.literule.server.spi.CronjobTriggerActionHandler;
 import com.njydsz.literule.server.spi.DbRuleSource;
 import com.njydsz.literule.server.spi.DecisionTableConfigProvider;
 import com.njydsz.literule.server.spi.DecisionTreeConfigProvider;
@@ -83,8 +81,6 @@ import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.server.spi.ScorecardConfigProvider;
 import com.njydsz.literule.server.spi.ScriptConfigProvider;
 import com.njydsz.literule.server.spi.TraceRecorder;
-import com.njydsz.literule.server.spi.WorkflowTriggerActionHandler;
-import com.njydsz.workflow.api.client.WorkflowServiceClient;
 
 /**
  * LiteFlow 规则引擎自动配置。
@@ -275,7 +271,7 @@ public class LiteRuleAutoConfiguration {
       LiteRuleProperties properties,
       ApplicationContext applicationContext) {
     if (properties.getRuleTimeoutMs() <= 0) return;
-    // P1-2: 优先使用 common-thread 统一管理的线程池
+    // P1-2: 使用 common-thread 统一管理的线程池（ydsz.thread.pools.ruleTimeout）
     ThreadPoolTaskExecutor threadPool = lookupExecutor(applicationContext, "ruleTimeoutExecutor");
     RuleTimeoutExecutor timeoutExecutor;
     if (threadPool != null) {
@@ -284,12 +280,13 @@ public class LiteRuleAutoConfiguration {
           "[LiteRule] 单规则超时控制已启用 (timeoutMs={}, executor=common-thread:ruleTimeout)",
           properties.getRuleTimeoutMs());
     } else {
+      // common-thread 未配置时降级（使用可用处理器数）
       int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors());
       timeoutExecutor =
           new RuleTimeoutExecutor(
-              properties.getRuleTimeoutMs(), createManualTimeoutExecutor(poolSize));
-      log.info(
-          "[LiteRule] 单规则超时控制已启用 (timeoutMs={}, poolSize={}, executor=manual)",
+              properties.getRuleTimeoutMs(), createFallbackTimeoutExecutor(poolSize));
+      log.warn(
+          "[LiteRule] 单规则超时控制已启用 (timeoutMs={}, poolSize={}, executor=fallback: common-thread bean 'ruleTimeoutExecutor' 未配置)",
           properties.getRuleTimeoutMs(),
           poolSize);
     }
@@ -297,7 +294,10 @@ public class LiteRuleAutoConfiguration {
   }
 
   /**
-   * 创建手动管理的守护线程池（common-thread 不可用时的降级方案）
+   * 创建降级守护线程池（common-thread 未配置时的兜底方案）。
+   *
+   * <p><b>注意：</b>此方法仅在 common-thread 未配置 {@code ydsz.thread.pools.ruleTimeout} 时兜底使用，
+   * 生产环境应通过配置 {@code ydsz.thread.pools.ruleTimeout.core-size} 等属性启用统一线程池管理。
    *
    * <p>线程设置为守护线程，避免阻止 JVM 退出；线程名带 {@code literule-timeout-} 前缀便于排查。
    *
@@ -305,7 +305,9 @@ public class LiteRuleAutoConfiguration {
    * @return 守护线程池
    * @since 1.0.0
    */
-  private static ExecutorService createManualTimeoutExecutor(int poolSize) {
+  @SuppressWarnings("PMD.AvoidThreadGroup")
+  private static ExecutorService createFallbackTimeoutExecutor(int poolSize) {
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
     ThreadFactory factory =
         new ThreadFactory() {
           private final AtomicInteger counter = new AtomicInteger(0);
@@ -325,6 +327,7 @@ public class LiteRuleAutoConfiguration {
         new LinkedBlockingQueue<>(1024),
         factory,
         new ThreadPoolExecutor.CallerRunsPolicy());
+    // CHECKSTYLE.ON: RegexpSinglelineJava
   }
 
   /**
@@ -916,7 +919,10 @@ public class LiteRuleAutoConfiguration {
           new ModelInputRegistry(
               cfg.getTimeoutMs(), cfg.isFallbackOnError(), threadPool.getThreadPoolExecutor());
     } else {
+      // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
       registry = new ModelInputRegistry(cfg.getTimeoutMs(), cfg.isFallbackOnError());
+      // CHECKSTYLE.ON: RegexpSinglelineJava
+      log.warn("[LiteRule-Model] common-thread bean 'modelInputExecutor' 未配置，使用降级线程池");
     }
     // 注册所有 ModelInputProvider Bean（包括 MockModelInputProvider）
     List<ModelInputProvider> providers = providersProvider.orderedStream().toList();
@@ -1010,7 +1016,10 @@ public class LiteRuleAutoConfiguration {
           new FactProviderRegistry(
               cfg.getTimeoutMs(), cfg.isFallbackOnError(), threadPool.getThreadPoolExecutor());
     } else {
+      // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
       registry = new FactProviderRegistry(cfg.getTimeoutMs(), cfg.isFallbackOnError());
+      // CHECKSTYLE.ON: RegexpSinglelineJava
+      log.warn("[LiteRule-Fact] common-thread bean 'factProviderExecutor' 未配置，使用降级线程池");
     }
     // 注册所有 FactProvider Bean
     List<FactProvider> providers = providersProvider.orderedStream().toList();
@@ -1081,53 +1090,8 @@ public class LiteRuleAutoConfiguration {
     return new DefaultAlertActionHandler(eventPublisher);
   }
 
-  /**
-   * 定时任务触发动作处理器 Bean（P1-2 规则与定时任务联动）
-   *
-   * <p>当 classpath 中存在 {@code CronjobServiceClient}（由 ydsz-cronjob-api 提供）且 {@code
-   * ydsz.literule.action.cronjob-trigger-enabled=true}（默认 true）时自动装配。 规则触发后自动触发关联的 cronjob 定时任务。
-   *
-   * @param cronjobClient cronjob Feign 客户端
-   * @return CronjobTriggerActionHandler 实例
-   * @since 1.0.0
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  @ConditionalOnBean(name = "cronjobServiceClient")
-  @ConditionalOnProperty(
-      prefix = "ydsz.literule.action",
-      name = "cronjob-trigger-enabled",
-      havingValue = "true",
-      matchIfMissing = true)
-  public CronjobTriggerActionHandler cronjobTriggerActionHandler(
-      CronjobServiceClient cronjobClient) {
-    log.info("[LiteRule-Action] 定时任务触发处理器已初始化");
-    return new CronjobTriggerActionHandler(cronjobClient);
-  }
-
-  /**
-   * 工作流触发动作处理器 Bean（P2-1 规则与工作流深度联动）
-   *
-   * <p>当 classpath 中存在 {@code WorkflowServiceClient}（由 ydsz-workflow-api 提供）且 {@code
-   * ydsz.literule.action.workflow-trigger-enabled=true}（默认 true）时自动装配。 规则触发后自动启动关联的工作流流程实例。
-   *
-   * @param workflowClient workflow Feign 客户端
-   * @return WorkflowTriggerActionHandler 实例
-   * @since 1.0.0
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  @ConditionalOnBean(name = "workflowServiceClient")
-  @ConditionalOnProperty(
-      prefix = "ydsz.literule.action",
-      name = "workflow-trigger-enabled",
-      havingValue = "true",
-      matchIfMissing = true)
-  public WorkflowTriggerActionHandler workflowTriggerActionHandler(
-      WorkflowServiceClient workflowClient) {
-    log.info("[LiteRule-Action] 工作流触发处理器已初始化");
-    return new WorkflowTriggerActionHandler(workflowClient);
-  }
+  // P2-1: 移除 cronjobTriggerActionHandler / workflowTriggerActionHandler Bean 定义。
+  // 规则引擎不再直接依赖其他引擎的 Feign 客户端，跨引擎联动由业务系统通过 RuleActionHandler SPI 自行注册。
 
   // ------------------------------------------------------------------
   // P2-3 高性能优化（评估结果缓存 + 规则分组并行评估）
@@ -1158,9 +1122,11 @@ public class LiteRuleAutoConfiguration {
       evaluator = new ParallelRuleEvaluator(threadPool);
       log.info("[LiteRule-Performance] 规则并行评估器已初始化（executor=common-thread:ruleParallel)");
     } else {
+      // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
       evaluator = new ParallelRuleEvaluator(cfg.getParallelPoolSize());
-      log.info(
-          "[LiteRule-Performance] 规则并行评估器已初始化（poolSize={}, executor=manual)",
+      // CHECKSTYLE.ON: RegexpSinglelineJava
+      log.warn(
+          "[LiteRule-Performance] 规则并行评估器已初始化（poolSize={}, executor=fallback: common-thread bean 'ruleParallelExecutor' 未配置）",
           cfg.getParallelPoolSize());
     }
     return evaluator;

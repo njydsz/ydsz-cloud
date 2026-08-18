@@ -11,6 +11,8 @@ import lombok.Data;
 /**
  * 文件节点树形 VO
  *
+ * <p>领域层返回的文件节点视图对象，包含完整的业务字段。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -20,6 +22,12 @@ import lombok.Data;
 public class FileNodeVO implements Serializable {
 
   private static final long serialVersionUID = 1L;
+
+  /** 节点类型：文件夹 */
+  public static final String TYPE_FOLDER = "folder";
+
+  /** 节点类型：文件 */
+  public static final String TYPE_FILE = "file";
 
   @Schema(description = "节点ID")
   private String id;
@@ -42,6 +50,18 @@ public class FileNodeVO implements Serializable {
   @Schema(description = "MIME 类型")
   private String mimeType;
 
+  @Schema(description = "底层存储对象键")
+  private String storageKey;
+
+  @Schema(description = "存储桶名称")
+  private String bucketName;
+
+  @Schema(description = "文件 SHA-256 哈希")
+  private String fileHash;
+
+  @Schema(description = "目录路径")
+  private String path;
+
   @Schema(description = "层级深度")
   private Integer level;
 
@@ -51,20 +71,23 @@ public class FileNodeVO implements Serializable {
   @Schema(description = "当前版本号")
   private Integer currentVersion;
 
+  @Schema(description = "缩略图存储键")
+  private String thumbnailKey;
+
+  @Schema(description = "是否已生成预览")
+  private Boolean previewReady;
+
   @Schema(description = "是否星标")
   private Boolean starred;
 
   @Schema(description = "共享状态")
   private String shareStatus;
 
-  @Schema(description = "缩略图URL")
-  private String thumbnailUrl;
-
-  @Schema(description = "预览是否就绪")
-  private Boolean previewReady;
-
   @Schema(description = "创建人")
   private String createdBy;
+
+  @Schema(description = "更新人")
+  private String updatedBy;
 
   @Schema(description = "创建时间")
   private LocalDateTime createdAt;
@@ -77,4 +100,14 @@ public class FileNodeVO implements Serializable {
 
   @Schema(description = "标签列表")
   private List<String> tags;
+
+  /** 是否为目录 */
+  public boolean isFolder() {
+    return TYPE_FOLDER.equals(nodeType);
+  }
+
+  /** 是否为文件 */
+  public boolean isFile() {
+    return TYPE_FILE.equals(nodeType);
+  }
 }

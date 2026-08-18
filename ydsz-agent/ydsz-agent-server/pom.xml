@@ -16,27 +16,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-agent-domain</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-agent-infra</artifactId>
-        </dependency>
-        <!-- App 端基座模块（移动端接口能力） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-agent-app</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-jdbc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-feign</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-web</artifactId>
-        </dependency>
+        <!-- P1: 遵循 DDD 分层，server 层不直接依赖 infra 层；infra 实现由 web/app 层通过组件扫描注入 -->
         <!-- P1-A1: 显式声明 common-auth（使用 @EnableYdszAuth / @AuthApiPermission 等能力） -->
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -80,8 +60,12 @@
             <artifactId>ydsz-common-docs</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-feign</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-web</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -107,13 +91,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-sentry</artifactId>
         </dependency>
-        <!-- P0-3: 跨模块 Feign 客户端（Agent 调用用户信息服务） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-userinfo-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <!-- P1-2: 通知渠道（Agent 执行结果通知）—— 预留，待实现时引入 -->
         <!-- P1-2: 搜索 Provider SPI（知识库搜索） -->
         <dependency>
             <groupId>com.njydsz</groupId>

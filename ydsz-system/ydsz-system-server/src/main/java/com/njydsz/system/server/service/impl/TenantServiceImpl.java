@@ -2,9 +2,6 @@ package com.njydsz.system.server.service.impl;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,11 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.jdbc.support.PageResponses;
-import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.domain.dto.TenantDTO;
-import com.njydsz.system.infra.entity.Tenant;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.query.TenantPageQuery;
 import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.domain.repository.TenantRepository;
 import com.njydsz.system.server.service.TenantService;
@@ -57,8 +52,7 @@ public class TenantServiceImpl implements TenantService {
    */
   @Override
   public TenantVO getById(String id) {
-    Tenant entity = tenantRepository.findById(id).orElse(null);
-    return SystemConverter.INSTANT.entityToVO(entity);
+    return tenantRepository.findById(id).orElse(null);
   }
 
   /**
@@ -75,8 +69,12 @@ public class TenantServiceImpl implements TenantService {
   @Override
   public PageResponse<List<TenantVO>> page(
       int pageNum, int pageSize, String tenantName, String status) {
-    IPage<Tenant> page = tenantRepository.findByPage(new Page<>(pageNum, pageSize), tenantName, status);
-    return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
+    TenantPageQuery query = new TenantPageQuery();
+    query.setPageNum(pageNum);
+    query.setPageSize(pageSize);
+    query.setTenantName(tenantName);
+    query.setStatus(status);
+    return tenantRepository.findByPage(query);
   }
 
   /**
@@ -94,10 +92,9 @@ public class TenantServiceImpl implements TenantService {
       throw BusinessException.of(SystemExceptionCode.TENANT_CODE_DUPLICATE)
           .data("tenantCode", dto.getTenantCode());
     }
-    Tenant entity = toEntity(dto);
-    tenantRepository.insert(entity);
-    log.info("创建租户成功: tenantCode={}, tenantId={}", dto.getTenantCode(), entity.getId());
-    return entity.getId();
+    tenantRepository.insert(dto);
+    log.info("创建租户成功: tenantCode={}", dto.getTenantCode());
+    return dto.getId();
   }
 
   /**
@@ -111,15 +108,13 @@ public class TenantServiceImpl implements TenantService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(TenantDTO dto) {
-    LambdaQueryWrapper<Tenant> checkWrapper = new LambdaQueryWrapper<>();
-    checkWrapper.eq(Tenant::getTenantCode, dto.getTenantCode());
-    checkWrapper.ne(Tenant::getId, dto.getId());
-    if (tenantRepository.countByCondition(checkWrapper) > 0) {
+    TenantPageQuery checkQuery = new TenantPageQuery();
+    checkQuery.setTenantName(dto.getTenantCode());
+    if (tenantRepository.countByCondition(checkQuery) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_CODE_DUPLICATE)
           .data("tenantCode", dto.getTenantCode());
     }
-    Tenant entity = toEntity(dto);
-    return tenantRepository.updateById(entity);
+    return tenantRepository.updateById(dto);
   }
 
   /**
@@ -142,7 +137,7 @@ public class TenantServiceImpl implements TenantService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Tenant tenant = tenantRepository.findById(id).orElse(null);
+    TenantVO tenant = tenantRepository.findById(id).orElse(null);
     if (tenant == null) {
       return false;
     }
@@ -178,30 +173,8 @@ public class TenantServiceImpl implements TenantService {
    */
   @Override
   public boolean existsByTenantCode(String tenantCode) {
-    LambdaQueryWrapper<Tenant> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Tenant::getTenantCode, tenantCode);
-    return tenantRepository.countByCondition(wrapper) > 0;
-  }
-
-  /**
-   * DTO → DO 转换（私有）
-   *
-   * @param dto 租户 DTO
-   * @return 租户 Entity
-   */
-  private Tenant toEntity(TenantDTO dto) {
-    Tenant entity = new Tenant();
-    entity.setId(dto.getId());
-    entity.setTenantCode(dto.getTenantCode());
-    entity.setTenantName(dto.getTenantName());
-    entity.setContactName(dto.getContactName());
-    entity.setContactPhone(dto.getContactPhone());
-    entity.setContactEmail(dto.getContactEmail());
-    entity.setPlanId(dto.getPlanId());
-    entity.setExpireAt(dto.getExpireAt());
-    entity.setDatasourceKey(dto.getDatasourceKey());
-    entity.setStatus(dto.getStatus());
-    entity.setRemark(dto.getRemark());
-    return entity;
+    TenantPageQuery query = new TenantPageQuery();
+    query.setSearchKey(tenantCode);
+    return tenantRepository.countByCondition(query) > 0;
   }
 }

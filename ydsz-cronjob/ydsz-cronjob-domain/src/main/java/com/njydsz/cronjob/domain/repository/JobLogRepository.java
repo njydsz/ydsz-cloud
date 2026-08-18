@@ -122,4 +122,40 @@ public interface JobLogRepository {
    * @return 实际删除条数
    */
   int cleanExpiredLogs(LocalDateTime before, int limit);
+
+  // ===== Web 层查询方法（Controller 停止 Mapper 直注） =====
+
+  /**
+   * 统计指定状态且起始时间之后的日志数量。
+   *
+   * @param status 执行状态（SUCCESS / FAILED / RUNNING），可为 null 表示不限
+   * @param startAfter 起始时间之后（含），可为 null 表示不限
+   * @return 日志数量
+   */
+  long countByStatusAfter(String status, LocalDateTime startAfter);
+
+  /**
+   * 查询最近的失败日志列表。
+   *
+   * @param limit 返回条数上限
+   * @return 失败日志 VO 列表（按开始时间倒序）
+   */
+  List<JobLogVO> findRecentFailures(int limit);
+
+  /**
+   * 查询指定任务 KEY 的执行日志列表。
+   *
+   * @param jobKey 任务 KEY（精确匹配）
+   * @param limit 返回条数上限
+   * @return 日志 VO 列表（按创建时间倒序）
+   */
+  List<JobLogVO> findByJobKey(String jobKey, int limit);
+
+  /**
+   * 查询指定任务 KEY 的最新一条执行日志。
+   *
+   * @param jobKey 任务 KEY（精确匹配）
+   * @return 最新日志 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<JobLogVO> findLatestByJobKey(String jobKey);
 }

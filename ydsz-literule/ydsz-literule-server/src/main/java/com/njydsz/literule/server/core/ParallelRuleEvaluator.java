@@ -308,12 +308,15 @@ public class ParallelRuleEvaluator {
   }
 
   /**
-   * 创建默认线程池（仅当未注入外部 common-thread 线程池时使用）。
+   * 创建降级线程池（仅当未注入外部 common-thread 线程池时使用）。
+   *
+   * <p><b>注意：</b>此降级池仅在未通过 {@code ydsz.thread.pools.parallel} 配置 common-thread 时使用，
+   * 生产环境应通过 {@link #ParallelRuleEvaluator(Executor)} 注入 common-thread 统一管理的线程池。
    *
    * <p>命名符合云顶编码规范 15.4.4 约定：ydsz-{module}-{biz}-。
    *
    * @param poolSize 线程池大小
-   * @return 默认线程池
+   * @return 降级线程池
    */
   private static ExecutorService createExecutor(int poolSize) {
     ThreadFactory factory =
@@ -327,6 +330,7 @@ public class ParallelRuleEvaluator {
             return t;
           }
         };
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
     return new ThreadPoolExecutor(
         poolSize,
         poolSize,
@@ -335,6 +339,7 @@ public class ParallelRuleEvaluator {
         new LinkedBlockingQueue<>(1024),
         factory,
         new ThreadPoolExecutor.CallerRunsPolicy());
+    // CHECKSTYLE.ON: RegexpSinglelineJava
   }
 
   /** 单规则评估函数接口 */

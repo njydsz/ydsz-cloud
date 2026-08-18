@@ -21,7 +21,8 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.service.FilePermissionService;
@@ -118,7 +119,7 @@ public class FileLockController {
     // P2-R2: 权限检查
     permissionService.checkWrite(nodeId, userId);
 
-    FileNodeDO node = fileNodeRepository.findById(nodeId);
+    FileNodeVO node = fileNodeRepository.findById(nodeId).orElse(null);
     if (node == null || !node.isFile()) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
     }
@@ -131,7 +132,7 @@ public class FileLockController {
     node.setStatus("locked");
     node.setUpdatedBy(userId);
     node.setUpdatedAt(LocalDateTime.now());
-    fileNodeRepository.update(node);
+    fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
 
     log.info("[FileLockController] 锁定文件: nodeId={}, userId={}", nodeId, userId);
     return BaseResponse.success();
@@ -159,7 +160,7 @@ public class FileLockController {
     // P2-R2: 权限检查
     permissionService.checkWrite(nodeId, userId);
 
-    FileNodeDO node = fileNodeRepository.findById(nodeId);
+    FileNodeVO node = fileNodeRepository.findById(nodeId).orElse(null);
     if (node == null) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
     }
@@ -168,7 +169,7 @@ public class FileLockController {
     node.setStatus("active");
     node.setUpdatedBy(userId);
     node.setUpdatedAt(LocalDateTime.now());
-    fileNodeRepository.update(node);
+    fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
 
     log.info("[FileLockController] 解锁文件: nodeId={}, userId={}", nodeId, userId);
     return BaseResponse.success();

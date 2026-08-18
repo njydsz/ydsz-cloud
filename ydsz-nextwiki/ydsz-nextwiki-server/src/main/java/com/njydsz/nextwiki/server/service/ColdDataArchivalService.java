@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
@@ -70,7 +70,7 @@ public class ColdDataArchivalService {
     LocalDateTime threshold = LocalDateTime.now().minusDays(coldDays);
 
     // 查询冷数据候选（此处分页查询，实际应用需要游标分页）
-    List<FileNodeDO> coldCandidates =
+    List<FileNodeVO> coldCandidates =
         fileNodeRepository.findColdCandidates(threshold, config.getExcludeExtensions(), batchSize);
 
     if (coldCandidates == null || coldCandidates.isEmpty()) {
@@ -81,7 +81,7 @@ public class ColdDataArchivalService {
     log.info("[ColdDataArchival] 发现冷数据候选: count={}", coldCandidates.size());
 
     int archivedCount = 0;
-    for (FileNodeDO file : coldCandidates) {
+    for (FileNodeVO file : coldCandidates) {
       try {
         archiveFile(file, config.getArchiveStorageClass());
         archivedCount++;
@@ -116,7 +116,7 @@ public class ColdDataArchivalService {
    * @param file 文件节点
    * @param storageClass 目标存储类型
    */
-  private void archiveFile(FileNodeDO file, String storageClass) {
+  private void archiveFile(FileNodeVO file, String storageClass) {
     // TODO: 调用云存储 API 变更存储类型
     // 例如：S3: s3Client.restoreObject() / 阿里: ossClient.setObjectStorageClass()
     log.info(
@@ -127,6 +127,6 @@ public class ColdDataArchivalService {
 
     // 标记文件为已归档
     file.setStorageClass(storageClass);
-    fileNodeRepository.update(file);
+    fileNodeRepository.update(com.njydsz.nextwiki.server.converter.NextwikiConverter.INSTANT.toDTO(file));
   }
 }

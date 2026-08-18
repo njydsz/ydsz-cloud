@@ -70,4 +70,12 @@ public interface TrashItemMapper extends BaseMapper<TrashItemDO> {
 
   /** 带 revision 乐观锁的更新（更新失败返回 0） */
   int updateWithRevision(@Param("trashItem") TrashItemDO TrashItemDO);
+
+  /**
+   * 批量插入回收站条目（用于批量删除场景）。
+   *
+   * @param items 回收站实体列表
+   * @return 实际插入条数
+   */
+  int insertBatch(@Param("items") List<TrashItemDO> items);
 }

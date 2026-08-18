@@ -155,6 +155,23 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
+  public int batchSoftDelete(List<String> ids, List<String> originalPaths) {
+    if (ids == null || ids.isEmpty()) {
+      return 0;
+    }
+    return fileNodeMapper.batchSoftDelete(ids, originalPaths);
+  }
+
+  @Override
+  public int batchUpdateParentAndPath(
+      List<String> ids, String targetParentId, List<String> newPaths, List<Integer> levelDeltas) {
+    if (ids == null || ids.isEmpty()) {
+      return 0;
+    }
+    return fileNodeMapper.batchUpdateParentAndPath(ids, targetParentId, newPaths, levelDeltas);
+  }
+
+  @Override
   public void updateSize(String id, Long sizeDelta) {
     fileNodeMapper.updateSize(id, sizeDelta);
   }

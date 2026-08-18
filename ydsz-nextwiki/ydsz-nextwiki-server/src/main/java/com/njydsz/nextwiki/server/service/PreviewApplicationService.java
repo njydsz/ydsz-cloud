@@ -24,7 +24,9 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
+import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
@@ -40,7 +42,7 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  *   <li>从存储下载原文件到临时目录
  *   <li>调用 LibreOffice headless 模式转换为 PDF
  *   <li>上传 PDF 到存储（预览副本，存储键: wiki/preview/{nodeId}.pdf）
- *   <li>更新 FileNodeDO 的 previewReady 和 previewStorageKey
+ *   <li>更新 FileNodeVO 的 previewReady 和 previewStorageKey
  *   <li>图片类型直接生成缩略图并上传到存储
  * </ol>
  *
@@ -93,13 +95,13 @@ public class PreviewApplicationService {
 
   /** 预览生成的实际执行逻辑 */
   private void doGeneratePreview(String fileNodeId) {
-    FileNodeDO FileNodeDO = fileNodeRepository.findById(fileNodeId);
-    if (FileNodeDO == null || !FileNodeDO.isFile()) {
+    FileNodeVO node = fileNodeRepository.findById(fileNodeId).orElse(null);
+    if (node == null || !node.isFile()) {
       log.warn("[PreviewApplicationService] 文件节点不存在或不是文件: {}", fileNodeId);
       return;
     }
 
-    String suffix = FileNodeDO.getSuffix();
+    String suffix = node.getSuffix();
     if (suffix == null || suffix.isEmpty()) {
       log.warn("[PreviewApplicationService] 文件无扩展名，跳过预览生成: {}", fileNodeId);
       return;
@@ -107,19 +109,19 @@ public class PreviewApplicationService {
 
     if (OFFICE_SUFFIXES.contains(suffix)) {
       try {
-        convertOfficeToPdf(FileNodeDO);
+        convertOfficeToPdf(node);
       } catch (Exception e) {
         log.error("[PreviewApplicationService] Office 转 PDF 失败: fileNodeId={}", fileNodeId, e);
       }
     } else if (IMAGE_SUFFIXES.contains(suffix)) {
       try {
-        generateImageThumbnail(FileNodeDO);
+        generateImageThumbnail(node);
       } catch (Exception e) {
         log.error("[PreviewApplicationService] 图片缩略图生成失败: fileNodeId={}", fileNodeId, e);
       }
     } else if (DIRECT_PREVIEW_SUFFIXES.contains(suffix)) {
-      FileNodeDO.setPreviewReady(true);
-      fileNodeRepository.update(FileNodeDO);
+      node.setPreviewReady(true);
+      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
     }
   }
 
@@ -159,7 +161,7 @@ public class PreviewApplicationService {
   // ==================== 私有方法 ====================
 
   /** 从存储下载文件到临时路径 */
-  private Path downloadToTemp(FileNodeDO FileNodeDO) throws Exception {
+  private Path downloadToTemp(FileNodeVO node) throws Exception {
     IFileStorage storage = resolveStorage();
     if (storage == null) {
       throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
@@ -169,27 +171,27 @@ public class PreviewApplicationService {
     Files.createDirectories(tempDirPath);
 
     String tempFileId = UUID.randomUUID().toString().replace("-", "");
-    String suffix = FileNodeDO.getSuffix() != null ? FileNodeDO.getSuffix() : "tmp";
+    String suffix = node.getSuffix() != null ? node.getSuffix() : "tmp";
     Path tempFile = tempDirPath.resolve(tempFileId + "." + suffix);
 
     try (InputStream is =
-        storage.downloadAsStream(FileNodeDO.getBucketName(), FileNodeDO.getStorageKey())) {
+        storage.downloadAsStream(node.getBucketName(), node.getStorageKey())) {
       Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING);
     }
 
     log.info(
         "[PreviewApplicationService] 文件下载到临时路径: fileNodeId={}, tempPath={}",
-        FileNodeDO.getId(),
+        node.getId(),
         tempFile);
     return tempFile;
   }
 
   /** Office 文档转 PDF（调用 LibreOffice headless） 转换后将 PDF 上传到存储作为预览副本。 */
-  private void convertOfficeToPdf(FileNodeDO FileNodeDO) throws Exception {
+  private void convertOfficeToPdf(FileNodeVO node) throws Exception {
     Path inputFile = null;
     Path outputDir = null;
     try {
-      inputFile = downloadToTemp(FileNodeDO);
+      inputFile = downloadToTemp(node);
 
       String tempFileId = UUID.randomUUID().toString().replace("-", "");
       String tempDir = properties.getPreview().getTempDir();
@@ -199,8 +201,8 @@ public class PreviewApplicationService {
 
       log.info(
           "[PreviewApplicationService] 开始 Office->PDF 转换: fileNodeId={}, suffix={}",
-          FileNodeDO.getId(),
-          FileNodeDO.getSuffix());
+          node.getId(),
+          node.getSuffix());
 
       ProcessBuilder pb =
           new ProcessBuilder(
@@ -228,7 +230,7 @@ public class PreviewApplicationService {
       }
 
       String pdfName =
-          FileNodeDO.getName().substring(0, FileNodeDO.getName().lastIndexOf('.')) + ".pdf";
+          node.getName().substring(0, node.getName().lastIndexOf('.')) + ".pdf";
       Path pdfFile = outputDir.resolve(pdfName);
 
       if (!Files.exists(pdfFile)) {
@@ -241,21 +243,21 @@ public class PreviewApplicationService {
       }
 
       // 上传 PDF 预览副本到存储
-      String previewStorageKey = "wiki/preview/" + FileNodeDO.getId() + ".pdf";
+      String previewStorageKey = "wiki/preview/" + node.getId() + ".pdf";
       IFileStorage storage = resolveStorage();
       if (storage != null) {
         uploadFileToStorage(storage, pdfFile, previewStorageKey, "application/pdf");
         log.info(
             "[PreviewApplicationService] PDF 预览副本已上传: fileNodeId={}, previewKey={}",
-            FileNodeDO.getId(),
+            node.getId(),
             previewStorageKey);
       }
 
-      FileNodeDO.setPreviewReady(true);
-      FileNodeDO.setThumbnailKey(previewStorageKey);
-      fileNodeRepository.update(FileNodeDO);
+      node.setPreviewReady(true);
+      node.setThumbnailKey(previewStorageKey);
+      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
 
-      log.info("[PreviewApplicationService] Office->PDF 转换完成: fileNodeId={}", FileNodeDO.getId());
+      log.info("[PreviewApplicationService] Office->PDF 转换完成: fileNodeId={}", node.getId());
     } finally {
       // P0-5: 确保所有临时文件和目录被递归清理
       if (inputFile != null) {
@@ -296,15 +298,15 @@ public class PreviewApplicationService {
    * <p>原实现直接上传原图作为缩略图（无缩放），与 ThumbnailApplicationService 的实际缩放逻辑冲突。 现委托 ThumbnailApplicationService
    * 统一处理。
    */
-  private void generateImageThumbnail(FileNodeDO FileNodeDO) {
+  private void generateImageThumbnail(FileNodeVO node) {
     // P0-R4: 直接委托 ThumbnailApplicationService，不再重复实现
     // ThumbnailApplicationService 会下载原图、缩放、上传到存储、更新 thumbnailKey
     // 此处仅标记预览就绪（图片可直接预览）
-    FileNodeDO.setPreviewReady(true);
-    fileNodeRepository.update(FileNodeDO);
+    node.setPreviewReady(true);
+    fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
     log.info(
         "[PreviewApplicationService] 图片预览就绪（缩略图由 ThumbnailApplicationService 异步生成）: fileNodeId={}",
-        FileNodeDO.getId());
+        node.getId());
   }
 
   /**

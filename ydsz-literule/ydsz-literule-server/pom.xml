@@ -111,15 +111,17 @@
             <groupId>org.redisson</groupId>
             <artifactId>redisson-spring-boot-starter</artifactId>
         </dependency>
-        <!-- P1-2: 规则与定时任务联动（正式依赖，Feign 客户端 + FallbackFactory 降级）-->
+        <!-- P2-1: 规则与定时任务联动（可选依赖，由业务系统按需引入）-->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-cronjob-api</artifactId>
+            <optional>true</optional>
         </dependency>
-        <!-- P2-1: 规则与工作流深度联动（正式依赖，Feign 客户端 + FallbackFactory 降级）-->
+        <!-- P2-1: 规则与工作流深度联动（可选依赖，由业务系统按需引入）-->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-workflow-api</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <dependency>

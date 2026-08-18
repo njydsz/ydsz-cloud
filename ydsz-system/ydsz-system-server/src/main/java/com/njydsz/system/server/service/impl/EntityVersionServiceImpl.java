@@ -2,7 +2,6 @@ package com.njydsz.system.server.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,9 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
-import com.njydsz.system.infra.entity.EntityVersion;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 import com.njydsz.system.domain.repository.EntityVersionRepository;
@@ -51,23 +48,13 @@ public class EntityVersionServiceImpl implements EntityVersionService {
 
   @Override
   public List<EntityVersionVO> listByResourceTypeAndKey(String resourceType, String resourceKey) {
-    return entityVersionRepository.findByTypeAndKey(resourceType, resourceKey).stream()
-        .map(SystemConverter.INSTANT::entityVersionToVO)
-        .collect(Collectors.toList());
+    return entityVersionRepository.findByTypeAndKey(resourceType, resourceKey);
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String createVersion(EntityVersionCreateDTO dto) {
-    EntityVersion entity = new EntityVersion();
-    entity.setResourceType(dto.getResourceType());
-    entity.setResourceKey(dto.getResourceKey());
-    entity.setResourceGroup(dto.getResourceGroup());
-    entity.setVersion(dto.getVersion());
-    entity.setChangeLog(dto.getChangeLog());
-    entity.setSnapshotJson(dto.getSnapshotJson());
-    entity.setEffectiveDate(LocalDateTime.now());
-    EntityVersion saved = entityVersionRepository.save(entity);
+    EntityVersionVO saved = entityVersionRepository.save(dto);
     return saved.getId();
   }
 
@@ -80,7 +67,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
       String operatorId,
       RollbackCallback rollbackCallback) {
     // 1. 查询目标版本
-    EntityVersion targetVersionEntity =
+    EntityVersionVO targetVersionVO =
         entityVersionRepository
             .findByTypeAndKeyAndVersion(resourceType, resourceKey, targetVersion)
             .orElseThrow(
@@ -91,7 +78,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
                         .data("version", targetVersion));
 
     // 2. 执行回滚回调（由业务方实现资源重建逻辑）
-    String snapshotJson = targetVersionEntity.getSnapshotJson();
+    String snapshotJson = targetVersionVO.getSnapshotJson();
     if (snapshotJson != null && !snapshotJson.isBlank()) {
       rollbackCallback.execute(snapshotJson);
     }
@@ -99,15 +86,15 @@ public class EntityVersionServiceImpl implements EntityVersionService {
     // 3. 创建新版本（标记回滚来源）
     String newVersion = SystemVersionUtils.nextVersion();
     String changeLog = String.format("回滚自 %s by %s", targetVersion, operatorId);
-    EntityVersion newVersionEntity = new EntityVersion();
-    newVersionEntity.setResourceType(resourceType);
-    newVersionEntity.setResourceKey(resourceKey);
-    newVersionEntity.setResourceGroup(targetVersionEntity.getResourceGroup());
-    newVersionEntity.setVersion(newVersion);
-    newVersionEntity.setChangeLog(changeLog);
-    newVersionEntity.setSnapshotJson(snapshotJson);
-    newVersionEntity.setEffectiveDate(LocalDateTime.now());
-    entityVersionRepository.save(newVersionEntity);
+    EntityVersionCreateDTO newVersionDto = EntityVersionCreateDTO.builder()
+        .resourceType(resourceType)
+        .resourceKey(resourceKey)
+        .resourceGroup(targetVersionVO.getResourceGroup())
+        .version(newVersion)
+        .changeLog(changeLog)
+        .snapshotJson(snapshotJson)
+        .build();
+    EntityVersionVO newVersionVO = entityVersionRepository.save(newVersionDto);
 
     log.info(
         "[EntityVersion] 回滚完成: resourceType={}, resourceKey={}, targetVersion={}, newVersion={}",
@@ -115,6 +102,6 @@ public class EntityVersionServiceImpl implements EntityVersionService {
         resourceKey,
         targetVersion,
         newVersion);
-    return newVersionEntity.getId();
+    return newVersionVO.getId();
   }
 }

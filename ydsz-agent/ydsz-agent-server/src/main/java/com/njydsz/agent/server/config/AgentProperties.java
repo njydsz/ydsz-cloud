@@ -49,6 +49,9 @@ public class AgentProperties {
   /** 护栏配置 */
   private Guardrail guardrail = new Guardrail();
 
+  /** 工具调用配置 */
+  private Tool tool = new Tool();
+
   public boolean isEnabled() {
     return enabled;
   }
@@ -127,6 +130,14 @@ public class AgentProperties {
 
   public void setGuardrail(Guardrail guardrail) {
     this.guardrail = guardrail;
+  }
+
+  public Tool getTool() {
+    return tool;
+  }
+
+  public void setTool(Tool tool) {
+    this.tool = tool;
   }
 
   /** LLM 相关配置组（默认 Provider、模型、密钥、价格等）。 */
@@ -306,6 +317,21 @@ public class AgentProperties {
     /** 压缩后保留的最近原始消息条数 */
     private int summaryKeepRecent = 10;
 
+    /**
+     * 上下文 Token 预算（估算值）。
+     *
+     * <p>当对话历史估算 Token 数超过此预算时，触发摘要压缩。 基于字符数估算（中文约 1.5 Char/Token，英文约 4 Char/Token），
+     * 默认 4000 Token 适合大多数 LLM 的上下文窗口。
+     */
+    private int tokenBudget = 4000;
+
+    /**
+     * Token 估算的字符系数（Char/Token）。
+     *
+     * <p>中文为主场景取 1.5，英文为主取 4.0，中英混合取 2.5。 用于将字符数转换为估算 Token 数。
+     */
+    private double tokenCharRatio = 2.5;
+
     public int getTtlHours() {
       return ttlHours;
     }
@@ -345,6 +371,22 @@ public class AgentProperties {
     public void setSummaryKeepRecent(int summaryKeepRecent) {
       this.summaryKeepRecent = summaryKeepRecent;
     }
+
+    public int getTokenBudget() {
+      return tokenBudget;
+    }
+
+    public void setTokenBudget(int tokenBudget) {
+      this.tokenBudget = tokenBudget;
+    }
+
+    public double getTokenCharRatio() {
+      return tokenCharRatio;
+    }
+
+    public void setTokenCharRatio(double tokenCharRatio) {
+      this.tokenCharRatio = tokenCharRatio;
+    }
   }
 
   /** RAG 检索相关配置组（开关、向量存储类型、Embedding 模型等）。 */
@@ -378,6 +420,22 @@ public class AgentProperties {
 
     /** 最小相似度阈值 */
     private double minScore = 0.7;
+
+    /**
+     * 上下文 Token 预算（估算值）。
+     *
+     * <p>RAG 检索结果拼接为上下文时，总 Token 不超过此预算。 默认 3000 Token（约占 GPT-4o 上下文窗口的 25%），
+     * 避免检索结果占用过多上下文导致 LLM 回复质量下降。
+     */
+    private int contextTokenBudget = 3000;
+
+    /**
+     * 是否启用 Reranker 精排（对召回结果做重排序，提升 Top-K 精确度）。
+     *
+     * <p>需配合实现 domain 层 {@link com.njydsz.agent.domain.rag.Reranker} 接口的 Bean（如 Cross-Encoder 模型）。
+     * 未配置 Reranker Bean 时默认使用 IdentityReranker（恒等排序，仅截断）。
+     */
+    private boolean rerankerEnabled = false;
 
     /** 是否启用 RAG 多租户隔离（启用时向量/全文检索 SQL 显式追加 tenant_id 条件） */
     private boolean tenantIsolation = true;
@@ -460,6 +518,22 @@ public class AgentProperties {
 
     public void setMinScore(double minScore) {
       this.minScore = minScore;
+    }
+
+    public int getContextTokenBudget() {
+      return contextTokenBudget;
+    }
+
+    public void setContextTokenBudget(int contextTokenBudget) {
+      this.contextTokenBudget = contextTokenBudget;
+    }
+
+    public boolean isRerankerEnabled() {
+      return rerankerEnabled;
+    }
+
+    public void setRerankerEnabled(boolean rerankerEnabled) {
+      this.rerankerEnabled = rerankerEnabled;
     }
 
     public boolean isTenantIsolation() {
@@ -573,6 +647,21 @@ public class AgentProperties {
     /** Plan-Execute 模式 Prompt 模板编码 */
     private String planSystemCode = "PLAN_SYSTEM";
 
+    /** Plan-Execute 规划阶段 Prompt 模板编码（分解用户需求的指令） */
+    private String planExecutePlanCode = "PLAN_EXECUTE_PLAN";
+
+    /** Plan-Execute 规划阶段系统 Prompt 编码 */
+    private String planExecutePlanSystemCode = "PLAN_EXECUTE_PLAN_SYSTEM";
+
+    /** Plan-Execute 重规划阶段 Prompt 模板编码 */
+    private String planExecuteReplanCode = "PLAN_EXECUTE_REPLAN";
+
+    /** Supervisor 任务分解 Prompt 模板编码 */
+    private String supervisorPlanCode = "SUPERVISOR_PLAN";
+
+    /** Supervisor 规划阶段系统 Prompt 编码 */
+    private String supervisorPlanSystemCode = "SUPERVISOR_PLAN_SYSTEM";
+
     public String getDefaultSystemCode() {
       return defaultSystemCode;
     }
@@ -595,6 +684,46 @@ public class AgentProperties {
 
     public void setPlanSystemCode(String planSystemCode) {
       this.planSystemCode = planSystemCode;
+    }
+
+    public String getPlanExecutePlanCode() {
+      return planExecutePlanCode;
+    }
+
+    public void setPlanExecutePlanCode(String planExecutePlanCode) {
+      this.planExecutePlanCode = planExecutePlanCode;
+    }
+
+    public String getPlanExecutePlanSystemCode() {
+      return planExecutePlanSystemCode;
+    }
+
+    public void setPlanExecutePlanSystemCode(String planExecutePlanSystemCode) {
+      this.planExecutePlanSystemCode = planExecutePlanSystemCode;
+    }
+
+    public String getPlanExecuteReplanCode() {
+      return planExecuteReplanCode;
+    }
+
+    public void setPlanExecuteReplanCode(String planExecuteReplanCode) {
+      this.planExecuteReplanCode = planExecuteReplanCode;
+    }
+
+    public String getSupervisorPlanCode() {
+      return supervisorPlanCode;
+    }
+
+    public void setSupervisorPlanCode(String supervisorPlanCode) {
+      this.supervisorPlanCode = supervisorPlanCode;
+    }
+
+    public String getSupervisorPlanSystemCode() {
+      return supervisorPlanSystemCode;
+    }
+
+    public void setSupervisorPlanSystemCode(String supervisorPlanSystemCode) {
+      this.supervisorPlanSystemCode = supervisorPlanSystemCode;
     }
   }
 
@@ -676,6 +805,28 @@ public class AgentProperties {
 
     public void setPromptInjectionEnabled(boolean promptInjectionEnabled) {
       this.promptInjectionEnabled = promptInjectionEnabled;
+    }
+  }
+
+  /**
+   * 工具调用配置组
+   *
+   * <p>控制工具执行的超时、错误处理等行为。
+   */
+  public static class Tool {
+    /**
+     * 工具执行超时（秒）。
+     *
+     * <p>工具执行超过此时间未完成将被中断，防止单个工具挂起阻塞整个 Agent 迭代循环。
+     */
+    private int timeoutSeconds = 30;
+
+    public int getTimeoutSeconds() {
+      return timeoutSeconds;
+    }
+
+    public void setTimeoutSeconds(int timeoutSeconds) {
+      this.timeoutSeconds = timeoutSeconds;
     }
   }
 }

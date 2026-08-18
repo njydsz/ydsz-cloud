@@ -29,7 +29,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
  * @since 1.0.0
  */
 @SpringBootApplication(
-    scanBasePackages = {"com.njydsz.workflow", "com.njydsz.common", "com.njydsz.literule"})
+    scanBasePackages = {"com.njydsz.workflow", "com.njydsz.common"})
 @EnableDiscoveryClient
 @EnableYdszAudit
 @EnableYdszAuth
@@ -37,11 +37,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszFeign(
     basePackages = {
       "com.njydsz.workflow.api",
-      "com.njydsz.common.feign",
-      "com.njydsz.userinfo.api",
-      "com.njydsz.literule.api",
-      "com.njydsz.system.api",
-      "com.njydsz.agent.api"
+      "com.njydsz.common.feign"
     })
 // P1-1: 移除 literule Mapper 扫描，跨模块数据访问应通过 Feign 交互而非直接访问 Mapper
 @MapperScan({"com.njydsz.workflow.infra.mapper"})

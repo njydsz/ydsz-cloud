@@ -28,8 +28,8 @@ public final class ExecutionPlan implements Serializable {
   /** 执行步骤列表 */
   private final List<PlanStep> steps;
 
-  /** 计划状态 */
-  private PlanStatus status;
+  /** 计划状态（volatile 保障多线程可见性：DAG 并行节点可能并发读写） */
+  private volatile PlanStatus status;
 
   public ExecutionPlan(String id, String goal, List<PlanStep> steps) {
     this.id = Objects.requireNonNull(id, "id 不能为 null");
@@ -163,8 +163,8 @@ public final class ExecutionPlan implements Serializable {
     /** 执行动作 */
     private final String action;
 
-    /** 步骤状态 */
-    private StepStatus status;
+    /** 步骤状态（volatile 保障多线程可见性） */
+    private volatile StepStatus status;
 
     public PlanStep(int index, String description, String action) {
       this.index = index;

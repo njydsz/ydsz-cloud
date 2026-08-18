@@ -9,6 +9,7 @@ import org.mapstruct.factory.Mappers;
 import com.njydsz.nextwiki.domain.dto.FileAclDTO;
 import com.njydsz.nextwiki.domain.dto.FileCommentDTO;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
+import com.njydsz.nextwiki.domain.dto.FileTagDTO;
 import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
 import com.njydsz.nextwiki.domain.dto.ShareAccessLogDTO;
@@ -88,10 +89,6 @@ public interface NextwikiConverter {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   FileNodeDO dtoToEntity(FileNodeDTO dto);
 
@@ -103,8 +100,6 @@ public interface NextwikiConverter {
    */
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   FileNodeDO dtoToEntityWithId(FileNodeDTO dto);
 
@@ -331,7 +326,24 @@ public interface NextwikiConverter {
   com.njydsz.nextwiki.infra.entity.TrashItemDO dtoToEntityWithId(
       com.njydsz.nextwiki.domain.dto.TrashItemDTO dto);
 
-  // ===== Tag =====
+  /**
+   * 回收站条目 DTO 列表 → 回收站条目实体列表（批量创建场景）
+   *
+   * @param dtos 回收站条目 DTO 列表
+   * @return 回收站条目实体列表
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  List<com.njydsz.nextwiki.infra.entity.TrashItemDO> trashItemDtosToEntities(
+      List<com.njydsz.nextwiki.domain.dto.TrashItemDTO> dtos);
+
+// ===== Tag =====
 
   /**
    * 标签实体 → 标签 VO
@@ -395,6 +407,51 @@ public interface NextwikiConverter {
    * @return 文件-标签关联 VO 列表
    */
   List<FileTagVO> fileTagListToVO(List<FileTagDO> entities);
+
+  /**
+   * 文件-标签关联 DTO → 文件-标签关联实体（创建场景）
+   *
+   * @param dto 文件-标签关联 DTO
+   * @return 文件-标签关联实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  FileTagDO dtoToEntity(FileTagDTO dto);
+
+  /**
+   * 文件-标签关联 DTO（含 ID）→ 文件-标签关联实体（更新场景）
+   *
+   * @param dto 文件-标签关联 DTO（含 id）
+   * @return 文件-标签关联实体
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  FileTagDO dtoToEntityWithId(FileTagDTO dto);
+
+  /**
+   * 文件-标签关联 DTO 列表 → 文件-标签关联实体列表
+   *
+   * @param dtos 文件-标签关联 DTO 列表
+   * @return 文件-标签关联实体列表
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  List<FileTagDO> fileTagDtosToEntities(List<FileTagDTO> dtos);
 
   // ===== StorageQuota =====
 

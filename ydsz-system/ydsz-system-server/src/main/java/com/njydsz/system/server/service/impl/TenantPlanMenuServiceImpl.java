@@ -1,21 +1,13 @@
 package com.njydsz.system.server.service.impl;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
-import com.njydsz.system.infra.entity.TenantPlanMenu;
 import com.njydsz.system.domain.vo.TenantPlanMenuVO;
 import com.njydsz.system.domain.repository.TenantPlanMenuRepository;
 import com.njydsz.system.server.service.TenantPlanMenuService;
@@ -56,11 +48,7 @@ public class TenantPlanMenuServiceImpl implements TenantPlanMenuService {
    */
   @Override
   public List<TenantPlanMenuVO> listByPlanId(String planId) {
-    LambdaQueryWrapper<TenantPlanMenu> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(TenantPlanMenu::getPlanId, planId);
-    return tenantPlanMenuRepository.findList(wrapper).stream()
-        .map(SystemConverter.INSTANT::entityToVO)
-        .collect(Collectors.toList());
+    return tenantPlanMenuRepository.findByPlanId(planId);
   }
 
   /**
@@ -74,43 +62,14 @@ public class TenantPlanMenuServiceImpl implements TenantPlanMenuService {
   @Transactional(rollbackFor = Exception.class)
   public void updatePlanMenus(TenantPlanMenuDTO dto) {
     // 1. 删除旧关联
-    LambdaQueryWrapper<TenantPlanMenu> deleteWrapper = new LambdaQueryWrapper<>();
-    deleteWrapper.eq(TenantPlanMenu::getPlanId, dto.getPlanId());
-    tenantPlanMenuRepository.deleteByCondition(deleteWrapper);
+    tenantPlanMenuRepository.deleteByPlanId(dto.getPlanId());
 
     // 2. 批量插入新关联（1 次 SQL 替代 N 次单条 INSERT）
     if (dto.getMenuIds() == null || dto.getMenuIds().isEmpty()) {
       log.info("套餐[{}]菜单配置已清空", dto.getPlanId());
       return;
     }
-    List<TenantPlanMenu> entities = new ArrayList<>(dto.getMenuIds().size());
-    for (String menuId : dto.getMenuIds()) {
-      TenantPlanMenu entity = new TenantPlanMenu();
-      entity.setId(com.baomidou.mybatisplus.core.toolkit.IdWorker.getIdStr());
-      entity.setPlanId(dto.getPlanId());
-      entity.setMenuId(menuId);
-      entity.setTenantId(TenantContextHolder.getTenantId());
-      entity.setDeleted(0);
-      entity.setCreatedAt(LocalDateTime.now());
-      entity.setCreatedBy(getCurrentUserId());
-      entities.add(entity);
-    }
-    tenantPlanMenuRepository.insertBatch(entities);
+    tenantPlanMenuRepository.insertBatch(dto);
     log.info("套餐[{}]菜单配置已更新, 菜单数量={}", dto.getPlanId(), dto.getMenuIds().size());
-  }
-
-  /**
-   * 获取当前用户 ID（私有）。
-   *
-   * <p>从 RequestContext 获取当前操作人 ID，未登录时返回 "system"。
-   *
-   * @return 当前用户 ID
-   */
-  private String getCurrentUserId() {
-    try {
-      return RequestContext.getUserId();
-    } catch (Exception e) {
-      return "system";
-    }
   }
 }

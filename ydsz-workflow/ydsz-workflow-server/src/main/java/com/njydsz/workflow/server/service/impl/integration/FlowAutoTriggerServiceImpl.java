@@ -26,8 +26,8 @@ import com.njydsz.workflow.server.service.FlowRoutingService;
  * 流程自动触发服务实现
  *
  * <p>对 {@link FlowAutoTriggerService} 接口的完整实现，是工作流引擎的<b>流程联动</b>扩展点。 当一个流程实例完成时，自动检查 {@code
- * sourceFlowCode} 对应的所有 {@code enabled=1} 触发规则， 使用 {@code ydsz-literule} 的 {@link
- * com.njydsz.literule.api.expr.ExpressionEvaluator} 评估 {@code conditionExpression}，满足条件则自动启动 {@code
+ * sourceFlowCode} 对应的所有 {@code enabled=1} 触发规则， 使用引擎内置的 {@link
+ * com.njydsz.workflow.server.engine.expr.ExpressionEvaluator} 评估 {@code conditionExpression}，满足条件则自动启动 {@code
  * targetFlowCode} 对应的目标流程。
  *
  * <p><b>核心职责：</b>
@@ -73,8 +73,8 @@ import com.njydsz.workflow.server.service.FlowRoutingService;
  * @see FlowAutoTriggerService 接口定义
  * @see com.njydsz.workflow.infra.entity.FlowAutoTriggerDO 自动触发规则实体
  * @see WorkflowFacade 工作流门面
- * @see com.njydsz.literule.api.expr.ExpressionEvaluator Aviator 表达式评估器
- * @see FlowRoutingServiceImpl 智能路由（与之联动：路由+触发形成完整决策链）
+ * @see com.njydsz.workflow.server.engine.expr.ExpressionEvaluator Aviator 表达式评估器
+ * @see com.njydsz.workflow.server.service.impl.instance.DefaultFlowRoutingService 智能路由（与之联动：路由+触发形成完整决策链）
  */
 @Slf4j
 @Service

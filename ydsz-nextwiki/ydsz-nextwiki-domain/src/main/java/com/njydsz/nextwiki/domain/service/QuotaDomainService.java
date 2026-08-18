@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.nextwiki.infra.entity.StorageQuotaDO;
+import com.njydsz.nextwiki.domain.dto.StorageQuotaDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 
 /**
@@ -42,13 +42,13 @@ public class QuotaDomainService {
    * @param requiredBytes 本次上传所需字节数
    * @throws BusinessException 配额不足或文件数超限时抛出
    */
-  public void checkQuota(StorageQuotaDO quota, long requiredBytes) {
+  public void checkQuota(StorageQuotaDTO quota, long requiredBytes) {
     if (quota == null) {
       throw BusinessException.of(NextwikiExceptionCode.QUOTA_INSUFFICIENT)
           .data("reason", "配额记录不存在");
     }
 
-    if (!quota.hasSpace(requiredBytes)) {
+    if (!hasSpace(quota, requiredBytes)) {
       long used = quota.getQuotaUsed() != null ? quota.getQuotaUsed() : 0;
       long limit = quota.getQuotaLimit() != null ? quota.getQuotaLimit() : 0;
       throw BusinessException.of(NextwikiExceptionCode.QUOTA_INSUFFICIENT)
@@ -57,10 +57,28 @@ public class QuotaDomainService {
           .data("required", formatSize(requiredBytes));
     }
 
-    if (!quota.hasFileCountSlot()) {
+    if (!hasFileCountSlot(quota)) {
       throw BusinessException.of(NextwikiExceptionCode.QUOTA_FILE_LIMIT)
           .data("limit", quota.getFileCountLimit());
     }
+  }
+
+  /** 检查是否有足够空间 */
+  public static boolean hasSpace(StorageQuotaDTO quota, long requiredBytes) {
+    if (quota.getQuotaLimit() == null || quota.getQuotaLimit() <= 0) {
+      return true;
+    }
+    long used = quota.getQuotaUsed() != null ? quota.getQuotaUsed() : 0;
+    return used + requiredBytes <= quota.getQuotaLimit();
+  }
+
+  /** 检查是否有足够文件数量 */
+  public static boolean hasFileCountSlot(StorageQuotaDTO quota) {
+    if (quota.getFileCountLimit() == null || quota.getFileCountLimit() <= 0) {
+      return true;
+    }
+    int used = quota.getFileCountUsed() != null ? quota.getFileCountUsed() : 0;
+    return used < quota.getFileCountLimit();
   }
 
   /**
@@ -72,22 +90,20 @@ public class QuotaDomainService {
    * @param scopeId 配额作用域 ID
    * @return 新建的默认配额实体（未持久化）
    */
-  public StorageQuotaDO buildDefaultQuota(String scopeType, String scopeId) {
+  public StorageQuotaDTO buildDefaultQuota(String scopeType, String scopeId) {
     long defaultLimit = DEFAULT_USER_QUOTA;
     int defaultFileLimit = DEFAULT_USER_FILE_LIMIT;
     if ("tenant".equals(scopeType)) {
       defaultLimit = 100L * 1024 * 1024 * 1024;
       defaultFileLimit = 100000;
     }
-    return StorageQuotaDO.builder()
+    return StorageQuotaDTO.builder()
         .scopeType(scopeType)
         .scopeId(scopeId)
         .quotaLimit(defaultLimit)
         .quotaUsed(0L)
         .fileCountLimit(defaultFileLimit)
         .fileCountUsed(0)
-        .revision(0)
-        .deleted(0)
         .build();
   }
 

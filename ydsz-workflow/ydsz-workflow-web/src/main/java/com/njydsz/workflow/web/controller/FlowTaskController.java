@@ -132,6 +132,7 @@ public class FlowTaskController {
    */
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_VIEW)
   @GetMapping("/task/{taskId}")
+  @Operation(summary = "任务详情查询")
   public BaseResponse<Map<String, Object>> taskDetail(@PathVariable String taskId) {
     return BaseResponse.success(workflowFacade.getTaskDetail(taskId));
   }
@@ -151,6 +152,7 @@ public class FlowTaskController {
       action = AuditAction.CREATE,
       content = "'claim'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "签收任务")
   public BaseResponse<Void> claim(@RequestParam String taskId) {
     workflowFacade.claimTask(taskId, AuthContextUtils.getUserId());
     return BaseResponse.success();
@@ -171,6 +173,7 @@ public class FlowTaskController {
       action = AuditAction.APPROVE,
       content = "'pass'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "通过任务")
   public BaseResponse<Void> pass(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -193,6 +196,7 @@ public class FlowTaskController {
       action = AuditAction.REJECT,
       content = "'reject'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "驳回任务")
   public BaseResponse<Void> reject(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -207,6 +211,7 @@ public class FlowTaskController {
    * @return 该任务所属实例经过的历史节点列表（按首次完成时间正序）
    */
   @GetMapping("/task/{taskId}/rejectableNodes")
+  @Operation(summary = "查询任务所属实例的历史节点")
   public BaseResponse<List<Map<String, Object>>> rejectableNodes(@PathVariable String taskId) {
     FlowRunTaskDO task = taskService.getById(taskId);
     if (task == null) {
@@ -231,6 +236,7 @@ public class FlowTaskController {
       action = AuditAction.GRANT,
       content = "'transfer'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "转办任务")
   public BaseResponse<Void> transfer(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -253,6 +259,7 @@ public class FlowTaskController {
       action = AuditAction.GRANT,
       content = "'delegate'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "委派任务")
   public BaseResponse<Void> delegate(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -275,6 +282,7 @@ public class FlowTaskController {
       action = AuditAction.CREATE,
       content = "'countersignBefore'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "前加签")
   public BaseResponse<Void> countersignBefore(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -297,6 +305,7 @@ public class FlowTaskController {
       action = AuditAction.CREATE,
       content = "'countersignAfter'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "后加签")
   public BaseResponse<Void> countersignAfter(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -342,6 +351,7 @@ public class FlowTaskController {
       action = AuditAction.CREATE,
       content = "'jump'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
+  @Operation(summary = "管理员强制跳转任务")
   public BaseResponse<Void> jump(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -364,6 +374,7 @@ public class FlowTaskController {
       action = AuditAction.CREATE,
       content = "'freeJump'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_FREE_JUMP)
+  @Operation(summary = "办理人自由流跳转任务")
   public BaseResponse<Void> freeJump(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -388,6 +399,7 @@ public class FlowTaskController {
       action = AuditAction.APPROVE,
       content = "'batchPass'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "批量通过任务")
   public BaseResponse<Void> batchPass(@RequestBody List<String> taskIds) {
     workflowFacade.batchPass(taskIds, AuthContextUtils.getUserId(), AuthContextUtils.getUsername());
     return BaseResponse.success();
@@ -407,6 +419,7 @@ public class FlowTaskController {
       action = AuditAction.REJECT,
       content = "'batchReject'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "批量驳回任务")
   public BaseResponse<Void> batchReject(@Valid @RequestBody List<FlowTaskOperateDTO> dtos) {
     for (FlowTaskOperateDTO dto : dtos) {
       dto.setUserId(AuthContextUtils.getUserId());
@@ -430,6 +443,7 @@ public class FlowTaskController {
       action = AuditAction.GRANT,
       content = "'batchTransfer'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "批量转办任务")
   public BaseResponse<Void> batchTransfer(@Valid @RequestBody List<FlowTaskOperateDTO> dtos) {
     for (FlowTaskOperateDTO dto : dtos) {
       dto.setUserId(AuthContextUtils.getUserId());
@@ -454,6 +468,7 @@ public class FlowTaskController {
       action = AuditAction.CREATE,
       content = "'batchUrge'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "批量催办任务")
   public BaseResponse<Map<String, Object>> batchUrge(
       @RequestBody List<String> instanceIds, @RequestParam(required = false) String comment) {
     return BaseResponse.success(
@@ -473,6 +488,7 @@ public class FlowTaskController {
       action = AuditAction.APPROVE,
       content = "'passAll'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "一键通过全部待办")
   public BaseResponse<Integer> passAll() {
     return BaseResponse.success(
         taskService.passAll(AuthContextUtils.getUserId(), AuthContextUtils.getUsername()));
@@ -492,6 +508,7 @@ public class FlowTaskController {
    * @return 统一响应结果，包含分页待办列表
    */
   @GetMapping("/task/todo")
+  @Operation(summary = "查询待办任务列表")
   public PageResponse<List<FlowRunTaskVO>> todo(
       @RequestParam(defaultValue = "1") @Min(1) int page,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
@@ -520,6 +537,7 @@ public class FlowTaskController {
    * @return 统一响应结果，包含分页已办列表
    */
   @GetMapping("/task/done")
+  @Operation(summary = "查询已办任务列表")
   public PageResponse<List<FlowRunTaskVO>> done(
       @RequestParam(defaultValue = "1") @Min(1) int page,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
@@ -539,14 +557,17 @@ public class FlowTaskController {
   /**
    * P2-32: 超期任务查询
    *
+   * @param limit 返回条数上限（默认 200，最大 500）
    * @return 统一响应结果，包含超期任务列表
    */
   @GetMapping("/task/overdue")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-  public BaseResponse<List<FlowRunTaskVO>> overdue() {
+  @Operation(summary = "查询超期任务列表")
+  public BaseResponse<List<FlowRunTaskVO>> overdue(
+      @RequestParam(defaultValue = "200") @Min(1) @Max(500) int limit) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    List<FlowRunTaskDO> tasks = taskService.listOverdue(userId, tenantId);
+    List<FlowRunTaskDO> tasks = taskService.listOverdue(userId, tenantId, limit);
     return BaseResponse.success(WorkflowConverter.INSTANT.flowRunTaskListToVO(tasks));
   }
 
@@ -563,6 +584,7 @@ public class FlowTaskController {
    * @return 统一响应结果，包含分页已办列表
    */
   @GetMapping("/task/done/search")
+  @Operation(summary = "多维筛选已办任务")
   public PageResponse<List<FlowRunTaskVO>> doneSearch(
       @RequestParam(defaultValue = "1") @Min(1) int page,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
@@ -591,6 +613,7 @@ public class FlowTaskController {
    */
   @GetMapping("/stats/nodeDuration")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "节点耗时统计")
   public BaseResponse<List<Map<String, Object>>> nodeDurationStats(
       @RequestParam(required = false) String flowCode,
       @RequestParam(required = false) LocalDateTime startTime,
@@ -608,6 +631,7 @@ public class FlowTaskController {
    */
   @GetMapping("/stats/overdue")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "超期任务统计")
   public BaseResponse<List<Map<String, Object>>> overdueStats(
       @RequestParam(required = false) String flowCode,
       @RequestParam(required = false) LocalDateTime startTime,
@@ -632,6 +656,7 @@ public class FlowTaskController {
       action = AuditAction.CREATE,
       content = "'countersignRemove'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "减签（移除会签审批人）")
   public BaseResponse<Void> countersignRemove(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -653,6 +678,7 @@ public class FlowTaskController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'markRead'")
+  @Operation(summary = "标记任务已阅")
   public BaseResponse<Void> markRead(@PathVariable String taskId) {
     String userId = AuthContextUtils.getUserId();
     taskService.markRead(taskId, userId);
@@ -674,6 +700,7 @@ public class FlowTaskController {
       action = AuditAction.CREATE,
       content = "'communicate'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "添加沟通评论")
   public BaseResponse<Void> communicate(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -696,6 +723,7 @@ public class FlowTaskController {
       action = AuditAction.CREATE,
       content = "'saveDraft'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "暂存待审（保存审批意见草稿）")
   public BaseResponse<Void> saveDraft(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -718,6 +746,7 @@ public class FlowTaskController {
       action = AuditAction.APPROVE,
       content = "'addApprover'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "追加处理人")
   public BaseResponse<Void> addApprover(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -728,22 +757,23 @@ public class FlowTaskController {
   /**
    * P1-3: 取回审批 — 审批人已审批后，在下一节点未处理前，把自己的审批撤回。
    *
-   * @param hisTaskId 历史任务 ID（ydsz_flow_his_task.id）
+   * @param taskId 历史任务 ID（ydsz_flow_his_task.id）
    * @param comment 取回说明（可选）
    * @return 统一响应结果，包含新创建的待办任务 ID
    */
   @Idempotent(key = "ydsz:workflow:FlowTaskController:retract:lock", ttlSeconds = 5)
-  @PostMapping("/task/{hisTaskId}/retract")
+  @PostMapping("/task/{taskId}/retract")
   @Audit(
       module = "流程任务",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'retract'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "取回审批")
   public BaseResponse<String> retract(
-      @PathVariable String hisTaskId, @RequestParam(required = false) String comment) {
+      @PathVariable String taskId, @RequestParam(required = false) String comment) {
     return BaseResponse.success(
-        taskService.retract(hisTaskId, AuthContextUtils.getUserId(), comment));
+        taskService.retract(taskId, AuthContextUtils.getUserId(), comment));
   }
 
   /**
@@ -761,6 +791,7 @@ public class FlowTaskController {
       action = AuditAction.DISABLE,
       content = "'suspendTask'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "任务挂起")
   public BaseResponse<Void> suspendTask(
       @PathVariable String taskId, @RequestParam(required = false) String reason) {
     workflowFacade.suspendTask(taskId, AuthContextUtils.getUserId(), reason);
@@ -782,6 +813,7 @@ public class FlowTaskController {
       action = AuditAction.ENABLE,
       content = "'activateTask'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  @Operation(summary = "任务激活")
   public BaseResponse<Void> activateTask(@PathVariable String taskId) {
     workflowFacade.activateTask(taskId, AuthContextUtils.getUserId());
     return BaseResponse.success();
@@ -795,6 +827,7 @@ public class FlowTaskController {
    * @return 包含 todoCount、userId、timestamp 的响应
    */
   @GetMapping("/todo/count")
+  @Operation(summary = "查询当前用户的待办数")
   public BaseResponse<Map<String, Object>> myTodoCount() {
     String userId = AuthContextUtils.getUserId();
     if (userId == null) {
@@ -823,6 +856,7 @@ public class FlowTaskController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'pushMyTodoCount'")
+  @Operation(summary = "手动触发推送当前用户待办数到WebSocket")
   public BaseResponse<Boolean> pushMyTodoCount() {
     String userId = AuthContextUtils.getUserId();
     if (userId == null) {
@@ -948,6 +982,7 @@ public class FlowTaskController {
       action = AuditAction.GRANT,
       content = "'createDelegateAuth'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
+  @Operation(summary = "创建长期授权委派")
   public BaseResponse<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthPostDTO dto) {
     var auth = WorkflowConverter.INSTANT.postDtoToEntity(dto);
     if (auth.getOwnerUserId() == null) {
@@ -972,6 +1007,7 @@ public class FlowTaskController {
       action = AuditAction.GRANT,
       content = "'revokeDelegateAuth'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
+  @Operation(summary = "撤回授权")
   public BaseResponse<Void> revokeDelegateAuth(@PathVariable String id) {
     String ownerId = AuthContextUtils.getUserId();
     delegateAuthService.revoke(id, ownerId);
@@ -996,6 +1032,7 @@ public class FlowTaskController {
       action = AuditAction.GRANT,
       content = "'updateDelegateAuthStatus'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
+  @Operation(summary = "启用停用授权")
   public BaseResponse<Void> updateDelegateAuthStatus(
       @PathVariable String id, @RequestParam String status) {
     String operatorId = AuthContextUtils.getUserId();
@@ -1010,6 +1047,7 @@ public class FlowTaskController {
    * @return 授权列表
    */
   @GetMapping("/delegateAuth/mine")
+  @Operation(summary = "查询我设置的授权列表")
   public BaseResponse<List<FlowDelegateAuthVO>> listMyDelegateAuths(
       @RequestParam(required = false) String status) {
     String ownerId = AuthContextUtils.getUserId();
@@ -1026,6 +1064,7 @@ public class FlowTaskController {
    * @return 授权列表
    */
   @GetMapping("/delegateAuth/asDelegate")
+  @Operation(summary = "查询代理给我的授权列表")
   public BaseResponse<List<FlowDelegateAuthVO>> listAsDelegate(
       @RequestParam(required = false) String status) {
     String delegateUserId = AuthContextUtils.getUserId();
@@ -1053,6 +1092,7 @@ public class FlowTaskController {
       action = AuditAction.CREATE,
       content = "'pageCc'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
+  @Operation(summary = "抄送中心分页查询")
   public BaseResponse<List<FlowCcDO>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     String userId = AuthContextUtils.getUserId();
@@ -1068,6 +1108,7 @@ public class FlowTaskController {
    * @return 未读抄送条数
    */
   @GetMapping("/cc/unreadCount")
+  @Operation(summary = "抄送未读数")
   public BaseResponse<Long> ccUnreadCount() {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     String userId = AuthContextUtils.getUserId();
@@ -1088,6 +1129,7 @@ public class FlowTaskController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'ccMarkRead'")
+  @Operation(summary = "抄送标记已读")
   public BaseResponse<Boolean> ccMarkRead(@PathVariable String id) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     String userId = AuthContextUtils.getUserId();
@@ -1108,6 +1150,7 @@ public class FlowTaskController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'ccMarkAllRead'")
+  @Operation(summary = "抄送全部标记已读")
   public BaseResponse<Integer> ccMarkAllRead() {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     String userId = AuthContextUtils.getUserId();
@@ -1123,6 +1166,7 @@ public class FlowTaskController {
    * @return 附件列表
    */
   @GetMapping("/attachment/task/{taskId}")
+  @Operation(summary = "查询任务附件")
   public BaseResponse<List<FlowAttachmentVO>> listByTask(@PathVariable String taskId) {
     return BaseResponse.success(
         WorkflowConverter.INSTANT.flowAttachmentListToVO(attachmentService.listByTask(taskId)));
@@ -1135,6 +1179,7 @@ public class FlowTaskController {
    * @return 附件列表
    */
   @GetMapping("/attachment/instance/{instanceId}")
+  @Operation(summary = "查询实例附件")
   public BaseResponse<List<FlowAttachmentVO>> listByInstance(@PathVariable String instanceId) {
     return BaseResponse.success(
         WorkflowConverter.INSTANT.flowAttachmentListToVO(
@@ -1156,6 +1201,7 @@ public class FlowTaskController {
       type = AuditType.OPERATION,
       action = AuditAction.DELETE,
       content = "'delete'")
+  @Operation(summary = "删除附件（逻辑删除）")
   public BaseResponse<Void> delete(
       @PathVariable String attachmentId, @RequestParam String operatorId) {
     attachmentService.delete(attachmentId, operatorId);

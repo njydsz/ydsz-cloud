@@ -64,7 +64,7 @@ import com.njydsz.workflow.server.service.FlowCustomButtonService;
  *       /definition/{id}/enable}（启用） / {@code POST /definition/{id}/disable}（停用） / {@code GET
  *       /definition/{id}/versions}（版本列表） / {@code GET /definition/{id}/diff}（版本差异对比） /
  *       {@code POST /definition/rollback}（一键回滚到上一版本）
- *   <li><b>设计器</b>：{@code POST /definition/{definitionId}/node/{nodeCode}/coordinate}（更新节点坐标） /
+ *   <li><b>设计器</b>：{@code POST /definition/{id}/node/{nodeCode}/coordinate}（更新节点坐标） /
  *       {@code PUT /definition/{id}}（编辑未发布草稿）
  *   <li><b>导入导出</b>：{@code GET /definition/{id}/export}（JSON 导出） / {@code POST
  *       /definition/import}（JSON 导入，创建为草稿）
@@ -384,7 +384,7 @@ public class FlowDefinitionController {
   /**
    * P2-40: 更新节点坐标（供前端设计器保存布局）
    *
-   * @param definitionId 流程定义 ID
+   * @param id 流程定义 ID
    * @param nodeCode 节点编码
    * @param coordinate 坐标 JSON 字符串
    * @return 统一响应结果
@@ -393,7 +393,7 @@ public class FlowDefinitionController {
       key = "ydsz:workflow:FlowDefinitionController:updateNodeCoordinate:lock",
       ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowDefinitionDO.updateNodeCoordinate", threshold = 50)
-  @PostMapping("/definition/{definitionId}/node/{nodeCode}/coordinate")
+  @PostMapping("/definition/{id}/node/{nodeCode}/coordinate")
   @Audit(
       module = "流程定义",
       type = AuditType.OPERATION,
@@ -402,10 +402,10 @@ public class FlowDefinitionController {
   @Operation(summary = "更新流程节点坐标")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
   public BaseResponse<Void> updateNodeCoordinate(
-      @PathVariable String definitionId,
+      @PathVariable String id,
       @PathVariable String nodeCode,
       @RequestBody String coordinate) {
-    definitionService.updateNodeCoordinate(definitionId, nodeCode, coordinate);
+    definitionService.updateNodeCoordinate(id, nodeCode, coordinate);
     return BaseResponse.success();
   }
 
@@ -523,6 +523,7 @@ public class FlowDefinitionController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'correlateMessage'")
+  @Operation(summary = "消息关联（外部系统通过消息名称触发 WAITING 订阅）")
   public BaseResponse<Integer> correlateMessage(
       @RequestParam String messageName,
       @RequestParam(required = false) String correlationKey,
@@ -549,6 +550,7 @@ public class FlowDefinitionController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'throwError'")
+  @Operation(summary = "抛出错误（触发 WAITING 的 ERROR 订阅）")
   public BaseResponse<Integer> throwError(
       @RequestParam String errorCode,
       @RequestParam(required = false) String instanceId,
@@ -566,6 +568,7 @@ public class FlowDefinitionController {
    * @return 订阅列表（含 WAITING / COMPLETED / CANCELLED 状态）
    */
   @GetMapping("/instance/{instanceId}/eventSubscriptions")
+  @Operation(summary = "查询实例的事件订阅列表")
   public BaseResponse<List<FlowEventSubscriptionVO>> listEventSubscriptions(
       @PathVariable String instanceId) {
     return BaseResponse.success(
@@ -589,6 +592,7 @@ public class FlowDefinitionController {
       action = AuditAction.CREATE,
       content = "'slaScan'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
+  @Operation(summary = "手动触发 SLA 扫描")
   public BaseResponse<Integer> slaScan() {
     int processed = slaService.scanAndProcess();
     return BaseResponse.success(processed);
@@ -609,6 +613,7 @@ public class FlowDefinitionController {
       action = AuditAction.CREATE,
       content = "'slaProcess'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
+  @Operation(summary = "手动触发单条任务的 SLA 处理")
   public BaseResponse<Boolean> slaProcess(@PathVariable String taskId) {
     FlowRunTaskDO task = taskService.getById(taskId);
     if (task == null) {
@@ -702,13 +707,13 @@ public class FlowDefinitionController {
   /**
    * 获取指定流程定义的可用变量列表。
    *
-   * @param definitionId 流程定义 ID
+   * @param id 流程定义 ID
    * @return 变量列表
    */
-  @GetMapping("/definition/conditionExpr/variables/{definitionId}")
+  @GetMapping("/definition/conditionExpr/variables/{id}")
   @Operation(summary = "获取流程定义的可用变量列表")
-  public BaseResponse<List<Map<String, String>>> variables(@PathVariable String definitionId) {
-    return BaseResponse.success(conditionExprService.getVariablesByDefinition(definitionId));
+  public BaseResponse<List<Map<String, String>>> variables(@PathVariable String id) {
+    return BaseResponse.success(conditionExprService.getVariablesByDefinition(id));
   }
 
   /**

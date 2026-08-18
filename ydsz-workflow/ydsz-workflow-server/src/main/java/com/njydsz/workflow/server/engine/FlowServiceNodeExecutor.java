@@ -17,9 +17,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
@@ -186,14 +190,44 @@ public class FlowServiceNodeExecutor {
         log.error("[Flow-Service] HTTP 调用失败: node={} {}", node.getNodeCode(), msg);
       }
       return new ServiceExecutionResult(success, msg);
-    } catch (Exception e) {
+    } catch (HttpServerErrorException e) {
+      // 5xx 服务端错误：可重试异常
+      log.warn(
+          "[Flow-Service] HTTP 服务端错误(可重试): node={} url={} status={} err={}",
+          node.getNodeCode(),
+          url,
+          e.getStatusCode(),
+          e.getMessage());
+      return new ServiceExecutionResult(
+          false, "HTTP 服务端错误[" + e.getStatusCode() + "]，建议重试");
+    } catch (ResourceAccessException e) {
+      // 网络/超时异常：可重试异常
+      log.warn(
+          "[Flow-Service] HTTP 网络异常(可重试): node={} url={} err={}",
+          node.getNodeCode(),
+          url,
+          e.getMessage());
+      return new ServiceExecutionResult(false, "HTTP 网络超时或连接失败，建议重试");
+    } catch (HttpClientErrorException e) {
+      // 4xx 客户端错误：不可重试（请求本身有误）
       log.error(
-          "[Flow-Service] HTTP 调用异常: node={} url={} err={}",
+          "[Flow-Service] HTTP 客户端错误(不可重试): node={} url={} status={} err={}",
+          node.getNodeCode(),
+          url,
+          e.getStatusCode(),
+          e.getMessage(),
+          e);
+      return new ServiceExecutionResult(
+          false, "HTTP 客户端错误[" + e.getStatusCode() + "]: " + e.getStatusText());
+    } catch (Exception e) {
+      // 兜底：未知异常
+      log.error(
+          "[Flow-Service] HTTP 调用未知异常: node={} url={} err={}",
           node.getNodeCode(),
           url,
           e.getMessage(),
           e);
-      return new ServiceExecutionResult(false, "HTTP 调用异常: " + e.getMessage());
+      return new ServiceExecutionResult(false, "HTTP 调用未知异常: " + e.getMessage());
     }
   }
 

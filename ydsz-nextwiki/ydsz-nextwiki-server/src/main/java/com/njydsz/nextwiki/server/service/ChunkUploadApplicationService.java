@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.PostConstruct;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +21,9 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.exception.custom.BusinessException;
@@ -31,8 +34,8 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
-import com.njydsz.nextwiki.infra.entity.FileVersionDO;
+import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
+import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
@@ -42,6 +45,7 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
+import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 
 /**
  * 分片上传应用服务
@@ -53,7 +57,7 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  * <ol>
  *   <li>初始化：生成 uploadId，记录文件元数据到 Redis
  *   <li>上传分片：将分片写入临时目录，记录已上传分片号
- *   <li>完成合并：按分片顺序合并为完整文件，上传到存储，创建 FileNodeDO
+ *   <li>完成合并：按分片顺序合并为完整文件，上传到存储，创建 FileNodeVO
  *   <li>取消：清理临时文件和 Redis 记录
  * </ol>
  *
@@ -74,6 +78,17 @@ public class ChunkUploadApplicationService {
   private final ApplicationEventPublisher eventPublisher;
   private final NextwikiProperties properties;
   private final SnowflakeIdGenerator snowflakeIdGenerator;
+
+  /** 事务管理器（用于创建编程式事务模板） */
+  private final PlatformTransactionManager transactionManager;
+
+  /** 编程式事务模板（用于精确控制事务边界，将IO操作移出事务） */
+  private TransactionTemplate transactionTemplate;
+
+  @PostConstruct
+  void initTransactionTemplate() {
+    this.transactionTemplate = new TransactionTemplate(transactionManager);
+  }
 
   @Autowired(required = false)
   private IFileStorageProvider fileStorageProvider;
@@ -100,7 +115,8 @@ public class ChunkUploadApplicationService {
       FolderDomainService folderDomainService,
       ApplicationEventPublisher eventPublisher,
       NextwikiProperties properties,
-      SnowflakeIdGenerator snowflakeIdGenerator) {
+      SnowflakeIdGenerator snowflakeIdGenerator,
+      PlatformTransactionManager transactionManager) {
     this.stringOps = stringOps;
     this.collectionOps = collectionOps;
     this.fileNodeRepository = fileNodeRepository;
@@ -111,6 +127,7 @@ public class ChunkUploadApplicationService {
     this.eventPublisher = eventPublisher;
     this.properties = properties;
     this.snowflakeIdGenerator = snowflakeIdGenerator;
+    this.transactionManager = transactionManager;
   }
 
   /**
@@ -213,19 +230,19 @@ public class ChunkUploadApplicationService {
   /**
    * 完成分片上传：校验完整性 → 合并分片 → 上传存储 → 建节点（含秒传去重）。
    *
-   * <p>先核对已上传分片数与声明总数一致，再按序合并临时分片、计算 SHA-256 做秒传去重， 命中已有文件则复用其存储键（仅新增节点与配额）；否则上传对象存储并创建 FileNodeDO。
+   * <p><b>P0-2 事务优化：</b>将分片合并、SHA-256 计算、存储上传等耗时 IO 操作移出事务，仅在短事务中执行数据库操作。
+   *
+   * <p>先核对已上传分片数与声明总数一致，再按序合并临时分片、计算 SHA-256 做秒传去重， 命中已有文件则复用其存储键（仅新增节点与配额）；否则上传对象存储并创建 FileNodeVO。
    * 成功后发布上传事件（驱动内容提取/索引/审计），并在 {@code finally} 清理临时文件与 Redis 会话。
    *
    * @param uploadId 会话 ID
    * @param userId 操作人 ID，用于配额与审计归属
    * @return 新建/去重的文件节点视图 {@link FileNodeVO}
    * @throws BusinessException 分片不完整、存储未配置或合并失败（FILE_DOWNLOAD_FAILED）时抛出
-   * @transaction 整个方法 {@code @Transactional(rollbackFor = Exception.class)}，节点落库与配额/版本变更同事务
    * @complexity O(totalChunks)（顺序合并）+ 一次存储上传 + 一次 SHA-256 全量读取
    * @concurrency 同一 {@code uploadId} 应串行完成，避免并发合并竞争；分片上传阶段可并发
-   * @note 方法结束后强制清理临时分片与 Redis 会话，确保不残留孤儿文件
+   * @note 分片合并、SHA-256 计算与存储上传均在事务外执行，仅数据库操作使用短事务
    */
-  @Transactional(rollbackFor = Exception.class)
   public FileNodeVO completeChunkUpload(String uploadId, String userId) {
     ChunkUploadSession session = validateSession(uploadId);
 
@@ -237,9 +254,10 @@ public class ChunkUploadApplicationService {
           .data("total", session.getTotalChunks());
     }
 
-    // 合并分片
-    Path mergedFile = getMergedPath(uploadId, session.getFileName());
+    // ===== 阶段1：准备阶段（无事务边界） =====
+    Path mergedFile = null;
     try {
+      mergedFile = getMergedPath(uploadId, session.getFileName());
       Files.createDirectories(mergedFile.getParent());
       try (OutputStream os = Files.newOutputStream(mergedFile)) {
         for (int i = 1; i <= session.getTotalChunks(); i++) {
@@ -255,132 +273,183 @@ public class ChunkUploadApplicationService {
             session.getFileSize(),
             actualSize);
       }
+    } catch (IOException e) {
+      log.error("[ChunkUploadApplicationService] 合并失败: uploadId={}", uploadId, e);
+      throw new BusinessException(NextwikiExceptionCode.FILE_DOWNLOAD_FAILED);
+    }
 
-      // 上传到存储
+    // 计算 SHA-256（IO 操作，在事务外执行）
+    String fileHash = calculateSha256(mergedFile);
+
+    // 秒传去重检查（只读查询）
+    FileNodeVO dedupExisting = null;
+    if (fileHash != null) {
+      dedupExisting = fileNodeRepository.findByFileHash(fileHash).orElse(null);
+    }
+
+    // 存储上传（IO 操作，在事务外执行）
+    FileStorage stored = null;
+    String storageKey = null;
+    if (dedupExisting == null) {
       IFileStorage storage = resolveStorage();
       if (storage == null) {
         throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
       }
-
-      // P0-R2: 计算 SHA-256 哈希（用于秒传去重）
-      String fileHash = calculateSha256(mergedFile);
-
-      // P0-R2: 秒传去重检查
-      if (fileHash != null) {
-        FileNodeDO existing = fileNodeRepository.findByFileHash(fileHash);
-        if (existing != null) {
-          log.info(
-              "[ChunkUploadApplicationService] 秒传命中: hash={}, existingId={}",
-              fileHash,
-              existing.getId());
-          FileNodeDO deduped = buildDedupedNode(session, existing, fileHash, userId);
-          FileNodeDO saved = fileNodeRepository.save(deduped);
-          List<FileVersionDO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
-          FileVersionDomainService.VersionCreateResult versionResult =
-              versionDomainService.createVersion(
-                  saved,
-                  existingVersions,
-                  existing.getStorageKey(),
-                  existing.getSize(),
-                  fileHash,
-                  existing.getMimeType(),
-                  "秒传",
-                  userId);
-          versionRepository.setActiveVersion(saved.getId(), -1);
-          versionRepository.save(versionResult.newVersion());
-          fileNodeRepository.update(versionResult.updatedFileNode());
-          cleanupExcessVersions(saved.getId());
-          quotaDomainService.addUsage("user", userId, existing.getSize(), 1);
-          publishUploadEvent(saved, userId);
-          return FileNodeVO.builder()
-              .id(saved.getId())
-              .name(saved.getName())
-              .nodeType(saved.getNodeType())
-              .size(saved.getSize())
-              .build();
-        }
-      }
-
-      String storageKey = generateStorageKey(userId, session.getFileName());
+      storageKey = generateStorageKey(userId, session.getFileName());
       MultipartFile multipartFile = createMultipartFile(mergedFile, session.getFileName());
-      FileStorage stored = storage.upload(null, storageKey, multipartFile);
+      stored = storage.upload(null, storageKey, multipartFile);
+    }
 
-      // P0-R2: 解析父目录获取正确 path/level（不再硬编码 "/" 和 1）
-      FileNodeDO parent = resolveParent(session.getParentId(), userId);
-      String parentPath = parent.getPath() != null ? parent.getPath() : "/";
-      String path =
-          parentPath.endsWith("/")
-              ? parentPath + session.getFileName() + "/"
-              : parentPath + "/" + session.getFileName() + "/";
-      int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
+    // 解析父目录获取正确 path/level
+    FileNodeVO parent = resolveParent(session.getParentId(), userId);
+    String parentPath = parent.getPath() != null ? parent.getPath() : "/";
+    String path =
+        parentPath.endsWith("/")
+            ? parentPath + session.getFileName() + "/"
+            : parentPath + "/" + session.getFileName() + "/";
+    int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
 
-      FileNodeDO FileNodeDO =
-          FileNodeDO.builder()
-              .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
-              .parentId(parent.getId())
-              .name(session.getFileName())
-              .nodeType(FileNodeDO.TYPE_FILE)
-              .suffix(extractSuffix(session.getFileName()))
-              .size(stored.getSize())
-              .storageKey(storageKey)
-              .bucketName(stored.getUuidName())
-              .mimeType(stored.getMimeType())
-              .path(path)
-              .level(level)
-              .sort(0)
-              .currentVersion(0)
-              .fileHash(fileHash)
-              .previewReady(false)
-              .starred(false)
-              .shareStatus("private")
-              .status("active")
-              .deleted(0)
-              .revision(0)
-              .build();
-      FileNodeDO.setCreatedBy(userId);
-      FileNodeDO.setUpdatedBy(userId);
+    // ===== 阶段2：事务阶段（短事务，仅数据库操作） =====
+    ChunkUploadPrepareContext ctx =
+        ChunkUploadPrepareContext.builder()
+            .session(session)
+            .userId(userId)
+            .fileHash(fileHash)
+            .dedupExisting(dedupExisting)
+            .stored(stored)
+            .storageKey(storageKey)
+            .parent(parent)
+            .path(path)
+            .level(level)
+            .build();
 
-      FileNodeDO saved = fileNodeRepository.save(FileNodeDO);
+    FileNodeVO result;
+    if (dedupExisting != null) {
+      result = persistDedupedNode(ctx);
+    } else {
+      result = persistNewNode(ctx);
+    }
 
-      List<FileVersionDO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+    // 清理临时资源（事务外）
+    cleanupChunks(uploadId, session.getTotalChunks(), session.getFileName());
+    stringOps.del(KEY_UPLOAD_SESSION + uploadId);
+    stringOps.del(KEY_UPLOADED_CHUNKS + uploadId);
+
+    return result;
+  }
+
+  /**
+   * 秒传命中时持久化去重节点（短事务）。
+   */
+  private FileNodeVO persistDedupedNode(ChunkUploadPrepareContext ctx) {
+    return transactionTemplate.execute(status -> {
+      FileNodeDTO deduped = buildDedupedNode(ctx.session, ctx.dedupExisting, ctx.fileHash, ctx.userId);
+      FileNodeDTO saved = fileNodeRepository.save(deduped);
+      List<FileVersionVO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+      FileNodeVO savedVO = NextwikiConverter.INSTANT.dtoToVO(saved);
       FileVersionDomainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
-              saved,
+              savedVO,
               existingVersions,
-              storageKey,
-              stored.getSize(),
-              fileHash,
-              stored.getMimeType(),
-              "分片上传",
-              userId);
+              ctx.dedupExisting.getStorageKey(),
+              ctx.dedupExisting.getSize(),
+              ctx.fileHash,
+              ctx.dedupExisting.getMimeType(),
+              "秒传",
+              ctx.userId);
       versionRepository.setActiveVersion(saved.getId(), -1);
       versionRepository.save(versionResult.newVersion());
-      fileNodeRepository.update(versionResult.updatedFileNode());
+      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
       cleanupExcessVersions(saved.getId());
+      quotaDomainService.addUsage("user", ctx.userId, ctx.dedupExisting.getSize(), 1);
+      publishUploadEvent(savedVO, ctx.userId);
 
-      quotaDomainService.addUsage("user", userId, stored.getSize(), 1);
-
-      // P0-R2: 发布上传事件（触发内容提取、索引同步、审计日志）
-      publishUploadEvent(saved, userId);
-
-      log.info(
-          "[ChunkUploadApplicationService] 分片上传完成: uploadId={}, nodeId={}",
-          uploadId,
-          saved.getId());
+      log.info("[ChunkUploadApplicationService] 秒传分片上传完成: hash={}, nodeId={}",
+          ctx.fileHash, saved.getId());
       return FileNodeVO.builder()
           .id(saved.getId())
           .name(saved.getName())
           .nodeType(saved.getNodeType())
           .size(saved.getSize())
           .build();
-    } catch (IOException e) {
-      log.error("[ChunkUploadApplicationService] 合并失败: uploadId={}", uploadId, e);
-      throw new BusinessException(NextwikiExceptionCode.FILE_DOWNLOAD_FAILED);
-    } finally {
-      cleanupChunks(uploadId, session.getTotalChunks(), session.getFileName());
-      stringOps.del(KEY_UPLOAD_SESSION + uploadId);
-      stringOps.del(KEY_UPLOADED_CHUNKS + uploadId);
-    }
+    });
+  }
+
+  /**
+   * 新文件分片上传时持久化节点（短事务）。
+   */
+  private FileNodeVO persistNewNode(ChunkUploadPrepareContext ctx) {
+    return transactionTemplate.execute(status -> {
+      FileNodeDTO newNode =
+          FileNodeDTO.builder()
+              .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+              .parentId(ctx.parent.getId())
+              .name(ctx.session.getFileName())
+              .nodeType(FileNodeVO.TYPE_FILE)
+              .suffix(extractSuffix(ctx.session.getFileName()))
+              .size(ctx.stored.getSize())
+              .storageKey(ctx.storageKey)
+              .bucketName(ctx.stored.getUuidName())
+              .mimeType(ctx.stored.getMimeType())
+              .path(ctx.path)
+              .level(ctx.level)
+              .sort(0)
+              .currentVersion(0)
+              .fileHash(ctx.fileHash)
+              .previewReady(false)
+              .starred(false)
+              .shareStatus("private")
+              .createdBy(ctx.userId)
+              .updatedBy(ctx.userId)
+              .build();
+
+      FileNodeDTO saved = fileNodeRepository.save(newNode);
+      List<FileVersionVO> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+      FileNodeVO savedVO = NextwikiConverter.INSTANT.dtoToVO(saved);
+      FileVersionDomainService.VersionCreateResult versionResult =
+          versionDomainService.createVersion(
+              savedVO,
+              existingVersions,
+              ctx.storageKey,
+              ctx.stored.getSize(),
+              ctx.fileHash,
+              ctx.stored.getMimeType(),
+              "分片上传",
+              ctx.userId);
+      versionRepository.setActiveVersion(saved.getId(), -1);
+      versionRepository.save(versionResult.newVersion());
+      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
+      cleanupExcessVersions(saved.getId());
+      quotaDomainService.addUsage("user", ctx.userId, ctx.stored.getSize(), 1);
+      publishUploadEvent(savedVO, ctx.userId);
+
+      log.info("[ChunkUploadApplicationService] 分片上传完成: uploadId={}, nodeId={}",
+          ctx.session.getUploadId(), saved.getId());
+      return FileNodeVO.builder()
+          .id(saved.getId())
+          .name(saved.getName())
+          .nodeType(saved.getNodeType())
+          .size(saved.getSize())
+          .build();
+    });
+  }
+
+  /**
+   * 分片上传准备阶段的上下文数据（从准备阶段传递到事务阶段）。
+   *
+   * <p>P0-2: 将 IO 操作结果封装为不可变上下文，供事务方法使用，确保事务边界最小化。
+   */
+  @lombok.Builder
+  private static class ChunkUploadPrepareContext {
+    private final ChunkUploadSession session;
+    private final String userId;
+    private final String fileHash;
+    private final FileNodeVO dedupExisting;
+    private final FileStorage stored;
+    private final String storageKey;
+    private final FileNodeVO parent;
+    private final String path;
+    private final int level;
   }
 
   /**
@@ -488,9 +557,9 @@ public class ChunkUploadApplicationService {
 
   /** 清理超出保留数量的旧版本 */
   private void cleanupExcessVersions(String fileNodeId) {
-    List<FileVersionDO> allVersions = versionRepository.findByFileNodeId(fileNodeId);
-    List<FileVersionDO> toDelete = versionDomainService.findVersionsToCleanup(allVersions);
-    for (FileVersionDO v : toDelete) {
+    List<FileVersionVO> allVersions = versionRepository.findByFileNodeId(fileNodeId);
+    List<FileVersionVO> toDelete = versionDomainService.findVersionsToCleanup(allVersions);
+    for (FileVersionVO v : toDelete) {
       versionRepository.deleteById(v.getId());
     }
     if (!toDelete.isEmpty()) {
@@ -529,11 +598,11 @@ public class ChunkUploadApplicationService {
 
   // P0-R2: 新增辅助方法
 
-  private FileNodeDO resolveParent(String parentId, String userId) {
+  private FileNodeVO resolveParent(String parentId, String userId) {
     if (parentId == null || parentId.isEmpty() || "0".equals(parentId)) {
       return fileNodeRepository.findOrCreateRoot(userId);
     }
-    FileNodeDO parent = fileNodeRepository.findById(parentId);
+    FileNodeVO parent = fileNodeRepository.findById(parentId).orElse(null);
     if (parent == null) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_FOLDER_NOT_FOUND)
           .data("parentId", parentId);
@@ -550,9 +619,9 @@ public class ChunkUploadApplicationService {
     }
   }
 
-  private FileNodeDO buildDedupedNode(
-      ChunkUploadSession session, FileNodeDO existing, String fileHash, String userId) {
-    FileNodeDO parent = resolveParent(session.getParentId(), userId);
+  private FileNodeDTO buildDedupedNode(
+      ChunkUploadSession session, FileNodeVO existing, String fileHash, String userId) {
+    FileNodeVO parent = resolveParent(session.getParentId(), userId);
     String parentPath = parent.getPath() != null ? parent.getPath() : "/";
     String path =
         parentPath.endsWith("/")
@@ -560,12 +629,12 @@ public class ChunkUploadApplicationService {
             : parentPath + "/" + session.getFileName() + "/";
     int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
 
-    FileNodeDO node =
-        FileNodeDO.builder()
+    FileNodeDTO node =
+        FileNodeDTO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
             .parentId(parent.getId())
             .name(session.getFileName())
-            .nodeType(FileNodeDO.TYPE_FILE)
+            .nodeType(FileNodeVO.TYPE_FILE)
             .suffix(extractSuffix(session.getFileName()))
             .size(existing.getSize())
             .storageKey(existing.getStorageKey())
@@ -580,16 +649,13 @@ public class ChunkUploadApplicationService {
             .previewReady(existing.getPreviewReady())
             .starred(false)
             .shareStatus("private")
-            .status("active")
-            .deleted(0)
-            .revision(0)
+            .createdBy(userId)
+            .updatedBy(userId)
             .build();
-    node.setCreatedBy(userId);
-    node.setUpdatedBy(userId);
     return node;
   }
 
-  private void publishUploadEvent(FileNodeDO saved, String userId) {
+  private void publishUploadEvent(FileNodeVO saved, String userId) {
     eventPublisher.publishEvent(
         FileOperatedEvent.builder()
             .operation(FileOperatedEvent.OP_UPLOAD)

@@ -57,11 +57,11 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
  *       /activate}（激活） / {@code /recall}（撤回） / {@code /rollback}（回滚） / {@code /resubmit}（驳回后快速重审）
  *   <li><b>审计与时间线</b>：{@code GET /instance/{id}/auditTrail} / {@code /timeline} / {@code /diagram} / {@code
  *       /replay}
- *   <li><b>加签历史</b>：{@code GET /countersign/instance/{instanceId}} / {@code /task/{taskId}} / {@code /myInitiated}
+ *   <li><b>加签历史</b>：{@code GET /countersign/instance/{instanceId}} / {@code /countersign/task/{taskId}} / {@code /myInitiated}
  *   <li><b>分页查询</b>：{@code GET /instance/page} / {@code /my} / {@code /all}
  *   <li><b>变量读写</b>：{@code GET /instance/{id}/variables} / {@code POST /instance/{id}/variables}
  *   <li><b>催办</b>：{@code POST /instance/{id}/urge} / {@code POST /instance/{id}/urge/node}
- *   <li><b>表单渲染</b>：{@code GET /instance/{instanceId}/formRender}
+ *   <li><b>表单渲染</b>：{@code GET /instance/{id}/formRender}
  * </ul>
  *
  * <p><b>权限模型：</b>所有写接口通过 {@link AuthApiPermission} 校验 {@link
@@ -114,6 +114,7 @@ public class FlowInstanceController {
       content = "'启动流程:' + #dto.flowCode")
   @RateLimit(resource = "workflow.FlowInstanceDO.startProcess", threshold = 50)
   @PostMapping("/instance/start")
+  @Operation(summary = "启动流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
   public BaseResponse<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
     return BaseResponse.success(workflowFacade.startProcess(dto));
@@ -147,6 +148,7 @@ public class FlowInstanceController {
    * @param businessId 业务 ID
    * @return 统一响应结果，包含流程实例视图
    */
+  @Operation(summary = "按业务类型与业务ID查询流程实例")
   @GetMapping("/instance/byBusiness")
   public BaseResponse<FlowInstanceViewDTO> getByBusiness(
       @RequestParam String businessType, @RequestParam String businessId) {
@@ -167,6 +169,7 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'terminate'")
+  @Operation(summary = "终止流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
   public BaseResponse<Void> terminate(
       @PathVariable String id, @RequestParam(required = false) String reason) {
@@ -188,6 +191,7 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.DISABLE,
       content = "'suspend'")
+  @Operation(summary = "挂起流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
   public BaseResponse<Void> suspend(@PathVariable String id) {
     workflowFacade.suspendProcess(id);
@@ -208,6 +212,7 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.ENABLE,
       content = "'activate'")
+  @Operation(summary = "激活流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
   public BaseResponse<Void> activate(@PathVariable String id) {
     workflowFacade.activateProcess(id);
@@ -228,6 +233,7 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'recall'")
+  @Operation(summary = "撤回流程")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
   public BaseResponse<Boolean> recall(
       @PathVariable String id, @RequestParam(required = false) String targetNodeCode) {
@@ -242,6 +248,7 @@ public class FlowInstanceController {
    * @return 统一响应结果，包含可撤回节点列表
    */
   @GetMapping("/instance/{id}/recallableNodes")
+  @Operation(summary = "查询可撤回的历史节点列表")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
   public BaseResponse<List<Map<String, Object>>> listRecallableNodes(@PathVariable String id) {
     return BaseResponse.success(
@@ -263,6 +270,7 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.RESTORE,
       content = "'rollback'")
+  @Operation(summary = "回滚已完成的流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_ROLLBACK)
   public BaseResponse<Boolean> rollback(
       @PathVariable String id,
@@ -292,6 +300,7 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'resubmit'")
+  @Operation(summary = "驳回后快速重审")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_RESUBMIT)
   public BaseResponse<String> resubmit(
       @PathVariable String id,
@@ -309,6 +318,7 @@ public class FlowInstanceController {
    * @param id 流程实例 ID
    * @return 统一响应结果，包含审计轨迹列表
    */
+  @Operation(summary = "审计轨迹查询")
   @GetMapping("/instance/{id}/auditTrail")
   public BaseResponse<List<Map<String, Object>>> auditTrail(@PathVariable String id) {
     return BaseResponse.success(workflowFacade.listAuditTrail(id));
@@ -320,6 +330,7 @@ public class FlowInstanceController {
    * @param id 流程实例 ID
    * @return 统一响应结果，包含时间线列表
    */
+  @Operation(summary = "审批轨迹时间线查询")
   @GetMapping("/instance/{id}/timeline")
   public BaseResponse<List<Map<String, Object>>> timeline(@PathVariable String id) {
     return BaseResponse.success(workflowFacade.getTimeline(id));
@@ -331,6 +342,7 @@ public class FlowInstanceController {
    * @param id 流程实例 ID
    * @return 统一响应结果，包含 definition / nodes / skips，nodes 中每个节点带 active 标记
    */
+  @Operation(summary = "流程图查询")
   @GetMapping("/instance/{id}/diagram")
   public BaseResponse<Map<String, Object>> diagram(@PathVariable String id) {
     return BaseResponse.success(workflowFacade.getDiagram(id));
@@ -342,6 +354,7 @@ public class FlowInstanceController {
    * @param id 流程实例 ID
    * @return 步骤列表（按 timestamp 升序）
    */
+  @Operation(summary = "流程回放步骤序列")
   @GetMapping("/instance/{id}/replay")
   public BaseResponse<List<Map<String, Object>>> replay(@PathVariable String id) {
     return BaseResponse.success(workflowFacade.getReplaySteps(id));
@@ -360,6 +373,7 @@ public class FlowInstanceController {
    * @param tenantId 租户 ID（可选）
    * @return 统一响应结果，包含分页实例列表
    */
+  @Operation(summary = "实例多维分页查询")
   @GetMapping("/instance/page")
   public PageResponse<List<FlowInstanceVO>> instancePage(
       @RequestParam(defaultValue = "1") @Min(1) int pageNo,
@@ -392,6 +406,7 @@ public class FlowInstanceController {
    * @param pageSize 每页大小（默认 20，最大 100）
    * @return 统一响应结果，包含分页实例列表
    */
+  @Operation(summary = "我发起的流程实例分页查询")
   @GetMapping("/instance/my")
   public PageResponse<List<FlowInstanceVO>> instanceMy(
       @RequestParam(required = false) String flowCode,
@@ -431,6 +446,7 @@ public class FlowInstanceController {
    * @return 统一响应结果，包含分页实例 Map 列表
    */
   @GetMapping("/instance/all")
+  @Operation(summary = "全部流程实例查询")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
   public PageResponse<List<Map<String, Object>>> instanceAll(
       @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -449,6 +465,7 @@ public class FlowInstanceController {
    * @param id 流程实例 ID
    * @return 统一响应结果，包含变量 Map
    */
+  @Operation(summary = "读取流程变量")
   @GetMapping("/instance/{id}/variables")
   public BaseResponse<Map<String, Object>> getVariables(@PathVariable String id) {
     return BaseResponse.success(instanceService.getVariables(id));
@@ -469,6 +486,7 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'setVariables'")
+  @Operation(summary = "批量写入流程变量")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
   public BaseResponse<Void> setVariables(
       @PathVariable String id, @Valid @RequestBody FlowInstanceVariablesDTO dto) {
@@ -490,6 +508,7 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'urge'")
+  @Operation(summary = "催办")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_VIEW)
   public BaseResponse<List<String>> urge(
       @PathVariable String id, @RequestParam(required = false) String comment) {
@@ -508,6 +527,7 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'urgeByNode'")
+  @Operation(summary = "节点级催办")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_VIEW)
   public BaseResponse<List<String>> urgeByNode(
       @PathVariable String id,
@@ -520,14 +540,15 @@ public class FlowInstanceController {
   /**
    * GAP-V2-02: 获取表单渲染数据 — 审批人打开待办时获取字段权限
    *
-   * @param instanceId 流程实例 ID
+   * @param id 流程实例 ID
    * @param taskId 任务 ID（可选，为空取当前节点）
    * @return 渲染数据（nodeCode / formFieldsConfig / variables）
    */
-  @GetMapping("/instance/{instanceId}/formRender")
+  @Operation(summary = "获取表单渲染数据")
+  @GetMapping("/instance/{id}/formRender")
   public BaseResponse<Map<String, Object>> getFormRenderData(
-      @PathVariable String instanceId, @RequestParam(required = false) String taskId) {
-    return BaseResponse.success(instanceService.getFormRenderData(instanceId, taskId));
+      @PathVariable String id, @RequestParam(required = false) String taskId) {
+    return BaseResponse.success(instanceService.getFormRenderData(id, taskId));
   }
 
   // ============== P1-10: 流程实例迁移 ==============
@@ -547,6 +568,7 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'migrateInstances'")
+  @Operation(summary = "执行实例迁移")
   @AuthApiPermission
   public BaseResponse<com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO> migrateInstances(
       @Valid @RequestBody com.njydsz.workflow.domain.dto.InstanceMigrationDTO dto) {
@@ -568,6 +590,7 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'previewMigration'")
+  @Operation(summary = "预览实例迁移")
   @AuthApiPermission
   public BaseResponse<com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO> previewMigration(
       @Valid @RequestBody com.njydsz.workflow.domain.dto.InstanceMigrationDTO dto) {
@@ -581,6 +604,7 @@ public class FlowInstanceController {
    * @param targetDefinitionId 目标定义 ID
    * @return 统一响应结果，包含「旧节点编码 → 新节点编码」的映射
    */
+  @Operation(summary = "自动映射节点编码")
   @GetMapping("/instance/migrate/autoMap")
   public BaseResponse<Map<String, String>> autoMapNodes(
       @RequestParam Long sourceDefinitionId, @RequestParam Long targetDefinitionId) {

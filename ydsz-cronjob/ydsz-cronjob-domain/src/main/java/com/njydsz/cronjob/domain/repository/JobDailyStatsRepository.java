@@ -59,4 +59,16 @@ public interface JobDailyStatsRepository {
    * @param vo 统计记录 VO
    */
   void upsert(JobDailyStatsVO vo);
+
+  // ===== Web 层查询方法（Controller 停止 Mapper 直注） =====
+
+  /**
+   * 根据任务 ID 和日期范围查询统计记录（LocalDate 重载）。
+   *
+   * @param jobId 任务 ID
+   * @param startDate 起始日期（含）
+   * @param endDate 结束日期（含）
+   * @return 统计记录 VO 列表
+   */
+  List<JobDailyStatsVO> findByJobIdAndDateRange(String jobId, java.time.LocalDate startDate, java.time.LocalDate endDate);
 }

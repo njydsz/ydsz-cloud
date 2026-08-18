@@ -21,7 +21,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.service.AiSummaryApplicationService;
 import com.njydsz.nextwiki.server.service.StorageAnalysisApplicationService;
 
@@ -133,12 +133,12 @@ public class AnalysisController {
    *
    * @param userId 当前用户 ID
    * @param limit 返回数量上限（默认 10，建议不超过 100）
-   * @return 统一响应结果，data 为 {@link FileNodeDO} 列表
+   * @return 统一响应结果，data 为 {@link FileNodeVO} 列表
    */
   @GetMapping("/top-large-files")
   @Operation(summary = "大文件 Top-N")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
-  public BaseResponse<List<FileNodeDO>> topLargeFiles(
+  public BaseResponse<List<FileNodeVO>> topLargeFiles(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
       @RequestParam(defaultValue = "10") int limit) {
     return BaseResponse.success(storageAnalysisService.topLargeFiles(userId, limit));

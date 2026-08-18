@@ -646,4 +646,186 @@ public class CEPEngine implements Serializable {
   public List<CEPPattern> listPatterns() {
     return Collections.unmodifiableList(new ArrayList<>(patterns.values()));
   }
+
+  // ==================== Checkpoint 机制（P1-2）====================
+
+  /**
+   * 创建当前状态的快照（Checkpoint）
+   *
+   * <p>将事件队列、序列状态、会话时间戳序列化为可持久化的 {@link CEPStateSnapshot}。 用于故障恢复：应用关闭/重启前 checkpoint，启动时 restore。
+   *
+   * <p>注意：模式定义（patterns）不会被快照（配置应从持久化配置源获取，不属于运行时状态）。
+   *
+   * @return 状态快照
+   * @since 1.0.0
+   */
+  public CEPStateSnapshot checkpoint() {
+    CEPStateSnapshot snapshot = new CEPStateSnapshot();
+    snapshot.setSnapshotTime(Instant.now());
+    snapshot.setTotalHits(totalHits.get());
+    snapshot.setEventQueues(snapshotEventQueues());
+    snapshot.setSequenceStates(snapshotSequenceStates());
+    snapshot.setSessionLastEventAt(snapshotSessionLastEventAt());
+    log.info("[CEP] Checkpoint 完成: hits={}, eventQueueParts={}, seqStates={}",
+        snapshot.getTotalHits(),
+        snapshot.getEventQueues().size(),
+        snapshot.getSequenceStates().size());
+    return snapshot;
+  }
+
+  /**
+   * 从快照恢复状态（Restore）
+   *
+   * <p>恢复事件队列、序列状态和会话时间戳。已过期（超出 pattern 窗口）的事件会被自动裁剪。 模式定义不会被覆盖，需调用方确保 registerPattern 已执行。
+   *
+   * @param snapshot 状态快照；为 null 时静默跳过
+   * @since 1.0.0
+   */
+  public void restore(CEPStateSnapshot snapshot) {
+    if (snapshot == null) {
+      return;
+    }
+    totalHits.set(snapshot.getTotalHits());
+    restoreEventQueues(snapshot.getEventQueues());
+    restoreSequenceStates(snapshot.getSequenceStates());
+    restoreSessionLastEventAt(snapshot.getSessionLastEventAt());
+    log.info("[CEP] Restore 完成: hits={}, eventQueueParts={}, seqStates={}",
+        snapshot.getTotalHits(),
+        snapshot.getEventQueues().size(),
+        snapshot.getSequenceStates().size());
+  }
+
+  // ----- 内部序列化方法 -----
+
+  private Map<String, Map<String, List<CEPStateSnapshot.CEPEventSnapshot>>> snapshotEventQueues() {
+    Map<String, Map<String, List<CEPStateSnapshot.CEPEventSnapshot>>> result = new HashMap<>();
+    eventQueues.forEach((patternId, partitionMap) -> {
+      Map<String, List<CEPStateSnapshot.CEPEventSnapshot>> partitionResult = new HashMap<>();
+      partitionMap.forEach((partitionKey, queue) -> {
+        List<CEPStateSnapshot.CEPEventSnapshot> events = new ArrayList<>(queue.size());
+        for (CEPEvent event : queue) {
+          events.add(toEventSnapshot(event));
+        }
+        partitionResult.put(partitionKey, events);
+      });
+      result.put(patternId, partitionResult);
+    });
+    return result;
+  }
+
+  private CEPStateSnapshot.CEPEventSnapshot toEventSnapshot(CEPEvent event) {
+    CEPStateSnapshot.CEPEventSnapshot snapshot = new CEPStateSnapshot.CEPEventSnapshot();
+    snapshot.setType(event.getType());
+    snapshot.setPartitionKey(event.getPartitionKey());
+    snapshot.setTimestamp(event.getTimestamp());
+    // 防御性复制 attributes（避免外部修改影响快照）
+    if (event.getAttributes() != null) {
+      snapshot.setAttributes(new HashMap<>(event.getAttributes()));
+    }
+    return snapshot;
+  }
+
+  private Map<String, Map<String, CEPStateSnapshot.SequenceStateSnapshot>> snapshotSequenceStates() {
+    Map<String, Map<String, CEPStateSnapshot.SequenceStateSnapshot>> result = new HashMap<>();
+    sequenceStates.forEach((patternId, partitionMap) -> {
+      Map<String, CEPStateSnapshot.SequenceStateSnapshot> partitionResult = new HashMap<>();
+      partitionMap.forEach((partitionKey, state) -> {
+        CEPStateSnapshot.SequenceStateSnapshot stateSnapshot =
+            new CEPStateSnapshot.SequenceStateSnapshot();
+        stateSnapshot.setCurrentStep(state.currentStep);
+        stateSnapshot.setLastMatchAt(state.lastMatchAt);
+        List<CEPStateSnapshot.CEPEventSnapshot> matchedEvents = new ArrayList<>(state.matchedEvents.size());
+        for (CEPEvent event : state.matchedEvents) {
+          matchedEvents.add(toEventSnapshot(event));
+        }
+        stateSnapshot.setMatchedEvents(matchedEvents);
+        partitionResult.put(partitionKey, stateSnapshot);
+      });
+      result.put(patternId, partitionResult);
+    });
+    return result;
+  }
+
+  private Map<String, Map<String, Instant>> snapshotSessionLastEventAt() {
+    Map<String, Map<String, Instant>> result = new HashMap<>();
+    sessionLastEventAt.forEach((patternId, partitionMap) -> {
+      result.put(patternId, new HashMap<>(partitionMap));
+    });
+    return result;
+  }
+
+  // ----- 内部反序列化方法 -----
+
+  private void restoreEventQueues(
+      Map<String, Map<String, List<CEPStateSnapshot.CEPEventSnapshot>>> data) {
+    if (data == null) return;
+    Instant now = Instant.now();
+    data.forEach((patternId, partitionMap) -> {
+      CEPPattern pattern = patterns.get(patternId);
+      if (pattern == null || pattern.getWindow() == null) {
+        // 模式不存在或无窗口定义，跳过
+        return;
+      }
+      Instant windowStart = now.minus(pattern.getWindow());
+      Map<String, ConcurrentLinkedDeque<CEPEvent>> partitionQueues =
+          eventQueues.computeIfAbsent(patternId, k -> new ConcurrentHashMap<>());
+      partitionMap.forEach((partitionKey, eventSnapshots) -> {
+        ConcurrentLinkedDeque<CEPEvent> queue = new ConcurrentLinkedDeque<>();
+        for (CEPStateSnapshot.CEPEventSnapshot eventSnapshot : eventSnapshots) {
+          // 裁剪窗口外的事件
+          if (eventSnapshot.getTimestamp().isBefore(windowStart)) {
+            continue;
+          }
+          queue.addLast(fromEventSnapshot(eventSnapshot));
+        }
+        if (!queue.isEmpty()) {
+          partitionQueues.put(partitionKey, queue);
+        }
+      });
+    });
+  }
+
+  private CEPEvent fromEventSnapshot(CEPStateSnapshot.CEPEventSnapshot snapshot) {
+    CEPEvent event = new CEPEvent();
+    event.setType(snapshot.getType());
+    event.setPartitionKey(snapshot.getPartitionKey());
+    event.setTimestamp(snapshot.getTimestamp());
+    if (snapshot.getAttributes() != null) {
+      event.setAttributes(new HashMap<>(snapshot.getAttributes()));
+    }
+    return event;
+  }
+
+  private void restoreSequenceStates(
+      Map<String, Map<String, CEPStateSnapshot.SequenceStateSnapshot>> data) {
+    if (data == null) return;
+    data.forEach((patternId, partitionMap) -> {
+      if (!patterns.containsKey(patternId)) {
+        return;
+      }
+      Map<String, SequenceState> stateMap =
+          sequenceStates.computeIfAbsent(patternId, k -> new ConcurrentHashMap<>());
+      partitionMap.forEach((partitionKey, stateSnapshot) -> {
+        SequenceState state = new SequenceState();
+        state.currentStep = stateSnapshot.getCurrentStep();
+        state.lastMatchAt = stateSnapshot.getLastMatchAt();
+        if (stateSnapshot.getMatchedEvents() != null) {
+          for (CEPStateSnapshot.CEPEventSnapshot eventSnapshot : stateSnapshot.getMatchedEvents()) {
+            state.matchedEvents.add(fromEventSnapshot(eventSnapshot));
+          }
+        }
+        stateMap.put(partitionKey, state);
+      });
+    });
+  }
+
+  private void restoreSessionLastEventAt(Map<String, Map<String, Instant>> data) {
+    if (data == null) return;
+    data.forEach((patternId, partitionMap) -> {
+      if (!patterns.containsKey(patternId)) {
+        return;
+      }
+      sessionLastEventAt.computeIfAbsent(patternId, k -> new ConcurrentHashMap<>()).putAll(partitionMap);
+    });
+  }
 }

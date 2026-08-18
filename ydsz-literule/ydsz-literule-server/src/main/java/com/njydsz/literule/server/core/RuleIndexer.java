@@ -2,6 +2,7 @@ package com.njydsz.literule.server.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -270,18 +271,23 @@ public class RuleIndexer {
     } else if (defaultEnvRules == null) {
       envFilteredRules = new ArrayList<>(exactEnvRules);
     } else {
-      // 合并两个列表并去重（按规则编码）
+      // 合并两个列表并去重（按规则编码）— O(n) 去重（P1-4 优化）
       envFilteredRules = new ArrayList<>(defaultEnvRules.size() + exactEnvRules.size());
       envFilteredRules.addAll(defaultEnvRules);
-      for (Rule rule : exactEnvRules) {
-        boolean duplicate = false;
-        for (Rule existing : envFilteredRules) {
-          if (rule.getCode() != null && rule.getCode().equals(existing.getCode())) {
-            duplicate = true;
-            break;
-          }
+      // 构建已有编码集合，将去重从 O(n²) 降为 O(n)
+      Set<String> existingCodes = new HashSet<>(defaultEnvRules.size());
+      for (Rule existing : defaultEnvRules) {
+        if (existing.getCode() != null) {
+          existingCodes.add(existing.getCode());
         }
-        if (!duplicate) {
+      }
+      for (Rule rule : exactEnvRules) {
+        String code = rule.getCode();
+        if (code != null && existingCodes.add(code)) {
+          // Set.add 返回 true 表示不存在重复
+          envFilteredRules.add(rule);
+        } else if (code == null) {
+          // 无编码规则直接添加（无法去重）
           envFilteredRules.add(rule);
         }
       }

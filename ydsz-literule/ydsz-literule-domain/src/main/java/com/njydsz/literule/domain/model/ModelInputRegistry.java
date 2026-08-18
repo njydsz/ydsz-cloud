@@ -73,7 +73,10 @@ public class ModelInputRegistry {
   }
 
   /**
-   * 构造注册中心
+   * 构造注册中心（降级方案）。
+   *
+   * <p><b>注意：</b>此构造方法在未配置 common-thread {@code ydsz.thread.pools.modelInput} 时兜底使用，
+   * 生产环境应使用 {@link #ModelInputRegistry(long, boolean, ExecutorService)} 注入共同管理的线程池。
    *
    * @param timeoutMs 单个 provider 调用超时（毫秒），<=0 表示不限制
    * @param fallbackOnError 模型异常时是否降级
@@ -81,6 +84,7 @@ public class ModelInputRegistry {
   public ModelInputRegistry(long timeoutMs, boolean fallbackOnError) {
     this.timeoutMs = timeoutMs;
     this.fallbackOnError = fallbackOnError;
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
     this.executor =
         new ThreadPoolExecutor(
             0,
@@ -94,6 +98,7 @@ public class ModelInputRegistry {
               return t;
             },
             new ThreadPoolExecutor.CallerRunsPolicy());
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     this.ownsExecutor = true;
   }
 

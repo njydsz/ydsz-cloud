@@ -1,6 +1,5 @@
 package com.njydsz.system.server.search;
 
-import java.time.ZoneId;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -11,7 +10,7 @@ import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
-import com.njydsz.system.infra.entity.DictItem;
+import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.repository.DictRepository;
 
 /**
@@ -32,13 +31,13 @@ import com.njydsz.system.domain.repository.DictRepository;
  *
  * @author ydsz-team
  * @since 1.1.0
- * @see DictItem 字典项实体
+ * @see DictItemVO 字典项视图对象
  * @see SearchProvider 统一搜索 Provider 接口
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DictItemSearchProvider implements SearchProvider<DictItem> {
+public class DictItemSearchProvider implements SearchProvider<DictItemVO> {
 
   private final DictRepository dictRepository;
 
@@ -55,11 +54,11 @@ public class DictItemSearchProvider implements SearchProvider<DictItem> {
   /**
    * 将 {@link DictItem} 实体转换为搜索索引文档。
    *
-   * @param entity 字典项实体
+   * @param entity 字典项视图对象
    * @return 索引文档；入参为 null 或 ID 为空时返回 null
    */
   @Override
-  public IndexDocument toIndexDocument(DictItem entity) {
+  public IndexDocument toIndexDocument(DictItemVO entity) {
     if (entity == null || entity.getId() == null) {
       return null;
     }
@@ -81,17 +80,6 @@ public class DictItemSearchProvider implements SearchProvider<DictItem> {
         .snippet(entity.getDescription())
         .status(entity.getStatus())
         .path("/system/dict/item/" + entity.getId())
-        .tenantId(entity.getTenantId())
-        .createdBy(entity.getCreatedBy())
-        .createdAt(
-            entity.getCreatedAt() != null
-                ? entity.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()
-                : null)
-        .updatedBy(entity.getUpdatedBy())
-        .updatedAt(
-            entity.getUpdatedAt() != null
-                ? entity.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant()
-                : null)
         .build();
   }
 
@@ -115,7 +103,7 @@ public class DictItemSearchProvider implements SearchProvider<DictItem> {
    * @return 未删除字典项实体列表
    */
   @Override
-  public List<DictItem> loadAll(String tenantId) {
+  public List<DictItemVO> loadAll(String tenantId) {
     return dictRepository.findByTenantId(tenantId);
   }
 }

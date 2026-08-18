@@ -259,9 +259,10 @@ public class AviatorExpressionEngine implements ExpressionEngine {
     return compiler;
   }
 
-  /** 清空编译缓存 */
+  /** 清空编译缓存 + 沙箱校验缓存（P1-3） */
   public void clearCache() {
     compiler.clearCache();
+    sandbox.clearCache();
   }
 
   /** 缓存大小 */

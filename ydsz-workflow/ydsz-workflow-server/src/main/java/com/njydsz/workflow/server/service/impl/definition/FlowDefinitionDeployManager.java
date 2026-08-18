@@ -1,0 +1,404 @@
+package com.njydsz.workflow.server.service.impl.definition;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.collection.MapUtils;
+import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
+import com.njydsz.workflow.domain.enums.FlowNodeType;
+import com.njydsz.workflow.domain.enums.FlowSkipType;
+import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.infra.entity.FlowSkipDO;
+import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
+import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
+import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
+import com.njydsz.workflow.server.config.FlowProperties;
+import com.njydsz.workflow.server.engine.BpmnModel;
+import com.njydsz.workflow.server.engine.BpmnXmlParser;
+import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
+import com.njydsz.workflow.server.engine.FlowGraphValidator;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+/**
+ * 流程定义部署管理器
+ *
+ * <p>承担流程定义<b>部署</b>相关全部职责：双模式部署（BPMN XML / 轻量 JSON）、拓扑校验、
+ * 三方写入（definition + node + skip）、BPMN 2.0 zip 包批量部署。
+ *
+ * <p><b>核心能力：</b>
+ *
+ * <ul>
+ *   <li><b>双模式部署</b>：支持 BPMN 2.0 标准 XML（{@code bpmnXml}）与轻量 JSON（{@code nodes+skips}）两种模型，
+ *       通过 {@link BpmnXmlParser} 解析后统一转写为 {@link FlowNodeDO} / {@link FlowSkipDO} 实体
+ *   <li><b>拓扑校验</b>：部署前调用 {@link FlowGraphValidator} 校验连通性、死节点、环路口等结构规则，
+ *       校验失败立即阻断写入
+ *   <li><b>三方写入</b>：{@code ydsz_flow_definition + ydsz_flow_node + ydsz_flow_skip} 事务原子性
+ *   <li><b>批量部署</b>：BPMN 2.0 zip 包批量部署，每个文件独立事务
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ *
+ * <ul>
+ *   <li>{@link #deploy} 开启 {@code @Transactional(rollbackFor = Exception.class)}，确保三方写入原子性
+ *   <li>{@link #batchDeployFromZip} 通过 {@code self} 代理引用调用 {@link #deploy}，每个文件独立事务
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@Slf4j
+@Component
+public class FlowDefinitionDeployManager {
+
+  /** 流程定义 Mapper */
+  private final FlowDefinitionMapper definitionMapper;
+
+  /** 流程节点 Mapper */
+  private final FlowNodeMapper nodeMapper;
+
+  /** 流程跳转 Mapper */
+  private final FlowSkipMapper skipMapper;
+
+  /** BPMN 2.0 XML 解析器 */
+  private final BpmnXmlParser bpmnXmlParser;
+
+  /** 流程图结构校验器 */
+  private final FlowGraphValidator graphValidator;
+
+  /** 流程定义元数据缓存 */
+  private final FlowDefinitionCacheService flowDefinitionCacheService;
+
+  /** 统一配置属性 */
+  private final FlowProperties flowProperties;
+
+  /**
+   * 自注入代理引用，使 {@link #batchDeployFromZip} 内部调用 {@link #deploy} 时能正确触发 Spring 事务代理。
+   * 使用 {@code @Lazy} 打破启动期循环依赖。
+   */
+  private final FlowDefinitionDeployManager self;
+
+  public FlowDefinitionDeployManager(
+      FlowDefinitionMapper definitionMapper,
+      FlowNodeMapper nodeMapper,
+      FlowSkipMapper skipMapper,
+      BpmnXmlParser bpmnXmlParser,
+      FlowGraphValidator graphValidator,
+      FlowDefinitionCacheService flowDefinitionCacheService,
+      FlowProperties flowProperties,
+      @Lazy FlowDefinitionDeployManager self) {
+    this.definitionMapper = definitionMapper;
+    this.nodeMapper = nodeMapper;
+    this.skipMapper = skipMapper;
+    this.bpmnXmlParser = bpmnXmlParser;
+    this.graphValidator = graphValidator;
+    this.flowDefinitionCacheService = flowDefinitionCacheService;
+    this.flowProperties = flowProperties;
+    this.self = self;
+  }
+
+  /**
+   * 部署流程定义（双模式：BPMN XML / 轻量 JSON）
+   *
+   * <p>完整执行链路：
+   *
+   * <ol>
+   *   <li><b>参数校验</b>：必填 {@code flowCode / flowName}，至少二选一传 {@code bpmnXml / nodes}
+   *   <li><b>租户解析</b>：{@code dto.tenantId} → {@code SecurityContext} → 默认 {@code "1"}
+   *   <li><b>重名校验</b>：同 {@code flowCode+version+tenantId} 已存在时抛 {@code DUPLICATE_KEY}
+   *   <li><b>模型解析</b>：XML 模式通过 {@link BpmnXmlParser#parse} 解析；JSON 模式直接构造
+   *   <li><b>结构校验</b>：{@link FlowGraphValidator#validate} 校验连通性、死节点、环路口
+   *   <li><b>三方写入</b>：definition + node + skip 事务原子性
+   *   <li><b>缓存清理</b>：{@code @CacheEvict} + {@link FlowDefinitionCacheService#evict}
+   * </ol>
+   *
+   * @param dto 部署 DTO（含 {@code flowCode/flowName/version/bpmnXml/nodes/skips/tenantId}）
+   * @return 新流程定义的 ID
+   * @throws SysException {@code BAD_REQUEST} — 参数缺失或结构校验失败；{@code DUPLICATE_KEY} — 版本冲突
+   */
+  @Transactional(rollbackFor = Exception.class)
+  @CacheEvict(
+      value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
+      allEntries = true)
+  public String deploy(FlowDeployProcessDTO dto) {
+    if (dto == null
+        || !StringUtils.hasText(dto.getFlowCode())
+        || !StringUtils.hasText(dto.getFlowName())) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("flowCode/flowName 不能为空")
+          .build();
+    }
+
+    String version = StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : "1.0";
+    String tenantId =
+        dto.getTenantId() != null ? dto.getTenantId() : AuthContextUtils.getTenantIdOrDefault();
+
+    FlowDefinitionDO existing =
+        definitionMapper.selectPublished(dto.getFlowCode(), version, tenantId);
+    if (existing != null) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("流程定义已存在: code=" + dto.getFlowCode() + " version=" + version)
+          .build();
+    }
+
+    boolean hasBpmn = StringUtils.hasText(dto.getBpmnXml());
+    boolean hasJson = dto.getNodes() != null && !dto.getNodes().isEmpty();
+    if (!hasBpmn && !hasJson) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("bpmnXml / nodes 至少二选一")
+          .build();
+    }
+
+    List<FlowNodeDO> nodes = new ArrayList<>();
+    List<FlowSkipDO> skips = new ArrayList<>();
+
+    if (hasBpmn) {
+      BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
+      if (StringUtils.hasText(bpmnModel.getProcessId())
+          && !bpmnModel.getProcessId().equals(dto.getFlowCode())) {
+        throw SysException.builder()
+            .resultCode(BaseResultCode.BAD_REQUEST)
+            .message(
+                "BPMN process id 与 flowCode 不一致: bpmn="
+                    + bpmnModel.getProcessId()
+                    + " dto="
+                    + dto.getFlowCode())
+            .build();
+      }
+      if (!StringUtils.hasText(dto.getFlowName()) || dto.getFlowName().equals(dto.getFlowCode())) {
+        dto.setFlowName(bpmnModel.getProcessName());
+      }
+      nodes.addAll(bpmnModel.getNodes());
+      skips.addAll(bpmnModel.getSkips());
+      Map<String, BpmnModel.NodeCoordinate> nodeCoords = bpmnModel.getNodeCoordinates();
+      if (nodeCoords != null && !nodeCoords.isEmpty()) {
+        for (FlowNodeDO n : nodes) {
+          BpmnModel.NodeCoordinate coord = nodeCoords.get(n.getNodeCode());
+          if (coord != null) {
+            n.setCoordinate(
+                YdszJson.toJson(
+                    Map.of(
+                        "x", coord.getX(),
+                        "y", coord.getY(),
+                        "width", coord.getWidth(),
+                        "height", coord.getHeight())));
+          }
+        }
+        log.info("[Flow] 从 BPMNDI 注入节点坐标: defId-pending count={}", nodeCoords.size());
+      }
+    } else {
+      for (FlowDeployProcessDTO.FlowNodeDTO n : dto.getNodes()) {
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode(n.getNodeCode());
+        node.setNodeName(n.getNodeName() == null ? n.getNodeCode() : n.getNodeName());
+        node.setNodeType(
+            n.getNodeType() == null ? FlowNodeType.APPROVAL.getCode() : n.getNodeType());
+        node.setPermissionFlag(n.getPermissionFlag());
+        node.setSkipAnyNode(n.getSkipAnyNode());
+        nodes.add(node);
+      }
+      boolean hasStart =
+          nodes.stream().anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
+      if (!hasStart) {
+        throw SysException.builder()
+            .resultCode(BaseResultCode.BAD_REQUEST)
+            .message("流程定义必须包含开始节点（nodeType=0）")
+            .build();
+      }
+      long uniqueCount = nodes.stream().map(FlowNodeDO::getNodeCode).distinct().count();
+      if (uniqueCount != nodes.size()) {
+        throw SysException.builder()
+            .resultCode(BaseResultCode.BAD_REQUEST)
+            .message("节点编码 nodeCode 必须唯一")
+            .build();
+      }
+      if (dto.getSkips() != null) {
+        for (FlowDeployProcessDTO.FlowSkipDTO s : dto.getSkips()) {
+          FlowSkipDO skip = new FlowSkipDO();
+          skip.setSkipName(s.getSkipName());
+          skip.setSkipType(
+              StringUtils.hasText(s.getSkipType()) ? s.getSkipType() : FlowSkipType.PASS.name());
+          skip.setSkipCondition(s.getSkipCondition());
+          skip.setNextNodeCode(s.getToNodeCode());
+          skip.setExt(YdszJson.toJson(Map.of("sourceRef", s.getFromNodeCode())));
+          skips.add(skip);
+        }
+      }
+    }
+
+    graphValidator.validate(nodes, skips);
+
+    FlowDefinitionDO def = new FlowDefinitionDO();
+    def.setFlowCode(dto.getFlowCode());
+    def.setFlowName(dto.getFlowName());
+    def.setCategory(dto.getCategory());
+    def.setFlowVersion(version);
+    def.setModelValue("CLASSICS");
+    def.setFormCustom("N");
+    def.setFormPath(dto.getFormPath());
+    def.setActivityStatus(1);
+    def.setIsPublish(0);
+    def.setDescription(dto.getDescription());
+    def.setTenantId(tenantId);
+    def.setProviderTraceId(dto.getProviderTraceId());
+    definitionMapper.insert(def);
+    String definitionId = def.getId();
+
+    for (FlowNodeDO node : nodes) {
+      node.setDefinitionId(definitionId);
+      node.setFlowCode(dto.getFlowCode());
+      node.setTenantId(tenantId);
+      node.setProviderTraceId(dto.getProviderTraceId());
+      nodeMapper.insert(node);
+    }
+
+    for (FlowSkipDO skip : skips) {
+      skip.setDefinitionId(definitionId);
+      skip.setFlowCode(dto.getFlowCode());
+      skip.setTenantId(tenantId);
+      skip.setProviderTraceId(dto.getProviderTraceId());
+      skipMapper.insert(skip);
+    }
+
+    log.info(
+        "[Flow] 部署流程成功: code={} version={} defId={} mode={} nodes={} skips={}",
+        dto.getFlowCode(),
+        version,
+        definitionId,
+        hasBpmn ? "BPMN" : "JSON",
+        nodes.size(),
+        skips.size());
+    flowDefinitionCacheService.evict(definitionId);
+    return definitionId;
+  }
+
+  /**
+   * 从 BPMN 部署包 .zip 批量导入流程定义
+   *
+   * <p>对标 Activiti/Flowable 的 {@code repositoryService.createDeployment().addZipInputStream()}。
+   * 遍历 zip 内的 {@code .bpmn} / {@code .bpmn20.xml} 文件，逐个解析并委托 {@link #deploy} 入库。
+   * 单个文件失败不影响其他文件（通过 self 代理调用 deploy，每个文件独立事务）。
+   *
+   * @param zipBytes zip 文件字节数组
+   * @param tenantId 租户 ID（可空，默认从 SecurityContext 获取）
+   * @return Map 包含 successCount（成功数）和 failedItems（失败列表，每项含 fileName + reason）
+   */
+  public Map<String, Object> batchDeployFromZip(byte[] zipBytes, String tenantId) {
+    if (zipBytes == null || zipBytes.length == 0) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("zip 文件内容为空")
+          .build();
+    }
+    String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
+
+    int successCount = 0;
+    List<Map<String, String>> failedItems = new ArrayList<>();
+
+    try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
+      ZipEntry entry;
+      while ((entry = zis.getNextEntry()) != null) {
+        if (entry.isDirectory()) {
+          continue;
+        }
+        String fileName = entry.getName();
+        String lowerName = fileName.toLowerCase();
+        if (!lowerName.endsWith(".bpmn") && !lowerName.endsWith(".bpmn20.xml")) {
+          continue;
+        }
+        try {
+          String bpmnXml = new String(readAllBytes(zis), StandardCharsets.UTF_8);
+          BpmnModel model = bpmnXmlParser.parse(bpmnXml);
+          String flowCode = model.getProcessId();
+          String flowName =
+              StringUtils.hasText(model.getProcessName())
+                  ? model.getProcessName()
+                  : extractBaseName(fileName);
+
+          if (!StringUtils.hasText(flowCode)) {
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("BPMN 文件缺少 process id: " + fileName)
+                .build();
+          }
+
+          FlowDeployProcessDTO dto = new FlowDeployProcessDTO();
+          dto.setFlowCode(flowCode);
+          dto.setFlowName(flowName);
+          dto.setVersion("1.0");
+          dto.setBpmnXml(bpmnXml);
+          dto.setTenantId(tid);
+          self.deploy(dto);
+          successCount++;
+          log.info("[Flow] zip 批量导入成功: fileName={} flowCode={}", fileName, flowCode);
+        } catch (Exception e) {
+          Map<String, String> fail = new LinkedHashMap<>();
+          fail.put("fileName", fileName);
+          fail.put(
+              "reason", e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+          failedItems.add(fail);
+          log.warn("[Flow] zip 批量导入失败: fileName={} reason={}", fileName, e.getMessage());
+        } finally {
+          zis.closeEntry();
+        }
+      }
+    } catch (Exception e) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("zip 文件解析失败: " + e.getMessage())
+          .build();
+    }
+
+    Map<String, Object> result = new LinkedHashMap<>();
+    result.put("successCount", successCount);
+    result.put("failedItems", failedItems);
+    log.info("[Flow] zip 批量导入完成: success={} failed={}", successCount, failedItems.size());
+    return result;
+  }
+
+  /** 读取 ZipInputStream 当前 entry 的全部字节（不关闭流） */
+  private byte[] readAllBytes(ZipInputStream zis) throws Exception {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    byte[] buffer = new byte[4096];
+    int len;
+    while ((len = zis.read(buffer)) > 0) {
+      baos.write(buffer, 0, len);
+    }
+    return baos.toByteArray();
+  }
+
+  /** 从 zip entry 路径中提取文件名（去掉目录和扩展名） */
+  private String extractBaseName(String fileName) {
+    String name = fileName;
+    int slashIdx = name.lastIndexOf('/');
+    if (slashIdx >= 0) {
+      name = name.substring(slashIdx + 1);
+    }
+    int dotIdx = name.lastIndexOf('.');
+    if (dotIdx > 0) {
+      name = name.substring(0, dotIdx);
+    }
+    return name;
+  }
+}

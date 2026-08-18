@@ -10,8 +10,8 @@ import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.agent.domain.trace.TraceMeta;
 import com.njydsz.agent.domain.trace.TraceRecorder;
-import com.njydsz.agent.infra.trace.InMemoryTraceRecorder;
 import com.njydsz.agent.server.agent.AgentFactory;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
@@ -19,6 +19,8 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * Agent 调试服务
  *
  * <p>提供执行链路查询和重放能力，用于开发调试和问题排查。
+ *
+ * <p><b>DDD 合规：</b>通过 {@link TraceRecorder} 域接口访问链路数据，不依赖 infra 实现。
  *
  * <h3>核心能力</h3>
  *
@@ -106,10 +108,7 @@ public class AgentDebuggerService {
    * @return 链路 ID 列表
    */
   public List<String> listTraces(int limit) {
-    if (traceRecorder instanceof InMemoryTraceRecorder inMem) {
-      return inMem.listRecentTraces(limit);
-    }
-    return List.of();
+    return traceRecorder.listRecentTraces(limit);
   }
 
   /**
@@ -118,11 +117,8 @@ public class AgentDebuggerService {
    * @param limit 最大数量
    * @return 链路元数据列表，不支持时返回空列表
    */
-  public List<InMemoryTraceRecorder.TraceMeta> listTraceMetas(int limit) {
-    if (traceRecorder instanceof InMemoryTraceRecorder inMem) {
-      return inMem.listRecentTraceMetas(limit);
-    }
-    return List.of();
+  public List<TraceMeta> listTraceMetas(int limit) {
+    return traceRecorder.listRecentTraceMetas(limit);
   }
 
   /**
@@ -131,10 +127,7 @@ public class AgentDebuggerService {
    * @param traceId 链路 ID
    * @return 元数据，不支持或不存在时返回 null
    */
-  public InMemoryTraceRecorder.TraceMeta getTraceMeta(String traceId) {
-    if (traceRecorder instanceof InMemoryTraceRecorder inMem) {
-      return inMem.getTraceMeta(traceId);
-    }
-    return null;
+  public TraceMeta getTraceMeta(String traceId) {
+    return traceRecorder.getTraceMeta(traceId);
   }
 }

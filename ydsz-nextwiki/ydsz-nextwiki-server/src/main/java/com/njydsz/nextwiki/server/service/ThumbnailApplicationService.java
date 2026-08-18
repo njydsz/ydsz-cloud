@@ -21,7 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
@@ -93,12 +94,12 @@ public class ThumbnailApplicationService {
    * @note 方法结束在 {@code finally} 清理原图临时文件；缩略图临时文件在成功后删除
    */
   public void generateThumbnail(String fileNodeId) throws Exception {
-    FileNodeDO FileNodeDO = fileNodeRepository.findById(fileNodeId);
-    if (FileNodeDO == null || !FileNodeDO.isFile()) {
+    FileNodeVO node = fileNodeRepository.findById(fileNodeId).orElse(null);
+    if (node == null || !node.isFile()) {
       return;
     }
 
-    String suffix = FileNodeDO.getSuffix();
+    String suffix = node.getSuffix();
     if (suffix == null) return;
     suffix = suffix.toLowerCase();
 
@@ -108,8 +109,8 @@ public class ThumbnailApplicationService {
     if (IMAGE_SUFFIXES.contains(suffix)) {
       IFileStorage storage = resolveStorage();
       if (storage == null) {
-        FileNodeDO.setThumbnailKey(thumbnailKey);
-        fileNodeRepository.update(FileNodeDO);
+        node.setThumbnailKey(thumbnailKey);
+        fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
         return;
       }
 
@@ -118,7 +119,7 @@ public class ThumbnailApplicationService {
           Path.of(properties.getThumbnail().getTempDir(), fileNodeId + "_orig." + suffix);
       Files.createDirectories(tempFile.getParent());
       try (InputStream is =
-          storage.downloadAsStream(FileNodeDO.getBucketName(), FileNodeDO.getStorageKey())) {
+          storage.downloadAsStream(node.getBucketName(), node.getStorageKey())) {
         Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING);
       }
 
@@ -136,8 +137,8 @@ public class ThumbnailApplicationService {
             new PathMultipartFile(thumbFile, fileNodeId + "_thumb.png", "image/png");
         storage.upload(null, thumbnailKey, multipartFile);
 
-        FileNodeDO.setThumbnailKey(thumbnailKey);
-        fileNodeRepository.update(FileNodeDO);
+        node.setThumbnailKey(thumbnailKey);
+        fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
         log.info("[ThumbnailApplicationService] 缩略图生成并上传完成: fileNodeId={}", fileNodeId);
 
         Files.deleteIfExists(thumbFile);
@@ -146,8 +147,8 @@ public class ThumbnailApplicationService {
       }
     } else {
       // 非图片类型仅设置 key（后续可由预览服务填充）
-      FileNodeDO.setThumbnailKey(thumbnailKey);
-      fileNodeRepository.update(FileNodeDO);
+      node.setThumbnailKey(thumbnailKey);
+      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
     }
   }
 

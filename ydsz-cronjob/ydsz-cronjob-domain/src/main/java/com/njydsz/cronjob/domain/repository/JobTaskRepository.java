@@ -83,4 +83,26 @@ public interface JobTaskRepository {
    * @return 实际删除条数
    */
   int cleanExpiredLogs(LocalDateTime before, int limit);
+
+  // ===== Web 层查询方法（Controller 停止 Mapper 直注） =====
+
+  /**
+   * 分页查询指定日志 ID 的子任务列表（按 created_at 升序）。
+   *
+   * <p>仅查询 {@code deleted=0} 的子任务。
+   *
+   * @param logId 执行日志 ID
+   * @param page 页码（从 1 开始）
+   * @param size 每页条数
+   * @return 分页结果（records=VO列表, total=总条数）
+   */
+  JobRepository.PageResult<JobTaskVO> pageByLogId(String logId, int page, int size);
+
+  /**
+   * 统计指定日志 ID 的子任务总数（所有状态）。
+   *
+   * @param logId 执行日志 ID
+   * @return 子任务总数
+   */
+  int countByLogId(String logId);
 }

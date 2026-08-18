@@ -192,14 +192,4 @@ public class SelfServiceServiceImpl implements SelfServiceService {
       bridge.indexUpsert("user", userVO);
     }
   }
-
-  /**
-   * 获取默认登录失败次数常量。
-   *
-   * @return 默认登录失败次数（始终为 0）
-   */
-  @SuppressWarnings("unused")
-  private int getDefaultLoginFailCount() {
-    return DEFAULT_LOGIN_FAIL_COUNT;
-  }
 }

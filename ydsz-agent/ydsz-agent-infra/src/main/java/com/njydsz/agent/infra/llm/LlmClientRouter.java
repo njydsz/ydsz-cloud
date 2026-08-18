@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -54,8 +55,8 @@ public class LlmClientRouter implements LlmClient {
   /** 已注册的 Provider 客户端映射（key=provider name） */
   private final Map<String, LlmClient> clients = new ConcurrentHashMap<>();
 
-  /** 默认客户端（无匹配 Provider 时使用） */
-  private LlmClient defaultClient;
+  /** 默认客户端（无匹配 Provider 时使用），使用 AtomicReference 保障并发注册的可见性与原子性 */
+  private final AtomicReference<LlmClient> defaultClient = new AtomicReference<>();
 
   /**
    * 注册一个 LLM Provider 客户端。
@@ -70,9 +71,8 @@ public class LlmClientRouter implements LlmClient {
    */
   public void register(LlmClient client) {
     clients.put(client.getProvider(), client);
-    if (defaultClient == null) {
-      defaultClient = client;
-    }
+    // 首个注册的客户端通过 CAS 成为 defaultClient，避免并发注册时重复赋值
+    defaultClient.compareAndSet(null, client);
     LOG.info("[LLM-Router] 注册 Provider: {}", client.getProvider());
   }
 
@@ -88,9 +88,14 @@ public class LlmClientRouter implements LlmClient {
    */
   public void unregister(String provider) {
     clients.remove(provider);
-    if (defaultClient != null && defaultClient.getProvider().equals(provider)) {
-      defaultClient = clients.values().stream().findFirst().orElse(null);
-    }
+    // 原子方式更新 defaultClient：仅当当前默认值匹配被移除的 Provider 时才替换
+    defaultClient.updateAndGet(
+        current -> {
+          if (current != null && current.getProvider().equals(provider)) {
+            return clients.values().stream().findFirst().orElse(null);
+          }
+          return current;
+        });
   }
 
   @Override
@@ -179,7 +184,7 @@ public class LlmClientRouter implements LlmClient {
         return c;
       }
     }
-    return defaultClient;
+    return defaultClient.get();
   }
 
   private LlmClient findFallback(LlmClient primary) {

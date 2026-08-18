@@ -119,7 +119,9 @@
           <!-- P1-3: 数据权限 SQL 片段（由 DataScopeHelper.buildSqlFragment 生成） -->
           <!-- Security: dataScopeFilter is generated internally by DataScopeHelper which uses
                hardcoded column names (dept_id / initiator_id) and escapes all values via
-               escapeSql() (strips non-alphanumeric except -_). No user input reaches ${} directly. -->
+               escapeSql() (strips non-alphanumeric except -_). No user input reaches ${} directly.
+               DataScopeHelper performs whitelist validation on column names/aliases and applies
+               fail-closed default (AND 1 = 0) for unrecognized scope rules. -->
           <if test="dataScopeFilter != null and dataScopeFilter != ''">
             AND ${dataScopeFilter}
           </if>
@@ -270,4 +272,43 @@
         GROUP BY current_node_code
         ORDER BY cnt DESC
     </select>
+
+    <!--
+        P0-2: 查询 RUNNING 状态但无 PENDING/CLAIMED 任务的异常实例
+        用于一致性对账：找出「实例在运行但没有活跃任务」的数据不一致场景
+    -->
+    <select id="selectRunningWithoutTask" resultType="java.util.Map">
+        SELECT i.id AS "id",
+               i.flow_code AS "flowCode",
+               i.flow_name AS "flowName",
+               i.business_type AS "businessType",
+               i.business_id AS "businessId",
+               i.start_at AS "startAt"
+        FROM ydsz_flow_instance i
+        WHERE i.flow_status = 'RUNNING'
+          AND i.status = 'ENABLED'
+          AND i.deleted = 0
+          AND NOT EXISTS (
+              SELECT 1 FROM ydsz_flow_run_task t
+              WHERE t.instance_id = i.id
+                AND t.task_status IN ('PENDING', 'CLAIMED')
+                AND t.status = 'ENABLED'
+                AND t.deleted = 0
+          )
+        ORDER BY i.start_at ASC
+        LIMIT #{limit}
+    </select>
+
+    <!-- P0-2: 批量标记实例为 ERROR（一致性修复用） -->
+    <update id="batchMarkError">
+        UPDATE ydsz_flow_instance
+        SET flow_status = 'ERROR',
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id IN
+        <foreach collection="instanceIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND flow_status = 'RUNNING'
+        AND deleted = 0
+    </update>
 </mapper>

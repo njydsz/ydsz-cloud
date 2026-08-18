@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import lombok.Data;
 
@@ -28,6 +29,9 @@ public class RuleTestCaseVO implements Serializable {
 
   /** 关联的规则编码 */
   private String ruleCode;
+
+  /** 事实数据（输入因子） */
+  private Map<String, Object> factsData;
 
   /** 预期命中的规则编码列表 */
   private List<String> expectedTriggered;

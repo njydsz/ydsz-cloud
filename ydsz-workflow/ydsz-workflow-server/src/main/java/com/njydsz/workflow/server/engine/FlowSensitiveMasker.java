@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -39,6 +40,34 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
 @Slf4j
 @Component
 public class FlowSensitiveMasker {
+
+  /**
+   * 敏感字段名匹配模式（使用单词边界，避免误匹配非敏感字段如 phoneModel、telephoneExchange 等）
+   *
+   * <p>匹配规则：字段名中包含独立的敏感词（前后为下划线、连字符、字符串边界或大小写转换位置）， 而非作为其他单词的子串。例如：
+   *
+   * <ul>
+ *   <li><b>匹配</b>：{@code phone}、{@code mobile_phone}、{@code phoneNo}、{@code id_card_no}、{@code emailAddress}
+ *   <li><b>不匹配</b>：{@code phoneModel}、{@code telephoneExchange}、{@code cardNote}
+ *   </ul>
+   */
+  private static final List<Pattern> SENSITIVE_KEY_PATTERNS = List.of(
+      // 电话/手机
+      Pattern.compile("(^|[_-]|(?<=[a-z]))phone($|[_-]|(?=[A-Z]))", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("(^|[_-]|(?<=[a-z]))mobile($|[_-]|(?=[A-Z]))", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("(^|[_-]|(?<=[a-z]))tel($|[_-]|(?=[A-Z]))", Pattern.CASE_INSENSITIVE),
+      // 身份证
+      Pattern.compile("(^|[_-]|(?<=[a-z]))idcard($|[_-]|(?=[A-Z]))", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("(^|[_-]|(?<=[a-z]))idno($|[_-]|(?=[A-Z]))", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("(^|[_-]|(?<=[a-z]))identity($|[_-]|(?=[A-Z]))", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("(^|[_-]|(?<=[a-z]))id_number($|[_-]|(?=[A-Z]))", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("(^|[_-]|(?<=[a-z]))certno($|[_-]|(?=[A-Z]))", Pattern.CASE_INSENSITIVE),
+      // 银行卡
+      Pattern.compile("(^|[_-]|(?<=[a-z]))bankcard($|[_-]|(?=[A-Z]))", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("(^|[_-]|(?<=[a-z]))cardno($|[_-]|(?=[A-Z]))", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("(^|[_-]|(?<=[a-z]))bankno($|[_-]|(?=[A-Z]))", Pattern.CASE_INSENSITIVE),
+      // 邮箱
+      Pattern.compile("(^|[_-]|(?<=[a-z]))email($|[_-]|(?=[A-Z]))", Pattern.CASE_INSENSITIVE));
 
   // ============================== 公共 API ==============================
 
@@ -90,7 +119,9 @@ public class FlowSensitiveMasker {
    * 便捷方法：对 Map 中疑似敏感字段自动脱敏。
    *
    * <p>扫描 Map 的 key，若 key 名称匹配常见敏感字段名（phone/mobile/tel/idCard/idNo/ bankCard/cardNo/email
-   * 等，不区分大小写），则对其值做脱敏。
+   * 等），则对其值做脱敏。
+   *
+   * <p>使用单词边界匹配，避免误匹配非敏感字段（如 {@code phoneModel}、{@code cardNote} 等）。
    *
    * @param data 原始 Map
    * @return 脱敏后的新 Map
@@ -104,22 +135,25 @@ public class FlowSensitiveMasker {
       if (key == null) {
         continue;
       }
-      String lower = key.toLowerCase();
-      if (lower.contains("phone")
-          || lower.contains("mobile")
-          || lower.contains("tel")
-          || lower.contains("idcard")
-          || lower.contains("idno")
-          || lower.contains("identity")
-          || lower.contains("bankcard")
-          || lower.contains("cardno")
-          || lower.contains("bankno")
-          || lower.contains("email")
-          || lower.contains("id_number")
-          || lower.contains("certno")) {
+      if (isSensitiveKey(key)) {
         sensitiveKeys.add(key);
       }
     }
     return maskFields(data, sensitiveKeys);
+  }
+
+  /**
+   * 判断字段名是否为敏感字段（使用单词边界正则匹配）
+   *
+   * @param key 字段名
+   * @return true 表示该字段名匹配敏感模式
+   */
+  private boolean isSensitiveKey(String key) {
+    for (Pattern pattern : SENSITIVE_KEY_PATTERNS) {
+      if (pattern.matcher(key).find()) {
+        return true;
+      }
+    }
+    return false;
   }
 }

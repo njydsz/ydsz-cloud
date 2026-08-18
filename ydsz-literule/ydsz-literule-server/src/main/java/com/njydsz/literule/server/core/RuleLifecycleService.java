@@ -21,6 +21,7 @@ import com.njydsz.literule.server.config.LiteRuleProperties;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
+import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 
 /**
@@ -59,7 +60,7 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
  * System.out.println("差异数: " + preview.getDiffCount());
  *
  * // 3. 确认后执行回滚
- * RuleDefinition restored = lifecycleService.rollback("R001", 3, "admin");
+ * RuleDefinitionVO restored = lifecycleService.rollback("R001", 3, "admin");
  *
  * // 4. 一键退役
  * lifecycleService.retireRule("R002", "admin", "休眠规则，长期零触发");
@@ -706,7 +707,7 @@ public class RuleLifecycleService {
    * @return 回滚后的规则定义
    * @throws IllegalStateException 规则已归档或版本不存在
    */
-  public RuleDefinition rollback(String ruleCode, int version, String operator) {
+  public RuleDefinitionVO rollback(String ruleCode, int version, String operator) {
     RollbackPreview preview = previewRollback(ruleCode, version);
     if (!preview.isRollbackAllowed()) {
       throw new IllegalStateException("回滚被拒绝: " + preview.getRollbackBlockedReason());
@@ -717,7 +718,8 @@ public class RuleLifecycleService {
         version,
         preview.getDiffCount(),
         operator);
-    return ruleAdminService.rollback(ruleCode, version, operator);
+    return ruleAdminService.rollback(ruleCode, version, operator)
+        .orElseThrow(() -> new IllegalStateException("回滚失败: 版本不存在, ruleCode=" + ruleCode + ", version=" + version));
   }
 
   // ==================== 一键退役 ====================

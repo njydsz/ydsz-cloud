@@ -23,7 +23,7 @@ import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.nextwiki.infra.entity.TrashItemDO;
+import com.njydsz.nextwiki.domain.vo.TrashItemVO;
 import com.njydsz.nextwiki.server.service.TrashApplicationService;
 
 /**
@@ -106,7 +106,7 @@ public class TrashController {
   @GetMapping("/list")
   @Operation(summary = "查询回收站列表")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_LIST)
-  public BaseResponse<List<TrashItemDO>> list(
+  public BaseResponse<List<TrashItemVO>> list(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     return BaseResponse.success(trashApplicationService.listTrash(userId));
   }

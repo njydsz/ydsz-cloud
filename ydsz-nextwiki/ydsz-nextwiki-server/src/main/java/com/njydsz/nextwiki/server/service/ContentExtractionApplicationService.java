@@ -14,7 +14,7 @@ import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.service.DocumentService;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
 
@@ -89,19 +89,19 @@ public class ContentExtractionApplicationService {
    * @concurrency 无共享可变状态，可并发；幂等（重复索引以最新内容覆盖）
    */
   public void extractAndIndex(String fileNodeId, String userId) {
-    FileNodeDO FileNodeDO = fileNodeRepository.findById(fileNodeId);
-    if (FileNodeDO == null || !FileNodeDO.isFile()) {
+    FileNodeVO node = fileNodeRepository.findById(fileNodeId).orElse(null);
+    if (node == null || !node.isFile()) {
       return;
     }
 
-    String suffix = FileNodeDO.getSuffix();
+    String suffix = node.getSuffix();
     if (suffix == null || suffix.isEmpty()) {
       log.debug("[ContentExtractionApplicationService] 无后缀，跳过: fileNodeId={}", fileNodeId);
       return;
     }
 
     // 使用 DocumentFormat 统一格式检测（基于文件名），覆盖 16 种格式
-    String fileName = FileNodeDO.getName();
+    String fileName = node.getName();
     if (DocumentFormat.fromFileName(fileName) == DocumentFormat.UNKNOWN) {
       log.debug(
           "[ContentExtractionApplicationService] 不支持的格式，仅索引元数据: fileNodeId={}, fileName={}",
@@ -112,7 +112,7 @@ public class ContentExtractionApplicationService {
     }
 
     // 调用 common-docs 统一解析
-    String content = parseDocumentContent(FileNodeDO);
+    String content = parseDocumentContent(node);
 
     if (content != null && !content.isEmpty()) {
       // 限制最大长度
@@ -136,23 +136,23 @@ public class ContentExtractionApplicationService {
    * <p>委托 {@link DocumentService#parseAndPreprocess} 执行解析 + 预处理一体化流程， 内部自动选择对应格式的解析器（PDFBox / POI /
    * Jsoup 等），并执行文本归一化、 清洗等预处理步骤。
    *
-   * @param FileNodeDO 文件节点（含存储定位信息）
+   * @param node 文件节点（含存储定位信息）
    * @return 解析后的纯文本内容；解析失败返回 {@code null}
    */
-  private String parseDocumentContent(FileNodeDO FileNodeDO) {
+  private String parseDocumentContent(FileNodeVO node) {
     IFileStorage storage = resolveStorage();
     if (storage == null) {
       return null;
     }
 
     try (InputStream is =
-        storage.downloadAsStream(FileNodeDO.getBucketName(), FileNodeDO.getStorageKey())) {
-      DocumentParseResult result = documentService.parseAndPreprocess(is, FileNodeDO.getName(), null);
+        storage.downloadAsStream(node.getBucketName(), node.getStorageKey())) {
+      DocumentParseResult result = documentService.parseAndPreprocess(is, node.getName(), null);
 
       if (!result.isSuccess()) {
         log.warn(
             "[ContentExtractionApplicationService] 文档解析失败: fileNodeId={}, error={}",
-            FileNodeDO.getId(),
+            node.getId(),
             result.getErrorMessage());
         return null;
       }
@@ -166,7 +166,7 @@ public class ContentExtractionApplicationService {
     } catch (Exception e) {
       log.warn(
           "[ContentExtractionApplicationService] 文档解析异常: fileNodeId={}, error={}",
-          FileNodeDO.getId(),
+          node.getId(),
           e.getMessage());
       return null;
     }

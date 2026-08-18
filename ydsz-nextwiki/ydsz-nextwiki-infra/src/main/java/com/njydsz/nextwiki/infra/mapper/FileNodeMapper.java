@@ -109,6 +109,58 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
           + "original_path = #{originalPath}, updated_at = NOW() WHERE id = #{id}")
   int softDelete(@Param("id") String id, @Param("originalPath") String originalPath);
 
+  /**
+   * 批量逻辑删除（移入回收站，用于批量删除场景）。
+   *
+   * <p>使用 CASE WHEN 一次性更新多条记录，比逐条删除性能更优。
+   *
+   * @param ids 文件节点ID列表
+   * @param originalPaths 原始路径列表（与ids一一对应）
+   * @return 受影响行数
+   */
+  @Update(
+      "<script>UPDATE nw_file_node SET deleted = 1, deleted_time = NOW(), updated_at = NOW(), "
+          + "original_path = CASE id "
+          + "<foreach collection='ids' item='id' separator=' '> "
+          + "  WHEN #{id} THEN #{originalPaths[${index}]} "
+          + "</foreach> "
+          + "END "
+          + "WHERE id IN "
+          + "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach> "
+          + "AND deleted = 0</script>")
+  int batchSoftDelete(
+      @Param("ids") List<String> ids, @Param("originalPaths") List<String> originalPaths);
+
+  /**
+   * 批量更新父节点和路径（用于批量移动场景）。
+   *
+   * <p>使用 CASE WHEN 一次性更新多条记录的路径和层级。
+   *
+   * @param ids 文件节点ID列表
+   * @param targetParentId 目标父节点ID
+   * @param newPaths 新路径列表（与ids一一对应）
+   * @param levels 新层级列表（与ids一一对应）
+   * @return 受影响行数
+   */
+  @Update(
+      "<script>UPDATE nw_file_node SET parent_id = #{targetParentId}, updated_at = NOW(), "
+          + "path = CASE id "
+          + "<foreach collection='ids' item='id' separator=' '> "
+          + "  WHEN #{id} THEN #{newPaths[${index}]} "
+          + "</foreach> END, "
+          + "level = CASE id "
+          + "<foreach collection='ids' item='id' separator=' '> "
+          + "  WHEN #{id} THEN #{levels[${index}]} "
+          + "</foreach> END "
+          + "WHERE id IN "
+          + "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach> "
+          + "AND deleted = 0</script>")
+  int batchUpdateParentAndPath(
+      @Param("ids") List<String> ids,
+      @Param("targetParentId") String targetParentId,
+      @Param("newPaths") List<String> newPaths,
+      @Param("levels") List<Integer> levels);
+
   /** 恢复逻辑删除 */
   @Update(
       "UPDATE nw_file_node SET deleted = 0, deleted_time = NULL, updated_at = NOW() WHERE id = #{id}")

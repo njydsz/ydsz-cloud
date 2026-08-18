@@ -9,9 +9,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.agent.domain.rag.Retriever;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
-import com.njydsz.agent.infra.rag.HybridRetriever;
+import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.enums.DocumentFormat;
@@ -21,6 +22,8 @@ import com.njydsz.common.docs.service.DocumentService;
  * RAG 检索服务
  *
  * <p>提供基于向量相似度的知识检索能力，将检索结果组装为 LLM 上下文。
+ *
+ * <p><b>DDD 合规：</b>通过 domain 层 {@link Retriever} 接口访问检索能力，不依赖 infra 实现。
  *
  * <h3>核心能力</h3>
  *
@@ -48,20 +51,26 @@ public class RagService {
   /** 最大提取文本长度（1MB），保护向量库体积 */
   private static final int MAX_CONTENT_LENGTH = 1024 * 1024;
 
+  /** 上下文模板固定开销 Token 估算（标题行 + 分隔线 + 结尾提示 ≈ 50 Token） */
+  private static final int CONTEXT_TEMPLATE_OVERHEAD_TOKENS = 50;
+
   private final VectorStore vectorStore;
-  private final ObjectProvider<HybridRetriever> hybridRetrieverProvider;
+  private final ObjectProvider<Retriever> retrieverProvider;
   private final DocumentService documentService;
   private final DocumentIngestionService ingestionService;
+  private final AgentProperties properties;
 
   public RagService(
       VectorStore vectorStore,
-      ObjectProvider<HybridRetriever> hybridRetrieverProvider,
+      ObjectProvider<Retriever> retrieverProvider,
       DocumentService documentService,
-      DocumentIngestionService ingestionService) {
+      DocumentIngestionService ingestionService,
+      AgentProperties properties) {
     this.vectorStore = vectorStore;
-    this.hybridRetrieverProvider = hybridRetrieverProvider;
+    this.retrieverProvider = retrieverProvider;
     this.documentService = documentService;
     this.ingestionService = ingestionService;
+    this.properties = properties;
   }
 
   /**
@@ -86,35 +95,60 @@ public class RagService {
     if (query == null || query.isBlank()) {
       return List.of();
     }
-    HybridRetriever hybridRetriever = hybridRetrieverProvider.getIfAvailable();
+    Retriever retriever = retrieverProvider.getIfAvailable();
     List<TextChunk> chunks;
-    if (hybridRetriever != null) {
-      chunks = hybridRetriever.retrieve(query, topK, minScore);
+    if (retriever != null) {
+      chunks = retriever.retrieve(query, topK, minScore);
     } else {
       chunks = vectorStore.search(query, topK, minScore);
     }
     LOG.info(
         "[RAG] 检索完成: query='{}', mode={}, results={}",
         truncate(query, 50),
-        hybridRetriever != null ? "hybrid" : "vector",
+        retriever != null ? "hybrid" : "vector",
         chunks.size());
     return chunks;
   }
 
   /**
-   * 将检索结果组装为 LLM 上下文文本
+   * 将检索结果组装为 LLM 上下文文本（Token 感知截断）。
+   *
+   * <p>按 Token 预算从前往后累加文本块，超出预算时截断当前块并追加省略标记。 保证输出的上下文总 Token 不超过 {@code contextTokenBudget}，
+   * 避免检索结果占用过多上下文导致 LLM 回复质量下降。
    *
    * @param chunks 检索到的文本块
-   * @return 上下文文本（含引用标注）
+   * @return 上下文文本（含引用标注），Token 数不超过预算
    */
   public String buildContext(List<TextChunk> chunks) {
     if (chunks == null || chunks.isEmpty()) {
       return "";
     }
+    int tokenBudget = properties.getRag().getContextTokenBudget();
+    double tokenCharRatio = properties.getMemory().getTokenCharRatio();
+    // 扣除模板固定开销
+    int remainingTokens = tokenBudget - CONTEXT_TEMPLATE_OVERHEAD_TOKENS;
     StringBuilder sb = new StringBuilder();
     sb.append("以下是从知识库中检索到的相关内容：\n\n");
     for (int i = 0; i < chunks.size(); i++) {
       TextChunk chunk = chunks.get(i);
+      // 计算当前块的 Token 数
+      int chunkTokens = TokenEstimator.estimate(chunk.getContent(), tokenCharRatio);
+      if (chunkTokens > remainingTokens) {
+        // 超出预算：截断当前块或跳过
+        if (remainingTokens > 50) {
+          // 剩余预算足够容纳部分文本，截断并追加省略标记
+          int maxChars = TokenEstimator.maxCharsForBudget(chunk.getContent(), remainingTokens, tokenCharRatio);
+          sb.append("--- 参考资料 [").append(i + 1).append("] ---\n");
+          if (chunk.getDocumentTitle() != null) {
+            sb.append("来源: ").append(chunk.getDocumentTitle()).append("\n");
+          }
+          sb.append("内容: ")
+              .append(chunk.getContent(), 0, Math.min(maxChars, chunk.getContent().length()))
+              .append("...[已截断]\n\n");
+        }
+        // 预算已满，停止添加更多块
+        break;
+      }
       sb.append("--- 参考资料 [").append(i + 1).append("] ---\n");
       if (chunk.getDocumentTitle() != null) {
         sb.append("来源: ").append(chunk.getDocumentTitle()).append("\n");
@@ -123,6 +157,7 @@ public class RagService {
         sb.append("来源类型: ").append(chunk.getSource()).append("\n");
       }
       sb.append("内容: ").append(chunk.getContent()).append("\n\n");
+      remainingTokens -= chunkTokens;
     }
     sb.append("--- 请基于以上参考资料回答用户问题。如果资料不足以回答，请如实说明。 ---\n");
     return sb.toString();

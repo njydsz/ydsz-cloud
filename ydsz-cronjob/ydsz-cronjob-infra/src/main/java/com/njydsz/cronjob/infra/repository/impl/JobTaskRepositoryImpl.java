@@ -63,4 +63,31 @@ public class JobTaskRepositoryImpl implements JobTaskRepository {
   public int cleanExpiredLogs(LocalDateTime before, int limit) {
     return jobTaskMapper.cleanExpiredLogs(before, limit);
   }
+
+  // ===== Web 层查询方法实现 =====
+
+  @Override
+  public JobRepository.PageResult<JobTaskVO> pageByLogId(String logId, int page, int size) {
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.njydsz.cronjob.domain.entity.job.JobTask> pageObj =
+        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size);
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.cronjob.domain.entity.job.JobTask> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper
+        .eq(com.njydsz.cronjob.domain.entity.job.JobTask::getLogId, logId)
+        .eq(com.njydsz.cronjob.domain.entity.job.JobTask::getDeleted, 0)
+        .orderByAsc(com.njydsz.cronjob.domain.entity.job.JobTask::getCreatedAt);
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.njydsz.cronjob.domain.entity.job.JobTask> result =
+        jobTaskMapper.selectPage(pageObj, wrapper);
+    return new JobRepository.PageResult<>(converter.jobTaskListToVO(result.getRecords()), result.getTotal());
+  }
+
+  @Override
+  public int countByLogId(String logId) {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.cronjob.domain.entity.job.JobTask> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper
+        .eq(com.njydsz.cronjob.domain.entity.job.JobTask::getLogId, logId)
+        .eq(com.njydsz.cronjob.domain.entity.job.JobTask::getDeleted, 0);
+    return jobTaskMapper.selectCount(wrapper);
+  }
 }

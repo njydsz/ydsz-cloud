@@ -59,4 +59,10 @@ public class ShareAccessLogDTO implements Serializable {
 
   @Schema(description = "访问时间")
   private LocalDateTime accessTime;
+
+  @Schema(description = "创建人")
+  private String createdBy;
+
+  @Schema(description = "租户ID")
+  private String tenantId;
 }

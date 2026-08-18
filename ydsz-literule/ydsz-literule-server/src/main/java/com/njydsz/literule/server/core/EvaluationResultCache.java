@@ -3,7 +3,6 @@ package com.njydsz.literule.server.core;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -144,6 +143,15 @@ public class EvaluationResultCache {
     caffeineCache.put(key, immutableResults);
   }
 
+  /**
+   * 触发缓存清理（执行异步淘汰任务）。
+   *
+   * <p>Caffeine 的淘汰是异步的，调用此方法可立即执行待处理的淘汰任务， 确保 {@link #size()} 反映最新的条目数。
+   */
+  public void cleanUp() {
+    caffeineCache.cleanUp();
+  }
+
   /** 清除全部缓存 */
   public void clear() {
     long size = caffeineCache.estimatedSize();
@@ -219,36 +227,14 @@ public class EvaluationResultCache {
   // ==================== 内部实现 ====================
 
   /**
-   * 构建缓存键
+   * 构建缓存键（P1-1：使用 CacheKeyBuilder 生成固定长度哈希键）
    *
-   * <p>缓存键由 scenario + tenantId + environment + facts 组成。 facts 按 key 排序后拼接，value 使用 {@code
-   * String.valueOf()} 序列化， 保证相同事实数据产生相同键（不依赖对象的 hashCode，避免不可靠性）。
+   * <p>替代原有的全量字符串拼接方案，将键长从 O(总 facts 序列化长度) 降至固定 ~80 字符， 减少内存占用和 equals 比较开销。
    *
    * @param context 规则上下文
    * @return 缓存键
    */
   private String buildCacheKey(RuleContext context) {
-    Map<String, Object> facts = context.getFacts();
-
-    // 按 key 排序后拼接
-    StringBuilder sb = new StringBuilder(256);
-    sb.append(context.getScenario()).append('|');
-    sb.append(context.getTenantId()).append('|');
-    sb.append(context.getEnvironment()).append('|');
-
-    facts.entrySet().stream()
-        .sorted(Map.Entry.comparingByKey())
-        .forEach(
-            e -> {
-              sb.append(e.getKey()).append('=');
-              if (e.getValue() != null) {
-                sb.append(String.valueOf(e.getValue()));
-              } else {
-                sb.append("null");
-              }
-              sb.append(';');
-            });
-
-    return sb.toString();
+    return CacheKeyBuilder.buildKey(context);
   }
 }

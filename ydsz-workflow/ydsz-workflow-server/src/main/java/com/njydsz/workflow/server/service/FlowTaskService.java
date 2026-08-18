@@ -357,9 +357,10 @@ public interface FlowTaskService {
    *
    * @param assigneeId 办理人 ID（可空，为空时查全部）
    * @param tenantId 租户 ID（可空）
+   * @param limit 返回条数上限
    * @return 超期任务列表
    */
-  List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId);
+  List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId, int limit);
 
   /**
    * P2-32: 统计超期任务数量

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -137,25 +138,32 @@ public class BatchController {
   }
 
   /**
-   * SSE 订阅批次进度（服务端推送）。
+   * SSE 订阅批次进度（服务端推送，支持 Last-Event-ID 断线重连）。
    *
    * <p>建立 SSE 连接后，后端在批次处理过程中实时推送进度事件（progress / complete）， 无需客户端轮询。超时时间 5 分钟，批次完成后自动关闭连接。
+   *
+   * <p><b>P3-1: Last-Event-ID 断线重连</b>
+   *
+   * <p>客户端断线后重连时，在 {@code Last-Event-ID} Header 中携带上次收到的最后一个事件 ID， 服务端将自动重放该 ID 之后所有缺失的进度事件，避免轮询补偿。
    *
    * <p>推事件类型：
    *
    * <ul>
-   *   <li>{@code initial} — 连接建立时立即发送当前快照
-   *   <li>{@code progress} — 处理过程中的进度更新（预留；当前版本在完整事件后触发）
+   *   <li>{@code initial} — 连接建立时立即发送当前快照（携带事件 ID）
+   *   <li>{@code progress} — 处理过程中的进度更新（每条携带递增事件 ID）
    *   <li>{@code complete} — 批次处理完成，携带最终结果
    * </ul>
    *
    * @param batchId 批次 ID
+   * @param lastEventId 客户端上次收到的事件 ID（可选，断线重连时携带）
    * @return SseEmitter 流
    */
-  @Operation(summary = "SSE 订阅批次进度")
+  @Operation(summary = "SSE 订阅批次进度（支持断线重连）")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping(value = "/progress/{batchId}/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  public SseEmitter subscribeProgress(@PathVariable String batchId) {
+  public SseEmitter subscribeProgress(
+      @PathVariable String batchId,
+      @RequestHeader(value = "Last-Event-ID", required = false) String lastEventId) {
     // 先拉取当前进度作为初始快照，让客户端连接后立即可见状态
     BatchProgressVO initialSnapshot = null;
     try {
@@ -165,6 +173,6 @@ public class BatchController {
       log.warn("[BatchController] 批次进度查询失败，降级返回空快照: batchId={}, err={}", batchId, e.getMessage());
       initialSnapshot = null;
     }
-    return sseEmitterService.subscribe(batchId, initialSnapshot);
+    return sseEmitterService.subscribe(batchId, initialSnapshot, lastEventId);
   }
 }

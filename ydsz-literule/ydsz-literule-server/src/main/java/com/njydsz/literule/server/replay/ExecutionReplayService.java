@@ -307,7 +307,10 @@ public class ExecutionReplayService {
     versionDef.setReviewedAt(versionVO.getReviewedAt());
     versionDef.setReviewComment(versionVO.getReviewComment());
     versionDef.setCanaryRatio(versionVO.getCanaryRatio());
-    versionDef.setCanaryConditions(versionVO.getCanaryConditions());
+    versionDef.setCanaryConditions(
+        versionVO.getCanaryConditions() == null || versionVO.getCanaryConditions().isEmpty()
+            ? Collections.emptyList()
+            : List.of(versionVO.getCanaryConditions()));
     versionDef.setCanaryConditionExpression(versionVO.getCanaryConditionExpression());
     versionDef.setCanarySeverityExpression(versionVO.getCanarySeverityExpression());
 

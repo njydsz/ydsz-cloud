@@ -61,6 +61,12 @@ public class SummaryConversationMemory implements ConversationMemory {
   /** 保留最近消息数 */
   private final int keepRecentCount;
 
+  /** Token 预算（估算值），超过时触发压缩 */
+  private final int tokenBudget;
+
+  /** Token 估算的字符系数（Char/Token） */
+  private final double tokenCharRatio;
+
   /** 对话摘要缓存（conversationId → summary） */
   private final ConcurrentMap<String, String> conversationSummaries = new ConcurrentHashMap<>();
 
@@ -70,11 +76,24 @@ public class SummaryConversationMemory implements ConversationMemory {
       String model,
       int summaryThreshold,
       int keepRecentCount) {
+    this(delegate, llmClient, model, summaryThreshold, keepRecentCount, 4000, 2.5);
+  }
+
+  public SummaryConversationMemory(
+      ConversationMemory delegate,
+      LlmClient llmClient,
+      String model,
+      int summaryThreshold,
+      int keepRecentCount,
+      int tokenBudget,
+      double tokenCharRatio) {
     this.delegate = delegate;
     this.llmClient = llmClient;
     this.model = model;
     this.summaryThreshold = summaryThreshold > 0 ? summaryThreshold : 20;
     this.keepRecentCount = keepRecentCount > 0 ? keepRecentCount : 10;
+    this.tokenBudget = tokenBudget > 0 ? tokenBudget : 4000;
+    this.tokenCharRatio = tokenCharRatio > 0 ? tokenCharRatio : 2.5;
   }
 
   @Override
@@ -82,7 +101,9 @@ public class SummaryConversationMemory implements ConversationMemory {
     delegate.save(conversationId, message);
 
     long count = delegate.count(conversationId);
-    if (count > summaryThreshold) {
+    int totalTokens = estimateConversationTokens(conversationId);
+    // 消息数超阈值 或 估算 Token 超预算，均触发压缩
+    if (count > summaryThreshold || totalTokens > tokenBudget) {
       tryCompress(conversationId);
     }
   }
@@ -109,6 +130,59 @@ public class SummaryConversationMemory implements ConversationMemory {
   @Override
   public long count(String conversationId) {
     return delegate.count(conversationId);
+  }
+
+  /**
+   * 按 Token 预算加载对话历史（Token 感知截断 + 摘要合并）。
+   *
+   * <p>先加载摘要（如有），再按 Token 预算从委托记忆中选择最新消息，保证总 Token 不超预算。
+   */
+  @Override
+  public List<ChatMessage> loadWithTokenBudget(
+      String conversationId, int tokenBudget, double tokenCharRatio) {
+    List<ChatMessage> result = new ArrayList<>();
+    // 摘要优先（占用部分预算）
+    String summary = conversationSummaries.get(conversationId);
+    if (summary != null && !summary.isBlank()) {
+      ChatMessage summaryMsg = ChatMessage.system(SUMMARY_PREFIX + summary);
+      result.add(summaryMsg);
+      tokenBudget -= estimateTokens(summaryMsg, tokenCharRatio);
+    }
+    // 按剩余预算加载最近消息
+    if (tokenBudget > 0) {
+      List<ChatMessage> recentMessages = delegate.load(conversationId, Integer.MAX_VALUE);
+      int currentTokens = 0;
+      int includeUpTo = recentMessages.size();
+      for (int i = recentMessages.size() - 1; i >= 0; i--) {
+        int msgTokens = estimateTokens(recentMessages.get(i), tokenCharRatio);
+        if (currentTokens + msgTokens > tokenBudget) {
+          break;
+        }
+        currentTokens += msgTokens;
+        includeUpTo = i;
+      }
+      result.addAll(recentMessages.subList(includeUpTo, recentMessages.size()));
+    }
+    return result;
+  }
+
+  /**
+   * 估算对话历史总 Token 数（含摘要）。
+   *
+   * @param conversationId 对话 ID
+   * @return 估算 Token 总数
+   */
+  private int estimateConversationTokens(String conversationId) {
+    int total = 0;
+    String summary = conversationSummaries.get(conversationId);
+    if (summary != null) {
+      total += (int) Math.ceil(summary.length() / tokenCharRatio);
+    }
+    List<ChatMessage> messages = delegate.load(conversationId, Integer.MAX_VALUE);
+    for (ChatMessage msg : messages) {
+      total += estimateTokens(msg, tokenCharRatio);
+    }
+    return total;
   }
 
   /** 压缩对话历史：将较早的消息摘要后替换 */

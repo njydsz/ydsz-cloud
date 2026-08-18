@@ -2,6 +2,7 @@ package com.njydsz.literule.server.engine.liteexpr;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,6 +92,16 @@ public class LiteExprSandbox {
   /** 允许的函数名白名单（由 FunctionRegistry 初始化） */
   private final Set<String> allowedFunctions = new HashSet<>();
 
+  /**
+   * 沙箱校验结果缓存（P1-3 性能优化）
+   *
+   * <p>使用 {@link IdentityHashMap} 以 AST 对象引用为 key（{@link LiteExprCompiler} 按表达式字符串缓存 AST，
+   * 同一表达式返回相同对象引用）。 校验结果仅依赖静态 {@code FORBIDDEN_*} 集合， 与运行时白名单状态无关（白名单仅抑制误报，不产生新的违规项），因此可安全缓存。
+   *
+   * <p>缓存容量无限制，依赖 {@link LiteExprCompiler} 的编译缓存（默认 4096 条）作为天然上界。
+   */
+  private final Map<ExprNode, SandboxResult> checkCache = new IdentityHashMap<>();
+
   public LiteExprSandbox() {}
 
   /** 从函数注册表初始化白名单 */
@@ -126,18 +137,31 @@ public class LiteExprSandbox {
   }
 
   /**
-   * AST 级别安全校验
+   * AST 级别安全校验（P1-3：带缓存，同一 AST 引用仅校验一次）
    *
    * @param ast AST 根节点
    * @return 校验结果
    */
   public SandboxResult check(ExprNode ast) {
+    SandboxResult cached = checkCache.get(ast);
+    if (cached != null) {
+      return cached;
+    }
     List<String> violations = new ArrayList<>();
     checkNode(ast, violations);
+    SandboxResult result;
     if (violations.isEmpty()) {
-      return SandboxResult.ok();
+      result = SandboxResult.ok();
+    } else {
+      result = SandboxResult.fail(violations);
     }
-    return SandboxResult.fail(violations);
+    checkCache.put(ast, result);
+    return result;
+  }
+
+  /** 清空校验结果缓存（函数白名单变更时调用） */
+  public void clearCache() {
+    checkCache.clear();
   }
 
   /** 递归检查 AST 节点 */

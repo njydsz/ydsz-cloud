@@ -28,9 +28,8 @@ import com.njydsz.agent.api.dto.ChatResponseDTO;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
-import com.njydsz.agent.server.agent.AgentFactory;
+import com.njydsz.agent.server.agent.AgentFacade;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
-import com.njydsz.agent.server.chat.ChatService;
 import com.njydsz.agent.server.chat.SseExecutor;
 import com.njydsz.agent.server.chat.SseExecutor.SseChunk;
 import com.njydsz.common.audit.annotation.Audit;
@@ -62,7 +61,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  *
  * <ul>
  *   <li>同步 / 流式双模式执行（流式支持心跳保活和客户端断连检测）
- *   <li>多 LLM Provider 路由（通过 {@link AgentFactory} 统一抽象）
+ *   <li>多 LLM Provider 路由（通过 {@link AgentFacade} 统一抽象）
  *   <li>幂等防重（5s TTL）+ 限流（50 QPS）+ 审计日志
  * </ul>
  *
@@ -80,14 +79,15 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  *   前端 Chat UI / Agent 调用方
  *     → ydsz-gateway
  *       → ydsz-agent-web（本 Controller）
- *         → ydsz-agent-server.AgentFactory / ChatService
- *           → LlmClient（OpenAI / Claude / 通义千问 / 文心一言 ...）
+ *         → ydsz-agent-server.AgentFacade（应用门面）
+ *           → ChatService / AgentFactory
+ *             → LlmClient（OpenAI / Claude / 通义千问 / 文心一言 ...）
  * </pre>
  *
  * @author ydsz-team
  * @since 1.0.0
  * @see AgentMetadataController 元数据查询接口（可用模型 / 已注册工具）
- * @see AgentFactory Agent 工厂
+ * @see AgentFacade Agent 应用门面
  * @see AgentRequestGuard 请求守卫（幂等 + 限流 + 业务校验）
  */
 @Slf4j
@@ -99,11 +99,8 @@ public class AgentController {
 
   private static final Logger LOG = LoggerFactory.getLogger(AgentController.class);
 
-  /** Agent 工厂（根据 agentCode 创建/缓存执行器） */
-  private final AgentFactory agentFactory;
-
-  /** 对话服务（封装同步/流式对话、历史读写） */
-  private final ChatService chatService;
+  /** Agent 应用门面（解耦 Controller 与内部服务） */
+  private final AgentFacade agentFacade;
 
   /** 请求守卫（幂等 + 限流 + 业务校验） */
   private final AgentRequestGuard requestGuard;
@@ -135,7 +132,7 @@ public class AgentController {
     requestGuard.check(request.getRequestId(), null);
     AgentExecutionRequest execReq = toExecutionRequest(request);
     try {
-      ChatResponse response = agentFactory.getDefaultExecutor().execute(execReq);
+      ChatResponse response = agentFacade.execute(execReq);
       return BaseResponse.success(toDTO(response));
     } catch (Exception e) {
       requestGuard.releaseIdempotent(request.getRequestId());
@@ -180,28 +177,26 @@ public class AgentController {
 
     executor.execute(
         chunkConsumer ->
-            agentFactory
-                .getDefaultExecutor()
-                .executeStream(
-                    execReq,
-                    chunk -> {
-                      if (chunk.hasContent()) {
-                        chunkConsumer.accept(
-                            SseChunk.content(
-                                chunk.getDeltaContent(),
-                                chunk.getFinishReason(),
-                                chunk.getDeltaToolCalls()));
-                      } else if (chunk.isFinished()) {
-                        chunkConsumer.accept(SseChunk.finish(chunk.getFinishReason()));
-                      } else {
-                        // 工具调用等非文本 chunk 原样转发
-                        chunkConsumer.accept(
-                            SseChunk.content(
-                                chunk.getDeltaContent(),
-                                chunk.getFinishReason(),
-                                chunk.getDeltaToolCalls()));
-                      }
-                    }));
+            agentFacade.executeStream(
+                execReq,
+                chunk -> {
+                  if (chunk.hasContent()) {
+                    chunkConsumer.accept(
+                        SseChunk.content(
+                            chunk.getDeltaContent(),
+                            chunk.getFinishReason(),
+                            chunk.getDeltaToolCalls()));
+                  } else if (chunk.isFinished()) {
+                    chunkConsumer.accept(SseChunk.finish(chunk.getFinishReason()));
+                  } else {
+                    // 工具调用等非文本 chunk 原样转发
+                    chunkConsumer.accept(
+                        SseChunk.content(
+                            chunk.getDeltaContent(),
+                            chunk.getFinishReason(),
+                            chunk.getDeltaToolCalls()));
+                  }
+                }));
 
     return emitter;
   }
@@ -236,7 +231,7 @@ public class AgentController {
     requestGuard.check(request.getRequestId(), null);
     try {
       ChatResponse response =
-          chatService.chat(
+          agentFacade.chat(
               request.getConversationId(), request.getMessage(), request.getSystemPrompt());
       ChatResponseDTO dto = toDTO(response);
       return BaseResponse.success(dto);
@@ -272,7 +267,7 @@ public class AgentController {
 
     executor.execute(
         chunkConsumer ->
-            chatService.stream(
+            agentFacade.stream(
                 request.getConversationId(),
                 request.getMessage(),
                 request.getSystemPrompt(),
@@ -313,7 +308,7 @@ public class AgentController {
   @GetMapping("/history")
   @Operation(summary = "获取对话历史")
   public BaseResponse<List<Map<String, Object>>> history(@RequestParam String conversationId) {
-    List<ChatMessage> messages = chatService.getHistory(conversationId);
+    List<ChatMessage> messages = agentFacade.getHistory(conversationId);
     List<Map<String, Object>> result = new ArrayList<>();
     for (ChatMessage msg : messages) {
       result.add(
@@ -348,7 +343,7 @@ public class AgentController {
   @Operation(summary = "清除对话历史")
   public BaseResponse<Void> clearHistory(
       @RequestParam String conversationId, @RequestParam(required = false) String requestId) {
-    chatService.clearHistory(conversationId);
+    agentFacade.clearHistory(conversationId);
     return BaseResponse.success();
   }
 

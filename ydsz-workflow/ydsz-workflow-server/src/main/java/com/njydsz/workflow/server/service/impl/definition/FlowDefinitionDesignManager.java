@@ -1,0 +1,602 @@
+package com.njydsz.workflow.server.service.impl.definition;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.util.collection.MapUtils;
+import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
+import com.njydsz.workflow.domain.enums.FlowNodeType;
+import com.njydsz.workflow.domain.enums.FlowSkipType;
+import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.infra.entity.FlowSkipDO;
+import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
+import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
+import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
+import com.njydsz.workflow.server.config.FlowProperties;
+import com.njydsz.workflow.server.engine.BpmnModel;
+import com.njydsz.workflow.server.engine.BpmnXmlParser;
+import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
+import com.njydsz.workflow.server.service.impl.definition.FlowDefinitionQueryService;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+/**
+ * 流程定义设计器管理器
+ *
+ * <p>承担流程定义<b>设计器协同编辑</b>相关全部职责：节点坐标更新、草稿编辑、
+ * 设计器数据加载/保存、表单字段配置、SLA 配置、协同编辑锁定/解锁。
+ *
+ * <p><b>核心能力：</b>
+ *
+ * <ul>
+ *   <li><b>节点坐标</b>：更新节点坐标（{@code {x,y,width,height}}）
+ *   <li><b>草稿编辑</b>：编辑未发布定义的元数据 + 节点/跳转全量替换
+ *   <li><b>设计器数据</b>：获取/保存设计器数据（含 edges 格式供前端直接消费）
+ *   <li><b>表单配置</b>：节点表单字段权限配置（EDIT/READONLY/HIDDEN）
+ *   <li><b>SLA 配置</b>：节点级超时配置（时长/提醒/升级策略）
+ *   <li><b>协同锁</b>：CAS 乐观锁实现设计器多用户并发编辑锁定
+ * </ul>
+ *
+ * <p><b>并发控制：</b>协同编辑锁使用 CAS（Compare-And-Swap）乐观锁，
+ * 单条 UPDATE SQL 完成判定 + 更新，避免"读-判-写"竞态。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@Slf4j
+@Component
+public class FlowDefinitionDesignManager {
+
+  /** 流程定义 Mapper */
+  private final FlowDefinitionMapper definitionMapper;
+
+  /** 流程节点 Mapper */
+  private final FlowNodeMapper nodeMapper;
+
+  /** 流程跳转 Mapper */
+  private final FlowSkipMapper skipMapper;
+
+  /** 流程定义元数据缓存 */
+  private final FlowDefinitionCacheService flowDefinitionCacheService;
+
+  /** 统一配置属性 */
+  private final FlowProperties flowProperties;
+
+  /** BPMN 2.0 XML 解析器（草稿编辑时使用） */
+  private final BpmnXmlParser bpmnXmlParser;
+
+  /** 查询服务（获取详情数据） */
+  private final FlowDefinitionQueryService queryService;
+
+  public FlowDefinitionDesignManager(
+      FlowDefinitionMapper definitionMapper,
+      FlowNodeMapper nodeMapper,
+      FlowSkipMapper skipMapper,
+      FlowDefinitionCacheService flowDefinitionCacheService,
+      FlowProperties flowProperties,
+      BpmnXmlParser bpmnXmlParser,
+      FlowDefinitionQueryService queryService) {
+    this.definitionMapper = definitionMapper;
+    this.nodeMapper = nodeMapper;
+    this.skipMapper = skipMapper;
+    this.flowDefinitionCacheService = flowDefinitionCacheService;
+    this.flowProperties = flowProperties;
+    this.bpmnXmlParser = bpmnXmlParser;
+    this.queryService = queryService;
+  }
+
+  /**
+   * 更新节点坐标
+   *
+   * <p>设计器拖拽节点后调用，{@code coordinate} 字段为 JSON 字符串（{@code {x,y,width,height}}）。
+   *
+   * @param definitionId 流程定义 ID
+   * @param nodeCode 节点编码
+   * @param coordinate 坐标 JSON 字符串
+   * @throws SysException {@code BAD_REQUEST} / {@code NOT_FOUND}
+   */
+  @Transactional(rollbackFor = Exception.class)
+  public void updateNodeCoordinate(String definitionId, String nodeCode, String coordinate) {
+    if (definitionId == null || !StringUtils.hasText(nodeCode)) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("definitionId/nodeCode 不能为空")
+          .build();
+    }
+    FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+    if (node == null) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.NOT_FOUND)
+          .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
+          .build();
+    }
+    node.setCoordinate(coordinate);
+    nodeMapper.updateById(node);
+    flowDefinitionCacheService.evict(definitionId);
+    log.info("[Flow] 更新节点坐标: defId={} node={} coordinate={}", definitionId, nodeCode, coordinate);
+  }
+
+  /**
+   * 更新流程定义（草稿编辑）
+   *
+   * <p>仅允许编辑未发布（{@code isPublish=0}）的定义。支持元数据更新 + 节点/跳转全量替换。
+   *
+   * @param definitionId 流程定义 ID（必须未发布）
+   * @param dto 更新参数 DTO
+   * @throws SysException {@code BAD_REQUEST} — 定义已发布；{@code NOT_FOUND} — 定义不存在
+   */
+  @Transactional(rollbackFor = Exception.class)
+  @CacheEvict(
+      value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
+      allEntries = true)
+  public void updateDefinition(String definitionId, FlowDeployProcessDTO dto) {
+    if (definitionId == null || dto == null) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("definitionId/dto 不能为空")
+          .build();
+    }
+    FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+    if (def == null) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.NOT_FOUND)
+          .message("流程定义不存在: " + definitionId)
+          .build();
+    }
+    if (def.getIsPublish() != null && def.getIsPublish() == 1) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("已发布的流程定义不可编辑，请创建新版本: " + definitionId)
+          .build();
+    }
+
+    if (StringUtils.hasText(dto.getFlowName())) {
+      def.setFlowName(dto.getFlowName());
+    }
+    if (StringUtils.hasText(dto.getCategory())) {
+      def.setCategory(dto.getCategory());
+    }
+    if (dto.getDescription() != null) {
+      def.setDescription(dto.getDescription());
+    }
+    if (StringUtils.hasText(dto.getFormPath())) {
+      def.setFormPath(dto.getFormPath());
+    }
+    definitionMapper.updateById(def);
+
+    boolean hasNodes = dto.getNodes() != null && !dto.getNodes().isEmpty();
+    boolean hasSkips = dto.getSkips() != null && !dto.getSkips().isEmpty();
+    boolean hasBpmn = StringUtils.hasText(dto.getBpmnXml());
+    if (hasBpmn || hasNodes || hasSkips) {
+      skipMapper.deleteByDefinitionId(definitionId);
+      nodeMapper.deleteByDefinitionId(definitionId);
+
+      List<FlowNodeDO> nodes = new ArrayList<>();
+      List<FlowSkipDO> skips = new ArrayList<>();
+
+      if (hasBpmn) {
+        BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
+        nodes.addAll(bpmnModel.getNodes());
+        skips.addAll(bpmnModel.getSkips());
+      } else {
+        for (FlowDeployProcessDTO.FlowNodeDTO n : dto.getNodes()) {
+          FlowNodeDO node = new FlowNodeDO();
+          node.setNodeCode(n.getNodeCode());
+          node.setNodeName(n.getNodeName() == null ? n.getNodeCode() : n.getNodeName());
+          node.setNodeType(
+              n.getNodeType() == null ? FlowNodeType.APPROVAL.getCode() : n.getNodeType());
+          node.setPermissionFlag(n.getPermissionFlag());
+          node.setSkipAnyNode(n.getSkipAnyNode());
+          nodes.add(node);
+        }
+        if (dto.getSkips() != null) {
+          for (FlowDeployProcessDTO.FlowSkipDTO s : dto.getSkips()) {
+            FlowSkipDO skip = new FlowSkipDO();
+            skip.setSkipName(s.getSkipName());
+            skip.setSkipType(
+                StringUtils.hasText(s.getSkipType()) ? s.getSkipType() : FlowSkipType.PASS.name());
+            skip.setSkipCondition(s.getSkipCondition());
+            skip.setNextNodeCode(s.getToNodeCode());
+            skip.setExt(YdszJson.toJson(Map.of("sourceRef", s.getFromNodeCode())));
+            skips.add(skip);
+          }
+        }
+      }
+
+      for (FlowNodeDO node : nodes) {
+        node.setDefinitionId(definitionId);
+        node.setFlowCode(def.getFlowCode());
+        node.setTenantId(def.getTenantId());
+        node.setProviderTraceId(dto.getProviderTraceId());
+        nodeMapper.insert(node);
+      }
+      for (FlowSkipDO skip : skips) {
+        skip.setDefinitionId(definitionId);
+        skip.setFlowCode(def.getFlowCode());
+        skip.setTenantId(def.getTenantId());
+        skip.setProviderTraceId(dto.getProviderTraceId());
+        skipMapper.insert(skip);
+      }
+    }
+
+    flowDefinitionCacheService.evict(definitionId);
+    log.info("[Flow] 编辑流程定义草稿: defId={} flowCode={}", definitionId, def.getFlowCode());
+  }
+
+  /**
+   * 获取设计器数据
+   *
+   * <p>在 {@link FlowDefinitionQueryService#getDetail} 基础上额外组装 {@code edges} 字段，
+   * 供前端 VueFlow / LogicFlow 直接消费。
+   *
+   * @param definitionId 流程定义 ID
+   * @return 设计器数据 Map（含 {@code definition/nodes/skips/edges}）；不存在返回 {@code null}
+   */
+  @Transactional(readOnly = true)
+  public Map<String, Object> getDesignerData(String definitionId) {
+    Map<String, Object> detail = queryService.getDetail(definitionId);
+    if (detail == null) {
+      return null;
+    }
+    Map<String, Object> result = new LinkedHashMap<>(detail);
+    List<FlowSkipDO> skips = MapUtils.safeCastList(detail.get("skips"), FlowSkipDO.class);
+    if (skips != null) {
+      List<Map<String, Object>> edges = new ArrayList<>();
+      for (FlowSkipDO skip : skips) {
+        Map<String, Object> edge = new LinkedHashMap<>();
+        edge.put("id", skip.getId());
+        String source = null;
+        if (StringUtils.hasText(skip.getExt())) {
+          try {
+            ObjectNode extNode = YdszJson.parseObject(skip.getExt());
+            source = extNode != null ? extNode.getString("sourceRef") : null;
+          } catch (Exception e) {
+            log.warn("解析skip节点ext JSON失败: {}", e.getMessage(), e);
+          }
+        }
+        edge.put("source", source);
+        edge.put("target", skip.getNextNodeCode());
+        edge.put("label", skip.getSkipName());
+        edge.put("condition", skip.getSkipCondition());
+        edge.put("skipType", skip.getSkipType());
+        edges.add(edge);
+      }
+      result.put("edges", edges);
+    }
+    return result;
+  }
+
+  /**
+   * 保存设计器数据
+   *
+   * <p>设计器拖拽 / 修改节点后保存。仅允许编辑未发布定义。
+   * 支持批量更新节点坐标、节点名称、权限标识、扩展字段。
+   *
+   * @param definitionId 流程定义 ID
+   * @param designerData 设计器数据 Map（含 {@code nodes} 数组）
+   * @throws SysException {@code NOT_FOUND} — 流程定义不存在；{@code BAD_REQUEST} — 已发布
+   */
+  @Transactional(rollbackFor = Exception.class)
+  public void saveDesignerData(String definitionId, Map<String, Object> designerData) {
+    FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+    if (def == null) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.NOT_FOUND)
+          .message("流程定义不存在: " + definitionId)
+          .build();
+    }
+    if (def.getIsPublish() != null && def.getIsPublish() == 1) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("已发布的流程定义不可编辑，请先创建新版本")
+          .build();
+    }
+
+    List<Map<String, Object>> nodes = MapUtils.getListOfMaps(designerData, "nodes");
+    if (nodes != null) {
+      for (Map<String, Object> nodeData : nodes) {
+        String nodeCode = (String) nodeData.get("nodeCode");
+        if (nodeCode == null) {
+          continue;
+        }
+        Object coord = nodeData.get("coordinate");
+        if (coord != null) {
+          String coordStr = coord instanceof String ? (String) coord : YdszJson.toJson(coord);
+          FlowNodeDO nodeForCoord = nodeMapper.selectByCode(definitionId, nodeCode);
+          if (nodeForCoord != null) {
+            nodeForCoord.setCoordinate(coordStr);
+            nodeMapper.updateById(nodeForCoord);
+          }
+        }
+        Object nodeName = nodeData.get("nodeName");
+        if (nodeName != null) {
+          FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+          if (node != null) {
+            node.setNodeName((String) nodeName);
+            Object permFlag = nodeData.get("permissionFlag");
+            if (permFlag != null) {
+              node.setPermissionFlag((String) permFlag);
+            }
+            Object ext = nodeData.get("ext");
+            if (ext != null) {
+              node.setExt(ext instanceof String ? (String) ext : YdszJson.toJson(ext));
+            }
+            nodeMapper.updateById(node);
+          }
+        }
+      }
+    }
+
+    flowDefinitionCacheService.evict(definitionId);
+    log.info(
+        "[Flow] 设计器数据已保存: definitionId={} nodes={}",
+        definitionId,
+        nodes != null ? nodes.size() : 0);
+  }
+
+  /**
+   * 获取节点表单字段配置
+   *
+   * @param definitionId 流程定义 ID
+   * @param nodeCode 节点编码
+   * @return 表单字段配置 JSON 字符串；节点未配置时返回 {@code null}
+   * @throws SysException {@code NOT_FOUND} — 节点不存在
+   */
+  @Transactional(readOnly = true)
+  public String getFormConfig(String definitionId, String nodeCode) {
+    FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+    if (node == null) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.NOT_FOUND)
+          .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
+          .build();
+    }
+    return node.getFormFieldsConfig();
+  }
+
+  /**
+   * 保存节点表单字段配置
+   *
+   * @param definitionId 流程定义 ID
+   * @param nodeCode 节点编码
+   * @param formFieldsConfig 表单字段配置 JSON 字符串
+   * @throws SysException {@code NOT_FOUND} — 节点不存在
+   */
+  @Transactional(rollbackFor = Exception.class)
+  public void saveFormConfig(String definitionId, String nodeCode, String formFieldsConfig) {
+    FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+    if (node == null) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.NOT_FOUND)
+          .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
+          .build();
+    }
+    node.setFormFieldsConfig(formFieldsConfig);
+    nodeMapper.updateById(node);
+    flowDefinitionCacheService.evict(definitionId);
+    log.info("[Flow] 表单字段配置已保存: definitionId={} nodeCode={}", definitionId, nodeCode);
+  }
+
+  /**
+   * 获取节点 SLA 配置
+   *
+   * @param definitionId 流程定义 ID
+   * @param nodeCode 节点编码
+   * @return SLA 配置 JSON 字符串；未配置返回 {@code null}
+   * @throws SysException {@code NOT_FOUND} — 节点不存在
+   */
+  @Transactional(readOnly = true)
+  public String getSlaConfig(String definitionId, String nodeCode) {
+    FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+    if (node == null) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.NOT_FOUND)
+          .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
+          .build();
+    }
+    return node.getSlaConfig();
+  }
+
+  /**
+   * 保存节点 SLA 配置
+   *
+   * @param definitionId 流程定义 ID
+   * @param nodeCode 节点编码
+   * @param slaConfig SLA 配置 JSON 字符串
+   * @throws SysException {@code NOT_FOUND} — 节点不存在
+   */
+  @Transactional(rollbackFor = Exception.class)
+  public void saveSlaConfig(String definitionId, String nodeCode, String slaConfig) {
+    FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+    if (node == null) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.NOT_FOUND)
+          .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
+          .build();
+    }
+    node.setSlaConfig(slaConfig);
+    nodeMapper.updateById(node);
+    flowDefinitionCacheService.evict(definitionId);
+    log.info(
+        "[Flow] SLA 配置已保存: definitionId={} nodeCode={} slaConfig={}",
+        definitionId,
+        nodeCode,
+        slaConfig);
+  }
+
+  /**
+   * 加锁流程定义（设计器协同编辑）
+   *
+   * <p>采用 CAS 乐观锁实现，保证多用户并发加锁的强一致性。
+   *
+   * @param definitionId 流程定义 ID
+   * @param userId 当前操作用户 ID
+   * @return true=加锁成功
+   * @throws SysException 当锁被他人持有时
+   */
+  @Transactional(rollbackFor = Exception.class)
+  public boolean lockDefinition(String definitionId, String userId) {
+    if (!StringUtils.hasText(definitionId) || !StringUtils.hasText(userId)) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("error.workflow.msg_d6e7f8a9")
+          .build();
+    }
+    FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+    if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.NOT_FOUND)
+          .key("error.workflow.msg_e7f8a9b0")
+          .params(definitionId)
+          .build();
+    }
+
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime timeoutExpired = now.minusMinutes(flowProperties.getDesignerLockTimeoutMinutes());
+
+    int affected =
+        definitionMapper.casLock(
+            definitionId, userId, now, userId, timeoutExpired, def.getRevision());
+
+    if (affected == 1) {
+      log.info(
+          "[Flow] 设计器加锁成功: defId={} userId={} timeout={}min",
+          definitionId,
+          userId,
+          flowProperties.getDesignerLockTimeoutMinutes());
+      return true;
+    }
+
+    FlowDefinitionDO latest = definitionMapper.selectById(definitionId);
+    if (latest == null) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.NOT_FOUND)
+          .key("error.workflow.msg_e7f8a9b0")
+          .params(definitionId)
+          .build();
+    }
+    String holder = latest.getLockedBy();
+    if (StringUtils.hasText(holder) && !holder.equals(userId)) {
+      boolean expired =
+          latest.getLockedAt() != null && latest.getLockedAt().isBefore(timeoutExpired);
+      if (expired) {
+        log.warn("[Flow] 设计器加锁重试（锁已超时但 version 变化）: defId={} holder={}", definitionId, holder);
+        int retry =
+            definitionMapper.casLock(
+                definitionId, userId, now, userId, timeoutExpired, latest.getRevision());
+        if (retry == 1) {
+          log.info("[Flow] 设计器加锁成功（重试）: defId={} userId={} 抢占自={}", definitionId, userId, holder);
+          return true;
+        }
+      }
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .key("error.workflow.msg_f8a9b0c1")
+          .params(holder)
+          .build();
+    }
+    throw SysException.builder()
+        .resultCode(BaseResultCode.BAD_REQUEST)
+        .message("error.workflow.msg_a9b0c1d2")
+        .build();
+  }
+
+  /**
+   * 解锁流程定义（设计器协同编辑）
+   *
+   * <p>仅持锁人本人可解锁；他人持锁或未锁定时抛 SysException。
+   *
+   * @param definitionId 流程定义 ID
+   * @param userId 当前操作用户 ID
+   * @return true=解锁成功
+   * @throws SysException 当非持锁人尝试解锁时
+   */
+  @Transactional(rollbackFor = Exception.class)
+  public boolean unlockDefinition(String definitionId, String userId) {
+    if (!StringUtils.hasText(definitionId) || !StringUtils.hasText(userId)) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("error.workflow.msg_d6e7f8a9")
+          .build();
+    }
+    FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+    if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.NOT_FOUND)
+          .key("error.workflow.msg_e7f8a9b0")
+          .params(definitionId)
+          .build();
+    }
+
+    if (!StringUtils.hasText(def.getLockedBy())) {
+      log.debug("[Flow] 设计器解锁：当前未锁定，幂等返回 defId={}", definitionId);
+      return true;
+    }
+
+    int affected = definitionMapper.casUnlock(definitionId, userId, def.getRevision());
+    if (affected == 1) {
+      log.info("[Flow] 设计器解锁成功: defId={} userId={}", definitionId, userId);
+      return true;
+    }
+
+    FlowDefinitionDO latest = definitionMapper.selectById(definitionId);
+    if (latest == null) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.NOT_FOUND)
+          .key("error.workflow.msg_e7f8a9b0")
+          .params(definitionId)
+          .build();
+    }
+    String holder = latest.getLockedBy();
+    if (StringUtils.hasText(holder) && !holder.equals(userId)) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.FORBIDDEN)
+          .key("error.workflow.msg_b1c2d3e4")
+          .params(holder)
+          .build();
+    }
+    log.info("[Flow] 设计器解锁：锁已被并发清空，视为成功 defId={} userId={}", definitionId, userId);
+    return true;
+  }
+
+  /** 查询流程定义的锁定状态 */
+  public Map<String, Object> getLockStatus(String definitionId) {
+    if (!StringUtils.hasText(definitionId)) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("error.workflow.msg_d6e7f8a9")
+          .build();
+    }
+    FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+    if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
+      return null;
+    }
+
+    Map<String, Object> result = new LinkedHashMap<>();
+    boolean locked = StringUtils.hasText(def.getLockedBy());
+    boolean expired = false;
+    if (locked && def.getLockedAt() != null) {
+      LocalDateTime timeoutExpired =
+          LocalDateTime.now().minusMinutes(flowProperties.getDesignerLockTimeoutMinutes());
+      expired = def.getLockedAt().isBefore(timeoutExpired);
+    }
+    result.put("locked", locked);
+    result.put("lockedBy", def.getLockedBy());
+    result.put("lockedAt", def.getLockedAt());
+    result.put("expired", expired);
+    return result;
+  }
+}

@@ -31,7 +31,7 @@ import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.util.ClientIpResolver;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
@@ -129,7 +129,7 @@ public class DownloadController {
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
       HttpServletResponse response) {
 
-    FileNodeDO folder = fileNodeRepository.findById(folderId);
+    FileNodeVO folder = fileNodeRepository.findById(folderId).orElse(null);
     if (folder == null || !folder.isFolder()) {
       throw new BusinessException(NextwikiExceptionCode.FILE_NOT_FOUND);
     }
@@ -162,13 +162,13 @@ public class DownloadController {
    * @param basePath 当前 ZIP 条目的父路径（递归累加）
    */
   private void downloadFolderRecursive(
-      FileNodeDO folder, ZipOutputStream zos, String userId, String basePath) {
-    List<FileNodeDO> children = fileNodeRepository.findChildren(folder.getId());
+      FileNodeVO folder, ZipOutputStream zos, String userId, String basePath) {
+    List<FileNodeVO> children = fileNodeRepository.findChildren(folder.getId());
     if (children == null) return;
 
     IFileStorage storage = downloadApplicationService.resolveStorageForDownload();
 
-    for (FileNodeDO child : children) {
+    for (FileNodeVO child : children) {
       String entryPath = basePath.isEmpty() ? child.getName() : basePath + "/" + child.getName();
       if (child.isFolder()) {
         try {
@@ -230,19 +230,19 @@ public class DownloadController {
       throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
     }
 
-    FileNodeDO FileNodeDO = context.getFileNode();
+    FileNodeVO node = context.getNode();
 
     // P0-3: 支持 HTTP Range 断点续传
     String rangeHeader = request.getHeader("Range");
     if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
-      handleRangeDownload(storage, FileNodeDO, rangeHeader, response);
+      handleRangeDownload(storage, node, rangeHeader, response);
     } else {
-      setDownloadHeaders(response, FileNodeDO.getName(), FileNodeDO.getMimeType());
-      if (FileNodeDO.getSize() != null) {
-        response.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(FileNodeDO.getSize()));
+      setDownloadHeaders(response, node.getName(), node.getMimeType());
+      if (node.getSize() != null) {
+        response.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(node.getSize()));
       }
       response.setHeader(HttpHeaders.ACCEPT_RANGES, "bytes");
-      storage.download(FileNodeDO.getBucketName(), FileNodeDO.getStorageKey(), response);
+      storage.download(node.getBucketName(), node.getStorageKey(), response);
     }
 
     nextwikiMetrics.recordDownload();
@@ -261,13 +261,13 @@ public class DownloadController {
    * Requested Range Not Satisfiable。
    *
    * @param storage 文件存储抽象
-   * @param FileNodeDO 文件节点（含 size / storageKey / mimeType 等）
+   * @param node 文件节点（含 size / storageKey / mimeType 等）
    * @param rangeHeader HTTP Range 头（含 {@code bytes=} 前缀）
    * @param response HTTP 响应
    */
   private void handleRangeDownload(
-      IFileStorage storage, FileNodeDO FileNodeDO, String rangeHeader, HttpServletResponse response) {
-    long fileSize = FileNodeDO.getSize() != null ? FileNodeDO.getSize() : 0;
+      IFileStorage storage, FileNodeVO node, String rangeHeader, HttpServletResponse response) {
+    long fileSize = node.getSize() != null ? node.getSize() : 0;
     String rangeValue = rangeHeader.substring(6); // strip "bytes="
     String[] parts = rangeValue.split("-");
     long start = 0;
@@ -294,9 +294,9 @@ public class DownloadController {
     response.setHeader(HttpHeaders.CONTENT_RANGE, "bytes " + start + "-" + end + "/" + fileSize);
     response.setHeader(HttpHeaders.ACCEPT_RANGES, "bytes");
     response.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength));
-    setDownloadHeaders(response, FileNodeDO.getName(), FileNodeDO.getMimeType());
+    setDownloadHeaders(response, node.getName(), node.getMimeType());
     try (InputStream is =
-        storage.downloadAsStream(FileNodeDO.getBucketName(), FileNodeDO.getStorageKey())) {
+        storage.downloadAsStream(node.getBucketName(), node.getStorageKey())) {
       long skipped = is.skip(start);
       if (skipped < start) {
         log.warn("[DownloadController] skip 不足: start={}, skipped={}", start, skipped);
@@ -314,7 +314,7 @@ public class DownloadController {
       }
       response.getOutputStream().flush();
     } catch (Exception e) {
-      log.error("[DownloadController] Range 下载失败: nodeId={}", FileNodeDO.getId(), e);
+      log.error("[DownloadController] Range 下载失败: nodeId={}", node.getId(), e);
       throw new BusinessException(NextwikiExceptionCode.FILE_DOWNLOAD_FAILED);
     }
   }

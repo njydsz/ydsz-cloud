@@ -58,8 +58,12 @@ public class RuleChain {
    * <p>当调用方未提供 parallelExecutor 时，使用此线程池替代 ForkJoinPool.commonPool()， 避免 WHEN
    * 链并行任务污染公共线程池导致其他组件线程饥饿。 使用守护线程确保不阻止 JVM 退出。
    *
+   * <p><b>注意：</b>此降级池仅在未通过 {@code ydsz.thread.pools.whenChain} 配置 common-thread 时使用，
+   * 生产环境应配置 common-thread 统一管理。
+   *
    * <p>P1-T4：提供 {@link #shutdownFallbackExecutor()} 方法用于优雅关闭， 建议在应用关闭时（如 @PreDestroy 方法中）调用。
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
   private static final ExecutorService WHEN_FALLBACK_EXECUTOR =
       new ThreadPoolExecutor(
           Math.max(2, Runtime.getRuntime().availableProcessors()),
@@ -73,6 +77,7 @@ public class RuleChain {
             return t;
           },
           new ThreadPoolExecutor.CallerRunsPolicy());
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /**
    * 优雅关闭 WHEN 回退线程池（P1-T4）

@@ -6,11 +6,7 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
-import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.agent.ExecutionPlan;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
@@ -46,9 +42,8 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class PlanExecuteAgentExecutor implements AgentExecutor {
+public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
 
-  private static final Logger LOG = LoggerFactory.getLogger(PlanExecuteAgentExecutor.class);
   // 解析 LLM 返回的编号步骤列表：匹配行首「数字 + 分隔符(.、)、])」+ 步骤描述
   private static final Pattern STEP_PATTERN = Pattern.compile("(?m)^\\s*(\\d+)[.、)\\]]\\s*(.+)");
 
@@ -59,15 +54,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
   /** 最终汇总提示 */
   private static final String SYNTHESIZING_MESSAGE = "[汇总中] 正在整理最终回复...\n";
 
-  private final LlmClient llmClient;
-  private final ConversationMemory memory;
   private final ToolRegistry toolRegistry;
-  private final AgentProperties properties;
-  private final TraceRecorder traceRecorder;
-  private final AgentMetrics agentMetrics;
-  private final CostAnalysisService costAnalysisService;
-  private final GuardrailService guardrailService;
-  private final PromptTemplateProvider promptTemplateProvider;
 
   public PlanExecuteAgentExecutor(
       LlmClient llmClient,
@@ -79,22 +66,22 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
       CostAnalysisService costAnalysisService,
       GuardrailService guardrailService,
       PromptTemplateProvider promptTemplateProvider) {
-    this.llmClient = llmClient;
-    this.memory = memory;
+    super(
+        llmClient,
+        memory,
+        properties,
+        traceRecorder,
+        agentMetrics,
+        costAnalysisService,
+        guardrailService,
+        promptTemplateProvider);
     this.toolRegistry = toolRegistry;
-    this.properties = properties;
-    this.traceRecorder = traceRecorder;
-    this.agentMetrics = agentMetrics;
-    this.costAnalysisService = costAnalysisService;
-    this.guardrailService = guardrailService;
-    this.promptTemplateProvider = promptTemplateProvider;
   }
 
   @Override
   public ChatResponse execute(AgentExecutionRequest request) {
-    String convId =
-        request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
-    String traceId = traceRecorder.startTrace(convId, "PLAN_EXECUTE");
+    String convId = extractConvId(request);
+    String traceId = startTrace(convId, "PLAN_EXECUTE");
     LOG.info("[Plan-Execute] 开始: convId={}, traceId={}", convId, traceId);
 
     long planStart = System.currentTimeMillis();
@@ -265,9 +252,8 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
    */
   @Override
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
-    String convId =
-        request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
-    String traceId = traceRecorder.startTrace(convId, "PLAN_EXECUTE_STREAM");
+    String convId = extractConvId(request);
+    String traceId = startTrace(convId, "PLAN_EXECUTE_STREAM");
     LOG.info("[Plan-Execute-Stream] 开始: convId={}, traceId={}", convId, traceId);
 
     String responseId = IdGenerator.nextIdStr();
@@ -431,25 +417,32 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
 
   private ExecutionPlan generatePlan(String userInput, String convId) {
     String planPrompt =
-        """
-                你是 YDSZ 项目管理系统的任务规划器。
-                请将以下用户需求分解为 2-5 个可执行的步骤。
+        promptTemplateProvider.loadOrDefault(
+            properties.getPromptTemplate().getPlanExecutePlanCode(),
+            """
+                    你是 YDSZ 项目管理系统的任务规划器。
+                    请将以下用户需求分解为 2-5 个可执行的步骤。
 
-                用户需求: %s
+                    用户需求: %s
 
-                请按以下格式输出（每行一个步骤）：
-                1. 第一步描述
-                2. 第二步描述
-                3. ...
-                """
+                    请按以下格式输出（每行一个步骤）：
+                    1. 第一步描述
+                    2. 第二步描述
+                    3. ...
+                    """)
             .formatted(userInput);
+
+    String planSystemPrompt =
+        promptTemplateProvider.loadOrDefault(
+            properties.getPromptTemplate().getPlanExecutePlanSystemCode(),
+            "你是任务规划器，只输出编号步骤列表，不加额外解释。");
 
     ChatRequest planRequest =
         ChatRequest.builder()
             .model(properties.getLlm().getDefaultModel())
             .messages(
                 List.of(
-                    ChatMessage.system("你是任务规划器，只输出编号步骤列表，不加额外解释。"),
+                    ChatMessage.system(planSystemPrompt),
                     ChatMessage.user(planPrompt, null)))
             // 规划阶段温度 0.3：偏低以保证步骤分解稳定、可复现
             .temperature(0.3)
@@ -469,31 +462,38 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
       String errorMessage,
       String convId) {
     String replanPrompt =
-        """
-                你是 YDSZ 项目管理系统的任务规划器。
-                原计划在执行过程中某步骤失败，请根据已完成的结果和失败信息重新规划剩余步骤。
+        promptTemplateProvider.loadOrDefault(
+            properties.getPromptTemplate().getPlanExecuteReplanCode(),
+            """
+                    你是 YDSZ 项目管理系统的任务规划器。
+                    原计划在执行过程中某步骤失败，请根据已完成的结果和失败信息重新规划剩余步骤。
 
-                原始目标: %s
+                    原始目标: %s
 
-                已完成的步骤结果:
-                %s
+                    已完成的步骤结果:
+                     %s
 
-                失败的步骤: %s
-                失败原因: %s
+                    失败的步骤: %s
+                    失败原因: %s
 
-                请按以下格式输出新的剩余步骤（每行一个步骤）：
-                1. 第一步描述
-                2. 第二步描述
-                3. ...
-                """
+                    请按以下格式输出新的剩余步骤（每行一个步骤）：
+                    1. 第一步描述
+                    2. 第二步描述
+                    3. ...
+                    """)
             .formatted(goal, String.join("\n", completedResults), failedStep, errorMessage);
+
+    String replanSystemPrompt =
+        promptTemplateProvider.loadOrDefault(
+            properties.getPromptTemplate().getPlanExecutePlanSystemCode(),
+            "你是任务规划器，只输出编号步骤列表，不加额外解释。");
 
     ChatRequest replanRequest =
         ChatRequest.builder()
             .model(properties.getLlm().getDefaultModel())
             .messages(
                 List.of(
-                    ChatMessage.system("你是任务规划器，只输出编号步骤列表，不加额外解释。"),
+                    ChatMessage.system(replanSystemPrompt),
                     ChatMessage.user(replanPrompt, null)))
             // 规划阶段温度 0.3：偏低以保证步骤分解稳定、可复现
             .temperature(0.3)

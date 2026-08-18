@@ -13,8 +13,8 @@ import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
-import com.njydsz.nextwiki.infra.entity.TagDO;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.vo.TagVO;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.domain.repository.TagRepository;
@@ -39,7 +39,7 @@ import com.njydsz.nextwiki.domain.repository.TagRepository;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class WikiSearchProvider implements SearchProvider<FileNodeDO> {
+public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
 
   private final FileNodeRepository fileNodeRepository;
   private final SearchIndexRepository searchIndexRepository;
@@ -56,16 +56,16 @@ public class WikiSearchProvider implements SearchProvider<FileNodeDO> {
   }
 
   @Override
-  public IndexDocument toIndexDocument(FileNodeDO node) {
+  public IndexDocument toIndexDocument(FileNodeVO node) {
     if (node == null || node.getId() == null) {
       return null;
     }
 
     List<String> tagNames = List.of();
     try {
-      List<TagDO> tags = tagRepository.findByFileNodeId(node.getId());
+      List<TagVO> tags = tagRepository.findByFileNodeId(node.getId());
       if (tags != null && !tags.isEmpty()) {
-        tagNames = tags.stream().map(TagDO::getName).filter(n -> n != null && !n.isBlank()).toList();
+        tagNames = tags.stream().map(TagVO::getName).filter(n -> n != null && !n.isBlank()).toList();
       }
     } catch (Exception e) {
       log.debug("[WikiSearchProvider] 加载标签失败: nodeId={}", node.getId(), e);
@@ -73,7 +73,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeDO> {
 
     // 填充全文内容：优先使用内存传递的提取内容（searchableContent），
     // 否则仅索引元数据（文件名/路径/标签）。
-    // searchableContent 由 ContentExtractionApplicationService 解析后设置在 FileNodeDO 上，
+    // searchableContent 由 ContentExtractionApplicationService 解析后设置在 FileNodeVO 上，
     // 仅在索引同步流程中有效，不持久化到数据库。
     String content = node.getSearchableContent();
 
@@ -179,7 +179,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeDO> {
   }
 
   @Override
-  public FileNodeDO loadById(String id) {
-    return fileNodeRepository.findById(id);
+  public FileNodeVO loadById(String id) {
+    return fileNodeRepository.findById(id).orElse(null);
   }
 }

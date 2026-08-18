@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +35,35 @@ public class DefaultToolRegistry implements ToolRegistry {
   /** 工具注册表（key=工具名） */
   private final Map<String, ToolRegistration> registry = new ConcurrentHashMap<>();
 
+  /** 工具执行超时（秒），0 表示不限时 */
+  private final int defaultTimeoutSeconds;
+
+  /** 工具执行线程池（虚拟线程，用于超时控制） */
+  private final ExecutorService toolExecutorPool;
+
+  /** 默认构造器（30 秒超时） */
+  public DefaultToolRegistry() {
+    this(30);
+  }
+
+  /**
+   * 构造工具注册中心。
+   *
+   * @param defaultTimeoutSeconds 工具执行超时（秒），0 表示不限时
+   */
+  public DefaultToolRegistry(int defaultTimeoutSeconds) {
+    this.defaultTimeoutSeconds = defaultTimeoutSeconds > 0 ? defaultTimeoutSeconds : 0;
+    this.toolExecutorPool = Executors.newVirtualThreadPerTaskExecutor();
+  }
+
   @Override
   public void register(String name, ToolExecutor executor) {
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException("工具名称不能为空");
+    }
+    if (executor == null) {
+      throw new IllegalArgumentException("工具执行器不能为 null");
+    }
     ToolRegistration registration =
         ToolRegistration.builder()
             .name(name)
@@ -76,6 +108,30 @@ public class DefaultToolRegistry implements ToolRegistry {
       return YdszJson.toJson(Map.of("error", "工具未找到: " + toolCall.getName()));
     }
     long startTime = System.currentTimeMillis();
+    // 无超时配置时直接同步执行
+    if (defaultTimeoutSeconds <= 0) {
+      return executeInternal(registration, toolCall, startTime);
+    }
+    // 有超时配置时通过 Future 异步执行并限时等待
+    Future<String> future = toolExecutorPool.submit(() -> executeInternal(registration, toolCall, startTime));
+    try {
+      return future.get(defaultTimeoutSeconds, TimeUnit.SECONDS);
+    } catch (TimeoutException e) {
+      future.cancel(true);
+      long duration = System.currentTimeMillis() - startTime;
+      LOG.error("[Tool-Registry] 工具执行超时: {} ({}ms > {}s)", toolCall.getName(), duration, defaultTimeoutSeconds);
+      return YdszJson.toJson(
+          Map.of("error", "工具执行超时（" + defaultTimeoutSeconds + "s）", "tool", toolCall.getName()));
+    } catch (Exception e) {
+      long duration = System.currentTimeMillis() - startTime;
+      LOG.error("[Tool-Registry] 工具执行失败: {} ({}ms): {}", toolCall.getName(), duration, e.getMessage(), e);
+      return YdszJson.toJson(
+          Map.of("error", "工具执行失败: " + e.getMessage(), "tool", toolCall.getName()));
+    }
+  }
+
+  /** 内部执行逻辑（不含超时控制）。 */
+  private String executeInternal(ToolRegistration registration, ToolCall toolCall, long startTime) {
     try {
       String result = registration.getExecutor().execute(toolCall.getArguments());
       long duration = System.currentTimeMillis() - startTime;

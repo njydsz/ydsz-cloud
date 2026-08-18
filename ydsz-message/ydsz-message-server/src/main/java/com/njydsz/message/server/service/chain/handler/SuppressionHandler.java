@@ -9,6 +9,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
+import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendHandler;
@@ -50,7 +51,10 @@ public class SuppressionHandler implements SendHandler {
           SensitiveUtil.scanAndMask(receiver),
           channel);
       messageMetrics.recordSend(channel, "SUPPRESSED", 0);
-      ctx.setErrorResult(MessageResult.fail(channel, "跨渠道抑制: 已有其他渠道发送"));
+      ctx.setErrorResult(MessageResult.fail(
+          channel,
+          "跨渠道抑制: 已有其他渠道发送",
+          MessageExceptionCode.CHANNEL_SUPPRESSED.getCode()));
       return false;
     }
     return true;

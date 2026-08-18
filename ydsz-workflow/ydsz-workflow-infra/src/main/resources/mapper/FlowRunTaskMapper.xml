@@ -266,6 +266,7 @@
           <if test="assigneeId != null and assigneeId != ''">AND assignee_id = #{assigneeId}</if>
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
         ORDER BY due_at ASC
+        LIMIT #{limit}
     </select>
 
     <!-- P2-32: 统计超期任务数量 -->
@@ -356,4 +357,39 @@
         WHERE id = #{id}
           AND deleted = 0
     </update>
+
+    <!-- P0-2: 批量取消任务（一致性修复用） -->
+    <update id="batchCancelTasks">
+        UPDATE ydsz_flow_run_task
+        SET task_status = 'CANCELLED',
+            updated_by = #{updatedBy},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id IN
+        <foreach collection="taskIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND task_status IN ('PENDING', 'CLAIMED')
+        AND deleted = 0
+    </update>
+
+    <!--
+        P0-2: 查询关联实例已处于终态但任务仍为 PENDING/CLAIMED 的异常任务
+        用于一致性对账：找出「实例已结束但任务未清理」的数据不一致场景
+    -->
+    <select id="selectOrphanPendingTasks" resultType="java.util.Map">
+        SELECT t.id AS "taskId",
+               t.task_status AS "taskStatus",
+               t.instance_id AS "instanceId",
+               t.flow_code AS "flowCode",
+               t.node_code AS "nodeCode"
+        FROM ydsz_flow_run_task t
+        INNER JOIN ydsz_flow_instance i ON t.instance_id = i.id
+        WHERE t.task_status IN ('PENDING', 'CLAIMED')
+          AND t.status = 'ENABLED'
+          AND t.deleted = 0
+          AND i.flow_status IN ('COMPLETED', 'TERMINATED', 'REJECTED')
+          AND i.deleted = 0
+        ORDER BY t.created_at ASC
+        LIMIT #{limit}
+    </select>
 </mapper>

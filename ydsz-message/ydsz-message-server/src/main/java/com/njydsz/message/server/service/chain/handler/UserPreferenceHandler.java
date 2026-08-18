@@ -13,6 +13,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.message.domain.entity.config.MsgPreference;
+import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.chain.SendContext;
@@ -59,7 +60,10 @@ public class UserPreferenceHandler implements SendHandler {
             templateCode,
             channel);
         messageMetrics.recordSend(channel, "BLOCKED", 0);
-        ctx.setErrorResult(MessageResult.fail(channel, "用户已退订该消息"));
+        ctx.setErrorResult(MessageResult.fail(
+            channel,
+            "用户已退订该消息",
+            MessageExceptionCode.USER_UNSUBSCRIBED.getCode()));
         return false;
       }
     }
@@ -96,7 +100,10 @@ public class UserPreferenceHandler implements SendHandler {
       return handleSmartTiming(request, ctx, pref, stc, channel, receiver);
     }
     messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
-    ctx.setErrorResult(MessageResult.fail(channel, "当前为免打扰时段"));
+    ctx.setErrorResult(MessageResult.fail(
+        channel,
+        "当前为免打扰时段",
+        MessageExceptionCode.DND_PERIOD_ACTIVE.getCode()));
     return false;
   }
 
@@ -133,7 +140,10 @@ public class UserPreferenceHandler implements SendHandler {
           deferSeconds,
           maxDeferSeconds);
       messageMetrics.recordSend(channel, "DND_DROPPED", 0);
-      ctx.setErrorResult(MessageResult.fail(channel, "免打扰时段消息延迟过久,已丢弃"));
+      ctx.setErrorResult(MessageResult.fail(
+          channel,
+          "免打扰时段消息延迟过久,已丢弃",
+          MessageExceptionCode.DND_DEFER_EXCEED.getCode()));
       return false;
     }
     log.info(

@@ -232,9 +232,9 @@ public class FlowTaskQueryServiceImpl {
   }
 
   /** P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED） */
-  public List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId) {
+  public List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId, int limit) {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    return taskMapper.selectOverdue(assigneeId, tid);
+    return taskMapper.selectOverdue(assigneeId, tid, limit);
   }
 
   /** P2-32: 统计超期任务数量 */

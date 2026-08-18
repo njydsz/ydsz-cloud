@@ -208,4 +208,22 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
    * @return 每个节点一行：currentNodeCode / currentNodeName / cnt
    */
   List<Map<String, Object>> selectRunningGroupByNode(@Param("definitionId") String definitionId);
+
+  /**
+   * P0-2: 查询 RUNNING 状态但无 PENDING/CLAIMED 任务的异常实例
+   *
+   * <p>用于一致性对账：找出「实例在运行但没有活跃任务」的数据不一致场景（可能由事务部分提交、JVM 崩溃等原因导致）。
+   *
+   * @param limit 返回条数上限（防止全表扫描）
+   * @return 异常实例列表（id / flow_code / flow_name / business_type / business_id / start_at）
+   */
+  List<Map<String, Object>> selectRunningWithoutTask(@Param("limit") int limit);
+
+  /**
+   * P0-2: 批量更新实例状态为 ERROR（一致性修复用）
+   *
+   * @param instanceIds 实例 ID 列表
+   * @return 更新行数
+   */
+  int batchMarkError(@Param("instanceIds") List<String> instanceIds);
 }

@@ -181,12 +181,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
     }
   }
 
-  /**
-   * 列出最近的链路 ID
-   *
-   * @param limit 最大数量
-   * @return 链路 ID 列表（按开始时间倒序）
-   */
+  @Override
   public List<String> listRecentTraces(int limit) {
     int safeLimit = limit > 0 ? limit : 10;
     return traceMetas.values().stream()
@@ -197,27 +192,40 @@ public class InMemoryTraceRecorder implements TraceRecorder {
   }
 
   /**
-   * 列出最近的链路元数据
-   *
-   * @param limit 最大数量
-   * @return 链路元数据列表（按开始时间倒序）
+   * {@inheritDoc}
    */
+  @Override
   public List<TraceMeta> listRecentTraceMetas(int limit) {
     int safeLimit = limit > 0 ? limit : 10;
     return traceMetas.values().stream()
         .sorted(Comparator.comparing(TraceMeta::getStartedAt).reversed())
         .limit(safeLimit)
+        .map(meta -> new com.njydsz.agent.domain.trace.TraceMeta(
+            meta.getTraceId(),
+            meta.getConversationId(),
+            meta.getAgentId(),
+            meta.getStartedAt(),
+            meta.getStatus(),
+            meta.getTotalDurationMs()))
         .toList();
   }
 
   /**
-   * 获取链路元数据
-   *
-   * @param traceId 链路 ID
-   * @return 元数据，不存在返回 null
+   * {@inheritDoc}
    */
-  public TraceMeta getTraceMeta(String traceId) {
-    return traceMetas.get(traceId);
+  @Override
+  public com.njydsz.agent.domain.trace.TraceMeta getTraceMeta(String traceId) {
+    TraceMeta meta = traceMetas.get(traceId);
+    if (meta == null) {
+      return null;
+    }
+    return new com.njydsz.agent.domain.trace.TraceMeta(
+        meta.getTraceId(),
+        meta.getConversationId(),
+        meta.getAgentId(),
+        meta.getStartedAt(),
+        meta.getStatus(),
+        meta.getTotalDurationMs());
   }
 
   /** 链路元数据 */

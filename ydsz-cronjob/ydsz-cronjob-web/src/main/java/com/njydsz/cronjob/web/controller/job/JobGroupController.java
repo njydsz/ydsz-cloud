@@ -5,8 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -24,14 +22,11 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
-import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobVO;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.server.service.job.JobService;
 
 /**
@@ -68,14 +63,15 @@ import com.njydsz.cronjob.server.service.job.JobService;
  *   <li>查询接口加 {@link AuthApiPermission} 权限控制（CRONJOB_JOB_VIEW）
  * </ul>
  *
- * <h3>架构位置</h3>
+ * <h3>架构位置（DDD 分层）</h3>
  *
  * <pre>
  *   前端分组管理面板
  *     → ydsz-gateway
  *       → ydsz-cronjob-web（本 Controller）
- *         → ydsz-cronjob-server.JobService
- *           → ydsz-cronjob-infra.JobMapper
+ *         → ydsz-cronjob-domain.JobRepository（契约）
+ *           → ydsz-cronjob-infra.JobRepositoryImpl（实现）
+ *             → ydsz-common-jdbc（MyBatis-Plus Mapper）
  * </pre>
  *
  * @author ydsz-team
@@ -88,8 +84,8 @@ import com.njydsz.cronjob.server.service.job.JobService;
 @RequiredArgsConstructor
 public class JobGroupController {
 
-  /** 任务 Mapper（直接查询分组维度的任务列表） */
-  private final JobMapper jobMapper;
+  /** 任务 Repository（DDD 分层：Controller 通过 Repository 接口访问，禁止 Mapper 直注） */
+  private final JobRepository jobRepository;
 
   /** 任务 Service（封装 batchPause/batchResume/batchTrigger 等批量操作） */
   private final JobService jobService;
@@ -112,15 +108,9 @@ public class JobGroupController {
       @PathVariable String jobGroup,
       @RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "20") int size) {
-    // 1. 构建分页对象（MyBatis-Plus Page）
-    Page<Job> pageObj = new Page<>(page, size);
-    // 2. 构建查询条件：jobGroup 精确匹配 + 未逻辑删除 + 按 created_at 倒序
-    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getDeleted, 0).orderByDesc(Job::getCreatedAt);
-    // 3. 执行分页查询
-    Page<Job> result = jobMapper.selectPage(pageObj, wrapper);
-    // 4. 转换为 VO（Entity → VO 含审计字段脱敏等）
-    return PageResponses.success(result, CronjobConverter.INSTANT::entityToVO);
+    // 通过 Repository 分页查询（封装了 MyBatis-Plus Page 和 Entity→VO 转换）
+    JobRepository.PageResult<JobVO> result = jobRepository.pageByGroup(jobGroup, page, size);
+    return PageResponse.success(result.getRecords(), result.getTotal());
   }
 
   /**
@@ -146,11 +136,9 @@ public class JobGroupController {
   @PostMapping("/{jobGroup}/pause")
   public BaseResponse<Integer> pauseByGroup(@PathVariable String jobGroup) {
     // 查询 NORMAL 状态且未删除的任务
-    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getStatus, "NORMAL").eq(Job::getDeleted, 0);
-    List<Job> jobs = jobMapper.selectList(wrapper);
-    // 提取 ID 列表（去重 + 防御性 NPE）
-    List<String> jobIds = jobs.stream().map(Job::getId).toList();
+    List<JobVO> jobs = jobRepository.findByGroupAndStatus(jobGroup, "NORMAL");
+    // 提取 ID 列表
+    List<String> jobIds = jobs.stream().map(JobVO::getId).toList();
     if (jobIds.isEmpty()) {
       log.info("[JobGroup] pauseByGroup jobGroup={} 命中 0 个 NORMAL 任务，跳过", jobGroup);
       return BaseResponse.success(0);
@@ -183,10 +171,8 @@ public class JobGroupController {
   @PostMapping("/{jobGroup}/resume")
   public BaseResponse<Integer> resumeByGroup(@PathVariable String jobGroup) {
     // 查询 PAUSED 状态且未删除的任务
-    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getStatus, "PAUSED").eq(Job::getDeleted, 0);
-    List<Job> jobs = jobMapper.selectList(wrapper);
-    List<String> jobIds = jobs.stream().map(Job::getId).toList();
+    List<JobVO> jobs = jobRepository.findByGroupAndStatus(jobGroup, "PAUSED");
+    List<String> jobIds = jobs.stream().map(JobVO::getId).toList();
     if (jobIds.isEmpty()) {
       log.info("[JobGroup] resumeByGroup jobGroup={} 命中 0 个 PAUSED 任务，跳过", jobGroup);
       return BaseResponse.success(0);
@@ -221,10 +207,8 @@ public class JobGroupController {
   @PostMapping("/{jobGroup}/trigger")
   public BaseResponse<Integer> triggerByGroup(@PathVariable String jobGroup) {
     // 查询 NORMAL 状态且未删除的任务（仅 NORMAL 状态可被触发）
-    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getStatus, "NORMAL").eq(Job::getDeleted, 0);
-    List<Job> jobs = jobMapper.selectList(wrapper);
-    List<String> jobIds = jobs.stream().map(Job::getId).toList();
+    List<JobVO> jobs = jobRepository.findByGroupAndStatus(jobGroup, "NORMAL");
+    List<String> jobIds = jobs.stream().map(JobVO::getId).toList();
     if (jobIds.isEmpty()) {
       log.info("[JobGroup] triggerByGroup jobGroup={} 命中 0 个 NORMAL 任务，跳过", jobGroup);
       return BaseResponse.success(0);
@@ -248,17 +232,18 @@ public class JobGroupController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/stats")
   public BaseResponse<List<Map<String, Object>>> groupStats() {
-    // 1. 仅查询 job_group 字段，减少 IO（select(Job::getJobGroup) 触发 MyBatis-Plus 仅查该列）
-    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Job::getDeleted, 0).select(Job::getJobGroup);
-    List<Job> all = jobMapper.selectList(wrapper);
-    // 2. 在内存中按 group 聚合计数（使用 LinkedHashMap 保持插入顺序）
+    // 1. 通过 Repository 获取去重分组列表
+    List<String> groups = jobRepository.listDistinctGroups();
+    // 2. 逐组统计任务数
     Map<String, Integer> counts = new LinkedHashMap<>();
-    for (Job job : all) {
-      // jobGroup 为空时归入 default 分组
-      String group =
-          job.getJobGroup() != null && !job.getJobGroup().isBlank() ? job.getJobGroup() : "default";
-      counts.merge(group, 1, Integer::sum);
+    for (String group : groups) {
+      counts.put(group, (int) jobRepository.countByGroup(group));
+    }
+    // jobGroup 为空的记录归入 default 分组
+    long defaultCount =
+        jobRepository.countAll() - counts.values().stream().mapToLong(Integer::longValue).sum();
+    if (defaultCount > 0) {
+      counts.put("default", (int) defaultCount);
     }
     // 3. 转换为前端友好的 List<Map> 格式
     List<Map<String, Object>> result = new ArrayList<>();

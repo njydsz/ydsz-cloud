@@ -38,12 +38,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-domain</artifactId>
         </dependency>
-        <!-- ydsz-cronjob-domain: JobHandler 抽象（FlowTimeout/ThirdPartyRetry/HistoryArchive JobHandler 由 cronjob 框架调度） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-cronjob-domain</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+        <!-- P2-1: 移除 ydsz-cronjob-domain 依赖，JobHandler 由业务系统按需实现 -->
         <!-- common-feign 传递引入: spring-cloud-starter-openfeign -->
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -104,16 +99,7 @@
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-literule-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-userinfo-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+        <!-- P2-1: Aviator 表达式引擎（工作流内置，替代对 ydsz-literule 的直接依赖） -->
         <dependency>
             <groupId>com.googlecode.aviator</groupId>
             <artifactId>aviator</artifactId>

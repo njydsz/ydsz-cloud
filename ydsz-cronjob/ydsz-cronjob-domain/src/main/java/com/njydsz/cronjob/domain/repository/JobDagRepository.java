@@ -64,4 +64,14 @@ public interface JobDagRepository {
    * @return 受影响行数
    */
   int updateResultStats(String dagId, boolean success);
+
+  // ===== Web 层查询方法（Controller 停止 Mapper 直注） =====
+
+  /**
+   * 根据 ID 查询 DAG 定义。
+   *
+   * @param dagId DAG ID
+   * @return DAG 定义 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<JobDagVO> findById(String dagId);
 }

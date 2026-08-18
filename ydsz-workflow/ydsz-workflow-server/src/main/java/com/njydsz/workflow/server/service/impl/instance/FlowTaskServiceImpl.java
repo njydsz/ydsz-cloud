@@ -311,8 +311,8 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   }
 
   @Override
-  public List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId) {
-    return queryService.listOverdue(assigneeId, tenantId);
+  public List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId, int limit) {
+    return queryService.listOverdue(assigneeId, tenantId, limit);
   }
 
   @Override

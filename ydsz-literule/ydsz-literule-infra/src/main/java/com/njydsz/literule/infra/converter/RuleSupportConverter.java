@@ -76,21 +76,13 @@ public interface RuleSupportConverter {
   @Mapping(target = "definitionJson", source = "definitionJson")
   @Mapping(target = "changeDesc", source = "changeDesc")
   @Mapping(target = "operator", source = "operator")
-  @Mapping(target = "createdAt", source = "createdAt")
+  @Mapping(target = "createdAt", ignore = true)
   RuleVersionVO ruleVersionHistoryToVO(RuleVersionHistory entity);
 
   List<RuleVersionVO> ruleVersionListToVO(List<RuleVersionHistory> entities);
 
   // ===== RuleVersionSaveDTO → RuleVersionHistory =====
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "ruleName", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
   RuleVersionHistory postDtoToEntity(RuleVersionSaveDTO dto);
 
   // ===== RuleTestCase PostDTO → Entity =====

@@ -49,6 +49,23 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
   }
 
   @Override
+  public int saveBatch(List<TrashItemDTO> dtos) {
+    if (dtos == null || dtos.isEmpty()) {
+      return 0;
+    }
+    List<TrashItemDO> entities = converter.trashItemDtosToEntities(dtos);
+    int count = 0;
+    for (TrashItemDO entity : entities) {
+      if (entity.getId() == null || entity.getId().isEmpty()) {
+        entity.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
+      }
+      count++;
+    }
+    trashItemMapper.insertBatch(entities);
+    return count;
+  }
+
+  @Override
   public Optional<TrashItemVO> findById(String id) {
     return Optional.ofNullable(trashItemMapper.selectById(id)).map(converter::entityToVO);
   }

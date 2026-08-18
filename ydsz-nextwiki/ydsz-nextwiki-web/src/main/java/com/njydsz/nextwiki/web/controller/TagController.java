@@ -22,7 +22,8 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
-import com.njydsz.nextwiki.infra.entity.TagDO;
+import com.njydsz.nextwiki.domain.dto.TagDTO;
+import com.njydsz.nextwiki.domain.vo.TagVO;
 import com.njydsz.nextwiki.server.service.TagApplicationService;
 
 /**
@@ -111,11 +112,11 @@ public class TagController {
   @PostMapping
   @Operation(summary = "创建标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_CREATE)
-  public BaseResponse<TagDO> createTag(
+  public BaseResponse<TagDTO> createTag(
       @RequestBody NextwikiDTOs.CreateTagRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    TagDO TagDO = tagApplicationService.createTag(request.getName(), request.getColor(), userId);
-    return BaseResponse.success(TagDO);
+    TagDTO tagDTO = tagApplicationService.createTag(request.getName(), request.getColor(), userId);
+    return BaseResponse.success(tagDTO);
   }
 
   /**
@@ -128,7 +129,7 @@ public class TagController {
   @GetMapping
   @Operation(summary = "查询所有标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
-  public BaseResponse<List<TagDO>> listTags() {
+  public BaseResponse<List<TagVO>> listTags() {
     return BaseResponse.success(tagApplicationService.getAllTags());
   }
 
@@ -166,7 +167,7 @@ public class TagController {
   @GetMapping("/file/{fileNodeId}")
   @Operation(summary = "查询文件的标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
-  public BaseResponse<List<TagDO>> getFileTags(@PathVariable String fileNodeId) {
+  public BaseResponse<List<TagVO>> getFileTags(@PathVariable String fileNodeId) {
     return BaseResponse.success(tagApplicationService.getFileTags(fileNodeId));
   }
 
@@ -181,7 +182,7 @@ public class TagController {
   @GetMapping("/recommend/{fileNodeId}")
   @Operation(summary = "推荐标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
-  public BaseResponse<List<TagDO>> recommendTags(@PathVariable String fileNodeId) {
+  public BaseResponse<List<TagVO>> recommendTags(@PathVariable String fileNodeId) {
     return BaseResponse.success(tagApplicationService.recommendTags(fileNodeId));
   }
 }

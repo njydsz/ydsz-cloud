@@ -16,6 +16,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-agent-server</artifactId>
         </dependency>
+        <!-- P1: DDD 分层——web 层负责依赖注入编排，依赖 infra 实现层 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-agent-infra</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>

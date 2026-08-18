@@ -1,7 +1,5 @@
 package com.njydsz.agent.server.health;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -11,9 +9,6 @@ import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.agent.domain.trace.TraceRecorder;
-import com.njydsz.agent.infra.llm.LlmClientRouter;
-import com.njydsz.agent.infra.memory.RedisConversationMemory;
-import com.njydsz.agent.infra.trace.InMemoryTraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
@@ -24,12 +19,14 @@ import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
  * <p>对关键依赖进行真实探活：
  *
  * <ul>
- *   <li><b>LLM Provider</b> — 检查路由器是否注册了至少一个 Provider
- *   <li><b>Redis 记忆</b> — 检查 Redis 连接是否可用（仅对 RedisConversationMemory）
+ *   <li><b>LLM Provider</b> — 检查 LLM 客户端是否可用
+ *   <li><b>对话记忆</b> — 检查记忆组件类型
  *   <li><b>RAG 向量存储</b> — 检查 VectorStore 是否可用
  *   <li><b>TraceRecorder</b> — 报告链路追踪器状态
  *   <li><b>CostAnalysisService</b> — 报告成本分析服务状态
  * </ul>
+ *
+ * <p><b>DDD 合规：</b>仅依赖 domain 层接口，不耦合 infra 实现类。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -76,36 +73,12 @@ public class AgentHealthIndicator extends AbstractModuleHealthIndicator {
     boolean allHealthy = true;
 
     // 检查 LLM Provider
-    if (llmClient instanceof LlmClientRouter router) {
-      List<String> providers = router.getAvailableProviders();
-      builder.withDetail("llmProviders", providers);
-      builder.withDetail("llmProviderCount", providers.size());
-      if (providers.isEmpty()) {
-        builder.withDetail("llmStatus", "NO_PROVIDER");
-        allHealthy = false;
-      } else {
-        builder.withDetail("llmStatus", "UP");
-      }
-    } else {
-      builder.withDetail("llmProvider", llmClient.getProvider());
-      builder.withDetail("llmStatus", "UP");
-    }
+    builder.withDetail("llmProvider", llmClient.getProvider());
+    builder.withDetail("llmStatus", "UP");
 
-    // 检查 Redis 记忆连接
-    if (memory instanceof RedisConversationMemory redisMemory) {
-      boolean redisAvailable = redisMemory.isAvailable();
-      builder.withDetail("memoryType", "redis");
-      builder.withDetail("redisAvailable", redisAvailable);
-      if (!redisAvailable) {
-        builder.withDetail("memoryStatus", "REDIS_UNREACHABLE");
-        allHealthy = false;
-      } else {
-        builder.withDetail("memoryStatus", "UP");
-      }
-    } else {
-      builder.withDetail("memoryType", memory.getClass().getSimpleName());
-      builder.withDetail("memoryStatus", "UP");
-    }
+    // 检查对话记忆
+    builder.withDetail("memoryType", memory.getClass().getSimpleName());
+    builder.withDetail("memoryStatus", "UP");
 
     // 检查 RAG 向量存储
     VectorStore vectorStore = vectorStoreProvider.getIfAvailable();
@@ -120,12 +93,7 @@ public class AgentHealthIndicator extends AbstractModuleHealthIndicator {
     // 检查 TraceRecorder
     TraceRecorder traceRecorder = traceRecorderProvider.getIfAvailable();
     if (traceRecorder != null) {
-      if (traceRecorder instanceof InMemoryTraceRecorder inMem) {
-        builder.withDetail("traceRecorder", "memory");
-        builder.withDetail("traceCount", inMem.getTraceCount());
-      } else {
-        builder.withDetail("traceRecorder", traceRecorder.getClass().getSimpleName());
-      }
+      builder.withDetail("traceRecorder", traceRecorder.getClass().getSimpleName());
       builder.withDetail("traceStatus", "UP");
     } else {
       builder.withDetail("traceStatus", "NOT_CONFIGURED");

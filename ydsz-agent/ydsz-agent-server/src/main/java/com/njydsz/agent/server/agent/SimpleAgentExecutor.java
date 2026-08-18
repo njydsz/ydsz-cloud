@@ -4,11 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
-import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
@@ -33,34 +29,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class SimpleAgentExecutor implements AgentExecutor {
-
-  /** 日志记录器 */
-  private static final Logger LOG = LoggerFactory.getLogger(SimpleAgentExecutor.class);
-
-  /** LLM 客户端 */
-  private final LlmClient llmClient;
-
-  /** 对话记忆（历史消息加载/保存） */
-  private final ConversationMemory memory;
-
-  /** Agent 配置属性 */
-  private final AgentProperties properties;
-
-  /** 链路追踪记录器 */
-  private final TraceRecorder traceRecorder;
-
-  /** Agent 监控指标采集器 */
-  private final AgentMetrics agentMetrics;
-
-  /** 成本分析服务（Token 用量核算） */
-  private final CostAnalysisService costAnalysisService;
-
-  /** 护栏编排服务（统一驱动输入/输出护栏，消除重复逻辑） */
-  private final GuardrailService guardrailService;
-
-  /** Prompt 模板提供者（加载外部化模板，替代硬编码 Prompt） */
-  private final PromptTemplateProvider promptTemplateProvider;
+public class SimpleAgentExecutor extends AbstractAgentExecutor {
 
   public SimpleAgentExecutor(
       LlmClient llmClient,
@@ -71,14 +40,15 @@ public class SimpleAgentExecutor implements AgentExecutor {
       CostAnalysisService costAnalysisService,
       GuardrailService guardrailService,
       PromptTemplateProvider promptTemplateProvider) {
-    this.llmClient = llmClient;
-    this.memory = memory;
-    this.properties = properties;
-    this.traceRecorder = traceRecorder;
-    this.agentMetrics = agentMetrics;
-    this.costAnalysisService = costAnalysisService;
-    this.guardrailService = guardrailService;
-    this.promptTemplateProvider = promptTemplateProvider;
+    super(
+        llmClient,
+        memory,
+        properties,
+        traceRecorder,
+        agentMetrics,
+        costAnalysisService,
+        guardrailService,
+        promptTemplateProvider);
   }
 
   /**
@@ -89,26 +59,22 @@ public class SimpleAgentExecutor implements AgentExecutor {
    */
   @Override
   public ChatResponse execute(AgentExecutionRequest request) {
-    String convId =
-        request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
-    String traceId = traceRecorder.startTrace(convId, "CHAT");
+    String convId = extractConvId(request);
+    String traceId = startTrace(convId, "CHAT");
     LOG.info("[Simple-Agent] 执行: convId={}, traceId={}", convId, traceId);
 
-    String userInput = guardrailService.applyInputGuardrails(request.getUserInput());
+    String userInput = applyInputGuardrails(request.getUserInput());
     if (userInput == null) {
       traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
-      ChatMessage msg = ChatMessage.assistant("抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero());
-      return new ChatResponse(
-          IdGenerator.nextIdStr(),
-          "guardrail",
-          msg,
-          TokenUsage.zero(),
-          "guardrail_rejected",
-          List.of());
+      return buildRejectedResponse("您的输入被安全护栏拒绝");
     }
 
     List<ChatMessage> messages = new ArrayList<>();
-    String systemPrompt = resolveSystemPrompt(request, properties.getDefaultSystemPrompt());
+    String systemPrompt =
+        resolveSystemPrompt(
+            request,
+            properties.getPromptTemplate().getDefaultSystemCode(),
+            properties.getDefaultSystemPrompt());
     messages.add(ChatMessage.system(systemPrompt));
     messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
     messages.add(ChatMessage.user(userInput, convId));
@@ -126,42 +92,14 @@ public class SimpleAgentExecutor implements AgentExecutor {
     try {
       response = llmClient.chat(llmRequest);
     } catch (Exception e) {
-      long llmDuration = System.currentTimeMillis() - llmStart;
-      agentMetrics.recordLlmCall(
-          llmClient.getProvider(), properties.getLlm().getDefaultModel(), llmDuration, null, e);
-      traceRecorder.recordStep(
-          traceId,
-          "LLM_CALL_ERROR",
-          "LLM 调用失败",
-          request.getUserInput(),
-          e.getMessage(),
-          llmDuration);
-      traceRecorder.endTrace(traceId, "FAILED");
+      recordLlmError(traceId, "CHAT", request, e, llmStart);
       throw e;
     }
-    long llmDuration = System.currentTimeMillis() - llmStart;
 
-    // P0-3: AgentMetrics 指标采集
-    agentMetrics.recordLlmCall(
-        llmClient.getProvider(),
-        properties.getLlm().getDefaultModel(),
-        llmDuration,
-        response,
-        null);
+    recordLlmSuccess(convId, traceId, "Simple chat", messages, response, llmStart);
 
-    // P0-2: CostAnalysisService 成本核算
-    if (response.getUsage() != null && costAnalysisService != null) {
-      costAnalysisService.recordUsage(
-          convId, properties.getLlm().getDefaultModel(), response.getUsage());
-    }
-
-    // P0-1: TraceRecorder 记录 LLM 调用步骤
-    traceRecorder.recordStep(traceId, "LLM_CALL", "Simple chat", messages, response, llmDuration);
-
-    String output = guardrailService.applyOutputGuardrails(response.getContent());
-
-    memory.save(convId, ChatMessage.user(userInput, convId));
-    memory.save(convId, ChatMessage.assistant(output, convId, response.getUsage()));
+    String output = applyOutputGuardrails(response.getContent());
+    saveConversation(convId, userInput, output, response.getUsage());
 
     traceRecorder.endTrace(traceId, "SUCCESS");
     LOG.info(
@@ -184,24 +122,26 @@ public class SimpleAgentExecutor implements AgentExecutor {
    */
   @Override
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
-    String convId =
-        request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
-    String traceId = traceRecorder.startTrace(convId, "CHAT_STREAM");
+    String convId = extractConvId(request);
+    String traceId = startTrace(convId, "CHAT_STREAM");
     LOG.info("[Simple-Agent-Stream] 流式执行: convId={}, traceId={}", convId, traceId);
 
     String responseId = IdGenerator.nextIdStr();
     String model = properties.getLlm().getDefaultModel();
 
-    String userInput = guardrailService.applyInputGuardrails(request.getUserInput());
+    String userInput = applyInputGuardrails(request.getUserInput());
     if (userInput == null) {
       traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
-      chunkConsumer.accept(ChatChunk.content(responseId, model, "抱歉，您的输入被安全护栏拒绝。"));
-      chunkConsumer.accept(ChatChunk.finish(responseId, model, "guardrail_rejected", null));
+      emitRejectionStream(responseId, chunkConsumer);
       return;
     }
 
     List<ChatMessage> messages = new ArrayList<>();
-    String systemPrompt = resolveSystemPrompt(request, properties.getDefaultSystemPrompt());
+    String systemPrompt =
+        resolveSystemPrompt(
+            request,
+            properties.getPromptTemplate().getDefaultSystemCode(),
+            properties.getDefaultSystemPrompt());
     messages.add(ChatMessage.system(systemPrompt));
     messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
     messages.add(ChatMessage.user(userInput, convId));
@@ -250,11 +190,7 @@ public class SimpleAgentExecutor implements AgentExecutor {
             }
           });
     } catch (Exception e) {
-      long duration = System.currentTimeMillis() - startTime;
-      agentMetrics.recordLlmCall(llmClient.getProvider(), model, duration, null, e);
-      traceRecorder.recordStep(
-          traceId, "LLM_CALL_ERROR", "Stream failed", llmRequest, e.getMessage(), duration);
-      traceRecorder.endTrace(traceId, "FAILED");
+      recordLlmStreamError(traceId, llmRequest, e, startTime);
       throw e;
     }
     long duration = System.currentTimeMillis() - startTime;
@@ -271,9 +207,8 @@ public class SimpleAgentExecutor implements AgentExecutor {
         contentBuilder.toString(),
         duration);
 
-    String output = guardrailService.applyOutputGuardrails(contentBuilder.toString());
-    memory.save(convId, ChatMessage.user(userInput, convId));
-    memory.save(convId, ChatMessage.assistant(output, convId, usage[0]));
+    String output = applyOutputGuardrails(contentBuilder.toString());
+    saveConversation(convId, userInput, output, usage[0]);
 
     traceRecorder.endTrace(traceId, "SUCCESS");
     LOG.info("[Simple-Agent-Stream] 完成: convId={}, tokens={}", convId, usage[0].getTotalTokens());
@@ -287,26 +222,5 @@ public class SimpleAgentExecutor implements AgentExecutor {
   @Override
   public boolean supports(String type) {
     return "chat".equalsIgnoreCase(type) || "simple".equalsIgnoreCase(type);
-  }
-
-  /**
-   * 解析系统 Prompt 优先级：请求级 > 模板编码 > 配置默认值
-   *
-   * @param request 执行请求
-   * @param fallback 最终回退值
-   * @return 实际使用的系统 Prompt
-   */
-  private String resolveSystemPrompt(AgentExecutionRequest request, String fallback) {
-    if (request.getSystemPrompt() != null && !request.getSystemPrompt().isBlank()) {
-      return request.getSystemPrompt();
-    }
-    if (promptTemplateProvider != null) {
-      String templateCode = properties.getPromptTemplate().getDefaultSystemCode();
-      String templateContent = promptTemplateProvider.load(templateCode);
-      if (templateContent != null) {
-        return templateContent;
-      }
-    }
-    return fallback;
   }
 }

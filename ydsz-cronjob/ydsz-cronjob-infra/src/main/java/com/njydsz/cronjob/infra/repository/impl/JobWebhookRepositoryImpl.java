@@ -37,4 +37,52 @@ public class JobWebhookRepositoryImpl implements JobWebhookRepository {
   public List<JobWebhookVO> findActiveByEventAndJob(String eventType, String jobId) {
     return converter.jobWebhookListToVO(jobWebhookMapper.selectActiveByEventAndJob(eventType, jobId));
   }
+
+  // ===== Web 层 CRUD 方法实现 =====
+
+  @Override
+  public String create(JobWebhookVO vo) {
+    jobWebhookMapper.insert(converter.voToEntity(vo));
+    return vo.getId();
+  }
+
+  @Override
+  public void update(JobWebhookVO vo) {
+    jobWebhookMapper.updateById(converter.voToEntity(vo));
+  }
+
+  @Override
+  public void deleteById(String id, java.time.LocalDateTime updatedAt) {
+    com.njydsz.cronjob.domain.entity.job.JobWebhook update = new com.njydsz.cronjob.domain.entity.job.JobWebhook();
+    update.setId(id);
+    update.setDeleted(1);
+    update.setUpdatedAt(updatedAt);
+    jobWebhookMapper.updateById(update);
+  }
+
+  @Override
+  public java.util.Optional<JobWebhookVO> findById(String id) {
+    java.util.Optional<com.njydsz.cronjob.domain.entity.job.JobWebhook> entityOpt =
+        java.util.Optional.ofNullable(jobWebhookMapper.selectById(id));
+    return entityOpt.map(converter::entityToVO);
+  }
+
+  @Override
+  public JobRepository.PageResult<JobWebhookVO> pageBy(int pageNum, int size, String eventType, String jobKey) {
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.njydsz.cronjob.domain.entity.job.JobWebhook> pageObj =
+        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, size);
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.cronjob.domain.entity.job.JobWebhook> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper.eq(com.njydsz.cronjob.domain.entity.job.JobWebhook::getDeleted, 0);
+    if (eventType != null && !eventType.isBlank()) {
+      wrapper.eq(com.njydsz.cronjob.domain.entity.job.JobWebhook::getEventType, eventType);
+    }
+    if (jobKey != null && !jobKey.isBlank()) {
+      wrapper.eq(com.njydsz.cronjob.domain.entity.job.JobWebhook::getJobKey, jobKey);
+    }
+    wrapper.orderByDesc(com.njydsz.cronjob.domain.entity.job.JobWebhook::getCreatedAt);
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.njydsz.cronjob.domain.entity.job.JobWebhook> result =
+        jobWebhookMapper.selectPage(pageObj, wrapper);
+    return new JobRepository.PageResult<>(converter.jobWebhookListToVO(result.getRecords()), result.getTotal());
+  }
 }

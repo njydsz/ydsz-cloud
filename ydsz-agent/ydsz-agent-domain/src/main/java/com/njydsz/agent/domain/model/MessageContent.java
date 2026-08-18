@@ -81,6 +81,26 @@ public final class MessageContent implements Serializable {
   }
 
   /**
+   * 估算多模态内容的 Token 字符数。
+   *
+   * <p>文本段落按实际字符数计算；图片段落按固定 85 Token（OpenAI Vision 低分辨率单图约 85 Token）估算。
+   *
+   * @return 估算 Token 字符数
+   */
+  public int estimateTokenChars() {
+    int chars = 0;
+    for (ContentPart part : parts) {
+      if (part.isText() && part.text() != null) {
+        chars += part.text().length();
+      } else if (part.isImage()) {
+        // OpenAI Vision 低分辨率单图约 85 Token，按 tokenCharRatio 反算字符数
+        chars += 85 * 2.5;
+      }
+    }
+    return chars;
+  }
+
+  /**
    * 内容段落（文本或图片）
    *
    * @param type 内容类型（text / image_url）

@@ -29,7 +29,13 @@ public final class AgentDefinition implements Serializable {
     /** Plan-and-Execute 模式 */
     PLAN_EXECUTE,
     /** 路由器（多 Agent 分发） */
-    ROUTER
+    ROUTER,
+    /** 工作流模式（多步任务编排，与 PLAN_EXECUTE 共享执行器） */
+    WORKFLOW,
+    /** Supervisor 模式（主管-子 Agent 协同，LLM 驱动任务分解） */
+    SUPERVISOR,
+    /** DAG 模式（有向无环图编排，YAML DSL 定义执行图） */
+    DAG
   }
 
   private final String agentId;

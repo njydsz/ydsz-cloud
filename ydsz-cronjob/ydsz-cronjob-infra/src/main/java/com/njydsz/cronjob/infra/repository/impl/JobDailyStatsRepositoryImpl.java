@@ -51,4 +51,14 @@ public class JobDailyStatsRepositoryImpl implements JobDailyStatsRepository {
   public void upsert(JobDailyStatsVO vo) {
     jobDailyStatsMapper.upsert(converter.voToEntity(vo));
   }
+
+  // ===== Web 层查询方法实现 =====
+
+  @Override
+  public List<JobDailyStatsVO> findByJobIdAndDateRange(
+      String jobId, java.time.LocalDate startDate, java.time.LocalDate endDate) {
+    LocalDateTime start = startDate.atStartOfDay();
+    LocalDateTime end = endDate.atTime(23, 59, 59);
+    return findByJobIdAndDateRange(jobId, start, end);
+  }
 }

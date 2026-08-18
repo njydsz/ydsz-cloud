@@ -142,6 +142,29 @@ public interface FileNodeRepository {
   List<FileNodeVO> findByIds(List<String> ids);
 
   /**
+   * 批量逻辑删除（移入回收站，用于批量删除场景）。
+   *
+   * <p>一次性更新多条记录，比逐条删除性能更优。
+   *
+   * @param ids 文件节点ID列表
+   * @param originalPaths 原始路径列表（与ids一一对应）
+   * @return 受影响行数
+   */
+  int batchSoftDelete(List<String> ids, List<String> originalPaths);
+
+  /**
+   * 批量更新父节点和路径（用于批量移动场景）。
+   *
+   * @param ids 文件节点ID列表
+   * @param targetParentId 目标父节点ID
+   * @param newPaths 新路径列表（与ids一一对应）
+   * @param levelDeltas 层级变化量列表（与ids一一对应）
+   * @return 受影响行数
+   */
+  int batchUpdateParentAndPath(
+      List<String> ids, String targetParentId, List<String> newPaths, List<Integer> levelDeltas);
+
+  /**
    * 更新存储用量（移动/删除时更新目录统计）
    *
    * @param id 文件节点ID

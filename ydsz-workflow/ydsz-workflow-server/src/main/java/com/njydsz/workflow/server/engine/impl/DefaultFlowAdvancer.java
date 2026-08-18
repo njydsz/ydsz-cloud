@@ -56,10 +56,9 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
   private final FlowJoinTokenService joinTokenService;
 
   /**
-   * 智能路由服务（可选注入，literule 不可用时为 null）
+   * 智能路由服务（可选注入）
    *
-   * <p>当 ydsz-literule 模块在 classpath 中且 RuleEngine/ExpressionEvaluator Bean 存在时， Spring 会自动注入
-   * FlowRoutingService；否则本字段为 null，回退到 variableStrategy。
+   * <p>P2-1: 本字段注入 {@link DefaultFlowRoutingService}（引擎自包含实现）， 引擎内置异常检测与路由能力，无需依赖外部模块。
    */
   private final FlowRoutingService routingService;
 
@@ -105,7 +104,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
    * 上的同键锁注解<b>不会</b>再次生效——这既避免了 非可重入锁自死锁，也意味着 {@code advance} 的原子性在此路径下完全由本方法的锁保证。
    *
    * <p><b>事务边界：</b>本方法整体包在 {@code @Transactional} 事务中，任务生成与状态回写 在同一事务内提交，避免"任务已生成但状态未更新"的中间态。
-   * 异常态兜底由 {@code FlowConsistencyJobHandler} 对账任务负责扫描修复。
+   * P2-1: 异常态兜底逻辑由业务系统通过 cronjob 引擎自行编排对账任务实现。
    *
    * @param instanceId 流程实例 ID，不可为 {@code null}
    * @return 推进后的实例视图，含当前待办任务列表
@@ -531,7 +530,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
    * <p>评估优先级：
    *
    * <ol>
-   *   <li>FlowRoutingService（literule Aviator 引擎）
+   *   <li>FlowRoutingService（引擎内置 Aviator 引擎实现）
    *   <li>DefaultFlowVariableStrategy（Aviator 引擎 + 正则降级兜底）
    * </ol>
    *
@@ -545,7 +544,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
       return true;
     }
 
-    // 优先使用 literule FlowRoutingService 评估
+    // 优先使用内置 FlowRoutingService 评估
     if (routingService != null) {
       try {
         boolean result = routingService.evaluateCondition(condition, variables);

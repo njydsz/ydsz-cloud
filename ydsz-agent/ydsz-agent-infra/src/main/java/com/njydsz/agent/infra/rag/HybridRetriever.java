@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.agent.domain.rag.Reranker;
+import com.njydsz.agent.domain.rag.Retriever;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.common.tenant.TenantContextHolder;
@@ -18,6 +19,8 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * 混合检索器（Hybrid Retrieval）
  *
  * <p>结合向量相似度检索和全文检索（BM25/ILIKE），通过 RRF（Reciprocal Rank Fusion） 融合两路检索结果，提升召回率和精确度。
+ *
+ * <p>实现 domain 层 {@link Retriever} 接口，符合 DDD 分层规范。
  *
  * <h3>RRF 算法</h3>
  *
@@ -33,7 +36,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class HybridRetriever {
+public class HybridRetriever implements Retriever {
 
   private static final Logger LOG = LoggerFactory.getLogger(HybridRetriever.class);
 
@@ -96,6 +99,7 @@ public class HybridRetriever {
    * @param minScore 向量检索相似度下限，内部按 50% 放宽后再交由 RRF 精排
    * @return 按 RRF 分值降序排列的文本块；无命中时返回空列表而非 {@code null}
    */
+  @Override
   public List<TextChunk> retrieve(String query, int topK, double minScore) {
     if (query == null || query.isBlank()) {
       return List.of();

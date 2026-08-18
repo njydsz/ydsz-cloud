@@ -1,6 +1,5 @@
 package com.njydsz.system.server.search;
 
-import java.time.ZoneId;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -11,7 +10,7 @@ import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
-import com.njydsz.system.infra.entity.Variable;
+import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.domain.repository.VariableRepository;
 
 /**
@@ -30,13 +29,13 @@ import com.njydsz.system.domain.repository.VariableRepository;
  *
  * @author ydsz-team
  * @since 1.1.0
- * @see Variable 系统变量实体
+ * @see VariableVO 系统变量视图对象
  * @see SearchProvider 统一搜索 Provider 接口
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class VariableSearchProvider implements SearchProvider<Variable> {
+public class VariableSearchProvider implements SearchProvider<VariableVO> {
 
   private final VariableRepository variableRepository;
 
@@ -53,11 +52,11 @@ public class VariableSearchProvider implements SearchProvider<Variable> {
   /**
    * 将 {@link Variable} 实体转换为搜索索引文档。
    *
-   * @param entity 系统变量实体
+   * @param entity 系统变量视图对象
    * @return 索引文档；入参为 null 或 ID 为空时返回 null
    */
   @Override
-  public IndexDocument toIndexDocument(Variable entity) {
+  public IndexDocument toIndexDocument(VariableVO entity) {
     if (entity == null || entity.getId() == null) {
       return null;
     }
@@ -79,17 +78,6 @@ public class VariableSearchProvider implements SearchProvider<Variable> {
         .snippet(entity.getDescription())
         .status(entity.getStatus())
         .path("/system/variable/" + entity.getId())
-        .tenantId(entity.getTenantId())
-        .createdBy(entity.getCreatedBy())
-        .createdAt(
-            entity.getCreatedAt() != null
-                ? entity.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()
-                : null)
-        .updatedBy(entity.getUpdatedBy())
-        .updatedAt(
-            entity.getUpdatedAt() != null
-                ? entity.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant()
-                : null)
         .build();
   }
 
@@ -121,7 +109,7 @@ public class VariableSearchProvider implements SearchProvider<Variable> {
    * @return 未删除变量实体列表
    */
   @Override
-  public List<Variable> loadAll(String tenantId) {
+  public List<VariableVO> loadAll(String tenantId) {
     return variableRepository.findByTenantId(tenantId);
   }
 }

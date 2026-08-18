@@ -87,6 +87,7 @@ public class FlowDesignerController {
    */
   @GetMapping("/definition/{id}/designer")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+  @Operation(summary = "获取设计器数据（完整流程图：节点+边+坐标）")
   public BaseResponse<Map<String, Object>> getDesignerData(@PathVariable String id) {
     return BaseResponse.success(definitionService.getDesignerData(id));
   }
@@ -110,6 +111,7 @@ public class FlowDesignerController {
       action = AuditAction.CREATE,
       content = "'saveDesignerData'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+  @Operation(summary = "批量保存设计器数据（节点坐标+属性）")
   public BaseResponse<Void> saveDesignerData(
       @PathVariable String id, @Valid @RequestBody FlowDesignerDataDTO dto) {
     Map<String, Object> designerData = YdszJson.parseMap(dto.getDesignerData());
@@ -207,6 +209,7 @@ public class FlowDesignerController {
    */
   @GetMapping("/definition/{id}/formConfig/{nodeCode}")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+  @Operation(summary = "获取节点表单字段配置")
   public BaseResponse<String> getFormConfig(
       @PathVariable String id, @PathVariable String nodeCode) {
     return BaseResponse.success(definitionService.getFormConfig(id, nodeCode));
@@ -229,6 +232,7 @@ public class FlowDesignerController {
       action = AuditAction.CREATE,
       content = "'saveFormConfig'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+  @Operation(summary = "保存节点表单字段配置")
   public BaseResponse<Void> saveFormConfig(
       @PathVariable String id,
       @PathVariable String nodeCode,
@@ -248,6 +252,7 @@ public class FlowDesignerController {
    */
   @GetMapping("/definition/{id}/slaConfig/{nodeCode}")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
+  @Operation(summary = "获取节点 SLA 配置")
   public BaseResponse<String> getSlaConfig(@PathVariable String id, @PathVariable String nodeCode) {
     return BaseResponse.success(definitionService.getSlaConfig(id, nodeCode));
   }
@@ -269,6 +274,7 @@ public class FlowDesignerController {
       action = AuditAction.CREATE,
       content = "'saveSlaConfig'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
+  @Operation(summary = "保存节点 SLA 配置")
   public BaseResponse<Void> saveSlaConfig(
       @PathVariable String id,
       @PathVariable String nodeCode,
@@ -287,6 +293,7 @@ public class FlowDesignerController {
    * @return 模板列表
    */
   @GetMapping("/template/list")
+  @Operation(summary = "列出所有可用模板")
   public BaseResponse<List<Map<String, Object>>> listTemplates(
       @RequestParam(required = false) String category) {
     return BaseResponse.success(templateService.listTemplates(category));
@@ -307,6 +314,7 @@ public class FlowDesignerController {
       action = AuditAction.IMPORT,
       content = "'importTemplate'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TEMPLATE_IMPORT)
+  @Operation(summary = "一键导入模板")
   public BaseResponse<String> importTemplate(
       @PathVariable String templateCode, @RequestParam(required = false) String flowName) {
     return BaseResponse.success(templateService.importTemplate(templateCode, flowName));
@@ -319,6 +327,7 @@ public class FlowDesignerController {
    * @return 模板详情
    */
   @GetMapping("/template/{templateCode}")
+  @Operation(summary = "获取模板详情（含 BPMN XML）")
   public BaseResponse<Map<String, Object>> getTemplate(@PathVariable String templateCode) {
     return BaseResponse.success(templateService.getTemplate(templateCode));
   }

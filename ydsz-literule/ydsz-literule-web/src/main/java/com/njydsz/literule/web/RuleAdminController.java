@@ -50,7 +50,6 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.server.config.ABTestService;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
-import com.njydsz.literule.server.spi.RuleVersion;
 import com.njydsz.literule.server.version.RuleVersionDiffService;
 
 /**
@@ -203,10 +202,7 @@ public class RuleAdminController {
    */
   @GetMapping("/{ruleCode}/versions")
   public BaseResponse<List<RuleVersionVO>> listVersions(@PathVariable String ruleCode) {
-    return BaseResponse.success(
-        ruleAdminService.listVersions(ruleCode).stream()
-            .map(LiteruleWebConverter.INSTANT::entityToVO)
-            .toList());
+    return BaseResponse.success(ruleAdminService.listVersions(ruleCode));
   }
 
   /**
@@ -223,10 +219,10 @@ public class RuleAdminController {
   @GetMapping("/{ruleCode}/version-diff")
   public BaseResponse<RuleVersionDiffVO> versionDiff(
       @PathVariable String ruleCode, @RequestParam int oldVersion, @RequestParam int newVersion) {
-    List<RuleVersion> versions = ruleAdminService.listVersions(ruleCode);
-    RuleVersion oldV =
+    List<RuleVersionVO> versions = ruleAdminService.listVersions(ruleCode);
+    RuleVersionVO oldV =
         versions.stream().filter(v -> v.getVersion() == oldVersion).findFirst().orElse(null);
-    RuleVersion newV =
+    RuleVersionVO newV =
         versions.stream().filter(v -> v.getVersion() == newVersion).findFirst().orElse(null);
 
     if (oldV == null || newV == null) {
@@ -273,9 +269,14 @@ public class RuleAdminController {
       @PathVariable String ruleCode,
       @RequestParam int version,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-    return BaseResponse.success(
-        LiteruleConverter.INSTANT.entityToVO(
-            ruleAdminService.rollback(ruleCode, version, operator)));
+    RuleDefinitionVO restored =
+        ruleAdminService
+            .rollback(ruleCode, version, operator)
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "回滚失败: 版本不存在, ruleCode=" + ruleCode + ", version=" + version));
+    return BaseResponse.success(restored);
   }
 
   /**

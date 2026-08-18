@@ -63,7 +63,7 @@ public interface TraceRecorder {
       Object input,
       Object output,
       long durationMs,
-    double cost);
+      double cost);
 
   /**
    * 结束执行链路
@@ -80,6 +80,36 @@ public interface TraceRecorder {
    * @return 步骤列表
    */
   List<TraceStep> getSteps(String traceId);
+
+  /**
+   * 列出最近的链路 ID。
+   *
+   * @param limit 最大数量
+   * @return 链路 ID 列表（按开始时间倒序）；不支持时返回空列表
+   */
+  default List<String> listRecentTraces(int limit) {
+    return List.of();
+  }
+
+  /**
+   * 列出最近的链路元数据。
+   *
+   * @param limit 最大数量
+   * @return 链路元数据列表（按开始时间倒序）；不支持时返回空列表
+   */
+  default List<TraceMeta> listRecentTraceMetas(int limit) {
+    return List.of();
+  }
+
+  /**
+   * 获取链路元数据。
+   *
+   * @param traceId 链路 ID
+   * @return 元数据，不支持或不存在时返回 null
+   */
+  default TraceMeta getTraceMeta(String traceId) {
+    return null;
+  }
 
   /** 执行步骤记录 */
   final class TraceStep {

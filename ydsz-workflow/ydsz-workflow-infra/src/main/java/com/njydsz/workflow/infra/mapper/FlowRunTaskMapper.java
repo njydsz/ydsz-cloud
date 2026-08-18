@@ -168,7 +168,9 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTaskDO> {
    * @return 超期任务列表
    */
   List<FlowRunTaskDO> selectOverdue(
-      @Param("assigneeId") String assigneeId, @Param("tenantId") String tenantId);
+      @Param("assigneeId") String assigneeId,
+      @Param("tenantId") String tenantId,
+      @Param("limit") int limit);
 
   /**
    * P2-32: 统计超期任务数量
@@ -202,6 +204,25 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTaskDO> {
    */
   List<Map<String, Object>> selectOverdueTopN(
       @Param("tenantId") String tenantId, @Param("limit") int limit);
+
+  /**
+   * P0-2: 查询关联实例已处于终态但任务仍为 PENDING/CLAIMED 的异常任务
+   *
+   * <p>用于一致性对账：找出「实例已结束但任务未清理」的数据不一致场景（可能由任务取消逻辑遗漏等原因导致）。
+   *
+   * @param limit 返回条数上限
+   * @return 异常任务列表（task_id / task_status / instance_id / flow_code / node_code）
+   */
+  List<Map<String, Object>> selectOrphanPendingTasks(@Param("limit") int limit);
+
+  /**
+   * P0-2: 批量更新任务状态为 CANCELLED（一致性修复用）
+   *
+   * @param taskIds 任务 ID 列表
+   * @param updatedBy 操作人（系统修复记为 0）
+   * @return 更新行数
+   */
+  int batchCancelTasks(@Param("taskIds") List<String> taskIds, @Param("updatedBy") long updatedBy);
 
   /**
    * P2-7: 审批人负载分布 — 统计各审批人当前待办数量（PENDING + CLAIMED）。

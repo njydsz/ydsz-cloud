@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.domain.dto;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -52,4 +53,19 @@ public class FileVersionDTO implements Serializable {
 
   @Schema(description = "是否为当前活跃版本")
   private Boolean active;
+
+  @Schema(description = "创建人")
+  private String createdBy;
+
+  @Schema(description = "更新人")
+  private String updatedBy;
+
+  @Schema(description = "创建时间")
+  private LocalDateTime createdAt;
+
+  @Schema(description = "更新时间")
+  private LocalDateTime updatedAt;
+
+  @Schema(description = "租户ID")
+  private String tenantId;
 }

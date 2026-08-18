@@ -2,6 +2,7 @@ package com.njydsz.cronjob.domain.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.njydsz.cronjob.domain.vo.JobVO;
@@ -143,4 +144,82 @@ public interface JobRepository {
    * @return 受影响行数
    */
   int resumeAutoPaused(String id);
+
+  // ===== Web 层查询方法（Controller 停止 Mapper 直注） =====
+
+  /**
+   * 按任务分组分页查询任务列表（按 created_at 倒序）。
+   *
+   * <p>仅查询 {@code deleted=0} 的任务。
+   *
+   * @param jobGroup 任务分组（精确匹配）
+   * @param page 页码（从 1 开始）
+   * @param size 每页条数
+   * @return 分页结果（records=VO列表, total=总条数）
+   */
+  PageResult<JobVO> pageByGroup(String jobGroup, int page, int size);
+
+  /**
+   * 按任务分组和状态查询任务列表。
+   *
+   * <p>仅查询 {@code deleted=0} 的任务，按 created_at 倒序。
+   *
+   * @param jobGroup 任务分组（精确匹配）
+   * @param status 任务状态（NORMAL / PAUSED / ERROR / AUTO_PAUSED），可为 null 表示不限
+   * @return 任务 VO 列表
+   */
+  List<JobVO> findByGroupAndStatus(String jobGroup, String status);
+
+  /**
+   * 查询所有已删除标记为 0 的任务分组列表（去重）。
+   *
+   * @return 分组名称列表（按分组名称升序）
+   */
+  List<String> listDistinctGroups();
+
+  /**
+   * 统计指定分组的任务数量。
+   *
+   * @param jobGroup 任务分组
+   * @return 任务数量
+   */
+  long countByGroup(String jobGroup);
+
+  /**
+   * 按任务状态统计数量。
+   *
+   * @param status 任务状态（NORMAL / PAUSED / ERROR / AUTO_PAUSED）
+   * @return 任务数量
+   */
+  long countByStatus(String status);
+
+  /**
+   * 统计所有未删除任务总数。
+   *
+   * @return 任务总数
+   */
+  long countAll();
+
+  /**
+   * 分页查询内部结果对象。
+   *
+   * @param <T> 记录类型
+   */
+  class PageResult<T> {
+    private final List<T> records;
+    private final long total;
+
+    public PageResult(List<T> records, long total) {
+      this.records = records;
+      this.total = total;
+    }
+
+    public List<T> getRecords() {
+      return records;
+    }
+
+    public long getTotal() {
+      return total;
+    }
+  }
 }

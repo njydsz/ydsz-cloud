@@ -202,8 +202,9 @@ public class FlowGraphValidator {
     Set<String> inStack = new HashSet<>();
     for (String node : nodeCodes) {
       if (!visited.contains(node)) {
+        List<String> path = new ArrayList<>();
         List<String> cyclePath = new ArrayList<>();
-        if (dfsCycle(node, edges, visited, inStack, cyclePath)) {
+        if (dfsCycle(node, edges, visited, inStack, path, cyclePath)) {
           log.warn("[Flow-Validate] 检测到环路: {}", String.join(" → ", cyclePath));
         }
       }
@@ -213,6 +214,12 @@ public class FlowGraphValidator {
   /**
    * DFS 环路检测
    *
+   * @param node 当前节点
+   * @param edges 边映射
+   * @param visited 已访问节点集合
+   * @param inStack 当前 DFS 栈中节点集合
+   * @param path 当前 DFS 路径（回溯时会移除节点）
+   * @param cyclePath 发现环时保存的完整环路路径（独立于 path，不受回溯影响）
    * @return true 表示发现环
    */
   private boolean dfsCycle(
@@ -220,18 +227,28 @@ public class FlowGraphValidator {
       Map<String, List<String>> edges,
       Set<String> visited,
       Set<String> inStack,
-      List<String> path) {
+      List<String> path,
+      List<String> cyclePath) {
     visited.add(node);
     inStack.add(node);
     path.add(node);
 
     for (String neighbor : edges.getOrDefault(node, List.of())) {
       if (!visited.contains(neighbor)) {
-        if (dfsCycle(neighbor, edges, visited, inStack, path)) {
+        if (dfsCycle(neighbor, edges, visited, inStack, path, cyclePath)) {
           return true;
         }
       } else if (inStack.contains(neighbor)) {
-        path.add(neighbor);
+        // 发现环：从 path 中提取完整环路（neighbor → ... → node → neighbor）
+        int idx = path.indexOf(neighbor);
+        if (idx >= 0) {
+          cyclePath.addAll(path.subList(idx, path.size()));
+          cyclePath.add(neighbor);
+        } else {
+          // 兜底：至少记录当前节点和邻居
+          cyclePath.add(node);
+          cyclePath.add(neighbor);
+        }
         return true;
       }
     }
