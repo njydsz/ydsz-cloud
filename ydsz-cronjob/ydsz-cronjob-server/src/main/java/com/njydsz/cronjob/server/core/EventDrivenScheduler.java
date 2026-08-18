@@ -1,14 +1,15 @@
 package com.njydsz.cronjob.server.core;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobService;
 
 /**
@@ -56,12 +57,12 @@ public class EventDrivenScheduler {
     }
 
     try {
-      Job job = jobRepository.selectByJobKey(jobKey);
-      if (job == null) {
+      Optional<JobVO> jobOpt = jobRepository.findByJobKey(jobKey);
+      if (jobOpt.isEmpty()) {
         log.warn("[EventScheduler] jobKey 不存在: {}", jobKey);
         return false;
       }
-      String logId = jobService.trigger(job.getId());
+      String logId = jobService.trigger(jobOpt.get().getId());
       log.info("[EventScheduler] 事件触发任务成功: jobKey={} msgId={} logId={}", jobKey, msgId, logId);
       return true;
     } catch (Exception e) {
