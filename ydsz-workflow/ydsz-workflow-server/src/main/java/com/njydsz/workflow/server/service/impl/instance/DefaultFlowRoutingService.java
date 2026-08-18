@@ -15,14 +15,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
+import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.expr.ExpressionEvaluator;
 import com.njydsz.workflow.server.service.FlowRoutingService;
+import java.util.stream.Collectors;
 
 /**
  * 默认流程路由服务实现（引擎自包含）
@@ -53,24 +55,29 @@ public class DefaultFlowRoutingService implements FlowRoutingService {
   /** 表达式求值器，评估路由条件表达式 */
   private final ExpressionEvaluator expressionEvaluator;
 
-  /** 运行时任务 Mapper，查询卡单/超期任务 */
-  private final FlowRunTaskMapper taskMapper;
+  /** 运行时任务仓储，查询卡单/超期任务 */
+  private final FlowRunTaskRepository taskRepository;
 
-  /** 审计日志 Mapper，查询循环审批等异常模式 */
-  private final FlowAuditLogMapper auditLogMapper;
+  /** 审计日志仓储，查询循环审批等异常模式 */
+  private final FlowAuditLogRepository auditLogRepository;
 
-  /** 流程实例 Mapper，查询运行中实例状态 */
-  private final FlowInstanceMapper instanceMapper;
+  /** 流程实例仓储，查询运行中实例状态 */
+  private final FlowInstanceRepository instanceRepository;
+
+  /** MapStruct 转换器（DO/VO/DTO 转换） */
+  private final WorkflowConverter converter;
 
   public DefaultFlowRoutingService(
       ExpressionEvaluator expressionEvaluator,
-      FlowRunTaskMapper taskMapper,
-      FlowAuditLogMapper auditLogMapper,
-      FlowInstanceMapper instanceMapper) {
+      FlowRunTaskRepository taskRepository,
+      FlowAuditLogRepository auditLogRepository,
+      FlowInstanceRepository instanceRepository,
+      WorkflowConverter converter) {
     this.expressionEvaluator = expressionEvaluator;
-    this.taskMapper = taskMapper;
-    this.auditLogMapper = auditLogMapper;
-    this.instanceMapper = instanceMapper;
+    this.taskRepository = taskRepository;
+    this.auditLogRepository = auditLogRepository;
+    this.instanceRepository = instanceRepository;
+    this.converter = converter;
   }
 
   // ============================== 路由评估 ==============================
@@ -120,7 +127,7 @@ public class DefaultFlowRoutingService implements FlowRoutingService {
     if (instanceId == null) {
       return Collections.emptyList();
     }
-    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+    FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
     if (instance == null) {
       log.warn("[FlowRoute] 实例不存在，跳过异常检测: instanceId={}", instanceId);
       return Collections.emptyList();
@@ -144,7 +151,7 @@ public class DefaultFlowRoutingService implements FlowRoutingService {
   // ============================== 私有方法 ==============================
 
   private void detectTimeout(String instanceId, List<Map<String, Object>> anomalies) {
-    List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
+    List<FlowRunTaskDO> tasks = taskRepository.findByInstanceId(instanceId).stream().map(converter::entityToDO).collect(Collectors.toList());
     if (tasks == null || tasks.isEmpty()) {
       return;
     }
@@ -179,7 +186,7 @@ public class DefaultFlowRoutingService implements FlowRoutingService {
   }
 
   private void detectStuck(String instanceId, List<Map<String, Object>> anomalies) {
-    List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
+    List<FlowRunTaskDO> tasks = taskRepository.findByInstanceId(instanceId).stream().map(converter::entityToDO).collect(Collectors.toList());
     if (tasks == null || tasks.isEmpty()) {
       return;
     }
@@ -211,7 +218,7 @@ public class DefaultFlowRoutingService implements FlowRoutingService {
   }
 
   private void detectLoop(String instanceId, List<Map<String, Object>> anomalies) {
-    List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(instanceId);
+    List<FlowAuditLogDO> logs = auditLogRepository.findByInstanceId(instanceId).stream().map(converter::entityToDO).collect(Collectors.toList());
     if (logs == null || logs.isEmpty()) {
       return;
     }

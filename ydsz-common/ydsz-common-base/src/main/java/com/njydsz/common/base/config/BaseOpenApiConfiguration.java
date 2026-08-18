@@ -10,6 +10,8 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.responses.ApiResponse;
+import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -89,6 +91,29 @@ public abstract class BaseOpenApiConfiguration {
                 .name("ydsz-team")
                 .email("devops@ydsz.example.com")
                 .url("https://ydszsoft.ydsz.com.cn"));
+  }
+
+  /**
+   * 创建通用响应（含 API 版本响应头）。
+   *
+   * <p>子类可覆盖以自定义通用响应结构。
+   *
+   * @return ApiResponses 实例，包含 200/401/403/404/500 响应描述
+   */
+  protected ApiResponses createCommonResponses() {
+    ApiResponses responses = new ApiResponses();
+    responses.addApiResponse(
+        "200",
+        new ApiResponse()
+            .description("成功")
+            .addHeaderObject(
+                "X-Api-Version",
+                new Header().description("API 版本号（如 v1、v2）").required(true)));
+    responses.addApiResponse("401", new ApiResponse().description("未认证（Token 无效或缺失）"));
+    responses.addApiResponse("403", new ApiResponse().description("无权限"));
+    responses.addApiResponse("404", new ApiResponse().description("资源不存在"));
+    responses.addApiResponse("500", new ApiResponse().description("服务器内部错误"));
+    return responses;
   }
 
   /** 构建 OpenAPI 组件（请求头、安全方案） */

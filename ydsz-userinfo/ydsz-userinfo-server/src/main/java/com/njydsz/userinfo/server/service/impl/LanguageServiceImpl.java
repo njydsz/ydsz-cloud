@@ -1,12 +1,7 @@
 package com.njydsz.userinfo.server.service.impl;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,11 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.LanguageDTO;
-import com.njydsz.userinfo.infra.entity.LanguageDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
@@ -42,74 +34,43 @@ public class LanguageServiceImpl implements LanguageService {
 
   @Override
   public PageResponse<List<LanguageVO>> page(LanguagePageQuery query) {
-    QueryWrapper<LanguageDO> wrapper = buildQueryWrapper(query);
-    Page<LanguageDO> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
-    IPage<LanguageDO> result = languageRepository.page(mpPage, wrapper);
-    return PageResponses.success(result, UserInfoConverter.INSTANT::entityToVO);
+    return languageRepository.page(query);
   }
 
   @Override
   public LanguageVO getById(String id) {
-    LanguageDO entity = languageRepository.findById(id);
-    if (entity == null || entity.getDeleted() == 1) {
-      throw new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND);
-    }
-    return UserInfoConverter.INSTANT.entityToVO(entity);
+    return languageRepository.findById(id)
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND));
   }
 
   @Override
   public List<LanguageVO> list() {
-    LambdaQueryWrapper<LanguageDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.orderByDesc(LanguageDO::getSortOrder);
-    return languageRepository.list(wrapper).stream()
-        .map(UserInfoConverter.INSTANT::entityToVO)
-        .collect(Collectors.toList());
+    LanguagePageQuery query = new LanguagePageQuery();
+    return languageRepository.list(query);
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String create(LanguageDTO dto) {
-    LanguageDO entity = UserInfoConverter.INSTANT.dtoToEntity(dto);
-    if (entity.getStatus() == null) {
-      entity.setStatus("ENABLED");
-    }
-    languageRepository.insert(entity);
-    return entity.getId();
+    LanguageVO vo = languageRepository.create(dto);
+    return vo.getId();
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(LanguageDTO dto) {
-    LanguageDO entity = languageRepository.findById(dto.getId());
-    if (entity == null || entity.getDeleted() == 1) {
-      throw new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND);
-    }
-    BeanUpdateUtil.copyNonNull(dto, entity, "id");
-    return languageRepository.updateById(entity) > 0;
+    LanguageVO existing = languageRepository.findById(dto.getId())
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND));
+    BeanUpdateUtil.copyNonNull(dto, existing, "id");
+    LanguageVO vo = languageRepository.update(dto);
+    return vo != null;
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    LanguageDO entity = languageRepository.findById(id);
-    if (entity == null || entity.getDeleted() == 1) {
-      throw new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND);
-    }
-    return languageRepository.deleteById(id) > 0;
-  }
-
-  private QueryWrapper<LanguageDO> buildQueryWrapper(LanguagePageQuery query) {
-    QueryWrapper<LanguageDO> wrapper = new QueryWrapper<>();
-    if (query.getLanguageCode() != null && !query.getLanguageCode().isBlank()) {
-      wrapper.like("language_code", query.getLanguageCode());
-    }
-    if (query.getLanguageName() != null && !query.getLanguageName().isBlank()) {
-      wrapper.like("language_name", query.getLanguageName());
-    }
-    if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq("status", query.getStatus());
-    }
-    wrapper.orderByDesc("sort_order");
-    return wrapper;
+    languageRepository.findById(id)
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND));
+    return languageRepository.deleteById(id);
   }
 }

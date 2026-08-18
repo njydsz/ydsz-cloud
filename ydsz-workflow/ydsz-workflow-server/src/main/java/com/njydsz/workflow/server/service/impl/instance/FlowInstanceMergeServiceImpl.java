@@ -22,10 +22,9 @@ import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowInstanceMergeService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -96,14 +95,14 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @RequiredArgsConstructor
 public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
 
-  /** 流程实例 Mapper */
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-  private final FlowInstanceMapper instanceMapper;
+  /** 流程实例仓储 */
+  private final FlowInstanceRepository instanceRepository;
 
-  /** 运行时任务 Mapper */
-  private final FlowRunTaskMapper taskMapper;
+  /** MapStruct 转换器（DO/VO/DTO 转换） */
+  private final WorkflowConverter converter;
 
   /** 任务服务（查询待办任务） */
   private final FlowTaskService taskService;
@@ -144,9 +143,9 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     // 校验所有实例存在且类型相同
     Set<String> flowCodes = new LinkedHashSet<>();
     for (String instanceId : instanceIds) {
-      FlowInstanceDO instance = instanceMapper.selectById(instanceId);
-      if (instance == null) {
-        throw SysException.builder()
+        FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
+        if (instance == null) {
+          throw SysException.builder()
             .resultCode(BaseResultCode.NOT_FOUND)
             .key("error.workflow.msg_9e8f0a1b")
             .params(instanceId)
@@ -307,7 +306,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     // 获取实例摘要
     List<Map<String, Object>> instanceDetails = new ArrayList<>();
     for (String instanceId : instanceIds) {
-      FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+      FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
       if (instance != null) {
         Map<String, Object> info = new LinkedHashMap<>();
         info.put("instanceId", instance.getId());

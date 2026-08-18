@@ -10,9 +10,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 
 /**
@@ -30,8 +31,9 @@ import com.njydsz.workflow.server.metrics.FlowMetrics;
 @RequiredArgsConstructor
 public class FlowTaskTimeoutService {
 
-  private final FlowRunTaskMapper taskMapper;
+  private final FlowRunTaskRepository taskRepository;
   private final FlowTaskSupport support;
+  private final WorkflowConverter converter;
 
   /** P2-3: Prometheus 指标（可能为 null：测试环境） */
   private final FlowMetrics flowMetrics;
@@ -56,11 +58,11 @@ public class FlowTaskTimeoutService {
     LocalDateTime now = LocalDateTime.now();
     Long durationMs =
         task.getCreatedAt() == null ? null : Duration.between(task.getCreatedAt(), now).toMillis();
-    taskMapper.completeTask(task.getId(), FlowTaskStatus.TIMEOUT.name(), reason, now, durationMs);
     task.setTaskStatus(FlowTaskStatus.TIMEOUT.name());
     task.setComment(reason);
     task.setFinishAt(now);
     task.setDurationMs(durationMs);
+    taskRepository.update(converter.entityToVO(task));
     support.audit(task, "TIMEOUT", null, null, reason);
     log.info("[Flow] 任务超时: taskId={} reason={}", taskId, reason);
     if (flowMetrics != null) {
@@ -91,7 +93,7 @@ public class FlowTaskTimeoutService {
     }
     task.setTaskStatus(FlowTaskStatus.SUSPENDED.name());
     task.setComment(reason);
-    taskMapper.updateById(task);
+    taskRepository.update(converter.entityToVO(task));
     support.audit(task, "SUSPEND", operatorId, null, reason);
     log.info("[Flow] 任务挂起: taskId={} operator={} reason={}", taskId, operatorId, reason);
   }
@@ -116,13 +118,13 @@ public class FlowTaskTimeoutService {
     task.setAssigneeId(null);
     task.setAssigneeName(null);
     task.setClaimAt(null);
-    taskMapper.updateById(task);
+    taskRepository.update(converter.entityToVO(task));
     support.audit(task, "ACTIVATE", operatorId, null, null);
     log.info("[Flow] 任务激活: taskId={} operator={}", taskId, operatorId);
   }
 
   /** 取消某实例的全部 PENDING 任务（终止/驳回终态时使用） */
   public void cancelByInstance(String instanceId, String taskStatus) {
-    taskMapper.cancelByInstance(instanceId, taskStatus);
+    taskRepository.updateStatusByInstance(instanceId, taskStatus);
   }
 }

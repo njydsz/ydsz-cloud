@@ -8,8 +8,9 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 
 /**
  * P2-6: 会签动态完成条件服务
@@ -53,8 +54,11 @@ public class FlowCountersignDynamicService {
 
   // ============================== 依赖注入 ==============================
 
-  /** 运行时任务 Mapper，负责 {@code ydsz_flow_run_task} 表的查询与更新 */
-  private final FlowRunTaskMapper taskMapper;
+  /** 运行时任务仓储，负责 {@code ydsz_flow_run_task} 表的查询与更新 */
+  private final FlowRunTaskRepository taskRepository;
+
+  /** MapStruct 转换器（DO/VO/DTO 转换） */
+  private final WorkflowConverter converter;
 
   // ============================== 公共方法 ==============================
 
@@ -79,7 +83,7 @@ public class FlowCountersignDynamicService {
           .build();
     }
 
-    FlowRunTaskDO task = taskMapper.selectById(taskId);
+    FlowRunTaskDO task = taskRepository.findById(taskId).map(converter::entityToDO).orElse(null);
     if (task == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -90,7 +94,7 @@ public class FlowCountersignDynamicService {
 
     Integer oldCount = task.getApproveCount();
     task.setApproveCount(approveCount);
-    taskMapper.updateById(task);
+    taskRepository.update(converter.entityToVO(task));
 
     log.info(
         "[FlowCountersign] P2-6 动态修改通过人数: taskId={} oldCount={} → newCount={} operator={}",
