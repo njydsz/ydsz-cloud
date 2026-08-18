@@ -2,84 +2,110 @@ package com.njydsz.userinfo.infra.repository.impl;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.infra.repository.UserAccountRepository;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
+import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
+import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
+import com.njydsz.userinfo.domain.repository.UserAccountRepository;
+import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
+import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.userinfo.infra.converter.UserInfoConverter;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 
 /**
  * 用户账号 Repository 实现
  *
- * <p>基于 MyBatis-Plus 的 {@link UserAccountMapper} 实现用户账号的数据访问。
+ * <p>基于 MyBatis-Plus 实现 domain 层 {@link UserAccountRepository} 接口。
+ * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 2.18.0
  */
 @Repository
 @RequiredArgsConstructor
 public class UserAccountRepositoryImpl implements UserAccountRepository {
 
   private final UserAccountMapper userAccountMapper;
+  private final UserInfoConverter converter;
 
   @Override
-  public UserAccountDO findById(String id) {
-    return userAccountMapper.selectById(id);
+  public Optional<UserAccountVO> findById(String id) {
+    UserAccountDO entity = userAccountMapper.selectById(id);
+    return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
-  public UserAccountDO findByUsername(String username) {
+  public Optional<UserAccountVO> findByUsername(String username) {
     LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserAccountDO::getUsername, username);
-    return userAccountMapper.selectOne(wrapper);
+    UserAccountDO entity = userAccountMapper.selectOne(wrapper);
+    return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
-  public UserAccountDO save(UserAccountDO entity) {
-    if (entity.getId() == null || entity.getId().isBlank()) {
-      userAccountMapper.insert(entity);
-    } else {
-      userAccountMapper.updateById(entity);
-    }
-    return entity;
+  public Optional<UserAccountCredentialVO> findCredentialByUsername(String username) {
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccountDO::getUsername, username);
+    UserAccountDO entity = userAccountMapper.selectOne(wrapper);
+    return Optional.ofNullable(entity).map(converter::entityToCredentialVO);
   }
 
   @Override
-  public int insert(UserAccountDO entity) {
-    return userAccountMapper.insert(entity);
+  public UserAccountVO create(UserAccountCreateDTO dto) {
+    UserAccountDO entity = converter.createDtoToEntity(dto);
+    userAccountMapper.insert(entity);
+    return converter.entityToVO(entity);
   }
 
   @Override
-  public int updateById(UserAccountDO entity) {
-    return userAccountMapper.updateById(entity);
+  public UserAccountVO update(UserAccountUpdateDTO dto) {
+    UserAccountDO entity = converter.updateDtoToEntity(dto);
+    userAccountMapper.updateById(entity);
+    return converter.entityToVO(entity);
   }
 
   @Override
-  public int deleteById(String id) {
-    return userAccountMapper.deleteById(id);
+  public boolean deleteById(String id) {
+    return userAccountMapper.deleteById(id) > 0;
   }
 
   @Override
-  public Page<UserAccountDO> page(Page<UserAccountDO> page, LambdaQueryWrapper<UserAccountDO> wrapper) {
-    return userAccountMapper.selectPage(page, wrapper);
+  public PageResponse<List<UserAccountVO>> page(UserAccountPageQueryDTO query) {
+    Page<UserAccountDO> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<UserAccountDO> wrapper = buildWrapper(query);
+    Page<UserAccountDO> result = userAccountMapper.selectPage(page, wrapper);
+    List<UserAccountVO> vos = converter.userAccountListToVO(result.getRecords());
+    return PageResponse.success(
+        result.getTotal(),
+        (long) query.getPageNum(),
+        (long) query.getPageSize(),
+        vos);
   }
 
   @Override
-  public List<UserAccountDO> list(LambdaQueryWrapper<UserAccountDO> wrapper) {
-    return userAccountMapper.selectList(wrapper);
+  public List<UserAccountVO> list(UserAccountPageQueryDTO query) {
+    LambdaQueryWrapper<UserAccountDO> wrapper = buildWrapper(query);
+    List<UserAccountDO> entities = userAccountMapper.selectList(wrapper);
+    return converter.userAccountListToVO(entities);
   }
 
   @Override
-  public List<UserAccountDO> listByIds(Collection<String> ids) {
-    return userAccountMapper.selectBatchIds(ids);
+  public List<UserAccountVO> listByIds(Collection<String> ids) {
+    List<UserAccountDO> entities = userAccountMapper.selectBatchIds(ids);
+    return converter.userAccountListToVO(entities);
   }
 
   @Override
-  public long count(LambdaQueryWrapper<UserAccountDO> wrapper) {
+  public long count(UserAccountPageQueryDTO query) {
+    LambdaQueryWrapper<UserAccountDO> wrapper = buildWrapper(query);
     return userAccountMapper.selectCount(wrapper);
   }
 
@@ -105,5 +131,41 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   @Override
   public int resetLoginSuccess(String id, String loginIp) {
     return userAccountMapper.resetLoginSuccess(id, loginIp);
+  }
+
+  /**
+   * 根据查询参数构建 MyBatis-Plus 查询条件。
+   *
+   * @param query 分页查询参数
+   * @return LambdaQueryWrapper
+   */
+  private LambdaQueryWrapper<UserAccountDO> buildWrapper(UserAccountPageQueryDTO query) {
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    if (query.getUsername() != null && !query.getUsername().isBlank()) {
+      wrapper.like(UserAccountDO::getUsername, query.getUsername());
+    }
+    if (query.getRealName() != null && !query.getRealName().isBlank()) {
+      wrapper.like(UserAccountDO::getRealName, query.getRealName());
+    }
+    if (query.getPhone() != null && !query.getPhone().isBlank()) {
+      wrapper.like(UserAccountDO::getPhone, query.getPhone());
+    }
+    if (query.getEmail() != null && !query.getEmail().isBlank()) {
+      wrapper.like(UserAccountDO::getEmail, query.getEmail());
+    }
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq(UserAccountDO::getStatus, query.getStatus());
+    }
+    if (query.getUserType() != null && !query.getUserType().isBlank()) {
+      wrapper.eq(UserAccountDO::getUserType, query.getUserType());
+    }
+    if (query.getCompanyId() != null && !query.getCompanyId().isBlank()) {
+      wrapper.eq(UserAccountDO::getCompanyId, query.getCompanyId());
+    }
+    if (query.getDeptId() != null && !query.getDeptId().isBlank()) {
+      wrapper.eq(UserAccountDO::getDeptId, query.getDeptId());
+    }
+    wrapper.orderByAsc(UserAccountDO::getCreatedAt);
+    return wrapper;
   }
 }

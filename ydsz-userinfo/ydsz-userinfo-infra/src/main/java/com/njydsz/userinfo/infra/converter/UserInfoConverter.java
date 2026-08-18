@@ -36,6 +36,7 @@ import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 import com.njydsz.userinfo.domain.vo.PostVO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
+import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
 /**
@@ -432,6 +433,31 @@ public interface UserInfoConverter {
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   UserAccountDO createDtoToEntity(UserAccountCreateDTO dto);
+
+  /**
+   * 用户更新 DTO → 用户账号实体
+   *
+   * <p>用于更新用户场景，保留 id 字段用于定位更新记录。
+   *
+   * @param dto 用户更新 DTO
+   * @return 用户账号实体（含 id，用于条件更新）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  UserAccountDO updateDtoToEntity(UserAccountUpdateDTO dto);
+
+  /**
+   * 用户实体 → 用户认证凭据 VO
+   *
+   * <p>专用于认证场景，包含密码哈希、锁定状态等敏感字段。
+   *
+   * @param entity 用户账号实体
+   * @return 用户认证凭据 VO
+   */
+  UserAccountCredentialVO entityToCredentialVO(UserAccountDO entity);
 
   // ===== UserAccountDO → LoginVO.UserInfoVO =====
   /**
