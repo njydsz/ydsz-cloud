@@ -80,4 +80,36 @@ public interface FlowCcRepository {
    * @return 更新后的抄送 VO
    */
   FlowCcVO update(FlowCcVO vo);
+
+  /**
+   * 分页查询抄送我的列表（按接收人 + 租户）。
+   *
+   * <p>与 {@link #findByReceiverId(String, int, int)} 类似，但额外增加租户隔离条件，
+   * 用于多租户场景下「抄送我的」分页查询。按创建时间倒序排列。
+   *
+   * @param userId 接收人 ID
+   * @param tenantId 租户 ID
+   * @param offset 偏移量
+   * @param limit 每页大小
+   * @return 抄送 VO 列表
+   */
+  List<FlowCcVO> findCcByUserPage(String userId, String tenantId, int offset, int limit);
+
+  /**
+   * 统计抄送我的数量（按接收人 + 租户）。
+   *
+   * @param userId 接收人 ID
+   * @param tenantId 租户 ID
+   * @return 抄送数量
+   */
+  long countCcByUser(String userId, String tenantId);
+
+  /**
+   * 标记抄送为已读。
+   *
+   * <p>更新 {@code readStatus = 'READ', readAt = now()}。
+   *
+   * @param id 抄送 ID
+   */
+  void markRead(String id);
 }

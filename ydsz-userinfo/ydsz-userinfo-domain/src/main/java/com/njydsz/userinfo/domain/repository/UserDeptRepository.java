@@ -91,4 +91,14 @@ public interface UserDeptRepository {
    * @return 是否删除成功
    */
   boolean deleteById(String id);
+
+  /**
+   * 统计指定部门的关联用户数量。
+   *
+   * <p>用于部门删除前校验：有人员关联时禁止删除。
+   *
+   * @param deptId 部门 ID
+   * @return 关联的用户-部门记录数
+   */
+  long countByDeptId(String deptId);
 }

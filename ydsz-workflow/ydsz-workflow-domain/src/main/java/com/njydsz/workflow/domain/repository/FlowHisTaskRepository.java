@@ -72,4 +72,17 @@ public interface FlowHisTaskRepository {
    * @param id 任务 ID
    */
   void deleteById(String id);
+
+  /**
+   * 根据办理人查询历史任务列表。
+   *
+   * <p>查询 {@code assigneeId = ? AND tenantId = ?} 的历史任务，
+   * 按完成时间倒序排列，限制返回数量。用于「我审批过的」查询。
+   *
+   * @param userId 办理人 ID
+   * @param tenantId 租户 ID
+   * @param limit 返回数量上限
+   * @return 历史任务 VO 列表
+   */
+  List<FlowHisTaskVO> findByAssignee(String userId, String tenantId, int limit);
 }

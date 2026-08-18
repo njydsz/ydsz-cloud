@@ -1,5 +1,6 @@
 package com.njydsz.workflow.infra.repository.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,5 +89,35 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
     FlowCcDO entity = converter.entityToDO(vo);
     ccMapper.updateById(entity);
     return vo;
+  }
+
+  @Override
+  public List<FlowCcVO> findCcByUserPage(String userId, String tenantId, int offset, int limit) {
+    return converter.flowCcListToVO(
+        ccMapper.selectList(
+            new LambdaQueryWrapper<FlowCcDO>()
+                .eq(FlowCcDO::getCcUserId, userId)
+                .eq(FlowCcDO::getTenantId, tenantId)
+                .eq(FlowCcDO::getDeleted, 0)
+                .orderByDesc(FlowCcDO::getCreatedAt)
+                .last("LIMIT " + limit + " OFFSET " + offset)));
+  }
+
+  @Override
+  public long countCcByUser(String userId, String tenantId) {
+    return ccMapper.selectCount(
+        new LambdaQueryWrapper<FlowCcDO>()
+            .eq(FlowCcDO::getCcUserId, userId)
+            .eq(FlowCcDO::getTenantId, tenantId)
+            .eq(FlowCcDO::getDeleted, 0));
+  }
+
+  @Override
+  public void markRead(String id) {
+    FlowCcDO update = new FlowCcDO();
+    update.setReadStatus("READ");
+    update.setReadAt(LocalDateTime.now());
+    update.setId(id);
+    ccMapper.updateById(update);
   }
 }

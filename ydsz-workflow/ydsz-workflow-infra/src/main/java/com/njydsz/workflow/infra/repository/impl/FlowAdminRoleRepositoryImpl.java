@@ -80,4 +80,18 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
     adminRoleMapper.updateById(entity);
     return vo;
   }
+
+  @Override
+  public Optional<FlowAdminRoleVO> findByUserAndRole(String userId, String roleCode) {
+    return adminRoleMapper
+        .selectList(
+            new LambdaQueryWrapper<FlowAdminRoleDO>()
+                .eq(FlowAdminRoleDO::getUserId, userId)
+                .eq(FlowAdminRoleDO::getRoleCode, roleCode)
+                .eq(FlowAdminRoleDO::getDeleted, 0)
+                .last("LIMIT 1"))
+        .stream()
+        .findFirst()
+        .map(converter::entityToVO);
+  }
 }

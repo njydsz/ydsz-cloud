@@ -81,4 +81,25 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
     commentMapper.updateById(entity);
     return vo;
   }
+
+  @Override
+  public List<FlowCommentVO> findRootComments(String instanceId) {
+    return converter.flowCommentListToVO(
+        commentMapper.selectList(
+            new LambdaQueryWrapper<FlowCommentDO>()
+                .eq(FlowCommentDO::getInstanceId, instanceId)
+                .isNull(FlowCommentDO::getParentCommentId)
+                .eq(FlowCommentDO::getDeleted, 0)
+                .orderByAsc(FlowCommentDO::getCreatedAt)));
+  }
+
+  @Override
+  public List<FlowCommentVO> findReplies(String commentId) {
+    return converter.flowCommentListToVO(
+        commentMapper.selectList(
+            new LambdaQueryWrapper<FlowCommentDO>()
+                .eq(FlowCommentDO::getParentCommentId, commentId)
+                .eq(FlowCommentDO::getDeleted, 0)
+                .orderByAsc(FlowCommentDO::getCreatedAt)));
+  }
 }

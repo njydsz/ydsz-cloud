@@ -70,4 +70,24 @@ public interface FlowCommentRepository {
    * @return 更新后的审批意见 VO
    */
   FlowCommentVO update(FlowCommentVO vo);
+
+  /**
+   * 查询实例的根评论列表（一级评论）。
+   *
+   * <p>返回 {@code parentCommentId = null} 的评论，按创建时间正序排列。
+   *
+   * @param instanceId 实例 ID
+   * @return 根评论 VO 列表
+   */
+  List<FlowCommentVO> findRootComments(String instanceId);
+
+  /**
+   * 查询某条评论的回复列表。
+   *
+   * <p>返回 {@code parentCommentId = commentId} 的评论，按创建时间正序排列。
+   *
+   * @param commentId 父评论 ID
+   * @return 回复评论 VO 列表
+   */
+  List<FlowCommentVO> findReplies(String commentId);
 }

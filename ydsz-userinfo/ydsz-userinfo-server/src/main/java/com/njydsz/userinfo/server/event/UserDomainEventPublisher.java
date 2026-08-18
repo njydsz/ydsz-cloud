@@ -10,6 +10,8 @@ import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.userinfo.domain.event.UserDomainEvent;
 import com.njydsz.userinfo.domain.event.UserDomainEventType;
+import com.njydsz.userinfo.domain.vo.DepartmentVO;
+import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.infra.entity.DepartmentDO;
 import com.njydsz.userinfo.infra.entity.RoleDO;
@@ -180,6 +182,56 @@ public class UserDomainEventPublisher {
             RoleDO.getId(),
             "RoleDO",
             Map.of("roleId", RoleDO.getId(), "roleCode", orEmpty(RoleDO.getRoleCode()), "action", action)));
+  }
+
+  /**
+   * 发布角色实体变更事件（VO 版本，推荐新代码使用）。
+   *
+   * @param roleVO 角色 VO
+   * @param action 操作类型（CREATED / UPDATED / DELETED）
+   */
+  public void publishRoleEntityChanged(RoleVO roleVO, String action) {
+    if (roleVO == null) {
+      return;
+    }
+    publish(
+        UserDomainEventType.ROLE_CHANGED,
+        roleVO.getId(),
+        "RoleDO",
+        new UserDomainEvent(
+            UserDomainEventType.ROLE_CHANGED,
+            roleVO.getId(),
+            "RoleDO",
+            Map.of("roleId", roleVO.getId(), "roleCode", orEmpty(roleVO.getRoleCode()), "action", action)));
+  }
+
+  /**
+   * 发布部门变更事件（VO 版本，推荐新代码使用）。
+   *
+   * @param deptVO 部门 VO
+   * @param action 操作类型（CREATED / UPDATED / DELETED）
+   */
+  public void publishDepartmentChanged(DepartmentVO deptVO, String action) {
+    if (deptVO == null) {
+      return;
+    }
+    publish(
+        UserDomainEventType.ORG_STRUCTURE_CHANGED,
+        deptVO.getId(),
+        "DepartmentDO",
+        new UserDomainEvent(
+            UserDomainEventType.ORG_STRUCTURE_CHANGED,
+            deptVO.getId(),
+            "DepartmentDO",
+            Map.of(
+                "deptId",
+                deptVO.getId(),
+                "deptCode",
+                orEmpty(deptVO.getDeptCode()),
+                "deptName",
+                orEmpty(deptVO.getDeptName()),
+                "action",
+                action)));
   }
 
   /**

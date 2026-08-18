@@ -1,5 +1,6 @@
 package com.njydsz.workflow.domain.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -71,4 +72,42 @@ public interface FlowDelegateAuthRepository {
    * @return 更新后的委托授权 VO
    */
   FlowDelegateAuthVO update(FlowDelegateAuthVO vo);
+
+  /**
+   * 查询委托人的有效委托授权列表。
+   *
+   * <p>返回 {@code ownerUserId = ? AND tenantId = ? AND authStatus = 'ENABLED'
+   * AND startTime <= now AND endTime >= now} 的授权列表，
+   * 用于委托匹配时获取当前生效的授权规则。
+   *
+   * @param ownerId 委托人 ID
+   * @param tenantId 租户 ID
+   * @param now 当前时间
+   * @return 委托授权 VO 列表
+   */
+  List<FlowDelegateAuthVO> findActiveByOwner(String ownerId, String tenantId, LocalDateTime now);
+
+  /**
+   * 匹配委托权限（按委托人和流程编码）。
+   *
+   * <p>查询 {@code ownerUserId = ? AND flowCode = ? AND authStatus = 'ENABLED'
+   * AND startTime <= now AND endTime >= now} 的授权列表，
+   * 用于判断某委托人是否对某流程设置了有效委托。
+   *
+   * @param ownerId 委托人 ID
+   * @param flowCode 流程编码
+   * @param now 当前时间
+   * @return 委托授权 VO 列表
+   */
+  List<FlowDelegateAuthVO> matchAuth(String ownerId, String flowCode, LocalDateTime now);
+
+  /**
+   * 更新委托授权状态。
+   *
+   * <p>用于批量停用/过期/撤销委托授权。
+   *
+   * @param id 委托授权 ID
+   * @param status 目标状态（ENABLED / DISABLED / EXPIRED / REVOKED）
+   */
+  void updateStatus(String id, String status);
 }

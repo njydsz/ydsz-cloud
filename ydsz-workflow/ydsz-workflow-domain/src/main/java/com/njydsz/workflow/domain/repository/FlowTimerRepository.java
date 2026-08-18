@@ -1,5 +1,6 @@
 package com.njydsz.workflow.domain.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -77,4 +78,44 @@ public interface FlowTimerRepository {
    * @return 更新后的定时器 VO
    */
   FlowTimerVO update(FlowTimerVO vo);
+
+  /**
+   * 查询到期的定时器列表（待触发）。
+   *
+   * <p>扫描 {@code fireAt <= now AND timerStatus = 'PENDING'} 的定时器，
+   * 按 fireAt 升序排列，限制返回数量。由定时器调度器调用。
+   *
+   * @param now 当前时间
+   * @param limit 返回数量上限
+   * @return 到期定时器 VO 列表
+   */
+  List<FlowTimerVO> findDueTimers(LocalDateTime now, int limit);
+
+  /**
+   * 标记定时器为已触发。
+   *
+   * <p>更新 {@code timerStatus = 'FIRED', firedAt = now()}。
+   *
+   * @param id 定时器 ID
+   */
+  void markFired(String id);
+
+  /**
+   * 按任务 ID 取消定时器（边界定时器关联的 userTask 完成时调用）。
+   *
+   * <p>更新 {@code timerStatus = 'CANCELLED', cancelReason = 'TASK_COMPLETED'}。
+   *
+   * @param taskId 任务 ID
+   */
+  void cancelByTask(String taskId);
+
+  /**
+   * 标记定时器为延后（重新设置触发时间）。
+   *
+   * <p>更新 {@code fireAt = nextTime, timerStatus = 'PENDING'}，用于循环定时器或手动延后场景。
+   *
+   * @param id 定时器 ID
+   * @param nextTime 下次触发时间
+   */
+  void markSnoozed(String id, LocalDateTime nextTime);
 }

@@ -78,4 +78,35 @@ public interface FlowEventSubscriptionRepository {
    * @return 更新后的事件订阅 VO
    */
   FlowEventSubscriptionVO update(FlowEventSubscriptionVO vo);
+
+  /**
+   * 按事件类型查询等待中的事件订阅。
+   *
+   * <p>查询 {@code eventType = ? AND flowCode = ? AND subscriptionStatus = 'WAITING'} 的订阅列表，
+   * 用于事件触发时匹配等待中的订阅。
+   *
+   * @param eventType 事件类型（MESSAGE / ERROR / SIGNAL）
+   * @param flowCode 流程编码
+   * @return 事件订阅 VO 列表
+   */
+  List<FlowEventSubscriptionVO> findWaitingByEvent(String eventType, String flowCode);
+
+  /**
+   * 标记事件订阅为已触发。
+   *
+   * <p>更新 {@code subscriptionStatus = 'COMPLETED', triggeredAt = now()}。
+   *
+   * @param id 事件订阅 ID
+   */
+  void markTriggered(String id);
+
+  /**
+   * 重置事件订阅为等待状态。
+   *
+   * <p>更新 {@code subscriptionStatus = 'WAITING', triggeredAt = null}，
+   * 用于流程回退或重试场景。
+   *
+   * @param id 事件订阅 ID
+   */
+  void resetToWaiting(String id);
 }

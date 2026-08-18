@@ -3,6 +3,7 @@ package com.njydsz.workflow.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.workflow.domain.dto.FlowTaskQueryDTO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 
 /**
@@ -122,4 +123,42 @@ public interface FlowRunTaskRepository {
    * @return 运行时任务 VO 列表
    */
   List<FlowRunTaskVO> findByInstanceId(String instanceId);
+
+  /**
+   * 查询办理人的待办任务列表（带租户隔离）。
+   *
+   * <p>与 {@link #findPendingByAssignee(String, int, int)} 类似，但额外增加租户隔离条件，
+   * 用于多租户场景下「我的待办」查询。按创建时间倒序排列。
+   *
+   * @param userId 办理人 ID
+   * @param tenantId 租户 ID
+   * @param limit 返回数量上限
+   * @return 运行时任务 VO 列表
+   */
+  List<FlowRunTaskVO> findTodoByAssignee(String userId, String tenantId, int limit);
+
+  /**
+   * 根据复杂条件查询运行时任务列表。
+   *
+   * <p>支持多条件组合过滤：流程编码、实例 ID、节点编码、办理人、任务状态、业务类型、
+   * 优先级、创建时间范围、截止时间范围等。所有条件均为可选，为空时忽略。
+   *
+   * @param condition 查询条件 DTO
+   * @return 运行时任务 VO 列表
+   */
+  List<FlowRunTaskVO> findByCondition(FlowTaskQueryDTO condition);
+
+  /**
+   * 根据条件批量更新任务状态。
+   *
+   * <p>满足 instanceId + nodeCode + fromStatus 条件的所有任务，统一更新为 toStatus。
+   * 用于流程推进时批量刷新同实例同节点的任务状态。
+   *
+   * @param instanceId 实例 ID
+   * @param nodeCode 节点编码（可为 null，表示不限制节点）
+   * @param fromStatus 原始任务状态
+   * @param toStatus 目标任务状态
+   * @return 更新行数
+   */
+  int updateStatusByCondition(String instanceId, String nodeCode, String fromStatus, String toStatus);
 }

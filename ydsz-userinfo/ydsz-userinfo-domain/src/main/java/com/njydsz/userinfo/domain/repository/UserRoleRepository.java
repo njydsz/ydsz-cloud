@@ -75,4 +75,14 @@ public interface UserRoleRepository {
    * @return 删除影响的行数
    */
   int deleteByUserIdAndRoleId(String userId, String roleId);
+
+  /**
+   * 统计指定角色的用户关联数量。
+   *
+   * <p>用于角色删除前校验：有用户关联时禁止删除。
+   *
+   * @param roleId 角色 ID
+   * @return 关联的用户-角色记录数
+   */
+  long countByRoleId(String roleId);
 }

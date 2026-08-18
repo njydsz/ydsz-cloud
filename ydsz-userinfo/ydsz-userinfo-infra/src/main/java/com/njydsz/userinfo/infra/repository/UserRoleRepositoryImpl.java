@@ -86,4 +86,11 @@ public class UserRoleRepositoryImpl implements UserRoleRepository {
     wrapper.eq(UserRoleDO::getRoleId, roleId);
     return userRoleMapper.delete(wrapper);
   }
+
+  @Override
+  public long countByRoleId(String roleId) {
+    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRoleDO::getRoleId, roleId);
+    return userRoleMapper.selectCount(wrapper);
+  }
 }

@@ -127,4 +127,17 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
             .eq(tenantId != null, FlowDefinitionDO::getTenantId, tenantId)
             .eq(FlowDefinitionDO::getDeleted, 0));
   }
+
+  @Override
+  public List<FlowDefinitionVO> findEnabledByCategory(String categoryCode, String tenantId) {
+    return converter.flowDefinitionListToVO(
+        definitionMapper.selectList(
+            new LambdaQueryWrapper<FlowDefinitionDO>()
+                .eq(FlowDefinitionDO::getCategory, categoryCode)
+                .eq(FlowDefinitionDO::getTenantId, tenantId)
+                .eq(FlowDefinitionDO::getActivityStatus, 1)
+                .eq(FlowDefinitionDO::getIsPublish, 1)
+                .eq(FlowDefinitionDO::getDeleted, 0)
+                .orderByDesc(FlowDefinitionDO::getCreatedAt)));
+  }
 }

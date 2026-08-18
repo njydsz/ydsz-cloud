@@ -70,4 +70,15 @@ public interface FlowAdminRoleRepository {
    * @return 更新后的管理员角色 VO
    */
   FlowAdminRoleVO update(FlowAdminRoleVO vo);
+
+  /**
+   * 按用户 ID + 角色编码查询管理员角色。
+   *
+   * <p>用于权限校验场景：判断指定用户是否拥有指定角色。
+   *
+   * @param userId 用户 ID
+   * @param roleCode 角色编码
+   * @return 管理员角色 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<FlowAdminRoleVO> findByUserAndRole(String userId, String roleCode);
 }

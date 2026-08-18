@@ -1,5 +1,6 @@
 package com.njydsz.workflow.infra.repository.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -87,5 +88,34 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
     FlowEventSubscriptionDO entity = converter.entityToDO(vo);
     eventSubscriptionMapper.updateById(entity);
     return vo;
+  }
+
+  @Override
+  public List<FlowEventSubscriptionVO> findWaitingByEvent(String eventType, String flowCode) {
+    return converter.flowEventSubscriptionListToVO(
+        eventSubscriptionMapper.selectList(
+            new LambdaQueryWrapper<FlowEventSubscriptionDO>()
+                .eq(FlowEventSubscriptionDO::getEventType, eventType)
+                .eq(FlowEventSubscriptionDO::getFlowCode, flowCode)
+                .eq(FlowEventSubscriptionDO::getSubscriptionStatus, "WAITING")
+                .eq(FlowEventSubscriptionDO::getDeleted, 0)));
+  }
+
+  @Override
+  public void markTriggered(String id) {
+    FlowEventSubscriptionDO update = new FlowEventSubscriptionDO();
+    update.setSubscriptionStatus("COMPLETED");
+    update.setTriggeredAt(LocalDateTime.now());
+    update.setId(id);
+    eventSubscriptionMapper.updateById(update);
+  }
+
+  @Override
+  public void resetToWaiting(String id) {
+    FlowEventSubscriptionDO update = new FlowEventSubscriptionDO();
+    update.setSubscriptionStatus("WAITING");
+    update.setTriggeredAt(null);
+    update.setId(id);
+    eventSubscriptionMapper.updateById(update);
   }
 }

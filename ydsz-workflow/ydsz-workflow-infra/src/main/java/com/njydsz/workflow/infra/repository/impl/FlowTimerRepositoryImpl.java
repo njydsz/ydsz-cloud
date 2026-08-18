@@ -1,5 +1,6 @@
 package com.njydsz.workflow.infra.repository.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -89,5 +90,47 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
     FlowTimerDO entity = converter.entityToDO(vo);
     timerMapper.updateById(entity);
     return vo;
+  }
+
+  @Override
+  public List<FlowTimerVO> findDueTimers(LocalDateTime now, int limit) {
+    return converter.flowTimerListToVO(
+        timerMapper.selectList(
+            new LambdaQueryWrapper<FlowTimerDO>()
+                .le(FlowTimerDO::getFireAt, now)
+                .eq(FlowTimerDO::getTimerStatus, "PENDING")
+                .eq(FlowTimerDO::getDeleted, 0)
+                .orderByAsc(FlowTimerDO::getFireAt)
+                .last("LIMIT " + limit)));
+  }
+
+  @Override
+  public void markFired(String id) {
+    FlowTimerDO update = new FlowTimerDO();
+    update.setTimerStatus("FIRED");
+    update.setFiredAt(LocalDateTime.now());
+    update.setId(id);
+    timerMapper.updateById(update);
+  }
+
+  @Override
+  public void cancelByTask(String taskId) {
+    FlowTimerDO update = new FlowTimerDO();
+    update.setTimerStatus("CANCELLED");
+    update.setCancelReason("TASK_COMPLETED");
+    timerMapper.update(
+        update,
+        new LambdaQueryWrapper<FlowTimerDO>()
+            .eq(FlowTimerDO::getBoundaryTaskId, taskId)
+            .eq(FlowTimerDO::getTimerStatus, "PENDING"));
+  }
+
+  @Override
+  public void markSnoozed(String id, LocalDateTime nextTime) {
+    FlowTimerDO update = new FlowTimerDO();
+    update.setFireAt(nextTime);
+    update.setTimerStatus("PENDING");
+    update.setId(id);
+    timerMapper.updateById(update);
   }
 }

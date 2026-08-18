@@ -81,4 +81,16 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
   public void deleteById(String id) {
     hisTaskMapper.deleteById(id);
   }
+
+  @Override
+  public List<FlowHisTaskVO> findByAssignee(String userId, String tenantId, int limit) {
+    return converter.flowHisTaskListToVO(
+        hisTaskMapper.selectList(
+            new LambdaQueryWrapper<FlowHisTaskDO>()
+                .eq(FlowHisTaskDO::getAssigneeId, userId)
+                .eq(FlowHisTaskDO::getTenantId, tenantId)
+                .eq(FlowHisTaskDO::getDeleted, 0)
+                .orderByDesc(FlowHisTaskDO::getFinishAt)
+                .last("LIMIT " + limit)));
+  }
 }

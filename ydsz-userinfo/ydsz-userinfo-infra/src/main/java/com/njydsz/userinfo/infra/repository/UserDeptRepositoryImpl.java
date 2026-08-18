@@ -96,4 +96,11 @@ public class UserDeptRepositoryImpl implements UserDeptRepository {
   public boolean deleteById(String id) {
     return userDeptMapper.deleteById(id) > 0;
   }
+
+  @Override
+  public long countByDeptId(String deptId) {
+    LambdaQueryWrapper<UserDeptDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserDeptDO::getDeptId, deptId);
+    return userDeptMapper.selectCount(wrapper);
+  }
 }

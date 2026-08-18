@@ -103,4 +103,16 @@ public interface FlowDefinitionRepository {
    * @return 流程定义数量
    */
   long countPage(String flowCode, String flowName, String tenantId);
+
+  /**
+   * 按分类查询已启用的流程定义列表。
+   *
+   * <p>返回 {@code category = ? AND activityStatus = 1 AND isPublish = 1 AND deleted = 0} 的定义列表，
+   * 按创建时间倒序排列。用于流程发起页按分类展示可发起的流程。
+   *
+   * @param categoryCode 流程分类编码
+   * @param tenantId 租户 ID
+   * @return 流程定义 VO 列表
+   */
+  List<FlowDefinitionVO> findEnabledByCategory(String categoryCode, String tenantId);
 }
