@@ -2,6 +2,7 @@ package com.njydsz.system.infra.converter;
 
 import java.util.List;
 
+import com.njydsz.system.infra.entity.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -66,7 +67,7 @@ import com.njydsz.system.domain.vo.VariableVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity AppInfo / Config / DictItem / DictType / EntityVersion /
+ * @see com.njydsz.system.infra.entity AppInfo / Config / DictItem / DictType / EntityVersion /
  *     Variable
  * @see com.njydsz.system.domain.vo AppInfoVO / ConfigVO / DictItemVO / DictTypeVO / EntityVersionVO /
  *     VariableVO

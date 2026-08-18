@@ -151,6 +151,16 @@ public interface WorkflowConverter {
   List<FlowInstanceVO> flowInstanceListToVO(List<FlowInstanceDO> entities);
 
   /**
+   * 流程实例 DTO → 流程实例 VO。
+   *
+   * <p>用于 save 方法返回领域层 VO，同名字段自动映射。
+   *
+   * @param dto 流程实例 DTO
+   * @return 流程实例 VO
+   */
+  FlowInstanceVO dtoToVO(FlowInstanceDTO dto);
+
+  /**
    * 流程实例 DTO → 流程实例实体（创建场景）。
    *
    * <p>用于新增流程实例。MpBaseEntity 的自动填充字段通过 @Mapping(ignore = true) 忽略。
