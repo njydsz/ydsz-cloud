@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +37,16 @@ public class CostAnalysisService {
 
   private static final Logger LOG = LoggerFactory.getLogger(CostAnalysisService.class);
 
+  /**
+   * 用量记录异步写入线程池（JDK 21 虚拟线程，规范豁免场景）。
+   *
+   * <p>用量写入是旁路统计，不允许阻塞 LLM 调用主流程（P1 修复：原实现注释声称异步但实际同步 insert）。
+   */
+  // CHECKSTYLE.OFF: ThreadPoolCreate
+  private static final ExecutorService USAGE_WRITE_EXECUTOR =
+      Executors.newVirtualThreadPerTaskExecutor();
+  // CHECKSTYLE.ON: ThreadPoolCreate
+
   /** Token 用量记录 Repository */
   private final TokenUsageRecordRepository tokenUsageRecordRepository;
 
@@ -55,7 +67,7 @@ public class CostAnalysisService {
   /**
    * 记录 Token 用量
    *
-   * <p>将用量数据异步写入数据库，写入失败仅记录日志不阻塞主流程。
+   * <p>用量数据异步写入数据库（P1 修复：原实现注释声称异步，实际同步阻塞主流程）， 写入失败仅记录日志不阻塞主流程。
    *
    * @param conversationId 对话 ID
    * @param modelName 模型名称
@@ -72,10 +84,23 @@ public class CostAnalysisService {
       record.setPromptTokens((long) usage.getPromptTokens());
       record.setCompletionTokens((long) usage.getCompletionTokens());
       record.setTotalTokens((long) usage.getTotalTokens());
-      tokenUsageRecordRepository.insert(record);
+      // 异步写入：旁路统计不允许阻塞 LLM 调用主流程
+      USAGE_WRITE_EXECUTOR.execute(
+          () -> {
+            try {
+              tokenUsageRecordRepository.insert(record);
+            } catch (Exception e) {
+              // 用量记录失败不应影响主流程，仅记录日志
+              LOG.warn(
+                  "[CostAnalysis] 用量记录失败: convId={}, model={}",
+                  conversationId,
+                  modelName,
+                  e);
+            }
+          });
     } catch (Exception e) {
-      // 用量记录失败不应影响主流程，仅记录日志
-      LOG.warn("[CostAnalysis] 用量记录失败: convId={}, model={}", conversationId, modelName, e);
+      // 记录构造失败同样不阻塞主流程
+      LOG.warn("[CostAnalysis] 用量记录构造失败: convId={}, model={}", conversationId, modelName, e);
     }
   }
 

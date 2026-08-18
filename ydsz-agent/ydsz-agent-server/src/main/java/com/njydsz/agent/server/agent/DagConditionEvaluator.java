@@ -57,6 +57,9 @@ public final class DagConditionEvaluator {
   private static final Pattern ENDS_WITH_PATTERN =
       Pattern.compile("\\.endsWith\\([\"']([^\"']+)[\"']\\)");
 
+  /** 数值比较运算符（按优先级排列：双字符运算符必须先于单字符运算符匹配） */
+  private static final String[] NUMERIC_COMPARISON_OPS = {"<=", ">=", "<", ">"};
+
   /**
    * 对给定的条件表达式进行求值。
    *
@@ -141,6 +144,22 @@ public final class DagConditionEvaluator {
       String left = expr.substring(0, neIdx).trim();
       String right = expr.substring(neIdx + 2).trim();
       return !resolveValue(left, results).equals(stripQuotes(right));
+    }
+
+    // 数值比较运算：<= / >= / < / >（P1 修复：类注释声明支持但原实现缺失）
+    // 注意查找顺序：<= 必须先于 <，>= 必须先于 >，否则双字符运算符会被单字符截断
+    for (String op : NUMERIC_COMPARISON_OPS) {
+      int opIdx = findOperatorAtTopLevel(expr, op);
+      if (opIdx >= 0) {
+        double left = parseNumeric(resolveValue(expr.substring(0, opIdx).trim(), results));
+        double right = parseNumeric(stripQuotes(expr.substring(opIdx + op.length()).trim()));
+        return switch (op) {
+          case "<=" -> left <= right;
+          case ">=" -> left >= right;
+          case "<" -> left < right;
+          default -> left > right;
+        };
+      }
     }
 
     // 字符串方法调用
@@ -229,6 +248,21 @@ public final class DagConditionEvaluator {
 
     // 字符串字面量
     return stripQuotes(expr);
+  }
+
+  /**
+   * 解析字符串为数值（供数值比较运算符使用）。
+   *
+   * @param value 数值字符串
+   * @return 解析后的 double 值
+   * @throws IllegalArgumentException 当字符串无法解析为数字时抛出
+   */
+  private static double parseNumeric(String value) {
+    try {
+      return Double.parseDouble(value.trim());
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("数值比较的操作数无法解析为数字: " + value, e);
+    }
   }
 
   /**

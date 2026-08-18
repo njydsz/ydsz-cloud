@@ -32,6 +32,7 @@ import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 import com.njydsz.cronjob.domain.repository.JobWebhookRepository;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
+import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
 
 /**
  * WebHook 事件订阅管理 Controller（P3-13）。
@@ -58,6 +59,9 @@ public class JobWebhookController {
 
   /** WebHook 订阅 Repository（DDD 分层：Controller 通过 Repository 接口访问） */
   private final JobWebhookRepository webhookRepository;
+
+  /** P0-F3: WebHook 事件分发器（发送测试事件） */
+  private final WebhookEventDispatcher webhookEventDispatcher;
 
   /**
    * 新增 WebHook 订阅。
@@ -184,11 +188,12 @@ public class JobWebhookController {
   /**
    * 测试 WebHook 推送（发送测试事件）。
    *
-   * <p>主动发送一个 {@code TEST_WEBHOOK} 类型的合成事件，用于验证 WebHook 配置正确性。 异步执行，不阻塞当前线程；失败重试由 {@code
-   * WebhookEventDispatcher} 负责。
+   * <p>P0-F3: 主动发送一个 {@code TEST_WEBHOOK} 类型的合成事件，用于验证 WebHook 配置正确性。
+   * 原实现方法体为空（仅 return success），现通过 {@link WebhookEventDispatcher#sendTest} 真实推送。
+   * 同步执行并返回推送结果：失败时返回业务错误，方便前端提示。
    *
    * @param id WebHook ID
-   * @return 统一响应结果（仅表示任务已派发，不代表实际推送成功）
+   * @return 统一响应结果（success=推送成功；error=推送失败）
    */
   @Operation(summary = "测试 WebHook 推送")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
@@ -202,12 +207,17 @@ public class JobWebhookController {
   @PostMapping("/{id}/test")
   public BaseResponse<Void> testWebhook(@PathVariable String id) {
     // 通过 Repository 查询 Webhook
-    JobWebhookVO webhook = webhookRepository.findById(id)
+    JobWebhook webhook = webhookRepository.findById(id)
         .orElse(null);
     if (webhook == null) {
       return BaseResponse.error(CronjobExceptionCode.WEBHOOK_NOT_FOUND, "WebHook not found");
     }
-    // 测试事件通过 WebhookEventDispatcher 发送
+    // P0-F3: 通过 WebhookEventDispatcher 真实发送测试事件（含重试）
+    boolean sent = webhookEventDispatcher.sendTest(webhook);
+    if (!sent) {
+      return BaseResponse.error(
+          CronjobExceptionCode.WEBHOOK_SEND_FAILED, "WebHook 测试推送失败，请检查 URL / 网络 / 签名配置");
+    }
     return BaseResponse.success();
   }
 }

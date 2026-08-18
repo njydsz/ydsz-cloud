@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
+import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
@@ -167,4 +168,24 @@ public interface UserAccountRepository {
    * @return 影响行数（用户不存在或已删除时为 0）
    */
   int updatePasswordAndResetFailCount(String id, String newPasswordHash);
+
+  /**
+   * 批量更新用户账号状态（P0-9：单条 SQL 替代 N+1 循环）。
+   *
+   * <p>用于批量启用/禁用场景，通过单条 {@code UPDATE ... SET status = ? WHERE id IN (...)} 完成，
+   * 避免 {@code for} 循环逐个 {@code findById} + {@code update} 的 N+1 问题。
+   *
+   * @param ids 用户 ID 集合
+   * @param status 目标状态（ENABLED / DISABLED）
+   * @return 影响行数
+   */
+  int batchUpdateStatus(Collection<String> ids, EnableStatusEnum status);
+
+  /**
+   * 批量逻辑删除用户账号（P0-9：单条 SQL 替代 N+1 循环）。
+   *
+   * @param ids 用户 ID 集合
+   * @return 影响行数
+   */
+  int batchDeleteByIds(Collection<String> ids);
 }

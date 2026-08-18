@@ -84,7 +84,7 @@ public class WebhookEventDispatcher {
       eventBody.put("data", payload);
 
       for (JobWebhook webhook : webhooks) {
-        sendWebhook(webhook, eventBody);
+        sendWebhookWithRetry(webhook, eventBody);
       }
     } catch (Exception e) {
       log.error(
@@ -96,60 +96,124 @@ public class WebhookEventDispatcher {
     }
   }
 
-  /** 发送 WebHook 通知。 */
-  private void sendWebhook(JobWebhook webhook, ObjectNode body) {
-    try {
-      String method = webhook.getHttpMethod() != null ? webhook.getHttpMethod() : "POST";
-      HttpRequest.Builder builder =
-          HttpRequest.newBuilder()
-              .uri(URI.create(webhook.getCallbackUrl()))
-              .timeout(Duration.ofSeconds(10))
-              .header("Content-Type", "application/json; charset=UTF-8");
+  /**
+   * P0-F3: 发送测试事件到指定 WebHook。
+   *
+   * <p>供 {@code JobWebhookController.testWebhook} 调用，主动发送一个 {@code TEST_WEBHOOK} 合成事件
+   * 验证 WebHook 配置正确性（URL/签名/请求头）。同步执行并返回推送结果。
+   *
+   * @param webhook WebHook 订阅配置
+   * @return true=推送成功；false=重试耗尽仍失败
+   */
+  public boolean sendTest(JobWebhook webhook) {
+    ObjectNode body = new ObjectNode();
+    body.put("eventType", "TEST_WEBHOOK");
+    body.put("jobKey", webhook.getJobKey() != null ? webhook.getJobKey() : "");
+    body.put("timestamp", LocalDateTime.now().toString());
+    ObjectNode data = new ObjectNode();
+    data.put("message", "This is a test event from ydsz-cronjob");
+    data.put("webhookId", webhook.getId());
+    data.put("webhookName", webhook.getName() != null ? webhook.getName() : "");
+    body.put("data", data);
+    return sendWebhookWithRetry(webhook, body);
+  }
 
-      // 添加自定义请求头
-      if (webhook.getHeaders() != null && !webhook.getHeaders().isBlank()) {
-        ObjectNode headers = YdszJson.parseObject(webhook.getHeaders());
-        for (String key : headers.keySet()) {
-          builder.header(key, headers.getString(key));
+  /** 重试退避间隔（毫秒）：第 1 次失败后等 1s，第 2 次失败后等 5s，最多 3 次尝试。 */
+  private static final long[] RETRY_BACKOFF_MS = {1_000L, 5_000L};
+
+  /**
+   * P0-F5: 发送 WebHook 通知（带指数退避重试）。
+   *
+   * <p>原实现失败仅 log 丢弃，网络抖动/接收方瞬时不可用时事件丢失。现引入最多 3 次尝试
+   * （1s / 5s 退避），全部失败才放弃并记录 ERROR，供运维排查。
+   *
+   * @return true 推送成功；false 重试耗尽仍失败
+   */
+  private boolean sendWebhookWithRetry(JobWebhook webhook, ObjectNode body) {
+    Throwable lastError = null;
+    for (int attempt = 1; attempt <= RETRY_BACKOFF_MS.length + 1; attempt++) {
+      try {
+        if (doSend(webhook, body)) {
+          log.debug(
+              "[Webhook] 推送成功: webhook={} url={} attempt={}",
+              webhook.getName(),
+              webhook.getCallbackUrl(),
+              attempt);
+          return true;
+        }
+        log.warn(
+            "[Webhook] 推送失败(第 {} 次): webhook={} url={}",
+            attempt,
+            webhook.getName(),
+            webhook.getCallbackUrl());
+      } catch (Exception e) {
+        lastError = e;
+        log.warn(
+            "[Webhook] 推送异常(第 {} 次): webhook={} url={} reason={}",
+            attempt,
+            webhook.getName(),
+            webhook.getCallbackUrl(),
+            e.getMessage());
+      }
+      if (attempt <= RETRY_BACKOFF_MS.length) {
+        try {
+          Thread.sleep(RETRY_BACKOFF_MS[attempt - 1]);
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          return false;
         }
       }
-
-      // 添加签名头（如有密钥）
-      if (webhook.getSecret() != null && !webhook.getSecret().isBlank()) {
-        String signature = computeSignature(YdszJson.toJson(body), webhook.getSecret());
-        builder.header("X-Webhook-Signature", signature);
-      }
-
-      HttpRequest request =
-          builder
-              .method(method, HttpRequest.BodyPublishers.ofString(YdszJson.toJson(body)))
-              .build();
-      HttpResponse<String> response =
-          httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-      if (response.statusCode() >= 200 && response.statusCode() < 300) {
-        log.debug(
-            "[Webhook] 推送成功: webhook={} url={} status={}",
-            webhook.getName(),
-            webhook.getCallbackUrl(),
-            response.statusCode());
-      } else {
-        log.warn(
-            "[Webhook] 推送失败: webhook={} url={} status={} body={}",
-            webhook.getName(),
-            webhook.getCallbackUrl(),
-            response.statusCode(),
-            response.body() == null
-                ? ""
-                : response.body().substring(0, Math.min(200, response.body().length())));
-      }
-    } catch (Exception e) {
-      log.error(
-          "[Webhook] 推送异常: webhook={} url={} reason={}",
-          webhook.getName(),
-          webhook.getCallbackUrl(),
-          e.getMessage());
     }
+    log.error(
+        "[Webhook] 推送失败(重试耗尽): webhook={} url={} lastError={}",
+        webhook.getName(),
+        webhook.getCallbackUrl(),
+        lastError != null ? lastError.getMessage() : "非 2xx 响应");
+    return false;
+  }
+
+  /** 单次 HTTP 推送。 */
+  private boolean doSend(JobWebhook webhook, ObjectNode body) {
+    String method = webhook.getHttpMethod() != null ? webhook.getHttpMethod() : "POST";
+    HttpRequest.Builder builder =
+        HttpRequest.newBuilder()
+            .uri(URI.create(webhook.getCallbackUrl()))
+            .timeout(Duration.ofSeconds(10))
+            .header("Content-Type", "application/json; charset=UTF-8");
+
+    // 添加自定义请求头
+    if (webhook.getHeaders() != null && !webhook.getHeaders().isBlank()) {
+      ObjectNode headers = YdszJson.parseObject(webhook.getHeaders());
+      for (String key : headers.keySet()) {
+        builder.header(key, headers.getString(key));
+      }
+    }
+
+    // 添加签名头（如有密钥）
+    if (webhook.getSecret() != null && !webhook.getSecret().isBlank()) {
+      String signature = computeSignature(YdszJson.toJson(body), webhook.getSecret());
+      builder.header("X-Webhook-Signature", signature);
+    }
+
+    HttpRequest request =
+        builder
+            .method(method, HttpRequest.BodyPublishers.ofString(YdszJson.toJson(body)))
+            .build();
+    HttpResponse<String> response =
+        httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+    if (response.statusCode() >= 200 && response.statusCode() < 300) {
+      return true;
+    }
+    log.warn(
+        "[Webhook] 非 2xx 响应: webhook={} url={} status={} body={}",
+        webhook.getName(),
+        webhook.getCallbackUrl(),
+        response.statusCode(),
+        response.body() == null
+            ? ""
+            : response.body().substring(0, Math.min(200, response.body().length())));
+    return false;
   }
 
   /** 计算 HMAC-SHA256 签名。 */

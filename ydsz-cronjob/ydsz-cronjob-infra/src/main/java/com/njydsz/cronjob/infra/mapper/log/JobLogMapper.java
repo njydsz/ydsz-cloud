@@ -248,6 +248,35 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
   Long selectDurationP95(@Param("jobId") String jobId, @Param("since") LocalDateTime since);
 
   /**
+   * P0-F2: 统计全局（所有任务）在时间窗口内的执行次数和失败次数。
+   *
+   * <p>供全局 FAIL_RATE 告警规则（jobId=NULL）使用：失败率 = failed / total * 100。
+   *
+   * @param since 时间窗口起点（仅统计此时间之后的日志）
+   * @return Map 包含 total（总次数）和 failed（失败次数）字段；无记录时 total=0 / failed=0
+   */
+  @Select(
+      "SELECT COUNT(1) as total, "
+          + "SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) as failed "
+          + "FROM ydsz_job_log "
+          + "WHERE created_at >= #{since} AND deleted = 0")
+  Map<String, Object> countSince(@Param("since") LocalDateTime since);
+
+  /**
+   * P0-F2: 统计全局（所有任务）在时间窗口内的 P95 耗时。
+   *
+   * <p>供全局 DURATION_P95 告警规则（jobId=NULL）使用。仅统计 {@code status='SUCCESS'} 的执行。
+   *
+   * @param since 时间窗口起点
+   * @return P95 耗时（毫秒）；无成功记录时返回 0
+   */
+  @Select(
+      "SELECT COALESCE(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY duration_ms), 0)::BIGINT "
+          + "FROM ydsz_job_log "
+          + "WHERE created_at >= #{since} AND status = 'SUCCESS' AND deleted = 0")
+  Long selectDurationP95Global(@Param("since") LocalDateTime since);
+
+  /**
    * P2-2: 批量清理过期任务日志（硬删除，释放磁盘空间）。
    *
    * <p>按 {@code created_at < before} 筛选过期记录，单批最多删除 {@code limit} 条， 避免大事务锁表。由 {@link

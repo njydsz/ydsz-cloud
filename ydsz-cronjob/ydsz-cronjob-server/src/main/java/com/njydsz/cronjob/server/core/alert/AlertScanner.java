@@ -161,14 +161,15 @@ public class AlertScanner {
           rule.getThreshold());
       return;
     }
-    if (rule.getJobId() == null) {
-      // 全局规则（jobId=NULL）不参与周期性扫描：无具体 jobId 无法统计
-      log.debug("[AlertScanner] FAIL_RATE 全局规则跳过周期性扫描: ruleId={}", rule.getId());
-      return;
-    }
     int windowMinutes = resolveWindowMinutes(rule);
     LocalDateTime since = LocalDateTime.now().minusMinutes(windowMinutes);
-    Map<String, Object> stats = jobLogRepository.countByJobIdSince(rule.getJobId(), since);
+    Map<String, Object> stats;
+    if (rule.getJobId() == null) {
+      // P0-F2: 全局规则（jobId=NULL）按时间窗口聚合全量任务统计，不再跳过
+      stats = jobLogRepository.countSince(since);
+    } else {
+      stats = jobLogRepository.countByJobIdSince(rule.getJobId(), since);
+    }
     if (stats == null) {
       return;
     }
@@ -211,13 +212,15 @@ public class AlertScanner {
           rule.getThreshold());
       return;
     }
-    if (rule.getJobId() == null) {
-      log.debug("[AlertScanner] DURATION_P95 全局规则跳过周期性扫描: ruleId={}", rule.getId());
-      return;
-    }
     int windowMinutes = resolveWindowMinutes(rule);
     LocalDateTime since = LocalDateTime.now().minusMinutes(windowMinutes);
-    Long p95Ms = jobLogRepository.selectDurationP95(rule.getJobId(), since);
+    Long p95Ms;
+    if (rule.getJobId() == null) {
+      // P0-F2: 全局规则（jobId=NULL）按时间窗口聚合全量任务 P95，不再跳过
+      p95Ms = jobLogRepository.findDurationP95Global(since).orElse(null);
+    } else {
+      p95Ms = jobLogRepository.findDurationP95(rule.getJobId(), since).orElse(null);
+    }
     if (p95Ms == null || p95Ms <= 0) {
       // 无成功执行记录（PERCENTILE_CONT 返回 0），不触发告警
       return;
