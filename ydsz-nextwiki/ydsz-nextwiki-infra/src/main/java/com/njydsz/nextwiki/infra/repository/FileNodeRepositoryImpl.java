@@ -108,15 +108,33 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
       return 0;
     }
     List<FileNodeDO> entities = converter.fileNodeDtosToEntities(dtos);
-    int count = 0;
+    LocalDateTime now = LocalDateTime.now();
+    String tenantId = TenantContextHolder.getTenantId();
     for (FileNodeDO entity : entities) {
       if (entity.getId() == null || entity.getId().isEmpty()) {
         entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
       }
-      fileNodeMapper.insert(entity);
-      count++;
+      // P1-3: XML 批量插入绕过 MP 自动填充，此处手动补全审计字段
+      if (entity.getStatus() == null) {
+        entity.setStatus("active");
+      }
+      if (entity.getDeleted() == null) {
+        entity.setDeleted(0);
+      }
+      if (entity.getRevision() == null) {
+        entity.setRevision(0);
+      }
+      if (entity.getCreatedAt() == null) {
+        entity.setCreatedAt(now);
+      }
+      if (entity.getUpdatedAt() == null) {
+        entity.setUpdatedAt(now);
+      }
+      if (entity.getTenantId() == null) {
+        entity.setTenantId(tenantId);
+      }
     }
-    return count;
+    return fileNodeMapper.insertBatch(entities);
   }
 
   @Override

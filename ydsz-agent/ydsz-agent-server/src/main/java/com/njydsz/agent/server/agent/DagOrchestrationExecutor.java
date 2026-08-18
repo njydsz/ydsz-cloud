@@ -17,9 +17,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.agent.domain.agent.AgentDag;
+import com.njydsz.agent.domain.agent.AgentDefinition;
+import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.gateway.LlmClient;
-import com.njydsz.agent.domain.model.ChatMessage;
-import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.server.config.AgentProperties;
@@ -166,6 +166,9 @@ public class DagOrchestrationExecutor {
   /** 默认节点超时（秒），当节点未配置 timeoutSeconds 时使用 */
   private static final int DEFAULT_NODE_TIMEOUT_SECONDS = 60;
 
+  /** 节点子 Agent 默认最大迭代次数（ReAct/Plan 循环兜底熔断） */
+  private static final int DEFAULT_NODE_MAX_ITERATIONS = 10;
+
   /** 执行单个节点的业务逻辑 */
   private void executeNodeLogic(
       AgentDag dag,
@@ -211,21 +214,24 @@ public class DagOrchestrationExecutor {
         nodeTimeoutSeconds);
 
     try {
-      ChatRequest request =
-          ChatRequest.builder()
-              .model(properties.getLlm().getDefaultModel())
-              .messages(
-                  List.of(
-                      ChatMessage.system(
-                          node.getPrompt().isBlank() ? "你是 YDSZ 智能助手。" : node.getPrompt()),
-                      ChatMessage.user(input, null)))
-              .temperature(properties.getLlm().getTemperature())
-              .maxTokens(properties.getLlm().getMaxTokens())
+      // P1 修复：按节点 agentType 路由到子 Agent 执行器（原实现忽略 agentType，统一走 LLM 直连，
+      // 导致节点无法承载 ReAct/PlanExecute 等子 Agent 能力）
+      AgentDefinition nodeAgentDef = buildNodeAgentDefinition(node);
+      AgentExecutionRequest nodeRequest =
+          AgentExecutionRequest.builder()
+              .userInput(input)
+              .conversationId(executionId)
+              .systemPrompt(
+                  node.getPrompt().isBlank()
+                      ? properties.getDefaultSystemPrompt()
+                      : node.getPrompt())
+              .maxIterations(getNodeMaxIterations(node))
               .build();
 
       // 节点级超时：使用 CompletableFuture.orTimeout 为单个节点设置超时
       ChatResponse response =
-          CompletableFuture.supplyAsync(() -> llmClient.chat(request), executor)
+          CompletableFuture.supplyAsync(
+                  () -> agentFactory.getExecutor(nodeAgentDef).execute(nodeRequest), executor)
               .orTimeout(nodeTimeoutSeconds, TimeUnit.SECONDS)
               .join();
 
@@ -313,6 +319,63 @@ public class DagOrchestrationExecutor {
       }
     }
     return false;
+  }
+
+  /**
+   * 构建节点对应的 {@link AgentDefinition}，供 AgentFactory 路由到子 Agent 执行器。
+   *
+   * @param node DAG 节点
+   * @return Agent 定义（类型由节点 {@code agentType} 决定，未知类型回退 CHAT）
+   */
+  private AgentDefinition buildNodeAgentDefinition(AgentDag.Node node) {
+    return new AgentDefinition(
+        IdGenerator.nextIdStr(),
+        node.getId(),
+        node.getId(),
+        resolveNodeAgentType(node.getAgentType()),
+        node.getPrompt(),
+        List.of(),
+        properties.getLlm().getTemperature(),
+        properties.getLlm().getMaxTokens(),
+        getNodeMaxIterations(node),
+        null);
+  }
+
+  /**
+   * 解析节点 agentType 为 {@link AgentDefinition.Type}。
+   *
+   * <p>未知类型回退为 CHAT（单轮对话），保证节点必定可执行。
+   *
+   * @param agentType 节点声明的 agentType
+   * @return Agent 类型枚举
+   */
+  private AgentDefinition.Type resolveNodeAgentType(String agentType) {
+    if (agentType == null || agentType.isBlank()) {
+      return AgentDefinition.Type.CHAT;
+    }
+    try {
+      return AgentDefinition.Type.valueOf(agentType.trim().toUpperCase());
+    } catch (IllegalArgumentException e) {
+      LOG.warn("[DAG] 未知节点 agentType: {}，回退为 CHAT", agentType);
+      return AgentDefinition.Type.CHAT;
+    }
+  }
+
+  /**
+   * 获取节点 ReAct/Plan 循环最大迭代次数。
+   *
+   * <p>优先从节点 {@code config.maxIterations} 读取，未配置时使用默认 10 轮。
+   *
+   * @param node DAG 节点
+   * @return 最大迭代次数
+   */
+  private int getNodeMaxIterations(AgentDag.Node node) {
+    Object iterations = node.getConfig().get("maxIterations");
+    if (iterations instanceof Number num) {
+      int value = num.intValue();
+      return value > 0 ? value : DEFAULT_NODE_MAX_ITERATIONS;
+    }
+    return DEFAULT_NODE_MAX_ITERATIONS;
   }
 
   /**

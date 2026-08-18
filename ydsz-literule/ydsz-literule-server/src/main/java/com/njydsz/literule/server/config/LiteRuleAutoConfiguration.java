@@ -67,6 +67,7 @@ import com.njydsz.literule.server.expression.ExpressionValidationService;
 import com.njydsz.literule.server.expression.VariableRegistry;
 import com.njydsz.literule.server.health.LiteRuleHealthIndicator;
 import com.njydsz.literule.server.orchestrator.RuleChain;
+import com.njydsz.literule.server.orchestrator.DefaultGraphExecutionProvider;
 import com.njydsz.literule.server.replay.ExecutionReplayService;
 import com.njydsz.literule.server.sdk.LiteRuleSdk;
 import com.njydsz.literule.server.security.RulePermissionChecker;
@@ -83,6 +84,7 @@ import com.njydsz.literule.server.spi.RuleActionDispatcher;
 import com.njydsz.literule.server.spi.RuleActionHandler;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
+import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 import com.njydsz.literule.server.spi.RuleSource;
 import com.njydsz.literule.server.spi.RuleSourceManager;
 import com.njydsz.literule.server.spi.ZookeeperRuleSource;
@@ -671,6 +673,32 @@ public class LiteRuleAutoConfiguration {
   @ConditionalOnProperty(prefix = "ydsz.literule.debug", name = "enabled", havingValue = "true", matchIfMissing = true)
   public RuleDebugger ruleDebugger(ExpressionEngine evaluator) {
     return new RuleDebugger(evaluator);
+  }
+
+  /**
+   * 默认画布执行提供者（P0-A2 画布执行后端下沉）
+   *
+   * <p>literule 自带的画布执行后端默认实现，将可视化规则链画布还原为可执行编排并执行， 不再依赖外部模块提供
+   * {@code GraphExecutionProvider} 实现。 消费方可通过 {@link RuleChainGraphProvider} SPI 提供画布持久化；
+   * 未配置 SPI 时使用内存注册表（{@code registerGraph} 编程式注册）。
+   *
+   * @param ruleEngine 规则引擎
+   * @param evaluator 表达式求值器
+   * @param graphProviderProvider 画布数据源 SPI（可选）
+   * @return DefaultGraphExecutionProvider 实例
+   * @since 1.0.0
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public DefaultGraphExecutionProvider defaultGraphExecutionProvider(
+      RuleEngine ruleEngine,
+      ExpressionEngine evaluator,
+      ObjectProvider<RuleChainGraphProvider> graphProviderProvider) {
+    DefaultGraphExecutionProvider provider =
+        new DefaultGraphExecutionProvider(
+            ruleEngine, evaluator, graphProviderProvider.getIfAvailable());
+    log.info("[LiteRule-Graph] 默认画布执行后端已初始化");
+    return provider;
   }
 
   /**
