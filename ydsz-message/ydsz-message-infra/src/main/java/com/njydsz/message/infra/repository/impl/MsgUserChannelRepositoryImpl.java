@@ -1,19 +1,23 @@
 package com.njydsz.message.infra.repository.impl;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.message.domain.entity.config.MsgUserChannel;
+import com.njydsz.message.domain.query.MsgUserChannelQuery;
+import com.njydsz.message.domain.repository.MsgUserChannelRepository;
+import com.njydsz.message.domain.vo.MsgUserChannelVO;
+import com.njydsz.message.infra.converter.MessageConverter;
+import com.njydsz.message.infra.entity.MsgUserChannelDO;
 import com.njydsz.message.infra.mapper.config.MsgUserChannelMapper;
-import com.njydsz.message.infra.repository.MsgUserChannelRepository;
 
 /**
- * 用户通道绑定 Repository 实现。
+ * 用户通道绑定仓储实现（Infra 层）。
  *
- * <p>基于 MyBatis-Plus 的 {@link MsgUserChannelMapper} 实现 {@link MsgUserChannelRepository} 接口。
+ * <p>实现 {@link MsgUserChannelRepository} 接口，封装 MsgUserChannelMapper 数据访问细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,28 +28,64 @@ public class MsgUserChannelRepositoryImpl implements MsgUserChannelRepository {
 
   private final MsgUserChannelMapper msgUserChannelMapper;
 
+  private final MessageConverter converter;
+
   @Override
-  public int insert(MsgUserChannel entity) {
-    return msgUserChannelMapper.insert(entity);
+  public boolean save(MsgUserChannelVO vo) {
+    MsgUserChannelDO entity = voToDO(vo);
+    return msgUserChannelMapper.insert(entity) > 0;
   }
 
   @Override
-  public int updateById(MsgUserChannel entity) {
-    return msgUserChannelMapper.updateById(entity);
+  public boolean update(MsgUserChannelVO vo) {
+    MsgUserChannelDO entity = voToDO(vo);
+    return msgUserChannelMapper.updateById(entity) > 0;
   }
 
   @Override
-  public int deleteById(String id) {
-    return msgUserChannelMapper.deleteById(id);
+  public boolean deleteById(String id) {
+    return msgUserChannelMapper.deleteById(id) > 0;
   }
 
   @Override
-  public MsgUserChannel selectOne(LambdaQueryWrapper<MsgUserChannel> wrapper) {
-    return msgUserChannelMapper.selectOne(wrapper);
+  public Optional<MsgUserChannelVO> findOne(MsgUserChannelQuery query) {
+    QueryWrapper<MsgUserChannelDO> wrapper = buildWrapper(query);
+    return Optional.ofNullable(msgUserChannelMapper.selectOne(wrapper)).map(converter::doToVO);
   }
 
   @Override
-  public List<MsgUserChannel> selectList(LambdaQueryWrapper<MsgUserChannel> wrapper) {
-    return msgUserChannelMapper.selectList(wrapper);
+  public List<MsgUserChannelVO> findList(MsgUserChannelQuery query) {
+    QueryWrapper<MsgUserChannelDO> wrapper = buildWrapper(query);
+    return converter.userChannelDoListToVO(msgUserChannelMapper.selectList(wrapper));
+  }
+
+  private QueryWrapper<MsgUserChannelDO> buildWrapper(MsgUserChannelQuery query) {
+    QueryWrapper<MsgUserChannelDO> wrapper = new QueryWrapper<>();
+    if (query.getUserId() != null && !query.getUserId().isBlank()) {
+      wrapper.eq("user_id", query.getUserId());
+    }
+    if (query.getChannelType() != null && !query.getChannelType().isBlank()) {
+      wrapper.eq("channel_type", query.getChannelType());
+    }
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq("status", query.getStatus());
+    }
+    wrapper.eq("deleted", 0);
+    return wrapper;
+  }
+
+  private MsgUserChannelDO voToDO(MsgUserChannelVO vo) {
+    if (vo == null) {
+      return null;
+    }
+    MsgUserChannelDO entity = new MsgUserChannelDO();
+    entity.setId(vo.getId());
+    entity.setUserId(vo.getUserId());
+    entity.setChannelType(vo.getChannelType());
+    entity.setChannelUserId(vo.getChannelUserId());
+    entity.setVerified(vo.getVerified());
+    entity.setIsPrimary(vo.getIsPrimary());
+    entity.setExtra(vo.getExtra());
+    return entity;
   }
 }

@@ -2,18 +2,21 @@ package com.njydsz.message.infra.repository.impl;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.message.domain.entity.config.MsgVariableSource;
+import com.njydsz.message.domain.query.MsgVariableSourceQuery;
+import com.njydsz.message.domain.repository.MsgVariableSourceRepository;
+import com.njydsz.message.domain.vo.MsgVariableSourceVO;
+import com.njydsz.message.infra.converter.MessageConverter;
+import com.njydsz.message.infra.entity.MsgVariableSourceDO;
 import com.njydsz.message.infra.mapper.config.MsgVariableSourceMapper;
-import com.njydsz.message.infra.repository.MsgVariableSourceRepository;
 
 /**
- * 消息变量数据源 Repository 实现。
+ * 消息变量数据源仓储实现（Infra 层）。
  *
- * <p>基于 MyBatis-Plus 的 {@link MsgVariableSourceMapper} 实现 {@link MsgVariableSourceRepository} 接口。
+ * <p>实现 {@link MsgVariableSourceRepository} 接口，封装 MsgVariableSourceMapper 数据访问细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,8 +27,21 @@ public class MsgVariableSourceRepositoryImpl implements MsgVariableSourceReposit
 
   private final MsgVariableSourceMapper msgVariableSourceMapper;
 
+  private final MessageConverter converter;
+
   @Override
-  public List<MsgVariableSource> selectList(LambdaQueryWrapper<MsgVariableSource> wrapper) {
-    return msgVariableSourceMapper.selectList(wrapper);
+  public List<MsgVariableSourceVO> findList(MsgVariableSourceQuery query) {
+    QueryWrapper<MsgVariableSourceDO> wrapper = new QueryWrapper<>();
+    if (query.getTemplateCode() != null && !query.getTemplateCode().isBlank()) {
+      wrapper.eq("template_code", query.getTemplateCode());
+    }
+    if (query.getVariableName() != null && !query.getVariableName().isBlank()) {
+      wrapper.eq("variable_name", query.getVariableName());
+    }
+    if (query.getSourceType() != null && !query.getSourceType().isBlank()) {
+      wrapper.eq("source_type", query.getSourceType());
+    }
+    wrapper.eq("deleted", 0);
+    return converter.variableSourceDoListToVO(msgVariableSourceMapper.selectList(wrapper));
   }
 }

@@ -1,19 +1,23 @@
 package com.njydsz.message.infra.repository.impl;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.message.domain.entity.config.MsgPreference;
+import com.njydsz.message.domain.query.MsgPreferenceQuery;
+import com.njydsz.message.domain.repository.MsgPreferenceRepository;
+import com.njydsz.message.domain.vo.MsgPreferenceVO;
+import com.njydsz.message.infra.converter.MessageConverter;
+import com.njydsz.message.infra.entity.MsgPreferenceDO;
 import com.njydsz.message.infra.mapper.config.MsgPreferenceMapper;
-import com.njydsz.message.infra.repository.MsgPreferenceRepository;
 
 /**
- * 用户消息偏好 Repository 实现。
+ * 用户消息偏好仓储实现（Infra 层）。
  *
- * <p>基于 MyBatis-Plus 的 {@link MsgPreferenceMapper} 实现 {@link MsgPreferenceRepository} 接口。
+ * <p>实现 {@link MsgPreferenceRepository} 接口，封装 MsgPreferenceMapper 数据访问细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,28 +28,74 @@ public class MsgPreferenceRepositoryImpl implements MsgPreferenceRepository {
 
   private final MsgPreferenceMapper msgPreferenceMapper;
 
+  private final MessageConverter converter;
+
   @Override
-  public int insert(MsgPreference entity) {
-    return msgPreferenceMapper.insert(entity);
+  public boolean save(MsgPreferenceVO vo) {
+    MsgPreferenceDO entity = voToDO(vo);
+    return msgPreferenceMapper.insert(entity) > 0;
   }
 
   @Override
-  public int updateById(MsgPreference entity) {
-    return msgPreferenceMapper.updateById(entity);
+  public boolean update(MsgPreferenceVO vo) {
+    MsgPreferenceDO entity = voToDO(vo);
+    return msgPreferenceMapper.updateById(entity) > 0;
   }
 
   @Override
-  public int deleteById(String id) {
-    return msgPreferenceMapper.deleteById(id);
+  public boolean deleteById(String id) {
+    return msgPreferenceMapper.deleteById(id) > 0;
   }
 
   @Override
-  public MsgPreference selectOne(LambdaQueryWrapper<MsgPreference> wrapper) {
-    return msgPreferenceMapper.selectOne(wrapper);
+  public Optional<MsgPreferenceVO> findOne(MsgPreferenceQuery query) {
+    QueryWrapper<MsgPreferenceDO> wrapper = buildWrapper(query);
+    return Optional.ofNullable(msgPreferenceMapper.selectOne(wrapper)).map(converter::doToVO);
   }
 
   @Override
-  public List<MsgPreference> selectList(LambdaQueryWrapper<MsgPreference> wrapper) {
-    return msgPreferenceMapper.selectList(wrapper);
+  public List<MsgPreferenceVO> findList(MsgPreferenceQuery query) {
+    QueryWrapper<MsgPreferenceDO> wrapper = buildWrapper(query);
+    return converter.preferenceDoListToVO(msgPreferenceMapper.selectList(wrapper));
+  }
+
+  private QueryWrapper<MsgPreferenceDO> buildWrapper(MsgPreferenceQuery query) {
+    QueryWrapper<MsgPreferenceDO> wrapper = new QueryWrapper<>();
+    if (query.getUserId() != null && !query.getUserId().isBlank()) {
+      wrapper.eq("user_id", query.getUserId());
+    }
+    if (query.getChannel() != null && !query.getChannel().isBlank()) {
+      wrapper.eq("channel", query.getChannel());
+    }
+    if (query.getBizType() != null && !query.getBizType().isBlank()) {
+      wrapper.eq("biz_type", query.getBizType());
+    }
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq("status", query.getStatus());
+    }
+    wrapper.eq("deleted", 0);
+    return wrapper;
+  }
+
+  private MsgPreferenceDO voToDO(MsgPreferenceVO vo) {
+    if (vo == null) {
+      return null;
+    }
+    MsgPreferenceDO entity = new MsgPreferenceDO();
+    entity.setId(vo.getId());
+    entity.setUserId(vo.getUserId());
+    entity.setChannel(vo.getChannel());
+    entity.setBizType(vo.getBizType());
+    entity.setEnabled(vo.getEnabled());
+    entity.setDndEnabled(vo.getDndEnabled());
+    entity.setDndStart(vo.getDndStart());
+    entity.setDndEnd(vo.getDndEnd());
+    entity.setDailyLimit(vo.getDailyLimit());
+    entity.setHourlyLimit(vo.getHourlyLimit());
+    entity.setDigestEnabled(vo.getDigestEnabled());
+    entity.setDigestFrequency(vo.getDigestFrequency());
+    entity.setLocale(vo.getLocale());
+    entity.setExtra(vo.getExtra());
+    return entity;
   }
 }
