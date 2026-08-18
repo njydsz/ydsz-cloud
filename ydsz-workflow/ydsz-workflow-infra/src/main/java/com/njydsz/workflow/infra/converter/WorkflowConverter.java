@@ -212,6 +212,59 @@ public interface WorkflowConverter {
   @Mapping(target = "providerTraceId", ignore = true)
   FlowDelegateAuthDO putDtoToEntity(FlowDelegateAuthPutDTO dto);
 
+  // ===== VO → DO (Repository 写入场景) =====
+
+  /** 运行时任务 VO → 运行时任务 DO。 */
+  FlowRunTaskDO entityToDO(FlowRunTaskVO vo);
+
+  /** 流程节点 VO → 流程节点 DO。 */
+  FlowNodeDO entityToDO(FlowNodeVO vo);
+
+  /** 流程定义 VO → 流程定义 DO。 */
+  FlowDefinitionDO entityToDO(FlowDefinitionVO vo);
+
+  /** 审计日志 VO → 审计日志 DO。 */
+  FlowAuditLogDO entityToDO(FlowAuditLogVO vo);
+
+  /** 历史任务 VO → 历史任务 DO。 */
+  FlowHisTaskDO entityToDO(FlowHisTaskVO vo);
+
+  /** 定时器 VO → 定时器 DO。 */
+  FlowTimerDO entityToDO(FlowTimerVO vo);
+
+  /** 事件订阅 VO → 事件订阅 DO。 */
+  FlowEventSubscriptionDO entityToDO(FlowEventSubscriptionVO vo);
+
+  /** 自动触发 VO → 自动触发 DO。 */
+  FlowAutoTriggerDO entityToDO(FlowAutoTriggerVO vo);
+
+  /** 附件 VO → 附件 DO。 */
+  FlowAttachmentDO entityToDO(FlowAttachmentVO vo);
+
+  /** 抄送 VO → 抄送 DO。 */
+  FlowCcDO entityToDO(FlowCcVO vo);
+
+  /** 审批意见 VO → 审批意见 DO。 */
+  FlowCommentDO entityToDO(FlowCommentVO vo);
+
+  /** 流程分类 VO → 流程分类 DO。 */
+  FlowCategoryDO entityToDO(FlowCategoryVO vo);
+
+  /** 流程模板 VO → 流程模板 DO。 */
+  FlowTemplateDO entityToDO(FlowTemplateVO vo);
+
+  /** 委托授权 VO → 委托授权 DO。 */
+  FlowDelegateAuthDO entityToDO(FlowDelegateAuthVO vo);
+
+  /** 管理员角色 VO → 管理员角色 DO。 */
+  FlowAdminRoleDO entityToDO(FlowAdminRoleVO vo);
+
+  /** 节点跳转 VO → 节点跳转 DO。 */
+  FlowSkipDO entityToDO(FlowSkipVO vo);
+
+  /** 流程用户 VO → 流程用户 DO。 */
+  FlowUserDO entityToDO(FlowUserVO vo);
+
   // ===== String (通用字符串包装) =====
   /** 字符串 → {@link StringVO}（如合并组 ID 包装）。 */
   default StringVO entityToVO(String value) {

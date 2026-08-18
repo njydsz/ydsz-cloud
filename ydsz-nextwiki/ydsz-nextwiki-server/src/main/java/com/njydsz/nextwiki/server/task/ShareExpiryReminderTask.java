@@ -7,8 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.nextwiki.infra.entity.ShareLinkDO;
+import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
+import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
+import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
 
 /**
  * 分享链接到期提醒定时任务。
@@ -29,6 +31,7 @@ public class ShareExpiryReminderTask {
   private static final int EXPIRY_REMINDER_HOURS = 24;
 
   private final ShareLinkDomainService shareLinkDomainService;
+  private final ShareLinkRepository shareLinkRepository;
 
   /**
    * 扫描即将到期的分享链接并触发提醒。
@@ -38,17 +41,29 @@ public class ShareExpiryReminderTask {
   @Scheduled(cron = "0 0 * * * *")
   public void scanExpiringShares() {
     try {
-      List<ShareLinkDO> expiringShares = shareLinkDomainService.findExpiringShares(EXPIRY_REMINDER_HOURS);
+      // 查询即将到期的分享链接
+      List<ShareLinkVO> expiringVOs = shareLinkRepository.findExpiringShares(EXPIRY_REMINDER_HOURS);
 
-      if (expiringShares == null || expiringShares.isEmpty()) {
+      if (expiringVOs == null || expiringVOs.isEmpty()) {
         return;
       }
 
-      log.info("[ShareExpiryReminder] 发现即将到期的分享链接: count={}", expiringShares.size());
+      // 转换为 DTO 并调用领域服务过滤（仅 Active 状态 + 未发送提醒）
+      List<ShareLinkDTO> expiringDTOs = expiringVOs.stream()
+          .map(this::toDTO)
+          .toList();
+      List<ShareLinkDTO> toRemind = shareLinkDomainService.findExpiringShares(expiringDTOs, EXPIRY_REMINDER_HOURS);
 
-      for (ShareLinkDO share : expiringShares) {
-        // 标记提醒已发送（避免重复提醒）
-        shareLinkDomainService.markReminderSent(share.getId());
+      if (toRemind.isEmpty()) {
+        return;
+      }
+
+      log.info("[ShareExpiryReminder] 发现即将到期的分享链接: count={}", toRemind.size());
+
+      for (ShareLinkDTO share : toRemind) {
+        // 标记提醒已发送（通过领域服务修改状态，然后持久化）
+        shareLinkDomainService.markReminderSent(share);
+        shareLinkRepository.update(share);
         log.info(
             "[ShareExpiryReminder] 分享即将到期: shareId={}, shareCode={}, expireTime={}",
             share.getId(),
@@ -59,5 +74,19 @@ public class ShareExpiryReminderTask {
     } catch (Exception e) {
       log.error("[ShareExpiryReminder] 扫描到期分享失败", e);
     }
+  }
+
+  /** ShareLinkVO → ShareLinkDTO 转换 */
+  private ShareLinkDTO toDTO(ShareLinkVO vo) {
+    return ShareLinkDTO.builder()
+        .id(vo.getId())
+        .shareCode(vo.getShareCode())
+        .extractCode(vo.getExtractCode())
+        .shareType(vo.getShareType())
+        .expireTime(vo.getExpireTime())
+        .maxAccessCount(vo.getMaxAccessCount())
+        .accessCount(vo.getAccessCount())
+        .status(vo.getStatus())
+        .build();
   }
 }

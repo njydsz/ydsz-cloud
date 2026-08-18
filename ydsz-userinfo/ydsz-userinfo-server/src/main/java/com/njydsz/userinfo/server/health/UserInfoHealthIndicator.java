@@ -14,7 +14,7 @@ import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.userinfo.infra.entity.RoleDO;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
-import com.njydsz.userinfo.infra.repository.UserAccountRepository;
+import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 
 /**
  * 用户信息中心健康检查指标。

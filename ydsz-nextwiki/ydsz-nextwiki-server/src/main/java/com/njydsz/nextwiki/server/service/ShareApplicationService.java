@@ -8,13 +8,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.nextwiki.infra.entity.ShareAccessLogDO;
-import com.njydsz.nextwiki.infra.entity.ShareLinkDO;
-import com.njydsz.nextwiki.infra.entity.ShareRecipientDO;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.nextwiki.domain.dto.ShareAccessLogDTO;
+import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
+import com.njydsz.nextwiki.domain.dto.ShareRecipientDTO;
+import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
+import com.njydsz.nextwiki.domain.repository.ShareAccessLogRepository;
+import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
+import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
 import com.njydsz.nextwiki.domain.service.ShareAccessLogDomainService;
 import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
-import com.njydsz.nextwiki.domain.repository.ShareAccessLogRepository;
-import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.vo.ShareAccessLogVO;
+import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
+import com.njydsz.nextwiki.domain.vo.ShareRecipientVO;
 
 /**
  * 分享应用服务。
@@ -34,8 +41,11 @@ public class ShareApplicationService {
 
   private final ShareLinkDomainService shareLinkDomainService;
   private final ShareAccessLogDomainService shareAccessLogDomainService;
+  private final ShareLinkRepository shareLinkRepository;
   private final ShareAccessLogRepository shareAccessLogRepository;
   private final ShareRecipientRepository shareRecipientRepository;
+  private final FilePermissionService filePermissionService;
+  private final FileNodeRepository fileNodeRepository;
 
   /**
    * 创建文件分享链接。
@@ -46,22 +56,29 @@ public class ShareApplicationService {
    * @param expireTime 过期时间（可为空表示永不过期）
    * @param maxAccessCount 最大访问次数（可为空表示不限）
    * @param userId 创建者 ID
-   * @return 分享链接实体 {@link ShareLinkDO}
+   * @return 分享链接 VO
    * @throws 由 {@link ShareLinkDomainService} 在节点不存在/无权限时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
-   * @complexity O(1)（一次分享记录写入）
-   * @note 委托 {@link ShareLinkDomainService} 实现；创建后通常由事件/通知触达被分享方
    */
   @Transactional(rollbackFor = Exception.class)
-  public ShareLinkDO createShare(
+  public ShareLinkVO createShare(
       String fileNodeId,
       String shareType,
       String password,
       LocalDateTime expireTime,
       Integer maxAccessCount,
       String userId) {
-    return shareLinkDomainService.createShare(
-        fileNodeId, shareType, password, expireTime, maxAccessCount, userId);
+    FileNodeVO node = fileNodeRepository.findById(fileNodeId)
+        .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("fileNodeId", fileNodeId));
+    filePermissionService.checkShare(fileNodeId, userId);
+
+    ShareLinkDomainService.CreateShareResult result = shareLinkDomainService.createShare(
+        node, shareType, password, expireTime, maxAccessCount, userId);
+    ShareLinkVO saved = shareLinkRepository.save(result.shareLink());
+    if (result.recipients() != null && !result.recipients().isEmpty()) {
+      shareRecipientRepository.saveBatch(result.recipients());
+    }
+    return saved;
   }
 
   /**
@@ -75,10 +92,10 @@ public class ShareApplicationService {
    * @param targetUserIds 目标用户 ID 列表（可为空；非空时创建定向分享）
    * @param title 分享标题（可为空）
    * @param userId 创建者 ID
-   * @return 分享链接实体 {@link ShareLinkDO}
+   * @return 分享链接 VO
    */
   @Transactional(rollbackFor = Exception.class)
-  public ShareLinkDO createShareWithTargets(
+  public ShareLinkVO createShareWithTargets(
       String fileNodeId,
       String shareType,
       String password,
@@ -87,8 +104,17 @@ public class ShareApplicationService {
       List<String> targetUserIds,
       String title,
       String userId) {
-    return shareLinkDomainService.createShare(
-        fileNodeId, shareType, password, expireTime, maxAccessCount, targetUserIds, title, userId);
+    FileNodeVO node = fileNodeRepository.findById(fileNodeId)
+        .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("fileNodeId", fileNodeId));
+    filePermissionService.checkShare(fileNodeId, userId);
+
+    ShareLinkDomainService.CreateShareResult result = shareLinkDomainService.createShare(
+        node, shareType, password, expireTime, maxAccessCount, targetUserIds, title, userId);
+    ShareLinkVO saved = shareLinkRepository.save(result.shareLink());
+    if (result.recipients() != null && !result.recipients().isEmpty()) {
+      shareRecipientRepository.saveBatch(result.recipients());
+    }
+    return saved;
   }
 
   /**
@@ -99,12 +125,16 @@ public class ShareApplicationService {
    * @param shareCode 分享码（分享链接唯一标识）
    * @param extractCode 提取码（可为空；与分享码配合用于 LIMITED 类型）
    * @param password 访问密码（可为空；PUBLIC 类型忽略）
-   * @return 分享链接实体 {@link ShareLinkDO}；任一校验不通过返回 {@code null}
+   * @return 分享链接 VO；任一校验不通过返回 {@code null}
    * @complexity O(1)（一次分享记录查询 + 内存校验）
    * @note 无事务边界；验证失败时抛业务异常
    */
-  public ShareLinkDO verifyAccess(String shareCode, String extractCode, String password) {
-    return shareLinkDomainService.verifyAccess(shareCode, extractCode, password);
+  public ShareLinkVO verifyAccess(String shareCode, String extractCode, String password) {
+    ShareLinkVO vo = shareLinkRepository.findByShareCode(shareCode)
+        .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SHARE_NOT_FOUND).data("shareCode", shareCode));
+    ShareLinkDTO dto = shareLinkToDTO(vo);
+    ShareLinkDTO verified = shareLinkDomainService.verifyAccess(dto, extractCode, password);
+    return shareLinkRepository.save(verified);
   }
 
   /**
@@ -112,27 +142,26 @@ public class ShareApplicationService {
    *
    * @param shareId 分享 ID
    * @param userId 操作者 ID（需具备该分享的撤销权限）
-   * @return 无返回值
    * @throws 由 {@link ShareLinkDomainService} 在分享不存在/无权限时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
-   * @complexity O(1)（一次分享状态更新）
-   * @note 撤销后原分享码不可再访问；已发出的访问不再有效
    */
   @Transactional(rollbackFor = Exception.class)
   public void revoke(String shareId, String userId) {
-    shareLinkDomainService.revoke(shareId, userId);
+    ShareLinkVO vo = shareLinkRepository.findById(shareId)
+        .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SHARE_NOT_FOUND).data("shareId", shareId));
+    ShareLinkDTO dto = shareLinkToDTO(vo);
+    shareLinkDomainService.revoke(dto, userId);
+    shareLinkRepository.update(dto);
   }
 
   /**
    * 查询某用户创建的全部分享链接列表。
    *
    * @param userId 用户 ID
-   * @return 分享链接列表 {@link ShareLinkDO}（可能为空，非 {@code null}）
-   * @complexity O(1)（一次按用户查询）
-   * @note 只读，无事务边界
+   * @return 分享链接 VO 列表（可能为空，非 {@code null}）
    */
-  public List<ShareLinkDO> findByUserId(String userId) {
-    return shareLinkDomainService.findByUserId(userId);
+  public List<ShareLinkVO> findByUserId(String userId) {
+    return shareLinkRepository.findActiveSharesByUserId(userId);
   }
 
   /**
@@ -140,9 +169,9 @@ public class ShareApplicationService {
    *
    * @param shareId 分享链接 ID
    * @param limit 返回条数限制
-   * @return 访问日志列表
+   * @return 访问日志 VO 列表
    */
-  public List<ShareAccessLogDO> getAccessLogs(String shareId, int limit) {
+  public List<ShareAccessLogVO> getAccessLogs(String shareId, int limit) {
     return shareAccessLogRepository.findByShareId(shareId, limit);
   }
 
@@ -150,9 +179,9 @@ public class ShareApplicationService {
    * 查询分享链接的目标用户列表。
    *
    * @param shareId 分享链接 ID
-   * @return 目标用户列表
+   * @return 目标用户 VO 列表
    */
-  public List<ShareRecipientDO> getRecipients(String shareId) {
+  public List<ShareRecipientVO> getRecipients(String shareId) {
     return shareRecipientRepository.findByShareId(shareId);
   }
 
@@ -160,9 +189,9 @@ public class ShareApplicationService {
    * 查询用户收到的分享列表。
    *
    * @param userId 用户 ID
-   * @return 分享接收记录列表
+   * @return 分享接收记录 VO 列表
    */
-  public List<ShareRecipientDO> getReceivedShares(String userId) {
+  public List<ShareRecipientVO> getReceivedShares(String userId) {
     return shareRecipientRepository.findByRecipientId(userId);
   }
 
@@ -193,7 +222,7 @@ public class ShareApplicationService {
       String status,
       String failReason) {
     try {
-      ShareAccessLogDO accessLog =
+      ShareAccessLogDTO accessLog =
           shareAccessLogDomainService.buildAccessLog(
               shareId, shareCode, fileNodeId, visitorId, visitorIp, userAgent, accessType, status,
               failReason);
@@ -205,5 +234,29 @@ public class ShareApplicationService {
           shareCode,
           e.getMessage());
     }
+  }
+
+  // ==================== 私有方法 ====================
+
+  /** ShareLinkVO → ShareLinkDTO 转换（用于调用领域服务） */
+  private ShareLinkDTO shareLinkToDTO(ShareLinkVO vo) {
+    return ShareLinkDTO.builder()
+        .id(vo.getId())
+        .fileNodeId(vo.getFileNodeId())
+        .shareCode(vo.getShareCode())
+        .extractCode(vo.getExtractCode())
+        .shareType(vo.getShareType())
+        .password(vo.getPassword())
+        .expireTime(vo.getExpireTime())
+        .maxAccessCount(vo.getMaxAccessCount())
+        .accessCount(vo.getAccessCount())
+        .status(vo.getStatus())
+        .shareTargetType(vo.getShareTargetType())
+        .title(vo.getTitle())
+        .reminderSent(vo.getReminderSent())
+        .createdBy(vo.getCreatedBy())
+        .updatedBy(vo.getUpdatedBy())
+        .createdAt(vo.getCreatedAt())
+        .build();
   }
 }

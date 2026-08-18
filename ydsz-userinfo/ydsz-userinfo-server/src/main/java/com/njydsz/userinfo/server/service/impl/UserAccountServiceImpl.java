@@ -35,7 +35,7 @@ import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
-import com.njydsz.userinfo.infra.repository.UserAccountRepository;
+import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.repository.UserDeptRepository;
 import com.njydsz.userinfo.domain.repository.UserRoleRepository;
 import com.njydsz.userinfo.server.auth.AuthService;

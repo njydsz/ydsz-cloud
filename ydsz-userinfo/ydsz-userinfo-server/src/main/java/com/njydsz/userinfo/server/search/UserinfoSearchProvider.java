@@ -16,7 +16,7 @@ import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
-import com.njydsz.userinfo.infra.repository.UserAccountRepository;
+import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 
 /**
  * 用户搜索提供者
