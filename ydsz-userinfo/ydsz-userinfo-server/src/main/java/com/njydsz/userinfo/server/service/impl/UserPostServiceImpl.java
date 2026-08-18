@@ -2,14 +2,18 @@ package com.njydsz.userinfo.server.service.impl;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.userinfo.infra.entity.UserPostDO;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.userinfo.domain.dto.UserPostDTO;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.vo.UserPostVO;
 import com.njydsz.userinfo.domain.repository.UserPostRepository;
+import com.njydsz.userinfo.infra.entity.UserPostDO;
 import com.njydsz.userinfo.server.service.UserPostService;
 
 /**
@@ -29,38 +33,67 @@ public class UserPostServiceImpl implements UserPostService {
 
   private final UserPostRepository userPostRepository;
 
+  /**
+   * {@inheritDoc}
+   *
+   * <p>通过 {@link UserPostRepository#findById} 查询，未找到或已删除时抛出 {@link BusinessException}。
+   *
+   * @throws BusinessException 当用户-岗位关联不存在时抛出
+   */
   @Override
   public UserPostDO getById(String id) {
-    UserPostDO entity = userPostRepository.findById(id);
-    if (entity == null || entity.getDeleted() == 1) {
-      return null;
-    }
+    UserPostVO vo = userPostRepository.findById(id)
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND));
+    UserPostDO entity = new UserPostDO();
+    BeanUtils.copyProperties(vo, entity);
     return entity;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * <p>⚠️ UserPostRepository 不支持无过滤条件的全量查询，请使用 {@link UserPostRepository#findByUserId(String)}。
+   */
   @Override
   public List<UserPostDO> list() {
-    LambdaQueryWrapper<UserPostDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserPostDO::getDeleted, 0);
-    return userPostRepository.list(wrapper);
+    throw new UnsupportedOperationException(
+        "UserPostRepository 不支持无过滤条件的全量列表查询，请使用 findByUserId");
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * <p>将 {@link UserPostDO} 属性拷贝到 {@link UserPostDTO} 后调用 {@link UserPostRepository#create}。
+   */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String save(UserPostDO entity) {
-    userPostRepository.insert(entity);
-    return entity.getId();
+    UserPostDTO dto = new UserPostDTO();
+    BeanUtils.copyProperties(entity, dto);
+    UserPostVO vo = userPostRepository.create(dto);
+    return vo.getId();
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * <p>⚠️ UserPostRepository 不支持 update 操作，岗位关联变更请通过「先删后建」实现。
+   */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(UserPostDO entity) {
-    return userPostRepository.updateById(entity) > 0;
+    throw new UnsupportedOperationException(
+        "UserPostRepository 不支持 update 操作，请使用 delete + create 实现关联变更");
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * <p>直接委托 {@link UserPostRepository#deleteById}，返回其布尔结果。
+   */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    return userPostRepository.deleteById(id) > 0;
+    return userPostRepository.deleteById(id);
   }
 }

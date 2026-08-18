@@ -22,6 +22,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.dto.FlowCommentCreateDTO;
 import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
+import com.njydsz.workflow.domain.repository.FlowCommentRepository;
 import com.njydsz.workflow.infra.entity.FlowCommentDO;
 import com.njydsz.workflow.infra.entity.FlowQuickCommentDO;
 import com.njydsz.workflow.infra.mapper.FlowCommentMapper;
@@ -103,6 +104,16 @@ public class FlowCommentServiceImpl implements FlowCommentService {
   /** 评论记录 Mapper，负责 ydsz_flow_comment 表的增删改查及多级回复查询 */
   private final FlowCommentMapper commentMapper;
 
+  /**
+   * 审批意见仓储（domain 层契约）。
+   *
+   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #commentMapper} 访问数据，
+   * 因为部分 Mapper 方法（如 {@code listByInstance}、{@code listRootComments}、{@code listReplies}）
+   * 在仓储中暂无等价签名，且仓储返回 {@code FlowCommentVO} 与 Service 使用的 {@code FlowCommentDO} 类型不同。
+   * 后续应在仓储中补齐对应方法并迁移。
+   */
+  private final FlowCommentRepository commentRepository;
+
   /** P0-1: 敏感字段脱敏器，对评论内容中的手机号/身份证等敏感信息做实时脱敏 */
   private final FlowSensitiveMasker sensitiveMasker;
 
@@ -110,6 +121,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
   @Lazy private final FlowNotificationService notificationService;
 
   /** P2-1: 常用语 Mapper，负责 ydsz_flow_quick_comment 表的增删改查（含用户自定义 + 系统预设） */
+  // 注意：FlowQuickComment 无对应 Repository，mapper 暂时保留
   private final FlowQuickCommentMapper quickCommentMapper;
 
   /** P2-1: @提及正则，匹配 @{userId} 或 @userId 格式 */
@@ -128,6 +140,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     }
     // 回复场景：校验父评论存在且属于同一实例
     if (StringUtils.hasText(dto.getParentCommentId())) {
+      // TODO: 迁移至 commentRepository.findById(id)，需 VO→DO 转换
       FlowCommentDO parent = commentMapper.selectById(dto.getParentCommentId());
       if (parent == null || parent.getDeleted() == 1) {
         throw SysException.builder()
@@ -157,6 +170,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     comment.setReplyToUserName(dto.getReplyToUserName());
     // 评论类型默认 COMMENT（吸收 task_comment 功能后新增字段）
     comment.setType("COMMENT");
+    // TODO: 迁移至 commentRepository.save(vo)，需 DO→VO 转换
     commentMapper.insert(comment);
     log.info(
         "[FlowCommentDO] 新增评论: commentId={} instanceId={} userId={} isReply={}",
@@ -220,22 +234,26 @@ public class FlowCommentServiceImpl implements FlowCommentService {
 
   @Override
   public List<FlowCommentDO> listByInstance(String tenantId, String instanceId) {
+    // TODO: 迁移至 commentRepository.findByInstanceId(instanceId)，签名不同
     return commentMapper.listByInstance(tenantId, instanceId);
   }
 
   @Override
   public List<FlowCommentDO> listRootComments(String tenantId, String instanceId) {
+    // TODO: 迁移至 commentRepository.findRootComments(instanceId)，签名不同
     return commentMapper.listRootComments(tenantId, instanceId);
   }
 
   @Override
   public List<FlowCommentDO> listReplies(String parentCommentId) {
+    // TODO: 迁移至 commentRepository.findReplies(commentId)
     return commentMapper.listReplies(parentCommentId);
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean deleteComment(String commentId, String userId) {
+    // TODO: 迁移至 commentRepository.findById(id)，需 VO→DO 转换
     FlowCommentDO comment = commentMapper.selectById(commentId);
     if (comment == null || comment.getDeleted() == 1) {
       return false;
@@ -248,6 +266,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
           .build();
     }
     comment.setDeleted(1);
+    // TODO: 迁移至 commentRepository.update(vo)，需 DO→VO 转换
     commentMapper.updateById(comment);
     log.info("[FlowCommentDO] 删除评论: commentId={} userId={}", commentId, userId);
     return true;

@@ -21,6 +21,8 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.util.id.TracerUtils;
+import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
+import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
@@ -102,8 +104,29 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
   /** 委派授权 Mapper，负责 ydsz_flow_delegate_auth 表的增删改查 */
   private final FlowDelegateAuthMapper authMapper;
 
+  /**
+   * 委托授权仓储（domain 层契约）。
+   *
+   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #authMapper} 访问数据，
+   * 因为部分 Mapper 方法（如 {@code selectByOwner}、{@code selectByDelegate}、{@code matchAuth}、
+   * {@code markExpired}）在仓储中暂无等价签名，
+   * 且仓储返回 {@code FlowDelegateAuthVO} 与 Service 使用的 {@code FlowDelegateAuthDO} 类型不同。
+   * 后续应在仓储中补齐对应方法并迁移。
+   */
+  private final FlowDelegateAuthRepository authRepository;
+
   /** 审计日志 Mapper，委派代理操作日志已合并到 ydsz_flow_audit_log */
   private final FlowAuditLogMapper auditLogMapper;
+
+  /**
+   * 审计日志仓储（domain 层契约）。
+   *
+   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #auditLogMapper} 访问数据，
+   * 因为 {@code selectList(LambdaQueryWrapper)} 复杂查询在仓储中暂无等价方法，
+   * 且仓储返回 {@code FlowAuditLogVO} 与 Service 使用的 {@code FlowAuditLogDO} 类型不同。
+   * 后续应在仓储中补齐对应方法并迁移。
+   */
+  private final FlowAuditLogRepository auditLogRepository;
 
   /** P2-5: 离线代理自动转发（@Lazy 避免循环依赖） */
   @Lazy private final FlowOfflineAutoForwardService offlineAutoForwardService;
@@ -216,6 +239,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
     auth.setProviderTraceId(TracerUtils.getOrCreateTraceId());
 
+    // TODO: 迁移至 authRepository.save(vo)，需 DO→VO 转换
     authMapper.insert(auth);
     log.info(
         "[FlowDelegate] 创建授权: owner={} delegate={} scope={} flow={} node={} role={} time=[{},{}]",
@@ -275,6 +299,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
           .message("error.workflow.msg_f121ff85")
           .build();
     }
+    // TODO: 迁移至 authRepository.updateStatus(id, status)，签名不同
     int n = authMapper.updateStatus(authId, "REVOKED", LocalDateTime.now());
     log.info(
         "[FlowDelegate] 撤回授权: authId={} owner={} affected={}", authId, auth.getOwnerUserId(), n);
@@ -322,6 +347,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
           .message("error.workflow.msg_d6a95488")
           .build();
     }
+    // TODO: 迁移至 authRepository.updateStatus(id, status)，签名不同
     int n = authMapper.updateStatus(authId, status, LocalDateTime.now());
     log.info(
         "[FlowDelegate] 更新授权状态: authId={} status={} operator={} affected={}",
@@ -346,6 +372,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
       return List.of();
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
+    // TODO: 迁移至 authRepository.findActiveByOwner(ownerId, tenantId, now)，签名不同
     return authMapper.selectByOwner(tid, ownerUserId, status);
   }
 
@@ -365,6 +392,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
       return List.of();
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
+    // TODO: Repository 中暂无 selectByDelegate 等价方法，需补齐
     return authMapper.selectByDelegate(tid, delegateUserId, status);
   }
 
@@ -388,6 +416,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
       return null;
     }
     try {
+      // TODO: 迁移至 authRepository.matchAuth(ownerId, flowCode, now)，签名不同
       return authMapper.matchAuth(tenantId, ownerUserId, flowCode, nodeCode, LocalDateTime.now());
     } catch (Exception e) {
       log.error(

@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 
 /**
@@ -81,6 +82,16 @@ public class FlowAssigneeDedupService {
   /** 历史任务 Mapper，负责 {@code ydsz_flow_his_task} 表的查询（已审批人来源） */
   private final FlowHisTaskMapper hisTaskMapper;
 
+  /**
+   * 历史任务仓储（domain 层契约）。
+   *
+   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #hisTaskMapper} 访问数据，
+   * 因为 {@code selectCompletedAssigneeIds(instanceId)} 在仓储中暂无等价方法，
+   * 且仓储返回 {@code FlowHisTaskVO} 与 Service 使用的 {@code FlowHisTaskDO} 类型不同。
+   * 后续应在仓储中补齐 {@code findCompletedAssigneeIds} 方法并迁移。
+   */
+  private final FlowHisTaskRepository hisTaskRepository;
+
   // ============================== 单点检查 ==============================
 
   /**
@@ -101,6 +112,7 @@ public class FlowAssigneeDedupService {
       return false;
     }
     try {
+      // TODO: 迁移至 hisTaskRepository.findCompletedAssigneeIds(instanceId)，需补齐方法
       List<String> completedAssignees = hisTaskMapper.selectCompletedAssigneeIds(instanceId);
       if (completedAssignees == null || completedAssignees.isEmpty()) {
         return false;
@@ -132,6 +144,7 @@ public class FlowAssigneeDedupService {
       return new HashSet<>();
     }
     try {
+      // TODO: 迁移至 hisTaskRepository.findCompletedAssigneeIds(instanceId)，需补齐方法
       List<String> completedAssignees = hisTaskMapper.selectCompletedAssigneeIds(instanceId);
       return completedAssignees != null ? new HashSet<>(completedAssignees) : new HashSet<>();
     } catch (Exception e) {

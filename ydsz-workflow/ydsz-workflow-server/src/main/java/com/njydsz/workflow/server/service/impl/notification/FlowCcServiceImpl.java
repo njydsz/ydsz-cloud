@@ -18,6 +18,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
+import com.njydsz.workflow.domain.repository.FlowCcRepository;
 import com.njydsz.workflow.infra.entity.FlowCcDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
@@ -72,6 +73,17 @@ public class FlowCcServiceImpl implements FlowCcService {
   /** 抄送记录 Mapper，负责 ydsz_flow_cc 表的增删改查 */
   private final FlowCcMapper ccMapper;
 
+  /**
+   * 抄送仓储（domain 层契约）。
+   *
+   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #ccMapper} 访问数据，
+   * 因为部分 Mapper 方法（如 {@code selectCcByUserPage}、{@code countCcByUser}、{@code markAllRead}、
+   * {@code countCcUnreadByUser}）在仓储中暂无等价方法或签名不同，
+   * 且仓储返回 {@code FlowCcVO} 与 Service 使用的 {@code FlowCcDO} 类型不同。
+   * 后续应在仓储中补齐对应方法并迁移。
+   */
+  private final FlowCcRepository ccRepository;
+
   /** 流程实例 Mapper，用于获取实例冗余字段（flowCode/flowName/businessKey 等） */
   private final FlowInstanceMapper instanceMapper;
 
@@ -112,6 +124,7 @@ public class FlowCcServiceImpl implements FlowCcService {
       }
 
       // 1. 获取流程实例（取 flowCode/flowName/businessKey 等冗余字段）
+      // TODO: 迁移至 FlowInstanceRepository.findById(instanceId)，需 VO→DO 转换
       FlowInstanceDO instance = instanceMapper.selectById(instanceId);
       if (instance == null) {
         log.warn("[FlowCcDO] 流程实例不存在: instanceId={}", instanceId);
@@ -158,6 +171,7 @@ public class FlowCcServiceImpl implements FlowCcService {
       int insertCount = 0;
       for (String userId : userIds) {
         FlowCcDO cc = buildCcDO(instance, node, userId, now, traceId);
+        // TODO: 迁移至 ccRepository.save(vo)，需 DO→VO 转换
         ccMapper.insert(cc);
         insertCount++;
       }
@@ -202,6 +216,7 @@ public class FlowCcServiceImpl implements FlowCcService {
       int page = (int) Math.max(query.getPageNum(), 1);
       int size = (int) Math.min(Math.max(query.getPageSize(), 1), PageConstants.MAX_PAGE_SIZE);
       int offset = (page - 1) * size;
+      // TODO: 迁移至 ccRepository.findCcByUserPage(userId, tenantId, offset, limit)，签名不同
       return ccMapper.selectCcByUserPage(
           tenantId, userId, query.getReadStatus(), query.getFlowCode(), offset, size);
     } catch (Exception e) {
@@ -225,6 +240,7 @@ public class FlowCcServiceImpl implements FlowCcService {
       if (userId == null || query == null) {
         return 0L;
       }
+      // TODO: 迁移至 ccRepository.countCcByUser(userId, tenantId)，签名不同
       return ccMapper.countCcByUser(tenantId, userId, query.getReadStatus(), query.getFlowCode());
     } catch (Exception e) {
       log.error("[FlowCcDO] countMyCc 异常: userId={} err={}", userId, e.getMessage(), e);
@@ -292,6 +308,7 @@ public class FlowCcServiceImpl implements FlowCcService {
       if (ccId == null || userId == null) {
         return;
       }
+      // TODO: 迁移至 ccRepository.markRead(id)，签名不同
       int n = ccMapper.markRead(ccId, userId, LocalDateTime.now());
       log.info("[FlowCcDO] 标记已读: ccId={} userId={} affected={}", ccId, userId, n);
     } catch (Exception e) {
@@ -313,6 +330,7 @@ public class FlowCcServiceImpl implements FlowCcService {
       if (userId == null || tenantId == null) {
         return 0;
       }
+      // TODO: Repository 中暂无 markAllRead 方法，需补齐
       int n = ccMapper.markAllRead(tenantId, userId, LocalDateTime.now());
       log.info("[FlowCcDO] 全部已读: userId={} tenantId={} affected={}", userId, tenantId, n);
       return n;

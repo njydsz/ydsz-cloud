@@ -19,6 +19,8 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowSlaAction;
@@ -80,8 +82,27 @@ public class FlowSlaServiceImpl implements FlowSlaService {
   /** 运行时任务 Mapper，查询超期待办及更新提醒计数 */
   private final FlowRunTaskMapper taskMapper;
 
+  /**
+   * 运行时任务仓储（domain 层契约）。
+   *
+   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #taskMapper} 访问数据，
+   * 因为部分 Mapper 方法（如 {@code selectSlaCandidates}、{@code incrementUrgeCount}、{@code markSlaAction}）
+   * 在仓储中暂无等价方法，且仓储返回 {@code FlowRunTaskVO} 与 Service 使用的 {@code FlowRunTaskDO} 类型不同。
+   * 后续应在仓储中补齐对应方法并迁移。
+   */
+  private final FlowRunTaskRepository taskRepository;
+
   /** 流程节点 Mapper，读取节点 SLA 配置（slaConfig JSON） */
   private final FlowNodeMapper nodeMapper;
+
+  /**
+   * 流程节点仓储（domain 层契约）。
+   *
+   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #nodeMapper} 访问数据，
+   * 因为 {@code selectByCode} 在仓储中返回 VO 类型与 Service 使用的 {@code FlowNodeDO} 不同。
+   * 后续应迁移至 {@code nodeRepository.findByCode(definitionId, nodeCode)}。
+   */
+  private final FlowNodeRepository nodeRepository;
 
   /** P1-6: 用 @Lazy 打破 FlowSlaService ↔ FlowTaskService 循环依赖 */
   @Lazy private final FlowTaskService taskService;
@@ -205,6 +226,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       int iterations = 0;
       // P1-6: 游标分页 — 循环处理多批，直到无候选或达到最大迭代次数
       while (iterations < MAX_SCAN_ITERATIONS) {
+        // TODO: Repository 中暂无 selectSlaCandidates 方法，需补齐
         List<FlowRunTaskDO> candidates = taskMapper.selectSlaCandidates(SCAN_BATCH_SIZE);
         if (candidates == null || candidates.isEmpty()) {
           break;
@@ -258,6 +280,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       return false;
     }
     // 1. 重新查一遍任务，避免读到陈旧数据
+    // TODO: 迁移至 taskRepository.findById(id)，需 VO→DO 转换
     FlowRunTaskDO fresh = taskMapper.selectById(task.getId());
     if (fresh == null) {
       return false;
@@ -273,6 +296,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       return false;
     }
     // 3. 解析节点 SLA 配置
+    // TODO: 迁移至 nodeRepository.findByCode(definitionId, nodeCode)，需 VO→DO 转换
     FlowNodeDO node = nodeMapper.selectByCode(fresh.getDefinitionId(), fresh.getNodeCode());
     Map<String, Object> config =
         node == null ? Collections.emptyMap() : parseSlaConfig(node.getSlaConfig());
@@ -305,6 +329,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     // 6. 未达最大提醒次数：先发一次提醒，再决定
     boolean urged = sendUrge(fresh, action, currentUrges + 1, maxUrges, now);
     if (urged) {
+      // TODO: Repository 中暂无 incrementUrgeCount 方法，需补齐
       taskMapper.incrementUrgeCount(fresh.getId(), currentUrges + 1, now);
     }
     return urged;
@@ -399,6 +424,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       dto.setComment(comment);
       dto.setVariables(Collections.emptyMap());
       taskService.pass(dto);
+      // TODO: Repository 中暂无 markSlaAction 方法，需补齐
       taskMapper.markSlaAction(task.getId(), FlowSlaAction.AUTO_PASS.name(), 0);
       log.info("[FlowSla] 自动通过: taskId={} comment={}", task.getId(), comment);
       // P2-3: Prometheus 指标

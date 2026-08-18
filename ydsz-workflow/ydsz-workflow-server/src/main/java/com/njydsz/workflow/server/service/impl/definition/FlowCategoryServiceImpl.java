@@ -124,6 +124,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   @Override
   public List<FlowCategoryDO> listAll(String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
+    // TODO: 迁移至 categoryRepository.findAll(tenantId)，需 VO→DO 转换
     List<FlowCategoryDO> list =
         categoryMapper.selectList(
             new LambdaQueryWrapper<FlowCategoryDO>()
@@ -179,6 +180,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   public String create(FlowCategoryDTO dto, String tenantId) {
     // 校验编码唯一
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
+    // TODO: 迁移至 categoryRepository.findByCode(code)，当前仓储返回单条不适合 count 语义
     Long count =
         categoryMapper.selectCount(
             new LambdaQueryWrapper<FlowCategoryDO>()
@@ -201,6 +203,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     category.setIcon(dto.getIcon());
     category.setRemark(dto.getRemark());
     category.setTenantId(tid);
+    // TODO: 迁移至 categoryRepository.save(vo)，需 DO→VO 转换
     categoryMapper.insert(category);
     log.info(
         "[FlowCategoryDO] 新增分类: code={} name={} id={}",
@@ -228,6 +231,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
           .message("error.workflow.msg_id_required")
           .build();
     }
+    // TODO: 迁移至 categoryRepository.findById(id)，需 VO→DO 转换
     FlowCategoryDO existing = categoryMapper.selectById(dto.getId());
     if (existing == null || existing.getDeleted() == 1) {
       throw SysException.builder()
@@ -249,6 +253,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     if (dto.getRemark() != null) {
       existing.setRemark(dto.getRemark());
     }
+    // TODO: 迁移至 categoryRepository.update(vo)，需 DO→VO 转换
     categoryMapper.updateById(existing);
   }
 
@@ -272,11 +277,13 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void delete(String id) {
+    // TODO: 迁移至 categoryRepository.findById(id)，需 VO→DO 转换
     FlowCategoryDO existing = categoryMapper.selectById(id);
     if (existing == null || existing.getDeleted() == 1) {
       return;
     }
     // 校验是否有子分类
+    // TODO: 迁移至 categoryRepository.findByParentId(id)，需 VO→DO 转换
     Long childCount =
         categoryMapper.selectCount(
             new LambdaQueryWrapper<FlowCategoryDO>()
