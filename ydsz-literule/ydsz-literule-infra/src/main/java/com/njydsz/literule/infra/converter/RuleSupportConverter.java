@@ -8,6 +8,7 @@ import org.mapstruct.factory.Mappers;
 
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
 import com.njydsz.literule.domain.dto.post.RuleTestCasePostDTO;
+import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
 import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
 import com.njydsz.literule.domain.entity.DecisionTable;
 import com.njydsz.literule.domain.entity.RuleABPolicy;
@@ -23,6 +24,7 @@ import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.RuleTestCaseVO;
 import com.njydsz.literule.domain.vo.RuleVariableDefVO;
 import com.njydsz.literule.domain.vo.RuleVersionHistoryVO;
+import com.njydsz.literule.domain.vo.RuleVersionVO;
 
 /**
  * 规则支撑转换器（P2-2 拆分）
@@ -66,6 +68,30 @@ public interface RuleSupportConverter {
   RuleVersionHistoryVO entityToVO(RuleVersionHistory entity);
 
   List<RuleVersionHistoryVO> ruleVersionHistoryListToVO(List<RuleVersionHistory> entities);
+
+  // ===== RuleVersionHistory → RuleVersionVO =====
+  @Mapping(target = "id", source = "id")
+  @Mapping(target = "ruleCode", source = "ruleCode")
+  @Mapping(target = "version", source = "version")
+  @Mapping(target = "definitionJson", source = "definitionJson")
+  @Mapping(target = "changeDesc", source = "changeDesc")
+  @Mapping(target = "operator", source = "operator")
+  @Mapping(target = "createdAt", source = "createdAt")
+  RuleVersionVO ruleVersionHistoryToVO(RuleVersionHistory entity);
+
+  List<RuleVersionVO> ruleVersionListToVO(List<RuleVersionHistory> entities);
+
+  // ===== RuleVersionSaveDTO → RuleVersionHistory =====
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "ruleName", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  RuleVersionHistory postDtoToEntity(RuleVersionSaveDTO dto);
 
   // ===== RuleTestCase PostDTO → Entity =====
   @Mapping(target = "id", ignore = true)

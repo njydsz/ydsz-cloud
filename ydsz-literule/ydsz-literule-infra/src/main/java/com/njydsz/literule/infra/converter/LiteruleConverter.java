@@ -11,6 +11,7 @@ import com.njydsz.literule.api.expression.ExpressionFunctionDef;
 import com.njydsz.literule.api.expression.ExpressionValidationResult;
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
 import com.njydsz.literule.domain.dto.post.RuleTestCasePostDTO;
+import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
 import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
 import com.njydsz.literule.domain.entity.DecisionTable;
 import com.njydsz.literule.domain.entity.RuleABPolicy;
@@ -49,6 +50,7 @@ import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.domain.vo.RuleTestCaseVO;
 import com.njydsz.literule.domain.vo.RuleVariableDefVO;
 import com.njydsz.literule.domain.vo.RuleVersionHistoryVO;
+import com.njydsz.literule.domain.vo.RuleVersionVO;
 
 /**
  * literule 模块统一转换器门面。
@@ -219,6 +221,20 @@ public class LiteruleConverter {
 
   public List<RuleVersionHistoryVO> ruleVersionHistoryListToVO(List<RuleVersionHistory> entities) {
     return support.ruleVersionHistoryListToVO(entities);
+  }
+
+  // ===== RuleVersionHistory → RuleVersionVO =====
+  public RuleVersionVO ruleVersionHistoryToVO(RuleVersionHistory entity) {
+    return support.ruleVersionHistoryToVO(entity);
+  }
+
+  public List<RuleVersionVO> ruleVersionListToVO(List<RuleVersionHistory> entities) {
+    return support.ruleVersionListToVO(entities);
+  }
+
+  // ===== RuleVersionSaveDTO → RuleVersionHistory =====
+  public RuleVersionHistory postDtoToEntity(RuleVersionSaveDTO dto) {
+    return support.postDtoToEntity(dto);
   }
 
   // ===== RuleDefinition (api) → RuleDefinitionVO =====
