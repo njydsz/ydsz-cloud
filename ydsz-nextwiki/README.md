@@ -44,31 +44,26 @@
 ydsz-nextwiki/
 ├── pom.xml
 ├── ydsz-nextwiki-api/                 # API 层：Feign Client + DTO
-├── ydsz-nextwiki-domain/              # 领域层：Entity + Repository 接口 + 领域服务
+├── ydsz-nextwiki-domain/              # 领域层：领域服务 + Repository 接口 + VO/DTO/事件/枚举
 │   └── src/main/java/com/njydsz/nextwiki/domain/
-│       ├── entity/                    # 实体（12 个，无 DO 后缀，符合 entity-naming 规范）
-│       │   ├── FileNode.java          # 文件节点（核心实体，含树形结构）
-│       │   ├── FileVersion.java       # 文件版本历史
-│       │   ├── FileAcl.java           # 文件 ACL 权限
-│       │   ├── FileComment.java       # 文件评论
-│       │   ├── FileTag.java           # 文件-标签关联
-│       │   ├── Tag.java               # 标签
-│       │   ├── ShareLink.java         # 分享链接
-│       │   ├── ShareAccessLog.java    # 分享访问日志
-│       │   ├── ShareRecipient.java    # 分享接收人
-│       │   ├── StorageQuota.java      # 存储配额
-│       │   ├── TrashItem.java         # 回收站项
-│       │   └── SearchIndex.java       # 搜索索引
+│       ├── dto/                       # 数据传输对象（FileNodeDTO / FileVersionDTO / TrashItemDTO 等）
+│       ├── vo/                        # 视图对象（FileNodeVO / SearchResultVO / ShareLinkVO 等 13 个）
+│       ├── query/                     # 查询对象（FileNodeQuery / FileVersionQuery 等）
 │       ├── repository/                # 仓储接口（11 个）
-│       ├── service/                   # 领域服务（10 个：FileVersion/Folder/Quota/Search/Share/Tag/Trash/FilePermission/ShareAccessLog/ShareLink/StorageReference）
+│       ├── service/                   # 领域服务（Folder/FileVersion/Quota/Search/Share/Tag/Trash/FilePermission/ShareAccessLog/ShareLink/StorageReference）
 │       ├── event/                     # 领域事件（FileOperatedEvent / AuditEvent）
 │       ├── enums/                     # 枚举（NextwikiEnums / NextwikiExceptionCode）
-│       └── vo/                        # 视图对象（FileNodeVO / SearchResultVO / ShareLinkVO）
-├── ydsz-nextwiki-infra/               # 基础设施层：仓储实现 + Mapper
-├── ydsz-nextwiki-server/              # 应用层：应用服务 + 配置 + 健康检查 + 监听器
+│       └── config/                    # 领域安全配置
+├── ydsz-nextwiki-infra/               # 基础设施层：DO 实体 + Mapper + 仓储实现
+│   └── src/main/java/com/njydsz/nextwiki/infra/
+│       ├── entity/                    # 持久化实体（12 个 DO：FileNodeDO / FileVersionDO / FileAclDO 等）
+│       ├── mapper/                    # MyBatis Mapper（10 个）
+│       ├── repository/                # 仓储实现（11 个）
+│       └── converter/                 # MapStruct 转换器（DO ↔ VO / DTO）
+├── ydsz-nextwiki-server/              # 应用层（命名沿用 server）：应用服务 + 配置 + 缓存 + 监听器 + 定时任务
 └── ydsz-nextwiki-web/                 # Web 层：Controller + 启动类
     └── src/main/java/com/njydsz/nextwiki/web/
-        ├── NextwikiApplication.java
+        ├── NextwikiApplication.java   # 启动类（位于 web 根包下）
         └── controller/                # 17 个 Controller
             ├── FileController.java          # /api/v1/nextwiki/files
             ├── FileChunkController.java     # /api/v1/nextwiki/files/chunk
@@ -97,7 +92,7 @@ ydsz-nextwiki/
 |---|---|
 | `POST /api/v1/nextwiki/files/upload` | 上传文件 |
 | `POST /api/v1/nextwiki/files/chunk/init` | 初始化分片上传 |
-| `POST /api/v1/nextwiki/files/chunk/{uploadId}/{chunkNumber}` | 上传分片 |
+| `POST /api/v1/nextwiki/files/chunk/{uploadId}/{chunkNumber}` | 上传分片（chunkNumber 从 1 开始） |
 | `POST /api/v1/nextwiki/files/chunk/{uploadId}/complete` | 完成分片上传 |
 | `DELETE /api/v1/nextwiki/files/chunk/{uploadId}` | 取消分片上传 |
 | `POST /api/v1/nextwiki/files/{nodeId}/copy` | 复制文件 |
@@ -117,7 +112,7 @@ ydsz-nextwiki/
 | `POST /api/v1/nextwiki/shares/verify` | 验证分享访问 |
 | `POST /api/v1/nextwiki/search` | 搜索文件（POST） |
 | `POST /api/v1/nextwiki/search/rebuild` | 重建索引 |
-| `POST /api/v1/nextwiki/search/suggest` `/did-you-mean` | 搜索建议 / 纠错 |
+| `GET /api/v1/nextwiki/search/suggest` `GET /api/v1/nextwiki/search/did-you-mean` | 搜索建议 / 纠错 |
 | `GET /api/v1/nextwiki/trash/list` | 查询回收站 |
 | `POST /api/v1/nextwiki/trash/{trashItemId}/restore` | 恢复 |
 | `DELETE /api/v1/nextwiki/trash/empty` | 清空回收站 |

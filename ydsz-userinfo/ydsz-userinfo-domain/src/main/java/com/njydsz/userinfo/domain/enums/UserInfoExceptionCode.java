@@ -103,6 +103,8 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   INTERNAL_ACCESS_FORBIDDEN("B30031", "userinfo.internal.access.forbidden", 403),
   /** OAuth2 scope 超出客户端授权范围（P1-3） */
   OAUTH2_SCOPE_INVALID("B30032", "userinfo.oauth2.scope.invalid", 401),
+  /** 数据已被其他用户修改，请刷新后重试（乐观锁冲突，P1-6） */
+  USER_UPDATE_CONFLICT("B30033", "userinfo.user.update.conflict", 409),
 
   // ==================== B31xxx 组织架构 ====================
   /** 部门不存在 */

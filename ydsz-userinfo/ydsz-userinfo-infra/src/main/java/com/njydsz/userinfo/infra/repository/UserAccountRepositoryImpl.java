@@ -75,7 +75,12 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   @Override
   public UserAccountVO update(UserAccountUpdateDTO dto) {
     UserAccountDO entity = converter.updateDtoToEntity(dto);
-    userAccountMapper.updateById(entity);
+    // P1-6: 检查乐观锁冲突（entity.revision 非 null 时 MP 自动带 WHERE revision = ?）
+    int affected = userAccountMapper.updateById(entity);
+    if (affected == 0) {
+      throw new com.njydsz.common.exception.custom.BusinessException(
+          com.njydsz.userinfo.domain.enums.UserInfoExceptionCode.USER_UPDATE_CONFLICT);
+    }
     return converter.entityToVO(entity);
   }
 

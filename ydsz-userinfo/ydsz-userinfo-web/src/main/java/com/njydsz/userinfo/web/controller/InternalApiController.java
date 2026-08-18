@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
@@ -140,8 +141,8 @@ public class InternalApiController {
    * @param roleCode 角色编码（如 {@code PM} / {@code FINANCE}）
    * @return 该角色下的用户 ID 列表；角色不存在时返回空列表
    */
-  @GetMapping("/user/list-by-RoleDO")
-  @Operation(summary = "按角色编码查询用户 ID 列表（工作流 RoleDO:xxx 展开，带缓存）")
+  @GetMapping("/user/list-by-role")
+  @Operation(summary = "按角色编码查询用户 ID 列表（工作流 role:xxx 展开，带缓存）")
   public BaseResponse<List<String>> listUserIdsByRole(@RequestParam String roleCode) {
     return BaseResponse.success(workflowCacheService.listUserIdsByRoleCode(roleCode));
   }
@@ -154,7 +155,7 @@ public class InternalApiController {
    * @param userId 用户 ID
    * @return 用户的角色编码列表；用户无角色时返回空列表
    */
-  @GetMapping("/user/RoleDO-codes")
+  @GetMapping("/user/role-codes")
   @Operation(summary = "查询用户拥有的角色编码列表（工作流待办反查）")
   public BaseResponse<List<String>> listRoleCodesByUserId(@RequestParam String userId) {
     return BaseResponse.success(userAccountService.listRoleCodesByUserId(userId));
@@ -254,6 +255,7 @@ public class InternalApiController {
    */
   @PostMapping("/user/batch-names")
   @Operation(summary = "批量查询用户 ID → 真实姓名映射（NameAssembler 富化用）")
+  @RateLimit(resource = "userinfo.internal.batchUserNames", threshold = 200)
   public BaseResponse<Map<String, String>> batchUserNames(
       @RequestBody @Valid @Size(max = 500) List<String> userIds) {
     return BaseResponse.success(userAccountService.batchUserNames(userIds));
@@ -269,6 +271,7 @@ public class InternalApiController {
    */
   @PostMapping("/dept/batch-names")
   @Operation(summary = "批量查询部门 ID → 部门名映射（NameAssembler 富化用）")
+  @RateLimit(resource = "userinfo.internal.batchDeptNames", threshold = 200)
   public BaseResponse<Map<String, String>> batchDeptNames(
       @RequestBody @Valid @Size(max = 500) List<String> deptIds) {
     return BaseResponse.success(departmentService.batchNamesByIds(deptIds));
@@ -280,8 +283,9 @@ public class InternalApiController {
    * @param roleIds 角色 ID 列表（建议 ≤ 500）
    * @return roleId → 角色名 映射
    */
-  @PostMapping("/RoleDO/batch-names")
+  @PostMapping("/role/batch-names")
   @Operation(summary = "批量查询角色 ID → 角色名映射（NameAssembler 富化用）")
+  @RateLimit(resource = "userinfo.internal.batchRoleNames", threshold = 200)
   public BaseResponse<Map<String, String>> batchRoleNames(
       @RequestBody @Valid @Size(max = 500) List<String> roleIds) {
     return BaseResponse.success(roleService.batchNamesByIds(roleIds));
@@ -293,8 +297,9 @@ public class InternalApiController {
    * @param postIds 岗位 ID 列表（建议 ≤ 500）
    * @return postId → 岗位名 映射
    */
-  @PostMapping("/PostDO/batch-names")
+  @PostMapping("/post/batch-names")
   @Operation(summary = "批量查询岗位 ID → 岗位名映射（NameAssembler 富化用）")
+  @RateLimit(resource = "userinfo.internal.batchPostNames", threshold = 200)
   public BaseResponse<Map<String, String>> batchPostNames(
       @RequestBody @Valid @Size(max = 500) List<String> postIds) {
     return BaseResponse.success(postService.batchNamesByIds(postIds));
@@ -306,8 +311,9 @@ public class InternalApiController {
    * @param companyIds 公司 ID 列表（建议 ≤ 500）
    * @return companyId → 公司名 映射
    */
-  @PostMapping("/CompanyDO/batch-names")
+  @PostMapping("/company/batch-names")
   @Operation(summary = "批量查询公司 ID → 公司名映射（NameAssembler 富化用）")
+  @RateLimit(resource = "userinfo.internal.batchCompanyNames", threshold = 200)
   public BaseResponse<Map<String, String>> batchCompanyNames(
       @RequestBody @Valid @Size(max = 500) List<String> companyIds) {
     return BaseResponse.success(companyService.batchNamesByIds(companyIds));

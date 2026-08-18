@@ -150,6 +150,9 @@ public class AlertDispatcher {
     List<AlertChannel> channels = parseChannels(rule.getChannels());
     List<String> receivers = parseReceivers(rule.getReceivers());
 
+    // P2-F7: 按告警级别过滤通道（SMS 成本高，仅 ERROR/CRITICAL 级别启用，与 AlertLevel 语义对齐）
+    channels = filterChannelsByLevel(channels, rule.getAlertLevel());
+
     if (channels.isEmpty()) {
       log.warn(
           "[AlertDispatcher] 规则未配置有效通道, 跳过: ruleId={} ruleName={} recovery={}",
@@ -316,6 +319,34 @@ public class AlertDispatcher {
           "[AlertDispatcher] 解析接收人 JSON 失败: receivers={} reason={}", receiversJson, e.getMessage());
       return Collections.emptyList();
     }
+  }
+
+  /**
+   * P2-F7: 按告警级别过滤通道。
+   *
+   * <p>SMS 短信通道成本较高，仅 ERROR/CRITICAL 级别启用（与 {@link AlertLevel} 枚举语义对齐：
+   * INFO 仅邮件、WARN 邮件+IM、ERROR/CRITICAL 含短信）。原实现注释声明了该约束但派发逻辑未落地，
+   * 导致 INFO/WARN 级别告警也会触发短信。
+   *
+   * @param channels 规则配置的通道列表
+   * @param alertLevel 告警级别字符串
+   * @return 过滤后的通道列表
+   */
+  private List<AlertChannel> filterChannelsByLevel(List<AlertChannel> channels, String alertLevel) {
+    AlertLevel level = AlertLevel.parse(alertLevel);
+    boolean allowSms = level == AlertLevel.ERROR || level == AlertLevel.CRITICAL;
+    if (allowSms) {
+      return channels;
+    }
+    List<AlertChannel> filtered =
+        channels.stream().filter(channel -> channel != AlertChannel.SMS).toList();
+    if (filtered.size() != channels.size()) {
+      log.info(
+          "[AlertDispatcher] 非 ERROR/CRITICAL 级别移除 SMS 通道: level={} removed={}",
+          level,
+          channels.size() - filtered.size());
+    }
+    return filtered;
   }
 
   /**

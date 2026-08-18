@@ -88,6 +88,30 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
   List<JobDagNodeInstance> selectAllByDagInstanceAndJob(
       @Param("dagInstanceId") String dagInstanceId, @Param("jobId") String jobId);
 
+  /**
+   * P1-P4: 根据任务 ID 查询所有活跃（PENDING/RUNNING）状态的节点实例。
+   *
+   * <p>供 DAG 节点完成事件（{@code onTaskCompleted}）快速定位匹配节点。原实现遍历所有 RUNNING 实例后
+   * 逐实例查询，复杂度 O(D×N)（D=运行中实例数，N=每实例节点数），大量并发 DAG 时性能差。
+   * 本方法单条 SQL 按 job_id 直接过滤（建议部署侧为 {@code ydsz_job_dag_node_instance} 增加
+   * {@code (job_id, node_status)} 联合索引），复杂度 O(1) 查询。
+   *
+   * <p>注意：PAUSED 实例中的 PENDING 节点也会被返回，由调用方（DagInstanceExecutor）的实例状态
+   * 检查兜底跳过，保证与原语义一致。
+   *
+   * @param jobId 任务 ID
+   * @return 活跃状态的节点实例列表（按创建时间升序）
+   */
+  @Select(
+      "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
+          + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
+          + "       result_json, error_message, "
+          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "FROM ydsz_job_dag_node_instance "
+          + "WHERE job_id = #{jobId} AND node_status IN ('PENDING', 'RUNNING') AND deleted = 0 "
+          + "ORDER BY created_at ASC")
+  List<JobDagNodeInstance> selectActiveByJobId(@Param("jobId") String jobId);
+
   /** 标记节点开始执行（PENDING → RUNNING）。 */
   @Update(
       "UPDATE ydsz_job_dag_node_instance SET node_status = 'RUNNING', started_at = #{startedAt}, "

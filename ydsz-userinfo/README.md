@@ -38,44 +38,60 @@ ydsz-userinfo/
 │   └── src/main/java/com/njydsz/userinfo/api/
 │       ├── client/                    # OrgQueryClient（15 个方法）
 │       └── fallback/                  # Feign 降级实现
-├── ydsz-userinfo-domain/              # 领域层：Entity + DTO + VO
+├── ydsz-userinfo-domain/              # 领域层：Repository 接口 + DTO + VO + Query + Event
 │   └── src/main/java/com/njydsz/userinfo/domain/
-│       ├── entity/                    # 实体（14 个，无 DO 后缀，符合 entity-naming 规范）
-│       │   ├── UserAccount.java       # 用户账号
-│       │   ├── Role.java              # 角色
-│       │   ├── RolePermission.java    # 角色-权限关联
-│       │   ├── UserRole.java          # 用户-角色关联
-│       │   ├── Menu.java              # 菜单/按钮/API 权限定义
-│       │   ├── Department.java        # 部门（树形）
-│       │   ├── Company.java           # 公司
-│       │   ├── CompanyDept.java       # 公司-部门关联
-│       │   ├── Post.java              # 岗位
-│       │   ├── UserDept.java          # 用户-部门关联
-│       │   ├── UserPost.java          # 用户-岗位关联
-│       │   ├── UserLoginHistory.java  # 登录历史
-│       │   ├── UserPasswordHistory.java # 密码变更历史
-│       │   └── Language.java          # 语言
+│       ├── repository/                # Repository 接口（14 个，DDD 仓储契约，返回 VO）
 │       ├── dto/                       # create/update 子目录 + 查询/操作 DTO
 │       ├── query/                     # 分页查询对象（5 个）
-│       └── vo/                        # 视图对象（10 个，含 TreeVO）
-├── ydsz-userinfo-infra/               # 基础设施层：Mapper + Repository
-│   └── src/main/java/com/njydsz/userinfo/infra/mapper/
-├── ydsz-userinfo-server/              # 应用层：Service + Config + Health
+│       ├── vo/                        # 视图对象（11 个，含 TreeVO）
+│       ├── enums/                     # 领域枚举（EnableStatusEnum 等）
+│       └── event/                     # 领域事件（UserDomainEvent / UserDomainEventType）
+├── ydsz-userinfo-infra/               # 基础设施层：Mapper + Repository 实现 + 实体 DO
+│   └── src/main/java/com/njydsz/userinfo/infra/
+│       ├── entity/                    # 持久化实体 DO（14 个，DO 后缀，对应 ydsz_* 表）
+│       │   ├── UserAccountDO.java     # 用户账号（含 AES-256-GCM 字段加密 realName）
+│       │   ├── RoleDO.java            # 角色
+│       │   ├── RolePermissionDO.java  # 角色-权限关联
+│       │   ├── UserRoleDO.java        # 用户-角色关联
+│       │   ├── MenuDO.java            # 菜单/按钮/API 权限定义
+│       │   ├── DepartmentDO.java      # 部门（树形）
+│       │   ├── CompanyDO.java         # 公司
+│       │   ├── CompanyDeptDO.java     # 公司-部门关联
+│       │   ├── PostDO.java            # 岗位
+│       │   ├── UserDeptDO.java        # 用户-部门关联
+│       │   ├── UserPostDO.java        # 用户-岗位关联
+│       │   ├── UserLoginHistoryDO.java # 登录历史
+│       │   ├── UserPasswordHistoryDO.java # 密码变更历史
+│       │   └── LanguageDO.java        # 语言
+│       ├── mapper/                    # MyBatis-Plus Mapper（14 个）
+│       ├── repository/                # Repository 实现（Converter DO↔VO 转换）
+│       └── converter/                 # UserInfoConverter（MapStruct）
+├── ydsz-userinfo-server/              # 应用层：Service + Auth + Config + Aspect + Metrics + Trace
 │   └── src/main/java/com/njydsz/userinfo/server/
-│       ├── auth/                      # 认证/风控（RiskScoringService / WeakPasswordDictionary / LoginAttemptContext 等）
-│       ├── config/                    # UserInfoProperties + UserInfoConfiguration
-│       ├── service/                   # Auth/RBAC/Org/Menu/OAuth2/Excel/登录历史 Service
+│       ├── auth/                      # 认证/风控（AuthService / AccountStatusGuard / CredentialVerifier /
+│       │                              #   SessionManager / RoleCacheService / RiskScoringService /
+│       │                              #   MfaService / CaptchaService / SensitiveVerifyService /
+│       │                              #   PasswordPolicyValidator / WeakPasswordDictionary /
+│       │                              #   LoginAttemptCounterService / DbRolePermissionLoader 等）
+│       ├── config/                    # UserInfoProperties + UserInfoConfiguration + LdapProperties + InternalCallProperties
+│       ├── service/                   # UserAccount/Role/Org/Menu/Excel/登录历史/SelfService Service
 │       ├── search/                    # UserinfoSearchProvider
-│       ├── event/                     # UserDomainEventPublisher
-│       ├── metrics/                   # UserInfoMetrics
+│       ├── event/                     # UserDomainEventPublisher（Outbox）
+│       ├── metrics/                   # UserInfoMetrics（SentryMetricsAdapter）
+│       ├── trace/                     # TraceContext（P1-10 轻量链路追踪）
+│       ├── aspect/                    # SensitiveOperationAspect（二次认证切面）
 │       └── health/                    # UserInfoHealthIndicator
-└── ydsz-userinfo-web/                 # Web 层：Controller + Bootstrap
+└── ydsz-userinfo-web/                 # Web 层：Controller + Filter + Bootstrap
     └── src/main/java/com/njydsz/userinfo/web/
         ├── UserInfoApplication.java
-        └── controller/                # 12 个 Controller
+        ├── annotation/                # RequireInternal（内部接口标记注解）
+        ├── aspect/                    # RequireInternalAspect（内部调用校验切面）
+        ├── filter/                    # TraceIdFilter + UserInfoMetricsFilter
+        └── controller/                # 14 个 Controller
             ├── AuthController.java          # /api/v1/auth
             ├── CaptchaController.java       # /api/v1/captcha
             ├── UserAccountController.java   # /api/v1/user
+            ├── UserProfileController.java   # /api/v1/user/profile
             ├── RoleController.java          # /api/v1/role
             ├── DepartmentController.java    # /api/v1/dept
             ├── MenuController.java          # /api/v1/menu
@@ -84,7 +100,8 @@ ydsz-userinfo/
             ├── LanguageController.java      # /api/v1/language
             ├── OAuth2Controller.java        # /api/v1/oauth2
             ├── UserinfoSearchController.java # /api/v1/userinfo/search
-            └── InternalApiController.java   # /api/internal（Feign 内部调用）
+            ├── InternalApiController.java   # /api/internal（Feign 内部调用，@RequireInternal）
+            └── selfservice/SelfServiceController.java # /api/v1/self-service
 ```
 
 ## 关键 Controller
@@ -101,9 +118,10 @@ ydsz-userinfo/
 | `/api/v1/post` | 岗位 CRUD |
 | `/api/v1/language` | 语言 CRUD |
 | `/api/v1/captcha` | 图形验证码生成/校验 |
-| `/api/v1/oauth2/authorize` `/token` | OAuth2 授权码模式（支持 PKCE） |
+| `/api/v1/oauth2/authorize` `/token` | OAuth2 授权码模式（支持 PKCE + scope 细粒度） |
 | `/api/v1/userinfo/search` | 用户/部门/角色搜索 |
-| `/api/internal/*` | 内部 Feign 调用接口（用户查询/部门树/审批人缓存等 15 个端点） |
+| `/api/v1/self-service` | 自助注册/找回密码/发送验证码（图形验证码 + IP 限流 + 幂等防护） |
+| `/api/internal/*` | 内部 Feign 调用接口（15 个端点，`@RequireInternal` 服务端二次校验） |
 
 ## 数据库表设计
 
@@ -131,17 +149,24 @@ ydsz-userinfo/
 | 特性 | 说明 |
 |---|---|
 | **密码加密** | BCrypt（PasswordEncoder，强度可配置） |
-| **密码策略** | 最少 8 位 + 大小写/数字/特殊字符 3 选 4 + 禁止连续重复 + 禁止包含用户名 + 弱口令字典校验 + 密码历史（防近期重用） |
+| **密码策略** | 最少 8 位 + 大小写/数字/特殊字符 3 选 4 + 禁止连续重复 + 禁止键盘序列/连续字母序（P2-4）+ 禁止包含用户名 + 弱口令字典校验 + 密码历史（防近期重用） |
 | **账号锁定** | 5 次密码错误自动锁定 30 分钟，登录成功自动解锁（原子 SQL 计数，无并发竞态） |
 | **双因素认证（MFA）** | TOTP（RFC 6238，兼容 Google/Microsoft Authenticator）+ 短信验证码降级；登录风险 HIGH 时强制校验（P0-2） |
-| **动态认证策略** | 风险 MEDIUM+ 强制图形验证码，HIGH 追加 MFA，CRITICAL 拒绝登录（P0-2） |
+| **动态认证策略** | 风险 MEDIUM 强制图形验证码，HIGH 追加 MFA，CRITICAL 拒绝登录（P0-10 单因素策略） |
 | **JWT 黑名单** | 登出后 access_token + refresh_token 一并加入 Redis 黑名单（SHA-256 摘要 + 分布式锁，common-auth TokenBlacklistService） |
-| **OAuth2** | 授权码模式 + PKCE + refresh_token 轮换 + revoke（RFC 7009）+ introspect（RFC 7662）+ userinfo（P1-4），授权码 5 分钟有效、一次性使用 |
+| **refresh_token 重用检测** | 已轮换的 refresh_token 再次使用触发链式撤销（RFC 6819，P1-4） |
+| **OAuth2** | 授权码模式 + PKCE + refresh_token 轮换 + revoke（RFC 7009）+ introspect（RFC 7662）+ userinfo（P1-4）+ scope 细粒度授权（P1-3）；授权码 256 位随机、GETDEL 原子消费（P0-3/4） |
 | **验证码** | 4 位字母数字混合，Base64 PNG 图片，5 分钟有效 |
 | **LDAP** | 可选 LDAP/ADFS 域认证（@ConfigurationProperties 配置注入） |
-| **登录风控** | 风险评分（RiskScoringService）+ 登录尝试上下文（LoginAttemptContext）+ Redis 计数器统一采集（P1-2/P1-5） |
-| **权限缓存失效** | 菜单/角色变更发布 PermissionChangedEvent（common-auth）+ 角色权限 DB 结果缓存主动失效（P0-1） |
-| **指标埋点** | Micrometer 计数器/计时器（登录成功/失败/认证耗时/在线会话数） |
+| **登录风控** | 风险评分（RiskScoringService，权重/时段/阈值可配置 P1-1）+ Redis 计数器统一采集 |
+| **权限缓存失效** | 菜单/角色变更发布 PermissionChangedEvent（common-auth）+ 角色权限 DB 结果缓存主动失效（P0-1）+ RBAC 本地二级缓存（P1-5） |
+| **内部接口鉴权** | `/api/internal/**` 服务端二次校验（@RequireInternal，网关白名单之外的最后防线，P0-6） |
+| **敏感操作分级** | 二次认证按 CRITICAL/HIGH/MEDIUM 分级，CRITICAL 短时效（P1-8） |
+| **并发写保护** | 角色分配分布式锁（P1-7）+ 用户更新乐观锁 revision（P1-6） |
+| **单设备登录限制** | 单用户最大并发会话数可配置，超限自动踢出（P1-9） |
+| **链路追踪** | X-Trace-Id 全链路贯穿（日志 MDC + 指标标签 + 响应头，P1-10） |
+| **字段加密** | realName 使用 AES-256-GCM 加密存储，密钥经环境变量注入（P0-1） |
+| **指标埋点** | Micrometer 计数器/计时器（登录成功/失败/登出/认证耗时/在线会话数） |
 | **健康检查** | Redis + JWT + 数据库连通性 + 用户/角色计数 |
 
 ## Feign 接口
@@ -208,7 +233,20 @@ ydsz:
 | `ydsz.userinfo.password-min-category-count` | `3` | 密码字符类别数下限 |
 | `ydsz.userinfo.password-history-count` | `5` | 禁止重用的历史密码条数 |
 | `ydsz.userinfo.bcrypt-strength` | `10` | BCrypt 强度（4-31） |
-| `ydsz.userinfo.oauth2-clients` | `[]` | OAuth2 客户端注册（client-id/secret） |
+| `ydsz.userinfo.oauth2-clients` | `[]` | OAuth2 客户端注册（client-id/secret/redirect-uris/allowed-scopes） |
+| `ydsz.userinfo.max-sessions-per-user` | `5` | 单用户最大并发会话数（0=不限制，P1-9） |
+| `ydsz.userinfo.trusted-proxies` | `[]` | 可信代理 IP 列表（为空时不信任转发头，P2-6） |
+| `ydsz.userinfo.risk-ip-weight` | `30` | 风控：IP 风险权重（P1-1） |
+| `ydsz.userinfo.risk-time-weight` | `20` | 风控：时间异常权重（P1-1） |
+| `ydsz.userinfo.risk-device-weight` | `25` | 风控：设备异常权重（P1-1） |
+| `ydsz.userinfo.risk-frequency-weight` | `25` | 风控：频率异常权重（P1-1） |
+| `ydsz.userinfo.risk-anomaly-start-hour` | `0` | 风控：异常时段起始小时（P1-1） |
+| `ydsz.userinfo.risk-anomaly-end-hour` | `6` | 风控：异常时段结束小时（P1-1） |
+| `ydsz.userinfo.risk-frequency-window-minutes` | `5` | 风控：频率窗口（分钟，P1-1） |
+| `ydsz.userinfo.risk-frequency-threshold` | `3` | 风控：频率阈值（P1-1） |
+| `ydsz.userinfo.internal-call.enabled` | `false` | 内部接口服务端二次校验开关（P0-6） |
+| `ydsz.tenant.enabled` | `false` | 多租户隔离开关（开启后 SQL 自动追加 tenant_id，P1-2） |
+| `ydsz.safe.field-encryption.keys.1` | `${YDSZ_FIELD_ENC_KEY_V1}` | 字段加密密钥（环境变量注入，P0-1） |
 | `ydsz.auth.token.secret-key` | （必填） | JWT 签名密钥（至少 32 字符） |
 | `ydsz.auth.token.access-token-expire-seconds` | `7200` | Access Token 有效期（秒） |
 | `ydsz.auth.token.refresh-token-expire-seconds` | `604800` | Refresh Token 有效期（秒） |

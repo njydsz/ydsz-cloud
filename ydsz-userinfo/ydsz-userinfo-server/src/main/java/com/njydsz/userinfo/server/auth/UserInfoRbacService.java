@@ -54,6 +54,14 @@ public class UserInfoRbacService implements RbacUserInfoService {
     if (map == null || map.isEmpty()) {
       return null;
     }
+    // P2-5: 会话 schema 版本兼容性检查（老版本会话无此字段，兼容读取；未来字段变更据此判断迁移）
+    Object schemaVersion = map.get("schemaVersion");
+    if (schemaVersion != null && !String.valueOf(schemaVersion).equals("1")) {
+      log.warn(
+          "Session schema version mismatch: token={}, version={}, supported=1",
+          accessToken != null ? accessToken.substring(0, Math.min(8, accessToken.length())) : "null",
+          schemaVersion);
+    }
     UserInfo userInfo = new UserInfo();
     userInfo.setUserId(getString(map, "userId"));
     userInfo.setUsername(getString(map, "username"));

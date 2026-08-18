@@ -642,11 +642,13 @@ public interface UserInfoConverter {
    *
    * <p>用于更新用户场景，保留 id 字段用于定位更新记录。
    *
+   * <p>P1-6: revision 不再 ignore —— 由 DTO 携带的版本号参与乐观锁冲突检测；
+   * DTO 未传（null）时由 Service 层回填当前版本，保持兼容。
+   *
    * @param dto 用户更新 DTO
    * @return 用户账号实体（含 id，用于条件更新）
    */
   @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)

@@ -89,6 +89,9 @@ public class FileNodeVO implements Serializable {
   @Schema(description = "共享状态")
   private String shareStatus;
 
+  @Schema(description = "租户ID")
+  private String tenantId;
+
   @Schema(description = "创建人")
   private String createdBy;
 

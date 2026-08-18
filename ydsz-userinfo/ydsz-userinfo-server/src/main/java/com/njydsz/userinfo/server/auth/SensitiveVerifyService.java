@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
@@ -40,6 +41,9 @@ public class SensitiveVerifyService {
   /** 验证标记有效期（5 分钟） */
   private static final Duration VERIFY_TTL = Duration.ofMinutes(5);
 
+  /** P1-8: CRITICAL 级别验证标记有效期（2 分钟，更短时效以降低风险窗口） */
+  private static final Duration CRITICAL_VERIFY_TTL = Duration.ofMinutes(2);
+
   /** 验证标记值 */
   private static final String VERIFIED_VALUE = "1";
 
@@ -48,12 +52,26 @@ public class SensitiveVerifyService {
   private final RedisStringOps redisStringOps;
 
   /**
-   * 执行二次认证：校验当前登录用户的密码，通过后写入 Redis 验证标记。
+   * 执行二次认证：校验当前登录用户的密码，通过后写入 Redis 验证标记（默认 HIGH 级别，5 分钟）。
    *
    * @param password 当前登录用户的明文密码
    * @throws BusinessException 用户不存在或密码错误时抛出
    */
   public void verify(String password) {
+    verify(password, SensitiveLevel.HIGH);
+  }
+
+  /**
+   * P1-8: 执行二次认证（按敏感操作等级差异化时效）。
+   *
+   * <p>CRITICAL 级别使用 2 分钟短时效标记，降低敏感操作验证窗口被滥用的风险；
+   * MEDIUM / HIGH 级别使用默认 5 分钟时效。
+   *
+   * @param password 当前登录用户的明文密码
+   * @param level 敏感操作等级
+   * @throws BusinessException 用户不存在或密码错误时抛出
+   */
+  public void verify(String password, SensitiveLevel level) {
     String userId = RequestContext.getUserId();
     if (userId == null || userId.isBlank()) {
       throw new BusinessException(UserInfoExceptionCode.SENSITIVE_VERIFY_REQUIRED);
@@ -66,13 +84,14 @@ public class SensitiveVerifyService {
 
     UserAccountCredentialVO credential = credentialOpt.get();
     if (!passwordEncoder.matches(password, credential.getPassword())) {
-      log.warn("敏感操作二次认证密码错误: userId={}", userId);
+      log.warn("敏感操作二次认证密码错误: userId={}, level={}", userId, level);
       throw new BusinessException(UserInfoExceptionCode.SENSITIVE_VERIFY_PASSWORD_INCORRECT);
     }
 
     String key = buildKey(userId);
-    redisStringOps.set(key, VERIFIED_VALUE, VERIFY_TTL);
-    log.info("敏感操作二次认证通过: userId={}", userId);
+    Duration ttl = level == SensitiveLevel.CRITICAL ? CRITICAL_VERIFY_TTL : VERIFY_TTL;
+    redisStringOps.set(key, VERIFIED_VALUE, ttl);
+    log.info("敏感操作二次认证通过: userId={}, level={}", userId, level);
   }
 
   /**

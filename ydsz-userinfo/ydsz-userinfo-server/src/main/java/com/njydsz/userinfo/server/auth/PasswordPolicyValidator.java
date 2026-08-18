@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.auth;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,10 @@ public class PasswordPolicyValidator {
       Pattern.compile("[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]");
   private static final Pattern REPEAT_3 = Pattern.compile("(.)\\1{2,}");
 
+  /** P2-4: 常见键盘序列（连续 3 位及以上视为弱口令特征） */
+  private static final List<String> KEYBOARD_ROWS =
+      List.of("qwertyuiop", "asdfghjkl", "zxcvbnm", "1234567890", "poiuytrewq", "lkjhgfdsa", "mnbvcxz");
+
   /**
    * 校验密码强度（不检查历史密码，用于创建用户等无需检查历史的场景）。
    *
@@ -77,9 +82,66 @@ public class PasswordPolicyValidator {
     validateLength(password, minLength, maxLength);
     validateCharacterCategories(password, minCategoryCount);
     validateNoRepeatChars(password);
+    validateNoKeyboardSequence(password);
+    validateNoSequentialAlphabet(password);
     validateNotContainUsername(password, username);
     validateNotWeakPassword(password);
     validateNotReusedFromHistory(password, userId, passwordHistoryService);
+  }
+
+  /**
+   * P2-4: 校验密码不包含常见键盘序列（如 qwer、asdf、1234 连续 3 位及以上）。
+   *
+   * @param password 待校验密码
+   * @throws BusinessException 含键盘序列时抛出
+   */
+  private void validateNoKeyboardSequence(String password) {
+    if (password == null) {
+      return;
+    }
+    String lower = password.toLowerCase();
+    for (String row : KEYBOARD_ROWS) {
+      for (int i = 0; i + 3 <= row.length(); i++) {
+        String seq = row.substring(i, i + 3);
+        if (lower.contains(seq)) {
+          throw new BusinessException(UserInfoExceptionCode.PASSWORD_TOO_WEAK);
+        }
+      }
+    }
+  }
+
+  /**
+   * P2-4: 校验密码不包含连续 3 位升序/降序字母序列（如 abc、cba）。
+   *
+   * @param password 待校验密码
+   * @throws BusinessException 含连续字母序列时抛出
+   */
+  private void validateNoSequentialAlphabet(String password) {
+    if (password == null || password.length() < 3) {
+      return;
+    }
+    String lower = password.toLowerCase();
+    for (int i = 0; i + 2 < lower.length(); i++) {
+      char c1 = lower.charAt(i);
+      char c2 = lower.charAt(i + 1);
+      char c3 = lower.charAt(i + 2);
+      if (isLetter(c1) && c1 + 1 == c2 && c2 + 1 == c3) {
+        throw new BusinessException(UserInfoExceptionCode.PASSWORD_TOO_WEAK);
+      }
+      if (isLetter(c1) && c1 - 1 == c2 && c2 - 1 == c3) {
+        throw new BusinessException(UserInfoExceptionCode.PASSWORD_TOO_WEAK);
+      }
+    }
+  }
+
+  /**
+   * 判断字符是否为字母。
+   *
+   * @param c 字符
+   * @return true 表示字母
+   */
+  private boolean isLetter(char c) {
+    return c >= 'a' && c <= 'z';
   }
 
   /**

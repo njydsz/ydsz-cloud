@@ -1,23 +1,24 @@
 package com.njydsz.workflow.server.service.impl.definition;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.repository.FlowSkipRepository;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowSkipVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowSkipDO;
-import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
-import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
-import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -55,22 +56,27 @@ import org.springframework.util.StringUtils;
 @Component
 public class FlowDefinitionQueryService {
 
-  /** 流程定义 Mapper */
-  private final FlowDefinitionMapper definitionMapper;
+  /** 流程定义仓储 */
+  private final FlowDefinitionRepository definitionRepository;
 
-  /** 流程节点 Mapper */
-  private final FlowNodeMapper nodeMapper;
+  /** 流程节点仓储 */
+  private final FlowNodeRepository nodeRepository;
 
-  /** 流程跳转 Mapper */
-  private final FlowSkipMapper skipMapper;
+  /** 节点跳转仓储 */
+  private final FlowSkipRepository skipRepository;
+
+  /** DO/VO 转换器 */
+  private final WorkflowConverter converter;
 
   public FlowDefinitionQueryService(
-      FlowDefinitionMapper definitionMapper,
-      FlowNodeMapper nodeMapper,
-      FlowSkipMapper skipMapper) {
-    this.definitionMapper = definitionMapper;
-    this.nodeMapper = nodeMapper;
-    this.skipMapper = skipMapper;
+      FlowDefinitionRepository definitionRepository,
+      FlowNodeRepository nodeRepository,
+      FlowSkipRepository skipRepository,
+      WorkflowConverter converter) {
+    this.definitionRepository = definitionRepository;
+    this.nodeRepository = nodeRepository;
+    this.skipRepository = skipRepository;
+    this.converter = converter;
   }
 
   /**
@@ -94,7 +100,10 @@ public class FlowDefinitionQueryService {
       version = "1.0";
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    return definitionMapper.selectPublished(flowCode, version, tid);
+    return definitionRepository
+        .findPublished(flowCode, version, tid)
+        .map(converter::entityToDO)
+        .orElse(null);
   }
 
   /**
@@ -114,7 +123,10 @@ public class FlowDefinitionQueryService {
       unless = "#result == null")
   public FlowDefinitionDO getLatestByCode(String flowCode, String tenantId) {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    return definitionMapper.selectLatestByCode(flowCode, tid);
+    return definitionRepository
+        .findLatestByCode(flowCode, tid)
+        .map(converter::entityToDO)
+        .orElse(null);
   }
 
   /**
@@ -131,14 +143,11 @@ public class FlowDefinitionQueryService {
    */
   @Transactional(readOnly = true)
   public List<FlowDefinitionDO> page(int pageNo, int pageSize, String category, String flowCode) {
-    Page<FlowDefinitionDO> page = new Page<>(pageNo, pageSize);
-    LambdaQueryWrapper<FlowDefinitionDO> w = new LambdaQueryWrapper<>();
-    w.eq(StringUtils.hasText(category), FlowDefinitionDO::getCategory, category)
-        .like(StringUtils.hasText(flowCode), FlowDefinitionDO::getFlowCode, flowCode)
-        .eq(FlowDefinitionDO::getActivityStatus, 1)
-        .eq(FlowDefinitionDO::getDeleted, 0)
-        .orderByDesc(FlowDefinitionDO::getCreatedAt);
-    return definitionMapper.selectPage(page, w).getRecords();
+    return definitionRepository
+        .findActivePage(pageNo, pageSize, category, flowCode)
+        .stream()
+        .map(converter::entityToDO)
+        .toList();
   }
 
   /**
@@ -151,13 +160,20 @@ public class FlowDefinitionQueryService {
    */
   @Transactional(readOnly = true)
   public Map<String, Object> getDetail(String definitionId) {
-    FlowDefinitionDO definition = definitionMapper.selectById(definitionId);
+    FlowDefinitionDO definition =
+        definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (definition == null) {
       return null;
     }
-    List<FlowNodeDO> nodes = nodeMapper.selectByDefinitionId(definitionId);
-    List<FlowSkipDO> skips = skipMapper.selectByDefinitionId(definitionId);
-    Map<String, Object> result = new HashMap<>();
+    List<FlowNodeDO> nodes =
+        nodeRepository.findByDefinitionId(definitionId).stream()
+            .map(converter::entityToDO)
+            .toList();
+    List<FlowSkipDO> skips =
+        skipRepository.findByDefinitionId(definitionId).stream()
+            .map(converter::entityToDO)
+            .toList();
+    Map<String, Object> result = new java.util.HashMap<>();
     result.put("definition", definition);
     result.put("nodes", nodes);
     result.put("skips", skips);
@@ -176,7 +192,8 @@ public class FlowDefinitionQueryService {
    */
   @Transactional(readOnly = true)
   public List<Map<String, Object>> listVersions(String definitionId) {
-    FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+    FlowDefinitionDO def =
+        definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -184,8 +201,11 @@ public class FlowDefinitionQueryService {
           .build();
     }
     String tenantId = def.getTenantId() != null ? def.getTenantId() : "1";
-    List<FlowDefinitionDO> versions = definitionMapper.selectByFlowCode(def.getFlowCode(), tenantId);
-    List<Map<String, Object>> result = new ArrayList<>();
+    List<FlowDefinitionDO> versions =
+        definitionRepository.findByFlowCodeAndTenantId(def.getFlowCode(), tenantId).stream()
+            .map(converter::entityToDO)
+            .toList();
+    List<Map<String, Object>> result = new ArrayList<>(versions.size());
     for (FlowDefinitionDO v : versions) {
       Map<String, Object> map = new LinkedHashMap<>();
       map.put("id", v.getId());

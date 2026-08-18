@@ -329,17 +329,17 @@ public class DagInstanceExecutor {
    *
    * <p>P0-4 修复：使用 {@link JobDagNodeInstanceMapper#selectAllByDagInstanceAndJob} 返回 ALL 匹配实例（含 LOOP
    * iter 实例），避免 LOOP 场景下同一 jobId 的多个实例 仅返回一条导致部分 iter 完成事件丢失。
+   *
+   * <p>P1-P4 性能优化：原实现先查所有 RUNNING 实例再逐实例查节点，复杂度 O(D×N)（D=运行中实例数）。
+   * 改为单条 SQL 按 job_id 过滤活跃节点（PENDING/RUNNING），复杂度 O(1)。PAUSED 实例的 PENDING 节点
+   * 由 {@link #processNodeCompletion} 的实例状态检查兜底跳过，语义与原实现一致。
    */
   private List<JobDagNodeInstance> findRunningNodesByJobId(String jobId) {
-    List<JobDagInstance> runningInstances =
-        dagInstanceMapper.selectByStatus(DagInstanceStatus.RUNNING.name());
-    if (runningInstances.isEmpty()) {
+    List<JobDagNodeInstance> activeNodes = dagNodeInstanceMapper.selectActiveByJobId(jobId);
+    if (activeNodes.isEmpty()) {
       return List.of();
     }
-    return runningInstances.stream()
-        .flatMap(
-            inst ->
-                dagNodeInstanceMapper.selectAllByDagInstanceAndJob(inst.getId(), jobId).stream())
+    return activeNodes.stream()
         .filter(
             ni ->
                 ni != null

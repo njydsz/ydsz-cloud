@@ -129,6 +129,21 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   }
 
   @Override
+  public Optional<FlowDefinitionVO> findLatestByCode(String flowCode, String tenantId) {
+    return definitionMapper
+        .selectList(
+            new LambdaQueryWrapper<FlowDefinitionDO>()
+                .eq(FlowDefinitionDO::getFlowCode, flowCode)
+                .eq(tenantId != null, FlowDefinitionDO::getTenantId, tenantId)
+                .eq(FlowDefinitionDO::getDeleted, 0)
+                .orderByDesc(FlowDefinitionDO::getCreatedAt)
+                .last("LIMIT 1"))
+        .stream()
+        .findFirst()
+        .map(converter::entityToVO);
+  }
+
+  @Override
   public List<FlowDefinitionVO> findEnabledByCategory(String categoryCode, String tenantId) {
     return converter.flowDefinitionListToVO(
         definitionMapper.selectList(
@@ -139,5 +154,32 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
                 .eq(FlowDefinitionDO::getIsPublish, 1)
                 .eq(FlowDefinitionDO::getDeleted, 0)
                 .orderByDesc(FlowDefinitionDO::getCreatedAt)));
+  }
+
+  @Override
+  public List<FlowDefinitionVO> findActivePage(
+      int pageNo, int pageSize, String category, String flowCode) {
+    return converter.flowDefinitionListToVO(
+        definitionMapper.selectList(
+            new LambdaQueryWrapper<FlowDefinitionDO>()
+                .eq(org.springframework.util.StringUtils.hasText(category),
+                    FlowDefinitionDO::getCategory, category)
+                .like(org.springframework.util.StringUtils.hasText(flowCode),
+                    FlowDefinitionDO::getFlowCode, flowCode)
+                .eq(FlowDefinitionDO::getActivityStatus, 1)
+                .eq(FlowDefinitionDO::getDeleted, 0)
+                .orderByDesc(FlowDefinitionDO::getCreatedAt)
+                .last("LIMIT " + pageSize + " OFFSET " + (long) (pageNo - 1) * pageSize)));
+  }
+
+  @Override
+  public List<FlowDefinitionVO> findByFlowCodeAndTenantId(String flowCode, String tenantId) {
+    return converter.flowDefinitionListToVO(
+        definitionMapper.selectList(
+            new LambdaQueryWrapper<FlowDefinitionDO>()
+                .eq(FlowDefinitionDO::getFlowCode, flowCode)
+                .eq(tenantId != null, FlowDefinitionDO::getTenantId, tenantId)
+                .eq(FlowDefinitionDO::getDeleted, 0)
+                .orderByDesc(FlowDefinitionDO::getFlowVersion)));
   }
 }

@@ -4,21 +4,24 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
  * 登录风险评分服务。
  *
  * <p>基于多维度因素评估登录请求的风险等级，用于动态调整认证策略（如触发 MFA、要求验证码、拒绝登录）。
  *
- * <p><b>风险评分维度：</b>
+ * <p><b>风险评分维度（P1-1: 权重配置化）：</b>
  *
  * <ul>
- *   <li><b>IP 风险</b>：IP 在过去 15 分钟内失败次数（权重 30%）
- *   <li><b>时间异常</b>：登录时间是否在用户常用时间段外（权重 20%）
- *   <li><b>设备异常</b>：User-Agent 是否与历史记录匹配（权重 25%）
- *   <li><b>频率异常</b>：短时间内多次登录尝试（权重 25%）
+ *   <li><b>IP 风险</b>：IP 在窗口内失败次数（权重默认 30%，可配置 {@code ydsz.userinfo.risk-ip-weight}）
+ *   <li><b>时间异常</b>：登录时间是否在配置的异常时段内（权重默认 20%，时段可配置）
+ *   <li><b>设备异常</b>：User-Agent 是否与历史记录匹配（权重默认 25%，可配置）
+ *   <li><b>频率异常</b>：配置窗口内多次登录尝试（权重默认 25%，窗口/阈值可配置）
  * </ul>
  *
  * <p><b>风险等级：</b>
@@ -35,6 +38,7 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RiskScoringService {
 
   /** 风险等级：安全阈值 */
@@ -46,23 +50,8 @@ public class RiskScoringService {
   /** 风险等级：高阈值 */
   private static final int HIGH_THRESHOLD = 80;
 
-  /** IP 风险权重 */
-  private static final int IP_RISK_WEIGHT = 30;
-
-  /** 时间异常权重 */
-  private static final int TIME_ANOMALY_WEIGHT = 20;
-
-  /** 设备异常权重 */
-  private static final int DEVICE_ANOMALY_WEIGHT = 25;
-
-  /** 频率异常权重 */
-  private static final int FREQUENCY_ANOMALY_WEIGHT = 25;
-
-  /** 短时间窗口（分钟）：用于频率检测 */
-  private static final int FREQUENCY_WINDOW_MINUTES = 5;
-
-  /** 频率异常阈值：5 分钟内尝试次数 */
-  private static final int FREQUENCY_THRESHOLD = 3;
+  /** P1-1: 风险权重配置 */
+  private final UserInfoProperties properties;
 
   /**
    * 评估登录风险等级。
@@ -82,26 +71,32 @@ public class RiskScoringService {
       boolean isNewDevice) {
     List<String> factors = new ArrayList<>();
 
+    // P1-1: 权重与阈值全部从配置读取（默认值与历史一致，保证行为不变）
+    int ipWeight = properties.getRiskIpWeight();
+    int timeWeight = properties.getRiskTimeWeight();
+    int deviceWeight = properties.getRiskDeviceWeight();
+    int frequencyWeight = properties.getRiskFrequencyWeight();
+
     // 1. IP 风险评分（基于失败次数）
-    int ipRisk = calculateIpRisk(recentFailCount);
+    int ipRisk = calculateIpRisk(recentFailCount, ipWeight);
     if (ipRisk > 0) {
       factors.add("IP风险(" + ipRisk + ")");
     }
 
     // 2. 时间异常评分
-    int timeRisk = calculateTimeRisk();
+    int timeRisk = calculateTimeRisk(timeWeight);
     if (timeRisk > 0) {
       factors.add("时间异常(" + timeRisk + ")");
     }
 
     // 3. 设备异常评分
-    int deviceRisk = calculateDeviceRisk(isNewDevice);
+    int deviceRisk = calculateDeviceRisk(isNewDevice, deviceWeight);
     if (deviceRisk > 0) {
       factors.add("设备异常(" + deviceRisk + ")");
     }
 
     // 4. 频率异常评分
-    int frequencyRisk = calculateFrequencyRisk(recentFailCount);
+    int frequencyRisk = calculateFrequencyRisk(recentFailCount, frequencyWeight);
     if (frequencyRisk > 0) {
       factors.add("频率异常(" + frequencyRisk + ")");
     }
@@ -116,53 +111,77 @@ public class RiskScoringService {
    * 计算 IP 风险分数。
    *
    * @param recentFailCount 最近失败次数
-   * @return IP 风险分数（0-IP_RISK_WEIGHT）
+   * @param weight 配置权重
+   * @return IP 风险分数（0-weight）
    */
-  private int calculateIpRisk(int recentFailCount) {
+  private int calculateIpRisk(int recentFailCount, int weight) {
     if (recentFailCount <= 0) {
       return 0;
     }
     if (recentFailCount >= 10) {
-      return IP_RISK_WEIGHT;
+      return weight;
     }
-    return (int) ((double) recentFailCount / 10 * IP_RISK_WEIGHT);
+    return (int) ((double) recentFailCount / 10 * weight);
   }
 
   /**
    * 计算时间异常分数。
    *
-   * <p>如果登录时间在凌晨 0-6 点，视为异常时间段。
+   * <p>登录时间在配置的异常时段（默认凌晨 0-6 点）内视为异常时间段。
    *
-   * @return 时间异常分数（0-TIME_ANOMALY_WEIGHT）
+   * @param weight 配置权重
+   * @return 时间异常分数（0-weight）
    */
-  private int calculateTimeRisk() {
+  private int calculateTimeRisk(int weight) {
     int hour = LocalDateTime.now().getHour();
-    // 凌晨 0-6 点视为异常时间段
-    if (hour >= 0 && hour < 6) {
-      return TIME_ANOMALY_WEIGHT;
+    int startHour = properties.getRiskAnomalyStartHour();
+    int endHour = properties.getRiskAnomalyEndHour();
+    if (isHourInRange(hour, startHour, endHour)) {
+      return weight;
     }
     return 0;
+  }
+
+  /**
+   * 判断小时是否落在异常时段内（支持跨午夜，如 22-6）。
+   *
+   * @param hour 当前小时（0-23）
+   * @param startHour 起始小时
+   * @param endHour 结束小时
+   * @return true 表示在异常时段内
+   */
+  private boolean isHourInRange(int hour, int startHour, int endHour) {
+    if (startHour == endHour) {
+      return hour == startHour;
+    }
+    if (startHour < endHour) {
+      return hour >= startHour && hour < endHour;
+    }
+    // 跨午夜：如 22-6 → 22 <= hour || hour < 6
+    return hour >= startHour || hour < endHour;
   }
 
   /**
    * 计算设备异常分数。
    *
    * @param isNewDevice 是否新设备
-   * @return 设备异常分数（0-DEVICE_ANOMALY_WEIGHT）
+   * @param weight 配置权重
+   * @return 设备异常分数（0-weight）
    */
-  private int calculateDeviceRisk(boolean isNewDevice) {
-    return isNewDevice ? DEVICE_ANOMALY_WEIGHT : 0;
+  private int calculateDeviceRisk(boolean isNewDevice, int weight) {
+    return isNewDevice ? weight : 0;
   }
 
   /**
    * 计算频率异常分数。
    *
    * @param recentFailCount 最近失败次数
-   * @return 频率异常分数（0-FREQUENCY_ANOMALY_WEIGHT）
+   * @param weight 配置权重
+   * @return 频率异常分数（0-weight）
    */
-  private int calculateFrequencyRisk(int recentFailCount) {
-    if (recentFailCount >= FREQUENCY_THRESHOLD) {
-      return FREQUENCY_ANOMALY_WEIGHT;
+  private int calculateFrequencyRisk(int recentFailCount, int weight) {
+    if (recentFailCount >= properties.getRiskFrequencyThreshold()) {
+      return weight;
     }
     return 0;
   }

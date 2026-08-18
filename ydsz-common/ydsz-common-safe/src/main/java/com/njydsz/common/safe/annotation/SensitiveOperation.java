@@ -35,4 +35,15 @@ public @interface SensitiveOperation {
    * @return operation description text
    */
   String value() default "";
+
+  /**
+   * Sensitive operation level (P1-8).
+   *
+   * <p>用于差异化控制二次认证的强度与时效：{@link SensitiveLevel#CRITICAL} 使用更短
+   * 的验证标记时效并强制审计，{@link SensitiveLevel#HIGH} / {@link SensitiveLevel#MEDIUM}
+   * 使用常规时效。默认 {@link SensitiveLevel#HIGH}，向后兼容。
+   *
+   * @return sensitive operation level
+   */
+  SensitiveLevel level() default SensitiveLevel.HIGH;
 }

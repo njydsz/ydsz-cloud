@@ -68,7 +68,12 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     Page<FileNodeDO> pageParam = new Page<>(query.getPage(), query.getPageSize());
     IPage<FileNodeDO> result =
         fileNodeMapper.selectPageByParentId(
-            pageParam, query.getParentId(), query.getNodeType(), query.getSortBy(), query.getSortDir());
+            pageParam,
+            query.getParentId(),
+            query.getNodeType(),
+            query.getSortBy(),
+            query.getSortDir(),
+            TenantContextHolder.getTenantId());
     List<FileNodeVO> vos = converter.fileNodeListToVO(result.getRecords());
     Page<FileNodeVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
     voPage.setRecords(vos);
@@ -77,19 +82,21 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
   @Override
   public List<FileNodeVO> findByPathPrefix(String pathPrefix) {
-    return converter.fileNodeListToVO(fileNodeMapper.selectByPathPrefix(pathPrefix));
+    return converter.fileNodeListToVO(
+        fileNodeMapper.selectByPathPrefix(pathPrefix, TenantContextHolder.getTenantId()));
   }
 
   @Override
   public int batchUpdatePathPrefix(
       String oldPathPrefix, String newPathPrefix, int levelDelta, String excludeId) {
     return fileNodeMapper.batchUpdatePathPrefix(
-        oldPathPrefix, newPathPrefix, levelDelta, excludeId);
+        oldPathPrefix, newPathPrefix, levelDelta, excludeId, TenantContextHolder.getTenantId());
   }
 
   @Override
   public int batchSoftDeleteByPathPrefix(String pathPrefix, String excludeId) {
-    return fileNodeMapper.batchSoftDeleteByPathPrefix(pathPrefix, excludeId);
+    return fileNodeMapper.batchSoftDeleteByPathPrefix(
+        pathPrefix, excludeId, TenantContextHolder.getTenantId());
   }
 
   @Override
@@ -280,7 +287,8 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
   @Override
   public List<FileNodeVO> findAllDescendantsByPath(String folderPath) {
-    return converter.fileNodeListToVO(fileNodeMapper.selectAllDescendantsByPath(folderPath));
+    return converter.fileNodeListToVO(
+        fileNodeMapper.selectAllDescendantsByPath(folderPath, TenantContextHolder.getTenantId()));
   }
 
   @Override
@@ -289,7 +297,8 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
       return new ArrayList<>();
     }
     return converter.fileNodeListToVO(
-        fileNodeMapper.selectDescendantsByPage(folderPath, offset, limit));
+        fileNodeMapper.selectDescendantsByPage(
+            folderPath, offset, limit, TenantContextHolder.getTenantId()));
   }
 
   @Override
@@ -297,7 +306,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     if (folderPath == null || folderPath.isEmpty()) {
       return 0;
     }
-    return fileNodeMapper.countDescendantsByPath(folderPath);
+    return fileNodeMapper.countDescendantsByPath(folderPath, TenantContextHolder.getTenantId());
   }
 
   @Override
@@ -310,7 +319,8 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     if (path == null || path.isEmpty()) {
       return new ArrayList<>();
     }
-    return converter.fileNodeListToVO(fileNodeMapper.selectAllDescendantsByPath(path));
+    return converter.fileNodeListToVO(
+        fileNodeMapper.selectAllDescendantsByPath(path, TenantContextHolder.getTenantId()));
   }
 
   @Override

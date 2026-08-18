@@ -182,6 +182,11 @@ public class UserAccountServiceImpl implements UserAccountService {
     UserAccountVO existing = userAccountRepository.findById(dto.getId())
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND));
 
+    // P1-6: 乐观锁版本回填 —— DTO 未携带版本号时使用当前版本（兼容旧调用方）
+    if (dto.getRevision() == null) {
+      dto.setRevision(existing.getRevision());
+    }
+
     UserAccountVO vo = userAccountRepository.update(dto);
     if (vo != null) {
       indexUpsert(vo);

@@ -174,17 +174,21 @@ public record DagNode(
   /**
    * DAG 节点类型枚举。
    *
-   * <p>CONDITION / LOOP / PARALLEL_GATEWAY 已于 v1.2.0 移除，枚举值保留仅用于反序列化兼容。
-   * 遇到旧数据中的控制节点类型时，{@link #parse(String)} 会降级返回 {@link #TASK}。
+   * <p>P2-O2: CONDITION / LOOP / PARALLEL_GATEWAY 已于 v1.2.0 移除，标注 {@link Deprecated}，
+   * 枚举值保留仅用于反序列化兼容旧数据。遇到旧数据中的控制节点类型时，
+   * {@link #parse(String)} 会降级返回 {@link #TASK}。新增节点类型请勿复用废弃值。
    */
   public enum NodeType {
     /** 普通任务节点：调用 handler 执行 */
     TASK,
     /** 已废弃：条件分支节点（v1.2.0 移除，反序列化时降级为 TASK） */
+    @Deprecated
     CONDITION,
     /** 已废弃：循环节点（v1.2.0 移除，反序列化时降级为 TASK） */
+    @Deprecated
     LOOP,
     /** 已废弃：并行网关节点（v1.2.0 移除，反序列化时降级为 TASK） */
+    @Deprecated
     PARALLEL_GATEWAY,
     /** P1-5: 子工作流节点：嵌套触发另一个 DAG 工作流 */
     SUB_WORKFLOW,

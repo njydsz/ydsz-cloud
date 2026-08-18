@@ -10,6 +10,15 @@ import com.njydsz.common.queue.constant.QueueChannels;
  * <p><b>注意：</b>所有通道值引用自 {@link QueueChannels}（统一注册中心）， 禁止在此类中重复定义字符串常量。新增通道请到 {@code QueueChannels}
  * 中注册。
  *
+ * <p><b>P2-O1 命名澄清：</b>本类只是<b>逻辑通道名称常量</b>，不是队列实现（非 Redis Stream /
+ * BlockingQueue / Disruptor）。实际的削峰与排队由以下组件承担：
+ *
+ * <ul>
+ *   <li>任务执行排队：{@code DefaultTaskDispatcher} 的任务执行线程池（PriorityBlockingQueue + CallerRunsPolicy）
+ *   <li>执行日志削峰：{@code DisruptorLogPublisher}（LMAX Disruptor ring buffer）
+ *   <li>调度扫描限流：{@code JobScanner.batchSize} + 并行派发线程池
+ * </ul>
+ *
  * <p><b>通道说明：</b>
  *
  * <ul>

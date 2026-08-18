@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
@@ -238,6 +239,16 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /** P2-6: COVER 策略防递归标记（ThreadLocal），避免重新派发时锁仍被持有导致无限递归 */
   private static final ThreadLocal<Boolean> COVER_REDISPATCHING =
       ThreadLocal.withInitial(() -> false);
+
+  /**
+   * P1-A4: 正在执行任务（含分片）的线程注册表（threadId → Thread）。
+   *
+   * <p>原 COVER 中断实现通过 {@link Thread#getAllStackTraces()} 全量遍历查找目标线程，JVM 线程数多时
+   * 性能差（O(线程数)）。现派发时注册线程引用、执行完成时注销，COVER 中断可 O(1) 命中；
+   * 缓存 miss（如线程已完成、远程节点）时回退原全栈遍历逻辑，保证兼容。
+   */
+  private static final ConcurrentHashMap<Long, Thread> COVER_EXECUTING_THREADS =
+      new ConcurrentHashMap<>();
 
   /** 触发类型常量 */
   public static final String TRIGGER_CRON = "CRON";
@@ -696,6 +707,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       JobLoggerImpl jobLogger) {
     boolean success = false;
     Object result = null;
+    // P1-A4: 注册当前执行线程，供 COVER 策略 O(1) 中断定位（分片场景）
+    Thread currentThread = Thread.currentThread();
+    COVER_EXECUTING_THREADS.put(currentThread.threadId(), currentThread);
     try {
       JobHandler handler = resolveHandler(job);
       ShardingContext ctx = new ShardingContext();
@@ -743,6 +757,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       recordExecutionEnd(job.getTenantId());
 
       notifyTaskComplete();
+
+      // P1-A4: 注销当前执行线程
+      COVER_EXECUTING_THREADS.remove(currentThread.threadId());
     }
     // P0-2: 刷新并清理在线日志器（在作用域退出后、ThreadLocal 已清理）
     try {
@@ -1179,6 +1196,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       ShardingContext shardingCtx) {
     boolean success = false;
     Object result = null;
+    // P1-A4: 注册当前执行线程，供 COVER 策略 O(1) 中断定位
+    Thread currentThread = Thread.currentThread();
+    COVER_EXECUTING_THREADS.put(currentThread.threadId(), currentThread);
     try {
       // P0-4: MAP/MAP_REDUCE 类型走 MapTaskExecutor
       String jobType = job.getJobType();
@@ -1255,6 +1275,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
       // 通知心跳组件：任务结束
       notifyTaskComplete();
+
+      // P1-A4: 注销当前执行线程
+      COVER_EXECUTING_THREADS.remove(currentThread.threadId());
     }
     // P0-2: 刷新并清理在线日志器（在作用域退出后、ThreadLocal 已清理）
     try {
@@ -1483,8 +1506,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /**
    * P2-6: 中断指定线程。
    *
-   * <p>通过 {@link Thread#getAllStackTraces()} 遍历所有线程，按 threadId 匹配。 找到后调用 {@link
-   * Thread#interrupt()}，等待最多 1s 让线程响应中断。
+   * <p>P1-A4 优化：优先从 {@link #COVER_EXECUTING_THREADS} 注册表 O(1) 查找（派发时注册、完成时注销）；
+   * 缓存 miss（线程已完成或为历史数据）时回退 {@link Thread#getAllStackTraces()} 全栈遍历。
+   * 找到后调用 {@link Thread#interrupt()}，等待最多 1s 让线程响应中断。
    *
    * @param threadId 线程 ID
    * @return true 中断成功；false 线程未找到或未在 1s 内响应
@@ -1493,11 +1517,14 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     if (threadId == null) {
       return false;
     }
-    Thread target = null;
-    for (Thread t : Thread.getAllStackTraces().keySet()) {
-      if (t.threadId() == threadId) {
-        target = t;
-        break;
+    Thread target = COVER_EXECUTING_THREADS.get(threadId);
+    if (target == null) {
+      // 缓存 miss：回退全栈遍历（兼容未注册的历史线程）
+      for (Thread t : Thread.getAllStackTraces().keySet()) {
+        if (t.threadId() == threadId) {
+          target = t;
+          break;
+        }
       }
     }
     if (target == null) {

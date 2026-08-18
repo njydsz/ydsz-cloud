@@ -44,6 +44,9 @@ public class SessionManager {
   /** 用户会话索引 Redis Key 前缀：userinfo:session:user:{userId} */
   private static final String SESSION_KEY_PREFIX = "userinfo:session:user:";
 
+  /** P2-5: 会话 Hash schema 版本号（当前 v1） */
+  private static final int SESSION_SCHEMA_VERSION = 1;
+
   private final RedisHashOps redisHashOps;
   private final RedisStringOps redisStringOps;
   private final RedisCollectionOps redisCollectionOps;
@@ -223,6 +226,8 @@ public class SessionManager {
       String userId, String username, String roleCodes, String roleNames, String tenantId,
       String refreshToken) {
     Map<String, Object> sessionInfo = new HashMap<>();
+    // P2-5: 会话 Hash schema 版本号，便于未来字段变更的平滑迁移与兼容性判断
+    sessionInfo.put("schemaVersion", SESSION_SCHEMA_VERSION);
     sessionInfo.put("userId", userId);
     sessionInfo.put("username", username);
     sessionInfo.put("roleCode", roleCodes);

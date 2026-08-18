@@ -302,9 +302,18 @@ public class ConfigController {
       HttpServletResponse response)
       throws IOException {
     byte[] bytes = configService.exportConfigs(configGroup);
-    String filename =
-        "config_" + (configGroup != null ? configGroup : "all") + "_" + System.currentTimeMillis() + ".xlsx";
-    excelWebSupport.writeBytes(response, bytes, filename);
+    excelWebSupport.writeBytes(response, bytes, buildExportFilename(configGroup));
+  }
+
+  /**
+   * 构造导出文件名（{@code config_{group}_{timestamp}.xlsx}，group 为空时使用 {@code all}）。
+   *
+   * @param configGroup 配置分组（可为空）
+   * @return 导出文件名
+   */
+  private String buildExportFilename(String configGroup) {
+    String group = configGroup != null ? configGroup : "all";
+    return "config_" + group + "_" + System.currentTimeMillis() + ".xlsx";
   }
 
   /**

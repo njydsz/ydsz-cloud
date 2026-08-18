@@ -158,6 +158,40 @@ public class UserInfoProperties {
    */
   private int maxSessionsPerUser = DEFAULT_MAX_SESSIONS_PER_USER;
 
+  // ==================== P1-1 登录风控配置 ====================
+
+  /** 风险评分：IP 风险权重（默认 30）。 */
+  private int riskIpWeight = 30;
+
+  /** 风险评分：时间异常权重（默认 20）。 */
+  private int riskTimeWeight = 20;
+
+  /** 风险评分：设备异常权重（默认 25）。 */
+  private int riskDeviceWeight = 25;
+
+  /** 风险评分：频率异常权重（默认 25）。 */
+  private int riskFrequencyWeight = 25;
+
+  /** 风险评分：异常时段起始小时（默认 0，即凌晨 0 点）。 */
+  private int riskAnomalyStartHour = 0;
+
+  /** 风险评分：异常时段结束小时（默认 6，即凌晨 6 点）。 */
+  private int riskAnomalyEndHour = 6;
+
+  /** 风险评分：频率异常窗口（分钟，默认 5 分钟）。 */
+  private int riskFrequencyWindowMinutes = 5;
+
+  /** 风险评分：频率异常阈值（窗口内尝试次数，默认 3 次）。 */
+  private int riskFrequencyThreshold = 3;
+
+  /**
+   * P2-6: 可信代理 IP 列表。
+   *
+   * <p>仅当请求来源（remoteAddr）命中此列表时，才信任 {@code X-Forwarded-For} 等代理头；
+   * 列表为空（默认）时不读取任何代理头，直接用 remoteAddr，防止客户端伪造 IP 绕过登录风控。
+   */
+  private List<String> trustedProxies = List.of();
+
   /**
    * OAuth2 客户端配置
    *

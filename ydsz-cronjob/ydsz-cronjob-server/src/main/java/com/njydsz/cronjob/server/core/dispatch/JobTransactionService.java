@@ -58,6 +58,22 @@ public class JobTransactionService {
   }
 
   /**
+   * P1-P3: 抢占式扫描预读窗口内到期的 CRON 任务（读写事务内）。
+   *
+   * <p>供 {@code TaskPreloadScheduler} 使用：查询 {@code next_fire_time} 在 {@code [now, windowEnd]}
+   * 区间内的 NORMAL+CRON 任务（含 {@code FOR UPDATE SKIP LOCKED} 行锁），注册到内存调度器精准触发。
+   *
+   * @param now 当前时间
+   * @param windowEnd 预读窗口结束时间
+   * @param batchSize 批量大小
+   * @return 窗口内待预读任务列表
+   */
+  @Transactional(rollbackFor = Exception.class)
+  public List<Job> acquireDueJobsInWindow(LocalDateTime now, LocalDateTime windowEnd, int batchSize) {
+    return jobMapper.selectDueJobsInWindow(now, windowEnd, batchSize);
+  }
+
+  /**
    * CAS 推进 next_fire_time（read-write 事务内，防止重复派发）。
    *
    * <p>通过 {@code WHERE next_fire_time = #{oldNextFireTime}} 实现 CAS 乐观锁， 保证 Leader 切换时不会重复派发同一任务。

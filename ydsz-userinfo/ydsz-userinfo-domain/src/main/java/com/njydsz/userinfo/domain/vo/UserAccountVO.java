@@ -79,4 +79,11 @@ public class UserAccountVO {
   /** 更新时间 */
   private LocalDateTime updatedAt;
 
+  /**
+   * 乐观锁版本号（P1-6）。
+   *
+   * <p>由查询响应返回给前端，前端编辑时原样回传，服务端据此做乐观锁冲突检测。
+   */
+  private Integer revision;
+
 }

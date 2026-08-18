@@ -108,15 +108,6 @@ public class FileNodeDO extends MpBaseEntity<String> implements Serializable {
   @TableField("storage_class")
   private String storageClass;
 
-  /**
-   * 提取的文档全文内容（不持久化，仅用于内存传递到搜索索引）。
-   *
-   * <p>由 {@code ContentExtractionApplicationService} 解析后设置， 供 {@code
-   * WikiSearchProvider#toIndexDocument} 填充到统一搜索索引的 content 字段。 此字段不映射到数据库，仅作内存传递用途。
-   */
-  @TableField(exist = false)
-  private String searchableContent;
-
   /** 是否为目录 */
   public boolean isFolder() {
     return TYPE_FOLDER.equals(nodeType);

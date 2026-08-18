@@ -177,7 +177,7 @@ public class EvaluationResultCache {
    * @return 命中次数
    */
   public long getHitCount() {
-    return cache.getStats().hitCount();
+    return cache.getStats().getHitCount();
   }
 
   /**
@@ -186,7 +186,7 @@ public class EvaluationResultCache {
    * @return 未命中次数
    */
   public long getMissCount() {
-    return cache.getStats().missCount();
+    return cache.getStats().getMissCount();
   }
 
   /**
@@ -195,7 +195,7 @@ public class EvaluationResultCache {
    * @return 淘汰次数
    */
   public long getEvictionCount() {
-    return cache.getStats().evictionCount();
+    return cache.getStats().getEvictionCount();
   }
 
   /**
@@ -208,11 +208,11 @@ public class EvaluationResultCache {
     return String.format(
         "[EvalCache] size=%d, hits=%d, misses=%d, hitRate=%.4f, evictions=%d, avgLoadTime=%.2fms",
         size(),
-        stats.hitCount(),
-        stats.missCount(),
-        stats.hitRate(),
-        stats.evictionCount(),
-        stats.averageLoadPenalty() / 1_000_000.0);
+        stats.getHitCount(),
+        stats.getMissCount(),
+        stats.getHitRate(),
+        stats.getEvictionCount(),
+        stats.getAverageLoadPenalty() / 1_000_000.0);
   }
 
   // ==================== 内部实现 ====================

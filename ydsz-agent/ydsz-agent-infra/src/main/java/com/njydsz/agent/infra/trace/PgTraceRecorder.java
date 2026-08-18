@@ -33,7 +33,9 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
  * <ul>
  *   <li>步骤序号内存化：{@code recordStep} 不再执行 SELECT MAX(stepIndex)
  *   <li>总耗时墙钟化：{@code endTrace} 以链路开始到结束的墙钟时间计总耗时， 替代各步骤耗时求和（DAG 并行节点求和会虚高）
- *   <li>如需进一步降低写放大，可在后续版本引入异步批量写入缓冲（AsyncWriter）
+ *   <li><b>写放大权衡说明</b>：当前步骤为同步单条写入，以保证 {@link #getSteps} 的立即一致性
+ *       （调试面板在链路结束后即时查询）。若改为异步批量写入，写放大可显著降低， 但会牺牲"写入即可读"语义。
+ *       对写放大敏感的生产环境，可在后续版本引入 AsyncWriter 并配合最终一致性查询策略。
  * </ul>
  *
  * @author ydsz-team

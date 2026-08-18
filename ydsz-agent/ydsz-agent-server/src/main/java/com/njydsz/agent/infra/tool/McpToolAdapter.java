@@ -21,8 +21,13 @@ import com.njydsz.agent.server.config.AgentProperties;
  *
  * <h3>集成说明</h3>
  *
- * <p>实际 MCP Client SDK（io.modelcontextprotocol:sdk）依赖由 ydsz-agent-infra 的 pom.xml 引入。 本适配器通过 {@link
- * McpClientProvider} 解耦具体 SDK 实现，便于单元测试替换。
+ * <p>当前通过 {@link McpClientProvider} 抽象接入 SSE 传输实现（{@link SseMcpClientProvider}，
+ * 基于 JDK HttpClient 手写 JSON-RPC over HTTP/SSE，未引入官方 io.modelcontextprotocol:sdk 依赖）。
+ * 未来接入官方 SDK 或补齐 stdio / streamable-http 传输时，仅需新增 {@link McpClientProvider} 实现，
+ * 本适配器无需改动。
+ *
+ * <p><b>传输类型校验</b>：仅支持 {@code transport=sse}；配置其他传输类型（如 stdio）时明确抛错，
+ * 避免静默降级为 SSE 导致连接行为与配置不符。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -75,8 +80,15 @@ public class McpToolAdapter {
    *
    * @param server MCP Server 配置
    * @return 转换后的工具定义列表
+   * @throws IllegalArgumentException 当传输类型非 {@code sse} 时抛出（当前仅实现 SSE 传输）
    */
   public List<ToolDefinition> discoverServerTools(AgentProperties.ServerInfo server) {
+    // P1 修复：传输类型校验，避免配置 stdio 时被静默当作 SSE 处理
+    String transport = server.getTransport() != null ? server.getTransport().toLowerCase() : "sse";
+    if (!"sse".equals(transport)) {
+      throw new IllegalArgumentException(
+          "MCP 传输类型暂不支持: " + transport + "（当前仅支持 sse，stdio/streamable-http 待接入官方 SDK）");
+    }
     List<McpToolDescriptor> descriptors = clientProvider.listTools(server);
     List<ToolDefinition> result = new ArrayList<>(descriptors.size());
     for (McpToolDescriptor descriptor : descriptors) {

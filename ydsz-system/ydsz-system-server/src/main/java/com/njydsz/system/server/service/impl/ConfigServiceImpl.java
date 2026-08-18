@@ -1,10 +1,8 @@
 package com.njydsz.system.server.service.impl;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +19,6 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
-import com.njydsz.common.excel.core.ExcelFacade;
-import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.ConfigDTO;
@@ -31,7 +27,6 @@ import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.repository.ConfigRepository;
-import com.njydsz.system.domain.vo.ConfigExcelVO;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.CursorPageResponse;
 import com.njydsz.system.domain.vo.ImportResult;
@@ -39,6 +34,7 @@ import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.search.SearchIndexSyncer;
+import com.njydsz.system.server.service.ConfigExcelService;
 import com.njydsz.system.server.service.ConfigService;
 import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.util.SystemVersionUtils;
@@ -123,8 +119,8 @@ public class ConfigServiceImpl implements ConfigService {
   /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
   private final SearchIndexSyncer searchIndexSyncer;
 
-  /** Excel 导出辅助类（用于配置导入导出） */
-  private final ExcelExportHelper excelExportHelper;
+  /** Excel 导入导出服务（P1-1 拆分：环境迁移能力独立成类，本类专注 CRUD/缓存/事件编排） */
+  private final ConfigExcelService configExcelService;
 
   // ============================== CRUD ==============================
 
@@ -488,71 +484,13 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public byte[] exportConfigs(String configGroup) {
-    // 1. 查询配置数据（含分组过滤）
-    List<ConfigVO> configs = loadConfigsForExport(configGroup);
-
-    // 2. 转换为 Excel VO 并导出
-    List<ConfigExcelVO> excelRows =
-        configs.stream().map(this::toExcelVO).collect(Collectors.toList());
-    return excelRows.isEmpty()
-        ? new byte[0]
-        : excelExportHelper.export("系统配置", ConfigExcelVO.class, excelRows);
-  }
-
-  /**
-   * 加载导出配置数据（私有）。
-   *
-   * @param configGroup 配置分组（为空时导出全部）
-   * @return 未删除配置列表（按分组/排序）
-   */
-  private List<ConfigVO> loadConfigsForExport(String configGroup) {
-    return configRepository.findForExport(configGroup);
+    return configExcelService.exportConfigs(configGroup);
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public ImportResult importConfigs(InputStream inputStream) {
-    // 1. 读取 Excel 文件
-    List<ConfigExcelVO> excelRows = readExcel(inputStream);
-    if (excelRows.isEmpty()) {
-      return ImportResult.builder()
-          .totalCount(0)
-          .successCount(0)
-          .failCount(0)
-          .skipCount(0)
-          .message("Excel 文件为空")
-          .build();
-    }
-
-    // 2. 逐条校验并转换（必填 / 值类型 / DB 唯一性）
-    List<String> errors = new ArrayList<>();
-    List<ConfigVO> validItems = new ArrayList<>();
-    int skipCount = 0;
-    for (int i = 0; i < excelRows.size(); i++) {
-      String error = validateExcelRow(excelRows.get(i), i + 2);
-      if (error != null) {
-        errors.add(error);
-        skipCount++;
-      } else {
-        validItems.add(toConfigVO(excelRows.get(i)));
-      }
-    }
-
-    // 3. 批量保存有效数据（使用 insertBatch 消除 N+1）
-    int successCount = saveValidItemsBatch(validItems, errors);
-
-    // 4. 构建导入结果
-    return ImportResult.builder()
-        .totalCount(excelRows.size())
-        .successCount(successCount)
-        .failCount(excelRows.size() - successCount - skipCount)
-        .skipCount(skipCount)
-        .errors(errors)
-        .message(
-            String.format(
-                "导入完成: 成功 %d 条, 跳过 %d 条, 失败 %d 条",
-                successCount, skipCount, excelRows.size() - successCount - skipCount))
-        .build();
+    return configExcelService.importConfigs(inputStream);
   }
 
   /**
@@ -561,203 +499,6 @@ public class ConfigServiceImpl implements ConfigService {
    * @param inputStream Excel 输入流
    * @return 配置 Excel 行列表
    */
-  private List<ConfigExcelVO> readExcel(InputStream inputStream) {
-    try {
-      List<ConfigExcelVO> rows =
-          ExcelFacade.read(inputStream, ConfigExcelVO.class).sheet(0).doReadAll();
-      return rows != null ? rows : List.of();
-    } catch (Exception e) {
-      log.warn("[ConfigService] Excel 读取失败: {}", e.getMessage());
-      throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
-          .data("reason", "Excel 文件读取失败: " + e.getMessage());
-    }
-  }
-
-  /**
-   * 校验单条 Excel 行（私有）。
-   *
-   * <p>校验必填字段、值类型、DB 唯一性；通过返回 null，否则返回错误描述。
-   *
-   * @param excelRow Excel 行数据
-   * @param rowNum Excel 行号（从 2 开始，第 1 行为表头）
-   * @return 错误描述；校验通过返回 null
-   */
-  private String validateExcelRow(ConfigExcelVO excelRow, int rowNum) {
-    String requiredError = validateRequiredFields(excelRow, rowNum);
-    if (requiredError != null) {
-      return requiredError;
-    }
-    String typeError = validateExcelValueType(excelRow, rowNum);
-    if (typeError != null) {
-      return typeError;
-    }
-    if (configRepository.existsByGroupAndKey(excelRow.getConfigGroup(), excelRow.getConfigKey())) {
-      return "第 " + rowNum + " 行: 配置已存在("
-          + excelRow.getConfigGroup() + "/" + excelRow.getConfigKey() + ")";
-    }
-    return null;
-  }
-
-  /**
-   * 校验 Excel 行必填字段（私有）。
-   *
-   * @param excelRow Excel 行数据
-   * @param rowNum Excel 行号
-   * @return 错误描述；通过返回 null
-   */
-  private String validateRequiredFields(ConfigExcelVO excelRow, int rowNum) {
-    if (excelRow.getConfigGroup() == null || excelRow.getConfigGroup().isBlank()) {
-      return "第 " + rowNum + " 行: 配置分组不能为空";
-    }
-    if (excelRow.getConfigKey() == null || excelRow.getConfigKey().isBlank()) {
-      return "第 " + rowNum + " 行: 配置键不能为空";
-    }
-    if (excelRow.getConfigValue() == null || excelRow.getConfigValue().isBlank()) {
-      return "第 " + rowNum + " 行: 配置值不能为空";
-    }
-    return null;
-  }
-
-  /**
-   * 校验 Excel 行值类型（私有）。
-   *
-   * @param excelRow Excel 行数据
-   * @param rowNum Excel 行号
-   * @return 错误描述；通过返回 null
-   */
-  private String validateExcelValueType(ConfigExcelVO excelRow, int rowNum) {
-    if (excelRow.getValueType() == null || excelRow.getValueType().isBlank()) {
-      return null;
-    }
-    try {
-      ConfigValueType.validate(excelRow.getValueType());
-      return null;
-    } catch (IllegalArgumentException e) {
-      return "第 " + rowNum + " 行: 值类型不合法: " + excelRow.getValueType();
-    }
-  }
-
-  /**
-   * Excel 行转换为配置 VO（私有）。
-   *
-   * @param excelRow Excel 行数据
-   * @return 配置 VO
-   */
-  private ConfigVO toConfigVO(ConfigExcelVO excelRow) {
-    ConfigVO vo = new ConfigVO();
-    vo.setConfigGroup(excelRow.getConfigGroup());
-    vo.setConfigKey(excelRow.getConfigKey());
-    vo.setConfigValue(excelRow.getConfigValue());
-    vo.setValueType(excelRow.getValueType());
-    vo.setDefaultValue(excelRow.getDefaultValue());
-    vo.setDescription(excelRow.getDescription());
-    vo.setIsPublic(excelRow.getIsPublic());
-    vo.setSortOrder(excelRow.getSortOrder());
-    vo.setStatus(excelRow.getStatus());
-    return vo;
-  }
-
-  /**
-   * 批量保存有效配置（私有，使用 insertBatch 消除 N+1）。
-   *
-   * <p><b>P0-2 优化：</b>将 N 次单条 INSERT 合并为 1 次批量 INSERT，显著减少 DB 往返次数。 批量 XML 不走 MyBatis-Plus 拦截器（租户拦截器、审计字段自动填充均不生效），
-   * 需在此处手动预生成 ID；审计字段由仓储层实现内部处理。
-   *
-   * @param validItems 校验通过的配置列表
-   * @param errors 错误收集器（保存失败时追加）
-   * @return 保存成功条数
-   */
-  private int saveValidItemsBatch(List<ConfigVO> validItems, List<String> errors) {
-    if (validItems.isEmpty()) {
-      return 0;
-    }
-    try {
-      // 1. VO 转 DTO，预生成 ID
-      List<ConfigDTO> dtos = validItems.stream()
-          .map(this::toDtoForImport)
-          .collect(Collectors.toList());
-
-      // 2. 批量插入（1 次 SQL 完成全部写入）
-      configRepository.insertBatch(dtos);
-
-      // 3. 精准失效缓存：按涉及 configGroup 逐一失效
-      dtos.stream()
-          .map(ConfigDTO::getConfigGroup)
-          .distinct()
-          .forEach(this::evictConfigGroup);
-      evictConfigPublic();
-
-      // 4. 同步搜索索引 + 发布变更事件（异步，不阻塞主流程）
-      dtos.forEach(dto -> indexUpsert(dto));
-
-      return dtos.size();
-    } catch (Exception e) {
-      errors.add("批量导入失败: " + e.getMessage());
-      return 0;
-    }
-  }
-
-  /**
-   * VO 转 DTO + 预生成雪花 ID（导入场景专用，私有）。
-   *
-   * <p>批量 XML 插入不走 MyBatis-Plus 拦截器（CombinedFieldFillInterceptor、租户拦截器、 IdentifierGenerator
-   * 均不生效），需在此处手动预生成 ID。审计字段由仓储层实现内部处理。
-   *
-   * <p>缺省 {@code status="ENABLED"}。
-   *
-   * @param vo 配置 VO
-   * @return 配置 DTO（含预生成 ID）
-   */
-  private ConfigDTO toDtoForImport(ConfigVO vo) {
-    ConfigDTO dto = new ConfigDTO();
-    dto.setId(com.baomidou.mybatisplus.core.toolkit.IdWorker.getIdStr());
-    dto.setConfigGroup(vo.getConfigGroup());
-    dto.setConfigKey(vo.getConfigKey());
-    dto.setConfigValue(vo.getConfigValue());
-    dto.setValueType(vo.getValueType());
-    dto.setDefaultValue(vo.getDefaultValue());
-    dto.setDescription(vo.getDescription());
-    dto.setIsPublic(vo.getIsPublic());
-    dto.setSortOrder(vo.getSortOrder());
-    dto.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
-    return dto;
-  }
-
-  /**
-   * 获取当前用户 ID（私有）。
-   *
-   * <p>从 RequestContext 获取当前操作人 ID，未登录时返回 "system"。
-   *
-   * @return 当前用户 ID
-   */
-  private String getCurrentUserId() {
-    try {
-      return com.njydsz.common.core.context.RequestContext.getUserId();
-    } catch (Exception e) {
-      return "system";
-    }
-  }
-
-  /**
-   * ConfigVO 转换为 Excel VO
-   *
-   * @param vo 配置 VO
-   * @return Excel VO
-   */
-  private ConfigExcelVO toExcelVO(ConfigVO vo) {
-    ConfigExcelVO excelVO = new ConfigExcelVO();
-    excelVO.setConfigGroup(vo.getConfigGroup());
-    excelVO.setConfigKey(vo.getConfigKey());
-    excelVO.setConfigValue(vo.getConfigValue());
-    excelVO.setValueType(vo.getValueType());
-    excelVO.setDefaultValue(vo.getDefaultValue());
-    excelVO.setDescription(vo.getDescription());
-    excelVO.setIsPublic(vo.getIsPublic());
-    excelVO.setSortOrder(vo.getSortOrder());
-    excelVO.setStatus(vo.getStatus());
-    return excelVO;
-  }
-
   /**
    * 广播配置变更事件（用于跨实例本地缓存失效感知）。
    *

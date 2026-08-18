@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -24,6 +25,10 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>对标 XXL-Job 的 ShardingUtil.shardingVo，保证相同节点列表产生稳定分配。
  *
+ * <p>P1 增强：通过配置 {@code ydsz.cronjob.sharding.strategy=average|consistent_hash} 选择策略。
+ * 本实现为默认（matchIfMissing=true）；配置 {@code consistent_hash} 时由
+ * {@link ConsistentHashShardingStrategy} 生效（{@code @ConditionalOnMissingBean} 保证唯一 Bean）。
+ *
  * <h3>示例</h3>
  *
  * <pre>{@code
@@ -38,6 +43,10 @@ import org.springframework.context.annotation.Configuration;
  * @since 1.0.0
  */
 @Configuration
+@ConditionalOnProperty(
+    name = "ydsz.cronjob.sharding.strategy",
+    havingValue = "average",
+    matchIfMissing = true)
 @ConditionalOnMissingBean(ShardingStrategy.class)
 public class AverageShardingStrategy implements ShardingStrategy {
 

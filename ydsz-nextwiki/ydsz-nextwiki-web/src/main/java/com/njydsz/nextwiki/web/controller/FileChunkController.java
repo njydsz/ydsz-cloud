@@ -151,7 +151,7 @@ public class FileChunkController {
    * 内部做幂等校验。
    *
    * @param uploadId 上传任务 ID
-   * @param chunkNumber 分片序号（从 0 开始）
+   * @param chunkNumber 分片序号（从 1 开始，与服务端合并逻辑一致）
    * @param chunk 分片文件
    * @param userId 当前用户 ID（P0-1：校验分片上传会话归属，防止越权上传）
    * @return 统一响应结果

@@ -71,11 +71,11 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
       log.debug("[WikiSearchProvider] 加载标签失败: nodeId={}", node.getId(), e);
     }
 
-    // 填充全文内容：优先使用内存传递的提取内容（searchableContent），
-    // 否则仅索引元数据（文件名/路径/标签）。
-    // searchableContent 由 ContentExtractionApplicationService 解析后设置在 FileNodeVO 上，
-    // 仅在索引同步流程中有效，不持久化到数据库。
-    String content = node.getSearchableContent();
+    // 全文内容（P1-5 修复）：文档正文由 ContentExtractionApplicationService 解析后，
+    // 通过 SearchDomainService.indexFile(fileNodeId, content, userId) 直接写入索引，
+    // 不再经 FileNodeVO 内存字段传递（移除原 searchableContent 死字段）。
+    // 此处 content 置空，仅索引元数据（文件名/路径/标签）。
+    String content = null;
 
     return IndexDocument.builder()
         .id(node.getId())

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,9 @@ public class CronjobThreadPoolRegistry {
   /** 线程池注册表: poolName -> ThreadPoolExecutor */
   private final ConcurrentHashMap<String, ThreadPoolExecutor> pools = new ConcurrentHashMap<>();
 
+  /** P2-E1: 线程池拒绝计数: poolName -> 拒绝次数（由 CountingRejectedExecutionHandler 维护） */
+  private final ConcurrentHashMap<String, AtomicLong> rejectedCounts = new ConcurrentHashMap<>();
+
   // ==================== 标准注册名常量 ====================
 
   /** 全局任务执行线程池（DefaultTaskDispatcher 主执行池） */
@@ -80,8 +84,24 @@ public class CronjobThreadPoolRegistry {
       log.debug("[ThreadPoolRegistry] 线程池已存在, 忽略本次注册: name={}", name);
       return existing;
     }
+    // P2-E1: 包装拒绝处理器为计数版本，使 rejectedExecutionCount 可观测
+    wrapRejectionCounter(name, pool);
     log.info("[ThreadPoolRegistry] 注册线程池: name={}", name);
     return pool;
+  }
+
+  /**
+   * P2-E1: 将线程池的拒绝处理器包装为计数版本。
+   *
+   * <p>仅在首次注册时包装（幂等判断：已是计数版本则跳过）。 包装不改变原拒绝策略行为（委托链），仅增加计数。
+   */
+  private void wrapRejectionCounter(String name, ThreadPoolExecutor pool) {
+    AtomicLong counter = new AtomicLong();
+    rejectedCounts.put(name, counter);
+    if (!(pool.getRejectedExecutionHandler() instanceof CountingRejectedExecutionHandler)) {
+      pool.setRejectedExecutionHandler(
+          new CountingRejectedExecutionHandler(pool.getRejectedExecutionHandler(), counter));
+    }
   }
 
   /**
@@ -148,8 +168,8 @@ public class CronjobThreadPoolRegistry {
                     pool.getQueue() != null ? pool.getQueue().size() : 0,
                     pool.getCompletedTaskCount(),
                     pool.getLargestPoolSize(),
-                    0L // rejectedExecutionCount 需由 RejectedExecutionHandler 自行计数
-                    )));
+                    // P2-E1: 读取真实拒绝计数（CountingRejectedExecutionHandler 维护）
+                    rejectedCounts.getOrDefault(name, new AtomicLong(0)).get())));
     return metrics;
   }
 

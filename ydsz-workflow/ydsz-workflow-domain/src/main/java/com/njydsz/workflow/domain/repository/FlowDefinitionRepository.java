@@ -105,6 +105,37 @@ public interface FlowDefinitionRepository {
   long countPage(String flowCode, String flowName, String tenantId);
 
   /**
+   * 分页查询流程定义（简化版）。
+   *
+   * <p>返回 {@code activityStatus=1} 且未逻辑删除的记录，按创建时间倒序。
+   *
+   * @param pageNo 页码（从 1 开始）
+   * @param pageSize 每页大小
+   * @param category 分类编码过滤（可选）
+   * @param flowCode 流程编码模糊过滤（可选）
+   * @return 流程定义 VO 列表
+   */
+  List<FlowDefinitionVO> findActivePage(int pageNo, int pageSize, String category, String flowCode);
+
+  /**
+   * 根据流程编码 + 租户查询所有版本的流程定义。
+   *
+   * @param flowCode 流程编码
+   * @param tenantId 租户 ID
+   * @return 流程定义 VO 列表
+   */
+  List<FlowDefinitionVO> findByFlowCodeAndTenantId(String flowCode, String tenantId);
+
+  /**
+   * 根据流程编码查询最新版本定义（不限制发布状态）。
+   *
+   * @param flowCode 流程编码
+   * @param tenantId 租户 ID
+   * @return 流程定义 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<FlowDefinitionVO> findLatestByCode(String flowCode, String tenantId);
+
+  /**
    * 按分类查询已启用的流程定义列表。
    *
    * <p>返回 {@code category = ? AND activityStatus = 1 AND isPublish = 1 AND deleted = 0} 的定义列表，

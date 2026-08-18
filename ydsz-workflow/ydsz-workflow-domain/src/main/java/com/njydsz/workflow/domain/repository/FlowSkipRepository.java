@@ -73,4 +73,12 @@ public interface FlowSkipRepository {
    * @return 节点跳转 VO 列表
    */
   List<FlowSkipVO> findByDefinitionIdAndNodeCode(String definitionId, String nodeCode);
+
+  /**
+   * 根据流程定义 ID 查询所有跳转边。
+   *
+   * @param definitionId 流程定义 ID
+   * @return 节点跳转 VO 列表
+   */
+  List<FlowSkipVO> findByDefinitionId(String definitionId);
 }

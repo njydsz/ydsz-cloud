@@ -16,7 +16,7 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 /**
  * 文件节点 Mapper
  *
- * <p>对应数据表 <code>ydsz_file_node</code>。
+ * <p>对应数据表 <code>nw_file_node</code>。
  *
  * <p>文件树节点是知识库的核心数据（文件夹/文件/文档），按父子层级组织，支持版本/分享/ACL。
  *
@@ -28,14 +28,15 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
  *   <li>idx_tenant_id — 租户隔离索引
  * </ul>
  *
- * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件（对 MP 自动生成的 SQL 生效）；
+ * 注解/XML 手写 SQL 需显式携带 {@code tenant_id}（见 P1-7 修复，路径类查询已显式过滤）。
  *
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.nextwiki.infra.entity.FileNodeDO 文件节点实体
- * @see com.njydsz.nextwiki.server.service.FileNodeService 文件节点 Service
+ * @see com.njydsz.nextwiki.server.service.FileApplicationService 文件应用服务
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
@@ -55,8 +56,9 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
   @Select("SELECT COUNT(*) FROM nw_file_node WHERE parent_id = #{parentId} AND deleted = 0")
   int countChildren(@Param("parentId") String parentId);
 
-  /** 按路径前缀查询（用于递归操作） */
-  List<FileNodeDO> selectByPathPrefix(@Param("pathPrefix") String pathPrefix);
+  /** 按路径前缀查询（用于递归操作，P1-7：显式带租户过滤） */
+  List<FileNodeDO> selectByPathPrefix(
+      @Param("pathPrefix") String pathPrefix, @Param("tenantId") String tenantId);
 
   /**
    * 数据库分页查询子节点（支持类型过滤与排序）
@@ -66,6 +68,7 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
    * @param nodeType 节点类型过滤（file/folder，null 表示不过滤）
    * @param sortBy 排序字段：name / size / time
    * @param sortDir 排序方向：asc / desc
+   * @param tenantId 租户 ID（P1-7：显式租户过滤，注解/XML SQL 不受 MP 租户拦截器增强）
    * @return 分页结果
    */
   IPage<FileNodeDO> selectPageByParentId(
@@ -73,7 +76,8 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
       @Param("parentId") String parentId,
       @Param("nodeType") String nodeType,
       @Param("sortBy") String sortBy,
-      @Param("sortDir") String sortDir);
+      @Param("sortDir") String sortDir,
+      @Param("tenantId") String tenantId);
 
   /**
    * 批量更新路径前缀（用于目录移动/重命名时递归更新子节点路径）
@@ -81,17 +85,21 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
    * @param oldPathPrefix 原路径前缀
    * @param newPathPrefix 新路径前缀
    * @param levelDelta 层级变化量（正负均可）
+   * @param excludeId 需要排除的节点 ID
+   * @param tenantId 租户 ID（P1-7：显式租户过滤）
    * @return 受影响行数
    */
   @Update(
       "UPDATE nw_file_node SET path = CONCAT(#{newPathPrefix}, SUBSTRING(path, LENGTH(#{oldPathPrefix}) + 1)), "
           + "level = level + #{levelDelta}, updated_at = NOW() "
-          + "WHERE path LIKE CONCAT(#{oldPathPrefix}, '%') AND deleted = 0 AND id <> #{excludeId}")
+          + "WHERE path LIKE CONCAT(#{oldPathPrefix}, '%') AND deleted = 0 AND id <> #{excludeId} "
+          + "AND tenant_id = #{tenantId}")
   int batchUpdatePathPrefix(
       @Param("oldPathPrefix") String oldPathPrefix,
       @Param("newPathPrefix") String newPathPrefix,
       @Param("levelDelta") int levelDelta,
-      @Param("excludeId") String excludeId);
+      @Param("excludeId") String excludeId,
+      @Param("tenantId") String tenantId);
 
   /**
    * 批量逻辑删除路径前缀下的所有节点（用于目录删除时递归逻辑删除子节点）
@@ -102,9 +110,12 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
    */
   @Update(
       "UPDATE nw_file_node SET deleted = 1, deleted_time = NOW(), updated_at = NOW() "
-          + "WHERE path LIKE CONCAT(#{pathPrefix}, '%') AND deleted = 0 AND id <> #{excludeId}")
+          + "WHERE path LIKE CONCAT(#{pathPrefix}, '%') AND deleted = 0 AND id <> #{excludeId} "
+          + "AND tenant_id = #{tenantId}")
   int batchSoftDeleteByPathPrefix(
-      @Param("pathPrefix") String pathPrefix, @Param("excludeId") String excludeId);
+      @Param("pathPrefix") String pathPrefix,
+      @Param("excludeId") String excludeId,
+      @Param("tenantId") String tenantId);
 
   /** 逻辑删除（设置 deleted=1 + deleted_time） */
   @Update(
@@ -169,8 +180,10 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
       "UPDATE nw_file_node SET deleted = 0, deleted_time = NULL, updated_at = NOW() WHERE id = #{id}")
   int restore(@Param("id") String id);
 
-  /** 更新大小 */
-  @Update("UPDATE nw_file_node SET size = size + #{sizeDelta}, updated_at = NOW() WHERE id = #{id}")
+  /** 更新大小（P1-11：限制仅更新未删除节点，防误更新回收站条目） */
+  @Update(
+      "UPDATE nw_file_node SET size = size + #{sizeDelta}, updated_at = NOW() "
+          + "WHERE id = #{id} AND deleted = 0")
   int updateSize(@Param("id") String id, @Param("sizeDelta") Long sizeDelta);
 
   /** 搜索文件名（LIKE） */
@@ -233,12 +246,14 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
    * <p>利用 LIKE 前缀匹配：路径为 {@code /root/documents/} 时， 所有后代节点路径均以该前缀开头。结果按 level 升序、sort 升序排列。
    *
    * @param folderPath 文件夹路径（需以 {@code /} 结尾）
+   * @param tenantId 租户 ID（P1-7：显式租户过滤）
    * @return 全部后代节点列表，按层级升序排列
    */
   @Select(
       "SELECT * FROM nw_file_node WHERE path LIKE CONCAT(#{folderPath}, '%') "
-          + "AND deleted = 0 ORDER BY level ASC, sort ASC")
-  List<FileNodeDO> selectAllDescendantsByPath(@Param("folderPath") String folderPath);
+          + "AND deleted = 0 AND tenant_id = #{tenantId} ORDER BY level ASC, sort ASC")
+  List<FileNodeDO> selectAllDescendantsByPath(
+      @Param("folderPath") String folderPath, @Param("tenantId") String tenantId);
 
   /**
    * 分页查询文件夹的后代节点（用于分批复制场景，避免一次全量加载 OOM）。
@@ -248,25 +263,31 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
    * @param folderPath 文件夹路径（需以 {@code /} 结尾）
    * @param offset 偏移量（从 0 开始）
    * @param limit 每页大小
+   * @param tenantId 租户 ID（P1-7：显式租户过滤）
    * @return 后代节点分页列表
    */
   @Select(
       "SELECT * FROM nw_file_node WHERE path LIKE CONCAT(#{folderPath}, '%') "
-          + "AND deleted = 0 ORDER BY level ASC, sort ASC LIMIT #{limit} OFFSET #{offset}")
+          + "AND deleted = 0 AND tenant_id = #{tenantId} "
+          + "ORDER BY level ASC, sort ASC LIMIT #{limit} OFFSET #{offset}")
   List<FileNodeDO> selectDescendantsByPage(
       @Param("folderPath") String folderPath,
       @Param("offset") int offset,
-      @Param("limit") int limit);
+      @Param("limit") int limit,
+      @Param("tenantId") String tenantId);
 
   /**
    * 统计文件夹的后代节点数量（不含文件夹自身）。
    *
    * @param folderPath 文件夹路径
+   * @param tenantId 租户 ID（P1-7：显式租户过滤）
    * @return 后代节点总数
    */
   @Select(
-      "SELECT COUNT(*) FROM nw_file_node WHERE path LIKE CONCAT(#{folderPath}, '%') AND deleted = 0")
-  int countDescendantsByPath(@Param("folderPath") String folderPath);
+      "SELECT COUNT(*) FROM nw_file_node WHERE path LIKE CONCAT(#{folderPath}, '%') "
+          + "AND deleted = 0 AND tenant_id = #{tenantId}")
+  int countDescendantsByPath(
+      @Param("folderPath") String folderPath, @Param("tenantId") String tenantId);
 
   /**
    * 查询冷数据候选（长期未访问的文件）。

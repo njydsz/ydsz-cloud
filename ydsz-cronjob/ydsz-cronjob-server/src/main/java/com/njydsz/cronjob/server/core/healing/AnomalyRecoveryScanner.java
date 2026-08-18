@@ -151,6 +151,17 @@ public class AnomalyRecoveryScanner {
     }
   }
 
+  /**
+   * P2-P6: 立即触发一次异常扫描（供节点变更事件驱动）。
+   *
+   * <p>由 {@code ShardRebalanceListener} 在检测到节点下线时调用，立即恢复下线节点的 RUNNING 任务，
+   * 无需等待下一个 30s 扫描周期。内部仍复用 {@link #scan()} 的 Leader 校验与分布式锁语义，
+   * 多节点并发触发时仅一个节点实际执行。
+   */
+  public void scanImmediately() {
+    scan();
+  }
+
   // ==================== 离线节点任务恢复（原 FailoverScanner） ====================
 
   /**

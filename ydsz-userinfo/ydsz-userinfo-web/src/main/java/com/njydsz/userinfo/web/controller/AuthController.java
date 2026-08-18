@@ -31,6 +31,7 @@ import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.MfaService;
+import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
  * 认证 Controller
@@ -71,6 +72,9 @@ public class AuthController {
 
   /** 双因素认证服务（登录短信验证码发送） */
   private final MfaService mfaService;
+
+  /** P2-6: 可信代理配置（决定是否信任转发头） */
+  private final UserInfoProperties properties;
 
   /**
    * 发送登录 MFA 短信验证码（风险为 HIGH 且未绑定 TOTP 时调用）。
@@ -171,7 +175,9 @@ public class AuthController {
   /**
    * 从 HttpServletRequest 中提取客户端真实 IP
    *
-   * <p>优先读取 X-Forwarded-For、X-Real-IP、Proxy-Client-IP 等代理头， 兜底使用 getRemoteAddr()。
+   * <p>P2-6: 仅当请求来自可信代理（{@code ydsz.userinfo.trusted-proxies}）时，才读取
+   * X-Forwarded-For、X-Real-IP 等代理头；否则直接用 getRemoteAddr()，
+   * 防止客户端直接伪造转发头绕过 IP 风控。
    *
    * @param request HTTP 请求
    * @return 客户端真实 IP；无 IP 时为 null
@@ -179,6 +185,9 @@ public class AuthController {
   private String extractClientIp(HttpServletRequest request) {
     if (request == null) {
       return null;
+    }
+    if (!isTrustedProxy(request)) {
+      return request.getRemoteAddr();
     }
     String ip = request.getHeader(HeaderConstants.X_FORWARDED_FOR);
     if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
@@ -199,6 +208,24 @@ public class AuthController {
       return ip.trim();
     }
     return request.getRemoteAddr();
+  }
+
+  /**
+   * P2-6: 判断请求是否来自可信代理。
+   *
+   * <p>远程地址命中 {@code ydsz.userinfo.trusted-proxies} 列表才返回 true；
+   * 列表为空时一律不信任代理头（默认安全策略）。
+   *
+   * @param request HTTP 请求
+   * @return true 表示来自可信代理
+   */
+  private boolean isTrustedProxy(HttpServletRequest request) {
+    java.util.List<String> trustedProxies = properties.getTrustedProxies();
+    if (trustedProxies == null || trustedProxies.isEmpty()) {
+      return false;
+    }
+    String remoteAddr = request.getRemoteAddr();
+    return remoteAddr != null && trustedProxies.contains(remoteAddr);
   }
 
   /**

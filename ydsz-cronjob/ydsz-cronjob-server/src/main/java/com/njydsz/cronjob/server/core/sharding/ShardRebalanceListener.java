@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
+import com.njydsz.cronjob.server.core.healing.AnomalyRecoveryScanner;
 
 /**
  * P1-9: 分片实时重平衡监听器。
@@ -54,6 +55,9 @@ import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 public class ShardRebalanceListener {
 
   private final ObjectProvider<NodeDiscoveryStrategy> nodeDiscoveryStrategyProvider;
+
+  /** P2-P6: 异常恢复扫描器（节点下线时主动触发任务转移，不等 30s 周期） */
+  private final ObjectProvider<AnomalyRecoveryScanner> anomalyRecoveryScannerProvider;
 
   /** 上次缓存的在线节点 ID 列表（用于对比变化） */
   private volatile List<String> lastNodeIds = List.of();
@@ -124,7 +128,17 @@ public class ShardRebalanceListener {
       log.info("[ShardRebalance] 节点上线: {}", added);
     }
     if (!removed.isEmpty()) {
-      log.warn("[ShardRebalance] 节点下线: {}（AnomalyRecoveryScanner 将自动转移其任务）", removed);
+      log.warn("[ShardRebalance] 节点下线: {}（主动触发故障转移）", removed);
+      // P2-P6: 主动触发异常恢复扫描，立即转移下线节点上的 RUNNING 任务（含运行中分片），
+      // 无需等待 AnomalyRecoveryScanner 的下一个 30s 扫描周期。scanImmediately 内部有 Leader 校验。
+      AnomalyRecoveryScanner scanner = anomalyRecoveryScannerProvider.getIfAvailable();
+      if (scanner != null) {
+        try {
+          scanner.scanImmediately();
+        } catch (Exception e) {
+          log.warn("[ShardRebalance] 主动触发故障转移异常(将等待周期扫描兜底): reason={}", e.getMessage());
+        }
+      }
     }
 
     // 记录变更历史

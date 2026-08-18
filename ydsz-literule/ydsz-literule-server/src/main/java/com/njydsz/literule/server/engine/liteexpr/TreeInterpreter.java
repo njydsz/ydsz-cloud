@@ -411,7 +411,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
       return;
     }
     try {
-      debugger.checkExpressionBreakpoint(ruleCode, node, nodeType, variables);
+      debugger.checkExpressionBreakpoint(ruleCode, nodeType, node.exprText(), variables);
     } catch (Exception e) {
       // 断点挂起异常不应中断求值（调试器故障隔离）
       if (e instanceof InterruptedException) {

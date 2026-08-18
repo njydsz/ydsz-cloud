@@ -38,6 +38,9 @@ public class InMemoryTraceRecorder implements TraceRecorder {
   /** 链路状态存储 */
   private final Map<String, String> traceStatus = new ConcurrentHashMap<>();
 
+  /** 超容量后一次性多淘汰的链路数（避免频繁触发淘汰，同时防止低流量时清空近半链路） */
+  private static final int EVICT_MARGIN = 10;
+
   /** 链路元数据存储 */
   private final Map<String, TraceMeta> traceMetas = new ConcurrentHashMap<>();
 
@@ -164,9 +167,9 @@ public class InMemoryTraceRecorder implements TraceRecorder {
               traceStatus.remove(tid);
               traceMetas.remove(tid);
             });
-    // 超容量时清理最旧的链路
+    // 超容量时清理最旧的链路（P2 修复：原一次删 100 条，低流量时可能清空近半链路）
     if (traces.size() >= MAX_TRACES) {
-      int toRemove = traces.size() - MAX_TRACES + 100;
+      int toRemove = traces.size() - MAX_TRACES + EVICT_MARGIN;
       traceMetas.values().stream()
           .sorted(Comparator.comparing(TraceMeta::getStartedAt))
           .limit(toRemove)

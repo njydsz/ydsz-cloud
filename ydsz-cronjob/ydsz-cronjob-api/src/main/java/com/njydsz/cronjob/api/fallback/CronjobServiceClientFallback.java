@@ -1,5 +1,7 @@
 package com.njydsz.cronjob.api.fallback;
 
+import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -61,6 +63,45 @@ public class CronjobServiceClientFallback implements FallbackFactory<CronjobServ
             jobId,
             holdLock);
         return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
+      }
+
+      /**
+       * P2-F8: 降级实现——查询任务详情不可用。
+       *
+       * @param jobId 任务 ID
+       * @return 返回统一错误码，表示服务不可用
+       */
+      @Override
+      public BaseResponse<Map<String, Object>> getJobInfo(String jobId) {
+        log.warn("[CronjobServiceClient] getJobInfo 降级: jobId={}, reason=cronjob服务不可用", jobId);
+        return BaseResponse.error(
+            FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
+      }
+
+      /**
+       * P2-F8: 降级实现——暂停任务不可用。
+       *
+       * @param jobId 任务 ID
+       * @return 返回统一错误码，表示服务不可用
+       */
+      @Override
+      public BaseResponse<Void> pauseJob(String jobId) {
+        log.warn("[CronjobServiceClient] pauseJob 降级: jobId={}, reason=cronjob服务不可用", jobId);
+        return BaseResponse.error(
+            FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
+      }
+
+      /**
+       * P2-F8: 降级实现——恢复任务不可用。
+       *
+       * @param jobId 任务 ID
+       * @return 返回统一错误码，表示服务不可用
+       */
+      @Override
+      public BaseResponse<Void> resumeJob(String jobId) {
+        log.warn("[CronjobServiceClient] resumeJob 降级: jobId={}, reason=cronjob服务不可用", jobId);
+        return BaseResponse.error(
+            FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
       }
     };
   }

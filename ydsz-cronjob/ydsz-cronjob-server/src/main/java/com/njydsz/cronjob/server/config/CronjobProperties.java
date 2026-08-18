@@ -98,6 +98,9 @@ public class CronjobProperties {
   /** P1-4: 异常修复统一配置（合并原 Failover + SelfHealing） */
   private AnomalyRecoveryConfig anomalyRecovery = new AnomalyRecoveryConfig();
 
+  /** P1-P3: 秒级预读调度配置（时间轮式精准触发，提升 CRON 任务调度精度） */
+  private PrecisionConfig preload = new PrecisionConfig();
+
   /** SpEL 表达式缓存配置（已废弃，v1.2.0 移除） */
   @Deprecated
   private SpelConfig spel = new SpelConfig();

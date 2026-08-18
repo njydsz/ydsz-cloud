@@ -81,4 +81,13 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
                 .eq(FlowSkipDO::getNextNodeCode, nodeCode)
                 .eq(FlowSkipDO::getDeleted, 0)));
   }
+
+  @Override
+  public List<FlowSkipVO> findByDefinitionId(String definitionId) {
+    return converter.flowSkipListToVO(
+        skipMapper.selectList(
+            new LambdaQueryWrapper<FlowSkipDO>()
+                .eq(FlowSkipDO::getDefinitionId, definitionId)
+                .eq(FlowSkipDO::getDeleted, 0)));
+  }
 }

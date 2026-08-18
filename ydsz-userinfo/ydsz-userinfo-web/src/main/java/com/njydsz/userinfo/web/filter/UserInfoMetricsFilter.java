@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
+import com.njydsz.userinfo.server.trace.TraceContext;
 
 /**
  * 用户中心 HTTP 请求耗时统计过滤器。
@@ -52,13 +53,22 @@ public class UserInfoMetricsFilter extends OncePerRequestFilter {
       long durationMs = System.currentTimeMillis() - startTime;
       int status = response.getStatus();
 
+      // P1-10: 指标标签携带 traceId，便于按链路聚合排障
+      String traceId = TraceContext.getTraceId();
       userInfoMetrics.recordTimer(
-          "http_request_duration_ms", durationMs, "method", method, "uri", uri, "status",
-          String.valueOf(status));
+          "http_request_duration_ms",
+          durationMs,
+          "method", method,
+          "uri", uri,
+          "status", String.valueOf(status),
+          "traceId", traceId != null ? traceId : "none");
 
       userInfoMetrics.recordHttpCount(
           "http_requests_total",
-          "method", method, "uri", uri, "status", String.valueOf(status));
+          "method", method,
+          "uri", uri,
+          "status", String.valueOf(status),
+          "traceId", traceId != null ? traceId : "none");
     }
   }
 

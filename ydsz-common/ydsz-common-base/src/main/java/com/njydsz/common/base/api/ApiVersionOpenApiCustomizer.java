@@ -61,9 +61,10 @@ public class ApiVersionOpenApiCustomizer implements OperationCustomizer {
 
       // 添加 X-Api-Version 响应头
       if (operation.getResponses() != null) {
+        // swagger-core 2.2+ 已将 addHeaderObject 更名为 addHeader
         operation
             .getResponses()
-            .addHeaderObject(
+            .addHeader(
                 "X-Api-Version",
                 new Header().description("API 版本号: " + version.value()).required(true));
       }

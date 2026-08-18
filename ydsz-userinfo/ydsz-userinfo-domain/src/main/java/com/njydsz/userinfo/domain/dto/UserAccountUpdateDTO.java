@@ -61,4 +61,13 @@ public class UserAccountUpdateDTO implements Serializable {
 
   /** 岗位编码（如 PM/DEV/QA/SA，支持 position: 审批人展开） */
   private String positionCode;
+
+  /**
+   * 乐观锁版本号（P1-6）。
+   *
+   * <p>由前端在编辑页面携带（从查询响应获取），更新时用于乐观锁冲突检测。
+   * 为 null 时保持原行为（由 Service 层填充当前版本）；携带后若与 DB 当前版本不一致，
+   * 更新将被拒绝并提示"数据已被他人修改"。
+   */
+  private Integer revision;
 }

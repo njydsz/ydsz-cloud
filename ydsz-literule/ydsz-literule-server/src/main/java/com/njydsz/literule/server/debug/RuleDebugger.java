@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.expression.ExpressionEngine;
-import com.njydsz.literule.server.engine.liteexpr.ExprNode;
 
 /**
  * 规则断点调试器（F1 断点调试器）
@@ -331,13 +330,13 @@ public class RuleDebugger {
    * 表达式节点级断点检查（TreeInterpreter 节点求值前调用）
    *
    * @param ruleCode 规则编码
-   * @param node AST 节点
    * @param nodeType 节点类型（COMPARISON/LOGICAL/ARITHMETIC/VARIABLE/FUNCTION_CALL/TERNARY）
+   * @param expression 节点表达式文本
    * @param facts 当前变量上下文
    * @return 命中断点；未命中返回 null
    */
   public BreakpointHit checkExpressionBreakpoint(
-      String ruleCode, ExprNode node, String nodeType, Map<String, Object> facts) {
+      String ruleCode, String nodeType, String expression, Map<String, Object> facts) {
     if (ruleCode == null) {
       return null;
     }
@@ -358,8 +357,7 @@ public class RuleDebugger {
         continue;
       }
       // 表达式文本匹配（可选）
-      if (bp.getExpression() != null
-          && (node == null || !bp.getExpression().equals(node.exprText()))) {
+      if (bp.getExpression() != null && !bp.getExpression().equals(expression)) {
         continue;
       }
       if (!matchesHitLimit(bp)) {
@@ -369,7 +367,7 @@ public class RuleDebugger {
         continue;
       }
       bp.setHitCount(bp.getHitCount() + 1);
-      String exprText = node != null ? node.exprText() : nodeType;
+      String exprText = expression != null ? expression : nodeType;
       BreakpointHit hit =
           BreakpointHit.nodeHit(
               session.getSessionId(), bp.getId(), ruleCode, nodeType, exprText, facts);
