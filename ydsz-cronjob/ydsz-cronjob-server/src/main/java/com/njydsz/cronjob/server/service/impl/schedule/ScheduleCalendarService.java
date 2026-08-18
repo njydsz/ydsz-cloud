@@ -10,7 +10,7 @@ import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.cronjob.domain.entity.job.Job;
-import com.njydsz.cronjob.infra.repository.JobRepository;
+import com.njydsz.cronjob.domain.repository.JobRepository;
 
 /**
  * 调度日历服务实现。

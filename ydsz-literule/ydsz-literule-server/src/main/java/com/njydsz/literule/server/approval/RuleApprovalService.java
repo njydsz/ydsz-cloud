@@ -8,13 +8,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleStatus;
-import com.njydsz.literule.infra.repository.ApprovalRecordRepository;
+import com.njydsz.literule.domain.dto.post.ApprovalRecordSaveDTO;
+import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
+import com.njydsz.literule.domain.vo.ApprovalRecordVO;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 
 /**
@@ -678,8 +681,10 @@ public class RuleApprovalService {
   private ApprovalRecord loadRecord(String ruleCode) {
     ApprovalRecord record = recordStore.get(ruleCode);
     if (record == null && recordRepository != null) {
-      record = recordRepository.findByRuleCode(ruleCode);
-      if (record != null) {
+      List<ApprovalRecordVO> records = recordRepository.findByRuleCode(ruleCode);
+      if (!records.isEmpty()) {
+        ApprovalRecordVO vo = records.get(0);
+        record = voToRecord(vo);
         recordStore.put(ruleCode, record);
       }
     }
@@ -691,11 +696,56 @@ public class RuleApprovalService {
     recordStore.put(record.getRuleCode(), record);
     if (recordRepository != null) {
       try {
-        recordRepository.save(record);
+        ApprovalRecordSaveDTO saveDTO = recordToSaveDTO(record);
+        recordRepository.save(saveDTO);
       } catch (Exception e) {
         log.warn("[Approval] 审批记录持久化失败: ruleCode={}, err={}", record.getRuleCode(), e.getMessage());
       }
     }
+  }
+
+  /** ApprovalRecordVO → ApprovalRecord（server 对象） */
+  private ApprovalRecord voToRecord(ApprovalRecordVO vo) {
+    ApprovalRecord record = new ApprovalRecord();
+    record.setRecordId(vo.getRecordId());
+    record.setRuleCode(vo.getRuleCode());
+    record.setFlowCode(vo.getFlowCode());
+    record.setCurrentLevel(vo.getCurrentLevel());
+    record.setCurrentStatus(vo.getCurrentStatus());
+    record.setCreatedAt(vo.getCreatedAt());
+    record.setUpdatedAt(vo.getUpdatedAt());
+    return record;
+  }
+
+  /** ApprovalRecord（server 对象） → ApprovalRecordSaveDTO */
+  private ApprovalRecordSaveDTO recordToSaveDTO(ApprovalRecord record) {
+    ApprovalRecordSaveDTO dto = new ApprovalRecordSaveDTO();
+    dto.setRecordId(record.getRecordId());
+    dto.setRuleCode(record.getRuleCode());
+    dto.setFlowCode(record.getFlowCode());
+    dto.setCurrentLevel(record.getCurrentLevel());
+    dto.setCurrentStatus(record.getCurrentStatus());
+    dto.setCreatedAt(record.getCreatedAt());
+    dto.setUpdatedAt(record.getUpdatedAt());
+    if (record.getLogs() != null) {
+      List<ApprovalRecordSaveDTO.ApprovalLogDTO> logDTOs = record.getLogs().stream()
+          .map(log -> {
+            ApprovalRecordSaveDTO.ApprovalLogDTO logDTO = new ApprovalRecordSaveDTO.ApprovalLogDTO();
+            logDTO.setLevel(log.getLevel());
+            logDTO.setApprover(log.getApprover());
+            logDTO.setAction(log.getAction());
+            logDTO.setComment(log.getComment());
+            logDTO.setDelegatedTo(log.getDelegatedTo());
+            logDTO.setTimestamp(log.getTimestamp());
+            return logDTO;
+          })
+          .collect(java.util.stream.Collectors.toList());
+      dto.setLogs(logDTOs);
+    }
+    if (record.getCurrentLevelApprovedApprovers() != null) {
+      dto.setCurrentLevelApprovedApprovers(new ArrayList<>(record.getCurrentLevelApprovedApprovers()));
+    }
+    return dto;
   }
 
   /** 校验审批权限 */

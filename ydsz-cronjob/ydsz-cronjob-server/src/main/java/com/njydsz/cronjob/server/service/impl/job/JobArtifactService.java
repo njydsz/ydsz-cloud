@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.cronjob.domain.entity.job.JobArtifact;
-import com.njydsz.cronjob.infra.repository.JobArtifactRepository;
+import com.njydsz.cronjob.domain.repository.JobArtifactRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**

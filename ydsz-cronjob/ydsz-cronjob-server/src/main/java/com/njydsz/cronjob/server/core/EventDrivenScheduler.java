@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.cronjob.domain.entity.job.Job;
-import com.njydsz.cronjob.infra.repository.JobRepository;
+import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.server.service.job.JobService;
 
 /**

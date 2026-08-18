@@ -10,11 +10,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.audit.storage.JdbcAuditStorage;
-import com.njydsz.cronjob.infra.repository.JobAlertLogRepository;
-import com.njydsz.cronjob.infra.repository.JobHistoryRepository;
-import com.njydsz.cronjob.infra.repository.JobLogContentRepository;
-import com.njydsz.cronjob.infra.repository.JobLogRepository;
-import com.njydsz.cronjob.infra.repository.JobTaskRepository;
+import com.njydsz.cronjob.domain.repository.JobAlertLogRepository;
+import com.njydsz.cronjob.domain.repository.JobHistoryRepository;
+import com.njydsz.cronjob.domain.repository.JobLogContentRepository;
+import com.njydsz.cronjob.domain.repository.JobLogRepository;
+import com.njydsz.cronjob.domain.repository.JobTaskRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.LogRetentionConfig;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;

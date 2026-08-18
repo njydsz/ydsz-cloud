@@ -19,8 +19,8 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.entity.job.JobHistory;
-import com.njydsz.cronjob.infra.repository.JobHistoryRepository;
-import com.njydsz.cronjob.infra.repository.JobRepository;
+import com.njydsz.cronjob.domain.repository.JobHistoryRepository;
+import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.server.service.job.JobHistoryService;
 
 /**

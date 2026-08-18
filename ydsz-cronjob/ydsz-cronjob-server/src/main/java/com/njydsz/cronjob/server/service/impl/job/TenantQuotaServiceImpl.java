@@ -13,8 +13,8 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.cronjob.domain.entity.job.TenantQuota;
-import com.njydsz.cronjob.infra.repository.JobRepository;
-import com.njydsz.cronjob.infra.repository.TenantQuotaRepository;
+import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.repository.TenantQuotaRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 

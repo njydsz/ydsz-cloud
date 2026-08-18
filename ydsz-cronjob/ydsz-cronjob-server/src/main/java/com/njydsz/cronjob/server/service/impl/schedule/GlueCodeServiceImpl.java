@@ -17,7 +17,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
-import com.njydsz.cronjob.infra.repository.GlueCodeRepository;
+import com.njydsz.cronjob.domain.repository.GlueCodeRepository;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
 
 import groovy.lang.GroovyClassLoader;

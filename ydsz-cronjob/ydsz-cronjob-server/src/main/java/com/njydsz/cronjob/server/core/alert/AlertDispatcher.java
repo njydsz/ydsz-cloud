@@ -27,8 +27,8 @@ import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
 import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
 import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
-import com.njydsz.cronjob.infra.repository.JobAlertLogRepository;
-import com.njydsz.cronjob.infra.repository.JobAlertRuleRepository;
+import com.njydsz.cronjob.domain.repository.JobAlertLogRepository;
+import com.njydsz.cronjob.domain.repository.JobAlertRuleRepository;
 import com.njydsz.cronjob.server.core.AlertSendException;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 

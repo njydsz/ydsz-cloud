@@ -10,7 +10,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
-import com.njydsz.cronjob.infra.repository.JobAlertRuleRepository;
+import com.njydsz.cronjob.domain.repository.JobAlertRuleRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
