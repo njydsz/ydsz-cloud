@@ -231,7 +231,7 @@ public class CachedJwtValidator {
       JsonNode node = YdszJson.readTree(payload);
       JsonNode expNode = node.get("exp");
       if (expNode != null && expNode.isNumber()) {
-        return expNode.longValue() * 1_000L;
+        return expNode.asLong() * 1_000L;
       }
       return 0L;
     } catch (Exception e) {
