@@ -7,6 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.dto.post.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.dto.put.FlowDelegateAuthPutDTO;
 import com.njydsz.workflow.infra.entity.FlowAdminRoleDO;
@@ -148,6 +149,39 @@ public interface WorkflowConverter {
   FlowInstanceVO entityToVO(FlowInstanceDO entity);
 
   List<FlowInstanceVO> flowInstanceListToVO(List<FlowInstanceDO> entities);
+
+  /**
+   * 流程实例 DTO → 流程实例实体（创建场景）。
+   *
+   * <p>用于新增流程实例。MpBaseEntity 的自动填充字段通过 @Mapping(ignore = true) 忽略。
+   *
+   * @param dto 流程实例 DTO
+   * @return 流程实例实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  FlowInstanceDO dtoToEntity(FlowInstanceDTO dto);
+
+  /**
+   * 流程实例 DTO（含 ID）→ 流程实例实体（更新场景）。
+   *
+   * <p>用于更新流程实例，保留 id 字段用于定位更新记录。
+   *
+   * @param dto 流程实例 DTO（含 id）
+   * @return 流程实例实体（含 id，用于条件更新）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  FlowInstanceDO dtoToEntityWithId(FlowInstanceDTO dto);
 
   // ===== FlowNodeDO =====
   FlowNodeVO entityToVO(FlowNodeDO entity);

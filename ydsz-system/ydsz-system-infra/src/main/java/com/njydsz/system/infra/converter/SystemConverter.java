@@ -3,8 +3,17 @@ package com.njydsz.system.infra.converter;
 import java.util.List;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import com.njydsz.system.domain.dto.AppInfoDTO;
+import com.njydsz.system.domain.dto.ConfigDTO;
+import com.njydsz.system.domain.dto.DictItemDTO;
+import com.njydsz.system.domain.dto.DictTypeDTO;
+import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
+import com.njydsz.system.domain.dto.TenantDTO;
+import com.njydsz.system.domain.dto.TenantPlanDTO;
+import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.DictItemVO;
@@ -87,6 +96,39 @@ public interface SystemConverter {
    */
   List<AppInfoVO> appInfoListToVO(List<AppInfo> entities);
 
+  /**
+   * 应用信息 DTO → 应用信息实体
+   *
+   * <p>用于创建应用信息场景。MpBaseEntity 的自动填充字段通过 @Mapping(ignore = true) 忽略。
+   *
+   * @param dto 应用信息 DTO
+   * @return 应用信息实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  AppInfo dtoToEntity(AppInfoDTO dto);
+
+  /**
+   * 应用信息 DTO（含 ID）→ 应用信息实体
+   *
+   * <p>用于更新应用信息场景，保留 id 字段用于定位更新记录。
+   *
+   * @param dto 应用信息 DTO（含 id）
+   * @return 应用信息实体（含 id，用于条件更新）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  AppInfo dtoToEntityWithId(AppInfoDTO dto);
+
   // ===== Config =====
 
   /**
@@ -104,6 +146,55 @@ public interface SystemConverter {
    * @return 系统配置 VO 列表
    */
   List<ConfigVO> configListToVO(List<Config> entities);
+
+  /**
+   * 系统配置 DTO → 系统配置实体
+   *
+   * <p>用于创建系统配置场景。MpBaseEntity 的自动填充字段通过 @Mapping(ignore = true) 忽略。
+   *
+   * @param dto 系统配置 DTO
+   * @return 系统配置实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  Config dtoToEntity(ConfigDTO dto);
+
+  /**
+   * 系统配置 DTO（含 ID）→ 系统配置实体
+   *
+   * <p>用于更新系统配置场景，保留 id 字段用于定位更新记录。
+   *
+   * @param dto 系统配置 DTO（含 id）
+   * @return 系统配置实体（含 id，用于条件更新）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  Config dtoToEntityWithId(ConfigDTO dto);
+
+  /**
+   * 系统配置 DTO 列表 → 系统配置实体列表
+   *
+   * @param dtos 系统配置 DTO 列表
+   * @return 系统配置实体列表
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  List<Config> configDtosToEntities(List<ConfigDTO> dtos);
 
   // ===== DictItem =====
 
@@ -123,6 +214,55 @@ public interface SystemConverter {
    */
   List<DictItemVO> dictItemListToVO(List<DictItem> entities);
 
+  /**
+   * 字典项 DTO → 字典项实体
+   *
+   * <p>用于创建/更新字典项场景。MpBaseEntity 的自动填充字段通过 @Mapping(ignore = true) 忽略。
+   *
+   * @param dto 字典项 DTO
+   * @return 字典项实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  DictItem dtoToEntity(DictItemDTO dto);
+
+  /**
+   * 字典项 DTO（含 ID）→ 字典项实体
+   *
+   * <p>用于更新字典项场景，保留 id 字段用于定位更新记录。
+   *
+   * @param dto 字典项 DTO（含 id）
+   * @return 字典项实体（含 id，用于条件更新）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  DictItem dtoToEntityWithId(DictItemDTO dto);
+
+  /**
+   * 字典项 DTO 列表 → 字典项实体列表
+   *
+   * @param dtos 字典项 DTO 列表
+   * @return 字典项实体列表
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  List<DictItem> dictItemDtosToEntities(List<DictItemDTO> dtos);
+
   // ===== DictType =====
 
   /**
@@ -140,6 +280,39 @@ public interface SystemConverter {
    * @return 字典类型 VO 列表
    */
   List<DictTypeVO> dictTypeListToVO(List<DictType> entities);
+
+  /**
+   * 字典类型 DTO → 字典类型实体
+   *
+   * <p>用于创建字典类型场景。MpBaseEntity 的自动填充字段通过 @Mapping(ignore = true) 忽略。
+   *
+   * @param dto 字典类型 DTO
+   * @return 字典类型实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  DictType dtoToEntity(DictTypeDTO dto);
+
+  /**
+   * 字典类型 DTO（含 ID）→ 字典类型实体
+   *
+   * <p>用于更新字典类型场景，保留 id 字段用于定位更新记录。
+   *
+   * @param dto 字典类型 DTO（含 id）
+   * @return 字典类型实体（含 id，用于条件更新）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  DictType dtoToEntityWithId(DictTypeDTO dto);
 
   // ===== EntityVersion =====
 
@@ -159,6 +332,24 @@ public interface SystemConverter {
    */
   List<EntityVersionVO> entityVersionListToVO(List<EntityVersion> entities);
 
+  /**
+   * 实体版本创建 DTO → 实体版本实体
+   *
+   * <p>用于创建实体版本场景。MpBaseEntity 的自动填充字段通过 @Mapping(ignore = true) 忽略。
+   *
+   * @param dto 实体版本创建 DTO
+   * @return 实体版本实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  EntityVersion dtoToEntity(EntityVersionCreateDTO dto);
+
   // ===== Tenant =====
 
   /**
@@ -176,6 +367,39 @@ public interface SystemConverter {
    * @return 租户 VO 列表
    */
   List<TenantVO> tenantListToVO(List<Tenant> entities);
+
+  /**
+   * 租户 DTO → 租户实体
+   *
+   * <p>用于创建租户场景。MpBaseEntity 的自动填充字段通过 @Mapping(ignore = true) 忽略。
+   *
+   * @param dto 租户 DTO
+   * @return 租户实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  Tenant dtoToEntity(TenantDTO dto);
+
+  /**
+   * 租户 DTO（含 ID）→ 租户实体
+   *
+   * <p>用于更新租户场景，保留 id 字段用于定位更新记录。
+   *
+   * @param dto 租户 DTO（含 id）
+   * @return 租户实体（含 id，用于条件更新）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  Tenant dtoToEntityWithId(TenantDTO dto);
 
   // ===== TenantPlan =====
 
@@ -195,6 +419,39 @@ public interface SystemConverter {
    */
   List<TenantPlanVO> planListToVO(List<TenantPlan> entities);
 
+  /**
+   * 套餐 DTO → 套餐实体
+   *
+   * <p>用于创建套餐场景。MpBaseEntity 的自动填充字段通过 @Mapping(ignore = true) 忽略。
+   *
+   * @param dto 套餐 DTO
+   * @return 套餐实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  TenantPlan dtoToEntity(TenantPlanDTO dto);
+
+  /**
+   * 套餐 DTO（含 ID）→ 套餐实体
+   *
+   * <p>用于更新套餐场景，保留 id 字段用于定位更新记录。
+   *
+   * @param dto 套餐 DTO（含 id）
+   * @return 套餐实体（含 id，用于条件更新）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  TenantPlan dtoToEntityWithId(TenantPlanDTO dto);
+
   // ===== TenantPlanMenu =====
 
   /**
@@ -213,6 +470,25 @@ public interface SystemConverter {
    */
   List<TenantPlanMenuVO> planMenuListToVO(List<TenantPlanMenu> entities);
 
+  /**
+   * 套餐 ID + 菜单 ID → 套餐-菜单关联实体
+   *
+   * <p>用于创建套餐-菜单关联场景。MpBaseEntity 的自动填充字段通过 @Mapping(ignore = true) 忽略。
+   *
+   * @param planId 套餐 ID
+   * @param menuId 菜单 ID
+   * @return 套餐-菜单关联实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  TenantPlanMenu dtoToEntity(String planId, String menuId);
+
   // ===== Variable =====
 
   /**
@@ -230,4 +506,37 @@ public interface SystemConverter {
    * @return 系统变量 VO 列表
    */
   List<VariableVO> variableListToVO(List<Variable> entities);
+
+  /**
+   * 系统变量 DTO → 系统变量实体
+   *
+   * <p>用于创建系统变量场景。MpBaseEntity 的自动填充字段通过 @Mapping(ignore = true) 忽略。
+   *
+   * @param dto 系统变量 DTO
+   * @return 系统变量实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  Variable dtoToEntity(VariableDTO dto);
+
+  /**
+   * 系统变量 DTO（含 ID）→ 系统变量实体
+   *
+   * <p>用于更新系统变量场景，保留 id 字段用于定位更新记录。
+   *
+   * @param dto 系统变量 DTO（含 id）
+   * @return 系统变量实体（含 id，用于条件更新）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  Variable dtoToEntityWithId(VariableDTO dto);
 }

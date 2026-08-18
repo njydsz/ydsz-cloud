@@ -1,14 +1,18 @@
 package com.njydsz.system.infra.repository.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.TenantPlanMenu;
 import com.njydsz.system.infra.mapper.TenantPlanMenuMapper;
 import com.njydsz.system.domain.repository.TenantPlanMenuRepository;
+import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
+import com.njydsz.system.domain.vo.TenantPlanMenuVO;
 
 /**
  * 租户套餐-菜单关联仓储实现（Infra 层）。
@@ -19,7 +23,8 @@ import com.njydsz.system.domain.repository.TenantPlanMenuRepository;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>返回领域实体，由 Service 层负责转换为 VO
+ *   <li>通过 {@link SystemConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link SystemConverter} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -31,18 +36,31 @@ public class TenantPlanMenuRepositoryImpl implements TenantPlanMenuRepository {
 
   private final TenantPlanMenuMapper tenantPlanMenuMapper;
 
+  private final SystemConverter converter;
+
   @Override
-  public List<TenantPlanMenu> findList(LambdaQueryWrapper<TenantPlanMenu> wrapper) {
-    return tenantPlanMenuMapper.selectList(wrapper);
+  public List<TenantPlanMenuVO> findByPlanId(String planId) {
+    LambdaQueryWrapper<TenantPlanMenu> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(TenantPlanMenu::getPlanId, planId);
+    return converter.planMenuListToVO(tenantPlanMenuMapper.selectList(wrapper));
   }
 
   @Override
-  public boolean deleteByCondition(LambdaQueryWrapper<TenantPlanMenu> wrapper) {
+  public boolean deleteByPlanId(String planId) {
+    LambdaQueryWrapper<TenantPlanMenu> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(TenantPlanMenu::getPlanId, planId);
     return tenantPlanMenuMapper.delete(wrapper) > 0;
   }
 
   @Override
-  public boolean insertBatch(List<TenantPlanMenu> entities) {
+  public boolean insertBatch(TenantPlanMenuDTO dto) {
+    List<TenantPlanMenu> entities = new ArrayList<>();
+    if (dto.getMenuIds() != null) {
+      for (String menuId : dto.getMenuIds()) {
+        TenantPlanMenu entity = converter.dtoToEntity(dto.getPlanId(), menuId);
+        entities.add(entity);
+      }
+    }
     return tenantPlanMenuMapper.insertBatch(entities) > 0;
   }
 }

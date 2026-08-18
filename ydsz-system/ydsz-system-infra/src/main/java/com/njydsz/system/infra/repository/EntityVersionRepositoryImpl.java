@@ -6,9 +6,12 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.EntityVersion;
 import com.njydsz.system.infra.mapper.EntityVersionMapper;
 import com.njydsz.system.domain.repository.EntityVersionRepository;
+import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
+import com.njydsz.system.domain.vo.EntityVersionVO;
 
 /**
  * 统一实体版本仓储实现（Infra 层）。
@@ -19,7 +22,8 @@ import com.njydsz.system.domain.repository.EntityVersionRepository;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>返回领域实体，由 Service 层负责转换为 VO
+ *   <li>通过 {@link SystemConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link SystemConverter} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -31,21 +35,26 @@ public class EntityVersionRepositoryImpl implements EntityVersionRepository {
 
   private final EntityVersionMapper entityVersionMapper;
 
+  private final SystemConverter converter;
+
   @Override
-  public List<EntityVersion> findByTypeAndKey(String resourceType, String resourceKey) {
-    return entityVersionMapper.listByResourceTypeAndKey(resourceType, resourceKey);
+  public List<EntityVersionVO> findByTypeAndKey(String resourceType, String resourceKey) {
+    return converter.entityVersionListToVO(
+        entityVersionMapper.listByResourceTypeAndKey(resourceType, resourceKey));
   }
 
   @Override
-  public Optional<EntityVersion> findByTypeAndKeyAndVersion(
+  public Optional<EntityVersionVO> findByTypeAndKeyAndVersion(
       String resourceType, String resourceKey, String version) {
     return Optional.ofNullable(
-        entityVersionMapper.selectByTypeAndKeyAndVersion(resourceType, resourceKey, version));
+        entityVersionMapper.selectByTypeAndKeyAndVersion(resourceType, resourceKey, version))
+        .map(converter::entityVersionToVO);
   }
 
   @Override
-  public EntityVersion save(EntityVersion entity) {
+  public EntityVersionVO save(EntityVersionCreateDTO dto) {
+    EntityVersion entity = converter.dtoToEntity(dto);
     entityVersionMapper.insert(entity);
-    return entity;
+    return converter.entityVersionToVO(entity);
   }
 }

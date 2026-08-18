@@ -3,14 +3,14 @@ package com.njydsz.system.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
-import com.njydsz.system.infra.entity.Variable;
+import com.njydsz.system.domain.dto.VariableDTO;
+import com.njydsz.system.domain.query.VariablePageQuery;
+import com.njydsz.system.domain.vo.VariableVO;
 
 /**
- * 系统变量仓储接口（Infra 层契约）。
+ * 系统变量仓储接口（domain 层契约）。
  *
  * <p>定义变量域的数据访问能力，Infra 层负责实现。
  *
@@ -18,8 +18,9 @@ import com.njydsz.system.infra.entity.Variable;
  *
  * <ul>
  *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
- *   <li>返回领域实体（{@link Variable}），非 DTO / VO
- *   <li>分页查询通过 {@link Page} + {@link IPage} 标准契约返回
+ *   <li>返回领域 VO（{@link VariableVO}），非 DTO / infra 实体
+ *   <li>CUD 入参使用领域 DTO（{@link VariableDTO}），禁止接受 infra 实体
+ *   <li>分页查询入参使用领域 Query（{@link VariablePageQuery}）
  * </ul>
  *
  * @author ydsz-team
@@ -36,66 +37,56 @@ public interface VariableRepository {
    * 按变量键查询启用的变量。
    *
    * @param variableKey 变量键
-   * @return 变量实体；不存在返回 {@code Optional.empty()}
+   * @return 变量 VO；不存在返回 {@code Optional.empty()}
    */
-  Optional<Variable> findEnabledByKey(String variableKey);
+  Optional<VariableVO> findEnabledByKey(String variableKey);
 
   /**
    * 按变量键查询变量（不区分状态，用于版本快照 / 回滚定位）。
    *
    * @param variableKey 变量键
-   * @return 变量实体；不存在返回 {@code Optional.empty()}
+   * @return 变量 VO；不存在返回 {@code Optional.empty()}
    */
-  Optional<Variable> findByKeyIgnoreStatus(String variableKey);
+  Optional<VariableVO> findByKeyIgnoreStatus(String variableKey);
 
   /**
    * 根据主键查询变量。
    *
    * @param id 变量主键
-   * @return 变量实体；不存在返回 {@code Optional.empty()}
+   * @return 变量 VO；不存在返回 {@code Optional.empty()}
    */
-  Optional<Variable> findById(String id);
+  Optional<VariableVO> findById(String id);
 
   /**
    * 分页查询变量。
    *
-   * @param page 分页参数
-   * @param variableKey 变量键模糊匹配（可选）
-   * @param status 状态精确匹配（可选）
-   * @return 分页结果
+   * @param query 分页查询参数
+   * @return 分页结果（VO 分页）
    */
-  IPage<Variable> findByPage(Page<Variable> page, String variableKey, String status);
+  IPage<VariableVO> findByPage(VariablePageQuery query);
 
   /**
    * 查询全部变量（不区分状态）。
    *
-   * @return 全部变量列表
+   * @return 全部变量 VO 列表
    */
-  List<Variable> findAll();
-
-  /**
-   * 按条件查询变量列表。
-   *
-   * @param wrapper 查询条件
-   * @return 变量列表
-   */
-  List<Variable> findList(QueryWrapper<Variable> wrapper);
+  List<VariableVO> findAll();
 
   /**
    * 插入变量。
    *
-   * @param entity 变量实体
+   * @param dto 变量 DTO
    * @return 插入成功返回 {@code true}
    */
-  boolean insert(Variable entity);
+  boolean insert(VariableDTO dto);
 
   /**
    * 更新变量。
    *
-   * @param entity 变量实体
+   * @param dto 变量 DTO
    * @return 更新成功返回 {@code true}
    */
-  boolean updateById(Variable entity);
+  boolean updateById(VariableDTO dto);
 
   /**
    * 逻辑删除变量。
@@ -109,7 +100,7 @@ public interface VariableRepository {
    * 按租户 ID 查询未删除变量（用于搜索索引全量重建）。
    *
    * @param tenantId 租户 ID（null 或空表示全量）
-   * @return 未删除变量列表
+   * @return 未删除变量 VO 列表
    */
-  List<Variable> findByTenantId(String tenantId);
+  List<VariableVO> findByTenantId(String tenantId);
 }

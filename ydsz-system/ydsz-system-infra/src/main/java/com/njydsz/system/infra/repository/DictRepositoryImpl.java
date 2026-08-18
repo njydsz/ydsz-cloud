@@ -10,11 +10,18 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.DictItem;
 import com.njydsz.system.infra.entity.DictType;
 import com.njydsz.system.infra.mapper.DictItemMapper;
 import com.njydsz.system.infra.mapper.DictTypeMapper;
 import com.njydsz.system.domain.repository.DictRepository;
+import com.njydsz.system.domain.dto.DictItemDTO;
+import com.njydsz.system.domain.dto.DictTypeDTO;
+import com.njydsz.system.domain.query.DictItemPageQuery;
+import com.njydsz.system.domain.query.DictPageQuery;
+import com.njydsz.system.domain.vo.DictItemVO;
+import com.njydsz.system.domain.vo.DictTypeVO;
 
 /**
  * 字典仓储实现（Infra 层）。
@@ -25,7 +32,8 @@ import com.njydsz.system.domain.repository.DictRepository;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>返回领域实体，由 Service 层负责转换为 VO
+ *   <li>通过 {@link SystemConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link SystemConverter} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -39,33 +47,40 @@ public class DictRepositoryImpl implements DictRepository {
 
   private final DictItemMapper dictItemMapper;
 
+  private final SystemConverter converter;
+
   // ============================== 字典类型 ==============================
 
   @Override
-  public IPage<DictType> findTypePage(
-      Page<DictType> page, String typeCode, String typeName, String status) {
+  public IPage<DictTypeVO> findTypePage(DictPageQuery query) {
+    Page<DictType> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<DictType> wrapper = new QueryWrapper<>();
-    if (typeCode != null && !typeCode.isBlank()) {
-      wrapper.eq("type_code", typeCode);
+    if (query.getTypeCode() != null && !query.getTypeCode().isBlank()) {
+      wrapper.eq("type_code", query.getTypeCode());
     }
-    if (typeName != null && !typeName.isBlank()) {
-      wrapper.like("type_name", typeName);
+    if (query.getTypeName() != null && !query.getTypeName().isBlank()) {
+      wrapper.like("type_name", query.getTypeName());
     }
-    if (status != null && !status.isBlank()) {
-      wrapper.eq("status", status);
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq("status", query.getStatus());
     }
     wrapper.orderByDesc("created_at");
-    return dictTypeMapper.selectPage(page, wrapper);
+    IPage<DictType> entityPage = dictTypeMapper.selectPage(page, wrapper);
+    // DO → VO 转换
+    List<DictTypeVO> vos = converter.dictTypeListToVO(entityPage.getRecords());
+    Page<DictTypeVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
+    voPage.setRecords(vos);
+    return voPage;
   }
 
   @Override
-  public Optional<DictType> findTypeById(String id) {
-    return Optional.ofNullable(dictTypeMapper.selectById(id));
+  public Optional<DictTypeVO> findTypeById(String id) {
+    return Optional.ofNullable(dictTypeMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override
-  public List<DictType> findAllTypes() {
-    return dictTypeMapper.selectList(null);
+  public List<DictTypeVO> findAllTypes() {
+    return converter.dictTypeListToVO(dictTypeMapper.selectList(null));
   }
 
   @Override
@@ -79,12 +94,14 @@ public class DictRepositoryImpl implements DictRepository {
   }
 
   @Override
-  public boolean insertType(DictType entity) {
+  public boolean insertType(DictTypeDTO dto) {
+    DictType entity = converter.dtoToEntity(dto);
     return dictTypeMapper.insert(entity) > 0;
   }
 
   @Override
-  public boolean updateTypeById(DictType entity) {
+  public boolean updateTypeById(DictTypeDTO dto) {
+    DictType entity = converter.dtoToEntityWithId(dto);
     return dictTypeMapper.updateById(entity) > 0;
   }
 
@@ -103,72 +120,78 @@ public class DictRepositoryImpl implements DictRepository {
   // ============================== 字典项 ==============================
 
   @Override
-  public Optional<DictItem> findItemById(String id) {
-    return Optional.ofNullable(dictItemMapper.selectById(id));
+  public Optional<DictItemVO> findItemById(String id) {
+    return Optional.ofNullable(dictItemMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override
-  public Optional<DictItem> findItemByTypeAndCode(String typeCode, String itemCode) {
-    return Optional.ofNullable(dictItemMapper.selectByTypeAndCode(typeCode, itemCode));
+  public Optional<DictItemVO> findItemByTypeAndCode(String typeCode, String itemCode) {
+    return Optional.ofNullable(dictItemMapper.selectByTypeAndCode(typeCode, itemCode))
+        .map(converter::entityToVO);
   }
 
   @Override
-  public List<DictItem> findItemsEnabledByTypeCode(String typeCode) {
-    return dictItemMapper.listEnabledByTypeCode(typeCode);
+  public List<DictItemVO> findItemsEnabledByTypeCode(String typeCode) {
+    return converter.dictItemListToVO(dictItemMapper.listEnabledByTypeCode(typeCode));
   }
 
   @Override
-  public List<DictItem> findItemsByParentId(String parentId) {
+  public List<DictItemVO> findItemsByParentId(String parentId) {
     QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
     wrapper.eq("parent_id", parentId).orderByAsc("sort_order");
-    return dictItemMapper.selectList(wrapper);
+    return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 
   @Override
-  public List<DictItem> findItemsByTypeCode(String typeCode) {
+  public List<DictItemVO> findItemsByTypeCode(String typeCode) {
     QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
     wrapper.eq("type_code", typeCode).orderByAsc("sort_order");
-    return dictItemMapper.selectList(wrapper);
+    return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 
   @Override
-  public IPage<DictItem> findItemPage(
-      Page<DictItem> page, String typeCode, String itemCode, String status) {
+  public IPage<DictItemVO> findItemPage(DictItemPageQuery query) {
+    Page<DictItem> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
-    if (typeCode != null && !typeCode.isBlank()) {
-      wrapper.eq("type_code", typeCode);
+    if (query.getTypeCode() != null && !query.getTypeCode().isBlank()) {
+      wrapper.eq("type_code", query.getTypeCode());
     }
-    if (itemCode != null && !itemCode.isBlank()) {
-      wrapper.like("item_code", itemCode);
+    if (query.getItemCode() != null && !query.getItemCode().isBlank()) {
+      wrapper.like("item_code", query.getItemCode());
     }
-    if (status != null && !status.isBlank()) {
-      wrapper.eq("status", status);
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq("status", query.getStatus());
     }
     wrapper.orderByDesc("created_at");
-    return dictItemMapper.selectPage(page, wrapper);
+    IPage<DictItem> entityPage = dictItemMapper.selectPage(page, wrapper);
+    // DO → VO 转换
+    List<DictItemVO> vos = converter.dictItemListToVO(entityPage.getRecords());
+    Page<DictItemVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
+    voPage.setRecords(vos);
+    return voPage;
   }
 
   @Override
-  public List<DictItem> findAllItems() {
-    return dictItemMapper.selectList(null);
+  public List<DictItemVO> findAllItems() {
+    return converter.dictItemListToVO(dictItemMapper.selectList(null));
   }
 
   @Override
-  public List<DictItem> findItemsForExport(String typeCode) {
+  public List<DictItemVO> findItemsForExport(String typeCode) {
     QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
     wrapper.eq("deleted", 0);
     if (typeCode != null && !typeCode.isBlank()) {
       wrapper.eq("type_code", typeCode);
     }
     wrapper.orderByAsc("type_code", "sort_order");
-    return dictItemMapper.selectList(wrapper);
+    return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 
   @Override
-  public List<DictItem> findItemsByTypeCodes(Set<String> typeCodes) {
+  public List<DictItemVO> findItemsByTypeCodes(Set<String> typeCodes) {
     QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
     wrapper.select("type_code", "item_code").in("type_code", typeCodes);
-    return dictItemMapper.selectList(wrapper);
+    return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 
   @Override
@@ -179,12 +202,14 @@ public class DictRepositoryImpl implements DictRepository {
   }
 
   @Override
-  public boolean insertItem(DictItem entity) {
+  public boolean insertItem(DictItemDTO dto) {
+    DictItem entity = converter.dtoToEntity(dto);
     return dictItemMapper.insert(entity) > 0;
   }
 
   @Override
-  public boolean updateItemById(DictItem entity) {
+  public boolean updateItemById(DictItemDTO dto) {
+    DictItem entity = converter.dtoToEntityWithId(dto);
     return dictItemMapper.updateById(entity) > 0;
   }
 
@@ -194,8 +219,9 @@ public class DictRepositoryImpl implements DictRepository {
   }
 
   @Override
-  public boolean insertItemsBatch(List<DictItem> items) {
-    return dictItemMapper.insertBatch(items) > 0;
+  public boolean insertItemsBatch(List<DictItemDTO> items) {
+    List<DictItem> entities = converter.dictItemDtosToEntities(items);
+    return dictItemMapper.insertBatch(entities) > 0;
   }
 
   @Override
@@ -204,19 +230,19 @@ public class DictRepositoryImpl implements DictRepository {
   }
 
   @Override
-  public List<DictItem> findEnabledItems() {
+  public List<DictItemVO> findEnabledItems() {
     QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
     wrapper.eq("status", "ENABLED").eq("deleted", 0);
-    return dictItemMapper.selectList(wrapper);
+    return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 
   @Override
-  public List<DictItem> findByTenantId(String tenantId) {
+  public List<DictItemVO> findByTenantId(String tenantId) {
     QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
     wrapper.eq("deleted", 0);
     if (tenantId != null && !tenantId.isBlank()) {
       wrapper.eq("tenant_id", tenantId);
     }
-    return dictItemMapper.selectList(wrapper);
+    return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 }

@@ -9,9 +9,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.AppInfo;
 import com.njydsz.system.infra.mapper.AppInfoMapper;
 import com.njydsz.system.domain.repository.AppInfoRepository;
+import com.njydsz.system.domain.dto.AppInfoDTO;
+import com.njydsz.system.domain.query.AppInfoPageQuery;
+import com.njydsz.system.domain.vo.AppInfoVO;
 
 /**
  * 应用信息仓储实现（Infra 层）。
@@ -22,7 +26,8 @@ import com.njydsz.system.domain.repository.AppInfoRepository;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>返回领域实体，由 Service 层负责转换为 VO
+ *   <li>通过 {@link SystemConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link SystemConverter} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -34,9 +39,12 @@ public class AppInfoRepositoryImpl implements AppInfoRepository {
 
   private final AppInfoMapper appInfoMapper;
 
+  private final SystemConverter converter;
+
   @Override
-  public Optional<AppInfo> findEnabledByAppKey(String appKey) {
-    return Optional.ofNullable(appInfoMapper.selectEnabledByAppKey(appKey));
+  public Optional<AppInfoVO> findEnabledByAppKey(String appKey) {
+    return Optional.ofNullable(appInfoMapper.selectEnabledByAppKey(appKey))
+        .map(converter::entityToVO);
   }
 
   @Override
@@ -46,35 +54,43 @@ public class AppInfoRepositoryImpl implements AppInfoRepository {
   }
 
   @Override
-  public Optional<AppInfo> findById(String id) {
-    return Optional.ofNullable(appInfoMapper.selectById(id));
+  public Optional<AppInfoVO> findById(String id) {
+    return Optional.ofNullable(appInfoMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override
-  public IPage<AppInfo> findByPage(Page<AppInfo> page, String appName, String status) {
+  public IPage<AppInfoVO> findByPage(AppInfoPageQuery query) {
+    Page<AppInfo> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<AppInfo> wrapper = new QueryWrapper<>();
-    if (appName != null && !appName.isBlank()) {
-      wrapper.like("app_name", appName);
+    if (query.getAppName() != null && !query.getAppName().isBlank()) {
+      wrapper.like("app_name", query.getAppName());
     }
-    if (status != null && !status.isBlank()) {
-      wrapper.eq("status", status);
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq("status", query.getStatus());
     }
     wrapper.orderByDesc("created_at");
-    return appInfoMapper.selectPage(page, wrapper);
+    IPage<AppInfo> entityPage = appInfoMapper.selectPage(page, wrapper);
+    // DO → VO 转换
+    List<AppInfoVO> vos = converter.appInfoListToVO(entityPage.getRecords());
+    Page<AppInfoVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
+    voPage.setRecords(vos);
+    return voPage;
   }
 
   @Override
-  public List<AppInfo> findAll() {
-    return appInfoMapper.selectList(null);
+  public List<AppInfoVO> findAll() {
+    return converter.appInfoListToVO(appInfoMapper.selectList(null));
   }
 
   @Override
-  public boolean insert(AppInfo entity) {
+  public boolean insert(AppInfoDTO dto) {
+    AppInfo entity = converter.dtoToEntity(dto);
     return appInfoMapper.insert(entity) > 0;
   }
 
   @Override
-  public boolean updateById(AppInfo entity) {
+  public boolean updateById(AppInfoDTO dto) {
+    AppInfo entity = converter.dtoToEntityWithId(dto);
     return appInfoMapper.updateById(entity) > 0;
   }
 

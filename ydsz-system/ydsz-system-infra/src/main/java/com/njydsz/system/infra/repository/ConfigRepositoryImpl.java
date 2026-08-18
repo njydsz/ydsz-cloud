@@ -9,9 +9,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.Config;
 import com.njydsz.system.infra.mapper.ConfigMapper;
 import com.njydsz.system.domain.repository.ConfigRepository;
+import com.njydsz.system.domain.dto.ConfigDTO;
+import com.njydsz.system.domain.query.ConfigPageQuery;
+import com.njydsz.system.domain.vo.ConfigVO;
 
 /**
  * 系统配置仓储实现（Infra 层）。
@@ -22,8 +26,8 @@ import com.njydsz.system.domain.repository.ConfigRepository;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>返回领域实体，由 Service 层负责转换为 VO
- *   <li>分页等动态条件查询封装为 {@link #findByPage} 方法
+ *   <li>通过 {@link SystemConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link SystemConverter} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -38,34 +42,38 @@ public class ConfigRepositoryImpl implements ConfigRepository {
 
   private final ConfigMapper configMapper;
 
+  private final SystemConverter converter;
+
   @Override
-  public Optional<Config> findEnabledByKey(String configKey) {
-    return Optional.ofNullable(configMapper.selectByConfigKey(configKey));
+  public Optional<ConfigVO> findEnabledByKey(String configKey) {
+    return Optional.ofNullable(configMapper.selectByConfigKey(configKey))
+        .map(converter::entityToVO);
   }
 
   @Override
-  public Optional<Config> findByKeyIgnoreStatus(String configKey) {
+  public Optional<ConfigVO> findByKeyIgnoreStatus(String configKey) {
     return Optional.ofNullable(
         configMapper.selectOne(
-            new QueryWrapper<Config>().eq("config_key", configKey).eq("deleted", 0).last("LIMIT 1")));
+            new QueryWrapper<Config>().eq("config_key", configKey).eq("deleted", 0).last("LIMIT 1")))
+        .map(converter::entityToVO);
   }
 
   @Override
-  public List<Config> findEnabledByGroup(String configGroup) {
-    return configMapper.selectList(
+  public List<ConfigVO> findEnabledByGroup(String configGroup) {
+    return converter.configListToVO(configMapper.selectList(
         new QueryWrapper<Config>()
             .eq("config_group", configGroup)
             .eq("status", STATUS_ENABLED)
-            .orderByAsc("sort_order"));
+            .orderByAsc("sort_order")));
   }
 
   @Override
-  public List<Config> findPublicEnabled() {
-    return configMapper.selectList(
+  public List<ConfigVO> findPublicEnabled() {
+    return converter.configListToVO(configMapper.selectList(
         new QueryWrapper<Config>()
             .eq("is_public", 1)
             .eq("status", STATUS_ENABLED)
-            .orderByAsc("sort_order"));
+            .orderByAsc("sort_order")));
   }
 
   @Override
@@ -79,29 +87,36 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   }
 
   @Override
-  public IPage<Config> findByPage(
-      Page<Config> page, String configGroup, String configKey, String status) {
+  public IPage<ConfigVO> findByPage(ConfigPageQuery query) {
+    Page<Config> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<Config> wrapper = new QueryWrapper<>();
-    if (configGroup != null && !configGroup.isBlank()) {
-      wrapper.eq("config_group", configGroup);
+    if (query.getConfigGroup() != null && !query.getConfigGroup().isBlank()) {
+      wrapper.eq("config_group", query.getConfigGroup());
     }
-    if (configKey != null && !configKey.isBlank()) {
-      wrapper.like("config_key", configKey);
+    if (query.getConfigKey() != null && !query.getConfigKey().isBlank()) {
+      wrapper.like("config_key", query.getConfigKey());
     }
-    if (status != null && !status.isBlank()) {
-      wrapper.eq("status", status);
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq("status", query.getStatus());
     }
     wrapper.orderByDesc("created_at");
-    return configMapper.selectPage(page, wrapper);
+    IPage<Config> entityPage = configMapper.selectPage(page, wrapper);
+    // DO → VO 转换
+    List<ConfigVO> vos = converter.configListToVO(entityPage.getRecords());
+    Page<ConfigVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
+    voPage.setRecords(vos);
+    return voPage;
   }
 
   @Override
-  public boolean insert(Config entity) {
+  public boolean insert(ConfigDTO dto) {
+    Config entity = converter.dtoToEntity(dto);
     return configMapper.insert(entity) > 0;
   }
 
   @Override
-  public boolean updateById(Config entity) {
+  public boolean updateById(ConfigDTO dto) {
+    Config entity = converter.dtoToEntityWithId(dto);
     return configMapper.updateById(entity) > 0;
   }
 
@@ -111,17 +126,18 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   }
 
   @Override
-  public Optional<Config> findById(String id) {
-    return Optional.ofNullable(configMapper.selectById(id));
+  public Optional<ConfigVO> findById(String id) {
+    return Optional.ofNullable(configMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override
-  public boolean insertBatch(List<Config> entities) {
+  public boolean insertBatch(List<ConfigDTO> dtos) {
+    List<Config> entities = converter.configDtosToEntities(dtos);
     return configMapper.insertBatch(entities) > 0;
   }
 
   @Override
-  public List<Config> findForCursor(String configGroup, String configKey, String cursor, int limit) {
+  public List<ConfigVO> findForCursor(String configGroup, String configKey, String cursor, int limit) {
     QueryWrapper<Config> wrapper = new QueryWrapper<>();
     wrapper.eq("deleted", 0);
     if (configGroup != null && !configGroup.isBlank()) {
@@ -135,7 +151,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
     }
     wrapper.orderByAsc("id");
     wrapper.last("LIMIT " + limit);
-    return configMapper.selectList(wrapper);
+    return converter.configListToVO(configMapper.selectList(wrapper));
   }
 
   @Override
@@ -155,7 +171,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   }
 
   @Override
-  public List<Config> findForExport(String configGroup) {
+  public List<ConfigVO> findForExport(String configGroup) {
     QueryWrapper<Config> wrapper = new QueryWrapper<>();
     wrapper.eq("deleted", 0);
     if (configGroup != null && !configGroup.isBlank()) {
@@ -163,35 +179,36 @@ public class ConfigRepositoryImpl implements ConfigRepository {
     } else {
       wrapper.orderByAsc("config_group", "sort_order");
     }
-    return configMapper.selectList(wrapper);
+    return converter.configListToVO(configMapper.selectList(wrapper));
   }
 
   @Override
-  public List<Config> findEnabledConfigs() {
+  public List<ConfigVO> findEnabledConfigs() {
     QueryWrapper<Config> wrapper = new QueryWrapper<>();
     wrapper.eq("status", STATUS_ENABLED).eq("deleted", 0);
-    return configMapper.selectList(wrapper);
+    return converter.configListToVO(configMapper.selectList(wrapper));
   }
 
   @Override
-  public List<Config> findByGroup(String configGroup) {
+  public List<ConfigVO> findByGroup(String configGroup) {
     QueryWrapper<Config> wrapper = new QueryWrapper<>();
     wrapper.eq("config_group", configGroup).eq("deleted", 0);
-    return configMapper.selectList(wrapper);
+    return converter.configListToVO(configMapper.selectList(wrapper));
   }
 
   @Override
-  public List<Config> findAll() {
-    return configMapper.selectList(new QueryWrapper<Config>().eq("deleted", 0));
+  public List<ConfigVO> findAll() {
+    return converter.configListToVO(
+        configMapper.selectList(new QueryWrapper<Config>().eq("deleted", 0)));
   }
 
   @Override
-  public List<Config> findByTenantId(String tenantId) {
+  public List<ConfigVO> findByTenantId(String tenantId) {
     QueryWrapper<Config> wrapper = new QueryWrapper<>();
     wrapper.eq("deleted", 0);
     if (tenantId != null && !tenantId.isBlank()) {
       wrapper.eq("tenant_id", tenantId);
     }
-    return configMapper.selectList(wrapper);
+    return converter.configListToVO(configMapper.selectList(wrapper));
   }
 }

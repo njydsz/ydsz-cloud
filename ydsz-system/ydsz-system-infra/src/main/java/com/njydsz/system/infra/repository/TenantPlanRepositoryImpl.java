@@ -9,9 +9,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.TenantPlan;
 import com.njydsz.system.infra.mapper.TenantPlanMapper;
 import com.njydsz.system.domain.repository.TenantPlanRepository;
+import com.njydsz.system.domain.dto.TenantPlanDTO;
+import com.njydsz.system.domain.query.TenantPlanPageQuery;
+import com.njydsz.system.domain.query.TenantPlanQuery;
+import com.njydsz.system.domain.vo.TenantPlanVO;
 
 /**
  * 租户方案仓储实现（Infra 层）。
@@ -22,7 +27,8 @@ import com.njydsz.system.domain.repository.TenantPlanRepository;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>返回领域实体，由 Service 层负责转换为 VO
+ *   <li>通过 {@link SystemConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link SystemConverter} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -34,42 +40,67 @@ public class TenantPlanRepositoryImpl implements TenantPlanRepository {
 
   private final TenantPlanMapper tenantPlanMapper;
 
+  private final SystemConverter converter;
+
   @Override
-  public Optional<TenantPlan> findById(String id) {
-    return Optional.ofNullable(tenantPlanMapper.selectById(id));
+  public Optional<TenantPlanVO> findById(String id) {
+    return Optional.ofNullable(tenantPlanMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override
-  public IPage<TenantPlan> findByPage(Page<TenantPlan> page, String planName, String status) {
+  public IPage<TenantPlanVO> findByPage(TenantPlanPageQuery query) {
+    Page<TenantPlan> page = new Page<>(query.getPageNum(), query.getPageSize());
     LambdaQueryWrapper<TenantPlan> wrapper = new LambdaQueryWrapper<>();
-    if (planName != null && !planName.isBlank()) {
-      wrapper.like(TenantPlan::getPlanName, planName);
+    if (query.getPlanName() != null && !query.getPlanName().isBlank()) {
+      wrapper.like(TenantPlan::getPlanName, query.getPlanName());
     }
-    if (status != null && !status.isBlank()) {
-      wrapper.eq(TenantPlan::getStatus, status);
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq(TenantPlan::getStatus, query.getStatus());
     }
     wrapper.orderByAsc(TenantPlan::getSortOrder);
-    return tenantPlanMapper.selectPage(page, wrapper);
+    IPage<TenantPlan> entityPage = tenantPlanMapper.selectPage(page, wrapper);
+    // DO → VO 转换
+    List<TenantPlanVO> vos = converter.planListToVO(entityPage.getRecords());
+    Page<TenantPlanVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
+    voPage.setRecords(vos);
+    return voPage;
   }
 
   @Override
-  public List<TenantPlan> findList(LambdaQueryWrapper<TenantPlan> wrapper) {
-    return tenantPlanMapper.selectList(wrapper);
+  public List<TenantPlanVO> findList(TenantPlanQuery query) {
+    LambdaQueryWrapper<TenantPlan> wrapper = new LambdaQueryWrapper<>();
+    if (query.getPlanName() != null && !query.getPlanName().isBlank()) {
+      wrapper.like(TenantPlan::getPlanName, query.getPlanName());
+    }
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq(TenantPlan::getStatus, query.getStatus());
+    }
+    wrapper.orderByAsc(TenantPlan::getSortOrder);
+    return converter.planListToVO(tenantPlanMapper.selectList(wrapper));
   }
 
   @Override
-  public long countByCondition(LambdaQueryWrapper<TenantPlan> wrapper) {
+  public long countByCondition(TenantPlanQuery query) {
+    LambdaQueryWrapper<TenantPlan> wrapper = new LambdaQueryWrapper<>();
+    if (query.getPlanName() != null && !query.getPlanName().isBlank()) {
+      wrapper.like(TenantPlan::getPlanName, query.getPlanName());
+    }
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq(TenantPlan::getStatus, query.getStatus());
+    }
     Long count = tenantPlanMapper.selectCount(wrapper);
     return count != null ? count : 0L;
   }
 
   @Override
-  public boolean insert(TenantPlan entity) {
+  public boolean insert(TenantPlanDTO dto) {
+    TenantPlan entity = converter.dtoToEntity(dto);
     return tenantPlanMapper.insert(entity) > 0;
   }
 
   @Override
-  public boolean updateById(TenantPlan entity) {
+  public boolean updateById(TenantPlanDTO dto) {
+    TenantPlan entity = converter.dtoToEntityWithId(dto);
     return tenantPlanMapper.updateById(entity) > 0;
   }
 

@@ -4,11 +4,13 @@ import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.system.infra.entity.Config;
+
+import com.njydsz.system.domain.dto.ConfigDTO;
+import com.njydsz.system.domain.query.ConfigPageQuery;
+import com.njydsz.system.domain.vo.ConfigVO;
 
 /**
- * 系统配置仓储接口（Infra 层契约）。
+ * 系统配置仓储接口（domain 层契约）。
  *
  * <p>定义配置域的数据访问能力，Infra 层负责实现。
  *
@@ -16,8 +18,9 @@ import com.njydsz.system.infra.entity.Config;
  *
  * <ul>
  *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
- *   <li>返回领域实体（{@link Config}），非 DTO / VO
- *   <li>分页查询通过 {@link Page} + {@link IPage} 标准契约返回
+ *   <li>返回领域 VO（{@link ConfigVO}），非 DTO / infra 实体
+ *   <li>CUD 入参使用领域 DTO（{@link ConfigDTO}），禁止接受 infra 实体
+ *   <li>分页查询入参使用领域 Query（{@link ConfigPageQuery}）
  * </ul>
  *
  * @author ydsz-team
@@ -29,32 +32,32 @@ public interface ConfigRepository {
    * 按配置键查询启用的配置项。
    *
    * @param configKey 配置键
-   * @return 配置实体；不存在返回 {@code Optional.empty()}
+   * @return 配置 VO；不存在返回 {@code Optional.empty()}
    */
-  Optional<Config> findEnabledByKey(String configKey);
+  Optional<ConfigVO> findEnabledByKey(String configKey);
 
   /**
    * 按配置键查询配置项（不区分状态）。
    *
    * @param configKey 配置键
-   * @return 配置实体；不存在返回 {@code Optional.empty()}
+   * @return 配置 VO；不存在返回 {@code Optional.empty()}
    */
-  Optional<Config> findByKeyIgnoreStatus(String configKey);
+  Optional<ConfigVO> findByKeyIgnoreStatus(String configKey);
 
   /**
    * 按分组查询启用状态配置（按 sortOrder 升序）。
    *
    * @param configGroup 配置分组
-   * @return 启用配置列表
+   * @return 启用配置 VO 列表
    */
-  List<Config> findEnabledByGroup(String configGroup);
+  List<ConfigVO> findEnabledByGroup(String configGroup);
 
   /**
    * 查询全部公开配置（按 sortOrder 升序）。
    *
-   * @return 公开配置列表
+   * @return 公开配置 VO 列表
    */
-  List<Config> findPublicEnabled();
+  List<ConfigVO> findPublicEnabled();
 
   /**
    * 校验同分组下配置键是否已存在。
@@ -68,29 +71,26 @@ public interface ConfigRepository {
   /**
    * 分页查询配置。
    *
-   * @param page 分页参数
-   * @param configGroup 配置分组（可选）
-   * @param configKey 配置键模糊匹配（可选）
-   * @param status 状态（可选）
-   * @return 分页结果
+   * @param query 分页查询参数
+   * @return 分页结果（VO 分页）
    */
-  IPage<Config> findByPage(Page<Config> page, String configGroup, String configKey, String status);
+  IPage<ConfigVO> findByPage(ConfigPageQuery query);
 
   /**
    * 插入配置。
    *
-   * @param entity 配置实体
+   * @param dto 配置 DTO
    * @return 插入成功返回 {@code true}
    */
-  boolean insert(Config entity);
+  boolean insert(ConfigDTO dto);
 
   /**
    * 更新配置。
    *
-   * @param entity 配置实体
+   * @param dto 配置 DTO
    * @return 更新成功返回 {@code true}
    */
-  boolean updateById(Config entity);
+  boolean updateById(ConfigDTO dto);
 
   /**
    * 逻辑删除配置。
@@ -104,17 +104,17 @@ public interface ConfigRepository {
    * 按 ID 查询配置。
    *
    * @param id 配置 ID
-   * @return 配置实体；不存在返回 {@code Optional.empty()}
+   * @return 配置 VO；不存在返回 {@code Optional.empty()}
    */
-  Optional<Config> findById(String id);
+  Optional<ConfigVO> findById(String id);
 
   /**
    * 批量插入配置。
    *
-   * @param entities 配置实体列表
+   * @param dtos 配置 DTO 列表
    * @return 插入成功返回 {@code true}
    */
-  boolean insertBatch(List<Config> entities);
+  boolean insertBatch(List<ConfigDTO> dtos);
 
   /**
    * 游标分页查询（seek method，{@code id > cursor} 升序，最多返回 {@code limit} 条）。
@@ -125,9 +125,9 @@ public interface ConfigRepository {
    * @param configKey 配置键（可选，模糊匹配）
    * @param cursor 游标（上一页最后一条 ID，可选）
    * @param limit 返回条数上限
-   * @return 配置实体列表（按 ID 升序）
+   * @return 配置 VO 列表（按 ID 升序）
    */
-  List<Config> findForCursor(String configGroup, String configKey, String cursor, int limit);
+  List<ConfigVO> findForCursor(String configGroup, String configKey, String cursor, int limit);
 
   /**
    * 判断游标之后是否还有更多记录。
@@ -143,37 +143,37 @@ public interface ConfigRepository {
    * 查询待导出配置（未删除记录，按分组/排序号有序）。
    *
    * @param configGroup 配置分组（为空导出全部）
-   * @return 配置实体列表
+   * @return 配置 VO 列表
    */
-  List<Config> findForExport(String configGroup);
+  List<ConfigVO> findForExport(String configGroup);
 
   /**
    * 查询全部启用状态的配置（用于缓存预热）。
    *
-   * @return 启用且未删除的配置列表
+   * @return 启用且未删除的配置 VO 列表
    */
-  List<Config> findEnabledConfigs();
+  List<ConfigVO> findEnabledConfigs();
 
   /**
    * 按分组查询配置列表（含未删除条件）。
    *
    * @param configGroup 配置分组
-   * @return 配置实体列表
+   * @return 配置 VO 列表
    */
-  List<Config> findByGroup(String configGroup);
+  List<ConfigVO> findByGroup(String configGroup);
 
   /**
    * 查询全部未删除配置（用于搜索索引全量重建）。
    *
-   * @return 未删除配置列表
+   * @return 未删除配置 VO 列表
    */
-  List<Config> findAll();
+  List<ConfigVO> findAll();
 
   /**
    * 按租户 ID 查询未删除配置（用于搜索索引全量重建）。
    *
    * @param tenantId 租户 ID（null 或空表示全量）
-   * @return 未删除配置列表
+   * @return 未删除配置 VO 列表
    */
-  List<Config> findByTenantId(String tenantId);
+  List<ConfigVO> findByTenantId(String tenantId);
 }

@@ -9,9 +9,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.Variable;
 import com.njydsz.system.infra.mapper.VariableMapper;
 import com.njydsz.system.domain.repository.VariableRepository;
+import com.njydsz.system.domain.dto.VariableDTO;
+import com.njydsz.system.domain.query.VariablePageQuery;
+import com.njydsz.system.domain.vo.VariableVO;
 
 /**
  * 系统变量仓储实现（Infra 层）。
@@ -22,7 +26,8 @@ import com.njydsz.system.domain.repository.VariableRepository;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>返回领域实体，由 Service 层负责转换为 VO
+ *   <li>通过 {@link SystemConverter} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link SystemConverter} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -34,61 +39,68 @@ public class VariableRepositoryImpl implements VariableRepository {
 
   private final VariableMapper variableMapper;
 
+  private final SystemConverter converter;
+
   @Override
-  public Optional<Variable> findEnabledByKey(String variableKey) {
+  public Optional<VariableVO> findEnabledByKey(String variableKey) {
     return Optional.ofNullable(
         variableMapper.selectOne(
             new QueryWrapper<Variable>()
                 .eq("variable_key", variableKey)
                 .eq("status", STATUS_ENABLED)
-                .last("LIMIT 1")));
+                .last("LIMIT 1")))
+        .map(converter::entityToVO);
   }
 
   @Override
-  public Optional<Variable> findByKeyIgnoreStatus(String variableKey) {
+  public Optional<VariableVO> findByKeyIgnoreStatus(String variableKey) {
     return Optional.ofNullable(
         variableMapper.selectOne(
             new QueryWrapper<Variable>()
                 .eq("variable_key", variableKey)
                 .eq("deleted", 0)
-                .last("LIMIT 1")));
+                .last("LIMIT 1")))
+        .map(converter::entityToVO);
   }
 
   @Override
-  public Optional<Variable> findById(String id) {
-    return Optional.ofNullable(variableMapper.selectById(id));
+  public Optional<VariableVO> findById(String id) {
+    return Optional.ofNullable(variableMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override
-  public IPage<Variable> findByPage(Page<Variable> page, String variableKey, String status) {
+  public IPage<VariableVO> findByPage(VariablePageQuery query) {
+    Page<Variable> page = new Page<>(query.getPageNum(), query.getPageSize());
     QueryWrapper<Variable> wrapper = new QueryWrapper<>();
-    if (variableKey != null && !variableKey.isBlank()) {
-      wrapper.like("variable_key", variableKey);
+    if (query.getVariableKey() != null && !query.getVariableKey().isBlank()) {
+      wrapper.like("variable_key", query.getVariableKey());
     }
-    if (status != null && !status.isBlank()) {
-      wrapper.eq("status", status);
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq("status", query.getStatus());
     }
     wrapper.orderByDesc("created_at");
-    return variableMapper.selectPage(page, wrapper);
+    IPage<Variable> entityPage = variableMapper.selectPage(page, wrapper);
+    // DO → VO 转换
+    List<VariableVO> vos = converter.variableListToVO(entityPage.getRecords());
+    Page<VariableVO> voPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
+    voPage.setRecords(vos);
+    return voPage;
   }
 
   @Override
-  public List<Variable> findAll() {
-    return variableMapper.selectList(null);
+  public List<VariableVO> findAll() {
+    return converter.variableListToVO(variableMapper.selectList(null));
   }
 
   @Override
-  public List<Variable> findList(QueryWrapper<Variable> wrapper) {
-    return variableMapper.selectList(wrapper);
-  }
-
-  @Override
-  public boolean insert(Variable entity) {
+  public boolean insert(VariableDTO dto) {
+    Variable entity = converter.dtoToEntity(dto);
     return variableMapper.insert(entity) > 0;
   }
 
   @Override
-  public boolean updateById(Variable entity) {
+  public boolean updateById(VariableDTO dto) {
+    Variable entity = converter.dtoToEntityWithId(dto);
     return variableMapper.updateById(entity) > 0;
   }
 
@@ -98,12 +110,12 @@ public class VariableRepositoryImpl implements VariableRepository {
   }
 
   @Override
-  public List<Variable> findByTenantId(String tenantId) {
+  public List<VariableVO> findByTenantId(String tenantId) {
     QueryWrapper<Variable> wrapper = new QueryWrapper<>();
     wrapper.eq("deleted", 0);
     if (tenantId != null && !tenantId.isBlank()) {
       wrapper.eq("tenant_id", tenantId);
     }
-    return variableMapper.selectList(wrapper);
+    return converter.variableListToVO(variableMapper.selectList(wrapper));
   }
 }

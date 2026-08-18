@@ -3,14 +3,15 @@ package com.njydsz.system.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
-import com.njydsz.system.infra.entity.TenantPlan;
+import com.njydsz.system.domain.dto.TenantPlanDTO;
+import com.njydsz.system.domain.query.TenantPlanPageQuery;
+import com.njydsz.system.domain.query.TenantPlanQuery;
+import com.njydsz.system.domain.vo.TenantPlanVO;
 
 /**
- * 租户方案仓储接口（Infra 层契约）。
+ * 租户方案仓储接口（domain 层契约）。
  *
  * <p>定义租户方案域的数据访问能力，Infra 层负责实现。
  *
@@ -18,7 +19,9 @@ import com.njydsz.system.infra.entity.TenantPlan;
  *
  * <ul>
  *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
- *   <li>返回领域实体（{@link TenantPlan}），非 DTO / VO
+ *   <li>返回领域 VO（{@link TenantPlanVO}），非 DTO / infra 实体
+ *   <li>CUD 入参使用领域 DTO（{@link TenantPlanDTO}），禁止接受 infra 实体
+ *   <li>查询入参使用领域 Query（{@link TenantPlanPageQuery} / {@link TenantPlanQuery}）
  * </ul>
  *
  * @author ydsz-team
@@ -30,51 +33,49 @@ public interface TenantPlanRepository {
    * 根据主键查询方案。
    *
    * @param id 方案主键
-   * @return 方案实体；不存在返回 {@code Optional.empty()}
+   * @return 方案 VO；不存在返回 {@code Optional.empty()}
    */
-  Optional<TenantPlan> findById(String id);
+  Optional<TenantPlanVO> findById(String id);
 
   /**
    * 分页查询方案。
    *
-   * @param page 分页参数
-   * @param planName 方案名称模糊匹配（可选）
-   * @param status 状态精确匹配（可选）
-   * @return 分页结果
+   * @param query 分页查询参数
+   * @return 分页结果（VO 分页）
    */
-  IPage<TenantPlan> findByPage(Page<TenantPlan> page, String planName, String status);
+  IPage<TenantPlanVO> findByPage(TenantPlanPageQuery query);
 
   /**
    * 按条件查询方案列表。
    *
-   * @param wrapper 查询条件
-   * @return 方案列表
+   * @param query 查询条件
+   * @return 方案 VO 列表
    */
-  List<TenantPlan> findList(LambdaQueryWrapper<TenantPlan> wrapper);
+  List<TenantPlanVO> findList(TenantPlanQuery query);
 
   /**
    * 按条件统计方案数量。
    *
-   * @param wrapper 查询条件
+   * @param query 查询条件
    * @return 方案数量
    */
-  long countByCondition(LambdaQueryWrapper<TenantPlan> wrapper);
+  long countByCondition(TenantPlanQuery query);
 
   /**
    * 插入方案。
    *
-   * @param entity 方案实体
+   * @param dto 方案 DTO
    * @return 插入成功返回 {@code true}
    */
-  boolean insert(TenantPlan entity);
+  boolean insert(TenantPlanDTO dto);
 
   /**
    * 更新方案。
    *
-   * @param entity 方案实体
+   * @param dto 方案 DTO
    * @return 更新成功返回 {@code true}
    */
-  boolean updateById(TenantPlan entity);
+  boolean updateById(TenantPlanDTO dto);
 
   /**
    * 逻辑删除方案。
