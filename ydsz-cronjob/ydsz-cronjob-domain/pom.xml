@@ -52,12 +52,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-cache</artifactId>
         </dependency>
-            <!-- MapStruct -->
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-            <scope>provided</scope>
-        </dependency>
         <!-- ydsz-common-json -->
         <dependency>
             <groupId>com.njydsz</groupId>

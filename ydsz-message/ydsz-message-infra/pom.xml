@@ -16,5 +16,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-message-domain</artifactId>
         </dependency>
+        <!-- MapStruct（MessageConverter 使用 @Mapper 注解） -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
     </dependencies>
 </project>

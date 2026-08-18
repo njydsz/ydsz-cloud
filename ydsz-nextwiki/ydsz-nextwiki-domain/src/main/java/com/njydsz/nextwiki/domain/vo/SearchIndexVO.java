@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.domain.vo;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -9,17 +10,19 @@ import lombok.Data;
 /**
  * 搜索索引 VO
  *
+ * <p>用于搜索索引的查询结果返回，作为 Repository 接口查询方法的返回值。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
 @Builder
-@Schema(description = "搜索索引信息")
+@Schema(description = "搜索索引视图对象")
 public class SearchIndexVO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  @Schema(description = "索引记录ID")
+  @Schema(description = "主键ID")
   private String id;
 
   @Schema(description = "关联的文件节点ID")
@@ -49,6 +52,6 @@ public class SearchIndexVO implements Serializable {
   @Schema(description = "创建人")
   private String createdBy;
 
-  @Schema(description = "创建时间")
-  private java.time.LocalDateTime createdAt;
+  @Schema(description = "更新时间")
+  private LocalDateTime updatedAt;
 }

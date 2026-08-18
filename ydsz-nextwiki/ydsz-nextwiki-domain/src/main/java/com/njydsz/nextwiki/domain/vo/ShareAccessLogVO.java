@@ -58,4 +58,16 @@ public class ShareAccessLogVO implements Serializable {
 
   @Schema(description = "创建时间")
   private LocalDateTime createdAt;
+
+  @Schema(description = "更新人")
+  private String updatedBy;
+
+  @Schema(description = "更新时间")
+  private LocalDateTime updatedAt;
+
+  @Schema(description = "乐观锁版本号")
+  private Integer revision;
+
+  @Schema(description = "删除标记（0=正常，1=已删除）")
+  private Integer deleted;
 }

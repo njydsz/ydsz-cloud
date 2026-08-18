@@ -11,9 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
-import com.njydsz.nextwiki.infra.entity.SearchIndexDO;
-import com.njydsz.nextwiki.infra.entity.TagDO;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.vo.SearchIndexVO;
+import com.njydsz.nextwiki.domain.vo.TagVO;
+import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
 import com.njydsz.nextwiki.domain.vo.SearchResultVO;
 
 /**
@@ -50,6 +51,9 @@ import com.njydsz.nextwiki.domain.vo.SearchResultVO;
 @RequiredArgsConstructor
 public class SearchDomainService {
 
+  /** 文件类型常量 */
+  private static final String TYPE_FILE = "file";
+
   /**
    * 同步到统一搜索索引的最大内容长度（字符数）。
    *
@@ -74,7 +78,7 @@ public class SearchDomainService {
    * @return 搜索结果
    */
   public SearchResultVO search(
-      List<SearchIndexDO> indices, long total, String keyword, int page, int pageSize) {
+      List<SearchIndexVO> indices, long total, String keyword, int page, int pageSize) {
     long startTime = System.currentTimeMillis();
 
     log.info(
@@ -85,14 +89,14 @@ public class SearchDomainService {
         pageSize);
 
     List<SearchResultVO.SearchHitVO> hits = new ArrayList<>();
-    for (SearchIndexDO index : indices) {
+    for (SearchIndexVO index : indices) {
       float score = calculateScore(index, keyword);
       hits.add(
           SearchResultVO.SearchHitVO.builder()
               .fileNodeId(index.getFileNodeId())
               .name(index.getName())
               .path(index.getPath())
-              .nodeType(FileNodeDO.TYPE_FILE)
+              .nodeType(TYPE_FILE)
               .suffix(index.getSuffix())
               .size(index.getSize())
               .highlight(buildHighlight(index.getName(), keyword))
@@ -115,23 +119,23 @@ public class SearchDomainService {
   }
 
   /**
-   * 构建搜索索引实体（纯领域逻辑，数据由 server 层传入）
+   * 构建搜索索引 DTO（纯领域逻辑，数据由 server 层传入）
    *
-   * <p>根据文件节点和标签数据，构建 {@link SearchIndexDO} 实体。 实体持久化由 server 层通过 {@code SearchIndexRepository} 完成。
+   * <p>根据文件节点和标签数据，构建 {@link SearchIndexDTO} DTO。 DTO 持久化由 server 层通过 {@code SearchIndexRepository} 完成。
    *
-   * @param node 文件节点实体（由 server 层查询传入，须保证非 null 且未删除）
+   * @param node 文件节点 VO（由 server 层查询传入，须保证非 null 且未删除）
    * @param tags 文件关联的标签列表（由 server 层查询传入，可为 null 或空）
    * @param content 提取的文本内容（可为 null）
    * @param userId 操作人ID
-   * @return 构建完成的搜索索引实体
+   * @return 构建完成的搜索索引 DTO
    */
-  public SearchIndexDO buildSearchIndex(
-      FileNodeDO node, List<TagDO> tags, String content, String userId) {
+  public SearchIndexDTO buildSearchIndex(
+      FileNodeVO node, List<TagVO> tags, String content, String userId) {
     log.info("[SearchDomainService] 构建搜索索引: fileNodeId={}", node.getId());
 
     String tagNames =
         tags != null && !tags.isEmpty()
-            ? tags.stream().map(TagDO::getName).collect(Collectors.joining(","))
+            ? tags.stream().map(TagVO::getName).collect(Collectors.joining(","))
             : null;
 
     // 构建可搜索内容
@@ -149,8 +153,8 @@ public class SearchDomainService {
       searchableContent.append(' ').append(tagNames);
     }
 
-    SearchIndexDO index =
-        SearchIndexDO.builder()
+    SearchIndexDTO dto =
+        SearchIndexDTO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
             .fileNodeId(node.getId())
             .name(node.getName())
@@ -161,19 +165,15 @@ public class SearchDomainService {
             .size(node.getSize())
             .tags(tagNames)
             .build();
-    index.setCreatedBy(node.getCreatedBy());
-    index.setUpdatedBy(userId);
-    index.setRevision(0);
-    index.setDeleted(0);
 
     log.info("[SearchDomainService] 搜索索引构建完成: fileNodeId={}", node.getId());
-    return index;
+    return dto;
   }
 
   // ==================== 私有方法 ====================
 
   /** 计算搜索得分（0-1 之间，越高越相关） */
-  private float calculateScore(SearchIndexDO index, String keyword) {
+  private float calculateScore(SearchIndexVO index, String keyword) {
     if (keyword == null || keyword.isEmpty()) {
       return 1.0f;
     }
