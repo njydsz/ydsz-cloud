@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.server.service.impl;
 
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -8,16 +10,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.userinfo.domain.dto.ForgotPasswordDTO;
 import com.njydsz.userinfo.domain.dto.SelfRegisterDTO;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
+import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
+import com.njydsz.userinfo.domain.repository.UserAccountRepository;
+import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.auth.UserPasswordHistoryService;
@@ -33,6 +35,8 @@ import com.njydsz.userinfo.server.service.SelfServiceService;
  * 与 {@link UserAccountServiceImpl#create} / {@code resetPassword} 保持一致的关注点（事务、密码历史、
  * 搜索索引同步、领域事件、会话驱逐），修复原 Controller 直连 Mapper 导致的逻辑重复与缺失
  * （P0-4：缺事务、密码历史、索引同步、事件、审计、改密后会话驱逐）。
+ *
+ * <p><b>DDD 合规：</b>通过 {@link UserAccountRepository} 访问数据，不直接依赖 Mapper。
  *
  * @author ydsz-team
  * @since 1.1.0
@@ -50,8 +54,11 @@ public class SelfServiceServiceImpl implements SelfServiceService {
   /** 找回密码场景验证码类型 */
   private static final String CODE_TYPE_FORGOT_PASSWORD = "FORGOT_PASSWORD";
 
+  /** 默认租户 ID（自助注册场景） */
+  private static final String DEFAULT_TENANT_ID = "1";
+
   private final VerifyCodeService verifyCodeService;
-  private final UserAccountMapper userAccountMapper;
+  private final UserAccountRepository userAccountRepository;
   private final PasswordEncoder passwordEncoder;
   private final PasswordPolicyValidator passwordPolicyValidator;
   private final UserPasswordHistoryService passwordHistoryService;
@@ -83,9 +90,7 @@ public class SelfServiceServiceImpl implements SelfServiceService {
     }
 
     // 2. 用户名唯一性校验
-    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccountDO::getUsername, dto.getUsername());
-    if (userAccountMapper.selectCount(wrapper) > 0) {
+    if (userAccountRepository.existsByUsername(dto.getUsername())) {
       throw new BusinessException(UserInfoExceptionCode.USERNAME_DUPLICATE);
     }
 
@@ -94,28 +99,20 @@ public class SelfServiceServiceImpl implements SelfServiceService {
 
     // 4. 创建用户（启用状态，默认租户）
     String passwordHash = passwordEncoder.encode(dto.getPassword());
-    UserAccountDO user = new UserAccountDO();
-    user.setUsername(dto.getUsername());
-    user.setRealName(dto.getRealName());
-    user.setPassword(passwordHash);
-    user.setPhone(dto.getPhone());
-    user.setEmail(dto.getEmail());
-    user.setStatusEnum(EnableStatusEnum.ENABLED);
-    user.setLoginFailCount(0);
-    user.setTenantId("1");
-    userAccountMapper.insert(user);
-    log.info("用户自助注册成功: userId={}, username={}", user.getId(), user.getUsername());
+    UserAccountCreateDTO createDTO = buildCreateDTO(dto, passwordHash);
+    UserAccountVO createdUser = userAccountRepository.create(createDTO);
+    log.info("用户自助注册成功: userId={}, username={}", createdUser.getId(), createdUser.getUsername());
 
     // 5. 记录初始密码到历史（防重用）
     passwordHistoryService.recordPasswordHistory(
-        user.getId(), passwordHash, properties.getPasswordHistoryCount());
+        createdUser.getId(), passwordHash, properties.getPasswordHistoryCount());
 
     // 6. 搜索索引同步
-    indexUpsert(user);
+    indexUpsert(createdUser);
 
     // 7. 发布领域事件
-    eventPublisher.publishUserCreated(user);
-    return user.getId();
+    eventPublisher.publishUserCreated(createdUser);
+    return createdUser.getId();
   }
 
   /**
@@ -127,15 +124,14 @@ public class SelfServiceServiceImpl implements SelfServiceService {
   @Transactional(rollbackFor = Exception.class)
   public boolean forgotPassword(ForgotPasswordDTO dto) {
     // 1. 查询用户
-    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccountDO::getUsername, dto.getUsername());
-    UserAccountDO user = userAccountMapper.selectOne(wrapper);
-    if (user == null) {
+    Optional<UserAccountVO> userOpt = userAccountRepository.findByUsername(dto.getUsername());
+    if (userOpt.isEmpty()) {
       throw new BusinessException(UserInfoExceptionCode.FORGOT_PASSWORD_USER_NOT_FOUND);
     }
+    UserAccountVO userVO = userOpt.get();
 
     // 2. 手机号匹配校验（防账号探测）
-    if (user.getPhone() == null || !user.getPhone().equals(dto.getPhone())) {
+    if (userVO.getPhone() == null || !userVO.getPhone().equals(dto.getPhone())) {
       throw new BusinessException(UserInfoExceptionCode.FORGOT_PASSWORD_PHONE_MISMATCH);
     }
 
@@ -146,33 +142,64 @@ public class SelfServiceServiceImpl implements SelfServiceService {
 
     // 4. 密码策略校验（含历史密码防重用）
     passwordPolicyValidator.validate(
-        dto.getNewPassword(), user.getUsername(), user.getId(), passwordHistoryService);
+        dto.getNewPassword(), userVO.getUsername(), userVO.getId(), passwordHistoryService);
 
     // 5. 更新密码并重置失败计数/锁定状态
     String newPasswordHash = passwordEncoder.encode(dto.getNewPassword());
-    user.setPassword(newPasswordHash);
-    user.setLoginFailCount(0);
-    user.setLockedUntil(null);
-    userAccountMapper.updateById(user);
+    userAccountRepository.updatePasswordAndResetFailCount(userVO.getId(), newPasswordHash);
 
     // 6. 记录新密码到历史
     passwordHistoryService.recordPasswordHistory(
-        user.getId(), newPasswordHash, properties.getPasswordHistoryCount());
+        userVO.getId(), newPasswordHash, properties.getPasswordHistoryCount());
 
     // 7. 驱逐旧会话，强制重新登录
-    authService.evictAllSessions(user.getId());
+    authService.evictAllSessions(userVO.getId());
 
     // 8. 搜索索引同步 + 领域事件
-    indexUpsert(user);
-    eventPublisher.publishUserUpdated(user);
-    log.info("用户找回密码成功: userId={}, username={}", user.getId(), user.getUsername());
+    indexUpsert(userVO);
+    eventPublisher.publishUserUpdated(userVO);
+    log.info("用户找回密码成功: userId={}, username={}", userVO.getId(), userVO.getUsername());
     return true;
   }
 
-  private void indexUpsert(UserAccountDO entity) {
+  /**
+   * 构建用户创建 DTO。
+   *
+   * @param dto 自助注册请求 DTO
+   * @param passwordHash 密码哈希
+   * @return 用户创建 DTO
+   */
+  private UserAccountCreateDTO buildCreateDTO(SelfRegisterDTO dto, String passwordHash) {
+    UserAccountCreateDTO createDTO = new UserAccountCreateDTO();
+    createDTO.setUsername(dto.getUsername());
+    createDTO.setPassword(passwordHash);
+    createDTO.setRealName(dto.getRealName());
+    createDTO.setPhone(dto.getPhone());
+    createDTO.setEmail(dto.getEmail());
+    createDTO.setStatus(EnableStatusEnum.ENABLED);
+    createDTO.setTenantId(DEFAULT_TENANT_ID);
+    return createDTO;
+  }
+
+  /**
+   * 同步用户数据到搜索索引。
+   *
+   * @param userVO 用户账号 VO
+   */
+  private void indexUpsert(UserAccountVO userVO) {
     SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
     if (bridge != null) {
-      bridge.indexUpsert("user", entity);
+      bridge.indexUpsert("user", userVO);
     }
+  }
+
+  /**
+   * 获取默认登录失败次数常量。
+   *
+   * @return 默认登录失败次数（始终为 0）
+   */
+  @SuppressWarnings("unused")
+  private int getDefaultLoginFailCount() {
+    return DEFAULT_LOGIN_FAIL_COUNT;
   }
 }

@@ -13,14 +13,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.math.RoundingMode;
 
-import lombok.RequiredArgsConstructor;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.RemovalCause;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.code.BaseResultCode;
@@ -28,9 +35,9 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.server.template.TemplateEngine;
 
 /**
- * 带 AST 缓存的模板引擎。
+ * 带 AST 缓存的模板引擎（Caffeine 实现）。
  *
- * <p>核心优化：将高频模板预编译为指令树（{@link TemplateAst}）， 避免每次渲染重复执行正则匹配。
+ * <p>核心优化：将高频模板预编译为指令树（{@link TemplateAst}），避免每次渲染重复执行正则匹配。
  *
  * <p>性能对比（万级词库 + 复杂模板）：
  *
@@ -39,20 +46,20 @@ import com.njydsz.message.server.template.TemplateEngine;
  *   <li>有缓存：O(指令数)，仅首次渲染编译，后续直接遍历指令列表
  * </ul>
  *
- * <p>缓存策略：
+ * <p>缓存策略（Caffeine W-TinyLFU）：
  *
  * <ul>
- *   <li>最大容量 1000 条（可通过配置调整）
- *   <li>无 TTL（模板由管理后台维护，变更时主动失效）
- *   <li>线程安全（ConcurrentHashMap + volatile 引用）
+ *   <li>最大容量可通过 {@code ydsz.message.template.cache-max-size} 配置（默认 1000）
+ *   <li>写入后 30 分钟过期（模板由管理后台维护，长时间未使用的模板自动淘汰）
+ *   <li>缓存命中率、容量等指标自动暴露到 Micrometer {@code ydsz.message.template.cache.*}
  * </ul>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.2.0
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
+@ConditionalOnClass(Cache.class)
 public class CachedTemplateEngine implements TemplateEngine {
 
   /** 变量占位符正则：匹配 ${var} / ${a.b.c} / ${this} / ${@index} / ${var|filter:arg} */
@@ -74,17 +81,70 @@ public class CachedTemplateEngine implements TemplateEngine {
   /** 默认缓存最大容量 */
   private static final int DEFAULT_MAX_CACHE_SIZE = 1000;
 
-  /** 模板 AST 缓存：原始模板字符串 → 编译后的 AST */
-  private final Map<String, TemplateAst> astCache = new ConcurrentHashMap<>(128);
+  /** 默认缓存过期时间（分钟） */
+  private static final long DEFAULT_EXPIRE_AFTER_WRITE_MINUTES = 30L;
 
-  /** 命中次数统计（用于监控） */
+  /** 模板 AST 缓存：原始模板字符串 → 编译后的 AST */
+  private final Cache<String, TemplateAst> astCache;
+
+  /** 命中次数统计（监控用） */
   private final AtomicLong cacheHits = new AtomicLong(0);
 
-  /** 未命中次数统计（用于监控） */
+  /** 未命中次数统计（监控用） */
   private final AtomicLong cacheMisses = new AtomicLong(0);
 
-  /** 最大缓存容量 */
-  private final int maxCacheSize = DEFAULT_MAX_CACHE_SIZE;
+  /**
+   * 构造带监控的 Caffeine 缓存实例。
+   *
+   * @param maxCacheSize 最大缓存容量
+   * @param expireAfterWriteMinutes 写入后过期时间（分钟）
+   * @param meterRegistry 指标注册器（可选，未注入时不注册监控指标）
+   */
+  public CachedTemplateEngine(
+      int maxCacheSize,
+      long expireAfterWriteMinutes,
+      @Autowired(required = false) MeterRegistry meterRegistry) {
+    this.astCache =
+        Caffeine.newBuilder()
+            .maximumSize(Math.max(64, maxCacheSize))
+            .expireAfterWrite(expireAfterWriteMinutes, TimeUnit.MINUTES)
+            .recordStats()
+            .removalListener(
+                (String key, TemplateAst value, RemovalCause cause) -> {
+                  if (cause == RemovalCause.SIZE) {
+                    log.warn(
+                        "[TemplateAst] 缓存容量驱逐: cause={} cacheSize={}",
+                        cause,
+                        astCache.estimatedSize());
+                  }
+                })
+            .build();
+    log.info(
+        "[TemplateAst] 缓存已初始化: maxSize={} expireAfterWrite={}min",
+        maxCacheSize,
+        expireAfterWriteMinutes);
+  }
+
+  /** 注册 Micrometer 监控指标。 */
+  @PostConstruct
+  public void registerMetrics(@Autowired(required = false) MeterRegistry meterRegistry) {
+    if (meterRegistry != null) {
+      Tags tags = Tags.of("engine", "template.ast");
+      meterRegistry.gauge(
+          "ydsz.message.template.cache.size", tags, astCache, c -> (double) c.estimatedSize());
+      meterRegistry.gauge(
+          "ydsz.message.template.cache.hit.rate",
+          tags,
+          astCache,
+          c -> c.stats().hitRate());
+      meterRegistry.gauge(
+          "ydsz.message.template.cache.eviction.count",
+          tags,
+          astCache,
+          c -> (double) c.stats().evictionCount());
+      log.info("[TemplateAst] 缓存监控指标已注册");
+    }
+  }
 
   @Override
   public String render(String template, Map<String, Object> params) {
@@ -111,24 +171,12 @@ public class CachedTemplateEngine implements TemplateEngine {
 
   /** 获取或编译模板 AST。 */
   private TemplateAst getOrCompile(String template) {
-    TemplateAst cached = astCache.get(template);
-    if (cached != null) {
-      cacheHits.incrementAndGet();
-      return cached;
-    }
-    cacheMisses.incrementAndGet();
-    // 编译模板为 AST
-    TemplateAst compiled = compile(template);
-    // 控制缓存容量
-    if (astCache.size() < maxCacheSize) {
-      astCache.put(template, compiled);
-    } else {
-      log.warn(
-          "[TemplateAst] 缓存已达上限({}),跳过缓存新模板: {}",
-          maxCacheSize,
-          template.length() > 50 ? template.substring(0, 50) + "..." : template);
-    }
-    return compiled;
+    return astCache.get(
+        template,
+        key -> {
+          cacheMisses.incrementAndGet();
+          return compile(key);
+        });
   }
 
   /** 将模板编译为 AST。 */
@@ -269,24 +317,34 @@ public class CachedTemplateEngine implements TemplateEngine {
 
   /** 日期格式化过滤器。 */
   private String formatDate(Object value, String pattern) {
-    if (value == null) return "";
+    if (value == null) {
+      return "";
+    }
     String fmt = pattern.isEmpty() ? "yyyy-MM-dd HH:mm:ss" : pattern;
     try {
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern(fmt);
-      if (value instanceof LocalDateTime ldt) return ldt.format(formatter);
-      if (value instanceof LocalDate ld) return ld.format(formatter);
-      if (value instanceof Date date)
+      if (value instanceof LocalDateTime ldt) {
+        return ldt.format(formatter);
+      }
+      if (value instanceof LocalDate ld) {
+        return ld.format(formatter);
+      }
+      if (value instanceof Date date) {
         return date.toInstant()
             .atZone(ZoneId.systemDefault())
             .toLocalDateTime()
             .format(formatter);
-      if (value instanceof String str) return LocalDateTime.parse(str).format(formatter);
-      if (value instanceof Long ts)
+      }
+      if (value instanceof String str) {
+        return LocalDateTime.parse(str).format(formatter);
+      }
+      if (value instanceof Long ts) {
         return new Date(ts)
             .toInstant()
             .atZone(ZoneId.systemDefault())
             .toLocalDateTime()
             .format(formatter);
+      }
     } catch (Exception e) {
       return String.valueOf(value);
     }
@@ -295,13 +353,19 @@ public class CachedTemplateEngine implements TemplateEngine {
 
   /** 数字格式化过滤器。 */
   private String formatNumber(Object value, String pattern) {
-    if (value == null) return "";
+    if (value == null) {
+      return "";
+    }
     String fmt = pattern.isEmpty() ? "#,##0.00" : pattern;
     try {
       DecimalFormat df = new DecimalFormat(fmt);
       df.setRoundingMode(RoundingMode.HALF_UP);
-      if (value instanceof Number num) return df.format(num);
-      if (value instanceof String str) return df.format(new BigDecimal(str));
+      if (value instanceof Number num) {
+        return df.format(num);
+      }
+      if (value instanceof String str) {
+        return df.format(new BigDecimal(str));
+      }
     } catch (Exception e) {
       return String.valueOf(value);
     }
@@ -310,7 +374,9 @@ public class CachedTemplateEngine implements TemplateEngine {
 
   /** 字符串截断过滤器。 */
   private String truncate(Object value, String lengthStr) {
-    if (value == null) return "";
+    if (value == null) {
+      return "";
+    }
     String str = String.valueOf(value);
     try {
       int maxLen = Integer.parseInt(lengthStr.trim());
@@ -339,12 +405,24 @@ public class CachedTemplateEngine implements TemplateEngine {
 
   /** truthy 判定。 */
   private boolean isTruthy(Object value) {
-    if (value == null) return false;
-    if (value instanceof Boolean b) return b;
-    if (value instanceof String s) return !s.isBlank();
-    if (value instanceof Number n) return n.doubleValue() != 0d;
-    if (value instanceof Collection<?> c) return !c.isEmpty();
-    if (value instanceof Map<?, ?> mp) return !mp.isEmpty();
+    if (value == null) {
+      return false;
+    }
+    if (value instanceof Boolean b) {
+      return b;
+    }
+    if (value instanceof String s) {
+      return !s.isBlank();
+    }
+    if (value instanceof Number n) {
+      return n.doubleValue() != 0d;
+    }
+    if (value instanceof Collection<?> c) {
+      return !c.isEmpty();
+    }
+    if (value instanceof Map<?, ?> mp) {
+      return !mp.isEmpty();
+    }
     return true;
   }
 
@@ -368,7 +446,7 @@ public class CachedTemplateEngine implements TemplateEngine {
    */
   public void evictCache(String template) {
     if (template != null) {
-      astCache.remove(template);
+      astCache.invalidate(template);
       log.debug(
           "[TemplateAst] 缓存已失效: {}",
           template.length() > 30 ? template.substring(0, 30) + "..." : template);
@@ -377,13 +455,15 @@ public class CachedTemplateEngine implements TemplateEngine {
 
   /** 清空所有缓存。 */
   public void clearCache() {
-    astCache.clear();
+    astCache.invalidateAll();
+    cacheHits.set(0);
+    cacheMisses.set(0);
     log.info("[TemplateAst] 缓存已全部清空");
   }
 
   /** 当前缓存大小。 */
-  public int cacheSize() {
-    return astCache.size();
+  public long cacheSize() {
+    return astCache.estimatedSize();
   }
 
   /**
@@ -396,5 +476,14 @@ public class CachedTemplateEngine implements TemplateEngine {
     long misses = cacheMisses.get();
     long total = hits + misses;
     return total > 0 ? (double) hits / total : -1.0;
+  }
+
+  /** 缓存详细统计信息。 */
+  public String cacheStats() {
+    return String.format(
+        "size=%d, hitRate=%.2f%%, evictions=%d",
+        astCache.estimatedSize(),
+        astCache.stats().hitRate() * 100,
+        astCache.stats().evictionCount());
   }
 }

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.message.infra.mapper.OutboxEventMapper">
+
+  <!-- 通用结果映射 -->
+  <resultMap id="BaseResultMap" type="com.njydsz.message.infra.entity.OutboxEventDO">
+    <id column="id" property="id"/>
+    <result column="aggregate_type" property="aggregateType"/>
+    <result column="aggregate_id" property="aggregateId"/>
+    <result column="event_type" property="eventType"/>
+    <result column="payload" property="payload"/>
+    <result column="tenant_id" property="tenantId"/>
+    <result column="created_at" property="createdAt"/>
+    <result column="published_at" property="publishedAt"/>
+    <result column="publish_attempts" property="publishAttempts"/>
+    <result column="status" property="status"/>
+  </resultMap>
+
+  <!-- Base_Column_List -->
+  <sql id="Base_Column_List">
+    id, aggregate_type, aggregate_id, event_type, payload, tenant_id,
+    created_at, published_at, publish_attempts, status
+  </sql>
+
+  <!-- 按状态统计事件数量 -->
+  <select id="countGroupByStatus" resultType="java.util.Map">
+    SELECT status, COUNT(*) AS count
+    FROM ydsz_msg_outbox
+    GROUP BY status
+  </select>
+
+  <!-- CAS 更新：PENDING → PUBLISHING -->
+  <update id="casMarkPublishing">
+    UPDATE ydsz_msg_outbox
+    SET status = 'PUBLISHING',
+        publish_attempts = publish_attempts + 1
+    WHERE id = #{id}
+      AND status = 'PENDING'
+      AND publish_attempts = #{expectedVersion}
+  </update>
+
+  <!-- CAS 更新：PUBLISHING → PUBLISHED -->
+  <update id="casMarkPublished">
+    UPDATE ydsz_msg_outbox
+    SET status = 'PUBLISHED',
+        published_at = NOW()
+    WHERE id = #{id}
+      AND status = 'PUBLISHING'
+  </update>
+
+  <!-- CAS 更新：PUBLISHING → PENDING(重试) 或 FAILED(超次数) -->
+  <update id="casMarkFailed">
+    UPDATE ydsz_msg_outbox
+    SET status = CASE
+        WHEN publish_attempts &gt;= #{maxRetries} THEN 'FAILED'
+        ELSE 'PENDING'
+        END
+    WHERE id = #{id}
+      AND status = 'PUBLISHING'
+  </update>
+
+</mapper>

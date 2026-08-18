@@ -146,4 +146,15 @@ public interface UserAccountRepository {
    * @return 影响行数（用户不存在或已删除时为 0）
    */
   int resetLoginSuccess(String id, String loginIp);
+
+  /**
+   * 更新用户密码并重置登录失败计数/锁定状态。
+   *
+   * <p>专用于密码修改场景（自助注册、找回密码、管理员重置），原子完成：设置新密码哈希、清零失败计数、清除锁定时间。
+   *
+   * @param id 用户 ID
+   * @param newPasswordHash 新密码哈希（已加密）
+   * @return 影响行数（用户不存在或已删除时为 0）
+   */
+  int updatePasswordAndResetFailCount(String id, String newPasswordHash);
 }

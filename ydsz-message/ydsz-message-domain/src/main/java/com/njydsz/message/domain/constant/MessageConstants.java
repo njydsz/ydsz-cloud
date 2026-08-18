@@ -53,6 +53,12 @@ public final class MessageConstants {
   /** 聚合批次锁前缀 */
   public static final String AGGREGATE_LOCK_PREFIX = "ydsz:msg:aggregate:lock:";
 
+  /** P1: Redis 聚合计数器 key 前缀（替代分布式锁方案） */
+  public static final String AGGREGATE_COUNTER_PREFIX = "ydsz:msg:aggregate:counter:";
+
+  /** P1: Redis 聚合批次元数据 key 前缀 */
+  public static final String AGGREGATE_BATCH_PREFIX = "ydsz:msg:aggregate:batch:";
+
   /** 路由规则缓存 key */
   public static final String ROUTE_RULE_CACHE_KEY = "ydsz:msg:route:rules";
 

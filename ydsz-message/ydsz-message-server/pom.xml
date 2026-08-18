@@ -169,5 +169,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-freemarker</artifactId>
         </dependency>
+        <!-- P0: Caffeine 高性能本地缓存（替代手写 ConcurrentHashMap，提供 W-TinyLFU 淘汰策略） -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
     </dependencies>
 </project>

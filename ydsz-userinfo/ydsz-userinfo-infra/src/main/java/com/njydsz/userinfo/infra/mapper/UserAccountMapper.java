@@ -145,4 +145,25 @@ public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
             </script>
             """)
   int batchDeleteByIds(@Param("ids") List<String> ids);
+
+  /**
+   * 原子更新用户密码并重置登录失败计数/锁定状态。
+   *
+   * <p>专用于密码修改场景（自助注册、找回密码、管理员重置），通过单条 SQL 完成密码更新与状态重置，避免并发竞态。
+   *
+   * @param id 用户 ID
+   * @param newPasswordHash 新密码哈希（已加密）
+   * @return 影响行数（用户不存在或已删除时为 0）
+   */
+  @Update(
+      """
+            UPDATE ydsz_user_account
+            SET password = #{newPasswordHash},
+                login_fail_count = 0,
+                locked_until = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = #{id} AND deleted = 0
+            """)
+  int updatePasswordAndResetFailCount(
+      @Param("id") String id, @Param("newPasswordHash") String newPasswordHash);
 }

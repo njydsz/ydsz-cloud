@@ -133,6 +133,11 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
     return userAccountMapper.resetLoginSuccess(id, loginIp);
   }
 
+  @Override
+  public int updatePasswordAndResetFailCount(String id, String newPasswordHash) {
+    return userAccountMapper.updatePasswordAndResetFailCount(id, newPasswordHash);
+  }
+
   /**
    * 根据查询参数构建 MyBatis-Plus 查询条件。
    *
