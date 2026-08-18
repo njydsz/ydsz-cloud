@@ -1,5 +1,6 @@
 package com.njydsz.workflow.domain.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,13 +46,14 @@ public interface FlowInstanceRepository {
   Optional<FlowInstanceVO> findById(String id);
 
   /**
-   * 根据业务类型 + 业务单据 ID 查询流程实例。
+   * 根据租户 ID + 业务类型 + 业务单据 ID 查询流程实例。
    *
+   * @param tenantId 租户 ID
    * @param businessType 业务类型
    * @param businessId 业务单据 ID
    * @return 流程实例 VO；不存在返回 {@code Optional.empty()}
    */
-  Optional<FlowInstanceVO> findByBusiness(String businessType, String businessId);
+  Optional<FlowInstanceVO> findByBusiness(String tenantId, String businessType, String businessId);
 
   /**
    * 查询发起人的流程实例列表。
@@ -92,4 +94,86 @@ public interface FlowInstanceRepository {
    * @param id 实例 ID
    */
   void deleteById(String id);
+
+  /**
+   * 更新流程变量 JSON。
+   *
+   * <p>仅更新 variable 字段，不影响其他字段。
+   *
+   * @param id 实例 ID
+   * @param variable 流程变量 JSON
+   */
+  void updateVariable(String id, String variable);
+
+  /**
+   * 更新实例状态。
+   *
+   * @param id 实例 ID
+   * @param flowStatus 流程状态
+   * @param currentNodeCode 当前节点编码
+   * @param currentNodeName 当前节点名称
+   * @param endAt 结束时间
+   * @param durationMs 耗时（毫秒）
+   */
+  void updateStatus(
+      String id,
+      String flowStatus,
+      String currentNodeCode,
+      String currentNodeName,
+      java.time.LocalDateTime endAt,
+      Long durationMs);
+
+  /**
+   * 更新实例的 dueAt 字段（子流程超时用）。
+   *
+   * @param id 实例 ID
+   * @param dueAt 超时时间
+   */
+  void updateDueAt(String id, LocalDateTime dueAt);
+
+  /**
+   * 实例多维分页查询。
+   *
+   * @param businessType 业务类型（可选）
+   * @param initiatorId 发起人 ID（可选）
+   * @param flowStatus 流程状态（可选）
+   * @param startTime 开始时间下界（可选）
+   * @param endTime 开始时间上界（可选）
+   * @param tenantId 租户 ID（可选）
+   * @param dataScopeFilter 数据权限 SQL 片段（可选）
+   * @param offset 偏移量
+   * @param limit 每页大小
+   * @return 流程实例 VO 列表
+   */
+  List<FlowInstanceVO> findPage(
+      String businessType,
+      String initiatorId,
+      String flowStatus,
+      LocalDateTime startTime,
+      LocalDateTime endTime,
+      String tenantId,
+      String dataScopeFilter,
+      int offset,
+      int limit);
+
+  /**
+   * 实例多维分页计数。
+   *
+   * @param businessType 业务类型（可选）
+   * @param initiatorId 发起人 ID（可选）
+   * @param flowStatus 流程状态（可选）
+   * @param startTime 开始时间下界（可选）
+   * @param endTime 开始时间上界（可选）
+   * @param tenantId 租户 ID（可选）
+   * @param dataScopeFilter 数据权限 SQL 片段（可选）
+   * @return 总数
+   */
+  long countPage(
+      String businessType,
+      String initiatorId,
+      String flowStatus,
+      LocalDateTime startTime,
+      LocalDateTime endTime,
+      String tenantId,
+      String dataScopeFilter);
 }

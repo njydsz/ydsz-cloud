@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.web.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.TagDO;
@@ -169,5 +170,50 @@ public class SearchController {
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     searchApplicationService.rebuildAllIndices();
     return BaseResponse.success();
+  }
+
+  /**
+   * 获取当前用户搜索历史。
+   *
+   * <p>返回最近 20 条搜索记录（按时间降序），数据保留 30 天。
+   *
+   * @param userId 当前用户 ID
+   * @return 搜索历史列表
+   */
+  @GetMapping("/history")
+  @Operation(summary = "获取搜索历史")
+  @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
+  public BaseResponse<List<String>> getSearchHistory(
+      @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
+    return BaseResponse.success(searchApplicationService.getUserSearchHistory(userId));
+  }
+
+  /**
+   * 清除当前用户搜索历史。
+   *
+   * @param userId 当前用户 ID
+   * @return 统一响应结果
+   */
+  @DeleteMapping("/history")
+  @Operation(summary = "清除搜索历史")
+  @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
+  public BaseResponse<Void> clearSearchHistory(
+      @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
+    searchApplicationService.clearUserSearchHistory(userId);
+    return BaseResponse.success();
+  }
+
+  /**
+   * 获取热门搜索排行。
+   *
+   * <p>基于全局搜索频率统计，返回 Top 10 热门搜索词（按搜索次数降序）。 搜索模块未引入时返回空列表。
+   *
+   * @return 热门搜索列表（含关键词 + 热度分值）
+   */
+  @GetMapping("/hot")
+  @Operation(summary = "获取热门搜索")
+  @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
+  public BaseResponse<List<Map.Entry<String, Double>>> getHotSearches() {
+    return BaseResponse.success(searchApplicationService.getHotSearches());
   }
 }

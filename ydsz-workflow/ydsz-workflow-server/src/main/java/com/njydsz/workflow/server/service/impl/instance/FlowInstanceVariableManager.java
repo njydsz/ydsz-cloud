@@ -14,8 +14,8 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 
 /**
  * 流程变量管理器
@@ -38,8 +38,8 @@ import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 @RequiredArgsConstructor
 public class FlowInstanceVariableManager {
 
-  /** 流程实例 Mapper，负责 ydsz_flow_instance 表的增删改查 */
-  private final FlowInstanceMapper instanceMapper;
+  /** 流程实例仓储，负责 ydsz_flow_instance 的领域持久化 */
+  private final FlowInstanceRepository instanceRepository;
 
   /**
    * P2-24: 读取实例流程变量
@@ -49,7 +49,7 @@ public class FlowInstanceVariableManager {
    */
   @Transactional(readOnly = true)
   public Map<String, Object> getVariables(String instanceId) {
-    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+    FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
     if (instance == null || !StringUtils.hasText(instance.getVariable())) {
       return Collections.emptyMap();
     }
@@ -77,7 +77,7 @@ public class FlowInstanceVariableManager {
           .message("error.workflow.msg_fae06125")
           .build();
     }
-    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+    FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -87,7 +87,7 @@ public class FlowInstanceVariableManager {
     }
     Map<String, Object> map = parseVariables(instance.getVariable());
     map.put(key, value);
-    instanceMapper.updateVariable(instanceId, YdszJson.toJson(map));
+    instanceRepository.updateVariable(instanceId, YdszJson.toJson(map));
     log.info("[Flow] 设置变量: instanceId={} key={}", instanceId, key);
   }
 
@@ -102,7 +102,7 @@ public class FlowInstanceVariableManager {
     if (variables == null || variables.isEmpty()) {
       return;
     }
-    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+    FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -112,7 +112,7 @@ public class FlowInstanceVariableManager {
     }
     Map<String, Object> map = parseVariables(instance.getVariable());
     map.putAll(variables);
-    instanceMapper.updateVariable(instanceId, YdszJson.toJson(map));
+    instanceRepository.updateVariable(instanceId, YdszJson.toJson(map));
     log.info("[Flow] 批量设置变量: instanceId={} keys={}", instanceId, variables.keySet());
   }
 

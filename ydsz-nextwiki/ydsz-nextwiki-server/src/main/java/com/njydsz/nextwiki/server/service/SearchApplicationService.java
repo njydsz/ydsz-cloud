@@ -2,6 +2,7 @@ package com.njydsz.nextwiki.server.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -58,12 +59,15 @@ public class SearchApplicationService {
   private final ObjectProvider<UnifiedSearchService> unifiedSearchServiceProvider;
   private final ObjectProvider<SearchEngineRegistry> engineRegistryProvider;
   private final ObjectProvider<SuggestionService> suggestionServiceProvider;
+  private final SearchHistoryService searchHistoryService;
 
   /**
    * 全文检索（按关键词在用户可见范围内分页搜索）。
    *
    * <p>搜索引擎可用时走统一检索链路（PG/ES + {@code WikiSearchProvider} 权限过滤）， 不可用时降级到 DB LIKE。引擎异常同样降级并打印 warn
    * 日志，保证搜索接口始终可用。
+   *
+   * <p><b>搜索记录：</b>每次成功搜索后记录用户搜索历史并更新热门搜索排行。
    *
    * @param keyword 搜索关键词（文件名/路径/全文/标签）
    * @param userId 操作人 ID（用于权限与结果过滤）
@@ -79,12 +83,17 @@ public class SearchApplicationService {
     SearchEngineRegistry registry = engineRegistryProvider.getIfAvailable();
     UnifiedSearchService unifiedSearch = unifiedSearchServiceProvider.getIfAvailable();
 
+    SearchResultVO result;
     if (registry != null && unifiedSearch != null && registry.isPrimaryAvailable()) {
-      return searchViaEngine(unifiedSearch, keyword, userId, page, pageSize);
+      result = searchViaEngine(unifiedSearch, keyword, userId, page, pageSize);
+    } else {
+      log.info("[SearchApplicationService] 搜索引擎不可用，降级 DB LIKE: keyword={}", keyword);
+      result = searchDomainService.search(keyword, userId, scope, page, pageSize);
     }
 
-    log.info("[SearchApplicationService] 搜索引擎不可用，降级 DB LIKE: keyword={}", keyword);
-    return searchDomainService.search(keyword, userId, scope, page, pageSize);
+    // 记录搜索历史（异步不影响主流程）
+    searchHistoryService.recordSearch(userId, keyword);
+    return result;
   }
 
   /**
@@ -115,15 +124,23 @@ public class SearchApplicationService {
     SearchEngineRegistry registry = engineRegistryProvider.getIfAvailable();
     UnifiedSearchService unifiedSearch = unifiedSearchServiceProvider.getIfAvailable();
 
+    SearchResultVO result;
     if (registry != null && unifiedSearch != null && registry.isPrimaryAvailable()) {
-      return searchViaEngine(
+      result = searchViaEngine(
           unifiedSearch, request.getKeyword(), userId, pageNum, pageSize, filters);
+    } else {
+      log.info(
+          "[SearchApplicationService] 搜索引擎不可用，降级 DB LIKE（筛选不生效）: keyword={}",
+          request.getKeyword());
+      result = searchDomainService.search(
+          request.getKeyword(), userId, request.getScope(), pageNum, pageSize);
     }
 
-    log.info(
-        "[SearchApplicationService] 搜索引擎不可用，降级 DB LIKE（筛选不生效）: keyword={}", request.getKeyword());
-    return searchDomainService.search(
-        request.getKeyword(), userId, request.getScope(), pageNum, pageSize);
+    // 记录搜索历史
+    if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
+      searchHistoryService.recordSearch(userId, request.getKeyword());
+    }
+    return result;
   }
 
   /**
@@ -168,6 +185,34 @@ public class SearchApplicationService {
       return List.of();
     }
     return suggestionService.didYouMean(keyword);
+  }
+
+  /**
+   * 获取用户搜索历史列表。
+   *
+   * @param userId 用户 ID
+   * @return 搜索历史列表（最新在前）
+   */
+  public List<String> getUserSearchHistory(String userId) {
+    return searchHistoryService.getUserHistory(userId);
+  }
+
+  /**
+   * 清除用户搜索历史。
+   *
+   * @param userId 用户 ID
+   */
+  public void clearUserSearchHistory(String userId) {
+    searchHistoryService.clearUserHistory(userId);
+  }
+
+  /**
+   * 获取热门搜索列表。
+   *
+   * @return 热门搜索词及热度分值列表（按热度降序）
+   */
+  public List<Map.Entry<String, Double>> getHotSearches() {
+    return searchHistoryService.getHotSearches();
   }
 
   // ==================== 私有方法 ====================

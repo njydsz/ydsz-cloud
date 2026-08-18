@@ -23,13 +23,17 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.security.DataScopeHelper;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
+import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 
 /**
  * 流程实例查询服务
@@ -58,17 +62,20 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 @RequiredArgsConstructor
 public class FlowInstanceQueryService {
 
-  /** 流程实例 Mapper，负责 ydsz_flow_instance 表的增删改查 */
-  private final FlowInstanceMapper instanceMapper;
+  /** 流程实例仓储，负责 ydsz_flow_instance 的领域持久化 */
+  private final FlowInstanceRepository instanceRepository;
 
-  /** 流程节点 Mapper */
-  private final FlowNodeMapper nodeMapper;
+  /** 流程节点仓储，负责 ydsz_flow_node 的领域持久化 */
+  private final FlowNodeRepository nodeRepository;
 
-  /** 运行时任务 Mapper，查询/更新当前待办任务 */
-  private final FlowRunTaskMapper taskMapper;
+  /** 运行时任务仓储，负责 ydsz_flow_run_task 的领域持久化 */
+  private final FlowRunTaskRepository taskRepository;
 
-  /** 历史任务 Mapper（查询可撤回的历史节点列表） */
-  private final FlowHisTaskMapper hisTaskMapper;
+  /** 历史任务仓储，负责 ydsz_flow_his_task 的领域持久化 */
+  private final FlowHisTaskRepository hisTaskRepository;
+
+  /** MapStruct 转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
 
   /** 流程变量管理器，负责变量读写与解析 */
   private final FlowInstanceVariableManager variableManager;
@@ -89,7 +96,7 @@ public class FlowInstanceQueryService {
    */
   @Transactional(readOnly = true)
   public FlowInstanceDO getById(String id) {
-    FlowInstanceDO instance = instanceMapper.selectById(id);
+    FlowInstanceVO instance = instanceRepository.findById(id).orElse(null);
     if (instance == null) {
       return null;
     }
@@ -97,9 +104,9 @@ public class FlowInstanceQueryService {
     if (!StringUtils.hasText(instance.getInitiatorName())
         && StringUtils.hasText(instance.getInitiatorId())) {
       nameAssembler.enrichOne(
-          instance, FlowInstanceDO::getInitiatorId, FlowInstanceDO::setInitiatorName, NameType.USER);
+          instance, FlowInstanceVO::getInitiatorId, FlowInstanceVO::setInitiatorName, NameType.USER);
     }
-    return instance;
+    return converter.entityToDO(instance);
   }
 
   /**
@@ -115,7 +122,9 @@ public class FlowInstanceQueryService {
   public FlowInstanceDO getByBusiness(String businessType, String businessId) {
     // P1-2: 增加 tenantId 过滤，防止跨租户串号；仅返回活跃实例（RUNNING/SUSPENDED）
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return instanceMapper.selectByBusiness(tenantId, businessType, businessId);
+    return instanceRepository.findByBusiness(tenantId, businessType, businessId)
+        .map(converter::entityToDO)
+        .orElse(null);
   }
 
   /**
@@ -127,7 +136,10 @@ public class FlowInstanceQueryService {
    */
   @Transactional(readOnly = true)
   public List<FlowInstanceDO> listByInitiator(String initiatorId, String flowStatus) {
-    return instanceMapper.selectByInitiator(initiatorId, flowStatus);
+    return instanceRepository.findByInitiatorId(initiatorId).stream()
+        .filter(vo -> flowStatus == null || flowStatus.equals(vo.getFlowStatus()))
+        .map(converter::entityToDO)
+        .toList();
   }
 
   /**
@@ -159,7 +171,7 @@ public class FlowInstanceQueryService {
           .build();
     }
     // 查历史已办节点
-    List<Map<String, Object>> passedNodes = hisTaskMapper.listPassedNodes(instanceId);
+    List<Map<String, Object>> passedNodes = hisTaskRepository.listPassedNodes(instanceId);
     if (passedNodes == null || passedNodes.isEmpty()) {
       return Collections.emptyList();
     }
@@ -210,17 +222,10 @@ public class FlowInstanceQueryService {
     } catch (Exception e) {
       log.debug("[Flow] 数据权限片段构建失败（无登录用户上下文）: {}", e.getMessage());
     }
-    List<FlowInstanceDO> list = instanceMapper.selectPage(
-        businessType,
-        initiatorId,
-        flowStatus,
-        startTime,
-        endTime,
-        tenantId,
-        dataScopeFilter,
-        offset,
-        safeSize);
-    long total = instanceMapper.countPage(
+    List<FlowInstanceDO> list = instanceRepository.findPage(
+        businessType, initiatorId, flowStatus, startTime, endTime, tenantId, dataScopeFilter, offset, safeSize)
+        .stream().map(converter::entityToDO).toList();
+    long total = instanceRepository.countPage(
         businessType, initiatorId, flowStatus, startTime, endTime, tenantId, dataScopeFilter);
     return PageResponse.success(total, (long) safePage, (long) safeSize, list);
   }
@@ -273,7 +278,7 @@ public class FlowInstanceQueryService {
    */
   @Transactional(readOnly = true)
   public Map<String, Object> getFormRenderData(String instanceId, String taskId) {
-    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+    FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -288,7 +293,7 @@ public class FlowInstanceQueryService {
     Map<String, Object> commentConfig = null;
     if (taskId != null) {
       // 优先从任务获取节点信息
-      FlowRunTaskDO task = taskMapper.selectById(taskId);
+      FlowRunTaskVO task = taskRepository.findById(taskId).orElse(null);
       if (task == null) {
         throw SysException.builder()
             .resultCode(BaseResultCode.NOT_FOUND)
@@ -305,7 +310,7 @@ public class FlowInstanceQueryService {
     }
     // 查节点表获取 formFieldsConfig 和 ext 中的字段权限
     if (nodeCode != null) {
-      FlowNodeDO node = nodeMapper.selectByCode(instance.getDefinitionId(), nodeCode);
+      FlowNodeVO node = nodeRepository.findByCode(instance.getDefinitionId(), nodeCode).orElse(null);
       if (node != null) {
         formFieldsConfig = node.getFormFieldsConfig();
         if (nodeName == null) {
@@ -352,7 +357,7 @@ public class FlowInstanceQueryService {
   // ============================== 私有辅助方法 ==============================
 
   private FlowInstanceDO getByIdOrThrow(String id) {
-    FlowInstanceDO instance = instanceMapper.selectById(id);
+    FlowInstanceVO instance = instanceRepository.findById(id).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -360,6 +365,6 @@ public class FlowInstanceQueryService {
           .params(id)
           .build();
     }
-    return instance;
+    return converter.entityToDO(instance);
   }
 }

@@ -62,16 +62,10 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   @Override
-  public Optional<FlowInstanceVO> findByBusiness(String businessType, String businessId) {
-    return instanceMapper
-        .selectList(
-            new LambdaQueryWrapper<FlowInstanceDO>()
-                .eq(FlowInstanceDO::getBusinessType, businessType)
-                .eq(FlowInstanceDO::getBusinessId, businessId)
-                .eq(FlowInstanceDO::getDeleted, 0)
-                .last("LIMIT 1"))
-        .stream()
-        .findFirst()
+  public Optional<FlowInstanceVO> findByBusiness(
+      String tenantId, String businessType, String businessId) {
+    return Optional.ofNullable(
+            instanceMapper.selectByBusiness(tenantId, businessType, businessId))
         .map(converter::entityToVO);
   }
 
@@ -116,5 +110,55 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   @Override
   public void deleteById(String id) {
     instanceMapper.deleteById(id);
+  }
+
+  @Override
+  public void updateVariable(String id, String variable) {
+    instanceMapper.updateVariable(id, variable);
+  }
+
+  @Override
+  public void updateStatus(
+      String id,
+      String flowStatus,
+      String currentNodeCode,
+      String currentNodeName,
+      LocalDateTime endAt,
+      Long durationMs) {
+    instanceMapper.updateStatus(id, flowStatus, currentNodeCode, currentNodeName, endAt, durationMs);
+  }
+
+  @Override
+  public void updateDueAt(String id, LocalDateTime dueAt) {
+    instanceMapper.updateDueAt(id, dueAt);
+  }
+
+  @Override
+  public List<FlowInstanceVO> findPage(
+      String businessType,
+      String initiatorId,
+      String flowStatus,
+      LocalDateTime startTime,
+      LocalDateTime endTime,
+      String tenantId,
+      String dataScopeFilter,
+      int offset,
+      int limit) {
+    return converter.flowInstanceListToVO(
+        instanceMapper.selectPage(
+            businessType, initiatorId, flowStatus, startTime, endTime, tenantId, dataScopeFilter, offset, limit));
+  }
+
+  @Override
+  public long countPage(
+      String businessType,
+      String initiatorId,
+      String flowStatus,
+      LocalDateTime startTime,
+      LocalDateTime endTime,
+      String tenantId,
+      String dataScopeFilter) {
+    return instanceMapper.countPage(
+        businessType, initiatorId, flowStatus, startTime, endTime, tenantId, dataScopeFilter);
   }
 }

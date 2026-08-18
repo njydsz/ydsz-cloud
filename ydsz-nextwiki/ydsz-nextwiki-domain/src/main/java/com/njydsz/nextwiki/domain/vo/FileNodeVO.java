@@ -56,6 +56,9 @@ public class FileNodeVO implements Serializable {
   @Schema(description = "存储桶名称")
   private String bucketName;
 
+  @Schema(description = "存储类型（如 STANDARD / GLACIER / DEEP_ARCHIVE）")
+  private String storageClass;
+
   @Schema(description = "文件 SHA-256 哈希")
   private String fileHash;
 

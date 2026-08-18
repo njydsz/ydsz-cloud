@@ -214,6 +214,9 @@ public interface WorkflowConverter {
 
   // ===== VO → DO (Repository 写入场景) =====
 
+  /** 流程实例 VO → 流程实例 DO。 */
+  FlowInstanceDO entityToDO(FlowInstanceVO vo);
+
   /** 运行时任务 VO → 运行时任务 DO。 */
   FlowRunTaskDO entityToDO(FlowRunTaskVO vo);
 

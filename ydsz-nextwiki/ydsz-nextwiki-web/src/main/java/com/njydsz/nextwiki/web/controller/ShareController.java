@@ -28,9 +28,9 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
-import com.njydsz.nextwiki.infra.entity.ShareAccessLogDO;
-import com.njydsz.nextwiki.infra.entity.ShareLinkDO;
-import com.njydsz.nextwiki.infra.entity.ShareRecipientDO;
+import com.njydsz.nextwiki.domain.vo.ShareAccessLogVO;
+import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
+import com.njydsz.nextwiki.domain.vo.ShareRecipientVO;
 import com.njydsz.nextwiki.server.service.ShareApplicationService;
 
 /**
@@ -78,7 +78,7 @@ public class ShareController {
    *
    * @param request 创建分享请求
    * @param userId 当前用户 ID
-   * @return 统一响应结果，data 为 {@link ShareLinkDO}
+   * @return 统一响应结果，data 为 {@link ShareLinkVO}
    */
   @Audit(
       module = "分享管理",
@@ -89,11 +89,11 @@ public class ShareController {
   @PostMapping
   @Operation(summary = "创建分享链接")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_CREATE)
-  public BaseResponse<ShareLinkDO> createShare(
+  public BaseResponse<ShareLinkVO> createShare(
       @Valid @RequestBody NextwikiDTOs.CreateShareRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
-    ShareLinkDO result;
+    ShareLinkVO result;
     // 有目标用户时使用定向分享模式
     if (request.getTargetUserIds() != null && !request.getTargetUserIds().isEmpty()) {
       result =
@@ -138,9 +138,9 @@ public class ShareController {
   @PostMapping("/verify")
   @Operation(summary = "验证分享链接访问权限")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_VERIFY)
-  public BaseResponse<ShareLinkDO> verifyAccess(
+  public BaseResponse<ShareLinkVO> verifyAccess(
       @Valid @RequestBody NextwikiDTOs.VerifyShareRequest request, HttpServletRequest httpRequest) {
-    ShareLinkDO result =
+    ShareLinkVO result =
         shareApplicationService.verifyAccess(
             request.getShareCode(), request.getExtractCode(), request.getPassword());
 
@@ -190,12 +190,12 @@ public class ShareController {
    * 查询当前用户创建的所有分享链接。
    *
    * @param userId 当前用户 ID
-   * @return 统一响应结果，data 为 {@link ShareLinkDO} 列表
+   * @return 统一响应结果，data 为 {@link ShareLinkVO} 列表
    */
   @GetMapping("/my")
   @Operation(summary = "查询我的分享列表")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_LIST)
-  public BaseResponse<List<ShareLinkDO>> myShares(
+  public BaseResponse<List<ShareLinkVO>> myShares(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     return BaseResponse.success(shareApplicationService.findByUserId(userId));
   }
@@ -211,7 +211,7 @@ public class ShareController {
   @GetMapping("/{shareId}/logs")
   @Operation(summary = "查询分享访问日志")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_LOG_VIEW)
-  public BaseResponse<List<ShareAccessLogDO>> getAccessLogs(
+  public BaseResponse<List<ShareAccessLogVO>> getAccessLogs(
       @PathVariable String shareId,
       @RequestParam(defaultValue = "50") int limit,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
@@ -228,7 +228,7 @@ public class ShareController {
   @GetMapping("/{shareId}/recipients")
   @Operation(summary = "查询分享目标用户")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_VIEW)
-  public BaseResponse<List<ShareRecipientDO>> getRecipients(
+  public BaseResponse<List<ShareRecipientVO>> getRecipients(
       @PathVariable String shareId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     return BaseResponse.success(shareApplicationService.getRecipients(shareId));
   }
@@ -242,7 +242,7 @@ public class ShareController {
   @GetMapping("/received")
   @Operation(summary = "查询我收到的分享")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_LIST)
-  public BaseResponse<List<ShareRecipientDO>> getReceivedShares(
+  public BaseResponse<List<ShareRecipientVO>> getReceivedShares(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     return BaseResponse.success(shareApplicationService.getReceivedShares(userId));
   }

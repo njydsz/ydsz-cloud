@@ -29,20 +29,26 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.common.security.LoginUser;
 import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
+import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
+import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
-import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
@@ -94,8 +100,8 @@ public class FlowInstanceLifecycleManager {
   /** P2-6: 单次批量发起的最大数量限制（防止事务过多） */
   private static final int BATCH_START_MAX_SIZE = 100;
 
-  /** 流程实例 Mapper，负责 ydsz_flow_instance 表的增删改查 */
-  private final FlowInstanceMapper instanceMapper;
+  /** 流程实例仓储，负责 ydsz_flow_instance 的领域持久化 */
+  private final FlowInstanceRepository instanceRepository;
 
   /** 流程定义服务，启动实例时解析流程定义节点和跳转 */
   private final FlowDefinitionService definitionService;
@@ -106,11 +112,11 @@ public class FlowInstanceLifecycleManager {
   /** 流程任务服务，创建/推进/终止任务 */
   private final FlowTaskService taskService;
 
-  /** 运行时任务 Mapper，查询/更新当前待办任务 */
-  private final FlowRunTaskMapper taskMapper;
+  /** 运行时任务仓储，负责 ydsz_flow_run_task 的领域持久化 */
+  private final FlowRunTaskRepository taskRepository;
 
-  /** 流程节点 Mapper */
-  private final FlowNodeMapper nodeMapper;
+  /** 流程节点仓储，负责 ydsz_flow_node 的领域持久化 */
+  private final FlowNodeRepository nodeRepository;
 
   /** P2-3: Prometheus 指标收集（可能为 null：测试环境） */
   private final FlowMetrics flowMetrics;
@@ -136,11 +142,14 @@ public class FlowInstanceLifecycleManager {
   @Lazy
   private final FlowEventSubscriptionService eventSubscriptionService;
 
-  /** P2-2: 审计日志 Mapper（重审时写入 RESUBMIT 轨迹） */
-  private final FlowAuditLogMapper auditLogMapper;
+  /** 审计日志仓储，负责 ydsz_flow_audit_log 的领域持久化 */
+  private final FlowAuditLogRepository auditLogRepository;
 
-  /** P1-1: 历史任务 Mapper（查询可撤回的历史节点列表） */
-  private final FlowHisTaskMapper hisTaskMapper;
+  /** 历史任务仓储，负责 ydsz_flow_his_task 的领域持久化 */
+  private final FlowHisTaskRepository hisTaskRepository;
+
+  /** MapStruct 转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
 
   /**
    * P0-2: 定时器服务 — boundaryEvent 含 timer 配置时注册边界定时器自动触发
@@ -193,7 +202,9 @@ public class FlowInstanceLifecycleManager {
     String tenantId =
         dto.getTenantId() != null ? dto.getTenantId() : AuthContextUtils.getTenantIdOrDefault();
     FlowInstanceDO existing =
-        instanceMapper.selectByBusiness(tenantId, dto.getBusinessType(), dto.getBusinessId());
+        instanceRepository.findByBusiness(tenantId, dto.getBusinessType(), dto.getBusinessId())
+            .map(converter::entityToDO)
+            .orElse(null);
     if (existing != null) {
       log.info(
           "[Flow] 实例已存在: businessType={} businessId={} id={} status={}",
@@ -218,22 +229,22 @@ public class FlowInstanceLifecycleManager {
           .build();
     }
 
-    // 2. 创建实例
-    FlowInstanceDO instance = new FlowInstanceDO();
-    instance.setFlowCode(def.getFlowCode());
-    instance.setFlowName(def.getFlowName());
-    instance.setDefinitionId(def.getId());
-    instance.setFlowVersion(def.getFlowVersion());
-    instance.setBusinessType(dto.getBusinessType());
-    instance.setBusinessId(dto.getBusinessId());
-    instance.setBusinessNo(dto.getBusinessNo());
-    instance.setTitle(
+    // 2. 构建流程实例 DTO
+    FlowInstanceDTO instanceDto = new FlowInstanceDTO();
+    instanceDto.setFlowCode(def.getFlowCode());
+    instanceDto.setFlowName(def.getFlowName());
+    instanceDto.setDefinitionId(def.getId());
+    instanceDto.setFlowVersion(def.getFlowVersion());
+    instanceDto.setBusinessType(dto.getBusinessType());
+    instanceDto.setBusinessId(dto.getBusinessId());
+    instanceDto.setBusinessNo(dto.getBusinessNo());
+    instanceDto.setTitle(
         dto.getTitle() == null ? def.getFlowName() + "-" + dto.getBusinessId() : dto.getTitle());
-    instance.setInitiatorId(dto.getInitiatorId());
-    instance.setInitiatorName(dto.getInitiatorName());
-    instance.setFlowStatus(FlowInstanceStatus.RUNNING.name());
-    instance.setActivityStatus(1);
-    instance.setStartAt(LocalDateTime.now());
+    instanceDto.setInitiatorId(dto.getInitiatorId());
+    instanceDto.setInitiatorName(dto.getInitiatorName());
+    instanceDto.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+    instanceDto.setActivityStatus(1);
+    instanceDto.setStartAt(LocalDateTime.now());
     // GAP-P2: 发起人自选审批人 — 将 nodeAssignees 合并到 variables 中
     Map<String, Object> mergedVars =
         dto.getVariables() == null ? new HashMap<>() : new HashMap<>(dto.getVariables());
@@ -242,14 +253,13 @@ public class FlowInstanceLifecycleManager {
         mergedVars.put("_selfSelect_" + entry.getKey(), entry.getValue());
       }
     }
-    instance.setVariable(mergedVars.isEmpty() ? null : YdszJson.toJson(mergedVars));
-    instance.setTenantId(tenantId);
-    instance.setProviderTraceId(dto.getProviderTraceId());
+    instanceDto.setVariable(mergedVars.isEmpty() ? null : YdszJson.toJson(mergedVars));
+    instanceDto.setProviderTraceId(dto.getProviderTraceId());
     // P1-3: 子流程场景：填充父实例信息
-    instance.setParentInstanceId(dto.getParentInstanceId());
-    instance.setParentNodeCode(dto.getParentNodeCode());
-    instanceMapper.insert(instance);
-    String instanceId = instance.getId();
+    instanceDto.setParentInstanceId(dto.getParentInstanceId());
+    instanceDto.setParentNodeCode(dto.getParentNodeCode());
+    FlowInstanceVO savedInstance = instanceRepository.save(instanceDto);
+    String instanceId = savedInstance.getId();
 
     // P2-38: 发起人自选审批人 — _selfSelect_<nodeCode> 变量已合并到 mergedVars
     for (String key : mergedVars.keySet()) {

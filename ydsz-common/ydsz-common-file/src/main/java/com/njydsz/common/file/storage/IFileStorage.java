@@ -374,6 +374,24 @@ public interface IFileStorage {
   ObjectMetadata getMetadata(String bucketName, String objectName);
 
   /**
+   * 变更对象的存储类型（用于冷数据归档 / 热数据解冻）。
+   *
+   * <p>将对象从标准存储迁移至归档存储（如 GLACIER / DEEP_ARCHIVE），或从归档存储解冻回标准存储。
+   * 不同云厂商的存储类型和 API 不同，由各自实现类负责翻译。
+   *
+   * <p>默认实现抛出 UnsupportedOperationException，各云存储实现类按需覆盖。
+   *
+   * @param bucketName 存储桶名称，传 null 时使用配置默认值
+   * @param objectName 对象路径
+   * @param storageClass 目标存储类型（如 "GLACIER"、"DEEP_ARCHIVE"、"STANDARD"、"STANDARD_IA"）
+   * @throws UnsupportedOperationException 如果当前存储后端不支持存储类型变更
+   */
+  default void changeStorageClass(String bucketName, String objectName, String storageClass) {
+    throw new UnsupportedOperationException(
+        "Storage class change not supported by this storage backend");
+  }
+
+  /**
    * 删除单个文件对象
    *
    * @param bucketName 存储桶名称，传 null 时使用配置默认值

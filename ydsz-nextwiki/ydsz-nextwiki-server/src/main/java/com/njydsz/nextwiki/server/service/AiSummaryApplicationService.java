@@ -1,5 +1,8 @@
 package com.njydsz.nextwiki.server.service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,12 +28,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.nextwiki.server.cache.NextwikiCacheService;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 /**
  * AI 文档摘要服务。
  *
- * <p>基于 LLM 生成文件内容摘要。
+ * <p>基于 LLM 生成文件内容摘要，支持：
+ *
+ * <ul>
+ *   <li>LLM 模式：调用 OpenAI 兼容 API（需配置 API 地址/Key）
+ *   <li>降级模式：LLM 不可用时自动降级到 TextRank 算法
+ *   <li>缓存：基于内容哈希的 Redis 缓存（TTL 24 小时），避免重复计算
+ *   <li>中文优化：内置中文停用词过滤 + 改进的分词逻辑
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -38,14 +50,6 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
 @Slf4j
 @Service
 public class AiSummaryApplicationService {
-
-  private final RestTemplate nextwikiRestTemplate;
-  private final NextwikiProperties properties;
-
-  public AiSummaryApplicationService(RestTemplate restTemplate, NextwikiProperties properties) {
-    this.nextwikiRestTemplate = restTemplate;
-    this.properties = properties;
-  }
 
   /** 摘要最大句子数 */
   private static final int MAX_SENTENCES = 5;
@@ -56,11 +60,38 @@ public class AiSummaryApplicationService {
   /** 最小句子长度 */
   private static final int MIN_SENTENCE_LENGTH = 10;
 
+  /** 摘要缓存 TTL（秒）：24 小时 */
+  private static final int SUMMARY_CACHE_TTL = 86400;
+
+  /** 关键词缓存 TTL（秒）：24 小时 */
+  private static final int KEYWORDS_CACHE_TTL = 86400;
+
+  /** 中文停用词集合 */
+  private static final Set<String> CHINESE_STOP_WORDS = Set.of(
+      "的", "了", "在", "是", "我", "有", "和", "就", "不", "人", "都", "一", "一个",
+      "上", "也", "很", "到", "说", "要", "去", "你", "会", "着", "没有", "看", "好",
+      "自己", "这", "他", "她", "它", "们", "那", "些", "什么", "怎么", "如果", "因为",
+      "所以", "但是", "而且", "或者", "可以", "这个", "那个", "这些", "那些", "已经",
+      "现在", "然后", "虽然", "不过", "这样", "那样", "如何", "哪个", "哪里");
+
+  private final RestTemplate nextwikiRestTemplate;
+  private final NextwikiProperties properties;
+  private final NextwikiCacheService cacheService;
+
+  public AiSummaryApplicationService(RestTemplate restTemplate, NextwikiProperties properties,
+      NextwikiCacheService cacheService) {
+    this.nextwikiRestTemplate = restTemplate;
+    this.properties = properties;
+    this.cacheService = cacheService;
+  }
+
   /**
    * 生成文档摘要（对外总入口）。
    *
    * <p>优先走 LLM（需配置 {@code nextwiki.ai.llm-enabled=true} 且已配置 API 地址/Key）， 当 LLM
    * 未启用、返回空或调用异常时，自动降级到本地 TextRank 算法，保证摘要能力始终可用。
+   *
+   * <p><b>缓存策略：</b>基于内容 SHA-256 哈希作为缓存键，相同内容 24 小时内直接返回缓存结果。
    *
    * @param content 待摘要的文档纯文本；为 {@code null}/空时直接返回空串，不做任何处理
    * @return 摘要文本；输入为空时返回空串，正常情况下不会直接抛出异常
@@ -76,16 +107,34 @@ public class AiSummaryApplicationService {
       return "";
     }
 
-    if (properties.getAi().isLlmEnabled()) {
-      return generateSummaryByLlm(content);
+    // 尝试从缓存获取
+    String cacheKey = "summary:" + sha256(content);
+    String cached = cacheService.getAiSummary(cacheKey);
+    if (cached != null) {
+      log.debug("[AiSummaryApplicationService] 摘要缓存命中");
+      return cached;
     }
-    return generateSummaryByTextRank(content);
+
+    String result;
+    if (properties.getAi().isLlmEnabled()) {
+      result = generateSummaryByLlm(content);
+    } else {
+      result = generateSummaryByTextRank(content);
+    }
+
+    // 写入缓存
+    if (result != null && !result.isEmpty()) {
+      cacheService.putAiSummary(cacheKey, result, SUMMARY_CACHE_TTL);
+    }
+    return result;
   }
 
   /**
    * 提取文档关键词（对外总入口）。
    *
    * <p>与 {@link #generateSummary(String)} 同源：LLM 可用时调用大模型提取，否则降级到本地词频统计。
+   *
+   * <p><b>缓存策略：</b>基于内容 SHA-256 哈希作为缓存键，相同内容 24 小时内直接返回缓存结果。
    *
    * @param content 文档纯文本；为 {@code null}/空时返回空列表
    * @return 关键词列表（最多 {@link #MAX_KEYWORDS} 个），输入为空时返回空列表
@@ -98,10 +147,26 @@ public class AiSummaryApplicationService {
       return List.of();
     }
 
-    if (properties.getAi().isLlmEnabled()) {
-      return extractKeywordsByLlm(content);
+    // 尝试从缓存获取
+    String cacheKey = "keywords:" + sha256(content);
+    List<String> cached = cacheService.getAiKeywords(cacheKey);
+    if (cached != null) {
+      log.debug("[AiSummaryApplicationService] 关键词缓存命中");
+      return cached;
     }
-    return extractKeywordsByTextRank(content);
+
+    List<String> result;
+    if (properties.getAi().isLlmEnabled()) {
+      result = extractKeywordsByLlm(content);
+    } else {
+      result = extractKeywordsByTextRank(content);
+    }
+
+    // 写入缓存
+    if (result != null && !result.isEmpty()) {
+      cacheService.putAiKeywords(cacheKey, result, KEYWORDS_CACHE_TTL);
+    }
+    return result;
   }
 
   /**
@@ -205,7 +270,7 @@ public class AiSummaryApplicationService {
     return summary.toString();
   }
 
-  /** 基于 TextRank 的关键词提取 */
+  /** 基于 TextRank 的关键词提取（含停用词过滤） */
   private List<String> extractKeywordsByTextRank(String content) {
     List<String> words = tokenize(content).stream().toList();
     if (words.isEmpty()) {
@@ -218,8 +283,9 @@ public class AiSummaryApplicationService {
       wordFreq.merge(word, 1, Integer::sum);
     }
 
-    // 按词频排序
+    // 按词频排序，过滤停用词
     return wordFreq.entrySet().stream()
+        .filter(entry -> !CHINESE_STOP_WORDS.contains(entry.getKey()))
         .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
         .limit(MAX_KEYWORDS)
         .map(Map.Entry::getKey)
@@ -241,16 +307,16 @@ public class AiSummaryApplicationService {
     return sentences;
   }
 
-  /** 分词（简化版） */
+  /** 分词（简化版，含中文停用词过滤） */
   private Set<String> tokenize(String text) {
     // 移除标点和特殊字符，按空格分词
     String cleaned = text.replaceAll("[\\p{Punct}\\p{IsPunctuation}0-9a-zA-Z\\s]+", " ");
     Set<String> words = new HashSet<>();
-    // 简单的中文 n-gram 分词（2-4字）
+    // 简单的中文 n-gram 分词（2-4字），过滤停用词
     for (int len = 2; len <= 4; len++) {
       for (int i = 0; i <= cleaned.length() - len; i++) {
         String gram = cleaned.substring(i, i + len).trim();
-        if (gram.length() == len && !gram.contains(" ")) {
+        if (gram.length() == len && !gram.contains(" ") && !CHINESE_STOP_WORDS.contains(gram)) {
           words.add(gram);
         }
       }
@@ -266,6 +332,33 @@ public class AiSummaryApplicationService {
     Set<String> union = new HashSet<>(set1);
     union.addAll(set2);
     return (double) intersection.size() / union.size();
+  }
+
+  // ==================== 工具方法 ====================
+
+  /**
+   * 计算字符串的 SHA-256 哈希（用于缓存键）。
+   *
+   * @param text 输入文本
+   * @return SHA-256 十六进制字符串
+   */
+  private static String sha256(String text) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      byte[] hash = digest.digest(text.getBytes(StandardCharsets.UTF_8));
+      StringBuilder hexString = new StringBuilder();
+      for (byte b : hash) {
+        String hex = Integer.toHexString(0xff & b);
+        if (hex.length() == 1) {
+          hexString.append('0');
+        }
+        hexString.append(hex);
+      }
+      return hexString.toString();
+    } catch (NoSuchAlgorithmException e) {
+      // SHA-256 是标准算法，不会到达这里
+      return String.valueOf(text.hashCode());
+    }
   }
 
   // ==================== LLM 模式 ====================

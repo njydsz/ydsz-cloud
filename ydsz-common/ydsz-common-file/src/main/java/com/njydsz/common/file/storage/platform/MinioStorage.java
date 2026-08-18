@@ -450,6 +450,29 @@ public class MinioStorage extends AbstractFileStorage {
   }
 
   @Override
+  public void changeStorageClass(String bucketName, String objectName, String storageClass) {
+    try {
+      // MinIO 通过 CopyObject 并设置 storage-class 头来变更存储类型
+      // 源和目标相同，本质是"原地修改元数据"
+      minioClient.copyObject(
+          CopyObjectArgs.builder()
+              .source(CopySource.builder().bucket(bucketName).object(objectName).build())
+              .bucket(bucketName)
+              .object(objectName)
+              .storageClass(storageClass)
+              .build());
+      log.info(
+          "[Minio] 存储类型变更成功: bucket={}, object={}, storageClass={}",
+          bucketName, objectName, storageClass);
+    } catch (Exception e) {
+      log.error(
+          "[Minio] 存储类型变更失败: bucket={}, object={}, storageClass={}, message={}",
+          bucketName, objectName, storageClass, e.getMessage());
+      throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
+    }
+  }
+
+  @Override
   protected ListObjectsResult doListObjects(
       String bucketName, String prefix, String cursor, int maxKeys) {
     List<ObjectMetadata> objects = new ArrayList<>();

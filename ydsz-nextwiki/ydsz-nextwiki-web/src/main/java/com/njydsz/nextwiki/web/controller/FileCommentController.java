@@ -1,6 +1,5 @@
 package com.njydsz.nextwiki.web.controller;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,8 +24,9 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.infra.entity.FileCommentDO;
+import com.njydsz.nextwiki.domain.dto.FileCommentDTO;
 import com.njydsz.nextwiki.domain.repository.FileCommentRepository;
+import com.njydsz.nextwiki.domain.vo.FileCommentVO;
 
 /**
  * 文件评论 REST API Controller（P1-5）。
@@ -107,12 +107,12 @@ public class FileCommentController {
    * <p>返回所有未删除的评论，包括顶级评论和它们的回复（前端自行组装树形结构）。
    *
    * @param fileNodeId 文件节点 ID
-   * @return 统一响应结果，data 为 {@link FileCommentDO} 列表
+   * @return 统一响应结果，data 为 {@link FileCommentVO} 列表
    */
   @GetMapping("/file/{fileNodeId}")
   @Operation(summary = "查询文件的评论列表")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VIEW)
-  public BaseResponse<List<FileCommentDO>> listComments(@PathVariable String fileNodeId) {
+  public BaseResponse<List<FileCommentVO>> listComments(@PathVariable String fileNodeId) {
     return BaseResponse.success(commentRepository.findByFileNodeId(fileNodeId));
   }
 
@@ -130,7 +130,7 @@ public class FileCommentController {
    *
    * @param request 评论请求（fileNodeId / content / parentCommentId / position）
    * @param userId 评论人 ID
-   * @return 统一响应结果，data 为保存后的 {@link FileCommentDO}
+   * @return 统一响应结果，data 为保存后的 {@link FileCommentVO}
    */
   @Audit(
       module = "文件评论",
@@ -141,12 +141,12 @@ public class FileCommentController {
   @PostMapping
   @Operation(summary = "添加评论/回复")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-  public BaseResponse<FileCommentDO> addComment(
+  public BaseResponse<FileCommentVO> addComment(
       @RequestBody AddCommentRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
-    FileCommentDO comment =
-        FileCommentDO.builder()
+    FileCommentDTO comment =
+        FileCommentDTO.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
             .fileNodeId(request.getFileNodeId())
             .content(request.getContent())
@@ -154,15 +154,9 @@ public class FileCommentController {
             .position(request.getPosition())
             .resolved(false)
             .edited(false)
-            .revision(0)
-            .deleted(0)
             .build();
-    comment.setCreatedBy(userId);
-    comment.setCreatedAt(LocalDateTime.now());
-    comment.setUpdatedBy(userId);
-    comment.setUpdatedAt(LocalDateTime.now());
 
-    FileCommentDO saved = commentRepository.save(comment);
+    FileCommentVO saved = commentRepository.save(comment);
     log.info(
         "[FileCommentController] 添加评论: fileNodeId={}, commentId={}",
         request.getFileNodeId(),

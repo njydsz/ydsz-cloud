@@ -249,4 +249,75 @@ public class NextwikiCacheService {
   public void evictQuotaOnChange(String scopeType, String scopeId) {
     evictQuota(scopeType, scopeId);
   }
+
+  // ==================== AI 摘要缓存 ====================
+
+  /** AI 摘要缓存前缀 */
+  private static final String KEY_AI_SUMMARY = "nw:ai:summary:";
+
+  /** AI 关键词缓存前缀 */
+  private static final String KEY_AI_KEYWORDS = "nw:ai:keywords:";
+
+  /**
+   * 获取 AI 摘要缓存。
+   *
+   * @param key 缓存键（通常为内容哈希）
+   * @return 缓存的摘要文本；不存在返回 {@code null}
+   */
+  public String getAiSummary(String key) {
+    try {
+      return redisStringOps.get(KEY_AI_SUMMARY + key, String.class);
+    } catch (Exception e) {
+      log.warn("[NextwikiCacheService] AI 摘要缓存读取异常: err={}", e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * 写入 AI 摘要缓存。
+   *
+   * @param key 缓存键
+   * @param summary 摘要文本
+   * @param ttlSeconds 过期时间（秒）
+   */
+  public void putAiSummary(String key, String summary, int ttlSeconds) {
+    try {
+      redisStringOps.set(KEY_AI_SUMMARY + key, summary, ttlSeconds);
+    } catch (Exception e) {
+      log.warn("[NextwikiCacheService] AI 摘要缓存写入异常: err={}", e.getMessage());
+    }
+  }
+
+  /**
+   * 获取 AI 关键词缓存。
+   *
+   * @param key 缓存键（通常为内容哈希）
+   * @return 缓存的关键词列表；不存在返回 {@code null}
+   */
+  public List<String> getAiKeywords(String key) {
+    try {
+      String json = redisStringOps.get(KEY_AI_KEYWORDS + key, String.class);
+      if (json != null && !json.isEmpty()) {
+        return YdszJson.fromJson(json, List.class, String.class);
+      }
+    } catch (Exception e) {
+      log.warn("[NextwikiCacheService] AI 关键词缓存读取异常: err={}", e.getMessage());
+    }
+    return null;
+  }
+
+  /**
+   * 写入 AI 关键词缓存。
+   *
+   * @param key 缓存键
+   * @param keywords 关键词列表
+   * @param ttlSeconds 过期时间（秒）
+   */
+  public void putAiKeywords(String key, List<String> keywords, int ttlSeconds) {
+    try {
+      redisStringOps.set(KEY_AI_KEYWORDS + key, YdszJson.toJson(keywords), ttlSeconds);
+    } catch (Exception e) {
+      log.warn("[NextwikiCacheService] AI 关键词缓存写入异常: err={}", e.getMessage());
+    }
+  }
 }

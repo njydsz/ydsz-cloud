@@ -23,6 +23,9 @@ public class ShareLinkVO implements Serializable {
   @Schema(description = "分享ID")
   private String id;
 
+  @Schema(description = "关联的文件节点ID")
+  private String fileNodeId;
+
   @Schema(description = "分享码")
   private String shareCode;
 

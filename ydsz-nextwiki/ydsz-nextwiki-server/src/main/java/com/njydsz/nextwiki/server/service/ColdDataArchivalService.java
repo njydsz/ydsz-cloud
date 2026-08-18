@@ -7,9 +7,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.file.storage.IFileStorage;
+import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
+import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 
 /**
  * 冷数据归档服务。
@@ -49,6 +52,7 @@ public class ColdDataArchivalService {
 
   private final FileNodeRepository fileNodeRepository;
   private final NextwikiProperties nextwikiProperties;
+  private final IFileStorageProvider fileStorageProvider;
 
   /**
    * 扫描并归档冷数据。
@@ -111,22 +115,71 @@ public class ColdDataArchivalService {
   }
 
   /**
+   * 解冻归档文件（用户访问冷数据时调用）。
+   *
+   * @param file 文件节点
+   * @return 是否成功提交解冻请求
+   */
+  public boolean restoreFromArchive(FileNodeVO file) {
+    if (file.getStorageKey() == null || file.getStorageKey().isEmpty()) {
+      log.warn("[ColdDataArchival] 文件无 storageKey，无法解冻: fileNodeId={}", file.getId());
+      return false;
+    }
+
+    IFileStorage storage = fileStorageProvider.getStorage();
+    if (storage == null) {
+      log.warn("[ColdDataArchival] 存储实例未初始化，无法解冻: fileNodeId={}", file.getId());
+      return false;
+    }
+
+    try {
+      // 将对象从归档存储解冻回标准存储
+      storage.changeStorageClass(file.getBucketName(), file.getStorageKey(), "STANDARD");
+      // 更新元数据标记
+      file.setStorageClass("STANDARD");
+      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(file));
+      log.info("[ColdDataArchival] 解冻请求已提交: fileNodeId={}, name={}", file.getId(), file.getName());
+      return true;
+    } catch (UnsupportedOperationException e) {
+      log.warn("[ColdDataArchival] 当前存储后端不支持解冻: fileNodeId={}", file.getId());
+      return false;
+    } catch (Exception e) {
+      log.error("[ColdDataArchival] 解冻失败: fileNodeId={}, error={}", file.getId(), e.getMessage());
+      return false;
+    }
+  }
+
+  /**
    * 归档单个文件。
    *
    * @param file 文件节点
    * @param storageClass 目标存储类型
    */
   private void archiveFile(FileNodeVO file, String storageClass) {
-    // TODO: 调用云存储 API 变更存储类型
-    // 例如：S3: s3Client.restoreObject() / 阿里: ossClient.setObjectStorageClass()
-    log.info(
-        "[ColdDataArchival] 归档文件: fileNodeId={}, name={}, -> {}",
-        file.getId(),
-        file.getName(),
-        storageClass);
+    if (file.getStorageKey() == null || file.getStorageKey().isEmpty()) {
+      log.warn("[ColdDataArchival] 文件无 storageKey，跳过归档: fileNodeId={}", file.getId());
+      return;
+    }
 
-    // 标记文件为已归档
-    file.setStorageClass(storageClass);
-    fileNodeRepository.update(com.njydsz.nextwiki.server.converter.NextwikiConverter.INSTANT.toDTO(file));
+    IFileStorage storage = fileStorageProvider.getStorage();
+    if (storage == null) {
+      log.warn("[ColdDataArchival] 存储实例未初始化，跳过归档: fileNodeId={}", file.getId());
+      return;
+    }
+
+    try {
+      // 调用存储 API 变更存储类型
+      storage.changeStorageClass(file.getBucketName(), file.getStorageKey(), storageClass);
+      // 标记文件为已归档
+      file.setStorageClass(storageClass);
+      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(file));
+      log.info("[ColdDataArchival] 归档文件: fileNodeId={}, name={}, -> {}", file.getId(),
+          file.getName(), storageClass);
+    } catch (UnsupportedOperationException e) {
+      log.warn("[ColdDataArchival] 当前存储后端不支持存储类型变更: fileNodeId={}", file.getId());
+    } catch (Exception e) {
+      log.error("[ColdDataArchival] 归档失败: fileNodeId={}, error={}", file.getId(), e.getMessage());
+      throw e;
+    }
   }
 }
