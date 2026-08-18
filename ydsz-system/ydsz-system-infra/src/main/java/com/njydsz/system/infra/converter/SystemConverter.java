@@ -3,8 +3,10 @@ package com.njydsz.system.infra.converter;
 import java.util.List;
 
 import com.njydsz.system.infra.entity.*;
+import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.system.domain.dto.AppInfoDTO;
@@ -187,6 +189,9 @@ public interface SystemConverter {
    * @param dtos 系统配置 DTO 列表
    * @return 系统配置实体列表
    */
+  @IterableMapping(qualifiedByName = "configDtoToEntity")
+  List<Config> configDtosToEntities(List<ConfigDTO> dtos);
+
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -195,7 +200,8 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  List<Config> configDtosToEntities(List<ConfigDTO> dtos);
+  @Named("configDtoToEntity")
+  Config configDtoToEntityInternal(ConfigDTO dto);
 
   // ===== DictItem =====
 
@@ -254,6 +260,9 @@ public interface SystemConverter {
    * @param dtos 字典项 DTO 列表
    * @return 字典项实体列表
    */
+  @IterableMapping(qualifiedByName = "dictItemDtoToEntity")
+  List<DictItem> dictItemDtosToEntities(List<DictItemDTO> dtos);
+
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -262,7 +271,8 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  List<DictItem> dictItemDtosToEntities(List<DictItemDTO> dtos);
+  @Named("dictItemDtoToEntity")
+  DictItem dictItemDtoToEntityInternal(DictItemDTO dto);
 
   // ===== DictType =====
 
