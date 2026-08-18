@@ -8,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,7 +24,8 @@ import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.impl.ExpressionRule;
-import com.njydsz.literule.infra.repository.RuleVersionRepository;
+import com.njydsz.literule.domain.repository.RuleVersionRepository;
+import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.server.spi.TraceRecorder;
 
 /**
@@ -273,10 +275,41 @@ public class ExecutionReplayService {
     }
 
     // 加载指定版本的规则定义
-    RuleDefinition versionDef = versionRepository.rollback(ruleCode, version, "REPLAY");
-    if (versionDef == null) {
+    Optional<RuleDefinitionVO> versionOpt = versionRepository.rollback(ruleCode, version, "REPLAY");
+    if (versionOpt.isEmpty()) {
       return ReplayResult.error(traceId, "未找到规则 " + ruleCode + " 的版本 " + version);
     }
+
+    // 将 VO 转换回 RuleDefinition 用于评估
+    RuleDefinitionVO versionVO = versionOpt.get();
+    RuleDefinition versionDef = new RuleDefinition();
+    versionDef.setCode(versionVO.getRuleCode());
+    versionDef.setName(versionVO.getRuleName());
+    versionDef.setConditionExpression(versionVO.getConditionExpression());
+    versionDef.setSeverityExpression(versionVO.getSeverityExpression());
+    versionDef.setDefaultSeverity(RuleSeverity.fromCode(versionVO.getDefaultSeverity()));
+    versionDef.setTitleTemplate(versionVO.getTitleTemplate());
+    versionDef.setDescriptionTemplate(versionVO.getDescriptionTemplate());
+    versionDef.setPriority(versionVO.getPriority());
+    versionDef.setEnabled(versionVO.getEnabled());
+    versionDef.setScope(versionVO.getScope());
+    versionDef.setMutexGroup(versionVO.getMutexGroup());
+    versionDef.setDrilldownAvailable(versionVO.getDrilldownAvailable());
+    versionDef.setVersion(versionVO.getVersion());
+    versionDef.setStatus(versionVO.getStatus());
+    versionDef.setEffectiveFrom(versionVO.getEffectiveFrom());
+    versionDef.setEffectiveTo(versionVO.getEffectiveTo());
+    versionDef.setCategory(versionVO.getCategory());
+    versionDef.setCategoryPath(versionVO.getCategoryPath());
+    versionDef.setOwner(versionVO.getOwner());
+    versionDef.setDescription(versionVO.getDescription());
+    versionDef.setReviewedBy(versionVO.getReviewedBy());
+    versionDef.setReviewedAt(versionVO.getReviewedAt());
+    versionDef.setReviewComment(versionVO.getReviewComment());
+    versionDef.setCanaryRatio(versionVO.getCanaryRatio());
+    versionDef.setCanaryConditions(versionVO.getCanaryConditions());
+    versionDef.setCanaryConditionExpression(versionVO.getCanaryConditionExpression());
+    versionDef.setCanarySeverityExpression(versionVO.getCanarySeverityExpression());
 
     // 用目标版本重新评估
     ExpressionRule versionRule = new ExpressionRule(versionDef, evaluator);

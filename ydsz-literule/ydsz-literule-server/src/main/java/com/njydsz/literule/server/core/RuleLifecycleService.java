@@ -20,8 +20,8 @@ import com.njydsz.literule.api.RuleStatus;
 import com.njydsz.literule.server.config.LiteRuleProperties;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
-import com.njydsz.literule.server.spi.RuleVersion;
-import com.njydsz.literule.infra.repository.RuleVersionRepository;
+import com.njydsz.literule.domain.repository.RuleVersionRepository;
+import com.njydsz.literule.domain.vo.RuleVersionVO;
 
 /**
  * 规则生命周期管理服务（P3-1）
@@ -435,8 +435,8 @@ public class RuleLifecycleService {
     }
 
     // 查找目标版本
-    List<RuleVersion> versions = versionRepository.listVersions(ruleCode);
-    RuleVersion targetVersion =
+    List<RuleVersionVO> versions = versionRepository.listVersions(ruleCode);
+    RuleVersionVO targetVersion =
         versions.stream().filter(v -> v.getVersion() == version).findFirst().orElse(null);
 
     if (targetVersion == null) {

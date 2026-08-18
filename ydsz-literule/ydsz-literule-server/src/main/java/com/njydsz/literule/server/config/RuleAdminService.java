@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -26,8 +27,11 @@ import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
-import com.njydsz.literule.infra.repository.RuleVersionRepository;
-import com.njydsz.literule.server.spi.RuleVersion;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
+import com.njydsz.literule.domain.repository.RuleVersionRepository;
+import com.njydsz.literule.domain.vo.RuleDefinitionVO;
+import com.njydsz.literule.domain.vo.RuleVersionVO;
 
 /**
  * 规则管理服务
@@ -413,7 +417,14 @@ public class RuleAdminService {
 
     // 保存版本快照（同一事务内，失败则整体回滚）
     if (versionRepository != null) {
-      versionRepository.saveVersion(saved, operator, changeDesc);
+      RuleVersionSaveDTO saveDTO = new RuleVersionSaveDTO();
+      saveDTO.setRuleCode(saved.getCode());
+      saveDTO.setRuleName(saved.getName());
+      saveDTO.setVersion(saved.getVersion());
+      saveDTO.setDefinitionJson(YdszJson.toJson(saved));
+      saveDTO.setChangeDesc(changeDesc);
+      saveDTO.setOperator(operator);
+      versionRepository.saveVersion(saveDTO);
     }
 
     // 发布热刷新事件（基于持久化后的 version 判断 CREATE/UPDATE）
@@ -543,7 +554,7 @@ public class RuleAdminService {
    * @param ruleCode 规则编码
    * @return 版本历史
    */
-  public List<RuleVersion> listVersions(String ruleCode) {
+  public List<RuleVersionVO> listVersions(String ruleCode) {
     if (versionRepository == null) {
       return List.of();
     }
@@ -559,11 +570,11 @@ public class RuleAdminService {
    * @return 回滚后的规则定义
    */
   @Transactional(rollbackFor = Exception.class)
-  public RuleDefinition rollback(String ruleCode, int version, String operator) {
+  public Optional<RuleDefinitionVO> rollback(String ruleCode, int version, String operator) {
     if (versionRepository == null) {
       throw new IllegalStateException("版本仓库未配置，不支持回滚");
     }
-    RuleDefinition restored = versionRepository.rollback(ruleCode, version, operator);
+    Optional<RuleDefinitionVO> restored = versionRepository.rollback(ruleCode, version, operator);
     publishRefreshEvent(
         RuleConfigRefreshEvent.of(ruleCode, RuleConfigRefreshEvent.ChangeType.UPDATE, operator));
     log.info("[LiteRule] 规则已回滚: code={}, version={}, operator={}", ruleCode, version, operator);
