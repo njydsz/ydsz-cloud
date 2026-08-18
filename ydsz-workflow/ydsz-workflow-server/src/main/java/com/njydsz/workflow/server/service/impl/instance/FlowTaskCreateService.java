@@ -35,10 +35,14 @@ import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowSignType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.repository.FlowUserRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
-import com.njydsz.workflow.infra.mapper.FlowUserMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowAssigneeResolver;
 import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
@@ -150,17 +154,29 @@ public class FlowTaskCreateService {
   /** AUTO_PASS 最大递归深度，超过则抛异常 */
   private static final int MAX_AUTO_PASS_DEPTH = 20;
 
-  /** 运行时任务 Mapper，创建/更新待办任务 */
+  /** 运行时任务仓储，创建/更新待办任务 */
+  private final FlowRunTaskRepository taskRepository;
+
+  /** 用户仓储，查询审批人/候选人用户信息 */
+  private final FlowUserRepository userRepository;
+
+  /** 流程实例仓储，查询/更新实例状态和变量 */
+  private final FlowInstanceRepository instanceRepository;
+
+  /** 流程节点仓储，查询节点配置（审批人/权限/SLA 等） */
+  private final FlowNodeRepository nodeRepository;
+
+  /** 运行时任务 Mapper（保留：selectList 复杂查询无 Repository 替代） */
   private final FlowRunTaskMapper taskMapper;
 
-  /** 用户 Mapper，查询审批人/候选人用户信息 */
-  private final FlowUserMapper userMapper;
-
-  /** 流程实例 Mapper，查询/更新实例状态和变量 */
+  /** 流程实例 Mapper（保留：updateStatus 无 Repository 替代） */
   private final FlowInstanceMapper instanceMapper;
 
-  /** 流程节点 Mapper，查询节点配置（审批人/权限/SLA 等） */
+  /** 流程节点 Mapper（保留：selectByDefinitionId 无 Repository 替代） */
   private final FlowNodeMapper nodeMapper;
+
+  /** MapStruct 转换器（DO/VO/DTO 转换） */
+  private final WorkflowConverter converter;
 
   /** 流程推进引擎，AUTO_PASS 递归推进到下一节点 */
   private final FlowAdvancer advancer;
@@ -316,7 +332,7 @@ public class FlowTaskCreateService {
     }
 
     // 持久化任务 + 写入 ydsz_flow_user（需 task ID，必须在 insert 之后）
-    taskMapper.insert(task);
+    taskRepository.save(converter.entityToVO(task));
     Map<String, Integer> userWeights = parseUserWeights(node.getExt());
     for (String uid : userIds) {
       insertFlowUser(task, instance, node, uid, userWeights);
@@ -416,7 +432,7 @@ public class FlowTaskCreateService {
     LocalDateTime now = LocalDateTime.now();
     task.setFinishAt(now);
     task.setDurationMs(0L);
-    taskMapper.insert(task);
+    taskRepository.save(converter.entityToVO(task));
     archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
     support.audit(task, "DEDUP_SKIP", null, null, "办理人去重后为空，自动跳过");
     log.info("[Flow] 办理人去重后为空，自动跳过: instanceId={} node={}", instance.getId(), node.getNodeCode());
@@ -473,7 +489,7 @@ public class FlowTaskCreateService {
     LocalDateTime now = LocalDateTime.now();
     task.setFinishAt(now);
     task.setDurationMs(0L);
-    taskMapper.insert(task);
+    taskRepository.save(converter.entityToVO(task));
     archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
     support.audit(task, "AUTO_PASS", null, null, "审批人为空，自动通过");
     log.info("[Flow] 审批人为空自动通过: instanceId={} node={}", instance.getId(), node.getNodeCode());
@@ -496,7 +512,7 @@ public class FlowTaskCreateService {
     task.setAssigneeType(FlowAssigneeType.USER.name());
     task.setAssigneeId(userId);
     task.setAssigneeName(fallbackName);
-    taskMapper.insert(task);
+    taskRepository.save(converter.entityToVO(task));
     log.info(logMsg, instance.getId(), node.getNodeCode(), userId);
     return task.getId();
   }
@@ -504,9 +520,9 @@ public class FlowTaskCreateService {
   /** FALLBACK 策略：回退到原有 resolveAssignee 逻辑。 */
   private String fallbackToResolveAssignee(
       FlowRunTaskDO task, FlowInstanceDO instance, FlowNodeDO node, Map<String, Object> variables) {
-    taskMapper.insert(task);
+    taskRepository.save(converter.entityToVO(task));
     resolveAssignee(task, node, variables, null, instance);
-    taskMapper.updateById(task);
+    taskRepository.update(converter.entityToVO(task));
     return task.getId();
   }
 
@@ -791,7 +807,7 @@ public class FlowTaskCreateService {
     fu.setSignType(FlowSignType.ORIGINAL.name());
     fu.setTenantId(instance.getTenantId());
     fu.setProviderTraceId(instance.getProviderTraceId());
-    userMapper.insert(fu);
+    userRepository.save(converter.entityToVO(fu));
   }
 
   /** P0-4: 创建逐级审批任务（精简为 PARALLEL 模式） */
@@ -802,7 +818,7 @@ public class FlowTaskCreateService {
     task.setAssigneeId(approvers.get(0));
     task.setAssigneeName("USER:" + approvers.get(0));
     task.setPriority(50);
-    taskMapper.insert(task);
+    taskRepository.save(converter.entityToVO(task));
     for (String uid : approvers) {
       insertFlowUser(task, instance, node, uid, null);
     }
@@ -850,7 +866,7 @@ public class FlowTaskCreateService {
             task.setFinishAt(LocalDateTime.now());
             task.setDurationMs(0L);
           }
-          taskMapper.insert(task);
+          taskRepository.save(converter.entityToVO(task));
           if (FlowTaskStatus.COMPLETED.name().equals(task.getTaskStatus())) {
             archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
             support.audit(
@@ -869,7 +885,7 @@ public class FlowTaskCreateService {
           task.setAssigneeType(FlowAssigneeType.USER.name());
           task.setAssigneeId("1");
           task.setAssigneeName("FALLBACK");
-          taskMapper.insert(task);
+          taskRepository.save(converter.entityToVO(task));
           log.warn(
               "[Flow] 逐级审批空兜底 FALLBACK: instanceId={} node={}",
               instance.getId(),
@@ -899,7 +915,7 @@ public class FlowTaskCreateService {
         autoTask.setTaskStatus(FlowTaskStatus.COMPLETED.name());
         autoTask.setFinishAt(LocalDateTime.now());
         autoTask.setDurationMs(0L);
-        taskMapper.insert(autoTask);
+        taskRepository.save(converter.entityToVO(autoTask));
         archiveService.archiveToHistory(autoTask, FlowTaskStatus.COMPLETED);
         support.audit(autoTask, "FOREACH_AUTO_PASS", null, null, "FOREACH 集合为空，自动通过");
         log.info(
@@ -914,7 +930,7 @@ public class FlowTaskCreateService {
     String firstTaskId = null;
     for (String element : elements) {
       FlowRunTaskDO task = buildForeachTask(instance, node, element, "USER:" + element, element);
-      taskMapper.insert(task);
+      taskRepository.save(converter.entityToVO(task));
       insertFlowUser(task, instance, node, element, null);
       if (flowMetrics != null) {
         flowMetrics.incTask(instance.getFlowCode(), node.getNodeCode(), "created");
@@ -1005,7 +1021,7 @@ public class FlowTaskCreateService {
       task.setAssigneeId(finalDelegateId);
       // 最终代理人姓名：优先从链路末端匹配记录获取
       task.setAssigneeName(matched != null ? matched.getDelegateUserName() : finalDelegateId);
-      taskMapper.updateById(task);
+      taskRepository.update(converter.entityToVO(task));
       String authId = matched != null ? matched.getId() : "CHAIN_RESOLVED";
       String scopeType = matched != null ? matched.getScopeType() : "CHAIN";
       support.audit(
@@ -1199,7 +1215,7 @@ public class FlowTaskCreateService {
       LocalDateTime now = LocalDateTime.now();
       task.setFinishAt(now);
       task.setDurationMs(0L);
-      taskMapper.insert(task);
+      taskRepository.save(converter.entityToVO(task));
       archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
       support.audit(task, "AUTO_DEDUP", null, null, "审批人与上一节点相同，自动去重跳过");
       advanceAfterAutoPass(instance, node, variables);
@@ -1528,7 +1544,7 @@ public class FlowTaskCreateService {
       // 3a. 成功：标记 COMPLETED，归档，审计，推进
       task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
       task.setComment(result.message());
-      taskMapper.insert(task);
+      taskRepository.save(converter.entityToVO(task));
       archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
       support.audit(task, "SERVICE_EXECUTE", null, null, "服务节点执行成功: " + result.message());
       log.info(
@@ -1547,7 +1563,7 @@ public class FlowTaskCreateService {
       } else {
         task.setComment("服务节点执行失败: " + result.message());
       }
-      taskMapper.insert(task);
+      taskRepository.save(converter.entityToVO(task));
       archiveService.archiveToHistory(task, FlowTaskStatus.TIMEOUT);
       if (errorBoundaryTriggered) {
         support.audit(

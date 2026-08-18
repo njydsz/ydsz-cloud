@@ -6,9 +6,10 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.service.impl.CountersignStrategy;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 
@@ -26,8 +27,11 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 @RequiredArgsConstructor
 public class ParallelCountersignStrategy implements CountersignStrategy {
 
-  /** 运行时任务 Mapper，用于乐观锁更新 approveFinished 计数 */
-  private final FlowRunTaskMapper taskMapper;
+  /** 运行时任务仓储，用于乐观锁更新 approveFinished 计数 */
+  private final FlowRunTaskRepository taskRepository;
+
+  /** MapStruct 转换器（DO/VO/DTO 转换） */
+  private final WorkflowConverter converter;
 
   /** 任务归档服务，会签全部通过后完成 + 归档到历史表 */
   private final FlowTaskArchiveService archiveService;
@@ -41,7 +45,7 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
   public void onUserPassed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
     int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
     task.setApproveFinished(finished);
-    int updated = taskMapper.updateById(task);
+    int updated = taskRepository.update(converter.entityToVO(task)) != null ? 1 : 0;
     if (updated == 0) {
       // 乐观锁冲突，抛异常由调用方处理
       throw SysException.builder()

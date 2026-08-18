@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,10 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.PostDTO;
-import com.njydsz.userinfo.infra.entity.PostDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.query.PostPageQuery;
 import com.njydsz.userinfo.domain.vo.PostVO;
 import com.njydsz.userinfo.domain.repository.PostRepository;
 import com.njydsz.userinfo.server.service.PostService;
@@ -44,7 +42,6 @@ import com.njydsz.userinfo.server.service.PostService;
  * @author ydsz-team
  * @since 1.0.0
  * @see PostService Service 接口
- * @see PostDO 岗位实体
  * @see com.njydsz.userinfo.web.controller.PostController 岗位 Controller
  */
 @Slf4j
@@ -62,11 +59,8 @@ public class PostServiceImpl implements PostService {
    */
   @Override
   public PostVO getById(String id) {
-    PostDO entity = postRepository.findById(id);
-    if (entity == null || entity.getDeleted() == 1) {
-      throw new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND);
-    }
-    return UserInfoConverter.INSTANT.entityToVO(entity);
+    return postRepository.findById(id)
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND));
   }
 
   /**
@@ -76,11 +70,8 @@ public class PostServiceImpl implements PostService {
    */
   @Override
   public List<PostVO> list() {
-    LambdaQueryWrapper<PostDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.orderByDesc(PostDO::getSortOrder);
-    return postRepository.list(wrapper).stream()
-        .map(UserInfoConverter.INSTANT::entityToVO)
-        .collect(Collectors.toList());
+    PostPageQuery query = new PostPageQuery();
+    return postRepository.list(query);
   }
 
   /**
@@ -94,19 +85,15 @@ public class PostServiceImpl implements PostService {
   @Transactional(rollbackFor = Exception.class)
   public String create(PostDTO dto) {
     // 编码唯一性校验
-    LambdaQueryWrapper<PostDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(PostDO::getPostCode, dto.getPostCode());
-    if (postRepository.count(wrapper) > 0) {
+    PostPageQuery query = new PostPageQuery();
+    query.setPostCode(dto.getPostCode());
+    if (postRepository.countByQuery(query) > 0) {
       throw new BusinessException(UserInfoExceptionCode.POST_CODE_DUPLICATE);
     }
 
-    PostDO entity = UserInfoConverter.INSTANT.dtoToEntity(dto);
-    if (entity.getStatus() == null) {
-      entity.setStatus("ENABLED");
-    }
-    postRepository.insert(entity);
-    log.info("PostDO created: code={}, id={}", entity.getPostCode(), entity.getId());
-    return entity.getId();
+    PostVO vo = postRepository.create(dto);
+    log.info("Post created: code={}, id={}", dto.getPostCode(), vo.getId());
+    return vo.getId();
   }
 
   /**
@@ -119,12 +106,11 @@ public class PostServiceImpl implements PostService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(PostDTO dto) {
-    PostDO entity = postRepository.findById(dto.getId());
-    if (entity == null || entity.getDeleted() == 1) {
-      throw new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND);
-    }
-    BeanUpdateUtil.copyNonNull(dto, entity, "id");
-    return postRepository.updateById(entity) > 0;
+    PostVO existing = postRepository.findById(dto.getId())
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND));
+    BeanUpdateUtil.copyNonNull(dto, existing, "id");
+    PostVO vo = postRepository.update(dto);
+    return vo != null;
   }
 
   /**
@@ -135,11 +121,9 @@ public class PostServiceImpl implements PostService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    PostDO entity = postRepository.findById(id);
-    if (entity == null || entity.getDeleted() == 1) {
-      throw new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND);
-    }
-    return postRepository.deleteById(id) > 0;
+    postRepository.findById(id)
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND));
+    return postRepository.deleteById(id);
   }
 
   /**
@@ -152,13 +136,21 @@ public class PostServiceImpl implements PostService {
     if (postIds == null || postIds.isEmpty()) {
       return Collections.emptyMap();
     }
-
-    LambdaQueryWrapper<PostDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.in(PostDO::getId, postIds);
-    wrapper.select(PostDO::getId, PostDO::getPostName);
-
-    return postRepository.list(wrapper).stream()
-        .collect(
-            Collectors.toMap(PostDO::getId, PostDO::getPostName, (v1, v2) -> v1, LinkedHashMap::new));
+    List<String> distinctIds =
+        postIds.stream()
+            .filter(id -> id != null && !id.isBlank())
+            .distinct()
+            .collect(Collectors.toList());
+    if (distinctIds.isEmpty()) {
+      return Collections.emptyMap();
+    }
+    List<PostVO> posts = postRepository.listByIds(distinctIds);
+    Map<String, String> result = new LinkedHashMap<>(posts.size());
+    for (PostVO post : posts) {
+      if (post.getPostName() != null && !post.getPostName().isBlank()) {
+        result.put(post.getId(), post.getPostName());
+      }
+    }
+    return result;
   }
 }

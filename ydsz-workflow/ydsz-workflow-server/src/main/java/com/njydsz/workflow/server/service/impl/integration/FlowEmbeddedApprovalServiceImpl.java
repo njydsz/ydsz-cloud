@@ -17,13 +17,15 @@ import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
+import com.njydsz.workflow.domain.enums.FlowTaskStatus;
+import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
-import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
+import java.util.stream.Collectors;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -106,8 +108,11 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
   /** 流程任务服务，执行通过/驳回等审批操作 */
   private final FlowTaskService taskService;
 
-  /** P2-2: 历史任务 mapper（嵌入式审批面板加载审批轨迹） */
-  private final FlowHisTaskMapper hisTaskMapper;
+  /** P2-2: 历史任务仓储（嵌入式审批面板加载审批轨迹） */
+  private final FlowHisTaskRepository hisTaskRepository;
+
+  /** MapStruct 转换器（DO/VO/DTO 转换） */
+  private final WorkflowConverter converter;
 
   /** 操作人角色：发起人 */
   private static final String ROLE_INITIATOR = "INITIATOR";
@@ -401,7 +406,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
       }
     }
     // P0-4: 检查是否有已完成的历史任务（排除 START 节点）— 有则说明审批人已处理过，流程已推进，不可撤回
-    List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(instance.getId());
+    List<FlowHisTaskDO> hisTasks = hisTaskRepository.findByInstanceId(instance.getId()).stream().map(converter::entityToDO).collect(Collectors.toList());
     if (hisTasks != null) {
       // 排除 START(0) 节点归档记录（发起人提交产生的），只检查是否有真实审批人处理过
       boolean hasApprovalHistory =
@@ -480,7 +485,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
   /** 加载审批轨迹（历史任务 + 审计日志） */
   private List<Map<String, Object>> loadHistory(String instanceId) {
     try {
-      List<FlowHisTaskDO> his = hisTaskMapper.selectByInstanceId(instanceId);
+      List<FlowHisTaskDO> his = hisTaskRepository.findByInstanceId(instanceId).stream().map(converter::entityToDO).collect(Collectors.toList());
       if (his == null || his.isEmpty()) {
         return Collections.emptyList();
       }

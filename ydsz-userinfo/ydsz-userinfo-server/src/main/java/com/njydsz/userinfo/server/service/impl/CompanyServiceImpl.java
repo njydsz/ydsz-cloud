@@ -7,19 +7,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.CompanyDTO;
-import com.njydsz.userinfo.infra.entity.CompanyDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.query.CompanyPageQuery;
 import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.domain.repository.CompanyRepository;
@@ -44,7 +43,6 @@ import com.njydsz.userinfo.server.service.CompanyService;
  * @author ydsz-team
  * @since 1.0.0
  * @see CompanyService Service 接口
- * @see CompanyDO 公司实体
  */
 @Slf4j
 @Service
@@ -55,20 +53,14 @@ public class CompanyServiceImpl implements CompanyService {
 
   @Override
   public CompanyVO getById(String id) {
-    CompanyDO entity = companyRepository.findById(id);
-    if (entity == null || entity.getDeleted() == 1) {
-      throw new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND);
-    }
-    return UserInfoConverter.INSTANT.entityToVO(entity);
+    return companyRepository.findById(id)
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND));
   }
 
   @Override
   public List<CompanyVO> list() {
-    LambdaQueryWrapper<CompanyDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.orderByDesc(CompanyDO::getCreatedAt);
-    return companyRepository.list(wrapper).stream()
-        .map(UserInfoConverter.INSTANT::entityToVO)
-        .collect(Collectors.toList());
+    CompanyPageQuery query = new CompanyPageQuery();
+    return companyRepository.list(query);
   }
 
   /**
@@ -81,13 +73,17 @@ public class CompanyServiceImpl implements CompanyService {
    */
   @Override
   public List<CompanyTreeVO> tree() {
-    List<CompanyDO> all =
-        companyRepository.list(
-            new LambdaQueryWrapper<CompanyDO>().eq(CompanyDO::getDeleted, 0));
+    List<CompanyVO> all = companyRepository.list(new CompanyPageQuery());
     if (all.isEmpty()) {
       return List.of();
     }
-    List<CompanyTreeVO> flatList = UserInfoConverter.INSTANT.companyTreeListToVO(all);
+    List<CompanyTreeVO> flatList = all.stream()
+        .map(vo -> {
+          CompanyTreeVO treeVO = new CompanyTreeVO();
+          BeanUtils.copyProperties(vo, treeVO);
+          return treeVO;
+        })
+        .collect(Collectors.toList());
     return TreeBuilder.buildSimple(
         flatList,
         CompanyTreeVO::getId,
@@ -101,40 +97,33 @@ public class CompanyServiceImpl implements CompanyService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String create(CompanyDTO dto) {
-    LambdaQueryWrapper<CompanyDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(CompanyDO::getCompanyCode, dto.getCompanyCode());
-    if (companyRepository.count(wrapper) > 0) {
+    CompanyPageQuery query = new CompanyPageQuery();
+    query.setCompanyCode(dto.getCompanyCode());
+    if (companyRepository.countByQuery(query) > 0) {
       throw new BusinessException(UserInfoExceptionCode.COMPANY_CODE_DUPLICATE);
     }
 
-    CompanyDO entity = UserInfoConverter.INSTANT.dtoToEntity(dto);
-    if (entity.getStatus() == null) {
-      entity.setStatus("ENABLED");
-    }
-    companyRepository.insert(entity);
-    log.info("CompanyDO created: code={}, id={}", entity.getCompanyCode(), entity.getId());
-    return entity.getId();
+    CompanyVO vo = companyRepository.create(dto);
+    log.info("Company created: code={}, id={}", dto.getCompanyCode(), vo.getId());
+    return vo.getId();
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(CompanyDTO dto) {
-    CompanyDO entity = companyRepository.findById(dto.getId());
-    if (entity == null || entity.getDeleted() == 1) {
-      throw new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND);
-    }
-    BeanUpdateUtil.copyNonNull(dto, entity, "id");
-    return companyRepository.updateById(entity) > 0;
+    CompanyVO existing = companyRepository.findById(dto.getId())
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND));
+    BeanUpdateUtil.copyNonNull(dto, existing, "id");
+    CompanyVO vo = companyRepository.update(dto);
+    return vo != null;
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    CompanyDO entity = companyRepository.findById(id);
-    if (entity == null || entity.getDeleted() == 1) {
-      throw new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND);
-    }
-    return companyRepository.deleteById(id) > 0;
+    companyRepository.findById(id)
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND));
+    return companyRepository.deleteById(id);
   }
 
   @Override
@@ -150,11 +139,11 @@ public class CompanyServiceImpl implements CompanyService {
     if (distinctIds.isEmpty()) {
       return Collections.emptyMap();
     }
-    List<CompanyDO> companies = companyRepository.listByIds(distinctIds);
+    List<CompanyVO> companies = companyRepository.listByIds(distinctIds);
     Map<String, String> result = new LinkedHashMap<>(companies.size());
-    for (CompanyDO CompanyDO : companies) {
-      if (CompanyDO.getCompanyName() != null && !CompanyDO.getCompanyName().isBlank()) {
-        result.put(CompanyDO.getId(), CompanyDO.getCompanyName());
+    for (CompanyVO company : companies) {
+      if (company.getCompanyName() != null && !company.getCompanyName().isBlank()) {
+        result.put(company.getId(), company.getCompanyName());
       }
     }
     return result;
