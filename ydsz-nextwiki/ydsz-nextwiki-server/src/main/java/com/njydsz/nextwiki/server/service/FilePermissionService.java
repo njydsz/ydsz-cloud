@@ -11,11 +11,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.nextwiki.infra.entity.FileAclDO;
-import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.dto.FileAclDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
+import com.njydsz.nextwiki.domain.query.FileAclQuery;
+import com.njydsz.nextwiki.domain.repository.FileAclRepository;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.service.FilePermissionDomainService;
+import com.njydsz.nextwiki.domain.vo.FileAclVO;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 
 /**
  * 文件权限校验服务
@@ -41,28 +44,30 @@ import com.njydsz.nextwiki.domain.service.FilePermissionDomainService;
 public class FilePermissionService {
 
   private final FileNodeRepository fileNodeRepository;
+  private final FileAclRepository fileAclRepository;
   private final FilePermissionDomainService filePermissionDomainService;
 
   /** 权限位：读取 */
-  public static final int PERM_READ = FileAclDO.PERM_READ;
+  public static final int PERM_READ = FilePermissionDomainService.PERM_READ;
 
   /** 权限位：写入 */
-  public static final int PERM_WRITE = FileAclDO.PERM_WRITE;
+  public static final int PERM_WRITE = FilePermissionDomainService.PERM_WRITE;
 
   /** 权限位：删除 */
-  public static final int PERM_DELETE = FileAclDO.PERM_DELETE;
+  public static final int PERM_DELETE = FilePermissionDomainService.PERM_DELETE;
 
   /** 权限位：分享 */
-  public static final int PERM_SHARE = FileAclDO.PERM_SHARE;
+  public static final int PERM_SHARE = FilePermissionDomainService.PERM_SHARE;
+
+  /** 权限位：下载 */
+  public static final int PERM_DOWNLOAD = FilePermissionDomainService.PERM_DOWNLOAD;
 
   /**
    * 校验读取权限（{@link #PERM_READ}）。
    *
    * @param nodeId 文件节点 ID
    * @param userId 用户 ID
-   * @return 无返回值
    * @throws BusinessException 无权限（PERMISSION_DENIED）或节点不存在时抛出
-   * @see #checkPermission(String, String, int, String)
    */
   public void checkRead(String nodeId, String userId) {
     checkPermission(nodeId, userId, PERM_READ, "读取");
@@ -73,9 +78,7 @@ public class FilePermissionService {
    *
    * @param nodeId 文件节点 ID
    * @param userId 用户 ID
-   * @return 无返回值
    * @throws BusinessException 无权限或节点不存在时抛出
-   * @see #checkPermission(String, String, int, String)
    */
   public void checkWrite(String nodeId, String userId) {
     checkPermission(nodeId, userId, PERM_WRITE, "写入");
@@ -86,9 +89,7 @@ public class FilePermissionService {
    *
    * @param nodeId 文件节点 ID
    * @param userId 用户 ID
-   * @return 无返回值
    * @throws BusinessException 无权限或节点不存在时抛出
-   * @see #checkPermission(String, String, int, String)
    */
   public void checkDelete(String nodeId, String userId) {
     checkPermission(nodeId, userId, PERM_DELETE, "删除");
@@ -99,9 +100,7 @@ public class FilePermissionService {
    *
    * @param nodeId 文件节点 ID
    * @param userId 用户 ID
-   * @return 无返回值
    * @throws BusinessException 无权限或节点不存在时抛出
-   * @see #checkPermission(String, String, int, String)
    */
   public void checkShare(String nodeId, String userId) {
     checkPermission(nodeId, userId, PERM_SHARE, "分享");
@@ -115,12 +114,9 @@ public class FilePermissionService {
    *
    * @param nodeId 文件节点 ID
    * @param userId 用户 ID
-   * @param permission 目标权限位（{@link #PERM_READ}/{@link #PERM_WRITE}/{@link #PERM_DELETE}/{@link
-   *     #PERM_SHARE}）
+   * @param permission 目标权限位
    * @param action 动作名（用于错误日志与提示，如"读取"）
-   * @return 无返回值
    * @throws BusinessException 节点不存在（FILE_NOT_FOUND）或无权限（PERMISSION_DENIED）时抛出
-   * @complexity O(1)（一次节点查询 + 一次 ACL 缓存查询 + O(acls) 遍历）
    */
   public void checkPermission(String nodeId, String userId, int permission, String action) {
     FileNodeVO node = fileNodeRepository.findById(nodeId).orElse(null);
@@ -134,10 +130,10 @@ public class FilePermissionService {
     }
 
     // ACL 权限校验（结果走缓存）
-    List<FileAclDO> acls = getEffectiveAcls(nodeId, userId);
+    List<FileAclVO> acls = getEffectiveAcls(nodeId, userId);
     boolean hasPermission = false;
-    for (FileAclDO acl : acls) {
-      if (acl.hasPermission(permission)) {
+    for (FileAclVO acl : acls) {
+      if (acl.getPermissionMask() != null && (acl.getPermissionMask() & permission) == permission) {
         hasPermission = true;
         break;
       }
@@ -165,8 +161,12 @@ public class FilePermissionService {
       cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE,
       key = "#fileNodeId + ':' + #userId",
       condition = "#userId != null")
-  public List<FileAclDO> getEffectiveAcls(String fileNodeId, String userId) {
-    return filePermissionDomainService.findEffectiveAcls(fileNodeId, userId);
+  public List<FileAclVO> getEffectiveAcls(String fileNodeId, String userId) {
+    return fileAclRepository.findEffectivePermissions(
+        FileAclQuery.builder()
+            .fileNodeId(fileNodeId)
+            .userId(userId)
+            .build());
   }
 
   /**
@@ -177,19 +177,20 @@ public class FilePermissionService {
    * @param granteeId 授权对象 ID
    * @param permissionMask 权限位掩码
    * @param userId 操作者 ID
-   * @return 创建的 ACL 实体
+   * @return 创建的 ACL VO
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    */
   @Transactional(rollbackFor = Exception.class)
   @CacheEvict(cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE, allEntries = true)
-  public FileAclDO grantPermission(
+  public FileAclVO grantPermission(
       String fileNodeId,
       String granteeType,
       String granteeId,
       int permissionMask,
       String userId) {
-    return filePermissionDomainService.grantPermission(
+    FileAclDTO dto = filePermissionDomainService.buildAcl(
         fileNodeId, granteeType, granteeId, permissionMask, userId);
+    return fileAclRepository.save(dto);
   }
 
   /**
@@ -197,12 +198,13 @@ public class FilePermissionService {
    *
    * @param fileNodeId 文件节点 ID
    * @param userId 所有者用户 ID
-   * @return 创建的 ACL 实体
+   * @return 创建的 ACL VO
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    */
   @Transactional(rollbackFor = Exception.class)
   @CacheEvict(cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE, allEntries = true)
-  public FileAclDO setOwner(String fileNodeId, String userId) {
-    return filePermissionDomainService.setOwner(fileNodeId, userId);
+  public FileAclVO setOwner(String fileNodeId, String userId) {
+    FileAclDTO dto = filePermissionDomainService.buildOwnerAcl(fileNodeId, userId);
+    return fileAclRepository.save(dto);
   }
 }

@@ -14,8 +14,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
-import com.njydsz.nextwiki.infra.entity.StorageQuotaDO;
 import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
+import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 
 /**
  * NextWiki Micrometer 指标采集。
@@ -269,7 +269,7 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
    */
   public void refreshQuotaGauge(String scopeType, String scopeId) {
     try {
-      StorageQuotaDO quota = quotaRepository.findByScope(scopeType, scopeId);
+      StorageQuotaVO quota = quotaRepository.findByScope(scopeType, scopeId).orElse(null);
       if (quota != null && quota.getQuotaUsed() != null) {
         quotaUsageCached.set(quota.getQuotaUsed());
       }

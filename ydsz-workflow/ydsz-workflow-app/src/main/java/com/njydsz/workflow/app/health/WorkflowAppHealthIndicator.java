@@ -3,8 +3,8 @@ package com.njydsz.workflow.app.health;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.boot.health.contributor.Health;
-import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.boot.actuate.health.AbstractHealthIndicator;
+import org.springframework.boot.actuate.health.Health;
 
 /**
  * 工作流引擎模块 App 端健康检查指示器。
@@ -12,13 +12,13 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class WorkflowAppHealthIndicator implements HealthIndicator {
+public class WorkflowAppHealthIndicator extends AbstractHealthIndicator {
 
   @Override
-  public Health health() {
+  protected void doHealthCheck(Health.Builder builder) throws Exception {
     Map<String, Object> details = new LinkedHashMap<>();
     details.put("module", "workflow");
     details.put("platform", "app");
-    return Health.up().withDetails(details).build();
+    builder.up().withDetails(details);
   }
 }

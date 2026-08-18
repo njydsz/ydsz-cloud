@@ -3,11 +3,11 @@ package com.njydsz.literule.server.core;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.TimeUnit;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.stats.CacheStats;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.builder.CacheBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.literule.api.RuleContext;
@@ -75,14 +75,8 @@ public class EvaluationResultCache {
   /** 默认最大缓存条目数 */
   public static final int DEFAULT_MAX_SIZE = 10_000;
 
-  /** Caffeine 缓存实例 */
-  private final Cache<String, List<RuleResult>> caffeineCache;
-
-  /** 统计：命中次数（Caffeine 已内置，此处用于兼容原有监控接口） */
-  private final AtomicLong hitCount = new AtomicLong(0);
-
-  /** 统计：未命中次数 */
-  private final AtomicLong missCount = new AtomicLong(0);
+  /** 缓存实例（基于 ydsz-common-cache 实现） */
+  private final Cache<String, List<RuleResult>> cache;
 
   /** 使用默认配置创建缓存 */
   public EvaluationResultCache() {
@@ -96,16 +90,18 @@ public class EvaluationResultCache {
    * @param maxSize 最大缓存条目数，&le; 0 表示不限
    */
   public EvaluationResultCache(long ttlMs, int maxSize) {
-    Caffeine<Object, Object> builder = Caffeine.newBuilder().recordStats();
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 使用 ydsz-common-cache 替代 Caffeine
+    CacheBuilder<String, List<RuleResult>> builder =
+        YdszCache.newBuilder()
+            .maximumSize(maxSize > 0 ? maxSize : -1)
+            .recordStats();
     if (ttlMs > 0) {
-      builder.expireAfterWrite(java.time.Duration.ofMillis(ttlMs));
+      builder.expireAfterWrite(ttlMs, TimeUnit.MILLISECONDS);
     }
-    if (maxSize > 0) {
-      builder.maximumSize(maxSize);
-    }
-    this.caffeineCache = builder.build();
+    this.cache = builder.build();
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     log.info(
-        "[EvalCache] 评估结果缓存已初始化（ttlMs={}, maxSize={}, implementation=Caffeine）",
+        "[EvalCache] 评估结果缓存已初始化（ttlMs={}, maxSize={}, implementation=ydsz-common-cache）",
         ttlMs > 0 ? ttlMs : "unlimited",
         maxSize > 0 ? maxSize : "unlimited");
   }
@@ -118,12 +114,10 @@ public class EvaluationResultCache {
    */
   public List<RuleResult> get(RuleContext context) {
     String key = buildCacheKey(context);
-    List<RuleResult> result = caffeineCache.getIfPresent(key);
+    List<RuleResult> result = cache.getIfPresent(key);
     if (result == null) {
-      missCount.incrementAndGet();
       return null;
     }
-    hitCount.incrementAndGet();
     // 返回防御性副本
     return new ArrayList<>(result);
   }
@@ -140,7 +134,7 @@ public class EvaluationResultCache {
     }
     String key = buildCacheKey(context);
     List<RuleResult> immutableResults = Collections.unmodifiableList(new ArrayList<>(results));
-    caffeineCache.put(key, immutableResults);
+    cache.put(key, immutableResults);
   }
 
   /**
@@ -149,13 +143,13 @@ public class EvaluationResultCache {
    * <p>Caffeine 的淘汰是异步的，调用此方法可立即执行待处理的淘汰任务， 确保 {@link #size()} 反映最新的条目数。
    */
   public void cleanUp() {
-    caffeineCache.cleanUp();
+    cache.cleanUp();
   }
 
   /** 清除全部缓存 */
   public void clear() {
-    long size = caffeineCache.estimatedSize();
-    caffeineCache.invalidateAll();
+    long size = cache.estimatedSize();
+    cache.invalidateAll();
     log.info("[EvalCache] 缓存已清空（cleared≈{}）", size);
   }
 
@@ -165,7 +159,7 @@ public class EvaluationResultCache {
    * @return 条目数
    */
   public int size() {
-    return (int) caffeineCache.estimatedSize();
+    return (int) cache.estimatedSize();
   }
 
   /**
@@ -174,10 +168,7 @@ public class EvaluationResultCache {
    * @return 命中率（0.0 ~ 1.0）；无请求时返回 0.0
    */
   public double getHitRate() {
-    long hits = hitCount.get();
-    long misses = missCount.get();
-    long total = hits + misses;
-    return total > 0 ? (double) hits / total : 0.0;
+    return cache.getHitRate();
   }
 
   /**
@@ -186,7 +177,7 @@ public class EvaluationResultCache {
    * @return 命中次数
    */
   public long getHitCount() {
-    return hitCount.get();
+    return cache.getStats().hitCount();
   }
 
   /**
@@ -195,7 +186,7 @@ public class EvaluationResultCache {
    * @return 未命中次数
    */
   public long getMissCount() {
-    return missCount.get();
+    return cache.getStats().missCount();
   }
 
   /**
@@ -204,7 +195,7 @@ public class EvaluationResultCache {
    * @return 淘汰次数
    */
   public long getEvictionCount() {
-    return caffeineCache.stats().evictionCount();
+    return cache.getStats().evictionCount();
   }
 
   /**
@@ -213,13 +204,13 @@ public class EvaluationResultCache {
    * @return 统计摘要文本
    */
   public String getStatsSummary() {
-    CacheStats stats = caffeineCache.stats();
+    com.njydsz.common.cache.stats.CacheStats stats = cache.getStats();
     return String.format(
         "[EvalCache] size=%d, hits=%d, misses=%d, hitRate=%.4f, evictions=%d, avgLoadTime=%.2fms",
         size(),
-        getHitCount(),
-        getMissCount(),
-        getHitRate(),
+        stats.hitCount(),
+        stats.missCount(),
+        stats.hitRate(),
         stats.evictionCount(),
         stats.averageLoadPenalty() / 1_000_000.0);
   }

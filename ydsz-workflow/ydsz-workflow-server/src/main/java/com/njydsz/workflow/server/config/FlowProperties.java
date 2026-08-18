@@ -1,5 +1,6 @@
 package com.njydsz.workflow.server.config;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

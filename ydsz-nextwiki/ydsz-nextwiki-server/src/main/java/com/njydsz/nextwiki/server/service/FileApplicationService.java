@@ -51,6 +51,7 @@ import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.service.StorageReferenceService;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.server.cache.NextwikiCacheService;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 
@@ -104,6 +105,9 @@ public class FileApplicationService {
   /** 批量任务线程池（使用 ydsz-common-thread 统一管理的 nextwikiTaskExecutor） */
   @org.springframework.beans.factory.annotation.Qualifier("nextwikiTaskExecutor")
   private final Executor batchTaskExecutor;
+
+  /** 缓存服务（文件详情、目录列表、配额用量 Redis 缓存） */
+  private final NextwikiCacheService cacheService;
 
   /** 编程式事务模板（用于精确控制事务边界，将IO操作移出事务） */
   private TransactionTemplate transactionTemplate;
@@ -400,6 +404,10 @@ public class FileApplicationService {
     List<FileNodeVO> siblings = fileNodeRepository.findChildren(parent.getId());
     FileNodeVO folder = folderDomainService.createFolder(parent, siblings, sanitizedName, userId);
     FileNodeVO saved = fileNodeRepository.save(NextwikiConverter.INSTANT.toDTO(folder));
+
+    // 失效缓存：父目录子节点列表
+    cacheService.evictChildren(parent.getId());
+
     publishUploadEvent(saved, sanitizedName, userId);
     return saved;
   }
@@ -479,10 +487,17 @@ public class FileApplicationService {
     try {
       FileNodeVO node = fileNodeRepository.findById(nodeId)
           .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
+      String oldParentId = node.getParentId();
       FileNodeVO targetParent = resolveParentNode(targetParentId, userId);
       List<FileNodeVO> targetSiblings = fileNodeRepository.findChildren(targetParent.getId());
       FileNodeVO movedNode = folderDomainService.move(node, targetParent, targetSiblings, userId);
       fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(movedNode));
+
+      // 失效缓存：文件详情 + 原父目录 + 新父目录
+      cacheService.evictFile(nodeId);
+      cacheService.evictChildren(oldParentId);
+      cacheService.evictChildren(targetParentId);
+
       return movedNode;
     } finally {
       locker.unlock(lockKey, lockValue);
@@ -515,6 +530,10 @@ public class FileApplicationService {
       FileNodeVO parent = resolveParentNode(node.getParentId(), userId);
       FileNodeVO renamedNode = folderDomainService.rename(node, parent, sanitizeFileName(newName), userId);
       fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(renamedNode));
+
+      // 失效缓存：文件详情 + 父目录子节点列表
+      cacheService.evictFileAndParent(nodeId, node.getParentId());
+
       return renamedNode;
     } finally {
       locker.unlock(lockKey, lockValue);
@@ -572,6 +591,11 @@ public class FileApplicationService {
             refCount);
       }
     }
+
+    // 失效缓存（文件详情 + 父目录子节点列表）
+    cacheService.evictFileAndParent(nodeId, node.getParentId());
+    // 配额缓存失效
+    cacheService.evictQuotaOnChange("user", userId);
 
     log.info("[FileApplicationService] 删除文件: nodeId={}, name={}", nodeId, node.getName());
     indexDelete(nodeId);
@@ -926,7 +950,8 @@ public class FileApplicationService {
    * @note 只读，无事务边界；不在此做权限校验，调用方可按需叠加 {@code permissionService}
    */
   public FileNodeVO getFileInfo(String nodeId) {
-    return fileNodeRepository.findById(nodeId)
+    return cacheService.getFile(nodeId,
+        () -> fileNodeRepository.findById(nodeId))
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
   }
 
@@ -948,6 +973,10 @@ public class FileApplicationService {
     node.setStarred(node.getStarred() == null || !node.getStarred());
     node.setUpdatedBy(userId);
     fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
+
+    // 失效缓存：文件详情
+    cacheService.evictFile(nodeId);
+
     log.info(
         "[FileApplicationService] 切换星标: nodeId={}, starred={}, userId={}",
         nodeId,
