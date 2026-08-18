@@ -10,7 +10,9 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.model.ChatMessage;
+import com.njydsz.agent.domain.model.MessageContent;
 import com.njydsz.agent.domain.model.MessageRole;
+import com.njydsz.agent.domain.model.ToolCall;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
@@ -151,14 +153,24 @@ public class RedisConversationMemory implements ConversationMemory {
 
   private String serializeMessage(ChatMessage message) {
     SerializedMessage sm = new SerializedMessage();
+    sm.version = SerializedMessage.CURRENT_VERSION;
     sm.id = message.getId();
     sm.role = message.getRole().name();
     sm.content = message.getContent();
     sm.conversationId = message.getConversationId();
     sm.createdAt = message.getCreatedAt() != null ? message.getCreatedAt().toString() : null;
+    sm.toolCallId = message.getToolCallId();
     if (message.getTokenUsage() != null) {
       sm.promptTokens = message.getTokenUsage().getPromptTokens();
       sm.completionTokens = message.getTokenUsage().getCompletionTokens();
+    }
+    // 序列化多模态内容（Vision 模型场景）
+    if (message.getMultimodalContent() != null && !message.getMultimodalContent().isEmpty()) {
+      sm.multimodalContent = YdszJson.toJson(message.getMultimodalContent());
+    }
+    // 序列化工具调用（Assistant 角色含 Function Calling 场景）
+    if (message.hasToolCalls()) {
+      sm.toolCalls = YdszJson.toJson(message.getToolCalls());
     }
     return YdszJson.toJson(sm);
   }
@@ -173,16 +185,44 @@ public class RedisConversationMemory implements ConversationMemory {
       }
       LocalDateTime createdAt =
           sm.createdAt != null ? LocalDateTime.parse(sm.createdAt) : LocalDateTime.now();
+      // 反序列化多模态内容（v2+ 数据；v1 旧数据该字段为 null，安全跳过）
+      MessageContent multimodalContent = null;
+      if (sm.multimodalContent != null && !sm.multimodalContent.isBlank()) {
+        multimodalContent = YdszJson.fromJson(sm.multimodalContent, MessageContent.class);
+      }
+      // 反序列化工具调用（v2+ 数据；v1 旧数据该字段为 null，安全跳过）
+      List<ToolCall> toolCalls = null;
+      if (sm.toolCalls != null && !sm.toolCalls.isBlank()) {
+        toolCalls = YdszJson.fromJson(sm.toolCalls, List.class, ToolCall.class);
+      }
       return new ChatMessage(
-          sm.id, role, sm.content, sm.conversationId, createdAt, null, null, usage);
+          sm.id,
+          role,
+          sm.content,
+          multimodalContent,
+          sm.conversationId,
+          createdAt,
+          toolCalls,
+          sm.toolCallId,
+          usage);
     } catch (Exception e) {
       LOG.warn("[Memory] 反序列化消息失败: {}", e.getMessage());
       return null;
     }
   }
 
-  /** 消息序列化内部结构 */
+  /**
+   * 消息序列化内部结构。
+   *
+   * <p>使用版本号保障向前兼容：v1 旧数据缺失新增字段时为 null，反序列化时安全跳过；v2 数据完整恢复多模态内容和工具调用。
+   */
   private static class SerializedMessage {
+    /** 序列化协议版本（当前为 {@link #CURRENT_VERSION}） */
+    private static final int CURRENT_VERSION = 2;
+
+    /** 版本号（用于向前兼容，v1 无此字段解析为 0，按 v1 逻辑处理） */
+    public int version;
+
     /** 消息 ID */
     public String id;
 
@@ -191,6 +231,15 @@ public class RedisConversationMemory implements ConversationMemory {
 
     /** 消息内容 */
     public String content;
+
+    /** 多模态内容 JSON（v2+；Vision 模型场景，含文本+图片段落） */
+    public String multimodalContent;
+
+    /** 工具调用列表 JSON（v2+；Assistant 角色含 Function Calling 场景） */
+    public String toolCalls;
+
+    /** 工具调用 ID（Tool 角色使用，关联对应的工具调用） */
+    public String toolCallId;
 
     /** 对话 ID */
     public String conversationId;
@@ -203,5 +252,10 @@ public class RedisConversationMemory implements ConversationMemory {
 
     /** 输出 Token 数量 */
     public int completionTokens;
+
+    /** 默认构造器（兼容旧数据反序列化，版本号初始为 0 表示 v1 格式） */
+    public SerializedMessage() {
+      this.version = CURRENT_VERSION;
+    }
   }
 }

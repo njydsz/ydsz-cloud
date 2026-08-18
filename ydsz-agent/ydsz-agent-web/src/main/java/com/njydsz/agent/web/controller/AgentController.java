@@ -224,7 +224,7 @@ public class AgentController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'chat'")
-  @Idempotent(key = "ydsz:agent:ChatController:chat:lock", ttlSeconds = 5)
+  @Idempotent(key = "'agent:chat:' + #request.requestId", ttlSeconds = 5)
   @RateLimit(resource = "agent.chat.chat", threshold = 50)
   @PostMapping("/chat")
   @Operation(summary = "同步对话", description = "等待 LLM 返回完整响应后返回")
@@ -260,7 +260,7 @@ public class AgentController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'chatStream'")
-  @Idempotent(key = "ydsz:agent:ChatController:chatStream:lock", ttlSeconds = 5)
+  @Idempotent(key = "'agent:chat:stream:' + #request.requestId", ttlSeconds = 5)
   @RateLimit(resource = "agent.chat.chatStream", threshold = 50)
   @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   @Operation(summary = "流式对话（SSE）", description = "逐 token 推送 LLM 响应")
@@ -342,11 +342,12 @@ public class AgentController {
       type = AuditType.OPERATION,
       action = AuditAction.DELETE,
       content = "'clearHistory'")
-  @Idempotent(key = "ydsz:agent:ChatController:clearHistory:lock", ttlSeconds = 5)
+  @Idempotent(key = "'agent:chat:clear:' + #requestId", ttlSeconds = 5)
   @RateLimit(resource = "agent.chat.clearHistory", threshold = 50)
   @DeleteMapping("/history")
   @Operation(summary = "清除对话历史")
-  public BaseResponse<Void> clearHistory(@RequestParam String conversationId) {
+  public BaseResponse<Void> clearHistory(
+      @RequestParam String conversationId, @RequestParam(required = false) String requestId) {
     chatService.clearHistory(conversationId);
     return BaseResponse.success();
   }

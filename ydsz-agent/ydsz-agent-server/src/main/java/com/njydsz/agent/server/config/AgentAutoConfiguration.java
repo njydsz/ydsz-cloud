@@ -12,6 +12,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
@@ -486,6 +487,9 @@ public class AgentAutoConfiguration {
    * <p>这是本配置类的<b>汇聚点</b>：模型调用、记忆、工具、RAG、护栏、链路追踪、 指标与成本核算在此拼装成完整执行链路。任一上游 Bean 被业务覆盖， 都会透明地反映到工厂创建出的
    * Agent 上。
    *
+   * <p><b>循环依赖说明</b>：{@link DagOrchestrationExecutor} 和 {@link SupervisorAgentExecutor} 内部需要通过本工厂创建子 Agent，
+   * 形成构造器循环依赖。此处使用 {@link org.springframework.context.annotation.Lazy} 延迟注入，Spring 会代理目标 Bean 直到首次实际调用时才初始化，从而打破循环。
+   *
    * @param llmClient 模型调用入口（默认为带 Fallback 的路由器）
    * @param memory 对话记忆，决定多轮上下文的召回范围
    * @param toolRegistry 工具注册中心，提供 Function Calling 能力
@@ -494,6 +498,10 @@ public class AgentAutoConfiguration {
    * @param traceRecorder 执行链路记录器，用于调试回放
    * @param agentMetrics 指标采集组件
    * @param costAnalysisService Token 成本核算服务
+   * @param guardrailService 护栏编排服务
+   * @param promptTemplateProvider Prompt 模板提供者
+   * @param dagExecutor DAG 编排执行器（延迟注入打破循环依赖）
+   * @param supervisorExecutor Supervisor 执行器（延迟注入打破循环依赖）
    * @return Agent 工厂；仅在容器中不存在其他 {@link AgentFactory} 时生效
    */
   @Bean
@@ -508,7 +516,9 @@ public class AgentAutoConfiguration {
       AgentMetrics agentMetrics,
       CostAnalysisService costAnalysisService,
       GuardrailService guardrailService,
-      PromptTemplateProvider promptTemplateProvider) {
+      PromptTemplateProvider promptTemplateProvider,
+      @Lazy DagOrchestrationExecutor dagExecutor,
+      @Lazy SupervisorAgentExecutor supervisorExecutor) {
     return new AgentFactory(
         llmClient,
         memory,
@@ -519,7 +529,9 @@ public class AgentAutoConfiguration {
         agentMetrics,
         costAnalysisService,
         guardrailService,
-        promptTemplateProvider);
+        promptTemplateProvider,
+        dagExecutor,
+        supervisorExecutor);
   }
 
   /**

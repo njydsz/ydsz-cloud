@@ -125,7 +125,7 @@ public class FlowI18nServiceImpl implements FlowI18nService {
     register("FlowSkipType", "NONE", "无操作", "None");
 
     // FlowSlaAction
-    register("FlowSlaAction", "REMIND", "提醒", "Ydsznd");
+    register("FlowSlaAction", "REMIND", "提醒", "Remind");
     register("FlowSlaAction", "ESCALATE", "升级", "Escalate");
     register("FlowSlaAction", "AUTO_PASS", "自动通过", "Auto Pass");
     register("FlowSlaAction", "AUTO_REJECT", "自动驳回", "Auto Reject");

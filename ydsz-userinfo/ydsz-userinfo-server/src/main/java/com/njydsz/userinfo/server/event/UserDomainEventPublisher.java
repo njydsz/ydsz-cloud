@@ -8,11 +8,12 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.publish.DomainEventPublisher;
+import com.njydsz.userinfo.domain.event.UserDomainEvent;
+import com.njydsz.userinfo.domain.event.UserDomainEventType;
+import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.infra.entity.DepartmentDO;
 import com.njydsz.userinfo.infra.entity.RoleDO;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
-import com.njydsz.userinfo.domain.event.UserDomainEvent;
-import com.njydsz.userinfo.domain.event.UserDomainEventType;
 
 /**
  * 用户模块领域事件发布器。
@@ -20,6 +21,8 @@ import com.njydsz.userinfo.domain.event.UserDomainEventType;
  * <p>统一封装 {@link UserDomainEvent} 的创建与发布，通过 common-event 的 {@link DomainEventPublisher} 门面投递事件。 业务服务在涉及用户/角色/部门变更时调用此组件。
  *
  * <p><b>事件类型枚举：</b>使用 {@link UserDomainEventType} 替代硬编码字符串，提供类型安全。
+ *
+ * <p><b>DDD 合规：</b>同时支持 {@link UserAccountDO}（infra 层）和 {@link UserAccountVO}（domain 层），新代码应优先使用 VO 版本。
  *
  * @author ydsz-team
  * @since 1.1.0
@@ -35,10 +38,31 @@ public class UserDomainEventPublisher {
   }
 
   /**
-   * 发布用户创建事件。
+   * 发布用户创建事件（VO 版本，推荐新代码使用）。
+   *
+   * @param userVO 新建的用户领域 VO
+   */
+  public void publishUserCreated(UserAccountVO userVO) {
+    if (userVO == null) {
+      return;
+    }
+    publish(
+        UserDomainEventType.USER_CREATED,
+        userVO.getId(),
+        "USER",
+        UserDomainEvent.of(
+            UserDomainEventType.USER_CREATED,
+            userVO.getId(),
+            Map.of("username", userVO.getUsername(), "realName", orEmpty(userVO.getRealName()))));
+  }
+
+  /**
+   * 发布用户创建事件（DO 版本，兼容已有代码）。
    *
    * @param user 新建的用户实体
+   * @deprecated 使用 {@link #publishUserCreated(UserAccountVO)} 替代
    */
+  @Deprecated
   public void publishUserCreated(UserAccountDO user) {
     if (user == null) {
       return;
@@ -54,10 +78,31 @@ public class UserDomainEventPublisher {
   }
 
   /**
-   * 发布用户更新事件。
+   * 发布用户更新事件（VO 版本，推荐新代码使用）。
+   *
+   * @param userVO 更新后的用户领域 VO
+   */
+  public void publishUserUpdated(UserAccountVO userVO) {
+    if (userVO == null) {
+      return;
+    }
+    publish(
+        UserDomainEventType.USER_UPDATED,
+        userVO.getId(),
+        "USER",
+        UserDomainEvent.of(
+            UserDomainEventType.USER_UPDATED,
+            userVO.getId(),
+            Map.of("username", userVO.getUsername(), "status", String.valueOf(userVO.getStatus()))));
+  }
+
+  /**
+   * 发布用户更新事件（DO 版本，兼容已有代码）。
    *
    * @param user 更新后的用户实体
+   * @deprecated 使用 {@link #publishUserUpdated(UserAccountVO)} 替代
    */
+  @Deprecated
   public void publishUserUpdated(UserAccountDO user) {
     if (user == null) {
       return;

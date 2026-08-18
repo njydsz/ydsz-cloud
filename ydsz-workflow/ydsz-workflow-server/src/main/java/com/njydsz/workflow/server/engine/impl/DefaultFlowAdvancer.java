@@ -439,7 +439,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
       if (target == null) {
         throw SysException.builder()
             .resultCode(BaseResultCode.NOT_FOUND)
-            .message("error.workflow.msg_6e66716d" + nodeCode)
+            .key("error.workflow.msg_6e66716d")
+            .params(nodeCode)
             .build();
       }
       // 避免重复

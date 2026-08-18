@@ -62,4 +62,21 @@ public class MessageRequest implements Serializable {
 
   /** 级联子消息列表 */
   private List<MessageRequest> cascadeTo;
+
+  /**
+   * 发送场景标识（可选，用于管线模板选择）。
+   *
+   * <p>可选值：simple / template / batch / callback / full。 为空时由 {@link
+   * com.njydsz.message.server.service.chain.SendPipelineFacade} 自动推断。
+   *
+   * <p>自动推断规则：
+   *
+   * <ul>
+   *   <li>有 parentMsgId → callback（内部回调）
+   *   <li>有 cascadeTo → batch（批量/级联）
+   *   <li>有 templateCode → template（模板发送）
+   *   <li>其他 → simple（简单直发）
+   * </ul>
+   */
+  private String scenario;
 }

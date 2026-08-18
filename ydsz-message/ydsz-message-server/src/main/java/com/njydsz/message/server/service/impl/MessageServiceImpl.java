@@ -43,8 +43,9 @@ import com.njydsz.message.server.config.RetryStrategyResolver;
 import com.njydsz.message.server.filter.SensitiveWordFilter;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.producer.MessageQueueOperations;
+import com.njydsz.message.server.service.chain.PipelineTemplate;
 import com.njydsz.message.server.service.chain.SendContext;
-import com.njydsz.message.server.service.chain.SendPipeline;
+import com.njydsz.message.server.service.chain.SendPipelineFacade;
 import com.njydsz.message.server.service.config.PreferenceService;
 import com.njydsz.message.server.service.config.RouteRuleService;
 import com.njydsz.message.server.service.config.SubscriptionService;
@@ -153,8 +154,8 @@ public class MessageServiceImpl implements MessageService {
 
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
-  /** P1-H1: 发送管线编排引擎（Handler Chain 模式替代原 preprocess 方法） */
-  private final SendPipeline sendPipeline;
+  /** P2-1: 管线模板门面（自动选择模板 + 按需组合 Handler） */
+  private final SendPipelineFacade sendPipelineFacade;
 
   @Override
   public MessageResult send(MessageRequest request) {
@@ -188,9 +189,10 @@ public class MessageServiceImpl implements MessageService {
       return MessageResult.fail(request.getChannel(), "级联深度超限");
     }
 
-    // ① 预处理管线：通道校验 → 绑定 → 路由 → 灰度 → 订阅 → 偏好 → 去重 → 抑制 → 限流 → 配额
+    // ① 预处理管线：P2-1 根据场景自动选择模板（模板发送/简单直发/批量/回调）
     SendContext ctx = new SendContext();
-    sendPipeline.execute(request, ctx);
+    PipelineTemplate template = sendPipelineFacade.resolveTemplate(request);
+    sendPipelineFacade.execute(request, ctx, template);
     if (ctx.getErrorResult() != null) {
       return ctx.getErrorResult();
     }

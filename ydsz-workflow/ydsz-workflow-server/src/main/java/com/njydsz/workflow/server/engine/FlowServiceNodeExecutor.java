@@ -1,5 +1,6 @@
 package com.njydsz.workflow.server.engine;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,6 +11,7 @@ import com.googlecode.aviator.Expression;
 import com.googlecode.aviator.Feature;
 import com.googlecode.aviator.Options;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -57,7 +59,13 @@ import com.njydsz.workflow.infra.entity.FlowNodeDO;
 @Component
 public class FlowServiceNodeExecutor {
 
-  /** WEBHOOK / HTTP 通道使用的 RestTemplate（由 ydsz-common-notify 统一提供）。 */
+  /** HTTP 连接超时时间（秒） */
+  private static final int CONNECT_TIMEOUT_SECONDS = 5;
+
+  /** HTTP 读取超时时间（秒） */
+  private static final int READ_TIMEOUT_SECONDS = 30;
+
+  /** WEBHOOK / HTTP 通道使用的 RestTemplate（带超时配置）。 */
   private final RestTemplate restTemplate;
 
   /**
@@ -68,9 +76,17 @@ public class FlowServiceNodeExecutor {
    */
   private final AviatorEvaluatorInstance aviatorInstance;
 
-  /** 构造器：注入 RestTemplate 并初始化 Aviator 沙箱实例。 */
-  public FlowServiceNodeExecutor(RestTemplate restTemplate) {
-    this.restTemplate = restTemplate;
+  /**
+   * 构造器：通过 RestTemplateBuilder 构建带超时的 RestTemplate，并初始化 Aviator 沙箱实例。
+   *
+   * @param restTemplateBuilder RestTemplate 构建器
+   */
+  public FlowServiceNodeExecutor(RestTemplateBuilder restTemplateBuilder) {
+    this.restTemplate =
+        restTemplateBuilder
+            .setConnectTimeout(Duration.ofSeconds(CONNECT_TIMEOUT_SECONDS))
+            .setReadTimeout(Duration.ofSeconds(READ_TIMEOUT_SECONDS))
+            .build();
     this.aviatorInstance = AviatorEvaluator.newInstance();
     // 浮点数解析为 Decimal，避免精度丢失
     this.aviatorInstance.setOption(Options.ALWAYS_PARSE_FLOATING_POINT_NUMBER_INTO_DECIMAL, true);
@@ -78,7 +94,10 @@ public class FlowServiceNodeExecutor {
     this.aviatorInstance.disableFeature(Feature.NewInstance);
     this.aviatorInstance.disableFeature(Feature.Module);
     this.aviatorInstance.disableFeature(Feature.Lambda);
-    log.info("[Flow-Service] Aviator 脚本引擎已初始化（沙箱模式）");
+    log.info(
+        "[Flow-Service] Aviator 脚本引擎已初始化（沙箱模式），HTTP 超时配置: connect={}s read={}s",
+        CONNECT_TIMEOUT_SECONDS,
+        READ_TIMEOUT_SECONDS);
   }
 
   /**
