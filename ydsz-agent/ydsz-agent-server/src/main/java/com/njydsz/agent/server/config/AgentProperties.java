@@ -799,12 +799,38 @@ public class AgentProperties {
      */
     private boolean promptInjectionEnabled = false;
 
+    /**
+     * 单用户每分钟请求上限（AgentRequestGuard 限流阈值，P2 修复：原值硬编码不可配置）。
+     */
+    private int maxRequestsPerMinute = 10;
+
+    /**
+     * 输出护栏拒绝时的兜底文案（P2 修复：原文案硬编码不可配置）。
+     */
+    private String rejectionMessage = "抱歉，我无法回答这个问题。";
+
     public boolean isPromptInjectionEnabled() {
       return promptInjectionEnabled;
     }
 
     public void setPromptInjectionEnabled(boolean promptInjectionEnabled) {
       this.promptInjectionEnabled = promptInjectionEnabled;
+    }
+
+    public int getMaxRequestsPerMinute() {
+      return maxRequestsPerMinute;
+    }
+
+    public void setMaxRequestsPerMinute(int maxRequestsPerMinute) {
+      this.maxRequestsPerMinute = maxRequestsPerMinute;
+    }
+
+    public String getRejectionMessage() {
+      return rejectionMessage;
+    }
+
+    public void setRejectionMessage(String rejectionMessage) {
+      this.rejectionMessage = rejectionMessage;
     }
   }
 
