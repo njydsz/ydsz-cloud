@@ -2,6 +2,11 @@ package com.njydsz.agent.server.agent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
@@ -46,6 +51,15 @@ import com.njydsz.common.util.id.IdGenerator;
  * @since 1.0.0
  */
 public class ReActAgentExecutor extends AbstractAgentExecutor {
+
+  /**
+   * 工具并发执行线程池（JDK 21 虚拟线程，规范豁免场景）。
+   *
+   * <p>多个 tool call 并行执行以缩短单轮迭代耗时；虚拟线程在 IO 密集型工具场景下近乎零成本。
+   */
+  // CHECKSTYLE.OFF: ThreadPoolCreate
+  private static final ExecutorService TOOL_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
+  // CHECKSTYLE.ON: ThreadPoolCreate
 
   /** 工具注册中心 */
   private final ToolRegistry toolRegistry;
@@ -145,22 +159,15 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       }
 
       messages.add(response.getMessage());
-      for (ToolCall toolCall : response.getToolCalls()) {
-        LOG.info("[ReAct] 执行工具: {}", toolCall.getName());
-        long toolStart = System.currentTimeMillis();
-        String result = toolRegistry.execute(toolCall);
-        long toolDuration = System.currentTimeMillis() - toolStart;
-
-        // P0-1: TraceRecorder 记录工具调用步骤
-        traceRecorder.recordStep(
-            traceId,
-            "TOOL_CALL",
-            toolCall.getName(),
-            toolCall.getArguments(),
-            result,
-            toolDuration);
-
-        ChatMessage toolMsg = ChatMessage.tool(toolCall.getId(), result, convId);
+      // 白名单过滤 + 并发执行工具（保持原始顺序回填结果）
+      List<ToolCall> allowedCalls = filterAllowedTools(request, response.getToolCalls());
+      Map<String, String> toolResults = executeToolsConcurrently(traceId, allowedCalls);
+      for (ToolCall toolCall : allowedCalls) {
+        ChatMessage toolMsg =
+            ChatMessage.tool(
+                toolCall.getId(),
+                toolResults.getOrDefault(toolCall.getId(), "{}"),
+                convId);
         messages.add(toolMsg);
       }
     }
@@ -238,19 +245,15 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
 
       // 推送工具调用事件
       messages.add(response.getMessage());
-      for (ToolCall toolCall : response.getToolCalls()) {
+      List<ToolCall> allowedCalls = filterAllowedTools(request, response.getToolCalls());
+      for (ToolCall toolCall : allowedCalls) {
         chunkConsumer.accept(
             ChatChunk.content(responseId, model, "\n\n[工具调用] " + toolCall.getName() + "..."));
-        long toolStart = System.currentTimeMillis();
-        String result = toolRegistry.execute(toolCall);
-        long toolDuration = System.currentTimeMillis() - toolStart;
-        traceRecorder.recordStep(
-            traceId,
-            "TOOL_CALL",
-            toolCall.getName(),
-            toolCall.getArguments(),
-            result,
-            toolDuration);
+      }
+      // 并发执行工具，保持原始顺序回填结果
+      Map<String, String> toolResults = executeToolsConcurrently(traceId, allowedCalls);
+      for (ToolCall toolCall : allowedCalls) {
+        String result = toolResults.getOrDefault(toolCall.getId(), "{}");
         chunkConsumer.accept(
             ChatChunk.content(responseId, model, "\n[工具结果] " + truncateResult(result)));
         ChatMessage toolMsg = ChatMessage.tool(toolCall.getId(), result, convId);
@@ -269,6 +272,74 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       return "";
     }
     return result.length() > 200 ? result.substring(0, 200) + "..." : result;
+  }
+
+  /**
+   * 白名单过滤工具调用。
+   *
+   * <p>P1 修复：仅执行 {@link AgentExecutionRequest#getEnabledTools()} 允许的工具， 防御 LLM 幻觉调用未授权工具。
+   *
+   * @param request 执行请求
+   * @param toolCalls LLM 返回的工具调用列表
+   * @return 通过白名单校验的工具调用列表
+   */
+  private List<ToolCall> filterAllowedTools(
+      AgentExecutionRequest request, List<ToolCall> toolCalls) {
+    List<String> enabledTools = request.getEnabledTools();
+    if (toolCalls == null
+        || toolCalls.isEmpty()
+        || enabledTools == null
+        || enabledTools.isEmpty()) {
+      return toolCalls != null ? toolCalls : List.of();
+    }
+    List<ToolCall> allowed = new ArrayList<>(toolCalls.size());
+    for (ToolCall toolCall : toolCalls) {
+      if (enabledTools.contains(toolCall.getName())) {
+        allowed.add(toolCall);
+      } else {
+        LOG.warn("[ReAct] 工具不在白名单内，拒绝调用: {}", toolCall.getName());
+      }
+    }
+    return allowed;
+  }
+
+  /**
+   * 并发执行工具调用并记录链路。
+   *
+   * <p>P1 优化：LLM 一次返回多个 tool call 时并行执行（对标 LangChain/AutoGen 默认行为）， 结果按 callId
+   * 收集后由调用方按原始顺序回填，保证 tool/tool_result 配对顺序。
+   *
+   * @param traceId 链路 ID
+   * @param toolCalls 待执行的工具调用列表
+   * @return callId → 工具执行结果
+   */
+  private Map<String, String> executeToolsConcurrently(String traceId, List<ToolCall> toolCalls) {
+    Map<String, String> results = new ConcurrentHashMap<>(toolCalls.size());
+    if (toolCalls.isEmpty()) {
+      return results;
+    }
+    List<CompletableFuture<Void>> futures = new ArrayList<>(toolCalls.size());
+    for (ToolCall toolCall : toolCalls) {
+      futures.add(
+          CompletableFuture.runAsync(
+              () -> {
+                long toolStart = System.currentTimeMillis();
+                String result = toolRegistry.execute(toolCall);
+                long toolDuration = System.currentTimeMillis() - toolStart;
+                // TraceRecorder 记录工具调用步骤
+                traceRecorder.recordStep(
+                    traceId,
+                    "TOOL_CALL",
+                    toolCall.getName(),
+                    toolCall.getArguments(),
+                    result,
+                    toolDuration);
+                results.put(toolCall.getId(), result);
+              },
+              TOOL_EXECUTOR));
+    }
+    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+    return results;
   }
 
   @Override

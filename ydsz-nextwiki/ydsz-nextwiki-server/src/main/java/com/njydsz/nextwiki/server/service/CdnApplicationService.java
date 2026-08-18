@@ -4,9 +4,9 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 /**

@@ -79,7 +79,8 @@ public class DebugController {
   /**
    * 列出最近执行链路。
    *
-   * <p>按 trace 开始时间倒序返回最近 {@code limit} 条链路元数据；每条链路额外统计其步骤数 （{@code stepCount}）便于前端按复杂度排序展示。
+   * <p>按 trace 开始时间倒序返回最近 {@code limit} 条链路元数据； 步骤数（{@code stepCount}）由链路存储层在元数据查询时批量填充，
+   * 避免逐条查询步骤列表的 N+1 开销。
    *
    * @param limit 最大数量（默认 20，建议不超过 100）
    * @return 统一响应结果，data 为 {@link AgentTraceListDTO} 列表
@@ -97,17 +98,15 @@ public class DebugController {
     List<AgentTraceListDTO> dtos =
         metas.stream()
             .map(
-                meta -> {
-                  int stepCount = agentDebuggerService.getTrace(meta.getTraceId()).size();
-                  return new AgentTraceListDTO(
-                      meta.getTraceId(),
-                      meta.getConversationId(),
-                      meta.getAgentId(),
-                      meta.getStatus(),
-                      meta.getStartedAt(),
-                      meta.getTotalDurationMs(),
-                      stepCount);
-                })
+                meta ->
+                    new AgentTraceListDTO(
+                        meta.getTraceId(),
+                        meta.getConversationId(),
+                        meta.getAgentId(),
+                        meta.getStatus(),
+                        meta.getStartedAt(),
+                        meta.getTotalDurationMs(),
+                        meta.getStepCount()))
             .collect(Collectors.toList());
     return BaseResponse.success(dtos);
   }

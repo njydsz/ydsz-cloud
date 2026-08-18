@@ -29,7 +29,7 @@ psql -U postgres -d ydsz_cloud -f ydsz-system/deploy/sql/init.sql
 
 | 业务域 | 说明 |
 |---|---|
-| **系统配置** | 参数配置（`ydsz_config`），支持按 key 查询、按 group 批量查询、公开配置查询、Redis 缓存、缓存穿透防护、值类型校验 |
+| **系统配置** | 参数配置（`ydsz_config`），支持按 key 查询、按 group 批量查询、公开配置查询、ydsz-common-cache 本地缓存、缓存穿透防护、值类型校验 |
 | **数据字典** | 字典类型（`ydsz_dict_type`）+ 字典项（`ydsz_dict_item`），支持树形字典、缓存、版本管理 |
 | **应用注册** | OAuth2 应用注册（`ydsz_app_info`），支持 BCrypt 密钥校验（强度可配置） |
 | **系统变量** | 业务级变量管理（`ydsz_variable`），支持 Redis 缓存、缓存穿透防护 |
@@ -50,11 +50,18 @@ ydsz-system/
 │       ├── ConfigClientFallback.java
 │       ├── DictClient.java             # 字典查询 Feign 客户端（dict item / dict list）
 │       └── DictClientFallback.java
-├── ydsz-system-domain/                 # 领域层：Entity + DTO + VO
+├── ydsz-system-domain/                 # 领域层：DTO + VO + Query + Enum + Repository 接口
 │   └── src/main/java/com/njydsz/system/domain/
-│       ├── entity/                     # 实体（无 DO 后缀，符合 entity-naming 规范）
+│       ├── dto/                        # 创建/更新 DTO（含 JSR-303 校验）
+│       ├── vo/                         # 视图对象（不含敏感字段如 appSecret）
+│       ├── enums/                      # 领域枚举（ConfigValueType / SystemExceptionCode / QuotaType）
+│       ├── query/                      # 分页查询条件对象（ConfigPageQuery / DictPageQuery 等）
+│       └── repository/                 # 仓储接口（8 个，实现在 infra/repository，依赖方向 domain ← infra）
+├── ydsz-system-infra/                  # 基础设施层：MyBatis Mapper + Entity + Repository 实现
+│   └── src/main/java/com/njydsz/system/infra/
+│       ├── entity/                     # 持久化实体（无 DO 后缀，符合 entity-naming 规范）
 │       │   ├── AppInfo.java            # OAuth2 应用注册
-│       │   ├── Config.java             # 系统参数
+│       │   ├── Config.java             # 系统参数（充血模型：validate / getTypedValue 等领域方法）
 │       │   ├── DictItem.java           # 字典项
 │       │   ├── DictType.java           # 字典类型
 │       │   ├── EntityVersion.java      # 通用实体版本快照
@@ -62,12 +69,8 @@ ydsz-system/
 │       │   ├── Tenant.java             # 租户
 │       │   ├── TenantPlan.java         # 租户套餐
 │       │   └── TenantPlanMenu.java     # 套餐菜单关联
-│       ├── dto/                        # 创建/更新 DTO（含 JSR-303 校验）
-│       └── vo/                         # 视图对象（不含敏感字段如 appSecret）
-├── ydsz-system-infra/                  # 基础设施层：MyBatis Mapper + Repository
-│   └── src/main/java/com/njydsz/system/infra/
 │       ├── mapper/                     # AppInfo/Config/DictItem/DictType/EntityVersion/Tenant/TenantPlan/TenantPlanMenu/Variable Mapper
-│       └── repository/                 # 8 个仓储（AppInfo/Config/Dict/EntityVersion/TenantPlanMenu/TenantPlan/Tenant/Variable）
+│       └── repository/                 # 8 个仓储实现（AppInfo/Config/Dict/EntityVersion/TenantPlanMenu/TenantPlan/Tenant/Variable）
 ├── ydsz-system-server/                 # 应用层：Service + Config + Health + Metrics
 │   └── src/main/java/com/njydsz/system/server/
 │       ├── config/                     # SystemProperties + SystemConfiguration + CacheConfig + InternalApiIpFilter
@@ -81,6 +84,11 @@ ydsz-system/
 │       │   └── impl/
 │       ├── health/                     # SystemHealthIndicator（轻量探针）
 │       └── metrics/                    # SystemMetrics（Micrometer，含 dict 专用指标）
+├── ydsz-system-app/                    # App 端基座（预留：auto-config + HealthIndicator + OpenAPI 配置，无 Controller）
+│   └── src/main/java/com/njydsz/system/app/
+│       ├── config/                     # SystemAppAutoConfiguration（@ConditionalOnPlatform(APP) 激活）
+│       ├── health/                     # SystemAppHealthIndicator（轻量探针）
+│       └── openapi/                    # SystemAppOpenApiConfiguration（App 端 API 文档配置）
 └── ydsz-system-web/                    # Web 层：Controller + Bootstrap
     └── src/main/java/com/njydsz/system/web/
         ├── SystemApplication.java
@@ -125,7 +133,7 @@ ydsz-system/
 
 | 表名 | 说明 |
 |---|---|
-| `ydsz_config` | 系统参数（key-value，支持租户维度） |
+| `ydsz_config` | 系统参数（key-value，含 `tenant_id` 列 + 唯一索引 `uk_config_group_key(tenant_id, config_group, config_key)`，多租户隔离在 schema 层保证） |
 | `ydsz_dict_type` | 字典类型 |
 | `ydsz_dict_item` | 字典项（支持树形 parent_id、扩展 ext_json） |
 | `ydsz_entity_version` | 通用实体版本（配置/变量/字典等变更历史快照，含 tenant_id） |
@@ -138,21 +146,21 @@ ydsz-system/
 ## 核心能力
 
 ### 配置缓存
-- 按 `config_key` 缓存配置值到 Redis，TTL 可配置（默认 5 分钟）
-- 缓存穿透防护：空值写入哨兵 `__NULL__`，短 TTL（1 分钟）
-- 写操作（save/update/delete）自动清除缓存
+- 基于 ydsz-common-cache 进程内本地缓存（Spring Cache 注解驱动，@Cacheable / @CacheEvict / @Caching 精准失效）
+- 缓存键：`value:{tenantId}:{configKey}`（单值）/ `group:{tenantId}:{configGroup}`（组批量）/ `public:{tenantId}`（公开配置），TTL 与容量通过 `ydsz.cache.caches.system:config` 配置（默认 5 分钟）
+- 缓存穿透防护：ydsz-common-cache 内置 null 值缓存（allowNullValues=true）
+- 写操作（save/update/delete）通过 @CacheEvict 精准失效单键 / 分组 / 公开配置缓存，并在事务内发布 `CONFIG_CHANGED` 事件（Outbox 模式），跨实例最终一致性由 TTL 自然过期兜底
 
 ### 字典缓存
-- 按 `type_code:item_code` 缓存单个字典项，TTL 可配置（默认 10 分钟）
-- 按 `type_code` 缓存字典项列表，TTL 可配置
-- 缓存清除使用 SCAN 替代 KEYS，避免 Redis 阻塞
+- 基于 ydsz-common-cache 本地缓存，按 `list:{tenantId}:{typeCode}` 缓存字典项列表，TTL 通过 `ydsz.cache.caches.system:dict-item` 配置（默认 10 分钟）
+- 单条字典项缓存键 `item:{tenantId}:{typeCode}:{itemCode}`，写操作精准失效
 - 缓存穿透防护：空值写入哨兵 `__NULL__`
-- 写操作自动清除对应类型的缓存 + 记录版本快照
+- 写操作自动失效对应类型缓存 + 记录版本快照，并发布 `DICT_TYPE_CHANGED` 事件（Outbox）
 
 ### 系统变量缓存
-- 按 `variable_key` 缓存变量值到 Redis，TTL 可配置
+- 基于 ydsz-common-cache 本地缓存，按 `{tenantId}:{variableKey}` 缓存变量值，TTL 可配置（默认 5 分钟）
 - 缓存穿透防护：空值写入哨兵 `__NULL__`
-- 写操作自动清除缓存
+- 写操作自动清除缓存 + 发布 `VARIABLE_CHANGED` 事件（Outbox）
 
 ### 应用密钥安全
 - `appSecret` 使用 BCrypt 加密存储，强度可配置（`ydsz.system.app.bcrypt-strength`）
@@ -239,7 +247,7 @@ mvn -pl ydsz-system spring-boot:run
 ### Q1：配置查询返回 null
 
 检查 `ydsz_config` 表中是否存在对应的 `config_key` 且 `status = 'ENABLED'`、`deleted = 0`。
-配置查询走 Redis 缓存，空值会缓存 1 分钟（防穿透），期间重复查询返回 null。
+配置查询走 ydsz-common-cache 本地缓存，空值会缓存（allowNullValues=true，TTL 默认 5 分钟），期间重复查询返回 null。
 
 ### Q2：应用密钥校验失败
 
@@ -250,8 +258,8 @@ mvn -pl ydsz-system spring-boot:run
 
 ### Q3：字典项查询缓存不刷新
 
-字典项写操作（save/update/delete）会自动清除对应 `type_code` 的缓存（使用 SCAN 命令）。
-如果缓存未清除，检查 Redis 连接是否正常。
+字典项写操作（save/update/delete）会自动失效对应 `type_code` 的本地缓存（@CacheEvict 精准失效）。
+如果缓存未清除，检查 ydsz-common-cache 缓存管理器是否正常注册（@Primary 生效）。
 
 ### Q4：内部 API 安全
 

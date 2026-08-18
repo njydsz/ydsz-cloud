@@ -21,6 +21,7 @@ import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.auth.AuthService;
+import com.njydsz.userinfo.server.auth.CaptchaService;
 import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.auth.UserPasswordHistoryService;
 import com.njydsz.userinfo.server.auth.VerifyCodeService;
@@ -63,6 +64,7 @@ public class SelfServiceServiceImpl implements SelfServiceService {
   private final PasswordPolicyValidator passwordPolicyValidator;
   private final UserPasswordHistoryService passwordHistoryService;
   private final AuthService authService;
+  private final CaptchaService captchaService;
   private final UserInfoProperties properties;
   private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
   private final UserDomainEventPublisher eventPublisher;
@@ -72,6 +74,8 @@ public class SelfServiceServiceImpl implements SelfServiceService {
    */
   @Override
   public boolean sendVerifyCode(SendVerifyCodeDTO dto) {
+    // P0-5: 发送验证码前置图形验证码校验（防短信轰炸）
+    captchaService.validate(dto.getCaptchaKey(), dto.getCaptcha());
     verifyCodeService.sendCode(dto.getType(), dto.getPhone());
     return true;
   }
@@ -84,6 +88,9 @@ public class SelfServiceServiceImpl implements SelfServiceService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String register(SelfRegisterDTO dto) {
+    // 0. P0-5: 图形验证码校验（防批量注册）
+    captchaService.validate(dto.getCaptchaKey(), dto.getCaptcha());
+
     // 1. 校验验证码（一次性）
     if (!verifyCodeService.verifyCode(CODE_TYPE_REGISTER, dto.getPhone(), dto.getVerifyCode())) {
       throw new BusinessException(UserInfoExceptionCode.VERIFY_CODE_INVALID);
@@ -123,6 +130,9 @@ public class SelfServiceServiceImpl implements SelfServiceService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean forgotPassword(ForgotPasswordDTO dto) {
+    // 0. P0-5: 图形验证码校验（防撞库批量找回密码）
+    captchaService.validate(dto.getCaptchaKey(), dto.getCaptcha());
+
     // 1. 查询用户
     Optional<UserAccountVO> userOpt = userAccountRepository.findByUsername(dto.getUsername());
     if (userOpt.isEmpty()) {

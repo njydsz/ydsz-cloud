@@ -188,7 +188,8 @@ public class AgentAutoConfiguration {
           llmClient,
           properties.getLlm().getDefaultModel(),
           memoryConfig.getSummaryThreshold(),
-          memoryConfig.getSummaryKeepRecent());
+          memoryConfig.getSummaryKeepRecent(),
+          stringOps);
     }
     return redisMemory;
   }

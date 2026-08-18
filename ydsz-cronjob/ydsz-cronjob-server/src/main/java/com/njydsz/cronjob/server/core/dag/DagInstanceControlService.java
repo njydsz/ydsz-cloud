@@ -97,8 +97,11 @@ public class DagInstanceControlService {
     }
     log.info("[DagControl] DAG 实例已恢复: instanceId={}", dagInstanceId);
 
-    // 重新派发所有 PENDING 状态的节点
-    redeliverPendingNodes(dagInstanceId);
+    // P0-F1: 重新派发所有 PENDING 且前置成功的节点。
+    // 原实现调用 dagInstanceExecutor.execute()，但 doExecute 开头 CAS 要求实例为 PENDING，
+    // RUNNING 实例直接 return，导致恢复后 PENDING 节点永远不会派发。
+    // 现委托 DagInstanceExecutor.redeliverPendingNodes 直接逐节点派发。
+    dagInstanceExecutor.redeliverPendingNodes(dagInstanceId);
     return true;
   }
 
@@ -356,43 +359,6 @@ public class DagInstanceControlService {
         dagInstanceId,
         jobKey);
     return false;
-  }
-
-  /** 恢复后重新派发所有 PENDING 状态的节点。 */
-  private void redeliverPendingNodes(String dagInstanceId) {
-    JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
-    if (instance == null) {
-      return;
-    }
-    var dag = dagMapper.selectById(instance.getDagId());
-    if (dag == null) {
-      return;
-    }
-    DagDefinition definition = dagDefinitionCodec.fromJson(dag.getDagDefinition());
-    List<JobDagNodeInstance> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
-    int dispatched = 0;
-    for (JobDagNodeInstance node : nodes) {
-      if (!DagNodeStatus.PENDING.name().equals(node.getNodeStatus())) {
-        continue;
-      }
-      DagNode dagNode = definition.findNode(node.getJobKey());
-      if (dagNode == null) {
-        // 可能是循环迭代的 jobKey（含 #loop 后缀），尝试去除后缀查找
-        String baseKey = node.getJobKey().split("#")[0];
-        dagNode = definition.findNode(baseKey);
-      }
-      if (dagNode != null) {
-        // 检查前置是否都成功
-        if (areAllPredecessorsSuccessful(dagInstanceId, dagNode.jobKey(), definition, nodes)) {
-          dagInstanceExecutor.execute(dagInstanceId); // 触发重新派发
-          dispatched++;
-        }
-      }
-    }
-    if (dispatched > 0) {
-      log.info(
-          "[DagControl] 恢复后重新派发 PENDING 节点: instanceId={} count={}", dagInstanceId, dispatched);
-    }
   }
 
   /** 派发重试节点。 */

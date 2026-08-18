@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -107,8 +108,8 @@ public class ConfigServiceImpl implements ConfigService {
   /** 系统配置属性 */
   private final SystemProperties properties;
 
-  /** 统一领域事件发布门面 */
-  private final DomainEventPublisher eventPublisher;
+  /** 统一领域事件发布门面（ObjectProvider 可选注入，common-event 未引入时安全降级，见《云顶编码规范》27.4） */
+  private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
   /** 统一实体版本服务（写操作时创建版本快照） */
   private final EntityVersionService entityVersionService;
@@ -736,7 +737,11 @@ public class ConfigServiceImpl implements ConfigService {
    * @param configGroup 配置分组（为 null 时跳过）
    */
   private void publishConfigChangedEvent(String configKey, String configGroup) {
-    eventPublisher.publish(
+    DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
+    if (publisher == null) {
+      return;
+    }
+    publisher.publish(
         DomainEvent.builder()
             .aggregateType("Config")
             .aggregateId(configKey)

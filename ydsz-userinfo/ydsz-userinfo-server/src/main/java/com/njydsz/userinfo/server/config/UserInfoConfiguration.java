@@ -51,7 +51,11 @@ import com.njydsz.userinfo.server.health.UserInfoHealthIndicator;
 @Configuration
 @EnableAsync
 @EnableCaching
-@EnableConfigurationProperties({UserInfoProperties.class, LdapProperties.class})
+@EnableConfigurationProperties({
+  UserInfoProperties.class,
+  LdapProperties.class,
+  InternalCallProperties.class
+})
 public class UserInfoConfiguration {
 
   /**

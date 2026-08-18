@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
@@ -89,11 +90,11 @@ public class GlueJobHandler implements JobHandler {
   /** P1-7: JavaScript 脚本引擎（Nashorn/GraalJS） */
   private final ScriptEngine jsEngine;
 
-  /** 编译缓存: cacheKey → 编译后的 Class */
-  private final Map<String, Class<?>> compiledClassCache = new HashMap<>();
+  /** 编译缓存: cacheKey → 编译后的 Class（并发安全，多任务并行编译互不阻塞） */
+  private final Map<String, Class<?>> compiledClassCache = new ConcurrentHashMap<>();
 
   /** ClassLoader 缓存: cacheKey → GroovyClassLoader（用于隔离不同任务的类空间） */
-  private final Map<String, GroovyClassLoader> classLoaderCache = new HashMap<>();
+  private final Map<String, GroovyClassLoader> classLoaderCache = new ConcurrentHashMap<>();
 
   public GlueJobHandler(
       ObjectProvider<GlueCodeService> glueCodeServiceProvider,
@@ -365,35 +366,41 @@ public class GlueJobHandler implements JobHandler {
    *
    * <p>缓存 key 为 {@code jobId + ":" + sourceCode.hashCode()}， 当源代码变更时自动重新编译。
    *
+   * <p>P0-P5 性能优化：原实现为 {@code synchronized} 全局锁，多任务并发编译时会互相阻塞（编译为 CPU
+   * 密集操作，耗时可达百毫秒级）。改为 {@link ConcurrentHashMap#computeIfAbsent} 按缓存 key 分段加锁：
+   * 同一 jobId+源码 仅编译一次，不同任务并行编译互不阻塞。
+   *
    * @param jobId 任务 ID
    * @param sourceCode 源代码
    * @return 编译后的 Class
    * @throws IllegalStateException 编译失败时抛出
    */
-  private synchronized Class<?> compileWithCache(String jobId, String sourceCode) {
+  private Class<?> compileWithCache(String jobId, String sourceCode) {
     String cacheKey = jobId + ":" + sourceCode.hashCode();
     Class<?> cached = compiledClassCache.get(cacheKey);
     if (cached != null) {
       log.debug("[GlueJobHandler] 命中编译缓存: jobId={}", jobId);
       return cached;
     }
-
-    // P0-6: 使用安全编译配置（SecureASTCustomizer 沙箱隔离）
-    CompilerConfiguration config = createSecureCompilerConfiguration();
-    GroovyClassLoader classLoader = new GroovyClassLoader(getClass().getClassLoader(), config);
-    Class<?> clazz;
-    try {
-      clazz = classLoader.parseClass(sourceCode);
-    } catch (Exception e) {
-      throw new IllegalStateException("GLUE 代码编译失败（沙箱安全检查未通过）: " + e.getMessage(), e);
-    }
-    if (clazz == null) {
-      throw new IllegalStateException("GLUE 代码编译失败: 解析结果为空");
-    }
-    compiledClassCache.put(cacheKey, clazz);
-    classLoaderCache.put(cacheKey, classLoader);
-    log.info("[GlueJobHandler] GLUE 代码编译成功（沙箱模式）: jobId={} className={}", jobId, clazz.getName());
-    return clazz;
+    return compiledClassCache.computeIfAbsent(
+        cacheKey,
+        key -> {
+          // P0-6: 使用安全编译配置（SecureASTCustomizer 沙箱隔离）
+          CompilerConfiguration config = createSecureCompilerConfiguration();
+          GroovyClassLoader classLoader = new GroovyClassLoader(getClass().getClassLoader(), config);
+          try {
+            Class<?> clazz = classLoader.parseClass(sourceCode);
+            classLoaderCache.put(key, classLoader);
+            log.info(
+                "[GlueJobHandler] GLUE 代码编译成功（沙箱模式）: jobId={} className={}",
+                jobId,
+                clazz.getName());
+            return clazz;
+          } catch (Exception e) {
+            throw new IllegalStateException(
+                "GLUE 代码编译失败（沙箱安全检查未通过）: " + e.getMessage(), e);
+          }
+        });
   }
 
   /**

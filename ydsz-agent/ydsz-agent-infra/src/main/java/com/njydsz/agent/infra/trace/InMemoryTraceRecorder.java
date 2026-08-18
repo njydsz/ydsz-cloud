@@ -200,13 +200,16 @@ public class InMemoryTraceRecorder implements TraceRecorder {
     return traceMetas.values().stream()
         .sorted(Comparator.comparing(TraceMeta::getStartedAt).reversed())
         .limit(safeLimit)
-        .map(meta -> new com.njydsz.agent.domain.trace.TraceMeta(
-            meta.getTraceId(),
-            meta.getConversationId(),
-            meta.getAgentId(),
-            meta.getStartedAt(),
-            meta.getStatus(),
-            meta.getTotalDurationMs()))
+        .map(
+            meta ->
+                new com.njydsz.agent.domain.trace.TraceMeta(
+                    meta.getTraceId(),
+                    meta.getConversationId(),
+                    meta.getAgentId(),
+                    meta.getStartedAt(),
+                    meta.getStatus(),
+                    meta.getTotalDurationMs(),
+                    traces.getOrDefault(meta.getTraceId(), List.of()).size()))
         .toList();
   }
 
@@ -225,7 +228,8 @@ public class InMemoryTraceRecorder implements TraceRecorder {
         meta.getAgentId(),
         meta.getStartedAt(),
         meta.getStatus(),
-        meta.getTotalDurationMs());
+        meta.getTotalDurationMs(),
+        traces.getOrDefault(traceId, List.of()).size());
   }
 
   /** 链路元数据 */

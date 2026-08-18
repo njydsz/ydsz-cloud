@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,8 +82,8 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
   private final SearchIndexSyncer searchIndexSyncer;
 
-  /** 统一领域事件发布门面 */
-  private final DomainEventPublisher eventPublisher;
+  /** 统一领域事件发布门面（ObjectProvider 可选注入，common-event 未引入时安全降级，见《云顶编码规范》27.4） */
+  private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
   /**
    * 批量创建配置项
@@ -429,7 +430,11 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
    * @param configGroup 配置分组
    */
   private void publishConfigChangedEvent(String configKey, String configGroup) {
-    eventPublisher.publish(
+    DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
+    if (publisher == null) {
+      return;
+    }
+    publisher.publish(
         DomainEvent.builder()
             .aggregateType("Config")
             .aggregateId(configKey)

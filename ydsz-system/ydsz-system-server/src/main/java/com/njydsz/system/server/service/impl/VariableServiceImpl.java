@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -134,8 +135,8 @@ public class VariableServiceImpl implements VariableService {
   /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
   private final SearchIndexSyncer searchIndexSyncer;
 
-  /** 统一领域事件发布门面 */
-  private final DomainEventPublisher eventPublisher;
+  /** 统一领域事件发布门面（ObjectProvider 可选注入，common-event 未引入时安全降级，见《云顶编码规范》27.4） */
+  private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
   /** 统一 Excel 导出辅助类 */
   private final ExcelExportHelper excelExportHelper;
@@ -417,7 +418,11 @@ public class VariableServiceImpl implements VariableService {
    * @param action 操作描述（创建变量/更新变量/删除变量）
    */
   private void publishVariableChangedEvent(String variableKey, String action) {
-    eventPublisher.publish(
+    DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
+    if (publisher == null) {
+      return;
+    }
+    publisher.publish(
         DomainEvent.builder()
             .aggregateType("Variable")
             .aggregateId(variableKey)

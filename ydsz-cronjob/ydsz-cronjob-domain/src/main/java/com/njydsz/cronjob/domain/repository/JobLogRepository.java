@@ -115,6 +115,27 @@ public interface JobLogRepository {
   Optional<Long> findDurationP95(String jobId, LocalDateTime since);
 
   /**
+   * P0-F2: 统计全局（所有任务）在时间窗口内的执行次数和失败次数。
+   *
+   * <p>供全局 FAIL_RATE 告警规则（{@code jobId=NULL}）使用。全局规则无具体 jobId，
+   * 需按时间窗口聚合全量任务的失败率。
+   *
+   * @param since 时间窗口起点
+   * @return Map 包含 total 和 failed 字段
+   */
+  Map<String, Object> countSince(LocalDateTime since);
+
+  /**
+   * P0-F2: 统计全局（所有任务）在时间窗口内的 P95 耗时。
+   *
+   * <p>供全局 DURATION_P95 告警规则（{@code jobId=NULL}）使用。仅统计 SUCCESS 状态执行。
+   *
+   * @param since 时间窗口起点
+   * @return P95 耗时（毫秒）；无成功记录时返回空
+   */
+  Optional<Long> findDurationP95Global(LocalDateTime since);
+
+  /**
    * P2-2: 批量清理过期任务日志（硬删除，释放磁盘空间）。
    *
    * @param before 过期分界时间

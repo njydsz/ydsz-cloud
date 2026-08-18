@@ -3,6 +3,7 @@ package com.njydsz.cronjob.server.core;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
@@ -40,6 +41,7 @@ import com.njydsz.common.lock.strategy.LockStrategy;
  * @since 1.0.0
  */
 @Slf4j
+@Component
 public class JobLockManager {
 
   /**
@@ -103,5 +105,30 @@ public class JobLockManager {
   public boolean isLocked(String jobKey, Integer shardIndex) {
     String lockKey = LockKeyUtil.buildJobLockKey(jobKey, shardIndex);
     return distributedLocker.isLocked(lockKey);
+  }
+
+  /**
+   * P0-A2: 抢占分布式锁（通用 key 版本，供幂等锁等非任务锁场景使用）。
+   *
+   * <p>与 {@link #tryAcquireLock(String, Integer, long)} 的区别：直接使用调用方提供的完整 lockKey，
+   * 不经过 {@link LockKeyUtil} 的任务锁 key 构造（幂等锁 key 为 {@code ydsz:job:idempotent:{key}}）。
+   *
+   * @param lockKey 完整锁 key
+   * @param ttlMs 锁 TTL（毫秒）
+   * @return 锁持有者标识（clientId）；获取失败返回 null
+   */
+  public String tryAcquireLock(String lockKey, long ttlMs) {
+    return distributedLocker.tryLock(lockKey, ttlMs, TimeUnit.MILLISECONDS);
+  }
+
+  /**
+   * P0-A2: 安全释放分布式锁（通用 key 版本，仅持有者可释放）。
+   *
+   * @param lockKey 完整锁 key
+   * @param lockValue 锁持有者标识（{@link #tryAcquireLock(String, long)} 返回值）
+   * @return true=释放成功，false=锁已被其他节点持有或已过期
+   */
+  public boolean releaseLock(String lockKey, String lockValue) {
+    return distributedLocker.unlock(lockKey, lockValue);
   }
 }

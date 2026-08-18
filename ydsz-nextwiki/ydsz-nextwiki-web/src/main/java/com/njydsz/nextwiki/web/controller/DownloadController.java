@@ -299,10 +299,9 @@ public class DownloadController {
     setDownloadHeaders(response, node.getName(), node.getMimeType());
     try (InputStream is =
         storage.downloadAsStream(node.getBucketName(), node.getStorageKey())) {
-      long skipped = is.skip(start);
-      if (skipped < start) {
-        log.warn("[DownloadController] skip 不足: start={}, skipped={}", start, skipped);
-      }
+      // P0-5: InputStream.skip 不保证一次跳过指定字节数（可能返回更小值），
+      // 使用循环跳过确保大文件 Range 下载不丢字节
+      skipFully(is, start);
       long remaining = contentLength;
       byte[] buffer = new byte[8192];
       while (remaining > 0) {
@@ -318,6 +317,31 @@ public class DownloadController {
     } catch (Exception e) {
       log.error("[DownloadController] Range 下载失败: nodeId={}", node.getId(), e);
       throw new BusinessException(NextwikiExceptionCode.FILE_DOWNLOAD_FAILED);
+    }
+  }
+
+  /**
+   * 循环跳过指定字节数（处理 {@link InputStream#skip} 不保证一次跳够的问题）。
+   *
+   * <p>单次 skip 可能返回 0 或小于请求的字节数（尤其网络流/自定义流实现）， 循环直至跳够或在 EOF 处停止。
+   *
+   * @param is 输入流
+   * @param bytes 需要跳过的字节数
+   * @throws java.io.IOException 读取失败时抛出
+   */
+  private void skipFully(InputStream is, long bytes) throws java.io.IOException {
+    long remaining = bytes;
+    while (remaining > 0) {
+      long skipped = is.skip(remaining);
+      if (skipped > 0) {
+        remaining -= skipped;
+      } else if (is.read() == -1) {
+        // 已到 EOF，跳过结束
+        return;
+      } else {
+        // skip 返回 0 但读到一个字节，消耗该字节继续
+        remaining--;
+      }
     }
   }
 

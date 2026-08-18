@@ -82,6 +82,16 @@ public class JobLogRepositoryImpl implements JobLogRepository {
   }
 
   @Override
+  public Map<String, Object> countSince(LocalDateTime since) {
+    return jobLogMapper.countSince(since);
+  }
+
+  @Override
+  public Optional<Long> findDurationP95Global(LocalDateTime since) {
+    return Optional.ofNullable(jobLogMapper.selectDurationP95Global(since));
+  }
+
+  @Override
   public int cleanExpiredLogs(LocalDateTime before, int limit) {
     return jobLogMapper.cleanExpiredLogs(before, limit);
   }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -90,8 +91,8 @@ public class DictServiceImpl implements DictService {
   /** 字典仓储（聚合 DictTypeMapper / DictItemMapper） */
   private final DictRepository dictRepository;
 
-  /** 统一领域事件发布门面 */
-  private final DomainEventPublisher eventPublisher;
+  /** 统一领域事件发布门面（ObjectProvider 可选注入，common-event 未引入时安全降级，见《云顶编码规范》27.4） */
+  private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
   // ============================== CRUD ==============================
 
@@ -224,7 +225,11 @@ public class DictServiceImpl implements DictService {
    * @param action 变更动作描述
    */
   private void publishDictTypeChangedEvent(String typeCode, String action) {
-    eventPublisher.publish(
+    DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
+    if (publisher == null) {
+      return;
+    }
+    publisher.publish(
         DomainEvent.builder()
             .aggregateType("DictType")
             .aggregateId(typeCode)

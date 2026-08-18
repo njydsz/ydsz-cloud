@@ -99,6 +99,8 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   IMPORT_LEADER_NOT_FOUND("B30029", "userinfo.import.leader.not.found"),
   /** 导入文件读取失败 */
   IMPORT_READ_FAILED("B30030", "userinfo.import.read.failed"),
+  /** 内部接口访问被拒绝（缺少 X-Internal-Call 标记，P0-6） */
+  INTERNAL_ACCESS_FORBIDDEN("B30031", "userinfo.internal.access.forbidden", 403),
 
   // ==================== B31xxx 组织架构 ====================
   /** 部门不存在 */

@@ -28,6 +28,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import com.njydsz.common.event.gateway.EventPublishGateway;
+import com.njydsz.common.event.repository.OutboxRepository;
+import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.literule.api.RuleEngine;
@@ -55,6 +58,8 @@ import com.njydsz.literule.server.core.RuleCircuitBreaker;
 import com.njydsz.literule.server.core.RuleLifecycleService;
 import com.njydsz.literule.server.core.RuleMetrics;
 import com.njydsz.literule.server.core.RuleTimeoutExecutor;
+import com.njydsz.literule.server.distributed.RuleConfigOutboxGateway;
+import com.njydsz.literule.server.distributed.RuleConfigOutboxRelay;
 import com.njydsz.literule.server.engine.liteexpr.AviatorExpressionEngine;
 import com.njydsz.literule.server.expression.EmptyVariableRegistry;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
@@ -548,6 +553,7 @@ public class LiteRuleAutoConfiguration {
       ObjectProvider<RuleVersionRepository> versionRepoProvider,
       ObjectProvider<RuleConfigBroadcaster> broadcasterProvider,
       ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider,
+      ObjectProvider<OutboxService> outboxServiceProvider,
       ApplicationEventPublisher eventPublisher,
       LiteRuleProperties properties,
       RuleDefinitionMapper ruleDefinitionMapper) {
@@ -564,6 +570,12 @@ public class LiteRuleAutoConfiguration {
     if (broadcaster != null) {
       service.setBroadcaster(broadcaster);
       log.info("[LiteRule] 分布式规则广播已启用");
+    }
+    // P0-A1: 事务性 Outbox（可选，未引入 common-event 时自动跳过）
+    OutboxService outboxService = outboxServiceProvider.getIfAvailable();
+    if (outboxService != null) {
+      service.setOutboxService(outboxService);
+      log.info("[LiteRule] 规则变更事件已启用 Outbox 事务性广播（可失败重试）");
     }
     // 搜索索引同步（可选，未引入 common-search 时自动跳过）
     service.setSearchIndexEventBridgeProvider(searchIndexEventBridgeProvider);
@@ -585,6 +597,59 @@ public class LiteRuleAutoConfiguration {
         broadcaster != null,
         properties.isConflictDetectionEnabled());
     return service;
+  }
+
+  /**
+   * 规则配置变更 Outbox 中继（P0-A1 热更新一致性）
+   *
+   * <p>事务提交后捕获 OutboxMessage 中的规则刷新事件，执行低延迟广播（毫秒级）， 成功即标记 SENT；失败保持
+   * PENDING 交由 OutboxProcessor 兜底重试。 当广播器与 Outbox 仓储均存在时自动装配。
+   *
+   * @param broadcasterProvider 规则配置广播器（可选）
+   * @param outboxRepositoryProvider Outbox 仓储（可选）
+   * @return RuleConfigOutboxRelay 实例
+   * @since 1.0.0
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnBean(RuleConfigBroadcaster.class)
+  public RuleConfigOutboxRelay ruleConfigOutboxRelay(
+      RuleConfigBroadcaster broadcaster,
+      ObjectProvider<OutboxRepository> outboxRepositoryProvider,
+      ObjectProvider<String> nodeIdProvider) {
+    String nodeId = nodeIdProvider.getIfAvailable();
+    if (nodeId == null) {
+      nodeId = "literule-outbox-relay";
+    }
+    RuleConfigOutboxRelay relay =
+        new RuleConfigOutboxRelay(broadcaster, outboxRepositoryProvider.getIfAvailable(), nodeId);
+    log.info("[LiteRule] 规则变更 Outbox 中继已初始化（低延迟广播 + 失败重试兜底）");
+    return relay;
+  }
+
+  /**
+   * 规则配置变更 Outbox 投递网关（P0-A1 热更新一致性）
+   *
+   * <p>实现 {@link EventPublishGateway}，使 OutboxProcessor 轮询到 PENDING 的规则刷新消息时 能真正投递到
+   * Redis Pub/Sub（替代 Noop 网关），广播失败自动指数退避重试。 仅当容器中无其他事件投递网关时注册，避免与业务方
+   * RocketMQ/Kafka 网关冲突。
+   *
+   * @param broadcaster 规则配置广播器
+   * @param nodeIdProvider 当前节点标识（可选）
+   * @return RuleConfigOutboxGateway 实例
+   * @since 1.0.0
+   */
+  @Bean
+  @ConditionalOnMissingBean(EventPublishGateway.class)
+  @ConditionalOnBean(RuleConfigBroadcaster.class)
+  public EventPublishGateway ruleConfigOutboxGateway(
+      RuleConfigBroadcaster broadcaster, ObjectProvider<String> nodeIdProvider) {
+    String nodeId = nodeIdProvider.getIfAvailable();
+    if (nodeId == null) {
+      nodeId = "literule-outbox-gateway";
+    }
+    log.info("[LiteRule] 规则变更 Outbox 投递网关已注册（Redis Pub/Sub）");
+    return new RuleConfigOutboxGateway(broadcaster, nodeId);
   }
 
   /**

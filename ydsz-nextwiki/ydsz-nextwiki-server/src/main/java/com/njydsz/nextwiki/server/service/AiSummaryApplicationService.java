@@ -1,8 +1,5 @@
 package com.njydsz.nextwiki.server.service;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.nextwiki.server.cache.NextwikiCacheService;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
@@ -59,6 +57,10 @@ public class AiSummaryApplicationService {
 
   /** 最小句子长度 */
   private static final int MIN_SENTENCE_LENGTH = 10;
+
+  /** 句子分割正则（P1-4：缓存 Pattern，避免每次调用重新编译） */
+  private static final Pattern SENTENCE_SPLIT_PATTERN =
+      Pattern.compile("[^。！？.!?\\n]+[。！？.!?]?");
 
   /** 摘要缓存 TTL（秒）：24 小时 */
   private static final int SUMMARY_CACHE_TTL = 86400;
@@ -294,9 +296,8 @@ public class AiSummaryApplicationService {
 
   /** 句子分割 */
   private List<String> splitSentences(String content) {
-    // 中文句号、英文句号、感叹号、问号、换行
-    Pattern pattern = Pattern.compile("[^。！？.!?\\n]+[。！？.!?]?");
-    Matcher matcher = pattern.matcher(content);
+    // 中文句号、英文句号、感叹号、问号、换行（P1-4：复用缓存的正则）
+    Matcher matcher = SENTENCE_SPLIT_PATTERN.matcher(content);
     List<String> sentences = new ArrayList<>();
     while (matcher.find()) {
       String sentence = matcher.group().trim();
@@ -339,26 +340,14 @@ public class AiSummaryApplicationService {
   /**
    * 计算字符串的 SHA-256 哈希（用于缓存键）。
    *
+   * <p>P0-7：统一收敛到 ydsz-common-util 自研 {@link DigestUtils}， 移除自实现的
+   * {@code MessageDigest} 代码，符合云顶编码规范"禁止重复造轮子"要求。
+   *
    * @param text 输入文本
    * @return SHA-256 十六进制字符串
    */
   private static String sha256(String text) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      byte[] hash = digest.digest(text.getBytes(StandardCharsets.UTF_8));
-      StringBuilder hexString = new StringBuilder();
-      for (byte b : hash) {
-        String hex = Integer.toHexString(0xff & b);
-        if (hex.length() == 1) {
-          hexString.append('0');
-        }
-        hexString.append(hex);
-      }
-      return hexString.toString();
-    } catch (NoSuchAlgorithmException e) {
-      // SHA-256 是标准算法，不会到达这里
-      return String.valueOf(text.hashCode());
-    }
+    return DigestUtils.sha256Hex(text);
   }
 
   // ==================== LLM 模式 ====================

@@ -16,7 +16,9 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.userinfo.domain.dto.ForgotPasswordDTO;
 import com.njydsz.userinfo.domain.dto.SelfRegisterDTO;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
@@ -58,7 +60,11 @@ public class SelfServiceController {
    */
   @PostMapping("/send-verify-code")
   @Operation(summary = "发送验证码")
-  @RateLimit(resource = "userinfo.selfservice.sendCode", threshold = 5)
+  @RateLimit(
+      resource = "userinfo.selfservice.sendCode",
+      threshold = 3,
+      windowMillis = 60000,
+      dimension = RateLimitDimension.IP)
   public BaseResponse<Boolean> sendVerifyCode(@Valid @RequestBody SendVerifyCodeDTO dto) {
     return BaseResponse.success(selfServiceService.sendVerifyCode(dto));
   }
@@ -77,9 +83,14 @@ public class SelfServiceController {
       action = AuditAction.CREATE,
       content = "'用户自助注册: ' + #dto.username",
       excludeParams = {"password"})
+  @Idempotent(key = "ydsz:userinfo:selfservice:register:#{#dto.username}", ttlSeconds = 10)
   @PostMapping("/register")
   @Operation(summary = "自助注册")
-  @RateLimit(resource = "userinfo.selfservice.register", threshold = 5)
+  @RateLimit(
+      resource = "userinfo.selfservice.register",
+      threshold = 3,
+      windowMillis = 60000,
+      dimension = RateLimitDimension.IP)
   public BaseResponse<String> register(@Valid @RequestBody SelfRegisterDTO dto) {
     return BaseResponse.success(selfServiceService.register(dto));
   }
@@ -98,9 +109,16 @@ public class SelfServiceController {
       action = AuditAction.UPDATE,
       content = "'用户找回密码: ' + #dto.username",
       excludeParams = {"newPassword", "verifyCode"})
+  @Idempotent(
+      key = "ydsz:userinfo:selfservice:forgotPassword:#{#dto.username}",
+      ttlSeconds = 10)
   @PostMapping("/forgot-password")
   @Operation(summary = "找回密码")
-  @RateLimit(resource = "userinfo.selfservice.forgotPassword", threshold = 5)
+  @RateLimit(
+      resource = "userinfo.selfservice.forgotPassword",
+      threshold = 3,
+      windowMillis = 60000,
+      dimension = RateLimitDimension.IP)
   public BaseResponse<Boolean> forgotPassword(@Valid @RequestBody ForgotPasswordDTO dto) {
     return BaseResponse.success(selfServiceService.forgotPassword(dto));
   }

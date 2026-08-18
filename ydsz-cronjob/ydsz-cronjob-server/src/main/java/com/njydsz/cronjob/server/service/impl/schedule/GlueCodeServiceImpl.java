@@ -6,10 +6,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -18,6 +21,7 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 import com.njydsz.cronjob.domain.repository.GlueCodeRepository;
+import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
 
 import groovy.lang.GroovyClassLoader;
@@ -41,6 +45,9 @@ public class GlueCodeServiceImpl implements GlueCodeService {
 
   /** GLUE 代码 Repository（版本化源码 CRUD） */
   private final GlueCodeRepository glueCodeRepository;
+
+  /** P0-F4: 沙箱脚本执行器（可选注入，PYTHON/SHELL 在线测试使用，与 GlueJobHandler 执行路径一致） */
+  private final ObjectProvider<SandboxScriptExecutor> sandboxExecutorProvider;
 
   /**
    * {@inheritDoc}
@@ -177,8 +184,8 @@ public class GlueCodeServiceImpl implements GlueCodeService {
   /**
    * {@inheritDoc}
    *
-   * <p>仅支持 Groovy/Java 内存编译执行（GroovyClassLoader）， Python/Shell/JavaScript 需保存后通过任务调度执行。 执行结果包含
-   * success/result/durationMs/error 四个字段。
+   * <p>P0-F4: 支持全部 5 种语言在线测试——Groovy/Java 内存编译执行，Python/Shell 走进程沙箱
+   * （与 GlueJobHandler 执行路径一致），JavaScript 走 ScriptEngine。执行结果包含 success/result/durationMs/error 四个字段。
    *
    * @param sourceCode 源代码内容
    * @param language 编程语言
@@ -345,11 +352,21 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     return result;
   }
 
-  /** 根据语言执行代码（内存编译，不持久化）。 */
+  /**
+   * 根据语言执行代码（内存编译，不持久化）。
+   *
+   * <p>P0-F4 修复：原实现对 PYTHON/SHELL/JAVASCRIPT 返回"not supported in memory"，与
+   * {@code GlueJobHandler} 的实际执行能力（进程沙箱 / ScriptEngine）矛盾。现对齐执行路径：
+   *
+   * <ul>
+   *   <li>GROOVY/JAVA：GroovyClassLoader 内存编译执行（保留原有逻辑）
+   *   <li>PYTHON/SHELL：通过 {@link SandboxScriptExecutor} 进程沙箱执行（与 GlueJobHandler 一致，
+   *       参数经环境变量 JOB_PARAMS 传入）
+   *   <li>JAVASCRIPT：通过临时 ScriptEngine 执行（Nashorn/GraalJS，与 GlueJobHandler 一致）
+   * </ul>
+   */
   private Object executeByLanguage(String sourceCode, String language, String paramsJson)
       throws Exception {
-    // 委托给 GlueJobHandler 的编译执行逻辑
-    // 这里简化实现：Groovy 通过 GroovyClassLoader 执行，其他语言返回提示
     switch (language) {
       case "GROOVY", "JAVA" -> {
         try (GroovyClassLoader classLoader = new GroovyClassLoader()) {
@@ -370,9 +387,35 @@ public class GlueCodeServiceImpl implements GlueCodeService {
           }
         }
       }
-      case "PYTHON", "SHELL", "JAVASCRIPT" -> {
-        return language
-            + " code test is not supported in memory, please save and execute via job dispatch";
+      case "PYTHON", "SHELL" -> {
+        SandboxScriptExecutor executor = sandboxExecutorProvider.getIfAvailable();
+        if (executor == null) {
+          return language + " sandbox executor is not available, please save and execute via job dispatch";
+        }
+        Map<String, String> envVars = new HashMap<>();
+        envVars.put("JOB_PARAMS", paramsJson != null ? paramsJson : "{}");
+        SandboxScriptExecutor.SandboxResult sandboxResult =
+            executor.execute(sourceCode, language, (int) (TEST_TIMEOUT_MS / 1000), envVars);
+        if (!sandboxResult.success()) {
+          throw new IllegalStateException(
+              language + " 脚本执行失败: " + sandboxResult.errorMessage());
+        }
+        return sandboxResult.output();
+      }
+      case "JAVASCRIPT", "JS" -> {
+        ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
+        if (engine == null) {
+          engine = new ScriptEngineManager().getEngineByName("graal.js");
+        }
+        if (engine == null) {
+          engine = new ScriptEngineManager().getEngineByName("js");
+        }
+        if (engine == null) {
+          return "JavaScript engine is not available, please save and execute via job dispatch";
+        }
+        engine.put("paramsJson", paramsJson != null ? paramsJson : "{}");
+        Object jsResult = engine.eval(sourceCode);
+        return jsResult != null ? jsResult.toString() : "null";
       }
       default -> {
         return "Unsupported language: " + language;
@@ -384,7 +427,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
   private GlueCode getVersion(String jobId, Integer version) {
     LambdaQueryWrapper<GlueCode> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(GlueCode::getJobId, jobId).eq(GlueCode::getVersion, version);
-    return glueCodeMapper.selectOne(wrapper);
+    return glueCodeRepository.selectOne(wrapper);
   }
 
   /** 计算行级差异（简单实现）。 */

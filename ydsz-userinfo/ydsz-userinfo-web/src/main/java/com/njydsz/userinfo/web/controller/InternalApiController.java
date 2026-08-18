@@ -5,8 +5,11 @@ import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,6 +27,7 @@ import com.njydsz.userinfo.server.service.PostService;
 import com.njydsz.userinfo.server.service.RoleService;
 import com.njydsz.userinfo.server.service.UserAccountService;
 import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
+import com.njydsz.userinfo.web.annotation.RequireInternal;
 
 /**
  * 内部 API Controller（供跨服务 Feign 调用）
@@ -67,7 +71,9 @@ import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
  * @see com.njydsz.common.feign.client.UserInfoInternalClient Feign Client 接口
  */
 @Slf4j
+@Validated
 @RestController
+@RequireInternal
 @RequestMapping("/api/internal")
 @RequiredArgsConstructor
 @Tag(name = "内部 API", description = "跨服务 Feign 调用接口")
@@ -248,7 +254,8 @@ public class InternalApiController {
    */
   @PostMapping("/user/batch-names")
   @Operation(summary = "批量查询用户 ID → 真实姓名映射（NameAssembler 富化用）")
-  public BaseResponse<Map<String, String>> batchUserNames(@RequestBody List<String> userIds) {
+  public BaseResponse<Map<String, String>> batchUserNames(
+      @RequestBody @Valid @Size(max = 500) List<String> userIds) {
     return BaseResponse.success(userAccountService.batchUserNames(userIds));
   }
 
@@ -262,7 +269,8 @@ public class InternalApiController {
    */
   @PostMapping("/dept/batch-names")
   @Operation(summary = "批量查询部门 ID → 部门名映射（NameAssembler 富化用）")
-  public BaseResponse<Map<String, String>> batchDeptNames(@RequestBody List<String> deptIds) {
+  public BaseResponse<Map<String, String>> batchDeptNames(
+      @RequestBody @Valid @Size(max = 500) List<String> deptIds) {
     return BaseResponse.success(departmentService.batchNamesByIds(deptIds));
   }
 
@@ -274,7 +282,8 @@ public class InternalApiController {
    */
   @PostMapping("/RoleDO/batch-names")
   @Operation(summary = "批量查询角色 ID → 角色名映射（NameAssembler 富化用）")
-  public BaseResponse<Map<String, String>> batchRoleNames(@RequestBody List<String> roleIds) {
+  public BaseResponse<Map<String, String>> batchRoleNames(
+      @RequestBody @Valid @Size(max = 500) List<String> roleIds) {
     return BaseResponse.success(roleService.batchNamesByIds(roleIds));
   }
 
@@ -286,7 +295,8 @@ public class InternalApiController {
    */
   @PostMapping("/PostDO/batch-names")
   @Operation(summary = "批量查询岗位 ID → 岗位名映射（NameAssembler 富化用）")
-  public BaseResponse<Map<String, String>> batchPostNames(@RequestBody List<String> postIds) {
+  public BaseResponse<Map<String, String>> batchPostNames(
+      @RequestBody @Valid @Size(max = 500) List<String> postIds) {
     return BaseResponse.success(postService.batchNamesByIds(postIds));
   }
 
@@ -298,7 +308,8 @@ public class InternalApiController {
    */
   @PostMapping("/CompanyDO/batch-names")
   @Operation(summary = "批量查询公司 ID → 公司名映射（NameAssembler 富化用）")
-  public BaseResponse<Map<String, String>> batchCompanyNames(@RequestBody List<String> companyIds) {
+  public BaseResponse<Map<String, String>> batchCompanyNames(
+      @RequestBody @Valid @Size(max = 500) List<String> companyIds) {
     return BaseResponse.success(companyService.batchNamesByIds(companyIds));
   }
 }

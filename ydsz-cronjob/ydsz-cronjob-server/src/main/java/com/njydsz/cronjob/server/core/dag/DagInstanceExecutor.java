@@ -90,6 +90,58 @@ public class DagInstanceExecutor {
   }
 
   /**
+   * P0-F1: 重新派发指定 DAG 实例中所有 PENDING 且前置已成功的节点。
+   *
+   * <p>供 DAG 恢复（PAUSED → RUNNING）后使用。原实现（DagInstanceControlService）误调用
+   * {@link #execute(String)}，但 {@link #doExecute} 开头 CAS 要求实例为 PENDING 状态，
+   * RUNNING 实例会直接 return，导致恢复后 PENDING 节点永远不会被派发。
+   *
+   * <p>本方法直接扫描节点实例并逐个 {@link #dispatchNode}，不受实例状态守卫影响。
+   *
+   * @param dagInstanceId DAG 实例 ID
+   * @return 实际派发的节点数
+   */
+  public int redeliverPendingNodes(String dagInstanceId) {
+    JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
+    if (instance == null) {
+      log.warn("[DagInstance] 重投递失败, 实例不存在: instanceId={}", dagInstanceId);
+      return 0;
+    }
+    JobDag dag = dagMapper.selectById(instance.getDagId());
+    if (dag == null) {
+      log.warn("[DagInstance] 重投递失败, DAG 定义不存在: instanceId={} dagId={}", dagInstanceId, instance.getDagId());
+      return 0;
+    }
+    DagDefinition definition = dagDefinitionCodec.fromJson(dag.getDagDefinition());
+    List<JobDagNodeInstance> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+    int dispatched = 0;
+    for (JobDagNodeInstance node : nodes) {
+      if (!DagNodeStatus.PENDING.name().equals(node.getNodeStatus())) {
+        continue;
+      }
+      // 优先按原始 jobKey 查找；兼容 LOOP iter 后缀（历史数据）
+      DagNode dagNode = definition.findNode(node.getJobKey());
+      if (dagNode == null && node.getJobKey() != null && node.getJobKey().contains("#")) {
+        dagNode = definition.findNode(node.getJobKey().split("#")[0]);
+      }
+      if (dagNode == null) {
+        continue;
+      }
+      if (areAllPredecessorsSuccessful(dagInstanceId, dagNode.jobKey(), definition)) {
+        dispatchNode(dagInstanceId, instance.getDagId(), dagNode, definition);
+        dispatched++;
+      }
+    }
+    if (dispatched > 0) {
+      log.info(
+          "[DagInstance] 恢复后重新派发 PENDING 节点: instanceId={} count={}",
+          dagInstanceId,
+          dispatched);
+    }
+    return dispatched;
+  }
+
+  /**
    * 监听任务完成事件，更新 DAG 节点状态并触发后继。
    *
    * <p>通过查询节点实例表判断是否为 DAG 节点：
