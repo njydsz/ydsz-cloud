@@ -41,6 +41,9 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 @Mapper
 public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
 
+  /** 批量插入节点（P1-3：单条 SQL 批量写入，替代循环 insert，适用于文件夹批量复制场景） */
+  int insertBatch(@Param("list") List<FileNodeDO> entities);
+
   /** 查询子节点（未删除） */
   List<FileNodeDO> selectChildren(
       @Param("parentId") String parentId, @Param("tenantId") String tenantId);

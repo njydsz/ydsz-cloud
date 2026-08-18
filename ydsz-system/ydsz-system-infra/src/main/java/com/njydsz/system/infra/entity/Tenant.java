@@ -68,4 +68,27 @@ public class Tenant extends MpBaseEntity<String> {
 
   /** 备注 */
   private String remark;
+
+  /** 启用状态值（与 ydsz_tenant.status 列约定一致） */
+  private static final String STATUS_ENABLED = "ENABLED";
+
+  /**
+   * 判断租户是否已到期。
+   *
+   * <p>到期时间早于当前时间视为已到期（配合 {@code TenantExpireScheduler} 自动停用）。
+   *
+   * @return true 已到期；{@code expireAt} 为空视为永不过期
+   */
+  public boolean isExpired() {
+    return expireAt != null && expireAt.isBefore(LocalDateTime.now());
+  }
+
+  /**
+   * 判断租户当前是否可用（状态为启用且未到期）。
+   *
+   * @return true 可用
+   */
+  public boolean isActive() {
+    return STATUS_ENABLED.equals(getStatus()) && !isExpired();
+  }
 }

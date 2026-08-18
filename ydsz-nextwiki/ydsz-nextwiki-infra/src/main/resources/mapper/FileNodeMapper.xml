@@ -3,6 +3,23 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.FileNodeMapper">
 
+    <insert id="insertBatch">
+        INSERT INTO nw_file_node
+            (id, parent_id, name, node_type, suffix, size, storage_key, bucket_name, mime_type,
+             path, level, sort, current_version, file_hash, thumbnail_key, preview_ready, starred,
+             status, share_status, storage_class, deleted_time, original_path,
+             created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id)
+        VALUES
+        <foreach collection="list" item="node" separator=",">
+            (#{node.id}, #{node.parentId}, #{node.name}, #{node.nodeType}, #{node.suffix}, #{node.size},
+             #{node.storageKey}, #{node.bucketName}, #{node.mimeType}, #{node.path}, #{node.level}, #{node.sort},
+             #{node.currentVersion}, #{node.fileHash}, #{node.thumbnailKey}, #{node.previewReady}, #{node.starred},
+             #{node.status}, #{node.shareStatus}, #{node.storageClass}, #{node.deletedTime}, #{node.originalPath},
+             #{node.createdBy}, #{node.createdAt}, #{node.updatedBy}, #{node.updatedAt}, #{node.revision},
+             #{node.deleted}, #{node.tenantId})
+        </foreach>
+    </insert>
+
     <resultMap id="FileNodeResult" type="com.njydsz.nextwiki.infra.entity.FileNodeDO">
         <id column="id" property="id"/>
         <result column="parent_id" property="parentId"/>
