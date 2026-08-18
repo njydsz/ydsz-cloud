@@ -33,7 +33,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.dto.TestCaseBatchRunDTO;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.dto.post.RuleTestCasePostDTO;
 import com.njydsz.literule.domain.entity.RuleTestCaseDO;
 import com.njydsz.literule.domain.vo.RuleTestCaseVO;

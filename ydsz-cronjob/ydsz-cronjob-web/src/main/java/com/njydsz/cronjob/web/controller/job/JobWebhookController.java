@@ -28,7 +28,7 @@ import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
 import com.njydsz.cronjob.domain.entity.job.JobWebhook;

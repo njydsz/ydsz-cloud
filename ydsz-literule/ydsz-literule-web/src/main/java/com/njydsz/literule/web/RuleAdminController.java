@@ -39,7 +39,7 @@ import com.njydsz.literule.api.dto.ExpressionValidateDTO;
 import com.njydsz.literule.api.dto.RuleABTestDTO;
 import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.api.expression.ExpressionValidationResult;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.domain.vo.ExpressionValidationResultVO;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;

@@ -26,7 +26,7 @@ import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.domain.dto.template.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.template.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.template.TemplateQueryDTO;

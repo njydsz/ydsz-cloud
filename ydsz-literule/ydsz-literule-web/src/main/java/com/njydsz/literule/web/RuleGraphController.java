@@ -27,7 +27,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.expression.ExpressionFunctionDef;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
 import com.njydsz.literule.domain.vo.ExpressionPreviewResultVO;
 import com.njydsz.literule.domain.vo.RuleChainGraphVO;

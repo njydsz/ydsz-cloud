@@ -26,7 +26,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
 import com.njydsz.cronjob.domain.dto.post.AlertRulePostDTO;
 import com.njydsz.cronjob.domain.dto.put.AlertRulePutDTO;

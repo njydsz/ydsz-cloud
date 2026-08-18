@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.entity.dag.JobDag;
 import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;

@@ -34,7 +34,7 @@ import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.entity.RuleExecutionTraceDO;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;

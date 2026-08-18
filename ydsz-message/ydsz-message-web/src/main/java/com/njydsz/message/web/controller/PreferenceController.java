@@ -22,7 +22,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.domain.dto.config.PreferenceUpsertDTO;
 import com.njydsz.message.domain.vo.MsgPreferenceVO;
 import com.njydsz.message.server.service.config.PreferenceService;

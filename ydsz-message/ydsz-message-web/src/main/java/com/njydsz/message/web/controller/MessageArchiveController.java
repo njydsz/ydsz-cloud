@@ -18,7 +18,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.service.archive.MessageArchiveService;

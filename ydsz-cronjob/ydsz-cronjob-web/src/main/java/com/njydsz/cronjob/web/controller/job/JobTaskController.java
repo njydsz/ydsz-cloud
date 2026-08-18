@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
-import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.entity.job.JobTask;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
 import com.njydsz.cronjob.infra.mapper.job.JobTaskMapper;

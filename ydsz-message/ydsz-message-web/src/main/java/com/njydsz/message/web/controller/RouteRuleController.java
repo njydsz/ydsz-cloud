@@ -27,7 +27,7 @@ import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.domain.dto.config.RouteRuleUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgRouteRule;
 import com.njydsz.message.domain.vo.MsgRouteRuleVO;

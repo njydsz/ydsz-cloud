@@ -34,7 +34,7 @@ import com.njydsz.literule.api.dto.RuleDelegateDTO;
 import com.njydsz.literule.api.dto.RuleRejectDTO;
 import com.njydsz.literule.api.dto.RuleStatusChangeDTO;
 import com.njydsz.literule.api.dto.RuleSubmitReviewDTO;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.domain.vo.ApprovalFlowVO;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;

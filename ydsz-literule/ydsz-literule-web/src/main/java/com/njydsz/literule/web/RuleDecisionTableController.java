@@ -34,7 +34,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.DecisionTableDefinition;
 import com.njydsz.literule.api.spi.DecisionTableEvalProvider;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
 import com.njydsz.literule.domain.entity.DecisionTable;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;

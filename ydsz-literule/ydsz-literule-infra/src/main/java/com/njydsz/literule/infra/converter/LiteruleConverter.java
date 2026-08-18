@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.converter;
+package com.njydsz.literule.infra.converter;
 
 import java.util.List;
 

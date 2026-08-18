@@ -31,7 +31,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RulePack;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.vo.InstallResultVO;
 import com.njydsz.literule.domain.vo.PackDiffVO;
 import com.njydsz.literule.domain.vo.PackUpdateInfoVO;

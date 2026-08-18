@@ -22,7 +22,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.domain.dto.config.UnsubscribeQueryDTO;
 import com.njydsz.message.domain.entity.config.MsgSubscription;
 import com.njydsz.message.domain.vo.MsgSubscriptionVO;

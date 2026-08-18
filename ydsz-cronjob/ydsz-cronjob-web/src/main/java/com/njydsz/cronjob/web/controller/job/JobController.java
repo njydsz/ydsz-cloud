@@ -37,7 +37,7 @@ import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
-import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.dto.BatchResult;
 import com.njydsz.cronjob.domain.dto.job.JobBatchDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;

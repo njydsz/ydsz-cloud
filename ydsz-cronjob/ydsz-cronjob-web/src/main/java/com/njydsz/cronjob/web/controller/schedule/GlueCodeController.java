@@ -27,7 +27,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
-import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
 
