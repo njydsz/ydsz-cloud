@@ -40,8 +40,12 @@ import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.LoginVO;
+import com.njydsz.common.safe.annotation.SecondaryAuth;
+import com.njydsz.common.safe.annotation.SensitiveLevel;
+import com.njydsz.userinfo.server.aspect.SecondaryAuthAspect;
 import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.MfaService;
+import com.njydsz.userinfo.server.auth.SecondaryAuthService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.web.dto.RefreshRequest;
 
@@ -84,6 +88,9 @@ public class AuthController {
 
   /** 双因素认证服务（登录短信验证码发送） */
   private final MfaService mfaService;
+
+  /** P0-2: 场景化二级认证服务 */
+  private final SecondaryAuthService secondaryAuthService;
 
   /** P2-6: 可信代理配置（决定是否信任转发头） */
   private final UserInfoProperties properties;
@@ -449,6 +456,79 @@ public class AuthController {
   public YdszResponse<Void> kickOutSession(@PathVariable String token) {
     authService.logout(token);
     return YdszResponse.success();
+  }
+
+  /**
+   * 场景化二级认证（P0-2 标准化）。
+   *
+   * <p>校验当前登录用户的密码，通过后写入场景化的 Redis 安全标记，后续标记场景下的敏感操作无需再次验证。
+   * 不同场景独立验证、独立过期，比全局 {@code /sensitive-verify} 更灵活安全。
+   *
+   * <p><b>流程：</b>
+   *
+   * <ol>
+   *   <li>前端调用此端点，传入场景标识（scene）和当前密码</li>
+   *   <li>后端校验密码通过后，写入场景化 Redis 标记：{@code userinfo:safe:{scene}:{userId}}</li>
+   *   <li>后续标注了 {@code @SecondaryAuth(scene="xxx")} 的方法自动校验该标记</li>
+   * </ol>
+   *
+   * <p><b>常用场景：</b>{@code password_change}、{@code role_assign}、{@code data_export}、{@code tenant_config}
+   *
+   * @param request 二级认证请求（含密码和场景标识）
+   * @return 认证结果（含实际生效的 TTL）
+   */
+  @Audit(
+      module = "认证管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'场景化二级认证: scene=' + #request.scene + ', level=' + #request.level")
+  @RateLimit(resource = "userinfo.auth.secondaryAuth", threshold = 10)
+  @PostMapping("/secondary-auth")
+  @Operation(
+      summary = "场景化二级认证",
+      description = "校验密码后写入场景化安全标记，用于 @SecondaryAuth 注解鉴权")
+  public YdszResponse<Map<String, Object>> secondaryAuth(@RequestBody @Valid SecondaryAuthRequest request) {
+    // 计算实际生效 TTL（CRITICAL 级别自动缩短）
+    int ttlSeconds = request.getTtlSeconds() != null ? request.getTtlSeconds() : 300;
+    SensitiveLevel level = request.getLevel() != null ? request.getLevel() : SensitiveLevel.HIGH;
+
+    // 构造 SecondaryAuth 注解实例以复用 TTL 计算逻辑
+    SecondaryAuth annotation = new SecondaryAuth() {
+      @Override
+      public Class<SecondaryAuth> annotationType() {
+        return SecondaryAuth.class;
+      }
+
+      @Override
+      public String scene() {
+        return request.getScene();
+      }
+
+      @Override
+      public int ttlSeconds() {
+        return ttlSeconds;
+      }
+
+      @Override
+      public SensitiveLevel level() {
+        return level;
+      }
+
+      @Override
+      public String value() {
+        return "secondary-auth-" + request.getScene();
+      }
+    };
+    java.time.Duration effectiveTtl = SecondaryAuthAspect.resolveEffectiveTtl(annotation);
+
+    // 开启安全操作模式
+    secondaryAuthService.openSafe(request.getPassword(), request.getScene(), effectiveTtl);
+
+    Map<String, Object> result = new HashMap<>();
+    result.put("scene", request.getScene());
+    result.put("level", level.name());
+    result.put("ttlSeconds", effectiveTtl.getSeconds());
+    return YdszResponse.success(result);
   }
 
   /**
