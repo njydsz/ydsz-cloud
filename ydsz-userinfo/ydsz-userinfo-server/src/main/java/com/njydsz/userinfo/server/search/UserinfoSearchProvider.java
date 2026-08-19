@@ -15,7 +15,7 @@ import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
-import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
@@ -170,7 +170,7 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccountVO> {
   }
 
   public List<String> getAllDocumentIds(String tenantId) {
-    UserAccountPageQueryDTO query = new UserAccountPageQueryDTO();
+    UserAccountPageQuery query = new UserAccountPageQuery();
     query.setTenantId(tenantId);
     return userAccountRepository.list(query).stream()
         .map(UserAccountVO::getId)

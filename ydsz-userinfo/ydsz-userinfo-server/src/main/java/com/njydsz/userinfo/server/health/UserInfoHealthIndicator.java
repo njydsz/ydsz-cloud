@@ -10,7 +10,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
-import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.query.RolePageQuery;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
@@ -58,7 +58,7 @@ public class UserInfoHealthIndicator extends AbstractModuleHealthIndicator {
 
     // 用户表探针
     checkTableProbeWithValue(
-        builder, "userCount", () -> userAccountRepository.count(new UserAccountPageQueryDTO()));
+        builder, "userCount", () -> userAccountRepository.count(new UserAccountPageQuery()));
 
     // 角色表探针
     checkTableProbeWithValue(

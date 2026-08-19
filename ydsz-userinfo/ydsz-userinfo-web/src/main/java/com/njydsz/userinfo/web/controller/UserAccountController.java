@@ -3,7 +3,6 @@ package com.njydsz.userinfo.web.controller;
 import java.io.IOException;
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,7 +25,6 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.annotation.SensitiveOperation;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -37,7 +35,7 @@ import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.SensitiveVerifyDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserImportResultDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -108,9 +106,8 @@ public class UserAccountController {
    */
   @GetMapping("/page")
   @Operation(summary = "分页查询用户列表")
-  public PageResponse<List<UserAccountVO>> page(@Valid UserAccountPageQueryDTO query) {
-    Page<UserAccountVO> page = service.page(query);
-    return PageResponses.success(page);
+  public YdszResponse<PageResponse<List<UserAccountVO>>> page(@Valid UserAccountPageQuery query) {
+    return YdszResponse.success(service.page(query));
   }
 
   /**

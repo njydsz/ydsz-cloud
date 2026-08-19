@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
@@ -90,7 +90,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   }
 
   @Override
-  public PageResponse<List<UserAccountVO>> page(UserAccountPageQueryDTO query) {
+  public PageResponse<List<UserAccountVO>> page(UserAccountPageQuery query) {
     Page<UserAccountDO> page = new Page<>(query.getPageNum(), query.getPageSize());
     LambdaQueryWrapper<UserAccountDO> wrapper = buildWrapper(query);
     Page<UserAccountDO> result = userAccountMapper.selectPage(page, wrapper);
@@ -103,7 +103,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   }
 
   @Override
-  public List<UserAccountVO> list(UserAccountPageQueryDTO query) {
+  public List<UserAccountVO> list(UserAccountPageQuery query) {
     LambdaQueryWrapper<UserAccountDO> wrapper = buildWrapper(query);
     List<UserAccountDO> entities = userAccountMapper.selectList(wrapper);
     return converter.userAccountListToVO(entities);
@@ -116,7 +116,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   }
 
   @Override
-  public long count(UserAccountPageQueryDTO query) {
+  public long count(UserAccountPageQuery query) {
     LambdaQueryWrapper<UserAccountDO> wrapper = buildWrapper(query);
     return userAccountMapper.selectCount(wrapper);
   }
@@ -233,7 +233,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
    * @param query 分页查询参数
    * @return LambdaQueryWrapper
    */
-  private LambdaQueryWrapper<UserAccountDO> buildWrapper(UserAccountPageQueryDTO query) {
+  private LambdaQueryWrapper<UserAccountDO> buildWrapper(UserAccountPageQuery query) {
     LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
     if (query.getUsername() != null && !query.getUsername().isBlank()) {
       wrapper.like(UserAccountDO::getUsername, query.getUsername());

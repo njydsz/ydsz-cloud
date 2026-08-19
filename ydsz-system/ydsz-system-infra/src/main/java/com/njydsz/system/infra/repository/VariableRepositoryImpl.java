@@ -105,14 +105,4 @@ public class VariableRepositoryImpl implements VariableRepository {
   public boolean deleteById(String id) {
     return variableMapper.deleteById(id) > 0;
   }
-
-  @Override
-  public List<VariableVO> findByTenantId(String tenantId) {
-    LambdaQueryWrapper<Variable> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Variable::getDeleted, 0);
-    if (tenantId != null && !tenantId.isBlank()) {
-      wrapper.eq(Variable::getTenantId, tenantId);
-    }
-    return converter.variableListToVO(variableMapper.selectList(wrapper));
-  }
 }

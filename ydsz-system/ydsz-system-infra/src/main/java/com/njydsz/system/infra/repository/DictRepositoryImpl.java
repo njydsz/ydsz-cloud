@@ -229,14 +229,4 @@ public class DictRepositoryImpl implements DictRepository {
     wrapper.eq(DictItem::getStatus, "ENABLED").eq(DictItem::getDeleted, 0);
     return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
-
-  @Override
-  public List<DictItemVO> findByTenantId(String tenantId) {
-    LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DictItem::getDeleted, 0);
-    if (tenantId != null && !tenantId.isBlank()) {
-      wrapper.eq(DictItem::getTenantId, tenantId);
-    }
-    return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
-  }
 }

@@ -4,14 +4,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
 /**
@@ -63,9 +61,9 @@ public interface UserAccountService {
    * 精确。
    *
    * @param query 查询条件
-   * @return 分页结果（{@link Page} 包含 total/records）
+   * @return 分页结果（{@link PageResponse} 包含 total/pageNum/pageSize/data）
    */
-  Page<UserAccountVO> page(UserAccountPageQueryDTO query);
+  PageResponse<List<UserAccountVO>> page(UserAccountPageQuery query);
 
   /**
    * 查询全部用户列表（无分页）。

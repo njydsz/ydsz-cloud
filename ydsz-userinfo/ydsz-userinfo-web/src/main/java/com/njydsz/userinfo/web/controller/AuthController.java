@@ -279,8 +279,6 @@ public class AuthController {
         com.njydsz.common.json.YdszJson.toJson(codeData),
         DEVICE_CODE_TTL_SECONDS);
 
-    log.info("SSO device code generated: user={}", userInfo.getUsername());
-
     Map<String, Object> result = new HashMap<>();
     result.put("deviceCode", code);
     result.put("expiresIn", DEVICE_CODE_TTL_SECONDS);
@@ -329,7 +327,6 @@ public class AuthController {
     // 2. 解析用户信息
     Map<String, String> codeData = com.njydsz.common.json.YdszJson.fromJson(codeDataJson, Map.class);
     if (codeData == null || codeData.get("userId") == null) {
-      log.warn("SSO device code data corrupted: code={}", code);
       throw new BusinessException(UserInfoExceptionCode.SSO_DEVICE_CODE_INVALID);
     }
 
@@ -341,8 +338,6 @@ public class AuthController {
 
     String accessToken = tokenService.issueAccessToken(userInfo);
     String refreshToken = tokenService.issueRefreshToken(userInfo);
-
-    log.info("SSO device code exchanged: user={}", userInfo.getUsername());
 
     LoginVO loginVO = new LoginVO();
     loginVO.setAccessToken(accessToken);

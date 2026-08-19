@@ -19,7 +19,7 @@ import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserImportResultDTO;
 import com.njydsz.userinfo.server.dto.UserImportDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -135,7 +135,7 @@ public class UserExcelServiceImpl implements UserExcelService {
   @Override
   public byte[] exportUsers() {
     // 查询全部用户
-    UserAccountPageQueryDTO query = new UserAccountPageQueryDTO();
+    UserAccountPageQuery query = new UserAccountPageQuery();
     query.addDescOrder("createdAt");
     List<UserAccountVO> voList = userAccountRepository.list(query);
 

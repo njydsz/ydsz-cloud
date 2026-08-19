@@ -162,18 +162,4 @@ public interface ConfigRepository {
    */
   List<ConfigVO> findByGroup(String configGroup);
 
-  /**
-   * 查询全部未删除配置（用于搜索索引全量重建）。
-   *
-   * @return 未删除配置 VO 列表
-   */
-  List<ConfigVO> findAll();
-
-  /**
-   * 按租户 ID 查询未删除配置（用于搜索索引全量重建）。
-   *
-   * @param tenantId 租户 ID（null 或空表示全量）
-   * @return 未删除配置 VO 列表
-   */
-  List<ConfigVO> findByTenantId(String tenantId);
 }

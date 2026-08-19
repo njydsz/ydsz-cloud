@@ -6,7 +6,7 @@ import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
@@ -97,7 +97,7 @@ public interface UserAccountRepository {
    * @param query 分页查询参数
    * @return 分页结果（包含用户 VO 列表）
    */
-  PageResponse<List<UserAccountVO>> page(UserAccountPageQueryDTO query);
+  PageResponse<List<UserAccountVO>> page(UserAccountPageQuery query);
 
   /**
    * 条件查询用户列表。
@@ -105,7 +105,7 @@ public interface UserAccountRepository {
    * @param query 查询参数
    * @return 用户 VO 列表
    */
-  List<UserAccountVO> list(UserAccountPageQueryDTO query);
+  List<UserAccountVO> list(UserAccountPageQuery query);
 
   /**
    * 批量根据 ID 查询用户账号。
@@ -121,7 +121,7 @@ public interface UserAccountRepository {
    * @param query 查询参数
    * @return 用户数量
    */
-  long count(UserAccountPageQueryDTO query);
+  long count(UserAccountPageQuery query);
 
   /**
    * 判断用户名是否已存在。

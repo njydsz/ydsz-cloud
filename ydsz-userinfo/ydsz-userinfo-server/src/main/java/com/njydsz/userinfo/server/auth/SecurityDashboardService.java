@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
 import com.njydsz.userinfo.domain.vo.LoginFailDistributionVO;
@@ -202,7 +202,7 @@ public class SecurityDashboardService {
    * @return MFA 覆盖率统计
    */
   public MfaCoverageVO getMfaCoverage() {
-    long totalUsers = userAccountRepository.count(new UserAccountPageQueryDTO());
+    long totalUsers = userAccountRepository.count(new UserAccountPageQuery());
 
     long mfaEnabledUsers = 0;
     try {
@@ -248,7 +248,7 @@ public class SecurityDashboardService {
     }
 
     // 低风险：总启用用户数 - 高风险 - 中风险
-    long totalUsers = userAccountRepository.count(new UserAccountPageQueryDTO());
+    long totalUsers = userAccountRepository.count(new UserAccountPageQuery());
     long lowRisk = Math.max(totalUsers - highRisk - mediumRisk, 0);
 
     return new RiskLevelDistributionVO((int) highRisk, (int) mediumRisk, (int) lowRisk);
@@ -300,9 +300,9 @@ public class SecurityDashboardService {
    */
   private SecurityDashboardVO computeDashboard() {
     // 用户统计
-    long totalUsers = userAccountRepository.count(new UserAccountPageQueryDTO());
+    long totalUsers = userAccountRepository.count(new UserAccountPageQuery());
 
-    UserAccountPageQueryDTO activeQuery = new UserAccountPageQueryDTO();
+    UserAccountPageQuery activeQuery = new UserAccountPageQuery();
     activeQuery.setStatus("1");
     long activeUsers = userAccountRepository.count(activeQuery);
 

@@ -227,12 +227,4 @@ public interface DictRepository {
    * @return 启用且未删除的字典项 VO 列表
    */
   List<DictItemVO> findEnabledItems();
-
-  /**
-   * 按租户 ID 查询未删除字典项（用于搜索索引全量重建）。
-   *
-   * @param tenantId 租户 ID（null 或空表示全量）
-   * @return 未删除字典项 VO 列表
-   */
-  List<DictItemVO> findByTenantId(String tenantId);
 }

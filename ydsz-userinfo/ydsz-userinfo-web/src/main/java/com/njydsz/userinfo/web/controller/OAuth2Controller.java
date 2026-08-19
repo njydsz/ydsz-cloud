@@ -126,6 +126,15 @@ public class OAuth2Controller {
   /** OIDC scope：openid（OpenID Connect Core 1.0 §3.1.2.1） */
   private static final String SCOPE_OPENID = "openid";
 
+  /** scope 显示名称映射 */
+  private static final Map<String, String> SCOPE_DISPLAY_NAMES = Map.of(
+      "openid", "OpenID Connect 身份认证",
+      "profile", "个人资料访问",
+      "email", "邮箱地址访问",
+      "tenant", "租户信息访问",
+      "read", "读取权限",
+      "write", "写入权限");
+
   /** P0-4: 授权码随机数生成器（SecureRandom，128 位熵替代可枚举的雪花 ID） */
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
@@ -298,6 +307,110 @@ public class OAuth2Controller {
         codeChallenge != null,
         state != null);
     return YdszResponse.success(code);
+  }
+
+  /**
+   * 获取 OAuth2 授权同意信息（用户授权页面展示用）。
+   *
+   * <p>返回当前用户、客户端信息、请求的 scope 列表，供前端渲染用户授权同意界面。
+   *
+   * @param authorization Authorization 请求头（Bearer access_token）
+   * @param clientId 客户端 ID
+   * @param redirectUri 回调地址
+   * @param scope 请求的 scope（可选）
+   * @return 授权同意上下文（用户、客户端、scope 详情）
+   */
+  @GetMapping("/consent")
+  @Operation(summary = "获取授权同意信息", description = "返回客户端和 scope 信息，供用户授权页面展示")
+  public YdszResponse<Map<String, Object>> getConsentInfo(
+      @RequestHeader(HeaderConstants.AUTHORIZATION) String authorization,
+      @RequestParam String clientId,
+      @RequestParam String redirectUri,
+      @RequestParam(required = false) String scope) {
+
+    // 1. 认证检查
+    if (authorization == null || !authorization.startsWith("Bearer ")) {
+      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
+    }
+    String accessToken = authorization.substring(7);
+    UserInfo userInfo = tokenService.parseAccessToken(accessToken);
+    if (userInfo == null || !tokenService.validateAccessToken(accessToken)) {
+      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
+    }
+
+    // 2. 校验 clientId 和 redirectUri
+    UserInfoProperties.OAuth2Client clientConfig = properties.getOauth2Clients().get(clientId);
+    if (clientConfig == null) {
+      throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
+    }
+    List<String> redirectUris = clientConfig.getRedirectUris();
+    if (redirectUris == null || redirectUris.isEmpty() || !redirectUris.contains(redirectUri)) {
+      throw new BusinessException(UserInfoExceptionCode.OAUTH2_REDIRECT_URI_MISMATCH);
+    }
+
+    // 3. 解析 scope 并构建显示信息
+    Set<String> requestedScopes = parseScopes(scope);
+    List<Map<String, String>> scopeDetails = requestedScopes.stream()
+        .sorted()
+        .map(s -> {
+          Map<String, String> detail = new HashMap<>();
+          detail.put("scope", s);
+          detail.put("displayName", SCOPE_DISPLAY_NAMES.getOrDefault(s, s));
+          return detail;
+        })
+        .toList();
+
+    // 4. 构建响应
+    Map<String, Object> consentInfo = new HashMap<>();
+    consentInfo.put("user", Map.of(
+        "userId", userInfo.getUserId(),
+        "username", userInfo.getUsername()));
+    consentInfo.put("client", Map.of(
+        "clientId", clientId,
+        "clientName", clientConfig.getClientName() != null ? clientConfig.getClientName() : clientId,
+        "redirectUri", redirectUri));
+    consentInfo.put("scopes", scopeDetails);
+    consentInfo.put("scopeString", scope != null ? scope : "");
+
+    return YdszResponse.success(consentInfo);
+  }
+
+  /**
+   * 提交 OAuth2 授权同意（用户确认授权）。
+   *
+   * <p>用户确认授权后，生成授权码并返回（与 authorize() 逻辑一致，但作为独立的 consent 流程）。
+   *
+   * @param authorization Authorization 请求头（Bearer access_token）
+   * @param clientId 客户端 ID
+   * @param redirectUri 回调地址
+   * @param state 防 CSRF 随机串（可选）
+   * @param scope 授权范围（可选）
+   * @param nonce OIDC nonce（可选）
+   * @param codeChallenge PKCE code_challenge（可选）
+   * @param codeChallengeMethod PKCE code_challenge_method（可选）
+   * @return OAuth2 授权码
+   */
+  @Audit(
+      module = "OAuth2",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'OAuth2 用户授权同意: clientId=' + #clientId")
+  @PostMapping("/consent")
+  @Operation(summary = "提交授权同意", description = "用户确认授权后生成授权码")
+  @RateLimit(resource = "userinfo.oauth2.consent", threshold = 10)
+  public YdszResponse<String> submitConsent(
+      @RequestHeader(HeaderConstants.AUTHORIZATION) String authorization,
+      @RequestParam String clientId,
+      @RequestParam String redirectUri,
+      @RequestParam(required = false) String state,
+      @RequestParam(required = false) String scope,
+      @RequestParam(required = false) String nonce,
+      @RequestParam(required = false) String codeChallenge,
+      @RequestParam(required = false) String codeChallengeMethod) {
+
+    // 直接调用 authorize() 生成授权码
+    return authorize(authorization, clientId, redirectUri, state, scope, nonce,
+        codeChallenge, codeChallengeMethod);
   }
 
   /**

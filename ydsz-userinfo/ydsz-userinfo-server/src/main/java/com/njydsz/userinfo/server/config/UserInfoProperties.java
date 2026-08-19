@@ -270,6 +270,9 @@ public class UserInfoProperties {
    */
   @Data
   public static class OAuth2Client {
+    /** 客户端名称（显示在用户授权同意界面上） */
+    private String clientName;
+
     /** 客户端密钥：与 clientId 配对，在 /token 端点强制校验，建议存储在密钥管理服务 */
     private String clientSecret;
 

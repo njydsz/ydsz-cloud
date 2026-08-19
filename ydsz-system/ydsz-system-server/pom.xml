@@ -115,5 +115,9 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-</dependencies>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-system-domain</artifactId>
+        </dependency>
+    </dependencies>
 </project>

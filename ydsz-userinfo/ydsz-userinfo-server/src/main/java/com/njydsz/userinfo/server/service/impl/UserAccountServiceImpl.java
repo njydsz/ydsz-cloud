@@ -24,7 +24,7 @@ import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserRoleDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
@@ -112,14 +112,8 @@ public class UserAccountServiceImpl implements UserAccountService {
    */
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "id")
-  public Page<UserAccountVO> page(UserAccountPageQueryDTO query) {
-    PageResponse<List<UserAccountVO>> pageResponse = userAccountRepository.page(query);
-    Page<UserAccountVO> voPage = new Page<>(
-        pageResponse.getPageNum() != null ? pageResponse.getPageNum() : query.getEffectivePageNum(),
-        pageResponse.getPageSize() != null ? pageResponse.getPageSize() : query.getEffectivePageSize(),
-        pageResponse.getTotal() != null ? pageResponse.getTotal() : 0L);
-    voPage.setRecords(pageResponse.getData() != null ? pageResponse.getData() : List.of());
-    return voPage;
+  public PageResponse<List<UserAccountVO>> page(UserAccountPageQuery query) {
+    return userAccountRepository.page(query);
   }
 
   /**
@@ -130,7 +124,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "id")
   public List<UserAccountVO> list() {
-    return userAccountRepository.list(new UserAccountPageQueryDTO());
+    return userAccountRepository.list(new UserAccountPageQuery());
   }
 
   /**
@@ -430,7 +424,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (positionCode == null || positionCode.isBlank()) {
       return Collections.emptyList();
     }
-    UserAccountPageQueryDTO query = new UserAccountPageQueryDTO();
+    UserAccountPageQuery query = new UserAccountPageQuery();
     query.setPositionCode(positionCode);
     return userAccountRepository.list(query).stream()
         .map(UserAccountVO::getId)

@@ -193,19 +193,5 @@ public class ConfigRepositoryImpl implements ConfigRepository {
     return converter.configListToVO(configMapper.selectList(wrapper));
   }
 
-  @Override
-  public List<ConfigVO> findAll() {
-    return converter.configListToVO(
-        configMapper.selectList(new LambdaQueryWrapper<Config>().eq(Config::getDeleted, 0)));
-  }
 
-  @Override
-  public List<ConfigVO> findByTenantId(String tenantId) {
-    LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getDeleted, 0);
-    if (tenantId != null && !tenantId.isBlank()) {
-      wrapper.eq(Config::getTenantId, tenantId);
-    }
-    return converter.configListToVO(configMapper.selectList(wrapper));
-  }
 }

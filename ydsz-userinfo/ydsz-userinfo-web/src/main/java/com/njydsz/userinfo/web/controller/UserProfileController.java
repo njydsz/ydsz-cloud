@@ -13,8 +13,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.MfaOperationDTO;
 import com.njydsz.userinfo.domain.dto.UserProfileUpdateDTO;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
@@ -45,6 +50,9 @@ public class UserProfileController {
 
   /** 双因素认证服务（TOTP 绑定/激活/解除） */
   private final MfaService mfaService;
+
+  /** 用户账号服务（密码修改） */
+  private final com.njydsz.userinfo.server.service.UserAccountService userAccountService;
 
   /**
    * 获取当前登录用户的个人资料。
@@ -96,6 +104,41 @@ public class UserProfileController {
     userAccountMapper.updateById(user);
     log.info("用户资料更新成功: userId={}", userId);
     return YdszResponse.success(true);
+  }
+
+  /**
+   * 当前登录用户修改密码（需验证旧密码）。
+   *
+   * <p>用户自行修改登录密码，需输入旧密码进行身份验证。修改成功后，所有活跃会话保持不变。
+   *
+   * <p><b>安全策略：</b>
+   *
+   * <ul>
+   *   <li>旧密码验证（BCrypt 比对）</li>
+   *   <li>新密码须符合密码策略（长度+复杂度）</li>
+   *   <li>新密码不能与最近使用过的密码重复</li>
+   *   <li>限流 3 QPS（防暴力破解）</li>
+   * </ul>
+   *
+   * @param dto 修改密码请求（含旧密码和新密码）
+   * @return 是否成功
+   */
+  @Audit(
+      module = "个人中心",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'用户修改密码'",
+      excludeParams = {"oldPassword", "newPassword"})
+  @PutMapping("/password")
+  @Operation(summary = "修改密码", description = "当前登录用户修改密码（需验证旧密码）")
+  @RateLimit(resource = "userinfo.profile.changePassword", threshold = 3)
+  public YdszResponse<Boolean> changePassword(@jakarta.validation.Valid @RequestBody ChangePasswordDTO dto) {
+    String userId = RequestContext.getUserId();
+    // 确保只能修改自己的密码
+    dto.setUserId(userId);
+    boolean result = userAccountService.changePassword(dto);
+    log.info("用户密码修改成功: userId={}", userId);
+    return YdszResponse.success(result);
   }
 
   /**
