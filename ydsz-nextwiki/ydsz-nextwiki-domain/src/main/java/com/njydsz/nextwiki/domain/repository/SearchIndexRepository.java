@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
 import com.njydsz.nextwiki.domain.query.SearchIndexQuery;
+import com.njydsz.nextwiki.domain.query.SearchQuery;
 import com.njydsz.nextwiki.domain.vo.SearchIndexVO;
 
 /**
@@ -68,4 +69,14 @@ public interface SearchIndexRepository {
    * @return 分页搜索结果
    */
   PageResponse<List<SearchIndexVO>> searchPage(SearchIndexQuery query);
+
+  /**
+   * 高级语法分页搜索（支持字段限定、布尔运算、短语精确匹配）。
+   *
+   * <p>当统一搜索引擎不可用时作为高级查询的 DB 降级入口，直接基于解析后的结构化查询构建 SQL。
+   *
+   * @param query 解析后的高级搜索查询（由 {@link com.njydsz.nextwiki.domain.service.SearchQueryParser} 生成）
+   * @return 分页搜索结果
+   */
+  PageResponse<List<SearchIndexVO>> searchAdvanced(SearchQuery query);
 }

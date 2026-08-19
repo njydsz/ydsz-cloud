@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.hash.BloomFilter;
@@ -89,6 +90,9 @@ public class BloomFilterDeduplicator {
   /** 当前周期已添加条目数（监控用） */
   private volatile long currentWindowCount;
 
+  /** 当前窗口创建时间戳（毫秒），用于计算窗口年龄 */
+  private final AtomicLong windowCreatedAt = new AtomicLong(0);
+
   /** 累计命中次数（监控用） */
   private volatile long totalHits;
 
@@ -96,6 +100,7 @@ public class BloomFilterDeduplicator {
   public void init() {
     activeFilter.set(createFilter());
     previousFilter.set(createFilter());
+    windowCreatedAt.set(System.currentTimeMillis());
     scheduler.scheduleAtFixedRate(
         this::rotateFilter, rotateSeconds, rotateSeconds, TimeUnit.SECONDS);
     log.info(
@@ -173,6 +178,7 @@ public class BloomFilterDeduplicator {
       BloomFilter<String> oldActive = activeFilter.getAndSet(newFilter);
       previousFilter.set(oldActive);
       currentWindowCount = 0;
+      windowCreatedAt.set(System.currentTimeMillis());
       log.debug("[BloomFilter] 窗口已翻转");
     } catch (Exception e) {
       log.warn("[BloomFilter] 窗口翻转异常: {}", e.getMessage());
@@ -203,5 +209,41 @@ public class BloomFilterDeduplicator {
    */
   public long getTotalHits() {
     return totalHits;
+  }
+
+  /**
+   * 获取预期最大插入条目数。
+   *
+   * @return 预期插入条目数
+   */
+  public int getExpectedInsertions() {
+    return expectedInsertions;
+  }
+
+  /**
+   * 获取误判率。
+   *
+   * @return 误判率
+   */
+  public double getFalsePositiveProbability() {
+    return falsePositiveProbability;
+  }
+
+  /**
+   * 获取窗口翻转间隔（秒）。
+   *
+   * @return 窗口翻转间隔
+   */
+  public int getRotateSeconds() {
+    return rotateSeconds;
+  }
+
+  /**
+   * 获取当前窗口已运行秒数。
+   *
+   * @return 窗口年龄（秒）
+   */
+  public long getWindowAgeSeconds() {
+    return Duration.ofMillis(System.currentTimeMillis() - windowCreatedAt.get()).getSeconds();
   }
 }

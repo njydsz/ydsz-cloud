@@ -3,6 +3,8 @@ package com.njydsz.agent.infra.tool;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.gateway.Text2SQLService;
@@ -25,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class Text2SQLTool implements ToolExecutor {
+
+  private static final Logger LOG = LoggerFactory.getLogger(Text2SQLTool.class);
 
   /** 参数名：自然语言查询 */
   private static final String PARAM_QUERY = "query";

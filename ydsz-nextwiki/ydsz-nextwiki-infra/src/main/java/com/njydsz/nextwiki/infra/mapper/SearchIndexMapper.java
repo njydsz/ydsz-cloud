@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import com.njydsz.nextwiki.domain.query.SearchQuery;
 import com.njydsz.nextwiki.infra.entity.SearchIndexDO;
 
 /**
@@ -94,4 +95,17 @@ public interface SearchIndexMapper extends BaseMapper<SearchIndexDO> {
       @Param("keyword") String keyword,
       @Param("createdBy") String createdBy,
       @Param("scope") String scope);
+
+  /**
+   * 高级语法分页搜索（支持字段限定、布尔运算、短语精确匹配、通配符）。
+   *
+   * <p>由 SearchIndexRepositoryImpl.searchAdvanced 调用，直接传入 {@link SearchQuery} 结构化查询对象。
+   *
+   * @param page MyBatis-Plus 分页对象
+   * @param query 解析后的搜索查询对象（含全文词、包含/排除词、字段限定、短语）
+   * @return 分页结果
+   */
+  IPage<SearchIndexDO> searchAdvanced(
+      IPage<SearchIndexDO> page,
+      @Param("query") SearchQuery query);
 }

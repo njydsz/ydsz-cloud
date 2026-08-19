@@ -134,7 +134,7 @@ public class OpenAiCompatibleClient implements LlmClient {
             .baseUrl(this.baseUrl)
             .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .clientConnector(new ReactorClientHttpConnector(httpClient))
+            .requestFactory(new ReactorClientHttpConnector(httpClient))
             .build();
     this.webClient =
         WebClient.builder()

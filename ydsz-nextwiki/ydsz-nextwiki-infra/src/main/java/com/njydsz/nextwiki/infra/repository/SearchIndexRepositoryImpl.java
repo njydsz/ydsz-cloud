@@ -13,6 +13,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
 import com.njydsz.nextwiki.domain.query.SearchIndexQuery;
+import com.njydsz.nextwiki.domain.query.SearchQuery;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.domain.vo.SearchIndexVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
@@ -74,6 +75,19 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
     IPage<SearchIndexDO> result =
         searchIndexMapper.searchPage(
             pageParam, query.getKeyword(), query.getCreatedBy(), query.getScope());
+    List<SearchIndexVO> vos = converter.searchIndexListToVO(result.getRecords());
+    Page<SearchIndexVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
+    voPage.setRecords(vos);
+    return PageResponses.success(voPage);
+  }
+
+  @Override
+  public PageResponse<List<SearchIndexVO>> searchAdvanced(SearchQuery query) {
+    Page<SearchIndexDO> pageParam = new Page<>(
+        query.getPage() != null ? query.getPage() : 1,
+        query.getPageSize() != null ? query.getPageSize() : 20);
+    IPage<SearchIndexDO> result =
+        searchIndexMapper.searchAdvanced(pageParam, query);
     List<SearchIndexVO> vos = converter.searchIndexListToVO(result.getRecords());
     Page<SearchIndexVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
     voPage.setRecords(vos);

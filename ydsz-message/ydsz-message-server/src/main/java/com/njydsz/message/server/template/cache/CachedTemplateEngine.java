@@ -486,4 +486,16 @@ public class CachedTemplateEngine implements TemplateEngine {
         astCache.stats().hitRate() * 100,
         astCache.stats().evictionCount());
   }
+
+  /**
+   * 获取 Caffeine 缓存统计信息（结构化对象，供运维接口使用）。
+   *
+   * <p>返回 Caffeine {@link com.github.benmanes.caffeine.cache.stats.CacheStats}，
+   * 包含 hitCount、missCount、hitRate、evictionCount 等详细指标。
+   *
+   * @return Caffeine CacheStats 对象
+   */
+  public com.github.benmanes.caffeine.cache.stats.CacheStats caffeineCacheStats() {
+    return astCache.stats();
+  }
 }

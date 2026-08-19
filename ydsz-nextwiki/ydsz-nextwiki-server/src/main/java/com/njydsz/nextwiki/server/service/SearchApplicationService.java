@@ -22,10 +22,12 @@ import com.njydsz.common.search.service.UnifiedSearchService;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
 import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
 import com.njydsz.nextwiki.domain.query.SearchIndexQuery;
+import com.njydsz.nextwiki.domain.query.SearchQuery;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.domain.repository.TagRepository;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
+import com.njydsz.nextwiki.domain.service.SearchQueryParser;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.SearchIndexVO;
 import com.njydsz.nextwiki.domain.vo.SearchResultVO;
@@ -71,6 +73,8 @@ public class SearchApplicationService {
   private final ObjectProvider<SearchEngineRegistry> engineRegistryProvider;
   private final ObjectProvider<SuggestionService> suggestionServiceProvider;
   private final SearchHistoryService searchHistoryService;
+  /** 高级搜索语法解析器（S3-P2-02） */
+  private final SearchQueryParser searchQueryParser;
 
   /**
    * 全文检索（按关键词在用户可见范围内分页搜索）。
@@ -242,6 +246,54 @@ public class SearchApplicationService {
    */
   public List<Map.Entry<String, Double>> getHotSearches() {
     return searchHistoryService.getHotSearches();
+  }
+
+  // ==================== 高级语法搜索（S3-P2-02） ====================
+
+  /**
+   * 高级语法搜索（支持字段限定、布尔运算、短语精确匹配）。
+   *
+   * <p>解析用户输入的高级搜索语法：
+   *
+   * <ul>
+   *   <li>字段限定：{@code name:报告}、{@code tag:重要}、{@code suffix:pdf}
+   *   <li>短语精确匹配：{@code "季度财务"}
+   *   <li>包含/排除：{@code +必须}、{@code -排除}
+   *   <li>布尔运算符：{@code AND}、{@code OR}、{@code NOT}
+   * </ul>
+   *
+   * <p>搜索引擎可用时走统一检索（高亮/权重），否则降级 DB 高级查询。
+   *
+   * @param rawInput 用户原始搜索输入
+   * @param userId 当前用户 ID（权限过滤）
+   * @param scope 搜索作用域（all / filename / content / tag）
+   * @param page 页码
+   * @param pageSize 每页大小
+   * @return 分页搜索结果
+   * @complexity 引擎路径 O(query + filters)；DB 路径 O(parsed_query)
+   */
+  public SearchResultVO searchWithAdvancedSyntax(
+      String rawInput, String userId, String scope, int page, int pageSize) {
+    // 1. 解析高级搜索语法
+    SearchQuery searchQuery = searchQueryParser.parse(rawInput, userId, scope, page, pageSize);
+
+    // 2. 判断走引擎还是 DB 降级
+    SearchEngineRegistry registry = engineRegistryProvider.getIfAvailable();
+    UnifiedSearchService unifiedSearch = unifiedSearchServiceProvider.getIfAvailable();
+
+    SearchResultVO result;
+    if (registry != null && unifiedSearch != null && registry.isPrimaryAvailable()) {
+      result = searchViaEngineAdvanced(unifiedSearch, searchQuery, userId);
+    } else {
+      log.info("[SearchApplicationService] 高级语法搜索降级 DB: rawInput={}", rawInput);
+      result = searchViaDatabaseAdvanced(searchQuery);
+    }
+
+    // 3. 记录搜索历史
+    if (rawInput != null && !rawInput.isBlank()) {
+      searchHistoryService.recordSearch(userId, rawInput);
+    }
+    return result;
   }
 
   // ==================== 私有方法 ====================
@@ -446,5 +498,121 @@ public class SearchApplicationService {
         .tags(hit.getTags())
         .updatedAt(hit.getUpdatedAt())
         .build();
+  }
+
+  // ==================== 高级语法搜索私有方法（S3-P2-02） ====================
+
+  /**
+   * 高级语法搜索引擎路径：将解析后的查询转换为引擎 SearchFilter。
+   *
+   * @param unifiedSearch 统一搜索服务
+   * @param searchQuery 解析后的搜索查询
+   * @param userId 操作人 ID
+   * @return 分页搜索结果
+   */
+  private SearchResultVO searchViaEngineAdvanced(
+      UnifiedSearchService unifiedSearch, SearchQuery searchQuery, String userId) {
+    // 将高级语法转换为引擎的 SearchFilter 列表
+    List<SearchFilter> filters = new ArrayList<>();
+
+    // 字段限定 → SearchFilter
+    if (searchQuery.getFieldQueries() != null) {
+      for (SearchQuery.FieldQuery fq : searchQuery.getFieldQueries()) {
+        if ("suffix".equals(fq.getField())) {
+          filters.add(SearchFilter.builder()
+              .field("suffix")
+              .values(List.of(fq.getValue()))
+              .operator(Operator.EQ)
+              .build());
+        } else {
+          filters.add(SearchFilter.builder()
+              .field(fq.getField())
+              .values(List.of(fq.getValue()))
+              .operator(Operator.CONTAINS)
+              .build());
+        }
+      }
+    }
+
+    // 必须包含词 → SearchFilter
+    if (searchQuery.getMustIncludeTerms() != null) {
+      for (String term : searchQuery.getMustIncludeTerms()) {
+        filters.add(SearchFilter.builder()
+            .field("content")
+            .values(List.of(term))
+            .operator(Operator.CONTAINS)
+            .build());
+      }
+    }
+
+    // 必须排除词 → SearchFilter（使用 NOT_CONTAINS）
+    if (searchQuery.getMustExcludeTerms() != null) {
+      for (String term : searchQuery.getMustExcludeTerms()) {
+        filters.add(SearchFilter.builder()
+            .field("content")
+            .values(List.of(term))
+            .operator(Operator.NOT_CONTAINS)
+            .build());
+      }
+    }
+
+    // 短语精确匹配 → SearchFilter
+    if (searchQuery.getPhrases() != null) {
+      for (String phrase : searchQuery.getPhrases()) {
+        filters.add(SearchFilter.builder()
+            .field("content")
+            .values(List.of(phrase))
+            .operator(Operator.PHRASE)
+            .build());
+      }
+    }
+
+    // 取第一个全文词作为引擎 keyword（引擎自身支持全文检索）
+    String keyword = (searchQuery.getFullTextTerms() != null && !searchQuery.getFullTextTerms().isEmpty())
+        ? searchQuery.getFullTextTerms().get(0)
+        : "";
+
+    SearchRequest request = SearchRequest.builder()
+        .keyword(keyword)
+        .types(List.of("wiki"))
+        .page(searchQuery.getPage())
+        .pageSize(searchQuery.getPageSize())
+        .userId(userId)
+        .highlight(true)
+        .filters(filters)
+        .build();
+
+    try {
+      SearchResponse response = unifiedSearch.search(request);
+      return convertResponse(response);
+    } catch (Exception e) {
+      log.warn("[SearchApplicationService] 高级语法引擎检索异常，降级 DB: error={}", e.getMessage());
+      return searchViaDatabaseAdvanced(searchQuery);
+    }
+  }
+
+  /**
+   * 高级语法搜索 DB 降级路径：直接使用 searchAdvanced 查询。
+   *
+   * @param searchQuery 解析后的搜索查询
+   * @return 分页搜索结果
+   */
+  private SearchResultVO searchViaDatabaseAdvanced(SearchQuery searchQuery) {
+    PageResponse<List<SearchIndexVO>> pageResult = searchIndexRepository.searchAdvanced(searchQuery);
+    List<SearchIndexVO> indices = pageResult.getData();
+    long total = pageResult.getTotal() != null ? pageResult.getTotal() : 0L;
+
+    // 合并所有关键词用于评分/高亮
+    StringBuilder allKeywords = new StringBuilder();
+    if (searchQuery.getFullTextTerms() != null) {
+      allKeywords.append(String.join(" ", searchQuery.getFullTextTerms()));
+    }
+
+    return searchDomainService.search(
+        indices != null ? indices : List.of(),
+        total,
+        allKeywords.toString(),
+        searchQuery.getPage(),
+        searchQuery.getPageSize());
   }
 }

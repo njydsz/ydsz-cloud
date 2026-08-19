@@ -109,4 +109,74 @@
         </choose>
     </select>
 
+    <!-- ==================== 高级语法搜索（S3-P2-02） ==================== -->
+    <!--
+        高级语法分页搜索（支持字段限定、布尔运算、短语精确匹配、通配符）
+        调用前由 SearchIndexRepositoryImpl.searchAdvanced 将 SearchQuery 转为各参数
+    -->
+    <select id="searchAdvanced" resultMap="SearchIndexResult">
+        SELECT * FROM nw_search_index
+        WHERE deleted = 0
+        AND created_by = #{query.createdBy}
+        <!-- 全文词模糊匹配（name/path/content/tags，任意一词命中即匹配） -->
+        <if test="query.fullTextTerms != null and query.fullTextTerms.size() > 0">
+            AND (
+            <foreach collection="query.fullTextTerms" item="term" separator=" OR ">
+                (name ILIKE CONCAT('%', #{term}, '%')
+                 OR path ILIKE CONCAT('%', #{term}, '%')
+                 OR content ILIKE CONCAT('%', #{term}, '%')
+                 OR tags ILIKE CONCAT('%', #{term}, '%'))
+            </foreach>
+            )
+        </if>
+        <!-- 必须包含词（AND 关系，每个词至少在一个字段中出现） -->
+        <if test="query.mustIncludeTerms != null and query.mustIncludeTerms.size() > 0">
+            <foreach collection="query.mustIncludeTerms" item="term">
+                AND (name ILIKE CONCAT('%', #{term}, '%')
+                     OR path ILIKE CONCAT('%', #{term}, '%')
+                     OR content ILIKE CONCAT('%', #{term}, '%')
+                     OR tags ILIKE CONCAT('%', #{term}, '%'))
+            </foreach>
+        </if>
+        <!-- 必须排除词（NOT 关系） -->
+        <if test="query.mustExcludeTerms != null and query.mustExcludeTerms.size() > 0">
+            <foreach collection="query.mustExcludeTerms" item="term">
+                AND NOT (name ILIKE CONCAT('%', #{term}, '%')
+                         OR path ILIKE CONCAT('%', #{term}, '%')
+                         OR content ILIKE CONCAT('%', #{term}, '%')
+                         OR tags ILIKE CONCAT('%', #{term}, '%'))
+            </foreach>
+        </if>
+        <!-- 短语精确匹配 -->
+        <if test="query.phrases != null and query.phrases.size() > 0">
+            <foreach collection="query.phrases" item="phrase">
+                AND (name ILIKE CONCAT('%', #{phrase}, '%')
+                     OR content ILIKE CONCAT('%', #{phrase}, '%'))
+            </foreach>
+        </if>
+        <!-- 字段限定查询（field:value） -->
+        <if test="query.fieldQueries != null and query.fieldQueries.size() > 0">
+            <foreach collection="query.fieldQueries" item="fq" open="" separator="" close="">
+                <choose>
+                    <when test="fq.field == 'name'">
+                        AND name ILIKE CONCAT('%', #{fq.value}, '%')
+                    </when>
+                    <when test="fq.field == 'content'">
+                        AND content ILIKE CONCAT('%', #{fq.value}, '%')
+                    </when>
+                    <when test="fq.field == 'tag'">
+                        AND tags ILIKE CONCAT('%', #{fq.value}, '%')
+                    </when>
+                    <when test="fq.field == 'path'">
+                        AND path ILIKE CONCAT('%', #{fq.value}, '%')
+                    </when>
+                    <when test="fq.field == 'suffix'">
+                        AND suffix = #{fq.value}
+                    </when>
+                </choose>
+            </foreach>
+        </if>
+        ORDER BY updated_at DESC
+    </select>
+
 </mapper>

@@ -15,6 +15,8 @@ import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +26,6 @@ import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -54,8 +55,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class JdbcText2SQLService implements Text2SQLService {
+
+  private static final Logger LOG = LoggerFactory.getLogger(JdbcText2SQLService.class);
 
   /** 结果行数上限 */
   private static final int MAX_RESULT_ROWS = 100;
@@ -116,7 +118,7 @@ public class JdbcText2SQLService implements Text2SQLService {
     ChatRequest request =
         ChatRequest.builder()
             .model(defaultModel)
-            .messages(List.of(ChatMessage.user(query)))
+            .messages(List.of(ChatMessage.user(query, null)))
             .temperature(0)
             .maxTokens(512)
             .build();
