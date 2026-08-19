@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 
 /**
@@ -13,11 +12,9 @@ import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
  * <p>定义 DAG 工作流实例的数据访问能力，Infra 层负责实现。
  *
  * <p><b>设计要点：</b>
- *
  * <ul>
  *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
  *   <li>返回领域 VO（{@link JobDagInstanceVO}），非 DTO / infra 实体
- *   <li>查询入参使用具体字段
  * </ul>
  *
  * @author ydsz-team
@@ -71,17 +68,6 @@ public interface JobDagInstanceRepository {
 
   /**
    * 标记实例为终态。
-   *
-   * @param instanceId 实例 ID
-   * @param status 终态状态
-   * @param finishedAt 完成时间
-   * @param durationMs 耗时
-   * @param errorMessage 错误信息
-   * @param totalNodes 总节点数
-   * @param successNodes 成功节点数
-   * @param failedNodes 失败节点数
-   * @param skippedNodes 跳过节点数
-   * @return 受影响行数
    */
   int markFinished(
       String instanceId,
@@ -96,67 +82,39 @@ public interface JobDagInstanceRepository {
 
   /**
    * 更新实例上下文（contextJson）。
-   *
-   * @param instanceId 实例 ID
-   * @param contextJson 上下文 JSON
-   * @return 受影响行数
    */
   int updateContext(String instanceId, String contextJson);
 
   /**
    * 原子合并实例上下文（PostgreSQL jsonb || 操作符）。
-   *
-   * @param instanceId 实例 ID
-   * @param mergeJson 待合并的 JSON 片段
-   * @return 受影响行数
    */
   int mergeContextAtomic(String instanceId, String mergeJson);
 
   /**
    * 统计指定 DAG 的活跃（RUNNING/PAUSED）实例数量。
-   *
-   * @param dagId DAG ID
-   * @return 实例数量
    */
   int countActiveInstances(String dagId);
 
   /**
    * 标记实例为 PAUSED。
-   *
-   * @param instanceId 实例 ID
-   * @return 受影响行数
    */
   int markPaused(String instanceId);
 
   /**
    * 标记实例为 RESUMED。
-   *
-   * @param instanceId 实例 ID
-   * @return 受影响行数
    */
   int markResumed(String instanceId);
 
   /**
    * 标记实例为 CANCELED。
-   *
-   * @param instanceId 实例 ID
-   * @param canceledAt 取消时间
-   * @param durationMs 耗时
-   * @return 受影响行数
    */
   int markCanceled(String instanceId, LocalDateTime canceledAt, long durationMs);
 
-  // ===== 实体方法（Service / 核心调度使用，与 VO 查询方法并存） =====
-
-  /** 按 ID 查询实例实体。 */
-  JobDagInstance selectById(String instanceId);
-
-  /** 按 DAG ID 查询实例实体列表。 */
-  List<JobDagInstance> selectByDagId(String dagId, int limit);
-
-  /** 按状态查询实例实体列表。 */
-  List<JobDagInstance> selectByStatus(String status);
-
-  /** 新增实例实体。 */
-  int insert(JobDagInstance instance);
+  /**
+   * 新增实例。
+   *
+   * @param vo 实例 VO
+   * @return 新实例 ID
+   */
+  String insert(JobDagInstanceVO vo);
 }

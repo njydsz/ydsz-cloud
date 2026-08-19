@@ -56,6 +56,10 @@ public class OidcController {
    * <p>返回 OpenID Connect Provider 的标准配置元数据，客户端可通过此文档自动发现授权端点、令牌端点、
    * 用户信息端点、JWKS 端点位置以及支持的 scope、response_type、grant_type 等能力声明。
    *
+   * <p>P0-1 新增：revocation_endpoint（RFC 7009）、introspection_endpoint（RFC 7662）、
+   * id_token_signing_alg_values_supported、claims_supported、response_modes_supported，
+   * 对标 MaxKey 实现 OIDC 协议完整性。
+   *
    * <p>响应 Content-Type 为 {@code application/json}，符合 OIDC Discovery 1.0 §3 规范。
    *
    * @return OIDC Discovery 元数据 JSON
@@ -73,19 +77,27 @@ public class OidcController {
         baseUrl + "/api/v1/oauth2/token",
         baseUrl + "/api/v1/oauth2/userinfo",
         baseUrl + "/.well-known/jwks.json",
+        baseUrl + "/api/v1/oauth2/revoke",
+        baseUrl + "/api/v1/oauth2/introspect",
         List.of(
             OidcDiscoveryEndpoint.SCOPE_OPENID,
             "profile",
             "email",
             "tenant"),
         List.of(OidcDiscoveryEndpoint.RESPONSE_TYPE_CODE),
+        List.of(OidcDiscoveryEndpoint.RESPONSE_MODE_QUERY),
         List.of(
             OidcDiscoveryEndpoint.GRANT_TYPE_AUTHORIZATION_CODE,
             "refresh_token"),
         List.of(OidcDiscoveryEndpoint.SUBJECT_TYPE_PUBLIC),
         List.of(
             OidcDiscoveryEndpoint.AUTH_METHOD_CLIENT_SECRET_BASIC,
-            OidcDiscoveryEndpoint.AUTH_METHOD_CLIENT_SECRET_POST));
+            OidcDiscoveryEndpoint.AUTH_METHOD_CLIENT_SECRET_POST),
+        List.of(
+            OidcDiscoveryEndpoint.ALG_RS256,
+            OidcDiscoveryEndpoint.ALG_HS256),
+        List.of(
+            "sub", "preferred_username", "tenant_id", "email", "name", "iss", "aud", "exp", "iat"));
     log.debug("OIDC Discovery 请求: issuer={}", oidcProperties.getIssuer());
     return ResponseEntity.ok(metadata);
   }

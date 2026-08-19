@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import com.njydsz.cronjob.domain.entity.dag.JobDag;
+import com.njydsz.cronjob.domain.dto.dag.JobDagSaveDTO;
 import com.njydsz.cronjob.domain.vo.JobDagVO;
 
 /**
@@ -13,11 +13,10 @@ import com.njydsz.cronjob.domain.vo.JobDagVO;
  * <p>定义 DAG 工作流定义的数据访问能力，Infra 层负责实现。
  *
  * <p><b>设计要点：</b>
- *
  * <ul>
  *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
  *   <li>返回领域 VO（{@link JobDagVO}），非 DTO / infra 实体
- *   <li>查询入参使用具体字段
+ *   <li>CUD 入参使用 DTO
  * </ul>
  *
  * @author ydsz-team
@@ -32,6 +31,14 @@ public interface JobDagRepository {
    * @return DAG 定义 VO；不存在返回 {@code Optional.empty()}
    */
   Optional<JobDagVO> findByDagKey(String dagKey);
+
+  /**
+   * 根据 ID 查询 DAG 定义。
+   *
+   * @param dagId DAG ID
+   * @return DAG 定义 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<JobDagVO> findById(String dagId);
 
   /**
    * 查询所有启用 CRON 触发的 DAG 定义。
@@ -66,36 +73,27 @@ public interface JobDagRepository {
    */
   int updateResultStats(String dagId, boolean success);
 
-  // ===== Web 层查询方法（Controller 停止 Mapper 直注） =====
+  /**
+   * 新增 DAG。
+   *
+   * @param dto DAG 保存 DTO
+   * @return 新 DAG ID
+   */
+  String insert(JobDagSaveDTO dto);
 
   /**
-   * 根据 ID 查询 DAG 定义。
+   * 按 ID 更新 DAG。
+   *
+   * @param dto DAG 保存 DTO（必须含 id）
+   * @return 受影响行数
+   */
+  int update(JobDagSaveDTO dto);
+
+  /**
+   * 按 ID 删除 DAG（逻辑删除）。
    *
    * @param dagId DAG ID
-   * @return DAG 定义 VO；不存在返回 {@code Optional.empty()}
+   * @return 受影响行数
    */
-  Optional<JobDagVO> findById(String dagId);
-
-  // ===== 实体 CRUD（Service 层 DAG 管理使用，与 VO 查询方法并存） =====
-
-  /** 按 ID 查询 DAG 实体。 */
-  JobDag selectById(String id);
-
-  /** 新增 DAG。 */
-  int insert(JobDag dag);
-
-  /** 按 ID 更新 DAG。 */
-  int updateById(JobDag dag);
-
-  /** 按 ID 删除 DAG（逻辑删除）。 */
-  int deleteById(String id);
-
-  /** 按 dagKey 查询 DAG 实体（唯一性校验）。 */
-  JobDag selectByDagKey(String dagKey);
-
-  /** 查询启用且 cron 触发的 DAG 列表。 */
-  List<JobDag> selectCronEnabledDags();
-
-  /** 查询启用的 DAG 列表。 */
-  List<JobDag> selectEnabledDags();
+  int deleteById(String dagId);
 }

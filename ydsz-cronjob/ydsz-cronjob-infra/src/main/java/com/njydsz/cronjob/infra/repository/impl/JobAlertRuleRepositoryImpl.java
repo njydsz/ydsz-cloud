@@ -2,23 +2,20 @@ package com.njydsz.cronjob.infra.repository.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.cronjob.infra.entity.job.JobAlertRule;
+import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
 import com.njydsz.cronjob.domain.repository.JobAlertRuleRepository;
 import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
+import com.njydsz.cronjob.infra.entity.job.JobAlertRule;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
 
 /**
  * 告警规则 Repository 实现（Infra 层）。
- *
- * <p>实现 {@link JobAlertRuleRepository} 接口，封装 JobAlertRuleMapper 数据访问细节。
- *
- * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -28,7 +25,6 @@ import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
 public class JobAlertRuleRepositoryImpl implements JobAlertRuleRepository {
 
   private final JobAlertRuleMapper jobAlertRuleMapper;
-
   private final CronjobConverter converter;
 
   @Override
@@ -52,33 +48,31 @@ public class JobAlertRuleRepositoryImpl implements JobAlertRuleRepository {
   }
 
   @Override
+  public Optional<JobAlertRuleVO> findById(String id) {
+    return Optional.ofNullable(jobAlertRuleMapper.selectById(id))
+        .map(converter::entityToVO);
+  }
+
+  @Override
   public int updateLastAlertAtIfNotInCooldown(String ruleId, LocalDateTime now, LocalDateTime cooldownBefore) {
     return jobAlertRuleMapper.updateLastAlertAtIfNotInCooldown(ruleId, now, cooldownBefore);
   }
 
   @Override
-  public JobAlertRule selectById(String id) {
-    return jobAlertRuleMapper.selectById(id);
+  public String insert(AlertRuleSaveDTO dto) {
+    JobAlertRule entity = converter.dtoToEntity(dto);
+    jobAlertRuleMapper.insert(entity);
+    return entity.getId();
   }
 
   @Override
-  public int insert(JobAlertRule rule) {
-    return jobAlertRuleMapper.insert(rule);
-  }
-
-  @Override
-  public int updateById(JobAlertRule rule) {
-    return jobAlertRuleMapper.updateById(rule);
+  public int update(AlertRuleSaveDTO dto) {
+    JobAlertRule entity = converter.dtoToEntity(dto);
+    return jobAlertRuleMapper.updateById(entity);
   }
 
   @Override
   public int deleteById(String id) {
     return jobAlertRuleMapper.deleteById(id);
-  }
-
-  @Override
-  public List<JobAlertRule> selectList() {
-    return jobAlertRuleMapper.selectList(
-        new LambdaQueryWrapper<JobAlertRule>().orderByDesc(JobAlertRule::getCreatedAt));
   }
 }

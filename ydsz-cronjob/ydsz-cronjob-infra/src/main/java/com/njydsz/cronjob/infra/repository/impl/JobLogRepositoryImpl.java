@@ -8,20 +8,14 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.cronjob.infra.entity.log.JobLog;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
+import com.njydsz.cronjob.infra.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 
 /**
  * 任务执行日志 Repository 实现（Infra 层）。
- *
- * <p>实现 {@link JobLogRepository} 接口，封装 JobLogMapper 数据访问细节。
- *
- * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -31,7 +25,6 @@ import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 public class JobLogRepositoryImpl implements JobLogRepository {
 
   private final JobLogMapper jobLogMapper;
-
   private final CronjobConverter converter;
 
   @Override
@@ -99,11 +92,10 @@ public class JobLogRepositoryImpl implements JobLogRepository {
     return jobLogMapper.cleanExpiredLogs(before, limit);
   }
 
-  // ===== Web 层查询方法实现 =====
-
   @Override
   public long countByStatusAfter(String status, LocalDateTime startAfter) {
-    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
     if (status != null) {
       wrapper.eq(JobLog::getStatus, status);
     }
@@ -115,7 +107,8 @@ public class JobLogRepositoryImpl implements JobLogRepository {
 
   @Override
   public List<JobLogVO> findRecentFailures(int limit) {
-    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
     wrapper.eq(JobLog::getStatus, JobLog.STATUS_FAILED)
         .orderByDesc(JobLog::getStartTime)
         .last("LIMIT " + Math.min(limit, 100));
@@ -123,16 +116,9 @@ public class JobLogRepositoryImpl implements JobLogRepository {
   }
 
   @Override
-  public long countByTimeRange(LocalDateTime start, LocalDateTime end) {
-    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
-    wrapper.ge(JobLog::getStartTime, start)
-        .le(JobLog::getStartTime, end);
-    return jobLogMapper.selectCount(wrapper);
-  }
-
-  @Override
   public List<JobLogVO> findByJobKey(String jobKey, int limit) {
-    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
     wrapper.eq(JobLog::getJobKey, jobKey)
         .orderByDesc(JobLog::getCreatedAt)
         .last("LIMIT " + Math.min(limit, 100));
@@ -141,7 +127,8 @@ public class JobLogRepositoryImpl implements JobLogRepository {
 
   @Override
   public Optional<JobLogVO> findLatestByJobKey(String jobKey) {
-    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
     wrapper.eq(JobLog::getJobKey, jobKey)
         .orderByDesc(JobLog::getCreatedAt)
         .last("LIMIT 1");
@@ -149,20 +136,25 @@ public class JobLogRepositoryImpl implements JobLogRepository {
     return Optional.ofNullable(vo);
   }
 
-  // ===== 实体方法实现 =====
-
   @Override
-  public Page<JobLog> selectPage(Page<JobLog> page, LambdaQueryWrapper<JobLog> wrapper) {
-    return jobLogMapper.selectPage(page, wrapper);
+  public long countByTimeRange(LocalDateTime start, LocalDateTime end) {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper.ge(JobLog::getStartTime, start)
+        .le(JobLog::getStartTime, end);
+    return jobLogMapper.selectCount(wrapper);
   }
 
   @Override
-  public int insert(JobLog log) {
-    return jobLogMapper.insert(log);
+  public String insert(JobLogVO vo) {
+    JobLog entity = converter.voToEntity(vo);
+    jobLogMapper.insert(entity);
+    return entity.getId();
   }
 
   @Override
-  public int updateById(JobLog log) {
-    return jobLogMapper.updateById(log);
+  public int update(JobLogVO vo) {
+    JobLog entity = converter.voToEntity(vo);
+    return jobLogMapper.updateById(entity);
   }
 }

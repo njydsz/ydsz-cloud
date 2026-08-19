@@ -7,18 +7,14 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.infra.entity.job.JobHistory;
 import com.njydsz.cronjob.domain.repository.JobHistoryRepository;
 import com.njydsz.cronjob.domain.vo.JobHistoryVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
+import com.njydsz.cronjob.infra.entity.job.JobHistory;
 import com.njydsz.cronjob.infra.mapper.job.JobHistoryMapper;
 
 /**
  * 任务历史记录 Repository 实现（Infra 层）。
- *
- * <p>实现 {@link JobHistoryRepository} 接口，封装 JobHistoryMapper 数据访问细节。
- *
- * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -28,7 +24,6 @@ import com.njydsz.cronjob.infra.mapper.job.JobHistoryMapper;
 public class JobHistoryRepositoryImpl implements JobHistoryRepository {
 
   private final JobHistoryMapper jobHistoryMapper;
-
   private final CronjobConverter converter;
 
   @Override
@@ -47,20 +42,10 @@ public class JobHistoryRepositoryImpl implements JobHistoryRepository {
     return jobHistoryMapper.cleanExpiredLogs(before, limit);
   }
 
-  // ===== 实体方法实现 =====
-
   @Override
-  public int insert(JobHistory history) {
-    return jobHistoryMapper.insert(history);
-  }
-
-  @Override
-  public List<JobHistory> selectByJobIdOrderByVersionDesc(String jobId) {
-    return jobHistoryMapper.selectByJobIdOrderByVersionDesc(jobId);
-  }
-
-  @Override
-  public JobHistory selectByVersion(String jobId, Integer version) {
-    return jobHistoryMapper.selectByVersion(jobId, version);
+  public String insert(JobHistoryVO vo) {
+    JobHistory entity = converter.voToEntity(vo);
+    jobHistoryMapper.insert(entity);
+    return entity.getId();
   }
 }

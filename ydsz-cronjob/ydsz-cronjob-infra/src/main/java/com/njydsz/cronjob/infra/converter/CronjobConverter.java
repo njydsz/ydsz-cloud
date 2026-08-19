@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
+import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
 import com.njydsz.cronjob.domain.dto.post.JobDagPostDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
@@ -101,25 +102,98 @@ public interface CronjobConverter {
 
   List<JobAlertLogVO> jobAlertLogListToVO(List<JobAlertLog> entities);
 
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobAlertLog voToEntity(JobAlertLogVO vo);
+
   // ===== JobAlertRule =====
   JobAlertRuleVO entityToVO(JobAlertRule entity);
 
   List<JobAlertRuleVO> jobAlertRuleListToVO(List<JobAlertRule> entities);
+
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobAlertRule voToEntity(JobAlertRuleVO vo);
+
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobAlertRule dtoToEntity(AlertRuleSaveDTO dto);
 
   // ===== JobArtifact =====
   JobArtifactVO entityToVO(JobArtifact entity);
 
   List<JobArtifactVO> jobArtifactListToVO(List<JobArtifact> entities);
 
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobArtifact voToEntity(JobArtifactVO vo);
+
   // ===== JobDag =====
   JobDagVO entityToVO(JobDag entity);
 
   List<JobDagVO> jobDagListToVO(List<JobDag> entities);
 
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "fireCount", ignore = true)
+  @Mapping(target = "successCount", ignore = true)
+  @Mapping(target = "failCount", ignore = true)
+  @Mapping(target = "version", ignore = true)
+  @Mapping(target = "lastFireTime", ignore = true)
+  @Mapping(target = "nextFireTime", ignore = true)
+  JobDag dtoToEntity(JobDagSaveDTO dto);
+
   // ===== JobDagInstance =====
   JobDagInstanceVO entityToVO(JobDagInstance entity);
 
   List<JobDagInstanceVO> jobDagInstanceListToVO(List<JobDagInstance> entities);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "triggerType", ignore = true)
+  @Mapping(target = "triggerBy", ignore = true)
+  @Mapping(target = "triggerTraceId", ignore = true)
+  @Mapping(target = "contextJson", ignore = true)
+  @Mapping(target = "startedAt", ignore = true)
+  @Mapping(target = "finishedAt", ignore = true)
+  @Mapping(target = "durationMs", ignore = true)
+  @Mapping(target = "errorMessage", ignore = true)
+  @Mapping(target = "totalNodes", ignore = true)
+  @Mapping(target = "successNodes", ignore = true)
+  @Mapping(target = "failedNodes", ignore = true)
+  @Mapping(target = "skippedNodes", ignore = true)
+  JobDagInstance voToEntity(JobDagInstanceVO vo);
 
   // ===== JobDagNodeInstance =====
   JobDagNodeInstanceVO entityToVO(JobDagNodeInstance entity);
@@ -155,6 +229,16 @@ public interface CronjobConverter {
 
   List<JobDagVersionVO> jobDagVersionListToVO(List<JobDagVersion> entities);
 
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobDagVersion voToEntity(JobDagVersionVO vo);
+
   // ===== JobDailyStats =====
   JobDailyStatsVO entityToVO(JobDailyStats entity);
 
@@ -171,15 +255,42 @@ public interface CronjobConverter {
 
   List<JobHistoryVO> jobHistoryListToVO(List<JobHistory> entities);
 
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobHistory voToEntity(JobHistoryVO vo);
+
   // ===== JobLog =====
   JobLogVO entityToVO(JobLog entity);
 
   List<JobLogVO> jobLogListToVO(List<JobLog> entities);
 
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobLog voToEntity(JobLogVO vo);
+
   // ===== JobLogContent =====
   JobLogContentVO entityToVO(JobLogContent entity);
 
   List<JobLogContentVO> jobLogContentListToVO(List<JobLogContent> entities);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobLogContent voToEntity(JobLogContentVO vo);
 
   // ===== JobNode =====
   JobNodeVO entityToVO(JobNode entity);
@@ -190,6 +301,15 @@ public interface CronjobConverter {
   JobTaskVO entityToVO(JobTask entity);
 
   List<JobTaskVO> jobTaskListToVO(List<JobTask> entities);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobTask voToEntity(JobTaskVO vo);
 
   // ===== JobWebhook =====
   JobWebhookVO entityToVO(JobWebhook entity);

@@ -7,18 +7,14 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.infra.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.domain.repository.JobDagInstanceRepository;
 import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
+import com.njydsz.cronjob.infra.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagInstanceMapper;
 
 /**
  * DAG 实例 Repository 实现（Infra 层）。
- *
- * <p>实现 {@link JobDagInstanceRepository} 接口，封装 JobDagInstanceMapper 数据访问细节。
- *
- * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -28,7 +24,6 @@ import com.njydsz.cronjob.infra.mapper.dag.JobDagInstanceMapper;
 public class JobDagInstanceRepositoryImpl implements JobDagInstanceRepository {
 
   private final JobDagInstanceMapper jobDagInstanceMapper;
-
   private final CronjobConverter converter;
 
   @Override
@@ -84,8 +79,8 @@ public class JobDagInstanceRepositoryImpl implements JobDagInstanceRepository {
   }
 
   @Override
-  public int countActiveInstances(String status) {
-    return jobDagInstanceMapper.countActiveInstances(status);
+  public int countActiveInstances(String dagId) {
+    return jobDagInstanceMapper.countActiveInstances(dagId);
   }
 
   @Override
@@ -103,25 +98,10 @@ public class JobDagInstanceRepositoryImpl implements JobDagInstanceRepository {
     return jobDagInstanceMapper.markCanceled(instanceId, canceledAt, durationMs);
   }
 
-  // ===== 实体方法实现 =====
-
   @Override
-  public JobDagInstance selectById(String instanceId) {
-    return jobDagInstanceMapper.selectById(instanceId);
-  }
-
-  @Override
-  public List<JobDagInstance> selectByDagId(String dagId, int limit) {
-    return jobDagInstanceMapper.selectByDagId(dagId, limit);
-  }
-
-  @Override
-  public List<JobDagInstance> selectByStatus(String status) {
-    return jobDagInstanceMapper.selectByStatus(status);
-  }
-
-  @Override
-  public int insert(JobDagInstance instance) {
-    return jobDagInstanceMapper.insert(instance);
+  public String insert(JobDagInstanceVO vo) {
+    JobDagInstance entity = converter.voToEntity(vo);
+    jobDagInstanceMapper.insert(entity);
+    return entity.getId();
   }
 }
