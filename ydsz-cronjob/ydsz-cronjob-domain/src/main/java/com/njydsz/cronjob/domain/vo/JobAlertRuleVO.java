@@ -58,6 +58,9 @@ public class JobAlertRuleVO implements Serializable {
   /** 来源类型（如 SLA，用于区分规则业务来源） */
   private String sourceType;
 
+  /** 租户 ID（P0-FIX 补回：与实体一致，AlertScanner 全局规则告警上下文使用） */
+  private String tenantId;
+
   /** 最后告警时间（冷却窗口判定起点） */
   private LocalDateTime lastAlertAt;
 

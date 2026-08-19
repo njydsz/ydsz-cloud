@@ -44,6 +44,17 @@ public class MessageProperties {
   /** 默认发送优先级 */
   private String defaultPriority = "NORMAL";
 
+  /**
+   * P1-A4: 默认异步发送开关。
+   *
+   * <p>开启后 {@code send()} 默认行为变为"先落库 PENDING → 写入 Outbox → 异步投递 MQ → 消费端异步发送"， 仅在请求中显式设置
+   * {@code sync=true} 时走同步路径。
+   *
+   * <p>对标阿里消息中心发送入口 100% 异步化：API 仅落库 PENDING + 返回 msgId，实际发送由 Worker 池消费。 默认 false（保持向后兼容），高
+   * 并发场景建议开启。
+   */
+  private boolean defaultAsync = false;
+
   /** 聚合扫描间隔（毫秒） */
   @Min(1000)
   private long aggregateScanIntervalMs = 60000L;
