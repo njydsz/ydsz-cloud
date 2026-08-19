@@ -26,6 +26,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  *   <li>B32xxx RBAC（角色/权限/菜单/岗位/语言）
  *   <li>B33xxx 自助服务
  *   <li>B34xxx 社交认证（OAuth2 绑定/登录）
+ *   <li>B35xxx LDAP 同步
  *   <li>A20xxx 安全认证（锁号/MFA/Token，HTTP 401）
  * </ul>
  *
@@ -170,6 +171,14 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   /** 账号已离职（终态，不可再激活） */
   USER_RESIGNED("A20127", "userinfo.user.resigned", 403),
 
+  // ==================== A20xxx 跨域 SSO ====================
+  /** 不受信的跨域来源 */
+  SSO_DOMAIN_NOT_TRUSTED("A20137", "userinfo.sso.domain.not.trusted", 403),
+  /** 令牌交换失败 */
+  SSO_TOKEN_EXCHANGE_FAILED("A20138", "userinfo.sso.token.exchange.failed", 401),
+  /** CORS 预检失败 */
+  CORS_PREFLIGHT_FAILED("A20139", "userinfo.cors.preflight.failed", 403),
+
   // ==================== B33xxx 自助服务 ====================
   /** 自助注册功能未开启 */
   SELF_REGISTRATION_DISABLED("B33001", "userinfo.self.registration.disabled"),
@@ -192,6 +201,16 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   /** 不能封禁自己 */
   CANNOT_BAN_SELF("A20136", "userinfo.cannot.ban.self", 400),
 
+  // ==================== A20xxx API 参数签名（P0-7） ====================
+  /** 缺少签名参数（X-Timestamp/X-Nonce/X-Signature 任一缺失） */
+  SIGNATURE_REQUIRED("A20129", "userinfo.signature.required", 401),
+  /** 签名无效（签名值不匹配） */
+  SIGNATURE_INVALID("A20130", "userinfo.signature.invalid", 401),
+  /** 签名已过期（时间戳超出有效期窗口） */
+  SIGNATURE_EXPIRED("A20131", "userinfo.signature.expired", 401),
+  /** Nonce 已被使用（疑似重放攻击） */
+  NONCE_REUSED("A20132", "userinfo.nonce.reused", 401),
+
   // ==================== B34xxx 社交认证 ====================
   /** 社交认证功能未开启 */
   SOCIAL_AUTH_DISABLED("B34001", "userinfo.social.auth.disabled"),
@@ -202,7 +221,17 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   /** 社交账号未绑定 */
   SOCIAL_ACCOUNT_NOT_BOUND("B34004", "userinfo.social.account.not.bound"),
   /** 社交认证失败 */
-  SOCIAL_AUTH_FAILED("B34005", "userinfo.social.auth.failed");
+  SOCIAL_AUTH_FAILED("B34005", "userinfo.social.auth.failed"),
+
+  // ==================== B35xxx LDAP 同步 ====================
+  /** LDAP 同步功能未开启 */
+  LDAP_SYNC_DISABLED("B35001", "userinfo.ldap.sync.disabled"),
+  /** LDAP 同步正在进行中 */
+  LDAP_SYNC_IN_PROGRESS("B35002", "userinfo.ldap.sync.in.progress"),
+  /** LDAP 同步失败 */
+  LDAP_SYNC_FAILED("B35003", "userinfo.ldap.sync.failed"),
+  /** LDAP 连接失败 */
+  LDAP_CONNECTION_FAILED("B35004", "userinfo.ldap.connection.failed");
 
   /** 错误码（业务契约，不应轻易变更） */
   private final String code;

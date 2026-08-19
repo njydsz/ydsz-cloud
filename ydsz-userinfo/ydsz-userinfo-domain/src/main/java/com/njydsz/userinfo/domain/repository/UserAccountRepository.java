@@ -188,4 +188,35 @@ public interface UserAccountRepository {
    * @return 影响行数
    */
   int batchDeleteByIds(Collection<String> ids);
+
+  /**
+   * 更新账号封禁字段。
+   *
+   * <p>专用于封禁/解封操作，原子更新 ban_type、ban_reason、ban_expire_at、banned_by、banned_at 五个字段，
+   * 同时更新 updated_at。其他字段不受影响。
+   *
+   * @param id 用户 ID
+   * @param banType 封禁类型（TEMPORARY/PERMANENT/null）
+   * @param banReason 封禁原因（null 表示清除）
+   * @param banExpireAt 封禁到期时间（null 表示清除）
+   * @param bannedBy 操作人标识
+   * @return 影响行数（用户不存在或已删除时为 0）
+   */
+  int updateBanFields(
+      String id,
+      String banType,
+      String banReason,
+      java.time.LocalDateTime banExpireAt,
+      String bannedBy);
+
+  /**
+   * 根据 ID 查询用户账号（返回包含封禁字段的完整 VO）。
+   *
+   * <p>返回的 VO 包含 banType、banReason、banExpireAt、bannedBy、bannedAt 字段，
+   * 用于封禁状态查询场景。
+   *
+   * @param id 用户 ID
+   * @return 用户账号 VO（含封禁字段）；不存在返回 {@code Optional.empty()}
+   */
+  Optional<UserAccountVO> findByIdWithBan(String id);
 }

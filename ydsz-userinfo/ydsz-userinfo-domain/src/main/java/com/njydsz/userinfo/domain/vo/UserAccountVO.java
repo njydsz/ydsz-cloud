@@ -86,4 +86,63 @@ public class UserAccountVO {
    */
   private Integer revision;
 
+  // ==================== 封禁字段 ====================
+
+  /** 封禁类型（TEMPORARY/PERMANENT/null），null 表示未封禁 */
+  private String banType;
+
+  /** 封禁原因 */
+  private String banReason;
+
+  /** 封禁到期时间（临时封禁使用，永久封禁为 null） */
+  private LocalDateTime banExpireAt;
+
+  /** 封禁操作人标识 */
+  private String bannedBy;
+
+  /** 封禁操作时间 */
+  private LocalDateTime bannedAt;
+
+  /**
+   * 转换为封禁信息 VO。
+   *
+   * <p>根据当前封禁字段状态生成 {@link BanInfoVO}，包含懒检查逻辑（临时封禁过期自动解除）。
+   *
+   * @return 封禁信息 VO
+   */
+  public BanInfoVO toBanInfo() {
+    BanInfoVO vo = new BanInfoVO();
+    vo.setBanned(checkBanned());
+    if (this.banType != null) {
+      vo.setBanType(this.banType);
+    }
+    vo.setBanReason(this.banReason);
+    vo.setBanExpireAt(this.banExpireAt);
+    vo.setBannedBy(this.bannedBy);
+    vo.setBannedAt(this.bannedAt);
+    return vo;
+  }
+
+  /**
+   * 检查当前是否处于封禁状态（懒检查）。
+   *
+   * <p>临时封禁过期自动返回 false。永久封禁始终返回 true。
+   *
+   * @return true 表示当前处于封禁状态
+   */
+  private boolean checkBanned() {
+    if (this.banType == null) {
+      return false;
+    }
+    try {
+      BanType type = BanType.valueOf(this.banType);
+      if (type == BanType.PERMANENT) {
+        return true;
+      }
+      // TEMPORARY: 检查是否过期
+      return this.banExpireAt != null && this.banExpireAt.isAfter(LocalDateTime.now());
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
+  }
 }

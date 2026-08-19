@@ -32,4 +32,10 @@ public class UserSessionVO implements Serializable {
 
   /** 会话过期时间（ISO 8601 格式） */
   private String expireTime;
+
+  /** 设备类型编码（web/app/api/unknown） */
+  private String device;
+
+  /** 用户名 */
+  private String username;
 }

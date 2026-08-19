@@ -170,6 +170,22 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
     return userAccountMapper.batchDeleteByIds(new java.util.ArrayList<>(ids));
   }
 
+  @Override
+  public int updateBanFields(
+      String id,
+      String banType,
+      String banReason,
+      java.time.LocalDateTime banExpireAt,
+      String bannedBy) {
+    return userAccountMapper.updateBanFields(id, banType, banReason, banExpireAt, bannedBy);
+  }
+
+  @Override
+  public Optional<UserAccountVO> findByIdWithBan(String id) {
+    UserAccountDO entity = userAccountMapper.selectById(id);
+    return Optional.ofNullable(entity).map(converter::entityToVO);
+  }
+
   /**
    * 根据查询参数构建 MyBatis-Plus 查询条件。
    *

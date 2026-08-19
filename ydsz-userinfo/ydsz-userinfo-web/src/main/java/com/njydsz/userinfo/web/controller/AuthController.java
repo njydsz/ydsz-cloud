@@ -5,6 +5,7 @@ import java.util.Set;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -114,11 +115,13 @@ public class AuthController {
   @PostMapping("/login")
   @Operation(summary = "用户登录", description = "账号密码登录，返回 access_token 和 refresh_token")
   public BaseResponse<LoginVO> login(
-      @Valid @RequestBody LoginDTO request, HttpServletRequest servletRequest) {
+      @Valid @RequestBody LoginDTO request,
+      HttpServletRequest servletRequest,
+      HttpServletResponse servletResponse) {
     // P1-3: 提取客户端 IP 和 User-Agent 传入 LoginDTO
     request.setLoginIp(extractClientIp(servletRequest));
     request.setUserAgent(servletRequest.getHeader("User-Agent"));
-    LoginVO result = authService.login(request);
+    LoginVO result = authService.login(request, servletResponse);
     return BaseResponse.success(result);
   }
 

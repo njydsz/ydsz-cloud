@@ -166,4 +166,34 @@ public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
             """)
   int updatePasswordAndResetFailCount(
       @Param("id") String id, @Param("newPasswordHash") String newPasswordHash);
+
+  /**
+   * 原子更新账号封禁字段。
+   *
+   * <p>通过单条 SQL 完成封禁类型、原因、到期时间、操作人、操作时间的更新，避免并发竞态。
+   *
+   * @param id 用户 ID
+   * @param banType 封禁类型（TEMPORARY/PERMANENT/null）
+   * @param banReason 封禁原因（null 表示清除）
+   * @param banExpireAt 封禁到期时间（null 表示清除）
+   * @param bannedBy 操作人标识
+   * @return 影响行数（用户不存在或已删除时为 0）
+   */
+  @Update(
+      """
+            UPDATE ydsz_user_account
+            SET ban_type = #{banType},
+                ban_reason = #{banReason},
+                ban_expire_at = #{banExpireAt},
+                banned_by = #{bannedBy},
+                banned_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = #{id} AND deleted = 0
+            """)
+  int updateBanFields(
+      @Param("id") String id,
+      @Param("banType") String banType,
+      @Param("banReason") String banReason,
+      @Param("banExpireAt") java.time.LocalDateTime banExpireAt,
+      @Param("bannedBy") String bannedBy);
 }

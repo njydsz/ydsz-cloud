@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import io.micrometer.core.instrument.Timer;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
+import com.njydsz.userinfo.server.config.CrossDomainSsoProperties;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
@@ -79,20 +81,23 @@ public class AuthServiceImpl implements AuthService {
   private final CredentialVerifier credentialVerifier;
   private final SessionManager sessionManager;
   private final RoleCacheService roleCacheService;
+  private final CrossDomainTokenService crossDomainTokenService;
+  private final CrossDomainSsoProperties ssoProperties;
 
   /**
    * {@inheritDoc}
    *
    * <p>认证流程：IP 封禁检查 → 用户状态/锁定校验 → 风险评分 → 动态认证策略（MEDIUM+ 图形验证码，HIGH
    * 追加 MFA 动态码）→ 密码校验（本地优先，失败回退 LDAP）→ 角色加载 → JWT 签发 → Redis 会话存储 + 会话索引 →
-   * 登录信息更新。
+   * 登录信息更新 → 跨域 Cookie 注入（启用 SSO 且请求来自跨域时）。
    *
    * @param loginDTO 登录请求（用户名、密码、可选验证码、可选 MFA 动态码）
+   * @param response HTTP 响应（用于注入跨域 Cookie），可为 null
    * @return 登录响应（含 accessToken、refreshToken、用户信息）
    * @throws BusinessException 当 IP 被封禁、验证码缺失、用户不存在、账号禁用/锁定、MFA 未通过、密码错误时抛出
    */
   @Override
-  public LoginVO login(LoginDTO loginDTO) {
+  public LoginVO login(LoginDTO loginDTO, HttpServletResponse response) {
     Timer.Sample sample = userInfoMetrics.startTimer();
     String loginIp = loginDTO.getLoginIp();
     String userAgent = loginDTO.getUserAgent();
@@ -115,7 +120,7 @@ public class AuthServiceImpl implements AuthService {
 
     // 加载角色 + 签发 Token + 存储会话
     List<RoleDO> roles = roleCacheService.loadUserRoles(user.getId());
-    TokenResult tokenResult = issueTokensAndCreateSession(user, roles, loginDTO);
+    TokenResult tokenResult = issueTokensAndCreateSession(user, roles, loginDTO, response);
 
     // 更新登录状态 + 审计
     updateLoginSuccess(user, loginIp, userAgent);
@@ -262,15 +267,17 @@ public class AuthServiceImpl implements AuthService {
    * 签发 Token 并写入 Redis 会话。
    *
    * <p>从登录 DTO 中推断设备类型（优先 X-Platform 头，其次 User-Agent），传递给会话管理器
-   * 实现分端会话限制。
+   * 实现分端会话限制。登录成功后，如果启用了跨域 SSO 且请求来自跨域子应用，
+   * 在响应中注入跨域共享 Cookie（Domain 设为父域名），实现微前端子应用免登录。
    *
    * @param user 登录用户
    * @param roles 用户角色列表
    * @param loginDTO 登录请求 DTO（用于推断设备类型）
+   * @param response HTTP 响应（用于注入跨域 Cookie），可为 null
    * @return 包含 accessToken 和 refreshToken 的结果对象
    */
   private TokenResult issueTokensAndCreateSession(
-      UserAccountDO user, List<RoleDO> roles, LoginDTO loginDTO) {
+      UserAccountDO user, List<RoleDO> roles, LoginDTO loginDTO, HttpServletResponse response) {
     String roleCodes = roles.stream().map(RoleDO::getRoleCode).collect(Collectors.joining(","));
     String roleNames = roles.stream().map(RoleDO::getRoleName).collect(Collectors.joining(","));
 
@@ -292,7 +299,34 @@ public class AuthServiceImpl implements AuthService {
     String refreshToken = tokenService.issueRefreshToken(userInfo);
     sessionManager.createSession(
         accessToken, refreshToken, user, roleCodes, roleNames, deviceType);
+
+    // 跨域 SSO：登录成功后注入跨域共享 Cookie
+    injectCrossDomainCookie(accessToken, response);
+
     return new TokenResult(accessToken, refreshToken);
+  }
+
+  /**
+   * 注入跨域共享 Cookie。
+   *
+   * <p>启用跨域 SSO（{@link CrossDomainSsoProperties#enabled}）且 response 非 null 时，
+   * 将 access_token 写入 Domain 为父域名的 Cookie，使父域名下所有子域浏览器自动携带，
+   * 实现微前端子应用免登录。同域场景不受影响。
+   *
+   * @param accessToken 登录成功的 access_token
+   * @param response HTTP 响应，为 null 时跳过
+   */
+  private void injectCrossDomainCookie(String accessToken, HttpServletResponse response) {
+    if (!ssoProperties.isEnabled() || response == null) {
+      return;
+    }
+    try {
+      crossDomainTokenService.injectTokenCookie(response, accessToken, ssoProperties);
+      log.debug("Cross-domain SSO cookie injected after login");
+    } catch (Exception e) {
+      // Cookie 注入失败不影响登录主流程，仅记录日志
+      log.warn("Failed to inject cross-domain SSO cookie: {}", e.getMessage());
+    }
   }
 
   /**

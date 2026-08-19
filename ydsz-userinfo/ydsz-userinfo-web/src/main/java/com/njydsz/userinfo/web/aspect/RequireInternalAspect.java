@@ -14,8 +14,10 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.server.config.ApiSignatureProperties;
 import com.njydsz.userinfo.server.config.InternalCallProperties;
 import com.njydsz.userinfo.web.annotation.RequireInternal;
+import com.njydsz.userinfo.web.filter.ApiSignatureFilter;
 
 /**
  * 内部接口调用校验切面（P0-6）。
@@ -27,10 +29,15 @@ import com.njydsz.userinfo.web.annotation.RequireInternal;
  * <p><b>开关控制：</b>通过 {@link InternalCallProperties#isEnabled()} 控制是否生效。
  * 默认关闭（渐进式启用），开启后所有内部端点强制要求标记头。
  *
+ * <p><b>签名优先模式（P0-7）：</b>当 {@link ApiSignatureProperties#isEnabled()} 为 true 时，
+ * 签名过滤器优先校验签名，通过则设置请求属性；本切面检测到该属性后直接放行，跳过 IP 标记头校验。
+ * 签名未通过或未配置时，回退到原有的 IP 标记头校验逻辑。
+ *
  * @author ydsz-team
- * @since 2.21.0
+ * @since 1.6.0
  * @see RequireInternal 内部接口标记注解
  * @see InternalCallProperties 内部调用配置
+ * @see ApiSignatureProperties 签名配置
  */
 @Slf4j
 @Aspect
@@ -39,6 +46,7 @@ import com.njydsz.userinfo.web.annotation.RequireInternal;
 public class RequireInternalAspect {
 
   private final InternalCallProperties properties;
+  private final ApiSignatureProperties signatureProperties;
 
   /** 切点：类级或方法级标注了 @RequireInternal 的方法 */
   @Pointcut("@annotation(com.njydsz.userinfo.web.annotation.RequireInternal) "
@@ -63,6 +71,13 @@ public class RequireInternalAspect {
       throw new BusinessException(UserInfoExceptionCode.INTERNAL_ACCESS_FORBIDDEN);
     }
     HttpServletRequest request = attributes.getRequest();
+
+    // P0-7: 签名校验优先 — 若签名过滤器已通过校验（设置请求属性），直接放行
+    if (isSignatureVerified(request)) {
+      return;
+    }
+
+    // 回退到 IP 标记头校验
     String flag = request.getHeader(properties.getHeaderName());
     if (!"true".equalsIgnoreCase(flag)) {
       log.warn(
@@ -72,5 +87,23 @@ public class RequireInternalAspect {
           request.getRequestURI());
       throw new BusinessException(UserInfoExceptionCode.INTERNAL_ACCESS_FORBIDDEN);
     }
+  }
+
+  /**
+   * 判断签名过滤器是否已通过校验。
+   *
+   * <p>当 {@link ApiSignatureProperties#isEnabled()} 为 true 且签名过滤器成功验证签名后，
+   * 会在请求属性中设置 {@code SIGNATURE_VERIFIED_ATTR} 为 {@link Boolean#TRUE}。
+   * 本方法检查该属性，若存在且为 true 则视为签名校验已通过。
+   *
+   * @param request HTTP 请求
+   * @return true 表示签名校验已通过（可跳过 IP 标记头校验）
+   */
+  private boolean isSignatureVerified(HttpServletRequest request) {
+    if (!signatureProperties.isEnabled()) {
+      return false;
+    }
+    Object attr = request.getAttribute(ApiSignatureFilter.SIGNATURE_VERIFIED_ATTR);
+    return Boolean.TRUE.equals(attr);
   }
 }
