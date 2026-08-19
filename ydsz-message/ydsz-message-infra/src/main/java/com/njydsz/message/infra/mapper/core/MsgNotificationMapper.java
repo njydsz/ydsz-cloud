@@ -3,6 +3,7 @@ package com.njydsz.message.infra.mapper.core;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.message.infra.entity.MsgNotification;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -29,7 +30,7 @@ import com.njydsz.message.infra.entity.MsgNotificationDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.entity.core.MsgNotification 通知实体
+ * @see MsgNotification 通知实体
  * @see com.njydsz.message.server.service.MsgNotificationService 通知 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

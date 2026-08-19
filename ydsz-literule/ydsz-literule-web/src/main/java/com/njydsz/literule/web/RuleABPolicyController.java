@@ -25,7 +25,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
-import com.njydsz.literule.domain.entity.RuleABPolicy;
+import com.njydsz.literule.infra.entity.RuleABPolicy;
 import com.njydsz.literule.domain.vo.RuleABPolicyVO;
 import com.njydsz.literule.domain.vo.RuleABRollbackVO;
 import com.njydsz.literule.server.spi.ABTestAutoRollbackProvider;

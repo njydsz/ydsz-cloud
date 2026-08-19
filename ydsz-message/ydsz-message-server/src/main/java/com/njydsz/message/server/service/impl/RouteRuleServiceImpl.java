@@ -18,7 +18,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
-import com.njydsz.message.domain.dto.config.RouteRuleUpsertDTO;
+import com.njydsz.message.domain.dto.RouteRuleUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgRouteRule;
 import com.njydsz.message.infra.repository.MsgRouteRuleRepository;
 import com.njydsz.message.server.service.config.RouteRuleService;

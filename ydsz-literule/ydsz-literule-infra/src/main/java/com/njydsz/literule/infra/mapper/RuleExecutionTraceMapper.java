@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.literule.domain.entity.RuleExecutionTraceDO;
+import com.njydsz.literule.infra.entity.RuleExecutionTraceDO;
 
 /**
  * 规则执行轨迹 Mapper
@@ -32,7 +32,7 @@ import com.njydsz.literule.domain.entity.RuleExecutionTraceDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.literule.domain.entity.RuleExecutionTraceDO 执行轨迹实体
+ * @see RuleExecutionTraceDO 执行轨迹实体
  * @see com.njydsz.literule.server.service.RuleExecutionTraceService 轨迹 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

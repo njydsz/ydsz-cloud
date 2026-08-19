@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
-import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.infra.entity.MsgLog;
 
 /**
  * 消息归档服务接口。

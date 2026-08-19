@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.literule.domain.entity.RulePackDO;
+import com.njydsz.literule.infra.entity.RulePackDO;
 
 /**
  * 规则包 Mapper
@@ -28,7 +28,7 @@ import com.njydsz.literule.domain.entity.RulePackDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.literule.domain.entity.RulePackDO 规则包实体
+ * @see RulePackDO 规则包实体
  * @see com.njydsz.literule.server.service.RulePackService 规则包 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

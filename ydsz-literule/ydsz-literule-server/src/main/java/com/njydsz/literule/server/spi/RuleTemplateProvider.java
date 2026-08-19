@@ -3,7 +3,7 @@ package com.njydsz.literule.server.spi;
 import java.util.List;
 
 import com.njydsz.literule.api.RuleDefinition;
-import com.njydsz.literule.domain.entity.RuleTemplate;
+import com.njydsz.literule.infra.entity.RuleTemplate;
 
 /**
  * 规则模板提供者 SPI

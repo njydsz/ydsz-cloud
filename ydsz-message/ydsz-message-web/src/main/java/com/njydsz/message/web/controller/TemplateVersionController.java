@@ -26,8 +26,8 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.domain.dto.template.TemplatePreviewDTO;
-import com.njydsz.message.domain.dto.template.TemplateTestSendDTO;
+import com.njydsz.message.domain.dto.TemplatePreviewDTO;
+import com.njydsz.message.domain.dto.TemplateTestSendDTO;
 import com.njydsz.message.domain.entity.template.MsgTemplateVersion;
 import com.njydsz.message.server.service.template.TemplateVersionService;
 

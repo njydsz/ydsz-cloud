@@ -5,7 +5,7 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
-import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
 import com.njydsz.message.domain.vo.MsgBatchVO;
 import com.njydsz.message.domain.vo.MsgFeedbackVO;

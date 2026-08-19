@@ -5,11 +5,10 @@ import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.core.response.PageResponse;
 
-import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
-import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.entity.MsgLog;
 import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**

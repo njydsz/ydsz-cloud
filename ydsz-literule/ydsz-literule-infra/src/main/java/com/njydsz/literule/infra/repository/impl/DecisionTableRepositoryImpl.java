@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
-import com.njydsz.literule.domain.entity.DecisionTable;
+import com.njydsz.literule.infra.entity.DecisionTable;
 import com.njydsz.literule.domain.repository.DecisionTableRepository;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.infra.converter.LiteruleConverter;

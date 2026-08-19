@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.message.domain.dto.core.ChannelStatsVO;
-import com.njydsz.message.domain.dto.core.CostStatsVO;
-import com.njydsz.message.domain.dto.core.FunnelStatsVO;
-import com.njydsz.message.domain.dto.core.MessageStatsVO;
-import com.njydsz.message.domain.dto.receipt.ReceiptStatsVO;
+import com.njydsz.message.domain.dto.ChannelStatsVO;
+import com.njydsz.message.domain.dto.CostStatsVO;
+import com.njydsz.message.domain.dto.FunnelStatsVO;
+import com.njydsz.message.domain.dto.MessageStatsVO;
+import com.njydsz.message.domain.dto.ReceiptStatsVO;
 import com.njydsz.message.server.service.core.MessageStatsService;
 
 /**
@@ -75,9 +75,9 @@ import com.njydsz.message.server.service.core.MessageStatsService;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.message.server.service.core.MessageStatsService 消息统计服务
- * @see com.njydsz.message.domain.dto.core.MessageStatsVO 总览 VO
- * @see com.njydsz.message.domain.dto.core.FunnelStatsVO 漏斗 VO
- * @see com.njydsz.message.domain.dto.core.CostStatsVO 成本 VO
+ * @see MessageStatsVO 总览 VO
+ * @see FunnelStatsVO 漏斗 VO
+ * @see CostStatsVO 成本 VO
  */
 @Slf4j
 @Tag(name = "消息统计看板", description = "发送/重试/死信/回执聚合指标")

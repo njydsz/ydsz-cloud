@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
-import com.njydsz.message.domain.entity.core.MsgNotification;
+import com.njydsz.message.infra.entity.MsgNotification;
 import com.njydsz.message.infra.repository.MsgNotificationRepository;
 
 /**

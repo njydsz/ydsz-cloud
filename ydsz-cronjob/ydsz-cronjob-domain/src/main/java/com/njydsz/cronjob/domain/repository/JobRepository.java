@@ -2,10 +2,10 @@ package com.njydsz.cronjob.domain.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
+import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
@@ -18,7 +18,8 @@ import com.njydsz.cronjob.domain.vo.JobVO;
  * <ul>
  *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
  *   <li>返回领域 VO（{@link JobVO}），非 DTO / infra 实体
- *   <li>查询入参使用具体字段
+ *   <li>CUD 入参使用 DTO，查询入参使用具体字段
+ *   <li>分页结果使用内部 {@link PageResult}，禁止 MyBatis-Plus API 透传
  * </ul>
  *
  * @author ydsz-team
@@ -33,6 +34,14 @@ public interface JobRepository {
    * @return 任务定义 VO；不存在返回 {@code Optional.empty()}
    */
   Optional<JobVO> findByJobKey(String jobKey);
+
+  /**
+   * 根据 ID 查询任务定义。
+   *
+   * @param id 任务 ID
+   * @return 任务定义 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<JobVO> findById(String id);
 
   /**
    * 查询所有 NORMAL 状态任务（启动时加载）。
@@ -201,33 +210,31 @@ public interface JobRepository {
    */
   long countAll();
 
-  // ===== 实体 CRUD（JobServiceImpl / JobHistoryServiceImpl 使用，与 VO 查询方法并存） =====
+  // ===== CUD 操作（入参 DTO，返回影响行数/主键） =====
 
-  /** 按 ID 查询任务实体。 */
-  Job selectById(String id);
+  /**
+   * 新增任务。
+   *
+   * @param dto 任务创建 DTO
+   * @return 新建任务主键 ID
+   */
+  String insert(JobPostDTO dto);
 
-  /** 新增任务实体。 */
-  int insert(Job job);
+  /**
+   * 按 ID 更新任务。
+   *
+   * @param dto 任务更新 DTO（必须含 id）
+   * @return 受影响行数
+   */
+  int update(JobPutDTO dto);
 
-  /** 按 ID 更新任务实体。 */
-  int updateById(Job job);
-
-  /** 按 ID 删除任务（逻辑删除）。 */
+  /**
+   * 按 ID 删除任务（逻辑删除）。
+   *
+   * @param id 任务 ID
+   * @return 受影响行数
+   */
   int deleteById(String id);
-
-  /** 查询全部 NORMAL 状态任务实体（启动加载）。 */
-  List<Job> selectAllNormal();
-
-  /** 按 jobKey 查询任务实体（唯一性校验）。 */
-  Job selectByJobKey(String jobKey);
-
-  /** MyBatis-Plus 分页查询（JobServiceImpl 任务分页使用）。 */
-  com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> selectPage(
-      com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> page,
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper);
-
-  /** 按条件统计任务数（TenantQuotaServiceImpl 配额计量使用）。 */
-  long selectCount(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper);
 
   /**
    * 分页查询内部结果对象。

@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -21,7 +20,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.domain.dto.receipt.RecallRequestDTO;
+import com.njydsz.message.domain.dto.RecallRequestDTO;
 import com.njydsz.message.server.service.receipt.RecallService;
 
 /**
@@ -71,7 +70,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.message.server.service.receipt.RecallService 消息撤回服务
- * @see com.njydsz.message.domain.dto.receipt.RecallRequestDTO 撤回请求 DTO
+ * @see RecallRequestDTO 撤回请求 DTO
  */
 @Tag(name = "消息撤回", description = "通知/消息撤回")
 @Slf4j

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.event.OutboxEvent;
 import com.njydsz.message.domain.repository.OutboxEventRepository;
 import com.njydsz.message.infra.entity.MsgTraceDO;

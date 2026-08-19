@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
-import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
-import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.infra.entity.MsgLog;
 
 /**
  * 消息发送日志 Service
@@ -28,7 +28,7 @@ import com.njydsz.message.domain.entity.core.MsgLog;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.entity.core.MsgLog 消息日志实体
+ * @see MsgLog 消息日志实体
  * @see MessageStatsService 消息统计服务
  */
 public interface MessageLogService {

@@ -6,10 +6,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.message.domain.dto.batch.BatchSendResult;
-import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
-import com.njydsz.message.domain.dto.core.MessageSendDTO;
-import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.domain.dto.BatchSendResult;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.dto.MessageSendDTO;
+import com.njydsz.message.infra.entity.MsgLog;
 
 /**
  * 消息发送 Service 接口（多渠道核心入口）
@@ -41,7 +41,7 @@ import com.njydsz.message.domain.entity.core.MsgLog;
  * @since 1.0.0
  * @see com.njydsz.message.server.service.RouteRuleService 路由规则 Service
  * @see com.njydsz.message.server.service.ReceiptService 回执 Service
- * @see com.njydsz.message.domain.entity.core.MsgLog 消息日志实体
+ * @see MsgLog 消息日志实体
  */
 public interface MessageService {
 

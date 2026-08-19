@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.queue.trace.MessageTracer;
-import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;

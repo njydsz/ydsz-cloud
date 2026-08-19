@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.nextwiki.domain.dto.TagDTO;
 import com.njydsz.nextwiki.domain.vo.TagVO;
-import com.njydsz.nextwiki.domain.service.TagDomainService;
 
 /**
  * 标签应用服务。

@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -23,7 +22,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.domain.dto.receipt.ReceiptCallbackDTO;
+import com.njydsz.message.domain.dto.ReceiptCallbackDTO;
 import com.njydsz.message.domain.entity.receipt.MsgReceipt;
 import com.njydsz.message.server.service.receipt.ReceiptService;
 
@@ -73,7 +72,7 @@ import com.njydsz.message.server.service.receipt.ReceiptService;
  * @since 1.0.0
  * @see com.njydsz.message.server.service.receipt.ReceiptService 消息回执服务
  * @see com.njydsz.message.domain.entity.receipt.MsgReceipt 回执实体
- * @see com.njydsz.message.domain.dto.receipt.ReceiptCallbackDTO 回执回调 DTO
+ * @see ReceiptCallbackDTO 回执回调 DTO
  */
 @Tag(name = "消息回执", description = "服务商回执回调与查询")
 @Slf4j

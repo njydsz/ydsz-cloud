@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.archive.MessageArchiveService;

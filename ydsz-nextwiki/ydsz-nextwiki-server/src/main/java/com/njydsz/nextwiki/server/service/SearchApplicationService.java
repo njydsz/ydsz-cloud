@@ -26,8 +26,6 @@ import com.njydsz.nextwiki.domain.query.SearchQuery;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.domain.repository.TagRepository;
-import com.njydsz.nextwiki.domain.service.SearchDomainService;
-import com.njydsz.nextwiki.domain.service.SearchQueryParser;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.SearchIndexVO;
 import com.njydsz.nextwiki.domain.vo.SearchResultVO;
@@ -58,7 +56,7 @@ import com.njydsz.nextwiki.domain.vo.TagVO;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.common.search.service.UnifiedSearchService 统一搜索服务
- * @see com.njydsz.nextwiki.domain.service.SearchDomainService DB 降级搜索
+ * @see SearchDomainService DB 降级搜索
  */
 @Slf4j
 @Service

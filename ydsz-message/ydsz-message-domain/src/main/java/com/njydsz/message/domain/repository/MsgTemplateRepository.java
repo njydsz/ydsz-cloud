@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
 
-import com.njydsz.message.domain.dto.template.TemplateQueryDTO;
+import com.njydsz.message.domain.dto.TemplateQueryDTO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 
 /**

@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.domain.entity.config.MsgTenantConfig;
+import com.njydsz.message.infra.entity.MsgTenantConfig;
 
 /**
  * 多租户消息配置 Mapper
@@ -24,7 +24,7 @@ import com.njydsz.message.domain.entity.config.MsgTenantConfig;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.entity.config.MsgTenantConfig 租户配置实体
+ * @see MsgTenantConfig 租户配置实体
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper

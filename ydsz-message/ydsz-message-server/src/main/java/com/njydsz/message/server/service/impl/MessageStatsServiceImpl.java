@@ -13,12 +13,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.message.domain.dto.core.ChannelStatsVO;
-import com.njydsz.message.domain.dto.core.CostStatsVO;
-import com.njydsz.message.domain.dto.core.FunnelStatsVO;
-import com.njydsz.message.domain.dto.core.MessageStatsVO;
-import com.njydsz.message.domain.dto.receipt.ReceiptStatsVO;
-import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.domain.dto.ChannelStatsVO;
+import com.njydsz.message.domain.dto.CostStatsVO;
+import com.njydsz.message.domain.dto.FunnelStatsVO;
+import com.njydsz.message.domain.dto.MessageStatsVO;
+import com.njydsz.message.domain.dto.ReceiptStatsVO;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageChannelEnum;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;

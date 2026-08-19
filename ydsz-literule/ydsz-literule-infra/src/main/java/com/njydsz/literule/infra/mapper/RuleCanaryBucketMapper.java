@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.literule.domain.entity.RuleCanaryBucket;
+import com.njydsz.literule.infra.entity.RuleCanaryBucket;
 
 /**
  * 规则灰度桶 Mapper
@@ -28,7 +28,7 @@ import com.njydsz.literule.domain.entity.RuleCanaryBucket;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.literule.domain.entity.RuleCanaryBucket 灰度桶实体
+ * @see RuleCanaryBucket 灰度桶实体
  * @see com.njydsz.literule.server.service.RuleCanaryBucketService 灰度桶 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

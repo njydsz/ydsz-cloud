@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.domain.entity.canary.MsgCanary;
+import com.njydsz.message.infra.entity.MsgCanary;
 
 /**
  * 灰度实验 Mapper
@@ -22,7 +22,7 @@ import com.njydsz.message.domain.entity.canary.MsgCanary;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.entity.canary.MsgCanary 灰度实验实体
+ * @see MsgCanary 灰度实验实体
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper

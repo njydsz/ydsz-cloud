@@ -16,7 +16,6 @@ import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.query.FileAclQuery;
 import com.njydsz.nextwiki.domain.repository.FileAclRepository;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.domain.service.FilePermissionDomainService;
 import com.njydsz.nextwiki.domain.vo.FileAclVO;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 

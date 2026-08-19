@@ -4,10 +4,10 @@ import java.util.Map;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
-import com.njydsz.message.domain.dto.template.TemplateAuditDTO;
-import com.njydsz.message.domain.dto.template.TemplateCreateDTO;
-import com.njydsz.message.domain.dto.template.TemplateQueryDTO;
-import com.njydsz.message.domain.entity.template.MsgTemplate;
+import com.njydsz.message.domain.dto.TemplateAuditDTO;
+import com.njydsz.message.domain.dto.TemplateCreateDTO;
+import com.njydsz.message.domain.dto.TemplateQueryDTO;
+import com.njydsz.message.infra.entity.MsgTemplate;
 
 /**
  * 消息模板 Service 接口
@@ -32,7 +32,7 @@ import com.njydsz.message.domain.entity.template.MsgTemplate;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.entity.template.MsgTemplate 模板实体
+ * @see MsgTemplate 模板实体
  * @see com.njydsz.message.server.service.TemplateVersionService 模板版本 Service
  */
 public interface TemplateService {

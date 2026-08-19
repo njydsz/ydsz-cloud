@@ -13,7 +13,7 @@ import com.njydsz.literule.api.RulePack;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.expression.ExpressionFunctionDef;
 import com.njydsz.literule.api.expression.ExpressionValidationResult;
-import com.njydsz.literule.domain.entity.RuleDefinitionDO;
+import com.njydsz.literule.infra.entity.RuleDefinitionDO;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
 import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
 import com.njydsz.literule.domain.vo.ExpressionValidationResultVO;

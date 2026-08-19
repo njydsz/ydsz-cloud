@@ -1,6 +1,5 @@
 package com.njydsz.nextwiki.server.listener;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -20,7 +19,7 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.domain.repository.TagRepository;
-import com.njydsz.nextwiki.domain.service.SearchDomainService;
+import com.njydsz.nextwiki.server.service.SearchDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.TagVO;
 import com.njydsz.nextwiki.server.service.ContentExtractionApplicationService;

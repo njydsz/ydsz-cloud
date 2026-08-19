@@ -7,17 +7,17 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.service.FilePermissionDomainService;
-import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
-import com.njydsz.nextwiki.domain.service.FolderDomainService;
-import com.njydsz.nextwiki.domain.service.QuotaDomainService;
-import com.njydsz.nextwiki.domain.service.SearchDomainService;
-import com.njydsz.nextwiki.domain.service.SearchQueryParser;
-import com.njydsz.nextwiki.domain.service.ShareAccessLogDomainService;
-import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
-import com.njydsz.nextwiki.domain.service.SpaceDomainService;
-import com.njydsz.nextwiki.domain.service.TagDomainService;
-import com.njydsz.nextwiki.domain.service.TrashDomainService;
+import com.njydsz.nextwiki.server.service.FilePermissionDomainService;
+import com.njydsz.nextwiki.server.service.FileVersionDomainService;
+import com.njydsz.nextwiki.server.service.FolderDomainService;
+import com.njydsz.nextwiki.server.service.QuotaDomainService;
+import com.njydsz.nextwiki.server.service.SearchDomainService;
+import com.njydsz.nextwiki.server.service.SearchQueryParser;
+import com.njydsz.nextwiki.server.service.ShareAccessLogDomainService;
+import com.njydsz.nextwiki.server.service.ShareLinkDomainService;
+import com.njydsz.nextwiki.server.service.SpaceDomainService;
+import com.njydsz.nextwiki.server.service.TagDomainService;
+import com.njydsz.nextwiki.server.service.TrashDomainService;
 
 /**
  * NextWiki 领域服务 Bean 注册配置。

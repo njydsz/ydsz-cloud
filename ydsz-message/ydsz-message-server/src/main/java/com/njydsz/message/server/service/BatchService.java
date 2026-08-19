@@ -1,7 +1,7 @@
 package com.njydsz.message.server.service.batch;
 
-import com.njydsz.message.domain.dto.batch.BatchProgressVO;
-import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
+import com.njydsz.message.domain.dto.BatchProgressVO;
+import com.njydsz.message.domain.dto.BatchSendRequestDTO;
 import com.njydsz.message.domain.entity.batch.MsgBatch;
 
 /**

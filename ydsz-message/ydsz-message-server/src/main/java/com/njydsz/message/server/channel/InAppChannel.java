@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.message.domain.dto.core.NotificationSendDTO;
+import com.njydsz.message.domain.dto.NotificationSendDTO;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.service.core.NotificationService;
 

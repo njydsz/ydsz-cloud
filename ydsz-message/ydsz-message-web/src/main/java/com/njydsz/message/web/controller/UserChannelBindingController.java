@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -26,7 +25,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.domain.dto.config.UserChannelBindingDTO;
+import com.njydsz.message.domain.dto.UserChannelBindingDTO;
 import com.njydsz.message.domain.vo.MsgUserChannelVO;
 import com.njydsz.message.server.service.config.UserChannelBindingService;
 

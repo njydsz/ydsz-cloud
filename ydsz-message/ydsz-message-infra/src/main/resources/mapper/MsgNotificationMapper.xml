@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.message.infra.mapper.core.MsgNotificationMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.message.domain.entity.core.MsgNotification">
+    <resultMap id="BaseResultMap" type="com.njydsz.message.infra.entity.MsgNotification">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
         <result column="content" property="content"/>

@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.core;
 
 import java.util.List;
 
-import com.njydsz.message.domain.dto.core.UserReachProfileDTO;
+import com.njydsz.message.domain.dto.UserReachProfileDTO;
 
 /**
  * 智能触达策略 Service
@@ -30,7 +30,7 @@ import com.njydsz.message.domain.dto.core.UserReachProfileDTO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.dto.core.UserReachProfileDTO 用户触达画像 DTO
+ * @see UserReachProfileDTO 用户触达画像 DTO
  * @see ReachStrategyService 智能触达主服务
  */
 public interface ReachStrategyService {

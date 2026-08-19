@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.config;
 
 import java.util.List;
 
-import com.njydsz.message.domain.dto.config.UserChannelBindingDTO;
+import com.njydsz.message.domain.dto.UserChannelBindingDTO;
 import com.njydsz.message.domain.entity.config.MsgUserChannel;
 
 /**

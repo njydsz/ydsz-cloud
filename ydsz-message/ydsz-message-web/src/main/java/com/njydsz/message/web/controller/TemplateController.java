@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -29,10 +28,10 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.domain.dto.template.TemplateAuditDTO;
-import com.njydsz.message.domain.dto.template.TemplateCreateDTO;
-import com.njydsz.message.domain.dto.template.TemplateQueryDTO;
-import com.njydsz.message.domain.entity.template.MsgTemplate;
+import com.njydsz.message.domain.dto.TemplateAuditDTO;
+import com.njydsz.message.domain.dto.TemplateCreateDTO;
+import com.njydsz.message.domain.dto.TemplateQueryDTO;
+import com.njydsz.message.infra.entity.MsgTemplate;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.service.template.TemplateService;
 
@@ -75,7 +74,7 @@ import com.njydsz.message.server.service.template.TemplateService;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.message.server.service.template.TemplateService 模板服务
- * @see com.njydsz.message.domain.entity.template.MsgTemplate 模板实体
+ * @see MsgTemplate 模板实体
  */
 @Tag(name = "消息模板", description = "消息模板增删改查与审核")
 @Slf4j

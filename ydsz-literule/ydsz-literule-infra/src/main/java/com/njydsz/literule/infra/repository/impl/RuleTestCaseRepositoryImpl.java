@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.literule.domain.dto.post.RuleTestCasePostDTO;
-import com.njydsz.literule.domain.entity.RuleTestCaseDO;
+import com.njydsz.literule.infra.entity.RuleTestCaseDO;
 import com.njydsz.literule.domain.repository.RuleTestCaseRepository;
 import com.njydsz.literule.domain.vo.RuleTestCaseVO;
 import com.njydsz.literule.infra.converter.LiteruleConverter;

@@ -9,7 +9,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.domain.entity.config.MsgTenantConfig;
+import com.njydsz.message.infra.entity.MsgTenantConfig;
 import com.njydsz.message.infra.mapper.MsgTenantConfigMapper;
 
 /**

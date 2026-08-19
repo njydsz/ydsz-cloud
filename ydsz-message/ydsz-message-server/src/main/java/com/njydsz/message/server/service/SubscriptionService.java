@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.config;
 
 import java.util.List;
 
-import com.njydsz.message.domain.dto.config.SubscriptionUpsertDTO;
+import com.njydsz.message.domain.dto.SubscriptionUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgSubscription;
 
 /**

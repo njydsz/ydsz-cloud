@@ -1,6 +1,7 @@
 package com.njydsz.message.infra.mapper.template;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.message.infra.entity.MsgTemplate;
 import org.apache.ibatis.annotations.Mapper;
 
 import com.njydsz.message.infra.entity.MsgTemplateDO;
@@ -25,7 +26,7 @@ import com.njydsz.message.infra.entity.MsgTemplateDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.entity.template.MsgTemplate 模板实体
+ * @see MsgTemplate 模板实体
  * @see com.njydsz.message.server.service.MsgTemplateService 模板 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

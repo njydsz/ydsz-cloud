@@ -8,8 +8,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
-import com.njydsz.workflow.domain.dto.post.FlowDelegateAuthPostDTO;
-import com.njydsz.workflow.domain.dto.put.FlowDelegateAuthPutDTO;
+import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
+import com.njydsz.workflow.domain.dto.FlowDelegateAuthPutDTO;
 import com.njydsz.workflow.infra.entity.FlowAdminRoleDO;
 import com.njydsz.workflow.infra.entity.FlowAttachmentDO;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;

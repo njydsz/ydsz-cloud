@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.literule.domain.entity.RuleABPolicy;
+import com.njydsz.literule.infra.entity.RuleABPolicy;
 
 /**
  * 规则 A/B 策略 Mapper
@@ -26,7 +26,7 @@ import com.njydsz.literule.domain.entity.RuleABPolicy;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.literule.domain.entity.RuleABPolicy A/B 策略实体
+ * @see RuleABPolicy A/B 策略实体
  * @see com.njydsz.literule.server.service.RuleABPolicyService A/B Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

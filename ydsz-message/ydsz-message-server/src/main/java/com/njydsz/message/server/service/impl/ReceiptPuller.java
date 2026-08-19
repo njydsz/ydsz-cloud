@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.domain.constant.MessageConstants;
-import com.njydsz.message.domain.dto.receipt.ReceiptResult;
-import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.domain.dto.ReceiptResult;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;

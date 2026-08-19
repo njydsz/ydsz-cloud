@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 /**
  * 规则测试用例（SDK 内置模型）
  *
- * <p>与 {@link com.njydsz.literule.domain.entity.RuleTestCaseDO} 不同， 本类是 SDK 内置的纯 POJO 测试用例模型，不依赖
+ * <p>与 {@link com.njydsz.literule.infra.entity.RuleTestCaseDO} 不同， 本类是 SDK 内置的纯 POJO 测试用例模型，不依赖
  * MyBatis-Plus 注解， 适用于嵌入式场景和单元测试。
  *
  * <h3>链式构建测试用例</h3>

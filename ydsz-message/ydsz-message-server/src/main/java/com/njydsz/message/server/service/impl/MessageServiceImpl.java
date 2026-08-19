@@ -28,12 +28,12 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.message.domain.constant.MessageConstants;
-import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
-import com.njydsz.message.domain.dto.batch.BatchSendResult;
-import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
-import com.njydsz.message.domain.dto.core.MessageSendDTO;
+import com.njydsz.message.domain.dto.BatchSendRequestDTO;
+import com.njydsz.message.domain.dto.BatchSendResult;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.domain.entity.batch.MsgBatch;
-import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.event.OutboxEvent;
@@ -56,7 +56,6 @@ import com.njydsz.message.server.service.core.MessageSendTxService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.core.MessageTraceService;
 import com.njydsz.message.server.service.batch.BatchService;
-import com.njydsz.message.server.service.impl.AggregatePersistenceService;
 
 /**
  * 消息服务实现（核心）。

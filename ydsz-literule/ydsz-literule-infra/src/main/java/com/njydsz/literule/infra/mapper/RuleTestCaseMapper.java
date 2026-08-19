@@ -3,7 +3,7 @@ package com.njydsz.literule.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.literule.domain.entity.RuleTestCaseDO;
+import com.njydsz.literule.infra.entity.RuleTestCaseDO;
 
 /**
  * 规则测试用例 Mapper
@@ -25,7 +25,7 @@ import com.njydsz.literule.domain.entity.RuleTestCaseDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.literule.domain.entity.RuleTestCaseDO 规则测试用例实体
+ * @see RuleTestCaseDO 规则测试用例实体
  * @see com.njydsz.literule.server.service.RuleTestCaseService 测试用例 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

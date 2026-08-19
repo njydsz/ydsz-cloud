@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.message.domain.dto.config.SubscriptionUpsertDTO;
+import com.njydsz.message.domain.dto.SubscriptionUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgSubscription;
 import com.njydsz.message.domain.enums.config.SubscriptionStatusEnum;
 import com.njydsz.message.infra.repository.MsgSubscriptionRepository;

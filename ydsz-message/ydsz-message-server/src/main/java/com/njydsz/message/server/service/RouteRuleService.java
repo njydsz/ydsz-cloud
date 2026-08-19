@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.message.domain.dto.config.RouteRuleUpsertDTO;
+import com.njydsz.message.domain.dto.RouteRuleUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgRouteRule;
 
 /**

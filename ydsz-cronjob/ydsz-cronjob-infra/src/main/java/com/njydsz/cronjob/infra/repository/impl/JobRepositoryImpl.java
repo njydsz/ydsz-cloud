@@ -7,10 +7,12 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
+import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
+import com.njydsz.cronjob.infra.entity.job.Job;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 
 /**
@@ -18,7 +20,7 @@ import com.njydsz.cronjob.infra.mapper.job.JobMapper;
  *
  * <p>实现 {@link JobRepository} 接口，封装 JobMapper 数据访问细节。
  *
- * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
+ * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回；DTO 入参经 Converter 转为 Entity 后持久化。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -34,6 +36,11 @@ public class JobRepositoryImpl implements JobRepository {
   @Override
   public Optional<JobVO> findByJobKey(String jobKey) {
     return Optional.ofNullable(jobMapper.selectByJobKey(jobKey)).map(converter::entityToVO);
+  }
+
+  @Override
+  public Optional<JobVO> findById(String id) {
+    return Optional.ofNullable(jobMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override
@@ -102,11 +109,10 @@ public class JobRepositoryImpl implements JobRepository {
     return jobMapper.resumeAutoPaused(id);
   }
 
-  // ===== Web 层查询方法实现（Controller 停止 Mapper 直注） =====
+  // ===== Web 层查询方法实现 =====
 
   @Override
   public PageResult<JobVO> pageByGroup(String jobGroup, int page, int size) {
-    // 使用 MyBatis-Plus 分页插件
     com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> pageObj =
         new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size);
     com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
@@ -166,48 +172,23 @@ public class JobRepositoryImpl implements JobRepository {
     return jobMapper.selectCount(wrapper);
   }
 
-  // ===== 实体 CRUD 实现（JobServiceImpl / JobHistoryServiceImpl 使用） =====
+  // ===== CUD 操作实现 =====
 
   @Override
-  public Job selectById(String id) {
-    return jobMapper.selectById(id);
+  public String insert(JobPostDTO dto) {
+    Job entity = converter.postDtoToEntity(dto);
+    jobMapper.insert(entity);
+    return entity.getId();
   }
 
   @Override
-  public int insert(Job job) {
-    return jobMapper.insert(job);
-  }
-
-  @Override
-  public int updateById(Job job) {
-    return jobMapper.updateById(job);
+  public int update(JobPutDTO dto) {
+    Job entity = converter.putDtoToEntity(dto);
+    return jobMapper.updateById(entity);
   }
 
   @Override
   public int deleteById(String id) {
     return jobMapper.deleteById(id);
-  }
-
-  @Override
-  public List<Job> selectAllNormal() {
-    return jobMapper.selectAllNormal();
-  }
-
-  @Override
-  public Job selectByJobKey(String jobKey) {
-    return jobMapper.selectByJobKey(jobKey);
-  }
-
-  @Override
-  public com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> selectPage(
-      com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> page,
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper) {
-    return jobMapper.selectPage(page, wrapper);
-  }
-
-  @Override
-  public long selectCount(
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper) {
-    return jobMapper.selectCount(wrapper);
   }
 }

@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.config;
 
 import java.util.List;
 
-import com.njydsz.message.domain.dto.config.PreferenceUpsertDTO;
+import com.njydsz.message.domain.dto.PreferenceUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgPreference;
 
 /**

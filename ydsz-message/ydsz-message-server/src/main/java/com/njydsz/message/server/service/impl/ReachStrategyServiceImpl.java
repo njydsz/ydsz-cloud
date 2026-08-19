@@ -12,9 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.redis.service.ops.RedisHashOps;
-import com.njydsz.message.domain.dto.core.UserReachProfileDTO;
+import com.njydsz.message.domain.dto.UserReachProfileDTO;
 import com.njydsz.message.server.service.core.ReachStrategyService;
-import com.njydsz.message.server.service.impl.DndService;
 
 /**
  * 智能触达策略服务实现。

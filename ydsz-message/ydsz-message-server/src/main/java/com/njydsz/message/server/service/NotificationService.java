@@ -4,9 +4,9 @@ import java.util.List;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
-import com.njydsz.message.domain.dto.core.NotificationQueryDTO;
-import com.njydsz.message.domain.dto.core.NotificationSendDTO;
-import com.njydsz.message.domain.entity.core.MsgNotification;
+import com.njydsz.message.domain.dto.NotificationQueryDTO;
+import com.njydsz.message.domain.dto.NotificationSendDTO;
+import com.njydsz.message.infra.entity.MsgNotification;
 import com.njydsz.message.domain.vo.NotificationGroupVO;
 
 /**
@@ -31,7 +31,7 @@ import com.njydsz.message.domain.vo.NotificationGroupVO;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.message.server.service.MessageService 全渠道消息（含短信/邮件/推送）
- * @see com.njydsz.message.domain.entity.core.MsgNotification 站内通知实体
+ * @see MsgNotification 站内通知实体
  */
 public interface NotificationService {
 

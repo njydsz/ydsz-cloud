@@ -14,8 +14,8 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.message.domain.entity.core.MsgLog;
-import com.njydsz.message.domain.entity.core.MsgNotification;
+import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.infra.entity.MsgNotification;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.infra.repository.MsgNotificationRepository;

@@ -1,6 +1,6 @@
 package com.njydsz.message.server.channel.recall;
 
-import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.infra.entity.MsgLog;
 
 /**
  * 默认撤回通道实现（数据库标记模式）。

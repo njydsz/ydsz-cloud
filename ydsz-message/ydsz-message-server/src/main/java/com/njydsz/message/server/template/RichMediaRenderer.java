@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.domain.dto.core.RichMediaContent;
+import com.njydsz.message.domain.dto.RichMediaContent;
 
 /**
  * P1-2: 富媒体消息渲染器。

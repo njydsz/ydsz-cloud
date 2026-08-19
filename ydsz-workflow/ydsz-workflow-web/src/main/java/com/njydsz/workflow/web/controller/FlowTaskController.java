@@ -1,6 +1,5 @@
 package com.njydsz.workflow.web.controller.instance;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +39,7 @@ import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
 import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.dto.post.FlowDelegateAuthPostDTO;
+import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.domain.vo.FlowCcVO;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;

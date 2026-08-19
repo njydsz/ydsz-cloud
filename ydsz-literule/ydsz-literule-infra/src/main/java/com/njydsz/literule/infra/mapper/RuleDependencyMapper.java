@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.literule.domain.entity.RuleDependency;
+import com.njydsz.literule.infra.entity.RuleDependency;
 
 /**
  * 规则依赖关系 Mapper
@@ -27,7 +27,7 @@ import com.njydsz.literule.domain.entity.RuleDependency;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.literule.domain.entity.RuleDependency 规则依赖实体
+ * @see RuleDependency 规则依赖实体
  * @see com.njydsz.literule.server.service.RuleDependencyService 规则依赖 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

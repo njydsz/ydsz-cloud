@@ -14,14 +14,13 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.message.domain.entity.config.MsgRouteRule;
 import com.njydsz.message.infra.entity.MsgTraceDO;
-import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.config.RetryStrategyResolver;
 import com.njydsz.message.server.metric.MessageMetrics;
-import com.njydsz.message.server.service.core.GuardService;
 
 /**
  * 消息发送与通道分发服务。

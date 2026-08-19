@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
-import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
+import com.njydsz.nextwiki.server.service.ShareLinkDomainService;
 import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
 
 /**

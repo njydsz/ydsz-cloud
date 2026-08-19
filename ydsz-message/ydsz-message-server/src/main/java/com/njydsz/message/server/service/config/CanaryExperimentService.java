@@ -1,5 +1,7 @@
 package com.njydsz.message.server.service.config;
 
+import com.njydsz.message.domain.dto.TemplateCanaryDTO;
+
 /**
  * 灰度实验服务接口
  *
@@ -32,7 +34,7 @@ package com.njydsz.message.server.service.config;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.dto.template.TemplateCanaryDTO
+ * @see TemplateCanaryDTO
  * @see com.njydsz.message.domain.vo.MsgCanaryVO
  */
 public interface CanaryExperimentService {

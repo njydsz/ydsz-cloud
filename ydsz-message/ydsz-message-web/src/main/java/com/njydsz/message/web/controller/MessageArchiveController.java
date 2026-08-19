@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.message.infra.entity.MsgLog;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -13,7 +14,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.PageResponse;
@@ -21,7 +21,6 @@ import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.service.archive.MessageArchiveService;
 
@@ -77,7 +76,7 @@ import com.njydsz.message.server.service.archive.MessageArchiveService;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.message.server.service.archive.MessageArchiveService 消息归档服务
- * @see com.njydsz.message.domain.entity.core.MsgLog 发送日志实体
+ * @see MsgLog 发送日志实体
  */
 @Tag(name = "消息归档搜索", description = "消息发送日志全文搜索")
 @Slf4j

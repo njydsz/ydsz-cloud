@@ -25,8 +25,8 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
-import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.service.core.MessageLogService;
@@ -79,7 +79,7 @@ import com.njydsz.message.server.service.core.MessageLogService;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.message.server.service.core.MessageLogService 消息日志服务
- * @see com.njydsz.message.domain.entity.core.MsgLog 发送日志实体
+ * @see MsgLog 发送日志实体
  * @see com.njydsz.message.domain.enums.core.MessageStatusEnum 消息状态枚举
  */
 @Slf4j

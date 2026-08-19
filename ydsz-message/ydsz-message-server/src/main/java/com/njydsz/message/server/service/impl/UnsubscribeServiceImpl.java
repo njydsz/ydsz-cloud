@@ -14,7 +14,7 @@ import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.jdbc.support.PageResponses;
-import com.njydsz.message.domain.dto.config.UnsubscribeQueryDTO;
+import com.njydsz.message.domain.dto.UnsubscribeQueryDTO;
 import com.njydsz.message.domain.entity.config.MsgSubscription;
 import com.njydsz.message.domain.enums.config.SubscriptionStatusEnum;
 import com.njydsz.message.infra.repository.MsgSubscriptionRepository;

@@ -11,7 +11,7 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.literule.domain.entity.RuleDefinitionDO;
+import com.njydsz.literule.infra.entity.RuleDefinitionDO;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 
 /**
