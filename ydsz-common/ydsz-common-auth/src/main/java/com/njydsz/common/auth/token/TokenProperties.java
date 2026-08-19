@@ -48,6 +48,19 @@ public class TokenProperties {
    */
   private String audience;
 
+  /** ID Token 有效期（秒），默认 10 分钟 */
+  private long idTokenExpireSeconds = 600;
+
+  /** 是否启用 JWKS 公钥端点，默认 false */
+  private boolean jwksEnabled = false;
+
+  /**
+   * RSA 公钥 PEM 格式字符串（可选）
+   *
+   * <p>配置后 JWKS 端点将返回 RSA 公钥（kty=RSA）； 未配置时返回 HMAC 对称密钥（kty=oct）。
+   */
+  private String publicKeyPem;
+
   /**
    * 校验密钥配置
    *

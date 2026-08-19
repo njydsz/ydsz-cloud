@@ -1,15 +1,6 @@
 package com.njydsz.message.server.template.cache;
 
-import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.math.RoundingMode;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -34,6 +24,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.server.template.TemplateEngine;
+import com.njydsz.message.server.template.util.TemplateFilterUtil;
 
 /**
  * 带 AST 缓存的模板引擎（Caffeine 实现）。
@@ -296,134 +287,19 @@ public class CachedTemplateEngine implements TemplateEngine {
     return value == null ? "" : String.valueOf(value);
   }
 
-  /** 应用管道过滤器。 */
+  /** 应用管道过滤器（委托至 {@link TemplateFilterUtil}）。 */
   private Object applyFilter(Object value, String filterExpr) {
-    if (filterExpr == null || filterExpr.isEmpty()) {
-      return value;
-    }
-    String[] fa = filterExpr.split(":", 2);
-    String filterName = fa[0].trim().toLowerCase();
-    String filterArg = fa.length > 1 ? fa[1] : "";
-    return switch (filterName) {
-      case "date" -> formatDate(value, filterArg);
-      case "number" -> formatNumber(value, filterArg);
-      case "default" ->
-          value == null || (value instanceof String s && s.isBlank()) ? filterArg : value;
-      case "upper" -> value == null ? null : String.valueOf(value).toUpperCase();
-      case "lower" -> value == null ? null : String.valueOf(value).toLowerCase();
-      case "truncate" -> truncate(value, filterArg);
-      default -> value;
-    };
+    return TemplateFilterUtil.applyFilter(value, filterExpr);
   }
 
-  /** 日期格式化过滤器。 */
-  private String formatDate(Object value, String pattern) {
-    if (value == null) {
-      return "";
-    }
-    String fmt = pattern.isEmpty() ? "yyyy-MM-dd HH:mm:ss" : pattern;
-    try {
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern(fmt);
-      if (value instanceof LocalDateTime ldt) {
-        return ldt.format(formatter);
-      }
-      if (value instanceof LocalDate ld) {
-        return ld.format(formatter);
-      }
-      if (value instanceof Date date) {
-        return date.toInstant()
-            .atZone(ZoneId.systemDefault())
-            .toLocalDateTime()
-            .format(formatter);
-      }
-      if (value instanceof String str) {
-        return LocalDateTime.parse(str).format(formatter);
-      }
-      if (value instanceof Long ts) {
-        return Instant.ofEpochMilli(ts)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDateTime()
-            .format(formatter);
-      }
-    } catch (Exception e) {
-      return String.valueOf(value);
-    }
-    return String.valueOf(value);
-  }
-
-  /** 数字格式化过滤器。 */
-  private String formatNumber(Object value, String pattern) {
-    if (value == null) {
-      return "";
-    }
-    String fmt = pattern.isEmpty() ? "#,##0.00" : pattern;
-    try {
-      DecimalFormat df = new DecimalFormat(fmt);
-      df.setRoundingMode(RoundingMode.HALF_UP);
-      if (value instanceof Number num) {
-        return df.format(num);
-      }
-      if (value instanceof String str) {
-        return df.format(new BigDecimal(str));
-      }
-    } catch (Exception e) {
-      return String.valueOf(value);
-    }
-    return String.valueOf(value);
-  }
-
-  /** 字符串截断过滤器。 */
-  private String truncate(Object value, String lengthStr) {
-    if (value == null) {
-      return "";
-    }
-    String str = String.valueOf(value);
-    try {
-      int maxLen = Integer.parseInt(lengthStr.trim());
-      return str.length() <= maxLen ? str : str.substring(0, maxLen) + "...";
-    } catch (NumberFormatException e) {
-      return str;
-    }
-  }
-
-  /** 解析占位符 key 对应的值，支持 a.b.c 嵌套 Map 取值。 */
+  /** 解析占位符 key 对应的值（委托至 {@link TemplateFilterUtil}）。 */
   private Object resolve(Map<String, Object> params, String key) {
-    if (!key.contains(".")) {
-      return params.get(key);
-    }
-    String[] parts = key.split("\\.");
-    Object cur = params;
-    for (String p : parts) {
-      if (cur instanceof Map<?, ?> map) {
-        cur = map.get(p);
-      } else {
-        return null;
-      }
-    }
-    return cur;
+    return TemplateFilterUtil.resolve(params, key);
   }
 
-  /** truthy 判定。 */
+  /** truthy 判定（委托至 {@link TemplateFilterUtil}）。 */
   private boolean isTruthy(Object value) {
-    if (value == null) {
-      return false;
-    }
-    if (value instanceof Boolean b) {
-      return b;
-    }
-    if (value instanceof String s) {
-      return !s.isBlank();
-    }
-    if (value instanceof Number n) {
-      return n.doubleValue() != 0d;
-    }
-    if (value instanceof Collection<?> c) {
-      return !c.isEmpty();
-    }
-    if (value instanceof Map<?, ?> mp) {
-      return !mp.isEmpty();
-    }
-    return true;
+    return TemplateFilterUtil.isTruthy(value);
   }
 
   /** 校验必填参数。 */

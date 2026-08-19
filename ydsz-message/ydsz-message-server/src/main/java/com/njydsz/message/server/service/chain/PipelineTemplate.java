@@ -26,6 +26,14 @@ import com.njydsz.message.server.service.chain.handler.UserPreferenceHandler;
  *   <li>{@link #INTERNAL_CALLBACK}：内部回调场景，仅通道校验（信任内部调用）
  * </ul>
  *
+ * <p><b>维护约定：</b>
+ *
+ * <ul>
+ *   <li>新增 {@link SendHandler} 实现时，必须同步评估并更新所有枚举值的 Handler 列表，确保各模板行为符合预期
+ *   <li>每个枚举值的 Javadoc 中通过 {@code @see} 引用其包含的 Handler 类，方便交叉导航
+ *   <li>修改 Handler 执行顺序时，需同步更新所有引用该 Handler 的枚举值
+ * </ul>
+ *
  * <p>使用方式：
  *
  * <pre>{@code
@@ -42,6 +50,13 @@ public enum PipelineTemplate {
    * 全量处理模板（默认兜底）。
    *
    * <p>包含所有 Handler，适用于无法明确分类的请求或需要完整校验的场景。 执行顺序：ChannelResolve → RouteRule → UserPreference → Dedup → Suppression → Throttling。
+   *
+   * @see ChannelResolveHandler
+   * @see RouteRuleHandler
+   * @see UserPreferenceHandler
+   * @see DedupHandler
+   * @see SuppressionHandler
+   * @see ThrottlingHandler
    */
   FULL_PROCESS(
       "full",
@@ -57,6 +72,12 @@ public enum PipelineTemplate {
    * 模板发送场景。
    *
    * <p>通过模板编码发送消息，需要路由规则匹配通道、用户偏好校验、去重、限流。 不含跨渠道抑制（模板发送通常是首次发送，不存在多渠道冲突）。
+   *
+   * @see ChannelResolveHandler
+   * @see RouteRuleHandler
+   * @see UserPreferenceHandler
+   * @see DedupHandler
+   * @see ThrottlingHandler
    */
   TEMPLATE_SEND(
       "template",
@@ -70,7 +91,10 @@ public enum PipelineTemplate {
   /**
    * 简单直发场景。
    *
- * <p>直接指定通道和内容发送，无需路由、偏好校验、去重、抑制。 仅执行通道校验 + 限流，追求最小时延。
+   * <p>直接指定通道和内容发送，无需路由、偏好校验、去重、抑制。 仅执行通道校验 + 限流，追求最小时延。
+   *
+   * @see ChannelResolveHandler
+   * @see ThrottlingHandler
    */
   SIMPLE_SEND(
       "simple",
@@ -82,6 +106,9 @@ public enum PipelineTemplate {
    * 批量发送场景。
    *
    * <p>批量接口自身已完成去重和抑制，管线侧仅做通道校验 + 限流。 批量场景下逐条执行去重/抑制反而成为瓶颈。
+   *
+   * @see ChannelResolveHandler
+   * @see ThrottlingHandler
    */
   BATCH_SEND(
       "batch",
@@ -93,6 +120,8 @@ public enum PipelineTemplate {
    * 内部回调场景。
    *
    * <p>内部系统回调（如回执处理、状态同步），信任内部调用源， 仅做最基本的通道校验，不做限流和去重。
+   *
+   * @see ChannelResolveHandler
    */
   INTERNAL_CALLBACK(
       "callback",

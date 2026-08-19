@@ -20,6 +20,7 @@ import lombok.Builder;
  *   <li>{@link #scope} — 授权 scope
  *   <li>{@link #codeChallenge} — PKCE code_challenge（可为 null）
  *   <li>{@link #codeChallengeMethod} — PKCE code_challenge_method（可为 null）
+ *   <li>{@link #state} — OAuth2 CSRF 防护 state 参数（可为 null）
  * </ul>
  *
  * @author ydsz-team
@@ -34,7 +35,8 @@ public record OAuthCodeContext(
     @JsonProperty("redirectUri") String redirectUri,
     @JsonProperty("scope") String scope,
     @JsonProperty("codeChallenge") String codeChallenge,
-    @JsonProperty("codeChallengeMethod") String codeChallengeMethod) {
+    @JsonProperty("codeChallengeMethod") String codeChallengeMethod,
+    @JsonProperty("state") String state) {
 
   /** 序列化为 JSON 字符串（存储到 Redis）。 */
   public String toJson() {

@@ -102,6 +102,9 @@ public class OAuth2Controller {
   /** 授权码 Redis Key 前缀：{@code oauth2:code:{code}} */
   private static final String CODE_KEY_PREFIX = "oauth2:code:";
 
+  /** State 校验 Redis Key 前缀：{@code oauth2:state:{state}} */
+  private static final String STATE_KEY_PREFIX = "oauth2:state:";
+
   /** PKCE code_challenge_method 常量：S256（SHA-256） */
   private static final String PKCE_METHOD_S256 = "S256";
 
@@ -182,7 +185,7 @@ public class OAuth2Controller {
    * @param authorization Authorization 请求头（Bearer access_token）
    * @param clientId 客户端 ID（必须已注册）
    * @param redirectUri 回调地址（必须在 clientId 的白名单中）
-   * @param state 客户端防 CSRF 随机串（透传，ydsz 不存储）
+   * @param state 客户端防 CSRF 随机串（服务端存储并校验）
    * @param codeChallenge PKCE 码挑战值（可选，用于公共客户端）
    * @param codeChallengeMethod PKCE 码挑战方法（可选，仅支持 S256）
    * @return OAuth2 授权码
@@ -266,15 +269,24 @@ public class OAuth2Controller {
         .scope(effectiveScope)
         .codeChallenge(codeChallenge)
         .codeChallengeMethod(codeChallengeMethodResolved)
+        .state(state)
         .build();
 
     redisStringOps.set(CODE_KEY_PREFIX + code, context.toJson(), CODE_TTL_SECONDS);
+
+    // 存储 state → code 映射（CSRF 防护，TTL 与授权码一致）
+    if (state != null && !state.isBlank()) {
+      redisStringOps.set(STATE_KEY_PREFIX + state, code, CODE_TTL_SECONDS);
+      log.debug("OAuth2 state stored: state={}", state);
+    }
+
     log.info(
-        "OAuth2 authorize: clientId={}, userId={}, code={}, pkce={}",
+        "OAuth2 authorize: clientId={}, userId={}, code={}, pkce={}, state={}",
         clientId,
         userInfo.getUserId(),
         code,
-        codeChallenge != null);
+        codeChallenge != null,
+        state != null);
     return BaseResponse.success(code);
   }
 
@@ -294,6 +306,7 @@ public class OAuth2Controller {
    * @param clientId 客户端 ID
    * @param clientSecret 客户端密钥（confidential 客户端必填）
    * @param codeVerifier PKCE 码验证器（public 客户端 authorization_code 必填）
+   * @param state OAuth2 CSRF 防护 state 参数（可选，若 authorize 时传了 state 则必须携带）
    * @return 标准 OAuth2 token 响应
    */
   @Audit(
@@ -312,13 +325,14 @@ public class OAuth2Controller {
       @RequestParam(required = false) String refreshToken,
       @RequestParam String clientId,
       @RequestParam(required = false) String clientSecret,
-      @RequestParam(required = false) String codeVerifier) {
+      @RequestParam(required = false) String codeVerifier,
+      @RequestParam(required = false) String state) {
 
     if (OAUTH2_GRANT_REFRESH_TOKEN.equals(grantType)) {
       return refreshTokenGrant(clientId, clientSecret, refreshToken);
     }
     if (OAUTH2_GRANT_AUTHORIZATION_CODE.equals(grantType)) {
-      return authorizationCodeGrant(code, clientId, clientSecret, codeVerifier);
+      return authorizationCodeGrant(code, clientId, clientSecret, codeVerifier, state);
     }
     throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
   }
@@ -330,10 +344,11 @@ public class OAuth2Controller {
    * @param clientId 客户端 ID
    * @param clientSecret 客户端密钥（confidential 客户端必填）
    * @param codeVerifier PKCE 码验证器（public 客户端必填）
+   * @param state OAuth2 CSRF 防护 state 参数（可选，若 authorize 时传了 state 则必须匹配）
    * @return 标准 OAuth2 token 响应
    */
   private BaseResponse<Map<String, Object>> authorizationCodeGrant(
-      String code, String clientId, String clientSecret, String codeVerifier) {
+      String code, String clientId, String clientSecret, String codeVerifier, String state) {
 
     // 1. P0-3: 原子读取并删除授权码（GETDEL 语义，防并发重放）
     // 并发携带同一授权码时，仅首个请求能读到上下文，后续请求返回 null 被拒绝
@@ -380,9 +395,21 @@ public class OAuth2Controller {
       }
     }
 
-    // 4. 授权码已在上方由 GETDEL 原子删除（一次性使用），此处无需再次 DEL
+    // 4. State 校验（CSRF 防护，可选——仅当客户端传入 state 时执行）
+    if (state != null && !state.isBlank()) {
+      String storedCode = redisStringOps.get(STATE_KEY_PREFIX + state);
+      if (storedCode == null || !storedCode.equals(code)) {
+        log.warn("OAuth2 state validation failed: state={}, code={}", state, code);
+        throw new BusinessException(UserInfoExceptionCode.OAUTH2_STATE_INVALID);
+      }
+      // 校验通过后删除 state 标记（一次性使用）
+      redisStringOps.delete(STATE_KEY_PREFIX + state);
+      log.debug("OAuth2 state validated and consumed: state={}", state);
+    }
 
-    // 5. 重建 UserInfo 并签发新 token
+    // 5. 授权码已在上方由 GETDEL 原子删除（一次性使用），此处无需再次 DEL
+
+    // 6. 重建 UserInfo 并签发新 token
     UserInfo userInfo = new UserInfo();
     userInfo.setUserId(userId);
     userInfo.setUsername(username);
@@ -393,13 +420,13 @@ public class OAuth2Controller {
 
     log.info("OAuth2 token issued: clientId={}, userId={}", clientId, userId);
 
-    // 6. P1-3: 返回实际授权的 scope（授权码上下文中声明的 scope；未声明时回落客户端注册范围）
+    // 7. P1-3: 返回实际授权的 scope（授权码上下文中声明的 scope；未声明时回落客户端注册范围）
     String grantedScope = context.scope();
     if (grantedScope == null || grantedScope.isBlank()) {
       grantedScope = resolveGrantedScope(clientId);
     }
 
-    // 7. 返回标准 OAuth2 响应（RFC 6749 §5.1）
+    // 8. 返回标准 OAuth2 响应（RFC 6749 §5.1）
     return BaseResponse.success(
         Map.of(
             "access_token",

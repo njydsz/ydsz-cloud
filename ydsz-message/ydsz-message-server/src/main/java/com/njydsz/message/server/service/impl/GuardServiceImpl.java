@@ -18,6 +18,7 @@ import com.njydsz.message.domain.entity.config.MsgPreference;
 import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.config.PreferenceService;
+import com.njydsz.message.server.service.config.TenantConfigService;
 import com.njydsz.message.server.service.core.GuardService;
 
 /**
@@ -56,6 +57,9 @@ public class GuardServiceImpl implements GuardService {
   /** 用户偏好服务（读取 hourlyLimit/dailyLimit） */
   private final PreferenceService preferenceService;
 
+  /** 租户配置服务（读取租户级配额与通道覆盖） */
+  private final TenantConfigService tenantConfigService;
+
   /** 消息模块配置属性 */
   private final MessageProperties messageProperties;
 
@@ -75,11 +79,13 @@ public class GuardServiceImpl implements GuardService {
       RedisStringOps redisStringOps,
       IdempotentStrategy idempotentStrategy,
       PreferenceService preferenceService,
+      TenantConfigService tenantConfigService,
       MessageProperties messageProperties) {
     this.rateLimiter = rateLimiterProvider.getIfAvailable();
     this.redisStringOps = redisStringOps;
     this.idempotentStrategy = idempotentStrategy;
     this.preferenceService = preferenceService;
+    this.tenantConfigService = tenantConfigService;
     this.messageProperties = messageProperties;
     if (this.rateLimiter == null) {
       log.warn("[Guard] RedisRateLimiter 不可用，令牌桶限流将降级放行");
@@ -225,12 +231,13 @@ public class GuardServiceImpl implements GuardService {
       }
     }
     if (cfg.isTenantEnabled() && tenantId != null && !tenantId.isBlank()) {
-      if (!tryAcquire("tenant:" + tenantId, cfg.getTenantPermits())) {
+      long tenantPermits = tenantConfigService.getDailyLimit(tenantId, cfg.getTenantPermits());
+      if (!tryAcquire("tenant:" + tenantId, (int) tenantPermits)) {
         log.info(
             "[Guard] tenant 维度限流: channel={} tenant={} permits={}/s",
             channel,
             tenantId,
-            cfg.getTenantPermits());
+            tenantPermits);
         return false;
       }
     }

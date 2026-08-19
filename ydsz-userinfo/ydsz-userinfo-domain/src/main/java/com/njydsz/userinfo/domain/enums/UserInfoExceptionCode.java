@@ -105,6 +105,8 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   OAUTH2_SCOPE_INVALID("B30032", "userinfo.oauth2.scope.invalid", 401),
   /** 数据已被其他用户修改，请刷新后重试（乐观锁冲突，P1-6） */
   USER_UPDATE_CONFLICT("B30033", "userinfo.user.update.conflict", 409),
+  /** OAuth2 state 参数无效或已过期 */
+  OAUTH2_STATE_INVALID("B30034", "userinfo.oauth2.state.invalid", 401),
 
   // ==================== B31xxx 组织架构 ====================
   /** 部门不存在 */
@@ -153,6 +155,10 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   SENSITIVE_VERIFY_EXPIRED("A20121", "userinfo.sensitive.verify.expired", 401),
   /** 二次认证密码错误 */
   SENSITIVE_VERIFY_PASSWORD_INCORRECT("A20122", "userinfo.sensitive.verify.password.incorrect", 401),
+  /** 需要二级认证 */
+  SECONDARY_AUTH_REQUIRED("A20123", "userinfo.secondary.auth.required", 401),
+  /** 二级认证已过期 */
+  SECONDARY_AUTH_EXPIRED("A20124", "userinfo.secondary.auth.expired", 401),
 
   // ==================== B33xxx 自助服务 ====================
   /** 自助注册功能未开启 */

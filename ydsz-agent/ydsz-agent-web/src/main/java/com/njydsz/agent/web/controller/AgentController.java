@@ -25,13 +25,17 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.njydsz.agent.api.dto.AgentExecutionRequestDTO;
+import com.njydsz.agent.api.dto.BatchChatRequestDTO;
+import com.njydsz.agent.api.dto.BatchChatResponseDTO;
 import com.njydsz.agent.api.dto.ChatRequestDTO;
 import com.njydsz.agent.api.dto.ChatResponseDTO;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
+import com.njydsz.agent.domain.model.BatchChatResult;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.MessageContent;
 import com.njydsz.agent.server.agent.AgentFacade;
+import com.njydsz.agent.server.agent.AgentFacade.BatchChatItem;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.server.chat.SseExecutor;
 import com.njydsz.agent.server.chat.SseExecutor.SseChunk;
@@ -369,6 +373,60 @@ public class AgentController {
   }
 
   /**
+   * 批量对话（并行执行）。
+   *
+   * <p>使用 JDK 21 结构化并发并行处理多条对话请求，单条失败不影响其他条目。 适用于批量问答、多 Prompt 对比测试、A/B 评估等场景。
+   *
+   * <p>限制：
+   *
+   * <ul>
+   *   <li>单次最多 50 条
+   *   <li>所有请求共享同一模型配置（model / temperature / maxTokens）
+   *   <li>每条请求独立对话 ID，互不干扰
+   * </ul>
+   *
+   * @param request 批量对话请求体
+   * @return 统一响应结果，data 为 {@link BatchChatResponseDTO}
+   */
+  @AuthApiPermission(apiCodes = PermissionCodes.AGENT_CHAT)
+  @Audit(
+      module = "对话管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'batchChat'")
+  @Idempotent(key = "'agent:chat:batch:' + #request.requestId", ttlSeconds = 300)
+  @RateLimit(resource = "agent.chat.batch", threshold = 10)
+  @PostMapping("/chat/batch")
+  @Operation(summary = "批量对话（并行）", description = "并行处理多条对话请求，单条失败不影响其他条目")
+  public BaseResponse<BatchChatResponseDTO> batchChat(
+      @Valid @RequestBody BatchChatRequestDTO request) {
+    LOG.info("[Batch-API] 批量对话请求: itemsCount={}", request.getItems().size());
+    requestGuard.check(request.getRequestId(), null);
+    try {
+      // DTO → 应用层 BatchChatItem 转换
+      List<BatchChatItem> facadeItems = new ArrayList<>(request.getItems().size());
+      for (BatchChatRequestDTO.BatchChatItem dto : request.getItems()) {
+        MessageContent content = null;
+        if (dto.getMultimodalContent() != null && !dto.getMultimodalContent().isEmpty()) {
+          content = toMessageContent(dto.getMultimodalContent());
+        }
+        facadeItems.add(
+            new BatchChatItem(
+                dto.getItemId(),
+                dto.getConversationId(),
+                dto.getMessage(),
+                content,
+                dto.getSystemPrompt()));
+      }
+      BatchChatResult result = agentFacade.batchChat(facadeItems);
+      return BaseResponse.success(toBatchDTO(result));
+    } catch (Exception e) {
+      requestGuard.releaseIdempotent(request.getRequestId());
+      throw e;
+    }
+  }
+
+  /**
    * 获取指定 conversationId 的对话历史。
    *
    * @param conversationId 会话 ID
@@ -425,6 +483,35 @@ public class AgentController {
   // ==========================================================================
   // 内部方法
   // ==========================================================================
+
+  /** BatchChatResult → BatchChatResponseDTO 转换。 */
+  private BatchChatResponseDTO toBatchDTO(BatchChatResult result) {
+    BatchChatResponseDTO dto = new BatchChatResponseDTO();
+    dto.setTotalDurationMs(result.getTotalDurationMs());
+    dto.setSuccessCount(result.getSuccessCount());
+    dto.setFailedCount(result.getFailedCount());
+
+    List<BatchChatResponseDTO.BatchResultItem> itemDTOs = new ArrayList<>(result.getResults().size());
+    for (BatchChatResult.BatchResultItem item : result.getResults()) {
+      BatchChatResponseDTO.BatchResultItem itemDTO = new BatchChatResponseDTO.BatchResultItem();
+      itemDTO.setItemId(item.getItemId());
+      itemDTO.setSuccess(item.isSuccess());
+      itemDTO.setContent(item.getContent());
+      itemDTO.setModel(item.getModel());
+      itemDTO.setFinishReason(item.getFinishReason());
+      itemDTO.setErrorMessage(item.getErrorMessage());
+      if (item.getUsage() != null) {
+        itemDTO.setUsage(
+            new ChatResponseDTO.TokenUsageDTO(
+                item.getUsage().getPromptTokens(),
+                item.getUsage().getCompletionTokens(),
+                item.getUsage().getTotalTokens()));
+      }
+      itemDTOs.add(itemDTO);
+    }
+    dto.setResults(itemDTOs);
+    return dto;
+  }
 
   /** ChatResponse → ChatResponseDTO 转换（Agent 执行用）。 */
   private AgentExecutionRequest toExecutionRequest(AgentExecutionRequestDTO dto) {

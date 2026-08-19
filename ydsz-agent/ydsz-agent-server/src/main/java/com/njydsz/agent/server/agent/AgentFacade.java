@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.DagProgressEvent;
+import com.njydsz.agent.domain.model.BatchChatResult;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
@@ -56,6 +57,62 @@ public interface AgentFacade {
    * @return LLM 响应
    */
   ChatResponse chat(String conversationId, MessageContent multimodalContent, String systemPrompt);
+
+  /**
+   * 批量对话（并行执行）。
+   *
+   * <p>使用 JDK 21 结构化并发（{@code StructuredTaskScope}）并行处理多条对话请求，单条失败不影响其他条目。 适用于批量问答、多 Prompt 对比测试、A/B 评估等场景。
+   *
+   * @param items 批量对话条目列表（每条包含独立的用户消息和对话 ID）
+   * @return 批量对话结果（与请求 items 顺序一致）
+   */
+  BatchChatResult batchChat(List<BatchChatItem> items);
+
+  /**
+   * 批量对话条目（应用层）
+   *
+   * <p>封装单条对话请求的参数，与 {@link com.njydsz.agent.api.dto.BatchChatRequestDTO.BatchChatItem} 结构对应。
+   */
+  class BatchChatItem {
+    private final String itemId;
+    private final String conversationId;
+    private final String message;
+    private final MessageContent multimodalContent;
+    private final String systemPrompt;
+
+    public BatchChatItem(
+        String itemId,
+        String conversationId,
+        String message,
+        MessageContent multimodalContent,
+        String systemPrompt) {
+      this.itemId = itemId;
+      this.conversationId = conversationId;
+      this.message = message;
+      this.multimodalContent = multimodalContent;
+      this.systemPrompt = systemPrompt;
+    }
+
+    public String getItemId() {
+      return itemId;
+    }
+
+    public String getConversationId() {
+      return conversationId;
+    }
+
+    public String getMessage() {
+      return message;
+    }
+
+    public MessageContent getMultimodalContent() {
+      return multimodalContent;
+    }
+
+    public String getSystemPrompt() {
+      return systemPrompt;
+    }
+  }
 
   /**
    * 同步执行 Agent（支持 ReAct / RAG / Plan-Execute / Supervisor / DAG 等类型）。

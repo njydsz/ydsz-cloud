@@ -13,16 +13,23 @@ import com.google.common.hash.Funnels;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 /**
- * 基于 BloomFilter 的消息去重前置过滤器。
+ * 基于 BloomFilter + Redis 的消息去重前置过滤器。
  *
  * <p>在 RocketMQ 消费者处理消息前，使用 BloomFilter 做第一层去重判定，
  * 减少绝大多数场景下的 Redis 查询（BloomFilter 判定"一定不存在"则必定未处理过）。
+ *
+ * <h3>多实例一致性策略</h3>
+ * <p>本地 BloomFilter 作为快速路径（减少 Redis 调用），Redis 共享 Set 作为误判兜底。
+ * 当本地 BloomFilter 判定"可能存在"时，进一步查 Redis 确认，消除多实例部署时
+ * 各实例 BloomFilter 互相独立导致的去重失效问题。
  *
  * <p>BloomFilter 特性：
  * <ul>
@@ -40,11 +47,13 @@ import org.springframework.stereotype.Component;
  * <ul>
  *   <li>滑动窗口：每秒创建新 BloomFilter，过期数据自然淘汰</li>
  *   <li>双缓冲：读写分离，避免并发创建时的竞争</li>
+ *   <li>Redis 兜底：多实例共享去重状态，消除单实例内存方案的局限</li>
+ *   <li>降级策略：Redis 异常时仅使用本地 BloomFilter（fail-open）</li>
  *   <li>可关闭：配置 {@code ydsz.message.consumer.bloom-filter-enabled=false} 禁用</li>
  * </ul>
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component
@@ -55,6 +64,15 @@ import org.springframework.stereotype.Component;
     havingValue = "true",
     matchIfMissing = true)
 public class BloomFilterDeduplicator {
+
+  /** Redis 共享 Set 名称前缀（多实例部署时共享） */
+  private static final String REDIS_DEDUP_SET_PREFIX = "msg:bloom:dedup:";
+
+  /** RedisTemplate（用于多实例共享去重） */
+  private final RedisTemplate<String, Object> redisTemplate;
+
+  /** Redis 去重 TTL（秒），与本地 BloomFilter 窗口一致 */
+  private final int redisDedupTtlSeconds;
 
   /** 当前活跃的 BloomFilter（写入新条目） */
   private final AtomicReference<BloomFilter<String>> activeFilter = new AtomicReference<>();
@@ -96,6 +114,20 @@ public class BloomFilterDeduplicator {
   /** 累计命中次数（监控用） */
   private volatile long totalHits;
 
+  /** Redis 降级模式标志（Redis 异常时切换） */
+  private volatile boolean redisDegraded;
+
+  /**
+   * 构造 BloomFilter 去重器。
+   *
+   * @param redisTemplate Redis 模板（多实例共享去重用）
+   */
+  @Autowired
+  public BloomFilterDeduplicator(RedisTemplate<String, Object> redisTemplate) {
+    this.redisTemplate = redisTemplate;
+    this.redisDedupTtlSeconds = 60;
+  }
+
   @PostConstruct
   public void init() {
     activeFilter.set(createFilter());
@@ -104,10 +136,11 @@ public class BloomFilterDeduplicator {
     scheduler.scheduleAtFixedRate(
         this::rotateFilter, rotateSeconds, rotateSeconds, TimeUnit.SECONDS);
     log.info(
-        "[BloomFilter] 初始化完成: capacity={} fpp={} rotate={}s",
+        "[BloomFilter] 初始化完成: capacity={} fpp={} rotate={}s redisTtl={}s",
         expectedInsertions,
         falsePositiveProbability,
-        rotateSeconds);
+        rotateSeconds,
+        redisDedupTtlSeconds);
   }
 
   @PreDestroy
@@ -130,16 +163,40 @@ public class BloomFilterDeduplicator {
     BloomFilter<String> previous = previousFilter.get();
 
     // 先查当前窗口，再查上一窗口（防止边界误判）
-    boolean mightContain = active != null && active.mightContain(msgId);
-    if (!mightContain && previous != null) {
-      mightContain = previous.mightContain(msgId);
+    boolean localMightContain = active != null && active.mightContain(msgId);
+    if (!localMightContain && previous != null) {
+      localMightContain = previous.mightContain(msgId);
     }
 
-    if (mightContain) {
-      totalHits++;
+    // 本地 BloomFilter 判定"一定不存在" → 直接返回 false（快速路径）
+    if (!localMightContain) {
+      return false;
     }
 
-    return mightContain;
+    // 本地 BloomFilter 判定"可能存在" → 查 Redis 确认（误判兜底，多实例一致）
+    if (!redisDegraded) {
+      try {
+        String redisKey = REDIS_DEDUP_SET_PREFIX + msgId;
+        Boolean exists = redisTemplate.hasKey(redisKey);
+        if (Boolean.TRUE.equals(exists)) {
+          // Redis 确认存在 → 确实重复
+          totalHits++;
+          return true;
+        }
+        // BloomFilter 误判：本地可能存在，但 Redis 中不存在
+        return false;
+      } catch (Exception e) {
+        // Redis 异常时降级为纯本地 BloomFilter（fail-open）
+        redisDegraded = true;
+        log.warn("[BloomFilter] Redis 异常，降级为本地模式: {}", e.getMessage());
+        totalHits++;
+        return true;
+      }
+    }
+
+    // 已降级：仅依赖本地 BloomFilter
+    totalHits++;
+    return true;
   }
 
   /**
@@ -156,6 +213,20 @@ public class BloomFilterDeduplicator {
     if (active != null) {
       active.put(msgId);
       currentWindowCount++;
+    }
+
+    // 同步写入 Redis（多实例共享去重）
+    if (!redisDegraded) {
+      try {
+        String redisKey = REDIS_DEDUP_SET_PREFIX + msgId;
+        redisTemplate
+            .opsForValue()
+            .set(redisKey, "1", redisDedupTtlSeconds, TimeUnit.SECONDS);
+      } catch (Exception e) {
+        // Redis 异常时降级为纯本地 BloomFilter（fail-open）
+        redisDegraded = true;
+        log.warn("[BloomFilter] Redis 写入异常，降级为本地模式: {}", e.getMessage());
+      }
     }
   }
 
