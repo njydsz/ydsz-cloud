@@ -6,6 +6,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.cronjob.domain.entity.dag.JobDagVersion;
 import com.njydsz.cronjob.domain.repository.JobDagVersionRepository;
 import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
@@ -44,5 +45,22 @@ public class JobDagVersionRepositoryImpl implements JobDagVersionRepository {
   public Optional<JobDagVersionVO> findByVersion(String dagId, Integer version) {
     return Optional.ofNullable(jobDagVersionMapper.selectByVersion(dagId, version))
         .map(converter::entityToVO);
+  }
+
+  // ===== 实体方法实现（JobDagServiceImpl 使用） =====
+
+  @Override
+  public List<JobDagVersion> selectByVersionDesc(String dagId, int limit) {
+    return jobDagVersionMapper.selectByVersionDesc(dagId, limit);
+  }
+
+  @Override
+  public JobDagVersion selectByVersion(String dagId, int version) {
+    return jobDagVersionMapper.selectByVersion(dagId, version);
+  }
+
+  @Override
+  public int insert(JobDagVersion version) {
+    return jobDagVersionMapper.insert(version);
   }
 }

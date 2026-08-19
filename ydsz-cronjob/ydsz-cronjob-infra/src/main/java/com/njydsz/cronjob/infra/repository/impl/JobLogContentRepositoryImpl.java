@@ -6,6 +6,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 import com.njydsz.cronjob.domain.repository.JobLogContentRepository;
 import com.njydsz.cronjob.domain.vo.JobLogContentVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
@@ -53,5 +54,28 @@ public class JobLogContentRepositoryImpl implements JobLogContentRepository {
   @Override
   public int cleanExpiredLogs(LocalDateTime before, int limit) {
     return jobLogContentMapper.cleanExpiredLogs(before, limit);
+  }
+
+  // ===== 实体方法实现 =====
+
+  @Override
+  public int insert(JobLogContent content) {
+    return jobLogContentMapper.insert(content);
+  }
+
+  @Override
+  public List<JobLogContent> selectByLogId(String logId, int offset, int limit) {
+    return jobLogContentMapper.selectByLogId(logId, offset, limit);
+  }
+
+  @Override
+  public List<JobLogContent> selectAfterLine(String logId, int fromLineNo) {
+    return jobLogContentMapper.selectAfterLine(logId, fromLineNo);
+  }
+
+  @Override
+  public List<JobLogContent> selectByLogIdAndKeyword(
+      String logId, String keyword, int offset, int limit) {
+    return jobLogContentMapper.selectByLogIdAndKeyword(logId, keyword, offset, limit);
   }
 }

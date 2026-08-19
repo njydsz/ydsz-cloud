@@ -172,8 +172,8 @@ public class WebhookEventDispatcher {
     return false;
   }
 
-  /** 单次 HTTP 推送。 */
-  private boolean doSend(JobWebhook webhook, ObjectNode body) {
+  /** 单次 HTTP 推送（IOException/InterruptedException 由调用方 sendWebhookWithRetry 捕获）。 */
+  private boolean doSend(JobWebhook webhook, ObjectNode body) throws java.io.IOException, InterruptedException {
     String method = webhook.getHttpMethod() != null ? webhook.getHttpMethod() : "POST";
     HttpRequest.Builder builder =
         HttpRequest.newBuilder()

@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 import com.njydsz.cronjob.domain.vo.JobLogContentVO;
 
 /**
@@ -69,4 +70,18 @@ public interface JobLogContentRepository {
    * @return 实际删除条数
    */
   int cleanExpiredLogs(LocalDateTime before, int limit);
+
+  // ===== 实体方法（JobLogContentServiceImpl 使用，与 VO 查询方法并存） =====
+
+  /** 新增日志内容实体。 */
+  int insert(JobLogContent content);
+
+  /** 按日志 ID 分页查询日志内容实体（SSE 补拉场景）。 */
+  List<JobLogContent> selectByLogId(String logId, int offset, int limit);
+
+  /** 按日志 ID 查询指定行号之后的日志内容实体（SSE 增量拉取）。 */
+  List<JobLogContent> selectAfterLine(String logId, int fromLineNo);
+
+  /** 按日志 ID 与关键字分页查询日志内容实体。 */
+  List<JobLogContent> selectByLogIdAndKeyword(String logId, String keyword, int offset, int limit);
 }

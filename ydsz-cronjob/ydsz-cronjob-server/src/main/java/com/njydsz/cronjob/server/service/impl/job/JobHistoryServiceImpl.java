@@ -95,7 +95,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     history.setRemark(job.getJobRemark());
     history.setChangedBy(StringUtils.hasText(changedBy) ? changedBy : "SYSTEM");
     history.setChangedAt(LocalDateTime.now());
-    history.setDeleted(0);
+    history.setHistoryDeleted(0);
     jobHistoryRepository.insert(history);
     log.info("[History] 保存任务历史版本: jobId={} version={},", job.getId(), job.getVersion());
     return history;
@@ -126,7 +126,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
       history.setRemark(displayJob.getJobRemark());
       history.setChangedBy(StringUtils.hasText(changedBy) ? changedBy : "SYSTEM");
       history.setChangedAt(LocalDateTime.now());
-      history.setDeleted(0);
+      history.setHistoryDeleted(0);
       jobHistoryRepository.insert(history);
       log.info(
           "[History] 版本记录: jobId={} key={} version={} type={}",

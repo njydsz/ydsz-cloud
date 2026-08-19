@@ -272,21 +272,11 @@ public class AppInfoServiceImpl implements AppInfoService {
    *
    * <p><b>租户隔离：</b>本方法按当前租户自动过滤（MyBatis 拦截器注入 tenant_id），避免跨租户越权查看。
    *
-   * @param pageNum 页码（1-based）
-   * @param pageSize 每页条数
-   * @param appName 应用名（可选，模糊匹配）
-   * @param status 状态（可选过滤条件，如 {@code ENABLED/DISABLED}）
+   * @param query 分页查询条件（pageNum / pageSize / appName / status）
    * @return 分页结果（VO 中密钥字段为 null，不暴露密钥哈希）
    */
   @Override
-  public PageResponse<List<AppInfoVO>> page(
-      int pageNum, int pageSize, String appName, String status) {
-    AppInfoPageQuery query = AppInfoPageQuery.builder()
-        .pageNum(pageNum)
-        .pageSize(pageSize)
-        .appName(appName)
-        .status(status)
-        .build();
+  public PageResponse<List<AppInfoVO>> page(AppInfoPageQuery query) {
     return appInfoRepository.findByPage(query);
   }
 

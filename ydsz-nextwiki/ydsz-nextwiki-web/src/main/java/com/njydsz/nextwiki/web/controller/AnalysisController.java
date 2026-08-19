@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.TagDO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -87,7 +87,7 @@ import com.njydsz.nextwiki.server.service.StorageAnalysisApplicationService;
 @RestController
 @RequestMapping("/api/v1/nextwiki/analysis")
 @RequiredArgsConstructor
-@TagDO(name = "存储分析与AI摘要", description = "存储统计报表、文档智能摘要（LLM）")
+@Tag(name = "存储分析与AI摘要", description = "存储统计报表、文档智能摘要（LLM）")
 public class AnalysisController {
 
   /** 存储分析应用服务（封装存储统计 + 大文件识别） */

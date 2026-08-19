@@ -14,6 +14,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.context.RequestContext;
@@ -24,7 +26,6 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
-import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.repository.ConfigRepository;
@@ -137,14 +138,21 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
     // 6. 批量插入
     configRepository.insertBatch(dtos);
 
-    // 7. 精准失效缓存：按涉及 configGroup 逐一失效组缓存 + 公开配置缓存
-    configGroups.forEach(this::evictConfigGroup);
-    evictConfigPublic();
-
-    // 8. 同步搜索索引 + 发布变更事件（异步，不阻塞主流程）
-    dtos.forEach(dto -> {
-      searchIndexSyncer.upsert("config", dto);
-      publishConfigChangedEvent(dto.getConfigKey(), dto.getConfigGroup());
+    // P1-6: 缓存失效、搜索索引同步、事件发布移至事务提交后（减少锁持有时间，避免 IO 操作在事务内）
+    Set<String> finalConfigGroups = configGroups;
+    List<ConfigDTO> finalDtos = dtos;
+    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+      @Override
+      public void afterCommit() {
+        // 7. 精准失效缓存
+        finalConfigGroups.forEach(ConfigBatchServiceImpl.this::evictConfigGroup);
+        ConfigBatchServiceImpl.this.evictConfigPublic();
+        // 8. 同步搜索索引 + 发布变更事件
+        finalDtos.forEach(dto -> {
+          searchIndexSyncer.upsert("config", dto);
+          publishConfigChangedEvent(dto.getConfigKey(), dto.getConfigGroup());
+        });
+      }
     });
 
     Map<String, Object> result = new HashMap<>();
@@ -267,7 +275,16 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
    * @return 配置 DTO（含预生成 ID 和审计字段）
    */
   private ConfigDTO toDtoWithId(ConfigVO vo) {
-    ConfigDTO dto = SystemConverter.INSTANT.voToDto(vo);
+    // VO → DTO 手动映射（字段完全一致，避免依赖 infra 层 SystemConverter，符合 DDD 分层）
+    ConfigDTO dto = new ConfigDTO();
+    dto.setConfigGroup(vo.getConfigGroup());
+    dto.setConfigKey(vo.getConfigKey());
+    dto.setConfigValue(vo.getConfigValue());
+    dto.setValueType(vo.getValueType());
+    dto.setDefaultValue(vo.getDefaultValue());
+    dto.setDescription(vo.getDescription());
+    dto.setIsPublic(vo.getIsPublic());
+    dto.setSortOrder(vo.getSortOrder());
     dto.setId(com.baomidou.mybatisplus.core.toolkit.IdWorker.getIdStr());
     dto.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
     return dto;

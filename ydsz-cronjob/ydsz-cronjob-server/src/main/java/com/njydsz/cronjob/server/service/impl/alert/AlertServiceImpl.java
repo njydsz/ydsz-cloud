@@ -112,7 +112,7 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public List<JobAlertRule> listRules() {
-    return jobAlertRuleRepository.selectList(null);
+    return jobAlertRuleRepository.selectList();
   }
 
   @Override

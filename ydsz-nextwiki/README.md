@@ -127,6 +127,18 @@ ydsz-nextwiki/
 | `POST /api/v1/nextwiki/ai/summary` `GET /api/v1/nextwiki/ai/status` | AI 文档摘要 / 任务状态 |
 | `POST /api/v1/nextwiki/storage/presigned-upload` `/presigned-download` | 预签名直传 / 直下 |
 
+### 收藏夹 / 最近访问（S2-P1-06）
+
+| 端点 | 作用 |
+|---|---|
+| `GET /api/v1/nextwiki/favorites` | 查询收藏列表 |
+| `POST /api/v1/nextwiki/favorites/{nodeId}` | 添加收藏 |
+| `DELETE /api/v1/nextwiki/favorites/{nodeId}` | 取消收藏 |
+| `PUT /api/v1/nextwiki/favorites/{nodeId}/sort` | 更新收藏排序 |
+| `GET /api/v1/nextwiki/recent` | 查询最近访问列表 |
+| `POST /api/v1/nextwiki/recent/{nodeId}` | 记录访问 |
+| `DELETE /api/v1/nextwiki/recent` | 清空最近访问 |
+
 ### WOPI 在线编辑
 
 | 端点 | 作用 |

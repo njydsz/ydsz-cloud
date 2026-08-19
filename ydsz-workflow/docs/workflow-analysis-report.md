@@ -240,6 +240,14 @@
 - **现象**：`error.workflow.msg_67a10717` / `error.workflow.msg_560bf118` 等哈希化 key
 - **影响**：阅读维护困难，grep 定位低效
 - **修复**：改为业务描述性 key，如 `workflow.instance.not_found` / `workflow.definition.start_node_missing`
+- **进度**（已完成）：
+  - `messages_zh_CN.properties` / `messages_en_US.properties` 中 2 个哈希 key 已重命名为描述性 key：
+    - `error.workflow.msg_6e66716d` → `error.workflow.node.not.found`（目标节点不存在）
+    - `error.workflow.msg_241f4a79` → `error.workflow.reject.target.not.found`（退回目标节点不存在）
+  - `DefaultFlowAdvancer.java` 中 6 处引用已同步更新
+- **待后续专项**：剩余 ~60 个硬编码哈希 key 散落在 ~40 个 Java 文件中，均无 properties 文件对应条目。
+  需逐一定义业务语义并补全中英双语 message，建议作为独立 i18n 专项分批推进。
+  高频文件：`BpmnXmlParser.java`（9 处）、`FlowDefinitionDesignManager.java`（10 处）、`FlowDelegateAuthServiceImpl.java`（18 处）
 
 **E4. OpenAPI 文档不完整**
 

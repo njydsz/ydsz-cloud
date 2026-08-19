@@ -165,4 +165,49 @@ public class JobRepositoryImpl implements JobRepository {
     wrapper.eq(Job::getDeleted, 0);
     return jobMapper.selectCount(wrapper);
   }
+
+  // ===== 实体 CRUD 实现（JobServiceImpl / JobHistoryServiceImpl 使用） =====
+
+  @Override
+  public Job selectById(String id) {
+    return jobMapper.selectById(id);
+  }
+
+  @Override
+  public int insert(Job job) {
+    return jobMapper.insert(job);
+  }
+
+  @Override
+  public int updateById(Job job) {
+    return jobMapper.updateById(job);
+  }
+
+  @Override
+  public int deleteById(String id) {
+    return jobMapper.deleteById(id);
+  }
+
+  @Override
+  public List<Job> selectAllNormal() {
+    return jobMapper.selectAllNormal();
+  }
+
+  @Override
+  public Job selectByJobKey(String jobKey) {
+    return jobMapper.selectByJobKey(jobKey);
+  }
+
+  @Override
+  public com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> selectPage(
+      com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> page,
+      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper) {
+    return jobMapper.selectPage(page, wrapper);
+  }
+
+  @Override
+  public long selectCount(
+      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper) {
+    return jobMapper.selectCount(wrapper);
+  }
 }

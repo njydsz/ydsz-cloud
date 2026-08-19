@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.JobTaskRepository;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
 
@@ -86,7 +87,7 @@ public class JobTaskController {
           int size) {
     // 通过 Repository 分页查询（封装了 MyBatis-Plus Page 和 Entity→VO 转换）
     JobRepository.PageResult<JobTaskVO> result = jobTaskRepository.pageByLogId(logId, page, size);
-    return PageResponse.success(result.getRecords(), result.getTotal());
+    return PageResponse.success((long) page, (long) size, result.getTotal(), result.getRecords());
   }
 
   /**

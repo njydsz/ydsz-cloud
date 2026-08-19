@@ -45,6 +45,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-system-domain</artifactId>
         </dependency>
+        <!-- P1-2: infra 层由 web 引入，通过 Spring 自动装配注入 Repository 实现到 server 层 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-system-infra</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-system-api</artifactId>

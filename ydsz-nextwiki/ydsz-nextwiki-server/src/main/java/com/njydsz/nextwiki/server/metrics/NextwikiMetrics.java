@@ -75,7 +75,7 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
     this.operationTimer = Timer.builder("ydsz_nextwiki_operation_duration")
             .description("通用操作耗时（毫秒），由 operation tag 区分类型")
             .publishPercentiles(0.5, 0.95, 0.99)
-            .TagDO("operation", "unknown")
+            .tag("operation", "unknown")
             .register(meterRegistry);
     this.uploadSizeSummary = DistributionSummary.builder("ydsz_nextwiki_file_upload_size_bytes")
             .description("上传文件大小分布（字节）")

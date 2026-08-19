@@ -22,13 +22,8 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAuth
 @EnableYdszSafe
 @EnableYdszAudit
-@EnableYdszFeign(
-    basePackages = {
-      "com.njydsz.cronjob.api",
-      "com.njydsz.common.feign",
-      "com.njydsz.userinfo.api",
-      "com.njydsz.system.api"
-    })
+// P0-FIX: @EnableYdszFeign 为无属性注解（默认扫描 com.njydsz 下 FeignClient），移除不存在的 basePackages 属性
+@EnableYdszFeign
 @EnableScheduling
 @MapperScan("com.njydsz.cronjob.infra.mapper")
 public class CronjobApplication {

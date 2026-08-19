@@ -1,7 +1,7 @@
 package com.njydsz.nextwiki.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.TagDO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +78,7 @@ import com.njydsz.nextwiki.server.service.QuotaApplicationService;
 @RestController
 @RequestMapping("/api/v1/nextwiki/quota")
 @RequiredArgsConstructor
-@TagDO(name = "存储配额", description = "配额查询、设置、校验（支持 user/tenant/project 维度）")
+@Tag(name = "存储配额", description = "配额查询、设置、校验（支持 user/tenant/project 维度）")
 public class QuotaController {
 
   /** 配额应用服务（封装配额查询 + 设置 + 实时校验） */

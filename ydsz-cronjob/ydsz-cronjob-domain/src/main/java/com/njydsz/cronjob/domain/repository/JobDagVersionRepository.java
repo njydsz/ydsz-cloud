@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.cronjob.domain.entity.dag.JobDagVersion;
 import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
 
 /**
@@ -47,4 +48,15 @@ public interface JobDagVersionRepository {
    * @return 版本记录 VO；不存在返回 {@code Optional.empty()}
    */
   Optional<JobDagVersionVO> findByVersion(String dagId, Integer version);
+
+  // ===== 实体方法（JobDagServiceImpl 使用） =====
+
+  /** 按 DAG ID 查询版本实体列表（版本号降序，limit 截断）。 */
+  List<JobDagVersion> selectByVersionDesc(String dagId, int limit);
+
+  /** 按 DAG ID 与版本号查询版本实体。 */
+  JobDagVersion selectByVersion(String dagId, int version);
+
+  /** 新增版本实体。 */
+  int insert(JobDagVersion version);
 }

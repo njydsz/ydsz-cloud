@@ -42,6 +42,23 @@ public interface AgentExecutor {
   void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer);
 
   /**
+   * 流式执行 Agent（带进度回调）。
+   *
+   * <p>默认实现忽略进度回调，仅委托 {@link #executeStream(AgentExecutionRequest, Consumer)}。 支持细粒度进度的执行器（如 {@code DagOrchestrationExecutor}）应重写本方法，在节点生命周期事件发生时回调
+   * {@code progressConsumer}。
+   *
+   * @param request 执行请求
+   * @param chunkConsumer 流式片段消费者
+   * @param progressConsumer DAG 节点进度事件消费者（可为 null）
+   */
+  default void executeStream(
+      AgentExecutionRequest request,
+      Consumer<ChatChunk> chunkConsumer,
+      Consumer<DagProgressEvent> progressConsumer) {
+    executeStream(request, chunkConsumer);
+  }
+
+  /**
    * Agent 类型标识
    *
    * @return 类型标识（如 "simple"、"react"、"plan_execute"）

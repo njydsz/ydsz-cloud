@@ -46,4 +46,21 @@ public class JobHistoryRepositoryImpl implements JobHistoryRepository {
   public int cleanExpiredLogs(LocalDateTime before, int limit) {
     return jobHistoryMapper.cleanExpiredLogs(before, limit);
   }
+
+  // ===== 实体方法实现 =====
+
+  @Override
+  public int insert(JobHistory history) {
+    return jobHistoryMapper.insert(history);
+  }
+
+  @Override
+  public List<JobHistory> selectByJobIdOrderByVersionDesc(String jobId) {
+    return jobHistoryMapper.selectByJobIdOrderByVersionDesc(jobId);
+  }
+
+  @Override
+  public JobHistory selectByVersion(String jobId, Integer version) {
+    return jobHistoryMapper.selectByVersion(jobId, version);
+  }
 }

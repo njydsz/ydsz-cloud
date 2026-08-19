@@ -7,6 +7,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.domain.repository.JobDagInstanceRepository;
 import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
@@ -100,5 +101,27 @@ public class JobDagInstanceRepositoryImpl implements JobDagInstanceRepository {
   @Override
   public int markCanceled(String instanceId, LocalDateTime canceledAt, long durationMs) {
     return jobDagInstanceMapper.markCanceled(instanceId, canceledAt, durationMs);
+  }
+
+  // ===== 实体方法实现 =====
+
+  @Override
+  public JobDagInstance selectById(String instanceId) {
+    return jobDagInstanceMapper.selectById(instanceId);
+  }
+
+  @Override
+  public List<JobDagInstance> selectByDagId(String dagId, int limit) {
+    return jobDagInstanceMapper.selectByDagId(dagId, limit);
+  }
+
+  @Override
+  public List<JobDagInstance> selectByStatus(String status) {
+    return jobDagInstanceMapper.selectByStatus(status);
+  }
+
+  @Override
+  public int insert(JobDagInstance instance) {
+    return jobDagInstanceMapper.insert(instance);
   }
 }

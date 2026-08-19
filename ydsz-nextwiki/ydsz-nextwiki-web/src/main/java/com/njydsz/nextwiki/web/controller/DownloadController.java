@@ -8,7 +8,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.TagDO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -100,7 +100,7 @@ import com.njydsz.nextwiki.server.service.DownloadApplicationService.SignedDownl
 @RestController
 @RequestMapping("/api/v1/nextwiki/download")
 @RequiredArgsConstructor
-@TagDO(name = "文件下载", description = "文件下载、签名URL生成、限流防盗链、Range 断点续传")
+@Tag(name = "文件下载", description = "文件下载、签名URL生成、限流防盗链、Range 断点续传")
 public class DownloadController {
 
   /** 下载应用服务（封装下载上下文准备、签名 URL 生成、限流等） */

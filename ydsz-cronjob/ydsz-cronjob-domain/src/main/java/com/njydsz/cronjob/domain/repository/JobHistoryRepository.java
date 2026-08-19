@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.cronjob.domain.entity.job.JobHistory;
 import com.njydsz.cronjob.domain.vo.JobHistoryVO;
 
 /**
@@ -49,4 +50,15 @@ public interface JobHistoryRepository {
    * @return 实际删除条数
    */
   int cleanExpiredLogs(LocalDateTime before, int limit);
+
+  // ===== 实体方法（JobHistoryServiceImpl 使用） =====
+
+  /** 新增历史记录实体。 */
+  int insert(JobHistory history);
+
+  /** 按任务 ID 查询历史版本实体列表（版本号降序）。 */
+  List<JobHistory> selectByJobIdOrderByVersionDesc(String jobId);
+
+  /** 按任务 ID 与版本号查询历史记录实体。 */
+  JobHistory selectByVersion(String jobId, Integer version);
 }

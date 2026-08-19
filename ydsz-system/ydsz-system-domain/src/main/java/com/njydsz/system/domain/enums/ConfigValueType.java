@@ -2,8 +2,6 @@ package com.njydsz.system.domain.enums;
 
 import java.util.regex.Pattern;
 
-import com.njydsz.common.json.YdszJson;
-
 /**
  * 配置值类型枚举
  *
@@ -138,29 +136,64 @@ public enum ConfigValueType {
     return null;
   }
 
-  /** 校验 JSON 类型合法性与长度。 */
+  /**
+   * 校验 JSON 类型合法性与长度。
+   *
+   * <p>采用轻量级括号匹配校验（不依赖具体 JSON 库，避免 domain 层与 common-json 耦合）。完整 JSON 语法校验由 server
+   * 层在写入前通过 {@code YdszJson} 完成。
+   */
   private static String validateJson(String value) {
     if (value.length() > MAX_JSON_LENGTH) {
       return "JSON 长度超过限制 " + MAX_JSON_LENGTH;
     }
     String trimmed = value.trim();
-    if (trimmed.startsWith("{")) {
-      try {
-        YdszJson.parseMap(trimmed);
-        return null;
-      } catch (Exception e) {
-        return "JSON 解析失败: " + e.getMessage();
-      }
+    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+      return isBalanced(trimmed, '{', '}') ? null : "JSON 花括号不匹配";
     }
-    if (trimmed.startsWith("[")) {
-      try {
-        YdszJson.parseArray(trimmed, Object.class);
-        return null;
-      } catch (Exception e) {
-        return "JSON 解析失败: " + e.getMessage();
-      }
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      return isBalanced(trimmed, '[', ']') ? null : "JSON 方括号不匹配";
     }
     return "JSON 类型值必须以 '{' 或 '[' 开头";
+  }
+
+  /**
+   * 校验括号是否平衡（轻量级 JSON 结构校验）。
+   *
+   * @param str 待校验字符串
+   * @param open 开括号
+   * @param close 闭括号
+   * @return 平衡返回 true
+   */
+  private static boolean isBalanced(String str, char open, char close) {
+    int depth = 0;
+    boolean inString = false;
+    boolean escape = false;
+    for (char c : str.toCharArray()) {
+      if (escape) {
+        escape = false;
+        continue;
+      }
+      if (c == '\\' && inString) {
+        escape = true;
+        continue;
+      }
+      if (c == '"') {
+        inString = !inString;
+        continue;
+      }
+      if (inString) {
+        continue;
+      }
+      if (c == open) {
+        depth++;
+      } else if (c == close) {
+        depth--;
+        if (depth < 0) {
+          return false;
+        }
+      }
+    }
+    return depth == 0;
   }
 
   /**

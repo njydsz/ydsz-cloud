@@ -1,5 +1,6 @@
 package com.njydsz.agent.web.controller;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -195,6 +196,33 @@ public class AgentController {
                             chunk.getDeltaContent(),
                             chunk.getFinishReason(),
                             chunk.getDeltaToolCalls()));
+                  }
+                },
+                // P2-#14: 进度回调 — 将 DAG 节点事件转为 SSE progress 事件推送
+                progressEvent -> {
+                  if (progressEvent == null) {
+                    return;
+                  }
+                  String status = progressEvent.getEventType();
+                  String nodeId = progressEvent.getNodeId();
+                  int completed = progressEvent.getCompletedCount();
+                  int total = progressEvent.getTotalCount();
+                  try {
+                    emitter.send(
+                        SseEmitter.event()
+                            .data(
+                                String.format(
+                                    "{\"eventType\":\"%s\",\"nodeId\":\"%s\",\"nodeType\":\"%s\","
+                                        + "\"completedCount\":%d,\"totalCount\":%d,\"error\":\"%s\"}",
+                                    status,
+                                    nodeId != null ? nodeId : "",
+                                    progressEvent.getNodeType() != null ? progressEvent.getNodeType() : "",
+                                    completed,
+                                    total,
+                                    progressEvent.getError() != null ? progressEvent.getError() : ""))
+                            .name("progress"));
+                  } catch (IOException e) {
+                    LOG.debug("[Agent-API] SSE progress 发送失败（客户端已断开）: {}", e.getMessage());
                   }
                 }));
 

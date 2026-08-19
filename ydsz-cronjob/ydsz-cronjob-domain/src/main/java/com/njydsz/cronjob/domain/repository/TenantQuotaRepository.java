@@ -2,6 +2,7 @@ package com.njydsz.cronjob.domain.repository;
 
 import java.util.Optional;
 
+import com.njydsz.cronjob.domain.entity.job.TenantQuota;
 import com.njydsz.cronjob.domain.vo.TenantQuotaVO;
 
 /**
@@ -28,4 +29,7 @@ public interface TenantQuotaRepository {
    * @return 配额 VO；不存在返回 {@code Optional.empty()}
    */
   Optional<TenantQuotaVO> findByTenantId(String tenantId);
+
+  /** 按租户 ID 查询配额实体（TenantQuotaServiceImpl 计量/更新使用）。 */
+  TenantQuota selectByTenantId(String tenantId);
 }

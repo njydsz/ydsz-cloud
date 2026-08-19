@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.agent;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,6 +22,9 @@ import com.njydsz.agent.domain.agent.AgentDag;
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
+import com.njydsz.agent.domain.agent.DagCheckpoint;
+import com.njydsz.agent.domain.agent.DagProgressEvent;
+import com.njydsz.agent.domain.gateway.DagCheckpointStore;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
@@ -73,6 +77,9 @@ public class DagOrchestrationExecutor implements AgentExecutor {
   private final DagDslParser dagDslParser;
   private final ExecutorService executor;
 
+  /** 检查点存储（可选依赖，Redis 不可用时降级） */
+  private final DagCheckpointStore checkpointStore;
+
   /**
    * 构造 DAG 执行器（强制使用外部线程池）
    *
@@ -81,18 +88,21 @@ public class DagOrchestrationExecutor implements AgentExecutor {
    * @param agentFactory Agent 工厂
    * @param dagDslParser YAML DSL 解析器（AgentExecutor 适配入口使用）
    * @param executor 外部线程池（由 common-thread 管理）
+   * @param checkpointStore 检查点存储（可为 null，null 时禁用断点续跑）
    */
   public DagOrchestrationExecutor(
       LlmClient llmClient,
       AgentProperties properties,
       AgentFactory agentFactory,
       DagDslParser dagDslParser,
-      ExecutorService executor) {
+      ExecutorService executor,
+      DagCheckpointStore checkpointStore) {
     this.llmClient = llmClient;
     this.properties = properties;
     this.agentFactory = agentFactory;
     this.dagDslParser = dagDslParser;
     this.executor = executor;
+    this.checkpointStore = checkpointStore;
   }
 
   /**
@@ -105,14 +115,34 @@ public class DagOrchestrationExecutor implements AgentExecutor {
    * @return 各节点执行结果
    */
   public DagExecutionResult execute(AgentDag dag, String userInput) {
-    String executionId = IdGenerator.nextIdStr();
+    return execute(dag, userInput, null);
+  }
+
+  /**
+   * 执行 DAG 编排（支持从检查点续跑）。
+   *
+   * <p>当 {@code resumeExecutionId} 非空时尝试加载已存在的检查点，跳过已成功的节点， 仅执行失败及未执行的节点；若检查点不存在则退化为全新执行。
+   *
+   * @param dag DAG 定义
+   * @param userInput 用户原始输入
+   * @param resumeExecutionId 续跑的执行 ID（null 表示全新执行）
+   * @return 各节点执行结果
+   */
+  public DagExecutionResult execute(AgentDag dag, String userInput, String resumeExecutionId) {
+    String executionId = resumeExecutionId != null ? resumeExecutionId : IdGenerator.nextIdStr();
     LOG.info(
-        "[DAG] 开始编排: id={}, name={}, nodes={}", executionId, dag.getName(), dag.getNodes().size());
+        "[DAG] 开始编排: id={}, name={}, nodes={}, resume={}",
+        executionId, dag.getName(), dag.getNodes().size(), resumeExecutionId != null);
 
     Map<String, String> nodeResults = new ConcurrentHashMap<>();
     Map<String, TokenUsage> nodeUsages = new ConcurrentHashMap<>();
     Set<String> completed = ConcurrentHashMap.newKeySet();
     Set<String> failed = ConcurrentHashMap.newKeySet();
+
+    // P2-#8: 尝试加载检查点恢复中间状态
+    if (resumeExecutionId != null) {
+      loadCheckpoint(resumeExecutionId, nodeResults, completed, failed);
+    }
 
     List<String> sortedNodeIds = topologicalSort(dag);
     Map<String, CompletableFuture<Void>> futureMap = new HashMap<>();
@@ -121,6 +151,13 @@ public class DagOrchestrationExecutor implements AgentExecutor {
     Set<String> loopBodyNodeIds = collectLoopBodyNodeIds(dag);
 
     for (String nodeId : sortedNodeIds) {
+      // P2-#8: 检查点中已成功的节点跳过
+      if (completed.contains(nodeId)) {
+        LOG.info("[DAG] 跳过已完成节点: id={}", nodeId);
+        // 为该节点创建一个已完成的占位 future，保证下游依赖正常
+        futureMap.put(nodeId, CompletableFuture.completedFuture(null));
+        continue;
+      }
       // 循环体节点跳过主图调度（在 LOOP 节点内由 executeLoopNode 驱动执行）
       if (loopBodyNodeIds.contains(nodeId)) {
         continue;
@@ -168,6 +205,9 @@ public class DagOrchestrationExecutor implements AgentExecutor {
     LOG.info(
         "[DAG] 编排完成: id={}, completed={}, failed={}", executionId, completed.size(), failed.size());
 
+    // P2-#8: 保存检查点（支持后续续跑）
+    saveCheckpoint(executionId, dag.getName(), userInput, nodeResults, completed, failed);
+
     return new DagExecutionResult(
         executionId,
         dag.getName(),
@@ -176,6 +216,81 @@ public class DagOrchestrationExecutor implements AgentExecutor {
         completed,
         failed,
         hasFailed);
+  }
+
+  /**
+   * 从检查点加载已完成的节点状态。
+   *
+   * <p>加载成功时恢复 nodeResults / completed / failed 三个集合，使续跑跳过已成功的节点。
+   *
+   * @param executionId 执行 ID
+   * @param nodeResults 节点结果映射（输出参数）
+   * @param completed 已完成节点集合（输出参数）
+   * @param failed 失败节点集合（输出参数）
+   */
+  private void loadCheckpoint(
+      String executionId,
+      Map<String, String> nodeResults,
+      Set<String> completed,
+      Set<String> failed) {
+    if (checkpointStore == null) {
+      return;
+    }
+    try {
+      checkpointStore
+          .load(executionId)
+          .ifPresent(
+              cp -> {
+                nodeResults.putAll(cp.getNodeResults());
+                completed.addAll(cp.getCompletedNodes());
+                failed.addAll(cp.getFailedNodes());
+                LOG.info(
+                    "[DAG] 加载检查点: executionId={}, completed={}, failed={}",
+                    executionId,
+                    cp.getCompletedNodes().size(),
+                    cp.getFailedNodes().size());
+              });
+    } catch (Exception e) {
+      LOG.warn("[DAG] 加载检查点失败，退化为全新执行: executionId={}, err={}", executionId, e.getMessage());
+    }
+  }
+
+  /**
+   * 保存当前执行状态的检查点快照。
+   *
+   * @param executionId 执行 ID
+   * @param dagName DAG 名称
+   * @param userInput 用户输入
+   * @param nodeResults 节点结果映射
+   * @param completed 已完成节点集合
+   * @param failed 失败节点集合
+   */
+  private void saveCheckpoint(
+      String executionId,
+      String dagName,
+      String userInput,
+      Map<String, String> nodeResults,
+      Set<String> completed,
+      Set<String> failed) {
+    if (checkpointStore == null) {
+      return;
+    }
+    try {
+      DagCheckpoint checkpoint =
+          new DagCheckpoint(
+              executionId,
+              dagName,
+              null,
+              userInput,
+              new HashMap<>(nodeResults),
+              new HashSet<>(completed),
+              new HashSet<>(failed),
+              LocalDateTime.now());
+      checkpointStore.save(checkpoint);
+      LOG.debug("[DAG] 保存检查点: executionId={}, completed={}, failed={}", executionId, completed.size(), failed.size());
+    } catch (Exception e) {
+      LOG.warn("[DAG] 保存检查点失败: executionId={}, err={}", executionId, e.getMessage());
+    }
   }
 
   /** 默认节点超时（秒），当节点未配置 timeoutSeconds 时使用 */
@@ -609,8 +724,10 @@ public class DagOrchestrationExecutor implements AgentExecutor {
       throw new IllegalArgumentException(
           "DAG 类型 Agent 执行时缺少 dsl 定义（request.variables.dsl）");
     }
+    // P2-#8: 支持通过 variables.resumeExecutionId 触发续跑
+    String resumeExecutionId = (String) request.getVariables().get("resumeExecutionId");
     AgentDag dag = dagDslParser.parse(dsl);
-    DagExecutionResult result = execute(dag, request.getUserInput());
+    DagExecutionResult result = execute(dag, request.getUserInput(), resumeExecutionId);
     return buildSummaryResponse(result);
   }
 
@@ -622,9 +739,204 @@ public class DagOrchestrationExecutor implements AgentExecutor {
    */
   @Override
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
-    ChatResponse response = execute(request);
+    executeStream(request, chunkConsumer, null);
+  }
+
+  /**
+   * 流式执行 DAG（带节点级进度推送）。
+   *
+   * <p>在编排执行过程中，按节点生命周期推送进度事件：DAG_STARTED → NODE_STARTED → NODE_COMPLETED / NODE_FAILED → DAG_COMPLETED。
+   * {@code progressConsumer} 为 null 时退化为普通流式（仅推送最终结果）。
+   *
+   * @param request 执行请求
+   * @param chunkConsumer 流式片段消费者
+   * @param progressConsumer DAG 节点进度事件消费者（可为 null）
+   */
+  @Override
+  public void executeStream(
+      AgentExecutionRequest request,
+      Consumer<ChatChunk> chunkConsumer,
+      Consumer<DagProgressEvent> progressConsumer) {
+    Object dslObj = request.getVariables().get(VARIABLE_DSL_KEY);
+    if (!(dslObj instanceof String dsl) || dsl.isBlank()) {
+      throw new IllegalArgumentException(
+          "DAG 类型 Agent 执行时缺少 dsl 定义（request.variables.dsl）");
+    }
+    String resumeExecutionId = (String) request.getVariables().get("resumeExecutionId");
+    AgentDag dag = dagDslParser.parse(dsl);
+    String executionId =
+        resumeExecutionId != null ? resumeExecutionId : IdGenerator.nextIdStr();
+
+    // P2-#14: 推送编排启动事件
+    if (progressConsumer != null) {
+      progressConsumer.accept(DagProgressEvent.dagStarted(executionId, dag.getNodes().size()));
+    }
+
+    // P2-#14: 创建带进度回调的消费者，在节点完成时推送进度
+    Consumer<DagProgressEvent> progressTracker = createProgressTracker(progressConsumer, executionId, dag);
+    DagExecutionResult result = executeWithProgress(dag, request.getUserInput(), resumeExecutionId, progressTracker);
+
+    // 推送最终结果
+    ChatResponse response = buildSummaryResponse(result);
     chunkConsumer.accept(ChatChunk.content(response.getId(), response.getModel(), response.getContent()));
     chunkConsumer.accept(ChatChunk.finish(response.getId(), response.getModel(), "stop", response.getUsage()));
+
+    // P2-#14: 推送编排完成事件
+    if (progressConsumer != null) {
+      progressConsumer.accept(DagProgressEvent.dagCompleted(executionId, dag.getNodes().size()));
+    }
+  }
+
+  /**
+   * 创建进度追踪回调包装器。
+   *
+   * <p>内部维护已完成计数，每次回调时附加进度信息（completedCount / totalCount）。
+   *
+   * @param delegate 实际进度消费者
+   * @param executionId 执行 ID
+   * @param dag DAG 定义（用于获取总节点数）
+   * @return 包装后的进度消费者
+   */
+  private Consumer<DagProgressEvent> createProgressTracker(
+      Consumer<DagProgressEvent> delegate, String executionId, AgentDag dag) {
+    if (delegate == null) {
+      return null;
+    }
+    int total = dag.getNodes().size();
+    return event -> {
+      // 包装原始事件，附加当前进度计数
+      DagProgressEvent enriched =
+          new DagProgressEvent(
+              event.getEventType(),
+              event.getNodeId(),
+              event.getNodeType(),
+              event.getCompletedCount(),
+              total,
+              event.getError(),
+              event.getTimestamp());
+      delegate.accept(enriched);
+    };
+  }
+
+  /**
+   * 带进度追踪的 DAG 编排执行。
+   *
+   * <p>在每个节点开始/完成/失败时调用 progressCallback，同时保持检查点保存逻辑不变。
+   *
+   * @param dag DAG 定义
+   * @param userInput 用户原始输入
+   * @param resumeExecutionId 续跑的执行 ID（null 表示全新执行）
+   * @param progressCallback 进度回调（可为 null）
+   * @return 各节点执行结果
+   */
+  private DagExecutionResult executeWithProgress(
+      AgentDag dag,
+      String userInput,
+      String resumeExecutionId,
+      Consumer<DagProgressEvent> progressCallback) {
+    String executionId = resumeExecutionId != null ? resumeExecutionId : IdGenerator.nextIdStr();
+    LOG.info(
+        "[DAG] 开始编排: id={}, name={}, nodes={}, resume={}",
+        executionId, dag.getName(), dag.getNodes().size(), resumeExecutionId != null);
+
+    Map<String, String> nodeResults = new ConcurrentHashMap<>();
+    Map<String, TokenUsage> nodeUsages = new ConcurrentHashMap<>();
+    Set<String> completed = ConcurrentHashMap.newKeySet();
+    Set<String> failed = ConcurrentHashMap.newKeySet();
+
+    if (resumeExecutionId != null) {
+      loadCheckpoint(resumeExecutionId, nodeResults, completed, failed);
+    }
+
+    List<String> sortedNodeIds = topologicalSort(dag);
+    Map<String, CompletableFuture<Void>> futureMap = new HashMap<>();
+    Set<String> loopBodyNodeIds = collectLoopBodyNodeIds(dag);
+
+    // P2-#14: 用于计算当前完成进度的原子计数器
+    int[] completedCounter = {completed.size()};
+
+    for (String nodeId : sortedNodeIds) {
+      if (completed.contains(nodeId)) {
+        futureMap.put(nodeId, CompletableFuture.completedFuture(null));
+        continue;
+      }
+      if (loopBodyNodeIds.contains(nodeId)) {
+        continue;
+      }
+      AgentDag.Node node = dag.getNodes().get(nodeId);
+      List<String> deps = dag.getEdges().getOrDefault(nodeId, List.of());
+
+      CompletableFuture<Void> allDepsFuture =
+          deps.stream()
+              .map(dep -> futureMap.getOrDefault(dep, CompletableFuture.completedFuture(null)))
+              .reduce(
+                  CompletableFuture.completedFuture(null),
+                  (f1, f2) -> f1.thenCombine(f2, (v1, v2) -> null));
+
+      CompletableFuture<Void> nodeFuture =
+          allDepsFuture.thenRunAsync(
+              () -> {
+                // P2-#14: 推送节点启动事件
+                if (progressCallback != null) {
+                  progressCallback.accept(
+                      DagProgressEvent.nodeStarted(
+                          nodeId, node.getAgentType(), completedCounter[0], dag.getNodes().size()));
+                }
+                executeNodeLogic(
+                    dag, node, userInput, nodeResults, nodeUsages, completed, failed, executionId);
+                // P2-#14: 根据执行结果推送完成/失败事件
+                if (progressCallback != null) {
+                  synchronized (completedCounter) {
+                    completedCounter[0] = completed.size();
+                    if (failed.contains(nodeId)) {
+                      progressCallback.accept(
+                          DagProgressEvent.nodeFailed(
+                              nodeId,
+                              node.getAgentType(),
+                              completedCounter[0],
+                              dag.getNodes().size(),
+                              nodeResults.getOrDefault(nodeId, "节点执行失败")));
+                    } else {
+                      progressCallback.accept(
+                          DagProgressEvent.nodeCompleted(
+                              nodeId,
+                              node.getAgentType(),
+                              completedCounter[0],
+                              dag.getNodes().size()));
+                    }
+                  }
+                }
+              },
+              executor);
+      futureMap.put(nodeId, nodeFuture);
+    }
+
+    try {
+      CompletableFuture.allOf(futureMap.values().toArray(new CompletableFuture[0]))
+          .orTimeout(300, TimeUnit.SECONDS)
+          .join();
+    } catch (CompletionException e) {
+      if (e.getCause() instanceof TimeoutException) {
+        LOG.error("[DAG] 编排超时: id={}", executionId);
+      } else {
+        LOG.error("[DAG] 编排异常: id={}, error={}", executionId, e.getMessage(), e);
+      }
+    }
+
+    boolean hasFailed = !failed.isEmpty();
+    LOG.info(
+        "[DAG] 编排完成: id={}, completed={}, failed={}", executionId, completed.size(), failed.size());
+
+    saveCheckpoint(executionId, dag.getName(), userInput, nodeResults, completed, failed);
+
+    return new DagExecutionResult(
+        executionId,
+        dag.getName(),
+        new HashMap<>(nodeResults),
+        new HashMap<>(nodeUsages),
+        completed,
+        failed,
+        hasFailed);
   }
 
   /**

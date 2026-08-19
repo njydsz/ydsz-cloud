@@ -5,6 +5,8 @@ import java.util.Map;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.agent.api.dto.DagExecutionDTO;
 import com.njydsz.agent.domain.agent.AgentDag;
+import com.njydsz.agent.domain.agent.DagCheckpoint;
+import com.njydsz.agent.domain.gateway.DagCheckpointStore;
 import com.njydsz.agent.server.agent.DagDslParser;
 import com.njydsz.agent.server.agent.DagOrchestrationExecutor;
 import com.njydsz.common.audit.annotation.Audit;
@@ -77,9 +81,17 @@ public class DagController {
   /** DAG 编排执行器（拓扑排序 + 节点派发） */
   private final DagOrchestrationExecutor dagExecutor;
 
-  public DagController(DagDslParser dslParser, DagOrchestrationExecutor dagExecutor) {
+  /** 检查点存储（可选依赖，Redis 不可用时降级） */
+  private final DagCheckpointStore checkpointStore;
+
+  public DagController(
+      DagDslParser dslParser,
+      DagOrchestrationExecutor dagExecutor,
+      ObjectProvider<DagCheckpointStore> checkpointStoreProvider) {
     this.dslParser = dslParser;
     this.dagExecutor = dagExecutor;
+    // 检查点存储为可选依赖：Redis 不可用时降级为无续跑能力，编排本身仍可执行
+    this.checkpointStore = checkpointStoreProvider.getIfAvailable();
   }
 
   /**
@@ -114,11 +126,33 @@ public class DagController {
 
     // 1. 解析 DSL（YAML → AgentDag 对象）
     AgentDag dag = dslParser.parse(request.getDsl());
-    // 2. 编排执行（拓扑排序 + 逐节点派发）
+    // 2. 编排执行（拓扑排序 + 逐节点派发；含 resumeExecutionId 则从检查点续跑）
     DagOrchestrationExecutor.DagExecutionResult result =
-        dagExecutor.execute(dag, request.getUserInput());
+        dagExecutor.execute(dag, request.getUserInput(), request.getResumeExecutionId());
 
     return BaseResponse.success(result);
+  }
+
+  /**
+   * 查询执行检查点。
+   *
+   * <p>返回指定执行 ID 的快照状态（已完成节点、失败节点、快照时间），供前端判断是否可以续跑。 检查点不存在时返回 success + found=false。
+   *
+   * @param executionId 执行 ID
+   * @return 检查点状态
+   */
+  @AuthApiPermission(apiCodes = PermissionCodes.AGENT_DAG_EXECUTE)
+  @Audit(
+      module = "DAG管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.QUERY,
+      content = "'query checkpoint'")
+  @GetMapping("/checkpoint/{executionId}")
+  public BaseResponse<DagCheckpoint> getCheckpoint(@PathVariable String executionId) {
+    if (checkpointStore == null) {
+      return BaseResponse.success(null);
+    }
+    return BaseResponse.success(checkpointStore.load(executionId).orElse(null));
   }
 
   /**

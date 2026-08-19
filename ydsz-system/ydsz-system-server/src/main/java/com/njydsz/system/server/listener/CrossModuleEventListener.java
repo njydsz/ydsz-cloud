@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.event.model.OutboxMessage;
+import com.njydsz.system.server.cache.CacheInvalidationPublisher;
 
 /**
  * 进程内缓存失效监听器 — System 模块订阅自身发布配置/字典/变量的领域事件。
@@ -45,6 +46,7 @@ public class CrossModuleEventListener {
   private static final String DEFAULT_TENANT = "default";
 
   private final CacheManager cacheManager;
+  private final CacheInvalidationPublisher invalidationPublisher;
 
   /**
    * 配置变更 — 精准失效本实例配置缓存（防御性兜底）。
@@ -67,6 +69,9 @@ public class CrossModuleEventListener {
       }
       evict(CacheConstants.SYSTEM_CONFIG_CACHE, "value:" + tenantId + ":" + configKey);
       evict(CacheConstants.SYSTEM_CONFIG_CACHE, "public:" + tenantId);
+      // P1-7: 跨实例缓存失效（Redis Pub/Sub 通知其他实例清除本地缓存）
+      invalidationPublisher.publishEviction(CacheConstants.SYSTEM_CONFIG_CACHE, "value:" + tenantId + ":" + configKey);
+      invalidationPublisher.publishEviction(CacheConstants.SYSTEM_CONFIG_CACHE, "public:" + tenantId);
       log.debug("[CrossModuleEventListener] 精准失效配置缓存: tenant={}, key={}", tenantId, configKey);
     } catch (Exception e) {
       // 监听器异常必须吞掉，不能影响事件发布方事务（《云顶编码规范》27.3 规则 25.3.2）
@@ -94,6 +99,8 @@ public class CrossModuleEventListener {
         return;
       }
       evict(CacheConstants.SYSTEM_DICT_ITEM_CACHE, "list:" + tenantId + ":" + typeCode);
+      // P1-7: 跨实例缓存失效
+      invalidationPublisher.publishEviction(CacheConstants.SYSTEM_DICT_ITEM_CACHE, "list:" + tenantId + ":" + typeCode);
       log.debug("[CrossModuleEventListener] 精准失效字典缓存: tenant={}, typeCode={}", tenantId, typeCode);
     } catch (Exception e) {
       log.error("[CrossModuleEventListener] 字典缓存失效失败: typeCode={}", message.getAggregateId(), e);
@@ -119,6 +126,8 @@ public class CrossModuleEventListener {
         return;
       }
       evict(CacheConstants.SYSTEM_VARIABLE_CACHE, tenantId + ":" + variableKey);
+      // P1-7: 跨实例缓存失效
+      invalidationPublisher.publishEviction(CacheConstants.SYSTEM_VARIABLE_CACHE, tenantId + ":" + variableKey);
       log.debug("[CrossModuleEventListener] 精准失效变量缓存: tenant={}, key={}", tenantId, variableKey);
     } catch (Exception e) {
       log.error("[CrossModuleEventListener] 变量缓存失效失败: key={}", message.getAggregateId(), e);

@@ -3,7 +3,7 @@ package com.njydsz.nextwiki.web.controller;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.TagDO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -91,7 +91,7 @@ import com.njydsz.nextwiki.server.service.TrashApplicationService;
 @RestController
 @RequestMapping("/api/v1/nextwiki/trash")
 @RequiredArgsConstructor
-@TagDO(name = "回收站管理", description = "回收站列表、恢复、永久删除、清空（默认 30 天保留期）")
+@Tag(name = "回收站管理", description = "回收站列表、恢复、永久删除、清空（默认 30 天保留期）")
 public class TrashController {
 
   /** 回收站应用服务（封装回收站 CRUD + 恢复 + 永久删除） */

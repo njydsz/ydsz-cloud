@@ -25,7 +25,7 @@ import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.DictItemPageQuery;
-import com.njydsz.system.domain.vo.DictItemExcelVO;
+import com.njydsz.system.server.vo.DictItemExcelVO;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.vo.ImportResult;
 import com.njydsz.system.domain.repository.DictRepository;
@@ -261,23 +261,11 @@ public class DictItemServiceImpl implements DictItemService {
    * <p>支持按 {@code typeCode} 精确匹配、{@code itemCode} 模糊匹配、{@code status} 精确匹配进行过滤， 按 {@code
    * created_at} 倒序返回。
    *
-   * @param pageNum 页码（1-based）
-   * @param pageSize 每页条数
-   * @param typeCode 字典类型编码（可选过滤条件）
-   * @param itemCode 字典项编码（可选，模糊匹配）
-   * @param status 状态（可选过滤条件，如 {@code ENABLED/DISABLED}）
+   * @param query 分页查询条件（pageNum / pageSize / typeCode / itemCode / status）
    * @return 分页结果（含总条数）
    */
   @Override
-  public PageResponse<List<DictItemVO>> page(
-      int pageNum, int pageSize, String typeCode, String itemCode, String status) {
-    DictItemPageQuery query = DictItemPageQuery.builder()
-        .pageNum(pageNum)
-        .pageSize(pageSize)
-        .typeCode(typeCode)
-        .itemCode(itemCode)
-        .status(status)
-        .build();
+  public PageResponse<List<DictItemVO>> page(DictItemPageQuery query) {
     return dictRepository.findItemPage(query);
   }
 

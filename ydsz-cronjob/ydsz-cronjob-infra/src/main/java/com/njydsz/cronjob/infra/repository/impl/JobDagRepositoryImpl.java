@@ -7,6 +7,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.cronjob.domain.entity.dag.JobDag;
 import com.njydsz.cronjob.domain.repository.JobDagRepository;
 import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
@@ -60,5 +61,42 @@ public class JobDagRepositoryImpl implements JobDagRepository {
   @Override
   public Optional<JobDagVO> findById(String dagId) {
     return Optional.ofNullable(jobDagMapper.selectById(dagId)).map(converter::entityToVO);
+  }
+
+  // ===== 实体 CRUD 实现（Service 层 DAG 管理使用） =====
+
+  @Override
+  public JobDag selectById(String id) {
+    return jobDagMapper.selectById(id);
+  }
+
+  @Override
+  public int insert(JobDag dag) {
+    return jobDagMapper.insert(dag);
+  }
+
+  @Override
+  public int updateById(JobDag dag) {
+    return jobDagMapper.updateById(dag);
+  }
+
+  @Override
+  public int deleteById(String id) {
+    return jobDagMapper.deleteById(id);
+  }
+
+  @Override
+  public JobDag selectByDagKey(String dagKey) {
+    return jobDagMapper.selectByDagKey(dagKey);
+  }
+
+  @Override
+  public List<JobDag> selectCronEnabledDags() {
+    return jobDagMapper.selectCronEnabledDags();
+  }
+
+  @Override
+  public List<JobDag> selectEnabledDags() {
+    return jobDagMapper.selectEnabledDags();
   }
 }

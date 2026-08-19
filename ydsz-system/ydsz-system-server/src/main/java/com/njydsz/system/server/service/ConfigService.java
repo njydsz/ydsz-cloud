@@ -4,11 +4,11 @@ import java.io.InputStream;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.CursorPageResponse;
 import com.njydsz.system.domain.vo.ImportResult;
-import com.njydsz.system.infra.entity.Config;
 
 /**
  * 系统配置 Service 接口
@@ -42,7 +42,7 @@ import com.njydsz.system.infra.entity.Config;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see Config 系统配置实体
+ * @see ConfigDTO 系统配置 DTO
  * @see com.njydsz.system.domain.enums.ConfigValueType 值类型枚举
  */
 public interface ConfigService {

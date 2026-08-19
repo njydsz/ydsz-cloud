@@ -315,8 +315,13 @@ public class ChunkUploadApplicationService {
         throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
       }
       storageKey = generateStorageKey(userId, session.getFileName());
-      MultipartFile multipartFile = createMultipartFile(mergedFile, session.getFileName());
-      stored = storage.upload(null, storageKey, multipartFile);
+      try {
+        MultipartFile multipartFile = createMultipartFile(mergedFile, session.getFileName());
+        stored = storage.upload(null, storageKey, multipartFile);
+      } catch (IOException e) {
+        log.error("[ChunkUploadApplicationService] 存储上传失败: uploadId={}", uploadId, e);
+        throw new BusinessException(NextwikiExceptionCode.FILE_DOWNLOAD_FAILED);
+      }
     }
 
     // 解析父目录获取正确 path/level

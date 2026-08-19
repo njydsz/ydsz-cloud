@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.njydsz.cronjob.domain.entity.job.JobArtifact;
 import com.njydsz.cronjob.domain.vo.JobArtifactVO;
 
 /**
@@ -39,4 +40,15 @@ public interface JobArtifactRepository {
    * @return 实际删除条数
    */
   int cleanExpired(LocalDateTime before, int limit);
+
+  // ===== 实体方法（JobArtifactService 使用） =====
+
+  /** 按 ID 查询产物实体。 */
+  JobArtifact selectById(String id);
+
+  /** 新增产物。 */
+  int insert(JobArtifact artifact);
+
+  /** 按日志 ID 查询产物实体列表。 */
+  List<JobArtifact> selectByLogId(String logId);
 }

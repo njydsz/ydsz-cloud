@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.cronjob.domain.entity.dag.JobDag;
 import com.njydsz.cronjob.domain.vo.JobDagVO;
 
 /**
@@ -74,4 +75,27 @@ public interface JobDagRepository {
    * @return DAG 定义 VO；不存在返回 {@code Optional.empty()}
    */
   Optional<JobDagVO> findById(String dagId);
+
+  // ===== 实体 CRUD（Service 层 DAG 管理使用，与 VO 查询方法并存） =====
+
+  /** 按 ID 查询 DAG 实体。 */
+  JobDag selectById(String id);
+
+  /** 新增 DAG。 */
+  int insert(JobDag dag);
+
+  /** 按 ID 更新 DAG。 */
+  int updateById(JobDag dag);
+
+  /** 按 ID 删除 DAG（逻辑删除）。 */
+  int deleteById(String id);
+
+  /** 按 dagKey 查询 DAG 实体（唯一性校验）。 */
+  JobDag selectByDagKey(String dagKey);
+
+  /** 查询启用且 cron 触发的 DAG 列表。 */
+  List<JobDag> selectCronEnabledDags();
+
+  /** 查询启用的 DAG 列表。 */
+  List<JobDag> selectEnabledDags();
 }

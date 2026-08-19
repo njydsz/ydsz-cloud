@@ -25,6 +25,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.AppInfoDTO;
+import com.njydsz.system.domain.query.AppInfoPageQuery;
 import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.server.service.AppInfoService;
 
@@ -73,22 +74,15 @@ public class AppInfoController {
    *
    * <p>支持按应用名称模糊搜索和状态精确过滤。
    *
-   * @param pageNum 页码（默认 1）
-   * @param pageSize 每页条数（默认 10）
-   * @param appName 应用名称模糊搜索关键字（可选）
-   * @param status 状态过滤（ENABLED/DISABLED/REVOKED，可选）
+   * @param query 分页查询条件（pageNum / pageSize / appName / status）
    * @return 分页结果
    */
   @Operation(summary = "分页查询应用列表（支持搜索过滤）")
   @GetMapping("/page")
-  public PageResponse<List<AppInfoVO>> page(
-      @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
-      @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
-      @Parameter(description = "应用名称模糊搜索") @RequestParam(required = false) String appName,
-      @Parameter(description = "状态") @RequestParam(required = false) String status) {
+  public PageResponse<List<AppInfoVO>> page(AppInfoPageQuery query) {
     // pageSize 服务端硬上限截断，防止深度分页 OOM
-    int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
-    return service.page(pageNum, safePageSize, appName, status);
+    query.setPageSize(Math.min(query.getPageSize(), MAX_PAGE_SIZE));
+    return service.page(query);
   }
 
   /**

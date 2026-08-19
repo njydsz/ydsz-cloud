@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
@@ -199,6 +200,34 @@ public interface JobRepository {
    * @return 任务总数
    */
   long countAll();
+
+  // ===== 实体 CRUD（JobServiceImpl / JobHistoryServiceImpl 使用，与 VO 查询方法并存） =====
+
+  /** 按 ID 查询任务实体。 */
+  Job selectById(String id);
+
+  /** 新增任务实体。 */
+  int insert(Job job);
+
+  /** 按 ID 更新任务实体。 */
+  int updateById(Job job);
+
+  /** 按 ID 删除任务（逻辑删除）。 */
+  int deleteById(String id);
+
+  /** 查询全部 NORMAL 状态任务实体（启动加载）。 */
+  List<Job> selectAllNormal();
+
+  /** 按 jobKey 查询任务实体（唯一性校验）。 */
+  Job selectByJobKey(String jobKey);
+
+  /** MyBatis-Plus 分页查询（JobServiceImpl 任务分页使用）。 */
+  com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> selectPage(
+      com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> page,
+      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper);
+
+  /** 按条件统计任务数（TenantQuotaServiceImpl 配额计量使用）。 */
+  long selectCount(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper);
 
   /**
    * 分页查询内部结果对象。

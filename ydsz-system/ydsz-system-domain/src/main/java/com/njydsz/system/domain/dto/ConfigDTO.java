@@ -12,8 +12,13 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 系统配置创建/更新 DTO
  *
- * <p>对应 {@code ydsz_config} 表的写入参数，是「系统配置中心」创建 / 更新接口的入参载体。
- * 创建时 {@code id} 为空（由雪花算法自动生成），更新时 {@code id} 必填。
+ * <p>对应 {@code ydsz_config} 表的写入参数，是「系统配置中心」创建 / 更新接口的入参载体。 创建时 {@code id} 为空（由雪花算法自动生成），更新时
+ * {@code id} 必填。
+ *
+ * <p><b>P1-5 字段重叠处理：</b>本类与 {@link ConfigVO} 字段完全一致，遵循《云顶编码规范》"VO 兼 DTO"模式（字段无差异时不作三分离）。 作为
+ * Repository 层的写入契约存在，避免 infra 层直接依赖 {@link ConfigVO}（保持分层边界清晰）。
+ *
+ * <p><b>维护约定：</b>新增字段时需同步 {@link ConfigVO}，确保两者结构一致。
  *
  * <p><b>字段语义：</b>
  *
@@ -30,6 +35,7 @@ import com.njydsz.common.safe.annotation.Xss;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see ConfigVO 字段完全一致的视图对象（"VO 兼 DTO"模式）
  */
 @Data
 @SuperBuilder

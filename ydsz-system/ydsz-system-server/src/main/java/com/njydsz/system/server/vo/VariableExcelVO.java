@@ -1,4 +1,4 @@
-package com.njydsz.system.domain.vo;
+package com.njydsz.system.server.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -9,6 +9,8 @@ import com.njydsz.common.excel.annotation.ExcelProperty;
  * 系统变量 Excel 导入导出 VO
  *
  * <p>用于 ydsz-common-excel 的导入导出映射，字段通过 {@link ExcelProperty} 注解与 Excel 列对应。
+ *
+ * <p><b>P1-3 分层调整：</b>从 domain 层移至 server 层，剥离 domain 对 common-excel 的依赖。
  *
  * @author ydsz-team
  * @since 1.9.0

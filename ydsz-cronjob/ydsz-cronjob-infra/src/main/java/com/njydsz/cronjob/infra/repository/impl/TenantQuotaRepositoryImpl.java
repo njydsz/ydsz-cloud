@@ -5,6 +5,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.cronjob.domain.entity.job.TenantQuota;
 import com.njydsz.cronjob.domain.repository.TenantQuotaRepository;
 import com.njydsz.cronjob.domain.vo.TenantQuotaVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
@@ -32,5 +33,10 @@ public class TenantQuotaRepositoryImpl implements TenantQuotaRepository {
   public Optional<TenantQuotaVO> findByTenantId(String tenantId) {
     return Optional.ofNullable(tenantQuotaMapper.selectByTenantId(tenantId))
         .map(converter::entityToVO);
+  }
+
+  @Override
+  public TenantQuota selectByTenantId(String tenantId) {
+    return tenantQuotaMapper.selectByTenantId(tenantId);
   }
 }

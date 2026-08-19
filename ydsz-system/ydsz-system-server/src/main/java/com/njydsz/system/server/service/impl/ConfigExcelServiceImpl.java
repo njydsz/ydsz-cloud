@@ -20,7 +20,7 @@ import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.repository.ConfigRepository;
-import com.njydsz.system.domain.vo.ConfigExcelVO;
+import com.njydsz.system.server.vo.ConfigExcelVO;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.ImportResult;
 import com.njydsz.system.server.cache.CacheKeyBuilder;

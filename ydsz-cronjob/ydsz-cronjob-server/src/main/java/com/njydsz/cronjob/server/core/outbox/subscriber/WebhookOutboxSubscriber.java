@@ -55,6 +55,8 @@ public class WebhookOutboxSubscriber implements java.util.function.Consumer<Outb
   /**
    * 解析 payload JSON 为 Map。
    *
+   * <p>P0-FIX: YdszJson.parseObject 仅支持单参（返回 ObjectNode），改用 {@link YdszJson#fromJson}。
+   *
    * @param payloadJson payload JSON 字符串
    * @return 解析后的 Map（解析失败返回 null）
    */
@@ -64,7 +66,7 @@ public class WebhookOutboxSubscriber implements java.util.function.Consumer<Outb
       return null;
     }
     try {
-      return YdszJson.parseObject(payloadJson, Map.class);
+      return YdszJson.fromJson(payloadJson, Map.class);
     } catch (Exception e) {
       log.warn("[WebhookSubscriber] payload 解析失败: {}", e.getMessage());
       return null;

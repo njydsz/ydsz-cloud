@@ -29,6 +29,7 @@ import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
 import com.njydsz.cronjob.domain.entity.job.JobWebhook;
 import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
+import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.JobWebhookRepository;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
@@ -168,7 +169,7 @@ public class JobWebhookController {
       @RequestParam(required = false) String jobKey) {
     // 通过 Repository 分页查询（封装了 MyBatis-Plus Page 和 Entity→VO 转换）
     JobRepository.PageResult<JobWebhookVO> result = webhookRepository.pageBy(pageNum, size, eventType, jobKey);
-    return PageResponse.success(result.getRecords(), result.getTotal());
+    return PageResponse.success((long) pageNum, (long) size, result.getTotal(), result.getRecords());
   }
 
   /**

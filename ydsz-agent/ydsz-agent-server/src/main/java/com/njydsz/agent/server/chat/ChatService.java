@@ -22,10 +22,8 @@ import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
+import com.njydsz.agent.server.event.AgentEventPublisher;
 import com.njydsz.agent.server.quota.TenantQuotaService;
-import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.tenant.TenantContextHolder;
 
@@ -81,8 +79,8 @@ public class ChatService {
   /** 链路记录器 */
   private final TraceRecorder traceRecorder;
 
-  /** 统一领域事件发布门面 */
-  private final DomainEventPublisher eventPublisher;
+  /** Agent 事件统一发布器 */
+  private final AgentEventPublisher eventPublisher;
 
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -102,7 +100,7 @@ public class ChatService {
       AgentRuntimeMetrics runtimeMetrics,
       CostAnalysisService costAnalysisService,
       TraceRecorder traceRecorder,
-      DomainEventPublisher eventPublisher,
+      AgentEventPublisher eventPublisher,
       SnowflakeIdGenerator snowflakeIdGenerator,
       TokenCostCalculator tokenCostCalculator,
       TenantQuotaService quotaService) {
@@ -197,7 +195,10 @@ public class ChatService {
 
     String model = properties.getLlm().getDefaultModel();
     String provider = llmClient.getProvider();
+    String executionId = String.valueOf(snowflakeIdGenerator.nextId());
     long startTime = System.currentTimeMillis();
+    // P2: 发布执行启动事件
+    eventPublisher.publishExecutionStarted(executionId, resolveTenantId(convId), null, "CHAT", model);
     ChatResponse response;
     try {
       response = llmClient.chat(request);
@@ -209,6 +210,8 @@ public class ChatService {
       traceRecorder.endTrace(traceId, "FAILED");
       // P2: 运行态指标埋点 — 执行失败
       runtimeMetrics.recordExecution("simple", false, duration);
+      // P2: 发布执行失败事件
+      eventPublisher.publishExecutionFailed(executionId, resolveTenantId(convId), "CHAT", model, duration, e.getMessage());
       LOG.error("[Chat] LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
       ChatMessage errorMsg =
           ChatMessage.assistant("[错误] LLM 调用失败: " + e.getMessage(), convId, TokenUsage.zero());
@@ -248,14 +251,15 @@ public class ChatService {
         response.getUsage() != null ? response.getUsage().getTotalTokens() : 0,
         actualCost.getActualCostUsd());
     traceRecorder.endTrace(traceId, "SUCCESS");
-    eventPublisher.publish(
-        DomainEvent.builder()
-            .aggregateType("Conversation")
-            .aggregateId(convId)
-            .eventType(DomainEventTypes.CONVERSATION_CREATED)
-            .metadata("model", response.getModel())
-            .metadata("costUsd", String.valueOf(actualCost.getActualCostUsd()))
-            .build());
+    // P2: 发布执行完成事件
+    eventPublisher.publishExecutionCompleted(
+        executionId,
+        resolveTenantId(convId),
+        "CHAT",
+        model,
+        duration,
+        actualCost.getActualTotalTokens(),
+        actualCost.getActualCostUsd());
     return new ChatResponse(
         response.getId(),
         response.getModel(),
@@ -345,7 +349,10 @@ public class ChatService {
 
     String model = properties.getLlm().getDefaultModel();
     String provider = llmClient.getProvider();
+    String executionId = String.valueOf(snowflakeIdGenerator.nextId());
     long startTime = System.currentTimeMillis();
+    // P2: 发布执行启动事件
+    eventPublisher.publishExecutionStarted(executionId, resolveTenantId(convId), null, "CHAT_STREAM", model);
     StringBuilder contentBuilder = new StringBuilder();
     final TokenUsage[] usage = {TokenUsage.zero()};
     // P2: 流式首 Token 测 TTFT
@@ -400,6 +407,8 @@ public class ChatService {
       traceRecorder.endTrace(traceId, "FAILED");
       // P2: 运行态指标埋点 — 执行失败
       runtimeMetrics.recordExecution("simple", false, duration);
+      // P2: 发布执行失败事件
+      eventPublisher.publishExecutionFailed(executionId, resolveTenantId(convId), "CHAT_STREAM", model, duration, e.getMessage());
       LOG.error("[Chat-Stream] 流式 LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
       memory.save(
           convId,
@@ -435,6 +444,15 @@ public class ChatService {
     runtimeMetrics.recordExecution("simple", true, duration);
 
     traceRecorder.endTrace(traceId, "SUCCESS");
+    // P2: 发布执行完成事件
+    eventPublisher.publishExecutionCompleted(
+        executionId,
+        resolveTenantId(convId),
+        "CHAT_STREAM",
+        model,
+        duration,
+        actualCost.getActualTotalTokens(),
+        actualCost.getActualCostUsd());
     LOG.info(
         "[Chat-Stream] 流式对话完成: convId={}, tokens={}, costUsd={}",
         convId,

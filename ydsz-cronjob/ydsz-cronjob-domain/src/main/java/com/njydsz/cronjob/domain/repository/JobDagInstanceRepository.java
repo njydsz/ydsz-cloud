@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 
 /**
@@ -144,4 +145,18 @@ public interface JobDagInstanceRepository {
    * @return 受影响行数
    */
   int markCanceled(String instanceId, LocalDateTime canceledAt, long durationMs);
+
+  // ===== 实体方法（Service / 核心调度使用，与 VO 查询方法并存） =====
+
+  /** 按 ID 查询实例实体。 */
+  JobDagInstance selectById(String instanceId);
+
+  /** 按 DAG ID 查询实例实体列表。 */
+  List<JobDagInstance> selectByDagId(String dagId, int limit);
+
+  /** 按状态查询实例实体列表。 */
+  List<JobDagInstance> selectByStatus(String status);
+
+  /** 新增实例实体。 */
+  int insert(JobDagInstance instance);
 }

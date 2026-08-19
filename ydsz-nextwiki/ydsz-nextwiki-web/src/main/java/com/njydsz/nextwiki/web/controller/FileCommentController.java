@@ -3,7 +3,7 @@ package com.njydsz.nextwiki.web.controller;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.TagDO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -94,7 +94,7 @@ import com.njydsz.nextwiki.domain.vo.FileCommentVO;
 @RestController
 @RequestMapping("/api/v1/nextwiki/comments")
 @RequiredArgsConstructor
-@TagDO(name = "文件评论", description = "文件级评论、回复、批注、解决标记")
+@Tag(name = "文件评论", description = "文件级评论、回复、批注、解决标记")
 public class FileCommentController {
 
   /** 分布式 ID 生成器 */

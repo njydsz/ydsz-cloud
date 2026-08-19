@@ -195,14 +195,26 @@ public class RuleAdminController {
   }
 
   /**
-   * 查询规则版本历史
+   * 分页查询规则版本历史
+   *
+   * <p>支持分页，避免全量加载大量版本记录导致 OOM。{@code pageNum}/{pageSize} 均为可选，默认第 1 页、每页 20 条。
    *
    * @param ruleCode 规则编码
-   * @return 版本历史
+   * @param pageQuery 分页参数
+   * @return 分页版本历史
    */
+  @Operation(summary = "分页查询规则版本历史", description = "分页查询规则的版本历史记录，按版本号降序")
+  @Parameter(name = "ruleCode", description = "规则编码", required = true)
+  @Parameter(name = "pageNum", description = "页码（默认 1）", required = false)
+  @Parameter(name = "pageSize", description = "每页条数（默认 20，最大 100）", required = false)
+  @ApiResponse(responseCode = "200", description = "分页版本历史")
   @GetMapping("/{ruleCode}/versions")
-  public BaseResponse<List<RuleVersionVO>> listVersions(@PathVariable String ruleCode) {
-    return BaseResponse.success(ruleAdminService.listVersions(ruleCode));
+  public com.njydsz.common.core.response.PageResponse<List<RuleVersionVO>> listVersions(
+      @PathVariable String ruleCode, @jakarta.validation.Valid PageQuery pageQuery) {
+    com.baomidou.mybatisplus.core.metadata.IPage<RuleVersionVO> page =
+        ruleAdminService.pageVersions(ruleCode, pageQuery);
+    return com.njydsz.common.core.response.PageResponse.success(
+        page.getTotal(), page.getCurrent(), page.getSize(), page.getRecords());
   }
 
   /**

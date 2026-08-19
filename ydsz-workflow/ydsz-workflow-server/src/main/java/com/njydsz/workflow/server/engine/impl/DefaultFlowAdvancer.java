@@ -250,7 +250,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     if (rejectTarget == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_241f4a79")
+          .message("error.workflow.reject.target.not.found")
           .build();
     }
     FlowNodeDO target =
@@ -258,7 +258,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     if (target == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
-          .key("error.workflow.msg_6e66716d")
+          .key("error.workflow.node.not.found")
           .params(rejectTarget)
           .build();
     }
@@ -438,7 +438,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
       if (target == null) {
         throw SysException.builder()
             .resultCode(BaseResultCode.NOT_FOUND)
-            .key("error.workflow.msg_6e66716d")
+            .key("error.workflow.node.not.found")
             .params(nodeCode)
             .build();
       }
@@ -450,7 +450,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     if (targets.isEmpty()) {
       throw SysException.builder()
           .resultCode(BaseResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_241f4a79")
+          .message("error.workflow.reject.target.not.found")
           .build();
     }
     return targets;

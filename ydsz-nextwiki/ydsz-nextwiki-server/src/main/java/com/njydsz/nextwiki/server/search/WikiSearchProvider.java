@@ -50,7 +50,11 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
     return "wiki";
   }
 
-  @Override
+  /**
+   * 获取类型标签（当前 SearchProvider 接口未定义该方法，保留为类自有能力）。
+   *
+   * @return 类型标签
+   */
   public String getTypeLabel() {
     return "知识库";
   }

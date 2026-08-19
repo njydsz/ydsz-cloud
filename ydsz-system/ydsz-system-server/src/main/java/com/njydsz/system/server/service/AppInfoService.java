@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.AppInfoDTO;
+import com.njydsz.system.domain.query.AppInfoPageQuery;
 import com.njydsz.system.domain.vo.AppInfoVO;
-import com.njydsz.system.infra.entity.AppInfo;
 
 /**
  * 应用注册 Service 接口
@@ -34,7 +34,7 @@ import com.njydsz.system.infra.entity.AppInfo;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see AppInfo 应用注册实体
+ * @see AppInfoDTO 应用注册 DTO
  */
 public interface AppInfoService {
 
@@ -64,13 +64,10 @@ public interface AppInfoService {
    *
    * <p>管理后台「应用管理」列表数据源。
    *
-   * @param pageNum 当前页码
-   * @param pageSize 每页记录数
-   * @param appName 应用名称模糊搜索（可选）
-   * @param status 状态过滤（可选）
+   * @param query 分页查询条件（pageNum / pageSize / appName / status）
    * @return 分页结果（VO），统一使用 {@link PageResponse}
    */
-  PageResponse<List<AppInfoVO>> page(int pageNum, int pageSize, String appName, String status);
+  PageResponse<List<AppInfoVO>> page(AppInfoPageQuery query);
 
   /**
    * 查询全部应用（仅内部使用）

@@ -12,10 +12,7 @@
     <name>ydsz-system-server</name>
     <description>Application Layer - Service + Config + AppInfo</description>
     <dependencies>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-system-infra</artifactId>
-        </dependency>
+        <!-- P1-2: 移除 server 对 infra 的直接依赖，符合 DDD 分层（server 仅依赖 domain，infra 由 web 层引入并通过 Spring 自动装配注入 Repository 实现） -->
         <!-- App 端基座模块（移动端接口能力） -->
         <dependency>
             <groupId>com.njydsz</groupId>

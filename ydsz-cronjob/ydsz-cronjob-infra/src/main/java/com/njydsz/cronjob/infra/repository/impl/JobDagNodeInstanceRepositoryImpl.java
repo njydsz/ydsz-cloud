@@ -7,6 +7,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
 import com.njydsz.cronjob.domain.repository.JobDagNodeInstanceRepository;
 import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
@@ -83,5 +84,10 @@ public class JobDagNodeInstanceRepositoryImpl implements JobDagNodeInstanceRepos
     // Since CronjobConverter doesn't have a voToEntity for JobDagNodeInstance, we use the mapper directly
     // This is a CUD operation that accepts VO and converts internally
     jobDagNodeInstanceMapper.insertBatch(converter.jobDagNodeInstanceVOsToEntities(vos));
+  }
+
+  @Override
+  public List<JobDagNodeInstance> selectByDagInstanceId(String dagInstanceId) {
+    return jobDagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
   }
 }

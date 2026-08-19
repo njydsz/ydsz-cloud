@@ -45,6 +45,14 @@ public class DagExecutionDTO implements Serializable {
   @Schema(description = "用户输入", requiredMode = Schema.RequiredMode.REQUIRED)
   private String userInput;
 
+  /**
+   * 续跑的执行 ID（可选）。
+   *
+   * <p>传入时尝试从已有检查点恢复，跳过已成功的节点，仅重试失败及未执行的节点。 为空时按全新编排执行。
+   */
+  @Schema(description = "续跑的执行 ID（空则全新执行）", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  private String resumeExecutionId;
+
   public String getDsl() {
     return dsl;
   }
@@ -59,5 +67,13 @@ public class DagExecutionDTO implements Serializable {
 
   public void setUserInput(String userInput) {
     this.userInput = userInput;
+  }
+
+  public String getResumeExecutionId() {
+    return resumeExecutionId;
+  }
+
+  public void setResumeExecutionId(String resumeExecutionId) {
+    this.resumeExecutionId = resumeExecutionId;
   }
 }

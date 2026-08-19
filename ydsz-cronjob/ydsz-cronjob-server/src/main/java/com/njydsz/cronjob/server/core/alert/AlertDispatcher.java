@@ -27,7 +27,7 @@ import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
 import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
-import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
+import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.domain.repository.JobAlertLogRepository;
 import com.njydsz.cronjob.domain.repository.JobAlertRuleRepository;
 import com.njydsz.cronjob.server.core.AlertSendException;
@@ -132,7 +132,7 @@ public class AlertDispatcher {
    * @param context 告警上下文（recovery=true 表示恢复通知）
    * @param rule 匹配到的告警规则
    */
-  void dispatch(AlertContext context, JobAlertRule rule) {
+  void dispatch(AlertContext context, JobAlertRuleVO rule) {
     boolean recovery = context.recovery();
 
     // 1. 冷却窗口去重：CAS 更新 last_alert_at（恢复通知跳过冷却）
@@ -227,7 +227,7 @@ public class AlertDispatcher {
    * @param rule 告警规则
    * @param recovery 是否为恢复通知
    */
-  private void broadcastAlert(AlertContext context, JobAlertRule rule, boolean recovery) {
+  private void broadcastAlert(AlertContext context, JobAlertRuleVO rule, boolean recovery) {
     try {
       Map<String, Object> data = new HashMap<>();
       data.put("alertCode", "CRONJOB-" + System.currentTimeMillis() + "-" + rule.getId());
@@ -255,7 +255,7 @@ public class AlertDispatcher {
    * @param rule 告警规则
    * @return true 表示可以告警（更新成功）；false 表示在冷却期内（更新失败）
    */
-  private boolean acquireAlertSlot(JobAlertRule rule) {
+  private boolean acquireAlertSlot(JobAlertRuleVO rule) {
     int cooldownMinutes = rule.getCooldownMinutes() != null ? rule.getCooldownMinutes() : 0;
     if (cooldownMinutes <= 0) {
       // 无冷却时间，直接放行
@@ -357,7 +357,7 @@ public class AlertDispatcher {
    * specific channel implementation.
    */
   private void sendViaMessageCenter(
-      AlertChannel channel, AlertContext context, JobAlertRule rule, List<String> receivers) {
+      AlertChannel channel, AlertContext context, JobAlertRuleVO rule, List<String> receivers) {
     String title = buildTitle(context, rule);
     String content = buildContent(context, rule);
     MessageRequest request = new MessageRequest();
@@ -430,7 +430,7 @@ public class AlertDispatcher {
     }
   }
 
-  private String buildTitle(AlertContext context, JobAlertRule rule) {
+  private String buildTitle(AlertContext context, JobAlertRuleVO rule) {
     String prefix = context.recovery() ? "[recovery] " : "";
     return String.format(
         "%s[%s] %s - %s",
@@ -442,7 +442,7 @@ public class AlertDispatcher {
             : (context.jobKey() != null ? context.jobKey() : "global"));
   }
 
-  private String buildContent(AlertContext context, JobAlertRule rule) {
+  private String buildContent(AlertContext context, JobAlertRuleVO rule) {
     StringBuilder sb = new StringBuilder();
     sb.append(context.recovery() ? "## Alert Recovery\n\n" : "## Alert Details\n\n");
     sb.append("| Field | Value |\n|------|----|\n");
@@ -525,7 +525,7 @@ public class AlertDispatcher {
 
   /** 持久化告警日志（P3-1-merge: 写入 ydsz_alert_dispatch 表）。 */
   private void persistAlertLog(
-      AlertContext context, JobAlertRule rule, String status, String errorMessage) {
+      AlertContext context, JobAlertRuleVO rule, String status, String errorMessage) {
     try {
       JobAlertLog alertLog = new JobAlertLog();
       // P3-1-merge: 生成唯一 alert_code

@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.server.service;
 
 import java.io.InputStream;
+import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +15,13 @@ import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.service.DocumentService;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
-import com.njydsz.nextwiki.domain.vo.FileNodeVO;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
+import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
+import com.njydsz.nextwiki.domain.repository.TagRepository;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.vo.TagVO;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 
 /**
  * 内容提取服务。
@@ -44,6 +49,8 @@ public class ContentExtractionApplicationService {
 
   private final FileNodeRepository fileNodeRepository;
   private final SearchDomainService searchDomainService;
+  private final SearchIndexRepository searchIndexRepository;
+  private final TagRepository tagRepository;
   private final DocumentService documentService;
 
   @Autowired(required = false)
@@ -107,7 +114,7 @@ public class ContentExtractionApplicationService {
           "[ContentExtractionApplicationService] 不支持的格式，仅索引元数据: fileNodeId={}, fileName={}",
           fileNodeId,
           fileName);
-      searchDomainService.indexFile(fileNodeId, null, userId);
+      indexFile(fileNodeId, null, userId);
       return;
     }
 
@@ -119,14 +126,41 @@ public class ContentExtractionApplicationService {
       if (content.length() > MAX_CONTENT_LENGTH) {
         content = content.substring(0, MAX_CONTENT_LENGTH);
       }
-      searchDomainService.indexFile(fileNodeId, content, userId);
+      indexFile(fileNodeId, content, userId);
       log.info(
           "[ContentExtractionApplicationService] 内容索引完成: fileNodeId={}, contentLength={}",
           fileNodeId,
           content.length());
     } else {
       // 无内容提取时仍需索引文件元数据
-      searchDomainService.indexFile(fileNodeId, null, userId);
+      indexFile(fileNodeId, null, userId);
+    }
+  }
+
+  /**
+   * 构建并同步 DB 降级搜索索引（nw_search_index）。
+   *
+   * <p>加载文件节点与标签，经 {@link SearchDomainService#buildSearchIndex} 组装后 upsert。
+   * 统一搜索引擎主索引由 {@code SearchIndexEventBridge} 链路另行维护。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @param content 提取的文档内容（可为 null）
+   * @param userId 操作人 ID
+   */
+  private void indexFile(String fileNodeId, String content, String userId) {
+    try {
+      FileNodeVO node = fileNodeRepository.findById(fileNodeId).orElse(null);
+      if (node == null) {
+        return;
+      }
+      List<TagVO> tags = tagRepository.findByFileNodeId(fileNodeId);
+      SearchIndexDTO dto = searchDomainService.buildSearchIndex(node, tags, content, userId);
+      searchIndexRepository.upsert(dto);
+    } catch (Exception e) {
+      log.warn(
+          "[ContentExtractionApplicationService] 索引同步失败: fileNodeId={}, error={}",
+          fileNodeId,
+          e.getMessage());
     }
   }
 

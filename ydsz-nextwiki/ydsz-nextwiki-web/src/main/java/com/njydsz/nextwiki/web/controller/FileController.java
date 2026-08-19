@@ -3,7 +3,7 @@ package com.njydsz.nextwiki.web.controller;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.TagDO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -102,7 +102,7 @@ import com.njydsz.nextwiki.server.service.FileApplicationService;
 @RequestMapping("/api/v1/nextwiki/files")
 @RequiredArgsConstructor
 @Validated
-@TagDO(name = "网盘文件管理", description = "文件上传、目录、移动、重命名、删除、复制")
+@Tag(name = "网盘文件管理", description = "文件上传、目录、移动、重命名、删除、复制")
 public class FileController {
 
   /** 文件应用服务（封装上传/移动/重命名/复制/删除等业务编排） */

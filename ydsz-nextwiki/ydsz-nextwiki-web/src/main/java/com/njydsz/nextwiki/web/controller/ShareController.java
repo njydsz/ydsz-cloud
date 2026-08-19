@@ -3,7 +3,7 @@ package com.njydsz.nextwiki.web.controller;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.TagDO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -67,7 +67,7 @@ import com.njydsz.nextwiki.server.service.ShareApplicationService;
 @RestController
 @RequestMapping("/api/v1/nextwiki/shares")
 @RequiredArgsConstructor
-@TagDO(name = "文件分享", description = "创建分享链接、验证访问、撤销分享、访问日志、定向分享")
+@Tag(name = "文件分享", description = "创建分享链接、验证访问、撤销分享、访问日志、定向分享")
 public class ShareController {
 
   /** 分享应用服务（封装分享链接的 CRUD + 验证 + 撤销） */

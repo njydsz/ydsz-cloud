@@ -71,10 +71,11 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     LambdaQueryWrapper<RuleVersionHistory> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(RuleVersionHistory::getRuleCode, ruleCode)
            .orderByDesc(RuleVersionHistory::getVersion);
+    // selectPage 会填充 page 的总记录数等元数据
     IPage<RuleVersionHistory> entityPage = ruleVersionHistoryMapper.selectPage(page, wrapper);
-    // 将 Entity 分页结果转换为 VO 分页结果
-    IPage<RuleVersionVO> voPage = page.setRecords(converter.ruleVersionListToVO(entityPage.getRecords()));
-    return voPage;
+    page.setTotal(entityPage.getTotal());
+    page.setRecords(converter.ruleVersionListToVO(entityPage.getRecords()));
+    return page;
   }
 
   @Override

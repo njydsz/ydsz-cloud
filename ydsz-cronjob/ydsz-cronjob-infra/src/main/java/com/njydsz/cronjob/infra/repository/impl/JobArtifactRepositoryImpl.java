@@ -6,6 +6,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.cronjob.domain.entity.job.JobArtifact;
 import com.njydsz.cronjob.domain.repository.JobArtifactRepository;
 import com.njydsz.cronjob.domain.vo.JobArtifactVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
@@ -37,5 +38,22 @@ public class JobArtifactRepositoryImpl implements JobArtifactRepository {
   @Override
   public int cleanExpired(LocalDateTime before, int limit) {
     return jobArtifactMapper.cleanExpired(before, limit);
+  }
+
+  // ===== 实体方法实现 =====
+
+  @Override
+  public JobArtifact selectById(String id) {
+    return jobArtifactMapper.selectById(id);
+  }
+
+  @Override
+  public int insert(JobArtifact artifact) {
+    return jobArtifactMapper.insert(artifact);
+  }
+
+  @Override
+  public List<JobArtifact> selectByLogId(String logId) {
+    return jobArtifactMapper.selectByLogId(logId);
   }
 }

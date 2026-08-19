@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
+import com.njydsz.agent.domain.gateway.DagCheckpointStore;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
 import com.njydsz.agent.domain.guardrail.InputGuardrail;
@@ -482,12 +483,14 @@ public class AgentAutoConfiguration {
       AgentProperties properties,
       AgentFactory agentFactory,
       DagDslParser dagDslParser,
-      ApplicationContext applicationContext) {
+      ApplicationContext applicationContext,
+      ObjectProvider<DagCheckpointStore> checkpointStoreProvider) {
     ExecutorService dagExecutor =
         applicationContext.getBean("agentDagExecutor", ExecutorService.class);
-    log.info("[Agent] DagOrchestrationExecutor 使用统一线程池 agentDagExecutor");
+    DagCheckpointStore checkpointStore = checkpointStoreProvider.getIfAvailable();
+    log.info("[Agent] DagOrchestrationExecutor 使用统一线程池 agentDagExecutor，断点续跑已启用");
     return new DagOrchestrationExecutor(
-        llmClient, properties, agentFactory, dagDslParser, dagExecutor);
+        llmClient, properties, agentFactory, dagDslParser, dagExecutor, checkpointStore);
   }
 
   /**

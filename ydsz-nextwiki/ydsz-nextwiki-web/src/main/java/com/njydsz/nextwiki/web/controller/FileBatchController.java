@@ -3,7 +3,7 @@ package com.njydsz.nextwiki.web.controller;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.TagDO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
@@ -91,7 +92,7 @@ import com.njydsz.nextwiki.server.service.VersionDiffService;
 @RequestMapping("/api/v1/nextwiki/files")
 @RequiredArgsConstructor
 @Validated
-@TagDO(name = "网盘文件批量与版本管理", description = "批量删除/移动、版本历史/回滚、星标切换")
+@Tag(name = "网盘文件批量与版本管理", description = "批量删除/移动、版本历史/回滚、星标切换")
 public class FileBatchController {
 
   /** 文件应用服务（封装批量操作/版本管理/星标等业务编排） */

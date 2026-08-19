@@ -1,7 +1,9 @@
 package com.njydsz.cronjob.domain.repository;
 
+import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 
 /**
@@ -28,4 +30,18 @@ public interface GlueCodeRepository {
    * @return 最新版本的 GLUE 代码 VO；不存在返回 {@code Optional.empty()}
    */
   Optional<GlueCodeVO> findLatestByJobId(String jobId);
+
+  // ===== 实体方法（GlueCodeServiceImpl 使用） =====
+
+  /** 按任务 ID 查询最新版本实体。 */
+  GlueCode selectLatestByJobId(String jobId);
+
+  /** 按条件查询实体列表。 */
+  List<GlueCode> selectList(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<GlueCode> wrapper);
+
+  /** 按条件查询单个实体。 */
+  GlueCode selectOne(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<GlueCode> wrapper);
+
+  /** 新增实体。 */
+  int insert(GlueCode entity);
 }

@@ -1,7 +1,7 @@
 package com.njydsz.nextwiki.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.TagDO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -75,7 +75,7 @@ import com.njydsz.nextwiki.server.service.PreviewApplicationService;
 @RestController
 @RequestMapping("/api/v1/nextwiki/preview")
 @RequiredArgsConstructor
-@TagDO(name = "文档预览", description = "在线预览生成、缩略图、文档格式转换")
+@Tag(name = "文档预览", description = "在线预览生成、缩略图、文档格式转换")
 public class PreviewController {
 
   /** 预览应用服务（封装预览生成 + 类型判断 + 后缀识别） */

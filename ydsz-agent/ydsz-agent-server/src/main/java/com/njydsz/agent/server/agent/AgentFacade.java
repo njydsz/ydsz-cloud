@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
+import com.njydsz.agent.domain.agent.DagProgressEvent;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
@@ -72,6 +73,20 @@ public interface AgentFacade {
    * @param chunkConsumer 流式片段消费者
    */
   void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer);
+
+  /**
+   * 流式执行 Agent（SSE，带进度回调）。
+   *
+   * <p>支持细粒度进度的 Agent 类型（如 DAG）通过本方法推送节点级进度事件； 不支持的 Agent 类型退化为普通流式调用（忽略 progressConsumer）。
+   *
+   * @param request Agent 执行请求
+   * @param chunkConsumer 流式片段消费者
+   * @param progressConsumer DAG 节点进度事件消费者（可为 null）
+   */
+  void executeStream(
+      AgentExecutionRequest request,
+      Consumer<ChatChunk> chunkConsumer,
+      Consumer<DagProgressEvent> progressConsumer);
 
   /**
    * 获取对话历史。

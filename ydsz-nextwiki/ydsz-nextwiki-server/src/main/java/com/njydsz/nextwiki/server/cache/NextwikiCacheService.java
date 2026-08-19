@@ -181,7 +181,7 @@ public class NextwikiCacheService {
    */
   public void evictFile(String nodeId) {
     try {
-      redisStringOps.delete(KEY_FILE + nodeId);
+      redisStringOps.del(KEY_FILE + nodeId);
       log.debug("[NextwikiCacheService] 文件详情缓存失效: nodeId={}", nodeId);
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] 文件详情缓存失效异常: nodeId={}, err={}", nodeId, e.getMessage());
@@ -284,7 +284,7 @@ public class NextwikiCacheService {
    */
   public void evictChildren(String parentId) {
     try {
-      redisStringOps.delete(KEY_CHILDREN + parentId);
+      redisStringOps.del(KEY_CHILDREN + parentId);
       log.debug("[NextwikiCacheService] 目录列表缓存失效: parentId={}", parentId);
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] 目录列表缓存失效异常: parentId={}, err={}", parentId, e.getMessage());
@@ -381,7 +381,7 @@ public class NextwikiCacheService {
    */
   public void evictQuota(String scopeType, String scopeId) {
     try {
-      redisStringOps.delete(KEY_QUOTA + scopeType + ":" + scopeId);
+      redisStringOps.del(KEY_QUOTA + scopeType + ":" + scopeId);
       log.debug("[NextwikiCacheService] 配额用量缓存失效: {}:{}", scopeType, scopeId);
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] 配额用量缓存失效异常: {}:{}, err={}", scopeType, scopeId, e.getMessage());
@@ -500,7 +500,7 @@ public class NextwikiCacheService {
    */
   private boolean acquireLock(String lockKey) {
     try {
-      return Boolean.TRUE.equals(redisStringOps.setIfAbsent(lockKey, "1", LOCK_LEASE_S, TimeUnit.SECONDS));
+      return Boolean.TRUE.equals(redisStringOps.setIfAbsent(lockKey, "1", LOCK_LEASE_S));
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] 获取互斥锁异常: lockKey={}, err={}", lockKey, e.getMessage());
       // 异常时放行（允许直接查 DB，避免因 Redis 故障导致服务不可用）
@@ -515,7 +515,7 @@ public class NextwikiCacheService {
    */
   private void releaseLock(String lockKey) {
     try {
-      redisStringOps.delete(lockKey);
+      redisStringOps.del(lockKey);
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] 释放互斥锁异常: lockKey={}, err={}", lockKey, e.getMessage());
     }

@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
+import com.njydsz.agent.domain.agent.DagProgressEvent;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
@@ -83,6 +84,19 @@ public class AgentFacadeImpl implements AgentFacade {
   @Override
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
     agentFactory.getDefaultExecutor().executeStream(request, chunkConsumer);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>委托 {@link AgentFactory#getDefaultExecutor()} 获取默认执行器并执行流式 Agent。
+   */
+  @Override
+  public void executeStream(
+      AgentExecutionRequest request,
+      Consumer<ChatChunk> chunkConsumer,
+      Consumer<DagProgressEvent> progressConsumer) {
+    agentFactory.getDefaultExecutor().executeStream(request, chunkConsumer, progressConsumer);
   }
 
   /**

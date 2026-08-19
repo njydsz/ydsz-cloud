@@ -150,4 +150,23 @@ public class JobLogRepositoryImpl implements JobLogRepository {
     JobLogVO vo = converter.entityToVO(jobLogMapper.selectOne(wrapper));
     return Optional.ofNullable(vo);
   }
+
+  // ===== 实体方法实现 =====
+
+  @Override
+  public com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.njydsz.cronjob.domain.entity.log.JobLog> selectPage(
+      com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.njydsz.cronjob.domain.entity.log.JobLog> page,
+      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.cronjob.domain.entity.log.JobLog> wrapper) {
+    return jobLogMapper.selectPage(page, wrapper);
+  }
+
+  @Override
+  public int insert(com.njydsz.cronjob.domain.entity.log.JobLog log) {
+    return jobLogMapper.insert(log);
+  }
+
+  @Override
+  public int updateById(com.njydsz.cronjob.domain.entity.log.JobLog log) {
+    return jobLogMapper.updateById(log);
+  }
 }

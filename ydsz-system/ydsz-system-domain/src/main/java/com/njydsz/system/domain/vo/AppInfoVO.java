@@ -1,9 +1,8 @@
 package com.njydsz.system.domain.vo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-
-import com.njydsz.common.json.annotation.JsonIgnore;
 
 /**
  * 应用注册 VO

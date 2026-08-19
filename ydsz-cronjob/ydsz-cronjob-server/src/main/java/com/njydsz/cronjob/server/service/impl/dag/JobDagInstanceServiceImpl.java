@@ -13,14 +13,16 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dag.DagInstanceStatus;
-import com.njydsz.cronjob.domain.entity.dag.JobDag;
 import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
 import com.njydsz.cronjob.domain.repository.JobDagInstanceRepository;
 import com.njydsz.cronjob.domain.repository.JobDagNodeInstanceRepository;
 import com.njydsz.cronjob.domain.repository.JobDagRepository;
+import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
+import com.njydsz.cronjob.server.core.dag.DagEdge;
+import com.njydsz.cronjob.server.core.dag.DagNode;
 import com.njydsz.cronjob.server.service.dag.JobDagInstanceService;
 import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
 
@@ -162,7 +164,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     JobDagInstance instance = getInstanceById(instanceId);
 
     // 2. 查询 DAG 定义（通过实例.dagId 关联）
-    JobDag dag = jobDagRepository.selectById(instance.getDagId());
+    JobDagVO dag = jobDagRepository.findById(instance.getDagId()).orElse(null);
     if (dag == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)

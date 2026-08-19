@@ -88,7 +88,7 @@ import com.njydsz.nextwiki.server.service.TagApplicationService;
 @RestController
 @RequestMapping("/api/v1/nextwiki/tags")
 @RequiredArgsConstructor
-@io.swagger.v3.oas.annotations.tags.TagDO(
+@io.swagger.v3.oas.annotations.tags.Tag(
     name = "标签管理",
     description = "标签创建、绑定、智能推荐") // FQN-OK: name conflict with TagDO entity
 public class TagController {

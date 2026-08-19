@@ -2,15 +2,15 @@ package com.njydsz.cronjob.server.core.outbox;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.cronjob.domain.repository.outbox.OutboxEventRepository;
 import com.njydsz.cronjob.domain.entity.outbox.OutboxEvent;
+import com.njydsz.cronjob.domain.repository.outbox.OutboxEventRepository;
 
 /**
  * Outbox 事件发布器（P0-2：事务性 Outbox 事件模式）。
@@ -49,8 +49,8 @@ public class OutboxPublisher {
   /** 事件发布保留天数（超过此天数的 PUBLISHED 事件自动清理） */
   private static final int PUBLISHED_RETAIN_DAYS = 7;
 
-  /** Topic -> 订阅者映射 */
-  private final Map<String, Consumer<OutboxEvent>> subscribers;
+  /** 订阅者列表（按 topic 过滤） */
+  private final List<Consumer<OutboxEvent>> subscribers;
 
   /**
    * 执行一次事件发布扫描。
@@ -89,8 +89,13 @@ public class OutboxPublisher {
    * @return 发布结果
    */
   private PublishResult publishSingle(OutboxEvent event) {
-    Consumer<OutboxEvent> subscriber = subscribers.get(event.getTopic());
-    if (subscriber == null) {
+    // 查找匹配的订阅者（按 topic 过滤）
+    Consumer<OutboxEvent> matchedSubscriber = subscribers.stream()
+        .filter(sub -> supportsTopic(sub, event.getTopic()))
+        .findFirst()
+        .orElse(null);
+
+    if (matchedSubscriber == null) {
       log.warn("[OutboxPublisher] 无订阅者, topic={} eventKey={}", event.getTopic(), event.getEventKey());
       // 无订阅者时直接标记已发布（不重试）
       outboxEventRepository.markPublished(event.getId());
@@ -98,7 +103,7 @@ public class OutboxPublisher {
     }
 
     try {
-      subscriber.accept(event);
+      matchedSubscriber.accept(event);
       outboxEventRepository.markPublished(event.getId());
       return PublishResult.SUCCESS;
     } catch (Exception e) {
@@ -106,6 +111,20 @@ public class OutboxPublisher {
           event.getEventKey(), event.getTopic(), event.getRetryCount(), e.getMessage());
       return handleFailure(event);
     }
+  }
+
+  /**
+   * 判断订阅者是否支持指定 topic。
+   *
+   * <p>通过订阅者的类名约定判断：类名包含 "Webhook" 则支持 "webhook" topic，包含 "Metrics" 则支持 "metrics" topic，以此类推。
+   *
+   * @param subscriber 订阅者
+   * @param topic      主题
+   * @return true 表示支持
+   */
+  private boolean supportsTopic(Consumer<OutboxEvent> subscriber, String topic) {
+    String className = subscriber.getClass().getSimpleName().toLowerCase();
+    return className.contains(topic.toLowerCase());
   }
 
   /**

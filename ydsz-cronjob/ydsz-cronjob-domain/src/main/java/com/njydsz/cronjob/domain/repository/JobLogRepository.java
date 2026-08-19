@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 
 /**
@@ -191,4 +192,17 @@ public interface JobLogRepository {
    * @return 日志数量
    */
   long countByTimeRange(LocalDateTime start, LocalDateTime end);
+
+  // ===== 实体方法（JobServiceImpl 日志分页/写入使用） =====
+
+  /** MyBatis-Plus 分页查询执行日志。 */
+  com.baomidou.mybatisplus.extension.plugins.pagination.Page<JobLog> selectPage(
+      com.baomidou.mybatisplus.extension.plugins.pagination.Page<JobLog> page,
+      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper);
+
+  /** 新增执行日志实体。 */
+  int insert(JobLog log);
+
+  /** 按 ID 更新执行日志实体。 */
+  int updateById(JobLog log);
 }

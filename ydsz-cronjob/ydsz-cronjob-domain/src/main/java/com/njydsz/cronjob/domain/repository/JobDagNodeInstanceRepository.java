@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
 import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
 
 /**
@@ -102,4 +103,7 @@ public interface JobDagNodeInstanceRepository {
    * @param vos 节点实例 VO 列表
    */
   void insertBatch(List<JobDagNodeInstanceVO> vos);
+
+  /** 按 DAG 实例 ID 查询节点实例实体列表（Service 层可视化/状态查询使用）。 */
+  List<JobDagNodeInstance> selectByDagInstanceId(String dagInstanceId);
 }

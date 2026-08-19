@@ -116,6 +116,17 @@ public class CronjobMetrics extends SentryMetricsAdapter {
   }
 
   /**
+   * 任务成功计数（按 job_key 分类，便于定位高频成功任务）。
+   *
+   * <p>P0-FIX: Outbox MetricsOutboxSubscriber 消费 JOB_SUCCESS 事件时调用，原实现缺失。
+   *
+   * @param jobKey 任务 KEY
+   */
+  public void incJobSuccess(String jobKey) {
+    counter("job_success_total", "job_key", safe(jobKey)).increment();
+  }
+
+  /**
    * 任务失败计数（按 job_key 分类，便于定位高频失败任务）。
    *
    * @param jobKey 任务 KEY
