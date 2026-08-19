@@ -54,7 +54,7 @@ public class TenantPlanMenuRepositoryImpl implements TenantPlanMenuRepository {
 
   @Override
   public boolean insertBatch(TenantPlanMenuDTO dto) {
-    List<TenantPlanMenu> entities = new ArrayList<>();
+    List<TenantPlanMenu> entities = new ArrayList<>(dto.getMenuIds() != null ? dto.getMenuIds().size() : 16);
     if (dto.getMenuIds() != null) {
       for (String menuId : dto.getMenuIds()) {
         TenantPlanMenu entity = converter.dtoToEntity(dto.getPlanId(), menuId);

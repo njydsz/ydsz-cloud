@@ -36,6 +36,7 @@ import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.ConfigExcelService;
 import com.njydsz.system.server.service.ConfigService;
 import com.njydsz.system.server.service.EntityVersionService;
+import com.njydsz.system.server.service.rollback.ConfigRollbackStrategy;
 import com.njydsz.system.server.util.SystemVersionUtils;
 
 /**
@@ -117,6 +118,9 @@ public class ConfigServiceImpl implements ConfigService {
 
   /** Excel 导入导出服务（P1-1 拆分：环境迁移能力独立成类，本类专注 CRUD/缓存/事件编排） */
   private final ConfigExcelService configExcelService;
+
+  /** 配置回滚策略（从快照 JSON 反序列化并重建配置资源） */
+  private final ConfigRollbackStrategy rollbackStrategy;
 
   // ============================== CRUD ==============================
 
@@ -400,55 +404,12 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String rollbackTo(String resourceKey, String targetVersion, String operatorId) {
-    // 1. 执行回滚（通过 EntityVersionService 回调机制）
     return entityVersionService.rollbackTo(
         EntityVersionService.RESOURCE_TYPE_CONFIG,
         resourceKey,
         targetVersion,
         operatorId,
-        snapshotJson -> {
-          // 2. 反序列化快照并更新配置项
-          String snapshotGroup = null;
-          if (snapshotJson != null && !snapshotJson.isBlank()) {
-            try {
-              ConfigVO snapshotVO = YdszJson.fromJson(snapshotJson, ConfigVO.class);
-              snapshotGroup = snapshotVO.getConfigGroup();
-              ConfigVO currentConfig = configRepository.findByKeyIgnoreStatus(resourceKey).orElse(null);
-              if (currentConfig != null) {
-                currentConfig.setConfigValue(snapshotVO.getConfigValue());
-                currentConfig.setValueType(snapshotVO.getValueType());
-                currentConfig.setDefaultValue(snapshotVO.getDefaultValue());
-                currentConfig.setDescription(snapshotVO.getDescription());
-                currentConfig.setIsPublic(snapshotVO.getIsPublic());
-                currentConfig.setSortOrder(snapshotVO.getSortOrder());
-                currentConfig.setStatus(snapshotVO.getStatus());
-                configRepository.updateById(toDto(currentConfig));
-              } else {
-                ConfigDTO newConfig = new ConfigDTO();
-                newConfig.setConfigGroup(snapshotVO.getConfigGroup());
-                newConfig.setConfigKey(snapshotVO.getConfigKey());
-                newConfig.setConfigValue(snapshotVO.getConfigValue());
-                newConfig.setValueType(snapshotVO.getValueType());
-                newConfig.setDefaultValue(snapshotVO.getDefaultValue());
-                newConfig.setDescription(snapshotVO.getDescription());
-                newConfig.setIsPublic(snapshotVO.getIsPublic());
-                newConfig.setSortOrder(snapshotVO.getSortOrder());
-                newConfig.setStatus(snapshotVO.getStatus());
-                configRepository.insert(newConfig);
-              }
-            } catch (Exception e) {
-              throw BusinessException.of(SystemExceptionCode.SNAPSHOT_PARSE_ERROR)
-                  .data("reason", e.getMessage());
-            }
-          }
-          // 3. 精准失效缓存（P0-2：回滚后必须清缓存，避免读到旧值）并发布变更事件
-          evictConfigKey(resourceKey);
-          if (snapshotGroup != null) {
-            evictConfigGroup(snapshotGroup);
-          }
-          evictConfigPublic();
-          publishConfigChangedEvent(resourceKey, snapshotGroup);
-        });
+        rollbackStrategy);
   }
 
   // ============================== 导入导出 ==============================

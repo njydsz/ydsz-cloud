@@ -113,7 +113,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
     // 6. 精准失效缓存：按涉及 typeCode 逐一失效列表缓存（替代全量清空，避免缓存击穿）
     typeCodes.forEach(this::evictDictList);
 
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(4);
     result.put("successCount", items.size());
     result.put("totalCount", items.size());
     result.put("message", String.format("成功批量新增 %d 条字典项", items.size()));
@@ -129,7 +129,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
    * @throws BusinessException 当批量数据中存在重复项时抛出
    */
   private void validateInnerDuplication(List<DictItemVO> items) {
-    Set<String> innerKeySet = new HashSet<>();
+    Set<String> innerKeySet = new HashSet<>(items.size());
     for (int i = 0; i < items.size(); i++) {
       DictItemVO item = items.get(i);
       String key = item.getTypeCode() + "/" + item.getItemCode();

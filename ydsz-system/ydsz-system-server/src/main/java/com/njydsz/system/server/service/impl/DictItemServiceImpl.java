@@ -33,6 +33,7 @@ import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.DictItemService;
 import com.njydsz.system.server.service.EntityVersionService;
+import com.njydsz.system.server.service.rollback.DictItemRollbackStrategy;
 import com.njydsz.system.server.util.SystemVersionUtils;
 
 /**
@@ -129,6 +130,9 @@ public class DictItemServiceImpl implements DictItemService {
 
   /** 统一 Excel 导出辅助类 */
   private final ExcelExportHelper excelExportHelper;
+
+  /** 字典项回滚策略（从快照 JSON 反序列化并重建字典项资源） */
+  private final DictItemRollbackStrategy rollbackStrategy;
 
   /**
    * 根据主键查询字典项（不走缓存，直接走 DB）
@@ -419,29 +423,7 @@ public class DictItemServiceImpl implements DictItemService {
         typeCode,
         targetVersion,
         operatorId,
-        snapshotJson -> {
-          // 1. 物理删除当前字典项
-          dictRepository.physicalDeleteByTypeCode(typeCode);
-          // 2. 反序列化目标快照并重建字典项
-          if (snapshotJson != null && !snapshotJson.isBlank()) {
-            try {
-              List<DictItemVO> snapshotItems =
-                  YdszJson.fromJson(snapshotJson, List.class, DictItemVO.class);
-              if (snapshotItems != null && !snapshotItems.isEmpty()) {
-                for (DictItemVO vo : snapshotItems) {
-                  DictItemDTO dto = toDto(vo);
-                  dto.setId(vo.getId());
-                  dictRepository.insertItem(dto);
-                }
-              }
-            } catch (Exception e) {
-              throw BusinessException.of(SystemExceptionCode.SNAPSHOT_PARSE_ERROR)
-                  .data("reason", e.getMessage());
-            }
-          }
-          // 3. P0-2：回滚后精准失效该类型缓存，避免读到旧值
-          evictDictList(typeCode);
-        });
+        rollbackStrategy);
   }
 
   /**
@@ -547,8 +529,8 @@ public class DictItemServiceImpl implements DictItemService {
     }
 
     // 2. 逐条校验并转换（必填 / DB 唯一性）
-    List<String> errors = new ArrayList<>();
-    List<DictItemVO> validItems = new ArrayList<>();
+    List<String> errors = new ArrayList<>(excelRows.size());
+    List<DictItemVO> validItems = new ArrayList<>(excelRows.size());
     int skipCount = 0;
     for (int i = 0; i < excelRows.size(); i++) {
       String error = validateExcelRow(excelRows.get(i), i + 2);
@@ -589,7 +571,7 @@ public class DictItemServiceImpl implements DictItemService {
           ExcelFacade.read(inputStream, DictItemExcelVO.class).sheet(0).doReadAll();
       return rows != null ? rows : List.of();
     } catch (Exception e) {
-      log.warn("[DictItemService] Excel 读取失败: {}", e.getMessage());
+      log.warn("[DictItemService] Excel 读取失败: {}", e.getMessage(), e);
       throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
           .data("reason", "Excel 文件读取失败: " + e.getMessage());
     }

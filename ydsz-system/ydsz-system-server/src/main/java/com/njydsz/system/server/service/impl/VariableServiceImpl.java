@@ -461,8 +461,8 @@ public class VariableServiceImpl implements VariableService {
     }
 
     // 2. 逐条校验并转换（必填 / 值类型 / DB 唯一性）
-    List<String> errors = new ArrayList<>();
-    List<VariableVO> validItems = new ArrayList<>();
+    List<String> errors = new ArrayList<>(excelRows.size());
+    List<VariableVO> validItems = new ArrayList<>(excelRows.size());
     int skipCount = 0;
     for (int i = 0; i < excelRows.size(); i++) {
       String error = validateExcelRow(excelRows.get(i), i + 2);
@@ -503,7 +503,7 @@ public class VariableServiceImpl implements VariableService {
           ExcelFacade.read(inputStream, VariableExcelVO.class).sheet(0).doReadAll();
       return rows != null ? rows : List.of();
     } catch (Exception e) {
-      log.warn("[VariableService] Excel 读取失败: {}", e.getMessage());
+      log.warn("[VariableService] Excel 读取失败: {}", e.getMessage(), e);
       throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
           .data("reason", "Excel 文件读取失败: " + e.getMessage());
     }

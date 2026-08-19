@@ -90,8 +90,8 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
     }
 
     // 2. 逐条校验并转换（必填 / 值类型 / DB 唯一性）
-    List<String> errors = new ArrayList<>();
-    List<ConfigVO> validItems = new ArrayList<>();
+    List<String> errors = new ArrayList<>(excelRows.size());
+    List<ConfigVO> validItems = new ArrayList<>(excelRows.size());
     int skipCount = 0;
     for (int i = 0; i < excelRows.size(); i++) {
       String error = validateExcelRow(excelRows.get(i), i + 2);
@@ -134,7 +134,7 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
           ExcelFacade.read(inputStream, ConfigExcelVO.class).sheet(0).doReadAll();
       return rows != null ? rows : List.of();
     } catch (Exception e) {
-      log.warn("[ConfigExcelService] Excel 读取失败: {}", e.getMessage());
+      log.warn("[ConfigExcelService] Excel 读取失败: {}", e.getMessage(), e);
       throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
           .data("reason", "Excel 文件读取失败: " + e.getMessage());
     }

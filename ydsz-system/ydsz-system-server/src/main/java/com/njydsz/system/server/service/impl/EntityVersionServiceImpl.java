@@ -16,6 +16,7 @@ import com.njydsz.system.domain.query.EntityVersionPageQuery;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 import com.njydsz.system.domain.repository.EntityVersionRepository;
 import com.njydsz.system.server.service.EntityVersionService;
+import com.njydsz.system.server.service.rollback.RollbackStrategy;
 import com.njydsz.system.server.util.SystemVersionUtils;
 
 /**
@@ -30,7 +31,7 @@ import com.njydsz.system.server.util.SystemVersionUtils;
  * <ul>
  *   <li><b>版本查询</b>：按资源类型 + 资源键查询历史版本
  *   <li><b>版本创建</b>：业务 Service 写操作成功后调用
- *   <li><b>版本回滚</b>：通过回调接口实现资源重建
+ *   <li><b>版本回滚</b>：通过策略接口实现资源重建
  * </ul>
  *
  * <p><b>事务边界：</b>所有写方法 {@code @Transactional(rollbackFor = Exception.class)}；
@@ -72,7 +73,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
       String resourceKey,
       String targetVersion,
       String operatorId,
-      RollbackCallback rollbackCallback) {
+      RollbackStrategy rollbackStrategy) {
     // 1. 查询目标版本
     EntityVersionVO targetVersionVO =
         entityVersionRepository
@@ -84,10 +85,10 @@ public class EntityVersionServiceImpl implements EntityVersionService {
                         .data("resourceKey", resourceKey)
                         .data("version", targetVersion));
 
-    // 2. 执行回滚回调（由业务方实现资源重建逻辑）
+    // 2. 执行回滚策略（由业务方实现资源重建逻辑）
     String snapshotJson = targetVersionVO.getSnapshotJson();
     if (snapshotJson != null && !snapshotJson.isBlank()) {
-      rollbackCallback.execute(snapshotJson);
+      rollbackStrategy.rebuild(snapshotJson);
     }
 
     // 3. 创建新版本（标记回滚来源）

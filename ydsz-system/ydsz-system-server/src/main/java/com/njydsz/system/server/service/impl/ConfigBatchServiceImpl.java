@@ -148,7 +148,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
       }
     });
 
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(4);
     result.put("successCount", items.size());
     result.put("totalCount", items.size());
     result.put("message", String.format("成功批量创建 %d 条配置", items.size()));
@@ -164,7 +164,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
    * @throws BusinessException 当批量数据中存在重复项时抛出
    */
   private void validateInnerDuplication(List<ConfigVO> items) {
-    Set<String> innerKeySet = new HashSet<>();
+    Set<String> innerKeySet = new HashSet<>(items.size());
     for (int i = 0; i < items.size(); i++) {
       ConfigVO item = items.get(i);
       String key = item.getConfigGroup() + "/" + item.getConfigKey();

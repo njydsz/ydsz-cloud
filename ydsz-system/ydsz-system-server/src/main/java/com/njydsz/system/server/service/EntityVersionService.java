@@ -5,6 +5,7 @@ import java.util.List;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.query.EntityVersionPageQuery;
 import com.njydsz.system.domain.vo.EntityVersionVO;
+import com.njydsz.system.server.service.rollback.RollbackStrategy;
 
 /**
  * 统一实体版本 Service 接口
@@ -78,7 +79,7 @@ public interface EntityVersionService {
    *
    * <ol>
    *   <li>校验目标版本是否存在且未删除
-   *   <li>执行回滚回调（由调用方提供，实现资源重建逻辑）
+   *   <li>执行回滚策略（由调用方提供，实现资源重建逻辑）
    *   <li>创建新版本记录（标记回滚来源，保持完整审计链）
    * </ol>
    *
@@ -88,7 +89,7 @@ public interface EntityVersionService {
    * @param resourceKey 资源唯一标识
    * @param targetVersion 目标版本号
    * @param operatorId 操作人 ID（审计用途）
-   * @param rollbackCallback 回滚回调（反序列化快照并重建资源）
+   * @param rollbackStrategy 回滚策略（反序列化快照并重建资源）
    * @return 新创建的回滚版本 ID
    * @throws com.njydsz.common.exception.custom.BusinessException 版本不存在时抛出
    */
@@ -97,20 +98,5 @@ public interface EntityVersionService {
       String resourceKey,
       String targetVersion,
       String operatorId,
-      RollbackCallback rollbackCallback);
-
-  /**
-   * 回滚回调接口
-   *
-   * <p>由业务方实现，负责从快照 JSON 反序列化并重建资源。
-   */
-  @FunctionalInterface
-  interface RollbackCallback {
-    /**
-     * 执行回滚逻辑
-     *
-     * @param snapshotJson 目标版本的快照 JSON
-     */
-    void execute(String snapshotJson);
-  }
+      RollbackStrategy rollbackStrategy);
 }

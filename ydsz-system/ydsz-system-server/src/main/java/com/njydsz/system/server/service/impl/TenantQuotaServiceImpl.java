@@ -94,7 +94,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
       Integer usage = provider.apply(tenantId, quotaType);
       return usage != null ? usage : 0;
     } catch (Exception e) {
-      log.warn("[TenantQuotaService] 获取配额使用量失败: {}, error={}", quotaType, e.getMessage());
+      log.warn("[TenantQuotaService] 获取配额使用量失败: {}, error={}", quotaType, e.getMessage(), e);
       return 0;
     }
   }
