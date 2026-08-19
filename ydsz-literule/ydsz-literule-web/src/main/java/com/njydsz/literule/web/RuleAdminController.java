@@ -153,7 +153,7 @@ public class RuleAdminController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'save'")
+      content = "'规则保存: ' + #definition.code + ', 操作人: ' + #operator")
   @RateLimit(resource = "literule.rule_admin.save", threshold = 50)
   @PostMapping
   @AuthApiPermission(apiCodes = "execution:rule:save")
@@ -182,7 +182,7 @@ public class RuleAdminController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
-      content = "'toggle'")
+      content = "'规则启停切换: ' + #ruleCode + ', 启用: ' + #enabled + ', 操作人: ' + #operator")
   @RateLimit(resource = "literule.rule_admin.toggle", threshold = 50)
   @PutMapping("/{ruleCode}/toggle")
   @AuthApiPermission(apiCodes = "execution:rule:toggle")
@@ -262,7 +262,7 @@ public class RuleAdminController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'rollback'")
+      content = "'规则回滚: ' + #ruleCode + ', 目标版本: ' + #version + ', 操作人: ' + #operator")
   @RateLimit(resource = "literule.rule_admin.rollback", threshold = 50)
   @PostMapping("/{ruleCode}/rollback")
   public BaseResponse<RuleDefinitionVO> rollback(
@@ -291,7 +291,7 @@ public class RuleAdminController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'dryRun'")
+      content = "'规则仿真运行: ' + (#ruleCode != null ? #ruleCode : 'ALL') + ', 操作人: SYSTEM")
   @RateLimit(resource = "literule.rule_admin.dryRun", threshold = 50)
   @PostMapping("/dry-run")
   public BaseResponse<List<RuleResultVO>> dryRun(
@@ -336,7 +336,7 @@ public class RuleAdminController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'traceExpression'")
+      content = "'表达式追踪: ' + #request['expression']")
   @RateLimit(resource = "literule.rule_admin.traceExpression", threshold = 50)
   @PostMapping("/expr-trace")
   public BaseResponse<ExpressionEngine.TraceResult> traceExpression(
@@ -363,7 +363,7 @@ public class RuleAdminController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'validateExpression'")
+      content = "'表达式校验: ' + #dto.expression + ', 类型: ' + #dto.type")
   @RateLimit(resource = "literule.rule_admin.validateExpression", threshold = 50)
   @PostMapping("/validate-expression")
   public BaseResponse<ExpressionValidationResultVO> validateExpression(
@@ -397,7 +397,7 @@ public class RuleAdminController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'postmapping'")
+      content = "'批量表达式校验: 共 ' + #request.size() + ' 条'")
   @RateLimit(resource = "literule.rule_admin.validateBatch", threshold = 50)
   @PostMapping("/validate-batch")
   public BaseResponse<Map<String, ExpressionValidationResult>> validateBatch(
@@ -418,7 +418,7 @@ public class RuleAdminController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'abTest'")
+      content = "'规则AB测试: ' + #ruleCode + ', 操作人: SYSTEM")
   @RateLimit(resource = "literule.rule_admin.abTest", threshold = 50)
   @PostMapping("/{ruleCode}/ab-test")
   public BaseResponse<ABTestService.ABTestReport> abTest(
