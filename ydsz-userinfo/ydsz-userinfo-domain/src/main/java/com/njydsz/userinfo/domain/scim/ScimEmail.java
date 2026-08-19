@@ -1,7 +1,6 @@
 package com.njydsz.userinfo.domain.scim;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,18 +17,17 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ScimEmail {
 
   /** 电子邮箱地址。 */
-  @JsonProperty("value")
+  @JSONField(name = "value")
   private String value;
 
   /** 显示名称（可选）。 */
-  @JsonProperty("display")
+  @JSONField(name = "display")
   private String display;
 
   /** 是否为主邮箱。 */
-  @JsonProperty("primary")
+  @JSONField(name = "primary")
   private Boolean primary;
 }

@@ -1,7 +1,6 @@
 package com.njydsz.userinfo.domain.scim;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.alibaba.fastjson2.annotation.JSONField;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,18 +17,17 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ScimMeta {
 
   /** 资源类型（如 "User"、"Group"）。 */
-  @JsonProperty("resourceType")
+  @JSONField(name = "resourceType")
   private String resourceType;
 
   /** 资源创建时间（ISO 8601 格式）。 */
-  @JsonProperty("created")
+  @JSONField(name = "created")
   private String created;
 
   /** 资源最后修改时间（ISO 8601 格式）。 */
-  @JsonProperty("lastModified")
+  @JSONField(name = "lastModified")
   private String lastModified;
 }

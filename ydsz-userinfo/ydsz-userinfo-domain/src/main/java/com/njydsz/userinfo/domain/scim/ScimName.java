@@ -1,7 +1,6 @@
 package com.njydsz.userinfo.domain.scim;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.alibaba.fastjson2.annotation.JSONField;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,18 +17,17 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ScimName {
 
   /** 完整格式化姓名（如 "张三" 或 "Dr. John Jonas, Jr."）。 */
-  @JsonProperty("formatted")
+  @JSONField(name = "formatted")
   private String formatted;
 
   /** 姓氏（family name / surname）。 */
-  @JsonProperty("familyName")
+  @JSONField(name = "familyName")
   private String familyName;
 
   /** 名字（given name / first name）。 */
-  @JsonProperty("givenName")
+  @JSONField(name = "givenName")
   private String givenName;
 }
