@@ -79,6 +79,7 @@ public class JwtTokenService implements TokenService {
 
   private static final String TOKEN_TYPE_ACCESS = "access";
   private static final String TOKEN_TYPE_REFRESH = "refresh";
+  private static final String TOKEN_TYPE_ID = "id_token";
 
   private final TokenProperties tokenProperties;
   private final SecretKey secretKey;
@@ -196,6 +197,24 @@ public class JwtTokenService implements TokenService {
     }
   }
 
+  @Override
+  public String issueIdToken(UserInfo userInfo, String nonce, String clientId) {
+    if (userInfo == null || userInfo.getUserId() == null || userInfo.getUserId().isBlank()) {
+      LOG.warn("签发 ID Token 失败: userInfo 或 userId 为空");
+      return null;
+    }
+    if (clientId == null || clientId.isBlank()) {
+      LOG.warn("签发 ID Token 失败: clientId 不能为空");
+      return null;
+    }
+    try {
+      return buildIdToken(userInfo, nonce, clientId);
+    } catch (Exception e) {
+      LOG.error("签发 ID Token 异常", e);
+      return null;
+    }
+  }
+
   /**
    * 构建 JWT Token
    *
@@ -233,6 +252,48 @@ public class JwtTokenService implements TokenService {
       // jjwt 0.12.x: audience() 返回 AudienceCollection<JwtBuilder>，
       // 调用 single(String) 设置单一 audience 并返回 JwtBuilder
       builder.audience().single(audience);
+    }
+
+    return builder.signWith(secretKey).compact();
+  }
+
+  /**
+   * 构建 OIDC ID Token
+   *
+   * <p>ID Token 遵循 OpenID Connect Core 1.0 规范，包含以下标准声明：
+   *
+   * <ul>
+   *   <li><b>iss</b>（Issuer）：令牌签发者，取自 tokenProperties.issuer
+   *   <li><b>sub</b>（Subject）：用户标识，取自 userInfo.userId
+   *   <li><b>aud</b>（Audience）：受众，取客户端 ID（clientId）
+   *   <li><b>exp</b>（Expiration）：过期时间，默认 10 分钟
+   *   <li><b>iat</b>（Issued At）：签发时间
+   *   <li><b>nonce</b>（可选）：一次性随机值，用于防止重放攻击
+   * </ul>
+   *
+   * <p>token_type 声明设为 "id_token"，便于后续解析时区分。
+   *
+   * @param userInfo 用户信息
+   * @param nonce    一次性随机值（可为 null）
+   * @param clientId 客户端 ID
+   * @return ID Token JWT 字符串
+   */
+  private String buildIdToken(UserInfo userInfo, String nonce, String clientId) {
+    Instant now = Instant.now();
+    Instant expiration = now.plusSeconds(tokenProperties.getIdTokenExpireSeconds());
+
+    var builder = Jwts.builder()
+        .subject(userInfo.getUserId())
+        .issuer(tokenProperties.getIssuer())
+        .audience().single(clientId)
+        .issuedAt(Date.from(now))
+        .expiration(Date.from(expiration))
+        .id(String.valueOf(snowflakeIdGenerator.nextId()))
+        .claim(CLAIM_TOKEN_TYPE, TOKEN_TYPE_ID)
+        .claim(CLAIM_USERNAME, userInfo.getUsername());
+
+    if (nonce != null && !nonce.isBlank()) {
+      builder.claim("nonce", nonce);
     }
 
     return builder.signWith(secretKey).compact();

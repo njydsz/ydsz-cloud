@@ -74,4 +74,17 @@ public interface TokenService {
    * @return 新的访问令牌，刷新失败返回 null
    */
   String refreshAccessToken(String refreshToken);
+
+  /**
+   * 签发 OIDC ID Token
+   *
+   * <p>ID Token 是 OpenID Connect 协议的核心令牌，用于向客户端证明用户身份。 包含标准 OIDC 声明（iss, sub, aud, exp, iat, nonce）， 有效期较短（默认
+   * 10 分钟，可通过 ydsz.auth.token.id-token-expire-seconds 配置）。
+   *
+   * @param userInfo 用户信息（sub 声明来源）
+   * @param nonce    一次性随机值（可选，用于防止重放攻击，可为 null）
+   * @param clientId 客户端 ID（aud 声明来源）
+   * @return ID Token（JWT 格式），签发失败返回 null
+   */
+  String issueIdToken(UserInfo userInfo, String nonce, String clientId);
 }
