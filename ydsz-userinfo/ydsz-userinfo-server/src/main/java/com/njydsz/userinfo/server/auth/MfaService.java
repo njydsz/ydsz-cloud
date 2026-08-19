@@ -10,9 +10,10 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.auth.util.TotpAuthenticator;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
+import com.njydsz.userinfo.domain.config.MfaSecretEncryptor;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.MfaSetupVO;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
 
 /**
  * 双因素认证（MFA）服务。
@@ -36,8 +37,9 @@ import com.njydsz.userinfo.domain.vo.MfaSetupVO;
  *   userinfo:mfa:enabled:{userId} →  "1"              启用标记，TTL 30 天
  * </pre>
  *
- * <p><b>安全说明：</b>生产环境建议将 secret 加密落库（{@code ydsz-common-safe} 的
- * {@code @EncryptField} / CryptoUtils），替代 Redis 存储，本实现以最小侵入保证功能闭环。
+   * <p><b>安全说明：</b>生产环境通过配置 {@code ydsz.userinfo.mfa.encryption-key} 启用
+   * AES-256-GCM 加密，密钥在存入 Redis 前自动加密，读取时自动解密。
+   * 未配置时明文存储（仅适用于开发/测试环境）。
  *
  * @author ydsz-team
  * @since 1.1.0
@@ -76,6 +78,7 @@ public class MfaService {
 
   private final RedisStringOps redisStringOps;
   private final VerifyCodeService verifyCodeService;
+  private final MfaSecretEncryptor mfaSecretEncryptor;
 
   /**
    * 发起 TOTP 绑定：生成临时密钥与 otpauth URI。
@@ -93,8 +96,10 @@ public class MfaService {
     String secret = TotpAuthenticator.generateSecret();
     String otpauthUri =
         TotpAuthenticator.buildOtpAuthUri(TOTP_ISSUER, username, secret);
+    // 加密后存入 Redis（生产环境配置 encryption-key 时自动加密，开发环境明文）
+    String encryptedSecret = mfaSecretEncryptor.encrypt(secret);
     try {
-      redisStringOps.set(SETUP_KEY_PREFIX + userId, secret, SETUP_TTL);
+      redisStringOps.set(SETUP_KEY_PREFIX + userId, encryptedSecret, SETUP_TTL);
     } catch (Exception e) {
       log.warn("Failed to store MFA setup secret: userId={}, error={}", userId, e.getMessage(), e);
     }
@@ -118,8 +123,10 @@ public class MfaService {
       log.warn("MFA activate failed, invalid code: userId={}", userId);
       throw new BusinessException(UserInfoExceptionCode.MFA_INVALID);
     }
+    // 加密后正式存储
+    String encryptedSecret = mfaSecretEncryptor.encrypt(setupSecret);
     try {
-      redisStringOps.set(SECRET_KEY_PREFIX + userId, setupSecret, BOUND_TTL);
+      redisStringOps.set(SECRET_KEY_PREFIX + userId, encryptedSecret, BOUND_TTL);
       redisStringOps.set(ENABLED_KEY_PREFIX + userId, ENABLED_VALUE, BOUND_TTL);
       redisStringOps.del(SETUP_KEY_PREFIX + userId);
     } catch (Exception e) {
@@ -145,6 +152,7 @@ public class MfaService {
       log.warn("MFA disable failed, invalid code: userId={}", userId);
       throw new BusinessException(UserInfoExceptionCode.MFA_INVALID);
     }
+    // 解绑时清除加密存储的密钥
     try {
       redisStringOps.del(SECRET_KEY_PREFIX + userId);
       redisStringOps.del(ENABLED_KEY_PREFIX + userId);
@@ -190,6 +198,7 @@ public class MfaService {
    */
   public void validateLoginMfa(UserAccountDO user, String mfaCode) {
     String userId = user.getId();
+    // readSecret 已自动解密，可直接用于 TOTP 校验
     String secret = readSecret(SECRET_KEY_PREFIX + userId);
     if (secret != null && isMfaEnabled(userId)) {
       if (mfaCode == null || mfaCode.isBlank()
@@ -238,11 +247,24 @@ public class MfaService {
     verifyCodeService.sendCode(EMAIL_TYPE_MFA_LOGIN, VerifyCodeService.TARGET_TYPE_EMAIL, email);
   }
 
+  /**
+   * 从 Redis 读取 MFA 密钥并自动解密。
+   *
+   * <p>无论生产环境（AES-256-GCM 加密）还是开发环境（明文），均通过
+   * {@link MfaSecretEncryptor#decrypt} 处理，对调用方透明。
+   *
+   * @param key Redis Key
+   * @return 解密后的明文密钥；不存在或解密失败返回 null
+   */
   private String readSecret(String key) {
     try {
-      return redisStringOps.get(key, String.class);
+      String encrypted = redisStringOps.get(key, String.class);
+      if (encrypted == null || encrypted.isBlank()) {
+        return null;
+      }
+      return mfaSecretEncryptor.decrypt(encrypted);
     } catch (Exception e) {
-      log.warn("Failed to read MFA secret: key={}, error={}", key, e.getMessage(), e);
+      log.warn("Failed to read/decrypt MFA secret: key={}, error={}", key, e.getMessage(), e);
       return null;
     }
   }

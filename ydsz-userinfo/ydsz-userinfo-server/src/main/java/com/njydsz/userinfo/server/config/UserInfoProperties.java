@@ -158,6 +158,27 @@ public class UserInfoProperties {
    */
   private int maxSessionsPerUser = DEFAULT_MAX_SESSIONS_PER_USER;
 
+  // ==================== P0-3 MFA 密钥加密配置 ====================
+
+  /**
+   * MFA TOTP 密钥加密密钥（AES-256-GCM）。
+   *
+   * <p>Base64 编码的 32 字节（256 位）密钥。配置后 MFA 密钥在存入 Redis 前自动加密。
+   * 未配置时使用明文存储（仅适用于开发/测试环境）。
+   *
+   * <p><b>生成方式：</b>{@code openssl rand -base64 32}
+   *
+   * <p><b>application.yml 示例：</b>
+   *
+   * <pre>
+   * ydsz:
+   *   userinfo:
+   *     mfa:
+   *       encryption-key: ${MFA_ENCRYPTION_KEY:}
+   * </pre>
+   */
+  private String mfaEncryptionKey;
+
   /**
    * 分端会话限制配置。
    *

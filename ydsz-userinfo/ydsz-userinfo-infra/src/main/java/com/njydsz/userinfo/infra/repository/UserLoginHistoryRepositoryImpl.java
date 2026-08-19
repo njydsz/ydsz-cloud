@@ -100,4 +100,9 @@ public class UserLoginHistoryRepositoryImpl implements UserLoginHistoryRepositor
     List<UserLoginHistoryDO> entities = userLoginHistoryMapper.selectList(wrapper);
     return converter.userLoginHistoryListToVO(entities);
   }
+
+  @Override
+  public long countDistinctUsersWithFailures(LocalDateTime startTime, LocalDateTime endTime) {
+    return userLoginHistoryMapper.countDistinctUsersWithFailures(startTime, endTime);
+  }
 }

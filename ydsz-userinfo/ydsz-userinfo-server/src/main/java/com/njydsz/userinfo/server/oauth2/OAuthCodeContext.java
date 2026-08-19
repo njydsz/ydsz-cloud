@@ -18,6 +18,7 @@ import lombok.Builder;
  *   <li>{@link #tenantId} — 租户 ID
  *   <li>{@link #redirectUri} — 回调地址（已在 authorize 端点校验白名单）
  *   <li>{@link #scope} — 授权 scope
+ *   <li>{@link #nonce} — OIDC nonce（可为 null，用于防重放）
  *   <li>{@link #codeChallenge} — PKCE code_challenge（可为 null）
  *   <li>{@link #codeChallengeMethod} — PKCE code_challenge_method（可为 null）
  *   <li>{@link #state} — OAuth2 CSRF 防护 state 参数（可为 null）
@@ -34,6 +35,7 @@ public record OAuthCodeContext(
     @JsonProperty("tenantId") String tenantId,
     @JsonProperty("redirectUri") String redirectUri,
     @JsonProperty("scope") String scope,
+    @JsonProperty("nonce") String nonce,
     @JsonProperty("codeChallenge") String codeChallenge,
     @JsonProperty("codeChallengeMethod") String codeChallengeMethod,
     @JsonProperty("state") String state) {

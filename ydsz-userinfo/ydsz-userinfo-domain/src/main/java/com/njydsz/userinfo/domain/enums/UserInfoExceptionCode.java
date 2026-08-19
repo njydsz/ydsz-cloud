@@ -234,6 +234,8 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   SOCIAL_ACCOUNT_NOT_BOUND("B34004", "userinfo.social.account.not.bound"),
   /** 社交认证失败 */
   SOCIAL_AUTH_FAILED("B34005", "userinfo.social.auth.failed"),
+  /** 社交认证 CSRF 校验失败（state 无效或已消费） */
+  SOCIAL_AUTH_CSRF_FAILED("B34006", "userinfo.social.auth.csrf.failed", 401),
 
   // ==================== B35xxx LDAP 同步 ====================
   /** LDAP 同步功能未开启 */

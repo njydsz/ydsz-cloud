@@ -44,6 +44,9 @@ import com.njydsz.userinfo.server.oauth2.OAuthCodeContext;
  *
  * <p>实现标准 OAuth2 Authorization Code Grant 流程（参考 RFC 6749），并支持 PKCE（RFC 7636）增强公共客户端安全性。
  *
+ * <p><b>OIDC 支持：</b>当 scope 包含 {@code openid} 时，token 端点额外返回 id_token（遵循 OpenID Connect Core 1.0），
+ * id_token 包含标准声明（iss, sub, aud, exp, iat, nonce），由 {@link TokenService#issueIdToken} 签发。
+ *
  * <p><b>接口路径：</b>{@code /api/v1/oauth2}
  *
  * <p><b>端点清单（P1-4 补齐）：</b>
@@ -120,6 +123,9 @@ public class OAuth2Controller {
   /** OAuth2 grant_type：refresh_token 轮换 */
   private static final String OAUTH2_GRANT_REFRESH_TOKEN = "refresh_token";
 
+  /** OIDC scope：openid（OpenID Connect Core 1.0 §3.1.2.1） */
+  private static final String SCOPE_OPENID = "openid";
+
   /** P0-4: 授权码随机数生成器（SecureRandom，128 位熵替代可枚举的雪花 ID） */
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
@@ -178,7 +184,7 @@ public class OAuth2Controller {
    *   <li>解析并验证 token 有效性
    *   <li>校验 clientId 已在系统中注册
    *   <li>校验 redirectUri 在 clientId 的白名单中（防开放重定向）
-   *   <li}生成 UUID 授权码，将 userId/username/tenantId/clientId/redirectUri/codeChallenge 序列化后写入 Redis
+   *   <li}生成 UUID 授权码，将 userId/username/tenantId/clientId/redirectUri/codeChallenge/nonce 序列化后写入 Redis
    *   <li>返回授权码（业务方需将 code 拼到 redirectUri 的 query 上）
    * </ol>
    *
@@ -186,6 +192,8 @@ public class OAuth2Controller {
    * @param clientId 客户端 ID（必须已注册）
    * @param redirectUri 回调地址（必须在 clientId 的白名单中）
    * @param state 客户端防 CSRF 随机串（服务端存储并校验）
+   * @param scope 授权范围（可选，OIDC 流程需包含 {@code openid}）
+   * @param nonce OIDC nonce（可选，用于防重放攻击，scope 含 openid 时建议携带）
    * @param codeChallenge PKCE 码挑战值（可选，用于公共客户端）
    * @param codeChallengeMethod PKCE 码挑战方法（可选，仅支持 S256）
    * @return OAuth2 授权码
@@ -206,6 +214,7 @@ public class OAuth2Controller {
       @RequestParam String redirectUri,
       @RequestParam(required = false) String state,
       @RequestParam(required = false) String scope,
+      @RequestParam(required = false) String nonce,
       @RequestParam(required = false) String codeChallenge,
       @RequestParam(required = false) String codeChallengeMethod) {
 
@@ -267,6 +276,7 @@ public class OAuth2Controller {
         .tenantId(effectiveTenantId)
         .redirectUri(redirectUri)
         .scope(effectiveScope)
+        .nonce(nonce)
         .codeChallenge(codeChallenge)
         .codeChallengeMethod(codeChallengeMethodResolved)
         .state(state)
@@ -340,12 +350,14 @@ public class OAuth2Controller {
   /**
    * 授权码模式换取 Token（RFC 6749 §4.1.3）。
    *
+   * <p>当授权码上下文的 scope 包含 {@code openid} 时，额外签发 OIDC id_token（遵循 OpenID Connect Core 1.0）。
+   *
    * @param code 授权码（/authorize 返回）
    * @param clientId 客户端 ID
    * @param clientSecret 客户端密钥（confidential 客户端必填）
    * @param codeVerifier PKCE 码验证器（public 客户端必填）
    * @param state OAuth2 CSRF 防护 state 参数（可选，若 authorize 时传了 state 则必须匹配）
-   * @return 标准 OAuth2 token 响应
+   * @return 标准 OAuth2 token 响应（scope 含 openid 时包含 id_token）
    */
   private YdszResponse<Map<String, Object>> authorizationCodeGrant(
       String code, String clientId, String clientSecret, String codeVerifier, String state) {
@@ -372,6 +384,7 @@ public class OAuth2Controller {
     String tenantId = context.tenantId();
     String storedCodeChallenge = context.codeChallenge();
     String storedCodeChallengeMethod = context.codeChallengeMethod();
+    String nonce = context.nonce();
 
     // 2. 校验 clientId 一致性（防跨客户端重放）
     if (!clientId.equals(storedClientId)) {
@@ -426,19 +439,26 @@ public class OAuth2Controller {
       grantedScope = resolveGrantedScope(clientId);
     }
 
-    // 8. 返回标准 OAuth2 响应（RFC 6749 §5.1）
-    return YdszResponse.success(
-        Map.of(
-            "access_token",
-            newAccessToken,
-            "refresh_token",
-            refreshToken,
-            "token_type",
-            "Bearer",
-            "expires_in",
-            properties.getTokenTtlSeconds(),
-            "scope",
-            grantedScope));
+    // 8. P1-2: OIDC — scope 含 openid 时签发 id_token（OpenID Connect Core 1.0）
+    Map<String, Object> tokenResponse = new HashMap<>();
+    tokenResponse.put("access_token", newAccessToken);
+    tokenResponse.put("refresh_token", refreshToken);
+    tokenResponse.put("token_type", "Bearer");
+    tokenResponse.put("expires_in", properties.getTokenTtlSeconds());
+    tokenResponse.put("scope", grantedScope);
+
+    if (grantedScope.contains(SCOPE_OPENID)) {
+      String idToken = tokenService.issueIdToken(userInfo, nonce, clientId);
+      if (idToken != null) {
+        tokenResponse.put("id_token", idToken);
+        log.info("OIDC id_token issued: clientId={}, userId={}", clientId, userId);
+      } else {
+        log.warn("OIDC id_token issuance failed: clientId={}, userId={}", clientId, userId);
+      }
+    }
+
+    // 9. 返回标准 OAuth2/OIDC 响应（RFC 6749 §5.1 + OIDC Core 1.0 §3.1.3.3）
+    return YdszResponse.success(tokenResponse);
   }
 
   /**

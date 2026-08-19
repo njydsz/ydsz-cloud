@@ -69,6 +69,14 @@ public class SocialAuthProperties {
 
     /** OAuth2 授权范围（scope，格式依平台而定） */
     private String scope;
+
+    /**
+     * 平台回调地址（redirectUri）。
+     *
+     * <p>授权完成后平台重定向回应用的完整 URL，如 {@code https://example.com/api/v1/auth/social/callback/dingtalk}。
+     * 必须与平台管理后台注册的回调地址完全一致，否则授权平台会拒绝请求。
+     */
+    private String redirectUri;
   }
 
   /**

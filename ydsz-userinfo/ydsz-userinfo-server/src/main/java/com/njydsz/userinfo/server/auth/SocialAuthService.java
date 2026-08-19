@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.dto.SocialAccountCreateDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.SocialAccountRepository;
@@ -37,9 +38,16 @@ import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 @RequiredArgsConstructor
 public class SocialAuthService {
 
+  /** State Redis Key 前缀（用于 CSRF 防护） */
+  private static final String STATE_KEY_PREFIX = "userinfo:social:state:";
+
+  /** State 有效期（秒）：10 分钟 */
+  private static final long STATE_TTL_SECONDS = 600;
+
   private final SocialAuthProperties socialAuthProperties;
   private final SocialAccountRepository socialAccountRepository;
   private final Map<String, SocialAuthProvider> socialAuthProviderMap;
+  private final RedisStringOps redisStringOps;
 
   /**
    * 生成指定平台的授权 URL。
@@ -74,8 +82,14 @@ public class SocialAuthService {
     checkSocialAuthEnabled();
     SocialAuthProvider provider = getProviderOrThrow(platform);
 
+    // 校验 state 防止 CSRF 攻击
+    if (!validateState(state)) {
+      log.warn("Social auth CSRF check failed: platform={}, state={}", platform, state);
+      throw new BusinessException(UserInfoExceptionCode.SOCIAL_AUTH_CSRF_FAILED);
+    }
+
     try {
-      // 换取访问令牌
+      // 换取访问令牌（redirectUri 必须与 authorize 时保持一致）
       var token = provider.exchangeToken(code, getRedirectUri(platform));
       // 获取社交用户信息
       SocialUserInfo userInfo = provider.getUserInfo(token);
@@ -220,17 +234,54 @@ public class SocialAuthService {
    */
   private String getRedirectUri(String platform) {
     SocialAuthProperties.ProviderConfig config = socialAuthProperties.getProvider(platform);
-    return config != null ? config.getScope() : null;
+    return config != null ? config.getRedirectUri() : null;
   }
 
   /**
-   * 生成防 CSRF 的随机状态码。
+   * 生成防 CSRF 的随机状态码，并存入 Redis 供回调校验。
    *
-   * <p>使用当前时间戳 + 随机数生成简单 state，生产环境应使用更安全的随机源并配合 Redis 存储校验。
+   * <p>state 值格式为 {@code social:state:{random}}，Redis TTL 10 分钟。
+   * 回调时通过 {@link #validateState(String)} 校验并一次性消费。
    *
    * @return 随机状态码
    */
   private String generateState() {
-    return System.currentTimeMillis() + "-" + java.util.concurrent.ThreadLocalRandom.current().nextInt(100000, 999999);
+    String state = java.util.UUID.randomUUID().toString().replace("-", "");
+    try {
+      redisStringOps.set(
+          STATE_KEY_PREFIX + state,
+          "1",
+          STATE_TTL_SECONDS);
+    } catch (Exception e) {
+      log.warn("Failed to store state in Redis: state={}, error={}", state, e.getMessage(), e);
+    }
+    return state;
+  }
+
+  /**
+   * 校验并消费 state（一次性）。
+   *
+   * <p>从 Redis 中删除 state，若删除成功表示 state 有效且未被使用过。
+   *
+   * @param state 回调携带的状态码
+   * @return true 表示 state 有效；false 表示无效或已消费
+   */
+  private boolean validateState(String state) {
+    if (state == null || state.isBlank()) {
+      return false;
+    }
+    try {
+      String key = STATE_KEY_PREFIX + state;
+      String value = redisStringOps.get(key, String.class);
+      if (value != null) {
+        redisStringOps.del(key);
+        return true;
+      }
+      log.warn("State validation failed: state not found or already consumed, state={}", state);
+      return false;
+    } catch (Exception e) {
+      log.warn("Failed to validate state from Redis: state={}, error={}", state, e.getMessage(), e);
+      return false;
+    }
   }
 }

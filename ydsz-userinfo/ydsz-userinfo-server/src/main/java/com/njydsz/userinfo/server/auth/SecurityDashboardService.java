@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
-import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
 import com.njydsz.userinfo.domain.vo.LoginFailDistributionVO;
@@ -222,21 +221,37 @@ public class SecurityDashboardService {
   /**
    * 获取风险等级分布。
    *
-   * <p>按风险等级（高/中/低）聚合用户数量。
+   * <p>基于数据库实时数据评估用户风险等级：
+   *
+   * <ul>
+   *   <li><b>高风险</b>：当前处于锁定或封禁状态的用户</li>
+   *   <li><b>中风险</b>：近 24 小时内至少有一次登录失败记录的用户（去重）</li>
+   *   <li><b>低风险</b>：总启用用户数 - 高风险 - 中风险</li>
+   * </ul>
    *
    * @return 风险等级分布
    */
   public RiskLevelDistributionVO getRiskLevelDistribution() {
-    // 基于用户登录失败次数和锁定状态评估风险等级
     // 高风险：当前被锁定或封禁的用户
-    // 中风险：近期有登录失败记录的用户
-    // 低风险：正常用户
+    long lockedUsers = countLockedUsers();
+    long bannedUsers = countBannedUsers();
+    long highRisk = lockedUsers + bannedUsers;
 
-    int highRisk = countHighRiskUsers();
-    int mediumRisk = countMediumRiskUsers();
-    int lowRisk = countLowRiskUsers();
+    // 中风险：近 24 小时内有登录失败记录的去重用户数
+    LocalDateTime dayStart = LocalDateTime.now().minusHours(24);
+    LocalDateTime dayEnd = LocalDateTime.now();
+    long mediumRisk = 0;
+    try {
+      mediumRisk = userLoginHistoryRepository.countDistinctUsersWithFailures(dayStart, dayEnd);
+    } catch (Exception e) {
+      log.warn("Failed to count users with recent failures: {}", e.getMessage(), e);
+    }
 
-    return new RiskLevelDistributionVO(highRisk, mediumRisk, lowRisk);
+    // 低风险：总启用用户数 - 高风险 - 中风险
+    long totalUsers = userAccountRepository.count(new UserAccountPageQueryDTO());
+    long lowRisk = Math.max(totalUsers - highRisk - mediumRisk, 0);
+
+    return new RiskLevelDistributionVO((int) highRisk, (int) mediumRisk, (int) lowRisk);
   }
 
   /**
@@ -596,56 +611,7 @@ public class SecurityDashboardService {
     return 0;
   }
 
-  /**
-   * 统计高风险用户数。
-   *
-   * @return 高风险用户数
-   */
-  private int countHighRiskUsers() {
-    try {
-      String countStr = redisStringOps.get("userinfo:security:risk:high", String.class);
-      if (countStr != null && !countStr.isBlank()) {
-        return Integer.parseInt(countStr);
-      }
-    } catch (Exception e) {
-      log.warn("Failed to read high risk user count, error={}", e.getMessage(), e);
-    }
-    return 0;
-  }
-
-  /**
-   * 统计中风险用户数。
-   *
-   * @return 中风险用户数
-   */
-  private int countMediumRiskUsers() {
-    try {
-      String countStr = redisStringOps.get("userinfo:security:risk:medium", String.class);
-      if (countStr != null && !countStr.isBlank()) {
-        return Integer.parseInt(countStr);
-      }
-    } catch (Exception e) {
-      log.warn("Failed to read medium risk user count, error={}", e.getMessage(), e);
-    }
-    return 0;
-  }
-
-  /**
-   * 统计低风险用户数。
-   *
-   * @return 低风险用户数
-   */
-  private int countLowRiskUsers() {
-    try {
-      String countStr = redisStringOps.get("userinfo:security:risk:low", String.class);
-      if (countStr != null && !countStr.isBlank()) {
-        return Integer.parseInt(countStr);
-      }
-    } catch (Exception e) {
-      log.warn("Failed to read low risk user count, error={}", e.getMessage(), e);
-    }
-    return 0;
-  }
+  // ==================== 私有辅助方法 ====================
 
   /**
    * 查询指定时间之后的最近登录失败记录。

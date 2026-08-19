@@ -81,4 +81,15 @@ public interface UserLoginHistoryRepository {
    * @return 登录失败记录列表
    */
   List<UserLoginHistoryVO> findRecentFailedLogins(LocalDateTime since, int limit);
+
+  /**
+   * 统计指定时间范围内有登录失败记录的去重用户数。
+   *
+   * <p>用于安全仪表盘风险等级分布（中风险）统计，返回在指定时间范围内至少有一次登录失败的去重用户数量。
+   *
+   * @param startTime 起始时间（含）
+   * @param endTime 结束时间（含）
+   * @return 有登录失败记录的去重用户数
+   */
+  long countDistinctUsersWithFailures(LocalDateTime startTime, LocalDateTime endTime);
 }

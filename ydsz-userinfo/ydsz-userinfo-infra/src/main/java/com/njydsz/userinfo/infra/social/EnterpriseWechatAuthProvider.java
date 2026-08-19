@@ -3,18 +3,16 @@ package com.njydsz.userinfo.infra.social;
 import java.util.HashMap;
 import java.util.Map;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 import com.njydsz.userinfo.domain.social.SocialAccessToken;
 import com.njydsz.userinfo.domain.social.SocialAuthException;
-import com.njydsz.userinfo.domain.social.SocialAuthProvider;
 import com.njydsz.userinfo.domain.social.SocialUserInfo;
-import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 
 /**
- * 企业微信 OAuth2 认证提供者
+ * 企业微信 OAuth2 认证提供者。
  *
  * <p>实现企业微信扫码登录流程：
  *
@@ -34,30 +32,33 @@ import com.njydsz.userinfo.domain.config.SocialAuthProperties;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class EnterpriseWechatAuthProvider implements SocialAuthProvider {
+public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
 
   /** 企业微信平台标识 */
   private static final String PLATFORM = "ENTERPRISE_WECHAT";
 
   /** 企业微信授权端点 */
-  private static final String AUTHORIZE_URL =
-      "https://open.work.weixin.qq.com/wwopen/sso/3rd_qrConnect";
+  private static final String AUTHORIZE_URL = "https://open.work.weixin.qq.com/wwopen/sso/3rd_qrConnect";
 
   /** 企业微信令牌端点 */
-  private static final String ACCESS_TOKEN_URL =
-      "https://qyapi.weixin.qq.com/cgi-bin/gettoken";
+  private static final String ACCESS_TOKEN_URL = "https://qyapi.weixin.qq.com/cgi-bin/gettoken";
 
   /** 企业微信用户信息端点 */
-  private static final String USER_INFO_URL =
-      "https://qyapi.weixin.qq.com/cgi-bin/user/getuserinfo";
+  private static final String USER_INFO_URL = "https://qyapi.weixin.qq.com/cgi-bin/user/getuserinfo";
 
   /** 企业微信用户详情端点 */
-  private static final String USER_DETAIL_URL =
-      "https://qyapi.weixin.qq.com/cgi-bin/user/get";
+  private static final String USER_DETAIL_URL = "https://qyapi.weixin.qq.com/cgi-bin/user/get";
 
-  private final SocialAuthProperties socialAuthProperties;
-  private final JustAuthHttpClient httpClient;
+  /**
+   * 构造企业微信认证提供者。
+   *
+   * @param socialAuthProperties 社交认证配置
+   * @param httpClient HTTP 客户端
+   */
+  public EnterpriseWechatAuthProvider(SocialAuthProperties socialAuthProperties,
+      JustAuthHttpClient httpClient) {
+    super(socialAuthProperties, httpClient);
+  }
 
   @Override
   public String getPlatform() {
@@ -66,8 +67,7 @@ public class EnterpriseWechatAuthProvider implements SocialAuthProvider {
 
   @Override
   public String authorize(String state, String redirectUri) {
-    SocialAuthProperties.ProviderConfig config =
-        socialAuthProperties.getProvider(PLATFORM.toLowerCase());
+    SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
       throw new SocialAuthException("企业微信配置未找到");
     }
@@ -76,11 +76,10 @@ public class EnterpriseWechatAuthProvider implements SocialAuthProvider {
     String agentId = config.getScope(); // 企业微信使用 scope 字段存储 agentid
 
     String url = AUTHORIZE_URL
-        + "?appid=" + java.net.URLEncoder.encode(appId, java.nio.charset.StandardCharsets.UTF_8)
-        + "&agentid=" + java.net.URLEncoder.encode(agentId, java.nio.charset.StandardCharsets.UTF_8)
-        + "&redirect_uri=" + java.net.URLEncoder.encode(redirectUri,
-            java.nio.charset.StandardCharsets.UTF_8)
-        + "&state=" + java.net.URLEncoder.encode(state, java.nio.charset.StandardCharsets.UTF_8);
+        + "?appid=" + urlEncode(appId)
+        + "&agentid=" + urlEncode(agentId)
+        + "&redirect_uri=" + urlEncode(redirectUri)
+        + "&state=" + urlEncode(state);
 
     log.debug("企业微信授权 URL 已生成: appId={}", appId);
     return url;
@@ -88,8 +87,7 @@ public class EnterpriseWechatAuthProvider implements SocialAuthProvider {
 
   @Override
   public SocialAccessToken exchangeToken(String code, String redirectUri) {
-    SocialAuthProperties.ProviderConfig config =
-        socialAuthProperties.getProvider(PLATFORM.toLowerCase());
+    SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
       throw new SocialAuthException("企业微信配置未找到");
     }
@@ -101,10 +99,10 @@ public class EnterpriseWechatAuthProvider implements SocialAuthProvider {
 
     Map<String, Object> tokenResponse = httpClient.postFormForMap(ACCESS_TOKEN_URL, tokenParams);
 
-    String accessToken = getStringValue(tokenResponse, "access_token");
+    String accessToken = getStr(tokenResponse, "access_token");
     if (accessToken == null || accessToken.isBlank()) {
-      int errcode = getIntValue(tokenResponse, "errcode", -1);
-      String errmsg = getStringValue(tokenResponse, "errmsg");
+      int errcode = getInt(tokenResponse, "errcode", -1);
+      String errmsg = getStr(tokenResponse, "errmsg");
       throw new SocialAuthException("企业微信获取 access_token 失败: " + errcode + " - " + errmsg);
     }
 
@@ -115,23 +113,17 @@ public class EnterpriseWechatAuthProvider implements SocialAuthProvider {
 
     Map<String, Object> userResponse = httpClient.getForMap(USER_INFO_URL, null, userParams);
 
-    String userId = getStringValue(userResponse, "UserId");
+    String userId = getStr(userResponse, "UserId");
     if (userId == null || userId.isBlank()) {
       throw new SocialAuthException("企业微信获取用户信息失败: 未返回 UserId");
     }
 
-    return new SocialAccessToken(
-        accessToken,
-        null,
-        7200,
-        userId,
-        null);
+    return new SocialAccessToken(accessToken, null, 7200, userId, null);
   }
 
   @Override
   public SocialUserInfo getUserInfo(SocialAccessToken token) {
-    SocialAuthProperties.ProviderConfig config =
-        socialAuthProperties.getProvider(PLATFORM.toLowerCase());
+    SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
       throw new SocialAuthException("企业微信配置未找到");
     }
@@ -143,45 +135,12 @@ public class EnterpriseWechatAuthProvider implements SocialAuthProvider {
 
     Map<String, Object> detailResponse = httpClient.getForMap(USER_DETAIL_URL, null, params);
 
-    String name = getStringValue(detailResponse, "name");
-    String avatar = getStringValue(detailResponse, "avatar");
-    String email = getStringValue(detailResponse, "email");
-    String mobile = getStringValue(detailResponse, "mobile");
+    String name = getStr(detailResponse, "name");
+    String avatar = getStr(detailResponse, "avatar");
+    String email = getStr(detailResponse, "email");
+    String mobile = getStr(detailResponse, "mobile");
 
     return new SocialUserInfo(
-        token.openId(),
-        null,
-        name,
-        avatar,
-        email != null ? email : mobile,
-        PLATFORM);
-  }
-
-  /**
-   * 从响应 Map 中获取字符串值
-   *
-   * @param map 响应 Map
-   * @param key 键
-   * @return 值，不存在返回 null
-   */
-  private String getStringValue(Map<String, Object> map, String key) {
-    Object value = map.get(key);
-    return value != null ? value.toString() : null;
-  }
-
-  /**
-   * 从响应 Map 中获取整数值
-   *
-   * @param map 响应 Map
-   * @param key 键
-   * @param defaultValue 默认值
-   * @return 值
-   */
-  private int getIntValue(Map<String, Object> map, String key, int defaultValue) {
-    Object value = map.get(key);
-    if (value instanceof Number) {
-      return ((Number) value).intValue();
-    }
-    return defaultValue;
+        token.openId(), null, name, avatar, email != null ? email : mobile, PLATFORM);
   }
 }
