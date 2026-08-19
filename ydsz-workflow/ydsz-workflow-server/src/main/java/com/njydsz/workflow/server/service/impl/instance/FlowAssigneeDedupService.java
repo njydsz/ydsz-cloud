@@ -112,7 +112,7 @@ public class FlowAssigneeDedupService {
       return false;
     }
     try {
-      // TODO: 迁移至 hisTaskRepository.findCompletedAssigneeIds(instanceId)，需补齐方法
+      // 保留 Mapper：自定义 SQL 操作，Repository 暂无 selectCompletedAssigneeIds 方法
       List<String> completedAssignees = hisTaskMapper.selectCompletedAssigneeIds(instanceId);
       if (completedAssignees == null || completedAssignees.isEmpty()) {
         return false;
@@ -144,7 +144,7 @@ public class FlowAssigneeDedupService {
       return new HashSet<>();
     }
     try {
-      // TODO: 迁移至 hisTaskRepository.findCompletedAssigneeIds(instanceId)，需补齐方法
+      // 保留 Mapper：自定义 SQL 操作，Repository 暂无 selectCompletedAssigneeIds 方法
       List<String> completedAssignees = hisTaskMapper.selectCompletedAssigneeIds(instanceId);
       return completedAssignees != null ? new HashSet<>(completedAssignees) : new HashSet<>();
     } catch (Exception e) {

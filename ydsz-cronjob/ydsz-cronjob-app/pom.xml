@@ -25,6 +25,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-cronjob-domain</artifactId>
         </dependency>
+        <!-- P0-FIX: CronjobAppHealthIndicator 使用 actuator HealthIndicator，补充依赖（与 server 模块一致） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

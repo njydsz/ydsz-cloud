@@ -273,6 +273,45 @@ public final class NextwikiDTOs {
     private Integer maxLength;
   }
 
+  /**
+   * 批量排序条目。
+   *
+   * <p>拖拽排序场景：前端传多个节点的新排序值，服务端批量更新。
+   */
+  @Data
+  @NoArgsConstructor
+  @Schema(description = "排序条目")
+  public static class SortItem implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Schema(description = "文件节点ID")
+    @NotBlank(message = "节点ID不能为空")
+    private String nodeId;
+
+    @Schema(description = "排序值（升序排列，值越小越靠前）")
+    @NotNull(message = "排序值不能为空")
+    private Integer sort;
+  }
+
+  /**
+   * 批量排序请求（P1-5：拖拽排序 API 请求体）。
+   *
+   * <p>前端拖拽完成后提交完整的排序列表，服务端批量更新 sort 字段。
+   */
+  @Data
+  @Schema(description = "批量排序请求")
+  public static class BatchSortRequest implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Schema(description = "排序条目列表（按目标顺序排列）")
+    @NotNull(message = "排序列表不能为空")
+    @Size(min = 1, message = "至少包含一个节点")
+    private List<SortItem> items;
+
+    @Schema(description = "父目录 ID（用于权限校验与缓存失效）")
+    private String parentId;
+  }
+
   /** AI 摘要结果 DTO */
   @Data
   @NoArgsConstructor

@@ -14,6 +14,7 @@ import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.agent.domain.model.CostEstimate;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
@@ -83,6 +84,9 @@ public class ChatService {
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
+  /** Token 预计算与成本核算 */
+  private final TokenCostCalculator tokenCostCalculator;
+
   public ChatService(
       LlmClient llmClient,
       ConversationMemory memory,
@@ -93,7 +97,8 @@ public class ChatService {
       CostAnalysisService costAnalysisService,
       TraceRecorder traceRecorder,
       DomainEventPublisher eventPublisher,
-      SnowflakeIdGenerator snowflakeIdGenerator) {
+      SnowflakeIdGenerator snowflakeIdGenerator,
+      TokenCostCalculator tokenCostCalculator) {
     this.llmClient = llmClient;
     this.memory = memory;
     this.properties = properties;
@@ -104,6 +109,7 @@ public class ChatService {
     this.traceRecorder = traceRecorder;
     this.eventPublisher = eventPublisher;
     this.snowflakeIdGenerator = snowflakeIdGenerator;
+    this.tokenCostCalculator = tokenCostCalculator;
   }
 
   /**
@@ -165,6 +171,14 @@ public class ChatService {
             .maxTokens(properties.getLlm().getMaxTokens())
             .build();
 
+    // P0: 调用前 Token 预计算 — 估算成本供配额预检与前端展示
+    CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
+    LOG.info(
+        "[Chat] 成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
+        convId,
+        estimatedCost.getEstimatedTotalTokens(),
+        estimatedCost.getEstimatedCostUsd());
+
     String model = properties.getLlm().getDefaultModel();
     String provider = llmClient.getProvider();
     long startTime = System.currentTimeMillis();
@@ -187,9 +201,17 @@ public class ChatService {
     }
     long duration = System.currentTimeMillis() - startTime;
     metrics.recordLlmCall(provider, model, duration, response, null);
+
+    // P0: 调用后精确成本核算
+    CostEstimate actualCost = tokenCostCalculator.calculateActual(response.getUsage(), model);
     if (response.getUsage() != null && costAnalysisService != null) {
       costAnalysisService.recordUsage(convId, model, response.getUsage());
     }
+    LOG.info(
+        "[Chat] 成本核算: convId={}, actualTokens={}, actualCostUsd={}",
+        convId,
+        actualCost.getActualTotalTokens(),
+        actualCost.getActualCostUsd());
     traceRecorder.recordStep(traceId, "LLM_CALL", "Chat LLM call", request, response, duration);
 
     String output = guardrailService.applyOutputGuardrails(response.getContent());
@@ -200,9 +222,10 @@ public class ChatService {
     runtimeMetrics.recordExecution("simple", true, duration);
 
     LOG.info(
-        "[Chat] 对话完成: convId={}, tokens={}",
+        "[Chat] 对话完成: convId={}, tokens={}, costUsd={}",
         convId,
-        response.getUsage() != null ? response.getUsage().getTotalTokens() : 0);
+        response.getUsage() != null ? response.getUsage().getTotalTokens() : 0,
+        actualCost.getActualCostUsd());
     traceRecorder.endTrace(traceId, "SUCCESS");
     eventPublisher.publish(
         DomainEvent.builder()
@@ -210,6 +233,7 @@ public class ChatService {
             .aggregateId(convId)
             .eventType(DomainEventTypes.CONVERSATION_CREATED)
             .metadata("model", response.getModel())
+            .metadata("costUsd", String.valueOf(actualCost.getActualCostUsd()))
             .build());
     return new ChatResponse(
         response.getId(),
@@ -217,7 +241,8 @@ public class ChatService {
         assistantMsg,
         response.getUsage(),
         response.getFinishReason(),
-        List.of());
+        List.of(),
+        actualCost);
   }
 
   /**
@@ -280,6 +305,14 @@ public class ChatService {
             .maxTokens(properties.getLlm().getMaxTokens())
             .stream(true)
             .build();
+
+    // P0: 调用前 Token 预计算 — 估算成本供配额预检与前端展示
+    CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
+    LOG.info(
+        "[Chat-Stream] 成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
+        convId,
+        estimatedCost.getEstimatedTotalTokens(),
+        estimatedCost.getEstimatedCostUsd());
 
     String model = properties.getLlm().getDefaultModel();
     String provider = llmClient.getProvider();

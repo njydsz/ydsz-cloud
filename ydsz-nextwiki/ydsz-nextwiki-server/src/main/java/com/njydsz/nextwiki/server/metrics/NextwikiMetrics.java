@@ -176,6 +176,46 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
     quotaCheckFailureCounter.increment();
   }
 
+  // ==================== Counter：缓存命中/未命中 ====================
+
+  /**
+   * 记录一次缓存命中，累加 {@code ydsz_nextwiki_cache_hit_total}。
+   *
+   * <p>在 {@link com.njydsz.nextwiki.server.cache.NextwikiCacheService} 查询到缓存命中时调用。
+   *
+   * @param cacheType 缓存类型（file / children / quota 等）
+   */
+  public void recordCacheHit(String cacheType) {
+    try {
+      Counter.builder("ydsz_nextwiki_cache_hit_total")
+          .description("缓存命中次数")
+          .tags("cache_type", cacheType != null ? cacheType : "unknown")
+          .register(meterRegistry)
+          .increment();
+    } catch (Exception e) {
+      log.warn("[NextwikiMetrics] 记录缓存命中失败: err={}", e.getMessage());
+    }
+  }
+
+  /**
+   * 记录一次缓存未命中，累加 {@code ydsz_nextwiki_cache_miss_total}。
+   *
+   * <p>在 {@link com.njydsz.nextwiki.server.cache.NextwikiCacheService} 缓存未命中需要回查 DB 时调用。
+   *
+   * @param cacheType 缓存类型（file / children / quota 等）
+   */
+  public void recordCacheMiss(String cacheType) {
+    try {
+      Counter.builder("ydsz_nextwiki_cache_miss_total")
+          .description("缓存未命中次数")
+          .tags("cache_type", cacheType != null ? cacheType : "unknown")
+          .register(meterRegistry)
+          .increment();
+    } catch (Exception e) {
+      log.warn("[NextwikiMetrics] 记录缓存未命中失败: err={}", e.getMessage());
+    }
+  }
+
   // ==================== Timer：操作耗时 ====================
 
   /**

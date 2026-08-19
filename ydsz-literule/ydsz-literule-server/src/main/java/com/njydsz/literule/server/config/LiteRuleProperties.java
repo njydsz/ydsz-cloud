@@ -250,6 +250,16 @@ public class LiteRuleProperties {
   private FactConfig fact = new FactConfig();
 
   /**
+   * 注入线程池配置（P1-3）
+   *
+   * <p>控制事实采集和模型注入并行执行的线程池大小。
+   * 默认值根据 CPU 核数动态计算，确保在不同规格机器上都能获得合理的并发度。
+   *
+   * @since 1.0.0
+   */
+  private InjectionConfig injection = new InjectionConfig();
+
+  /**
    * 高性能优化配置（P2-3）
    *
    * <p>控制评估结果缓存与规则分组并行评估。

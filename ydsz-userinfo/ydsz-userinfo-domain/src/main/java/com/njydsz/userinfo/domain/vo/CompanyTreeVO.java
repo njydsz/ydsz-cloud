@@ -2,7 +2,6 @@ package com.njydsz.userinfo.domain.vo;
 
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -19,56 +18,47 @@ import lombok.Data;
  *   <li>{@code path} — 节点路径（如 "/1/5/12/"）
  * </ul>
  *
+ * <p><b>架构说明：</b>本类仅保留纯业务字段，Swagger 注解下沉至 Web 层的 CompanyTreeResponse DTO，
+ * 避免 domain 层对 swagger-annotations 的编译期依赖（符合 DDD 分层纯净性约束）。
+ *
  * @author ydsz-team
  * @since 1.7.0
  * @see CompanyVO 扁平结构 VO
  * @see com.njydsz.common.domain.tree.TreeBuilder 通用树构建器
  */
 @Data
-@Schema(description = "公司树形结构")
 public class CompanyTreeVO {
 
   /** 公司唯一标识 */
-  @Schema(description = "公司唯一标识")
   private String id;
 
   /** 上级公司 ID（顶级公司为 "0" 或 null） */
-  @Schema(description = "上级公司 ID")
   private String parentId;
 
   /** 子公司列表 */
-  @Schema(description = "子公司列表")
   private List<CompanyTreeVO> children;
 
   /** 层级深度（根节点=1，由 TreeBuilder 自动填充） */
-  @Schema(description = "层级深度")
   private Integer level;
 
   /** 节点路径（如 "/1/5/12/"，由 TreeBuilder 自动填充） */
-  @Schema(description = "节点路径")
   private String path;
 
   /** 公司名称（前端展示） */
-  @Schema(description = "公司名称")
   private String companyName;
 
   /** 公司编码（业务侧引用，全局唯一） */
-  @Schema(description = "公司编码")
   private String companyCode;
 
   /** 联系人姓名 */
-  @Schema(description = "联系人")
   private String contactPerson;
 
   /** 联系电话 */
-  @Schema(description = "联系电话")
   private String contactPhone;
 
   /** 注册地址 */
-  @Schema(description = "地址")
   private String address;
 
   /** 启用状态（ENABLED / DISABLED） */
-  @Schema(description = "状态")
   private String status;
 }

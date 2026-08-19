@@ -3,6 +3,8 @@ package com.njydsz.nextwiki.server.cache;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +14,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
+import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
 
 /**
  * NextWiki 缓存服务
@@ -21,9 +24,9 @@ import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
  * <p><b>缓存策略：</b>
  *
  * <ul>
- *   <li>文件详情：key={@code nw:file:{nodeId}}，TTL 10 分钟
- *   <li>目录列表：key={@code nw:children:{parentId}}，TTL 5 分钟
- *   <li>配额用量：key={@code nw:quota:{scopeType}:{scopeId}}，TTL 3 分钟
+ *   <li>文件详情：key={@code nw:file:{nodeId}}，TTL 10 分钟（±10% 随机偏移）
+ *   <li>目录列表：key={@code nw:children:{parentId}}，TTL 5 分钟（±10% 随机偏移）
+ *   <li>配额用量：key={@code nw:quota:{scopeType}:{scopeId}}，TTL 3 分钟（±10% 随机偏移）
  * </ul>
  *
  * <p><b>缓存失效：</b>
@@ -33,11 +36,12 @@ import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
  *   <li>配额变更（上传/删除/恢复） → 失效对应用户配额
  * </ul>
  *
- * <p><b>防穿透/雪崩：</b>
+ * <p><b>防穿透/雪崩：（P1-4 增强）</b>
  *
  * <ul>
  *   <li>空值不缓存（文件/配额不存在时直接返回，避免缓存污染）
- *   <li>TTL 固定 + 随机偏移（RedisStringOps 内置）
+ *   <li>TTL 固定 + 随机偏移（避免集中过期）
+ *   <li>互斥锁防穿透：缓存未命中时通过分布式锁控制单线程回查 DB，防止缓存击穿
  * </ul>
  *
  * @author ydsz-team
@@ -57,6 +61,9 @@ public class NextwikiCacheService {
   /** 配额用量缓存前缀 */
   private static final String KEY_QUOTA = "nw:quota:";
 
+  /** 缓存互斥锁前缀（防穿透） */
+  private static final String KEY_LOCK = "nw:lock:";
+
   /** 文件详情缓存 TTL（秒） */
   private static final long TTL_FILE = 600;
 
@@ -66,7 +73,14 @@ public class NextwikiCacheService {
   /** 配额用量缓存 TTL（秒） */
   private static final long TTL_QUOTA = 180;
 
+  /** 互斥锁等待超时（毫秒） */
+  private static final long LOCK_WAIT_MS = 3000;
+
+  /** 互斥锁持有超时（秒） */
+  private static final long LOCK_LEASE_S = 10;
+
   private final RedisStringOps redisStringOps;
+  private final NextwikiMetrics nextwikiMetrics;
 
   // ==================== 文件详情缓存 ====================
 
@@ -75,32 +89,89 @@ public class NextwikiCacheService {
    *
    * <p>缓存未命中时通过 {@code loader} 从数据库加载并回填缓存。
    *
+   * <p><b>P1-4 防穿透优化：</b>
+   *
+   * <ol>
+   *   <li>先查缓存，命中直接返回
+   *   <li>未命中则尝试获取互斥锁（{@code nw:file:{nodeId}:lock}）
+   *   <li>获锁成功 → 二次查缓存（双重检查） → DB 回查 → 回填缓存 → 释放锁
+   *   <li>获锁失败 → 等待后重读缓存（其他线程已回查）
+   * </ol>
+   *
    * @param nodeId 文件节点 ID
    * @param loader 数据库加载函数
    * @return 文件节点 VO；不存在返回 {@code Optional.empty()}
    */
   public Optional<FileNodeVO> getFile(String nodeId, java.util.function.Supplier<Optional<FileNodeVO>> loader) {
     String key = KEY_FILE + nodeId;
+    String lockKey = KEY_LOCK + "file:" + nodeId;
     try {
       FileNodeVO cached = redisStringOps.get(key, FileNodeVO.class);
       if (cached != null) {
         log.debug("[NextwikiCacheService] 文件详情缓存命中: nodeId={}", nodeId);
+        nextwikiMetrics.recordCacheHit("file");
         return Optional.of(cached);
       }
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] 文件详情缓存读取异常: nodeId={}, err={}", nodeId, e.getMessage());
     }
 
-    Optional<FileNodeVO> result = loader.get();
-    result.ifPresent(vo -> {
+   nextwikiMetrics.recordCacheMiss("file");
+
+    // P1-4：互斥锁防穿透
+    if (acquireLock(lockKey)) {
       try {
-        redisStringOps.set(key, vo, TTL_FILE);
-        log.debug("[NextwikiCacheService] 文件详情缓存回填: nodeId={}", nodeId);
-      } catch (Exception e) {
-        log.warn("[NextwikiCacheService] 文件详情缓存写入异常: nodeId={}, err={}", nodeId, e.getMessage());
+        // 双重检查：其他线程可能已回查
+        FileNodeVO doubleCheck = redisStringOps.get(key, FileNodeVO.class);
+        if (doubleCheck != null) {
+          log.debug("[NextwikiCacheService] 文件详情双重检查命中: nodeId={}", nodeId);
+          return Optional.of(doubleCheck);
+        }
+
+        Optional<FileNodeVO> result = loader.get();
+        result.ifPresent(vo -> {
+          try {
+            redisStringOps.set(key, vo, jitterTtl(TTL_FILE));
+            log.debug("[NextwikiCacheService] 文件详情缓存回填: nodeId={}", nodeId);
+          } catch (Exception e) {
+            log.warn("[NextwikiCacheService] 文件详情缓存写入异常: nodeId={}, err={}", nodeId, e.getMessage());
+          }
+        });
+        return result;
+      } finally {
+        releaseLock(lockKey);
       }
-    });
-    return result;
+    }
+
+    // 未获锁，等待后重读缓存
+    return waitForCache(key, lockKey);
+  }
+
+  /**
+   * 等待其他线程回填缓存后重读。
+   *
+   * @param key 缓存键
+   * @param lockKey 锁键
+   * @return 缓存值或 {@code Optional.empty()}
+   */
+  private Optional<FileNodeVO> waitForCache(String key, String lockKey) {
+    long deadline = System.currentTimeMillis() + LOCK_WAIT_MS;
+    while (System.currentTimeMillis() < deadline) {
+      try {
+        FileNodeVO cached = redisStringOps.get(key, FileNodeVO.class);
+        if (cached != null) {
+          return Optional.of(cached);
+        }
+        Thread.sleep(50);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        break;
+      } catch (Exception e) {
+        log.warn("[NextwikiCacheService] 等待缓存异常: lockKey={}, err={}", lockKey, e.getMessage());
+        break;
+      }
+    }
+    return Optional.empty();
   }
 
   /**
@@ -130,12 +201,14 @@ public class NextwikiCacheService {
    */
   public List<FileNodeVO> getChildren(String parentId, java.util.function.Supplier<List<FileNodeVO>> loader) {
     String key = KEY_CHILDREN + parentId;
+    String lockKey = KEY_LOCK + "children:" + parentId;
     try {
       String json = redisStringOps.get(key, String.class);
       if (json != null && !json.isEmpty()) {
         List<FileNodeVO> cached = YdszJson.fromJson(json, List.class, FileNodeVO.class);
         if (cached != null && !cached.isEmpty()) {
           log.debug("[NextwikiCacheService] 目录列表缓存命中: parentId={}, size={}", parentId, cached.size());
+          nextwikiMetrics.recordCacheHit("children");
           return cached;
         }
       }
@@ -143,16 +216,65 @@ public class NextwikiCacheService {
       log.warn("[NextwikiCacheService] 目录列表缓存读取异常: parentId={}, err={}", parentId, e.getMessage());
     }
 
-    List<FileNodeVO> result = loader.get();
-    if (result != null && !result.isEmpty()) {
+    nextwikiMetrics.recordCacheMiss("children");
+
+    // P1-4：互斥锁防穿透
+    if (acquireLock(lockKey)) {
       try {
-        redisStringOps.set(key, YdszJson.toJson(result), TTL_CHILDREN);
-        log.debug("[NextwikiCacheService] 目录列表缓存回填: parentId={}, size={}", parentId, result.size());
-      } catch (Exception e) {
-        log.warn("[NextwikiCacheService] 目录列表缓存写入异常: parentId={}, err={}", parentId, e.getMessage());
+        String jsonCheck = redisStringOps.get(key, String.class);
+        if (jsonCheck != null && !jsonCheck.isEmpty()) {
+          List<FileNodeVO> doubleCheck = YdszJson.fromJson(jsonCheck, List.class, FileNodeVO.class);
+          if (doubleCheck != null && !doubleCheck.isEmpty()) {
+            return doubleCheck;
+          }
+        }
+
+        List<FileNodeVO> result = loader.get();
+        if (result != null && !result.isEmpty()) {
+          try {
+            redisStringOps.set(key, YdszJson.toJson(result), jitterTtl(TTL_CHILDREN));
+            log.debug("[NextwikiCacheService] 目录列表缓存回填: parentId={}, size={}", parentId, result.size());
+          } catch (Exception e) {
+            log.warn("[NextwikiCacheService] 目录列表缓存写入异常: parentId={}, err={}", parentId, e.getMessage());
+          }
+        }
+        return result != null ? result : Collections.emptyList();
+      } finally {
+        releaseLock(lockKey);
       }
     }
-    return result != null ? result : Collections.emptyList();
+
+    return waitForChildrenCache(key, lockKey);
+  }
+
+  /**
+   * 等待其他线程回填目录列表缓存后重读。
+   *
+   * @param key 缓存键
+   * @param lockKey 锁键
+   * @return 子节点列表
+   */
+  private List<FileNodeVO> waitForChildrenCache(String key, String lockKey) {
+    long deadline = System.currentTimeMillis() + LOCK_WAIT_MS;
+    while (System.currentTimeMillis() < deadline) {
+      try {
+        String json = redisStringOps.get(key, String.class);
+        if (json != null && !json.isEmpty()) {
+          List<FileNodeVO> cached = YdszJson.fromJson(json, List.class, FileNodeVO.class);
+          if (cached != null && !cached.isEmpty()) {
+            return cached;
+          }
+        }
+        Thread.sleep(50);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        break;
+      } catch (Exception e) {
+        log.warn("[NextwikiCacheService] 等待目录缓存异常: lockKey={}, err={}", lockKey, e.getMessage());
+        break;
+      }
+    }
+    return Collections.emptyList();
   }
 
   /**
@@ -184,26 +306,71 @@ public class NextwikiCacheService {
   public Optional<StorageQuotaVO> getQuota(String scopeType, String scopeId,
       java.util.function.Supplier<Optional<StorageQuotaVO>> loader) {
     String key = KEY_QUOTA + scopeType + ":" + scopeId;
+    String lockKey = KEY_LOCK + "quota:" + scopeType + ":" + scopeId;
     try {
       StorageQuotaVO cached = redisStringOps.get(key, StorageQuotaVO.class);
       if (cached != null) {
         log.debug("[NextwikiCacheService] 配额用量缓存命中: {}:{}", scopeType, scopeId);
+        nextwikiMetrics.recordCacheHit("quota");
         return Optional.of(cached);
       }
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] 配额用量缓存读取异常: {}:{}, err={}", scopeType, scopeId, e.getMessage());
     }
 
-    Optional<StorageQuotaVO> result = loader.get();
-    result.ifPresent(vo -> {
+    nextwikiMetrics.recordCacheMiss("quota");
+
+    // P1-4：互斥锁防穿透
+    if (acquireLock(lockKey)) {
       try {
-        redisStringOps.set(key, vo, TTL_QUOTA);
-        log.debug("[NextwikiCacheService] 配额用量缓存回填: {}:{}", scopeType, scopeId);
-      } catch (Exception e) {
-        log.warn("[NextwikiCacheService] 配额用量缓存写入异常: {}:{}, err={}", scopeType, scopeId, e.getMessage());
+        StorageQuotaVO doubleCheck = redisStringOps.get(key, StorageQuotaVO.class);
+        if (doubleCheck != null) {
+          return Optional.of(doubleCheck);
+        }
+
+        Optional<StorageQuotaVO> result = loader.get();
+        result.ifPresent(vo -> {
+          try {
+            redisStringOps.set(key, vo, jitterTtl(TTL_QUOTA));
+            log.debug("[NextwikiCacheService] 配额用量缓存回填: {}:{}", scopeType, scopeId);
+          } catch (Exception e) {
+            log.warn("[NextwikiCacheService] 配额用量缓存写入异常: {}:{}, err={}", scopeType, scopeId, e.getMessage());
+          }
+        });
+        return result;
+      } finally {
+        releaseLock(lockKey);
       }
-    });
-    return result;
+    }
+
+    return waitForQuotaCache(key, lockKey);
+  }
+
+  /**
+   * 等待其他线程回填配额缓存后重读。
+   *
+   * @param key 缓存键
+   * @param lockKey 锁键
+   * @return 缓存值或 {@code Optional.empty()}
+   */
+  private Optional<StorageQuotaVO> waitForQuotaCache(String key, String lockKey) {
+    long deadline = System.currentTimeMillis() + LOCK_WAIT_MS;
+    while (System.currentTimeMillis() < deadline) {
+      try {
+        StorageQuotaVO cached = redisStringOps.get(key, StorageQuotaVO.class);
+        if (cached != null) {
+          return Optional.of(cached);
+        }
+        Thread.sleep(50);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        break;
+      } catch (Exception e) {
+        log.warn("[NextwikiCacheService] 等待配额缓存异常: lockKey={}, err={}", lockKey, e.getMessage());
+        break;
+      }
+    }
+    return Optional.empty();
   }
 
   /**
@@ -282,7 +449,7 @@ public class NextwikiCacheService {
    */
   public void putAiSummary(String key, String summary, int ttlSeconds) {
     try {
-      redisStringOps.set(KEY_AI_SUMMARY + key, summary, ttlSeconds);
+      redisStringOps.set(KEY_AI_SUMMARY + key, summary, jitterTtl(ttlSeconds));
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] AI 摘要缓存写入异常: err={}", e.getMessage());
     }
@@ -315,9 +482,55 @@ public class NextwikiCacheService {
    */
   public void putAiKeywords(String key, List<String> keywords, int ttlSeconds) {
     try {
-      redisStringOps.set(KEY_AI_KEYWORDS + key, YdszJson.toJson(keywords), ttlSeconds);
+      redisStringOps.set(KEY_AI_KEYWORDS + key, YdszJson.toJson(keywords), jitterTtl(ttlSeconds));
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] AI 关键词缓存写入异常: err={}", e.getMessage());
     }
+  }
+
+  // ==================== 私有工具方法 ====================
+
+  /**
+   * 获取分布式互斥锁（防缓存穿透）。
+   *
+   * <p>使用 Redis SETNX + 过期时间实现互斥锁，仅一个线程能成功获锁执行 DB 回查。
+   *
+   * @param lockKey 锁键
+   * @return {@code true} 表示获锁成功
+   */
+  private boolean acquireLock(String lockKey) {
+    try {
+      return Boolean.TRUE.equals(redisStringOps.setIfAbsent(lockKey, "1", LOCK_LEASE_S, TimeUnit.SECONDS));
+    } catch (Exception e) {
+      log.warn("[NextwikiCacheService] 获取互斥锁异常: lockKey={}, err={}", lockKey, e.getMessage());
+      // 异常时放行（允许直接查 DB，避免因 Redis 故障导致服务不可用）
+      return true;
+    }
+  }
+
+  /**
+   * 释放分布式互斥锁。
+   *
+   * @param lockKey 锁键
+   */
+  private void releaseLock(String lockKey) {
+    try {
+      redisStringOps.delete(lockKey);
+    } catch (Exception e) {
+      log.warn("[NextwikiCacheService] 释放互斥锁异常: lockKey={}, err={}", lockKey, e.getMessage());
+    }
+  }
+
+  /**
+   * TTL 随机偏移（防雪崩）。
+   *
+   * <p>在基础 TTL 上增加 ±10% 的随机偏移，避免同类 key 集中过期。
+   *
+   * @param baseTtl 基础 TTL（秒）
+   * @return 偏移后的 TTL
+   */
+  private long jitterTtl(long baseTtl) {
+    long jitter = ThreadLocalRandom.current().nextLong(baseTtl / 10);
+    return baseTtl + jitter - (baseTtl / 20);
   }
 }

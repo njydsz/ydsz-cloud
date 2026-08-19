@@ -11,6 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
@@ -98,11 +101,34 @@ import com.njydsz.workflow.server.service.FlowAnalyticsService;
 @RequiredArgsConstructor
 public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
 
-  /** 历史任务 Mapper，查询已归档的审批任务统计数据 */
+  /**
+   * 历史任务 Mapper，查询已归档的审批任务统计数据。
+   *
+   * <p>保留 Mapper 调用，因为本 Service 所有查询均为复杂聚合统计（selectOverviewStats、
+   * selectApproverEfficiency、selectFlowEfficiencyComparison、nodeDurationStats、
+   * selectApprovalTrend），在 Repository 中暂无等价方法。后续应在 FlowHisTaskRepository 中补齐。
+   */
   private final FlowHisTaskMapper hisTaskMapper;
 
-  /** 运行时任务 Mapper，查询当前待办及超期任务数 */
+  /**
+   * 历史任务仓储（domain 层契约），提供基础 CRUD 方法。
+   *
+   * <p>当前 Service 全部数据访问走 Mapper（复杂查询），后续应在 Repository 中补齐聚合统计方法。
+   */
+  private final FlowHisTaskRepository hisTaskRepository;
+
+  /**
+   * 运行时任务 Mapper，查询当前待办及超期任务数。
+   *
+   * <p>保留 Mapper 调用，因为 selectCount 走 LambdaQueryWrapper 复杂条件过滤，在 Repository 中暂无等价方法。
+   */
   private final FlowRunTaskMapper runTaskMapper;
+
+  /** 运行时任务仓储（domain 层契约），提供基础 CRUD 方法 */
+  private final FlowRunTaskRepository runTaskRepository;
+
+  /** 实体转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
 
   @Override
   public Map<String, Object> overview(

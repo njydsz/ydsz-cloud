@@ -134,6 +134,7 @@ public class FlowInstanceBatchOperator {
         lifecycleManager.terminate(instanceId, reason);
         count++;
         // 级联终止子流程实例
+        // 保留 Mapper：复杂 LambdaQueryWrapper 查询（含 flowStatus 过滤），Repository 暂无等价方法
         List<FlowInstanceDO> children =
             instanceMapper.selectList(
                 new LambdaQueryWrapper<FlowInstanceDO>()

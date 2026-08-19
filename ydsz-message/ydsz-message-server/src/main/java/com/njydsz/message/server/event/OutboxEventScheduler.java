@@ -3,26 +3,36 @@ package com.njydsz.message.server.event;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.domain.event.OutboxEvent;
 import com.njydsz.message.domain.repository.OutboxEventRepository;
 import com.njydsz.message.server.metric.MessageMetrics;
+import com.njydsz.message.server.producer.MessageQueueOperations;
 
 /**
  * Outbox 事件扫描发布调度器。
  *
- * <p>定时扫描 {@code ydsz_msg_outbox} 表中 PENDING 事件，反序列化为领域事件后发布到 Spring 事件总线。
- * 发布成功标记为 PUBLISHED，失败则根据重试次数决定重试或标记为 FAILED。
+ * <p>定时扫描 {@code ydsz_msg_outbox} 表中 PENDING 事件，根据事件类型分发：
+ * <ul>
+ *   <li>{@code MessageAsyncDispatch} —— 反序列化为 {@link MessageRequest} 后投递到 MQ</li>
+ *   <li>其他领域事件 —— 发布到 Spring 事件总线</li>
+ * </ul>
+ *
+ * <p>发布成功标记为 PUBLISHED，失败则根据重试次数决定重试或标记为 FAILED。
  *
  * <p>多实例部署通过 {@link DistributedScheduled} 分布式锁保证只有一个实例执行扫描。
+ *
+ * <p><b>编码规范合规：</b>使用 {@link YdszJson} 替代 Jackson ObjectMapper，符合《云顶编码规范》"禁止第三方 JSON 库"要求。
  *
  * @author ydsz-team
  * @since 1.2.0
@@ -37,10 +47,13 @@ import com.njydsz.message.server.metric.MessageMetrics;
     matchIfMissing = true)
 public class OutboxEventScheduler {
 
+  /** 异步消息投递事件类型常量 */
+  private static final String EVENT_TYPE_ASYNC_DISPATCH = "MessageAsyncDispatch";
+
   private final OutboxEventRepository outboxEventRepository;
   private final ApplicationEventPublisher eventPublisher;
   private final MessageMetrics messageMetrics;
-  private final ObjectMapper objectMapper;
+  private final ObjectProvider<MessageQueueOperations> mqOperationsProvider;
 
   /** 每次扫描最大处理数量 */
   private static final int SCAN_BATCH_SIZE = 100;
@@ -77,8 +90,8 @@ public class OutboxEventScheduler {
       }
 
       try {
-        // 反序列化并发布领域事件
-        publishDomainEvent(outboxEvent);
+        // 根据事件类型分发
+        dispatchOutboxEvent(outboxEvent);
         // 标记为已发布
         outboxEventRepository.markPublished(outboxEvent.getId());
         published++;
@@ -101,12 +114,64 @@ public class OutboxEventScheduler {
   }
 
   /**
+   * 根据 Outbox 事件类型分发到不同处理器。
+   *
+   * <ul>
+   *   <li>{@code MessageAsyncDispatch} —— 反序列化为 {@link MessageRequest} 后投递到 MQ</li>
+   *   <li>其他 —— 发布到 Spring 事件总线</li>
+   * </ul>
+   *
+   * @param outboxEvent Outbox 事件
+   */
+  private void dispatchOutboxEvent(OutboxEvent outboxEvent) throws Exception {
+    if (EVENT_TYPE_ASYNC_DISPATCH.equals(outboxEvent.getEventType())) {
+      // 异步消息投递：反序列化后发送到 MQ
+      dispatchAsyncMessage(outboxEvent);
+    } else {
+      // 领域事件：发布到 Spring 事件总线
+      publishDomainEvent(outboxEvent);
+    }
+  }
+
+  /**
+   * 异步消息投递：将 Outbox 事件反序列化为 {@link MessageRequest} 后投递到 MQ。
+   *
+   * @param outboxEvent Outbox 事件
+   */
+  private void dispatchAsyncMessage(OutboxEvent outboxEvent) {
+    MessageRequest request = YdszJson.fromJson(outboxEvent.getPayload(), MessageRequest.class);
+    if (request == null) {
+      log.error(
+          "[OutboxScheduler] 异步消息反序列化失败: eventId={} aggregateId={}",
+          outboxEvent.getId(),
+          outboxEvent.getAggregateId());
+      return;
+    }
+    MessageQueueOperations mqOps = mqOperationsProvider.getIfAvailable();
+    if (mqOps == null) {
+      log.warn(
+          "[OutboxScheduler] MQ 未配置,异步消息投递跳过: eventId={} aggregateId={}",
+          outboxEvent.getId(),
+          outboxEvent.getAggregateId());
+      return;
+    }
+    mqOps.asyncSend(request);
+    messageMetrics.recordSend("OUTBOX", "SUCCESS", 0);
+    log.info(
+        "[OutboxScheduler] 异步消息已投递 MQ: eventId={} aggregateId={} channel={}",
+        outboxEvent.getId(),
+        outboxEvent.getAggregateId(),
+        request.getChannel());
+  }
+
+  /**
    * 将 Outbox 事件反序列化为领域事件并发布到 Spring 事件总线。
+   *
+   * <p>使用 {@link YdszJson} 进行 JSON 反序列化，符合《云顶编码规范》"禁止第三方 JSON 库"要求。
    *
    * @param outboxEvent Outbox 事件
    */
   private void publishDomainEvent(OutboxEvent outboxEvent) throws Exception {
-    // 通过 eventType 反射构造目标事件
     String eventType = outboxEvent.getEventType();
     String payload = outboxEvent.getPayload();
 
@@ -132,6 +197,8 @@ public class OutboxEventScheduler {
   /**
    * 根据事件类型和 JSON 负载反序列化领域事件。
    *
+   * <p>使用 {@link YdszJson} 替代 Jackson，符合编码规范。
+   *
    * @param eventType 事件类型（类名）
    * @param payload JSON 负载
    * @return 反序列化后的领域事件对象
@@ -140,18 +207,21 @@ public class OutboxEventScheduler {
     try {
       // 尝试全限定类名
       Class<?> eventClass = Class.forName(eventType);
-      return objectMapper.readValue(payload, eventClass);
+      return YdszJson.fromJson(payload, eventClass);
     } catch (ClassNotFoundException e) {
       // 尝试从领域事件包查找
       try {
         String fqcn = "com.njydsz.message.domain.event." + eventType;
         Class<?> eventClass = Class.forName(fqcn);
-        return objectMapper.readValue(payload, eventClass);
-      } catch (ClassNotFoundException | com.fasterxml.jackson.core.JsonProcessingException ex) {
+        return YdszJson.fromJson(payload, eventClass);
+      } catch (ClassNotFoundException ex) {
         log.warn("无法反序列化事件: type={} err={}", eventType, ex.getMessage());
         return null;
+      } catch (Exception ex) {
+        log.warn("事件 JSON 解析失败: type={} err={}", eventType, ex.getMessage());
+        return null;
       }
-    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+    } catch (Exception e) {
       log.warn("事件 JSON 解析失败: type={} err={}", eventType, e.getMessage());
       return null;
     }

@@ -32,25 +32,9 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-safe</artifactId>
         </dependency>
-        <!-- ydsz-common-excel（UserImportDTO 等使用 @ExcelProperty 注解） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-excel</artifactId>
-        </dependency>
-        <!-- swagger-annotations（VO 类使用 @Schema 注解），运行时由 springdoc 提供 -->
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-annotations-jakarta</artifactId>
-            <version>2.2.47</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-crypto</artifactId>
         </dependency>
         <!-- ydsz-common-json -->
         <dependency>

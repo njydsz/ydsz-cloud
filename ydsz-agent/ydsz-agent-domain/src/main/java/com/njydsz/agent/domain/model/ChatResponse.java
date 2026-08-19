@@ -36,6 +36,9 @@ public final class ChatResponse implements Serializable {
   /** 工具调用列表 */
   private final List<ToolCall> toolCalls;
 
+  /** 成本估算与核算（可能为 null，表示未启用成本计算） */
+  private final CostEstimate costEstimate;
+
   public ChatResponse(
       String id,
       String model,
@@ -43,12 +46,24 @@ public final class ChatResponse implements Serializable {
       TokenUsage usage,
       String finishReason,
       List<ToolCall> toolCalls) {
+    this(id, model, message, usage, finishReason, toolCalls, null);
+  }
+
+  public ChatResponse(
+      String id,
+      String model,
+      ChatMessage message,
+      TokenUsage usage,
+      String finishReason,
+      List<ToolCall> toolCalls,
+      CostEstimate costEstimate) {
     this.id = Objects.requireNonNull(id, "id 不能为 null");
     this.model = model;
     this.message = message;
     this.usage = usage != null ? usage : TokenUsage.zero();
     this.finishReason = finishReason;
     this.toolCalls = toolCalls != null ? List.copyOf(toolCalls) : List.of();
+    this.costEstimate = costEstimate;
   }
 
   public String getId() {
@@ -73,6 +88,10 @@ public final class ChatResponse implements Serializable {
 
   public List<ToolCall> getToolCalls() {
     return toolCalls;
+  }
+
+  public CostEstimate getCostEstimate() {
+    return costEstimate;
   }
 
   /**

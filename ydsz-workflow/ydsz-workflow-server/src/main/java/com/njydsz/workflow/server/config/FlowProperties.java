@@ -52,6 +52,9 @@ public class FlowProperties {
   /** 自动催办配置 */
   private AutoUrge autoUrge = new AutoUrge();
 
+  /** P1-2: 流程定义缓存配置（节点/连线/SourceRef 索引三级缓存统一 TTL 与容量） */
+  private DefinitionCache definitionCache = new DefinitionCache();
+
   /** P3-1: 流程历史数据归档配置（原 FlowHistoryProperties 合并） */
   private History history = new History();
 
@@ -123,5 +126,24 @@ public class FlowProperties {
     /** 归档数据清理阈值天数：archived_at 超过该天数的归档记录将被物理删除（默认 5 年 = 1825 天） */
     @Min(30)
     private int purgeDays = 1825;
+  }
+
+  /**
+   * P1-2: 流程定义缓存配置。
+   *
+   * <p>节点缓存（{@code flow:def-nodes}）、连线缓存（{@code flow:def-skips}）、SourceRef 索引缓存
+   * （{@code flow:def-sourceref-index}）三级缓存统一使用此配置。TTL 与容量通过 YAML 外部化，禁止硬编码。
+   *
+   * <p>由 {@link com.njydsz.workflow.server.engine.FlowDefinitionCacheService} 消费。
+   */
+  @Data
+  public static class DefinitionCache {
+    /** 缓存过期时间（分钟），所有流程定义缓存统一 TTL（默认 60 分钟） */
+    @Min(1)
+    private long definitionCacheTtlMinutes = 60L;
+
+    /** 缓存最大容量（条目数），所有流程定义缓存统一上限（默认 1000 条） */
+    @Min(1)
+    private long definitionCacheMaxSize = 1000L;
   }
 }

@@ -197,7 +197,7 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
                 FlowRunTaskDO::getTaskStatus,
                 FlowTaskStatus.PENDING.name(),
                 FlowTaskStatus.CLAIMED.name());
-    // TODO: 迁移至 taskRepository.findPendingByAssignee(assigneeId, 0, limit) 或类似方法
+    // 保留 Mapper：复杂 LambdaQueryWrapper 查询，Repository 暂无等价方法
     List<FlowRunTaskDO> tasks = taskMapper.selectList(wrapper);
 
     if (tasks.isEmpty()) {
@@ -300,7 +300,7 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
                         .or()
                         .ge(FlowDelegateAuthDO::getEndTime, now))
             .last("LIMIT 1");
-    // TODO: 迁移至 delegateAuthRepository.findActiveByOwner(ownerId, tenantId, now)，签名不同
+    // 保留 Mapper：复杂 LambdaQueryWrapper 查询，Repository 暂无等价方法
     FlowDelegateAuthDO auth = delegateAuthMapper.selectOne(wrapper);
     return auth != null ? auth.getDelegateUserId() : null;
   }
