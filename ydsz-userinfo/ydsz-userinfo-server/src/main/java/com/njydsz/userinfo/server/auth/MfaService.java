@@ -17,8 +17,14 @@ import com.njydsz.userinfo.domain.vo.MfaSetupVO;
 /**
  * 双因素认证（MFA）服务。
  *
- * <p>提供 TOTP（RFC 6238，兼容 Google/Microsoft Authenticator）绑定与登录校验能力， 未绑定 TOTP 时降级使用短信验证码
- * （复用 {@link VerifyCodeService}，场景类型 {@code MFA_LOGIN}）。
+ * <p>提供 TOTP（RFC 6238，兼容 Google/Microsoft Authenticator）绑定与登录校验能力。
+ * MFA 校验策略（优先级从高到低）：
+ *
+ * <ol>
+ *   <li>已绑定 TOTP → 校验 TOTP 动态码</li>
+ *   <li>未绑定 TOTP 且有手机号 → 降级使用短信验证码（场景类型 {@code MFA_LOGIN}）</li>
+ *   <li>未绑定 TOTP 且无手机号但有邮箱 → 降级使用邮件验证码（场景类型 {@code MFA_LOGIN_EMAIL}）</li>
+ * </ol>
  *
  * <p>算法实现复用 common-auth 的 {@link TotpAuthenticator}，不重复造轮子。
  *
@@ -64,6 +70,9 @@ public class MfaService {
 
   /** 登录短信验证码场景类型 */
   public static final String SMS_TYPE_MFA_LOGIN = "MFA_LOGIN";
+
+  /** 登录邮件验证码场景类型 */
+  public static final String EMAIL_TYPE_MFA_LOGIN = "MFA_LOGIN_EMAIL";
 
   private final RedisStringOps redisStringOps;
   private final VerifyCodeService verifyCodeService;
@@ -167,10 +176,16 @@ public class MfaService {
   /**
    * 登录场景的 MFA 动态码校验（供登录流程在风险为 HIGH 时调用）。
    *
-   * <p>已绑定 TOTP → 校验 TOTP 动态码；未绑定但有手机号 → 校验短信验证码；两者均不可用时拒绝登录。
+   * <p>MFA 校验策略（优先级从高到低）：
+   *
+   * <ol>
+   *   <li>已绑定 TOTP → 校验 TOTP 动态码</li>
+   *   <li>未绑定 TOTP 且有手机号 → 校验短信验证码</li>
+   *   <li>未绑定 TOTP 且无手机号但有邮箱 → 校验邮件验证码</li>
+   * </ol>
    *
    * @param user 登录用户
-   * @param mfaCode 用户提交的动态码（TOTP 或短信验证码）
+   * @param mfaCode 用户提交的动态码（TOTP、短信验证码或邮件验证码）
    * @throws BusinessException 动态码缺失、错误或用户无法完成 MFA 时抛出
    */
   public void validateLoginMfa(UserAccountDO user, String mfaCode) {
@@ -184,14 +199,23 @@ public class MfaService {
       return;
     }
     // 未绑定 TOTP：降级短信验证码
-    if (user.getPhone() == null || user.getPhone().isBlank()) {
-      log.warn("MFA required but user has no TOTP bound and no phone: userId={}", userId);
-      throw new BusinessException(UserInfoExceptionCode.MFA_REQUIRED);
+    if (user.getPhone() != null && !user.getPhone().isBlank()) {
+      if (mfaCode == null || mfaCode.isBlank()
+          || !verifyCodeService.verifyCode(SMS_TYPE_MFA_LOGIN, user.getPhone(), mfaCode)) {
+        throw new BusinessException(UserInfoExceptionCode.MFA_INVALID);
+      }
+      return;
     }
-    if (mfaCode == null || mfaCode.isBlank()
-        || !verifyCodeService.verifyCode(SMS_TYPE_MFA_LOGIN, user.getPhone(), mfaCode)) {
-      throw new BusinessException(UserInfoExceptionCode.MFA_INVALID);
+    // 无手机号：降级邮件验证码
+    if (user.getEmail() != null && !user.getEmail().isBlank()) {
+      if (mfaCode == null || mfaCode.isBlank()
+          || !verifyCodeService.verifyCode(EMAIL_TYPE_MFA_LOGIN, user.getEmail(), mfaCode)) {
+        throw new BusinessException(UserInfoExceptionCode.MFA_INVALID);
+      }
+      return;
     }
+    log.warn("MFA required but user has no TOTP bound, no phone, no email: userId={}", userId);
+    throw new BusinessException(UserInfoExceptionCode.MFA_REQUIRED);
   }
 
   /**
@@ -201,7 +225,17 @@ public class MfaService {
    * @throws BusinessException 发送过于频繁时抛出
    */
   public void sendLoginSmsCode(String phone) {
-    verifyCodeService.sendCode(SMS_TYPE_MFA_LOGIN, phone);
+    verifyCodeService.sendCode(SMS_TYPE_MFA_LOGIN, VerifyCodeService.TARGET_TYPE_PHONE, phone);
+  }
+
+  /**
+   * 发送登录场景邮件验证码（前端在风险为 HIGH 且未绑定 TOTP 且无手机号时调用）。
+   *
+   * @param email 邮箱地址
+   * @throws BusinessException 发送过于频繁时抛出
+   */
+  public void sendLoginEmailCode(String email) {
+    verifyCodeService.sendCode(EMAIL_TYPE_MFA_LOGIN, VerifyCodeService.TARGET_TYPE_EMAIL, email);
   }
 
   private String readSecret(String key) {

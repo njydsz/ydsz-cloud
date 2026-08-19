@@ -301,7 +301,7 @@ public class UserExcelServiceImpl implements UserExcelService {
    */
   private Set<String> queryExistingUsernames(Set<String> usernames) {
     if (usernames.isEmpty()) {
-      return new HashSet<>();
+      return new HashSet<>(0);
     }
     return usernames.stream()
         .filter(username -> userAccountRepository.findByUsername(username).isPresent())
@@ -316,7 +316,7 @@ public class UserExcelServiceImpl implements UserExcelService {
    */
   private Map<String, String> queryDeptCodeToIdMap(Set<String> deptCodes) {
     if (deptCodes.isEmpty()) {
-      return new HashMap<>();
+      return new HashMap<>(0);
     }
     Map<String, String> result = new HashMap<>(deptCodes.size());
     for (String deptCode : deptCodes) {
@@ -334,7 +334,7 @@ public class UserExcelServiceImpl implements UserExcelService {
    */
   private Map<String, String> queryUsernameToIdMap(Set<String> usernames) {
     if (usernames.isEmpty()) {
-      return new HashMap<>();
+      return new HashMap<>(0);
     }
     Map<String, String> result = new HashMap<>(usernames.size());
     for (String username : usernames) {

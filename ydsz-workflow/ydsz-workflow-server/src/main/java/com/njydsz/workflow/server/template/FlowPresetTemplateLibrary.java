@@ -81,14 +81,14 @@ public class FlowPresetTemplateLibrary {
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("人事", "请假", "考勤"));
 
-    List<Map<String, Object>> nodes = new ArrayList<>();
+    List<Map<String, Object>> nodes = new ArrayList<>(10);
     nodes.add(buildNode("start", "开始", "START", null, 100, 100));
     nodes.add(buildNode("approval_1", "直属上级审批", "APPROVAL", "LEADER", 300, 100));
     nodes.add(buildNode("approval_2", "HR审批", "APPROVAL", "ROLE:HR", 500, 100));
     nodes.add(buildNode("end", "结束", "END", null, 700, 100));
     tpl.setNodes(nodes);
 
-    List<Map<String, Object>> skips = new ArrayList<>();
+    List<Map<String, Object>> skips = new ArrayList<>(10);
     skips.add(buildSkip("start", "approval_1", "PASS"));
     skips.add(buildSkip("approval_1", "approval_2", "PASS"));
     skips.add(buildSkip("approval_1", "start", "REJECT"));
@@ -111,7 +111,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("财务", "报销", "费用"));
 
-    List<Map<String, Object>> nodes = new ArrayList<>();
+    List<Map<String, Object>> nodes = new ArrayList<>(10);
     nodes.add(buildNode("start", "开始", "START", null, 100, 100));
     nodes.add(buildNode("approval_1", "直属上级审批", "APPROVAL", "LEADER", 300, 100));
     nodes.add(buildNode("approval_2", "财务审批", "APPROVAL", "ROLE:FINANCE", 500, 100));
@@ -119,7 +119,7 @@ public class FlowPresetTemplateLibrary {
     nodes.add(buildNode("end", "结束", "END", null, 900, 100));
     tpl.setNodes(nodes);
 
-    List<Map<String, Object>> skips = new ArrayList<>();
+    List<Map<String, Object>> skips = new ArrayList<>(10);
     skips.add(buildSkip("start", "approval_1", "PASS"));
     skips.add(buildSkip("approval_1", "approval_2", "PASS"));
     skips.add(buildSkip("approval_1", "start", "REJECT"));
@@ -143,7 +143,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("财务", "采购", "物资"));
 
-    List<Map<String, Object>> nodes = new ArrayList<>();
+    List<Map<String, Object>> nodes = new ArrayList<>(10);
     nodes.add(buildNode("start", "开始", "START", null, 100, 100));
     nodes.add(buildNode("approval_1", "部门负责人审批", "APPROVAL", "DEPT_LEADER", 300, 100));
     nodes.add(buildNode("approval_2", "采购审批", "APPROVAL", "ROLE:PROCUREMENT", 500, 100));
@@ -151,7 +151,7 @@ public class FlowPresetTemplateLibrary {
     nodes.add(buildNode("end", "结束", "END", null, 900, 100));
     tpl.setNodes(nodes);
 
-    List<Map<String, Object>> skips = new ArrayList<>();
+    List<Map<String, Object>> skips = new ArrayList<>(10);
     skips.add(buildSkip("start", "approval_1", "PASS"));
     skips.add(buildSkip("approval_1", "approval_2", "PASS"));
     skips.add(buildSkip("approval_1", "start", "REJECT"));
@@ -176,14 +176,14 @@ public class FlowPresetTemplateLibrary {
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("人事", "出差", "差旅"));
 
-    List<Map<String, Object>> nodes = new ArrayList<>();
+    List<Map<String, Object>> nodes = new ArrayList<>(10);
     nodes.add(buildNode("start", "开始", "START", null, 100, 100));
     nodes.add(buildNode("approval_1", "直属上级审批", "APPROVAL", "LEADER", 300, 100));
     nodes.add(buildNode("approval_2", "HR审批", "APPROVAL", "ROLE:HR", 500, 100));
     nodes.add(buildNode("end", "结束", "END", null, 700, 100));
     tpl.setNodes(nodes);
 
-    List<Map<String, Object>> skips = new ArrayList<>();
+    List<Map<String, Object>> skips = new ArrayList<>(10);
     skips.add(buildSkip("start", "approval_1", "PASS"));
     skips.add(buildSkip("approval_1", "approval_2", "PASS"));
     skips.add(buildSkip("approval_1", "start", "REJECT"));
@@ -206,14 +206,14 @@ public class FlowPresetTemplateLibrary {
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("行政", "用印", "印章"));
 
-    List<Map<String, Object>> nodes = new ArrayList<>();
+    List<Map<String, Object>> nodes = new ArrayList<>(10);
     nodes.add(buildNode("start", "开始", "START", null, 100, 100));
     nodes.add(buildNode("approval_1", "直属上级审批", "APPROVAL", "LEADER", 300, 100));
     nodes.add(buildNode("approval_2", "行政审批", "APPROVAL", "ROLE:ADMIN", 500, 100));
     nodes.add(buildNode("end", "结束", "END", null, 700, 100));
     tpl.setNodes(nodes);
 
-    List<Map<String, Object>> skips = new ArrayList<>();
+    List<Map<String, Object>> skips = new ArrayList<>(10);
     skips.add(buildSkip("start", "approval_1", "PASS"));
     skips.add(buildSkip("approval_1", "approval_2", "PASS"));
     skips.add(buildSkip("approval_1", "start", "REJECT"));
@@ -236,7 +236,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("项目", "立项", "审批"));
 
-    List<Map<String, Object>> nodes = new ArrayList<>();
+    List<Map<String, Object>> nodes = new ArrayList<>(10);
     nodes.add(buildNode("start", "开始", "START", null, 100, 100));
     nodes.add(buildNode("approval_1", "部门负责人审批", "APPROVAL", "DEPT_LEADER", 300, 100));
     nodes.add(buildNode("approval_2", "项目总监审批", "APPROVAL", "ROLE:PROJECT_DIRECTOR", 500, 100));
@@ -244,7 +244,7 @@ public class FlowPresetTemplateLibrary {
     nodes.add(buildNode("end", "结束", "END", null, 900, 100));
     tpl.setNodes(nodes);
 
-    List<Map<String, Object>> skips = new ArrayList<>();
+    List<Map<String, Object>> skips = new ArrayList<>(10);
     skips.add(buildSkip("start", "approval_1", "PASS"));
     skips.add(buildSkip("approval_1", "approval_2", "PASS"));
     skips.add(buildSkip("approval_1", "start", "REJECT"));

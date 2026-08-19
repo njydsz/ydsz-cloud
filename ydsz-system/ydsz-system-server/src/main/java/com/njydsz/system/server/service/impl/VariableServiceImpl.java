@@ -37,6 +37,7 @@ import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.service.VariableService;
+import com.njydsz.system.server.service.rollback.VariableRollbackStrategy;
 import com.njydsz.system.server.util.SystemVersionUtils;
 
 /**
@@ -137,6 +138,9 @@ public class VariableServiceImpl implements VariableService {
   /** 统一 Excel 导出辅助类 */
   private final ExcelExportHelper excelExportHelper;
 
+  /** 变量回滚策略（从快照 JSON 反序列化并重建变量资源） */
+  private final VariableRollbackStrategy rollbackStrategy;
+
   /**
    * 根据主键查询变量（不走缓存，直接走 DB）
    *
@@ -170,14 +174,8 @@ public class VariableServiceImpl implements VariableService {
   @Override
   @Cacheable(value = CacheConstants.SYSTEM_VARIABLE_CACHE, key = "@cacheKeyBuilder.variable(#p0)")
   public String getVariableValue(String variableKey) {
-    long start = System.nanoTime();
-    try {
-      metrics.recordVariableCacheMiss();
-      VariableVO vo = variableRepository.findEnabledByKey(variableKey).orElse(null);
-      return vo != null ? vo.getVariableValue() : null;
-    } finally {
-      metrics.recordVariableRead(System.nanoTime() - start);
-    }
+    VariableVO vo = variableRepository.findEnabledByKey(variableKey).orElse(null);
+    return vo != null ? vo.getVariableValue() : null;
   }
 
   /**
@@ -354,28 +352,7 @@ public class VariableServiceImpl implements VariableService {
         resourceKey,
         targetVersion,
         operatorId,
-        snapshotJson -> {
-          if (snapshotJson != null && !snapshotJson.isBlank()) {
-            try {
-              VariableVO snapshotVO = YdszJson.fromJson(snapshotJson, VariableVO.class);
-              VariableVO currentVariableVO = variableRepository.findByKeyIgnoreStatus(resourceKey).orElse(null);
-              if (currentVariableVO != null) {
-                // 更新现有变量
-                VariableDTO updateDto = toDto(snapshotVO);
-                updateDto.setId(currentVariableVO.getId());
-                variableRepository.updateById(updateDto);
-              } else {
-                // 原变量已被删除，重新创建
-                variableRepository.insert(toDto(snapshotVO));
-              }
-            } catch (Exception e) {
-              throw BusinessException.of(SystemExceptionCode.SNAPSHOT_PARSE_ERROR)
-                  .data("reason", e.getMessage());
-            }
-          }
-          // P0-2：回滚后精准失效缓存，避免读到旧值
-          evictVariable(resourceKey);
-        });
+        rollbackStrategy);
   }
 
   /**

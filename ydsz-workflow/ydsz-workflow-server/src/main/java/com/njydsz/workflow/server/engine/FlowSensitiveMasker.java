@@ -131,7 +131,7 @@ public class FlowSensitiveMasker {
     if (data == null || data.isEmpty()) {
       return data;
     }
-    List<String> sensitiveKeys = new ArrayList<>();
+    List<String> sensitiveKeys = new ArrayList<>(data.size());
     for (String key : data.keySet()) {
       if (key == null) {
         continue;

@@ -70,10 +70,10 @@ public class TenantController {
    */
   @Operation(summary = "分页查询租户列表")
   @GetMapping("/page")
-  public PageResponse<List<TenantVO>> page(TenantPageQuery query) {
+  public YdszResponse<PageResponse<List<TenantVO>>> page(TenantPageQuery query) {
     // pageSize 服务端硬上限截断，防止深度分页 OOM
     query.setPageSize(Math.min(query.getPageSize(), MAX_PAGE_SIZE));
-    return service.page(query);
+    return YdszResponse.success(service.page(query));
   }
 
   /**

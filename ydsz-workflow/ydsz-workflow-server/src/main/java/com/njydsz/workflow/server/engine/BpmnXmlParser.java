@@ -120,8 +120,8 @@ public class BpmnXmlParser {
     }
 
     // 解析所有 BPMN 节点元素
-    List<FlowNodeDO> nodes = new ArrayList<>();
-    List<FlowSkipDO> skips = new ArrayList<>();
+    List<FlowNodeDO> nodes = new ArrayList<>(children.getLength());
+    List<FlowSkipDO> skips = new ArrayList<>(children.getLength());
     NodeList children = process.getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
       Node node = children.item(i);
@@ -146,7 +146,7 @@ public class BpmnXmlParser {
     }
 
     // 补全 skip.nextNodeType
-    Map<String, FlowNodeDO> nodeByCode = new HashMap<>();
+    Map<String, FlowNodeDO> nodeByCode = new HashMap<>(nodes.size());
     for (FlowNodeDO n : nodes) {
       nodeByCode.put(n.getNodeCode(), n);
     }
@@ -179,8 +179,8 @@ public class BpmnXmlParser {
 
     // P3-1: 解析 BPMN 2.0 BPMNDI 段，提取节点/边的可视化坐标
     // （用于驱动流程图回放与 SVG 可视化高亮）
-    Map<String, BpmnModel.NodeCoordinate> nodeCoords = new HashMap<>();
-    Map<String, List<BpmnModel.NodeCoordinate>> skipCoords = new HashMap<>();
+    Map<String, BpmnModel.NodeCoordinate> nodeCoords = new HashMap<>(nodes.size());
+    Map<String, List<BpmnModel.NodeCoordinate>> skipCoords = new HashMap<>(skips.size());
     bpmnDiagramParser.parseBpmnDiagram(root, nodeCoords, skipCoords);
     model.setNodeCoordinates(nodeCoords);
     model.setSkipCoordinates(skipCoords);

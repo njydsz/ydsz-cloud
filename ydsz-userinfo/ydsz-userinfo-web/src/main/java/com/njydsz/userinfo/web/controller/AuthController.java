@@ -94,6 +94,23 @@ public class AuthController {
   }
 
   /**
+   * 发送登录 MFA 邮件验证码（风险为 HIGH 且未绑定 TOTP 且无手机号时调用）。
+   *
+   * <p>限流 5 QPS，同邮箱 60 秒内仅可发送一次（由 {@link VerifyCodeService} 频率限制保证）。
+   * 作为短信验证码的降级方案，适用于未绑定手机但有邮箱的用户。
+   *
+   * @param request 发送请求（含邮箱地址）
+   * @return 是否发送成功
+   */
+  @RateLimit(resource = "userinfo.auth.mfaSendEmailCode", threshold = 5)
+  @PostMapping("/mfa/send-email-code")
+  @Operation(summary = "发送登录 MFA 邮件验证码")
+  public YdszResponse<Boolean> sendMfaEmailCode(@Valid @RequestBody SendVerifyCodeDTO request) {
+    mfaService.sendLoginEmailCode(request.getEmail());
+    return YdszResponse.success(true);
+  }
+
+  /**
    * 用户登录（账号密码模式）
    *
    * <p>认证流程：账号密码校验 → 滑块验证码校验（可选）→ 签发 access_token / refresh_token。

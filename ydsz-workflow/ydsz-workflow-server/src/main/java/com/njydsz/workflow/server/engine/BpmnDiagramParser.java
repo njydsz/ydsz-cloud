@@ -147,7 +147,7 @@ public class BpmnDiagramParser {
     if (bpmnElement == null || bpmnElement.isBlank()) {
       return;
     }
-    List<BpmnModel.NodeCoordinate> waypoints = new ArrayList<>();
+    List<BpmnModel.NodeCoordinate> waypoints = new ArrayList<>(children.getLength());
     NodeList children = edge.getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
       Node n = children.item(i);

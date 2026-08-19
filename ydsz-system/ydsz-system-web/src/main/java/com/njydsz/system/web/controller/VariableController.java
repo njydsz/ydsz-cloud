@@ -80,10 +80,10 @@ public class VariableController {
    */
   @Operation(summary = "分页查询系统变量（支持搜索过滤）")
   @GetMapping("/page")
-  public PageResponse<List<VariableVO>> page(VariablePageQuery query) {
+  public YdszResponse<PageResponse<List<VariableVO>>> page(VariablePageQuery query) {
     // pageSize 服务端硬上限截断，防止深度分页 OOM
     query.setPageSize(Math.min(query.getPageSize(), MAX_PAGE_SIZE));
-    return service.page(query);
+    return YdszResponse.success(service.page(query));
   }
 
   /**

@@ -99,10 +99,10 @@ public class DictVersionController {
    */
   @Operation(summary = "按类型编码分页查询版本历史")
   @GetMapping("/page")
-  public PageResponse<List<EntityVersionVO>> pageByTypeCode(EntityVersionPageQuery query) {
+  public YdszResponse<PageResponse<List<EntityVersionVO>>> pageByTypeCode(EntityVersionPageQuery query) {
     // pageSize 服务端硬上限截断，防止深度分页 OOM
     query.setPageSize(Math.min(query.getPageSize(), MAX_PAGE_SIZE));
-    return entityVersionService.pageByResourceTypeAndKey(query);
+    return YdszResponse.success(entityVersionService.pageByResourceTypeAndKey(query));
   }
 
   /**

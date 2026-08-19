@@ -85,10 +85,10 @@ public class DictItemController {
    */
   @Operation(summary = "分页查询字典项（支持搜索过滤）")
   @GetMapping("/page")
-  public PageResponse<List<DictItemVO>> page(DictItemPageQuery query) {
+  public YdszResponse<PageResponse<List<DictItemVO>>> page(DictItemPageQuery query) {
     // pageSize 服务端硬上限截断，防止深度分页 OOM
     query.setPageSize(Math.min(query.getPageSize(), MAX_PAGE_SIZE));
-    return service.page(query);
+    return YdszResponse.success(service.page(query));
   }
 
   /**

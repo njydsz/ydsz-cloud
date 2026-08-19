@@ -113,6 +113,7 @@ public class SecurityDashboardService {
    * 获取登录成功率趋势。
    *
    * <p>查询指定日期范围内每日的登录成功/失败次数，计算成功率。
+   * 优先从 Redis 读取预聚合数据，Redis 未命中时从数据库查询。
    *
    * @param start 起始日期（含）
    * @param end 结束日期（含）
@@ -147,6 +148,7 @@ public class SecurityDashboardService {
    * 获取登录失败原因分布。
    *
    * <p>统计指定日期内各失败原因的分布情况，用于饼图展示。
+   * 优先从 Redis 读取预聚合数据，Redis 未命中时从数据库查询。
    *
    * @param date 统计日期
    * @return 失败原因分布列表
@@ -168,20 +170,26 @@ public class SecurityDashboardService {
     }
 
     // 按失败原因分类统计（基于 failReason 字段）
-    // 由于当前数据模型限制，按常见失败原因分类
     reasonCountMap.put("密码错误", countLoginsByFailReason(dayStart, dayEnd, "PASSWORD_INCORRECT"));
     reasonCountMap.put("账号锁定", countLoginsByFailReason(dayStart, dayEnd, "ACCOUNT_LOCKED"));
     reasonCountMap.put("MFA失败", countLoginsByFailReason(dayStart, dayEnd, "MFA_INVALID"));
     reasonCountMap.put("IP封禁", countLoginsByFailReason(dayStart, dayEnd, "IP_BLOCKED"));
     reasonCountMap.put("Token无效", countLoginsByFailReason(dayStart, dayEnd, "TOKEN_INVALID"));
-    reasonCountMap.put("其他", countLoginsByFailReason(dayStart, dayEnd, "OTHER"));
 
     List<LoginFailDistributionVO> result = new ArrayList<>(8);
+    int accountedFails = 0;
     for (Map.Entry<String, Integer> entry : reasonCountMap.entrySet()) {
       if (entry.getValue() > 0) {
+        accountedFails += entry.getValue();
         double percentage = (double) entry.getValue() / totalFails;
         result.add(new LoginFailDistributionVO(entry.getKey(), entry.getValue(), percentage));
       }
+    }
+    // 其他原因（未分类的失败）
+    int otherFails = totalFails - accountedFails;
+    if (otherFails > 0) {
+      double percentage = (double) otherFails / totalFails;
+      result.add(new LoginFailDistributionVO("其他", otherFails, percentage));
     }
 
     return result;
@@ -437,14 +445,16 @@ public class SecurityDashboardService {
   /**
    * 按登录结果统计指定时间范围内的登录次数。
    *
+   * <p>优先从 Redis 读取预聚合的统计数据，Redis 未命中时从数据库查询并回填缓存。
+   *
    * @param start 起始时间
    * @param end 结束时间
    * @param result 登录结果（SUCCESS/FAILED）
    * @return 登录次数
    */
   private long countLoginsByResult(LocalDateTime start, LocalDateTime end, String result) {
+    // 优先从 Redis 读取
     try {
-      // 从 Redis 读取预聚合的统计数据
       String dateKey = start.toLocalDate().toString();
       String redisKey = "userinfo:login:count:" + result.toLowerCase() + ":" + dateKey;
       String countStr = redisStringOps.get(redisKey, String.class);
@@ -454,11 +464,29 @@ public class SecurityDashboardService {
     } catch (Exception e) {
       log.warn("Failed to read login count from Redis, error={}", e.getMessage(), e);
     }
+
+    // Redis 未命中，从数据库查询
+    try {
+      long count = userLoginHistoryRepository.countByResultAndTimeRange(start, end, result);
+      // 回填缓存（TTL 10 分钟）
+      try {
+        String dateKey = start.toLocalDate().toString();
+        String redisKey = "userinfo:login:count:" + result.toLowerCase() + ":" + dateKey;
+        redisStringOps.set(redisKey, String.valueOf(count), 600);
+      } catch (Exception ex) {
+        log.warn("Failed to cache login count, error={}", ex.getMessage());
+      }
+      return count;
+    } catch (Exception e) {
+      log.warn("Failed to query login count from DB, error={}", e.getMessage(), e);
+    }
     return 0;
   }
 
   /**
    * 按失败原因统计指定时间范围内的登录失败次数。
+   *
+   * <p>优先从 Redis 读取预聚合的统计数据，Redis 未命中时从数据库查询。
    *
    * @param start 起始时间
    * @param end 结束时间
@@ -466,6 +494,7 @@ public class SecurityDashboardService {
    * @return 失败次数
    */
   private int countLoginsByFailReason(LocalDateTime start, LocalDateTime end, String failReason) {
+    // 优先从 Redis 读取
     try {
       String dateKey = start.toLocalDate().toString();
       String redisKey = "userinfo:login:fail:reason:" + failReason + ":" + dateKey;
@@ -475,6 +504,22 @@ public class SecurityDashboardService {
       }
     } catch (Exception e) {
       log.warn("Failed to read fail reason count from Redis, error={}", e.getMessage(), e);
+    }
+
+    // Redis 未命中，从数据库查询
+    try {
+      int count = userLoginHistoryRepository.countByFailReasonAndTimeRange(start, end, failReason);
+      // 回填缓存（TTL 10 分钟）
+      try {
+        String dateKey = start.toLocalDate().toString();
+        String redisKey = "userinfo:login:fail:reason:" + failReason + ":" + dateKey;
+        redisStringOps.set(redisKey, String.valueOf(count), 600);
+      } catch (Exception ex) {
+        log.warn("Failed to cache fail reason count, error={}", ex.getMessage());
+      }
+      return count;
+    } catch (Exception e) {
+      log.warn("Failed to query fail reason count from DB, error={}", e.getMessage(), e);
     }
     return 0;
   }

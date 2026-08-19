@@ -73,8 +73,8 @@ public class DictController {
    */
   @Operation(summary = "分页查询")
   @GetMapping("/page")
-  public PageResponse<List<DictTypeVO>> page(DictPageQuery query) {
-    return dictService.page(query);
+  public YdszResponse<PageResponse<List<DictTypeVO>>> page(DictPageQuery query) {
+    return YdszResponse.success(dictService.page(query));
   }
 
   /**

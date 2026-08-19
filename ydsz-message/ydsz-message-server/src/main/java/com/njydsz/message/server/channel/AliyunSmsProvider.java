@@ -139,7 +139,7 @@ public class AliyunSmsProvider implements SmsProvider {
    * @return 公共参数 Map
    */
   private Map<String, String> buildCommonParams() {
-    Map<String, String> p = new HashMap<>();
+    Map<String, String> p = new HashMap<>(16);
     p.put("AccessKeyId", config.getAccessKeyId());
     p.put("Action", "SendSms");
     p.put("Format", "JSON");

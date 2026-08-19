@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -19,8 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.userinfo.domain.scim.ScimListResponse;
+import com.njydsz.userinfo.domain.scim.ScimPatchOp;
 import com.njydsz.userinfo.domain.scim.ScimUser;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.userinfo.server.auth.ScimPatchHandler;
 import com.njydsz.userinfo.server.config.ScimProperties;
 import com.njydsz.userinfo.server.service.UserAccountService;
 
@@ -62,6 +65,7 @@ public class ScimController {
 
   private final UserAccountService userAccountService;
   private final ScimProperties scimProperties;
+  private final ScimPatchHandler scimPatchHandler;
 
   /**
    * 查询用户列表。
@@ -212,6 +216,52 @@ public class ScimController {
     UserAccountVO updatedUser = userAccountService.getById(id);
     ScimUser result = com.njydsz.userinfo.infra.converter.ScimConverter.toScimUser(updatedUser);
 
+    return ResponseEntity.ok(YdszJson.toJson(result));
+  }
+
+  /**
+   * 部分更新用户（PATCH，RFC 7644 Section 3.5.2）。
+   *
+   * <p>支持 SCIM 标准 PATCH 语义：
+   *
+   * <ul>
+   *   <li>{@code add} — 添加或替换属性值</li>
+   *   <li>{@code remove} — 移除属性值</li>
+   *   <li>{@code replace} — 替换属性值</li>
+   * </ul>
+   *
+   * <p><b>示例请求：</b>
+   *
+   * <pre>
+   * PATCH /scim/v2/Users/123
+   * {
+   *   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:PatchOp"],
+   *   "Operations": [
+   *     {"op": "replace", "path": "displayName", "value": "张三"},
+   *     {"op": "replace", "path": "emails", "value": "new@example.com"},
+   *     {"op": "replace", "path": "active", "value": false}
+   *   ]
+   * }
+   * </pre>
+   *
+   * @param id      用户 ID
+   * @param patchOp PATCH 操作请求体
+   * @return 更新后的 SCIM User 资源
+   */
+  @PatchMapping("/Users/{id}")
+  public ResponseEntity<String> patchUser(
+      @PathVariable String id, @RequestBody ScimPatchOp patchOp) {
+    if (!scimProperties.isAllowPatch()) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN)
+          .body(YdszJson.toJson(
+              com.njydsz.userinfo.domain.scim.ScimError.builder()
+                  .schemas(List.of("urn:ietf:params:scim:api:messages:2.0:Error"))
+                  .status("403")
+                  .detail("SCIM PATCH is disabled")
+                  .build()));
+    }
+
+    ScimUser result = scimPatchHandler.applyPatch(id, patchOp);
     return ResponseEntity.ok(YdszJson.toJson(result));
   }
 

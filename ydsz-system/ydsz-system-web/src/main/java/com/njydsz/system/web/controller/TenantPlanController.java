@@ -64,10 +64,10 @@ public class TenantPlanController {
    */
   @Operation(summary = "分页查询套餐列表")
   @GetMapping("/page")
-  public PageResponse<List<TenantPlanVO>> page(TenantPlanPageQuery query) {
+  public YdszResponse<PageResponse<List<TenantPlanVO>>> page(TenantPlanPageQuery query) {
     // pageSize 服务端硬上限截断，防止深度分页 OOM
     query.setPageSize(Math.min(query.getPageSize(), MAX_PAGE_SIZE));
-    return planService.page(query);
+    return YdszResponse.success(planService.page(query));
   }
 
   /**

@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.infra.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -60,6 +61,42 @@ public class UserLoginHistoryRepositoryImpl implements UserLoginHistoryRepositor
   public List<UserLoginHistoryVO> findByUserId(String userId) {
     LambdaQueryWrapper<UserLoginHistoryDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserLoginHistoryDO::getUserId, userId);
+    List<UserLoginHistoryDO> entities = userLoginHistoryMapper.selectList(wrapper);
+    return converter.userLoginHistoryListToVO(entities);
+  }
+
+  @Override
+  public long countByResultAndTimeRange(
+      LocalDateTime startTime, LocalDateTime endTime, String result) {
+    LambdaQueryWrapper<UserLoginHistoryDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.ge(UserLoginHistoryDO::getCreatedAt, startTime);
+    wrapper.lt(UserLoginHistoryDO::getCreatedAt, endTime);
+    if (result != null) {
+      wrapper.eq(UserLoginHistoryDO::getLoginResult, result);
+    }
+    return userLoginHistoryMapper.selectCount(wrapper);
+  }
+
+  @Override
+  public int countByFailReasonAndTimeRange(
+      LocalDateTime startTime, LocalDateTime endTime, String failReason) {
+    LambdaQueryWrapper<UserLoginHistoryDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.ge(UserLoginHistoryDO::getCreatedAt, startTime);
+    wrapper.lt(UserLoginHistoryDO::getCreatedAt, endTime);
+    wrapper.eq(UserLoginHistoryDO::getLoginResult, "FAILED");
+    if (failReason != null) {
+      wrapper.eq(UserLoginHistoryDO::getFailReason, failReason);
+    }
+    return Math.toIntExact(userLoginHistoryMapper.selectCount(wrapper));
+  }
+
+  @Override
+  public List<UserLoginHistoryVO> findRecentFailedLogins(LocalDateTime since, int limit) {
+    LambdaQueryWrapper<UserLoginHistoryDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.ge(UserLoginHistoryDO::getCreatedAt, since);
+    wrapper.eq(UserLoginHistoryDO::getLoginResult, "FAILED");
+    wrapper.orderByDesc(UserLoginHistoryDO::getCreatedAt);
+    wrapper.last("LIMIT " + Math.min(limit, 100));
     List<UserLoginHistoryDO> entities = userLoginHistoryMapper.selectList(wrapper);
     return converter.userLoginHistoryListToVO(entities);
   }

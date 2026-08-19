@@ -168,13 +168,7 @@ public class DictItemServiceImpl implements DictItemService {
       value = CacheConstants.SYSTEM_DICT_ITEM_CACHE,
       key = "@cacheKeyBuilder.dictItem(#p0, #p1)")
   public DictItemVO getByTypeAndCode(String typeCode, String itemCode) {
-    long start = System.nanoTime();
-    try {
-      metrics.recordDictCacheMiss();
-      return dictRepository.findItemByTypeAndCode(typeCode, itemCode).orElse(null);
-    } finally {
-      metrics.recordDictQuery(System.nanoTime() - start);
-    }
+    return dictRepository.findItemByTypeAndCode(typeCode, itemCode).orElse(null);
   }
 
   /**
@@ -199,13 +193,7 @@ public class DictItemServiceImpl implements DictItemService {
       key = "@cacheKeyBuilder.dictList(#p0)",
       sync = true)
   public List<DictItemVO> listEnabledByTypeCode(String typeCode) {
-    long start = System.nanoTime();
-    try {
-      metrics.recordDictCacheMiss();
-      return dictRepository.findItemsEnabledByTypeCode(typeCode);
-    } finally {
-      metrics.recordDictQuery(System.nanoTime() - start);
-    }
+    return dictRepository.findItemsEnabledByTypeCode(typeCode);
   }
 
   /**

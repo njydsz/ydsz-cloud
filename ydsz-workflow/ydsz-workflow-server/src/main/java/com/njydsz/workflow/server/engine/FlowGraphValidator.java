@@ -53,7 +53,7 @@ public class FlowGraphValidator {
     }
 
     // 1. 构建节点索引
-    Map<String, FlowNodeDO> nodeMap = new HashMap<>();
+    Map<String, FlowNodeDO> nodeMap = new HashMap<>(nodes.size());
     for (FlowNodeDO node : nodes) {
       String code = node.getNodeCode();
       if (!StringUtils.hasText(code)) {
@@ -83,14 +83,14 @@ public class FlowGraphValidator {
     String startCode = startNodes.get(0).getNodeCode();
 
     // 3. 构建邻接表（正向 + 反向）
-    Map<String, List<String>> outEdges = new HashMap<>(); // source → [target...]
-    Map<String, List<String>> inEdges = new HashMap<>(); // target → [source...]
+    Map<String, List<String>> outEdges = new HashMap<>(nodes.size()); // source → [target...]
+    Map<String, List<String>> inEdges = new HashMap<>(nodes.size()); // target → [source...]
     for (String code : nodeMap.keySet()) {
       outEdges.put(code, new ArrayList<>());
       inEdges.put(code, new ArrayList<>());
     }
 
-    Set<String> validSkips = new HashSet<>();
+    Set<String> validSkips = new HashSet<>(skips != null ? skips.size() : 16);
     if (skips != null) {
       for (FlowSkipDO skip : skips) {
         String source = extractSourceRef(skip);
@@ -136,7 +136,7 @@ public class FlowGraphValidator {
             .filter(n -> FlowNodeType.END.getCode() == n.getNodeType())
             .map(FlowNodeDO::getNodeCode)
             .toList();
-    Set<String> canReachEnd = new HashSet<>();
+    Set<String> canReachEnd = new HashSet<>(nodes.size());
     for (String endCode : endNodes) {
       canReachEnd.addAll(bfs(endCode, inEdges));
     }
@@ -170,7 +170,7 @@ public class FlowGraphValidator {
 
   /** 从指定起点 BFS 遍历，返回所有可达节点 */
   private Set<String> bfs(String start, Map<String, List<String>> edges) {
-    Set<String> visited = new HashSet<>();
+    Set<String> visited = new HashSet<>(edges.size());
     Queue<String> queue = new LinkedList<>();
     queue.add(start);
     visited.add(start);
@@ -198,12 +198,12 @@ public class FlowGraphValidator {
 
   /** 环路检测（DFS + 颜色标记法），仅记录日志不拒绝 */
   private void detectCycles(Set<String> nodeCodes, Map<String, List<String>> edges) {
-    Set<String> visited = new HashSet<>();
-    Set<String> inStack = new HashSet<>();
+    Set<String> visited = new HashSet<>(nodeCodes.size());
+    Set<String> inStack = new HashSet<>(nodeCodes.size());
     for (String node : nodeCodes) {
       if (!visited.contains(node)) {
-        List<String> path = new ArrayList<>();
-        List<String> cyclePath = new ArrayList<>();
+        List<String> path = new ArrayList<>(nodeCodes.size());
+        List<String> cyclePath = new ArrayList<>(nodeCodes.size());
         if (dfsCycle(node, edges, visited, inStack, path, cyclePath)) {
           log.warn("[Flow-Validate] 检测到环路: {}", String.join(" → ", cyclePath));
         }

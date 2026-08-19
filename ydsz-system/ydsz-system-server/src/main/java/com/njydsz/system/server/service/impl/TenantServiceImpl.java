@@ -14,7 +14,6 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.TenantPageQuery;
 import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.domain.repository.TenantRepository;
-import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.TenantService;
 
 /**
@@ -45,9 +44,6 @@ public class TenantServiceImpl implements TenantService {
   /** 租户仓储 */
   private final TenantRepository tenantRepository;
 
-  /** 指标采集器（P2-4 指标埋点补充） */
-  private final SystemMetrics metrics;
-
   /**
    * 按 ID 查询租户
    *
@@ -56,10 +52,7 @@ public class TenantServiceImpl implements TenantService {
    */
   @Override
   public TenantVO getById(String id) {
-    long start = System.nanoTime();
-    TenantVO result = tenantRepository.findById(id).orElse(null);
-    metrics.recordTenantRead(System.nanoTime() - start);
-    return result;
+    return tenantRepository.findById(id).orElse(null);
   }
 
   /**
@@ -72,10 +65,7 @@ public class TenantServiceImpl implements TenantService {
    */
   @Override
   public PageResponse<List<TenantVO>> page(TenantPageQuery query) {
-    long start = System.nanoTime();
-    PageResponse<List<TenantVO>> result = tenantRepository.findByPage(query);
-    metrics.recordTenantRead(System.nanoTime() - start);
-    return result;
+    return tenantRepository.findByPage(query);
   }
 
   /**
@@ -94,7 +84,6 @@ public class TenantServiceImpl implements TenantService {
           .data("tenantCode", dto.getTenantCode());
     }
     tenantRepository.insert(dto);
-    metrics.recordTenantWrite();
     log.info("创建租户成功: tenantCode={}", dto.getTenantCode());
     return dto.getId();
   }
@@ -116,9 +105,7 @@ public class TenantServiceImpl implements TenantService {
       throw BusinessException.of(SystemExceptionCode.TENANT_CODE_DUPLICATE)
           .data("tenantCode", dto.getTenantCode());
     }
-    boolean result = tenantRepository.updateById(dto);
-    metrics.recordTenantWrite();
-    return result;
+    return tenantRepository.updateById(dto);
   }
 
   /**
@@ -156,9 +143,7 @@ public class TenantServiceImpl implements TenantService {
           .data("tenantCode", tenant.getTenantCode())
           .data("reason", "租户仍处于启用状态，请先停用租户并清理其业务数据后再删除");
     }
-    boolean result = tenantRepository.deleteById(id);
-    metrics.recordTenantWrite();
-    return result;
+    return tenantRepository.deleteById(id);
   }
 
   /**

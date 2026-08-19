@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.domain.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.njydsz.userinfo.domain.dto.UserLoginHistoryDTO;
@@ -50,4 +51,34 @@ public interface UserLoginHistoryRepository {
    * @return 登录历史列表
    */
   List<UserLoginHistoryVO> findByUserId(String userId);
+
+  /**
+   * 按登录结果统计指定时间范围内的登录次数。
+   *
+   * @param startTime 起始时间（含）
+   * @param endTime 结束时间（含）
+   * @param result 登录结果（SUCCESS/FAILED）
+   * @return 登录次数
+   */
+  long countByResultAndTimeRange(LocalDateTime startTime, LocalDateTime endTime, String result);
+
+  /**
+   * 按失败原因统计指定时间范围内的登录失败次数。
+   *
+   * @param startTime 起始时间（含）
+   * @param endTime 结束时间（含）
+   * @param failReason 失败原因
+   * @return 失败次数
+   */
+  int countByFailReasonAndTimeRange(
+      LocalDateTime startTime, LocalDateTime endTime, String failReason);
+
+  /**
+   * 查询指定时间之后的最近登录失败记录。
+   *
+   * @param since 起始时间
+   * @param limit 返回记录数上限
+   * @return 登录失败记录列表
+   */
+  List<UserLoginHistoryVO> findRecentFailedLogins(LocalDateTime since, int limit);
 }

@@ -167,7 +167,7 @@ public class FeishuChannel implements MessageChannel {
       textNode.put("tag", "text");
       textNode.put("text", content);
       line.add(textNode);
-      List<List<Map<String, Object>>> contentList = new ArrayList<>();
+      List<List<Map<String, Object>>> contentList = new ArrayList<>(4);
       contentList.add(line);
       zhCn.put("content", contentList);
       post.put("zh_cn", zhCn);
@@ -251,7 +251,7 @@ public class FeishuChannel implements MessageChannel {
               stringToSign.getBytes(StandardCharsets.UTF_8),
               secret.getBytes(StandardCharsets.UTF_8));
       String sign = Base64.getEncoder().encodeToString(signData);
-      Map<String, String> result = new HashMap<>();
+      Map<String, String> result = new HashMap<>(4);
       result.put("timestamp", String.valueOf(timestamp));
       result.put("sign", sign);
       return result;

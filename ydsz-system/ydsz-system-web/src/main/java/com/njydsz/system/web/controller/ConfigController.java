@@ -85,8 +85,8 @@ public class ConfigController {
    */
   @Operation(summary = "分页查询")
   @GetMapping("/page")
-  public PageResponse<List<ConfigVO>> page(ConfigPageQuery query) {
-    return configService.page(query);
+  public YdszResponse<PageResponse<List<ConfigVO>>> page(ConfigPageQuery query) {
+    return YdszResponse.success(configService.page(query));
   }
 
   /**

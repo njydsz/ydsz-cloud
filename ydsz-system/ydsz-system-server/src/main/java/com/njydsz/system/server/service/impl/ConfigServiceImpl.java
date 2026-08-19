@@ -292,38 +292,20 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   @Cacheable(value = CacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configValue(#p0)")
   public String getConfigValue(String configKey) {
-    long start = System.nanoTime();
-    try {
-      metrics.recordConfigCacheMiss();
-      ConfigVO config = configRepository.findEnabledByKey(configKey).orElse(null);
-      return config != null ? config.getConfigValue() : null;
-    } finally {
-      metrics.recordConfigRead(System.nanoTime() - start);
-    }
+    ConfigVO config = configRepository.findEnabledByKey(configKey).orElse(null);
+    return config != null ? config.getConfigValue() : null;
   }
 
   @Override
   @Cacheable(value = CacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configGroup(#p0)")
   public List<ConfigVO> getConfigsByGroup(String configGroup) {
-    long start = System.nanoTime();
-    try {
-      metrics.recordConfigCacheMiss();
-      return configRepository.findEnabledByGroup(configGroup);
-    } finally {
-      metrics.recordConfigRead(System.nanoTime() - start);
-    }
+    return configRepository.findEnabledByGroup(configGroup);
   }
 
   @Override
   @Cacheable(value = CacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configPublic()")
   public List<ConfigVO> listPublicConfigs() {
-    long start = System.nanoTime();
-    try {
-      metrics.recordConfigCacheMiss();
-      return configRepository.findPublicEnabled();
-    } finally {
-      metrics.recordConfigRead(System.nanoTime() - start);
-    }
+    return configRepository.findPublicEnabled();
   }
 
   // ============================== 私有方法 ==============================

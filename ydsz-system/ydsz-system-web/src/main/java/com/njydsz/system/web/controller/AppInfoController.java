@@ -81,10 +81,10 @@ public class AppInfoController {
    */
   @Operation(summary = "分页查询应用列表（支持搜索过滤）")
   @GetMapping("/page")
-  public PageResponse<List<AppInfoVO>> page(AppInfoPageQuery query) {
+  public YdszResponse<PageResponse<List<AppInfoVO>>> page(AppInfoPageQuery query) {
     // pageSize 服务端硬上限截断，防止深度分页 OOM
     query.setPageSize(Math.min(query.getPageSize(), MAX_PAGE_SIZE));
-    return service.page(query);
+    return YdszResponse.success(service.page(query));
   }
 
   /**
