@@ -137,6 +137,7 @@ public class FlowTaskPassService {
 
     // 标记当前用户已处理（ydsz_flow_user）
     if (dto.getUserId() != null) {
+      // 保留 Mapper：自定义 SQL 操作（markProcessed），Repository 暂无等价方法
       userMapper.markProcessed(
           task.getId(), String.valueOf(dto.getUserId()), dto.getComment(), LocalDateTime.now());
     }

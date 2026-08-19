@@ -1,10 +1,13 @@
 package com.njydsz.literule.server.config;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.annotation.Order;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -14,6 +17,7 @@ import com.njydsz.literule.api.DecisionTreeDefinition;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEngine;
+import com.njydsz.literule.api.RulePack;
 import com.njydsz.literule.api.ScorecardDefinition;
 import com.njydsz.literule.api.ScriptDefinition;
 import com.njydsz.literule.api.expression.ExpressionEngine;
@@ -26,6 +30,7 @@ import com.njydsz.literule.server.impl.ScriptRule;
 import com.njydsz.literule.server.spi.DecisionTableConfigProvider;
 import com.njydsz.literule.server.spi.DecisionTreeConfigProvider;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
+import com.njydsz.literule.server.spi.RulePackProvider;
 import com.njydsz.literule.server.spi.ScorecardConfigProvider;
 import com.njydsz.literule.server.spi.ScriptConfigProvider;
 
@@ -78,6 +83,17 @@ public class RuleHotReloader {
   /** 脚本规则配置提供者（可选，1.4.0 起支持） */
   private ScriptConfigProvider scriptConfigProvider;
 
+  /** 规则集市场提供者（可选，P0-F4 规则包批量热更新） */
+  private RulePackProvider packProvider;
+
+  /**
+   * 已加载版本号记录（P0-F4 版本号去重）
+   *
+   * <p>ruleCode -> 最后加载的版本号。reloadSingle 时比对 {@link RuleDefinition#getVersion()}，
+   * 版本相同（重复事件/重复广播）时跳过重载，避免无谓的 register/unregister 开销。
+   */
+  private final Map<String, Integer> lastLoadedVersions = new ConcurrentHashMap<>();
+
   /**
    * 设置决策表配置提供者
    *
@@ -116,6 +132,16 @@ public class RuleHotReloader {
    */
   public void setScriptConfigProvider(ScriptConfigProvider provider) {
     this.scriptConfigProvider = provider;
+  }
+
+  /**
+   * 设置规则集市场提供者（P0-F4 规则包批量热更新）
+   *
+   * @param packProviderProvider 规则集提供者（可选）
+   * @since 1.0.0
+   */
+  public void setPackProvider(ObjectProvider<RulePackProvider> packProviderProvider) {
+    this.packProvider = packProviderProvider != null ? packProviderProvider.getIfAvailable() : null;
   }
 
   /** 启动时全量加载规则 */
@@ -269,12 +295,62 @@ public class RuleHotReloader {
 
     switch (event.getChangeType()) {
       case FULL_RELOAD -> fullReload(event.getOperator());
+      case PACK_RELOAD -> reloadPack(event.getRuleCode(), event.getOperator());
       case DELETE -> {
         ruleEngine.unregister(event.getRuleCode());
+        lastLoadedVersions.remove(event.getRuleCode());
         log.info(
             "[LiteRule] 规则已注销: code={}, operator={}", event.getRuleCode(), event.getOperator());
       }
       default -> reloadSingle(event.getRuleCode(), event.getOperator());
+    }
+  }
+
+  /**
+   * 规则包批量热更新（P0-F4）
+   *
+   * <p>从 {@link RulePackProvider} 获取规则包最新版本的规则编码列表，逐条重载； 包不存在或未配置 Provider 时降级为全量重载。
+   *
+   * @param packCode 规则包编码
+   * @param operator 操作人
+   */
+  private void reloadPack(String packCode, String operator) {
+    if (packCode == null || packCode.isBlank()) {
+      log.warn("[LiteRule] 规则包编码为空，降级为全量重载");
+      fullReload(operator);
+      return;
+    }
+    if (packProvider == null) {
+      log.warn(
+          "[LiteRule] RulePackProvider 未配置，规则包 {} 降级为全量重载", packCode);
+      fullReload(operator);
+      return;
+    }
+    try {
+      RulePack pack = packProvider.getLatest(packCode);
+      if (pack == null || pack.getRuleCodes() == null || pack.getRuleCodes().isEmpty()) {
+        log.warn("[LiteRule] 规则包 {} 不存在或无规则，降级为全量重载", packCode);
+        fullReload(operator);
+        return;
+      }
+      int success = 0;
+      for (String ruleCode : pack.getRuleCodes()) {
+        try {
+          reloadSingle(ruleCode, operator);
+          success++;
+        } catch (Exception e) {
+          log.warn("[LiteRule] 规则包 {} 内规则 {} 重载失败: {}", packCode, ruleCode, e.getMessage());
+        }
+      }
+      log.info(
+          "[LiteRule] 规则包批量热更新完成: packCode={}, rules={}, success={}, operator={}",
+          packCode,
+          pack.getRuleCodes().size(),
+          success,
+          operator);
+    } catch (Exception e) {
+      log.error("[LiteRule] 规则包 {} 批量热更新失败，降级为全量重载: {}", packCode, e.getMessage());
+      fullReload(operator);
     }
   }
 
@@ -303,13 +379,21 @@ public class RuleHotReloader {
   private boolean tryReloadExpression(String ruleCode, String operator) {
     RuleDefinition def = configProvider.findByCode(ruleCode);
     if (def == null) return false;
+    // P0-F4 版本号去重：版本相同（重复事件/广播）跳过重载
+    Integer lastVersion = lastLoadedVersions.get(ruleCode);
+    if (lastVersion != null && lastVersion.equals(def.getVersion())) {
+      log.debug("[LiteRule] 规则 {} 版本 {} 已加载，跳过重载", ruleCode, def.getVersion());
+      return true;
+    }
     if (!def.isEnabled()) {
       ruleEngine.unregister(ruleCode);
+      lastLoadedVersions.remove(ruleCode);
       log.info("[LiteRule] 规则 {} 已注销（已禁用）, operator={}", ruleCode, operator);
       return true;
     }
     ruleEngine.register(new ExpressionRule(def, evaluator));
-    log.info("[LiteRule] 规则 {} 热刷新完成, operator={}", ruleCode, operator);
+    lastLoadedVersions.put(ruleCode, def.getVersion() != null ? def.getVersion() : 1);
+    log.info("[LiteRule] 规则 {} 热刷新完成（version={}), operator={}", ruleCode, def.getVersion(), operator);
     return true;
   }
 

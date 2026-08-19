@@ -44,7 +44,20 @@ public class RuleConfigRefreshEvent extends DomainEvent {
     UPDATE,
     DELETE,
     TOGGLE,
-    FULL_RELOAD
+    FULL_RELOAD,
+    /** 规则包（RulePack）批量重载（P0-F4） */
+    PACK_RELOAD
+  }
+
+  /**
+   * 构造规则包批量重载事件（P0-F4）
+   *
+   * @param packCode 规则包编码
+   * @param operator 操作人
+   * @return 事件实例
+   */
+  public static RuleConfigRefreshEvent packReload(String packCode, String operator) {
+    return new RuleConfigRefreshEvent(packCode, ChangeType.PACK_RELOAD, operator);
   }
 
   /**

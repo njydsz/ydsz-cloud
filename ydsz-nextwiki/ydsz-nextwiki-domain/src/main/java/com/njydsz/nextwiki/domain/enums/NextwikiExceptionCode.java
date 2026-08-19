@@ -75,6 +75,8 @@ public enum NextwikiExceptionCode implements ExceptionCode {
   CHUNK_UPLOAD_COMPLETED("W01020", "nextwiki.chunk.upload.completed"),
   /** 分片不完整 */
   CHUNK_INCOMPLETE("W01021", "nextwiki.chunk.incomplete"),
+  /** 节点不属于指定父目录（批量排序越权校验） */
+  FILE_NOT_BELONG_TO_PARENT("W01022", "nextwiki.file.not.belong.to.parent", 403),
 
   // 版本相关 W02xxx
   /** 版本不存在 */

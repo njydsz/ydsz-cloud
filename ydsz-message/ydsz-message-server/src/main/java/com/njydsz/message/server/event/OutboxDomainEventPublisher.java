@@ -1,7 +1,5 @@
 package com.njydsz.message.server.event;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.event.MessageDomainEvent;
 import com.njydsz.message.domain.event.OutboxEvent;
 import com.njydsz.message.domain.repository.OutboxEventRepository;
@@ -30,6 +29,8 @@ import com.njydsz.message.domain.repository.OutboxEventRepository;
  *   <li>支持失败重试，最终一致性</li>
  * </ul>
  *
+ * <p><b>编码规范合规：</b>使用 {@link YdszJson} 替代 Jackson ObjectMapper，符合《云顶编码规范》"禁止第三方 JSON 库"要求。
+ *
  * @author ydsz-team
  * @since 1.2.0
  */
@@ -40,7 +41,6 @@ public class OutboxDomainEventPublisher {
 
   private final ApplicationEventPublisher eventPublisher;
   private final OutboxEventRepository outboxEventRepository;
-  private final ObjectMapper objectMapper;
 
   /** Outbox 模式开关（关闭后等同原直接发布行为） */
   @Value("${ydsz.message.outbox.enabled:true}")
@@ -66,8 +66,8 @@ public class OutboxDomainEventPublisher {
     }
 
     try {
-      // 序列化事件载荷
-      String payload = objectMapper.writeValueAsString(event);
+      // 序列化事件载荷（使用 YdszJson，符合编码规范）
+      String payload = YdszJson.toJson(event);
       String eventType = event.getClass().getName();
 
       // 构造 Outbox 事件
@@ -100,7 +100,7 @@ public class OutboxDomainEventPublisher {
               }
             }
           });
-    } catch (JsonProcessingException e) {
+    } catch (Exception e) {
       log.error(
           "[OutboxPublisher] 事件序列化失败，回退直接发布: eventType={} err={}",
           event.eventType(),

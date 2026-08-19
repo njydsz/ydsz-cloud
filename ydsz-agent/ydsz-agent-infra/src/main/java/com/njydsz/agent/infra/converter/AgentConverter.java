@@ -128,7 +128,8 @@ public interface AgentConverter {
    * @param dto Agent 执行链路 DTO
    * @return 数据库实体
    */
-  AgentTraceDTO dtoToEntity(AgentTraceDTO dto);
+  // P1 修复：返回类型原误写为 AgentTraceDTO（复制粘贴错误），应转换为 AgentTraceDO
+  AgentTraceDO dtoToEntity(AgentTraceDTO dto);
 
   /**
    * DTO（含 ID）→ Entity 转换（更新场景）

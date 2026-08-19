@@ -379,9 +379,17 @@ public class ChatService {
     }
     long duration = System.currentTimeMillis() - startTime;
     metrics.recordLlmStream(provider, model, duration, usage[0], null);
+
+    // P0: 调用后精确成本核算
+    CostEstimate actualCost = tokenCostCalculator.calculateActual(usage[0], model);
     if (usage[0] != null && !usage[0].equals(TokenUsage.zero()) && costAnalysisService != null) {
       costAnalysisService.recordUsage(convId, model, usage[0]);
     }
+    LOG.info(
+        "[Chat-Stream] 成本核算: convId={}, actualTokens={}, actualCostUsd={}",
+        convId,
+        actualCost.getActualTotalTokens(),
+        actualCost.getActualCostUsd());
     traceRecorder.recordStep(
         traceId, "LLM_CALL", "Stream LLM call", request, contentBuilder.toString(), duration);
 
@@ -393,7 +401,11 @@ public class ChatService {
     runtimeMetrics.recordExecution("simple", true, duration);
 
     traceRecorder.endTrace(traceId, "SUCCESS");
-    LOG.info("[Chat-Stream] 流式对话完成: convId={}, tokens={}", convId, usage[0].getTotalTokens());
+    LOG.info(
+        "[Chat-Stream] 流式对话完成: convId={}, tokens={}, costUsd={}",
+        convId,
+        usage[0].getTotalTokens(),
+        actualCost.getActualCostUsd());
   }
 
   /** 获取对话历史 */

@@ -11,6 +11,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
@@ -279,7 +280,7 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
    */
   private ConfigDTO toDtoForImport(ConfigVO vo) {
     ConfigDTO dto = new ConfigDTO();
-    dto.setId(com.baomidou.mybatisplus.core.toolkit.IdWorker.getIdStr());
+    dto.setId(IdWorker.getIdStr());
     dto.setConfigGroup(vo.getConfigGroup());
     dto.setConfigKey(vo.getConfigKey());
     dto.setConfigValue(vo.getConfigValue());
