@@ -72,7 +72,7 @@ public class TenantConfigService {
         return YdszJson.fromJson(cached, MsgTenantConfig.class);
       }
     } catch (Exception e) {
-      log.warn("[TenantConfig] 缓存读取异常(fail-open): tenant={} err={}", tenantId, e.getMessage());
+      log.warn("[TenantConfig] 缓存读取异常(fail-open): tenant={} err={}", tenantId, e.getMessage(), e);
     }
 
     // 2. 缓存未命中查 DB
@@ -88,7 +88,7 @@ public class TenantConfigService {
           .opsForValue()
           .set(cacheKey, YdszJson.toJson(config), Duration.ofMinutes(CACHE_TTL_MINUTES));
     } catch (Exception e) {
-      log.warn("[TenantConfig] 缓存写入异常(忽略): tenant={} err={}", tenantId, e.getMessage());
+      log.warn("[TenantConfig] 缓存写入异常(忽略): tenant={} err={}", tenantId, e.getMessage(), e);
     }
 
     return config;
@@ -121,7 +121,7 @@ public class TenantConfigService {
         return enabled != null ? enabled : globalDefault;
       }
     } catch (Exception e) {
-      log.warn("[TenantConfig] channelOverrides 解析异常(fail-open): tenant={} err={}", tenantId, e.getMessage());
+      log.warn("[TenantConfig] channelOverrides 解析异常(fail-open): tenant={} err={}", tenantId, e.getMessage(), e);
     }
     return globalDefault;
   }
@@ -153,7 +153,7 @@ public class TenantConfigService {
         return provider != null ? provider : globalProvider;
       }
     } catch (Exception e) {
-      log.warn("[TenantConfig] providerOverrides 解析异常(fail-open): tenant={} err={}", tenantId, e.getMessage());
+      log.warn("[TenantConfig] providerOverrides 解析异常(fail-open): tenant={} err={}", tenantId, e.getMessage(), e);
     }
     return globalProvider;
   }

@@ -144,7 +144,7 @@ public class ColdDataArchivalService {
       log.warn("[ColdDataArchival] 当前存储后端不支持解冻: fileNodeId={}", file.getId());
       return false;
     } catch (Exception e) {
-      log.error("[ColdDataArchival] 解冻失败: fileNodeId={}, error={}", file.getId(), e.getMessage());
+      log.error("[ColdDataArchival] 解冻失败: fileNodeId={}, error={}", file.getId(), e.getMessage(), e);
       return false;
     }
   }
@@ -178,7 +178,7 @@ public class ColdDataArchivalService {
     } catch (UnsupportedOperationException e) {
       log.warn("[ColdDataArchival] 当前存储后端不支持存储类型变更: fileNodeId={}", file.getId());
     } catch (Exception e) {
-      log.error("[ColdDataArchival] 归档失败: fileNodeId={}, error={}", file.getId(), e.getMessage());
+      log.error("[ColdDataArchival] 归档失败: fileNodeId={}, error={}", file.getId(), e.getMessage(), e);
       throw e;
     }
   }

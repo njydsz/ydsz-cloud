@@ -464,7 +464,7 @@ public class AiSummaryApplicationService implements AiSummaryService {
       }
       return response;
     } catch (Exception e) {
-      log.warn("[AiSummaryApplicationService] LLM 摘要失败，降级到 TextRank: {}", e.getMessage());
+      log.warn("[AiSummaryApplicationService] LLM 摘要失败，降级到 TextRank: {}", e.getMessage(), e);
       return generateSummaryByTextRank(content);
     }
   }
@@ -493,7 +493,7 @@ public class AiSummaryApplicationService implements AiSummaryService {
           .limit(MAX_KEYWORDS)
           .collect(Collectors.toList());
     } catch (Exception e) {
-      log.warn("[AiSummaryApplicationService] LLM 关键词提取失败，降级到 TextRank: {}", e.getMessage());
+      log.warn("[AiSummaryApplicationService] LLM 关键词提取失败，降级到 TextRank: {}", e.getMessage(), e);
       return extractKeywordsByTextRank(content);
     }
   }

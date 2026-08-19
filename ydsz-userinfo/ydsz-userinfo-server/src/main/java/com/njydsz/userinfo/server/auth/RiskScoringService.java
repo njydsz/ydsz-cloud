@@ -69,7 +69,7 @@ public class RiskScoringService {
       String userAgent,
       int recentFailCount,
       boolean isNewDevice) {
-    List<String> factors = new ArrayList<>();
+    List<String> factors = new ArrayList<>(4);
 
     // P1-1: 权重与阈值全部从配置读取（默认值与历史一致，保证行为不变）
     int ipWeight = properties.getRiskIpWeight();

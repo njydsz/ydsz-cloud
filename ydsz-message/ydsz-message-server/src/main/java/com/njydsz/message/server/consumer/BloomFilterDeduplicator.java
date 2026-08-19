@@ -188,7 +188,7 @@ public class BloomFilterDeduplicator {
       } catch (Exception e) {
         // Redis 异常时降级为纯本地 BloomFilter（fail-open）
         redisDegraded = true;
-        log.warn("[BloomFilter] Redis 异常，降级为本地模式: {}", e.getMessage());
+        log.warn("[BloomFilter] Redis 异常，降级为本地模式: {}", e.getMessage(), e);
         totalHits++;
         return true;
       }
@@ -225,7 +225,7 @@ public class BloomFilterDeduplicator {
       } catch (Exception e) {
         // Redis 异常时降级为纯本地 BloomFilter（fail-open）
         redisDegraded = true;
-        log.warn("[BloomFilter] Redis 写入异常，降级为本地模式: {}", e.getMessage());
+        log.warn("[BloomFilter] Redis 写入异常，降级为本地模式: {}", e.getMessage(), e);
       }
     }
   }
@@ -252,7 +252,7 @@ public class BloomFilterDeduplicator {
       windowCreatedAt.set(System.currentTimeMillis());
       log.debug("[BloomFilter] 窗口已翻转");
     } catch (Exception e) {
-      log.warn("[BloomFilter] 窗口翻转异常: {}", e.getMessage());
+      log.warn("[BloomFilter] 窗口翻转异常: {}", e.getMessage(), e);
     }
   }
 

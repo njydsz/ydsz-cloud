@@ -88,7 +88,7 @@ public class ScheduledMessageScanner {
         sendScheduledMessage(logDO);
         success++;
       } catch (Exception e) {
-        log.error("[ScheduledScanner] 定时消息发送异常: logId={} err={}", logDO.getId(), e.getMessage());
+        log.error("[ScheduledScanner] 定时消息发送异常: logId={} err={}", logDO.getId(), e.getMessage(), e);
         failed++;
       }
     }

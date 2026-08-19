@@ -74,7 +74,7 @@ public class CacheWarmer {
       warmDictCache();
       log.info("[CacheWarmer] 缓存预热完成，耗时 {}ms", System.currentTimeMillis() - start);
     } catch (Exception e) {
-      log.warn("[CacheWarmer] 缓存预热失败（不影响应用启动）: {}", e.getMessage());
+      log.warn("[CacheWarmer] 缓存预热失败（不影响应用启动）: {}", e.getMessage(), e);
     }
   }
 
@@ -110,7 +110,7 @@ public class CacheWarmer {
 
       log.info("[CacheWarmer] 系统配置缓存预热完成，共 {} 条", configs.size());
     } catch (Exception e) {
-      log.warn("[CacheWarmer] 系统配置缓存预热失败: {}", e.getMessage());
+      log.warn("[CacheWarmer] 系统配置缓存预热失败: {}", e.getMessage(), e);
     }
   }
 
@@ -152,7 +152,7 @@ public class CacheWarmer {
 
       log.info("[CacheWarmer] 字典项缓存预热完成，共 {} 条，{} 个类型", dictItems.size(), groupedItems.size());
     } catch (Exception e) {
-      log.warn("[CacheWarmer] 字典项缓存预热失败: {}", e.getMessage());
+      log.warn("[CacheWarmer] 字典项缓存预热失败: {}", e.getMessage(), e);
     }
   }
 

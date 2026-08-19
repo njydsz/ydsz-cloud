@@ -193,7 +193,7 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
           .register(meterRegistry)
           .increment();
     } catch (Exception e) {
-      log.warn("[NextwikiMetrics] 记录缓存命中失败: err={}", e.getMessage());
+      log.warn("[NextwikiMetrics] 记录缓存命中失败: err={}", e.getMessage(), e);
     }
   }
 
@@ -212,7 +212,7 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
           .register(meterRegistry)
           .increment();
     } catch (Exception e) {
-      log.warn("[NextwikiMetrics] 记录缓存未命中失败: err={}", e.getMessage());
+      log.warn("[NextwikiMetrics] 记录缓存未命中失败: err={}", e.getMessage(), e);
     }
   }
 
@@ -314,7 +314,7 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
         quotaUsageCached.set(quota.getQuotaUsed());
       }
     } catch (Exception e) {
-      log.warn("[NextwikiMetrics] 配额 Gauge 刷新失败: {}", e.getMessage());
+      log.warn("[NextwikiMetrics] 配额 Gauge 刷新失败: {}", e.getMessage(), e);
     }
   }
 }

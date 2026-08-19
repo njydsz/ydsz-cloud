@@ -78,7 +78,7 @@ public class InAppChannel implements MessageChannel {
           traceId);
       return MessageResult.ok(CHANNEL_TYPE, traceId);
     } catch (Exception e) {
-      log.error("[INAPP] 站内信发送异常: receiver={} err={}", request.getReceiver(), e.getMessage());
+      log.error("[INAPP] 站内信发送异常: receiver={} err={}", request.getReceiver(), e.getMessage(), e);
       return MessageResult.fail(CHANNEL_TYPE, "站内信发送异常: " + e.getMessage());
     }
   }

@@ -106,7 +106,7 @@ public class SearchHistoryService {
       List<String> history = redisTemplate.opsForList().range(KEY_SEARCH_HISTORY + userId, 0, -1);
       return history != null ? history : Collections.emptyList();
     } catch (Exception e) {
-      log.warn("[SearchHistoryService] 获取搜索历史失败: userId={}, err={}", userId, e.getMessage());
+      log.warn("[SearchHistoryService] 获取搜索历史失败: userId={}, err={}", userId, e.getMessage(), e);
       return Collections.emptyList();
     }
   }
@@ -125,7 +125,7 @@ public class SearchHistoryService {
       redisTemplate.delete(KEY_SEARCH_HISTORY + userId);
       log.debug("[SearchHistoryService] 清除搜索历史: userId={}", userId);
     } catch (Exception e) {
-      log.warn("[SearchHistoryService] 清除搜索历史失败: userId={}, err={}", userId, e.getMessage());
+      log.warn("[SearchHistoryService] 清除搜索历史失败: userId={}, err={}", userId, e.getMessage(), e);
     }
   }
 
@@ -145,7 +145,7 @@ public class SearchHistoryService {
           .map(entry -> Map.<String, Double>entry(entry.getValue(), entry.getScore()))
           .collect(Collectors.toList());
     } catch (Exception e) {
-      log.warn("[SearchHistoryService] 获取热门搜索失败: err={}", e.getMessage());
+      log.warn("[SearchHistoryService] 获取热门搜索失败: err={}", e.getMessage(), e);
       return Collections.emptyList();
     }
   }

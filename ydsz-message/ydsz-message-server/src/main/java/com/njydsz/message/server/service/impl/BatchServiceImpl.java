@@ -198,7 +198,7 @@ public class BatchServiceImpl implements BatchService {
       List<MessageRequest> requests = YdszJson.parseArray(payload, MessageRequest.class);
       return requests != null ? requests : new ArrayList<>();
     } catch (Exception e) {
-      log.warn("[Batch] payload 反序列化失败: {}", e.getMessage());
+      log.warn("[Batch] payload 反序列化失败: {}", e.getMessage(), e);
       return new ArrayList<>();
     }
   }

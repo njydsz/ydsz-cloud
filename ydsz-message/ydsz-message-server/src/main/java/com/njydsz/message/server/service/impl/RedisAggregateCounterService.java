@@ -91,7 +91,7 @@ public class RedisAggregateCounterService {
 
       return count != null ? count : -1L;
     } catch (Exception e) {
-      log.warn("[AggregateCounter] Redis INCR 异常，需降级: group={} err={}", group, e.getMessage());
+      log.warn("[AggregateCounter] Redis INCR 异常，需降级: group={} err={}", group, e.getMessage(), e);
       return -1L;
     }
   }
@@ -109,7 +109,7 @@ public class RedisAggregateCounterService {
       Long count = redisStringOps.get(counterKey, Long.class);
       return count != null ? count : 0L;
     } catch (Exception e) {
-      log.warn("[AggregateCounter] Redis GET 异常: group={} err={}", group, e.getMessage());
+      log.warn("[AggregateCounter] Redis GET 异常: group={} err={}", group, e.getMessage(), e);
       return -1L;
     }
   }
@@ -129,7 +129,7 @@ public class RedisAggregateCounterService {
       log.debug("[AggregateCounter] 重置计数: group={} receiver={}", group, receiver);
       return true;
     } catch (Exception e) {
-      log.warn("[AggregateCounter] Redis DEL 异常: group={} err={}", group, e.getMessage());
+      log.warn("[AggregateCounter] Redis DEL 异常: group={} err={}", group, e.getMessage(), e);
       return false;
     }
   }

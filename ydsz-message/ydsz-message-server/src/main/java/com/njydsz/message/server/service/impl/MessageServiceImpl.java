@@ -637,7 +637,7 @@ public class MessageServiceImpl implements MessageService {
       log.info(
           "[Message] 异步消息已落库 PENDING: msgId={} channel={}", logDO.getMsgId(), request.getChannel());
     } catch (Exception e) {
-      log.error("[Message] 异步消息落库失败: msgId={} err={}", request.getMessageId(), e.getMessage());
+      log.error("[Message] 异步消息落库失败: msgId={} err={}", request.getMessageId(), e.getMessage(), e);
       return MessageResult.fail(request.getChannel(), "消息落库失败: " + e.getMessage());
     }
     // ② 写入 Outbox 表（与业务同事务语义，由 OutboxEventScheduler 异步投递 MQ）

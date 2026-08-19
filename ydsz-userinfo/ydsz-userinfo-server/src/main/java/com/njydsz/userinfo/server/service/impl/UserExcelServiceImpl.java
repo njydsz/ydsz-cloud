@@ -107,7 +107,7 @@ public class UserExcelServiceImpl implements UserExcelService {
     // 4. 逐行处理
     int successCount = 0;
     int failCount = 0;
-    List<String> failDetails = new ArrayList<>();
+    List<String> failDetails = new ArrayList<>(importList.size());
 
     for (int i = 0; i < importList.size(); i++) {
       int rowNum = i + 2; // Excel 行号（第1行是表头）
@@ -170,7 +170,7 @@ public class UserExcelServiceImpl implements UserExcelService {
    */
   private List<UserImportDTO> readExcel(InputStream inputStream, String originalFilename) {
     try {
-      List<UserImportDTO> result = new ArrayList<>();
+      List<UserImportDTO> result = new ArrayList<>(16);
       // 使用 common-excel 的 ExcelFacade 读取
       ExcelFacade.read(inputStream, UserImportDTO.class)
           .sheet()
@@ -318,7 +318,7 @@ public class UserExcelServiceImpl implements UserExcelService {
     if (deptCodes.isEmpty()) {
       return new HashMap<>();
     }
-    Map<String, String> result = new HashMap<>();
+    Map<String, String> result = new HashMap<>(deptCodes.size());
     for (String deptCode : deptCodes) {
       departmentRepository.findByDeptCode(deptCode)
           .ifPresent(vo -> result.put(deptCode, vo.getId()));
@@ -336,7 +336,7 @@ public class UserExcelServiceImpl implements UserExcelService {
     if (usernames.isEmpty()) {
       return new HashMap<>();
     }
-    Map<String, String> result = new HashMap<>();
+    Map<String, String> result = new HashMap<>(usernames.size());
     for (String username : usernames) {
       userAccountRepository.findByUsername(username)
           .ifPresent(vo -> result.put(username, vo.getId()));

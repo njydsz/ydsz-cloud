@@ -215,14 +215,14 @@ public class OutboxEventScheduler {
         Class<?> eventClass = Class.forName(fqcn);
         return YdszJson.fromJson(payload, eventClass);
       } catch (ClassNotFoundException ex) {
-        log.warn("无法反序列化事件: type={} err={}", eventType, ex.getMessage());
+        log.warn("无法反序列化事件: type={} err={}", eventType, ex.getMessage(), ex);
         return null;
       } catch (Exception ex) {
-        log.warn("事件 JSON 解析失败: type={} err={}", eventType, ex.getMessage());
+        log.warn("事件 JSON 解析失败: type={} err={}", eventType, ex.getMessage(), ex);
         return null;
       }
     } catch (Exception e) {
-      log.warn("事件 JSON 解析失败: type={} err={}", eventType, e.getMessage());
+      log.warn("事件 JSON 解析失败: type={} err={}", eventType, e.getMessage(), e);
       return null;
     }
   }

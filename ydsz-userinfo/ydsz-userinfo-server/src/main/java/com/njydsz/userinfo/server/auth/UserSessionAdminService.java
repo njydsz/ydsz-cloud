@@ -66,10 +66,10 @@ public class UserSessionAdminService {
   public List<UserSessionVO> listUserSessions(String userId) {
     Set<String> tokens = sessionManager.listActiveSessions(userId);
     if (tokens.isEmpty()) {
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     }
 
-    List<UserSessionVO> sessions = new ArrayList<>();
+    List<UserSessionVO> sessions = new ArrayList<>(tokens.size());
     for (String token : tokens) {
       UserSessionVO vo = buildSessionVO(token);
       if (vo != null) {
@@ -93,7 +93,7 @@ public class UserSessionAdminService {
     // 由于缺乏全局会话索引，此接口当前无法高效实现
     // 后续可通过维护 userinfo:session:all（全局 Set 索引）支持 SCAN
     log.warn("listAllActiveSessions limited by lack of global session index, returning empty");
-    return new ArrayList<>();
+    return new ArrayList<>(0);
   }
 
   /**
@@ -130,7 +130,7 @@ public class UserSessionAdminService {
     // 完整实现需要遍历所有用户或通过全局会话索引获取
     // 当前返回零值，避免 N+1 查询
     log.debug("getSessionStatistics called - requires global session index for accurate data");
-    return new UserSessionStatistics(0, 0, new HashMap<>());
+    return new UserSessionStatistics(0, 0, new HashMap<>(4));
   }
 
   /**

@@ -187,7 +187,7 @@ public class SessionActivityService {
       return List.of();
     }
 
-    List<SessionTrendVO> result = new ArrayList<>();
+    List<SessionTrendVO> result = new ArrayList<>(16);
     LocalDate current = start;
 
     while (!current.isAfter(end)) {
@@ -208,7 +208,7 @@ public class SessionActivityService {
    * @return 设备分布列表
    */
   public List<DeviceDistributionVO> getDeviceDistribution() {
-    Map<String, Integer> deviceCount = new HashMap<>();
+    Map<String, Integer> deviceCount = new HashMap<>(4);
     deviceCount.put("web", 0);
     deviceCount.put("app", 0);
     deviceCount.put("api", 0);
@@ -239,7 +239,7 @@ public class SessionActivityService {
 
     // 计算总数和百分比
     int total = deviceCount.values().stream().mapToInt(Integer::intValue).sum();
-    List<DeviceDistributionVO> result = new ArrayList<>();
+    List<DeviceDistributionVO> result = new ArrayList<>(16);
 
     for (Map.Entry<String, Integer> entry : deviceCount.entrySet()) {
       double percentage = total > 0 ? (double) entry.getValue() / total : 0.0;
@@ -265,7 +265,7 @@ public class SessionActivityService {
    * @return 异常会话列表
    */
   public List<AnomalySessionVO> detectAnomalySessions() {
-    List<AnomalySessionVO> anomalies = new ArrayList<>();
+    List<AnomalySessionVO> anomalies = new ArrayList<>(16);
 
     try {
       // 1. 多地登录检测
@@ -302,7 +302,7 @@ public class SessionActivityService {
       Set<String> sessionKeys = redisStringOps.scan(SESSION_KEY_PREFIX + "*", MAX_SCAN_KEYS);
 
       int totalSessions = 0;
-      Set<String> activeUserIds = new HashSet<>();
+      Set<String> activeUserIds = new HashSet<>(16);
       long totalTtl = 0;
       int sessionCount = 0;
 
@@ -405,7 +405,7 @@ public class SessionActivityService {
    * @return 多地登录异常列表
    */
   private List<AnomalySessionVO> detectMultiIpLogins() {
-    List<AnomalySessionVO> anomalies = new ArrayList<>();
+    List<AnomalySessionVO> anomalies = new ArrayList<>(16);
 
     try {
       // 扫描所有用户会话索引
@@ -424,7 +424,7 @@ public class SessionActivityService {
         }
 
         // 收集该用户所有会话的 IP 和登录时间
-        Set<String> distinctIps = new HashSet<>();
+        Set<String> distinctIps = new HashSet<>(16);
         String username = null;
         LocalDateTime earliestLogin = null;
 
@@ -474,15 +474,15 @@ public class SessionActivityService {
    * @return 异常活跃列表
    */
   private List<AnomalySessionVO> detectAbnormallyActiveUsers() {
-    List<AnomalySessionVO> anomalies = new ArrayList<>();
+    List<AnomalySessionVO> anomalies = new ArrayList<>(16);
 
     try {
       // 扫描所有用户会话索引
       Set<String> sessionKeys = redisStringOps.scan(SESSION_KEY_PREFIX + "*", MAX_SCAN_KEYS);
 
       // 第一遍：计算平台平均会话数
-      List<Integer> sessionCounts = new ArrayList<>();
-      Map<String, String> keyToUserId = new HashMap<>();
+      List<Integer> sessionCounts = new ArrayList<>(16);
+      Map<String, String> keyToUserId = new HashMap<>(16);
 
       for (String sessionKey : sessionKeys) {
         if (sessionKey.contains(":device:")) {
@@ -552,7 +552,7 @@ public class SessionActivityService {
    * @return 长时间未活动异常列表
    */
   private List<AnomalySessionVO> detectStaleSessions() {
-    List<AnomalySessionVO> anomalies = new ArrayList<>();
+    List<AnomalySessionVO> anomalies = new ArrayList<>(16);
 
     try {
       // 扫描所有用户会话索引

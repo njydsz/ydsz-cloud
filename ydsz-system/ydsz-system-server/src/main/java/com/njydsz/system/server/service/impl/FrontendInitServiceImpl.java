@@ -84,7 +84,7 @@ public class FrontendInitServiceImpl implements FrontendInitService {
               (v1, v2) -> v1 // 重复键取第一个
           ));
     } catch (Exception e) {
-      log.warn("[FrontendInitService] 获取公开配置失败: {}", e.getMessage());
+      log.warn("[FrontendInitService] 获取公开配置失败: {}", e.getMessage(), e);
       return new HashMap<>();
     }
   }
@@ -96,7 +96,7 @@ public class FrontendInitServiceImpl implements FrontendInitService {
    * @return typeCode -> 字典项列表
    */
   private Map<String, List<DictItemVO>> getDictMap(List<String> typeCodes) {
-    Map<String, List<DictItemVO>> dictMap = new HashMap<>();
+    Map<String, List<DictItemVO>> dictMap = new HashMap<>(typeCodes.size());
     if (typeCodes == null || typeCodes.isEmpty()) {
       return dictMap;
     }
@@ -107,7 +107,7 @@ public class FrontendInitServiceImpl implements FrontendInitService {
           dictMap.put(typeCode, items);
         }
       } catch (Exception e) {
-        log.warn("[FrontendInitService] 获取字典失败: typeCode={}, error={}", typeCode, e.getMessage());
+        log.warn("[FrontendInitService] 获取字典失败: typeCode={}, error={}", typeCode, e.getMessage(), e);
       }
     }
     return dictMap;
