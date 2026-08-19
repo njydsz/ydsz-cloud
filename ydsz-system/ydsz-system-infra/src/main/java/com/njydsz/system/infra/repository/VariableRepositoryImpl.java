@@ -3,7 +3,7 @@ package com.njydsz.system.infra.repository.impl;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -45,9 +45,9 @@ public class VariableRepositoryImpl implements VariableRepository {
   public Optional<VariableVO> findEnabledByKey(String variableKey) {
     return Optional.ofNullable(
         variableMapper.selectOne(
-            new QueryWrapper<Variable>()
-                .eq("variable_key", variableKey)
-                .eq("status", STATUS_ENABLED)
+            new LambdaQueryWrapper<Variable>()
+                .eq(Variable::getVariableKey, variableKey)
+                .eq(Variable::getStatus, STATUS_ENABLED)
                 .last("LIMIT 1")))
         .map(converter::entityToVO);
   }
@@ -56,9 +56,9 @@ public class VariableRepositoryImpl implements VariableRepository {
   public Optional<VariableVO> findByKeyIgnoreStatus(String variableKey) {
     return Optional.ofNullable(
         variableMapper.selectOne(
-            new QueryWrapper<Variable>()
-                .eq("variable_key", variableKey)
-                .eq("deleted", 0)
+            new LambdaQueryWrapper<Variable>()
+                .eq(Variable::getVariableKey, variableKey)
+                .eq(Variable::getDeleted, 0)
                 .last("LIMIT 1")))
         .map(converter::entityToVO);
   }
@@ -71,14 +71,14 @@ public class VariableRepositoryImpl implements VariableRepository {
   @Override
   public PageResponse<List<VariableVO>> findByPage(VariablePageQuery query) {
     Page<Variable> page = new Page<>(query.getPageNum(), query.getPageSize());
-    QueryWrapper<Variable> wrapper = new QueryWrapper<>();
+    LambdaQueryWrapper<Variable> wrapper = new LambdaQueryWrapper<>();
     if (query.getVariableKey() != null && !query.getVariableKey().isBlank()) {
-      wrapper.like("variable_key", query.getVariableKey());
+      wrapper.like(Variable::getVariableKey, query.getVariableKey());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq("status", query.getStatus());
+      wrapper.eq(Variable::getStatus, query.getStatus());
     }
-    wrapper.orderByDesc("created_at");
+    wrapper.orderByDesc(Variable::getCreatedAt);
     com.baomidou.mybatisplus.core.metadata.IPage<Variable> result = variableMapper.selectPage(page, wrapper);
     List<VariableVO> vos = converter.variableListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
@@ -108,10 +108,10 @@ public class VariableRepositoryImpl implements VariableRepository {
 
   @Override
   public List<VariableVO> findByTenantId(String tenantId) {
-    QueryWrapper<Variable> wrapper = new QueryWrapper<>();
-    wrapper.eq("deleted", 0);
+    LambdaQueryWrapper<Variable> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(Variable::getDeleted, 0);
     if (tenantId != null && !tenantId.isBlank()) {
-      wrapper.eq("tenant_id", tenantId);
+      wrapper.eq(Variable::getTenantId, tenantId);
     }
     return converter.variableListToVO(variableMapper.selectList(wrapper));
   }

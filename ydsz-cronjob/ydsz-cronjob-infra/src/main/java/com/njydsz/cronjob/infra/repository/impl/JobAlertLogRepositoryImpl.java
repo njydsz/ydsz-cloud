@@ -6,6 +6,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
 import com.njydsz.cronjob.domain.repository.JobAlertLogRepository;
 import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
@@ -42,5 +43,10 @@ public class JobAlertLogRepositoryImpl implements JobAlertLogRepository {
   @Override
   public int cleanExpiredLogs(LocalDateTime before, int limit) {
     return jobAlertLogMapper.cleanExpiredLogs(before, limit);
+  }
+
+  @Override
+  public int insert(JobAlertLog alertLog) {
+    return jobAlertLogMapper.insert(alertLog);
   }
 }

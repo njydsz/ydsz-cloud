@@ -270,7 +270,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   /** 获取租户当前并发执行数（容错：Redis 失败时返回 0，降级放行）。 */
   private long getConcurrentCount(String tenantId) {
     try {
-      String quotaValue = redisStringOps.get(CONCURRENT_KEY_PREFIX + tenantId);
+      String quotaValue = redisStringOps.get(CONCURRENT_KEY_PREFIX + tenantId, String.class);
       if (quotaValue == null || quotaValue.isEmpty()) {
         return 0L;
       }
@@ -285,7 +285,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   private long getDailyCount(String tenantId) {
     try {
       String key = DAILY_KEY_PREFIX + tenantId + ":" + todaySuffix();
-      String quotaValue = redisStringOps.get(key);
+      String quotaValue = redisStringOps.get(key, String.class);
       if (quotaValue == null || quotaValue.isEmpty()) {
         return 0L;
       }

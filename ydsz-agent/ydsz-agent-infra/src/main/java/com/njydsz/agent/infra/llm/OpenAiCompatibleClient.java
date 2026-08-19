@@ -124,22 +124,16 @@ public class OpenAiCompatibleClient implements LlmClient {
         new Semaphore(maxConcurrent > 0 ? maxConcurrent : DEFAULT_MAX_CONCURRENT);
     this.snakeCaseMapper =
         JsonMapper.builder().namingStrategy(PropertyNamingStrategy.SNAKE_CASE).build();
+    // 共享连接池：RestClient 和 WebClient 共用同一 ConnectionProvider，避免重复创建连接
+    ConnectionProvider connectionProvider = createConnectionProvider();
+    HttpClient httpClient = createNettyHttpClient(connectionProvider);
     this.restClient =
         RestClient.builder()
             .baseUrl(this.baseUrl)
             .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .clientConnector(new ReactorClientHttpConnector(httpClient))
             .build();
-    ConnectionProvider connectionProvider =
-        ConnectionProvider.builder("agent-llm-" + this.provider)
-            .maxConnections(100)
-            .maxIdleTime(Duration.ofSeconds(30))
-            .pendingAcquireTimeout(Duration.ofSeconds(10))
-            .build();
-    HttpClient httpClient =
-        HttpClient.create(connectionProvider)
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
-            .responseTimeout(Duration.ofSeconds(this.timeoutSeconds));
     this.webClient =
         WebClient.builder()
             .baseUrl(this.baseUrl)
@@ -147,6 +141,41 @@ public class OpenAiCompatibleClient implements LlmClient {
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .clientConnector(new ReactorClientHttpConnector(httpClient))
             .build();
+  }
+
+  /**
+   * 创建 Netty 连接池 Provider。
+   *
+   * <p>配置说明：
+   *
+   * <ul>
+   *   <li>maxConnections=100：单 Provider 最大连接数，覆盖同步 + 流式共用
+   *   <li>maxIdleTime=30s：空闲连接自动回收，避免长时间占用远端连接
+   *   <li>pendingAcquireTimeout=10s：等待可用连接的超时，超时快速失败
+   * </ul>
+   *
+   * @return 共享的 ConnectionProvider 实例
+   */
+  private static ConnectionProvider createConnectionProvider() {
+    return ConnectionProvider.builder("agent-llm-shared")
+        .maxConnections(100)
+        .maxIdleTime(Duration.ofSeconds(30))
+        .pendingAcquireTimeout(Duration.ofSeconds(10))
+        .build();
+  }
+
+  /**
+   * 创建共享的 Netty HttpClient。
+   *
+   * <p>统一配置连接超时（5s）和响应超时（由外部配置驱动）。
+   *
+   * @param provider 连接池 Provider
+   * @return 配置好的 HttpClient 实例
+   */
+  private HttpClient createNettyHttpClient(ConnectionProvider provider) {
+    return HttpClient.create(provider)
+        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+        .responseTimeout(Duration.ofSeconds(this.timeoutSeconds));
   }
 
   @Override

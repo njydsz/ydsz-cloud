@@ -12,10 +12,16 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.core.NotifyService;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
 import com.njydsz.nextwiki.domain.event.AuditEvent;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
+import com.njydsz.nextwiki.domain.repository.TagRepository;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.vo.TagVO;
 import com.njydsz.nextwiki.server.service.ContentExtractionApplicationService;
 
 /**
@@ -46,6 +52,9 @@ public class FileOperatedEventListener {
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
   private final SearchDomainService searchDomainService;
+  private final SearchIndexRepository searchIndexRepository;
+  private final FileNodeRepository fileNodeRepository;
+  private final TagRepository tagRepository;
   private final ContentExtractionApplicationService contentExtractionService;
   private final ShareLinkRepository shareLinkRepository;
   private final NotifyService notifyService;
@@ -130,7 +139,7 @@ public class FileOperatedEventListener {
    * @param event 文件操作领域事件
    */
   private void handleDelete(FileOperatedEvent event) {
-    searchDomainService.removeIndex(event.getFileNodeId());
+    removeIndex(event.getFileNodeId());
     log.info("[FileOperatedEventListener] 删除后处理完成: fileNodeId={}", event.getFileNodeId());
   }
 
@@ -141,7 +150,7 @@ public class FileOperatedEventListener {
    */
   private void handleMove(FileOperatedEvent event) {
     if (!"folder".equals(event.getNodeType())) {
-      searchDomainService.indexFile(event.getFileNodeId(), null, event.getOperatorId());
+      indexFile(event.getFileNodeId(), null, event.getOperatorId());
     }
     log.info(
         "[FileOperatedEventListener] 移动后处理完成: fileNodeId={}, extra={}",
@@ -156,7 +165,7 @@ public class FileOperatedEventListener {
    */
   private void handleRename(FileOperatedEvent event) {
     if (!"folder".equals(event.getNodeType())) {
-      searchDomainService.indexFile(event.getFileNodeId(), null, event.getOperatorId());
+      indexFile(event.getFileNodeId(), null, event.getOperatorId());
     }
     log.info(
         "[FileOperatedEventListener] 重命名后处理完成: fileNodeId={}, extra={}",
@@ -211,7 +220,7 @@ public class FileOperatedEventListener {
    * @param event 文件操作领域事件
    */
   private void handleRestore(FileOperatedEvent event) {
-    searchDomainService.indexFile(event.getFileNodeId(), null, event.getOperatorId());
+    indexFile(event.getFileNodeId(), null, event.getOperatorId());
     log.info("[FileOperatedEventListener] 恢复后处理完成: fileNodeId={}", event.getFileNodeId());
   }
 
@@ -221,10 +230,56 @@ public class FileOperatedEventListener {
    * @param event 文件操作领域事件
    */
   private void handleVersionRollback(FileOperatedEvent event) {
-    searchDomainService.indexFile(event.getFileNodeId(), null, event.getOperatorId());
+    indexFile(event.getFileNodeId(), null, event.getOperatorId());
     log.info(
         "[FileOperatedEventListener] 版本回滚后处理完成: fileNodeId={}, extra={}",
         event.getFileNodeId(),
         event.getExtra());
+  }
+
+  // ==================== 私有方法（DB 降级索引同步） ====================
+
+  /**
+   * 构建并同步 DB 降级搜索索引（nw_search_index）。
+   *
+   * <p>加载文件节点与标签，经 {@link SearchDomainService#buildSearchIndex} 组装后 upsert。
+   * 统一搜索引擎主索引由 {@code SearchIndexEventBridge} 链路另行维护。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @param content 提取的文档内容（可为 null）
+   * @param userId 操作人 ID
+   */
+  private void indexFile(String fileNodeId, String content, String userId) {
+    try {
+      FileNodeVO node = fileNodeRepository.findById(fileNodeId).orElse(null);
+      if (node == null) {
+        log.debug("[FileOperatedEventListener] 索引同步跳过（节点不存在）: fileNodeId={}", fileNodeId);
+        return;
+      }
+      List<TagVO> tags = tagRepository.findByFileNodeId(fileNodeId);
+      SearchIndexDTO dto = searchDomainService.buildSearchIndex(node, tags, content, userId);
+      searchIndexRepository.upsert(dto);
+    } catch (Exception e) {
+      log.warn(
+          "[FileOperatedEventListener] 索引同步失败: fileNodeId={}, error={}",
+          fileNodeId,
+          e.getMessage());
+    }
+  }
+
+  /**
+   * 删除 DB 降级搜索索引。
+   *
+   * @param fileNodeId 文件节点 ID
+   */
+  private void removeIndex(String fileNodeId) {
+    try {
+      searchIndexRepository.deleteByFileNodeId(fileNodeId);
+    } catch (Exception e) {
+      log.warn(
+          "[FileOperatedEventListener] 索引删除失败: fileNodeId={}, error={}",
+          fileNodeId,
+          e.getMessage());
+    }
   }
 }

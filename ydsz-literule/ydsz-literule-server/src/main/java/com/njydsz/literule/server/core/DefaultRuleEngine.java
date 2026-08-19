@@ -943,7 +943,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         if (enableShortCircuit
             && result.isTriggered()
             && result.getSeverity() != null
-            && result.getSeverity().getLevel() >= minSeverity.getLevel()) {
+            && result.getSeverity().getWeight() >= minSeverity.getWeight()) {
           qualifiedCount++;
         }
       } catch (Exception e) {

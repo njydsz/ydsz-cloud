@@ -16,8 +16,8 @@ import com.njydsz.agent.api.dto.AgentTraceDetailDTO;
 import com.njydsz.agent.api.dto.AgentTraceListDTO;
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.agent.domain.trace.TraceMeta;
 import com.njydsz.agent.domain.trace.TraceRecorder.TraceStep;
-import com.njydsz.agent.infra.trace.InMemoryTraceRecorder.TraceMeta;
 import com.njydsz.agent.server.debug.AgentDebuggerService;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -100,13 +100,13 @@ public class DebugController {
             .map(
                 meta ->
                     new AgentTraceListDTO(
-                        meta.getTraceId(),
-                        meta.getConversationId(),
-                        meta.getAgentId(),
-                        meta.getStatus(),
-                        meta.getStartedAt(),
-                        meta.getTotalDurationMs(),
-                        meta.getStepCount()))
+                        meta.traceId(),
+                        meta.conversationId(),
+                        meta.agentId(),
+                        meta.status(),
+                        meta.startedAt(),
+                        meta.totalDurationMs(),
+                        meta.stepCount()))
             .collect(Collectors.toList());
     return BaseResponse.success(dtos);
   }
@@ -128,7 +128,7 @@ public class DebugController {
   @GetMapping("/trace/{traceId}")
   public BaseResponse<AgentTraceDetailDTO> getTrace(@PathVariable String traceId) {
     TraceMeta meta = agentDebuggerService.getTraceMeta(traceId);
-    String agentType = meta != null ? meta.getAgentId() : "UNKNOWN";
+    String agentType = meta != null ? meta.agentId() : "UNKNOWN";
     List<TraceStep> steps = agentDebuggerService.getTrace(traceId);
     String plan =
         steps.stream()
@@ -183,8 +183,8 @@ public class DebugController {
     }
     // 从链路第一个步骤提取原始 userInput，从元数据提取 conversationId / agentType
     String userInput = steps.get(0).getContent();
-    String conversationId = meta.getConversationId();
-    String agentType = meta.getAgentId();
+    String conversationId = meta.conversationId();
+    String agentType = meta.agentId();
     LOG.info(
         "[Debug-API] 重放参数: convId={}, agentType={}, userInputLen={}",
         conversationId,

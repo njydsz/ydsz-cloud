@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -39,12 +40,14 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
+import com.njydsz.nextwiki.domain.dto.StorageQuotaDTO;
 import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
+import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
 import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
 import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 import com.njydsz.nextwiki.domain.service.FolderDomainService;
@@ -83,6 +86,7 @@ public class FileApplicationService {
   private final FolderDomainService folderDomainService;
   private final FileVersionDomainService versionDomainService;
   private final QuotaDomainService quotaDomainService;
+  private final StorageQuotaRepository storageQuotaRepository;
   private final StorageReferenceService storageReferenceService;
   private final TrashDomainService trashDomainService;
   private final FileNodeRepository fileNodeRepository;
@@ -289,7 +293,7 @@ public class FileApplicationService {
       versionRepository.save(versionResult.newVersion());
       fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
       cleanupExcessVersions(saved.getId());
-      quotaDomainService.addUsage("user", ctx.userId, ctx.dedupExisting.getSize(), 1);
+      storageQuotaRepository.addUsage("user", ctx.userId, ctx.dedupExisting.getSize(), 1);
       publishUploadEvent(saved, ctx.fileName, ctx.userId);
 
       log.info("[FileApplicationService] 秒传上传成功: name={}, hash={}", ctx.fileName, ctx.fileHash);
@@ -355,7 +359,7 @@ public class FileApplicationService {
       versionRepository.save(versionResult.newVersion());
       fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
       cleanupExcessVersions(saved.getId());
-      quotaDomainService.addUsage("user", ctx.userId, ctx.uploaded.getSize(), 1);
+      storageQuotaRepository.addUsage("user", ctx.userId, ctx.uploaded.getSize(), 1);
       publishUploadEvent(saved, ctx.fileName, ctx.userId);
 
       log.info("[FileApplicationService] 文件上传成功: name={}, size={}, userId={}",
@@ -746,7 +750,7 @@ public class FileApplicationService {
 
     // 配额校验（仅文件需要）
     if (source.isFile() && source.getSize() != null) {
-      quotaDomainService.checkQuota("user", userId, source.getSize());
+      quotaDomainService.checkQuota(loadQuota("user", userId), source.getSize(), null);
     }
 
     FileNodeDTO copyNode =
@@ -799,7 +803,7 @@ public class FileApplicationService {
       fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
       cleanupExcessVersions(saved.getId());
       if (source.getSize() != null) {
-        quotaDomainService.addUsage("user", userId, source.getSize(), 1);
+        storageQuotaRepository.addUsage("user", userId, source.getSize(), 1);
       }
     }
 
@@ -851,7 +855,7 @@ public class FileApplicationService {
             .mapToLong(FileNodeVO::getSize)
             .sum();
     long totalFileCount = allDescendants.stream().filter(FileNodeVO::isFile).count();
-    quotaDomainService.checkQuota("user", userId, totalFileBytes);
+    quotaDomainService.checkQuota(loadQuota("user", userId), totalFileBytes, null);
 
     // 4. 短事务：创建根文件夹节点
     String newFolderId =
@@ -864,7 +868,7 @@ public class FileApplicationService {
 
     // 6. 批量增加配额（文件数 + 引用文件大小）
     if (totalFileBytes > 0 || totalFileCount > 0) {
-      quotaDomainService.addUsage(
+      storageQuotaRepository.addUsage(
           "user", userId, totalFileBytes, (int) Math.min(totalFileCount, Integer.MAX_VALUE));
     }
 

@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -831,6 +832,20 @@ public class DagInstanceExecutor {
       // contextJson 非法时返回空对象，避免覆盖
     }
     return new ObjectNode();
+  }
+
+  /** 判断 jobKey 是否携带 LOOP iter 后缀（{@code #loop<i>}，历史 LOOP 节点生成的迭代实例）。 */
+  private boolean isLoopIterJobKey(String jobKey) {
+    return jobKey != null && jobKey.contains("#loop");
+  }
+
+  /** 去除 LOOP iter 后缀返回原始 jobKey；无后缀时原样返回。 */
+  private String stripLoopSuffix(String jobKey) {
+    if (jobKey == null) {
+      return null;
+    }
+    int idx = jobKey.indexOf("#loop");
+    return idx > 0 ? jobKey.substring(0, idx) : jobKey;
   }
 
   /**

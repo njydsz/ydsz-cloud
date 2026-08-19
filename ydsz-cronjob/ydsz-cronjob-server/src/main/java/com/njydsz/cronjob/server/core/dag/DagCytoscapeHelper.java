@@ -105,7 +105,7 @@ public final class DagCytoscapeHelper {
                   nodeData.put("x", node.x());
                   nodeData.put("y", node.y());
 
-                  return Map.of("data", nodeData);
+                  return Map.of("data", (Object) nodeData);
                 })
             .toList();
 
@@ -123,7 +123,7 @@ public final class DagCytoscapeHelper {
                   if (edge.failStrategy() != null && !edge.failStrategy().isBlank()) {
                     edgeData.put("failStrategy", edge.failStrategy());
                   }
-                  return Map.of("data", edgeData);
+                  return Map.of("data", (Object) edgeData);
                 })
             .toList();
 

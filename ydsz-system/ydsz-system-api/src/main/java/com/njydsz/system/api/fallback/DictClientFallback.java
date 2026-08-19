@@ -10,6 +10,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.system.api.client.DictClient;
 import com.njydsz.system.api.dto.DictItemGetRequest;
+import com.njydsz.system.api.dto.DictListRequest;
 
 /**
  * {@link DictClient} 的 FallbackFactory。
@@ -37,8 +38,10 @@ public class DictClientFallback implements FallbackFactory<DictClient> {
       }
 
       @Override
-      public BaseResponse<List<String>> listDictItems(String typeCode) {
-        log.warn("[DictClient] listDictItems 降级: typeCode={}, reason=系统管理服务不可用", typeCode);
+      public BaseResponse<List<String>> listDictItems(DictListRequest request) {
+        log.warn(
+            "[DictClient] listDictItems 降级: typeCode={}, reason=系统管理服务不可用",
+            request == null ? null : request.getTypeCode());
         return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "系统管理服务不可用");
       }
     };

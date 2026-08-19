@@ -550,7 +550,7 @@ public class AnomalyRecoveryScanner {
     for (Job job : autoPausedJobs) {
       try {
         // 清除重试计数
-        redisStringOps.delete(HEAL_RETRY_PREFIX + job.getJobKey());
+        redisStringOps.del(HEAL_RETRY_PREFIX + job.getJobKey());
         // 恢复为 NORMAL
         jobMapper.resumeAutoPaused(job.getId());
         log.info("[AnomalyRecovery] 任务已自动恢复: jobKey={}", job.getJobKey());

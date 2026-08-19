@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
 import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
 
 /**
@@ -49,4 +50,12 @@ public interface JobAlertLogRepository {
    * @return 实际删除条数
    */
   int cleanExpiredLogs(LocalDateTime before, int limit);
+
+  /**
+   * 写入告警派发记录（告警触发链路调用，记录到 ydsz_alert_dispatch）。
+   *
+   * @param alertLog 告警日志实体（由 {@code AlertDispatcher} 构造）
+   * @return 受影响行数
+   */
+  int insert(JobAlertLog alertLog);
 }

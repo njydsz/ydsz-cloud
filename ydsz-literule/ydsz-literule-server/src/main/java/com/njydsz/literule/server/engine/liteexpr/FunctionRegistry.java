@@ -25,6 +25,7 @@ public class FunctionRegistry {
   private final Map<String, LiteExprFunction> functions = new ConcurrentHashMap<>();
   private final Map<String, String> functionSignatures = new ConcurrentHashMap<>();
   private final Map<String, String> functionDescriptions = new ConcurrentHashMap<>();
+  private final Map<String, String> functionCategories = new ConcurrentHashMap<>();
 
   public FunctionRegistry() {
     BuiltinFunctions.registerAll(this);
@@ -56,6 +57,29 @@ public class FunctionRegistry {
   }
 
   /**
+   * 注册函数（含签名、描述和分类，用于函数市场分类展示）
+   *
+   * @param name 函数名
+   * @param function 函数实现
+   * @param signature 函数签名（如 "max(a, b, ...)"）
+   * @param description 函数描述
+   * @param category 函数分类（math/string/type/collection/datetime/utility）
+   */
+  public void register(
+      String name,
+      LiteExprFunction function,
+      String signature,
+      String description,
+      String category) {
+    functions.put(name, function);
+    functionSignatures.put(name, signature);
+    functionDescriptions.put(name, description);
+    if (category != null && !category.isBlank()) {
+      functionCategories.put(name, category);
+    }
+  }
+
+  /**
    * 查找函数
    *
    * @param name 函数名
@@ -83,6 +107,16 @@ public class FunctionRegistry {
   /** 获取函数描述 */
   public String getDescription(String name) {
     return functionDescriptions.get(name);
+  }
+
+  /**
+   * 获取函数分类
+   *
+   * @param name 函数名
+   * @return 函数分类；未设置时返回 null
+   */
+  public String getCategory(String name) {
+    return functionCategories.get(name);
   }
 
   /** 获取所有已注册函数名列表 */

@@ -542,7 +542,7 @@ public class AlertDispatcher {
       alertLog.setThreshold(rule.getThreshold());
       // P3-1-merge: channels 从 JSON 数组转为逗号分隔
       alertLog.setChannels(convertChannelsToCsv(rule.getChannels()));
-      alertLog.setStatus(status);
+      alertLog.setAlertStatus(status);
       alertLog.setErrorMessage(errorMessage);
       alertLog.setTraceId(context.traceId());
       alertLog.setTriggerLogId(context.triggerLogId());

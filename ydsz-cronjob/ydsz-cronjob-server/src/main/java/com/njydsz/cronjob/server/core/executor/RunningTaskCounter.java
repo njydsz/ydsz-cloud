@@ -104,7 +104,7 @@ public class RunningTaskCounter {
    */
   public long getCount() {
     try {
-      String value = redisStringOps.get(RUNNING_COUNT_KEY);
+      String value = redisStringOps.get(RUNNING_COUNT_KEY, String.class);
       if (value == null) {
         return 0;
       }

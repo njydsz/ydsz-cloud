@@ -32,6 +32,7 @@ public enum LiteruleExceptionCode implements ExceptionCode {
   RULE_CODE_DUPLICATE("B93002", "literule.rule.code.duplicate"),
   RULE_EXPRESSION_INVALID("B93003", "literule.rule.expression.invalid"),
   RULE_STATUS_INVALID("B93004", "literule.rule.status.invalid"),
+  RULE_STATUS_TRANSITION_ILLEGAL("B93005", "literule.rule.status.transition.illegal"),
 
   // ==================== B93101-B93199 规则包/版本 ====================
   RULE_PACK_NOT_FOUND("B93101", "literule.rule.pack.not.found", 404),

@@ -3,7 +3,7 @@ package com.njydsz.system.infra.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -50,7 +50,7 @@ public class AppInfoRepositoryImpl implements AppInfoRepository {
   @Override
   public boolean existsByAppKey(String appKey) {
     Long count = appInfoMapper.selectCount(
-        new QueryWrapper<AppInfo>().eq("app_key", appKey).eq("deleted", 0));
+        new LambdaQueryWrapper<AppInfo>().eq(AppInfo::getAppKey, appKey).eq(AppInfo::getDeleted, 0));
     return count != null && count > 0;
   }
 
@@ -62,14 +62,14 @@ public class AppInfoRepositoryImpl implements AppInfoRepository {
   @Override
   public PageResponse<List<AppInfoVO>> findByPage(AppInfoPageQuery query) {
     Page<AppInfo> page = new Page<>(query.getPageNum(), query.getPageSize());
-    QueryWrapper<AppInfo> wrapper = new QueryWrapper<>();
+    LambdaQueryWrapper<AppInfo> wrapper = new LambdaQueryWrapper<>();
     if (query.getAppName() != null && !query.getAppName().isBlank()) {
-      wrapper.like("app_name", query.getAppName());
+      wrapper.like(AppInfo::getAppName, query.getAppName());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq("status", query.getStatus());
+      wrapper.eq(AppInfo::getStatus, query.getStatus());
     }
-    wrapper.orderByDesc("created_at");
+    wrapper.orderByDesc(AppInfo::getCreatedAt);
     com.baomidou.mybatisplus.core.metadata.IPage<AppInfo> result = appInfoMapper.selectPage(page, wrapper);
     List<AppInfoVO> vos = converter.appInfoListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);

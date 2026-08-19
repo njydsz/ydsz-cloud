@@ -338,4 +338,9 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   public long countColdNodes(LocalDateTime threshold) {
     return fileNodeMapper.countColdNodes(threshold);
   }
+
+  @Override
+  public List<FileNodeVO> findAll() {
+    return converter.fileNodeListToVO(fileNodeMapper.selectList(null));
+  }
 }

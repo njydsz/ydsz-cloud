@@ -11,10 +11,10 @@ import java.util.stream.Collectors;
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
-import com.njydsz.nextwiki.domain.service.SearchDomainService;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
 import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
 import com.njydsz.nextwiki.domain.vo.TrashItemVO;
+import com.njydsz.nextwiki.server.service.SearchApplicationService;
 
 /**
  * NextWiki 定时任务
@@ -31,7 +31,7 @@ public class NextwikiScheduledJobs {
 
   private final TrashDomainService trashDomainService;
   private final TrashItemRepository trashItemRepository;
-  private final SearchDomainService searchDomainService;
+  private final SearchApplicationService searchApplicationService;
 
   /** 每天凌晨 2 点清理过期回收站条目 */
   @Scheduled(cron = "0 0 2 * * ?")
@@ -62,7 +62,7 @@ public class NextwikiScheduledJobs {
   @DistributedScheduled(lockKey = "nextwiki:rebuild-index")
   public void rebuildSearchIndex() {
     log.info("[NextwikiScheduledJobs] 开始重建搜索索引");
-    searchDomainService.rebuildAllIndices();
+    searchApplicationService.rebuildAllIndices();
     log.info("[NextwikiScheduledJobs] 搜索索引重建完成");
   }
 }

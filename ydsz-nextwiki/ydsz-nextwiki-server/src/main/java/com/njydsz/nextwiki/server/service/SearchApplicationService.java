@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.api.SearchFilter.Operator;
 import com.njydsz.common.search.api.SearchHit;
@@ -19,9 +20,16 @@ import com.njydsz.common.search.core.SearchEngineRegistry;
 import com.njydsz.common.search.service.SuggestionService;
 import com.njydsz.common.search.service.UnifiedSearchService;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
-import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
+import com.njydsz.nextwiki.domain.query.SearchIndexQuery;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
+import com.njydsz.nextwiki.domain.repository.TagRepository;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.vo.SearchIndexVO;
 import com.njydsz.nextwiki.domain.vo.SearchResultVO;
+import com.njydsz.nextwiki.domain.vo.TagVO;
 
 /**
  * NextWiki 搜索应用服务。
@@ -56,6 +64,9 @@ import com.njydsz.nextwiki.domain.vo.SearchResultVO;
 public class SearchApplicationService {
 
   private final SearchDomainService searchDomainService;
+  private final SearchIndexRepository searchIndexRepository;
+  private final FileNodeRepository fileNodeRepository;
+  private final TagRepository tagRepository;
   private final ObjectProvider<UnifiedSearchService> unifiedSearchServiceProvider;
   private final ObjectProvider<SearchEngineRegistry> engineRegistryProvider;
   private final ObjectProvider<SuggestionService> suggestionServiceProvider;
@@ -85,10 +96,10 @@ public class SearchApplicationService {
 
     SearchResultVO result;
     if (registry != null && unifiedSearch != null && registry.isPrimaryAvailable()) {
-      result = searchViaEngine(unifiedSearch, keyword, userId, page, pageSize);
+      result = searchViaEngine(unifiedSearch, keyword, userId, page, pageSize, new ArrayList<>());
     } else {
       log.info("[SearchApplicationService] 搜索引擎不可用，降级 DB LIKE: keyword={}", keyword);
-      result = searchDomainService.search(keyword, userId, scope, page, pageSize);
+      result = searchViaDatabase(keyword, scope, page, pageSize);
     }
 
     // 记录搜索历史（异步不影响主流程）
@@ -132,8 +143,7 @@ public class SearchApplicationService {
       log.info(
           "[SearchApplicationService] 搜索引擎不可用，降级 DB LIKE（筛选不生效）: keyword={}",
           request.getKeyword());
-      result = searchDomainService.search(
-          request.getKeyword(), userId, request.getScope(), pageNum, pageSize);
+      result = searchViaDatabase(request.getKeyword(), request.getScope(), pageNum, pageSize);
     }
 
     // 记录搜索历史
@@ -146,13 +156,32 @@ public class SearchApplicationService {
   /**
    * 重建全量搜索索引（通常由定时任务或运维操作触发）。
    *
+   * <p>遍历全部文件节点，构建搜索索引 DTO 并 upsert 到 DB 降级索引表
+   * （统一搜索引擎主索引由 {@code NextwikiScheduledJobs#rebuildSearchIndex} 通过
+   * {@code IndexRebuildService} 维护）。双索引链路在此保持同步。
+   *
    * @return 无返回值
    * @complexity O(N)（N 为文件总数，遍历重新建索引，耗时较长）
    * @note 非事务（批量操作）；执行期间建议避开高峰期，避免影响在线搜索
    * @see com.njydsz.nextwiki.server.job.NextwikiScheduledJobs#rebuildSearchIndex()
    */
   public void rebuildAllIndices() {
-    searchDomainService.rebuildAllIndices();
+    List<FileNodeVO> allNodes = fileNodeRepository.findAll();
+    int count = 0;
+    for (FileNodeVO node : allNodes) {
+      try {
+        List<TagVO> tags = tagRepository.findByFileNodeId(node.getId());
+        SearchIndexDTO dto = searchDomainService.buildSearchIndex(node, tags, null, null);
+        searchIndexRepository.upsert(dto);
+        count++;
+      } catch (Exception e) {
+        log.warn(
+            "[SearchApplicationService] 索引重建跳过节点: nodeId={}, error={}",
+            node.getId(),
+            e.getMessage());
+      }
+    }
+    log.info("[SearchApplicationService] 全量索引重建完成: total={}, rebuilt={}", allNodes.size(), count);
   }
 
   /**
@@ -259,8 +288,32 @@ public class SearchApplicationService {
     } catch (Exception e) {
       log.warn(
           "[SearchApplicationService] 引擎检索异常，降级 DB: keyword={}, error={}", keyword, e.getMessage());
-      return searchDomainService.search(keyword, userId, null, page, pageSize);
+      return searchViaDatabase(keyword, null, page, pageSize);
     }
+  }
+
+  /**
+   * DB LIKE 降级搜索（构建查询 → 分页 → 领域服务评分组装）。
+   *
+   * @param keyword 搜索关键词
+   * @param scope 搜索范围（all/filename/content/tag，可空）
+   * @param page 页码
+   * @param pageSize 每页大小
+   * @return 分页搜索结果
+   */
+  private SearchResultVO searchViaDatabase(String keyword, String scope, int page, int pageSize) {
+    SearchIndexQuery query =
+        SearchIndexQuery.builder()
+            .keyword(keyword)
+            .scope(scope)
+            .page(page)
+            .pageSize(pageSize)
+            .build();
+    PageResponse<List<SearchIndexVO>> pageResult = searchIndexRepository.searchPage(query);
+    List<SearchIndexVO> indices = pageResult.getData();
+    long total = pageResult.getTotal() != null ? pageResult.getTotal() : 0L;
+    return searchDomainService.search(
+        indices != null ? indices : List.of(), total, keyword, page, pageSize);
   }
 
   /**

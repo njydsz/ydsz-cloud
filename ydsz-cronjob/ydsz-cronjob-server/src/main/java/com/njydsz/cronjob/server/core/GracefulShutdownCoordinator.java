@@ -160,7 +160,7 @@ public class GracefulShutdownCoordinator implements SmartLifecycle {
      * <p>轮询等待运行中任务数降为 0，超时后强制继续。
      */
     private void drainRunningTasks() {
-        int drainTimeout = cronjobProperties.getExecutor().getDrainTimeoutSeconds();
+        long drainTimeout = cronjobProperties.getExecutor().getDrainTimeoutSeconds();
         log.info("[GracefulShutdown] 阶段2: 等待运行中任务完成, 超时={}s, 当前运行中={}",
                 drainTimeout, runningTaskCount.get());
 

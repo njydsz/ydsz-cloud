@@ -20,7 +20,9 @@ import com.njydsz.literule.api.dto.RuleDashboardOverviewVO;
 import com.njydsz.literule.api.dto.RuleDashboardRealtimeVO;
 import com.njydsz.literule.api.dto.RuleDashboardTopRuleVO;
 import com.njydsz.literule.api.dto.RuleDashboardTrendVO;
+import com.njydsz.literule.server.core.RuleMetrics;
 import com.njydsz.literule.server.spi.DashboardDataProvider;
+import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * 规则引擎监控大盘 Controller
@@ -43,6 +45,9 @@ public class RuleDashboardController {
 
   /** 规则引擎看板数据提供者（由消费方实现） */
   private final DashboardDataProvider dashboardService;
+
+  /** 引擎内建指标（可选，E3 慢规则/热点规则看板数据源） */
+  private final ObjectProvider<RuleMetrics> ruleMetricsProvider;
 
   /**
    * 概览指标
@@ -105,5 +110,43 @@ public class RuleDashboardController {
   @Operation(summary = "实时指标", description = "当前 QPS、活跃规则数、注册规则数等秒级实时指标")
   public BaseResponse<RuleDashboardRealtimeVO> realtime() {
     return BaseResponse.success(dashboardService.getRealtime());
+  }
+
+  /**
+   * 慢规则 Top N（E3 看板）
+   *
+   * <p>基于引擎内建指标（{@code InMemoryRuleMetrics}）按平均耗时倒序返回规则级统计。 Micrometer 场景返回空列表（建议 Grafana 查询）。
+   *
+   * @param limit 返回条数（默认 10，最大 50）
+   * @return 慢规则统计列表
+   */
+  @GetMapping("/slow-rules")
+  @Operation(summary = "慢规则 Top N", description = "按平均耗时倒序的规则级耗时统计（E3）")
+  public BaseResponse<List<com.njydsz.literule.server.core.RuleMetrics.RuleStatSnapshot>> slowRules(
+      @RequestParam(value = "limit", defaultValue = "10") @Min(1) @Max(50) int limit) {
+    RuleMetrics metrics = ruleMetricsProvider.getIfAvailable();
+    if (metrics == null) {
+      return BaseResponse.success(List.of());
+    }
+    return BaseResponse.success(metrics.getSlowRuleStats(limit));
+  }
+
+  /**
+   * 热点规则 Top N（E3 看板）
+   *
+   * <p>基于引擎内建指标按评估次数倒序返回规则级统计。
+   *
+   * @param limit 返回条数（默认 10，最大 50）
+   * @return 热点规则统计列表
+   */
+  @GetMapping("/hot-rules")
+  @Operation(summary = "热点规则 Top N", description = "按评估次数倒序的规则级热度统计（E3）")
+  public BaseResponse<List<com.njydsz.literule.server.core.RuleMetrics.RuleStatSnapshot>> hotRules(
+      @RequestParam(value = "limit", defaultValue = "10") @Min(1) @Max(50) int limit) {
+    RuleMetrics metrics = ruleMetricsProvider.getIfAvailable();
+    if (metrics == null) {
+      return BaseResponse.success(List.of());
+    }
+    return BaseResponse.success(metrics.getHotRuleStats(limit));
   }
 }

@@ -79,6 +79,8 @@ public class RuleLifecycleController {
   /**
    * 规则状态变更
    *
+   * <p>执行状态机驱动的规则状态流转。非法状态流转会返回明确的业务异常码。
+   *
    * @param ruleCode 规则编码
    * @param request 请求体，包含 targetStatus/comment
    * @param operator 操作人
@@ -100,10 +102,26 @@ public class RuleLifecycleController {
     String targetStatus = dto.getTargetStatus();
     String comment = dto.getComment() == null ? "" : dto.getComment();
     RuleDefinition def = ruleAdminService.getByCode(ruleCode);
-    RuleStatus current = RuleStatus.valueOf(def.getStatus());
-    RuleStatus target = RuleStatus.valueOf(targetStatus);
+    if (def == null) {
+      return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+    }
+
+    RuleStatus current = parseStatusSafely(def.getStatus());
+    if (current == null) {
+      return BaseResponse.error(
+          LiteruleExceptionCode.RULE_STATUS_INVALID, "规则当前状态非法: " + def.getStatus());
+    }
+    RuleStatus target = parseStatusSafely(targetStatus);
+    if (target == null) {
+      return BaseResponse.error(
+          LiteruleExceptionCode.RULE_STATUS_INVALID, "目标状态非法: " + targetStatus);
+    }
     if (!current.canTransitionTo(target)) {
-      throw new IllegalArgumentException("不允许从 " + current.getDesc() + " 变更到 " + target.getDesc());
+      return BaseResponse.error(
+          LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL,
+          String.format(
+              "不允许从 %s(%s) 变更到 %s(%s)",
+              current.name(), current.getDesc(), target.name(), target.getDesc()));
     }
     def.setStatus(targetStatus);
     if (target == RuleStatus.PUBLISHED) {

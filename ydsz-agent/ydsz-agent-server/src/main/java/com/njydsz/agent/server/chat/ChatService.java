@@ -15,16 +15,19 @@ import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.CostEstimate;
+import com.njydsz.agent.domain.model.TenantQuota;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
+import com.njydsz.agent.server.quota.TenantQuotaService;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 对话服务
@@ -87,6 +90,9 @@ public class ChatService {
   /** Token 预计算与成本核算 */
   private final TokenCostCalculator tokenCostCalculator;
 
+  /** 租户配额管理服务 */
+  private final TenantQuotaService quotaService;
+
   public ChatService(
       LlmClient llmClient,
       ConversationMemory memory,
@@ -98,7 +104,8 @@ public class ChatService {
       TraceRecorder traceRecorder,
       DomainEventPublisher eventPublisher,
       SnowflakeIdGenerator snowflakeIdGenerator,
-      TokenCostCalculator tokenCostCalculator) {
+      TokenCostCalculator tokenCostCalculator,
+      TenantQuotaService quotaService) {
     this.llmClient = llmClient;
     this.memory = memory;
     this.properties = properties;
@@ -110,6 +117,7 @@ public class ChatService {
     this.eventPublisher = eventPublisher;
     this.snowflakeIdGenerator = snowflakeIdGenerator;
     this.tokenCostCalculator = tokenCostCalculator;
+    this.quotaService = quotaService;
   }
 
   /**
@@ -179,6 +187,14 @@ public class ChatService {
         estimatedCost.getEstimatedTotalTokens(),
         estimatedCost.getEstimatedCostUsd());
 
+    // P0: 配额预检 — 调用前拦截超额请求
+    if (properties.getQuota().isEnabled()) {
+      String tenantId = resolveTenantId(convId);
+      TenantQuota quota = resolveTenantQuota();
+      quotaService.preCheck(
+          tenantId, quota, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
+    }
+
     String model = properties.getLlm().getDefaultModel();
     String provider = llmClient.getProvider();
     long startTime = System.currentTimeMillis();
@@ -206,6 +222,11 @@ public class ChatService {
     CostEstimate actualCost = tokenCostCalculator.calculateActual(response.getUsage(), model);
     if (response.getUsage() != null && costAnalysisService != null) {
       costAnalysisService.recordUsage(convId, model, response.getUsage());
+    }
+    // P0: 配额用量记录 — 累加实际用量
+    if (properties.getQuota().isEnabled()) {
+      String tenantId = resolveTenantId(convId);
+      quotaService.recordUsage(tenantId, actualCost);
     }
     LOG.info(
         "[Chat] 成本核算: convId={}, actualTokens={}, actualCostUsd={}",
@@ -314,6 +335,14 @@ public class ChatService {
         estimatedCost.getEstimatedTotalTokens(),
         estimatedCost.getEstimatedCostUsd());
 
+    // P0: 配额预检 — 调用前拦截超额请求
+    if (properties.getQuota().isEnabled()) {
+      String tenantId = resolveTenantId(convId);
+      TenantQuota quota = resolveTenantQuota();
+      quotaService.preCheck(
+          tenantId, quota, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
+    }
+
     String model = properties.getLlm().getDefaultModel();
     String provider = llmClient.getProvider();
     long startTime = System.currentTimeMillis();
@@ -385,6 +414,11 @@ public class ChatService {
     if (usage[0] != null && !usage[0].equals(TokenUsage.zero()) && costAnalysisService != null) {
       costAnalysisService.recordUsage(convId, model, usage[0]);
     }
+    // P0: 配额用量记录 — 累加实际用量
+    if (properties.getQuota().isEnabled()) {
+      String tenantId = resolveTenantId(convId);
+      quotaService.recordUsage(tenantId, actualCost);
+    }
     LOG.info(
         "[Chat-Stream] 成本核算: convId={}, actualTokens={}, actualCostUsd={}",
         convId,
@@ -432,5 +466,37 @@ public class ChatService {
 
   private String getDefaultSystemPrompt() {
     return properties.getDefaultSystemPrompt();
+  }
+
+  /**
+   * 解析当前租户 ID。
+   *
+   * <p>优先从租户上下文获取，未设置时返回 "default"。
+   *
+   * @param convId 对话 ID（仅用于日志）
+   * @return 租户 ID
+   */
+  private String resolveTenantId(String convId) {
+    try {
+      String tenantId = TenantContextHolder.getTenantId();
+      return tenantId != null && !tenantId.isBlank() ? tenantId : "default";
+    } catch (Exception e) {
+      LOG.debug("[Chat] 获取租户 ID 失败，使用默认值: convId={}, error={}", convId, e.getMessage());
+      return "default";
+    }
+  }
+
+  /**
+   * 根据配置构建租户配额对象。
+   *
+   * @return 租户配额配置
+   */
+  private TenantQuota resolveTenantQuota() {
+    AgentProperties.Quota config = properties.getQuota();
+    return new TenantQuota(
+        "default",
+        config.getDailyTokenLimit(),
+        config.getMonthlyBudgetUsd(),
+        config.getAlertThreshold());
   }
 }

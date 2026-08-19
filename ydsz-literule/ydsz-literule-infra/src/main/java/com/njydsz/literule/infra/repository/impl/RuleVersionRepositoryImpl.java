@@ -89,7 +89,6 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     Integer nextVersion = calculateNextVersionNumber(ruleCode);
     RuleVersionHistory backupVersion = RuleVersionHistory.builder()
         .ruleCode(ruleCode)
-        .ruleName(currentRule.getRuleName())
         .version(nextVersion)
         .definitionJson(currentDefinitionJson)
         .changeDesc(String.format("[回滚前快照] 回滚前自动备份, 操作人=%s", operator))

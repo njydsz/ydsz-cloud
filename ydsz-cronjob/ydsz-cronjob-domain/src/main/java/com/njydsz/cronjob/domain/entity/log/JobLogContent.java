@@ -1,6 +1,7 @@
 package com.njydsz.cronjob.domain.entity.log;
 
 import java.io.Serial;
+import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -42,4 +43,10 @@ public class JobLogContent extends MpBaseIdEntity<String> {
 
   /** 日志内容（单行文本，最长 4000 字符） */
   private String content;
+
+  /** 创建时间（与 ydsz_job_log_content.created_at 列对应） */
+  private LocalDateTime createdAt;
+
+  /** 逻辑删除标记（0=正常 / 1=已删除） */
+  private Integer deleted;
 }

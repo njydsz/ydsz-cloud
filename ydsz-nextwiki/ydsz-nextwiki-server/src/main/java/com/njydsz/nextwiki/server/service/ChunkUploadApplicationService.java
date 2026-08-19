@@ -10,6 +10,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,6 +46,7 @@ import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
+import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 
@@ -74,6 +76,7 @@ public class ChunkUploadApplicationService {
   private final FileNodeRepository fileNodeRepository;
   private final FileVersionRepository versionRepository;
   private final QuotaDomainService quotaDomainService;
+  private final StorageQuotaRepository storageQuotaRepository;
   private final FileVersionDomainService versionDomainService;
   private final FolderDomainService folderDomainService;
   private final ApplicationEventPublisher eventPublisher;
@@ -112,6 +115,7 @@ public class ChunkUploadApplicationService {
       FileNodeRepository fileNodeRepository,
       FileVersionRepository versionRepository,
       QuotaDomainService quotaDomainService,
+      StorageQuotaRepository storageQuotaRepository,
       FileVersionDomainService versionDomainService,
       FolderDomainService folderDomainService,
       ApplicationEventPublisher eventPublisher,
@@ -123,6 +127,7 @@ public class ChunkUploadApplicationService {
     this.fileNodeRepository = fileNodeRepository;
     this.versionRepository = versionRepository;
     this.quotaDomainService = quotaDomainService;
+    this.storageQuotaRepository = storageQuotaRepository;
     this.versionDomainService = versionDomainService;
     this.folderDomainService = folderDomainService;
     this.eventPublisher = eventPublisher;
@@ -357,10 +362,10 @@ public class ChunkUploadApplicationService {
   private FileNodeVO persistDedupedNode(ChunkUploadPrepareContext ctx) {
     return transactionTemplate.execute(status -> {
       FileNodeDTO deduped = buildDedupedNode(ctx.session, ctx.dedupExisting, ctx.fileHash, ctx.userId);
-      FileNodeDTO saved = fileNodeRepository.save(deduped);
+      FileNodeVO saved = fileNodeRepository.save(deduped);
       List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
           versionRepository.findByFileNodeId(saved.getId()));
-      FileNodeVO savedVO = NextwikiConverter.INSTANT.dtoToVO(saved);
+      FileNodeVO savedVO = saved;
       FileVersionDomainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
               savedVO,
@@ -375,7 +380,7 @@ public class ChunkUploadApplicationService {
       versionRepository.save(versionResult.newVersion());
       fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
       cleanupExcessVersions(saved.getId());
-      quotaDomainService.addUsage("user", ctx.userId, ctx.dedupExisting.getSize(), 1);
+      storageQuotaRepository.addUsage("user", ctx.userId, ctx.dedupExisting.getSize(), 1);
       publishUploadEvent(savedVO, ctx.userId);
 
       log.info("[ChunkUploadApplicationService] 秒传分片上传完成: hash={}, nodeId={}",
@@ -417,10 +422,10 @@ public class ChunkUploadApplicationService {
               .updatedBy(ctx.userId)
               .build();
 
-      FileNodeDTO saved = fileNodeRepository.save(newNode);
+      FileNodeVO saved = fileNodeRepository.save(newNode);
       List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
           versionRepository.findByFileNodeId(saved.getId()));
-      FileNodeVO savedVO = NextwikiConverter.INSTANT.dtoToVO(saved);
+      FileNodeVO savedVO = saved;
       FileVersionDomainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
               savedVO,
@@ -435,7 +440,7 @@ public class ChunkUploadApplicationService {
       versionRepository.save(versionResult.newVersion());
       fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
       cleanupExcessVersions(saved.getId());
-      quotaDomainService.addUsage("user", ctx.userId, ctx.stored.getSize(), 1);
+      storageQuotaRepository.addUsage("user", ctx.userId, ctx.stored.getSize(), 1);
       publishUploadEvent(savedVO, ctx.userId);
 
       log.info("[ChunkUploadApplicationService] 分片上传完成: uploadId={}, nodeId={}",

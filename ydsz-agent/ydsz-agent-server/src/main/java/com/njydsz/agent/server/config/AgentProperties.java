@@ -855,4 +855,66 @@ public class AgentProperties {
       this.timeoutSeconds = timeoutSeconds;
     }
   }
+
+  /** 租户配额配置组 */
+  private Quota quota = new Quota();
+
+  public Quota getQuota() {
+    return quota;
+  }
+
+  public void setQuota(Quota quota) {
+    this.quota = quota;
+  }
+
+  /**
+   * 租户 LLM 配额配置
+   *
+   * <p>控制单租户在 LLM 调用层面的用量上限，包含每日 Token 限额和月度预算限额。 配额为 0 表示不限制该维度。
+   */
+  public static class Quota {
+    /** 是否启用配额校验 */
+    private boolean enabled = true;
+
+    /** 每日 Token 限额（0 = 不限制） */
+    private long dailyTokenLimit = 1000000L;
+
+    /** 月度预算（USD，0 = 不限制） */
+    private double monthlyBudgetUsd = 1000.0;
+
+    /** 告警阈值（0.0-1.0，默认 0.8 即 80%） */
+    private double alertThreshold = 0.8;
+
+    public boolean isEnabled() {
+      return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+      this.enabled = enabled;
+    }
+
+    public long getDailyTokenLimit() {
+      return dailyTokenLimit;
+    }
+
+    public void setDailyTokenLimit(long dailyTokenLimit) {
+      this.dailyTokenLimit = dailyTokenLimit;
+    }
+
+    public double getMonthlyBudgetUsd() {
+      return monthlyBudgetUsd;
+    }
+
+    public void setMonthlyBudgetUsd(double monthlyBudgetUsd) {
+      this.monthlyBudgetUsd = monthlyBudgetUsd;
+    }
+
+    public double getAlertThreshold() {
+      return alertThreshold;
+    }
+
+    public void setAlertThreshold(double alertThreshold) {
+      this.alertThreshold = alertThreshold;
+    }
+  }
 }

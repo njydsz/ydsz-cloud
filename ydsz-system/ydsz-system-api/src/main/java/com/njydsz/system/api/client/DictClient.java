@@ -5,11 +5,11 @@ import java.util.List;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.system.api.dto.DictItemGetRequest;
+import com.njydsz.system.api.dto.DictListRequest;
 import com.njydsz.system.api.fallback.DictClientFallback;
 
 /**
@@ -38,9 +38,9 @@ public interface DictClient {
   /**
    * 按字典类型编码查询全部字典项列表（走缓存）。
    *
-   * @param typeCode 字典类型编码
+   * @param request 请求体（必须包含 {@code typeCode} 字段）
    * @return 字典项值列表
    */
   @PostMapping(FeignClientConstants.SYSTEM_PATH_DICT_LIST)
-  BaseResponse<List<String>> listDictItems(@RequestParam("typeCode") String typeCode);
+  BaseResponse<List<String>> listDictItems(@RequestBody DictListRequest request);
 }

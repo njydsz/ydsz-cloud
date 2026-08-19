@@ -130,6 +130,9 @@ public class MessageServiceImpl implements MessageService {
    * <p>P1-3: 拆分为 preprocess → renderContent → persistAndDispatch 三个阶段, 聚合路径(insert + appendOrStart
    * + updateById)用 {@code @Transactional} 保证原子性。
    *
+   * <p>P1-A4: 支持异步发送模式。当 {@code ydsz.message.defaultAsync=true} 且请求未显式要求同步时, 落库 PENDING + 写入
+   * OutboxEvent 后立即返回, 由 OutboxEventScheduler 异步投递 MQ。
+   *
    * @param request 消息请求
    * @param depth 级联深度(0=顶层消息)
    */
@@ -180,7 +183,12 @@ public class MessageServiceImpl implements MessageService {
       return earlyResult;
     }
 
-    // ⑤ 常规落库 PENDING
+    // P1-A4: 异步发送模式 —— 落库 PENDING + 写入 OutboxEvent 后立即返回，由 OutboxEventScheduler 异步投递 MQ
+    if (messageProperties.isDefaultAsync()) {
+      return dispatchAsync(logDO, ctx);
+    }
+
+    // ⑤ 常规落库 PENDING（同步模式）
     msgLogRepository.insert(logDO);
     messageTraceService.recordTrace(
         logDO.getMsgId(),
@@ -196,6 +204,69 @@ public class MessageServiceImpl implements MessageService {
       triggerCascade(request, logDO, depth);
     }
     return result;
+  }
+
+  /**
+   * P1-A4: 异步分发 —— 落库 PENDING + 写入 OutboxEvent，由 OutboxEventScheduler 异步投递 MQ。
+   *
+   * <p>对标阿里消息中心发送入口 100% 异步化：API 仅落库 PENDING + 返回 msgId，实际发送由 Worker 池消费。
+   *
+   * @param logDO 消息日志实体（已构造，未落库）
+   * @param ctx 管线上下文
+   * @return 发送结果（含 msgId 供追踪）
+   */
+  private MessageResult dispatchAsync(MsgLog logDO, SendContext ctx) {
+    // 落库 PENDING
+    msgLogRepository.insert(logDO);
+    messageTraceService.recordTrace(
+        logDO.getMsgId(),
+        MsgTrace.Node.PERSISTED,
+        "SUCCESS",
+        ctx.getChannel(),
+        "异步模式: 消息已落库 PENDING");
+    // 写入 Outbox 表（由 OutboxEventScheduler 异步投递 MQ）
+    try {
+      OutboxEvent outboxEvent =
+          new OutboxEvent(
+              "Message",
+              logDO.getMsgId(),
+              "MessageAsyncDispatch",
+              YdszJson.toJson(buildMessageRequestFromLog(logDO, ctx)),
+              TenantContextHolder.getTenantId());
+      outboxEventRepository.save(outboxEvent);
+      log.info(
+          "[Message] 异步模式: 消息已写入 Outbox: msgId={} outboxId={} channel={}",
+          logDO.getMsgId(),
+          outboxEvent.getId(),
+          ctx.getChannel());
+    } catch (Exception e) {
+      // Outbox 落库失败不阻塞主流程，PENDING 记录由恢复扫描器补偿
+      log.error(
+          "[Message] 异步模式: Outbox 落库失败,由恢复扫描器补偿: msgId={} err={}",
+          logDO.getMsgId(),
+          e.getMessage());
+    }
+    return MessageResult.ok(ctx.getChannel(), logDO.getMsgId());
+  }
+
+  /**
+   * P1-A4: 从 MsgLog 和 SendContext 重建 MessageRequest（用于 Outbox 序列化）。
+   *
+   * @param logDO 消息日志实体
+   * @param ctx 管线上下文
+   * @return MessageRequest
+   */
+  private MessageRequest buildMessageRequestFromLog(MsgLog logDO, SendContext ctx) {
+    MessageRequest request = new MessageRequest();
+    request.setChannel(ctx.getChannel());
+    request.setReceiver(logDO.getReceiver());
+    request.setContent(logDO.getContent());
+    request.setBizType(logDO.getBizType());
+    request.setBizId(logDO.getBizId());
+    request.setTemplateCode(logDO.getTemplateCode());
+    request.setMessageId(logDO.getMsgId());
+    request.setPriority(logDO.getPriority() != null ? logDO.getPriority().name() : null);
+    return request;
   }
 
   /** P1-3: 构造落库 MsgLog。 */

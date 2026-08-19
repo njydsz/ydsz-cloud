@@ -61,4 +61,10 @@ public class JobDailyStats extends MpBaseIdEntity<String> {
 
   /** P95 耗时（毫秒） */
   private Long p95DurationMs;
+
+  /** 创建时间（与 ydsz_job_daily_stats.created_at 列对应） */
+  private LocalDateTime createdAt;
+
+  /** 逻辑删除标记（0=正常 / 1=已删除） */
+  private Integer deleted;
 }

@@ -28,6 +28,19 @@ public final class BuiltinFunctions {
 
   private BuiltinFunctions() {}
 
+  /** 内置函数分类：数学 */
+  private static final String CAT_MATH = "math";
+  /** 内置函数分类：字符串 */
+  private static final String CAT_STRING = "string";
+  /** 内置函数分类：集合 */
+  private static final String CAT_COLLECTION = "collection";
+  /** 内置函数分类：类型转换 */
+  private static final String CAT_TYPE = "type";
+  /** 内置函数分类：时间 */
+  private static final String CAT_DATETIME = "datetime";
+  /** 内置函数分类：工具 */
+  private static final String CAT_UTILITY = "utility";
+
   /** 注册所有内置函数到注册表 */
   static void registerAll(FunctionRegistry registry) {
     registerMath(registry);
@@ -48,7 +61,7 @@ public final class BuiltinFunctions {
    * @param r 函数注册表
    */
   private static void registerMath(FunctionRegistry r) {
-    r.register("abs", args -> toDecimal(args[0]).abs(), "abs(n)", "绝对值");
+    r.register("abs", args -> toDecimal(args[0]).abs(), "abs(n)", "绝对值", CAT_MATH);
     r.register(
         "max",
         args -> {
@@ -60,7 +73,8 @@ public final class BuiltinFunctions {
           return result;
         },
         "max(a, b, ...)",
-        "最大值");
+        "最大值",
+        CAT_MATH);
     r.register(
         "min",
         args -> {
@@ -72,7 +86,8 @@ public final class BuiltinFunctions {
           return result;
         },
         "min(a, b, ...)",
-        "最小值");
+        "最小值",
+        CAT_MATH);
     r.register(
         "round",
         args -> {
@@ -80,21 +95,51 @@ public final class BuiltinFunctions {
           return toDecimal(args[0]).setScale(scale, RoundingMode.HALF_UP);
         },
         "round(n, scale)",
-        "四舍五入");
+        "四舍五入",
+        CAT_MATH);
     r.register(
-        "floor", args -> toDecimal(args[0]).setScale(0, RoundingMode.FLOOR), "floor(n)", "向下取整");
+        "floor",
+        args -> toDecimal(args[0]).setScale(0, RoundingMode.FLOOR),
+        "floor(n)",
+        "向下取整",
+        CAT_MATH);
     r.register(
-        "ceil", args -> toDecimal(args[0]).setScale(0, RoundingMode.CEILING), "ceil(n)", "向上取整");
-    r.register("sqrt", args -> Math.sqrt(toDecimal(args[0]).doubleValue()), "sqrt(n)", "平方根");
+        "ceil",
+        args -> toDecimal(args[0]).setScale(0, RoundingMode.CEILING),
+        "ceil(n)",
+        "向上取整",
+        CAT_MATH);
+    r.register(
+        "sqrt",
+        args -> Math.sqrt(toDecimal(args[0]).doubleValue()),
+        "sqrt(n)",
+        "平方根",
+        CAT_MATH);
     r.register(
         "pow",
         args -> Math.pow(toDecimal(args[0]).doubleValue(), toDecimal(args[1]).doubleValue()),
         "pow(base, exp)",
-        "幂运算");
-    r.register("log", args -> Math.log(toDecimal(args[0]).doubleValue()), "log(n)", "自然对数");
-    r.register("log10", args -> Math.log10(toDecimal(args[0]).doubleValue()), "log10(n)", "常用对数");
-    r.register("exp", args -> Math.exp(toDecimal(args[0]).doubleValue()), "exp(n)", "自然指数");
-    r.register("random", args -> Math.random(), "random()", "随机数 [0, 1)");
+        "幂运算",
+        CAT_MATH);
+    r.register(
+        "log",
+        args -> Math.log(toDecimal(args[0]).doubleValue()),
+        "log(n)",
+        "自然对数",
+        CAT_MATH);
+    r.register(
+        "log10",
+        args -> Math.log10(toDecimal(args[0]).doubleValue()),
+        "log10(n)",
+        "常用对数",
+        CAT_MATH);
+    r.register(
+        "exp",
+        args -> Math.exp(toDecimal(args[0]).doubleValue()),
+        "exp(n)",
+        "自然指数",
+        CAT_MATH);
+    r.register("random", args -> Math.random(), "random()", "随机数 [0, 1)", CAT_MATH);
   }
 
   // ===== 字符串函数 =====
@@ -121,7 +166,8 @@ public final class BuiltinFunctions {
           return String.valueOf(v).length();
         },
         "length(str)",
-        "长度");
+        "长度",
+        CAT_STRING);
     r.register(
         "size",
         args -> {
@@ -134,22 +180,29 @@ public final class BuiltinFunctions {
           return 1;
         },
         "size(coll)",
-        "集合/字符串大小");
-    r.register("upper", args -> str(args[0]).toUpperCase(), "upper(str)", "转大写");
-    r.register("lower", args -> str(args[0]).toLowerCase(), "lower(str)", "转小写");
-    r.register("trim", args -> str(args[0]).trim(), "trim(str)", "去首尾空白");
+        "集合/字符串大小",
+        CAT_STRING);
+    r.register("upper", args -> str(args[0]).toUpperCase(), "upper(str)", "转大写", CAT_STRING);
+    r.register("lower", args -> str(args[0]).toLowerCase(), "lower(str)", "转小写", CAT_STRING);
+    r.register("trim", args -> str(args[0]).trim(), "trim(str)", "去首尾空白", CAT_STRING);
     r.register(
-        "contains", args -> str(args[0]).contains(str(args[1])), "contains(str, sub)", "是否包含子串");
+        "contains",
+        args -> str(args[0]).contains(str(args[1])),
+        "contains(str, sub)",
+        "是否包含子串",
+        CAT_STRING);
     r.register(
         "startsWith",
         args -> str(args[0]).startsWith(str(args[1])),
         "startsWith(str, prefix)",
-        "是否以 prefix 开头");
+        "是否以 prefix 开头",
+        CAT_STRING);
     r.register(
         "endsWith",
         args -> str(args[0]).endsWith(str(args[1])),
         "endsWith(str, suffix)",
-        "是否以 suffix 结尾");
+        "是否以 suffix 结尾",
+        CAT_STRING);
     r.register(
         "substring",
         args -> {
@@ -161,20 +214,32 @@ public final class BuiltinFunctions {
           return s.substring(start);
         },
         "substring(str, start[, end])",
-        "截取子串");
+        "截取子串",
+        CAT_STRING);
     r.register(
-        "indexOf", args -> str(args[0]).indexOf(str(args[1])), "indexOf(str, sub)", "子串首次出现位置");
+        "indexOf",
+        args -> str(args[0]).indexOf(str(args[1])),
+        "indexOf(str, sub)",
+        "子串首次出现位置",
+        CAT_STRING);
     r.register(
         "lastIndexOf",
         args -> str(args[0]).lastIndexOf(str(args[1])),
         "lastIndexOf(str, sub)",
-        "子串最后出现位置");
+        "子串最后出现位置",
+        CAT_STRING);
     r.register(
         "replace",
         args -> str(args[0]).replace(str(args[1]), str(args[2])),
         "replace(str, old, new)",
-        "替换");
-    r.register("split", args -> str(args[0]).split(str(args[1])), "split(str, sep)", "分割");
+        "替换",
+        CAT_STRING);
+    r.register(
+        "split",
+        args -> str(args[0]).split(str(args[1])),
+        "split(str, sep)",
+        "分割",
+        CAT_STRING);
     r.register(
         "join",
         args -> {
@@ -187,7 +252,8 @@ public final class BuiltinFunctions {
           return sb.toString();
         },
         "join(a, b, ..., sep)",
-        "拼接");
+        "拼接",
+        CAT_STRING);
     r.register(
         "concat",
         args -> {
@@ -196,10 +262,20 @@ public final class BuiltinFunctions {
           return sb.toString();
         },
         "concat(str, ...)",
-        "字符串拼接");
-    r.register("equals", args -> str(args[0]).equals(str(args[1])), "equals(a, b)", "字符串相等比较");
+        "字符串拼接",
+        CAT_STRING);
     r.register(
-        "compareTo", args -> str(args[0]).compareTo(str(args[1])), "compareTo(a, b)", "字符串比较");
+        "equals",
+        args -> str(args[0]).equals(str(args[1])),
+        "equals(a, b)",
+        "字符串相等比较",
+        CAT_STRING);
+    r.register(
+        "compareTo",
+        args -> str(args[0]).compareTo(str(args[1])),
+        "compareTo(a, b)",
+        "字符串比较",
+        CAT_STRING);
     r.register(
         "isEmpty",
         args -> {

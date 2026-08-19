@@ -61,8 +61,8 @@ public class DisruptorLogPublisher {
             new DisruptorLogEventFactory(),
             BUFFER_SIZE,
             DaemonThreadFactory.INSTANCE,
-            // P0-FIX: 原代码缺包名点号（com.lmax.disruptor ProducerType.MULTI），导致语法错误
-            com.lmax.disruptor.ProducerType.MULTI,
+            // P0-FIX: ProducerType 位于 dsl 子包（3.4.4），非 com.lmax.disruptor 根包
+            com.lmax.disruptor.dsl.ProducerType.MULTI,
             new com.lmax.disruptor.BlockingWaitStrategy());
     disruptor.handleEventsWith(new DisruptorLogEventHandler(jobLogContentServiceProvider));
     disruptor.start();
@@ -84,8 +84,15 @@ public class DisruptorLogPublisher {
    */
   public void publish(String logId, String jobKey, int lineNo, String content, String level) {
     try {
+      // P0-FIX: 5 个参数超出 EventTranslatorThreeArg 上限，改用 Vararg translator
       ringBuffer.publishEvent(
-          (event, sequence, lId, jKey, lNo, cnt, lvl) -> event.setInfo(lId, jKey, lNo, cnt, lvl),
+          (event, sequence, args) ->
+              event.setInfo(
+                  (String) args[0],
+                  (String) args[1],
+                  (Integer) args[2],
+                  (String) args[3],
+                  (String) args[4]),
           logId,
           jobKey,
           lineNo,

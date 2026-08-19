@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
-import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowHisInstanceDO;
@@ -25,9 +24,7 @@ import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.infra.mapper.FlowHisInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 
@@ -123,19 +120,10 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
    */
   private final FlowInstanceMapper instanceMapper;
 
-  /** 流程实例仓储（domain 层契约），提供基础 CRUD 方法 */
-  private final FlowInstanceRepository instanceRepository;
-
-  /** 历史任务 Mapper，校验任务是否已归档到 his_task 表（复杂查询保留） */
-  private final FlowHisTaskMapper hisTaskMapper;
-
-  /** 历史任务仓储（domain 层契约），提供 findByInstanceId 等查询方法 */
+  /** 历史任务仓储（domain 层契约），提供 findByInstanceId 查询 */
   private final FlowHisTaskRepository hisTaskRepository;
 
-  /** 运行时任务 Mapper（复杂查询保留） */
-  private final FlowRunTaskMapper taskMapper;
-
-  /** 运行时任务仓储（domain 层契约），提供 findByInstanceId 等查询方法 */
+  /** 运行时任务仓储（domain 层契约），提供 findByInstanceId 查询 */
   private final FlowRunTaskRepository taskRepository;
 
   /** 实体转换器，用于 VO ↔ DO 转换 */

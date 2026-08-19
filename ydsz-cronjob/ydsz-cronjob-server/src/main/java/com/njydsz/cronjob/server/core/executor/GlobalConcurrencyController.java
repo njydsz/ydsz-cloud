@@ -142,7 +142,7 @@ public class GlobalConcurrencyController {
    */
   public long getCurrentConcurrent() {
     try {
-      String value = redisStringOps.get(GLOBAL_CONCURRENT_KEY);
+      String value = redisStringOps.get(GLOBAL_CONCURRENT_KEY, String.class);
       return value != null ? Long.parseLong(value) : 0;
     } catch (Exception e) {
       return -1;
@@ -178,7 +178,7 @@ public class GlobalConcurrencyController {
       log.warn("[GlobalConcurrency] 校准失败: reason={}", e.getMessage());
     } finally {
       try {
-        redisStringOps.delete(CALIBRATION_LOCK_KEY);
+        redisStringOps.del(CALIBRATION_LOCK_KEY);
       } catch (Exception ignored) {
         log.debug("Caught exception (ignored): {}", ignored.getMessage());
       }

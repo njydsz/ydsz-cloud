@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +31,7 @@ import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.MfaService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
+import com.njydsz.userinfo.web.dto.RefreshRequest;
 
 /**
  * 认证 Controller
@@ -226,18 +226,6 @@ public class AuthController {
     }
     String remoteAddr = request.getRemoteAddr();
     return remoteAddr != null && trustedProxies.contains(remoteAddr);
-  }
-
-  /**
-   * 刷新 Token 请求体
-   *
-   * <p>封装 refreshToken 字段，避免与 {@link LoginDTO} 耦合。 内部类，使用 Lombok {@code @Data} 自动生成 getter / setter
-   * / toString 等。
-   */
-  @Data
-  public static class RefreshRequest {
-    /** 刷新令牌（来自上一次登录或上一次 refresh 响应） */
-    private String refreshToken;
   }
 
   /**

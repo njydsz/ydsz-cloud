@@ -6,8 +6,17 @@
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml,classpath*:mapper/flow/**/*.xml
 
-# P0-1: 统一线程池配置（ydsz-common-thread）
 ydsz:
+  # P1-2: 工作流模块私有配置（ydsz.flow.* → FlowProperties）
+  flow:
+    enabled: true
+    health-enabled: true
+    publish-block-on-high-risk: true
+    designer-lock-timeout-minutes: 30
+    definition-cache:
+      definition-cache-ttl-minutes: 60
+      definition-cache-max-size: 1000
+
   # P1-1: 多租户 MULTI 模式试点（集团+公司+部门三级隔离）
   tenant:
     enabled: true

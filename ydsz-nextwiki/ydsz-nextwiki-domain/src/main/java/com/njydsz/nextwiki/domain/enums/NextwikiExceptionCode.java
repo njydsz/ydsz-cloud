@@ -105,6 +105,8 @@ public enum NextwikiExceptionCode implements ExceptionCode {
   QUOTA_FILE_LIMIT("W04002", "nextwiki.quota.file.limit"),
   /** 配额记录不存在 */
   QUOTA_NOT_FOUND("W04003", "nextwiki.quota.not.found", 404),
+  /** 文件类型配额不足（S3-P2-6 新增：按文件类型分别限额） */
+  QUOTA_FILE_TYPE_LIMIT("W04004", "nextwiki.quota.file.type.limit"),
 
   // 权限相关 W05xxx
   /** 权限不足 */

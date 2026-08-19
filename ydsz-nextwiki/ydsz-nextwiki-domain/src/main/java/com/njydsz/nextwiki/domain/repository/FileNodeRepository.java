@@ -300,6 +300,13 @@ public interface FileNodeRepository {
    */
   long countColdNodes(LocalDateTime threshold);
 
+  /**
+   * 查询全部未删除节点（用于全量索引重建等批量场景）
+   *
+   * @return 全部节点 VO 列表（含文件夹与文件）
+   */
+  List<FileNodeVO> findAll();
+
   /** 文件类型统计结果 */
   record FileTypeStat(String suffix, int fileCount, long totalSize) {}
 }

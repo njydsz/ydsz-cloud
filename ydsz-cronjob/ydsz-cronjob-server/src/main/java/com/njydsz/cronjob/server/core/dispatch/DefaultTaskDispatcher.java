@@ -52,6 +52,7 @@ import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobHandler;
+import com.njydsz.cronjob.domain.job.ExecutionContextScope;
 import com.njydsz.cronjob.domain.job.ProcessResult;
 import com.njydsz.cronjob.domain.job.ShardingContext;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
@@ -1141,7 +1142,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       // P3-13: 推送 TASK_STARTED WebHook 事件
       dispatchWebhookEvent("TASK_STARTED", job, log0);
 
-      executeAndFinalize(job, lockKey, lockValue, triggerType, retryCount, log0, jobLogger, shardingCtx);
+      executeAndFinalize(job, lockKey, lockValue, holdLock, triggerType, retryCount, log0, jobLogger, shardingCtx);
     } finally {
       // P1-5: 释放幂等锁（确保异常时也释放）
       releaseIdempotentLock(idempotentLock);
@@ -1191,6 +1192,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       Job job,
       String lockKey,
       String lockValue,
+      boolean holdLock,
       String triggerType,
       int retryCount,
       JobLog log0,

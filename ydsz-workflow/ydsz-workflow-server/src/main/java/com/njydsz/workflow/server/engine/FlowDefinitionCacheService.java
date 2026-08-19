@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
@@ -29,7 +28,7 @@ import com.njydsz.workflow.server.config.FlowProperties;
  * <p>P1: 使用 ydsz-common-cache 本地缓存流程节点和跳转定义，避免每次推进时重复查库。
  *
  * <p>缓存策略：以 definitionId 为 key，缓存该定义下所有节点和 skip 列表， TTL 与容量通过 {@code
- * ydsz.flow.definition-cache-ttl-minutes/definition-cache-max-size} YAML 配置， 流程部署新版本时主动 evict。
+ * ydsz.flow.definition-cache.*} YAML 配置（{@link FlowProperties.DefinitionCache}），流程部署新版本时主动 evict。
  *
  * <p>设计说明：节点和 skip 的全量列表各自仅查库一次（{@code selectByDefinitionId}）， 其余按 nodeCode / nextNodeCode / 起始节点
  * 等维度的查询均从缓存列表中派生， 将原本每次推进 5+ 次查库降为首次 2 次、后续 0 次。
@@ -52,6 +51,18 @@ public class FlowDefinitionCacheService {
 
   /** P2-4: sourceRef 索引缓存，避免每次 getSkipsByNodeCode 都解析 JSON */
   private final Cache<String, Map<String, List<FlowSkipDO>>> skipSourceRefIndexCache;
+
+  /**
+   * P1: 节点编码索引缓存（nodeCode → FlowNodeDO），将 getNodeByCode 从 O(n) 流过滤优化为 O(1) Map 查找。
+   *
+   * <p>与 {@link #skipSourceRefIndexCache} 类似，在加载节点时一次性构建索引。
+   */
+  private final Cache<String, Map<String, FlowNodeDO>> nodeByCodeCache;
+
+  /**
+   * P1: 下一节点编码索引缓存（nextNodeCode → List<FlowSkipDO>），将 getSkipsByNextNode 从 O(n) 流过滤优化为 O(1) Map 查找。
+   */
+  private final Cache<String, Map<String, List<FlowSkipDO>>> skipsByNextNodeCache;
 
   /**
    * Spring 注入构造器，使用系统时钟。
@@ -86,6 +97,20 @@ public class FlowDefinitionCacheService {
         YdszCache.<String, Map<String, List<FlowSkipDO>>>newBuilder()
             .type(CacheType.STRIPED)
             .name("flow:def-sourceref-index")
+            .expireAfterWrite(properties.getDefinitionCacheTtlMinutes(), TimeUnit.MINUTES)
+            .maximumSize(properties.getDefinitionCacheMaxSize())
+            .build();
+    this.nodeByCodeCache =
+        YdszCache.<String, Map<String, FlowNodeDO>>newBuilder()
+            .type(CacheType.STRIPED)
+            .name("flow:def-node-by-code")
+            .expireAfterWrite(properties.getDefinitionCacheTtlMinutes(), TimeUnit.MINUTES)
+            .maximumSize(properties.getDefinitionCacheMaxSize())
+            .build();
+    this.skipsByNextNodeCache =
+        YdszCache.<String, Map<String, List<FlowSkipDO>>>newBuilder()
+            .type(CacheType.STRIPED)
+            .name("flow:def-skips-by-next")
             .expireAfterWrite(properties.getDefinitionCacheTtlMinutes(), TimeUnit.MINUTES)
             .maximumSize(properties.getDefinitionCacheMaxSize())
             .build();
@@ -134,6 +159,12 @@ public class FlowDefinitionCacheService {
     skipSourceRefIndexCache.asMap().keySet().stream()
         .filter(k -> k.endsWith(":" + definitionId))
         .forEach(skipSourceRefIndexCache::invalidate);
+    nodeByCodeCache.asMap().keySet().stream()
+        .filter(k -> k.endsWith(":" + definitionId))
+        .forEach(nodeByCodeCache::invalidate);
+    skipsByNextNodeCache.asMap().keySet().stream()
+        .filter(k -> k.endsWith(":" + definitionId))
+        .forEach(skipsByNextNodeCache::invalidate);
     log.debug("[FlowCache] evictLocal definitionId={}", definitionId);
   }
 
@@ -148,19 +179,20 @@ public class FlowDefinitionCacheService {
     return nodeCache.get(cacheKey, this::loadNodes);
   }
 
-  /** 按 nodeCode 查单节点。 */
+  /** 按 nodeCode 查单节点（P1: O(1) Map 查找）。 */
   public FlowNodeDO getNodeByCode(String definitionId, String nodeCode) {
     if (nodeCode == null) {
       return null;
     }
-    return getAllNodes(definitionId).stream()
-        .filter(n -> nodeCode.equals(n.getNodeCode()))
-        .findFirst()
-        .orElse(null);
+    String cacheKey = buildCacheKey(definitionId);
+    Map<String, FlowNodeDO> index = nodeByCodeCache.get(cacheKey, this::loadNodeByCodeIndex);
+    return index.get(nodeCode);
   }
 
-  /** 查开始节点（nodeType = START）。 */
+  /** 查开始节点（nodeType = START，P1: 使用 nodeByCode 索引缓存）。 */
   public FlowNodeDO getStartNode(String definitionId) {
+    // 无法直接通过 nodeByCode 索引定位 START 节点（需要遍历），但 O(n) 仅在首次加载时发生（缓存后直接命中）
+    // 若需进一步优化，可额外维护 nodeByType 索引，但 START 节点每次查询频率低于 getNodeByCode，当前实现已足够
     return getAllNodes(definitionId).stream()
         .filter(n -> n.getNodeType() != null && n.getNodeType() == FlowNodeType.START.getCode())
         .findFirst()
@@ -194,14 +226,16 @@ public class FlowDefinitionCacheService {
     return result == null ? Collections.emptyList() : result;
   }
 
-  /** 查指向某节点的跳转（按 nextNodeCode 过滤，用于退回时找前驱）。 */
+  /** 查指向某节点的跳转（按 nextNodeCode 过滤，用于退回时找前驱，P1: O(1) Map 查找）。 */
   public List<FlowSkipDO> getSkipsByNextNode(String definitionId, String nextNodeCode) {
     if (nextNodeCode == null) {
       return Collections.emptyList();
     }
-    return getAllSkips(definitionId).stream()
-        .filter(s -> nextNodeCode.equals(s.getNextNodeCode()))
-        .collect(Collectors.toList());
+    String cacheKey = buildCacheKey(definitionId);
+    Map<String, List<FlowSkipDO>> index =
+        skipsByNextNodeCache.get(cacheKey, this::loadSkipsByNextNodeIndex);
+    List<FlowSkipDO> result = index.get(nextNodeCode);
+    return result == null ? Collections.emptyList() : result;
   }
 
   // ============================== 内部加载 ==============================
@@ -260,6 +294,30 @@ public class FlowDefinitionCacheService {
   private String extractDefinitionId(String cacheKey) {
     int idx = cacheKey.indexOf(':');
     return idx >= 0 ? cacheKey.substring(idx + 1) : cacheKey;
+  }
+
+  /** P1: 构建节点编码索引（nodeCode → FlowNodeDO），将 getNodeByCode 从 O(n) 优化为 O(1) */
+  private Map<String, FlowNodeDO> loadNodeByCodeIndex(String cacheKey) {
+    List<FlowNodeDO> nodes = loadNodes(cacheKey);
+    Map<String, FlowNodeDO> index = new HashMap<>(nodes.size());
+    for (FlowNodeDO node : nodes) {
+      if (node.getNodeCode() != null) {
+        index.put(node.getNodeCode(), node);
+      }
+    }
+    return index;
+  }
+
+  /** P1: 构建下一节点编码索引（nextNodeCode → List<FlowSkipDO>），将 getSkipsByNextNode 从 O(n) 优化为 O(1) */
+  private Map<String, List<FlowSkipDO>> loadSkipsByNextNodeIndex(String cacheKey) {
+    List<FlowSkipDO> skips = loadSkips(cacheKey);
+    Map<String, List<FlowSkipDO>> index = new HashMap<>(skips.size());
+    for (FlowSkipDO skip : skips) {
+      if (skip.getNextNodeCode() != null) {
+        index.computeIfAbsent(skip.getNextNodeCode(), k -> new ArrayList<>()).add(skip);
+      }
+    }
+    return index;
   }
 
   private String extractSourceRef(FlowSkipDO skip) {

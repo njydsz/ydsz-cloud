@@ -2,6 +2,7 @@ package com.njydsz.nextwiki.domain.dto;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -44,6 +45,12 @@ public class StorageQuotaDTO implements Serializable {
 
   @Schema(description = "已使用文件数量")
   private Integer fileCountUsed;
+
+  @Schema(description = "文件类型已使用量（扩展字段：fileType -> 已用字节）")
+  private Map<String, Long> fileTypeUsedMap;
+
+  @Schema(description = "文件类型配额限制（扩展字段：fileType -> 限制字节）")
+  private Map<String, Long> fileTypeLimitMap;
 
   @Schema(description = "创建人")
   private String createdBy;

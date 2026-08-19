@@ -278,7 +278,7 @@ public class DownloadRateLimitService {
      * @return 拒绝结果，{@code allowed=false}
      */
     public static RateLimitResult blocked(String message) {
-      return RateLimitResult.builder().allowed(false).message(message);
+      return RateLimitResult.builder().allowed(false).message(message).build();
     }
   }
 }

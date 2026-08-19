@@ -1,6 +1,5 @@
 package com.njydsz.cronjob.server.core;
 
-import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 
 /**
@@ -23,13 +22,13 @@ public class AlertSendException extends SysException {
   /**
    * 构造告警发送异常。
    *
-   * <p>P0-FIX: SysException 无 String 构造器，改用 {@link BaseResultCode#INTERNAL_ERROR} +
-   * {@link #setMessage(String)} 组装（AbstractYdszException 提供 setMessage）。
+   * <p>P0-FIX: SysException 无 String 构造器，使用无参构造器 + {@link #setMessage(String)} 组装
+   * （AbstractYdszException 提供 setMessage）。
    *
    * @param message 异常描述信息
    */
   public AlertSendException(String message) {
-    super(BaseResultCode.INTERNAL_ERROR);
+    super();
     setMessage(message);
   }
 
@@ -40,7 +39,8 @@ public class AlertSendException extends SysException {
    * @param cause 导致发送失败的根因（如网络异常、渠道超时）
    */
   public AlertSendException(String message, Throwable cause) {
-    super(BaseResultCode.INTERNAL_ERROR, cause);
+    super();
     setMessage(message);
+    initCause(cause);
   }
 }

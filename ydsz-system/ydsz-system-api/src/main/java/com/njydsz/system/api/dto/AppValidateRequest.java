@@ -1,6 +1,7 @@
 package com.njydsz.system.api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 /**
@@ -14,10 +15,12 @@ import lombok.Data;
 public class AppValidateRequest {
 
   /** 应用 Key（client_id） */
+  @NotBlank(message = "应用 Key 不能为空")
   @Schema(description = "应用 Key（client_id）", required = true)
   private String appKey;
 
   /** 应用密钥（client_secret） */
+  @NotBlank(message = "应用密钥不能为空")
   @Schema(description = "应用密钥（client_secret）", required = true)
   private String appSecret;
 }
