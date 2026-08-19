@@ -208,7 +208,7 @@ public class SummaryConversationMemory implements ConversationMemory {
     if (summary != null && !summary.isBlank()) {
       ChatMessage summaryMsg = ChatMessage.system(SUMMARY_PREFIX + summary);
       result.add(summaryMsg);
-      tokenBudget -= estimateTokens(summaryMsg, tokenCharRatio);
+      tokenBudget -= ConversationMemory.estimateTokens(summaryMsg, tokenCharRatio);
     }
     // 按剩余预算加载最近消息
     if (tokenBudget > 0) {
@@ -216,7 +216,7 @@ public class SummaryConversationMemory implements ConversationMemory {
       int currentTokens = 0;
       int includeUpTo = recentMessages.size();
       for (int i = recentMessages.size() - 1; i >= 0; i--) {
-        int msgTokens = estimateTokens(recentMessages.get(i), tokenCharRatio);
+        int msgTokens = ConversationMemory.estimateTokens(recentMessages.get(i), tokenCharRatio);
         if (currentTokens + msgTokens > tokenBudget) {
           break;
         }
@@ -242,7 +242,7 @@ public class SummaryConversationMemory implements ConversationMemory {
     }
     List<ChatMessage> messages = delegate.load(conversationId, Integer.MAX_VALUE);
     for (ChatMessage msg : messages) {
-      total += estimateTokens(msg, tokenCharRatio);
+      total += ConversationMemory.estimateTokens(msg, tokenCharRatio);
     }
     return total;
   }

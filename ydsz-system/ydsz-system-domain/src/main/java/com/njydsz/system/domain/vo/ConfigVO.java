@@ -12,9 +12,10 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 系统配置 VO（兼 DTO）
  *
- * <p>对应 {@code ydsz_config} 表的展示视图和写入参数，是「系统配置中心」列表 / 详情 / 创建 / 更新接口的通用载体。 由 {@link
- * com.njydsz.system.domain.converter.SystemConverter} 从 {@link
- * com.njydsz.system.domain.entity.Config} 实体转换而来。
+ * <p>对应 {@code ydsz_config} 表的展示视图和写入参数，是「系统配置中心」列表 / 详情 / 创建 / 更新接口的通用载体（轻量模块约定：
+ * 请求 / 响应共用同一契约对象，字段语义一致；严格三分离（Command/VO/DTO）在字段无差异时视为过度设计，不作拆分）。 由 {@link
+ * com.njydsz.system.infra.converter.SystemConverter} 从 {@link
+ * com.njydsz.system.infra.entity.Config} 实体转换而来。
  *
  * <p><b>字段语义：</b>
  *
@@ -34,12 +35,12 @@ import com.njydsz.common.safe.annotation.Xss;
  *   <li>前端「公开配置」接口返回值（开关、限流阈值、特性开关等）
  * </ul>
  *
- * <p><b>缓存策略：</b>读取通过 {@code ydsz:config:{group}:{key}} 缓存至 Redis； 写入时 {@code @CacheEvict} 主动失效；TTL
- * 默认 30min。
+ * <p><b>缓存策略：</b>读取通过 ydsz-common-cache 进程内本地缓存（键 {@code value:{tenantId}:{configKey}}）；
+ * 写入时 {@code @CacheEvict} 精准失效；TTL 通过 {@code ydsz.cache.caches.system:config} 配置（默认 5 分钟）。
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.Config 系统配置实体
+ * @see com.njydsz.system.infra.entity.Config 系统配置实体
  */
 @Data
 @SuperBuilder

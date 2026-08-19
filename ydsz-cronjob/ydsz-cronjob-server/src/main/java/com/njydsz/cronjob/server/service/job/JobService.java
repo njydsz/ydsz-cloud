@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.BatchResult;
-import com.njydsz.cronjob.domain.entity.LOG.JobLog;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.domain.entity.job.Job;
 
 /**

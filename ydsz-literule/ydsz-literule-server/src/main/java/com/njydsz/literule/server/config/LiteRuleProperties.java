@@ -167,6 +167,17 @@ public class LiteRuleProperties {
   private String defaultTenantId = "1";
 
   /**
+   * 多租户隔离配置（P0-F3）
+   *
+   * <p>控制规则引擎的多租户物理隔离校验。 对标大厂金融级规则引擎：默认逻辑隔离（行级 tenant_id）， 可通过
+   * {@code physical-isolation-required=true} 强制要求物理隔离（SCHEMA/ISOLATE_DB）， 校验不通过时启动失败（fail-fast），
+   * 避免高合规场景下误用逻辑隔离导致租户数据串扰。
+   *
+   * @since 1.0.0
+   */
+  private TenantConfig tenant = new TenantConfig();
+
+  /**
    * 当前运行环境（P1-5 多环境隔离）
    *
    * <p>可选值：
@@ -647,5 +658,31 @@ public class LiteRuleProperties {
      */
     @Min(0)
     private long minSampleSize = 500;
+  }
+
+  /**
+   * 多租户隔离配置（P0-F3）
+   *
+   * <p>配置示例：
+   *
+   * <pre>
+   * ydsz:
+   *   literule:
+   *     tenant:
+   *       physical-isolation-required: true   # 强制要求物理隔离
+   * </pre>
+   *
+   * @since 1.0.0
+   */
+  @Data
+  public static class TenantConfig {
+
+    /**
+     * 是否强制要求多租户物理隔离
+     *
+     * <p>true：启动时校验 {@code ydsz.common.tenant.mode} 必须为 SCHEMA 或 ISOLATE_DB， 否则启动失败（fail-fast）。
+     * 适用于金融/合规等高隔离要求场景。 false（默认）：不校验，兼容逻辑隔离部署。
+     */
+    private boolean physicalIsolationRequired = false;
   }
 }

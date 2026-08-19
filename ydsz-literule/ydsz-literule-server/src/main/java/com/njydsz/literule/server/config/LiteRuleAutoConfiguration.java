@@ -33,6 +33,7 @@ import com.njydsz.common.event.repository.OutboxRepository;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
+import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.domain.model.MockModelInputProvider;
@@ -61,7 +62,7 @@ import com.njydsz.literule.server.core.RuleTimeoutExecutor;
 import com.njydsz.literule.server.debug.RuleDebugger;
 import com.njydsz.literule.server.distributed.RuleConfigOutboxGateway;
 import com.njydsz.literule.server.distributed.RuleConfigOutboxRelay;
-import com.njydsz.literule.server.engine.liteexpr.AviatorExpressionEngine;
+import com.njydsz.literule.server.engine.liteexpr.LiteExprEngine;
 import com.njydsz.literule.server.expression.EmptyVariableRegistry;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
 import com.njydsz.literule.server.expression.VariableRegistry;
@@ -127,7 +128,7 @@ public class LiteRuleAutoConfiguration {
   /**
    * 表达式求值器
    *
-   * <p>2.1.0 起仅保留自研 {@link AviatorExpressionEngine}，零外部依赖、AST 原生追踪/沙箱/变量提取。
+   * <p>2.1.0 起仅保留自研 {@link LiteExprEngine}，零外部依赖、AST 原生追踪/沙箱/变量提取。
    *
    * @param properties 配置属性
    * @return ExpressionEngine 实例
@@ -136,7 +137,7 @@ public class LiteRuleAutoConfiguration {
   @ConditionalOnMissingBean
   public ExpressionEngine expressionEvaluator(LiteRuleProperties properties) {
     log.info("[LiteRule] LiteExpr 自研表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
-    return new AviatorExpressionEngine(properties.isSandboxEnabled());
+    return new LiteExprEngine(properties.isSandboxEnabled());
   }
 
   /**
@@ -673,6 +674,44 @@ public class LiteRuleAutoConfiguration {
   @ConditionalOnProperty(prefix = "ydsz.literule.debug", name = "enabled", havingValue = "true", matchIfMissing = true)
   public RuleDebugger ruleDebugger(ExpressionEngine evaluator) {
     return new RuleDebugger(evaluator);
+  }
+
+  /**
+   * 多租户物理隔离强制校验（P0-F3）
+   *
+   * <p>当 {@code ydsz.literule.tenant.physical-isolation-required=true} 时， 启动校验
+   * {@code ydsz.tenant.mode} 必须为 SCHEMA 或 ISOLATE_DB（物理隔离）； 否则抛异常阻止启动（fail-fast），
+   * 避免金融/合规等高隔离要求场景误用逻辑隔离导致租户数据串扰。
+   *
+   * @param tenantPropsProvider 租户配置（可选，未引入 common-tenant 时跳过校验）
+   * @return 校验通过时的占位标记对象
+   * @since 1.0.0
+   */
+  @Bean
+  @ConditionalOnMissingBean(name = "liteRuleTenantIsolationValidator")
+  @ConditionalOnProperty(
+      prefix = "ydsz.literule.tenant",
+      name = "physical-isolation-required",
+      havingValue = "true")
+  public Object liteRuleTenantIsolationValidator(
+      ObjectProvider<TenantProperties> tenantPropsProvider) {
+    TenantProperties props = tenantPropsProvider.getIfAvailable();
+    if (props != null) {
+      TenantProperties.TenantMode mode = props.getMode();
+      if (mode != TenantProperties.TenantMode.SCHEMA
+          && mode != TenantProperties.TenantMode.ISOLATE_DB) {
+        throw new IllegalStateException(
+            "[LiteRule-Tenant] ydsz.literule.tenant.physical-isolation-required=true 要求多租户物理隔离，"
+                + "但当前 ydsz.tenant.mode="
+                + mode
+                + "（逻辑隔离），请配置为 SCHEMA 或 ISOLATE_DB（fail-fast）");
+      }
+      log.info("[LiteRule-Tenant] 多租户物理隔离校验通过（mode={}）", mode);
+    } else {
+      log.warn(
+          "[LiteRule-Tenant] 未检测到 TenantProperties（未引入 common-tenant），跳过物理隔离校验");
+    }
+    return Boolean.TRUE;
   }
 
   /**

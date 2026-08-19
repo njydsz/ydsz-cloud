@@ -15,12 +15,17 @@ import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowSkipType;
+import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.repository.FlowSkipRepository;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowSkipVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowSkipDO;
 import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
-import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
-import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.BpmnModel;
 import com.njydsz.workflow.server.engine.BpmnXmlParser;
@@ -36,7 +41,7 @@ import org.springframework.util.StringUtils;
 /**
  * 流程定义设计器管理器
  *
- * <p>承担流程定义<b>设计器协同编辑</b>相关全部职责：节点坐标更新、草稿编辑、
+ * <p>承担流程定义<b>设计器协同编辑</b>全部职责：节点坐标更新、草稿编辑、
  * 设计器数据加载/保存、表单字段配置、SLA 配置、协同编辑锁定/解锁。
  *
  * <p><b>核心能力：</b>
@@ -60,14 +65,17 @@ import org.springframework.util.StringUtils;
 @Component
 public class FlowDefinitionDesignManager {
 
-  /** 流程定义 Mapper */
-  private final FlowDefinitionMapper definitionMapper;
+  /** 流程定义仓储 */
+  private final FlowDefinitionRepository definitionRepository;
 
-  /** 流程节点 Mapper */
-  private final FlowNodeMapper nodeMapper;
+  /** 流程节点仓储 */
+  private final FlowNodeRepository nodeRepository;
 
-  /** 流程跳转 Mapper */
-  private final FlowSkipMapper skipMapper;
+  /** 节点跳转仓储 */
+  private final FlowSkipRepository skipRepository;
+
+  /** DO/VO 转换器 */
+  private final WorkflowConverter converter;
 
   /** 流程定义元数据缓存 */
   private final FlowDefinitionCacheService flowDefinitionCacheService;
@@ -81,21 +89,28 @@ public class FlowDefinitionDesignManager {
   /** 查询服务（获取详情数据） */
   private final FlowDefinitionQueryService queryService;
 
+  /** 流程定义 Mapper（仅用于 CAS 加解锁，Repository 暂无对应方法） */
+  private final FlowDefinitionMapper definitionMapper;
+
   public FlowDefinitionDesignManager(
-      FlowDefinitionMapper definitionMapper,
-      FlowNodeMapper nodeMapper,
-      FlowSkipMapper skipMapper,
+      FlowDefinitionRepository definitionRepository,
+      FlowNodeRepository nodeRepository,
+      FlowSkipRepository skipRepository,
+      WorkflowConverter converter,
       FlowDefinitionCacheService flowDefinitionCacheService,
       FlowProperties flowProperties,
       BpmnXmlParser bpmnXmlParser,
-      FlowDefinitionQueryService queryService) {
-    this.definitionMapper = definitionMapper;
-    this.nodeMapper = nodeMapper;
-    this.skipMapper = skipMapper;
+      FlowDefinitionQueryService queryService,
+      FlowDefinitionMapper definitionMapper) {
+    this.definitionRepository = definitionRepository;
+    this.nodeRepository = nodeRepository;
+    this.skipRepository = skipRepository;
+    this.converter = converter;
     this.flowDefinitionCacheService = flowDefinitionCacheService;
     this.flowProperties = flowProperties;
     this.bpmnXmlParser = bpmnXmlParser;
     this.queryService = queryService;
+    this.definitionMapper = definitionMapper;
   }
 
   /**
@@ -116,7 +131,7 @@ public class FlowDefinitionDesignManager {
           .message("definitionId/nodeCode 不能为空")
           .build();
     }
-    FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+    FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -124,7 +139,7 @@ public class FlowDefinitionDesignManager {
           .build();
     }
     node.setCoordinate(coordinate);
-    nodeMapper.updateById(node);
+    nodeRepository.update(converter.entityToVO(node));
     flowDefinitionCacheService.evict(definitionId);
     log.info("[Flow] 更新节点坐标: defId={} node={} coordinate={}", definitionId, nodeCode, coordinate);
   }
@@ -149,7 +164,7 @@ public class FlowDefinitionDesignManager {
           .message("definitionId/dto 不能为空")
           .build();
     }
-    FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+    FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -175,14 +190,15 @@ public class FlowDefinitionDesignManager {
     if (StringUtils.hasText(dto.getFormPath())) {
       def.setFormPath(dto.getFormPath());
     }
-    definitionMapper.updateById(def);
+    definitionRepository.update(converter.entityToVO(def));
 
     boolean hasNodes = dto.getNodes() != null && !dto.getNodes().isEmpty();
     boolean hasSkips = dto.getSkips() != null && !dto.getSkips().isEmpty();
     boolean hasBpmn = StringUtils.hasText(dto.getBpmnXml());
     if (hasBpmn || hasNodes || hasSkips) {
-      skipMapper.deleteByDefinitionId(definitionId);
-      nodeMapper.deleteByDefinitionId(definitionId);
+      // 先删除跳转（外键依赖节点，但此处按业务约定先删跳转再删节点）
+      skipRepository.findByDefinitionId(definitionId).forEach(s -> skipRepository.deleteById(s.getId()));
+      nodeRepository.deleteByDefinitionId(definitionId);
 
       List<FlowNodeDO> nodes = new ArrayList<>();
       List<FlowSkipDO> skips = new ArrayList<>();
@@ -221,14 +237,14 @@ public class FlowDefinitionDesignManager {
         node.setFlowCode(def.getFlowCode());
         node.setTenantId(def.getTenantId());
         node.setProviderTraceId(dto.getProviderTraceId());
-        nodeMapper.insert(node);
+        nodeRepository.save(converter.entityToVO(node));
       }
       for (FlowSkipDO skip : skips) {
         skip.setDefinitionId(definitionId);
         skip.setFlowCode(def.getFlowCode());
         skip.setTenantId(def.getTenantId());
         skip.setProviderTraceId(dto.getProviderTraceId());
-        skipMapper.insert(skip);
+        skipRepository.save(converter.entityToVO(skip));
       }
     }
 
@@ -291,7 +307,7 @@ public class FlowDefinitionDesignManager {
    */
   @Transactional(rollbackFor = Exception.class)
   public void saveDesignerData(String definitionId, Map<String, Object> designerData) {
-    FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+    FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -315,15 +331,15 @@ public class FlowDefinitionDesignManager {
         Object coord = nodeData.get("coordinate");
         if (coord != null) {
           String coordStr = coord instanceof String ? (String) coord : YdszJson.toJson(coord);
-          FlowNodeDO nodeForCoord = nodeMapper.selectByCode(definitionId, nodeCode);
+          FlowNodeDO nodeForCoord = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
           if (nodeForCoord != null) {
             nodeForCoord.setCoordinate(coordStr);
-            nodeMapper.updateById(nodeForCoord);
+            nodeRepository.update(converter.entityToVO(nodeForCoord));
           }
         }
         Object nodeName = nodeData.get("nodeName");
         if (nodeName != null) {
-          FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+          FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
           if (node != null) {
             node.setNodeName((String) nodeName);
             Object permFlag = nodeData.get("permissionFlag");
@@ -334,7 +350,7 @@ public class FlowDefinitionDesignManager {
             if (ext != null) {
               node.setExt(ext instanceof String ? (String) ext : YdszJson.toJson(ext));
             }
-            nodeMapper.updateById(node);
+            nodeRepository.update(converter.entityToVO(node));
           }
         }
       }
@@ -357,7 +373,7 @@ public class FlowDefinitionDesignManager {
    */
   @Transactional(readOnly = true)
   public String getFormConfig(String definitionId, String nodeCode) {
-    FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+    FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -377,7 +393,7 @@ public class FlowDefinitionDesignManager {
    */
   @Transactional(rollbackFor = Exception.class)
   public void saveFormConfig(String definitionId, String nodeCode, String formFieldsConfig) {
-    FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+    FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -385,7 +401,7 @@ public class FlowDefinitionDesignManager {
           .build();
     }
     node.setFormFieldsConfig(formFieldsConfig);
-    nodeMapper.updateById(node);
+    nodeRepository.update(converter.entityToVO(node));
     flowDefinitionCacheService.evict(definitionId);
     log.info("[Flow] 表单字段配置已保存: definitionId={} nodeCode={}", definitionId, nodeCode);
   }
@@ -400,7 +416,7 @@ public class FlowDefinitionDesignManager {
    */
   @Transactional(readOnly = true)
   public String getSlaConfig(String definitionId, String nodeCode) {
-    FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+    FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -420,7 +436,7 @@ public class FlowDefinitionDesignManager {
    */
   @Transactional(rollbackFor = Exception.class)
   public void saveSlaConfig(String definitionId, String nodeCode, String slaConfig) {
-    FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+    FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -428,7 +444,7 @@ public class FlowDefinitionDesignManager {
           .build();
     }
     node.setSlaConfig(slaConfig);
-    nodeMapper.updateById(node);
+    nodeRepository.update(converter.entityToVO(node));
     flowDefinitionCacheService.evict(definitionId);
     log.info(
         "[Flow] SLA 配置已保存: definitionId={} nodeCode={} slaConfig={}",
@@ -455,7 +471,7 @@ public class FlowDefinitionDesignManager {
           .message("error.workflow.msg_d6e7f8a9")
           .build();
     }
-    FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+    FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -467,6 +483,7 @@ public class FlowDefinitionDesignManager {
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime timeoutExpired = now.minusMinutes(flowProperties.getDesignerLockTimeoutMinutes());
 
+    // 保留 Mapper：自定义 CAS 操作，Repository 暂无对应方法
     int affected =
         definitionMapper.casLock(
             definitionId, userId, now, userId, timeoutExpired, def.getRevision());
@@ -480,7 +497,7 @@ public class FlowDefinitionDesignManager {
       return true;
     }
 
-    FlowDefinitionDO latest = definitionMapper.selectById(definitionId);
+    FlowDefinitionDO latest = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (latest == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -494,6 +511,7 @@ public class FlowDefinitionDesignManager {
           latest.getLockedAt() != null && latest.getLockedAt().isBefore(timeoutExpired);
       if (expired) {
         log.warn("[Flow] 设计器加锁重试（锁已超时但 version 变化）: defId={} holder={}", definitionId, holder);
+        // 保留 Mapper：自定义 CAS 操作，Repository 暂无对应方法
         int retry =
             definitionMapper.casLock(
                 definitionId, userId, now, userId, timeoutExpired, latest.getRevision());
@@ -532,7 +550,7 @@ public class FlowDefinitionDesignManager {
           .message("error.workflow.msg_d6e7f8a9")
           .build();
     }
-    FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+    FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -546,13 +564,14 @@ public class FlowDefinitionDesignManager {
       return true;
     }
 
+    // 保留 Mapper：自定义 CAS 操作，Repository 暂无对应方法
     int affected = definitionMapper.casUnlock(definitionId, userId, def.getRevision());
     if (affected == 1) {
       log.info("[Flow] 设计器解锁成功: defId={} userId={}", definitionId, userId);
       return true;
     }
 
-    FlowDefinitionDO latest = definitionMapper.selectById(definitionId);
+    FlowDefinitionDO latest = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (latest == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -580,7 +599,7 @@ public class FlowDefinitionDesignManager {
           .message("error.workflow.msg_d6e7f8a9")
           .build();
     }
-    FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+    FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
       return null;
     }

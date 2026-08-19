@@ -2,7 +2,7 @@ package com.njydsz.cronjob.server.service.log;
 
 import java.util.List;
 
-import com.njydsz.cronjob.domain.entity.LOG.JobLogContent;
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 
 /**
  * 任务执行日志内容 Service。

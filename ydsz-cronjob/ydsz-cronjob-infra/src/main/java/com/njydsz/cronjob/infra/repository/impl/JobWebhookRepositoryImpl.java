@@ -9,6 +9,7 @@ import com.njydsz.cronjob.domain.repository.JobWebhookRepository;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.infra.mapper.job.JobWebhookMapper;
+import com.njydsz.cronjob.infra.repository.JobRepository;
 
 /**
  * 任务 Webhook Repository 实现（Infra 层）。

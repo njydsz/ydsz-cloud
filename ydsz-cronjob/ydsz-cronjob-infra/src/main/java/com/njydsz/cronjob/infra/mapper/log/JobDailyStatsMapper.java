@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.cronjob.domain.entity.LOG.JobDailyStats;
+import com.njydsz.cronjob.domain.entity.log.JobDailyStats;
 
 /**
  * 任务日统计 Mapper
@@ -32,7 +32,7 @@ import com.njydsz.cronjob.domain.entity.LOG.JobDailyStats;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.cronjob.domain.entity.LOG.JobDailyStats 日统计实体
+ * @see com.njydsz.cronjob.domain.entity.log.JobDailyStats 日统计实体
  * @see com.njydsz.cronjob.server.service.JobStatsService 任务统计 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

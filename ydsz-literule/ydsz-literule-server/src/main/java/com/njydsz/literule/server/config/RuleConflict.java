@@ -69,7 +69,13 @@ public class RuleConflict implements Serializable {
      *
      * <p>复合条件中某子句被另一子句完全包含或排除， 导致该子句恒为冗余（如 {@code x > 5 && x > 3} 中 {@code x > 3} 不可达）。
      */
-    UNREACHABLE_SUBCONDITION
+    UNREACHABLE_SUBCONDITION,
+    /**
+     * 执行顺序冲突（P0-F2 起）
+     *
+     * <p>两条规则条件范围重叠、优先级相同且无互斥组约束时， 执行顺序（注册顺序/并行分组）将直接影响评估结果， 存在"同一事实因顺序不同命中不同规则"的不确定性。
+     */
+    EXECUTION_ORDER_CONFLICT
   }
 
   /** 冲突类型 */

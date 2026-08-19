@@ -134,4 +134,31 @@ public interface JobRepository {
    * @return 受影响行数
    */
   int resumeAutoPaused(String id);
+
+  /**
+   * 分页结果封装（供 Web 层查询方法返回分页数据）。
+   *
+   * <p>P0-FIX：本接口（infra 层）与 domain 层 {@code JobRepository} 同名，infra.repository.impl 包内的
+   * 实现类引用 {@code JobRepository.PageResult} 时会优先解析到同包本接口；原缺少数该嵌套类型导致编译失败
+   * （cannot find symbol: JobRepository.PageResult）。补充与 domain 版一致的实现。
+   *
+   * @param <T> 记录类型
+   */
+  class PageResult<T> {
+    private final List<T> records;
+    private final long total;
+
+    public PageResult(List<T> records, long total) {
+      this.records = records;
+      this.total = total;
+    }
+
+    public List<T> getRecords() {
+      return records;
+    }
+
+    public long getTotal() {
+      return total;
+    }
+  }
 }

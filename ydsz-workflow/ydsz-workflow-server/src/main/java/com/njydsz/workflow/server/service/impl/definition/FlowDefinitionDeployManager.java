@@ -19,12 +19,16 @@ import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowSkipType;
+import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.repository.FlowSkipRepository;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowSkipVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowSkipDO;
-import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
-import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
-import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.BpmnModel;
 import com.njydsz.workflow.server.engine.BpmnXmlParser;
@@ -69,14 +73,17 @@ import org.springframework.util.StringUtils;
 @Component
 public class FlowDefinitionDeployManager {
 
-  /** 流程定义 Mapper */
-  private final FlowDefinitionMapper definitionMapper;
+  /** 流程定义仓储 */
+  private final FlowDefinitionRepository definitionRepository;
 
-  /** 流程节点 Mapper */
-  private final FlowNodeMapper nodeMapper;
+  /** 流程节点仓储 */
+  private final FlowNodeRepository nodeRepository;
 
-  /** 流程跳转 Mapper */
-  private final FlowSkipMapper skipMapper;
+  /** 节点跳转仓储 */
+  private final FlowSkipRepository skipRepository;
+
+  /** DO/VO 转换器 */
+  private final WorkflowConverter converter;
 
   /** BPMN 2.0 XML 解析器 */
   private final BpmnXmlParser bpmnXmlParser;
@@ -97,17 +104,19 @@ public class FlowDefinitionDeployManager {
   private final FlowDefinitionDeployManager self;
 
   public FlowDefinitionDeployManager(
-      FlowDefinitionMapper definitionMapper,
-      FlowNodeMapper nodeMapper,
-      FlowSkipMapper skipMapper,
+      FlowDefinitionRepository definitionRepository,
+      FlowNodeRepository nodeRepository,
+      FlowSkipRepository skipRepository,
+      WorkflowConverter converter,
       BpmnXmlParser bpmnXmlParser,
       FlowGraphValidator graphValidator,
       FlowDefinitionCacheService flowDefinitionCacheService,
       FlowProperties flowProperties,
       @Lazy FlowDefinitionDeployManager self) {
-    this.definitionMapper = definitionMapper;
-    this.nodeMapper = nodeMapper;
-    this.skipMapper = skipMapper;
+    this.definitionRepository = definitionRepository;
+    this.nodeRepository = nodeRepository;
+    this.skipRepository = skipRepository;
+    this.converter = converter;
     this.bpmnXmlParser = bpmnXmlParser;
     this.graphValidator = graphValidator;
     this.flowDefinitionCacheService = flowDefinitionCacheService;
@@ -153,7 +162,9 @@ public class FlowDefinitionDeployManager {
         dto.getTenantId() != null ? dto.getTenantId() : AuthContextUtils.getTenantIdOrDefault();
 
     FlowDefinitionDO existing =
-        definitionMapper.selectPublished(dto.getFlowCode(), version, tenantId);
+        definitionRepository.findPublished(dto.getFlowCode(), version, tenantId)
+            .map(converter::entityToDO)
+            .orElse(null);
     if (existing != null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.BAD_REQUEST)
@@ -262,15 +273,15 @@ public class FlowDefinitionDeployManager {
     def.setDescription(dto.getDescription());
     def.setTenantId(tenantId);
     def.setProviderTraceId(dto.getProviderTraceId());
-    definitionMapper.insert(def);
-    String definitionId = def.getId();
+    FlowDefinitionVO savedDef = definitionRepository.save(converter.entityToVO(def));
+    String definitionId = savedDef.getId();
 
     for (FlowNodeDO node : nodes) {
       node.setDefinitionId(definitionId);
       node.setFlowCode(dto.getFlowCode());
       node.setTenantId(tenantId);
       node.setProviderTraceId(dto.getProviderTraceId());
-      nodeMapper.insert(node);
+      nodeRepository.save(converter.entityToVO(node));
     }
 
     for (FlowSkipDO skip : skips) {
@@ -278,7 +289,7 @@ public class FlowDefinitionDeployManager {
       skip.setFlowCode(dto.getFlowCode());
       skip.setTenantId(tenantId);
       skip.setProviderTraceId(dto.getProviderTraceId());
-      skipMapper.insert(skip);
+      skipRepository.save(converter.entityToVO(skip));
     }
 
     log.info(

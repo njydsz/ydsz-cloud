@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
+import com.njydsz.agent.domain.gateway.CacheMetricsRecorder;
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
@@ -23,13 +24,17 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  *   <li>{@code agent_llm_call_duration_seconds{provider,model}} — LLM 调用耗时
  *   <li>{@code agent_llm_tokens_total{provider,model,type}} — Token 消耗（prompt/completion）
  *   <li>{@code agent_guardrail_rejections_total{guard,direction}} — 安全护栏拒绝次数
+ *   <li>{@code agent_cache_hits_total{provider}} / {@code agent_cache_misses_total{provider}} — LLM 缓存命中/未命中
  * </ul>
+ *
+ * <p><b>DDD 合规</b>：实现 domain 层 {@link CacheMetricsRecorder} SPI， 供 infra 层
+ * {@code CachedLlmClient} 回调上报缓存指标，避免 infra 反向依赖 server 层。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @ConditionalOnClass(MeterRegistry.class)
-public class AgentMetrics extends SentryMetricsAdapter {
+public class AgentMetrics extends SentryMetricsAdapter implements CacheMetricsRecorder {
 
   /** LLM 调用次数指标名 */
   private static final String METRIC_LLM_CALLS = "llm_calls_total";

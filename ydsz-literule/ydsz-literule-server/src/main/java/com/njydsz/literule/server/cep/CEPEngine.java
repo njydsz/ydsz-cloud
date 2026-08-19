@@ -100,10 +100,10 @@ public class CEPEngine implements Serializable {
   private static ExpressionEngine createDefaultEvaluator() {
     try {
       Class<?> clazz =
-          Class.forName("com.njydsz.literule.server.engine.liteexpr.AviatorExpressionEngine");
+          Class.forName("com.njydsz.literule.server.engine.liteexpr.LiteExprEngine");
       return (ExpressionEngine) clazz.getConstructor(boolean.class).newInstance(true);
     } catch (Exception e) {
-      throw new IllegalStateException("无法创建默认 AviatorExpressionEngine", e);
+      throw new IllegalStateException("无法创建默认 LiteExprEngine", e);
     }
   }
 

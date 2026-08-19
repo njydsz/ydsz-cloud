@@ -40,9 +40,9 @@ import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserImportResultDTO;
-import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 import com.njydsz.userinfo.server.auth.SensitiveVerifyService;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
 import com.njydsz.userinfo.server.service.UserAccountService;
@@ -400,7 +400,7 @@ public class UserAccountController {
    */
   @GetMapping("/{userId}/login-history")
   @Operation(summary = "查询用户最近登录历史（安全审计）")
-  public BaseResponse<List<UserLoginHistoryDO>> getLoginHistory(
+  public BaseResponse<List<UserLoginHistoryVO>> getLoginHistory(
       @PathVariable String userId,
       @org.springframework.web.bind.annotation.RequestParam(defaultValue = "20") int limit) {
     return BaseResponse.success(loginHistoryService.getRecentLogins(userId, limit));

@@ -452,14 +452,16 @@ public class MinioStorage extends AbstractFileStorage {
   @Override
   public void changeStorageClass(String bucketName, String objectName, String storageClass) {
     try {
-      // MinIO 通过 CopyObject 并设置 storage-class 头来变更存储类型
+      // MinIO 通过 CopyObject 并携带 x-amz-storage-class 请求头来变更存储类型
       // 源和目标相同，本质是"原地修改元数据"
+      // 注意：minio-java 8.5.11 的 Builder 无 storageClass(String) API，
+      // 统一走标准 S3 头方式，避免依赖升级带来的兼容风险
       minioClient.copyObject(
           CopyObjectArgs.builder()
               .source(CopySource.builder().bucket(bucketName).object(objectName).build())
               .bucket(bucketName)
               .object(objectName)
-              .storageClass(storageClass)
+              .headers(Map.of("x-amz-storage-class", storageClass))
               .build());
       log.info(
           "[Minio] 存储类型变更成功: bucket={}, object={}, storageClass={}",

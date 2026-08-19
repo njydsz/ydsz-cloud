@@ -14,9 +14,9 @@ import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobDagPutDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
-import com.njydsz.cronjob.domain.entity.LOG.JobDailyStats;
-import com.njydsz.cronjob.domain.entity.LOG.JobLog;
-import com.njydsz.cronjob.domain.entity.LOG.JobLogContent;
+import com.njydsz.cronjob.domain.entity.log.JobDailyStats;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 import com.njydsz.cronjob.domain.entity.dag.JobDag;
 import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
@@ -150,14 +150,10 @@ public interface CronjobConverter {
 
   List<JobDailyStatsVO> jobDailyStatsListToVO(List<JobDailyStats> entities);
 
+  // P0-FIX: JobDailyStats 继承 MpBaseIdEntity（@SuperBuilder 仅暴露 id），
+  // deleted/revision/tenantId/createdBy/createdAt/updatedBy/updatedAt 不在 builder 中，
+  // 原 @Mapping(target=..., ignore=true) 引用不存在属性导致 MapStruct 生成失败（Unknown property）。
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
   JobDailyStats voToEntity(JobDailyStatsVO vo);
 
   // ===== JobHistory =====

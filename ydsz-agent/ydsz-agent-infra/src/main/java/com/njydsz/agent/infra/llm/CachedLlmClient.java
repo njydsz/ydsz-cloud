@@ -10,12 +10,12 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.agent.domain.gateway.CacheMetricsRecorder;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
-import com.njydsz.agent.server.metrics.AgentMetrics;
 
 /**
  * 带缓存的 LLM 客户端（装饰器模式）
@@ -34,8 +34,9 @@ import com.njydsz.agent.server.metrics.AgentMetrics;
  * <p><b>缓存击穿防护（P1 修复）</b>：同一缓存 key 高并发未命中时，仅放行一个线程发起 LLM 调用， 其余线程等待其结果，
  * 避免全部请求同时打穿到 LLM（Singleflight 语义）。
  *
- * <p><b>缓存命中率指标（P1 增强）</b>：通过 {@link AgentMetrics} 上报
- * {@code agent_cache_hits_total} / {@code agent_cache_misses_total}，便于度量缓存效果。
+ * <p><b>缓存命中率指标（P1 增强）</b>：通过 {@link CacheMetricsRecorder} SPI（domain 层接口）上报
+ * {@code agent_cache_hits_total} / {@code agent_cache_misses_total}，便于度量缓存效果； 具体采集由 server 层实现注入。
+ * 指标组件可为 null（未装配时跳过指标采集，不影响功能）。
  *
  * <p><b>与安全护栏的交互</b>：输出护栏（PII 脱敏 / 内容拦截）在应用服务层执行， 本装饰器位于 LLM 客户端层，缓存写入的是 LLM
  * 原始输出；命中缓存后仍会经过服务层输出护栏，不会绕过安全管控。
@@ -58,13 +59,13 @@ public class CachedLlmClient implements LlmClient {
   /** 语义缓存实例 */
   private final SemanticLlmCache cache;
 
-  /** 指标采集组件（记录缓存命中率） */
-  private final AgentMetrics metrics;
+  /** 指标采集组件（记录缓存命中率，可为 null） */
+  private final CacheMetricsRecorder metrics;
 
   /** 在途调用表（key=缓存 key，value=对应 LLM 调用结果 Future），用于缓存击穿防护 */
   private final Map<String, CompletableFuture<ChatResponse>> inflight = new ConcurrentHashMap<>();
 
-  public CachedLlmClient(LlmClient delegate, SemanticLlmCache cache, AgentMetrics metrics) {
+  public CachedLlmClient(LlmClient delegate, SemanticLlmCache cache, CacheMetricsRecorder metrics) {
     this.delegate = delegate;
     this.cache = cache;
     this.metrics = metrics;
@@ -85,11 +86,15 @@ public class CachedLlmClient implements LlmClient {
     SemanticLlmCache.CachedLlmResponse cached =
         cache.get(model, cacheContent.getKey(), cacheContent.getValue());
     if (cached != null) {
-      metrics.recordCacheHit(delegate.getProvider());
+      if (metrics != null) {
+        metrics.recordCacheHit(delegate.getProvider());
+      }
       LOG.info("[CachedLLM] 缓存命中，跳过 LLM 调用: model={}", model);
       return buildCachedResponse(request, cached);
     }
-    metrics.recordCacheMiss(delegate.getProvider());
+    if (metrics != null) {
+      metrics.recordCacheMiss(delegate.getProvider());
+    }
 
     // 2. 缓存击穿防护：同 key 并发未命中仅放行一个 LLM 调用，其余等待其结果
     String lockKey = cache.buildKey(model, cacheContent.getKey(), cacheContent.getValue());

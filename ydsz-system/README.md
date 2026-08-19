@@ -77,6 +77,7 @@ ydsz-system/
 │       ├── service/                    # 接口 + impl（含缓存、事务、指标、版本快照）
 │       │   ├── AppInfoService.java
 │       │   ├── ConfigService.java
+│       │   ├── ConfigExcelService.java     # 配置 Excel 导入导出（P1-1 拆分，独立职责）
 │       │   ├── DictService.java
 │       │   ├── DictItemService.java
 │       │   ├── EntityVersionService.java
@@ -219,6 +220,7 @@ server:
 | `ydsz.system.health-enabled` | true | 是否启用健康检查 |
 | `ydsz.system.config.enabled` | true | 是否启用配置服务 |
 | `ydsz.system.config.cache-ttl-minutes` | 5 | 配置缓存 TTL（分钟） |
+| `ydsz.system.config.strict-validation` | false | 配置值格式严格校验：true 时格式非法阻止保存，false 仅告警放行（P1-10 接线，生产建议开启） |
 | `ydsz.system.dict.enabled` | true | 是否启用字典服务 |
 | `ydsz.system.dict.cache-ttl-minutes` | 10 | 字典缓存 TTL（分钟） |
 | `ydsz.system.variable.enabled` | true | 是否启用变量服务 |

@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.cronjob.domain.entity.LOG.JobLogContent;
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 
 /**
  * 任务日志大字段 Mapper
@@ -30,7 +30,7 @@ import com.njydsz.cronjob.domain.entity.LOG.JobLogContent;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.cronjob.domain.entity.LOG.JobLogContent 日志内容实体
+ * @see com.njydsz.cronjob.domain.entity.log.JobLogContent 日志内容实体
  * @see com.njydsz.cronjob.server.service.JobLogService 日志 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.cronjob.domain.entity.LOG.JobLog;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 
 /**
  * 任务执行日志 Mapper
@@ -34,7 +34,7 @@ import com.njydsz.cronjob.domain.entity.LOG.JobLog;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.cronjob.domain.entity.LOG.JobLog 执行日志实体
+ * @see com.njydsz.cronjob.domain.entity.log.JobLog 执行日志实体
  * @see com.njydsz.cronjob.server.service.JobLogService 日志 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

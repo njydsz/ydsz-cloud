@@ -3,6 +3,9 @@ package com.njydsz.literule.server.core;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import com.njydsz.common.cache.YdszCache;
@@ -78,6 +81,13 @@ public class EvaluationResultCache {
   /** 缓存实例（基于 ydsz-common-cache 实现） */
   private final Cache<String, List<RuleResult>> cache;
 
+  /**
+   * 规则编码 → 涉及该规则的缓存键集合（P1 精准失效反向索引）
+   *
+   * <p>规则变更时按 ruleCode 精准 evict 相关缓存条目， 避免全量 {@link #clear()} 导致未变更规则的缓存全部失效。
+   */
+  private final Map<String, Set<String>> ruleToCacheKeys = new ConcurrentHashMap<>();
+
   /** 使用默认配置创建缓存 */
   public EvaluationResultCache() {
     this(DEFAULT_TTL_MS, DEFAULT_MAX_SIZE);
@@ -91,8 +101,9 @@ public class EvaluationResultCache {
    */
   public EvaluationResultCache(long ttlMs, int maxSize) {
     // CHECKSTYLE.OFF: RegexpSinglelineJava - 使用 ydsz-common-cache 替代 Caffeine
+    // 显式类型见证：javac 对链式泛型方法调用无法从赋值目标推断 K/V
     CacheBuilder<String, List<RuleResult>> builder =
-        YdszCache.newBuilder()
+        YdszCache.<String, List<RuleResult>>newBuilder()
             .maximumSize(maxSize > 0 ? maxSize : -1)
             .recordStats();
     if (ttlMs > 0) {
@@ -135,6 +146,39 @@ public class EvaluationResultCache {
     String key = buildCacheKey(context);
     List<RuleResult> immutableResults = Collections.unmodifiableList(new ArrayList<>(results));
     cache.put(key, immutableResults);
+    // P1 精准失效：建立 ruleCode → cacheKey 反向索引
+    for (RuleResult result : results) {
+      if (result.getRuleCode() != null) {
+        ruleToCacheKeys
+            .computeIfAbsent(result.getRuleCode(), k -> ConcurrentHashMap.newKeySet())
+            .add(key);
+      }
+    }
+  }
+
+  /**
+   * 按规则编码精准失效缓存（P1 精准 evict）
+   *
+   * <p>规则注册/注销/变更时调用，仅删除评估结果涉及该规则的缓存条目， 保留其他规则的缓存（对比全量 {@link #clear()} 显著减少缓存抖动）。
+   *
+   * @param ruleCode 规则编码
+   */
+  public void invalidateRule(String ruleCode) {
+    if (ruleCode == null) {
+      return;
+    }
+    Set<String> keys = ruleToCacheKeys.remove(ruleCode);
+    if (keys == null || keys.isEmpty()) {
+      return;
+    }
+    int evicted = 0;
+    for (String key : keys) {
+      if (cache.getIfPresent(key) != null) {
+        cache.invalidate(key);
+        evicted++;
+      }
+    }
+    log.debug("[EvalCache] 按规则精准失效完成: ruleCode={}, evicted={}", ruleCode, evicted);
   }
 
   /**
@@ -150,6 +194,7 @@ public class EvaluationResultCache {
   public void clear() {
     long size = cache.estimatedSize();
     cache.invalidateAll();
+    ruleToCacheKeys.clear();
     log.info("[EvalCache] 缓存已清空（cleared≈{}）", size);
   }
 

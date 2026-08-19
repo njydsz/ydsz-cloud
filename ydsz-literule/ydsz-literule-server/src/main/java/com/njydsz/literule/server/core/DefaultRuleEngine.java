@@ -195,9 +195,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     if (!ruleIndexer.isIndexEnabled() && rules.size() >= 200) {
       ruleIndexer.rebuildIndex(rules);
     }
-    // P1-7：规则变更时清除评估结果缓存
+    // P1-7：规则变更时精准失效该规则的评估结果缓存（对比全量 clear 减少缓存抖动）
     if (evaluationResultCache != null) {
-      evaluationResultCache.clear();
+      evaluationResultCache.invalidateRule(rule.getCode());
     }
     recordRegisteredRules();
     log.info(
@@ -251,9 +251,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     if (circuitBreaker != null) {
       circuitBreaker.reset(ruleCode);
     }
-    // P1-7：规则变更时清除评估结果缓存
+    // P1-7：规则变更时精准失效该规则的评估结果缓存
     if (evaluationResultCache != null) {
-      evaluationResultCache.clear();
+      evaluationResultCache.invalidateRule(ruleCode);
     }
     recordRegisteredRules();
   }

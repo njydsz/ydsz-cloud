@@ -52,6 +52,15 @@ public class JobLog extends MpBaseIdEntity<String> {
   /** 任务 KEY */
   private String jobKey;
 
+  /** 执行状态（P0-FIX 补回：PENDING/RUNNING/SUCCESS/FAILED/TIMEOUT，与 ydsz_job_log.status 列对应） */
+  private String status;
+
+  /** 创建时间（P0-FIX 补回：与 ydsz_job_log.created_at 列对应，供日志分页/清理使用） */
+  private LocalDateTime createdAt;
+
+  /** 逻辑删除标记（P0-FIX 补回：0=正常 / 1=已删除，与 ydsz_job_log.deleted 列对应） */
+  private Integer deleted;
+
   /** 开始时间 */
   private LocalDateTime startTime;
 

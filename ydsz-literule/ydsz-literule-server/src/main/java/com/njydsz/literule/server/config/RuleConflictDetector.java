@@ -89,8 +89,8 @@ public class RuleConflictDetector {
     String newSeverity = severityKey(newDefinition);
     String newMutexGroup = newDefinition.getMutexGroup();
 
-    // 解析新规则的简单比较条件（用于范围重叠分析）
-    ComparisonCondition newComparison = parseComparison(newConditionRaw);
+    // 解析新规则的简单比较条件（用于范围重叠分析，P0-F2 支持 AND 复合条件子句级）
+    List<ComparisonCondition> newComparisons = parseConditions(newConditionRaw);
 
     // ===== 单规则自检（1.5.1 新增）=====
     // 1. 死规则检测：复合条件中同变量存在矛盾范围
@@ -161,29 +161,52 @@ public class RuleConflictDetector {
                 .build());
       }
 
-      // 3. 条件范围重叠（1.5.0 新增）
-      if (newComparison != null) {
-        ComparisonCondition otherComparison = parseComparison(other.getConditionExpression());
-        if (otherComparison != null
-            && isOverlap(newComparison, otherComparison, newMutexGroup, other.getMutexGroup())) {
-          conflicts.add(
-              RuleConflict.builder()
-                  .type(RuleConflict.Type.CONDITION_OVERLAP)
-                  .level(RuleConflict.Level.WARN)
-                  .newRuleCode(newCode)
-                  .conflictingRuleCode(other.getCode())
-                  .description(
-                      "条件范围与规则 "
-                          + other.getCode()
-                          + " 在变量 '"
-                          + newComparison.variable
-                          + "' 上存在重叠（"
-                          + newComparison.original
-                          + " vs "
-                          + otherComparison.original
-                          + "），可能导致同一事实同时命中两条规则")
-                  .build());
+      // 3. 条件范围重叠（1.5.0 新增；P0-F2 增强支持 AND 复合条件的子句级重叠）
+      if (!newComparisons.isEmpty()) {
+        List<ComparisonCondition> otherComparisons = parseConditions(other.getConditionExpression());
+        if (!otherComparisons.isEmpty()) {
+          for (ComparisonCondition nc : newComparisons) {
+            for (ComparisonCondition oc : otherComparisons) {
+              if (isOverlap(nc, oc, newMutexGroup, other.getMutexGroup())) {
+                conflicts.add(
+                    RuleConflict.builder()
+                        .type(RuleConflict.Type.CONDITION_OVERLAP)
+                        .level(RuleConflict.Level.WARN)
+                        .newRuleCode(newCode)
+                        .conflictingRuleCode(other.getCode())
+                        .description(
+                            "条件范围与规则 "
+                                + other.getCode()
+                                + " 在变量 '"
+                                + nc.variable
+                                + "' 上存在重叠（"
+                                + nc.original
+                                + " vs "
+                                + oc.original
+                                + "），可能导致同一事实同时命中两条规则")
+                        .build());
+                break;
+              }
+            }
+          }
         }
+      }
+
+      // 4. 执行顺序冲突（P0-F2 新增）：条件重叠 + 同优先级 + 无互斥组 → 评估结果依赖执行顺序
+      if (isOrderConflict(newDefinition, other)) {
+        conflicts.add(
+            RuleConflict.builder()
+                .type(RuleConflict.Type.EXECUTION_ORDER_CONFLICT)
+                .level(RuleConflict.Level.WARN)
+                .newRuleCode(newCode)
+                .conflictingRuleCode(other.getCode())
+                .description(
+                    "规则与规则 "
+                        + other.getCode()
+                        + " 条件范围重叠且优先级相同（"
+                        + newDefinition.getPriority()
+                        + "），且未配置互斥组，评估结果依赖执行顺序，存在不确定性")
+                .build());
       }
     }
 
@@ -419,6 +442,69 @@ public class RuleConflictDetector {
       return new ComparisonCondition(var, flipOperator(op), Double.parseDouble(number), trimmed);
     }
     return null;
+  }
+
+  /**
+   * 解析表达式为比较条件列表（P0-F2 增强）
+   *
+   * <p>支持 AND 复合条件（{@code x > 10 && y < 5}）的 CNF 子句级拆分： 将表达式按 AND 拆分为多个子句，
+   * 每个子句独立解析为 {@link ComparisonCondition}。 含 OR / 嵌套或无法解析的子句被跳过（不参与重叠检测，避免误报）。
+   *
+   * @param expression 条件表达式
+   * @return 比较条件列表（可能为空）
+   */
+  private List<ComparisonCondition> parseConditions(String expression) {
+    List<ComparisonCondition> result = new ArrayList<>();
+    if (expression == null || expression.isBlank()) {
+      return result;
+    }
+    for (String clause : splitAndClauses(expression)) {
+      ComparisonCondition cc = parseComparison(clause.trim());
+      if (cc != null) {
+        result.add(cc);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * 执行顺序冲突检测（P0-F2 新增）
+   *
+   * <p>判定条件：同租户 + 同分类 + 条件范围重叠 + 优先级相同 + 两规则均无互斥组。 满足时，同一事实可能同时命中两条规则，
+   * 评估结果取决于注册顺序/并行分组，存在不确定性。
+   *
+   * @param newDef 新规则定义
+   * @param other 已有规则定义
+   * @return true=存在执行顺序冲突
+   */
+  private boolean isOrderConflict(RuleDefinition newDef, RuleDefinition other) {
+    // 互斥组可消除顺序不确定性
+    String newMutex = newDef.getMutexGroup();
+    String otherMutex = other.getMutexGroup();
+    if ((newMutex != null && !newMutex.isBlank()) || (otherMutex != null && !otherMutex.isBlank())) {
+      return false;
+    }
+    // 优先级不同时，高优先级规则先评估，结果确定
+    if (newDef.getPriority() != other.getPriority()) {
+      return false;
+    }
+    // 条件范围重叠（AND 子句级）
+    List<ComparisonCondition> newComparisons = parseConditions(newDef.getConditionExpression());
+    if (newComparisons.isEmpty()) {
+      return false;
+    }
+    List<ComparisonCondition> otherComparisons = parseConditions(other.getConditionExpression());
+    if (otherComparisons.isEmpty()) {
+      return false;
+    }
+    for (ComparisonCondition nc : newComparisons) {
+      for (ComparisonCondition oc : otherComparisons) {
+        if (isOverlap(nc, oc, null, null)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**

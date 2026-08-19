@@ -88,7 +88,7 @@ public class RuleIndexer {
   /** 是否启用索引 */
   private volatile boolean indexEnabled = false;
 
-  /** LiteExpr 关键字与内置函数，字段提取时不应作为变量返回。 与 {@code AviatorExpressionEngine.EXPR_KEYWORDS} 保持一致。 */
+  /** LiteExpr 关键字与内置函数，字段提取时不应作为变量返回。 与 {@code LiteExprEngine.EXPR_KEYWORDS} 保持一致。 */
   private static final Set<String> EXPR_KEYWORDS =
       Set.of(
           "true",
@@ -534,7 +534,7 @@ public class RuleIndexer {
    * <ul>
    *   <li>仅对 {@link Rule#getRuleDefinition()} 返回非空且 conditionExpression 非空的规则提取 （即仅 ExpressionRule
    *       等基于定义的规则参与倒排索引过滤）
-   *   <li>复用 AviatorExpressionEngine 的正则逻辑：{@code \b([a-zA-Z_]\w*)\b}， 扩展支持中文标识符
+   *   <li>复用 LiteExprEngine 的正则逻辑：{@code \b([a-zA-Z_]\w*)\b}， 扩展支持中文标识符
    *   <li>过滤 LiteExpr 关键字（true/false/null/if/else/return 等）
    *   <li>过滤纯数字字面量
    *   <li>过滤首字母大写的标识符（类名/常量），保留首字母小写、含下划线或中文开头的标识符

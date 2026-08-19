@@ -3,7 +3,7 @@ package com.njydsz.literule.server.sdk;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.server.core.DefaultRuleEngine;
-import com.njydsz.literule.server.engine.liteexpr.AviatorExpressionEngine;
+import com.njydsz.literule.server.engine.liteexpr.LiteExprEngine;
 
 /**
  * LiteRuleSdk 构建器
@@ -66,11 +66,11 @@ public class LiteRuleSdkBuilder {
    * 构建 LiteRuleSdk
    *
    * <p>如果未提供 RuleEngine，则自动创建 {@link DefaultRuleEngine}； 如果未提供 ExpressionEngine，则自动创建 {@link
-   * AviatorExpressionEngine}。
+   * LiteExprEngine}。
    */
   public LiteRuleSdk build() {
     if (evaluator == null) {
-      evaluator = new AviatorExpressionEngine();
+      evaluator = new LiteExprEngine();
     }
     if (ruleEngine == null) {
       ruleEngine = new DefaultRuleEngine();

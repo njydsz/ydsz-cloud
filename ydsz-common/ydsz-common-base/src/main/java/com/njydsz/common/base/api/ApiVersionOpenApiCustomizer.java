@@ -59,14 +59,15 @@ public class ApiVersionOpenApiCustomizer implements OperationCustomizer {
         operation.setDeprecated(true);
       }
 
-      // 添加 X-Api-Version 响应头
+      // 给所有响应追加 X-Api-Version 响应头
+      // 注意：Header 挂在 ApiResponse 上（addHeaderObject），ApiResponses 容器本身无 header 方法
       if (operation.getResponses() != null) {
-        // swagger-core 2.2+ 已将 addHeaderObject 更名为 addHeader
+        Header apiVersionHeader =
+            new Header().description("API 版本号: " + version.value()).required(true);
         operation
             .getResponses()
-            .addHeader(
-                "X-Api-Version",
-                new Header().description("API 版本号: " + version.value()).required(true));
+            .values()
+            .forEach(apiResponse -> apiResponse.addHeaderObject("X-Api-Version", apiVersionHeader));
       }
     }
 

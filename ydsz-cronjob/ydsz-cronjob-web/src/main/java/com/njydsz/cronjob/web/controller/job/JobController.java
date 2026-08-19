@@ -42,7 +42,7 @@ import com.njydsz.cronjob.domain.dto.BatchResult;
 import com.njydsz.cronjob.domain.dto.job.JobBatchDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
-import com.njydsz.cronjob.domain.entity.LOG.JobLog;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.vo.JobVO;

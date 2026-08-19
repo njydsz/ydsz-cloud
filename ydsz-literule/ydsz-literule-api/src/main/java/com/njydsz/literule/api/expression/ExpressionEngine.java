@@ -7,7 +7,7 @@ import com.njydsz.literule.api.RuleContext;
 /**
  * 表达式求值器接口
  *
- * <p>抽象表达式引擎，默认提供 {@link com.njydsz.literule.server.engine.liteexpr.AviatorExpressionEngine}。
+ * <p>抽象表达式引擎，默认提供 {@link com.njydsz.literule.server.engine.liteexpr.LiteExprEngine}。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -49,7 +49,7 @@ public interface ExpressionEngine {
    * <p>与 {@link #validate(String)} 不同，本方法返回结构化的错误信息， 包含错误类型、错误位置、错误描述，供前端表达式编辑器渲染。
    *
    * <p>默认实现仅调用 {@link #validate(String)} 返回简单结果； 具体实现类（如 {@link
-   * com.njydsz.literule.server.engine.liteexpr.AviatorExpressionEngine}）应 override 本方法提供详细错误信息。
+   * com.njydsz.literule.server.engine.liteexpr.LiteExprEngine}）应 override 本方法提供详细错误信息。
    *
    * @param expression 表达式字符串
    * @return 校验结果

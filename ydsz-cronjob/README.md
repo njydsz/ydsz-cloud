@@ -25,16 +25,18 @@
 | **多分区调度** | `leader.partition.enabled=true` 启用多 Active Leader 分区调度，提升吞吐量 |
 | **节点发现** | Nacos 服务发现（推荐）/ DB 心跳表（向后兼容） |
 | **任务调度** | Cron 表达式 + 固定频率 + 固定延迟 + API 触发 |
-| **分片广播** | 单机串行 / 广播并行 / 分片 MapReduce（平均分片策略） |
-| **故障转移** | `AnomalyRecoveryScanner` 定时扫描，节点宕机后自动转移 RUNNING 任务 |
+| **秒级预读调度** | `preload.enabled=true` 启用内存精准触发（预读窗口内 CRON 任务毫秒级派发，主扫描器兜底） |
+| **分片广播** | 单机串行 / 广播并行 / 分片 MapReduce（平均 / 一致性哈希策略，`sharding.strategy` 切换） |
+| **故障转移** | `AnomalyRecoveryScanner` 定时扫描 + 节点下线事件即时触发，宕机节点 RUNNING 任务自动转移 |
 | **异常自愈** | `AnomalyRecoveryScanner` 检测卡死任务并自动修复 + 重新派发 |
 | **租户隔离** | `isolation-strategy: tenant` / `job_group` |
-| **告警通道** | 消息中心 Feign + common-notify IM 直推（飞书/钉钉/企业微信） |
+| **告警通道** | 消息中心 Feign + common-notify IM 直推（飞书/钉钉/企业微信），SMS 仅 ERROR/CRITICAL 级别 |
 | **日志归档** | 每天凌晨 3 点清理 30 天前的日志 |
 | **配额管理** | 租户级任务数 / 并发 / 日执行量 |
 | **HTTP 任务** | `jobType=HTTP` 内置 HTTP 调用处理器 |
-| **脚本沙箱** | `sandbox.enabled`（默认开启）进程级/Docker 容器级隔离执行 Shell/Python |
+| **脚本沙箱** | `sandbox.enabled`（默认开启）进程级隔离；`sandbox.docker-enabled=true` 时 Docker 容器级隔离（网络/资源/权限受限） |
 | **调度器-执行器分离** | `scheduler-executor-separation.enabled` Leader 仅调度，Worker 执行 |
+| **Webhook** | 出站回调 + HMAC-SHA256 签名 + 5 事件类型 + 失败指数退避重试（1s/5s，最多 3 次） |
 
 ### 2. 关键 Controller（基路径 `/api/v1/cronjob`，共 16 个）
 
@@ -155,6 +157,10 @@ ydsz-cronjob/                          # 父 POM
 | `ydsz.cronjob.scanner.interval-ms` | `5000` | 任务扫描间隔 |
 | `ydsz.cronjob.scanner.batch-size` | `500` | 单批触发任务数 |
 | `ydsz.cronjob.scanner.parallel-dispatch-enabled` | `true` | 并行派发 |
+| `ydsz.cronjob.preload.enabled` | `false` | 秒级预读调度（CRON 任务毫秒级触发） |
+| `ydsz.cronjob.preload.window-seconds` | `30` | 预读窗口（秒） |
+| `ydsz.cronjob.sharding.strategy` | `average` | 分片策略：`average`（轮询）/ `consistent_hash`（一致性哈希） |
+| `ydsz.cronjob.executor.running-counter-renew-ms` | `600000` | 运行中任务计数 TTL 续期间隔 |
 | `ydsz.cronjob.executor.max-concurrent` | `16` | 最大并发 |
 | `ydsz.cronjob.executor.isolation-strategy` | `none` | `none` / `tenant` / `job_group` |
 | `ydsz.cronjob.executor.queue-capacity` | `32` | 线程池队列容量 |
