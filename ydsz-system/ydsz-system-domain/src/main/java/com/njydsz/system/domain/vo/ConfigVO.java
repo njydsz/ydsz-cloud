@@ -1,19 +1,14 @@
 package com.njydsz.system.domain.vo;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.safe.annotation.Xss;
-
 /**
- * 系统配置 VO（兼 DTO）
+ * 系统配置 VO（视图对象）
  *
- * <p>对应 {@code ydsz_config} 表的展示视图和写入参数，是「系统配置中心」列表 / 详情 / 创建 / 更新接口的通用载体（轻量模块约定：
- * 请求 / 响应共用同一契约对象，字段语义一致；严格三分离（Command/VO/DTO）在字段无差异时视为过度设计，不作拆分）。 由 {@link
- * com.njydsz.system.infra.converter.SystemConverter} 从 {@link
+ * <p>对应 {@code ydsz_config} 表的展示视图，是「系统配置中心」列表 / 详情接口的响应载体。
+ * 由 {@link com.njydsz.system.infra.converter.SystemConverter} 从 {@link
  * com.njydsz.system.infra.entity.Config} 实体转换而来。
  *
  * <p><b>字段语义：</b>
@@ -37,9 +32,13 @@ import com.njydsz.common.safe.annotation.Xss;
  * <p><b>缓存策略：</b>读取通过 ydsz-common-cache 进程内本地缓存（键 {@code value:{tenantId}:{configKey}}）；
  * 写入时 {@code @CacheEvict} 精准失效；TTL 通过 {@code ydsz.cache.caches.system:config} 配置（默认 5 分钟）。
  *
+ * <p><b>注意：</b>本类为视图对象，不包含输入校验逻辑。输入校验由 {@link
+ * com.njydsz.system.domain.dto.ConfigDTO} 负责。
+ *
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.system.infra.entity.Config 系统配置实体
+ * @see com.njydsz.system.domain.dto.ConfigDTO 配置输入 DTO
  */
 @Data
 @SuperBuilder
@@ -48,26 +47,16 @@ public class ConfigVO {
 
   private String id;
 
-  @NotBlank(message = "配置分组不能为空")
-  @Size(max = 64, message = "配置分组长度不能超过64")
-  @Xss(message = "配置分组包含非法内容")
   private String configGroup;
 
-  @NotBlank(message = "配置键不能为空")
-  @Size(max = 128, message = "配置键长度不能超过128")
-  @Xss(message = "配置键包含非法内容")
   private String configKey;
 
-  @Xss(message = "配置值包含非法内容")
   private String configValue;
 
-  @NotBlank(message = "值类型不能为空")
   private String valueType;
 
-  @Xss(message = "默认值包含非法内容")
   private String defaultValue;
 
-  @Xss(message = "配置项说明包含非法内容")
   private String description;
 
   private Integer isPublic;

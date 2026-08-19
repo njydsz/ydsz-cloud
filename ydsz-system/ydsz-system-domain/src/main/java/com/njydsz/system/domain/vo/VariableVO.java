@@ -1,19 +1,13 @@
 package com.njydsz.system.domain.vo;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.safe.annotation.Xss;
-
 /**
- * 系统变量 VO（兼 DTO）
+ * 系统变量 VO（视图对象）
  *
- * <p>对应 {@code ydsz_variable} 表的展示视图和写入参数，是「系统变量中心」列表 / 详情 / 创建 / 更新接口的通用载体。 由 {@link
- * com.njydsz.system.domain.converter.SystemConverter} 从 {@link
- * com.njydsz.system.domain.entity.Variable} 实体转换而来。
+ * <p>对应 {@code ydsz_variable} 表的展示视图，是「系统变量中心」列表 / 详情接口的响应载体。
  *
  * <p><b>字段语义：</b>
  *
@@ -36,9 +30,12 @@ import com.njydsz.common.safe.annotation.Xss;
  *
  * <p><b>缓存策略：</b>读取通过 {@code ydsz:variable:{key}} 缓存至 Redis； 写入时 {@code @CacheEvict} 主动失效。
  *
+ * <p><b>注意：</b>本类为视图对象，不包含输入校验逻辑。输入校验由 {@link
+ * com.njydsz.system.domain.dto.VariableDTO} 负责。
+ *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.domain.entity.Variable 系统变量实体
+ * @see com.njydsz.system.infra.entity.Variable 系统变量实体
  * @see ConfigVO 系统配置 VO（按分组的同类结构）
  */
 @Data
@@ -48,18 +45,12 @@ public class VariableVO {
 
   private String id;
 
-  @NotBlank(message = "变量键不能为空")
-  @Size(max = 128, message = "变量键长度不能超过128")
-  @Xss(message = "变量键包含非法内容")
   private String variableKey;
 
-  @Xss(message = "变量值包含非法内容")
   private String variableValue;
 
-  @NotBlank(message = "值类型不能为空")
   private String valueType;
 
-  @Xss(message = "变量说明包含非法内容")
   private String description;
 
   private String status;
