@@ -81,6 +81,16 @@ public interface CronjobConverter {
 
   List<GlueCodeVO> glueCodeListToVO(List<GlueCode> entities);
 
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  GlueCode voToEntity(GlueCodeVO vo);
+
   // ===== Job =====
   JobVO entityToVO(Job entity);
 

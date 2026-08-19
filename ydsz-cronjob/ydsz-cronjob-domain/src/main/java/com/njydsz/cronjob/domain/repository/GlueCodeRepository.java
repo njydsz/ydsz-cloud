@@ -3,7 +3,6 @@ package com.njydsz.cronjob.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 
 /**
@@ -12,7 +11,6 @@ import com.njydsz.cronjob.domain.vo.GlueCodeVO;
  * <p>定义 GLUE 在线编码的数据访问能力，Infra 层负责实现。
  *
  * <p><b>设计要点：</b>
- *
  * <ul>
  *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
  *   <li>返回领域 VO（{@link GlueCodeVO}），非 DTO / infra 实体
@@ -31,17 +29,19 @@ public interface GlueCodeRepository {
    */
   Optional<GlueCodeVO> findLatestByJobId(String jobId);
 
-  // ===== 实体方法（GlueCodeServiceImpl 使用） =====
+  /**
+   * 根据任务 ID 查询所有版本的 GLUE 代码列表（版本号降序）。
+   *
+   * @param jobId 任务 ID
+   * @return GLUE 代码 VO 列表
+   */
+  List<GlueCodeVO> findAllByJobId(String jobId);
 
-  /** 按任务 ID 查询最新版本实体。 */
-  GlueCode selectLatestByJobId(String jobId);
-
-  /** 按条件查询实体列表。 */
-  List<GlueCode> selectList(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<GlueCode> wrapper);
-
-  /** 按条件查询单个实体。 */
-  GlueCode selectOne(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<GlueCode> wrapper);
-
-  /** 新增实体。 */
-  int insert(GlueCode entity);
+  /**
+   * 新增 GLUE 代码记录。
+   *
+   * @param vo GLUE 代码 VO（不含 id，由雪花生成器填充）
+   * @return 新记录 ID
+   */
+  String insert(GlueCodeVO vo);
 }

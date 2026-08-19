@@ -1,5 +1,7 @@
 package com.njydsz.cronjob.infra.mapper.schedule;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -49,4 +51,18 @@ public interface GlueCodeMapper extends BaseMapper<GlueCode> {
           + "ORDER BY version DESC "
           + "LIMIT 1")
   GlueCode selectLatestByJobId(@Param("jobId") String jobId);
+
+  /**
+   * 查询指定任务的所有版本 GLUE 代码（版本号降序）。
+   *
+   * @param jobId 任务 ID
+   * @return GLUE 代码列表
+   */
+  @Select(
+      "SELECT id, job_id, source_code, language, version, remark, "
+          + "       created_by, created_at, deleted "
+          + "FROM ydsz_job_glue "
+          + "WHERE job_id = #{jobId} AND deleted = 0 "
+          + "ORDER BY version DESC")
+  List<GlueCode> selectAllByJobId(@Param("jobId") String jobId);
 }
