@@ -16,6 +16,16 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-nextwiki-domain</artifactId>
         </dependency>
+        <!-- MpBaseEntity / PageResponses（DO 实体基类与分页转换，构建修复：infra 需显式依赖 jdbc） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-jdbc</artifactId>
+        </dependency>
+        <!-- TenantContextHolder（多租户上下文，构建修复） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-tenant</artifactId>
+        </dependency>
         <!-- MyBatis Plus (Spring Boot 4.x) -->
         <dependency>
             <groupId>com.baomidou</groupId>

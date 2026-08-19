@@ -695,4 +695,34 @@ public class LiteRuleProperties {
      */
     private boolean physicalIsolationRequired = false;
   }
+
+  /**
+   * 注入线程池配置（P1-3）
+   *
+   * <p>控制事实采集和模型注入并行执行的线程池大小（{@code injectionExecutor}）。
+   *
+   * @since 1.0.0
+   */
+  @Data
+  public static class InjectionConfig {
+
+    /**
+     * 注入线程池大小
+     *
+     * <p>用于事实采集和模型注入的并行执行线程数量。
+     * 默认值为 {@code max(4, CPU 核数 * 2)}，适用于大多数 FactProvider 和 ModelProvider 组合场景。
+     * 如果注册了大量 provider（>5），建议适当增加池大小以避免注入成为瓶颈。
+     */
+    @Min(1)
+    private int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors() * 2);
+
+    /**
+     * 注入线程保持活跃时间（秒）
+     *
+     * <p>超过核心线程数的空闲线程在终止前等待新任务的最长时间。
+     * 默认 60 秒。
+     */
+    @Min(0)
+    private long keepAliveSeconds = 60L;
+  }
 }

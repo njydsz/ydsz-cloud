@@ -85,6 +85,7 @@ import com.njydsz.literule.server.spi.RuleActionDispatcher;
 import com.njydsz.literule.server.spi.RuleActionHandler;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
+import com.njydsz.literule.server.spi.RulePackProvider;
 import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 import com.njydsz.literule.server.spi.RuleSource;
 import com.njydsz.literule.server.spi.RuleSourceManager;
@@ -479,6 +480,7 @@ public class LiteRuleAutoConfiguration {
       ObjectProvider<ScorecardConfigProvider> scConfigProvider,
       ObjectProvider<DecisionTreeConfigProvider> trConfigProvider,
       ObjectProvider<ScriptConfigProvider> scriptConfigProvider,
+      ObjectProvider<RulePackProvider> packProvider,
       LiteRuleProperties properties) {
     RuleHotReloader reloader =
         new RuleHotReloader(ruleEngine, evaluator, configProvider, properties);
@@ -502,6 +504,9 @@ public class LiteRuleAutoConfiguration {
     if (script != null) {
       reloader.setScriptConfigProvider(script);
     }
+
+    // P0-F4：规则包批量热更新（RulePackProvider 可选注入）
+    reloader.setPackProvider(packProvider);
 
     log.info(
         "[LiteRule] 规则热加载管理器已初始化（hotReload={}, decisionTable={}, scorecard={}, decisionTree={}, script={}）",

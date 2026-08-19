@@ -2,8 +2,10 @@ package com.njydsz.nextwiki.infra.converter;
 
 import java.util.List;
 
+import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.nextwiki.domain.dto.FileAclDTO;
@@ -86,6 +88,7 @@ public interface NextwikiConverter {
    * @param dto 文件节点 DTO
    * @return 文件节点实体
    */
+  @Named("create")
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -109,6 +112,7 @@ public interface NextwikiConverter {
    * @param dtos 文件节点 DTO 列表
    * @return 文件节点实体列表
    */
+  @IterableMapping(qualifiedByName = "create")
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -237,6 +241,7 @@ public interface NextwikiConverter {
    * @param dto 文件 ACL DTO
    * @return 文件 ACL 实体
    */
+  @Named("create")
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)

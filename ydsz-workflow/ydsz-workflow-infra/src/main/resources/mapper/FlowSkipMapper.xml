@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.workflow.infra.mapper.FlowSkipMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.workflow.domain.entity.FlowSkip">
+    <resultMap id="BaseResultMap" type="com.njydsz.workflow.infra.entity.FlowSkipDO">
         <id column="id" property="id"/>
         <result column="definition_id" property="definitionId"/>
         <result column="flow_code" property="flowCode"/>

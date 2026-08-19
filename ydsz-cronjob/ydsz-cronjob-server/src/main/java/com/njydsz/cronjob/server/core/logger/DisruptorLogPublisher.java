@@ -61,7 +61,8 @@ public class DisruptorLogPublisher {
             new DisruptorLogEventFactory(),
             BUFFER_SIZE,
             DaemonThreadFactory.INSTANCE,
-            com.lmax.disruptor ProducerType.MULTI,
+            // P0-FIX: 原代码缺包名点号（com.lmax.disruptor ProducerType.MULTI），导致语法错误
+            com.lmax.disruptor.ProducerType.MULTI,
             new com.lmax.disruptor.BlockingWaitStrategy());
     disruptor.handleEventsWith(new DisruptorLogEventHandler(jobLogContentServiceProvider));
     disruptor.start();

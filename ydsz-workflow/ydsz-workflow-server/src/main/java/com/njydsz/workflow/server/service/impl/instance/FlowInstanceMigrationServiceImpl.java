@@ -26,10 +26,11 @@ import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 
 /**
@@ -115,14 +116,17 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
   /** 流程实例 Mapper，查询/更新待迁移的运行中实例 */
   private final FlowInstanceMapper instanceMapper;
 
-  /** 流程节点 Mapper，查询新旧版本节点映射关系 */
-  private final FlowNodeMapper nodeMapper;
+  /** 流程节点仓储，查询新旧版本节点映射关系 */
+  private final FlowNodeRepository nodeRepository;
 
-  /** 流程定义 Mapper，查询新版本定义信息 */
+  /** 流程定义 Mapper（保留：无 FlowDefinitionRepository 可用） */
   private final FlowDefinitionMapper definitionMapper;
 
-  /** 运行时任务 Mapper，迁移后同步更新待办任务的 definitionId 和 nodeCode */
-  private final FlowRunTaskMapper flowTaskMapper;
+  /** 运行时任务仓储，迁移后同步更新待办任务的 definitionId 和 nodeCode */
+  private final FlowRunTaskRepository taskRepository;
+
+  /** DO/VO 转换器 */
+  private final WorkflowConverter converter;
 
   @Override
   public InstanceMigrationResultDTO migrate(InstanceMigrationDTO dto) {
@@ -166,8 +170,8 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
           .message("sourceDefId/targetDefId 不能为空")
           .build();
     }
-    List<FlowNodeDO> sourceNodes = nodeMapper.selectByDefinitionId(String.valueOf(sourceDefId));
-    List<FlowNodeDO> targetNodes = nodeMapper.selectByDefinitionId(String.valueOf(targetDefId));
+    List<FlowNodeDO> sourceNodes = nodeRepository.findByDefinitionId(String.valueOf(sourceDefId)).stream().map(converter::entityToDO).toList();
+    List<FlowNodeDO> targetNodes = nodeRepository.findByDefinitionId(String.valueOf(targetDefId)).stream().map(converter::entityToDO).toList();
     if (sourceNodes == null || targetNodes == null) {
       return Collections.emptyMap();
     }

@@ -28,6 +28,9 @@ public class TokenCostCalculator {
   /** 默认字符系数（中英混合） */
   private static final double DEFAULT_CHAR_RATIO = 2.5;
 
+  /** 未知模型兜底单价（USD / 千 Token） */
+  private static final double FALLBACK_PRICE = 0.001;
+
   private final AgentProperties properties;
 
   public TokenCostCalculator(AgentProperties properties) {
@@ -72,11 +75,11 @@ public class TokenCostCalculator {
    * 根据模型名称解析单价（USD / 千 Token）。
    *
    * @param model 模型名称
-   * @return 模型单价，未匹配时返回兜底价 0.001
+   * @return 模型单价，未匹配时返回兜底价
    */
   private double resolveUnitPrice(String model) {
     if (model == null || model.isBlank()) {
-      return CostAnalysisService.ModelPriceConfig.FALLBACK_PRICE;
+      return FALLBACK_PRICE;
     }
     AgentProperties.Llm llm = properties.getLlm();
     if (llm.getModelPrices() != null && llm.getModelPrices().containsKey(model)) {
@@ -110,6 +113,6 @@ public class TokenCostCalculator {
     if (lower.contains("deepseek")) {
       return 0.00014;
     }
-    return CostAnalysisService.ModelPriceConfig.FALLBACK_PRICE;
+    return FALLBACK_PRICE;
   }
 }

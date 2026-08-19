@@ -92,6 +92,12 @@ public class LiteExprSandbox {
   /** 允许的函数名白名单（由 FunctionRegistry 初始化） */
   private final Set<String> allowedFunctions = new HashSet<>();
 
+  /** 扩展危险方法名（O2 配置外置化，可热更新追加） */
+  private final Set<String> extraForbiddenMethods = new HashSet<>();
+
+  /** 扩展危险属性链根标识符（O2 配置外置化，可热更新追加） */
+  private final Set<String> extraForbiddenRoots = new HashSet<>();
+
   /**
    * 沙箱校验结果缓存（P1-3 性能优化）
    *
@@ -108,6 +114,63 @@ public class LiteExprSandbox {
   public void syncFunctions(FunctionRegistry registry) {
     allowedFunctions.clear();
     allowedFunctions.addAll(registry.getFunctionNames());
+  }
+
+  // ===== O2 沙箱规则外置化（配置可追加，非 static 硬编码） =====
+
+  /**
+   * 应用沙箱策略（O2 配置外置化）
+   *
+   * <p>将 YAML 配置中的黑名单方法/类根追加到沙箱规则， 白名单函数合并到函数白名单（{@code null} 表示不修改对应集合）。
+   *
+   * @param forbiddenMethods 追加的危险方法名（可为 null）
+   * @param forbiddenRoots 追加的危险类/属性链根（可为 null）
+   * @param allowedFunctions 追加的白名单函数（可为 null）
+   */
+  public void applyPolicy(
+      Iterable<String> forbiddenMethods,
+      Iterable<String> forbiddenRoots,
+      Iterable<String> allowedFunctions) {
+    if (forbiddenMethods != null) {
+      for (String m : forbiddenMethods) {
+        if (m != null && !m.isBlank()) extraForbiddenMethods.add(m.trim());
+      }
+    }
+    if (forbiddenRoots != null) {
+      for (String r : forbiddenRoots) {
+        if (r != null && !r.isBlank()) extraForbiddenRoots.add(r.trim());
+      }
+    }
+    if (allowedFunctions != null) {
+      for (String f : allowedFunctions) {
+        if (f != null && !f.isBlank()) this.allowedFunctions.add(f.trim());
+      }
+    }
+    // 规则集合变化，清空校验缓存
+    clearCache();
+  }
+
+  /** 追加危险方法名 */
+  public void addForbiddenMethod(String method) {
+    if (method != null && !method.isBlank()) {
+      extraForbiddenMethods.add(method.trim());
+      clearCache();
+    }
+  }
+
+  /** 追加危险类/属性链根 */
+  public void addForbiddenRoot(String root) {
+    if (root != null && !root.isBlank()) {
+      extraForbiddenRoots.add(root.trim());
+      clearCache();
+    }
+  }
+
+  /** 清空全部扩展规则（恢复仅内置黑名单） */
+  public void clearExtraPolicy() {
+    extraForbiddenMethods.clear();
+    extraForbiddenRoots.clear();
+    clearCache();
   }
 
   /** 添加变量到白名单 */
@@ -173,12 +236,12 @@ public class LiteExprSandbox {
         List<String> chain = man.memberChain();
         if (!chain.isEmpty()) {
           String root = chain.get(0);
-          if (FORBIDDEN_ROOTS.contains(root)) {
+          if (FORBIDDEN_ROOTS.contains(root) || extraForbiddenRoots.contains(root)) {
             violations.add("禁止访问危险类/属性: " + String.join(".", chain));
           }
           // 检查链中的方法名
           for (String segment : chain) {
-            if (FORBIDDEN_METHODS.contains(segment)) {
+            if (FORBIDDEN_METHODS.contains(segment) || extraForbiddenMethods.contains(segment)) {
               violations.add("禁止调用危险方法: " + segment);
             }
           }
@@ -187,7 +250,7 @@ public class LiteExprSandbox {
       }
       case FunctionCallNode fcn -> {
         String funcName = fcn.functionName();
-        if (FORBIDDEN_METHODS.contains(funcName)) {
+        if (FORBIDDEN_METHODS.contains(funcName) || extraForbiddenMethods.contains(funcName)) {
           violations.add("禁止调用危险方法: " + funcName);
         }
         // 检查方法调用链（如 "System.exit"、"Runtime.getRuntime"）
@@ -197,10 +260,16 @@ public class LiteExprSandbox {
             break;
           }
         }
+        for (String root : extraForbiddenRoots) {
+          if (funcName.startsWith(root + ".")) {
+            violations.add("禁止访问危险类方法: " + funcName);
+            break;
+          }
+        }
         // 检查链中的方法名
         String[] parts = funcName.split("\\.");
         for (String part : parts) {
-          if (FORBIDDEN_METHODS.contains(part)) {
+          if (FORBIDDEN_METHODS.contains(part) || extraForbiddenMethods.contains(part)) {
             violations.add("禁止调用危险方法: " + part);
           }
         }
@@ -245,7 +314,7 @@ public class LiteExprSandbox {
             && !FORBIDDEN_ROOTS.contains(vn.name())) {
           // 未注册变量不阻断，仅记录（向后兼容）
         }
-        if (FORBIDDEN_ROOTS.contains(vn.name())) {
+        if (FORBIDDEN_ROOTS.contains(vn.name()) || extraForbiddenRoots.contains(vn.name())) {
           violations.add("禁止引用危险类: " + vn.name());
         }
       }

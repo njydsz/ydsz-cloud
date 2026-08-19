@@ -12,7 +12,7 @@
     </sql>
 
     <!-- 查"抄送我的"（分页） -->
-    <select id="selectCcByUserPage" resultType="com.njydsz.workflow.domain.entity.FlowCc">
+    <select id="selectCcByUserPage" resultType="com.njydsz.workflow.infra.entity.FlowCcDO">
         SELECT
             <include refid="Base_Column"/>
         FROM ydsz_flow_cc
@@ -87,7 +87,7 @@
     </update>
 
     <!-- 查实例的抄送列表 -->
-    <select id="selectByInstanceId" resultType="com.njydsz.workflow.domain.entity.FlowCc">
+    <select id="selectByInstanceId" resultType="com.njydsz.workflow.infra.entity.FlowCcDO">
         SELECT
             <include refid="Base_Column"/>
         FROM ydsz_flow_cc
