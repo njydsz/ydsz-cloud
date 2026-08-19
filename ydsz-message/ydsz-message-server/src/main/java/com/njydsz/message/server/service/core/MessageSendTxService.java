@@ -44,7 +44,7 @@ public class MessageSendTxService {
    * {@link org.springframework.transaction.support.TransactionSynchronization#afterCommit()} 注册 Outbox 写入,
    * 而非回退到同步发布。
    *
-   * <p>同时记录轨迹节点 {@link MsgTrace.Node#PERSISTED}, 与 {@code MessageServiceImpl} 中其他 trace 节点保持一致。
+   * <p>同时记录轨迹节点 {@link MsgTraceDO.Node#PERSISTED}, 与 {@code MessageServiceImpl} 中其他 trace 节点保持一致。
    *
    * @param logDO 消息日志领域实体(已构造, 未落库)
    * @param outboxEvent Outbox 事件(可为 null, 为 null 时仅落库 msgLog)
