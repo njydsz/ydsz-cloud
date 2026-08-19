@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.query.DictItemPageQuery;
 import com.njydsz.system.server.vo.DictItemExcelVO;
 import com.njydsz.system.domain.vo.DictItemVO;
@@ -133,6 +135,9 @@ public class DictItemServiceImpl implements DictItemService {
 
   /** 字典项回滚策略（从快照 JSON 反序列化并重建字典项资源） */
   private final DictItemRollbackStrategy rollbackStrategy;
+
+  /** Spring 事件发布器（用于异步创建版本快照，P3-2 版本快照异步化） */
+  private final ApplicationEventPublisher eventPublisher;
 
   /**
    * 根据主键查询字典项（不走缓存，直接走 DB）
@@ -289,18 +294,17 @@ public class DictItemServiceImpl implements DictItemService {
   @Override
   @CacheEvict(
       value = CacheConstants.SYSTEM_DICT_ITEM_CACHE,
-      key = "@cacheKeyBuilder.dictList(#vo.typeCode)")
+      key = "@cacheKeyBuilder.dictList(#dto.typeCode)")
   @Transactional(rollbackFor = Exception.class)
-  public String save(DictItemVO vo) {
+  public String save(DictItemDTO dto) {
     // 唯一性校验：(typeCode, itemCode) 组合不能重复
-    if (dictRepository.existsItemByTypeAndCode(vo.getTypeCode(), vo.getItemCode())) {
+    if (dictRepository.existsItemByTypeAndCode(dto.getTypeCode(), dto.getItemCode())) {
       throw BusinessException.of(SystemExceptionCode.DICT_ITEM_CODE_DUPLICATE)
-          .data("typeCode", vo.getTypeCode())
-          .data("itemCode", vo.getItemCode());
+          .data("typeCode", dto.getTypeCode())
+          .data("itemCode", dto.getItemCode());
     }
     // 写操作前抓取「变更前」快照，支持后续版本回滚
-    createSnapshotVersion(vo.getTypeCode(), "新增字典项: " + vo.getItemCode());
-    DictItemDTO dto = toDto(vo);
+    createSnapshotVersion(dto.getTypeCode(), "新增字典项: " + dto.getItemCode());
     dictRepository.insertItem(dto);
     return dto.getId();
   }
@@ -323,20 +327,19 @@ public class DictItemServiceImpl implements DictItemService {
   @Override
   @CacheEvict(
       value = CacheConstants.SYSTEM_DICT_ITEM_CACHE,
-      key = "@cacheKeyBuilder.dictList(#vo.typeCode)")
+      key = "@cacheKeyBuilder.dictList(#dto.typeCode)")
   @Transactional(rollbackFor = Exception.class)
-  public boolean updateById(DictItemVO vo) {
+  public boolean updateById(DictItemDTO dto) {
     // 写操作前抓取「变更前」快照，支持后续版本回滚
-    createSnapshotVersion(vo.getTypeCode(), "更新字典项: " + vo.getItemCode());
+    createSnapshotVersion(dto.getTypeCode(), "更新字典项: " + dto.getItemCode());
     // 查询变更前 VO，itemCode/typeCode 变更时旧缓存 key 一并失效
-    DictItemVO before = dictRepository.findItemById(vo.getId()).orElse(null);
-    DictItemDTO dto = toDtoWithId(vo);
+    DictItemVO before = dictRepository.findItemById(dto.getId()).orElse(null);
     boolean updated = dictRepository.updateItemById(dto);
     if (updated && before != null) {
-      if (!Objects.equals(before.getItemCode(), vo.getItemCode())) {
-        evictDictItem(vo.getTypeCode(), before.getItemCode());
+      if (!Objects.equals(before.getItemCode(), dto.getItemCode())) {
+        evictDictItem(dto.getTypeCode(), before.getItemCode());
       }
-      if (!Objects.equals(before.getTypeCode(), vo.getTypeCode())) {
+      if (!Objects.equals(before.getTypeCode(), dto.getTypeCode())) {
         evictDictList(before.getTypeCode());
       }
     }
@@ -393,14 +396,17 @@ public class DictItemServiceImpl implements DictItemService {
     }
     List<DictItemVO> snapshot = dictRepository.findItemsEnabledByTypeCode(typeCode);
     String snapshotJson = YdszJson.toJson(snapshot);
-    entityVersionService.createVersion(
-        EntityVersionCreateDTO.builder()
-            .resourceType(EntityVersionService.RESOURCE_TYPE_DICT)
-            .resourceKey(typeCode)
-            .version(SystemVersionUtils.nextVersion())
-            .changeLog(changeLog)
-            .snapshotJson(snapshotJson)
-            .build());
+    // P3-2 异步化：事务提交后由监听器创建版本快照
+    eventPublisher.publishEvent(
+        new VersionSnapshotEvent(
+            this,
+            EntityVersionCreateDTO.builder()
+                .resourceType(EntityVersionService.RESOURCE_TYPE_DICT)
+                .resourceKey(typeCode)
+                .version(SystemVersionUtils.nextVersion())
+                .changeLog(changeLog)
+                .snapshotJson(snapshotJson)
+                .build()));
   }
 
   @Override
@@ -451,31 +457,6 @@ public class DictItemServiceImpl implements DictItemService {
    * @param dto 数据传输对象
    * @return 数据库实体
    */
-  private DictItemDTO toDto(DictItemVO vo) {
-    if (vo == null) {
-      return null;
-    }
-    DictItemDTO dto = new DictItemDTO();
-    dto.setTypeCode(vo.getTypeCode());
-    dto.setItemCode(vo.getItemCode());
-    dto.setItemValue(vo.getItemValue());
-    dto.setSortOrder(vo.getSortOrder());
-    dto.setParentId(vo.getParentId());
-    dto.setDescription(vo.getDescription());
-    dto.setExtJson(vo.getExtJson());
-    dto.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
-    return dto;
-  }
-
-  private DictItemDTO toDtoWithId(DictItemVO vo) {
-    if (vo == null) {
-      return null;
-    }
-    DictItemDTO dto = toDto(vo);
-    dto.setId(vo.getId());
-    return dto;
-  }
-
   // ============================== 导入导出 ==============================
 
   @Override

@@ -250,4 +250,22 @@ public interface UserAccountRepository {
    * @return 用户账号 VO；不存在返回 {@code Optional.empty()}
    */
   Optional<UserAccountVO> findByEmail(String email);
+
+  /**
+   * 统计当前处于锁定状态的用户数。
+   *
+   * <p>锁定状态判断：locked_until 字段非空且晚于当前时间。
+   *
+   * @return 锁定用户数
+   */
+  long countLockedUsers();
+
+  /**
+   * 统计当前处于封禁状态的用户数。
+   *
+   * <p>封禁状态判断：ban_type 非空且（永久封禁或临时封禁未过期）。
+   *
+   * @return 封禁用户数
+   */
+  long countBannedUsers();
 }

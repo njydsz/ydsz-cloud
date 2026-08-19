@@ -3,6 +3,7 @@ package com.njydsz.system.server.service;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.dto.TenantPlanDTO;
 import com.njydsz.system.domain.query.TenantPlanPageQuery;
 import com.njydsz.system.domain.vo.TenantPlanVO;
 
@@ -51,18 +52,18 @@ public interface TenantPlanService {
   /**
    * 创建套餐
    *
-   * @param vo 套餐 DTO
+   * @param dto 套餐 DTO（命令入参）
    * @return 新建套餐主键 ID
    */
-  String save(TenantPlanVO vo);
+  String save(TenantPlanDTO dto);
 
   /**
    * 更新套餐
    *
-   * @param vo 套餐 DTO（{@code id} 必填）
+   * @param dto 套餐 DTO（命令入参，{@code id} 必填）
    * @return 是否成功
    */
-  boolean updateById(TenantPlanVO vo);
+  boolean updateById(TenantPlanDTO dto);
 
   /**
    * 删除套餐

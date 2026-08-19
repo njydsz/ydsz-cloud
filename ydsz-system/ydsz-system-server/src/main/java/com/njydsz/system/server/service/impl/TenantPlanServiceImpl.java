@@ -89,21 +89,20 @@ public class TenantPlanServiceImpl implements TenantPlanService {
    *
    * <p>写入前校验 {@code planCode} 全局唯一性。
    *
-   * @param vo 套餐 DTO
+   * @param dto 套餐 DTO（命令入参）
    * @return 新建套餐主键 ID
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String save(TenantPlanVO vo) {
+  public String save(TenantPlanDTO dto) {
     TenantPlanQuery checkQuery = new TenantPlanQuery();
-    checkQuery.setPlanCode(vo.getPlanCode());
+    checkQuery.setPlanCode(dto.getPlanCode());
     if (tenantPlanRepository.countByCondition(checkQuery) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_CODE_DUPLICATE)
-          .data("planCode", vo.getPlanCode());
+          .data("planCode", dto.getPlanCode());
     }
-    TenantPlanDTO dto = toDto(vo);
     tenantPlanRepository.insert(dto);
-    log.info("创建套餐成功: planCode={}", vo.getPlanCode());
+    log.info("创建套餐成功: planCode={}", dto.getPlanCode());
     return dto.getId();
   }
 
@@ -112,19 +111,19 @@ public class TenantPlanServiceImpl implements TenantPlanService {
    *
    * <p>更新时校验 {@code planCode} 唯一性（排除自身）。
    *
-   * @param vo 套餐 DTO（{@code id} 必填）
+   * @param dto 套餐 DTO（命令入参，{@code id} 必填）
    * @return 是否成功
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean updateById(TenantPlanVO vo) {
+  public boolean updateById(TenantPlanDTO dto) {
     TenantPlanQuery checkQuery = new TenantPlanQuery();
-    checkQuery.setPlanCode(vo.getPlanCode());
+    checkQuery.setPlanCode(dto.getPlanCode());
     if (tenantPlanRepository.countByCondition(checkQuery) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_CODE_DUPLICATE)
-          .data("planCode", vo.getPlanCode());
+          .data("planCode", dto.getPlanCode());
     }
-    return tenantPlanRepository.updateById(toDto(vo));
+    return tenantPlanRepository.updateById(dto);
   }
 
   /**
@@ -149,21 +148,4 @@ public class TenantPlanServiceImpl implements TenantPlanService {
     return tenantPlanRepository.deleteById(id);
   }
 
-  /**
-   * VO → DTO 转换（私有）
-   *
-   * @param vo 套餐 VO
-   * @return 套餐 DTO
-   */
-  private TenantPlanDTO toDto(TenantPlanVO vo) {
-    TenantPlanDTO dto = new TenantPlanDTO();
-    dto.setId(vo.getId());
-    dto.setPlanCode(vo.getPlanCode());
-    dto.setPlanName(vo.getPlanName());
-    dto.setDescription(vo.getDescription());
-    dto.setSortOrder(vo.getSortOrder());
-    dto.setQuotaJson(vo.getQuotaJson());
-    dto.setFeatureJson(vo.getFeatureJson());
-    return dto;
-  }
 }

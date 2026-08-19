@@ -11,6 +11,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
+import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.repository.ConfigRepository;
@@ -122,6 +124,9 @@ public class ConfigServiceImpl implements ConfigService {
   /** 配置回滚策略（从快照 JSON 反序列化并重建配置资源） */
   private final ConfigRollbackStrategy rollbackStrategy;
 
+  /** Spring 事件发布器（用于异步创建版本快照，P3-2 版本快照异步化） */
+  private final ApplicationEventPublisher eventPublisher;
+
   // ============================== CRUD ==============================
 
   @Override
@@ -161,17 +166,16 @@ public class ConfigServiceImpl implements ConfigService {
       evict = {
         @CacheEvict(
             value = CacheConstants.SYSTEM_CONFIG_CACHE,
-            key = "@cacheKeyBuilder.configValue(#vo.configKey)"),
+            key = "@cacheKeyBuilder.configValue(#dto.configKey)"),
         @CacheEvict(
             value = CacheConstants.SYSTEM_CONFIG_CACHE,
-            key = "@cacheKeyBuilder.configGroup(#vo.configGroup)"),
+            key = "@cacheKeyBuilder.configGroup(#dto.configGroup)"),
         @CacheEvict(
             value = CacheConstants.SYSTEM_CONFIG_CACHE,
             key = "@cacheKeyBuilder.configPublic()")
       })
   @Transactional(rollbackFor = Exception.class)
-  public String save(ConfigVO vo) {
-    ConfigDTO dto = toDto(vo);
+  public String save(ConfigDTO dto) {
     checkDuplicateKey(dto);
     validateConfigValueFormat(dto);
     // 版本快照：新建配置无需快照（变更前不存在）
@@ -185,17 +189,16 @@ public class ConfigServiceImpl implements ConfigService {
       evict = {
         @CacheEvict(
             value = CacheConstants.SYSTEM_CONFIG_CACHE,
-            key = "@cacheKeyBuilder.configValue(#vo.configKey)"),
+            key = "@cacheKeyBuilder.configValue(#dto.configKey)"),
         @CacheEvict(
             value = CacheConstants.SYSTEM_CONFIG_CACHE,
-            key = "@cacheKeyBuilder.configGroup(#vo.configGroup)"),
+            key = "@cacheKeyBuilder.configGroup(#dto.configGroup)"),
         @CacheEvict(
             value = CacheConstants.SYSTEM_CONFIG_CACHE,
             key = "@cacheKeyBuilder.configPublic()")
       })
   @Transactional(rollbackFor = Exception.class)
-  public boolean updateById(ConfigVO vo) {
-    ConfigDTO dto = toDto(vo);
+  public boolean updateById(ConfigDTO dto) {
     validateConfigValueFormat(dto);
     // 版本快照：查询变更前状态
     ConfigVO before = configRepository.findByKeyIgnoreStatus(dto.getConfigKey()).orElse(null);
@@ -206,16 +209,18 @@ public class ConfigServiceImpl implements ConfigService {
       if (before != null && !Objects.equals(before.getConfigGroup(), dto.getConfigGroup())) {
         evictConfigGroup(before.getConfigGroup());
       }
-      // 创建版本快照（与配置变更同一事务）
-      entityVersionService.createVersion(
-          EntityVersionCreateDTO.builder()
-              .resourceType(EntityVersionService.RESOURCE_TYPE_CONFIG)
-              .resourceKey(dto.getConfigKey())
-              .resourceGroup(dto.getConfigGroup())
-              .version(SystemVersionUtils.nextVersion())
-              .changeLog("更新配置: " + dto.getConfigKey())
-              .snapshotJson(snapshotJson)
-              .build());
+      // 创建版本快照（P3-2 异步化：事务提交后由监听器创建）
+      eventPublisher.publishEvent(
+          new VersionSnapshotEvent(
+              this,
+              EntityVersionCreateDTO.builder()
+                  .resourceType(EntityVersionService.RESOURCE_TYPE_CONFIG)
+                  .resourceKey(dto.getConfigKey())
+                  .resourceGroup(dto.getConfigGroup())
+                  .version(SystemVersionUtils.nextVersion())
+                  .changeLog("更新配置: " + dto.getConfigKey())
+                  .snapshotJson(snapshotJson)
+                  .build()));
       publishConfigChangedEvent(dto.getConfigKey(), dto.getConfigGroup());
     }
     return updated;
@@ -231,16 +236,18 @@ public class ConfigServiceImpl implements ConfigService {
     if (removed && entity != null) {
       // 精准失效单 key / 分组 / 公开配置缓存
       evictConfigCaches(entity.getConfigKey(), entity.getConfigGroup());
-      // 创建版本快照（与配置变更同一事务）
-      entityVersionService.createVersion(
-          EntityVersionCreateDTO.builder()
-              .resourceType(EntityVersionService.RESOURCE_TYPE_CONFIG)
-              .resourceKey(entity.getConfigKey())
-              .resourceGroup(entity.getConfigGroup())
-              .version(SystemVersionUtils.nextVersion())
-              .changeLog("删除配置: " + entity.getConfigKey())
-              .snapshotJson(snapshotJson)
-              .build());
+      // 创建版本快照（P3-2 异步化：事务提交后由监听器创建）
+      eventPublisher.publishEvent(
+          new VersionSnapshotEvent(
+              this,
+              EntityVersionCreateDTO.builder()
+                  .resourceType(EntityVersionService.RESOURCE_TYPE_CONFIG)
+                  .resourceKey(entity.getConfigKey())
+                  .resourceGroup(entity.getConfigGroup())
+                  .version(SystemVersionUtils.nextVersion())
+                  .changeLog("删除配置: " + entity.getConfigKey())
+                  .snapshotJson(snapshotJson)
+                  .build()));
       publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
     }
     return removed;
@@ -309,34 +316,6 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   // ============================== 私有方法 ==============================
-
-  /**
-   * 将配置 VO 转换为仓储层 DTO。
-   *
-   * <p>未显式指定状态时默认置为 {@code ENABLED}，保证新建配置默认可用。
-   *
-   * @param vo 配置 VO（为 null 时返回 null）
-   * @return 转换后的 DTO
-   */
-  private ConfigDTO toDto(ConfigVO vo) {
-    if (vo == null) {
-      return null;
-    }
-    ConfigDTO dto = new ConfigDTO();
-    dto.setId(vo.getId());
-    dto.setConfigGroup(vo.getConfigGroup());
-    dto.setConfigKey(vo.getConfigKey());
-    dto.setConfigValue(vo.getConfigValue());
-    dto.setValueType(vo.getValueType());
-    dto.setDefaultValue(vo.getDefaultValue());
-    dto.setDescription(vo.getDescription());
-    dto.setIsPublic(vo.getIsPublic());
-    dto.setSortOrder(vo.getSortOrder());
-    if (dto.getStatus() == null) {
-      dto.setStatus("ENABLED");
-    }
-    return dto;
-  }
 
   /**
    * 校验同一分组下配置键是否重复。

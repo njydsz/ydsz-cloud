@@ -353,24 +353,42 @@ public class SecurityDashboardService {
    * 统计当前处于锁定状态的用户数。
    *
    * <p>锁定状态判断：lockedUntil 字段非空且晚于当前时间。
+   * 从数据库实时查询，确保数据准确性。
    *
    * @return 锁定用户数
    */
   private long countLockedUsers() {
     try {
-      // 使用 Redis 缓存的锁定用户计数
+      // 使用 Redis 缓存（TTL 5 分钟）
       String countStr = redisStringOps.get("userinfo:security:locked:count", String.class);
       if (countStr != null && !countStr.isBlank()) {
         return Long.parseLong(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read locked user count, error={}", e.getMessage(), e);
+      log.warn("Failed to read locked user count from Redis, error={}", e.getMessage(), e);
+    }
+
+    // Redis 未命中，从数据库查询
+    try {
+      long count = userAccountRepository.countLockedUsers();
+      // 回填缓存（TTL 5 分钟）
+      try {
+        redisStringOps.set("userinfo:security:locked:count", String.valueOf(count), 300);
+      } catch (Exception ex) {
+        log.warn("Failed to cache locked user count, error={}", ex.getMessage());
+      }
+      return count;
+    } catch (Exception e) {
+      log.warn("Failed to query locked user count from DB, error={}", e.getMessage(), e);
     }
     return 0;
   }
 
   /**
    * 统计当前处于封禁状态的用户数。
+   *
+   * <p>封禁状态判断：banType 非空且（永久封禁或临时封禁未过期）。
+   * 从数据库实时查询，确保数据准确性。
    *
    * @return 封禁用户数
    */
@@ -381,7 +399,21 @@ public class SecurityDashboardService {
         return Long.parseLong(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read banned user count, error={}", e.getMessage(), e);
+      log.warn("Failed to read banned user count from Redis, error={}", e.getMessage(), e);
+    }
+
+    // Redis 未命中，从数据库查询
+    try {
+      long count = userAccountRepository.countBannedUsers();
+      // 回填缓存（TTL 5 分钟）
+      try {
+        redisStringOps.set("userinfo:security:banned:count", String.valueOf(count), 300);
+      } catch (Exception ex) {
+        log.warn("Failed to cache banned user count, error={}", ex.getMessage());
+      }
+      return count;
+    } catch (Exception e) {
+      log.warn("Failed to query banned user count from DB, error={}", e.getMessage(), e);
     }
     return 0;
   }
@@ -389,9 +421,12 @@ public class SecurityDashboardService {
   /**
    * 获取今日登录成功次数。
    *
+   * <p>优先从 Redis 读取，Redis 未命中时从数据库查询。
+   *
    * @return 今日登录成功次数
    */
   private long getTodayLoginSuccessCount() {
+    // 优先从 Redis 读取
     try {
       String today = LocalDate.now().toString();
       String countStr = redisStringOps.get(TODAY_LOGIN_SUCCESS_KEY + ":" + today, String.class);
@@ -399,7 +434,24 @@ public class SecurityDashboardService {
         return Long.parseLong(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read today login success count, error={}", e.getMessage(), e);
+      log.warn("Failed to read today login success count from Redis, error={}", e.getMessage(), e);
+    }
+
+    // Redis 未命中，从数据库查询
+    try {
+      LocalDateTime dayStart = LocalDate.now().atStartOfDay();
+      LocalDateTime dayEnd = LocalDate.now().plusDays(1).atStartOfDay();
+      long count = userLoginHistoryRepository.countByResultAndTimeRange(dayStart, dayEnd, "SUCCESS");
+      // 回填缓存（TTL 5 分钟）
+      try {
+        String today = LocalDate.now().toString();
+        redisStringOps.set(TODAY_LOGIN_SUCCESS_KEY + ":" + today, String.valueOf(count), 300);
+      } catch (Exception ex) {
+        log.warn("Failed to cache today login success count, error={}", ex.getMessage());
+      }
+      return count;
+    } catch (Exception e) {
+      log.warn("Failed to query today login success count from DB, error={}", e.getMessage(), e);
     }
     return 0;
   }
@@ -407,9 +459,12 @@ public class SecurityDashboardService {
   /**
    * 获取今日登录失败次数。
    *
+   * <p>优先从 Redis 读取，Redis 未命中时从数据库查询。
+   *
    * @return 今日登录失败次数
    */
   private long getTodayLoginFailCount() {
+    // 优先从 Redis 读取
     try {
       String today = LocalDate.now().toString();
       String countStr = redisStringOps.get(TODAY_LOGIN_FAIL_KEY + ":" + today, String.class);
@@ -417,7 +472,24 @@ public class SecurityDashboardService {
         return Long.parseLong(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read today login fail count, error={}", e.getMessage(), e);
+      log.warn("Failed to read today login fail count from Redis, error={}", e.getMessage(), e);
+    }
+
+    // Redis 未命中，从数据库查询
+    try {
+      LocalDateTime dayStart = LocalDate.now().atStartOfDay();
+      LocalDateTime dayEnd = LocalDate.now().plusDays(1).atStartOfDay();
+      long count = userLoginHistoryRepository.countByResultAndTimeRange(dayStart, dayEnd, "FAILED");
+      // 回填缓存（TTL 5 分钟）
+      try {
+        String today = LocalDate.now().toString();
+        redisStringOps.set(TODAY_LOGIN_FAIL_KEY + ":" + today, String.valueOf(count), 300);
+      } catch (Exception ex) {
+        log.warn("Failed to cache today login fail count, error={}", ex.getMessage());
+      }
+      return count;
+    } catch (Exception e) {
+      log.warn("Failed to query today login fail count from DB, error={}", e.getMessage(), e);
     }
     return 0;
   }
@@ -583,11 +655,8 @@ public class SecurityDashboardService {
    * @return 登录失败记录列表
    */
   private List<UserLoginHistoryVO> findRecentFailedLogins(LocalDateTime since, int limit) {
-    // 由于 UserLoginHistoryRepository 不直接支持时间范围查询，
-    // 这里通过查询最近的登录记录并过滤失败记录
-    // 实际生产环境应在 Repository 中添加按时间和结果查询的方法
     log.debug("Querying recent failed logins since={}, limit={}", since, limit);
-    return List.of();
+    return userLoginHistoryRepository.findRecentFailedLogins(since, limit);
   }
 
   /**

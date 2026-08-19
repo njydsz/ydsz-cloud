@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.query.VariablePageQuery;
 import com.njydsz.system.domain.vo.ImportResult;
 import com.njydsz.system.domain.vo.VariableVO;
@@ -89,20 +90,20 @@ public interface VariableService {
    * <p>写入前校验 {@code (tenantId, variableKey)} 唯一性； 自动校验 {@code valueType}（{@link
    * com.njydsz.system.domain.enums.ConfigValueType}）。
    *
-   * @param vo 变量 DTO
+   * @param dto 变量 DTO（命令入参）
    * @return 新建变量主键 ID
    */
-  String save(VariableVO vo);
+  String save(VariableDTO dto);
 
   /**
    * 更新系统变量
    *
    * <p>更新后失效 Redis 缓存。
    *
-   * @param vo 变量 DTO（{@code id} 必填）
+   * @param dto 变量 DTO（命令入参，{@code id} 必填）
    * @return 是否成功
    */
-  boolean updateById(VariableVO vo);
+  boolean updateById(VariableDTO dto);
 
   /**
    * 删除系统变量（逻辑删除）

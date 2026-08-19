@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.query.DictItemPageQuery;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.vo.ImportResult;
@@ -125,18 +126,18 @@ public interface DictItemService {
    * <p>写入前校验 {@code (tenantId, typeCode, itemCode)} 唯一性； 写入成功后异步调用 {@link
    * DictVersionService#createVersion} 记录变更。
    *
-   * @param vo 字典项 DTO
+   * @param dto 字典项 DTO（命令入参）
    * @return 新建字典项主键 ID
    */
-  String save(DictItemVO vo);
+  String save(DictItemDTO dto);
 
   /**
    * 更新字典项（自动记录版本快照）
    *
-   * @param vo 字典项 DTO（{@code id} 必填）
+   * @param dto 字典项 DTO（命令入参，{@code id} 必填）
    * @return 是否成功
    */
-  boolean updateById(DictItemVO vo);
+  boolean updateById(DictItemDTO dto);
 
   /**
    * 删除字典项（自动记录版本快照）

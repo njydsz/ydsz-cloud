@@ -12,6 +12,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
+import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.VariablePageQuery;
 import com.njydsz.system.domain.vo.ImportResult;
@@ -141,6 +143,9 @@ public class VariableServiceImpl implements VariableService {
   /** 变量回滚策略（从快照 JSON 反序列化并重建变量资源） */
   private final VariableRollbackStrategy rollbackStrategy;
 
+  /** Spring 事件发布器（用于异步创建版本快照，P3-2 版本快照异步化） */
+  private final ApplicationEventPublisher eventPublisher;
+
   /**
    * 根据主键查询变量（不走缓存，直接走 DB）
    *
@@ -226,16 +231,15 @@ public class VariableServiceImpl implements VariableService {
   @Override
   @CacheEvict(
       value = CacheConstants.SYSTEM_VARIABLE_CACHE,
-      key = "@cacheKeyBuilder.variable(#vo.variableKey)")
+      key = "@cacheKeyBuilder.variable(#dto.variableKey)")
   @Transactional(rollbackFor = Exception.class)
-  public String save(VariableVO vo) {
-    validateValueType(vo.getValueType());
-    VariableDTO dto = toDto(vo);
+  public String save(VariableDTO dto) {
+    validateValueType(dto.getValueType());
     if (dto.getStatus() == null) {
       dto.setStatus("ENABLED");
     }
     variableRepository.insert(dto);
-    publishVariableChangedEvent(vo.getVariableKey(), "创建变量");
+    publishVariableChangedEvent(dto.getVariableKey(), "创建变量");
     return dto.getId();
   }
 
@@ -252,36 +256,37 @@ public class VariableServiceImpl implements VariableService {
    *
    * <p><b>注意：</b>更新 {@code variableKey} 会导致所有依赖该键的下游缓存失效， 调用方需主动清理相关业务缓存。
    *
-   * @param vo 变量数据（需包含 {@code id}）
+   * @param dto 变量数据（命令入参，需包含 {@code id}）
    * @return true=更新成功，false=记录不存在
    */
   @Override
   @CacheEvict(
       value = CacheConstants.SYSTEM_VARIABLE_CACHE,
-      key = "@cacheKeyBuilder.variable(#vo.variableKey)")
+      key = "@cacheKeyBuilder.variable(#dto.variableKey)")
   @Transactional(rollbackFor = Exception.class)
-  public boolean updateById(VariableVO vo) {
-    validateValueType(vo.getValueType());
-    VariableDTO dto = toDto(vo);
+  public boolean updateById(VariableDTO dto) {
+    validateValueType(dto.getValueType());
     // 版本快照：查询变更前状态
-    VariableVO before = variableRepository.findByKeyIgnoreStatus(vo.getVariableKey()).orElse(null);
+    VariableVO before = variableRepository.findByKeyIgnoreStatus(dto.getVariableKey()).orElse(null);
     String snapshotJson = before != null ? YdszJson.toJson(before) : null;
     boolean updated = variableRepository.updateById(dto);
     if (updated) {
       // 变量键变更时，旧键缓存一并失效
-      if (before != null && !Objects.equals(before.getVariableKey(), vo.getVariableKey())) {
+      if (before != null && !Objects.equals(before.getVariableKey(), dto.getVariableKey())) {
         evictVariable(before.getVariableKey());
       }
-      // 创建版本快照（与变量变更同一事务）
-      entityVersionService.createVersion(
-          EntityVersionCreateDTO.builder()
-              .resourceType(EntityVersionService.RESOURCE_TYPE_VARIABLE)
-              .resourceKey(vo.getVariableKey())
-              .version(SystemVersionUtils.nextVersion())
-              .changeLog("更新变量: " + vo.getVariableKey())
-              .snapshotJson(snapshotJson)
-              .build());
-      publishVariableChangedEvent(vo.getVariableKey(), "更新变量");
+      // 创建版本快照（P3-2 异步化：事务提交后由监听器创建）
+      eventPublisher.publishEvent(
+          new VersionSnapshotEvent(
+              this,
+              EntityVersionCreateDTO.builder()
+                  .resourceType(EntityVersionService.RESOURCE_TYPE_VARIABLE)
+                  .resourceKey(dto.getVariableKey())
+                  .version(SystemVersionUtils.nextVersion())
+                  .changeLog("更新变量: " + dto.getVariableKey())
+                  .snapshotJson(snapshotJson)
+                  .build()));
+      publishVariableChangedEvent(dto.getVariableKey(), "更新变量");
     }
     return updated;
   }
@@ -311,37 +316,20 @@ public class VariableServiceImpl implements VariableService {
     if (removed && vo != null) {
       // 精准失效该变量键缓存（替代 allEntries 全量清空）
       evictVariable(vo.getVariableKey());
-      // 创建版本快照（与变量变更同一事务）
-      entityVersionService.createVersion(
-          EntityVersionCreateDTO.builder()
-              .resourceType(EntityVersionService.RESOURCE_TYPE_VARIABLE)
-              .resourceKey(vo.getVariableKey())
-              .version(SystemVersionUtils.nextVersion())
-              .changeLog("删除变量: " + vo.getVariableKey())
-              .snapshotJson(snapshotJson)
-              .build());
+      // 创建版本快照（P3-2 异步化：事务提交后由监听器创建）
+      eventPublisher.publishEvent(
+          new VersionSnapshotEvent(
+              this,
+              EntityVersionCreateDTO.builder()
+                  .resourceType(EntityVersionService.RESOURCE_TYPE_VARIABLE)
+                  .resourceKey(vo.getVariableKey())
+                  .version(SystemVersionUtils.nextVersion())
+                  .changeLog("删除变量: " + vo.getVariableKey())
+                  .snapshotJson(snapshotJson)
+                  .build()));
       publishVariableChangedEvent(vo.getVariableKey(), "删除变量");
     }
     return removed;
-  }
-
-  /**
-   * VO → DTO 转换（私有）
-   *
-   * <p>VariableVO 与 VariableDTO 字段完全一致，直接手动映射。
-   *
-   * @param vo 变量 VO
-   * @return 变量 DTO
-   */
-  private VariableDTO toDto(VariableVO vo) {
-    VariableDTO dto = new VariableDTO();
-    dto.setId(vo.getId());
-    dto.setVariableKey(vo.getVariableKey());
-    dto.setVariableValue(vo.getVariableValue());
-    dto.setValueType(vo.getValueType());
-    dto.setDescription(vo.getDescription());
-    dto.setStatus(vo.getStatus());
-    return dto;
   }
 
   @Override

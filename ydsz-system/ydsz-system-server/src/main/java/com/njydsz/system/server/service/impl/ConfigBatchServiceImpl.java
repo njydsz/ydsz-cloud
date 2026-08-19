@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -27,6 +28,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
+import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.vo.ConfigVO;
@@ -70,9 +72,6 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   /** 配置仓储（用于批量插入 + 唯一性校验） */
   private final ConfigRepository configRepository;
 
-  /** 统一实体版本服务（用于创建批量快照） */
-  private final EntityVersionService entityVersionService;
-
   /** Spring Cache 管理器（用于按 key 精准失效缓存） */
   private final CacheManager cacheManager;
 
@@ -81,6 +80,9 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
 
   /** 统一领域事件发布门面（ObjectProvider 可选注入，common-event 未引入时安全降级，见《云顶编码规范》27.4） */
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
+
+  /** Spring 事件发布器（用于异步创建版本快照，P3-2 版本快照异步化） */
+  private final ApplicationEventPublisher snapshotEventPublisher;
 
   /**
    * 批量创建配置项
@@ -245,15 +247,18 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   private void createSnapshotVersion(String configGroup, String version, String changeLog) {
     List<ConfigVO> snapshot = configRepository.findByGroup(configGroup);
     String snapshotJson = YdszJson.toJson(snapshot);
-    entityVersionService.createVersion(
-        EntityVersionCreateDTO.builder()
-            .resourceType(EntityVersionService.RESOURCE_TYPE_CONFIG)
-            .resourceKey(configGroup)
-            .resourceGroup(configGroup)
-            .version(version)
-            .changeLog(changeLog)
-            .snapshotJson(snapshotJson)
-            .build());
+    // P3-2 异步化：事务提交后由监听器创建版本快照
+    snapshotEventPublisher.publishEvent(
+        new VersionSnapshotEvent(
+            this,
+            EntityVersionCreateDTO.builder()
+                .resourceType(EntityVersionService.RESOURCE_TYPE_CONFIG)
+                .resourceKey(configGroup)
+                .resourceGroup(configGroup)
+                .version(version)
+                .changeLog(changeLog)
+                .snapshotJson(snapshotJson)
+                .build()));
   }
 
   /**

@@ -3,6 +3,7 @@ package com.njydsz.system.server.service;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.system.domain.vo.DictTypeVO;
 
@@ -52,21 +53,21 @@ public interface DictService {
    * <p>写入前校验 {@code (tenantId, typeCode)} 唯一性；冲突时抛 {@code
    * com.njydsz.common.exception.custom.BusinessException}。
    *
-   * @param vo 字典类型 DTO
+   * @param dto 字典类型 DTO（命令入参）
    * @return 新建字典类型主键 ID
    * @throws com.njydsz.common.exception.custom.BusinessException 当 {@code typeCode} 已存在时抛出
    */
-  String save(DictTypeVO vo);
+  String save(DictTypeDTO dto);
 
   /**
    * 更新字典类型
    *
    * <p>仅更新非空字段；{@code typeCode} 一般不允许变更（与字典项强绑定）。
    *
-   * @param vo 字典类型 DTO（{@code id} 必填）
+   * @param dto 字典类型 DTO（命令入参，{@code id} 必填）
    * @return 是否成功
    */
-  boolean updateById(DictTypeVO vo);
+  boolean updateById(DictTypeDTO dto);
 
   /**
    * 删除字典类型

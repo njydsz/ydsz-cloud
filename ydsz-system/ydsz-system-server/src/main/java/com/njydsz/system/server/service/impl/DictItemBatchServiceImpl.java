@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.repository.DictRepository;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
@@ -53,14 +55,14 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
   /** 字典仓储（用于批量插入 + 唯一性校验） */
   private final DictRepository dictRepository;
 
-  /** 统一实体版本服务（用于创建批量快照） */
-  private final EntityVersionService entityVersionService;
-
   /** Spring Cache 管理器（用于按 key 精准失效缓存） */
   private final CacheManager cacheManager;
 
   /** 租户感知缓存键构造器（手动 evict 使用） */
   private final CacheKeyBuilder cacheKeyBuilder;
+
+  /** Spring 事件发布器（用于异步创建版本快照，P3-2 版本快照异步化） */
+  private final ApplicationEventPublisher eventPublisher;
 
   /**
    * 批量新增字典项
@@ -196,14 +198,17 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
   private void createSnapshotVersion(String typeCode, String version, String changeLog) {
     List<DictItemVO> snapshot = dictRepository.findItemsEnabledByTypeCode(typeCode);
     String snapshotJson = YdszJson.toJson(snapshot);
-    entityVersionService.createVersion(
-        EntityVersionCreateDTO.builder()
-            .resourceType(EntityVersionService.RESOURCE_TYPE_DICT)
-            .resourceKey(typeCode)
-            .version(version)
-            .changeLog(changeLog)
-            .snapshotJson(snapshotJson)
-            .build());
+    // P3-2 异步化：事务提交后由监听器创建版本快照
+    eventPublisher.publishEvent(
+        new VersionSnapshotEvent(
+            this,
+            EntityVersionCreateDTO.builder()
+                .resourceType(EntityVersionService.RESOURCE_TYPE_DICT)
+                .resourceKey(typeCode)
+                .version(version)
+                .changeLog(changeLog)
+                .snapshotJson(snapshotJson)
+                .build()));
   }
 
   /**

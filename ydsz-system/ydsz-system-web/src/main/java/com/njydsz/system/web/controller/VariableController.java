@@ -25,6 +25,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.query.VariablePageQuery;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.server.service.VariableService;
@@ -117,21 +118,21 @@ public class VariableController {
    *
    * <p>幂等保护 5 秒；限流 50 QPS；写审计日志。
    *
-   * @param vo 变量 DTO
+   * @param dto 变量 DTO（命令入参）
    * @return 新创建的变量 ID
    */
   @Audit(
       module = "系统变量",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'创建变量: ' + #vo.variableKey")
+      content = "'创建变量: ' + #dto.variableKey")
   @Operation(summary = "创建系统变量")
   @RateLimit(resource = "system.variable.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:variable:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:variable:add")
   @PostMapping
-  public YdszResponse<String> save(@Valid @RequestBody VariableVO vo) {
-    return YdszResponse.success(service.save(vo));
+  public YdszResponse<String> save(@Valid @RequestBody VariableDTO dto) {
+    return YdszResponse.success(service.save(dto));
   }
 
   /**
@@ -139,21 +140,21 @@ public class VariableController {
    *
    * <p>幂等保护 5 秒；限流 50 QPS；写审计日志。
    *
-   * @param vo 变量 DTO
+   * @param dto 变量 DTO（命令入参）
    * @return 是否成功
    */
   @Audit(
       module = "系统变量",
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
-      content = "'更新变量: ' + #vo.variableKey")
+      content = "'更新变量: ' + #dto.variableKey")
   @Operation(summary = "更新系统变量")
   @RateLimit(resource = "system.variable.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:variable:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:variable:edit")
   @PutMapping
-  public YdszResponse<Boolean> update(@Valid @RequestBody VariableVO vo) {
-    return YdszResponse.success(service.updateById(vo));
+  public YdszResponse<Boolean> update(@Valid @RequestBody VariableDTO dto) {
+    return YdszResponse.success(service.updateById(dto));
   }
 
   /**

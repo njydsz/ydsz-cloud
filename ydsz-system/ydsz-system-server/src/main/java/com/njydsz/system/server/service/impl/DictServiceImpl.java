@@ -143,8 +143,7 @@ public class DictServiceImpl implements DictService {
       value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
       key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
   @Transactional(rollbackFor = Exception.class)
-  public String save(DictTypeVO vo) {
-    DictTypeDTO dto = toDto(vo);
+  public String save(DictTypeDTO dto) {
     checkDuplicateTypeCode(dto);
     dictRepository.insertType(dto);
     publishDictTypeChangedEvent(dto.getTypeCode(), "创建字典类型");
@@ -173,8 +172,7 @@ public class DictServiceImpl implements DictService {
       value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
       key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
   @Transactional(rollbackFor = Exception.class)
-  public boolean updateById(DictTypeVO vo) {
-    DictTypeDTO dto = toDtoWithId(vo);
+  public boolean updateById(DictTypeDTO dto) {
     checkDuplicateTypeCode(dto);
     boolean updated = dictRepository.updateTypeById(dto);
     if (updated) {
@@ -264,41 +262,6 @@ public class DictServiceImpl implements DictService {
   }
 
   // ============================== 私有方法 ==============================
-
-  /**
-   * VO → DTO 转换（私有，用于新增场景）
-   *
-   * <p>缺省 {@code status="ENABLED"}，保证新建的字典类型默认可用。
-   *
-   * @param vo 字典类型 VO
-   * @return 字典类型 DTO
-   */
-  private DictTypeDTO toDto(DictTypeVO vo) {
-    if (vo == null) {
-      return null;
-    }
-    DictTypeDTO dto = new DictTypeDTO();
-    dto.setTypeCode(vo.getTypeCode());
-    dto.setTypeName(vo.getTypeName());
-    dto.setDescription(vo.getDescription());
-    dto.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
-    return dto;
-  }
-
-  /**
-   * VO → DTO 转换（私有，用于更新场景，保留 ID）
-   *
-   * @param vo 字典类型 VO
-   * @return 字典类型 DTO（含 ID）
-   */
-  private DictTypeDTO toDtoWithId(DictTypeVO vo) {
-    if (vo == null) {
-      return null;
-    }
-    DictTypeDTO dto = toDto(vo);
-    dto.setId(vo.getId());
-    return dto;
-  }
 
   /**
    * 唯一性校验（私有）

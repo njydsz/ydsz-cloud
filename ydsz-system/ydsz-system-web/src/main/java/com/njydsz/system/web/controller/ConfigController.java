@@ -30,6 +30,7 @@ import com.njydsz.common.excel.spring.ExcelWebSupport;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.ConfigBatchDTO;
+import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.CursorPageResponse;
@@ -130,21 +131,21 @@ public class ConfigController {
    * <p>创建后会自动失效 Redis 缓存（{@code ydsz:system:ConfigController:save:lock}）， 并通过 {@code
    * ConfigChangeEvent} 广播变更。
    *
-   * @param vo 配置 DTO（含 configKey / configValue / configGroup / valueType / isPublic）
+   * @param dto 配置 DTO（命令入参，含 configKey / configValue / configGroup / valueType / isPublic）
    * @return 新创建的配置 ID
    */
   @Audit(
       module = "系统配置",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'创建配置: ' + #vo.configKey")
+      content = "'创建配置: ' + #dto.configKey")
   @Operation(summary = "创建配置")
   @RateLimit(resource = "system.config.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:config:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:config:add")
   @PostMapping
-  public YdszResponse<String> save(@Valid @RequestBody ConfigVO vo) {
-    return YdszResponse.success(configService.save(vo));
+  public YdszResponse<String> save(@Valid @RequestBody ConfigDTO dto) {
+    return YdszResponse.success(configService.save(dto));
   }
 
   /**
@@ -154,21 +155,21 @@ public class ConfigController {
    *
    * <p>更新后会自动失效 Redis 缓存，并通过 {@code ConfigChangeEvent} 广播变更， 业务方可通过订阅事件感知配置变更。
    *
-   * @param vo 配置 DTO（必须包含 ID）
+   * @param dto 配置 DTO（命令入参，必须包含 ID）
    * @return 是否成功
    */
   @Audit(
       module = "系统配置",
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
-      content = "'更新配置: ' + #vo.configKey")
+      content = "'更新配置: ' + #dto.configKey")
   @Operation(summary = "更新配置")
   @RateLimit(resource = "system.config.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:config:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:config:edit")
   @PutMapping
-  public YdszResponse<Boolean> update(@Valid @RequestBody ConfigVO vo) {
-    return YdszResponse.success(configService.updateById(vo));
+  public YdszResponse<Boolean> update(@Valid @RequestBody ConfigDTO dto) {
+    return YdszResponse.success(configService.updateById(dto));
   }
 
   /**

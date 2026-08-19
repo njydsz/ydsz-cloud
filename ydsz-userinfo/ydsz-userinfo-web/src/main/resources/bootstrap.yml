@@ -169,3 +169,22 @@ ydsz:
       audit-delete: true
       log-parameters: true
       max-parameter-length: 500
+
+  # 安全告警配置
+  # 安全告警系统：基于风险评分的异常行为告警，支持暴力破解/密码喷洒检测
+  # 启用后自动监听安全事件并触发告警通知
+  security:
+    alert:
+      # 告警去重时间窗口（秒），默认 300 秒（5 分钟）
+      dedup-ttl-seconds: 300
+      # IP 维度告警去重时间窗口（秒），默认 180 秒（3 分钟）
+      ip-dedup-ttl-seconds: 180
+      # 暴力破解检测阈值（同一 IP 5 分钟内失败次数），默认 10 次
+      brute-force-threshold: 10
+      # 密码喷洒检测阈值（同一 IP 尝试不同用户数），默认 5 个
+      password-spray-threshold: 5
+      aggregation:
+        # 聚合分析定时任务是否启用
+        enabled: true
+        # 聚合分析 cron 表达式，默认每 5 分钟执行一次
+        cron: "0 */5 * * * ?"

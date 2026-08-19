@@ -27,6 +27,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.system.domain.dto.TenantPlanDTO;
 import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
 import com.njydsz.system.domain.query.TenantPlanPageQuery;
 import com.njydsz.system.domain.vo.TenantPlanMenuVO;
@@ -98,7 +99,7 @@ public class TenantPlanController {
   /**
    * 创建套餐
    *
-   * @param vo 套餐 DTO
+   * @param dto 套餐 DTO（命令入参）
    * @param userId 当前用户 ID
    * @return 新创建的套餐 ID
    */
@@ -113,15 +114,15 @@ public class TenantPlanController {
   @AuthApiPermission(apiCodes = "sys:tenant:plan:add")
   @PostMapping
   public YdszResponse<String> save(
-      @Valid @RequestBody TenantPlanVO vo,
+      @Valid @RequestBody TenantPlanDTO dto,
       @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId) {
-    return YdszResponse.success(planService.save(vo));
+    return YdszResponse.success(planService.save(dto));
   }
 
   /**
    * 更新套餐
    *
-   * @param vo 套餐 VO（必须包含 ID）
+   * @param dto 套餐 DTO（命令入参，必须包含 ID）
    * @param userId 当前用户 ID
    * @return 是否成功
    */
@@ -129,16 +130,16 @@ public class TenantPlanController {
       module = "租户套餐管理",
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
-      content = "'更新套餐: ' + #vo.planCode")
+      content = "'更新套餐: ' + #dto.planCode")
   @Operation(summary = "更新套餐")
   @RateLimit(resource = "system.tenantplan.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:tenant-plan:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:tenant:plan:edit")
   @PutMapping
   public YdszResponse<Boolean> update(
-      @Valid @RequestBody TenantPlanVO vo,
+      @Valid @RequestBody TenantPlanDTO dto,
       @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId) {
-    return YdszResponse.success(planService.updateById(vo));
+    return YdszResponse.success(planService.updateById(dto));
   }
 
   /**

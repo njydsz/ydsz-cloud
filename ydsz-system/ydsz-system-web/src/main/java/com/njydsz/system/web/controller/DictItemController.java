@@ -27,6 +27,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.DictItemBatchDTO;
+import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.query.DictItemPageQuery;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.server.service.DictItemBatchService;
@@ -178,21 +179,21 @@ public class DictItemController {
    * <p>创建后自动创建字典版本快照（{@code ydsz_dict_version}），用于变更回滚。 业务方需保证 {@code (typeCode, itemCode)}
    * 组合唯一，否则返回业务异常。
    *
-   * @param vo 字典项 DTO（含 typeCode / itemCode / itemLabel / sortOrder / status / parentId）
+   * @param dto 字典项 DTO（命令入参，含 typeCode / itemCode / itemLabel / sortOrder / status / parentId）
    * @return 新创建的字典项 ID
    */
   @Audit(
       module = "字典管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'创建字典项: ' + #vo.typeCode + '/' + #vo.itemCode")
+      content = "'创建字典项: ' + #dto.typeCode + '/' + #dto.itemCode")
   @Operation(summary = "创建字典项")
   @RateLimit(resource = "system.dictitem.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict-item:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:dict:item:add")
   @PostMapping
-  public YdszResponse<String> save(@Valid @RequestBody DictItemVO vo) {
-    return YdszResponse.success(service.save(vo));
+  public YdszResponse<String> save(@Valid @RequestBody DictItemDTO dto) {
+    return YdszResponse.success(service.save(dto));
   }
 
   /**
@@ -203,21 +204,21 @@ public class DictItemController {
    * <p>更新后自动创建字典版本快照，旧版本可由 {@link DictVersionController} 回滚。 业务方可通过本接口禁用字典项（{@code
    * status=DISABLED}），无需删除以保留历史引用。
    *
-   * @param vo 字典项 DTO（必须包含 ID）
+   * @param dto 字典项 DTO（命令入参，必须包含 ID）
    * @return 是否成功
    */
   @Audit(
       module = "字典管理",
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
-      content = "'更新字典项: ' + #vo.typeCode + '/' + #vo.itemCode")
+      content = "'更新字典项: ' + #dto.typeCode + '/' + #dto.itemCode")
   @Operation(summary = "更新字典项")
   @RateLimit(resource = "system.dictitem.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict-item:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:dict:item:edit")
   @PutMapping
-  public YdszResponse<Boolean> update(@Valid @RequestBody DictItemVO vo) {
-    return YdszResponse.success(service.updateById(vo));
+  public YdszResponse<Boolean> update(@Valid @RequestBody DictItemDTO dto) {
+    return YdszResponse.success(service.updateById(dto));
   }
 
   /**

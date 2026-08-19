@@ -224,6 +224,20 @@ public class UserInfoProperties {
    */
   private List<String> trustedProxies = List.of();
 
+  // ==================== 安全告警配置 ====================
+
+  /** 安全告警：告警去重时间窗口（秒），默认 300 秒（5 分钟） */
+  private long alertDedupTtlSeconds = 300;
+
+  /** 安全告警：IP 维度告警去重时间窗口（秒），默认 180 秒（3 分钟） */
+  private long alertIpDedupTtlSeconds = 180;
+
+  /** 安全告警：暴力破解检测阈值（同一 IP 5 分钟内失败次数），默认 10 次 */
+  private int alertBruteForceThreshold = 10;
+
+  /** 安全告警：密码喷洒检测阈值（同一 IP 尝试不同用户数），默认 5 个 */
+  private int alertPasswordSprayThreshold = 5;
+
   /**
    * OAuth2 客户端配置
    *

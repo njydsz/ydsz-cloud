@@ -207,6 +207,26 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
+  @Override
+  public long countLockedUsers() {
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.isNotNull(UserAccountDO::getLockedUntil);
+    wrapper.gt(UserAccountDO::getLockedUntil, java.time.LocalDateTime.now());
+    return userAccountMapper.selectCount(wrapper);
+  }
+
+  @Override
+  public long countBannedUsers() {
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.isNotNull(UserAccountDO::getBanType);
+    // 永久封禁 或 临时封禁未过期
+    wrapper.and(w -> w.eq(UserAccountDO::getBanType, "PERMANENT")
+        .or()
+        .eq(UserAccountDO::getBanType, "TEMPORARY")
+        .gt(UserAccountDO::getBanExpireAt, java.time.LocalDateTime.now()));
+    return userAccountMapper.selectCount(wrapper);
+  }
+
   /**
    * 根据查询参数构建 MyBatis-Plus 查询条件。
    *

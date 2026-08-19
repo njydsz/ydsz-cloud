@@ -1,0 +1,66 @@
+package com.njydsz.userinfo.infra.converter;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
+
+import com.njydsz.userinfo.domain.alert.SecurityAlert;
+import com.njydsz.userinfo.infra.entity.SecurityAlertDO;
+
+/**
+ * 安全告警 MapStruct 转换器。
+ *
+ * <p>提供 SecurityAlertDO ↔ SecurityAlert 的转换方法。
+ *
+ * @author ydsz-team
+ * @since 2.18.0
+ */
+@Mapper
+public interface SecurityAlertConverter {
+
+  /** MapStruct 生成的转换器单例。 */
+  SecurityAlertConverter INSTANT = Mappers.getMapper(SecurityAlertConverter.class);
+
+  /**
+   * 安全告警实体 → 领域模型。
+   *
+   * @param entity 安全告警实体
+   * @return 安全告警领域模型
+   */
+  @Mapping(target = "id", source = "id")
+  @Mapping(target = "alertType", expression = "java(SecurityAlert.AlertType.valueOf(entity.getAlertType()))")
+  @Mapping(target = "riskLevel", expression = "java(SecurityAlert.RiskLevel.valueOf(entity.getRiskLevel()))")
+  @Mapping(target = "userId", source = "userId")
+  @Mapping(target = "username", source = "username")
+  @Mapping(target = "sourceIp", source = "sourceIp")
+  @Mapping(target = "title", source = "title")
+  @Mapping(target = "content", source = "content")
+  @Mapping(target = "status", expression = "java(SecurityAlert.AlertStatus.valueOf(entity.getStatus()))")
+  @Mapping(target = "createdAt", source = "createdAt")
+  @Mapping(target = "handledAt", source = "handledAt")
+  @Mapping(target = "handlerNote", source = "handlerNote")
+  SecurityAlert entityToDomain(SecurityAlertDO entity);
+
+  /**
+   * 安全告警领域模型 → 实体。
+   *
+   * @param domain 安全告警领域模型
+   * @return 安全告警实体
+   */
+  @Mapping(target = "id", source = "id")
+  @Mapping(target = "alertType", expression = "java(domain.alertType().name())")
+  @Mapping(target = "riskLevel", expression = "java(domain.riskLevel().name())")
+  @Mapping(target = "userId", source = "userId")
+  @Mapping(target = "username", source = "username")
+  @Mapping(target = "sourceIp", source = "sourceIp")
+  @Mapping(target = "title", source = "title")
+  @Mapping(target = "content", source = "content")
+  @Mapping(target = "status", expression = "java(domain.status().name())")
+  @Mapping(target = "handledAt", source = "handledAt")
+  @Mapping(target = "handlerNote", source = "handlerNote")
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  SecurityAlertDO domainToEntity(SecurityAlert domain);
+}

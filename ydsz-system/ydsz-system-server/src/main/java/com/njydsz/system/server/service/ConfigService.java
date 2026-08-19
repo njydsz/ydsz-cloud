@@ -87,20 +87,20 @@ public interface ConfigService {
    * <p>写入前校验 {@code (tenantId, configGroup, configKey)} 唯一性； 自动校验 {@code valueType}（{@link
    * com.njydsz.system.domain.enums.ConfigValueType}）。
    *
-   * @param vo 配置 DTO
+   * @param dto 配置 DTO（命令入参）
    * @return 新建配置主键 ID
    */
-  String save(ConfigVO vo);
+  String save(ConfigDTO dto);
 
   /**
    * 更新配置
    *
    * <p>更新后失效 Redis 缓存并发布 {@code ConfigChangeEvent}。
    *
-   * @param vo 配置 DTO（{@code id} 必填）
+   * @param dto 配置 DTO（命令入参，{@code id} 必填）
    * @return 是否成功
    */
-  boolean updateById(ConfigVO vo);
+  boolean updateById(ConfigDTO dto);
 
   /**
    * 删除配置

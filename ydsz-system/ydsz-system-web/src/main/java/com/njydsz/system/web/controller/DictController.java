@@ -23,6 +23,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.server.service.DictService;
@@ -94,21 +95,21 @@ public class DictController {
    *
    * <p>幂等保护：5 秒内同一请求只能成功一次；限流 50 QPS；写审计日志。
    *
-   * @param vo 字典类型 DTO（含 typeCode、typeName、status 等）
+   * @param dto 字典类型 DTO（命令入参，含 typeCode、typeName、status 等）
    * @return 新创建的字典类型 ID
    */
   @Audit(
       module = "字典管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'创建字典类型: ' + #vo.typeCode")
+      content = "'创建字典类型: ' + #dto.typeCode")
   @Operation(summary = "创建字典类型")
   @RateLimit(resource = "system.dict.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:dict:add")
   @PostMapping
-  public YdszResponse<String> save(@Valid @RequestBody DictTypeVO vo) {
-    return YdszResponse.success(dictService.save(vo));
+  public YdszResponse<String> save(@Valid @RequestBody DictTypeDTO dto) {
+    return YdszResponse.success(dictService.save(dto));
   }
 
   /**
@@ -116,21 +117,21 @@ public class DictController {
    *
    * <p>幂等保护：5 秒内同一请求只能成功一次；限流 50 QPS；写审计日志。
    *
-   * @param vo 字典类型 DTO（必须包含 ID）
+   * @param dto 字典类型 DTO（命令入参，必须包含 ID）
    * @return 是否成功
    */
   @Audit(
       module = "字典管理",
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
-      content = "'更新字典类型: ' + #vo.typeCode")
+      content = "'更新字典类型: ' + #dto.typeCode")
   @Operation(summary = "更新字典类型")
   @RateLimit(resource = "system.dict.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:dict:edit")
   @PutMapping
-  public YdszResponse<Boolean> update(@Valid @RequestBody DictTypeVO vo) {
-    return YdszResponse.success(dictService.updateById(vo));
+  public YdszResponse<Boolean> update(@Valid @RequestBody DictTypeDTO dto) {
+    return YdszResponse.success(dictService.updateById(dto));
   }
 
   /**
