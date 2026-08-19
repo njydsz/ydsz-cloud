@@ -16,10 +16,11 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.service.FlowCustomButtonService;
 import com.njydsz.workflow.server.service.FlowTaskService;
@@ -100,11 +101,14 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @RequiredArgsConstructor
 public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
 
-  /** 流程节点 Mapper，用于读取和更新节点 ext 配置 */
-  private final FlowNodeMapper nodeMapper;
+  /** 流程节点仓储（domain 层契约），读取和更新节点 ext 配置 */
+  private final FlowNodeRepository nodeRepository;
 
-  /** 运行时任务 Mapper，用于查询按钮执行关联的待办任务 */
-  private final FlowRunTaskMapper taskMapper;
+  /** 运行时任务仓储（domain 层契约），查询按钮执行关联的待办任务 */
+  private final FlowRunTaskRepository taskRepository;
+
+  /** 实体转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
 
   /** 流程定义缓存服务，按钮配置变更后主动失效缓存 */
   private final FlowDefinitionCacheService definitionCacheService;
@@ -125,7 +129,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
   @Transactional(rollbackFor = Exception.class)
   public void saveCustomButtons(
       String definitionId, String nodeCode, List<Map<String, Object>> buttons) {
-    FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+    FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -145,7 +149,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
       extJson.put("customButtons", buttons);
     }
     node.setExt(YdszJson.toJson(extJson));
-    nodeMapper.updateById(node);
+    nodeRepository.update(converter.entityToVO(node));
     // 失效缓存
     definitionCacheService.evict(definitionId);
     log.info(
@@ -163,7 +167,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
       String userId,
       String comment,
       Map<String, Object> variables) {
-    FlowRunTaskDO task = taskMapper.selectById(taskId);
+    FlowRunTaskDO task = taskRepository.findById(taskId).map(converter::entityToDO).orElse(null);
     if (task == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)

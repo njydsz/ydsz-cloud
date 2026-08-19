@@ -179,4 +179,16 @@ public interface JobLogRepository {
    * @return 最新日志 VO；不存在返回 {@code Optional.empty()}
    */
   Optional<JobLogVO> findLatestByJobKey(String jobKey);
+
+  /**
+   * 统计指定时间范围内的执行日志数量（按 start_time）。
+   *
+   * <p>P0-FIX：原方法仅在 infra impl 中实现且被 JobStatsController 调用，但接口未声明
+   * （impl 上 @Override 不成立），补充声明到接口使 DDD 契约完整。
+   *
+   * @param start 起始时间（含）
+   * @param end 结束时间（含）
+   * @return 日志数量
+   */
+  long countByTimeRange(LocalDateTime start, LocalDateTime end);
 }

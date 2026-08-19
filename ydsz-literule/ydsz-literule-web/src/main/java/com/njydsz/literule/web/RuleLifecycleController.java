@@ -89,7 +89,7 @@ public class RuleLifecycleController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
-      content = "'changeStatus'")
+      content = "'规则状态变更: ' + #ruleCode + ', 目标状态: ' + #dto.targetStatus")
   @RateLimit(resource = "literule.rule_lifecycle.changeStatus", threshold = 50)
   @PutMapping("/{ruleCode}/status")
   @AuthApiPermission(apiCodes = "execution:rule:status")
@@ -133,7 +133,7 @@ public class RuleLifecycleController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'approve'")
+      content = "'规则审批通过: ' + #ruleCode + ', 审批人: ' + #operator")
   @RateLimit(resource = "literule.rule_lifecycle.approve", threshold = 50)
   @PostMapping("/{ruleCode}/approve")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
@@ -190,7 +190,7 @@ public class RuleLifecycleController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'reject'")
+      content = "'规则审批驳回: ' + #ruleCode + ', 审批人: ' + #operator + ', 理由: ' + #dto.reason")
   @RateLimit(resource = "literule.rule_lifecycle.reject", threshold = 50)
   @PostMapping("/{ruleCode}/reject")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
@@ -255,7 +255,7 @@ public class RuleLifecycleController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'submitReview'")
+      content = "'提交规则审核: ' + #ruleCode + ', 操作人: ' + #operator")
   @RateLimit(resource = "literule.rule_lifecycle.submitReview", threshold = 50)
   @PostMapping("/{ruleCode}/submit-review")
   @AuthApiPermission(apiCodes = "execution:rule:save")
@@ -287,7 +287,7 @@ public class RuleLifecycleController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'approveLevel'")
+      content = "'多级审批通过: ' + #ruleCode + ', 审批人: ' + #operator")
   @RateLimit(resource = "literule.rule_lifecycle.approveLevel", threshold = 50)
   @PostMapping("/{ruleCode}/approve-level")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
@@ -319,7 +319,7 @@ public class RuleLifecycleController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'rejectLevel'")
+      content = "'多级审批驳回: ' + #ruleCode + ', 驳回人: ' + #operator + ', 理由: ' + #dto.reason")
   @RateLimit(resource = "literule.rule_lifecycle.rejectLevel", threshold = 50)
   @PostMapping("/{ruleCode}/reject-level")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
@@ -350,7 +350,7 @@ public class RuleLifecycleController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'delegate'")
+      content = "'审批委托: ' + #ruleCode + ', 委托人: ' + #operator + ', 被委托人: ' + #dto.delegatedTo")
   @RateLimit(resource = "literule.rule_lifecycle.delegate", threshold = 50)
   @PostMapping("/{ruleCode}/delegate")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
@@ -416,7 +416,7 @@ public class RuleLifecycleController {
       module = "规则管理",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'cancelReview'")
+      content = "'撤审: ' + #ruleCode + ', 操作人: ' + #operator")
   @RateLimit(resource = "literule.rule_lifecycle.cancelReview", threshold = 50)
   @PostMapping("/{ruleCode}/cancel-review")
   @AuthApiPermission(apiCodes = "execution:rule:save")

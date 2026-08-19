@@ -11,10 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.infra.mapper.FlowDelegateAuthMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.FlowTaskService;
@@ -105,10 +106,18 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @RequiredArgsConstructor
 public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForwardService {
 
-  /** 委派授权 Mapper，查询用户的长期授权委派配置 */
-  private final FlowDelegateAuthMapper delegateAuthMapper;
+  /** 委托授权仓储（domain 层契约），管理 ydsz_flow_delegate_auth 表 */
+  private final FlowDelegateAuthRepository authRepository;
 
-  /** 运行时任务 Mapper，查询原办理人名下的待办任务 */
+  /** 实体转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
+
+  /**
+   * 运行时任务 Mapper，查询原办理人名下的待办任务。
+   *
+   * <p>保留 Mapper 调用，因为复杂条件查询（assigneeId + taskStatus IN + deleted + 可选 flowCode/tenantId）
+   * 在 Repository 中暂无等价方法，后续应在 FlowRunTaskRepository 中补齐对应方法。
+   */
   private final FlowRunTaskMapper taskMapper;
 
   /** 流程任务服务，调用 transfer 接口执行批量转办 */
@@ -135,7 +144,7 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
     if (!StringUtils.hasText(authId)) {
       return 0;
     }
-    FlowDelegateAuthDO auth = delegateAuthMapper.selectById(authId);
+    FlowDelegateAuthDO auth = authRepository.findById(authId).map(converter::entityToDO).orElse(null);
     if (auth == null) {
       log.warn("[OfflineForward] 代理授权不存在: authId={}", authId);
       return 0;

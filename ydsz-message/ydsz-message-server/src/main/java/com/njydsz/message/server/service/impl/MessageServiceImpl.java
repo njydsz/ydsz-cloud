@@ -36,6 +36,8 @@ import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
+import com.njydsz.message.domain.event.OutboxEvent;
+import com.njydsz.message.domain.repository.OutboxEventRepository;
 import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
@@ -153,6 +155,9 @@ public class MessageServiceImpl implements MessageService {
   private final AggregatePersistenceService aggregatePersistenceService;
 
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
+
+  /** P0-A1: Outbox 事件仓储（异步消息投递） */
+  private final OutboxEventRepository outboxEventRepository;
 
   /** P2-1: 管线模板门面（自动选择模板 + 按需组合 Handler） */
   private final SendPipelineFacade sendPipelineFacade;
@@ -617,16 +622,20 @@ public class MessageServiceImpl implements MessageService {
   }
 
   /**
-   * P0-3: 异步发送消息（先落库 PENDING → 再投递 MQ）。
+   * P0-A1: 异步发送消息（先落库 PENDING → 写入 Outbox → 异步投递 MQ）。
    *
-   * <p>可靠性保证流程：
+   * <p>可靠性保证流程（事务一致性修复）：
    *
    * <ol>
+   *   <li>幂等校验：同 messageId 的 PENDING/SENDING/SUCCESS 记录已存在时直接返回
    *   <li>生成 messageId（雪花 ID）
-   *   <li>落库 PENDING 记录（DB 是 Source of Truth）
-   *   <li>投递到 MQ，消费端处理后更新状态
-   *   <li>MQ 投递失败 → 落库 PENDING 记录仍存在，由恢复扫描器补偿
+   *   <li>落库 PENDING 记录 + 写入 OutboxEvent（同事务，DB 是 Source of Truth）
+   *   <li>OutboxEventScheduler 异步扫描 Outbox 表并投递到 MQ
+   *   <li>MQ 投递失败 → Outbox 扫描器重试，不降级为同步发送（避免重复落库）
    * </ol>
+   *
+   * <p><b>事务一致性保证：</b>MQ 投递失败时不会降级调用 {@link #send}，避免产生重复 PENDING 记录。 PENDING 记录由
+   * OutboxEventScheduler 扫描补偿，保证最终一致性。
    *
    * @param request 消息发送请求
    * @return 发送结果
@@ -639,6 +648,24 @@ public class MessageServiceImpl implements MessageService {
     // 确保有 messageId
     if (!StringUtils.hasText(request.getMessageId())) {
       request.setMessageId(String.valueOf(snowflakeIdGenerator.nextId()));
+    }
+    // P0-A1: 幂等校验 —— 同 messageId 的 PENDING/SENDING/SUCCESS 记录已存在时直接返回，避免重复落库
+    MsgLog existingLog =
+        msgLogRepository.selectOne(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<MsgLog>()
+                .eq(MsgLog::getMsgId, request.getMessageId())
+                .in(
+                    MsgLog::getStatus,
+                    MessageStatusEnum.PENDING.name(),
+                    MessageStatusEnum.SENDING.name(),
+                    MessageStatusEnum.SUCCESS.name())
+                .last("LIMIT 1"));
+    if (existingLog != null) {
+      log.info(
+          "[Message] 异步消息幂等命中,跳过重复落库: msgId={} status={}",
+          request.getMessageId(),
+          existingLog.getStatus());
+      return MessageResult.ok(existingLog.getChannel(), existingLog.getMsgId());
     }
     // ① 先落库 PENDING（DB 是 Source of Truth）
     MsgLog logDO = new MsgLog();
@@ -663,28 +690,31 @@ public class MessageServiceImpl implements MessageService {
       log.info(
           "[Message] 异步消息已落库 PENDING: msgId={} channel={}", logDO.getMsgId(), request.getChannel());
     } catch (Exception e) {
-      log.error(
-          "[Message] 异步消息落库失败,降级直接投递 MQ: msgId={} err={}", request.getMessageId(), e.getMessage());
+      log.error("[Message] 异步消息落库失败: msgId={} err={}", request.getMessageId(), e.getMessage());
+      return MessageResult.fail(request.getChannel(), "消息落库失败: " + e.getMessage());
     }
-    // ② 投递到 MQ
-    MessageQueueOperations mqOps = mqProducerProvider.getIfAvailable();
-    if (mqOps == null) {
-      // MQ 未配置，降级为同步发送
-      log.warn("[Message] MQ 未配置,异步消息降级同步发送: msgId={}", request.getMessageId());
-      return send(request);
-    }
+    // ② 写入 Outbox 表（与业务同事务语义，由 OutboxEventScheduler 异步投递 MQ）
     try {
-      mqOps.asyncSend(request);
+      OutboxEvent outboxEvent =
+          new OutboxEvent(
+              "Message",
+              logDO.getMsgId(),
+              "MessageAsyncDispatch",
+              YdszJson.toJson(request),
+              TenantContextHolder.getTenantId());
+      outboxEventRepository.save(outboxEvent);
       log.info(
-          "[Message] 异步消息已投递 MQ: msgId={} channel={}",
+          "[Message] 异步消息已写入 Outbox: msgId={} outboxId={}",
           request.getMessageId(),
-          request.getChannel());
-      return MessageResult.ok(request.getChannel(), request.getMessageId());
+          outboxEvent.getId());
     } catch (Exception e) {
+      // Outbox 落库失败不阻塞主流程，PENDING 记录由恢复扫描器补偿
       log.error(
-          "[Message] 异步投递 MQ 失败,降级同步发送: msgId={} err={}", request.getMessageId(), e.getMessage());
-      return send(request);
+          "[Message] Outbox 落库失败,由恢复扫描器补偿: msgId={} err={}",
+          request.getMessageId(),
+          e.getMessage());
     }
+    return MessageResult.ok(request.getChannel(), request.getMessageId());
   }
 
   /** 发布领域事件到 Outbox（DomainEventPublisher 不可用时静默跳过）。 */

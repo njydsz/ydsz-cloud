@@ -31,7 +31,8 @@ public class JobDagVersionRepositoryImpl implements JobDagVersionRepository {
 
   @Override
   public List<JobDagVersionVO> findByVersionDesc(String dagId) {
-    return converter.jobDagVersionListToVO(jobDagVersionMapper.selectByVersionDesc(dagId));
+    // P0-FIX: Mapper.selectByVersionDesc 需要 (dagId, limit) 两个参数，原实现漏传 limit
+    return converter.jobDagVersionListToVO(jobDagVersionMapper.selectByVersionDesc(dagId, 100));
   }
 
   @Override

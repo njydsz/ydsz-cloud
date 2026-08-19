@@ -32,14 +32,15 @@ public class JobDailyStatsRepositoryImpl implements JobDailyStatsRepository {
 
   @Override
   public List<JobDailyStatsVO> findByJobIdAndDateRange(String jobId, LocalDateTime start, LocalDateTime end) {
+    // P0-FIX: Mapper 按 LocalDate 统计（daily 粒度），原实现直接传 LocalDateTime 类型不匹配
     return converter.jobDailyStatsListToVO(
-        jobDailyStatsMapper.selectByJobIdAndDateRange(jobId, start, end));
+        jobDailyStatsMapper.selectByJobIdAndDateRange(jobId, start.toLocalDate(), end.toLocalDate()));
   }
 
   @Override
   public List<JobDailyStatsVO> findByJobKeyAndDateRange(String jobKey, LocalDateTime start, LocalDateTime end) {
     return converter.jobDailyStatsListToVO(
-        jobDailyStatsMapper.selectByJobKeyAndDateRange(jobKey, start, end));
+        jobDailyStatsMapper.selectByJobKeyAndDateRange(jobKey, start.toLocalDate(), end.toLocalDate()));
   }
 
   @Override
