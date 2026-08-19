@@ -156,7 +156,9 @@ public class TenantServiceImpl implements TenantService {
           .data("tenantCode", tenant.getTenantCode())
           .data("reason", "租户仍处于启用状态，请先停用租户并清理其业务数据后再删除");
     }
-    return tenantRepository.deleteById(id);
+    boolean result = tenantRepository.deleteById(id);
+    metrics.recordTenantWrite();
+    return result;
   }
 
   /**

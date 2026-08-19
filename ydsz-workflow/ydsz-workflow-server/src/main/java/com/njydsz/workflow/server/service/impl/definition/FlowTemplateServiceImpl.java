@@ -105,7 +105,6 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class FlowTemplateServiceImpl implements FlowTemplateService {
 
   /** 流程模板 Mapper，负责 ydsz_flow_template 表的增删改查 */
