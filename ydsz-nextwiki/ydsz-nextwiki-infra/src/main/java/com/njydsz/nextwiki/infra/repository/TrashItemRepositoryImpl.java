@@ -72,18 +72,18 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
 
   @Override
   public Optional<TrashItemVO> findByFileNodeId(String fileNodeId) {
-    return Optional.ofNullable(trashItemMapper.selectByFileNodeId(fileNodeId))
+    return Optional.ofNullable(trashItemMapper.findByFileNodeId(fileNodeId))
         .map(converter::entityToVO);
   }
 
   @Override
   public List<TrashItemVO> findActiveTrash(String userId) {
-    return converter.trashItemListToVO(trashItemMapper.selectActiveTrash(userId));
+    return converter.trashItemListToVO(trashItemMapper.findActiveTrash(userId));
   }
 
   @Override
   public List<TrashItemVO> findExpiredItems(int limit) {
-    return converter.trashItemListToVO(trashItemMapper.selectExpiredItems(limit));
+    return converter.trashItemListToVO(trashItemMapper.findExpiredItems(limit));
   }
 
   @Override

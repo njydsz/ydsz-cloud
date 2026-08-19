@@ -105,7 +105,7 @@ public class TenantPlanServiceImpl implements TenantPlanService {
   @Transactional(rollbackFor = Exception.class)
   public String save(TenantPlanVO vo) {
     TenantPlanQuery checkQuery = new TenantPlanQuery();
-    checkQuery.setPlanName(vo.getPlanCode());
+    checkQuery.setPlanCode(vo.getPlanCode());
     if (tenantPlanRepository.countByCondition(checkQuery) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_CODE_DUPLICATE)
           .data("planCode", vo.getPlanCode());
@@ -128,7 +128,7 @@ public class TenantPlanServiceImpl implements TenantPlanService {
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(TenantPlanVO vo) {
     TenantPlanQuery checkQuery = new TenantPlanQuery();
-    checkQuery.setPlanName(vo.getPlanCode());
+    checkQuery.setPlanCode(vo.getPlanCode());
     if (tenantPlanRepository.countByCondition(checkQuery) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_CODE_DUPLICATE)
           .data("planCode", vo.getPlanCode());

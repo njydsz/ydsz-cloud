@@ -604,12 +604,23 @@ public class RuleAdminService {
    * <p>当 {@code dryRunEnabled=false} 时抛出 {@link IllegalStateException}， 消费
    * ydsz.literule.dryRunEnabled 配置开关。
    *
+   * <p>支持短路返回优化（P2-5）：
+   *
+   * <ul>
+   *   <li>当 {@code limit != null} 且 {@code minSeverity != null} 时，在按优先级遍历过程中， 已命中（triggered=true）且严重度不低于
+   *       {@code minSeverity} 的结果数量达到 {@code limit} 时立即停止评估—— 后续低优先级规则无需评估，节省计算资源
+   *   <li>仅对全规则仿真（{@code ruleCode == null}）生效，单条规则仿真忽略此参数
+   * </ul>
+   *
    * @param ruleCode 规则编码（null 表示仿真全部规则）
    * @param facts 事实数据
+   * @param limit 返回结果数量上限（可为 null，表示不限制）。需配合 {@code minSeverity} 使用
+   * @param minSeverity 最低严重度阈值（可为 null，表示不限制）。需配合 {@code limit} 使用
    * @return 仿真结果列表
    * @throws IllegalStateException dry-run 功能被禁用
    */
-  public List<RuleResult> dryRun(String ruleCode, Map<String, Object> facts) {
+  public List<RuleResult> dryRun(
+      String ruleCode, Map<String, Object> facts, Integer limit, RuleSeverity minSeverity) {
     if (!dryRunEnabled) {
       throw new IllegalStateException("Dry-run 功能已被禁用（ydsz.literule.dryRunEnabled=false）");
     }
@@ -626,8 +637,19 @@ public class RuleAdminService {
       return List.of(result);
     }
 
-    // 全部规则仿真
-    return ruleEngine.dryRun(context);
+    // 全部规则仿真（支持短路返回优化）
+    return ruleEngine.dryRun(context, limit, minSeverity);
+  }
+
+  /**
+   * Dry-run 仿真（简化版本，不支持短路参数）
+   *
+   * @param ruleCode 规则编码（null 表示仿真全部规则）
+   * @param facts 事实数据
+   * @return 仿真结果列表
+   */
+  public List<RuleResult> dryRun(String ruleCode, Map<String, Object> facts) {
+    return dryRun(ruleCode, facts, null, null);
   }
 
   /**

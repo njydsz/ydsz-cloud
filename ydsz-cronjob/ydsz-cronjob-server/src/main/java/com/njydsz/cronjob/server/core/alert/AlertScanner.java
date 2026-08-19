@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
+import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.domain.repository.JobAlertRuleRepository;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -108,12 +108,12 @@ public class AlertScanner {
    * <p>失败率 = 失败次数 / 总次数 * 100（百分比，与 threshold 单位一致）。 失败率 &gt;= threshold 时触发告警。
    */
   void scanFailRateRules() {
-    List<JobAlertRule> rules = jobAlertRuleRepository.selectByAlertType(AlertType.FAIL_RATE.name());
+    List<JobAlertRuleVO> rules = jobAlertRuleRepository.findByAlertType(AlertType.FAIL_RATE.name());
     if (rules.isEmpty()) {
       return;
     }
     log.debug("[AlertScanner] 扫描 FAIL_RATE 规则: count={}", rules.size());
-    for (JobAlertRule rule : rules) {
+    for (JobAlertRuleVO rule : rules) {
       try {
         evaluateFailRateRule(rule);
       } catch (Exception e) {
@@ -133,12 +133,12 @@ public class AlertScanner {
    * <p>P95 耗时仅统计 {@code status='SUCCESS'} 的执行（避免失败/超时任务拉高 P95）。 P95 &gt;= threshold（毫秒）时触发告警。
    */
   void scanDurationP95Rules() {
-    List<JobAlertRule> rules = jobAlertRuleRepository.selectByAlertType(AlertType.DURATION_P95.name());
+    List<JobAlertRuleVO> rules = jobAlertRuleRepository.findByAlertType(AlertType.DURATION_P95.name());
     if (rules.isEmpty()) {
       return;
     }
     log.debug("[AlertScanner] 扫描 DURATION_P95 规则: count={}", rules.size());
-    for (JobAlertRule rule : rules) {
+    for (JobAlertRuleVO rule : rules) {
       try {
         evaluateDurationP95Rule(rule);
       } catch (Exception e) {

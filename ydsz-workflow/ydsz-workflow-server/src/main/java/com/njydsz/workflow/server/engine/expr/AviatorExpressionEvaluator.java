@@ -3,19 +3,18 @@ package com.njydsz.workflow.server.engine.expr;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.googlecode.aviator.AviatorEvaluator;
 import com.googlecode.aviator.AviatorEvaluatorInstance;
 import com.googlecode.aviator.Feature;
 import com.googlecode.aviator.Options;
-import com.googlecode.aviator.exception.ExpressionSyntaxErrorException;
-import com.googlecode.aviator.exception.ExpressionTooLongException;
-import com.googlecode.aviator.runtime.function.LambdaFunction;
-import com.googlecode.aviator.runtime.type.AviatorFunction;
+import com.googlecode.aviator.Expression;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.exception.SysException;
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * 工作流内置 Aviator 表达式求值器（安全加固版）。
@@ -28,8 +27,8 @@ import com.njydsz.common.exception.SysException;
  * <ul>
  *   <li><b>禁用反射特性</b> — 通过自定义 {@link AviatorEvaluatorInstance} 禁用 {@link Feature#NewInstance} 与
  *       {@link Feature#Module}，防止恶意表达式通过反射调用 {@code Runtime.getRuntime().exec(...)}
- *   <li><b>表达式长度限制</b> — 单表达式上限 4KB（通过 {@link Options#MAX_LENGTH} 或自定义校验），防止超长表达式耗尽 CPU
- *   <li><b>缓存编译结果</b> — 使用 {@link ConcurrentHashMap} 缓存编译后的表达式，避免重复编译开销
+ *   <li><b>表达式长度限制</b> — 单表达式上限 4KB（通过 {@link Options#MAX_LENGTH}），防止超长表达式耗尽 CPU
+ *   <li><b>缓存编译结果</b> — 使用 {@link ConcurrentHashMap} 缓存编译后的 {@link Expression}，避免重复编译开销
  * </ul>
  *
  * <p>业务系统如需更强大的规则引擎能力（如规则链、决策表），可自行实现 {@link ExpressionEvaluator} 并注册为 Bean 覆盖本实现。
@@ -39,7 +38,7 @@ import com.njydsz.common.exception.SysException;
  */
 @Slf4j
 @Component
-@ConditionalOnClass(AviatorEvaluatorInstance.class)
+@ConditionalOnClass(AviatorEvaluator.class)
 @ConditionalOnMissingBean(ExpressionEvaluator.class)
 public class AviatorExpressionEvaluator implements ExpressionEvaluator {
 
@@ -54,11 +53,11 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
   private final AviatorEvaluatorInstance instance;
 
   /**
-   * 表达式编译缓存（表达式文本 → 编译后的 LambdaFunction）。
+   * 表达式编译缓存（表达式文本 → 编译后的 Expression）。
    *
    * <p>缓存编译结果避免重复编译，同时利用 ConcurrentHashMap 的线程安全特性。
    */
-  private final ConcurrentHashMap<String, LambdaFunction> compiledCache = new ConcurrentHashMap<>(128);
+  private final ConcurrentHashMap<String, Expression> compiledCache = new ConcurrentHashMap<>(128);
 
   /**
    * 构造安全加固的 Aviator 求值器实例。
@@ -66,7 +65,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
    * <p>禁用反射特性（NewInstance/Module），确保表达式无法访问任意 Java 类。
    */
   public AviatorExpressionEvaluator() {
-    this.instance = AviatorEvaluatorInstance.newInstance();
+    this.instance = AviatorEvaluator.newInstance();
     // 安全加固：禁用反射特性，防止表达式注入调用任意 Java 方法
     this.instance.disableFeature(Feature.NewInstance);
     this.instance.disableFeature(Feature.Module);
@@ -114,7 +113,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
   /**
    * 编译并执行表达式（带缓存）。
    *
-   * <p>先从缓存获取编译结果，未命中时编译并缓存。使用 {@link LambdaFunction#call(Map)} 执行。
+   * <p>先从缓存获取编译结果，未命中时编译并缓存。使用 {@link Expression#execute(Map)} 执行。
    *
    * @param expression 表达式文本
    * @param variables 变量 Map
@@ -123,38 +122,35 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
    */
   private Object execute(String expression, Map<String, Object> variables) {
     try {
-      LambdaFunction compiled = compiledCache.computeIfAbsent(expression, expr -> {
+      Expression compiled = compiledCache.computeIfAbsent(expression, expr -> {
         try {
-          // 先尝试编译为 LambdaFunction（性能优于 execute）
-          AviatorFunction func = instance.compile(expr);
-          if (func instanceof LambdaFunction lambda) {
-            return lambda;
+          // compile(expr, true) 表示缓存编译结果（instance 内部缓存）
+          return instance.compile(expr, true);
+        } catch (Exception e) {
+          // 判断是否为超长表达式异常
+          if (e.getMessage() != null && e.getMessage().contains("too long")) {
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("workflow.expr.too_long")
+                .build();
           }
-          // 非 LambdaFunction 时包装为 LambdaFunction
-          return new LambdaFunction() {
-            @Override
-            public AviatorFunction call(Map<String, Object> env) {
-              return (AviatorFunction) instance.execute(expr, env);
-            }
-
-            @Override
-            public String getName() {
-              return expr;
-            }
-          };
-        } catch (ExpressionTooLongException e) {
-          throw new SysException("workflow.expr.too_long", "表达式超长（上限" + MAX_EXPRESSION_LENGTH + "字节）");
-        } catch (ExpressionSyntaxErrorException e) {
-          throw new SysException("workflow.expr.syntax_error", "表达式语法错误: " + e.getMessage());
+          throw SysException.builder()
+              .resultCode(BaseResultCode.BAD_REQUEST)
+              .message("workflow.expr.syntax_error")
+              .params(e.getMessage())
+              .build();
         }
       });
-      @SuppressWarnings("unchecked")
       Map<String, Object> env = variables != null ? variables : Map.of();
-      return compiled.call(env);
+      return compiled.execute(env);
     } catch (SysException e) {
       throw e;
     } catch (Exception e) {
-      throw new SysException("workflow.expr.eval_failed", "表达式执行失败: " + e.getMessage());
+      throw SysException.builder()
+          .resultCode(BaseResultCode.INTERNAL_ERROR)
+          .message("workflow.expr.eval_failed")
+          .params(e.getMessage())
+          .build();
     }
   }
 }

@@ -1,9 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
@@ -29,11 +27,9 @@ import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
 import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.core.MessageSendDTO;
-import com.njydsz.message.domain.dto.core.RichMediaContent;
 import com.njydsz.message.domain.entity.config.MsgTrace;
 import com.njydsz.message.domain.entity.batch.MsgBatch;
 import com.njydsz.message.domain.entity.core.MsgLog;
-import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.event.OutboxEvent;
@@ -41,20 +37,12 @@ import com.njydsz.message.domain.repository.OutboxEventRepository;
 import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
-import com.njydsz.message.server.config.RetryStrategyResolver;
-import com.njydsz.message.server.filter.SensitiveWordFilter;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.producer.MessageQueueOperations;
 import com.njydsz.message.server.service.chain.PipelineTemplate;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendPipelineFacade;
-import com.njydsz.message.server.service.config.PreferenceService;
-import com.njydsz.message.server.service.config.RouteRuleService;
-import com.njydsz.message.server.service.config.SubscriptionService;
-import com.njydsz.message.server.service.config.UserChannelBindingService;
-import com.njydsz.message.server.service.config.VariableSourceResolver;
 import com.njydsz.message.server.service.core.DeliveryTimeOptimizer;
-import com.njydsz.message.server.service.core.GuardService;
 import com.njydsz.message.server.service.core.MessageQueryService;
 import com.njydsz.message.server.service.core.MessageRenderService;
 import com.njydsz.message.server.service.core.MessageRenderService.RenderedContent;
@@ -63,10 +51,6 @@ import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.core.MessageTraceService;
 import com.njydsz.message.server.service.batch.BatchService;
 import com.njydsz.message.server.service.impl.AggregatePersistenceService;
-import com.njydsz.message.server.service.template.TemplateService;
-import com.njydsz.message.server.template.RichMediaRenderer;
-import com.njydsz.message.server.template.TemplateEngine;
-import com.njydsz.message.server.template.TemplateVariableValidator;
 
 /**
  * 消息服务实现（核心）。
@@ -85,26 +69,14 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
 @RequiredArgsConstructor
 public class MessageServiceImpl implements MessageService {
 
-  /** 通道路由器（负责通道选择与消息分发） */
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
+  /** 通道路由器（负责通道选择与消息分发） */
   private final ChannelRouter channelRouter;
-
-  /** 模板引擎（变量占位符渲染） */
-  private final TemplateEngine templateEngine;
-
-  /** 模板管理服务（加载/校验模板） */
-  private final TemplateService templateService;
 
   /** 消息日志 Repository（落库 / 查询） */
   private final MsgLogRepository msgLogRepository;
-
-  /** 路由规则服务（通道动态路由） */
-  private final RouteRuleService routeRuleService;
-
-  /** 消息防护服务（限流 + 去重） */
-  private final GuardService guardService;
 
   /** 消息模块配置属性 */
   private final MessageProperties messageProperties;
@@ -112,35 +84,11 @@ public class MessageServiceImpl implements MessageService {
   /** 消息指标采集（Prometheus） */
   private final MessageMetrics messageMetrics;
 
-  /** 订阅管理服务（退订校验） */
-  private final SubscriptionService subscriptionService;
-
-  /** 用户偏好服务（DND / locale / 聚合） */
-  private final PreferenceService preferenceService;
-
-  /** 敏感词过滤器 */
-  private final SensitiveWordFilter sensitiveWordFilter;
-
-  /** 重试策略解析器（按通道解析最大重试次数与退避间隔） */
-  private final RetryStrategyResolver retryStrategyResolver;
-
   /** 消息全链路追踪服务 */
   private final MessageTraceService messageTraceService;
 
   /** 智能推送时间优化器（用户活跃度画像） */
   private final DeliveryTimeOptimizer deliveryTimeOptimizer;
-
-  /** 富媒体内容渲染器（HTML / Markdown / 纯文本） */
-  private final RichMediaRenderer richMediaRenderer;
-
-  /** P0-1: 用户通道绑定服务（userId → 通道联系方式解析） */
-  private final UserChannelBindingService userChannelBindingService;
-
-  /** P0-3: 模板变量校验器 */
-  private final TemplateVariableValidator templateVariableValidator;
-
-  /** P0-4: 变量数据源解析器 */
-  private final VariableSourceResolver variableSourceResolver;
 
   /** P2-3: 消息队列操作（可选,未配置 MQ 时为 null） */
   private final ObjectProvider<MessageQueueOperations> mqProducerProvider;

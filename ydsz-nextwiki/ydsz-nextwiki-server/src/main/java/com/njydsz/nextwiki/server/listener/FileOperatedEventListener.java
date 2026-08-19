@@ -8,7 +8,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.json.JsonUtils;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.core.NotifyService;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
@@ -109,7 +109,7 @@ public class FileOperatedEventListener {
         event.getExtra(),
         String.valueOf(snowflakeIdGenerator.nextId()));
     // 使用 JSON 序列化，自动转义特殊字符
-    log.info("{}", JsonUtils.toJson(auditEvent));
+    log.info("{}", YdszJson.toJson(auditEvent));
   }
 
   /**

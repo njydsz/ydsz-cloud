@@ -66,4 +66,17 @@
           AND revision = #{trashItem.revision}
     </update>
 
+    <insert id="insertBatch">
+        INSERT INTO nw_trash_item
+            (id, file_node_id, original_name, original_path, original_parent_id, node_type, size,
+             deleted_time, purge_time, status, created_by, created_at, updated_by, updated_at,
+             revision, deleted, tenant_id)
+        VALUES
+        <foreach collection="items" item="item" separator=",">
+            (#{item.id}, #{item.fileNodeId}, #{item.originalName}, #{item.originalPath}, #{item.originalParentId},
+             #{item.nodeType}, #{item.size}, #{item.deletedTime}, #{item.purgeTime}, #{item.status},
+             #{item.createdBy}, NOW(), #{item.updatedBy}, NOW(), 0, 0, #{item.tenantId})
+        </foreach>
+    </insert>
+
 </mapper>

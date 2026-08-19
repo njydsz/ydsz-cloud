@@ -169,9 +169,9 @@ public class AlertTrigger {
     if (context.jobId() != null) {
       return getCachedOrLoad(
           "job:" + context.jobId(),
-          () -> jobAlertRuleRepository.selectByJobIdOrGlobal(context.jobId()));
+          () -> jobAlertRuleRepository.findByJobIdOrGlobal(context.jobId()));
     }
-    return getCachedOrLoad("global", jobAlertRuleRepository::selectAllEnabled);
+    return getCachedOrLoad("global", jobAlertRuleRepository::findAllEnabled);
   }
 
   /**

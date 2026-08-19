@@ -33,11 +33,11 @@ import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
+import com.njydsz.userinfo.server.oauth2.OAuthCodeContext;
 
 /**
  * OAuth2 授权码模式 Controller
@@ -248,24 +248,27 @@ public class OAuth2Controller {
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_SCOPE_INVALID);
     }
 
-    // 5. 使用 YdszJson 序列化授权码上下文（含 tenantId + PKCE + scope），Redis 存储 5 分钟
+    // 5. 构建类型安全的授权码上下文（P1-5：Map→Record 重构，消除字符串键硬编码）
     String code = generateAuthorizationCode();
-    Map<String, String> contextMap = new HashMap<>();
-    contextMap.put("clientId", clientId);
-    contextMap.put("userId", userInfo.getUserId());
-    contextMap.put("username", userInfo.getUsername());
-    contextMap.put("tenantId", userInfo.getTenantId() != null ? userInfo.getTenantId() : "1");
-    contextMap.put("redirectUri", redirectUri);
-    contextMap.put("scope", scope != null ? scope : "");
-    // PKCE 支持：存储 code_challenge 和 code_challenge_method
-    if (codeChallenge != null && !codeChallenge.isBlank()) {
-      contextMap.put("codeChallenge", codeChallenge);
-      contextMap.put(
-          "codeChallengeMethod",
-          codeChallengeMethod != null ? codeChallengeMethod : PKCE_METHOD_S256);
-    }
-    String context = YdszJson.toJson(contextMap);
-    redisStringOps.set(CODE_KEY_PREFIX + code, context, CODE_TTL_SECONDS);
+    String effectiveTenantId = userInfo.getTenantId() != null ? userInfo.getTenantId() : "1";
+    String effectiveScope = scope != null ? scope : "";
+    String codeChallengeMethodResolved =
+        (codeChallenge != null && !codeChallenge.isBlank())
+            ? (codeChallengeMethod != null ? codeChallengeMethod : PKCE_METHOD_S256)
+            : null;
+
+    OAuthCodeContext context = OAuthCodeContext.builder()
+        .clientId(clientId)
+        .userId(userInfo.getUserId())
+        .username(userInfo.getUsername())
+        .tenantId(effectiveTenantId)
+        .redirectUri(redirectUri)
+        .scope(effectiveScope)
+        .codeChallenge(codeChallenge)
+        .codeChallengeMethod(codeChallengeMethodResolved)
+        .build();
+
+    redisStringOps.set(CODE_KEY_PREFIX + code, context.toJson(), CODE_TTL_SECONDS);
     log.info(
         "OAuth2 authorize: clientId={}, userId={}, code={}, pkce={}",
         clientId,

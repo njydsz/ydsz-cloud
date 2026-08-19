@@ -37,12 +37,13 @@ ydsz:
         thread-name-prefix: flow-queue-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 10
-  # P1-1: 分布式事务配置（TCC 三方审批回调验证场景启用，LOCAL 模式降级）
+  # P1-1: 分布式事务配置（当前未启用，TC 地址未配置时禁用，避免运行时降级 LOCAL 模式的反模式）
+  # 如需启用，请配置 seata.enabled=true 并提供完整的 TC 客户端配置（vgroup-mapping / grouplist）
   seata:
-    enabled: true
+    enabled: false
     default-type: LOCAL
-    tcc-enabled: true
-    saga-enabled: true
+    tcc-enabled: false
+    saga-enabled: false
     seata-at-enabled: false
     tcc-log-store: memory
   # P0-1: YdszJson ASM 预热（高频序列化 Bean，消除首次请求延迟尖峰）

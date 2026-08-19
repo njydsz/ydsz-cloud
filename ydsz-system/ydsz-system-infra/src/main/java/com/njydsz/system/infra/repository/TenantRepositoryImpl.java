@@ -68,6 +68,9 @@ public class TenantRepositoryImpl implements TenantRepository {
     if (query.getTenantName() != null && !query.getTenantName().isBlank()) {
       wrapper.like(Tenant::getTenantName, query.getTenantName());
     }
+    if (query.getTenantCode() != null && !query.getTenantCode().isBlank()) {
+      wrapper.eq(Tenant::getTenantCode, query.getTenantCode());
+    }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
       wrapper.eq(Tenant::getStatus, query.getStatus());
     }

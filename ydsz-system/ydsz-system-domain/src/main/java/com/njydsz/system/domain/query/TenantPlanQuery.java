@@ -37,6 +37,9 @@ public class TenantPlanQuery extends PageQuery {
   @Schema(description = "套餐名称（模糊匹配）")
   private String planName;
 
+  @Schema(description = "套餐编码（精确匹配）")
+  private String planCode;
+
   @Schema(description = "启用状态：ENABLED/DISABLED")
   private String status;
 }

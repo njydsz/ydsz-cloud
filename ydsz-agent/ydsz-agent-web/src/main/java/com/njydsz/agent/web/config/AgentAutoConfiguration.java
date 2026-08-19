@@ -51,10 +51,12 @@ import com.njydsz.agent.infra.tool.ToolAnnotationScanner;
 import com.njydsz.agent.infra.trace.InMemoryTraceRecorder;
 import com.njydsz.agent.infra.trace.PgTraceRecorder;
 import com.njydsz.agent.server.agent.AgentFactory;
+import com.njydsz.agent.server.agent.DagDslParser;
 import com.njydsz.agent.server.agent.DagOrchestrationExecutor;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.server.chat.GuardrailService;
+import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.health.AgentHealthIndicator;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
@@ -479,11 +481,13 @@ public class AgentAutoConfiguration {
       LlmClient llmClient,
       AgentProperties properties,
       AgentFactory agentFactory,
+      DagDslParser dagDslParser,
       ApplicationContext applicationContext) {
     ExecutorService dagExecutor =
         applicationContext.getBean("agentDagExecutor", ExecutorService.class);
     log.info("[Agent] DagOrchestrationExecutor 使用统一线程池 agentDagExecutor");
-    return new DagOrchestrationExecutor(llmClient, properties, agentFactory, dagExecutor);
+    return new DagOrchestrationExecutor(
+        llmClient, properties, agentFactory, dagDslParser, dagExecutor);
   }
 
   /**

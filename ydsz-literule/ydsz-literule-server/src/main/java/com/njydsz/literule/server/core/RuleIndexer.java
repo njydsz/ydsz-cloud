@@ -82,6 +82,14 @@ public class RuleIndexer {
    */
   private final Map<String, Set<String>> ruleToFields = new ConcurrentHashMap<>();
 
+  /**
+   * α 节点共享索引（P2 轻量 RETE α 网络）：字段|操作符 -> 规则编码集合
+   *
+   * <p>对标 Drools RETE 的 α 网络：同一字段的同一比较操作（如 {@code amount|>}）共享一个 α 节点，
+   * 查询时按 "字段|操作符" 直接定位引用该模式的规则集合， 减少逐条表达式匹配开销。
+   */
+  private final Map<String, Set<String>> fieldOpIndex = new ConcurrentHashMap<>();
+
   /** 全局规则列表（兼容无场景过滤的场景） */
   private volatile List<Rule> allRules = Collections.emptyList();
 
@@ -153,6 +161,10 @@ public class RuleIndexer {
   private static final Pattern FIELD_PATTERN =
       Pattern.compile("([a-zA-Z_\\u4e00-\\u9fa5][a-zA-Z0-9_\\u4e00-\\u9fa5]*)");
 
+  /** 比较表达式模式：var OP value（P2 α 节点提取用） */
+  private static final Pattern COMPARISON_PATTERN =
+      Pattern.compile("^([a-zA-Z_]\\w*)\\s*(>=|<=|>|<|==|!=)\\s*(.+)$");
+
   /**
    * 重建索引
    *
@@ -168,6 +180,7 @@ public class RuleIndexer {
     mutexGroupIndex.clear();
     fieldToRules.clear();
     ruleToFields.clear();
+    fieldOpIndex.clear();
 
     allRules = new ArrayList<>(rules);
     indexEnabled = rules.size() >= INDEX_THRESHOLD;
@@ -183,13 +196,14 @@ public class RuleIndexer {
     }
 
     log.info(
-        "[LiteRule-Indexer] 索引重建完成: totalRules={}, tenants={}, envs={}, scopes={}, mutexGroups={}, fieldIndexSize={}",
+        "[LiteRule-Indexer] 索引重建完成: totalRules={}, tenants={}, envs={}, scopes={}, mutexGroups={}, fieldIndexSize={}, alphaNodes={}",
         rules.size(),
         tenantIndex.size(),
         environmentIndex.size(),
         scopeIndex.size(),
         mutexGroupIndex.size(),
-        fieldToRules.size());
+        fieldToRules.size(),
+        fieldOpIndex.size());
   }
 
   /**
@@ -228,6 +242,12 @@ public class RuleIndexer {
         }
       }
     }
+    // 同步清除 α 节点共享索引（P2）
+    fieldOpIndex.entrySet().removeIf(entry -> {
+      Set<String> codes = entry.getValue();
+      codes.remove(ruleCode);
+      return codes.isEmpty();
+    });
   }
 
   /**
@@ -524,6 +544,79 @@ public class RuleIndexer {
         fieldToRules.computeIfAbsent(field, k -> ConcurrentHashMap.newKeySet()).add(ruleCode);
       }
     }
+    // α 节点共享索引（P2）：字段|操作符 -> ruleCodes
+    if (rule.getCode() != null) {
+      Map<String, Set<String>> fieldOps = extractFieldOps(rule);
+      for (Map.Entry<String, Set<String>> entry : fieldOps.entrySet()) {
+        String alphaKey = entry.getKey();
+        Set<String> ops = entry.getValue();
+        for (String op : ops) {
+          fieldOpIndex
+              .computeIfAbsent(alphaKey + "|" + op, k -> ConcurrentHashMap.newKeySet())
+              .add(rule.getCode());
+        }
+      }
+    }
+  }
+
+  /**
+   * 按 "字段|操作符" 查询引用该比较模式的规则编码集合（P2 α 节点共享索引）
+   *
+   * @param field 字段名（如 amount）
+   * @param operator 比较操作符（> / >= / < / <= / == / !=）
+   * @return 规则编码集合；无匹配返回空集合
+   */
+  public Set<String> findRuleCodesByFieldOp(String field, String operator) {
+    if (field == null || operator == null) {
+      return Collections.emptySet();
+    }
+    Set<String> codes = fieldOpIndex.get(field + "|" + operator);
+    return codes != null ? Collections.unmodifiableSet(codes) : Collections.emptySet();
+  }
+
+  /**
+   * 获取 α 节点数量（监控用）
+   *
+   * @return α 节点数
+   */
+  public int getAlphaNodeCount() {
+    return fieldOpIndex.size();
+  }
+
+  /**
+   * 从条件表达式提取 "字段|操作符" 比较模式（P2 α 网络）
+   *
+   * <p>提取形如 {@code var OP value} 的比较对，key=字段名，value=操作符集合。
+   * 仅支持简单比较表达式；复合/复杂表达式不提取（避免误匹配）。
+   *
+   * @param rule 规则
+   * @return 字段 -> 操作符集合；无法提取返回空 Map
+   */
+  Map<String, Set<String>> extractFieldOps(Rule rule) {
+    if (rule == null) {
+      return Collections.emptyMap();
+    }
+    RuleDefinition def = rule.getRuleDefinition();
+    if (def == null) {
+      return Collections.emptyMap();
+    }
+    String expr = def.getConditionExpression();
+    if (expr == null || expr.isBlank()) {
+      return Collections.emptyMap();
+    }
+    Map<String, Set<String>> result = new java.util.HashMap<>();
+    // 匹配 var OP value 或 var OP value 的子句（AND 拆分后）
+    for (String clause : expr.split("&&|\\|\\|")) {
+      Matcher m = COMPARISON_PATTERN.matcher(clause.trim());
+      if (m.matches()) {
+        String var = m.group(1);
+        String op = m.group(2);
+        if (!EXPR_KEYWORDS.contains(var) && !var.matches("\\d+")) {
+          result.computeIfAbsent(var, k -> new HashSet<>()).add(op);
+        }
+      }
+    }
+    return result;
   }
 
   /**

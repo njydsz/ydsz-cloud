@@ -555,6 +555,9 @@ public class UserAccountServiceImpl implements UserAccountService {
    *
    * <p>P0-9: 批量禁用改为单条 {@code UPDATE ... SET status = '0' WHERE id IN (...)}，
    * 替代逐个 {@code findById} + {@code update} 的 N+1 循环。
+   *
+   * <p>P1-5: 会话驱逐使用 {@link AuthService#evictAllSessionsBatch(Collection)} 批量处理，
+   * 避免循环调用 {@code evictAllSessions} 导致 N+1 Redis 调用。
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -574,9 +577,9 @@ public class UserAccountServiceImpl implements UserAccountService {
         vo.setStatus(0);
         indexUpsert(vo);
         eventPublisher.publishUserUpdated(vo);
-        // 禁用时驱逐全部会话
-        authService.evictAllSessions(vo.getId());
       }
+      // P1-5: 批量驱逐全部会话（替代循环单个驱逐）
+      authService.evictAllSessionsBatch(distinctIds);
     }
     return affected;
   }

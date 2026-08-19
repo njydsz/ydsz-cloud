@@ -18,14 +18,16 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.repository.FlowEventSubscriptionRepository;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowEventSubscriptionMapper;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
@@ -99,28 +101,26 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
 @RequiredArgsConstructor
 public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionService {
 
-  /** 事件订阅 Mapper，管理 BPMN 事件捕获节点订阅记录 */
+  /** 事件订阅 Mapper，管理 BPMN 事件捕获节点订阅记录（复杂查询保留） */
   private final FlowEventSubscriptionMapper subscriptionMapper;
 
-  /**
-   * 事件订阅仓储（domain 层契约）。
-   *
-   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #subscriptionMapper} 访问数据，
-   * 因为部分 Mapper 方法（如 {@code selectWaitingByEvent} 带 tenant 参数、{@code cancelByTask}、
-   * {@code cancelByInstance}、{@code markTriggered} 带额外参数）在仓储中暂无等价签名，
-   * 且仓储返回 {@code FlowEventSubscriptionVO} 与 Service 使用的 {@code FlowEventSubscriptionDO} 类型不同。
-   * 后续应在仓储中补齐对应方法并迁移。
-   */
+  /** 事件订阅仓储（domain 层契约），管理事件订阅表 CRUD */
   private final FlowEventSubscriptionRepository subscriptionRepository;
 
-  /** 流程实例 Mapper，查询事件关联的流程实例 */
-  private final FlowInstanceMapper instanceMapper;
+  /** 实体转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
 
-  /** 流程节点 Mapper，查询事件捕获节点配置 */
-  private final FlowNodeMapper nodeMapper;
+  /** 流程实例仓储（domain 层契约），查询事件关联的流程实例 */
+  private final FlowInstanceRepository instanceRepository;
 
-  /** 运行时任务 Mapper，事件触发后创建待办任务 */
+  /** 流程节点仓储（domain 层契约），查询事件捕获节点配置 */
+  private final FlowNodeRepository nodeRepository;
+
+  /** 运行时任务 Mapper（cancelTask 无 Repository 等价方法，保留） */
   private final FlowRunTaskMapper taskMapper;
+
+  /** 运行时任务仓储（domain 层契约），查询待办任务 */
+  private final FlowRunTaskRepository taskRepository;
 
   /** 流程推进引擎，事件触发后推进流程 */
   private final FlowAdvancer advancer;
@@ -135,7 +135,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
           .message("instanceId/node 不能为空")
           .build();
     }
-    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+    FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -167,8 +167,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     subscription.setBoundaryTaskId(boundaryTaskId);
     subscription.setSubscriptionStatus("WAITING");
     subscription.setProviderTraceId(instance.getProviderTraceId());
-    // TODO: 迁移至 subscriptionRepository.save(vo)，需 DO→VO 转换
-    subscriptionMapper.insert(subscription);
+    subscriptionRepository.save(converter.entityToVO(subscription));
 
     log.info(
         "[Flow] 创建事件订阅: subId={} instanceId={} node={} type={} ref={} boundaryTaskId={}",
@@ -194,7 +193,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
 
     List<FlowEventSubscriptionDO> subscriptions =
-        // TODO: 迁移至 subscriptionRepository.findWaitingByEvent(eventType, flowCode)，签名不同
+        // Repository 中 findWaitingByEvent 无 tenantId 参数，签名不同，保留 Mapper 调用
         subscriptionMapper.selectWaitingByEvent(tid, "MESSAGE", messageName);
 
     if (StringUtils.hasText(correlationKey)) {
@@ -236,7 +235,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
 
     List<FlowEventSubscriptionDO> subscriptions =
-        // TODO: 迁移至 subscriptionRepository.findWaitingByEvent(eventType, flowCode)，签名不同
+        // Repository 中 findWaitingByEvent 无 tenantId 参数，签名不同，保留 Mapper 调用
         subscriptionMapper.selectWaitingByEvent(tid, "ERROR", errorCode);
 
     if (instanceId != null) {
@@ -268,7 +267,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     if (boundaryTaskId == null) {
       return 0;
     }
-    // TODO: Repository 中暂无 cancelByTask 方法，需补齐
+    // Repository 中暂无 cancelByTask 方法，需补齐
     return subscriptionMapper.cancelByTask(boundaryTaskId, reason);
   }
 
@@ -277,7 +276,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     if (instanceId == null) {
       return 0;
     }
-    // TODO: Repository 中暂无 cancelByInstance 方法，需补齐
+    // Repository 中暂无 cancelByInstance 方法，需补齐
     return subscriptionMapper.cancelByInstance(instanceId, reason);
   }
 
@@ -314,7 +313,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
   private void triggerSubscription(
       FlowEventSubscriptionDO sub, String payload, String triggerSource) {
     // 1. 标记订阅已触发
-    // TODO: 迁移至 subscriptionRepository.markTriggered(id)，签名不同
+    // Repository 中 markTriggered 签名不同（无 payload/triggerSource/now 参数），保留 Mapper 调用
     subscriptionMapper.markTriggered(sub.getId(), payload, triggerSource, LocalDateTime.now());
 
     // 2. 边界事件：取消关联的 userTask
@@ -323,7 +322,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     }
 
     // 3. 推进流程
-    FlowInstanceDO instance = instanceMapper.selectById(sub.getInstanceId());
+    FlowInstanceDO instance = instanceRepository.findById(sub.getInstanceId()).map(converter::entityToDO).orElse(null);
     if (instance == null) {
       log.warn("[Flow] 订阅触发时实例不存在: subId={} instanceId={}", sub.getId(), sub.getInstanceId());
       return;
@@ -349,7 +348,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     }
 
     // 5. 从事件捕获节点推进流程
-    FlowNodeDO catchNode = nodeMapper.selectByCode(instance.getDefinitionId(), sub.getNodeCode());
+    FlowNodeDO catchNode = nodeRepository.findByCode(instance.getDefinitionId(), sub.getNodeCode()).map(converter::entityToDO).orElse(null);
     if (catchNode == null) {
       log.warn("[Flow] 事件捕获节点不存在: subId={} nodeCode={}", sub.getId(), sub.getNodeCode());
       return;
@@ -386,7 +385,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
   /** 取消边界事件关联的 userTask */
   private void cancelBoundaryTask(String taskId, String errorCode) {
-    FlowRunTaskDO task = taskMapper.selectById(taskId);
+    FlowRunTaskDO task = taskRepository.findById(taskId).map(converter::entityToDO).orElse(null);
     if (task == null) {
       return;
     }

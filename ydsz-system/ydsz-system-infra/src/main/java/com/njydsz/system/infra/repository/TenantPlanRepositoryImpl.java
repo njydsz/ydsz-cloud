@@ -82,6 +82,9 @@ public class TenantPlanRepositoryImpl implements TenantPlanRepository {
     if (query.getPlanName() != null && !query.getPlanName().isBlank()) {
       wrapper.like(TenantPlan::getPlanName, query.getPlanName());
     }
+    if (query.getPlanCode() != null && !query.getPlanCode().isBlank()) {
+      wrapper.eq(TenantPlan::getPlanCode, query.getPlanCode());
+    }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
       wrapper.eq(TenantPlan::getStatus, query.getStatus());
     }

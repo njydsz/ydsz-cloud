@@ -1,6 +1,7 @@
 package com.njydsz.cronjob.domain.entity.job;
 
 import java.io.Serial;
+import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -75,4 +76,13 @@ public class JobAlertLog extends MpBaseIdEntity<String> {
 
   /** 触发该告警的任务日志 ID（关联 ydsz_job_log.id） */
   private String triggerLogId;
+
+  /** 租户 ID（P0-FIX 补回：与 ydsz_alert_dispatch.tenant_id 列对应） */
+  private String tenantId;
+
+  /** 创建时间（P0-FIX 补回：与 ydsz_alert_dispatch.created_at 列对应，供告警日志分页/清理使用） */
+  private LocalDateTime createdAt;
+
+  /** 逻辑删除标记（P0-FIX 补回：0=正常 / 1=已删除，与 ydsz_alert_dispatch.deleted 列对应） */
+  private Integer deleted;
 }

@@ -186,9 +186,9 @@ public class SseExecutor {
                       "finished",
                       true))
               .name("error"));
-    } catch (IOException e) {
-      // 客户端已断开，忽略
-      LOG.debug("[SseExecutor] 错误事件发送失败（客户端已断开）: {}", e.getMessage());
+    } catch (IOException ex) {
+      // 客户端已断开，忽略（P1 修复：catch 变量与方法参数 e 重名，编译冲突）
+      LOG.debug("[SseExecutor] 错误事件发送失败（客户端已断开）: {}", ex.getMessage());
     }
   }
 

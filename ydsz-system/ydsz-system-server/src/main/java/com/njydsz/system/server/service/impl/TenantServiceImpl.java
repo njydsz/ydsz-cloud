@@ -109,7 +109,7 @@ public class TenantServiceImpl implements TenantService {
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(TenantDTO dto) {
     TenantPageQuery checkQuery = new TenantPageQuery();
-    checkQuery.setTenantName(dto.getTenantCode());
+    checkQuery.setTenantCode(dto.getTenantCode());
     if (tenantRepository.countByCondition(checkQuery) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_CODE_DUPLICATE)
           .data("tenantCode", dto.getTenantCode());
@@ -174,7 +174,7 @@ public class TenantServiceImpl implements TenantService {
   @Override
   public boolean existsByTenantCode(String tenantCode) {
     TenantPageQuery query = new TenantPageQuery();
-    query.setSearchKey(tenantCode);
+    query.setTenantCode(tenantCode);
     return tenantRepository.countByCondition(query) > 0;
   }
 }

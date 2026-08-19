@@ -40,8 +40,6 @@ import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowUserRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowAssigneeResolver;
@@ -168,12 +166,6 @@ public class FlowTaskCreateService {
 
   /** 运行时任务 Mapper（保留：selectList 复杂查询无 Repository 替代） */
   private final FlowRunTaskMapper taskMapper;
-
-  /** 流程实例 Mapper（保留：updateStatus 无 Repository 替代） */
-  private final FlowInstanceMapper instanceMapper;
-
-  /** 流程节点 Mapper（保留：selectByDefinitionId 无 Repository 替代） */
-  private final FlowNodeMapper nodeMapper;
 
   /** MapStruct 转换器（DO/VO/DTO 转换） */
   private final WorkflowConverter converter;
@@ -1075,7 +1067,7 @@ public class FlowTaskCreateService {
   /** 更新实例当前节点 */
   private void updateInstanceNode(FlowInstanceDO instance, List<FlowNodeDO> nextNodes) {
     if (!nextNodes.isEmpty() && nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {
-      instanceMapper.updateStatus(
+      instanceRepository.updateStatus(
           instance.getId(),
           instance.getFlowStatus(),
           nextNodes.get(0).getNodeCode(),
@@ -1190,6 +1182,7 @@ public class FlowTaskCreateService {
       Map<String, Object> variables,
       String currentAssigneeId) {
     try {
+      // 保留 Mapper：复杂 LambdaQueryWrapper 查询（instanceId + status + orderBy + LIMIT），Repository 暂无等价方法
       LambdaQueryWrapper<FlowRunTaskDO> qw = new LambdaQueryWrapper<>();
       qw.eq(FlowRunTaskDO::getInstanceId, instance.getId())
           .eq(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.COMPLETED.name())
@@ -1234,6 +1227,7 @@ public class FlowTaskCreateService {
   private List<String> applyCrossNodeDedup(List<String> userIds, String instanceId, FlowNodeDO node) {
     try {
       // 查询实例下已审批过的人员（COMPLETED 状态）
+      // 保留 Mapper：复杂 LambdaQueryWrapper 查询（instanceId + status），Repository 暂无等价方法
       LambdaQueryWrapper<FlowRunTaskDO> qw = new LambdaQueryWrapper<>();
       qw.eq(FlowRunTaskDO::getInstanceId, instanceId)
           .eq(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.COMPLETED.name());
@@ -1578,7 +1572,7 @@ public class FlowTaskCreateService {
             node.getNodeCode());
       } else {
         support.audit(task, "SERVICE_ERROR", null, null, "服务节点执行失败: " + result.message());
-        instanceMapper.updateStatus(
+        instanceRepository.updateStatus(
             instance.getId(),
             FlowInstanceStatus.ERROR.name(),
             node.getNodeCode(),
@@ -1602,7 +1596,7 @@ public class FlowTaskCreateService {
       return false;
     }
     try {
-      List<FlowNodeDO> allNodes = nodeMapper.selectByDefinitionId(instance.getDefinitionId());
+      List<FlowNodeDO> allNodes = nodeRepository.findByDefinitionId(instance.getDefinitionId()).stream().map(converter::entityToDO).toList();
       if (allNodes == null || allNodes.isEmpty()) {
         return false;
       }

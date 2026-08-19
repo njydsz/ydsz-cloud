@@ -9,9 +9,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
@@ -79,9 +81,26 @@ public class CEPEngine implements Serializable {
   /** 已注册模式数 */
   private final AtomicLong totalHits = new AtomicLong();
 
+  // ===== P3 高吞吐异步化（可选） =====
+
+  /** 是否启用异步投递模式（true：feed 仅入队，由独立消费者线程处理） */
+  private final boolean asyncMode;
+
+  /** 异步事件队列（asyncMode 时启用） */
+  private final ArrayBlockingQueue<CEPEvent> asyncQueue;
+
+  /** 异步消费者线程（asyncMode 时启用） */
+  private final Thread asyncConsumer;
+
+  /** 异步消费者运行标志 */
+  private volatile boolean asyncRunning = true;
+
+  /** 默认异步队列容量 */
+  private static final int DEFAULT_ASYNC_QUEUE_CAPACITY = 10_000;
+
   /** 默认构造（向后兼容，内部创建默认求值器） */
   public CEPEngine() {
-    this(DEFAULT_EVALUATOR);
+    this(DEFAULT_EVALUATOR, false, DEFAULT_ASYNC_QUEUE_CAPACITY);
   }
 
   /**
@@ -93,8 +112,34 @@ public class CEPEngine implements Serializable {
    * @since 1.0.0
    */
   public CEPEngine(ExpressionEngine expressionEvaluator) {
+    this(expressionEvaluator, false, DEFAULT_ASYNC_QUEUE_CAPACITY);
+  }
+
+  /**
+   * 构造 CEP 引擎（P3 高吞吐异步化）
+   *
+   * <p>asyncMode=true 时，{@link #feed(CEPEvent)} 仅将事件写入 {@link ArrayBlockingQueue} 并立即返回， 由内部守护线程异步消费，
+   * 将模式匹配从调用方线程剥离，适合万级 TPS 高吞吐场景； asyncMode=false（默认）保持同步投递，向后兼容。
+   *
+   * @param expressionEvaluator 表达式求值器
+   * @param asyncMode 是否启用异步投递
+   * @param queueCapacity 异步队列容量（&le; 0 时使用默认 10000）
+   */
+  public CEPEngine(ExpressionEngine expressionEvaluator, boolean asyncMode, int queueCapacity) {
     this.expressionEvaluator =
         expressionEvaluator != null ? expressionEvaluator : DEFAULT_EVALUATOR;
+    this.asyncMode = asyncMode;
+    if (asyncMode) {
+      int capacity = queueCapacity > 0 ? queueCapacity : DEFAULT_ASYNC_QUEUE_CAPACITY;
+      this.asyncQueue = new ArrayBlockingQueue<>(capacity);
+      this.asyncConsumer = new Thread(this::drainLoop, "literule-cep-async");
+      this.asyncConsumer.setDaemon(true);
+      this.asyncConsumer.start();
+      log.info("[CEP] 异步投递模式已启用（queueCapacity={}）", capacity);
+    } else {
+      this.asyncQueue = null;
+      this.asyncConsumer = null;
+    }
   }
 
   private static ExpressionEngine createDefaultEvaluator() {
@@ -145,7 +190,21 @@ public class CEPEngine implements Serializable {
 
   /** 投放事件 */
   public void feed(CEPEvent event) {
-    if (event == null) return;
+    if (event == null) {
+      return;
+    }
+    if (asyncMode) {
+      // P3 异步投递：仅入队，由消费者线程处理（队列满时丢弃并告警，避免阻塞调用方）
+      if (!asyncQueue.offer(event)) {
+        log.warn("[CEP] 异步队列已满，丢弃事件: type={}, partition={}", event.getType(), event.getPartitionKey());
+      }
+      return;
+    }
+    feedSync(event);
+  }
+
+  /** 同步处理事件（异步模式消费者线程与同步模式共用） */
+  private void feedSync(CEPEvent event) {
     for (CEPPattern pattern : patterns.values()) {
       try {
         feedToPattern(pattern, event);
@@ -153,6 +212,33 @@ public class CEPEngine implements Serializable {
         log.warn("[CEP] 模式 {} 处理事件异常: {}", pattern.getId(), e.getMessage());
       }
     }
+  }
+
+  /** 异步消费者循环（P3） */
+  private void drainLoop() {
+    while (asyncRunning) {
+      try {
+        CEPEvent event = asyncQueue.poll(1, TimeUnit.SECONDS);
+        if (event != null) {
+          feedSync(event);
+        }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        break;
+      } catch (Exception e) {
+        log.warn("[CEP] 异步消费异常: {}", e.getMessage());
+      }
+    }
+    // 退出前清空剩余事件（优雅关闭，避免事件丢失）
+    CEPEvent remaining;
+    while ((remaining = asyncQueue.poll()) != null) {
+      try {
+        feedSync(remaining);
+      } catch (Exception e) {
+        log.warn("[CEP] 关闭时消费剩余事件异常: {}", e.getMessage());
+      }
+    }
+    log.info("[CEP] 异步消费者已退出，剩余事件已处理");
   }
 
   /** 投放事件到指定模式 */
@@ -619,10 +705,21 @@ public class CEPEngine implements Serializable {
   /**
    * 优雅关闭：清理所有队列和状态（P0-5）
    *
+   * <p>异步模式下先停止消费者线程并处理剩余事件，再清理全部状态。
+   *
    * @since 1.0.0
    */
   @PreDestroy
   public void destroy() {
+    if (asyncMode && asyncConsumer != null) {
+      asyncRunning = false;
+      asyncConsumer.interrupt();
+      try {
+        asyncConsumer.join(5_000);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+    }
     clearAll();
     log.info("[CEP] 引擎已关闭，所有队列和状态已清理");
   }

@@ -39,6 +39,9 @@ public class TenantPageQuery extends PageQuery {
   @Schema(description = "租户名称（模糊匹配）")
   private String tenantName;
 
+  @Schema(description = "租户编码（精确匹配）")
+  private String tenantCode;
+
   @Schema(description = "启用状态：ENABLED/DISABLED")
   private String status;
 }

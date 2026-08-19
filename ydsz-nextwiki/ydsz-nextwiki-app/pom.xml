@@ -17,6 +17,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-app</artifactId>
         </dependency>
+        <!-- HealthIndicator 依赖（Spring Boot 4 将 health 拆分至 spring-boot-health，构建修复） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-nextwiki-api</artifactId>

@@ -64,7 +64,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
   @Override
   public Optional<FileVersionVO> findByFileNodeIdAndVersion(FileVersionQuery query) {
     return Optional.ofNullable(
-            fileVersionMapper.selectByFileNodeIdAndVersion(
+            fileVersionMapper.selectByVersion(
                 query.getFileNodeId(), query.getVersionNumber()))
         .map(converter::entityToVO);
   }

@@ -49,7 +49,8 @@ public class AppInfoRepositoryImpl implements AppInfoRepository {
 
   @Override
   public boolean existsByAppKey(String appKey) {
-    Long count = appInfoMapper.selectCount(new QueryWrapper<AppInfo>().eq("app_key", appKey));
+    Long count = appInfoMapper.selectCount(
+        new QueryWrapper<AppInfo>().eq("app_key", appKey).eq("deleted", 0));
     return count != null && count > 0;
   }
 

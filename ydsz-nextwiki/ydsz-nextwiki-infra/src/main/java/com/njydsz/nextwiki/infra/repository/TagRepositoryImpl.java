@@ -38,7 +38,6 @@ public class TagRepositoryImpl implements TagRepository {
 
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final TagMapper tagMapper;
-  private final FileNodeMapper fileNodeMapper;
   private final NextwikiConverter converter;
 
   @Override

@@ -16,26 +16,27 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
  *
  * <p>对标钉钉/飞书审批的敏感数据自动脱敏能力，在审计日志写入、通知内容组装、 评论持久化等场景统一调用，防止手机号、身份证号、银行卡号等 PII 数据明文暴露。
  *
- * <h3>脱敏策略（P1-3 优化后）</h3>
+ * <h3>脱敏策略（双层防护）</h3>
  *
  * <ul>
- *   <li><b>文本级脱敏</b> — 委托 {@link SensitiveUtil#scanAndMask(String)} 统一扫描+脱敏
- *   <li><b>自定义字段</b> — 通过 {@link #maskFields} 对 Map 中指定 key 的值整体脱敏
+ *   <li><b>文本级脱敏</b> — 委托 {@link SensitiveUtil#scanAndMask(String)} 统一扫描+脱敏，使用 common-safe 维护的
+ *       PII 扫描正则库（手机号/身份证/银行卡/邮箱），确保与 {@code @SensitiveData} 注解结果一致
+ *   <li><b>字段名匹配</b> — 本类维护 {@link #SENSITIVE_KEY_PATTERNS}（单词边界正则），用于识别 Map 中哪些 key 代表敏感字段
+ *       （如 {@code phone}、{@code idCardNo}、{@code emailAddress}），与文本级 PII 扫描正则职责不同：前者匹配字段名，后者匹配文本内容
  * </ul>
  *
- * <p><b>P1-3 重构说明：</b>
+ * <p><b>设计说明：</b>
  *
  * <ul>
- *   <li>原实现中 4 个 PII 正则（PHONE/ID_CARD/BANK_CARD/EMAIL）在 common-safe、workflow、agent 三处重复定义，现统一为
- *       {@link SensitiveUtil} 的 {@code PII_SCAN_PATTERNS} 单一来源
- *   <li>脱敏算法同样委托 {@link SensitiveUtil}，确保与 {@code @SensitiveData} 注解结果一致
- *   <li>升级 PII 类型（如手机号号段扩展）只需修改 common-safe 一处
+ *   <li>文本级 PII 正则（匹配手机号/身份证号格式）统一归属 {@link SensitiveUtil}，升级只需修改 common-safe 一处
+ *   <li>字段名匹配正则（匹配 phone/email 等字段命名）保留在本类，因为 {@link SensitiveUtil} 不提供字段名语义判断能力，
+ *       且需要单词边界匹配避免误匹配（如 {@code phoneModel}、{@code telephoneExchange}）
  * </ul>
  *
  * <p>所有方法均为无状态纯函数，线程安全。
  *
- * @since 1.0.0
  * @author ydsz-team
+ * @since 1.0.0
  */
 @Slf4j
 @Component

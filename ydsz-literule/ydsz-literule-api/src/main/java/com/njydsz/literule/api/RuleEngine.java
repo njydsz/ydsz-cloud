@@ -2,6 +2,8 @@ package com.njydsz.literule.api;
 
 import java.util.List;
 
+import com.njydsz.literule.api.RuleSeverity;
+
 /**
  * 规则引擎接口
  *
@@ -49,6 +51,25 @@ public interface RuleEngine {
    * @return 全部规则结果列表（含未触发）
    */
   List<RuleResult> dryRun(RuleContext context);
+
+  /**
+   * Dry-run 仿真（支持短路返回优化，P2-5）
+   *
+   * <p>当 {@code limit} 与 {@code minSeverity} 均非空时， 在按优先级遍历过程中，已命中且严重度不低于 {@code minSeverity}
+   * 的结果数量达到 {@code limit} 时立即停止评估（短路）。
+   *
+   * <p>默认实现委托 {@link #dryRun(RuleContext)}（短路参数不生效）， 支持短路优化的实现（如 {@code DefaultRuleEngine}）应覆盖本方法。
+   *
+   * @param context 规则上下文
+   * @param limit 返回结果数量上限（可为 null，表示不限制）
+   * @param minSeverity 最低严重度阈值（可为 null，表示不限制）
+   * @return 全部规则结果列表（含未触发）
+   * @since 1.0.0
+   */
+  default List<RuleResult> dryRun(
+      RuleContext context, Integer limit, RuleSeverity minSeverity) {
+    return dryRun(context);
+  }
 
   /**
    * 获取全部已注册规则（只读）

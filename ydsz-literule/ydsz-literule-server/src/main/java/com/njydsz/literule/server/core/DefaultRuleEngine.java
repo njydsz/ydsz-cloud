@@ -889,17 +889,41 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    */
   @Override
   public List<RuleResult> dryRun(RuleContext context) {
-    String traceId = resolveTraceId(context);
-    return withMdcTraceId(traceId, () -> doDryRun(context));
+    return dryRun(context, null, null);
   }
 
-  private List<RuleResult> doDryRun(RuleContext context) {
+  /**
+   * 仿真评估（dry-run，支持短路返回优化）
+   *
+   * <p>当 {@code limit} 和 {@code minSeverity} 均不为 null 时，
+   * 已命中（triggered=true）且严重度不低于 {@code minSeverity} 的结果数量达到 {@code limit} 时立即停止评估。
+   * 适用于大规则量场景（>500 条）下仅需查看高严重度命中结果的场景。
+   *
+   * @param context 规则上下文
+   * @param limit 返回结果数量上限（null 表示不限制）
+   * @param minSeverity 最低严重度阈值（null 表示不限制）
+   * @return 仿真结果列表
+   * @since 1.0.0
+   */
+  public List<RuleResult> dryRun(RuleContext context, Integer limit, RuleSeverity minSeverity) {
+    String traceId = resolveTraceId(context);
+    return withMdcTraceId(traceId, () -> doDryRun(context, limit, minSeverity));
+  }
+
+  private List<RuleResult> doDryRun(RuleContext context, Integer limit, RuleSeverity minSeverity) {
     // P0-2 动态事实采集 + P3-1 模型融合：dry-run 同样注入（并行优化）
     context = injectDataInParallel(context);
     List<RuleResult> all = new ArrayList<>();
     String contextTenantId = context.getTenantId();
     String contextEnvironment = context.getEnvironment();
+    // 短路计数：已命中且满足严重度要求的规则数量
+    int qualifiedCount = 0;
+    boolean enableShortCircuit = (limit != null && limit > 0) && (minSeverity != null);
     for (Rule rule : rules) {
+      // 短路返回：已收集足够的合格结果
+      if (enableShortCircuit && qualifiedCount >= limit) {
+        break;
+      }
       // 租户隔离（1.5.0）：dry-run 同样仅评估与上下文租户匹配的规则
       if (!Objects.equals(rule.getTenantId(), contextTenantId)) {
         continue;
@@ -914,6 +938,13 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
           result = RuleResult.notTriggered(rule.getCode());
         }
         all.add(result);
+        // 短路计数递增
+        if (enableShortCircuit
+            && result.isTriggered()
+            && result.getSeverity() != null
+            && result.getSeverity().getLevel() >= minSeverity.getLevel()) {
+          qualifiedCount++;
+        }
       } catch (Exception e) {
         all.add(
             RuleResult.builder()

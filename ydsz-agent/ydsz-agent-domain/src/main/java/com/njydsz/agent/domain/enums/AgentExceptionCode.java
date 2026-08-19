@@ -45,6 +45,10 @@ public enum AgentExceptionCode implements ExceptionCode {
   LLM_TOKEN_EXCEEDED("B94203", "agent.llm.token.exceeded"),
   LLM_PROVIDER_NOT_CONFIGURED("B94204", "agent.llm.provider.not.configured"),
 
+  // ==================== B94251-B94299 配额/成本控制 ====================
+  QUOTA_DAILY_TOKEN_EXCEEDED("B94251", "agent.quota.daily.token.exceeded", 429),
+  QUOTA_MONTHLY_BUDGET_EXCEEDED("B94252", "agent.quota.monthly.budget.exceeded", 429),
+
   // ==================== B94301-B94399 RAG/工具/Prompt ====================
   RAG_RETRIEVAL_FAILED("B94301", "agent.rag.retrieval.failed", 500),
   TOOL_NOT_FOUND("B94302", "agent.tool.not.found", 404),

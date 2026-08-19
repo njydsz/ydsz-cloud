@@ -30,12 +30,51 @@ import com.njydsz.literule.server.debug.RuleDebugger;
  */
 public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
+  /**
+   * 默认 AST 递归深度上限（P1-5：防御恶意嵌套表达式导致的 StackOverflow）
+   *
+   * <p>超过此深度时抛 {@link LiteExprException} 明确错误而非 JVM 崩溃。
+   * 正常业务表达式嵌套深度通常在 5-20 层内，128 层足以覆盖合理场景。
+   */
+  public static final int DEFAULT_MAX_RECURSION_DEPTH = 128;
+
   private final FunctionRegistry functionRegistry;
   private Map<String, Object> variables;
   private ExprTraceBuilder traceBuilder;
 
+  /** 当前递归深度（每次 visit 开始时 +1，结束时 -1） */
+  private int currentDepth = 0;
+
+  /** 递归深度上限（可通过系统属性覆盖） */
+  private final int maxRecursionDepth;
+
   public TreeInterpreter(FunctionRegistry functionRegistry) {
+    this(functionRegistry, DEFAULT_MAX_RECURSION_DEPTH);
+  }
+
+  /**
+   * 带自定义递归深度上限的解释器构造器
+   *
+   * @param functionRegistry 函数注册表
+   * @param maxRecursionDepth 递归深度上限（最小 16）
+   */
+  public TreeInterpreter(FunctionRegistry functionRegistry, int maxRecursionDepth) {
     this.functionRegistry = functionRegistry;
+    this.maxRecursionDepth = Math.max(16, maxRecursionDepth);
+  }
+
+  /**
+   * 检查递归深度是否超限
+   *
+   * @throws LiteExprException 超过递归深度上限时
+   */
+  private void checkRecursionDepth(ExprNode node) {
+    if (currentDepth >= maxRecursionDepth) {
+      throw new LiteExprException(
+          String.format("表达式递归深度超过上限 %d，请检查表达式是否存在过深嵌套或循环引用", maxRecursionDepth),
+          node != null ? node.line() : 0,
+          node != null ? node.column() : 0);
+    }
   }
 
   /**
@@ -85,189 +124,237 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   @Override
   public Object visitBinaryOp(BinaryOpNode node) {
-    String op = node.operator();
-    // F1 断点调试：比较/逻辑/算术节点求值前挂起（仅调试会话激活时生效）
-    debugCheckNode(node, node.isLogical() ? "LOGICAL" : node.isComparison() ? "COMPARISON" : "ARITHMETIC");
+    checkRecursionDepth(node);
+    currentDepth++;
+    try {
+      String op = node.operator();
+      // F1 断点调试：比较/逻辑/算术节点求值前挂起（仅调试会话激活时生效）
+      debugCheckNode(node, node.isLogical() ? "LOGICAL" : node.isComparison() ? "COMPARISON" : "ARITHMETIC");
 
-    // 短路求值
-    if ("&&".equals(op) || "and".equals(op)) {
-      Object leftVal = node.left().accept(this);
-      boolean leftBool = BuiltinFunctions.toBool(leftVal);
-      if (!leftBool) {
-        if (traceBuilder != null) {
-          traceBuilder.recordLogical(op, false, true, node);
+      // 短路求值
+      if ("&&".equals(op) || "and".equals(op)) {
+        Object leftVal = node.left().accept(this);
+        boolean leftBool = BuiltinFunctions.toBool(leftVal);
+        if (!leftBool) {
+          if (traceBuilder != null) {
+            traceBuilder.recordLogical(op, false, true, node);
+          }
+          return false;
         }
-        return false;
-      }
-      Object rightVal = node.right().accept(this);
-      boolean rightBool = BuiltinFunctions.toBool(rightVal);
-      if (traceBuilder != null) {
-        traceBuilder.recordLogical(op, rightBool, false, node);
-      }
-      return rightBool;
-    }
-
-    if ("||".equals(op) || "or".equals(op)) {
-      Object leftVal = node.left().accept(this);
-      boolean leftBool = BuiltinFunctions.toBool(leftVal);
-      if (leftBool) {
+        Object rightVal = node.right().accept(this);
+        boolean rightBool = BuiltinFunctions.toBool(rightVal);
         if (traceBuilder != null) {
-          traceBuilder.recordLogical(op, true, true, node);
+          traceBuilder.recordLogical(op, rightBool, false, node);
         }
-        return true;
+        return rightBool;
       }
+
+      if ("||".equals(op) || "or".equals(op)) {
+        Object leftVal = node.left().accept(this);
+        boolean leftBool = BuiltinFunctions.toBool(leftVal);
+        if (leftBool) {
+          if (traceBuilder != null) {
+            traceBuilder.recordLogical(op, true, true, node);
+          }
+          return true;
+        }
+        Object rightVal = node.right().accept(this);
+        boolean rightBool = BuiltinFunctions.toBool(rightVal);
+        if (traceBuilder != null) {
+          traceBuilder.recordLogical(op, rightBool, false, node);
+        }
+        return rightBool;
+      }
+
+      // 非短路运算
+      Object leftVal = node.left().accept(this);
       Object rightVal = node.right().accept(this);
-      boolean rightBool = BuiltinFunctions.toBool(rightVal);
+      Object result = applyBinaryOp(op, leftVal, rightVal);
+
       if (traceBuilder != null) {
-        traceBuilder.recordLogical(op, rightBool, false, node);
+        traceBuilder.recordBinary(op, leftVal, rightVal, result, node);
       }
-      return rightBool;
+      return result;
+    } finally {
+      currentDepth--;
     }
-
-    // 非短路运算
-    Object leftVal = node.left().accept(this);
-    Object rightVal = node.right().accept(this);
-    Object result = applyBinaryOp(op, leftVal, rightVal);
-
-    if (traceBuilder != null) {
-      traceBuilder.recordBinary(op, leftVal, rightVal, result, node);
-    }
-    return result;
   }
 
   @Override
   public Object visitUnaryOp(UnaryOpNode node) {
-    Object operandVal = node.operand().accept(this);
-    String op = node.operator();
-    Object result;
-    if ("!".equals(op) || "not".equals(op)) {
-      result = !BuiltinFunctions.toBool(operandVal);
-    } else if ("-".equals(op)) {
-      result =
-          BuiltinFunctions.isIntegerLike(operandVal)
-              ? -BuiltinFunctions.toLong(operandVal)
-              : BuiltinFunctions.toDecimal(operandVal).negate();
-    } else {
-      throw new LiteExprException("未知一元运算符: " + op, node.line(), node.column());
+    checkRecursionDepth(node);
+    currentDepth++;
+    try {
+      Object operandVal = node.operand().accept(this);
+      String op = node.operator();
+      Object result;
+      if ("!".equals(op) || "not".equals(op)) {
+        result = !BuiltinFunctions.toBool(operandVal);
+      } else if ("-".equals(op)) {
+        result =
+            BuiltinFunctions.isIntegerLike(operandVal)
+                ? -BuiltinFunctions.toLong(operandVal)
+                : BuiltinFunctions.toDecimal(operandVal).negate();
+      } else {
+        throw new LiteExprException("未知一元运算符: " + op, node.line(), node.column());
+      }
+      if (traceBuilder != null) {
+        traceBuilder.recordUnary(op, operandVal, result, node);
+      }
+      return result;
+    } finally {
+      currentDepth--;
     }
-    if (traceBuilder != null) {
-      traceBuilder.recordUnary(op, operandVal, result, node);
-    }
-    return result;
   }
 
   @Override
   public Object visitTernary(TernaryNode node) {
-    Object condVal = node.condition().accept(this);
-    boolean cond = BuiltinFunctions.toBool(condVal);
-    Object result = cond ? node.thenExpr().accept(this) : node.elseExpr().accept(this);
-    if (traceBuilder != null) {
-      traceBuilder.recordTernary(cond, result, node);
+    checkRecursionDepth(node);
+    currentDepth++;
+    try {
+      Object condVal = node.condition().accept(this);
+      boolean cond = BuiltinFunctions.toBool(condVal);
+      Object result = cond ? node.thenExpr().accept(this) : node.elseExpr().accept(this);
+      if (traceBuilder != null) {
+        traceBuilder.recordTernary(cond, result, node);
+      }
+      return result;
+    } finally {
+      currentDepth--;
     }
-    return result;
   }
 
   @Override
   public Object visitFunctionCall(FunctionCallNode node) {
-    debugCheckNode(node, "FUNCTION_CALL");
-    String funcName = node.functionName();
-    LiteExprFunction function = functionRegistry.lookup(funcName);
-    if (function == null) {
-      throw new LiteExprException("未定义的函数: " + funcName, node.line(), node.column());
-    }
-
-    // 求值参数
-    Object[] argValues = new Object[node.arguments().size()];
-    for (int i = 0; i < node.arguments().size(); i++) {
-      argValues[i] = node.arguments().get(i).accept(this);
-    }
-
+    checkRecursionDepth(node);
+    currentDepth++;
     try {
-      Object result = function.call(argValues);
-      if (traceBuilder != null) {
-        traceBuilder.recordFunctionCall(funcName, argValues, result, node);
+      debugCheckNode(node, "FUNCTION_CALL");
+      String funcName = node.functionName();
+      LiteExprFunction function = functionRegistry.lookup(funcName);
+      if (function == null) {
+        throw new LiteExprException("未定义的函数: " + funcName, node.line(), node.column());
       }
-      return result;
-    } catch (LiteExprException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new LiteExprException(
-          "函数 '" + funcName + "' 执行失败: " + e.getMessage(), node.line(), node.column(), e);
+
+      // 求值参数
+      Object[] argValues = new Object[node.arguments().size()];
+      for (int i = 0; i < node.arguments().size(); i++) {
+        argValues[i] = node.arguments().get(i).accept(this);
+      }
+
+      try {
+        Object result = function.call(argValues);
+        if (traceBuilder != null) {
+          traceBuilder.recordFunctionCall(funcName, argValues, result, node);
+        }
+        return result;
+      } catch (LiteExprException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new LiteExprException(
+            "函数 '" + funcName + "' 执行失败: " + e.getMessage(), node.line(), node.column(), e);
+      }
+    } finally {
+      currentDepth--;
     }
   }
 
   @Override
   public Object visitMemberAccess(MemberAccessNode node) {
-    Object target = node.target().accept(this);
-    if (target == null) return null;
+    checkRecursionDepth(node);
+    currentDepth++;
+    try {
+      Object target = node.target().accept(this);
+      if (target == null) return null;
 
-    String member = node.member();
-    Object result;
+      String member = node.member();
+      Object result;
 
-    if (target instanceof Map<?, ?> map) {
-      result = map.get(member);
-    } else if (target instanceof List<?> list) {
-      // List 上没有属性，但可能有一些伪属性
-      result =
-          switch (member) {
-            case "size" -> list.size();
-            case "isEmpty" -> list.isEmpty();
-            default -> getFieldValue(target, member);
-          };
-    } else {
-      result = getFieldValue(target, member);
+      if (target instanceof Map<?, ?> map) {
+        result = map.get(member);
+      } else if (target instanceof List<?> list) {
+        // List 上没有属性，但可能有一些伪属性
+        result =
+            switch (member) {
+              case "size" -> list.size();
+              case "isEmpty" -> list.isEmpty();
+              default -> getFieldValue(target, member);
+            };
+      } else {
+        result = getFieldValue(target, member);
+      }
+
+      if (traceBuilder != null) {
+        traceBuilder.recordMemberAccess(target, member, result, node);
+      }
+      return result;
+    } finally {
+      currentDepth--;
     }
-
-    if (traceBuilder != null) {
-      traceBuilder.recordMemberAccess(target, member, result, node);
-    }
-    return result;
   }
 
   @Override
   public Object visitIndex(IndexNode node) {
-    Object target = node.target().accept(this);
-    if (target == null) return null;
+    checkRecursionDepth(node);
+    currentDepth++;
+    try {
+      Object target = node.target().accept(this);
+      if (target == null) return null;
 
-    Object index = node.index().accept(this);
-    Object result;
+      Object index = node.index().accept(this);
+      Object result;
 
-    if (target instanceof List<?> list) {
-      int idx = BuiltinFunctions.toInt(index);
-      result = (idx >= 0 && idx < list.size()) ? list.get(idx) : null;
-    } else if (target instanceof Map<?, ?> map) {
-      result = map.get(index);
-    } else if (target instanceof String str) {
-      int idx = BuiltinFunctions.toInt(index);
-      result = (idx >= 0 && idx < str.length()) ? String.valueOf(str.charAt(idx)) : null;
-    } else if (target.getClass().isArray()) {
-      int idx = BuiltinFunctions.toInt(index);
-      result = (idx >= 0 && idx < Array.getLength(target)) ? Array.get(target, idx) : null;
-    } else {
-      result = null;
+      if (target instanceof List<?> list) {
+        int idx = BuiltinFunctions.toInt(index);
+        result = (idx >= 0 && idx < list.size()) ? list.get(idx) : null;
+      } else if (target instanceof Map<?, ?> map) {
+        result = map.get(index);
+      } else if (target instanceof String str) {
+        int idx = BuiltinFunctions.toInt(index);
+        result = (idx >= 0 && idx < str.length()) ? String.valueOf(str.charAt(idx)) : null;
+      } else if (target.getClass().isArray()) {
+        int idx = BuiltinFunctions.toInt(index);
+        result = (idx >= 0 && idx < Array.getLength(target)) ? Array.get(target, idx) : null;
+      } else {
+        result = null;
+      }
+
+      return result;
+    } finally {
+      currentDepth--;
     }
-
-    return result;
   }
 
   @Override
   public Object visitList(ListNode node) {
-    List<Object> result = new ArrayList<>(node.elements().size());
-    for (ExprNode element : node.elements()) {
-      result.add(element.accept(this));
+    checkRecursionDepth(node);
+    currentDepth++;
+    try {
+      List<Object> result = new ArrayList<>(node.elements().size());
+      for (ExprNode element : node.elements()) {
+        result.add(element.accept(this));
+      }
+      return result;
+    } finally {
+      currentDepth--;
     }
-    return result;
   }
 
   @Override
   public Object visitMap(MapNode node) {
-    Map<Object, Object> result = new LinkedHashMap<>(node.entries().size());
-    for (Map.Entry<ExprNode, ExprNode> entry : node.entries().entrySet()) {
-      Object key = entry.getKey().accept(this);
-      Object value = entry.getValue().accept(this);
-      result.put(key, value);
+    checkRecursionDepth(node);
+    currentDepth++;
+    try {
+      Map<Object, Object> result = new LinkedHashMap<>(node.entries().size());
+      for (Map.Entry<ExprNode, ExprNode> entry : node.entries().entrySet()) {
+        Object key = entry.getKey().accept(this);
+        Object value = entry.getValue().accept(this);
+        result.put(key, value);
+      }
+      return result;
+    } finally {
+      currentDepth--;
     }
-    return result;
   }
 
   @Override

@@ -56,13 +56,11 @@ public class FileAclRepositoryImpl implements FileAclRepository {
 
   @Override
   public List<FileAclVO> findByFileNodeIdAndGrantee(FileAclQuery query) {
+    // 语义为"查询用户对文件的有效权限"（含用户/角色/租户维度），
+    // 对应 Mapper 的 selectEffectivePermissions（构建修复：原误调用 3 参数的精确匹配查询）
     return converter.fileAclListToVO(
-        fileAclMapper.selectByFileNodeIdAndGrantee(
-            query.getFileNodeId(),
-            query.getGranteeType(),
-            query.getGranteeId(),
-            query.getUserId(),
-            query.getRoleIds()));
+        fileAclMapper.selectEffectivePermissions(
+            query.getFileNodeId(), query.getUserId(), query.getRoleIds()));
   }
 
   @Override

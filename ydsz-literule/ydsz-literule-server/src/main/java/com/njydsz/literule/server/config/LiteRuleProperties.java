@@ -62,6 +62,23 @@ public class LiteRuleProperties {
   /** 是否启用执行轨迹记录（1.4.0） */
   private boolean traceEnabled = true;
 
+  /**
+   * CEP 复杂事件处理配置（P3 高吞吐异步化）
+   *
+   * <p>配置示例：
+   *
+   * <pre>
+   * ydsz:
+   *   literule:
+   *     cep:
+   *       async-enabled: true    # 异步投递（万级 TPS 场景）
+   *       async-queue-capacity: 10000
+   * </pre>
+   *
+   * @since 1.0.0
+   */
+  private CepConfig cep = new CepConfig();
+
   /** 异步 Trace 队列容量 */
   @Min(1)
   private int traceQueueCapacity = 5000;
@@ -737,6 +754,29 @@ public class LiteRuleProperties {
 
     /** 追加的白名单函数（业务自定义函数，合并到函数白名单） */
     private List<String> allowedFunctions = new java.util.ArrayList<>();
+  }
+
+  /**
+   * CEP 复杂事件处理配置（P3 高吞吐异步化）
+   *
+   * <p>控制 {@code CEPEngine} 的投递模式。
+   *
+   * @since 1.0.0
+   */
+  @Data
+  public static class CepConfig {
+
+    /**
+     * 是否启用异步投递模式
+     *
+     * <p>true：{@code feed} 仅入队，由内部守护线程异步消费， 将模式匹配从调用方线程剥离（高吞吐场景，如万级 TPS）；
+     * false（默认）：同步投递，向后兼容。
+     */
+    private boolean asyncEnabled = false;
+
+    /** 异步队列容量（默认 10000，队列满时丢弃最旧事件并告警） */
+    @Min(1)
+    private int asyncQueueCapacity = 10_000;
   }
 
   /**

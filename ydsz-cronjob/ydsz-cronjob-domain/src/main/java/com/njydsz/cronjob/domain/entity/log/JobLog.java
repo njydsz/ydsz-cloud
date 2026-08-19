@@ -58,6 +58,9 @@ public class JobLog extends MpBaseIdEntity<String> {
   /** 创建时间（P0-FIX 补回：与 ydsz_job_log.created_at 列对应，供日志分页/清理使用） */
   private LocalDateTime createdAt;
 
+  /** 更新时间（P0-FIX 补回：与 ydsz_job_log.updated_at 列对应，供执行轨迹/审计使用） */
+  private LocalDateTime updatedAt;
+
   /** 逻辑删除标记（P0-FIX 补回：0=正常 / 1=已删除，与 ydsz_job_log.deleted 列对应） */
   private Integer deleted;
 

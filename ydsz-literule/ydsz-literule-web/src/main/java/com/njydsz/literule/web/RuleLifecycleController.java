@@ -230,12 +230,22 @@ public class RuleLifecycleController {
         LiteruleConverter.INSTANT.entityToVO(ruleAdminService.save(def, operator, changeDesc)));
   }
 
-  /** 安全解析规则状态，无效值返回 null 而非伪装成 PUBLISHED */
+  /**
+   * 安全解析规则状态
+   *
+   * <p>解析失败时返回 null，由调用方决定如何处理（抛出明确业务异常）。
+   *
+   * @param status 状态字符串
+   * @return RuleStatus；无法解析时返回 null
+   */
   private RuleStatus parseStatusSafely(String status) {
+    if (status == null || status.isBlank()) {
+      return null;
+    }
     try {
       return RuleStatus.valueOf(status);
-    } catch (Exception e) {
-      log.warn("规则状态解析失败，status={}", status, e);
+    } catch (IllegalArgumentException e) {
+      log.warn("规则状态解析失败，status={}", status);
       return null;
     }
   }

@@ -13,7 +13,7 @@ import com.njydsz.nextwiki.domain.repository.FileCommentRepository;
 import com.njydsz.nextwiki.domain.vo.FileCommentVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
 import com.njydsz.nextwiki.infra.entity.FileCommentDO;
-import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
+import com.njydsz.nextwiki.infra.mapper.FileCommentMapper;
 
 /**
  * 文件评论仓储实现
@@ -35,7 +35,7 @@ import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
 public class FileCommentRepositoryImpl implements FileCommentRepository {
 
   private final SnowflakeIdGenerator snowflakeIdGenerator;
-  private final FileNodeMapper fileNodeMapper;
+  private final FileCommentMapper fileCommentMapper;
   private final NextwikiConverter converter;
 
   @Override
@@ -44,38 +44,38 @@ public class FileCommentRepositoryImpl implements FileCommentRepository {
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
-    fileNodeMapper.insertFileComment(entity);
+    fileCommentMapper.insertFileComment(entity);
     return converter.entityToVO(entity);
   }
 
   @Override
   public Optional<FileCommentVO> findById(String id) {
-    return Optional.ofNullable(fileNodeMapper.selectFileCommentById(id)).map(converter::entityToVO);
+    return Optional.ofNullable(fileCommentMapper.selectFileCommentById(id)).map(converter::entityToVO);
   }
 
   @Override
   public List<FileCommentVO> findByFileNodeId(String fileNodeId) {
-    return converter.fileCommentListToVO(fileNodeMapper.selectFileCommentsByFileNodeId(fileNodeId));
+    return converter.fileCommentListToVO(fileCommentMapper.selectFileCommentsByFileNodeId(fileNodeId));
   }
 
   @Override
   public List<FileCommentVO> findReplies(String parentCommentId) {
-    return converter.fileCommentListToVO(fileNodeMapper.selectFileCommentReplies(parentCommentId));
+    return converter.fileCommentListToVO(fileCommentMapper.selectFileCommentReplies(parentCommentId));
   }
 
   @Override
   public void update(FileCommentDTO dto) {
     FileCommentDO entity = converter.dtoToEntityWithId(dto);
-    fileNodeMapper.updateFileComment(entity);
+    fileCommentMapper.updateFileComment(entity);
   }
 
   @Override
   public void delete(String id) {
-    fileNodeMapper.deleteFileComment(id);
+    fileCommentMapper.deleteFileComment(id);
   }
 
   @Override
   public void markResolved(String id, String userId) {
-    fileNodeMapper.markFileCommentResolved(id, userId);
+    fileCommentMapper.markFileCommentResolved(id, userId);
   }
 }

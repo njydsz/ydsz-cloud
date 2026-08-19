@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.auth;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -55,6 +56,16 @@ public interface AuthService {
    * @param userId 用户 ID，不可为 null 或空
    */
   void evictAllSessions(String userId);
+
+  /**
+   * P1-5: 批量驱逐多个用户的全部活跃会话。
+   *
+   * <p>用于批量禁用/批量改密场景，避免循环调用 {@link #evictAllSessions(String)} 导致 N+1 Redis 调用。
+   *
+   * @param userIds 用户 ID 集合，为 null 或空时不执行任何操作
+   * @return 实际驱逐的会话总数
+   */
+  int evictAllSessionsBatch(Collection<String> userIds);
 
   /**
    * P1-1: 失效指定用户的角色缓存。

@@ -64,10 +64,22 @@ public class SseMcpClientProvider implements McpClientProvider {
 
   @Override
   public String callTool(AgentProperties.ServerInfo server, String toolName, String arguments) {
-    String sessionId = initSession(server);
-    Map<String, Object> params = Map.of("name", toolName, "arguments", parseArguments(arguments));
-    String callResponse = sendRequest(server, sessionId, "tools/call", params);
-    return extractCallResult(callResponse);
+    try {
+      String sessionId = initSession(server);
+      Map<String, Object> params = Map.of("name", toolName, "arguments", parseArguments(arguments));
+      String callResponse = sendRequest(server, sessionId, "tools/call", params);
+      return extractCallResult(callResponse);
+    } catch (Exception e) {
+      LOG.error(
+          "[MCP-SSE] 工具调用失败: server={}, tool={}, error={}",
+          server.getName(),
+          toolName,
+          e.getMessage(),
+          e);
+      // P1 修复：错误以未检查异常向上传播（由 ToolRegistry 统一兜底为结构化错误结果），
+      // 替代原实现"catch 后返回 error JSON 字符串"导致的错误静默吞掉
+      throw new IllegalStateException("MCP 工具调用失败: " + e.getMessage(), e);
+    }
   }
 
   /**

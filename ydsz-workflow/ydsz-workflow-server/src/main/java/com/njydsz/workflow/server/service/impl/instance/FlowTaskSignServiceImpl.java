@@ -11,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.repository.FlowUserRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.infra.entity.FlowUserDO;
 import com.njydsz.workflow.domain.enums.FlowAssigneeType;
@@ -76,11 +79,20 @@ import com.njydsz.workflow.infra.mapper.FlowUserMapper;
 @RequiredArgsConstructor
 public class FlowTaskSignServiceImpl {
 
-  /** 运行时任务 Mapper，查询/更新加签减签的任务 */
+  /** 运行时任务 Mapper（保留：updateApproveFinished 自定义 SQL 操作） */
   private final FlowRunTaskMapper taskMapper;
 
-  /** 用户 Mapper，查询加签/追加处理人的用户信息 */
+  /** 运行时任务仓储，查询/更新加签减签的任务 */
+  private final FlowRunTaskRepository taskRepository;
+
+  /** 用户 Mapper（保留：deleteByMap 复杂删除操作） */
   private final FlowUserMapper userMapper;
+
+  /** 用户仓储，写入/查询流程用户 */
+  private final FlowUserRepository userRepository;
+
+  /** DO/VO 转换器 */
+  private final WorkflowConverter converter;
 
   /** 跨子 Service 共享的任务校验/审计/事件辅助 */
   private final FlowTaskSupport support;
@@ -130,11 +142,12 @@ public class FlowTaskSignServiceImpl {
       fu.setSignType(FlowSignType.BEFORE.name());
       fu.setTenantId(task.getTenantId());
       fu.setProviderTraceId(task.getProviderTraceId());
-      userMapper.insert(fu);
+      userRepository.save(converter.entityToVO(fu));
+      // 保留 Mapper：自定义 SQL 操作（updateApproveFinished），Repository 暂无等价方法
       taskMapper.updateApproveFinished(task.getId(), task.getApproveFinished());
       // approveCount +1
       task.setApproveCount((task.getApproveCount() == null ? 0 : task.getApproveCount()) + 1);
-      taskMapper.updateById(task);
+      taskRepository.update(converter.entityToVO(task));
     }
     support.audit(
         task, "COUNTERSIGN_BEFORE", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
@@ -191,11 +204,11 @@ public class FlowTaskSignServiceImpl {
       fu.setSignType(FlowSignType.AFTER.name());
       fu.setTenantId(task.getTenantId());
       fu.setProviderTraceId(task.getProviderTraceId());
-      userMapper.insert(fu);
+      userRepository.save(converter.entityToVO(fu));
       // 切换为并行会签：当前人和加签人都通过后才推进
       task.setPerformType(FlowPerformType.PARALLEL.name());
       task.setApproveCount((task.getApproveCount() == null ? 0 : task.getApproveCount()) + 1);
-      taskMapper.updateById(task);
+      taskRepository.update(converter.entityToVO(task));
     }
     support.audit(
         task, "COUNTERSIGN_AFTER", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
@@ -247,11 +260,11 @@ public class FlowTaskSignServiceImpl {
     fu.setSignType(FlowSignType.PARALLEL.name());
     fu.setTenantId(task.getTenantId());
     fu.setProviderTraceId(task.getProviderTraceId());
-    userMapper.insert(fu);
+    userRepository.save(converter.entityToVO(fu));
     // 强制切换为并行会签：加签人与原审批人并行审批，所有人全部通过才推进
     task.setPerformType(FlowPerformType.PARALLEL.name());
     task.setApproveCount((task.getApproveCount() == null ? 0 : task.getApproveCount()) + 1);
-    taskMapper.updateById(task);
+    taskRepository.update(converter.entityToVO(task));
     support.audit(
         task, "COUNTERSIGN_PARALLEL", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
     log.info("[Flow] 并加签: taskId={} → 新增审批人={} (切换为并行会签)", task.getId(), dto.getTargetUserId());
@@ -295,6 +308,7 @@ public class FlowTaskSignServiceImpl {
           .build();
     }
     // 从 ydsz_flow_user 中删除指定用户
+    // 保留 Mapper：复杂 Map 条件删除（复合键 instance_id + node_code + user_id），Repository 暂无等价方法
     Map<String, Object> deleteMap = new HashMap<>();
     deleteMap.put("instance_id", task.getInstanceId());
     deleteMap.put("node_code", task.getNodeCode());
@@ -310,7 +324,7 @@ public class FlowTaskSignServiceImpl {
     // approveCount -1，但不低于 1
     int currentCount = task.getApproveCount() == null ? 1 : task.getApproveCount();
     task.setApproveCount(Math.max(1, currentCount - 1));
-    taskMapper.updateById(task);
+    taskRepository.update(converter.entityToVO(task));
     support.audit(
         task, "COUNTERSIGN_REMOVE", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
     log.info(
@@ -382,7 +396,7 @@ public class FlowTaskSignServiceImpl {
     }
     // 保存审批意见草稿到 comment 字段，不改变任务状态
     task.setComment(dto.getComment());
-    taskMapper.updateById(task);
+    taskRepository.update(converter.entityToVO(task));
     support.audit(
         task, "SAVE_DRAFT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
     log.info("[Flow] 暂存待审: taskId={} userId={}", dto.getTaskId(), dto.getUserId());
@@ -439,11 +453,11 @@ public class FlowTaskSignServiceImpl {
     fu.setSignType(FlowSignType.ADD.name());
     fu.setTenantId(task.getTenantId());
     fu.setProviderTraceId(task.getProviderTraceId());
-    userMapper.insert(fu);
+    userRepository.save(converter.entityToVO(fu));
     // approveCount +1
     int currentCount = task.getApproveCount() == null ? 1 : task.getApproveCount();
     task.setApproveCount(currentCount + 1);
-    taskMapper.updateById(task);
+    taskRepository.update(converter.entityToVO(task));
     support.audit(task, "ADD_APPROVER", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
     log.info("[Flow] 追加处理人: taskId={} targetUserId={}", task.getId(), dto.getTargetUserId());
     support.fireEvent(

@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,10 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.agent.domain.agent.AgentDag;
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
+import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.model.ChatChunk;
+import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.server.config.AgentProperties;
@@ -49,16 +53,24 @@ import com.njydsz.common.util.id.IdGenerator;
  *   <li>失败快速终止
  * </ul>
  *
+ * <p><b>AgentExecutor 适配（P1 修复）</b>：本类实现 {@link AgentExecutor} 接口，作为 DAG 类型 Agent
+ * 纳入 {@link AgentFactory} 路由体系。通过 {@link AgentExecutionRequest#getVariables()} 中的 {@code dsl}
+ * 字段传入 YAML 定义，userInput 作为编排输入。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
-public class DagOrchestrationExecutor {
+public class DagOrchestrationExecutor implements AgentExecutor {
 
   private static final Logger LOG = LoggerFactory.getLogger(DagOrchestrationExecutor.class);
+
+  /** variables 中携带 DAG YAML 定义时使用的键 */
+  private static final String VARIABLE_DSL_KEY = "dsl";
 
   private final LlmClient llmClient;
   private final AgentProperties properties;
   private final AgentFactory agentFactory;
+  private final DagDslParser dagDslParser;
   private final ExecutorService executor;
 
   /**
@@ -67,16 +79,19 @@ public class DagOrchestrationExecutor {
    * @param llmClient LLM 客户端
    * @param properties Agent 配置
    * @param agentFactory Agent 工厂
+   * @param dagDslParser YAML DSL 解析器（AgentExecutor 适配入口使用）
    * @param executor 外部线程池（由 common-thread 管理）
    */
   public DagOrchestrationExecutor(
       LlmClient llmClient,
       AgentProperties properties,
       AgentFactory agentFactory,
+      DagDslParser dagDslParser,
       ExecutorService executor) {
     this.llmClient = llmClient;
     this.properties = properties;
     this.agentFactory = agentFactory;
+    this.dagDslParser = dagDslParser;
     this.executor = executor;
   }
 
@@ -572,4 +587,86 @@ public class DagOrchestrationExecutor {
       Set<String> completedNodes,
       Set<String> failedNodes,
       boolean hasFailure) {}
+
+  // -----------------------------------------------------------------------
+  // AgentExecutor 适配（P1 修复：DAG 纳入 AgentFactory 路由体系）
+  // -----------------------------------------------------------------------
+
+  /**
+   * 以 {@link AgentExecutor} 身份执行 DAG。
+   *
+   * <p>DAG 定义（YAML DSL）通过 {@link AgentExecutionRequest#getVariables()} 的 {@code dsl} 键传入；
+   * 用户输入作为编排的根输入。执行结果按节点拼装为最终回复。
+   *
+   * @param request 执行请求（variables.dsl 必填）
+   * @return 编排结果汇总响应
+   * @throws IllegalArgumentException 当 variables 中缺少 dsl 定义时抛出
+   */
+  @Override
+  public ChatResponse execute(AgentExecutionRequest request) {
+    Object dslObj = request.getVariables().get(VARIABLE_DSL_KEY);
+    if (!(dslObj instanceof String dsl) || dsl.isBlank()) {
+      throw new IllegalArgumentException(
+          "DAG 类型 Agent 执行时缺少 dsl 定义（request.variables.dsl）");
+    }
+    AgentDag dag = dagDslParser.parse(dsl);
+    DagExecutionResult result = execute(dag, request.getUserInput());
+    return buildSummaryResponse(result);
+  }
+
+  /**
+   * 流式执行 DAG：复用同步编排，完成后一次性推送结果（DAG 为图执行，无逐 token 流式语义）。
+   *
+   * @param request 执行请求
+   * @param chunkConsumer 流式片段消费者
+   */
+  @Override
+  public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
+    ChatResponse response = execute(request);
+    chunkConsumer.accept(ChatChunk.content(response.getId(), response.getModel(), response.getContent()));
+    chunkConsumer.accept(ChatChunk.finish(response.getId(), response.getModel(), "stop", response.getUsage()));
+  }
+
+  /**
+   * 汇总 DAG 执行结果到最终回复。
+   *
+   * <p>失败节点存在时以错误文案提示；否则按节点顺序拼接各节点输出。
+   *
+   * @param result DAG 执行结果
+   * @return 汇总后的 {@link ChatResponse}
+   */
+  private ChatResponse buildSummaryResponse(DagExecutionResult result) {
+    String content;
+    if (result.hasFailure()) {
+      content = "DAG 编排存在失败节点: " + String.join(", ", result.failedNodes());
+    } else {
+      StringBuilder sb = new StringBuilder();
+      for (Map.Entry<String, String> entry : result.nodeResults().entrySet()) {
+        sb.append("## ").append(entry.getKey()).append("\n").append(entry.getValue()).append("\n\n");
+      }
+      content = sb.toString().trim();
+    }
+    TokenUsage totalUsage =
+        result.nodeUsages().values().stream()
+            .reduce(TokenUsage.zero(), TokenUsage::add);
+    return new ChatResponse(
+        result.executionId(),
+        properties.getLlm().getDefaultModel(),
+        ChatMessage.assistant(content, null, totalUsage),
+        totalUsage,
+        result.hasFailure() ? "failure" : "stop",
+        List.of());
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public String getType() {
+    return "dag";
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public boolean supports(String type) {
+    return "dag".equalsIgnoreCase(type);
+  }
 }

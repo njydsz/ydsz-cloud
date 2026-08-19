@@ -947,9 +947,17 @@ public class LiteRuleAutoConfiguration {
       name = "enabled",
       havingValue = "true",
       matchIfMissing = true)
-  public CEPEngine cepEngine(ExpressionEngine evaluator) {
-    CEPEngine engine = new CEPEngine(evaluator);
-    log.info("[LiteRule-CEP] 复杂事件处理引擎已初始化");
+  public CEPEngine cepEngine(ExpressionEngine evaluator, LiteRuleProperties properties) {
+    // P3 高吞吐异步化：ydsz.literule.cep.async-enabled=true 时启用异步投递
+    CEPEngine engine =
+        new CEPEngine(
+            evaluator,
+            properties.getCep().isAsyncEnabled(),
+            properties.getCep().getAsyncQueueCapacity());
+    log.info(
+        "[LiteRule-CEP] 复杂事件处理引擎已初始化（async={}, queueCapacity={}）",
+        properties.getCep().isAsyncEnabled(),
+        properties.getCep().getAsyncQueueCapacity());
     return engine;
   }
 

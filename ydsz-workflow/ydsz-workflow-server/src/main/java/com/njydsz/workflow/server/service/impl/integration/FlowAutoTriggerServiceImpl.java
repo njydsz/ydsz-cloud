@@ -104,9 +104,6 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
   /** 流程实例服务，查询前置流程实例状态 */
   private final FlowInstanceService instanceService;
 
-  /** 审计日志 Mapper，记录自动触发操作轨迹 */
-  private final FlowAuditLogMapper auditLogMapper;
-
   // ============================== 核心：实例完成时触发 ==============================
 
   @Override
@@ -129,6 +126,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     }
 
     // 2. 查询 sourceFlowCode 对应的所有 enabled 触发规则
+    // Repository 中暂无 selectEnabledBySourceFlowCode 等价方法，保留 Mapper 调用
     List<FlowAutoTriggerDO> triggers =
         autoTriggerMapper.selectEnabledBySourceFlowCode(sourceFlowCode);
     if (triggers == null || triggers.isEmpty()) {
@@ -305,6 +303,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void removeTrigger(String sourceFlowCode) {
+    // Repository 中暂无按 sourceFlowCode 批量删除等价方法，保留 Mapper 调用
     LambdaQueryWrapper<FlowAutoTriggerDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(FlowAutoTriggerDO::getSourceFlowCode, sourceFlowCode);
     autoTriggerMapper.delete(wrapper);
@@ -314,6 +313,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
   @Override
   @Transactional(readOnly = true)
   public List<FlowAutoTriggerDO> listAll() {
+    // Repository 中暂无按 sortOrder + id 排序全量查询等价方法，保留 Mapper 调用
     LambdaQueryWrapper<FlowAutoTriggerDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.orderByAsc(FlowAutoTriggerDO::getSortOrder).orderByAsc(FlowAutoTriggerDO::getId);
     return autoTriggerMapper.selectList(wrapper);

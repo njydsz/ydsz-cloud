@@ -21,10 +21,10 @@ import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowSlaAction;
-import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowNotificationService;
@@ -79,29 +79,16 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @RequiredArgsConstructor
 public class FlowSlaServiceImpl implements FlowSlaService {
 
-  /** 运行时任务 Mapper，查询超期待办及更新提醒计数 */
+  /** 运行时任务 Mapper（selectSlaCandidates/incrementUrgeCount/markSlaAction 无 Repository 等价方法，保留） */
   private final FlowRunTaskMapper taskMapper;
 
-  /**
-   * 运行时任务仓储（domain 层契约）。
-   *
-   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #taskMapper} 访问数据，
-   * 因为部分 Mapper 方法（如 {@code selectSlaCandidates}、{@code incrementUrgeCount}、{@code markSlaAction}）
-   * 在仓储中暂无等价方法，且仓储返回 {@code FlowRunTaskVO} 与 Service 使用的 {@code FlowRunTaskDO} 类型不同。
-   * 后续应在仓储中补齐对应方法并迁移。
-   */
+  /** 运行时任务仓储（domain 层契约），查询单条任务 */
   private final FlowRunTaskRepository taskRepository;
 
-  /** 流程节点 Mapper，读取节点 SLA 配置（slaConfig JSON） */
-  private final FlowNodeMapper nodeMapper;
+  /** 实体转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
 
-  /**
-   * 流程节点仓储（domain 层契约）。
-   *
-   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #nodeMapper} 访问数据，
-   * 因为 {@code selectByCode} 在仓储中返回 VO 类型与 Service 使用的 {@code FlowNodeDO} 不同。
-   * 后续应迁移至 {@code nodeRepository.findByCode(definitionId, nodeCode)}。
-   */
+  /** 流程节点仓储（domain 层契约），读取节点 SLA 配置（slaConfig JSON） */
   private final FlowNodeRepository nodeRepository;
 
   /** P1-6: 用 @Lazy 打破 FlowSlaService ↔ FlowTaskService 循环依赖 */
@@ -280,8 +267,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       return false;
     }
     // 1. 重新查一遍任务，避免读到陈旧数据
-    // TODO: 迁移至 taskRepository.findById(id)，需 VO→DO 转换
-    FlowRunTaskDO fresh = taskMapper.selectById(task.getId());
+    FlowRunTaskDO fresh = taskRepository.findById(task.getId()).map(converter::entityToDO).orElse(null);
     if (fresh == null) {
       return false;
     }
@@ -296,8 +282,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       return false;
     }
     // 3. 解析节点 SLA 配置
-    // TODO: 迁移至 nodeRepository.findByCode(definitionId, nodeCode)，需 VO→DO 转换
-    FlowNodeDO node = nodeMapper.selectByCode(fresh.getDefinitionId(), fresh.getNodeCode());
+    FlowNodeDO node = nodeRepository.findByCode(fresh.getDefinitionId(), fresh.getNodeCode()).map(converter::entityToDO).orElse(null);
     Map<String, Object> config =
         node == null ? Collections.emptyMap() : parseSlaConfig(node.getSlaConfig());
     // 无配置：默认仅 NOTIFY（但因 FlowSlaService 只对配了 dueAt 的任务扫描，这种情况不应出现）
@@ -487,7 +472,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         taskService.transfer(dto);
         taskMapper.markSlaAction(task.getId(), FlowSlaAction.ESCALATE.name(), 1);
         // 转办后：升级后的任务重新计 SLA
-        FlowRunTaskDO afterTransfer = taskMapper.selectById(task.getId());
+        FlowRunTaskDO afterTransfer = taskRepository.findById(task.getId()).map(converter::entityToDO).orElse(null);
         if (afterTransfer != null) {
           afterTransfer.setSlaEscalated(1);
           afterTransfer.setUrgeCount(0);

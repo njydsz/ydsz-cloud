@@ -7,10 +7,10 @@ import com.njydsz.agent.server.config.AgentProperties;
 /**
  * MCP Client 提供者接口
  *
- * <p>封装 MCP SDK 的具体实现，提供工具发现和调用能力。 通过此接口解耦 {@link McpToolAdapter} 与具体 MCP SDK， 便于单元测试使用 Mock 实现。
+ * <p>封装 MCP 协议的具体实现，提供工具发现和调用能力。 通过此接口解耦 {@link McpToolAdapter} 与具体传输实现， 便于单元测试使用 Mock 实现。
  *
- * <p>生产实现 {@code SseMcpClientProvider} 基于 MCP Java SDK （io.modelcontextprotocol:sdk）的 SSE 传输协议连接
- * MCP Server。
+ * <p>生产实现 {@code SseMcpClientProvider} 基于 JDK HttpClient 手写 JSON-RPC over HTTP/SSE（未引入官方
+ * io.modelcontextprotocol:sdk 依赖，注释与实现保持一致）； 未来接入官方 SDK 或 stdio/streamable-http 传输时新增实现类即可。
  *
  * @author ydsz-team
  * @since 1.0.0

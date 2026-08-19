@@ -392,7 +392,7 @@ public class RuleHotReloader {
       return true;
     }
     ruleEngine.register(new ExpressionRule(def, evaluator));
-    lastLoadedVersions.put(ruleCode, def.getVersion() != null ? def.getVersion() : 1);
+    lastLoadedVersions.put(ruleCode, def.getVersion());
     log.info("[LiteRule] 规则 {} 热刷新完成（version={}), operator={}", ruleCode, def.getVersion(), operator);
     return true;
   }

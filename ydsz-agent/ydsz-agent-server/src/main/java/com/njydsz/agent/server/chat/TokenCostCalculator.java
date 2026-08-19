@@ -52,7 +52,9 @@ public class TokenCostCalculator {
       }
     }
     double charRatio = properties.getMemory().getTokenCharRatio();
-    int estimatedPromptTokens = TokenEstimator.estimate(totalChars, charRatio);
+    // P1 修复：TokenEstimator.estimate 接受 String 文本并按内部 length 估算；
+    // 此处已累加字符数，直接按字符数/系数估算，避免将 int 误传为 String 参数
+    int estimatedPromptTokens = Math.max(1, (int) Math.ceil(totalChars / charRatio));
     double unitPrice = resolveUnitPrice(request.getModel());
     return CostEstimate.estimate(
         estimatedPromptTokens, request.getMaxTokens(), request.getModel(), unitPrice);

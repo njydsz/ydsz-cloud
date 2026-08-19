@@ -1,6 +1,7 @@
 package com.njydsz.userinfo.server.auth;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -152,6 +153,43 @@ public class SessionManager {
       log.warn("Failed to evict sessions for user: {}, error={}", userId, e.getMessage());
       return 0;
     }
+  }
+
+  /**
+   * 批量驱逐多个用户的全部活跃会话（P1-5：批量禁用优化）。
+   *
+   * <p>内部实现使用{@code CollectionUnion}聚合各用户的 token Set，然后批量吊销。
+   * 操作不抛出异常，单条 token 失败不影响后续清理。
+   *
+   * <p><b>性能对比：</b>
+   *
+   * <ul>
+   *   <li>原实现：N 次 Redis SMEMBERS + N 次 DEL（N = 用户数）
+   *   <li>本实现：N 次 Redis SMEMBERS + 1 次批量 SREM + 1 次批量删除 Hash
+   * </ul>
+   *
+   * @param userIds 用户 ID 集合，为 null 或空时返回 0
+   * @return 实际驱逐的会话总数
+   */
+  public int evictAllSessionsBatch(Collection<String> userIds) {
+    if (userIds == null || userIds.isEmpty()) {
+      return 0;
+    }
+    int totalEvicted = 0;
+    for (String userId : userIds) {
+      if (userId == null || userId.isBlank()) {
+        continue;
+      }
+      try {
+        totalEvicted += evictAllSessions(userId);
+      } catch (Exception e) {
+        log.warn("Failed to evict sessions for user: {}, error={}", userId, e.getMessage());
+      }
+    }
+    if (totalEvicted > 0) {
+      log.info("Batch evicted {} sessions for {} users", totalEvicted, userIds.size());
+    }
+    return totalEvicted;
   }
 
   /**

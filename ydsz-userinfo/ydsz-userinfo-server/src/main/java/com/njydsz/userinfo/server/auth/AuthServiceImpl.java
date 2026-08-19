@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.auth;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -400,13 +401,24 @@ public class AuthServiceImpl implements AuthService {
   /**
    * {@inheritDoc}
    *
-   * <p>委托 {@link SessionManager#evictAllSessions(String)} 完成会话驱逐。
-   *
-   * @param userId 用户 ID，不可为 null 或空
+   * @param userId 用户 ID
    */
   @Override
   public void evictAllSessions(String userId) {
     sessionManager.evictAllSessions(userId);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>委托 {@link SessionManager#evictAllSessionsBatch(Collection)} 完成批量会话驱逐。
+   *
+   * @param userIds 用户 ID 集合
+   * @return 实际驱逐的会话总数
+   */
+  @Override
+  public int evictAllSessionsBatch(Collection<String> userIds) {
+    return sessionManager.evictAllSessionsBatch(userIds);
   }
 
   /**
