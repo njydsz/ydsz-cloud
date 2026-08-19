@@ -50,15 +50,17 @@ ydsz:
   json:
     # P1-1: 流程条件表达式涉及金额数值比较，必须开启 BigDecimal 精度模式
     use-big-decimal: true
+    # P0-1: YdszJson ASM 预热（高频序列化 Bean，消除首次请求延迟尖峰）
+    # 注意：实体类位于 com.njydsz.workflow.infra.entity 包下，使用 DO 后缀
     warmup-classes:
-      - com.njydsz.workflow.domain.entity.FlowDefinition
-      - com.njydsz.workflow.domain.entity.FlowInstance
-      - com.njydsz.workflow.domain.entity.FlowNode
-      - com.njydsz.workflow.domain.entity.FlowRunTask
-      - com.njydsz.workflow.domain.entity.FlowHisTask
-      - com.njydsz.workflow.domain.entity.FlowHisInstance
-      - com.njydsz.workflow.domain.entity.FlowTemplate
-      - com.njydsz.workflow.domain.entity.FlowAuditLog
+      - com.njydsz.workflow.infra.entity.FlowDefinitionDO
+      - com.njydsz.workflow.infra.entity.FlowInstanceDO
+      - com.njydsz.workflow.infra.entity.FlowNodeDO
+      - com.njydsz.workflow.infra.entity.FlowRunTaskDO
+      - com.njydsz.workflow.infra.entity.FlowHisTaskDO
+      - com.njydsz.workflow.infra.entity.FlowHisInstanceDO
+      - com.njydsz.workflow.infra.entity.FlowTemplateDO
+      - com.njydsz.workflow.infra.entity.FlowAuditLogDO
     streaming-enabled: true
 
   # P0: JDBC 安全加固（ydsz-common-jdbc）

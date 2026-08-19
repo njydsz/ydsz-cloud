@@ -265,6 +265,23 @@ public class LiteExprEngine implements ExpressionEngine {
     sandbox.clearCache();
   }
 
+  /**
+   * 应用沙箱扩展策略（O2 沙箱规则外置化）
+   *
+   * <p>将 YAML 配置中的危险方法/类根追加到沙箱黑名单，白名单函数合并到函数白名单。 对标 Aviator 的配置化沙箱策略，
+   * 业务方无需改代码即可收紧/放宽沙箱规则。
+   *
+   * @param forbiddenMethods 追加的危险方法名（可为 null）
+   * @param forbiddenRoots 追加的危险类/属性链根（可为 null）
+   * @param allowedFunctions 追加的白名单函数（可为 null）
+   */
+  public void applySandboxPolicy(
+      Iterable<String> forbiddenMethods,
+      Iterable<String> forbiddenRoots,
+      Iterable<String> allowedFunctions) {
+    sandbox.applyPolicy(forbiddenMethods, forbiddenRoots, allowedFunctions);
+  }
+
   /** 缓存大小 */
   public long cacheSize() {
     return compiler.cacheSize();

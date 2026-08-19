@@ -271,6 +271,7 @@ public interface NextwikiConverter {
    * @param dtos 文件 ACL DTO 列表
    * @return 文件 ACL 实体列表
    */
+  @IterableMapping(qualifiedByName = "create")
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -306,6 +307,7 @@ public interface NextwikiConverter {
    * @param dto 回收站条目 DTO
    * @return 回收站条目实体
    */
+  @Named("create")
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -337,6 +339,7 @@ public interface NextwikiConverter {
    * @param dtos 回收站条目 DTO 列表
    * @return 回收站条目实体列表
    */
+  @IterableMapping(qualifiedByName = "create")
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)

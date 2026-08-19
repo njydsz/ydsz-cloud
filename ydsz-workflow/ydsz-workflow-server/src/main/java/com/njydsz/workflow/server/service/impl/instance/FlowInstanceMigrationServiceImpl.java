@@ -237,6 +237,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         dto.getNodeMapping() != null ? dto.getNodeMapping() : Collections.emptyMap();
 
     // 2. 校验源/目标定义存在且 flowCode 一致
+    // 保留 Mapper：无 FlowDefinitionRepository 可用
     FlowDefinitionDO sourceDef = definitionMapper.selectById(sourceDefId);
     if (sourceDef == null) {
       throw SysException.builder()
@@ -244,6 +245,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
           .message("源流程定义不存在: " + sourceDefId)
           .build();
     }
+    // 保留 Mapper：无 FlowDefinitionRepository 可用
     FlowDefinitionDO targetDef = definitionMapper.selectById(targetDefId);
     if (targetDef == null) {
       throw SysException.builder()
@@ -263,7 +265,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     }
 
     // 3. 预加载目标定义的节点编码集合（用于判断当前节点是否存在于新版本）
-    List<FlowNodeDO> targetNodes = nodeMapper.selectByDefinitionId(targetDefId);
+    List<FlowNodeDO> targetNodes = nodeRepository.findByDefinitionId(targetDefId).stream().map(converter::entityToDO).toList();
     Map<String, FlowNodeDO> targetNodeMap =
         targetNodes == null
             ? Collections.emptyMap()
@@ -271,6 +273,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
                 .collect(Collectors.toMap(FlowNodeDO::getNodeCode, n -> n, (a, b) -> a));
 
     // 4. 查询源定义下所有运行中实例
+    // 保留 Mapper：复杂 LambdaQueryWrapper 查询（含 definitionId + flowStatus + tenantId + deleted），Repository 暂无等价方法
     LambdaQueryWrapper<FlowInstanceDO> w = new LambdaQueryWrapper<>();
     w.eq(FlowInstanceDO::getDefinitionId, sourceDefId)
         .eq(FlowInstanceDO::getFlowStatus, FlowInstanceStatus.RUNNING.name())
@@ -317,6 +320,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
             if (targetNode != null) {
               instance.setCurrentNodeName(targetNode.getNodeName());
             }
+            // 保留 Mapper：自定义更新操作（definitionId/flowVersion/currentNodeCode/currentNodeName），Repository 暂无等价方法
             instanceMapper.updateById(instance);
 
             // P3-3: 同步迁移该实例下未完成的待办任务（ydsz_flow_run_task）

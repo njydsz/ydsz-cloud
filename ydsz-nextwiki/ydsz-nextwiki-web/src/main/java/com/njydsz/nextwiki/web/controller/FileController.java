@@ -303,4 +303,40 @@ public class FileController {
     }
     return BaseResponse.success(result);
   }
+
+  /**
+   * 批量更新节点排序值（拖拽排序）。
+   *
+   * <p>前端拖拽完成后提交目标父目录下的完整排序列表，服务端在单个事务内批量更新 sort 字段。
+   *
+   * <p><b>请求体示例：</b>
+   *
+   * <pre>
+   * {
+   *   "parentId": "folder_123",
+   *   "items": [
+   *     {"nodeId": "node_1", "sort": 0},
+   *     {"nodeId": "node_2", "sort": 1},
+   *     {"nodeId": "node_3", "sort": 2}
+   *   ]
+   * }
+   * </pre>
+   *
+   * @param request 批量排序请求（含父目录 ID + 排序条目列表）
+   * @param userId 当前用户 ID
+   * @return 统一响应结果，data 为实际更新的节点数
+   */
+  @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.UPDATE, content = "'batchSort'")
+  @Idempotent(key = "ydsz:nextwiki:FileController:batchSort:lock", ttlSeconds = 5)
+  @PutMapping("/sort")
+  @Operation(summary = "批量排序", description = "拖拽排序后批量更新节点排序值")
+  @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_RENAME)
+  public BaseResponse<Integer> batchSort(
+      @Valid @RequestBody NextwikiDTOs.BatchSortRequest request,
+      @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
+
+    int updated = fileApplicationService.batchSort(request.getParentId(), request.getItems(), userId);
+    log.info("[FileController] 批量排序: parentId={}, count={}, userId={}", request.getParentId(), updated, userId);
+    return BaseResponse.success(updated);
+  }
 }

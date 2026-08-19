@@ -19,6 +19,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
+import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
@@ -116,17 +121,49 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
 @Transactional(readOnly = true)
 public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
-  /** 历史任务 Mapper，查询审批效率统计的基础数据源 */
+  /**
+   * 历史任务 Mapper，查询审批效率统计的基础数据源。
+   *
+   * <p>保留 Mapper 调用，因为本 Service 所有查询均为复杂聚合（selectList 带复杂条件、
+   * nodeDurationStats 等），在 Repository 中暂无等价方法。
+   */
   private final FlowHisTaskMapper hisTaskMapper;
 
-  /** P0-2: 审计日志 Mapper（用于统计真实代批率，数据来源 ydsz_flow_audit_log） */
+  /** 历史任务仓储（domain 层契约），提供基础 CRUD 方法 */
+  private final FlowHisTaskRepository hisTaskRepository;
+
+  /**
+   * 审计日志 Mapper（用于统计真实代批率，数据来源 ydsz_flow_audit_log）。
+   *
+   * <p>保留 Mapper 调用，因为 selectCount 走复杂 LambdaQueryWrapper，在 Repository 中暂无等价方法。
+   */
   private final FlowAuditLogMapper auditLogMapper;
 
-  /** 待办任务 Mapper（用于卡单检测） */
+  /** 审计日志仓储（domain 层契约），提供基础 CRUD 方法 */
+  private final FlowAuditLogRepository auditLogRepository;
+
+  /**
+   * 待办任务 Mapper（用于卡单检测）。
+   *
+   * <p>保留 Mapper 调用，因为 selectList 走复杂 LambdaQueryWrapper，在 Repository 中暂无等价方法。
+   */
   private final FlowRunTaskMapper taskMapper;
 
-  /** 流程实例 Mapper（用于长期运行实例检测） */
+  /** 运行时任务仓储（domain 层契约），提供基础 CRUD 方法 */
+  private final FlowRunTaskRepository taskRepository;
+
+  /**
+   * 流程实例 Mapper（用于长期运行实例检测）。
+   *
+   * <p>保留 Mapper 调用，因为 selectList 走复杂 LambdaQueryWrapper，在 Repository 中暂无等价方法。
+   */
   private final FlowInstanceMapper instanceMapper;
+
+  /** 流程实例仓储（domain 层契约），提供基础 CRUD 方法 */
+  private final FlowInstanceRepository instanceRepository;
+
+  /** 实体转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
 
   /** 日期时间格式 */
   private static final DateTimeFormatter DT_FMT =
