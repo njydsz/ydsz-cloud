@@ -53,11 +53,13 @@ public class CacheInvalidationSubscriber implements MessageListener {
     try {
       container = new RedisMessageListenerContainer();
       container.setConnectionFactory(connectionFactory);
+      // CHECKSTYLE.OFF: RegexpSinglelineJava - Redis 订阅容器单线程执行器，用于异步订阅缓存失效消息
       container.setTaskExecutor(Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "cache-invalidation-subscriber");
         t.setDaemon(true);
         return t;
       }));
+      // CHECKSTYLE.ON: RegexpSinglelineJava
       container.addMessageListener(this, new ChannelTopic(CacheInvalidationPublisher.CHANNEL));
       container.start();
       log.info("[CacheInvalidationSubscriber] 启动 Redis 缓存失效订阅: channel={}", CacheInvalidationPublisher.CHANNEL);

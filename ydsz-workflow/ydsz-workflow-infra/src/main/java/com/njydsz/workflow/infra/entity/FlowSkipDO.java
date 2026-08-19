@@ -36,7 +36,13 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <ul>
  *   <li>普通索引 {@code idx_definition}（{@code definition_id}）：按流程定义查询
  *   <li>普通索引 {@code idx_flow_code}（{@code flow_code}）：按流程编码查询
+ *   <li>A9: {@code idx_source_node}（{@code source_node_code}）：源节点反查（REJECT 回退场景）
  * </ul>
+ *
+ * <p><b>DDL 变更：</b>新增 {@code source_node_code VARCHAR(64)} 列（对应 {@code
+ * ydsz_flow_skip.source_node_code}），需在环境初始化脚本中添加：
+ * {@code ALTER TABLE ydsz_flow_skip ADD COLUMN source_node_code VARCHAR(64) DEFAULT NULL
+ * COMMENT '源节点编码';} 并建索引 {@code idx_source_node (source_node_code)}。
  *
  * @author ydsz-team
  * @since 1.0.0

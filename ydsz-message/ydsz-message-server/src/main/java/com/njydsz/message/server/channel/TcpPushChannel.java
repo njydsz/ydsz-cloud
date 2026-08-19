@@ -3,6 +3,7 @@ package com.njydsz.message.server.channel.impl;
 import java.util.HashMap;
 import java.util.Map;
 
+// CHECKSTYLE.OFF: RegexpSinglelineJava - Netty Handler 实现需要原生 API（继承 AbstractNettyServer 后的 pipeline 回调）
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -11,6 +12,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.CharsetUtil;
+// CHECKSTYLE.ON: RegexpSinglelineJava
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

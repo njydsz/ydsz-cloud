@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.vo.FrontendInitVO;
 import com.njydsz.system.server.service.FrontendInitService;
 
@@ -49,6 +50,8 @@ public class FrontendInitController {
    * @return 前端初始化聚合数据
    */
   @Operation(summary = "获取前端初始化数据", description = "聚合返回公开配置、默认字典、系统版本等前端启动数据")
+  // P2-2: 公开接口添加限流保护（前端高频调用，防止恶意刷接口）
+  @RateLimit(resource = "system.frontend.init", threshold = 100)
   @GetMapping
   public BaseResponse<FrontendInitVO> init() {
     return BaseResponse.success(frontendInitService.getInitData());
@@ -65,6 +68,8 @@ public class FrontendInitController {
   @Operation(
       summary = "获取指定字典的初始化数据",
       description = "按需指定字典类型，返回公开配置与指定字典数据")
+  // P2-2: 公开接口添加限流保护
+  @RateLimit(resource = "system.frontend.init.dicts", threshold = 100)
   @GetMapping("/dicts")
   public BaseResponse<FrontendInitVO> initWithDicts(
       @Parameter(description = "字典类型编码列表")

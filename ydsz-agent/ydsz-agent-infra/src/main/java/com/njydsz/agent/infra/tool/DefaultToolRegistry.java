@@ -38,8 +38,10 @@ public class DefaultToolRegistry implements ToolRegistry {
   /** 工具执行超时（秒），0 表示不限时 */
   private final int defaultTimeoutSeconds;
 
-  /** 工具执行线程池（虚拟线程，用于超时控制） */
+  /** 工具执行线程池（JDK 21 虚拟线程，规范豁免场景） */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava - 虚拟线程执行器，每个任务一个虚拟线程，无界但无平台线程占用
   private final ExecutorService toolExecutorPool;
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /** 默认构造器（30 秒超时） */
   public DefaultToolRegistry() {

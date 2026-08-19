@@ -3,7 +3,9 @@ package com.njydsz.system.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
+import com.njydsz.system.domain.query.EntityVersionPageQuery;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 
 /**
@@ -32,6 +34,16 @@ public interface EntityVersionRepository {
    * @return 版本 VO 列表（按生效时间倒序），无版本时返回空列表
    */
   List<EntityVersionVO> findByTypeAndKey(String resourceType, String resourceKey);
+
+  /**
+   * 按资源类型 + 资源键分页查询版本历史（P2-3 分页优化）。
+   *
+   * <p>支持翻页查询，避免一次性加载全部版本导致性能问题（版本量大的场景）。
+   *
+   * @param query 分页查询条件（resourceType / resourceKey / pageNum / pageSize）
+   * @return 分页结果（含总记录数）
+   */
+  PageResponse<List<EntityVersionVO>> findPageByTypeAndKey(EntityVersionPageQuery query);
 
   /**
    * 按资源类型 + 资源键 + 版本号查询唯一版本。

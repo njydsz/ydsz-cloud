@@ -10,7 +10,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
+// CHECKSTYLE.OFF: RegexpSinglelineJava - WebClient 底层 Reactor Netty 连接器配置（CONNECT_TIMEOUT_MILLIS）
 import io.netty.channel.ChannelOption;
+// CHECKSTYLE.ON: RegexpSinglelineJava
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;

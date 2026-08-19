@@ -41,7 +41,8 @@ public class BpmnSkipParser {
     // sequenceFlow 自身 id 作为 skip 唯一标识
     String sourceRef = elem.getAttribute("sourceRef");
     String targetRef = elem.getAttribute("targetRef");
-    // sourceRef / targetRef 临时借用 skipName + ext 传递
+    // A9: sourceNodeCode 独立列存储源节点编码（替代 ext JSON 中的 sourceRef）
+    skip.setSourceNodeCode(sourceRef);
     Map<String, Object> ext = new HashMap<>();
     ext.put("sourceRef", sourceRef);
     ext.put("targetRef", targetRef);

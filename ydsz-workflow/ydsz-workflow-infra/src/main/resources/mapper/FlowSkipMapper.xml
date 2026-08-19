@@ -11,6 +11,7 @@
         <result column="coordinate" property="coordinate"/>
         <result column="skip_condition" property="skipCondition"/>
         <result column="next_node_code" property="nextNodeCode"/>
+        <result column="source_node_code" property="sourceNodeCode"/>
         <result column="next_node_type" property="nextNodeType"/>
         <result column="coordinate_next" property="coordinateNext"/>
         <result column="skip_list" property="skipList"/>
@@ -26,7 +27,7 @@
 
     <sql id="Base_Column_List">
         id, definition_id, flow_code, skip_name, skip_type, coordinate, skip_condition,
-        next_node_code, next_node_type, coordinate_next, skip_list, status,
+        next_node_code, source_node_code, next_node_type, coordinate_next, skip_list, status,
         created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id
     </sql>
 
