@@ -103,23 +103,9 @@
         <module>ydsz-common-sentry</module>
         <!-- L6 应用层 -->
         <module>ydsz-common-base</module>
-        <module>ydsz-common-app</module>
         <module>ydsz-common-web</module>
     </modules>
 
-    <!--
-        App 端基座模块（ydsz-common-app）当前无业务消费方。
-        保留模块源码与 dependencyManagement，但移出默认构建。
-        当有 App 端开发需求时，通过 -P app-profile 激活构建和集成验证。
-    -->
-    <profiles>
-        <profile>
-            <id>app-profile</id>
-            <modules>
-                <module>ydsz-common-app</module>
-            </modules>
-        </profile>
-    </profiles>
 
     <dependencyManagement>
         <dependencies>
@@ -263,11 +249,6 @@
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-web</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- ==================== 第三方依赖（父 POM 未管理部分） ==================== -->

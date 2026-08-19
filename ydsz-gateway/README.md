@@ -16,15 +16,15 @@
 
 ## 核心职责
 
-1. **路由分发**：Nacos 动态路由为唯一入口（`gateway-routes.json` JSON 数组格式）+ Java 兜底路由（order=1000）
+1. **路由分发**：Nacos 动态路由为唯一入口（`gateway-routes.json` JSON 数组格式）
 2. **鉴权拦截**：解析 JWT（Caffeine 防击穿缓存 + 自适应 TTL，验签切出事件循环）、转发 `X-User-Id` / `X-Tenant-Id` / `X-Trace-Id` 内部头
-3. **限流**：Redis + Lua 令牌桶五维限流（IP / 用户 / 租户 / 应用 / 接口）
+3. **限流**：Redis + Lua 令牌桶二维限流（IP / 用户）
 4. **熔断**：Resilience4j 按路由隔离熔断（防下游雪崩）
 5. **CORS**：按环境白名单放行（生产必须显式域名）
 6. **IP 访问控制**：`ydsz.gateway.ip-control.*` 统一黑白名单（Redis 动态黑名单）
 7. **灰度路由**：基于 `X-Gray-Tag` 头 + Nacos `metadata.version` 元数据 + `weight` 权重加权随机 + `grayRatio` 比例分流
 8. **WebSocket**：握手认证 + Origin 校验 + 连接数限制（`/ws` 前缀），实际转发路由需自行配置
-9. **API 版本协商**：`X-API-Version` 头（Path > Header > Query 优先级）+ 网关层 RBAC 路径角色（默认关闭）
+9. **API 版本协商**：`X-API-Version` 头（Path > Header > Query 优先级）
 
 ## 数据库表设计
 
@@ -75,15 +75,13 @@ ydsz-gateway/
     │   │   ├── GatewayHttpClientConfig.java     # HttpClient 连接池配置（真实连接池指标）
     │   │   ├── GatewayIpUtils.java              # IP 工具类（可信代理链）
     │   │   ├── GatewayMetrics.java              # Prometheus 指标
-    │   │   ├── GatewayRouteConfig.java          # Nacos 动态路由装配 + Java 兜底路由（order=1000）
+    │   │   ├── GatewayRouteConfig.java          # Nacos 动态路由装配
     │   │   ├── InternalHeaderSigner.java        # 内部头 HMAC 签名
     │   │   ├── NacosRouteDefinitionRepository.java  # Nacos 路由仓库（gateway-routes.json 模板）
     │   │   ├── PathGuard.java                   # 路径安全防护（双层检测）
-    │   │   ├── RateLimitProperties.java         # 限流配置属性（per-ip/user/tenant/app/api）
+    │   │   ├── RateLimitProperties.java         # 限流配置属性（per-ip/user）
     │   │   ├── IpAccessControlProperties.java   # IP 黑白名单配置（prefix ydsz.gateway.ip-control）
-    │   │   ├── SecurityHeadersProperties.java   # 安全响应头配置属性
     │   │   ├── ApiVersionProperties.java        # API 版本协商配置（prefix ydsz.gateway.api-version）
-    │   │   ├── AuthorizationProperties.java     # 网关 RBAC 路径角色配置（默认关闭）
     │   │   ├── CorsProperties.java              # CORS 配置
     │   │   ├── WebSocketConnectionLimiter.java  # WebSocket 连接数限制器（Redis 原子计数）
     │   │   └── CachedJwtValidator.java          # JWT 校验缓存（防击穿/穿透 + 自适应 TTL）
@@ -91,13 +89,12 @@ ydsz-gateway/
     │   │   ├── AccessLogGlobalFilter.java       # 访问日志（JSON 转义 + 采样）
     │   │   ├── ApiKeyAuthFilter.java            # API Key 认证（SHA-256 摘要比对）
     │   │   ├── AuthGlobalFilter.java            # JWT 解析 + 内部头注入（验签切出事件循环）
-    │   │   ├── AuthorizationFilter.java         # 网关层 RBAC 路径角色（默认关）
     │   │   ├── CircuitBreakerGlobalFilter.java  # 熔断（Resilience4j，按路由隔离）
     │   │   ├── GrayLoadBalancerRequestFilter.java  # 灰度路由请求过滤器
     │   │   ├── GrayResponseHeaderFilter.java    # 灰度路由响应头（X-Gray-Hit）
     │   │   ├── IpAccessControlFilter.java       # IP 黑白名单统一过滤（Redis 动态黑名单）
     │   │   ├── PayloadValidationFilter.java     # 请求体安全校验（大小 + Content-Type）
-    │   │   ├── RateLimitFilter.java             # Redis 令牌桶五维限流（IP/用户/租户/应用/接口）
+    │   │   ├── RateLimitFilter.java             # Redis 令牌桶二维限流（IP/用户）
     │   │   ├── W3CTraceContextFilter.java       # W3C 链路追踪
     │   │   ├── WebSocketAuthFilter.java         # WebSocket 握手认证
     │   │   ├── AuditLogFilter.java              # 审计日志（桥接 sys_audit_log）
@@ -111,6 +108,7 @@ ydsz-gateway/
         ├── bootstrap.yml                       # Nacos 连接 + 端口（9000）
         ├── routes-nacos.yaml                   # Nacos 动态路由模板（JSON 数组格式，8 条）
         ├── config/                             # 环境配置（Nacos DataId）
+        │   ├── ydsz-gateway-common.yaml          # 跨环境共享配置（shared-configs 引入）
         │   ├── ydsz-gateway-dev.yaml
         │   ├── ydsz-gateway-sit.yaml
         │   ├── ydsz-gateway-uat.yaml
@@ -141,7 +139,7 @@ ydsz-gateway/
 | `ydsz.gateway.httpclient.pool.max-life-time-seconds` | 60 | 最大生命周期（秒） |
 | `ydsz.gateway.httpclient.pool.eviction-interval-seconds` | 60 | 驱逐检查间隔（秒） |
 
-### 限流配置（五维度：IP / 用户 / 租户 / 应用 / 接口）
+### 限流配置（二维度：IP / 用户）
 
 | 配置项 | 默认值 | 说明 |
 |---|---|---|
@@ -152,22 +150,12 @@ ydsz-gateway/
 | `ydsz.gateway.ratelimit.per-user.enabled` | true | 用户级限流 |
 | `ydsz.gateway.ratelimit.per-user.default-qps` | 50 | 用户默认 QPS |
 | `ydsz.gateway.ratelimit.per-user.burst-capacity` | 100 | 用户突发容量 |
-| `ydsz.gateway.ratelimit.per-tenant.enabled` | false | 租户级限流（X-Tenant-Id） |
-| `ydsz.gateway.ratelimit.per-app.enabled` | false | 应用级限流（X-App-Id） |
-| `ydsz.gateway.ratelimit.per-api.enabled` | false | 接口级限流（请求路径） |
 | `ydsz.gateway.ratelimit.response-headers.enabled` | true | 限流响应头 |
 
 ### 安全响应头
 
-| 配置项 | 默认值 | 说明 |
-|---|---|---|
-| `ydsz.gateway.security-headers.enabled` | true | 安全头总开关 |
-| `ydsz.gateway.security-headers.csp.enabled` | true | CSP 响应头 |
-| `ydsz.gateway.security-headers.hsts.enabled` | true | HSTS 响应头 |
-| `ydsz.gateway.security-headers.hsts.max-age` | 31536000 | HSTS max-age |
-| `ydsz.gateway.security-headers.coop.enabled` | true | COOP 响应头 |
-| `ydsz.gateway.security-headers.coep.enabled` | true | COEP 响应头 |
-| `ydsz.gateway.security-headers.corp.enabled` | true | CORP 响应头 |
+> 安全响应头由 `common-safe` 模块统一管理（prefix `ydsz.safe.security-headers`），Gateway 不再单独配置。
+> 详见 `SecurityHeaderProperties` / `SecurityHeaderConfigurer`。
 
 ### IP 访问控制（统一黑白名单，prefix `ydsz.gateway.ip-control`）
 

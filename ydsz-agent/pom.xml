@@ -16,7 +16,6 @@
         <module>ydsz-agent-domain</module>
         <module>ydsz-agent-infra</module>
         <module>ydsz-agent-server</module>
-        <module>ydsz-agent-app</module>
         <module>ydsz-agent-web</module>
     </modules>
 </project>
