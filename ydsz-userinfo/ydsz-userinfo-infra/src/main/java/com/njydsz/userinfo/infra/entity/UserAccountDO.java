@@ -13,8 +13,10 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.IntegerStringTypeHandler;
 import com.njydsz.common.safe.encrypt.EncryptField;
 import com.njydsz.common.safe.encrypt.EncryptTypeHandler;
+import com.njydsz.userinfo.domain.enums.BanType;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.vo.BanInfoVO;
 
 /**
  * 用户账号实体
@@ -117,6 +119,23 @@ public class UserAccountDO extends MpBaseEntity<String> {
   /** 岗位编码（如 PM/DEV/QA/SA，支持 position: 审批人展开） */
   private String positionCode;
 
+  // ==================== 封禁字段 ====================
+
+  /** 封禁类型（TEMPORARY/PERMANENT/null），null 表示未封禁 */
+  private String banType;
+
+  /** 封禁原因 */
+  private String banReason;
+
+  /** 封禁到期时间（临时封禁使用，永久封禁为 null） */
+  private LocalDateTime banExpireAt;
+
+  /** 封禁操作人标识 */
+  private String bannedBy;
+
+  /** 封禁操作时间 */
+  private LocalDateTime bannedAt;
+
   /**
    * 获取状态枚举。
    *
@@ -142,6 +161,91 @@ public class UserAccountDO extends MpBaseEntity<String> {
   }
 
   // ==================== 领域行为（Domain Behavior）====================
+
+  // ==================== 封禁行为 ====================
+
+  /**
+   * 封禁账号。
+   *
+   * <p>充血模型：封禁逻辑封装在实体内部，设置封禁类型、原因、到期时间与操作信息。
+   * 临时封禁到达期后自动解除（通过 {@link #isBanned()} 懒检查）。
+   *
+   * @param type 封禁类型（TEMPORARY/PERMANENT），不可为 null
+   * @param reason 封禁原因，不可为空白
+   * @param expireAt 封禁到期时间（临时封禁必填，永久封禁传 null）
+   * @param operator 操作人标识，不可为空白
+   */
+  public void ban(BanType type, String reason, LocalDateTime expireAt, String operator) {
+    this.banType = type.name();
+    this.banReason = reason;
+    this.banExpireAt = expireAt;
+    this.bannedBy = operator;
+    this.bannedAt = LocalDateTime.now();
+  }
+
+  /**
+   * 解封账号。
+   *
+   * <p>清空所有封禁字段，恢复到未封禁状态。
+   *
+   * @param operator 操作人标识
+   */
+  public void unban(String operator) {
+    this.banType = null;
+    this.banReason = null;
+    this.banExpireAt = null;
+    this.bannedBy = operator;
+    this.bannedAt = LocalDateTime.now();
+  }
+
+  /**
+   * 检查当前是否处于封禁状态。
+   *
+   * <p>临时封禁过期自动解除（懒检查）：过期时将 banType 清除并返回 false。
+   * 永久封禁始终返回 true。
+   *
+   * @return true 表示当前处于封禁状态
+   */
+  public boolean isBanned() {
+    if (this.banType == null) {
+      return false;
+    }
+    BanType type = BanType.valueOf(this.banType);
+    if (type == BanType.PERMANENT) {
+      return true;
+    }
+    // TEMPORARY: 检查是否过期
+    boolean expired =
+        this.banExpireAt != null && !this.banExpireAt.isAfter(LocalDateTime.now());
+    if (expired) {
+      // 懒清除：临时封禁已到期，自动解除
+      this.banType = null;
+      this.banReason = null;
+      this.banExpireAt = null;
+      this.bannedBy = null;
+      this.bannedAt = null;
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * 转换为封禁信息 VO。
+   *
+   * @return 封禁信息 VO
+   */
+  public BanInfoVO toBanInfo() {
+    BanInfoVO vo = new BanInfoVO();
+    vo.setBanned(isBanned());
+    if (this.banType != null) {
+      vo.setBanType(this.banType);
+    }
+    vo.setBanReason(this.banReason);
+    vo.setBanExpireAt(this.banExpireAt);
+    vo.setBannedBy(this.bannedBy);
+    vo.setBannedAt(this.bannedAt);
+    return vo;
+  }
 
   /**
    * 激活账号（PENDING → ENABLED）。

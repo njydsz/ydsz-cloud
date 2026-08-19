@@ -182,6 +182,16 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   /** 找回密码手机号与账号不匹配 */
   FORGOT_PASSWORD_PHONE_MISMATCH("B33005", "userinfo.forgot.password.phone.mismatch"),
 
+  // ==================== A20xxx 封禁治理（运营侧主动封禁与管理员会话治理） ====================
+  /** 账号已被封禁 */
+  USER_BANNED("A20133", "userinfo.user.banned", 403),
+  /** 账号已被永久封禁 */
+  USER_BANNED_PERMANENT("A20134", "userinfo.user.banned.permanent", 403),
+  /** 不能封禁管理员 */
+  CANNOT_BAN_ADMIN("A20135", "userinfo.cannot.ban.admin", 403),
+  /** 不能封禁自己 */
+  CANNOT_BAN_SELF("A20136", "userinfo.cannot.ban.self", 400),
+
   // ==================== B34xxx 社交认证 ====================
   /** 社交认证功能未开启 */
   SOCIAL_AUTH_DISABLED("B34001", "userinfo.social.auth.disabled"),

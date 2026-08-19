@@ -39,6 +39,21 @@ public class UserAccountCredentialVO {
   /** 租户 ID */
   private String tenantId;
 
+  /** 封禁类型（TEMPORARY/PERMANENT/null），null 表示未封禁 */
+  private String banType;
+
+  /** 封禁原因 */
+  private String banReason;
+
+  /** 封禁到期时间（临时封禁使用，永久封禁为 null） */
+  private LocalDateTime banExpireAt;
+
+  /** 封禁操作人标识 */
+  private String bannedBy;
+
+  /** 封禁操作时间 */
+  private LocalDateTime bannedAt;
+
   /**
    * 判断账号是否被锁定。
    *
