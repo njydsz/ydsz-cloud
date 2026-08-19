@@ -249,7 +249,55 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   /** SCIM 过滤表达式解析错误 */
   SCIM_FILTER_PARSE_ERROR("B36004", "userinfo.scim.filter.parse.error"),
   /** SCIM PATCH 操作无效 */
-  SCIM_PATCH_INVALID("B36005", "userinfo.scim.patch.invalid");
+  SCIM_PATCH_INVALID("B36005", "userinfo.scim.patch.invalid"),
+
+  // ==================== B37xxx SAML 2.0 ====================
+  /** SAML 配置缺失（IdP 端点或证书未配置） */
+  SAML_CONFIG_MISSING("B37001", "userinfo.saml.config.missing"),
+  /** SAML Response 无效或解析失败 */
+  SAML_RESPONSE_INVALID("B37002", "userinfo.saml.response.invalid"),
+  /** SAML 签名缺失 */
+  SAML_SIGNATURE_MISSING("B37003", "userinfo.saml.signature.missing"),
+  /** SAML 签名验证失败 */
+  SAML_SIGNATURE_INVALID("B37004", "userinfo.saml.signature.invalid"),
+  /** SAML 断言已过期 */
+  SAML_ASSERTION_EXPIRED("B37005", "userinfo.saml.assertion.expired"),
+  /** SAML 断言尚未生效 */
+  SAML_ASSERTION_NOT_YET_VALID("B37006", "userinfo.saml.assertion.not.yet.valid"),
+  /** SAML Audience 不匹配 */
+  SAML_AUDIENCE_MISMATCH("B37007", "userinfo.saml.audience.mismatch"),
+  /** SAML SSO 发起失败 */
+  SAML_SSO_INIT_FAILED("B37008", "userinfo.saml.sso.init.failed"),
+
+  // ==================== B38xxx OIDC ====================
+  /** OIDC 配置无效 */
+  OIDC_CONFIG_INVALID("B38001", "userinfo.oidc.config.invalid"),
+  /** OIDC nonce 无效或已使用 */
+  OIDC_NONCE_INVALID("B38002", "userinfo.oidc.nonce.invalid"),
+  /** OIDC ID Token 签发失败 */
+  OIDC_ID_TOKEN_ISSUE_FAILED("B38003", "userinfo.oidc.id.token.issue.failed"),
+
+  // ==================== B39xxx WebAuthn/Passkey ====================
+  /** WebAuthn 功能未开启 */
+  WEBAUTHN_DISABLED("B39001", "userinfo.webauthn.disabled"),
+  /** WebAuthn 挑战码已过期 */
+  WEBAUTHN_CHALLENGE_EXPIRED("B39002", "userinfo.webauthn.challenge.expired"),
+  /** WebAuthn 挑战码类型不匹配 */
+  WEBAUTHN_CHALLENGE_TYPE_MISMATCH("B39003", "userinfo.webauthn.challenge.type.mismatch"),
+  /** WebAuthn 挑战码用户不匹配 */
+  WEBAUTHN_CHALLENGE_USER_MISMATCH("B39004", "userinfo.webauthn.challenge.user.mismatch"),
+  /** WebAuthn 客户端数据无效 */
+  WEBAUTHN_CLIENT_DATA_INVALID("B39005", "userinfo.webauthn.client.data.invalid"),
+  /** WebAuthn 签名验证失败 */
+  WEBAUTHN_SIGNATURE_INVALID("B39006", "userinfo.webauthn.signature.invalid"),
+  /** WebAuthn 凭证不存在 */
+  WEBAUTHN_CREDENTIAL_NOT_FOUND("B39007", "userinfo.webauthn.credential.not.found"),
+  /** WebAuthn 凭证已存在 */
+  WEBAUTHN_CREDENTIAL_EXISTS("B39008", "userinfo.webauthn.credential.exists"),
+  /** WebAuthn 凭证不属于当前用户 */
+  WEBAUTHN_CREDENTIAL_NOT_BELONG_TO_USER("B39009", "userinfo.webauthn.credential.not.belong.to.user"),
+  /** WebAuthn 凭证数已达上限 */
+  WEBAUTHN_CREDENTIAL_LIMIT_REACHED("B39010", "userinfo.webauthn.credential.limit.reached");
 
   /** 错误码（业务契约，不应轻易变更） */
   private final String code;

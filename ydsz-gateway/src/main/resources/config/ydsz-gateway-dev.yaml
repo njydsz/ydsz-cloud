@@ -5,8 +5,8 @@
 #  Group:     dev
 #  Profile:   dev
 #  端口:      9000
-#  说明:      Nacos 配置中心加载此文件后等价于 application.yml，
-#             配合 bootstrap.yml 完成启动。
+#  说明:      跨环境共享配置见 ydsz-gateway-common.yaml（shared-configs 引入），
+#              本文件仅保留环境特有配置。
 # =====================================================================
 
 server:
@@ -29,42 +29,9 @@ spring:
   # P0-阶段二-8: 优雅停机超时（30s 内未完成则强制关闭）
   lifecycle:
     timeout-per-shutdown-phase: 30s
-  cloud:
-    gateway:
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
-      # P2-1 安全修复：globalcors 已移除，CORS 改由 ydsz.gateway.cors.allowed-origin 单一可信来源控制
-      # 避免 CorsWebFilter 与 globalcors 双重注册导致行为不确定
-      default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
-        # P0-4: 请求体大小限制 10MB（防 DoS）
-        - RequestSize=10485760
-        # P0-阶段二-5: 网关层重试（仅对 GET 幂等请求重试，避免非幂等请求重复执行）
-        - name: Retry
-          args:
-            retries: 3
-            statuses: BAD_GATEWAY,GATEWAY_TIMEOUT,SERVICE_UNAVAILABLE
-            methods: GET,OPTIONS
-            backoff:
-              firstBackoff: 100ms
-              maxBackoff: 500ms
-              factor: 2
-              basedOnPreviousValue: true
-      # P0-3: 连接超时 + 响应超时（防雪崩）
-      httpclient:
-        connect-timeout: 3000
-        response-timeout: 30s
-        websocket:
-          max-frame-payload-length: 65536
-    loadbalancer:
-      configurations: gray
-      nacos:
-        enabled: true
 
 # =====================================================================
-# YDSZ · Gateway · P0 安全配置（P0-2 / P0-4 / P0-6）
+# YDSZ · Gateway · DEV 环境特有配置
 # =====================================================================
 ydsz:
   # JSON 引擎配置（ydsz-common-json）
@@ -79,16 +46,9 @@ ydsz:
       - com.njydsz.common.core.response.BaseResponse
       - org.springframework.cloud.gateway.route.RouteDefinition
   gateway:
-    # P0-A1: Nacos 动态路由（唯一路由入口，JSON 数组格式，Group=dev）
-    dynamic-routes:
-      enabled: true
-      data-id: gateway-routes.json
-    # P0-2: 内部头签名密钥（与 JWT 密钥分离，避免单密钥泄漏导致整体信任链破裂）
-    # ⚠️ 生产环境必须通过 YDSZ_GATEWAY_INTERNAL_SIGN_SECRET 环境变量注入强随机密钥（≥32 字节）
-    # 开发环境如未配置，自动回退到 ydsz.jwt.secret（仅用于本地调试）
+    # P0-2: 内部头签名密钥（dev 环境回退到 JWT 密钥，生产环境必须通过环境变量注入）
     internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:${JWT_SECRET:}}
-    # P2-1: CORS 单一可信来源（与凭据模式互斥校验）
-    # dev 环境允许本地开发服务器，生产环境必须通过 Nacos 替换
+    # P2-1: CORS 单一可信来源（dev 环境允许本地开发服务器）
     cors:
       allowed-origin: ${YDSZ_GATEWAY_CORS_ALLOWED_ORIGIN:http://localhost:5173}
       allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
@@ -97,85 +57,21 @@ ydsz:
       allow-credentials: true
       max-age-seconds: 3600
       enabled: true
-    # P0-4: WebSocket Origin 白名单（防跨域 WebSocket 劫持）
-    # 逗号分隔，支持通配符（如 https://*.ydsz.example.com）
-    # dev 环境为空表示不校验 Origin；prod 环境必须配置可信域
+    # P0-4: WebSocket Origin 白名单（dev 环境不校验 Origin）
     websocket:
       allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:}
-      # P2-F4: WebSocket 连接数限制（防连接耗尽攻击）
-      max-connections-per-user: 5     # 单用户最大并发 WebSocket 连接数
-      max-connections-per-ip: 20      # 单 IP 最大并发 WebSocket 连接数
-      counter-ttl-seconds: 3600       # 计数器 TTL（秒），作为异常断开的兜底清理
-    # P0-A4: 过滤器开关（与各 GlobalFilter 的 @ConditionalOnProperty 前缀/名称严格对齐）
-    filter:
-      access-log: true        # 访问日志（AccessLogGlobalFilter）
-      audit-log: true         # 安全审计日志（AuditLogFilter）
-      rate-limit: true        # 令牌桶限流（RateLimitFilter）
-      circuit-breaker: true   # 熔断（CircuitBreakerGlobalFilter）
-      gray-loadbalancer: true # 灰度路由（GrayLoadBalancerRequestFilter）
-      w3c-trace: true         # W3C Trace Context（W3CTraceContextFilter）
-      ip-access-control: true # IP 黑白名单统一开关（IpAccessControlFilter；黑白名单启用与否由 ydsz.gateway.ip-control.* 控制）
-      auth: true              # JWT 鉴权（AuthGlobalFilter）
-      api-key-auth: false     # API Key 认证（ApiKeyAuthFilter）
-      websocket-auth: true    # WebSocket 鉴权（WebSocketAuthFilter）
-      payload-validation: true # 请求体校验（PayloadValidationFilter）
-      # 注：ApiVersionHeaderFilter 开关为 ydsz.gateway.api-version.enabled；AuthorizationFilter 开关为 ydsz.gateway.authorization.enabled
-    # P0-A4: IP 访问控制属性（黑白名单的启用/配置）
-    ip-control:
-      blacklist-enabled: true
-      blacklist-fail-mode: fail-open
-      whitelist-enabled: false
-      whitelist: ""
-    # F1: 限流配置（IP + 用户二维度）
-    ratelimit:
-      enabled: true
-      per-ip:
-        enabled: true
-        default-qps: 30
-        burst-capacity: 60
-      per-user:
-        enabled: true
-        default-qps: 50
-        burst-capacity: 100
-      response-headers:
-        enabled: true
-    # P0-A4: API 版本响应头（ApiVersionHeaderFilter 开关）
-    api-version:
-      enabled: true
-    # P0-A4: 网关层粗粒度 RBAC（默认关闭，权限判定以业务服务细粒度 RBAC 为准，避免双源真相）
-    authorization:
-      enabled: false
-    # P2-1: 插件系统（Groovy 热脚本）
-    plugin:
-      enabled: false           # 默认关闭，需手动启用
-      watch-path: ./plugins    # 插件目录
-      reload-interval: 5000    # 扫描间隔（毫秒）
-    # P0-阶段二-6: HttpClient 连接池配置
+      max-connections-per-user: 5
+      max-connections-per-ip: 20
+      counter-ttl-seconds: 3600
+    # P0-阶段二-6: HttpClient 连接池配置（dev 环境默认 500）
     httpclient:
       pool:
         max-connections: 500
-        pending-acquire-timeout-ms: 45000
-        max-idle-time-seconds: 30
-        max-life-time-seconds: 60
-        eviction-interval-seconds: 60
-    # P0-阶段二-7: K8s health probe 路径放行
-    health-probe:
-      paths:
-        - /actuator/health
-        - /actuator/health/liveness
-        - /actuator/health/readiness
-        - /actuator/info
-    # P1-3: API Key 认证配置（外部系统接入）
-    api-key:
-      enabled: ${YDSZ_GATEWAY_API_KEY_ENABLED:false}
-      keys: ${YDSZ_GATEWAY_API_KEYS:}
-      protected-paths: /api/project/**,/api/workflow/**
-    # P1-8: 请求体安全校验配置
-    payload-validation:
-      enabled: true
-      max-body-size-mb: 10
-      max-json-depth: 50
-      strict-content-type: true
+    # P2-1: 插件系统（Groovy 热脚本）
+    plugin:
+      enabled: false
+      watch-path: ./plugins
+      reload-interval: 5000
 
 # 日志级别（dev 环境开 DEBUG）
 logging:
@@ -200,7 +96,6 @@ management:
       enabled: true
     health:
       show-details: when-authorized
-      # P0-阶段二-7: K8s 探针分组（liveness / readiness）
       group:
         liveness:
           include:

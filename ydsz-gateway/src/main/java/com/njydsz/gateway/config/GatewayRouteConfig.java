@@ -8,30 +8,17 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.route.RouteDefinitionRepository;
-import org.springframework.cloud.gateway.route.RouteLocator;
-import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
- * 网关路由配置（Nacos 动态路由为唯一入口 + Java 兜底路由）。
+ * 网关路由配置（Nacos 动态路由为唯一入口）。
  *
- * <p>聚合路由定义的两种来源：
- *
- * <ul>
- *   <li>{@link NacosRouteDefinitionRepository}：Nacos 动态路由（<b>唯一配置入口</b>，默认启用，支持运行时刷新）
- *   <li>{@link RouteLocator}：Java 兜底路由（order=1000，仅在 Nacos 无路由配置时生效）
- * </ul>
- *
- * <h3>路由优先级</h3>
- *
- * <p>Nacos 路由为 {@code @Primary}，且 Java 兜底路由统一设置 order=1000（低于 Nacos 路由的默认 order=0），
- * 保证 Nacos 动态路由优先匹配；Nacos 中无路由配置（空或解析失败）时自动回退到 Java 兜底路由。
+ * <p>Nacos 动态路由为唯一配置入口，默认启用，支持运行时刷新。
  *
  * <h3>配置项</h3>
  *
@@ -53,8 +40,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * ]
  * </pre>
  *
- * <p>详见模块内 {@code routes-nacos.yaml} 模板。禁止同时在 shared-configs 中引入
- * {@code ydsz-gateway-routes.yaml}，避免双路由源竞争。
+ * <p>详见模块内 {@code routes-nacos.yaml} 模板。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -102,82 +88,5 @@ public class GatewayRouteConfig {
     }
     return new NacosRouteDefinitionRepository(
         nacosConfigManager, dataId, group, true, eventPublisher, routeListenerExecutor);
-  }
-
-  /**
-   * 兜底静态路由定位器。
-   *
-   * <p>当 Nacos 配置中心无路由配置（空/解析失败）时提供基础路由能力。 统一设置 order=1000，
-   * 确保 Nacos 动态路由（order=0）优先匹配，避免双路由源冲突。
-   *
-   * <p>如需完全禁用静态路由（仅使用 Nacos 动态路由）， 启动时添加 JVM 参数 {@code -Dspring.profiles.active=noroutes}。
-   *
-   * @param builder 路由定位器构建器
-   * @return 兜底路由定位器
-   */
-  @Bean
-  @Profile("!noroutes")
-  public RouteLocator fallbackRouteLocator(RouteLocatorBuilder builder) {
-    return builder
-        .routes()
-        // ===== 基础服务（order=1000 兜底，Nacos 路由优先） =====
-        .route(
-            "ydsz-userinfo",
-            r ->
-                r.path(
-                        "/api/v1/auth/**",
-                        "/api/v1/user/**",
-                        "/api/v1/company/**",
-                        "/api/v1/dept/**",
-                        "/api/v1/menu/**",
-                        "/api/v1/post/**",
-                        "/api/v1/role/**",
-                        "/api/v1/language/**",
-                        "/api/v1/oauth2/**",
-                        "/api/v1/userinfo/**",
-                        "/api/internal/**",
-                        "/feign/**")
-                    .customize(routeBuilder -> routeBuilder.order(1000))
-                    .uri("lb://ydsz-userinfo"))
-        // ===== 业务服务 =====
-        .route(
-            "ydsz-workflow",
-            r -> r.path("/api/v1/workflow/**").customize(routeBuilder -> routeBuilder.order(1000)).uri("lb://ydsz-workflow"))
-        .route(
-            "ydsz-system",
-            r ->
-                r.path(
-                        "/api/v1/config/**",
-                        "/api/v1/dict/**",
-                        "/api/v1/app/**",
-                        "/api/v1/variable/**",
-                        "/api/v1/system/**",
-                        "/api/v1/search/**")
-                    .customize(routeBuilder -> routeBuilder.order(1000))
-                    .uri("lb://ydsz-system"))
-        .route(
-            "ydsz-message",
-            r -> r.path("/api/v1/message/**").customize(routeBuilder -> routeBuilder.order(1000)).uri("lb://ydsz-message"))
-        .route(
-            "ydsz-cronjob",
-            r -> r.path("/api/v1/cronjob/**").customize(routeBuilder -> routeBuilder.order(1000)).uri("lb://ydsz-cronjob"))
-        .route(
-            "ydsz-literule",
-            r -> r.path("/api/v1/literule/**").customize(routeBuilder -> routeBuilder.order(1000)).uri("lb://ydsz-literule"))
-        .route(
-            "ydsz-agent",
-            r ->
-                r.path("/api/v1/agent/**")
-                    .customize(
-                        routeBuilder -> {
-                          routeBuilder.order(1000);
-                          // P0-B4: AI Agent 对话为 SSE 流式响应，覆盖默认 30s 响应超时为 120s
-                          routeBuilder.metadata("response-timeout", 120000);
-                        })
-                    .uri("lb://ydsz-agent"))
-        .route(
-            "ydsz-nextwiki",
-            r -> r.path("/api/v1/nextwiki/**").customize(routeBuilder -> routeBuilder.order(1000)).uri("lb://ydsz-nextwiki"))
-        .build();
   }
 }

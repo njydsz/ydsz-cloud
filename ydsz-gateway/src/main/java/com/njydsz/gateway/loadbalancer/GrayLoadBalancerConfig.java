@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClients;
 import org.springframework.cloud.loadbalancer.core.DiscoveryClientServiceInstanceListSupplier;
 import org.springframework.cloud.loadbalancer.core.HealthCheckServiceInstanceListSupplier;
 import org.springframework.cloud.loadbalancer.core.ReactorLoadBalancer;
@@ -21,16 +20,14 @@ import reactor.core.publisher.Mono;
 /**
  * 灰度负载均衡器配置
  *
- * <p>通过 {@link LoadBalancerClients#defaultConfiguration} 将 {@link GrayLoadBalancer}
- * 注册为所有服务的默认负载均衡器, 替换 Spring Cloud LoadBalancer 内置的 {@code RoundRobinLoadBalancer}。
+ * <p>通过 {@code spring.cloud.loadbalancer.configurations=gray} 配置项激活灰度负载均衡器, 替换 Spring Cloud LoadBalancer
+ * 内置的 {@code RoundRobinLoadBalancer}。未配置时默认使用轮询策略。
  *
- * <p>配合 {@code spring.cloud.loadbalancer.configurations=gray} 配置项, 抑制默认轮询负载均衡器,使灰度负载均衡器接管所有 {@code
- * lb://} 路由。
+ * <h3>P0-3: 可选辅助定位</h3>
  *
- * <h3>P2-1: 可选辅助定位</h3>
- *
- * <p>入口流量拆分由 Argo Rollouts 统一控制（Infrastructue 层）。 本模块降为可选的辅助组件,仅用于服务间调用透传灰度标记 （header-based
- * 路由,如压测、定向灰度验证）。 通过 {@code ydsz.gray-loadbalancer.enabled=true} 控制是否启用 （默认 true,保持向后兼容）。
+ * <p>入口流量拆分由 Argo Rollouts 统一控制（Infrastructure 层）。本模块降为可选的辅助组件,仅用于服务间调用透传灰度标记（header-based
+ * 路由,如压测、定向灰度验证）。通过 {@code ydsz.gray-loadbalancer.enabled=true} 控制是否启用（默认 true,保持向后兼容）。
+ * 通过 {@code spring.cloud.loadbalancer.configurations=gray} 控制是否注册灰度负载均衡器。
  *
  * <h3>P1-1/P2-10: 主动健康检查（已启用）</h3>
  *
@@ -58,7 +55,6 @@ import reactor.core.publisher.Mono;
     value = "ydsz.gray-loadbalancer.enabled",
     havingValue = "true",
     matchIfMissing = true)
-@LoadBalancerClients(defaultConfiguration = GrayLoadBalancerConfig.class)
 public class GrayLoadBalancerConfig {
 
   /**

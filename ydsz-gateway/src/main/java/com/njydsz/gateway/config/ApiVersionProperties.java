@@ -5,7 +5,6 @@ import java.util.Map;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
 
 /**
  * P3-7: 网关 API 版本管理配置属性
@@ -50,7 +49,6 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
  * @author ydsz-team
  */
 @Data
-@RefreshScope
 @ConfigurationProperties(prefix = "ydsz.gateway.api-version")
 public class ApiVersionProperties {
 

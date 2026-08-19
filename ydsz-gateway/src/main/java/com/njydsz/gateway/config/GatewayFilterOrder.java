@@ -19,7 +19,6 @@ import org.springframework.core.Ordered;
  *   4   PayloadValidationFilter   请求体校验
  *   8   WebSocketAuthFilter       WebSocket 认证
  *   10  AuthGlobalFilter          主鉴权 + 内部头注入
- *   12  AuthorizationFilter       网关层粗粒度鉴权（RBAC）
  *   15  ApiKeyAuthFilter          API Key 认证
  *   20  GrayLoadBalancerRequestFilter 灰度标识注入
  *   30  RateLimitFilter           限流
@@ -45,8 +44,6 @@ public enum GatewayFilterOrder {
   WEBSOCKET_AUTH(8),
   /** 主鉴权过滤器 */
   AUTH(10),
-  /** 网关层粗粒度鉴权（RBAC）过滤器 */
-  AUTHORIZATION(12),
   /** API Key 认证过滤器 */
   API_KEY_AUTH(15),
   /** 灰度路由标识注入过滤器 */

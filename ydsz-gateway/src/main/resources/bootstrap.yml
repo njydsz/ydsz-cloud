@@ -58,6 +58,11 @@ spring:
           - data-id: ydsz-common.yaml
             group: ${spring.profiles.active}
             refresh: true
+          # P1-3: 网关跨环境共享配置（过滤器开关 / 限流 / IP 控制 / 连接池 / 健康探针等）
+          # 环境特有配置（CORS Origin / 日志级别 / 连接池大小）仍在 ydsz-gateway-{profile}.yaml 中覆盖
+          - data-id: ydsz-gateway-common.yaml
+            group: ${spring.profiles.active}
+            refresh: true
           # P0-A1: 网关路由不再通过 shared-configs 引入 yaml 路由文件，
           #        统一由 NacosRouteDefinitionRepository 从 gateway-routes.json（JSON 数组格式）加载，
           #        避免双路由源竞争。路由模板见 src/main/resources/routes-nacos.yaml。

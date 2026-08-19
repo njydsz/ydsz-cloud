@@ -1,0 +1,116 @@
+# =====================================================================
+#  YDSZ · Gateway · 跨环境共享配置（Nacos Shared Config）
+#  --------------------------------------------------------------------
+#  DataId:    ydsz-gateway-common.yaml
+#  Group:     ${spring.profiles.active}
+#  说明:      通过 bootstrap.yml shared-configs 引入，所有环境共享。
+#              环境特有配置（CORS Origin / 日志级别 / 连接池大小等）
+#              仍在各环境 ydsz-gateway-{profile}.yaml 中覆盖。
+# =====================================================================
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      # P2-1 安全修复：globalcors 已移除，CORS 改由 ydsz.gateway.cors.allowed-origin 单一可信来源控制
+      # 避免 CorsWebFilter 与 globalcors 双重注册导致行为不确定
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+        # P0-4: 请求体大小限制 10MB（防 DoS）
+        - RequestSize=10485760
+        # P0-阶段二-5: 网关层重试（仅对 GET 幂等请求重试，避免非幂等请求重复执行）
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,GATEWAY_TIMEOUT,SERVICE_UNAVAILABLE
+            methods: GET,OPTIONS
+            backoff:
+              firstBackoff: 100ms
+              maxBackoff: 500ms
+              factor: 2
+              basedOnPreviousValue: true
+      # P0-3: 连接超时 + 响应超时（防雪崩）
+      httpclient:
+        connect-timeout: 3000
+        response-timeout: 30s
+        websocket:
+          max-frame-payload-length: 65536
+    loadbalancer:
+      configurations: gray
+      nacos:
+        enabled: true
+
+# =====================================================================
+# YDSZ · Gateway · 跨环境共享业务配置
+# =====================================================================
+ydsz:
+  gateway:
+    # P0-A1: Nacos 动态路由（唯一路由入口）
+    dynamic-routes:
+      enabled: true
+      data-id: gateway-routes.json
+    # P0-A4: 过滤器总开关（环境可覆盖）
+    filter:
+      access-log: true        # 访问日志（AccessLogGlobalFilter）
+      audit-log: true         # 安全审计日志（AuditLogFilter）
+      rate-limit: true        # 令牌桶限流（RateLimitFilter）
+      circuit-breaker: true   # 熔断（CircuitBreakerGlobalFilter）
+      gray-loadbalancer: true # 灰度路由（GrayLoadBalancerRequestFilter）
+      w3c-trace: true         # W3C Trace Context（W3CTraceContextFilter）
+      ip-access-control: true # IP 黑白名单（IpAccessControlFilter）
+      auth: true              # JWT 鉴权（AuthGlobalFilter）
+      api-key-auth: false     # API Key 认证（ApiKeyAuthFilter）
+      websocket-auth: true    # WebSocket 鉴权（WebSocketAuthFilter）
+      payload-validation: true # 请求体校验（PayloadValidationFilter）
+      # 注：ApiVersionHeaderFilter 开关为 ydsz.gateway.api-version.enabled
+    # P0-A4: IP 访问控制属性（黑白名单的启用/配置）
+    ip-control:
+      blacklist-enabled: true
+      blacklist-fail-mode: fail-open
+      whitelist-enabled: false
+      whitelist: ""
+    # F1: 限流配置（IP + 用户二维度）
+    ratelimit:
+      enabled: true
+      per-ip:
+        enabled: true
+        default-qps: 30
+        burst-capacity: 60
+      per-user:
+        enabled: true
+        default-qps: 50
+        burst-capacity: 100
+      response-headers:
+        enabled: true
+    # P0-A4: API 版本响应头（ApiVersionHeaderFilter 开关）
+    api-version:
+      enabled: true
+    # P0-阶段二-6: HttpClient 连接池配置（默认值，环境可覆盖）
+    httpclient:
+      pool:
+        max-connections: 500
+        pending-acquire-timeout-ms: 45000
+        max-idle-time-seconds: 30
+        max-life-time-seconds: 60
+        eviction-interval-seconds: 60
+    # P0-阶段二-7: K8s health probe 路径放行
+    health-probe:
+      paths:
+        - /actuator/health
+        - /actuator/health/liveness
+        - /actuator/health/readiness
+        - /actuator/info
+    # P1-3: API Key 认证配置（外部系统接入）
+    api-key:
+      enabled: ${YDSZ_GATEWAY_API_KEY_ENABLED:false}
+      keys: ${YDSZ_GATEWAY_API_KEYS:}
+      protected-paths: /api/project/**,/api/workflow/**
+    # P1-8: 请求体安全校验配置
+    payload-validation:
+      enabled: true
+      max-body-size-mb: 10
+      max-json-depth: 50
+      strict-content-type: true

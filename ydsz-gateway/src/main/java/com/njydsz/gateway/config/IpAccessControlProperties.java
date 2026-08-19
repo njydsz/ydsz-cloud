@@ -5,7 +5,6 @@ import java.util.List;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
 
 /**
  * IP 访问控制配置属性。
@@ -33,7 +32,6 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
  * @author ydsz-team
  */
 @Data
-@RefreshScope
 @ConfigurationProperties(prefix = "ydsz.gateway.ip-control")
 public class IpAccessControlProperties {
 
