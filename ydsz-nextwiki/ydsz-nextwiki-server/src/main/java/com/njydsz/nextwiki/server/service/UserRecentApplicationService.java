@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.nextwiki.domain.dto.UserRecentDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.UserRecentRepository;
@@ -48,7 +48,7 @@ public class UserRecentApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void recordAccess(String nodeId, String userId, String accessType) {
-    String tenantId = TenantContext.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
     LocalDateTime now = LocalDateTime.now();
 
     UserRecentDTO dto = UserRecentDTO.builder()
@@ -86,7 +86,7 @@ public class UserRecentApplicationService {
    * @return 最近访问视图列表
    */
   public List<UserRecentVO> listRecent(String userId, int limit) {
-    String tenantId = TenantContext.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
     List<UserRecentDTO> recents =
         userRecentRepository.findByUserIdOrderByAccessedAt(userId, tenantId, limit);
 
@@ -129,7 +129,7 @@ public class UserRecentApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public boolean clearAll(String userId) {
-    String tenantId = TenantContext.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
     int deleted = userRecentRepository.deleteEarliestRecords(userId, tenantId, 0);
     log.info("[UserRecentApplicationService] 清除最近访问记录: userId={}, deleted={}", userId, deleted);
     return true;
@@ -142,7 +142,7 @@ public class UserRecentApplicationService {
    * @return 记录数量
    */
   public int getRecentCount(String userId) {
-    String tenantId = TenantContext.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
     return userRecentRepository.countByUserId(userId, tenantId);
   }
 }

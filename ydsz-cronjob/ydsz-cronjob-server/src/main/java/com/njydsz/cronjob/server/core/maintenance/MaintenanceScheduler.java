@@ -225,17 +225,24 @@ public class MaintenanceScheduler {
    * @param avgElapsedMs    平均耗时（毫秒）
    * @param lastError       上次异常信息（无异常为 null）
    */
-  public record TaskStats(
-      String name,
-      long totalExecutions,
-      long successCount,
-      long failureCount,
-      LocalDateTime lastExecuteTime,
-      double avgElapsedMs,
-      String lastError) {
+  /**
+   * 扫描任务执行统计。
+   *
+   * <p>P0-FIX: 原为 {@code record}（组件不可变），但 recordSuccess/recordFailure 会修改字段，
+   * 编译报"无法为 final 变量赋值"。改为可变内部类，保留原构造语义。
+   */
+  public static class TaskStats {
+
+    private final String name;
+    private long totalExecutions;
+    private long successCount;
+    private long failureCount;
+    private LocalDateTime lastExecuteTime;
+    private double avgElapsedMs;
+    private String lastError;
 
     TaskStats(String name) {
-      this(name, 0, 0, 0, null, 0.0, null);
+      this.name = name;
     }
 
     /** 记录一次成功执行。 */
@@ -253,6 +260,34 @@ public class MaintenanceScheduler {
       lastExecuteTime = LocalDateTime.now();
       lastError = e.getMessage();
       avgElapsedMs = (avgElapsedMs * (totalExecutions - 1) + elapsedMs) / totalExecutions;
+    }
+
+    public String name() {
+      return name;
+    }
+
+    public long getTotalExecutions() {
+      return totalExecutions;
+    }
+
+    public long getSuccessCount() {
+      return successCount;
+    }
+
+    public long getFailureCount() {
+      return failureCount;
+    }
+
+    public LocalDateTime getLastExecuteTime() {
+      return lastExecuteTime;
+    }
+
+    public double getAvgElapsedMs() {
+      return avgElapsedMs;
+    }
+
+    public String getLastError() {
+      return lastError;
     }
   }
 }

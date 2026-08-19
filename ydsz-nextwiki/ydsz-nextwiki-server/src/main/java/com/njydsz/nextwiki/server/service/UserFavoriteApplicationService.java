@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.nextwiki.domain.dto.UserFavoriteDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.UserFavoriteRepository;
@@ -57,7 +57,7 @@ public class UserFavoriteApplicationService {
       throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
     }
 
-    String tenantId = TenantContext.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
 
     // 校验是否已收藏
     if (userFavoriteRepository.existsByUserIdAndNodeId(userId, nodeId, tenantId)) {
@@ -123,7 +123,7 @@ public class UserFavoriteApplicationService {
    * @return 收藏视图列表
    */
   public List<UserFavoriteVO> listFavorites(String userId, int limit) {
-    String tenantId = TenantContext.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
     List<UserFavoriteDTO> favorites =
         userFavoriteRepository.findByUserId(userId, tenantId);
 
@@ -174,7 +174,7 @@ public class UserFavoriteApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public boolean updateSortOrder(String userId, String nodeId, int newSortOrder) {
-    String tenantId = TenantContext.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
 
     // 校验收藏存在
     if (!userFavoriteRepository.existsByUserIdAndNodeId(userId, nodeId, tenantId)) {
@@ -195,7 +195,7 @@ public class UserFavoriteApplicationService {
    * @return true 表示已收藏
    */
   public boolean isFavorited(String nodeId, String userId) {
-    String tenantId = TenantContext.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
     return userFavoriteRepository.existsByUserIdAndNodeId(userId, nodeId, tenantId);
   }
 
@@ -206,7 +206,7 @@ public class UserFavoriteApplicationService {
    * @return 收藏数量
    */
   public int getFavoriteCount(String userId) {
-    String tenantId = TenantContext.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
     return userFavoriteRepository.countByUserId(userId, tenantId);
   }
 }

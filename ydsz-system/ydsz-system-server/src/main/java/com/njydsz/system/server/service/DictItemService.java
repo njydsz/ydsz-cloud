@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.query.DictItemPageQuery;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.vo.ImportResult;
 
@@ -104,15 +105,10 @@ public interface DictItemService {
    *
    * <p>管理后台「字典项管理」列表数据源；不走缓存（数据量可控）。
    *
-   * @param pageNum 当前页码
-   * @param pageSize 每页记录数
-   * @param typeCode 字典类型编码过滤（可选）
-   * @param itemCode 字典项编码模糊搜索（可选）
-   * @param status 状态过滤（可选）
+   * @param query 分页查询条件（pageNum / pageSize / typeCode / itemCode / status）
    * @return 分页结果（VO），统一使用 {@link PageResponse}
    */
-  PageResponse<List<DictItemVO>> page(
-      int pageNum, int pageSize, String typeCode, String itemCode, String status);
+  PageResponse<List<DictItemVO>> page(DictItemPageQuery query);
 
   /**
    * 查询全部字典项（仅内部使用）

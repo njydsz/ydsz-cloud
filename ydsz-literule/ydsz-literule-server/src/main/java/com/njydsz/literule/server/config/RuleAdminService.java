@@ -566,7 +566,25 @@ public class RuleAdminService {
   }
 
   /**
-   * 查询规则版本历史
+   * 分页查询规则版本历史
+   *
+   * @param ruleCode 规则编码
+   * @param page 分页参数
+   * @return 分页结果
+   */
+  public IPage<RuleVersionVO> pageVersions(String ruleCode, IPage<RuleVersionVO> page) {
+    if (versionRepository == null) {
+      page.setRecords(List.of());
+      page.setTotal(0);
+      return page;
+    }
+    return versionRepository.pageVersions(ruleCode, page);
+  }
+
+  /**
+   * 查询规则版本历史（全量）
+   *
+   * <p>内部使用（如 versionDiff 需要全量列表对比），API 层请使用分页版本。
    *
    * @param ruleCode 规则编码
    * @return 版本历史

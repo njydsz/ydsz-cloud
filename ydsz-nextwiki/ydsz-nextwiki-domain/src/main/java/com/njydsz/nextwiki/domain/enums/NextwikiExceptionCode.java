@@ -142,6 +142,12 @@ public enum NextwikiExceptionCode implements ExceptionCode {
   /** AI 服务超时 */
   AI_SERVICE_TIMEOUT("W10003", "nextwiki.ai.service.timeout", 504),
 
+  // 收藏夹相关 W11xxx（S2-P1-06 新增）
+  /** 收藏已存在 */
+  FAVORITE_ALREADY_EXISTS("W11001", "nextwiki.favorite.already.exists"),
+  /** 收藏记录不存在 */
+  FAVORITE_NOT_FOUND("W11002", "nextwiki.favorite.not.found", 404),
+
   // 系统错误 W09xxx
   /** 系统内部错误 */
   INTERNAL_ERROR("W09001", "nextwiki.internal.error", 500),
