@@ -231,18 +231,6 @@ public class SseExecutor {
       return new SseChunk(null, true, finishReason, null);
     }
 
-    /** 创建进度事件 chunk（P2-#14: DAG 节点级进度感知） */
-    public static SseChunk progress(String nodeId, String status, int completedCount, int totalCount) {
-      String json =
-          String.format(
-              "{\"nodeId\":\"%s\",\"status\":\"%s\",\"completedCount\":%d,\"totalCount\":%d}",
-              nodeId != null ? nodeId : "",
-              status != null ? status : "",
-              completedCount,
-              totalCount);
-      return new SseChunk(json, false, "progress", null);
-    }
-
     /** 转换为 Map（用于 SseEmitter.event().data()） */
     public Map<String, Object> toMap() {
       Map<String, Object> map = new HashMap<>();

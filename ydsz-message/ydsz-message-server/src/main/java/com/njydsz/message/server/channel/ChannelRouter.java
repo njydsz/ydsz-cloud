@@ -1,7 +1,9 @@
 package com.njydsz.message.server.channel;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +23,8 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.server.channel.ChannelScoreCalculator.ChannelScore;
+import com.njydsz.message.server.channel.ChannelScoreCalculator.ScoreConfig;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
 
@@ -50,6 +54,9 @@ public class ChannelRouter {
 
   /** P2-4: 通道级错误指标采集 */
   private final MessageMetrics messageMetrics;
+
+  /** 通道综合评分计算器，用于 dispatchWithScore 评分选优 */
+  private final ChannelScoreCalculator channelScoreCalculator;
 
   /** P0-4: 通道缓存改为 ConcurrentHashMap，保证多线程并发读写的可见性与安全性 */
   private final Map<String, MessageChannel> channelCache = new ConcurrentHashMap<>();

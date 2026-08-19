@@ -7,10 +7,10 @@ import java.util.Objects;
 /**
  * Prompt 模板值对象
  *
- * <p>支持 SpEL 变量替换的 Prompt 模板，如：
+ * <p>支持 {@code #{var}} 占位符变量替换的 Prompt 模板，如：
  *
  * <pre>{@code
- * PromptTemplate t = new PromptTemplate("RT001", "你是项目管理助手。当前项目：#{projectName}", "v1");
+ * PromptTemplate t = new PromptTemplate("RT001", "你是项目管理助手。当前项目：#{projectName}", "v1", null);
  * String rendered = t.render(Map.of("projectName", "南京云顶 YDSZ"));
  * }</pre>
  *
@@ -36,9 +36,9 @@ public final class PromptTemplate implements Serializable {
   }
 
   /**
-   * 渲染模板（简单 #{var} 替换）
+   * 渲染模板（#{var} 占位符替换）。
    *
-   * <p>使用 SpEL 风格的 #{variableName} 占位符。 实际 SpEL 渲染由 {@code SpelPromptRenderer} 实现。
+   * <p>遍历变量映射，将 {@code #{key}} 占位符替换为对应值的字符串形式。 变量为 {@code null} 时替换为空字符串；variables 为空时返回原始模板内容。
    *
    * @param variables 变量映射
    * @return 渲染后的字符串
@@ -51,7 +51,6 @@ public final class PromptTemplate implements Serializable {
     for (Map.Entry<String, Object> entry : variables.entrySet()) {
       String placeholder = "#{" + entry.getKey() + "}";
       String value = entry.getValue() != null ? entry.getValue().toString() : "";
-      // 朴素字符串替换：按 #{key} 顺序替换；不做 SpEL 表达式求值，真正的 SpEL 渲染由独立渲染器负责
       result = result.replace(placeholder, value);
     }
     return result;

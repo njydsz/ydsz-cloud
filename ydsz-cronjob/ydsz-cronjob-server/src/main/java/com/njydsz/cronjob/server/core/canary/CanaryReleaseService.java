@@ -2,7 +2,6 @@ package com.njydsz.cronjob.server.core.canary;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -193,25 +192,9 @@ public class CanaryReleaseService {
   }
 
   /**
-   *灰度执行统计。
-   *
-   * <p>记录灰度版本的执行成功率、平均耗时、P95 耗时等指标。
-   *
-   * @param jobKey          任务 KEY
-   * @param canaryHandler   灰度处理器
-   * @param initialRatio    初始灰度比例
-   * @param totalExecutions 累计执行次数
-   * @param successCount    成功次数
-   * @param failureCount    失败次数
-   * @param avgDurationMs   平均耗时
-   * @param p95DurationMs   P95 耗时
-   * @param startTime       灰度开始时间
-   */
-  /**
    * 灰度任务运行统计。
    *
-   * <p>P0-FIX: 原为 {@code record}（组件不可变），但 updateRatio/recordExecution 会修改字段，
-   * 编译报"无法为 final 变量赋值"。改为可变内部类，保留原访问器语义。
+   * <p>记录灰度版本的执行成功率、平均耗时、P95 耗时等指标。
    */
   public static class CanaryStats {
 
