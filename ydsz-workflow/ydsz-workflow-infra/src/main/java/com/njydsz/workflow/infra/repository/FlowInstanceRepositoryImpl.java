@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
+import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowRepositoryConverter;
@@ -134,31 +135,12 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   @Override
-  public List<FlowInstanceVO> findPage(
-      String businessType,
-      String initiatorId,
-      String flowStatus,
-      LocalDateTime startTime,
-      LocalDateTime endTime,
-      String tenantId,
-      String dataScopeFilter,
-      int offset,
-      int limit) {
-    return converter.flowInstanceListToVO(
-        instanceMapper.selectPage(
-            businessType, initiatorId, flowStatus, startTime, endTime, tenantId, dataScopeFilter, offset, limit));
+  public List<FlowInstanceVO> findPage(FlowInstancePageQuery query) {
+    return converter.flowInstanceListToVO(instanceMapper.selectPage(query));
   }
 
   @Override
-  public long countPage(
-      String businessType,
-      String initiatorId,
-      String flowStatus,
-      LocalDateTime startTime,
-      LocalDateTime endTime,
-      String tenantId,
-      String dataScopeFilter) {
-    return instanceMapper.countPage(
-        businessType, initiatorId, flowStatus, startTime, endTime, tenantId, dataScopeFilter);
+  public long countPage(FlowInstancePageQuery query) {
+    return instanceMapper.countPage(query);
   }
 }

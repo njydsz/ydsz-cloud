@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
+import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 
 /**
@@ -17,7 +18,7 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
  * <ul>
  *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
  *   <li>返回领域 VO（{@link FlowInstanceVO}），非 DTO / infra 实体
- *   <li>查询入参使用具体字段（id / businessType / businessId / initiatorId 等）
+ *   <li>查询入参使用领域 Query（{@link FlowInstancePageQuery}）或具体字段
  *   <li>CUD 入参使用领域 DTO（{@link FlowInstanceDTO}），禁止接受 infra 实体
  * </ul>
  *
@@ -134,46 +135,20 @@ public interface FlowInstanceRepository {
   /**
    * 实例多维分页查询。
    *
-   * @param businessType 业务类型（可选）
-   * @param initiatorId 发起人 ID（可选）
-   * @param flowStatus 流程状态（可选）
-   * @param startTime 开始时间下界（可选）
-   * @param endTime 开始时间上界（可选）
-   * @param tenantId 租户 ID（可选）
-   * @param dataScopeFilter 数据权限 SQL 片段（可选）
-   * @param offset 偏移量
-   * @param limit 每页大小
+   * <p>支持按业务类型、发起人、状态、时间范围等多维度过滤。
+   *
+   * @param query 分页查询参数（包含 offset/limit 分页信息）
    * @return 流程实例 VO 列表
    */
-  List<FlowInstanceVO> findPage(
-      String businessType,
-      String initiatorId,
-      String flowStatus,
-      LocalDateTime startTime,
-      LocalDateTime endTime,
-      String tenantId,
-      String dataScopeFilter,
-      int offset,
-      int limit);
+  List<FlowInstanceVO> findPage(FlowInstancePageQuery query);
 
   /**
    * 实例多维分页计数。
    *
-   * @param businessType 业务类型（可选）
-   * @param initiatorId 发起人 ID（可选）
-   * @param flowStatus 流程状态（可选）
-   * @param startTime 开始时间下界（可选）
-   * @param endTime 开始时间上界（可选）
-   * @param tenantId 租户 ID（可选）
-   * @param dataScopeFilter 数据权限 SQL 片段（可选）
+   * <p>与 {@link #findPage(FlowInstancePageQuery)} 配套使用，返回符合条件的总记录数。
+   *
+   * @param query 分页查询参数
    * @return 总数
    */
-  long countPage(
-      String businessType,
-      String initiatorId,
-      String flowStatus,
-      LocalDateTime startTime,
-      LocalDateTime endTime,
-      String tenantId,
-      String dataScopeFilter);
+  long countPage(FlowInstancePageQuery query);
 }

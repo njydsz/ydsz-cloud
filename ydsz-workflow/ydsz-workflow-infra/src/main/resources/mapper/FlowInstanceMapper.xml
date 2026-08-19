@@ -98,23 +98,23 @@
         FROM ydsz_flow_instance
         WHERE status = 'ENABLED'
           AND deleted = 0
-          <if test="businessType != null and businessType != ''">
-            AND business_type = #{businessType}
+          <if test="query.businessType != null and query.businessType != ''">
+            AND business_type = #{query.businessType}
           </if>
-          <if test="initiatorId != null">
-            AND initiator_id = #{initiatorId}
+          <if test="query.initiatorId != null">
+            AND initiator_id = #{query.initiatorId}
           </if>
-          <if test="flowStatus != null and flowStatus != ''">
-            AND flow_status = #{flowStatus}
+          <if test="query.flowStatus != null and query.flowStatus != ''">
+            AND flow_status = #{query.flowStatus}
           </if>
-          <if test="startTime != null">
-            AND start_at &gt;= #{startTime}
+          <if test="query.startTime != null">
+            AND start_at &gt;= #{query.startTime}
           </if>
-          <if test="endTime != null">
-            AND start_at &lt;= #{endTime}
+          <if test="query.endTime != null">
+            AND start_at &lt;= #{query.endTime}
           </if>
-          <if test="tenantId != null">
-            AND tenant_id = #{tenantId}
+          <if test="query.tenantId != null">
+            AND tenant_id = #{query.tenantId}
           </if>
           <!-- P1-3: 数据权限 SQL 片段（由 DataScopeHelper.buildSqlFragment 生成） -->
           <!-- Security: dataScopeFilter is generated internally by DataScopeHelper which uses
@@ -122,11 +122,11 @@
                escapeSql() (strips non-alphanumeric except -_). No user input reaches ${} directly.
                DataScopeHelper performs whitelist validation on column names/aliases and applies
                fail-closed default (AND 1 = 0) for unrecognized scope rules. -->
-          <if test="dataScopeFilter != null and dataScopeFilter != ''">
-            AND ${dataScopeFilter}
+          <if test="query.dataScopeFilter != null and query.dataScopeFilter != ''">
+            AND ${query.dataScopeFilter}
           </if>
         ORDER BY start_at DESC
-        LIMIT #{limit} OFFSET #{offset}
+        LIMIT #{query.pageSize} OFFSET #{query.offset}
     </select>
 
     <!-- P2-23: 实例多维分页计数 -->
@@ -135,30 +135,30 @@
         FROM ydsz_flow_instance
         WHERE status = 'ENABLED'
           AND deleted = 0
-          <if test="businessType != null and businessType != ''">
-            AND business_type = #{businessType}
+          <if test="query.businessType != null and query.businessType != ''">
+            AND business_type = #{query.businessType}
           </if>
-          <if test="initiatorId != null">
-            AND initiator_id = #{initiatorId}
+          <if test="query.initiatorId != null">
+            AND initiator_id = #{query.initiatorId}
           </if>
-          <if test="flowStatus != null and flowStatus != ''">
-            AND flow_status = #{flowStatus}
+          <if test="query.flowStatus != null and query.flowStatus != ''">
+            AND flow_status = #{query.flowStatus}
           </if>
-          <if test="startTime != null">
-            AND start_at &gt;= #{startTime}
+          <if test="query.startTime != null">
+            AND start_at &gt;= #{query.startTime}
           </if>
-          <if test="endTime != null">
-            AND start_at &lt;= #{endTime}
+          <if test="query.endTime != null">
+            AND start_at &lt;= #{query.endTime}
           </if>
-          <if test="tenantId != null">
-            AND tenant_id = #{tenantId}
+          <if test="query.tenantId != null">
+            AND tenant_id = #{query.tenantId}
           </if>
           <!-- P1-3: 数据权限 SQL 片段 -->
           <!-- Security: dataScopeFilter is generated internally by DataScopeHelper which uses
                hardcoded column names (dept_id / initiator_id) and escapes all values via
                escapeSql() (strips non-alphanumeric except -_). No user input reaches ${} directly. -->
-          <if test="dataScopeFilter != null and dataScopeFilter != ''">
-            AND ${dataScopeFilter}
+          <if test="query.dataScopeFilter != null and query.dataScopeFilter != ''">
+            AND ${query.dataScopeFilter}
           </if>
     </select>
 

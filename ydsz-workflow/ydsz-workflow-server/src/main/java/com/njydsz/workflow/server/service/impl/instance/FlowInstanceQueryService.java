@@ -23,6 +23,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.security.DataScopeHelper;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
+import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
@@ -194,44 +195,23 @@ public class FlowInstanceQueryService {
   /**
    * P2-23: 实例多维分页查询
    *
-   * @param businessType 业务类型（可选）
-   * @param initiatorId 发起人 ID（可选）
-   * @param flowStatus 流程状态（可选）
-   * @param startTime 开始时间下界（可选）
-   * @param endTime 开始时间上界（可选）
-   * @param tenantId 租户 ID（可选）
-   * @param pageNo 页码（从 1 开始）
-   * @param pageSize 每页大小
+   * @param query 分页查询参数对象（含筛选条件、分页信息）
    * @return 分页结果
    */
   @Transactional(readOnly = true)
   @DataScope(deptAlias = "", userAlias = "", userColumn = "initiator_id")
-  public PageResponse<List<FlowInstanceDO>> page(
-      String businessType,
-      String initiatorId,
-      String flowStatus,
-      java.time.LocalDateTime startTime,
-      java.time.LocalDateTime endTime,
-      String tenantId,
-      int pageNo,
-      int pageSize) {
-    // P2-23: 真分页（SQL LIMIT/OFFSET），支持多维度过滤
-    int safePage = Math.max(1, pageNo);
-    int safeSize = pageSize > 0 ? pageSize : 20;
-    int offset = (safePage - 1) * safeSize;
+  public PageResponse<List<FlowInstanceDO>> page(FlowInstancePageQuery query) {
     // P1-3: 数据权限 SQL 片段（由 DataScopeAspect ThreadLocal 传递，DataScopeHelper 构造）
-    String dataScopeFilter = "";
     try {
-      dataScopeFilter = DataScopeHelper.buildSqlFragment("", "", "dept_id", "initiator_id");
+      String dataScopeFilter = DataScopeHelper.buildSqlFragment("", "", "dept_id", "initiator_id");
+      query.setDataScopeFilter(dataScopeFilter);
     } catch (Exception e) {
       log.debug("[Flow] 数据权限片段构建失败（无登录用户上下文）: {}", e.getMessage());
     }
-    List<FlowInstanceDO> list = instanceRepository.findPage(
-        businessType, initiatorId, flowStatus, startTime, endTime, tenantId, dataScopeFilter, offset, safeSize)
+    List<FlowInstanceDO> list = instanceRepository.findPage(query)
         .stream().map(converter::entityToDO).toList();
-    long total = instanceRepository.countPage(
-        businessType, initiatorId, flowStatus, startTime, endTime, tenantId, dataScopeFilter);
-    return PageResponse.success(total, (long) safePage, (long) safeSize, list);
+    long total = instanceRepository.countPage(query);
+    return PageResponse.success(total, (long) query.getPageNum(), (long) query.getPageSize(), list);
   }
 
   /**
