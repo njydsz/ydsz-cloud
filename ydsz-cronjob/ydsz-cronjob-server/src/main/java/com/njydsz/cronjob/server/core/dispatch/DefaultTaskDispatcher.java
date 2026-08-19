@@ -1900,7 +1900,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param jobId 任务 ID
    * @return true 表示存在 RUNNING 日志
    */
-  private boolean hasRunningLog(Long jobId) {
+  private boolean hasRunningLog(String jobId) {
     Long count =
         jobLogMapper.selectCount(
             new LambdaQueryWrapper<JobLog>()

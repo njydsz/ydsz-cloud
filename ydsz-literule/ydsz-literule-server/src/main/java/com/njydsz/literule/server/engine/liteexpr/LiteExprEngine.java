@@ -3,7 +3,6 @@ package com.njydsz.literule.server.engine.liteexpr;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -336,48 +335,16 @@ public class LiteExprEngine implements ExpressionEngine {
         .build();
   }
 
+  /**
+   * 推断函数分类
+   *
+   * <p>优先使用注册表中注册的分类信息（P1-2 注解化后内置函数已在注册时声明分类）。 对于未注册分类的自定义函数，默认返回 "custom"。
+   *
+   * @param funcName 函数名
+   * @return 函数分类字符串
+   */
   private String inferCategory(String funcName) {
-    if (Set.of(
-            "abs", "max", "min", "round", "floor", "ceil", "sqrt", "pow", "log", "log10", "exp",
-            "random")
-        .contains(funcName)) return "math";
-    if (Set.of(
-            "length",
-            "upper",
-            "lower",
-            "trim",
-            "contains",
-            "startsWith",
-            "endsWith",
-            "substring",
-            "indexOf",
-            "replace",
-            "split",
-            "join",
-            "concat",
-            "equals",
-            "isEmpty",
-            "isBlank",
-            "isNotBlank",
-            "compareTo")
-        .contains(funcName)) return "string";
-    if (Set.of(
-            "count", "sum", "avg", "first", "last", "distinct", "filter", "map", "reduce", "sortBy")
-        .contains(funcName)) return "collection";
-    if (Set.of(
-            "toString",
-            "toNumber",
-            "toInt",
-            "toLong",
-            "toDouble",
-            "toBoolean",
-            "toDecimal",
-            "isNull",
-            "isNotNull",
-            "typeOf")
-        .contains(funcName)) return "type";
-    if (Set.of("now", "today", "dateFormat", "dateParse", "year", "month", "day")
-        .contains(funcName)) return "datetime";
-    return "utility";
+    String category = functionRegistry.getCategory(funcName);
+    return category != null ? category : "custom";
   }
 }

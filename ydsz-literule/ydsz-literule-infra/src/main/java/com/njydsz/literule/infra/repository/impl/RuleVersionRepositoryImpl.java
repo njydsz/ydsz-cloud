@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -63,6 +64,17 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
            .orderByDesc(RuleVersionHistory::getVersion);
     List<RuleVersionHistory> entities = ruleVersionHistoryMapper.selectList(wrapper);
     return converter.ruleVersionListToVO(entities);
+  }
+
+  @Override
+  public IPage<RuleVersionVO> pageVersions(String ruleCode, IPage<RuleVersionVO> page) {
+    LambdaQueryWrapper<RuleVersionHistory> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(RuleVersionHistory::getRuleCode, ruleCode)
+           .orderByDesc(RuleVersionHistory::getVersion);
+    IPage<RuleVersionHistory> entityPage = ruleVersionHistoryMapper.selectPage(page, wrapper);
+    // 将 Entity 分页结果转换为 VO 分页结果
+    IPage<RuleVersionVO> voPage = page.setRecords(converter.ruleVersionListToVO(entityPage.getRecords()));
+    return voPage;
   }
 
   @Override

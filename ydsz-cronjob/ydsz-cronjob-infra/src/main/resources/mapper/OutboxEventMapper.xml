@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.cronjob.infra.outbox.OutboxEventMapper">
+
+  <resultMap id="BaseResultMap" type="com.njydsz.cronjob.infra.outbox.OutboxEvent">
+    <id column="id" property="id"/>
+    <result column="event_key" property="eventKey"/>
+    <result column="event_type" property="eventType"/>
+    <result column="topic" property="topic"/>
+    <result column="payload" property="payload"/>
+    <result column="status" property="status"/>
+    <result column="retry_count" property="retryCount"/>
+    <result column="next_retry_time" property="nextRetryTime"/>
+    <result column="create_time" property="createTime"/>
+    <result column="update_time" property="updateTime"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, event_key, event_type, topic, payload, status, retry_count, next_retry_time, create_time, update_time
+  </sql>
+
+  <!-- 查询待发布事件 -->
+  <select id="selectPending" resultMap="BaseResultMap">
+    SELECT <include refid="Base_Column_List"/>
+    FROM ydsz_job_outbox
+    WHERE status = 'PENDING'
+      AND next_retry_time &lt;= #{now}
+      AND retry_count &lt; #{maxRetry}
+    ORDER BY create_time ASC
+    LIMIT #{batchSize}
+  </select>
+
+  <!-- 标记为已发布 -->
+  <update id="markPublished">
+    UPDATE ydsz_job_outbox
+    SET status = 'PUBLISHED',
+        update_time = NOW()
+    WHERE id = #{id}
+      AND status = 'PENDING'
+  </update>
+
+  <!-- 标记为死亡信 -->
+  <update id="markDead">
+    UPDATE ydsz_job_outbox
+    SET status = 'DEAD',
+        update_time = NOW()
+    WHERE id = #{id}
+      AND status = 'PENDING'
+  </update>
+
+  <!-- 递增重试计数 -->
+  <update id="incrementRetry">
+    UPDATE ydsz_job_outbox
+    SET retry_count = retry_count + 1,
+        next_retry_time = #{nextRetry},
+        update_time = NOW()
+    WHERE id = #{id}
+      AND status = 'PENDING'
+  </update>
+
+  <!-- 删除已发布历史数据 -->
+  <delete id="deletePublishedBefore">
+    DELETE FROM ydsz_job_outbox
+    WHERE status = 'PUBLISHED'
+      AND update_time &lt; #{beforeTime}
+  </delete>
+
+</mapper>

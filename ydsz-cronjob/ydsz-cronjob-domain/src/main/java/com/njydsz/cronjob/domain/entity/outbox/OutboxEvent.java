@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.infra.outbox;
+package com.njydsz.cronjob.domain.entity.outbox;
 
 import java.time.LocalDateTime;
 

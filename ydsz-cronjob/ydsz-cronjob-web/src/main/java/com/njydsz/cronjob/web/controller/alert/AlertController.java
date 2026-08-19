@@ -207,8 +207,7 @@ public class AlertController {
       @PathVariable String jobId,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime since) {
-    return BaseResponse.success(
-        CronjobConverter.INSTANT.jobAlertLogListToVO(alertService.queryAlertLogs(jobId, since)));
+    return BaseResponse.success(alertService.queryAlertLogs(jobId, since));
   }
 
   /** 将 PostDTO 转换为 SaveDTO。 */

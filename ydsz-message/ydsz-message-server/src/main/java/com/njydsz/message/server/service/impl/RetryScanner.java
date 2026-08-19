@@ -114,7 +114,7 @@ public class RetryScanner {
   }
 
   /**
-   * 重试单条消息:状态流转 RETRY → SENDING → dispatch → SUCCESS/RETRY/DEAD。
+   * 重试单条消息:状态流转 RETRY → dispatch → SUCCESS/RETRY/DEAD。
    *
    * @param logDO 日志实体
    * @return 重试后的状态
@@ -122,9 +122,6 @@ public class RetryScanner {
   private MessageStatusEnum retryOnce(MsgLog logDO) {
     // P1-3: 进入追踪上下文，将 logDO.traceId 写入 MDC，确保重试日志可追溯
     try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(logDO.getTraceId())) {
-      // ① 流转到 SENDING
-      logDO.setStatus(MessageStatusEnum.SENDING.name());
-      msgLogRepository.updateById(logDO);
       long start = System.currentTimeMillis();
       try {
         String providerTraceId = channelRouter.dispatch(logDO);

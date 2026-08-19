@@ -205,36 +205,30 @@ public class SseExecutor {
   }
 
   /**
-   * SSE 传输的 chunk 值对象。
+   * SSE 传输的 chunk 值对象（不可变 record）。
    *
    * <p>封装流式片段数据，统一 ChatController 和 AgentController 的数据格式。
+   *
+   * @param content 增量文本内容
+   * @param finished 是否已完成
+   * @param finishReason 结束原因（stop / length / tool_calls）
+   * @param toolCalls 工具调用列表
    */
-  public static class SseChunk {
-    private final String content;
-    private final boolean finished;
-    private final String finishReason;
-    private final Object toolCalls;
-
-    private SseChunk(Builder builder) {
-      this.content = builder.content;
-      this.finished = builder.finished;
-      this.finishReason = builder.finishReason;
-      this.toolCalls = builder.toolCalls;
-    }
+  public record SseChunk(String content, boolean finished, String finishReason, Object toolCalls) {
 
     /** 创建增量内容 chunk */
     public static SseChunk content(String content) {
-      return new Builder().content(content).build();
+      return new SseChunk(content, false, null, null);
     }
 
     /** 创建带完成标记的 chunk */
     public static SseChunk content(String content, String finishReason, Object toolCalls) {
-      return new Builder().content(content).finishReason(finishReason).toolCalls(toolCalls).build();
+      return new SseChunk(content, false, finishReason, toolCalls);
     }
 
     /** 创建完成 chunk */
     public static SseChunk finish(String finishReason) {
-      return new Builder().finished(true).finishReason(finishReason).build();
+      return new SseChunk(null, true, finishReason, null);
     }
 
     /** 转换为 Map（用于 SseEmitter.event().data()） */
@@ -249,54 +243,6 @@ public class SseExecutor {
         map.put("toolCalls", toolCalls);
       }
       return map;
-    }
-
-    public String getContent() {
-      return content;
-    }
-
-    public boolean isFinished() {
-      return finished;
-    }
-
-    public String getFinishReason() {
-      return finishReason;
-    }
-
-    public Object getToolCalls() {
-      return toolCalls;
-    }
-
-    /** Builder 模式构建 SseChunk */
-    public static class Builder {
-      private String content;
-      private boolean finished;
-      private String finishReason;
-      private Object toolCalls;
-
-      public Builder content(String content) {
-        this.content = content;
-        return this;
-      }
-
-      public Builder finished(boolean finished) {
-        this.finished = finished;
-        return this;
-      }
-
-      public Builder finishReason(String finishReason) {
-        this.finishReason = finishReason;
-        return this;
-      }
-
-      public Builder toolCalls(Object toolCalls) {
-        this.toolCalls = toolCalls;
-        return this;
-      }
-
-      public SseChunk build() {
-        return new SseChunk(this);
-      }
     }
   }
 }

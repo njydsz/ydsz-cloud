@@ -6,6 +6,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 import com.njydsz.cronjob.domain.repository.JobAlertRuleRepository;
 import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
@@ -52,5 +54,31 @@ public class JobAlertRuleRepositoryImpl implements JobAlertRuleRepository {
   @Override
   public int updateLastAlertAtIfNotInCooldown(String ruleId, LocalDateTime now, LocalDateTime cooldownBefore) {
     return jobAlertRuleMapper.updateLastAlertAtIfNotInCooldown(ruleId, now, cooldownBefore);
+  }
+
+  @Override
+  public JobAlertRule selectById(String id) {
+    return jobAlertRuleMapper.selectById(id);
+  }
+
+  @Override
+  public int insert(JobAlertRule rule) {
+    return jobAlertRuleMapper.insert(rule);
+  }
+
+  @Override
+  public int updateById(JobAlertRule rule) {
+    return jobAlertRuleMapper.updateById(rule);
+  }
+
+  @Override
+  public int deleteById(String id) {
+    return jobAlertRuleMapper.deleteById(id);
+  }
+
+  @Override
+  public List<JobAlertRule> selectList() {
+    return jobAlertRuleMapper.selectList(
+        new LambdaQueryWrapper<JobAlertRule>().orderByDesc(JobAlertRule::getCreatedAt));
   }
 }

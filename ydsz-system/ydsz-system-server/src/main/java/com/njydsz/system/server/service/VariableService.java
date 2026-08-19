@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.query.VariablePageQuery;
 import com.njydsz.system.domain.vo.ImportResult;
 import com.njydsz.system.domain.vo.VariableVO;
 
@@ -68,13 +69,10 @@ public interface VariableService {
   /**
    * 分页查询系统变量（支持搜索过滤）
    *
-   * @param pageNum 当前页码
-   * @param pageSize 每页记录数
-   * @param variableKey 变量键模糊搜索（可选）
-   * @param status 状态过滤（可选）
+   * @param query 分页查询条件（pageNum / pageSize / variableKey / status）
    * @return 分页结果（VO），统一使用 {@link PageResponse}
    */
-  PageResponse<List<VariableVO>> page(int pageNum, int pageSize, String variableKey, String status);
+  PageResponse<List<VariableVO>> page(VariablePageQuery query);
 
   /**
    * 查询全部系统变量（仅内部使用）

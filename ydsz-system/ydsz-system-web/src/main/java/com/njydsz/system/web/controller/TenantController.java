@@ -27,6 +27,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.TenantDTO;
+import com.njydsz.system.domain.query.TenantPageQuery;
 import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.server.service.TenantService;
 
@@ -62,22 +63,15 @@ public class TenantController {
    *
    * <p>支持按租户名称模糊搜索和状态精确过滤。
    *
-   * @param pageNum 页码（默认 1）
-   * @param pageSize 每页条数（默认 10，最大 500）
-   * @param tenantName 租户名称模糊搜索关键字（可选）
-   * @param status 状态过滤（ENABLED/DISABLED/EXPIRED，可选）
+   * @param query 分页查询条件（pageNum / pageSize / tenantName / status）
    * @return 分页结果
    */
   @Operation(summary = "分页查询租户列表")
   @GetMapping("/page")
-  public PageResponse<List<TenantVO>> page(
-      @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
-      @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
-      @Parameter(description = "租户名称模糊搜索") @RequestParam(required = false) String tenantName,
-      @Parameter(description = "状态") @RequestParam(required = false) String status) {
+  public PageResponse<List<TenantVO>> page(TenantPageQuery query) {
     // pageSize 服务端硬上限截断，防止深度分页 OOM
-    int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
-    return service.page(pageNum, safePageSize, tenantName, status);
+    query.setPageSize(Math.min(query.getPageSize(), MAX_PAGE_SIZE));
+    return service.page(query);
   }
 
   /**

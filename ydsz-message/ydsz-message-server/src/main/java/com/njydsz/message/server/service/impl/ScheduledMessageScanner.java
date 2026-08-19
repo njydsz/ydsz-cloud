@@ -96,14 +96,12 @@ public class ScheduledMessageScanner {
   }
 
   /**
-   * 发送单条定时消息：状态流转 SCHEDULED → SENDING → dispatch → SUCCESS/RETRY。
+   * 发送单条定时消息：状态流转 SCHEDULED → dispatch → SUCCESS/RETRY。
    *
    * @param logDO 消息日志实体
    */
   private void sendScheduledMessage(MsgLog logDO) {
     try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(logDO.getTraceId())) {
-      logDO.setStatus(MessageStatusEnum.SENDING.name());
-      msgLogRepository.updateById(logDO);
       long start = System.currentTimeMillis();
       try {
         String providerTraceId = channelRouter.dispatch(logDO);

@@ -37,6 +37,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
+import com.njydsz.nextwiki.domain.dto.StorageQuotaDTO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
@@ -159,8 +160,8 @@ public class ChunkUploadApplicationService {
           .data("maxChunks", MAX_CHUNKS);
     }
 
-    // 配额校验
-    quotaDomainService.checkQuota("user", userId, fileSize);
+    // 配额校验（QuotaDomainService 为纯领域逻辑，先加载配额实体再校验）
+    quotaDomainService.checkQuota(loadQuota("user", userId), fileSize, null);
 
     String uploadId = String.valueOf(snowflakeIdGenerator.nextId());
 
@@ -615,6 +616,29 @@ public class ChunkUploadApplicationService {
       return fileStorageProvider.getStorage();
     }
     return null;
+  }
+
+  /**
+   * 加载配额 DTO（供领域服务配额校验）。
+   *
+   * <p>QuotaDomainService.checkQuota 为纯领域逻辑，需由本层先加载配额实体传入；
+   * 配额不存在时返回 {@code null}，由领域服务统一抛出配额不足异常。
+   */
+  private StorageQuotaDTO loadQuota(String scopeType, String scopeId) {
+    return storageQuotaRepository
+        .findByScope(scopeType, scopeId)
+        .map(
+            vo ->
+                StorageQuotaDTO.builder()
+                    .id(vo.getId())
+                    .scopeType(vo.getScopeType())
+                    .scopeId(vo.getScopeId())
+                    .quotaLimit(vo.getQuotaLimit())
+                    .quotaUsed(vo.getQuotaUsed())
+                    .fileCountLimit(vo.getFileCountLimit())
+                    .fileCountUsed(vo.getFileCountUsed())
+                    .build())
+        .orElse(null);
   }
 
   // P0-R2: 新增辅助方法

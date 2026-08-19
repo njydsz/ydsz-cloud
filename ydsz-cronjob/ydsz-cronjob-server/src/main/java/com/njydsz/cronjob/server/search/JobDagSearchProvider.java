@@ -1,21 +1,21 @@
 package com.njydsz.cronjob.server.search;
 
 import java.time.ZoneId;
-import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.search.core.IndexDocument;
-import com.njydsz.common.search.core.SearchField;
-import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.cronjob.domain.entity.dag.JobDag;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
 
 /**
  * DAG 工作流搜索提供者 — 将 DAG 定义注册到统一搜索体系。
+ *
+ * <p>P0-FIX: 移除旧版 SearchProvider 接口已删除的方法（getTypeLabel/getSearchableFields/loadById），
+ * 仅保留新接口契约（getType/toIndexDocument），消除"方法不覆盖"编译错误。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -30,11 +30,6 @@ public class JobDagSearchProvider implements SearchProvider<JobDag> {
   @Override
   public String getType() {
     return "job_dag";
-  }
-
-  @Override
-  public String getTypeLabel() {
-    return "DAG工作流";
   }
 
   @Override
@@ -63,47 +58,5 @@ public class JobDagSearchProvider implements SearchProvider<JobDag> {
                 ? entity.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant()
                 : null)
         .build();
-  }
-
-  @Override
-  public List<SearchField> getSearchableFields() {
-    return List.of(
-        SearchField.builder()
-            .name("title")
-            .label("DAG名称")
-            .type(FieldType.TEXT)
-            .weight(3.0f)
-            .searchable(true)
-            .highlightable(true)
-            .sortable(true)
-            .build(),
-        SearchField.builder()
-            .name("subtitle")
-            .label("DAG Key")
-            .type(FieldType.TEXT)
-            .weight(2.0f)
-            .searchable(true)
-            .highlightable(true)
-            .build(),
-        SearchField.builder()
-            .name("content")
-            .label("描述")
-            .type(FieldType.TEXT)
-            .weight(1.0f)
-            .searchable(true)
-            .build(),
-        SearchField.builder()
-            .name("status")
-            .label("DAG状态")
-            .type(FieldType.KEYWORD)
-            .weight(0.5f)
-            .searchable(false)
-            .aggregatable(true)
-            .build());
-  }
-
-  @Override
-  public JobDag loadById(String id) {
-    return jobDagMapper.selectById(id);
   }
 }

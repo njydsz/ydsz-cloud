@@ -1,8 +1,5 @@
 package com.njydsz.agent.server.agent;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
@@ -95,9 +92,6 @@ public class AgentFactory {
    */
   private final SupervisorAgentExecutor supervisorExecutor;
 
-  /** 执行器缓存（key=Agent 类型） */
-  private final Map<String, AgentExecutor> executorCache = new ConcurrentHashMap<>();
-
   public AgentFactory(
       LlmClient llmClient,
       ConversationMemory memory,
@@ -128,17 +122,18 @@ public class AgentFactory {
   /**
    * 获取 Agent 执行器
    *
+   * <p>每次创建新实例（执行器为无状态不可变对象，创建开销极小），避免缓存长期持有依赖引用。
+   *
    * @param definition Agent 定义
    * @return 执行器
    */
   public AgentExecutor getExecutor(AgentDefinition definition) {
-    String type = definition.getType().name();
-    return executorCache.computeIfAbsent(type, this::createExecutor);
+    return createExecutor(definition.getType().name());
   }
 
   /** 获取默认 Agent 执行器（ReAct 模式） */
   public AgentExecutor getDefaultExecutor() {
-    return executorCache.computeIfAbsent("REACT", this::createExecutor);
+    return createExecutor("REACT");
   }
 
   /**

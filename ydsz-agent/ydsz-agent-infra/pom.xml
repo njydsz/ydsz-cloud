@@ -38,6 +38,11 @@
             <groupId>io.projectreactor.netty</groupId>
             <artifactId>reactor-netty-http</artifactId>
         </dependency>
+        <!-- P1-10: 双层缓存 L1（Caffeine 本地缓存） -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
         <!-- ydzs-common-redis -->
         <dependency>
             <groupId>com.njydsz</groupId>

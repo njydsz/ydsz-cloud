@@ -12,10 +12,10 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
-import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
 import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 import com.njydsz.cronjob.domain.repository.JobAlertLogRepository;
 import com.njydsz.cronjob.domain.repository.JobAlertRuleRepository;
+import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
 import com.njydsz.cronjob.server.core.alert.AlertTrigger;
 import com.njydsz.cronjob.server.core.alert.AlertType;
 import com.njydsz.cronjob.server.service.alert.AlertService;
@@ -139,12 +139,12 @@ public class AlertServiceImpl implements AlertService {
   }
 
   @Override
-  public List<JobAlertLog> queryAlertLogs(String jobId, LocalDateTime since) {
+  public List<JobAlertLogVO> queryAlertLogs(String jobId, LocalDateTime since) {
     if (jobId == null || jobId.isBlank()) {
       return List.of();
     }
     LocalDateTime cutoff = since != null ? since : LocalDateTime.now().minusDays(7);
-    return jobAlertLogRepository.selectByJobIdSince(jobId, cutoff);
+    return jobAlertLogRepository.findByJobIdSince(jobId, cutoff);
   }
 
   /**

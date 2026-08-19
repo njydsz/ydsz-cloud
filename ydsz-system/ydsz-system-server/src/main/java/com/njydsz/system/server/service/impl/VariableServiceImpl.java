@@ -191,21 +191,11 @@ public class VariableServiceImpl implements VariableService {
    *
    * <p><b>租户隔离：</b>本方法按当前租户自动过滤（MyBatis 拦截器注入 tenant_id）。
    *
-   * @param pageNum 页码（1-based）
-   * @param pageSize 每页条数
-   * @param variableKey 变量键（可选，模糊匹配）
-   * @param status 状态（可选过滤条件，如 {@code ENABLED/DISABLED}）
+   * @param query 分页查询条件（pageNum / pageSize / variableKey / status）
    * @return 分页结果（含总条数）
    */
   @Override
-  public PageResponse<List<VariableVO>> page(
-      int pageNum, int pageSize, String variableKey, String status) {
-    VariablePageQuery query = VariablePageQuery.builder()
-        .pageNum(pageNum)
-        .pageSize(pageSize)
-        .variableKey(variableKey)
-        .status(status)
-        .build();
+  public PageResponse<List<VariableVO>> page(VariablePageQuery query) {
     return variableRepository.findByPage(query);
   }
 

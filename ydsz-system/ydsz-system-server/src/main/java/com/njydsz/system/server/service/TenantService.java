@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.TenantDTO;
+import com.njydsz.system.domain.query.TenantPageQuery;
 import com.njydsz.system.domain.vo.TenantVO;
 
 /**
@@ -40,13 +41,10 @@ public interface TenantService {
    *
    * <p>支持按租户名称模糊匹配、状态过滤。
    *
-   * @param pageNum 当前页码
-   * @param pageSize 每页记录数
-   * @param tenantName 租户名称模糊搜索（可选）
-   * @param status 状态过滤（可选）
+   * @param query 分页查询条件（pageNum / pageSize / tenantName / status）
    * @return 分页结果
    */
-  PageResponse<List<TenantVO>> page(int pageNum, int pageSize, String tenantName, String status);
+  PageResponse<List<TenantVO>> page(TenantPageQuery query);
 
   /**
    * 创建租户

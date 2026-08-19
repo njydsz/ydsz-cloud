@@ -3,6 +3,7 @@ package com.njydsz.literule.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
@@ -33,6 +34,17 @@ public interface RuleVersionRepository {
    * @return 版本历史 VO 列表（按版本号降序）
    */
   List<RuleVersionVO> listVersions(String ruleCode);
+
+  /**
+   * 分页查询规则的版本历史
+   *
+   * <p>支持大数据量版本历史场景，避免一次性加载全部版本记录导致 OOM。
+   *
+   * @param ruleCode 规则编码
+   * @param page 分页参数（IPage 由 MyBatis-Plus 插件拦截并执行分页）
+   * @return 分页结果
+   */
+  IPage<RuleVersionVO> pageVersions(String ruleCode, IPage<RuleVersionVO> page);
 
   /**
    * 回滚到指定版本

@@ -17,9 +17,9 @@ import com.njydsz.common.util.id.IdGenerator;
 /**
  * LiteExpr 内置函数库
  *
- * <p>替代 LiteExpr 标准库，提供表达式引擎所需的基础函数。 按 5 大类组织：数学、字符串、集合、类型转换、时间。
+ * <p>替代 LiteExpr 标准库，提供表达式引擎所需的基础函数。 按 6 大类组织：数学、字符串、集合、类型转换、时间、工具。
  *
- * <p>所有函数在 {@link FunctionRegistry} 构造时自动注册。 业务侧可通过 {@code registry.register(name, fn)} 追加自定义函数。
+ * <p>所有函数在 {@link FunctionRegistry} 构造时自动注册，附带分类信息用于前端函数市场分组展示。 业务侧可通过 {@code registry.register(name, fn, sig, desc, category)} 追加自定义函数。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -284,7 +284,8 @@ public final class BuiltinFunctions {
           return str(v).isEmpty();
         },
         "isEmpty(v)",
-        "是否为空字符串");
+        "是否为空字符串",
+        CAT_STRING);
     r.register(
         "isBlank",
         args -> {
@@ -293,7 +294,8 @@ public final class BuiltinFunctions {
           return str(v).isBlank();
         },
         "isBlank(v)",
-        "是否为空白");
+        "是否为空白",
+        CAT_STRING);
     r.register(
         "isNotBlank",
         args -> {
@@ -302,7 +304,8 @@ public final class BuiltinFunctions {
           return !str(v).isBlank();
         },
         "isNotBlank(v)",
-        "是否非空白");
+        "是否非空白",
+        CAT_STRING);
   }
 
   // ===== 集合函数 =====
@@ -325,7 +328,8 @@ public final class BuiltinFunctions {
           return 1;
         },
         "count(coll)",
-        "元素个数");
+        "元素个数",
+        CAT_COLLECTION);
     r.register(
         "sum",
         args -> {
@@ -338,7 +342,8 @@ public final class BuiltinFunctions {
           return toDecimal(v);
         },
         "sum(coll)",
-        "求和");
+        "求和",
+        CAT_COLLECTION);
     r.register(
         "avg",
         args -> {
@@ -352,7 +357,8 @@ public final class BuiltinFunctions {
           return toDecimal(v);
         },
         "avg(coll)",
-        "平均值");
+        "平均值",
+        CAT_COLLECTION);
     r.register(
         "first",
         args -> {
@@ -362,7 +368,8 @@ public final class BuiltinFunctions {
           return null;
         },
         "first(coll)",
-        "第一个元素");
+        "第一个元素",
+        CAT_COLLECTION);
     r.register(
         "last",
         args -> {
@@ -371,7 +378,8 @@ public final class BuiltinFunctions {
           return null;
         },
         "last(coll)",
-        "最后一个元素");
+        "最后一个元素",
+        CAT_COLLECTION);
     r.register(
         "distinct",
         args -> {
@@ -382,7 +390,8 @@ public final class BuiltinFunctions {
           return v;
         },
         "distinct(coll)",
-        "去重");
+        "去重",
+        CAT_COLLECTION);
     r.register(
         "contains",
         (LiteExprFunction)
@@ -395,7 +404,8 @@ public final class BuiltinFunctions {
               return false;
             },
         "contains(coll, item)",
-        "是否包含元素");
+        "是否包含元素",
+        CAT_COLLECTION);
     r.register(
         "filter",
         (LiteExprFunction)
@@ -412,7 +422,8 @@ public final class BuiltinFunctions {
               return coll;
             },
         "filter(coll, predicate)",
-        "过滤");
+        "过滤",
+        CAT_COLLECTION);
     r.register(
         "map",
         (LiteExprFunction)
@@ -427,7 +438,8 @@ public final class BuiltinFunctions {
               return coll;
             },
         "map(coll, mapper)",
-        "映射");
+        "映射",
+        CAT_COLLECTION);
     r.register(
         "reduce",
         (LiteExprFunction)
@@ -443,7 +455,8 @@ public final class BuiltinFunctions {
               return initial;
             },
         "reduce(coll, initial, reducer)",
-        "归约");
+        "归约",
+        CAT_COLLECTION);
     r.register(
         "sortBy",
         args -> {
@@ -456,7 +469,8 @@ public final class BuiltinFunctions {
           return coll;
         },
         "sortBy(coll)",
-        "排序");
+        "排序",
+        CAT_COLLECTION);
   }
 
   // ===== 类型转换函数 =====
@@ -470,20 +484,21 @@ public final class BuiltinFunctions {
    * @param r 函数注册表
    */
   private static void registerType(FunctionRegistry r) {
-    r.register("toString", args -> str(args[0]), "toString(v)", "转字符串");
-    r.register("toNumber", args -> toDecimal(args[0]), "toNumber(v)", "转数字");
-    r.register("toInt", args -> toInt(args[0]), "toInt(v)", "转整数");
-    r.register("toLong", args -> toLong(args[0]), "toLong(v)", "转长整型");
-    r.register("toDouble", args -> toDecimal(args[0]).doubleValue(), "toDouble(v)", "转浮点");
-    r.register("toBoolean", args -> toBool(args[0]), "toBoolean(v)", "转布尔");
-    r.register("toDecimal", args -> toDecimal(args[0]), "toDecimal(v)", "转 BigDecimal");
-    r.register("isNull", args -> args[0] == null, "isNull(v)", "是否为 null");
-    r.register("isNotNull", args -> args[0] != null, "isNotNull(v)", "是否非 null");
+    r.register("toString", args -> str(args[0]), "toString(v)", "转字符串", CAT_TYPE);
+    r.register("toNumber", args -> toDecimal(args[0]), "toNumber(v)", "转数字", CAT_TYPE);
+    r.register("toInt", args -> toInt(args[0]), "toInt(v)", "转整数", CAT_TYPE);
+    r.register("toLong", args -> toLong(args[0]), "toLong(v)", "转长整型", CAT_TYPE);
+    r.register("toDouble", args -> toDecimal(args[0]).doubleValue(), "toDouble(v)", "转浮点", CAT_TYPE);
+    r.register("toBoolean", args -> toBool(args[0]), "toBoolean(v)", "转布尔", CAT_TYPE);
+    r.register("toDecimal", args -> toDecimal(args[0]), "toDecimal(v)", "转 BigDecimal", CAT_TYPE);
+    r.register("isNull", args -> args[0] == null, "isNull(v)", "是否为 null", CAT_TYPE);
+    r.register("isNotNull", args -> args[0] != null, "isNotNull(v)", "是否非 null", CAT_TYPE);
     r.register(
         "typeOf",
         args -> args[0] == null ? "null" : args[0].getClass().getSimpleName(),
         "typeOf(v)",
-        "获取类型");
+        "获取类型",
+        CAT_TYPE);
   }
 
   // ===== 时间函数 =====
@@ -497,8 +512,8 @@ public final class BuiltinFunctions {
    * @param r 函数注册表
    */
   private static void registerDateTime(FunctionRegistry r) {
-    r.register("now", args -> LocalDateTime.now(), "now()", "当前时间");
-    r.register("today", args -> LocalDate.now(), "today()", "今天日期");
+    r.register("now", args -> LocalDateTime.now(), "now()", "当前时间", CAT_DATETIME);
+    r.register("today", args -> LocalDate.now(), "today()", "今天日期", CAT_DATETIME);
     r.register(
         "dateFormat",
         args -> {
@@ -510,7 +525,8 @@ public final class BuiltinFunctions {
           return str(date);
         },
         "dateFormat(date, pattern)",
-        "日期格式化");
+        "日期格式化",
+        CAT_DATETIME);
     r.register(
         "dateParse",
         args -> {
@@ -519,7 +535,8 @@ public final class BuiltinFunctions {
           return LocalDateTime.parse(text, DateTimeFormatter.ofPattern(pattern));
         },
         "dateParse(str, pattern)",
-        "日期解析");
+        "日期解析",
+        CAT_DATETIME);
     r.register(
         "year",
         args -> {
@@ -529,7 +546,8 @@ public final class BuiltinFunctions {
           return null;
         },
         "year(date)",
-        "获取年份");
+        "获取年份",
+        CAT_DATETIME);
     r.register(
         "month",
         args -> {
@@ -539,7 +557,8 @@ public final class BuiltinFunctions {
           return null;
         },
         "month(date)",
-        "获取月份");
+        "获取月份",
+        CAT_DATETIME);
     r.register(
         "day",
         args -> {
@@ -549,7 +568,8 @@ public final class BuiltinFunctions {
           return null;
         },
         "day(date)",
-        "获取日期");
+        "获取日期",
+        CAT_DATETIME);
   }
 
   // ===== 工具函数 =====
@@ -560,7 +580,7 @@ public final class BuiltinFunctions {
    * @param r 函数注册表
    */
   private static void registerUtility(FunctionRegistry r) {
-    r.register("uuid", args -> IdGenerator.nextIdStr(), "uuid()", "生成 UUID");
+    r.register("uuid", args -> IdGenerator.nextIdStr(), "uuid()", "生成 UUID", CAT_UTILITY);
     r.register(
         "if",
         args -> {
@@ -568,7 +588,8 @@ public final class BuiltinFunctions {
           return cond ? args[1] : args[2];
         },
         "if(cond, a, b)",
-        "三元表达式");
+        "三元表达式",
+        CAT_UTILITY);
   }
 
   // ===== 类型转换辅助方法 =====

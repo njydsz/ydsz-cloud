@@ -48,7 +48,7 @@ public interface JobAlertLogMapper extends BaseMapper<JobAlertLog> {
   @Select(
       "SELECT id, alert_code, rule_id, title as rule_name, source_id as job_id, "
           + "       null as job_key, alert_type, alert_level, trigger_value, threshold, "
-          + "       push_channels as channels, status, fail_reason as error_message, "
+          + "       push_channels as channels, status as alert_status, fail_reason as error_message, "
           + "       provider_trace_id as trace_id, trigger_log_id, tenant_id, "
           + "       created_by, created_at, updated_by, updated_at, deleted "
           + "FROM ydsz_alert_dispatch "
@@ -67,7 +67,7 @@ public interface JobAlertLogMapper extends BaseMapper<JobAlertLog> {
   @Select(
       "SELECT id, alert_code, rule_id, title as rule_name, source_id as job_id, "
           + "       null as job_key, alert_type, alert_level, trigger_value, threshold, "
-          + "       push_channels as channels, status, fail_reason as error_message, "
+          + "       push_channels as channels, status as alert_status, fail_reason as error_message, "
           + "       provider_trace_id as trace_id, trigger_log_id, tenant_id, "
           + "       created_by, created_at, updated_by, updated_at, deleted "
           + "FROM ydsz_alert_dispatch "

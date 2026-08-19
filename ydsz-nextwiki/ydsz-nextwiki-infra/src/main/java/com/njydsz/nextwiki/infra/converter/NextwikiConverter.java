@@ -666,4 +666,44 @@ public interface NextwikiConverter {
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   SearchIndexDO dtoToEntity(SearchIndexDTO dto);
+
+  // ===== UserFavorite（S2-P1-06） =====
+
+  /**
+   * 用户收藏夹实体 → 用户收藏夹 DTO
+   *
+   * @param entity 用户收藏夹实体
+   * @return 用户收藏夹 DTO
+   */
+  com.njydsz.nextwiki.domain.dto.UserFavoriteDTO toUserFavoriteDTO(
+      com.njydsz.nextwiki.infra.entity.UserFavoriteDO entity);
+
+  /**
+   * 用户收藏夹 DTO → 用户收藏夹实体
+   *
+   * @param dto 用户收藏夹 DTO
+   * @return 用户收藏夹实体
+   */
+  com.njydsz.nextwiki.infra.entity.UserFavoriteDO toUserFavoriteDO(
+      com.njydsz.nextwiki.domain.dto.UserFavoriteDTO dto);
+
+  // ===== UserRecent（S2-P1-06） =====
+
+  /**
+   * 用户最近访问实体 → 用户最近访问 DTO
+   *
+   * @param entity 用户最近访问实体
+   * @return 用户最近访问 DTO
+   */
+  com.njydsz.nextwiki.domain.dto.UserRecentDTO toUserRecentDTO(
+      com.njydsz.nextwiki.infra.entity.UserRecentDO entity);
+
+  /**
+   * 用户最近访问 DTO → 用户最近访问实体
+   *
+   * @param dto 用户最近访问 DTO
+   * @return 用户最近访问实体
+   */
+  com.njydsz.nextwiki.infra.entity.UserRecentDO toUserRecentDO(
+      com.njydsz.nextwiki.domain.dto.UserRecentDTO dto);
 }

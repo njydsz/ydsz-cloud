@@ -101,7 +101,11 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
         .build();
   }
 
-  @Override
+  /**
+   * 获取可搜索字段定义（供前端筛选/高亮能力声明；当前 SearchProvider 接口未定义该方法，保留为类自有能力）。
+   *
+   * @return 可搜索字段列表
+   */
   public List<SearchField> getSearchableFields() {
     return List.of(
         SearchField.builder()
@@ -132,7 +136,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
         SearchField.builder()
             .name("tags")
             .label("标签")
-            .type(FieldType.TagDO)
+            .type(FieldType.TAG)
             .weight(1.5f)
             .searchable(true)
             .aggregatable(true)
@@ -171,14 +175,24 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
             .build());
   }
 
-  @Override
+  /**
+   * 获取全部文件 ID（供索引重建/同步引擎调用；当前 SearchProvider 接口未定义该方法，保留为类自有能力）。
+   *
+   * @param tenantId 租户 ID（未使用，保留签名兼容）
+   * @return 全部文件节点 ID
+   */
   public List<String> getAllDocumentIds(String tenantId) {
     log.info("[WikiSearchProvider] 获取全部文件 ID: tenantId={}", tenantId);
     // SearchIndexRepository.findAllFileNodeIds 参数为 createdBy，传 null 查询全部
     return searchIndexRepository.findAllFileNodeIds(null);
   }
 
-  @Override
+  /**
+   * 按 ID 加载文件节点（供索引重建/同步引擎调用；当前 SearchProvider 接口未定义该方法，保留为类自有能力）。
+   *
+   * @param id 文件节点 ID
+   * @return 文件节点 VO；不存在返回 {@code null}
+   */
   public FileNodeVO loadById(String id) {
     return fileNodeRepository.findById(id).orElse(null);
   }

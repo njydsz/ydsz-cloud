@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
-import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
+import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
 import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 
 /**
@@ -88,5 +88,5 @@ public interface AlertService {
    * @param since 时间窗口起点（NULL 表示查询全部）
    * @return 告警日志列表
    */
-  List<JobAlertLog> queryAlertLogs(String jobId, LocalDateTime since);
+  List<JobAlertLogVO> queryAlertLogs(String jobId, LocalDateTime since);
 }

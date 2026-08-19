@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 
 /**
@@ -63,4 +64,43 @@ public interface JobAlertRuleRepository {
    * @return 受影响行数（1=可以告警；0=在冷却期内）
    */
   int updateLastAlertAtIfNotInCooldown(String ruleId, LocalDateTime now, LocalDateTime cooldownBefore);
+
+  /**
+   * 按 ID 查询规则实体（AlertServiceImpl 规则管理使用）。
+   *
+   * @param id 规则 ID
+   * @return 规则实体；不存在返回 null
+   */
+  JobAlertRule selectById(String id);
+
+  /**
+   * 新增规则。
+   *
+   * @param rule 规则实体
+   * @return 受影响行数
+   */
+  int insert(JobAlertRule rule);
+
+  /**
+   * 按 ID 更新规则。
+   *
+   * @param rule 规则实体（须含 id）
+   * @return 受影响行数
+   */
+  int updateById(JobAlertRule rule);
+
+  /**
+   * 按 ID 删除规则（逻辑删除）。
+   *
+   * @param id 规则 ID
+   * @return 受影响行数
+   */
+  int deleteById(String id);
+
+  /**
+   * 查询全部规则（按创建时间倒序）。
+   *
+   * @return 规则实体列表
+   */
+  List<JobAlertRule> selectList();
 }

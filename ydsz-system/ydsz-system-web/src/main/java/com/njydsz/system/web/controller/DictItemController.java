@@ -26,6 +26,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.DictItemBatchDTO;
+import com.njydsz.system.domain.query.DictItemPageQuery;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.server.service.DictItemBatchService;
 import com.njydsz.system.server.service.DictItemService;
@@ -77,24 +78,15 @@ public class DictItemController {
    *
    * <p>典型场景：字典管理后台列表展示。
    *
-   * @param pageNum 页码（默认 1）
-   * @param pageSize 每页条数（默认 10）
-   * @param typeCode 字典类型编码精确过滤（可选）
-   * @param itemCode 字典项编码模糊搜索（可选）
-   * @param status 状态精确过滤（ENABLED/DISABLED，可选）
+   * @param query 分页查询条件（pageNum / pageSize / typeCode / itemCode / status）
    * @return 分页结果
    */
   @Operation(summary = "分页查询字典项（支持搜索过滤）")
   @GetMapping("/page")
-  public PageResponse<List<DictItemVO>> page(
-      @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
-      @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
-      @Parameter(description = "字典类型编码过滤") @RequestParam(required = false) String typeCode,
-      @Parameter(description = "字典项编码模糊搜索") @RequestParam(required = false) String itemCode,
-      @Parameter(description = "状态") @RequestParam(required = false) String status) {
+  public PageResponse<List<DictItemVO>> page(DictItemPageQuery query) {
     // pageSize 服务端硬上限截断，防止深度分页 OOM
-    int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
-    return service.page(pageNum, safePageSize, typeCode, itemCode, status);
+    query.setPageSize(Math.min(query.getPageSize(), MAX_PAGE_SIZE));
+    return service.page(query);
   }
 
   /**

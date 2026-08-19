@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.domain.dto;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -88,6 +89,9 @@ public class FileNodeDTO implements Serializable {
 
   @Schema(description = "更新人（操作人）")
   private String updatedBy;
+
+  @Schema(description = "更新时间")
+  private LocalDateTime updatedAt;
 
   @Schema(description = "租户ID")
   private String tenantId;

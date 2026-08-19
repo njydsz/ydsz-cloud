@@ -3,6 +3,7 @@ package com.njydsz.system.server.service;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.query.TenantPlanPageQuery;
 import com.njydsz.system.domain.vo.TenantPlanVO;
 
 /**
@@ -35,13 +36,10 @@ public interface TenantPlanService {
   /**
    * 分页查询套餐列表
    *
-   * @param pageNum 当前页码
-   * @param pageSize 每页记录数
-   * @param planName 套餐名称模糊搜索（可选）
-   * @param status 状态过滤（可选）
+   * @param query 分页查询条件（pageNum / pageSize / planName / status）
    * @return 分页结果
    */
-  PageResponse<List<TenantPlanVO>> page(int pageNum, int pageSize, String planName, String status);
+  PageResponse<List<TenantPlanVO>> page(TenantPlanPageQuery query);
 
   /**
    * 查询全部启用套餐

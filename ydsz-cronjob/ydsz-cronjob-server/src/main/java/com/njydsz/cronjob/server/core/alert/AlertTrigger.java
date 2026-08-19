@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
+import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.domain.repository.JobAlertRuleRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
@@ -49,7 +49,7 @@ public class AlertTrigger {
    * <p>Key: jobId（可为 null 表示全局规则缓存），Value: 规则列表。 使用 ConcurrentHashMap 实现线程安全，TTL 通过写入时间判断。 规则增删改时由
    * {@link #invalidateAlertRuleCache(String)} 手动失效。
    */
-  private final ConcurrentHashMap<String, CacheEntry<List<JobAlertRule>>> ruleCache =
+  private final ConcurrentHashMap<String, CacheEntry<List<JobAlertRuleVO>>> ruleCache =
       new ConcurrentHashMap<>();
 
   /** 缓存时间戳 + 条目（简化 TTL 实现，无需额外依赖） */
@@ -79,7 +79,7 @@ public class AlertTrigger {
       return;
     }
     try {
-      List<JobAlertRule> rules = findMatchingRules(context);
+      List<JobAlertRuleVO> rules = findMatchingRules(context);
       if (rules.isEmpty()) {
         log.debug(
             "[AlertTrigger] 无匹配规则, 跳过: alertType={} jobId={}",
@@ -92,7 +92,7 @@ public class AlertTrigger {
           context.alertType(),
           context.jobId(),
           rules.size());
-      for (JobAlertRule rule : rules) {
+      for (JobAlertRuleVO rule : rules) {
         if (!isRuleMatched(rule, context)) {
           continue;
         }
@@ -129,7 +129,7 @@ public class AlertTrigger {
       return;
     }
     try {
-      List<JobAlertRule> rules = findMatchingRules(context);
+      List<JobAlertRuleVO> rules = findMatchingRules(context);
       if (rules.isEmpty()) {
         log.debug(
             "[AlertTrigger] 无匹配规则, 跳过恢复通知: alertType={} jobId={}",
@@ -142,7 +142,7 @@ public class AlertTrigger {
           context.alertType(),
           context.jobId(),
           rules.size());
-      for (JobAlertRule rule : rules) {
+      for (JobAlertRuleVO rule : rules) {
         if (!isRuleMatchedForRecovery(rule, context)) {
           continue;
         }
@@ -165,7 +165,7 @@ public class AlertTrigger {
    * <p>P1-P5: 使用本地缓存减少高频告警场景下的 DB 查询压力。 缓存 TTL 通过 {@code ydsz.cronjob.alert.rule-cache-ttl-seconds}
    * 配置（默认 60s）。 规则增删改时通过 {@link #invalidateAlertRuleCache(String)} 手动失效。
    */
-  private List<JobAlertRule> findMatchingRules(AlertContext context) {
+  private List<JobAlertRuleVO> findMatchingRules(AlertContext context) {
     if (context.jobId() != null) {
       return getCachedOrLoad(
           "job:" + context.jobId(),
@@ -181,13 +181,13 @@ public class AlertTrigger {
    * @param loader DB 加载器
    * @return 规则列表
    */
-  private List<JobAlertRule> getCachedOrLoad(
-      String key, java.util.function.Supplier<List<JobAlertRule>> loader) {
-    CacheEntry<List<JobAlertRule>> entry = ruleCache.get(key);
+  private List<JobAlertRuleVO> getCachedOrLoad(
+      String key, java.util.function.Supplier<List<JobAlertRuleVO>> loader) {
+    CacheEntry<List<JobAlertRuleVO>> entry = ruleCache.get(key);
     if (entry != null && !entry.isExpired()) {
       return entry.value;
     }
-    List<JobAlertRule> rules = loader.get();
+    List<JobAlertRuleVO> rules = loader.get();
     if (rules == null) {
       rules = Collections.emptyList();
     }
@@ -226,7 +226,7 @@ public class AlertTrigger {
    *   <li>FAIL_RATE / DURATION_P95 类型不在单次触发中判定（需周期性扫描统计）
    * </ul>
    */
-  private boolean isRuleMatched(JobAlertRule rule, AlertContext context) {
+  private boolean isRuleMatched(JobAlertRuleVO rule, AlertContext context) {
     AlertType ruleAlertType = AlertType.parse(rule.getAlertType());
     if (ruleAlertType != context.alertType()) {
       return false;
@@ -265,7 +265,7 @@ public class AlertTrigger {
    * @param context 恢复上下文
    * @return true 表示规则匹配（按 alert_type 维度）
    */
-  private boolean isRuleMatchedForRecovery(JobAlertRule rule, AlertContext context) {
+  private boolean isRuleMatchedForRecovery(JobAlertRuleVO rule, AlertContext context) {
     AlertType ruleAlertType = AlertType.parse(rule.getAlertType());
     return ruleAlertType == context.alertType();
   }

@@ -45,6 +45,7 @@ import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
+import com.njydsz.nextwiki.domain.query.FileNodeQuery;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
 import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
@@ -162,7 +163,7 @@ public class FileApplicationService {
     validateUpload(file);
 
     // 2. 配额校验
-    quotaDomainService.checkQuota("user", userId, file.getSize());
+    quotaDomainService.checkQuota(loadQuota("user", userId), file.getSize(), null);
 
     // 3. 解析父目录
     String originalFilename = file.getOriginalFilename();
@@ -323,7 +324,7 @@ public class FileApplicationService {
           }
         }
         if (existing.getSize() != null) {
-          quotaDomainService.subtractUsage("user", ctx.userId, existing.getSize(), 1);
+          storageQuotaRepository.subtractUsage("user", ctx.userId, existing.getSize(), 1);
         }
         fileNodeRepository.physicalDelete(existing.getId());
       }
@@ -574,7 +575,7 @@ public class FileApplicationService {
       trashItemRepository.save(trashItem);
 
       if (node.isFile() && node.getSize() != null) {
-        quotaDomainService.subtractUsage("user", userId, node.getSize(), 1);
+        storageQuotaRepository.subtractUsage("user", userId, node.getSize(), 1);
       }
     } finally {
       locker.unlock(lockKey, lockValue);
@@ -1360,6 +1361,34 @@ public class FileApplicationService {
       throw BusinessException.of(NextwikiExceptionCode.LOCK_BUSY).data("lockKey", lockKey);
     }
     return lockValue;
+  }
+
+  /**
+   * 加载配额 DTO（用于领域服务配额校验）。
+   *
+   * <p>QuotaDomainService.checkQuota 为纯领域逻辑，需由本层先通过
+   * {@link StorageQuotaRepository} 加载配额实体后传入；配额不存在时返回 {@code null}，
+   * 由领域服务统一抛出配额不足异常。
+   *
+   * @param scopeType 配额维度
+   * @param scopeId 维度 ID
+   * @return 配额 DTO；不存在返回 {@code null}
+   */
+  private StorageQuotaDTO loadQuota(String scopeType, String scopeId) {
+    return storageQuotaRepository
+        .findByScope(scopeType, scopeId)
+        .map(
+            vo ->
+                StorageQuotaDTO.builder()
+                    .id(vo.getId())
+                    .scopeType(vo.getScopeType())
+                    .scopeId(vo.getScopeId())
+                    .quotaLimit(vo.getQuotaLimit())
+                    .quotaUsed(vo.getQuotaUsed())
+                    .fileCountLimit(vo.getFileCountLimit())
+                    .fileCountUsed(vo.getFileCountUsed())
+                    .build())
+        .orElse(null);
   }
 
   /** 批量操作结果 */

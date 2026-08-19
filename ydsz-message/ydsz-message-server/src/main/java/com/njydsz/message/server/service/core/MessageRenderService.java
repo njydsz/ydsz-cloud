@@ -18,8 +18,8 @@ import com.njydsz.message.server.filter.SensitiveWordFilter;
 import com.njydsz.message.server.service.TemplateService;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.template.RichMediaRenderer;
-import com.njydsz.message.server.template.TemplateEngine;
 import com.njydsz.message.server.template.TemplateVariableValidator;
+import com.njydsz.message.server.template.cache.CachedTemplateEngine;
 
 /**
  * 消息内容渲染服务。
@@ -44,8 +44,8 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
 @RequiredArgsConstructor
 public class MessageRenderService {
 
-  /** 模板引擎（变量占位符渲染） */
-  private final TemplateEngine templateEngine;
+  /** 带 AST 缓存的模板引擎（Caffeine 实现，变量占位符渲染） */
+  private final CachedTemplateEngine cachedTemplateEngine;
 
   /** 模板管理服务（加载/校验模板） */
   private final TemplateService templateService;
@@ -101,10 +101,10 @@ public class MessageRenderService {
         variableSourceResolver.resolveVariables(ctx.getTemplateCode(), request.getParams(), varCtx);
       }
       if (StringUtils.hasText(template.getContent())) {
-        content = templateEngine.render(template.getContent(), request.getParams());
+        content = cachedTemplateEngine.render(template.getContent(), request.getParams());
       }
       if (!StringUtils.hasText(subject) && StringUtils.hasText(template.getSubject())) {
-        subject = templateEngine.render(template.getSubject(), request.getParams());
+        subject = cachedTemplateEngine.render(template.getSubject(), request.getParams());
       }
     }
 

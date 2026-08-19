@@ -8,33 +8,43 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.MessageRole;
 import com.njydsz.common.json.YdszJson;
 
 /**
- * LLM 响应缓存（基于 Redis）
+ * LLM 响应双层缓存（L1 Caffeine + L2 Redis）
  *
- * <p><b>实现说明（P0/P1 修复）</b>：本类名为 "Semantic"（语义），但当前实现为<b>精确哈希匹配</b>缓存：
- * 以 (model + system prompt + 最新 user message) 的 SHA-256 作为缓存 key，相同输入才可命中， 未引入 embedding
- * 相似度检索（避免每次查询额外调用 embedding 服务的成本）。如需真正的语义命中， 需引入向量索引，属后续增强项。
+ * <p><b>实现说明</b>：本类名为 "Semantic"（语义），但当前实现为<b>精确哈希匹配</b>缓存： 以 (model + system prompt + 最新 user message)
+ * 的 SHA-256 作为缓存 key，相同输入才可命中， 未引入 embedding 相似度检索（避免每次查询额外调用 embedding 服务的成本）。如需真正的语义命中，
+ * 需引入向量索引，属后续增强项。
+ *
+ * <p><b>双层缓存架构（P1-10）</b>：
+ *
+ * <ul>
+ *   <li>L1（Caffeine 本地缓存）：进程内高速缓存，最大 200 条，写入后 5 分钟过期。热点 key 亚毫秒级命中，避免 Redis 网络开销
+ *   <li>L2（Redis 分布式缓存）：跨进程共享，支持 TTL 过期与 LRU 容量控制（ZSET 索引：命中刷新 score，超容量淘汰最旧条目）
+ *   <li>读取策略：L1 → L2，L2 命中后回填 L1；写入策略：同时写入 L1 和 L2
+ * </ul>
  *
  * <p>缓存策略：
  *
  * <ul>
  *   <li>以 (model + system prompt + 最新 user message) 的 SHA-256 作为缓存 key
- *   <li>命中缓存时直接从 Redis 返回 JSON 序列化的 {@link CachedLlmResponse}，跳过 LLM 调用
- *   <li>支持 TTL 过期与 LRU 容量控制（Redis ZSET 索引：命中刷新 score，超容量淘汰最旧条目）
+ *   <li>命中缓存时直接返回 JSON 序列化的 {@link CachedLlmResponse}，跳过 LLM 调用
  *   <li>仅对 temperature=0 的确定性请求启用缓存（高 temperature 结果随机性高）
  * </ul>
  *
- * <p><b>线程安全</b>：Redis 操作原子，{@link StringRedisTemplate} 线程安全。
+ * <p><b>线程安全</b>：Caffeine 与 {@link StringRedisTemplate} 均为线程安全实现。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -49,20 +59,35 @@ public class SemanticLlmCache {
   /** 超容量后一次性多淘汰的条目数（避免每次写入都触发淘汰） */
   private static final int EVICT_MARGIN = 10;
 
+  /** L1 本地缓存最大条目数 */
+  private static final int L1_MAX_SIZE = 200;
+
+  /** L1 本地缓存写入后过期时间（分钟） */
+  private static final int L1_EXPIRE_MINUTES = 5;
+
   private final StringRedisTemplate redisTemplate;
   private final Duration ttl;
   private final int maxCacheSize;
+
+  /** L1 本地缓存（Caffeine） — 进程内高速缓存，降低热点 key 的 Redis 网络开销 */
+  private final Cache<String, CachedLlmResponse> l1Cache;
 
   public SemanticLlmCache(StringRedisTemplate redisTemplate, Duration ttl, int maxCacheSize) {
     this.redisTemplate = redisTemplate;
     this.ttl = ttl;
     this.maxCacheSize = maxCacheSize;
+    this.l1Cache =
+        Caffeine.newBuilder()
+            .maximumSize(L1_MAX_SIZE)
+            .expireAfterWrite(L1_EXPIRE_MINUTES, TimeUnit.MINUTES)
+            .recordStats()
+            .build();
   }
 
   /**
    * 尝试获取缓存的 LLM 响应。
    *
-   * <p>生成缓存 key 并从 Redis 反序列化缓存的响应数据。 缓存不存在或反序列化失败时返回 null。
+   * <p>采用 L1（Caffeine 本地）→ L2（Redis 分布式）双层查询策略： L1 命中直接返回（亚毫秒级）；L1 未命中查 L2，命中后回填 L1。
    *
    * @param model 模型名称
    * @param systemPrompt 系统提示词
@@ -71,16 +96,28 @@ public class SemanticLlmCache {
    */
   public CachedLlmResponse get(String model, String systemPrompt, String userMessage) {
     String key = buildKey(model, systemPrompt, userMessage);
+    // L1: 本地 Caffeine 缓存查询（无网络开销）
+    CachedLlmResponse l1Result = l1Cache.getIfPresent(key);
+    if (l1Result != null) {
+      LOG.debug("[SemanticCache] L1 命中: key={}", key.substring(0, 16) + "...");
+      return l1Result;
+    }
+    // L2: Redis 分布式缓存查询
     try {
       String json = redisTemplate.opsForValue().get(key);
       if (json != null) {
         // 命中刷新 LRU 访问时间
         redisTemplate.opsForZSet().add(LRU_INDEX_KEY, key, Instant.now().toEpochMilli());
-        LOG.debug("[SemanticCache] 缓存命中: key={}", key.substring(0, 16) + "...");
-        return YdszJson.fromJson(json, CachedLlmResponse.class);
+        CachedLlmResponse result = YdszJson.fromJson(json, CachedLlmResponse.class);
+        // L2 命中后回填 L1，加速后续同进程请求
+        if (result != null) {
+          l1Cache.put(key, result);
+        }
+        LOG.debug("[SemanticCache] L2 命中: key={}", key.substring(0, 16) + "...");
+        return result;
       }
     } catch (Exception e) {
-      LOG.warn("[SemanticCache] 缓存读取失败: {}", e.getMessage());
+      LOG.warn("[SemanticCache] L2 缓存读取失败: {}", e.getMessage());
     }
     return null;
   }
@@ -88,7 +125,7 @@ public class SemanticLlmCache {
   /**
    * 将 LLM 响应写入缓存。
    *
-   * <p>写入后维护 LRU 索引：新增/刷新 score，超出 {@link #maxCacheSize} 时淘汰最旧条目。
+   * <p>同时写入 L1（Caffeine 本地）和 L2（Redis 分布式）： L1 提供进程内高速读取，L2 提供跨进程共享与持久化。 写入后维护 LRU 索引：新增/刷新 score，超出 {@link #maxCacheSize} 时淘汰最旧条目。
    *
    * @param model 模型名称
    * @param systemPrompt 系统提示词
@@ -99,9 +136,12 @@ public class SemanticLlmCache {
   public void put(
       String model, String systemPrompt, String userMessage, String response, String provider) {
     String key = buildKey(model, systemPrompt, userMessage);
+    CachedLlmResponse cached =
+        new CachedLlmResponse(response, provider, Instant.now().toEpochMilli());
+    // L1: 写入本地 Caffeine 缓存
+    l1Cache.put(key, cached);
+    // L2: 写入 Redis 分布式缓存
     try {
-      CachedLlmResponse cached =
-          new CachedLlmResponse(response, provider, Instant.now().toEpochMilli());
       String json = YdszJson.toJson(cached);
       redisTemplate.opsForValue().set(key, json, ttl);
       // 维护 LRU 索引并执行容量淘汰（P1 修复：原 maxCacheSize 参数从未使用，属死代码）
@@ -110,7 +150,7 @@ public class SemanticLlmCache {
       LOG.debug(
           "[SemanticCache] 缓存写入: key={}, ttl={}min", key.substring(0, 16) + "...", ttl.toMinutes());
     } catch (Exception e) {
-      LOG.warn("[SemanticCache] 缓存写入失败: {}", e.getMessage());
+      LOG.warn("[SemanticCache] L2 缓存写入失败: {}", e.getMessage());
     }
   }
 

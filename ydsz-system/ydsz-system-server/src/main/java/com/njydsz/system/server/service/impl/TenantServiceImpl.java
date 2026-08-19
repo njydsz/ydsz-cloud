@@ -60,20 +60,11 @@ public class TenantServiceImpl implements TenantService {
    *
    * <p>支持按租户名称模糊匹配、状态过滤。
    *
-   * @param pageNum 当前页码（1-based）
-   * @param pageSize 每页记录数
-   * @param tenantName 租户名称模糊搜索（可选）
-   * @param status 状态过滤（可选）
+   * @param query 分页查询条件（pageNum / pageSize / tenantName / status）
    * @return 分页结果
    */
   @Override
-  public PageResponse<List<TenantVO>> page(
-      int pageNum, int pageSize, String tenantName, String status) {
-    TenantPageQuery query = new TenantPageQuery();
-    query.setPageNum(pageNum);
-    query.setPageSize(pageSize);
-    query.setTenantName(tenantName);
-    query.setStatus(status);
+  public PageResponse<List<TenantVO>> page(TenantPageQuery query) {
     return tenantRepository.findByPage(query);
   }
 

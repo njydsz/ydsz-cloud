@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.entity.job;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -42,12 +43,15 @@ public class JobAlertLog extends MpBaseIdEntity<String> {
   private String ruleId;
 
   /** 规则名称（映射到 ydsz_alert_dispatch.title） */
+  @TableField("title")
   private String ruleName;
 
   /** 任务 ID（NULL 表示全局告警; 映射到 source_id） */
+  @TableField("source_id")
   private String jobId;
 
-  /** 任务 KEY（冗余） */
+  /** 任务 KEY（冗余；ydsz_alert_dispatch 无此列，仅内存使用） */
+  @TableField(exist = false)
   private String jobKey;
 
   /** 告警类型: FAIL / TIMEOUT / SLOW / FAIL_RATE / DURATION_P95 */
@@ -62,16 +66,20 @@ public class JobAlertLog extends MpBaseIdEntity<String> {
   /** 规则阈值（冗余） */
   private Long threshold;
 
-  /** 实际发送通道（逗号分隔: INAPP,EMAIL,DINGTALK） */
+  /** 实际发送通道（逗号分隔: INAPP,EMAIL,DINGTALK；映射到 push_channels） */
+  @TableField("push_channels")
   private String channels;
 
-  /** 告警状态: PENDING / SUCCESS / PARTIAL / FAILED / *_RECOVERY */
+  /** 告警状态: PENDING / SUCCESS / PARTIAL / FAILED / *_RECOVERY（映射到 status） */
+  @TableField("status")
   private String alertStatus;
 
   /** 错误信息（部分通道失败时记录; 映射到 fail_reason） */
+  @TableField("fail_reason")
   private String errorMessage;
 
   /** 链路追踪 ID（映射到 provider_trace_id） */
+  @TableField("provider_trace_id")
   private String traceId;
 
   /** 触发该告警的任务日志 ID（关联 ydsz_job_log.id） */
