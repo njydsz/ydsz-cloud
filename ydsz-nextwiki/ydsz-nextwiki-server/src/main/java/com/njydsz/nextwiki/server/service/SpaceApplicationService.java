@@ -124,12 +124,10 @@ public class SpaceApplicationService {
    * @return 更新后的空间视图
    */
   @Transactional(rollbackFor = Exception.class)
+  @SpacePermission(level = Level.ADMIN)
   public SpaceVO updateSpace(String spaceId, String name, String description, String visibility, String userId) {
     SpaceDTO space = spaceRepository.findById(spaceId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SPACE_NOT_FOUND).data("spaceId", spaceId));
-
-    // 校验权限（仅所有者和管理员可更新）
-    checkSpaceAdminPermission(spaceId, userId);
 
     // 更新字段
     if (name != null) {
@@ -159,11 +157,11 @@ public class SpaceApplicationService {
    * @param userId 操作人ID
    */
   @Transactional(rollbackFor = Exception.class)
+  @SpacePermission(level = Level.ADMIN)
   public void archiveSpace(String spaceId, String userId) {
     SpaceDTO space = spaceRepository.findById(spaceId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SPACE_NOT_FOUND).data("spaceId", spaceId));
 
-    checkSpaceAdminPermission(spaceId, userId);
     spaceDomainService.transitionStatus(space, "archived");
     space.setUpdatedBy(userId);
     space.setUpdatedAt(LocalDateTime.now());
@@ -179,11 +177,11 @@ public class SpaceApplicationService {
    * @param userId 操作人ID
    */
   @Transactional(rollbackFor = Exception.class)
+  @SpacePermission(level = Level.OWNER)
   public void deleteSpace(String spaceId, String userId) {
     SpaceDTO space = spaceRepository.findById(spaceId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SPACE_NOT_FOUND).data("spaceId", spaceId));
 
-    checkSpaceAdminPermission(spaceId, userId);
     spaceRepository.deleteById(spaceId);
 
     log.info("[SpaceApplicationService] 删除空间: spaceId={}, userId={}", spaceId, userId);
@@ -211,13 +209,10 @@ public class SpaceApplicationService {
    * @param userId 用户ID
    * @return 空间视图
    */
+  @SpacePermission(level = Level.VIEWER)
   public SpaceVO getSpace(String spaceId, String userId) {
     SpaceDTO space = spaceRepository.findById(spaceId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SPACE_NOT_FOUND).data("spaceId", spaceId));
-
-    if (!hasSpaceReadPermission(spaceId, userId)) {
-      throw BusinessException.of(NextwikiExceptionCode.PERMISSION_DENIED);
-    }
 
     return toSpaceVO(space);
   }
@@ -231,13 +226,11 @@ public class SpaceApplicationService {
    * @param operatorId 操作人ID
    */
   @Transactional(rollbackFor = Exception.class)
+  @SpacePermission(level = Level.ADMIN)
   public void addMember(String spaceId, String targetUserId, String role, String operatorId) {
     // 校验空间存在
     SpaceDTO space = spaceRepository.findById(spaceId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SPACE_NOT_FOUND).data("spaceId", spaceId));
-
-    // 校验操作人权限（仅所有者和管理员可添加成员）
-    checkSpaceAdminPermission(spaceId, operatorId);
 
     // 校验角色合法性
     if (!isValidRole(role)) {
@@ -285,9 +278,8 @@ public class SpaceApplicationService {
    * @param operatorId 操作人ID
    */
   @Transactional(rollbackFor = Exception.class)
+  @SpacePermission(level = Level.ADMIN)
   public void removeMember(String spaceId, String targetUserId, String operatorId) {
-    checkSpaceAdminPermission(spaceId, operatorId);
-
     // 不能移除所有者
     SpaceMemberDTO member = spaceMemberRepository.findBySpaceIdAndUserId(spaceId, targetUserId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SPACE_MEMBER_NOT_FOUND).data("userId", targetUserId));
@@ -314,10 +306,8 @@ public class SpaceApplicationService {
    * @param userId 请求用户ID
    * @return 成员DTO列表
    */
+  @SpacePermission(level = Level.VIEWER)
   public List<SpaceMemberDTO> listMembers(String spaceId, String userId) {
-    if (!hasSpaceReadPermission(spaceId, userId)) {
-      throw BusinessException.of(NextwikiExceptionCode.PERMISSION_DENIED);
-    }
     return spaceMemberRepository.findBySpaceId(spaceId);
   }
 

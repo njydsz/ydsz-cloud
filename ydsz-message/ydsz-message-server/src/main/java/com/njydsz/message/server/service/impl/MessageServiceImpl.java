@@ -32,7 +32,6 @@ import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
 import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.core.MessageSendDTO;
-import com.njydsz.message.domain.entity.config.MsgTrace;
 import com.njydsz.message.domain.entity.batch.MsgBatch;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
@@ -52,6 +51,7 @@ import com.njydsz.message.server.service.core.MessageQueryService;
 import com.njydsz.message.server.service.core.MessageRenderService;
 import com.njydsz.message.server.service.core.MessageRenderService.RenderedContent;
 import com.njydsz.message.server.service.core.MessageSendService;
+import com.njydsz.message.server.service.core.MessageSendTxService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.core.MessageTraceService;
 import com.njydsz.message.server.service.batch.BatchService;
@@ -119,6 +119,9 @@ public class MessageServiceImpl implements MessageService {
 
   /** P2-1: 管线模板门面（自动选择模板 + 按需组合 Handler） */
   private final SendPipelineFacade sendPipelineFacade;
+
+  /** P2-A6: 消息发送事务包装（解决同类 self-invocation 事务不生效问题） */
+  private final MessageSendTxService messageSendTxService;
 
   /** P2-C5: 级联消息发送线程池（固定大小，避免级联消息耗尽主线程池） */
   private final Executor cascadeExecutor = Executors.newFixedThreadPool(4, r -> {
@@ -200,14 +203,8 @@ public class MessageServiceImpl implements MessageService {
       return dispatchAsync(logDO, ctx);
     }
 
-    // ⑤ 常规落库 PENDING（同步模式）
-    msgLogRepository.insert(logDO);
-    messageTraceService.recordTrace(
-        logDO.getMsgId(),
-        MsgTrace.Node.PERSISTED,
-        "SUCCESS",
-        ctx.getChannel(),
-        "消息已落库: status=" + logDO.getStatus());
+    // ⑤ 常规落库 PENDING（同步模式）— P2-A6: 通过事务包装确保 OutboxDomainEventPublisher 感知事务上下文
+    messageSendTxService.insertLogAndOutbox(logDO, null);
 
     // ⑥ 通道分发 + 级联
     MessageResult result =
@@ -228,36 +225,21 @@ public class MessageServiceImpl implements MessageService {
    * @return 发送结果（含 msgId 供追踪）
    */
   private MessageResult dispatchAsync(MsgLog logDO, SendContext ctx) {
-    // 落库 PENDING
-    msgLogRepository.insert(logDO);
-    messageTraceService.recordTrace(
+    // P2-A6: 构造 OutboxEvent, 与 msgLog 落库在同一事务中(原子性保证)
+    OutboxEvent outboxEvent =
+        new OutboxEvent(
+            "Message",
+            logDO.getMsgId(),
+            "MessageAsyncDispatch",
+            YdszJson.toJson(buildMessageRequestFromLog(logDO, ctx)),
+            TenantContextHolder.getTenantId());
+    // P2-A6: 落库 PENDING + 写 Outbox 在同一事务中(OutboxDomainEventPublisher 因此感知事务上下文)
+    messageSendTxService.insertLogAndOutbox(logDO, outboxEvent);
+    log.info(
+        "[Message] 异步模式: 消息已写入 Outbox: msgId={} outboxId={} channel={}",
         logDO.getMsgId(),
-        MsgTrace.Node.PERSISTED,
-        "SUCCESS",
-        ctx.getChannel(),
-        "异步模式: 消息已落库 PENDING");
-    // 写入 Outbox 表（由 OutboxEventScheduler 异步投递 MQ）
-    try {
-      OutboxEvent outboxEvent =
-          new OutboxEvent(
-              "Message",
-              logDO.getMsgId(),
-              "MessageAsyncDispatch",
-              YdszJson.toJson(buildMessageRequestFromLog(logDO, ctx)),
-              TenantContextHolder.getTenantId());
-      outboxEventRepository.save(outboxEvent);
-      log.info(
-          "[Message] 异步模式: 消息已写入 Outbox: msgId={} outboxId={} channel={}",
-          logDO.getMsgId(),
-          outboxEvent.getId(),
-          ctx.getChannel());
-    } catch (Exception e) {
-      // Outbox 落库失败不阻塞主流程，PENDING 记录由恢复扫描器补偿
-      log.error(
-          "[Message] 异步模式: Outbox 落库失败,由恢复扫描器补偿: msgId={} err={}",
-          logDO.getMsgId(),
-          e.getMessage());
-    }
+        outboxEvent.getId(),
+        ctx.getChannel());
     return MessageResult.ok(ctx.getChannel(), logDO.getMsgId());
   }
 
