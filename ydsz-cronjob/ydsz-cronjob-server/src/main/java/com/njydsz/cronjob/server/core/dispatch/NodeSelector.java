@@ -2,8 +2,8 @@ package com.njydsz.cronjob.server.core.dispatch;
 
 import java.util.List;
 
-import com.njydsz.cronjob.domain.entity.job.Job;
-import com.njydsz.cronjob.domain.entity.job.JobNode;
+import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.infra.entity.job.JobNode;
 
 /**
  * 节点选择策略接口。

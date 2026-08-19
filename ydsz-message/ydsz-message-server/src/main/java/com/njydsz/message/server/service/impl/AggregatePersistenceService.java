@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
-import com.njydsz.message.infra.repository.MsgLogRepository;
+import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.server.service.batch.AggregateService;
 
 /**

@@ -24,7 +24,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.ObjectNode;
-import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.infra.entity.job.Job;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.domain.job.JobLogger;

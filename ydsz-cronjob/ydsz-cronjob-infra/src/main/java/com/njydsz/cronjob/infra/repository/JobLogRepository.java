@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.cronjob.domain.entity.log.JobLog;
+import com.njydsz.cronjob.infra.entity.log.JobLog;
 
 /**
  * 任务执行日志 Repository。

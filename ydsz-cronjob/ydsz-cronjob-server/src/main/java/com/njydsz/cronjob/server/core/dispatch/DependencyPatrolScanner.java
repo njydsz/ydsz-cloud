@@ -12,8 +12,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
-import com.njydsz.cronjob.domain.entity.dag.JobDag;
-import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.infra.entity.dag.JobDag;
+import com.njydsz.cronjob.infra.entity.job.Job;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;

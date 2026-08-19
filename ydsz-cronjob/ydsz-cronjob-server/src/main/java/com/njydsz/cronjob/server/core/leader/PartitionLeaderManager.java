@@ -13,7 +13,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.infra.entity.job.Job;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**

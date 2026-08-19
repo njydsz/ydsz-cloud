@@ -3,7 +3,7 @@ package com.njydsz.cronjob.infra.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
+import com.njydsz.cronjob.infra.entity.dag.JobDagNodeInstance;
 
 /**
  * DAG 节点实例 Repository。

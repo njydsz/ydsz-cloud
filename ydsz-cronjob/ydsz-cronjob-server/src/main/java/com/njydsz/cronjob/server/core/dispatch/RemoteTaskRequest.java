@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.infra.entity.job.Job;
 
 /**
  * 远程派发请求 DTO（P1-4）。

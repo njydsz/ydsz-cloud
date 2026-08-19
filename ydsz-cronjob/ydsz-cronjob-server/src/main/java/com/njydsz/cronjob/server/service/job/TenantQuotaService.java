@@ -1,7 +1,7 @@
 package com.njydsz.cronjob.server.service.job;
 
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.cronjob.domain.entity.job.TenantQuota;
+import com.njydsz.cronjob.infra.entity.job.TenantQuota;
 
 /**
  * 租户级配额服务（P7-2 / P7-3）。

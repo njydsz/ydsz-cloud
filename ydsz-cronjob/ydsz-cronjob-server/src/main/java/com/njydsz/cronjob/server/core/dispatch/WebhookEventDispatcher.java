@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
-import com.njydsz.cronjob.domain.entity.job.JobWebhook;
+import com.njydsz.cronjob.infra.entity.job.JobWebhook;
 import com.njydsz.cronjob.infra.mapper.job.JobWebhookMapper;
 
 /**

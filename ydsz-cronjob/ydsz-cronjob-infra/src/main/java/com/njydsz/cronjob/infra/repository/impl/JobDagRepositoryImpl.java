@@ -7,7 +7,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.domain.entity.dag.JobDag;
+import com.njydsz.cronjob.infra.entity.dag.JobDag;
 import com.njydsz.cronjob.domain.repository.JobDagRepository;
 import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;

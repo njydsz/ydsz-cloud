@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
+import com.njydsz.cronjob.infra.entity.schedule.GlueCode;
 import com.njydsz.cronjob.domain.repository.GlueCodeRepository;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;

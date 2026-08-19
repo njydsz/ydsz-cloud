@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.infra.entity.job.Job;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 
 /**

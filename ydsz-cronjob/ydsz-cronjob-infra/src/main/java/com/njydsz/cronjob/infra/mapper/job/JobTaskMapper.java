@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.cronjob.domain.entity.job.JobTask;
+import com.njydsz.cronjob.infra.entity.job.JobTask;
 
 /**
  * MapReduce 子任务 Mapper（P0-4）。

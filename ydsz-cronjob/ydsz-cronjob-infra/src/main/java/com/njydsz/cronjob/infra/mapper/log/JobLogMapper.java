@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.cronjob.domain.entity.log.JobLog;
+import com.njydsz.cronjob.infra.entity.log.JobLog;
 
 /**
  * 任务执行日志 Mapper

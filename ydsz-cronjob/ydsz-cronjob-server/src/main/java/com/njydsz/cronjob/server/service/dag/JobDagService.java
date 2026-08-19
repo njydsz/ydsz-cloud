@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.dag.JobDagSaveDTO;
-import com.njydsz.cronjob.domain.entity.dag.JobDag;
-import com.njydsz.cronjob.domain.entity.dag.JobDagVersion;
+import com.njydsz.cronjob.infra.entity.dag.JobDag;
+import com.njydsz.cronjob.infra.entity.dag.JobDagVersion;
 
 /**
  * DAG 工作流定义 Service

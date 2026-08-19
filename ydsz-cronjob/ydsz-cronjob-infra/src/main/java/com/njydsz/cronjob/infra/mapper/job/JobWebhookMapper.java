@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.cronjob.domain.entity.job.JobWebhook;
+import com.njydsz.cronjob.infra.entity.job.JobWebhook;
 
 /**
  * 任务 Webhook Mapper

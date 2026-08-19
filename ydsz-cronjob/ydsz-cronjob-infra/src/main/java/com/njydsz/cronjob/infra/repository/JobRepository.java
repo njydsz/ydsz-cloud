@@ -3,7 +3,7 @@ package com.njydsz.cronjob.infra.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.infra.entity.job.Job;
 
 /**
  * 任务定义 Repository。

@@ -39,12 +39,14 @@ import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserImportResultDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 import com.njydsz.userinfo.server.auth.SensitiveVerifyService;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
 import com.njydsz.userinfo.server.service.UserAccountService;
 import com.njydsz.userinfo.server.service.UserExcelService;
+import com.njydsz.userinfo.server.service.UserLifecycleService;
 
 /**
  * 用户账号 Controller
@@ -92,6 +94,7 @@ public class UserAccountController {
   private final UserExcelService userExcelService;
   private final LoginHistoryService loginHistoryService;
   private final SensitiveVerifyService sensitiveVerifyService;
+  private final UserLifecycleService lifecycleService;
 
   /**
    * 分页查询用户列表
@@ -466,6 +469,119 @@ public class UserAccountController {
   public YdszResponse<Integer> batchDisable(@Valid @RequestBody BatchUserStatusDTO dto) {
     sensitiveVerifyService.clearVerification();
     return YdszResponse.success(service.batchDisable(dto.getIds()));
+  }
+
+  // ==================== P2-3: 用户生命周期状态流转 ====================
+
+  /**
+   * 暂停用户账号（ENABLED → SUSPENDED）
+   *
+   * <p>临时停用，可由管理员恢复为 {@link UserLifecycleStatusEnum#ENABLED}。暂停期间禁止登录。
+   *
+   * <p>幂等保护 5 秒；限流 10 QPS；写审计日志。
+   *
+   * @param userId 用户 ID
+   * @return 流转后的目标状态
+   */
+  @Audit(
+      module = "用户管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'暂停用户: ' + #userId")
+  @Idempotent(key = "ydsz:userinfo:UserAccountController:suspend:lock:#userId", ttlSeconds = 5)
+  @RateLimit(resource = "userinfo.UserAccountDO.suspend", threshold = 10)
+  @PutMapping("/{userId}/lifecycle/suspend")
+  @Operation(summary = "暂停用户账号", description = "将用户从 ENABLED 状态临时停用，可后续恢复")
+  public YdszResponse<String> suspend(@PathVariable String userId) {
+    return YdszResponse.success(lifecycleService.suspend(userId).name());
+  }
+
+  /**
+   * 恢复暂停的用户账号（SUSPENDED → ENABLED）
+   *
+   * <p>从暂停状态恢复到正常启用状态，清除锁定信息。
+   *
+   * @param userId 用户 ID
+   * @return 流转后的目标状态
+   */
+  @Audit(
+      module = "用户管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'恢复用户: ' + #userId")
+  @Idempotent(key = "ydsz:userinfo:UserAccountController:resume:lock:#userId", ttlSeconds = 5)
+  @RateLimit(resource = "userinfo.UserAccountDO.resume", threshold = 10)
+  @PutMapping("/{userId}/lifecycle/resume")
+  @Operation(summary = "恢复暂停用户", description = "将暂停状态的用户恢复到 ENABLED")
+  public YdszResponse<String> resume(@PathVariable String userId) {
+    return YdszResponse.success(lifecycleService.resume(userId).name());
+  }
+
+  /**
+   * 禁用用户账号（ENABLED/SUSPENDED → DISABLED）
+   *
+   * <p>长期禁用，从 DISABLED 可重新启用为 {@link UserLifecycleStatusEnum#ENABLED}。
+   *
+   * @param userId 用户 ID
+   * @return 流转后的目标状态
+   */
+  @Audit(
+      module = "用户管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'禁用用户: ' + #userId")
+  @SensitiveOperation("禁用用户")
+  @Idempotent(key = "ydsz:userinfo:UserAccountController:lifecycleDisable:lock:#userId", ttlSeconds = 5)
+  @RateLimit(resource = "userinfo.UserAccountDO.disable", threshold = 10)
+  @PutMapping("/{userId}/lifecycle/disable")
+  @Operation(summary = "禁用用户账号", description = "长期禁用，后续可重新启用")
+  public YdszResponse<String> disable(@PathVariable String userId) {
+    sensitiveVerifyService.clearVerification();
+    return YdszResponse.success(lifecycleService.disable(userId).name());
+  }
+
+  /**
+   * 启用用户账号（DISABLED → ENABLED）
+   *
+   * <p>从禁用状态恢复到正常启用状态，清除锁定信息。
+   *
+   * @param userId 用户 ID
+   * @return 流转后的目标状态
+   */
+  @Audit(
+      module = "用户管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'启用用户: ' + #userId")
+  @Idempotent(key = "ydsz:userinfo:UserAccountController:lifecycleEnable:lock:#userId", ttlSeconds = 5)
+  @RateLimit(resource = "userinfo.UserAccountDO.enable", threshold = 10)
+  @PutMapping("/{userId}/lifecycle/enable")
+  @Operation(summary = "启用用户账号", description = "从 DISABLED 恢复到 ENABLED")
+  public YdszResponse<String> enable(@PathVariable String userId) {
+    return YdszResponse.success(lifecycleService.enable(userId).name());
+  }
+
+  /**
+   * 账号离职处理（ENABLED/SUSPENDED → RESIGNED）
+   *
+   * <p>终态操作，执行后账号永久不可再激活。触发全量会话驱逐。
+   *
+   * @param userId 用户 ID
+   * @return 流转后的目标状态（始终为 RESIGNED）
+   */
+  @Audit(
+      module = "用户管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'用户离职: ' + #userId")
+  @SensitiveOperation("用户离职")
+  @Idempotent(key = "ydsz:userinfo:UserAccountController:resign:lock:#userId", ttlSeconds = 5)
+  @RateLimit(resource = "userinfo.UserAccountDO.resign", threshold = 5)
+  @PutMapping("/{userId}/lifecycle/resign")
+  @Operation(summary = "账号离职处理", description = "终态操作，永久不可再激活")
+  public YdszResponse<String> resign(@PathVariable String userId) {
+    sensitiveVerifyService.clearVerification();
+    return YdszResponse.success(lifecycleService.resign(userId).name());
   }
 
   /**

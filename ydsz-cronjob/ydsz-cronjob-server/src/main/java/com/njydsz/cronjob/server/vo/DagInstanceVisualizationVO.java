@@ -4,8 +4,8 @@ import java.util.List;
 
 import lombok.Data;
 
-import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
-import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
+import com.njydsz.cronjob.infra.entity.dag.JobDagInstance;
+import com.njydsz.cronjob.infra.entity.dag.JobDagNodeInstance;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 
 /**

@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.cronjob.domain.entity.job.JobNode;
+import com.njydsz.cronjob.infra.entity.job.JobNode;
 import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.ExecutorConfig;

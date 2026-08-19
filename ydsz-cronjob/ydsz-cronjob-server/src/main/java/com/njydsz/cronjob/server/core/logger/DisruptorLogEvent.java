@@ -1,6 +1,6 @@
 package com.njydsz.cronjob.server.core.logger;
 
-import com.njydsz.cronjob.domain.entity.log.JobLogContent;
+import com.njydsz.cronjob.infra.entity.log.JobLogContent;
 
 /**
  * P2-3: Disruptor 日志事件（预分配对象，避免 GC）。

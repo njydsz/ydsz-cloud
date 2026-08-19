@@ -1,6 +1,6 @@
 package com.njydsz.cronjob.infra.repository;
 
-import com.njydsz.cronjob.domain.entity.job.TenantQuota;
+import com.njydsz.cronjob.infra.entity.job.TenantQuota;
 
 /**
  * 租户配额 Repository。

@@ -9,6 +9,7 @@ import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
@@ -188,6 +189,20 @@ public interface UserAccountRepository {
    * @return 影响行数
    */
   int batchDeleteByIds(Collection<String> ids);
+
+  /**
+   * 更新用户生命周期状态（P2-3：状态机流转原子操作）。
+   *
+   * <p>专用于 {@link UserLifecycleService#transition} 状态流转场景，原子完成：
+   * 更新 status 列、自动填充 updated_at。不触发其他字段变更。
+   *
+   * <p>状态存储格式：ENABLED → "1"、DISABLED → "0"、PENDING/SUSPENDED/RESIGNED → 枚举名字符串。
+   *
+   * @param id 用户 ID
+   * @param status 目标生命周期状态
+   * @return 影响行数（用户不存在或已删除时为 0）
+   */
+  int updateLifecycleStatus(String id, UserLifecycleStatusEnum status);
 
   /**
    * 更新账号封禁字段。

@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
+import com.njydsz.cronjob.infra.entity.schedule.GlueCode;
 
 /**
  * GLUE 脚本代码 Mapper

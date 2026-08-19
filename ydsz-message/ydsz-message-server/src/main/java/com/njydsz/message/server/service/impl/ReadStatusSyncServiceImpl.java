@@ -17,7 +17,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
-import com.njydsz.message.infra.repository.MsgLogRepository;
+import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.infra.repository.MsgNotificationRepository;
 import com.njydsz.message.server.realtime.RealtimePushService;
 import com.njydsz.message.server.service.receipt.ReadStatusSyncService;

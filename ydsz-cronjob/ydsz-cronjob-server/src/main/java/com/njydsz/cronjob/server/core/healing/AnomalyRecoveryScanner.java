@@ -20,9 +20,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.cronjob.domain.entity.job.Job;
-import com.njydsz.cronjob.domain.entity.job.JobNode;
-import com.njydsz.cronjob.domain.entity.log.JobLog;
+import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.infra.entity.job.JobNode;
+import com.njydsz.cronjob.infra.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.AnomalyRecoveryConfig;

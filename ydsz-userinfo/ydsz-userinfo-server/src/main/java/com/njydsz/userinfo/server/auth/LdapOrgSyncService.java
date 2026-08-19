@@ -32,6 +32,7 @@ import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserDeptDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.DepartmentRepository;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.repository.UserDeptRepository;
@@ -621,8 +622,7 @@ public class LdapOrgSyncService {
    */
   private void deactivateOrphanedUsers(Set<String> ldapUsernames, List<String> errors) {
     try {
-      com.njydsz.userinfo.domain.query.UserAccountPageQuery query =
-          new com.njydsz.userinfo.domain.query.UserAccountPageQuery();
+      UserAccountPageQuery query = new UserAccountPageQuery();
       List<UserAccountVO> allUsers = userAccountRepository.list(query);
       for (UserAccountVO user : allUsers) {
         if (!ldapUsernames.contains(user.getUsername())) {

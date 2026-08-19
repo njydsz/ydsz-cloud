@@ -12,7 +12,7 @@ import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.infra.entity.job.Job;
 
 /**
  * 下次触发时间计算器（P1-3：统一 Cron next_fire_time 计算）。

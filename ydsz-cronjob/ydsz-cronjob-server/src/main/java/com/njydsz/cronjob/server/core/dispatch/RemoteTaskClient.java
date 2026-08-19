@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
-import com.njydsz.cronjob.domain.entity.job.JobNode;
+import com.njydsz.cronjob.infra.entity.job.JobNode;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.RemoteConfig;
 

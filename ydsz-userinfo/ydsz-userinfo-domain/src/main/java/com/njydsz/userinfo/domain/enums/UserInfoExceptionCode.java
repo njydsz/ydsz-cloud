@@ -156,6 +156,10 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   // ==================== A20xxx 安全认证（二次认证/会话控制） ====================
   /** 该设备类型会话数已达上限 */
   DEVICE_SESSION_LIMIT_EXCEEDED("A20128", "userinfo.device.session.limit.exceeded", 401),
+  /** 会话不存在或已过期 */
+  SESSION_NOT_FOUND("A20145", "userinfo.session.not.found", 404),
+  /** 设备不存在或已被下线 */
+  DEVICE_NOT_FOUND("A20146", "userinfo.device.not.found", 404),
   /** 敏感操作需要二次认证 */
   SENSITIVE_VERIFY_REQUIRED("A20120", "userinfo.sensitive.verify.required", 401),
   /** 二次认证已过期，请重新验证 */

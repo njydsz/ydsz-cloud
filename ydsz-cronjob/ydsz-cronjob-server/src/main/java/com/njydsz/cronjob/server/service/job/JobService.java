@@ -6,8 +6,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.BatchResult;
-import com.njydsz.cronjob.domain.entity.log.JobLog;
-import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.infra.entity.log.JobLog;
+import com.njydsz.cronjob.infra.entity.job.Job;
 
 /**
  * 任务调度 Service 接口

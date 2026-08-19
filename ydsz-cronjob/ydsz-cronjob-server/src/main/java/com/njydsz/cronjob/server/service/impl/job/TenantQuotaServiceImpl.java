@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.cronjob.domain.entity.job.TenantQuota;
+import com.njydsz.cronjob.infra.entity.job.TenantQuota;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.TenantQuotaRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;

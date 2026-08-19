@@ -1,8 +1,10 @@
 package com.njydsz.userinfo.server.auth;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -66,6 +68,18 @@ public class SessionManager {
   /** 会话 Hash 中 rememberMe 标记字段名 */
   private static final String SESSION_REMEMBER_ME_FIELD = "rememberMe";
 
+  /** 会话 Hash 中登录 IP 字段名（P3-2） */
+  private static final String SESSION_LOGIN_IP_FIELD = "loginIp";
+
+  /** 会话 Hash 中 User-Agent 字段名（P3-2） */
+  private static final String SESSION_USER_AGENT_FIELD = "userAgent";
+
+  /** 会话 Hash 中登录时间字段名（P3-2） */
+  private static final String SESSION_LOGIN_TIME_FIELD = "loginTime";
+
+  /** User-Agent 最大存储长度（防止 Redis 大 Key） */
+  private static final int USER_AGENT_MAX_LENGTH = 200;
+
   private final RedisHashOps redisHashOps;
   private final RedisStringOps redisStringOps;
   private final RedisCollectionOps redisCollectionOps;
@@ -92,6 +106,30 @@ public class SessionManager {
       String roleCodes,
       String roleNames,
       DeviceType deviceType) {
+    createSession(accessToken, refreshToken, user, roleCodes, roleNames, deviceType, null, null);
+  }
+
+  /**
+   * 写入 Redis 会话，携带设备详情（P3-2：登录 IP + User-Agent + 登录时间）。
+   *
+   * @param accessToken 访问令牌
+   * @param refreshToken 刷新令牌
+   * @param user 用户账号
+   * @param roleCodes 角色编码（逗号分隔）
+   * @param roleNames 角色名称（逗号分隔）
+   * @param deviceType 设备类型
+   * @param loginIp 登录 IP（可为 null）
+   * @param userAgent User-Agent 头（可为 null，超长自动截断）
+   */
+  public void createSession(
+      String accessToken,
+      String refreshToken,
+      UserAccountDO user,
+      String roleCodes,
+      String roleNames,
+      DeviceType deviceType,
+      String loginIp,
+      String userAgent) {
     Map<String, Object> sessionInfo =
         buildSessionInfo(
             user.getId(),
@@ -100,7 +138,9 @@ public class SessionManager {
             roleNames,
             user.getTenantId(),
             refreshToken,
-            deviceType);
+            deviceType,
+            loginIp,
+            userAgent);
     storeSession(accessToken, sessionInfo, user.getId(), deviceType);
   }
 
@@ -274,6 +314,39 @@ public class SessionManager {
       log.warn("Failed to list active sessions for user: {}, error={}", userId, e.getMessage());
       return Set.of();
     }
+  }
+
+  /**
+   * 读取用户所有活跃会话的设备详情列表（P3-2：设备管理页面数据源）。
+   *
+   * @param userId 用户 ID
+   * @return 设备详情列表（accessToken 掩码 + 设备信息），无会话时返回空列表
+   */
+  public List<Map<String, String>> listSessionDeviceDetails(String userId) {
+    Set<String> tokens = listActiveSessions(userId);
+    if (tokens.isEmpty()) {
+      return List.of();
+    }
+    List<Map<String, String>> result = new ArrayList<>();
+    for (String token : tokens) {
+      Map<String, String> details = getSessionDeviceDetails(token);
+      if (!details.isEmpty()) {
+        // 用掩码替代完整 token（安全考虑）
+        details.put("sessionId", token.substring(0, Math.min(8, token.length())) + "****");
+        result.add(details);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * 驱逐指定 accessToken 的会话（P3-2：单设备下线）。
+   *
+   * @param accessToken 访问令牌
+   * @return 被驱逐的 userId，无会话时返回 null
+   */
+  public String evictSession(String accessToken) {
+    return revokeSession(accessToken);
   }
 
   /**
@@ -462,6 +535,26 @@ public class SessionManager {
       String tenantId,
       String refreshToken,
       DeviceType deviceType) {
+    return buildSessionInfo(userId, username, roleCodes, roleNames, tenantId, refreshToken,
+        deviceType, null, null);
+  }
+
+  /**
+   * 构建会话 Hash 数据（含设备详情）。
+   *
+   * @param loginIp 登录 IP（可为 null）
+   * @param userAgent User-Agent（可为 null，超长自动截断）
+   */
+  private Map<String, Object> buildSessionInfo(
+      String userId,
+      String username,
+      String roleCodes,
+      String roleNames,
+      String tenantId,
+      String refreshToken,
+      DeviceType deviceType,
+      String loginIp,
+      String userAgent) {
     Map<String, Object> sessionInfo = new HashMap<>();
     // P2-5: 会话 Hash schema 版本号，便于未来字段变更的平滑迁移与兼容性判断
     sessionInfo.put("schemaVersion", SESSION_SCHEMA_VERSION);
@@ -472,7 +565,48 @@ public class SessionManager {
     sessionInfo.put("tenantId", tenantId);
     sessionInfo.put("refreshToken", refreshToken);
     sessionInfo.put(SESSION_DEVICE_TYPE_FIELD, deviceType.getCode());
+    // P3-2: 设备详情
+    if (loginIp != null && !loginIp.isBlank()) {
+      sessionInfo.put(SESSION_LOGIN_IP_FIELD, loginIp);
+    }
+    if (userAgent != null && !userAgent.isBlank()) {
+      sessionInfo.put(SESSION_USER_AGENT_FIELD,
+          userAgent.length() > USER_AGENT_MAX_LENGTH
+              ? userAgent.substring(0, USER_AGENT_MAX_LENGTH)
+              : userAgent);
+    }
+    sessionInfo.put(SESSION_LOGIN_TIME_FIELD, java.time.LocalDateTime.now().toString());
     return sessionInfo;
+  }
+
+  /**
+   * 读取指定 accessToken 的设备详情（P3-2：登录 IP、User-Agent、登录时间）。
+   *
+   * @param accessToken 访问令牌
+   * @return 设备详情 Map（可能为空，但不返回 null）
+   */
+  public Map<String, String> getSessionDeviceDetails(String accessToken) {
+    if (accessToken == null || accessToken.isBlank()) {
+      return java.util.Map.of();
+    }
+    Map<String, String> details = new HashMap<>();
+    String loginIp = redisHashOps.hGet(accessToken, SESSION_LOGIN_IP_FIELD, String.class);
+    String userAgent = redisHashOps.hGet(accessToken, SESSION_USER_AGENT_FIELD, String.class);
+    String loginTime = redisHashOps.hGet(accessToken, SESSION_LOGIN_TIME_FIELD, String.class);
+    String deviceType = redisHashOps.hGet(accessToken, SESSION_DEVICE_TYPE_FIELD, String.class);
+    if (loginIp != null) {
+      details.put("loginIp", loginIp);
+    }
+    if (userAgent != null) {
+      details.put("userAgent", userAgent);
+    }
+    if (loginTime != null) {
+      details.put("loginTime", loginTime);
+    }
+    if (deviceType != null) {
+      details.put("deviceType", deviceType);
+    }
+    return details;
   }
 
   /**

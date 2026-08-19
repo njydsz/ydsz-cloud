@@ -2,7 +2,7 @@ package com.njydsz.cronjob.server.core.discovery;
 
 import java.util.List;
 
-import com.njydsz.cronjob.domain.entity.job.JobNode;
+import com.njydsz.cronjob.infra.entity.job.JobNode;
 
 /**
  * 执行器节点发现策略（P1-1）。

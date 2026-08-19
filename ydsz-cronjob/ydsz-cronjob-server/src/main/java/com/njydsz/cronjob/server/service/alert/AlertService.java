@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
 import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
-import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
+import com.njydsz.cronjob.infra.entity.job.JobAlertRule;
 
 /**
  * 告警规则 Service

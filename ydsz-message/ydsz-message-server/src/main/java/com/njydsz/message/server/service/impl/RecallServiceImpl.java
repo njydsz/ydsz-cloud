@@ -19,7 +19,7 @@ import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.event.MessageRecalledEvent;
-import com.njydsz.message.infra.repository.MsgLogRepository;
+import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.infra.repository.MsgNotificationRepository;
 import com.njydsz.message.server.channel.recall.RecallChannel;
 import com.njydsz.message.server.channel.recall.RecallChannelRouter;

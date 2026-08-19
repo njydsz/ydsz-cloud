@@ -14,6 +14,7 @@ import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
@@ -168,6 +169,30 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
       return 0;
     }
     return userAccountMapper.batchDeleteByIds(new java.util.ArrayList<>(ids));
+  }
+
+  @Override
+  public int updateLifecycleStatus(String id, UserLifecycleStatusEnum status) {
+    if (id == null || id.isBlank() || status == null) {
+      return 0;
+    }
+    com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<UserAccountDO> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
+    wrapper.eq("id", id).set("status", convertLifecycleStatusToString(status));
+    return userAccountMapper.update(null, wrapper);
+  }
+
+  /**
+   * 将 {@link UserLifecycleStatusEnum} 转换为 DB 存储字符串。
+   *
+   * <p>存储规则：ENABLED → "1"、DISABLED → "0"、PENDING/SUSPENDED/RESIGNED → 枚举名字符串。
+   */
+  private static String convertLifecycleStatusToString(UserLifecycleStatusEnum status) {
+    return switch (status) {
+      case ENABLED -> "1";
+      case DISABLED -> "0";
+      default -> status.name();
+    };
   }
 
   @Override

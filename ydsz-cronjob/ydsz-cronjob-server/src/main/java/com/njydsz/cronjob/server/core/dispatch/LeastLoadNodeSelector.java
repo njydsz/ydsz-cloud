@@ -9,8 +9,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import com.njydsz.cronjob.domain.entity.job.Job;
-import com.njydsz.cronjob.domain.entity.job.JobNode;
+import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.infra.entity.job.JobNode;
 
 /**
  * 默认节点选择策略：最少负载优先。

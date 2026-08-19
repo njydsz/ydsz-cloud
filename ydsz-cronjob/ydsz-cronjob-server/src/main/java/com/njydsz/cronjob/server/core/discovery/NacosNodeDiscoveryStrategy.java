@@ -15,7 +15,7 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.cronjob.domain.entity.job.JobNode;
+import com.njydsz.cronjob.infra.entity.job.JobNode;
 
 /**
  * 基于 Nacos 服务发现的节点发现策略（P1-1）。

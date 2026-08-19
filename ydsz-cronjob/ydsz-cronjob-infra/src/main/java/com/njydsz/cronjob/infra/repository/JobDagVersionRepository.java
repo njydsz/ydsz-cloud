@@ -2,7 +2,7 @@ package com.njydsz.cronjob.infra.repository;
 
 import java.util.List;
 
-import com.njydsz.cronjob.domain.entity.dag.JobDagVersion;
+import com.njydsz.cronjob.infra.entity.dag.JobDagVersion;
 
 /**
  * DAG 版本历史 Repository。

@@ -10,7 +10,7 @@ import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.event.OutboxEvent;
 import com.njydsz.message.domain.repository.OutboxEventRepository;
 import com.njydsz.message.infra.entity.MsgTraceDO;
-import com.njydsz.message.infra.repository.MsgLogRepository;
+import com.njydsz.message.domain.repository.MsgLogRepository;
 
 /**
  * 消息发送事务包装服务。

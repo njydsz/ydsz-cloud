@@ -3,8 +3,8 @@ package com.njydsz.cronjob.server.service.job;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.cronjob.domain.entity.job.Job;
-import com.njydsz.cronjob.domain.entity.job.JobHistory;
+import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.infra.entity.job.JobHistory;
 
 /**
  * 任务配置历史版本服务（P1-6 任务版本管理）。

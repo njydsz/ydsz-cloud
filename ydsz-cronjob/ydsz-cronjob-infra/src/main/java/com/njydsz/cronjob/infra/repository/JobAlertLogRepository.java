@@ -3,7 +3,7 @@ package com.njydsz.cronjob.infra.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
+import com.njydsz.cronjob.infra.entity.job.JobAlertLog;
 
 /**
  * 告警日志 Repository。

@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.cronjob.domain.entity.dag.JobDagVersion;
+import com.njydsz.cronjob.infra.entity.dag.JobDagVersion;
 
 /**
  * 任务 DAG 版本历史 Mapper

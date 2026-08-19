@@ -1,6 +1,6 @@
 package com.njydsz.cronjob.server.core.dispatch;
 
-import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.infra.entity.job.Job;
 
 /**
  * 任务派发接口。

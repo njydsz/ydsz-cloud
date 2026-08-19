@@ -25,7 +25,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
+import com.njydsz.cronjob.infra.entity.schedule.GlueCode;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;

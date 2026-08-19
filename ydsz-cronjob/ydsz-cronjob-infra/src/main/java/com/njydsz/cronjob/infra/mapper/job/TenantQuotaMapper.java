@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.cronjob.domain.entity.job.TenantQuota;
+import com.njydsz.cronjob.infra.entity.job.TenantQuota;
 
 /**
  * 租户任务配额 Mapper
