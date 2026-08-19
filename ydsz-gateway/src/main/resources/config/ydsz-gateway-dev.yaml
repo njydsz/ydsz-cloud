@@ -67,11 +67,6 @@ ydsz:
     httpclient:
       pool:
         max-connections: 500
-    # P2-1: 插件系统（Groovy 热脚本）
-    plugin:
-      enabled: false
-      watch-path: ./plugins
-      reload-interval: 5000
 
 # 日志级别（dev 环境开 DEBUG）
 logging:

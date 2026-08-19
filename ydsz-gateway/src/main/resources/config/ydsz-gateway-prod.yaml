@@ -5,17 +5,17 @@
 #  Group:     prod
 #  Profile:   prod
 #  端口:      9000 (HTTPS)
+#  说明:      跨环境共享配置见 ydsz-gateway-common.yaml（shared-configs 引入），
+#              本文件仅保留环境特有配置。
 # =====================================================================
 
 server:
   port: 9000
   max-http-request-header-size: 16KB
-  # P1-10: 响应压缩（节省 60-80% 带宽）
   compression:
     enabled: true
     mime-types: application/json,application/xml,text/html,text/plain,text/css,application/javascript
     min-response-size: 1024
-  # P0-阶段二-8: 优雅停机（等待进行中的请求完成）
   shutdown: graceful
   # P0-阶段二-9: 仅 HTTPS 通信（生产环境强制 TLS）
   ssl:
@@ -24,70 +24,32 @@ server:
     key-store-password: ${SSL_KEYSTORE_PASSWORD:}
     key-store-type: PKCS12
     key-alias: ${SSL_KEY_ALIAS:ydsz-gateway}
-    # TLS 1.2+（禁用 SSLv3/TLSv1.0/TLSv1.1）
     enabled-protocols: TLSv1.2,TLSv1.3
-    # 仅强加密套件
     ciphers: TLS_AES_256_GCM_SHA384,TLS_AES_128_GCM_SHA256,TLS_CHACHA20_POLY1305_SHA256,ECDHE-RSA-AES256-GCM-SHA384,ECDHE-RSA-AES128-GCM-SHA256
-  # P1-6: 隐藏 Server 头（防指纹识别）
   netty:
-    # P1: 隐藏 Server 响应头，避免暴露 Reactor Netty 版本
-    # 默认值为 "Reactor Netty" 会让攻击者据此搜索 CVE
-    # 设为空字符串时 ResponseHeaders 将不包含 Server 头
     response:
       server-header: ""
     connection-timeout: 5s
 
 spring:
   profiles: prod
-  # P0-阶段二-8: 优雅停机超时（30s 内未完成则强制关闭）
   lifecycle:
     timeout-per-shutdown-phase: 30s
   cloud:
     gateway:
+      # PROD 关闭自动服务发现路由（仅使用 Nacos 显式路由）
       discovery:
         locator:
           enabled: false
-          lower-case-service-id: true
-      # P2-1 安全修复：globalcors 已移除，CORS 改由 ydsz.gateway.cors.allowed-origin 单一可信来源控制
-      # 避免 CorsWebFilter 与 globalcors 双重注册导致行为不确定
-      default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
-        # P0-4: 请求体大小限制 10MB（防 DoS）
-        - RequestSize=10485760
-        # P0-阶段二-5: 网关层重试（仅对 GET 幂等请求重试，避免非幂等请求重复执行）
-        - name: Retry
-          args:
-            retries: 3
-            statuses: BAD_GATEWAY,GATEWAY_TIMEOUT,SERVICE_UNAVAILABLE
-            methods: GET,OPTIONS
-            backoff:
-              firstBackoff: 100ms
-              maxBackoff: 500ms
-              factor: 2
-              basedOnPreviousValue: true
-      # P0-3: 连接超时 + 响应超时（防雪崩）
-      httpclient:
-        connect-timeout: 3000
-        response-timeout: 30s
-        websocket:
-          max-frame-payload-length: 65536
-    loadbalancer:
-      configurations: gray
-      nacos:
-        enabled: true
 
 # =====================================================================
-# YDSZ · Gateway · P0 安全配置（P0-2 / P0-4 / P0-6）
+# YDSZ · Gateway · PROD 环境特有配置
 # =====================================================================
 ydsz:
   gateway:
-    # P0-A1: Nacos 动态路由（唯一路由入口，JSON 数组格式，Group=prod）
-    dynamic-routes:
-      enabled: true
-      data-id: gateway-routes.json
     # P0-2: 内部头签名密钥（生产环境必须通过环境变量注入强随机密钥）
     internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:}
-    # P2-1: CORS 单一可信来源（与凭据模式互斥校验，生产环境禁止通配符）
+    # P2-1: CORS 单一可信来源（生产环境禁止通配符）
     cors:
       allowed-origin: ${YDSZ_GATEWAY_CORS_ALLOWED_ORIGIN:https://ydsz.example.com}
       allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
@@ -99,21 +61,10 @@ ydsz:
     # P0-4: WebSocket Origin 白名单（生产环境必须配置）
     websocket:
       allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:https://ydsz.example.com}
-    # P0-阶段二-6: HttpClient 连接池配置
+    # P0-阶段二-6: HttpClient 连接池配置（prod 1000）
     httpclient:
       pool:
         max-connections: 1000
-        pending-acquire-timeout-ms: 45000
-        max-idle-time-seconds: 30
-        max-life-time-seconds: 60
-        eviction-interval-seconds: 60
-    # P0-阶段二-7: K8s health probe 路径放行
-    health-probe:
-      paths:
-        - /actuator/health
-        - /actuator/health/liveness
-        - /actuator/health/readiness
-        - /actuator/info
 
 # 日志级别（prod 环境仅 INFO/WARN/ERROR）
 logging:
@@ -137,7 +88,6 @@ management:
       enabled: true
     health:
       show-details: when-authorized
-      # P0-阶段二-7: K8s 探针分组（liveness / readiness）
       group:
         liveness:
           include:
