@@ -94,6 +94,7 @@ public class TenantServiceImpl implements TenantService {
           .data("tenantCode", dto.getTenantCode());
     }
     tenantRepository.insert(dto);
+    metrics.recordTenantWrite();
     log.info("创建租户成功: tenantCode={}", dto.getTenantCode());
     return dto.getId();
   }
@@ -115,7 +116,9 @@ public class TenantServiceImpl implements TenantService {
       throw BusinessException.of(SystemExceptionCode.TENANT_CODE_DUPLICATE)
           .data("tenantCode", dto.getTenantCode());
     }
-    return tenantRepository.updateById(dto);
+    boolean result = tenantRepository.updateById(dto);
+    metrics.recordTenantWrite();
+    return result;
   }
 
   /**
