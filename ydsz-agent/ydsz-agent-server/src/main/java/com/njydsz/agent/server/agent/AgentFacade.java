@@ -61,7 +61,7 @@ public interface AgentFacade {
   /**
    * 批量对话（并行执行）。
    *
-   * <p>使用 JDK 21 结构化并发（{@code StructuredTaskScope}）并行处理多条对话请求，单条失败不影响其他条目。 适用于批量问答、多 Prompt 对比测试、A/B 评估等场景。
+   * <p>使用 JDK 21 虚拟线程 + {@code CompletableFuture} 并行处理多条对话请求，单条失败不影响其他条目。 适用于批量问答、多 Prompt 对比测试、A/B 评估等场景。
    *
    * @param items 批量对话条目列表（每条包含独立的用户消息和对话 ID）
    * @return 批量对话结果（与请求 items 顺序一致）

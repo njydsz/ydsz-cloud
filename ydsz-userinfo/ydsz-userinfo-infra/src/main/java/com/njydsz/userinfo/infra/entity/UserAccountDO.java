@@ -14,6 +14,7 @@ import com.njydsz.common.jdbc.handler.IntegerStringTypeHandler;
 import com.njydsz.common.safe.encrypt.EncryptField;
 import com.njydsz.common.safe.encrypt.EncryptTypeHandler;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 
 /**
  * 用户账号实体
@@ -143,10 +144,77 @@ public class UserAccountDO extends MpBaseEntity<String> {
   // ==================== 领域行为（Domain Behavior）====================
 
   /**
+   * 激活账号（PENDING → ENABLED）。
+   *
+   * <p>将状态设为 {@link UserLifecycleStatusEnum#ENABLED}，清除锁定信息。仅当前状态为 {@link UserLifecycleStatusEnum#PENDING} 时允许。
+   *
+   * @throws IllegalStateException 当前状态不允许激活时抛出
+   */
+  public void activate() {
+    UserLifecycleStatusEnum current = getLifecycleStatus();
+    if (current != null) {
+      current.requireTransitTo(UserLifecycleStatusEnum.ENABLED);
+    }
+    setLifecycleStatus(UserLifecycleStatusEnum.ENABLED);
+    this.lockedUntil = null;
+    this.loginFailCount = 0;
+  }
+
+  /**
+   * 暂停账号（ENABLED → SUSPENDED）。
+   *
+   * <p>将状态设为 {@link UserLifecycleStatusEnum#SUSPENDED}。仅当前状态为 {@link UserLifecycleStatusEnum#ENABLED} 时允许。
+   *
+   * @throws IllegalStateException 当前状态不允许暂停时抛出
+   */
+  public void suspend() {
+    UserLifecycleStatusEnum current = getLifecycleStatus();
+    if (current != null) {
+      current.requireTransitTo(UserLifecycleStatusEnum.SUSPENDED);
+    }
+    setLifecycleStatus(UserLifecycleStatusEnum.SUSPENDED);
+  }
+
+  /**
+   * 恢复账号（SUSPENDED → ENABLED）。
+   *
+   * <p>将状态设为 {@link UserLifecycleStatusEnum#ENABLED}。仅当前状态为 {@link UserLifecycleStatusEnum#SUSPENDED} 时允许。
+   *
+   * @throws IllegalStateException 当前状态不允许恢复时抛出
+   */
+  public void resume() {
+    UserLifecycleStatusEnum current = getLifecycleStatus();
+    if (current != null) {
+      current.requireTransitTo(UserLifecycleStatusEnum.ENABLED);
+    }
+    setLifecycleStatus(UserLifecycleStatusEnum.ENABLED);
+    this.lockedUntil = null;
+    this.loginFailCount = 0;
+  }
+
+  /**
+   * 离职处理（→ RESIGNED）。
+   *
+   * <p>将状态设为 {@link UserLifecycleStatusEnum#RESIGNED}（终态）。从 ENABLED 或 SUSPENDED 状态均可流转。
+   *
+   * @throws IllegalStateException 当前状态不允许离职时抛出
+   */
+  public void resign() {
+    UserLifecycleStatusEnum current = getLifecycleStatus();
+    if (current != null) {
+      current.requireTransitTo(UserLifecycleStatusEnum.RESIGNED);
+    }
+    setLifecycleStatus(UserLifecycleStatusEnum.RESIGNED);
+  }
+
+  /**
    * 启用账号。
    *
    * <p>将状态设为 {@link EnableStatusEnum#ENABLED}，清除锁定信息。
+   *
+   * @deprecated 使用 {@link #activate()} 替代，提供更严格的状态流转校验
    */
+  @Deprecated
   public void enable() {
     setStatusEnum(EnableStatusEnum.ENABLED);
     this.lockedUntil = null;
@@ -154,12 +222,19 @@ public class UserAccountDO extends MpBaseEntity<String> {
   }
 
   /**
-   * 禁用账号。
+   * 禁用账号（→ DISABLED）。
    *
-   * <p>将状态设为 {@link EnableStatusEnum#DISABLED}。禁用后用户无法登录，但不清除锁定信息（如存在）。
+   * <p>将状态设为 {@link EnableStatusEnum#DISABLED} 或 {@link UserLifecycleStatusEnum#DISABLED}。
+   * 支持从 ENABLED 或 SUSPENDED 状态流转。
+   *
+   * @throws IllegalStateException 当前状态不允许禁用时抛出
    */
   public void disable() {
-    setStatusEnum(EnableStatusEnum.DISABLED);
+    UserLifecycleStatusEnum current = getLifecycleStatus();
+    if (current != null) {
+      current.requireTransitTo(UserLifecycleStatusEnum.DISABLED);
+    }
+    setLifecycleStatus(UserLifecycleStatusEnum.DISABLED);
   }
 
   /**
@@ -184,12 +259,54 @@ public class UserAccountDO extends MpBaseEntity<String> {
   }
 
   /**
+   * 获取生命周期状态枚举。
+   *
+   * <p>兼容 "0"/"1"（DB 存储）和 "ENABLED"/"DISABLED"/"PENDING"/"SUSPENDED"/"RESIGNED" 格式。
+   *
+   * @return 生命周期状态枚举，无法解析时返回 null
+   */
+  public UserLifecycleStatusEnum getLifecycleStatus() {
+    return UserLifecycleStatusEnum.parse(this.status);
+  }
+
+  /**
+   * 设置生命周期状态。
+   *
+   * @param status 生命周期状态枚举，为 null 时清除状态
+   */
+  public void setLifecycleStatus(UserLifecycleStatusEnum status) {
+    if (status == null) {
+      this.status = null;
+      return;
+    }
+    switch (status) {
+      case ENABLED -> this.status = "1";
+      case DISABLED -> this.status = "0";
+      default -> this.status = status.name();
+    }
+  }
+
+  /**
+   * 检查是否允许登录。
+   *
+   * <p>仅 {@link UserLifecycleStatusEnum#ENABLED} 状态且未锁定时允许登录。
+   *
+   * @return true 表示允许登录
+   */
+  public boolean canLogin() {
+    return getLifecycleStatus() == UserLifecycleStatusEnum.ENABLED && !isLocked();
+  }
+
+  /**
    * 判断当前是否允许认证（登录）。
    *
    * <p>前置条件：账号存在、已启用、未锁定。
    *
+   * <p><b>已废弃：</b>使用 {@link #canLogin()} 替代，语义更清晰。
+   *
    * @return true 表示允许尝试认证
    */
+  @Deprecated
   public boolean canAuthenticate() {
     return getStatusEnum() == EnableStatusEnum.ENABLED && !isLocked();
   }

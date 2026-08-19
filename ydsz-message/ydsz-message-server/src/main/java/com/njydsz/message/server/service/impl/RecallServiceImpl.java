@@ -16,6 +16,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.infra.entity.MsgTraceDO;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.entity.core.MsgNotification;
+import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.event.MessageRecalledEvent;
 import com.njydsz.message.infra.repository.MsgLogRepository;
@@ -169,7 +170,14 @@ public class RecallServiceImpl implements RecallService {
           .message("消息不存在: msgId=" + msgId)
           .build();
     }
-    // 校验撤回时间窗口
+    // P2-B5: 终态消息（DEAD/SKIPPED）不可撤回
+    if (logDO.getStatus() == MessageStatusEnum.DEAD || logDO.getStatus() == MessageStatusEnum.SKIPPED) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("消息状态为 " + logDO.getStatus().name() + "，不可撤回")
+          .build();
+    }
+    // 校验撤回时间窗口（当前实体无 sentAt 字段，以 createdAt 为基准）
     if (logDO.getCreatedAt() != null) {
       long minutesElapsed = Duration.between(logDO.getCreatedAt(), LocalDateTime.now()).toMinutes();
       if (minutesElapsed > RECALL_WINDOW_MINUTES) {
@@ -179,12 +187,10 @@ public class RecallServiceImpl implements RecallService {
             .build();
       }
     }
-    // 校验是否已撤回
+    // P2-B5: 已撤回则幂等返回 false，不抛异常
     if (RecallStatusEnum.RECALLED.name().equals(logDO.getRecallStatus())) {
-      throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
-          .message("消息已撤回，无需重复操作")
-          .build();
+      log.info("[Recall] 消息已撤回，跳过重复撤回: msgId={}", msgId);
+      return false;
     }
     // 执行撤回
     logDO.setRecallStatus(RecallStatusEnum.RECALLED.name());

@@ -2,7 +2,9 @@ package com.njydsz.agent.server.agent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.StructuredTaskScope;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import lombok.RequiredArgsConstructor;
@@ -73,12 +75,13 @@ public class AgentFacadeImpl implements AgentFacade {
   /**
    * {@inheritDoc}
    *
-   * <p>使用 JDK 21 {@link StructuredTaskScope} 并行处理多条对话请求：
+   * <p>使用 JDK 21 虚拟线程 + {@link CompletableFuture} 并行处理多条对话请求：
    *
    * <ul>
    *   <li>每条请求在独立虚拟线程中执行，单条失败不影响其他条目
    *   <li>结果顺序与请求 items 顺序一致
    *   <li>总耗时取所有线程中最长者（并行加速）
+   *   <li>使用守护线程池，JVM 退出时自动回收
    * </ul>
    */
   @Override
@@ -86,26 +89,26 @@ public class AgentFacadeImpl implements AgentFacade {
     long startTime = System.currentTimeMillis();
     LOG.info("[BatchChat] 批量对话启动: itemsCount={}", items.size());
 
-    // StructuredTaskScope：JDK 21 结构化并发，子线程生命周期严格限定在 try-with-resources 块内
-    try (var scope = new StructuredTaskScope<BatchChatResult.BatchResultItem>()) {
-      // 为每条请求 fork 一个虚拟线程
-      List<StructuredTaskScope.Subtask<BatchChatResult.BatchResultItem>> subtasks = new ArrayList<>(items.size());
+    // 虚拟线程池：每个任务一个虚拟线程，适合 I/O 密集型（LLM HTTP 调用）
+    ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    try {
+      // 为每条请求提交一个异步任务
+      List<CompletableFuture<BatchChatResult.BatchResultItem>> futures = new ArrayList<>(items.size());
       for (BatchChatItem item : items) {
-        subtasks.add(scope.fork(() -> executeSingleItem(item)));
+        futures.add(CompletableFuture.supplyAsync(() -> executeSingleItem(item), executor));
       }
 
-      // 阻塞等待所有子线程完成（或失败/取消）
-      scope.join();
+      // 阻塞等待所有任务完成（或失败）
+      CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
       // 按原始顺序收集结果
       List<BatchChatResult.BatchResultItem> results = new ArrayList<>(items.size());
-      for (StructuredTaskScope.Subtask<BatchChatResult.BatchResultItem> subtask : subtasks) {
+      for (int i = 0; i < futures.size(); i++) {
         try {
-          results.add(subtask.get());
+          results.add(futures.get(i).get());
         } catch (Exception e) {
-          // subtask 状态异常时（任务失败），构造失败结果
-          int idx = subtasks.indexOf(subtask);
-          String itemId = items.get(idx).getItemId();
+          // 单个任务失败时构造失败结果，不影响其他条目
+          String itemId = items.get(i).getItemId();
           results.add(BatchChatResult.BatchResultItem.failure(itemId, "获取结果异常: " + e.getMessage()));
         }
       }
@@ -116,16 +119,17 @@ public class AgentFacadeImpl implements AgentFacade {
           "[BatchChat] 批量对话完成: total={}, success={}, failed={}, duration={}ms",
           items.size(), result.getSuccessCount(), result.getFailedCount(), duration);
       return result;
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
+    } catch (Exception e) {
       long duration = System.currentTimeMillis() - startTime;
-      LOG.warn("[BatchChat] 批量对话被中断: duration={}ms", duration);
-      // 中断时返回所有条目为失败
+      LOG.warn("[BatchChat] 批量对话异常: duration={}ms, error={}", duration, e.getMessage());
+      // 异常时返回所有条目为失败
       List<BatchChatResult.BatchResultItem> results = new ArrayList<>(items.size());
       for (BatchChatItem item : items) {
-        results.add(BatchChatResult.BatchResultItem.failure(item.getItemId(), "批量对话被中断"));
+        results.add(BatchChatResult.BatchResultItem.failure(item.getItemId(), "批量对话异常: " + e.getMessage()));
       }
       return new BatchChatResult(results, duration);
+    } finally {
+      executor.shutdown();
     }
   }
 

@@ -8,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
@@ -38,6 +40,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class TenantQuotaService {
+
+  private static final Logger LOG = LoggerFactory.getLogger(TenantQuotaService.class);
+
 
   /** 每日配额 Key 前缀 */
   private static final String DAILY_KEY_PREFIX = "agent:quota:daily:";
@@ -79,7 +84,7 @@ public class TenantQuotaService {
     if (quota.isDailyTokenLimited()) {
       long currentDaily = getDailyTokenCount(tid);
       if (currentDaily + estimatedTokens > quota.getDailyTokenLimit()) {
-        log.warn("[Quota] 租户每日 Token 配额不足: tenant={}, current={}, estimated={}, limit={}",
+        LOG.warn("[Quota] 租户每日 Token 配额不足: tenant={}, current={}, estimated={}, limit={}",
             tid, currentDaily, estimatedTokens, quota.getDailyTokenLimit());
         // P1 修复：原引用不存在的 YdszException 类，改用 BusinessException + AgentExceptionCode
         throw BusinessException.builder()
@@ -93,7 +98,7 @@ public class TenantQuotaService {
     if (quota.isMonthlyBudgetLimited()) {
       double currentMonthly = getMonthlyCostUsd(tid);
       if (currentMonthly + estimatedCostUsd > quota.getMonthlyBudgetUsd()) {
-        log.warn("[Quota] 租户月度预算配额不足: tenant={}, current={}, estimated={}, limit={}",
+        LOG.warn("[Quota] 租户月度预算配额不足: tenant={}, current={}, estimated={}, limit={}",
             tid, currentMonthly, estimatedCostUsd, quota.getMonthlyBudgetUsd());
         throw BusinessException.builder()
             .resultCode(AgentExceptionCode.QUOTA_MONTHLY_BUDGET_EXCEEDED)
@@ -120,11 +125,11 @@ public class TenantQuotaService {
     double actualCostUsd = costEstimate.getActualCostUsd();
     if (actualTokens > 0) {
       long newDaily = incrementDailyTokens(tid, actualTokens);
-      log.info("[Quota] 记录每日 Token 用量: tenant={}, delta={}, newTotal={}", tid, actualTokens, newDaily);
+      LOG.info("[Quota] 记录每日 Token 用量: tenant={}, delta={}, newTotal={}", tid, actualTokens, newDaily);
     }
     if (actualCostUsd > 0) {
       double newMonthly = incrementMonthlyCost(tid, actualCostUsd);
-      log.info("[Quota] 记录月度成本: tenant={}, delta={}, newTotal={}", tid, actualCostUsd, newMonthly);
+      LOG.info("[Quota] 记录月度成本: tenant={}, delta={}, newTotal={}", tid, actualCostUsd, newMonthly);
     }
   }
 
@@ -140,7 +145,7 @@ public class TenantQuotaService {
       Long val = redisStringOps.get(key, Long.class);
       return val != null ? val : 0L;
     } catch (Exception e) {
-      log.debug("[Quota] Redis 获取每日 Token 计数失败，降级本地缓存: {}", e.getMessage());
+      LOG.debug("[Quota] Redis 获取每日 Token 计数失败，降级本地缓存: {}", e.getMessage());
       return localFallback.getOrDefault(key, new AtomicLong(0)).get();
     }
   }
@@ -157,7 +162,7 @@ public class TenantQuotaService {
       Double val = redisStringOps.get(key, Double.class);
       return val != null ? val : 0.0;
     } catch (Exception e) {
-      log.debug("[Quota] Redis 获取月度成本失败，降级本地缓存: {}", e.getMessage());
+      LOG.debug("[Quota] Redis 获取月度成本失败，降级本地缓存: {}", e.getMessage());
       return localFallback.getOrDefault(key, new AtomicLong(0)).get() / 10000.0;
     }
   }
@@ -169,7 +174,7 @@ public class TenantQuotaService {
     try {
       return redisStringOps.incr(key, delta);
     } catch (Exception e) {
-      log.warn("[Quota] Redis INCR 失败，降级本地缓存: key={}, delta={}", key, delta);
+      LOG.warn("[Quota] Redis INCR 失败，降级本地缓存: key={}, delta={}", key, delta);
       return localFallback.computeIfAbsent(key, k -> new AtomicLong(0)).addAndGet(delta);
     }
   }
@@ -179,7 +184,7 @@ public class TenantQuotaService {
     try {
       return redisStringOps.incrByFloat(key, deltaUsd);
     } catch (Exception e) {
-      log.warn("[Quota] Redis INCR BY FLOAT 失败，降级本地缓存: key={}, delta={}", key, deltaUsd);
+      LOG.warn("[Quota] Redis INCR BY FLOAT 失败，降级本地缓存: key={}, delta={}", key, deltaUsd);
       // 本地缓存以微美元为单位存储（double -> long 转换）
       long microUsd = Math.round(deltaUsd * 10000);
       return localFallback.computeIfAbsent(key, k -> new AtomicLong(0)).addAndGet(microUsd) / 10000.0;

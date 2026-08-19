@@ -53,4 +53,12 @@ public class LoginDTO implements Serializable {
 
   /** User-Agent（由 Controller 从请求头提取，用于登录历史审计） */
   private String userAgent;
+
+  /**
+   * X-Platform 请求头（由 Controller 从请求头提取，用于分端会话控制）。
+   *
+   * <p>可选值：{@code web} / {@code app} / {@code api}。
+   * 未传时从 {@link #userAgent} 推断设备类型。
+   */
+  private String platform;
 }

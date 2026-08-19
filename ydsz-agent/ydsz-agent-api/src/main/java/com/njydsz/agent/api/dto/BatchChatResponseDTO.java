@@ -10,7 +10,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * <p>封装一组对话结果，与请求条目一一对应。
  *
- * <p>每条结果独立返回成功或失败：成功的包含 content / usage，失败的包含 errorMessage。 调用方可通过 {@link BatchResultItem#success} 字段快速判断每条结果状态。
+ * <p>每条结果独立返回成功或失败：成功的包含 content / usage，失败的包含 errorMessage。
+ * 调用方可通过 {@link BatchResultItem#success} 字段快速判断每条结果状态。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -162,4 +163,4 @@ public class BatchChatResponseDTO implements Serializable {
       this.errorMessage = errorMessage;
     }
   }
-}</longcat_think>
+}

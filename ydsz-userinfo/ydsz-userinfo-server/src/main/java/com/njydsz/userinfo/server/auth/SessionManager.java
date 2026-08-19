@@ -16,6 +16,7 @@ import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
@@ -29,9 +30,17 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  * <p><b>Redis Key 设计：</b>
  *
  * <pre>
- *   {accessToken}                 →  Hash&lt;String,Object&gt;  单会话详情（userId/roleCode/refreshToken 等）
- *   userinfo:session:user:{userId} →  Set&lt;accessToken&gt;   该用户所有活跃会话
+ *   {accessToken}                            →  Hash&lt;String,Object&gt;  单会话详情（含 deviceType）
+ *   userinfo:session:user:{userId}            →  Set&lt;accessToken&gt;   该用户所有活跃会话（全局索引）
+ *   userinfo:session:user:{userId}:device:{deviceType} → Set&lt;accessToken&gt; 该设备类型的活跃会话（分端索引）
  * </pre>
+ *
+ * <p><b>会话驱逐策略（P1-9 + 分端限制）：</b>
+ *
+ * <ol>
+ *   <li>先按分端限制驱逐该设备类型的超量会话</li>
+ *   <li>再按全局限制驱逐该用户的超量会话</li>
+ * </ol>
  *
  * @author ydsz-team
  * @since 1.1.0
@@ -45,8 +54,14 @@ public class SessionManager {
   /** 用户会话索引 Redis Key 前缀：userinfo:session:user:{userId} */
   private static final String SESSION_KEY_PREFIX = "userinfo:session:user:";
 
+  /** 分端会话索引 Redis Key 中 device 段：userinfo:session:user:{userId}:device:{deviceType} */
+  private static final String SESSION_DEVICE_KEY_INFIX = ":device:";
+
   /** P2-5: 会话 Hash schema 版本号（当前 v1） */
   private static final int SESSION_SCHEMA_VERSION = 1;
+
+  /** 会话 Hash 中 deviceType 字段名 */
+  private static final String SESSION_DEVICE_TYPE_FIELD = "deviceType";
 
   private final RedisHashOps redisHashOps;
   private final RedisStringOps redisStringOps;
@@ -55,22 +70,35 @@ public class SessionManager {
   private final UserInfoProperties properties;
 
   /**
-   * 写入 Redis 会话（会话 Hash + 会话索引）。
+   * 写入 Redis 会话（会话 Hash + 全局会话索引 + 分端会话索引）。
    *
-   * <p>会话 Hash 同时保存 refreshToken，供登出时同步吊销（P0-3）。
+   * <p>会话 Hash 同时保存 refreshToken 和 deviceType，供登出时同步吊销（P0-3）和分端会话管理。
+   * 写入后触发分端驱逐 + 全局驱逐，确保同时满足两类限制。
    *
    * @param accessToken 访问令牌
    * @param refreshToken 刷新令牌
    * @param user 用户账号
    * @param roleCodes 角色编码（逗号分隔）
    * @param roleNames 角色名称（逗号分隔）
+   * @param deviceType 设备类型（用于分端会话限制）
    */
   public void createSession(
-      String accessToken, String refreshToken, UserAccountDO user, String roleCodes,
-      String roleNames) {
-    Map<String, Object> sessionInfo = buildSessionInfo(
-        user.getId(), user.getUsername(), roleCodes, roleNames, user.getTenantId(), refreshToken);
-    storeSession(accessToken, sessionInfo, user.getId());
+      String accessToken,
+      String refreshToken,
+      UserAccountDO user,
+      String roleCodes,
+      String roleNames,
+      DeviceType deviceType) {
+    Map<String, Object> sessionInfo =
+        buildSessionInfo(
+            user.getId(),
+            user.getUsername(),
+            roleCodes,
+            roleNames,
+            user.getTenantId(),
+            refreshToken,
+            deviceType);
+    storeSession(accessToken, sessionInfo, user.getId(), deviceType);
   }
 
   /**
@@ -82,13 +110,19 @@ public class SessionManager {
    */
   public void refreshSession(String newAccessToken, String newRefreshToken, UserInfo userInfo) {
     Map<String, Object> sessionInfo = buildSessionInfo(
-        userInfo.getUserId(), userInfo.getUsername(), userInfo.getRoleCode(),
-        userInfo.getRoleName(), userInfo.getTenantId(), newRefreshToken);
-    storeSession(newAccessToken, sessionInfo, userInfo.getUserId());
+        userInfo.getUserId(),
+        userInfo.getUsername(),
+        userInfo.getRoleCode(),
+        userInfo.getRoleName(),
+        userInfo.getTenantId(),
+        newRefreshToken,
+        DeviceType.UNKNOWN);
+    storeSession(newAccessToken, sessionInfo, userInfo.getUserId(), DeviceType.UNKNOWN);
   }
 
   /**
-   * 登出吊销：从会话 Hash 读取 userId 与 refreshToken，移除会话索引，吊销 access_token 与 refresh_token。
+   * 登出吊销：从会话 Hash 读取 userId、refreshToken 与 deviceType，移除全局/分端会话索引，
+   * 吊销 access_token 与 refresh_token。
    *
    * @param accessToken 访问令牌，为空时直接返回
    * @return 会话所属 userId，无会话时返回 null（供调用方审计）
@@ -99,12 +133,25 @@ public class SessionManager {
     }
     String userId = redisHashOps.hGet(accessToken, "userId", String.class);
     String refreshToken = redisHashOps.hGet(accessToken, "refreshToken", String.class);
+    String deviceTypeCode =
+        redisHashOps.hGet(accessToken, SESSION_DEVICE_TYPE_FIELD, String.class);
 
-    // 从 userId → Set 索引中移除该 token
+    // 从全局会话索引中移除该 token
     if (userId != null) {
       String sessionKey = buildSessionKey(userId);
       redisCollectionOps.sRem(sessionKey, accessToken);
-      log.info("Removed token from session index for user: {}", userId);
+      log.info("Removed token from global session index for user: {}", userId);
+    }
+
+    // 从分端会话索引中移除该 token
+    if (userId != null && deviceTypeCode != null && !deviceTypeCode.isBlank()) {
+      String deviceSessionKey =
+          buildDeviceSessionKey(userId, DeviceType.valueOf(deviceTypeCode.toUpperCase()));
+      redisCollectionOps.sRem(deviceSessionKey, accessToken);
+      log.info(
+          "Removed token from device session index for user: {} device: {}",
+          userId,
+          deviceTypeCode);
     }
 
     // 吊销 refresh_token（P0-3），杜绝登出后长期复用缝隙
@@ -120,7 +167,8 @@ public class SessionManager {
   /**
    * 驱逐指定用户的全部活跃会话（改密/禁用/强制下线时调用）。
    *
-   * <p>从 Redis Set 中读取所有 accessToken，逐个加入黑名单并删除 Hash，最后删除 Set 索引 Key。
+   * <p>从 Redis Set 中读取所有 accessToken，逐个加入黑名单并删除 Hash，
+   * 最后删除全局 Set 索引 Key 和所有分端 Set 索引 Key。
    * 操作不抛出异常，单条 token 失败不影响后续清理。
    *
    * @param userId 用户 ID，不可为 null 或空
@@ -147,6 +195,12 @@ public class SessionManager {
         }
       }
       redisStringOps.del(sessionKey);
+
+      // 清理所有分端会话索引 Key
+      for (DeviceType deviceType : DeviceType.values()) {
+        redisStringOps.del(buildDeviceSessionKey(userId, deviceType));
+      }
+
       log.info("Evicted {} sessions for user: {}", tokens.size(), userId);
       return tokens.size();
     } catch (Exception e) {
@@ -210,16 +264,81 @@ public class SessionManager {
     }
   }
 
-  private void storeSession(String accessToken, Map<String, Object> sessionInfo, String userId) {
+  /**
+   * 写入会话 Hash 和全局/分端索引，然后触发会话驱逐。
+   *
+   * <p>驱逐顺序：先按分端限制驱逐超量会话，再按全局限制驱逐超量会话。
+   *
+   * @param accessToken 访问令牌
+   * @param sessionInfo 会话 Hash 数据
+   * @param userId 用户 ID
+   * @param deviceType 设备类型
+   */
+  private void storeSession(
+      String accessToken, Map<String, Object> sessionInfo, String userId, DeviceType deviceType) {
     redisHashOps.hMSet(accessToken, sessionInfo);
     redisStringOps.expire(accessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
 
+    // 全局会话索引
     String sessionKey = buildSessionKey(userId);
     redisCollectionOps.sAdd(sessionKey, accessToken);
     redisStringOps.expire(sessionKey, Duration.ofSeconds(properties.getTokenTtlSeconds()));
 
-    // P1-9: 单设备登录限制 —— 超出 maxSessionsPerUser 时踢出最早活跃会话
+    // 分端会话索引
+    String deviceSessionKey = buildDeviceSessionKey(userId, deviceType);
+    redisCollectionOps.sAdd(deviceSessionKey, accessToken);
+    redisStringOps.expire(
+        deviceSessionKey, Duration.ofSeconds(properties.getTokenTtlSeconds()));
+
+    // 先按分端限制驱逐超量会话，再按全局限制驱逐超量会话
+    evictExcessSessionsByDeviceType(userId, deviceType, deviceSessionKey);
     evictExcessSessions(userId, sessionKey);
+  }
+
+  /**
+   * 分端会话驱逐：超出单设备类型会话上限时，吊销该设备类型最早创建的会话。
+   *
+   * <p>会话索引为 Redis Set（无序），此处按 Set 内顺序吊销超量会话，保证任一时刻
+   * 该设备类型的活跃会话数不超过 {@code ydsz.userinfo.max-sessions-per-device-type} 中配置的值。
+   * 上限 ≤ 0 或未配置（回退到全局值 ≤ 0）时不限制。
+   *
+   * @param userId 用户 ID
+   * @param deviceType 设备类型
+   * @param deviceSessionKey 分端会话索引 Key
+   */
+  private void evictExcessSessionsByDeviceType(
+      String userId, DeviceType deviceType, String deviceSessionKey) {
+    int maxSessions = properties.getMaxSessionsForDevice(deviceType.getCode());
+    if (maxSessions <= 0) {
+      return;
+    }
+    try {
+      Set<String> tokens = redisCollectionOps.sMembers(deviceSessionKey, String.class);
+      long excess = tokens.size() - maxSessions;
+      if (excess <= 0) {
+        return;
+      }
+      log.info(
+          "Per-device session limit exceeded for user {} device {}: active={}, max={}, evicting {}",
+          userId,
+          deviceType.getCode(),
+          tokens.size(),
+          maxSessions,
+          excess);
+      for (String token : tokens) {
+        if (excess <= 0) {
+          break;
+        }
+        revokeSession(token);
+        excess--;
+      }
+    } catch (Exception e) {
+      log.warn(
+          "Failed to evict excess sessions for user: {} device: {}, error={}",
+          userId,
+          deviceType.getCode(),
+          e.getMessage());
+    }
   }
 
   /**
@@ -260,9 +379,28 @@ public class SessionManager {
     }
   }
 
+  /**
+   * 构建会话 Hash 数据。
+   *
+   * <p>包含 schema 版本号、用户信息、角色信息、refreshToken 和 deviceType。
+   *
+   * @param userId 用户 ID
+   * @param username 用户名
+   * @param roleCodes 角色编码（逗号分隔）
+   * @param roleNames 角色名称（逗号分隔）
+   * @param tenantId 租户 ID
+   * @param refreshToken 刷新令牌
+   * @param deviceType 设备类型
+   * @return 会话 Hash 数据 Map
+   */
   private Map<String, Object> buildSessionInfo(
-      String userId, String username, String roleCodes, String roleNames, String tenantId,
-      String refreshToken) {
+      String userId,
+      String username,
+      String roleCodes,
+      String roleNames,
+      String tenantId,
+      String refreshToken,
+      DeviceType deviceType) {
     Map<String, Object> sessionInfo = new HashMap<>();
     // P2-5: 会话 Hash schema 版本号，便于未来字段变更的平滑迁移与兼容性判断
     sessionInfo.put("schemaVersion", SESSION_SCHEMA_VERSION);
@@ -272,10 +410,28 @@ public class SessionManager {
     sessionInfo.put("roleName", roleNames);
     sessionInfo.put("tenantId", tenantId);
     sessionInfo.put("refreshToken", refreshToken);
+    sessionInfo.put(SESSION_DEVICE_TYPE_FIELD, deviceType.getCode());
     return sessionInfo;
   }
 
+  /**
+   * 构建全局会话索引 Key。
+   *
+   * @param userId 用户 ID
+   * @return 全局会话索引 Key，格式：userinfo:session:user:{userId}
+   */
   private String buildSessionKey(String userId) {
     return SESSION_KEY_PREFIX + userId;
+  }
+
+  /**
+   * 构建分端会话索引 Key。
+   *
+   * @param userId 用户 ID
+   * @param deviceType 设备类型
+   * @return 分端会话索引 Key，格式：userinfo:session:user:{userId}:device:{deviceType}
+   */
+  private String buildDeviceSessionKey(String userId, DeviceType deviceType) {
+    return SESSION_KEY_PREFIX + userId + SESSION_DEVICE_KEY_INFIX + deviceType.getCode();
   }
 }

@@ -19,6 +19,7 @@ import com.njydsz.userinfo.infra.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.infra.entity.RoleDO;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
+import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
@@ -114,7 +115,7 @@ public class AuthServiceImpl implements AuthService {
 
     // 加载角色 + 签发 Token + 存储会话
     List<RoleDO> roles = roleCacheService.loadUserRoles(user.getId());
-    TokenResult tokenResult = issueTokensAndCreateSession(user, roles);
+    TokenResult tokenResult = issueTokensAndCreateSession(user, roles, loginDTO);
 
     // 更新登录状态 + 审计
     updateLoginSuccess(user, loginIp, userAgent);
@@ -260,13 +261,26 @@ public class AuthServiceImpl implements AuthService {
   /**
    * 签发 Token 并写入 Redis 会话。
    *
+   * <p>从登录 DTO 中推断设备类型（优先 X-Platform 头，其次 User-Agent），传递给会话管理器
+   * 实现分端会话限制。
+   *
    * @param user 登录用户
    * @param roles 用户角色列表
+   * @param loginDTO 登录请求 DTO（用于推断设备类型）
    * @return 包含 accessToken 和 refreshToken 的结果对象
    */
-  private TokenResult issueTokensAndCreateSession(UserAccountDO user, List<RoleDO> roles) {
+  private TokenResult issueTokensAndCreateSession(
+      UserAccountDO user, List<RoleDO> roles, LoginDTO loginDTO) {
     String roleCodes = roles.stream().map(RoleDO::getRoleCode).collect(Collectors.joining(","));
     String roleNames = roles.stream().map(RoleDO::getRoleName).collect(Collectors.joining(","));
+
+    // 推断设备类型（优先 X-Platform 头，其次 User-Agent）
+    DeviceType deviceType =
+        DeviceType.resolve(loginDTO.getUserAgent(), loginDTO.getPlatform());
+    log.debug(
+        "Resolved device type for user {}: {}",
+        user.getUsername(),
+        deviceType.getCode());
 
     UserInfo userInfo = new UserInfo();
     userInfo.setUserId(user.getId());
@@ -276,7 +290,8 @@ public class AuthServiceImpl implements AuthService {
 
     String accessToken = tokenService.issueAccessToken(userInfo);
     String refreshToken = tokenService.issueRefreshToken(userInfo);
-    sessionManager.createSession(accessToken, refreshToken, user, roleCodes, roleNames);
+    sessionManager.createSession(
+        accessToken, refreshToken, user, roleCodes, roleNames, deviceType);
     return new TokenResult(accessToken, refreshToken);
   }
 

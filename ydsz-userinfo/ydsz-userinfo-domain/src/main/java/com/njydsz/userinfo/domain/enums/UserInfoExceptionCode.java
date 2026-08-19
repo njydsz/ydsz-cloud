@@ -24,6 +24,8 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  *   <li>B30xxx 用户/认证
  *   <li>B31xxx 组织架构
  *   <li>B32xxx RBAC（角色/权限/菜单/岗位/语言）
+ *   <li>B33xxx 自助服务
+ *   <li>B34xxx 社交认证（OAuth2 绑定/登录）
  *   <li>A20xxx 安全认证（锁号/MFA/Token，HTTP 401）
  * </ul>
  *
@@ -148,7 +150,9 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   /** 语言编码已存在 */
   LANGUAGE_CODE_DUPLICATE("B32010", "userinfo.LanguageDO.code.duplicate"),
 
-  // ==================== A20xxx 安全认证（二次认证） ====================
+  // ==================== A20xxx 安全认证（二次认证/会话控制） ====================
+  /** 该设备类型会话数已达上限 */
+  DEVICE_SESSION_LIMIT_EXCEEDED("A20128", "userinfo.device.session.limit.exceeded", 401),
   /** 敏感操作需要二次认证 */
   SENSITIVE_VERIFY_REQUIRED("A20120", "userinfo.sensitive.verify.required", 401),
   /** 二次认证已过期，请重新验证 */
@@ -159,6 +163,12 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   SECONDARY_AUTH_REQUIRED("A20123", "userinfo.secondary.auth.required", 401),
   /** 二级认证已过期 */
   SECONDARY_AUTH_EXPIRED("A20124", "userinfo.secondary.auth.expired", 401),
+  /** 账号未激活（用户已注册但未验证邮箱/手机） */
+  USER_NOT_ACTIVATED("A20125", "userinfo.user.not.activated", 403),
+  /** 账号已暂停（临时停用，可由管理员恢复） */
+  USER_SUSPENDED("A20126", "userinfo.user.suspended", 403),
+  /** 账号已离职（终态，不可再激活） */
+  USER_RESIGNED("A20127", "userinfo.user.resigned", 403),
 
   // ==================== B33xxx 自助服务 ====================
   /** 自助注册功能未开启 */
@@ -170,7 +180,19 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   /** 找回密码账号不存在 */
   FORGOT_PASSWORD_USER_NOT_FOUND("B33004", "userinfo.forgot.password.user.not.found"),
   /** 找回密码手机号与账号不匹配 */
-  FORGOT_PASSWORD_PHONE_MISMATCH("B33005", "userinfo.forgot.password.phone.mismatch");
+  FORGOT_PASSWORD_PHONE_MISMATCH("B33005", "userinfo.forgot.password.phone.mismatch"),
+
+  // ==================== B34xxx 社交认证 ====================
+  /** 社交认证功能未开启 */
+  SOCIAL_AUTH_DISABLED("B34001", "userinfo.social.auth.disabled"),
+  /** 不支持的社交平台 */
+  SOCIAL_PLATFORM_NOT_SUPPORTED("B34002", "userinfo.social.platform.not.supported"),
+  /** 该社交账号已绑定到其他用户 */
+  SOCIAL_BIND_EXISTS("B34003", "userinfo.social.bind.exists"),
+  /** 社交账号未绑定 */
+  SOCIAL_ACCOUNT_NOT_BOUND("B34004", "userinfo.social.account.not.bound"),
+  /** 社交认证失败 */
+  SOCIAL_AUTH_FAILED("B34005", "userinfo.social.auth.failed");
 
   /** 错误码（业务契约，不应轻易变更） */
   private final String code;

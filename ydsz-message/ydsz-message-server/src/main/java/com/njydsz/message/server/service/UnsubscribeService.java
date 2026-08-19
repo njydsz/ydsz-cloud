@@ -54,6 +54,19 @@ public interface UnsubscribeService {
   PageResponse<List<MsgSubscription>> pageUnsubscribed(UnsubscribeQueryDTO query);
 
   /**
+   * 按用户+主题+通道三元组退订（带退订原因）。
+   *
+   * <p>供管理后台或用户自助退订场景使用，内部委托 {@link com.njydsz.message.server.service.SubscriptionService#unsubscribe}。
+   *
+   * @param userId 用户 ID
+   * @param topicCode 主题编码
+   * @param channel 通道
+   * @param reason 退订原因（可选，供运营分析）
+   * @return 退订后的订阅记录
+   */
+  MsgSubscription unsubscribe(String userId, String topicCode, String channel, String reason);
+
+  /**
    * 恢复订阅（管理后台 / 用户自助）。
    *
    * <p>将指定 (userId, topicCode, channel) 的订阅状态从 UNSUBSCRIBED 改回 SUBSCRIBED， 并清空退订时间。若记录不存在则按

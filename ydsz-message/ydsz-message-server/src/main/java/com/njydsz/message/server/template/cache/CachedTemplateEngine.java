@@ -343,6 +343,37 @@ public class CachedTemplateEngine implements TemplateEngine {
   }
 
   /**
+   * 当前缓存大小（供 OpsController 使用）。
+   *
+   * @return 缓存条目数
+   */
+  public long getCacheSize() {
+    return cacheSize();
+  }
+
+  /**
+   * 根据模板编码清除缓存（支持热更新时失效）。
+   *
+   * <p>遍历缓存 key，模糊匹配包含指定 templateCode 的所有条目并清除。
+   *
+   * @param templateCode 模板编码
+   */
+  public void evictByTemplateCode(String templateCode) {
+    if (templateCode == null || templateCode.isBlank()) {
+      return;
+    }
+    long evicted =
+        astCache.asMap().keySet().stream()
+            .filter(key -> key.contains(templateCode))
+            .peek(astCache::invalidate)
+            .count();
+    log.info(
+        "[CachedTemplateEngine] evictByTemplateCode: templateCode={}, evicted={}",
+        templateCode,
+        evicted);
+  }
+
+  /**
    * 缓存命中率统计（供监控使用）。
    *
    * @return 命中率（0.0 ~ 1.0），无数据时返回 -1

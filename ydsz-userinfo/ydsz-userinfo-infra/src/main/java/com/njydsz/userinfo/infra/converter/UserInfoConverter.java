@@ -6,6 +6,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import com.njydsz.userinfo.domain.dto.SocialAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.dto.CompanyCreateDTO;
@@ -42,6 +43,7 @@ import com.njydsz.userinfo.infra.entity.MenuDO;
 import com.njydsz.userinfo.infra.entity.PostDO;
 import com.njydsz.userinfo.infra.entity.RoleDO;
 import com.njydsz.userinfo.infra.entity.RolePermissionDO;
+import com.njydsz.userinfo.infra.entity.SocialAccountDO;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.infra.entity.UserDeptDO;
 import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
@@ -60,6 +62,7 @@ import com.njydsz.userinfo.domain.vo.MenuVO;
 import com.njydsz.userinfo.domain.vo.PostVO;
 import com.njydsz.userinfo.domain.vo.RolePermissionVO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
+import com.njydsz.userinfo.domain.vo.SocialAccountVO;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.domain.vo.UserDeptVO;
@@ -918,6 +921,44 @@ public interface UserInfoConverter {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   UserLoginHistoryDO dtoToEntity(UserLoginHistoryDTO dto);
+
+  // ===== SocialAccountDO =====
+
+  /**
+   * 社交账号绑定创建 DTO → 社交账号绑定实体。
+   *
+   * <p>用于绑定保存场景，MpBaseEntity 的自动填充字段通过 @Mapping(ignore = true) 忽略。
+   *
+   * @param dto 社交账号绑定创建 DTO
+   * @return 社交账号绑定实体（未持久化）
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  SocialAccountDO createDtoToEntity(SocialAccountCreateDTO dto);
+
+  /**
+   * 社交账号绑定实体 → 社交账号绑定 VO。
+   *
+   * <p>自动排除 accessToken、refreshToken 等敏感字段。
+   *
+   * @param entity 社交账号绑定实体
+   * @return 社会交账号绑定 VO（已脱敏）
+   */
+  SocialAccountVO entityToVO(SocialAccountDO entity);
+
+  /**
+   * 社交账号绑定实体列表 → 社交账号绑定 VO 列表。
+   *
+   * @param entities 社交账号绑定实体列表
+   * @return 社交账号绑定 VO 列表（已脱敏）
+   */
+  List<SocialAccountVO> socialAccountListToVO(List<SocialAccountDO> entities);
 
   // ===== UserAccountDO → LoginVO.UserInfoVO =====
 

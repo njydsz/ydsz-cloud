@@ -2,6 +2,8 @@ package com.njydsz.agent.server.listener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -26,6 +28,8 @@ import com.njydsz.common.event.model.OutboxMessage;
 @RequiredArgsConstructor
 public class CrossModuleEventListener {
 
+  private static final Logger LOG = LoggerFactory.getLogger(CrossModuleEventListener.class);
+
   private final RagService ragService;
 
   /**
@@ -38,14 +42,14 @@ public class CrossModuleEventListener {
       condition =
           "#message.eventType == T(com.njydsz.common.event.api.DomainEventTypes).FILE_UPLOADED")
   public void onFileUploaded(OutboxMessage message) {
-    log.info(
+    LOG.info(
         "[CrossModuleEventListener] 接收文件上传事件: aggregateId={}, payload={}",
         message.getAggregateId(),
         message.getPayload());
     try {
       ragService.ingestByFileId(message.getAggregateId());
     } catch (Exception e) {
-      log.error(
+      LOG.error(
           "[CrossModuleEventListener] 自动索引文件到 RAG 知识库异常: fileId={}", message.getAggregateId(), e);
     }
   }

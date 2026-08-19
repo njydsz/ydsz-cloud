@@ -36,6 +36,10 @@ public class BatchChatRequestDTO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
+  /** 请求幂等键（防重，建议每条请求唯一） */
+  @Schema(description = "请求幂等键（防重，建议每条请求唯一）")
+  private String requestId;
+
   /** 批量对话条目列表（至少 1 条，最多 50 条） */
   @NotEmpty(message = "批量对话条目不能为空")
   @Size(min = 1, max = 50, message = "批量对话条目数必须在 1-50 之间")
@@ -57,6 +61,14 @@ public class BatchChatRequestDTO implements Serializable {
   /** 系统提示词（可选，所有条目共享） */
   @Schema(description = "系统提示词（可选，所有条目共享）")
   private String systemPrompt;
+
+  public String getRequestId() {
+    return requestId;
+  }
+
+  public void setRequestId(String requestId) {
+    this.requestId = requestId;
+  }
 
   public List<BatchChatItem> getItems() {
     return items;

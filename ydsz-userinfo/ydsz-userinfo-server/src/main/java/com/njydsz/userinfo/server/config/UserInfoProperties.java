@@ -158,6 +158,38 @@ public class UserInfoProperties {
    */
   private int maxSessionsPerUser = DEFAULT_MAX_SESSIONS_PER_USER;
 
+  /**
+   * 分端会话限制配置。
+   *
+   * <p>按设备类型独立限制会话数，-1 表示不限制。未配置分端限制时回退到全局 {@link #maxSessionsPerUser}。
+   * 分端限制是全局限制的子集：先满足分端限制，再满足全局限制。
+   *
+   * <p><b>application.yml 示例：</b>
+   *
+   * <pre>
+   * ydsz:
+   *   userinfo:
+   *     max-sessions-per-device-type:
+   *       web: 3
+   *       app: 2
+   *       api: -1
+   * </pre>
+   */
+  private Map<String, Integer> maxSessionsPerDeviceType = new HashMap<>();
+
+  /**
+   * 获取指定设备类型的最大会话数。
+   *
+   * <p>未配置分端限制时回退到全局 {@link #getMaxSessionsPerUser()}，保持向后兼容。
+   * -1 表示不限制。
+   *
+   * @param deviceType 设备类型编码（如 web/app/api）
+   * @return 该设备类型的最大会话数
+   */
+  public int getMaxSessionsForDevice(String deviceType) {
+    return maxSessionsPerDeviceType.getOrDefault(deviceType, getMaxSessionsPerUser());
+  }
+
   // ==================== P1-1 登录风控配置 ====================
 
   /** 风险评分：IP 风险权重（默认 30）。 */

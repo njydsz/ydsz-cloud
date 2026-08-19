@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.gateway.LlmClient;
@@ -34,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class PromptEvaluationService {
+
+  private static final Logger LOG = LoggerFactory.getLogger(PromptEvaluationService.class);
 
   /** 默认用户消息模板（评估时用于触发 LLM 响应） */
   private static final String DEFAULT_EVAL_USER_MESSAGE = "请根据以上系统提示进行回复。";
@@ -66,7 +70,7 @@ public class PromptEvaluationService {
     String evalUserMessage = userMessage != null ? userMessage : DEFAULT_EVAL_USER_MESSAGE;
     String evalModel = model != null ? model : properties.getLlm().getDefaultModel();
 
-    log.info("[PromptEval] 开始评估: template={}, model={}", templateCode, evalModel);
+    LOG.info("[PromptEval] 开始评估: template={}, model={}", templateCode, evalModel);
 
     // 构造请求：System = 渲染后的模板，User = 评估消息
     ChatRequest request =
@@ -93,7 +97,7 @@ public class PromptEvaluationService {
     // 估算成本（基于 GPT-4 级别定价的微美元近似）
     double estimatedCostUsd = (promptTokens * 0.001 + completionTokens * 0.002) / 1000.0;
 
-    log.info(
+    LOG.info(
         "[PromptEval] 评估完成: template={}, duration={}ms, tokens={}, cost={}",
         templateCode, durationMs, totalTokens, String.format("%.6f", estimatedCostUsd));
 
@@ -127,7 +131,7 @@ public class PromptEvaluationService {
       Map<String, Object> variables,
       String userMessage,
       String model) {
-    log.info("[PromptEval] 开始对比: A={}, B={}", templateCodeA, templateCodeB);
+    LOG.info("[PromptEval] 开始对比: A={}, B={}", templateCodeA, templateCodeB);
     PromptEvaluationResult resultA = evaluate(templateCodeA, variables, userMessage, model);
     PromptEvaluationResult resultB = evaluate(templateCodeB, variables, userMessage, model);
     return new PromptComparisonResult(resultA, resultB);

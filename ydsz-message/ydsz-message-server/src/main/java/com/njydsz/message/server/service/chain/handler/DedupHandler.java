@@ -22,7 +22,7 @@ import com.njydsz.message.server.service.core.GuardService;
 /**
  * 智能去重 Handler。
  *
- * <p>使用 Redis SET NX EX 原子去重，窗口内重复消息跳过发送。 去重 key 由 bizId + receiver + templateCode 拼接而成。
+ * <p>使用 Redis SET NX EX 原子去重，窗口内重复消息跳过发送。 去重 key 由 bizId + receiver + templateCode 拼接而成， 含 channel 时追加 channel 维度（P2-D3 去重精化）。
  *
  * @author ydsz-team
  * @since 1.1.0
@@ -46,9 +46,11 @@ public class DedupHandler implements SendHandler {
     ctx.setDedupKey(dedupKey);
     if (!guardService.tryDedup(dedupKey)) {
       log.info(
-          "[Message] 检测到重复消息,跳过发送: dedupKey={} receiver={}",
+          "[DedupHandler] 去重命中,跳过发送: dedupKey={}, receiver={}, templateCode={}, channel={}",
           dedupKey,
-          SensitiveUtil.scanAndMask(ctx.getReceiver()));
+          SensitiveUtil.scanAndMask(ctx.getReceiver()),
+          request.getTemplateCode(),
+          request.getChannel());
       messageMetrics.recordSend(ctx.getChannel(), "DEDUPED", 0);
       // P2-A4: 发布消息被拦截领域事件
       domainEventPublisher.publish(
@@ -72,7 +74,15 @@ public class DedupHandler implements SendHandler {
     return 600;
   }
 
-  /** 构建去重 key：bizId + receiver + templateCode。 */
+  /**
+   * 构建去重 key：bizId + receiver + templateCode，含 channel 时追加 channel 维度。
+   *
+   * <p>格式：
+   * <ul>
+   *   <li>有 channel：ydsz:msg:dedup:{bizId}:{receiver}:{templateCode}:{channel}</li>
+   *   <li>无 channel：ydsz:msg:dedup:{bizId}:{receiver}:{templateCode}</li>
+   * </ul>
+   */
   private String buildDedupKey(MessageRequest request) {
     if (!StringUtils.hasText(request.getBizId())) {
       return null;
@@ -80,11 +90,13 @@ public class DedupHandler implements SendHandler {
     String receiver = StringUtils.hasText(request.getReceiver()) ? request.getReceiver() : "";
     String templateCode =
         StringUtils.hasText(request.getTemplateCode()) ? request.getTemplateCode() : "";
-    return MessageConstants.DEDUP_KEY_PREFIX
-        + request.getBizId()
-        + ":"
-        + receiver
-        + ":"
-        + templateCode;
+    StringBuilder key = new StringBuilder(MessageConstants.DEDUP_KEY_PREFIX)
+        .append(request.getBizId()).append(":")
+        .append(receiver).append(":")
+        .append(templateCode);
+    if (StringUtils.hasText(request.getChannel())) {
+      key.append(":").append(request.getChannel());
+    }
+    return key.toString();
   }
 }

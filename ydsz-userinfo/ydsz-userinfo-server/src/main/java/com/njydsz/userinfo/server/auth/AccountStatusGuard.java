@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
@@ -42,13 +43,22 @@ public class AccountStatusGuard {
   /**
    * 查询用户并校验账号状态与锁定状态。
    *
-   * <p>通过 {@link UserAccountRepository#findCredentialByUsername} 获取用户认证凭据，校验账号状态（不存在/禁用/锁定）。
+   * <p>通过 {@link UserAccountRepository#findCredentialByUsername} 获取用户认证凭据，校验账号状态（不存在/生命周期状态/锁定）。
+   *
+   * <p>使用 {@link UserLifecycleStatusEnum} 进行状态校验，覆盖所有生命周期状态：
+   *
+   * <ul>
+   *   <li>PENDING → 抛出 {@link UserInfoExceptionCode#USER_NOT_ACTIVATED}
+   *   <li>SUSPENDED → 抛出 {@link UserInfoExceptionCode#USER_SUSPENDED}
+   *   <li>RESIGNED → 抛出 {@link UserInfoExceptionCode#USER_RESIGNED}
+   *   <li>DISABLED → 抛出 {@link UserInfoExceptionCode#USER_DISABLED}
+   * </ul>
    *
    * @param username 登录用户名
    * @param loginIp 登录来源 IP
    * @param userAgent 用户代理
    * @return 有效的用户账号实体（由领域凭据 VO 转换而来，兼容现有调用方）
-   * @throws BusinessException 用户不存在、已禁用或已锁定时抛出
+   * @throws BusinessException 用户不存在、未激活、已暂停、已离职、已禁用或已锁定时抛出
    */
   public UserAccountDO findValidUser(String username, String loginIp, String userAgent) {
     Optional<UserAccountCredentialVO> credentialOpt = userAccountRepository.findCredentialByUsername(username);
@@ -62,23 +72,33 @@ public class AccountStatusGuard {
 
     UserAccountCredentialVO credential = credentialOpt.get();
 
-    if (isDisabled(credential)) {
-      loginHistoryService.recordLoginAttempt(
-          new LoginAttemptContext(credential.getId(), username, loginIp),
-          "FAILED",
-          "USER_DISABLED",
-          userAgent);
-      userInfoMetrics.recordLoginFail();
-      throw new BusinessException(UserInfoExceptionCode.USER_DISABLED);
+    UserLifecycleStatusEnum lifecycleStatus = resolveLifecycleStatus(credential);
+    if (lifecycleStatus != null && !lifecycleStatus.canLogin()) {
+      switch (lifecycleStatus) {
+        case PENDING -> {
+          recordLoginFailure(credential, username, loginIp, userAgent, "USER_NOT_ACTIVATED");
+          throw new BusinessException(UserInfoExceptionCode.USER_NOT_ACTIVATED);
+        }
+        case SUSPENDED -> {
+          recordLoginFailure(credential, username, loginIp, userAgent, "USER_SUSPENDED");
+          throw new BusinessException(UserInfoExceptionCode.USER_SUSPENDED);
+        }
+        case RESIGNED -> {
+          recordLoginFailure(credential, username, loginIp, userAgent, "USER_RESIGNED");
+          throw new BusinessException(UserInfoExceptionCode.USER_RESIGNED);
+        }
+        case DISABLED -> {
+          recordLoginFailure(credential, username, loginIp, userAgent, "USER_DISABLED");
+          throw new BusinessException(UserInfoExceptionCode.USER_DISABLED);
+        }
+        default -> {
+          // ENABLED falls through to lock check below
+        }
+      }
     }
 
     if (credential.isLocked()) {
-      loginHistoryService.recordLoginAttempt(
-          new LoginAttemptContext(credential.getId(), username, loginIp),
-          "FAILED",
-          "ACCOUNT_LOCKED",
-          userAgent);
-      userInfoMetrics.recordLoginFail();
+      recordLoginFailure(credential, username, loginIp, userAgent, "ACCOUNT_LOCKED");
       throw new BusinessException(UserInfoExceptionCode.ACCOUNT_LOCKED);
     }
 
@@ -86,17 +106,52 @@ public class AccountStatusGuard {
   }
 
   /**
-   * 判断账号是否被禁用。
+   * 解析用户生命周期状态。
+   *
+   * @param credential 用户认证凭据 VO
+   * @return 生命周期状态枚举，无法解析时返回 null
+   */
+  private UserLifecycleStatusEnum resolveLifecycleStatus(UserAccountCredentialVO credential) {
+    if (credential.getStatus() == null) {
+      return null;
+    }
+    return UserLifecycleStatusEnum.parse(String.valueOf(credential.getStatus()));
+  }
+
+  /**
+   * 判断账号是否被禁用（向后兼容）。
    *
    * @param credential 用户认证凭据 VO
    * @return true 表示账号被禁用
+   * @deprecated 使用 {@link #resolveLifecycleStatus(UserAccountCredentialVO)} 替代
    */
+  @Deprecated
   private boolean isDisabled(UserAccountCredentialVO credential) {
     if (credential.getStatus() == null) {
       return false;
     }
     EnableStatusEnum statusEnum = EnableStatusEnum.parse(String.valueOf(credential.getStatus()));
     return statusEnum == EnableStatusEnum.DISABLED;
+  }
+
+  /**
+   * 记录登录失败（生命周期状态相关）。
+   *
+   * @param credential 用户认证凭据 VO
+   * @param username 登录用户名
+   * @param loginIp 登录来源 IP
+   * @param userAgent 用户代理
+   * @param reason 失败原因标识
+   */
+  private void recordLoginFailure(
+      UserAccountCredentialVO credential,
+      String username,
+      String loginIp,
+      String userAgent,
+      String reason) {
+    loginHistoryService.recordLoginAttempt(
+        new LoginAttemptContext(credential.getId(), username, loginIp), "FAILED", reason, userAgent);
+    userInfoMetrics.recordLoginFail();
   }
 
   /**

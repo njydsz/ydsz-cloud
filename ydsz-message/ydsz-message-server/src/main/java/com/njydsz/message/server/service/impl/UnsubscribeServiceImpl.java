@@ -142,6 +142,27 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
   }
 
   /**
+   * 按用户+主题+通道三元组退订（带退订原因）。
+   *
+   * <p>供管理后台或用户自助退订场景使用，内部委托 {@link SubscriptionService#unsubscribe}。 退订原因供运营分析，不影响退订逻辑。
+   *
+   * @param userId 用户 ID
+   * @param topicCode 主题编码
+   * @param channel 消息通道
+   * @param reason 退订原因（可选，供运营分析）
+   * @return 退订后的订阅记录
+   */
+  @Override
+  public MsgSubscription unsubscribe(String userId, String topicCode, String channel, String reason) {
+    if (StringUtils.hasText(reason)) {
+      log.info(
+          "[Unsubscribe] 退订原因: user={} topic={} channel={} reason={}",
+          userId, topicCode, channel, reason);
+    }
+    return subscriptionService.unsubscribe(userId, topicCode, channel);
+  }
+
+  /**
    * 恢复订阅
    *
    * <p>将指定用户+主题+通道的订阅状态恢复为 SUBSCRIBED。 无记录时新建 SUBSCRIBED 记录；已订阅则跳过。
