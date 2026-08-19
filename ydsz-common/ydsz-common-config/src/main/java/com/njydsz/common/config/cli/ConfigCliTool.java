@@ -12,7 +12,10 @@ import com.njydsz.common.json.YdszJson;
 /**
  * Jasypt 配置加密 CLI 工具
  *
- * <p>提供命令行方式加密 / 解密配置值，生成 {@code ENC(密文)} 格式串， 便于在 Nacos 配置中心中填写加密属性。
+ * <p>提供命令行方式加密 / 解密配置值，生成 {@code ENC(密文)} 格式串，便于在 Nacos 配置中心中填写加密属性。
+ *
+ * <p>本工具为 CLI 入口（{@code main} 方法），{@link System#out} / {@link System#err} 是 CLI 标准输出通道，
+ * 不属于运行时代码的日志场景，因此豁免 checkstyle 日志规范要求。
  *
  * <h3>用法</h3>
  *

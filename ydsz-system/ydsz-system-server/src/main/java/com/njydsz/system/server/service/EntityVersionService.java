@@ -2,6 +2,8 @@ package com.njydsz.system.server.service;
 
 import java.util.List;
 
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.query.EntityVersionPageQuery;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 
 /**
@@ -47,6 +49,16 @@ public interface EntityVersionService {
    * @return 版本列表（按生效时间倒序）
    */
   List<EntityVersionVO> listByResourceTypeAndKey(String resourceType, String resourceKey);
+
+  /**
+   * 按资源类型 + 资源键分页查询版本历史（P2-3 分页优化）。
+   *
+   * <p>支持翻页查询，适用于版本量大的场景（如高频变更的配置）。
+   *
+   * @param query 分页查询条件（resourceType / resourceKey / pageNum / pageSize）
+   * @return 分页结果（含总记录数）
+   */
+  PageResponse<List<EntityVersionVO>> pageByResourceTypeAndKey(EntityVersionPageQuery query);
 
   /**
    * 创建版本快照

@@ -134,6 +134,7 @@ public class DistributedAutoConfiguration {
     long heartbeatIntervalMs = properties.getDistributed().getHeartbeatIntervalMs();
 
     // 启动定时心跳 + 节点刷新
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 分布式心跳调度器，单线程固定，定时刷新节点状态
     scheduler =
         Executors.newSingleThreadScheduledExecutor(
             r -> {
@@ -141,6 +142,7 @@ public class DistributedAutoConfiguration {
               t.setDaemon(true);
               return t;
             });
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     scheduler.scheduleAtFixedRate(
         () -> {
           try {

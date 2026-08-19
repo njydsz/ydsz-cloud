@@ -107,14 +107,17 @@ public class ScriptRule implements Rule {
   private static final long SANDBOX_TIMEOUT_MS = 5000;
 
   /**
-   * 脚本执行虚拟线程池（P0-2）
+   * 脚本执行虚拟线程池（JDK 21 虚拟线程）。
    *
-   * <p>使用 JDK 21 虚拟线程执行脚本规则，IO 阻塞时不占用平台线程资源。 每个任务分配一个虚拟线程，适合脚本引擎的异构负载。
+   * <p>使用 JDK 21 虚拟线程执行脚本规则，IO 阻塞时不占用平台线程资源。
+   * 每个任务分配一个虚拟线程，适合脚本引擎的异构负载。
    *
    * <p>虚拟线程为守护线程，不阻止 JVM 退出，无需显式 shutdown。
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava - 虚拟线程执行器，每个任务一个虚拟线程，无平台线程占用
   private static final java.util.concurrent.ExecutorService SCRIPT_EXECUTOR =
       Executors.newVirtualThreadPerTaskExecutor();
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /** ScriptEngine 缓存（按语言名，全局共享，线程安全） */
   private static final Map<String, ScriptEngine> ENGINE_CACHE = new ConcurrentHashMap<>();

@@ -1,6 +1,7 @@
 package com.njydsz.agent.api.dto;
 
 import java.io.Serializable;
+import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -9,6 +10,15 @@ import jakarta.validation.constraints.NotBlank;
  * 对话请求 DTO
  *
  * <p>封装用户与 Agent 进行单轮/多轮对话的请求参数， 包括消息内容、模型选择、生成参数等。
+ *
+ * <p>支持两种消息输入方式：
+ *
+ * <ul>
+ *   <li>纯文本：通过 {@link #message} 字段传入（向后兼容）
+ *   <li>多模态（Vision 模型）：通过 {@link #multimodalContent} 传入内容段落列表（文本+图片）
+ * </ul>
+ *
+ * <p>当 {@code multimodalContent} 非空时，优先使用多模态格式，{@code message} 忽略。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -26,10 +36,18 @@ public class ChatRequestDTO implements Serializable {
   @Schema(description = "请求幂等键（可选，防止重复调用 LLM 扣费）")
   private String requestId;
 
-  /** 用户消息内容（必填） */
+  /** 用户消息内容（必填，纯文本场景） */
   @NotBlank(message = "消息内容不能为空")
-  @Schema(description = "用户消息", requiredMode = Schema.RequiredMode.REQUIRED)
+  @Schema(description = "用户消息（纯文本，与 multimodalContent 二选一）")
   private String message;
+
+  /**
+   * 多模态内容段落列表（Vision 模型场景，与 message 二选一）
+   *
+   * <p>当该字段非空时，优先使用多模态格式传递给 LLM，{@code message} 字段忽略。 每个段落可以是文本（type=text）或图片（type=image_url）。
+   */
+  @Schema(description = "多模态内容段落（Vision 模型，与 message 二选一）")
+  private List<ContentPartDTO> multimodalContent;
 
   /** 系统提示词（可选，覆盖 Agent 默认配置） */
   @Schema(description = "系统提示词（可选，覆盖默认）")
@@ -71,6 +89,14 @@ public class ChatRequestDTO implements Serializable {
     this.message = message;
   }
 
+  public List<ContentPartDTO> getMultimodalContent() {
+    return multimodalContent;
+  }
+
+  public void setMultimodalContent(List<ContentPartDTO> multimodalContent) {
+    this.multimodalContent = multimodalContent;
+  }
+
   public String getSystemPrompt() {
     return systemPrompt;
   }
@@ -101,5 +127,52 @@ public class ChatRequestDTO implements Serializable {
 
   public void setMaxTokens(Integer maxTokens) {
     this.maxTokens = maxTokens;
+  }
+
+  /**
+   * 多模态内容段落 DTO（OpenAI Vision API 契约格式）
+   *
+   * <p>每个段落可以是文本或图片之一，类型由 {@link #type} 标识。
+   */
+  @Schema(description = "多模态内容段落")
+  public static class ContentPartDTO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    /** 内容类型（text / image_url） */
+    @Schema(description = "内容类型（text / image_url）")
+    private String type;
+
+    /** 文本内容（type=text 时有效） */
+    @Schema(description = "文本内容（type=text 时有效）")
+    private String text;
+
+    /** 图片 URL（type=image_url 时有效，支持 http(s):// 或 data:image/... 内联格式） */
+    @Schema(description = "图片 URL（type=image_url 时有效）")
+    private String imageUrl;
+
+    public String getType() {
+      return type;
+    }
+
+    public void setType(String type) {
+      this.type = type;
+    }
+
+    public String getText() {
+      return text;
+    }
+
+    public void setText(String text) {
+      this.text = text;
+    }
+
+    public String getImageUrl() {
+      return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+      this.imageUrl = imageUrl;
+    }
   }
 }

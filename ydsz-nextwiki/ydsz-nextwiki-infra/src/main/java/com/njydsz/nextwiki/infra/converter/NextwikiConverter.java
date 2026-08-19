@@ -670,6 +670,24 @@ public interface NextwikiConverter {
   // ===== UserFavorite（S2-P1-06） =====
 
   /**
+   * 空间模板实体 → 空间模板 DTO
+   *
+   * @param entity 空间模板实体
+   * @return 空间模板 DTO
+   */
+  com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO toSpaceTemplateDTO(
+      com.njydsz.nextwiki.infra.entity.SpaceTemplateDO entity);
+
+  /**
+   * 空间模板 DTO → 空间模板实体
+   *
+   * @param dto 空间模板 DTO
+   * @return 空间模板实体
+   */
+  com.njydsz.nextwiki.infra.entity.SpaceTemplateDO toSpaceTemplateDO(
+      com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO dto);
+
+  /**
    * 空间 DTO → 空间实体
    *
    * @param dto 空间 DTO
