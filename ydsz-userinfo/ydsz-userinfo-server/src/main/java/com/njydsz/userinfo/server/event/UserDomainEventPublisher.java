@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.event;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,18 @@ import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.userinfo.domain.event.UserDomainEvent;
 import com.njydsz.userinfo.domain.event.UserDomainEventType;
+import com.njydsz.userinfo.domain.event.auth.AccountBannedEvent;
+import com.njydsz.userinfo.domain.event.auth.AccountLockedEvent;
+import com.njydsz.userinfo.domain.event.auth.AccountUnbannedEvent;
+import com.njydsz.userinfo.domain.event.auth.AccountUnlockedEvent;
+import com.njydsz.userinfo.domain.event.auth.LoginFailedEvent;
+import com.njydsz.userinfo.domain.event.auth.LoginSuccessEvent;
+import com.njydsz.userinfo.domain.event.auth.LogoutEvent;
+import com.njydsz.userinfo.domain.event.auth.MfaFailedEvent;
+import com.njydsz.userinfo.domain.event.auth.MfaTriggeredEvent;
+import com.njydsz.userinfo.domain.event.auth.MfaVerifiedEvent;
+import com.njydsz.userinfo.domain.event.auth.PasswordChangedEvent;
+import com.njydsz.userinfo.domain.event.auth.SessionEvictedEvent;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
@@ -26,6 +39,8 @@ import com.njydsz.userinfo.infra.entity.UserAccountDO;
  *
  * <p><b>DDD 合规：</b>同时支持 {@link UserAccountDO}（infra 层）和 {@link UserAccountVO}（domain 层），新代码应优先使用 VO 版本。
  *
+ * <p><b>认证事件（v1.6.0+）：</b>新增的认证事件发布方法通过 {@link UserAuthEventDispatcher} 分发，替代旧的 {@code publishUserLogin} 等字符串事件。
+ *
  * @author ydsz-team
  * @since 1.1.0
  */
@@ -34,9 +49,13 @@ import com.njydsz.userinfo.infra.entity.UserAccountDO;
 public class UserDomainEventPublisher {
 
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
+  private final UserAuthEventDispatcher authEventDispatcher;
 
-  public UserDomainEventPublisher(ObjectProvider<DomainEventPublisher> eventPublisherProvider) {
+  public UserDomainEventPublisher(
+      ObjectProvider<DomainEventPublisher> eventPublisherProvider,
+      UserAuthEventDispatcher authEventDispatcher) {
     this.eventPublisherProvider = eventPublisherProvider;
+    this.authEventDispatcher = authEventDispatcher;
   }
 
   /**
@@ -137,13 +156,175 @@ public class UserDomainEventPublisher {
    * 发布用户登录事件。
    *
    * @param userId 登录用户 ID
+   * @deprecated 使用 {@link #publishLoginSuccess(String, String, String, String)} 替代，新方式携带更丰富的认证上下文信息
    */
+  @Deprecated
   public void publishUserLogin(String userId) {
     publish(
         UserDomainEventType.USER_LOGIN,
         userId,
         "USER",
         UserDomainEvent.of(UserDomainEventType.USER_LOGIN, userId, Map.of()));
+  }
+
+  // ==================== 认证事件（v1.6.0+，通过 UserAuthEventDispatcher 分发） ====================
+
+  /**
+   * 发布登录成功事件。
+   *
+   * @param userId 用户 ID
+   * @param username 用户名
+   * @param sourceIp 登录来源 IP
+   * @param userAgent 浏览器 User-Agent
+   * @param deviceType 设备类型
+   */
+  public void publishLoginSuccess(
+      String userId, String username, String sourceIp, String userAgent, String deviceType) {
+    authEventDispatcher.publish(
+        new LoginSuccessEvent(userId, username, LocalDateTime.now(), sourceIp, userAgent, deviceType));
+  }
+
+  /**
+   * 发布登录失败事件。
+   *
+   * @param userId 用户 ID
+   * @param username 用户名
+   * @param sourceIp 登录来源 IP
+   * @param reason 失败原因
+   * @param failCount 累计失败次数
+   */
+  public void publishLoginFailed(
+      String userId, String username, String sourceIp, String reason, int failCount) {
+    authEventDispatcher.publish(
+        new LoginFailedEvent(userId, username, LocalDateTime.now(), sourceIp, reason, failCount));
+  }
+
+  /**
+   * 发布注销事件。
+   *
+   * @param userId 用户 ID
+   * @param username 用户名
+   * @param sourceIp 注销来源 IP
+   * @param sessionDuration 会话持续时长（毫秒）
+   */
+  public void publishLogout(String userId, String username, String sourceIp, long sessionDuration) {
+    authEventDispatcher.publish(
+        new LogoutEvent(userId, username, LocalDateTime.now(), sourceIp, sessionDuration));
+  }
+
+  /**
+   * 发布 MFA 触发事件。
+   *
+   * @param userId 用户 ID
+   * @param username 用户名
+   * @param mfaType MFA 类型
+   */
+  public void publishMfaTriggered(String userId, String username, String mfaType) {
+    authEventDispatcher.publish(
+        new MfaTriggeredEvent(userId, username, LocalDateTime.now(), mfaType));
+  }
+
+  /**
+   * 发布 MFA 验证成功事件。
+   *
+   * @param userId 用户 ID
+   * @param username 用户名
+   * @param mfaType MFA 类型
+   */
+  public void publishMfaVerified(String userId, String username, String mfaType) {
+    authEventDispatcher.publish(
+        new MfaVerifiedEvent(userId, username, LocalDateTime.now(), mfaType));
+  }
+
+  /**
+   * 发布 MFA 验证失败事件。
+   *
+   * @param userId 用户 ID
+   * @param username 用户名
+   * @param mfaType MFA 类型
+   * @param reason 失败原因
+   */
+  public void publishMfaFailed(String userId, String username, String mfaType, String reason) {
+    authEventDispatcher.publish(
+        new MfaFailedEvent(userId, username, LocalDateTime.now(), mfaType, reason));
+  }
+
+  /**
+   * 发布账号锁定事件。
+   *
+   * @param userId 用户 ID
+   * @param username 用户名
+   * @param lockDuration 锁定持续时长（分钟），-1 表示永久锁定
+   * @param reason 锁定原因
+   */
+  public void publishAccountLocked(String userId, String username, long lockDuration, String reason) {
+    authEventDispatcher.publish(
+        new AccountLockedEvent(userId, username, LocalDateTime.now(), lockDuration, reason));
+  }
+
+  /**
+   * 发布账号解锁事件。
+   *
+   * @param userId 用户 ID
+   * @param username 用户名
+   * @param unlockedBy 解锁操作者
+   */
+  public void publishAccountUnlocked(String userId, String username, String unlockedBy) {
+    authEventDispatcher.publish(
+        new AccountUnlockedEvent(userId, username, LocalDateTime.now(), unlockedBy));
+  }
+
+  /**
+   * 发布会话驱逐事件。
+   *
+   * @param userId 用户 ID
+   * @param username 用户名
+   * @param evictedBy 驱逐操作者
+   * @param reason 驱逐原因
+   */
+  public void publishSessionEvicted(
+      String userId, String username, String evictedBy, String reason) {
+    authEventDispatcher.publish(
+        new SessionEvictedEvent(userId, username, LocalDateTime.now(), evictedBy, reason));
+  }
+
+  /**
+   * 发布密码修改事件。
+   *
+   * @param userId 用户 ID
+   * @param username 用户名
+   * @param changedBy 操作者
+   */
+  public void publishPasswordChanged(String userId, String username, String changedBy) {
+    authEventDispatcher.publish(
+        new PasswordChangedEvent(userId, username, LocalDateTime.now(), changedBy));
+  }
+
+  /**
+   * 发布账号封禁事件。
+   *
+   * @param userId 用户 ID
+   * @param username 用户名
+   * @param banType 封禁类型
+   * @param reason 封禁原因
+   * @param bannedBy 封禁操作者
+   */
+  public void publishAccountBanned(
+      String userId, String username, String banType, String reason, String bannedBy) {
+    authEventDispatcher.publish(
+        new AccountBannedEvent(userId, username, LocalDateTime.now(), banType, reason, bannedBy));
+  }
+
+  /**
+   * 发布账号解封事件。
+   *
+   * @param userId 用户 ID
+   * @param username 用户名
+   * @param unbannedBy 解封操作者
+   */
+  public void publishAccountUnbanned(String userId, String username, String unbannedBy) {
+    authEventDispatcher.publish(
+        new AccountUnbannedEvent(userId, username, LocalDateTime.now(), unbannedBy));
   }
 
   /**

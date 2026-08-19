@@ -83,6 +83,7 @@ public class AuthServiceImpl implements AuthService {
   private final RoleCacheService roleCacheService;
   private final CrossDomainTokenService crossDomainTokenService;
   private final CrossDomainSsoProperties ssoProperties;
+  private final RememberMeService rememberMeService;
 
   /**
    * {@inheritDoc}
@@ -269,6 +270,7 @@ public class AuthServiceImpl implements AuthService {
    * <p>从登录 DTO 中推断设备类型（优先 X-Platform 头，其次 User-Agent），传递给会话管理器
    * 实现分端会话限制。登录成功后，如果启用了跨域 SSO 且请求来自跨域子应用，
    * 在响应中注入跨域共享 Cookie（Domain 设为父域名），实现微前端子应用免登录。
+   * 如果用户勾选了「记住我」，签发 Remember-Me Cookie 并在会话中标记。
    *
    * @param user 登录用户
    * @param roles 用户角色列表
@@ -299,6 +301,13 @@ public class AuthServiceImpl implements AuthService {
     String refreshToken = tokenService.issueRefreshToken(userInfo);
     sessionManager.createSession(
         accessToken, refreshToken, user, roleCodes, roleNames, deviceType);
+
+    // Remember-Me：如果用户勾选，在会话中标记并签发 Cookie
+    if (loginDTO.isRememberMe()) {
+      sessionManager.markSessionRememberMe(accessToken);
+      rememberMeService.onLoginSuccess(response, user.getId(), true);
+      log.info("Remember-Me enabled for user: {}", user.getUsername());
+    }
 
     // 跨域 SSO：登录成功后注入跨域共享 Cookie
     injectCrossDomainCookie(accessToken, response);
@@ -359,6 +368,7 @@ public class AuthServiceImpl implements AuthService {
    * {@inheritDoc}
    *
    * <p>委托 {@link SessionManager#revokeSession(String)} 完成会话索引移除与 access/refresh token 吊销。
+   * 同时清除 Remember-Me Cookie 和续期审计信息。
    *
    * @param accessToken 访问令牌，为空时直接返回
    */

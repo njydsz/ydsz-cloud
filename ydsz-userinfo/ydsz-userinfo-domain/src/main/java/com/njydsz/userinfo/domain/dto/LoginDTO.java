@@ -61,4 +61,12 @@ public class LoginDTO implements Serializable {
    * 未传时从 {@link #userAgent} 推断设备类型。
    */
   private String platform;
+
+  /**
+   * 是否开启「记住我」功能，默认 false。
+   *
+   * <p>开启后每次访问自动续期 Token TTL（滑动过期），关闭浏览器则按原 Cookie 有效期失效。
+   * 开启时服务端会签发 Remember-Me Cookie（存储加密后的用户 ID）。
+   */
+  private boolean rememberMe;
 }

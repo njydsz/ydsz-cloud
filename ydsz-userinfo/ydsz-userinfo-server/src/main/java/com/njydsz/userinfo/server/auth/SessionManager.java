@@ -63,6 +63,9 @@ public class SessionManager {
   /** 会话 Hash 中 deviceType 字段名 */
   private static final String SESSION_DEVICE_TYPE_FIELD = "deviceType";
 
+  /** 会话 Hash 中 rememberMe 标记字段名 */
+  private static final String SESSION_REMEMBER_ME_FIELD = "rememberMe";
+
   private final RedisHashOps redisHashOps;
   private final RedisStringOps redisStringOps;
   private final RedisCollectionOps redisCollectionOps;
@@ -104,6 +107,8 @@ public class SessionManager {
   /**
    * Token 刷新后更新会话（使用新 access_token 与新 refresh_token）。
    *
+   * <p>如果原会话标记为 rememberMe，新会话继承该标记，并自动执行滑动续期。
+   *
    * @param newAccessToken 新访问令牌
    * @param newRefreshToken 新刷新令牌
    * @param userInfo 用户信息（来自 refresh_token 解析）
@@ -118,6 +123,13 @@ public class SessionManager {
         newRefreshToken,
         DeviceType.UNKNOWN);
     storeSession(newAccessToken, sessionInfo, userInfo.getUserId(), DeviceType.UNKNOWN);
+
+    // 如果原会话标记为 rememberMe，继承标记并执行滑动续期
+    String oldRememberMe = redisHashOps.hGet(userInfo.getUserId() + "_pending_remember_me",
+        "rememberMe", String.class);
+    if ("true".equals(oldRememberMe)) {
+      redisHashOps.hSet(newAccessToken, SESSION_REMEMBER_ME_FIELD, "true");
+    }
   }
 
   /**
@@ -377,6 +389,55 @@ public class SessionManager {
     } catch (Exception e) {
       log.warn("Failed to evict excess sessions for user: {}, error={}", userId, e.getMessage());
     }
+  }
+
+  /**
+   * 标记会话为 Remember-Me 会话。
+   *
+   * <p>在会话 Hash 中写入 rememberMe=true 标记，供滑动续期判断使用。
+   *
+   * @param accessToken 访问令牌
+   */
+  public void markSessionRememberMe(String accessToken) {
+    if (accessToken == null || accessToken.isBlank()) {
+      return;
+    }
+    redisHashOps.hSet(accessToken, SESSION_REMEMBER_ME_FIELD, "true");
+    log.debug("Session marked as rememberMe: {}", accessToken.substring(0, 8) + "...");
+  }
+
+  /**
+   * 延长会话 TTL（滑动续期）。
+   *
+   * <p>将 access_token 对应会话 Hash 和全局/分端索引的 TTL 延长指定的秒数。
+   *
+   * @param accessToken 访问令牌
+   * @param ttlSeconds 新的 TTL（秒）
+   */
+  public void extendSession(String accessToken, long ttlSeconds) {
+    if (accessToken == null || accessToken.isBlank() || ttlSeconds <= 0) {
+      return;
+    }
+    Duration ttl = Duration.ofSeconds(ttlSeconds);
+    // 延长会话 Hash TTL
+    redisStringOps.expire(accessToken, ttl);
+
+    // 延长全局会话索引 TTL
+    String userId = redisHashOps.hGet(accessToken, "userId", String.class);
+    if (userId != null && !userId.isBlank()) {
+      String sessionKey = buildSessionKey(userId);
+      redisStringOps.expire(sessionKey, ttl);
+
+      // 延长分端会话索引 TTL
+      String deviceTypeCode =
+          redisHashOps.hGet(accessToken, SESSION_DEVICE_TYPE_FIELD, String.class);
+      if (deviceTypeCode != null && !deviceTypeCode.isBlank()) {
+        String deviceSessionKey = buildDeviceSessionKey(userId, DeviceType.UNKNOWN);
+        redisStringOps.expire(deviceSessionKey, ttl);
+      }
+    }
+    log.debug("Session TTL extended: {} seconds for token={}", ttlSeconds,
+        accessToken.substring(0, 8) + "...");
   }
 
   /**

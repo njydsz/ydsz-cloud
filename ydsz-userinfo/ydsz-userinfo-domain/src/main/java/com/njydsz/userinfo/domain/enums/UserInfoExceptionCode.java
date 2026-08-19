@@ -27,7 +27,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  *   <li>B33xxx 自助服务
  *   <li>B34xxx 社交认证（OAuth2 绑定/登录）
  *   <li>B35xxx LDAP 同步
- *   <li>A20xxx 安全认证（锁号/MFA/Token，HTTP 401）
+ *   <li>A20xxx 安全认证（锁号/MFA/Token/Remember-Me，HTTP 401）
  * </ul>
  *
  * <p><b>稳定性</b>：错误码是业务契约，修改/废弃必须保留向前兼容。
@@ -171,6 +171,12 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   /** 账号已离职（终态，不可再激活） */
   USER_RESIGNED("A20127", "userinfo.user.resigned", 403),
 
+  // ==================== A20xxx Remember-Me ====================
+  /** Remember-Me 已过期（超过最大续期天数） */
+  REMEMBER_ME_EXPIRED("A20140", "userinfo.remember.me.expired", 401),
+  /** Remember-Me 无效（Cookie 校验失败或会话不存在） */
+  REMEMBER_ME_INVALID("A20141", "userinfo.remember.me.invalid", 401),
+
   // ==================== A20xxx 跨域 SSO ====================
   /** 不受信的跨域来源 */
   SSO_DOMAIN_NOT_TRUSTED("A20137", "userinfo.sso.domain.not.trusted", 403),
@@ -231,7 +237,19 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   /** LDAP 同步失败 */
   LDAP_SYNC_FAILED("B35003", "userinfo.ldap.sync.failed"),
   /** LDAP 连接失败 */
-  LDAP_CONNECTION_FAILED("B35004", "userinfo.ldap.connection.failed");
+  LDAP_CONNECTION_FAILED("B35004", "userinfo.ldap.connection.failed"),
+
+  // ==================== B36xxx SCIM 2.0 用户供给 ====================
+  /** SCIM 服务未开启 */
+  SCIM_DISABLED("B36001", "userinfo.scim.disabled"),
+  /** SCIM 认证失败（Bearer Token 无效） */
+  SCIM_AUTH_FAILED("B36002", "userinfo.scim.auth.failed", 401),
+  /** SCIM 用户不存在 */
+  SCIM_USER_NOT_FOUND("B36003", "userinfo.scim.user.not.found", 404),
+  /** SCIM 过滤表达式解析错误 */
+  SCIM_FILTER_PARSE_ERROR("B36004", "userinfo.scim.filter.parse.error"),
+  /** SCIM PATCH 操作无效 */
+  SCIM_PATCH_INVALID("B36005", "userinfo.scim.patch.invalid");
 
   /** 错误码（业务契约，不应轻易变更） */
   private final String code;

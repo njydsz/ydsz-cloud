@@ -32,7 +32,6 @@ import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.InternalHeaderSigner;
 import com.njydsz.gateway.config.PathGuard;
-import com.njydsz.gateway.config.SecurityHeadersProperties;
 
 /**
  * 认证全局过滤器。
@@ -90,8 +89,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
   /** JWT 校验结果缓存 */
   private final CachedJwtValidator cachedJwtValidator;
 
-  /** 安全响应头配置 */
-  private final SecurityHeadersProperties securityHeadersProperties;
+  /** 安全响应头配置（common-safe 统一配置） */
+  private final SecurityHeaderProperties securityHeaderProperties;
 
   /** 内部头签名密钥（独立配置，禁止复用 JWT 密钥） */
   @Value("${ydsz.gateway.internal-sign-secret:}")
@@ -300,63 +299,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
    */
   private Mono<Void> withSecurityHeaders(ServerWebExchange exchange, Mono<Void> result) {
     return result.then(Mono.fromRunnable(() -> {
-      if (!securityHeadersProperties.isEnabled()) {
+      if (!securityHeaderProperties.isEnabled()) {
         return;
       }
-      SecurityHeaderProperties commonProps = toCommonProperties(securityHeadersProperties);
-      SecurityHeaderConfigurer.applyWebFluxHeaders(exchange.getResponse(), commonProps);
+      SecurityHeaderConfigurer.applyWebFluxHeaders(exchange.getResponse(), securityHeaderProperties);
     }));
-  }
-
-  /**
-   * 将 Gateway {@link SecurityHeadersProperties} 转换为 common-safe {@link SecurityHeaderProperties}。
-   *
-   * @param gatewayProps 网关安全头配置
-   * @return common-safe 统一配置
-   */
-  private static SecurityHeaderProperties toCommonProperties(SecurityHeadersProperties gatewayProps) {
-    SecurityHeaderProperties common = new SecurityHeaderProperties();
-    common.setEnabled(gatewayProps.isEnabled());
-    common.setXssProtection("1; mode=block");
-    common.setContentTypeOptions("nosniff");
-    common.setFrameOptions("DENY");
-    common.setReferrerPolicy("strict-origin-when-cross-origin");
-    common.setPermissionsPolicy(
-        "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()");
-
-    if (gatewayProps.getCsp() != null) {
-      SecurityHeaderProperties.CspConfig commonCsp = new SecurityHeaderProperties.CspConfig();
-      commonCsp.setEnabled(gatewayProps.getCsp().isEnabled());
-      commonCsp.setUnsafeEval(gatewayProps.getCsp().isUnsafeEval());
-      common.setCsp(commonCsp);
-    }
-    if (gatewayProps.getHsts() != null) {
-      SecurityHeaderProperties.HstsConfig commonHsts = new SecurityHeaderProperties.HstsConfig();
-      commonHsts.setEnabled(gatewayProps.getHsts().isEnabled());
-      commonHsts.setMaxAge(gatewayProps.getHsts().getMaxAge());
-      commonHsts.setIncludeSubdomains(gatewayProps.getHsts().isIncludeSubdomains());
-      commonHsts.setPreload(gatewayProps.getHsts().isPreload());
-      common.setHsts(commonHsts);
-    }
-    if (gatewayProps.getCoop() != null) {
-      SecurityHeaderProperties.CoopConfig commonCoop = new SecurityHeaderProperties.CoopConfig();
-      commonCoop.setEnabled(gatewayProps.getCoop().isEnabled());
-      commonCoop.setPolicy(gatewayProps.getCoop().getPolicy());
-      common.setCoop(commonCoop);
-    }
-    if (gatewayProps.getCoep() != null) {
-      SecurityHeaderProperties.CoepConfig commonCoep = new SecurityHeaderProperties.CoepConfig();
-      commonCoep.setEnabled(gatewayProps.getCoep().isEnabled());
-      commonCoep.setPolicy(gatewayProps.getCoep().getPolicy());
-      common.setCoep(commonCoep);
-    }
-    if (gatewayProps.getCorp() != null) {
-      SecurityHeaderProperties.CorpConfig commonCorp = new SecurityHeaderProperties.CorpConfig();
-      commonCorp.setEnabled(gatewayProps.getCorp().isEnabled());
-      commonCorp.setPolicy(gatewayProps.getCorp().getPolicy());
-      common.setCorp(commonCorp);
-    }
-    return common;
   }
 
   @Override
