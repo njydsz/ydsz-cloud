@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +30,7 @@ import com.njydsz.agent.api.dto.ChatResponseDTO;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.agent.domain.model.MessageContent;
 import com.njydsz.agent.server.agent.AgentFacade;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.server.chat.SseExecutor;
@@ -252,15 +254,26 @@ public class AgentController {
   @PostMapping("/chat")
   @Operation(summary = "同步对话", description = "等待 LLM 返回完整响应后返回")
   public BaseResponse<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
-    LOG.info(
-        "[Chat-API] 同步对话请求: convId={}, msgLen={}",
-        request.getConversationId(),
-        request.getMessage().length());
     requestGuard.check(request.getRequestId(), null);
     try {
-      ChatResponse response =
-          agentFacade.chat(
-              request.getConversationId(), request.getMessage(), request.getSystemPrompt());
+      ChatResponse response;
+      // 多模态输入优先：multimodalContent 非空时使用 Vision 模型对话
+      if (request.getMultimodalContent() != null && !request.getMultimodalContent().isEmpty()) {
+        LOG.info(
+            "[Chat-API] 多模态同步对话请求: convId={}, partsCount={}",
+            request.getConversationId(),
+            request.getMultimodalContent().size());
+        MessageContent content = toMessageContent(request.getMultimodalContent());
+        response = agentFacade.chat(request.getConversationId(), content, request.getSystemPrompt());
+      } else {
+        LOG.info(
+            "[Chat-API] 同步对话请求: convId={}, msgLen={}",
+            request.getConversationId(),
+            request.getMessage().length());
+        response =
+            agentFacade.chat(
+                request.getConversationId(), request.getMessage(), request.getSystemPrompt());
+      }
       ChatResponseDTO dto = toDTO(response);
       return BaseResponse.success(dto);
     } catch (Exception e) {
@@ -288,11 +301,45 @@ public class AgentController {
   @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   @Operation(summary = "流式对话（SSE）", description = "逐 token 推送 LLM 响应")
   public SseEmitter chatStream(@Valid @RequestBody ChatRequestDTO request) {
-    LOG.info("[Chat-API] 流式对话请求: convId={}", request.getConversationId());
     requestGuard.check(request.getRequestId(), null);
     SseEmitter emitter = new SseEmitter();
     SseExecutor executor = new SseExecutor(emitter);
 
+    // 多模态输入优先：multimodalContent 非空时使用 Vision 模型流式对话
+    if (request.getMultimodalContent() != null && !request.getMultimodalContent().isEmpty()) {
+      LOG.info(
+          "[Chat-API] 多模态流式对话请求: convId={}, partsCount={}",
+          request.getConversationId(),
+          request.getMultimodalContent().size());
+      MessageContent content = toMessageContent(request.getMultimodalContent());
+      executor.execute(
+          chunkConsumer ->
+              agentFacade.stream(
+                  request.getConversationId(),
+                  content,
+                  request.getSystemPrompt(),
+                  chunk -> {
+                    if (chunk.hasContent()) {
+                      chunkConsumer.accept(
+                          SseChunk.content(
+                              chunk.getDeltaContent(),
+                              chunk.getFinishReason(),
+                              chunk.getDeltaToolCalls()));
+                    } else if (chunk.isFinished()) {
+                      chunkConsumer.accept(SseChunk.finish(chunk.getFinishReason()));
+                    } else {
+                      // 工具调用等非文本 chunk 原样转发
+                      chunkConsumer.accept(
+                          SseChunk.content(
+                              chunk.getDeltaContent(),
+                              chunk.getFinishReason(),
+                              chunk.getDeltaToolCalls()));
+                    }
+                  }));
+      return emitter;
+    }
+
+    LOG.info("[Chat-API] 流式对话请求: convId={}", request.getConversationId());
     executor.execute(
         chunkConsumer ->
             agentFacade.stream(
@@ -404,5 +451,28 @@ public class AgentController {
               response.getUsage().getTotalTokens()));
     }
     return dto;
+  }
+
+  /**
+   * 将 DTO 列表转换为领域值对象 {@link MessageContent}。
+   *
+   * <p>每个 {@link ChatRequestDTO.ContentPartDTO} 转换为 {@link MessageContent.ContentPart}，保留类型与内容。
+   *
+   * @param dtos DTO 段落列表
+   * @return 多模态内容值对象
+   */
+  private MessageContent toMessageContent(List<ChatRequestDTO.ContentPartDTO> dtos) {
+    List<MessageContent.ContentPart> parts = new ArrayList<>(dtos.size());
+    for (ChatRequestDTO.ContentPartDTO dto : dtos) {
+      Objects.requireNonNull(dto.getType(), "ContentPart type 不能为 null");
+      if ("text".equals(dto.getType())) {
+        parts.add(MessageContent.ContentPart.text(dto.getText()));
+      } else if ("image_url".equals(dto.getType())) {
+        parts.add(MessageContent.ContentPart.image(dto.getImageUrl()));
+      } else {
+        throw new IllegalArgumentException("不支持的内容类型: " + dto.getType());
+      }
+    }
+    return new MessageContent(parts);
   }
 }

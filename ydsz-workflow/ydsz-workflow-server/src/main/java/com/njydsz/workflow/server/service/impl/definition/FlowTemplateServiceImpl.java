@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -171,6 +170,8 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
   /**
    * 获取模板详情（含 BPMN XML）
    *
+   * <p>P6: 通过 {@link #templateCache} 二级缓存加速高频查询，缓存未命中时回源数据库并写入缓存。
+   *
    * @param templateCode 模板编码
    * @return 模板详情 Map（含 {@code bpmnXml / formPath / version / inheritType} 等全部字段）
    * @throws SysException {@code BAD_REQUEST} — 模板编码为空；{@code NOT_FOUND} — 模板不存在； {@code
@@ -186,6 +187,11 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .message("error.workflow.msg_f68a3fa3")
             .build();
       }
+      // P6: 缓存命中直接返回，未命中则查库并回填
+      Map<String, Object> cached = templateCache.getIfPresent(templateCode);
+      if (cached != null) {
+        return cached;
+      }
       FlowTemplateDO template = templateMapper.selectByTemplateCode(templateCode);
       if (template == null) {
         throw SysException.builder()
@@ -194,7 +200,9 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .params(templateCode)
             .build();
       }
-      return toDetailMap(template);
+      Map<String, Object> detail = toDetailMap(template);
+      templateCache.put(templateCode, detail);
+      return detail;
     } catch (SysException e) {
       throw e;
     } catch (Exception e) {
@@ -204,6 +212,19 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
           .key("error.workflow.msg_c2642700")
           .params(e.getMessage())
           .build();
+    }
+  }
+
+  /**
+   * P6: 清除指定模板的二级缓存。
+   *
+   * <p>在模板写入操作（导入/导出/版本创建/克隆/继承/同步）成功后调用，确保下次读取回源最新数据。
+   *
+   * @param templateCode 模板编码
+   */
+  private void evictTemplateCache(String templateCode) {
+    if (StringUtils.hasText(templateCode)) {
+      templateCache.invalidate(templateCode);
     }
   }
 
@@ -237,6 +258,8 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .message("error.workflow.msg_f68a3fa3")
             .build();
       }
+      // P6: 导入会递增 use_count，先失效缓存确保下次读取回源最新数据
+      evictTemplateCache(templateCode);
       FlowTemplateDO template = templateMapper.selectByTemplateCode(templateCode);
       if (template == null) {
         throw SysException.builder()

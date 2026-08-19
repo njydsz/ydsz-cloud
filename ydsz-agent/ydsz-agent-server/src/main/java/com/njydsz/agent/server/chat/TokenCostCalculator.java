@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.CostEstimate;
+import com.njydsz.agent.domain.model.MessageContent;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.server.config.AgentProperties;
-import com.njydsz.agent.server.rag.TokenEstimator;
 
 /**
  * Token 预计算与成本核算组件
@@ -39,6 +39,8 @@ public class TokenCostCalculator {
   /**
    * 调用前估算 Token 用量与成本。
    *
+   * <p>对纯文本消息按 content 字符数估算；对多模态消息按 {@link MessageContent#estimateTokenChars()} 估算（含图片固定 Token）。
+   *
    * @param request LLM 请求
    * @return 成本估算值对象
    */
@@ -46,14 +48,18 @@ public class TokenCostCalculator {
     List<ChatMessage> messages = request.getMessages();
     int totalChars = 0;
     for (ChatMessage message : messages) {
-      String content = message.getContent();
-      if (content != null) {
-        totalChars += content.length();
+      // 多模态内容（Vision 模型）：按 MessageContent 估算 Token 字符数
+      MessageContent multimodal = message.getMultimodalContent();
+      if (multimodal != null && !multimodal.isEmpty()) {
+        totalChars += multimodal.estimateTokenChars();
+      } else {
+        String content = message.getContent();
+        if (content != null) {
+          totalChars += content.length();
+        }
       }
     }
     double charRatio = properties.getMemory().getTokenCharRatio();
-    // P1 修复：TokenEstimator.estimate 接受 String 文本并按内部 length 估算；
-    // 此处已累加字符数，直接按字符数/系数估算，避免将 int 误传为 String 参数
     int estimatedPromptTokens = Math.max(1, (int) Math.ceil(totalChars / charRatio));
     double unitPrice = resolveUnitPrice(request.getModel());
     return CostEstimate.estimate(

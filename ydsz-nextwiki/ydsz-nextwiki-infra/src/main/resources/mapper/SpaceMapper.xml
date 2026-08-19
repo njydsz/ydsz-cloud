@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.nextwiki.infra.mapper.SpaceMapper">
+
+  <resultMap id="BaseResultMap" type="com.njydsz.nextwiki.infra.entity.SpaceDO">
+    <id column="id" property="id"/>
+    <result column="name" property="name"/>
+    <result column="description" property="description"/>
+    <result column="icon_url" property="iconUrl"/>
+    <result column="cover_url" property="coverUrl"/>
+    <result column="tenant_id" property="tenantId"/>
+    <result column="owner_id" property="ownerId"/>
+    <result column="status" property="status"/>
+    <result column="visibility" property="visibility"/>
+    <result column="sort_order" property="sortOrder"/>
+    <result column="member_count" property="memberCount"/>
+    <result column="node_count" property="nodeCount"/>
+    <result column="quota_limit" property="quotaLimit"/>
+    <result column="quota_used" property="quotaUsed"/>
+    <result column="created_at" property="createdAt"/>
+    <result column="created_by" property="createdBy"/>
+    <result column="updated_at" property="updatedAt"/>
+    <result column="updated_by" property="updatedBy"/>
+    <result column="deleted" property="deleted"/>
+    <result column="deleted_time" property="deletedTime"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, name, description, icon_url, cover_url, tenant_id, owner_id, status, visibility,
+    sort_order, member_count, node_count, quota_limit, quota_used,
+    created_at, created_by, updated_at, updated_by, deleted, deleted_time
+  </sql>
+
+  <!-- 根据租户ID查询空间列表（按排序号升序，未删除） -->
+  <select id="selectByTenantId" resultMap="BaseResultMap">
+    SELECT <include refid="Base_Column_List"/>
+    FROM nw_space
+    WHERE tenant_id = #{tenantId} AND deleted = FALSE
+    ORDER BY sort_order ASC, created_at DESC
+  </select>
+
+  <!-- 分页查询租户下的空间列表 -->
+  <select id="selectByTenantIdWithPage" resultMap="BaseResultMap">
+    SELECT <include refid="Base_Column_List"/>
+    FROM nw_space
+    WHERE tenant_id = #{tenantId} AND deleted = FALSE
+    ORDER BY sort_order ASC, created_at DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <!-- 根据租户ID和名称查询空间 -->
+  <select id="selectByTenantIdAndName" resultMap="BaseResultMap">
+    SELECT <include refid="Base_Column_List"/>
+    FROM nw_space
+    WHERE tenant_id = #{tenantId} AND name = #{name} AND deleted = FALSE
+    LIMIT 1
+  </select>
+
+  <!-- 统计租户下的空间数量 -->
+  <select id="countByTenantId" resultType="int">
+    SELECT COUNT(*)
+    FROM nw_space
+    WHERE tenant_id = #{tenantId} AND deleted = FALSE
+  </select>
+
+</mapper>

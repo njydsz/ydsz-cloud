@@ -2,6 +2,11 @@ package com.njydsz.message.server.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
@@ -114,6 +119,13 @@ public class MessageServiceImpl implements MessageService {
 
   /** P2-1: 管线模板门面（自动选择模板 + 按需组合 Handler） */
   private final SendPipelineFacade sendPipelineFacade;
+
+  /** P2-C5: 级联消息发送线程池（固定大小，避免级联消息耗尽主线程池） */
+  private final Executor cascadeExecutor = Executors.newFixedThreadPool(4, r -> {
+    Thread t = new Thread(r, "msg-cascade-" + System.nanoTime());
+    t.setDaemon(true);
+    return t;
+  });
 
   @Override
   public MessageResult send(MessageRequest request) {
@@ -400,19 +412,32 @@ public class MessageServiceImpl implements MessageService {
           MessageConstants.MAX_CASCADE_DEPTH);
       return;
     }
-    for (MessageRequest child : cascadeTo) {
-      if (child == null) {
-        continue;
-      }
-      child.setParentMsgId(parentLog.getMsgId());
-      try {
-        sendInternal(child, depth + 1);
-      } catch (Exception e) {
-        log.warn(
-            "[Message] 级联消息发送失败,不影响其他级联: parentMsgId={} err={}",
-            parentLog.getMsgId(),
-            e.getMessage());
-      }
+    // P2-C5: 使用 CompletableFuture 并行发送级联消息
+    List<CompletableFuture<Boolean>> futures = cascadeTo.stream()
+        .filter(child -> child != null)
+        .map(child -> CompletableFuture.supplyAsync(() -> {
+          try {
+            child.setParentMsgId(parentLog.getMsgId());
+            sendInternal(child, depth + 1);
+            return true;
+          } catch (Exception e) {
+            log.warn("[Message] 级联消息发送失败,不影响其他级联: parentMsgId={} childMsgId={} err={}",
+                parentLog.getMsgId(),
+                child.getMessageId(),
+                e.getMessage());
+            return false;
+          }
+        }, cascadeExecutor))
+        .toList();
+
+    // 等待所有级联消息发送完成（带超时）
+    try {
+      CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+          .get(30, TimeUnit.SECONDS);
+    } catch (TimeoutException e) {
+      log.warn("[Message] 级联消息发送超时,部分消息可能未完成: parentMsgId={}", parentLog.getMsgId());
+    } catch (Exception e) {
+      log.error("[Message] 级联消息发送异常: parentMsgId={}", parentLog.getMsgId(), e);
     }
   }
 

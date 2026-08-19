@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.nextwiki.infra.mapper.SpaceTemplateMapper">
+
+  <resultMap id="BaseResultMap" type="com.njydsz.nextwiki.infra.entity.SpaceTemplateDO">
+    <id column="id" property="id"/>
+    <result column="name" property="name"/>
+    <result column="description" property="description"/>
+    <result column="category" property="category"/>
+    <result column="icon_url" property="iconUrl"/>
+    <result column="tenant_id" property="tenantId"/>
+    <result column="is_system" property="isSystem"/>
+    <result column="is_public" property="isPublic"/>
+    <result column="structure_json" property="structureJson"/>
+    <result column="sort_order" property="sortOrder"/>
+    <result column="usage_count" property="usageCount"/>
+    <result column="created_at" property="createdAt"/>
+    <result column="created_by" property="createdBy"/>
+    <result column="updated_at" property="updatedAt"/>
+    <result column="updated_by" property="updatedBy"/>
+    <result column="deleted" property="deleted"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, name, description, category, icon_url, tenant_id, is_system, is_public,
+    structure_json, sort_order, usage_count, created_at, created_by, updated_at, updated_by, deleted
+  </sql>
+
+  <!-- 查询可用模板（系统公开模板 + 租户自定义模板，按排序号升序） -->
+  <select id="selectAvailableTemplates" resultMap="BaseResultMap">
+    SELECT <include refid="Base_Column_List"/>
+    FROM nw_space_template
+    WHERE deleted = FALSE
+      AND (
+        (is_system = TRUE AND is_public = TRUE)
+        OR
+        (tenant_id = #{tenantId})
+      )
+      AND (#{category} IS NULL OR category = #{category})
+    ORDER BY sort_order ASC, usage_count DESC
+  </select>
+
+  <!-- 分页查询模板列表 -->
+  <select id="selectWithPage" resultMap="BaseResultMap">
+    SELECT <include refid="Base_Column_List"/>
+    FROM nw_space_template
+    WHERE deleted = FALSE
+      AND (
+        (is_system = TRUE AND is_public = TRUE)
+        OR
+        (tenant_id = #{tenantId})
+      )
+      AND (#{category} IS NULL OR category = #{category})
+    ORDER BY sort_order ASC, usage_count DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <!-- 统计模板数量 -->
+  <select id="countByCondition" resultType="int">
+    SELECT COUNT(*)
+    FROM nw_space_template
+    WHERE deleted = FALSE
+      AND (
+        (is_system = TRUE AND is_public = TRUE)
+        OR
+        (tenant_id = #{tenantId})
+      )
+      AND (#{category} IS NULL OR category = #{category})
+  </select>
+
+</mapper>

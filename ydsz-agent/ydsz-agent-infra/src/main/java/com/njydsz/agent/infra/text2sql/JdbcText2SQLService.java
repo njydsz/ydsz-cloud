@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.gateway.LlmClient;
@@ -22,8 +23,6 @@ import com.njydsz.agent.domain.gateway.Text2SQLService;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
-import com.njydsz.agent.server.config.AgentProperties;
-import com.njydsz.common.json.YdszJson;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -77,11 +76,23 @@ public class JdbcText2SQLService implements Text2SQLService {
 
   private final LlmClient llmClient;
   private final DataSource dataSource;
-  private final AgentProperties properties;
+  private final boolean text2sqlEnabled;
+  private final String defaultModel;
+
+  public JdbcText2SQLService(
+      LlmClient llmClient,
+      DataSource dataSource,
+      @Value("${ydsz.agent.text2sql.enabled:false}") boolean text2sqlEnabled,
+      @Value("${ydsz.agent.llm.default-model:gpt-4o-mini}") String defaultModel) {
+    this.llmClient = llmClient;
+    this.dataSource = dataSource;
+    this.text2sqlEnabled = text2sqlEnabled;
+    this.defaultModel = defaultModel;
+  }
 
   @Override
   public Text2SQLResult query(String naturalLanguageQuery, String tenantId) throws Text2SQLException {
-    if (!properties.getText2sql().isEnabled()) {
+    if (!text2sqlEnabled) {
       throw new Text2SQLException("Text2SQL 功能未启用", "TEXT2SQL_DISABLED");
     }
     // 1. 生成 SQL
@@ -104,7 +115,7 @@ public class JdbcText2SQLService implements Text2SQLService {
     String systemPrompt = buildSystemPrompt(tenantId);
     ChatRequest request =
         ChatRequest.builder()
-            .model(properties.getLlm().getDefaultModel())
+            .model(defaultModel)
             .messages(List.of(ChatMessage.user(query)))
             .temperature(0)
             .maxTokens(512)

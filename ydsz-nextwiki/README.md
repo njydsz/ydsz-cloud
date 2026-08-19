@@ -20,13 +20,13 @@
 
 | 能力 | 说明 |
 |---|---|
-| **文件管理** | 上传（SHA-256 秒传）、下载（断点续传）、复制、移动、重命名、删除 |
+| **文件管理** | 上传（SHA-256 秒传）、下载（断点续传）、复制、移动、重命名、删除、拖拽排序 |
 | **目录树** | 创建/移动/重命名/递归路径更新 |
 | **版本控制** | 版本历史、回滚、最多保留 20 版本 |
 | **分享与 ACL** | 分享链接（密码/过期/次数限制）、ACL 权限（读/写/删/分享/下载） |
 | **搜索** | 文件名+路径+标签+内容全文搜索、索引同步、重建（基于 common-search） |
-| **预览** | Office→PDF（LibreOffice）、图片缩略图、直接预览 |
-| **配额** | 用户/租户/项目级配额管理 |
+| **预览** | Office→PDF（LibreOffice）、图片缩略图、直接预览、动态水印 |
+| **配额** | 用户/租户/项目级配额管理、按文件类型配额 |
 | **回收站** | 30 天保留、恢复、永久删除、自动清理 |
 | **标签** | 创建/绑定/推荐 |
 | **批量操作** | 批量上传、ZIP 导入（炸弹防护）、文件夹打包下载 |
@@ -35,8 +35,11 @@
 | **在线编辑** | WOPI 协议（OnlyOffice/Collabora 集成） |
 | **文件评论** | 评论/回复/批注 |
 | **文件锁定** | Check-out/Check-in 防并发编辑 |
-| **安全** | ClamAV 病毒扫描、OCR 文字识别、CDN 集成 |
-| **可观测性** | 健康检查、Micrometer 指标、审计日志、分布式锁 |
+| **收藏夹/最近访问** | 快捷访问入口、收藏管理 |
+| **空间管理** | 知识库空间（Space）聚合根、空间成员角色（RBAC）、空间配额 |
+| **文档模板** | 预定义空间结构模板、自定义模板、快速创建空间 |
+| **安全** | ClamAV 病毒扫描、OCR 文字识别、CDN 集成、动态水印 |
+| **可观测性** | 健康检查、Micrometer 指标、审计日志、分布式锁、缓存命中率 |
 
 ## DDD 分层结构
 
@@ -138,6 +141,30 @@ ydsz-nextwiki/
 | `GET /api/v1/nextwiki/recent` | 查询最近访问列表 |
 | `POST /api/v1/nextwiki/recent/{nodeId}` | 记录访问 |
 | `DELETE /api/v1/nextwiki/recent` | 清空最近访问 |
+
+### 空间管理（S3-P2-01）
+
+| 端点 | 作用 |
+|---|---|
+| `GET /api/v1/nextwiki/spaces` | 查询空间列表 |
+| `POST /api/v1/nextwiki/spaces` | 创建空间 |
+| `GET /api/v1/nextwiki/spaces/{spaceId}` | 获取空间详情 |
+| `PUT /api/v1/nextwiki/spaces/{spaceId}` | 更新空间 |
+| `DELETE /api/v1/nextwiki/spaces/{spaceId}` | 删除空间 |
+| `POST /api/v1/nextwiki/spaces/{spaceId}/members` | 添加成员 |
+| `DELETE /api/v1/nextwiki/spaces/{spaceId}/members/{userId}` | 移除成员 |
+| `GET /api/v1/nextwiki/spaces/{spaceId}/members` | 成员列表 |
+
+### 空间模板（S4-P3-02）
+
+| 端点 | 作用 |
+|---|---|
+| `GET /api/v1/nextwiki/templates` | 查询模板列表 |
+| `GET /api/v1/nextwiki/templates/{templateId}` | 获取模板详情 |
+| `POST /api/v1/nextwiki/templates` | 创建自定义模板 |
+| `PUT /api/v1/nextwiki/templates/{templateId}` | 更新模板 |
+| `DELETE /api/v1/nextwiki/templates/{templateId}` | 删除模板 |
+| `POST /api/v1/nextwiki/templates/{templateId}/use` | 使用模板创建空间 |
 
 ### WOPI 在线编辑
 
