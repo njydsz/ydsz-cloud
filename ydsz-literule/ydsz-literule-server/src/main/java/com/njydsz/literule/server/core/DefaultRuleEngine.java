@@ -35,6 +35,7 @@ import com.njydsz.literule.api.RuleEngineStats;
 import com.njydsz.literule.api.RuleEnvironment;
 import com.njydsz.literule.api.RuleExecutionTrace;
 import com.njydsz.literule.api.RuleResult;
+import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.StatsRecorder;
 import com.njydsz.literule.domain.model.ModelInputRegistry;
 import com.njydsz.literule.domain.model.ModelInvocationException;

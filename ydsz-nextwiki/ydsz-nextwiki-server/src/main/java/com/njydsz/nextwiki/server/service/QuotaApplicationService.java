@@ -47,12 +47,13 @@ public class QuotaApplicationService {
    * @return 配额 VO（含容量与文件数上下限及已用量）
    */
   public StorageQuotaVO getQuotaInfo(String scopeType, String scopeId) {
-    return cacheService.getQuota(scopeType, scopeId,
-        () -> storageQuotaRepository.findByScope(scopeType, scopeId)
-            .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.QUOTA_NOT_FOUND)
-                .data("scopeType", scopeType)
-                .data("scopeId", scopeId)))
-        .orElse(null);
+    return cacheService.getQuota(
+            scopeType, scopeId, () -> storageQuotaRepository.findByScope(scopeType, scopeId))
+        .orElseThrow(
+            () ->
+                BusinessException.of(NextwikiExceptionCode.QUOTA_NOT_FOUND)
+                    .data("scopeType", scopeType)
+                    .data("scopeId", scopeId));
   }
 
   /**

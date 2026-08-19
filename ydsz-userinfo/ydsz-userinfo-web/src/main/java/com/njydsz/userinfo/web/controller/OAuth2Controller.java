@@ -342,20 +342,21 @@ public class OAuth2Controller {
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_CODE_INVALID);
     }
 
-    Map<String, Object> context;
+    // P1-5：使用类型安全的 OAuthCodeContext 反序列化（替代 YdszJson.parseMap + 手动 getString）
+    OAuthCodeContext context;
     try {
-      context = YdszJson.parseMap(storedContext);
+      context = OAuthCodeContext.fromJson(storedContext);
     } catch (Exception e) {
       log.error("Failed to parse OAuth2 code context", e);
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_CODE_INVALID);
     }
 
-    String storedClientId = getString(context, "clientId");
-    String userId = getString(context, "userId");
-    String username = getString(context, "username");
-    String tenantId = getString(context, "tenantId");
-    String storedCodeChallenge = getString(context, "codeChallenge");
-    String storedCodeChallengeMethod = getString(context, "codeChallengeMethod");
+    String storedClientId = context.clientId();
+    String userId = context.userId();
+    String username = context.username();
+    String tenantId = context.tenantId();
+    String storedCodeChallenge = context.codeChallenge();
+    String storedCodeChallengeMethod = context.codeChallengeMethod();
 
     // 2. 校验 clientId 一致性（防跨客户端重放）
     if (!clientId.equals(storedClientId)) {
@@ -393,7 +394,7 @@ public class OAuth2Controller {
     log.info("OAuth2 token issued: clientId={}, userId={}", clientId, userId);
 
     // 6. P1-3: 返回实际授权的 scope（授权码上下文中声明的 scope；未声明时回落客户端注册范围）
-    String grantedScope = getString(context, "scope");
+    String grantedScope = context.scope();
     if (grantedScope == null || grantedScope.isBlank()) {
       grantedScope = resolveGrantedScope(clientId);
     }
@@ -592,20 +593,6 @@ public class OAuth2Controller {
             "sub", userInfo.getUserId(),
             "preferred_username", userInfo.getUsername(),
             "tenant_id", userInfo.getTenantId()));
-  }
-
-  /**
-   * 安全地从 Map 中读取字符串字段
-   *
-   * <p>处理 JSON 反序列化时 {@code Object} → {@code String} 的隐式转换， 同时防御 null 字段，统一返回 null 表示字段缺失。
-   *
-   * @param map 上下文 Map
-   * @param key 字段名
-   * @return 字段字符串值；缺失或为 null 时返回 null
-   */
-  private String getString(Map<String, Object> map, String key) {
-    Object value = map.get(key);
-    return value != null ? value.toString() : null;
   }
 
   /**

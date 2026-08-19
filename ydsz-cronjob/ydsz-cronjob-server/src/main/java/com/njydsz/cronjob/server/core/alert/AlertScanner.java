@@ -153,7 +153,7 @@ public class AlertScanner {
   }
 
   /** 评估单条 FAIL_RATE 规则。 */
-  private void evaluateFailRateRule(JobAlertRule rule) {
+  private void evaluateFailRateRule(JobAlertRuleVO rule) {
     if (rule.getThreshold() == null || rule.getThreshold() < 0) {
       log.warn(
           "[AlertScanner] FAIL_RATE 规则阈值无效, 跳过: ruleId={} threshold={}",
@@ -204,7 +204,7 @@ public class AlertScanner {
   }
 
   /** 评估单条 DURATION_P95 规则。 */
-  private void evaluateDurationP95Rule(JobAlertRule rule) {
+  private void evaluateDurationP95Rule(JobAlertRuleVO rule) {
     if (rule.getThreshold() == null || rule.getThreshold() < 0) {
       log.warn(
           "[AlertScanner] DURATION_P95 规则阈值无效, 跳过: ruleId={} threshold={}",
@@ -249,7 +249,7 @@ public class AlertScanner {
   }
 
   /** 解析规则的时间窗口（分钟），缺省/无效时回退默认值 30 分钟。 */
-  private int resolveWindowMinutes(JobAlertRule rule) {
+  private int resolveWindowMinutes(JobAlertRuleVO rule) {
     Integer window = rule.getTimeWindowMinutes();
     if (window != null && window > 0) {
       return window;

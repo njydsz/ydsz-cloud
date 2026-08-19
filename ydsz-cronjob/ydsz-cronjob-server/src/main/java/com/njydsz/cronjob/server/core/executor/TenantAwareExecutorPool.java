@@ -162,6 +162,31 @@ public class TenantAwareExecutorPool {
   }
 
   /**
+   * P0-FIX: 清空所有分桶线程池（隔离策略/池参数热更新时调用）。
+   *
+   * <p>关闭现有分桶池并置空数组，下次 {@link #getExecutor} 时按最新配置懒重建
+   * （配合 ThreadPoolHotUpdateListener 的 isolationStrategy/tenantPoolSize 变更）。
+   *
+   * <p>注：原代码在 ThreadPoolHotUpdateListener 中调用 {@code evictAllPools()} 但本类未实现该方法
+   * （编译失败），此处补齐。关闭逻辑复用 {@link #shutdownAll()}。
+   */
+  public synchronized void evictAllPools() {
+    ExecutorService[] oldBuckets = buckets;
+    int oldCount = bucketCount;
+    buckets = null;
+    bucketCount = 0;
+    if (oldBuckets != null) {
+      for (int i = 0; i < oldCount; i++) {
+        ExecutorService pool = oldBuckets[i];
+        if (pool != null) {
+          pool.shutdown();
+        }
+      }
+      log.info("[TenantAwarePool] 已清空分桶池（下次按新配置懒重建）: oldCount={}", oldCount);
+    }
+  }
+
+  /**
    * 优雅关闭所有分桶线程池。
    *
    * <p>Spring 容器销毁时调用。每个线程池最多等待 5s 排空在执行任务，超时后强制 shutdownNow。

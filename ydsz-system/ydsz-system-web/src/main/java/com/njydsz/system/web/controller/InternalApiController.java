@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
@@ -17,6 +16,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.api.dto.AppValidateRequest;
 import com.njydsz.system.api.dto.ConfigGetRequest;
 import com.njydsz.system.api.dto.DictItemGetRequest;
+import com.njydsz.system.api.dto.DictListRequest;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.server.service.AppInfoService;
 import com.njydsz.system.server.service.ConfigService;
@@ -107,14 +107,14 @@ public class InternalApiController {
    *
    * <p>典型场景：跨服务 Feign 调用获取字典项值列表（如工作流模块获取所有审批状态）。
    *
-   * @param typeCode 字典类型编码
+   * @param request 请求体（必须包含 {@code typeCode} 字段）
    * @return 字典项展示值列表；类型不存在时返回空列表（包装在 {@link BaseResponse} 中）
    */
   @RateLimit(resource = "system.internalapi.listDictItems", threshold = 50)
-  @Idempotent(key = "'ydsz:system:internal-api:list-dict-items:' + #typeCode", ttlSeconds = 5)
+  @Idempotent(key = "'ydsz:system:internal-api:list-dict-items:' + #request.typeCode", ttlSeconds = 5)
   @PostMapping("/dict/list")
-  public BaseResponse<List<String>> listDictItems(@RequestParam("typeCode") String typeCode) {
-    List<DictItemVO> items = dictItemService.listEnabledByTypeCode(typeCode);
+  public BaseResponse<List<String>> listDictItems(@RequestBody DictListRequest request) {
+    List<DictItemVO> items = dictItemService.listEnabledByTypeCode(request.getTypeCode());
     if (items == null || items.isEmpty()) {
       return BaseResponse.success(List.of());
     }
