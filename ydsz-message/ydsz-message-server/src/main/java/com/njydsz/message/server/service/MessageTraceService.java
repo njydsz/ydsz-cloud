@@ -3,8 +3,8 @@ package com.njydsz.message.server.service.core;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.message.domain.entity.config.MsgTrace;
-import com.njydsz.message.domain.entity.config.MsgTrace.Node;
+import com.njydsz.message.infra.entity.MsgTraceDO;
+import com.njydsz.message.infra.entity.MsgTraceDO.Node;
 
 /**
  * 消息端到端追踪 Service
@@ -31,7 +31,7 @@ import com.njydsz.message.domain.entity.config.MsgTrace.Node;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.entity.config.MsgTrace 轨迹实体
+ * @see com.njydsz.message.infra.entity.MsgTraceDO 轨迹实体
  * @see MessageService 消息发送主流程(各节点调用 recordTrace)
  */
 public interface MessageTraceService {
@@ -71,7 +71,7 @@ public interface MessageTraceService {
    * @param msgId 消息 ID
    * @return 轨迹列表（时间正序）
    */
-  List<MsgTrace> getTraceByMsgId(String msgId);
+  List<MsgTraceDO> getTraceByMsgId(String msgId);
 
   /**
    * 按 traceId 查询关联的轨迹（跨消息）。
@@ -79,7 +79,7 @@ public interface MessageTraceService {
    * @param traceId 链路追踪 ID
    * @return 轨迹列表
    */
-  List<MsgTrace> getTraceByTraceId(String traceId);
+  List<MsgTraceDO> getTraceByTraceId(String traceId);
 
   /**
    * 按 bizType + bizId 查询关联的轨迹。
@@ -88,5 +88,5 @@ public interface MessageTraceService {
    * @param bizId 业务单据 ID
    * @return 轨迹列表
    */
-  List<MsgTrace> getTraceByBiz(String bizType, String bizId);
+  List<MsgTraceDO> getTraceByBiz(String bizType, String bizId);
 }

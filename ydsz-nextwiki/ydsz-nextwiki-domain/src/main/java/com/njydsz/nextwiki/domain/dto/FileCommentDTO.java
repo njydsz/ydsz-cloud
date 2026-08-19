@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.domain.dto;
 
 import java.io.Serializable;
+import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -43,4 +44,7 @@ public class FileCommentDTO implements Serializable {
 
   @Schema(description = "是否被编辑过")
   private Boolean edited;
+
+  @Schema(description = "被 @ 提及的用户 ID 列表（S4-P3-04）")
+  private List<String> mentions;
 }

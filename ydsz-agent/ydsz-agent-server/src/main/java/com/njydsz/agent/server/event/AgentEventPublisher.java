@@ -3,6 +3,8 @@ package com.njydsz.agent.server.event;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.event.AgentDomainEvent;
@@ -23,6 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class AgentEventPublisher {
+
+  private static final Logger LOG = LoggerFactory.getLogger(AgentEventPublisher.class);
 
   private final DomainEventPublisher publisher;
 

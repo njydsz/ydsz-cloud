@@ -38,6 +38,7 @@ import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.event.OutboxEvent;
 import com.njydsz.message.domain.repository.OutboxEventRepository;
+import com.njydsz.message.infra.entity.MsgTraceDO;
 import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
@@ -340,7 +341,7 @@ public class MessageServiceImpl implements MessageService {
           msgLogRepository.insert(logDO);
           messageTraceService.recordTrace(
               logDO.getMsgId(),
-              MsgTrace.Node.SCHEDULED,
+              MsgTraceDO.Node.SCHEDULED,
               "SUCCESS",
               ctx.getChannel(),
               "智能定时: optimalAt=" + optimalTime);

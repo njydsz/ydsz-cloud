@@ -13,7 +13,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.message.domain.entity.config.MsgTrace;
+import com.njydsz.message.infra.entity.MsgTraceDO;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
@@ -136,7 +136,7 @@ public class RecallServiceImpl implements RecallService {
       // P0-2: 记录撤回轨迹
       messageTraceService.recordTrace(
           logDO.getMsgId(),
-          MsgTrace.Node.RECALLED,
+          MsgTraceDO.Node.RECALLED,
           "SUCCESS",
           logDO.getChannel(),
           "消息已撤回: logId=" + logId);
@@ -201,7 +201,7 @@ public class RecallServiceImpl implements RecallService {
     // P0-2: 记录撤回轨迹
     messageTraceService.recordTrace(
         msgId,
-        MsgTrace.Node.RECALLED,
+        MsgTraceDO.Node.RECALLED,
         "SUCCESS",
         logDO.getChannel(),
         "消息已撤回: msgId=" + msgId + ", platformRecall=" + recallResult.platformRecallSucceeded());

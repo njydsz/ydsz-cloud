@@ -20,7 +20,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.netty.http.client.HttpClient;
@@ -56,7 +55,7 @@ import com.njydsz.common.json.tree.ObjectNode;
  *
  * <h3>同步调用</h3>
  *
- * <p>使用 {@link RestClient} 发送 POST 请求，解析 JSON 响应。
+ * <p>使用 {@link WebClient} 发送 POST 请求并阻塞等待结果，解析 JSON 响应。
  *
  * <h3>流式调用</h3>
  *
@@ -90,10 +89,7 @@ public class OpenAiCompatibleClient implements LlmClient {
   /** 调用超时时间（秒） */
   private final int timeoutSeconds;
 
-  /** 同步调用 HTTP 客户端 */
-  private final RestClient restClient;
-
-  /** 流式调用 HTTP 客户端 */
+  /** HTTP 客户端（同步 + 流式共用 WebClient，共享 Netty 连接池） */
   private final WebClient webClient;
 
   /** 并发限流信号量 */
@@ -126,16 +122,9 @@ public class OpenAiCompatibleClient implements LlmClient {
         new Semaphore(maxConcurrent > 0 ? maxConcurrent : DEFAULT_MAX_CONCURRENT);
     this.snakeCaseMapper =
         JsonMapper.builder().namingStrategy(PropertyNamingStrategy.SNAKE_CASE).build();
-    // 共享连接池：RestClient 和 WebClient 共用同一 ConnectionProvider，避免重复创建连接
+    // 共享连接池：同步 + 流式共用同一 WebClient，底层共享 Netty ConnectionProvider
     ConnectionProvider connectionProvider = createConnectionProvider();
     HttpClient httpClient = createNettyHttpClient(connectionProvider);
-    this.restClient =
-        RestClient.builder()
-            .baseUrl(this.baseUrl)
-            .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .requestFactory(new ReactorClientHttpConnector(httpClient))
-            .build();
     this.webClient =
         WebClient.builder()
             .baseUrl(this.baseUrl)
@@ -200,12 +189,13 @@ public class OpenAiCompatibleClient implements LlmClient {
         }
         try {
           String responseJson =
-              restClient
+              webClient
                   .post()
                   .uri("/chat/completions")
-                  .body(snakeCaseMapper.toJson(requestBody))
+                  .bodyValue(snakeCaseMapper.toJson(requestBody))
                   .retrieve()
-                  .body(String.class);
+                  .bodyToMono(String.class)
+                  .block();
           return parseResponse(responseJson);
         } finally {
           concurrencyLimiter.release();

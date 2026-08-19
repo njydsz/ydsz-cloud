@@ -28,6 +28,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.nextwiki.domain.dto.FileCommentDTO;
 import com.njydsz.nextwiki.domain.repository.FileCommentRepository;
 import com.njydsz.nextwiki.domain.vo.FileCommentVO;
+import com.njydsz.nextwiki.server.mention.MentionService;
 
 /**
  * 文件评论 REST API Controller（P1-5）。
@@ -103,6 +104,9 @@ public class FileCommentController {
   /** 文件评论仓储（封装评论的 CRUD + 解决标记） */
   private final FileCommentRepository commentRepository;
 
+  /** @ 提及服务（S4-P3-04） */
+  private final MentionService mentionService;
+
   /**
    * 查询文件的所有评论（按时间升序）。
    *
@@ -128,10 +132,13 @@ public class FileCommentController {
    *   <li>回复评论：传 {@code parentCommentId} 指向被回复的评论
    * </ul>
    *
-   * {@code position} 字段支持文档内位置定位（如行号 10、字符偏移 100）。
+   * <p>评论内容中支持 {@code @username} 格式提及用户，被提及用户将收到 WebSocket 通知。
+   *
+   * <p>{@code position} 字段支持文档内位置定位（如行号 10、字符偏移 100）。
    *
    * @param request 评论请求（fileNodeId / content / parentCommentId / position）
    * @param userId 评论人 ID
+   * @param userName 评论人名称（用于 @ 提及通知）
    * @return 统一响应结果，data 为保存后的 {@link FileCommentVO}
    */
   @Audit(
@@ -145,7 +152,11 @@ public class FileCommentController {
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
   public BaseResponse<FileCommentVO> addComment(
       @RequestBody AddCommentRequest request,
-      @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
+      @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
+      @RequestHeader(value = AuthHeaderConstants.X_USER_NAME, required = false) String userName) {
+
+    // 提取 @ 提及（S4-P3-04）
+    java.util.List<String> mentions = mentionService.extractMentions(request.getContent());
 
     FileCommentDTO comment =
         FileCommentDTO.builder()
@@ -156,13 +167,27 @@ public class FileCommentController {
             .position(request.getPosition())
             .resolved(false)
             .edited(false)
+            .mentions(mentions.isEmpty() ? null : mentions)
             .build();
 
     FileCommentVO saved = commentRepository.save(comment);
+
+    // 发送 @ 提及通知（S4-P3-04）
+    if (!mentions.isEmpty()) {
+      mentionService.sendMentionNotifications(
+          saved.getId(),
+          request.getFileNodeId(),
+          userId,
+          userName,
+          request.getContent(),
+          mentions);
+    }
+
     log.info(
-        "[FileCommentController] 添加评论: fileNodeId={}, commentId={}",
+        "[FileCommentController] 添加评论: fileNodeId={}, commentId={}, mentions={}",
         request.getFileNodeId(),
-        saved.getId());
+        saved.getId(),
+        mentions.size());
     return BaseResponse.success(saved);
   }
 

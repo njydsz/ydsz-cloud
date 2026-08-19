@@ -13,7 +13,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.message.domain.entity.config.MsgRouteRule;
-import com.njydsz.message.domain.entity.config.MsgTrace;
+import com.njydsz.message.infra.entity.MsgTraceDO;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.infra.repository.MsgLogRepository;
@@ -69,7 +69,7 @@ public class MessageSendService {
     long start = System.currentTimeMillis();
     try {
       messageTraceService.recordTrace(
-          logDO.getMsgId(), MsgTrace.Node.DISPATCH_START, "SUCCESS", channel, "通道分发开始");
+          logDO.getMsgId(), MsgTraceDO.Node.DISPATCH_START, "SUCCESS", channel, "通道分发开始");
       String providerTraceId = channelRouter.dispatch(logDO);
       long cost = System.currentTimeMillis() - start;
       logDO.setStatus(MessageStatusEnum.SUCCESS.name());
@@ -84,7 +84,7 @@ public class MessageSendService {
       messageMetrics.recordSendSuccess(channel, logDO.getTemplateCode(), logDO.getTenantId());
       messageTraceService.recordTrace(
           logDO.getMsgId(),
-          MsgTrace.Node.DISPATCH_SUCCESS,
+          MsgTraceDO.Node.DISPATCH_SUCCESS,
           "SUCCESS",
           channel,
           "发送成功: cost=" + cost + "ms");

@@ -28,6 +28,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-agent-domain</artifactId>
         </dependency>
+        <!-- Actuator：提供健康检查端点（HealthContributor API） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

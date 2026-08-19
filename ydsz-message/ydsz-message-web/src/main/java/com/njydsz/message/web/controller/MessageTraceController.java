@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.message.domain.entity.config.MsgTrace;
+import com.njydsz.message.infra.entity.MsgTraceDO;
 import com.njydsz.message.server.service.core.MessageTraceService;
 
 /**
@@ -73,7 +73,7 @@ import com.njydsz.message.server.service.core.MessageTraceService;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.message.server.service.core.MessageTraceService 消息追踪服务
- * @see com.njydsz.message.domain.entity.config.MsgTrace 追踪实体
+ * @see com.njydsz.message.infra.entity.MsgTraceDO 追踪实体
  */
 @Tag(name = "消息追踪", description = "消息端到端全链路追踪")
 @RestController
@@ -93,7 +93,7 @@ public class MessageTraceController {
   @Operation(summary = "按消息 ID 查询轨迹")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/msg/{msgId}")
-  public BaseResponse<List<MsgTrace>> getByMsgId(@PathVariable String msgId) {
+  public BaseResponse<List<MsgTraceDO>> getByMsgId(@PathVariable String msgId) {
     return BaseResponse.success(messageTraceService.getTraceByMsgId(msgId));
   }
 
@@ -106,7 +106,7 @@ public class MessageTraceController {
   @Operation(summary = "按链路追踪 ID 查询轨迹")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/trace/{traceId}")
-  public BaseResponse<List<MsgTrace>> getByTraceId(@PathVariable String traceId) {
+  public BaseResponse<List<MsgTraceDO>> getByTraceId(@PathVariable String traceId) {
     return BaseResponse.success(messageTraceService.getTraceByTraceId(traceId));
   }
 
@@ -120,7 +120,7 @@ public class MessageTraceController {
   @Operation(summary = "按业务类型+单据 ID 查询轨迹")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/biz")
-  public BaseResponse<List<MsgTrace>> getByBiz(
+  public BaseResponse<List<MsgTraceDO>> getByBiz(
       @RequestParam String bizType, @RequestParam String bizId) {
     return BaseResponse.success(messageTraceService.getTraceByBiz(bizType, bizId));
   }
