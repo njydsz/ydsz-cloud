@@ -219,4 +219,38 @@ public class SearchController {
   public BaseResponse<List<Map.Entry<String, Double>>> getHotSearches() {
     return BaseResponse.success(searchApplicationService.getHotSearches());
   }
+
+  /**
+   * 高级语法搜索（S3-P2-02）。
+   *
+   * <p>在综合搜索基础上支持高级搜索语法：
+   *
+   * <ul>
+   *   <li>字段限定：{@code name:报告}、{@code tag:重要}、{@code suffix:pdf}
+   *   <li>短语精确匹配：{@code "季度财务"}
+   *   <li>包含/排除：{@code +必须}、{@code -排除}
+   *   <li>布尔运算符：{@code AND}、{@code OR}、{@code NOT}
+   * </ul>
+   *
+   * <p>示例：{@code name:报告 tag:财务 "季度总结" +正式 -草稿}
+   *
+   * @param rawInput 用户原始搜索输入（支持高级语法）
+   * @param scope 搜索作用域（all / filename / content / tag）
+   * @param page 页码（从 1 开始）
+   * @param pageSize 每页大小
+   * @param userId 当前用户 ID
+   * @return 分页搜索结果
+   */
+  @GetMapping("/advanced")
+  @Operation(summary = "高级语法搜索", description = "支持字段限定、布尔运算、短语精确匹配")
+  @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
+  public BaseResponse<SearchResultVO> advancedSearch(
+      @RequestParam String rawInput,
+      @RequestParam(required = false, defaultValue = "all") String scope,
+      @RequestParam(required = false, defaultValue = "1") int page,
+      @RequestParam(required = false, defaultValue = "20") int pageSize,
+      @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
+    return BaseResponse.success(
+        searchApplicationService.searchWithAdvancedSyntax(rawInput, userId, scope, page, pageSize));
+  }
 }

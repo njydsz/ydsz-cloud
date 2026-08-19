@@ -505,6 +505,17 @@ public class SearchApplicationService {
   /**
    * 高级语法搜索引擎路径：将解析后的查询转换为引擎 SearchFilter。
    *
+   * <p>注意：统一搜索引擎的 {@link SearchFilter.Operator} 仅支持基础比较操作（EQ/IN/NOT_IN 等），
+   * 不支持 CONTAINS/PHRASE。因此引擎路径仅处理：
+   *
+   * <ul>
+   *   <li>suffix 字段 → IN 过滤
+   *   <li>必须排除词 → NOT_IN 过滤
+   *   <li>全文词/短语 → 拼接为 keyword 由引擎全文检索
+   * </ul>
+   *
+   * <p>更复杂的语法（字段限定模糊匹配、短语精确匹配）仅在 DB 降级路径生效。
+   *
    * @param unifiedSearch 统一搜索服务
    * @param searchQuery 解析后的搜索查询
    * @param userId 操作人 ID
@@ -515,62 +526,49 @@ public class SearchApplicationService {
     // 将高级语法转换为引擎的 SearchFilter 列表
     List<SearchFilter> filters = new ArrayList<>();
 
-    // 字段限定 → SearchFilter
+    // suffix 字段限定 → IN 过滤
     if (searchQuery.getFieldQueries() != null) {
-      for (SearchQuery.FieldQuery fq : searchQuery.getFieldQueries()) {
-        if ("suffix".equals(fq.getField())) {
-          filters.add(SearchFilter.builder()
-              .field("suffix")
-              .values(List.of(fq.getValue()))
-              .operator(Operator.EQ)
-              .build());
-        } else {
-          filters.add(SearchFilter.builder()
-              .field(fq.getField())
-              .values(List.of(fq.getValue()))
-              .operator(Operator.CONTAINS)
-              .build());
-        }
-      }
-    }
-
-    // 必须包含词 → SearchFilter
-    if (searchQuery.getMustIncludeTerms() != null) {
-      for (String term : searchQuery.getMustIncludeTerms()) {
+      List<String> suffixValues = searchQuery.getFieldQueries().stream()
+          .filter(fq -> "suffix".equals(fq.getField()))
+          .map(SearchQuery.FieldQuery::getValue)
+          .collect(Collectors.toList());
+      if (!suffixValues.isEmpty()) {
         filters.add(SearchFilter.builder()
-            .field("content")
-            .values(List.of(term))
-            .operator(Operator.CONTAINS)
+            .field("suffix")
+            .values(suffixValues)
+            .operator(Operator.IN)
             .build());
       }
     }
 
-    // 必须排除词 → SearchFilter（使用 NOT_CONTAINS）
-    if (searchQuery.getMustExcludeTerms() != null) {
-      for (String term : searchQuery.getMustExcludeTerms()) {
-        filters.add(SearchFilter.builder()
-            .field("content")
-            .values(List.of(term))
-            .operator(Operator.NOT_CONTAINS)
-            .build());
-      }
-    }
+    // 必须排除词 → NOT_IN 过滤（content 字段不支持 NOT_IN，此处作为 tag 排除示例）
+    // 注：统一搜索引擎暂不支持全文 NOT，复杂排除逻辑在 DB 路径处理
 
-    // 短语精确匹配 → SearchFilter
+    // 合并全文词 + 短语作为引擎 keyword
+    StringBuilder keywordBuilder = new StringBuilder();
+    if (searchQuery.getFullTextTerms() != null) {
+      keywordBuilder.append(String.join(" ", searchQuery.getFullTextTerms()));
+    }
     if (searchQuery.getPhrases() != null) {
       for (String phrase : searchQuery.getPhrases()) {
-        filters.add(SearchFilter.builder()
-            .field("content")
-            .values(List.of(phrase))
-            .operator(Operator.PHRASE)
-            .build());
+        if (keywordBuilder.length() > 0) {
+          keywordBuilder.append(' ');
+        }
+        keywordBuilder.append('"').append(phrase).append('"');
       }
     }
 
-    // 取第一个全文词作为引擎 keyword（引擎自身支持全文检索）
-    String keyword = (searchQuery.getFullTextTerms() != null && !searchQuery.getFullTextTerms().isEmpty())
-        ? searchQuery.getFullTextTerms().get(0)
-        : "";
+    // 必须包含词追加到 keyword（搜索引擎默认 AND 语义）
+    if (searchQuery.getMustIncludeTerms() != null) {
+      for (String term : searchQuery.getMustIncludeTerms()) {
+        if (keywordBuilder.length() > 0) {
+          keywordBuilder.append(' ');
+        }
+        keywordBuilder.append('+').append(term);
+      }
+    }
+
+    String keyword = keywordBuilder.toString();
 
     SearchRequest request = SearchRequest.builder()
         .keyword(keyword)

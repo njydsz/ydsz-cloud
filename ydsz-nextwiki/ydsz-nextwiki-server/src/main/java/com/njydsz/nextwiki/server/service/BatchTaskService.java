@@ -14,6 +14,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.server.service.FileApplicationService.BatchResult;
+import com.njydsz.nextwiki.server.websocket.BatchProgressNotifier;
 
 /**
  * 批量任务异步执行服务。
@@ -55,20 +56,26 @@ public class BatchTaskService {
   /** FileApplicationService 提供者（延迟查找避免循环依赖） */
   private final ObjectProvider<FileApplicationService> fileServiceProvider;
 
+  /** WebSocket 进度推送器（S3-P2-04） */
+  private final BatchProgressNotifier progressNotifier;
+
   /**
    * 构造方法注入依赖。
    *
    * @param stringOps Redis 字符串操作
    * @param snowflakeIdGenerator 分布式 ID 生成器
    * @param fileServiceProvider FileApplicationService 提供者
+   * @param progressNotifier WebSocket 进度推送器
    */
   public BatchTaskService(
       RedisStringOps stringOps,
       SnowflakeIdGenerator snowflakeIdGenerator,
-      ObjectProvider<FileApplicationService> fileServiceProvider) {
+      ObjectProvider<FileApplicationService> fileServiceProvider,
+      BatchProgressNotifier progressNotifier) {
     this.stringOps = stringOps;
     this.snowflakeIdGenerator = snowflakeIdGenerator;
     this.fileServiceProvider = fileServiceProvider;
+    this.progressNotifier = progressNotifier;
   }
 
   /**
@@ -157,6 +164,9 @@ public class BatchTaskService {
     status.setStatus(BatchTaskStatus.TaskStatus.RUNNING);
     status.setStartedAt(LocalDateTime.now());
 
+    // 推送任务开始通知（S3-P2-04）
+    progressNotifier.notifyTaskStarted(userId, taskId, status.getTaskType(), nodeIds.size());
+
     try {
       FileApplicationService fileService = getService();
       BatchResult result;
@@ -170,6 +180,12 @@ public class BatchTaskService {
       status.setResult(BatchResultView.from(result));
       status.setProcessedCount(result.successCount() + result.failedItems().size());
       status.setStatus(BatchTaskStatus.TaskStatus.COMPLETED);
+
+      // 推送任务完成通知（S3-P2-04）
+      progressNotifier.notifyTaskCompleted(
+          userId, taskId, status.getTaskType(), nodeIds.size(),
+          result.successCount(), result.failedItems().size());
+
       log.info(
           "[BatchTaskService] 批量任务完成: taskId={}, operation={}, success={}, failed={}",
           taskId,
@@ -179,6 +195,10 @@ public class BatchTaskService {
     } catch (Exception e) {
       status.setStatus(BatchTaskStatus.TaskStatus.FAILED);
       status.setErrorMessage(e.getMessage());
+
+      // 推送任务失败通知（S3-P2-04）
+      progressNotifier.notifyTaskFailed(userId, taskId, status.getTaskType(), e.getMessage());
+
       log.error("[BatchTaskService] 批量任务失败: taskId={}, operation={}", taskId, operation, e);
     } finally {
       status.setCompletedAt(LocalDateTime.now());
