@@ -4,7 +4,6 @@ import java.util.List;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
 
 /**
  * 网关限流配置属性。
@@ -14,9 +13,6 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
  * <ul>
  *   <li>IP 级限流：防止单 IP 暴力请求
  *   <li>用户级限流：按用户 ID 限流
- *   <li>租户级限流：多租户 SaaS 场景，按租户 ID 限流
- *   <li>应用级限流：按接入应用（App-ID）限流
- *   <li>接口级限流：按 API 路径限流（防热点接口被打爆）
  * </ul>
  *
  * <p>配置示例：
@@ -45,7 +41,6 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
  * @author ydsz-team
  */
 @Data
-@RefreshScope
 @ConfigurationProperties(prefix = "ydsz.gateway.ratelimit")
 public class RateLimitProperties {
 
@@ -57,15 +52,6 @@ public class RateLimitProperties {
 
   /** IP 级限流配置 */
   private PerIpConfig perIp = new PerIpConfig();
-
-  /** 租户级限流配置（多租户 SaaS） */
-  private PerTenantConfig perTenant = new PerTenantConfig();
-
-  /** 应用级限流配置（按 App-ID） */
-  private PerAppConfig perApp = new PerAppConfig();
-
-  /** 接口级限流配置（按 API 路径） */
-  private PerApiConfig perApi = new PerApiConfig();
 
   /** 响应头配置 */
   private ResponseHeadersConfig responseHeaders = new ResponseHeadersConfig();
@@ -95,42 +81,6 @@ public class RateLimitProperties {
 
     /** IP 白名单（不限流） */
     private List<String> whitelist;
-  }
-
-  /** 租户级限流配置（多租户 SaaS 场景） */
-  @Data
-  public static class PerTenantConfig {
-    private boolean enabled = false;
-
-    /** 默认每秒请求数 */
-    private int defaultQps = 100;
-
-    /** 突发容量 */
-    private int burstCapacity = 200;
-  }
-
-  /** 应用级限流配置（按 App-ID） */
-  @Data
-  public static class PerAppConfig {
-    private boolean enabled = false;
-
-    /** 默认每秒请求数 */
-    private int defaultQps = 200;
-
-    /** 突发容量 */
-    private int burstCapacity = 400;
-  }
-
-  /** 接口级限流配置（按 API 路径） */
-  @Data
-  public static class PerApiConfig {
-    private boolean enabled = false;
-
-    /** 默认每秒请求数 */
-    private int defaultQps = 500;
-
-    /** 突发容量 */
-    private int burstCapacity = 1000;
   }
 
   /** 响应头配置 */
