@@ -564,4 +564,21 @@ public class VariableServiceImpl implements VariableService {
       return 0;
     }
   }
+
+  /**
+   * 将 VariableVO 转换为 VariableDTO（避免 server 层依赖 infra 的 SystemConverter）。
+   *
+   * @param vo 变量 VO
+   * @return 变量 DTO
+   */
+  private VariableDTO toDto(VariableVO vo) {
+    VariableDTO dto = new VariableDTO();
+    dto.setId(vo.getId());
+    dto.setVariableKey(vo.getVariableKey());
+    dto.setVariableValue(vo.getVariableValue());
+    dto.setValueType(vo.getValueType());
+    dto.setDescription(vo.getDescription());
+    dto.setStatus(vo.getStatus());
+    return dto;
+  }
 }

@@ -42,7 +42,6 @@ public class ConfigRollbackStrategy implements RollbackStrategy {
   private final ConfigRepository configRepository;
   private final CacheManager cacheManager;
   private final CacheKeyBuilder cacheKeyBuilder;
-  private final SystemConverter converter;
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
   @Override
@@ -68,7 +67,7 @@ public class ConfigRollbackStrategy implements RollbackStrategy {
         currentConfig.setIsPublic(snapshotVO.getIsPublic());
         currentConfig.setSortOrder(snapshotVO.getSortOrder());
         currentConfig.setStatus(snapshotVO.getStatus());
-        configRepository.updateById(converter.voToDto(currentConfig));
+        configRepository.updateById(toDto(currentConfig));
       } else {
         // 原配置已被删除，重新创建
         ConfigDTO newConfig = new ConfigDTO();
@@ -136,5 +135,26 @@ public class ConfigRollbackStrategy implements RollbackStrategy {
             .metadata("configKey", configKey)
             .metadata("configGroup", configGroup)
             .build());
+  }
+
+  /**
+   * 将 ConfigVO 转换为 ConfigDTO（避免 server 层依赖 infra 的 SystemConverter）。
+   *
+   * @param vo 配置 VO
+   * @return 配置 DTO
+   */
+  private ConfigDTO toDto(ConfigVO vo) {
+    ConfigDTO dto = new ConfigDTO();
+    dto.setId(vo.getId());
+    dto.setConfigGroup(vo.getConfigGroup());
+    dto.setConfigKey(vo.getConfigKey());
+    dto.setConfigValue(vo.getConfigValue());
+    dto.setValueType(vo.getValueType());
+    dto.setDefaultValue(vo.getDefaultValue());
+    dto.setDescription(vo.getDescription());
+    dto.setIsPublic(vo.getIsPublic());
+    dto.setSortOrder(vo.getSortOrder());
+    dto.setStatus(vo.getStatus());
+    return dto;
   }
 }

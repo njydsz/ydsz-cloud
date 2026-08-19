@@ -639,4 +639,24 @@ public class DictItemServiceImpl implements DictItemService {
       return 0;
     }
   }
+
+  /**
+   * 将 DictItemVO 转换为 DictItemDTO（避免 server 层依赖 infra 的 SystemConverter）。
+   *
+   * @param vo 字典项 VO
+   * @return 字典项 DTO
+   */
+  private DictItemDTO toDto(DictItemVO vo) {
+    DictItemDTO dto = new DictItemDTO();
+    dto.setId(vo.getId());
+    dto.setParentId(vo.getParentId());
+    dto.setTypeCode(vo.getTypeCode());
+    dto.setItemCode(vo.getItemCode());
+    dto.setItemValue(vo.getItemValue());
+    dto.setSortOrder(vo.getSortOrder());
+    dto.setDescription(vo.getDescription());
+    dto.setExtJson(vo.getExtJson());
+    dto.setStatus(vo.getStatus());
+    return dto;
+  }
 }
