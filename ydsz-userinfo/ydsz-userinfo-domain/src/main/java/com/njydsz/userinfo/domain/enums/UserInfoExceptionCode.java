@@ -40,6 +40,8 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
 public enum UserInfoExceptionCode implements ExceptionCode {
 
   // ==================== B30xxx 用户/认证 ====================
+  /** 参数校验失败 */
+  PARAM_INVALID("B30028", "userinfo.param.invalid"),
   /** 用户不存在 */
   USER_NOT_FOUND("B30001", "userinfo.user.not.found", 404),
   /** 密码错误 */

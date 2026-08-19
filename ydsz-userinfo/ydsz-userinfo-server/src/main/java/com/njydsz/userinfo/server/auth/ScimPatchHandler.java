@@ -350,10 +350,7 @@ public class ScimPatchHandler {
       UserAccountUpdateDTO updateDTO, String fieldName, Object value, boolean isReplace) {
     String strValue = value != null ? value.toString() : null;
     return switch (fieldName) {
-      case "username" -> {
-        updateDTO.setUsername(strValue);
-        yield true;
-      }
+      // username 创建后不可修改（返回 false 表示忽略）
       case "displayName", "realName" -> {
         updateDTO.setRealName(strValue);
         yield true;

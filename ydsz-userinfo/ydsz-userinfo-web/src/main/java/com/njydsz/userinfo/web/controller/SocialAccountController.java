@@ -88,14 +88,13 @@ public class SocialAccountController {
           SocialAuthProperties.ProviderConfig config = entry.getValue();
           SocialAccountVO binding = bindingMap.get(platformKey);
 
-          PlatformBindingStatusVO vo = new PlatformBindingStatusVO();
-          vo.setPlatform(platformKey);
-          vo.setPlatformName(getPlatformDisplayName(platformKey));
-          vo.setAppId(config.getAppId());
-          vo.setBound(binding != null);
-          vo.setBoundAt(binding != null ? binding.getCreatedAt() : null);
-          vo.setNickname(binding != null ? binding.getNickname() : null);
-          return vo;
+          return new PlatformBindingStatusVO(
+              platformKey,
+              getPlatformDisplayName(platformKey),
+              config.getAppId(),
+              binding != null,
+              binding != null ? binding.getCreatedAt() : null,
+              binding != null ? binding.getNickname() : null);
         })
         .toList();
 
