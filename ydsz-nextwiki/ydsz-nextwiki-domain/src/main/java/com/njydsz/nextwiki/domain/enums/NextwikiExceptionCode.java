@@ -142,6 +142,20 @@ public enum NextwikiExceptionCode implements ExceptionCode {
   /** AI 服务超时 */
   AI_SERVICE_TIMEOUT("W10003", "nextwiki.ai.service.timeout", 504),
 
+  // 空间相关 W12xxx（S3-P2-01 新增）
+  /** 空间不存在 */
+  SPACE_NOT_FOUND("W12001", "nextwiki.space.not.found", 404),
+  /** 空间名称重复 */
+  SPACE_NAME_DUPLICATE("W12002", "nextwiki.space.name.duplicate"),
+  /** 空间状态转换不合法 */
+  SPACE_STATUS_TRANSITION_INVALID("W12003", "nextwiki.space.status.transition.invalid"),
+  /** 空间成员不存在 */
+  SPACE_MEMBER_NOT_FOUND("W12004", "nextwiki.space.member.not.found", 404),
+  /** 空间成员角色不合法 */
+  SPACE_MEMBER_ROLE_INVALID("W12005", "nextwiki.space.member.role.invalid"),
+  /** 空间不存在所有者（数据异常） */
+  SPACE_NO_OWNER("W12006", "nextwiki.space.no.owner"),
+
   // 收藏夹相关 W11xxx（S2-P1-06 新增）
   /** 收藏已存在 */
   FAVORITE_ALREADY_EXISTS("W11001", "nextwiki.favorite.already.exists"),

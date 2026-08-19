@@ -135,6 +135,7 @@ public class JobScanner {
               cronjobProperties.getScanner().getBatchSize());
         } catch (Exception e) {
           int poolSize = cronjobProperties.getScanner().getParallelDispatchPoolSize();
+          // CHECKSTYLE.OFF: RegexpSinglelineJava - common-thread 未配置时的降级兜底池
           this.dispatchPool =
               new ThreadPoolExecutor(
                   poolSize,
@@ -148,6 +149,7 @@ public class JobScanner {
                     return t;
                   },
                   new ThreadPoolExecutor.CallerRunsPolicy());
+          // CHECKSTYLE.ON: RegexpSinglelineJava
           this.useExternalDispatchPool = false;
           log.info(
               "[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=true poolSize={} (manual fallback)",

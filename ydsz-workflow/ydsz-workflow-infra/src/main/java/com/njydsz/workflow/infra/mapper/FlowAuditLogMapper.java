@@ -1,5 +1,6 @@
 package com.njydsz.workflow.infra.mapper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -41,9 +42,33 @@ public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLogDO> {
   /** 查某任务的操作记录 */
   List<FlowAuditLogDO> selectByTaskId(@Param("taskId") String taskId);
 
-  /** 查某操作人的审计日志（P1-8: 加签历史查询） */
-  List<FlowAuditLogDO> selectByOperatorId(@Param("operatorId") String operatorId);
+  /**
+   * 查某操作人的审计日志（P1-8: 加签历史查询）
+   *
+   * <p>P3: {@code startTime} 为必填项，强制限定查询时间范围，避免跨分区全表扫描。 服务层应保证非空（默认近 12 个月）。
+   *
+   * @param operatorId 操作人 ID
+   * @param startTime 操作时间下界（含，必填）
+   * @param endTime 操作时间上界（含，可选）
+   * @return 审计日志列表
+   */
+  List<FlowAuditLogDO> selectByOperatorId(
+      @Param("operatorId") String operatorId,
+      @Param("startTime") LocalDateTime startTime,
+      @Param("endTime") LocalDateTime endTime);
 
-  /** 查某目标人（转办/委派/加签目标）的审计日志（P1-8: 加签历史查询） */
-  List<FlowAuditLogDO> selectByTargetId(@Param("targetId") String targetId);
+  /**
+   * 查某目标人（转办/委派/加签目标）的审计日志（P1-8: 加签历史查询）
+   *
+   * <p>P3: {@code startTime} 为必填项，强制限定查询时间范围，避免跨分区全表扫描。
+   *
+   * @param targetId 目标人 ID
+   * @param startTime 操作时间下界（含，必填）
+   * @param endTime 操作时间上界（含，可选）
+   * @return 审计日志列表
+   */
+  List<FlowAuditLogDO> selectByTargetId(
+      @Param("targetId") String targetId,
+      @Param("startTime") LocalDateTime startTime,
+      @Param("endTime") LocalDateTime endTime);
 }

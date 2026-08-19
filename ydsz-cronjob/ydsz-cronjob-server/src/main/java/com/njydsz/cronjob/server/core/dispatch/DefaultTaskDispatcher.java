@@ -1978,6 +1978,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     BlockingQueue<Runnable> workQueue =
         queueCapacity == 0 ? new SynchronousQueue<>() : new PriorityBlockingQueue<>();
     AtomicInteger threadCounter = new AtomicInteger(0);
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 全局任务执行池，线程数由配置控制，注册到 CronjobThreadPoolRegistry 供热更新
     this.taskExecutorPool =
         new ThreadPoolExecutor(
             corePoolSize,
@@ -1992,6 +1993,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
               return t;
             },
             new ThreadPoolExecutor.CallerRunsPolicy());
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     // P1-A2: 注册线程池到注册表，供热更新监听器统一访问
     registerPoolsToRegistry();
     log.info(

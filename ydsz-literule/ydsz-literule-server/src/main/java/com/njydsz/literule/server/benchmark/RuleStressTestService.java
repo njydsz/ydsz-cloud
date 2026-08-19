@@ -84,7 +84,9 @@ public class RuleStressTestService {
     LongAdder totalExecutions = new LongAdder();
 
     // 每个线程分配独立的事实数据游标，避免共享竞争
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 压测工具类，线程数由调用方传入，用于性能基准测试
     ExecutorService executor = Executors.newFixedThreadPool(threads);
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     final List<Map<String, Object>> finalFactsList = factsList;
     final int finalIterations = iterations;
     final int finalWarmup = warmupIterations;

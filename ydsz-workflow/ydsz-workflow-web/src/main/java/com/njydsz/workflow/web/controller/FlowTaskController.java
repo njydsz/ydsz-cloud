@@ -5,6 +5,11 @@ import java.util.List;
 import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -135,8 +140,22 @@ public class FlowTaskController {
    */
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_VIEW)
   @GetMapping("/task/{taskId}")
-  @Operation(summary = "任务详情查询")
-  public BaseResponse<Map<String, Object>> taskDetail(@PathVariable String taskId) {
+  @Operation(summary = "任务详情查询", description = "查询指定任务的完整详情，含历史轨迹、表单权限、可执行操作")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(
+            responseCode = "404",
+            description = "任务不存在",
+            content = @Content(schema = @Schema(hidden = true))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "无权限查看该任务",
+            content = @Content(schema = @Schema(hidden = true)))
+      })
+  public BaseResponse<Map<String, Object>> taskDetail(
+      @Parameter(description = "任务 ID", required = true, example = "task-abc123")
+          @PathVariable String taskId) {
     return BaseResponse.success(workflowFacade.getTaskDetail(taskId));
   }
 
@@ -176,8 +195,22 @@ public class FlowTaskController {
       action = AuditAction.APPROVE,
       content = "'pass'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-  @Operation(summary = "通过任务")
-  public BaseResponse<Void> pass(@Valid @RequestBody FlowTaskOperateDTO dto) {
+  @Operation(summary = "通过任务", description = "审批人同意当前任务，流程按网关条件推进到下一节点")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "操作成功"),
+        @ApiResponse(
+            responseCode = "400",
+            description = "参数错误 / 流程状态不允许通过",
+            content = @Content(schema = @Schema(hidden = true))),
+        @ApiResponse(
+            responseCode = "403",
+            description = "非当前任务办理人，无权操作",
+            content = @Content(schema = @Schema(hidden = true)))
+      })
+  public BaseResponse<Void> pass(
+      @Parameter(description = "任务操作参数", required = true) @Valid @RequestBody
+          FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
     workflowFacade.completeTask(dto);

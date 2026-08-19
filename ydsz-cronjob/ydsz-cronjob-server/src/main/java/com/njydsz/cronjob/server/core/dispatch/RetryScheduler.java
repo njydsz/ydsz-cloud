@@ -35,7 +35,13 @@ public class RetryScheduler {
   /** 线程池注册表（可选注入，standalone 模式下可能不可用） */
   private final ObjectProvider<CronjobThreadPoolRegistry> registryProvider;
 
-  /** 重试调度线程池 */
+  /**
+   * 重试调度线程池（固定2线程，守护线程，CallerRunsPolicy 自然背压）。
+   *
+   * <p>CHECKSTYLE.OFF 原因：重试调度器需要独立于全局执行池，避免重试任务阻塞新任务派发；
+   * 线程数固定为2，不随负载增长，不属于无限创建场景。
+   */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava - 重试调度专用池，线程数固定为2
   private final ScheduledExecutorService retryScheduler =
       new ScheduledThreadPoolExecutor(
           2,
@@ -45,6 +51,7 @@ public class RetryScheduler {
             return t;
           },
           new ThreadPoolExecutor.CallerRunsPolicy());
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /** 构造函数：注入线程池注册表 */
   public RetryScheduler(ObjectProvider<CronjobThreadPoolRegistry> registryProvider) {

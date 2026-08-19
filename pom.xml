@@ -114,6 +114,8 @@
         <testcontainers.version>1.20.6</testcontainers.version>
         <!-- JMH 基准测试（UtilBenchmark 等） -->
         <jmh.version>1.37</jmh.version>
+        <!-- Aviator 表达式引擎（工作流条件表达式求值） -->
+        <aviator.version>5.4.3</aviator.version>
     </properties>
 
     <dependencyManagement>
@@ -160,6 +162,12 @@
                 <groupId>org.openjdk.jmh</groupId>
                 <artifactId>jmh-generator-annprocess</artifactId>
                 <version>${jmh.version}</version>
+            </dependency>
+            <!-- A10: Aviator 表达式引擎版本集中管控（工作流条件表达式求值） -->
+            <dependency>
+                <groupId>com.googlecode.aviator</groupId>
+                <artifactId>aviator</artifactId>
+                <version>${aviator.version}</version>
             </dependency>
 
             <!-- 内部模块：ydsz-common 多模块拆分 -->

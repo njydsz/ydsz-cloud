@@ -1,51 +1,107 @@
 package com.njydsz.literule.infra.repository.impl;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.literule.domain.dto.post.ApprovalRecordSaveDTO;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
-import com.njydsz.literule.infra.converter.LiteruleConverter;
 
 /**
- * 审批记录仓储实现（Infra 层默认内存实现）。
+ * 审批记录仓储实现（Infra 层，基于 ConcurrentHashMap 的内存实现）。
  *
- * <p>提供基于内存的审批记录存储实现，适用于轻量级场景。
+ * <p>作为 {@link com.njydsz.literule.server.approval.RuleApprovalService} 的持久化备份存储。
+ * Service 层维护主内存缓存（{@code recordRecord}），本仓库作为二级存储提供崩溃恢复能力。
+ *
+ * <p><b>局限性：</b>
+ *
+ * <ul>
+ *   <li>进程重启后数据丢失，生产环境应替换为数据库实现
+ *   <li>不支持集群多节点共享
+ * </ul>
+ *
+ * <p>如需数据库实现，可新建 {@code ApprovalRecordMapper} 与 {@code ApprovalRecordDO}，
+ * 并通过 {@code @Primary} 注解替换本 Bean。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @Repository
-@RequiredArgsConstructor
 public class ApprovalRecordRepositoryImpl implements ApprovalRecordRepository {
 
-  // 注意：此处使用具体字段而非注入 Mapper，因为是内存实现
-  // 如果需要数据库实现，注入对应的 Mapper 和 Converter
+  /** 主存储：ruleCode → 审批记录 DTO */
+  private final Map<String, ApprovalRecordSaveDTO> store = new ConcurrentHashMap<>();
 
   @Override
   public void save(ApprovalRecordSaveDTO saveDTO) {
-    // TODO: 实现保存逻辑（当前为内存实现占位）
-    throw new UnsupportedOperationException("ApprovalRecordRepositoryImpl.save() 尚未实现");
+    if (saveDTO == null || saveDTO.getRuleCode() == null) {
+      log.warn("[ApprovalRecord] 保存参数忽略：saveDTO 或 ruleCode 为空");
+      return;
+    }
+    // 写入前设置更新时间
+    saveDTO.setUpdatedAt(LocalDateTime.now());
+    // 设置创建时间（仅首次）
+    if (saveDTO.getCreatedAt() == null) {
+      saveDTO.setCreatedAt(LocalDateTime.now());
+    }
+    store.put(saveDTO.getRuleCode(), saveDTO);
+    log.debug("[ApprovalRecord] 审批记录已保存：ruleCode={}, status={}",
+        saveDTO.getRuleCode(), saveDTO.getCurrentStatus());
   }
 
   @Override
   public List<ApprovalRecordVO> findByRuleCode(String ruleCode) {
-    // TODO: 实现查询逻辑
-    throw new UnsupportedOperationException("ApprovalRecordRepositoryImpl.findByRuleCode() 尚未实现");
+    if (ruleCode == null) {
+      return List.of();
+    }
+    ApprovalRecordSaveDTO dto = store.get(ruleCode);
+    if (dto == null) {
+      return List.of();
+    }
+    return List.of(toVO(dto));
   }
 
   @Override
   public List<ApprovalRecordVO> findByApprover(String approver) {
-    // TODO: 实现查询逻辑
-    throw new UnsupportedOperationException("ApprovalRecordRepositoryImpl.findByApprover() 尚未实现");
+    if (approver == null) {
+      return List.of();
+    }
+    // 遍历所有记录，查找审批日志中包含该审批人的记录
+    return store.values().stream()
+        .filter(dto -> dto.getLogs() != null && dto.getLogs().stream()
+            .anyMatch(log -> approver.equals(log.getApprover())))
+        .map(this::toVO)
+        .collect(Collectors.toList());
   }
 
   @Override
   public List<ApprovalRecordVO> findAll() {
-    // TODO: 实现查询逻辑
-    throw new UnsupportedOperationException("ApprovalRecordRepositoryImpl.findAll() 尚未实现");
+    return store.values().stream().map(this::toVO).collect(Collectors.toList());
+  }
+
+  /**
+   * DTO → VO 转换
+   *
+   * @param dto 审批记录 DTO
+   * @return 审批记录 VO
+   */
+  private ApprovalRecordVO toVO(ApprovalRecordSaveDTO dto) {
+    ApprovalRecordVO vo = new ApprovalRecordVO();
+    vo.setRecordId(dto.getRecordId());
+    vo.setRuleCode(dto.getRuleCode());
+    vo.setFlowCode(dto.getFlowCode());
+    vo.setCurrentLevel(dto.getCurrentLevel());
+    vo.setCurrentStatus(dto.getCurrentStatus());
+    vo.setCreatedAt(dto.getCreatedAt());
+    vo.setUpdatedAt(dto.getUpdatedAt());
+    return vo;
   }
 }

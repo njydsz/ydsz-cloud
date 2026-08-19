@@ -75,6 +75,7 @@ public class TaskPreloadScheduler {
 
   @PostConstruct
   public void init() {
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 单线程调度器，用于秒级预读触发，数量固定为1
     this.precisionScheduler =
         Executors.newSingleThreadScheduledExecutor(
             r -> {
@@ -82,6 +83,7 @@ public class TaskPreloadScheduler {
               t.setDaemon(true);
               return t;
             });
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     PrecisionConfig cfg = cronjobProperties.getPreload();
     log.info(
         "[Preload] 秒级预读调度器初始化: enabled={} scanInterval={}ms window={}s batch={}",

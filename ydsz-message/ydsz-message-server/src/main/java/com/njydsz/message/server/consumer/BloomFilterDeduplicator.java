@@ -62,10 +62,17 @@ public class BloomFilterDeduplicator {
   private final AtomicReference<BloomFilter<String>> previousFilter =
       new AtomicReference<>();
 
-  /** 窗口翻转调度器 */
+  /**
+   * 窗口翻转调度器（单线程，守护线程）。
+   *
+   * <p>CHECKSTYLE.OFF 原因：BloomFilter 窗口翻转需要独立调度线程，避免与消费者线程竞争；
+   * 线程数固定为1，不随负载增长。
+   */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava - BloomFilter 窗口翻转调度器，单线程固定
   private final ScheduledExecutorService scheduler =
       Executors.newSingleThreadScheduledExecutor(
           r -> new Thread(r, "bloom-filter-rotator"));
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /** 预期最大消息数/窗口 */
   @Value("${ydsz.message.consumer.bloom-filter-capacity:1000000}")

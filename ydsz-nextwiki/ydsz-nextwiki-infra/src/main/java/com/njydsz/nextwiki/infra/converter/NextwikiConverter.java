@@ -670,6 +670,42 @@ public interface NextwikiConverter {
   // ===== UserFavorite（S2-P1-06） =====
 
   /**
+   * 空间 DTO → 空间实体
+   *
+   * @param dto 空间 DTO
+   * @return 空间实体
+   */
+  com.njydsz.nextwiki.infra.entity.SpaceDO toSpaceDO(
+      com.njydsz.nextwiki.domain.dto.SpaceDTO dto);
+
+  /**
+   * 空间实体 → 空间 DTO
+   *
+   * @param entity 空间实体
+   * @return 空间 DTO
+   */
+  com.njydsz.nextwiki.domain.dto.SpaceDTO toSpaceDTO(
+      com.njydsz.nextwiki.infra.entity.SpaceDO entity);
+
+  /**
+   * 空间成员 DTO → 空间成员实体
+   *
+   * @param dto 空间成员 DTO
+   * @return 空间成员实体
+   */
+  com.njydsz.nextwiki.infra.entity.SpaceMemberDO toSpaceMemberDO(
+      com.njydsz.nextwiki.domain.dto.SpaceMemberDTO dto);
+
+  /**
+   * 空间成员实体 → 空间成员 DTO
+   *
+   * @param entity 空间成员实体
+   * @return 空间成员 DTO
+   */
+  com.njydsz.nextwiki.domain.dto.SpaceMemberDTO toSpaceMemberDTO(
+      com.njydsz.nextwiki.infra.entity.SpaceMemberDO entity);
+
+  /**
    * 用户收藏夹实体 → 用户收藏夹 DTO
    *
    * @param entity 用户收藏夹实体

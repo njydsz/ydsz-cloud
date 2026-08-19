@@ -190,6 +190,118 @@ public class ChannelRouter {
   }
 
   /**
+   * 基于评分选优的智能分发：对所有启用通道按综合评分降序排序，依次尝试 dispatch，首次成功即返回。
+   *
+   * <p>评分模型由 {@link ChannelScoreCalculator} 提供，基于「通道成功率 + 成本 + 用户打开率」三因子加权计算。 全部通道失败时返回最后一个失败结果。
+   *
+   * @param request 消息请求
+   * @return 发送结果（首个成功或最后一个失败）
+   */
+  public MessageResult dispatchWithScore(MessageRequest request) {
+    return dispatchWithScore(request, null);
+  }
+
+  /**
+   * 基于评分选优的智能分发（带权重配置重载）。
+   *
+   * <p>对所有启用通道按综合评分降序排序，依次尝试 dispatch：
+   *
+   * <ol>
+   *   <li>从 channelCache 获取所有启用（isChannelEnabled）的通道</li>
+   *   <li>调用 {@link ChannelScoreCalculator#rankChannels(List, String, ScoreConfig)} 获取排序后的评分列表</li>
+   *   <li>依次调用 {@link #dispatch(MessageRequest)}，将 request.channel 替换为当前评分通道</li>
+   *   <li>首次成功即返回，全部失败时返回最后一个失败结果</li>
+   * </ol>
+   *
+   * @param request 消息请求
+   * @param scoreConfig 评分权重配置，为 null 时使用默认权重
+   * @return 发送结果（首个成功或最后一个失败）
+   */
+  public MessageResult dispatchWithScore(MessageRequest request, ScoreConfig scoreConfig) {
+    if (request == null) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("消息请求不能为空")
+          .build();
+    }
+
+    // 1. 获取所有启用的通道
+    List<String> enabledChannels = new ArrayList<>();
+    for (String channelKey : channelCache.keySet()) {
+      if (isChannelEnabled(channelKey)) {
+        enabledChannels.add(channelKey);
+      }
+    }
+
+    if (enabledChannels.isEmpty()) {
+      log.warn("[ChannelRouter] dispatchWithScore: 无可用启用通道");
+      return MessageResult.fail(null, "无可用启用通道", "无可用启用通道", null);
+    }
+
+    // 2. 按评分降序排序
+    String userId = request.getReceiver();
+    List<ChannelScore> rankedScores =
+        channelScoreCalculator.rankChannels(enabledChannels, userId, scoreConfig);
+
+    log.info(
+        "[ChannelRouter] dispatchWithScore: 通道评分排序={}",
+        rankedScores.stream()
+            .map(s -> s.channel() + ":" + s.totalRate())
+            .reduce((a, b) -> a + ", " + b)
+            .orElse(""));
+
+    // 3. 依次尝试 dispatch，首次成功即返回
+    MessageResult lastResult = null;
+    for (ChannelScore channelScore : rankedScores) {
+      // 构建针对当前评分通道的请求副本
+      MessageRequest channelRequest = cloneRequestWithChannel(request, channelScore.channel());
+      lastResult = dispatch(channelRequest);
+      if (lastResult.isSuccess()) {
+        log.info(
+            "[ChannelRouter] dispatchWithScore: 通道发送成功 channel={} totalRate={}",
+            channelScore.channel(),
+            channelScore.totalRate());
+        return lastResult;
+      }
+      log.warn(
+          "[ChannelRouter] dispatchWithScore: 通道发送失败尝试下一个 channel={} err={}",
+          channelScore.channel(),
+          lastResult.getErrorMessage());
+    }
+
+    // 4. 全部失败，返回最后一个失败结果
+    log.error("[ChannelRouter] dispatchWithScore: 所有通道均失败, lastError={}", lastResult != null ? lastResult.getErrorMessage() : "unknown");
+    return lastResult;
+  }
+
+  /**
+   * 克隆 MessageRequest 并替换为指定通道（避免修改原始请求的通道字段）。
+   *
+   * @param original 原始请求
+   * @param channel 目标通道
+   * @return 替换通道后的请求副本
+   */
+  private MessageRequest cloneRequestWithChannel(MessageRequest original, String channel) {
+    MessageRequest copy = new MessageRequest();
+    copy.setChannel(channel);
+    copy.setReceiver(original.getReceiver());
+    copy.setSubject(original.getSubject());
+    copy.setContent(original.getContent());
+    copy.setBizType(original.getBizType());
+    copy.setBizId(original.getBizId());
+    copy.setTemplateCode(original.getTemplateCode());
+    copy.setMessageId(original.getMessageId());
+    copy.setParams(original.getParams());
+    copy.setChannelMeta(original.getChannelMeta());
+    copy.setScheduledAt(original.getScheduledAt());
+    copy.setPriority(original.getPriority());
+    copy.setParentMsgId(original.getParentMsgId());
+    copy.setCascadeTo(original.getCascadeTo());
+    copy.setScenario(original.getScenario());
+    return copy;
+  }
+
+  /**
    * P3-2: 构造包含 cause 链的错误消息。
    *
    * <p>遍历异常的 cause 链（最多 5 层防御性兜底），将每层异常的 {@code SimpleName: message} 拼接，避免 Spring/HTTP 客户端等包装异常

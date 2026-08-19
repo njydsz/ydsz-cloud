@@ -56,21 +56,32 @@
         ORDER BY operated_at ASC, id ASC
     </select>
 
-    <!-- 查某操作人的审计日志（P1-8: 加签历史查询） -->
+    <!--
+        查某操作人的审计日志（P1-8: 加签历史查询）
+        P3: 强制时间范围，避免跨分区全表扫描（按月分区表，无时间范围会扫描全部分区）。
+        服务层需保证 startTime 非空（默认查近 12 个月）。
+    -->
     <select id="selectByOperatorId" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_flow_audit_log
         WHERE operator_id = #{operatorId}
+          AND operated_at &gt;= #{startTime}
+          <if test="endTime != null">AND operated_at &lt;= #{endTime}</if>
           AND status = 'ENABLED'
           AND deleted = 0
         ORDER BY operated_at DESC, id DESC
     </select>
 
-    <!-- 查某目标人（转办/委派/加签目标）的审计日志（P1-8: 加签历史查询） -->
+    <!--
+        查某目标人（转办/委派/加签目标）的审计日志（P1-8: 加签历史查询）
+        P3: 同 selectByOperatorId，强制时间范围防跨分区扫描。
+    -->
     <select id="selectByTargetId" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_flow_audit_log
         WHERE target_id = #{targetId}
+          AND operated_at &gt;= #{startTime}
+          <if test="endTime != null">AND operated_at &lt;= #{endTime}</if>
           AND status = 'ENABLED'
           AND deleted = 0
         ORDER BY operated_at DESC, id DESC

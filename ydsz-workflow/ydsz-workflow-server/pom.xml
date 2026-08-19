@@ -100,10 +100,10 @@
         </dependency>
 
         <!-- P2-1: Aviator 表达式引擎（工作流内置，替代对 ydsz-literule 的直接依赖） -->
+        <!-- A10: 版本由父 pom dependencyManagement 统一管控 -->
         <dependency>
             <groupId>com.googlecode.aviator</groupId>
             <artifactId>aviator</artifactId>
-            <version>5.4.3</version>
         </dependency>
         <!-- Micrometer Prometheus 注册器（FlowMetrics 指标暴露给 /actuator/prometheus） -->
         <dependency>

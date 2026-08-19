@@ -91,6 +91,7 @@ public class MaintenanceScheduler {
       log.info("[MaintenanceScheduler] 无注册 ScanTask, 跳过初始化");
       return;
     }
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 统一维护调度器，线程数固定（最多4个），按 ScanTask 数量动态调整
     this.scheduler = Executors.newScheduledThreadPool(
         Math.min(scanTasks.size(), 4),
         r -> {
@@ -98,6 +99,7 @@ public class MaintenanceScheduler {
           t.setDaemon(true);
           return t;
         });
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     for (ScanTask task : scanTasks) {
       registerTask(task);
     }
