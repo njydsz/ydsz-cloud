@@ -126,7 +126,7 @@ ydsz:
       blacklist-fail-mode: fail-open
       whitelist-enabled: false
       whitelist: ""
-    # F1: 多维度限流配置（IP / 用户 / 租户 / 应用 / 接口）
+    # F1: 限流配置（IP + 用户二维度）
     ratelimit:
       enabled: true
       per-ip:
@@ -137,18 +137,6 @@ ydsz:
         enabled: true
         default-qps: 50
         burst-capacity: 100
-      per-tenant:
-        enabled: false        # 多租户场景开启
-        default-qps: 100
-        burst-capacity: 200
-      per-app:
-        enabled: false        # 接入方限流开启
-        default-qps: 200
-        burst-capacity: 400
-      per-api:
-        enabled: false        # 热点接口限流开启
-        default-qps: 500
-        burst-capacity: 1000
       response-headers:
         enabled: true
     # P0-A4: API 版本响应头（ApiVersionHeaderFilter 开关）

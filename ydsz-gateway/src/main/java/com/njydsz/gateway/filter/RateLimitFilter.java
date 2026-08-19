@@ -79,24 +79,18 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   private final AtomicInteger redisFailureCount = new AtomicInteger(0);
 
   /**
-   * 五维度（IP + 用户 + 租户 + 应用 + 接口）合并令牌桶 Lua 脚本。
+   * 二维度（IP + 用户）合并令牌桶 Lua 脚本。
    *
    * <p>参数:
    *
    * <pre>
-   *   KEYS[1] = ip key         KEYS[2] = user key       KEYS[3] = tenant key
-   *   KEYS[4] = app key        KEYS[5] = api key
+   *   KEYS[1] = ip key         KEYS[2] = user key
    *   ARGV[1..3] = ip rate/capacity/enabled
    *   ARGV[4..6] = user rate/capacity/enabled
-   *   ARGV[7..9] = tenant rate/capacity/enabled
-   *   ARGV[10..12] = app rate/capacity/enabled
-   *   ARGV[13..15] = api rate/capacity/enabled
-   *   ARGV[16] = timestamp_seconds  ARGV[17] = requested_tokens
+   *   ARGV[7] = timestamp_seconds  ARGV[8] = requested_tokens
    * </pre>
    *
-   * <p>返回: {ip_allowed, ip_remaining, ip_reset, user_allowed, user_remaining, user_reset,
-   *          tenant_allowed, tenant_remaining, tenant_reset, app_allowed, app_remaining, app_reset,
-   *          api_allowed, api_remaining, api_reset}
+   * <p>返回: {ip_allowed, ip_remaining, ip_reset, user_allowed, user_remaining, user_reset}
    */
   private static final String TOKEN_BUCKET_SCRIPT =
       """
@@ -132,13 +126,13 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
                 return allowed, remaining, reset
             end
 
-            local now = tonumber(ARGV[16])
-            local requested = tonumber(ARGV[17])
+            local now = tonumber(ARGV[7])
+            local requested = tonumber(ARGV[8])
 
             local results = {}
 
-            -- 遍历 5 个维度（每个维度 3 个参数：rate, capacity, enabled）
-            for i = 1, 5 do
+            -- 遍历 2 个维度（每个维度 3 个参数：rate, capacity, enabled）
+            for i = 1, 2 do
                 local key_index = i
                 local arg_base = (i - 1) * 3
                 local enabled = tonumber(ARGV[arg_base + 3])
@@ -167,7 +161,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   /**
    * 限流过滤器入口。
    *
-   * <p>先检查白名单路径，再按 IP → 用户 → 租户 → 应用 → 接口 五个维度执行令牌桶限流
+   * <p>先检查白名单路径，再按 IP → 用户 两个维度执行令牌桶限流
    * （维度启用与否由配置 {@code ydsz.gateway.ratelimit.per-*.enabled} 控制）。
    *
    * @param exchange 服务器 Web 交换上下文
@@ -204,7 +198,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
               if (result == null || result.allAllowed()) {
                 return chain.filter(exchange);
               }
-              // 按优先级检查各维度限流：IP → USER → TENANT → APP → API
+              // 按优先级检查各维度限流：IP → USER
               if (!result.ipAllowed()) {
                 return rejectWithRateLimit(
                     exchange, "IP", clientIp, properties.getPerIp().getDefaultQps(), result.ipReset());
@@ -213,29 +207,14 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
                 return rejectWithRateLimit(
                     exchange, "USER", userId, properties.getPerUser().getDefaultQps(), result.userReset());
               }
-              if (!result.tenantAllowed()) {
-                String tenantId = request.getHeaders().getFirst(GatewayConstants.HEADER_TENANT_ID);
-                return rejectWithRateLimit(
-                    exchange, "TENANT", tenantId,
-                    properties.getPerTenant().getDefaultQps(), result.tenantReset());
-              }
-              if (!result.appAllowed()) {
-                String appId = request.getHeaders().getFirst(GatewayConstants.HEADER_APP_ID);
-                return rejectWithRateLimit(
-                    exchange, "APP", appId,
-                    properties.getPerApp().getDefaultQps(), result.appReset());
-              }
-              return rejectWithRateLimit(
-                  exchange, "API", path,
-                  properties.getPerApi().getDefaultQps(), result.apiReset());
+              return chain.filter(exchange);
             });
   }
 
   /**
-   * 执行五维度令牌桶限流检查（P0-C4：补齐租户/应用/接口维度，与 Lua 脚本参数布局对齐）。
+   * 执行二维度令牌桶限流检查（IP + 用户）。
    *
-   * <p>维度标识来源：IP（可信代理解析）、用户（X-User-Id）、租户（X-Tenant-Id）、
-   * 应用（X-App-Id）、接口（请求路径）。
+   * <p>维度标识来源：IP（可信代理解析）、用户（X-User-Id）。
    *
    * @param exchange 服务器 Web 交换上下文
    * @param clientIp 客户端 IP
@@ -254,11 +233,6 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
       return Mono.just(localFallback());
     }
 
-    ServerHttpRequest request = exchange.getRequest();
-    String tenantId = request.getHeaders().getFirst(GatewayConstants.HEADER_TENANT_ID);
-    String appId = request.getHeaders().getFirst(GatewayConstants.HEADER_APP_ID);
-    String apiPath = request.getURI().getPath();
-
     boolean ipEnabled =
         properties.getPerIp().isEnabled()
             && !ipWhitelisted
@@ -266,14 +240,8 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             && !clientIp.isEmpty();
     boolean userEnabled =
         properties.getPerUser().isEnabled() && userId != null && !userId.isEmpty();
-    boolean tenantEnabled =
-        properties.getPerTenant().isEnabled() && tenantId != null && !tenantId.isEmpty();
-    boolean appEnabled =
-        properties.getPerApp().isEnabled() && appId != null && !appId.isEmpty();
-    boolean apiEnabled =
-        properties.getPerApi().isEnabled() && apiPath != null && !apiPath.isEmpty();
 
-    if (!ipEnabled && !userEnabled && !tenantEnabled && !appEnabled && !apiEnabled) {
+    if (!ipEnabled && !userEnabled) {
       return Mono.just(allAllowedResult());
     }
 
@@ -281,23 +249,14 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     List<String> keys =
         List.of(
             "ydsz:ratelimit:ip:" + (clientIp != null ? clientIp : ""),
-            "ydsz:ratelimit:user:" + (userId != null ? userId : ""),
-            "ydsz:ratelimit:tenant:" + (tenantId != null ? tenantId : ""),
-            "ydsz:ratelimit:app:" + (appId != null ? appId : ""),
-            "ydsz:ratelimit:api:" + (apiPath != null ? apiPath : ""));
+            "ydsz:ratelimit:user:" + (userId != null ? userId : ""));
 
-    // ARGV[1..15] = 5 维度 × (rate, capacity, enabled)；ARGV[16]=now；ARGV[17]=requested
-    List<Object> args = new ArrayList<>(17);
+    // ARGV[1..6] = 2 维度 × (rate, capacity, enabled)；ARGV[7]=now；ARGV[8]=requested
+    List<Object> args = new ArrayList<>(8);
     appendDimensionArgs(
         args, properties.getPerIp().getDefaultQps(), properties.getPerIp().getBurstCapacity(), ipEnabled);
     appendDimensionArgs(
         args, properties.getPerUser().getDefaultQps(), properties.getPerUser().getBurstCapacity(), userEnabled);
-    appendDimensionArgs(
-        args, properties.getPerTenant().getDefaultQps(), properties.getPerTenant().getBurstCapacity(), tenantEnabled);
-    appendDimensionArgs(
-        args, properties.getPerApp().getDefaultQps(), properties.getPerApp().getBurstCapacity(), appEnabled);
-    appendDimensionArgs(
-        args, properties.getPerApi().getDefaultQps(), properties.getPerApi().getBurstCapacity(), apiEnabled);
     args.add(String.valueOf(now));
     args.add("1");
 
@@ -306,7 +265,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         .next()
         .map(
             result -> {
-              if (result == null || result.size() < 15) {
+              if (result == null || result.size() < 6) {
                 redisFailureCount.incrementAndGet();
                 return allAllowedResult();
               }
@@ -316,23 +275,11 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
               boolean userAllowed = getLong(result, 3) != null && getLong(result, 3) == 1L;
               int userRemaining = getLong(result, 4) != null ? getLong(result, 4).intValue() : 0;
               int userReset = getLong(result, 5) != null ? getLong(result, 5).intValue() : 0;
-              boolean tenantAllowed = getLong(result, 6) != null && getLong(result, 6) == 1L;
-              int tenantRemaining = getLong(result, 7) != null ? getLong(result, 7).intValue() : 0;
-              int tenantReset = getLong(result, 8) != null ? getLong(result, 8).intValue() : 0;
-              boolean appAllowed = getLong(result, 9) != null && getLong(result, 9) == 1L;
-              int appRemaining = getLong(result, 10) != null ? getLong(result, 10).intValue() : 0;
-              int appReset = getLong(result, 11) != null ? getLong(result, 11).intValue() : 0;
-              boolean apiAllowed = getLong(result, 12) != null && getLong(result, 12) == 1L;
-              int apiRemaining = getLong(result, 13) != null ? getLong(result, 13).intValue() : 0;
-              int apiReset = getLong(result, 14) != null ? getLong(result, 14).intValue() : 0;
 
               redisFailureCount.set(0);
               return new RateLimitResult(
                   ipAllowed, ipRemaining, ipReset,
-                  userAllowed, userRemaining, userReset,
-                  tenantAllowed, tenantRemaining, tenantReset,
-                  appAllowed, appRemaining, appReset,
-                  apiAllowed, apiRemaining, apiReset);
+                  userAllowed, userRemaining, userReset);
             })
         .onErrorResume(
             e -> {
@@ -358,25 +305,16 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     args.add(enabled ? "1" : "0");
   }
 
-  /** 限流结果记录（五维度） */
+  /** 限流结果记录（IP + 用户二维度） */
   private record RateLimitResult(
       boolean ipAllowed,
       int ipRemaining,
       int ipReset,
       boolean userAllowed,
       int userRemaining,
-      int userReset,
-      boolean tenantAllowed,
-      int tenantRemaining,
-      int tenantReset,
-      boolean appAllowed,
-      int appRemaining,
-      int appReset,
-      boolean apiAllowed,
-      int apiRemaining,
-      int apiReset) {
+      int userReset) {
     boolean allAllowed() {
-      return ipAllowed && userAllowed && tenantAllowed && appAllowed && apiAllowed;
+      return ipAllowed && userAllowed;
     }
   }
 
@@ -391,9 +329,6 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   /** 全部维度放行的限流结果（未启用维度与异常降级时使用） */
   private RateLimitResult allAllowedResult() {
     return new RateLimitResult(
-        true, 0, 0,
-        true, 0, 0,
-        true, 0, 0,
         true, 0, 0,
         true, 0, 0);
   }
@@ -462,7 +397,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   /**
    * 按限流维度解析业务错误码。
    *
-   * @param dimension 限流维度（IP / USER / TENANT / APP / API）
+   * @param dimension 限流维度（IP / USER）
    * @return 对应错误码，未知维度返回通用限流错误码
    */
   private GatewayErrorCode resolveRateLimitErrorCode(String dimension) {
@@ -472,9 +407,6 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     return switch (dimension.toUpperCase()) {
       case "IP" -> GatewayErrorCode.RATE_LIMITED_IP;
       case "USER" -> GatewayErrorCode.RATE_LIMITED_USER;
-      case "TENANT" -> GatewayErrorCode.RATE_LIMITED_TENANT;
-      case "APP" -> GatewayErrorCode.RATE_LIMITED_APP;
-      case "API" -> GatewayErrorCode.RATE_LIMITED_API;
       default -> GatewayErrorCode.RATE_LIMITED;
     };
   }
