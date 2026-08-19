@@ -20,8 +20,10 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.system.domain.query.EntityVersionPageQuery;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 import com.njydsz.system.server.service.DictItemService;
 import com.njydsz.system.server.service.EntityVersionService;
@@ -66,6 +68,9 @@ public class DictVersionController {
 
   private final DictItemService dictItemService;
 
+  /** 分页安全上限 */
+  private static final int MAX_PAGE_SIZE = 500;
+
   /**
    * 按字典类型编码查询版本历史。
    *
@@ -80,6 +85,22 @@ public class DictVersionController {
     return BaseResponse.success(
         entityVersionService.listByResourceTypeAndKey(
             EntityVersionService.RESOURCE_TYPE_DICT, typeCode));
+  }
+
+  /**
+   * 按类型编码分页查询版本历史（P2-3 分页优化）。
+   *
+   * <p>适用于版本量大的场景（如高频变更的字典），支持翻页查询，避免一次性加载全部版本。
+   *
+   * @param query 分页查询条件（resourceType=DICT / resourceKey=typeCode / pageNum / pageSize）
+   * @return 分页结果（含总记录数）
+   */
+  @Operation(summary = "按类型编码分页查询版本历史")
+  @GetMapping("/page")
+  public PageResponse<List<EntityVersionVO>> pageByTypeCode(EntityVersionPageQuery query) {
+    // pageSize 服务端硬上限截断，防止深度分页 OOM
+    query.setPageSize(Math.min(query.getPageSize(), MAX_PAGE_SIZE));
+    return entityVersionService.pageByResourceTypeAndKey(query);
   }
 
   /**

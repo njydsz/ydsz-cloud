@@ -12,6 +12,7 @@ import com.njydsz.agent.domain.agent.DagProgressEvent;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.agent.domain.model.MessageContent;
 import com.njydsz.agent.server.chat.ChatService;
 
 /**
@@ -55,6 +56,16 @@ public class AgentFacadeImpl implements AgentFacade {
   /**
    * {@inheritDoc}
    *
+   * <p>委托 {@link ChatService#chat(String, MessageContent, String)} 执行多模态 LLM 对话。
+   */
+  @Override
+  public ChatResponse chat(String conversationId, MessageContent multimodalContent, String systemPrompt) {
+    return chatService.chat(conversationId, multimodalContent, systemPrompt);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * <p>委托 {@link AgentFactory#getDefaultExecutor()} 获取默认执行器并执行 Agent。
    */
   @Override
@@ -74,6 +85,20 @@ public class AgentFacadeImpl implements AgentFacade {
       String systemPrompt,
       Consumer<ChatChunk> chunkConsumer) {
     chatService.stream(conversationId, userMessage, systemPrompt, chunkConsumer);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>委托 {@link ChatService#stream(String, MessageContent, String, Consumer)} 执行多模态流式对话。
+   */
+  @Override
+  public void stream(
+      String conversationId,
+      MessageContent multimodalContent,
+      String systemPrompt,
+      Consumer<ChatChunk> chunkConsumer) {
+    chatService.stream(conversationId, multimodalContent, systemPrompt, chunkConsumer);
   }
 
   /**

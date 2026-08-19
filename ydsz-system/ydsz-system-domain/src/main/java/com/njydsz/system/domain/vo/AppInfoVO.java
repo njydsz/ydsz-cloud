@@ -1,6 +1,6 @@
 package com.njydsz.system.domain.vo;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.njydsz.common.json.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

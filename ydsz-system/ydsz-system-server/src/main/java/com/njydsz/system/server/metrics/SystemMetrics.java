@@ -144,4 +144,31 @@ public class SystemMetrics extends SentryMetricsAdapter {
   public void recordAppValidateFail() {
     incrementCounter("app_validate_fail_total");
   }
+
+  // ============================== 租户指标（P2-4 指标埋点补充） ==============================
+
+  /**
+   * 记录租户读取
+   *
+   * <p>同时累加 {@code tenant_read_total} 计数 + 记录 {@code tenant_read_duration_ms} 耗时。
+   *
+   * <p>由 {@code TenantServiceImpl.getById / page} 等读方法调用。
+   *
+   * @param durationNanos 读取耗时（纳秒）
+   */
+  public void recordTenantRead(long durationNanos) {
+    incrementCounter("tenant_read_total");
+    timer("tenant_read_duration_ms").record(durationNanos, TimeUnit.NANOSECONDS);
+  }
+
+  /**
+   * 记录租户写入
+   *
+   * <p>累加 {@code tenant_write_total} 计数（含 save / updateById / removeById）。
+   *
+   * <p>由 {@code TenantServiceImpl} 写方法调用。
+   */
+  public void recordTenantWrite() {
+    incrementCounter("tenant_write_total");
+  }
 }

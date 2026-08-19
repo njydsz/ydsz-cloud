@@ -96,6 +96,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     if (sharedRefreshScheduler == null) {
       synchronized (EnhancedLoadingCache.class) {
         if (sharedRefreshScheduler == null) {
+          // CHECKSTYLE.OFF: RegexpSinglelineJava - 缓存刷新共享调度器，单线程固定，守护线程
           ScheduledThreadPoolExecutor exec =
               new ScheduledThreadPoolExecutor(
                   1,
@@ -105,6 +106,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
                     t.setPriority(Thread.NORM_PRIORITY - 1);
                     return t;
                   });
+          // CHECKSTYLE.ON: RegexpSinglelineJava
           exec.setRemoveOnCancelPolicy(true);
           sharedRefreshScheduler = exec;
         }

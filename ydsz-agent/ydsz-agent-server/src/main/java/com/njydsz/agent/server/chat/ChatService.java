@@ -15,6 +15,7 @@ import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.CostEstimate;
+import com.njydsz.agent.domain.model.MessageContent;
 import com.njydsz.agent.domain.model.TenantQuota;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.trace.TraceRecorder;
@@ -256,6 +257,118 @@ public class ChatService {
         executionId,
         resolveTenantId(convId),
         "CHAT",
+        model,
+        duration,
+        actualCost.getActualTotalTokens(),
+        actualCost.getActualCostUsd());
+    return new ChatResponse(
+        response.getId(),
+        response.getModel(),
+        assistantMsg,
+        response.getUsage(),
+        response.getFinishReason(),
+        List.of(),
+        actualCost);
+  }
+
+  /**
+   * 同步对话（多模态，Vision 模型）
+   *
+   * <p>与 {@link #chat(String, String, String)} 流程一致，区别在于用户消息通过 {@link MessageContent} 封装多模态内容（文本+图片）。
+   *
+   * @param conversationId 对话 ID（null 则新建）
+   * @param multimodalContent 多模态内容（文本/图片段落列表）
+   * @param systemPrompt 系统提示词（null 则使用默认）
+   * @return 助手回复
+   */
+  public ChatResponse chat(String conversationId, MessageContent multimodalContent, String systemPrompt) {
+    String convId =
+        conversationId != null ? conversationId : String.valueOf(snowflakeIdGenerator.nextId());
+    String traceId = traceRecorder.startTrace(convId, "CHAT_MULTIMODAL");
+    LOG.info(
+        "[Chat] 多模态同步对话: convId={}, traceId={}, partsCount={}",
+        convId, traceId, multimodalContent.getParts().size());
+
+    // P2: 运行态指标埋点 — 标记会话活跃
+    runtimeMetrics.markConversationActive();
+
+    memory.save(convId, ChatMessage.userWithContent(multimodalContent, convId));
+    // P2: 记录用户消息
+    runtimeMetrics.recordMessage("user");
+
+    List<ChatMessage> messages = buildMessages(convId, multimodalContent, systemPrompt);
+    ChatRequest request =
+        ChatRequest.builder()
+            .model(properties.getLlm().getDefaultModel())
+            .messages(messages)
+            .temperature(properties.getLlm().getTemperature())
+            .maxTokens(properties.getLlm().getMaxTokens())
+            .build();
+
+    // P0: 调用前 Token 预计算 — 估算成本供配额预检与前端展示
+    CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
+    LOG.info(
+        "[Chat] 多模态成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
+        convId,
+        estimatedCost.getEstimatedTotalTokens(),
+        estimatedCost.getEstimatedCostUsd());
+
+    // P0: 配额预检 — 调用前拦截超额请求
+    if (properties.getQuota().isEnabled()) {
+      String tenantId = resolveTenantId(convId);
+      TenantQuota quota = resolveTenantQuota();
+      quotaService.preCheck(
+          tenantId, quota, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
+    }
+
+    String model = properties.getLlm().getDefaultModel();
+    String provider = llmClient.getProvider();
+    String executionId = String.valueOf(snowflakeIdGenerator.nextId());
+    long startTime = System.currentTimeMillis();
+    // P2: 发布执行启动事件
+    eventPublisher.publishExecutionStarted(executionId, resolveTenantId(convId), null, "CHAT_MULTIMODAL", model);
+    ChatResponse response;
+    try {
+      response = llmClient.chat(request);
+    } catch (Exception e) {
+      long duration = System.currentTimeMillis() - startTime;
+      metrics.recordLlmCall(provider, model, duration, null, e);
+      traceRecorder.recordStep(
+          traceId, "LLM_CALL_ERROR", "Multimodal LLM call failed", request, e.getMessage(), duration);
+      traceRecorder.endTrace(traceId, "FAILED");
+      runtimeMetrics.recordExecution("multimodal", false, duration);
+      eventPublisher.publishExecutionFailed(executionId, resolveTenantId(convId), "CHAT_MULTIMODAL", model, duration, e.getMessage());
+      LOG.error("[Chat] 多模态 LLM 调用失败: convId={}, error={}", convId, e.getMessage());
+      ChatMessage errorMsg =
+          ChatMessage.assistant("[错误] LLM 调用失败: " + e.getMessage(), convId, TokenUsage.zero());
+      memory.save(convId, errorMsg);
+      throw e;
+    }
+    long duration = System.currentTimeMillis() - startTime;
+    metrics.recordLlmCall(provider, model, duration, response, null);
+
+    // P0: 调用后精确成本核算
+    CostEstimate actualCost = tokenCostCalculator.calculateActual(response.getUsage(), model);
+    if (response.getUsage() != null && costAnalysisService != null) {
+      costAnalysisService.recordUsage(convId, model, response.getUsage());
+    }
+    if (properties.getQuota().isEnabled()) {
+      String tenantId = resolveTenantId(convId);
+      quotaService.recordUsage(tenantId, actualCost);
+    }
+    traceRecorder.recordStep(traceId, "LLM_CALL", "Multimodal chat LLM call", request, response, duration);
+
+    String output = guardrailService.applyOutputGuardrails(response.getContent());
+    ChatMessage assistantMsg = ChatMessage.assistant(output, convId, response.getUsage());
+    memory.save(convId, assistantMsg);
+    runtimeMetrics.recordMessage("assistant");
+    runtimeMetrics.recordExecution("multimodal", true, duration);
+
+    traceRecorder.endTrace(traceId, "SUCCESS");
+    eventPublisher.publishExecutionCompleted(
+        executionId,
+        resolveTenantId(convId),
+        "CHAT_MULTIMODAL",
         model,
         duration,
         actualCost.getActualTotalTokens(),

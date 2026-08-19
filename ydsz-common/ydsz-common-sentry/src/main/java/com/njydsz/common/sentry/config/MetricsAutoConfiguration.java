@@ -107,6 +107,7 @@ public class MetricsAutoConfiguration {
       MetricsCollector metricsCollector, SentryProperties properties) {
     SystemMetricsCollector collector = new SystemMetricsCollector(metricsCollector);
     int interval = properties.getMetrics().getSystemMetricsIntervalSeconds();
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 系统指标采集调度器，单线程固定，守护线程
     systemMetricsScheduler =
         new ScheduledThreadPoolExecutor(
             1,
@@ -116,6 +117,7 @@ public class MetricsAutoConfiguration {
               return t;
             },
             new ThreadPoolExecutor.CallerRunsPolicy());
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     systemMetricsScheduler.scheduleAtFixedRate(collector::collect, 5, interval, TimeUnit.SECONDS);
     log.info("[Sentry] 系统资源指标定时采集已启动, interval={}s", interval);
     return collector;

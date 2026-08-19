@@ -8,6 +8,7 @@ import com.njydsz.agent.domain.agent.DagProgressEvent;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.agent.domain.model.MessageContent;
 
 /**
  * Agent 应用门面（Application Facade）
@@ -45,6 +46,18 @@ public interface AgentFacade {
   ChatResponse chat(String conversationId, String userMessage, String systemPrompt);
 
   /**
+   * 同步对话（多模态，Vision 模型）。
+   *
+   * <p>支持文本+图片的多模态输入，通过 {@link MessageContent} 封装内容段落。
+   *
+   * @param conversationId 对话 ID（null 则新建）
+   * @param multimodalContent 多模态内容（文本/图片段落列表）
+   * @param systemPrompt 系统提示词（null 则使用默认）
+   * @return LLM 响应
+   */
+  ChatResponse chat(String conversationId, MessageContent multimodalContent, String systemPrompt);
+
+  /**
    * 同步执行 Agent（支持 ReAct / RAG / Plan-Execute / Supervisor / DAG 等类型）。
    *
    * @param request Agent 执行请求
@@ -63,6 +76,22 @@ public interface AgentFacade {
   void stream(
       String conversationId,
       String userMessage,
+      String systemPrompt,
+      Consumer<ChatChunk> chunkConsumer);
+
+  /**
+   * 流式对话（SSE，多模态 Vision 模型）。
+   *
+   * <p>支持文本+图片的多模态输入，通过 {@link MessageContent} 封装内容段落。
+   *
+   * @param conversationId 对话 ID
+   * @param multimodalContent 多模态内容（文本/图片段落列表）
+   * @param systemPrompt 系统提示词
+   * @param chunkConsumer 流式片段消费者
+   */
+  void stream(
+      String conversationId,
+      MessageContent multimodalContent,
       String systemPrompt,
       Consumer<ChatChunk> chunkConsumer);
 

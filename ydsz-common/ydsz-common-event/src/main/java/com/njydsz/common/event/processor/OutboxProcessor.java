@@ -464,6 +464,7 @@ public class OutboxProcessor {
    * @return 默认调度线程池
    */
   static ScheduledThreadPoolExecutor createDefaultScheduler() {
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - Outbox 调度器，单线程固定，守护线程
     ScheduledThreadPoolExecutor scheduler =
         new ScheduledThreadPoolExecutor(
             1,
@@ -473,6 +474,7 @@ public class OutboxProcessor {
               return t;
             },
             new ThreadPoolExecutor.CallerRunsPolicy());
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     scheduler.setRemoveOnCancelPolicy(true);
     return scheduler;
   }
@@ -487,6 +489,7 @@ public class OutboxProcessor {
    */
   static ThreadPoolExecutor createDefaultPublishExecutor(EventProperties properties) {
     int workerThreads = Math.max(1, properties.getWorkerThreads());
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - Outbox 投递线程池，线程数由配置控制，守护线程
     return new ThreadPoolExecutor(
         workerThreads,
         workerThreads,
@@ -499,5 +502,6 @@ public class OutboxProcessor {
           return t;
         },
         new ThreadPoolExecutor.CallerRunsPolicy());
+    // CHECKSTYLE.ON: RegexpSinglelineJava
   }
 }

@@ -436,6 +436,7 @@ public class LiteRuleAutoConfiguration {
         };
 
     // 使用 ThreadPoolExecutor 替代 Executors.newFixedThreadPool，提供更精细的控制
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 规则注入专用线程池，线程数由配置控制，守护线程
     ExecutorService injectionExecutor =
         new ThreadPoolExecutor(
             poolSize,
@@ -445,6 +446,7 @@ public class LiteRuleAutoConfiguration {
             new LinkedBlockingQueue<>(512),
             threadFactory,
             new ThreadPoolExecutor.CallerRunsPolicy());
+    // CHECKSTYLE.ON: RegexpSinglelineJava
 
     engine.setInjectionExecutor(injectionExecutor);
     log.info("[LiteRule] 注入线程池已配置 (poolSize={}, keepAliveSeconds={}s, queue=512, policy=CallerRunsPool)",

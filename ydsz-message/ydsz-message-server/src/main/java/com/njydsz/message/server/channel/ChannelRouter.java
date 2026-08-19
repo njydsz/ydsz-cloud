@@ -392,4 +392,13 @@ public class ChannelRouter {
   public Map<String, MessageChannel> getChannelCache() {
     return Collections.unmodifiableMap(channelCache);
   }
+
+  /**
+   * 获取熔断器缓存的只读视图（供健康检查使用）。
+   *
+   * @return 熔断器缓存只读 Map
+   */
+  public Map<String, CircuitBreaker> getBreakerCache() {
+    return Collections.unmodifiableMap(breakerCache);
+  }
 }

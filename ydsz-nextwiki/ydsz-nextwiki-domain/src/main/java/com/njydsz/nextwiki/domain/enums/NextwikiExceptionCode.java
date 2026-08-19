@@ -156,6 +156,14 @@ public enum NextwikiExceptionCode implements ExceptionCode {
   /** 空间不存在所有者（数据异常） */
   SPACE_NO_OWNER("W12006", "nextwiki.space.no.owner"),
 
+  // 模板相关 W13xxx（S4-P3-02 新增）
+  /** 模板不存在 */
+  TEMPLATE_NOT_FOUND("W13001", "nextwiki.template.not.found", 404),
+  /** 系统模板不可编辑 */
+  TEMPLATE_SYSTEM_NOT_EDITABLE("W13002", "nextwiki.template.system.not.editable"),
+  /** 系统模板不可删除 */
+  TEMPLATE_SYSTEM_NOT_DELETABLE("W13003", "nextwiki.template.system.not.deletable"),
+
   // 收藏夹相关 W11xxx（S2-P1-06 新增）
   /** 收藏已存在 */
   FAVORITE_ALREADY_EXISTS("W11001", "nextwiki.favorite.already.exists"),

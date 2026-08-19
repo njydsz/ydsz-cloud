@@ -3,14 +3,18 @@ package com.njydsz.system.infra.repository.impl;
 import java.util.List;
 import java.util.Optional;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.EntityVersion;
 import com.njydsz.system.infra.mapper.EntityVersionMapper;
 import com.njydsz.system.domain.repository.EntityVersionRepository;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
+import com.njydsz.system.domain.query.EntityVersionPageQuery;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 
 /**
@@ -41,6 +45,20 @@ public class EntityVersionRepositoryImpl implements EntityVersionRepository {
   public List<EntityVersionVO> findByTypeAndKey(String resourceType, String resourceKey) {
     return converter.entityVersionListToVO(
         entityVersionMapper.listByResourceTypeAndKey(resourceType, resourceKey));
+  }
+
+  @Override
+  public PageResponse<List<EntityVersionVO>> findPageByTypeAndKey(EntityVersionPageQuery query) {
+    Page<EntityVersion> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<EntityVersion> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(EntityVersion::getResourceType, query.getResourceType())
+        .eq(EntityVersion::getResourceKey, query.getResourceKey())
+        .orderByDesc(EntityVersion::getEffectiveDate);
+    com.baomidou.mybatisplus.core.metadata.IPage<EntityVersion> result =
+        entityVersionMapper.selectPage(page, wrapper);
+    List<EntityVersionVO> vos = converter.entityVersionListToVO(result.getRecords());
+    return PageResponse.success(
+        result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   @Override

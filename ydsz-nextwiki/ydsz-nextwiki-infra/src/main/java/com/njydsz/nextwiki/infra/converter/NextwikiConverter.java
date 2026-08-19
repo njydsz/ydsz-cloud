@@ -667,25 +667,45 @@ public interface NextwikiConverter {
   @Mapping(target = "updatedAt", ignore = true)
   SearchIndexDO dtoToEntity(SearchIndexDTO dto);
 
-  // ===== UserFavorite（S2-P1-06） =====
+  // ===== UserFavorite / UserRecent（S2-P1-06） =====
 
   /**
-   * 空间模板实体 → 空间模板 DTO
+   * 用户收藏夹实体 → 用户收藏夹 DTO
    *
-   * @param entity 空间模板实体
-   * @return 空间模板 DTO
+   * @param entity 用户收藏夹实体
+   * @return 用户收藏夹 DTO
    */
-  com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO toSpaceTemplateDTO(
-      com.njydsz.nextwiki.infra.entity.SpaceTemplateDO entity);
+  com.njydsz.nextwiki.domain.dto.UserFavoriteDTO toUserFavoriteDTO(
+      com.njydsz.nextwiki.infra.entity.UserFavoriteDO entity);
 
   /**
-   * 空间模板 DTO → 空间模板实体
+   * 用户收藏夹 DTO → 用户收藏夹实体
    *
-   * @param dto 空间模板 DTO
-   * @return 空间模板实体
+   * @param dto 用户收藏夹 DTO
+   * @return 用户收藏夹实体
    */
-  com.njydsz.nextwiki.infra.entity.SpaceTemplateDO toSpaceTemplateDO(
-      com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO dto);
+  com.njydsz.nextwiki.infra.entity.UserFavoriteDO toUserFavoriteDO(
+      com.njydsz.nextwiki.domain.dto.UserFavoriteDTO dto);
+
+  /**
+   * 用户最近访问实体 → 用户最近访问 DTO
+   *
+   * @param entity 用户最近访问实体
+   * @return 用户最近访问 DTO
+   */
+  com.njydsz.nextwiki.domain.dto.UserRecentDTO toUserRecentDTO(
+      com.njydsz.nextwiki.infra.entity.UserRecentDO entity);
+
+  /**
+   * 用户最近访问 DTO → 用户最近访问实体
+   *
+   * @param dto 用户最近访问 DTO
+   * @return 用户最近访问实体
+   */
+  com.njydsz.nextwiki.infra.entity.UserRecentDO toUserRecentDO(
+      com.njydsz.nextwiki.domain.dto.UserRecentDTO dto);
+
+  // ===== Space / SpaceMember（S3-P2-01） =====
 
   /**
    * 空间 DTO → 空间实体
@@ -723,41 +743,23 @@ public interface NextwikiConverter {
   com.njydsz.nextwiki.domain.dto.SpaceMemberDTO toSpaceMemberDTO(
       com.njydsz.nextwiki.infra.entity.SpaceMemberDO entity);
 
-  /**
-   * 用户收藏夹实体 → 用户收藏夹 DTO
-   *
-   * @param entity 用户收藏夹实体
-   * @return 用户收藏夹 DTO
-   */
-  com.njydsz.nextwiki.domain.dto.UserFavoriteDTO toUserFavoriteDTO(
-      com.njydsz.nextwiki.infra.entity.UserFavoriteDO entity);
+  // ===== SpaceTemplate（S4-P3-02） =====
 
   /**
-   * 用户收藏夹 DTO → 用户收藏夹实体
+   * 空间模板实体 → 空间模板 DTO
    *
-   * @param dto 用户收藏夹 DTO
-   * @return 用户收藏夹实体
+   * @param entity 空间模板实体
+   * @return 空间模板 DTO
    */
-  com.njydsz.nextwiki.infra.entity.UserFavoriteDO toUserFavoriteDO(
-      com.njydsz.nextwiki.domain.dto.UserFavoriteDTO dto);
-
-  // ===== UserRecent（S2-P1-06） =====
+  com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO toSpaceTemplateDTO(
+      com.njydsz.nextwiki.infra.entity.SpaceTemplateDO entity);
 
   /**
-   * 用户最近访问实体 → 用户最近访问 DTO
+   * 空间模板 DTO → 空间模板实体
    *
-   * @param entity 用户最近访问实体
-   * @return 用户最近访问 DTO
+   * @param dto 空间模板 DTO
+   * @return 空间模板实体
    */
-  com.njydsz.nextwiki.domain.dto.UserRecentDTO toUserRecentDTO(
-      com.njydsz.nextwiki.infra.entity.UserRecentDO entity);
-
-  /**
-   * 用户最近访问 DTO → 用户最近访问实体
-   *
-   * @param dto 用户最近访问 DTO
-   * @return 用户最近访问实体
-   */
-  com.njydsz.nextwiki.infra.entity.UserRecentDO toUserRecentDO(
-      com.njydsz.nextwiki.domain.dto.UserRecentDTO dto);
+  com.njydsz.nextwiki.infra.entity.SpaceTemplateDO toSpaceTemplateDO(
+      com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO dto);
 }

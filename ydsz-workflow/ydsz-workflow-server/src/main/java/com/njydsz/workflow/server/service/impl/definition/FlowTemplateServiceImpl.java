@@ -3,6 +3,7 @@ package com.njydsz.workflow.server.service.impl.definition;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
@@ -24,6 +27,7 @@ import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowSkipDO;
 import com.njydsz.workflow.infra.entity.FlowTemplateDO;
 import com.njydsz.workflow.infra.mapper.FlowTemplateMapper;
+import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowTemplateService;
 
@@ -112,6 +116,9 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
 
   /** 搜索索引事件桥接器（可选注入）。 用于在模板创建/更新时异步同步到 ydsz-common-search 统一搜索索引。 */
   private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
+
+  /** P6: 模板详情二级缓存（Caffeine，按 templateCode 缓存，加速高频模板查询） */
+  private final YdszCache<String, Map<String, Object>> templateCache;
 
   /**
    * 按分类查询模板列表

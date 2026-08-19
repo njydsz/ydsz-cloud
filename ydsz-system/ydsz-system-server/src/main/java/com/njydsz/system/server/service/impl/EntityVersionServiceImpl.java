@@ -8,9 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.query.EntityVersionPageQuery;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 import com.njydsz.system.domain.repository.EntityVersionRepository;
 import com.njydsz.system.server.service.EntityVersionService;
@@ -49,6 +51,11 @@ public class EntityVersionServiceImpl implements EntityVersionService {
   @Override
   public List<EntityVersionVO> listByResourceTypeAndKey(String resourceType, String resourceKey) {
     return entityVersionRepository.findByTypeAndKey(resourceType, resourceKey);
+  }
+
+  @Override
+  public PageResponse<List<EntityVersionVO>> pageByResourceTypeAndKey(EntityVersionPageQuery query) {
+    return entityVersionRepository.findPageByTypeAndKey(query);
   }
 
   @Override
