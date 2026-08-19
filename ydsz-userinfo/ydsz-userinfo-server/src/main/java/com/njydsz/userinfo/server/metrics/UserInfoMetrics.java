@@ -185,4 +185,111 @@ public class UserInfoMetrics extends SentryMetricsAdapter {
   public void recordTimer(String name, long durationMs, String... tags) {
     super.recordTimer(name, durationMs, tags);
   }
+
+  // ==================== SSO 协议指标 ====================
+
+  /**
+   * 记录 SSO 登录事件（按协议分类）。
+   *
+   * <p>支持协议：{@code cas} / {@code oauth2} / {@code saml} / {@code oidc}。
+   *
+   * @param protocol SSO 协议标识
+   * @param result 结果：success / fail
+   */
+  public void recordSsoLogin(String protocol, String result) {
+    incrementCounter("sso_logins_total", "protocol", protocol, "result", result);
+  }
+
+  /**
+   * 记录 CAS TGT 签发。
+   *
+   * <p>累加 {@code ydsz_userinfo_cas_tgt_issued_total} 计数器。
+   */
+  public void recordCasTgtIssued() {
+    incrementCounter("cas_tgt_issued_total");
+  }
+
+  /**
+   * 记录 CAS ST 签发。
+   *
+   * <p>累加 {@code ydsz_userinfo_cas_st_issued_total} 计数器。
+   */
+  public void recordCasStIssued() {
+    incrementCounter("cas_st_issued_total");
+  }
+
+  /**
+   * 记录 CAS ST 校验。
+   *
+   * @param result 结果：success / fail
+   */
+  public void recordCasStValidation(String result) {
+    incrementCounter("cas_st_validations_total", "result", result);
+  }
+
+  /**
+   * 记录 OAuth2 Token 签发。
+   *
+   * @param grantType 授权类型：authorization_code / refresh_token / client_credentials
+   */
+  public void recordOAuth2TokenIssued(String grantType) {
+    incrementCounter("oauth2_tokens_issued_total", "grant_type", grantType);
+  }
+
+  /**
+   * 记录 SAML 认证事件。
+   *
+   * @param result 结果：success / fail
+   */
+  public void recordSamlAuth(String result) {
+    incrementCounter("saml_auth_total", "result", result);
+  }
+
+  /**
+   * 记录 OIDC ID Token 签发。
+   *
+   * <p>累加 {@code ydsz_userinfo_oidc_id_tokens_issued_total} 计数器。
+   */
+  public void recordOidcIdTokenIssued() {
+    incrementCounter("oidc_id_tokens_issued_total");
+  }
+
+  /**
+   * 记录社交登录事件。
+   *
+   * @param platform 平台标识：wechat / dingtalk / feishu / github
+   * @param result 结果：success / fail
+   */
+  public void recordSocialLogin(String platform, String result) {
+    incrementCounter("social_logins_total", "platform", platform, "result", result);
+  }
+
+  /**
+   * 记录 WebAuthn 认证事件。
+   *
+   * @param result 结果：success / fail
+   */
+  public void recordWebAuthnAuth(String result) {
+    incrementCounter("webauthn_auth_total", "result", result);
+  }
+
+  /**
+   * 更新 CAS 活跃 TGT 数 Gauge。
+   *
+   * <p>从 Redis 读取当前活跃的 TGT 数量，用于监控 CAS 会话规模。
+   *
+   * @param count 活跃 TGT 数量
+   */
+  public void updateCasActiveTgtGauge(long count) {
+    gauge("cas_active_tgt", count);
+  }
+
+  /**
+   * 更新 OAuth2 活跃 Token 数 Gauge。
+   *
+   * @param count 活跃 Token 数量
+   */
+  public void updateOAuth2ActiveTokenGauge(long count) {
+    gauge("oauth2_active_tokens", count);
+  }
 }
