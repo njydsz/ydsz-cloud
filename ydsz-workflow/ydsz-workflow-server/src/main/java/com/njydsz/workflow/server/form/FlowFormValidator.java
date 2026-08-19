@@ -53,7 +53,7 @@ public class FlowFormValidator {
    */
   public List<FlowFormValidationError> validate(
       FlowFormSchema schema, Map<String, Object> formData) {
-    List<FlowFormValidationError> errors = new ArrayList<>();
+    List<FlowFormValidationError> errors = new ArrayList<>(schema.getFields().size());
     if (schema == null || schema.getFields() == null) {
       return errors;
     }

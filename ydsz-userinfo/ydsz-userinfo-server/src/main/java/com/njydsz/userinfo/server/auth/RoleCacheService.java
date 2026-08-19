@@ -67,7 +67,7 @@ public class RoleCacheService {
         return cachedRoles;
       }
     } catch (Exception e) {
-      log.warn("Failed to read user roles cache: userId={}, error={}", userId, e.getMessage());
+      log.warn("Failed to read user roles cache: userId={}, error={}", userId, e.getMessage(), e);
     }
 
     // 2. 缓存未命中，查询数据库
@@ -81,7 +81,7 @@ public class RoleCacheService {
         redisStringOps.expire(cacheKey, Duration.ofSeconds(USER_ROLES_CACHE_TTL));
         log.debug("User roles cached: userId={}, count={}", userId, roles.size());
       } catch (Exception e) {
-        log.warn("Failed to cache user roles: userId={}, error={}", userId, e.getMessage());
+        log.warn("Failed to cache user roles: userId={}, error={}", userId, e.getMessage(), e);
       }
     }
     return roles;
@@ -100,7 +100,7 @@ public class RoleCacheService {
       redisStringOps.del(USER_ROLES_KEY_PREFIX + userId);
       log.info("User roles cache evicted: userId={}", userId);
     } catch (Exception e) {
-      log.warn("Failed to evict user roles cache: userId={}, error={}", userId, e.getMessage());
+      log.warn("Failed to evict user roles cache: userId={}, error={}", userId, e.getMessage(), e);
     }
   }
 

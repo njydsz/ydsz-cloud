@@ -1,9 +1,12 @@
 package com.njydsz.system.server.service;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
@@ -179,4 +182,137 @@ public interface ConfigService {
    * @return 导入结果（成功数、失败数、跳过数）
    */
   ImportResult importConfigs(InputStream inputStream);
+
+  // ============================== 强类型配置读取 ==============================
+
+  /**
+   * 获取字符串配置值
+   *
+   * @param configKey 配置键
+   * @param defaultValue 默认值
+   * @return 配置值，不存在时返回默认值
+   */
+  default String getString(String configKey, String defaultValue) {
+    String value = getConfigValue(configKey);
+    return value != null ? value : defaultValue;
+  }
+
+  /**
+   * 获取整数配置值
+   *
+   * @param configKey 配置键
+   * @param defaultValue 默认值
+   * @return 配置值，不存在或解析失败时返回默认值
+   */
+  default Integer getInt(String configKey, Integer defaultValue) {
+    String value = getConfigValue(configKey);
+    if (value == null || value.isBlank()) {
+      return defaultValue;
+    }
+    try {
+      return Integer.parseInt(value.trim());
+    } catch (NumberFormatException e) {
+      return defaultValue;
+    }
+  }
+
+  /**
+   * 获取长整数配置值
+   *
+   * @param configKey 配置键
+   * @param defaultValue 默认值
+   * @return 配置值，不存在或解析失败时返回默认值
+   */
+  default Long getLong(String configKey, Long defaultValue) {
+    String value = getConfigValue(configKey);
+    if (value == null || value.isBlank()) {
+      return defaultValue;
+    }
+    try {
+      return Long.parseLong(value.trim());
+    } catch (NumberFormatException e) {
+      return defaultValue;
+    }
+  }
+
+  /**
+   * 获取布尔配置值
+   *
+   * @param configKey 配置键
+   * @param defaultValue 默认值
+   * @return 配置值，不存在或解析失败时返回默认值
+   */
+  default Boolean getBoolean(String configKey, Boolean defaultValue) {
+    String value = getConfigValue(configKey);
+    if (value == null || value.isBlank()) {
+      return defaultValue;
+    }
+    String trimmed = value.trim().toLowerCase();
+    if ("true".equals(trimmed) || "1".equals(trimmed) || "yes".equals(trimmed)) {
+      return Boolean.TRUE;
+    }
+    if ("false".equals(trimmed) || "0".equals(trimmed) || "no".equals(trimmed)) {
+      return Boolean.FALSE;
+    }
+    return defaultValue;
+  }
+
+  /**
+   * 获取数值配置值
+   *
+   * @param configKey 配置键
+   * @param defaultValue 默认值
+   * @return 配置值，不存在或解析失败时返回默认值
+   */
+  default BigDecimal getDecimal(String configKey, BigDecimal defaultValue) {
+    String value = getConfigValue(configKey);
+    if (value == null || value.isBlank()) {
+      return defaultValue;
+    }
+    try {
+      return new BigDecimal(value.trim());
+    } catch (NumberFormatException e) {
+      return defaultValue;
+    }
+  }
+
+  /**
+   * 获取 JSON 配置值并反序列化为指定类型
+   *
+   * @param configKey 配置键
+   * @param clazz 目标类型
+   * @param defaultValue 默认值
+   * @param <T> 目标类型泛型
+   * @return 配置值，不存在或解析失败时返回默认值
+   */
+  default <T> T getJson(String configKey, Class<T> clazz, T defaultValue) {
+    String value = getConfigValue(configKey);
+    if (value == null || value.isBlank()) {
+      return defaultValue;
+    }
+    try {
+      return YdszJson.fromJson(value, clazz);
+    } catch (Exception e) {
+      return defaultValue;
+    }
+  }
+
+  /**
+   * 获取 JSON 配置值并转换为 Map
+   *
+   * @param configKey 配置键
+   * @param defaultValue 默认值
+   * @return Map 类型配置值，不存在或解析失败时返回默认值
+   */
+  default Map<String, Object> getJsonAsMap(String configKey, Map<String, Object> defaultValue) {
+    String value = getConfigValue(configKey);
+    if (value == null || value.isBlank()) {
+      return defaultValue;
+    }
+    try {
+      return YdszJson.parseMap(value);
+    } catch (Exception e) {
+      return defaultValue;
+    }
+  }
 }

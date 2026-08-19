@@ -81,7 +81,7 @@ public class CasService {
       redisStringOps.set(tgtKey, tgt, casProperties.getTicketGrantingTicketTtl());
       log.info("TGT 签发成功: username={}, tgtId={}", userVO.getUsername(), tgtId);
     } catch (Exception e) {
-      log.error("TGT 签发失败: username={}, error={}", userVO.getUsername(), e.getMessage());
+      log.error("TGT 签发失败: username={}, error={}", userVO.getUsername(), e.getMessage(), e);
       throw new BusinessException(UserInfoExceptionCode.SSO_TOKEN_EXCHANGE_FAILED);
     }
 
@@ -118,7 +118,7 @@ public class CasService {
       redisStringOps.set(stKey, st, casProperties.getServiceTicketTtl());
       log.info("ST 签发成功: username={}, serviceUrl={}", tgt.getUsername(), serviceUrl);
     } catch (Exception e) {
-      log.error("ST 签发失败: username={}, error={}", tgt.getUsername(), e.getMessage());
+      log.error("ST 签发失败: username={}, error={}", tgt.getUsername(), e.getMessage(), e);
       throw new BusinessException(UserInfoExceptionCode.SSO_TOKEN_EXCHANGE_FAILED);
     }
 
@@ -166,7 +166,7 @@ public class CasService {
     } catch (BusinessException e) {
       throw e;
     } catch (Exception e) {
-      log.error("ST 校验异常: stId={}, error={}", stId, e.getMessage());
+      log.error("ST 校验异常: stId={}, error={}", stId, e.getMessage(), e);
       throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
     }
   }
@@ -184,7 +184,7 @@ public class CasService {
       redisStringOps.del(tgtKey);
       log.info("TGT 注销成功: tgtId={}", tgtId);
     } catch (Exception e) {
-      log.error("TGT 注销异常: tgtId={}, error={}", tgtId, e.getMessage());
+      log.error("TGT 注销异常: tgtId={}, error={}", tgtId, e.getMessage(), e);
     }
   }
 
@@ -208,7 +208,7 @@ public class CasService {
     } catch (BusinessException e) {
       throw e;
     } catch (Exception e) {
-      log.error("TGT 校验异常: tgtId={}, error={}", tgtId, e.getMessage());
+      log.error("TGT 校验异常: tgtId={}, error={}", tgtId, e.getMessage(), e);
       throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
     }
   }

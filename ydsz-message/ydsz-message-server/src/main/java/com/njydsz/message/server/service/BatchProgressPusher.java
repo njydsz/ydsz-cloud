@@ -38,7 +38,7 @@ public class BatchProgressPusher {
     if (batch == null || senderId == null) {
       return;
     }
-    Map<String, Object> payload = new HashMap<>();
+    Map<String, Object> payload = new HashMap<>(16);
     payload.put("type", "BATCH_PROGRESS");
     payload.put("batchId", batch.getBatchId());
     payload.put("batchName", batch.getBatchName());

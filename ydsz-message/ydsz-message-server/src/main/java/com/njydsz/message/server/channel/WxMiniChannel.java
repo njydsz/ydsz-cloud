@@ -185,7 +185,7 @@ public class WxMiniChannel implements MessageChannel {
     if (request.getParams() == null) {
       return Map.of();
     }
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(request.getParams().size());
     for (Map.Entry<String, Object> entry : request.getParams().entrySet()) {
       result.put(
           entry.getKey(),

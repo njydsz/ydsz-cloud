@@ -473,8 +473,9 @@ public class ConfigServiceImpl implements ConfigService {
   /**
    * 广播配置变更事件（用于跨实例本地缓存失效感知）。
    *
-   * <p>通过可选的 {@code OutboxService} 追加 {@code CONFIG_CHANGED} 事件， 订阅方（如其他实例的 {@code
-   * CrossModuleEventListener}）接收事件后清除本地缓存。 事件发布失败仅告警，不影响主流程。
+   * <p>通过可选的 {@code OutboxService} 追加 {@code CONFIG_CHANGED} 事件。开启
+   * {@code ydsz.system.cache.cross-instance-enabled=true} 时，事件将触发 Redis Pub/Sub 失效总线通知其他实例清除本地缓存。
+   * 事件发布失败仅告警，不影响主流程。
    *
    * @param configKey 配置键（为 null 时跳过）
    * @param configGroup 配置分组（为 null 时跳过）

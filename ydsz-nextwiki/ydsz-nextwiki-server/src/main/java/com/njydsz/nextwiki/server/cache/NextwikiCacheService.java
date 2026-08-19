@@ -113,7 +113,7 @@ public class NextwikiCacheService {
         return Optional.of(cached);
       }
     } catch (Exception e) {
-      log.warn("[NextwikiCacheService] 文件详情缓存读取异常: nodeId={}, err={}", nodeId, e.getMessage());
+      log.warn("[NextwikiCacheService] 文件详情缓存读取异常: nodeId={}, err={}", nodeId, e.getMessage(), e);
     }
 
    nextwikiMetrics.recordCacheMiss("file");
@@ -134,7 +134,7 @@ public class NextwikiCacheService {
             redisStringOps.set(key, vo, jitterTtl(TTL_FILE));
             log.debug("[NextwikiCacheService] 文件详情缓存回填: nodeId={}", nodeId);
           } catch (Exception e) {
-            log.warn("[NextwikiCacheService] 文件详情缓存写入异常: nodeId={}, err={}", nodeId, e.getMessage());
+            log.warn("[NextwikiCacheService] 文件详情缓存写入异常: nodeId={}, err={}", nodeId, e.getMessage(), e);
           }
         });
         return result;
@@ -167,7 +167,7 @@ public class NextwikiCacheService {
         Thread.currentThread().interrupt();
         break;
       } catch (Exception e) {
-        log.warn("[NextwikiCacheService] 等待缓存异常: lockKey={}, err={}", lockKey, e.getMessage());
+        log.warn("[NextwikiCacheService] 等待缓存异常: lockKey={}, err={}", lockKey, e.getMessage(), e);
         break;
       }
     }
@@ -184,7 +184,7 @@ public class NextwikiCacheService {
       redisStringOps.del(KEY_FILE + nodeId);
       log.debug("[NextwikiCacheService] 文件详情缓存失效: nodeId={}", nodeId);
     } catch (Exception e) {
-      log.warn("[NextwikiCacheService] 文件详情缓存失效异常: nodeId={}, err={}", nodeId, e.getMessage());
+      log.warn("[NextwikiCacheService] 文件详情缓存失效异常: nodeId={}, err={}", nodeId, e.getMessage(), e);
     }
   }
 
@@ -213,7 +213,7 @@ public class NextwikiCacheService {
         }
       }
     } catch (Exception e) {
-      log.warn("[NextwikiCacheService] 目录列表缓存读取异常: parentId={}, err={}", parentId, e.getMessage());
+      log.warn("[NextwikiCacheService] 目录列表缓存读取异常: parentId={}, err={}", parentId, e.getMessage(), e);
     }
 
     nextwikiMetrics.recordCacheMiss("children");
@@ -235,7 +235,7 @@ public class NextwikiCacheService {
             redisStringOps.set(key, YdszJson.toJson(result), jitterTtl(TTL_CHILDREN));
             log.debug("[NextwikiCacheService] 目录列表缓存回填: parentId={}, size={}", parentId, result.size());
           } catch (Exception e) {
-            log.warn("[NextwikiCacheService] 目录列表缓存写入异常: parentId={}, err={}", parentId, e.getMessage());
+            log.warn("[NextwikiCacheService] 目录列表缓存写入异常: parentId={}, err={}", parentId, e.getMessage(), e);
           }
         }
         return result != null ? result : Collections.emptyList();
@@ -287,7 +287,7 @@ public class NextwikiCacheService {
       redisStringOps.del(KEY_CHILDREN + parentId);
       log.debug("[NextwikiCacheService] 目录列表缓存失效: parentId={}", parentId);
     } catch (Exception e) {
-      log.warn("[NextwikiCacheService] 目录列表缓存失效异常: parentId={}, err={}", parentId, e.getMessage());
+      log.warn("[NextwikiCacheService] 目录列表缓存失效异常: parentId={}, err={}", parentId, e.getMessage(), e);
     }
   }
 
@@ -315,7 +315,7 @@ public class NextwikiCacheService {
         return Optional.of(cached);
       }
     } catch (Exception e) {
-      log.warn("[NextwikiCacheService] 配额用量缓存读取异常: {}:{}, err={}", scopeType, scopeId, e.getMessage());
+      log.warn("[NextwikiCacheService] 配额用量缓存读取异常: {}:{}, err={}", scopeType, scopeId, e.getMessage(), e);
     }
 
     nextwikiMetrics.recordCacheMiss("quota");
@@ -334,7 +334,7 @@ public class NextwikiCacheService {
             redisStringOps.set(key, vo, jitterTtl(TTL_QUOTA));
             log.debug("[NextwikiCacheService] 配额用量缓存回填: {}:{}", scopeType, scopeId);
           } catch (Exception e) {
-            log.warn("[NextwikiCacheService] 配额用量缓存写入异常: {}:{}, err={}", scopeType, scopeId, e.getMessage());
+            log.warn("[NextwikiCacheService] 配额用量缓存写入异常: {}:{}, err={}", scopeType, scopeId, e.getMessage(), e);
           }
         });
         return result;
@@ -384,7 +384,7 @@ public class NextwikiCacheService {
       redisStringOps.del(KEY_QUOTA + scopeType + ":" + scopeId);
       log.debug("[NextwikiCacheService] 配额用量缓存失效: {}:{}", scopeType, scopeId);
     } catch (Exception e) {
-      log.warn("[NextwikiCacheService] 配额用量缓存失效异常: {}:{}, err={}", scopeType, scopeId, e.getMessage());
+      log.warn("[NextwikiCacheService] 配额用量缓存失效异常: {}:{}, err={}", scopeType, scopeId, e.getMessage(), e);
     }
   }
 
@@ -435,7 +435,7 @@ public class NextwikiCacheService {
     try {
       return redisStringOps.get(KEY_AI_SUMMARY + key, String.class);
     } catch (Exception e) {
-      log.warn("[NextwikiCacheService] AI 摘要缓存读取异常: err={}", e.getMessage());
+      log.warn("[NextwikiCacheService] AI 摘要缓存读取异常: err={}", e.getMessage(), e);
       return null;
     }
   }
@@ -451,7 +451,7 @@ public class NextwikiCacheService {
     try {
       redisStringOps.set(KEY_AI_SUMMARY + key, summary, jitterTtl(ttlSeconds));
     } catch (Exception e) {
-      log.warn("[NextwikiCacheService] AI 摘要缓存写入异常: err={}", e.getMessage());
+      log.warn("[NextwikiCacheService] AI 摘要缓存写入异常: err={}", e.getMessage(), e);
     }
   }
 
@@ -468,7 +468,7 @@ public class NextwikiCacheService {
         return YdszJson.fromJson(json, List.class, String.class);
       }
     } catch (Exception e) {
-      log.warn("[NextwikiCacheService] AI 关键词缓存读取异常: err={}", e.getMessage());
+      log.warn("[NextwikiCacheService] AI 关键词缓存读取异常: err={}", e.getMessage(), e);
     }
     return null;
   }
@@ -484,7 +484,7 @@ public class NextwikiCacheService {
     try {
       redisStringOps.set(KEY_AI_KEYWORDS + key, YdszJson.toJson(keywords), jitterTtl(ttlSeconds));
     } catch (Exception e) {
-      log.warn("[NextwikiCacheService] AI 关键词缓存写入异常: err={}", e.getMessage());
+      log.warn("[NextwikiCacheService] AI 关键词缓存写入异常: err={}", e.getMessage(), e);
     }
   }
 
@@ -502,7 +502,7 @@ public class NextwikiCacheService {
     try {
       return Boolean.TRUE.equals(redisStringOps.setIfAbsent(lockKey, "1", LOCK_LEASE_S));
     } catch (Exception e) {
-      log.warn("[NextwikiCacheService] 获取互斥锁异常: lockKey={}, err={}", lockKey, e.getMessage());
+      log.warn("[NextwikiCacheService] 获取互斥锁异常: lockKey={}, err={}", lockKey, e.getMessage(), e);
       // 异常时放行（允许直接查 DB，避免因 Redis 故障导致服务不可用）
       return true;
     }
@@ -517,7 +517,7 @@ public class NextwikiCacheService {
     try {
       redisStringOps.del(lockKey);
     } catch (Exception e) {
-      log.warn("[NextwikiCacheService] 释放互斥锁异常: lockKey={}, err={}", lockKey, e.getMessage());
+      log.warn("[NextwikiCacheService] 释放互斥锁异常: lockKey={}, err={}", lockKey, e.getMessage(), e);
     }
   }
 

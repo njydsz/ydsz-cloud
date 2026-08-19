@@ -197,9 +197,9 @@ public class AliyunSmsProvider implements SmsProvider {
     }
     try {
       // 构造 JSON 数组参数
-      List<String> phones = new ArrayList<>();
-      List<String> signNames = new ArrayList<>();
-      List<String> templateParams = new ArrayList<>();
+      List<String> phones = new ArrayList<>(requests.size());
+      List<String> signNames = new ArrayList<>(requests.size());
+      List<String> templateParams = new ArrayList<>(requests.size());
       for (MessageRequest req : requests) {
         phones.add(req.getReceiver());
         signNames.add(signName);

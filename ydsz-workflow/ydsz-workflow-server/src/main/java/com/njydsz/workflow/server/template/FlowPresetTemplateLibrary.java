@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class FlowPresetTemplateLibrary {
 
-  private final List<FlowTemplateDefinition> templates = new ArrayList<>();
+  private final List<FlowTemplateDefinition> templates = new ArrayList<>(10);
 
   public FlowPresetTemplateLibrary() {
     templates.add(buildLeaveTemplate());

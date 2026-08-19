@@ -59,7 +59,7 @@ public class LoginAttemptCounterService {
       redisStringOps.incr(key, 1);
       redisStringOps.expire(key, Duration.ofSeconds(windowSeconds));
     } catch (Exception e) {
-      log.warn("Failed to record ip fail count: ip={}, error={}", ip, e.getMessage());
+      log.warn("Failed to record ip fail count: ip={}, error={}", ip, e.getMessage(), e);
     }
   }
 
@@ -77,7 +77,7 @@ public class LoginAttemptCounterService {
       Long count = redisStringOps.get(buildIpFailKey(ip), Long.class);
       return count != null ? Math.toIntExact(count) : 0;
     } catch (Exception e) {
-      log.warn("Failed to read ip fail count: ip={}, error={}", ip, e.getMessage());
+      log.warn("Failed to read ip fail count: ip={}, error={}", ip, e.getMessage(), e);
       return 0;
     }
   }
@@ -96,7 +96,7 @@ public class LoginAttemptCounterService {
     try {
       redisStringOps.setIfAbsent(buildDeviceKey(userId, userAgent), SEEN_VALUE, windowSeconds);
     } catch (Exception e) {
-      log.warn("Failed to mark device seen: userId={}, error={}", userId, e.getMessage());
+      log.warn("Failed to mark device seen: userId={}, error={}", userId, e.getMessage(), e);
     }
   }
 
@@ -114,7 +114,7 @@ public class LoginAttemptCounterService {
     try {
       return !redisStringOps.hasKey(buildDeviceKey(userId, userAgent));
     } catch (Exception e) {
-      log.warn("Failed to check device seen: userId={}, error={}", userId, e.getMessage());
+      log.warn("Failed to check device seen: userId={}, error={}", userId, e.getMessage(), e);
       return false;
     }
   }

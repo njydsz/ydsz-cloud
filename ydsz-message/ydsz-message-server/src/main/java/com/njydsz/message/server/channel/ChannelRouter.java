@@ -226,7 +226,7 @@ public class ChannelRouter {
     }
 
     // 1. 获取所有启用的通道
-    List<String> enabledChannels = new ArrayList<>();
+    List<String> enabledChannels = new ArrayList<>(channelCache.size());
     for (String channelKey : channelCache.keySet()) {
       if (isChannelEnabled(channelKey)) {
         enabledChannels.add(channelKey);

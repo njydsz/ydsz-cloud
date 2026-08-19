@@ -87,7 +87,7 @@ public class MfaService {
     try {
       redisStringOps.set(SETUP_KEY_PREFIX + userId, secret, SETUP_TTL);
     } catch (Exception e) {
-      log.warn("Failed to store MFA setup secret: userId={}, error={}", userId, e.getMessage());
+      log.warn("Failed to store MFA setup secret: userId={}, error={}", userId, e.getMessage(), e);
     }
     log.info("MFA setup initiated: userId={}", userId);
     return new MfaSetupVO(secret, otpauthUri);
@@ -114,7 +114,7 @@ public class MfaService {
       redisStringOps.set(ENABLED_KEY_PREFIX + userId, ENABLED_VALUE, BOUND_TTL);
       redisStringOps.del(SETUP_KEY_PREFIX + userId);
     } catch (Exception e) {
-      log.warn("Failed to activate MFA: userId={}, error={}", userId, e.getMessage());
+      log.warn("Failed to activate MFA: userId={}, error={}", userId, e.getMessage(), e);
       throw new BusinessException(UserInfoExceptionCode.MFA_INVALID);
     }
     log.info("MFA activated: userId={}", userId);
@@ -140,7 +140,7 @@ public class MfaService {
       redisStringOps.del(SECRET_KEY_PREFIX + userId);
       redisStringOps.del(ENABLED_KEY_PREFIX + userId);
     } catch (Exception e) {
-      log.warn("Failed to disable MFA: userId={}, error={}", userId, e.getMessage());
+      log.warn("Failed to disable MFA: userId={}, error={}", userId, e.getMessage(), e);
       throw new BusinessException(UserInfoExceptionCode.MFA_INVALID);
     }
     log.info("MFA disabled: userId={}", userId);
@@ -159,7 +159,7 @@ public class MfaService {
     try {
       return ENABLED_VALUE.equals(redisStringOps.get(ENABLED_KEY_PREFIX + userId, String.class));
     } catch (Exception e) {
-      log.warn("Failed to check MFA enabled: userId={}, error={}", userId, e.getMessage());
+      log.warn("Failed to check MFA enabled: userId={}, error={}", userId, e.getMessage(), e);
       return false;
     }
   }
@@ -208,7 +208,7 @@ public class MfaService {
     try {
       return redisStringOps.get(key, String.class);
     } catch (Exception e) {
-      log.warn("Failed to read MFA secret: key={}, error={}", key, e.getMessage());
+      log.warn("Failed to read MFA secret: key={}, error={}", key, e.getMessage(), e);
       return null;
     }
   }

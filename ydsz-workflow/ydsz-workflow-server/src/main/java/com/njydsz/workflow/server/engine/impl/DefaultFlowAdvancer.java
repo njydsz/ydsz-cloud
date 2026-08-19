@@ -289,7 +289,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
    * <p>跳过不存在的目标节点并告警；对于 join 节点委托 {@link #tryAggregateJoin} 执行令牌聚合逻辑，未满足聚合条件的分支不进入返回列表（静默等待）。
    */
   private List<FlowNodeDO> aggregateJoinResults(FlowInstanceDO currentInstance, List<FlowSkipDO> skips) {
-    List<FlowNodeDO> nextNodes = new ArrayList<>();
+    List<FlowNodeDO> nextNodes = new ArrayList<>(skips.size());
     for (FlowSkipDO skip : skips) {
       FlowNodeDO next =
           flowDefinitionCacheService.getNodeByCode(
@@ -428,7 +428,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         currentInstance.getId(),
         currentNodeCode,
         targetNodeCodes);
-    List<FlowNodeDO> targets = new ArrayList<>();
+    List<FlowNodeDO> targets = new ArrayList<>(targetNodeCodes.size());
     for (String nodeCode : targetNodeCodes) {
       if (nodeCode == null || nodeCode.isBlank()) {
         continue;
@@ -479,7 +479,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         currentNode.getNodeType() != null
             && currentNode.getNodeType() == FlowNodeType.INCLUSIVE.getCode();
 
-    List<FlowSkipDO> matched = new ArrayList<>();
+    List<FlowSkipDO> matched = new ArrayList<>(all.size());
     for (FlowSkipDO skip : all) {
       String cond = skip.getSkipCondition();
       if (evaluateSkipCondition(cond, variables)) {

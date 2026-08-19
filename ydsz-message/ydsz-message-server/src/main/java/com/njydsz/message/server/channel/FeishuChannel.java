@@ -155,15 +155,15 @@ public class FeishuChannel implements MessageChannel {
       }
     }
 
-    Map<String, Object> payload = new HashMap<>();
+    Map<String, Object> payload = new HashMap<>(8);
     if ("post".equals(msgType)) {
       payload.put("msg_type", "post");
-      Map<String, Object> contentWrapper = new HashMap<>();
-      Map<String, Object> post = new HashMap<>();
-      Map<String, Object> zhCn = new HashMap<>();
+      Map<String, Object> contentWrapper = new HashMap<>(4);
+      Map<String, Object> post = new HashMap<>(4);
+      Map<String, Object> zhCn = new HashMap<>(4);
       zhCn.put("title", subject);
-      List<Map<String, Object>> line = new ArrayList<>();
-      Map<String, Object> textNode = new HashMap<>();
+      List<Map<String, Object>> line = new ArrayList<>(4);
+      Map<String, Object> textNode = new HashMap<>(4);
       textNode.put("tag", "text");
       textNode.put("text", content);
       line.add(textNode);
@@ -175,7 +175,7 @@ public class FeishuChannel implements MessageChannel {
       payload.put("content", contentWrapper);
     } else {
       payload.put("msg_type", "text");
-      Map<String, Object> textContent = new HashMap<>();
+      Map<String, Object> textContent = new HashMap<>(4);
       textContent.put("text", content);
       payload.put("content", textContent);
     }

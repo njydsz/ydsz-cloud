@@ -29,10 +29,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SystemProperties {
 
   /** 默认配置缓存 TTL（分钟） */
-  private static final int DEFAULT_CACHE_TTL_MINUTES = 5;
+  private static final int DEFAULT_CACHE_TTL_MINUTES = 15;
 
   /** 默认字典缓存 TTL（分钟） */
-  private static final int DEFAULT_DICT_CACHE_TTL_MINUTES = 10;
+  private static final int DEFAULT_DICT_CACHE_TTL_MINUTES = 30;
 
   /** 是否启用系统模块健康检查（影响 {@code /actuator/health} 是否暴露 system 详情） */
   private boolean healthEnabled = true;
@@ -48,6 +48,9 @@ public class SystemProperties {
 
   /** 应用密钥配置（{@code ydsz.system.app.*}） */
   private App app = new App();
+
+  /** 缓存配置（{@code ydsz.system.cache.*}） */
+  private Cache cache = new Cache();
 
   /** 系统版本号（用于前端展示，对应 ydsz.system.version） */
   private String version = "1.0.0";
@@ -94,5 +97,16 @@ public class SystemProperties {
   public static class App {
     /** BCrypt 加密强度（4-31）。 */
     private int bcryptStrength = 10;
+  }
+
+  /** 缓存配置。 */
+  @Data
+  public static class Cache {
+    /**
+     * 是否启用跨实例缓存失效（Redis Pub/Sub）。
+     *
+     * <p>默认 false（单实例部署或接受最终一致性场景）。多实例部署且需实时一致性时开启。
+     */
+    private boolean crossInstanceEnabled = false;
   }
 }

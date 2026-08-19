@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.connection.Message;
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.Executors;
 
 /**
- * 跨实例缓存失效消息订阅者（P1-7 改进）。
+ * 跨实例缓存失效消息订阅者。
  *
  * <p>订阅 Redis Pub/Sub 频道 {@link CacheInvalidationPublisher#CHANNEL}，接收其他实例发布的缓存失效消息，清除本地缓存，实现跨实例实时一致性。
  *
@@ -29,11 +30,15 @@ import java.util.concurrent.Executors;
  *   <li>消息格式异常或缓存不存在时静默跳过（安全容错）
  * </ol>
  *
+ * <p><b>启用条件：</b>仅当 {@code ydsz.system.cache.cross-instance-enabled=true} 时生效。默认关闭，单实例部署或接受
+ * 最终一致性场景无需开启。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(prefix = "ydsz.system.cache", name = "cross-instance-enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class CacheInvalidationSubscriber implements MessageListener {
 
@@ -65,7 +70,7 @@ public class CacheInvalidationSubscriber implements MessageListener {
       log.info("[CacheInvalidationSubscriber] 启动 Redis 缓存失效订阅: channel={}", CacheInvalidationPublisher.CHANNEL);
     } catch (Exception e) {
       // Redis 不可用时降级（不影响启动，仅丧失跨实例实时一致性）
-      log.warn("[CacheInvalidationSubscriber] 启动 Redis 订阅失败（将降级为本地失效）: {}", e.getMessage());
+      log.warn("[CacheInvalidationSubscriber] 启动 Redis 订阅失败（将降级为本地失效）: {}", e.getMessage(), e);
     }
   }
 

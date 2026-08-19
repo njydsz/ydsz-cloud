@@ -93,7 +93,7 @@ public class SecurityDashboardService {
         return YdszJson.fromJson(cached, SecurityDashboardVO.class);
       }
     } catch (Exception e) {
-      log.warn("Failed to read dashboard cache, error={}", e.getMessage());
+      log.warn("Failed to read dashboard cache, error={}", e.getMessage(), e);
     }
 
     // 实时计算
@@ -103,7 +103,7 @@ public class SecurityDashboardService {
     try {
       redisStringOps.set(DASHBOARD_CACHE_KEY, YdszJson.toJson(dashboard), DASHBOARD_CACHE_TTL);
     } catch (Exception e) {
-      log.warn("Failed to write dashboard cache, error={}", e.getMessage());
+      log.warn("Failed to write dashboard cache, error={}", e.getMessage(), e);
     }
 
     return dashboard;
@@ -124,7 +124,7 @@ public class SecurityDashboardService {
       return List.of();
     }
 
-    List<LoginSuccessRateVO> result = new ArrayList<>();
+    List<LoginSuccessRateVO> result = new ArrayList<>(16);
     LocalDate current = start;
 
     while (!current.isAfter(end)) {
@@ -160,7 +160,7 @@ public class SecurityDashboardService {
     LocalDateTime dayEnd = date.plusDays(1).atStartOfDay();
 
     // 查询当日所有失败记录
-    Map<String, Integer> reasonCountMap = new HashMap<>();
+    Map<String, Integer> reasonCountMap = new HashMap<>(8);
     int totalFails = (int) countLoginsByResult(dayStart, dayEnd, "FAILED");
 
     if (totalFails == 0) {
@@ -176,7 +176,7 @@ public class SecurityDashboardService {
     reasonCountMap.put("Token无效", countLoginsByFailReason(dayStart, dayEnd, "TOKEN_INVALID"));
     reasonCountMap.put("其他", countLoginsByFailReason(dayStart, dayEnd, "OTHER"));
 
-    List<LoginFailDistributionVO> result = new ArrayList<>();
+    List<LoginFailDistributionVO> result = new ArrayList<>(8);
     for (Map.Entry<String, Integer> entry : reasonCountMap.entrySet()) {
       if (entry.getValue() > 0) {
         double percentage = (double) entry.getValue() / totalFails;
@@ -204,7 +204,7 @@ public class SecurityDashboardService {
         mfaEnabledUsers = Long.parseLong(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read MFA enabled count from Redis, error={}", e.getMessage());
+      log.warn("Failed to read MFA enabled count from Redis, error={}", e.getMessage(), e);
     }
 
     double coverageRate = totalUsers > 0 ? (double) mfaEnabledUsers / totalUsers : 0.0;
@@ -245,7 +245,7 @@ public class SecurityDashboardService {
     }
     limit = Math.min(limit, 100);
 
-    List<SecurityEventVO> events = new ArrayList<>();
+    List<SecurityEventVO> events = new ArrayList<>(16);
 
     try {
       // 查询最近的登录失败记录
@@ -262,7 +262,7 @@ public class SecurityDashboardService {
             buildEventDescription(record, eventType)));
       }
     } catch (Exception e) {
-      log.warn("Failed to query recent security events, error={}", e.getMessage());
+      log.warn("Failed to query recent security events, error={}", e.getMessage(), e);
     }
 
     return events;
@@ -294,7 +294,7 @@ public class SecurityDashboardService {
         mfaEnabledUsers = Long.parseLong(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read MFA count, error={}", e.getMessage());
+      log.warn("Failed to read MFA count, error={}", e.getMessage(), e);
     }
 
     // 锁定用户数
@@ -336,7 +336,7 @@ public class SecurityDashboardService {
         return Long.parseLong(value);
       }
     } catch (Exception e) {
-      log.warn("Failed to read online session count, error={}", e.getMessage());
+      log.warn("Failed to read online session count, error={}", e.getMessage(), e);
     }
     return 0;
   }
@@ -356,7 +356,7 @@ public class SecurityDashboardService {
         return Long.parseLong(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read locked user count, error={}", e.getMessage());
+      log.warn("Failed to read locked user count, error={}", e.getMessage(), e);
     }
     return 0;
   }
@@ -373,7 +373,7 @@ public class SecurityDashboardService {
         return Long.parseLong(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read banned user count, error={}", e.getMessage());
+      log.warn("Failed to read banned user count, error={}", e.getMessage(), e);
     }
     return 0;
   }
@@ -391,7 +391,7 @@ public class SecurityDashboardService {
         return Long.parseLong(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read today login success count, error={}", e.getMessage());
+      log.warn("Failed to read today login success count, error={}", e.getMessage(), e);
     }
     return 0;
   }
@@ -409,7 +409,7 @@ public class SecurityDashboardService {
         return Long.parseLong(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read today login fail count, error={}", e.getMessage());
+      log.warn("Failed to read today login fail count, error={}", e.getMessage(), e);
     }
     return 0;
   }
@@ -452,7 +452,7 @@ public class SecurityDashboardService {
         return Long.parseLong(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read login count from Redis, error={}", e.getMessage());
+      log.warn("Failed to read login count from Redis, error={}", e.getMessage(), e);
     }
     return 0;
   }
@@ -474,7 +474,7 @@ public class SecurityDashboardService {
         return Integer.parseInt(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read fail reason count from Redis, error={}", e.getMessage());
+      log.warn("Failed to read fail reason count from Redis, error={}", e.getMessage(), e);
     }
     return 0;
   }
@@ -491,7 +491,7 @@ public class SecurityDashboardService {
         return Integer.parseInt(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read high risk user count, error={}", e.getMessage());
+      log.warn("Failed to read high risk user count, error={}", e.getMessage(), e);
     }
     return 0;
   }
@@ -508,7 +508,7 @@ public class SecurityDashboardService {
         return Integer.parseInt(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read medium risk user count, error={}", e.getMessage());
+      log.warn("Failed to read medium risk user count, error={}", e.getMessage(), e);
     }
     return 0;
   }
@@ -525,7 +525,7 @@ public class SecurityDashboardService {
         return Integer.parseInt(countStr);
       }
     } catch (Exception e) {
-      log.warn("Failed to read low risk user count, error={}", e.getMessage());
+      log.warn("Failed to read low risk user count, error={}", e.getMessage(), e);
     }
     return 0;
   }

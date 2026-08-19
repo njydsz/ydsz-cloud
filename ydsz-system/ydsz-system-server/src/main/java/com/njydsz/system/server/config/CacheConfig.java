@@ -12,24 +12,20 @@ import com.njydsz.common.cache.spring.YdszCacheProperties;
 /**
  * 系统模块 Spring Cache 配置。
  *
- * <p>启用 Spring Cache 注解驱动（{@code @Cacheable} / {@code @CacheEvict}）， 以 ydsz-common-cache 的 {@link
- * YdszCacheManager} 作为缓存管理器， 替代原有的 {@code RedisStringOps} 手动缓存管理模式：
+ * <p>启用 Spring Cache 注解驱动（{@code @Cacheable} / {@code @CacheEvict}），以 ydsz-common-cache 的 {@link
+ * YdszCacheManager} 作为缓存管理器：
  *
  * <ul>
  *   <li>统一缓存编程模型，消除各 ServiceImpl 中重复的 cache-aside 样板代码
  *   <li>利用 ydsz-common-cache 内置的防穿透能力，无需手动维护空值哨兵
- *   <li>跨实例缓存一致性由 {@code ConfigServiceImpl} OutboxService 事件广播 + {@code CrossModuleEventListener}
- *       本地缓存失效机制保证
+ *   <li>写方法通过 {@code @CacheEvict} 精准失效本地缓存，保证本实例一致性
+ *   <li>跨实例一致性通过 TTL 自然过期实现最终一致；如需实时一致性，开启 {@code ydsz.system.cache.cross-instance-enabled=true}
+ *       启用 Redis Pub/Sub 失效总线
  * </ul>
- *
- * <p><b>本地缓存 vs Redis：</b>ydsz-common-cache 为进程内本地缓存（无网络 IO）， TTL 和容量通过 {@code ydsz.cache.caches}
- * YAML 配置。跨实例一致性通过 OutboxService 事件实现：写操作发布 {@code CONFIG_CHANGED} 事件， 各实例的 {@code
- * CrossModuleEventListener} 接收到事件后清除本地缓存。
  *
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.common.cache.spring.YdszCacheProperties
- * @see com.njydsz.system.server.listener.CrossModuleEventListener
  */
 @Configuration
 @EnableCaching

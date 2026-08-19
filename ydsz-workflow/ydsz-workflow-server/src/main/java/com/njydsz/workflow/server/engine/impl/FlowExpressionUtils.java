@@ -123,7 +123,7 @@ public final class FlowExpressionUtils {
    * @return 分割后的子表达式数组
    */
   public static String[] splitTopLevel(String expr, String delimiter) {
-    List<String> result = new ArrayList<>();
+    List<String> result = new ArrayList<>(16);
     StringBuilder current = new StringBuilder();
     int depth = 0;
     boolean inSingle = false;
