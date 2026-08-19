@@ -74,6 +74,9 @@ public class FlowSkipDO extends MpBaseEntity<String> {
   /** 下一节点编码 */
   private String nextNodeCode;
 
+  /** A9: 源节点编码（独立列，替代 ext JSON 中的 sourceRef，便于索引与联查） */
+  private String sourceNodeCode;
+
   /** 下一节点类型（{@link com.njydsz.workflow.domain.enums.FlowNodeType}.code） */
   private Integer nextNodeType;
 
