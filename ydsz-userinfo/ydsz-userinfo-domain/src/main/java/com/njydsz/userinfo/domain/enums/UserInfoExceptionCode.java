@@ -186,6 +186,10 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   SSO_TOKEN_EXCHANGE_FAILED("A20138", "userinfo.sso.token.exchange.failed", 401),
   /** CORS 预检失败 */
   CORS_PREFLIGHT_FAILED("A20139", "userinfo.cors.preflight.failed", 403),
+  /** 设备登录码无效或已过期 */
+  SSO_DEVICE_CODE_INVALID("A20142", "userinfo.sso.device.code.invalid", 401),
+  /** 设备登录码已被使用（一次性码防重放） */
+  SSO_DEVICE_CODE_CONSUMED("A20143", "userinfo.sso.device.code.consumed", 401),
 
   // ==================== B33xxx 自助服务 ====================
   /** 自助注册功能未开启 */

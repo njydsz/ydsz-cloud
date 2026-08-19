@@ -1,7 +1,11 @@
 package com.njydsz.userinfo.web.controller;
 
+import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
+import com.njydsz.common.exception.custom.BusinessException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,19 +19,24 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.model.UserInfo;
+import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.MfaService;
@@ -76,6 +85,27 @@ public class AuthController {
 
   /** P2-6: 可信代理配置（决定是否信任转发头） */
   private final UserInfoProperties properties;
+
+  /** Token 服务（签发 access/refresh token） */
+  private final TokenService tokenService;
+
+  /** Redis 操作（设备登录码存储） */
+  private final RedisStringOps redisStringOps;
+
+  /** 设备登录码有效期（秒）：5 分钟 */
+  private static final long DEVICE_CODE_TTL_SECONDS = 300;
+
+  /** 设备登录码 Redis Key 前缀：{@code sso:device:code:{code}} */
+  private static final String DEVICE_CODE_KEY_PREFIX = "sso:device:code:";
+
+  /** 设备登录码字符集（排除易混淆字符 0/O/1/I/L） */
+  private static final String DEVICE_CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
+  /** 设备登录码长度 */
+  private static final int DEVICE_CODE_LENGTH = 8;
+
+  /** 设备登录码随机数生成器 */
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
   /**
    * 发送登录 MFA 短信验证码（风险为 HIGH 且未绑定 TOTP 时调用）。
@@ -190,6 +220,148 @@ public class AuthController {
   public YdszResponse<LoginVO> refresh(@RequestBody RefreshRequest request) {
     LoginVO result = authService.refresh(request.getRefreshToken());
     return YdszResponse.success(result);
+  }
+
+  /**
+   * 生成设备登录码（Token 模式 SSO 第一步）。
+   *
+   * <p>已登录用户调用此端点生成一个短设备登录码，可在另一台设备（APP/小程序）上输入此码完成跨设备登录。
+   *
+   * <p><b>流程：</b>
+   *
+   * <ol>
+   *   <li>用户在本设备已登录（携带有效 access_token）</li>
+   *   <li>调用此端点生成 8 位设备登录码（5 分钟有效）</li>
+   *   <li>在另一台设备上输入此码，调用 {@code /sso/device-exchange} 完成登录</li>
+   * </ol>
+   *
+   * <p><b>安全约束：</b>
+   *
+   * <ul>
+   *   <li>必须携带有效 access_token（已登录状态）</li>
+   *   <li>设备登录码一次性使用（交换后立即失效）</li>
+   *   <li>限流 10 QPS（防批量生成）</li>
+   * </ul>
+   *
+   * @param authorization Authorization 请求头（Bearer access_token）
+   * @return 设备登录码及过期时间
+   */
+  @Audit(
+      module = "认证管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'生成设备登录码'")
+  @RateLimit(resource = "userinfo.auth.ssoDeviceCode", threshold = 10)
+  @PostMapping("/sso/device-code")
+  @Operation(summary = "生成设备登录码", description = "已登录用户生成跨设备登录码，供 APP/小程序使用")
+  public YdszResponse<Map<String, Object>> generateDeviceCode(
+      @RequestHeader(HeaderConstants.AUTHORIZATION) String authorization) {
+    // 1. 校验登录态
+    if (authorization == null || !authorization.startsWith("Bearer ")) {
+      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
+    }
+    String accessToken = authorization.substring(7);
+    UserInfo userInfo = tokenService.parseAccessToken(accessToken);
+    if (userInfo == null || !tokenService.validateAccessToken(accessToken)) {
+      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
+    }
+
+    // 2. 生成设备登录码
+    String code = generateDeviceCode();
+
+    // 3. 存储用户信息到 Redis（5 分钟有效，一次性使用）
+    Map<String, String> codeData = new HashMap<>();
+    codeData.put("userId", userInfo.getUserId());
+    codeData.put("username", userInfo.getUsername());
+    codeData.put("tenantId", userInfo.getTenantId() != null ? userInfo.getTenantId() : "1");
+    redisStringOps.set(
+        DEVICE_CODE_KEY_PREFIX + code,
+        com.njydsz.common.json.YdszJson.toJson(codeData),
+        DEVICE_CODE_TTL_SECONDS);
+
+    log.info("SSO device code generated: user={}", userInfo.getUsername());
+
+    Map<String, Object> result = new HashMap<>();
+    result.put("deviceCode", code);
+    result.put("expiresIn", DEVICE_CODE_TTL_SECONDS);
+    return YdszResponse.success(result);
+  }
+
+  /**
+   * 交换设备登录码获取 Token（Token 模式 SSO 第二步）。
+   *
+   * <p>在另一台设备（APP/小程序）上输入设备登录码后，调用此端点换取 access_token + refresh_token，
+   * 完成跨设备登录。
+   *
+   * <p><b>安全约束：</b>
+   *
+   * <ul>
+   *   <li>设备登录码一次性使用（交换后立即从 Redis 删除，防重放）</li>
+   *   <li>限流 20 QPS（防暴力破解）</li>
+   * </ul>
+   *
+   * @param code 设备登录码（8 位字母数字）
+   * @return 标准登录响应（access_token + refresh_token）
+   */
+  @Audit(
+      module = "认证管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'设备登录码换Token'")
+  @RateLimit(resource = "userinfo.auth.ssoDeviceExchange", threshold = 20)
+  @PostMapping("/sso/device-exchange")
+  @Operation(summary = "设备登录码换 Token", description = "用设备登录码换取 access_token，完成跨设备登录")
+  public YdszResponse<LoginVO> exchangeDeviceCode(@RequestParam String code) {
+    if (code == null || code.isBlank()) {
+      throw new BusinessException(UserInfoExceptionCode.SSO_DEVICE_CODE_INVALID);
+    }
+
+    // 1. 读取并删除设备登录码（一次性使用，防重放）
+    String codeKey = DEVICE_CODE_KEY_PREFIX + code.toUpperCase();
+    String codeDataJson = redisStringOps.get(codeKey, String.class);
+    if (codeDataJson == null) {
+      throw new BusinessException(UserInfoExceptionCode.SSO_DEVICE_CODE_INVALID);
+    }
+
+    // 立即删除（一次性使用）
+    redisStringOps.del(codeKey);
+
+    // 2. 解析用户信息
+    Map<String, String> codeData = com.njydsz.common.json.YdszJson.fromJson(codeDataJson, Map.class);
+    if (codeData == null || codeData.get("userId") == null) {
+      log.warn("SSO device code data corrupted: code={}", code);
+      throw new BusinessException(UserInfoExceptionCode.SSO_DEVICE_CODE_INVALID);
+    }
+
+    // 3. 重建 UserInfo 并签发 Token
+    UserInfo userInfo = new UserInfo();
+    userInfo.setUserId(codeData.get("userId"));
+    userInfo.setUsername(codeData.get("username"));
+    userInfo.setTenantId(codeData.get("tenantId"));
+
+    String accessToken = tokenService.issueAccessToken(userInfo);
+    String refreshToken = tokenService.issueRefreshToken(userInfo);
+
+    log.info("SSO device code exchanged: user={}", userInfo.getUsername());
+
+    LoginVO loginVO = new LoginVO();
+    loginVO.setAccessToken(accessToken);
+    loginVO.setRefreshToken(refreshToken);
+    loginVO.setTokenType("Bearer");
+    return YdszResponse.success(loginVO);
+  }
+
+  /**
+   * 生成设备登录码（8 位字母数字，排除易混淆字符）。
+   *
+   * @return 设备登录码
+   */
+  private String generateDeviceCode() {
+    StringBuilder sb = new StringBuilder(DEVICE_CODE_LENGTH);
+    for (int i = 0; i < DEVICE_CODE_LENGTH; i++) {
+      sb.append(DEVICE_CODE_CHARS.charAt(SECURE_RANDOM.nextInt(DEVICE_CODE_CHARS.length())));
+    }
+    return sb.toString();
   }
 
   /**
