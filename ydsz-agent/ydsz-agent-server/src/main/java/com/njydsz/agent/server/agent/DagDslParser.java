@@ -6,8 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -41,11 +40,11 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DagDslParser {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DagDslParser.class);
   private final Yaml yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
@@ -99,7 +98,7 @@ public class DagDslParser {
     }
 
     AgentDag dag = new AgentDag(String.valueOf(snowflakeIdGenerator.nextId()), name, nodes, edges);
-    LOG.info("[DagDslParser] 解析完成: name={}, nodes={}", name, nodes.size());
+    log.info("[DagDslParser] 解析完成: name={}, nodes={}", name, nodes.size());
     return dag;
   }
 

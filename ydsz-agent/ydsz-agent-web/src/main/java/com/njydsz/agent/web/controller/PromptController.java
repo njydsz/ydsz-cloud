@@ -6,8 +6,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +21,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Prompt 模板评估 REST API Controller。
@@ -32,12 +31,11 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/agent/prompt")
 @Tag(name = "Prompt 评估", description = "Prompt 模板试运行与对比评估")
 public class PromptController {
-
-  private static final Logger LOG = LoggerFactory.getLogger(PromptController.class);
 
   private final PromptEvaluationService evaluationService;
 
@@ -63,7 +61,7 @@ public class PromptController {
   @PostMapping("/evaluate")
   @Operation(summary = "评估 Prompt 模板", description = "渲染模板并发送到 LLM，返回性能指标")
   public YdszResponse<PromptEvaluationResult> evaluate(@Valid @RequestBody EvaluateRequest request) {
-    LOG.info("[Prompt-API] 评估请求: template={}", request.templateCode());
+    log.info("[Prompt-API] 评估请求: template={}", request.templateCode());
     PromptEvaluationResult result =
         evaluationService.evaluate(
             request.templateCode(),
@@ -91,7 +89,7 @@ public class PromptController {
   @PostMapping("/compare")
   @Operation(summary = "对比评估两个 Prompt 模板", description = "相同输入下对比两个模板的性能指标")
   public YdszResponse<PromptComparisonResult> compare(@Valid @RequestBody CompareRequest request) {
-    LOG.info("[Prompt-API] 对比请求: A={}, B={}", request.templateCodeA(), request.templateCodeB());
+    log.info("[Prompt-API] 对比请求: A={}, B={}", request.templateCodeA(), request.templateCodeB());
     PromptComparisonResult result =
         evaluationService.compare(
             request.templateCodeA(),

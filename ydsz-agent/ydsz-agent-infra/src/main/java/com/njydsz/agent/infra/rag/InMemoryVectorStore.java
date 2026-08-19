@@ -7,13 +7,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.njydsz.agent.domain.rag.EmbeddingClient;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.common.tenant.TenantContextHolder;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 内存向量存储（测试/降级用）
@@ -25,9 +23,8 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class InMemoryVectorStore implements VectorStore {
-
-  private static final Logger LOG = LoggerFactory.getLogger(InMemoryVectorStore.class);
 
   /** 内存存储（线程安全） */
   private final List<TextChunk> store = new CopyOnWriteArrayList<>();
@@ -62,7 +59,7 @@ public class InMemoryVectorStore implements VectorStore {
     for (TextChunk chunk : chunks) {
       store(chunk);
     }
-    LOG.info("[Memory-VectorStore] 批量存储: {} 块, 总计: {}", chunks.size(), store.size());
+    log.info("[Memory-VectorStore] 批量存储: {} 块, 总计: {}", chunks.size(), store.size());
   }
 
   @Override

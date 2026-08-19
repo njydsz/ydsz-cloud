@@ -7,8 +7,6 @@ import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,8 +27,6 @@ import com.njydsz.common.json.YdszJson;
 @Service
 @RequiredArgsConstructor
 public class AgentDefinitionServiceImpl implements AgentDefinitionService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(AgentDefinitionServiceImpl.class);
 
   /** Agent 定义 Repository */
   private final AgentDefinitionRepository agentDefinitionRepository;
@@ -93,7 +89,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
     postDTO.setTemperature(vo.getTemperature());
     postDTO.setMaxTokens(vo.getMaxTokens());
     agentDefinitionRepository.insert(postDTO);
-    LOG.info(
+    log.info(
         "[Agent-Def] 创建 Agent: code={}, name={}", vo.getAgentCode(), vo.getAgentName());
     return vo;
   }
@@ -123,7 +119,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
     putDTO.setTemperature(vo.getTemperature());
     putDTO.setMaxTokens(vo.getMaxTokens());
     agentDefinitionRepository.updateById(putDTO);
-    LOG.info("[Agent-Def] 更新 Agent: code={}", vo.getAgentCode());
+    log.info("[Agent-Def] 更新 Agent: code={}", vo.getAgentCode());
     return vo;
   }
 

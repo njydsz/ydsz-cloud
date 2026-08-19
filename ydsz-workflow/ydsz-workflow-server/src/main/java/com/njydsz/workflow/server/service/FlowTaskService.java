@@ -7,6 +7,7 @@ import java.util.Map;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 
@@ -498,4 +499,152 @@ public interface FlowTaskService {
    * @since 1.0.0
    */
   String retract(String hisTaskId, String operatorId, String comment);
+
+  // ======================== VO 查询方法（供 Controller 层使用，避免 DO 泄漏） ========================
+
+  /**
+   * 根据任务 ID 获取实例 ID（驳回候选节点查询场景，避免 Controller 层直接接触 DO）。
+   *
+   * @param taskId 任务 ID
+   * @return 实例 ID，任务不存在返回 null
+   */
+  String getTaskInstanceId(String taskId);
+
+  /**
+   * 查询实例经过的历史节点（去重，按首次完成时间排序），用于驳回时让用户选择驳回到任意历史节点。
+   *
+   * @param instanceId 流程实例 ID
+   * @return 节点列表：nodeCode / nodeName / firstFinishAt / assigneeName
+   */
+  List<Map<String, Object>> listPassedNodes(String instanceId);
+
+  /**
+   * 待办任务分页查询（VO 版本）
+   *
+   * @param userId 用户 ID
+   * @param tenantId 租户 ID
+   * @param flowCode 流程编码（可选）
+   * @param businessType 业务类型（可选）
+   * @param startTime 开始时间下界（可选）
+   * @param endTime 开始时间上界（可选）
+   * @param page 页码
+   * @param size 每页大小
+   * @return 分页结果（VO）
+   */
+  PageResponse<List<FlowRunTaskVO>> pageTodoVO(
+      String userId, String tenantId, String flowCode, String businessType,
+      LocalDateTime startTime, LocalDateTime endTime, int page, int size);
+
+  /**
+   * 已办任务分页查询（VO 版本）
+   *
+   * @param userId 用户 ID
+   * @param tenantId 租户 ID
+   * @param flowCode 流程编码（可选）
+   * @param businessType 业务类型（可选）
+   * @param startTime 开始时间下界（可选）
+   * @param endTime 开始时间上界（可选）
+   * @param page 页码
+   * @param size 每页大小
+   * @return 分页结果（VO）
+   */
+  PageResponse<List<FlowRunTaskVO>> pageDoneVO(
+      String userId, String tenantId, String flowCode, String businessType,
+      LocalDateTime startTime, LocalDateTime endTime, int page, int size);
+
+  /**
+   * 已办任务多维筛选分页查询（VO 版本）
+   *
+   * @param userId 用户 ID
+   * @param tenantId 租户 ID
+   * @param flowCode 流程编码（可选）
+   * @param businessType 业务类型（可选）
+   * @param startTime 开始时间下界（可选）
+   * @param endTime 开始时间上界（可选）
+   * @param keyword 关键字（可选，匹配 title / businessNo）
+   * @param page 页码
+   * @param size 每页大小
+   * @return 分页结果（VO）
+   */
+  PageResponse<List<FlowRunTaskVO>> pageDoneSearchVO(
+      String userId, String tenantId, String flowCode, String businessType,
+      LocalDateTime startTime, LocalDateTime endTime, String keyword, int page, int size);
+
+  /**
+   * 超期任务查询（VO 版本）
+   *
+   * @param userId 用户 ID
+   * @param tenantId 租户 ID
+   * @param limit 返回条数上限
+   * @return 超期任务列表（VO）
+   */
+  List<FlowRunTaskVO> listOverdueVO(String userId, String tenantId, int limit);
+
+  /**
+   * 查询流程实例的加签历史（Map 形式，避免 Controller 接触 DO）
+   *
+   * @param instanceId 流程实例 ID
+   * @return 加签历史列表
+   */
+  List<Map<String, Object>> listCountersignByInstance(String instanceId);
+
+  /**
+   * 查询任务的加签历史（Map 形式，避免 Controller 接触 DO）
+   *
+   * @param taskId 任务 ID
+   * @return 加签历史列表
+   */
+  List<Map<String, Object>> listCountersignByTask(String taskId);
+
+  /**
+   * 一键通过全部待办
+   *
+   * @param userId 用户 ID
+   * @param userName 用户姓名
+   * @return 通过数量
+   */
+  int passAll(String userId, String userName);
+
+  /**
+   * 超期任务统计（按流程编码分组）
+   *
+   * @param flowCode 流程编码（可选）
+   * @param startTime 统计开始时间（可选）
+   * @param endTime 统计结束时间（可选）
+   * @return 超期统计列表
+   */
+  List<Map<String, Object>> overdueStats(String flowCode, LocalDateTime startTime, LocalDateTime endTime);
+
+  /**
+   * 超期任务 Top N 排行（按超期时长降序）
+   *
+   * @param tenantId 租户 ID
+   * @param limit 返回条数上限
+   * @return 超期任务列表
+   */
+  List<Map<String, Object>> selectOverdueTopN(String tenantId, int limit);
+
+  /**
+   * 审批人负载分布（当前待办数量）
+   *
+   * @param tenantId 租户 ID
+   * @param limit 返回条数上限
+   * @return 审批人负载列表
+   */
+  List<Map<String, Object>> selectWorkloadByAssignee(String tenantId, int limit);
+
+  /**
+   * 手动触发单条任务的 SLA 处理（按 taskId，避免 Controller 层接触 DO）。
+   *
+   * <p>内部通过 {@code FlowSlaService#processOverdue} 执行 SLA 策略，返回：
+   * <ul>
+   *   <li>{@code null} — 任务不存在</li>
+   *   <li>{@code true} — 已处理（REMIND / 最终动作）</li>
+   *   <li>{@code false} — 跳过（未到期 / 已完成 / 状态不符）</li>
+   * </ul>
+   *
+   * @param taskId 任务 ID
+   * @return Boolean（nullable）
+   */
+  Boolean slaProcessByTaskId(String taskId);
 }

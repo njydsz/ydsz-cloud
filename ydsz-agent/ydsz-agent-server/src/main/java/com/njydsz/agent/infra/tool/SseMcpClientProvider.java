@@ -11,10 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.common.util.id.IdGenerator;
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.IdGenerator;
 
@@ -30,9 +28,8 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class SseMcpClientProvider implements McpClientProvider {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SseMcpClientProvider.class);
 
   /** 会话缓存 TTL（毫秒），超过后需重新建立 MCP 会话 */
   private static final long SESSION_TTL_MILLIS = 30 * 60 * 1000L;
@@ -57,7 +54,7 @@ public class SseMcpClientProvider implements McpClientProvider {
       // 3. 解析工具列表
       return parseToolList(listResponse);
     } catch (Exception e) {
-      LOG.error("[MCP-SSE] 工具列表获取失败: server={}, error={}", server.getName(), e.getMessage(), e);
+      log.error("[MCP-SSE] 工具列表获取失败: server={}, error={}", server.getName(), e.getMessage(), e);
       return new ArrayList<>();
     }
   }
@@ -70,7 +67,7 @@ public class SseMcpClientProvider implements McpClientProvider {
       String callResponse = sendRequest(server, sessionId, "tools/call", params);
       return extractCallResult(callResponse);
     } catch (Exception e) {
-      LOG.error(
+      log.error(
           "[MCP-SSE] 工具调用失败: server={}, tool={}, error={}",
           server.getName(),
           toolName,
@@ -115,7 +112,7 @@ public class SseMcpClientProvider implements McpClientProvider {
                         .headers()
                         .firstValue("Mcp-Session-Id")
                         .orElse("session-" + IdGenerator.nextIdStr());
-                LOG.info(
+                log.info(
                     "[MCP-SSE] 会话初始化完成: server={}, sessionId={}", name, sessionId);
                 return new SessionEntry(sessionId, System.currentTimeMillis());
               } catch (Exception e) {

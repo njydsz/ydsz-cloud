@@ -31,7 +31,6 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
-import com.njydsz.system.server.search.SearchIndexSyncer;
 import com.njydsz.system.server.service.ConfigBatchService;
 import com.njydsz.system.server.service.EntityVersionService;
 
@@ -79,9 +78,6 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
 
   /** 租户感知缓存键构造器（手动 evict 使用） */
   private final CacheKeyBuilder cacheKeyBuilder;
-
-  /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
-  private final SearchIndexSyncer searchIndexSyncer;
 
   /** 统一领域事件发布门面（ObjectProvider 可选注入，common-event 未引入时安全降级，见《云顶编码规范》27.4） */
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
@@ -147,11 +143,8 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
         // 7. 精准失效缓存
         finalConfigGroups.forEach(ConfigBatchServiceImpl.this::evictConfigGroup);
         ConfigBatchServiceImpl.this.evictConfigPublic();
-        // 8. 同步搜索索引 + 发布变更事件
-        finalDtos.forEach(dto -> {
-          searchIndexSyncer.upsert("config", dto);
-          publishConfigChangedEvent(dto.getConfigKey(), dto.getConfigGroup());
-        });
+        // 8. 发布变更事件
+        finalDtos.forEach(dto -> publishConfigChangedEvent(dto.getConfigKey(), dto.getConfigGroup()));
       }
     });
 

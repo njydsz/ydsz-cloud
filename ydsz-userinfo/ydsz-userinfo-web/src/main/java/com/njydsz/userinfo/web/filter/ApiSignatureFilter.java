@@ -99,7 +99,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
     }
 
     // 包装请求以支持多次读取 body
-    ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request);
+    ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request, 1024);
 
     try {
       // 1. 读取签名相关请求头

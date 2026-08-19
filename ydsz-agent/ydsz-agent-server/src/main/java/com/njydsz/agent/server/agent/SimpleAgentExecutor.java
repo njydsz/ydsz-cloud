@@ -20,6 +20,7 @@ import com.njydsz.agent.server.chat.StreamingPiiMasker;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.util.id.IdGenerator;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 简单 Agent 执行器（单轮 LLM 调用，无工具）
@@ -29,6 +30,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class SimpleAgentExecutor extends AbstractAgentExecutor {
 
   public SimpleAgentExecutor(
@@ -61,7 +63,7 @@ public class SimpleAgentExecutor extends AbstractAgentExecutor {
   public ChatResponse execute(AgentExecutionRequest request) {
     String convId = extractConvId(request);
     String traceId = startTrace(convId, "CHAT");
-    LOG.info("[Simple-Agent] 执行: convId={}, traceId={}", convId, traceId);
+    log.info("[Simple-Agent] 执行: convId={}, traceId={}", convId, traceId);
 
     String userInput = applyInputGuardrails(request.getUserInput());
     if (userInput == null) {
@@ -102,7 +104,7 @@ public class SimpleAgentExecutor extends AbstractAgentExecutor {
     saveConversation(convId, userInput, output, response.getUsage());
 
     traceRecorder.endTrace(traceId, "SUCCESS");
-    LOG.info(
+    log.info(
         "[Simple-Agent] 完成: convId={}, tokens={}",
         convId,
         response.getUsage() != null ? response.getUsage().getTotalTokens() : 0);
@@ -124,7 +126,7 @@ public class SimpleAgentExecutor extends AbstractAgentExecutor {
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
     String convId = extractConvId(request);
     String traceId = startTrace(convId, "CHAT_STREAM");
-    LOG.info("[Simple-Agent-Stream] 流式执行: convId={}, traceId={}", convId, traceId);
+    log.info("[Simple-Agent-Stream] 流式执行: convId={}, traceId={}", convId, traceId);
 
     String responseId = IdGenerator.nextIdStr();
     String model = properties.getLlm().getDefaultModel();
@@ -211,7 +213,7 @@ public class SimpleAgentExecutor extends AbstractAgentExecutor {
     saveConversation(convId, userInput, output, usage[0]);
 
     traceRecorder.endTrace(traceId, "SUCCESS");
-    LOG.info("[Simple-Agent-Stream] 完成: convId={}, tokens={}", convId, usage[0].getTotalTokens());
+    log.info("[Simple-Agent-Stream] 完成: convId={}, tokens={}", convId, usage[0].getTotalTokens());
   }
 
   @Override

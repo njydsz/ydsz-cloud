@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -65,6 +66,7 @@ import com.njydsz.system.server.service.AppInfoService;
 @RestController
 @RequestMapping("/api/v1/app")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "sys:app:list")
 public class AppInfoController {
 
   private final AppInfoService service;
@@ -116,6 +118,7 @@ public class AppInfoController {
   @Operation(summary = "创建应用")
   @RateLimit(resource = "system.appinfo.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:app-info:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:app:add")
   @PostMapping
   public YdszResponse<String> save(@Valid @RequestBody AppInfoDTO dto) {
     return YdszResponse.success(service.save(dto));
@@ -138,6 +141,7 @@ public class AppInfoController {
   @Operation(summary = "更新应用")
   @RateLimit(resource = "system.appinfo.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:app-info:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:app:edit")
   @PutMapping
   public YdszResponse<Boolean> update(@Valid @RequestBody AppInfoDTO dto) {
     return YdszResponse.success(service.updateById(dto));
@@ -159,6 +163,7 @@ public class AppInfoController {
   @Operation(summary = "删除应用")
   @RateLimit(resource = "system.appinfo.remove", threshold = 50)
   @Idempotent(key = "'ydsz:system:app-info:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:app:delete")
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(service.removeById(id));

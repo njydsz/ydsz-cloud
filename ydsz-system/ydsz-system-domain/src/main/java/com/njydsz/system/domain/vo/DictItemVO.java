@@ -2,7 +2,6 @@ package com.njydsz.system.domain.vo;
 
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -51,59 +50,46 @@ import com.njydsz.common.safe.annotation.Xss;
  * @see com.njydsz.common.domain.tree.TreeBuilder 通用树构建器
  */
 @Data
-@Schema(description = "字典项视图对象")
 public class DictItemVO {
 
   /** 字典项唯一标识 */
-  @Schema(description = "字典项唯一标识")
   private String id;
 
   /** 父级 ID（{@code 0} = 根），支持「省 / 市 / 区县」三级级联 */
-  @Schema(description = "父级 ID")
   private String parentId;
 
   /** 子节点列表（树形构建时由 TreeBuilder 自动填充） */
-  @Schema(description = "子节点列表")
   private List<DictItemVO> children;
 
   /** 层级深度（根节点=1，由 TreeBuilder 自动填充） */
-  @Schema(description = "层级深度")
   private Integer level;
 
   /** 节点路径（如 "/1/2/5/"，由 TreeBuilder 自动填充） */
-  @Schema(description = "节点路径")
   private String path;
 
   @NotBlank(message = "字典类型编码不能为空")
   @Size(max = 64, message = "字典类型编码长度不能超过64")
   @Xss(message = "字典类型编码包含非法内容")
-  @Schema(description = "所属字典类型编码")
   private String typeCode;
 
   @NotBlank(message = "字典项编码不能为空")
   @Size(max = 64, message = "字典项编码长度不能超过64")
   @Xss(message = "字典项编码包含非法内容")
-  @Schema(description = "字典项编码")
   private String itemCode;
 
   @NotBlank(message = "字典项展示值不能为空")
   @Size(max = 255, message = "字典项展示值长度不能超过255")
   @Xss(message = "字典项展示值包含非法内容")
-  @Schema(description = "字典项展示值")
   private String itemValue;
 
   /** 排序号（同类型内升序），直接作为 TreeBuilder 排序字段 */
-  @Schema(description = "排序号")
   private Integer sortOrder;
 
   @Xss(message = "字典项业务说明包含非法内容")
-  @Schema(description = "字典项业务说明")
   private String description;
 
   @Xss(message = "扩展属性包含非法内容")
-  @Schema(description = "扩展属性 JSON")
   private String extJson;
 
-  @Schema(description = "启用状态: ENABLED/DISABLED")
   private String status;
 }

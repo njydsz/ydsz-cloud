@@ -25,6 +25,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.cronjob.domain.constants.CronjobConstants;
 import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
 import com.njydsz.cronjob.domain.entity.job.JobWebhook;
@@ -86,12 +87,12 @@ public class JobWebhookController {
   public YdszResponse<String> create(@RequestBody JobWebhookPostDTO dto) {
     // 1. DTO → Entity（MapStruct 转换）
     JobWebhook entity = CronjobConverter.INSTANT.postDtoToEntity(dto);
-    entity.setStatus("ACTIVE");
+    entity.setStatus(CronjobConstants.WEBHOOK_STATUS_ACTIVE);
     entity.setCreatedAt(LocalDateTime.now());
     entity.setUpdatedAt(LocalDateTime.now());
     entity.setDeleted(0);
     if (entity.getHttpMethod() == null || entity.getHttpMethod().isBlank()) {
-      entity.setHttpMethod("POST");
+      entity.setHttpMethod(CronjobConstants.HTTP_METHOD_POST);
     }
     // 2. Entity → VO（Repository 层接受 VO）
     JobWebhookVO vo = CronjobConverter.INSTANT.entityToVO(entity);

@@ -3,8 +3,6 @@ package com.njydsz.agent.infra.tool;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.gateway.Text2SQLService;
@@ -28,8 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class Text2SQLTool implements ToolExecutor {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Text2SQLTool.class);
-
   /** 参数名：自然语言查询 */
   private static final String PARAM_QUERY = "query";
 
@@ -45,7 +41,7 @@ public class Text2SQLTool implements ToolExecutor {
       return YdszJson.toJson(Map.of("error", "参数 query 不能为空"));
     }
     String tenantId = resolveTenantId();
-    LOG.info("[Text2SQLTool] 执行自然语言查询: tenant={}, query={}", tenantId, query);
+    log.info("[Text2SQLTool] 执行自然语言查询: tenant={}, query={}", tenantId, query);
     try {
       Text2SQLService.Text2SQLResult result = text2SQLService.query(query, tenantId);
       return YdszJson.toJson(
@@ -56,10 +52,10 @@ public class Text2SQLTool implements ToolExecutor {
               "sql", result.generatedSql(),
               "executionTimeMs", result.executionTimeMs()));
     } catch (Text2SQLService.Text2SQLException e) {
-      LOG.warn("[Text2SQLTool] Text2SQL 执行失败: errorCode={}, msg={}", e.getErrorCode(), e.getMessage());
+      log.warn("[Text2SQLTool] Text2SQL 执行失败: errorCode={}, msg={}", e.getErrorCode(), e.getMessage());
       return YdszJson.toJson(Map.of("error", e.getMessage(), "errorCode", e.getErrorCode()));
     } catch (Exception e) {
-      LOG.error("[Text2SQLTool] Text2SQL 未知异常: {}", e.getMessage(), e);
+      log.error("[Text2SQLTool] Text2SQL 未知异常: {}", e.getMessage(), e);
       return YdszJson.toJson(Map.of("error", "Text2SQL 执行异常: " + e.getMessage()));
     }
   }
@@ -69,7 +65,7 @@ public class Text2SQLTool implements ToolExecutor {
       String tenantId = TenantContextHolder.getTenantId();
       return tenantId != null && !tenantId.isBlank() ? tenantId : "default";
     } catch (Exception e) {
-      LOG.debug("[Text2SQLTool] 获取租户 ID 失败，使用默认值");
+      log.debug("[Text2SQLTool] 获取租户 ID 失败，使用默认值");
       return "default";
     }
   }

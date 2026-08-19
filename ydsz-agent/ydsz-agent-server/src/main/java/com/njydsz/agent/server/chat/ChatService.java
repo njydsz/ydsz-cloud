@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import com.njydsz.common.tenant.TenantContextHolder;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
@@ -52,9 +51,8 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * @since 1.0.0
  */
 @Service
+@Slf4j
 public class ChatService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ChatService.class);
 
   /** LLM 客户端 */
   private final LlmClient llmClient;
@@ -141,7 +139,7 @@ public class ChatService {
     String convId =
         conversationId != null ? conversationId : String.valueOf(snowflakeIdGenerator.nextId());
     String traceId = traceRecorder.startTrace(convId, "CHAT");
-    LOG.info(
+    log.info(
         "[Chat] 同步对话: convId={}, traceId={}, messageLen={}", convId, traceId, userMessage.length());
 
     // P2: 运行态指标埋点 — 标记会话活跃
@@ -149,7 +147,7 @@ public class ChatService {
 
     String sanitizedInput = guardrailService.applyInputGuardrails(userMessage);
     if (sanitizedInput == null) {
-      LOG.warn("[Chat] 输入被安全护栏拒绝: convId={}", convId);
+      log.warn("[Chat] 输入被安全护栏拒绝: convId={}", convId);
       metrics.recordGuardrailRejection("input-guardrail", "input");
       traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
       ChatMessage rejectedMsg = ChatMessage.assistant("抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero());
@@ -180,7 +178,7 @@ public class ChatService {
 
     // P0: 调用前 Token 预计算 — 估算成本供配额预检与前端展示
     CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
-    LOG.info(
+    log.info(
         "[Chat] 成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
         convId,
         estimatedCost.getEstimatedTotalTokens(),
@@ -213,7 +211,7 @@ public class ChatService {
       runtimeMetrics.recordExecution("simple", false, duration);
       // P2: 发布执行失败事件
       eventPublisher.publishExecutionFailed(executionId, resolveTenantId(convId), "CHAT", model, duration, e.getMessage());
-      LOG.error("[Chat] LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
+      log.error("[Chat] LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
       ChatMessage errorMsg =
           ChatMessage.assistant("[错误] LLM 调用失败: " + e.getMessage(), convId, TokenUsage.zero());
       memory.save(convId, errorMsg);
@@ -232,7 +230,7 @@ public class ChatService {
       String tenantId = resolveTenantId(convId);
       quotaService.recordUsage(tenantId, actualCost);
     }
-    LOG.info(
+    log.info(
         "[Chat] 成本核算: convId={}, actualTokens={}, actualCostUsd={}",
         convId,
         actualCost.getActualTotalTokens(),
@@ -246,7 +244,7 @@ public class ChatService {
     runtimeMetrics.recordMessage("assistant");
     runtimeMetrics.recordExecution("simple", true, duration);
 
-    LOG.info(
+    log.info(
         "[Chat] 对话完成: convId={}, tokens={}, costUsd={}",
         convId,
         response.getUsage() != null ? response.getUsage().getTotalTokens() : 0,
@@ -285,7 +283,7 @@ public class ChatService {
     String convId =
         conversationId != null ? conversationId : String.valueOf(snowflakeIdGenerator.nextId());
     String traceId = traceRecorder.startTrace(convId, "CHAT_MULTIMODAL");
-    LOG.info(
+    log.info(
         "[Chat] 多模态同步对话: convId={}, traceId={}, partsCount={}",
         convId, traceId, multimodalContent.getParts().size());
 
@@ -307,7 +305,7 @@ public class ChatService {
 
     // P0: 调用前 Token 预计算 — 估算成本供配额预检与前端展示
     CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
-    LOG.info(
+    log.info(
         "[Chat] 多模态成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
         convId,
         estimatedCost.getEstimatedTotalTokens(),
@@ -338,7 +336,7 @@ public class ChatService {
       traceRecorder.endTrace(traceId, "FAILED");
       runtimeMetrics.recordExecution("multimodal", false, duration);
       eventPublisher.publishExecutionFailed(executionId, resolveTenantId(convId), "CHAT_MULTIMODAL", model, duration, e.getMessage());
-      LOG.error("[Chat] 多模态 LLM 调用失败: convId={}, error={}", convId, e.getMessage());
+      log.error("[Chat] 多模态 LLM 调用失败: convId={}, error={}", convId, e.getMessage());
       ChatMessage errorMsg =
           ChatMessage.assistant("[错误] LLM 调用失败: " + e.getMessage(), convId, TokenUsage.zero());
       memory.save(convId, errorMsg);
@@ -401,7 +399,7 @@ public class ChatService {
     String convId =
         conversationId != null ? conversationId : String.valueOf(snowflakeIdGenerator.nextId());
     String traceId = traceRecorder.startTrace(convId, "CHAT_STREAM");
-    LOG.info(
+    log.info(
         "[Chat-Stream] 流式对话: convId={}, traceId={}, messageLen={}",
         convId,
         traceId,
@@ -412,7 +410,7 @@ public class ChatService {
 
     String sanitizedInput = guardrailService.applyInputGuardrails(userMessage);
     if (sanitizedInput == null) {
-      LOG.warn("[Chat-Stream] 流式输入被安全护栏拒绝: convId={}", convId);
+      log.warn("[Chat-Stream] 流式输入被安全护栏拒绝: convId={}", convId);
       metrics.recordGuardrailRejection("input-guardrail", "input");
       traceRecorder.recordStep(
           traceId,
@@ -446,7 +444,7 @@ public class ChatService {
 
     // P0: 调用前 Token 预计算 — 估算成本供配额预检与前端展示
     CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
-    LOG.info(
+    log.info(
         "[Chat-Stream] 成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
         convId,
         estimatedCost.getEstimatedTotalTokens(),
@@ -522,7 +520,7 @@ public class ChatService {
       runtimeMetrics.recordExecution("simple", false, duration);
       // P2: 发布执行失败事件
       eventPublisher.publishExecutionFailed(executionId, resolveTenantId(convId), "CHAT_STREAM", model, duration, e.getMessage());
-      LOG.error("[Chat-Stream] 流式 LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
+      log.error("[Chat-Stream] 流式 LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
       memory.save(
           convId,
           ChatMessage.assistant("[错误] LLM 流式调用失败: " + e.getMessage(), convId, TokenUsage.zero()));
@@ -541,7 +539,7 @@ public class ChatService {
       String tenantId = resolveTenantId(convId);
       quotaService.recordUsage(tenantId, actualCost);
     }
-    LOG.info(
+    log.info(
         "[Chat-Stream] 成本核算: convId={}, actualTokens={}, actualCostUsd={}",
         convId,
         actualCost.getActualTotalTokens(),
@@ -566,7 +564,7 @@ public class ChatService {
         duration,
         actualCost.getActualTotalTokens(),
         actualCost.getActualCostUsd());
-    LOG.info(
+    log.info(
         "[Chat-Stream] 流式对话完成: convId={}, tokens={}, costUsd={}",
         convId,
         usage[0].getTotalTokens(),
@@ -591,7 +589,7 @@ public class ChatService {
     String convId =
         conversationId != null ? conversationId : String.valueOf(snowflakeIdGenerator.nextId());
     String traceId = traceRecorder.startTrace(convId, "CHAT_MULTIMODAL_STREAM");
-    LOG.info(
+    log.info(
         "[Chat-Stream] 多模态流式对话: convId={}, traceId={}, partsCount={}",
         convId,
         traceId,
@@ -616,7 +614,7 @@ public class ChatService {
 
     // P0: 调用前 Token 预计算 — 估算成本供配额预检与前端展示
     CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
-    LOG.info(
+    log.info(
         "[Chat-Stream] 多模态成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
         convId,
         estimatedCost.getEstimatedTotalTokens(),
@@ -686,7 +684,7 @@ public class ChatService {
       traceRecorder.endTrace(traceId, "FAILED");
       runtimeMetrics.recordExecution("multimodal", false, duration);
       eventPublisher.publishExecutionFailed(executionId, resolveTenantId(convId), "CHAT_MULTIMODAL_STREAM", model, duration, e.getMessage());
-      LOG.error("[Chat-Stream] 多模态流式 LLM 调用失败: convId={}, error={}", convId, e.getMessage());
+      log.error("[Chat-Stream] 多模态流式 LLM 调用失败: convId={}, error={}", convId, e.getMessage());
       memory.save(
           convId,
           ChatMessage.assistant("[错误] LLM 流式调用失败: " + e.getMessage(), convId, TokenUsage.zero()));
@@ -786,7 +784,7 @@ public class ChatService {
       String tenantId = TenantContextHolder.getTenantId();
       return tenantId != null && !tenantId.isBlank() ? tenantId : "default";
     } catch (Exception e) {
-      LOG.debug("[Chat] 获取租户 ID 失败，使用默认值: convId={}, error={}", convId, e.getMessage());
+      log.debug("[Chat] 获取租户 ID 失败，使用默认值: convId={}, error={}", convId, e.getMessage());
       return "default";
     }
   }

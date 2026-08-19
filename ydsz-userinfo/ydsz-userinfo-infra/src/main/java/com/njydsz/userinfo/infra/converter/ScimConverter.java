@@ -113,7 +113,7 @@ public final class ScimConverter {
     }
 
     UserAccountCreateDTO dto = new UserAccountCreateDTO();
-    dto.setUserName(scimUser.getUserName());
+    dto.setUsername(scimUser.getUserName());
     dto.setExternalId(scimUser.getExternalId());
 
     // 姓名映射

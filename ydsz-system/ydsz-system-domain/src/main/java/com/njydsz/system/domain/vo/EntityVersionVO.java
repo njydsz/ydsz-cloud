@@ -2,7 +2,6 @@ package com.njydsz.system.domain.vo;
 
 import java.time.LocalDateTime;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -15,30 +14,21 @@ import lombok.Data;
  * @see com.njydsz.system.domain.entity.EntityVersion 实体版本实体
  */
 @Data
-@Schema(description = "实体版本视图对象")
 public class EntityVersionVO {
 
-  @Schema(description = "主键 ID")
   private String id;
 
-  @Schema(description = "资源类型: CONFIG/DICT/VARIABLE")
   private String resourceType;
 
-  @Schema(description = "资源唯一标识")
   private String resourceKey;
 
-  @Schema(description = "资源分组")
   private String resourceGroup;
 
-  @Schema(description = "版本号")
   private String version;
 
-  @Schema(description = "变更说明")
   private String changeLog;
 
-  @Schema(description = "生效时间")
   private LocalDateTime effectiveDate;
 
-  @Schema(description = "变更前 JSON 快照（内部使用，不回显前端）")
   private String snapshotJson;
 }

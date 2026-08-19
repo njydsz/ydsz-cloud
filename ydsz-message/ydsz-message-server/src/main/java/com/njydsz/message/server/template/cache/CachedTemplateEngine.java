@@ -1,7 +1,7 @@
 package com.njydsz.message.server.template.cache;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,24 +10,23 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.listener.RemovalCause;
+import com.njydsz.common.cache.listener.RemovalListener;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.message.server.template.TemplateEngine;
+import com.njydsz.message.server.template.util.TemplateFilterUtil;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.code.YdszResultCode;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.message.server.template.TemplateEngine;
-import com.njydsz.message.server.template.util.TemplateFilterUtil;
-
 /**
- * 带 AST 缓存的模板引擎（Caffeine 实现）。
+ * 带 AST 缓存的模板引擎（基于 ydsz-common-cache 实现）。
  *
  * <p>核心优化：将高频模板预编译为指令树（{@link TemplateAst}），避免每次渲染重复执行正则匹配。
  *
@@ -38,7 +37,7 @@ import com.njydsz.message.server.template.util.TemplateFilterUtil;
  *   <li>有缓存：O(指令数)，仅首次渲染编译，后续直接遍历指令列表
  * </ul>
  *
- * <p>缓存策略（Caffeine W-TinyLFU）：
+ * <p>缓存策略（Window-TinyLFU）：
  *
  * <ul>
  *   <li>最大容量可通过 {@code ydsz.message.template.cache-max-size} 配置（默认 1000）
@@ -51,7 +50,6 @@ import com.njydsz.message.server.template.util.TemplateFilterUtil;
  */
 @Slf4j
 @Component
-@ConditionalOnClass(Cache.class)
 public class CachedTemplateEngine implements TemplateEngine {
 
   /** 变量占位符正则：匹配 ${var} / ${a.b.c} / ${this} / ${@index} / ${var|filter:arg} */
@@ -76,6 +74,9 @@ public class CachedTemplateEngine implements TemplateEngine {
   /** 默认缓存过期时间（分钟） */
   private static final long DEFAULT_EXPIRE_AFTER_WRITE_MINUTES = 30L;
 
+  /** 缓存名称（用于健康检查和监控） */
+  private static final String CACHE_NAME = "message:template-ast";
+
   /** 模板 AST 缓存：原始模板字符串 → 编译后的 AST */
   private final Cache<String, TemplateAst> astCache;
 
@@ -86,7 +87,9 @@ public class CachedTemplateEngine implements TemplateEngine {
   private final AtomicLong cacheMisses = new AtomicLong(0);
 
   /**
-   * 构造带监控的 Caffeine 缓存实例。
+   * 构造带监控的缓存实例。
+   *
+   * <p>使用 ydsz-common-cache 统一管理缓存生命周期，支持配置外部化和健康检查。
    *
    * @param maxCacheSize 最大缓存容量
    * @param expireAfterWriteMinutes 写入后过期时间（分钟）
@@ -97,19 +100,21 @@ public class CachedTemplateEngine implements TemplateEngine {
       long expireAfterWriteMinutes,
       @Autowired(required = false) MeterRegistry meterRegistry) {
     this.astCache =
-        Caffeine.newBuilder()
+        YdszCache.newBuilder()
+            .name(CACHE_NAME)
             .maximumSize(Math.max(64, maxCacheSize))
             .expireAfterWrite(expireAfterWriteMinutes, TimeUnit.MINUTES)
             .recordStats()
             .removalListener(
-                (String key, TemplateAst value, RemovalCause cause) -> {
-                  if (cause == RemovalCause.SIZE) {
-                    log.warn(
-                        "[TemplateAst] 缓存容量驱逐: cause={} cacheSize={}",
-                        cause,
-                        astCache.estimatedSize());
-                  }
-                })
+                RemovalListener.listener(
+                    (String key, TemplateAst value, RemovalCause cause) -> {
+                      if (cause == RemovalCause.SIZE) {
+                        log.warn(
+                            "[TemplateAst] 缓存容量驱逐: cause={} cacheSize={}",
+                            cause,
+                            astCache.estimatedSize());
+                      }
+                    }))
             .build();
     log.info(
         "[TemplateAst] 缓存已初始化: maxSize={} expireAfterWrite={}min",
@@ -128,12 +133,12 @@ public class CachedTemplateEngine implements TemplateEngine {
           "ydsz.message.template.cache.hit.rate",
           tags,
           astCache,
-          c -> c.stats().hitRate());
+          c -> c.getHitRate());
       meterRegistry.gauge(
           "ydsz.message.template.cache.eviction.count",
           tags,
           astCache,
-          c -> (double) c.stats().evictionCount());
+          c -> (double) c.getStats().evictionCount());
       log.info("[TemplateAst] 缓存监控指标已注册");
     }
   }
@@ -263,7 +268,7 @@ public class CachedTemplateEngine implements TemplateEngine {
           if (listValue instanceof Iterable<?> iterable) {
             int index = 0;
             for (Object item : iterable) {
-              Map<String, Object> itemScope = new HashMap<>(params);
+              Map<String, Object> itemScope = new LinkedHashMap<>(params);
               itemScope.put("this", item);
               itemScope.put("@index", index);
               result.append(renderAst(instruction.getBody(), itemScope));
@@ -363,7 +368,7 @@ public class CachedTemplateEngine implements TemplateEngine {
       return;
     }
     long evicted =
-        astCache.asMap().keySet().stream()
+        astCache.keySet().stream()
             .filter(key -> key.contains(templateCode))
             .peek(astCache::invalidate)
             .count();
@@ -390,19 +395,19 @@ public class CachedTemplateEngine implements TemplateEngine {
     return String.format(
         "size=%d, hitRate=%.2f%%, evictions=%d",
         astCache.estimatedSize(),
-        astCache.stats().hitRate() * 100,
-        astCache.stats().evictionCount());
+        astCache.getHitRate() * 100,
+        astCache.getStats().evictionCount());
   }
 
   /**
-   * 获取 Caffeine 缓存统计信息（结构化对象，供运维接口使用）。
+   * 获取缓存统计信息（结构化对象，供运维接口使用）。
    *
-   * <p>返回 Caffeine {@link com.github.benmanes.caffeine.cache.stats.CacheStats}，
+   * <p>返回 {@link com.njydsz.common.cache.stats.CacheStats}，
    * 包含 hitCount、missCount、hitRate、evictionCount 等详细指标。
    *
-   * @return Caffeine CacheStats 对象
+   * @return CacheStats 对象
    */
-  public com.github.benmanes.caffeine.cache.stats.CacheStats caffeineCacheStats() {
-    return astCache.stats();
+  public com.njydsz.common.cache.stats.CacheStats getCacheStats() {
+    return astCache.getStats();
   }
 }

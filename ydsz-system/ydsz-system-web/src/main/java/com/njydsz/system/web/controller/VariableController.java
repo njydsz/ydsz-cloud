@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -64,6 +65,7 @@ import com.njydsz.system.server.service.VariableService;
 @RestController
 @RequestMapping("/api/v1/variable")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "sys:variable:list")
 public class VariableController {
 
   private final VariableService service;
@@ -126,6 +128,7 @@ public class VariableController {
   @Operation(summary = "创建系统变量")
   @RateLimit(resource = "system.variable.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:variable:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:variable:add")
   @PostMapping
   public YdszResponse<String> save(@Valid @RequestBody VariableVO vo) {
     return YdszResponse.success(service.save(vo));
@@ -147,6 +150,7 @@ public class VariableController {
   @Operation(summary = "更新系统变量")
   @RateLimit(resource = "system.variable.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:variable:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:variable:edit")
   @PutMapping
   public YdszResponse<Boolean> update(@Valid @RequestBody VariableVO vo) {
     return YdszResponse.success(service.updateById(vo));
@@ -168,6 +172,7 @@ public class VariableController {
   @Operation(summary = "删除系统变量")
   @RateLimit(resource = "system.variable.remove", threshold = 50)
   @Idempotent(key = "'ydsz:system:variable:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:variable:delete")
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(service.removeById(id));

@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.njydsz.workflow.domain.dto.FlowCommentCreateDTO;
 import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
+import com.njydsz.workflow.domain.vo.FlowCommentVO;
+import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
 import com.njydsz.workflow.infra.entity.FlowCommentDO;
 import com.njydsz.workflow.infra.entity.FlowQuickCommentDO;
 
@@ -71,7 +73,7 @@ public interface FlowCommentService {
    * @param instanceId 实例 ID
    * @return 全部评论列表
    */
-  List<FlowCommentDO> listByInstance(String tenantId, String instanceId);
+  List<FlowCommentVO> listByInstance(String tenantId, String instanceId);
 
   /**
    * 查询实例下全部一级评论（按创建时间正序，不含回复）。
@@ -80,7 +82,7 @@ public interface FlowCommentService {
    * @param instanceId 实例 ID
    * @return 一级评论列表
    */
-  List<FlowCommentDO> listRootComments(String tenantId, String instanceId);
+  List<FlowCommentVO> listRootComments(String tenantId, String instanceId);
 
   /**
    * 查询指定父评论下的全部回复（按创建时间正序）。
@@ -88,7 +90,7 @@ public interface FlowCommentService {
    * @param parentCommentId 父评论 ID
    * @return 回复列表
    */
-  List<FlowCommentDO> listReplies(String parentCommentId);
+  List<FlowCommentVO> listReplies(String parentCommentId);
 
   /**
    * 删除评论（软删除）。
@@ -112,7 +114,7 @@ public interface FlowCommentService {
    * @param tenantId 租户 ID
    * @return 常用语列表（已合并 + 已排序），无数据返回空列表
    */
-  List<FlowQuickCommentDO> listQuickComments(String userId, String tenantId);
+  List<FlowQuickCommentVO> listQuickComments(String userId, String tenantId);
 
   /**
    * 创建用户自定义常用语。

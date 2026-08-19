@@ -1,8 +1,7 @@
 package com.njydsz.agent.server.prompt;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
 
@@ -16,10 +15,9 @@ import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @Component
 public class DatabasePromptTemplateProvider implements PromptTemplateProvider {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DatabasePromptTemplateProvider.class);
 
   private final PromptManagementService promptManagementService;
 
@@ -35,13 +33,13 @@ public class DatabasePromptTemplateProvider implements PromptTemplateProvider {
     try {
       PromptManagementService.PromptTemplate template = promptManagementService.get(templateCode);
       if (template == null) {
-        LOG.debug("[PromptProvider] 模板不存在: code={}", templateCode);
+        log.debug("[PromptProvider] 模板不存在: code={}", templateCode);
         return null;
       }
-      LOG.debug("[PromptProvider] 加载模板: code={}, version={}", templateCode, template.version());
+      log.debug("[PromptProvider] 加载模板: code={}, version={}", templateCode, template.version());
       return template.content();
     } catch (Exception e) {
-      LOG.warn("[PromptProvider] 加载模板失败: code={}, error={}", templateCode, e.getMessage());
+      log.warn("[PromptProvider] 加载模板失败: code={}, error={}", templateCode, e.getMessage());
       return null;
     }
   }

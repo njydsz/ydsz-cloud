@@ -29,6 +29,7 @@ import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.util.id.IdGenerator;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * ReAct Agent 执行器
@@ -50,6 +51,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class ReActAgentExecutor extends AbstractAgentExecutor {
 
   /**
@@ -95,7 +97,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
   public ChatResponse execute(AgentExecutionRequest request) {
     String convId = extractConvId(request);
     String traceId = startTrace(convId, "REACT");
-    LOG.info(
+    log.info(
         "[ReAct] 开始执行: convId={}, traceId={}, maxIterations={}",
         convId,
         traceId,
@@ -144,7 +146,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
         String output = applyOutputGuardrails(response.getContent());
         saveConversation(convId, userInput, output, response.getUsage());
         traceRecorder.endTrace(traceId, "SUCCESS");
-        LOG.info(
+        log.info(
             "[ReAct] 完成: convId={}, iterations={}, tokens={}",
             convId,
             i + 1,
@@ -172,7 +174,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       }
     }
 
-    LOG.warn("[ReAct] 超过最大迭代次数: convId={}", convId);
+    log.warn("[ReAct] 超过最大迭代次数: convId={}", convId);
     traceRecorder.endTrace(traceId, "MAX_ITERATIONS");
     return buildMaxIterationsResponse(convId, totalUsage);
   }
@@ -181,7 +183,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
     String convId = extractConvId(request);
     String traceId = startTrace(convId, "REACT_STREAM");
-    LOG.info("[ReAct-Stream] 开始流式执行: convId={}, traceId={}", convId, traceId);
+    log.info("[ReAct-Stream] 开始流式执行: convId={}, traceId={}", convId, traceId);
 
     String responseId = IdGenerator.nextIdStr();
     String model = properties.getLlm().getDefaultModel();
@@ -261,7 +263,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       }
     }
 
-    LOG.warn("[ReAct-Stream] 超过最大迭代次数: convId={}", convId);
+    log.warn("[ReAct-Stream] 超过最大迭代次数: convId={}", convId);
     traceRecorder.endTrace(traceId, "MAX_ITERATIONS");
     chunkConsumer.accept(ChatChunk.content(responseId, model, "\n\n抱歉，我已达到最大推理次数限制，无法完成此任务。"));
     chunkConsumer.accept(ChatChunk.finish(responseId, model, "max_iterations", totalUsage));
@@ -297,7 +299,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       if (enabledTools.contains(toolCall.getName())) {
         allowed.add(toolCall);
       } else {
-        LOG.warn("[ReAct] 工具不在白名单内，拒绝调用: {}", toolCall.getName());
+        log.warn("[ReAct] 工具不在白名单内，拒绝调用: {}", toolCall.getName());
       }
     }
     return allowed;
@@ -410,7 +412,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       }
       return ragService.buildContext(chunks);
     } catch (Exception e) {
-      LOG.warn("[ReAct] RAG 检索失败，跳过知识增强: {}", e.getMessage());
+      log.warn("[ReAct] RAG 检索失败，跳过知识增强: {}", e.getMessage());
       return null;
     }
   }

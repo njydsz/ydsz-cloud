@@ -8,10 +8,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.njydsz.agent.domain.dto.TokenUsageRecordDTO;
+import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.repository.TokenUsageRecordRepository;
 import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
@@ -33,9 +31,8 @@ import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class CostAnalysisService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(CostAnalysisService.class);
 
   /**
    * 用量记录异步写入线程池（JDK 21 虚拟线程，规范豁免场景）。
@@ -91,7 +88,7 @@ public class CostAnalysisService {
               tokenUsageRecordRepository.insert(record);
             } catch (Exception e) {
               // 用量记录失败不应影响主流程，仅记录日志
-              LOG.warn(
+              log.warn(
                   "[CostAnalysis] 用量记录失败: convId={}, model={}",
                   conversationId,
                   modelName,
@@ -100,7 +97,7 @@ public class CostAnalysisService {
           });
     } catch (Exception e) {
       // 记录构造失败同样不阻塞主流程
-      LOG.warn("[CostAnalysis] 用量记录构造失败: convId={}, model={}", conversationId, modelName, e);
+      log.warn("[CostAnalysis] 用量记录构造失败: convId={}, model={}", conversationId, modelName, e);
     }
   }
 

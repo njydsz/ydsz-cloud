@@ -63,7 +63,7 @@ public class SecurityDashboardController {
    * @return 安全仪表盘总览
    */
   @GetMapping("/dashboard")
-  @AuthApiPermission("admin:security:view")
+  @AuthApiPermission(apiCodes = "admin:security:view")
   @Operation(summary = "获取仪表盘总览")
   public YdszResponse<SecurityDashboardVO> getDashboard() {
     return YdszResponse.success(securityDashboardService.getDashboard());
@@ -77,7 +77,7 @@ public class SecurityDashboardController {
    * @return 每日登录成功率列表
    */
   @GetMapping("/login-success-rate")
-  @AuthApiPermission("admin:security:view")
+  @AuthApiPermission(apiCodes = "admin:security:view")
   @Operation(summary = "获取登录成功率趋势")
   public YdszResponse<List<LoginSuccessRateVO>> getLoginSuccessRate(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
@@ -98,7 +98,7 @@ public class SecurityDashboardController {
    * @return 失败原因分布列表
    */
   @GetMapping("/login-fail-distribution")
-  @AuthApiPermission("admin:security:view")
+  @AuthApiPermission(apiCodes = "admin:security:view")
   @Operation(summary = "获取登录失败原因分布")
   public YdszResponse<List<LoginFailDistributionVO>> getLoginFailDistribution(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -111,7 +111,7 @@ public class SecurityDashboardController {
    * @return MFA 覆盖率统计
    */
   @GetMapping("/mfa-coverage")
-  @AuthApiPermission("admin:security:view")
+  @AuthApiPermission(apiCodes = "admin:security:view")
   @Operation(summary = "获取 MFA 覆盖率")
   public YdszResponse<MfaCoverageVO> getMfaCoverage() {
     return YdszResponse.success(securityDashboardService.getMfaCoverage());
@@ -123,7 +123,7 @@ public class SecurityDashboardController {
    * @return 风险等级分布
    */
   @GetMapping("/risk-distribution")
-  @AuthApiPermission("admin:security:view")
+  @AuthApiPermission(apiCodes = "admin:security:view")
   @Operation(summary = "获取风险等级分布")
   public YdszResponse<RiskLevelDistributionVO> getRiskLevelDistribution() {
     return YdszResponse.success(securityDashboardService.getRiskLevelDistribution());
@@ -136,7 +136,7 @@ public class SecurityDashboardController {
    * @return 最近安全事件列表
    */
   @GetMapping("/recent-events")
-  @AuthApiPermission("admin:security:view")
+  @AuthApiPermission(apiCodes = "admin:security:view")
   @Operation(summary = "获取最近安全事件")
   public YdszResponse<List<SecurityEventVO>> getRecentSecurityEvents(
       @RequestParam(defaultValue = "20") int limit) {
@@ -149,7 +149,7 @@ public class SecurityDashboardController {
    * @return 活跃度概览数据
    */
   @GetMapping("/session-activity")
-  @AuthApiPermission("admin:security:view")
+  @AuthApiPermission(apiCodes = "admin:security:view")
   @Operation(summary = "获取会话活跃度概览")
   public YdszResponse<SessionActivityVO> getSessionActivity() {
     return YdszResponse.success(sessionActivityService.getActivityOverview());
@@ -162,7 +162,7 @@ public class SecurityDashboardController {
    * @return 活跃用户排行列表
    */
   @GetMapping("/active-user-ranking")
-  @AuthApiPermission("admin:security:view")
+  @AuthApiPermission(apiCodes = "admin:security:view")
   @Operation(summary = "获取活跃用户排行")
   public YdszResponse<List<ActiveUserVO>> getActiveUserRanking(
       @RequestParam(defaultValue = "10") int limit) {
@@ -177,7 +177,7 @@ public class SecurityDashboardController {
    * @return 会话趋势列表
    */
   @GetMapping("/session-trend")
-  @AuthApiPermission("admin:security:view")
+  @AuthApiPermission(apiCodes = "admin:security:view")
   @Operation(summary = "获取会话趋势")
   public YdszResponse<List<SessionTrendVO>> getSessionTrend(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
@@ -197,7 +197,7 @@ public class SecurityDashboardController {
    * @return 设备分布列表
    */
   @GetMapping("/device-distribution")
-  @AuthApiPermission("admin:security:view")
+  @AuthApiPermission(apiCodes = "admin:security:view")
   @Operation(summary = "获取设备分布")
   public YdszResponse<List<DeviceDistributionVO>> getDeviceDistribution() {
     return YdszResponse.success(sessionActivityService.getDeviceDistribution());
@@ -209,7 +209,7 @@ public class SecurityDashboardController {
    * @return 异常会话列表
    */
   @GetMapping("/anomaly-sessions")
-  @AuthApiPermission("admin:security:view")
+  @AuthApiPermission(apiCodes = "admin:security:view")
   @Operation(summary = "检测异常会话")
   public YdszResponse<List<AnomalySessionVO>> detectAnomalySessions() {
     return YdszResponse.success(sessionActivityService.detectAnomalySessions());

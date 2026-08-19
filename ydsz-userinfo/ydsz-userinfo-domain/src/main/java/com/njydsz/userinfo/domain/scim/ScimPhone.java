@@ -1,7 +1,8 @@
 package com.njydsz.userinfo.domain.scim;
 
-import com.alibaba.fastjson2.annotation.JSONField;
+import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -15,19 +16,20 @@ import lombok.NoArgsConstructor;
  * @since 1.6.0
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ScimPhone {
 
   /** 电话号码。 */
-  @JSONField(name = "value")
+  @JsonProperty("value")
   private String value;
 
   /** 显示名称（可选）。 */
-  @JSONField(name = "display")
+  @JsonProperty("display")
   private String display;
 
   /** 是否为主要电话号码。 */
-  @JSONField(name = "primary")
+  @JsonProperty("primary")
   private Boolean primary;
 }

@@ -15,8 +15,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.njydsz.common.util.id.IdGenerator;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.agent.AgentDag;
 import com.njydsz.agent.domain.agent.AgentDefinition;
@@ -64,9 +64,8 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class DagOrchestrationExecutor implements AgentExecutor {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DagOrchestrationExecutor.class);
 
   /** variables 中携带 DAG YAML 定义时使用的键 */
   private static final String VARIABLE_DSL_KEY = "dsl";
@@ -130,7 +129,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
    */
   public DagExecutionResult execute(AgentDag dag, String userInput, String resumeExecutionId) {
     String executionId = resumeExecutionId != null ? resumeExecutionId : IdGenerator.nextIdStr();
-    LOG.info(
+    log.info(
         "[DAG] 开始编排: id={}, name={}, nodes={}, resume={}",
         executionId, dag.getName(), dag.getNodes().size(), resumeExecutionId != null);
 
@@ -153,7 +152,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
     for (String nodeId : sortedNodeIds) {
       // P2-#8: 检查点中已成功的节点跳过
       if (completed.contains(nodeId)) {
-        LOG.info("[DAG] 跳过已完成节点: id={}", nodeId);
+        log.info("[DAG] 跳过已完成节点: id={}", nodeId);
         // 为该节点创建一个已完成的占位 future，保证下游依赖正常
         futureMap.put(nodeId, CompletableFuture.completedFuture(null));
         continue;
@@ -195,14 +194,14 @@ public class DagOrchestrationExecutor implements AgentExecutor {
           .join();
     } catch (CompletionException e) {
       if (e.getCause() instanceof TimeoutException) {
-        LOG.error("[DAG] 编排超时: id={}", executionId);
+        log.error("[DAG] 编排超时: id={}", executionId);
       } else {
-        LOG.error("[DAG] 编排异常: id={}, error={}", executionId, e.getMessage(), e);
+        log.error("[DAG] 编排异常: id={}, error={}", executionId, e.getMessage(), e);
       }
     }
 
     boolean hasFailed = !failed.isEmpty();
-    LOG.info(
+    log.info(
         "[DAG] 编排完成: id={}, completed={}, failed={}", executionId, completed.size(), failed.size());
 
     // P2-#8: 保存检查点（支持后续续跑）
@@ -244,14 +243,14 @@ public class DagOrchestrationExecutor implements AgentExecutor {
                 nodeResults.putAll(cp.getNodeResults());
                 completed.addAll(cp.getCompletedNodes());
                 failed.addAll(cp.getFailedNodes());
-                LOG.info(
+                log.info(
                     "[DAG] 加载检查点: executionId={}, completed={}, failed={}",
                     executionId,
                     cp.getCompletedNodes().size(),
                     cp.getFailedNodes().size());
               });
     } catch (Exception e) {
-      LOG.warn("[DAG] 加载检查点失败，退化为全新执行: executionId={}, err={}", executionId, e.getMessage());
+      log.warn("[DAG] 加载检查点失败，退化为全新执行: executionId={}, err={}", executionId, e.getMessage());
     }
   }
 
@@ -287,9 +286,9 @@ public class DagOrchestrationExecutor implements AgentExecutor {
               new HashSet<>(failed),
               LocalDateTime.now());
       checkpointStore.save(checkpoint);
-      LOG.debug("[DAG] 保存检查点: executionId={}, completed={}, failed={}", executionId, completed.size(), failed.size());
+      log.debug("[DAG] 保存检查点: executionId={}, completed={}, failed={}", executionId, completed.size(), failed.size());
     } catch (Exception e) {
-      LOG.warn("[DAG] 保存检查点失败: executionId={}, err={}", executionId, e.getMessage());
+      log.warn("[DAG] 保存检查点失败: executionId={}, err={}", executionId, e.getMessage());
     }
   }
 
@@ -311,14 +310,14 @@ public class DagOrchestrationExecutor implements AgentExecutor {
       String executionId) {
     // 条件分支：若本节点属于某 CONDITION 节点未选中的分支，则跳过执行
     if (isBranchSkipped(dag, node, results)) {
-      LOG.info("[DAG] 节点被条件分支排除，跳过: node={}", node.getId());
+      log.info("[DAG] 节点被条件分支排除，跳过: node={}", node.getId());
       return;
     }
 
     List<AgentDag.Node> deps = dag.getDependencies(node.getId());
     for (AgentDag.Node dep : deps) {
       if (failed.contains(dep.getId())) {
-        LOG.warn("[DAG] 依赖节点失败，跳过: node={}, dep={}", node.getId(), dep.getId());
+        log.warn("[DAG] 依赖节点失败，跳过: node={}, dep={}", node.getId(), dep.getId());
         failed.add(node.getId());
         return;
       }
@@ -337,7 +336,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
     String input = buildNodeInput(node, userInput, results);
     // 获取节点级超时配置（优先节点 config，其次全局默认）
     int nodeTimeoutSeconds = getNodeTimeoutSeconds(node);
-    LOG.info(
+    log.info(
         "[DAG] 执行节点: id={}, type={}, timeout={}s",
         node.getId(),
         node.getAgentType(),
@@ -370,17 +369,17 @@ public class DagOrchestrationExecutor implements AgentExecutor {
         usages.put(node.getId(), response.getUsage());
       }
       completed.add(node.getId());
-      LOG.info("[DAG] 节点完成: id={}", node.getId());
+      log.info("[DAG] 节点完成: id={}", node.getId());
     } catch (CompletionException e) {
       if (e.getCause() instanceof TimeoutException) {
-        LOG.error("[DAG] 节点超时: id={}, timeout={}s", node.getId(), nodeTimeoutSeconds);
+        log.error("[DAG] 节点超时: id={}, timeout={}s", node.getId(), nodeTimeoutSeconds);
         results.put(node.getId(), "[超时] 节点执行超过 " + nodeTimeoutSeconds + " 秒");
       } else {
-        LOG.error("[DAG] 节点执行失败: id={}, error={}", node.getId(), e.getMessage(), e);
+        log.error("[DAG] 节点执行失败: id={}, error={}", node.getId(), e.getMessage(), e);
       }
       failed.add(node.getId());
     } catch (Exception e) {
-      LOG.error("[DAG] 节点执行失败: id={}, error={}", node.getId(), e.getMessage(), e);
+      log.error("[DAG] 节点执行失败: id={}, error={}", node.getId(), e.getMessage(), e);
       failed.add(node.getId());
     }
   }
@@ -486,7 +485,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
     try {
       return AgentDefinition.Type.valueOf(agentType.trim().toUpperCase());
     } catch (IllegalArgumentException e) {
-      LOG.warn("[DAG] 未知节点 agentType: {}，回退为 CHAT", agentType);
+      log.warn("[DAG] 未知节点 agentType: {}，回退为 CHAT", agentType);
       return AgentDefinition.Type.CHAT;
     }
   }
@@ -547,7 +546,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
     String trueBranch = (String) node.getConfig().get("trueBranch");
     String falseBranch = (String) node.getConfig().get("falseBranch");
 
-    LOG.info("[DAG] 执行条件节点: id={}, condition={}", node.getId(), condition);
+    log.info("[DAG] 执行条件节点: id={}, condition={}", node.getId(), condition);
 
     boolean conditionResult = evaluateCondition(condition, results);
     String branchNodeId = conditionResult ? trueBranch : falseBranch;
@@ -557,7 +556,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
 
     if (branchNodeId != null) {
       results.put("__BRANCH__" + node.getId(), branchNodeId);
-      LOG.info(
+      log.info(
           "[DAG] 条件路由: node={}, result={}, branch={}", node.getId(), conditionResult, branchNodeId);
     }
   }
@@ -591,14 +590,14 @@ public class DagOrchestrationExecutor implements AgentExecutor {
     List<String> loopBodyNodes =
         loopBodyStr.isBlank() ? List.of() : List.of(loopBodyStr.split(","));
 
-    LOG.info("[DAG] 执行循环节点: id={}, maxIterations={}", node.getId(), maxIter);
+    log.info("[DAG] 执行循环节点: id={}, maxIterations={}", node.getId(), maxIter);
 
     int iteration = 0;
     while (iteration < maxIter) {
       if (!evaluateCondition(loopCondition, results)) {
         break;
       }
-      LOG.info("[DAG] 循环迭代: node={}, iteration={}", node.getId(), iteration + 1);
+      log.info("[DAG] 循环迭代: node={}, iteration={}", node.getId(), iteration + 1);
       for (String bodyNodeId : loopBodyNodes) {
         AgentDag.Node bodyNode = dag.getNodes().get(bodyNodeId.trim());
         if (bodyNode != null && !failed.contains(bodyNodeId.trim())) {
@@ -611,7 +610,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
 
     results.put(node.getId(), "loop_completed_" + iteration + "_iterations");
     completed.add(node.getId());
-    LOG.info("[DAG] 循环完成: node={}, iterations={}", node.getId(), iteration);
+    log.info("[DAG] 循环完成: node={}, iterations={}", node.getId(), iteration);
   }
 
   /**
@@ -835,7 +834,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
       String resumeExecutionId,
       Consumer<DagProgressEvent> progressCallback) {
     String executionId = resumeExecutionId != null ? resumeExecutionId : IdGenerator.nextIdStr();
-    LOG.info(
+    log.info(
         "[DAG] 开始编排: id={}, name={}, nodes={}, resume={}",
         executionId, dag.getName(), dag.getNodes().size(), resumeExecutionId != null);
 
@@ -917,14 +916,14 @@ public class DagOrchestrationExecutor implements AgentExecutor {
           .join();
     } catch (CompletionException e) {
       if (e.getCause() instanceof TimeoutException) {
-        LOG.error("[DAG] 编排超时: id={}", executionId);
+        log.error("[DAG] 编排超时: id={}", executionId);
       } else {
-        LOG.error("[DAG] 编排异常: id={}, error={}", executionId, e.getMessage(), e);
+        log.error("[DAG] 编排异常: id={}, error={}", executionId, e.getMessage(), e);
       }
     }
 
     boolean hasFailed = !failed.isEmpty();
-    LOG.info(
+    log.info(
         "[DAG] 编排完成: id={}, completed={}, failed={}", executionId, completed.size(), failed.size());
 
     saveCheckpoint(executionId, dag.getName(), userInput, nodeResults, completed, failed);

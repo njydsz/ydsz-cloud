@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.excel.spring.ExcelWebSupport;
@@ -65,6 +66,7 @@ import com.njydsz.system.server.service.ConfigService;
 @RestController
 @RequestMapping("/api/v1/config")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "sys:config:list")
 public class ConfigController {
 
   private final ConfigService configService;
@@ -139,6 +141,7 @@ public class ConfigController {
   @Operation(summary = "创建配置")
   @RateLimit(resource = "system.config.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:config:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:config:add")
   @PostMapping
   public YdszResponse<String> save(@Valid @RequestBody ConfigVO vo) {
     return YdszResponse.success(configService.save(vo));
@@ -162,6 +165,7 @@ public class ConfigController {
   @Operation(summary = "更新配置")
   @RateLimit(resource = "system.config.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:config:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:config:edit")
   @PutMapping
   public YdszResponse<Boolean> update(@Valid @RequestBody ConfigVO vo) {
     return YdszResponse.success(configService.updateById(vo));
@@ -186,6 +190,7 @@ public class ConfigController {
   @Operation(summary = "删除配置")
   @RateLimit(resource = "system.config.remove", threshold = 50)
   @Idempotent(key = "'ydsz:system:config:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:config:delete")
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(configService.removeById(id));
@@ -223,6 +228,7 @@ public class ConfigController {
   @Idempotent(
       key = "'ydsz:system:config:batch:' + #batchDTO.items.hashCode() + ':' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
       ttlSeconds = 30)
+  @AuthApiPermission(apiCodes = "sys:config:add")
   @PostMapping("/batch")
   public YdszResponse<Map<String, Object>> batchSave(
       @Valid @RequestBody ConfigBatchDTO batchDTO) {
@@ -331,6 +337,7 @@ public class ConfigController {
       content = "'导入配置: ' + #file.originalFilename")
   @Operation(summary = "导入配置", description = "从 Excel 文件导入配置")
   @RateLimit(resource = "system.config.import", threshold = 5)
+  @AuthApiPermission(apiCodes = "sys:config:add")
   @PostMapping("/import")
   public YdszResponse<ImportResult> importConfigs(@RequestParam("file") MultipartFile file)
       throws IOException {

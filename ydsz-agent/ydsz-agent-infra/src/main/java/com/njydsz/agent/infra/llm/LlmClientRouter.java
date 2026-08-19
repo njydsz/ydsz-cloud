@@ -7,10 +7,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.model.ChatResponse;
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatRequest;
@@ -48,9 +46,8 @@ import com.njydsz.agent.domain.model.ChatResponse;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class LlmClientRouter implements LlmClient {
-
-  private static final Logger LOG = LoggerFactory.getLogger(LlmClientRouter.class);
 
   /** 已注册的 Provider 客户端映射（key=provider name） */
   private final Map<String, LlmClient> clients = new ConcurrentHashMap<>();
@@ -73,7 +70,7 @@ public class LlmClientRouter implements LlmClient {
     clients.put(client.getProvider(), client);
     // 首个注册的客户端通过 CAS 成为 defaultClient，避免并发注册时重复赋值
     defaultClient.compareAndSet(null, client);
-    LOG.info("[LLM-Router] 注册 Provider: {}", client.getProvider());
+    log.info("[LLM-Router] 注册 Provider: {}", client.getProvider());
   }
 
   /**
@@ -109,16 +106,16 @@ public class LlmClientRouter implements LlmClient {
       return client.chat(request);
     } catch (LlmException e) {
       if (!shouldFallback(e.getErrorType())) {
-        LOG.warn("[LLM-Router] 主 Provider 调用失败 ({})，错误类型不可恢复，不触发 Fallback", e.getErrorType());
+        log.warn("[LLM-Router] 主 Provider 调用失败 ({})，错误类型不可恢复，不触发 Fallback", e.getErrorType());
         throw e;
       }
-      LOG.warn(
+      log.warn(
           "[LLM-Router] 主 Provider 调用失败 ({})，尝试 Fallback: {}", e.getErrorType(), e.getMessage());
       LlmClient fallback = findFallback(client);
       if (fallback != null) {
         return fallback.chat(request);
       }
-      LOG.warn("[LLM-Router] 无可用 Fallback Provider，抛出原始异常");
+      log.warn("[LLM-Router] 无可用 Fallback Provider，抛出原始异常");
       throw e;
     }
   }
@@ -141,20 +138,20 @@ public class LlmClientRouter implements LlmClient {
     } catch (LlmException e) {
       if (!shouldFallback(e.getErrorType()) || streamStarted.get()) {
         if (streamStarted.get()) {
-          LOG.warn("[LLM-Router] 流式输出已开始，无法 Fallback: {}", e.getMessage());
+          log.warn("[LLM-Router] 流式输出已开始，无法 Fallback: {}", e.getMessage());
         } else {
-          LOG.warn("[LLM-Router] 主 Provider 流式调用失败 ({})，错误类型不可恢复，不触发 Fallback", e.getErrorType());
+          log.warn("[LLM-Router] 主 Provider 流式调用失败 ({})，错误类型不可恢复，不触发 Fallback", e.getErrorType());
         }
         throw e;
       }
-      LOG.warn(
+      log.warn(
           "[LLM-Router] 主 Provider 流式调用失败 ({})，尝试 Fallback: {}", e.getErrorType(), e.getMessage());
       LlmClient fallback = findFallback(client);
       if (fallback != null) {
         fallback.stream(request, chunkConsumer);
         return;
       }
-      LOG.warn("[LLM-Router] 无可用 Fallback Provider，抛出原始异常");
+      log.warn("[LLM-Router] 无可用 Fallback Provider，抛出原始异常");
       throw e;
     }
   }

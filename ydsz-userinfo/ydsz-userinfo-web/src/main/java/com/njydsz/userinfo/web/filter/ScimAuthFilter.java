@@ -156,6 +156,6 @@ public class ScimAuthFilter extends OncePerRequestFilter {
         .scimType(scimType)
         .build();
 
-    response.getWriter().write(YdszJson.toJsonString(error));
+    response.getWriter().write(YdszJson.toJson(error));
   }
 }

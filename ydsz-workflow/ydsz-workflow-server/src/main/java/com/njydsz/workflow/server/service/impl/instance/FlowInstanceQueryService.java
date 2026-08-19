@@ -34,6 +34,7 @@ import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 
 /**
  * 流程实例查询服务
@@ -76,6 +77,9 @@ public class FlowInstanceQueryService {
 
   /** MapStruct 转换器，用于 VO ↔ DO 转换 */
   private final WorkflowConverter converter;
+
+  /** 流程实例 Mapper（聚合查询无 Repository 等价方法，保留） */
+  private final FlowInstanceMapper instanceMapper;
 
   /** 流程变量管理器，负责变量读写与解析 */
   private final FlowInstanceVariableManager variableManager;
@@ -352,6 +356,83 @@ public class FlowInstanceQueryService {
     result.put("flowStatus", instance.getFlowStatus());
     result.put("title", instance.getTitle());
     return result;
+  }
+
+  // ============================== 监控聚合查询（供 Controller 层使用，避免 DO 泄漏） ==============================
+
+  /**
+   * 按 ID 查询流程实例（VO 版本）
+   *
+   * @param id 实例 ID
+   * @return 流程实例 VO，不存在返回 null
+   */
+  @Transactional(readOnly = true)
+  public FlowInstanceVO getByIdVO(String id) {
+    return instanceRepository.findById(id).orElse(null);
+  }
+
+  /**
+   * 按状态分组统计实例数量
+   *
+   * @param tenantId 租户 ID
+   * @return 状态分组计数列表
+   */
+  @Transactional(readOnly = true)
+  public List<Map<String, Object>> selectCountGroupByStatus(String tenantId) {
+    return instanceMapper.selectCountGroupByStatus(tenantId);
+  }
+
+  /**
+   * 查询今日新增/完成计数
+   *
+   * @param tenantId 租户 ID
+   * @return Map 含 todayNewCount / todayCompletedCount
+   */
+  @Transactional(readOnly = true)
+  public Map<String, Object> selectTodayCount(String tenantId) {
+    return instanceMapper.selectTodayCount(tenantId);
+  }
+
+  /**
+   * 按日统计新增实例数
+   *
+   * @param tenantId 租户 ID
+   * @param start 开始时间
+   * @param end 结束时间
+   * @return 每日新增列表
+   */
+  @Transactional(readOnly = true)
+  public List<Map<String, Object>> selectDailyNewCount(
+      String tenantId, LocalDateTime start, LocalDateTime end) {
+    return instanceMapper.selectDailyNewCount(tenantId, start, end);
+  }
+
+  /**
+   * 按日统计完成实例数
+   *
+   * @param tenantId 租户 ID
+   * @param start 开始时间
+   * @param end 结束时间
+   * @return 每日完成列表
+   */
+  @Transactional(readOnly = true)
+  public List<Map<String, Object>> selectDailyCompletedCount(
+      String tenantId, LocalDateTime start, LocalDateTime end) {
+    return instanceMapper.selectDailyCompletedCount(tenantId, start, end);
+  }
+
+  /**
+   * 按流程类型分组统计实例分布
+   *
+   * @param tenantId 租户 ID
+   * @param start 开始时间下界（可选）
+   * @param end 开始时间上界（可选）
+   * @return 流程类型分布列表
+   */
+  @Transactional(readOnly = true)
+  public List<Map<String, Object>> selectFlowTypeDistribution(
+      String tenantId, LocalDateTime start, LocalDateTime end) {
+    return instanceMapper.selectFlowTypeDistribution(tenantId, start, end);
   }
 
   // ============================== 私有辅助方法 ==============================

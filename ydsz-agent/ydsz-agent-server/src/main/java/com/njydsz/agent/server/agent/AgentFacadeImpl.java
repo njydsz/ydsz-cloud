@@ -9,8 +9,6 @@ import java.util.function.Consumer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
@@ -43,8 +41,6 @@ import com.njydsz.agent.server.chat.ChatService;
 @Service
 @RequiredArgsConstructor
 public class AgentFacadeImpl implements AgentFacade {
-
-  private static final Logger LOG = LoggerFactory.getLogger(AgentFacadeImpl.class);
 
   /** 简单对话服务（单轮 LLM 调用） */
   private final ChatService chatService;
@@ -87,7 +83,7 @@ public class AgentFacadeImpl implements AgentFacade {
   @Override
   public BatchChatResult batchChat(List<BatchChatItem> items) {
     long startTime = System.currentTimeMillis();
-    LOG.info("[BatchChat] 批量对话启动: itemsCount={}", items.size());
+    log.info("[BatchChat] 批量对话启动: itemsCount={}", items.size());
 
     // 虚拟线程池：每个任务一个虚拟线程，适合 I/O 密集型（LLM HTTP 调用）
     ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -115,13 +111,13 @@ public class AgentFacadeImpl implements AgentFacade {
 
       long duration = System.currentTimeMillis() - startTime;
       BatchChatResult result = new BatchChatResult(results, duration);
-      LOG.info(
+      log.info(
           "[BatchChat] 批量对话完成: total={}, success={}, failed={}, duration={}ms",
           items.size(), result.getSuccessCount(), result.getFailedCount(), duration);
       return result;
     } catch (Exception e) {
       long duration = System.currentTimeMillis() - startTime;
-      LOG.warn("[BatchChat] 批量对话异常: duration={}ms, error={}", duration, e.getMessage());
+      log.warn("[BatchChat] 批量对话异常: duration={}ms, error={}", duration, e.getMessage());
       // 异常时返回所有条目为失败
       List<BatchChatResult.BatchResultItem> results = new ArrayList<>(items.size());
       for (BatchChatItem item : items) {
@@ -159,7 +155,7 @@ public class AgentFacadeImpl implements AgentFacade {
           response.getUsage(),
           response.getFinishReason());
     } catch (Exception e) {
-      LOG.warn("[BatchChat] 单条对话失败: itemId={}, error={}", item.getItemId(), e.getMessage());
+      log.warn("[BatchChat] 单条对话失败: itemId={}, error={}", item.getItemId(), e.getMessage());
       return BatchChatResult.BatchResultItem.failure(item.getItemId(), e.getMessage());
     }
   }

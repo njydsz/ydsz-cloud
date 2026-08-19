@@ -3,9 +3,7 @@ package com.njydsz.agent.server.event;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.event.AgentDomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
@@ -25,9 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class AgentEventPublisher {
-
-  private static final Logger LOG = LoggerFactory.getLogger(AgentEventPublisher.class);
-
   private final DomainEventPublisher publisher;
 
   public AgentEventPublisher(DomainEventPublisher publisher) {
@@ -53,7 +48,7 @@ public class AgentEventPublisher {
     AgentDomainEvent event =
         AgentDomainEvent.of(DomainEventTypes.AGENT_EXECUTION_STARTED, executionId, metadata);
     publisher.publish(event);
-    LOG.debug("[AgentEvent] 执行启动: executionId={}, type={}", executionId, agentType);
+    log.debug("[AgentEvent] 执行启动: executionId={}, type={}", executionId, agentType);
   }
 
   /**
@@ -85,7 +80,7 @@ public class AgentEventPublisher {
     AgentDomainEvent event =
         AgentDomainEvent.of(DomainEventTypes.AGENT_EXECUTION_COMPLETED, executionId, metadata);
     publisher.publish(event);
-    LOG.debug("[AgentEvent] 执行完成: executionId={}, tokens={}, cost={}", executionId, totalTokens, costUsd);
+    log.debug("[AgentEvent] 执行完成: executionId={}, tokens={}, cost={}", executionId, totalTokens, costUsd);
   }
 
   /**
@@ -114,7 +109,7 @@ public class AgentEventPublisher {
     AgentDomainEvent event =
         AgentDomainEvent.of(DomainEventTypes.AGENT_EXECUTION_FAILED, executionId, metadata);
     publisher.publish(event);
-    LOG.warn("[AgentEvent] 执行失败: executionId={}, error={}", executionId, errorMessage);
+    log.warn("[AgentEvent] 执行失败: executionId={}, error={}", executionId, errorMessage);
   }
 
   /**

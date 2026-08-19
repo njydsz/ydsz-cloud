@@ -397,13 +397,13 @@ public class OAuth2Controller {
 
     // 4. State 校验（CSRF 防护，可选——仅当客户端传入 state 时执行）
     if (state != null && !state.isBlank()) {
-      String storedCode = redisStringOps.get(STATE_KEY_PREFIX + state);
+      String storedCode = redisStringOps.get(STATE_KEY_PREFIX + state, String.class);
       if (storedCode == null || !storedCode.equals(code)) {
         log.warn("OAuth2 state validation failed: state={}, code={}", state, code);
         throw new BusinessException(UserInfoExceptionCode.OAUTH2_STATE_INVALID);
       }
       // 校验通过后删除 state 标记（一次性使用）
-      redisStringOps.delete(STATE_KEY_PREFIX + state);
+      redisStringOps.del(STATE_KEY_PREFIX + state);
       log.debug("OAuth2 state validated and consumed: state={}", state);
     }
 

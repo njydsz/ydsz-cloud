@@ -388,7 +388,8 @@ public class CasController {
         ? "<p style=\"color: red;\">" + escapeHtml(errorMessage) + "</p>"
         : "";
 
-    return """
+    return String.format(
+        """
         <!DOCTYPE html>
         <html>
         <head>
@@ -397,15 +398,9 @@ public class CasController {
         </head>
         <body>
           <h2>统一身份认证</h2>
-        """
-        + errorHtml
-        + """
-          <form method="post" action="/cas/login?service="""
-        + encodedService
-        + """">
-            <input type="hidden" name="service" value="""
-        + escapeHtml(service)
-        + """">
+          %s
+          <form method="post" action="/cas/login?service=%s">
+            <input type="hidden" name="service" value="%s">
             <p>
               <label>用户名: <input type="text" name="username" required></label>
             </p>
@@ -418,7 +413,11 @@ public class CasController {
           </form>
         </body>
         </html>
-        """;
+        """,
+        errorHtml,
+        encodedService,
+        escapeHtml(service)
+    );
   }
 
   /**

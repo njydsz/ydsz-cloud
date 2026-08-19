@@ -33,7 +33,6 @@ import com.njydsz.system.domain.vo.ImportResult;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
-import com.njydsz.system.server.search.SearchIndexSyncer;
 import com.njydsz.system.server.service.ConfigExcelService;
 import com.njydsz.system.server.service.ConfigService;
 import com.njydsz.system.server.service.EntityVersionService;
@@ -116,9 +115,6 @@ public class ConfigServiceImpl implements ConfigService {
   /** 租户感知缓存键构造器（SpEL 与手动 evict 共用） */
   private final CacheKeyBuilder cacheKeyBuilder;
 
-  /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
-  private final SearchIndexSyncer searchIndexSyncer;
-
   /** Excel 导入导出服务（P1-1 拆分：环境迁移能力独立成类，本类专注 CRUD/缓存/事件编排） */
   private final ConfigExcelService configExcelService;
 
@@ -177,7 +173,6 @@ public class ConfigServiceImpl implements ConfigService {
     // 版本快照：新建配置无需快照（变更前不存在）
     configRepository.insert(dto);
     publishConfigChangedEvent(dto.getConfigKey(), dto.getConfigGroup());
-    indexUpsert(dto);
     return dto.getId();
   }
 
@@ -218,7 +213,6 @@ public class ConfigServiceImpl implements ConfigService {
               .snapshotJson(snapshotJson)
               .build());
       publishConfigChangedEvent(dto.getConfigKey(), dto.getConfigGroup());
-      indexUpsert(dto);
     }
     return updated;
   }
@@ -244,31 +238,8 @@ public class ConfigServiceImpl implements ConfigService {
               .snapshotJson(snapshotJson)
               .build());
       publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
-      indexDelete(id);
     }
     return removed;
-  }
-
-  /**
-   * 同步配置变更到 ES 搜索索引（可选能力）。
-   *
-   * <p>委托 {@link SearchIndexSyncer}，仅当搜索模块存在时才执行索引 upsert，避免对未启用搜索的环境产生硬依赖。
-   *
-   * @param dto 待同步的配置 DTO
-   */
-  private void indexUpsert(ConfigDTO dto) {
-    searchIndexSyncer.upsert("config", dto);
-  }
-
-  /**
-   * 从 ES 搜索索引删除配置文档（可选能力）。
-   *
-   * <p>同样委托 {@link SearchIndexSyncer}，未启用搜索模块时静默跳过。
-   *
-   * @param id 待删除的配置 ID
-   */
-  private void indexDelete(String id) {
-    searchIndexSyncer.delete("config", id);
   }
 
   /**

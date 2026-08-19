@@ -1,8 +1,7 @@
 package com.njydsz.agent.server.agent;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Lazy;
+import com.njydsz.agent.server.rag.RagService;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutor;
@@ -44,9 +43,8 @@ import com.njydsz.agent.server.rag.RagService;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class AgentFactory {
-
-  private static final Logger LOG = LoggerFactory.getLogger(AgentFactory.class);
 
   /** LLM 客户端 */
   private final LlmClient llmClient;
@@ -145,7 +143,7 @@ public class AgentFactory {
    * @return 对应类型的执行器实例
    */
   private AgentExecutor createExecutor(String type) {
-    LOG.info("[Agent-Factory] 创建执行器: type={}", type);
+    log.info("[Agent-Factory] 创建执行器: type={}", type);
 
     return switch (type.toUpperCase()) {
       case "REACT", "REACT_AGENT" ->
@@ -204,7 +202,7 @@ public class AgentFactory {
           // DAG 模式：图编排执行（仅首次创建时初始化，后续走缓存）
           dagExecutor;
       default -> {
-        LOG.warn("[Agent-Factory] 未知 Agent 类型: {}，回退到 ReAct", type);
+        log.warn("[Agent-Factory] 未知 Agent 类型: {}，回退到 ReAct", type);
         yield new ReActAgentExecutor(
             llmClient,
             memory,

@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
-import org.springframework.ldap.core.support.DefaultLdapContextSource;
+import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.query.LdapQueryBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -152,7 +152,7 @@ public class LdapOrgSyncService {
    */
   private LdapTemplate buildLdapTemplate() {
     String url = "ldap://" + ldapProperties.getHost() + ":" + ldapProperties.getPort();
-    DefaultLdapContextSource contextSource = new DefaultLdapContextSource();
+    LdapContextSource contextSource = new LdapContextSource();
     contextSource.setUrl(url);
     contextSource.setBase(ldapProperties.getBaseDn());
     contextSource.setUserDn(ldapProperties.getDomain());

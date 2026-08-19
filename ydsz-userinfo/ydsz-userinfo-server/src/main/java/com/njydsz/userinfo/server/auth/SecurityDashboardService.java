@@ -161,7 +161,7 @@ public class SecurityDashboardService {
 
     // 查询当日所有失败记录
     Map<String, Integer> reasonCountMap = new HashMap<>();
-    int totalFails = countLoginsByResult(dayStart, dayEnd, "FAILED");
+    int totalFails = (int) countLoginsByResult(dayStart, dayEnd, "FAILED");
 
     if (totalFails == 0) {
       return List.of();

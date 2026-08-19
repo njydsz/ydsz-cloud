@@ -5,8 +5,8 @@ import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.njydsz.common.json.YdszJson;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -45,9 +45,8 @@ import com.njydsz.common.json.YdszJson;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class ToolAnnotationScanner implements BeanPostProcessor {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ToolAnnotationScanner.class);
 
   /** 工具注册中心 */
   private final ToolRegistry toolRegistry;
@@ -101,7 +100,7 @@ public class ToolAnnotationScanner implements BeanPostProcessor {
     } else {
       toolRegistry.register(toolName, executor);
     }
-    LOG.info(
+    log.info(
         "[Tool-Scanner] 自动注册工具: {} (from {}.{}())",
         toolName,
         bean.getClass().getSimpleName(),

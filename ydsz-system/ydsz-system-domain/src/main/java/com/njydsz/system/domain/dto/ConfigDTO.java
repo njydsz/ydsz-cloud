@@ -1,6 +1,5 @@
 package com.njydsz.system.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -40,46 +39,35 @@ import com.njydsz.common.safe.annotation.Xss;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@Schema(description = "系统配置创建/更新 DTO")
 public class ConfigDTO {
 
-  @Schema(description = "主键 ID（更新时必填）")
   private String id;
 
   @NotBlank(message = "配置分组不能为空")
   @Size(max = 64, message = "配置分组长度不能超过64")
   @Xss(message = "配置分组包含非法内容")
-  @Schema(description = "配置分组")
   private String configGroup;
 
   @NotBlank(message = "配置键不能为空")
   @Size(max = 128, message = "配置键长度不能超过128")
   @Xss(message = "配置键包含非法内容")
-  @Schema(description = "配置键")
   private String configKey;
 
   @Xss(message = "配置值包含非法内容")
-  @Schema(description = "配置值")
   private String configValue;
 
   @NotBlank(message = "值类型不能为空")
-  @Schema(description = "值类型: STRING/NUMBER/BOOLEAN/JSON")
   private String valueType;
 
   @Xss(message = "默认值包含非法内容")
-  @Schema(description = "默认值")
   private String defaultValue;
 
   @Xss(message = "配置项说明包含非法内容")
-  @Schema(description = "配置项说明")
   private String description;
 
-  @Schema(description = "是否对前端公开: 1 公开 / 0 仅后端")
   private Integer isPublic;
 
-  @Schema(description = "排序号")
   private Integer sortOrder;
 
-  @Schema(description = "启用状态: ENABLED/DISABLED")
   private String status;
 }

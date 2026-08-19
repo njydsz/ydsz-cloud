@@ -22,7 +22,6 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.repository.DictRepository;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
-import com.njydsz.system.server.search.SearchIndexSyncer;
 import com.njydsz.system.server.service.DictItemBatchService;
 import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.util.SystemVersionUtils;
@@ -62,9 +61,6 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
 
   /** 租户感知缓存键构造器（手动 evict 使用） */
   private final CacheKeyBuilder cacheKeyBuilder;
-
-  /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
-  private final SearchIndexSyncer searchIndexSyncer;
 
   /**
    * 批量新增字典项
@@ -116,9 +112,6 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
 
     // 6. 精准失效缓存：按涉及 typeCode 逐一失效列表缓存（替代全量清空，避免缓存击穿）
     typeCodes.forEach(this::evictDictList);
-
-    // 7. 同步搜索索引（异步，不阻塞主流程）
-    dtos.forEach(dto -> searchIndexSyncer.upsert("dict", dto));
 
     Map<String, Object> result = new HashMap<>();
     result.put("successCount", items.size());

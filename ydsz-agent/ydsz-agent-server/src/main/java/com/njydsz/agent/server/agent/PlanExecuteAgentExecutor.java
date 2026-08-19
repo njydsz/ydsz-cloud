@@ -23,6 +23,7 @@ import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.util.id.IdGenerator;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Plan-and-Execute Agent 执行器
@@ -42,6 +43,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
 
   // 解析 LLM 返回的编号步骤列表：匹配行首「数字 + 分隔符(.、)、])」+ 步骤描述
@@ -82,7 +84,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
   public ChatResponse execute(AgentExecutionRequest request) {
     String convId = extractConvId(request);
     String traceId = startTrace(convId, "PLAN_EXECUTE");
-    LOG.info("[Plan-Execute] 开始: convId={}, traceId={}", convId, traceId);
+    log.info("[Plan-Execute] 开始: convId={}, traceId={}", convId, traceId);
 
     long planStart = System.currentTimeMillis();
     ExecutionPlan plan = generatePlan(request.getUserInput(), convId);
@@ -94,7 +96,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
         request.getUserInput(),
         plan,
         planDuration);
-    LOG.info("[Plan-Execute] 计划生成: steps={}", plan.getSteps().size());
+    log.info("[Plan-Execute] 计划生成: steps={}", plan.getSteps().size());
 
     plan.markExecuting();
     List<String> stepResults = new ArrayList<>();
@@ -107,7 +109,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
     while (stepIdx < plan.getSteps().size()) {
       ExecutionPlan.PlanStep step = plan.getSteps().get(stepIdx);
       step.markExecuting();
-      LOG.info(
+      log.info(
           "[Plan-Execute] 执行步骤 {}/{}: {}",
           stepIdx + 1,
           plan.getSteps().size(),
@@ -137,7 +139,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
         stepResponse = llmClient.chat(stepRequest);
       } catch (Exception e) {
         long stepDuration = System.currentTimeMillis() - stepStart;
-        LOG.warn(
+        log.warn(
             "[Plan-Execute] 步骤 {} 执行失败: {}, error={}",
             stepIdx + 1,
             step.getDescription(),
@@ -153,7 +155,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
 
         if (replanCount < maxReplans) {
           replanCount++;
-          LOG.info("[Plan-Execute] 触发重规划 {}/{}", replanCount, maxReplans);
+          log.info("[Plan-Execute] 触发重规划 {}/{}", replanCount, maxReplans);
           traceRecorder.recordStep(
               traceId,
               "REPLAN",
@@ -224,7 +226,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
     memory.save(convId, ChatMessage.user(request.getUserInput(), convId));
     memory.save(convId, ChatMessage.assistant(finalResponse.getContent(), convId, totalUsage));
 
-    LOG.info(
+    log.info(
         "[Plan-Execute] 完成: convId={}, steps={}, tokens={}, traceId={}",
         convId,
         plan.getSteps().size(),
@@ -254,7 +256,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
     String convId = extractConvId(request);
     String traceId = startTrace(convId, "PLAN_EXECUTE_STREAM");
-    LOG.info("[Plan-Execute-Stream] 开始: convId={}, traceId={}", convId, traceId);
+    log.info("[Plan-Execute-Stream] 开始: convId={}, traceId={}", convId, traceId);
 
     String responseId = IdGenerator.nextIdStr();
     String model = properties.getLlm().getDefaultModel();
@@ -276,7 +278,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
             responseId,
             model,
             PLAN_READY_TEMPLATE.formatted(plan.getSteps().size())));
-    LOG.info("[Plan-Execute-Stream] 计划生成: steps={}", plan.getSteps().size());
+    log.info("[Plan-Execute-Stream] 计划生成: steps={}", plan.getSteps().size());
 
     plan.markExecuting();
     List<String> stepResults = new ArrayList<>();
@@ -397,7 +399,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
     chunkConsumer.accept(ChatChunk.content(responseId, model, "\n" + finalResponse.getContent()));
     chunkConsumer.accept(ChatChunk.finish(responseId, model, "stop", totalUsage));
 
-    LOG.info(
+    log.info(
         "[Plan-Execute-Stream] 完成: convId={}, steps={}, tokens={}, traceId={}",
         convId,
         plan.getSteps().size(),
@@ -504,10 +506,10 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
     try {
       ChatResponse replanResponse = llmClient.chat(replanRequest);
       ExecutionPlan newPlan = parsePlan(goal, replanResponse.getContent());
-      LOG.info("[Plan-Execute] 重规划成功: newSteps={}", newPlan.getSteps().size());
+      log.info("[Plan-Execute] 重规划成功: newSteps={}", newPlan.getSteps().size());
       return newPlan.getSteps();
     } catch (Exception e) {
-      LOG.warn("[Plan-Execute] 重规划失败: {}", e.getMessage());
+      log.warn("[Plan-Execute] 重规划失败: {}", e.getMessage());
       return List.of();
     }
   }

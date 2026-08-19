@@ -22,6 +22,7 @@ import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.util.id.IdGenerator;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * RAG 增强 Agent 执行器
@@ -31,6 +32,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class RagAgentExecutor extends AbstractAgentExecutor {
 
   /** RAG 检索服务（向量检索 + 全文检索 + RRF 融合） */
@@ -68,7 +70,7 @@ public class RagAgentExecutor extends AbstractAgentExecutor {
   public ChatResponse execute(AgentExecutionRequest request) {
     String convId = extractConvId(request);
     String traceId = startTrace(convId, "RAG");
-    LOG.info("[RAG-Agent] 执行: convId={}, traceId={}", convId, traceId);
+    log.info("[RAG-Agent] 执行: convId={}, traceId={}", convId, traceId);
 
     String userInput = applyInputGuardrails(request.getUserInput());
     if (userInput == null) {
@@ -118,7 +120,7 @@ public class RagAgentExecutor extends AbstractAgentExecutor {
     saveConversation(convId, userInput, output, response.getUsage());
 
     traceRecorder.endTrace(traceId, "SUCCESS");
-    LOG.info(
+    log.info(
         "[RAG-Agent] 完成: convId={}, retrieved={}, tokens={}",
         convId,
         retrievedChunks.size(),
@@ -142,7 +144,7 @@ public class RagAgentExecutor extends AbstractAgentExecutor {
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
     String convId = extractConvId(request);
     String traceId = startTrace(convId, "RAG_STREAM");
-    LOG.info("[RAG-Agent-Stream] 流式执行: convId={}, traceId={}", convId, traceId);
+    log.info("[RAG-Agent-Stream] 流式执行: convId={}, traceId={}", convId, traceId);
 
     String responseId = IdGenerator.nextIdStr();
     String model = properties.getLlm().getDefaultModel();
@@ -239,7 +241,7 @@ public class RagAgentExecutor extends AbstractAgentExecutor {
     saveConversation(convId, userInput, output, usage[0]);
 
     traceRecorder.endTrace(traceId, "SUCCESS");
-    LOG.info(
+    log.info(
         "[RAG-Agent-Stream] 完成: convId={}, retrieved={}, tokens={}",
         convId,
         retrievedChunks.size(),

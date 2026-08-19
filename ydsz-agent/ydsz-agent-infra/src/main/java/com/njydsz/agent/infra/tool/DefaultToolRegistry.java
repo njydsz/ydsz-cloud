@@ -10,9 +10,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.njydsz.common.json.YdszJson;
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.model.ToolCall;
 import com.njydsz.agent.domain.model.ToolDefinition;
 import com.njydsz.agent.domain.tool.ToolExecutor;
@@ -28,9 +27,8 @@ import com.njydsz.common.json.YdszJson;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class DefaultToolRegistry implements ToolRegistry {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DefaultToolRegistry.class);
 
   /** 工具注册表（key=工具名） */
   private final Map<String, ToolRegistration> registry = new ConcurrentHashMap<>();
@@ -73,7 +71,7 @@ public class DefaultToolRegistry implements ToolRegistry {
             .executor(executor)
             .build();
     registry.put(name, registration);
-    LOG.info("[Tool-Registry] 注册工具: {}", name);
+    log.info("[Tool-Registry] 注册工具: {}", name);
   }
 
   /**
@@ -90,7 +88,7 @@ public class DefaultToolRegistry implements ToolRegistry {
    */
   public void register(ToolRegistration registration) {
     registry.put(registration.getName(), registration);
-    LOG.info(
+    log.info(
         "[Tool-Registry] 注册工具: {} (desc={})",
         registration.getName(),
         registration.getDefinition().getDescription());
@@ -99,14 +97,14 @@ public class DefaultToolRegistry implements ToolRegistry {
   @Override
   public void unregister(String name) {
     registry.remove(name);
-    LOG.info("[Tool-Registry] 注销工具: {}", name);
+    log.info("[Tool-Registry] 注销工具: {}", name);
   }
 
   @Override
   public String execute(ToolCall toolCall) {
     ToolRegistration registration = registry.get(toolCall.getName());
     if (registration == null) {
-      LOG.warn("[Tool-Registry] 工具未找到: {}", toolCall.getName());
+      log.warn("[Tool-Registry] 工具未找到: {}", toolCall.getName());
       return YdszJson.toJson(Map.of("error", "工具未找到: " + toolCall.getName()));
     }
     long startTime = System.currentTimeMillis();
@@ -121,12 +119,12 @@ public class DefaultToolRegistry implements ToolRegistry {
     } catch (TimeoutException e) {
       future.cancel(true);
       long duration = System.currentTimeMillis() - startTime;
-      LOG.error("[Tool-Registry] 工具执行超时: {} ({}ms > {}s)", toolCall.getName(), duration, defaultTimeoutSeconds);
+      log.error("[Tool-Registry] 工具执行超时: {} ({}ms > {}s)", toolCall.getName(), duration, defaultTimeoutSeconds);
       return YdszJson.toJson(
           Map.of("error", "工具执行超时（" + defaultTimeoutSeconds + "s）", "tool", toolCall.getName()));
     } catch (Exception e) {
       long duration = System.currentTimeMillis() - startTime;
-      LOG.error("[Tool-Registry] 工具执行失败: {} ({}ms): {}", toolCall.getName(), duration, e.getMessage(), e);
+      log.error("[Tool-Registry] 工具执行失败: {} ({}ms): {}", toolCall.getName(), duration, e.getMessage(), e);
       return YdszJson.toJson(
           Map.of("error", "工具执行失败: " + e.getMessage(), "tool", toolCall.getName()));
     }
@@ -137,11 +135,11 @@ public class DefaultToolRegistry implements ToolRegistry {
     try {
       String result = registration.getExecutor().execute(toolCall.getArguments());
       long duration = System.currentTimeMillis() - startTime;
-      LOG.info("[Tool-Registry] 工具执行完成: {} ({}ms)", toolCall.getName(), duration);
+      log.info("[Tool-Registry] 工具执行完成: {} ({}ms)", toolCall.getName(), duration);
       return result;
     } catch (Exception e) {
       long duration = System.currentTimeMillis() - startTime;
-      LOG.error(
+      log.error(
           "[Tool-Registry] 工具执行失败: {} ({}ms): {}", toolCall.getName(), duration, e.getMessage(), e);
       return YdszJson.toJson(
           Map.of("error", "工具执行失败: " + e.getMessage(), "tool", toolCall.getName()));

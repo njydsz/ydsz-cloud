@@ -3,8 +3,6 @@ package com.njydsz.agent.web.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +25,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Agent 调试 REST API Controller。
@@ -63,11 +62,10 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/agent/debug")
 public class DebugController {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DebugController.class);
 
   /** Agent 调试服务（封装链路查询 + 重放能力） */
   private final AgentDebuggerService agentDebuggerService;
@@ -172,7 +170,7 @@ public class DebugController {
   @RateLimit(resource = "agent.debug.replayTrace", threshold = 50)
   @PostMapping("/trace/{traceId}/replay")
   public YdszResponse<String> replayTrace(@PathVariable String traceId) {
-    LOG.info("[Debug-API] 重放链路: traceId={}", traceId);
+    log.info("[Debug-API] 重放链路: traceId={}", traceId);
     TraceMeta meta = agentDebuggerService.getTraceMeta(traceId);
     if (meta == null) {
       return YdszResponse.error(AgentExceptionCode.TRACE_NOT_FOUND, "链路不存在或不支持重放: " + traceId);
@@ -185,7 +183,7 @@ public class DebugController {
     String userInput = steps.get(0).getContent();
     String conversationId = meta.conversationId();
     String agentType = meta.agentId();
-    LOG.info(
+    log.info(
         "[Debug-API] 重放参数: convId={}, agentType={}, userInputLen={}",
         conversationId,
         agentType,

@@ -41,14 +41,10 @@ import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
 import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.dto.post.FlowDelegateAuthPostDTO;
-import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
-import com.njydsz.workflow.infra.entity.FlowCcDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
+import com.njydsz.workflow.domain.vo.FlowCcVO;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
-import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
 import com.njydsz.workflow.server.service.FlowCcService;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
@@ -112,14 +108,8 @@ public class FlowTaskController {
   /** 工作流门面，业务调用入口 */
   private final WorkflowFacade workflowFacade;
 
-  /** P1-1: 历史任务 mapper（驳回候选目标节点） */
-  private final FlowHisTaskMapper hisTaskMapper;
-
   /** P1-7: WebSocket 待办数实时推送服务 */
   private final FlowTodoCountPushService todoCountPushService;
-
-  /** P1-8: 加签历史审计日志 mapper */
-  private final FlowAuditLogMapper auditLogMapper;
 
   /** P1-4: 长期授权委派服务 */
   private final FlowDelegateAuthService delegateAuthService;
@@ -249,11 +239,11 @@ public class FlowTaskController {
   @GetMapping("/task/{taskId}/rejectableNodes")
   @Operation(summary = "查询任务所属实例的历史节点")
   public YdszResponse<List<Map<String, Object>>> rejectableNodes(@PathVariable String taskId) {
-    FlowRunTaskDO task = taskService.getById(taskId);
-    if (task == null) {
+    String instanceId = taskService.getTaskInstanceId(taskId);
+    if (instanceId == null) {
       return YdszResponse.success(List.of());
     }
-    List<Map<String, Object>> nodes = hisTaskMapper.listPassedNodes(task.getInstanceId());
+    List<Map<String, Object>> nodes = taskService.listPassedNodes(instanceId);
     return YdszResponse.success(nodes);
   }
 
@@ -554,11 +544,7 @@ public class FlowTaskController {
       @RequestParam(required = false) LocalDateTime endTime) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    PageResponse<List<FlowRunTaskDO>> pageResult =
-        taskService.pageTodo(userId, tenantId, flowCode, businessType, startTime, endTime, page, size);
-    List<FlowRunTaskVO> vos = WorkflowConverter.INSTANT.flowRunTaskListToVO(pageResult.getData());
-    return PageResponse.success(
-        pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
+    return taskService.pageTodoVO(userId, tenantId, flowCode, businessType, startTime, endTime, page, size);
   }
 
   /**
@@ -583,11 +569,7 @@ public class FlowTaskController {
       @RequestParam(required = false) LocalDateTime endTime) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    PageResponse<List<FlowRunTaskDO>> pageResult =
-        taskService.pageDone(userId, tenantId, flowCode, businessType, startTime, endTime, page, size);
-    List<FlowRunTaskVO> vos = WorkflowConverter.INSTANT.flowRunTaskListToVO(pageResult.getData());
-    return PageResponse.success(
-        pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
+    return taskService.pageDoneVO(userId, tenantId, flowCode, businessType, startTime, endTime, page, size);
   }
 
   /**
@@ -603,8 +585,7 @@ public class FlowTaskController {
       @RequestParam(defaultValue = "200") @Min(1) @Max(500) int limit) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    List<FlowRunTaskDO> tasks = taskService.listOverdue(userId, tenantId, limit);
-    return YdszResponse.success(WorkflowConverter.INSTANT.flowRunTaskListToVO(tasks));
+    return YdszResponse.success(taskService.listOverdueVO(userId, tenantId, limit));
   }
 
   /**
@@ -631,12 +612,8 @@ public class FlowTaskController {
       @RequestParam(required = false) String keyword) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    PageResponse<List<FlowRunTaskDO>> pageResult =
-        taskService.pageDoneSearch(
-            userId, tenantId, flowCode, businessType, startTime, endTime, keyword, page, size);
-    List<FlowRunTaskVO> vos = WorkflowConverter.INSTANT.flowRunTaskListToVO(pageResult.getData());
-    return PageResponse.success(
-        pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
+    return taskService.pageDoneSearchVO(
+        userId, tenantId, flowCode, businessType, startTime, endTime, keyword, page, size);
   }
 
   /**
@@ -923,14 +900,7 @@ public class FlowTaskController {
       @PathVariable String instanceId,
       @RequestParam(defaultValue = "1") @Min(1) int pageNo,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-    List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(instanceId);
-    List<Map<String, Object>> filtered =
-        logs == null
-            ? List.of()
-            : logs.stream()
-                .filter(log -> COUNTERSIGN_ACTIONS.contains(log.getAction()))
-                .map(this::toCountersignVO)
-                .toList();
+    List<Map<String, Object>> filtered = taskService.listCountersignByInstance(instanceId);
     int total = filtered.size();
     int fromIndex = Math.min((pageNo - 1) * pageSize, total);
     int toIndex = Math.min(fromIndex + pageSize, total);
@@ -952,53 +922,12 @@ public class FlowTaskController {
       @PathVariable String taskId,
       @RequestParam(defaultValue = "1") @Min(1) int pageNo,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-    List<FlowAuditLogDO> logs = auditLogMapper.selectByTaskId(taskId);
-    List<Map<String, Object>> filtered =
-        logs == null
-            ? List.of()
-            : logs.stream()
-                .filter(log -> COUNTERSIGN_ACTIONS.contains(log.getAction()))
-                .map(this::toCountersignVO)
-                .toList();
+    List<Map<String, Object>> filtered = taskService.listCountersignByTask(taskId);
     int total = filtered.size();
     int fromIndex = Math.min((pageNo - 1) * pageSize, total);
     int toIndex = Math.min(fromIndex + pageSize, total);
     List<Map<String, Object>> pageData = filtered.subList(fromIndex, toIndex);
     return PageResponse.success((long) total, (long) pageNo, (long) pageSize, pageData);
-  }
-
-  /** 将审计日志转换为加签视图 VO */
-  private Map<String, Object> toCountersignVO(FlowAuditLogDO log) {
-    Map<String, Object> vo = new LinkedHashMap<>();
-    vo.put("id", log.getId());
-    vo.put("instanceId", log.getInstanceId());
-    vo.put("taskId", log.getTaskId());
-    vo.put("flowCode", log.getFlowCode());
-    vo.put("nodeCode", log.getNodeCode());
-    vo.put("nodeName", log.getNodeName());
-    vo.put("action", log.getAction());
-    vo.put("actionName", getActionName(log.getAction()));
-    vo.put("operatorId", log.getOperatorId());
-    vo.put("operatorName", log.getOperatorName());
-    vo.put("targetId", log.getTargetId());
-    vo.put("targetName", log.getTargetName());
-    vo.put("comment", log.getComment());
-    vo.put("operatedAt", log.getOperatedAt());
-    return vo;
-  }
-
-  /** 获取加签操作名称 */
-  private String getActionName(String action) {
-    if (action == null) {
-      return "未知";
-    }
-    return switch (action) {
-      case "COUNTERSIGN_BEFORE" -> "前加签";
-      case "COUNTERSIGN_AFTER" -> "后加签";
-      case "COUNTERSIGN_PARALLEL" -> "并加签";
-      case "COUNTERSIGN_REMOVE" -> "减签";
-      default -> "未知加签操作";
-    };
   }
 
   // ============== P1-4: 长期授权委派 ==============
@@ -1129,7 +1058,7 @@ public class FlowTaskController {
       content = "'pageCc'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
   @Operation(summary = "抄送中心分页查询")
-  public YdszResponse<List<FlowCcDO>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
+  public YdszResponse<List<FlowCcVO>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     String userId = AuthContextUtils.getUserId();
     int pageNo = query.getPageNum();

@@ -25,10 +25,7 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
-import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.server.service.FlowEfficiencyService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTaskService;
@@ -63,20 +60,11 @@ public class FlowMonitorDashboardController {
   /** GAP-P2: 审批效率分析服务（异常检测 / 效率统计 / 健康度评分） */
   private final FlowEfficiencyService efficiencyService;
 
-  /** P2-4: 流程实例 mapper（监控仪表盘聚合查询） */
-  private final FlowInstanceMapper instanceMapper;
-
-  /** P1-1: 历史任务 mapper（审批人效率聚合） */
-  private final FlowHisTaskMapper hisTaskMapper;
-
   /** 任务服务（监控概览待办/超期计数） */
   private final FlowTaskService taskService;
 
-  /** 流程实例服务（异常实例详情查询） */
+  /** 流程实例服务（VO 查询 / 异常实例详情查询） */
   private final FlowInstanceService instanceService;
-
-  /** P2-7: 待办任务 mapper（超期任务 TopN / 审批人负载分布） */
-  private final FlowRunTaskMapper runTaskMapper;
 
   // ============== P0-3 / P2-4: 监控看板聚合端点 ==============
 
@@ -180,7 +168,7 @@ public class FlowMonitorDashboardController {
     LocalDateTime startDt = parseDateTime(startTime);
     LocalDateTime endDt = parseDateTime(endTime);
     List<Map<String, Object>> rows =
-        hisTaskMapper.selectApproverEfficiency(tenantId, startDt, endDt, topN);
+        efficiencyService.selectApproverEfficiency(tenantId, startDt, endDt, topN);
 
     List<Map<String, Object>> result = new ArrayList<>(topN);
     if (rows != null) {
@@ -218,7 +206,7 @@ public class FlowMonitorDashboardController {
     LocalDateTime startDt = parseDateTime(startTime);
     LocalDateTime endDt = parseDateTime(endTime);
     List<Map<String, Object>> rows =
-        instanceMapper.selectFlowTypeDistribution(tenantId, startDt, endDt);
+        instanceService.selectFlowTypeDistribution(tenantId, startDt, endDt);
 
     long total = 0;
     if (rows != null) {
@@ -272,7 +260,7 @@ public class FlowMonitorDashboardController {
     }
 
     try {
-      List<Map<String, Object>> overdueTop = runTaskMapper.selectOverdueTopN(tenantId, 5);
+      List<Map<String, Object>> overdueTop = taskService.selectOverdueTopN(tenantId, 5);
       dashboard.put("overdueTop5", overdueTop != null ? overdueTop : new ArrayList<>());
     } catch (Exception e) {
       log.warn("[Dashboard] overdueTop5 查询失败: {}", e.getMessage());
@@ -316,7 +304,7 @@ public class FlowMonitorDashboardController {
   public YdszResponse<List<Map<String, Object>>> monitorOverdueTasks(
       @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    List<Map<String, Object>> rows = runTaskMapper.selectOverdueTopN(tenantId, limit);
+    List<Map<String, Object>> rows = taskService.selectOverdueTopN(tenantId, limit);
     return YdszResponse.success(rows != null ? rows : new ArrayList<>());
   }
 
@@ -332,7 +320,7 @@ public class FlowMonitorDashboardController {
   public YdszResponse<List<Map<String, Object>>> monitorApproverWorkload(
       @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    List<Map<String, Object>> rows = runTaskMapper.selectWorkloadByAssignee(tenantId, limit);
+    List<Map<String, Object>> rows = taskService.selectWorkloadByAssignee(tenantId, limit);
     return YdszResponse.success(rows != null ? rows : new ArrayList<>());
   }
 
@@ -353,7 +341,7 @@ public class FlowMonitorDashboardController {
     LocalDateTime startDt = parseDateTime(startTime);
     LocalDateTime endDt = parseDateTime(endTime);
     List<Map<String, Object>> rows =
-        hisTaskMapper.selectFlowEfficiencyComparison(tenantId, startDt, endDt);
+        efficiencyService.selectFlowEfficiencyComparison(tenantId, startDt, endDt);
     return YdszResponse.success(rows != null ? rows : new ArrayList<>());
   }
 
@@ -473,7 +461,7 @@ public class FlowMonitorDashboardController {
 
     if (instanceId instanceof Number n) {
       try {
-        FlowInstanceDO inst = instanceService.getById(String.valueOf(n.longValue()));
+        FlowInstanceVO inst = instanceService.getByIdVO(String.valueOf(n.longValue()));
         if (inst != null) {
           item.put("flowCode", inst.getFlowCode());
           item.put("flowName", inst.getFlowName());
@@ -531,7 +519,7 @@ public class FlowMonitorDashboardController {
     Map<String, Object> overview = new LinkedHashMap<>();
     long running = 0;
     try {
-      List<Map<String, Object>> statusCounts = instanceMapper.selectCountGroupByStatus(tenantId);
+      List<Map<String, Object>> statusCounts = instanceService.selectCountGroupByStatus(tenantId);
       if (statusCounts != null) {
         for (Map<String, Object> row : statusCounts) {
           String status = String.valueOf(row.get("flowStatus"));
@@ -547,7 +535,7 @@ public class FlowMonitorDashboardController {
     overview.put("runningCount", running);
 
     try {
-      Map<String, Object> today = instanceMapper.selectTodayCount(tenantId);
+      Map<String, Object> today = instanceService.selectTodayCount(tenantId);
       if (today != null) {
         overview.put("todayNewCount", toLong(today.get("todayNewCount")));
         overview.put("todayCompletedCount", toLong(today.get("todayCompletedCount")));
@@ -592,9 +580,9 @@ public class FlowMonitorDashboardController {
     LocalDateTime endDt = today.atTime(23, 59, 59);
 
     List<Map<String, Object>> newCounts =
-        instanceMapper.selectDailyNewCount(tenantId, startDt, endDt);
+        instanceService.selectDailyNewCount(tenantId, startDt, endDt);
     List<Map<String, Object>> completedCounts =
-        instanceMapper.selectDailyCompletedCount(tenantId, startDt, endDt);
+        instanceService.selectDailyCompletedCount(tenantId, startDt, endDt);
 
     Map<String, long[]> byDate = new LinkedHashMap<>();
     for (int i = 0; i < effectiveDays; i++) {

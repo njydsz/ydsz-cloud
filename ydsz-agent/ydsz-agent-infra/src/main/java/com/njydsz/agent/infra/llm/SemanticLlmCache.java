@@ -10,19 +10,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.MessageRole;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.json.YdszJson;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
- * LLM 响应双层缓存（L1 Caffeine + L2 Redis）
+ * LLM 响应双层缓存（L1 YdszCache + L2 Redis）
  *
  * <p><b>实现说明</b>：本类名为 "Semantic"（语义），但当前实现为<b>精确哈希匹配</b>缓存： 以 (model + system prompt + 最新 user message)
  * 的 SHA-256 作为缓存 key，相同输入才可命中， 未引入 embedding 相似度检索（避免每次查询额外调用 embedding 服务的成本）。如需真正的语义命中，
@@ -31,7 +31,7 @@ import com.njydsz.common.json.YdszJson;
  * <p><b>双层缓存架构（P1-10）</b>：
  *
  * <ul>
- *   <li>L1（Caffeine 本地缓存）：进程内高速缓存，最大 200 条，写入后 5 分钟过期。热点 key 亚毫秒级命中，避免 Redis 网络开销
+ *   <li>L1（YdszCache 本地缓存）：进程内高速缓存，最大 200 条，写入后 5 分钟过期。热点 key 亚毫秒级命中，避免 Redis 网络开销
  *   <li>L2（Redis 分布式缓存）：跨进程共享，支持 TTL 过期与 LRU 容量控制（ZSET 索引：命中刷新 score，超容量淘汰最旧条目）
  *   <li>读取策略：L1 → L2，L2 命中后回填 L1；写入策略：同时写入 L1 和 L2
  * </ul>
@@ -44,14 +44,13 @@ import com.njydsz.common.json.YdszJson;
  *   <li>仅对 temperature=0 的确定性请求启用缓存（高 temperature 结果随机性高）
  * </ul>
  *
- * <p><b>线程安全</b>：Caffeine 与 {@link StringRedisTemplate} 均为线程安全实现。
+ * <p><b>线程安全</b>：YdszCache 与 {@link StringRedisTemplate} 均为线程安全实现。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class SemanticLlmCache {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SemanticLlmCache.class);
 
   /** LRU 索引 key（ZSET：member=缓存 key，score=最近访问时间戳毫秒） */
   private static final String LRU_INDEX_KEY = SemanticCacheConfig.CACHE_KEY_PREFIX + "lru-index";
@@ -65,11 +64,14 @@ public class SemanticLlmCache {
   /** L1 本地缓存写入后过期时间（分钟） */
   private static final int L1_EXPIRE_MINUTES = 5;
 
+  /** 缓存名称（用于健康检查和监控） */
+  private static final String CACHE_NAME = "agent:semantic-llm";
+
   private final StringRedisTemplate redisTemplate;
   private final Duration ttl;
   private final int maxCacheSize;
 
-  /** L1 本地缓存（Caffeine） — 进程内高速缓存，降低热点 key 的 Redis 网络开销 */
+  /** L1 本地缓存（YdszCache） — 进程内高速缓存，降低热点 key 的 Redis 网络开销 */
   private final Cache<String, CachedLlmResponse> l1Cache;
 
   public SemanticLlmCache(StringRedisTemplate redisTemplate, Duration ttl, int maxCacheSize) {
@@ -77,7 +79,8 @@ public class SemanticLlmCache {
     this.ttl = ttl;
     this.maxCacheSize = maxCacheSize;
     this.l1Cache =
-        Caffeine.newBuilder()
+        YdszCache.newBuilder()
+            .name(CACHE_NAME)
             .maximumSize(L1_MAX_SIZE)
             .expireAfterWrite(L1_EXPIRE_MINUTES, TimeUnit.MINUTES)
             .recordStats()
@@ -99,7 +102,7 @@ public class SemanticLlmCache {
     // L1: 本地 Caffeine 缓存查询（无网络开销）
     CachedLlmResponse l1Result = l1Cache.getIfPresent(key);
     if (l1Result != null) {
-      LOG.debug("[SemanticCache] L1 命中: key={}", key.substring(0, 16) + "...");
+      log.debug("[SemanticCache] L1 命中: key={}", key.substring(0, 16) + "...");
       return l1Result;
     }
     // L2: Redis 分布式缓存查询
@@ -113,11 +116,11 @@ public class SemanticLlmCache {
         if (result != null) {
           l1Cache.put(key, result);
         }
-        LOG.debug("[SemanticCache] L2 命中: key={}", key.substring(0, 16) + "...");
+        log.debug("[SemanticCache] L2 命中: key={}", key.substring(0, 16) + "...");
         return result;
       }
     } catch (Exception e) {
-      LOG.warn("[SemanticCache] L2 缓存读取失败: {}", e.getMessage());
+      log.warn("[SemanticCache] L2 缓存读取失败", e);
     }
     return null;
   }
@@ -147,10 +150,10 @@ public class SemanticLlmCache {
       // 维护 LRU 索引并执行容量淘汰（P1 修复：原 maxCacheSize 参数从未使用，属死代码）
       redisTemplate.opsForZSet().add(LRU_INDEX_KEY, key, Instant.now().toEpochMilli());
       evictIfOverCapacity();
-      LOG.debug(
+      log.debug(
           "[SemanticCache] 缓存写入: key={}, ttl={}min", key.substring(0, 16) + "...", ttl.toMinutes());
     } catch (Exception e) {
-      LOG.warn("[SemanticCache] L2 缓存写入失败: {}", e.getMessage());
+      log.warn("[SemanticCache] L2 缓存写入失败", e);
     }
   }
 
@@ -259,10 +262,10 @@ public class SemanticLlmCache {
             redisTemplate.delete(member);
           }
         }
-        LOG.info("[SemanticCache] LRU 淘汰完成: 共删除 {} 条", oldest.size());
+        log.info("[SemanticCache] LRU 淘汰完成: 共删除 {} 条", oldest.size());
       }
     } catch (Exception e) {
-      LOG.warn("[SemanticCache] LRU 淘汰失败: {}", e.getMessage());
+      log.warn("[SemanticCache] LRU 淘汰失败", e);
     }
   }
 

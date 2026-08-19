@@ -3,7 +3,6 @@ package com.njydsz.system.domain.vo;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,23 +29,18 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "游标分页响应")
 public class CursorPageResponse<T> {
 
   /** 数据列表 */
-  @Schema(description = "数据列表")
   private List<T> records;
 
   /** 下一页游标（null 表示已无更多数据） */
-  @Schema(description = "下一页游标（null 表示已无更多数据）")
   private String nextCursor;
 
   /** 是否有下一页 */
-  @Schema(description = "是否有下一页")
   private boolean hasMore;
 
   /** 本次返回数据条数 */
-  @Schema(description = "本次返回数据条数")
   private int size;
 
   /**

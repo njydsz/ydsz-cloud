@@ -7,12 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.json.YdszJson;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 内存执行链路记录器
@@ -22,9 +20,8 @@ import com.njydsz.common.json.YdszJson;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class InMemoryTraceRecorder implements TraceRecorder {
-
-  private static final Logger LOG = LoggerFactory.getLogger(InMemoryTraceRecorder.class);
 
   /** 最大链路存储数 */
   private static final int MAX_TRACES = 1000;
@@ -51,7 +48,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
     traces.put(traceId, new ArrayList<>());
     traceStatus.put(traceId, "RUNNING");
     traceMetas.put(traceId, new TraceMeta(traceId, conversationId, agentId, LocalDateTime.now()));
-    LOG.info("[Trace] 开始链路: traceId={}, convId={}, agentId={}", traceId, conversationId, agentId);
+    log.info("[Trace] 开始链路: traceId={}, convId={}, agentId={}", traceId, conversationId, agentId);
     return traceId;
   }
 
@@ -94,7 +91,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
             durationMs,
             cost,
             LocalDateTime.now()));
-    LOG.debug(
+    log.debug(
         "[Trace] 记录步骤: traceId={}, step={}, type={}, {}ms, cost=${}",
         traceId,
         index,
@@ -114,7 +111,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
       meta.setTotalDurationMs(totalMs);
     }
     int stepCount = traces.getOrDefault(traceId, List.of()).size();
-    LOG.info("[Trace] 结束链路: traceId={}, status={}, steps={}", traceId, status, stepCount);
+    log.info("[Trace] 结束链路: traceId={}, status={}, steps={}", traceId, status, stepCount);
   }
 
   @Override
@@ -180,7 +177,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
                 traceStatus.remove(tid);
                 traceMetas.remove(tid);
               });
-      LOG.info("[Trace] 清理超容量链路: 清除 {} 条", toRemove);
+      log.info("[Trace] 清理超容量链路: 清除 {} 条", toRemove);
     }
   }
 

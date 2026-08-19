@@ -26,6 +26,7 @@ import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.IdGenerator;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Supervisor 多 Agent 协作执行器
@@ -48,6 +49,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class SupervisorAgentExecutor extends AbstractAgentExecutor {
 
   /** 任务分解 Prompt 模板（默认值，可被数据库模板覆盖） */
@@ -106,7 +108,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
   public ChatResponse execute(AgentExecutionRequest request) {
     String convId = extractConvId(request);
     String traceId = startTrace(convId, "SUPERVISOR");
-    LOG.info("[Supervisor] 开始执行: convId={}, traceId={}", convId, traceId);
+    log.info("[Supervisor] 开始执行: convId={}, traceId={}", convId, traceId);
 
     String userInput = applyInputGuardrails(request.getUserInput());
     if (userInput == null) {
@@ -140,7 +142,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
       }
       if (!progressed) {
         // 依赖环或缺失依赖：兜底按剩余顺序执行，避免死循环
-        LOG.warn("[Supervisor] 子任务依赖无法满足，按剩余顺序兜底执行: remaining={}", pending.size());
+        log.warn("[Supervisor] 子任务依赖无法满足，按剩余顺序兜底执行: remaining={}", pending.size());
         for (SubTask subTask : pending) {
           String result = executeSubTask(convId, request, subTask, traceId, totalUsage);
           taskResults.put(subTask.id(), result);
@@ -154,7 +156,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
     String finalAnswer = synthesizeResults(userInput, results, convId);
     String output = guardrailService.applyOutputGuardrails(finalAnswer);
     traceRecorder.endTrace(traceId, "SUCCESS");
-    LOG.info(
+    log.info(
         "[Supervisor] 执行完成: convId={}, subTasks={}, tokens={}",
         convId,
         subTasks.size(),
@@ -207,7 +209,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
           0);
       return workerResponse.getContent();
     } catch (Exception e) {
-      LOG.error("[Supervisor] 子任务 {} 执行失败: {}", subTask.id(), e.getMessage());
+      log.error("[Supervisor] 子任务 {} 执行失败: {}", subTask.id(), e.getMessage());
       traceRecorder.recordStep(
           traceId,
           "SUB_TASK_ERROR",
@@ -236,7 +238,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
     String convId = extractConvId(request);
     String traceId = startTrace(convId, "SUPERVISOR_STREAM");
-    LOG.info("[Supervisor-Stream] 开始流式执行: convId={}, traceId={}", convId, traceId);
+    log.info("[Supervisor-Stream] 开始流式执行: convId={}, traceId={}", convId, traceId);
 
     String responseId = IdGenerator.nextIdStr();
     String model = properties.getLlm().getDefaultModel();
@@ -285,7 +287,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
         results.add(result);
       }
       if (!progressed) {
-        LOG.warn("[Supervisor-Stream] 子任务依赖无法满足，按剩余顺序兜底执行: remaining={}",
+        log.warn("[Supervisor-Stream] 子任务依赖无法满足，按剩余顺序兜底执行: remaining={}",
             pending.size());
         for (SubTask subTask : pending) {
           chunkConsumer.accept(
@@ -308,7 +310,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
         userInput, results, convId, responseId, model, streamingMasker, chunkConsumer);
 
     traceRecorder.endTrace(traceId, "SUCCESS");
-    LOG.info(
+    log.info(
         "[Supervisor-Stream] 流式执行完成: convId={}, subTasks={}, tokens={}",
         convId, subTasks.size(), totalUsage[0].getTotalTokens());
     // 推送完成 chunk（冲刷剩余 PII 缓冲）
@@ -403,7 +405,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
           resultBuilder.toString(),
           0);
     } catch (Exception e) {
-      LOG.error("[Supervisor-Stream] 子任务 {} 执行失败: {}", subTask.id(), e.getMessage());
+      log.error("[Supervisor-Stream] 子任务 {} 执行失败: {}", subTask.id(), e.getMessage());
       traceRecorder.recordStep(
           traceId,
           "SUB_TASK_ERROR",
@@ -493,7 +495,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
             }
           });
     } catch (Exception e) {
-      LOG.error("[Supervisor-Stream] 汇总生成失败: {}", e.getMessage());
+      log.error("[Supervisor-Stream] 汇总生成失败: {}", e.getMessage());
       // 降级：直接拼接结果
       String fallback = String.join("\n\n", results);
       chunkConsumer.accept(ChatChunk.content(responseId, model, fallback));
@@ -544,7 +546,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
           traceId, "LLM_PLAN", "Planning LLM call", planPrompt, planResponse.getContent(), 0);
       return parsePlanResponse(planResponse.getContent());
     } catch (Exception e) {
-      LOG.warn("[Supervisor] 任务规划失败，使用单任务降级: {}", e.getMessage());
+      log.warn("[Supervisor] 任务规划失败，使用单任务降级: {}", e.getMessage());
       // 降级为单 REACT 任务
       return List.of(new SubTask(1, "REACT", "直接处理用户请求: " + userTask, List.of()));
     }
@@ -575,7 +577,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
       Map<String, Object> root = YdszJson.parseMap(json);
       Object tasksObj = root.get("tasks");
       if (!(tasksObj instanceof List<?> taskList) || taskList.isEmpty()) {
-        LOG.warn("[Supervisor] 计划中无 tasks 数组，使用默认任务");
+        log.warn("[Supervisor] 计划中无 tasks 数组，使用默认任务");
         return List.of(new SubTask(1, "REACT", "处理用户请求", List.of()));
       }
       List<SubTask> tasks = new ArrayList<>(taskList.size());
@@ -593,7 +595,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
       }
       return tasks.isEmpty() ? List.of(new SubTask(1, "REACT", "处理用户请求", List.of())) : tasks;
     } catch (Exception e) {
-      LOG.warn("[Supervisor] 计划解析失败，使用默认任务: {}", e.getMessage());
+      log.warn("[Supervisor] 计划解析失败，使用默认任务: {}", e.getMessage());
       return List.of(new SubTask(1, "REACT", "处理用户请求", List.of()));
     }
   }

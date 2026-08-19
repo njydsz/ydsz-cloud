@@ -2,8 +2,6 @@ package com.njydsz.agent.web.controller;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -13,6 +11,7 @@ import com.njydsz.agent.server.observability.ObservabilityDashboardService;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService.DashboardOverviewDTO;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService.ModelUsageDTO;
 import com.njydsz.common.core.response.YdszResponse;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Agent 可观测性面板 REST API Controller
@@ -27,11 +26,10 @@ import com.njydsz.common.core.response.YdszResponse;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/agent/observability")
 public class ObservabilityController {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ObservabilityController.class);
 
   private final ObservabilityDashboardService dashboardService;
 
@@ -48,7 +46,7 @@ public class ObservabilityController {
    */
   @GetMapping("/overview")
   public YdszResponse<DashboardOverviewDTO> getOverview() {
-    LOG.info("[Observability-API] 查询面板概览");
+    log.info("[Observability-API] 查询面板概览");
     return YdszResponse.success(dashboardService.getOverview());
   }
 
@@ -64,7 +62,7 @@ public class ObservabilityController {
   public YdszResponse<List<ModelUsageDTO>> getModelUsage(
       @RequestParam(defaultValue = "7") int days) {
     int safeDays = Math.min(Math.max(days, 1), 30);
-    LOG.info("[Observability-API] 查询模型分布: days={}", safeDays);
+    log.info("[Observability-API] 查询模型分布: days={}", safeDays);
     return YdszResponse.success(dashboardService.getModelUsageDistribution(safeDays));
   }
 }

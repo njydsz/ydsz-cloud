@@ -1,6 +1,5 @@
 package com.njydsz.system.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -41,53 +40,42 @@ import com.njydsz.common.safe.annotation.Xss;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@Schema(description = "应用注册创建/更新 DTO")
 public class AppInfoDTO {
 
-  @Schema(description = "主键 ID（更新时必填）")
   private String id;
 
   @NotBlank(message = "应用编码不能为空")
   @Size(max = 64, message = "应用编码长度不能超过64")
   @Xss(message = "应用编码包含非法内容")
-  @Schema(description = "应用编码")
   private String appCode;
 
   @NotBlank(message = "应用名称不能为空")
   @Size(max = 128, message = "应用名称长度不能超过128")
   @Xss(message = "应用名称包含非法内容")
-  @Schema(description = "应用名称")
   private String appName;
 
   @NotBlank(message = "应用 Key 不能为空")
   @Size(max = 128, message = "应用 Key 长度不能超过128")
   @Xss(message = "应用 Key 包含非法内容")
-  @Schema(description = "应用 Key（client_id）")
   private String appKey;
 
   @Size(max = 256, message = "应用密钥长度不能超过256")
-  @Schema(description = "应用密钥（client_secret，BCrypt 加密存储）")
   private String appSecret;
 
   @Size(max = 512, message = "回调地址长度不能超过512")
   @Xss(message = "回调地址包含非法内容")
-  @Schema(description = "授权回调地址")
   private String redirectUrl;
 
   @Size(max = 512, message = "授权范围长度不能超过512")
   @Xss(message = "授权范围包含非法内容")
-  @Schema(description = "OAuth2 授权范围（CSV），如 user.read,order.write")
   private String scopes;
 
   @Size(max = 512, message = "IP 白名单长度不能超过512")
   @Xss(message = "IP 白名单包含非法内容")
-  @Schema(description = "IP 绑定白名单（CSV），如 192.168.1.0/24,10.0.0.1")
   private String boundIps;
 
   @Xss(message = "应用描述包含非法内容")
-  @Schema(description = "应用描述")
   private String description;
 
-  @Schema(description = "启用状态: ENABLED/DISABLED")
   private String status;
 }

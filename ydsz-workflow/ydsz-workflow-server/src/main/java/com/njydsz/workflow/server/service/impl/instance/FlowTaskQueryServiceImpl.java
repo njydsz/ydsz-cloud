@@ -2,6 +2,7 @@ package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,9 +24,11 @@ import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowUserRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
+import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowUserMapper;
@@ -86,6 +89,9 @@ public class FlowTaskQueryServiceImpl {
 
   /** 历史任务仓储，查询已归档的已办任务 */
   private final FlowHisTaskRepository hisTaskRepository;
+
+  /** 审计日志 Mapper，查询加签历史 */
+  private final FlowAuditLogMapper auditLogMapper;
 
   /** listTodoByUser 需通过 ydsz_flow_user 关联查询任务 */
   private final FlowUserMapper userMapper;
@@ -306,6 +312,114 @@ public class FlowTaskQueryServiceImpl {
         .dueAt(task.getDueAt())
         .priority(task.getPriority())
         .build();
+  }
+
+  /**
+   * P1-1: 查询实例经过的历史节点（去重，按首次完成时间排序），用于驳回时让用户选择驳回到任意历史节点。
+   *
+   * @param instanceId 流程实例 ID
+   * @return 节点列表：nodeCode / nodeName / firstFinishAt / assigneeName
+   */
+  public List<Map<String, Object>> listPassedNodes(String instanceId) {
+    return hisTaskMapper.listPassedNodes(instanceId);
+  }
+
+  // ============================== 加签历史查询（Map 形式，避免 DO 泄漏） ==============================
+
+  /** 加签类型常量 */
+  private static final List<String> COUNTERSIGN_ACTIONS =
+      List.of(
+          "COUNTERSIGN_BEFORE", "COUNTERSIGN_AFTER", "COUNTERSIGN_PARALLEL", "COUNTERSIGN_REMOVE");
+
+  /**
+   * 查询流程实例的加签历史记录（Map 形式返回，避免 Controller 层接触 DO）
+   *
+   * @param instanceId 流程实例 ID
+   * @return 加签历史列表
+   */
+  public List<Map<String, Object>> listCountersignByInstance(String instanceId) {
+    List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(instanceId);
+    return toCountersignMapList(logs);
+  }
+
+  /**
+   * 查询任务的加签历史记录（Map 形式返回，避免 Controller 层接触 DO）
+   *
+   * @param taskId 任务 ID
+   * @return 加签历史列表
+   */
+  public List<Map<String, Object>> listCountersignByTask(String taskId) {
+    List<FlowAuditLogDO> logs = auditLogMapper.selectByTaskId(taskId);
+    return toCountersignMapList(logs);
+  }
+
+  /** 将审计日志 DO 列表转换为加签视图 Map 列表 */
+  private List<Map<String, Object>> toCountersignMapList(List<FlowAuditLogDO> logs) {
+    if (logs == null || logs.isEmpty()) {
+      return List.of();
+    }
+    return logs.stream()
+        .filter(log -> COUNTERSIGN_ACTIONS.contains(log.getAction()))
+        .map(this::toCountersignMap)
+        .toList();
+  }
+
+  /** 将审计日志 DO 转换为加签视图 Map */
+  private Map<String, Object> toCountersignMap(FlowAuditLogDO log) {
+    Map<String, Object> vo = new LinkedHashMap<>();
+    vo.put("id", log.getId());
+    vo.put("instanceId", log.getInstanceId());
+    vo.put("taskId", log.getTaskId());
+    vo.put("flowCode", log.getFlowCode());
+    vo.put("nodeCode", log.getNodeCode());
+    vo.put("nodeName", log.getNodeName());
+    vo.put("action", log.getAction());
+    vo.put("actionName", getActionName(log.getAction()));
+    vo.put("operatorId", log.getOperatorId());
+    vo.put("operatorName", log.getOperatorName());
+    vo.put("targetId", log.getTargetId());
+    vo.put("targetName", log.getTargetName());
+    vo.put("comment", log.getComment());
+    vo.put("operatedAt", log.getOperatedAt());
+    return vo;
+  }
+
+  /** 获取加签操作名称 */
+  private String getActionName(String action) {
+    if (action == null) {
+      return "未知";
+    }
+    return switch (action) {
+      case "COUNTERSIGN_BEFORE" -> "前加签";
+      case "COUNTERSIGN_AFTER" -> "后加签";
+      case "COUNTERSIGN_PARALLEL" -> "并加签";
+      case "COUNTERSIGN_REMOVE" -> "减签";
+      default -> "未知加签操作";
+    };
+  }
+
+  // ============================== 监控聚合查询（供 Controller 层使用，避免 DO 泄漏） ==============================
+
+  /**
+   * 超期任务 Top N 排行（按超期时长降序）
+   *
+   * @param tenantId 租户 ID
+   * @param limit 返回条数上限
+   * @return 超期任务列表
+   */
+  public List<Map<String, Object>> selectOverdueTopN(String tenantId, int limit) {
+    return taskMapper.selectOverdueTopN(tenantId, limit);
+  }
+
+  /**
+   * 审批人负载分布（当前待办数量）
+   *
+   * @param tenantId 租户 ID
+   * @param limit 返回条数上限
+   * @return 审批人负载列表
+   */
+  public List<Map<String, Object>> selectWorkloadByAssignee(String tenantId, int limit) {
+    return taskMapper.selectWorkloadByAssignee(tenantId, limit);
   }
 
   // ============================== 私有辅助 ==============================

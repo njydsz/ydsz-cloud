@@ -7,10 +7,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.njydsz.agent.domain.conversation.ConversationMemory;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
@@ -49,9 +47,8 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class SummaryConversationMemory implements ConversationMemory {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SummaryConversationMemory.class);
 
   /** 摘要前缀 */
   private static final String SUMMARY_PREFIX = "[对话摘要] ";
@@ -289,14 +286,14 @@ public class SummaryConversationMemory implements ConversationMemory {
         for (ChatMessage msg : recentMessages) {
           delegate.save(conversationId, msg);
         }
-        LOG.info(
+        log.info(
             "[Memory-Summary] 对话压缩完成: convId={}, compressed={}, kept={}",
             conversationId,
             oldMessages.size(),
             recentMessages.size());
       }
     } catch (Exception e) {
-      LOG.warn("[Memory-Summary] 对话压缩失败: convId={}, error={}", conversationId, e.getMessage());
+      log.warn("[Memory-Summary] 对话压缩失败: convId={}, error={}", conversationId, e.getMessage());
     }
   }
 
@@ -342,7 +339,7 @@ public class SummaryConversationMemory implements ConversationMemory {
           return String.valueOf(value);
         }
       } catch (Exception e) {
-        LOG.warn("[Memory-Summary] 摘要读取失败，回退内存缓存: {}", e.getMessage());
+        log.warn("[Memory-Summary] 摘要读取失败，回退内存缓存: {}", e.getMessage());
       }
     }
     return conversationSummaries.get(conversationId);
@@ -360,7 +357,7 @@ public class SummaryConversationMemory implements ConversationMemory {
       try {
         redisOps.set(buildSummaryKey(conversationId), summary, SUMMARY_TTL_SECONDS);
       } catch (Exception e) {
-        LOG.warn("[Memory-Summary] 摘要持久化失败，仅保留内存缓存: {}", e.getMessage());
+        log.warn("[Memory-Summary] 摘要持久化失败，仅保留内存缓存: {}", e.getMessage());
       }
     }
   }
@@ -375,7 +372,7 @@ public class SummaryConversationMemory implements ConversationMemory {
       try {
         redisOps.del(buildSummaryKey(conversationId));
       } catch (Exception e) {
-        LOG.warn("[Memory-Summary] 摘要删除失败: {}", e.getMessage());
+        log.warn("[Memory-Summary] 摘要删除失败: {}", e.getMessage());
       }
     }
   }

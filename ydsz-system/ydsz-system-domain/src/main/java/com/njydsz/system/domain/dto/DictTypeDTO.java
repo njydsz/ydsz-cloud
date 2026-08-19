@@ -1,6 +1,5 @@
 package com.njydsz.system.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -30,28 +29,22 @@ import com.njydsz.common.safe.annotation.Xss;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@Schema(description = "字典类型数据传输对象")
 public class DictTypeDTO {
 
-  @Schema(description = "主键 ID（更新时必填）")
   private String id;
 
   @NotBlank(message = "字典类型编码不能为空")
   @Size(max = 64, message = "字典类型编码长度不能超过64")
   @Xss(message = "字典类型编码包含非法内容")
-  @Schema(description = "字典类型编码")
   private String typeCode;
 
   @NotBlank(message = "字典类型名称不能为空")
   @Size(max = 128, message = "字典类型名称长度不能超过128")
   @Xss(message = "字典类型名称包含非法内容")
-  @Schema(description = "字典类型名称")
   private String typeName;
 
   @Xss(message = "字典类型业务说明包含非法内容")
-  @Schema(description = "字典类型业务说明")
   private String description;
 
-  @Schema(description = "启用状态: ENABLED/DISABLED")
   private String status;
 }

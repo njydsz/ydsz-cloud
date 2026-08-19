@@ -3,11 +3,9 @@ package com.njydsz.agent.infra.guardrail;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.njydsz.agent.domain.guardrail.GuardrailResult;
 import com.njydsz.agent.domain.guardrail.InputGuardrail;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Prompt 注入检测护栏
@@ -23,9 +21,8 @@ import com.njydsz.agent.domain.guardrail.InputGuardrail;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class PromptInjectionGuardrail implements InputGuardrail {
-
-  private static final Logger LOG = LoggerFactory.getLogger(PromptInjectionGuardrail.class);
 
   /** Prompt 注入检测模式集合 */
   private static final Set<Pattern> INJECTION_PATTERNS =
@@ -55,7 +52,7 @@ public class PromptInjectionGuardrail implements InputGuardrail {
     }
     for (Pattern pattern : INJECTION_PATTERNS) {
       if (pattern.matcher(input).find()) {
-        LOG.warn("[Guardrail] 检测到 Prompt 注入: pattern={}", pattern.pattern());
+        log.warn("[Guardrail] 检测到 Prompt 注入: pattern={}", pattern.pattern());
         return GuardrailResult.reject("检测到潜在的 Prompt 注入攻击");
       }
     }

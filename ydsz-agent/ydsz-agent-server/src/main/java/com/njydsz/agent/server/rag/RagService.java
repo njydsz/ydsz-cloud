@@ -4,9 +4,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectProvider;
+import com.njydsz.common.docs.service.DocumentService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.rag.Retriever;
@@ -39,8 +38,6 @@ import com.njydsz.common.docs.service.DocumentService;
  */
 @Service
 public class RagService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(RagService.class);
 
   /** 默认返回 Top-5 召回；过小覆盖不足、过大引入噪声并增加上下文长度 */
   private static final int DEFAULT_TOP_K = 5;
@@ -102,7 +99,7 @@ public class RagService {
     } else {
       chunks = vectorStore.search(query, topK, minScore);
     }
-    LOG.info(
+    log.info(
         "[RAG] 检索完成: query='{}', mode={}, results={}",
         truncate(query, 50),
         retriever != null ? "hybrid" : "vector",
@@ -218,7 +215,7 @@ public class RagService {
    * @see #ingestFromStream(InputStream, String, String)
    */
   public void ingestByFileId(String fileId) {
-    LOG.info("[RagService] 接收文件索引请求: fileId={}", fileId);
+    log.info("[RagService] 接收文件索引请求: fileId={}", fileId);
     // TODO: 通过 FileContentFeignClient 调用 nextwiki 获取文件内容后，
     //  调用 ingestFromStream(stream, fileName, fileId) 完成摄入。
     //  当前 Feign 客户端未实现，待 nextwiki 模块暴露文件内容 API 后补充。
@@ -238,11 +235,11 @@ public class RagService {
    * @return 摄入的文本块数；解析失败返回 0
    */
   public int ingestFromStream(InputStream inputStream, String fileName, String documentId) {
-    LOG.info("[RagService] 开始摄入文件流: fileName={}, documentId={}", fileName, documentId);
+    log.info("[RagService] 开始摄入文件流: fileName={}, documentId={}", fileName, documentId);
 
     // 格式预检：快速跳过不支持的格式
     if (DocumentFormat.fromFileName(fileName) == DocumentFormat.UNKNOWN) {
-      LOG.info("[RagService] 不支持的格式，跳过摄入: fileName={}", fileName);
+      log.info("[RagService] 不支持的格式，跳过摄入: fileName={}", fileName);
       return 0;
     }
 
@@ -250,14 +247,14 @@ public class RagService {
     DocumentParseResult parseResult =
         documentService.parseAndPreprocess(inputStream, fileName, null);
     if (!parseResult.isSuccess()) {
-      LOG.warn(
+      log.warn(
           "[RagService] 文档解析失败: fileName={}, error={}", fileName, parseResult.getErrorMessage());
       return 0;
     }
 
     DocumentContent docContent = parseResult.getContent();
     if (docContent == null || docContent.getText() == null || docContent.getText().isEmpty()) {
-      LOG.warn("[RagService] 文档内容为空: fileName={}", fileName);
+      log.warn("[RagService] 文档内容为空: fileName={}", fileName);
       return 0;
     }
 
@@ -269,7 +266,7 @@ public class RagService {
 
     // 委托 DocumentIngestionService 完成分块 + 向量化 + 存储
     int count = ingestionService.ingest(documentId, text, fileName, "nextwiki");
-    LOG.info("[RagService] 文件流摄入完成: fileName={}, chunks={}", fileName, count);
+    log.info("[RagService] 文件流摄入完成: fileName={}, chunks={}", fileName, count);
     return count;
   }
 

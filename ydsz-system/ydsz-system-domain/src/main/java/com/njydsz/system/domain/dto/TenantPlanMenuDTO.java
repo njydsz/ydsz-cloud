@@ -2,7 +2,6 @@ package com.njydsz.system.domain.dto;
 
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -15,13 +14,10 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-@Schema(description = "套餐-菜单关联 DTO")
 public class TenantPlanMenuDTO {
 
   @NotBlank(message = "套餐 ID 不能为空")
-  @Schema(description = "套餐 ID")
   private String planId;
 
-  @Schema(description = "菜单 ID 列表")
   private List<String> menuIds;
 }

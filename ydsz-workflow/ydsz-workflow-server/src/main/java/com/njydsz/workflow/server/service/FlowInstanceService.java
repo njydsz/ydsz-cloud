@@ -7,6 +7,7 @@ import java.util.Map;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 
@@ -274,6 +275,29 @@ public interface FlowInstanceService {
       int pageSize);
 
   /**
+   * P2-23: 实例多维分页查询（VO 版本，避免 Controller 层接触 DO）
+   *
+   * @param businessType 业务类型（可选）
+   * @param initiatorId 发起人 ID（可选）
+   * @param flowStatus 流程状态（可选）
+   * @param startTime 开始时间下界（可选）
+   * @param endTime 开始时间上界（可选）
+   * @param tenantId 租户 ID（可选）
+   * @param pageNo 页码（从 1 开始）
+   * @param pageSize 每页大小
+   * @return 分页结果（VO）
+   */
+  PageResponse<List<FlowInstanceVO>> pageVO(
+      String businessType,
+      String initiatorId,
+      String flowStatus,
+      LocalDateTime startTime,
+      LocalDateTime endTime,
+      String tenantId,
+      int pageNo,
+      int pageSize);
+
+  /**
    * P2-24: 读取实例流程变量
    *
    * @param instanceId 实例 ID
@@ -326,6 +350,63 @@ public interface FlowInstanceService {
    * @param dueAt 超时时间（传 null 清除超时标记）
    */
   void setDueAt(String instanceId, LocalDateTime dueAt);
+
+  /**
+   * 按 ID 查询流程实例（VO 版本，避免 Controller 层接触 DO）
+   *
+   * @param id 实例 ID
+   * @return 流程实例 VO，不存在返回 null
+   */
+  FlowInstanceVO getByIdVO(String id);
+
+  /**
+   * 按状态分组统计实例数量
+   *
+   * @param tenantId 租户 ID
+   * @return 状态分组计数列表，每行含 flowStatus / cnt
+   */
+  List<Map<String, Object>> selectCountGroupByStatus(String tenantId);
+
+  /**
+   * 查询今日新增/完成计数
+   *
+   * @param tenantId 租户 ID
+   * @return Map 含 todayNewCount / todayCompletedCount
+   */
+  Map<String, Object> selectTodayCount(String tenantId);
+
+  /**
+   * 按日统计新增实例数
+   *
+   * @param tenantId 租户 ID
+   * @param start 开始时间
+   * @param end 结束时间
+   * @return 每日新增列表，每行含 date / newCount
+   */
+  List<Map<String, Object>> selectDailyNewCount(
+      String tenantId, LocalDateTime start, LocalDateTime end);
+
+  /**
+   * 按日统计完成实例数
+   *
+   * @param tenantId 租户 ID
+   * @param start 开始时间
+   * @param end 结束时间
+   * @return 每日完成列表，每行含 date / completedCount
+   */
+  List<Map<String, Object>> selectDailyCompletedCount(
+      String tenantId, LocalDateTime start, LocalDateTime end);
+
+  /**
+   * 按流程类型分组统计实例分布
+   *
+   * @param tenantId 租户 ID
+   * @param start 开始时间下界（可选）
+   * @param end 开始时间上界（可选）
+   * @return 流程类型分布列表，每行含 flowCode / flowName / cnt
+   */
+  List<Map<String, Object>> selectFlowTypeDistribution(
+      String tenantId, LocalDateTime start, LocalDateTime end);
 
   /**
    * P2-2 (GAP-10): 驳回后快速重审

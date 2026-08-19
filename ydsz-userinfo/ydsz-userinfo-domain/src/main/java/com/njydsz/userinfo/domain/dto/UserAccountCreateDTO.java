@@ -37,6 +37,12 @@ public class UserAccountCreateDTO implements Serializable {
   @Size(max = 64, message = "用户名长度不能超过 64 个字符")
   private String username;
 
+  /** 用户名（SCIM 兼容字段，与 username 同义） */
+  private String userName;
+
+  /** 外部系统标识（SCIM externalId，用于与 HR 系统关联） */
+  private String externalId;
+
   /** 登录密码（明文传入，服务端 BCrypt 加密存储，须符合密码策略） */
   @NotBlank(message = "密码不能为空")
   @Size(min = 8, max = 64, message = "密码长度必须在 8-64 个字符之间")

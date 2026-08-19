@@ -16,7 +16,7 @@ import com.njydsz.userinfo.domain.social.SocialAuthException;
 import com.njydsz.userinfo.domain.social.SocialAuthProvider;
 import com.njydsz.userinfo.domain.social.SocialUserInfo;
 import com.njydsz.userinfo.domain.vo.SocialAccountVO;
-import com.njydsz.userinfo.server.config.SocialAuthProperties;
+import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 
 /**
  * 社交认证服务编排实现。
@@ -220,7 +220,7 @@ public class SocialAuthService {
    */
   private String getRedirectUri(String platform) {
     SocialAuthProperties.ProviderConfig config = socialAuthProperties.getProvider(platform);
-    return config != null ? config.getRedirectUri() : null;
+    return config != null ? config.getScope() : null;
   }
 
   /**

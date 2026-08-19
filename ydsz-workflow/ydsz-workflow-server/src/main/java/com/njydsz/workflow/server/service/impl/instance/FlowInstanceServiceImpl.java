@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.server.service.FlowInstanceService;
@@ -277,6 +279,39 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
   }
 
   /**
+   * P2-23: 实例多维分页查询（VO 版本，避免 Controller 层接触 DO）
+   *
+   * @param businessType 业务类型（可选）
+   * @param initiatorId 发起人 ID（可选）
+   * @param flowStatus 流程状态（可选）
+   * @param startTime 开始时间下界（可选）
+   * @param endTime 开始时间上界（可选）
+   * @param tenantId 租户 ID（可选）
+   * @param pageNo 页码（从 1 开始）
+   * @param pageSize 每页大小
+   * @return 分页结果（VO）
+   */
+  @Override
+  public PageResponse<List<FlowInstanceVO>> pageVO(
+      String businessType,
+      String initiatorId,
+      String flowStatus,
+      LocalDateTime startTime,
+      LocalDateTime endTime,
+      String tenantId,
+      int pageNo,
+      int pageSize) {
+    PageResponse<List<FlowInstanceDO>> result =
+        queryService.page(
+            businessType, initiatorId, flowStatus, startTime, endTime, tenantId, pageNo, pageSize);
+    return PageResponse.success(
+        result.getTotal(),
+        result.getPageNum(),
+        result.getPageSize(),
+        WorkflowConverter.INSTANT.flowInstanceListToVO(result.getData()));
+  }
+
+  /**
    * P2-24: 读取实例流程变量
    *
    * @param instanceId 实例 ID
@@ -392,5 +427,40 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
       String comment,
       String redoMode) {
     return lifecycleManager.resubmit(instanceId, initiatorId, variables, comment, redoMode);
+  }
+
+  // ============================== 监控聚合查询 ==============================
+
+  @Override
+  public FlowInstanceVO getByIdVO(String id) {
+    return queryService.getByIdVO(id);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectCountGroupByStatus(String tenantId) {
+    return queryService.selectCountGroupByStatus(tenantId);
+  }
+
+  @Override
+  public Map<String, Object> selectTodayCount(String tenantId) {
+    return queryService.selectTodayCount(tenantId);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectDailyNewCount(
+      String tenantId, LocalDateTime start, LocalDateTime end) {
+    return queryService.selectDailyNewCount(tenantId, start, end);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectDailyCompletedCount(
+      String tenantId, LocalDateTime start, LocalDateTime end) {
+    return queryService.selectDailyCompletedCount(tenantId, start, end);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectFlowTypeDistribution(
+      String tenantId, LocalDateTime start, LocalDateTime end) {
+    return queryService.selectFlowTypeDistribution(tenantId, start, end);
   }
 }

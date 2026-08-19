@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.cronjob.domain.constants.CronjobConstants;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.domain.repository.JobDailyStatsRepository;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
@@ -174,19 +176,19 @@ public class JobStatsController {
     // 1. 任务状态分布（通过 Repository 统计）
     Map<String, Object> taskStats = new HashMap<>();
     taskStats.put("total", jobRepository.countAll());
-    taskStats.put("normal", jobRepository.countByStatus("NORMAL"));
-    taskStats.put("paused", jobRepository.countByStatus("PAUSED"));
-    taskStats.put("error", jobRepository.countByStatus("ERROR"));
-    taskStats.put("autoPaused", jobRepository.countByStatus("AUTO_PAUSED"));
+    taskStats.put("normal", jobRepository.countByStatus(CronjobConstants.JOB_STATUS_NORMAL));
+    taskStats.put("paused", jobRepository.countByStatus(CronjobConstants.JOB_STATUS_PAUSED));
+    taskStats.put("error", jobRepository.countByStatus(CronjobConstants.JOB_STATUS_ERROR));
+    taskStats.put("autoPaused", jobRepository.countByStatus(CronjobConstants.JOB_STATUS_AUTO_PAUSED));
     dashboard.put("taskStats", taskStats);
 
     // 2. 今日执行统计（通过 Repository 统计）
     LocalDateTime todayStart = LocalDate.now().atStartOfDay();
     Map<String, Object> todayExec = new HashMap<>();
     long todayTotal = jobLogRepository.countByStatusAfter(null, todayStart);
-    long todaySuccess = jobLogRepository.countByStatusAfter("SUCCESS", todayStart);
-    long todayFailed = jobLogRepository.countByStatusAfter("FAILED", todayStart);
-    long todayRunning = jobLogRepository.countByStatusAfter("RUNNING", null);
+    long todaySuccess = jobLogRepository.countByStatusAfter(JobLog.STATUS_SUCCESS, todayStart);
+    long todayFailed = jobLogRepository.countByStatusAfter(JobLog.STATUS_FAILED, todayStart);
+    long todayRunning = jobLogRepository.countByStatusAfter(JobLog.STATUS_RUNNING, null);
     todayExec.put("total", todayTotal);
     todayExec.put("success", todaySuccess);
     todayExec.put("failed", todayFailed);

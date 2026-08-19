@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
@@ -54,6 +55,7 @@ import com.njydsz.system.server.service.TenantService;
 @RestController
 @RequestMapping("/api/v1/tenant")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "sys:tenant:list")
 public class TenantController {
 
   private final TenantService service;
@@ -103,6 +105,7 @@ public class TenantController {
   @Operation(summary = "创建租户")
   @RateLimit(resource = "system.tenant.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:tenant:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:tenant:add")
   @PostMapping
   public YdszResponse<String> save(
       @Valid @RequestBody TenantDTO dto,
@@ -125,6 +128,7 @@ public class TenantController {
   @Operation(summary = "更新租户")
   @RateLimit(resource = "system.tenant.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:tenant:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:tenant:edit")
   @PutMapping
   public YdszResponse<Boolean> update(
       @Valid @RequestBody TenantDTO dto,
@@ -146,6 +150,7 @@ public class TenantController {
   @Operation(summary = "删除租户")
   @RateLimit(resource = "system.tenant.remove", threshold = 50)
   @Idempotent(key = "'ydsz:system:tenant:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:tenant:delete")
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(service.removeById(id));

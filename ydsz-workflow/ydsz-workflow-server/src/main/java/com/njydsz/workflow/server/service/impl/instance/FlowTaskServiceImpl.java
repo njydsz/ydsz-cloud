@@ -1,18 +1,24 @@
 package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.server.service.FlowSlaService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
 /**
@@ -72,6 +78,9 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
   /** 批量操作子服务，处理批量审批 */
   private final FlowTaskBatchServiceImpl batchService;
+
+  /** SLA 超时自动策略服务（@Lazy 打破与 FlowSlaService 的循环依赖） */
+  @Lazy private final FlowSlaService slaService;
 
   // ============================== 创建任务 ==============================
 
@@ -337,5 +346,115 @@ public class FlowTaskServiceImpl implements FlowTaskService {
       int size) {
     return queryService.listDoneByAssigneePageMulti(
         assigneeId, businessType, flowCode, startTime, endTime, tenantId, page, size);
+  }
+
+  // ============================== VO 查询方法实现 ==============================
+
+  @Override
+  public String getTaskInstanceId(String taskId) {
+    FlowRunTaskDO task = queryService.getById(taskId);
+    return task != null ? task.getInstanceId() : null;
+  }
+
+  @Override
+  public List<Map<String, Object>> listPassedNodes(String instanceId) {
+    return queryService.listPassedNodes(instanceId);
+  }
+
+  @Override
+  public PageResponse<List<FlowRunTaskVO>> pageTodoVO(
+      String userId, String tenantId, String flowCode, String businessType,
+      LocalDateTime startTime, LocalDateTime endTime, int page, int size) {
+    PageResponse<List<FlowRunTaskDO>> result =
+        queryService.listTodoByAssigneePage(userId, tenantId, page, size);
+    return PageResponse.success(
+        result.getTotal(), result.getPageNum(), result.getPageSize(),
+        WorkflowConverter.INSTANT.flowRunTaskListToVO(result.getData()));
+  }
+
+  @Override
+  public PageResponse<List<FlowRunTaskVO>> pageDoneVO(
+      String userId, String tenantId, String flowCode, String businessType,
+      LocalDateTime startTime, LocalDateTime endTime, int page, int size) {
+    PageResponse<List<FlowRunTaskDO>> result =
+        queryService.listDoneByAssigneePage(userId, tenantId, page, size);
+    return PageResponse.success(
+        result.getTotal(), result.getPageNum(), result.getPageSize(),
+        WorkflowConverter.INSTANT.flowRunTaskListToVO(result.getData()));
+  }
+
+  @Override
+  public PageResponse<List<FlowRunTaskVO>> pageDoneSearchVO(
+      String userId, String tenantId, String flowCode, String businessType,
+      LocalDateTime startTime, LocalDateTime endTime, String keyword, int page, int size) {
+    PageResponse<List<FlowRunTaskDO>> result =
+        queryService.listDoneByAssigneePageMulti(
+            userId, businessType, flowCode, startTime, endTime, tenantId, page, size);
+    return PageResponse.success(
+        result.getTotal(), result.getPageNum(), result.getPageSize(),
+        WorkflowConverter.INSTANT.flowRunTaskListToVO(result.getData()));
+  }
+
+  @Override
+  public List<FlowRunTaskVO> listOverdueVO(String userId, String tenantId, int limit) {
+    return WorkflowConverter.INSTANT.flowRunTaskListToVO(
+        queryService.listOverdue(userId, tenantId, limit));
+  }
+
+  @Override
+  public List<Map<String, Object>> listCountersignByInstance(String instanceId) {
+    return queryService.listCountersignByInstance(instanceId);
+  }
+
+  @Override
+  public List<Map<String, Object>> listCountersignByTask(String taskId) {
+    return queryService.listCountersignByTask(taskId);
+  }
+
+  @Override
+  public int passAll(String userId, String userName) {
+    List<FlowRunTaskDO> todos = queryService.listTodoByAssignee(userId, null);
+    if (todos == null || todos.isEmpty()) {
+      return 0;
+    }
+    List<String> taskIds = new ArrayList<>();
+    for (FlowRunTaskDO task : todos) {
+      taskIds.add(task.getId());
+    }
+    batchPass(taskIds, userId, userName);
+    return taskIds.size();
+  }
+
+  @Override
+  public List<Map<String, Object>> overdueStats(String flowCode, LocalDateTime startTime, LocalDateTime endTime) {
+    List<Map<String, Object>> result = new ArrayList<>();
+    Map<String, Object> stats = new LinkedHashMap<>();
+    stats.put("flowCode", flowCode);
+    stats.put("overdueCount", queryService.countOverdue(flowCode, null));
+    result.add(stats);
+    return result;
+  }
+
+  // ============================== 监控聚合查询 ==============================
+
+  @Override
+  public List<Map<String, Object>> selectOverdueTopN(String tenantId, int limit) {
+    return queryService.selectOverdueTopN(tenantId, limit);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectWorkloadByAssignee(String tenantId, int limit) {
+    return queryService.selectWorkloadByAssignee(tenantId, limit);
+  }
+
+  // ============================== SLA 处理 ==============================
+
+  @Override
+  public Boolean slaProcessByTaskId(String taskId) {
+    FlowRunTaskDO task = queryService.getById(taskId);
+    if (task == null) {
+      return null;
+    }
+    return slaService.processOverdue(task);
   }
 }

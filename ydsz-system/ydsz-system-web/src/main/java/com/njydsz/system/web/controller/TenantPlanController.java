@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
@@ -49,6 +50,7 @@ import com.njydsz.system.server.service.TenantPlanService;
 @RestController
 @RequestMapping("/api/v1/tenant-plan")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "sys:tenant:plan:list")
 public class TenantPlanController {
 
   private final TenantPlanService planService;
@@ -108,6 +110,7 @@ public class TenantPlanController {
   @Operation(summary = "创建套餐")
   @RateLimit(resource = "system.tenant.plan.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:tenant-plan:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:tenant:plan:add")
   @PostMapping
   public YdszResponse<String> save(
       @Valid @RequestBody TenantPlanVO vo,
@@ -130,6 +133,7 @@ public class TenantPlanController {
   @Operation(summary = "更新套餐")
   @RateLimit(resource = "system.tenantplan.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:tenant-plan:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:tenant:plan:edit")
   @PutMapping
   public YdszResponse<Boolean> update(
       @Valid @RequestBody TenantPlanVO vo,
@@ -153,6 +157,7 @@ public class TenantPlanController {
   @Operation(summary = "删除套餐")
   @RateLimit(resource = "system.tenant.plan.remove", threshold = 50)
   @Idempotent(key = "'ydsz:system:tenant-plan:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:tenant:plan:delete")
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(planService.removeById(id));
@@ -184,6 +189,7 @@ public class TenantPlanController {
       action = AuditAction.UPDATE,
       content = "'配置套餐菜单: ' + #dto.planId")
   @Operation(summary = "配置套餐菜单")
+  @AuthApiPermission(apiCodes = "sys:tenant:plan:edit")
   @PostMapping("/menus")
   public YdszResponse<Void> updateMenus(@Valid @RequestBody TenantPlanMenuDTO dto) {
     planMenuService.updatePlanMenus(dto);

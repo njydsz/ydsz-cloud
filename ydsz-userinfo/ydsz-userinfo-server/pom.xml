@@ -119,6 +119,21 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-config</artifactId>
         </dependency>
+        <!-- JJWT (OidcConfiguration 需要 io.jsonwebtoken.security.Keys) -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- Spring LDAP (LdapOrgSyncService 需要 LdapTemplate) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-ldap</artifactId>
+        </dependency>
         <!-- P0-1: 单元测试基础设施 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

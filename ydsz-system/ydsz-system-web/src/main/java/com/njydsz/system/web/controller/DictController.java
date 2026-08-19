@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -55,6 +56,7 @@ import com.njydsz.system.server.service.DictService;
 @RestController
 @RequestMapping("/api/v1/dict/type")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "sys:dict:list")
 public class DictController {
 
   private final DictService dictService;
@@ -103,6 +105,7 @@ public class DictController {
   @Operation(summary = "创建字典类型")
   @RateLimit(resource = "system.dict.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:dict:add")
   @PostMapping
   public YdszResponse<String> save(@Valid @RequestBody DictTypeVO vo) {
     return YdszResponse.success(dictService.save(vo));
@@ -124,6 +127,7 @@ public class DictController {
   @Operation(summary = "更新字典类型")
   @RateLimit(resource = "system.dict.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:dict:edit")
   @PutMapping
   public YdszResponse<Boolean> update(@Valid @RequestBody DictTypeVO vo) {
     return YdszResponse.success(dictService.updateById(vo));
@@ -145,6 +149,7 @@ public class DictController {
   @Operation(summary = "删除字典类型")
   @RateLimit(resource = "system.dict.remove", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:dict:delete")
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(dictService.removeById(id));

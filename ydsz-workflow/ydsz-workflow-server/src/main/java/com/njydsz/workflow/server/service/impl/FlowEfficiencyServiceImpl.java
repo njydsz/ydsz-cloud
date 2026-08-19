@@ -784,6 +784,20 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     return result;
   }
 
+  // ============================== 监控聚合查询（供 Controller 层使用，避免 DO 泄漏） ==============================
+
+  @Override
+  public List<Map<String, Object>> selectApproverEfficiency(
+      String tenantId, LocalDateTime start, LocalDateTime end, int limit) {
+    return hisTaskMapper.selectApproverEfficiency(tenantId, start, end, limit);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectFlowEfficiencyComparison(
+      String tenantId, LocalDateTime start, LocalDateTime end) {
+    return hisTaskMapper.selectFlowEfficiencyComparison(tenantId, start, end);
+  }
+
   /** 安全类型转换：Object → double */
   private double toDouble(Object val) {
     if (val == null) return 0.0;

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -56,6 +57,7 @@ import com.njydsz.system.server.service.DictItemService;
 @RestController
 @RequestMapping("/api/internal")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "sys:internal:api")
 public class InternalApiController {
 
   private final ConfigService configService;

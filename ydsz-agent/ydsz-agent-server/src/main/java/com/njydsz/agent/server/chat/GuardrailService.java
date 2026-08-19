@@ -3,10 +3,8 @@ package com.njydsz.agent.server.chat;
 import java.util.Comparator;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.njydsz.agent.domain.guardrail.GuardrailResult;
+import com.njydsz.agent.server.metrics.AgentMetrics;
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.guardrail.InputGuardrail;
 import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.server.metrics.AgentMetrics;
@@ -29,9 +27,8 @@ import com.njydsz.agent.server.metrics.AgentMetrics;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class GuardrailService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(GuardrailService.class);
 
   /** 默认输出护栏拒绝文案 */
   private static final String DEFAULT_REJECTION_MESSAGE = "抱歉，我无法回答这个问题。";
@@ -93,7 +90,7 @@ public class GuardrailService {
     for (InputGuardrail guard : inputGuardrails) {
       GuardrailResult result = guard.check(sanitized);
       if (result.isRejected()) {
-        LOG.warn("[Guardrail] 输入护栏拒绝: guard={}, reason={}", guard.getName(), result.getReason());
+        log.warn("[Guardrail] 输入护栏拒绝: guard={}, reason={}", guard.getName(), result.getReason());
         metrics.recordGuardrailRejection(guard.getName(), "input");
         return null;
       }
@@ -115,7 +112,7 @@ public class GuardrailService {
     for (OutputGuardrail guard : outputGuardrails) {
       GuardrailResult result = guard.check(sanitized);
       if (result.isRejected()) {
-        LOG.warn("[Guardrail] 输出护栏拒绝: guard={}, reason={}", guard.getName(), result.getReason());
+        log.warn("[Guardrail] 输出护栏拒绝: guard={}, reason={}", guard.getName(), result.getReason());
         metrics.recordGuardrailRejection(guard.getName(), "output");
         // P2 修复：拒绝文案可配置（原为硬编码固定文案）
         return rejectionMessage;

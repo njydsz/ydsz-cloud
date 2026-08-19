@@ -8,6 +8,9 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
@@ -100,52 +103,47 @@ public class JobLogRepositoryImpl implements JobLogRepository {
 
   @Override
   public long countByStatusAfter(String status, LocalDateTime startAfter) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.cronjob.domain.entity.log.JobLog> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
     if (status != null) {
-      wrapper.eq(com.njydsz.cronjob.domain.entity.log.JobLog::getStatus, status);
+      wrapper.eq(JobLog::getStatus, status);
     }
     if (startAfter != null) {
-      wrapper.ge(com.njydsz.cronjob.domain.entity.log.JobLog::getStartTime, startAfter);
+      wrapper.ge(JobLog::getStartTime, startAfter);
     }
     return jobLogMapper.selectCount(wrapper);
   }
 
   @Override
   public List<JobLogVO> findRecentFailures(int limit) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.cronjob.domain.entity.log.JobLog> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-    wrapper.eq(com.njydsz.cronjob.domain.entity.log.JobLog::getStatus, "FAILED")
-        .orderByDesc(com.njydsz.cronjob.domain.entity.log.JobLog::getStartTime)
+    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(JobLog::getStatus, JobLog.STATUS_FAILED)
+        .orderByDesc(JobLog::getStartTime)
         .last("LIMIT " + Math.min(limit, 100));
     return converter.jobLogListToVO(jobLogMapper.selectList(wrapper));
   }
 
   @Override
   public long countByTimeRange(LocalDateTime start, LocalDateTime end) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.cronjob.domain.entity.log.JobLog> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-    wrapper.ge(com.njydsz.cronjob.domain.entity.log.JobLog::getStartTime, start)
-        .le(com.njydsz.cronjob.domain.entity.log.JobLog::getStartTime, end);
+    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
+    wrapper.ge(JobLog::getStartTime, start)
+        .le(JobLog::getStartTime, end);
     return jobLogMapper.selectCount(wrapper);
   }
 
   @Override
   public List<JobLogVO> findByJobKey(String jobKey, int limit) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.cronjob.domain.entity.log.JobLog> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-    wrapper.eq(com.njydsz.cronjob.domain.entity.log.JobLog::getJobKey, jobKey)
-        .orderByDesc(com.njydsz.cronjob.domain.entity.log.JobLog::getCreatedAt)
+    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(JobLog::getJobKey, jobKey)
+        .orderByDesc(JobLog::getCreatedAt)
         .last("LIMIT " + Math.min(limit, 100));
     return converter.jobLogListToVO(jobLogMapper.selectList(wrapper));
   }
 
   @Override
   public Optional<JobLogVO> findLatestByJobKey(String jobKey) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.cronjob.domain.entity.log.JobLog> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-    wrapper.eq(com.njydsz.cronjob.domain.entity.log.JobLog::getJobKey, jobKey)
-        .orderByDesc(com.njydsz.cronjob.domain.entity.log.JobLog::getCreatedAt)
+    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(JobLog::getJobKey, jobKey)
+        .orderByDesc(JobLog::getCreatedAt)
         .last("LIMIT 1");
     JobLogVO vo = converter.entityToVO(jobLogMapper.selectOne(wrapper));
     return Optional.ofNullable(vo);
@@ -154,19 +152,17 @@ public class JobLogRepositoryImpl implements JobLogRepository {
   // ===== 实体方法实现 =====
 
   @Override
-  public com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.njydsz.cronjob.domain.entity.log.JobLog> selectPage(
-      com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.njydsz.cronjob.domain.entity.log.JobLog> page,
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.cronjob.domain.entity.log.JobLog> wrapper) {
+  public Page<JobLog> selectPage(Page<JobLog> page, LambdaQueryWrapper<JobLog> wrapper) {
     return jobLogMapper.selectPage(page, wrapper);
   }
 
   @Override
-  public int insert(com.njydsz.cronjob.domain.entity.log.JobLog log) {
+  public int insert(JobLog log) {
     return jobLogMapper.insert(log);
   }
 
   @Override
-  public int updateById(com.njydsz.cronjob.domain.entity.log.JobLog log) {
+  public int updateById(JobLog log) {
     return jobLogMapper.updateById(log);
   }
 }

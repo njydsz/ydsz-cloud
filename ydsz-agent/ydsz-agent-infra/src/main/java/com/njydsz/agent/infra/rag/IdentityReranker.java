@@ -2,11 +2,9 @@ package com.njydsz.agent.infra.rag;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.njydsz.agent.domain.rag.Reranker;
 import com.njydsz.agent.domain.rag.TextChunk;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 恒等 Reranker（关闭重排序时的默认实现）
@@ -16,9 +14,8 @@ import com.njydsz.agent.domain.rag.TextChunk;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class IdentityReranker implements Reranker {
-
-  private static final Logger LOG = LoggerFactory.getLogger(IdentityReranker.class);
 
   @Override
   public List<TextChunk> rerank(String query, List<TextChunk> chunks, int topK) {

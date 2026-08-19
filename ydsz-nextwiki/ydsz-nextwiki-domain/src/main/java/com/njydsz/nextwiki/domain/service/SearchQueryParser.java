@@ -7,7 +7,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.nextwiki.domain.query.SearchQuery;
 import com.njydsz.nextwiki.domain.query.SearchQuery.FieldQuery;
@@ -49,7 +48,6 @@ import com.njydsz.nextwiki.domain.query.SearchQuery.FieldQuery;
  * @since 1.0.0
  */
 @Slf4j
-@Component
 public class SearchQueryParser {
 
   /** 字段限定语法正则：field:value（value 不含空格） */

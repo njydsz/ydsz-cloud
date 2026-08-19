@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
+import com.njydsz.workflow.domain.vo.FlowCcVO;
 import com.njydsz.workflow.infra.entity.FlowCcDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 
@@ -93,7 +94,7 @@ public interface FlowCcService {
   long countMyCc(String tenantId, String userId, FlowCcQueryDTO query);
 
   /**
-   * 查"抄送我的"分页
+   * 查"抄送我的"分页（VO 版本，避免 Controller 层接触 DO）
    *
    * @param userId 接收人 ID
    * @param readStatus 已读状态过滤（UNREAD/READ，可空）
@@ -101,9 +102,9 @@ public interface FlowCcService {
    * @param tenantId 租户 ID
    * @param pageNo 页码（从 1 开始）
    * @param pageSize 每页大小
-   * @return 抄送记录分页
+   * @return 抄送记录分页（VO）
    */
-  YdszResponse<List<FlowCcDO>> listCcByUser(
+  YdszResponse<List<FlowCcVO>> listCcByUser(
       String userId, String readStatus, String flowCode, String tenantId, int pageNo, int pageSize);
 
   /**

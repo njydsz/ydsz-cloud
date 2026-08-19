@@ -31,7 +31,6 @@ import com.njydsz.system.domain.vo.ImportResult;
 import com.njydsz.system.domain.repository.DictRepository;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.metrics.SystemMetrics;
-import com.njydsz.system.server.search.SearchIndexSyncer;
 import com.njydsz.system.server.service.DictItemService;
 import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.util.SystemVersionUtils;
@@ -127,9 +126,6 @@ public class DictItemServiceImpl implements DictItemService {
 
   /** 租户感知缓存键构造器（SpEL 与手动 evict 共用） */
   private final CacheKeyBuilder cacheKeyBuilder;
-
-  /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
-  private final SearchIndexSyncer searchIndexSyncer;
 
   /** 统一 Excel 导出辅助类 */
   private final ExcelExportHelper excelExportHelper;
@@ -314,7 +310,6 @@ public class DictItemServiceImpl implements DictItemService {
     createSnapshotVersion(vo.getTypeCode(), "新增字典项: " + vo.getItemCode());
     DictItemDTO dto = toDto(vo);
     dictRepository.insertItem(dto);
-    searchIndexSyncer.upsert("dict", dto);
     return dto.getId();
   }
 
@@ -353,9 +348,6 @@ public class DictItemServiceImpl implements DictItemService {
         evictDictList(before.getTypeCode());
       }
     }
-    if (updated) {
-      searchIndexSyncer.upsert("dict", dto);
-    }
     return updated;
   }
 
@@ -390,7 +382,6 @@ public class DictItemServiceImpl implements DictItemService {
       // 精准失效单条 item 缓存 + 类型列表缓存（替代 allEntries 全量清空）
       evictDictItem(vo.getTypeCode(), vo.getItemCode());
       evictDictList(vo.getTypeCode());
-      searchIndexSyncer.delete("dict", id);
     }
     return removed;
   }
@@ -441,8 +432,6 @@ public class DictItemServiceImpl implements DictItemService {
                   DictItemDTO dto = toDto(vo);
                   dto.setId(vo.getId());
                   dictRepository.insertItem(dto);
-                  // 回滚重建后同步搜索索引
-                  searchIndexSyncer.upsert("dict", dto);
                 }
               }
             } catch (Exception e) {
@@ -693,8 +682,6 @@ public class DictItemServiceImpl implements DictItemService {
           .map(DictItemDTO::getTypeCode)
           .distinct()
           .forEach(this::evictDictList);
-      // 同步搜索索引
-      dtos.forEach(dto -> searchIndexSyncer.upsert("dict", dto));
       return dtos.size();
     } catch (Exception e) {
       errors.add("批量导入失败: " + e.getMessage());

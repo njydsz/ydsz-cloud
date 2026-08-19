@@ -90,7 +90,7 @@ public class JustAuthHttpClient {
    */
   public Map<String, Object> getForMap(String userInfoUrl, String accessToken,
       Map<String, String> params) {
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(userInfoUrl);
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(userInfoUrl);
     if (params != null) {
       params.forEach(builder::queryParam);
     }

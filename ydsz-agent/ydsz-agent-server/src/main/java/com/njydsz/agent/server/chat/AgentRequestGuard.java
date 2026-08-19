@@ -2,10 +2,8 @@ package com.njydsz.agent.server.chat;
 
 import java.time.Duration;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.tenant.TenantContextHolder;
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.tenant.TenantContextHolder;
 
@@ -34,9 +32,8 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class AgentRequestGuard {
-
-  private static final Logger LOG = LoggerFactory.getLogger(AgentRequestGuard.class);
 
   private static final String IDEM_KEY_PREFIX = "ydsz:agent:idem:";
   private static final String RATE_KEY_PREFIX = "ydsz:agent:rate:";
@@ -84,7 +81,7 @@ public class AgentRequestGuard {
     String key = IDEM_KEY_PREFIX + requestId;
     Boolean acquired = stringOps.setIfAbsent(key, "1", IDEM_TTL.toSeconds());
     if (acquired == null || !acquired) {
-      LOG.warn("[Agent-Guard] 重复请求被拒绝: requestId={}", requestId);
+      log.warn("[Agent-Guard] 重复请求被拒绝: requestId={}", requestId);
       throw BusinessException.builder()
           .code("REQUEST_DUPLICATE")
           .message("重复请求，请勿在 60 秒内重复提交")
@@ -104,7 +101,7 @@ public class AgentRequestGuard {
       stringOps.expire(key, RATE_WINDOW.toSeconds());
     }
     if (count > maxRequestsPerMinute) {
-      LOG.warn("[Agent-Guard] 限流触发: key={}, count={}", key, count);
+      log.warn("[Agent-Guard] 限流触发: key={}, count={}", key, count);
       throw BusinessException.builder()
           .code("RATE_LIMIT_EXCEEDED")
           .message("请求过于频繁，每分钟最多 " + maxRequestsPerMinute + " 次")

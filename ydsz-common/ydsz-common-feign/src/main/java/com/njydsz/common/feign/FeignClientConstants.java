@@ -66,6 +66,15 @@ public final class FeignClientConstants {
   /** 定时任务触发路径 */
   public static final String CRONJOB_PATH_TRIGGER = "/api/v1/cronjob/{id}/trigger";
 
+  /** 定时任务详情查询路径 */
+  public static final String CRONJOB_PATH_GET = "/api/v1/cronjob/{id}";
+
+  /** 定时任务暂停路径 */
+  public static final String CRONJOB_PATH_PAUSE = "/api/v1/cronjob/{id}/pause";
+
+  /** 定时任务恢复路径 */
+  public static final String CRONJOB_PATH_RESUME = "/api/v1/cronjob/{id}/resume";
+
   // ======================== 规则引擎服务路径常量 ========================
 
   /** 规则评估（dry-run）路径 */

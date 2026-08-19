@@ -19,6 +19,16 @@ public class SocialAuthException extends RuntimeException {
   private final String platform;
 
   /**
+   * 构造社交认证异常（平台标识未知）。
+   *
+   * @param message 错误描述
+   */
+  public SocialAuthException(String message) {
+    super(message);
+    this.platform = "UNKNOWN";
+  }
+
+  /**
    * 构造社交认证异常。
    *
    * @param platform 平台标识

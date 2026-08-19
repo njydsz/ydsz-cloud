@@ -1,6 +1,5 @@
 package com.njydsz.system.domain.vo;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -13,15 +12,11 @@ import lombok.Data;
  * @see com.njydsz.system.domain.entity.TenantPlanMenu 套餐-菜单关联实体
  */
 @Data
-@Schema(description = "套餐-菜单关联视图对象")
 public class TenantPlanMenuVO {
 
-  @Schema(description = "主键 ID")
   private String id;
 
-  @Schema(description = "套餐 ID")
   private String planId;
 
-  @Schema(description = "菜单 ID")
   private String menuId;
 }

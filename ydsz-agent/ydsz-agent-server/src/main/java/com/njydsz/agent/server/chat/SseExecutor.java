@@ -1,21 +1,19 @@
 package com.njydsz.agent.server.chat;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.njydsz.agent.domain.model.ChatChunk;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * SSE 流式执行器（统一封装心跳保活、虚拟线程、断连检测、cleanup 逻辑）
@@ -23,6 +21,9 @@ import com.njydsz.agent.domain.model.ChatChunk;
  * <p>消除 {@link com.njydsz.agent.web.controller.ChatController} 与
  * {@link com.njydsz.agent.web.controller.AgentController} 中重复的
  * 心跳调度、虚拟线程启动、客户端断连检测、超时 cleanup 等样板代码。
+ *
+ * <p><b>线程池管理：</b>心跳调度使用 {@link SseHeartbeatScheduler} 提供的共享调度器，
+ * 避免每个 SSE 连接独立创建线程池导致的资源浪费。
  *
  * <p>使用方式：
  *
@@ -39,9 +40,8 @@ import com.njydsz.agent.domain.model.ChatChunk;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class SseExecutor {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SseExecutor.class);
 
   /** SSE 超时时间（毫秒）：2 分钟，避免长连接占用 Web 容器资源 */
   private static final long SSE_TIMEOUT = 120_000L;
@@ -49,12 +49,8 @@ public class SseExecutor {
   /** 心跳间隔（秒）：15 秒，防止中间代理（Nginx/CDN）静默断开空闲连接 */
   private static final long HEARTBEAT_INTERVAL_SECONDS = 15L;
 
-  /** 心跳调度线程数：2 个足够覆盖常规 SSE 连接 */
-  private static final int HEARTBEAT_POOL_SIZE = 2;
-
   private final SseEmitter emitter;
   private final long heartbeatIntervalSeconds;
-  private final ScheduledExecutorService heartbeatScheduler;
   private final AtomicBoolean active;
 
   /**
@@ -69,6 +65,8 @@ public class SseExecutor {
   /**
    * 创建 SSE 执行器（自定义心跳间隔）。
    *
+   * <p>使用 {@link SseHeartbeatScheduler} 提供的共享调度器进行心跳调度。
+   *
    * @param emitter Spring MVC SSE 发送句柄
    * @param heartbeatIntervalSeconds 心跳间隔（秒）
    */
@@ -76,13 +74,8 @@ public class SseExecutor {
     this.emitter = emitter;
     this.heartbeatIntervalSeconds = heartbeatIntervalSeconds;
     this.active = new AtomicBoolean(true);
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - 短生命周期临时池，cleanup 中 shutdown
-    this.heartbeatScheduler =
-        new ScheduledThreadPoolExecutor(
-            HEARTBEAT_POOL_SIZE,
-            Thread.ofVirtual().name("agent-sse-heartbeat-", 0).factory(),
-            new ThreadPoolExecutor.CallerRunsPolicy());
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+    // 增加共享调度器引用计数
+    SseHeartbeatScheduler.getScheduler();
   }
 
   /**
@@ -93,8 +86,9 @@ public class SseExecutor {
    * @param task 业务回调，入参为 chunk 消费者
    */
   public void execute(Consumer<Consumer<SseChunk>> task) {
-    var heartbeatFuture =
-        heartbeatScheduler.scheduleAtFixedRate(
+    ScheduledExecutorService scheduler = SseHeartbeatScheduler.getScheduler();
+    ScheduledFuture<?> heartbeatFuture =
+        scheduler.scheduleAtFixedRate(
             this::sendHeartbeat,
             heartbeatIntervalSeconds,
             heartbeatIntervalSeconds,
@@ -112,13 +106,13 @@ public class SseExecutor {
   /** 执行流式任务核心逻辑 */
   private void doExecute(Consumer<Consumer<SseChunk>> task, ScheduledFuture<?> heartbeatFuture) {
     try {
-      task.accept(chunk -> sendChunk(chunk));
+      task.accept(this::sendChunk);
       if (active.get()) {
         sendDone();
         emitter.complete();
       }
     } catch (Exception e) {
-      LOG.error("[SseExecutor] 流式执行异常: {}", e.getMessage(), e);
+      log.error("[SseExecutor] 流式执行异常", e);
       if (active.get()) {
         sendError(e);
         emitter.completeWithError(e);
@@ -138,24 +132,21 @@ public class SseExecutor {
       emitter.send(SseEmitter.event().comment("keep-alive"));
     } catch (IOException e) {
       active.set(false);
-      LOG.debug("[SseExecutor] 心跳发送失败，标记连接断开: {}", e.getMessage());
+      log.debug("[SseExecutor] 心跳发送失败，标记连接断开", e);
     }
   }
 
   /** 推送增量 chunk */
   private void sendChunk(SseChunk chunk) {
     if (!active.get()) {
-      throw new RuntimeException("SSE 连接已断开，终止 LLM 调用");
+      throw new IllegalStateException("SSE 连接已断开，终止 LLM 调用");
     }
     try {
-      emitter.send(
-          SseEmitter.event()
-              .data(chunk.toMap())
-              .name("chunk"));
+      emitter.send(SseEmitter.event().data(chunk.toMap()).name("chunk"));
     } catch (IOException e) {
       active.set(false);
-      LOG.warn("[SseExecutor] SSE chunk 发送失败，标记连接断开: {}", e.getMessage());
-      throw new RuntimeException("SSE 连接已断开", e);
+      log.warn("[SseExecutor] SSE chunk 发送失败，标记连接断开", e);
+      throw new IllegalStateException("SSE 连接已断开", e);
     }
   }
 
@@ -165,9 +156,12 @@ public class SseExecutor {
       return;
     }
     try {
-      emitter.send(SseEmitter.event().data(Map.of("content", "", "finished", true)).name("done"));
+      Map<String, Object> data = new LinkedHashMap<>();
+      data.put("content", "");
+      data.put("finished", true);
+      emitter.send(SseEmitter.event().data(data).name("done"));
     } catch (IOException e) {
-      LOG.warn("[SseExecutor] SSE done 发送失败: {}", e.getMessage());
+      log.warn("[SseExecutor] SSE done 发送失败", e);
     }
   }
 
@@ -177,30 +171,31 @@ public class SseExecutor {
       return;
     }
     try {
-      emitter.send(
-          SseEmitter.event()
-              .data(
-                  Map.of(
-                      "error",
-                      e.getMessage() != null ? e.getMessage() : "未知错误",
-                      "finished",
-                      true))
-              .name("error"));
+      Map<String, Object> data = new LinkedHashMap<>();
+      data.put("error", e.getMessage() != null ? e.getMessage() : "未知错误");
+      data.put("finished", true);
+      emitter.send(SseEmitter.event().data(data).name("error"));
     } catch (IOException ex) {
-      // 客户端已断开，忽略（P1 修复：catch 变量与方法参数 e 重名，编译冲突）
-      LOG.debug("[SseExecutor] 错误事件发送失败（客户端已断开）: {}", ex.getMessage());
+      // 客户端已断开，忽略
+      log.debug("[SseExecutor] 错误事件发送失败（客户端已断开）", ex);
     }
   }
 
-  /** 清理资源：停止心跳 + 中断执行线程 */
+  /**
+   * 清理资源：取消心跳任务 + 中断执行线程。
+   *
+   * <p>注意：不 shutdown 共享调度器（{@link SseHeartbeatScheduler}），仅取消当前任务。
+   *
+   * @param heartbeatFuture 心跳任务句柄
+   * @param executionThread 执行线程
+   */
   private void cleanup(ScheduledFuture<?> heartbeatFuture, Thread executionThread) {
     active.set(false);
     heartbeatFuture.cancel(true);
-    if (executionThread != null && executionThread.isAlive() && !executionThread.equals(Thread.currentThread())) {
+    if (executionThread != null
+        && executionThread.isAlive()
+        && !executionThread.equals(Thread.currentThread())) {
       executionThread.interrupt();
-    }
-    if (!heartbeatScheduler.isShutdown()) {
-      heartbeatScheduler.shutdownNow();
     }
   }
 
@@ -233,7 +228,7 @@ public class SseExecutor {
 
     /** 转换为 Map（用于 SseEmitter.event().data()） */
     public Map<String, Object> toMap() {
-      Map<String, Object> map = new HashMap<>();
+      Map<String, Object> map = new LinkedHashMap<>();
       map.put("content", content != null ? content : "");
       map.put("finished", finished);
       if (finishReason != null) {

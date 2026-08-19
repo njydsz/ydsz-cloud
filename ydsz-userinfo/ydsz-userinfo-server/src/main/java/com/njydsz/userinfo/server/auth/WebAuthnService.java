@@ -301,7 +301,7 @@ public class WebAuthnService {
    */
   private WebAuthnChallengeVO validateChallenge(String challenge, String userId,
       String expectedType) {
-    String storedJson = redisStringOps.get(CHALLENGE_KEY_PREFIX + challenge);
+    String storedJson = redisStringOps.get(CHALLENGE_KEY_PREFIX + challenge, String.class);
     if (storedJson == null || storedJson.isBlank()) {
       throw new BusinessException(UserInfoExceptionCode.WEBAUTHN_CHALLENGE_EXPIRED);
     }

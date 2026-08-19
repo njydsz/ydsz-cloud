@@ -2,7 +2,7 @@ package com.njydsz.userinfo.domain.scim;
 
 import java.util.List;
 
-import com.alibaba.fastjson2.annotation.JSONField;
+import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,18 +32,18 @@ import lombok.NoArgsConstructor;
 public class ScimError {
 
   /** SCIM 错误响应 Schema 标识（固定值）。 */
-  @JSONField(name = "schemas")
+  @JsonProperty("schemas")
   private List<String> schemas;
 
   /** HTTP 状态码（字符串形式）。 */
-  @JSONField(name = "status")
+  @JsonProperty("status")
   private String status;
 
   /** 人类可读的错误描述。 */
-  @JSONField(name = "detail")
+  @JsonProperty("detail")
   private String detail;
 
   /** SCIM 标准错误类型（可选）。 */
-  @JSONField(name = "scimType")
+  @JsonProperty("scimType")
   private String scimType;
 }

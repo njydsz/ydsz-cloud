@@ -11,7 +11,7 @@ import com.njydsz.userinfo.domain.social.SocialAccessToken;
 import com.njydsz.userinfo.domain.social.SocialAuthException;
 import com.njydsz.userinfo.domain.social.SocialAuthProvider;
 import com.njydsz.userinfo.domain.social.SocialUserInfo;
-import com.njydsz.userinfo.server.config.SocialAuthProperties;
+import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 
 /**
  * 飞书 OAuth2 认证提供者

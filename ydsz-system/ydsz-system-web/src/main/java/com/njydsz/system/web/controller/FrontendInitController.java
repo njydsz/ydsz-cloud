@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.vo.FrontendInitVO;
@@ -38,6 +39,7 @@ import com.njydsz.system.server.service.FrontendInitService;
 @RestController
 @RequestMapping("/api/v1/system/init")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "sys:frontend:init")
 public class FrontendInitController {
 
   private final FrontendInitService frontendInitService;

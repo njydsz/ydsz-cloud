@@ -2,7 +2,6 @@ package com.njydsz.system.domain.vo;
 
 import java.time.LocalDateTime;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -26,45 +25,31 @@ import lombok.Data;
  * @see com.njydsz.system.domain.dto.TenantDTO 租户 DTO
  */
 @Data
-@Schema(description = "租户视图对象")
 public class TenantVO {
 
-  @Schema(description = "主键 ID")
   private String id;
 
-  @Schema(description = "租户编码")
   private String tenantCode;
 
-  @Schema(description = "租户名称")
   private String tenantName;
 
-  @Schema(description = "联系人姓名")
   private String contactName;
 
-  @Schema(description = "联系电话")
   private String contactPhone;
 
-  @Schema(description = "联系邮箱")
   private String contactEmail;
 
-  @Schema(description = "关联套餐 ID")
   private String planId;
 
-  @Schema(description = "订阅到期时间")
   private LocalDateTime expireAt;
 
-  @Schema(description = "独立数据源标识")
   private String datasourceKey;
 
-  @Schema(description = "状态: ENABLED/DISABLED/EXPIRED")
   private String status;
 
-  @Schema(description = "备注")
   private String remark;
 
-  @Schema(description = "创建时间")
   private LocalDateTime createdAt;
 
-  @Schema(description = "更新时间")
   private LocalDateTime updatedAt;
 }

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
@@ -62,6 +63,7 @@ import com.njydsz.system.server.service.EntityVersionService;
 @RestController
 @RequestMapping("/api/v1/dict/version")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "sys:dict:version:list")
 public class DictVersionController {
 
   private final EntityVersionService entityVersionService;

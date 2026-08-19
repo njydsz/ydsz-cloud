@@ -1,5 +1,6 @@
 package com.njydsz.workflow.server.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -107,6 +108,29 @@ public interface FlowEfficiencyService {
    */
   List<Map<String, Object>> detectLongRunningInstances(
       String tenantId, int limit, int longRunningDays);
+
+  /**
+   * 审批人效率排名（SQL GROUP BY 聚合）
+   *
+   * @param tenantId 租户 ID
+   * @param start 完成时间下界（可选）
+   * @param end 完成时间上界（可选）
+   * @param limit 返回条数上限
+   * @return 审批人排名列表，每行含 assigneeId / assigneeName / completedCount / avgDurationMs / totalDurationMs
+   */
+  List<Map<String, Object>> selectApproverEfficiency(
+      String tenantId, LocalDateTime start, LocalDateTime end, int limit);
+
+  /**
+   * 流程效率对比（按流程编码分组）
+   *
+   * @param tenantId 租户 ID
+   * @param start 完成时间下界（可选）
+   * @param end 完成时间上界（可选）
+   * @return 流程效率对比列表
+   */
+  List<Map<String, Object>> selectFlowEfficiencyComparison(
+      String tenantId, LocalDateTime start, LocalDateTime end);
 
   /**
    * P1: 流程健康度综合评分（0-100 分）

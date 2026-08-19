@@ -1,8 +1,7 @@
 package com.njydsz.agent.server.health;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectProvider;
+import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.Health;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
@@ -31,9 +30,8 @@ import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class AgentHealthIndicator extends AbstractModuleHealthIndicator {
-
-  private static final Logger LOG = LoggerFactory.getLogger(AgentHealthIndicator.class);
 
   /** LLM 客户端 */
   private final LlmClient llmClient;
@@ -108,7 +106,7 @@ public class AgentHealthIndicator extends AbstractModuleHealthIndicator {
     builder.withDetail("agentMetrics", metrics != null ? "UP" : "NOT_CONFIGURED");
 
     if (!allHealthy) {
-      LOG.warn("[Health] Agent 健康检查未通过，详见 health details");
+      log.warn("[Health] Agent 健康检查未通过，详见 health details");
       builder.down();
     }
   }

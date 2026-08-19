@@ -25,11 +25,8 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowCommentCreateDTO;
 import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
-import com.njydsz.workflow.infra.entity.FlowCommentDO;
-import com.njydsz.workflow.infra.entity.FlowQuickCommentDO;
 import com.njydsz.workflow.domain.vo.FlowCommentVO;
 import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
 import com.njydsz.workflow.server.service.FlowCommentService;
@@ -119,9 +116,7 @@ public class FlowCommentController {
   @Operation(summary = "查询实例全部评论（树结构）")
   public YdszResponse<List<FlowCommentVO>> listByInstance(@PathVariable String instanceId) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return YdszResponse.success(
-        WorkflowConverter.INSTANT.flowCommentListToVO(
-            commentService.listByInstance(tenantId, instanceId)));
+    return YdszResponse.success(commentService.listByInstance(tenantId, instanceId));
   }
 
   /**
@@ -134,9 +129,7 @@ public class FlowCommentController {
   @Operation(summary = "查询实例一级评论")
   public YdszResponse<List<FlowCommentVO>> listRootComments(@PathVariable String instanceId) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return YdszResponse.success(
-        WorkflowConverter.INSTANT.flowCommentListToVO(
-            commentService.listRootComments(tenantId, instanceId)));
+    return YdszResponse.success(commentService.listRootComments(tenantId, instanceId));
   }
 
   /**
@@ -148,8 +141,7 @@ public class FlowCommentController {
   @GetMapping("/replies/{parentCommentId}")
   @Operation(summary = "查询父评论下的回复")
   public YdszResponse<List<FlowCommentVO>> listReplies(@PathVariable String parentCommentId) {
-    return YdszResponse.success(
-        WorkflowConverter.INSTANT.flowCommentListToVO(commentService.listReplies(parentCommentId)));
+    return YdszResponse.success(commentService.listReplies(parentCommentId));
   }
 
   /**
@@ -185,9 +177,7 @@ public class FlowCommentController {
   public YdszResponse<List<FlowQuickCommentVO>> listQuickComments() {
     String userId = AuthContextUtils.getUserId();
     String tenantId = TenantContextHolder.getTenantId();
-    return YdszResponse.success(
-        WorkflowConverter.INSTANT.flowQuickCommentListToVO(
-            commentService.listQuickComments(userId, tenantId)));
+    return YdszResponse.success(commentService.listQuickComments(userId, tenantId));
   }
 
   /**

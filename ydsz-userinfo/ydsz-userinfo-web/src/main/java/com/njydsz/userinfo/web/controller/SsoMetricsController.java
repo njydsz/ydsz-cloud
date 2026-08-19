@@ -67,7 +67,7 @@ public class SsoMetricsController {
     metrics.setCasActiveSt(getLongFromRedis(CAS_ACTIVE_ST_KEY));
 
     // OAuth2 活跃 Token
-    metrics.setOAuth2ActiveTokens(getLongFromRedis(OAUTH2_ACTIVE_TOKENS_KEY));
+    metrics.setOauth2ActiveTokens(getLongFromRedis(OAUTH2_ACTIVE_TOKENS_KEY));
 
     // 协议分布
     Map<String, Long> protocolDistribution = new HashMap<>();

@@ -12,8 +12,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -104,8 +102,6 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @Tag(name = "Agent 统一入口", description = "Agent 执行 / 对话 / 历史")
 public class AgentController {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AgentController.class);
-
   /** Agent 应用门面（解耦 Controller 与内部服务） */
   private final AgentFacade agentFacade;
 
@@ -134,7 +130,7 @@ public class AgentController {
   @Operation(summary = "同步执行 Agent", description = "等待完整响应后返回，适用于非实时对话场景")
   public YdszResponse<ChatResponseDTO> execute(
       @Valid @RequestBody AgentExecutionRequestDTO request) {
-    LOG.info(
+    log.info(
         "[Agent-API] 执行请求: agentCode={}, stream={}", request.getAgentCode(), request.isStream());
     requestGuard.check(request.getRequestId(), null);
     AgentExecutionRequest execReq = toExecutionRequest(request);
@@ -176,7 +172,7 @@ public class AgentController {
   @PostMapping(value = "/execute/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   @Operation(summary = "流式执行 Agent（SSE）", description = "逐 chunk 推送 LLM 响应，支持心跳保活和断连检测")
   public SseEmitter executeStream(@Valid @RequestBody AgentExecutionRequestDTO request) {
-    LOG.info("[Agent-API] 流式执行请求: agentCode={}", request.getAgentCode());
+    log.info("[Agent-API] 流式执行请求: agentCode={}", request.getAgentCode());
     requestGuard.check(request.getRequestId(), null);
     SseEmitter emitter = new SseEmitter();
     SseExecutor executor = new SseExecutor(emitter);
@@ -228,7 +224,7 @@ public class AgentController {
                                     progressEvent.getError() != null ? progressEvent.getError() : ""))
                             .name("progress"));
                   } catch (IOException e) {
-                    LOG.debug("[Agent-API] SSE progress 发送失败（客户端已断开）: {}", e.getMessage());
+                    log.debug("[Agent-API] SSE progress 发送失败（客户端已断开）: {}", e.getMessage());
                   }
                 }));
 
@@ -263,14 +259,14 @@ public class AgentController {
       ChatResponse response;
       // 多模态输入优先：multimodalContent 非空时使用 Vision 模型对话
       if (request.getMultimodalContent() != null && !request.getMultimodalContent().isEmpty()) {
-        LOG.info(
+        log.info(
             "[Chat-API] 多模态同步对话请求: convId={}, partsCount={}",
             request.getConversationId(),
             request.getMultimodalContent().size());
         MessageContent content = toMessageContent(request.getMultimodalContent());
         response = agentFacade.chat(request.getConversationId(), content, request.getSystemPrompt());
       } else {
-        LOG.info(
+        log.info(
             "[Chat-API] 同步对话请求: convId={}, msgLen={}",
             request.getConversationId(),
             request.getMessage().length());
@@ -311,7 +307,7 @@ public class AgentController {
 
     // 多模态输入优先：multimodalContent 非空时使用 Vision 模型流式对话
     if (request.getMultimodalContent() != null && !request.getMultimodalContent().isEmpty()) {
-      LOG.info(
+      log.info(
           "[Chat-API] 多模态流式对话请求: convId={}, partsCount={}",
           request.getConversationId(),
           request.getMultimodalContent().size());
@@ -343,7 +339,7 @@ public class AgentController {
       return emitter;
     }
 
-    LOG.info("[Chat-API] 流式对话请求: convId={}", request.getConversationId());
+    log.info("[Chat-API] 流式对话请求: convId={}", request.getConversationId());
     executor.execute(
         chunkConsumer ->
             agentFacade.stream(
@@ -400,7 +396,7 @@ public class AgentController {
   @Operation(summary = "批量对话（并行）", description = "并行处理多条对话请求，单条失败不影响其他条目")
   public YdszResponse<BatchChatResponseDTO> batchChat(
       @Valid @RequestBody BatchChatRequestDTO request) {
-    LOG.info("[Batch-API] 批量对话请求: itemsCount={}", request.getItems().size());
+    log.info("[Batch-API] 批量对话请求: itemsCount={}", request.getItems().size());
     requestGuard.check(request.getRequestId(), null);
     try {
       // DTO → 应用层 BatchChatItem 转换

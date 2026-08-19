@@ -3,8 +3,6 @@ package com.njydsz.agent.infra.checkpoint;
 import java.time.Duration;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.agent.DagCheckpoint;
@@ -30,8 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class RedisDagCheckpointStore implements DagCheckpointStore {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RedisDagCheckpointStore.class);
-
   /** 检查点 Key 前缀 */
   private static final String KEY_PREFIX = "agent:dag:checkpoint:";
 
@@ -54,9 +50,9 @@ public class RedisDagCheckpointStore implements DagCheckpointStore {
     try {
       String json = YdszJson.toJson(checkpoint);
       redisStringOps.set(key, json, TTL);
-      LOG.debug("[DagCheckpoint] 保存检查点: executionId={}", checkpoint.getExecutionId());
+      log.debug("[DagCheckpoint] 保存检查点: executionId={}", checkpoint.getExecutionId());
     } catch (Exception e) {
-      LOG.warn("[DagCheckpoint] Redis 保存检查点失败，续跑能力降级: executionId={}, err={}",
+      log.warn("[DagCheckpoint] Redis 保存检查点失败，续跑能力降级: executionId={}, err={}",
           checkpoint.getExecutionId(), e.getMessage());
     }
   }
@@ -76,7 +72,7 @@ public class RedisDagCheckpointStore implements DagCheckpointStore {
       DagCheckpoint checkpoint = YdszJson.fromJson(json, DagCheckpoint.class);
       return Optional.ofNullable(checkpoint);
     } catch (Exception e) {
-      LOG.warn("[DagCheckpoint] Redis 加载检查点失败: executionId={}, err={}", executionId, e.getMessage());
+      log.warn("[DagCheckpoint] Redis 加载检查点失败: executionId={}, err={}", executionId, e.getMessage());
       return Optional.empty();
     }
   }
@@ -90,9 +86,9 @@ public class RedisDagCheckpointStore implements DagCheckpointStore {
     String key = buildKey(executionId);
     try {
       redisStringOps.del(key);
-      LOG.debug("[DagCheckpoint] 删除检查点: executionId={}", executionId);
+      log.debug("[DagCheckpoint] 删除检查点: executionId={}", executionId);
     } catch (Exception e) {
-      LOG.warn("[DagCheckpoint] Redis 删除检查点失败: executionId={}, err={}", executionId, e.getMessage());
+      log.warn("[DagCheckpoint] Redis 删除检查点失败: executionId={}, err={}", executionId, e.getMessage());
     }
   }
 

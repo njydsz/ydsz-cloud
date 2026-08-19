@@ -1,10 +1,15 @@
 package com.njydsz.cronjob.infra.repository.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.cronjob.domain.entity.job.JobWebhook;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.JobWebhookRepository;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
@@ -53,8 +58,8 @@ public class JobWebhookRepositoryImpl implements JobWebhookRepository {
   }
 
   @Override
-  public void deleteById(String id, java.time.LocalDateTime updatedAt) {
-    com.njydsz.cronjob.domain.entity.job.JobWebhook update = new com.njydsz.cronjob.domain.entity.job.JobWebhook();
+  public void deleteById(String id, LocalDateTime updatedAt) {
+    JobWebhook update = new JobWebhook();
     update.setId(id);
     update.setDeleted(1);
     update.setUpdatedAt(updatedAt);
@@ -62,28 +67,25 @@ public class JobWebhookRepositoryImpl implements JobWebhookRepository {
   }
 
   @Override
-  public java.util.Optional<JobWebhookVO> findById(String id) {
-    java.util.Optional<com.njydsz.cronjob.domain.entity.job.JobWebhook> entityOpt =
-        java.util.Optional.ofNullable(jobWebhookMapper.selectById(id));
+  public Optional<JobWebhookVO> findById(String id) {
+    Optional<JobWebhook> entityOpt =
+        Optional.ofNullable(jobWebhookMapper.selectById(id));
     return entityOpt.map(converter::entityToVO);
   }
 
   @Override
   public JobRepository.PageResult<JobWebhookVO> pageBy(int pageNum, int size, String eventType, String jobKey) {
-    com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.njydsz.cronjob.domain.entity.job.JobWebhook> pageObj =
-        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, size);
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.cronjob.domain.entity.job.JobWebhook> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-    wrapper.eq(com.njydsz.cronjob.domain.entity.job.JobWebhook::getDeleted, 0);
+    Page<JobWebhook> pageObj = new Page<>(pageNum, size);
+    LambdaQueryWrapper<JobWebhook> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(JobWebhook::getDeleted, 0);
     if (eventType != null && !eventType.isBlank()) {
-      wrapper.eq(com.njydsz.cronjob.domain.entity.job.JobWebhook::getEventType, eventType);
+      wrapper.eq(JobWebhook::getEventType, eventType);
     }
     if (jobKey != null && !jobKey.isBlank()) {
-      wrapper.eq(com.njydsz.cronjob.domain.entity.job.JobWebhook::getJobKey, jobKey);
+      wrapper.eq(JobWebhook::getJobKey, jobKey);
     }
-    wrapper.orderByDesc(com.njydsz.cronjob.domain.entity.job.JobWebhook::getCreatedAt);
-    com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.njydsz.cronjob.domain.entity.job.JobWebhook> result =
-        jobWebhookMapper.selectPage(pageObj, wrapper);
+    wrapper.orderByDesc(JobWebhook::getCreatedAt);
+    Page<JobWebhook> result = jobWebhookMapper.selectPage(pageObj, wrapper);
     return new JobRepository.PageResult<>(converter.jobWebhookListToVO(result.getRecords()), result.getTotal());
   }
 }

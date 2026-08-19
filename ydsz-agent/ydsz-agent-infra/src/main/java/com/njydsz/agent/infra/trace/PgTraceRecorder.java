@@ -7,9 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.njydsz.common.safe.sensitive.SensitiveUtil;
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.infra.entity.AgentTraceDO;
 import com.njydsz.agent.infra.entity.AgentTraceStepDO;
 import com.njydsz.agent.domain.trace.TraceRecorder;
@@ -41,9 +40,8 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class PgTraceRecorder implements TraceRecorder {
-
-  private static final Logger LOG = LoggerFactory.getLogger(PgTraceRecorder.class);
 
   /** 输入/输出 JSON 最大长度（防止超长内容撑爆字段） */
   private static final int MAX_JSON_LENGTH = 8000;
@@ -76,7 +74,7 @@ public class PgTraceRecorder implements TraceRecorder {
     traceMapper.insert(trace);
     stepIndexes.put(traceId, new AtomicInteger(0));
     startTimes.put(traceId, System.currentTimeMillis());
-    LOG.info("[Trace] 开始链路: traceId={}, convId={}, agentId={}", traceId, conversationId, agentId);
+    log.info("[Trace] 开始链路: traceId={}, convId={}, agentId={}", traceId, conversationId, agentId);
     return traceId;
   }
 
@@ -117,7 +115,7 @@ public class PgTraceRecorder implements TraceRecorder {
             .cost(cost)
             .build();
     traceStepMapper.insert(step);
-    LOG.debug(
+    log.debug(
         "[Trace] 记录步骤: traceId={}, step={}, type={}, {}ms, cost=${}",
         traceId,
         nextIndex,
@@ -130,7 +128,7 @@ public class PgTraceRecorder implements TraceRecorder {
   public void endTrace(String traceId, String status) {
     AgentTraceDO trace = traceMapper.selectById(traceId);
     if (trace == null) {
-      LOG.warn("[Trace] 链路不存在，无法结束: traceId={}", traceId);
+      log.warn("[Trace] 链路不存在，无法结束: traceId={}", traceId);
       cleanup(traceId);
       return;
     }
@@ -142,7 +140,7 @@ public class PgTraceRecorder implements TraceRecorder {
     trace.setTotalDurationMs(totalMs);
     traceMapper.updateById(trace);
     cleanup(traceId);
-    LOG.info("[Trace] 结束链路: traceId={}, status={}, totalMs={}", traceId, status, totalMs);
+    log.info("[Trace] 结束链路: traceId={}, status={}, totalMs={}", traceId, status, totalMs);
   }
 
   @Override
@@ -182,7 +180,7 @@ public class PgTraceRecorder implements TraceRecorder {
       String json = YdszJson.toJson(obj);
       return SensitiveUtil.scanAndMask(json);
     } catch (Exception e) {
-      LOG.warn("[Trace] 序列化失败: {}", e.getMessage());
+      log.warn("[Trace] 序列化失败: {}", e.getMessage());
       return SensitiveUtil.scanAndMask(String.valueOf(obj));
     }
   }

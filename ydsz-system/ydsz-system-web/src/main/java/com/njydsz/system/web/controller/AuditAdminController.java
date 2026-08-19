@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.core.AuditQueryService;
 import com.njydsz.common.audit.domain.AuditLog;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.web.version.ApiVersion;
@@ -47,6 +48,7 @@ import com.njydsz.common.web.version.ApiVersion;
 @RequiredArgsConstructor
 @ApiVersion("1")
 @Tag(name = "审计日志管理", description = "审计日志查询（运营/管理后台）")
+@AuthApiPermission(apiCodes = "sys:audit:list")
 public class AuditAdminController {
 
   /** 默认每页条数 */

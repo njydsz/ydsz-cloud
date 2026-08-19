@@ -397,7 +397,7 @@ public class JobController {
    * @param page 页码（默认 1，最小 1）
    * @param size 每页条数（默认 20，最大 100）
    * @param keyword 关键字（任务名/JOB_KEY/Handler，可选）
-   * @param status 状态过滤（NORMAL/PAUSED/STOPPED，可选）
+   * @param status 状态过滤（<code>NORMAL</code>/<code>PAUSED</code>/<code>STOPPED</code>，可选）
    * @param group 分组过滤（可选）
    * @return 任务分页数据
    */

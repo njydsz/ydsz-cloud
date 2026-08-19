@@ -2,6 +2,7 @@ package com.njydsz.userinfo.domain.scim;
 
 import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -15,19 +16,20 @@ import lombok.NoArgsConstructor;
  * @since 1.6.0
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ScimEmail {
 
   /** 电子邮箱地址。 */
-  @JSONField(name = "value")
+  @JsonProperty("value")
   private String value;
 
   /** 显示名称（可选）。 */
-  @JSONField(name = "display")
+  @JsonProperty("display")
   private String display;
 
   /** 是否为主邮箱。 */
-  @JSONField(name = "primary")
+  @JsonProperty("primary")
   private Boolean primary;
 }

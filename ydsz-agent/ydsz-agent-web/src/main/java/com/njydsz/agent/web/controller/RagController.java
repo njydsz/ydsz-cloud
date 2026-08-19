@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +25,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * RAG 知识库管理 REST API Controller。
@@ -67,11 +66,10 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/agent/rag")
 public class RagController {
-
-  private static final Logger LOG = LoggerFactory.getLogger(RagController.class);
 
   /** RAG 检索服务（封装向量相似度检索 + 引用构建 + 上下文拼装） */
   private final RagService ragService;
@@ -108,7 +106,7 @@ public class RagController {
   @Idempotent(key = "ydsz:agent:RagController:ingest:lock", ttlSeconds = 5)
   @PostMapping("/ingest")
   public YdszResponse<Map<String, Object>> ingest(@Valid @RequestBody DocumentIngestDTO request) {
-    LOG.info(
+    log.info(
         "[RAG-API] 摄入文档: docId={}, title={}", request.getDocumentId(), request.getDocumentTitle());
     int chunkCount =
         ingestionService.ingest(
@@ -186,7 +184,7 @@ public class RagController {
   @RateLimit(resource = "agent.rag.deleteDocument", threshold = 50)
   @DeleteMapping("/documents/{documentId}")
   public YdszResponse<Void> deleteDocument(@PathVariable String documentId) {
-    LOG.info("[RAG-API] 删除文档索引: documentId={}", documentId);
+    log.info("[RAG-API] 删除文档索引: documentId={}", documentId);
     ingestionService.delete(documentId);
     return YdszResponse.success();
   }

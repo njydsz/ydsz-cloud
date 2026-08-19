@@ -81,7 +81,7 @@ public class ScimController {
 
     if (!scimProperties.isAllowCreate()) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN)
-          .body(YdszJson.toJsonString(
+          .body(YdszJson.toJson(
               com.njydsz.userinfo.domain.scim.ScimError.builder()
                   .schemas(List.of("urn:ietf:params:scim:api:messages:2.0:Error"))
                   .status("403")
@@ -111,7 +111,7 @@ public class ScimController {
         .Resources(scimUsers)
         .build();
 
-    return ResponseEntity.ok(YdszJson.toJsonString(response));
+    return ResponseEntity.ok(YdszJson.toJson(response));
   }
 
   /**
@@ -125,7 +125,7 @@ public class ScimController {
     UserAccountVO user = userAccountService.getById(id);
     if (user == null) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
-          .body(YdszJson.toJsonString(
+          .body(YdszJson.toJson(
               com.njydsz.userinfo.domain.scim.ScimError.builder()
                   .schemas(List.of("urn:ietf:params:scim:api:messages:2.0:Error"))
                   .status("404")
@@ -134,7 +134,7 @@ public class ScimController {
     }
 
     ScimUser scimUser = com.njydsz.userinfo.infra.converter.ScimConverter.toScimUser(user);
-    return ResponseEntity.ok(YdszJson.toJsonString(scimUser));
+    return ResponseEntity.ok(YdszJson.toJson(scimUser));
   }
 
   /**
@@ -147,7 +147,7 @@ public class ScimController {
   public ResponseEntity<String> createUser(@Valid @RequestBody ScimUser scimUser) {
     if (!scimProperties.isAllowCreate()) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN)
-          .body(YdszJson.toJsonString(
+          .body(YdszJson.toJson(
               com.njydsz.userinfo.domain.scim.ScimError.builder()
                   .schemas(List.of("urn:ietf:params:scim:api:messages:2.0:Error"))
                   .status("403")
@@ -159,14 +159,14 @@ public class ScimController {
     com.njydsz.userinfo.domain.dto.UserAccountCreateDTO createDTO =
         com.njydsz.userinfo.infra.converter.ScimConverter.toCreateDTO(scimUser);
 
-    String userId = userAccountService.createUser(createDTO);
+    String userId = userAccountService.create(createDTO);
 
     // 查询创建后的用户并返回
     UserAccountVO createdUser = userAccountService.getById(userId);
     ScimUser result = com.njydsz.userinfo.infra.converter.ScimConverter.toScimUser(createdUser);
 
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(YdszJson.toJsonString(result));
+        .body(YdszJson.toJson(result));
   }
 
   /**
@@ -181,7 +181,7 @@ public class ScimController {
       @PathVariable String id, @Valid @RequestBody ScimUser scimUser) {
     if (!scimProperties.isAllowUpdate()) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN)
-          .body(YdszJson.toJsonString(
+          .body(YdszJson.toJson(
               com.njydsz.userinfo.domain.scim.ScimError.builder()
                   .schemas(List.of("urn:ietf:params:scim:api:messages:2.0:Error"))
                   .status("403")
@@ -193,7 +193,7 @@ public class ScimController {
     UserAccountVO existingUser = userAccountService.getById(id);
     if (existingUser == null) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
-          .body(YdszJson.toJsonString(
+          .body(YdszJson.toJson(
               com.njydsz.userinfo.domain.scim.ScimError.builder()
                   .schemas(List.of("urn:ietf:params:scim:api:messages:2.0:Error"))
                   .status("404")
@@ -206,13 +206,13 @@ public class ScimController {
         com.njydsz.userinfo.infra.converter.ScimConverter.toUpdateDTO(scimUser);
     updateDTO.setId(id);
 
-    userAccountService.updateUser(updateDTO);
+    userAccountService.update(updateDTO);
 
     // 查询更新后的用户并返回
     UserAccountVO updatedUser = userAccountService.getById(id);
     ScimUser result = com.njydsz.userinfo.infra.converter.ScimConverter.toScimUser(updatedUser);
 
-    return ResponseEntity.ok(YdszJson.toJsonString(result));
+    return ResponseEntity.ok(YdszJson.toJson(result));
   }
 
   /**
@@ -227,7 +227,7 @@ public class ScimController {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
-    userAccountService.deleteUser(id);
+    userAccountService.removeById(id);
     return ResponseEntity.noContent().build();
   }
 
@@ -251,7 +251,7 @@ public class ScimController {
         .Resources(List.of())
         .build();
 
-    return ResponseEntity.ok(YdszJson.toJsonString(response));
+    return ResponseEntity.ok(YdszJson.toJson(response));
   }
 
   /**

@@ -4,12 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.TextChunker;
 import com.njydsz.common.util.id.IdGenerator;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 固定大小分块器（带重叠）
@@ -27,9 +25,8 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class SimpleTextChunker implements TextChunker {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SimpleTextChunker.class);
 
   /** 默认分块大小（字符数） */
   private static final int DEFAULT_CHUNK_SIZE = 500;
@@ -86,7 +83,7 @@ public class SimpleTextChunker implements TextChunker {
         chunks.add(createChunk(content, documentId, documentTitle, source, chunkIndex));
       }
     }
-    LOG.debug("[Chunker] 分块完成: docId={}, chunks={}", documentId, chunks.size());
+    log.debug("[Chunker] 分块完成: docId={}, chunks={}", documentId, chunks.size());
     return chunks;
   }
 

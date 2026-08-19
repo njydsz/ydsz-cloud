@@ -1,7 +1,5 @@
 package com.njydsz.nextwiki.domain.service;
 
-import org.springframework.stereotype.Service;
-
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.domain.dto.SpaceDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -16,7 +14,6 @@ import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
  * @author ydsz-team
  * @since 1.2.0
  */
-@Service
 public class SpaceDomainService {
 
   /** 空间名称最大长度 */

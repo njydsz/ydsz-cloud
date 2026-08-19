@@ -122,6 +122,7 @@ public class FrontendInitServiceImpl implements FrontendInitService {
     try {
       return RequestContext.getUserId();
     } catch (Exception e) {
+      log.warn("[FrontendInit] 获取当前用户ID失败，将以匿名用户身份初始化", e);
       return null;
     }
   }

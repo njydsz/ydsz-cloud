@@ -8,9 +8,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import com.njydsz.agent.domain.vo.PromptVersionVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.agent.domain.dto.PromptTemplateDTO;
@@ -43,8 +42,6 @@ import com.njydsz.agent.domain.vo.PromptVersionVO;
  */
 @Service
 public class PromptManagementService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(PromptManagementService.class);
 
   /** 模板编码 → PromptTemplate，用于 O(1) 热点读取 */
   private final Map<String, PromptTemplate> templateCache = new ConcurrentHashMap<>();
@@ -100,7 +97,7 @@ public class PromptManagementService {
     PromptTemplate template =
         new PromptTemplate(code, name, content, description, category, 1, now, now);
     templateCache.put(code, template);
-    LOG.info("[Prompt] 创建模板: code={}, name={}", code, name);
+    log.info("[Prompt] 创建模板: code={}, name={}", code, name);
     return template;
   }
 
@@ -146,7 +143,7 @@ public class PromptManagementService {
             existing.getCreatedAt(),
             now);
     templateCache.put(code, updated);
-    LOG.info("[Prompt] 更新模板: code={}, version={}", code, newVersion);
+    log.info("[Prompt] 更新模板: code={}, version={}", code, newVersion);
     return updated;
   }
 
@@ -227,7 +224,7 @@ public class PromptManagementService {
     PromptTemplateVO existing = selectByCode(pCode);
     if (existing != null) {
       templateRepository.deleteById(existing.getId());
-      LOG.info("[Prompt] 删除模板: code={}", pCode);
+      log.info("[Prompt] 删除模板: code={}", pCode);
     }
     templateCache.remove(pCode);
   }
@@ -270,7 +267,7 @@ public class PromptManagementService {
             existing.getCreatedAt(),
             now);
     templateCache.put(code, rolledBack);
-    LOG.info(
+    log.info(
         "[Prompt] 回滚模板: code={}, targetVersion={}, newVersion={}", code, targetVersion, newVersion);
     return rolledBack;
   }
@@ -317,7 +314,7 @@ public class PromptManagementService {
               t.getUpdatedAt()));
     }
     cacheWarmed = true;
-    LOG.info("[Prompt] 缓存预热完成, count={}", allTemplates.size());
+    log.info("[Prompt] 缓存预热完成, count={}", allTemplates.size());
   }
 
   /** 从数据库加载并缓存指定模板 */

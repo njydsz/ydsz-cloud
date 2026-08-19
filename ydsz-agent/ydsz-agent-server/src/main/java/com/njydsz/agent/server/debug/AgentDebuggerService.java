@@ -2,9 +2,8 @@ package com.njydsz.agent.server.debug;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
@@ -34,9 +33,8 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * @since 1.0.0
  */
 @Service
+@Slf4j
 public class AgentDebuggerService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(AgentDebuggerService.class);
 
   private final TraceRecorder traceRecorder;
   private final AgentFactory agentFactory;
@@ -60,7 +58,7 @@ public class AgentDebuggerService {
    * @return 链路步骤列表
    */
   public List<TraceRecorder.TraceStep> getTrace(String traceId) {
-    LOG.info("[Debugger] 查询链路: traceId={}", traceId);
+    log.info("[Debugger] 查询链路: traceId={}", traceId);
     return traceRecorder.getSteps(traceId);
   }
 
@@ -75,7 +73,7 @@ public class AgentDebuggerService {
    * @return 重放结果
    */
   public ChatResponse replay(String conversationId, String userInput, String agentType) {
-    LOG.info("[Debugger] 重放: convId={}, agentType={}", conversationId, agentType);
+    log.info("[Debugger] 重放: convId={}, agentType={}", conversationId, agentType);
 
     AgentDefinition def =
         new AgentDefinition(

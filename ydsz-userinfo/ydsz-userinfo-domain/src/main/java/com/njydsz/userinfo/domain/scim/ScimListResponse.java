@@ -2,7 +2,7 @@ package com.njydsz.userinfo.domain.scim;
 
 import java.util.List;
 
-import com.alibaba.fastjson2.annotation.JSONField;
+import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -34,15 +34,15 @@ import lombok.NoArgsConstructor;
 public class ScimListResponse<T> {
 
   /** SCIM 列表响应 Schema 标识（固定值）。 */
-  @JSONField(name = "schemas")
+  @JsonProperty("schemas")
   private List<String> schemas;
 
   /** 符合条件的总记录数。 */
-  @JSONField(name = "totalResults")
+  @JsonProperty("totalResults")
   private Integer totalResults;
 
   /** 当前页实际返回条数。 */
-  @JSONField(name = "itemsPerPage")
+  @JsonProperty("itemsPerPage")
   private Integer itemsPerPage;
 
   /**
@@ -50,10 +50,10 @@ public class ScimListResponse<T> {
    *
    * <p>对应 SCIM 协议的 {@code startIndex} 参数，与页码的换算关系为 {@code startIndex = (page - 1) * count + 1}。
    */
-  @JSONField(name = "startIndex")
+  @JsonProperty("startIndex")
   private Integer startIndex;
 
   /** 资源列表。 */
-  @JSONField(name = "Resources")
+  @JsonProperty("Resources")
   private List<T> Resources;
 }

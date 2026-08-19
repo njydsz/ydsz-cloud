@@ -1,11 +1,9 @@
 package com.njydsz.agent.infra.guardrail;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.njydsz.agent.domain.guardrail.GuardrailResult;
 import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * PII 脱敏输出护栏（P1-3 优化）。
@@ -34,9 +32,8 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class PiiMaskingGuardrail implements OutputGuardrail {
-
-  private static final Logger LOG = LoggerFactory.getLogger(PiiMaskingGuardrail.class);
 
   @Override
   public GuardrailResult check(String output) {
@@ -46,7 +43,7 @@ public class PiiMaskingGuardrail implements OutputGuardrail {
     // P1-3: 委托 SensitiveUtil.scanAndMask() 统一扫描+脱敏
     String sanitized = SensitiveUtil.scanAndMask(output);
     if (!sanitized.equals(output)) {
-      LOG.info("[Guardrail] PII 脱敏处理完成");
+      log.info("[Guardrail] PII 脱敏处理完成");
     }
     return GuardrailResult.pass(output, sanitized);
   }

@@ -7,10 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.njydsz.agent.domain.gateway.CacheMetricsRecorder;
+import com.njydsz.agent.domain.model.TokenUsage;
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatRequest;
@@ -46,9 +44,8 @@ import com.njydsz.agent.domain.model.TokenUsage;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class CachedLlmClient implements LlmClient {
-
-  private static final Logger LOG = LoggerFactory.getLogger(CachedLlmClient.class);
 
   /** 等待在途 LLM 调用的最大时间（秒），超时后降级为直接调用避免饿死 */
   private static final long INFLIGHT_WAIT_SECONDS = 30;
@@ -89,7 +86,7 @@ public class CachedLlmClient implements LlmClient {
       if (metrics != null) {
         metrics.recordCacheHit(delegate.getProvider());
       }
-      LOG.info("[CachedLLM] 缓存命中，跳过 LLM 调用: model={}", model);
+      log.info("[CachedLLM] 缓存命中，跳过 LLM 调用: model={}", model);
       return buildCachedResponse(request, cached);
     }
     if (metrics != null) {
@@ -108,7 +105,7 @@ public class CachedLlmClient implements LlmClient {
         Thread.currentThread().interrupt();
         return delegate.chat(request);
       } catch (Exception e) {
-        LOG.warn("[CachedLLM] 等待在途调用超时，降级直接调用: {}", e.getMessage());
+        log.warn("[CachedLLM] 等待在途调用超时，降级直接调用: {}", e.getMessage());
         return doChatAndCache(request, cacheContent);
       }
     }

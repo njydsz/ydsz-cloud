@@ -5,9 +5,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import com.njydsz.agent.server.analytics.CostAnalysisService;
+import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
@@ -26,9 +26,8 @@ import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
  * @since 1.0.0
  */
 @Service
+@Slf4j
 public class ObservabilityDashboardService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ObservabilityDashboardService.class);
 
   private final AgentRuntimeMetrics runtimeMetrics;
   private final CostAnalysisService costAnalysisService;
@@ -45,7 +44,7 @@ public class ObservabilityDashboardService {
    * @return 面板数据 DTO
    */
   public DashboardOverviewDTO getOverview() {
-    LOG.info("[Observability] 查询面板概览数据");
+    log.info("[Observability] 查询面板概览数据");
 
     // 今日成本统计
     LocalDate today = LocalDate.now();
@@ -76,7 +75,7 @@ public class ObservabilityDashboardService {
    * @return 各模型的用量分布
    */
   public List<ModelUsageDTO> getModelUsageDistribution(int days) {
-    LOG.info("[Observability] 查询模型分布: last {} days", days);
+    log.info("[Observability] 查询模型分布: last {} days", days);
     LocalDate endDate = LocalDate.now().plusDays(1);
     LocalDate startDate = endDate.minusDays(days);
 

@@ -182,8 +182,22 @@ public class UserSessionAdminService {
       long seconds = redisStringOps.getExpire(key);
       return seconds > 0 ? Duration.ofSeconds(seconds) : null;
     } catch (Exception e) {
+      log.warn("[SessionAdmin] 获取会话TTL失败，key={}", maskKey(key), e);
       return null;
     }
+  }
+
+  /**
+   * Redis Key 脱敏处理（保留前8位，其余替换为*）。
+   *
+   * @param key Redis Key
+   * @return 脱敏后的 Key
+   */
+  private static String maskKey(String key) {
+    if (key == null || key.length() <= 8) {
+      return "***";
+    }
+    return key.substring(0, 8) + "***";
   }
 
   /**

@@ -1,7 +1,6 @@
 package com.njydsz.nextwiki.domain.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.domain.dto.StorageQuotaDTO;
@@ -28,7 +27,6 @@ import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
  * @since 1.0.0
  */
 @Slf4j
-@Service
 public class QuotaDomainService {
 
   /** 默认用户配额：10GB */

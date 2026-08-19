@@ -7,17 +7,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.domain.query.PageQuery;
@@ -31,6 +22,14 @@ import com.njydsz.message.domain.dto.config.RouteRuleUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgRouteRule;
 import com.njydsz.message.infra.repository.MsgRouteRuleRepository;
 import com.njydsz.message.server.service.config.RouteRuleService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 /**
  * 消息路由规则服务实现。
@@ -56,9 +55,13 @@ public class RouteRuleServiceImpl implements RouteRuleService {
   /** 本地缓存最大条目数（路由规则单一 key，设为 1） */
   private static final int LOCAL_CACHE_MAX_SIZE = 10;
 
-  /** Caffeine 本地一级缓存（规则列表，key 为 ROUTE_RULE_CACHE_KEY） */
+  /** 缓存名称（用于健康检查和监控） */
+  private static final String CACHE_NAME = "message:route-rule";
+
+  /** YdszCache 本地一级缓存（规则列表，key 为 ROUTE_RULE_CACHE_KEY） */
   private final Cache<String, List<MsgRouteRule>> localCache =
-      Caffeine.newBuilder()
+      YdszCache.newBuilder()
+          .name(CACHE_NAME)
           .maximumSize(LOCAL_CACHE_MAX_SIZE)
           .expireAfterWrite(LOCAL_CACHE_TTL_MS, TimeUnit.MILLISECONDS)
           .recordStats()

@@ -5,9 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.njydsz.common.tenant.TenantContextHolder;
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.MessageContent;
@@ -36,9 +35,8 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class RedisConversationMemory implements ConversationMemory {
-
-  private static final Logger LOG = LoggerFactory.getLogger(RedisConversationMemory.class);
 
   /** Redis key 前缀 */
   private static final String KEY_PREFIX = "ydsz:agent:memory:";
@@ -153,7 +151,7 @@ public class RedisConversationMemory implements ConversationMemory {
     try {
       return Boolean.TRUE.equals(stringOps.hasKey(KEY_PREFIX + "health-check"));
     } catch (Exception e) {
-      LOG.warn("[Memory] Redis 连接检查失败: {}", e.getMessage());
+      log.warn("[Memory] Redis 连接检查失败: {}", e.getMessage());
       return false;
     }
   }
@@ -213,7 +211,7 @@ public class RedisConversationMemory implements ConversationMemory {
           sm.toolCallId,
           usage);
     } catch (Exception e) {
-      LOG.warn("[Memory] 反序列化消息失败: {}", e.getMessage());
+      log.warn("[Memory] 反序列化消息失败: {}", e.getMessage());
       return null;
     }
   }

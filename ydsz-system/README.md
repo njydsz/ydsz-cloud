@@ -35,7 +35,6 @@ psql -U postgres -d ydsz_cloud -f ydsz-system/deploy/sql/init.sql
 | **系统变量** | 业务级变量管理（`ydsz_variable`），支持 Redis 缓存、缓存穿透防护 |
 | **实体版本** | 通用实体变更历史快照（`ydsz_entity_version`），写操作自动记录变更、支持查询审计与回滚 |
 | **多租户** | 租户（`ydsz_tenant`）+ 套餐（`ydsz_tenant_plan`）+ 套餐菜单（`ydsz_tenant_plan_menu`），支持租户级菜单定制 |
-| **全局搜索** | `GlobalSearchController` + `SearchDashboardController`，基于 common-search 聚合各模块 SearchProvider |
 
 ## DDD 分层结构
 
@@ -84,7 +83,7 @@ ydsz-system/
 │       │   ├── VariableService.java
 │       │   └── impl/
 │       ├── health/                     # SystemHealthIndicator（轻量探针）
-│       └── metrics/                    # SystemMetrics（Micrometer，含 dict 专用指标）
+│       ├── metrics/                    # SystemMetrics（Micrometer，含 dict 专用指标）
 ├── ydsz-system-app/                    # App 端基座（预留：auto-config + HealthIndicator + OpenAPI 配置，无 Controller）
 │   └── src/main/java/com/njydsz/system/app/
 │       ├── config/                     # SystemAppAutoConfiguration（@ConditionalOnPlatform(APP) 激活）
@@ -93,7 +92,7 @@ ydsz-system/
 └── ydsz-system-web/                    # Web 层：Controller + Bootstrap
     └── src/main/java/com/njydsz/system/web/
         ├── SystemApplication.java
-        └── controller/                 # 14 个 Controller
+        └── controller/                 # 12 个 Controller
             ├── AppInfoController.java       # /api/v1/app
             ├── ConfigController.java        # /api/v1/config
             ├── DictController.java          # /api/v1/dict/type
@@ -104,8 +103,6 @@ ydsz-system/
             ├── VariableVersionController.java # /api/v1/variable/version（回滚）
             ├── TenantController.java        # /api/v1/tenant
             ├── TenantPlanController.java    # /api/v1/tenant-plan
-            ├── GlobalSearchController.java  # /api/v1/search 全局搜索聚合
-            ├── SearchDashboardController.java # /api/v1/search/dashboard
             ├── AuditAdminController.java    # /api/v1/admin/audit
             └── InternalApiController.java   # /api/internal（POST + body，Feign 内部调用）
 ```
@@ -123,8 +120,6 @@ ydsz-system/
 | `/api/v1/tenant` `/api/v1/tenant-plan` | 租户 / 套餐 / 套餐菜单管理 |
 | `/api/v1/app` | 应用注册 CRUD（支持搜索过滤） |
 | `/api/v1/variable` | 系统变量 CRUD + 按 key 查询值 |
-| `/api/v1/search` | 全局搜索（聚合各模块 SearchProvider，基于 common-search） |
-| `/api/v1/search/dashboard` | 搜索分析 / 质量看板 |
 | `/api/v1/admin/audit` | 审计日志查询（AuditAdminController） |
 | `POST /api/internal/config/get` | Feign 内部调用：按 key 查配置值（POST body 传输） |
 | `POST /api/internal/dict/item` | Feign 内部调用：按类型+编码查字典项（POST body 传输） |

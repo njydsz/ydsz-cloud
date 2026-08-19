@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -66,6 +67,7 @@ import com.njydsz.system.server.service.DictItemService;
 @RestController
 @RequestMapping("/api/v1/dict/item")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "sys:dict:item:list")
 public class DictItemController {
 
   private final DictItemService service;
@@ -187,6 +189,7 @@ public class DictItemController {
   @Operation(summary = "创建字典项")
   @RateLimit(resource = "system.dictitem.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict-item:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:dict:item:add")
   @PostMapping
   public YdszResponse<String> save(@Valid @RequestBody DictItemVO vo) {
     return YdszResponse.success(service.save(vo));
@@ -211,6 +214,7 @@ public class DictItemController {
   @Operation(summary = "更新字典项")
   @RateLimit(resource = "system.dictitem.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict-item:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:dict:item:edit")
   @PutMapping
   public YdszResponse<Boolean> update(@Valid @RequestBody DictItemVO vo) {
     return YdszResponse.success(service.updateById(vo));
@@ -234,6 +238,7 @@ public class DictItemController {
   @Operation(summary = "删除字典项")
   @RateLimit(resource = "system.dictitem.remove", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict-item:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
+  @AuthApiPermission(apiCodes = "sys:dict:item:delete")
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(service.removeById(id));
@@ -267,6 +272,7 @@ public class DictItemController {
   @Idempotent(
       key = "'ydsz:system:dict-item:batch:' + #batchDTO.items.hashCode() + ':' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
       ttlSeconds = 30)
+  @AuthApiPermission(apiCodes = "sys:dict:item:add")
   @PostMapping("/batch")
   public YdszResponse<Map<String, Object>> batchSave(
       @Valid @RequestBody DictItemBatchDTO batchDTO) {

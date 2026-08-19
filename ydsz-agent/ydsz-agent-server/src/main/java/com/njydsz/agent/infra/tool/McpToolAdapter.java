@@ -5,10 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.njydsz.agent.domain.model.ToolDefinition;
+import com.njydsz.agent.server.config.AgentProperties;
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.server.config.AgentProperties;
 
 /**
@@ -32,9 +30,8 @@ import com.njydsz.agent.server.config.AgentProperties;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class McpToolAdapter {
-
-  private static final Logger LOG = LoggerFactory.getLogger(McpToolAdapter.class);
 
   /** MCP 工具名分隔符 */
   private static final String TOOL_NAME_SEPARATOR = "__";
@@ -67,9 +64,9 @@ public class McpToolAdapter {
       try {
         List<ToolDefinition> serverTools = discoverServerTools(server);
         allTools.addAll(serverTools);
-        LOG.info("[MCP] Server {} 发现 {} 个工具", server.getName(), serverTools.size());
+        log.info("[MCP] Server {} 发现 {} 个工具", server.getName(), serverTools.size());
       } catch (Exception e) {
-        LOG.error("[MCP] Server {} 工具发现失败: {}", server.getName(), e.getMessage(), e);
+        log.error("[MCP] Server {} 工具发现失败: {}", server.getName(), e.getMessage(), e);
       }
     }
     return allTools;

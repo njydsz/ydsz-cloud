@@ -35,7 +35,6 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
@@ -615,11 +614,10 @@ public class FlowDefinitionController {
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
   @Operation(summary = "手动触发单条任务的 SLA 处理")
   public YdszResponse<Boolean> slaProcess(@PathVariable String taskId) {
-    FlowRunTaskDO task = taskService.getById(taskId);
-    if (task == null) {
+    Boolean ok = taskService.slaProcessByTaskId(taskId);
+    if (ok == null) {
       return YdszResponse.error(YdszResultCode.NOT_FOUND, "任务不存在: " + taskId);
     }
-    boolean ok = slaService.processOverdue(task);
     return YdszResponse.success(ok);
   }
 

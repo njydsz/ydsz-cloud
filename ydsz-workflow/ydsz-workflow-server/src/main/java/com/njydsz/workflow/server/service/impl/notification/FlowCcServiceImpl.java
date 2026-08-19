@@ -21,6 +21,7 @@ import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
 import com.njydsz.workflow.domain.repository.FlowCcRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.FlowCcVO;
 import com.njydsz.workflow.infra.entity.FlowCcDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
@@ -258,7 +259,7 @@ public class FlowCcServiceImpl implements FlowCcService {
    */
   @Override
   @Transactional(readOnly = true)
-  public YdszResponse<List<FlowCcDO>> listCcByUser(
+  public YdszResponse<List<FlowCcVO>> listCcByUser(
       String userId,
       String readStatus,
       String flowCode,
@@ -277,7 +278,7 @@ public class FlowCcServiceImpl implements FlowCcService {
       List<FlowCcDO> list =
           ccMapper.selectCcByUserPage(tenantId, userId, readStatus, flowCode, offset, size);
       long total = ccMapper.countCcByUser(tenantId, userId, readStatus, flowCode);
-      return PageResponse.success(total, (long) page, (long) size, list);
+      return PageResponse.success(total, (long) page, (long) size, converter.flowCcListToVO(list));
     } catch (Exception e) {
       log.error("[FlowCcDO] 分页查询异常: userId={} err={}", userId, e.getMessage(), e);
       return PageResponse.success(0L, 0L, 0L, Collections.emptyList());
@@ -440,8 +441,21 @@ public class FlowCcServiceImpl implements FlowCcService {
         }
       }
     } catch (Exception e) {
-      log.warn("[FlowCcDO] 展开 token 异常: token={} err={}", token, e.getMessage());
+      // token 脱敏处理，仅打印前4位用于问题定位
+      log.warn("[FlowCcDO] 展开 token 异常: token={} err={}", maskToken(token), e);
     }
+
+  /**
+   * Token 脱敏处理（保留前4位，其余替换为*）。
+   *
+   * @param token 原始 token
+   * @return 脱敏后的 token
+   */
+  private static String maskToken(String token) {
+    if (token == null || token.length() <= 4) {
+      return "***";
+    }
+    return token.substring(0, 4) + "***";
   }
 
   /** 构建 FlowCcDO 记录 */

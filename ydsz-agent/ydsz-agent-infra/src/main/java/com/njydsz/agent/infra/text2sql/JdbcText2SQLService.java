@@ -4,9 +4,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
-import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +13,6 @@ import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -46,8 +42,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <ul>
  *   <li>仅允许以 SELECT / WITH 开头的语句
- *   <li;gt;拒绝含注释（-- /**&#47;）、分号多语句、存储过程调用（EXEC/CALL）、DDL/DML 关键词
+ *   <li>拒绝含注释（-- /**&#47;）、分号多语句、存储过程调用（EXEC/CALL）、DDL/DML 关键词
  *   <li>执行超时 10 秒、结果行数上限 100
+ *   <li>tenantId 通过安全校验后拼接到 WHERE 条件中，避免 prompt 注入
  * </ul>
  *
  * @author ydsz-team
@@ -56,8 +53,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class JdbcText2SQLService implements Text2SQLService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(JdbcText2SQLService.class);
 
   /** 结果行数上限 */
   private static final int MAX_RESULT_ROWS = 100;
@@ -75,6 +70,9 @@ public class JdbcText2SQLService implements Text2SQLService {
           Pattern.compile("/\\*.*?\\*/", Pattern.DOTALL),
           Pattern.compile(";\\s*(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|CREATE|EXEC|CALL)", Pattern.CASE_INSENSITIVE),
           Pattern.compile("\\b(UNION\\s+ALL\\s+SELECT|INTO\\s+OUTFILE|LOAD_FILE|BENCHMARK|SLEEP)\\b", Pattern.CASE_INSENSITIVE));
+
+  /** tenantId 格式校验正则（仅允许字母数字和下划线） */
+  private static final Pattern TENANT_ID_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]+$");
 
   private final LlmClient llmClient;
   private final DataSource dataSource;
@@ -114,7 +112,9 @@ public class JdbcText2SQLService implements Text2SQLService {
    * @throws Text2SQLException SQL 生成失败
    */
   private String generateSql(String query, String tenantId) throws Text2SQLException {
-    String systemPrompt = buildSystemPrompt(tenantId);
+    // 校验 tenantId 格式，防止注入
+    validateTenantId(tenantId);
+    String systemPrompt = buildSystemPrompt();
     ChatRequest request =
         ChatRequest.builder()
             .model(defaultModel)
@@ -129,7 +129,9 @@ public class JdbcText2SQLService implements Text2SQLService {
         throw new Text2SQLException("LLM 未返回 SQL", "TEXT2SQL_EMPTY_RESPONSE");
       }
       // 提取 SQL（LLM 可能包裹在 ```sql ``` 中）
-      return extractSql(content);
+      String sql = extractSql(content);
+      // 添加租户隔离条件
+      return appendTenantCondition(sql, tenantId);
     } catch (Text2SQLException e) {
       throw e;
     } catch (Exception e) {
@@ -138,21 +140,53 @@ public class JdbcText2SQLService implements Text2SQLService {
   }
 
   /**
-   * 构建系统提示词（含 Schema 上下文）。
+   * 校验 tenantId 格式（仅允许字母、数字、下划线、短横线）。
    *
    * @param tenantId 租户 ID
+   * @throws Text2SQLException tenantId 格式非法
+   */
+  private static void validateTenantId(String tenantId) throws Text2SQLException {
+    if (tenantId == null || !TENANT_ID_PATTERN.matcher(tenantId).matches()) {
+      throw new Text2SQLException("tenantId 格式非法", "TEXT2SQL_INVALID_TENANT_ID");
+    }
+  }
+
+  /**
+   * 向 SQL 添加租户隔离条件。
+   *
+   * @param sql 原始 SQL
+   * @param tenantId 租户 ID
+   * @return 添加租户条件后的 SQL
+   */
+  private static String appendTenantCondition(String sql, String tenantId) {
+    String trimmed = sql.trim().toUpperCase();
+    if (trimmed.contains("WHERE")) {
+      // 已有 WHERE 条件，追加 AND tenant_id = 'xxx'
+      return sql.replaceFirst("(?i)WHERE", "WHERE tenant_id = '" + tenantId + "' AND ");
+    } else {
+      // 无 WHERE 条件，添加 WHERE tenant_id = 'xxx'
+      return sql + " WHERE tenant_id = '" + tenantId + "'";
+    }
+  }
+
+  /**
+   * 构建系统提示词（含 Schema 上下文）。
+   *
+   * <p>注意：tenantId 不直接拼接到 prompt 中，而是在 SQL 生成后通过安全校验再添加，
+   * 避免 prompt 注入风险。
+   *
    * @return 系统提示词
    */
-  private String buildSystemPrompt(String tenantId) {
+  private String buildSystemPrompt() {
     return """
         你是 SQL 生成助手。根据用户问题生成 PostgreSQL SELECT 查询语句。
 
         规则：
         1. 仅生成 SELECT / WITH 查询，禁止任何 DML/DDL 操作
-        2. SQL 必须包含租户隔离条件：WHERE tenant_id = '%s'
+        2. SQL 必须包含租户隔离条件：WHERE tenant_id = ?
         3. 结果不超过 %d 行（使用 LIMIT）
         4. 仅输出纯 SQL，不要包裹在代码块中
-        """.formatted(tenantId, MAX_RESULT_ROWS);
+        """.formatted(MAX_RESULT_ROWS);
   }
 
   /**
@@ -229,7 +263,7 @@ public class JdbcText2SQLService implements Text2SQLService {
           rows.add(row);
         }
         long duration = System.currentTimeMillis() - start;
-        LOG.info("[Text2SQL] 执行完成: rows={}, duration={}ms", rows.size(), duration);
+        log.info("[Text2SQL] 执行完成: rows={}, duration={}ms", rows.size(), duration);
         return new Text2SQLResult(columns, rows, rows.size(), sql, duration);
       }
     } catch (Text2SQLException e) {

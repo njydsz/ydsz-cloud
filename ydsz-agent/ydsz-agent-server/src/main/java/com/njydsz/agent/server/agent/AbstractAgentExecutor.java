@@ -2,8 +2,8 @@ package com.njydsz.agent.server.agent;
 
 import java.util.function.Consumer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.njydsz.common.util.id.IdGenerator;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
@@ -40,10 +40,8 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public abstract class AbstractAgentExecutor implements AgentExecutor {
-
-  /** 日志记录器（子类可访问） */
-  protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
   /** LLM 客户端 */
   protected final LlmClient llmClient;

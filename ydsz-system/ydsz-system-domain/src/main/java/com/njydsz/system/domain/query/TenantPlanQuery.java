@@ -1,6 +1,5 @@
 package com.njydsz.system.domain.query;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -29,17 +28,13 @@ import com.njydsz.common.domain.query.PageQuery;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@Schema(description = "租户套餐查询参数")
 public class TenantPlanQuery extends PageQuery {
 
   private static final long serialVersionUID = 1L;
 
-  @Schema(description = "套餐名称（模糊匹配）")
   private String planName;
 
-  @Schema(description = "套餐编码（精确匹配）")
   private String planCode;
 
-  @Schema(description = "启用状态：ENABLED/DISABLED")
   private String status;
 }

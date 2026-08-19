@@ -3,8 +3,6 @@ package com.njydsz.agent.web.controller;
 import java.util.Map;
 
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +25,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Agent DAG 编排 REST API Controller。
@@ -63,11 +62,10 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/agent/dag")
 public class DagController {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DagController.class);
 
   /**
    * DAG 执行幂等锁 TTL（秒）。
@@ -123,7 +121,7 @@ public class DagController {
   @PostMapping("/execute")
   public YdszResponse<DagOrchestrationExecutor.DagExecutionResult> execute(
       @Valid @RequestBody DagExecutionDTO request) {
-    LOG.info("[DAG-API] 收到编排请求: userInput={}", request.getUserInput());
+    log.info("[DAG-API] 收到编排请求: userInput={}", request.getUserInput());
 
     // 1. 解析 DSL（YAML → AgentDag 对象）
     AgentDag dag = dslParser.parse(request.getDsl());
@@ -182,7 +180,7 @@ public class DagController {
               "dagName", dag.getName(),
               "nodeCount", dag.getNodes().size()));
     } catch (Exception e) {
-      LOG.error("[DAG-API] DSL 解析失败, dsl={}, err={}", request.getDsl(), e.getMessage(), e);
+      log.error("[DAG-API] DSL 解析失败, dsl={}, err={}", request.getDsl(), e.getMessage(), e);
       // 解析失败时仍返回 success，由 valid 字段标识
       return YdszResponse.success(Map.of("valid", false, "error", e.getMessage()));
     }

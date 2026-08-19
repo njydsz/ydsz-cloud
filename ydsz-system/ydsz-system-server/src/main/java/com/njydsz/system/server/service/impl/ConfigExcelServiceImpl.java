@@ -24,7 +24,6 @@ import com.njydsz.system.server.vo.ConfigExcelVO;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.ImportResult;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
-import com.njydsz.system.server.search.SearchIndexSyncer;
 import com.njydsz.system.server.service.ConfigExcelService;
 
 /**
@@ -58,9 +57,6 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
 
   /** 租户感知缓存键构造器 */
   private final CacheKeyBuilder cacheKeyBuilder;
-
-  /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
-  private final SearchIndexSyncer searchIndexSyncer;
 
   /** Excel 导出辅助类 */
   private final ExcelExportHelper excelExportHelper;
@@ -256,9 +252,6 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
           .distinct()
           .forEach(this::evictConfigGroup);
       evictConfigPublic();
-
-      // 4. 同步搜索索引（可选能力，未启用时静默跳过）
-      dtos.forEach(dto -> searchIndexSyncer.upsert("config", dto));
 
       return dtos.size();
     } catch (Exception e) {

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.cronjob.domain.enums.JobTaskStatusEnum;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.JobTaskRepository;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
@@ -104,10 +105,10 @@ public class JobTaskController {
   public YdszResponse<Map<String, Object>> progress(@RequestParam String logId) {
     // 通过 Repository 统计各状态子任务数量（避免拉取全量列表）
     int total = jobTaskRepository.countByLogId(logId);
-    int pending = jobTaskRepository.countByLogIdAndStatus(logId, "PENDING");
-    int running = jobTaskRepository.countByLogIdAndStatus(logId, "RUNNING");
-    int success = jobTaskRepository.countByLogIdAndStatus(logId, "SUCCESS");
-    int failed = jobTaskRepository.countByLogIdAndStatus(logId, "FAILED");
+    int pending = jobTaskRepository.countByLogIdAndStatus(logId, JobTaskStatusEnum.PENDING.name());
+    int running = jobTaskRepository.countByLogIdAndStatus(logId, JobTaskStatusEnum.RUNNING.name());
+    int success = jobTaskRepository.countByLogIdAndStatus(logId, JobTaskStatusEnum.SUCCESS.name());
+    int failed = jobTaskRepository.countByLogIdAndStatus(logId, JobTaskStatusEnum.FAILED.name());
     Map<String, Object> result = new HashMap<>();
     result.put("total", total);
     result.put("pending", pending);

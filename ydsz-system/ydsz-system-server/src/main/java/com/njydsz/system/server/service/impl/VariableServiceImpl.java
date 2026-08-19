@@ -35,7 +35,6 @@ import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.domain.repository.VariableRepository;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.metrics.SystemMetrics;
-import com.njydsz.system.server.search.SearchIndexSyncer;
 import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.service.VariableService;
 import com.njydsz.system.server.util.SystemVersionUtils;
@@ -131,9 +130,6 @@ public class VariableServiceImpl implements VariableService {
 
   /** 租户感知缓存键构造器（SpEL 与手动 evict 共用） */
   private final CacheKeyBuilder cacheKeyBuilder;
-
-  /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
-  private final SearchIndexSyncer searchIndexSyncer;
 
   /** 统一领域事件发布门面（ObjectProvider 可选注入，common-event 未引入时安全降级，见《云顶编码规范》27.4） */
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
@@ -241,7 +237,6 @@ public class VariableServiceImpl implements VariableService {
       dto.setStatus("ENABLED");
     }
     variableRepository.insert(dto);
-    searchIndexSyncer.upsert("variable", vo);
     publishVariableChangedEvent(vo.getVariableKey(), "创建变量");
     return dto.getId();
   }
@@ -289,7 +284,6 @@ public class VariableServiceImpl implements VariableService {
               .snapshotJson(snapshotJson)
               .build());
       publishVariableChangedEvent(vo.getVariableKey(), "更新变量");
-      searchIndexSyncer.upsert("variable", vo);
     }
     return updated;
   }
@@ -329,7 +323,6 @@ public class VariableServiceImpl implements VariableService {
               .snapshotJson(snapshotJson)
               .build());
       publishVariableChangedEvent(vo.getVariableKey(), "删除变量");
-      searchIndexSyncer.delete("variable", id);
     }
     return removed;
   }
@@ -371,11 +364,9 @@ public class VariableServiceImpl implements VariableService {
                 VariableDTO updateDto = toDto(snapshotVO);
                 updateDto.setId(currentVariableVO.getId());
                 variableRepository.updateById(updateDto);
-                searchIndexSyncer.upsert("variable", snapshotVO);
               } else {
                 // 原变量已被删除，重新创建
                 variableRepository.insert(toDto(snapshotVO));
-                searchIndexSyncer.upsert("variable", snapshotVO);
               }
             } catch (Exception e) {
               throw BusinessException.of(SystemExceptionCode.SNAPSHOT_PARSE_ERROR)
@@ -600,11 +591,8 @@ public class VariableServiceImpl implements VariableService {
       }
       // 精准失效缓存：按涉及 variableKey 逐一失效
       validItems.forEach(vo -> evictVariable(vo.getVariableKey()));
-      // 同步搜索索引 + 发布变更事件
-      validItems.forEach(vo -> {
-        searchIndexSyncer.upsert("variable", vo);
-        publishVariableChangedEvent(vo.getVariableKey(), "导入变量");
-      });
+      // 发布变更事件
+      validItems.forEach(vo -> publishVariableChangedEvent(vo.getVariableKey(), "导入变量"));
       return validItems.size();
     } catch (Exception e) {
       errors.add("批量导入失败: " + e.getMessage());

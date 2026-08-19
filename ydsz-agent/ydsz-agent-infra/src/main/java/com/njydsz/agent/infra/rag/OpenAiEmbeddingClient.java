@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.njydsz.common.json.tree.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.client.RestClient;
 
 import com.njydsz.agent.domain.gateway.LlmException;
@@ -23,9 +23,8 @@ import com.njydsz.common.json.tree.ObjectNode;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class OpenAiEmbeddingClient implements EmbeddingClient {
-
-  private static final Logger LOG = LoggerFactory.getLogger(OpenAiEmbeddingClient.class);
 
   /** API 基础地址 */
   private final String baseUrl;
@@ -77,7 +76,7 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
               .body(String.class);
       return parseEmbeddings(responseJson);
     } catch (Exception e) {
-      LOG.error("[Embedding] 调用失败: {}", e.getMessage(), e);
+      log.error("[Embedding] 调用失败: {}", e.getMessage(), e);
       throw new LlmException(
           "Embedding 调用失败: " + e.getMessage(), LlmException.ErrorType.PROVIDER_ERROR, e);
     }

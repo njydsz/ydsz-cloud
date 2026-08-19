@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
@@ -47,7 +46,6 @@ import com.njydsz.nextwiki.domain.vo.SearchResultVO;
  * @see com.njydsz.nextwiki.server.search.WikiSearchProvider 统一搜索 Provider（主索引）
  */
 @Slf4j
-@Service
 @RequiredArgsConstructor
 public class SearchDomainService {
 

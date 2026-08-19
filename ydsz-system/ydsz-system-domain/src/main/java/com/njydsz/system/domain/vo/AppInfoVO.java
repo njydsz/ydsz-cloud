@@ -1,7 +1,6 @@
 package com.njydsz.system.domain.vo;
 
 import com.njydsz.common.json.annotation.JsonIgnore;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -33,19 +32,14 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-@Schema(description = "应用注册视图对象")
 public class AppInfoVO {
 
-  @Schema(description = "主键 ID")
   private String id;
 
-  @Schema(description = "应用编码")
   private String appCode;
 
-  @Schema(description = "应用名称")
   private String appName;
 
-  @Schema(description = "应用 Key（client_id）")
   private String appKey;
 
   /**
@@ -54,21 +48,15 @@ public class AppInfoVO {
    * <p>标记 {@code @JsonIgnore} 确保序列化时不暴露给前端。
    */
   @JsonIgnore
-  @Schema(description = "应用密钥（BCrypt 哈希，内部使用）")
   private String appSecret;
 
-  @Schema(description = "授权回调地址")
   private String redirectUrl;
 
-  @Schema(description = "OAuth2 授权范围（CSV）")
   private String scopes;
 
-  @Schema(description = "IP 绑定白名单（CSV）")
   private String boundIps;
 
-  @Schema(description = "应用描述")
   private String description;
 
-  @Schema(description = "启用状态: ENABLED/DISABLED")
   private String status;
 }

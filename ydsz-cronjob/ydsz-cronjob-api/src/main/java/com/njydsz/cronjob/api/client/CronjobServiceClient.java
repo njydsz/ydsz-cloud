@@ -67,7 +67,7 @@ public interface CronjobServiceClient {
    * @param jobId 任务 ID
    * @return 任务详情（字段: id / jobKey / jobName / status / cronExpression / scheduleType 等）
    */
-  @GetMapping("/api/v1/cronjob/{id}")
+  @GetMapping(FeignClientConstants.CRONJOB_PATH_GET)
   YdszResponse<Map<String, Object>> getJobInfo(@PathVariable("id") String jobId);
 
   /**
@@ -79,7 +79,7 @@ public interface CronjobServiceClient {
    * @param jobId 任务 ID
    * @return 统一响应结果
    */
-  @PostMapping("/api/v1/cronjob/{id}/pause")
+  @PostMapping(FeignClientConstants.CRONJOB_PATH_PAUSE)
   YdszResponse<Void> pauseJob(@PathVariable("id") String jobId);
 
   /**
@@ -90,6 +90,6 @@ public interface CronjobServiceClient {
    * @param jobId 任务 ID
    * @return 统一响应结果
    */
-  @PostMapping("/api/v1/cronjob/{id}/resume")
+  @PostMapping(FeignClientConstants.CRONJOB_PATH_RESUME)
   YdszResponse<Void> resumeJob(@PathVariable("id") String jobId);
 }

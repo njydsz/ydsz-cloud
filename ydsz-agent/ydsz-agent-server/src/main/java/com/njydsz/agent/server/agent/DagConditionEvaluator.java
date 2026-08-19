@@ -5,8 +5,9 @@ import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.regex.Pattern;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * DAG 条件表达式求值器
@@ -35,9 +36,8 @@ import org.slf4j.LoggerFactory;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public final class DagConditionEvaluator {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DagConditionEvaluator.class);
 
   /** 私有构造器防止实例化 */
   private DagConditionEvaluator() {}
@@ -75,7 +75,7 @@ public final class DagConditionEvaluator {
       String expr = condition.trim();
       return evaluateExpression(expr, results);
     } catch (Exception e) {
-      LOG.warn("[DAG] 条件求值异常: condition={}, error={}", condition, e.getMessage());
+      log.warn("[DAG] 条件求值异常: condition={}, error={}", condition, e.getMessage());
       return false;
     }
   }
