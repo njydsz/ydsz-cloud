@@ -198,7 +198,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
    * {@inheritDoc}
    */
   @Override
-  public List<TraceMeta> listRecentTraceMetas(int limit) {
+  public List<com.njydsz.agent.domain.trace.TraceMeta> listRecentTraceMetas(int limit) {
     int safeLimit = limit > 0 ? limit : 10;
     return traceMetas.values().stream()
         .sorted(Comparator.comparing(TraceMeta::getStartedAt).reversed())

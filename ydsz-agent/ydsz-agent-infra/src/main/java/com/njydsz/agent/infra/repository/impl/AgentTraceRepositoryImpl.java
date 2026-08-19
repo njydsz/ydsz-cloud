@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.agent.domain.dto.AgentTraceDTO;
 import com.njydsz.agent.domain.repository.AgentTraceRepository;
 import com.njydsz.agent.domain.repository.AgentTraceStepRepository;
+import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.domain.vo.AgentTraceVO;
 import com.njydsz.agent.infra.converter.AgentConverter;
 import com.njydsz.agent.infra.entity.AgentTraceDO;
@@ -56,7 +57,7 @@ public class AgentTraceRepositoryImpl implements AgentTraceRepository {
   }
 
   @Override
-  public PgTraceRecorder createTraceRecorder(AgentTraceStepRepository traceStepRepository) {
+  public TraceRecorder createTraceRecorder(AgentTraceStepRepository traceStepRepository) {
     return new PgTraceRecorder(agentTraceMapper, extractStepMapper(traceStepRepository));
   }
 

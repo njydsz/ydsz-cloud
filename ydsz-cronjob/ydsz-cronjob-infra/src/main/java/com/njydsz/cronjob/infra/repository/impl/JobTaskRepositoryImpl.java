@@ -89,6 +89,7 @@ public class JobTaskRepositoryImpl implements JobTaskRepository {
     wrapper
         .eq(com.njydsz.cronjob.domain.entity.job.JobTask::getLogId, logId)
         .eq(com.njydsz.cronjob.domain.entity.job.JobTask::getDeleted, 0);
-    return jobTaskMapper.selectCount(wrapper);
+    Long count = jobTaskMapper.selectCount(wrapper);
+    return count != null ? count.intValue() : 0;
   }
 }
