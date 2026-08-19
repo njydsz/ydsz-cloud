@@ -621,8 +621,8 @@ public class LdapOrgSyncService {
    */
   private void deactivateOrphanedUsers(Set<String> ldapUsernames, List<String> errors) {
     try {
-      com.njydsz.userinfo.domain.dto.UserAccountPageQuery query =
-          new com.njydsz.userinfo.domain.dto.UserAccountPageQuery();
+      com.njydsz.userinfo.domain.query.UserAccountPageQuery query =
+          new com.njydsz.userinfo.domain.query.UserAccountPageQuery();
       List<UserAccountVO> allUsers = userAccountRepository.list(query);
       for (UserAccountVO user : allUsers) {
         if (!ldapUsernames.contains(user.getUsername())) {
