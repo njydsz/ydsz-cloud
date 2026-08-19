@@ -23,7 +23,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -92,7 +92,7 @@ public class DebugController {
       action = AuditAction.QUERY,
       content = "'listTraces'")
   @GetMapping("/traces")
-  public BaseResponse<List<AgentTraceListDTO>> listTraces(
+  public YdszResponse<List<AgentTraceListDTO>> listTraces(
       @RequestParam(defaultValue = "20") int limit) {
     List<TraceMeta> metas = agentDebuggerService.listTraceMetas(limit);
     List<AgentTraceListDTO> dtos =
@@ -108,7 +108,7 @@ public class DebugController {
                         meta.totalDurationMs(),
                         meta.stepCount()))
             .collect(Collectors.toList());
-    return BaseResponse.success(dtos);
+    return YdszResponse.success(dtos);
   }
 
   /**
@@ -126,7 +126,7 @@ public class DebugController {
       action = AuditAction.QUERY,
       content = "'getTrace: ' + #traceId")
   @GetMapping("/trace/{traceId}")
-  public BaseResponse<AgentTraceDetailDTO> getTrace(@PathVariable String traceId) {
+  public YdszResponse<AgentTraceDetailDTO> getTrace(@PathVariable String traceId) {
     TraceMeta meta = agentDebuggerService.getTraceMeta(traceId);
     String agentType = meta != null ? meta.agentId() : "UNKNOWN";
     List<TraceStep> steps = agentDebuggerService.getTrace(traceId);
@@ -141,7 +141,7 @@ public class DebugController {
                         + ": "
                         + step.getContent())
             .collect(Collectors.joining("\n"));
-    return BaseResponse.success(new AgentTraceDetailDTO(traceId, agentType, plan));
+    return YdszResponse.success(new AgentTraceDetailDTO(traceId, agentType, plan));
   }
 
   /**
@@ -171,15 +171,15 @@ public class DebugController {
   @Idempotent(key = "ydsz:agent:DebugController:replayTrace:lock", ttlSeconds = 5)
   @RateLimit(resource = "agent.debug.replayTrace", threshold = 50)
   @PostMapping("/trace/{traceId}/replay")
-  public BaseResponse<String> replayTrace(@PathVariable String traceId) {
+  public YdszResponse<String> replayTrace(@PathVariable String traceId) {
     LOG.info("[Debug-API] 重放链路: traceId={}", traceId);
     TraceMeta meta = agentDebuggerService.getTraceMeta(traceId);
     if (meta == null) {
-      return BaseResponse.error(AgentExceptionCode.TRACE_NOT_FOUND, "链路不存在或不支持重放: " + traceId);
+      return YdszResponse.error(AgentExceptionCode.TRACE_NOT_FOUND, "链路不存在或不支持重放: " + traceId);
     }
     List<TraceStep> steps = agentDebuggerService.getTrace(traceId);
     if (steps.isEmpty()) {
-      return BaseResponse.error(AgentExceptionCode.TRACE_EMPTY, "链路无步骤记录，无法提取重放输入: " + traceId);
+      return YdszResponse.error(AgentExceptionCode.TRACE_EMPTY, "链路无步骤记录，无法提取重放输入: " + traceId);
     }
     // 从链路第一个步骤提取原始 userInput，从元数据提取 conversationId / agentType
     String userInput = steps.get(0).getContent();
@@ -191,6 +191,6 @@ public class DebugController {
         agentType,
         userInput != null ? userInput.length() : 0);
     ChatResponse response = agentDebuggerService.replay(conversationId, userInput, agentType);
-    return BaseResponse.success(response != null ? response.getContent() : "");
+    return YdszResponse.success(response != null ? response.getContent() : "");
   }
 }

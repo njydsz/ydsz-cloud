@@ -20,7 +20,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
@@ -118,8 +118,8 @@ public class FileCommentController {
   @GetMapping("/file/{fileNodeId}")
   @Operation(summary = "查询文件的评论列表")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VIEW)
-  public BaseResponse<List<FileCommentVO>> listComments(@PathVariable String fileNodeId) {
-    return BaseResponse.success(commentRepository.findByFileNodeId(fileNodeId));
+  public YdszResponse<List<FileCommentVO>> listComments(@PathVariable String fileNodeId) {
+    return YdszResponse.success(commentRepository.findByFileNodeId(fileNodeId));
   }
 
   /**
@@ -150,7 +150,7 @@ public class FileCommentController {
   @PostMapping
   @Operation(summary = "添加评论/回复")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-  public BaseResponse<FileCommentVO> addComment(
+  public YdszResponse<FileCommentVO> addComment(
       @RequestBody AddCommentRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
       @RequestHeader(value = AuthHeaderConstants.X_USER_NAME, required = false) String userName) {
@@ -188,7 +188,7 @@ public class FileCommentController {
         request.getFileNodeId(),
         saved.getId(),
         mentions.size());
-    return BaseResponse.success(saved);
+    return YdszResponse.success(saved);
   }
 
   /**
@@ -209,10 +209,10 @@ public class FileCommentController {
   @DeleteMapping("/{commentId}")
   @Operation(summary = "删除评论")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
-  public BaseResponse<Void> deleteComment(
+  public YdszResponse<Void> deleteComment(
       @PathVariable String commentId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     commentRepository.delete(commentId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -233,10 +233,10 @@ public class FileCommentController {
   @PostMapping("/{commentId}/resolve")
   @Operation(summary = "标记评论已解决")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-  public BaseResponse<Void> resolveComment(
+  public YdszResponse<Void> resolveComment(
       @PathVariable String commentId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     commentRepository.markResolved(commentId, userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /** 添加评论请求体（顶级评论 / 回复）。 */

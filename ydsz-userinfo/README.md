@@ -173,10 +173,10 @@ ydsz-userinfo/
 
 | 客户端 | 方法（节选） | 返回类型 |
 |---|---|---|
-| `OrgQueryClient` | `queryUserById(userId)` | `BaseResponse<UserAccountVO>` |
-| `OrgQueryClient` | `getUserInfo(userId)` | `BaseResponse<UserAccountVO>` |
-| `OrgQueryClient` | `getDeptTree()` | `BaseResponse<List<DepartmentTreeVO>>` |
-| `OrgQueryClient` | `getDeptList()` | `BaseResponse<List<DepartmentVO>>` |
+| `OrgQueryClient` | `queryUserById(userId)` | `YdszResponse<UserAccountVO>` |
+| `OrgQueryClient` | `getUserInfo(userId)` | `YdszResponse<UserAccountVO>` |
+| `OrgQueryClient` | `getDeptTree()` | `YdszResponse<List<DepartmentTreeVO>>` |
+| `OrgQueryClient` | `getDeptList()` | `YdszResponse<List<DepartmentVO>>` |
 | `OrgQueryClient` | `listUserIdsByRoleCode` / `getLeaderByUserId` / batch-names 等 | 共 15 个方法 |
 
 ## 启动顺序

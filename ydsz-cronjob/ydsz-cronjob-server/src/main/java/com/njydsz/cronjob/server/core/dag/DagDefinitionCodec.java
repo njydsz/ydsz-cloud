@@ -8,7 +8,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
@@ -55,7 +55,7 @@ public class DagDefinitionCodec {
   public DagDefinition fromJson(String json) {
     if (json == null || json.isBlank()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_dag_definition_empty")
           .build();
     }
@@ -64,13 +64,13 @@ public class DagDefinitionCodec {
       root = YdszJson.parseObject(json);
     } catch (Exception e) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_dag_definition_invalid")
           .build();
     }
     if (root == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_dag_definition_empty")
           .build();
     }
@@ -80,7 +80,7 @@ public class DagDefinitionCodec {
     ArrayNode nodesArr = root.getArrayNode("nodes");
     if (nodesArr == null || nodesArr.isEmpty()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_dag_no_nodes")
           .build();
     }
@@ -89,7 +89,7 @@ public class DagDefinitionCodec {
       String jobKey = n.getString("jobKey");
       if (jobKey == null || jobKey.isBlank()) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("error.cronjob.msg_dag_node_key_missing")
             .build();
       }
@@ -117,7 +117,7 @@ public class DagDefinitionCodec {
     long distinctCount = nodes.stream().map(DagNode::jobKey).distinct().count();
     if (distinctCount != nodes.size()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_dag_node_key_duplicate")
           .build();
     }
@@ -132,7 +132,7 @@ public class DagDefinitionCodec {
         String to = e.getString("to");
         if (from == null || to == null) {
           throw SysException.builder()
-              .resultCode(BaseResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
               .message("error.cronjob.msg_dag_edge_invalid")
               .build();
         }
@@ -148,14 +148,14 @@ public class DagDefinitionCodec {
     for (DagEdge edge : edges) {
       if (!nodeKeys.contains(edge.from())) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_dag_edge_node_not_found")
             .params(edge.from())
             .build();
       }
       if (!nodeKeys.contains(edge.to())) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_dag_edge_node_not_found")
             .params(edge.to())
             .build();

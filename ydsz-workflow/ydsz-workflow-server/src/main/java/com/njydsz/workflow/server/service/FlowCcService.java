@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
 import com.njydsz.workflow.infra.entity.FlowCcDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
@@ -103,7 +103,7 @@ public interface FlowCcService {
    * @param pageSize 每页大小
    * @return 抄送记录分页
    */
-  BaseResponse<List<FlowCcDO>> listCcByUser(
+  YdszResponse<List<FlowCcDO>> listCcByUser(
       String userId, String readStatus, String flowCode, String tenantId, int pageNo, int pageSize);
 
   /**

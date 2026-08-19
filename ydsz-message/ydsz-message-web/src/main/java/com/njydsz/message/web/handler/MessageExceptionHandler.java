@@ -11,7 +11,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
@@ -23,7 +23,7 @@ import com.njydsz.message.domain.enums.MessageExceptionCode;
  *
  * <p>拦截消息模块抛出的 {@link SysException} / {@link BusinessException}，当异常码为 {@link
  * MessageExceptionCode} 时，构造分层错误消息（userMessage / developerMessage / retryAfter）写入
- * {@link MessageResult}，返回 {@code BaseResponse<MessageResult>} 供前端解析。
+ * {@link MessageResult}，返回 {@code YdszResponse<MessageResult>} 供前端解析。
  *
  * <p>分层规则：
  *
@@ -60,7 +60,7 @@ public class MessageExceptionHandler {
    * @return 分层错误响应；非 {@link MessageExceptionCode} 异常返回 null 由上层处理
    */
   @ExceptionHandler({SysException.class, BusinessException.class})
-  public BaseResponse<MessageResult> handleMessageException(
+  public YdszResponse<MessageResult> handleMessageException(
       AbstractYdszException e, HttpServletRequest request, HttpServletResponse response) {
 
     // 仅处理 MessageExceptionCode 类型的异常（通过 key 匹配，因为 resultCode() 返回匿名 ResultCode）
@@ -96,9 +96,9 @@ public class MessageExceptionHandler {
         MessageResult.fail(
             messageCode.getCode(), userMessage, developerMessage, retryAfter);
 
-    BaseResponse<MessageResult> baseResponse = BaseResponse.success(result);
-    baseResponse.setMsg(userMessage);
-    return baseResponse;
+    YdszResponse<MessageResult> YdszResponse = YdszResponse.success(result);
+    YdszResponse.setMsg(userMessage);
+    return YdszResponse;
   }
 
   /**

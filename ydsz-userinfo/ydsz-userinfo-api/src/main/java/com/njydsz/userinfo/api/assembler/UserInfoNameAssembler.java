@@ -14,7 +14,7 @@ import org.springframework.beans.factory.ObjectProvider;
 
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheBuilder;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.feign.assembler.NameAssemblerProperties;
 import com.njydsz.common.feign.assembler.NameType;
@@ -102,7 +102,7 @@ public class UserInfoNameAssembler implements NameAssembler {
 
     Map<String, String> result;
     try {
-      BaseResponse<Map<String, String>> response = doBatchCall(type, distinctIds);
+      YdszResponse<Map<String, String>> response = doBatchCall(type, distinctIds);
       if (response == null || !response.isSuccess()) {
         log.warn(
             "UserInfoNameAssembler batch call failed: type={}, size={}, resp={}",
@@ -276,7 +276,7 @@ public class UserInfoNameAssembler implements NameAssembler {
   }
 
   /** 路由到对应类型的 OrgQueryClient batch 方法。 */
-  private BaseResponse<Map<String, String>> doBatchCall(NameType type, List<String> ids) {
+  private YdszResponse<Map<String, String>> doBatchCall(NameType type, List<String> ids) {
     switch (type) {
       case USER:
         return orgQueryClient.batchUserNames(ids);
@@ -290,7 +290,7 @@ public class UserInfoNameAssembler implements NameAssembler {
         return orgQueryClient.batchCompanyNames(ids);
       default:
         log.warn("UserInfoNameAssembler unsupported type: {}", type);
-        return BaseResponse.success(Collections.emptyMap());
+        return YdszResponse.success(Collections.emptyMap());
     }
   }
 

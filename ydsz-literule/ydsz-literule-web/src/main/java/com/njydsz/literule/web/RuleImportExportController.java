@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -61,7 +61,7 @@ public class RuleImportExportController {
 
   /** 导出全部规则为 JSON */
   @GetMapping("/export")
-  public BaseResponse<Map<String, Object>> exportRules() {
+  public YdszResponse<Map<String, Object>> exportRules() {
     List<RuleDefinition> rules = ruleAdminService.listAll();
     // 过滤掉内部字段，只导出核心配置
     List<Map<String, Object>> exportData =
@@ -92,7 +92,7 @@ public class RuleImportExportController {
     result.put("exportTime", LocalDateTime.now().toString());
     result.put("ruleCount", rules.size());
     result.put("rules", exportData);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -169,12 +169,12 @@ public class RuleImportExportController {
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_import_export.importRules", threshold = 50)
   @PostMapping("/import")
-  public BaseResponse<Map<String, Object>> importRules(
+  public YdszResponse<Map<String, Object>> importRules(
       @Valid @RequestBody RuleImportDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     List<Map<String, Object>> rules = dto.getRules();
     if (rules == null || rules.isEmpty()) {
-      return BaseResponse.success(Map.of("imported", 0, "skipped", 0));
+      return YdszResponse.success(Map.of("imported", 0, "skipped", 0));
     }
     int imported = 0;
     int skipped = 0;
@@ -199,6 +199,6 @@ public class RuleImportExportController {
     Map<String, Object> result = new LinkedHashMap<>();
     result.put("imported", imported);
     result.put("skipped", skipped);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 }

@@ -25,7 +25,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -116,8 +116,8 @@ public class FlowInstanceController {
   @PostMapping("/instance/start")
   @Operation(summary = "启动流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
-  public BaseResponse<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
-    return BaseResponse.success(workflowFacade.startProcess(dto));
+  public YdszResponse<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
+    return YdszResponse.success(workflowFacade.startProcess(dto));
   }
 
   /**
@@ -136,9 +136,9 @@ public class FlowInstanceController {
   @PostMapping("/instance/batchStart")
   @Operation(summary = "批量启动流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
-  public BaseResponse<Map<String, Object>> batchStartInstances(
+  public YdszResponse<Map<String, Object>> batchStartInstances(
       @Valid @RequestBody List<FlowStartProcessDTO> dtos) {
-    return BaseResponse.success(instanceService.batchStartInstances(dtos));
+    return YdszResponse.success(instanceService.batchStartInstances(dtos));
   }
 
   /**
@@ -150,9 +150,9 @@ public class FlowInstanceController {
    */
   @Operation(summary = "按业务类型与业务ID查询流程实例")
   @GetMapping("/instance/byBusiness")
-  public BaseResponse<FlowInstanceViewDTO> getByBusiness(
+  public YdszResponse<FlowInstanceViewDTO> getByBusiness(
       @RequestParam String businessType, @RequestParam String businessId) {
-    return BaseResponse.success(workflowFacade.getByBusiness(businessType, businessId));
+    return YdszResponse.success(workflowFacade.getByBusiness(businessType, businessId));
   }
 
   /**
@@ -171,10 +171,10 @@ public class FlowInstanceController {
       content = "'terminate'")
   @Operation(summary = "终止流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-  public BaseResponse<Void> terminate(
+  public YdszResponse<Void> terminate(
       @PathVariable String id, @RequestParam(required = false) String reason) {
     workflowFacade.terminateProcess(id, reason);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -193,9 +193,9 @@ public class FlowInstanceController {
       content = "'suspend'")
   @Operation(summary = "挂起流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-  public BaseResponse<Void> suspend(@PathVariable String id) {
+  public YdszResponse<Void> suspend(@PathVariable String id) {
     workflowFacade.suspendProcess(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -214,9 +214,9 @@ public class FlowInstanceController {
       content = "'activate'")
   @Operation(summary = "激活流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-  public BaseResponse<Void> activate(@PathVariable String id) {
+  public YdszResponse<Void> activate(@PathVariable String id) {
     workflowFacade.activateProcess(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -235,9 +235,9 @@ public class FlowInstanceController {
       content = "'recall'")
   @Operation(summary = "撤回流程")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
-  public BaseResponse<Boolean> recall(
+  public YdszResponse<Boolean> recall(
       @PathVariable String id, @RequestParam(required = false) String targetNodeCode) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         instanceService.recall(id, AuthContextUtils.getUserId(), targetNodeCode));
   }
 
@@ -250,8 +250,8 @@ public class FlowInstanceController {
   @GetMapping("/instance/{id}/recallableNodes")
   @Operation(summary = "查询可撤回的历史节点列表")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
-  public BaseResponse<List<Map<String, Object>>> listRecallableNodes(@PathVariable String id) {
-    return BaseResponse.success(
+  public YdszResponse<List<Map<String, Object>>> listRecallableNodes(@PathVariable String id) {
+    return YdszResponse.success(
         instanceService.listRecallableNodes(id, AuthContextUtils.getUserId()));
   }
 
@@ -272,11 +272,11 @@ public class FlowInstanceController {
       content = "'rollback'")
   @Operation(summary = "回滚已完成的流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_ROLLBACK)
-  public BaseResponse<Boolean> rollback(
+  public YdszResponse<Boolean> rollback(
       @PathVariable String id,
       @RequestParam String reason,
       @RequestParam(required = false, defaultValue = "7") int maxRollbackDays) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         instanceService.rollback(id, AuthContextUtils.getUserId(), reason, maxRollbackDays));
   }
 
@@ -302,12 +302,12 @@ public class FlowInstanceController {
       content = "'resubmit'")
   @Operation(summary = "驳回后快速重审")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_RESUBMIT)
-  public BaseResponse<String> resubmit(
+  public YdszResponse<String> resubmit(
       @PathVariable String id,
       @RequestParam(required = false) String comment,
       @RequestParam(required = false, defaultValue = "RESTART") String redoMode,
       @RequestBody(required = false) Map<String, Object> variables) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         workflowFacade.resubmitProcess(
             id, AuthContextUtils.getUserId(), variables, comment, redoMode));
   }
@@ -320,8 +320,8 @@ public class FlowInstanceController {
    */
   @Operation(summary = "审计轨迹查询")
   @GetMapping("/instance/{id}/auditTrail")
-  public BaseResponse<List<Map<String, Object>>> auditTrail(@PathVariable String id) {
-    return BaseResponse.success(workflowFacade.listAuditTrail(id));
+  public YdszResponse<List<Map<String, Object>>> auditTrail(@PathVariable String id) {
+    return YdszResponse.success(workflowFacade.listAuditTrail(id));
   }
 
   /**
@@ -332,8 +332,8 @@ public class FlowInstanceController {
    */
   @Operation(summary = "审批轨迹时间线查询")
   @GetMapping("/instance/{id}/timeline")
-  public BaseResponse<List<Map<String, Object>>> timeline(@PathVariable String id) {
-    return BaseResponse.success(workflowFacade.getTimeline(id));
+  public YdszResponse<List<Map<String, Object>>> timeline(@PathVariable String id) {
+    return YdszResponse.success(workflowFacade.getTimeline(id));
   }
 
   /**
@@ -344,8 +344,8 @@ public class FlowInstanceController {
    */
   @Operation(summary = "流程图查询")
   @GetMapping("/instance/{id}/diagram")
-  public BaseResponse<Map<String, Object>> diagram(@PathVariable String id) {
-    return BaseResponse.success(workflowFacade.getDiagram(id));
+  public YdszResponse<Map<String, Object>> diagram(@PathVariable String id) {
+    return YdszResponse.success(workflowFacade.getDiagram(id));
   }
 
   /**
@@ -356,8 +356,8 @@ public class FlowInstanceController {
    */
   @Operation(summary = "流程回放步骤序列")
   @GetMapping("/instance/{id}/replay")
-  public BaseResponse<List<Map<String, Object>>> replay(@PathVariable String id) {
-    return BaseResponse.success(workflowFacade.getReplaySteps(id));
+  public YdszResponse<List<Map<String, Object>>> replay(@PathVariable String id) {
+    return YdszResponse.success(workflowFacade.getReplaySteps(id));
   }
 
   /**
@@ -467,8 +467,8 @@ public class FlowInstanceController {
    */
   @Operation(summary = "读取流程变量")
   @GetMapping("/instance/{id}/variables")
-  public BaseResponse<Map<String, Object>> getVariables(@PathVariable String id) {
-    return BaseResponse.success(instanceService.getVariables(id));
+  public YdszResponse<Map<String, Object>> getVariables(@PathVariable String id) {
+    return YdszResponse.success(instanceService.getVariables(id));
   }
 
   /**
@@ -488,10 +488,10 @@ public class FlowInstanceController {
       content = "'setVariables'")
   @Operation(summary = "批量写入流程变量")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-  public BaseResponse<Void> setVariables(
+  public YdszResponse<Void> setVariables(
       @PathVariable String id, @Valid @RequestBody FlowInstanceVariablesDTO dto) {
     instanceService.setVariables(id, dto.getVariables());
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -510,9 +510,9 @@ public class FlowInstanceController {
       content = "'urge'")
   @Operation(summary = "催办")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_VIEW)
-  public BaseResponse<List<String>> urge(
+  public YdszResponse<List<String>> urge(
       @PathVariable String id, @RequestParam(required = false) String comment) {
-    return BaseResponse.success(workflowFacade.urgeTask(id, AuthContextUtils.getUserId(), comment));
+    return YdszResponse.success(workflowFacade.urgeTask(id, AuthContextUtils.getUserId(), comment));
   }
 
   /**
@@ -529,11 +529,11 @@ public class FlowInstanceController {
       content = "'urgeByNode'")
   @Operation(summary = "节点级催办")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_VIEW)
-  public BaseResponse<List<String>> urgeByNode(
+  public YdszResponse<List<String>> urgeByNode(
       @PathVariable String id,
       @RequestParam(required = false) String nodeCode,
       @RequestParam(required = false) String comment) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         workflowFacade.urgeNodeTask(id, nodeCode, AuthContextUtils.getUserId(), comment));
   }
 
@@ -546,9 +546,9 @@ public class FlowInstanceController {
    */
   @Operation(summary = "获取表单渲染数据")
   @GetMapping("/instance/{id}/formRender")
-  public BaseResponse<Map<String, Object>> getFormRenderData(
+  public YdszResponse<Map<String, Object>> getFormRenderData(
       @PathVariable String id, @RequestParam(required = false) String taskId) {
-    return BaseResponse.success(instanceService.getFormRenderData(id, taskId));
+    return YdszResponse.success(instanceService.getFormRenderData(id, taskId));
   }
 
   // ============== P1-10: 流程实例迁移 ==============
@@ -570,9 +570,9 @@ public class FlowInstanceController {
       content = "'migrateInstances'")
   @Operation(summary = "执行实例迁移")
   @AuthApiPermission
-  public BaseResponse<com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO> migrateInstances(
+  public YdszResponse<com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO> migrateInstances(
       @Valid @RequestBody com.njydsz.workflow.domain.dto.InstanceMigrationDTO dto) {
-    return BaseResponse.success(instanceMigrationService.migrate(dto));
+    return YdszResponse.success(instanceMigrationService.migrate(dto));
   }
 
   /**
@@ -592,9 +592,9 @@ public class FlowInstanceController {
       content = "'previewMigration'")
   @Operation(summary = "预览实例迁移")
   @AuthApiPermission
-  public BaseResponse<com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO> previewMigration(
+  public YdszResponse<com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO> previewMigration(
       @Valid @RequestBody com.njydsz.workflow.domain.dto.InstanceMigrationDTO dto) {
-    return BaseResponse.success(instanceMigrationService.previewMigration(dto));
+    return YdszResponse.success(instanceMigrationService.previewMigration(dto));
   }
 
   /**
@@ -606,9 +606,9 @@ public class FlowInstanceController {
    */
   @Operation(summary = "自动映射节点编码")
   @GetMapping("/instance/migrate/autoMap")
-  public BaseResponse<Map<String, String>> autoMapNodes(
+  public YdszResponse<Map<String, String>> autoMapNodes(
       @RequestParam Long sourceDefinitionId, @RequestParam Long targetDefinitionId) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         instanceMigrationService.autoMapNodes(sourceDefinitionId, targetDefinitionId));
   }
 
@@ -623,8 +623,8 @@ public class FlowInstanceController {
    */
   @Operation(summary = "列出所有触发规则")
   @GetMapping("/instance/trigger/list")
-  public BaseResponse<List<FlowAutoTriggerVO>> listTriggers() {
-    return BaseResponse.success(
+  public YdszResponse<List<FlowAutoTriggerVO>> listTriggers() {
+    return YdszResponse.success(
         WorkflowConverter.INSTANT.flowAutoTriggerListToVO(autoTriggerService.listAll()));
   }
 
@@ -647,12 +647,12 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'createTrigger'")
-  public BaseResponse<Void> createTrigger(@Valid @RequestBody FlowAutoTriggerCreateDTO dto) {
+  public YdszResponse<Void> createTrigger(@Valid @RequestBody FlowAutoTriggerCreateDTO dto) {
     String sourceFlowCode = dto.getSourceFlowCode();
     String targetFlowCode = dto.getTargetFlowCode();
     String conditionExpression = dto.getConditionExpression();
     autoTriggerService.registerTrigger(sourceFlowCode, targetFlowCode, conditionExpression);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -674,9 +674,9 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.DELETE,
       content = "'deleteTrigger'")
-  public BaseResponse<Void> deleteTrigger(@PathVariable String id) {
+  public YdszResponse<Void> deleteTrigger(@PathVariable String id) {
     autoTriggerService.deleteById(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -692,8 +692,8 @@ public class FlowInstanceController {
   @Operation(summary = "启用/禁用触发规则")
   @Idempotent(key = "ydsz:workflow:FlowInstanceController:toggleTrigger:lock", ttlSeconds = 5)
   @PutMapping("/instance/trigger/{id}/toggle")
-  public BaseResponse<Map<String, Object>> toggleTrigger(@PathVariable String id) {
+  public YdszResponse<Map<String, Object>> toggleTrigger(@PathVariable String id) {
     boolean enabled = autoTriggerService.toggleEnabled(id);
-    return BaseResponse.success(Map.of("id", id, "enabled", enabled));
+    return YdszResponse.success(Map.of("id", id, "enabled", enabled));
   }
 }

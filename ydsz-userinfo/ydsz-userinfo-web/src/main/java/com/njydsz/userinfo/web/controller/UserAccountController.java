@@ -23,7 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
@@ -124,8 +124,8 @@ public class UserAccountController {
    */
   @GetMapping("/list")
   @Operation(summary = "查询全部用户列表")
-  public BaseResponse<List<UserAccountVO>> list() {
-    return BaseResponse.success(service.list());
+  public YdszResponse<List<UserAccountVO>> list() {
+    return YdszResponse.success(service.list());
   }
 
   /**
@@ -136,8 +136,8 @@ public class UserAccountController {
    */
   @GetMapping("/{id}")
   @Operation(summary = "根据 ID 查询用户")
-  public BaseResponse<UserAccountVO> getById(@PathVariable String id) {
-    return BaseResponse.success(service.getById(id));
+  public YdszResponse<UserAccountVO> getById(@PathVariable String id) {
+    return YdszResponse.success(service.getById(id));
   }
 
   /**
@@ -160,8 +160,8 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccountDO.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建用户")
-  public BaseResponse<String> create(@Valid @RequestBody UserAccountCreateDTO dto) {
-    return BaseResponse.success(service.create(dto));
+  public YdszResponse<String> create(@Valid @RequestBody UserAccountCreateDTO dto) {
+    return YdszResponse.success(service.create(dto));
   }
 
   /**
@@ -185,8 +185,8 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccountDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新用户信息")
-  public BaseResponse<Boolean> update(@Valid @RequestBody UserAccountUpdateDTO dto) {
-    return BaseResponse.success(service.update(dto));
+  public YdszResponse<Boolean> update(@Valid @RequestBody UserAccountUpdateDTO dto) {
+    return YdszResponse.success(service.update(dto));
   }
 
   /**
@@ -208,8 +208,8 @@ public class UserAccountController {
   @Idempotent(key = "ydsz:userinfo:UserAccountController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除用户")
-  public BaseResponse<Boolean> remove(@PathVariable String id) {
-    return BaseResponse.success(service.removeById(id));
+  public YdszResponse<Boolean> remove(@PathVariable String id) {
+    return YdszResponse.success(service.removeById(id));
   }
 
   /**
@@ -232,8 +232,8 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccountDO.changePassword", threshold = 50)
   @PostMapping("/change-password")
   @Operation(summary = "修改密码")
-  public BaseResponse<Boolean> changePassword(@Valid @RequestBody ChangePasswordDTO dto) {
-    return BaseResponse.success(service.changePassword(dto));
+  public YdszResponse<Boolean> changePassword(@Valid @RequestBody ChangePasswordDTO dto) {
+    return YdszResponse.success(service.changePassword(dto));
   }
 
   /**
@@ -253,9 +253,9 @@ public class UserAccountController {
   @Idempotent(key = "ydsz:userinfo:UserAccountController:resetPassword:lock", ttlSeconds = 5)
   @PostMapping("/reset-password")
   @Operation(summary = "重置密码（管理员）")
-  public BaseResponse<Boolean> resetPassword(@Valid @RequestBody ResetPasswordDTO dto) {
+  public YdszResponse<Boolean> resetPassword(@Valid @RequestBody ResetPasswordDTO dto) {
     sensitiveVerifyService.clearVerification();
-    return BaseResponse.success(service.resetPassword(dto));
+    return YdszResponse.success(service.resetPassword(dto));
   }
 
   /**
@@ -273,9 +273,9 @@ public class UserAccountController {
   @Idempotent(key = "ydsz:userinfo:UserAccountController:assignRoles:lock", ttlSeconds = 5)
   @PostMapping("/{userId}/roles")
   @Operation(summary = "分配用户角色")
-  public BaseResponse<Boolean> assignRoles(
+  public YdszResponse<Boolean> assignRoles(
       @PathVariable String userId, @Valid @RequestBody AssignRolesDTO dto) {
-    return BaseResponse.success(service.assignRoles(userId, dto.getRoleIds()));
+    return YdszResponse.success(service.assignRoles(userId, dto.getRoleIds()));
   }
 
   /**
@@ -288,8 +288,8 @@ public class UserAccountController {
    */
   @GetMapping("/{userId}/roles")
   @Operation(summary = "查询用户角色 ID 列表")
-  public BaseResponse<List<String>> getUserRoles(@PathVariable String userId) {
-    return BaseResponse.success(service.getUserRoleIds(userId));
+  public YdszResponse<List<String>> getUserRoles(@PathVariable String userId) {
+    return YdszResponse.success(service.getUserRoleIds(userId));
   }
 
   /**
@@ -313,7 +313,7 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccountDO.import", threshold = 10)
   @PostMapping("/import")
   @Operation(summary = "批量导入用户（Excel）")
-  public BaseResponse<UserImportResultDTO> importUsers(
+  public YdszResponse<UserImportResultDTO> importUsers(
       @org.springframework.web.bind.annotation.RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
       throw new BusinessException(UserInfoExceptionCode.IMPORT_FILE_EMPTY);
@@ -321,7 +321,7 @@ public class UserAccountController {
     try {
       UserImportResultDTO result =
           userExcelService.importUsers(file.getInputStream(), file.getOriginalFilename());
-      return BaseResponse.success(result);
+      return YdszResponse.success(result);
     } catch (IOException e) {
       log.error("导入用户文件读取失败", e);
       throw new BusinessException(UserInfoExceptionCode.IMPORT_READ_FAILED);
@@ -400,10 +400,10 @@ public class UserAccountController {
    */
   @GetMapping("/{userId}/login-history")
   @Operation(summary = "查询用户最近登录历史（安全审计）")
-  public BaseResponse<List<UserLoginHistoryVO>> getLoginHistory(
+  public YdszResponse<List<UserLoginHistoryVO>> getLoginHistory(
       @PathVariable String userId,
       @org.springframework.web.bind.annotation.RequestParam(defaultValue = "20") int limit) {
-    return BaseResponse.success(loginHistoryService.getRecentLogins(userId, limit));
+    return YdszResponse.success(loginHistoryService.getRecentLogins(userId, limit));
   }
 
   /**
@@ -423,8 +423,8 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccountDO.batchRemove", threshold = 30)
   @PostMapping("/batch-remove")
   @Operation(summary = "批量删除用户")
-  public BaseResponse<Integer> batchRemove(@Valid @RequestBody BatchUserStatusDTO dto) {
-    return BaseResponse.success(service.batchRemoveByIds(dto.getIds()));
+  public YdszResponse<Integer> batchRemove(@Valid @RequestBody BatchUserStatusDTO dto) {
+    return YdszResponse.success(service.batchRemoveByIds(dto.getIds()));
   }
 
   /**
@@ -444,8 +444,8 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccountDO.batchEnable", threshold = 30)
   @PostMapping("/batch-enable")
   @Operation(summary = "批量启用用户")
-  public BaseResponse<Integer> batchEnable(@Valid @RequestBody BatchUserStatusDTO dto) {
-    return BaseResponse.success(service.batchEnable(dto.getIds()));
+  public YdszResponse<Integer> batchEnable(@Valid @RequestBody BatchUserStatusDTO dto) {
+    return YdszResponse.success(service.batchEnable(dto.getIds()));
   }
 
   /**
@@ -466,9 +466,9 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccountDO.batchDisable", threshold = 30)
   @PostMapping("/batch-disable")
   @Operation(summary = "批量禁用用户")
-  public BaseResponse<Integer> batchDisable(@Valid @RequestBody BatchUserStatusDTO dto) {
+  public YdszResponse<Integer> batchDisable(@Valid @RequestBody BatchUserStatusDTO dto) {
     sensitiveVerifyService.clearVerification();
-    return BaseResponse.success(service.batchDisable(dto.getIds()));
+    return YdszResponse.success(service.batchDisable(dto.getIds()));
   }
 
   /**
@@ -490,8 +490,8 @@ public class UserAccountController {
    */
   @PostMapping("/sensitive-verify")
   @Operation(summary = "敏感操作二次认证")
-  public BaseResponse<Boolean> sensitiveVerify(@Valid @RequestBody SensitiveVerifyDTO dto) {
+  public YdszResponse<Boolean> sensitiveVerify(@Valid @RequestBody SensitiveVerifyDTO dto) {
     sensitiveVerifyService.verify(dto.getPassword());
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 }

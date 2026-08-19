@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RuleResult;
@@ -76,9 +76,9 @@ public class RuleTestCaseController {
    * @return 测试用例列表
    */
   @GetMapping("/test-cases")
-  public BaseResponse<List<RuleTestCaseVO>> listTestCases(
+  public YdszResponse<List<RuleTestCaseVO>> listTestCases(
       @RequestParam(required = false) String ruleCode) {
-    return BaseResponse.success(ruleTestCaseRepository.findByRuleCode(ruleCode));
+    return YdszResponse.success(ruleTestCaseRepository.findByRuleCode(ruleCode));
   }
 
   /**
@@ -95,8 +95,8 @@ public class RuleTestCaseController {
       content = "'saveTestCase'")
   @RateLimit(resource = "literule.rule_test_case.saveTestCase", threshold = 50)
   @PostMapping("/test-cases")
-  public BaseResponse<RuleTestCaseVO> saveTestCase(@Valid @RequestBody RuleTestCasePostDTO dto) {
-    return BaseResponse.success(ruleTestCaseRepository.save(dto));
+  public YdszResponse<RuleTestCaseVO> saveTestCase(@Valid @RequestBody RuleTestCasePostDTO dto) {
+    return YdszResponse.success(ruleTestCaseRepository.save(dto));
   }
 
   /**
@@ -113,9 +113,9 @@ public class RuleTestCaseController {
       content = "'deleteTestCase'")
   @RateLimit(resource = "literule.rule_test_case.deleteTestCase", threshold = 50)
   @DeleteMapping("/test-cases/{id}")
-  public BaseResponse<Void> deleteTestCase(@PathVariable String id) {
+  public YdszResponse<Void> deleteTestCase(@PathVariable String id) {
     ruleTestCaseRepository.deleteById(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -135,7 +135,7 @@ public class RuleTestCaseController {
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_test_case.batchRunTestCases", threshold = 50)
   @PostMapping("/test-cases/batch-run")
-  public BaseResponse<Map<String, Object>> batchRunTestCases(
+  public YdszResponse<Map<String, Object>> batchRunTestCases(
       @Valid @RequestBody TestCaseBatchRunDTO dto) {
     List<Long> ids = dto.getIds();
 
@@ -153,7 +153,7 @@ public class RuleTestCaseController {
     }
 
     if (testCases.isEmpty()) {
-      return BaseResponse.success(Map.of("total", 0, "passed", 0, "failed", 0, "passRate", "100%"));
+      return YdszResponse.success(Map.of("total", 0, "passed", 0, "failed", 0, "passRate", "100%"));
     }
 
     List<Map<String, Object>> caseResults = new ArrayList<>();
@@ -210,6 +210,6 @@ public class RuleTestCaseController {
     report.put("allPassed", failed == 0);
     report.put("caseResults", caseResults);
 
-    return BaseResponse.success(report);
+    return YdszResponse.success(report);
   }
 }

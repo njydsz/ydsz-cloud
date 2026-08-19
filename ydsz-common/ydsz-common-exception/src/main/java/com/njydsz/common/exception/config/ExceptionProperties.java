@@ -50,7 +50,7 @@ public class ExceptionProperties {
    * 响应格式
    *
    * <ul>
-   *   <li>{@code base-response} — 返回 {@code BaseResponse} 格式（默认）
+   *   <li>{@code base-response} — 返回 {@code YdszResponse} 格式（默认）
    *   <li>{@code problem-detail} — 返回 RFC 7807 ProblemDetail 格式
    * </ul>
    */
@@ -103,7 +103,7 @@ public class ExceptionProperties {
 
   /** 响应格式枚举 */
   public enum ResponseFormat {
-    /** BaseResponse 格式 */
+    /** YdszResponse 格式 */
     BASE_RESPONSE,
     /** RFC 7807 ProblemDetail 格式 */
     PROBLEM_DETAIL

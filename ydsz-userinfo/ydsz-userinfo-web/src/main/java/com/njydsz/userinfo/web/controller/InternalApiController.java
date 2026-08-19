@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
@@ -99,8 +99,8 @@ public class InternalApiController {
    */
   @GetMapping("/user/info")
   @Operation(summary = "根据 userId 查询用户信息（内部调用）")
-  public BaseResponse<UserAccountVO> getUserInfo(@RequestParam String userId) {
-    return BaseResponse.success(userAccountService.getById(userId));
+  public YdszResponse<UserAccountVO> getUserInfo(@RequestParam String userId) {
+    return YdszResponse.success(userAccountService.getById(userId));
   }
 
   /**
@@ -114,8 +114,8 @@ public class InternalApiController {
    */
   @GetMapping("/dept/tree")
   @Operation(summary = "查询部门树形结构（内部调用）")
-  public BaseResponse<List<DepartmentTreeVO>> getDeptTree() {
-    return BaseResponse.success(departmentService.tree());
+  public YdszResponse<List<DepartmentTreeVO>> getDeptTree() {
+    return YdszResponse.success(departmentService.tree());
   }
 
   /**
@@ -127,8 +127,8 @@ public class InternalApiController {
    */
   @GetMapping("/dept/list")
   @Operation(summary = "查询部门列表（内部调用）")
-  public BaseResponse<List<DepartmentVO>> getDeptList() {
-    return BaseResponse.success(departmentService.list());
+  public YdszResponse<List<DepartmentVO>> getDeptList() {
+    return YdszResponse.success(departmentService.list());
   }
 
   /**
@@ -143,8 +143,8 @@ public class InternalApiController {
    */
   @GetMapping("/user/list-by-role")
   @Operation(summary = "按角色编码查询用户 ID 列表（工作流 role:xxx 展开，带缓存）")
-  public BaseResponse<List<String>> listUserIdsByRole(@RequestParam String roleCode) {
-    return BaseResponse.success(workflowCacheService.listUserIdsByRoleCode(roleCode));
+  public YdszResponse<List<String>> listUserIdsByRole(@RequestParam String roleCode) {
+    return YdszResponse.success(workflowCacheService.listUserIdsByRoleCode(roleCode));
   }
 
   /**
@@ -157,8 +157,8 @@ public class InternalApiController {
    */
   @GetMapping("/user/role-codes")
   @Operation(summary = "查询用户拥有的角色编码列表（工作流待办反查）")
-  public BaseResponse<List<String>> listRoleCodesByUserId(@RequestParam String userId) {
-    return BaseResponse.success(userAccountService.listRoleCodesByUserId(userId));
+  public YdszResponse<List<String>> listRoleCodesByUserId(@RequestParam String userId) {
+    return YdszResponse.success(userAccountService.listRoleCodesByUserId(userId));
   }
 
   /**
@@ -173,8 +173,8 @@ public class InternalApiController {
    */
   @GetMapping("/user/dept-ids")
   @Operation(summary = "查询用户所属部门 ID 列表（工作流待办反查）")
-  public BaseResponse<List<String>> listDeptIdsByUserId(@RequestParam String userId) {
-    return BaseResponse.success(userAccountService.listDeptIdsByUserId(userId));
+  public YdszResponse<List<String>> listDeptIdsByUserId(@RequestParam String userId) {
+    return YdszResponse.success(userAccountService.listDeptIdsByUserId(userId));
   }
 
   /**
@@ -189,8 +189,8 @@ public class InternalApiController {
    */
   @GetMapping("/user/leader")
   @Operation(summary = "查询用户直属上级 ID（工作流 leader:xxx 展开，带缓存）")
-  public BaseResponse<String> getLeaderByUserId(@RequestParam String userId) {
-    return BaseResponse.success(workflowCacheService.getLeaderByUserId(userId));
+  public YdszResponse<String> getLeaderByUserId(@RequestParam String userId) {
+    return YdszResponse.success(workflowCacheService.getLeaderByUserId(userId));
   }
 
   /**
@@ -205,8 +205,8 @@ public class InternalApiController {
    */
   @GetMapping("/user/list-by-position")
   @Operation(summary = "按岗位编码查询用户 ID 列表（工作流 position:xxx 展开，带缓存）")
-  public BaseResponse<List<String>> listUserIdsByPosition(@RequestParam String positionCode) {
-    return BaseResponse.success(workflowCacheService.listUserIdsByPositionCode(positionCode));
+  public YdszResponse<List<String>> listUserIdsByPosition(@RequestParam String positionCode) {
+    return YdszResponse.success(workflowCacheService.listUserIdsByPositionCode(positionCode));
   }
 
   /**
@@ -221,8 +221,8 @@ public class InternalApiController {
    */
   @GetMapping("/dept/leader-by-id")
   @Operation(summary = "按部门 ID 查询部门负责人（工作流 dept:数字 展开，带缓存）")
-  public BaseResponse<String> getDeptLeaderByDeptId(@RequestParam String deptId) {
-    return BaseResponse.success(workflowCacheService.getDeptLeaderByDeptId(deptId));
+  public YdszResponse<String> getDeptLeaderByDeptId(@RequestParam String deptId) {
+    return YdszResponse.success(workflowCacheService.getDeptLeaderByDeptId(deptId));
   }
 
   /**
@@ -237,8 +237,8 @@ public class InternalApiController {
    */
   @GetMapping("/dept/leader-by-code")
   @Operation(summary = "按部门编码查询部门负责人（工作流 dept:非数字 展开，带缓存）")
-  public BaseResponse<String> getDeptLeaderByDeptCode(@RequestParam String deptCode) {
-    return BaseResponse.success(workflowCacheService.getDeptLeaderByDeptCode(deptCode));
+  public YdszResponse<String> getDeptLeaderByDeptCode(@RequestParam String deptCode) {
+    return YdszResponse.success(workflowCacheService.getDeptLeaderByDeptCode(deptCode));
   }
 
   // ==================== NameAssembler 批量名称富化接口 ====================
@@ -256,9 +256,9 @@ public class InternalApiController {
   @PostMapping("/user/batch-names")
   @Operation(summary = "批量查询用户 ID → 真实姓名映射（NameAssembler 富化用）")
   @RateLimit(resource = "userinfo.internal.batchUserNames", threshold = 200)
-  public BaseResponse<Map<String, String>> batchUserNames(
+  public YdszResponse<Map<String, String>> batchUserNames(
       @RequestBody @Valid @Size(max = 500) List<String> userIds) {
-    return BaseResponse.success(userAccountService.batchUserNames(userIds));
+    return YdszResponse.success(userAccountService.batchUserNames(userIds));
   }
 
   /**
@@ -272,9 +272,9 @@ public class InternalApiController {
   @PostMapping("/dept/batch-names")
   @Operation(summary = "批量查询部门 ID → 部门名映射（NameAssembler 富化用）")
   @RateLimit(resource = "userinfo.internal.batchDeptNames", threshold = 200)
-  public BaseResponse<Map<String, String>> batchDeptNames(
+  public YdszResponse<Map<String, String>> batchDeptNames(
       @RequestBody @Valid @Size(max = 500) List<String> deptIds) {
-    return BaseResponse.success(departmentService.batchNamesByIds(deptIds));
+    return YdszResponse.success(departmentService.batchNamesByIds(deptIds));
   }
 
   /**
@@ -286,9 +286,9 @@ public class InternalApiController {
   @PostMapping("/role/batch-names")
   @Operation(summary = "批量查询角色 ID → 角色名映射（NameAssembler 富化用）")
   @RateLimit(resource = "userinfo.internal.batchRoleNames", threshold = 200)
-  public BaseResponse<Map<String, String>> batchRoleNames(
+  public YdszResponse<Map<String, String>> batchRoleNames(
       @RequestBody @Valid @Size(max = 500) List<String> roleIds) {
-    return BaseResponse.success(roleService.batchNamesByIds(roleIds));
+    return YdszResponse.success(roleService.batchNamesByIds(roleIds));
   }
 
   /**
@@ -300,9 +300,9 @@ public class InternalApiController {
   @PostMapping("/post/batch-names")
   @Operation(summary = "批量查询岗位 ID → 岗位名映射（NameAssembler 富化用）")
   @RateLimit(resource = "userinfo.internal.batchPostNames", threshold = 200)
-  public BaseResponse<Map<String, String>> batchPostNames(
+  public YdszResponse<Map<String, String>> batchPostNames(
       @RequestBody @Valid @Size(max = 500) List<String> postIds) {
-    return BaseResponse.success(postService.batchNamesByIds(postIds));
+    return YdszResponse.success(postService.batchNamesByIds(postIds));
   }
 
   /**
@@ -314,8 +314,8 @@ public class InternalApiController {
   @PostMapping("/company/batch-names")
   @Operation(summary = "批量查询公司 ID → 公司名映射（NameAssembler 富化用）")
   @RateLimit(resource = "userinfo.internal.batchCompanyNames", threshold = 200)
-  public BaseResponse<Map<String, String>> batchCompanyNames(
+  public YdszResponse<Map<String, String>> batchCompanyNames(
       @RequestBody @Valid @Size(max = 500) List<String> companyIds) {
-    return BaseResponse.success(companyService.batchNamesByIds(companyIds));
+    return YdszResponse.success(companyService.batchNamesByIds(companyIds));
   }
 }

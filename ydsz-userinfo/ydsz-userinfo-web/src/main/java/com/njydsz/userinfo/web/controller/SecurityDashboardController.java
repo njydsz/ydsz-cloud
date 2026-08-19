@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.domain.vo.ActiveUserVO;
 import com.njydsz.userinfo.domain.vo.AnomalySessionVO;
 import com.njydsz.userinfo.domain.vo.DeviceDistributionVO;
@@ -65,8 +65,8 @@ public class SecurityDashboardController {
   @GetMapping("/dashboard")
   @AuthApiPermission("admin:security:view")
   @Operation(summary = "获取仪表盘总览")
-  public BaseResponse<SecurityDashboardVO> getDashboard() {
-    return BaseResponse.success(securityDashboardService.getDashboard());
+  public YdszResponse<SecurityDashboardVO> getDashboard() {
+    return YdszResponse.success(securityDashboardService.getDashboard());
   }
 
   /**
@@ -79,7 +79,7 @@ public class SecurityDashboardController {
   @GetMapping("/login-success-rate")
   @AuthApiPermission("admin:security:view")
   @Operation(summary = "获取登录成功率趋势")
-  public BaseResponse<List<LoginSuccessRateVO>> getLoginSuccessRate(
+  public YdszResponse<List<LoginSuccessRateVO>> getLoginSuccessRate(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
     if (start == null) {
@@ -88,7 +88,7 @@ public class SecurityDashboardController {
     if (end == null) {
       end = LocalDate.now();
     }
-    return BaseResponse.success(securityDashboardService.getLoginSuccessRate(start, end));
+    return YdszResponse.success(securityDashboardService.getLoginSuccessRate(start, end));
   }
 
   /**
@@ -100,9 +100,9 @@ public class SecurityDashboardController {
   @GetMapping("/login-fail-distribution")
   @AuthApiPermission("admin:security:view")
   @Operation(summary = "获取登录失败原因分布")
-  public BaseResponse<List<LoginFailDistributionVO>> getLoginFailDistribution(
+  public YdszResponse<List<LoginFailDistributionVO>> getLoginFailDistribution(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-    return BaseResponse.success(securityDashboardService.getLoginFailDistribution(date));
+    return YdszResponse.success(securityDashboardService.getLoginFailDistribution(date));
   }
 
   /**
@@ -113,8 +113,8 @@ public class SecurityDashboardController {
   @GetMapping("/mfa-coverage")
   @AuthApiPermission("admin:security:view")
   @Operation(summary = "获取 MFA 覆盖率")
-  public BaseResponse<MfaCoverageVO> getMfaCoverage() {
-    return BaseResponse.success(securityDashboardService.getMfaCoverage());
+  public YdszResponse<MfaCoverageVO> getMfaCoverage() {
+    return YdszResponse.success(securityDashboardService.getMfaCoverage());
   }
 
   /**
@@ -125,8 +125,8 @@ public class SecurityDashboardController {
   @GetMapping("/risk-distribution")
   @AuthApiPermission("admin:security:view")
   @Operation(summary = "获取风险等级分布")
-  public BaseResponse<RiskLevelDistributionVO> getRiskLevelDistribution() {
-    return BaseResponse.success(securityDashboardService.getRiskLevelDistribution());
+  public YdszResponse<RiskLevelDistributionVO> getRiskLevelDistribution() {
+    return YdszResponse.success(securityDashboardService.getRiskLevelDistribution());
   }
 
   /**
@@ -138,9 +138,9 @@ public class SecurityDashboardController {
   @GetMapping("/recent-events")
   @AuthApiPermission("admin:security:view")
   @Operation(summary = "获取最近安全事件")
-  public BaseResponse<List<SecurityEventVO>> getRecentSecurityEvents(
+  public YdszResponse<List<SecurityEventVO>> getRecentSecurityEvents(
       @RequestParam(defaultValue = "20") int limit) {
-    return BaseResponse.success(securityDashboardService.getRecentSecurityEvents(limit));
+    return YdszResponse.success(securityDashboardService.getRecentSecurityEvents(limit));
   }
 
   /**
@@ -151,8 +151,8 @@ public class SecurityDashboardController {
   @GetMapping("/session-activity")
   @AuthApiPermission("admin:security:view")
   @Operation(summary = "获取会话活跃度概览")
-  public BaseResponse<SessionActivityVO> getSessionActivity() {
-    return BaseResponse.success(sessionActivityService.getActivityOverview());
+  public YdszResponse<SessionActivityVO> getSessionActivity() {
+    return YdszResponse.success(sessionActivityService.getActivityOverview());
   }
 
   /**
@@ -164,9 +164,9 @@ public class SecurityDashboardController {
   @GetMapping("/active-user-ranking")
   @AuthApiPermission("admin:security:view")
   @Operation(summary = "获取活跃用户排行")
-  public BaseResponse<List<ActiveUserVO>> getActiveUserRanking(
+  public YdszResponse<List<ActiveUserVO>> getActiveUserRanking(
       @RequestParam(defaultValue = "10") int limit) {
-    return BaseResponse.success(sessionActivityService.getActiveUserRanking(limit));
+    return YdszResponse.success(sessionActivityService.getActiveUserRanking(limit));
   }
 
   /**
@@ -179,7 +179,7 @@ public class SecurityDashboardController {
   @GetMapping("/session-trend")
   @AuthApiPermission("admin:security:view")
   @Operation(summary = "获取会话趋势")
-  public BaseResponse<List<SessionTrendVO>> getSessionTrend(
+  public YdszResponse<List<SessionTrendVO>> getSessionTrend(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
     if (start == null) {
@@ -188,7 +188,7 @@ public class SecurityDashboardController {
     if (end == null) {
       end = LocalDate.now();
     }
-    return BaseResponse.success(sessionActivityService.getSessionTrend(start, end));
+    return YdszResponse.success(sessionActivityService.getSessionTrend(start, end));
   }
 
   /**
@@ -199,8 +199,8 @@ public class SecurityDashboardController {
   @GetMapping("/device-distribution")
   @AuthApiPermission("admin:security:view")
   @Operation(summary = "获取设备分布")
-  public BaseResponse<List<DeviceDistributionVO>> getDeviceDistribution() {
-    return BaseResponse.success(sessionActivityService.getDeviceDistribution());
+  public YdszResponse<List<DeviceDistributionVO>> getDeviceDistribution() {
+    return YdszResponse.success(sessionActivityService.getDeviceDistribution());
   }
 
   /**
@@ -211,7 +211,7 @@ public class SecurityDashboardController {
   @GetMapping("/anomaly-sessions")
   @AuthApiPermission("admin:security:view")
   @Operation(summary = "检测异常会话")
-  public BaseResponse<List<AnomalySessionVO>> detectAnomalySessions() {
-    return BaseResponse.success(sessionActivityService.detectAnomalySessions());
+  public YdszResponse<List<AnomalySessionVO>> detectAnomalySessions() {
+    return YdszResponse.success(sessionActivityService.detectAnomalySessions());
   }
 }

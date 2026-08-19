@@ -26,7 +26,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.base.api.ApiVersion;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -129,7 +129,7 @@ public class FileController {
   @PostMapping("/upload")
   @Operation(summary = "上传文件", description = "支持单文件上传，自动创建版本记录")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-  public BaseResponse<FileNodeVO> upload(
+  public YdszResponse<FileNodeVO> upload(
       @RequestParam("file") MultipartFile file,
       @RequestParam(value = "parentId", required = false) String parentId,
       @RequestParam(value = "rename", required = false) String rename,
@@ -139,7 +139,7 @@ public class FileController {
     FileNodeVO result =
         fileApplicationService.upload(file, parentId, rename, versionRemark, userId);
     nextwikiMetrics.recordUpload();
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -160,13 +160,13 @@ public class FileController {
   @PostMapping("/folders")
   @Operation(summary = "创建目录")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FOLDER_CREATE)
-  public BaseResponse<FileNodeVO> createFolder(
+  public YdszResponse<FileNodeVO> createFolder(
       @Valid @RequestBody NextwikiDTOs.CreateFolderRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     FileNodeVO result =
         fileApplicationService.createFolder(request.getParentId(), request.getName(), userId);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -215,13 +215,13 @@ public class FileController {
   @PutMapping("/{nodeId}/move")
   @Operation(summary = "移动文件/文件夹")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
-  public BaseResponse<FileNodeVO> move(
+  public YdszResponse<FileNodeVO> move(
       @PathVariable String nodeId,
       @Valid @RequestBody NextwikiDTOs.MoveRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     FileNodeVO result = fileApplicationService.move(nodeId, request.getTargetParentId(), userId);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -239,13 +239,13 @@ public class FileController {
   @PutMapping("/{nodeId}/rename")
   @Operation(summary = "重命名文件/文件夹")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_RENAME)
-  public BaseResponse<FileNodeVO> rename(
+  public YdszResponse<FileNodeVO> rename(
       @PathVariable String nodeId,
       @Valid @RequestBody NextwikiDTOs.RenameRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     FileNodeVO result = fileApplicationService.rename(nodeId, request.getNewName(), userId);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -263,12 +263,12 @@ public class FileController {
   @DeleteMapping("/{nodeId}")
   @Operation(summary = "删除文件/文件夹（移入回收站）")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
-  public BaseResponse<Void> delete(
+  public YdszResponse<Void> delete(
       @PathVariable String nodeId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     fileApplicationService.delete(nodeId, userId);
     nextwikiMetrics.recordDelete();
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -290,7 +290,7 @@ public class FileController {
   @PostMapping("/{nodeId}/copy")
   @Operation(summary = "复制文件或文件夹", description = "自动识别节点类型，文件直接复制，文件夹递归复制全部子节点")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_COPY)
-  public BaseResponse<FileNodeVO> copy(
+  public YdszResponse<FileNodeVO> copy(
       @PathVariable String nodeId,
       @RequestParam("targetParentId") String targetParentId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
@@ -302,7 +302,7 @@ public class FileController {
     } else {
       result = fileApplicationService.copy(nodeId, targetParentId, userId);
     }
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -332,12 +332,12 @@ public class FileController {
   @PutMapping("/sort")
   @Operation(summary = "批量排序", description = "拖拽排序后批量更新节点排序值")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_RENAME)
-  public BaseResponse<Integer> batchSort(
+  public YdszResponse<Integer> batchSort(
       @Valid @RequestBody NextwikiDTOs.BatchSortRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     int updated = fileApplicationService.batchSort(request.getParentId(), request.getItems(), userId);
     log.info("[FileController] 批量排序: parentId={}, count={}, userId={}", request.getParentId(), updated, userId);
-    return BaseResponse.success(updated);
+    return YdszResponse.success(updated);
   }
 }

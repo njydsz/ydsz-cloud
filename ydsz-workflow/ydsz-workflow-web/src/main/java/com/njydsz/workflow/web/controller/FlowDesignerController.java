@@ -22,7 +22,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -88,8 +88,8 @@ public class FlowDesignerController {
   @GetMapping("/definition/{id}/designer")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
   @Operation(summary = "获取设计器数据（完整流程图：节点+边+坐标）")
-  public BaseResponse<Map<String, Object>> getDesignerData(@PathVariable String id) {
-    return BaseResponse.success(definitionService.getDesignerData(id));
+  public YdszResponse<Map<String, Object>> getDesignerData(@PathVariable String id) {
+    return YdszResponse.success(definitionService.getDesignerData(id));
   }
 
   /**
@@ -112,11 +112,11 @@ public class FlowDesignerController {
       content = "'saveDesignerData'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
   @Operation(summary = "批量保存设计器数据（节点坐标+属性）")
-  public BaseResponse<Void> saveDesignerData(
+  public YdszResponse<Void> saveDesignerData(
       @PathVariable String id, @Valid @RequestBody FlowDesignerDataDTO dto) {
     Map<String, Object> designerData = YdszJson.parseMap(dto.getDesignerData());
     definitionService.saveDesignerData(id, designerData);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   // ============== P2-4: 设计器协同编辑锁定 API ==============
@@ -148,9 +148,9 @@ public class FlowDesignerController {
       content = "'lockDefinition'")
   @Operation(summary = "加锁流程定义（设计器协同编辑）")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-  public BaseResponse<Boolean> lockDefinition(@PathVariable String id) {
+  public YdszResponse<Boolean> lockDefinition(@PathVariable String id) {
     String userId = AuthContextUtils.getUserId();
-    return BaseResponse.success(definitionService.lockDefinition(id, userId));
+    return YdszResponse.success(definitionService.lockDefinition(id, userId));
   }
 
   /**
@@ -171,9 +171,9 @@ public class FlowDesignerController {
       content = "'unlockDefinition'")
   @Operation(summary = "解锁流程定义（设计器协同编辑）")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-  public BaseResponse<Boolean> unlockDefinition(@PathVariable String id) {
+  public YdszResponse<Boolean> unlockDefinition(@PathVariable String id) {
     String userId = AuthContextUtils.getUserId();
-    return BaseResponse.success(definitionService.unlockDefinition(id, userId));
+    return YdszResponse.success(definitionService.unlockDefinition(id, userId));
   }
 
   /**
@@ -194,8 +194,8 @@ public class FlowDesignerController {
   @GetMapping("/definition/{id}/lockStatus")
   @Operation(summary = "查询流程定义锁定状态")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-  public BaseResponse<Map<String, Object>> getLockStatus(@PathVariable String id) {
-    return BaseResponse.success(definitionService.getLockStatus(id));
+  public YdszResponse<Map<String, Object>> getLockStatus(@PathVariable String id) {
+    return YdszResponse.success(definitionService.getLockStatus(id));
   }
 
   // ============== GAP-V2-02: 表单引擎字段配置 ==============
@@ -210,9 +210,9 @@ public class FlowDesignerController {
   @GetMapping("/definition/{id}/formConfig/{nodeCode}")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
   @Operation(summary = "获取节点表单字段配置")
-  public BaseResponse<String> getFormConfig(
+  public YdszResponse<String> getFormConfig(
       @PathVariable String id, @PathVariable String nodeCode) {
-    return BaseResponse.success(definitionService.getFormConfig(id, nodeCode));
+    return YdszResponse.success(definitionService.getFormConfig(id, nodeCode));
   }
 
   /**
@@ -233,12 +233,12 @@ public class FlowDesignerController {
       content = "'saveFormConfig'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
   @Operation(summary = "保存节点表单字段配置")
-  public BaseResponse<Void> saveFormConfig(
+  public YdszResponse<Void> saveFormConfig(
       @PathVariable String id,
       @PathVariable String nodeCode,
       @RequestBody String formFieldsConfig) {
     definitionService.saveFormConfig(id, nodeCode, formFieldsConfig);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   // ============== P1-2: 节点 SLA 配置 ==============
@@ -253,8 +253,8 @@ public class FlowDesignerController {
   @GetMapping("/definition/{id}/slaConfig/{nodeCode}")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
   @Operation(summary = "获取节点 SLA 配置")
-  public BaseResponse<String> getSlaConfig(@PathVariable String id, @PathVariable String nodeCode) {
-    return BaseResponse.success(definitionService.getSlaConfig(id, nodeCode));
+  public YdszResponse<String> getSlaConfig(@PathVariable String id, @PathVariable String nodeCode) {
+    return YdszResponse.success(definitionService.getSlaConfig(id, nodeCode));
   }
 
   /**
@@ -275,13 +275,13 @@ public class FlowDesignerController {
       content = "'saveSlaConfig'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
   @Operation(summary = "保存节点 SLA 配置")
-  public BaseResponse<Void> saveSlaConfig(
+  public YdszResponse<Void> saveSlaConfig(
       @PathVariable String id,
       @PathVariable String nodeCode,
       @RequestBody Map<String, Object> slaConfig) {
     String json = slaConfig == null ? null : YdszJson.toJson(slaConfig);
     definitionService.saveSlaConfig(id, nodeCode, json);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   // ============== GAP-P2: 流程模板库 ==============
@@ -294,9 +294,9 @@ public class FlowDesignerController {
    */
   @GetMapping("/template/list")
   @Operation(summary = "列出所有可用模板")
-  public BaseResponse<List<Map<String, Object>>> listTemplates(
+  public YdszResponse<List<Map<String, Object>>> listTemplates(
       @RequestParam(required = false) String category) {
-    return BaseResponse.success(templateService.listTemplates(category));
+    return YdszResponse.success(templateService.listTemplates(category));
   }
 
   /**
@@ -315,9 +315,9 @@ public class FlowDesignerController {
       content = "'importTemplate'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TEMPLATE_IMPORT)
   @Operation(summary = "一键导入模板")
-  public BaseResponse<String> importTemplate(
+  public YdszResponse<String> importTemplate(
       @PathVariable String templateCode, @RequestParam(required = false) String flowName) {
-    return BaseResponse.success(templateService.importTemplate(templateCode, flowName));
+    return YdszResponse.success(templateService.importTemplate(templateCode, flowName));
   }
 
   /**
@@ -328,7 +328,7 @@ public class FlowDesignerController {
    */
   @GetMapping("/template/{templateCode}")
   @Operation(summary = "获取模板详情（含 BPMN XML）")
-  public BaseResponse<Map<String, Object>> getTemplate(@PathVariable String templateCode) {
-    return BaseResponse.success(templateService.getTemplate(templateCode));
+  public YdszResponse<Map<String, Object>> getTemplate(@PathVariable String templateCode) {
+    return YdszResponse.success(templateService.getTemplate(templateCode));
   }
 }

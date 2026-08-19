@@ -21,7 +21,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
@@ -89,7 +89,7 @@ public class BpmnXmlParser {
   public BpmnModel parse(String bpmnXml) {
     if (bpmnXml == null || bpmnXml.isBlank()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_30c8dc03")
           .build();
     }
@@ -97,7 +97,7 @@ public class BpmnXmlParser {
     Element root = doc.getDocumentElement();
     if (!"definitions".equalsIgnoreCase(root.getLocalName())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_a2ed268d")
           .params(root.getLocalName())
           .build();
@@ -107,7 +107,7 @@ public class BpmnXmlParser {
     Element process = bpmnElementHelper.findChild(root, "process");
     if (process == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_d7f0848f")
           .build();
     }
@@ -160,7 +160,7 @@ public class BpmnXmlParser {
     // 校验：节点编码唯一
     if (nodeByCode.size() != nodes.size()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_d60cd229")
           .build();
     }
@@ -169,7 +169,7 @@ public class BpmnXmlParser {
         nodes.stream().anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
     if (!hasStart) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_a2f0efff")
           .build();
     }
@@ -220,7 +220,7 @@ public class BpmnXmlParser {
       // XML 格式错误：不可重试（需修改 XML 内容）
       log.error("[BpmnParser] XML 格式错误: {}", e.getMessage());
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_3db1015b")
           .params("XML 格式错误: " + e.getMessage())
           .build();
@@ -228,7 +228,7 @@ public class BpmnXmlParser {
       // 解析器配置错误：不可重试（JVM 环境问题）
       log.error("[BpmnParser] 解析器配置异常: {}", e.getMessage(), e);
       throw SysException.builder()
-          .resultCode(BaseResultCode.SYSTEM_ERROR)
+          .resultCode(YdszResultCode.SYSTEM_ERROR)
           .key("error.workflow.msg_3db1015b")
           .params("解析器配置异常: " + e.getMessage())
           .build();
@@ -236,7 +236,7 @@ public class BpmnXmlParser {
       // IO 异常：理论上 StringReader 不会触发，作为兜底
       log.error("[BpmnParser] IO 异常: {}", e.getMessage(), e);
       throw SysException.builder()
-          .resultCode(BaseResultCode.SYSTEM_ERROR)
+          .resultCode(YdszResultCode.SYSTEM_ERROR)
           .key("error.workflow.msg_3db1015b")
           .params("读取异常: " + e.getMessage())
           .build();
@@ -244,7 +244,7 @@ public class BpmnXmlParser {
       // 兜底：未知异常
       log.error("[BpmnParser] 解析失败(未知): {}", e.getMessage(), e);
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_3db1015b")
           .params(e.getMessage())
           .build();

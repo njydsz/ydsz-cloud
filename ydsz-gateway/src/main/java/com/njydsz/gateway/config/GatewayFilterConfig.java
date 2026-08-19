@@ -26,7 +26,7 @@ import org.springframework.web.server.WebExceptionHandler;
 import reactor.core.publisher.Mono;
 
 import com.njydsz.common.auth.exception.PermissionDeniedException;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
@@ -39,7 +39,7 @@ import com.njydsz.common.json.YdszJson;
  *
  * <ul>
  *   <li>{@link CorsWebFilter}：跨域预检与响应头注入
- *   <li>{@link WebExceptionHandler}：统一异常 → RFC 7807 / BaseResponse JSON 映射
+ *   <li>{@link WebExceptionHandler}：统一异常 → RFC 7807 / YdszResponse JSON 映射
  * </ul>
  *
  * @since 1.0.0
@@ -144,7 +144,7 @@ public class GatewayFilterConfig {
   /**
    * 网关全局异常处理器。
    *
-   * <p>实现 {@link WebExceptionHandler} 接口， 拦截所有网关层异常并返回统一 {@link BaseResponse} JSON。
+   * <p>实现 {@link WebExceptionHandler} 接口， 拦截所有网关层异常并返回统一 {@link YdszResponse} JSON。
    */
   @Slf4j
   static class GatewayExceptionHandler implements WebExceptionHandler {
@@ -180,7 +180,7 @@ public class GatewayFilterConfig {
       // Accept 协商 — 判断客户端是否请求 problem+json
       boolean preferProblemJson = prefersProblemJson(exchange.getRequest());
 
-      BaseResponse<Void> body =
+      YdszResponse<Void> body =
           buildErrorResponse(bizCode, message, traceId, httpStatus, errorCode, preferProblemJson);
 
       log.warn(
@@ -221,17 +221,17 @@ public class GatewayFilterConfig {
      * @param preferProblemJson 是否优先返回 ProblemDetail 格式
      * @return 错误响应体
      */
-    private BaseResponse<Void> buildErrorResponse(
+    private YdszResponse<Void> buildErrorResponse(
         int bizCode,
         String message,
         String traceId,
         HttpStatus httpStatus,
         GatewayErrorCode errorCode,
         boolean preferProblemJson) {
-      BaseResponse<Void> body;
+      YdszResponse<Void> body;
       if (preferProblemJson) {
         // RFC 7807 ProblemDetail 格式
-        body = BaseResponse.error(String.valueOf(bizCode), message);
+        body = YdszResponse.error(String.valueOf(bizCode), message);
         body.putExtension(
             "type",
             errorCode.getHelpUrl() != null
@@ -243,7 +243,7 @@ public class GatewayFilterConfig {
         body.putExtension("timestamp", OffsetDateTime.now().toString());
       } else {
         // ydsz 标准格式（向后兼容）
-        body = BaseResponse.error(String.valueOf(bizCode), message);
+        body = YdszResponse.error(String.valueOf(bizCode), message);
         body.putExtension("help", errorCode.getHelpUrl());
         body.putExtension(
             "type",

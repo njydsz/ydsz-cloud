@@ -191,7 +191,7 @@ public class FeignConfiguration {
   /**
    * 创建 Feign 响应解码器。
    *
-   * <p>使用 {@link ResponseUnwrapDecoder} 包装 {@link JsonDecoder}， 自动解包 {@code BaseResponse<T>}
+   * <p>使用 {@link ResponseUnwrapDecoder} 包装 {@link JsonDecoder}， 自动解包 {@code YdszResponse<T>}
    * 响应，直接返回内部 data 字段。
    *
    * @return ResponseUnwrapDecoder 实例

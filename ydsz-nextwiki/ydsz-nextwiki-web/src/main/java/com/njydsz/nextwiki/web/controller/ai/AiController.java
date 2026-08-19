@@ -20,7 +20,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.base.api.ApiVersion;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
@@ -69,14 +69,14 @@ public class AiController {
   @PostMapping("/summary")
   @Operation(summary = "生成文件智能摘要")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_AI_SUMMARY)
-  public BaseResponse<NextwikiDTOs.SummaryResult> generateSummary(
+  public YdszResponse<NextwikiDTOs.SummaryResult> generateSummary(
       @Valid @RequestBody NextwikiDTOs.GenerateSummaryRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     NextwikiDTOs.SummaryResult result =
         aiSummaryService.generateSummary(
             request.getFileNodeId(), request.getSummaryType(), request.getMaxLength());
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -87,11 +87,11 @@ public class AiController {
   @GetMapping("/status")
   @Operation(summary = "查询 AI 服务状态")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_AI_STATUS)
-  public BaseResponse<AiStatusResponse> getStatus() {
+  public YdszResponse<AiStatusResponse> getStatus() {
     AiStatusResponse response = new AiStatusResponse();
     response.setAvailable(aiSummaryService.isAvailable());
     response.setSupportedFileTypes(aiSummaryService.getSupportedFileTypes());
-    return BaseResponse.success(response);
+    return YdszResponse.success(response);
   }
 
   /** AI 服务状态响应。 */

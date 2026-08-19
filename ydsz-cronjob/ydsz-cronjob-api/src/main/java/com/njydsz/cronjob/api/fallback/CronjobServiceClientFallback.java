@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.cronjob.api.client.CronjobServiceClient;
 
@@ -44,9 +44,9 @@ public class CronjobServiceClientFallback implements FallbackFactory<CronjobServ
        * @return 返回统一错误码，表示服务不可用
        */
       @Override
-      public BaseResponse<String> trigger(String jobId) {
+      public YdszResponse<String> trigger(String jobId) {
         log.warn("[CronjobServiceClient] trigger 降级: jobId={}, reason=cronjob服务不可用", jobId);
-        return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
       }
 
       /**
@@ -57,12 +57,12 @@ public class CronjobServiceClientFallback implements FallbackFactory<CronjobServ
        * @return 返回统一错误码，表示服务不可用
        */
       @Override
-      public BaseResponse<String> trigger(String jobId, boolean holdLock) {
+      public YdszResponse<String> trigger(String jobId, boolean holdLock) {
         log.warn(
             "[CronjobServiceClient] trigger 降级: jobId={}, holdLock={}, reason=cronjob服务不可用",
             jobId,
             holdLock);
-        return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
       }
 
       /**
@@ -72,9 +72,9 @@ public class CronjobServiceClientFallback implements FallbackFactory<CronjobServ
        * @return 返回统一错误码，表示服务不可用
        */
       @Override
-      public BaseResponse<Map<String, Object>> getJobInfo(String jobId) {
+      public YdszResponse<Map<String, Object>> getJobInfo(String jobId) {
         log.warn("[CronjobServiceClient] getJobInfo 降级: jobId={}, reason=cronjob服务不可用", jobId);
-        return BaseResponse.error(
+        return YdszResponse.error(
             FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
       }
 
@@ -85,9 +85,9 @@ public class CronjobServiceClientFallback implements FallbackFactory<CronjobServ
        * @return 返回统一错误码，表示服务不可用
        */
       @Override
-      public BaseResponse<Void> pauseJob(String jobId) {
+      public YdszResponse<Void> pauseJob(String jobId) {
         log.warn("[CronjobServiceClient] pauseJob 降级: jobId={}, reason=cronjob服务不可用", jobId);
-        return BaseResponse.error(
+        return YdszResponse.error(
             FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
       }
 
@@ -98,9 +98,9 @@ public class CronjobServiceClientFallback implements FallbackFactory<CronjobServ
        * @return 返回统一错误码，表示服务不可用
        */
       @Override
-      public BaseResponse<Void> resumeJob(String jobId) {
+      public YdszResponse<Void> resumeJob(String jobId) {
         log.warn("[CronjobServiceClient] resumeJob 降级: jobId={}, reason=cronjob服务不可用", jobId);
-        return BaseResponse.error(
+        return YdszResponse.error(
             FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
       }
     };

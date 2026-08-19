@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.dto.RuleDependencyAddDTO;
@@ -66,7 +66,7 @@ public class RuleDependencyController {
       content = "'addDependency'")
   @RateLimit(resource = "literule.rule_dependency.addDependency", threshold = 50)
   @PostMapping("/{ruleCode}/dependencies")
-  public BaseResponse<RuleDependencyVO> addDependency(
+  public YdszResponse<RuleDependencyVO> addDependency(
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleDependencyAddDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -74,7 +74,7 @@ public class RuleDependencyController {
     String depType = dto.getDependencyType() == null ? "EXECUTE" : dto.getDependencyType();
     Boolean cascade = dto.getCascadeOnDisable() == null ? false : dto.getCascadeOnDisable();
     String description = dto.getDescription();
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.entityToVO(
             ruleDependencyProvider.add(
                 ruleCode, dependsOn, depType, cascade, description, operator)));
@@ -89,32 +89,32 @@ public class RuleDependencyController {
       content = "'removeDependency'")
   @RateLimit(resource = "literule.rule_dependency.removeDependency", threshold = 50)
   @DeleteMapping("/{ruleCode}/dependencies/{dependsOnRuleCode}")
-  public BaseResponse<Void> removeDependency(
+  public YdszResponse<Void> removeDependency(
       @PathVariable String ruleCode, @PathVariable String dependsOnRuleCode) {
     ruleDependencyProvider.remove(ruleCode, dependsOnRuleCode);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /** 查询规则的依赖（正向：依赖了哪些） */
   @GetMapping("/{ruleCode}/dependencies")
-  public BaseResponse<List<RuleDependencyVO>> listDependencies(@PathVariable String ruleCode) {
-    return BaseResponse.success(
+  public YdszResponse<List<RuleDependencyVO>> listDependencies(@PathVariable String ruleCode) {
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.ruleDependencyListToVO(
             ruleDependencyProvider.listDependencies(ruleCode)));
   }
 
   /** 查询被依赖（反向：被哪些规则依赖） */
   @GetMapping("/{ruleCode}/dependents")
-  public BaseResponse<List<RuleDependencyVO>> listDependents(@PathVariable String ruleCode) {
-    return BaseResponse.success(
+  public YdszResponse<List<RuleDependencyVO>> listDependents(@PathVariable String ruleCode) {
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.ruleDependencyListToVO(
             ruleDependencyProvider.listDependents(ruleCode)));
   }
 
   /** 查询级联禁用影响（disable ruleCode 时，需要级联禁用的规则列表） */
   @GetMapping("/{ruleCode}/cascading-disable")
-  public BaseResponse<List<StringVO>> cascadingDisable(@PathVariable String ruleCode) {
-    return BaseResponse.success(
+  public YdszResponse<List<StringVO>> cascadingDisable(@PathVariable String ruleCode) {
+    return YdszResponse.success(
         ruleDependencyProvider.cascadingDisable(ruleCode).stream().map(StringVO::new).toList());
   }
 }

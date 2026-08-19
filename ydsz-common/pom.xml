@@ -776,7 +776,6 @@
                                         <!-- L1 禁止反向依赖 L6 应用基座层 -->
                                         <exclude>com.njydsz:ydsz-common-base:*:*:compile</exclude>
                                         <exclude>com.njydsz:ydsz-common-web:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-app:*:*:compile</exclude>
                                     </excludes>
                                     <searchTransitive>true</searchTransitive>
                                     <message>

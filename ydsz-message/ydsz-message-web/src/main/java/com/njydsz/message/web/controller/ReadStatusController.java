@@ -19,7 +19,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -95,8 +95,8 @@ public class ReadStatusController {
       content = "'markRead'")
   @RateLimit(resource = "message.readstatus.markRead", threshold = 50)
   @PostMapping("/read/{msgId}")
-  public BaseResponse<Boolean> markRead(@PathVariable String msgId, @RequestParam String userId) {
-    return BaseResponse.success(readStatusSyncService.markRead(msgId, userId));
+  public YdszResponse<Boolean> markRead(@PathVariable String msgId, @RequestParam String userId) {
+    return YdszResponse.success(readStatusSyncService.markRead(msgId, userId));
   }
 
   /**
@@ -116,9 +116,9 @@ public class ReadStatusController {
       content = "'markReadBatch'")
   @RateLimit(resource = "message.readstatus.markReadBatch", threshold = 50)
   @PostMapping("/readBatch")
-  public BaseResponse<Integer> markReadBatch(
+  public YdszResponse<Integer> markReadBatch(
       @Valid @RequestBody List<String> msgIds, @RequestParam String userId) {
-    return BaseResponse.success(readStatusSyncService.markReadBatch(msgIds, userId));
+    return YdszResponse.success(readStatusSyncService.markReadBatch(msgIds, userId));
   }
 
   /**
@@ -138,9 +138,9 @@ public class ReadStatusController {
       content = "'markNotificationRead'")
   @RateLimit(resource = "message.readstatus.markNotificationRead", threshold = 50)
   @PostMapping("/notification/{notificationId}")
-  public BaseResponse<Boolean> markNotificationRead(
+  public YdszResponse<Boolean> markNotificationRead(
       @PathVariable String notificationId, @RequestParam String userId) {
-    return BaseResponse.success(readStatusSyncService.markNotificationRead(notificationId, userId));
+    return YdszResponse.success(readStatusSyncService.markNotificationRead(notificationId, userId));
   }
 
   /**
@@ -161,9 +161,9 @@ public class ReadStatusController {
       action = AuditAction.UPDATE,
       content = "'markAllNotificationsRead'")
   @PostMapping("/notification/readAll")
-  public BaseResponse<Integer> markAllNotificationsRead(
+  public YdszResponse<Integer> markAllNotificationsRead(
       @RequestParam String userId, @RequestParam(required = false) String bizType) {
-    return BaseResponse.success(readStatusSyncService.markAllNotificationsRead(userId, bizType));
+    return YdszResponse.success(readStatusSyncService.markAllNotificationsRead(userId, bizType));
   }
 
   /**
@@ -176,11 +176,11 @@ public class ReadStatusController {
   @Operation(summary = "查询用户未读消息数量")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
   @GetMapping("/unreadCount")
-  public BaseResponse<Map<String, Long>> getUnreadCount(
+  public YdszResponse<Map<String, Long>> getUnreadCount(
       @RequestParam String userId, @RequestParam(required = false) String channel) {
     long total = readStatusSyncService.getUnreadCount(userId);
     long byChannel =
         channel != null ? readStatusSyncService.getUnreadCountByChannel(userId, channel) : total;
-    return BaseResponse.success(Map.of("total", total, "byChannel", byChannel));
+    return YdszResponse.success(Map.of("total", total, "byChannel", byChannel));
   }
 }

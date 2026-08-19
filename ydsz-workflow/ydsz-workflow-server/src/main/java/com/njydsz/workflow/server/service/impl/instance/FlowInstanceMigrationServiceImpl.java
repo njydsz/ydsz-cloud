@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
@@ -144,7 +144,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
   public List<String> findRunningInstances(String definitionId, String tenantId) {
     if (definitionId == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("definitionId 不能为空")
           .build();
     }
@@ -166,7 +166,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
   public Map<String, String> autoMapNodes(Long sourceDefId, Long targetDefId) {
     if (sourceDefId == null || targetDefId == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("sourceDefId/targetDefId 不能为空")
           .build();
     }
@@ -217,13 +217,13 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     // 1. 参数校验
     if (dto == null || dto.getSourceDefinitionId() == null || dto.getTargetDefinitionId() == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("sourceDefinitionId / targetDefinitionId 不能为空")
           .build();
     }
     if (Objects.equals(dto.getSourceDefinitionId(), dto.getTargetDefinitionId())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("源定义与目标定义不能相同")
           .build();
     }
@@ -241,7 +241,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     FlowDefinitionDO sourceDef = definitionMapper.selectById(sourceDefId);
     if (sourceDef == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("源流程定义不存在: " + sourceDefId)
           .build();
     }
@@ -249,13 +249,13 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     FlowDefinitionDO targetDef = definitionMapper.selectById(targetDefId);
     if (targetDef == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("目标流程定义不存在: " + targetDefId)
           .build();
     }
     if (!Objects.equals(sourceDef.getFlowCode(), targetDef.getFlowCode())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message(
               "源定义与目标定义 flowCode 不一致: source="
                   + sourceDef.getFlowCode()

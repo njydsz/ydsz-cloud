@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 
@@ -109,7 +109,7 @@ public class TemplateVariableValidator {
 
     if (!errors.isEmpty()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("模板变量校验失败[" + templateCode + "]: " + String.join("; ", errors))
           .build();
     }

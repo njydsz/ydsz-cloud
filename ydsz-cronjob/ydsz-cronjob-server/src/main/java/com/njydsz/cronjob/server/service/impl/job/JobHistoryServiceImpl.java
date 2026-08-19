@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.cronjob.domain.entity.job.Job;
@@ -78,7 +78,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
   public JobHistory saveHistory(Job job, String changedBy) {
     if (job == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_history_job_required")
           .build();
     }
@@ -164,13 +164,13 @@ public class JobHistoryServiceImpl implements JobHistoryService {
   public Job rollback(String jobId, Integer version) {
     if (!StringUtils.hasText(jobId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_history_job_id_required")
           .build();
     }
     if (version == null || version < 1) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_history_version_invalid")
           .build();
     }
@@ -178,7 +178,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     JobHistory targetHistory = jobHistoryRepository.selectByVersion(jobId, version);
     if (targetHistory == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("error.cronjob.msg_history_version_not_found")
           .build();
     }
@@ -188,7 +188,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     Job currentJob = jobRepository.selectById(jobId);
     if (currentJob == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("error.cronjob.msg_c0d8369f")
           .build();
     }

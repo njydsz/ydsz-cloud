@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -83,8 +83,8 @@ public class DictController {
    */
   @Operation(summary = "按 ID 查询")
   @GetMapping("/{id}")
-  public BaseResponse<DictTypeVO> getById(@PathVariable String id) {
-    return BaseResponse.success(dictService.getById(id));
+  public YdszResponse<DictTypeVO> getById(@PathVariable String id) {
+    return YdszResponse.success(dictService.getById(id));
   }
 
   /**
@@ -104,8 +104,8 @@ public class DictController {
   @RateLimit(resource = "system.dict.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PostMapping
-  public BaseResponse<String> save(@Valid @RequestBody DictTypeVO vo) {
-    return BaseResponse.success(dictService.save(vo));
+  public YdszResponse<String> save(@Valid @RequestBody DictTypeVO vo) {
+    return YdszResponse.success(dictService.save(vo));
   }
 
   /**
@@ -125,8 +125,8 @@ public class DictController {
   @RateLimit(resource = "system.dict.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PutMapping
-  public BaseResponse<Boolean> update(@Valid @RequestBody DictTypeVO vo) {
-    return BaseResponse.success(dictService.updateById(vo));
+  public YdszResponse<Boolean> update(@Valid @RequestBody DictTypeVO vo) {
+    return YdszResponse.success(dictService.updateById(vo));
   }
 
   /**
@@ -146,8 +146,8 @@ public class DictController {
   @RateLimit(resource = "system.dict.remove", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
   @DeleteMapping("/{id}")
-  public BaseResponse<Boolean> remove(@PathVariable String id) {
-    return BaseResponse.success(dictService.removeById(id));
+  public YdszResponse<Boolean> remove(@PathVariable String id) {
+    return YdszResponse.success(dictService.removeById(id));
   }
 
   // ============================== 业务扩展端点 ==============================
@@ -161,7 +161,7 @@ public class DictController {
    */
   @Operation(summary = "查询全部字典类型")
   @GetMapping("/all")
-  public BaseResponse<List<DictTypeVO>> listAll() {
-    return BaseResponse.success(dictService.listAll());
+  public YdszResponse<List<DictTypeVO>> listAll() {
+    return YdszResponse.success(dictService.listAll());
   }
 }

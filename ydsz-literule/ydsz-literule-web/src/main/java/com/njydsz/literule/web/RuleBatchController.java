@@ -22,8 +22,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RuleDefinition;
@@ -88,20 +88,20 @@ public class RuleBatchController {
   @RateLimit(resource = "literule.rule_batch.deleteRule", threshold = 50)
   @DeleteMapping("/{ruleCode}")
   @AuthApiPermission(apiCodes = "execution:rule:delete")
-  public BaseResponse<Void> deleteRule(
+  public YdszResponse<Void> deleteRule(
       @PathVariable String ruleCode,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleDefinition def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
-      return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
     }
     RuleStatus current = parseStatusSafely(def.getStatus());
     if (current == null) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_INVALID, "规则状态非法: " + def.getStatus());
     }
     if (!current.canTransitionTo(RuleStatus.ARCHIVED)) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_INVALID,
           "当前状态 " + current.getDesc() + " 不允许删除（归档），仅 DRAFT/REVIEW/PUBLISHED/DISABLED 可删除");
     }
@@ -111,7 +111,7 @@ public class RuleBatchController {
     // 同步删除画布
     ruleChainGraphProvider.delete(ruleCode);
     log.info("[LiteRule] 规则已删除: ruleCode={}, operator={}", ruleCode, operator);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /** 安全解析规则状态，无效值返回 null 而非伪装成 PUBLISHED */
@@ -142,7 +142,7 @@ public class RuleBatchController {
   @RateLimit(resource = "literule.rule_batch.batchToggle", threshold = 50)
   @PostMapping("/batch-toggle")
   @AuthApiPermission(apiCodes = "execution:rule:toggle")
-  public BaseResponse<Map<String, Object>> batchToggle(
+  public YdszResponse<Map<String, Object>> batchToggle(
       @Valid @RequestBody RuleBatchToggleDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     List<String> ruleCodes = dto.getRuleCodes();
@@ -171,7 +171,7 @@ public class RuleBatchController {
     Map<String, Object> result = new LinkedHashMap<>();
     result.put("success", success);
     result.put("failed", failed);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -189,14 +189,14 @@ public class RuleBatchController {
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_batch.batchPriority", threshold = 50)
   @PostMapping("/batch-priority")
-  public BaseResponse<Map<String, Object>> batchPriority(
+  public YdszResponse<Map<String, Object>> batchPriority(
       @Valid @RequestBody RuleBatchPriorityDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     List<String> ruleCodes = dto.getRuleCodes();
     Integer delta = dto.getDelta();
     // @NotEmpty + @NotNull 已校验非空；delta==0 需保留手动校验（JSR-303 无原生非零约束）
     if (delta == 0) {
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "delta 不能为 0");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "delta 不能为 0");
     }
     int success = 0;
     List<String> failed = new ArrayList<>();
@@ -220,7 +220,7 @@ public class RuleBatchController {
     Map<String, Object> result = new LinkedHashMap<>();
     result.put("success", success);
     result.put("failed", failed);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -238,7 +238,7 @@ public class RuleBatchController {
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_batch.batchCategory", threshold = 50)
   @PostMapping("/batch-category")
-  public BaseResponse<Map<String, Object>> batchCategory(
+  public YdszResponse<Map<String, Object>> batchCategory(
       @Valid @RequestBody RuleBatchCategoryDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     List<String> ruleCodes = dto.getRuleCodes();
@@ -263,6 +263,6 @@ public class RuleBatchController {
     Map<String, Object> result = new LinkedHashMap<>();
     result.put("success", success);
     result.put("failed", failed);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 }

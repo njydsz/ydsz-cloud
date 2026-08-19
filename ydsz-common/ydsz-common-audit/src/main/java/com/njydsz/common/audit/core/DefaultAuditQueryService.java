@@ -16,7 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.audit.storage.TableNameResolver;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 
 /**
@@ -200,7 +200,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
   // ====================== Paginated query methods ======================
 
   @Override
-  public BaseResponse<List<AuditLog>> queryByTimeRange(
+  public YdszResponse<List<AuditLog>> queryByTimeRange(
       LocalDateTime start, LocalDateTime end, int page, int size) {
     try {
       SqlContext countCtx = new SqlContext();
@@ -223,7 +223,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
   }
 
   @Override
-  public BaseResponse<List<AuditLog>> queryByOperator(String operatorId, int page, int size) {
+  public YdszResponse<List<AuditLog>> queryByOperator(String operatorId, int page, int size) {
     if (operatorId == null || operatorId.isEmpty()) {
       return emptyPageResult(page, size);
     }
@@ -245,7 +245,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
   }
 
   @Override
-  public BaseResponse<List<AuditLog>> queryByAction(Integer action, int page, int size) {
+  public YdszResponse<List<AuditLog>> queryByAction(Integer action, int page, int size) {
     if (action == null) {
       return emptyPageResult(page, size);
     }
@@ -267,7 +267,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
   }
 
   @Override
-  public BaseResponse<List<AuditLog>> queryByEntityType(String entityType, int page, int size) {
+  public YdszResponse<List<AuditLog>> queryByEntityType(String entityType, int page, int size) {
     if (entityType == null || entityType.isEmpty()) {
       return emptyPageResult(page, size);
     }
@@ -563,7 +563,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
    * @param size 每页大小
    * @return 无记录的空分页结果
    */
-  private BaseResponse<List<AuditLog>> emptyPageResult(int page, int size) {
+  private YdszResponse<List<AuditLog>> emptyPageResult(int page, int size) {
     return PageResponse.empty((long) page, (long) size);
   }
 

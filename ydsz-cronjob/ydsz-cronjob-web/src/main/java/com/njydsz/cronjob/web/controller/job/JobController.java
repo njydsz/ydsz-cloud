@@ -29,7 +29,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -112,9 +112,9 @@ public class JobController {
       content = "'create'")
   @RateLimit(resource = "cronjob.job.create", threshold = 50)
   @PostMapping
-  public BaseResponse<String> create(@Valid @RequestBody JobPostDTO dto) {
+  public YdszResponse<String> create(@Valid @RequestBody JobPostDTO dto) {
     Job job = CronjobConverter.INSTANT.postDtoToEntity(dto);
-    return BaseResponse.success(jobService.create(job));
+    return YdszResponse.success(jobService.create(job));
   }
 
   /**
@@ -135,10 +135,10 @@ public class JobController {
       content = "'update'")
   @RateLimit(resource = "cronjob.job.update", threshold = 50)
   @PutMapping
-  public BaseResponse<Void> update(@Valid @RequestBody JobPutDTO dto) {
+  public YdszResponse<Void> update(@Valid @RequestBody JobPutDTO dto) {
     Job job = CronjobConverter.INSTANT.putDtoToEntity(dto);
     jobService.update(job);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -155,7 +155,7 @@ public class JobController {
    */
   @Operation(summary = "Cron 表达式校验 + 触发时间预览")
   @GetMapping("/cron/validate")
-  public BaseResponse<Map<String, Object>> validateCron(
+  public YdszResponse<Map<String, Object>> validateCron(
       @RequestParam String expr, @RequestParam(defaultValue = "5") int count) {
     Map<String, Object> result = new HashMap<>();
     try {
@@ -175,7 +175,7 @@ public class JobController {
       result.put("valid", false);
       result.put("error", e.getMessage());
     }
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -196,8 +196,8 @@ public class JobController {
       content = "'batchDelete'")
   @RateLimit(resource = "cronjob.job.batchDelete", threshold = 50)
   @PostMapping("/batch/delete")
-  public BaseResponse<BatchResult<String>> batchDelete(@RequestBody @Valid JobBatchDTO dto) {
-    return BaseResponse.success(jobService.batchDelete(dto.getJobIds()));
+  public YdszResponse<BatchResult<String>> batchDelete(@RequestBody @Valid JobBatchDTO dto) {
+    return YdszResponse.success(jobService.batchDelete(dto.getJobIds()));
   }
 
   /**
@@ -219,9 +219,9 @@ public class JobController {
       content = "'delete'")
   @RateLimit(resource = "cronjob.job.delete", threshold = 50)
   @DeleteMapping("/{id}")
-  public BaseResponse<Void> delete(@PathVariable String id) {
+  public YdszResponse<Void> delete(@PathVariable String id) {
     jobService.delete(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -242,9 +242,9 @@ public class JobController {
       content = "'pause'")
   @RateLimit(resource = "cronjob.job.pause", threshold = 50)
   @PostMapping("/{id}/pause")
-  public BaseResponse<Void> pause(@PathVariable String id) {
+  public YdszResponse<Void> pause(@PathVariable String id) {
     jobService.pause(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -265,9 +265,9 @@ public class JobController {
       content = "'resume'")
   @RateLimit(resource = "cronjob.job.resume", threshold = 50)
   @PostMapping("/{id}/resume")
-  public BaseResponse<Void> resume(@PathVariable String id) {
+  public YdszResponse<Void> resume(@PathVariable String id) {
     jobService.resume(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -302,9 +302,9 @@ public class JobController {
       action = AuditAction.CREATE,
       content = "'trigger'")
   @PostMapping("/{id}/trigger")
-  public BaseResponse<String> trigger(
+  public YdszResponse<String> trigger(
       @PathVariable String id, @RequestParam(defaultValue = "false") boolean holdLock) {
-    return BaseResponse.success(jobService.trigger(id, holdLock));
+    return YdszResponse.success(jobService.trigger(id, holdLock));
   }
 
   /**
@@ -325,8 +325,8 @@ public class JobController {
       content = "'batchPause'")
   @RateLimit(resource = "cronjob.job.batchPause", threshold = 50)
   @PostMapping("/batch/pause")
-  public BaseResponse<BatchResult<String>> batchPause(@RequestBody @Valid JobBatchDTO dto) {
-    return BaseResponse.success(jobService.batchPause(dto.getJobIds()));
+  public YdszResponse<BatchResult<String>> batchPause(@RequestBody @Valid JobBatchDTO dto) {
+    return YdszResponse.success(jobService.batchPause(dto.getJobIds()));
   }
 
   /**
@@ -347,8 +347,8 @@ public class JobController {
       content = "'batchResume'")
   @RateLimit(resource = "cronjob.job.batchResume", threshold = 50)
   @PostMapping("/batch/resume")
-  public BaseResponse<BatchResult<String>> batchResume(@RequestBody @Valid JobBatchDTO dto) {
-    return BaseResponse.success(jobService.batchResume(dto.getJobIds()));
+  public YdszResponse<BatchResult<String>> batchResume(@RequestBody @Valid JobBatchDTO dto) {
+    return YdszResponse.success(jobService.batchResume(dto.getJobIds()));
   }
 
   /**
@@ -370,8 +370,8 @@ public class JobController {
       content = "'batchTrigger'")
   @RateLimit(resource = "cronjob.job.batchTrigger", threshold = 50)
   @PostMapping("/batch/trigger")
-  public BaseResponse<BatchResult<String>> batchTrigger(@RequestBody @Valid JobBatchDTO dto) {
-    return BaseResponse.success(jobService.batchTrigger(dto.getJobIds()));
+  public YdszResponse<BatchResult<String>> batchTrigger(@RequestBody @Valid JobBatchDTO dto) {
+    return YdszResponse.success(jobService.batchTrigger(dto.getJobIds()));
   }
 
   /**
@@ -385,8 +385,8 @@ public class JobController {
    */
   @Operation(summary = "任务详情")
   @GetMapping("/{id}")
-  public BaseResponse<JobVO> getById(@PathVariable String id) {
-    return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobService.getById(id)));
+  public YdszResponse<JobVO> getById(@PathVariable String id) {
+    return YdszResponse.success(CronjobConverter.INSTANT.entityToVO(jobService.getById(id)));
   }
 
   /**
@@ -464,8 +464,8 @@ public class JobController {
       content = "'postmapping'")
   @RateLimit(resource = "cronjob.job.reload", threshold = 50)
   @PostMapping("/reload")
-  public BaseResponse<Map<String, Object>> reload() {
+  public YdszResponse<Map<String, Object>> reload() {
     jobService.loadOnStartup();
-    return BaseResponse.success(Map.of("message", "ok"));
+    return YdszResponse.success(Map.of("message", "ok"));
   }
 }

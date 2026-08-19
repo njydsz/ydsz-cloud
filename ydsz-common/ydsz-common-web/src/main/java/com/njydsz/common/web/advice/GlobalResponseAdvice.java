@@ -5,12 +5,12 @@ import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.njydsz.common.base.advice.BaseGlobalResponseAdvice;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 
 /**
  * Web 端全局响应包装
  *
- * <p>继承 {@link BaseGlobalResponseAdvice}，对 Controller 返回的字符串类型响应 进行统一封装为 {@link BaseResponse} 标准格式。
+ * <p>继承 {@link BaseGlobalResponseAdvice}，对 Controller 返回的字符串类型响应 进行统一封装为 {@link YdszResponse} 标准格式。
  *
  * <p><b>触发条件：</b>返回类型为 {@code String} 且未被 {@code @ResponseBody} 注解处理的情况。
  *
@@ -21,7 +21,7 @@ import com.njydsz.common.core.response.BaseResponse;
  *
  * @author ydsz-team
  * @see BaseGlobalResponseAdvice
- * @see BaseResponse
+ * @see YdszResponse
  * @since 1.0.0
  */
 @RestControllerAdvice
@@ -29,7 +29,7 @@ import com.njydsz.common.core.response.BaseResponse;
 public class GlobalResponseAdvice extends BaseGlobalResponseAdvice {
 
   @Override
-  protected BaseResponse<String> wrapStringBody(String body) {
-    return BaseResponse.success(body);
+  protected YdszResponse<String> wrapStringBody(String body) {
+    return YdszResponse.success(body);
   }
 }

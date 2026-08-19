@@ -23,7 +23,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -107,7 +107,7 @@ public class RagController {
       content = "'ingest'")
   @Idempotent(key = "ydsz:agent:RagController:ingest:lock", ttlSeconds = 5)
   @PostMapping("/ingest")
-  public BaseResponse<Map<String, Object>> ingest(@Valid @RequestBody DocumentIngestDTO request) {
+  public YdszResponse<Map<String, Object>> ingest(@Valid @RequestBody DocumentIngestDTO request) {
     LOG.info(
         "[RAG-API] 摄入文档: docId={}, title={}", request.getDocumentId(), request.getDocumentTitle());
     int chunkCount =
@@ -116,7 +116,7 @@ public class RagController {
             request.getContent(),
             request.getDocumentTitle(),
             request.getSource());
-    return BaseResponse.success(
+    return YdszResponse.success(
         Map.of(
             "documentId", request.getDocumentId(), "chunkCount", chunkCount, "status", "ingested"));
   }
@@ -143,7 +143,7 @@ public class RagController {
       action = AuditAction.QUERY,
       content = "'search'")
   @PostMapping("/search")
-  public BaseResponse<Map<String, Object>> search(@Valid @RequestBody RagQueryDTO request) {
+  public YdszResponse<Map<String, Object>> search(@Valid @RequestBody RagQueryDTO request) {
     // 参数默认值兜底：topK=5 / minScore=0.7 / includeContext=true
     int topK = request.getTopK() != null ? request.getTopK() : 5;
     double minScore = request.getMinScore() != null ? request.getMinScore() : 0.7;
@@ -156,7 +156,7 @@ public class RagController {
     // 3. 拼装上下文（可选）
     String context = includeContext ? ragService.buildContext(chunks) : null;
 
-    return BaseResponse.success(
+    return YdszResponse.success(
         Map.of(
             "query",
             request.getQuery(),
@@ -185,10 +185,10 @@ public class RagController {
   @Idempotent(key = "ydsz:agent:RagController:deleteDocument:lock", ttlSeconds = 5)
   @RateLimit(resource = "agent.rag.deleteDocument", threshold = 50)
   @DeleteMapping("/documents/{documentId}")
-  public BaseResponse<Void> deleteDocument(@PathVariable String documentId) {
+  public YdszResponse<Void> deleteDocument(@PathVariable String documentId) {
     LOG.info("[RAG-API] 删除文档索引: documentId={}", documentId);
     ingestionService.delete(documentId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -205,7 +205,7 @@ public class RagController {
       action = AuditAction.QUERY,
       content = "'stats'")
   @GetMapping("/stats")
-  public BaseResponse<DocumentIngestionService.VectorStoreStats> stats() {
-    return BaseResponse.success(ingestionService.getStats());
+  public YdszResponse<DocumentIngestionService.VectorStoreStats> stats() {
+    return YdszResponse.success(ingestionService.getStats());
   }
 }

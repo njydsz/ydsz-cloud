@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.constant.PageConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
@@ -193,7 +193,7 @@ public class FlowCcServiceImpl implements FlowCcService {
    * 分页查询「抄送我的」列表
    *
    * <p>支持按 {@code readStatus}（{@code UNREAD/READ}）、{@code flowCode} 过滤， 返回按时间倒序的抄送记录。结果不封装为 {@link
-   * BaseResponse}，由调用方组装分页信息。
+   * YdszResponse}，由调用方组装分页信息。
    *
    * @param tenantId 租户 ID
    * @param userId 当前用户 ID
@@ -243,10 +243,10 @@ public class FlowCcServiceImpl implements FlowCcService {
   }
 
   /**
-   * 分页查询「抄送我的」（封装为 {@link BaseResponse}）
+   * 分页查询「抄送我的」（封装为 {@link YdszResponse}）
    *
    * <p>与 {@link #pageMyCc} + {@link #countMyCc} 组合等价，本方法在服务层一次性完成 「分页查询 + 总数统计 + 异常兜底 +
-   * BaseResponse 封装」， 减少 Controller 层胶水代码。
+   * YdszResponse 封装」， 减少 Controller 层胶水代码。
    *
    * @param userId 当前用户 ID
    * @param readStatus 已读状态过滤（{@code UNREAD/READ}，可为 null）
@@ -258,7 +258,7 @@ public class FlowCcServiceImpl implements FlowCcService {
    */
   @Override
   @Transactional(readOnly = true)
-  public BaseResponse<List<FlowCcDO>> listCcByUser(
+  public YdszResponse<List<FlowCcDO>> listCcByUser(
       String userId,
       String readStatus,
       String flowCode,

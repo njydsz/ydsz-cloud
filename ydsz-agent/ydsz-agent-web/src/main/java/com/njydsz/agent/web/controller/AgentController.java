@@ -43,7 +43,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -132,7 +132,7 @@ public class AgentController {
   @RateLimit(resource = "agent.agent.execute", threshold = 50)
   @PostMapping("/execute")
   @Operation(summary = "同步执行 Agent", description = "等待完整响应后返回，适用于非实时对话场景")
-  public BaseResponse<ChatResponseDTO> execute(
+  public YdszResponse<ChatResponseDTO> execute(
       @Valid @RequestBody AgentExecutionRequestDTO request) {
     LOG.info(
         "[Agent-API] 执行请求: agentCode={}, stream={}", request.getAgentCode(), request.isStream());
@@ -140,7 +140,7 @@ public class AgentController {
     AgentExecutionRequest execReq = toExecutionRequest(request);
     try {
       ChatResponse response = agentFacade.execute(execReq);
-      return BaseResponse.success(toDTO(response));
+      return YdszResponse.success(toDTO(response));
     } catch (Exception e) {
       requestGuard.releaseIdempotent(request.getRequestId());
       throw e;
@@ -257,7 +257,7 @@ public class AgentController {
   @RateLimit(resource = "agent.chat.chat", threshold = 50)
   @PostMapping("/chat")
   @Operation(summary = "同步对话", description = "等待 LLM 返回完整响应后返回")
-  public BaseResponse<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
+  public YdszResponse<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
     requestGuard.check(request.getRequestId(), null);
     try {
       ChatResponse response;
@@ -279,7 +279,7 @@ public class AgentController {
                 request.getConversationId(), request.getMessage(), request.getSystemPrompt());
       }
       ChatResponseDTO dto = toDTO(response);
-      return BaseResponse.success(dto);
+      return YdszResponse.success(dto);
     } catch (Exception e) {
       requestGuard.releaseIdempotent(request.getRequestId());
       throw e;
@@ -398,7 +398,7 @@ public class AgentController {
   @RateLimit(resource = "agent.chat.batch", threshold = 10)
   @PostMapping("/chat/batch")
   @Operation(summary = "批量对话（并行）", description = "并行处理多条对话请求，单条失败不影响其他条目")
-  public BaseResponse<BatchChatResponseDTO> batchChat(
+  public YdszResponse<BatchChatResponseDTO> batchChat(
       @Valid @RequestBody BatchChatRequestDTO request) {
     LOG.info("[Batch-API] 批量对话请求: itemsCount={}", request.getItems().size());
     requestGuard.check(request.getRequestId(), null);
@@ -419,7 +419,7 @@ public class AgentController {
                 dto.getSystemPrompt()));
       }
       BatchChatResult result = agentFacade.batchChat(facadeItems);
-      return BaseResponse.success(toBatchDTO(result));
+      return YdszResponse.success(toBatchDTO(result));
     } catch (Exception e) {
       requestGuard.releaseIdempotent(request.getRequestId());
       throw e;
@@ -440,7 +440,7 @@ public class AgentController {
       content = "'history: ' + #conversationId")
   @GetMapping("/history")
   @Operation(summary = "获取对话历史")
-  public BaseResponse<List<Map<String, Object>>> history(@RequestParam String conversationId) {
+  public YdszResponse<List<Map<String, Object>>> history(@RequestParam String conversationId) {
     List<ChatMessage> messages = agentFacade.getHistory(conversationId);
     List<Map<String, Object>> result = new ArrayList<>();
     for (ChatMessage msg : messages) {
@@ -455,7 +455,7 @@ public class AgentController {
               "createdAt",
               msg.getCreatedAt() != null ? msg.getCreatedAt().toString() : ""));
     }
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -474,10 +474,10 @@ public class AgentController {
   @RateLimit(resource = "agent.chat.clearHistory", threshold = 50)
   @DeleteMapping("/history")
   @Operation(summary = "清除对话历史")
-  public BaseResponse<Void> clearHistory(
+  public YdszResponse<Void> clearHistory(
       @RequestParam String conversationId, @RequestParam(required = false) String requestId) {
     agentFacade.clearHistory(conversationId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   // ==========================================================================

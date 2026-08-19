@@ -19,8 +19,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
@@ -99,8 +99,8 @@ public class TemplateVersionController {
   @Operation(summary = "查询模板版本历史")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_VIEW)
   @GetMapping("/list/{templateCode}")
-  public BaseResponse<List<MsgTemplateVersion>> listVersions(@PathVariable String templateCode) {
-    return BaseResponse.success(templateVersionService.listVersions(templateCode));
+  public YdszResponse<List<MsgTemplateVersion>> listVersions(@PathVariable String templateCode) {
+    return YdszResponse.success(templateVersionService.listVersions(templateCode));
   }
 
   /**
@@ -120,9 +120,9 @@ public class TemplateVersionController {
       content = "'rollback'")
   @RateLimit(resource = "message.templateversion.rollback", threshold = 50)
   @PostMapping("/rollback")
-  public BaseResponse<String> rollback(
+  public YdszResponse<String> rollback(
       @RequestParam String templateCode, @RequestParam int version) {
-    return BaseResponse.success(templateVersionService.rollbackToVersion(templateCode, version));
+    return YdszResponse.success(templateVersionService.rollbackToVersion(templateCode, version));
   }
 
   /**
@@ -137,11 +137,11 @@ public class TemplateVersionController {
   @RateLimit(resource = "message.templateversion.preview", threshold = 50)
   @Idempotent(key = "ydsz:message:TemplateVersionController:preview:lock", ttlSeconds = 5)
   @PostMapping("/preview")
-  public BaseResponse<String> preview(@Valid @RequestBody TemplatePreviewDTO dto) {
+  public YdszResponse<String> preview(@Valid @RequestBody TemplatePreviewDTO dto) {
     if (dto == null) {
-      return BaseResponse.error(BaseResultCode.BAD_REQUEST, "预览参数为空");
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "预览参数为空");
     }
-    return BaseResponse.success(templateVersionService.preview(dto));
+    return YdszResponse.success(templateVersionService.preview(dto));
   }
 
   /**
@@ -160,10 +160,10 @@ public class TemplateVersionController {
       content = "'testSend'")
   @RateLimit(resource = "message.templateversion.testSend", threshold = 50)
   @PostMapping("/testSend")
-  public BaseResponse<MessageResult> testSend(@Valid @RequestBody TemplateTestSendDTO dto) {
+  public YdszResponse<MessageResult> testSend(@Valid @RequestBody TemplateTestSendDTO dto) {
     if (dto == null) {
-      return BaseResponse.error(BaseResultCode.BAD_REQUEST, "试发参数为空");
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "试发参数为空");
     }
-    return BaseResponse.success(templateVersionService.testSend(dto));
+    return YdszResponse.success(templateVersionService.testSend(dto));
   }
 }

@@ -20,14 +20,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 
 /**
  * 全局异常处理器（规则引擎 Web 层）
  *
- * <p>统一拦截 Controller 层抛出的异常，将各类异常转换为标准的 {@link BaseResponse} 错误响应，
+ * <p>统一拦截 Controller 层抛出的异常，将各类异常转换为标准的 {@link YdszResponse} 错误响应，
  * 避免直接抛出 {@code 500 Internal Server Error} 暴露内部实现细节。
  *
  * <p><b>处理优先级（由高到低）：</b>
@@ -42,7 +42,7 @@ import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
  *   <li>业务异常兜底：{@link IllegalArgumentException}、{@link IllegalStateException} — 400
  * </ol>
  *
- * <p>所有异常均返回 {@link BaseResultCode#VALIDATION_FAILED} 或 {@link
+ * <p>所有异常均返回 {@link YdszResultCode#VALIDATION_FAILED} 或 {@link
  * LiteruleExceptionCode#RULE_STATUS_INVALID} 等明确错误码，前端可据此进行友好提示。
  *
  * <p><b>日志级别：</b>
@@ -71,12 +71,12 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(MethodArgumentNotValidException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public BaseResponse<Void> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
+  public YdszResponse<Void> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
     String message = e.getBindingResult().getFieldErrors().stream()
         .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
         .collect(Collectors.joining("; "));
     log.warn("[LiteRule] 参数校验失败: {}", message);
-    return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, message);
+    return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
@@ -87,12 +87,12 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(BindException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public BaseResponse<Void> handleBindException(BindException e) {
+  public YdszResponse<Void> handleBindException(BindException e) {
     String message = e.getBindingResult().getFieldErrors().stream()
         .map(this::formatFieldError)
         .collect(Collectors.joining("; "));
     log.warn("[LiteRule] 参数绑定失败: {}", message);
-    return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, message);
+    return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
@@ -103,10 +103,10 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(MissingServletRequestParameterException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public BaseResponse<Void> handleMissingParam(MissingServletRequestParameterException e) {
+  public YdszResponse<Void> handleMissingParam(MissingServletRequestParameterException e) {
     String message = "缺少必填参数: " + e.getParameterName() + " (" + e.getParameterType() + ")";
     log.warn("[LiteRule] {}", message);
-    return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, message);
+    return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
@@ -117,10 +117,10 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(MissingRequestHeaderException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public BaseResponse<Void> handleMissingHeader(MissingRequestHeaderException e) {
+  public YdszResponse<Void> handleMissingHeader(MissingRequestHeaderException e) {
     String message = "缺少必填请求头: " + e.getHeaderName();
     log.warn("[LiteRule] {}", message);
-    return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, message);
+    return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
@@ -131,10 +131,10 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(HttpMessageNotReadableException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public BaseResponse<Void> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+  public YdszResponse<Void> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
     String message = "请求体格式错误: " + e.getMessage();
     log.warn("[LiteRule] 请求体解析失败: {}", e.getMessage());
-    return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, message);
+    return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
@@ -145,12 +145,12 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public BaseResponse<Void> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException e) {
+  public YdszResponse<Void> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException e) {
     String message =
         String.format("参数[%s]类型不匹配，期望=%s，实际值=%s",
             e.getName(), e.getRequiredType(), e.getValue());
     log.warn("[LiteRule] {}", message);
-    return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, message);
+    return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
@@ -161,10 +161,10 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
   @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
-  public BaseResponse<Void> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+  public YdszResponse<Void> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
     String message = "不支持的请求方法: " + e.getMethod();
     log.info("[LiteRule] {}", message);
-    return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, message);
+    return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
@@ -175,10 +175,10 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
   @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
-  public BaseResponse<Void> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException e) {
+  public YdszResponse<Void> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException e) {
     String message = "不支持的 Content-Type: " + e.getContentType();
     log.info("[LiteRule] {}", message);
-    return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, message);
+    return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
@@ -189,10 +189,10 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(NoHandlerFoundException.class)
   @ResponseStatus(HttpStatus.NOT_FOUND)
-  public BaseResponse<Void> handleNoHandlerFound(NoHandlerFoundException e) {
+  public YdszResponse<Void> handleNoHandlerFound(NoHandlerFoundException e) {
     String message = "接口不存在: " + e.getHttpMethod() + " " + e.getRequestURL();
     log.info("[LiteRule] {}", message);
-    return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, message);
+    return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
@@ -205,9 +205,9 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(IllegalArgumentException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public BaseResponse<Void> handleIllegalArgument(IllegalArgumentException e) {
+  public YdszResponse<Void> handleIllegalArgument(IllegalArgumentException e) {
     log.warn("[LiteRule] 非法参数: {}", e.getMessage());
-    return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, e.getMessage());
+    return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, e.getMessage());
   }
 
   /**
@@ -218,9 +218,9 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(IllegalStateException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public BaseResponse<Void> handleIllegalState(IllegalStateException e) {
+  public YdszResponse<Void> handleIllegalState(IllegalStateException e) {
     log.warn("[LiteRule] 非法状态: {}", e.getMessage());
-    return BaseResponse.error(LiteruleExceptionCode.RULE_STATUS_INVALID, e.getMessage());
+    return YdszResponse.error(LiteruleExceptionCode.RULE_STATUS_INVALID, e.getMessage());
   }
 
   /**

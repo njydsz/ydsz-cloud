@@ -16,7 +16,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -67,8 +67,8 @@ public class JobHistoryController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @Operation(summary = "获取任务版本列表")
   @GetMapping("/versions")
-  public BaseResponse<List<JobHistoryVO>> versions(@RequestParam String jobId) {
-    return BaseResponse.success(
+  public YdszResponse<List<JobHistoryVO>> versions(@RequestParam String jobId) {
+    return YdszResponse.success(
         CronjobConverter.INSTANT.jobHistoryListToVO(jobHistoryService.listVersions(jobId)));
   }
 
@@ -84,9 +84,9 @@ public class JobHistoryController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @Operation(summary = "获取指定版本详情")
   @GetMapping("/detail")
-  public BaseResponse<JobHistoryVO> detail(
+  public YdszResponse<JobHistoryVO> detail(
       @RequestParam String jobId, @RequestParam Integer version) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         CronjobConverter.INSTANT.entityToVO(jobHistoryService.getVersion(jobId, version)));
   }
 
@@ -109,8 +109,8 @@ public class JobHistoryController {
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
       content = "'rollback'")
-  public BaseResponse<JobVO> rollback(@RequestParam String jobId, @RequestParam Integer version) {
-    return BaseResponse.success(
+  public YdszResponse<JobVO> rollback(@RequestParam String jobId, @RequestParam Integer version) {
+    return YdszResponse.success(
         CronjobConverter.INSTANT.entityToVO(jobHistoryService.rollback(jobId, version)));
   }
 
@@ -127,10 +127,10 @@ public class JobHistoryController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @Operation(summary = "对比两个版本差异")
   @GetMapping("/compare")
-  public BaseResponse<List<Map<String, Object>>> compare(
+  public YdszResponse<List<Map<String, Object>>> compare(
       @RequestParam String jobId,
       @RequestParam("v1") Integer version1,
       @RequestParam("v2") Integer version2) {
-    return BaseResponse.success(jobHistoryService.compareVersions(jobId, version1, version2));
+    return YdszResponse.success(jobHistoryService.compareVersions(jobId, version1, version2));
   }
 }

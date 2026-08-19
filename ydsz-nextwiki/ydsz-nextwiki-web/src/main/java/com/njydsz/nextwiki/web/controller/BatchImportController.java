@@ -16,7 +16,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
@@ -102,11 +102,11 @@ public class BatchImportController {
   @PostMapping("/batch-upload")
   @Operation(summary = "批量上传文件")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_BATCH_IMPORT)
-  public BaseResponse<BatchImportApplicationService.BatchImportResult> batchUpload(
+  public YdszResponse<BatchImportApplicationService.BatchImportResult> batchUpload(
       @RequestParam("files") MultipartFile[] files,
       @RequestParam(value = "parentId", required = false) String parentId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    return BaseResponse.success(batchImportService.batchUpload(files, parentId, userId));
+    return YdszResponse.success(batchImportService.batchUpload(files, parentId, userId));
   }
 
   /**
@@ -128,10 +128,10 @@ public class BatchImportController {
   @PostMapping("/zip")
   @Operation(summary = "从 ZIP 压缩包导入")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_BATCH_IMPORT)
-  public BaseResponse<BatchImportApplicationService.BatchImportResult> importZip(
+  public YdszResponse<BatchImportApplicationService.BatchImportResult> importZip(
       @RequestParam("file") MultipartFile zipFile,
       @RequestParam(value = "parentId", required = false) String parentId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    return BaseResponse.success(batchImportService.importFromZip(zipFile, parentId, userId));
+    return YdszResponse.success(batchImportService.importFromZip(zipFile, parentId, userId));
   }
 }

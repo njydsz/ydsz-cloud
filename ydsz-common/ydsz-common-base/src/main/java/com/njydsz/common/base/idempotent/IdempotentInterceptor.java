@@ -19,7 +19,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 
 /**
  * 幂等性拦截器。
@@ -222,7 +222,7 @@ public class IdempotentInterceptor implements HandlerInterceptor {
   private void rejectRequest(HttpServletResponse response, String message) throws IOException {
     response.setStatus(HTTP_TOO_MANY_REQUESTS);
     response.setContentType("application/json;charset=UTF-8");
-    BaseResponse<?> body = BaseResponse.error("IDEMPOTENT_REJECT", message);
+    YdszResponse<?> body = YdszResponse.error("IDEMPOTENT_REJECT", message);
     response.getWriter().write(body.toString());
   }
 }

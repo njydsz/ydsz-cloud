@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.server.service.impl.schedule.ScheduleCalendarService;
@@ -82,13 +82,13 @@ public class ScheduleCalendarController {
   @Operation(summary = "查询任务未来触发时间")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/fireTimes")
-  public BaseResponse<List<LocalDateTime>> getUpcomingFireTimes(
+  public YdszResponse<List<LocalDateTime>> getUpcomingFireTimes(
       @RequestParam String jobKey,
       @RequestParam(defaultValue = "24") int hours,
       @RequestParam(defaultValue = "100") int maxCount) {
     // 以当前时间作为起点，预计算未来触发时间（最多 maxCount 个）
     // 注意：当前实现暂未将 hours 透传给 service，service 默认从 from 起推算 maxCount 次
-    return BaseResponse.success(
+    return YdszResponse.success(
         scheduleCalendarService.getUpcomingFireTimes(jobKey, LocalDateTime.now(), maxCount));
   }
 
@@ -110,10 +110,10 @@ public class ScheduleCalendarController {
   @Operation(summary = "查询调度日历")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/schedule")
-  public BaseResponse<List<ScheduleCalendarService.ScheduleItem>> getScheduleCalendar(
+  public YdszResponse<List<ScheduleCalendarService.ScheduleItem>> getScheduleCalendar(
       @RequestParam(defaultValue = "24") int hours,
       @RequestParam(defaultValue = "50") int maxPerJob) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         scheduleCalendarService.getScheduleCalendar(LocalDateTime.now(), hours, maxPerJob));
   }
 }

@@ -19,7 +19,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -81,8 +81,8 @@ public class DictVersionController {
    */
   @Operation(summary = "按类型编码查询版本历史")
   @GetMapping("/{typeCode}")
-  public BaseResponse<List<EntityVersionVO>> listByTypeCode(@PathVariable String typeCode) {
-    return BaseResponse.success(
+  public YdszResponse<List<EntityVersionVO>> listByTypeCode(@PathVariable String typeCode) {
+    return YdszResponse.success(
         entityVersionService.listByResourceTypeAndKey(
             EntityVersionService.RESOURCE_TYPE_DICT, typeCode));
   }
@@ -136,13 +136,13 @@ public class DictVersionController {
       key = "'ydsz:system:DictVersionController:rollback:' + #typeCode + ':' + #targetVersion",
       ttlSeconds = 30)
   @PostMapping("/{typeCode}/rollback")
-  public BaseResponse<String> rollback(
+  public YdszResponse<String> rollback(
       @Parameter(description = "字典类型编码") @PathVariable @NotBlank String typeCode,
       @Parameter(description = "目标版本号") @RequestParam @NotBlank String targetVersion,
       @Parameter(description = "操作人 ID")
           @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false)
           String operatorId) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         dictItemService.rollbackTo(typeCode, targetVersion, operatorId));
   }
 }

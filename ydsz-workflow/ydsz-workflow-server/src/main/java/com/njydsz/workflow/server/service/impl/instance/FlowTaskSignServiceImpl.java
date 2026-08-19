@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
@@ -123,7 +123,7 @@ public class FlowTaskSignServiceImpl {
     FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_5ac7f16a")
           .build();
     }
@@ -181,7 +181,7 @@ public class FlowTaskSignServiceImpl {
     FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_5ac7f16a")
           .build();
     }
@@ -238,13 +238,13 @@ public class FlowTaskSignServiceImpl {
     FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_5ac7f16a")
           .build();
     }
     if (dto.getTargetUserId() == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_2deb2e4f")
           .build();
     }
@@ -297,13 +297,13 @@ public class FlowTaskSignServiceImpl {
     FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_ff1454e4")
           .build();
     }
     if (dto.getTargetUserId() == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_7c4a1bdf")
           .build();
     }
@@ -316,7 +316,7 @@ public class FlowTaskSignServiceImpl {
     int deleted = userMapper.deleteByMap(deleteMap);
     if (deleted == 0) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_a39adc9d")
           .params(dto.getTargetUserId())
           .build();
@@ -390,7 +390,7 @@ public class FlowTaskSignServiceImpl {
     FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_8913103b")
           .build();
     }
@@ -430,13 +430,13 @@ public class FlowTaskSignServiceImpl {
     FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_511d4aaa")
           .build();
     }
     if (dto.getTargetUserId() == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_2deb2e4f")
           .build();
     }

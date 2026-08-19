@@ -257,11 +257,6 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-app</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-feign</artifactId>
                 <version>${project.version}</version>
             </dependency>

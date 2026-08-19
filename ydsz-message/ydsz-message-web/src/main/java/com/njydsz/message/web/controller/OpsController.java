@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.message.domain.vo.BloomFilterStatsVO;
 import com.njydsz.message.domain.vo.CacheStatsVO;
 import com.njydsz.message.server.consumer.BloomFilterDeduplicator;
@@ -63,7 +63,7 @@ public class OpsController {
   @Operation(summary = "模板缓存统计")
   @AuthApiPermission("MESSAGE_LOG_VIEW")
   @GetMapping("/template-cache/stats")
-  public BaseResponse<CacheStatsVO> getTemplateCacheStats() {
+  public YdszResponse<CacheStatsVO> getTemplateCacheStats() {
     com.github.benmanes.caffeine.cache.stats.CacheStats stats = cachedTemplateEngine.caffeineCacheStats();
     CacheStatsVO vo = CacheStatsVO.builder()
         .size(cachedTemplateEngine.cacheSize())
@@ -72,7 +72,7 @@ public class OpsController {
         .hitRate(stats.hitRate())
         .evictionCount(stats.evictionCount())
         .build();
-    return BaseResponse.success(vo);
+    return YdszResponse.success(vo);
   }
 
   /**
@@ -86,9 +86,9 @@ public class OpsController {
   @Operation(summary = "清除模板缓存")
   @AuthApiPermission("MESSAGE_TEMPLATE_EDIT")
   @DeleteMapping("/template-cache")
-  public BaseResponse<Void> evictTemplateCache(@RequestParam String template) {
+  public YdszResponse<Void> evictTemplateCache(@RequestParam String template) {
     cachedTemplateEngine.evictCache(template);
-    return BaseResponse.success(null);
+    return YdszResponse.success(null);
   }
 
   /**
@@ -101,9 +101,9 @@ public class OpsController {
   @Operation(summary = "清空所有模板缓存")
   @AuthApiPermission("MESSAGE_TEMPLATE_EDIT")
   @DeleteMapping("/template-cache/all")
-  public BaseResponse<Void> clearTemplateCache() {
+  public YdszResponse<Void> clearTemplateCache() {
     cachedTemplateEngine.clearCache();
-    return BaseResponse.success(null);
+    return YdszResponse.success(null);
   }
 
   /**
@@ -116,13 +116,13 @@ public class OpsController {
   @Operation(summary = "BloomFilter 统计")
   @AuthApiPermission("MESSAGE_LOG_VIEW")
   @GetMapping("/bloomfilter/stats")
-  public BaseResponse<BloomFilterStatsVO> getBloomFilterStats() {
+  public YdszResponse<BloomFilterStatsVO> getBloomFilterStats() {
     BloomFilterStatsVO vo = BloomFilterStatsVO.builder()
         .expectedInsertions(bloomFilterDeduplicator.getExpectedInsertions())
         .fpp(bloomFilterDeduplicator.getFalsePositiveProbability())
         .primary(true)
         .windowAgeSeconds(bloomFilterDeduplicator.getWindowAgeSeconds())
         .build();
-    return BaseResponse.success(vo);
+    return YdszResponse.success(vo);
   }
 }

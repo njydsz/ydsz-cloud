@@ -1,4 +1,4 @@
-﻿# ydsz-common-core
+# ydsz-common-core
 
 > YDSZ 公共底座核心模块（L2 基础设施层）— 统一响应模型、结果码、请求上下文、链路追踪、分页协议、国际化、Spring Boot 自动配置
 
@@ -15,7 +15,7 @@
 - [数据结构](#数据结构)
 - [RequestContext](#requestcontext)
 - [链路追踪](#链路追踪)
-- [BaseResponse (分页场景)](#pageresponse)
+- [YdszResponse (分页场景)](#pageresponse)
 - [Header Constants](#header-constants)
 - [国际化消息](#国际化消息)
 - [Spring Boot 自动配置](#spring-boot-自动配置)
@@ -46,23 +46,23 @@
 ### 2. 基础使用
 
 ```java
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.core.code.YdszResultCode;
 
 // 成功响应
-return BaseResponse.success(user);
+return YdszResponse.success(user);
 
 // 成功响应（自定义消息）
-return BaseResponse.success("查询成功", user);
+return YdszResponse.success("查询成功", user);
 
 // 无数据成功响应
-return BaseResponse.success();
+return YdszResponse.success();
 
 // 失败响应（使用结果码枚举，自动走 i18n）
-return BaseResponse.error(BaseResultCode.NOT_FOUND);
+return YdszResponse.error(YdszResultCode.NOT_FOUND);
 
 // 失败响应（自定义消息覆盖）
-return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "邮箱格式不正确");
+return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "邮箱格式不正确");
 
 // 判断请求是否成功
 if (response.isSuccess()) { ... }
@@ -71,14 +71,14 @@ if (response.isSuccess()) { ... }
 ### 3. 分页场景
 
 ```java
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 
 // 标准分页响应（推荐：使用专用分页信封 PageResponse<T>）
 PageResponse<List<User>> resp = PageResponse.success(total, pageNum, pageSize, users);
 
-// 等价地，也可使用 BaseResponse.successPage(...) 工厂（返回 BaseResponse<T>）
-BaseResponse<List<User>> resp2 = BaseResponse.successPage(total, pageNum, pageSize, users);
+// 等价地，也可使用 YdszResponse.successPage(...) 工厂（返回 YdszResponse<T>）
+YdszResponse<List<User>> resp2 = YdszResponse.successPage(total, pageNum, pageSize, users);
 
 // 无数据分页响应
 PageResponse<List<User>> empty = PageResponse.empty(pageNum, pageSize);
@@ -87,8 +87,8 @@ PageResponse<List<User>> empty = PageResponse.empty(pageNum, pageSize);
 if (resp.isSuccess()) { ... }
 ```
 
-> **提示**：`PageResponse<T>` 是 `BaseResponse<T>` 的子类型，额外提供 `getPages()` 等便捷方法；
-> 分页元信息（total / pageNum / pageSize）收口于该类型，`BaseResponse` 仍保留兼容字段。
+> **提示**：`PageResponse<T>` 是 `YdszResponse<T>` 的子类型，额外提供 `getPages()` 等便捷方法；
+> 分页元信息（total / pageNum / pageSize）收口于该类型，`YdszResponse` 仍保留兼容字段。
 > `getExtensions()` 返回<b>不可变视图</b>，如需写入扩展字段请使用 `putExtension(key, value)`。
 
 ### 4. 请求上下文
@@ -175,10 +175,10 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 
 | 包 | 类 | 职责 |
 |---|---|---|
-| `response` | `BaseResponse<T>` | 统一 API 响应封装（code/msg/data/timestamp/traceId/extensions），使用 `@JsonInclude(NON_NULL)` 控制空值序列化 |
-| `response` | `PageResponse<T>` | 分页响应，推荐使用 `BaseResponse` 并将分页元数据放入 extensions |
+| `response` | `YdszResponse<T>` | 统一 API 响应封装（code/msg/data/timestamp/traceId/extensions），使用 `@JsonInclude(NON_NULL)` 控制空值序列化 |
+| `response` | `PageResponse<T>` | 分页响应，推荐使用 `YdszResponse` 并将分页元数据放入 extensions |
 | `response` | `IResponse<T>` | 统一响应接口，定义 code/msg/data/success/traceId/timestamp 标准契约 |
-| `code` | `BaseResultCode` | 系统通用结果码枚举，携带 code/msg/httpStatus 三元组 |
+| `code` | `YdszResultCode` | 系统通用结果码枚举，携带 code/msg/httpStatus 三元组 |
 | `code` | `ResultCode` | 结果码接口，业务模块自定义错误码应实现此接口 |
 | `context` | `RequestContext` | 请求级上下文（基于 TransmittableThreadLocal，线程池安全）；提供 typed accessor、防御性清理、快照/恢复、MDC 桥接 |
 | `context` | `ContextKey<T>` | 类型安全上下文键工厂，编译期保证类型安全 |
@@ -190,13 +190,13 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | `constant` | `DataScopeConstants` | 数据权限范围常量 |
 | `config` | `CoreAutoConfiguration` | Spring Boot 自动配置入口，注册 springMessageResolver、pageConstantsInitializer |
 | `config` | `CoreProperties` | 配置属性绑定（`@ConfigurationProperties("ydsz.core")`） |
-| `config` | `SpringMessageResolver` | Spring MessageSource 适配器，将 i18n 解析绑定到 BaseResponse |
+| `config` | `SpringMessageResolver` | Spring MessageSource 适配器，将 i18n 解析绑定到 YdszResponse |
 
 ---
 
 ## 数据结构
 
-### BaseResponse\<T\>
+### YdszResponse\<T\>
 
 ```json
 {
@@ -222,9 +222,9 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 
 ### PageResponse\<T\>
 
-> 推荐将分页元数据放入 `BaseResponse.extensions` 中承载（`PageResponse` 字段继承设计保留）。
+> 推荐将分页元数据放入 `YdszResponse.extensions` 中承载（`PageResponse` 字段继承设计保留）。
 
-继承 `BaseResponse`，新增分页元数据
+继承 `YdszResponse`，新增分页元数据
 
 ```json
 {
@@ -273,7 +273,7 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 
 > HTTP 状态码（`getHttpStatus`）等异常下沉语义定义在 `ExceptionCode` 子接口中。
 
-### BaseResultCode
+### YdszResultCode
 
 系统预定义的结果码枚举，每个枚举值包含二元组 `(code, msg)`。
 
@@ -330,9 +330,9 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | `SESSION_KICKED` | A20111 | 账号已在其他设备登录 | A2-授权 |
 | `UNKNOWN` | C99999 | 未知错误 | C9-未知 |
 
-> **HTTP 状态码**：`BaseResultCode` 不再持有 `httpStatus` 字段。HTTP 状态语义属于异常层，由 `ExceptionCode.getHttpStatus()`（default 400）决定；基础设施故障（`SysException`）默认 500。
+> **HTTP 状态码**：`YdszResultCode` 不再持有 `httpStatus` 字段。HTTP 状态语义属于异常层，由 `ExceptionCode.getHttpStatus()`（default 400）决定；基础设施故障（`SysException`）默认 500。
 
-**自定义结果码**：业务模块应实现 `ExceptionCode` 接口（继承自 `ResultCode`，扩展 `getHttpStatus` / `getCategory`），不应直接修改 `BaseResultCode`。
+**自定义结果码**：业务模块应实现 `ExceptionCode` 接口（继承自 `ResultCode`，扩展 `getHttpStatus` / `getCategory`），不应直接修改 `YdszResultCode`。
 
 ---
 
@@ -468,7 +468,7 @@ String traceId2 = TraceIdPropagation.currentTraceIdOrCreate();
 
 ### 设计取舍
 
-`PageResponse<T>` 采用**字段继承**（`extends BaseResponse<T>` + `total/pageNum/pageSize`）而不是将分页数据放入 `extensions Map`。
+`PageResponse<T>` 采用**字段继承**（`extends YdszResponse<T>` + `total/pageNum/pageSize`）而不是将分页数据放入 `extensions Map`。
 
 **选择字段继承的理由**：
 
@@ -528,10 +528,10 @@ core 模块仅保留两个通用响应消息 key：
 
 | Key | 说明 |
 |---|---|
-| `core.success` | 操作成功通用消息（`BaseResponse.success()` 默认使用） |
-| `core.error` | 操作失败通用消息（`BaseResponse.error()` 兜底使用） |
+| `core.success` | 操作成功通用消息（`YdszResponse.success()` 默认使用） |
+| `core.error` | 操作失败通用消息（`YdszResponse.error()` 兜底使用） |
 
-> **设计原则**：`error.{ENUM_NAME}`（与 `BaseResultCode` 枚举一一对应）等具体错误码文案已于 v2.2.0 移除。各业务模块应在自己的 `i18n/messages.properties` 中维护错误码 key（格式：`{module}.{code}` 或业务自定义 key），不在 core 模块维护。`BaseResultCode` 仅提供协议级码段常量（code + msg），i18n 解析委托给各模块的消息资源。
+> **设计原则**：`error.{ENUM_NAME}`（与 `YdszResultCode` 枚举一一对应）等具体错误码文案已于 v2.2.0 移除。各业务模块应在自己的 `i18n/messages.properties` 中维护错误码 key（格式：`{module}.{code}` 或业务自定义 key），不在 core 模块维护。`YdszResultCode` 仅提供协议级码段常量（code + msg），i18n 解析委托给各模块的消息资源。
 
 ---
 
@@ -549,7 +549,7 @@ com.njydsz.common.core.config.CoreAutoConfiguration
 
 | Bean 名称 | 类型 | 说明 |
 |---|---|---|
-| `springMessageResolver` | `SpringMessageResolver` | Spring i18n 解析器，绑定到 `BaseResponse`。需 classpath 含 `MessageSource` Bean 时生效 |
+| `springMessageResolver` | `SpringMessageResolver` | Spring i18n 解析器，绑定到 `YdszResponse`。需 classpath 含 `MessageSource` Bean 时生效 |
 | `pageConstantsInitializer` | `SmartInitializingSingleton` | 启动时将 `CoreProperties` 注入 `PageConstants` |
 
 > **健康检查**：core 模块不内置健康指示器，统一由 `ydsz-common-base` 的 `CoreHealthIndicator`（`@ConditionalOnMissingBean` 注册，版本号从构建 MANIFEST 读取）提供，避免重复定义。
@@ -650,11 +650,11 @@ ydsz:
 
 1. **RequestContext 必须显式清理**：推荐使用 `RequestContext.runWithCleanup()` / `supplyWithCleanup()` / `callWithCleanup()`，它们会在 finally 中自动调用 `clear()` 和 `clearMdc()`，防止内存泄漏和上下文污染。
 
-2. **业务模块自定义结果码**：不应直接修改 `BaseResultCode`，应在各自模块定义独立枚举并实现 `ExceptionCode` 接口（或直接继承 `ResultCode` 用于非 i18n 的纯协议层），遵循码段约定（A=系统级、B=业务级、C=第三方/未知）。
+2. **业务模块自定义结果码**：不应直接修改 `YdszResultCode`，应在各自模块定义独立枚举并实现 `ExceptionCode` 接口（或直接继承 `ResultCode` 用于非 i18n 的纯协议层），遵循码段约定（A=系统级、B=业务级、C=第三方/未知）。
 
 3. **Header 常量分类**：core 模块的 `HeaderConstants` 仅含通用常量（认证入口、幂等、链路追踪、网络），业务头常量按职责分布在各模块常量类。
 
-4. **序列化注解来源**：`BaseResponse` 和 `PageResponse` 上的 `@JsonInclude` 和 `@JsonPropertyOrder` 来自 `ydsz-common-json` 模块，非 Jackson 原生注解。引入 `ydsz-common-core` 时会自动传递依赖 `ydsz-common-json`。
+4. **序列化注解来源**：`YdszResponse` 和 `PageResponse` 上的 `@JsonInclude` 和 `@JsonPropertyOrder` 来自 `ydsz-common-json` 模块，非 Jackson 原生注解。引入 `ydsz-common-core` 时会自动传递依赖 `ydsz-common-json`。
 
 5. **Header 常量职责**：认证/权限/租户等业务头常量分布在 `common-base` / `common-auth` / `common-jdbc` 等模块的常量类中，core 仅保留通用（认证入口、幂等、链路、网络）常量。
 
@@ -662,7 +662,7 @@ ydsz:
 
 7. **PageConstants 一次性注入**：`PageConstants.init()` 采用一次性设置语义，重复调用会抛出 `IllegalStateException`；运行时通过 `ydsz.core.max-page-size` 和 `ydsz.core.default-page-size` 控制分页参数。
 
-8. **BaseResponse MessageResolver 一次性设置**：`BaseResponse.setResolverIfAbsent()` 仅首次调用生效，由 `CoreAutoConfiguration` 在应用启动时注入 `SpringMessageResolver`。
+8. **YdszResponse MessageResolver 一次性设置**：`YdszResponse.setResolverIfAbsent()` 仅首次调用生效，由 `CoreAutoConfiguration` 在应用启动时注入 `SpringMessageResolver`。
 
 ---
 
@@ -670,7 +670,7 @@ ydsz:
 
 - **v2.2.0**（2026-08-10）：
   - `ResultCode` 接口新增 `getModule()` default（返回 "core"），`getKey()` default 改为 `getModule() + "." + getCode()`，业务枚举可覆盖 `getModule()` 获得模块感知的 i18n key 前缀
-  - `BaseResultCode` 移除 `httpStatus` 字段及 getter，构造函数退化为 `(code, msg)` 二元组
+  - `YdszResultCode` 移除 `httpStatus` 字段及 getter，构造函数退化为 `(code, msg)` 二元组
   - core i18n messages 精简为 `core.success` / `core.error` 两个通用协议级 key，移除全部 `error.{ENUM_NAME}` 错误码消息
   - HTTP 状态码语义下沉至异常层（`ExceptionCode.getHttpStatus()`），`ResultCode` 不再持有 HTTP 状态
   - `PageResponse` 移除弃用标记，补充字段继承 vs extensions 的设计取舍说明

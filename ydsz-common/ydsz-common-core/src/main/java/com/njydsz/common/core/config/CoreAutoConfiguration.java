@@ -19,7 +19,7 @@ import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.feature.ConfigDrivenFeatureFlagService;
 import com.njydsz.common.core.feature.FeatureFlagContext;
 import com.njydsz.common.core.feature.FeatureFlagService;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 
 /**
  * Core 模块自动配置类。
@@ -27,7 +27,7 @@ import com.njydsz.common.core.response.BaseResponse;
  * <p>激活 {@link CoreProperties} 配置属性绑定， 使 {@code ydsz.core.*} 配置项在 IDE 中获得自动补全和类型校验支持。
  *
  * <p>当 Spring {@link MessageSource} 可用时，自动注册 {@link SpringMessageResolver} 并绑定到 {@link
- * BaseResponse}，使响应消息支持国际化。 若容器中无 MessageSource Bean（纯 core 使用场景），自动回退到 JDK {@link ResourceBundle}
+ * YdszResponse}，使响应消息支持国际化。 若容器中无 MessageSource Bean（纯 core 使用场景），自动回退到 JDK {@link ResourceBundle}
  * 加载 {@code i18n/core/messages*} 资源束，保障最低限度的国际化能力。
  *
  * <p><b>启用条件：</b>当 {@code ydsz.core.enabled=true} 时生效（默认启用）。
@@ -47,7 +47,7 @@ public class CoreAutoConfiguration {
   private static final Logger LOG = LoggerFactory.getLogger(CoreAutoConfiguration.class);
 
   /**
-   * 注册 SpringMessageResolver 并注入到 BaseResponse。
+   * 注册 SpringMessageResolver 并注入到 YdszResponse。
    *
    * <p>通过静态持有方式使统一的国际化解析能力在任意位置可用 （包括非 Spring Bean 中的静态工厂方法）。 仅当容器中存在 MessageSource Bean 时生效（如
    * starter 模块配置了 MessageSource）。
@@ -59,12 +59,12 @@ public class CoreAutoConfiguration {
   @ConditionalOnBean(MessageSource.class)
   public SpringMessageResolver springMessageResolver(MessageSource messageSource) {
     SpringMessageResolver resolver = new SpringMessageResolver(messageSource);
-    BaseResponse.setResolverIfAbsent(resolver);
+    YdszResponse.setResolverIfAbsent(resolver);
     return resolver;
   }
 
   /**
-   * 注册 JDK ResourceBundle 回退解析器到 BaseResponse。
+   * 注册 JDK ResourceBundle 回退解析器到 YdszResponse。
    *
    * <p>当 Spring MessageSource 不可用时（纯 core 使用场景、CLI 环境等）， 通过 JDK 原生 {@link ResourceBundle} 加载 {@code
    * i18n/core/messages*} 资源束， 提供最低限度的国际化能力。此 Bean 仅在 SpringMessageResolver 未注册时生效。
@@ -73,10 +73,10 @@ public class CoreAutoConfiguration {
    * @since 1.11.0
    */
   @Bean
-  @ConditionalOnMissingBean(BaseResponse.MessageResolver.class)
-  public BaseResponse.MessageResolver resourceBundleMessageResolver() {
+  @ConditionalOnMissingBean(YdszResponse.MessageResolver.class)
+  public YdszResponse.MessageResolver resourceBundleMessageResolver() {
     ResourceBundleMessageResolver resolver = new ResourceBundleMessageResolver();
-    BaseResponse.setResolverIfAbsent(resolver);
+    YdszResponse.setResolverIfAbsent(resolver);
     if (LOG.isDebugEnabled()) {
       LOG.debug("JDK ResourceBundle message resolver registered as fallback for i18n.");
     }
@@ -127,7 +127,7 @@ public class CoreAutoConfiguration {
    * <p>加载 classpath 下的 {@code i18n/core/messages} 资源束， 按当前线程的 {@link Locale} 选择对应语言版本。
    * 资源不存在时回退到默认值。
    */
-  static class ResourceBundleMessageResolver implements BaseResponse.MessageResolver {
+  static class ResourceBundleMessageResolver implements YdszResponse.MessageResolver {
 
     /** i18n 资源束的 base name（相对于 classpath 根）。 */
     private static final String BASENAME = "i18n/core/messages";

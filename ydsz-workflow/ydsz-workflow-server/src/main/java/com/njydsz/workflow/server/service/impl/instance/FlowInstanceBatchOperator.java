@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
@@ -65,13 +65,13 @@ public class FlowInstanceBatchOperator {
   public Map<String, Object> batchStartInstances(List<FlowStartProcessDTO> dtos) {
     if (dtos == null || dtos.isEmpty()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_e4f5a6b7")
           .build();
     }
     if (dtos.size() > 100) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_f5a6b7c8")
           .params(dtos.size(), 100)
           .build();

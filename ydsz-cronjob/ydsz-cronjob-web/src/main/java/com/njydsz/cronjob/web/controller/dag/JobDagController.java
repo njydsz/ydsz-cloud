@@ -21,7 +21,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
@@ -105,8 +105,8 @@ public class JobDagController {
       content = "'createDag'")
   @RateLimit(resource = "cronjob.jobdag.createDag", threshold = 50)
   @PostMapping("/")
-  public BaseResponse<String> createDag(@Valid @RequestBody JobDagPostDTO dto) {
-    return BaseResponse.success(jobDagService.createDag(toSaveDTO(dto)));
+  public YdszResponse<String> createDag(@Valid @RequestBody JobDagPostDTO dto) {
+    return YdszResponse.success(jobDagService.createDag(toSaveDTO(dto)));
   }
 
   /**
@@ -129,10 +129,10 @@ public class JobDagController {
       content = "'updateDag'")
   @RateLimit(resource = "cronjob.jobdag.updateDag", threshold = 50)
   @PutMapping("/{dagId}")
-  public BaseResponse<Void> updateDag(
+  public YdszResponse<Void> updateDag(
       @PathVariable String dagId, @Valid @RequestBody JobDagPutDTO dto) {
     jobDagService.updateDag(dagId, toSaveDTO(dto));
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -153,9 +153,9 @@ public class JobDagController {
       content = "'deleteDag'")
   @RateLimit(resource = "cronjob.jobdag.deleteDag", threshold = 50)
   @DeleteMapping("/{dagId}")
-  public BaseResponse<Void> deleteDag(@PathVariable String dagId) {
+  public YdszResponse<Void> deleteDag(@PathVariable String dagId) {
     jobDagService.deleteDag(dagId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -176,9 +176,9 @@ public class JobDagController {
       content = "'enableDag'")
   @RateLimit(resource = "cronjob.jobdag.enableDag", threshold = 50)
   @PutMapping("/{dagId}/enable")
-  public BaseResponse<Void> enableDag(@PathVariable String dagId) {
+  public YdszResponse<Void> enableDag(@PathVariable String dagId) {
     jobDagService.enableDag(dagId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -199,9 +199,9 @@ public class JobDagController {
       content = "'disableDag'")
   @RateLimit(resource = "cronjob.jobdag.disableDag", threshold = 50)
   @PutMapping("/{dagId}/disable")
-  public BaseResponse<Void> disableDag(@PathVariable String dagId) {
+  public YdszResponse<Void> disableDag(@PathVariable String dagId) {
     jobDagService.disableDag(dagId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -215,8 +215,8 @@ public class JobDagController {
   @Operation(summary = "查询 DAG 工作流详情")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
   @GetMapping("/{dagId}")
-  public BaseResponse<JobDagVO> getDagById(@PathVariable String dagId) {
-    return BaseResponse.success(
+  public YdszResponse<JobDagVO> getDagById(@PathVariable String dagId) {
+    return YdszResponse.success(
         CronjobConverter.INSTANT.entityToVO(jobDagService.getDagById(dagId)));
   }
 
@@ -231,8 +231,8 @@ public class JobDagController {
   @Operation(summary = "根据 KEY 查询 DAG 工作流")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
   @GetMapping("/key/{dagKey}")
-  public BaseResponse<JobDagVO> getDagByKey(@PathVariable String dagKey) {
-    return BaseResponse.success(
+  public YdszResponse<JobDagVO> getDagByKey(@PathVariable String dagKey) {
+    return YdszResponse.success(
         CronjobConverter.INSTANT.entityToVO(jobDagService.getDagByKey(dagKey)));
   }
 
@@ -246,8 +246,8 @@ public class JobDagController {
   @Operation(summary = "查询所有启用的 DAG 工作流")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
   @GetMapping("/enabled")
-  public BaseResponse<List<JobDagVO>> listEnabledDags() {
-    return BaseResponse.success(
+  public YdszResponse<List<JobDagVO>> listEnabledDags() {
+    return YdszResponse.success(
         CronjobConverter.INSTANT.jobDagListToVO(jobDagService.listEnabledDags()));
   }
 
@@ -271,8 +271,8 @@ public class JobDagController {
   @RateLimit(resource = "cronjob.jobdag.triggerDag", threshold = 50)
   @Idempotent(key = "ydsz:cronjob:JobDagController:triggerDag:lock", ttlSeconds = 5)
   @PostMapping("/trigger")
-  public BaseResponse<String> triggerDag(@Valid @RequestBody JobDagTriggerDTO dto) {
-    return BaseResponse.success(jobDagService.triggerDag(dto.getDagKey(), dto.getTriggerBy()));
+  public YdszResponse<String> triggerDag(@Valid @RequestBody JobDagTriggerDTO dto) {
+    return YdszResponse.success(jobDagService.triggerDag(dto.getDagKey(), dto.getTriggerBy()));
   }
 
   /**
@@ -296,10 +296,10 @@ public class JobDagController {
       content = "'validateDag'")
   @RateLimit(resource = "cronjob.jobdag.validateDag", threshold = 50)
   @PostMapping("/validate")
-  public BaseResponse<Boolean> validateDag(@RequestBody String dagDefinitionJson) {
+  public YdszResponse<Boolean> validateDag(@RequestBody String dagDefinitionJson) {
     DagDefinition definition = dagDefinitionCodec.fromJson(dagDefinitionJson);
     dagDefinitionValidator.validate(definition);
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -313,8 +313,8 @@ public class JobDagController {
   @Operation(summary = "查询 DAG 版本历史")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
   @GetMapping("/{dagId}/versions")
-  public BaseResponse<List<JobDagVersionVO>> listDagVersions(@PathVariable String dagId) {
-    return BaseResponse.success(
+  public YdszResponse<List<JobDagVersionVO>> listDagVersions(@PathVariable String dagId) {
+    return YdszResponse.success(
         CronjobConverter.INSTANT.jobDagVersionListToVO(jobDagService.listDagVersions(dagId, 50)));
   }
 
@@ -338,10 +338,10 @@ public class JobDagController {
       content = "'rollbackDag'")
   @RateLimit(resource = "cronjob.jobdag.rollbackDag", threshold = 50)
   @PostMapping("/{dagId}/rollback")
-  public BaseResponse<JobDagVO> rollbackDag(
+  public YdszResponse<JobDagVO> rollbackDag(
       @PathVariable String dagId, @RequestParam Integer version) {
     jobDagService.rollbackDagVersion(dagId, version, AuthContextUtils.getUserId());
-    return BaseResponse.success(
+    return YdszResponse.success(
         CronjobConverter.INSTANT.entityToVO(jobDagService.getDagById(dagId)));
   }
 

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -104,8 +104,8 @@ public class RoleController {
    */
   @GetMapping("/list")
   @Operation(summary = "查询全部角色列表")
-  public BaseResponse<List<RoleVO>> list() {
-    return BaseResponse.success(service.list());
+  public YdszResponse<List<RoleVO>> list() {
+    return YdszResponse.success(service.list());
   }
 
   /**
@@ -116,8 +116,8 @@ public class RoleController {
    */
   @GetMapping("/{id}")
   @Operation(summary = "根据 ID 查询角色")
-  public BaseResponse<RoleVO> getById(@PathVariable String id) {
-    return BaseResponse.success(service.getById(id));
+  public YdszResponse<RoleVO> getById(@PathVariable String id) {
+    return YdszResponse.success(service.getById(id));
   }
 
   /**
@@ -141,8 +141,8 @@ public class RoleController {
   @RateLimit(resource = "userinfo.RoleDO.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建角色")
-  public BaseResponse<String> create(@Valid @RequestBody RoleDTO dto) {
-    return BaseResponse.success(service.create(dto));
+  public YdszResponse<String> create(@Valid @RequestBody RoleDTO dto) {
+    return YdszResponse.success(service.create(dto));
   }
 
   /**
@@ -165,8 +165,8 @@ public class RoleController {
   @RateLimit(resource = "userinfo.RoleDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新角色")
-  public BaseResponse<Boolean> update(@Valid @RequestBody RoleDTO dto) {
-    return BaseResponse.success(service.update(dto));
+  public YdszResponse<Boolean> update(@Valid @RequestBody RoleDTO dto) {
+    return YdszResponse.success(service.update(dto));
   }
 
   /**
@@ -195,8 +195,8 @@ public class RoleController {
   @Idempotent(key = "ydsz:userinfo:RoleController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除角色")
-  public BaseResponse<Boolean> remove(@PathVariable String id) {
-    return BaseResponse.success(service.removeById(id));
+  public YdszResponse<Boolean> remove(@PathVariable String id) {
+    return YdszResponse.success(service.removeById(id));
   }
 
   /**
@@ -219,9 +219,9 @@ public class RoleController {
   @RateLimit(resource = "userinfo.RoleDO.assignPermissions", threshold = 50)
   @PostMapping("/{roleId}/permissions")
   @Operation(summary = "分配角色权限")
-  public BaseResponse<Boolean> assignPermissions(
+  public YdszResponse<Boolean> assignPermissions(
       @PathVariable String roleId, @Valid @RequestBody AssignPermissionsDTO dto) {
-    return BaseResponse.success(service.assignPermissions(roleId, dto.getPermissionIds()));
+    return YdszResponse.success(service.assignPermissions(roleId, dto.getPermissionIds()));
   }
 
   /**
@@ -234,7 +234,7 @@ public class RoleController {
    */
   @GetMapping("/{roleId}/permissions")
   @Operation(summary = "查询角色权限 ID 列表")
-  public BaseResponse<List<String>> getRolePermissions(@PathVariable String roleId) {
-    return BaseResponse.success(service.getRolePermissionIds(roleId));
+  public YdszResponse<List<String>> getRolePermissions(@PathVariable String roleId) {
+    return YdszResponse.success(service.getRolePermissionIds(roleId));
   }
 }

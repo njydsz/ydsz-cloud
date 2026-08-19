@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
@@ -89,7 +89,7 @@ public class FlowTaskOperateService {
   public void transfer(FlowTaskOperateDTO dto) {
     if (dto.getTargetUserId() == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_6ddae4d1")
           .build();
     }
@@ -127,7 +127,7 @@ public class FlowTaskOperateService {
   public void delegate(FlowTaskOperateDTO dto) {
     if (dto.getTargetUserId() == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_d4faa79e")
           .build();
     }
@@ -170,21 +170,21 @@ public class FlowTaskOperateService {
     FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_1efc5644")
           .params(task.getTaskStatus())
           .build();
     }
     if (!StringUtils.hasText(dto.getTargetNodeCode())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_09c299d0")
           .build();
     }
     FlowInstanceDO instance = instanceRepository.findById(task.getInstanceId()).map(converter::entityToDO).orElse(null);
     if (instance == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_fc4b1c16")
           .params(task.getInstanceId())
           .build();
@@ -193,7 +193,7 @@ public class FlowTaskOperateService {
     FlowNodeDO targetNode = nodeRepository.findByCode(task.getDefinitionId(), dto.getTargetNodeCode()).map(converter::entityToDO).orElse(null);
     if (targetNode == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_a35217ba")
           .params(dto.getTargetNodeCode())
           .build();
@@ -201,7 +201,7 @@ public class FlowTaskOperateService {
     // GAP-P2-9: 节点级 freeJump 白名单校验
     if ("JUMP".equals(dto.getAction()) && !isFreeJumpEnabled(targetNode)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message(String.format("目标节点未开启自由跳转白名单: nodeCode=%s", dto.getTargetNodeCode()))
           .build();
     }
@@ -249,7 +249,7 @@ public class FlowTaskOperateService {
     FlowHisTaskDO hisTask = hisTaskRepository.findById(hisTaskId).map(converter::entityToDO).orElse(null);
     if (hisTask == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_f1a2b3c4")
           .params(hisTaskId)
           .build();
@@ -257,7 +257,7 @@ public class FlowTaskOperateService {
     // 2. 校验：历史任务状态为 COMPLETED
     if (!FlowTaskStatus.COMPLETED.name().equals(hisTask.getTaskStatus())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_a2b3c4d5")
           .params(hisTask.getTaskStatus())
           .build();
@@ -265,7 +265,7 @@ public class FlowTaskOperateService {
     // 3. 校验：操作人必须是历史任务的办理人
     if (!hisTask.getAssigneeId().equals(operatorId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.FORBIDDEN)
+          .resultCode(YdszResultCode.FORBIDDEN)
           .message("error.workflow.msg_b3c4d5e6")
           .build();
     }
@@ -273,14 +273,14 @@ public class FlowTaskOperateService {
     FlowInstanceDO instance = instanceRepository.findById(hisTask.getInstanceId()).map(converter::entityToDO).orElse(null);
     if (instance == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_fc4b1c16")
           .params(hisTask.getInstanceId())
           .build();
     }
     if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_c4d5e6f7")
           .params(instance.getFlowStatus())
           .build();
@@ -297,7 +297,7 @@ public class FlowTaskOperateService {
                         || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
     if (anyProcessed) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_d5e6f7a8")
           .build();
     }

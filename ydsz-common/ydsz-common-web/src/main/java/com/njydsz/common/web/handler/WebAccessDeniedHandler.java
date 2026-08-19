@@ -11,7 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.code.SecurityExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.json.YdszJson;
@@ -26,7 +26,7 @@ import com.njydsz.common.util.message.MessageUtils;
  *
  * <ul>
  *   <li>HTTP 状态码：403 Forbidden
- *   <li>响应体：{@link BaseResponse} 标准格式
+ *   <li>响应体：{@link YdszResponse} 标准格式
  *   <li>错误码：D01001（访问被拒绝）
  *   <li>消息：支持国际化（i18n）
  * </ul>
@@ -52,7 +52,7 @@ public class WebAccessDeniedHandler implements AccessDeniedHandler {
     ExceptionCode errorCode = SecurityExceptionCode.ACCESS_DENIED;
     String message = MessageUtils.getMessage(errorCode.getKey(), errorCode.getKey());
 
-    BaseResponse<?> body = BaseResponse.error(errorCode.getCode(), message);
+    YdszResponse<?> body = YdszResponse.error(errorCode.getCode(), message);
     // 触发 traceId 懒加载，确保序列化时包含链路追踪 ID
     body.getTraceId();
     response.getWriter().write(YdszJson.toJson(body));

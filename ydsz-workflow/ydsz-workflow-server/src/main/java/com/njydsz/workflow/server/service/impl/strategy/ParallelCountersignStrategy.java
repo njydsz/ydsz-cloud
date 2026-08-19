@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.service.impl.strategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
@@ -49,7 +49,7 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
     if (updated == 0) {
       // 乐观锁冲突，抛异常由调用方处理
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_199e8ba1")
           .params(task.getId())
           .build();

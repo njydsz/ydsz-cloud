@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.dto.core.ChannelStatsVO;
 import com.njydsz.message.domain.dto.core.CostStatsVO;
@@ -99,12 +99,12 @@ public class MessageStatsController {
   @Operation(summary = "发送总览统计")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/overview")
-  public BaseResponse<MessageStatsVO> overview(
+  public YdszResponse<MessageStatsVO> overview(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime start,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime end) {
-    return BaseResponse.success(messageStatsService.getOverview(start, end));
+    return YdszResponse.success(messageStatsService.getOverview(start, end));
   }
 
   /**
@@ -117,12 +117,12 @@ public class MessageStatsController {
   @Operation(summary = "通道维度发送统计")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/channel")
-  public BaseResponse<List<ChannelStatsVO>> channelStats(
+  public YdszResponse<List<ChannelStatsVO>> channelStats(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime start,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime end) {
-    return BaseResponse.success(messageStatsService.getChannelStats(start, end));
+    return YdszResponse.success(messageStatsService.getChannelStats(start, end));
   }
 
   /**
@@ -135,12 +135,12 @@ public class MessageStatsController {
   @Operation(summary = "回执统计")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/receipt")
-  public BaseResponse<ReceiptStatsVO> receiptStats(
+  public YdszResponse<ReceiptStatsVO> receiptStats(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime start,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime end) {
-    return BaseResponse.success(messageStatsService.getReceiptStats(start, end));
+    return YdszResponse.success(messageStatsService.getReceiptStats(start, end));
   }
 
   /**
@@ -158,14 +158,14 @@ public class MessageStatsController {
   @Operation(summary = "消息转化漏斗分析")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/funnel")
-  public BaseResponse<FunnelStatsVO> funnel(
+  public YdszResponse<FunnelStatsVO> funnel(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime start,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime end,
       @RequestParam(required = false) String channel,
       @RequestParam(required = false) String templateCode) {
-    return BaseResponse.success(messageStatsService.getFunnel(start, end, channel, templateCode));
+    return YdszResponse.success(messageStatsService.getFunnel(start, end, channel, templateCode));
   }
 
   /**
@@ -180,11 +180,11 @@ public class MessageStatsController {
   @Operation(summary = "成本看板")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/cost")
-  public BaseResponse<CostStatsVO> cost(
+  public YdszResponse<CostStatsVO> cost(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime start,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime end) {
-    return BaseResponse.success(messageStatsService.getCostStats(start, end));
+    return YdszResponse.success(messageStatsService.getCostStats(start, end));
   }
 }

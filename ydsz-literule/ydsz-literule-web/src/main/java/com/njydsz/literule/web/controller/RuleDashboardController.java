@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.literule.api.dto.RuleDashboardDistributionVO;
 import com.njydsz.literule.api.dto.RuleDashboardOverviewVO;
 import com.njydsz.literule.api.dto.RuleDashboardRealtimeVO;
@@ -58,8 +58,8 @@ public class RuleDashboardController {
    */
   @GetMapping("/overview")
   @Operation(summary = "概览指标", description = "规则数量、触发率、P99 耗时、错误率等首屏卡片指标")
-  public BaseResponse<RuleDashboardOverviewVO> overview() {
-    return BaseResponse.success(dashboardService.getOverview());
+  public YdszResponse<RuleDashboardOverviewVO> overview() {
+    return YdszResponse.success(dashboardService.getOverview());
   }
 
   /**
@@ -70,9 +70,9 @@ public class RuleDashboardController {
    */
   @GetMapping("/trends")
   @Operation(summary = "趋势指标", description = "按时间维度（小时/天）展示触发次数、P99 耗时、错误率趋势")
-  public BaseResponse<RuleDashboardTrendVO> trends(
+  public YdszResponse<RuleDashboardTrendVO> trends(
       @RequestParam(value = "timeRange", defaultValue = "24h") String timeRange) {
-    return BaseResponse.success(dashboardService.getTrends(timeRange));
+    return YdszResponse.success(dashboardService.getTrends(timeRange));
   }
 
   /**
@@ -82,8 +82,8 @@ public class RuleDashboardController {
    */
   @GetMapping("/distribution")
   @Operation(summary = "分布指标", description = "按状态/类别/严重度/场景/租户/责任人分组的规则分布")
-  public BaseResponse<RuleDashboardDistributionVO> distribution() {
-    return BaseResponse.success(dashboardService.getDistribution());
+  public YdszResponse<RuleDashboardDistributionVO> distribution() {
+    return YdszResponse.success(dashboardService.getDistribution());
   }
 
   /**
@@ -95,10 +95,10 @@ public class RuleDashboardController {
    */
   @GetMapping("/top-rules")
   @Operation(summary = "Top 规则列表", description = "按触发次数/平均耗时/错误率排序的 Top 规则")
-  public BaseResponse<List<RuleDashboardTopRuleVO>> topRules(
+  public YdszResponse<List<RuleDashboardTopRuleVO>> topRules(
       @RequestParam(value = "type", defaultValue = "triggered") String type,
       @RequestParam(value = "limit", defaultValue = "10") @Min(1) @Max(50) int limit) {
-    return BaseResponse.success(dashboardService.getTopRules(type, limit));
+    return YdszResponse.success(dashboardService.getTopRules(type, limit));
   }
 
   /**
@@ -108,8 +108,8 @@ public class RuleDashboardController {
    */
   @GetMapping("/realtime")
   @Operation(summary = "实时指标", description = "当前 QPS、活跃规则数、注册规则数等秒级实时指标")
-  public BaseResponse<RuleDashboardRealtimeVO> realtime() {
-    return BaseResponse.success(dashboardService.getRealtime());
+  public YdszResponse<RuleDashboardRealtimeVO> realtime() {
+    return YdszResponse.success(dashboardService.getRealtime());
   }
 
   /**
@@ -122,13 +122,13 @@ public class RuleDashboardController {
    */
   @GetMapping("/slow-rules")
   @Operation(summary = "慢规则 Top N", description = "按平均耗时倒序的规则级耗时统计（E3）")
-  public BaseResponse<List<com.njydsz.literule.server.core.RuleMetrics.RuleStatSnapshot>> slowRules(
+  public YdszResponse<List<com.njydsz.literule.server.core.RuleMetrics.RuleStatSnapshot>> slowRules(
       @RequestParam(value = "limit", defaultValue = "10") @Min(1) @Max(50) int limit) {
     RuleMetrics metrics = ruleMetricsProvider.getIfAvailable();
     if (metrics == null) {
-      return BaseResponse.success(List.of());
+      return YdszResponse.success(List.of());
     }
-    return BaseResponse.success(metrics.getSlowRuleStats(limit));
+    return YdszResponse.success(metrics.getSlowRuleStats(limit));
   }
 
   /**
@@ -141,12 +141,12 @@ public class RuleDashboardController {
    */
   @GetMapping("/hot-rules")
   @Operation(summary = "热点规则 Top N", description = "按评估次数倒序的规则级热度统计（E3）")
-  public BaseResponse<List<com.njydsz.literule.server.core.RuleMetrics.RuleStatSnapshot>> hotRules(
+  public YdszResponse<List<com.njydsz.literule.server.core.RuleMetrics.RuleStatSnapshot>> hotRules(
       @RequestParam(value = "limit", defaultValue = "10") @Min(1) @Max(50) int limit) {
     RuleMetrics metrics = ruleMetricsProvider.getIfAvailable();
     if (metrics == null) {
-      return BaseResponse.success(List.of());
+      return YdszResponse.success(List.of());
     }
-    return BaseResponse.success(metrics.getHotRuleStats(limit));
+    return YdszResponse.success(metrics.getHotRuleStats(limit));
   }
 }

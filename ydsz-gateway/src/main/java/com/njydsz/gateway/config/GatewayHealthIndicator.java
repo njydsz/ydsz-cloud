@@ -9,6 +9,7 @@ import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 
+import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.gateway.filter.AuthGlobalFilter;
 
 /**
@@ -33,7 +34,7 @@ import com.njydsz.gateway.filter.AuthGlobalFilter;
 public class GatewayHealthIndicator implements HealthIndicator {
 
   private final ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider;
-  private final ObjectProvider<SecurityHeadersProperties> securityHeadersProvider;
+  private final ObjectProvider<SecurityHeaderProperties> securityHeaderProvider;
   private final ObjectProvider<RateLimitProperties> rateLimitPropertiesProvider;
   private final ObjectProvider<IpAccessControlProperties> ipAccessControlProvider;
   private final ObjectProvider<AuthGlobalFilter> authFilterProvider;
@@ -53,13 +54,13 @@ public class GatewayHealthIndicator implements HealthIndicator {
    */
   public GatewayHealthIndicator(
       ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider,
-      ObjectProvider<SecurityHeadersProperties> securityHeadersProvider,
+      ObjectProvider<SecurityHeaderProperties> securityHeaderProvider,
       ObjectProvider<RateLimitProperties> rateLimitPropertiesProvider,
       ObjectProvider<IpAccessControlProperties> ipAccessControlProvider,
       ObjectProvider<AuthGlobalFilter> authFilterProvider,
       ObjectProvider<GatewayMetrics> gatewayMetricsProvider) {
     this.redisTemplateProvider = redisTemplateProvider;
-    this.securityHeadersProvider = securityHeadersProvider;
+    this.securityHeaderProvider = securityHeaderProvider;
     this.rateLimitPropertiesProvider = rateLimitPropertiesProvider;
     this.ipAccessControlProvider = ipAccessControlProvider;
     this.authFilterProvider = authFilterProvider;
@@ -96,11 +97,13 @@ public class GatewayHealthIndicator implements HealthIndicator {
     }
 
     // 安全响应头状态
-    SecurityHeadersProperties securityHeaders = securityHeadersProvider.getIfAvailable();
+    SecurityHeaderProperties securityHeaders = securityHeaderProvider.getIfAvailable();
     if (securityHeaders != null) {
       details.put("securityHeaders.enabled", securityHeaders.isEnabled());
-      details.put("securityHeaders.csp.enabled", securityHeaders.getCsp().isEnabled());
-      details.put("securityHeaders.hsts.enabled", securityHeaders.getHsts().isEnabled());
+      details.put("securityHeaders.csp.enabled",
+          securityHeaders.getCsp() != null && securityHeaders.getCsp().isEnabled());
+      details.put("securityHeaders.hsts.enabled",
+          securityHeaders.getHsts() != null && securityHeaders.getHsts().isEnabled());
     } else {
       details.put("securityHeaders.enabled", "NOT_CONFIGURED");
     }

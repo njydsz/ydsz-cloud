@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.domain.dto.MfaOperationDTO;
 import com.njydsz.userinfo.domain.dto.UserProfileUpdateDTO;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
@@ -53,13 +53,13 @@ public class UserProfileController {
    */
   @GetMapping("/me")
   @Operation(summary = "获取当前用户资料")
-  public BaseResponse<UserAccountVO> getCurrentUserProfile() {
+  public YdszResponse<UserAccountVO> getCurrentUserProfile() {
     String userId = RequestContext.getUserId();
     UserAccountDO user = userAccountMapper.selectById(userId);
     if (user == null) {
-      return BaseResponse.success(null);
+      return YdszResponse.success(null);
     }
-    return BaseResponse.success(UserInfoConverter.INSTANT.entityToVO(user));
+    return YdszResponse.success(UserInfoConverter.INSTANT.entityToVO(user));
   }
 
   /**
@@ -72,11 +72,11 @@ public class UserProfileController {
    */
   @PutMapping("/me")
   @Operation(summary = "更新当前用户资料")
-  public BaseResponse<Boolean> updateCurrentUserProfile(@RequestBody UserProfileUpdateDTO dto) {
+  public YdszResponse<Boolean> updateCurrentUserProfile(@RequestBody UserProfileUpdateDTO dto) {
     String userId = RequestContext.getUserId();
     UserAccountDO user = userAccountMapper.selectById(userId);
     if (user == null) {
-      return BaseResponse.success(false);
+      return YdszResponse.success(false);
     }
 
     // 仅更新非空字段
@@ -95,7 +95,7 @@ public class UserProfileController {
 
     userAccountMapper.updateById(user);
     log.info("用户资料更新成功: userId={}", userId);
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -108,7 +108,7 @@ public class UserProfileController {
    */
   @PutMapping("/avatar")
   @Operation(summary = "上传头像")
-  public BaseResponse<String> uploadAvatar(
+  public YdszResponse<String> uploadAvatar(
       @RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
       throw new com.njydsz.common.exception.custom.BusinessException(
@@ -129,7 +129,7 @@ public class UserProfileController {
     }
 
     log.info("用户头像上传成功: userId={}, url={}", userId, avatarUrl);
-    return BaseResponse.success(avatarUrl);
+    return YdszResponse.success(avatarUrl);
   }
 
   // ==================== 双因素认证（MFA）管理 ====================
@@ -141,8 +141,8 @@ public class UserProfileController {
    */
   @GetMapping("/mfa/status")
   @Operation(summary = "查询 MFA 启用状态")
-  public BaseResponse<Boolean> getMfaStatus() {
-    return BaseResponse.success(mfaService.isMfaEnabled(RequestContext.getUserId()));
+  public YdszResponse<Boolean> getMfaStatus() {
+    return YdszResponse.success(mfaService.isMfaEnabled(RequestContext.getUserId()));
   }
 
   /**
@@ -155,10 +155,10 @@ public class UserProfileController {
    */
   @PostMapping("/mfa/setup")
   @Operation(summary = "发起 MFA 绑定", description = "返回 TOTP 密钥与 otpauth URI（二维码）")
-  public BaseResponse<MfaSetupVO> setupMfa() {
+  public YdszResponse<MfaSetupVO> setupMfa() {
     String userId = RequestContext.getUserId();
     UserAccountDO user = userAccountMapper.selectById(userId);
-    return BaseResponse.success(mfaService.setup(userId, user != null ? user.getUsername() : userId));
+    return YdszResponse.success(mfaService.setup(userId, user != null ? user.getUsername() : userId));
   }
 
   /**
@@ -169,9 +169,9 @@ public class UserProfileController {
    */
   @PostMapping("/mfa/activate")
   @Operation(summary = "激活 MFA 绑定")
-  public BaseResponse<Boolean> activateMfa(@jakarta.validation.Valid @RequestBody MfaOperationDTO dto) {
+  public YdszResponse<Boolean> activateMfa(@jakarta.validation.Valid @RequestBody MfaOperationDTO dto) {
     mfaService.activate(RequestContext.getUserId(), dto.getCode());
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -182,8 +182,8 @@ public class UserProfileController {
    */
   @PostMapping("/mfa/disable")
   @Operation(summary = "解除 MFA 绑定")
-  public BaseResponse<Boolean> disableMfa(@jakarta.validation.Valid @RequestBody MfaOperationDTO dto) {
+  public YdszResponse<Boolean> disableMfa(@jakarta.validation.Valid @RequestBody MfaOperationDTO dto) {
     mfaService.disable(RequestContext.getUserId(), dto.getCode());
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 }

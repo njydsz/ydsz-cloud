@@ -17,7 +17,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -75,8 +75,8 @@ public class JobDagInstanceController {
   @Operation(summary = "查询 DAG 实例详情")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
   @GetMapping("/{instanceId}")
-  public BaseResponse<JobDagInstanceVO> getInstanceById(@PathVariable String instanceId) {
-    return BaseResponse.success(
+  public YdszResponse<JobDagInstanceVO> getInstanceById(@PathVariable String instanceId) {
+    return YdszResponse.success(
         CronjobConverter.INSTANT.entityToVO(jobDagInstanceService.getInstanceById(instanceId)));
   }
 
@@ -92,9 +92,9 @@ public class JobDagInstanceController {
   @Operation(summary = "查询 DAG 的实例列表")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
   @GetMapping("/dag/{dagId}")
-  public BaseResponse<List<JobDagInstanceVO>> listByDagId(
+  public YdszResponse<List<JobDagInstanceVO>> listByDagId(
       @PathVariable String dagId, @RequestParam(defaultValue = "20") int limit) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         CronjobConverter.INSTANT.jobDagInstanceListToVO(
             jobDagInstanceService.listByDagId(dagId, limit)));
   }
@@ -110,8 +110,8 @@ public class JobDagInstanceController {
   @Operation(summary = "按状态查询 DAG 实例")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
   @GetMapping("/status/{status}")
-  public BaseResponse<List<JobDagInstanceVO>> listByStatus(@PathVariable String status) {
-    return BaseResponse.success(
+  public YdszResponse<List<JobDagInstanceVO>> listByStatus(@PathVariable String status) {
+    return YdszResponse.success(
         CronjobConverter.INSTANT.jobDagInstanceListToVO(
             jobDagInstanceService.listByStatus(status)));
   }
@@ -127,8 +127,8 @@ public class JobDagInstanceController {
   @Operation(summary = "查询 DAG 实例的节点列表")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
   @GetMapping("/{instanceId}/nodes")
-  public BaseResponse<List<JobDagNodeInstanceVO>> listNodes(@PathVariable String instanceId) {
-    return BaseResponse.success(
+  public YdszResponse<List<JobDagNodeInstanceVO>> listNodes(@PathVariable String instanceId) {
+    return YdszResponse.success(
         CronjobConverter.INSTANT.jobDagNodeInstanceListToVO(
             jobDagInstanceService.listNodes(instanceId)));
   }
@@ -144,9 +144,9 @@ public class JobDagInstanceController {
   @Operation(summary = "获取 DAG 实例可视化数据（P4-1）")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
   @GetMapping("/{instanceId}/visualization")
-  public BaseResponse<DagInstanceVisualizationVO> getVisualization(
+  public YdszResponse<DagInstanceVisualizationVO> getVisualization(
       @PathVariable String instanceId) {
-    return BaseResponse.success(jobDagInstanceService.getVisualization(instanceId));
+    return YdszResponse.success(jobDagInstanceService.getVisualization(instanceId));
   }
 
   /**
@@ -161,8 +161,8 @@ public class JobDagInstanceController {
   @Operation(summary = "获取 DAG 实例 Mermaid 图表文本（P2-2）")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
   @GetMapping("/{instanceId}/mermaid")
-  public BaseResponse<String> getMermaidDiagram(@PathVariable String instanceId) {
-    return BaseResponse.success(jobDagInstanceService.getMermaidDiagram(instanceId));
+  public YdszResponse<String> getMermaidDiagram(@PathVariable String instanceId) {
+    return YdszResponse.success(jobDagInstanceService.getMermaidDiagram(instanceId));
   }
 
   /**
@@ -184,9 +184,9 @@ public class JobDagInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.OTHER,
       content = "'pauseInstance'")
-  public BaseResponse<Void> pauseInstance(@PathVariable String instanceId) {
+  public YdszResponse<Void> pauseInstance(@PathVariable String instanceId) {
     jobDagInstanceService.pauseInstance(instanceId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -207,9 +207,9 @@ public class JobDagInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.OTHER,
       content = "'resumeInstance'")
-  public BaseResponse<Void> resumeInstance(@PathVariable String instanceId) {
+  public YdszResponse<Void> resumeInstance(@PathVariable String instanceId) {
     jobDagInstanceService.resumeInstance(instanceId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -230,9 +230,9 @@ public class JobDagInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.OTHER,
       content = "'cancelInstance'")
-  public BaseResponse<Void> cancelInstance(@PathVariable String instanceId) {
+  public YdszResponse<Void> cancelInstance(@PathVariable String instanceId) {
     jobDagInstanceService.cancelInstance(instanceId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -254,9 +254,9 @@ public class JobDagInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.OTHER,
       content = "'updateContext'")
-  public BaseResponse<Void> updateContext(
+  public YdszResponse<Void> updateContext(
       @PathVariable String instanceId, @RequestBody String contextJson) {
     jobDagInstanceService.updateContext(instanceId, contextJson);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

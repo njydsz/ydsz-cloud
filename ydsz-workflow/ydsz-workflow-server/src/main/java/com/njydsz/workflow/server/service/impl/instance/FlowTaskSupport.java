@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
@@ -150,7 +150,7 @@ public class FlowTaskSupport {
     FlowRunTaskDO task = taskRepository.findById(id).map(converter::entityToDO).orElse(null);
     if (task == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_6541ab08")
           .params(id)
           .build();

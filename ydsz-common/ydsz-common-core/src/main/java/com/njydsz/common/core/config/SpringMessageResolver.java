@@ -6,13 +6,13 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.i18n.LocaleContextHolder;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 
 /**
  * 基于 Spring {@link MessageSource} 的国际化消息解析器。
  *
- * <p>将 Spring 的 {@link MessageSource} 适配为 {@link BaseResponse.MessageResolver}， 使 {@link
- * BaseResponse} 的成功/失败消息支持国际化。
+ * <p>将 Spring 的 {@link MessageSource} 适配为 {@link YdszResponse.MessageResolver}， 使 {@link
+ * YdszResponse} 的成功/失败消息支持国际化。
  *
  * <p>解析流程：
  *
@@ -36,9 +36,9 @@ import com.njydsz.common.core.response.BaseResponse;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see BaseResponse.MessageResolver
+ * @see YdszResponse.MessageResolver
  */
-public class SpringMessageResolver implements BaseResponse.MessageResolver {
+public class SpringMessageResolver implements YdszResponse.MessageResolver {
 
   private final MessageSource messageSource;
 

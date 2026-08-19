@@ -27,8 +27,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.excel.spring.ExcelWebSupport;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -83,15 +83,15 @@ public class RuleDecisionTableController {
 
   /** 查询全部决策表 */
   @GetMapping("/decision-tables")
-  public BaseResponse<List<DecisionTableVO>> listDecisionTables() {
-    return BaseResponse.success(decisionTableRepository.findAll());
+  public YdszResponse<List<DecisionTableVO>> listDecisionTables() {
+    return YdszResponse.success(decisionTableRepository.findAll());
   }
 
   /** 查询单条决策表 */
   @GetMapping("/decision-tables/{tableCode}")
-  public BaseResponse<DecisionTableVO> getDecisionTable(@PathVariable String tableCode) {
+  public YdszResponse<DecisionTableVO> getDecisionTable(@PathVariable String tableCode) {
     Optional<DecisionTableVO> result = decisionTableRepository.findByTableCode(tableCode);
-    return BaseResponse.success(result.orElse(null));
+    return YdszResponse.success(result.orElse(null));
   }
 
   /** 保存决策表 */
@@ -103,9 +103,9 @@ public class RuleDecisionTableController {
       content = "'saveDecisionTable'")
   @RateLimit(resource = "literule.rule_decision_table.saveDecisionTable", threshold = 50)
   @PostMapping("/decision-tables")
-  public BaseResponse<DecisionTableVO> saveDecisionTable(
+  public YdszResponse<DecisionTableVO> saveDecisionTable(
       @Valid @RequestBody DecisionTablePostDTO dto) {
-    return BaseResponse.success(decisionTableRepository.save(dto));
+    return YdszResponse.success(decisionTableRepository.save(dto));
   }
 
   /** 删除决策表 */
@@ -117,9 +117,9 @@ public class RuleDecisionTableController {
       content = "'deleteDecisionTable'")
   @RateLimit(resource = "literule.rule_decision_table.deleteDecisionTable", threshold = 50)
   @DeleteMapping("/decision-tables/{id}")
-  public BaseResponse<Void> deleteDecisionTable(@PathVariable String id) {
+  public YdszResponse<Void> deleteDecisionTable(@PathVariable String id) {
     decisionTableRepository.deleteById(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -139,13 +139,13 @@ public class RuleDecisionTableController {
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_decision_table.evaluateDecisionTable", threshold = 50)
   @PostMapping("/decision-tables/{tableCode}/evaluate")
-  public BaseResponse<List<Map<String, Object>>> evaluateDecisionTable(
+  public YdszResponse<List<Map<String, Object>>> evaluateDecisionTable(
       @PathVariable String tableCode, @RequestBody Map<String, Object> facts) {
     try {
-      return BaseResponse.success(decisionTableEvalProvider.evaluate(tableCode, facts));
+      return YdszResponse.success(decisionTableEvalProvider.evaluate(tableCode, facts));
     } catch (Exception e) {
       log.warn("[DecisionTable] 评估失败: tableCode={}, err={}", tableCode, e.getMessage());
-      return BaseResponse.error(e.getMessage());
+      return YdszResponse.error(e.getMessage());
     }
   }
 
@@ -193,26 +193,26 @@ public class RuleDecisionTableController {
   @RateLimit(resource = "literule.rule_decision_table.importDecisionTableExcel", threshold = 50)
   @PostMapping(value = "/decision-tables/import-excel", consumes = "multipart/form-data")
   @AuthApiPermission(apiCodes = "execution:rule:save")
-  public BaseResponse<DecisionTableDefinitionVO> importDecisionTableExcel(
+  public YdszResponse<DecisionTableDefinitionVO> importDecisionTableExcel(
       @RequestParam("file") MultipartFile file,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
     if (svc == null) {
-      return BaseResponse.error(BaseResultCode.FORBIDDEN, "决策表管理服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "决策表管理服务未启用");
     }
     if (file == null || file.isEmpty()) {
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "上传文件不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "上传文件不能为空");
     }
     try {
       byte[] bytes = file.getBytes();
       DecisionTableDefinition saved = svc.importExcel(bytes, operator);
-      return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(saved));
+      return YdszResponse.success(LiteruleConverter.INSTANT.entityToVO(saved));
     } catch (IllegalArgumentException e) {
       log.warn("[DecisionTable] Excel 导入失败: {}", e.getMessage());
-      return BaseResponse.error(e.getMessage());
+      return YdszResponse.error(e.getMessage());
     } catch (IOException e) {
       log.warn("[DecisionTable] Excel 文件读取失败: {}", e.getMessage());
-      return BaseResponse.error(LiteruleExceptionCode.DSL_PARSE_ERROR, "文件读取失败: " + e.getMessage());
+      return YdszResponse.error(LiteruleExceptionCode.DSL_PARSE_ERROR, "文件读取失败: " + e.getMessage());
     }
   }
 

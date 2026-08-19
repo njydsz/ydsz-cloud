@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -92,8 +92,8 @@ public class VariableController {
    */
   @Operation(summary = "按 ID 查询系统变量")
   @GetMapping("/{id}")
-  public BaseResponse<VariableVO> getById(@PathVariable String id) {
-    return BaseResponse.success(service.getById(id));
+  public YdszResponse<VariableVO> getById(@PathVariable String id) {
+    return YdszResponse.success(service.getById(id));
   }
 
   /**
@@ -106,8 +106,8 @@ public class VariableController {
    */
   @Operation(summary = "按变量键查询变量值")
   @GetMapping("/key/{variableKey}")
-  public BaseResponse<String> getByKey(@PathVariable String variableKey) {
-    return BaseResponse.success(service.getVariableValue(variableKey));
+  public YdszResponse<String> getByKey(@PathVariable String variableKey) {
+    return YdszResponse.success(service.getVariableValue(variableKey));
   }
 
   /**
@@ -127,8 +127,8 @@ public class VariableController {
   @RateLimit(resource = "system.variable.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:variable:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PostMapping
-  public BaseResponse<String> save(@Valid @RequestBody VariableVO vo) {
-    return BaseResponse.success(service.save(vo));
+  public YdszResponse<String> save(@Valid @RequestBody VariableVO vo) {
+    return YdszResponse.success(service.save(vo));
   }
 
   /**
@@ -148,8 +148,8 @@ public class VariableController {
   @RateLimit(resource = "system.variable.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:variable:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PutMapping
-  public BaseResponse<Boolean> update(@Valid @RequestBody VariableVO vo) {
-    return BaseResponse.success(service.updateById(vo));
+  public YdszResponse<Boolean> update(@Valid @RequestBody VariableVO vo) {
+    return YdszResponse.success(service.updateById(vo));
   }
 
   /**
@@ -169,8 +169,8 @@ public class VariableController {
   @RateLimit(resource = "system.variable.remove", threshold = 50)
   @Idempotent(key = "'ydsz:system:variable:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
   @DeleteMapping("/{id}")
-  public BaseResponse<Boolean> remove(@PathVariable String id) {
-    return BaseResponse.success(service.removeById(id));
+  public YdszResponse<Boolean> remove(@PathVariable String id) {
+    return YdszResponse.success(service.removeById(id));
   }
 
   /** 分页安全上限：防止 pageSize=999999 导致深度分页 OOM */

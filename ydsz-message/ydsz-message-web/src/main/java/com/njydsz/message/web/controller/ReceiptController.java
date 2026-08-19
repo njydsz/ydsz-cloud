@@ -17,7 +17,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -98,9 +98,9 @@ public class ReceiptController {
       content = "'callback'")
   @RateLimit(resource = "message.receipt.callback", threshold = 50)
   @PostMapping("/callback")
-  public BaseResponse<Void> callback(@Valid @RequestBody ReceiptCallbackDTO dto) {
+  public YdszResponse<Void> callback(@Valid @RequestBody ReceiptCallbackDTO dto) {
     receiptService.callback(dto);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -112,7 +112,7 @@ public class ReceiptController {
   @Operation(summary = "按日志 ID 查询回执列表")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECEIPT_VIEW)
   @GetMapping("/{logId}")
-  public BaseResponse<List<MsgReceipt>> listByLogId(@PathVariable String logId) {
-    return BaseResponse.success(receiptService.listByLogId(logId));
+  public YdszResponse<List<MsgReceipt>> listByLogId(@PathVariable String logId) {
+    return YdszResponse.success(receiptService.listByLogId(logId));
   }
 }

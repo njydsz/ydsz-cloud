@@ -20,7 +20,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -83,7 +83,7 @@ public class JobWebhookController {
       content = "'create'")
   @RateLimit(resource = "cronjob.jobwebhook.create", threshold = 50)
   @PostMapping
-  public BaseResponse<String> create(@RequestBody JobWebhookPostDTO dto) {
+  public YdszResponse<String> create(@RequestBody JobWebhookPostDTO dto) {
     // 1. DTO → Entity（MapStruct 转换）
     JobWebhook entity = CronjobConverter.INSTANT.postDtoToEntity(dto);
     entity.setStatus("ACTIVE");
@@ -97,7 +97,7 @@ public class JobWebhookController {
     JobWebhookVO vo = CronjobConverter.INSTANT.entityToVO(entity);
     // 3. 通过 Repository 新增
     String newId = webhookRepository.create(vo);
-    return BaseResponse.success(newId);
+    return YdszResponse.success(newId);
   }
 
   /**
@@ -118,12 +118,12 @@ public class JobWebhookController {
       content = "'update'")
   @RateLimit(resource = "cronjob.jobwebhook.update", threshold = 50)
   @PutMapping
-  public BaseResponse<Void> update(@RequestBody JobWebhookPutDTO dto) {
+  public YdszResponse<Void> update(@RequestBody JobWebhookPutDTO dto) {
     // DTO → Entity → VO
     JobWebhook entity = CronjobConverter.INSTANT.putDtoToEntity(dto);
     entity.setUpdatedAt(LocalDateTime.now());
     webhookRepository.update(CronjobConverter.INSTANT.entityToVO(entity));
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -144,9 +144,9 @@ public class JobWebhookController {
       content = "'delete'")
   @RateLimit(resource = "cronjob.jobwebhook.delete", threshold = 50)
   @DeleteMapping("/{id}")
-  public BaseResponse<Void> delete(@PathVariable String id) {
+  public YdszResponse<Void> delete(@PathVariable String id) {
     webhookRepository.deleteById(id, LocalDateTime.now());
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -180,10 +180,10 @@ public class JobWebhookController {
    */
   @Operation(summary = "查询 WebHook 详情")
   @GetMapping("/{id}")
-  public BaseResponse<JobWebhookVO> getById(@PathVariable String id) {
+  public YdszResponse<JobWebhookVO> getById(@PathVariable String id) {
     return webhookRepository.findById(id)
-        .map(BaseResponse::success)
-        .orElse(BaseResponse.error(CronjobExceptionCode.WEBHOOK_NOT_FOUND, "WebHook not found"));
+        .map(YdszResponse::success)
+        .orElse(YdszResponse.error(CronjobExceptionCode.WEBHOOK_NOT_FOUND, "WebHook not found"));
   }
 
   /**
@@ -206,20 +206,20 @@ public class JobWebhookController {
       content = "'testWebhook'")
   @RateLimit(resource = "cronjob.jobwebhook.testWebhook", threshold = 50)
   @PostMapping("/{id}/test")
-  public BaseResponse<Void> testWebhook(@PathVariable String id) {
+  public YdszResponse<Void> testWebhook(@PathVariable String id) {
     // 通过 Repository 查询 Webhook
     JobWebhookVO webhookVO = webhookRepository.findById(id)
         .orElse(null);
     if (webhookVO == null) {
-      return BaseResponse.error(CronjobExceptionCode.WEBHOOK_NOT_FOUND, "WebHook not found");
+      return YdszResponse.error(CronjobExceptionCode.WEBHOOK_NOT_FOUND, "WebHook not found");
     }
     // P0-F3: 通过 WebhookEventDispatcher 真实发送测试事件（含重试）
     JobWebhook webhook = CronjobConverter.INSTANT.voToEntity(webhookVO);
     boolean sent = webhookEventDispatcher.sendTest(webhook);
     if (!sent) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           CronjobExceptionCode.WEBHOOK_SEND_FAILED, "WebHook 测试推送失败，请检查 URL / 网络 / 签名配置");
     }
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

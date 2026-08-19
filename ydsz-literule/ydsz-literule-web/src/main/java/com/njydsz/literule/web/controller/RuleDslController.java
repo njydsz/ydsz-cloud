@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
@@ -98,12 +98,12 @@ public class RuleDslController {
   @RateLimit(resource = "literule.rule_dsl.validate", threshold = 50)
   @PostMapping("/validate")
   @Operation(summary = "校验DSL", description = "校验 YAML/JSON 格式的 DSL 内容合法性")
-  public BaseResponse<Map<String, Object>> validate(@RequestBody Map<String, Object> request) {
+  public YdszResponse<Map<String, Object>> validate(@RequestBody Map<String, Object> request) {
     String content = (String) request.get("content");
     String format = (String) request.getOrDefault("format", "yaml");
 
     if (content == null || content.isBlank()) {
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "DSL 内容不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "DSL 内容不能为空");
     }
 
     Map<String, Object> result = new LinkedHashMap<>();
@@ -141,16 +141,16 @@ public class RuleDslController {
       result.put("errors", errors);
       result.put("ruleCount", ruleCount);
       result.put("chainCount", dsl.getChains() != null ? dsl.getChains().size() : 0);
-      return BaseResponse.success(result);
+      return YdszResponse.success(result);
 
     } catch (IllegalArgumentException e) {
       result.put("valid", false);
       result.put("errors", List.of(e.getMessage()));
       result.put("ruleCount", 0);
-      return BaseResponse.success(result);
+      return YdszResponse.success(result);
     } catch (Exception e) {
       log.warn("[DSL] 校验失败: {}", e.getMessage());
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.DSL_PARSE_ERROR, "DSL 解析失败: " + e.getMessage());
     }
   }
@@ -169,12 +169,12 @@ public class RuleDslController {
   @RateLimit(resource = "literule.rule_dsl.parse", threshold = 50)
   @PostMapping("/parse")
   @Operation(summary = "解析DSL", description = "将 YAML/JSON DSL 文本解析为结构化模型")
-  public BaseResponse<RuleDslVO> parse(@RequestBody Map<String, Object> request) {
+  public YdszResponse<RuleDslVO> parse(@RequestBody Map<String, Object> request) {
     String content = (String) request.get("content");
     String format = (String) request.getOrDefault("format", "yaml");
 
     if (content == null || content.isBlank()) {
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "DSL 内容不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "DSL 内容不能为空");
     }
 
     try {
@@ -182,10 +182,10 @@ public class RuleDslController {
           "json".equalsIgnoreCase(format)
               ? RuleDslParser.parseJson(content)
               : RuleDslParser.parseYaml(content);
-      return BaseResponse.success(toDslVO(dsl));
+      return YdszResponse.success(toDslVO(dsl));
     } catch (Exception e) {
       log.warn("[DSL] 解析失败: {}", e.getMessage());
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.DSL_PARSE_ERROR, "DSL 解析失败: " + e.getMessage());
     }
   }
@@ -206,12 +206,12 @@ public class RuleDslController {
   @RateLimit(resource = "literule.rule_dsl.preview", threshold = 50)
   @PostMapping("/preview")
   @Operation(summary = "预览DSL评估", description = "解析 DSL 并用提供的事实数据试运行，不持久化")
-  public BaseResponse<List<Map<String, Object>>> preview(@RequestBody Map<String, Object> request) {
+  public YdszResponse<List<Map<String, Object>>> preview(@RequestBody Map<String, Object> request) {
     String content = (String) request.get("content");
     String format = (String) request.getOrDefault("format", "yaml");
 
     if (content == null || content.isBlank()) {
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "DSL 内容不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "DSL 内容不能为空");
     }
 
     Object factsObj = request.get("facts");
@@ -255,11 +255,11 @@ public class RuleDslController {
         }
       }
 
-      return BaseResponse.success(results);
+      return YdszResponse.success(results);
 
     } catch (Exception e) {
       log.warn("[DSL] 预览失败: {}", e.getMessage());
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.DSL_PARSE_ERROR, "DSL 预览失败: " + e.getMessage());
     }
   }

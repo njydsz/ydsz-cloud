@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
@@ -88,9 +88,9 @@ public class FlowMonitorDashboardController {
   @Operation(summary = "监控概览")
   @GetMapping("/monitor/overview")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
-  public BaseResponse<Map<String, Object>> monitorOverview() {
+  public YdszResponse<Map<String, Object>> monitorOverview() {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(buildOverview(tenantId));
+    return YdszResponse.success(buildOverview(tenantId));
   }
 
   /**
@@ -105,7 +105,7 @@ public class FlowMonitorDashboardController {
   @Operation(summary = "异常流程列表")
   @GetMapping("/monitor/anomaly")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
-  public BaseResponse<List<Map<String, Object>>> monitorAnomaly(
+  public YdszResponse<List<Map<String, Object>>> monitorAnomaly(
       @RequestParam(required = false) String anomalyType,
       @RequestParam(required = false) String warnLevel,
       @RequestParam(defaultValue = "1") @Min(1) int pageNum,
@@ -155,10 +155,10 @@ public class FlowMonitorDashboardController {
   @Operation(summary = "实例趋势")
   @GetMapping("/monitor/instanceTrend")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
-  public BaseResponse<List<Map<String, Object>>> monitorInstanceTrend(
+  public YdszResponse<List<Map<String, Object>>> monitorInstanceTrend(
       @RequestParam(defaultValue = "7") int days) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(buildInstanceTrend(tenantId, days));
+    return YdszResponse.success(buildInstanceTrend(tenantId, days));
   }
 
   /**
@@ -172,7 +172,7 @@ public class FlowMonitorDashboardController {
   @Operation(summary = "审批人效率排名")
   @GetMapping("/monitor/approverEfficiency")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
-  public BaseResponse<List<Map<String, Object>>> monitorApproverEfficiency(
+  public YdszResponse<List<Map<String, Object>>> monitorApproverEfficiency(
       @RequestParam(defaultValue = "10") int topN,
       @RequestParam(required = false) String startTime,
       @RequestParam(required = false) String endTime) {
@@ -198,7 +198,7 @@ public class FlowMonitorDashboardController {
         result.add(item);
       }
     }
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -211,7 +211,7 @@ public class FlowMonitorDashboardController {
   @Operation(summary = "流程类型分布")
   @GetMapping("/monitor/flowTypeDistribution")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
-  public BaseResponse<List<Map<String, Object>>> monitorFlowTypeDistribution(
+  public YdszResponse<List<Map<String, Object>>> monitorFlowTypeDistribution(
       @RequestParam(required = false) String startTime,
       @RequestParam(required = false) String endTime) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
@@ -240,7 +240,7 @@ public class FlowMonitorDashboardController {
         result.add(item);
       }
     }
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   // ============== P2-7: 监控仪表盘 UI 增强 ==============
@@ -253,7 +253,7 @@ public class FlowMonitorDashboardController {
   @GetMapping("/monitor/dashboard")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
   @Operation(summary = "监控仪表盘聚合数据（首屏一次加载）")
-  public BaseResponse<Map<String, Object>> monitorDashboard() {
+  public YdszResponse<Map<String, Object>> monitorDashboard() {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     Map<String, Object> dashboard = new LinkedHashMap<>();
 
@@ -301,7 +301,7 @@ public class FlowMonitorDashboardController {
       dashboard.put("healthScore", new LinkedHashMap<>());
     }
 
-    return BaseResponse.success(dashboard);
+    return YdszResponse.success(dashboard);
   }
 
   /**
@@ -313,11 +313,11 @@ public class FlowMonitorDashboardController {
   @GetMapping("/monitor/overdueTasks")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
   @Operation(summary = "超期任务 Top N 排行（按超期时长降序）")
-  public BaseResponse<List<Map<String, Object>>> monitorOverdueTasks(
+  public YdszResponse<List<Map<String, Object>>> monitorOverdueTasks(
       @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     List<Map<String, Object>> rows = runTaskMapper.selectOverdueTopN(tenantId, limit);
-    return BaseResponse.success(rows != null ? rows : new ArrayList<>());
+    return YdszResponse.success(rows != null ? rows : new ArrayList<>());
   }
 
   /**
@@ -329,11 +329,11 @@ public class FlowMonitorDashboardController {
   @GetMapping("/monitor/approverWorkload")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
   @Operation(summary = "审批人负载分布（当前待办数量）")
-  public BaseResponse<List<Map<String, Object>>> monitorApproverWorkload(
+  public YdszResponse<List<Map<String, Object>>> monitorApproverWorkload(
       @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     List<Map<String, Object>> rows = runTaskMapper.selectWorkloadByAssignee(tenantId, limit);
-    return BaseResponse.success(rows != null ? rows : new ArrayList<>());
+    return YdszResponse.success(rows != null ? rows : new ArrayList<>());
   }
 
   /**
@@ -346,7 +346,7 @@ public class FlowMonitorDashboardController {
   @GetMapping("/monitor/flowEfficiencyComparison")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
   @Operation(summary = "流程效率对比（按流程编码分组）")
-  public BaseResponse<List<Map<String, Object>>> monitorFlowEfficiencyComparison(
+  public YdszResponse<List<Map<String, Object>>> monitorFlowEfficiencyComparison(
       @RequestParam(required = false) String startTime,
       @RequestParam(required = false) String endTime) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
@@ -354,7 +354,7 @@ public class FlowMonitorDashboardController {
     LocalDateTime endDt = parseDateTime(endTime);
     List<Map<String, Object>> rows =
         hisTaskMapper.selectFlowEfficiencyComparison(tenantId, startDt, endDt);
-    return BaseResponse.success(rows != null ? rows : new ArrayList<>());
+    return YdszResponse.success(rows != null ? rows : new ArrayList<>());
   }
 
   // ============== GAP-P2: 审批效率分析 ==============
@@ -368,11 +368,11 @@ public class FlowMonitorDashboardController {
    */
   @Operation(summary = "审批效率统计")
   @GetMapping("/efficiency/stats")
-  public BaseResponse<Map<String, Object>> efficiencyStats(
+  public YdszResponse<Map<String, Object>> efficiencyStats(
       @RequestParam(required = false) String startTime,
       @RequestParam(required = false) String endTime) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(efficiencyService.efficiencyStats(tenantId, startTime, endTime));
+    return YdszResponse.success(efficiencyService.efficiencyStats(tenantId, startTime, endTime));
   }
 
   /**
@@ -384,11 +384,11 @@ public class FlowMonitorDashboardController {
    */
   @Operation(summary = "节点瓶颈排名")
   @GetMapping("/efficiency/bottleneck")
-  public BaseResponse<List<Map<String, Object>>> bottleneckRanking(
+  public YdszResponse<List<Map<String, Object>>> bottleneckRanking(
       @RequestParam(required = false) String flowCode,
       @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(efficiencyService.bottleneckRanking(tenantId, flowCode, limit));
+    return YdszResponse.success(efficiencyService.bottleneckRanking(tenantId, flowCode, limit));
   }
 
   /**
@@ -401,12 +401,12 @@ public class FlowMonitorDashboardController {
    */
   @Operation(summary = "审批人效率排名")
   @GetMapping("/efficiency/approverRanking")
-  public BaseResponse<List<Map<String, Object>>> approverRanking(
+  public YdszResponse<List<Map<String, Object>>> approverRanking(
       @RequestParam(required = false) String startTime,
       @RequestParam(required = false) String endTime,
       @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(
+    return YdszResponse.success(
         efficiencyService.approverRanking(tenantId, startTime, endTime, limit));
   }
 
@@ -420,12 +420,12 @@ public class FlowMonitorDashboardController {
    */
   @Operation(summary = "审批趋势")
   @GetMapping("/efficiency/trend")
-  public BaseResponse<List<Map<String, Object>>> approvalTrend(
+  public YdszResponse<List<Map<String, Object>>> approvalTrend(
       @RequestParam(defaultValue = "DAY") String interval,
       @RequestParam(required = false) String startTime,
       @RequestParam(required = false) String endTime) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(
+    return YdszResponse.success(
         efficiencyService.approvalTrend(tenantId, interval, startTime, endTime));
   }
 
@@ -438,11 +438,11 @@ public class FlowMonitorDashboardController {
    */
   @Operation(summary = "流程健康度综合评分")
   @GetMapping("/efficiency/healthScore")
-  public BaseResponse<Map<String, Object>> healthScore(
+  public YdszResponse<Map<String, Object>> healthScore(
       @RequestParam(required = false) String startTime,
       @RequestParam(required = false) String endTime) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(efficiencyService.healthScore(tenantId, startTime, endTime));
+    return YdszResponse.success(efficiencyService.healthScore(tenantId, startTime, endTime));
   }
 
   // ============== 私有辅助方法 ==============

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -94,9 +94,9 @@ public class PreviewController {
   @PostMapping("/{fileNodeId}/generate")
   @Operation(summary = "生成预览（异步）")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_PREVIEW_GENERATE)
-  public BaseResponse<Void> generatePreview(@PathVariable String fileNodeId) {
+  public YdszResponse<Void> generatePreview(@PathVariable String fileNodeId) {
     previewService.generatePreview(fileNodeId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -110,8 +110,8 @@ public class PreviewController {
   @GetMapping("/supported")
   @Operation(summary = "检查文件是否支持预览")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_PREVIEW_VIEW)
-  public BaseResponse<Boolean> isSupported(@RequestParam String suffix) {
-    return BaseResponse.success(previewService.isPreviewSupported(suffix));
+  public YdszResponse<Boolean> isSupported(@RequestParam String suffix) {
+    return YdszResponse.success(previewService.isPreviewSupported(suffix));
   }
 
   /**
@@ -135,7 +135,7 @@ public class PreviewController {
   @GetMapping("/type")
   @Operation(summary = "获取预览类型")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_PREVIEW_VIEW)
-  public BaseResponse<String> getPreviewType(@RequestParam String suffix) {
-    return BaseResponse.success(previewService.getPreviewType(suffix));
+  public YdszResponse<String> getPreviewType(@RequestParam String suffix) {
+    return YdszResponse.success(previewService.getPreviewType(suffix));
   }
 }

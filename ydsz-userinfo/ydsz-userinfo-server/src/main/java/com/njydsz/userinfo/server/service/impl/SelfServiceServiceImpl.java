@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
+import com.njydsz.userinfo.domain.dto.AccountUnlockDTO;
 import com.njydsz.userinfo.domain.dto.ForgotPasswordDTO;
 import com.njydsz.userinfo.domain.dto.SelfRegisterDTO;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
@@ -19,6 +20,7 @@ import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
+import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.CaptchaService;
@@ -55,6 +57,9 @@ public class SelfServiceServiceImpl implements SelfServiceService {
   /** 找回密码场景验证码类型 */
   private static final String CODE_TYPE_FORGOT_PASSWORD = "FORGOT_PASSWORD";
 
+  /** 账号解锁场景验证码类型 */
+  private static final String CODE_TYPE_UNLOCK = "UNLOCK";
+
   /** 默认租户 ID（自助注册场景） */
   private static final String DEFAULT_TENANT_ID = "1";
 
@@ -76,7 +81,7 @@ public class SelfServiceServiceImpl implements SelfServiceService {
   public boolean sendVerifyCode(SendVerifyCodeDTO dto) {
     // P0-5: 发送验证码前置图形验证码校验（防短信轰炸）
     captchaService.validate(dto.getCaptchaKey(), dto.getCaptcha());
-    verifyCodeService.sendCode(dto.getType(), dto.getPhone());
+    verifyCodeService.sendCode(dto.getType(), dto.getTargetType(), dto.getTarget());
     return true;
   }
 
@@ -170,6 +175,63 @@ public class SelfServiceServiceImpl implements SelfServiceService {
     eventPublisher.publishUserUpdated(userVO);
     log.info("用户找回密码成功: userId={}, username={}", userVO.getId(), userVO.getUsername());
     return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @throws BusinessException 用户不存在、验证目标不匹配、验证码错误时抛出
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public boolean unlockAccount(AccountUnlockDTO dto) {
+    // 0. 图形验证码校验（防暴力破解）
+    captchaService.validate(dto.getCaptchaKey(), dto.getCaptcha());
+
+    // 1. 查询用户凭据（含锁定状态）
+    Optional<UserAccountCredentialVO> credentialOpt =
+        userAccountRepository.findCredentialByUsername(dto.getUsername());
+    if (credentialOpt.isEmpty()) {
+      throw new BusinessException(UserInfoExceptionCode.FORGOT_PASSWORD_USER_NOT_FOUND);
+    }
+    UserAccountCredentialVO credential = credentialOpt.get();
+
+    // 2. 校验账号是否已锁定
+    if (!credential.isLocked()) {
+      throw new BusinessException(UserInfoExceptionCode.ACCOUNT_NOT_LOCKED);
+    }
+
+    // 3. 查询用户基本信息（用于验证目标匹配）
+    Optional<UserAccountVO> userOpt = userAccountRepository.findByUsername(dto.getUsername());
+    if (userOpt.isEmpty()) {
+      throw new BusinessException(UserInfoExceptionCode.FORGOT_PASSWORD_USER_NOT_FOUND);
+    }
+    UserAccountVO userVO = userOpt.get();
+
+    // 4. 验证目标匹配校验（手机或邮箱）
+    boolean targetMatched = false;
+    if ("PHONE".equalsIgnoreCase(dto.getTargetType())) {
+      targetMatched = userVO.getPhone() != null && userVO.getPhone().equals(dto.getTarget());
+    } else if ("EMAIL".equalsIgnoreCase(dto.getTargetType())) {
+      targetMatched = userVO.getEmail() != null && userVO.getEmail().equals(dto.getTarget());
+    }
+    if (!targetMatched) {
+      throw new BusinessException(UserInfoExceptionCode.FORGOT_PASSWORD_PHONE_MISMATCH);
+    }
+
+    // 5. 校验验证码（一次性）
+    if (!verifyCodeService.verifyCode(CODE_TYPE_UNLOCK, dto.getTarget(), dto.getVerifyCode())) {
+      throw new BusinessException(UserInfoExceptionCode.ACCOUNT_UNLOCK_VERIFY_CODE_INVALID);
+    }
+
+    // 6. 解锁账号
+    int affected = userAccountRepository.unlockAccount(credential.getId());
+    if (affected > 0) {
+      log.info("账号自助解锁成功: userId={}, username={}", credential.getId(), credential.getUsername());
+      // 7. 发布领域事件
+      eventPublisher.publishUserUpdated(userVO);
+    }
+    return affected > 0;
   }
 
   /**

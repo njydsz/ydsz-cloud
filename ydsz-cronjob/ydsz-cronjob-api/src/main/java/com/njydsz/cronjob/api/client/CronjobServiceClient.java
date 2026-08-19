@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.cronjob.api.fallback.CronjobServiceClientFallback;
 
@@ -46,7 +46,7 @@ public interface CronjobServiceClient {
    * @return 执行日志 ID（触发失败时为 null）
    */
   @PostMapping(FeignClientConstants.CRONJOB_PATH_TRIGGER)
-  BaseResponse<String> trigger(@PathVariable("id") String jobId);
+  YdszResponse<String> trigger(@PathVariable("id") String jobId);
 
   /**
    * 立即触发执行一次定时任务（可选抢占分布式锁）
@@ -56,7 +56,7 @@ public interface CronjobServiceClient {
    * @return 执行日志 ID
    */
   @PostMapping(FeignClientConstants.CRONJOB_PATH_TRIGGER)
-  BaseResponse<String> trigger(
+  YdszResponse<String> trigger(
       @PathVariable("id") String jobId, @RequestParam("holdLock") boolean holdLock);
 
   /**
@@ -68,7 +68,7 @@ public interface CronjobServiceClient {
    * @return 任务详情（字段: id / jobKey / jobName / status / cronExpression / scheduleType 等）
    */
   @GetMapping("/api/v1/cronjob/{id}")
-  BaseResponse<Map<String, Object>> getJobInfo(@PathVariable("id") String jobId);
+  YdszResponse<Map<String, Object>> getJobInfo(@PathVariable("id") String jobId);
 
   /**
    * P2-F8: 暂停任务。
@@ -80,7 +80,7 @@ public interface CronjobServiceClient {
    * @return 统一响应结果
    */
   @PostMapping("/api/v1/cronjob/{id}/pause")
-  BaseResponse<Void> pauseJob(@PathVariable("id") String jobId);
+  YdszResponse<Void> pauseJob(@PathVariable("id") String jobId);
 
   /**
    * P2-F8: 恢复任务。
@@ -91,5 +91,5 @@ public interface CronjobServiceClient {
    * @return 统一响应结果
    */
   @PostMapping("/api/v1/cronjob/{id}/resume")
-  BaseResponse<Void> resumeJob(@PathVariable("id") String jobId);
+  YdszResponse<Void> resumeJob(@PathVariable("id") String jobId);
 }

@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.repository.FlowEventSubscriptionRepository;
@@ -131,14 +131,14 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
       String instanceId, FlowNodeDO node, Map<String, Object> variables, String boundaryTaskId) {
     if (instanceId == null || node == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("instanceId/node 不能为空")
           .build();
     }
     FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
     if (instance == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("流程实例不存在: " + instanceId)
           .build();
     }
@@ -186,7 +186,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
       String tenantId, String messageName, String correlationKey, String payload) {
     if (!StringUtils.hasText(messageName)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("messageName 不能为空")
           .build();
     }
@@ -228,7 +228,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
   public int throwError(String tenantId, String instanceId, String errorCode, String payload) {
     if (!StringUtils.hasText(errorCode)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("errorCode 不能为空")
           .build();
     }

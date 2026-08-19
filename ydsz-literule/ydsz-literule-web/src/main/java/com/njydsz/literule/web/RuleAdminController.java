@@ -26,8 +26,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
@@ -131,8 +131,8 @@ public class RuleAdminController {
   @Parameter(name = "ruleCode", description = "规则编码", required = true)
   @ApiResponse(responseCode = "200", description = "规则定义详情")
   @GetMapping("/{ruleCode}")
-  public BaseResponse<RuleDefinitionVO> get(@PathVariable String ruleCode) {
-    return BaseResponse.success(
+  public YdszResponse<RuleDefinitionVO> get(@PathVariable String ruleCode) {
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.entityToVO(ruleAdminService.getByCode(ruleCode)));
   }
 
@@ -157,11 +157,11 @@ public class RuleAdminController {
   @RateLimit(resource = "literule.rule_admin.save", threshold = 50)
   @PostMapping
   @AuthApiPermission(apiCodes = "execution:rule:save")
-  public BaseResponse<RuleDefinitionVO> save(
+  public YdszResponse<RuleDefinitionVO> save(
       @RequestBody RuleDefinition definition,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator,
       @RequestParam(value = "changeDesc", defaultValue = "API 更新") String changeDesc) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.entityToVO(
             ruleAdminService.save(definition, operator, changeDesc)));
   }
@@ -186,12 +186,12 @@ public class RuleAdminController {
   @RateLimit(resource = "literule.rule_admin.toggle", threshold = 50)
   @PutMapping("/{ruleCode}/toggle")
   @AuthApiPermission(apiCodes = "execution:rule:toggle")
-  public BaseResponse<Void> toggle(
+  public YdszResponse<Void> toggle(
       @PathVariable String ruleCode,
       @RequestParam boolean enabled,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     ruleAdminService.toggle(ruleCode, enabled, operator);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -229,7 +229,7 @@ public class RuleAdminController {
    * @since 1.0.0
    */
   @GetMapping("/{ruleCode}/version-diff")
-  public BaseResponse<RuleVersionDiffVO> versionDiff(
+  public YdszResponse<RuleVersionDiffVO> versionDiff(
       @PathVariable String ruleCode, @RequestParam int oldVersion, @RequestParam int newVersion) {
     List<RuleVersionVO> versions = ruleAdminService.listVersions(ruleCode);
     RuleVersionVO oldV =
@@ -238,7 +238,7 @@ public class RuleAdminController {
         versions.stream().filter(v -> v.getVersion() == newVersion).findFirst().orElse(null);
 
     if (oldV == null || newV == null) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.RULE_VERSION_NOT_FOUND,
           "版本不存在: oldVersion=" + oldVersion + ", newVersion=" + newVersion);
     }
@@ -247,7 +247,7 @@ public class RuleAdminController {
       RuleDefinition oldDef = YdszJson.fromJson(oldV.getDefinitionJson(), RuleDefinition.class);
       RuleDefinition newDef = YdszJson.fromJson(newV.getDefinitionJson(), RuleDefinition.class);
       RuleVersionDiffService diffService = new RuleVersionDiffService();
-      return BaseResponse.success(
+      return YdszResponse.success(
           LiteruleWebConverter.INSTANT.entityToVO(diffService.diff(oldDef, newDef)));
     } catch (Exception e) {
       log.error(
@@ -256,8 +256,8 @@ public class RuleAdminController {
           oldVersion,
           newVersion,
           e);
-      return BaseResponse.error(
-          BaseResultCode.VALIDATION_FAILED, "版本 Diff 解析失败: " + e.getMessage());
+      return YdszResponse.error(
+          YdszResultCode.VALIDATION_FAILED, "版本 Diff 解析失败: " + e.getMessage());
     }
   }
 
@@ -277,7 +277,7 @@ public class RuleAdminController {
       content = "'规则回滚: ' + #ruleCode + ', 目标版本: ' + #version + ', 操作人: ' + #operator")
   @RateLimit(resource = "literule.rule_admin.rollback", threshold = 50)
   @PostMapping("/{ruleCode}/rollback")
-  public BaseResponse<RuleDefinitionVO> rollback(
+  public YdszResponse<RuleDefinitionVO> rollback(
       @PathVariable String ruleCode,
       @RequestParam int version,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -288,7 +288,7 @@ public class RuleAdminController {
                 () ->
                     new IllegalStateException(
                         "回滚失败: 版本不存在, ruleCode=" + ruleCode + ", version=" + version));
-    return BaseResponse.success(restored);
+    return YdszResponse.success(restored);
   }
 
   /**
@@ -306,9 +306,9 @@ public class RuleAdminController {
       content = "'规则仿真运行: ' + (#ruleCode != null ? #ruleCode : 'ALL') + ', 操作人: SYSTEM")
   @RateLimit(resource = "literule.rule_admin.dryRun", threshold = 50)
   @PostMapping("/dry-run")
-  public BaseResponse<List<RuleResultVO>> dryRun(
+  public YdszResponse<List<RuleResultVO>> dryRun(
       @RequestParam(required = false) String ruleCode, @RequestBody Map<String, Object> facts) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         ruleAdminService.dryRun(ruleCode, facts).stream()
             .map(LiteruleConverter.INSTANT::entityToVO)
             .toList());
@@ -321,8 +321,8 @@ public class RuleAdminController {
    * @return true=合法
    */
   @GetMapping("/validate")
-  public BaseResponse<Boolean> validate(@RequestParam String expression) {
-    return BaseResponse.success(ruleAdminService.validateExpression(expression));
+  public YdszResponse<Boolean> validate(@RequestParam String expression) {
+    return YdszResponse.success(ruleAdminService.validateExpression(expression));
   }
 
   /**
@@ -351,7 +351,7 @@ public class RuleAdminController {
       content = "'表达式追踪: ' + #request['expression']")
   @RateLimit(resource = "literule.rule_admin.traceExpression", threshold = 50)
   @PostMapping("/expr-trace")
-  public BaseResponse<ExpressionEngine.TraceResult> traceExpression(
+  public YdszResponse<ExpressionEngine.TraceResult> traceExpression(
       @RequestBody Map<String, Object> request) {
     String expression = (String) request.get("expression");
     Map<String, Object> facts = new HashMap<>();
@@ -359,7 +359,7 @@ public class RuleAdminController {
     if (raw instanceof Map<?, ?> rawMap) {
       rawMap.forEach((k, v) -> facts.put(String.valueOf(k), v));
     }
-    return BaseResponse.success(ruleAdminService.traceExpression(expression, facts));
+    return YdszResponse.success(ruleAdminService.traceExpression(expression, facts));
   }
 
   /**
@@ -378,7 +378,7 @@ public class RuleAdminController {
       content = "'表达式校验: ' + #dto.expression + ', 类型: ' + #dto.type")
   @RateLimit(resource = "literule.rule_admin.validateExpression", threshold = 50)
   @PostMapping("/validate-expression")
-  public BaseResponse<ExpressionValidationResultVO> validateExpression(
+  public YdszResponse<ExpressionValidationResultVO> validateExpression(
       @Valid @RequestBody ExpressionValidateDTO dto) {
     String expression = dto.getExpression();
     String type = dto.getType() == null ? "condition" : dto.getType();
@@ -395,7 +395,7 @@ public class RuleAdminController {
         result = expressionValidationService.validateCondition(expression);
         break;
     }
-    return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(result));
+    return YdszResponse.success(LiteruleConverter.INSTANT.entityToVO(result));
   }
 
   /**
@@ -412,9 +412,9 @@ public class RuleAdminController {
       content = "'批量表达式校验: 共 ' + #request.size() + ' 条'")
   @RateLimit(resource = "literule.rule_admin.validateBatch", threshold = 50)
   @PostMapping("/validate-batch")
-  public BaseResponse<Map<String, ExpressionValidationResult>> validateBatch(
+  public YdszResponse<Map<String, ExpressionValidationResult>> validateBatch(
       @RequestBody Map<String, String> request) {
-    return BaseResponse.success(expressionValidationService.validateBatch(request));
+    return YdszResponse.success(expressionValidationService.validateBatch(request));
   }
 
   /**
@@ -433,18 +433,18 @@ public class RuleAdminController {
       content = "'规则AB测试: ' + #ruleCode + ', 操作人: SYSTEM")
   @RateLimit(resource = "literule.rule_admin.abTest", threshold = 50)
   @PostMapping("/{ruleCode}/ab-test")
-  public BaseResponse<ABTestService.ABTestReport> abTest(
+  public YdszResponse<ABTestService.ABTestReport> abTest(
       @PathVariable String ruleCode, @Valid @RequestBody RuleABTestDTO dto) {
     RuleDefinition currentDef = ruleAdminService.getByCode(ruleCode);
     if (currentDef == null) {
-      return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
     }
 
     // 构建候选规则定义（基于当前规则，覆盖候选字段）
     RuleDefinition candidateDef = dto.getCandidate();
     candidateDef.setCode(ruleCode);
 
-    return BaseResponse.success(abTestService.test(currentDef, candidateDef, dto.getFacts()));
+    return YdszResponse.success(abTestService.test(currentDef, candidateDef, dto.getFacts()));
   }
 
   /**
@@ -453,7 +453,7 @@ public class RuleAdminController {
    * @return 统计快照
    */
   @GetMapping("/stats")
-  public BaseResponse<RuleEngineStatsVO> stats() {
-    return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(ruleEngine.getStats()));
+  public YdszResponse<RuleEngineStatsVO> stats() {
+    return YdszResponse.success(LiteruleConverter.INSTANT.entityToVO(ruleEngine.getStats()));
   }
 }

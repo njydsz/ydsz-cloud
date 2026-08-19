@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 
 /**
  * 请求体大小限制过滤器。
@@ -69,8 +69,8 @@ public class RequestBodySizeLimitFilter extends OncePerRequestFilter {
   private void rejectRequest(HttpServletResponse response) throws IOException {
     response.setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
     response.setContentType("application/json;charset=UTF-8");
-    BaseResponse<?> body =
-        BaseResponse.error(
+    YdszResponse<?> body =
+        YdszResponse.error(
             "REQUEST_BODY_TOO_LARGE", "请求体过大，最大允许 " + (maxBodySize / 1024 / 1024) + "MB");
     response.getWriter().write(body.toString());
   }

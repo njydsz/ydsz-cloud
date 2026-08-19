@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
@@ -58,13 +58,13 @@ public class RuleVariableAdminController {
    * @return 变量定义列表
    */
   @GetMapping
-  public BaseResponse<List<VariableDefinitionVO>> list(
+  public YdszResponse<List<VariableDefinitionVO>> list(
       @RequestParam(required = false) String category) {
     List<VariableDefinition> all = variableRegistry.listAll();
     if (category == null || category.isBlank()) {
-      return BaseResponse.success(all.stream().map(this::toVariableVO).toList());
+      return YdszResponse.success(all.stream().map(this::toVariableVO).toList());
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         all.stream()
             .filter(v -> category.equals(v.getCategory()))
             .map(this::toVariableVO)
@@ -78,12 +78,12 @@ public class RuleVariableAdminController {
    * @return 变量定义
    */
   @GetMapping("/{varName}")
-  public BaseResponse<VariableDefinitionVO> get(@PathVariable String varName) {
+  public YdszResponse<VariableDefinitionVO> get(@PathVariable String varName) {
     VariableDefinition def = variableRegistry.lookup(varName);
     if (def == null) {
-      return BaseResponse.error(LiteruleExceptionCode.VARIABLE_DEF_NOT_FOUND, "变量不存在: " + varName);
+      return YdszResponse.error(LiteruleExceptionCode.VARIABLE_DEF_NOT_FOUND, "变量不存在: " + varName);
     }
-    return BaseResponse.success(toVariableVO(def));
+    return YdszResponse.success(toVariableVO(def));
   }
 
   /**
@@ -100,12 +100,12 @@ public class RuleVariableAdminController {
       content = "'save'")
   @RateLimit(resource = "literule.rule_variable_admin.save", threshold = 50)
   @PostMapping
-  public BaseResponse<VariableDefinitionVO> save(@RequestBody VariableDefinition definition) {
+  public YdszResponse<VariableDefinitionVO> save(@RequestBody VariableDefinition definition) {
     if (definition == null || definition.getName() == null || definition.getName().isBlank()) {
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "变量定义及 name 不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "变量定义及 name 不能为空");
     }
     variableRegistry.register(definition);
-    return BaseResponse.success(toVariableVO(variableRegistry.lookup(definition.getName())));
+    return YdszResponse.success(toVariableVO(variableRegistry.lookup(definition.getName())));
   }
 
   /**
@@ -122,9 +122,9 @@ public class RuleVariableAdminController {
       content = "'delete'")
   @RateLimit(resource = "literule.rule_variable_admin.delete", threshold = 50)
   @DeleteMapping("/{varName}")
-  public BaseResponse<Void> delete(@PathVariable String varName) {
+  public YdszResponse<Void> delete(@PathVariable String varName) {
     variableRegistry.unregister(varName);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -140,9 +140,9 @@ public class RuleVariableAdminController {
       content = "'refresh'")
   @RateLimit(resource = "literule.rule_variable_admin.refresh", threshold = 50)
   @PostMapping("/refresh")
-  public BaseResponse<Void> refresh() {
+  public YdszResponse<Void> refresh() {
     variableRegistry.refresh();
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -154,8 +154,8 @@ public class RuleVariableAdminController {
    * @return 可用变量定义列表
    */
   @GetMapping("/available")
-  public BaseResponse<List<VariableDefinitionVO>> listAvailable() {
-    return BaseResponse.success(
+  public YdszResponse<List<VariableDefinitionVO>> listAvailable() {
+    return YdszResponse.success(
         expressionValidationService.listAvailableVariables().stream()
             .map(this::toVariableVO)
             .toList());

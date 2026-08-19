@@ -19,7 +19,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -106,8 +106,8 @@ public class UserChannelBindingController {
   @RateLimit(resource = "message.userchannelbinding.upsert", threshold = 50)
   @Idempotent(key = "ydsz:message:UserChannelBindingController:upsert:lock", ttlSeconds = 5)
   @PostMapping
-  public BaseResponse<MsgUserChannelVO> upsert(@Valid @RequestBody UserChannelBindingDTO dto) {
-    return BaseResponse.success(
+  public YdszResponse<MsgUserChannelVO> upsert(@Valid @RequestBody UserChannelBindingDTO dto) {
+    return YdszResponse.success(
         MessageConverter.INSTANT.entityToVO(userChannelBindingService.upsert(dto)));
   }
 
@@ -121,8 +121,8 @@ public class UserChannelBindingController {
   @Operation(summary = "查询当前用户所有通道绑定")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
   @GetMapping("/mine")
-  public BaseResponse<List<MsgUserChannelVO>> listMine() {
-    return BaseResponse.success(
+  public YdszResponse<List<MsgUserChannelVO>> listMine() {
+    return YdszResponse.success(
         MessageConverter.INSTANT.userChannelListToVO(
             userChannelBindingService.listByUser(AuthContextUtils.getUserId())));
   }
@@ -138,8 +138,8 @@ public class UserChannelBindingController {
   @Operation(summary = "按用户ID查询通道绑定")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
   @GetMapping("/user/{userId}")
-  public BaseResponse<List<MsgUserChannelVO>> listByUser(@PathVariable String userId) {
-    return BaseResponse.success(
+  public YdszResponse<List<MsgUserChannelVO>> listByUser(@PathVariable String userId) {
+    return YdszResponse.success(
         MessageConverter.INSTANT.userChannelListToVO(userChannelBindingService.listByUser(userId)));
   }
 
@@ -162,8 +162,8 @@ public class UserChannelBindingController {
   @RateLimit(resource = "message.userchannelbinding.delete", threshold = 50)
   @Idempotent(key = "ydsz:message:UserChannelBindingController:delete:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
-  public BaseResponse<Void> delete(@PathVariable String id) {
+  public YdszResponse<Void> delete(@PathVariable String id) {
     userChannelBindingService.delete(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

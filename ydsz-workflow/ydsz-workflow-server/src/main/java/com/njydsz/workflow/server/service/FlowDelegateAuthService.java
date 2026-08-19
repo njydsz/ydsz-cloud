@@ -2,7 +2,7 @@ package com.njydsz.workflow.server.service;
 
 import java.util.List;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
 
 /**
@@ -69,10 +69,10 @@ public interface FlowDelegateAuthService {
   int scanAndMarkExpired();
 
   /** 分页查询"我代理处理的日志" */
-  BaseResponse<?> listDelegateLog(String delegateUserId, int page, int size);
+  YdszResponse<?> listDelegateLog(String delegateUserId, int page, int size);
 
   /** 分页查询"我的被代理日志" */
-  BaseResponse<?> listOwnerLog(String ownerUserId, int page, int size);
+  YdszResponse<?> listOwnerLog(String ownerUserId, int page, int size);
 
   /**
    * P1-7: 链式解析代理人

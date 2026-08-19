@@ -15,7 +15,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -97,9 +97,9 @@ public class RecallController {
       content = "'recallNotification'")
   @RateLimit(resource = "message.recall.recallNotification", threshold = 50)
   @PostMapping("/notification")
-  public BaseResponse<Boolean> recallNotification(
+  public YdszResponse<Boolean> recallNotification(
       @RequestParam String userId, @Valid @RequestBody RecallRequestDTO dto) {
-    return BaseResponse.success(recallService.recallNotification(userId, dto.getId()));
+    return YdszResponse.success(recallService.recallNotification(userId, dto.getId()));
   }
 
   /**
@@ -118,8 +118,8 @@ public class RecallController {
       content = "'recallMessage'")
   @RateLimit(resource = "message.recall.recallMessage", threshold = 50)
   @PostMapping("/message/{logId}")
-  public BaseResponse<Boolean> recallMessage(@PathVariable String logId) {
-    return BaseResponse.success(recallService.recallMessage(logId));
+  public YdszResponse<Boolean> recallMessage(@PathVariable String logId) {
+    return YdszResponse.success(recallService.recallMessage(logId));
   }
 
   /**
@@ -140,8 +140,8 @@ public class RecallController {
       content = "'recallByMsgId'")
   @RateLimit(resource = "message.recall.recallByMsgId", threshold = 50)
   @PostMapping("/msg/{msgId}")
-  public BaseResponse<Boolean> recallByMsgId(@PathVariable String msgId) {
-    return BaseResponse.success(recallService.recallByMsgId(msgId));
+  public YdszResponse<Boolean> recallByMsgId(@PathVariable String msgId) {
+    return YdszResponse.success(recallService.recallByMsgId(msgId));
   }
 
   /**
@@ -160,7 +160,7 @@ public class RecallController {
       content = "'recallBatch'")
   @RateLimit(resource = "message.recall.recallBatch", threshold = 50)
   @PostMapping("/batch")
-  public BaseResponse<Integer> recallBatch(@Valid @RequestBody RecallRequestDTO dto) {
-    return BaseResponse.success(recallService.recallBatch(dto.getBizType(), dto.getBizId()));
+  public YdszResponse<Integer> recallBatch(@Valid @RequestBody RecallRequestDTO dto) {
+    return YdszResponse.success(recallService.recallBatch(dto.getBizType(), dto.getBizId()));
   }
 }

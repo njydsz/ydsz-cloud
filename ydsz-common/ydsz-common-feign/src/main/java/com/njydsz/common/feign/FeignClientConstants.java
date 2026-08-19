@@ -142,10 +142,10 @@ public final class FeignClientConstants {
   /**
    * Feign 调用目标服务不可用时的统一错误码。
    *
-   * <p>所有 FeignClient FallbackFactory 在服务降级时必须返回此错误码， 禁止返回 {@code BaseResponse.success(null)} 或
-   * {@code BaseResponse.success(emptyList)}， 避免调用方误判为成功。
+   * <p>所有 FeignClient FallbackFactory 在服务降级时必须返回此错误码， 禁止返回 {@code YdszResponse.success(null)} 或
+   * {@code YdszResponse.success(emptyList)}， 避免调用方误判为成功。
    *
-   * <p>错误码与 {@link com.njydsz.common.core.code.BaseResultCode#SERVICE_UNAVAILABLE} 保持一致。
+   * <p>错误码与 {@link com.njydsz.common.core.code.YdszResultCode#SERVICE_UNAVAILABLE} 保持一致。
    */
   public static final String FEIGN_SERVICE_UNAVAILABLE = "B10202";
 }

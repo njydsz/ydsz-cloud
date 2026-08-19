@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
@@ -63,9 +63,9 @@ public class RuleABPolicyController {
 
   /** 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略） */
   @GetMapping("/{ruleCode}/ab-policy")
-  public BaseResponse<RuleABPolicyVO> getABPolicy(@PathVariable String ruleCode) {
+  public YdszResponse<RuleABPolicyVO> getABPolicy(@PathVariable String ruleCode) {
     RuleABPolicy policy = abTestAutoRollbackProvider.getPolicy(ruleCode);
-    return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(policy));
+    return YdszResponse.success(LiteruleConverter.INSTANT.entityToVO(policy));
   }
 
   /** 更新规则的 AB Test 自动回滚策略 */
@@ -77,20 +77,20 @@ public class RuleABPolicyController {
       content = "'updateABPolicy'")
   @RateLimit(resource = "literule.rule_a_b_policy.updateABPolicy", threshold = 50)
   @PutMapping("/{ruleCode}/ab-policy")
-  public BaseResponse<Void> updateABPolicy(
+  public YdszResponse<Void> updateABPolicy(
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleABPolicyPutDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleABPolicy policy = LiteruleConverter.INSTANT.putDtoToEntity(dto);
     policy.setRuleCode(ruleCode);
     abTestAutoRollbackProvider.savePolicy(policy, operator);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /** 查询规则的回滚历史 */
   @GetMapping("/{ruleCode}/ab-rollbacks")
-  public BaseResponse<List<RuleABRollbackVO>> listRollbackHistory(@PathVariable String ruleCode) {
-    return BaseResponse.success(
+  public YdszResponse<List<RuleABRollbackVO>> listRollbackHistory(@PathVariable String ruleCode) {
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.ruleABRollbackListToVO(
             abTestAutoRollbackProvider.listRollbackHistory(ruleCode)));
   }
@@ -104,8 +104,8 @@ public class RuleABPolicyController {
       content = "'evaluateAB'")
   @RateLimit(resource = "literule.rule_a_b_policy.evaluateAB", threshold = 50)
   @PostMapping("/{ruleCode}/ab-evaluate")
-  public BaseResponse<Boolean> evaluateAB(@PathVariable String ruleCode) {
-    return BaseResponse.success(abTestAutoRollbackProvider.evaluateOne(ruleCode));
+  public YdszResponse<Boolean> evaluateAB(@PathVariable String ruleCode) {
+    return YdszResponse.success(abTestAutoRollbackProvider.evaluateOne(ruleCode));
   }
 
   /**
@@ -121,11 +121,11 @@ public class RuleABPolicyController {
       content = "'manualRollback'")
   @RateLimit(resource = "literule.rule_a_b_policy.manualRollback", threshold = 50)
   @PostMapping("/{ruleCode}/ab-rollback")
-  public BaseResponse<RuleABRollbackVO> manualRollback(
+  public YdszResponse<RuleABRollbackVO> manualRollback(
       @PathVariable String ruleCode,
       @RequestParam(value = "reason", defaultValue = "MANUAL") String reason,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.entityToVO(
             abTestAutoRollbackProvider.manualRollback(ruleCode, operator, reason)));
   }

@@ -20,7 +20,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
@@ -108,9 +108,9 @@ public class TrashController {
   @GetMapping("/list")
   @Operation(summary = "查询回收站列表")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_LIST)
-  public BaseResponse<List<TrashItemVO>> list(
+  public YdszResponse<List<TrashItemVO>> list(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    return BaseResponse.success(trashApplicationService.listTrash(userId));
+    return YdszResponse.success(trashApplicationService.listTrash(userId));
   }
 
   /**
@@ -131,11 +131,11 @@ public class TrashController {
   @PostMapping("/{trashItemId}/restore")
   @Operation(summary = "从回收站恢复")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_RESTORE)
-  public BaseResponse<Void> restore(
+  public YdszResponse<Void> restore(
       @PathVariable String trashItemId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     trashApplicationService.restore(trashItemId, userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -156,11 +156,11 @@ public class TrashController {
   @PostMapping("/batch-restore")
   @Operation(summary = "批量恢复")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_RESTORE)
-  public BaseResponse<Void> batchRestore(
+  public YdszResponse<Void> batchRestore(
       @RequestBody List<String> trashItemIds,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     trashApplicationService.batchRestore(trashItemIds, userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -181,11 +181,11 @@ public class TrashController {
   @DeleteMapping("/{trashItemId}")
   @Operation(summary = "永久删除")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_PURGE)
-  public BaseResponse<Void> purge(
+  public YdszResponse<Void> purge(
       @PathVariable String trashItemId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     trashApplicationService.purge(trashItemId, userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -205,9 +205,9 @@ public class TrashController {
   @DeleteMapping("/empty")
   @Operation(summary = "清空回收站")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_EMPTY)
-  public BaseResponse<Void> emptyTrash(
+  public YdszResponse<Void> emptyTrash(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     trashApplicationService.emptyTrash(userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

@@ -22,7 +22,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -87,8 +87,8 @@ public class AlertController {
       content = "'createRule'")
   @RateLimit(resource = "cronjob.alert.createRule", threshold = 50)
   @PostMapping("/rule")
-  public BaseResponse<String> createRule(@Valid @RequestBody AlertRulePostDTO dto) {
-    return BaseResponse.success(alertService.createRule(toSaveDTO(dto)));
+  public YdszResponse<String> createRule(@Valid @RequestBody AlertRulePostDTO dto) {
+    return YdszResponse.success(alertService.createRule(toSaveDTO(dto)));
   }
 
   /**
@@ -110,10 +110,10 @@ public class AlertController {
       content = "'updateRule'")
   @RateLimit(resource = "cronjob.alert.updateRule", threshold = 50)
   @PutMapping("/rule/{id}")
-  public BaseResponse<Void> updateRule(
+  public YdszResponse<Void> updateRule(
       @PathVariable String id, @Valid @RequestBody AlertRulePutDTO dto) {
     alertService.updateRule(id, toSaveDTO(dto));
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -134,9 +134,9 @@ public class AlertController {
       content = "'deleteRule'")
   @RateLimit(resource = "cronjob.alert.deleteRule", threshold = 50)
   @DeleteMapping("/rule/{id}")
-  public BaseResponse<Void> deleteRule(@PathVariable String id) {
+  public YdszResponse<Void> deleteRule(@PathVariable String id) {
     alertService.deleteRule(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -148,8 +148,8 @@ public class AlertController {
   @Operation(summary = "查询告警规则详情")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
   @GetMapping("/rule/{id}")
-  public BaseResponse<JobAlertRuleVO> getRuleById(@PathVariable String id) {
-    return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(alertService.getRuleById(id)));
+  public YdszResponse<JobAlertRuleVO> getRuleById(@PathVariable String id) {
+    return YdszResponse.success(CronjobConverter.INSTANT.entityToVO(alertService.getRuleById(id)));
   }
 
   /**
@@ -162,8 +162,8 @@ public class AlertController {
   @Operation(summary = "查询全部告警规则")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
   @GetMapping("/rules")
-  public BaseResponse<List<JobAlertRuleVO>> listRules() {
-    return BaseResponse.success(
+  public YdszResponse<List<JobAlertRuleVO>> listRules() {
+    return YdszResponse.success(
         CronjobConverter.INSTANT.jobAlertRuleListToVO(alertService.listRules()));
   }
 
@@ -186,9 +186,9 @@ public class AlertController {
       content = "'toggleRule'")
   @RateLimit(resource = "cronjob.alert.toggleRule", threshold = 50)
   @PutMapping("/rule/{id}/toggle")
-  public BaseResponse<Void> toggleRule(@PathVariable String id, @RequestParam Integer enabled) {
+  public YdszResponse<Void> toggleRule(@PathVariable String id, @RequestParam Integer enabled) {
     alertService.toggleRule(id, enabled);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -203,11 +203,11 @@ public class AlertController {
   @Operation(summary = "查询任务告警历史")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
   @GetMapping("/logs/{jobId}")
-  public BaseResponse<List<JobAlertLogVO>> queryAlertLogs(
+  public YdszResponse<List<JobAlertLogVO>> queryAlertLogs(
       @PathVariable String jobId,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime since) {
-    return BaseResponse.success(alertService.queryAlertLogs(jobId, since));
+    return YdszResponse.success(alertService.queryAlertLogs(jobId, since));
   }
 
   /** 将 PostDTO 转换为 SaveDTO。 */

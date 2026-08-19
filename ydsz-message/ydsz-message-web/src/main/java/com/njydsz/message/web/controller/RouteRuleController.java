@@ -20,7 +20,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.jdbc.support.PageResponses;
@@ -99,8 +99,8 @@ public class RouteRuleController {
       content = "'create'")
   @RateLimit(resource = "message.routerule.create", threshold = 50)
   @PostMapping
-  public BaseResponse<MsgRouteRuleVO> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
-    return BaseResponse.success(MessageConverter.INSTANT.entityToVO(routeRuleService.create(dto)));
+  public YdszResponse<MsgRouteRuleVO> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
+    return YdszResponse.success(MessageConverter.INSTANT.entityToVO(routeRuleService.create(dto)));
   }
 
   /**
@@ -120,9 +120,9 @@ public class RouteRuleController {
       content = "'update'")
   @RateLimit(resource = "message.routerule.update", threshold = 50)
   @PutMapping("/{id}")
-  public BaseResponse<MsgRouteRuleVO> update(
+  public YdszResponse<MsgRouteRuleVO> update(
       @PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         MessageConverter.INSTANT.entityToVO(routeRuleService.update(id, dto)));
   }
 
@@ -142,9 +142,9 @@ public class RouteRuleController {
       content = "'delete'")
   @RateLimit(resource = "message.routerule.delete", threshold = 50)
   @DeleteMapping("/{id}")
-  public BaseResponse<Void> delete(@PathVariable String id) {
+  public YdszResponse<Void> delete(@PathVariable String id) {
     routeRuleService.delete(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -156,8 +156,8 @@ public class RouteRuleController {
   @Operation(summary = "路由规则详情")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_VIEW)
   @GetMapping("/{id}")
-  public BaseResponse<MsgRouteRuleVO> getById(@PathVariable String id) {
-    return BaseResponse.success(MessageConverter.INSTANT.entityToVO(routeRuleService.getById(id)));
+  public YdszResponse<MsgRouteRuleVO> getById(@PathVariable String id) {
+    return YdszResponse.success(MessageConverter.INSTANT.entityToVO(routeRuleService.getById(id)));
   }
 
   /**
@@ -182,8 +182,8 @@ public class RouteRuleController {
   @Operation(summary = "查询启用的路由规则")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
   @GetMapping("/enabled")
-  public BaseResponse<List<MsgRouteRuleVO>> listEnabled() {
-    return BaseResponse.success(
+  public YdszResponse<List<MsgRouteRuleVO>> listEnabled() {
+    return YdszResponse.success(
         MessageConverter.INSTANT.routeRuleListToVO(routeRuleService.listEnabled()));
   }
 }

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.response.BaseResponse;
+import com.njydsz.common.response.YdszResponse;
 import com.njydsz.common.web.constants.AuthHeaderConstants;
 import com.njydsz.nextwiki.domain.dto.SpaceMemberDTO;
 import com.njydsz.nextwiki.domain.vo.SpaceVO;
@@ -62,11 +62,11 @@ public class SpaceController {
    */
   @GetMapping
   @Operation(summary = "查询空间列表", description = "查询当前用户可见的空间列表")
-  public BaseResponse<List<SpaceVO>> listSpaces(
+  public YdszResponse<List<SpaceVO>> listSpaces(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     List<SpaceVO> spaces = spaceApplicationService.listSpaces(userId);
-    return BaseResponse.success(spaces);
+    return YdszResponse.success(spaces);
   }
 
   /**
@@ -78,13 +78,13 @@ public class SpaceController {
    */
   @PostMapping
   @Operation(summary = "创建空间", description = "创建新的知识库空间，创建者自动成为所有者")
-  public BaseResponse<SpaceVO> createSpace(
+  public YdszResponse<SpaceVO> createSpace(
       @Valid @RequestBody CreateSpaceRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     SpaceVO space = spaceApplicationService.createSpace(
         request.getName(), request.getDescription(), request.getVisibility(), userId);
-    return BaseResponse.success(space);
+    return YdszResponse.success(space);
   }
 
   /**
@@ -96,12 +96,12 @@ public class SpaceController {
    */
   @GetMapping("/{spaceId}")
   @Operation(summary = "获取空间详情")
-  public BaseResponse<SpaceVO> getSpace(
+  public YdszResponse<SpaceVO> getSpace(
       @PathVariable String spaceId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     SpaceVO space = spaceApplicationService.getSpace(spaceId, userId);
-    return BaseResponse.success(space);
+    return YdszResponse.success(space);
   }
 
   /**
@@ -114,14 +114,14 @@ public class SpaceController {
    */
   @PutMapping("/{spaceId}")
   @Operation(summary = "更新空间", description = "更新空间名称、描述、可见性（仅所有者/管理员）")
-  public BaseResponse<SpaceVO> updateSpace(
+  public YdszResponse<SpaceVO> updateSpace(
       @PathVariable String spaceId,
       @Valid @RequestBody UpdateSpaceRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     SpaceVO space = spaceApplicationService.updateSpace(
         spaceId, request.getName(), request.getDescription(), request.getVisibility(), userId);
-    return BaseResponse.success(space);
+    return YdszResponse.success(space);
   }
 
   /**
@@ -133,12 +133,12 @@ public class SpaceController {
    */
   @PostMapping("/{spaceId}/archive")
   @Operation(summary = "归档空间", description = "将空间状态改为 archived（仅所有者/管理员）")
-  public BaseResponse<Boolean> archiveSpace(
+  public YdszResponse<Boolean> archiveSpace(
       @PathVariable String spaceId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     spaceApplicationService.archiveSpace(spaceId, userId);
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -150,12 +150,12 @@ public class SpaceController {
    */
   @DeleteMapping("/{spaceId}")
   @Operation(summary = "删除空间", description = "逻辑删除空间（仅所有者/管理员）")
-  public BaseResponse<Boolean> deleteSpace(
+  public YdszResponse<Boolean> deleteSpace(
       @PathVariable String spaceId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     spaceApplicationService.deleteSpace(spaceId, userId);
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -168,13 +168,13 @@ public class SpaceController {
    */
   @PostMapping("/{spaceId}/members")
   @Operation(summary = "添加成员", description = "添加用户到空间并赋予角色（仅所有者/管理员）")
-  public BaseResponse<Boolean> addMember(
+  public YdszResponse<Boolean> addMember(
       @PathVariable String spaceId,
       @Valid @RequestBody AddMemberRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     spaceApplicationService.addMember(spaceId, request.getUserId(), request.getRole(), userId);
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -187,13 +187,13 @@ public class SpaceController {
    */
   @DeleteMapping("/{spaceId}/members/{targetUserId}")
   @Operation(summary = "移除成员", description = "从空间中移除用户（仅所有者/管理员，不能移除所有者）")
-  public BaseResponse<Boolean> removeMember(
+  public YdszResponse<Boolean> removeMember(
       @PathVariable String spaceId,
       @PathVariable String targetUserId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     spaceApplicationService.removeMember(spaceId, targetUserId, userId);
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -205,12 +205,12 @@ public class SpaceController {
    */
   @GetMapping("/{spaceId}/members")
   @Operation(summary = "查询成员列表", description = "查询空间的所有成员（需有读取权限）")
-  public BaseResponse<List<SpaceMemberDTO>> listMembers(
+  public YdszResponse<List<SpaceMemberDTO>> listMembers(
       @PathVariable String spaceId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     List<SpaceMemberDTO> members = spaceApplicationService.listMembers(spaceId, userId);
-    return BaseResponse.success(members);
+    return YdszResponse.success(members);
   }
 
   // ==================== 内部请求 DTO ====================

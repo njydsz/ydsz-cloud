@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.server.template.util.TemplateFilterUtil;
 
@@ -106,13 +106,13 @@ public class DefaultTemplateEngine implements TemplateEngine {
       Object value = resolve(params, key);
       if (value == null) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("模板必填参数缺失: " + key)
             .build();
       }
       if (value instanceof String s && s.isBlank()) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("模板必填参数为空: " + key)
             .build();
       }

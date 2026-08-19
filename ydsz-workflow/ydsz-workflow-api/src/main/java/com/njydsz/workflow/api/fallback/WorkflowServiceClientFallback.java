@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.workflow.api.client.WorkflowServiceClient;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
@@ -28,18 +28,18 @@ public class WorkflowServiceClientFallback implements FallbackFactory<WorkflowSe
     log.warn("[Feign] workflow 服务降级: {}", cause == null ? "?" : cause.getMessage());
     return new WorkflowServiceClient() {
       @Override
-      public BaseResponse<String> startProcess(FlowStartProcessDTO dto) {
-        return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "工作流服务不可用");
+      public YdszResponse<String> startProcess(FlowStartProcessDTO dto) {
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "工作流服务不可用");
       }
 
       @Override
-      public BaseResponse<FlowInstanceVO> getByBusiness(String businessType, String businessId) {
-        return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "工作流服务不可用");
+      public YdszResponse<FlowInstanceVO> getByBusiness(String businessType, String businessId) {
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "工作流服务不可用");
       }
 
       @Override
-      public BaseResponse<Void> terminate(String processInstanceId, String reason) {
-        return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "工作流服务不可用");
+      public YdszResponse<Void> terminate(String processInstanceId, String reason) {
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "工作流服务不可用");
       }
     };
   }

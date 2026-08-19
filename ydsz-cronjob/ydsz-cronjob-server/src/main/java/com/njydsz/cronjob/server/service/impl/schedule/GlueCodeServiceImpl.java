@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 import com.njydsz.cronjob.domain.repository.GlueCodeRepository;
@@ -66,13 +66,13 @@ public class GlueCodeServiceImpl implements GlueCodeService {
   public GlueCode save(String jobId, String sourceCode, String language, String remark) {
     if (!StringUtils.hasText(jobId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_glue_job_id_required")
           .build();
     }
     if (sourceCode == null || sourceCode.isBlank()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_glue_source_required")
           .build();
     }
@@ -139,13 +139,13 @@ public class GlueCodeServiceImpl implements GlueCodeService {
   public GlueCode rollback(String jobId, Integer version) {
     if (!StringUtils.hasText(jobId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_glue_job_id_required")
           .build();
     }
     if (version == null || version < 1) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_glue_version_invalid")
           .build();
     }
@@ -155,7 +155,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     GlueCode target = glueCodeRepository.selectOne(wrapper);
     if (target == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("error.cronjob.msg_glue_version_not_found")
           .build();
     }
@@ -312,7 +312,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     Map<String, Object> result = new HashMap<>();
     if (!StringUtils.hasText(jobId) || versionA == null || versionB == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_glue_diff_params_required")
           .build();
     }
@@ -321,7 +321,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     GlueCode codeB = getVersion(jobId, versionB);
     if (codeA == null || codeB == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("error.cronjob.msg_glue_version_not_found")
           .build();
     }

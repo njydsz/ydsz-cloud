@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.cache.constant.CacheConstants;
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
@@ -134,7 +134,7 @@ public class FlowDefinitionPublishManager {
     FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("流程定义不存在: " + definitionId)
           .build();
     }
@@ -185,20 +185,20 @@ public class FlowDefinitionPublishManager {
   public void switchActiveVersion(String flowCode, String definitionId, String tenantId) {
     if (!StringUtils.hasText(flowCode)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("flowCode 不能为空")
           .build();
     }
     FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("流程定义不存在: " + definitionId)
           .build();
     }
     if (!flowCode.equals(def.getFlowCode())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("flowCode 不匹配: 期望=" + flowCode + " 实际=" + def.getFlowCode())
           .build();
     }
@@ -254,7 +254,7 @@ public class FlowDefinitionPublishManager {
   public Map<String, Object> rollbackDefinition(String flowCode, String tenantId) {
     if (!StringUtils.hasText(flowCode)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("flowCode 不能为空")
           .build();
     }
@@ -265,7 +265,7 @@ public class FlowDefinitionPublishManager {
         .orElse(null);
     if (currentDef == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("未找到当前激活的流程定义: flowCode=" + flowCode)
           .build();
     }
@@ -282,7 +282,7 @@ public class FlowDefinitionPublishManager {
     FlowDefinitionDO previousDef = definitionMapper.selectOne(qw);
     if (previousDef == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("无可回滚的历史版本: flowCode=" + flowCode)
           .build();
     }
@@ -299,7 +299,7 @@ public class FlowDefinitionPublishManager {
           previousDef.getId(),
           riskLevel);
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("回滚风险等级为 HIGH，存在在途实例将卡死，请先处理在途实例后再回滚")
           .build();
     }
@@ -410,7 +410,7 @@ public class FlowDefinitionPublishManager {
             runningTotal,
             recommendations);
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message(
                 "发布阻断：存在 "
                     + runningTotal

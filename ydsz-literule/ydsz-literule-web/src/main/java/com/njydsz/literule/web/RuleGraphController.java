@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RuleResult;
@@ -87,8 +87,8 @@ public class RuleGraphController {
    * @return 画布对象
    */
   @GetMapping("/{ruleCode}/graph")
-  public BaseResponse<RuleChainGraphVO> getChainGraph(@PathVariable String ruleCode) {
-    return BaseResponse.success(
+  public YdszResponse<RuleChainGraphVO> getChainGraph(@PathVariable String ruleCode) {
+    return YdszResponse.success(
         LiteruleWebConverter.INSTANT.entityToVO(ruleChainGraphProvider.getByRuleCode(ruleCode)));
   }
 
@@ -110,14 +110,14 @@ public class RuleGraphController {
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_graph.saveChainGraph", threshold = 50)
   @PostMapping("/{ruleCode}/graph")
-  public BaseResponse<Map<String, Object>> saveChainGraph(
+  public YdszResponse<Map<String, Object>> saveChainGraph(
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleChainGraph graph,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     // 1. 结构校验
     List<RuleGraphValidator.GraphValidationIssue> issues = RuleGraphValidator.validate(graph);
     if (!RuleGraphValidator.isValid(issues)) {
-      return BaseResponse.success(
+      return YdszResponse.success(
           Map.of("valid", false, "issues", issues, "message", "画布结构不合法，请先修复错误"));
     }
     // 2. 保存
@@ -126,7 +126,7 @@ public class RuleGraphController {
     result.put("valid", true);
     result.put("issues", issues);
     result.put("graph", saved);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /** 删除画布 */
@@ -138,9 +138,9 @@ public class RuleGraphController {
       content = "'deleteChainGraph'")
   @RateLimit(resource = "literule.rule_graph.deleteChainGraph", threshold = 50)
   @DeleteMapping("/{ruleCode}/graph")
-  public BaseResponse<Void> deleteChainGraph(@PathVariable String ruleCode) {
+  public YdszResponse<Void> deleteChainGraph(@PathVariable String ruleCode) {
     ruleChainGraphProvider.delete(ruleCode);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -155,9 +155,9 @@ public class RuleGraphController {
       content = "'validateChainGraph'")
   @RateLimit(resource = "literule.rule_graph.validateChainGraph", threshold = 50)
   @PostMapping("/{ruleCode}/graph/validate")
-  public BaseResponse<List<RuleGraphValidator.GraphValidationIssue>> validateChainGraph(
+  public YdszResponse<List<RuleGraphValidator.GraphValidationIssue>> validateChainGraph(
       @Valid @RequestBody RuleChainGraph graph) {
-    return BaseResponse.success(RuleGraphValidator.validate(graph));
+    return YdszResponse.success(RuleGraphValidator.validate(graph));
   }
 
   /**
@@ -176,9 +176,9 @@ public class RuleGraphController {
       content = "'previewExpression'")
   @RateLimit(resource = "literule.rule_graph.previewExpression", threshold = 50)
   @PostMapping("/expression-preview")
-  public BaseResponse<ExpressionPreviewResultVO> previewExpression(
+  public YdszResponse<ExpressionPreviewResultVO> previewExpression(
       @RequestParam String expression, @RequestBody Map<String, Object> facts) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleWebConverter.INSTANT.entityToVO(
             expressionValidationService.previewEvaluate(expression, facts)));
   }
@@ -200,15 +200,15 @@ public class RuleGraphController {
       content = "'dryRunGraph'")
   @RateLimit(resource = "literule.rule_graph.dryRunGraph", threshold = 50)
   @PostMapping("/{ruleCode}/graph/dry-run")
-  public BaseResponse<List<RuleResultVO>> dryRunGraph(
+  public YdszResponse<List<RuleResultVO>> dryRunGraph(
       @PathVariable String ruleCode, @RequestBody Map<String, Object> facts) {
     try {
       List<RuleResult> results = graphExecutionProvider.dryRunGraph(ruleCode, facts);
-      return BaseResponse.success(
+      return YdszResponse.success(
           results.stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
     } catch (IllegalArgumentException e) {
       log.warn("[RuleAdmin] 画布 dry-run 失败: ruleCode={}, err={}", ruleCode, e.getMessage());
-      return BaseResponse.error(e.getMessage());
+      return YdszResponse.error(e.getMessage());
     }
   }
 
@@ -221,8 +221,8 @@ public class RuleGraphController {
    * @return 失效规则编码列表
    */
   @GetMapping("/{ruleCode}/graph/invalid-refs")
-  public BaseResponse<List<StringVO>> invalidGraphRefs(@PathVariable String ruleCode) {
-    return BaseResponse.success(
+  public YdszResponse<List<StringVO>> invalidGraphRefs(@PathVariable String ruleCode) {
+    return YdszResponse.success(
         graphExecutionProvider.collectInvalidReferences(ruleCode).stream()
             .map(StringVO::new)
             .toList());
@@ -238,7 +238,7 @@ public class RuleGraphController {
    * @return 函数定义列表
    */
   @GetMapping("/expression-functions")
-  public BaseResponse<List<ExpressionFunctionDefVO>> expressionFunctions(
+  public YdszResponse<List<ExpressionFunctionDefVO>> expressionFunctions(
       @RequestParam(value = "engine", defaultValue = "all") String engine) {
     List<ExpressionFunctionDef> all = ExpressionFunctionDef.defaults();
     List<ExpressionFunctionDef> filtered =
@@ -248,7 +248,7 @@ public class RuleGraphController {
                     "all".equalsIgnoreCase(engine)
                         || engine.equalsIgnoreCase(f.getSupportedEngines()))
             .toList();
-    return BaseResponse.success(
+    return YdszResponse.success(
         filtered.stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
   }
 }

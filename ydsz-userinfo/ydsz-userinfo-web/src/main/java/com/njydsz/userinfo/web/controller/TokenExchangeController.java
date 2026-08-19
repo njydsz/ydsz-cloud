@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -80,7 +80,7 @@ public class TokenExchangeController {
    */
   @PostMapping("/token-exchange")
   @Operation(summary = "令牌交换", description = "用父域 Token 换取子域可用 Token")
-  public BaseResponse<TokenExchangeVO> tokenExchange(
+  public YdszResponse<TokenExchangeVO> tokenExchange(
       HttpServletRequest request, @RequestBody TokenExchangeRequest body) {
     // 校验请求来源 Origin 白名单
     String origin = request.getHeader("Origin");
@@ -116,7 +116,7 @@ public class TokenExchangeController {
     vo.setAccessToken(newAccessToken);
     vo.setRefreshToken(newRefreshToken);
     vo.setTokenType("Bearer");
-    return BaseResponse.success(vo);
+    return YdszResponse.success(vo);
   }
 
   /**
@@ -134,7 +134,7 @@ public class TokenExchangeController {
    */
   @GetMapping("/validate")
   @Operation(summary = "验证 Token 有效性", description = "子应用调用检查当前登录态")
-  public BaseResponse<TokenValidateVO> validate(
+  public YdszResponse<TokenValidateVO> validate(
       HttpServletRequest request,
       @RequestParam(value = "token", required = false) String token,
       @RequestHeader(value = "Authorization", required = false) String authorization) {
@@ -154,7 +154,7 @@ public class TokenExchangeController {
     if (accessToken == null || accessToken.isBlank()) {
       vo.setValid(false);
       vo.setMessage("Token is empty");
-      return BaseResponse.success(vo);
+      return YdszResponse.success(vo);
     }
 
     boolean valid = tokenService.validateAccessToken(accessToken);
@@ -169,7 +169,7 @@ public class TokenExchangeController {
     } else {
       vo.setMessage("Token is invalid or expired");
     }
-    return BaseResponse.success(vo);
+    return YdszResponse.success(vo);
   }
 
   /**
@@ -186,7 +186,7 @@ public class TokenExchangeController {
    */
   @PostMapping("/logout-notify")
   @Operation(summary = "登出通知", description = "父域登出通知子域清除状态")
-  public BaseResponse<LogoutNotifyVO> logoutNotify(
+  public YdszResponse<LogoutNotifyVO> logoutNotify(
       HttpServletRequest request, @RequestBody LogoutNotifyRequest body) {
     // 校验请求来源 Origin 白名单
     String origin = request.getHeader("Origin");
@@ -200,7 +200,7 @@ public class TokenExchangeController {
     if (token == null || token.isBlank()) {
       vo.setSuccess(false);
       vo.setMessage("Token is empty");
-      return BaseResponse.success(vo);
+      return YdszResponse.success(vo);
     }
 
     try {
@@ -213,7 +213,7 @@ public class TokenExchangeController {
       vo.setSuccess(false);
       vo.setMessage("Failed to revoke session");
     }
-    return BaseResponse.success(vo);
+    return YdszResponse.success(vo);
   }
 
   // ==================== 请求/响应 DTO ====================

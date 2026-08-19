@@ -5,7 +5,7 @@ import java.util.Map;
 import lombok.ToString;
 import org.springframework.http.HttpStatus;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.core.ExceptionInfo;
@@ -218,18 +218,18 @@ public class SysException extends AbstractYdszException {
     }
 
     /**
-     * 便捷方法：设置 {@link BaseResultCode} 作为错误码（兼容路径）。
+     * 便捷方法：设置 {@link YdszResultCode} 作为错误码（兼容路径）。
      *
-     * <p>BaseResultCode 不包含 HTTP 状态码，使用默认值。
+     * <p>YdszResultCode 不包含 HTTP 状态码，使用默认值。
      *
      * @param resultCode 统一结果码
      * @return 处理结果
      */
-    public SysExceptionBuilder resultCode(BaseResultCode resultCode) {
+    public SysExceptionBuilder resultCode(YdszResultCode resultCode) {
       if (resultCode != null) {
         this.code = resultCode.getCode();
         this.key = resultCode.getKey();
-        this.httpStatus = (resultCode == BaseResultCode.SUCCESS) ? 200 : DEFAULT_HTTP_STATUS;
+        this.httpStatus = (resultCode == YdszResultCode.SUCCESS) ? 200 : DEFAULT_HTTP_STATUS;
       }
       return this;
     }

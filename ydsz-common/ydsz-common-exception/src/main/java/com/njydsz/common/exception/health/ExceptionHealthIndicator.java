@@ -21,7 +21,7 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
  *   <li>全局异常处理器是否启用
  *   <li>异常指标统计器是否可用
  *   <li>错误码注册中心已注册模块数和错误码总数
- *   <li>响应格式（BaseResponse / ProblemDetail）
+ *   <li>响应格式（YdszResponse / ProblemDetail）
  * </ul>
  *
  * @author ydsz-team

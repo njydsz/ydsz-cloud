@@ -26,8 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RulePack;
@@ -76,16 +76,16 @@ public class RulePackController {
 
   /** 列出全部规则集（市场首页） */
   @GetMapping("/packs")
-  public BaseResponse<List<RulePackVO>> listPacks() {
-    return BaseResponse.success(
+  public YdszResponse<List<RulePackVO>> listPacks() {
+    return YdszResponse.success(
         rulePackProvider.listAll().stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
   }
 
   /** 搜索规则集 */
   @GetMapping("/packs/search")
-  public BaseResponse<List<RulePackVO>> searchPacks(
+  public YdszResponse<List<RulePackVO>> searchPacks(
       @RequestParam(value = "keyword", required = false) String keyword) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         rulePackProvider.search(keyword).stream()
             .map(LiteruleConverter.INSTANT::entityToVO)
             .toList());
@@ -93,15 +93,15 @@ public class RulePackController {
 
   /** 查询规则集最新版本 */
   @GetMapping("/packs/{packCode}/latest")
-  public BaseResponse<RulePackVO> getLatestPack(@PathVariable String packCode) {
-    return BaseResponse.success(
+  public YdszResponse<RulePackVO> getLatestPack(@PathVariable String packCode) {
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.entityToVO(rulePackProvider.getLatest(packCode)));
   }
 
   /** 查询规则集的所有版本 */
   @GetMapping("/packs/{packCode}/versions")
-  public BaseResponse<List<RulePackVO>> listPackVersions(@PathVariable String packCode) {
-    return BaseResponse.success(
+  public YdszResponse<List<RulePackVO>> listPackVersions(@PathVariable String packCode) {
+    return YdszResponse.success(
         rulePackProvider.listVersions(packCode).stream()
             .map(LiteruleConverter.INSTANT::entityToVO)
             .toList());
@@ -109,9 +109,9 @@ public class RulePackController {
 
   /** 查询规则集指定版本（含规则定义快照，P2-8） */
   @GetMapping("/packs/{packCode}/versions/{version}")
-  public BaseResponse<RulePackVO> getPackVersion(
+  public YdszResponse<RulePackVO> getPackVersion(
       @PathVariable String packCode, @PathVariable String version) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.entityToVO(rulePackProvider.getVersion(packCode, version)));
   }
 
@@ -123,22 +123,22 @@ public class RulePackController {
       content = "'rollbackPack'")
   @RateLimit(resource = "literule.rule_pack.rollbackPack", threshold = 50)
   @PostMapping("/packs/{packCode}/rollback")
-  public BaseResponse<InstallResultVO> rollbackPack(
+  public YdszResponse<InstallResultVO> rollbackPack(
       @PathVariable String packCode,
       @RequestParam(value = "version") String version,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleWebConverter.INSTANT.entityToVO(
             rulePackProvider.rollback(packCode, version, operator)));
   }
 
   /** 知识包版本差异对比（P2-8）：对比两个版本规则编码与内容差异 */
   @GetMapping("/packs/{packCode}/diff")
-  public BaseResponse<PackDiffVO> diffPack(
+  public YdszResponse<PackDiffVO> diffPack(
       @PathVariable String packCode,
       @RequestParam(value = "from") String fromVersion,
       @RequestParam(value = "to") String toVersion) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleWebConverter.INSTANT.entityToVO(
             rulePackProvider.diff(packCode, fromVersion, toVersion)));
   }
@@ -152,10 +152,10 @@ public class RulePackController {
       content = "'publishPack'")
   @RateLimit(resource = "literule.rule_pack.publishPack", threshold = 50)
   @PostMapping("/packs")
-  public BaseResponse<RulePackVO> publishPack(
+  public YdszResponse<RulePackVO> publishPack(
       @Valid @RequestBody RulePack pack,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.entityToVO(rulePackProvider.publish(pack, operator)));
   }
 
@@ -167,11 +167,11 @@ public class RulePackController {
       content = "'installPack'")
   @RateLimit(resource = "literule.rule_pack.installPack", threshold = 50)
   @PostMapping("/packs/{packCode}/install")
-  public BaseResponse<InstallResultVO> installPack(
+  public YdszResponse<InstallResultVO> installPack(
       @PathVariable String packCode,
       @RequestParam(value = "version", required = false) String version,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleWebConverter.INSTANT.entityToVO(
             rulePackProvider.install(packCode, version, operator)));
   }
@@ -185,9 +185,9 @@ public class RulePackController {
       content = "'deletePack'")
   @RateLimit(resource = "literule.rule_pack.deletePack", threshold = 50)
   @DeleteMapping("/packs/{id}")
-  public BaseResponse<Void> deletePack(@PathVariable String id) {
+  public YdszResponse<Void> deletePack(@PathVariable String id) {
     rulePackProvider.delete(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /** 标记为官方 */
@@ -199,11 +199,11 @@ public class RulePackController {
       content = "'markOfficialPack'")
   @RateLimit(resource = "literule.rule_pack.markOfficialPack", threshold = 50)
   @PutMapping("/packs/{id}/official")
-  public BaseResponse<Void> markOfficialPack(
+  public YdszResponse<Void> markOfficialPack(
       @PathVariable String id,
       @RequestParam(value = "official", defaultValue = "true") boolean official) {
     rulePackProvider.markOfficial(id, official);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /** 评分（0-5） */
@@ -215,10 +215,10 @@ public class RulePackController {
       content = "'ratePack'")
   @RateLimit(resource = "literule.rule_pack.ratePack", threshold = 50)
   @PutMapping("/packs/{id}/rate")
-  public BaseResponse<Void> ratePack(
+  public YdszResponse<Void> ratePack(
       @PathVariable String id, @RequestParam(value = "rating") double rating) {
     rulePackProvider.rate(id, rating);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -250,11 +250,11 @@ public class RulePackController {
   @RateLimit(resource = "literule.rule_pack.stressTest", threshold = 50)
   @PostMapping("/stress-test")
   @Operation(summary = "规则压测", description = "使用线程池并发执行 Dry-run，统计 QPS、P50/P95/P99 耗时、错误率")
-  public BaseResponse<RuleStressTestService.StressTestResult> stressTest(
+  public YdszResponse<RuleStressTestService.StressTestResult> stressTest(
       @RequestBody Map<String, Object> request) {
     RuleStressTestService svc = ruleStressTestServiceProvider.getIfAvailable();
     if (svc == null) {
-      return BaseResponse.error(BaseResultCode.FORBIDDEN, "规则压测服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "规则压测服务未启用");
     }
     String ruleCode = (String) request.get("ruleCode");
     if (ruleCode != null && ruleCode.isBlank()) ruleCode = null;
@@ -273,9 +273,9 @@ public class RulePackController {
     int iterations = toInt(request.get("iterations"), 1000);
     int warmupIterations = toInt(request.get("warmupIterations"), 100);
     if (factsList == null || factsList.isEmpty()) {
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "factsList 不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "factsList 不能为空");
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         svc.run(ruleCode, factsList, threads, iterations, warmupIterations));
   }
 
@@ -299,8 +299,8 @@ public class RulePackController {
    */
   @GetMapping("/packs/update-check")
   @Operation(summary = "知识包更新检查", description = "对比已安装知识包与市场最新版本，返回有更新的包列表")
-  public BaseResponse<List<PackUpdateInfoVO>> checkPackUpdates() {
-    return BaseResponse.success(
+  public YdszResponse<List<PackUpdateInfoVO>> checkPackUpdates() {
+    return YdszResponse.success(
         rulePackProvider.checkPackUpdates().stream()
             .map(LiteruleWebConverter.INSTANT::entityToVO)
             .toList());
@@ -320,11 +320,11 @@ public class RulePackController {
   @RateLimit(resource = "literule.rule_pack.batchUpdatePacks", threshold = 50)
   @PostMapping("/packs/batch-update")
   @Operation(summary = "批量更新知识包", description = "将指定知识包列表更新到最新版本")
-  public BaseResponse<List<InstallResultVO>> batchUpdatePacks(
+  public YdszResponse<List<InstallResultVO>> batchUpdatePacks(
       @RequestBody List<String> packCodes,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     if (packCodes == null || packCodes.isEmpty()) {
-      return BaseResponse.success(List.of());
+      return YdszResponse.success(List.of());
     }
     List<InstallResult> results = new ArrayList<>();
     for (String packCode : packCodes) {
@@ -334,7 +334,7 @@ public class RulePackController {
         log.warn("[RuleAdmin] 批量更新知识包失败: packCode={}, err={}", packCode, e.getMessage());
       }
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         results.stream().map(LiteruleWebConverter.INSTANT::entityToVO).toList());
   }
 }

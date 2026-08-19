@@ -19,7 +19,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.search.api.SearchRequest;
@@ -107,7 +107,7 @@ public class GlobalSearchController {
   @GetMapping
   @Operation(summary = "全局搜索", description = "跨所有模块的统一搜索")
   @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_SEARCH)
-  public BaseResponse<SearchResponse> search(
+  public YdszResponse<SearchResponse> search(
       @RequestParam String keyword,
       @RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "20") int pageSize,
@@ -139,7 +139,7 @@ public class GlobalSearchController {
       builder.types(Arrays.asList(typesParam.split(",")));
     }
 
-    return BaseResponse.success(unifiedSearchService.search(builder.build()));
+    return YdszResponse.success(unifiedSearchService.search(builder.build()));
   }
 
   /**
@@ -154,8 +154,8 @@ public class GlobalSearchController {
   @GetMapping("/suggest")
   @Operation(summary = "搜索自动补全", description = "搜索框下拉自动补全建议")
   @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_SEARCH)
-  public BaseResponse<SearchSuggestion> suggest(@RequestParam String prefix) {
-    return BaseResponse.success(unifiedSearchService.suggest(prefix));
+  public YdszResponse<SearchSuggestion> suggest(@RequestParam String prefix) {
+    return YdszResponse.success(unifiedSearchService.suggest(prefix));
   }
 
   /**
@@ -169,8 +169,8 @@ public class GlobalSearchController {
   @GetMapping("/did-you-mean")
   @Operation(summary = "搜索纠错建议", description = "零结果时的 \"您是不是要找\" 纠错建议")
   @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_SEARCH)
-  public BaseResponse<SearchSuggestion> didYouMean(@RequestParam String keyword) {
-    return BaseResponse.success(unifiedSearchService.didYouMean(keyword));
+  public YdszResponse<SearchSuggestion> didYouMean(@RequestParam String keyword) {
+    return YdszResponse.success(unifiedSearchService.didYouMean(keyword));
   }
 
   /**
@@ -186,11 +186,11 @@ public class GlobalSearchController {
   @PostMapping("/rebuild")
   @Operation(summary = "重建搜索索引缓存", description = "清空搜索本地缓存，强制下次查询重新加载")
   @Audit(action = AuditAction.UPDATE, module = "SYSTEM", content = "重建搜索索引缓存")
-  public BaseResponse<Void> rebuildIndex(
+  public YdszResponse<Void> rebuildIndex(
       @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId) {
     unifiedSearchService.clearCache();
     log.info("[GlobalSearch] 索引缓存已清除, userId={}", userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /** 分页安全上限：防止 pageSize=999999 导致深度分页 OOM */

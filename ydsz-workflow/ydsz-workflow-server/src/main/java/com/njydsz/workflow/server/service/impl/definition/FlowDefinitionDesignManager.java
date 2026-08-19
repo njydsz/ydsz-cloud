@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.cache.constant.CacheConstants;
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
@@ -127,14 +127,14 @@ public class FlowDefinitionDesignManager {
   public void updateNodeCoordinate(String definitionId, String nodeCode, String coordinate) {
     if (definitionId == null || !StringUtils.hasText(nodeCode)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("definitionId/nodeCode 不能为空")
           .build();
     }
     FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
           .build();
     }
@@ -160,20 +160,20 @@ public class FlowDefinitionDesignManager {
   public void updateDefinition(String definitionId, FlowDeployProcessDTO dto) {
     if (definitionId == null || dto == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("definitionId/dto 不能为空")
           .build();
     }
     FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("流程定义不存在: " + definitionId)
           .build();
     }
     if (def.getIsPublish() != null && def.getIsPublish() == 1) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("已发布的流程定义不可编辑，请创建新版本: " + definitionId)
           .build();
     }
@@ -310,13 +310,13 @@ public class FlowDefinitionDesignManager {
     FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("流程定义不存在: " + definitionId)
           .build();
     }
     if (def.getIsPublish() != null && def.getIsPublish() == 1) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("已发布的流程定义不可编辑，请先创建新版本")
           .build();
     }
@@ -376,7 +376,7 @@ public class FlowDefinitionDesignManager {
     FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
           .build();
     }
@@ -396,7 +396,7 @@ public class FlowDefinitionDesignManager {
     FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
           .build();
     }
@@ -419,7 +419,7 @@ public class FlowDefinitionDesignManager {
     FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
           .build();
     }
@@ -439,7 +439,7 @@ public class FlowDefinitionDesignManager {
     FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
           .build();
     }
@@ -467,14 +467,14 @@ public class FlowDefinitionDesignManager {
   public boolean lockDefinition(String definitionId, String userId) {
     if (!StringUtils.hasText(definitionId) || !StringUtils.hasText(userId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_d6e7f8a9")
           .build();
     }
     FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_e7f8a9b0")
           .params(definitionId)
           .build();
@@ -500,7 +500,7 @@ public class FlowDefinitionDesignManager {
     FlowDefinitionDO latest = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (latest == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_e7f8a9b0")
           .params(definitionId)
           .build();
@@ -521,13 +521,13 @@ public class FlowDefinitionDesignManager {
         }
       }
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_f8a9b0c1")
           .params(holder)
           .build();
     }
     throw SysException.builder()
-        .resultCode(BaseResultCode.BAD_REQUEST)
+        .resultCode(YdszResultCode.BAD_REQUEST)
         .message("error.workflow.msg_a9b0c1d2")
         .build();
   }
@@ -546,14 +546,14 @@ public class FlowDefinitionDesignManager {
   public boolean unlockDefinition(String definitionId, String userId) {
     if (!StringUtils.hasText(definitionId) || !StringUtils.hasText(userId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_d6e7f8a9")
           .build();
     }
     FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_e7f8a9b0")
           .params(definitionId)
           .build();
@@ -574,7 +574,7 @@ public class FlowDefinitionDesignManager {
     FlowDefinitionDO latest = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (latest == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_e7f8a9b0")
           .params(definitionId)
           .build();
@@ -582,7 +582,7 @@ public class FlowDefinitionDesignManager {
     String holder = latest.getLockedBy();
     if (StringUtils.hasText(holder) && !holder.equals(userId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.FORBIDDEN)
+          .resultCode(YdszResultCode.FORBIDDEN)
           .key("error.workflow.msg_b1c2d3e4")
           .params(holder)
           .build();
@@ -595,7 +595,7 @@ public class FlowDefinitionDesignManager {
   public Map<String, Object> getLockStatus(String definitionId) {
     if (!StringUtils.hasText(definitionId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_d6e7f8a9")
           .build();
     }

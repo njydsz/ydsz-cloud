@@ -10,7 +10,7 @@ package com.njydsz.common.core.code;
  *
  * <pre>
  *   ResultCode（协议层：code + key + msg）
- *     ↑ 唯一直接实现：BaseResultCode（仅保留 SUCCESS / UNKNOWN）
+ *     ↑ 唯一直接实现：YdszResultCode（仅保留 SUCCESS / UNKNOWN）
  *     ↑ 唯一子接口：ExceptionCode（异常层：+ httpStatus + category）
  *           ↑ 全部业务模块 *ExceptionCode 枚举
  * </pre>
@@ -20,8 +20,8 @@ package com.njydsz.common.core.code;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see BaseResultCode
- * @see com.njydsz.common.core.code.BaseResultCode
+ * @see YdszResultCode
+ * @see com.njydsz.common.core.code.YdszResultCode
  */
 public interface ResultCode {
 
@@ -52,7 +52,7 @@ public interface ResultCode {
    * <p>默认值为 {@code getModule() + "." + getCode()}：
    *
    * <ul>
-   *   <li>core 模块（{@link BaseResultCode}）：{@code "core.A00000"}
+   *   <li>core 模块（{@link YdszResultCode}）：{@code "core.A00000"}
    *   <li>业务模块（覆盖 {@link #getModule()} 后）：{@code "workflow.B70001"}
    * </ul>
    *

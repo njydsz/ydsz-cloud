@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
@@ -151,43 +151,43 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
   public String create(FlowDelegateAuthDO auth) {
     if (auth == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_fdf18ac3")
           .build();
     }
     if (auth.getOwnerUserId() == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_d65b2814")
           .build();
     }
     if (auth.getDelegateUserId() == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_9999d306")
           .build();
     }
     if (auth.getOwnerUserId().equals(auth.getDelegateUserId())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_5b0149dc")
           .build();
     }
     if (auth.getStartTime() == null || auth.getEndTime() == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_8a268764")
           .build();
     }
     if (!auth.getEndTime().isAfter(auth.getStartTime())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_0e756b4f")
           .build();
     }
     if (!StringUtils.hasText(auth.getScopeType())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_4cfd103d")
           .build();
     }
@@ -196,7 +196,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
       case "FLOW" -> {
         if (!StringUtils.hasText(auth.getFlowCode())) {
           throw SysException.builder()
-              .resultCode(BaseResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
               .message("error.workflow.msg_2c8e3391")
               .build();
         }
@@ -204,7 +204,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
       case "FLOW_NODE" -> {
         if (!StringUtils.hasText(auth.getFlowCode()) || !StringUtils.hasText(auth.getNodeCode())) {
           throw SysException.builder()
-              .resultCode(BaseResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
               .message("error.workflow.msg_8722656e")
               .build();
         }
@@ -212,7 +212,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
       case "ROLE" -> {
         if (!StringUtils.hasText(auth.getRoleCode())) {
           throw SysException.builder()
-              .resultCode(BaseResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
               .message("error.workflow.msg_19801c0e")
               .build();
         }
@@ -222,7 +222,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
       }
       default ->
           throw SysException.builder()
-              .resultCode(BaseResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
               .key("error.workflow.msg_b0022eba")
               .params(auth.getScopeType())
               .build();
@@ -278,21 +278,21 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
   public void revoke(String authId, String ownerUserId) {
     if (authId == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_7804c8f2")
           .build();
     }
     FlowDelegateAuthDO auth = authRepository.findById(authId).map(converter::entityToDO).orElse(null);
     if (auth == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_c47a9632")
           .params(authId)
           .build();
     }
     if (ownerUserId != null && !ownerUserId.equals(auth.getOwnerUserId())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.FORBIDDEN)
+          .resultCode(YdszResultCode.FORBIDDEN)
           .message("error.workflow.msg_f121ff85")
           .build();
     }
@@ -318,20 +318,20 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
   public void updateStatus(String authId, String status, String operatorId) {
     if (authId == null || !StringUtils.hasText(status)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_40437174")
           .build();
     }
     if (!"ENABLED".equals(status) && !"DISABLED".equals(status)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_7678ad83")
           .build();
     }
     FlowDelegateAuthDO auth = authRepository.findById(authId).map(converter::entityToDO).orElse(null);
     if (auth == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_c47a9632")
           .params(authId)
           .build();
@@ -339,7 +339,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     // 权限校验：仅 owner 可改
     if (operatorId != null && !operatorId.equals(auth.getOwnerUserId())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.FORBIDDEN)
+          .resultCode(YdszResultCode.FORBIDDEN)
           .message("error.workflow.msg_d6a95488")
           .build();
     }
@@ -475,7 +475,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   @Transactional(readOnly = true)
-  public BaseResponse<?> listDelegateLog(String delegateUserId, int page, int size) {
+  public YdszResponse<?> listDelegateLog(String delegateUserId, int page, int size) {
     if (delegateUserId == null) {
       return PageResponse.success(0L, 0L, 0L, null);
     }
@@ -504,7 +504,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   @Transactional(readOnly = true)
-  public BaseResponse<?> listOwnerLog(String ownerUserId, int page, int size) {
+  public YdszResponse<?> listOwnerLog(String ownerUserId, int page, int size) {
     if (ownerUserId == null) {
       return PageResponse.success(0L, 0L, 0L, null);
     }

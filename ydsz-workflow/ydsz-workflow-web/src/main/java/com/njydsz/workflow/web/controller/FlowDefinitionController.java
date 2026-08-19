@@ -27,8 +27,8 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -127,9 +127,9 @@ public class FlowDefinitionController {
       content = "'deploy'")
   @Operation(summary = "部署流程定义")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
-  public BaseResponse<String> deploy(@Valid @RequestBody FlowDeployProcessDTO dto) {
+  public YdszResponse<String> deploy(@Valid @RequestBody FlowDeployProcessDTO dto) {
     String id = definitionService.deploy(dto);
-    return BaseResponse.success(id);
+    return YdszResponse.success(id);
   }
 
   /**
@@ -147,15 +147,15 @@ public class FlowDefinitionController {
   @PostMapping(value = "/definition/batchDeployZip", consumes = "multipart/form-data")
   @Operation(summary = "BPMN 部署包 .zip 批量导入")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
-  public BaseResponse<Map<String, Object>> batchDeployFromZip(
+  public YdszResponse<Map<String, Object>> batchDeployFromZip(
       @RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "zip 文件不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "zip 文件不能为空");
     }
     try {
-      return BaseResponse.success(definitionService.batchDeployFromZip(file.getBytes(), null));
+      return YdszResponse.success(definitionService.batchDeployFromZip(file.getBytes(), null));
     } catch (IOException e) {
-      return BaseResponse.error(BaseResultCode.BAD_REQUEST, "读取 zip 文件失败: " + e.getMessage());
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "读取 zip 文件失败: " + e.getMessage());
     }
   }
 
@@ -178,10 +178,10 @@ public class FlowDefinitionController {
       content = "'publish'")
   @Operation(summary = "发布流程定义（带版本兼容性校验）")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-  public BaseResponse<Void> publish(
+  public YdszResponse<Void> publish(
       @PathVariable String id, @RequestParam(defaultValue = "false") boolean force) {
     definitionService.publish(id, force);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -200,9 +200,9 @@ public class FlowDefinitionController {
       content = "'deprecate'")
   @Operation(summary = "废弃流程定义")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-  public BaseResponse<Void> deprecate(@PathVariable String id) {
+  public YdszResponse<Void> deprecate(@PathVariable String id) {
     definitionService.deprecate(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -215,11 +215,11 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/code/{code}")
   @Operation(summary = "按编码查询已发布流程定义")
-  public BaseResponse<FlowDefinitionVO> getByCode(
+  public YdszResponse<FlowDefinitionVO> getByCode(
       @PathVariable String code,
       @RequestParam(required = false) String version,
       @RequestParam(required = false) String tenantId) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         WorkflowConverter.INSTANT.entityToVO(
             definitionService.getPublished(code, version, tenantId)));
   }
@@ -235,12 +235,12 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/page")
   @Operation(summary = "分页查询流程定义")
-  public BaseResponse<List<FlowDefinitionVO>> page(
+  public YdszResponse<List<FlowDefinitionVO>> page(
       @RequestParam(defaultValue = "1") @Min(1) int pageNo,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
       @RequestParam(required = false) String category,
       @RequestParam(required = false) String flowCode) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         WorkflowConverter.INSTANT.flowDefinitionListToVO(
             definitionService.page(pageNo, pageSize, category, flowCode)));
   }
@@ -253,8 +253,8 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/{id}")
   @Operation(summary = "查询流程定义详情（含节点与跳转）")
-  public BaseResponse<Map<String, Object>> getDefinitionDetail(@PathVariable String id) {
-    return BaseResponse.success(definitionService.getDetail(id));
+  public YdszResponse<Map<String, Object>> getDefinitionDetail(@PathVariable String id) {
+    return YdszResponse.success(definitionService.getDetail(id));
   }
 
   /**
@@ -265,10 +265,10 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/{id}/preview")
   @Operation(summary = "流程定义预览（只读）")
-  public BaseResponse<Map<String, Object>> getDefinitionPreview(@PathVariable String id) {
+  public YdszResponse<Map<String, Object>> getDefinitionPreview(@PathVariable String id) {
     Map<String, Object> detail = definitionService.getDetail(id);
     detail.put("readOnly", true);
-    return BaseResponse.success(detail);
+    return YdszResponse.success(detail);
   }
 
   /**
@@ -288,12 +288,12 @@ public class FlowDefinitionController {
       content = "'switchVersion'")
   @Operation(summary = "切换流程定义的激活版本")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-  public BaseResponse<Void> switchVersion(
+  public YdszResponse<Void> switchVersion(
       @PathVariable String code,
       @RequestParam String definitionId,
       @RequestParam(required = false) String tenantId) {
     definitionService.switchActiveVersion(code, definitionId, tenantId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -312,9 +312,9 @@ public class FlowDefinitionController {
       content = "'enable'")
   @Operation(summary = "启用流程定义")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-  public BaseResponse<Void> enable(@PathVariable String id) {
+  public YdszResponse<Void> enable(@PathVariable String id) {
     definitionService.enable(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -333,9 +333,9 @@ public class FlowDefinitionController {
       content = "'disable'")
   @Operation(summary = "停用流程定义")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-  public BaseResponse<Void> disable(@PathVariable String id) {
+  public YdszResponse<Void> disable(@PathVariable String id) {
     definitionService.disable(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -346,8 +346,8 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/{id}/versions")
   @Operation(summary = "列出流程定义的所有历史版本")
-  public BaseResponse<List<Map<String, Object>>> listVersions(@PathVariable String id) {
-    return BaseResponse.success(definitionService.listVersions(id));
+  public YdszResponse<List<Map<String, Object>>> listVersions(@PathVariable String id) {
+    return YdszResponse.success(definitionService.listVersions(id));
   }
 
   /**
@@ -360,9 +360,9 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/{id}/diff")
   @Operation(summary = "流程定义版本差异对比")
-  public BaseResponse<Map<String, Object>> diffVersions(
+  public YdszResponse<Map<String, Object>> diffVersions(
       @PathVariable String id, @RequestParam Integer v1, @RequestParam Integer v2) {
-    return BaseResponse.success(definitionService.diffVersions(id, v1, v2));
+    return YdszResponse.success(definitionService.diffVersions(id, v1, v2));
   }
 
   /**
@@ -376,9 +376,9 @@ public class FlowDefinitionController {
   @PostMapping("/definition/rollback")
   @Operation(summary = "一键回滚流程定义到上一版本")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-  public BaseResponse<Map<String, Object>> rollbackDefinition(@RequestParam String flowCode) {
+  public YdszResponse<Map<String, Object>> rollbackDefinition(@RequestParam String flowCode) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(definitionService.rollbackDefinition(flowCode, tenantId));
+    return YdszResponse.success(definitionService.rollbackDefinition(flowCode, tenantId));
   }
 
   /**
@@ -401,12 +401,12 @@ public class FlowDefinitionController {
       content = "'updateNodeCoordinate'")
   @Operation(summary = "更新流程节点坐标")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-  public BaseResponse<Void> updateNodeCoordinate(
+  public YdszResponse<Void> updateNodeCoordinate(
       @PathVariable String id,
       @PathVariable String nodeCode,
       @RequestBody String coordinate) {
     definitionService.updateNodeCoordinate(id, nodeCode, coordinate);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -426,10 +426,10 @@ public class FlowDefinitionController {
       content = "'updateDefinition'")
   @Operation(summary = "编辑未发布的流程定义草稿")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-  public BaseResponse<Void> updateDefinition(
+  public YdszResponse<Void> updateDefinition(
       @PathVariable String id, @Valid @RequestBody FlowDeployProcessDTO dto) {
     definitionService.updateDefinition(id, dto);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -440,8 +440,8 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/{id}/export")
   @Operation(summary = "导出流程定义为 JSON")
-  public BaseResponse<String> exportDefinition(@PathVariable String id) {
-    return BaseResponse.success(definitionService.exportDefinition(id));
+  public YdszResponse<String> exportDefinition(@PathVariable String id) {
+    return YdszResponse.success(definitionService.exportDefinition(id));
   }
 
   /**
@@ -460,10 +460,10 @@ public class FlowDefinitionController {
       content = "'importDefinition'")
   @Operation(summary = "从 JSON 导入流程定义")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_IMPORT)
-  public BaseResponse<String> importDefinition(
+  public YdszResponse<String> importDefinition(
       @RequestBody String json, @RequestParam(required = false) String tenantId) {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(definitionService.importDefinition(json, tid));
+    return YdszResponse.success(definitionService.importDefinition(json, tid));
   }
 
   /**
@@ -487,9 +487,9 @@ public class FlowDefinitionController {
   @GetMapping("/definition/migrationImpact")
   @Operation(summary = "变更影响分析报告（评估版本升级对在途实例的影响）")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-  public BaseResponse<Map<String, Object>> analyzeMigrationImpact(
+  public YdszResponse<Map<String, Object>> analyzeMigrationImpact(
       @RequestParam String oldDefinitionId, @RequestParam String newDefinitionId) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         definitionService.analyzeMigrationImpact(oldDefinitionId, newDefinitionId));
   }
 
@@ -502,8 +502,8 @@ public class FlowDefinitionController {
    */
   @GetMapping("/info")
   @Operation(summary = "查询工作流引擎信息")
-  public BaseResponse<Map<String, Object>> info() {
-    return BaseResponse.success(
+  public YdszResponse<Map<String, Object>> info() {
+    return YdszResponse.success(
         Map.of("engineType", "YDSZ-Flow", "available", true));
   }
 
@@ -524,13 +524,13 @@ public class FlowDefinitionController {
       action = AuditAction.CREATE,
       content = "'correlateMessage'")
   @Operation(summary = "消息关联（外部系统通过消息名称触发 WAITING 订阅）")
-  public BaseResponse<Integer> correlateMessage(
+  public YdszResponse<Integer> correlateMessage(
       @RequestParam String messageName,
       @RequestParam(required = false) String correlationKey,
       @RequestBody(required = false) String payload,
       @RequestParam(required = false) String tenantId) {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(
+    return YdszResponse.success(
         eventSubscriptionService.correlateMessage(tid, messageName, correlationKey, payload));
   }
 
@@ -551,13 +551,13 @@ public class FlowDefinitionController {
       action = AuditAction.CREATE,
       content = "'throwError'")
   @Operation(summary = "抛出错误（触发 WAITING 的 ERROR 订阅）")
-  public BaseResponse<Integer> throwError(
+  public YdszResponse<Integer> throwError(
       @RequestParam String errorCode,
       @RequestParam(required = false) String instanceId,
       @RequestBody(required = false) String payload,
       @RequestParam(required = false) String tenantId) {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(
+    return YdszResponse.success(
         eventSubscriptionService.throwError(tid, instanceId, errorCode, payload));
   }
 
@@ -569,9 +569,9 @@ public class FlowDefinitionController {
    */
   @GetMapping("/instance/{instanceId}/eventSubscriptions")
   @Operation(summary = "查询实例的事件订阅列表")
-  public BaseResponse<List<FlowEventSubscriptionVO>> listEventSubscriptions(
+  public YdszResponse<List<FlowEventSubscriptionVO>> listEventSubscriptions(
       @PathVariable String instanceId) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         WorkflowConverter.INSTANT.flowEventSubscriptionListToVO(
             eventSubscriptionService.listByInstance(instanceId)));
   }
@@ -593,9 +593,9 @@ public class FlowDefinitionController {
       content = "'slaScan'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
   @Operation(summary = "手动触发 SLA 扫描")
-  public BaseResponse<Integer> slaScan() {
+  public YdszResponse<Integer> slaScan() {
     int processed = slaService.scanAndProcess();
-    return BaseResponse.success(processed);
+    return YdszResponse.success(processed);
   }
 
   /**
@@ -614,13 +614,13 @@ public class FlowDefinitionController {
       content = "'slaProcess'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
   @Operation(summary = "手动触发单条任务的 SLA 处理")
-  public BaseResponse<Boolean> slaProcess(@PathVariable String taskId) {
+  public YdszResponse<Boolean> slaProcess(@PathVariable String taskId) {
     FlowRunTaskDO task = taskService.getById(taskId);
     if (task == null) {
-      return BaseResponse.error(BaseResultCode.NOT_FOUND, "任务不存在: " + taskId);
+      return YdszResponse.error(YdszResultCode.NOT_FOUND, "任务不存在: " + taskId);
     }
     boolean ok = slaService.processOverdue(task);
-    return BaseResponse.success(ok);
+    return YdszResponse.success(ok);
   }
 
   // ==================== 条件表达式编辑器 ====================
@@ -640,10 +640,10 @@ public class FlowDefinitionController {
       action = AuditAction.CREATE,
       content = "'buildExpression'")
   @Operation(summary = "结构化条件 JSON → 表达式字符串")
-  public BaseResponse<String> buildExpression(@RequestBody Map<String, String> body) {
+  public YdszResponse<String> buildExpression(@RequestBody Map<String, String> body) {
     String conditionJson = body.get("conditionJson");
     String engine = body.getOrDefault("engine", "AVIATOR");
-    return BaseResponse.success(conditionExprService.buildExpression(conditionJson, engine));
+    return YdszResponse.success(conditionExprService.buildExpression(conditionJson, engine));
   }
 
   /**
@@ -661,10 +661,10 @@ public class FlowDefinitionController {
       action = AuditAction.CREATE,
       content = "'parseExpression'")
   @Operation(summary = "表达式字符串 → 结构化条件 JSON")
-  public BaseResponse<String> parseExpression(@RequestBody Map<String, String> body) {
+  public YdszResponse<String> parseExpression(@RequestBody Map<String, String> body) {
     String expression = body.get("expression");
     String engine = body.getOrDefault("engine", "AVIATOR");
-    return BaseResponse.success(conditionExprService.parseExpression(expression, engine));
+    return YdszResponse.success(conditionExprService.parseExpression(expression, engine));
   }
 
   /**
@@ -676,10 +676,10 @@ public class FlowDefinitionController {
   @Idempotent(key = "ydsz:workflow:FlowDefinitionController:validateExpression:lock", ttlSeconds = 5)
   @PostMapping("/definition/conditionExpr/validate")
   @Operation(summary = "校验表达式语法")
-  public BaseResponse<Map<String, Object>> validateExpression(@RequestBody Map<String, String> body) {
+  public YdszResponse<Map<String, Object>> validateExpression(@RequestBody Map<String, String> body) {
     String expression = body.get("expression");
     String engine = body.getOrDefault("engine", "AVIATOR");
-    return BaseResponse.success(conditionExprService.validateExpression(expression, engine));
+    return YdszResponse.success(conditionExprService.validateExpression(expression, engine));
   }
 
   /**
@@ -689,8 +689,8 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/conditionExpr/operators")
   @Operation(summary = "获取可用的操作符列表")
-  public BaseResponse<List<Map<String, String>>> operators() {
-    return BaseResponse.success(conditionExprService.getOperators());
+  public YdszResponse<List<Map<String, String>>> operators() {
+    return YdszResponse.success(conditionExprService.getOperators());
   }
 
   /**
@@ -700,8 +700,8 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/conditionExpr/valueTypes")
   @Operation(summary = "获取可用的值类型列表")
-  public BaseResponse<List<Map<String, String>>> valueTypes() {
-    return BaseResponse.success(conditionExprService.getValueTypes());
+  public YdszResponse<List<Map<String, String>>> valueTypes() {
+    return YdszResponse.success(conditionExprService.getValueTypes());
   }
 
   /**
@@ -712,8 +712,8 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/conditionExpr/variables/{id}")
   @Operation(summary = "获取流程定义的可用变量列表")
-  public BaseResponse<List<Map<String, String>>> variables(@PathVariable String id) {
-    return BaseResponse.success(conditionExprService.getVariablesByDefinition(id));
+  public YdszResponse<List<Map<String, String>>> variables(@PathVariable String id) {
+    return YdszResponse.success(conditionExprService.getVariablesByDefinition(id));
   }
 
   /**
@@ -724,12 +724,12 @@ public class FlowDefinitionController {
    */
   @PostMapping("/definition/conditionExpr/preview")
   @Operation(summary = "预览表达式执行结果")
-  public BaseResponse<Map<String, Object>> previewExpression(@RequestBody Map<String, Object> body) {
+  public YdszResponse<Map<String, Object>> previewExpression(@RequestBody Map<String, Object> body) {
     String expression = body.get("expression") instanceof String s ? s : null;
     String engine = body.get("engine") instanceof String s ? s : "AVIATOR";
     Map<String, Object> variables =
         body.get("variables") instanceof Map<?, ?> m ? MapUtils.toStringObjectMap(m) : Map.of();
-    return BaseResponse.success(
+    return YdszResponse.success(
         conditionExprService.previewExpression(expression, variables, engine));
   }
 
@@ -740,8 +740,8 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/conditionExpr/templates")
   @Operation(summary = "获取条件模板列表")
-  public BaseResponse<List<Map<String, String>>> conditionTemplates() {
-    return BaseResponse.success(conditionExprService.getConditionTemplates());
+  public YdszResponse<List<Map<String, String>>> conditionTemplates() {
+    return YdszResponse.success(conditionExprService.getConditionTemplates());
   }
 
   // ==================== 节点自定义按钮 ====================
@@ -757,9 +757,9 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/customButtons")
   @Operation(summary = "获取节点的自定义按钮列表")
-  public BaseResponse<List<Map<String, Object>>> listCustomButtons(
+  public YdszResponse<List<Map<String, Object>>> listCustomButtons(
       @RequestParam String definitionId, @RequestParam String nodeCode) {
-    return BaseResponse.success(customButtonService.getCustomButtons(definitionId, nodeCode));
+    return YdszResponse.success(customButtonService.getCustomButtons(definitionId, nodeCode));
   }
 
   /**
@@ -783,12 +783,12 @@ public class FlowDefinitionController {
       action = AuditAction.CREATE,
       content = "'saveCustomButtons'")
   @Operation(summary = "保存节点的自定义按钮配置")
-  public BaseResponse<Void> saveCustomButtons(
+  public YdszResponse<Void> saveCustomButtons(
       @RequestParam String definitionId,
       @RequestParam String nodeCode,
       @RequestBody List<Map<String, Object>> buttons) {
     customButtonService.saveCustomButtons(definitionId, nodeCode, buttons);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -807,13 +807,13 @@ public class FlowDefinitionController {
   @Idempotent(key = "ydsz:workflow:FlowDefinitionController:executeCustomButton:lock", ttlSeconds = 5)
   @PostMapping("/definition/customButtons/execute")
   @Operation(summary = "执行自定义按钮操作")
-  public BaseResponse<Map<String, Object>> executeCustomButton(
+  public YdszResponse<Map<String, Object>> executeCustomButton(
       @RequestParam String taskId,
       @RequestParam String buttonCode,
       @RequestParam(required = false) String comment,
       @RequestBody(required = false) Map<String, Object> variables) {
     String userId = AuthContextUtils.getUserId();
-    return BaseResponse.success(
+    return YdszResponse.success(
         customButtonService.executeButton(taskId, buttonCode, userId, comment, variables));
   }
 }

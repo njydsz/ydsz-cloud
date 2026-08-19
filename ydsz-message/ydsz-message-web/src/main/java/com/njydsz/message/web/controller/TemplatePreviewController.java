@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.tenant.TenantContextHolder;
@@ -88,9 +88,9 @@ public class TemplatePreviewController {
    */
   @Operation(summary = "按模板编码预览渲染结果")
   @PostMapping("/by-code")
-  public BaseResponse<Map<String, String>> previewByCode(@RequestBody PreviewRequest req) {
+  public YdszResponse<Map<String, String>> previewByCode(@RequestBody PreviewRequest req) {
     if (req == null || !StringUtils.hasText(req.getTemplateCode())) {
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "模板编码不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "模板编码不能为空");
     }
     MsgTemplate template =
         templateService.loadByCodeAndChannel(
@@ -99,7 +99,7 @@ public class TemplatePreviewController {
             StringUtils.hasText(req.getLocale()) ? req.getLocale() : "zh-CN",
             TenantContextHolder.getTenantId());
     if (template == null) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           MessageExceptionCode.TEMPLATE_NOT_FOUND, "模板不存在: " + req.getTemplateCode());
     }
 
@@ -119,7 +119,7 @@ public class TemplatePreviewController {
     result.put(
         "subject",
         templateEngine.render(template.getSubject() == null ? "" : template.getSubject(), params));
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -135,13 +135,13 @@ public class TemplatePreviewController {
   @RateLimit(resource = "message.templatepreview.previewRaw", threshold = 50)
   @Idempotent(key = "ydsz:message:TemplatePreviewController:previewRaw:lock", ttlSeconds = 5)
   @PostMapping("/raw")
-  public BaseResponse<String> previewRaw(@RequestBody RawPreviewRequest req) {
+  public YdszResponse<String> previewRaw(@RequestBody RawPreviewRequest req) {
     if (req == null || !StringUtils.hasText(req.getTemplate())) {
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "模板内容不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "模板内容不能为空");
     }
     Map<String, Object> params = req.getParams() == null ? new HashMap<>() : req.getParams();
     String rendered = templateEngine.render(req.getTemplate(), params);
-    return BaseResponse.success(rendered);
+    return YdszResponse.success(rendered);
   }
 
   /** 模板预览请求体（按模板编码渲染）。 */

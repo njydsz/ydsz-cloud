@@ -4,7 +4,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.system.api.dto.ConfigGetRequest;
 import com.njydsz.system.api.fallback.ConfigClientFallback;
@@ -30,5 +30,5 @@ public interface ConfigClient {
    * @return 配置值字符串；不存在时返回 null
    */
   @PostMapping(FeignClientConstants.SYSTEM_PATH_CONFIG_GET)
-  BaseResponse<String> getConfig(@RequestBody ConfigGetRequest request);
+  YdszResponse<String> getConfig(@RequestBody ConfigGetRequest request);
 }

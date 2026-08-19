@@ -5,7 +5,7 @@ import com.njydsz.common.core.code.ResultCode;
 /**
  * 异常结果码桥接接口。
  *
- * <p>由异常对象实现，提供从异常实例获取 {@link ResultCode} 的桥接能力， 供响应构建器（如 {@code BaseResponse.error(Throwable)}
+ * <p>由异常对象实现，提供从异常实例获取 {@link ResultCode} 的桥接能力， 供响应构建器（如 {@code YdszResponse.error(Throwable)}
  * 适配链路）消费。
  *
  * <p><b>迁移说明：</b>本接口原定义于 {@code ydsz-common-core}（v2.1.0 精简核心时移除）， 因属于异常处理能力，迁移至 {@code

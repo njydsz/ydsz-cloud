@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 
 /**
@@ -71,7 +71,7 @@ public class FreeMarkerTemplateEngine implements TemplateEngine {
     } catch (Exception e) {
       log.error("[Template] FreeMarker 渲染异常: err={}", e.getMessage(), e);
       throw SysException.builder()
-          .resultCode(BaseResultCode.INTERNAL_ERROR)
+          .resultCode(YdszResultCode.INTERNAL_ERROR)
           .message("模板渲染失败: " + e.getMessage())
           .build();
     }
@@ -89,13 +89,13 @@ public class FreeMarkerTemplateEngine implements TemplateEngine {
       Object value = safeParams.get(key);
       if (value == null) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("模板必填参数缺失: " + key)
             .build();
       }
       if (value instanceof String s && s.isBlank()) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("模板必填参数为空: " + key)
             .build();
       }

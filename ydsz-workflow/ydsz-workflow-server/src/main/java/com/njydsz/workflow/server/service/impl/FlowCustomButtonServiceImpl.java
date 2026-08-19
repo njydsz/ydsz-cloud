@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
@@ -132,7 +132,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_node_not_found")
           .params(nodeCode)
           .build();
@@ -170,7 +170,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     FlowRunTaskDO task = taskRepository.findById(taskId).map(converter::entityToDO).orElse(null);
     if (task == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_6541ab08")
           .params(taskId)
           .build();
@@ -186,7 +186,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
             .orElseThrow(
                 () ->
                     SysException.builder()
-                        .resultCode(BaseResultCode.BAD_REQUEST)
+                        .resultCode(YdszResultCode.BAD_REQUEST)
                         .key("error.workflow.msg_button_not_found")
                         .params(buttonCode)
                         .build());
@@ -237,7 +237,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
           result.put("result", "TRANSFERRED");
         } else {
           throw SysException.builder()
-              .resultCode(BaseResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
               .message("error.workflow.msg_transfer_target_required")
               .build();
         }
@@ -257,7 +257,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
           result.put("result", "DELEGATED");
         } else {
           throw SysException.builder()
-              .resultCode(BaseResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
               .message("error.workflow.msg_delegate_target_required")
               .build();
         }
@@ -274,7 +274,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
       }
       default ->
           throw SysException.builder()
-              .resultCode(BaseResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
               .key("error.workflow.msg_unknown_button_action")
               .params(action)
               .build();

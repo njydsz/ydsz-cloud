@@ -9,7 +9,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.excel.exception.ExcelException;
 import com.njydsz.common.excel.exception.ExcelReadException;
 import com.njydsz.common.excel.exception.ExcelWriteException;
@@ -47,7 +47,7 @@ public class ExcelMvcExceptionHandler {
    * @return 统一错误响应
    */
   @ExceptionHandler(ExcelReadException.class)
-  public BaseResponse<?> handleExcelReadException(
+  public YdszResponse<?> handleExcelReadException(
       ExcelReadException e, HttpServletRequest request, HttpServletResponse response) {
     return handleExcelException(e, request, response, "读取");
   }
@@ -61,7 +61,7 @@ public class ExcelMvcExceptionHandler {
    * @return 统一错误响应
    */
   @ExceptionHandler(ExcelWriteException.class)
-  public BaseResponse<?> handleExcelWriteException(
+  public YdszResponse<?> handleExcelWriteException(
       ExcelWriteException e, HttpServletRequest request, HttpServletResponse response) {
     return handleExcelException(e, request, response, "写入");
   }
@@ -75,7 +75,7 @@ public class ExcelMvcExceptionHandler {
    * @return 统一错误响应
    */
   @ExceptionHandler(ExcelException.class)
-  public BaseResponse<?> handleExcelException(
+  public YdszResponse<?> handleExcelException(
       ExcelException e, HttpServletRequest request, HttpServletResponse response) {
     return handleExcelException(e, request, response, "处理");
   }
@@ -89,7 +89,7 @@ public class ExcelMvcExceptionHandler {
    * @param operation 操作描述（读取/写入/处理）
    * @return 统一错误响应
    */
-  private BaseResponse<?> handleExcelException(
+  private YdszResponse<?> handleExcelException(
       ExcelException e,
       HttpServletRequest request,
       HttpServletResponse response,
@@ -122,7 +122,7 @@ public class ExcelMvcExceptionHandler {
           message);
     }
 
-    return BaseResponse.builder()
+    return YdszResponse.builder()
         .code(code)
         .msg(message)
         .timestamp(System.currentTimeMillis())

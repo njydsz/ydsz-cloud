@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.message.api.client.MessageSendClient;
@@ -29,12 +29,12 @@ public class MessageSendClientFallback implements FallbackFactory<MessageSendCli
     log.warn("[MessageSendClient] 降级触发: {}", cause.getMessage());
     return new MessageSendClient() {
       @Override
-      public BaseResponse<String> sendMessage(MessageRequest request) {
+      public YdszResponse<String> sendMessage(MessageRequest request) {
         log.warn(
             "[MessageSendClient] sendMessage 降级: receiver={}, subject={}, reason=消息中心服务不可用",
             request == null ? null : request.getReceiver(),
             request == null ? null : request.getSubject());
-        return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
       }
     };
   }

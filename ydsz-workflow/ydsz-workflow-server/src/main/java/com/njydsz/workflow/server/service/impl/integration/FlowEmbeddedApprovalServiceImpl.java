@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO;
@@ -131,7 +131,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
         || businessId == null
         || businessId.isBlank()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("businessType / businessId 不能为空")
           .build();
     }
@@ -212,7 +212,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
   public void quickAction(EmbeddedApprovalActionDTO dto) {
     if (dto == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_afb63fa5")
           .build();
     }
@@ -221,13 +221,13 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
         instanceService.getByBusiness(dto.getBusinessType(), dto.getBusinessId());
     if (instance == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("error.workflow.msg_b72e8598")
           .build();
     }
     if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_8243ec9a")
           .build();
     }
@@ -241,7 +241,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
           FlowRunTaskDO mine = findMyTask(instance.getId(), dto.getUserId());
           if (mine == null) {
             throw SysException.builder()
-                .resultCode(BaseResultCode.FORBIDDEN)
+                .resultCode(YdszResultCode.FORBIDDEN)
                 .message("error.workflow.msg_1440b2f2")
                 .build();
           }
@@ -262,7 +262,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
           } else if ("TRANSFER".equals(action)) {
             if (dto.getTargetUserId() == null) {
               throw SysException.builder()
-                  .resultCode(BaseResultCode.BAD_REQUEST)
+                  .resultCode(YdszResultCode.BAD_REQUEST)
                   .message("error.workflow.msg_df306e2b")
                   .build();
             }
@@ -270,7 +270,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
           } else { // DELEGATE
             if (dto.getTargetUserId() == null) {
               throw SysException.builder()
-                  .resultCode(BaseResultCode.BAD_REQUEST)
+                  .resultCode(YdszResultCode.BAD_REQUEST)
                   .message("委派操作必须指定 targetUserId")
                   .build();
             }
@@ -294,7 +294,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
           boolean ok = instanceService.recall(instance.getId(), dto.getUserId());
           if (!ok) {
             throw SysException.builder()
-                .resultCode(BaseResultCode.BAD_REQUEST)
+                .resultCode(YdszResultCode.BAD_REQUEST)
                 .message("error.workflow.msg_ad7c50c2")
                 .build();
           }
@@ -302,7 +302,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
         }
       default:
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.workflow.msg_3adf9016")
             .params(dto.getAction())
             .build();

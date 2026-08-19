@@ -21,8 +21,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
@@ -126,7 +126,7 @@ public class MessageController {
       content = "'send strategy=' + #dto.strategy")
   @RateLimit(resource = "message.message.send", threshold = 50)
   @PostMapping("/send")
-  public BaseResponse<?> send(@Valid @RequestBody MessageSendDTO dto) {
+  public YdszResponse<?> send(@Valid @RequestBody MessageSendDTO dto) {
     SendStrategyEnum strategy = dto.getStrategy();
     if (strategy == null) {
       strategy = SendStrategyEnum.SYNC;
@@ -135,30 +135,30 @@ public class MessageController {
     return switch (strategy) {
       case SYNC -> {
         MessageResult result = messageService.send(toMessageRequest(dto));
-        yield BaseResponse.success(result);
+        yield YdszResponse.success(result);
       }
       case DIRECT -> {
         MessageResult result = messageService.sendDirect(dto);
-        yield BaseResponse.success(result);
+        yield YdszResponse.success(result);
       }
       case ASYNC -> {
         // P0-3: 先落库 PENDING 再投递 MQ，保证消息不丢失
         MessageResult result = messageService.sendAsync(toMessageRequest(dto));
-        BaseResponse<MessageResult> response = BaseResponse.success(result);
+        YdszResponse<MessageResult> response = YdszResponse.success(result);
         response.setMsg("ASYNC_QUEUED");
         yield response;
       }
       case TRANSACTIONAL -> {
         MessageResult result = messageService.sendTransactionally(toMessageRequest(dto));
-        yield BaseResponse.success(result);
+        yield YdszResponse.success(result);
       }
       case BATCH -> {
         List<MessageRequest> requests = dto.getBatchRequests();
         if (requests == null || requests.isEmpty()) {
-          yield BaseResponse.error(BaseResultCode.BAD_REQUEST, "批量请求列表为空");
+          yield YdszResponse.error(YdszResultCode.BAD_REQUEST, "批量请求列表为空");
         }
         BatchSendResult result = messageService.batchSend(requests, dto.getBatchId());
-        yield BaseResponse.success(result);
+        yield YdszResponse.success(result);
       }
     };
   }
@@ -186,9 +186,9 @@ public class MessageController {
   @RateLimit(resource = "message.message.sendDirect", threshold = 50)
   @Deprecated
   @PostMapping("/sendDirect")
-  public BaseResponse<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
+  public YdszResponse<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
     dto.setStrategy(SendStrategyEnum.DIRECT);
-    return (BaseResponse<MessageResult>) send(dto);
+    return (YdszResponse<MessageResult>) send(dto);
   }
 
   /**
@@ -215,11 +215,11 @@ public class MessageController {
   @RateLimit(resource = "message.message.sendAsync", threshold = 50)
   @Deprecated
   @PostMapping("/sendAsync")
-  public BaseResponse<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
+  public YdszResponse<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
     MessageSendDTO dto = new MessageSendDTO();
     dto.setStrategy(SendStrategyEnum.ASYNC);
     fillFromRequest(dto, request);
-    return (BaseResponse<MessageResult>) send(dto);
+    return (YdszResponse<MessageResult>) send(dto);
   }
 
   /**
@@ -253,8 +253,8 @@ public class MessageController {
       action = AuditAction.DELETE,
       content = "'取消定时消息: msgId=' + #msgId")
   @PostMapping("/cancelScheduled")
-  public BaseResponse<MessageResult> cancelScheduled(@RequestParam String msgId) {
-    return BaseResponse.success(messageService.cancelScheduledMessage(msgId));
+  public YdszResponse<MessageResult> cancelScheduled(@RequestParam String msgId) {
+    return YdszResponse.success(messageService.cancelScheduledMessage(msgId));
   }
 
   /**
@@ -282,12 +282,12 @@ public class MessageController {
   @RateLimit(resource = "message.message.sendTransactionally", threshold = 50)
   @Deprecated
   @PostMapping("/sendTransactional")
-  public BaseResponse<MessageResult> sendTransactionally(
+  public YdszResponse<MessageResult> sendTransactionally(
       @Valid @RequestBody MessageRequest request) {
     MessageSendDTO dto = new MessageSendDTO();
     dto.setStrategy(SendStrategyEnum.TRANSACTIONAL);
     fillFromRequest(dto, request);
-    return (BaseResponse<MessageResult>) send(dto);
+    return (YdszResponse<MessageResult>) send(dto);
   }
 
   /**
@@ -316,13 +316,13 @@ public class MessageController {
   @RateLimit(resource = "message.message.batchSend", threshold = 50)
   @Deprecated
   @PostMapping("/batchSend")
-  public BaseResponse<BatchSendResult> batchSend(
+  public YdszResponse<BatchSendResult> batchSend(
       @Valid @RequestBody List<MessageRequest> requests, @RequestParam String batchId) {
     MessageSendDTO dto = new MessageSendDTO();
     dto.setStrategy(SendStrategyEnum.BATCH);
     dto.setBatchRequests(requests);
     dto.setBatchId(batchId);
-    return (BaseResponse<BatchSendResult>) send(dto);
+    return (YdszResponse<BatchSendResult>) send(dto);
   }
 
   /**

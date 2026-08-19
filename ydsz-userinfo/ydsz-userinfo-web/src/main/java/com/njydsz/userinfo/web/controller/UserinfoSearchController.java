@@ -18,7 +18,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.search.api.SearchRequest;
@@ -98,7 +98,7 @@ public class UserinfoSearchController {
   @Operation(summary = "搜索用户")
   @Audit(action = AuditAction.QUERY, module = "USERINFO", content = "搜索用户")
   @AuthApiPermission(apiCodes = PermissionCodes.USERINFO_SEARCH)
-  public BaseResponse<SearchResponse> search(
+  public YdszResponse<SearchResponse> search(
       @RequestParam String keyword,
       @RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "20") int pageSize,
@@ -124,7 +124,7 @@ public class UserinfoSearchController {
             .fuzzy(true)
             .build();
 
-    return BaseResponse.success(unifiedSearchService.search(request));
+    return YdszResponse.success(unifiedSearchService.search(request));
   }
 
   /**
@@ -148,11 +148,11 @@ public class UserinfoSearchController {
   @PostMapping("/rebuild")
   @Operation(summary = "重建用户索引")
   @Audit(action = AuditAction.UPDATE, module = "USERINFO", content = "重建用户搜索索引")
-  public BaseResponse<Void> rebuildIndex(
+  public YdszResponse<Void> rebuildIndex(
       @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId) {
 
     unifiedSearchService.clearCache();
     log.info("[UserinfoSearch] 索引缓存已清除, userId={}", userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

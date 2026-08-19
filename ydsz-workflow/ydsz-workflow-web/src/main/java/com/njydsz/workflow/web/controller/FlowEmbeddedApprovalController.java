@@ -18,8 +18,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.security.LoginUser;
@@ -95,7 +95,7 @@ public class FlowEmbeddedApprovalController {
    */
   @Operation(summary = "加载嵌入式审批面板")
   @GetMapping("/panel")
-  public BaseResponse<EmbeddedApprovalViewDTO> loadPanel(
+  public YdszResponse<EmbeddedApprovalViewDTO> loadPanel(
       @RequestParam String businessType,
       @RequestParam String businessId,
       @RequestParam(required = false) String userId) {
@@ -107,9 +107,9 @@ public class FlowEmbeddedApprovalController {
       }
     }
     if (uid == null) {
-      return BaseResponse.error(BaseResultCode.UNAUTHORIZED, "未登录");
+      return YdszResponse.error(YdszResultCode.UNAUTHORIZED, "未登录");
     }
-    return BaseResponse.success(embeddedApprovalService.loadPanel(businessType, businessId, uid));
+    return YdszResponse.success(embeddedApprovalService.loadPanel(businessType, businessId, uid));
   }
 
   /**
@@ -135,7 +135,7 @@ public class FlowEmbeddedApprovalController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'quickAction'")
-  public BaseResponse<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
+  public YdszResponse<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
     LoginUser u = AuthContextUtils.getCurrentOrNull();
     if (dto.getUserId() == null && u != null) {
       dto.setUserId(u.getUserId());
@@ -144,7 +144,7 @@ public class FlowEmbeddedApprovalController {
       dto.setUserName(u.getUsername());
     }
     embeddedApprovalService.quickAction(dto);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -168,7 +168,7 @@ public class FlowEmbeddedApprovalController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'quickActionByPath'")
-  public BaseResponse<Void> quickActionByPath(
+  public YdszResponse<Void> quickActionByPath(
       @PathVariable String businessType,
       @PathVariable String businessId,
       @RequestBody @Valid EmbeddedApprovalActionDTO dto) {
@@ -182,6 +182,6 @@ public class FlowEmbeddedApprovalController {
       dto.setUserName(u.getUsername());
     }
     embeddedApprovalService.quickAction(dto);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

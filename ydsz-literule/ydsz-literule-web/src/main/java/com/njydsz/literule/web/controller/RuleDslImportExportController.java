@@ -21,8 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
@@ -90,13 +90,13 @@ public class RuleDslImportExportController {
   @RateLimit(resource = "literule.rule_dsl_import_export.importDsl", threshold = 50)
   @PostMapping("/import")
   @Operation(summary = "导入DSL规则", description = "将 YAML/JSON DSL 导入到规则引擎（upsert 语义，单条失败不影响整体）")
-  public BaseResponse<Map<String, Object>> importDsl(@RequestBody Map<String, Object> request) {
+  public YdszResponse<Map<String, Object>> importDsl(@RequestBody Map<String, Object> request) {
     String content = (String) request.get("content");
     String format = (String) request.getOrDefault("format", "yaml");
     String operator = (String) request.getOrDefault("operator", "SYSTEM");
 
     if (content == null || content.isBlank()) {
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "DSL 内容不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "DSL 内容不能为空");
     }
 
     try {
@@ -140,11 +140,11 @@ public class RuleDslImportExportController {
               dsl.getRules() != null ? dsl.getRules().size() : 0, successCount, failCount));
 
       log.info("[DSL] 导入完成: success={}, fail={}", successCount, failCount);
-      return BaseResponse.success(result);
+      return YdszResponse.success(result);
 
     } catch (Exception e) {
       log.warn("[DSL] 导入失败: {}", e.getMessage());
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.DSL_PARSE_ERROR, "DSL 导入失败: " + e.getMessage());
     }
   }
@@ -157,7 +157,7 @@ public class RuleDslImportExportController {
    */
   @GetMapping("/export")
   @Operation(summary = "导出全部规则DSL", description = "将引擎中的规则导出为 YAML 格式的 DSL")
-  public BaseResponse<Map<String, Object>> exportAll(
+  public YdszResponse<Map<String, Object>> exportAll(
       @RequestParam(value = "category", required = false) String category) {
     List<RuleDefinition> allRules = ruleAdminService.listAll();
 
@@ -167,7 +167,7 @@ public class RuleDslImportExportController {
     }
 
     if (allRules.isEmpty()) {
-      return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "没有可导出的规则");
+      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "没有可导出的规则");
     }
 
     String yaml =
@@ -177,7 +177,7 @@ public class RuleDslImportExportController {
     result.put("format", "yaml");
     result.put("ruleCount", allRules.size());
     result.put("content", yaml);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -188,10 +188,10 @@ public class RuleDslImportExportController {
    */
   @GetMapping("/export/{ruleCode}")
   @Operation(summary = "导出单条规则DSL", description = "将指定规则导出为 YAML 格式的 DSL")
-  public BaseResponse<Map<String, Object>> exportSingle(@PathVariable String ruleCode) {
+  public YdszResponse<Map<String, Object>> exportSingle(@PathVariable String ruleCode) {
     RuleDefinition def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
-      return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
     }
 
     String yaml = RuleDslExporter.exportSingleRule(def);
@@ -200,6 +200,6 @@ public class RuleDslImportExportController {
     result.put("format", "yaml");
     result.put("ruleCode", ruleCode);
     result.put("content", yaml);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 }

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.oidc.JwksEndpoint;
 import com.njydsz.common.auth.oidc.OidcDiscoveryEndpoint;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.server.config.OidcProperties;
 
 /**

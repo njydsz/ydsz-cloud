@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.domain.repository.JobDailyStatsRepository;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
@@ -78,12 +78,12 @@ public class JobStatsController {
   @Operation(summary = "查询每日执行统计趋势")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/daily")
-  public BaseResponse<List<JobDailyStatsVO>> daily(
+  public YdszResponse<List<JobDailyStatsVO>> daily(
       @RequestParam String jobId,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
     // 通过 Repository 查询（LocalDate 重载内部转换为 LocalDateTime）
-    return BaseResponse.success(
+    return YdszResponse.success(
         jobDailyStatsRepository.findByJobIdAndDateRange(jobId, startDate, endDate));
   }
 
@@ -105,7 +105,7 @@ public class JobStatsController {
   @Operation(summary = "查询执行统计汇总")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/summary")
-  public BaseResponse<Map<String, Object>> summary(
+  public YdszResponse<Map<String, Object>> summary(
       @RequestParam String jobId,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
@@ -146,7 +146,7 @@ public class JobStatsController {
     summary.put("failCount", failCount);
     summary.put("timeoutCount", timeoutCount);
     summary.put("avgDurationMs", durationSamples > 0 ? totalDuration / durationSamples : 0L);
-    return BaseResponse.success(summary);
+    return YdszResponse.success(summary);
   }
 
   // ==================== P1-2: 运维监控仪表盘增强 ====================
@@ -169,7 +169,7 @@ public class JobStatsController {
   @Operation(summary = "全局监控仪表盘")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/dashboard")
-  public BaseResponse<Map<String, Object>> dashboard() {
+  public YdszResponse<Map<String, Object>> dashboard() {
     Map<String, Object> dashboard = new HashMap<>();
     // 1. 任务状态分布（通过 Repository 统计）
     Map<String, Object> taskStats = new HashMap<>();
@@ -206,7 +206,7 @@ public class JobStatsController {
       dashboard.put("systemMetrics", systemMetrics);
     }
 
-    return BaseResponse.success(dashboard);
+    return YdszResponse.success(dashboard);
   }
 
   /**
@@ -220,9 +220,9 @@ public class JobStatsController {
   @Operation(summary = "最近失败任务")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/recent-failures")
-  public BaseResponse<List<JobLogVO>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
+  public YdszResponse<List<JobLogVO>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
     // 通过 Repository 查询最近失败日志（Repository 内部处理 LIMIT 上限）
-    return BaseResponse.success(jobLogRepository.findRecentFailures(limit));
+    return YdszResponse.success(jobLogRepository.findRecentFailures(limit));
   }
 
   /**
@@ -236,7 +236,7 @@ public class JobStatsController {
   @Operation(summary = "执行热力图（按小时分布）")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/heatmap")
-  public BaseResponse<List<Map<String, Object>>> heatmap(
+  public YdszResponse<List<Map<String, Object>>> heatmap(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
           LocalDate date) {
     LocalDate queryDate = date != null ? date : LocalDate.now();
@@ -251,6 +251,6 @@ public class JobStatsController {
       entry.put("count", count);
       heatmap.add(entry);
     }
-    return BaseResponse.success(heatmap);
+    return YdszResponse.success(heatmap);
   }
 }

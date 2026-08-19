@@ -3,7 +3,7 @@ package com.njydsz.common.auth.context;
 import java.util.Map;
 
 import com.njydsz.common.auth.model.ColumnPermissionInfo;
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.SysException;
@@ -70,7 +70,7 @@ public final class AuthContextUtils {
     LoginUser user = getCurrentOrNull();
     if (user == null) {
       throw SysException.builder()
-          .code(BaseResultCode.UNAUTHORIZED.getCode())
+          .code(YdszResultCode.UNAUTHORIZED.getCode())
           .key("error.common.msg_1923bd82")
           .httpStatus(401)
           .build();
@@ -152,7 +152,7 @@ public final class AuthContextUtils {
     LoginUser user = getCurrent();
     if (!user.hasPermission(perm)) {
       throw SysException.builder()
-          .code(BaseResultCode.FORBIDDEN.getCode())
+          .code(YdszResultCode.FORBIDDEN.getCode())
           .key("error.common.msg_1e40057e")
           .params(new Object[] {perm})
           .httpStatus(403)
@@ -174,7 +174,7 @@ public final class AuthContextUtils {
       }
     }
     throw SysException.builder()
-        .code(BaseResultCode.FORBIDDEN.getCode())
+        .code(YdszResultCode.FORBIDDEN.getCode())
         .key("error.common.msg_ad4fff48")
         .httpStatus(403)
         .build();

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.cronjob.server.core.LockKeyUtil;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -74,7 +74,7 @@ public class JobDiagnosisController {
    */
   @Operation(summary = "诊断指定任务的运行状态")
   @GetMapping("/{jobKey}")
-  public BaseResponse<Map<String, Object>> diagnose(
+  public YdszResponse<Map<String, Object>> diagnose(
       @Parameter(description = "任务 KEY", required = true) @PathVariable String jobKey) {
     Map<String, Object> diagnosis = new HashMap<>(16);
 
@@ -129,7 +129,7 @@ public class JobDiagnosisController {
     configInfo.put("leaderEnabled", cronjobProperties.getLeader().isEnabled());
     diagnosis.put("config", configInfo);
 
-    return BaseResponse.success(diagnosis);
+    return YdszResponse.success(diagnosis);
   }
 
   /** 获取当前节点标识 */

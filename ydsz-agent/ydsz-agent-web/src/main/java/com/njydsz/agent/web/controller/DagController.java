@@ -23,7 +23,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -121,7 +121,7 @@ public class DagController {
   @Idempotent(key = "ydsz:agent:DagController:execute:lock", ttlSeconds = EXECUTE_IDEMPOTENT_TTL_SECONDS)
   @RateLimit(resource = "agent.dag.execute", threshold = 50)
   @PostMapping("/execute")
-  public BaseResponse<DagOrchestrationExecutor.DagExecutionResult> execute(
+  public YdszResponse<DagOrchestrationExecutor.DagExecutionResult> execute(
       @Valid @RequestBody DagExecutionDTO request) {
     LOG.info("[DAG-API] 收到编排请求: userInput={}", request.getUserInput());
 
@@ -131,7 +131,7 @@ public class DagController {
     DagOrchestrationExecutor.DagExecutionResult result =
         dagExecutor.execute(dag, request.getUserInput(), request.getResumeExecutionId());
 
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -149,11 +149,11 @@ public class DagController {
       action = AuditAction.QUERY,
       content = "'query checkpoint'")
   @GetMapping("/checkpoint/{executionId}")
-  public BaseResponse<DagCheckpoint> getCheckpoint(@PathVariable String executionId) {
+  public YdszResponse<DagCheckpoint> getCheckpoint(@PathVariable String executionId) {
     if (checkpointStore == null) {
-      return BaseResponse.success(null);
+      return YdszResponse.success(null);
     }
-    return BaseResponse.success(checkpointStore.load(executionId).orElse(null));
+    return YdszResponse.success(checkpointStore.load(executionId).orElse(null));
   }
 
   /**
@@ -173,10 +173,10 @@ public class DagController {
       content = "'validate'")
   @Idempotent(key = "ydsz:agent:DagController:write:lock", ttlSeconds = 5)
   @PostMapping("/validate")
-  public BaseResponse<Map<String, Object>> validate(@Valid @RequestBody DagExecutionDTO request) {
+  public YdszResponse<Map<String, Object>> validate(@Valid @RequestBody DagExecutionDTO request) {
     try {
       AgentDag dag = dslParser.parse(request.getDsl());
-      return BaseResponse.success(
+      return YdszResponse.success(
           Map.of(
               "valid", true,
               "dagName", dag.getName(),
@@ -184,7 +184,7 @@ public class DagController {
     } catch (Exception e) {
       LOG.error("[DAG-API] DSL 解析失败, dsl={}, err={}", request.getDsl(), e.getMessage(), e);
       // 解析失败时仍返回 success，由 valid 字段标识
-      return BaseResponse.success(Map.of("valid", false, "error", e.getMessage()));
+      return YdszResponse.success(Map.of("valid", false, "error", e.getMessage()));
     }
   }
 }

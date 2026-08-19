@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.infra.entity.MsgTraceDO;
 import com.njydsz.message.server.service.core.MessageTraceService;
@@ -93,8 +93,8 @@ public class MessageTraceController {
   @Operation(summary = "按消息 ID 查询轨迹")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/msg/{msgId}")
-  public BaseResponse<List<MsgTraceDO>> getByMsgId(@PathVariable String msgId) {
-    return BaseResponse.success(messageTraceService.getTraceByMsgId(msgId));
+  public YdszResponse<List<MsgTraceDO>> getByMsgId(@PathVariable String msgId) {
+    return YdszResponse.success(messageTraceService.getTraceByMsgId(msgId));
   }
 
   /**
@@ -106,8 +106,8 @@ public class MessageTraceController {
   @Operation(summary = "按链路追踪 ID 查询轨迹")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/trace/{traceId}")
-  public BaseResponse<List<MsgTraceDO>> getByTraceId(@PathVariable String traceId) {
-    return BaseResponse.success(messageTraceService.getTraceByTraceId(traceId));
+  public YdszResponse<List<MsgTraceDO>> getByTraceId(@PathVariable String traceId) {
+    return YdszResponse.success(messageTraceService.getTraceByTraceId(traceId));
   }
 
   /**
@@ -120,8 +120,8 @@ public class MessageTraceController {
   @Operation(summary = "按业务类型+单据 ID 查询轨迹")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/biz")
-  public BaseResponse<List<MsgTraceDO>> getByBiz(
+  public YdszResponse<List<MsgTraceDO>> getByBiz(
       @RequestParam String bizType, @RequestParam String bizId) {
-    return BaseResponse.success(messageTraceService.getTraceByBiz(bizType, bizId));
+    return YdszResponse.success(messageTraceService.getTraceByBiz(bizType, bizId));
   }
 }

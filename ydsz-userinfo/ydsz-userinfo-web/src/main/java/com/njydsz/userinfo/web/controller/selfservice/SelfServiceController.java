@@ -15,10 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
+import com.njydsz.userinfo.domain.dto.AccountUnlockDTO;
 import com.njydsz.userinfo.domain.dto.ForgotPasswordDTO;
 import com.njydsz.userinfo.domain.dto.SelfRegisterDTO;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
@@ -65,8 +66,8 @@ public class SelfServiceController {
       threshold = 3,
       windowMillis = 60000,
       dimension = RateLimitDimension.IP)
-  public BaseResponse<Boolean> sendVerifyCode(@Valid @RequestBody SendVerifyCodeDTO dto) {
-    return BaseResponse.success(selfServiceService.sendVerifyCode(dto));
+  public YdszResponse<Boolean> sendVerifyCode(@Valid @RequestBody SendVerifyCodeDTO dto) {
+    return YdszResponse.success(selfServiceService.sendVerifyCode(dto));
   }
 
   /**
@@ -91,8 +92,8 @@ public class SelfServiceController {
       threshold = 3,
       windowMillis = 60000,
       dimension = RateLimitDimension.IP)
-  public BaseResponse<String> register(@Valid @RequestBody SelfRegisterDTO dto) {
-    return BaseResponse.success(selfServiceService.register(dto));
+  public YdszResponse<String> register(@Valid @RequestBody SelfRegisterDTO dto) {
+    return YdszResponse.success(selfServiceService.register(dto));
   }
 
   /**
@@ -119,7 +120,35 @@ public class SelfServiceController {
       threshold = 3,
       windowMillis = 60000,
       dimension = RateLimitDimension.IP)
-  public BaseResponse<Boolean> forgotPassword(@Valid @RequestBody ForgotPasswordDTO dto) {
-    return BaseResponse.success(selfServiceService.forgotPassword(dto));
+  public YdszResponse<Boolean> forgotPassword(@Valid @RequestBody ForgotPasswordDTO dto) {
+    return YdszResponse.success(selfServiceService.forgotPassword(dto));
+  }
+
+  /**
+   * 账号自助解锁。
+   *
+   * <p>用户因登录失败次数过多被锁定后，通过手机/邮箱验证码验证身份后自助解锁。
+   *
+   * @param dto 解锁请求
+   * @return 是否成功
+   */
+  @Audit(
+      module = "自助服务",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'用户自助解锁: ' + #dto.username",
+      excludeParams = {"verifyCode"})
+  @Idempotent(
+      key = "ydsz:userinfo:selfservice:unlock:#{#dto.username}",
+      ttlSeconds = 10)
+  @PostMapping("/unlock")
+  @Operation(summary = "账号自助解锁")
+  @RateLimit(
+      resource = "userinfo.selfservice.unlock",
+      threshold = 3,
+      windowMillis = 60000,
+      dimension = RateLimitDimension.IP)
+  public YdszResponse<Boolean> unlockAccount(@Valid @RequestBody AccountUnlockDTO dto) {
+    return YdszResponse.success(selfServiceService.unlockAccount(dto));
   }
 }

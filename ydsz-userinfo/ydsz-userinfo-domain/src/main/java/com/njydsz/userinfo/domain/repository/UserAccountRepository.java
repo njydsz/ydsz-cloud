@@ -219,4 +219,35 @@ public interface UserAccountRepository {
    * @return 用户账号 VO（含封禁字段）；不存在返回 {@code Optional.empty()}
    */
   Optional<UserAccountVO> findByIdWithBan(String id);
+
+  /**
+   * 解锁账号：清除锁定时间、清零登录失败计数。
+   *
+   * <p>专用于自助解锁场景（用户通过验证码验证身份后解锁），原子完成：
+   * 清除锁定时间、清零失败计数、更新更新时间。
+   *
+   * @param id 用户 ID
+   * @return 影响行数（用户不存在或已删除时为 0）
+   */
+  int unlockAccount(String id);
+
+  /**
+   * 根据手机号查询用户账号。
+   *
+   * <p>用于自助服务场景（如手机号验证码解锁），通过手机号反查用户。
+   *
+   * @param phone 手机号
+   * @return 用户账号 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<UserAccountVO> findByPhone(String phone);
+
+  /**
+   * 根据邮箱查询用户账号。
+   *
+   * <p>用于自助服务场景（如邮箱验证码解锁），通过邮箱反查用户。
+   *
+   * @param email 邮箱地址
+   * @return 用户账号 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<UserAccountVO> findByEmail(String email);
 }

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.TokenService;
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.infra.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
@@ -395,7 +395,7 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public LoginVO refresh(String refreshToken) {
     if (refreshToken == null || refreshToken.isBlank()) {
-      throw BusinessException.builder().resultCode(BaseResultCode.UNAUTHORIZED).build();
+      throw BusinessException.builder().resultCode(YdszResultCode.UNAUTHORIZED).build();
     }
 
     // P1-4: refresh_token 重用检测（RFC 6819 §5.2.2.3）
@@ -411,18 +411,18 @@ public class AuthServiceImpl implements AuthService {
           && !reusedUser.getUserId().isBlank()) {
         sessionManager.evictAllSessions(reusedUser.getUserId());
       }
-      throw BusinessException.builder().resultCode(BaseResultCode.UNAUTHORIZED).build();
+      throw BusinessException.builder().resultCode(YdszResultCode.UNAUTHORIZED).build();
     }
 
     if (!tokenService.validateRefreshToken(refreshToken)) {
       log.warn("Refresh token validation failed, possible token reuse attack");
-      throw BusinessException.builder().resultCode(BaseResultCode.UNAUTHORIZED).build();
+      throw BusinessException.builder().resultCode(YdszResultCode.UNAUTHORIZED).build();
     }
 
     UserInfo userInfo = tokenService.parseRefreshToken(refreshToken);
     if (userInfo == null) {
       log.warn("Failed to parse user info from refresh token");
-      throw BusinessException.builder().resultCode(BaseResultCode.UNAUTHORIZED).build();
+      throw BusinessException.builder().resultCode(YdszResultCode.UNAUTHORIZED).build();
     }
 
     // 签发新的 access_token 和 refresh_token（token 轮换）

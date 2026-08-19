@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
@@ -54,7 +54,7 @@ public class FlowTaskUrgeService {
         && instanceId != null
         && !urgeLimiter.tryAcquire(operatorId, Long.parseLong(instanceId), "INSTANCE")) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
+          .resultCode(YdszResultCode.TOO_MANY_REQUESTS)
           .message("error.workflow.msg_75474a57")
           .build();
     }
@@ -85,7 +85,7 @@ public class FlowTaskUrgeService {
       String nodeTarget = instanceId + ":" + nodeCode;
       if (!urgeLimiter.tryAcquire(operatorId, nodeTarget.hashCode() & Long.MAX_VALUE, "NODE")) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
+            .resultCode(YdszResultCode.TOO_MANY_REQUESTS)
             .message("error.workflow.msg_75474a57")
             .build();
       }

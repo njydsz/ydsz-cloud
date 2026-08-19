@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.entity.core.MsgNotification;
@@ -62,7 +62,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
   public boolean markRead(String msgId, String userId) {
     if (!StringUtils.hasText(msgId) || !StringUtils.hasText(userId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("消息 ID 和用户 ID 不能为空")
           .build();
     }
@@ -139,7 +139,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
   public boolean markNotificationRead(String notificationId, String userId) {
     if (!StringUtils.hasText(notificationId) || !StringUtils.hasText(userId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("通知 ID 和用户 ID 不能为空")
           .build();
     }

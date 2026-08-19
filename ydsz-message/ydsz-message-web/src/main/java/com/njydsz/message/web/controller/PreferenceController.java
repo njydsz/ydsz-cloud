@@ -18,7 +18,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -101,8 +101,8 @@ public class PreferenceController {
       content = "'upsert'")
   @RateLimit(resource = "message.preference.upsert", threshold = 50)
   @PostMapping
-  public BaseResponse<MsgPreferenceVO> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
-    return BaseResponse.success(MessageConverter.INSTANT.entityToVO(preferenceService.upsert(dto)));
+  public YdszResponse<MsgPreferenceVO> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
+    return YdszResponse.success(MessageConverter.INSTANT.entityToVO(preferenceService.upsert(dto)));
   }
 
   /**
@@ -114,8 +114,8 @@ public class PreferenceController {
   @Operation(summary = "查询用户所有偏好")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_VIEW)
   @GetMapping("/{userId}")
-  public BaseResponse<List<MsgPreferenceVO>> listByUser(@PathVariable String userId) {
-    return BaseResponse.success(
+  public YdszResponse<List<MsgPreferenceVO>> listByUser(@PathVariable String userId) {
+    return YdszResponse.success(
         MessageConverter.INSTANT.preferenceListToVO(preferenceService.listByUser(userId)));
   }
 
@@ -130,9 +130,9 @@ public class PreferenceController {
   @Operation(summary = "按用户+通道+业务类型查询偏好")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_VIEW)
   @GetMapping("/{userId}/{channel}/{bizType}")
-  public BaseResponse<MsgPreferenceVO> getByUser(
+  public YdszResponse<MsgPreferenceVO> getByUser(
       @PathVariable String userId, @PathVariable String channel, @PathVariable String bizType) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         MessageConverter.INSTANT.entityToVO(preferenceService.getByUser(userId, channel, bizType)));
   }
 
@@ -152,8 +152,8 @@ public class PreferenceController {
       content = "'delete'")
   @RateLimit(resource = "message.preference.delete", threshold = 50)
   @DeleteMapping("/{id}")
-  public BaseResponse<Void> delete(@PathVariable String id) {
+  public YdszResponse<Void> delete(@PathVariable String id) {
     preferenceService.delete(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

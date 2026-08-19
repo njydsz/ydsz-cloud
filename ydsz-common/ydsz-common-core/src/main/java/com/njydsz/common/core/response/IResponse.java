@@ -18,13 +18,13 @@ package com.njydsz.common.core.response;
  * <p><b>实现类：</b>
  *
  * <ul>
- *   <li>{@link BaseResponse} - 通用响应实现
+ *   <li>{@link YdszResponse} - 通用响应实现
  * </ul>
  *
  * @param <T> 数据类型
  * @author ydsz-team
  * @since 1.0.0
- * @see BaseResponse
+ * @see YdszResponse
  */
 public interface IResponse<T> {
 

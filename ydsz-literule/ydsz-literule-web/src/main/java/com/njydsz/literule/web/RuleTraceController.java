@@ -26,8 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -74,16 +74,16 @@ public class RuleTraceController {
 
   /** 按 traceId 查询执行链路 */
   @GetMapping("/traces/{traceId}")
-  public BaseResponse<List<RuleExecutionTraceVO>> getTrace(@PathVariable String traceId) {
-    return BaseResponse.success(ruleExecutionTraceRepository.findByTraceId(traceId));
+  public YdszResponse<List<RuleExecutionTraceVO>> getTrace(@PathVariable String traceId) {
+    return YdszResponse.success(ruleExecutionTraceRepository.findByTraceId(traceId));
   }
 
   /** 按规则编码查询最近链路 */
   @GetMapping("/traces/rule/{ruleCode}")
-  public BaseResponse<List<RuleExecutionTraceVO>> getTracesByRule(
+  public YdszResponse<List<RuleExecutionTraceVO>> getTracesByRule(
       @PathVariable String ruleCode,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit) {
-    return BaseResponse.success(ruleExecutionTraceRepository.findByRuleCode(ruleCode, limit));
+    return YdszResponse.success(ruleExecutionTraceRepository.findByRuleCode(ruleCode, limit));
   }
 
   /**
@@ -102,18 +102,18 @@ public class RuleTraceController {
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_trace.replayTrace", threshold = 50)
   @PostMapping("/traces/{traceId}/replay")
-  public BaseResponse<Map<String, Object>> replayTrace(@PathVariable String traceId) {
+  public YdszResponse<Map<String, Object>> replayTrace(@PathVariable String traceId) {
     List<RuleExecutionTraceVO> traces = ruleExecutionTraceRepository.findByTraceId(traceId);
 
     if (traces.isEmpty()) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.RULE_NOT_FOUND, "未找到 traceId=" + traceId + " 的执行记录");
     }
 
     // 取第一条 trace 的 factsSnapshot 作为回放输入
     Map<String, Object> facts = traces.get(0).getFactsSnapshot();
     if (facts == null || facts.isEmpty()) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.RULE_NOT_FOUND, "traceId=" + traceId + " 的事实快照为空，无法回放");
     }
 
@@ -157,7 +157,7 @@ public class RuleTraceController {
                     "新增触发 %d 条，移除触发 %d 条，保持不变 %d 条",
                     added.size(), removed.size(), unchanged.size())));
 
-    return BaseResponse.success(replay);
+    return YdszResponse.success(replay);
   }
 
   /**
@@ -194,7 +194,7 @@ public class RuleTraceController {
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_trace.batchReplayTraces", threshold = 50)
   @PostMapping("/traces/batch-replay")
-  public BaseResponse<Map<String, Object>> batchReplayTraces(
+  public YdszResponse<Map<String, Object>> batchReplayTraces(
       @RequestBody Map<String, Object> request) {
     // 解析请求参数
     String startTimeStr = (String) request.get("startTime");
@@ -206,7 +206,7 @@ public class RuleTraceController {
     }
 
     if (startTimeStr == null || endTimeStr == null) {
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "startTime 和 endTime 不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "startTime 和 endTime 不能为空");
     }
 
     LocalDateTime startTime = LocalDateTime.parse(startTimeStr);
@@ -272,7 +272,7 @@ public class RuleTraceController {
         "summary",
         String.format("共回放 %d 条，一致 %d 条，差异 %d 条", traces.size(), consistentCount, diffCount));
 
-    return BaseResponse.success(report);
+    return YdszResponse.success(report);
   }
 
   /**
@@ -312,7 +312,7 @@ public class RuleTraceController {
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_trace.impactPreview", threshold = 50)
   @PostMapping("/{ruleCode}/impact-preview")
-  public BaseResponse<Map<String, Object>> impactPreview(
+  public YdszResponse<Map<String, Object>> impactPreview(
       @PathVariable String ruleCode, @RequestBody Map<String, Object> request) {
     String conditionExpression = (String) request.get("conditionExpression");
     String severityExpression = (String) request.get("severityExpression");
@@ -323,7 +323,7 @@ public class RuleTraceController {
     }
 
     if (conditionExpression == null || conditionExpression.isBlank()) {
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "conditionExpression 不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "conditionExpression 不能为空");
     }
 
     // 解析默认严重度
@@ -332,8 +332,8 @@ public class RuleTraceController {
       try {
         defaultSeverity = RuleSeverity.valueOf(defaultSeverityStr);
       } catch (IllegalArgumentException e) {
-        return BaseResponse.error(
-            BaseResultCode.VALIDATION_FAILED,
+        return YdszResponse.error(
+            YdszResultCode.VALIDATION_FAILED,
             "非法的 defaultSeverity: " + defaultSeverityStr + "，合法值: INFO / YELLOW / RED");
       }
     }
@@ -420,7 +420,7 @@ public class RuleTraceController {
             addedTriggeredCount,
             removedTriggeredCount));
 
-    return BaseResponse.success(report);
+    return YdszResponse.success(report);
   }
 
   /**
@@ -459,8 +459,8 @@ public class RuleTraceController {
    * @return 最近的执行链路列表
    */
   @GetMapping("/traces")
-  public BaseResponse<List<RuleExecutionTraceVO>> listRecentTraces(
+  public YdszResponse<List<RuleExecutionTraceVO>> listRecentTraces(
       @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-    return BaseResponse.success(ruleExecutionTraceRepository.findRecent(limit));
+    return YdszResponse.success(ruleExecutionTraceRepository.findRecent(limit));
   }
 }

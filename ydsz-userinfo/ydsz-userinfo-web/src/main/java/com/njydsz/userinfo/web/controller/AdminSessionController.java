@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.annotation.SensitiveOperation;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -95,14 +95,14 @@ public class AdminSessionController {
   @RateLimit(resource = "userinfo.admin.ban", threshold = 10)
   @PostMapping("/users/{userId}/ban")
   @Operation(summary = "封禁用户", description = "封禁指定用户，支持临时封禁和永久封禁")
-  public BaseResponse<Boolean> banUser(
+  public YdszResponse<Boolean> banUser(
       @PathVariable String userId, @Valid @RequestBody UserBanRequestDTO dto) {
     userBanService.ban(
         userId,
         com.njydsz.userinfo.domain.enums.BanType.valueOf(dto.getBanType()),
         dto.getBanReason(),
         dto.getBanExpireAt());
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -123,9 +123,9 @@ public class AdminSessionController {
   @RateLimit(resource = "userinfo.admin.unban", threshold = 10)
   @PostMapping("/users/{userId}/unban")
   @Operation(summary = "解封用户", description = "解除用户的封禁状态")
-  public BaseResponse<Boolean> unbanUser(@PathVariable String userId) {
+  public YdszResponse<Boolean> unbanUser(@PathVariable String userId) {
     userBanService.unban(userId);
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -136,8 +136,8 @@ public class AdminSessionController {
    */
   @GetMapping("/users/{userId}/ban-info")
   @Operation(summary = "查询封禁信息", description = "查询指定用户的封禁状态详情")
-  public BaseResponse<BanInfoVO> getBanInfo(@PathVariable String userId) {
-    return BaseResponse.success(userBanService.getBanInfo(userId));
+  public YdszResponse<BanInfoVO> getBanInfo(@PathVariable String userId) {
+    return YdszResponse.success(userBanService.getBanInfo(userId));
   }
 
   /**
@@ -148,8 +148,8 @@ public class AdminSessionController {
    */
   @GetMapping("/users/{userId}/sessions")
   @Operation(summary = "查询用户会话", description = "查询指定用户的活跃会话列表")
-  public BaseResponse<List<UserSessionVO>> getUserSessions(@PathVariable String userId) {
-    return BaseResponse.success(userSessionAdminService.listUserSessions(userId));
+  public YdszResponse<List<UserSessionVO>> getUserSessions(@PathVariable String userId) {
+    return YdszResponse.success(userSessionAdminService.listUserSessions(userId));
   }
 
   /**
@@ -169,10 +169,10 @@ public class AdminSessionController {
   @RateLimit(resource = "userinfo.admin.forceLogout", threshold = 10)
   @DeleteMapping("/users/{userId}/sessions/{accessToken}")
   @Operation(summary = "强制下线指定会话", description = "吊销用户的指定会话 Token")
-  public BaseResponse<Boolean> forceLogout(
+  public YdszResponse<Boolean> forceLogout(
       @PathVariable String userId, @PathVariable String accessToken) {
     userSessionAdminService.forceLogout(userId, accessToken);
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -186,10 +186,10 @@ public class AdminSessionController {
    */
   @GetMapping("/sessions")
   @Operation(summary = "查询所有在线会话", description = "查询全平台活跃会话（分页），当前需全局会话索引支持")
-  public BaseResponse<List<UserSessionVO>> getAllActiveSessions(
+  public YdszResponse<List<UserSessionVO>> getAllActiveSessions(
       @RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "20") int size) {
-    return BaseResponse.success(userSessionAdminService.listAllActiveSessions(page, size));
+    return YdszResponse.success(userSessionAdminService.listAllActiveSessions(page, size));
   }
 
   /**
@@ -199,7 +199,7 @@ public class AdminSessionController {
    */
   @GetMapping("/sessions/statistics")
   @Operation(summary = "查询会话统计", description = "查询全会话统计：总数/活跃用户数/分端分布")
-  public BaseResponse<UserSessionStatistics> getSessionStatistics() {
-    return BaseResponse.success(userSessionAdminService.getSessionStatistics());
+  public YdszResponse<UserSessionStatistics> getSessionStatistics() {
+    return YdszResponse.success(userSessionAdminService.getSessionStatistics());
   }
 }

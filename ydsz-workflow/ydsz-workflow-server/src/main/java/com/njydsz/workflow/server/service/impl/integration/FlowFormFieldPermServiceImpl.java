@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.server.service.FlowFormFieldPermService;
@@ -140,7 +140,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
           // HIDDEN 字段不允许提交
           if (submitted.containsKey(fieldKey)) {
             throw SysException.builder()
-                .resultCode(BaseResultCode.BAD_REQUEST)
+                .resultCode(YdszResultCode.BAD_REQUEST)
                 .key("error.workflow.msg_form_field_hidden")
                 .params(fieldKey)
                 .build();
@@ -153,7 +153,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
             Object existingVal = existing.get(fieldKey);
             if (!Objects.equals(existingVal, submittedVal)) {
               throw SysException.builder()
-                  .resultCode(BaseResultCode.BAD_REQUEST)
+                  .resultCode(YdszResultCode.BAD_REQUEST)
                   .key("error.workflow.msg_form_field_readonly")
                   .params(fieldKey)
                   .build();
@@ -165,7 +165,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
           // REQUIRED 字段不能为空
           if (submittedVal == null || (submittedVal instanceof String s && s.isBlank())) {
             throw SysException.builder()
-                .resultCode(BaseResultCode.BAD_REQUEST)
+                .resultCode(YdszResultCode.BAD_REQUEST)
                 .key("error.workflow.msg_form_field_required")
                 .params(fieldKey)
                 .build();

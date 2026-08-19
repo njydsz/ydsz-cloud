@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
 import com.njydsz.common.lock.scheduler.LockWatchDog.WatchTask;
@@ -88,7 +88,7 @@ public class LockAdminController {
    */
   @GetMapping("/metrics")
   @Operation(summary = "获取锁指标", description = "获取当前锁子系统的运行时指标快照")
-  public BaseResponse<Map<String, Object>> metrics() {
+  public YdszResponse<Map<String, Object>> metrics() {
     Map<String, Object> metrics = new HashMap<>();
     metrics.put("acquireSuccessCount", lockMetrics.getAcquireSuccessCount());
     metrics.put("acquireFailCount", lockMetrics.getAcquireFailCount());
@@ -102,7 +102,7 @@ public class LockAdminController {
     metrics.put("idempotentHitCount", lockMetrics.getIdempotentHitCount());
     metrics.put("activeRenewalTasks", lockWatchDog.getActiveTaskCount());
     log.info("[ydsz-lock] [admin] 查询锁指标 active={}", lockMetrics.getActiveLocks());
-    return BaseResponse.success(metrics);
+    return YdszResponse.success(metrics);
   }
 
   /**
@@ -113,7 +113,7 @@ public class LockAdminController {
    */
   @GetMapping("/status/{key}")
   @Operation(summary = "查询锁状态", description = "查询指定 key 的锁是否被持有及剩余时间")
-  public BaseResponse<Map<String, Object>> lockStatus(
+  public YdszResponse<Map<String, Object>> lockStatus(
       @Parameter(description = "锁 key（不含 ydsz 前缀）") @PathVariable("key") String key) {
     String fullKey = LOCK_KEY_PREFIX + key;
     Map<String, Object> status = new HashMap<>();
@@ -125,7 +125,7 @@ public class LockAdminController {
       status.put("ttlMs", ttl);
     }
     log.debug("[ydsz-lock] [admin] 查询锁状态 key={} exists={}", fullKey, exists);
-    return BaseResponse.success(status);
+    return YdszResponse.success(status);
   }
 
   /**
@@ -138,7 +138,7 @@ public class LockAdminController {
    */
   @DeleteMapping("/force-unlock/{key}")
   @Operation(summary = "强制释放锁", description = "紧急情况下强制释放指定锁（死锁恢复，需确认原持有者已安全）")
-  public BaseResponse<Map<String, Object>> forceUnlock(
+  public YdszResponse<Map<String, Object>> forceUnlock(
       @Parameter(description = "锁 key（不含 ydsz 前缀）") @PathVariable("key") String key) {
     String fullKey = LOCK_KEY_PREFIX + key;
     Map<String, Object> result = new HashMap<>();
@@ -149,7 +149,7 @@ public class LockAdminController {
     // 同时停止看门狗续期任务
     lockWatchDog.cancelRenewal(fullKey);
     log.warn("[ydsz-lock] [admin] 强制释放锁 key={} success={}", fullKey, success);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -159,11 +159,11 @@ public class LockAdminController {
    */
   @GetMapping("/watchdog/tasks")
   @Operation(summary = "查看活跃续期任务", description = "列出当前 WatchDog 正在续期的锁任务数")
-  public BaseResponse<Map<String, Object>> activeWatchdogTasks() {
+  public YdszResponse<Map<String, Object>> activeWatchdogTasks() {
     Map<String, Object> info = new HashMap<>();
     info.put("activeRenewalTasks", lockWatchDog.getActiveTaskCount());
     info.put("timestamp", System.currentTimeMillis());
-    return BaseResponse.success(info);
+    return YdszResponse.success(info);
   }
 
   /**
@@ -174,14 +174,14 @@ public class LockAdminController {
    */
   @GetMapping("/search")
   @Operation(summary = "搜索锁 key", description = "按前缀模式搜索当前持有的锁（谨慎使用，大数据量时影响 Redis 性能）")
-  public BaseResponse<Set<String>> searchKeys(
+  public YdszResponse<Set<String>> searchKeys(
       @Parameter(description = "Redis key 模式，如 'lock:order:*'")
           @RequestParam(value = "pattern", defaultValue = "lock:*")
           String pattern) {
     Set<String> keys = redisTemplate.keys(pattern);
     log.debug(
         "[ydsz-lock] [admin] 搜索锁 key pattern={} count={}", pattern, keys == null ? 0 : keys.size());
-    return BaseResponse.success(keys == null ? Collections.emptySet() : keys);
+    return YdszResponse.success(keys == null ? Collections.emptySet() : keys);
   }
 
   /**
@@ -196,7 +196,7 @@ public class LockAdminController {
    */
   @GetMapping("/active")
   @Operation(summary = "获取活跃锁分页列表", description = "基于 SCAN 获取当前持有的活跃锁分页列表，含 TTL 与续期状态")
-  public BaseResponse<Map<String, Object>> activeLocks(
+  public YdszResponse<Map<String, Object>> activeLocks(
       @Parameter(description = "Redis key 模式")
           @RequestParam(value = "pattern", defaultValue = "lock:*")
           String pattern,
@@ -244,7 +244,7 @@ public class LockAdminController {
         page,
         normalizedSize,
         activeLockList.size());
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -257,7 +257,7 @@ public class LockAdminController {
    */
   @GetMapping("/summary")
   @Operation(summary = "获取锁统计摘要", description = "按锁键前缀分组统计活跃锁分布、续期任务数、指标概览")
-  public BaseResponse<Map<String, Object>> summary(
+  public YdszResponse<Map<String, Object>> summary(
       @Parameter(description = "Redis key 模式")
           @RequestParam(value = "pattern", defaultValue = "lock:*")
           String pattern) {
@@ -292,7 +292,7 @@ public class LockAdminController {
         "[ydsz-lock] [admin] 查询锁摘要 totalActive={} categories={}",
         totalActive,
         categoryCount.size());
-    return BaseResponse.success(summary);
+    return YdszResponse.success(summary);
   }
 
   /**
@@ -305,18 +305,18 @@ public class LockAdminController {
    */
   @PostMapping("/batch-force-unlock")
   @Operation(summary = "批量强制释放锁", description = "紧急情况下批量强制释放指定锁列表（死锁恢复，需确认原持有者已安全）")
-  public BaseResponse<Map<String, Object>> batchForceUnlock(
+  public YdszResponse<Map<String, Object>> batchForceUnlock(
       @Parameter(description = "批量释放请求", required = true) @RequestBody
           Map<String, List<String>> request) {
     List<String> keys = request.get("keys");
     if (keys == null || keys.isEmpty()) {
-      return BaseResponse.error("参数错误：keys 不能为空");
+      return YdszResponse.error("参数错误：keys 不能为空");
     }
 
     // 限制单次批量操作数量
     int maxBatchSize = 50;
     if (keys.size() > maxBatchSize) {
-      return BaseResponse.error("单次批量释放数量超限，最多支持 " + maxBatchSize + " 个锁");
+      return YdszResponse.error("单次批量释放数量超限，最多支持 " + maxBatchSize + " 个锁");
     }
 
     int successCount = 0;
@@ -352,7 +352,7 @@ public class LockAdminController {
         keys.size(),
         successCount,
         failCount);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**

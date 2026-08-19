@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.literule.domain.vo.AuditLogEntryVO;
 import com.njydsz.literule.server.audit.RuleAuditLogService;
 import com.njydsz.literule.server.audit.RuleAuditLogService.AuditAction;
@@ -58,12 +58,12 @@ public class RuleAuditLogController {
    */
   @GetMapping("/recent")
   @Operation(summary = "查询最近审计日志", description = "返回最近 N 条审计日志，按时间倒序排列")
-  public BaseResponse<List<AuditLogEntryVO>> recent(
+  public YdszResponse<List<AuditLogEntryVO>> recent(
       @RequestParam(value = "limit", defaultValue = "50") int limit) {
     if (limit <= 0 || limit > 200) {
       limit = 50;
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         auditLogService.queryRecent(limit).stream().map(this::toAuditLogVO).toList());
   }
 
@@ -76,13 +76,13 @@ public class RuleAuditLogController {
    */
   @GetMapping("/by-rule/{ruleCode}")
   @Operation(summary = "按规则编码查询审计日志", description = "返回指定规则的全生命周期操作记录")
-  public BaseResponse<List<AuditLogEntryVO>> byRuleCode(
+  public YdszResponse<List<AuditLogEntryVO>> byRuleCode(
       @PathVariable String ruleCode,
       @RequestParam(value = "limit", defaultValue = "50") int limit) {
     if (limit <= 0 || limit > 200) {
       limit = 50;
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         auditLogService.queryByRuleCode(ruleCode, limit).stream().map(this::toAuditLogVO).toList());
   }
 
@@ -95,13 +95,13 @@ public class RuleAuditLogController {
    */
   @GetMapping("/by-operator")
   @Operation(summary = "按操作人查询审计日志", description = "返回指定操作人的审计日志")
-  public BaseResponse<List<AuditLogEntryVO>> byOperator(
+  public YdszResponse<List<AuditLogEntryVO>> byOperator(
       @RequestParam("operator") String operator,
       @RequestParam(value = "limit", defaultValue = "50") int limit) {
     if (limit <= 0 || limit > 200) {
       limit = 50;
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         auditLogService.queryByOperator(operator, limit).stream().map(this::toAuditLogVO).toList());
   }
 
@@ -115,7 +115,7 @@ public class RuleAuditLogController {
    */
   @GetMapping("/by-action")
   @Operation(summary = "按操作类型查询审计日志", description = "返回指定操作类型的审计日志")
-  public BaseResponse<List<AuditLogEntryVO>> byAction(
+  public YdszResponse<List<AuditLogEntryVO>> byAction(
       @RequestParam("action") String action,
       @RequestParam(value = "limit", defaultValue = "50") int limit) {
     if (limit <= 0 || limit > 200) {
@@ -123,13 +123,13 @@ public class RuleAuditLogController {
     }
     try {
       AuditAction auditAction = AuditAction.valueOf(action.toUpperCase());
-      return BaseResponse.success(
+      return YdszResponse.success(
           auditLogService.queryByAction(auditAction, limit).stream()
               .map(this::toAuditLogVO)
               .toList());
     } catch (IllegalArgumentException e) {
-      return BaseResponse.error(
-          BaseResultCode.VALIDATION_FAILED,
+      return YdszResponse.error(
+          YdszResultCode.VALIDATION_FAILED,
           "非法的操作类型: "
               + action
               + "，合法值: CREATE / UPDATE / TOGGLE / STATUS_CHANGE / ROLLBACK / APPROVE / REJECT / IMPORT / EXPORT / DELETE / DRY_RUN / STRESS_TEST / REPLAY");
@@ -146,7 +146,7 @@ public class RuleAuditLogController {
    */
   @GetMapping("/by-time-range")
   @Operation(summary = "按时间范围查询审计日志", description = "返回指定时间范围内的审计日志")
-  public BaseResponse<List<AuditLogEntryVO>> byTimeRange(
+  public YdszResponse<List<AuditLogEntryVO>> byTimeRange(
       @RequestParam("startTime") String startTime,
       @RequestParam("endTime") String endTime,
       @RequestParam(value = "limit", defaultValue = "50") int limit) {
@@ -156,13 +156,13 @@ public class RuleAuditLogController {
     try {
       LocalDateTime start = LocalDateTime.parse(startTime);
       LocalDateTime end = LocalDateTime.parse(endTime);
-      return BaseResponse.success(
+      return YdszResponse.success(
           auditLogService.queryByTimeRange(start, end, limit).stream()
               .map(this::toAuditLogVO)
               .toList());
     } catch (Exception e) {
-      return BaseResponse.error(
-          BaseResultCode.VALIDATION_FAILED,
+      return YdszResponse.error(
+          YdszResultCode.VALIDATION_FAILED,
           "时间格式错误，请使用 ISO 格式（如 2026-07-01T00:00:00）: " + e.getMessage());
     }
   }

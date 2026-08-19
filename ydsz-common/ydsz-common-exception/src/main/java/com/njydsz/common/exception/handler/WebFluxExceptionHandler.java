@@ -31,7 +31,7 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
  *
  * <ul>
  *   <li>处理业务异常、系统异常等
- *   <li>统一返回 BaseResponse 或 ProblemDetail 格式（通过配置切换）
+ *   <li>统一返回 YdszResponse 或 ProblemDetail 格式（通过配置切换）
  *   <li>记录异常指标（Counter + Timer）
  *   <li>提取 traceId 用于链路追踪
  * </ul>

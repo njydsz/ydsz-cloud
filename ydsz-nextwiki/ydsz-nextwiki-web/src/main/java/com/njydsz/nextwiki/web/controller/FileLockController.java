@@ -17,7 +17,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -117,7 +117,7 @@ public class FileLockController {
   @Operation(summary = "锁定文件（Check-out）")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
   @Transactional(rollbackFor = Exception.class)
-  public BaseResponse<Void> lock(
+  public YdszResponse<Void> lock(
       @PathVariable String nodeId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     // P2-R2: 权限检查
@@ -139,7 +139,7 @@ public class FileLockController {
     fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
 
     log.info("[FileLockController] 锁定文件: nodeId={}, userId={}", nodeId, userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -159,7 +159,7 @@ public class FileLockController {
   @Operation(summary = "解锁文件（Check-in）")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
   @Transactional(rollbackFor = Exception.class)
-  public BaseResponse<Void> unlock(
+  public YdszResponse<Void> unlock(
       @PathVariable String nodeId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     // P2-R2: 权限检查
@@ -177,6 +177,6 @@ public class FileLockController {
     fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
 
     log.info("[FileLockController] 解锁文件: nodeId={}, userId={}", nodeId, userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

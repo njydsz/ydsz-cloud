@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.nextwiki.domain.vo.UserRecentVO;
 import com.njydsz.nextwiki.server.service.UserRecentApplicationService;
@@ -53,12 +53,12 @@ public class UserRecentController {
    * @return 最近访问视图列表
    */
   @GetMapping
-  public BaseResponse<List<UserRecentVO>> listRecent(
+  public YdszResponse<List<UserRecentVO>> listRecent(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
       @RequestParam(required = false, defaultValue = "20") int limit) {
 
     List<UserRecentVO> recents = userRecentApplicationService.listRecent(userId, limit);
-    return BaseResponse.success(recents);
+    return YdszResponse.success(recents);
   }
 
   /**
@@ -72,13 +72,13 @@ public class UserRecentController {
    * @return 操作结果
    */
   @PostMapping("/{nodeId}")
-  public BaseResponse<Boolean> recordAccess(
+  public YdszResponse<Boolean> recordAccess(
       @PathVariable String nodeId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
       @RequestParam(required = false, defaultValue = "view") String accessType) {
 
     userRecentApplicationService.recordAccess(nodeId, userId, accessType);
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -88,11 +88,11 @@ public class UserRecentController {
    * @return 是否成功
    */
   @DeleteMapping
-  public BaseResponse<Boolean> clearAll(
+  public YdszResponse<Boolean> clearAll(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     boolean result = userRecentApplicationService.clearAll(userId);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -103,13 +103,13 @@ public class UserRecentController {
    * @return 是否成功
    */
   @DeleteMapping("/{nodeId}")
-  public BaseResponse<Boolean> removeRecent(
+  public YdszResponse<Boolean> removeRecent(
       @PathVariable String nodeId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     String tenantId = com.njydsz.common.tenant.TenantContextHolder.getTenantId();
     userRecentApplicationService.recordAccess(nodeId, userId, "view"); // 触发清理
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -119,10 +119,10 @@ public class UserRecentController {
    * @return 记录数量
    */
   @GetMapping("/count")
-  public BaseResponse<Integer> getRecentCount(
+  public YdszResponse<Integer> getRecentCount(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     int count = userRecentApplicationService.getRecentCount(userId);
-    return BaseResponse.success(count);
+    return YdszResponse.success(count);
   }
 }

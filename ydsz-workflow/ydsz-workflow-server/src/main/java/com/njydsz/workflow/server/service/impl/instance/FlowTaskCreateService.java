@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
@@ -366,7 +366,7 @@ public class FlowTaskCreateService {
     FlowInstanceDO instance = instanceService.getById(instanceId);
     if (instance == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_fc4b1c16")
           .params(instanceId)
           .build();
@@ -1045,7 +1045,7 @@ public class FlowTaskCreateService {
     if (depth >= MAX_AUTO_PASS_DEPTH) {
       log.warn("[Flow] AUTO_PASS 递归深度超限: depth={} instanceId={}", depth, instance.getId());
       throw SysException.builder()
-          .resultCode(BaseResultCode.INTERNAL_ERROR)
+          .resultCode(YdszResultCode.INTERNAL_ERROR)
           .message("error.workflow.msg_fcd55e62")
           .build();
     }

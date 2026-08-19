@@ -18,7 +18,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
@@ -114,11 +114,11 @@ public class TagController {
   @PostMapping
   @Operation(summary = "创建标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_CREATE)
-  public BaseResponse<TagDTO> createTag(
+  public YdszResponse<TagDTO> createTag(
       @RequestBody NextwikiDTOs.CreateTagRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     TagDTO tagDTO = tagApplicationService.createTag(request.getName(), request.getColor(), userId);
-    return BaseResponse.success(tagDTO);
+    return YdszResponse.success(tagDTO);
   }
 
   /**
@@ -131,8 +131,8 @@ public class TagController {
   @GetMapping
   @Operation(summary = "查询所有标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
-  public BaseResponse<List<TagVO>> listTags() {
-    return BaseResponse.success(tagApplicationService.getAllTags());
+  public YdszResponse<List<TagVO>> listTags() {
+    return YdszResponse.success(tagApplicationService.getAllTags());
   }
 
   /**
@@ -153,11 +153,11 @@ public class TagController {
   @PostMapping("/bind")
   @Operation(summary = "为文件绑定标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_BIND)
-  public BaseResponse<Void> bindTag(
+  public YdszResponse<Void> bindTag(
       @RequestBody NextwikiDTOs.BindTagRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     tagApplicationService.batchBindTags(request.getFileNodeId(), request.getTagIds(), userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -169,8 +169,8 @@ public class TagController {
   @GetMapping("/file/{fileNodeId}")
   @Operation(summary = "查询文件的标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
-  public BaseResponse<List<TagVO>> getFileTags(@PathVariable String fileNodeId) {
-    return BaseResponse.success(tagApplicationService.getFileTags(fileNodeId));
+  public YdszResponse<List<TagVO>> getFileTags(@PathVariable String fileNodeId) {
+    return YdszResponse.success(tagApplicationService.getFileTags(fileNodeId));
   }
 
   /**
@@ -184,7 +184,7 @@ public class TagController {
   @GetMapping("/recommend/{fileNodeId}")
   @Operation(summary = "推荐标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
-  public BaseResponse<List<TagVO>> recommendTags(@PathVariable String fileNodeId) {
-    return BaseResponse.success(tagApplicationService.recommendTags(fileNodeId));
+  public YdszResponse<List<TagVO>> recommendTags(@PathVariable String fileNodeId) {
+    return YdszResponse.success(tagApplicationService.recommendTags(fileNodeId));
   }
 }

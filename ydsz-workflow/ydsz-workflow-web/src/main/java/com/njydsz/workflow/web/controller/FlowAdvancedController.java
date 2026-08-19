@@ -20,7 +20,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -107,9 +107,9 @@ public class FlowAdvancedController {
    */
   @GetMapping("/report/weekly")
   @Operation(summary = "P2-4: 获取周报数据")
-  public BaseResponse<Map<String, Object>> weeklyReport() {
+  public YdszResponse<Map<String, Object>> weeklyReport() {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(reportService.generateWeeklyReport(tenantId));
+    return YdszResponse.success(reportService.generateWeeklyReport(tenantId));
   }
 
   /**
@@ -123,9 +123,9 @@ public class FlowAdvancedController {
    */
   @GetMapping("/report/monthly")
   @Operation(summary = "P2-4: 获取月报数据")
-  public BaseResponse<Map<String, Object>> monthlyReport() {
+  public YdszResponse<Map<String, Object>> monthlyReport() {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(reportService.generateMonthlyReport(tenantId));
+    return YdszResponse.success(reportService.generateMonthlyReport(tenantId));
   }
 
   /**
@@ -149,9 +149,9 @@ public class FlowAdvancedController {
       content = "'sendWeekly'")
   @Operation(summary = "P2-4: 推送周报")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-  public BaseResponse<Boolean> sendWeekly() {
+  public YdszResponse<Boolean> sendWeekly() {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(reportService.sendWeeklyReport(tenantId));
+    return YdszResponse.success(reportService.sendWeeklyReport(tenantId));
   }
 
   /**
@@ -175,9 +175,9 @@ public class FlowAdvancedController {
       content = "'sendMonthly'")
   @Operation(summary = "P2-4: 推送月报")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-  public BaseResponse<Boolean> sendMonthly() {
+  public YdszResponse<Boolean> sendMonthly() {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(reportService.sendMonthlyReport(tenantId));
+    return YdszResponse.success(reportService.sendMonthlyReport(tenantId));
   }
 
   // ==================== P2-5: 多实例合并审批 ====================
@@ -206,10 +206,10 @@ public class FlowAdvancedController {
       content = "'merge'")
   @Operation(summary = "P2-5: 合并多个流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-  public BaseResponse<StringVO> merge(@RequestParam List<String> instanceIds) {
+  public YdszResponse<StringVO> merge(@RequestParam List<String> instanceIds) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(
+    return YdszResponse.success(
         WorkflowConverter.INSTANT.entityToVO(
             mergeService.mergeInstances(instanceIds, userId, tenantId)));
   }
@@ -224,8 +224,8 @@ public class FlowAdvancedController {
    */
   @GetMapping("/merge/{mergeGroupId}")
   @Operation(summary = "P2-5: 查询合并组详情")
-  public BaseResponse<Map<String, Object>> getMergeGroup(@PathVariable String mergeGroupId) {
-    return BaseResponse.success(mergeService.getMergeGroup(mergeGroupId));
+  public YdszResponse<Map<String, Object>> getMergeGroup(@PathVariable String mergeGroupId) {
+    return YdszResponse.success(mergeService.getMergeGroup(mergeGroupId));
   }
 
   /**
@@ -250,10 +250,10 @@ public class FlowAdvancedController {
       content = "'mergePass'")
   @Operation(summary = "P2-5: 批量通过合并组")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-  public BaseResponse<Integer> mergePass(
+  public YdszResponse<Integer> mergePass(
       @PathVariable String mergeGroupId, @RequestParam(required = false) String comment) {
     String userId = AuthContextUtils.getUserId();
-    return BaseResponse.success(mergeService.batchPassMerged(mergeGroupId, userId, comment));
+    return YdszResponse.success(mergeService.batchPassMerged(mergeGroupId, userId, comment));
   }
 
   /**
@@ -278,10 +278,10 @@ public class FlowAdvancedController {
       content = "'mergeReject'")
   @Operation(summary = "P2-5: 批量驳回合并组")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-  public BaseResponse<Integer> mergeReject(
+  public YdszResponse<Integer> mergeReject(
       @PathVariable String mergeGroupId, @RequestParam(required = false) String comment) {
     String userId = AuthContextUtils.getUserId();
-    return BaseResponse.success(mergeService.batchRejectMerged(mergeGroupId, userId, comment));
+    return YdszResponse.success(mergeService.batchRejectMerged(mergeGroupId, userId, comment));
   }
 
   /**
@@ -295,10 +295,10 @@ public class FlowAdvancedController {
    */
   @GetMapping("/mergeable")
   @Operation(summary = "P2-5: 查询可合并的实例列表")
-  public BaseResponse<List<Map<String, Object>>> mergeable() {
+  public YdszResponse<List<Map<String, Object>>> mergeable() {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(mergeService.listMergeable(userId, tenantId));
+    return YdszResponse.success(mergeService.listMergeable(userId, tenantId));
   }
 
   // ==================== P2-6: 会签动态完成条件 ====================
@@ -328,11 +328,11 @@ public class FlowAdvancedController {
       content = "'updateVotePassRate'")
   @Operation(summary = "P2-6: 动态修改会签通过率阈值")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-  public BaseResponse<Void> updateVotePassRate(
+  public YdszResponse<Void> updateVotePassRate(
       @PathVariable String taskId, @RequestParam BigDecimal votePassRate) {
     String userId = AuthContextUtils.getUserId();
     countersignDynamicService.updateCompletionCondition(taskId, votePassRate, userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -360,11 +360,11 @@ public class FlowAdvancedController {
       content = "'updateApproveCount'")
   @Operation(summary = "P2-6: 动态修改会签所需通过人数")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-  public BaseResponse<Void> updateApproveCount(
+  public YdszResponse<Void> updateApproveCount(
       @PathVariable String taskId, @RequestParam Integer approveCount) {
     String userId = AuthContextUtils.getUserId();
     countersignDynamicService.updateApproveCount(taskId, approveCount, userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   // ==================== P2-7: 跨节点办理人去重 ====================
@@ -380,9 +380,9 @@ public class FlowAdvancedController {
    */
   @GetMapping("/dedup/{instanceId}/check/{userId}")
   @Operation(summary = "P2-7: 检查用户是否已审批过")
-  public BaseResponse<Boolean> hasApproved(
+  public YdszResponse<Boolean> hasApproved(
       @PathVariable String instanceId, @PathVariable String userId) {
-    return BaseResponse.success(dedupService.hasAlreadyApproved(instanceId, userId));
+    return YdszResponse.success(dedupService.hasAlreadyApproved(instanceId, userId));
   }
 
   /**
@@ -395,8 +395,8 @@ public class FlowAdvancedController {
    */
   @GetMapping("/dedup/{instanceId}/approvedUsers")
   @Operation(summary = "P2-7: 获取实例已审批人列表")
-  public BaseResponse<List<StringVO>> approvedUsers(@PathVariable String instanceId) {
-    return BaseResponse.success(
+  public YdszResponse<List<StringVO>> approvedUsers(@PathVariable String instanceId) {
+    return YdszResponse.success(
         WorkflowConverter.INSTANT.stringListToVO(
             dedupService.getApprovedUserIds(instanceId).stream().toList()));
   }
@@ -415,12 +415,12 @@ public class FlowAdvancedController {
    */
   @GetMapping("/urge/cooldown/{instanceId}")
   @Operation(summary = "P2-8: 查询催办剩余冷却时间")
-  public BaseResponse<Map<String, Object>> urgeCooldown(@PathVariable String instanceId) {
+  public YdszResponse<Map<String, Object>> urgeCooldown(@PathVariable String instanceId) {
     String userId = AuthContextUtils.getUserId();
     long cooldownSeconds = FlowUrgeLimiter.DEFAULT_COOLDOWN_SECONDS;
     long remaining = resolveCooldownRemaining(userId, instanceId);
     boolean canUrge = remaining <= 0;
-    return BaseResponse.success(
+    return YdszResponse.success(
         Map.of(
             "canUrge", canUrge,
             "remainingSeconds", remaining,
@@ -479,8 +479,8 @@ public class FlowAdvancedController {
       action = AuditAction.GRANT,
       content = "'autoForward'")
   @Operation(summary = "按代理授权规则自动转发已有待办")
-  public BaseResponse<Integer> autoForward(@RequestParam String authId) {
-    return BaseResponse.success(offlineAutoForwardService.autoForwardByAuth(authId));
+  public YdszResponse<Integer> autoForward(@RequestParam String authId) {
+    return YdszResponse.success(offlineAutoForwardService.autoForwardByAuth(authId));
   }
 
   /**
@@ -503,10 +503,10 @@ public class FlowAdvancedController {
       action = AuditAction.GRANT,
       content = "'manualForward'")
   @Operation(summary = "手动触发离线转发")
-  public BaseResponse<Integer> manualForward(
+  public YdszResponse<Integer> manualForward(
       @RequestParam String userId, @RequestParam String delegateUserId) {
     String operatorId = AuthContextUtils.getUserId();
-    return BaseResponse.success(
+    return YdszResponse.success(
         offlineAutoForwardService.manualForward(userId, delegateUserId, operatorId));
   }
 }

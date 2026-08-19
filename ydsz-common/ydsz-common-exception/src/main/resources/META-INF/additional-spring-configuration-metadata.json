@@ -102,7 +102,7 @@
       "values": [
         {
           "value": "base-response",
-          "description": "返回 BaseResponse 格式（兼容旧版 API 客户端，包含 code/msg/data 字段）"
+          "description": "返回 YdszResponse 格式（兼容旧版 API 客户端，包含 code/msg/data 字段）"
         },
         {
           "value": "problem-detail",

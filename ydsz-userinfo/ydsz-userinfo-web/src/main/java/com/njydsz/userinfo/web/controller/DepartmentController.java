@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.DepartmentDTO;
@@ -58,8 +58,8 @@ public class DepartmentController {
    */
   @GetMapping("/list")
   @Operation(summary = "查询全部部门列表")
-  public BaseResponse<List<DepartmentVO>> list() {
-    return BaseResponse.success(service.list());
+  public YdszResponse<List<DepartmentVO>> list() {
+    return YdszResponse.success(service.list());
   }
 
   /**
@@ -75,8 +75,8 @@ public class DepartmentController {
    */
   @GetMapping("/tree")
   @Operation(summary = "查询部门树形结构")
-  public BaseResponse<List<DepartmentTreeVO>> tree() {
-    return BaseResponse.success(service.tree());
+  public YdszResponse<List<DepartmentTreeVO>> tree() {
+    return YdszResponse.success(service.tree());
   }
 
   /**
@@ -87,8 +87,8 @@ public class DepartmentController {
    */
   @GetMapping("/{id}")
   @Operation(summary = "根据 ID 查询部门")
-  public BaseResponse<DepartmentVO> getById(@PathVariable String id) {
-    return BaseResponse.success(service.getById(id));
+  public YdszResponse<DepartmentVO> getById(@PathVariable String id) {
+    return YdszResponse.success(service.getById(id));
   }
 
   /**
@@ -112,8 +112,8 @@ public class DepartmentController {
   @Idempotent(key = "ydsz:userinfo:DepartmentController:create:lock", ttlSeconds = 5)
   @PostMapping
   @Operation(summary = "创建部门")
-  public BaseResponse<String> create(@Valid @RequestBody DepartmentDTO dto) {
-    return BaseResponse.success(service.create(dto));
+  public YdszResponse<String> create(@Valid @RequestBody DepartmentDTO dto) {
+    return YdszResponse.success(service.create(dto));
   }
 
   /**
@@ -137,8 +137,8 @@ public class DepartmentController {
   @Idempotent(key = "ydsz:userinfo:DepartmentController:update:lock", ttlSeconds = 5)
   @PutMapping
   @Operation(summary = "更新部门")
-  public BaseResponse<Boolean> update(@Valid @RequestBody DepartmentDTO dto) {
-    return BaseResponse.success(service.update(dto));
+  public YdszResponse<Boolean> update(@Valid @RequestBody DepartmentDTO dto) {
+    return YdszResponse.success(service.update(dto));
   }
 
   /**
@@ -162,7 +162,7 @@ public class DepartmentController {
   @Idempotent(key = "ydsz:userinfo:DepartmentController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除部门")
-  public BaseResponse<Boolean> remove(@PathVariable String id) {
-    return BaseResponse.success(service.removeById(id));
+  public YdszResponse<Boolean> remove(@PathVariable String id) {
+    return YdszResponse.success(service.removeById(id));
   }
 }

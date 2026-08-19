@@ -14,7 +14,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.WorkflowFacade;
@@ -141,7 +141,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
       FlowInstanceDO parentInstance, FlowNodeDO callActivityNode, Map<String, Object> variables) {
     if (parentInstance == null || callActivityNode == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("父实例/callActivity 节点不能为空")
           .build();
     }
@@ -149,7 +149,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     String subFlowCode = extractSubFlowCode(callActivityNode);
     if (subFlowCode == null || subFlowCode.isBlank()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("callActivity 节点未配置子流程编码: nodeCode=" + callActivityNode.getNodeCode())
           .build();
     }
@@ -158,7 +158,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
         definitionService.getPublished(subFlowCode, null, parentInstance.getTenantId());
     if (subDef == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("子流程定义未发布或不存在: flowCode=" + subFlowCode)
           .build();
     }
@@ -167,7 +167,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     int nestingDepth = getNestingDepth(parentInstance.getId());
     if (nestingDepth >= maxNestingDepth) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_14aff96e")
           .params(maxNestingDepth, nestingDepth, parentInstance.getId())
           .build();

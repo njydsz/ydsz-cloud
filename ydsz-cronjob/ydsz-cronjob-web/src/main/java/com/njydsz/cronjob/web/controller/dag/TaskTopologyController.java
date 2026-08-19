@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.domain.repository.JobDagInstanceRepository;
 import com.njydsz.cronjob.domain.repository.JobDagNodeInstanceRepository;
@@ -111,13 +111,13 @@ public class TaskTopologyController {
   @Operation(summary = "查询DAG实例执行拓扑图")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/dagInstance/{dagInstanceId}")
-  public BaseResponse<Map<String, Object>> getDagInstanceTopology(
+  public YdszResponse<Map<String, Object>> getDagInstanceTopology(
       @PathVariable String dagInstanceId) {
     // 1. 加载 DAG 实例（通过 Repository 返回 VO）
     Optional<JobDagInstanceVO> instanceOpt = dagInstanceRepository.findById(dagInstanceId);
     if (instanceOpt.isEmpty()) {
       log.debug("[TaskTopology] DAG 实例不存在: dagInstanceId={}", dagInstanceId);
-      return BaseResponse.success(null);
+      return YdszResponse.success(null);
     }
     JobDagInstanceVO instance = instanceOpt.get();
 
@@ -138,7 +138,7 @@ public class TaskTopologyController {
     topology.put("dagInstance", instance);
     topology.put("nodeInstances", nodeInstances);
 
-    return BaseResponse.success(topology);
+    return YdszResponse.success(topology);
   }
 
   /**
@@ -161,13 +161,13 @@ public class TaskTopologyController {
   @Operation(summary = "查询DAG实例Cytoscape.js可视化")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/dagInstance/{dagInstanceId}/cytoscape")
-  public BaseResponse<Map<String, Object>> getDagInstanceCytoscape(
+  public YdszResponse<Map<String, Object>> getDagInstanceCytoscape(
       @PathVariable String dagInstanceId) {
     // 1. 加载 DAG 实例（通过 Repository）
     Optional<JobDagInstanceVO> instanceOpt = dagInstanceRepository.findById(dagInstanceId);
     if (instanceOpt.isEmpty()) {
       log.debug("[TaskTopology] DAG 实例不存在: dagInstanceId={}", dagInstanceId);
-      return BaseResponse.success(null);
+      return YdszResponse.success(null);
     }
     JobDagInstanceVO instance = instanceOpt.get();
 
@@ -196,7 +196,7 @@ public class TaskTopologyController {
     Map<String, Object> cytoscapeData =
         DagCytoscapeHelper.toCytoscapeFormat(definition, statusMap, durationMap);
 
-    return BaseResponse.success(cytoscapeData);
+    return YdszResponse.success(cytoscapeData);
   }
 
   /**
@@ -213,8 +213,8 @@ public class TaskTopologyController {
   @Operation(summary = "查询任务执行历史")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/jobHistory/{jobKey}")
-  public BaseResponse<List<JobLogVO>> getJobExecutionHistory(@PathVariable String jobKey) {
+  public YdszResponse<List<JobLogVO>> getJobExecutionHistory(@PathVariable String jobKey) {
     // 通过 Repository 查询最近 20 条执行日志（LIMIT 20 在 Repository 层控制）
-    return BaseResponse.success(jobLogRepository.findByJobKey(jobKey, 20));
+    return YdszResponse.success(jobLogRepository.findByJobKey(jobKey, 20));
   }
 }

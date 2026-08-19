@@ -22,7 +22,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -75,8 +75,8 @@ public class GlueCodeController {
       content = "'save'")
   @RateLimit(resource = "cronjob.gluecode.save", threshold = 50)
   @PostMapping("/save")
-  public BaseResponse<GlueCodeVO> save(@Valid @RequestBody GlueCodeSaveRequest request) {
-    return BaseResponse.success(
+  public YdszResponse<GlueCodeVO> save(@Valid @RequestBody GlueCodeSaveRequest request) {
+    return YdszResponse.success(
         CronjobConverter.INSTANT.entityToVO(
             glueCodeService.save(
                 request.getJobId(),
@@ -94,8 +94,8 @@ public class GlueCodeController {
   @Operation(summary = "获取最新版本 GLUE 代码")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
   @GetMapping("/latest")
-  public BaseResponse<GlueCodeVO> latest(@RequestParam String jobId) {
-    return BaseResponse.success(
+  public YdszResponse<GlueCodeVO> latest(@RequestParam String jobId) {
+    return YdszResponse.success(
         CronjobConverter.INSTANT.entityToVO(glueCodeService.getLatest(jobId)));
   }
 
@@ -108,8 +108,8 @@ public class GlueCodeController {
   @Operation(summary = "获取 GLUE 代码版本列表")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
   @GetMapping("/versions")
-  public BaseResponse<List<GlueCodeVO>> versions(@RequestParam String jobId) {
-    return BaseResponse.success(
+  public YdszResponse<List<GlueCodeVO>> versions(@RequestParam String jobId) {
+    return YdszResponse.success(
         CronjobConverter.INSTANT.glueCodeListToVO(glueCodeService.listVersions(jobId)));
   }
 
@@ -129,8 +129,8 @@ public class GlueCodeController {
       content = "'rollback'")
   @RateLimit(resource = "cronjob.gluecode.rollback", threshold = 50)
   @PostMapping("/rollback")
-  public BaseResponse<GlueCodeVO> rollback(@Valid @RequestBody GlueCodeRollbackRequest request) {
-    return BaseResponse.success(
+  public YdszResponse<GlueCodeVO> rollback(@Valid @RequestBody GlueCodeRollbackRequest request) {
+    return YdszResponse.success(
         CronjobConverter.INSTANT.entityToVO(
             glueCodeService.rollback(request.getJobId(), request.getVersion())));
   }
@@ -160,8 +160,8 @@ public class GlueCodeController {
       action = AuditAction.CREATE,
       content = "'postmapping'")
   @PostMapping("/test")
-  public BaseResponse<Map<String, Object>> test(@Valid @RequestBody GlueTestRequest request) {
-    return BaseResponse.success(
+  public YdszResponse<Map<String, Object>> test(@Valid @RequestBody GlueTestRequest request) {
+    return YdszResponse.success(
         glueCodeService.testCode(
             request.getSourceCode(), request.getLanguage(), request.getParamsJson()));
   }
@@ -177,9 +177,9 @@ public class GlueCodeController {
   @Operation(summary = "获取代码模板")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
   @GetMapping("/template")
-  public BaseResponse<Map<String, String>> template(
+  public YdszResponse<Map<String, String>> template(
       @RequestParam(defaultValue = "GROOVY") String language) {
-    return BaseResponse.success(glueCodeService.getCodeTemplate(language));
+    return YdszResponse.success(glueCodeService.getCodeTemplate(language));
   }
 
   /**
@@ -193,9 +193,9 @@ public class GlueCodeController {
   @Operation(summary = "对比版本差异")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
   @GetMapping("/diff")
-  public BaseResponse<Map<String, Object>> diff(
+  public YdszResponse<Map<String, Object>> diff(
       @RequestParam String jobId, @RequestParam Integer versionA, @RequestParam Integer versionB) {
-    return BaseResponse.success(glueCodeService.diffVersions(jobId, versionA, versionB));
+    return YdszResponse.success(glueCodeService.diffVersions(jobId, versionA, versionB));
   }
 
   /** 保存请求体。 */

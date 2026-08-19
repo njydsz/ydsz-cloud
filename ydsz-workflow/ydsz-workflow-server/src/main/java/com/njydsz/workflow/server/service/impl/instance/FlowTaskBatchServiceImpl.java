@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 
@@ -42,7 +42,7 @@ public class FlowTaskBatchServiceImpl {
   public void batchPass(List<String> taskIds, String userId, String comment) {
     if (taskIds == null || taskIds.isEmpty()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_a02f7864")
           .build();
     }
@@ -72,7 +72,7 @@ public class FlowTaskBatchServiceImpl {
       List<String> taskIds, String userId, String comment, String targetNodeCode) {
     if (taskIds == null || taskIds.isEmpty()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_a02f7864")
           .build();
     }
@@ -113,7 +113,7 @@ public class FlowTaskBatchServiceImpl {
       String targetUserName) {
     if (taskIds == null || taskIds.isEmpty()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_a02f7864")
           .build();
     }
@@ -148,7 +148,7 @@ public class FlowTaskBatchServiceImpl {
   public int batchUrge(List<String> instanceIds, String operatorId, String comment) {
     if (instanceIds == null || instanceIds.isEmpty()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_a02f7864")
           .build();
     }

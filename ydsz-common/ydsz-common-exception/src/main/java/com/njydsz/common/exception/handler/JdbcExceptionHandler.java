@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
@@ -95,7 +95,7 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
    */
   @ExceptionHandler(DataIntegrityViolationException.class)
   @ResponseStatus(HttpStatus.CONFLICT)
-  public BaseResponse<?> handleDataIntegrityViolationException(
+  public YdszResponse<?> handleDataIntegrityViolationException(
       DataIntegrityViolationException e, HttpServletRequest request) {
     recordMetrics(e);
 
@@ -141,7 +141,7 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
    */
   @ExceptionHandler(DataAccessException.class)
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  public BaseResponse<?> handleDataAccessException(
+  public YdszResponse<?> handleDataAccessException(
       DataAccessException e, HttpServletRequest request) {
     recordMetrics(e);
     log.error(

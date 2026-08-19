@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dag.DagInstanceStatus;
@@ -87,7 +87,7 @@ public class JobDagServiceImpl implements JobDagService {
     // 校验 dagKey 唯一性
     if (jobDagRepository.selectByDagKey(dto.getDagKey()) != null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_already_exists")
           .params(dto.getDagKey())
           .build();
@@ -138,7 +138,7 @@ public class JobDagServiceImpl implements JobDagService {
     JobDag exists = jobDagRepository.selectById(dagId);
     if (exists == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.cronjob.msg_dag_not_found_def")
           .params(dagId)
           .build();
@@ -147,7 +147,7 @@ public class JobDagServiceImpl implements JobDagService {
     JobDag byKey = jobDagRepository.selectByDagKey(dto.getDagKey());
     if (byKey != null && !dagId.equals(byKey.getId())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_already_exists")
           .params(dto.getDagKey())
           .build();
@@ -200,7 +200,7 @@ public class JobDagServiceImpl implements JobDagService {
     JobDag exists = jobDagRepository.selectById(dagId);
     if (exists == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.cronjob.msg_dag_not_found_def")
           .params(dagId)
           .build();
@@ -215,14 +215,14 @@ public class JobDagServiceImpl implements JobDagService {
     JobDag exists = jobDagRepository.selectById(dagId);
     if (exists == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.cronjob.msg_dag_not_found_def")
           .params(dagId)
           .build();
     }
     if (!"DRAFT".equals(exists.getStatus()) && !"DISABLED".equals(exists.getStatus())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_status_invalid")
           .params(exists.getStatus())
           .build();
@@ -247,14 +247,14 @@ public class JobDagServiceImpl implements JobDagService {
     JobDag exists = jobDagRepository.selectById(dagId);
     if (exists == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.cronjob.msg_dag_not_found_def")
           .params(dagId)
           .build();
     }
     if (!"ENABLED".equals(exists.getStatus())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_status_invalid")
           .params(exists.getStatus())
           .build();
@@ -272,7 +272,7 @@ public class JobDagServiceImpl implements JobDagService {
     JobDag dag = jobDagRepository.selectById(dagId);
     if (dag == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.cronjob.msg_dag_not_found_def")
           .params(dagId)
           .build();
@@ -286,7 +286,7 @@ public class JobDagServiceImpl implements JobDagService {
     JobDag dag = jobDagRepository.selectByDagKey(dagKey);
     if (dag == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.cronjob.msg_dag_not_found_def")
           .params(dagKey)
           .build();
@@ -312,14 +312,14 @@ public class JobDagServiceImpl implements JobDagService {
     JobDag dag = jobDagRepository.selectByDagKey(dagKey);
     if (dag == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.cronjob.msg_dag_not_found_def")
           .params(dagKey)
           .build();
     }
     if (!"ENABLED".equals(dag.getStatus())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_dag_not_enabled")
           .params(dagKey)
           .build();
@@ -331,7 +331,7 @@ public class JobDagServiceImpl implements JobDagService {
       int active = jobDagInstanceRepository.countActiveInstances(dag.getId());
       if (active >= maxConcurrent) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_dag_concurrent_limit")
             .params(maxConcurrent)
             .build();
@@ -388,7 +388,7 @@ public class JobDagServiceImpl implements JobDagService {
     JobDagVersion versionDO = jobDagVersionRepository.selectByVersion(dagId, version);
     if (versionDO == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.cronjob.msg_dag_version_not_found")
           .params(dagId, version)
           .build();
@@ -402,7 +402,7 @@ public class JobDagServiceImpl implements JobDagService {
     JobDag dag = jobDagRepository.selectById(dagId);
     if (dag == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.cronjob.msg_dag_not_found_def")
           .params(dagId)
           .build();
@@ -410,7 +410,7 @@ public class JobDagServiceImpl implements JobDagService {
     JobDagVersion targetVersionDO = jobDagVersionRepository.selectByVersion(dagId, targetVersion);
     if (targetVersionDO == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.cronjob.msg_dag_version_not_found")
           .params(dagId, targetVersion)
           .build();
@@ -477,7 +477,7 @@ public class JobDagServiceImpl implements JobDagService {
     Map<String, List<String>> adj = buildAdjacencyListFromDagDefinition(definition);
     if (dagParser.hasCycle(adj)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_dag_has_cycle")
           .build();
     }
@@ -515,7 +515,7 @@ public class JobDagServiceImpl implements JobDagService {
   private void validateCronExpression(String triggerType, String cronExpression) {
     if ("CRON".equals(triggerType) && !StringUtils.hasText(cronExpression)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_dag_cron_required")
           .build();
     }

@@ -80,6 +80,12 @@ public class UserAccountVO {
   /** 更新时间 */
   private LocalDateTime updatedAt;
 
+  /** 登录失败次数 */
+  private Integer loginFailCount;
+
+  /** 锁定截止时间（未锁定为 null，用于自助解锁功能） */
+  private LocalDateTime lockedUntil;
+
   /**
    * 乐观锁版本号（P1-6）。
    *

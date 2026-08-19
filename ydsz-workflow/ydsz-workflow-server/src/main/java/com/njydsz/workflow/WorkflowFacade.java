@@ -105,7 +105,7 @@ public interface WorkflowFacade {
    *
    * <p>对标钉钉/飞书/企微审批中心的"全部"Tab，管理员可查看当前租户下所有流程实例。 非管理员调用应由上层权限拦截（需要 workflow:monitor:view 权限）。
    *
-   * <p>P0-2 修复：返回类型由 {@code List<Map>} 改为 {@code BaseResponse<Map>}， 保留 total / page /
+   * <p>P0-2 修复：返回类型由 {@code List<Map>} 改为 {@code YdszResponse<Map>}， 保留 total / page /
    * size，避免前端假分页。
    *
    * @param businessType 业务类型（可空）

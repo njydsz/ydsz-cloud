@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
@@ -50,7 +50,7 @@ public class FlowTaskTimeoutService {
     if (!FlowTaskStatus.PENDING.name().equals(status)
         && !FlowTaskStatus.CLAIMED.name().equals(status)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_ecc09732")
           .params(status)
           .build();
@@ -86,7 +86,7 @@ public class FlowTaskTimeoutService {
     if (!FlowTaskStatus.PENDING.name().equals(status)
         && !FlowTaskStatus.CLAIMED.name().equals(status)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_d0e1f2a3")
           .params(status)
           .build();
@@ -109,7 +109,7 @@ public class FlowTaskTimeoutService {
     String status = task.getTaskStatus();
     if (!FlowTaskStatus.SUSPENDED.name().equals(status)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_e1f2a3b4")
           .params(status)
           .build();

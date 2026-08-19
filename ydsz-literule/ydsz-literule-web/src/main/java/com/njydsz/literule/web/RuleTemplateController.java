@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
@@ -59,8 +59,8 @@ public class RuleTemplateController {
    * @return 模板列表
    */
   @GetMapping("/templates")
-  public BaseResponse<List<RuleTemplateVO>> listTemplates() {
-    return BaseResponse.success(
+  public YdszResponse<List<RuleTemplateVO>> listTemplates() {
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.ruleTemplateListToVO(ruleTemplateProvider.listAll()));
   }
 
@@ -71,8 +71,8 @@ public class RuleTemplateController {
    * @return 模板列表
    */
   @GetMapping("/templates/category/{category}")
-  public BaseResponse<List<RuleTemplateVO>> listTemplatesByCategory(@PathVariable String category) {
-    return BaseResponse.success(
+  public YdszResponse<List<RuleTemplateVO>> listTemplatesByCategory(@PathVariable String category) {
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.ruleTemplateListToVO(
             ruleTemplateProvider.listByCategory(category)));
   }
@@ -84,8 +84,8 @@ public class RuleTemplateController {
    * @return 模板列表
    */
   @GetMapping("/templates/industry/{industry}")
-  public BaseResponse<List<RuleTemplateVO>> listTemplatesByIndustry(@PathVariable String industry) {
-    return BaseResponse.success(
+  public YdszResponse<List<RuleTemplateVO>> listTemplatesByIndustry(@PathVariable String industry) {
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.ruleTemplateListToVO(
             ruleTemplateProvider.listByIndustry(industry)));
   }
@@ -105,10 +105,10 @@ public class RuleTemplateController {
       content = "'importTemplate'")
   @RateLimit(resource = "literule.rule_template.importTemplate", threshold = 50)
   @PostMapping("/templates/{templateCode}/import")
-  public BaseResponse<RuleDefinitionVO> importTemplate(
+  public YdszResponse<RuleDefinitionVO> importTemplate(
       @PathVariable String templateCode,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.entityToVO(
             ruleTemplateProvider.importTemplate(templateCode, operator)));
   }

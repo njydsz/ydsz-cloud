@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
@@ -258,7 +258,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     validate(job);
     if (jobRepository.selectByJobKey(job.getJobKey()) != null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_7e5ef640")
           .params(job.getJobKey())
           .build();
@@ -323,14 +323,14 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   public void update(Job job) {
     if (job.getId() == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_ce91ca69")
           .build();
     }
     Job exists = jobRepository.selectById(job.getId());
     if (exists == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("error.cronjob.msg_c0d8369f")
           .build();
     }
@@ -361,7 +361,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     } else if (type == ScheduleType.FIXED_RATE) {
       if (exists.getFixedRateMs() == null || exists.getFixedRateMs() <= 0) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_5d0044ca")
             .params("fixedRateMs 必须为正数")
             .build();
@@ -371,7 +371,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     } else if (type == ScheduleType.FIXED_DELAY) {
       if (exists.getFixedDelayMs() == null || exists.getFixedDelayMs() <= 0) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_5d0044ca")
             .params("fixedDelayMs 必须为正数")
             .build();
@@ -430,7 +430,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     Job j = jobRepository.selectById(id);
     if (j == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("error.cronjob.msg_c0d8369f")
           .build();
     }
@@ -457,7 +457,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     Job j = getById(id);
     if (!"NORMAL".equals(j.getStatus())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_job_status_invalid")
           .params(j.getStatus())
           .build();
@@ -487,7 +487,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       register(j);
     } else {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_job_status_invalid")
           .params(j.getStatus())
           .build();
@@ -800,7 +800,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     Job j = jobRepository.selectById(id);
     if (j == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("error.cronjob.msg_c0d8369f")
           .build();
     }
@@ -996,13 +996,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   private void validate(Job job) {
     if (!StringUtils.hasText(job.getJobKey())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_884214e7")
           .build();
     }
     if (!StringUtils.hasText(job.getHandler())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_04ebee77")
           .build();
     }
@@ -1012,7 +1012,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         ZoneId.of(job.getTimezone());
       } catch (Exception e) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_5d0044ca")
             .params("无效的时区 ID: " + job.getTimezone())
             .build();
@@ -1026,7 +1026,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       case FIXED_RATE:
         if (job.getFixedRateMs() == null || job.getFixedRateMs() <= 0) {
           throw SysException.builder()
-              .resultCode(BaseResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
               .key("error.cronjob.msg_5d0044ca")
               .params("fixedRateMs 必须为正数")
               .build();
@@ -1035,7 +1035,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       case FIXED_DELAY:
         if (job.getFixedDelayMs() == null || job.getFixedDelayMs() <= 0) {
           throw SysException.builder()
-              .resultCode(BaseResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
               .key("error.cronjob.msg_5d0044ca")
               .params("fixedDelayMs 必须为正数")
               .build();
@@ -1059,7 +1059,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   private void validateCron(String cron) {
     if (!StringUtils.hasText(cron)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_35ac148f")
           .build();
     }
@@ -1067,7 +1067,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       new CronTrigger(cron);
     } catch (Exception e) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_5d0044ca")
           .params(e.getMessage())
           .build();

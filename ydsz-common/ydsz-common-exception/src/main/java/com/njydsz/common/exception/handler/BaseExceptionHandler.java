@@ -22,7 +22,7 @@ import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
@@ -46,7 +46,7 @@ import com.njydsz.common.exception.util.ExceptionDesensitizer;
  * @author ydsz-team
  * @since 1.0.0
  * @see BusinessException
- * @see BaseResponse
+ * @see YdszResponse
  * @see ProblemDetail
  */
 @Slf4j
@@ -238,7 +238,7 @@ public abstract class BaseExceptionHandler {
   /**
    * 是否使用 ProblemDetail (RFC 7807) 响应格式
    *
-   * @return true-使用 ProblemDetail 格式，false-使用 BaseResponse 格式
+   * @return true-使用 ProblemDetail 格式，false-使用 YdszResponse 格式
    */
   protected boolean useProblemDetail() {
     if (properties != null) {
@@ -486,9 +486,9 @@ public abstract class BaseExceptionHandler {
   }
 
   /**
-   * 构建统一错误响应（{@link BaseResponse} 格式，兼容 {@code BaseResponse.error(code, msg, data)} 旧语义）。
+   * 构建统一错误响应（{@link YdszResponse} 格式，兼容 {@code YdszResponse.error(code, msg, data)} 旧语义）。
    *
-   * <p>ydsz-common-core 精简后移除了三参数 {@code error} 静态方法， 此处统一通过 {@link BaseResponse#builder()} 构建，保持各
+   * <p>ydsz-common-core 精简后移除了三参数 {@code error} 静态方法， 此处统一通过 {@link YdszResponse#builder()} 构建，保持各
    * handler 输出结构一致。
    *
    * @param code 错误码
@@ -496,8 +496,8 @@ public abstract class BaseExceptionHandler {
    * @param data 附加数据（可为 null，由 {@code @JsonInclude(NON_NULL)} 决定是否序列化）
    * @return 统一错误响应
    */
-  protected static <T> BaseResponse<T> errorResponse(String code, String msg, T data) {
-    return BaseResponse.<T>builder()
+  protected static <T> YdszResponse<T> errorResponse(String code, String msg, T data) {
+    return YdszResponse.<T>builder()
         .code(code)
         .msg(msg)
         .data(data)
@@ -506,14 +506,14 @@ public abstract class BaseExceptionHandler {
   }
 
   /**
-   * 构建统一异常响应（根据配置自动选择 BaseResponse 或 ProblemDetail 格式）
+   * 构建统一异常响应（根据配置自动选择 YdszResponse 或 ProblemDetail 格式）
    *
    * <p>统一在此处记录异常处理耗时（{@code exception.handler.duration} Timer）， 使全部走响应构建链路的 handler 均纳入耗时监控。
    *
    * @param throwable 异常对象
    * @param path 请求路径
    * @param traceId 追踪 ID
-   * @return 响应对象（BaseResponse 或 ProblemDetail）
+   * @return 响应对象（YdszResponse 或 ProblemDetail）
    */
   protected Object buildResponse(Throwable throwable, String path, String traceId) {
     long startNanos = System.nanoTime();
@@ -533,7 +533,7 @@ public abstract class BaseExceptionHandler {
    * @param throwable 异常对象
    * @param path 请求路径
    * @param traceId 追踪 ID
-   * @return 响应对象（BaseResponse 或 ProblemDetail）
+   * @return 响应对象（YdszResponse 或 ProblemDetail）
    */
   private Object doBuildResponse(Throwable throwable, String path, String traceId) {
     if (useProblemDetail()) {
@@ -617,7 +617,7 @@ public abstract class BaseExceptionHandler {
   }
 
   /**
-   * 构建标准错误响应（统一 {@link ExceptionInfo} + {@link BaseResponse} 组合）。
+   * 构建标准错误响应（统一 {@link ExceptionInfo} + {@link YdszResponse} 组合）。
    *
    * <p>消除各处理器中重复的"new ExceptionInfo → setPath → errorResponse"三步模板。 开发/测试环境自动填充详细信息（path），生产环境仅返回
    * code + message。
@@ -627,9 +627,9 @@ public abstract class BaseExceptionHandler {
    * @param message 已解析的错误消息
    * @param httpStatus HTTP 状态码
    * @param path 请求路径
-   * @return 统一 BaseResponse
+   * @return 统一 YdszResponse
    */
-  protected BaseResponse<?> buildStandardErrorResponse(
+  protected YdszResponse<?> buildStandardErrorResponse(
       String code, String key, String message, int httpStatus, String path) {
     if (!includeExceptionInfo()) {
       return errorResponse(code, message, null);
@@ -650,9 +650,9 @@ public abstract class BaseExceptionHandler {
    * @param message 已解析的错误消息
    * @param httpStatus HTTP 状态码
    * @param path 请求路径
-   * @return 统一 BaseResponse（始终包含 ExceptionInfo）
+   * @return 统一 YdszResponse（始终包含 ExceptionInfo）
    */
-  protected BaseResponse<?> buildWithInfo(
+  protected YdszResponse<?> buildWithInfo(
       String code, String key, String message, int httpStatus, String path) {
     ExceptionInfo info = new ExceptionInfo(code, key, message, httpStatus);
     info.setPath(path);
@@ -669,7 +669,7 @@ public abstract class BaseExceptionHandler {
    * @param throwable 原始异常
    * @return 统一响应格式
    */
-  protected BaseResponse<?> buildValidationErrorResponse(
+  protected YdszResponse<?> buildValidationErrorResponse(
       CoreExceptionCode errorCode,
       String message,
       int httpStatus,

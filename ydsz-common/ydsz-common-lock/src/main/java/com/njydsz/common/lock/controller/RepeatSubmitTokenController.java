@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
 import com.njydsz.common.lock.spi.CurrentUserIdResolver;
 
@@ -60,17 +60,17 @@ public class RepeatSubmitTokenController {
    */
   @GetMapping("/token")
   @Operation(summary = "获取防重复提交 Token", description = "前端提交表单前先获取 Token，提交时携带到请求头 X-Repeat-Token")
-  public BaseResponse<String> getToken(
+  public YdszResponse<String> getToken(
       @Parameter(description = "Token 有效期（毫秒），默认 60000") @RequestParam(defaultValue = "60000")
           long ttlMillis) {
     try {
       String userId = userIdResolver.getCurrentUserId();
       String token = tokenService.generateToken(userId, ttlMillis);
       log.debug("[ydsz-lock] [repeat-submit] 生成 Token 成功 | userId={}, ttl={}ms", userId, ttlMillis);
-      return BaseResponse.success(token);
+      return YdszResponse.success(token);
     } catch (IllegalArgumentException e) {
       log.warn("[ydsz-lock] [repeat-submit] 生成 Token 失败 | cause={}", e.getMessage());
-      return BaseResponse.error(BaseResultCode.UNAUTHORIZED, "用户未登录，无法生成 Token");
+      return YdszResponse.error(YdszResultCode.UNAUTHORIZED, "用户未登录，无法生成 Token");
     }
   }
 }

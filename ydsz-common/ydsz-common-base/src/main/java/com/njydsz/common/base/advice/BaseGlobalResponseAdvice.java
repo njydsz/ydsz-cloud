@@ -16,18 +16,18 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.json.YdszJson;
 
 /**
  * 全局响应包装基类（Web/App 共享）
  *
- * <p>自动将非 {@link BaseResponse} 类型的返回值包装为 {@link BaseResponse#success(Object)} 格式。
+ * <p>自动将非 {@link YdszResponse} 类型的返回值包装为 {@link YdszResponse#success(Object)} 格式。
  *
  * <p><b>跳过包装的类型：</b>
  *
  * <ul>
- *   <li>{@link BaseResponse} — 已是标准响应
+ *   <li>{@link YdszResponse} — 已是标准响应
  *   <li>{@code void} — 无返回值（如文件下载、204 No Content）
  *   <li>{@link ResponseEntity} — Spring MVC 特殊处理，包装会丢失原始状态码和 Header
  *   <li>{@link HttpEntity} — 同 ResponseEntity
@@ -35,7 +35,7 @@ import com.njydsz.common.json.YdszJson;
  * </ul>
  *
  * <p>子类覆盖 {@link #wrapStringBody(String)} 处理 String 类型返回值的差异： Web 端调用 {@code
- * BaseResponse.success(msg)}，App 端调用 {@code BaseResponse.successMsg(msg)}。
+ * YdszResponse.success(msg)}，App 端调用 {@code YdszResponse.successMsg(msg)}。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -48,7 +48,7 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
       @NonNull Class<? extends HttpMessageConverter<?>> converterType) {
     Class<?> paramType = returnType.getParameterType();
     // 跳过已包装类型、void、ResponseEntity/HttpEntity、Resource
-    if (paramType == BaseResponse.class
+    if (paramType == YdszResponse.class
         || paramType == void.class
         || paramType == Void.class
         || ResponseEntity.class.isAssignableFrom(paramType)
@@ -105,7 +105,7 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
       @NonNull Class<? extends HttpMessageConverter<?>> selectedConverterType,
       @NonNull ServerHttpRequest request,
       @NonNull ServerHttpResponse response) {
-    if (body instanceof BaseResponse) {
+    if (body instanceof YdszResponse) {
       return body;
     }
     if (body instanceof String) {
@@ -115,7 +115,7 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
       if (contentType == null || MediaType.TEXT_PLAIN.isCompatibleWith(contentType)) {
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
       }
-      BaseResponse<String> result = wrapStringBody((String) body);
+      YdszResponse<String> result = wrapStringBody((String) body);
       try {
         return YdszJson.toJson(result);
       } catch (Exception e) {
@@ -123,20 +123,20 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
       }
     }
     if (body == null) {
-      return BaseResponse.success();
+      return YdszResponse.success();
     }
     if (body instanceof Serializable) {
-      return BaseResponse.success((Serializable) body);
+      return YdszResponse.success((Serializable) body);
     }
     // 不可序列化对象降级为 toString()，避免 ClassCastException
-    return BaseResponse.success(body.toString());
+    return YdszResponse.success(body.toString());
   }
 
   /**
    * 子类覆盖此方法处理 String 类型返回值的包装差异
    *
    * @param body 原始 String 返回值
-   * @return 包装后的 BaseResponse
+   * @return 包装后的 YdszResponse
    */
-  protected abstract BaseResponse<String> wrapStringBody(String body);
+  protected abstract YdszResponse<String> wrapStringBody(String body);
 }

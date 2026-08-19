@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.nextwiki.domain.vo.UserFavoriteVO;
 import com.njydsz.nextwiki.server.service.UserFavoriteApplicationService;
@@ -54,12 +54,12 @@ public class UserFavoriteController {
    * @return 收藏视图列表
    */
   @GetMapping
-  public BaseResponse<List<UserFavoriteVO>> listFavorites(
+  public YdszResponse<List<UserFavoriteVO>> listFavorites(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
       @RequestParam(required = false, defaultValue = "50") int limit) {
 
     List<UserFavoriteVO> favorites = userFavoriteApplicationService.listFavorites(userId, limit);
-    return BaseResponse.success(favorites);
+    return YdszResponse.success(favorites);
   }
 
   /**
@@ -70,12 +70,12 @@ public class UserFavoriteController {
    * @return 收藏记录 ID
    */
   @PostMapping("/{nodeId}")
-  public BaseResponse<String> addFavorite(
+  public YdszResponse<String> addFavorite(
       @PathVariable String nodeId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     String favoriteId = userFavoriteApplicationService.addFavorite(nodeId, userId);
-    return BaseResponse.success(favoriteId);
+    return YdszResponse.success(favoriteId);
   }
 
   /**
@@ -86,12 +86,12 @@ public class UserFavoriteController {
    * @return 是否成功删除
    */
   @DeleteMapping("/{nodeId}")
-  public BaseResponse<Boolean> removeFavorite(
+  public YdszResponse<Boolean> removeFavorite(
       @PathVariable String nodeId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     boolean result = userFavoriteApplicationService.removeFavorite(nodeId, userId);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -102,12 +102,12 @@ public class UserFavoriteController {
    * @return true 表示已收藏
    */
   @GetMapping("/{nodeId}/is-favorited")
-  public BaseResponse<Boolean> isFavorited(
+  public YdszResponse<Boolean> isFavorited(
       @PathVariable String nodeId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     boolean result = userFavoriteApplicationService.isFavorited(nodeId, userId);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -119,13 +119,13 @@ public class UserFavoriteController {
    * @return 是否成功更新
    */
   @PostMapping("/{nodeId}/sort")
-  public BaseResponse<Boolean> updateSortOrder(
+  public YdszResponse<Boolean> updateSortOrder(
       @PathVariable String nodeId,
       @RequestParam int sortOrder,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     boolean result = userFavoriteApplicationService.updateSortOrder(userId, nodeId, sortOrder);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -135,10 +135,10 @@ public class UserFavoriteController {
    * @return 收藏数量
    */
   @GetMapping("/count")
-  public BaseResponse<Integer> getFavoriteCount(
+  public YdszResponse<Integer> getFavoriteCount(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     int count = userFavoriteApplicationService.getFavoriteCount(userId);
-    return BaseResponse.success(count);
+    return YdszResponse.success(count);
   }
 }

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.response.BaseResponse;
+import com.njydsz.common.response.YdszResponse;
 import com.njydsz.common.web.constants.AuthHeaderConstants;
 import com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO;
 import com.njydsz.nextwiki.server.service.SpaceTemplateApplicationService;
@@ -60,11 +60,11 @@ public class SpaceTemplateController {
    */
   @GetMapping
   @Operation(summary = "查询模板列表", description = "查询可用模板（系统公开模板 + 租户自定义模板）")
-  public BaseResponse<List<SpaceTemplateDTO>> listTemplates(
+  public YdszResponse<List<SpaceTemplateDTO>> listTemplates(
       @RequestParam(required = false) String category) {
 
     List<SpaceTemplateDTO> templates = spaceTemplateApplicationService.listTemplates(category);
-    return BaseResponse.success(templates);
+    return YdszResponse.success(templates);
   }
 
   /**
@@ -75,9 +75,9 @@ public class SpaceTemplateController {
    */
   @GetMapping("/{templateId}")
   @Operation(summary = "获取模板详情")
-  public BaseResponse<SpaceTemplateDTO> getTemplate(@PathVariable String templateId) {
+  public YdszResponse<SpaceTemplateDTO> getTemplate(@PathVariable String templateId) {
     SpaceTemplateDTO template = spaceTemplateApplicationService.getTemplate(templateId);
-    return BaseResponse.success(template);
+    return YdszResponse.success(template);
   }
 
   /**
@@ -89,14 +89,14 @@ public class SpaceTemplateController {
    */
   @PostMapping
   @Operation(summary = "创建模板", description = "创建租户自定义模板")
-  public BaseResponse<SpaceTemplateDTO> createTemplate(
+  public YdszResponse<SpaceTemplateDTO> createTemplate(
       @Valid @RequestBody CreateTemplateRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     SpaceTemplateDTO template = spaceTemplateApplicationService.createTemplate(
         request.getName(), request.getDescription(), request.getCategory(),
         request.getStructureJson(), userId);
-    return BaseResponse.success(template);
+    return YdszResponse.success(template);
   }
 
   /**
@@ -109,7 +109,7 @@ public class SpaceTemplateController {
    */
   @PutMapping("/{templateId}")
   @Operation(summary = "更新模板", description = "更新租户自定义模板（系统模板不可修改）")
-  public BaseResponse<SpaceTemplateDTO> updateTemplate(
+  public YdszResponse<SpaceTemplateDTO> updateTemplate(
       @PathVariable String templateId,
       @Valid @RequestBody UpdateTemplateRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
@@ -117,7 +117,7 @@ public class SpaceTemplateController {
     SpaceTemplateDTO template = spaceTemplateApplicationService.updateTemplate(
         templateId, request.getName(), request.getDescription(), request.getCategory(),
         request.getStructureJson(), userId);
-    return BaseResponse.success(template);
+    return YdszResponse.success(template);
   }
 
   /**
@@ -129,12 +129,12 @@ public class SpaceTemplateController {
    */
   @DeleteMapping("/{templateId}")
   @Operation(summary = "删除模板", description = "删除租户自定义模板（系统模板不可删除）")
-  public BaseResponse<Boolean> deleteTemplate(
+  public YdszResponse<Boolean> deleteTemplate(
       @PathVariable String templateId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     spaceTemplateApplicationService.deleteTemplate(templateId, userId);
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -147,14 +147,14 @@ public class SpaceTemplateController {
    */
   @PostMapping("/{templateId}/use")
   @Operation(summary = "使用模板创建空间", description = "基于模板预定义结构创建新空间")
-  public BaseResponse<com.njydsz.nextwiki.domain.vo.SpaceVO> useTemplate(
+  public YdszResponse<com.njydsz.nextwiki.domain.vo.SpaceVO> useTemplate(
       @PathVariable String templateId,
       @Valid @RequestBody UseTemplateRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     com.njydsz.nextwiki.domain.vo.SpaceVO space =
         spaceTemplateApplicationService.createSpaceFromTemplate(templateId, request.getSpaceName(), userId);
-    return BaseResponse.success(space);
+    return YdszResponse.success(space);
   }
 
   // ==================== 内部请求 DTO ====================

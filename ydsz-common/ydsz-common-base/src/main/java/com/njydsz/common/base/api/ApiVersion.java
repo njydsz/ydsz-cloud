@@ -36,7 +36,7 @@ import java.lang.annotation.Target;
  *
  *   @ApiVersion(value = "v2", since = "2.0.0", replacement = "/api/v2/nextwiki/files/upload")
  *   @PostMapping("/upload")
- *   public BaseResponse<...> uploadV2() { ... }
+ *   public YdszResponse<...> uploadV2() { ... }
  * }
  * }</pre>
  *

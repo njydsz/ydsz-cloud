@@ -18,7 +18,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -92,8 +92,8 @@ public class SubscriptionController {
       content = "'upsert'")
   @RateLimit(resource = "message.subscription.upsert", threshold = 50)
   @PostMapping
-  public BaseResponse<MsgSubscriptionVO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
-    return BaseResponse.success(
+  public YdszResponse<MsgSubscriptionVO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
+    return YdszResponse.success(
         MessageConverter.INSTANT.entityToVO(subscriptionService.upsert(dto)));
   }
 
@@ -106,8 +106,8 @@ public class SubscriptionController {
   @Operation(summary = "查询用户所有订阅")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
   @GetMapping("/user/{userId}")
-  public BaseResponse<List<MsgSubscriptionVO>> listByUser(@PathVariable String userId) {
-    return BaseResponse.success(
+  public YdszResponse<List<MsgSubscriptionVO>> listByUser(@PathVariable String userId) {
+    return YdszResponse.success(
         MessageConverter.INSTANT.subscriptionListToVO(subscriptionService.listByUser(userId)));
   }
 
@@ -121,9 +121,9 @@ public class SubscriptionController {
   @Operation(summary = "按主题+通道查询订阅")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
   @GetMapping("/topic/{topicCode}/{channel}")
-  public BaseResponse<List<MsgSubscriptionVO>> listByTopic(
+  public YdszResponse<List<MsgSubscriptionVO>> listByTopic(
       @PathVariable String topicCode, @PathVariable String channel) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         MessageConverter.INSTANT.subscriptionListToVO(
             subscriptionService.listByTopic(topicCode, channel)));
   }
@@ -146,9 +146,9 @@ public class SubscriptionController {
       content = "'unsubscribe'")
   @RateLimit(resource = "message.subscription.unsubscribe", threshold = 50)
   @PostMapping("/unsubscribe")
-  public BaseResponse<Void> unsubscribe(
+  public YdszResponse<Void> unsubscribe(
       @RequestParam String userId, @RequestParam String topicCode, @RequestParam String channel) {
     subscriptionService.unsubscribe(userId, topicCode, channel);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

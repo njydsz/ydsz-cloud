@@ -22,7 +22,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -134,13 +134,13 @@ public class FileChunkController {
   @PostMapping("/chunk/init")
   @Operation(summary = "初始化分片上传", description = "大文件分片上传，支持断点续传")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-  public BaseResponse<ChunkUploadApplicationService.ChunkUploadInit> initChunkUpload(
+  public YdszResponse<ChunkUploadApplicationService.ChunkUploadInit> initChunkUpload(
       @RequestParam("fileName") String fileName,
       @RequestParam("fileSize") long fileSize,
       @RequestParam("totalChunks") int totalChunks,
       @RequestParam(value = "parentId", required = false) String parentId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         chunkUploadService.initChunkUpload(fileName, fileSize, totalChunks, parentId, userId));
   }
 
@@ -165,13 +165,13 @@ public class FileChunkController {
   @PostMapping("/chunk/{uploadId}/{chunkNumber}")
   @Operation(summary = "上传单个分片")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-  public BaseResponse<Void> uploadChunk(
+  public YdszResponse<Void> uploadChunk(
       @PathVariable String uploadId,
       @PathVariable int chunkNumber,
       @RequestParam("chunk") MultipartFile chunk,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     chunkUploadService.uploadChunk(uploadId, chunkNumber, chunk, userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -192,9 +192,9 @@ public class FileChunkController {
   @PostMapping("/chunk/{uploadId}/complete")
   @Operation(summary = "完成分片上传", description = "合并分片并上传到存储")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-  public BaseResponse<FileNodeVO> completeChunkUpload(
+  public YdszResponse<FileNodeVO> completeChunkUpload(
       @PathVariable String uploadId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    return BaseResponse.success(chunkUploadService.completeChunkUpload(uploadId, userId));
+    return YdszResponse.success(chunkUploadService.completeChunkUpload(uploadId, userId));
   }
 
   /**
@@ -210,9 +210,9 @@ public class FileChunkController {
   @DeleteMapping("/chunk/{uploadId}")
   @Operation(summary = "取消分片上传")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-  public BaseResponse<Void> abortChunkUpload(@PathVariable String uploadId) {
+  public YdszResponse<Void> abortChunkUpload(@PathVariable String uploadId) {
     chunkUploadService.abortChunkUpload(uploadId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -226,7 +226,7 @@ public class FileChunkController {
   @GetMapping("/chunk/{uploadId}/uploaded-chunks")
   @Operation(summary = "查询已上传分片列表", description = "用于断点续传")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-  public BaseResponse<Set<Integer>> getUploadedChunks(@PathVariable String uploadId) {
-    return BaseResponse.success(chunkUploadService.getUploadedChunks(uploadId));
+  public YdszResponse<Set<Integer>> getUploadedChunks(@PathVariable String uploadId) {
+    return YdszResponse.success(chunkUploadService.getUploadedChunks(uploadId));
   }
 }

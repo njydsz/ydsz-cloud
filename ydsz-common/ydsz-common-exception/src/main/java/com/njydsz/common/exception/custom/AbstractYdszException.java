@@ -233,7 +233,7 @@ public abstract class AbstractYdszException extends RuntimeException
   }
 
   /**
-   * 将异常上下文桥接为 {@link ResultCode}，供响应构建器（{@code BaseResponse.error(Throwable)}）消费。
+   * 将异常上下文桥接为 {@link ResultCode}，供响应构建器（{@code YdszResponse.error(Throwable)}）消费。
    *
    * <p>字段映射规则：
    *

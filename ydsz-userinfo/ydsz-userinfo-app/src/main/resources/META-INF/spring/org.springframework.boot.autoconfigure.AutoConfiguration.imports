@@ -1,4 +1,0 @@
-com.njydsz.userinfo.app.config.UserInfoAppAutoConfiguration
-com.njydsz.userinfo.server.config.OidcConfiguration
-com.njydsz.userinfo.server.config.SamlConfiguration
-com.njydsz.userinfo.server.config.WebAuthnConfiguration

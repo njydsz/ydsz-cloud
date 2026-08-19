@@ -25,7 +25,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.batch.BatchBusinessException;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
@@ -155,7 +155,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         e.getFailureCount(),
         traceId);
 
-    return BaseResponse.builder()
+    return YdszResponse.builder()
         .code(e.getCode())
         .msg(resolvedMsg)
         .data(batchResult)
@@ -281,7 +281,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
    */
   @ExceptionHandler(MissingServletRequestParameterException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public BaseResponse<?> handleMissingServletRequestParameterException(
+  public YdszResponse<?> handleMissingServletRequestParameterException(
       MissingServletRequestParameterException e, HttpServletRequest request) {
     recordMetrics(e);
     String message =
@@ -303,7 +303,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
    */
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public BaseResponse<?> handleMethodArgumentTypeMismatchException(
+  public YdszResponse<?> handleMethodArgumentTypeMismatchException(
       MethodArgumentTypeMismatchException e, HttpServletRequest request) {
     recordMetrics(e);
     Class<?> requiredType = e.getRequiredType();
@@ -329,7 +329,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
    */
   @ExceptionHandler(MissingRequestHeaderException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public BaseResponse<?> handleMissingRequestHeaderException(
+  public YdszResponse<?> handleMissingRequestHeaderException(
       MissingRequestHeaderException e, HttpServletRequest request) {
     recordMetrics(e);
     String message =
@@ -351,7 +351,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
    */
   @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
   @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
-  public BaseResponse<?> handleHttpRequestMethodNotSupportedException(
+  public YdszResponse<?> handleHttpRequestMethodNotSupportedException(
       HttpRequestMethodNotSupportedException e, HttpServletRequest request) {
     recordMetrics(e);
     String message =

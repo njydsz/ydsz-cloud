@@ -196,4 +196,23 @@ public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
       @Param("banReason") String banReason,
       @Param("banExpireAt") java.time.LocalDateTime banExpireAt,
       @Param("bannedBy") String bannedBy);
+
+  /**
+   * 解锁账号：清除锁定时间、清零登录失败计数。
+   *
+   * <p>专用于自助解锁场景（用户通过验证码验证身份后解锁），原子完成：
+   * 清除锁定时间、清零失败计数、更新更新时间。
+   *
+   * @param id 用户 ID
+   * @return 影响行数（用户不存在或已删除时为 0）
+   */
+  @Update(
+      """
+            UPDATE ydsz_user_account
+            SET locked_until = NULL,
+                login_fail_count = 0,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = #{id} AND deleted = 0
+            """)
+  int unlockAccount(@Param("id") String id);
 }

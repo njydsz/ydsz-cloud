@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
@@ -75,7 +75,7 @@ public class BatchServiceImpl implements BatchService {
   public MsgBatch submitBatch(BatchSendRequestDTO dto) {
     if (dto == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("批量发送参数不能为空")
           .build();
     }
@@ -83,13 +83,13 @@ public class BatchServiceImpl implements BatchService {
     List<MessageRequest> requests = buildRequests(dto);
     if (requests.isEmpty()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("接收人列表为空")
           .build();
     }
     if (requests.size() > MAX_BATCH_SIZE) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("单批最大 " + MAX_BATCH_SIZE + " 条，当前 " + requests.size() + " 条")
           .build();
     }
@@ -134,7 +134,7 @@ public class BatchServiceImpl implements BatchService {
   public BatchProgressVO getProgress(String batchId) {
     if (!StringUtils.hasText(batchId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("批次 ID 不能为空")
           .build();
     }
@@ -143,7 +143,7 @@ public class BatchServiceImpl implements BatchService {
             new LambdaQueryWrapper<MsgBatch>().eq(MsgBatch::getBatchId, batchId).last("LIMIT 1"));
     if (batch == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("批次不存在: " + batchId)
           .build();
     }

@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
@@ -117,14 +117,14 @@ public class ChannelRouter {
   public MessageChannel route(String channel) {
     if (channel == null || channel.isBlank()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("消息通道不能为空")
           .build();
     }
     MessageChannel target = channelCache.get(channel.trim().toUpperCase());
     if (target == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("不支持的消息通道: " + channel)
           .build();
     }
@@ -220,7 +220,7 @@ public class ChannelRouter {
   public MessageResult dispatchWithScore(MessageRequest request, ScoreConfig scoreConfig) {
     if (request == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("消息请求不能为空")
           .build();
     }
@@ -337,7 +337,7 @@ public class ChannelRouter {
    */
   public String dispatch(MsgLog logDO) {
     if (logDO == null) {
-      throw SysException.builder().resultCode(BaseResultCode.BAD_REQUEST).message("消息日志为空").build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("消息日志为空").build();
     }
     MessageRequest request = new MessageRequest();
     request.setChannel(logDO.getChannel());

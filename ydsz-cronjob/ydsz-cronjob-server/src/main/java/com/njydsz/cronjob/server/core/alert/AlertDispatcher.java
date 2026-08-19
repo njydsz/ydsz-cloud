@@ -15,7 +15,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
@@ -385,7 +385,7 @@ public class AlertDispatcher {
     params.put("receivers", receivers);
     request.setParams(params);
     try {
-      BaseResponse<MessageResult> result = notificationClient.sendMessage(request);
+      YdszResponse<MessageResult> result = notificationClient.sendMessage(request);
       if (result == null || !result.isSuccess()) {
         String reason = result != null && result.getMsg() != null ? result.getMsg() : "unknown";
         throw new AlertSendException("message module returned failure: " + reason);

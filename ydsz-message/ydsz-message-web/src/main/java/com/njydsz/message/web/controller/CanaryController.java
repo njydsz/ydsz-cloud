@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.message.server.service.config.CanaryExperimentService;
 
 /**
@@ -56,7 +56,7 @@ public class CanaryController {
   @Operation(summary = "创建实验")
   @AuthApiPermission("MESSAGE_TEMPLATE_EDIT")
   @PostMapping("/experiment")
-  public BaseResponse<String> createExperiment(
+  public YdszResponse<String> createExperiment(
       @RequestParam String templateCode,
       @RequestParam String experimentName,
       @RequestParam Integer canaryPercent,
@@ -65,7 +65,7 @@ public class CanaryController {
     String canaryKey = canaryExperimentService.createExperiment(
         templateCode, experimentName, canaryPercent, metricsGoal);
 
-    return BaseResponse.success(canaryKey);
+    return YdszResponse.success(canaryKey);
   }
 
   /**
@@ -78,12 +78,12 @@ public class CanaryController {
   @Operation(summary = "分配实验桶")
   @AuthApiPermission("MESSAGE_TEMPLATE_EDIT")
   @GetMapping("/assign")
-  public BaseResponse<String> assignBucket(
+  public YdszResponse<String> assignBucket(
       @RequestParam String experimentId,
       @RequestParam String requestKey) {
 
     String group = canaryExperimentService.assignBucket(experimentId, requestKey);
 
-    return BaseResponse.success(group);
+    return YdszResponse.success(group);
   }
 }

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
@@ -64,8 +64,8 @@ public class RuleCategoryController {
    * <p>树根为虚拟 ROOT，children 为一级分类。叶子节点或中间节点都包含该路径下的规则数与 Owner 列表。
    */
   @GetMapping("/category-tree")
-  public BaseResponse<CategoryNodeVO> categoryTree() {
-    return BaseResponse.success(
+  public YdszResponse<CategoryNodeVO> categoryTree() {
+    return YdszResponse.success(
         LiteruleWebConverter.INSTANT.entityToVO(ruleCategoryProvider.buildTree()));
   }
 
@@ -75,9 +75,9 @@ public class RuleCategoryController {
    * @param path 分类路径前缀，例如 "finance" / "finance/credit"
    */
   @GetMapping("/by-category-path")
-  public BaseResponse<List<RuleDefinitionVO>> listByCategoryPath(
+  public YdszResponse<List<RuleDefinitionVO>> listByCategoryPath(
       @RequestParam(value = "path", required = false) String path) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         ruleCategoryProvider.listDefinitionsByCategoryPath(path).stream()
             .map(LiteruleConverter.INSTANT::entityToVO)
             .toList());
@@ -85,9 +85,9 @@ public class RuleCategoryController {
 
   /** 按 Owner 查询规则 */
   @GetMapping("/by-owner")
-  public BaseResponse<List<RuleDefinitionVO>> listByOwner(
+  public YdszResponse<List<RuleDefinitionVO>> listByOwner(
       @RequestParam(value = "owner") String owner) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         ruleCategoryProvider.listDefinitionsByOwner(owner).stream()
             .map(LiteruleConverter.INSTANT::entityToVO)
             .toList());
@@ -102,12 +102,12 @@ public class RuleCategoryController {
       content = "'setOwner'")
   @RateLimit(resource = "literule.rule_category.setOwner", threshold = 50)
   @PutMapping("/{ruleCode}/owner")
-  public BaseResponse<Void> setOwner(
+  public YdszResponse<Void> setOwner(
       @PathVariable String ruleCode,
       @RequestParam(value = "owner") String owner,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     ruleAdminService.updateOwner(ruleCode, owner, operator);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /** 设置规则分类路径 */
@@ -119,11 +119,11 @@ public class RuleCategoryController {
       content = "'setCategoryPath'")
   @RateLimit(resource = "literule.rule_category.setCategoryPath", threshold = 50)
   @PutMapping("/{ruleCode}/category-path")
-  public BaseResponse<Void> setCategoryPath(
+  public YdszResponse<Void> setCategoryPath(
       @PathVariable String ruleCode,
       @RequestParam(value = "path") String path,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     ruleAdminService.updateCategoryPath(ruleCode, path, operator);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

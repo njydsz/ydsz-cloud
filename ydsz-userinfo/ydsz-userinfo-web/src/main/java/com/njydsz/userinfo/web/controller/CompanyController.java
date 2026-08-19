@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.CompanyDTO;
@@ -83,8 +83,8 @@ public class CompanyController {
    */
   @GetMapping("/list")
   @Operation(summary = "查询全部公司列表")
-  public BaseResponse<List<CompanyVO>> list() {
-    return BaseResponse.success(service.list());
+  public YdszResponse<List<CompanyVO>> list() {
+    return YdszResponse.success(service.list());
   }
 
   /**
@@ -98,8 +98,8 @@ public class CompanyController {
    */
   @GetMapping("/tree")
   @Operation(summary = "查询公司树形结构")
-  public BaseResponse<List<CompanyTreeVO>> tree() {
-    return BaseResponse.success(service.tree());
+  public YdszResponse<List<CompanyTreeVO>> tree() {
+    return YdszResponse.success(service.tree());
   }
 
   /**
@@ -110,8 +110,8 @@ public class CompanyController {
    */
   @GetMapping("/{id}")
   @Operation(summary = "根据 ID 查询公司")
-  public BaseResponse<CompanyVO> getById(@PathVariable String id) {
-    return BaseResponse.success(service.getById(id));
+  public YdszResponse<CompanyVO> getById(@PathVariable String id) {
+    return YdszResponse.success(service.getById(id));
   }
 
   /**
@@ -130,8 +130,8 @@ public class CompanyController {
   @Idempotent(key = "ydsz:userinfo:CompanyController:create:lock", ttlSeconds = 5)
   @PostMapping
   @Operation(summary = "创建公司")
-  public BaseResponse<String> create(@Valid @RequestBody CompanyDTO dto) {
-    return BaseResponse.success(service.create(dto));
+  public YdszResponse<String> create(@Valid @RequestBody CompanyDTO dto) {
+    return YdszResponse.success(service.create(dto));
   }
 
   /**
@@ -153,8 +153,8 @@ public class CompanyController {
   @RateLimit(resource = "userinfo.CompanyDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新公司")
-  public BaseResponse<Boolean> update(@Valid @RequestBody CompanyDTO dto) {
-    return BaseResponse.success(service.update(dto));
+  public YdszResponse<Boolean> update(@Valid @RequestBody CompanyDTO dto) {
+    return YdszResponse.success(service.update(dto));
   }
 
   /**
@@ -184,7 +184,7 @@ public class CompanyController {
   @Idempotent(key = "ydsz:userinfo:CompanyController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除公司")
-  public BaseResponse<Boolean> remove(@PathVariable String id) {
-    return BaseResponse.success(service.removeById(id));
+  public YdszResponse<Boolean> remove(@PathVariable String id) {
+    return YdszResponse.success(service.removeById(id));
   }
 }

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 
@@ -76,18 +76,18 @@ public class JobQueueController {
   @Operation(summary = "查询执行队列状态")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/status")
-  public BaseResponse<Map<String, Object>> getQueueStatus() {
+  public YdszResponse<Map<String, Object>> getQueueStatus() {
     // 1. 获取 TaskDispatcher（ObjectProvider 避免强耦合，允许 TaskDispatcher 未注册时返回空）
     DefaultTaskDispatcher dispatcher = taskDispatcherProvider.getIfAvailable();
     if (dispatcher == null) {
       log.debug("[JobQueue] TaskDispatcher 不可用，返回空状态");
-      return BaseResponse.success(new HashMap<>());
+      return YdszResponse.success(new HashMap<>());
     }
     // 2. 获取线程池
     ThreadPoolExecutor pool = dispatcher.getTaskExecutorPool();
     if (pool == null) {
       log.debug("[JobQueue] 线程池未初始化，返回空状态");
-      return BaseResponse.success(new HashMap<>());
+      return YdszResponse.success(new HashMap<>());
     }
     // 3. 采集线程池实时指标
     Map<String, Object> status = new HashMap<>();
@@ -98,6 +98,6 @@ public class JobQueueController {
     status.put("queueRemainingCapacity", pool.getQueue().remainingCapacity());
     status.put("completedTaskCount", pool.getCompletedTaskCount());
     status.put("taskCount", pool.getTaskCount());
-    return BaseResponse.success(status);
+    return YdszResponse.success(status);
   }
 }

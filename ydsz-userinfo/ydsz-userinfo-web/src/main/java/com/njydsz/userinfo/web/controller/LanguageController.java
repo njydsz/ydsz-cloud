@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -97,8 +97,8 @@ public class LanguageController {
    */
   @GetMapping("/{id}")
   @Operation(summary = "按 ID 查询")
-  public BaseResponse<LanguageVO> getById(@PathVariable String id) {
-    return BaseResponse.success(service.getById(id));
+  public YdszResponse<LanguageVO> getById(@PathVariable String id) {
+    return YdszResponse.success(service.getById(id));
   }
 
   /**
@@ -112,8 +112,8 @@ public class LanguageController {
    */
   @GetMapping("/list")
   @Operation(summary = "查询全部语言列表")
-  public BaseResponse<List<LanguageVO>> list() {
-    return BaseResponse.success(service.list());
+  public YdszResponse<List<LanguageVO>> list() {
+    return YdszResponse.success(service.list());
   }
 
   /**
@@ -137,8 +137,8 @@ public class LanguageController {
   @RateLimit(resource = "userinfo.LanguageDO.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建语言")
-  public BaseResponse<String> create(@Valid @RequestBody LanguageDTO dto) {
-    return BaseResponse.success(service.create(dto));
+  public YdszResponse<String> create(@Valid @RequestBody LanguageDTO dto) {
+    return YdszResponse.success(service.create(dto));
   }
 
   /**
@@ -162,8 +162,8 @@ public class LanguageController {
   @RateLimit(resource = "userinfo.LanguageDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新语言")
-  public BaseResponse<Boolean> update(@Valid @RequestBody LanguageDTO dto) {
-    return BaseResponse.success(service.update(dto));
+  public YdszResponse<Boolean> update(@Valid @RequestBody LanguageDTO dto) {
+    return YdszResponse.success(service.update(dto));
   }
 
   /**
@@ -185,7 +185,7 @@ public class LanguageController {
   @Idempotent(key = "ydsz:userinfo:LanguageController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除语言")
-  public BaseResponse<Boolean> remove(@PathVariable String id) {
-    return BaseResponse.success(service.removeById(id));
+  public YdszResponse<Boolean> remove(@PathVariable String id) {
+    return YdszResponse.success(service.removeById(id));
   }
 }

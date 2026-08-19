@@ -16,7 +16,7 @@
  * <p>本模块依赖以下外部组件，接入方需确保 classpath 存在：
  *
  * <ul>
- *   <li><b>ydsz-common-json</b>（核心硬依赖）：{@code BaseResponse} / {@code IResponse} / {@code
+ *   <li><b>ydsz-common-json</b>（核心硬依赖）：{@code YdszResponse} / {@code IResponse} / {@code
  *       PageResponse} 上使用的 {@code @JsonInclude}、{@code @JsonPropertyOrder}、 {@code @JsonClass} 注解由
  *       ydsz-common-json 引擎解析。若未引入该模块， 序列化输出将不带字段白名单与空值控制。
  *   <li><b>transmittable-thread-local</b>（TTL）：线程池场景的上下文传递
@@ -30,8 +30,8 @@
  *   <li>上下文写入推荐使用 {@code BizContextKeys.KEY_*} 常量作为键名， 避免字符串字面量散落，保证整个项目的键名来源统一
  *   <li>结果码扩展：业务模块自定义错误码应实现 {@code com.njydsz.common.exception.enums.ExceptionCode} 接口 并使用
  *       {@code @YdszExceptionCode} 注解注册（{@code ResultCode} 仅内部使用）
- *   <li>响应构建：通用场景使用 {@code BaseResponse.success(data)}；分页场景使用 {@code PageResponse}； 带可观测字段使用 {@code
- *       BaseResponse.success(data)} 后 {@code setRequestId/setSpanId}
+ *   <li>响应构建：通用场景使用 {@code YdszResponse.success(data)}；分页场景使用 {@code PageResponse}； 带可观测字段使用 {@code
+ *       YdszResponse.success(data)} 后 {@code setRequestId/setSpanId}
  * </ul>
  *
  * @since 1.0.0

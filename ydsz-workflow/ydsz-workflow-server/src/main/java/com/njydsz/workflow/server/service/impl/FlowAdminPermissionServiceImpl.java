@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.repository.FlowAdminRoleRepository;
@@ -186,7 +186,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
   public void grantRole(String userId, String roleCode, String tenantId) {
     if (!StringUtils.hasText(userId) || !StringUtils.hasText(roleCode)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("用户 ID 和角色编码不能为空")
           .build();
     }

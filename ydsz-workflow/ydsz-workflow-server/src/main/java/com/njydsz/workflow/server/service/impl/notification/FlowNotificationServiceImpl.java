@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.feign.NotificationClient;
@@ -392,7 +392,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     params.put("webhookUrl", webhookUrl);
     request.setParams(params);
     try {
-      BaseResponse<MessageResult> result = notificationClient.sendMessage(request);
+      YdszResponse<MessageResult> result = notificationClient.sendMessage(request);
       if (result != null && result.getData() != null && !result.getData().isSuccess()) {
         log.warn(
             "[FlowNotify][WEBHOOK] 发送失败: userId={} url={} err={}",

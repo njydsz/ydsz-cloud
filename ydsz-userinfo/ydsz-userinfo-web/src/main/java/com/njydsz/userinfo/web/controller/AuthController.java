@@ -22,7 +22,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.web.version.ApiVersion;
@@ -88,9 +88,9 @@ public class AuthController {
   @RateLimit(resource = "userinfo.auth.mfaSendCode", threshold = 5)
   @PostMapping("/mfa/send-code")
   @Operation(summary = "发送登录 MFA 短信验证码")
-  public BaseResponse<Boolean> sendMfaCode(@Valid @RequestBody SendVerifyCodeDTO request) {
+  public YdszResponse<Boolean> sendMfaCode(@Valid @RequestBody SendVerifyCodeDTO request) {
     mfaService.sendLoginSmsCode(request.getPhone());
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -114,7 +114,7 @@ public class AuthController {
   @Idempotent(key = "ydsz:userinfo:AuthController:login:lock", ttlSeconds = 5)
   @PostMapping("/login")
   @Operation(summary = "用户登录", description = "账号密码登录，返回 access_token 和 refresh_token")
-  public BaseResponse<LoginVO> login(
+  public YdszResponse<LoginVO> login(
       @Valid @RequestBody LoginDTO request,
       HttpServletRequest servletRequest,
       HttpServletResponse servletResponse) {
@@ -122,7 +122,7 @@ public class AuthController {
     request.setLoginIp(extractClientIp(servletRequest));
     request.setUserAgent(servletRequest.getHeader("User-Agent"));
     LoginVO result = authService.login(request, servletResponse);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -142,10 +142,10 @@ public class AuthController {
       content = "'用户登出'")
   @PostMapping("/logout")
   @Operation(summary = "用户登出", description = "将 access_token 加入黑名单")
-  public BaseResponse<Void> logout(@RequestHeader(HeaderConstants.AUTHORIZATION) String token) {
+  public YdszResponse<Void> logout(@RequestHeader(HeaderConstants.AUTHORIZATION) String token) {
     String accessToken = token != null && token.startsWith("Bearer ") ? token.substring(7) : token;
     authService.logout(accessToken);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -170,9 +170,9 @@ public class AuthController {
   @Idempotent(key = "ydsz:userinfo:AuthController:refresh:lock", ttlSeconds = 5)
   @PostMapping("/refresh")
   @Operation(summary = "刷新 Token", description = "使用 refresh_token 获取新的 access_token")
-  public BaseResponse<LoginVO> refresh(@RequestBody RefreshRequest request) {
+  public YdszResponse<LoginVO> refresh(@RequestBody RefreshRequest request) {
     LoginVO result = authService.refresh(request.getRefreshToken());
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -240,9 +240,9 @@ public class AuthController {
    */
   @GetMapping("/sessions")
   @Operation(summary = "查询活跃会话列表")
-  public BaseResponse<Set<String>> listActiveSessions() {
+  public YdszResponse<Set<String>> listActiveSessions() {
     String userId = RequestContext.getUserId();
-    return BaseResponse.success(authService.listActiveSessions(userId));
+    return YdszResponse.success(authService.listActiveSessions(userId));
   }
 
   /**
@@ -260,9 +260,9 @@ public class AuthController {
       content = "'下线指定会话'")
   @DeleteMapping("/sessions/{token}")
   @Operation(summary = "下线指定会话")
-  public BaseResponse<Void> kickOutSession(@PathVariable String token) {
+  public YdszResponse<Void> kickOutSession(@PathVariable String token) {
     authService.logout(token);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -280,11 +280,11 @@ public class AuthController {
       content = "'下线全部其他会话'")
   @DeleteMapping("/sessions")
   @Operation(summary = "下线全部其他会话")
-  public BaseResponse<Void> kickOutOtherSessions(
+  public YdszResponse<Void> kickOutOtherSessions(
       @RequestHeader(HeaderConstants.AUTHORIZATION) String currentToken) {
     String userId = RequestContext.getUserId();
     if (userId == null || userId.isBlank()) {
-      return BaseResponse.success();
+      return YdszResponse.success();
     }
     String currentAccessToken =
         currentToken != null && currentToken.startsWith("Bearer ")
@@ -298,6 +298,6 @@ public class AuthController {
         authService.logout(token);
       }
     }
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

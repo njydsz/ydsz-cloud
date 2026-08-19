@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.cronjob.domain.entity.job.TenantQuota;
@@ -86,7 +86,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     long currentCount = countJobsByTenant(tenantId);
     if (currentCount >= maxJobs) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
+          .resultCode(YdszResultCode.TOO_MANY_REQUESTS)
           .key("error.cronjob.msg_quota_jobs_exceeded")
           .params(tenantId, currentCount, maxJobs)
           .build();
@@ -109,7 +109,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     long currentConcurrent = getConcurrentCount(tenantId);
     if (currentConcurrent >= maxConcurrent) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
+          .resultCode(YdszResultCode.TOO_MANY_REQUESTS)
           .key("error.cronjob.msg_quota_concurrent_exceeded")
           .params(tenantId, currentConcurrent, maxConcurrent)
           .build();
@@ -136,7 +136,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     long currentDaily = getDailyCount(tenantId);
     if (currentDaily >= maxDaily) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
+          .resultCode(YdszResultCode.TOO_MANY_REQUESTS)
           .key("error.cronjob.msg_quota_daily_exceeded")
           .params(tenantId, currentDaily, maxDaily)
           .build();

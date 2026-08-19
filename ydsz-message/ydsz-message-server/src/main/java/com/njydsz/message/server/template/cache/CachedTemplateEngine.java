@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.server.template.TemplateEngine;
 import com.njydsz.message.server.template.util.TemplateFilterUtil;
@@ -308,7 +308,7 @@ public class CachedTemplateEngine implements TemplateEngine {
       Object value = resolve(params, key);
       if (value == null || (value instanceof String s && s.isBlank())) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("模板必填参数缺失: " + key)
             .build();
       }

@@ -19,7 +19,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -92,9 +92,9 @@ public class FlowTemplateController {
    */
   @Operation(summary = "模板列表")
   @GetMapping("/list")
-  public BaseResponse<List<Map<String, Object>>> listTemplates(
+  public YdszResponse<List<Map<String, Object>>> listTemplates(
       @RequestParam(required = false) String category) {
-    return BaseResponse.success(templateService.listTemplates(category));
+    return YdszResponse.success(templateService.listTemplates(category));
   }
 
   /**
@@ -105,8 +105,8 @@ public class FlowTemplateController {
    */
   @Operation(summary = "模板详情（含 BPMN XML）")
   @GetMapping("/{templateCode}")
-  public BaseResponse<Map<String, Object>> getTemplate(@PathVariable String templateCode) {
-    return BaseResponse.success(templateService.getTemplate(templateCode));
+  public YdszResponse<Map<String, Object>> getTemplate(@PathVariable String templateCode) {
+    return YdszResponse.success(templateService.getTemplate(templateCode));
   }
 
   /**
@@ -126,9 +126,9 @@ public class FlowTemplateController {
       action = AuditAction.CREATE,
       content = "'导入模板:' + #templateCode")
   @PostMapping("/{templateCode}/import")
-  public BaseResponse<String> importTemplate(
+  public YdszResponse<String> importTemplate(
       @PathVariable String templateCode, @RequestParam(required = false) String flowName) {
-    return BaseResponse.success(templateService.importTemplate(templateCode, flowName));
+    return YdszResponse.success(templateService.importTemplate(templateCode, flowName));
   }
 
   /**
@@ -150,12 +150,12 @@ public class FlowTemplateController {
       action = AuditAction.CREATE,
       content = "'导出模板:' + #templateName")
   @PostMapping("/export/{definitionId}")
-  public BaseResponse<Void> exportAsTemplate(
+  public YdszResponse<Void> exportAsTemplate(
       @PathVariable String definitionId,
       @RequestParam String templateName,
       @RequestParam(required = false, defaultValue = "GENERAL") String category) {
     templateService.exportAsTemplate(definitionId, templateName, category);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   // ============================== P2-9: 模板继承与版本化 ==============================
@@ -168,9 +168,9 @@ public class FlowTemplateController {
    */
   @Operation(summary = "P2-9: 列出模板全部版本")
   @GetMapping("/{templateCode}/versions")
-  public BaseResponse<List<Map<String, Object>>> listTemplateVersions(
+  public YdszResponse<List<Map<String, Object>>> listTemplateVersions(
       @PathVariable String templateCode) {
-    return BaseResponse.success(templateService.listTemplateVersions(templateCode));
+    return YdszResponse.success(templateService.listTemplateVersions(templateCode));
   }
 
   /**
@@ -182,9 +182,9 @@ public class FlowTemplateController {
    */
   @Operation(summary = "P2-9: 获取指定版本模板详情")
   @GetMapping("/{templateCode}/versions/{version}")
-  public BaseResponse<Map<String, Object>> getTemplateVersion(
+  public YdszResponse<Map<String, Object>> getTemplateVersion(
       @PathVariable String templateCode, @PathVariable Integer version) {
-    return BaseResponse.success(templateService.getTemplateVersion(templateCode, version));
+    return YdszResponse.success(templateService.getTemplateVersion(templateCode, version));
   }
 
   /**
@@ -204,9 +204,9 @@ public class FlowTemplateController {
       action = AuditAction.CREATE,
       content = "'创建模板新版本:' + #templateCode")
   @PostMapping("/{templateCode}/newVersion")
-  public BaseResponse<Integer> createNewVersion(
+  public YdszResponse<Integer> createNewVersion(
       @PathVariable String templateCode, @RequestParam(required = false) String versionLabel) {
-    return BaseResponse.success(templateService.createNewVersion(templateCode, versionLabel));
+    return YdszResponse.success(templateService.createNewVersion(templateCode, versionLabel));
   }
 
   /**
@@ -228,12 +228,12 @@ public class FlowTemplateController {
       action = AuditAction.CREATE,
       content = "'克隆模板:' + #templateCode + ' -> ' + #newTemplateCode")
   @PostMapping("/{templateCode}/clone")
-  public BaseResponse<String> cloneTemplate(
+  public YdszResponse<String> cloneTemplate(
       @PathVariable String templateCode,
       @RequestParam String newTemplateCode,
       @RequestParam String newTemplateName,
       @RequestParam(required = false) String newCategory) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         templateService.cloneTemplate(templateCode, newTemplateCode, newTemplateName, newCategory));
   }
 
@@ -256,12 +256,12 @@ public class FlowTemplateController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'inheritFromParent'")
-  public BaseResponse<String> inheritFromParent(
+  public YdszResponse<String> inheritFromParent(
       @PathVariable String parentTemplateCode,
       @RequestParam String newTemplateCode,
       @RequestParam String newTemplateName,
       @RequestParam(required = false) String newCategory) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         templateService.inheritFromParent(
             parentTemplateCode, newTemplateCode, newTemplateName, newCategory));
   }
@@ -274,9 +274,9 @@ public class FlowTemplateController {
    */
   @Operation(summary = "P2-9: 列出继承自指定父模板的子模板")
   @GetMapping("/{parentTemplateCode}/inherited")
-  public BaseResponse<List<Map<String, Object>>> listInheritedTemplates(
+  public YdszResponse<List<Map<String, Object>>> listInheritedTemplates(
       @PathVariable String parentTemplateCode) {
-    return BaseResponse.success(templateService.listInheritedTemplates(parentTemplateCode));
+    return YdszResponse.success(templateService.listInheritedTemplates(parentTemplateCode));
   }
 
   /**
@@ -296,8 +296,8 @@ public class FlowTemplateController {
       type = AuditType.OPERATION,
       action = AuditAction.SYNC,
       content = "'syncFromParent'")
-  public BaseResponse<Integer> syncFromParent(@PathVariable String childTemplateCode) {
-    return BaseResponse.success(templateService.syncFromParent(childTemplateCode));
+  public YdszResponse<Integer> syncFromParent(@PathVariable String childTemplateCode) {
+    return YdszResponse.success(templateService.syncFromParent(childTemplateCode));
   }
 
   // ============================== P2-2: 模板智能推荐 ==============================
@@ -312,11 +312,11 @@ public class FlowTemplateController {
    */
   @Operation(summary = "P2-2: 智能推荐模板")
   @GetMapping("/recommend")
-  public BaseResponse<List<Map<String, Object>>> recommend(
+  public YdszResponse<List<Map<String, Object>>> recommend(
       @RequestParam(defaultValue = "5") int topN) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(recommendService.recommendTemplates(userId, tenantId, topN));
+    return YdszResponse.success(recommendService.recommendTemplates(userId, tenantId, topN));
   }
 
   /**
@@ -328,11 +328,11 @@ public class FlowTemplateController {
    */
   @Operation(summary = "P2-2: 按业务类型推荐模板")
   @GetMapping("/recommend/byBusinessType")
-  public BaseResponse<List<Map<String, Object>>> recommendByBusinessType(
+  public YdszResponse<List<Map<String, Object>>> recommendByBusinessType(
       @RequestParam String businessType, @RequestParam(defaultValue = "5") int topN) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(
+    return YdszResponse.success(
         recommendService.recommendByBusinessType(userId, tenantId, businessType, topN));
   }
 }

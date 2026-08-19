@@ -31,7 +31,7 @@ import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -200,7 +200,7 @@ public class OAuth2Controller {
   @RateLimit(resource = "userinfo.oauth2.authorize", threshold = 20)
   @GetMapping("/authorize")
   @Operation(summary = "获取授权码", description = "需携带已登录的 access_token，生成 OAuth2 授权码，5 分钟有效")
-  public BaseResponse<String> authorize(
+  public YdszResponse<String> authorize(
       @RequestHeader(HeaderConstants.AUTHORIZATION) String authorization,
       @RequestParam String clientId,
       @RequestParam String redirectUri,
@@ -287,7 +287,7 @@ public class OAuth2Controller {
         code,
         codeChallenge != null,
         state != null);
-    return BaseResponse.success(code);
+    return YdszResponse.success(code);
   }
 
   /**
@@ -319,7 +319,7 @@ public class OAuth2Controller {
   @Operation(
       summary = "用授权码或 refresh_token 换取 Token",
       description = "支持 authorization_code（含 PKCE）与 refresh_token 两种授权类型")
-  public BaseResponse<Map<String, Object>> token(
+  public YdszResponse<Map<String, Object>> token(
       @RequestParam String grantType,
       @RequestParam(required = false) String code,
       @RequestParam(required = false) String refreshToken,
@@ -347,7 +347,7 @@ public class OAuth2Controller {
    * @param state OAuth2 CSRF 防护 state 参数（可选，若 authorize 时传了 state 则必须匹配）
    * @return 标准 OAuth2 token 响应
    */
-  private BaseResponse<Map<String, Object>> authorizationCodeGrant(
+  private YdszResponse<Map<String, Object>> authorizationCodeGrant(
       String code, String clientId, String clientSecret, String codeVerifier, String state) {
 
     // 1. P0-3: 原子读取并删除授权码（GETDEL 语义，防并发重放）
@@ -427,7 +427,7 @@ public class OAuth2Controller {
     }
 
     // 8. 返回标准 OAuth2 响应（RFC 6749 §5.1）
-    return BaseResponse.success(
+    return YdszResponse.success(
         Map.of(
             "access_token",
             newAccessToken,
@@ -452,7 +452,7 @@ public class OAuth2Controller {
    * @param refreshToken 刷新令牌
    * @return 标准 OAuth2 token 响应
    */
-  private BaseResponse<Map<String, Object>> refreshTokenGrant(
+  private YdszResponse<Map<String, Object>> refreshTokenGrant(
       String clientId, String clientSecret, String refreshToken) {
 
     // 1. 客户端认证（RFC 6749 §6：refresh_token 流程强制 confidential 客户端认证）
@@ -483,7 +483,7 @@ public class OAuth2Controller {
     log.info("OAuth2 refresh token rotated: clientId={}, userId={}", clientId, userInfo.getUserId());
 
     // P1-3: refresh 流程返回客户端注册范围内可授予的 scope
-    return BaseResponse.success(
+    return YdszResponse.success(
         Map.of(
             "access_token",
             newAccessToken,
@@ -548,7 +548,7 @@ public class OAuth2Controller {
   @RateLimit(resource = "userinfo.oauth2.revoke", threshold = 20)
   @PostMapping("/revoke")
   @Operation(summary = "撤销 Token", description = "RFC 7009：将 access_token / refresh_token 加入黑名单立即失效")
-  public BaseResponse<Void> revoke(
+  public YdszResponse<Void> revoke(
       @RequestParam String token,
       @RequestParam(required = false) String tokenTypeHint) {
     if (token == null || token.isBlank()) {
@@ -556,7 +556,7 @@ public class OAuth2Controller {
     }
     tokenBlacklistService.addToBlacklist(token);
     log.info("OAuth2 token revoked: typeHint={}", tokenTypeHint);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -572,7 +572,7 @@ public class OAuth2Controller {
   @RateLimit(resource = "userinfo.oauth2.introspect", threshold = 100)
   @PostMapping("/introspect")
   @Operation(summary = "校验 Token 元数据", description = "RFC 7662：资源服务器校验 access_token 有效性")
-  public BaseResponse<Map<String, Object>> introspect(
+  public YdszResponse<Map<String, Object>> introspect(
       @RequestParam String token,
       @RequestParam String clientId,
       @RequestParam(required = false) String clientSecret) {
@@ -590,7 +590,7 @@ public class OAuth2Controller {
       result.put("username", userInfo.getUsername());
       result.put("tenantId", userInfo.getTenantId());
     }
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -604,7 +604,7 @@ public class OAuth2Controller {
   @RateLimit(resource = "userinfo.oauth2.userinfo", threshold = 100)
   @GetMapping("/userinfo")
   @Operation(summary = "当前用户信息", description = "OIDC userinfo：携带 access_token 获取用户身份")
-  public BaseResponse<Map<String, Object>> userinfo(
+  public YdszResponse<Map<String, Object>> userinfo(
       @RequestHeader(HeaderConstants.AUTHORIZATION) String authorization) {
 
     if (authorization == null || !authorization.startsWith("Bearer ")) {
@@ -615,7 +615,7 @@ public class OAuth2Controller {
     if (userInfo == null || !tokenService.validateAccessToken(accessToken)) {
       throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         Map.of(
             "sub", userInfo.getUserId(),
             "preferred_username", userInfo.getUsername(),

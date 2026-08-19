@@ -17,7 +17,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -251,7 +251,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
   /**
    * 写入 401 未授权响应。
    *
-   * <p>返回 JSON 格式的 {@link BaseResponse} 错误响应，不暴露具体校验失败原因。
+   * <p>返回 JSON 格式的 {@link YdszResponse} 错误响应，不暴露具体校验失败原因。
    *
    * @param response     HTTP 响应
    * @param exceptionCode 错误码枚举
@@ -260,8 +260,8 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
       UserInfoExceptionCode exceptionCode) {
     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     response.setContentType("application/json;charset=UTF-8");
-    BaseResponse<Void> body =
-        BaseResponse.error(exceptionCode.getCode(), exceptionCode.getMsg());
+    YdszResponse<Void> body =
+        YdszResponse.error(exceptionCode.getCode(), exceptionCode.getMsg());
     try {
       response.getWriter().write(YdszJson.toJson(body));
     } catch (IOException e) {

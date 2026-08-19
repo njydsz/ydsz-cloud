@@ -23,7 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.excel.spring.ExcelWebSupport;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -100,12 +100,12 @@ public class ConfigController {
    */
   @Operation(summary = "游标分页查询")
   @GetMapping("/cursor")
-  public BaseResponse<CursorPageResponse<ConfigVO>> pageByCursor(
+  public YdszResponse<CursorPageResponse<ConfigVO>> pageByCursor(
       @RequestParam(required = false) String configGroup,
       @RequestParam(required = false) String configKey,
       @RequestParam(defaultValue = "20") int pageSize,
       @RequestParam(required = false) String cursor) {
-    return BaseResponse.success(configService.pageByCursor(configGroup, configKey, pageSize, cursor));
+    return YdszResponse.success(configService.pageByCursor(configGroup, configKey, pageSize, cursor));
   }
 
   /**
@@ -116,8 +116,8 @@ public class ConfigController {
    */
   @Operation(summary = "按 ID 查询")
   @GetMapping("/{id}")
-  public BaseResponse<ConfigVO> getById(@PathVariable String id) {
-    return BaseResponse.success(configService.getById(id));
+  public YdszResponse<ConfigVO> getById(@PathVariable String id) {
+    return YdszResponse.success(configService.getById(id));
   }
 
   /**
@@ -140,8 +140,8 @@ public class ConfigController {
   @RateLimit(resource = "system.config.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:config:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PostMapping
-  public BaseResponse<String> save(@Valid @RequestBody ConfigVO vo) {
-    return BaseResponse.success(configService.save(vo));
+  public YdszResponse<String> save(@Valid @RequestBody ConfigVO vo) {
+    return YdszResponse.success(configService.save(vo));
   }
 
   /**
@@ -163,8 +163,8 @@ public class ConfigController {
   @RateLimit(resource = "system.config.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:config:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PutMapping
-  public BaseResponse<Boolean> update(@Valid @RequestBody ConfigVO vo) {
-    return BaseResponse.success(configService.updateById(vo));
+  public YdszResponse<Boolean> update(@Valid @RequestBody ConfigVO vo) {
+    return YdszResponse.success(configService.updateById(vo));
   }
 
   /**
@@ -187,8 +187,8 @@ public class ConfigController {
   @RateLimit(resource = "system.config.remove", threshold = 50)
   @Idempotent(key = "'ydsz:system:config:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
   @DeleteMapping("/{id}")
-  public BaseResponse<Boolean> remove(@PathVariable String id) {
-    return BaseResponse.success(configService.removeById(id));
+  public YdszResponse<Boolean> remove(@PathVariable String id) {
+    return YdszResponse.success(configService.removeById(id));
   }
 
   // ============================== 批量操作端点 ==============================
@@ -224,9 +224,9 @@ public class ConfigController {
       key = "'ydsz:system:config:batch:' + #batchDTO.items.hashCode() + ':' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
       ttlSeconds = 30)
   @PostMapping("/batch")
-  public BaseResponse<Map<String, Object>> batchSave(
+  public YdszResponse<Map<String, Object>> batchSave(
       @Valid @RequestBody ConfigBatchDTO batchDTO) {
-    return BaseResponse.success(configBatchService.batchSave(batchDTO.getItems()));
+    return YdszResponse.success(configBatchService.batchSave(batchDTO.getItems()));
   }
 
   // ============================== 业务扩展端点 ==============================
@@ -244,8 +244,8 @@ public class ConfigController {
    */
   @Operation(summary = "按配置键查询配置值")
   @GetMapping("/key/{configKey}")
-  public BaseResponse<String> getByKey(@PathVariable String configKey) {
-    return BaseResponse.success(configService.getConfigValue(configKey));
+  public YdszResponse<String> getByKey(@PathVariable String configKey) {
+    return YdszResponse.success(configService.getConfigValue(configKey));
   }
 
   /**
@@ -260,8 +260,8 @@ public class ConfigController {
    */
   @Operation(summary = "按配置分组批量查询")
   @GetMapping("/group/{configGroup}")
-  public BaseResponse<List<ConfigVO>> getConfigsByGroup(@PathVariable String configGroup) {
-    return BaseResponse.success(configService.getConfigsByGroup(configGroup));
+  public YdszResponse<List<ConfigVO>> getConfigsByGroup(@PathVariable String configGroup) {
+    return YdszResponse.success(configService.getConfigsByGroup(configGroup));
   }
 
   /**
@@ -275,8 +275,8 @@ public class ConfigController {
    */
   @Operation(summary = "查询所有公开配置")
   @GetMapping("/public")
-  public BaseResponse<List<ConfigVO>> listPublicConfigs() {
-    return BaseResponse.success(configService.listPublicConfigs());
+  public YdszResponse<List<ConfigVO>> listPublicConfigs() {
+    return YdszResponse.success(configService.listPublicConfigs());
   }
 
   // ============================== 导入导出端点 ==============================
@@ -332,10 +332,10 @@ public class ConfigController {
   @Operation(summary = "导入配置", description = "从 Excel 文件导入配置")
   @RateLimit(resource = "system.config.import", threshold = 5)
   @PostMapping("/import")
-  public BaseResponse<ImportResult> importConfigs(@RequestParam("file") MultipartFile file)
+  public YdszResponse<ImportResult> importConfigs(@RequestParam("file") MultipartFile file)
       throws IOException {
     if (file == null || file.isEmpty()) {
-      return BaseResponse.success(
+      return YdszResponse.success(
           ImportResult.builder()
               .totalCount(0)
               .successCount(0)
@@ -348,6 +348,6 @@ public class ConfigController {
     // Excel 解析或数据库异常直接抛出，由 common-exception 全局处理器返回错误响应（《云顶编码规范》18.4），
     // 不在 Controller 内吞异常包装为 success。
     ImportResult result = configService.importConfigs(file.getInputStream());
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 }

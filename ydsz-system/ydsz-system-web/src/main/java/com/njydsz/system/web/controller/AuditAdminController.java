@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.core.AuditQueryService;
 import com.njydsz.common.audit.domain.AuditLog;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.web.version.ApiVersion;
 
 /**
@@ -68,7 +68,7 @@ public class AuditAdminController {
    */
   @GetMapping("/logs")
   @Operation(summary = "按时间范围分页查询审计日志", description = "查询指定时间范围内的审计日志，按操作时间倒序排列")
-  public BaseResponse<List<AuditLog>> queryByTimeRange(
+  public YdszResponse<List<AuditLog>> queryByTimeRange(
       @Parameter(description = "开始时间（yyyy-MM-dd HH:mm:ss）")
           @RequestParam
           @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -93,7 +93,7 @@ public class AuditAdminController {
    */
   @GetMapping("/operator/{operatorId}")
   @Operation(summary = "按操作人分页查询审计日志", description = "查询指定操作人的审计轨迹")
-  public BaseResponse<List<AuditLog>> queryByOperator(
+  public YdszResponse<List<AuditLog>> queryByOperator(
       @Parameter(description = "操作人 ID") @PathVariable String operatorId,
       @Parameter(description = "页码（默认 1）") @RequestParam(defaultValue = "1") int page,
       @Parameter(description = "每页大小（默认 20）") @RequestParam(defaultValue = "20") int size) {
@@ -111,7 +111,7 @@ public class AuditAdminController {
    */
   @GetMapping("/action/{action}")
   @Operation(summary = "按操作行为分页查询审计日志", description = "按操作行为类型查询审计日志（1=新增, 2=修改, 3=删除, 4=查询, 5=导出）")
-  public BaseResponse<List<AuditLog>> queryByAction(
+  public YdszResponse<List<AuditLog>> queryByAction(
       @Parameter(description = "操作行为编码") @PathVariable Integer action,
       @Parameter(description = "页码（默认 1）") @RequestParam(defaultValue = "1") int page,
       @Parameter(description = "每页大小（默认 20）") @RequestParam(defaultValue = "20") int size) {
@@ -129,10 +129,10 @@ public class AuditAdminController {
    */
   @GetMapping("/trace/{traceId}")
   @Operation(summary = "按链路追踪ID查询审计日志", description = "通过 traceId 追踪完整请求链路中的所有操作记录")
-  public BaseResponse<List<AuditLog>> queryByTraceId(
+  public YdszResponse<List<AuditLog>> queryByTraceId(
       @Parameter(description = "链路追踪 ID") @PathVariable String traceId) {
     List<AuditLog> logs = auditQueryService.queryByTraceId(traceId);
-    return BaseResponse.success(logs);
+    return YdszResponse.success(logs);
   }
 
   /**
@@ -143,13 +143,13 @@ public class AuditAdminController {
    */
   @GetMapping("/{id}")
   @Operation(summary = "查询单条审计日志详情", description = "根据审计记录 ID 查询完整的审计日志信息")
-  public BaseResponse<AuditLog> getById(
+  public YdszResponse<AuditLog> getById(
       @Parameter(description = "审计记录 ID") @PathVariable String id) {
     AuditLog log = auditQueryService.getById(id);
     if (log == null) {
-      return BaseResponse.error(BaseResultCode.NOT_FOUND.getCode(), "审计日志不存在");
+      return YdszResponse.error(YdszResultCode.NOT_FOUND.getCode(), "审计日志不存在");
     }
-    return BaseResponse.success(log);
+    return YdszResponse.success(log);
   }
 
   /**

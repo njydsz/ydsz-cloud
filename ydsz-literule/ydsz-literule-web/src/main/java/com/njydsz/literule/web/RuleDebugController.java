@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.literule.server.debug.Breakpoint;
 import com.njydsz.literule.server.debug.BreakpointHit;
 import com.njydsz.literule.server.debug.DebugCommand;
@@ -61,20 +61,20 @@ public class RuleDebugController {
   }
 
   /** 未启用调试时的统一错误响应 */
-  private BaseResponse<Object> debugDisabled() {
-    return BaseResponse.error("规则断点调试未启用（ydsz.literule.debug.enabled=false）");
+  private YdszResponse<Object> debugDisabled() {
+    return YdszResponse.error("规则断点调试未启用（ydsz.literule.debug.enabled=false）");
   }
 
   // ==================== 断点管理 ====================
 
   /** 查询全部断点 */
   @GetMapping("/breakpoints")
-  public BaseResponse<Object> listBreakpoints() {
+  public YdszResponse<Object> listBreakpoints() {
     RuleDebugger debugger = debugger();
     if (debugger == null) {
       return debugDisabled();
     }
-    return BaseResponse.success(debugger.listBreakpoints());
+    return YdszResponse.success(debugger.listBreakpoints());
   }
 
   /**
@@ -101,14 +101,14 @@ public class RuleDebugController {
       action = AuditAction.CREATE,
       content = "'addBreakpoint'")
   @PostMapping("/breakpoints")
-  public BaseResponse<Object> addBreakpoint(@RequestBody Map<String, String> request) {
+  public YdszResponse<Object> addBreakpoint(@RequestBody Map<String, String> request) {
     RuleDebugger debugger = debugger();
     if (debugger == null) {
       return debugDisabled();
     }
     String ruleCode = request.get("ruleCode");
     if (ruleCode == null || ruleCode.isBlank()) {
-      return BaseResponse.error("ruleCode 不能为空");
+      return YdszResponse.error("ruleCode 不能为空");
     }
     String nodeType = request.get("nodeType");
     String expression = request.get("expression");
@@ -119,18 +119,18 @@ public class RuleDebugController {
     result.put("ruleCode", ruleCode);
     result.put("nodeType", nodeType);
     result.put("condition", condition);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /** 删除断点 */
   @DeleteMapping("/breakpoints/{breakpointId}")
-  public BaseResponse<Object> removeBreakpoint(@PathVariable String breakpointId) {
+  public YdszResponse<Object> removeBreakpoint(@PathVariable String breakpointId) {
     RuleDebugger debugger = debugger();
     if (debugger == null) {
       return debugDisabled();
     }
     debugger.removeBreakpoint(breakpointId);
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   // ==================== 调试会话 ====================
@@ -149,32 +149,32 @@ public class RuleDebugController {
       action = AuditAction.CREATE,
       content = "'createSession'")
   @PostMapping("/sessions")
-  public BaseResponse<Object> createSession(@RequestBody Map<String, String> request) {
+  public YdszResponse<Object> createSession(@RequestBody Map<String, String> request) {
     RuleDebugger debugger = debugger();
     if (debugger == null) {
       return debugDisabled();
     }
     String ruleCode = request.get("ruleCode");
     if (ruleCode == null || ruleCode.isBlank()) {
-      return BaseResponse.error("ruleCode 不能为空");
+      return YdszResponse.error("ruleCode 不能为空");
     }
     String sessionId = debugger.createSession(ruleCode);
     Map<String, Object> result = new LinkedHashMap<>();
     result.put("sessionId", sessionId);
     result.put("ruleCode", ruleCode);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /** 查询会话详情（含历史命中） */
   @GetMapping("/sessions/{sessionId}")
-  public BaseResponse<Object> getSession(@PathVariable String sessionId) {
+  public YdszResponse<Object> getSession(@PathVariable String sessionId) {
     RuleDebugger debugger = debugger();
     if (debugger == null) {
       return debugDisabled();
     }
     DebugSession session = debugger.getSession(sessionId);
     if (session == null) {
-      return BaseResponse.error("会话不存在: " + sessionId);
+      return YdszResponse.error("会话不存在: " + sessionId);
     }
     Map<String, Object> result = new LinkedHashMap<>();
     result.put("sessionId", session.getSessionId());
@@ -182,7 +182,7 @@ public class RuleDebugController {
     result.put("state", session.getState().name());
     result.put("hitCount", session.getHits().size());
     result.put("hits", toHitViews(session.getHits()));
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -200,7 +200,7 @@ public class RuleDebugController {
       action = AuditAction.CREATE,
       content = "'submitCommand'")
   @PostMapping("/sessions/{sessionId}/command")
-  public BaseResponse<Object> submitCommand(
+  public YdszResponse<Object> submitCommand(
       @PathVariable String sessionId, @RequestBody Map<String, String> request) {
     RuleDebugger debugger = debugger();
     if (debugger == null) {
@@ -208,41 +208,41 @@ public class RuleDebugController {
     }
     String commandStr = request.get("command");
     if (commandStr == null || commandStr.isBlank()) {
-      return BaseResponse.error("command 不能为空");
+      return YdszResponse.error("command 不能为空");
     }
     DebugCommand command;
     try {
       command = DebugCommand.valueOf(commandStr.toUpperCase());
     } catch (IllegalArgumentException e) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           "非法的调试指令: " + commandStr + "，合法值: RESUME / STEP_OVER / STEP_INTO / STEP_OUT / TERMINATE");
     }
     boolean ok = debugger.submitCommand(sessionId, command);
     if (!ok) {
-      return BaseResponse.error("会话不存在: " + sessionId);
+      return YdszResponse.error("会话不存在: " + sessionId);
     }
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /** 终止调试会话 */
   @DeleteMapping("/sessions/{sessionId}")
-  public BaseResponse<Object> terminateSession(@PathVariable String sessionId) {
+  public YdszResponse<Object> terminateSession(@PathVariable String sessionId) {
     RuleDebugger debugger = debugger();
     if (debugger == null) {
       return debugDisabled();
     }
     debugger.terminateSession(sessionId);
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /** 查询全部活跃会话 */
   @GetMapping("/sessions")
-  public BaseResponse<Object> listSessions() {
+  public YdszResponse<Object> listSessions() {
     RuleDebugger debugger = debugger();
     if (debugger == null) {
       return debugDisabled();
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         debugger.listSessions().stream()
             .map(
                 s -> {

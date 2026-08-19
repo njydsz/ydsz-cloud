@@ -13,7 +13,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 
 /**
@@ -130,12 +130,12 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
           // 判断是否为超长表达式异常
           if (e.getMessage() != null && e.getMessage().contains("too long")) {
             throw SysException.builder()
-                .resultCode(BaseResultCode.BAD_REQUEST)
+                .resultCode(YdszResultCode.BAD_REQUEST)
                 .message("workflow.expr.too_long")
                 .build();
           }
           throw SysException.builder()
-              .resultCode(BaseResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
               .message("workflow.expr.syntax_error")
               .params(e.getMessage())
               .build();
@@ -147,7 +147,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
       throw e;
     } catch (Exception e) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.INTERNAL_ERROR)
+          .resultCode(YdszResultCode.INTERNAL_ERROR)
           .message("workflow.expr.eval_failed")
           .params(e.getMessage())
           .build();

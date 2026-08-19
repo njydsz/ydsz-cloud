@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
@@ -49,7 +49,7 @@ public class PreferenceServiceImpl implements PreferenceService {
         || !StringUtils.hasText(dto.getUserId())
         || !StringUtils.hasText(dto.getChannel())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("用户 ID 与通道不能为空")
           .build();
     }
@@ -170,7 +170,7 @@ public class PreferenceServiceImpl implements PreferenceService {
   public void delete(String id) {
     if (!StringUtils.hasText(id)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("偏好 ID 不能为空")
           .build();
     }

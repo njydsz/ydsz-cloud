@@ -10,7 +10,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
@@ -108,8 +108,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
    *
    * @param instanceId 流程实例 ID，不可为 {@code null}
    * @return 推进后的实例视图，含当前待办任务列表
-   * @throws SysException 实例不存在时抛出，错误码 {@link BaseResultCode#NOT_FOUND}； 流程定义缺少开始节点时抛出，错误码 {@link
-   *     BaseResultCode#INTERNAL_ERROR}
+   * @throws SysException 实例不存在时抛出，错误码 {@link YdszResultCode#NOT_FOUND}； 流程定义缺少开始节点时抛出，错误码 {@link
+   *     YdszResultCode#INTERNAL_ERROR}
    */
   @Override
   @Transactional
@@ -122,7 +122,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     FlowInstanceDO instance = instanceService.getById(instanceId);
     if (instance == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_67a10717")
           .params(instanceId)
           .build();
@@ -130,7 +130,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     FlowNodeDO startNode = flowDefinitionCacheService.getStartNode(instance.getDefinitionId());
     if (startNode == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.INTERNAL_ERROR)
+          .resultCode(YdszResultCode.INTERNAL_ERROR)
           .key("error.workflow.msg_560bf118")
           .params(instance.getDefinitionId())
           .build();
@@ -200,8 +200,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
    * @param targetNodeCode 回退目标节点编码；仅 REJECT 生效，为 {@code null} 时自动推导
    * @param variables 流程变量，用于条件表达式求值；可为 {@code null}，等价于无变量
    * @return 下一批节点列表；流程已无下游或 join 仍在等待时返回<b>空列表</b>而非 {@code null}
-   * @throws SysException 当前节点不存在或回退目标不存在时抛出，错误码 {@link BaseResultCode#NOT_FOUND}； REJECT
-   *     无法推导出回退目标时抛出，错误码 {@link BaseResultCode#BAD_REQUEST}
+   * @throws SysException 当前节点不存在或回退目标不存在时抛出，错误码 {@link YdszResultCode#NOT_FOUND}； REJECT
+   *     无法推导出回退目标时抛出，错误码 {@link YdszResultCode#BAD_REQUEST}
    */
   @Override
   @YdszDistributedLock(
@@ -220,7 +220,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             currentInstance.getDefinitionId(), currentNodeCode);
     if (currentNode == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_d84d389b")
           .params(currentNodeCode)
           .build();
@@ -249,7 +249,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             : resolveRejectTarget(currentInstance.getDefinitionId(), currentNodeCode);
     if (rejectTarget == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.reject.target.not.found")
           .build();
     }
@@ -257,7 +257,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         flowDefinitionCacheService.getNodeByCode(currentInstance.getDefinitionId(), rejectTarget);
     if (target == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.node.not.found")
           .params(rejectTarget)
           .build();
@@ -437,7 +437,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
           flowDefinitionCacheService.getNodeByCode(currentInstance.getDefinitionId(), nodeCode);
       if (target == null) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.NOT_FOUND)
+            .resultCode(YdszResultCode.NOT_FOUND)
             .key("error.workflow.node.not.found")
             .params(nodeCode)
             .build();
@@ -449,7 +449,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     }
     if (targets.isEmpty()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.reject.target.not.found")
           .build();
     }

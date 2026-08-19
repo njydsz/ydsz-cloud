@@ -23,8 +23,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RuleDefinition;
@@ -95,7 +95,7 @@ public class RuleLifecycleController {
   @RateLimit(resource = "literule.rule_lifecycle.changeStatus", threshold = 50)
   @PutMapping("/{ruleCode}/status")
   @AuthApiPermission(apiCodes = "execution:rule:status")
-  public BaseResponse<RuleDefinitionVO> changeStatus(
+  public YdszResponse<RuleDefinitionVO> changeStatus(
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleStatusChangeDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -103,21 +103,21 @@ public class RuleLifecycleController {
     String comment = dto.getComment() == null ? "" : dto.getComment();
     RuleDefinition def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
-      return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
     }
 
     RuleStatus current = parseStatusSafely(def.getStatus());
     if (current == null) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_INVALID, "规则当前状态非法: " + def.getStatus());
     }
     RuleStatus target = parseStatusSafely(targetStatus);
     if (target == null) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_INVALID, "目标状态非法: " + targetStatus);
     }
     if (!current.canTransitionTo(target)) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL,
           String.format(
               "不允许从 %s(%s) 变更到 %s(%s)",
@@ -129,7 +129,7 @@ public class RuleLifecycleController {
       def.setReviewedAt(LocalDateTime.now());
       def.setReviewComment(comment);
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.entityToVO(
             ruleAdminService.save(
                 def, operator, "状态变更: " + current.getDesc() + " -> " + target.getDesc())));
@@ -155,22 +155,22 @@ public class RuleLifecycleController {
   @RateLimit(resource = "literule.rule_lifecycle.approve", threshold = 50)
   @PostMapping("/{ruleCode}/approve")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
-  public BaseResponse<RuleDefinitionVO> approve(
+  public YdszResponse<RuleDefinitionVO> approve(
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleApproveDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleDefinition def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
-      return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
     }
 
     RuleStatus current = parseStatusSafely(def.getStatus());
     if (current == null) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_INVALID, "规则状态非法: " + def.getStatus());
     }
     if (!current.canTransitionTo(RuleStatus.PUBLISHED)) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_INVALID,
           "当前状态 " + current.getDesc() + " 不允许审批通过，仅 DRAFT/REVIEW 可审批");
     }
@@ -189,7 +189,7 @@ public class RuleLifecycleController {
         String.format(
             "[审批通过] %s -> PUBLISHED, 审批人=%s, 意见=%s",
             current.getDesc(), operator, comment.isEmpty() ? "无" : comment);
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.entityToVO(ruleAdminService.save(def, operator, changeDesc)));
   }
 
@@ -212,22 +212,22 @@ public class RuleLifecycleController {
   @RateLimit(resource = "literule.rule_lifecycle.reject", threshold = 50)
   @PostMapping("/{ruleCode}/reject")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
-  public BaseResponse<RuleDefinitionVO> reject(
+  public YdszResponse<RuleDefinitionVO> reject(
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleRejectDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleDefinition def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
-      return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
     }
 
     RuleStatus current = parseStatusSafely(def.getStatus());
     if (current == null) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_INVALID, "规则状态非法: " + def.getStatus());
     }
     if (!current.canTransitionTo(RuleStatus.ARCHIVED)) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_INVALID,
           "当前状态 " + current.getDesc() + " 不允许驳回，仅 DRAFT/REVIEW/PUBLISHED 可驳回");
     }
@@ -244,7 +244,7 @@ public class RuleLifecycleController {
 
     String changeDesc =
         String.format("[审批驳回] %s -> ARCHIVED, 审批人=%s, 理由=%s", current.getDesc(), operator, reason);
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleConverter.INSTANT.entityToVO(ruleAdminService.save(def, operator, changeDesc)));
   }
 
@@ -287,16 +287,16 @@ public class RuleLifecycleController {
   @RateLimit(resource = "literule.rule_lifecycle.submitReview", threshold = 50)
   @PostMapping("/{ruleCode}/submit-review")
   @AuthApiPermission(apiCodes = "execution:rule:save")
-  public BaseResponse<ApprovalRecordVO> submitReview(
+  public YdszResponse<ApprovalRecordVO> submitReview(
       @PathVariable String ruleCode,
       @Valid @RequestBody(required = false) RuleSubmitReviewDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
     if (svc == null) {
-      return BaseResponse.error(BaseResultCode.FORBIDDEN, "多级审批流服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "多级审批流服务未启用");
     }
     String flowCode = dto == null ? null : dto.getFlowCode();
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleWebConverter.INSTANT.entityToVO(svc.submitForReview(ruleCode, flowCode, operator)));
   }
 
@@ -319,16 +319,16 @@ public class RuleLifecycleController {
   @RateLimit(resource = "literule.rule_lifecycle.approveLevel", threshold = 50)
   @PostMapping("/{ruleCode}/approve-level")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
-  public BaseResponse<ApprovalRecordVO> approveLevel(
+  public YdszResponse<ApprovalRecordVO> approveLevel(
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleApproveDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
     if (svc == null) {
-      return BaseResponse.error(BaseResultCode.FORBIDDEN, "多级审批流服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "多级审批流服务未启用");
     }
     String comment = dto.getComment() == null ? "" : dto.getComment();
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleWebConverter.INSTANT.entityToVO(svc.approve(ruleCode, operator, comment)));
   }
 
@@ -351,15 +351,15 @@ public class RuleLifecycleController {
   @RateLimit(resource = "literule.rule_lifecycle.rejectLevel", threshold = 50)
   @PostMapping("/{ruleCode}/reject-level")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
-  public BaseResponse<ApprovalRecordVO> rejectLevel(
+  public YdszResponse<ApprovalRecordVO> rejectLevel(
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleRejectDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
     if (svc == null) {
-      return BaseResponse.error(BaseResultCode.FORBIDDEN, "多级审批流服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "多级审批流服务未启用");
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleWebConverter.INSTANT.entityToVO(svc.reject(ruleCode, operator, dto.getReason())));
   }
 
@@ -382,16 +382,16 @@ public class RuleLifecycleController {
   @RateLimit(resource = "literule.rule_lifecycle.delegate", threshold = 50)
   @PostMapping("/{ruleCode}/delegate")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
-  public BaseResponse<ApprovalRecordVO> delegate(
+  public YdszResponse<ApprovalRecordVO> delegate(
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleDelegateDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
     if (svc == null) {
-      return BaseResponse.error(BaseResultCode.FORBIDDEN, "多级审批流服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "多级审批流服务未启用");
     }
     String comment = dto.getComment() == null ? "" : dto.getComment();
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleWebConverter.INSTANT.entityToVO(
             svc.delegate(ruleCode, operator, dto.getDelegatedTo(), comment)));
   }
@@ -403,12 +403,12 @@ public class RuleLifecycleController {
    * @return 审批记录；无审批记录时返回 null
    */
   @GetMapping("/{ruleCode}/approval-status")
-  public BaseResponse<ApprovalRecordVO> approvalStatus(@PathVariable String ruleCode) {
+  public YdszResponse<ApprovalRecordVO> approvalStatus(@PathVariable String ruleCode) {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
     if (svc == null) {
-      return BaseResponse.success((ApprovalRecordVO) null);
+      return YdszResponse.success((ApprovalRecordVO) null);
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleWebConverter.INSTANT.entityToVO(svc.getApprovalStatus(ruleCode)));
   }
 
@@ -419,12 +419,12 @@ public class RuleLifecycleController {
    * @return 待审批记录列表
    */
   @GetMapping("/pending-approvals")
-  public BaseResponse<List<ApprovalRecordVO>> pendingApprovals(@RequestParam String approver) {
+  public YdszResponse<List<ApprovalRecordVO>> pendingApprovals(@RequestParam String approver) {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
     if (svc == null) {
-      return BaseResponse.success(List.of());
+      return YdszResponse.success(List.of());
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         svc.listPendingApprovals(approver).stream()
             .map(LiteruleWebConverter.INSTANT::entityToVO)
             .toList());
@@ -448,14 +448,14 @@ public class RuleLifecycleController {
   @RateLimit(resource = "literule.rule_lifecycle.cancelReview", threshold = 50)
   @PostMapping("/{ruleCode}/cancel-review")
   @AuthApiPermission(apiCodes = "execution:rule:save")
-  public BaseResponse<ApprovalRecordVO> cancelReview(
+  public YdszResponse<ApprovalRecordVO> cancelReview(
       @PathVariable String ruleCode,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
     if (svc == null) {
-      return BaseResponse.error(BaseResultCode.FORBIDDEN, "多级审批流服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "多级审批流服务未启用");
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         LiteruleWebConverter.INSTANT.entityToVO(svc.cancelReview(ruleCode, operator)));
   }
 
@@ -465,12 +465,12 @@ public class RuleLifecycleController {
    * @return 审批流配置列表
    */
   @GetMapping("/approval-flows")
-  public BaseResponse<List<ApprovalFlowVO>> approvalFlows() {
+  public YdszResponse<List<ApprovalFlowVO>> approvalFlows() {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
     if (svc == null) {
-      return BaseResponse.success(List.of());
+      return YdszResponse.success(List.of());
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         svc.listFlows().stream().map(LiteruleWebConverter.INSTANT::entityToVO).toList());
   }
 }

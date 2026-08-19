@@ -23,7 +23,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -85,8 +85,8 @@ public class AgentDefinitionController {
       action = AuditAction.QUERY,
       content = "'list'")
   @GetMapping
-  public BaseResponse<List<AgentDefinitionVO>> list() {
-    return BaseResponse.success(agentDefinitionService.listActive());
+  public YdszResponse<List<AgentDefinitionVO>> list() {
+    return YdszResponse.success(agentDefinitionService.listActive());
   }
 
   /**
@@ -102,12 +102,12 @@ public class AgentDefinitionController {
       action = AuditAction.QUERY,
       content = "'getById: ' + #id")
   @GetMapping("/{id}")
-  public BaseResponse<AgentDefinitionVO> getById(@PathVariable String id) {
+  public YdszResponse<AgentDefinitionVO> getById(@PathVariable String id) {
     AgentDefinitionVO vo = agentDefinitionService.getById(id);
     if (vo == null) {
-      return BaseResponse.error(AgentExceptionCode.AGENT_NOT_FOUND, "Agent not found: " + id);
+      return YdszResponse.error(AgentExceptionCode.AGENT_NOT_FOUND, "Agent not found: " + id);
     }
-    return BaseResponse.success(vo);
+    return YdszResponse.success(vo);
   }
 
   /**
@@ -126,12 +126,12 @@ public class AgentDefinitionController {
       action = AuditAction.QUERY,
       content = "'getByCode: ' + #code")
   @GetMapping("/code/{code}")
-  public BaseResponse<AgentDefinitionVO> getByCode(@PathVariable String code) {
+  public YdszResponse<AgentDefinitionVO> getByCode(@PathVariable String code) {
     AgentDefinitionVO vo = agentDefinitionService.getByCode(code);
     if (vo == null) {
-      return BaseResponse.error(AgentExceptionCode.AGENT_NOT_FOUND, "Agent not found: " + code);
+      return YdszResponse.error(AgentExceptionCode.AGENT_NOT_FOUND, "Agent not found: " + code);
     }
-    return BaseResponse.success(vo);
+    return YdszResponse.success(vo);
   }
 
   /**
@@ -152,7 +152,7 @@ public class AgentDefinitionController {
   @Idempotent(key = "ydsz:agent:AgentDefinitionController:create:lock", ttlSeconds = 5)
   @RateLimit(resource = "agent.agentdefinition.create", threshold = 50)
   @PostMapping
-  public BaseResponse<AgentDefinitionVO> create(@Valid @RequestBody AgentDefinitionPostDTO dto) {
+  public YdszResponse<AgentDefinitionVO> create(@Valid @RequestBody AgentDefinitionPostDTO dto) {
     AgentDefinitionVO vo = new AgentDefinitionVO();
     vo.setAgentCode(dto.getAgentCode());
     vo.setAgentName(dto.getAgentName());
@@ -163,7 +163,7 @@ public class AgentDefinitionController {
     vo.setToolNames(dto.getToolNames());
     vo.setTemperature(dto.getTemperature());
     vo.setMaxTokens(dto.getMaxTokens());
-    return BaseResponse.success(agentDefinitionService.create(vo));
+    return YdszResponse.success(agentDefinitionService.create(vo));
   }
 
   /**
@@ -183,7 +183,7 @@ public class AgentDefinitionController {
   @RateLimit(resource = "agent.agentdefinition.update", threshold = 50)
   @Idempotent(key = "ydsz:agent:AgentDefinitionController:update:lock", ttlSeconds = 5)
   @PutMapping
-  public BaseResponse<AgentDefinitionVO> update(@Valid @RequestBody AgentDefinitionPutDTO dto) {
+  public YdszResponse<AgentDefinitionVO> update(@Valid @RequestBody AgentDefinitionPutDTO dto) {
     AgentDefinitionVO vo = new AgentDefinitionVO();
     vo.setId(dto.getId());
     vo.setAgentCode(dto.getAgentCode());
@@ -195,7 +195,7 @@ public class AgentDefinitionController {
     vo.setToolNames(dto.getToolNames());
     vo.setTemperature(dto.getTemperature());
     vo.setMaxTokens(dto.getMaxTokens());
-    return BaseResponse.success(agentDefinitionService.update(vo));
+    return YdszResponse.success(agentDefinitionService.update(vo));
   }
 
   /**
@@ -216,7 +216,7 @@ public class AgentDefinitionController {
   @Idempotent(key = "ydsz:agent:AgentDefinitionController:delete:lock", ttlSeconds = 5)
   @RateLimit(resource = "agent.agentdefinition.delete", threshold = 50)
   @DeleteMapping("/{id}")
-  public BaseResponse<Boolean> delete(@PathVariable String id) {
-    return BaseResponse.success(agentDefinitionService.removeById(id));
+  public YdszResponse<Boolean> delete(@PathVariable String id) {
+    return YdszResponse.success(agentDefinitionService.removeById(id));
   }
 }

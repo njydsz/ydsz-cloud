@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.MenuDTO;
@@ -87,8 +87,8 @@ public class MenuController {
    */
   @GetMapping("/list")
   @Operation(summary = "查询全部菜单列表")
-  public BaseResponse<List<MenuVO>> list() {
-    return BaseResponse.success(service.list());
+  public YdszResponse<List<MenuVO>> list() {
+    return YdszResponse.success(service.list());
   }
 
   /**
@@ -102,8 +102,8 @@ public class MenuController {
    */
   @GetMapping("/tree")
   @Operation(summary = "查询菜单树形结构")
-  public BaseResponse<List<MenuTreeVO>> tree() {
-    return BaseResponse.success(service.tree());
+  public YdszResponse<List<MenuTreeVO>> tree() {
+    return YdszResponse.success(service.tree());
   }
 
   /**
@@ -114,8 +114,8 @@ public class MenuController {
    */
   @GetMapping("/{id}")
   @Operation(summary = "根据 ID 查询菜单")
-  public BaseResponse<MenuVO> getById(@PathVariable String id) {
-    return BaseResponse.success(service.getById(id));
+  public YdszResponse<MenuVO> getById(@PathVariable String id) {
+    return YdszResponse.success(service.getById(id));
   }
 
   /**
@@ -139,8 +139,8 @@ public class MenuController {
   @RateLimit(resource = "userinfo.MenuDO.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建菜单")
-  public BaseResponse<String> create(@Valid @RequestBody MenuDTO dto) {
-    return BaseResponse.success(service.create(dto));
+  public YdszResponse<String> create(@Valid @RequestBody MenuDTO dto) {
+    return YdszResponse.success(service.create(dto));
   }
 
   /**
@@ -164,8 +164,8 @@ public class MenuController {
   @RateLimit(resource = "userinfo.MenuDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新菜单")
-  public BaseResponse<Boolean> update(@Valid @RequestBody MenuDTO dto) {
-    return BaseResponse.success(service.update(dto));
+  public YdszResponse<Boolean> update(@Valid @RequestBody MenuDTO dto) {
+    return YdszResponse.success(service.update(dto));
   }
 
   /**
@@ -194,7 +194,7 @@ public class MenuController {
   @Idempotent(key = "ydsz:userinfo:MenuController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除菜单")
-  public BaseResponse<Boolean> remove(@PathVariable String id) {
-    return BaseResponse.success(service.removeById(id));
+  public YdszResponse<Boolean> remove(@PathVariable String id) {
+    return YdszResponse.success(service.removeById(id));
   }
 }

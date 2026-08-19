@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.base.api.ApiVersion;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
@@ -96,9 +96,9 @@ public class QuotaController {
   @GetMapping("/info")
   @Operation(summary = "查询配额使用情况")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_QUOTA_VIEW)
-  public BaseResponse<StorageQuotaVO> getQuota(
+  public YdszResponse<StorageQuotaVO> getQuota(
       @RequestParam(defaultValue = "user") String scopeType, @RequestParam String scopeId) {
-    return BaseResponse.success(quotaApplicationService.getQuotaInfo(scopeType, scopeId));
+    return YdszResponse.success(quotaApplicationService.getQuotaInfo(scopeType, scopeId));
   }
 
   /**
@@ -114,7 +114,7 @@ public class QuotaController {
   @PostMapping("/set")
   @Operation(summary = "设置配额（管理员）")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_QUOTA_SET)
-  public BaseResponse<StorageQuotaVO> setQuota(
+  public YdszResponse<StorageQuotaVO> setQuota(
       @Valid @RequestBody NextwikiDTOs.SetQuotaRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     StorageQuotaVO quota =
@@ -124,6 +124,6 @@ public class QuotaController {
             request.getQuotaLimit(),
             request.getFileCountLimit(),
             userId);
-    return BaseResponse.success(quota);
+    return YdszResponse.success(quota);
   }
 }

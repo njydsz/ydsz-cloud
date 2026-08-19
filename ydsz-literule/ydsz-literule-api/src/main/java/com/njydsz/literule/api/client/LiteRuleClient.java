@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.fallback.LiteRuleClientFallback;
@@ -37,7 +37,7 @@ import com.njydsz.literule.api.fallback.LiteRuleClientFallback;
  * private LiteRuleClient liteRuleClient;
  *
  * public void checkProjectRisk(Map<String, Object> facts) {
- *     BaseResponse<List<RuleResult>> resp = liteRuleClient.dryRun(null, facts);
+ *     YdszResponse<List<RuleResult>> resp = liteRuleClient.dryRun(null, facts);
  *     if (resp.isSuccess() && !resp.getData().isEmpty()) {
  *         // 处理触发的规则
  *     }
@@ -63,7 +63,7 @@ public interface LiteRuleClient {
    * @return 触发的规则结果列表（按严重度倒序），未触发任何规则时返回空列表
    */
   @PostMapping(FeignClientConstants.LITERULE_PATH_DRY_RUN)
-  BaseResponse<List<RuleResult>> dryRun(
+  YdszResponse<List<RuleResult>> dryRun(
       @RequestParam(value = "ruleCode", required = false) String ruleCode,
       @RequestBody Map<String, Object> facts);
 
@@ -87,7 +87,7 @@ public interface LiteRuleClient {
    * @since 1.0.0
    */
   @PostMapping(FeignClientConstants.LITERULE_PATH_EVALUATE)
-  BaseResponse<List<RuleResult>> evaluate(
+  YdszResponse<List<RuleResult>> evaluate(
       @RequestParam(value = "ruleCode", required = false) String ruleCode,
       @RequestParam(value = "scenario", required = false) String scenario,
       @RequestBody Map<String, Object> facts);

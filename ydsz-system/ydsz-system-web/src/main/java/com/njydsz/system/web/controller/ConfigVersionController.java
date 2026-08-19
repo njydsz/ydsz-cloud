@@ -19,7 +19,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.vo.EntityVersionVO;
@@ -67,8 +67,8 @@ public class ConfigVersionController {
    */
   @Operation(summary = "按配置键查询版本历史")
   @GetMapping("/{resourceKey}")
-  public BaseResponse<List<EntityVersionVO>> listByResourceKey(@PathVariable String resourceKey) {
-    return BaseResponse.success(
+  public YdszResponse<List<EntityVersionVO>> listByResourceKey(@PathVariable String resourceKey) {
+    return YdszResponse.success(
         entityVersionService.listByResourceTypeAndKey(
             EntityVersionService.RESOURCE_TYPE_CONFIG, resourceKey));
   }
@@ -105,13 +105,13 @@ public class ConfigVersionController {
       key = "'ydsz:system:ConfigVersionController:rollback:' + #resourceKey + ':' + #targetVersion",
       ttlSeconds = 30)
   @PostMapping("/{resourceKey}/rollback")
-  public BaseResponse<String> rollback(
+  public YdszResponse<String> rollback(
       @Parameter(description = "配置键") @PathVariable @NotBlank String resourceKey,
       @Parameter(description = "目标版本号") @RequestParam @NotBlank String targetVersion,
       @Parameter(description = "操作人 ID")
           @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false)
           String operatorId) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         configService.rollbackTo(resourceKey, targetVersion, operatorId));
   }
 }

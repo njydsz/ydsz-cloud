@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.PostDTO;
@@ -78,8 +78,8 @@ public class PostController {
    */
   @GetMapping("/list")
   @Operation(summary = "查询全部岗位列表")
-  public BaseResponse<List<PostVO>> list() {
-    return BaseResponse.success(service.list());
+  public YdszResponse<List<PostVO>> list() {
+    return YdszResponse.success(service.list());
   }
 
   /**
@@ -90,8 +90,8 @@ public class PostController {
    */
   @GetMapping("/{id}")
   @Operation(summary = "根据 ID 查询岗位")
-  public BaseResponse<PostVO> getById(@PathVariable String id) {
-    return BaseResponse.success(service.getById(id));
+  public YdszResponse<PostVO> getById(@PathVariable String id) {
+    return YdszResponse.success(service.getById(id));
   }
 
   /**
@@ -115,8 +115,8 @@ public class PostController {
   @RateLimit(resource = "userinfo.PostDO.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建岗位")
-  public BaseResponse<String> create(@Valid @RequestBody PostDTO dto) {
-    return BaseResponse.success(service.create(dto));
+  public YdszResponse<String> create(@Valid @RequestBody PostDTO dto) {
+    return YdszResponse.success(service.create(dto));
   }
 
   /**
@@ -140,8 +140,8 @@ public class PostController {
   @RateLimit(resource = "userinfo.PostDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新岗位")
-  public BaseResponse<Boolean> update(@Valid @RequestBody PostDTO dto) {
-    return BaseResponse.success(service.update(dto));
+  public YdszResponse<Boolean> update(@Valid @RequestBody PostDTO dto) {
+    return YdszResponse.success(service.update(dto));
   }
 
   /**
@@ -170,7 +170,7 @@ public class PostController {
   @Idempotent(key = "ydsz:userinfo:PostController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除岗位")
-  public BaseResponse<Boolean> remove(@PathVariable String id) {
-    return BaseResponse.success(service.removeById(id));
+  public YdszResponse<Boolean> remove(@PathVariable String id) {
+    return YdszResponse.success(service.removeById(id));
   }
 }

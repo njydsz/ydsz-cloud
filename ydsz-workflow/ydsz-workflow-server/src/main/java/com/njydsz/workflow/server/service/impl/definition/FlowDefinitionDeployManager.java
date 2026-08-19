@@ -12,7 +12,7 @@ import java.util.zip.ZipInputStream;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.cache.constant.CacheConstants;
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
@@ -152,7 +152,7 @@ public class FlowDefinitionDeployManager {
         || !StringUtils.hasText(dto.getFlowCode())
         || !StringUtils.hasText(dto.getFlowName())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("flowCode/flowName 不能为空")
           .build();
     }
@@ -167,7 +167,7 @@ public class FlowDefinitionDeployManager {
             .orElse(null);
     if (existing != null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("流程定义已存在: code=" + dto.getFlowCode() + " version=" + version)
           .build();
     }
@@ -176,7 +176,7 @@ public class FlowDefinitionDeployManager {
     boolean hasJson = dto.getNodes() != null && !dto.getNodes().isEmpty();
     if (!hasBpmn && !hasJson) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("bpmnXml / nodes 至少二选一")
           .build();
     }
@@ -189,7 +189,7 @@ public class FlowDefinitionDeployManager {
       if (StringUtils.hasText(bpmnModel.getProcessId())
           && !bpmnModel.getProcessId().equals(dto.getFlowCode())) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message(
                 "BPMN process id 与 flowCode 不一致: bpmn="
                     + bpmnModel.getProcessId()
@@ -233,14 +233,14 @@ public class FlowDefinitionDeployManager {
           nodes.stream().anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
       if (!hasStart) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("流程定义必须包含开始节点（nodeType=0）")
             .build();
       }
       long uniqueCount = nodes.stream().map(FlowNodeDO::getNodeCode).distinct().count();
       if (uniqueCount != nodes.size()) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("节点编码 nodeCode 必须唯一")
             .build();
       }
@@ -318,7 +318,7 @@ public class FlowDefinitionDeployManager {
   public Map<String, Object> batchDeployFromZip(byte[] zipBytes, String tenantId) {
     if (zipBytes == null || zipBytes.length == 0) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("zip 文件内容为空")
           .build();
     }
@@ -349,7 +349,7 @@ public class FlowDefinitionDeployManager {
 
           if (!StringUtils.hasText(flowCode)) {
             throw SysException.builder()
-                .resultCode(BaseResultCode.BAD_REQUEST)
+                .resultCode(YdszResultCode.BAD_REQUEST)
                 .message("BPMN 文件缺少 process id: " + fileName)
                 .build();
           }
@@ -376,7 +376,7 @@ public class FlowDefinitionDeployManager {
       }
     } catch (Exception e) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("zip 文件解析失败: " + e.getMessage())
           .build();
     }

@@ -24,7 +24,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.base.api.ApiVersion;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -91,7 +91,7 @@ public class ShareController {
   @PostMapping
   @Operation(summary = "创建分享链接")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_CREATE)
-  public BaseResponse<ShareLinkVO> createShare(
+  public YdszResponse<ShareLinkVO> createShare(
       @Valid @RequestBody NextwikiDTOs.CreateShareRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
@@ -118,7 +118,7 @@ public class ShareController {
               request.getMaxAccessCount(),
               userId);
     }
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -140,7 +140,7 @@ public class ShareController {
   @PostMapping("/verify")
   @Operation(summary = "验证分享链接访问权限")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_VERIFY)
-  public BaseResponse<ShareLinkVO> verifyAccess(
+  public YdszResponse<ShareLinkVO> verifyAccess(
       @Valid @RequestBody NextwikiDTOs.VerifyShareRequest request, HttpServletRequest httpRequest) {
     ShareLinkVO result =
         shareApplicationService.verifyAccess(
@@ -160,7 +160,7 @@ public class ShareController {
         "SUCCESS",
         null);
 
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -181,11 +181,11 @@ public class ShareController {
   @DeleteMapping("/{shareId}")
   @Operation(summary = "撤销分享")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_REVOKE)
-  public BaseResponse<Void> revoke(
+  public YdszResponse<Void> revoke(
       @PathVariable String shareId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     shareApplicationService.revoke(shareId, userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -197,9 +197,9 @@ public class ShareController {
   @GetMapping("/my")
   @Operation(summary = "查询我的分享列表")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_LIST)
-  public BaseResponse<List<ShareLinkVO>> myShares(
+  public YdszResponse<List<ShareLinkVO>> myShares(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    return BaseResponse.success(shareApplicationService.findByUserId(userId));
+    return YdszResponse.success(shareApplicationService.findByUserId(userId));
   }
 
   /**
@@ -213,11 +213,11 @@ public class ShareController {
   @GetMapping("/{shareId}/logs")
   @Operation(summary = "查询分享访问日志")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_LOG_VIEW)
-  public BaseResponse<List<ShareAccessLogVO>> getAccessLogs(
+  public YdszResponse<List<ShareAccessLogVO>> getAccessLogs(
       @PathVariable String shareId,
       @RequestParam(defaultValue = "50") int limit,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    return BaseResponse.success(shareApplicationService.getAccessLogs(shareId, limit));
+    return YdszResponse.success(shareApplicationService.getAccessLogs(shareId, limit));
   }
 
   /**
@@ -230,9 +230,9 @@ public class ShareController {
   @GetMapping("/{shareId}/recipients")
   @Operation(summary = "查询分享目标用户")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_VIEW)
-  public BaseResponse<List<ShareRecipientVO>> getRecipients(
+  public YdszResponse<List<ShareRecipientVO>> getRecipients(
       @PathVariable String shareId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    return BaseResponse.success(shareApplicationService.getRecipients(shareId));
+    return YdszResponse.success(shareApplicationService.getRecipients(shareId));
   }
 
   /**
@@ -244,9 +244,9 @@ public class ShareController {
   @GetMapping("/received")
   @Operation(summary = "查询我收到的分享")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_LIST)
-  public BaseResponse<List<ShareRecipientVO>> getReceivedShares(
+  public YdszResponse<List<ShareRecipientVO>> getReceivedShares(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    return BaseResponse.success(shareApplicationService.getReceivedShares(userId));
+    return YdszResponse.success(shareApplicationService.getReceivedShares(userId));
   }
 
   // ==================== 私有方法 ====================

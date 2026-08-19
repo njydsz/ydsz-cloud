@@ -196,6 +196,12 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   FORGOT_PASSWORD_USER_NOT_FOUND("B33004", "userinfo.forgot.password.user.not.found"),
   /** 找回密码手机号与账号不匹配 */
   FORGOT_PASSWORD_PHONE_MISMATCH("B33005", "userinfo.forgot.password.phone.mismatch"),
+  /** 账号未锁定，无需解锁 */
+  ACCOUNT_NOT_LOCKED("B33006", "userinfo.account.not.locked"),
+  /** 账号解锁失败，验证信息不匹配 */
+  ACCOUNT_UNLOCK_FAILED("B33007", "userinfo.account.unlock.failed"),
+  /** 账号解锁验证码已过期或无效 */
+  ACCOUNT_UNLOCK_VERIFY_CODE_INVALID("B33008", "userinfo.account.unlock.verify.code.invalid"),
 
   // ==================== A20xxx 封禁治理（运营侧主动封禁与管理员会话治理） ====================
   /** 账号已被封禁 */

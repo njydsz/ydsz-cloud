@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.tenant.TenantContextHolder;
@@ -84,12 +84,12 @@ public class FlowAnalyticsController {
    */
   @GetMapping("/overview")
   @Operation(summary = "审批总览仪表盘")
-  public BaseResponse<Object> overview(
+  public YdszResponse<Object> overview(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime startTime,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime endTime) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         analyticsService.overview(startTime, endTime, TenantContextHolder.getTenantId()));
   }
 
@@ -107,13 +107,13 @@ public class FlowAnalyticsController {
    */
   @GetMapping("/approverEfficiency")
   @Operation(summary = "办理人效率排行")
-  public BaseResponse<Object> approverEfficiency(
+  public YdszResponse<Object> approverEfficiency(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime startTime,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime endTime,
       @RequestParam(defaultValue = "20") int limit) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         analyticsService.approverEfficiency(
             startTime, endTime, TenantContextHolder.getTenantId(), limit));
   }
@@ -129,12 +129,12 @@ public class FlowAnalyticsController {
    */
   @GetMapping("/flowEfficiency")
   @Operation(summary = "流程效率对比")
-  public BaseResponse<Object> flowEfficiency(
+  public YdszResponse<Object> flowEfficiency(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime startTime,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime endTime) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         analyticsService.flowEfficiencyComparison(
             startTime, endTime, TenantContextHolder.getTenantId()));
   }
@@ -151,8 +151,8 @@ public class FlowAnalyticsController {
    */
   @GetMapping("/nodeDuration")
   @Operation(summary = "节点耗时分析")
-  public BaseResponse<Object> nodeDuration(@RequestParam String flowCode) {
-    return BaseResponse.success(
+  public YdszResponse<Object> nodeDuration(@RequestParam String flowCode) {
+    return YdszResponse.success(
         analyticsService.nodeDurationStats(flowCode, TenantContextHolder.getTenantId()));
   }
 
@@ -168,13 +168,13 @@ public class FlowAnalyticsController {
    */
   @GetMapping("/approvalTrend")
   @Operation(summary = "审批趋势分析")
-  public BaseResponse<Object> approvalTrend(
+  public YdszResponse<Object> approvalTrend(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime startTime,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime endTime,
       @RequestParam(defaultValue = "DAY") String granularity) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         analyticsService.approvalTrend(
             startTime, endTime, TenantContextHolder.getTenantId(), granularity));
   }
@@ -188,8 +188,8 @@ public class FlowAnalyticsController {
    */
   @Operation(summary = "查询归档配置")
   @GetMapping("/history/config")
-  public BaseResponse<Map<String, Object>> getArchiveConfig() {
-    return BaseResponse.success(archiveService.getArchiveConfig());
+  public YdszResponse<Map<String, Object>> getArchiveConfig() {
+    return YdszResponse.success(archiveService.getArchiveConfig());
   }
 
   /**
@@ -210,7 +210,7 @@ public class FlowAnalyticsController {
   @Operation(summary = "手动触发归档")
   @Idempotent(key = "ydsz:workflow:FlowAnalyticsController:archive:lock", ttlSeconds = 5)
   @PostMapping("/history/archive")
-  public BaseResponse<Map<String, Object>> archive(
+  public YdszResponse<Map<String, Object>> archive(
       @RequestParam(required = false) @Min(1) Integer retentionDays,
       @RequestParam(required = false) @Min(1) @Max(1000) Integer batchSize,
       @RequestParam(required = false) Long maxProcessMs) {
@@ -219,7 +219,7 @@ public class FlowAnalyticsController {
         retentionDays,
         batchSize,
         maxProcessMs);
-    return BaseResponse.success(archiveService.archive(retentionDays, batchSize, maxProcessMs));
+    return YdszResponse.success(archiveService.archive(retentionDays, batchSize, maxProcessMs));
   }
 
   /**
@@ -238,10 +238,10 @@ public class FlowAnalyticsController {
   @Operation(summary = "手动触发清理（purge）")
   @Idempotent(key = "ydsz:workflow:FlowAnalyticsController:purge:lock", ttlSeconds = 5)
   @PostMapping("/history/purge")
-  public BaseResponse<Map<String, Object>> purge(
+  public YdszResponse<Map<String, Object>> purge(
       @RequestParam(required = false) Integer purgeDays) {
     log.info("[FlowAnalyticsController] 手动触发清理 purgeDays={}", purgeDays);
-    return BaseResponse.success(archiveService.purge(purgeDays));
+    return YdszResponse.success(archiveService.purge(purgeDays));
   }
 
   // ==================== 工作流国际化 (i18n) ====================
@@ -257,9 +257,9 @@ public class FlowAnalyticsController {
    */
   @GetMapping("/i18n/enum/{enumType}")
   @Operation(summary = "获取枚举类型的全部描述")
-  public BaseResponse<List<Map<String, String>>> enumDescriptions(
+  public YdszResponse<List<Map<String, String>>> enumDescriptions(
       @PathVariable String enumType, @RequestParam(required = false) String locale) {
-    return BaseResponse.success(i18nService.getEnumDescriptions(enumType, locale));
+    return YdszResponse.success(i18nService.getEnumDescriptions(enumType, locale));
   }
 
   /**
@@ -274,11 +274,11 @@ public class FlowAnalyticsController {
    */
   @GetMapping("/i18n/enum/{enumType}/{enumName}")
   @Operation(summary = "获取单个枚举值的描述")
-  public BaseResponse<String> enumDescription(
+  public YdszResponse<String> enumDescription(
       @PathVariable String enumType,
       @PathVariable String enumName,
       @RequestParam(required = false) String locale) {
-    return BaseResponse.success(i18nService.getEnumDescription(enumType, enumName, locale));
+    return YdszResponse.success(i18nService.getEnumDescription(enumType, enumName, locale));
   }
 
   /**
@@ -291,7 +291,7 @@ public class FlowAnalyticsController {
    */
   @GetMapping("/i18n/locales")
   @Operation(summary = "获取支持的语言列表")
-  public BaseResponse<List<Map<String, String>>> supportedLocales() {
-    return BaseResponse.success(i18nService.getSupportedLocales());
+  public YdszResponse<List<Map<String, String>>> supportedLocales() {
+    return YdszResponse.success(i18nService.getSupportedLocales());
   }
 }

@@ -26,12 +26,12 @@ import java.util.concurrent.TimeUnit;
  * // 限制接口每秒最多 10 次调用
  * @GetMapping("/api/data")
  * @RateLimit(limit = 10, window = 1, timeUnit = TimeUnit.SECONDS)
- * public BaseResponse<List<DataVO>> getData() { ... }
+ * public YdszResponse<List<DataVO>> getData() { ... }
  *
  * // 限制单个 IP 每分钟最多 60 次
  * @PostMapping("/api/orders")
  * @RateLimit(limit = 60, window = 1, timeUnit = TimeUnit.MINUTES, byClientIp = true)
- * public BaseResponse<OrderVO> createOrder() { ... }
+ * public YdszResponse<OrderVO> createOrder() { ... }
  * }</pre>
  *
  * @author ydsz-team

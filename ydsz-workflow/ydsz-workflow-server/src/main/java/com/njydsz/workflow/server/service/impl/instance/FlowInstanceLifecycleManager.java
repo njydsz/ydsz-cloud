@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.assembler.NameAssembler;
@@ -194,7 +194,7 @@ public class FlowInstanceLifecycleManager {
         || !StringUtils.hasText(dto.getBusinessType())
         || !StringUtils.hasText(dto.getBusinessId())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_208e3c66")
           .build();
     }
@@ -224,7 +224,7 @@ public class FlowInstanceLifecycleManager {
             tenantId);
     if (def == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_add8d012")
           .params(dto.getFlowCode())
           .build();
@@ -313,7 +313,7 @@ public class FlowInstanceLifecycleManager {
     FlowInstanceDO instance = getByIdOrThrow(instanceId);
     if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_2246960b")
           .build();
     }
@@ -368,7 +368,7 @@ public class FlowInstanceLifecycleManager {
     FlowInstanceDO instance = getByIdOrThrow(instanceId);
     if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_543fc92f")
           .build();
     }
@@ -403,7 +403,7 @@ public class FlowInstanceLifecycleManager {
     FlowInstanceDO instance = getByIdOrThrow(instanceId);
     if (!FlowInstanceStatus.SUSPENDED.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_ab594c75")
           .build();
     }
@@ -487,14 +487,14 @@ public class FlowInstanceLifecycleManager {
     // 校验：仅发起人可撤回
     if (!instance.getInitiatorId().equals(initiatorId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.FORBIDDEN)
+          .resultCode(YdszResultCode.FORBIDDEN)
           .message("error.workflow.msg_cc712a3a")
           .build();
     }
     // 校验：仅运行中可撤回
     if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_3095a676")
           .build();
     }
@@ -510,7 +510,7 @@ public class FlowInstanceLifecycleManager {
                         || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
     if (anyProcessed) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_c55fe642")
           .build();
     }
@@ -527,7 +527,7 @@ public class FlowInstanceLifecycleManager {
     }
     if (!recallableCodes.contains(targetNodeCode)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_e5f6a7b8")
           .params(targetNodeCode)
           .build();
@@ -545,7 +545,7 @@ public class FlowInstanceLifecycleManager {
     } catch (Exception e) {
       log.error("[Flow] 撤回到指定节点失败: instanceId={} targetNodeCode={}", instanceId, targetNodeCode, e);
       throw SysException.builder()
-          .resultCode(BaseResultCode.INTERNAL_ERROR)
+          .resultCode(YdszResultCode.INTERNAL_ERROR)
           .key("error.workflow.msg_3d726320")
           .params(e.getMessage())
           .build();
@@ -581,14 +581,14 @@ public class FlowInstanceLifecycleManager {
     // 校验：仅发起人可撤回
     if (!instance.getInitiatorId().equals(initiatorId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.FORBIDDEN)
+          .resultCode(YdszResultCode.FORBIDDEN)
           .message("error.workflow.msg_cc712a3a")
           .build();
     }
     // 校验：仅运行中可撤回
     if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_3095a676")
           .build();
     }
@@ -604,7 +604,7 @@ public class FlowInstanceLifecycleManager {
                         || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
     if (anyProcessed) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_c55fe642")
           .build();
     }
@@ -616,7 +616,7 @@ public class FlowInstanceLifecycleManager {
     } catch (Exception e) {
       log.error("[Flow] 撤回后重新推进失败: instanceId={}", instanceId, e);
       throw SysException.builder()
-          .resultCode(BaseResultCode.INTERNAL_ERROR)
+          .resultCode(YdszResultCode.INTERNAL_ERROR)
           .key("error.workflow.msg_3d726320")
           .params(e.getMessage())
           .build();
@@ -651,7 +651,7 @@ public class FlowInstanceLifecycleManager {
     // 1. 校验：仅 COMPLETED 状态可回滚
     if (!FlowInstanceStatus.COMPLETED.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_a1b2c3d4")
           .params(instance.getFlowStatus())
           .build();
@@ -667,7 +667,7 @@ public class FlowInstanceLifecycleManager {
     }
     if (!isInitiator && !isAdmin) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.FORBIDDEN)
+          .resultCode(YdszResultCode.FORBIDDEN)
           .message("error.workflow.msg_b2c3d4e5")
           .build();
     }
@@ -675,7 +675,7 @@ public class FlowInstanceLifecycleManager {
     // 3. 校验：回滚原因不能为空
     if (!StringUtils.hasText(reason)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_d4e5f6a7")
           .build();
     }
@@ -686,7 +686,7 @@ public class FlowInstanceLifecycleManager {
       long elapsedDays = Duration.between(instance.getEndAt(), LocalDateTime.now()).toDays();
       if (elapsedDays > days) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.workflow.msg_c3d4e5f6")
             .params(days)
             .build();
@@ -760,7 +760,7 @@ public class FlowInstanceLifecycleManager {
     FlowInstanceStatus status = FlowInstanceStatus.valueOf(instance.getFlowStatus());
     if (status != FlowInstanceStatus.REJECTED) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_7f4098fb")
           .params("仅被驳回实例可重审，当前状态=" + instance.getFlowStatus())
           .build();
@@ -769,7 +769,7 @@ public class FlowInstanceLifecycleManager {
     if (instance.getInitiatorId() != null
         && !String.valueOf(instance.getInitiatorId()).equals(initiatorId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.FORBIDDEN)
+          .resultCode(YdszResultCode.FORBIDDEN)
           .key("error.workflow.msg_d65b2814")
           .params("仅发起人可重审")
           .build();
@@ -955,7 +955,7 @@ public class FlowInstanceLifecycleManager {
               e.getMessage(),
               e);
           throw SysException.builder()
-              .resultCode(BaseResultCode.INTERNAL_ERROR)
+              .resultCode(YdszResultCode.INTERNAL_ERROR)
               .key("error.workflow.msg_f2bd498c")
               .params(e.getMessage())
               .build();
@@ -972,7 +972,7 @@ public class FlowInstanceLifecycleManager {
     FlowInstanceDO instance = instanceRepository.findById(id).map(converter::entityToDO).orElse(null);
     if (instance == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_67a10717")
           .params(id)
           .build();
@@ -991,7 +991,7 @@ public class FlowInstanceLifecycleManager {
     FlowInstanceStatus status = FlowInstanceStatus.valueOf(instance.getFlowStatus());
     if (status == FlowInstanceStatus.RUNNING || status == FlowInstanceStatus.SUSPENDED) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_c9d0e1f2")
           .params("运行中/挂起的实例不可重做，当前状态=" + instance.getFlowStatus())
           .build();
@@ -1000,7 +1000,7 @@ public class FlowInstanceLifecycleManager {
     if (instance.getInitiatorId() != null
         && !String.valueOf(instance.getInitiatorId()).equals(initiatorId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.FORBIDDEN)
+          .resultCode(YdszResultCode.FORBIDDEN)
           .key("error.workflow.msg_d65b2814")
           .params("仅发起人可重做")
           .build();

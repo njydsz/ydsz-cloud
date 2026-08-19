@@ -20,7 +20,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -100,8 +100,8 @@ public class TemplateController {
       content = "'create'")
   @RateLimit(resource = "message.template.create", threshold = 50)
   @PostMapping
-  public BaseResponse<MsgTemplateVO> create(@Valid @RequestBody TemplateCreateDTO dto) {
-    return BaseResponse.success(MessageConverter.INSTANT.entityToVO(templateService.create(dto)));
+  public YdszResponse<MsgTemplateVO> create(@Valid @RequestBody TemplateCreateDTO dto) {
+    return YdszResponse.success(MessageConverter.INSTANT.entityToVO(templateService.create(dto)));
   }
 
   /**
@@ -121,9 +121,9 @@ public class TemplateController {
       content = "'update'")
   @RateLimit(resource = "message.template.update", threshold = 50)
   @PutMapping("/{id}")
-  public BaseResponse<MsgTemplateVO> update(
+  public YdszResponse<MsgTemplateVO> update(
       @PathVariable String id, @Valid @RequestBody TemplateCreateDTO dto) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         MessageConverter.INSTANT.entityToVO(templateService.update(id, dto)));
   }
 
@@ -143,9 +143,9 @@ public class TemplateController {
       content = "'delete'")
   @RateLimit(resource = "message.template.delete", threshold = 50)
   @DeleteMapping("/{id}")
-  public BaseResponse<Void> delete(@PathVariable String id) {
+  public YdszResponse<Void> delete(@PathVariable String id) {
     templateService.delete(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -157,8 +157,8 @@ public class TemplateController {
   @Operation(summary = "模板详情")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_VIEW)
   @GetMapping("/{id}")
-  public BaseResponse<MsgTemplateVO> getById(@PathVariable String id) {
-    return BaseResponse.success(MessageConverter.INSTANT.entityToVO(templateService.getById(id)));
+  public YdszResponse<MsgTemplateVO> getById(@PathVariable String id) {
+    return YdszResponse.success(MessageConverter.INSTANT.entityToVO(templateService.getById(id)));
   }
 
   /**
@@ -192,10 +192,10 @@ public class TemplateController {
       content = "'audit'")
   @RateLimit(resource = "message.template.audit", threshold = 50)
   @PostMapping("/{id}/audit")
-  public BaseResponse<Void> audit(
+  public YdszResponse<Void> audit(
       @PathVariable String id, @Valid @RequestBody TemplateAuditDTO dto) {
     dto.setId(id);
     templateService.audit(id, dto);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

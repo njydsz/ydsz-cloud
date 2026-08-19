@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -95,8 +95,8 @@ public class AppInfoController {
    */
   @Operation(summary = "按 ID 查询应用")
   @GetMapping("/{id}")
-  public BaseResponse<AppInfoVO> getById(@PathVariable String id) {
-    return BaseResponse.success(service.getById(id));
+  public YdszResponse<AppInfoVO> getById(@PathVariable String id) {
+    return YdszResponse.success(service.getById(id));
   }
 
   /**
@@ -117,8 +117,8 @@ public class AppInfoController {
   @RateLimit(resource = "system.appinfo.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:app-info:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PostMapping
-  public BaseResponse<String> save(@Valid @RequestBody AppInfoDTO dto) {
-    return BaseResponse.success(service.save(dto));
+  public YdszResponse<String> save(@Valid @RequestBody AppInfoDTO dto) {
+    return YdszResponse.success(service.save(dto));
   }
 
   /**
@@ -139,8 +139,8 @@ public class AppInfoController {
   @RateLimit(resource = "system.appinfo.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:app-info:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PutMapping
-  public BaseResponse<Boolean> update(@Valid @RequestBody AppInfoDTO dto) {
-    return BaseResponse.success(service.updateById(dto));
+  public YdszResponse<Boolean> update(@Valid @RequestBody AppInfoDTO dto) {
+    return YdszResponse.success(service.updateById(dto));
   }
 
   /**
@@ -160,8 +160,8 @@ public class AppInfoController {
   @RateLimit(resource = "system.appinfo.remove", threshold = 50)
   @Idempotent(key = "'ydsz:system:app-info:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
   @DeleteMapping("/{id}")
-  public BaseResponse<Boolean> remove(@PathVariable String id) {
-    return BaseResponse.success(service.removeById(id));
+  public YdszResponse<Boolean> remove(@PathVariable String id) {
+    return YdszResponse.success(service.removeById(id));
   }
 
   /** 分页安全上限：防止 pageSize=999999 导致深度分页 OOM */

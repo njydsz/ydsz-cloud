@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
@@ -63,7 +63,7 @@ public class PresignedUrlController {
   @PostMapping("/presigned-upload")
   @Operation(summary = "生成上传预签名 URL")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-  public BaseResponse<PresignedUrlResponse> generateUploadUrl(
+  public YdszResponse<PresignedUrlResponse> generateUploadUrl(
       @Valid @RequestBody NextwikiDTOs.PresignedUrlRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
@@ -81,7 +81,7 @@ public class PresignedUrlController {
         request.getExpireSeconds() != null ? request.getExpireSeconds() : 3600);
     response.setMethod("PUT");
 
-    return BaseResponse.success(response);
+    return YdszResponse.success(response);
   }
 
   /**
@@ -96,7 +96,7 @@ public class PresignedUrlController {
   @PostMapping("/presigned-download")
   @Operation(summary = "生成下载预签名 URL")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DOWNLOAD)
-  public BaseResponse<PresignedUrlResponse> generateDownloadUrl(
+  public YdszResponse<PresignedUrlResponse> generateDownloadUrl(
       @Valid @RequestBody NextwikiDTOs.PresignedUrlRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
@@ -112,7 +112,7 @@ public class PresignedUrlController {
         request.getExpireSeconds() != null ? request.getExpireSeconds() : 3600);
     response.setMethod("GET");
 
-    return BaseResponse.success(response);
+    return YdszResponse.success(response);
   }
 
   /** 预签名 URL 响应。 */

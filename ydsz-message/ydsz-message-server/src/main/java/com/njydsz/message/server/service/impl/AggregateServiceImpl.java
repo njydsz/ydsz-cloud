@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.exception.custom.SysException;
@@ -78,7 +78,7 @@ public class AggregateServiceImpl implements AggregateService {
       String group, String receiver, String channel, String tenantId) {
     if (!StringUtils.hasText(group) || !StringUtils.hasText(receiver)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("聚合组与接收人不能为空")
           .build();
     }
@@ -89,7 +89,7 @@ public class AggregateServiceImpl implements AggregateService {
       lockValue = distributedLocker.tryLock(lockKey, 3, 10, TimeUnit.SECONDS);
       if (lockValue == null) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("获取聚合锁失败: " + group)
             .build();
       }
@@ -129,7 +129,7 @@ public class AggregateServiceImpl implements AggregateService {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("聚合锁等待中断")
           .build();
     } finally {
@@ -163,7 +163,7 @@ public class AggregateServiceImpl implements AggregateService {
   public int flushByGroup(String group, String receiver) {
     if (!StringUtils.hasText(group) || !StringUtils.hasText(receiver)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("聚合组与接收人不能为空")
           .build();
     }

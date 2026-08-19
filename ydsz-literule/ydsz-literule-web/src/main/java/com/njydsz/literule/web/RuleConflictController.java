@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.literule.domain.vo.RuleConflictInfoVO;
 import com.njydsz.literule.server.spi.RuleConflictDetectorProvider;
 
@@ -44,8 +44,8 @@ public class RuleConflictController {
    * @return 冲突规则对列表
    */
   @GetMapping("/conflicts")
-  public BaseResponse<List<RuleConflictInfoVO>> detectConflicts() {
-    return BaseResponse.success(
+  public YdszResponse<List<RuleConflictInfoVO>> detectConflicts() {
+    return YdszResponse.success(
         ruleConflictDetectorProvider.detectConflicts().stream()
             .map(LiteruleWebConverter.INSTANT::entityToVO)
             .toList());

@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  * <pre>{@code
  * @PostMapping("/orders")
  * @Idempotent(key = "#request.orderNo", expire = 300, timeUnit = TimeUnit.SECONDS)
- * public BaseResponse<OrderVO> createOrder(@RequestBody CreateOrderRequest request) {
+ * public YdszResponse<OrderVO> createOrder(@RequestBody CreateOrderRequest request) {
  *     // 同一 orderNo 在 300 秒内只执行一次
  * }
  * }</pre>

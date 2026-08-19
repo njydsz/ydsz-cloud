@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -107,14 +107,14 @@ public class InternalJobController {
       type = AuditType.OPERATION,
       action = AuditAction.OTHER,
       content = "'execute'")
-  public BaseResponse<String> execute(@RequestBody RemoteTaskRequest request) {
+  public YdszResponse<String> execute(@RequestBody RemoteTaskRequest request) {
     if (request == null || request.getJob() == null) {
       log.warn("[InternalJob] 远程派发请求参数为空");
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "请求参数为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "请求参数为空");
     }
     if (request.getJob().getJobKey() == null) {
       log.warn("[InternalJob] 远程派发请求 jobKey 为空");
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "jobKey 不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "jobKey 不能为空");
     }
     // P1-4: 从请求中恢复 traceId 到 MDC，保证全链路追踪
     String traceId = request.getTraceId();
@@ -135,7 +135,7 @@ public class InternalJobController {
           taskDispatcher.executeLocally(
               request.getJob(), request.getTriggerType(),
               request.getShardIndex(), request.getShardTotal());
-      return BaseResponse.success(logId);
+      return YdszResponse.success(logId);
     } catch (Exception e) {
       log.error(
           "[InternalJob] 远程派发执行异常: key={} reason={}",
@@ -143,7 +143,7 @@ public class InternalJobController {
           e.getMessage(),
           e);
       // 执行异常时返回 null（执行器端已记录 FAILED 日志，或锁被持有）
-      return BaseResponse.success(null);
+      return YdszResponse.success(null);
     } finally {
       TracerUtils.clear();
     }
@@ -177,10 +177,10 @@ public class InternalJobController {
       type = AuditType.OPERATION,
       action = AuditAction.OTHER,
       content = "'executeSubTask'")
-  public BaseResponse<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
+  public YdszResponse<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
     if (request == null || request.getJobKey() == null || request.getHandler() == null) {
       log.warn("[InternalJob] 子任务请求参数为空");
-      return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "请求参数为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "请求参数为空");
     }
     String traceId = request.getTraceId();
     if (traceId != null && !traceId.isBlank()) {
@@ -204,7 +204,7 @@ public class InternalJobController {
             "[InternalJob] 获取 MapProcessor Bean 失败: handler={} reason={}",
             request.getHandler(),
             e.getMessage());
-        return BaseResponse.success(
+        return YdszResponse.success(
             ProcessResult.failed("获取 MapProcessor Bean 失败: " + e.getMessage()));
       }
       // 构造子任务上下文并执行
@@ -230,7 +230,7 @@ public class InternalJobController {
             e);
         result = ProcessResult.failed(e.getClass().getSimpleName() + ": " + e.getMessage());
       }
-      return BaseResponse.success(result);
+      return YdszResponse.success(result);
     } finally {
       TracerUtils.clear();
     }

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.server.auth.LdapOrgSyncService;
 import com.njydsz.userinfo.server.auth.LdapOrgSyncService.SyncResult;
 
@@ -60,7 +60,7 @@ public class LdapSyncController {
    */
   @PostMapping
   @Operation(summary = "手动触发 LDAP 同步")
-  public BaseResponse<SyncResultVO> triggerSync() {
+  public YdszResponse<SyncResultVO> triggerSync() {
     log.info("Manual LDAP sync triggered via API");
     currentStatus = new SyncStatusVO("RUNNING", LocalDateTime.now(), null);
 
@@ -78,7 +78,7 @@ public class LdapSyncController {
       addSyncLog("SUCCESS", resultVO);
       currentStatus = new SyncStatusVO("COMPLETED", null, LocalDateTime.now());
 
-      return BaseResponse.success(resultVO);
+      return YdszResponse.success(resultVO);
     } catch (Exception e) {
       log.error("Manual LDAP sync failed: {}", e.getMessage(), e);
       currentStatus = new SyncStatusVO("FAILED", null, LocalDateTime.now());
@@ -94,8 +94,8 @@ public class LdapSyncController {
    */
   @GetMapping("/status")
   @Operation(summary = "查询同步状态")
-  public BaseResponse<SyncStatusVO> getStatus() {
-    return BaseResponse.success(currentStatus);
+  public YdszResponse<SyncStatusVO> getStatus() {
+    return YdszResponse.success(currentStatus);
   }
 
   /**
@@ -107,8 +107,8 @@ public class LdapSyncController {
    */
   @GetMapping("/logs")
   @Operation(summary = "查询同步历史")
-  public BaseResponse<List<SyncLogVO>> getLogs() {
-    return BaseResponse.success(new ArrayList<>(syncHistory));
+  public YdszResponse<List<SyncLogVO>> getLogs() {
+    return YdszResponse.success(new ArrayList<>(syncHistory));
   }
 
   /**

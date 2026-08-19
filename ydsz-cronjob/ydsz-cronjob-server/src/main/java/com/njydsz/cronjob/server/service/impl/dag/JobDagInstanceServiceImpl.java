@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dag.DagInstanceStatus;
 import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
@@ -61,7 +61,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     JobDagInstance instance = jobDagInstanceRepository.selectById(instanceId);
     if (instance == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.cronjob.msg_dag_instance_not_found")
           .params(instanceId)
           .build();
@@ -100,7 +100,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
             instanceId, DagInstanceStatus.RUNNING.name(), DagInstanceStatus.PAUSED.name());
     if (rows == 0) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_instance_not_running")
           .params(instanceId)
           .build();
@@ -117,7 +117,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
             instanceId, DagInstanceStatus.PAUSED.name(), DagInstanceStatus.RUNNING.name());
     if (rows == 0) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_instance_not_running")
           .params(instanceId)
           .build();
@@ -141,7 +141,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     }
     if (rows == 0) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_instance_not_running")
           .params(instanceId)
           .build();
@@ -167,7 +167,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     JobDagVO dag = jobDagRepository.findById(instance.getDagId()).orElse(null);
     if (dag == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.cronjob.msg_dag_not_found_def")
           .params(instance.getDagId())
           .build();

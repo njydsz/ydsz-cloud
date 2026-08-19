@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
@@ -112,7 +112,7 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
    */
   @ExceptionHandler(ConstraintViolationException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public BaseResponse<?> handleConstraintViolationException(
+  public YdszResponse<?> handleConstraintViolationException(
       ConstraintViolationException e, HttpServletRequest request) {
     recordMetrics(e);
     LOG.warn("{}参数校验异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage());
@@ -134,7 +134,7 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
    */
   @ExceptionHandler(MethodArgumentNotValidException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public BaseResponse<?> handleMethodArgumentNotValidException(
+  public YdszResponse<?> handleMethodArgumentNotValidException(
       MethodArgumentNotValidException e, HttpServletRequest request) {
     recordMetrics(e);
     LOG.warn(
@@ -157,7 +157,7 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
    */
   @ExceptionHandler(BindException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public BaseResponse<?> handleBindException(BindException e, HttpServletRequest request) {
+  public YdszResponse<?> handleBindException(BindException e, HttpServletRequest request) {
     recordMetrics(e);
     LOG.warn("{}表单绑定异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage());
     String message = extractBindingResultMessages(e.getBindingResult());

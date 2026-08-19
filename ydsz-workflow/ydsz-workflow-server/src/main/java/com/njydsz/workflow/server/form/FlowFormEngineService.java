@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 
@@ -89,7 +89,7 @@ public class FlowFormEngineService {
         String perm = entry.getValue();
         if ("HIDDEN".equals(perm) && formData.containsKey(fieldKey)) {
           throw SysException.builder()
-              .resultCode(BaseResultCode.VALIDATION_FAILED)
+              .resultCode(YdszResultCode.VALIDATION_FAILED)
               .message("字段 " + fieldKey + " 不允许提交")
               .build();
         }
@@ -107,7 +107,7 @@ public class FlowFormEngineService {
     if (!errors.isEmpty()) {
       FlowFormValidationError first = errors.get(0);
       throw SysException.builder()
-          .resultCode(BaseResultCode.VALIDATION_FAILED)
+          .resultCode(YdszResultCode.VALIDATION_FAILED)
           .message("表单校验失败: " + first)
           .build();
     }

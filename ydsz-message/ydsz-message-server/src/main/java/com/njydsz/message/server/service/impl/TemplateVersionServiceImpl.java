@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
@@ -62,7 +62,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
   public List<MsgTemplateVersion> listVersions(String templateCode) {
     if (!StringUtils.hasText(templateCode)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("模板编码不能为空")
           .build();
     }
@@ -143,7 +143,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
                 .last("LIMIT 1"));
     if (versionDO == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("版本不存在: " + version)
           .build();
     }
@@ -154,7 +154,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
                 .last("LIMIT 1"));
     if (template == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("模板不存在: " + templateCode)
           .build();
     }
@@ -177,7 +177,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
   public String preview(TemplatePreviewDTO dto) {
     if (dto == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("预览参数不能为空")
           .build();
     }
@@ -186,7 +186,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
       // 从模板加载
       if (!StringUtils.hasText(dto.getTemplateCode())) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("templateCode 和 content 不能同时为空")
             .build();
       }
@@ -197,7 +197,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
                   .last("LIMIT 1"));
       if (template == null) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.NOT_FOUND)
+            .resultCode(YdszResultCode.NOT_FOUND)
             .message("模板不存在: " + dto.getTemplateCode())
             .build();
       }
@@ -217,13 +217,13 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
   public MessageResult testSend(TemplateTestSendDTO dto) {
     if (dto == null || !StringUtils.hasText(dto.getTemplateCode())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("模板编码不能为空")
           .build();
     }
     if (!StringUtils.hasText(dto.getTestReceiver())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("测试接收人不能为空")
           .build();
     }

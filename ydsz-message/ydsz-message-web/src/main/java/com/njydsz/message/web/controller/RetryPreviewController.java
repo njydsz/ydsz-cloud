@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.server.service.retry.RetryPreset;
 import com.njydsz.message.server.service.retry.RetryPreviewService;
@@ -48,11 +48,11 @@ public class RetryPreviewController {
   @Operation(summary = "预览指定预设的重试时间线")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/preview")
-  public BaseResponse<Map<String, Object>> previewRetrySchedule(
+  public YdszResponse<Map<String, Object>> previewRetrySchedule(
       @Parameter(description = "预设档位: none/fast/standard/relaxed")
           @RequestParam(value = "preset", required = false, defaultValue = "standard")
           String preset) {
-    return BaseResponse.success(retryPreviewService.previewRetrySchedule(preset));
+    return YdszResponse.success(retryPreviewService.previewRetrySchedule(preset));
   }
 
   /**
@@ -65,8 +65,8 @@ public class RetryPreviewController {
   @Operation(summary = "对比所有预设档位的重试策略")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/preview/all")
-  public BaseResponse<Map<String, Map<String, Object>>> previewAllPresets() {
-    return BaseResponse.success(retryPreviewService.previewAllPresets());
+  public YdszResponse<Map<String, Map<String, Object>>> previewAllPresets() {
+    return YdszResponse.success(retryPreviewService.previewAllPresets());
   }
 
   /**
@@ -79,7 +79,7 @@ public class RetryPreviewController {
   @Operation(summary = "获取所有可用预设档位")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/presets")
-  public BaseResponse<Map<String, Object>> listPresets() {
+  public YdszResponse<Map<String, Object>> listPresets() {
     Map<String, Object> result = new java.util.LinkedHashMap<>();
     for (RetryPreset preset : RetryPreset.values()) {
       Map<String, Object> info = new java.util.LinkedHashMap<>();
@@ -91,6 +91,6 @@ public class RetryPreviewController {
       info.put("maxBackoffMs", preset.getMaxBackoffMs());
       result.put(preset.getCode(), info);
     }
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 }

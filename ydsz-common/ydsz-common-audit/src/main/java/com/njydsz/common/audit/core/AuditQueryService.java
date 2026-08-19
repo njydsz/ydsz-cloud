@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.njydsz.common.audit.domain.AuditLog;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 
 /**
  * 审计查询服务接口
@@ -84,7 +84,7 @@ public interface AuditQueryService {
    * @param size 每页大小
    * @return 分页查询结果
    */
-  BaseResponse<List<AuditLog>> queryByTimeRange(
+  YdszResponse<List<AuditLog>> queryByTimeRange(
       LocalDateTime start, LocalDateTime end, int page, int size);
 
   /**
@@ -95,7 +95,7 @@ public interface AuditQueryService {
    * @param size 每页大小
    * @return 分页查询结果
    */
-  BaseResponse<List<AuditLog>> queryByOperator(String operatorId, int page, int size);
+  YdszResponse<List<AuditLog>> queryByOperator(String operatorId, int page, int size);
 
   /**
    * 按操作行为分页查询审计日志
@@ -105,7 +105,7 @@ public interface AuditQueryService {
    * @param size 每页大小
    * @return 分页查询结果
    */
-  BaseResponse<List<AuditLog>> queryByAction(Integer action, int page, int size);
+  YdszResponse<List<AuditLog>> queryByAction(Integer action, int page, int size);
 
   /**
    * 按实体类型分页查询审计日志
@@ -117,7 +117,7 @@ public interface AuditQueryService {
    * @param size 每页大小
    * @return 分页查询结果
    */
-  BaseResponse<List<AuditLog>> queryByEntityType(String entityType, int page, int size);
+  YdszResponse<List<AuditLog>> queryByEntityType(String entityType, int page, int size);
 
   /**
    * 按追踪 ID 查询审计日志

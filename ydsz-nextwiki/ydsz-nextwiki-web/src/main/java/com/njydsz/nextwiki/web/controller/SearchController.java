@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.base.api.ApiVersion;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
@@ -110,12 +110,12 @@ public class SearchController {
   @PostMapping
   @Operation(summary = "综合搜索", description = "支持文件类型/时间范围/大小范围/标签多维度高级筛选")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
-  public BaseResponse<SearchResultVO> search(
+  public YdszResponse<SearchResultVO> search(
       @Valid @RequestBody NextwikiDTOs.SearchRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     SearchResultVO result = searchApplicationService.searchWithFilters(request, userId);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -130,9 +130,9 @@ public class SearchController {
   @GetMapping("/suggest")
   @Operation(summary = "搜索自动补全")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
-  public BaseResponse<List<String>> suggest(@RequestParam String prefix) {
+  public YdszResponse<List<String>> suggest(@RequestParam String prefix) {
     List<String> suggestions = searchApplicationService.autocomplete(prefix);
-    return BaseResponse.success(suggestions);
+    return YdszResponse.success(suggestions);
   }
 
   /**
@@ -146,9 +146,9 @@ public class SearchController {
   @GetMapping("/did-you-mean")
   @Operation(summary = "搜索纠错建议")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
-  public BaseResponse<List<String>> didYouMean(@RequestParam String keyword) {
+  public YdszResponse<List<String>> didYouMean(@RequestParam String keyword) {
     List<String> corrections = searchApplicationService.didYouMean(keyword);
-    return BaseResponse.success(corrections);
+    return YdszResponse.success(corrections);
   }
 
   /**
@@ -169,10 +169,10 @@ public class SearchController {
   @PostMapping("/rebuild")
   @Operation(summary = "重建全量索引")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH_REBUILD)
-  public BaseResponse<Void> rebuildIndices(
+  public YdszResponse<Void> rebuildIndices(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     searchApplicationService.rebuildAllIndices();
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -186,9 +186,9 @@ public class SearchController {
   @GetMapping("/history")
   @Operation(summary = "获取搜索历史")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
-  public BaseResponse<List<String>> getSearchHistory(
+  public YdszResponse<List<String>> getSearchHistory(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    return BaseResponse.success(searchApplicationService.getUserSearchHistory(userId));
+    return YdszResponse.success(searchApplicationService.getUserSearchHistory(userId));
   }
 
   /**
@@ -200,10 +200,10 @@ public class SearchController {
   @DeleteMapping("/history")
   @Operation(summary = "清除搜索历史")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
-  public BaseResponse<Void> clearSearchHistory(
+  public YdszResponse<Void> clearSearchHistory(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     searchApplicationService.clearUserSearchHistory(userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -216,8 +216,8 @@ public class SearchController {
   @GetMapping("/hot")
   @Operation(summary = "获取热门搜索")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
-  public BaseResponse<List<Map.Entry<String, Double>>> getHotSearches() {
-    return BaseResponse.success(searchApplicationService.getHotSearches());
+  public YdszResponse<List<Map.Entry<String, Double>>> getHotSearches() {
+    return YdszResponse.success(searchApplicationService.getHotSearches());
   }
 
   /**
@@ -244,13 +244,13 @@ public class SearchController {
   @GetMapping("/advanced")
   @Operation(summary = "高级语法搜索", description = "支持字段限定、布尔运算、短语精确匹配")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
-  public BaseResponse<SearchResultVO> advancedSearch(
+  public YdszResponse<SearchResultVO> advancedSearch(
       @RequestParam String rawInput,
       @RequestParam(required = false, defaultValue = "all") String scope,
       @RequestParam(required = false, defaultValue = "1") int page,
       @RequestParam(required = false, defaultValue = "20") int pageSize,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         searchApplicationService.searchWithAdvancedSyntax(rawInput, userId, scope, page, pageSize));
   }
 }

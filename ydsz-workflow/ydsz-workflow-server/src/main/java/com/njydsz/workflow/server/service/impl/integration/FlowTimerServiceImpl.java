@@ -13,7 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
@@ -133,21 +133,21 @@ public class FlowTimerServiceImpl implements FlowTimerService {
   public String scheduleIntermediate(String instanceId, String nodeCode, Duration delay) {
     if (instanceId == null || nodeCode == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("instanceId/nodeCode 不能为空")
           .build();
     }
     FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
     if (instance == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("流程实例不存在: " + instanceId)
           .build();
     }
     FlowNodeDO node = nodeRepository.findByCode(instance.getDefinitionId(), nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("节点不存在: " + nodeCode)
           .build();
     }
@@ -177,14 +177,14 @@ public class FlowTimerServiceImpl implements FlowTimerService {
       String taskId, String instanceId, String nodeCode, Duration delay) {
     if (taskId == null || instanceId == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("taskId/instanceId 不能为空")
           .build();
     }
     FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
     if (instance == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("流程实例不存在: " + instanceId)
           .build();
     }

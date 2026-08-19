@@ -17,8 +17,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -131,11 +131,11 @@ public class DeadLetterController {
       content = "'resend'")
   @RateLimit(resource = "message.deadletter.resend", threshold = 50)
   @PostMapping("/{logId}/resend")
-  public BaseResponse<Void> resend(@PathVariable String logId) {
+  public YdszResponse<Void> resend(@PathVariable String logId) {
     if (logId == null || logId.isBlank()) {
-      return BaseResponse.error(BaseResultCode.BAD_REQUEST, "死信日志 ID 不能为空");
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "死信日志 ID 不能为空");
     }
     messageLogService.resendDead(logId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

@@ -19,7 +19,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
 import com.njydsz.userinfo.server.auth.WebAuthnService;
@@ -61,7 +61,7 @@ public class WebAuthnController {
   @Operation(
       summary = "获取注册选项",
       description = "生成 WebAuthn 注册参数供浏览器生成密钥对")
-  public BaseResponse<Map<String, Object>> getRegistrationOptions(
+  public YdszResponse<Map<String, Object>> getRegistrationOptions(
       String username,
       String displayName) {
     String userId = AuthContextUtils.getUserId();
@@ -74,7 +74,7 @@ public class WebAuthnController {
 
     Map<String, Object> options = webAuthnService.generateRegistrationOptions(
         userId, username, displayName);
-    return BaseResponse.success(options);
+    return YdszResponse.success(options);
   }
 
   /**
@@ -95,7 +95,7 @@ public class WebAuthnController {
   @Operation(
       summary = "验证并存储注册凭证",
       description = "验证浏览器提交的公钥凭证并持久化存储")
-  public BaseResponse<Void> verifyRegistration(@RequestBody Map<String, Object> credential) {
+  public YdszResponse<Void> verifyRegistration(@RequestBody Map<String, Object> credential) {
     String userId = AuthContextUtils.getUserId();
     String challenge = (String) credential.get("challenge");
     String credentialId = (String) credential.get("credentialId");
@@ -105,7 +105,7 @@ public class WebAuthnController {
 
     webAuthnService.verifyAndStoreCredential(userId, challenge, credentialId,
         publicKey, aaguid, clientDataJSON);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -121,9 +121,9 @@ public class WebAuthnController {
   @Operation(
       summary = "获取认证选项",
       description = "生成 WebAuthn 认证参数供浏览器进行签名认证")
-  public BaseResponse<Map<String, Object>> getAuthenticationOptions(String userId) {
+  public YdszResponse<Map<String, Object>> getAuthenticationOptions(String userId) {
     Map<String, Object> options = webAuthnService.generateAuthenticationOptions(userId);
-    return BaseResponse.success(options);
+    return YdszResponse.success(options);
   }
 
   /**
@@ -144,7 +144,7 @@ public class WebAuthnController {
   @Operation(
       summary = "验证认证响应",
       description = "验证浏览器提交的 Passkey 签名，成功后建立会话")
-  public BaseResponse<String> verifyAuthentication(@RequestBody Map<String, Object> assertion) {
+  public YdszResponse<String> verifyAuthentication(@RequestBody Map<String, Object> assertion) {
     String challenge = (String) assertion.get("challenge");
     String credentialId = (String) assertion.get("credentialId");
     String clientDataJSON = (String) assertion.get("clientDataJSON");
@@ -156,7 +156,7 @@ public class WebAuthnController {
 
     // TODO: 签发 JWT Token 或建立会话
 
-    return BaseResponse.success(userId);
+    return YdszResponse.success(userId);
   }
 
   /**
@@ -168,10 +168,10 @@ public class WebAuthnController {
   @Operation(
       summary = "查询 Passkey 列表",
       description = "返回当前用户注册的所有 Passkey 凭证")
-  public BaseResponse<List<WebAuthnCredentialVO>> listCredentials() {
+  public YdszResponse<List<WebAuthnCredentialVO>> listCredentials() {
     String userId = AuthContextUtils.getUserId();
     List<WebAuthnCredentialVO> credentials = webAuthnService.listCredentials(userId);
-    return BaseResponse.success(credentials);
+    return YdszResponse.success(credentials);
   }
 
   /**
@@ -189,9 +189,9 @@ public class WebAuthnController {
   @Operation(
       summary = "删除 Passkey",
       description = "删除指定的 Passkey 凭证")
-  public BaseResponse<Void> deleteCredential(@PathVariable String credentialId) {
+  public YdszResponse<Void> deleteCredential(@PathVariable String credentialId) {
     String userId = AuthContextUtils.getUserId();
     webAuthnService.deleteCredential(userId, credentialId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

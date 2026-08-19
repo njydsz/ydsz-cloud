@@ -19,7 +19,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -99,8 +99,8 @@ public class MessageFeedbackController {
       content = "'submitFeedback'")
   @RateLimit(resource = "message.messagefeedback.submitFeedback", threshold = 50)
   @PostMapping
-  public BaseResponse<String> submitFeedback(@Valid @RequestBody MessageFeedbackDTO dto) {
-    return BaseResponse.success(messageFeedbackService.submitFeedback(dto));
+  public YdszResponse<String> submitFeedback(@Valid @RequestBody MessageFeedbackDTO dto) {
+    return YdszResponse.success(messageFeedbackService.submitFeedback(dto));
   }
 
   /**
@@ -113,12 +113,12 @@ public class MessageFeedbackController {
   @Operation(summary = "查询用户平均评分")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/rating")
-  public BaseResponse<Map<String, Double>> getAverageRating(
+  public YdszResponse<Map<String, Double>> getAverageRating(
       @RequestParam String userId, @RequestParam(required = false) String channel) {
     double userRating = messageFeedbackService.getAverageRating(userId);
     double channelRating =
         channel != null ? messageFeedbackService.getAverageRatingByChannel(channel) : 0;
-    return BaseResponse.success(
+    return YdszResponse.success(
         Map.of(
             "userRating", userRating,
             "channelRating", channelRating));
@@ -154,8 +154,8 @@ public class MessageFeedbackController {
   @Operation(summary = "检查用户是否需要降频")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/shouldReduceFreq")
-  public BaseResponse<Map<String, Boolean>> shouldReduceFrequency(@RequestParam String userId) {
-    return BaseResponse.success(
+  public YdszResponse<Map<String, Boolean>> shouldReduceFrequency(@RequestParam String userId) {
+    return YdszResponse.success(
         Map.of("shouldReduce", messageFeedbackService.shouldReduceFrequency(userId)));
   }
 }

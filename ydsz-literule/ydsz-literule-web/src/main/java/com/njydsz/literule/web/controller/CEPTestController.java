@@ -20,8 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -101,15 +101,15 @@ public class CEPTestController {
   @RateLimit(resource = "literule.c_e_p_test.testPattern", threshold = 50)
   @PostMapping("/patterns/test")
   @Operation(summary = "测试 CEP 模式", description = "注册临时模式 → 投递测试事件 → 收集命中 → 自动注销临时模式")
-  public BaseResponse<Map<String, Object>> testPattern(@RequestBody Map<String, Object> body) {
+  public YdszResponse<Map<String, Object>> testPattern(@RequestBody Map<String, Object> body) {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return BaseResponse.error(BaseResultCode.FORBIDDEN, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "CEP 引擎未启用");
     }
     try {
       Object patternObj = body.get("pattern");
       if (patternObj == null) {
-        return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "pattern 不能为空");
+        return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "pattern 不能为空");
       }
       CEPPattern pattern = YdszJson.convertValue(patternObj, CEPPattern.class);
       if (pattern.getId() == null || pattern.getId().isBlank()) {
@@ -118,7 +118,7 @@ public class CEPTestController {
       String patternId = pattern.getId();
       Object eventsObj = body.get("events");
       if (!(eventsObj instanceof List<?> eventsList)) {
-        return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "events 必须为数组");
+        return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "events 必须为数组");
       }
 
       // 注册临时模式
@@ -148,10 +148,10 @@ public class CEPTestController {
       result.put("fedEvents", eventsList.size());
       result.put("triggeredHits", hitsAfter - hitsBefore);
       result.put("hits", testHits);
-      return BaseResponse.success(result);
+      return YdszResponse.success(result);
     } catch (Exception e) {
       log.warn("[CEP] 测试模式失败: {}", e.getMessage());
-      return BaseResponse.error(
+      return YdszResponse.error(
           LiteruleExceptionCode.RULE_EXPRESSION_INVALID, "测试失败: " + e.getMessage());
     }
   }

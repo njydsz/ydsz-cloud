@@ -16,8 +16,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -105,11 +105,11 @@ public class UnsubscribeController {
       content = "'oneClick'")
   @RateLimit(resource = "message.unsubscribe.oneClick", threshold = 50)
   @PostMapping("/oneClick")
-  public BaseResponse<MsgSubscriptionVO> oneClick(@RequestParam String token) {
+  public YdszResponse<MsgSubscriptionVO> oneClick(@RequestParam String token) {
     if (token == null || token.isBlank()) {
-      return BaseResponse.error(BaseResultCode.BAD_REQUEST, "退订 token 不能为空");
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "退订 token 不能为空");
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         MessageConverter.INSTANT.entityToVO(unsubscribeService.unsubscribeByToken(token)));
   }
 
@@ -124,11 +124,11 @@ public class UnsubscribeController {
   @Operation(summary = "预览退订 token")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
   @GetMapping("/preview")
-  public BaseResponse<UnsubscribeTokenPayload> preview(@RequestParam String token) {
+  public YdszResponse<UnsubscribeTokenPayload> preview(@RequestParam String token) {
     if (token == null || token.isBlank()) {
-      return BaseResponse.error(BaseResultCode.BAD_REQUEST, "退订 token 不能为空");
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "退订 token 不能为空");
     }
-    return BaseResponse.success(unsubscribeService.previewToken(token));
+    return YdszResponse.success(unsubscribeService.previewToken(token));
   }
 
   /**
@@ -164,7 +164,7 @@ public class UnsubscribeController {
       content = "'resubscribe'")
   @RateLimit(resource = "message.unsubscribe.resubscribe", threshold = 50)
   @PostMapping("/resubscribe")
-  public BaseResponse<Void> resubscribe(
+  public YdszResponse<Void> resubscribe(
       @RequestParam String userId, @RequestParam String topicCode, @RequestParam String channel) {
     if (userId == null
         || userId.isBlank()
@@ -172,9 +172,9 @@ public class UnsubscribeController {
         || topicCode.isBlank()
         || channel == null
         || channel.isBlank()) {
-      return BaseResponse.error(BaseResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
     }
     unsubscribeService.resubscribe(userId, topicCode, channel);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

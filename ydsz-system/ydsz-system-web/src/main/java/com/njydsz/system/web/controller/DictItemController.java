@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -97,8 +97,8 @@ public class DictItemController {
    */
   @Operation(summary = "按 ID 查询字典项")
   @GetMapping("/{id}")
-  public BaseResponse<DictItemVO> getById(@PathVariable String id) {
-    return BaseResponse.success(service.getById(id));
+  public YdszResponse<DictItemVO> getById(@PathVariable String id) {
+    return YdszResponse.success(service.getById(id));
   }
 
   /**
@@ -114,10 +114,10 @@ public class DictItemController {
    */
   @Operation(summary = "按类型编码和字典项编码查询")
   @GetMapping("/lookup")
-  public BaseResponse<DictItemVO> lookup(
+  public YdszResponse<DictItemVO> lookup(
       @Parameter(description = "字典类型编码") @RequestParam String typeCode,
       @Parameter(description = "字典项编码") @RequestParam String itemCode) {
-    return BaseResponse.success(service.getByTypeAndCode(typeCode, itemCode));
+    return YdszResponse.success(service.getByTypeAndCode(typeCode, itemCode));
   }
 
   /**
@@ -132,8 +132,8 @@ public class DictItemController {
    */
   @Operation(summary = "按类型编码查询启用的字典项列表")
   @GetMapping("/type/{typeCode}")
-  public BaseResponse<List<DictItemVO>> listByType(@PathVariable String typeCode) {
-    return BaseResponse.success(service.listEnabledByTypeCode(typeCode));
+  public YdszResponse<List<DictItemVO>> listByType(@PathVariable String typeCode) {
+    return YdszResponse.success(service.listEnabledByTypeCode(typeCode));
   }
 
   /**
@@ -148,8 +148,8 @@ public class DictItemController {
    */
   @Operation(summary = "按父级 ID 查询子字典项列表（树形字典）")
   @GetMapping("/children/{parentId}")
-  public BaseResponse<List<DictItemVO>> listChildren(@PathVariable String parentId) {
-    return BaseResponse.success(service.listChildren(parentId));
+  public YdszResponse<List<DictItemVO>> listChildren(@PathVariable String parentId) {
+    return YdszResponse.success(service.listChildren(parentId));
   }
 
   /**
@@ -164,8 +164,8 @@ public class DictItemController {
    */
   @Operation(summary = "构建字典项树形结构")
   @GetMapping("/tree/{typeCode}")
-  public BaseResponse<List<DictItemVO>> buildTree(@PathVariable String typeCode) {
-    return BaseResponse.success(service.buildTree(typeCode));
+  public YdszResponse<List<DictItemVO>> buildTree(@PathVariable String typeCode) {
+    return YdszResponse.success(service.buildTree(typeCode));
   }
 
   /**
@@ -188,8 +188,8 @@ public class DictItemController {
   @RateLimit(resource = "system.dictitem.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict-item:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PostMapping
-  public BaseResponse<String> save(@Valid @RequestBody DictItemVO vo) {
-    return BaseResponse.success(service.save(vo));
+  public YdszResponse<String> save(@Valid @RequestBody DictItemVO vo) {
+    return YdszResponse.success(service.save(vo));
   }
 
   /**
@@ -212,8 +212,8 @@ public class DictItemController {
   @RateLimit(resource = "system.dictitem.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict-item:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PutMapping
-  public BaseResponse<Boolean> update(@Valid @RequestBody DictItemVO vo) {
-    return BaseResponse.success(service.updateById(vo));
+  public YdszResponse<Boolean> update(@Valid @RequestBody DictItemVO vo) {
+    return YdszResponse.success(service.updateById(vo));
   }
 
   /**
@@ -235,8 +235,8 @@ public class DictItemController {
   @RateLimit(resource = "system.dictitem.remove", threshold = 50)
   @Idempotent(key = "'ydsz:system:dict-item:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
   @DeleteMapping("/{id}")
-  public BaseResponse<Boolean> remove(@PathVariable String id) {
-    return BaseResponse.success(service.removeById(id));
+  public YdszResponse<Boolean> remove(@PathVariable String id) {
+    return YdszResponse.success(service.removeById(id));
   }
 
   /**
@@ -268,9 +268,9 @@ public class DictItemController {
       key = "'ydsz:system:dict-item:batch:' + #batchDTO.items.hashCode() + ':' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
       ttlSeconds = 30)
   @PostMapping("/batch")
-  public BaseResponse<Map<String, Object>> batchSave(
+  public YdszResponse<Map<String, Object>> batchSave(
       @Valid @RequestBody DictItemBatchDTO batchDTO) {
-    return BaseResponse.success(batchService.batchSave(batchDTO.getItems()));
+    return YdszResponse.success(batchService.batchSave(batchDTO.getItems()));
   }
 
   /** 分页安全上限：防止 pageSize=999999 导致深度分页 OOM */

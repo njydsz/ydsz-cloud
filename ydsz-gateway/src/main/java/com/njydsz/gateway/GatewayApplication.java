@@ -93,14 +93,14 @@ public class GatewayApplication {
   @Bean
   public GatewayHealthIndicator gatewayHealthIndicator(
       ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider,
-      ObjectProvider<SecurityHeadersProperties> securityHeadersProvider,
+      ObjectProvider<SecurityHeaderProperties> securityHeaderProvider,
       ObjectProvider<RateLimitProperties> rateLimitPropertiesProvider,
       ObjectProvider<IpAccessControlProperties> ipAccessControlProvider,
       ObjectProvider<AuthGlobalFilter> authFilterProvider,
       ObjectProvider<GatewayMetrics> gatewayMetricsProvider) {
     return new GatewayHealthIndicator(
         redisTemplateProvider,
-        securityHeadersProvider,
+        securityHeaderProvider,
         rateLimitPropertiesProvider,
         ipAccessControlProvider,
         authFilterProvider,

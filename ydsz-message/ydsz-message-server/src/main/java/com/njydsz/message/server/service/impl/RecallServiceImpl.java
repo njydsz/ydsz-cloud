@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.infra.entity.MsgTraceDO;
 import com.njydsz.message.domain.entity.core.MsgLog;
@@ -85,20 +85,20 @@ public class RecallServiceImpl implements RecallService {
   public boolean recallNotification(String userId, String notificationId) {
     if (!StringUtils.hasText(userId) || !StringUtils.hasText(notificationId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("用户 ID 与通知 ID 不能为空")
           .build();
     }
     MsgNotification n = msgNotificationRepository.selectById(notificationId);
     if (n == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("通知不存在: " + notificationId)
           .build();
     }
     if (!userId.equals(n.getReceiverId())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.FORBIDDEN)
+          .resultCode(YdszResultCode.FORBIDDEN)
           .message("仅可撤回本人的通知")
           .build();
     }
@@ -124,7 +124,7 @@ public class RecallServiceImpl implements RecallService {
   public boolean recallMessage(String logId) {
     if (!StringUtils.hasText(logId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("日志 ID 不能为空")
           .build();
     }
@@ -156,7 +156,7 @@ public class RecallServiceImpl implements RecallService {
   public boolean recallByMsgId(String msgId) {
     if (!StringUtils.hasText(msgId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("消息 ID 不能为空")
           .build();
     }
@@ -166,14 +166,14 @@ public class RecallServiceImpl implements RecallService {
             new LambdaQueryWrapper<MsgLog>().eq(MsgLog::getMsgId, msgId).last("LIMIT 1"));
     if (logDO == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("消息不存在: msgId=" + msgId)
           .build();
     }
     // P2-B5: 终态消息（DEAD/SKIPPED）不可撤回
     if (logDO.getStatus() == MessageStatusEnum.DEAD || logDO.getStatus() == MessageStatusEnum.SKIPPED) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("消息状态为 " + logDO.getStatus().name() + "，不可撤回")
           .build();
     }
@@ -182,7 +182,7 @@ public class RecallServiceImpl implements RecallService {
       long minutesElapsed = Duration.between(logDO.getCreatedAt(), LocalDateTime.now()).toMinutes();
       if (minutesElapsed > RECALL_WINDOW_MINUTES) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("消息发送已超过 " + RECALL_WINDOW_MINUTES + " 分钟，不可撤回")
             .build();
       }
@@ -238,7 +238,7 @@ public class RecallServiceImpl implements RecallService {
   public int recallBatch(String bizType, String bizId) {
     if (!StringUtils.hasText(bizType) || !StringUtils.hasText(bizId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("业务类型与单据 ID 不能为空")
           .build();
     }

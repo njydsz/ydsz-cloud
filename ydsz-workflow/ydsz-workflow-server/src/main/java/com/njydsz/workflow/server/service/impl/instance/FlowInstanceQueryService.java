@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.assembler.NameAssembler;
@@ -159,14 +159,14 @@ public class FlowInstanceQueryService {
     // 校验：仅发起人可查询
     if (!instance.getInitiatorId().equals(initiatorId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.FORBIDDEN)
+          .resultCode(YdszResultCode.FORBIDDEN)
           .message("error.workflow.msg_cc712a3a")
           .build();
     }
     // 校验：仅运行中可查询
     if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_3095a676")
           .build();
     }
@@ -281,7 +281,7 @@ public class FlowInstanceQueryService {
     FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
     if (instance == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_fc4b1c16")
           .params(instanceId)
           .build();
@@ -296,7 +296,7 @@ public class FlowInstanceQueryService {
       FlowRunTaskVO task = taskRepository.findById(taskId).orElse(null);
       if (task == null) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.NOT_FOUND)
+            .resultCode(YdszResultCode.NOT_FOUND)
             .key("error.workflow.msg_6541ab08")
             .params(taskId)
             .build();
@@ -360,7 +360,7 @@ public class FlowInstanceQueryService {
     FlowInstanceVO instance = instanceRepository.findById(id).orElse(null);
     if (instance == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_67a10717")
           .params(id)
           .build();

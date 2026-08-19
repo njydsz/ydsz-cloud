@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -117,7 +117,7 @@ public class SamlController {
   @Operation(
       summary = "Assertion Consumer Service",
       description = "接收 IdP 的 SAML Response，验证后建立本地会话")
-  public BaseResponse<Map<String, String>> assertionConsumerService(
+  public YdszResponse<Map<String, String>> assertionConsumerService(
       @RequestParam("SAMLResponse") String samlResponse,
       @RequestParam(value = "RelayState", required = false) String relayState) {
 
@@ -134,6 +134,6 @@ public class SamlController {
     // TODO: 根据 nameId 查找或创建本地用户，签发 JWT Token
     // 实际生产环境应将 token 写入 cookie/重定向至前端
 
-    return BaseResponse.success(userAttributes);
+    return YdszResponse.success(userAttributes);
   }
 }

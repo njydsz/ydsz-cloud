@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 
 /**
  * 限流拦截器。
@@ -136,7 +136,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     response.setStatus(HTTP_TOO_MANY_REQUESTS);
     response.setContentType("application/json;charset=UTF-8");
     response.setHeader("Retry-After", RETRY_AFTER_SECONDS);
-    BaseResponse<?> body = BaseResponse.error("RATE_LIMIT_REJECT", message);
+    YdszResponse<?> body = YdszResponse.error("RATE_LIMIT_REJECT", message);
     response.getWriter().write(body.toString());
   }
 }

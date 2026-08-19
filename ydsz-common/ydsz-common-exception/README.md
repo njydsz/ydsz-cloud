@@ -99,7 +99,7 @@ traceId 提取优先级：`RequestContext.getTraceId()` → `MDC.get("traceId")`
 
 支持两种响应格式通过配置开关切换：
 
-- `base-response`（默认）：返回 `BaseResponse` 格式
+- `base-response`（默认）：返回 `YdszResponse` 格式
 - `problem-detail`：返回 RFC 7807 ProblemDetail 格式
 
 ### 6. 国际化 i18n
@@ -336,7 +336,7 @@ ydsz:
   - 移除不存在的 `UnifiedExceptionCode` / `ExceptionCodeRegistry` / `ResultCodeRegistry` 引用
   - `YdszResultCode` → `YdszExceptionCode`，`ResultCodeScanner` → `ExceptionCodeScanner`
   - `ResultCode`（core）精简为协议层三要素：`getCode()` / `getModule()`（default: "core"） / `getKey()`（default: `module.code`） / `getMsg()`
-  - `BaseResultCode` 移除 `httpStatus` 字段，构造函数退化为 `(code, msg)` 二元组
+  - `YdszResultCode` 移除 `httpStatus` 字段，构造函数退化为 `(code, msg)` 二元组
   - HTTP 状态码下沉至异常层：`ExceptionCode.getHttpStatus()`（default 400）/ `getCategory()`（从 key 前缀推断）
   - core i18n messages 精简为 `core.success` / `core.error` 两个协议级 key，业务 key 下沉至各模块
   - ProblemDetail 改为 Spring 标准

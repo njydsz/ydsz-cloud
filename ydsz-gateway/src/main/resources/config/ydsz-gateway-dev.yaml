@@ -43,7 +43,7 @@ ydsz:
     monitoring-enabled: true
     streaming-enabled: true
     warmup-classes:
-      - com.njydsz.common.core.response.BaseResponse
+      - com.njydsz.common.core.response.YdszResponse
       - org.springframework.cloud.gateway.route.RouteDefinition
   gateway:
     # P0-2: 内部头签名密钥（dev 环境回退到 JWT 密钥，生产环境必须通过环境变量注入）

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -107,9 +107,9 @@ public class AnalysisController {
   @GetMapping("/overview")
   @Operation(summary = "获取存储概览")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
-  public BaseResponse<StorageAnalysisApplicationService.StorageOverview> getOverview(
+  public YdszResponse<StorageAnalysisApplicationService.StorageOverview> getOverview(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    return BaseResponse.success(storageAnalysisService.getUserOverview(userId));
+    return YdszResponse.success(storageAnalysisService.getUserOverview(userId));
   }
 
   /**
@@ -123,9 +123,9 @@ public class AnalysisController {
   @GetMapping("/by-type")
   @Operation(summary = "按文件类型统计")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
-  public BaseResponse<Map<String, StorageAnalysisApplicationService.TypeStats>> statsByType(
+  public YdszResponse<Map<String, StorageAnalysisApplicationService.TypeStats>> statsByType(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    return BaseResponse.success(storageAnalysisService.statsByType(userId));
+    return YdszResponse.success(storageAnalysisService.statsByType(userId));
   }
 
   /**
@@ -140,10 +140,10 @@ public class AnalysisController {
   @GetMapping("/top-large-files")
   @Operation(summary = "大文件 Top-N")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
-  public BaseResponse<List<FileNodeVO>> topLargeFiles(
+  public YdszResponse<List<FileNodeVO>> topLargeFiles(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
       @RequestParam(defaultValue = "10") int limit) {
-    return BaseResponse.success(storageAnalysisService.topLargeFiles(userId, limit));
+    return YdszResponse.success(storageAnalysisService.topLargeFiles(userId, limit));
   }
 
   /**
@@ -159,8 +159,8 @@ public class AnalysisController {
   @PostMapping("/summary")
   @Operation(summary = "生成文档摘要")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
-  public BaseResponse<AiSummaryApplicationService.DocumentAnalysis> analyze(
+  public YdszResponse<AiSummaryApplicationService.DocumentAnalysis> analyze(
       @RequestBody String content) {
-    return BaseResponse.success(aiSummaryService.analyze(content));
+    return YdszResponse.success(aiSummaryService.analyze(content));
   }
 }

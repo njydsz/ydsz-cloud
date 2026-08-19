@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.workflow.api.fallback.WorkflowServiceClientFallback;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
@@ -38,7 +38,7 @@ public interface WorkflowServiceClient {
    * @return 流程实例 ID
    */
   @PostMapping(FeignClientConstants.WORKFLOW_PATH_START)
-  BaseResponse<String> startProcess(@RequestBody FlowStartProcessDTO dto);
+  YdszResponse<String> startProcess(@RequestBody FlowStartProcessDTO dto);
 
   /**
    * 通过业务单据反查流程状态
@@ -50,7 +50,7 @@ public interface WorkflowServiceClient {
    * @return 流程实例视图对象 {@link FlowInstanceVO}
    */
   @GetMapping(FeignClientConstants.WORKFLOW_PATH_GET_BY_BUSINESS)
-  BaseResponse<FlowInstanceVO> getByBusiness(
+  YdszResponse<FlowInstanceVO> getByBusiness(
       @RequestParam("businessType") String businessType,
       @RequestParam("businessId") String businessId);
 
@@ -63,7 +63,7 @@ public interface WorkflowServiceClient {
    * @param reason 终止原因（可空）
    */
   @PostMapping(FeignClientConstants.WORKFLOW_PATH_TERMINATE)
-  BaseResponse<Void> terminate(
+  YdszResponse<Void> terminate(
       @PathVariable("id") String processInstanceId,
       @RequestParam(value = "reason", required = false) String reason);
 }

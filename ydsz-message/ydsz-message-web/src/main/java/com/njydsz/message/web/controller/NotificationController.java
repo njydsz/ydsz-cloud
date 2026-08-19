@@ -23,7 +23,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.feign.dto.BroadcastRequestDTO;
@@ -123,8 +123,8 @@ public class NotificationController {
       content = "'send'")
   @RateLimit(resource = "message.notification.send", threshold = 50)
   @PostMapping("/send")
-  public BaseResponse<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {
-    return BaseResponse.success(notificationService.send(dto));
+  public YdszResponse<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {
+    return YdszResponse.success(notificationService.send(dto));
   }
 
   /**
@@ -149,8 +149,8 @@ public class NotificationController {
   @Operation(summary = "未读数量", description = "查询当前登录用户未读站内通知总数。用于导航栏徽标角标展示。无需参数，按 tenantId + userId 隔离。返回未读数量。")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
   @GetMapping("/unreadCount")
-  public BaseResponse<Long> countUnread() {
-    return BaseResponse.success(notificationService.countUnread(AuthContextUtils.getUserId()));
+  public YdszResponse<Long> countUnread() {
+    return YdszResponse.success(notificationService.countUnread(AuthContextUtils.getUserId()));
   }
 
   /**
@@ -172,8 +172,8 @@ public class NotificationController {
       content = "'markRead'")
   @RateLimit(resource = "message.notification.markRead", threshold = 50)
   @PostMapping("/{id}/read")
-  public BaseResponse<Boolean> markRead(@PathVariable String id) {
-    return BaseResponse.success(notificationService.markRead(AuthContextUtils.getUserId(), id));
+  public YdszResponse<Boolean> markRead(@PathVariable String id) {
+    return YdszResponse.success(notificationService.markRead(AuthContextUtils.getUserId(), id));
   }
 
   /**
@@ -194,8 +194,8 @@ public class NotificationController {
       content = "'markAllRead'")
   @RateLimit(resource = "message.notification.markAllRead", threshold = 50)
   @PostMapping("/readAll")
-  public BaseResponse<Integer> markAllRead() {
-    return BaseResponse.success(notificationService.markAllRead(AuthContextUtils.getUserId()));
+  public YdszResponse<Integer> markAllRead() {
+    return YdszResponse.success(notificationService.markAllRead(AuthContextUtils.getUserId()));
   }
 
   /**
@@ -217,9 +217,9 @@ public class NotificationController {
       content = "'delete'")
   @RateLimit(resource = "message.notification.delete", threshold = 50)
   @DeleteMapping
-  public BaseResponse<Void> delete(@Valid @RequestBody List<String> ids) {
+  public YdszResponse<Void> delete(@Valid @RequestBody List<String> ids) {
     notificationService.delete(AuthContextUtils.getUserId(), ids);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -241,8 +241,8 @@ public class NotificationController {
       content = "'recall'")
   @RateLimit(resource = "message.notification.recall", threshold = 50)
   @PostMapping("/{id}/recall")
-  public BaseResponse<Boolean> recall(@PathVariable String id) {
-    return BaseResponse.success(recallService.recallNotification(AuthContextUtils.getUserId(), id));
+  public YdszResponse<Boolean> recall(@PathVariable String id) {
+    return YdszResponse.success(recallService.recallNotification(AuthContextUtils.getUserId(), id));
   }
 
   /**
@@ -265,13 +265,13 @@ public class NotificationController {
       action = AuditAction.CREATE,
       content = "'postmapping'")
   @PostMapping("/push")
-  public BaseResponse<Map<String, Object>> push(
+  public YdszResponse<Map<String, Object>> push(
       @RequestParam String userId,
       @RequestParam String type,
       @Valid @RequestBody PushRealtimeRequestDTO payload) {
     Object bizData = payload != null ? payload.getData() : null;
     realtimePushService.pushToUser(userId, type, bizData);
-    return BaseResponse.success(Map.of("success", true, "userId", userId, "type", type));
+    return YdszResponse.success(Map.of("success", true, "userId", userId, "type", type));
   }
 
   /**
@@ -295,10 +295,10 @@ public class NotificationController {
       action = AuditAction.CREATE,
       content = "'postmapping'")
   @PostMapping("/broadcast")
-  public BaseResponse<MessageResult> broadcast(@Valid @RequestBody BroadcastRequestDTO request) {
+  public YdszResponse<MessageResult> broadcast(@Valid @RequestBody BroadcastRequestDTO request) {
     realtimePushService.broadcast(request.getTopic(), request.getData());
     String traceId = WebSocketTraceContext.getTraceId();
-    return BaseResponse.success(MessageResult.ok(request.getTopic(), traceId));
+    return YdszResponse.success(MessageResult.ok(request.getTopic(), traceId));
   }
 
   /**
@@ -316,10 +316,10 @@ public class NotificationController {
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_PUSH)
   @Idempotent(key = "ydsz:message:NotificationController:push-realtime:lock", ttlSeconds = 5)
   @PostMapping("/push-realtime")
-  public BaseResponse<MessageResult> pushRealtime(
+  public YdszResponse<MessageResult> pushRealtime(
       @Valid @RequestBody PushRealtimeRequestDTO request) {
     realtimePushService.pushToUser(request.getUserId(), request.getType(), request.getData());
     String traceId = WebSocketTraceContext.getTraceId();
-    return BaseResponse.success(MessageResult.ok(request.getType(), traceId));
+    return YdszResponse.success(MessageResult.ok(request.getType(), traceId));
   }
 }

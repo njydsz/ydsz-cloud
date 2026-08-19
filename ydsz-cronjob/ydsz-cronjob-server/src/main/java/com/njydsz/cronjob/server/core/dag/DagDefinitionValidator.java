@@ -9,7 +9,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 
 /**
@@ -58,7 +58,7 @@ public class DagDefinitionValidator {
   public void validate(DagDefinition definition) {
     if (definition == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_dag_definition_empty")
           .build();
     }
@@ -74,7 +74,7 @@ public class DagDefinitionValidator {
   private void validateNodes(DagDefinition definition) {
     if (definition.nodes() == null || definition.nodes().isEmpty()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_dag_no_nodes")
           .build();
     }
@@ -82,13 +82,13 @@ public class DagDefinitionValidator {
     for (DagNode node : definition.nodes()) {
       if (node.jobKey() == null || node.jobKey().isBlank()) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("error.cronjob.msg_dag_node_key_missing")
             .build();
       }
       if (!seen.add(node.jobKey())) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("error.cronjob.msg_dag_node_key_duplicate")
             .build();
       }
@@ -105,27 +105,27 @@ public class DagDefinitionValidator {
     for (DagEdge edge : definition.edges()) {
       if (edge.from() == null || edge.to() == null) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("error.cronjob.msg_dag_edge_invalid")
             .build();
       }
       if (!nodeKeys.contains(edge.from())) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_dag_edge_node_not_found")
             .params(edge.from())
             .build();
       }
       if (!nodeKeys.contains(edge.to())) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_dag_edge_node_not_found")
             .params(edge.to())
             .build();
       }
       if (edge.from().equals(edge.to())) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_dag_self_loop")
             .params(edge.from())
             .build();
@@ -134,7 +134,7 @@ public class DagDefinitionValidator {
       String edgeKey = edge.from() + "->" + edge.to();
       if (!seenEdges.add(edgeKey)) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_dag_duplicate_edge")
             .params(edge.from(), edge.to())
             .build();
@@ -164,7 +164,7 @@ public class DagDefinitionValidator {
       if (color.get(node.jobKey()) == 0) {
         if (hasCycleDFS(node.jobKey(), definition, color)) {
           throw SysException.builder()
-              .resultCode(BaseResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
               .key("error.cronjob.msg_dag_cycle_detected")
               .params(node.jobKey())
               .build();
@@ -200,7 +200,7 @@ public class DagDefinitionValidator {
     List<DagNode> roots = definition.rootNodes();
     if (roots.isEmpty()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_dag_no_root")
           .build();
     }
@@ -220,7 +220,7 @@ public class DagDefinitionValidator {
           // TASK 节点要求 jobId 非空（关联具体任务）
           if (node.jobId() == null || node.jobId().isBlank()) {
             throw SysException.builder()
-                .resultCode(BaseResultCode.BAD_REQUEST)
+                .resultCode(YdszResultCode.BAD_REQUEST)
                 .key("error.cronjob.msg_dag_task_job_id_missing")
                 .params(node.jobKey())
                 .build();
@@ -230,7 +230,7 @@ public class DagDefinitionValidator {
           // P1-5: 子工作流节点要求 subWorkflowDagKey 非空
           if (node.subWorkflowDagKey() == null || node.subWorkflowDagKey().isBlank()) {
             throw SysException.builder()
-                .resultCode(BaseResultCode.BAD_REQUEST)
+                .resultCode(YdszResultCode.BAD_REQUEST)
                 .key("error.cronjob.msg_dag_sub_workflow_key_missing")
                 .params(node.jobKey())
                 .build();
@@ -240,14 +240,14 @@ public class DagDefinitionValidator {
           // P1-6: 审批节点要求 approvalUsers 非空
           if (node.approvalUsers() == null || node.approvalUsers().isBlank()) {
             throw SysException.builder()
-                .resultCode(BaseResultCode.BAD_REQUEST)
+                .resultCode(YdszResultCode.BAD_REQUEST)
                 .key("error.cronjob.msg_dag_approval_users_missing")
                 .params(node.jobKey())
                 .build();
           }
           if (node.approvalTimeoutMinutes() != null && node.approvalTimeoutMinutes() <= 0) {
             throw SysException.builder()
-                .resultCode(BaseResultCode.BAD_REQUEST)
+                .resultCode(YdszResultCode.BAD_REQUEST)
                 .key("error.cronjob.msg_dag_approval_timeout_invalid")
                 .params(node.jobKey())
                 .build();
@@ -265,14 +265,14 @@ public class DagDefinitionValidator {
   private void validateScale(DagDefinition definition) {
     if (definition.nodeCount() > MAX_NODES) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_too_many_nodes")
           .params(MAX_NODES, definition.nodeCount())
           .build();
     }
     if (definition.edges().size() > MAX_EDGES) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_too_many_edges")
           .params(MAX_EDGES, definition.edges().size())
           .build();

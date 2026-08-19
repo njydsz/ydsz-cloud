@@ -52,7 +52,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `BaseGlobalResponseAdvice` | 全局响应包装抽象基类（实现 `ResponseBodyAdvice<Object>`），自动将非 `BaseResponse` 类型返回值包装为 `BaseResponse.success(Object)`；跳过 `BaseResponse`、`void`、`ResponseEntity`、`HttpEntity`、`Resource`；子类覆盖 `wrapStringBody(String)` 处理 String 返回值差异（Web 端用 `success(msg)`，App 端用 `successMsg(msg)`） |
+| `BaseGlobalResponseAdvice` | 全局响应包装抽象基类（实现 `ResponseBodyAdvice<Object>`），自动将非 `YdszResponse` 类型返回值包装为 `YdszResponse.success(Object)`；跳过 `YdszResponse`、`void`、`ResponseEntity`、`HttpEntity`、`Resource`；子类覆盖 `wrapStringBody(String)` 处理 String 返回值差异（Web 端用 `success(msg)`，App 端用 `successMsg(msg)`） |
 
 ### 6. 自动配置
 

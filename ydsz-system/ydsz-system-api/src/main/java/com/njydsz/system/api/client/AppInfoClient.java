@@ -4,7 +4,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.system.api.dto.AppValidateRequest;
 import com.njydsz.system.api.fallback.AppInfoClientFallback;
@@ -32,5 +32,5 @@ public interface AppInfoClient {
    * @return 校验通过返回 {@code true}；应用不存在 / 未启用 / 密钥不匹配返回 {@code false}
    */
   @PostMapping(FeignClientConstants.SYSTEM_PATH_APP_VALIDATE)
-  BaseResponse<Boolean> validateClient(@RequestBody AppValidateRequest request);
+  YdszResponse<Boolean> validateClient(@RequestBody AppValidateRequest request);
 }

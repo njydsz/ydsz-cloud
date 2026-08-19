@@ -16,7 +16,7 @@ import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 
 /**
@@ -73,7 +73,7 @@ public class AgentMetadataController {
   @AuthApiPermission(apiCodes = PermissionCodes.AGENT_METADATA_VIEW)
   @GetMapping("/models")
   @Operation(summary = "获取可用模型列表", description = "返回当前 Agent 支持的 LLM Provider 列表")
-  public BaseResponse<List<Map<String, Object>>> models() {
+  public YdszResponse<List<Map<String, Object>>> models() {
     List<Map<String, Object>> result = new ArrayList<>();
     if (llmClient instanceof LlmClientRouter router) {
       for (String provider : router.getAvailableProviders()) {
@@ -82,7 +82,7 @@ public class AgentMetadataController {
     } else {
       result.add(Map.of("provider", llmClient.getProvider(), "available", true));
     }
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -96,7 +96,7 @@ public class AgentMetadataController {
   @AuthApiPermission(apiCodes = PermissionCodes.AGENT_METADATA_VIEW)
   @GetMapping("/tools")
   @Operation(summary = "获取已注册工具列表", description = "返回工具注册中心中所有已注册工具的元数据")
-  public BaseResponse<List<Map<String, Object>>> tools() {
+  public YdszResponse<List<Map<String, Object>>> tools() {
     var defs = toolRegistry.getToolDefinitions();
     List<Map<String, Object>> result =
         defs.stream()
@@ -108,6 +108,6 @@ public class AgentMetadataController {
                         "description",
                         td.getDescription() != null ? td.getDescription() : ""))
             .toList();
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 }

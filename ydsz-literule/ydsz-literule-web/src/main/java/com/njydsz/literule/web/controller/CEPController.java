@@ -23,8 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RuleContext;
@@ -150,12 +150,12 @@ public class CEPController {
    */
   @GetMapping("/patterns")
   @Operation(summary = "列出已注册的 CEP 模式")
-  public BaseResponse<List<CEPPatternVO>> listPatterns() {
+  public YdszResponse<List<CEPPatternVO>> listPatterns() {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return BaseResponse.error(BaseResultCode.FORBIDDEN, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "CEP 引擎未启用");
     }
-    return BaseResponse.success(engine.listPatterns().stream().map(this::toPatternVO).toList());
+    return YdszResponse.success(engine.listPatterns().stream().map(this::toPatternVO).toList());
   }
 
   /**
@@ -173,16 +173,16 @@ public class CEPController {
   @RateLimit(resource = "literule.c_e_p.registerPattern", threshold = 50)
   @PostMapping("/patterns")
   @Operation(summary = "注册 CEP 模式")
-  public BaseResponse<Void> registerPattern(@RequestBody CEPPattern pattern) {
+  public YdszResponse<Void> registerPattern(@RequestBody CEPPattern pattern) {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return BaseResponse.error(BaseResultCode.FORBIDDEN, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "CEP 引擎未启用");
     }
     try {
       engine.registerPattern(pattern);
-      return BaseResponse.success();
+      return YdszResponse.success();
     } catch (IllegalArgumentException e) {
-      return BaseResponse.error(e.getMessage());
+      return YdszResponse.error(e.getMessage());
     }
   }
 
@@ -201,13 +201,13 @@ public class CEPController {
   @RateLimit(resource = "literule.c_e_p.unregisterPattern", threshold = 50)
   @DeleteMapping("/patterns/{pattern-id}")
   @Operation(summary = "注销 CEP 模式")
-  public BaseResponse<Void> unregisterPattern(@PathVariable String patternId) {
+  public YdszResponse<Void> unregisterPattern(@PathVariable String patternId) {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return BaseResponse.error(BaseResultCode.FORBIDDEN, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "CEP 引擎未启用");
     }
     engine.unregisterPattern(patternId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -236,10 +236,10 @@ public class CEPController {
   @RateLimit(resource = "literule.c_e_p.feedEvent", threshold = 50)
   @PostMapping("/events")
   @Operation(summary = "投递单条事件", description = "投递单条事件到 CEP 引擎，返回触发的命中数")
-  public BaseResponse<Map<String, Object>> feedEvent(@RequestBody Map<String, Object> body) {
+  public YdszResponse<Map<String, Object>> feedEvent(@RequestBody Map<String, Object> body) {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return BaseResponse.error(BaseResultCode.FORBIDDEN, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "CEP 引擎未启用");
     }
     int hitsBefore = (int) engine.totalHits();
     CEPEvent event = toEvent(body);
@@ -248,7 +248,7 @@ public class CEPController {
     Map<String, Object> result = new HashMap<>();
     result.put("fed", true);
     result.put("triggeredHits", hitsAfter - hitsBefore);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -266,21 +266,21 @@ public class CEPController {
   @RateLimit(resource = "literule.c_e_p.feedEvents", threshold = 50)
   @PostMapping("/events/batch")
   @Operation(summary = "批量投递事件", description = "批量投递事件到 CEP 引擎，返回触发的命中数")
-  public BaseResponse<Map<String, Object>> feedEvents(
+  public YdszResponse<Map<String, Object>> feedEvents(
       @RequestBody List<Map<String, Object>> events) {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return BaseResponse.error(BaseResultCode.FORBIDDEN, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "CEP 引擎未启用");
     }
     if (events == null || events.isEmpty()) {
-      return BaseResponse.success(Map.of("fed", 0, "triggeredHits", 0));
+      return YdszResponse.success(Map.of("fed", 0, "triggeredHits", 0));
     }
     int hitsBefore = (int) engine.totalHits();
     for (Map<String, Object> body : events) {
       engine.feed(toEvent(body));
     }
     int hitsAfter = (int) engine.totalHits();
-    return BaseResponse.success(
+    return YdszResponse.success(
         Map.of("fed", events.size(), "triggeredHits", hitsAfter - hitsBefore));
   }
 
@@ -291,9 +291,9 @@ public class CEPController {
    */
   @GetMapping("/hits")
   @Operation(summary = "查询最近命中记录", description = "返回最近 200 条 CEP 命中记录（内存暂存）")
-  public BaseResponse<List<CEPHitVO>> recentHits() {
+  public YdszResponse<List<CEPHitVO>> recentHits() {
     synchronized (recentHits) {
-      return BaseResponse.success(new ArrayList<>(recentHits).stream().map(this::toHitVO).toList());
+      return YdszResponse.success(new ArrayList<>(recentHits).stream().map(this::toHitVO).toList());
     }
   }
 
@@ -304,12 +304,12 @@ public class CEPController {
    */
   @GetMapping("/stats")
   @Operation(summary = "CEP 引擎状态", description = "返回当前模式数和累计命中数")
-  public BaseResponse<Map<String, Object>> stats() {
+  public YdszResponse<Map<String, Object>> stats() {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return BaseResponse.error(BaseResultCode.FORBIDDEN, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "CEP 引擎未启用");
     }
-    return BaseResponse.success(
+    return YdszResponse.success(
         Map.of(
             "patternCount", engine.patternCount(),
             "totalHits", engine.totalHits()));

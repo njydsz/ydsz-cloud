@@ -24,7 +24,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.base.api.ApiVersion;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
@@ -122,12 +122,12 @@ public class FileBatchController {
   @PostMapping("/batch/delete")
   @Operation(summary = "批量删除")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
-  public BaseResponse<FileApplicationService.BatchResult> batchDelete(
+  public YdszResponse<FileApplicationService.BatchResult> batchDelete(
       @RequestBody List<String> nodeIds,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     FileApplicationService.BatchResult result = fileApplicationService.batchDelete(nodeIds, userId);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -148,13 +148,13 @@ public class FileBatchController {
   @PostMapping("/batch/move")
   @Operation(summary = "批量移动")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
-  public BaseResponse<FileApplicationService.BatchResult> batchMove(
+  public YdszResponse<FileApplicationService.BatchResult> batchMove(
       @Valid @RequestBody NextwikiDTOs.BatchMoveRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     FileApplicationService.BatchResult result =
         fileApplicationService.batchMove(request.getNodeIds(), request.getTargetParentId(), userId);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -168,8 +168,8 @@ public class FileBatchController {
   @GetMapping("/{nodeId}/versions")
   @Operation(summary = "获取版本历史")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION_VIEW)
-  public BaseResponse<List<FileVersionVO>> getVersionHistory(@PathVariable String nodeId) {
-    return BaseResponse.success(fileApplicationService.getVersionHistory(nodeId));
+  public YdszResponse<List<FileVersionVO>> getVersionHistory(@PathVariable String nodeId) {
+    return YdszResponse.success(fileApplicationService.getVersionHistory(nodeId));
   }
 
   /**
@@ -191,13 +191,13 @@ public class FileBatchController {
   @PostMapping("/{nodeId}/versions/{version}/rollback")
   @Operation(summary = "回滚到指定版本")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION_ROLLBACK)
-  public BaseResponse<FileNodeVO> rollbackVersion(
+  public YdszResponse<FileNodeVO> rollbackVersion(
       @PathVariable String nodeId,
       @PathVariable Integer version,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     FileNodeVO result = fileApplicationService.rollbackVersion(nodeId, version, userId);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -213,11 +213,11 @@ public class FileBatchController {
   @GetMapping("/{nodeId}/versions/diff")
   @Operation(summary = "对比版本差异")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION_VIEW)
-  public BaseResponse<VersionDiffService.DiffResult> diffVersions(
+  public YdszResponse<VersionDiffService.DiffResult> diffVersions(
       @PathVariable String nodeId,
       @RequestParam int oldVersion,
       @RequestParam int newVersion) {
-    return BaseResponse.success(
+    return YdszResponse.success(
         versionDiffApplicationService.diffVersions(nodeId, oldVersion, newVersion));
   }
 
@@ -239,12 +239,12 @@ public class FileBatchController {
   @PostMapping("/batch/async-delete")
   @Operation(summary = "异步批量删除")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
-  public BaseResponse<String> asyncBatchDelete(
+  public YdszResponse<String> asyncBatchDelete(
       @RequestBody List<String> nodeIds,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     String taskId = batchTaskService.submitBatchDelete(nodeIds, userId);
-    return BaseResponse.success(taskId);
+    return YdszResponse.success(taskId);
   }
 
   /**
@@ -263,13 +263,13 @@ public class FileBatchController {
   @PostMapping("/batch/async-move")
   @Operation(summary = "异步批量移动")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
-  public BaseResponse<String> asyncBatchMove(
+  public YdszResponse<String> asyncBatchMove(
       @Valid @RequestBody NextwikiDTOs.BatchMoveRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     String taskId =
         batchTaskService.submitBatchMove(request.getNodeIds(), request.getTargetParentId(), userId);
-    return BaseResponse.success(taskId);
+    return YdszResponse.success(taskId);
   }
 
   /**
@@ -281,9 +281,9 @@ public class FileBatchController {
   @GetMapping("/batch/task/{taskId}")
   @Operation(summary = "查询批量任务状态")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VIEW)
-  public BaseResponse<BatchTaskStatus> getBatchTaskStatus(@PathVariable String taskId) {
+  public YdszResponse<BatchTaskStatus> getBatchTaskStatus(@PathVariable String taskId) {
     BatchTaskStatus status = batchTaskService.getTaskStatus(taskId);
-    return BaseResponse.success(status);
+    return YdszResponse.success(status);
   }
 
   /**
@@ -304,10 +304,10 @@ public class FileBatchController {
   @PutMapping("/{nodeId}/star")
   @Operation(summary = "切换星标状态")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_STAR)
-  public BaseResponse<Void> toggleStar(
+  public YdszResponse<Void> toggleStar(
       @PathVariable String nodeId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     fileApplicationService.toggleStar(nodeId, userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

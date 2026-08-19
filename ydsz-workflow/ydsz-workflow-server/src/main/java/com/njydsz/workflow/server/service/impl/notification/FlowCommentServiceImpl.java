@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.dto.FlowCommentCreateDTO;
@@ -131,7 +131,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
       FlowCommentCreateDTO dto, String userId, String userName, String tenantId) {
     if (!StringUtils.hasText(userId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_a7b8c9d0")
           .build();
     }
@@ -141,14 +141,14 @@ public class FlowCommentServiceImpl implements FlowCommentService {
           commentRepository.findById(dto.getParentCommentId()).map(converter::entityToDO).orElse(null);
       if (parent == null || parent.getDeleted() == 1) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.NOT_FOUND)
+            .resultCode(YdszResultCode.NOT_FOUND)
             .key("error.workflow.msg_f2a3b4c5")
             .params(dto.getParentCommentId())
             .build();
       }
       if (!parent.getInstanceId().equals(dto.getInstanceId())) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("error.workflow.msg_a3b4c5d6")
             .build();
       }
@@ -256,7 +256,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     // 仅评论人本人可删除自己的评论
     if (!comment.getUserId().equals(userId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.FORBIDDEN)
+          .resultCode(YdszResultCode.FORBIDDEN)
           .message("error.workflow.msg_b4c5d6e7")
           .build();
     }
@@ -353,7 +353,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
   public String createQuickComment(FlowQuickCommentDTO dto, String userId, String tenantId) {
     if (!StringUtils.hasText(userId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_user_required")
           .build();
     }
@@ -384,21 +384,21 @@ public class FlowCommentServiceImpl implements FlowCommentService {
   public void updateQuickComment(FlowQuickCommentDTO dto, String userId) {
     if (!StringUtils.hasText(dto.getId())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_id_required")
           .build();
     }
     FlowQuickCommentDO existing = quickCommentMapper.selectById(dto.getId());
     if (existing == null || existing.getDeleted() == 1) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_6541ab08")
           .params(dto.getId())
           .build();
     }
     if (!userId.equals(existing.getUserId())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.FORBIDDEN)
+          .resultCode(YdszResultCode.FORBIDDEN)
           .message("error.workflow.msg_no_permission")
           .build();
     }
@@ -436,13 +436,13 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     // 系统预设不可删除
     if (existing.getIsSystem() != null && existing.getIsSystem() == 1) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_system_comment_cannot_delete")
           .build();
     }
     if (!userId.equals(existing.getUserId())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.FORBIDDEN)
+          .resultCode(YdszResultCode.FORBIDDEN)
           .message("error.workflow.msg_no_permission")
           .build();
     }

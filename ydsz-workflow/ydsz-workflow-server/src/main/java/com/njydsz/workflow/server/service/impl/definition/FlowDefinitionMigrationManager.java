@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
@@ -102,7 +102,7 @@ public class FlowDefinitionMigrationManager {
     Map<String, Object> detail = queryService.getDetail(definitionId);
     if (detail == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("流程定义不存在: " + definitionId)
           .build();
     }
@@ -124,7 +124,7 @@ public class FlowDefinitionMigrationManager {
   public String importDefinition(String json, String tenantId) {
     if (!StringUtils.hasText(json)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("导入 JSON 不能为空")
           .build();
     }
@@ -133,13 +133,13 @@ public class FlowDefinitionMigrationManager {
       root = YdszJson.parseMap(json);
     } catch (Exception e) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("JSON 解析失败: " + e.getMessage())
           .build();
     }
     if (root == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("JSON 内容为空")
           .build();
     }
@@ -147,7 +147,7 @@ public class FlowDefinitionMigrationManager {
     Map<String, Object> defJson = MapUtils.safeCastMap(MapUtils.getMap(root, "definition"));
     if (defJson == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("JSON 缺少 definition 字段")
           .build();
     }
@@ -155,7 +155,7 @@ public class FlowDefinitionMigrationManager {
     String flowName = MapUtils.getString(defJson, "flowName");
     if (!StringUtils.hasText(flowCode) || !StringUtils.hasText(flowName)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("definition 中 flowCode/flowName 不能为空")
           .build();
     }
@@ -239,7 +239,7 @@ public class FlowDefinitionMigrationManager {
     FlowDefinitionDO baseDef = definitionMapper.selectById(definitionId);
     if (baseDef == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("流程定义不存在: " + definitionId)
           .build();
     }
@@ -256,13 +256,13 @@ public class FlowDefinitionMigrationManager {
 
     if (defV1 == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("版本 " + version1 + " 不存在: flowCode=" + baseDef.getFlowCode())
           .build();
     }
     if (defV2 == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("版本 " + version2 + " 不存在: flowCode=" + baseDef.getFlowCode())
           .build();
     }
@@ -451,7 +451,7 @@ public class FlowDefinitionMigrationManager {
       String oldDefinitionId, String newDefinitionId) {
     if (!StringUtils.hasText(oldDefinitionId) || !StringUtils.hasText(newDefinitionId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_c2d3e4f5")
           .build();
     }
@@ -459,7 +459,7 @@ public class FlowDefinitionMigrationManager {
     FlowDefinitionDO oldDef = definitionMapper.selectById(oldDefinitionId);
     if (oldDef == null || (oldDef.getDeleted() != null && oldDef.getDeleted() == 1)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_e7f8a9b0")
           .params(oldDefinitionId)
           .build();
@@ -467,14 +467,14 @@ public class FlowDefinitionMigrationManager {
     FlowDefinitionDO newDef = definitionMapper.selectById(newDefinitionId);
     if (newDef == null || (newDef.getDeleted() != null && newDef.getDeleted() == 1)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_e7f8a9b0")
           .params(newDefinitionId)
           .build();
     }
     if (!Objects.equals(oldDef.getFlowCode(), newDef.getFlowCode())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_d3e4f5a6")
           .build();
     }

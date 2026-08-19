@@ -18,7 +18,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 
@@ -84,8 +84,8 @@ public class HumanApprovalController {
       action = AuditAction.QUERY,
       content = "'listPending'")
   @GetMapping("/pending")
-  public BaseResponse<List<ApprovalRequest>> listPending() {
-    return BaseResponse.success(approvalService.listPending());
+  public YdszResponse<List<ApprovalRequest>> listPending() {
+    return YdszResponse.success(approvalService.listPending());
   }
 
   /**
@@ -101,12 +101,12 @@ public class HumanApprovalController {
       action = AuditAction.QUERY,
       content = "'getApproval: ' + #id")
   @GetMapping("/{id}")
-  public BaseResponse<ApprovalRequest> getApproval(@PathVariable String id) {
+  public YdszResponse<ApprovalRequest> getApproval(@PathVariable String id) {
     ApprovalRequest request = approvalService.getApproval(id);
     if (request == null) {
-      return BaseResponse.error(AgentExceptionCode.AGENT_NOT_FOUND, "Approval not found: " + id);
+      return YdszResponse.error(AgentExceptionCode.AGENT_NOT_FOUND, "Approval not found: " + id);
     }
-    return BaseResponse.success(request);
+    return YdszResponse.success(request);
   }
 
   /**
@@ -128,17 +128,17 @@ public class HumanApprovalController {
       content = "'approve'")
   @Idempotent(key = "ydsz:agent:HumanApprovalController:approve:lock", ttlSeconds = 5)
   @PostMapping("/{id}/approve")
-  public BaseResponse<Boolean> approve(
+  public YdszResponse<Boolean> approve(
       @PathVariable String id,
       @RequestParam(required = false) String approver,
       @RequestParam(required = false) String comment) {
     log.info("[HumanApproval] 审批通过: id={}, approver={}", id, approver);
     boolean result = approvalService.approve(id, approver, comment);
     if (!result) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           AgentExceptionCode.AGENT_NOT_FOUND, "Approval not found or already resolved: " + id);
     }
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 
   /**
@@ -160,16 +160,16 @@ public class HumanApprovalController {
       content = "'reject'")
   @Idempotent(key = "ydsz:agent:HumanApprovalController:reject:lock", ttlSeconds = 5)
   @PostMapping("/{id}/reject")
-  public BaseResponse<Boolean> reject(
+  public YdszResponse<Boolean> reject(
       @PathVariable String id,
       @RequestParam(required = false) String approver,
       @RequestParam(required = false) String comment) {
     log.info("[HumanApproval] 审批拒绝: id={}, approver={}, reason={}", id, approver, comment);
     boolean result = approvalService.reject(id, approver, comment);
     if (!result) {
-      return BaseResponse.error(
+      return YdszResponse.error(
           AgentExceptionCode.AGENT_NOT_FOUND, "Approval not found or already resolved: " + id);
     }
-    return BaseResponse.success(true);
+    return YdszResponse.success(true);
   }
 }

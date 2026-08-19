@@ -4,7 +4,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.message.api.fallback.MessageSendClientFallback;
@@ -46,5 +46,5 @@ public interface MessageSendClient {
    * @return 发送结果（messageId + status）
    */
   @PostMapping(FeignClientConstants.MESSAGE_PATH_SEND)
-  BaseResponse<String> sendMessage(@RequestBody MessageRequest request);
+  YdszResponse<String> sendMessage(@RequestBody MessageRequest request);
 }

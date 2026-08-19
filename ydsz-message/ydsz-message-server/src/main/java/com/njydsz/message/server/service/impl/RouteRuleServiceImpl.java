@@ -18,7 +18,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.exception.custom.SysException;
@@ -84,7 +84,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
   public MsgRouteRule create(RouteRuleUpsertDTO dto) {
     if (dto == null || !StringUtils.hasText(dto.getRuleCode())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("规则编码不能为空")
           .build();
     }
@@ -96,7 +96,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
                 .last("LIMIT 1"));
     if (existing != null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("规则编码已存在: " + dto.getRuleCode())
           .build();
     }
@@ -118,7 +118,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
   public MsgRouteRule update(String id, RouteRuleUpsertDTO dto) {
     if (!StringUtils.hasText(id) || dto == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("规则 ID 与参数不能为空")
           .build();
     }
@@ -169,7 +169,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
   public void delete(String id) {
     if (!StringUtils.hasText(id)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("规则 ID 不能为空")
           .build();
     }
@@ -186,14 +186,14 @@ public class RouteRuleServiceImpl implements RouteRuleService {
   public MsgRouteRule getById(String id) {
     if (!StringUtils.hasText(id)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("规则 ID 不能为空")
           .build();
     }
     MsgRouteRule entity = msgRouteRuleRepository.selectById(id);
     if (entity == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("路由规则不存在: " + id)
           .build();
     }

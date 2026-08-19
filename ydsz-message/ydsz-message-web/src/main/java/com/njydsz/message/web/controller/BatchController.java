@@ -19,8 +19,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -117,11 +117,11 @@ public class BatchController {
       content = "'submitBatch'")
   @RateLimit(resource = "message.batch.submitBatch", threshold = 50)
   @PostMapping("/send")
-  public BaseResponse<MsgBatchVO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {
+  public YdszResponse<MsgBatchVO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {
     if (dto == null) {
-      return BaseResponse.error(BaseResultCode.BAD_REQUEST, "批量发送参数为空");
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "批量发送参数为空");
     }
-    return BaseResponse.success(MessageConverter.INSTANT.entityToVO(batchService.submitBatch(dto)));
+    return YdszResponse.success(MessageConverter.INSTANT.entityToVO(batchService.submitBatch(dto)));
   }
 
   /**
@@ -133,8 +133,8 @@ public class BatchController {
   @Operation(summary = "查询批次发送进度")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/progress/{batchId}")
-  public BaseResponse<BatchProgressVO> getProgress(@PathVariable String batchId) {
-    return BaseResponse.success(batchService.getProgress(batchId));
+  public YdszResponse<BatchProgressVO> getProgress(@PathVariable String batchId) {
+    return YdszResponse.success(batchService.getProgress(batchId));
   }
 
   /**

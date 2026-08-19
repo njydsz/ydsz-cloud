@@ -22,7 +22,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -82,8 +82,8 @@ public class TenantController {
    */
   @Operation(summary = "按 ID 查询租户")
   @GetMapping("/{id}")
-  public BaseResponse<TenantVO> getById(@PathVariable String id) {
-    return BaseResponse.success(service.getById(id));
+  public YdszResponse<TenantVO> getById(@PathVariable String id) {
+    return YdszResponse.success(service.getById(id));
   }
 
   /**
@@ -104,10 +104,10 @@ public class TenantController {
   @RateLimit(resource = "system.tenant.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:tenant:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PostMapping
-  public BaseResponse<String> save(
+  public YdszResponse<String> save(
       @Valid @RequestBody TenantDTO dto,
       @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId) {
-    return BaseResponse.success(service.save(dto));
+    return YdszResponse.success(service.save(dto));
   }
 
   /**
@@ -126,10 +126,10 @@ public class TenantController {
   @RateLimit(resource = "system.tenant.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:tenant:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PutMapping
-  public BaseResponse<Boolean> update(
+  public YdszResponse<Boolean> update(
       @Valid @RequestBody TenantDTO dto,
       @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId) {
-    return BaseResponse.success(service.updateById(dto));
+    return YdszResponse.success(service.updateById(dto));
   }
 
   /**
@@ -147,8 +147,8 @@ public class TenantController {
   @RateLimit(resource = "system.tenant.remove", threshold = 50)
   @Idempotent(key = "'ydsz:system:tenant:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
   @DeleteMapping("/{id}")
-  public BaseResponse<Boolean> remove(@PathVariable String id) {
-    return BaseResponse.success(service.removeById(id));
+  public YdszResponse<Boolean> remove(@PathVariable String id) {
+    return YdszResponse.success(service.removeById(id));
   }
 
   /** 分页安全上限：防止 pageSize=999999 导致深度分页 OOM */

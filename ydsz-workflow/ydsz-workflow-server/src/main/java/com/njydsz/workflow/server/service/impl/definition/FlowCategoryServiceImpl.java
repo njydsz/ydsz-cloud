@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
@@ -189,7 +189,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
                 .eq(FlowCategoryDO::getDeleted, 0));
     if (count != null && count > 0) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_category_code_exists")
           .params(dto.getCategoryCode())
           .build();
@@ -227,7 +227,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   public void update(FlowCategoryDTO dto) {
     if (!StringUtils.hasText(dto.getId())) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_id_required")
           .build();
     }
@@ -235,7 +235,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     FlowCategoryDO existing = categoryMapper.selectById(dto.getId());
     if (existing == null || existing.getDeleted() == 1) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.msg_6541ab08")
           .params(dto.getId())
           .build();
@@ -291,7 +291,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
                 .eq(FlowCategoryDO::getDeleted, 0));
     if (childCount != null && childCount > 0) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_category_has_children")
           .build();
     }
@@ -303,7 +303,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
                 .eq(FlowDefinitionDO::getDeleted, 0));
     if (defCount != null && defCount > 0) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_category_has_definitions")
           .build();
     }

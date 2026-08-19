@@ -16,7 +16,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.jdbc.support.PageResponses;
@@ -113,9 +113,9 @@ public class AggregateController {
       content = "'flushByGroup'")
   @RateLimit(resource = "message.aggregate.flushByGroup", threshold = 50)
   @PostMapping("/flush")
-  public BaseResponse<Integer> flushByGroup(
+  public YdszResponse<Integer> flushByGroup(
       @RequestParam String group, @RequestParam String receiver) {
-    return BaseResponse.success(aggregateService.flushByGroup(group, receiver));
+    return YdszResponse.success(aggregateService.flushByGroup(group, receiver));
   }
 
   /**
@@ -133,7 +133,7 @@ public class AggregateController {
       content = "'flushDue'")
   @RateLimit(resource = "message.aggregate.flushDue", threshold = 50)
   @PostMapping("/flushDue")
-  public BaseResponse<Integer> flushDue() {
-    return BaseResponse.success(aggregateService.flushDue());
+  public YdszResponse<Integer> flushDue() {
+    return YdszResponse.success(aggregateService.flushDue());
   }
 }

@@ -12,7 +12,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.json.YdszJson;
 
@@ -76,7 +76,7 @@ public final class GatewayErrorWriter {
     // Accept 协商：客户端请求 problem+json 时返回 RFC 7807 格式
     boolean preferProblemJson = prefersProblemJson(exchange.getRequest());
 
-    BaseResponse<Void> body =
+    YdszResponse<Void> body =
         buildErrorBody(httpStatus, errorCode, message, finalTraceId, preferProblemJson);
 
     response.setStatusCode(httpStatus);
@@ -106,7 +106,7 @@ public final class GatewayErrorWriter {
    * @param preferProblemJson 是否输出 RFC 7807 ProblemDetail 格式
    * @return 错误响应体
    */
-  private static BaseResponse<Void> buildErrorBody(
+  private static YdszResponse<Void> buildErrorBody(
       HttpStatus httpStatus,
       GatewayErrorCode errorCode,
       String message,
@@ -115,7 +115,7 @@ public final class GatewayErrorWriter {
     String bizCode = String.valueOf(errorCode.getCode());
     String helpUrl = errorCode.getHelpUrl();
 
-    BaseResponse<Void> body = BaseResponse.error(bizCode, message);
+    YdszResponse<Void> body = YdszResponse.error(bizCode, message);
     if (preferProblemJson) {
       // RFC 7807 ProblemDetail 扩展字段
       body.putExtension("type", helpUrl != null ? helpUrl : "https://docs.ydsz.com/errors/" + bizCode);

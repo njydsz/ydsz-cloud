@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.JobTaskRepository;
@@ -59,9 +59,9 @@ public class JobTaskController {
    */
   @Operation(summary = "查询子任务列表")
   @GetMapping("/list")
-  public BaseResponse<List<JobTaskVO>> list(@RequestParam String logId) {
+  public YdszResponse<List<JobTaskVO>> list(@RequestParam String logId) {
     // 通过 Repository 查询（返回 VO 列表）
-    return BaseResponse.success(jobTaskRepository.findByLogId(logId));
+    return YdszResponse.success(jobTaskRepository.findByLogId(logId));
   }
 
   /**
@@ -101,7 +101,7 @@ public class JobTaskController {
    */
   @Operation(summary = "查询子任务执行进度")
   @GetMapping("/progress")
-  public BaseResponse<Map<String, Object>> progress(@RequestParam String logId) {
+  public YdszResponse<Map<String, Object>> progress(@RequestParam String logId) {
     // 通过 Repository 统计各状态子任务数量（避免拉取全量列表）
     int total = jobTaskRepository.countByLogId(logId);
     int pending = jobTaskRepository.countByLogIdAndStatus(logId, "PENDING");
@@ -115,6 +115,6 @@ public class JobTaskController {
     result.put("success", success);
     result.put("failed", failed);
     result.put("progressPercent", total > 0 ? (int) ((success + failed) * 100.0 / total) : 0);
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 }

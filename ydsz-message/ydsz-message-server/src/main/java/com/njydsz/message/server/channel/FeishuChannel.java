@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
@@ -185,7 +185,7 @@ public class FeishuChannel implements MessageChannel {
       Map<String, String> sign = appendSign(secret);
       if (sign == null) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.INTERNAL_ERROR)
+            .resultCode(YdszResultCode.INTERNAL_ERROR)
             .message("飞书加签失败,请检查 secret 配置")
             .build();
       }

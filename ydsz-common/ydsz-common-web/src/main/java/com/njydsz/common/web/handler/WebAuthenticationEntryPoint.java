@@ -11,7 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.code.SecurityExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.json.YdszJson;
@@ -26,7 +26,7 @@ import com.njydsz.common.util.message.MessageUtils;
  *
  * <ul>
  *   <li>HTTP 状态码：401 Unauthorized
- *   <li>响应体：{@link BaseResponse} 标准格式
+ *   <li>响应体：{@link YdszResponse} 标准格式
  *   <li>错误码：A02001（未登录）
  *   <li>消息：支持国际化（i18n）
  * </ul>
@@ -52,7 +52,7 @@ public class WebAuthenticationEntryPoint implements AuthenticationEntryPoint {
     ExceptionCode errorCode = SecurityExceptionCode.AUTHENTICATION_REQUIRED;
     String message = MessageUtils.getMessage(errorCode.getKey(), errorCode.getKey());
 
-    BaseResponse<?> body = BaseResponse.error(errorCode.getCode(), message);
+    YdszResponse<?> body = YdszResponse.error(errorCode.getCode(), message);
     // 触发 traceId 懒加载，确保序列化时包含链路追踪 ID
     body.getTraceId();
     response.getWriter().write(YdszJson.toJson(body));

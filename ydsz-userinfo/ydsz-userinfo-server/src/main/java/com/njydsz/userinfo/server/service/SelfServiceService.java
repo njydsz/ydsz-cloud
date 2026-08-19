@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.service;
 
+import com.njydsz.userinfo.domain.dto.AccountUnlockDTO;
 import com.njydsz.userinfo.domain.dto.ForgotPasswordDTO;
 import com.njydsz.userinfo.domain.dto.SelfRegisterDTO;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
@@ -7,20 +8,21 @@ import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
 /**
  * 自助服务接口（无需登录）。
  *
- * <p>提供用户自助注册、找回密码、发送验证码能力。业务逻辑统一收敛到 Service 层， 保证与 {@link UserAccountService}
- * 的创建/改密链路一致（事务、密码历史、索引同步、领域事件、会话驱逐、审计）。
+ * <p>提供用户自助注册、找回密码、发送验证码、账号解锁能力。业务逻辑统一收敛到 Service 层，
+ * 保证与 {@link UserAccountService} 的创建/改密链路一致（事务、密码历史、索引同步、领域事件、会话驱逐、审计）。
  *
  * @author ydsz-team
  * @since 1.1.0
  * @see SelfRegisterDTO 注册请求 DTO
  * @see ForgotPasswordDTO 找回密码请求 DTO
+ * @see AccountUnlockDTO 账号解锁请求 DTO
  */
 public interface SelfServiceService {
 
   /**
    * 发送验证码。
    *
-   * @param dto 发送请求（type + phone）
+   * @param dto 发送请求（type + targetType + target）
    * @return 是否发送成功
    */
   boolean sendVerifyCode(SendVerifyCodeDTO dto);
@@ -46,4 +48,16 @@ public interface SelfServiceService {
    * @return 是否成功
    */
   boolean forgotPassword(ForgotPasswordDTO dto);
+
+  /**
+   * 账号自助解锁。
+   *
+   * <p>用户因登录失败次数过多被锁定后，通过手机/邮箱验证码验证身份后自助解锁。
+   *
+   * <p>完整链路：图形验证码校验 → 用户查询 → 验证目标匹配 → 验证码校验 → 解锁账号 → 发布领域事件。
+   *
+   * @param dto 解锁请求
+   * @return 是否成功
+   */
+  boolean unlockAccount(AccountUnlockDTO dto);
 }

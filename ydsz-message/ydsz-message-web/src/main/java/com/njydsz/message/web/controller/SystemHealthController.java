@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.message.domain.vo.ChannelHealthVO;
 import com.njydsz.message.domain.vo.SystemHealthVO;
 import com.njydsz.message.server.service.core.MessageHealthService;
@@ -58,8 +58,8 @@ public class SystemHealthController {
   @Operation(summary = "系统整体健康状态")
   @AuthApiPermission("MESSAGE_LOG_VIEW")
   @GetMapping
-  public BaseResponse<SystemHealthVO> getSystemHealth() {
-    return BaseResponse.success(messageHealthService.getSystemHealth());
+  public YdszResponse<SystemHealthVO> getSystemHealth() {
+    return YdszResponse.success(messageHealthService.getSystemHealth());
   }
 
   /**
@@ -72,7 +72,7 @@ public class SystemHealthController {
   @Operation(summary = "各通道详细健康状态")
   @AuthApiPermission("MESSAGE_LOG_VIEW")
   @GetMapping("/channels")
-  public BaseResponse<java.util.List<ChannelHealthVO>> getChannelHealths() {
-    return BaseResponse.success(messageHealthService.getChannelHealths());
+  public YdszResponse<java.util.List<ChannelHealthVO>> getChannelHealths() {
+    return YdszResponse.success(messageHealthService.getChannelHealths());
   }
 }

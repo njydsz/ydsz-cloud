@@ -186,6 +186,27 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
+  @Override
+  public int unlockAccount(String id) {
+    return userAccountMapper.unlockAccount(id);
+  }
+
+  @Override
+  public Optional<UserAccountVO> findByPhone(String phone) {
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccountDO::getPhone, phone);
+    UserAccountDO entity = userAccountMapper.selectOne(wrapper);
+    return Optional.ofNullable(entity).map(converter::entityToVO);
+  }
+
+  @Override
+  public Optional<UserAccountVO> findByEmail(String email) {
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccountDO::getEmail, email);
+    UserAccountDO entity = userAccountMapper.selectOne(wrapper);
+    return Optional.ofNullable(entity).map(converter::entityToVO);
+  }
+
   /**
    * 根据查询参数构建 MyBatis-Plus 查询条件。
    *

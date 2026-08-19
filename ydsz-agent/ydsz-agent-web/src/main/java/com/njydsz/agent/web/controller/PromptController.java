@@ -20,7 +20,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
@@ -62,7 +62,7 @@ public class PromptController {
   @RateLimit(resource = "agent.prompt.evaluate", threshold = 20)
   @PostMapping("/evaluate")
   @Operation(summary = "评估 Prompt 模板", description = "渲染模板并发送到 LLM，返回性能指标")
-  public BaseResponse<PromptEvaluationResult> evaluate(@Valid @RequestBody EvaluateRequest request) {
+  public YdszResponse<PromptEvaluationResult> evaluate(@Valid @RequestBody EvaluateRequest request) {
     LOG.info("[Prompt-API] 评估请求: template={}", request.templateCode());
     PromptEvaluationResult result =
         evaluationService.evaluate(
@@ -70,7 +70,7 @@ public class PromptController {
             request.variables(),
             request.userMessage(),
             request.model());
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -90,7 +90,7 @@ public class PromptController {
   @RateLimit(resource = "agent.prompt.evaluate", threshold = 10)
   @PostMapping("/compare")
   @Operation(summary = "对比评估两个 Prompt 模板", description = "相同输入下对比两个模板的性能指标")
-  public BaseResponse<PromptComparisonResult> compare(@Valid @RequestBody CompareRequest request) {
+  public YdszResponse<PromptComparisonResult> compare(@Valid @RequestBody CompareRequest request) {
     LOG.info("[Prompt-API] 对比请求: A={}, B={}", request.templateCodeA(), request.templateCodeB());
     PromptComparisonResult result =
         evaluationService.compare(
@@ -99,7 +99,7 @@ public class PromptController {
             request.variables(),
             request.userMessage(),
             request.model());
-    return BaseResponse.success(result);
+    return YdszResponse.success(result);
   }
 
   /** 单次评估请求 */

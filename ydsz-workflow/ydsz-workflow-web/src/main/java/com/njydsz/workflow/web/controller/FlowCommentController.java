@@ -20,7 +20,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -102,11 +102,11 @@ public class FlowCommentController {
       content = "'addComment'")
   @Operation(summary = "发表评论/回复")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-  public BaseResponse<String> addComment(@Valid @RequestBody FlowCommentCreateDTO dto) {
+  public YdszResponse<String> addComment(@Valid @RequestBody FlowCommentCreateDTO dto) {
     String userId = AuthContextUtils.getUserId();
     String userName = AuthContextUtils.getUsername();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(commentService.addComment(dto, userId, userName, tenantId));
+    return YdszResponse.success(commentService.addComment(dto, userId, userName, tenantId));
   }
 
   /**
@@ -117,9 +117,9 @@ public class FlowCommentController {
    */
   @GetMapping("/instance/{instanceId}")
   @Operation(summary = "查询实例全部评论（树结构）")
-  public BaseResponse<List<FlowCommentVO>> listByInstance(@PathVariable String instanceId) {
+  public YdszResponse<List<FlowCommentVO>> listByInstance(@PathVariable String instanceId) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(
+    return YdszResponse.success(
         WorkflowConverter.INSTANT.flowCommentListToVO(
             commentService.listByInstance(tenantId, instanceId)));
   }
@@ -132,9 +132,9 @@ public class FlowCommentController {
    */
   @GetMapping("/root/{instanceId}")
   @Operation(summary = "查询实例一级评论")
-  public BaseResponse<List<FlowCommentVO>> listRootComments(@PathVariable String instanceId) {
+  public YdszResponse<List<FlowCommentVO>> listRootComments(@PathVariable String instanceId) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return BaseResponse.success(
+    return YdszResponse.success(
         WorkflowConverter.INSTANT.flowCommentListToVO(
             commentService.listRootComments(tenantId, instanceId)));
   }
@@ -147,8 +147,8 @@ public class FlowCommentController {
    */
   @GetMapping("/replies/{parentCommentId}")
   @Operation(summary = "查询父评论下的回复")
-  public BaseResponse<List<FlowCommentVO>> listReplies(@PathVariable String parentCommentId) {
-    return BaseResponse.success(
+  public YdszResponse<List<FlowCommentVO>> listReplies(@PathVariable String parentCommentId) {
+    return YdszResponse.success(
         WorkflowConverter.INSTANT.flowCommentListToVO(commentService.listReplies(parentCommentId)));
   }
 
@@ -168,9 +168,9 @@ public class FlowCommentController {
       content = "'deleteComment'")
   @Operation(summary = "删除评论（仅本人）")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-  public BaseResponse<Boolean> deleteComment(@PathVariable String commentId) {
+  public YdszResponse<Boolean> deleteComment(@PathVariable String commentId) {
     String userId = AuthContextUtils.getUserId();
-    return BaseResponse.success(commentService.deleteComment(commentId, userId));
+    return YdszResponse.success(commentService.deleteComment(commentId, userId));
   }
 
   // ==================== 常用语管理 ====================
@@ -182,10 +182,10 @@ public class FlowCommentController {
    */
   @GetMapping("/quick")
   @Operation(summary = "查询当前用户的常用语列表")
-  public BaseResponse<List<FlowQuickCommentVO>> listQuickComments() {
+  public YdszResponse<List<FlowQuickCommentVO>> listQuickComments() {
     String userId = AuthContextUtils.getUserId();
     String tenantId = TenantContextHolder.getTenantId();
-    return BaseResponse.success(
+    return YdszResponse.success(
         WorkflowConverter.INSTANT.flowQuickCommentListToVO(
             commentService.listQuickComments(userId, tenantId)));
   }
@@ -205,10 +205,10 @@ public class FlowCommentController {
       action = AuditAction.CREATE,
       content = "'createQuickComment'")
   @Operation(summary = "新增常用语")
-  public BaseResponse<String> createQuickComment(@Valid @RequestBody FlowQuickCommentDTO dto) {
+  public YdszResponse<String> createQuickComment(@Valid @RequestBody FlowQuickCommentDTO dto) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = TenantContextHolder.getTenantId();
-    return BaseResponse.success(commentService.createQuickComment(dto, userId, tenantId));
+    return YdszResponse.success(commentService.createQuickComment(dto, userId, tenantId));
   }
 
   /**
@@ -226,10 +226,10 @@ public class FlowCommentController {
       action = AuditAction.UPDATE,
       content = "'updateQuickComment'")
   @Operation(summary = "编辑常用语")
-  public BaseResponse<Void> updateQuickComment(@Valid @RequestBody FlowQuickCommentDTO dto) {
+  public YdszResponse<Void> updateQuickComment(@Valid @RequestBody FlowQuickCommentDTO dto) {
     String userId = AuthContextUtils.getUserId();
     commentService.updateQuickComment(dto, userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -247,10 +247,10 @@ public class FlowCommentController {
       action = AuditAction.DELETE,
       content = "'deleteQuickComment'")
   @Operation(summary = "删除常用语")
-  public BaseResponse<Void> deleteQuickComment(@PathVariable String id) {
+  public YdszResponse<Void> deleteQuickComment(@PathVariable String id) {
     String userId = AuthContextUtils.getUserId();
     commentService.deleteQuickComment(id, userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -270,8 +270,8 @@ public class FlowCommentController {
       action = AuditAction.CREATE,
       content = "'incrementUseCount'")
   @Operation(summary = "增加使用次数（审批时调用）")
-  public BaseResponse<Void> incrementUseCount(@PathVariable String id) {
+  public YdszResponse<Void> incrementUseCount(@PathVariable String id) {
     commentService.incrementQuickCommentUseCount(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

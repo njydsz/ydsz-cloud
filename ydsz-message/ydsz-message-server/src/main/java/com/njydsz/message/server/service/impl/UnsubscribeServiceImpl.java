@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
@@ -90,7 +90,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
   public MsgSubscription unsubscribeByToken(String token) {
     if (!messageProperties.getUnsubscribe().isEnabled()) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("退订中心已关闭")
           .build();
     }
@@ -178,7 +178,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
         || !StringUtils.hasText(topicCode)
         || !StringUtils.hasText(channel)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("用户 ID、主题编码与通道不能为空")
           .build();
     }

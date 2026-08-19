@@ -4,19 +4,19 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.code.ResultCode;
 
 /**
- * 分页响应信封（{@link BaseResponse} 的子类型）。
+ * 分页响应信封（{@link YdszResponse} 的子类型）。
  *
- * <p>将分页元信息（total / pageNum / pageSize）收口到专用的分页响应类型中， 使 {@link BaseResponse}
+ * <p>将分页元信息（total / pageNum / pageSize）收口到专用的分页响应类型中， 使 {@link YdszResponse}
  * 不再承担分页职责，同时提供类型明确的返回对象， 便于 Controller 声明 {@code PageResponse<UserVO>} 或 {@code
- * BaseResponse<PageResponse<UserVO>>}。
+ * YdszResponse<PageResponse<UserVO>>}。
  *
  * <p>本类是 API 响应信封，用于 Controller 层返回分页数据。 新代码请直接返回 {@code PageResponse<T>}。
  *
- * <p><b>迁移提示：</b>{@link BaseResponse} 上的分页字段与 {@code successPage()/emptyPage()} 方法已于 v1.9.3
+ * <p><b>迁移提示：</b>{@link YdszResponse} 上的分页字段与 {@code successPage()/emptyPage()} 方法已于 v1.9.3
  * 移除。新代码请直接返回 {@code PageResponse<T>}。
  *
  * @param <T> 数据元素的类型
@@ -24,7 +24,7 @@ import com.njydsz.common.core.code.ResultCode;
  * @since 1.9.1
  */
 @EqualsAndHashCode(callSuper = true)
-public class PageResponse<T> extends BaseResponse<T> {
+public class PageResponse<T> extends YdszResponse<T> {
 
   /** 总记录数。 */
   @Getter @Setter private Long total;
@@ -52,7 +52,7 @@ public class PageResponse<T> extends BaseResponse<T> {
    */
   public static <T> PageResponse<T> success(Long total, Long pageNum, Long pageSize, T data) {
     PageResponse<T> response = new PageResponse<>();
-    response.setCode(BaseResultCode.SUCCESS.getCode());
+    response.setCode(YdszResultCode.SUCCESS.getCode());
     response.setMsg(resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"));
     response.setData(data);
     response.setTotal(total);

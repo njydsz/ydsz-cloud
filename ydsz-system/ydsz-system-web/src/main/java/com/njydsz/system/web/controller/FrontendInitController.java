@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.vo.FrontendInitVO;
 import com.njydsz.system.server.service.FrontendInitService;
@@ -53,8 +53,8 @@ public class FrontendInitController {
   // P2-2: 公开接口添加限流保护（前端高频调用，防止恶意刷接口）
   @RateLimit(resource = "system.frontend.init", threshold = 100)
   @GetMapping
-  public BaseResponse<FrontendInitVO> init() {
-    return BaseResponse.success(frontendInitService.getInitData());
+  public YdszResponse<FrontendInitVO> init() {
+    return YdszResponse.success(frontendInitService.getInitData());
   }
 
   /**
@@ -71,9 +71,9 @@ public class FrontendInitController {
   // P2-2: 公开接口添加限流保护
   @RateLimit(resource = "system.frontend.init.dicts", threshold = 100)
   @GetMapping("/dicts")
-  public BaseResponse<FrontendInitVO> initWithDicts(
+  public YdszResponse<FrontendInitVO> initWithDicts(
       @Parameter(description = "字典类型编码列表")
           @RequestParam("dictTypes") List<String> dictTypes) {
-    return BaseResponse.success(frontendInitService.getInitDataWithDicts(dictTypes));
+    return YdszResponse.success(frontendInitService.getInitDataWithDicts(dictTypes));
   }
 }

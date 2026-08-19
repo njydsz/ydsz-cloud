@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.server.auth.CaptchaService;
@@ -77,10 +77,10 @@ public class CaptchaController {
    */
   @GetMapping("/generate")
   @Operation(summary = "生成验证码", description = "返回 Base64 PNG 图片和 captchaKey")
-  public BaseResponse<Map<String, String>> generate() {
+  public YdszResponse<Map<String, String>> generate() {
     String captchaKey = UUID.randomUUID().toString().replace("-", "");
     String imageBase64 = captchaService.generateCaptcha(captchaKey);
-    return BaseResponse.success(
+    return YdszResponse.success(
         Map.of(
             "captchaKey", captchaKey,
             "image", imageBase64));
@@ -103,8 +103,8 @@ public class CaptchaController {
   @Idempotent(key = "ydsz:userinfo:CaptchaController:validate:lock", ttlSeconds = 5)
   @PostMapping("/validate")
   @Operation(summary = "校验验证码", description = "校验用户输入的验证码")
-  public BaseResponse<Boolean> validate(
+  public YdszResponse<Boolean> validate(
       @RequestParam String captchaKey, @RequestParam String captcha) {
-    return BaseResponse.success(captchaService.validate(captchaKey, captcha));
+    return YdszResponse.success(captchaService.validate(captchaKey, captcha));
   }
 }

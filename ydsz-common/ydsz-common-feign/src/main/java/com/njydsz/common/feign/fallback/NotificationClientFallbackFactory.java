@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
@@ -37,26 +37,26 @@ public class NotificationClientFallbackFactory implements FallbackFactory<Notifi
     log.warn("[NotificationClient] 降级触发: {}", cause.getMessage());
     return new NotificationClient() {
       @Override
-      public BaseResponse<MessageResult> sendMessage(MessageRequest request) {
+      public YdszResponse<MessageResult> sendMessage(MessageRequest request) {
         log.warn(
             "[NotificationClient] sendMessage 降级: receiver={}, subject={}, reason=消息中心服务不可用",
             request == null ? null : request.getReceiver(),
             request == null ? null : request.getSubject());
-        return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
       }
 
       @Override
-      public BaseResponse<MessageResult> broadcast(BroadcastRequestDTO request) {
+      public YdszResponse<MessageResult> broadcast(BroadcastRequestDTO request) {
         String topic = request == null ? null : request.getTopic();
         log.warn("[NotificationClient] broadcast 降级: topic={}, reason=消息中心服务不可用", topic);
-        return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
       }
 
       @Override
-      public BaseResponse<MessageResult> pushRealtime(PushRealtimeRequestDTO request) {
+      public YdszResponse<MessageResult> pushRealtime(PushRealtimeRequestDTO request) {
         String userId = request == null ? null : request.getUserId();
         log.warn("[NotificationClient] pushRealtime 降级: userId={}, reason=消息中心服务不可用", userId);
-        return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
       }
     };
   }

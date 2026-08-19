@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
 import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
@@ -69,7 +69,7 @@ public class AlertServiceImpl implements AlertService {
     JobAlertRule exists = jobAlertRuleRepository.selectById(id);
     if (exists == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("error.cronjob.msg_alert_not_found")
           .build();
     }
@@ -87,7 +87,7 @@ public class AlertServiceImpl implements AlertService {
     JobAlertRule exists = jobAlertRuleRepository.selectById(id);
     if (exists == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("error.cronjob.msg_alert_not_found")
           .build();
     }
@@ -103,7 +103,7 @@ public class AlertServiceImpl implements AlertService {
     JobAlertRule rule = jobAlertRuleRepository.selectById(id);
     if (rule == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("error.cronjob.msg_alert_not_found")
           .build();
     }
@@ -120,14 +120,14 @@ public class AlertServiceImpl implements AlertService {
   public void toggleRule(String id, Integer enabled) {
     if (enabled == null || (enabled != 0 && enabled != 1)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_alert_invalid_enabled")
           .build();
     }
     JobAlertRule exists = jobAlertRuleRepository.selectById(id);
     if (exists == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
           .message("error.cronjob.msg_alert_not_found")
           .build();
     }
@@ -161,20 +161,20 @@ public class AlertServiceImpl implements AlertService {
     AlertType alertType = AlertType.parse(dto.getAlertType());
     if (alertType == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_alert_invalid_type")
           .build();
     }
     if (alertType.requiresThreshold() && dto.getThreshold() == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_alert_threshold_required")
           .params(dto.getAlertType())
           .build();
     }
     if (alertType.requiresTimeWindow() && dto.getTimeWindowMinutes() == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_alert_window_required")
           .params(dto.getAlertType())
           .build();

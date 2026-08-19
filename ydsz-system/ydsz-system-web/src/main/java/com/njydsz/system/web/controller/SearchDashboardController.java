@@ -18,7 +18,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.analytics.SearchAnalyticsService.HotKeyword;
@@ -74,8 +74,8 @@ public class SearchDashboardController {
   @GetMapping("/analytics/summary")
   @Operation(summary = "搜索分析汇总", description = "总搜索量、零结果率、去重关键词数等汇总指标")
   @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_SEARCH_DASHBOARD)
-  public BaseResponse<SearchAnalyticsSummary> getAnalyticsSummary() {
-    return BaseResponse.success(analyticsService.getSummary());
+  public YdszResponse<SearchAnalyticsSummary> getAnalyticsSummary() {
+    return YdszResponse.success(analyticsService.getSummary());
   }
 
   /**
@@ -87,9 +87,9 @@ public class SearchDashboardController {
   @GetMapping("/analytics/hot")
   @Operation(summary = "热搜关键词排行", description = "按搜索次数降序的热门搜索词列表")
   @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_SEARCH_DASHBOARD)
-  public BaseResponse<List<HotKeyword>> getHotKeywords(
+  public YdszResponse<List<HotKeyword>> getHotKeywords(
       @RequestParam(defaultValue = "20") int limit) {
-    return BaseResponse.success(analyticsService.getHotKeywords(limit));
+    return YdszResponse.success(analyticsService.getHotKeywords(limit));
   }
 
   /**
@@ -103,9 +103,9 @@ public class SearchDashboardController {
   @GetMapping("/analytics/zero")
   @Operation(summary = "零结果关键词排行", description = "按零结果次数降序的关键词列表，反映内容缺口")
   @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_SEARCH_DASHBOARD)
-  public BaseResponse<List<HotKeyword>> getZeroResultKeywords(
+  public YdszResponse<List<HotKeyword>> getZeroResultKeywords(
       @RequestParam(defaultValue = "20") int limit) {
-    return BaseResponse.success(analyticsService.getZeroResultKeywords(limit));
+    return YdszResponse.success(analyticsService.getZeroResultKeywords(limit));
   }
 
   /**
@@ -117,9 +117,9 @@ public class SearchDashboardController {
   @GetMapping("/analytics/daily")
   @Operation(summary = "每日搜索量", description = "近 N 天的每日搜索量趋势")
   @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_SEARCH_DASHBOARD)
-  public BaseResponse<Map<java.time.LocalDate, Long>> getDailySearches(
+  public YdszResponse<Map<java.time.LocalDate, Long>> getDailySearches(
       @RequestParam(defaultValue = "30") int days) {
-    return BaseResponse.success(analyticsService.getDailySearches(days));
+    return YdszResponse.success(analyticsService.getDailySearches(days));
   }
 
   /**
@@ -139,8 +139,8 @@ public class SearchDashboardController {
   @GetMapping("/quality/report")
   @Operation(summary = "搜索质量报告", description = "MRR / CTR / 零结果率 / 平均延迟等质量指标")
   @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_SEARCH_DASHBOARD)
-  public BaseResponse<QualityReport> getQualityReport() {
-    return BaseResponse.success(qualityTracker.getReport());
+  public YdszResponse<QualityReport> getQualityReport() {
+    return YdszResponse.success(qualityTracker.getReport());
   }
 
   /**
@@ -155,10 +155,10 @@ public class SearchDashboardController {
   @Operation(summary = "清空搜索分析数据", description = "不可逆操作：删除全部搜索分析数据")
   @Audit(action = AuditAction.DELETE, module = "SYSTEM", content = "清空搜索分析数据")
   @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_SEARCH_DASHBOARD)
-  public BaseResponse<Void> clearAnalyticsData(
+  public YdszResponse<Void> clearAnalyticsData(
       @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId) {
     analyticsService.clear();
     log.info("[SearchDashboard] 搜索分析数据已清空, userId={}", userId);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

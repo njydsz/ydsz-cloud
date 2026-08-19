@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
@@ -134,7 +134,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
   public String mergeInstances(List<String> instanceIds, String operatorId, String tenantId) {
     if (instanceIds == null || instanceIds.size() < 2) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_5a6b7c8d")
           .build();
     }
@@ -146,14 +146,14 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
         if (instance == null) {
           throw SysException.builder()
-            .resultCode(BaseResultCode.NOT_FOUND)
+            .resultCode(YdszResultCode.NOT_FOUND)
             .key("error.workflow.msg_9e8f0a1b")
             .params(instanceId)
             .build();
       }
       if (!"RUNNING".equals(instance.getFlowStatus())) {
         throw SysException.builder()
-            .resultCode(BaseResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
             .message("error.workflow.msg_2b3c4d5e")
             .build();
       }
@@ -161,7 +161,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     }
     if (flowCodes.size() > 1) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_6c7d8e9f")
           .build();
     }

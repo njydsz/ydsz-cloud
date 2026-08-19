@@ -22,7 +22,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -77,8 +77,8 @@ public class TenantPlanController {
    */
   @Operation(summary = "查询全部启用套餐")
   @GetMapping("/list")
-  public BaseResponse<List<TenantPlanVO>> listAll() {
-    return BaseResponse.success(planService.listAll());
+  public YdszResponse<List<TenantPlanVO>> listAll() {
+    return YdszResponse.success(planService.listAll());
   }
 
   /**
@@ -89,8 +89,8 @@ public class TenantPlanController {
    */
   @Operation(summary = "按 ID 查询套餐")
   @GetMapping("/{id}")
-  public BaseResponse<TenantPlanVO> getById(@PathVariable String id) {
-    return BaseResponse.success(planService.getById(id));
+  public YdszResponse<TenantPlanVO> getById(@PathVariable String id) {
+    return YdszResponse.success(planService.getById(id));
   }
 
   /**
@@ -109,10 +109,10 @@ public class TenantPlanController {
   @RateLimit(resource = "system.tenant.plan.save", threshold = 50)
   @Idempotent(key = "'ydsz:system:tenant-plan:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PostMapping
-  public BaseResponse<String> save(
+  public YdszResponse<String> save(
       @Valid @RequestBody TenantPlanVO vo,
       @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId) {
-    return BaseResponse.success(planService.save(vo));
+    return YdszResponse.success(planService.save(vo));
   }
 
   /**
@@ -131,10 +131,10 @@ public class TenantPlanController {
   @RateLimit(resource = "system.tenantplan.update", threshold = 50)
   @Idempotent(key = "'ydsz:system:tenant-plan:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
   @PutMapping
-  public BaseResponse<Boolean> update(
+  public YdszResponse<Boolean> update(
       @Valid @RequestBody TenantPlanVO vo,
       @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId) {
-    return BaseResponse.success(planService.updateById(vo));
+    return YdszResponse.success(planService.updateById(vo));
   }
 
   /**
@@ -154,8 +154,8 @@ public class TenantPlanController {
   @RateLimit(resource = "system.tenant.plan.remove", threshold = 50)
   @Idempotent(key = "'ydsz:system:tenant-plan:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
   @DeleteMapping("/{id}")
-  public BaseResponse<Boolean> remove(@PathVariable String id) {
-    return BaseResponse.success(planService.removeById(id));
+  public YdszResponse<Boolean> remove(@PathVariable String id) {
+    return YdszResponse.success(planService.removeById(id));
   }
 
   /**
@@ -166,8 +166,8 @@ public class TenantPlanController {
    */
   @Operation(summary = "查询套餐关联菜单")
   @GetMapping("/{planId}/menus")
-  public BaseResponse<List<TenantPlanMenuVO>> listMenus(@PathVariable String planId) {
-    return BaseResponse.success(planMenuService.listByPlanId(planId));
+  public YdszResponse<List<TenantPlanMenuVO>> listMenus(@PathVariable String planId) {
+    return YdszResponse.success(planMenuService.listByPlanId(planId));
   }
 
   /**
@@ -185,9 +185,9 @@ public class TenantPlanController {
       content = "'配置套餐菜单: ' + #dto.planId")
   @Operation(summary = "配置套餐菜单")
   @PostMapping("/menus")
-  public BaseResponse<Void> updateMenus(@Valid @RequestBody TenantPlanMenuDTO dto) {
+  public YdszResponse<Void> updateMenus(@Valid @RequestBody TenantPlanMenuDTO dto) {
     planMenuService.updatePlanMenus(dto);
-    return BaseResponse.success(null);
+    return YdszResponse.success(null);
   }
 
   /** 分页安全上限 */

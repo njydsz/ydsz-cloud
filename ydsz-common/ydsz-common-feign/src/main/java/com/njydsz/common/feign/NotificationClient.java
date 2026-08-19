@@ -4,7 +4,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.dto.BroadcastRequestDTO;
 import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
 import com.njydsz.common.feign.dto.RealtimePushDTO;
@@ -34,7 +34,7 @@ import com.njydsz.common.feign.fallback.NotificationClientFallbackFactory;
  * <p><b>P0-3-fix</b>：
  *
  * <ul>
- *   <li>{@link #broadcast(BroadcastRequestDTO)} 将 topic 并入请求体，返回 {@link BaseResponse} 使调用方可感知结果
+ *   <li>{@link #broadcast(BroadcastRequestDTO)} 将 topic 并入请求体，返回 {@link YdszResponse} 使调用方可感知结果
  *   <li>新增 {@link #pushRealtime(String, String, RealtimePushDTO)} 单播实时推送方法
  * </ul>
  *
@@ -57,7 +57,7 @@ public interface NotificationClient {
    * @return 发送结果（包含 MessageResult 详细信息）
    */
   @PostMapping(FeignClientConstants.MESSAGE_PATH_SEND)
-  BaseResponse<MessageResult> sendMessage(@RequestBody MessageRequest request);
+  YdszResponse<MessageResult> sendMessage(@RequestBody MessageRequest request);
 
   /**
    * 实时广播推送（WebSocket/SSE）。
@@ -68,7 +68,7 @@ public interface NotificationClient {
    * @return 推送结果（成功时 traceId 可用于追踪）
    */
   @PostMapping(FeignClientConstants.MESSAGE_PATH_BROADCAST)
-  BaseResponse<MessageResult> broadcast(@RequestBody BroadcastRequestDTO request);
+  YdszResponse<MessageResult> broadcast(@RequestBody BroadcastRequestDTO request);
 
   /**
    * 实时单播推送（WebSocket/SSE）。
@@ -81,5 +81,5 @@ public interface NotificationClient {
    * @return 推送结果（成功时 traceId 可用于追踪）
    */
   @PostMapping(FeignClientConstants.MESSAGE_PATH_PUSH_REALTIME)
-  BaseResponse<MessageResult> pushRealtime(@RequestBody PushRealtimeRequestDTO request);
+  YdszResponse<MessageResult> pushRealtime(@RequestBody PushRealtimeRequestDTO request);
 }

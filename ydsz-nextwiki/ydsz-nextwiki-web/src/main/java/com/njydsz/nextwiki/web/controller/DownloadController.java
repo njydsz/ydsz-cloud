@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -365,7 +365,7 @@ public class DownloadController {
   @PostMapping("/{nodeId}/signed-url")
   @Operation(summary = "生成签名下载URL", description = "生成带时效性和IP绑定的签名下载链接")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_DOWNLOAD)
-  public BaseResponse<String> generateSignedUrl(
+  public YdszResponse<String> generateSignedUrl(
       @PathVariable String nodeId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
       HttpServletRequest request) {
@@ -374,7 +374,7 @@ public class DownloadController {
     String signedUrl = downloadApplicationService.generateSignedUrl(nodeId, userId, ip);
 
     log.info("[DownloadController] 生成签名URL: nodeId={}, userId={}", nodeId, userId);
-    return BaseResponse.success(signedUrl);
+    return YdszResponse.success(signedUrl);
   }
 
   /**

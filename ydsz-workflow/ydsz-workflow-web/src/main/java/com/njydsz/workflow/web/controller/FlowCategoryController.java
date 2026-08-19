@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.tenant.TenantContextHolder;
@@ -82,8 +82,8 @@ public class FlowCategoryController {
    */
   @GetMapping
   @Operation(summary = "查询全部分类")
-  public BaseResponse<List<FlowCategoryVO>> list() {
-    return BaseResponse.success(
+  public YdszResponse<List<FlowCategoryVO>> list() {
+    return YdszResponse.success(
         WorkflowConverter.INSTANT.flowCategoryListToVO(
             categoryService.listAll(TenantContextHolder.getTenantId())));
   }
@@ -99,8 +99,8 @@ public class FlowCategoryController {
    */
   @GetMapping("/tree")
   @Operation(summary = "查询全部分类（树形结构）")
-  public BaseResponse<List<FlowCategoryTreeVO>> tree() {
-    return BaseResponse.success(categoryService.tree(TenantContextHolder.getTenantId()));
+  public YdszResponse<List<FlowCategoryTreeVO>> tree() {
+    return YdszResponse.success(categoryService.tree(TenantContextHolder.getTenantId()));
   }
 
   /**
@@ -124,8 +124,8 @@ public class FlowCategoryController {
       action = AuditAction.CREATE,
       content = "'create'")
   @Operation(summary = "新增分类")
-  public BaseResponse<String> create(@Valid @RequestBody FlowCategoryDTO dto) {
-    return BaseResponse.success(categoryService.create(dto, TenantContextHolder.getTenantId()));
+  public YdszResponse<String> create(@Valid @RequestBody FlowCategoryDTO dto) {
+    return YdszResponse.success(categoryService.create(dto, TenantContextHolder.getTenantId()));
   }
 
   /**
@@ -149,9 +149,9 @@ public class FlowCategoryController {
       action = AuditAction.UPDATE,
       content = "'update'")
   @Operation(summary = "编辑分类")
-  public BaseResponse<Void> update(@Valid @RequestBody FlowCategoryDTO dto) {
+  public YdszResponse<Void> update(@Valid @RequestBody FlowCategoryDTO dto) {
     categoryService.update(dto);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 
   /**
@@ -180,8 +180,8 @@ public class FlowCategoryController {
       action = AuditAction.DELETE,
       content = "'delete'")
   @Operation(summary = "删除分类")
-  public BaseResponse<Void> delete(@PathVariable String id) {
+  public YdszResponse<Void> delete(@PathVariable String id) {
     categoryService.delete(id);
-    return BaseResponse.success();
+    return YdszResponse.success();
   }
 }

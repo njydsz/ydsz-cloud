@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.exception.custom.SysException;
@@ -70,7 +70,7 @@ public class NotificationServiceImpl implements NotificationService {
   public int send(NotificationSendDTO dto) {
     if (dto == null) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("通知参数不能为空")
           .build();
     }
@@ -109,7 +109,7 @@ public class NotificationServiceImpl implements NotificationService {
   public Page<MsgNotification> inbox(String userId, NotificationQueryDTO query) {
     if (!StringUtils.hasText(userId)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("用户 ID 不能为空")
           .build();
     }
@@ -261,7 +261,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
     if (CollectionUtils.isEmpty(receiverIds)) {
       throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
+          .resultCode(YdszResultCode.BAD_REQUEST)
           .message("接收人不能为空")
           .build();
     }
