@@ -5,7 +5,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -68,7 +69,7 @@ import com.njydsz.userinfo.server.service.MenuService;
  * @see com.njydsz.userinfo.infra.entity.MenuDO 菜单实体（含 permCode 字段）
  * @see com.njydsz.userinfo.web.controller.RoleController 角色 Controller（关联分配）
  */
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/MenuDO")
 @RequiredArgsConstructor
 @Tag(name = "菜单管理", description = "菜单/权限 CRUD、树形结构查询")

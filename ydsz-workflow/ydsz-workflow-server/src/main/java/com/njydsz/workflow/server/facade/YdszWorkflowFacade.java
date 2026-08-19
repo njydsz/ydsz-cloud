@@ -19,6 +19,7 @@ import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
@@ -151,16 +152,15 @@ public class YdszWorkflowFacade implements WorkflowFacade {
       LocalDateTime endTime,
       int page,
       int size) {
-    PageResponse<List<FlowInstanceDO>> pageResult =
-        instanceService.page(
-            businessType,
-            null,
-            flowStatus,
-            startTime,
-            endTime,
-            AuthContextUtils.getTenantIdOrDefault(),
-            page,
-            size);
+    FlowInstancePageQuery query = new FlowInstancePageQuery();
+    query.setPageNum(page);
+    query.setPageSize(size);
+    query.setBusinessType(businessType);
+    query.setFlowStatus(flowStatus);
+    query.setStartTime(startTime);
+    query.setEndTime(endTime);
+    query.setTenantId(AuthContextUtils.getTenantIdOrDefault());
+    PageResponse<List<FlowInstanceDO>> pageResult = instanceService.page(query);
     List<FlowInstanceDO> dataList = MapUtils.safeCastList(pageResult.getData(), FlowInstanceDO.class);
     List<Map<String, Object>> list = dataList.stream().map(this::instanceToMap).toList();
     return PageResponse.success(

@@ -2,7 +2,8 @@ package com.njydsz.message.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,7 +41,7 @@ import com.njydsz.message.server.service.core.MessageHealthService;
  * @see MessageHealthService 消息健康检查服务
  */
 @Tag(name = "系统健康检查", description = "消息模块运行时健康状态监控")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/message/health")
 @RequiredArgsConstructor
 public class SystemHealthController {

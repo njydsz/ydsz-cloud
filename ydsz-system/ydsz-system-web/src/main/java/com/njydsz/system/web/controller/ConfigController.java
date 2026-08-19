@@ -8,7 +8,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,7 +65,7 @@ import com.njydsz.system.server.service.ConfigService;
  * @see com.njydsz.system.server.service.ConfigService 配置业务逻辑
  */
 @Tag(name = "系统配置", description = "系统参数配置 CRUD + 按键查询 + 分组批量查询 + 批量操作 + 导入导出")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/config")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:config:list")

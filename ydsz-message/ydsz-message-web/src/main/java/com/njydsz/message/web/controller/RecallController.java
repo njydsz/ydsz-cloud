@@ -3,7 +3,8 @@ package com.njydsz.message.web.controller.receipt;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -72,7 +73,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
  * @see com.njydsz.message.domain.dto.receipt.RecallRequestDTO 撤回请求 DTO
  */
 @Tag(name = "消息撤回", description = "通知/消息撤回")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/message/recall")
 @RequiredArgsConstructor
 public class RecallController {

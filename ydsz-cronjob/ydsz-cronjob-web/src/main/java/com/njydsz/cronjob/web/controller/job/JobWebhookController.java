@@ -5,7 +5,8 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,7 +55,7 @@ import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
  * @since 1.0.0
  */
 @Tag(name = "WebHook 事件订阅", description = "订阅 CRUD、过滤查询、测试推送")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/cronjob/webhook")
 @RequiredArgsConstructor
 public class JobWebhookController {

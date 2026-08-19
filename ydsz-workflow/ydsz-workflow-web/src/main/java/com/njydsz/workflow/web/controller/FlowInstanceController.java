@@ -36,6 +36,7 @@ import com.njydsz.workflow.domain.dto.FlowAutoTriggerCreateDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceVariablesDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
+import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
@@ -384,8 +385,16 @@ public class FlowInstanceController {
       @RequestParam(required = false) LocalDateTime endTime,
       @RequestParam(required = false) String tenantId) {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    return instanceService.pageVO(
-        businessType, initiatorId, flowStatus, startTime, endTime, tid, pageNo, pageSize);
+    FlowInstancePageQuery query = new FlowInstancePageQuery();
+    query.setPageNum(pageNo);
+    query.setPageSize(pageSize);
+    query.setBusinessType(businessType);
+    query.setInitiatorId(initiatorId);
+    query.setFlowStatus(flowStatus);
+    query.setStartTime(startTime);
+    query.setEndTime(endTime);
+    query.setTenantId(tid);
+    return instanceService.pageVO(query);
   }
 
   /**
@@ -410,15 +419,15 @@ public class FlowInstanceController {
       @RequestParam(required = false) LocalDateTime endTime,
       @RequestParam(defaultValue = "1") @Min(1) int pageNum,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-    return instanceService.pageVO(
-        null,
-        AuthContextUtils.getUserId(),
-        status,
-        startTime,
-        endTime,
-        AuthContextUtils.getTenantIdOrDefault(),
-        pageNum,
-        pageSize);
+    FlowInstancePageQuery query = new FlowInstancePageQuery();
+    query.setPageNum(pageNum);
+    query.setPageSize(pageSize);
+    query.setInitiatorId(AuthContextUtils.getUserId());
+    query.setFlowStatus(status);
+    query.setStartTime(startTime);
+    query.setEndTime(endTime);
+    query.setTenantId(AuthContextUtils.getTenantIdOrDefault());
+    return instanceService.pageVO(query);
   }
 
   /**

@@ -6,7 +6,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,7 +44,7 @@ import com.njydsz.common.web.version.ApiVersion;
  * @author ydsz-team
  * @since 1.2.0
  */
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/admin/audit")
 @RequiredArgsConstructor
 @ApiVersion("1")

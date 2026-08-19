@@ -6,7 +6,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -61,7 +62,7 @@ import com.njydsz.cronjob.server.service.alert.AlertService;
  * @since 1.0.0
  */
 @Tag(name = "任务告警规则", description = "告警规则 CRUD、启停、告警日志查询")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/cronjob/alert")
 @RequiredArgsConstructor
 public class AlertController {

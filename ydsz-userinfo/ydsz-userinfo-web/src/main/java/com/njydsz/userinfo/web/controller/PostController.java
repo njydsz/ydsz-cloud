@@ -5,7 +5,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -57,7 +58,7 @@ import com.njydsz.userinfo.server.service.PostService;
  * @see com.njydsz.userinfo.infra.entity.PostDO 岗位实体
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（兼任岗位维护）
  */
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/PostDO")
 @RequiredArgsConstructor
 @Tag(name = "岗位管理", description = "岗位 CRUD")

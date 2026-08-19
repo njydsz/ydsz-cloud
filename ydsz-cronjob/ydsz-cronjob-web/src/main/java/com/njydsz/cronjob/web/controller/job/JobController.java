@@ -12,7 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -85,7 +86,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
  * @since 1.0.0
  */
 @Tag(name = "任务调度", description = "任务 CRUD、暂停/恢复、立即触发、Cron 校验、批量操作")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/cronjob")
 @RequiredArgsConstructor
 @Validated

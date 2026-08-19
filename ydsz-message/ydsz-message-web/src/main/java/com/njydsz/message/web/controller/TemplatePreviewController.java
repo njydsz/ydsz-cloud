@@ -5,7 +5,8 @@ import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -68,7 +69,7 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
  * @see com.njydsz.message.server.service.template.TemplateService 模板服务
  */
 @Tag(name = "模板预览", description = "模板渲染预览")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/message/template/preview")
 @RequiredArgsConstructor
 public class TemplatePreviewController {

@@ -5,7 +5,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -72,7 +73,7 @@ import com.njydsz.cronjob.server.service.dag.JobDagService;
  * @since 1.0.0
  */
 @Tag(name = "DAG工作流定义", description = "DAG CRUD、启停、触发、校验、版本历史、回滚")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/cronjob/dag")
 @RequiredArgsConstructor
 public class JobDagController {

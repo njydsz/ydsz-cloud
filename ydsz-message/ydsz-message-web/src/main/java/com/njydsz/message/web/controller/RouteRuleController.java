@@ -6,7 +6,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -75,7 +76,7 @@ import com.njydsz.message.server.service.config.RouteRuleService;
  * @see com.njydsz.message.domain.entity.config.MsgRouteRule 路由规则实体
  */
 @Tag(name = "路由规则", description = "消息路由规则管理")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/message/route-rule")
 @RequiredArgsConstructor
 public class RouteRuleController {

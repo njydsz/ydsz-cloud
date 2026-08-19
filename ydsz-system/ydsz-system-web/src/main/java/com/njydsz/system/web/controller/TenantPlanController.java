@@ -6,7 +6,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,7 +49,7 @@ import com.njydsz.system.server.service.TenantPlanService;
  * @see TenantPlanService 套餐业务逻辑
  */
 @Tag(name = "租户套餐管理", description = "套餐 CRUD / 菜单配置")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/tenant-plan")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:tenant:plan:list")

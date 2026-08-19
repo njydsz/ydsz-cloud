@@ -5,7 +5,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -74,7 +75,7 @@ import com.njydsz.message.server.service.receipt.ReceiptService;
  * @see com.njydsz.message.domain.dto.receipt.ReceiptCallbackDTO 回执回调 DTO
  */
 @Tag(name = "消息回执", description = "服务商回执回调与查询")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/message/receipt")
 @RequiredArgsConstructor
 public class ReceiptController {

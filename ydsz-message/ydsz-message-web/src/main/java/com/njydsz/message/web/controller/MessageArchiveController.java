@@ -6,7 +6,8 @@ import java.util.List;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -78,7 +79,7 @@ import com.njydsz.message.server.service.archive.MessageArchiveService;
  * @see com.njydsz.message.domain.entity.core.MsgLog 发送日志实体
  */
 @Tag(name = "消息归档搜索", description = "消息发送日志全文搜索")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/message/archive/search")
 @RequiredArgsConstructor
 public class MessageArchiveController {

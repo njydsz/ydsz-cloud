@@ -172,6 +172,8 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   USER_SUSPENDED("A20126", "userinfo.user.suspended", 403),
   /** 账号已离职（终态，不可再激活） */
   USER_RESIGNED("A20127", "userinfo.user.resigned", 403),
+  /** 非法状态流转（如终态 REISIGNED 不可再流转到任何状态） */
+  LIFECYCLE_TRANSITION_INVALID("A20144", "userinfo.lifecycle.transition.invalid", 400),
 
   // ==================== A20xxx Remember-Me ====================
   /** Remember-Me 已过期（超过最大续期天数） */

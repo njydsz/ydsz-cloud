@@ -5,7 +5,8 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -57,7 +58,7 @@ import com.njydsz.cronjob.server.service.impl.schedule.ScheduleCalendarService;
  * @since 1.0.0
  */
 @Tag(name = "调度日历", description = "单任务未来触发时间 / 全局调度日历聚合可视化")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/cronjob/calendar")
 @RequiredArgsConstructor
 public class ScheduleCalendarController {

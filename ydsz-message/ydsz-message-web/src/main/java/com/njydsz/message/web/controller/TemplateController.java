@@ -6,7 +6,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -76,7 +77,7 @@ import com.njydsz.message.server.service.template.TemplateService;
  * @see com.njydsz.message.domain.entity.template.MsgTemplate 模板实体
  */
 @Tag(name = "消息模板", description = "消息模板增删改查与审核")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/message/template")
 @RequiredArgsConstructor
 public class TemplateController {

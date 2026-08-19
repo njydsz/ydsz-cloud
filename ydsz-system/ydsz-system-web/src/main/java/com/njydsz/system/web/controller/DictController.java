@@ -5,7 +5,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,7 +55,7 @@ import com.njydsz.system.server.service.DictService;
  * @see DictVersionService 字典版本管理（变更通知下游）
  */
 @Tag(name = "字典类型", description = "字典类型 CRUD + 全量列表")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/dict/type")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:dict:list")

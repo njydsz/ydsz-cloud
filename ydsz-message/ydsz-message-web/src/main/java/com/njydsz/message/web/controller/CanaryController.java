@@ -2,7 +2,8 @@ package com.njydsz.message.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,7 +37,7 @@ import com.njydsz.message.server.service.config.CanaryExperimentService;
  * @see CanaryExperimentService 灰度实验服务
  */
 @Tag(name = "灰度实验", description = "消息模板 A/B 对照实验管理")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/message/canary")
 @RequiredArgsConstructor
 public class CanaryController {

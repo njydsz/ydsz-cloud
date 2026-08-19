@@ -8,7 +8,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,7 +42,7 @@ import com.njydsz.cronjob.domain.vo.JobTaskVO;
  * @since 1.0.0
  */
 @Tag(name = "MapReduce 子任务查询", description = "子任务列表/分页/进度汇总")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/cronjob/task")
 @RequiredArgsConstructor
 @Validated

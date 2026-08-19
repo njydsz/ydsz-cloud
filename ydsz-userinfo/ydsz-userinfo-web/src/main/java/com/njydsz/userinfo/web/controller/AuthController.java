@@ -11,7 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -71,7 +72,7 @@ import com.njydsz.userinfo.web.dto.RefreshRequest;
  * @see com.njydsz.userinfo.server.auth.AuthService 认证业务逻辑
  * @see com.njydsz.userinfo.web.controller.OAuth2Controller OAuth2.0 授权端点
  */
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Tag(name = "认证管理", description = "登录/登出/Token 刷新")

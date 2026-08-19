@@ -5,7 +5,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,7 +40,7 @@ import com.njydsz.userinfo.server.service.DepartmentService;
  * @since 1.0.0
  * @see com.njydsz.userinfo.server.service.DepartmentService 部门业务逻辑
  */
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/dept")
 @RequiredArgsConstructor
 @Tag(name = "部门管理", description = "部门 CRUD、树形结构查询")

@@ -7,7 +7,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -76,7 +77,7 @@ import com.njydsz.message.server.service.core.MessageFeedbackService;
  * @see com.njydsz.message.domain.entity.config.MsgFeedback 反馈实体
  */
 @Tag(name = "消息反馈", description = "消息质量评分与用户反馈")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/message/feedback")
 @RequiredArgsConstructor
 public class MessageFeedbackController {

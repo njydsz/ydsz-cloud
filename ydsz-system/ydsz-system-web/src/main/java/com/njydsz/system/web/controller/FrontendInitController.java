@@ -5,7 +5,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,7 +37,7 @@ import com.njydsz.system.server.service.FrontendInitService;
  * @since 1.9.0
  */
 @Tag(name = "前端初始化", description = "前端启动聚合数据接口")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/system/init")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:frontend:init")

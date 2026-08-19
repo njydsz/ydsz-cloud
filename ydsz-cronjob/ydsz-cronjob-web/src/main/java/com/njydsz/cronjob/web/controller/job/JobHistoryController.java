@@ -5,7 +5,8 @@ import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,7 +49,7 @@ import com.njydsz.cronjob.server.service.job.JobHistoryService;
  * @since 1.0.0
  */
 @Tag(name = "任务配置历史版本", description = "版本列表、版本详情、回滚、版本对比")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/cronjob/history")
 @RequiredArgsConstructor
 public class JobHistoryController {

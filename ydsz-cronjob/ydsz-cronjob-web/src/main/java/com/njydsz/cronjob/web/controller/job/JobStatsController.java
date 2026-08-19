@@ -9,7 +9,8 @@ import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,7 +50,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  * @since 1.0.0
  */
 @Tag(name = "任务执行统计", description = "每日趋势、范围汇总、仪表盘、热力图、失败列表")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/cronjob/stats")
 @RequiredArgsConstructor
 public class JobStatsController {

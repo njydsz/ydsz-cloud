@@ -5,7 +5,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,7 +65,7 @@ import com.njydsz.userinfo.server.service.LanguageService;
  * @see LanguageService 语言业务逻辑
  * @see com.njydsz.userinfo.infra.entity.LanguageDO 语言实体
  */
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/LanguageDO")
 @Tag(name = "语言管理", description = "语言 CRUD")
 @RequiredArgsConstructor

@@ -6,7 +6,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -70,7 +71,7 @@ import com.njydsz.userinfo.server.service.RoleService;
  * @see com.njydsz.userinfo.web.controller.MenuController 菜单 Controller（权限分配的目标对象）
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（角色授予目标）
  */
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/RoleDO")
 @RequiredArgsConstructor
 @Tag(name = "角色管理", description = "角色 CRUD、权限分配")

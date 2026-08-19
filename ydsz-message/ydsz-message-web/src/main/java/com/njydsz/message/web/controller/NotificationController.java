@@ -8,7 +8,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -90,7 +91,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
  * @see com.njydsz.message.server.service.receipt.RecallService 撤回服务
  */
 @Tag(name = "站内通知", description = "站内通知发送/收件箱/已读/撤回/推送")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/message/notifications")
 @RequiredArgsConstructor
 public class NotificationController {

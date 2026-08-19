@@ -6,7 +6,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,7 +64,7 @@ import com.njydsz.system.server.service.AppInfoService;
  * @see AppInfoService 应用注册业务逻辑
  */
 @Tag(name = "应用注册", description = "OAuth2 应用注册 CRUD")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/app")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:app:list")

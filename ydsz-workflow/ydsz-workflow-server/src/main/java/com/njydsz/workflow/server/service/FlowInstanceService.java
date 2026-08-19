@@ -1,12 +1,12 @@
 package com.njydsz.workflow.server.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
+import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
@@ -254,48 +254,18 @@ public interface FlowInstanceService {
   /**
    * P2-23: 实例多维分页查询
    *
-   * @param businessType 业务类型（可选）
-   * @param initiatorId 发起人 ID（可选）
-   * @param flowStatus 流程状态（可选）
-   * @param startTime 开始时间下界（可选）
-   * @param endTime 开始时间上界（可选）
-   * @param tenantId 租户 ID（可选）
-   * @param pageNo 页码（从 1 开始）
-   * @param pageSize 每页大小
+   * @param query 分页查询参数对象（含筛选条件、分页信息）
    * @return 分页结果
    */
-  PageResponse<List<FlowInstanceDO>> page(
-      String businessType,
-      String initiatorId,
-      String flowStatus,
-      LocalDateTime startTime,
-      LocalDateTime endTime,
-      String tenantId,
-      int pageNo,
-      int pageSize);
+  PageResponse<List<FlowInstanceDO>> page(FlowInstancePageQuery query);
 
   /**
    * P2-23: 实例多维分页查询（VO 版本，避免 Controller 层接触 DO）
    *
-   * @param businessType 业务类型（可选）
-   * @param initiatorId 发起人 ID（可选）
-   * @param flowStatus 流程状态（可选）
-   * @param startTime 开始时间下界（可选）
-   * @param endTime 开始时间上界（可选）
-   * @param tenantId 租户 ID（可选）
-   * @param pageNo 页码（从 1 开始）
-   * @param pageSize 每页大小
+   * @param query 分页查询参数对象（含筛选条件、分页信息）
    * @return 分页结果（VO）
    */
-  PageResponse<List<FlowInstanceVO>> pageVO(
-      String businessType,
-      String initiatorId,
-      String flowStatus,
-      LocalDateTime startTime,
-      LocalDateTime endTime,
-      String tenantId,
-      int pageNo,
-      int pageSize);
+  PageResponse<List<FlowInstanceVO>> pageVO(FlowInstancePageQuery query);
 
   /**
    * P2-24: 读取实例流程变量

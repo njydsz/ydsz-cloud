@@ -5,7 +5,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -77,7 +78,7 @@ import com.njydsz.message.server.service.config.PreferenceService;
  * @see com.njydsz.message.domain.entity.config.MsgPreference 偏好实体
  */
 @Tag(name = "消息偏好", description = "用户消息偏好管理")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/message/preference")
 @RequiredArgsConstructor
 public class PreferenceController {

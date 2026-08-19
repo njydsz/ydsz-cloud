@@ -5,7 +5,8 @@ import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,7 +56,7 @@ import com.njydsz.userinfo.server.auth.CaptchaService;
  * @see CaptchaService 验证码业务逻辑
  * @see com.njydsz.userinfo.web.controller.AuthController 认证 Controller（消费 captcha）
  */
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/captcha")
 @RequiredArgsConstructor
 @Tag(name = "验证码", description = "图形验证码生成与校验")

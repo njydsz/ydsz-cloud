@@ -4,7 +4,8 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -76,7 +77,7 @@ import com.njydsz.message.server.service.core.MessageTraceService;
  * @see com.njydsz.message.infra.entity.MsgTraceDO 追踪实体
  */
 @Tag(name = "消息追踪", description = "消息端到端全链路追踪")
-@RestController
+@Slf4j
 @RequestMapping("/api/v1/message/trace")
 @RequiredArgsConstructor
 public class MessageTraceController {
