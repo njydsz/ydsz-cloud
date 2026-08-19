@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.userinfo.domain.enums.BanType;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
@@ -94,6 +95,30 @@ public class AccountStatusGuard {
         default -> {
           // ENABLED falls through to lock check below
         }
+      }
+    }
+
+    // 封禁状态检查：在生命周期状态校验之后、密码校验之前
+    String banType = credential.getBanType();
+    if (banType != null && !banType.isBlank()) {
+      try {
+        BanType type = BanType.valueOf(banType.trim().toUpperCase());
+        if (type == BanType.PERMANENT) {
+          recordLoginFailure(credential, username, loginIp, userAgent, "USER_BANNED_PERMANENT");
+          throw new BusinessException(UserInfoExceptionCode.USER_BANNED_PERMANENT);
+        }
+        // TEMPORARY: 懒检查是否过期
+        LocalDateTime banExpireAt = credential.getBanExpireAt();
+        if (banExpireAt == null || !banExpireAt.isAfter(LocalDateTime.now())) {
+          // 临时封禁已过期或时间异常，自动解除（不写回 DB，仅内存判断）
+          log.debug("Temporary ban expired for user: {}, allowing login", username);
+        } else {
+          recordLoginFailure(credential, username, loginIp, userAgent, "USER_BANNED");
+          throw new BusinessException(UserInfoExceptionCode.USER_BANNED);
+        }
+      } catch (IllegalArgumentException e) {
+        // 无法解析的 banType 值，不阻止登录（防御性处理）
+        log.warn("Unknown banType for user {}: {}", username, banType);
       }
     }
 

@@ -33,7 +33,7 @@ public class LdapSyncTask {
    * <p>cron 表达式从配置中读取，默认每天凌晨 2 点执行。同步过程由 {@link LdapOrgSyncService} 负责获取分布式锁，
    * 防止并发执行。
    */
-  @Scheduled(cron = "${ydsz.userinfo.ldap.sync.cron}")
+  @Scheduled(cron = "${ydsz.userinfo.ldap.sync.cron:0 0 2 * * ?}")
   public void syncLdapOrg() {
     log.info("Scheduled LDAP sync task started");
     try {

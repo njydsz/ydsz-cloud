@@ -6,6 +6,7 @@ import lombok.Data;
 
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
+import com.njydsz.userinfo.domain.enums.BanType;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 
 /**

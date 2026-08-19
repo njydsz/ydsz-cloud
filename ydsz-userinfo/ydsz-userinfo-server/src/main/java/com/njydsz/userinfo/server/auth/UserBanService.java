@@ -80,11 +80,11 @@ public class UserBanService {
     }
 
     // 驱逐全部会话，强制下线
-    int evicted = sessionManager.evictAllSessions(userId);
+    evictAllSessions(userId);
 
     log.info(
-        "User banned: userId={}, type={}, reason={}, expireAt={}, operator={}, evicted={}",
-        userId, type, reason, expireAt, operator, evicted);
+        "User banned: userId={}, type={}, reason={}, expireAt={}, operator={}",
+        userId, type, reason, expireAt, operator);
   }
 
   /**
@@ -157,6 +157,18 @@ public class UserBanService {
       // 用户不存在时不视为封禁
       return false;
     }
+  }
+
+  /**
+   * 驱逐用户全部会话（强制下线）。
+   *
+   * <p>调用 {@link SessionManager#evictAllSessions(String)} 清理 Redis 会话数据并吊销所有 Token。
+   *
+   * @param userId 用户 ID
+   */
+  public void evictAllSessions(String userId) {
+    int count = sessionManager.evictAllSessions(userId);
+    log.info("Evicted {} sessions for user: {}", count, userId);
   }
 
   // ==================== 内部方法 ====================
