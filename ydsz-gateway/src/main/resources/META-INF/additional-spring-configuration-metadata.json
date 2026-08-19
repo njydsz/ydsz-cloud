@@ -168,12 +168,6 @@
       "defaultValue": true
     },
     {
-      "name": "ydsz.gateway.authorization.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用网关层粗粒度 RBAC（默认关闭，权限以业务服务细粒度 RBAC 为准）。",
-      "defaultValue": false
-    },
-    {
       "name": "ydsz.gateway.websocket.allowed-origins",
       "type": "java.lang.String",
       "description": "WebSocket Origin 白名单，逗号分隔，支持通配符。",
