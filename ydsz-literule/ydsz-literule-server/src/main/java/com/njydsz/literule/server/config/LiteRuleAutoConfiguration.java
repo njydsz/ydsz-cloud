@@ -137,8 +137,23 @@ public class LiteRuleAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean
   public ExpressionEngine expressionEvaluator(LiteRuleProperties properties) {
+    LiteExprEngine engine = new LiteExprEngine(properties.isSandboxEnabled());
+    // O2 沙箱规则外置化：应用 YAML 配置的扩展黑名单/白名单
+    LiteRuleProperties.SandboxPolicyConfig policy = properties.getSandboxPolicy();
+    if (policy != null
+        && (!policy.getForbiddenMethods().isEmpty()
+            || !policy.getForbiddenRoots().isEmpty()
+            || !policy.getAllowedFunctions().isEmpty())) {
+      engine.applySandboxPolicy(
+          policy.getForbiddenMethods(), policy.getForbiddenRoots(), policy.getAllowedFunctions());
+      log.info(
+          "[LiteRule] 沙箱扩展策略已应用（forbiddenMethods={}, forbiddenRoots={}, allowedFunctions={}）",
+          policy.getForbiddenMethods().size(),
+          policy.getForbiddenRoots().size(),
+          policy.getAllowedFunctions().size());
+    }
     log.info("[LiteRule] LiteExpr 自研表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
-    return new LiteExprEngine(properties.isSandboxEnabled());
+    return engine;
   }
 
   /**
@@ -188,6 +203,9 @@ public class LiteRuleAutoConfiguration {
     configureTimeoutExecutor(engine, properties, applicationContext);
     configureCircuitBreaker(engine, properties);
     configureCanaryRouting(engine, properties, evaluatorProvider);
+
+    // P1-3: 注入线程池配置化（替代硬编码的 2 线程）
+    configureInjectionExecutor(engine, properties);
 
     // Micrometer 桥接（仅当 classpath 存在 MeterRegistry 时启用）
     bindMicrometerIfAvailable(engine, meterRegistryProvider);
@@ -389,6 +407,48 @@ public class LiteRuleAutoConfiguration {
     engine.setCanaryRouter(canaryRouter);
     engine.setCanaryEnabled(true);
     log.info("[LiteRule] 规则灰度路由已启用");
+  }
+
+  /**
+   * 配置注入线程池（P1-3）
+   *
+   * <p>根据 {@code ydsz.literule.injection.poolSize} 配置创建事实采集/模型注入专用线程池，替代硬编码的固定 2 线程。
+   * 使用有界队列 + CallerRunsPolicy 避免任务无限堆积。线程设置为守护线程，不影响 JVM 关闭。
+   *
+   * @param engine 规则引擎
+   * @param properties 配置属性
+   */
+  private void configureInjectionExecutor(DefaultRuleEngine engine, LiteRuleProperties properties) {
+    LiteRuleProperties.InjectionConfig injection = properties.getInjection();
+    int poolSize = injection.getPoolSize();
+    long keepAliveSeconds = injection.getKeepAliveSeconds();
+
+    ThreadFactory threadFactory =
+        new ThreadFactory() {
+          private final AtomicInteger threadNumber = new AtomicInteger(1);
+
+          @Override
+          public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, "literule-injection-" + threadNumber.getAndIncrement());
+            t.setDaemon(true);
+            return t;
+          }
+        };
+
+    // 使用 ThreadPoolExecutor 替代 Executors.newFixedThreadPool，提供更精细的控制
+    ExecutorService injectionExecutor =
+        new ThreadPoolExecutor(
+            poolSize,
+            poolSize,
+            keepAliveSeconds,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(512),
+            threadFactory,
+            new ThreadPoolExecutor.CallerRunsPolicy());
+
+    engine.setInjectionExecutor(injectionExecutor);
+    log.info("[LiteRule] 注入线程池已配置 (poolSize={}, keepAliveSeconds={}s, queue=512, policy=CallerRunsPool)",
+        poolSize, keepAliveSeconds);
   }
 
   /**

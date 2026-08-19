@@ -56,6 +56,8 @@ import com.njydsz.message.server.service.config.VariableSourceResolver;
 import com.njydsz.message.server.service.core.DeliveryTimeOptimizer;
 import com.njydsz.message.server.service.core.GuardService;
 import com.njydsz.message.server.service.core.MessageQueryService;
+import com.njydsz.message.server.service.core.MessageRenderService;
+import com.njydsz.message.server.service.core.MessageRenderService.RenderedContent;
 import com.njydsz.message.server.service.core.MessageSendService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.core.MessageTraceService;
@@ -159,6 +161,9 @@ public class MessageServiceImpl implements MessageService {
   /** P0-A1: Outbox 事件仓储（异步消息投递） */
   private final OutboxEventRepository outboxEventRepository;
 
+  /** P1-A3: 消息内容渲染服务（从本类拆分，降低 God Class 复杂度） */
+  private final MessageRenderService messageRenderService;
+
   /** P2-1: 管线模板门面（自动选择模板 + 按需组合 Handler） */
   private final SendPipelineFacade sendPipelineFacade;
 
@@ -202,8 +207,8 @@ public class MessageServiceImpl implements MessageService {
       return ctx.getErrorResult();
     }
 
-    // ② 渲染内容: 模板加载 → 变量填充 → 渲染 → 敏感词 → 富媒体
-    RenderedContent rendered = renderContent(request, ctx);
+    // ② 渲染内容: 模板加载 → 变量填充 → 渲染 → 敏感词 → 富媒体（P1-A3: 委托 MessageRenderService）
+    RenderedContent rendered = messageRenderService.renderContent(request, ctx);
 
     // P1-7: 消息内容大小限制
     int maxLen = messageProperties.getMaxContentLength();
@@ -243,82 +248,6 @@ public class MessageServiceImpl implements MessageService {
       triggerCascade(request, logDO, depth);
     }
     return result;
-  }
-
-  /**
-   * P1-H1: 渲染阶段 —— 模板加载/变量填充/渲染/敏感词/富媒体。
-   *
-   * @param request 消息请求
-   * @param ctx 管线上下文
-   * @return 渲染后的 content/subject
-   */
-  private RenderedContent renderContent(MessageRequest request, SendContext ctx) {
-    String content = request.getContent();
-    String subject = request.getSubject();
-    String prefLocale = ctx.getPreference() != null ? ctx.getPreference().getLocale() : null;
-
-    if (StringUtils.hasText(ctx.getTemplateCode())) {
-      MsgTemplate template =
-          templateService.loadByCodeAndChannel(
-              ctx.getTemplateCode(),
-              ctx.getChannel(),
-              prefLocale,
-              TenantContextHolder.getTenantId());
-      if (template == null) {
-        return new RenderedContent(content, subject, true);
-      }
-      // P0-3: 模板变量类型校验
-      if (StringUtils.hasText(template.getVariableDefs())) {
-        var varDefs = templateVariableValidator.parse(template.getVariableDefs());
-        if (!varDefs.isEmpty() && request.getParams() != null) {
-          templateVariableValidator.validateAndFill(
-              request.getParams(), varDefs, ctx.getTemplateCode());
-        }
-      }
-      // P0-4: 变量数据源自动拉取
-      if (request.getParams() != null) {
-        Map<String, Object> varCtx = new HashMap<>();
-        if (StringUtils.hasText(request.getBizId())) {
-          varCtx.put("bizId", request.getBizId());
-        }
-        if (StringUtils.hasText(ctx.getBizType())) {
-          varCtx.put("bizType", ctx.getBizType());
-        }
-        varCtx.put("receiver", ctx.getReceiver());
-        variableSourceResolver.resolveVariables(ctx.getTemplateCode(), request.getParams(), varCtx);
-      }
-      if (StringUtils.hasText(template.getContent())) {
-        content = templateEngine.render(template.getContent(), request.getParams());
-      }
-      if (!StringUtils.hasText(subject) && StringUtils.hasText(template.getSubject())) {
-        subject = templateEngine.render(template.getSubject(), request.getParams());
-      }
-    }
-
-    // ⑦-2 敏感词过滤
-    if (StringUtils.hasText(content)) {
-      content = sensitiveWordFilter.filter(content);
-    }
-
-    // P1-2: 富媒体消息渲染
-    RichMediaContent richMedia = richMediaRenderer.extractFromParams(request.getParams());
-    if (richMedia != null) {
-      String renderedContent =
-          switch (ctx.getChannel() == null ? "" : ctx.getChannel().toUpperCase()) {
-            case "EMAIL" -> richMediaRenderer.renderHtml(richMedia);
-            case "INAPP", "DINGTALK", "WECOM", "FEISHU" ->
-                richMediaRenderer.renderMarkdown(richMedia);
-            case "SMS" -> richMediaRenderer.renderPlainText(richMedia);
-            default -> richMediaRenderer.renderPlainText(richMedia);
-          };
-      if (StringUtils.hasText(renderedContent)) {
-        content = renderedContent;
-      }
-      if (!StringUtils.hasText(subject) && StringUtils.hasText(richMedia.getTitle())) {
-        subject = richMedia.getTitle();
-      }
-    }
-    return new RenderedContent(content, subject, false);
   }
 
   /** P1-3: 构造落库 MsgLog。 */
@@ -428,15 +357,6 @@ public class MessageServiceImpl implements MessageService {
     }
     return null;
   }
-
-  /**
-   * P1-H1: 渲染阶段产出。
-   *
-   * @param content 渲染后内容
-   * @param subject 渲染后标题
-   * @param templateMissing 模板缺失标志(渲染阶段无法返回 fail,由调用方检查)
-   */
-  private record RenderedContent(String content, String subject, boolean templateMissing) {}
 
   /**
    * P2-6: 触发级联发送。

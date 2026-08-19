@@ -448,8 +448,8 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
       String newInstNode,
       Map<String, String> nodeMapping,
       Map<String, FlowNodeDO> targetNodeMap) {
-    List<FlowRunTaskDO> pendingTasks = flowTaskMapper.selectPendingByInstance(instanceId);
-    if (pendingTasks == null || pendingTasks.isEmpty()) {
+    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream().map(converter::entityToDO).toList();
+    if (pendingTasks.isEmpty()) {
       return 0;
     }
     int migrated = 0;
@@ -471,7 +471,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
       if (targetNode != null) {
         task.setNodeName(targetNode.getNodeName());
       }
-      flowTaskMapper.updateById(task);
+      taskRepository.update(converter.entityToVO(task));
       migrated++;
     }
     return migrated;

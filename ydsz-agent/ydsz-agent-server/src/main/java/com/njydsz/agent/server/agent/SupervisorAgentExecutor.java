@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
+import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;

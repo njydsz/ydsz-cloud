@@ -1,12 +1,13 @@
 package com.njydsz.cronjob.server.core.config;
 
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * P2-E1: 拒绝任务计数处理器。
  *
- * <p>包装原始 {@link java.util.concurrent.RejectedExecutionHandler}，在任务被拒绝时递增计数，
+ * <p>包装原始 {@link RejectedExecutionHandler}，在任务被拒绝时递增计数，
  * 供 {@link CronjobThreadPoolRegistry#getMetrics()} 与 {@code /actuator/threadpools} 端点观测
  * 线程池拒绝压力（原实现中 {@code rejectedExecutionCount} 硬编码为 0，无法观测）。
  *
@@ -15,9 +16,9 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author ydsz-team
  * @since 1.2.0
  */
-public class CountingRejectedExecutionHandler implements ThreadPoolExecutor.RejectedExecutionHandler {
+public class CountingRejectedExecutionHandler implements RejectedExecutionHandler {
 
-  private final ThreadPoolExecutor.RejectedExecutionHandler delegate;
+  private final RejectedExecutionHandler delegate;
 
   private final AtomicLong rejectedCount;
 
@@ -28,7 +29,7 @@ public class CountingRejectedExecutionHandler implements ThreadPoolExecutor.Reje
    * @param rejectedCount 共享计数（由 Registry 持有，跨注册/注销保持可见）
    */
   public CountingRejectedExecutionHandler(
-      ThreadPoolExecutor.RejectedExecutionHandler delegate, AtomicLong rejectedCount) {
+      RejectedExecutionHandler delegate, AtomicLong rejectedCount) {
     this.delegate = delegate;
     this.rejectedCount = rejectedCount;
   }

@@ -8,7 +8,6 @@ import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.CostEstimate;
 import com.njydsz.agent.domain.model.TokenUsage;
-import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.rag.TokenEstimator;
 

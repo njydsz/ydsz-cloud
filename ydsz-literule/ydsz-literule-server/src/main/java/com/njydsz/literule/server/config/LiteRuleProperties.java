@@ -1,6 +1,7 @@
 package com.njydsz.literule.server.config;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import jakarta.validation.constraints.DecimalMax;
@@ -35,6 +36,28 @@ public class LiteRuleProperties {
 
   /** 是否启用表达式沙箱（限制危险函数和类访问） */
   private boolean sandboxEnabled = true;
+
+  /**
+   * 沙箱扩展策略配置（O2 沙箱规则外置化）
+   *
+   * <p>配置示例：
+   *
+   * <pre>
+   * ydsz:
+   *   literule:
+   *     sandbox-policy:
+   *       forbidden-methods:
+   *         - exec
+   *         - connect
+   *       forbidden-roots:
+   *         - java.net.Socket
+   *       allowed-functions:
+   *         - myCustomFunc
+   * </pre>
+   *
+   * @since 1.0.0
+   */
+  private SandboxPolicyConfig sandboxPolicy = new SandboxPolicyConfig();
 
   /** 是否启用执行轨迹记录（1.4.0） */
   private boolean traceEnabled = true;
@@ -694,6 +717,26 @@ public class LiteRuleProperties {
      * 适用于金融/合规等高隔离要求场景。 false（默认）：不校验，兼容逻辑隔离部署。
      */
     private boolean physicalIsolationRequired = false;
+  }
+
+  /**
+   * 沙箱扩展策略配置（O2 沙箱规则外置化）
+   *
+   * <p>全部可选，未配置时仅使用内置黑名单。
+   *
+   * @since 1.0.0
+   */
+  @Data
+  public static class SandboxPolicyConfig {
+
+    /** 追加的危险方法名（如 exec / connect / delete） */
+    private List<String> forbiddenMethods = new java.util.ArrayList<>();
+
+    /** 追加的危险类/属性链根（如 java.net.Socket / MyDangerousClass） */
+    private List<String> forbiddenRoots = new java.util.ArrayList<>();
+
+    /** 追加的白名单函数（业务自定义函数，合并到函数白名单） */
+    private List<String> allowedFunctions = new java.util.ArrayList<>();
   }
 
   /**

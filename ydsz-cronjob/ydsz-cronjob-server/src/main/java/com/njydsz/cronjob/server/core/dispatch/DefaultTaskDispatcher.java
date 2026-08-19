@@ -66,6 +66,7 @@ import com.njydsz.cronjob.server.core.TaskCompletedEvent;
 import com.njydsz.cronjob.server.core.alert.AlertContext;
 import com.njydsz.cronjob.server.core.alert.AlertTrigger;
 import com.njydsz.cronjob.server.core.alert.AlertType;
+import com.njydsz.cronjob.server.core.config.CronjobThreadPoolRegistry;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.cronjob.server.core.executor.GlobalConcurrencyController;
 import com.njydsz.cronjob.server.core.executor.JobNodeHeartbeat;

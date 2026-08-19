@@ -96,6 +96,7 @@ ydsz-nextwiki/
 | `POST /api/v1/nextwiki/files/chunk/{uploadId}/complete` | 完成分片上传 |
 | `DELETE /api/v1/nextwiki/files/chunk/{uploadId}` | 取消分片上传 |
 | `POST /api/v1/nextwiki/files/{nodeId}/copy` | 复制文件 |
+| `PUT /api/v1/nextwiki/files/sort` | 批量排序（拖拽排序） |
 | `POST /api/v1/nextwiki/files/batch/move` | 批量移动（异步任务） |
 | `POST /api/v1/nextwiki/files/batch/delete` | 批量删除（异步任务） |
 | `POST /api/v1/nextwiki/files/folders` | 创建文件夹 |

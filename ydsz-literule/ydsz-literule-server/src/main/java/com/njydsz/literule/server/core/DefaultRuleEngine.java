@@ -151,18 +151,50 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
   private volatile EvaluationResultCache evaluationResultCache;
 
   /**
-   * 事实/模型并行注入专用线程池（P0-2 并行优化）
+   * 事实/模型并行注入专用线程池（P1-3 可配置）
    *
-   * <p>固定 2 线程，分别用于事实采集和模型调用。使用守护线程，不影响 JVM 关闭。
+   * <p>默认 {@code max(4, CPU * 2)} 线程，分别用于事实采集和模型调用。可通过 {@link #setInjectionExecutor} 替换为配置化线程池。
+   * 使用守护线程，不影响 JVM 关闭。
    */
-  private final ExecutorService injectionExecutor =
-      Executors.newFixedThreadPool(
-          2,
-          r -> {
-            Thread t = new Thread(r, "literule-injection");
-            t.setDaemon(true);
-            return t;
-          });
+  private volatile ExecutorService injectionExecutor = createDefaultInjectionExecutor();
+
+  /**
+   * 创建默认注入线程池
+   *
+   * <p>线程数 = {@code max(4, CPU 核数 * 2)}，使用守护线程避免阻止 JVM 关闭。
+   *
+   * @return 默认注入线程池
+   */
+  private static ExecutorService createDefaultInjectionExecutor() {
+    int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors() * 2);
+    return java.util.concurrent.Executors.newFixedThreadPool(
+        poolSize,
+        r -> {
+          Thread t = new Thread(r, "literule-injection");
+          t.setDaemon(true);
+          return t;
+        });
+  }
+
+  /**
+   * 设置注入线程池（替代硬编码的默认线程池）
+   *
+   * <p>由 {@code LiteRuleAutoConfiguration} 调用，根据 {@code ydsz.literule.injection.poolSize} 配置创建线程池。
+   * 使用 volatile 引用替换可以安全地在运行时切换（已提交任务继续在新旧线程池中处理）。
+   *
+   * @param injectionExecutor 自定义注入线程池
+   * @since 1.0.0
+   */
+  public void setInjectionExecutor(ExecutorService injectionExecutor) {
+    if (injectionExecutor != null) {
+      // 关闭旧线程池（如果已初始化且不是同一个实例）
+      ExecutorService old = this.injectionExecutor;
+      this.injectionExecutor = injectionExecutor;
+      if (old != null && old != injectionExecutor && !old.isShutdown()) {
+        old.shutdown();
+      }
+    }
+  }
 
   /**
    * 注册规则到引擎

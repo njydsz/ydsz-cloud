@@ -422,6 +422,7 @@ public interface NextwikiConverter {
    * @param dto 文件-标签关联 DTO
    * @return 文件-标签关联实体
    */
+  @Named("create")
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -451,6 +452,7 @@ public interface NextwikiConverter {
    * @param dtos 文件-标签关联 DTO 列表
    * @return 文件-标签关联实体列表
    */
+  @IterableMapping(qualifiedByName = "create")
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)

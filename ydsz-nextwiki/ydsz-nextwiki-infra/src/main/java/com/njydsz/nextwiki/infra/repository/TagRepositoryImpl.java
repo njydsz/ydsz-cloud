@@ -16,7 +16,6 @@ import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
 import com.njydsz.nextwiki.infra.entity.FileTagDO;
 import com.njydsz.nextwiki.infra.entity.TagDO;
 import com.njydsz.nextwiki.infra.mapper.TagMapper;
-import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
 
 /**
  * 标签仓储实现
@@ -80,22 +79,22 @@ public class TagRepositoryImpl implements TagRepository {
             .fileNodeId(fileNodeId)
             .tagId(tagId)
             .build();
-    fileNodeMapper.insertFileTag(fileTag);
+    tagMapper.insertFileTag(fileTag);
   }
 
   @Override
   public void unbindTag(String fileNodeId, String tagId) {
-    fileNodeMapper.deleteFileTag(fileNodeId, tagId);
+    tagMapper.deleteFileTag(fileNodeId, tagId);
   }
 
   @Override
   public void unbindAllByFileNodeId(String fileNodeId) {
-    fileNodeMapper.deleteAllFileTagsByFileNodeId(fileNodeId);
+    tagMapper.deleteAllFileTags(fileNodeId);
   }
 
   @Override
   public List<FileTagVO> findFileTagsByFileNodeId(String fileNodeId) {
-    return converter.fileTagListToVO(fileNodeMapper.selectFileTagsByFileNodeId(fileNodeId));
+    return converter.fileTagListToVO(tagMapper.selectFileTagsByFileNodeId(fileNodeId));
   }
 
   @Override
@@ -110,6 +109,6 @@ public class TagRepositoryImpl implements TagRepository {
 
   @Override
   public List<String> findFileNodeIdsByTagName(String tagName) {
-    return tagMapper.selectFileNodeIdsByTagName(tagName);
+    return tagMapper.findFileNodeIdsByTagName(tagName);
   }
 }

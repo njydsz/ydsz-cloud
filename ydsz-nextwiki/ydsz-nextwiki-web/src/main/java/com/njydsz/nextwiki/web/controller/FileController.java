@@ -77,6 +77,7 @@ import com.njydsz.nextwiki.server.service.FileApplicationService;
  *   PUT    /api/v1/nextwiki/files/{nodeId}/rename        - 重命名
  *   DELETE /api/v1/nextwiki/files/{nodeId}               - 删除（移入回收站）
  *   POST   /api/v1/nextwiki/files/{nodeId}/copy          - 复制
+ *   PUT    /api/v1/nextwiki/files/sort                   - 批量排序（拖拽排序）
  * </pre>
  *
  * <h3>架构位置</h3>

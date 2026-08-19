@@ -15,8 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowHisInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
@@ -113,37 +115,37 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 @RequiredArgsConstructor
 public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService {
 
-  /** 流程实例 Mapper，查询待归档的已完成实例 */
+  /**
+   * 流程实例 Mapper，查询待归档的已完成实例。
+   *
+   * <p>保留 Mapper 调用，因为 {@code selectList} 走复杂 LambdaQueryWrapper（IN + lt + orderBy + LIMIT），
+   * 在 Repository 中暂无等价方法。
+   */
   private final FlowInstanceMapper instanceMapper;
 
-  /**
-   * 流程实例仓储（domain 层契约）。
-   *
-   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #instanceMapper} 访问数据，
-   * 因为部分 Mapper 方法（如 {@code selectList(LambdaQueryWrapper)} 复杂查询）在仓储中暂无等价方法，
-   * 且仓储返回 {@code FlowInstanceVO} 与 Service 使用的 {@code FlowInstanceDO} 类型不同。
-   * 后续应在仓储中补齐对应方法并迁移。
-   */
+  /** 流程实例仓储（domain 层契约），提供基础 CRUD 方法 */
   private final FlowInstanceRepository instanceRepository;
 
-  /** 历史任务 Mapper，校验任务是否已归档到 his_task 表 */
+  /** 历史任务 Mapper，校验任务是否已归档到 his_task 表（复杂查询保留） */
   private final FlowHisTaskMapper hisTaskMapper;
 
-  /** 运行时任务 Mapper，查询实例关联的待办任务（校验是否全部终态） */
+  /** 历史任务仓储（domain 层契约），提供 findByInstanceId 等查询方法 */
+  private final FlowHisTaskRepository hisTaskRepository;
+
+  /** 运行时任务 Mapper（复杂查询保留） */
   private final FlowRunTaskMapper taskMapper;
 
-  /**
-   * 运行时任务仓储（domain 层契约）。
-   *
-   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #taskMapper} 访问数据，
-   * 因为部分 Mapper 方法（如 {@code selectByInstanceId}）在仓储中暂无等价签名，
-   * 且仓储返回 {@code FlowRunTaskVO} 与 Service 使用的 {@code FlowRunTaskDO} 类型不同。
-   * 后续应在仓储中补齐对应方法并迁移。
-   */
+  /** 运行时任务仓储（domain 层契约），提供 findByInstanceId 等查询方法 */
   private final FlowRunTaskRepository taskRepository;
 
-  /** 历史实例 Mapper，写入归档实例记录 */
-  // 注意：FlowHisInstance 无对应 Repository，mapper 暂时保留
+  /** 实体转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
+
+  /**
+   * 历史实例 Mapper，写入归档实例记录。
+   *
+   * <p>注意：FlowHisInstance 无对应 Repository，mapper 暂时保留。
+   */
   private final FlowHisInstanceMapper hisInstanceMapper;
 
   /** 历史归档配置属性，控制保留天数/批大小/最大耗时等 */
@@ -341,8 +343,10 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     String instanceId = instance.getId();
 
     // 1. 校验所有任务都已归档到 his_task
-    List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
-    List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(instanceId);
+    List<FlowRunTaskDO> tasks = taskRepository.findByInstanceId(instanceId).stream()
+        .map(converter::entityToDO).toList();
+    List<FlowHisTaskDO> hisTasks = hisTaskRepository.findByInstanceId(instanceId).stream()
+        .map(converter::entityToDO).toList();
     Set<String> archivedTaskIds = new HashSet<>();
     if (hisTasks != null) {
       for (FlowHisTaskDO his : hisTasks) {
