@@ -65,9 +65,15 @@ public final class JsonPatch {
 
   /** 单个 Patch 操作 */
   public static class PatchOp {
+/** op */
+/** op */
     public final Operation op;
+/** path */
+/** path */
     public final String path;
+/** value */
     public final Object value; // 用于 add / replace / test
+/** from */
     public final String from; // 用于 move / copy
 
     public PatchOp(Operation op, String path, Object value, String from) {

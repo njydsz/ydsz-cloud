@@ -11,11 +11,18 @@ package com.njydsz.common.json.exception;
 public class JsonSerializationException extends JsonException {
 
   private static final long serialVersionUID = 1L;
+/** null object */
+/** null object */
 
   public static final int NULL_OBJECT = 2001;
+/** circular reference */
+/** circular reference */
   public static final int CIRCULAR_REFERENCE = 2002;
+/** unsupported type */
   public static final int UNSUPPORTED_TYPE = 2003;
+/** field access error */
   public static final int FIELD_ACCESS_ERROR = 2004;
+/** serialization error */
   public static final int SERIALIZATION_ERROR = 2005;
 
   /**

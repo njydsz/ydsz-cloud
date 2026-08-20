@@ -79,6 +79,8 @@ public final class BeanReader<T> {
    */
   private final String[] creatorParameterNames;
 
+ *
+ * @param beanType Bean 类型
   /** 构造函数 */
   public BeanReader(Class<T> beanType) {
     this.beanType = beanType;
@@ -423,7 +425,10 @@ public final class BeanReader<T> {
     public final int[] aliasHashes;
 
     public final Class<?> fieldType;
+/** field */
+/** field */
     public final Field field;
+/** typeCode */
     public final int typeCode;
 
     /**

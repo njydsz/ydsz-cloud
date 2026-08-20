@@ -20,7 +20,6 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.vo.CategoryNodeVO;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.server.config.RuleAdminService;
@@ -79,7 +78,7 @@ public class RuleCategoryController {
       @RequestParam(value = "path", required = false) String path) {
     return YdszResponse.success(
         ruleCategoryProvider.listDefinitionsByCategoryPath(path).stream()
-            .map(LiteruleConverter.INSTANCE::entityToVO)
+            .map(LiteruleWebConverter.INSTANCE::entityToVO)
             .toList());
   }
 
@@ -89,7 +88,7 @@ public class RuleCategoryController {
       @RequestParam(value = "owner") String owner) {
     return YdszResponse.success(
         ruleCategoryProvider.listDefinitionsByOwner(owner).stream()
-            .map(LiteruleConverter.INSTANCE::entityToVO)
+            .map(LiteruleWebConverter.INSTANCE::entityToVO)
             .toList());
   }
 

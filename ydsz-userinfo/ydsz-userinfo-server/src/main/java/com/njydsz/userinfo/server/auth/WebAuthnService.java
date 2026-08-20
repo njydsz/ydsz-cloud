@@ -27,7 +27,10 @@ import com.webauthn4j.converter.util.ObjectConverter;
 import com.webauthn4j.data.AuthenticationData;
 import com.webauthn4j.data.AuthenticationParameters;
 import com.webauthn4j.data.AuthenticationRequest;
+import com.webauthn4j.data.attestation.authenticator.AAGUID;
+import com.webauthn4j.data.attestation.authenticator.AttestedCredentialData;
 import com.webauthn4j.data.client.Origin;
+import com.webauthn4j.data.client.challenge.Challenge;
 import com.webauthn4j.data.attestation.authenticator.COSEKey;
 import com.webauthn4j.server.ServerProperty;
 
@@ -469,21 +472,30 @@ public class WebAuthnService {
       byte[] signatureBytes = Base64.getUrlDecoder().decode(signature);
       byte[] credentialIdBytes = Base64.getUrlDecoder().decode(credential.getCredentialId());
 
-      // 构建 ServerProperty（来源、RP ID、挑战码）
+      // 构建 ServerProperty（来源、RP ID、挑战码）- webauthn4j 0.28.0 使用 Challenge
       Origin origin = Origin.create(webAuthnProperties.getOrigin());
+      Challenge challenge = new Challenge() {
+        @Override
+        public byte[] getValue() {
+          return new byte[0];
+        }
+      };
       ServerProperty serverProperty = new ServerProperty(
-          origin, webAuthnProperties.getRelyingPartyId());
+          origin, webAuthnProperties.getRelyingPartyId(), challenge);
 
-      // 从存储的 COSE 公钥重建 Authenticator
+      // 从存储的 COSE 公钥重建 Authenticator - webauthn4j 0.28.0 使用 AttestedCredentialData
       byte[] coseKeyBytes = Base64.getUrlDecoder().decode(credential.getPublicKey());
       COSEKey coseKey = OBJECT_CONVERTER.getCborConverter().readValue(
           coseKeyBytes, COSEKey.class);
+      AAGUID aaguid = AAGUID.NULL;
+      AttestedCredentialData attestedCredentialData = new AttestedCredentialData(
+          aaguid, credentialIdBytes, coseKey);
       Authenticator authenticator = new CoreAuthenticatorImpl(
-          credentialIdBytes, coseKey, credential.getSignCount());
+          attestedCredentialData, null, credential.getSignCount(), null);
 
-      // 构建认证参数
+      // 构建认证参数（webauthn4j 0.28.0：添加 userVerificationRequired 和 userPresenceRequired）
       AuthenticationParameters authenticationParameters = new AuthenticationParameters(
-          serverProperty, authenticator);
+          serverProperty, authenticator, true, true);
 
       // 创建认证请求对象（webauthn4j 0.28.0 API：直接构造 AuthenticationRequest）
       AuthenticationRequest authenticationRequest = new AuthenticationRequest(

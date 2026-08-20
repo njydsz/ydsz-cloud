@@ -34,7 +34,6 @@ import com.njydsz.literule.api.dto.RuleDelegateDTO;
 import com.njydsz.literule.api.dto.RuleRejectDTO;
 import com.njydsz.literule.api.dto.RuleStatusChangeDTO;
 import com.njydsz.literule.api.dto.RuleSubmitReviewDTO;
-import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.domain.vo.ApprovalFlowVO;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
@@ -130,7 +129,7 @@ public class RuleLifecycleController {
       def.setReviewComment(comment);
     }
     return YdszResponse.success(
-        LiteruleConverter.INSTANCE.entityToVO(
+        LiteruleWebConverter.INSTANCE.entityToVO(
             ruleAdminService.save(
                 def, operator, "状态变更: " + current.getDesc() + " -> " + target.getDesc())));
   }
@@ -190,7 +189,7 @@ public class RuleLifecycleController {
             "[审批通过] %s -> PUBLISHED, 审批人=%s, 意见=%s",
             current.getDesc(), operator, comment.isEmpty() ? "无" : comment);
     return YdszResponse.success(
-        LiteruleConverter.INSTANCE.entityToVO(ruleAdminService.save(def, operator, changeDesc)));
+        LiteruleWebConverter.INSTANCE.entityToVO(ruleAdminService.save(def, operator, changeDesc)));
   }
 
   /**
@@ -245,7 +244,7 @@ public class RuleLifecycleController {
     String changeDesc =
         String.format("[审批驳回] %s -> ARCHIVED, 审批人=%s, 理由=%s", current.getDesc(), operator, reason);
     return YdszResponse.success(
-        LiteruleConverter.INSTANCE.entityToVO(ruleAdminService.save(def, operator, changeDesc)));
+        LiteruleWebConverter.INSTANCE.entityToVO(ruleAdminService.save(def, operator, changeDesc)));
   }
 
   /**

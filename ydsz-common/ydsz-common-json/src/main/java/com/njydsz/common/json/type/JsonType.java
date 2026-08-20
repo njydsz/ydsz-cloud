@@ -53,6 +53,12 @@ import java.lang.reflect.Type;
  * @see Type
  * @see ParameterizedType
  */
+/**
+ * JsonType。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public abstract class JsonType<T> implements Comparable<JsonType<T>> {
 
   /** 泛型类型 */

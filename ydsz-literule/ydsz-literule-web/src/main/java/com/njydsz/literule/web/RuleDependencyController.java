@@ -23,7 +23,6 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.dto.RuleDependencyAddDTO;
-import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.vo.RuleDependencyVO;
 import com.njydsz.literule.domain.vo.StringVO;
 import com.njydsz.literule.server.spi.RuleDependencyProvider;
@@ -75,9 +74,8 @@ public class RuleDependencyController {
     Boolean cascade = dto.getCascadeOnDisable() == null ? false : dto.getCascadeOnDisable();
     String description = dto.getDescription();
     return YdszResponse.success(
-        LiteruleConverter.INSTANCE.entityToVO(
-            ruleDependencyProvider.add(
-                ruleCode, dependsOn, depType, cascade, description, operator)));
+        ruleDependencyProvider.add(
+            ruleCode, dependsOn, depType, cascade, description, operator));
   }
 
   /** 删除规则依赖 */
@@ -98,17 +96,13 @@ public class RuleDependencyController {
   /** 查询规则的依赖（正向：依赖了哪些） */
   @GetMapping("/{ruleCode}/dependencies")
   public YdszResponse<List<RuleDependencyVO>> listDependencies(@PathVariable String ruleCode) {
-    return YdszResponse.success(
-        LiteruleConverter.INSTANCE.ruleDependencyListToVO(
-            ruleDependencyProvider.listDependencies(ruleCode)));
+    return YdszResponse.success(ruleDependencyProvider.listDependencies(ruleCode));
   }
 
   /** 查询被依赖（反向：被哪些规则依赖） */
   @GetMapping("/{ruleCode}/dependents")
   public YdszResponse<List<RuleDependencyVO>> listDependents(@PathVariable String ruleCode) {
-    return YdszResponse.success(
-        LiteruleConverter.INSTANCE.ruleDependencyListToVO(
-            ruleDependencyProvider.listDependents(ruleCode)));
+    return YdszResponse.success(ruleDependencyProvider.listDependents(ruleCode));
   }
 
   /** 查询级联禁用影响（disable ruleCode 时，需要级联禁用的规则列表） */

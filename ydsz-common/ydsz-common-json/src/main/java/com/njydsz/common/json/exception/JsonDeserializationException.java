@@ -11,12 +11,21 @@ package com.njydsz.common.json.exception;
 public class JsonDeserializationException extends JsonException {
 
   private static final long serialVersionUID = 1L;
+/** missing field */
+/** missing field */
 
   public static final int MISSING_FIELD = 3001;
+/** type mismatch */
+/** type mismatch */
   public static final int TYPE_MISMATCH = 3002;
+/** invalid value */
+/** invalid value */
   public static final int INVALID_VALUE = 3003;
+/** no default constructor */
   public static final int NO_DEFAULT_CONSTRUCTOR = 3004;
+/** parse error */
   public static final int PARSE_ERROR = 3005;
+/** validation error */
   public static final int VALIDATION_ERROR = 3006;
 
   /** 长上下文片段半径：错误位置前后各取的字符数 */

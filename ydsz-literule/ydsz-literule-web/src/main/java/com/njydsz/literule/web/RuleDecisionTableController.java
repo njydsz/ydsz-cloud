@@ -35,7 +35,6 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.DecisionTableDefinition;
 import com.njydsz.literule.api.spi.DecisionTableEvalProvider;
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
-import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.domain.repository.DecisionTableRepository;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
@@ -206,7 +205,7 @@ public class RuleDecisionTableController {
     try {
       byte[] bytes = file.getBytes();
       DecisionTableDefinition saved = svc.importExcel(bytes, operator);
-      return YdszResponse.success(LiteruleConverter.INSTANCE.entityToVO(saved));
+      return YdszResponse.success(LiteruleWebConverter.INSTANCE.entityToVO(saved));
     } catch (IllegalArgumentException e) {
       log.warn("[DecisionTable] Excel 导入失败: {}", e.getMessage());
       return YdszResponse.error(e.getMessage());

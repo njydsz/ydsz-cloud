@@ -11,6 +11,12 @@ package com.njydsz.common.json.type;
  *
  * @since 1.0.0
  */
+/**
+ * FieldTypeCode。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public enum FieldTypeCode {
   STRING(1),
   INT(2),

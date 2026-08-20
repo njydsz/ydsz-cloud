@@ -39,20 +39,41 @@ public final class ColumnMetadata {
 
   /** 类型转换ID常量 */
   public static final int TYPE_STRING = 0;
+/** type int */
+/** type int */
 
   public static final int TYPE_INT = 1;
+/** type long */
+/** type long */
   public static final int TYPE_LONG = 2;
+/** type double */
+/** type double */
   public static final int TYPE_DOUBLE = 3;
+/** type float */
+/** type float */
   public static final int TYPE_FLOAT = 4;
+/** type short */
+/** type short */
   public static final int TYPE_SHORT = 5;
+/** type byte */
+/** type byte */
   public static final int TYPE_BYTE = 6;
+/** type boolean */
+/** type boolean */
   public static final int TYPE_BOOLEAN = 7;
+/** type date */
   public static final int TYPE_DATE = 8;
+/** type local date time */
   public static final int TYPE_LOCAL_DATE_TIME = 9;
+/** type local date */
   public static final int TYPE_LOCAL_DATE = 10;
+/** type timestamp */
   public static final int TYPE_TIMESTAMP = 11;
+/** type sql date */
   public static final int TYPE_SQL_DATE = 12;
+/** type big decimal */
   public static final int TYPE_BIG_DECIMAL = 13;
+/** type default */
   public static final int TYPE_DEFAULT = 14;
 
   /** 列索引 */

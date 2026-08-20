@@ -31,7 +31,6 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RulePack;
-import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.vo.InstallResultVO;
 import com.njydsz.literule.domain.vo.PackDiffVO;
 import com.njydsz.literule.domain.vo.PackUpdateInfoVO;
@@ -78,7 +77,7 @@ public class RulePackController {
   @GetMapping("/packs")
   public YdszResponse<List<RulePackVO>> listPacks() {
     return YdszResponse.success(
-        rulePackProvider.listAll().stream().map(LiteruleConverter.INSTANCE::entityToVO).toList());
+        rulePackProvider.listAll().stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList());
   }
 
   /** 搜索规则集 */
@@ -87,7 +86,7 @@ public class RulePackController {
       @RequestParam(value = "keyword", required = false) String keyword) {
     return YdszResponse.success(
         rulePackProvider.search(keyword).stream()
-            .map(LiteruleConverter.INSTANCE::entityToVO)
+            .map(LiteruleWebConverter.INSTANCE::entityToVO)
             .toList());
   }
 
@@ -95,7 +94,7 @@ public class RulePackController {
   @GetMapping("/packs/{packCode}/latest")
   public YdszResponse<RulePackVO> getLatestPack(@PathVariable String packCode) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANCE.entityToVO(rulePackProvider.getLatest(packCode)));
+        LiteruleWebConverter.INSTANCE.entityToVO(rulePackProvider.getLatest(packCode)));
   }
 
   /** 查询规则集的所有版本 */
@@ -103,7 +102,7 @@ public class RulePackController {
   public YdszResponse<List<RulePackVO>> listPackVersions(@PathVariable String packCode) {
     return YdszResponse.success(
         rulePackProvider.listVersions(packCode).stream()
-            .map(LiteruleConverter.INSTANCE::entityToVO)
+            .map(LiteruleWebConverter.INSTANCE::entityToVO)
             .toList());
   }
 
@@ -112,7 +111,7 @@ public class RulePackController {
   public YdszResponse<RulePackVO> getPackVersion(
       @PathVariable String packCode, @PathVariable String version) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANCE.entityToVO(rulePackProvider.getVersion(packCode, version)));
+        LiteruleWebConverter.INSTANCE.entityToVO(rulePackProvider.getVersion(packCode, version)));
   }
 
   /** 知识包版本回滚（P2-8）：将该版本固化的规则定义整体恢复到在线规则表 */
@@ -156,7 +155,7 @@ public class RulePackController {
       @Valid @RequestBody RulePack pack,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANCE.entityToVO(rulePackProvider.publish(pack, operator)));
+        LiteruleWebConverter.INSTANCE.entityToVO(rulePackProvider.publish(pack, operator)));
   }
 
   /** 安装规则集（一键导入） */
