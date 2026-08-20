@@ -147,6 +147,23 @@ public interface MessageConverter {
    */
   MsgLogDO voToDO(MsgLogVO vo);
 
+  // ===== 领域实体 → VO 方向（用于 Server 层迁移） =====
+
+  /**
+   * 消息发送日志领域实体 → 消息发送日志 VO。
+   *
+   * <p>默认方法：先转换为 DO，再转换为 VO。用于 Server 层将领域实体转换为 VO 后调用 Repository 的 VO-based 方法。
+   *
+   * @param entity 消息发送日志领域实体
+   * @return 消息发送日志 VO
+   */
+  default MsgLogVO entityToVO(MsgLog entity) {
+    if (entity == null) {
+      return null;
+    }
+    return doToVO(entityToDO(entity));
+  }
+
   /**
    * 消息发送日志 VO 列表 → 消息发送日志 DO 列表。
    *

@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.server.service.batch.AggregateService;
 
 /**
@@ -28,6 +30,7 @@ public class AggregatePersistenceService {
 
   private final MsgLogRepository msgLogRepository;
   private final AggregateService aggregateService;
+  private final MessageConverter converter;
 
   /**
    * 原子性地执行聚合路径：insert PENDING + appendOrStart + updateById 标记 AGGREGATED。
@@ -43,11 +46,11 @@ public class AggregatePersistenceService {
   @Transactional(rollbackFor = Exception.class)
   public void persistAggregated(
       MsgLog logDO, String bizType, String receiver, String channel, String tenantId) {
-    msgLogRepository.insert(logDO);
+    msgLogRepository.save(converter.entityToVO(logDO));
     aggregateService.appendOrStart(bizType, receiver, channel, tenantId);
     logDO.setStatus(MessageStatusEnum.PENDING.name());
     logDO.setErrorMessage("AGGREGATED");
-    msgLogRepository.updateById(logDO);
+    msgLogRepository.update(converter.entityToVO(logDO));
     log.info(
         "[Aggregate] 已加入聚合批次(事务): msgId={} group={} receiver={}",
         logDO.getMsgId(),

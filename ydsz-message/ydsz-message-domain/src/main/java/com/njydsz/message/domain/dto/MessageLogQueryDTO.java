@@ -45,6 +45,9 @@ public class MessageLogQueryDTO extends PageQuery {
   /** P2-13: 消息分组（按业务分组筛选） */
   @Xss private String messageGroup;
 
+  /** 消息业务 ID（精确匹配，用于幂等查重等场景） */
+  @Xss private String msgId;
+
   /** P2-13: 时间范围开始 */
   @Xss private String startTime;
 

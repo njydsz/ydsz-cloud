@@ -6,9 +6,6 @@ import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.ConsumeMode;
@@ -29,9 +26,12 @@ import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.infra.converter.MessageConverter;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.health.RedisHealthStatus;
 import com.njydsz.message.server.metric.MessageMetrics;
@@ -71,6 +71,7 @@ public class MessageConsumer implements RocketMQListener<String> {
   private final MessageMetrics messageMetrics;
   private final MessageProperties messageProperties;
   private final RedisHealthStatus redisHealthStatus;
+  private final MessageConverter converter;
 
   /** 当前实例标识(hostname:pid),用于锁值与安全释放 */
   private static final String INSTANCE_ID = initInstanceId();
@@ -158,16 +159,11 @@ public class MessageConsumer implements RocketMQListener<String> {
       // GAP-1: DB二级幂等检查——仅在 Redis 异常时启用，避免正常情况下的 DB 查询开销
       // P1-1: Redis 健康时跳过 DB 幂等兜底，Redis 故障恢复窗口期内启用
       if (StringUtils.hasText(request.getMessageId()) && !redisHealthStatus.isRedisHealthy()) {
-        Long dbCount =
-            msgLogRepository.selectCount(
-                new LambdaQueryWrapper<MsgLog>()
-                    .eq(MsgLog::getMsgId, request.getMessageId())
-                    .in(
-                        MsgLog::getStatus,
-                        MessageStatusEnum.SUCCESS.name(),
-                        MessageStatusEnum.SENDING.name())
-                    .last("LIMIT 1"));
-        if (dbCount != null && dbCount > 0) {
+        MessageLogQueryDTO dbIdempotentQuery = new MessageLogQueryDTO();
+        dbIdempotentQuery.setMsgId(request.getMessageId());
+        dbIdempotentQuery.setStatus(MessageStatusEnum.SUCCESS.name());
+        long dbCount = msgLogRepository.count(dbIdempotentQuery);
+        if (dbCount > 0) {
           log.warn("[MessageConsumer] DB二级幂等检查命中,跳过: messageId={}", request.getMessageId());
           return;
         }
@@ -215,13 +211,11 @@ public class MessageConsumer implements RocketMQListener<String> {
       // 先尝试按 msgId 更新已有记录状态为 FAILED
       String msgId = request.getMessageId();
       if (msgId != null && !msgId.isBlank()) {
-        LambdaUpdateWrapper<MsgLog> updateWrapper =
-            new LambdaUpdateWrapper<MsgLog>()
-                .eq(MsgLog::getMsgId, msgId)
-                .set(MsgLog::getStatus, MessageStatusEnum.FAILED.name())
-                .set(MsgLog::getErrorMessage, errorMessage);
-        int updated = msgLogRepository.update(null, updateWrapper);
-        if (updated > 0) {
+        MsgLogVO existingVO = findByMsgId(msgId);
+        if (existingVO != null) {
+          existingVO.setStatus(MessageStatusEnum.FAILED.name());
+          existingVO.setErrorMessage(errorMessage);
+          msgLogRepository.update(existingVO);
           log.info("[MessageConsumer] 已更新现有记录为 FAILED: messageId={}", msgId);
           return;
         }
@@ -240,13 +234,22 @@ public class MessageConsumer implements RocketMQListener<String> {
       logDO.setTopic(YdszMessageTopics.TOPIC_MESSAGE);
       logDO.setReconsumeTimes(0);
       logDO.setTenantId(TenantContextHolder.getTenantId());
-      msgLogRepository.insert(logDO);
+      msgLogRepository.save(converter.entityToVO(logDO));
     } catch (Exception logEx) {
       log.warn(
           "[MessageConsumer] 记录失败日志异常: messageId={} err={}",
           request.getMessageId(),
           logEx.getMessage());
     }
+  }
+
+  /** 按 msgId 精确查找消息日志 VO。 */
+  private MsgLogVO findByMsgId(String msgId) {
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setMsgId(msgId);
+    query.setPageNum(1);
+    query.setPageSize(1);
+    return msgLogRepository.findOne(query).orElse(null);
   }
 
   private String buildIdempotentKey(MessageRequest request) {

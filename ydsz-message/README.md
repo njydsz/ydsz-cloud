@@ -57,24 +57,39 @@
 | 敏感词过滤 | DFA 字典树算法 O(n) |
 | 监控 | MessageMetrics（Micrometer Counter + Timer）+ MessageHealthIndicator |
 
-### 3. 关键 Controller（均位于 `/api/v1/message` 前缀下，共 21 个）
+### 3. 关键 Controller（均位于 `/api/v1/message` 前缀下，共 25 个）
 
-| 路径前缀 | 作用 |
-|---|---|
-| `/api/v1/message/send` | 发送消息（同步 / 异步 / 事务消息 / 批量 / 撤回 / 追踪） |
-| `/api/v1/message/template` | 模板管理（含版本 / 预览 / 测试） |
-| `/api/v1/message/preference` | 用户偏好 |
-| `/api/v1/message/subscription` | 订阅管理 / 退订 |
-| `/api/v1/message/notifications/inbox` | 站内通知收件箱（前端通知中心） |
-| `/api/v1/message/stats` | 发送统计 |
-| `/api/v1/message/deadLetter` | 死信队列（驼峰命名） |
-| `/api/v1/message/route-rule` | 条件路由规则 |
-| `/api/v1/message/user-channels` | 用户渠道设置 |
-| `/api/v1/message/feedback` `/trace` `/read-status` `/read-receipt` `/archive/search` `/aggregate` `/recall` | 反馈 / 追踪 / 已读状态 / 回执 / 归档检索 / 聚合 / 撤回 等 |
+| 路径前缀 | Controller | 作用 |
+|---|---|---|
+| `/api/v1/message` | `MessageController` | 发送消息（同步 / 异步 / 事务消息 / 撤回 / 追踪） |
+| `/api/v1/message/batch` | `BatchController` | 批量发送 |
+| `/api/v1/message/template` | `TemplateController` | 模板管理 |
+| `/api/v1/message/template/preview` | `TemplatePreviewController` | 模板预览 / 测试发送 |
+| `/api/v1/message/template/version` | `TemplateVersionController` | 模板版本管理 |
+| `/api/v1/message/preference` | `PreferenceController` | 用户偏好 |
+| `/api/v1/message/subscription` | `SubscriptionController` | 订阅管理 |
+| `/api/v1/message/unsubscribe` | `UnsubscribeController` | 退订中心 |
+| `/api/v1/message/notifications` | `NotificationController` | 站内通知收件箱（前端通知中心） |
+| `/api/v1/message/stats` | `MessageStatsController` | 发送统计 |
+| `/api/v1/message/dead-letter` | `DeadLetterController` | 死信队列 |
+| `/api/v1/message/route-rule` | `RouteRuleController` | 条件路由规则 |
+| `/api/v1/message/user-channels` | `UserChannelBindingController` | 用户渠道绑定 |
+| `/api/v1/message/feedback` | `MessageFeedbackController` | 用户反馈 |
+| `/api/v1/message/trace` | `MessageTraceController` | 消息全链路追踪 |
+| `/api/v1/message/read-status` | `ReadStatusController` | 已读状态同步 |
+| `/api/v1/message/read-receipt` | `ReadReceiptController` | 已读回执 |
+| `/api/v1/message/archive/search` | `MessageArchiveController` | 归档检索 |
+| `/api/v1/message/aggregate` | `AggregateController` | 站内通知聚合 |
+| `/api/v1/message/recall` | `RecallController` | 消息撤回 |
+| `/api/v1/message/receipt` | `ReceiptController` | 送达回执 |
+| `/api/v1/message/retry` | `RetryPreviewController` | 重试预览 |
+| `/api/v1/message/canary` | `CanaryController` | 模板灰度发布 |
+| `/api/v1/message/health` | `SystemHealthController` | 健康检查 |
+| `/api/v1/message/ops` | `OpsController` | 运维操作 |
 
 ## 数据库表设计
 
-实体 `@TableName` 共映射 **15 张表**（DDL 由各部署环境统一维护，不在模块内）：
+实体 `@TableName` 共映射 **18 张表**（DDL 由各部署环境统一维护，不在模块内）：
 
 | 业务域 | 表名 | 说明 |
 |---|---|---|
@@ -85,6 +100,7 @@
 | **回执** | `ydsz_msg_receipt` | 消息回执（送达/已读/点击/失败/超时） |
 | **模板** | `ydsz_msg_template` | 消息模板（含 i18n/场景/审核） |
 | | `ydsz_msg_template_version` | 模板版本历史 |
+| **灰度** | `ydsz_msg_canary` | 模板灰度发布标记 |
 | **用户偏好** | `ydsz_msg_preference` | 用户偏好（免打扰/频率/语言） |
 | **订阅** | `ydsz_msg_subscription` | 主题订阅（用户×主题×渠道） |
 | **路由规则** | `ydsz_msg_route_rule` | 条件路由 + 通道降级 |
@@ -93,6 +109,8 @@
 | **反馈** | `ydsz_msg_feedback` | 用户反馈 |
 | **用户渠道** | `ydsz_msg_user_channel` | 用户×渠道设置 |
 | **变量源** | `ydsz_msg_variable_source` | 模板变量数据源 |
+| **租户配置** | `ydsz_msg_tenant_config` | 租户级通道配置 |
+| **Outbox 事件** | `ydsz_msg_outbox` | 领域事件 Outbox（事务消息） |
 
 ## 目录结构
 
@@ -162,13 +180,20 @@ ydsz-message/
 |---|---|---|---|
 | `ydsz.message.health-enabled` | Boolean | true | 是否启用健康检查 |
 | `ydsz.message.retry-enabled` | Boolean | true | 是否启用重试扫描器 |
+| `ydsz.message.channel-enabled` | Map<String, Boolean> | — | 通道全局开关（key=通道大写名） |
 | `ydsz.message.default-priority` | String | NORMAL | 默认发送优先级 |
+| `ydsz.message.default-async` | Boolean | false | 默认异步发送开关 |
 | `ydsz.message.max-content-length` | Integer | 1048576 | 消息内容最大长度（字符），0=不限 |
 | `ydsz.message.message-ttl-seconds` | Long | 3600 | 消息 TTL（秒），0=不检查 |
 | `ydsz.message.aggregate-scan-interval-ms` | Long | 60000 | 聚合扫描间隔 |
 | `ydsz.message.retry-scan-interval-ms` | Long | 30000 | 重试扫描间隔 |
 | `ydsz.message.global-daily-limit` | Integer | 0 | 全局每日上限（0=不限） |
 | `ydsz.message.global-hourly-limit` | Integer | 0 | 全局每小时上限（0=不限） |
+| `ydsz.message.mark-all-read-batch-size` | Integer | 500 | markAllRead 分批大小 |
+| `ydsz.message.suppress-window-seconds` | Long | 300 | 通道抑制窗口（秒） |
+| `ydsz.message.sender-daily-limit` | Long | 10000 | 单发送人每日上限（0=不限） |
+| `ydsz.message.sender-hourly-limit` | Long | 1000 | 单发送人每小时上限（0=不限） |
+| `ydsz.message.default-delivery-guarantee` | String | AT_LEAST_ONCE | 投递保证级别（AT_LEAST_ONCE/AT_MOST_ONCE/EXACTLY_ONCE） |
 
 ### 限流配置（prefix = `ydsz.message.rate-limit`）
 
@@ -246,8 +271,33 @@ ydsz-message/
 | 配置项 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
 | `ydsz.message.unsubscribe.enabled` | Boolean | true | 是否启用退订中心 |
-| `ydsz.message.unsubscribe.secret` | String | （必填） | 退订 token 签名密钥 |
+| `ydsz.message.unsubscribe.secret` | String | （内置默认值） | 退订 token 签名密钥（Base64，建议≥32字节） |
 | `ydsz.message.unsubscribe.ttl-days` | Integer | 30 | token 有效期（天） |
+| `ydsz.message.unsubscribe.base-url` | String | — | 退订链接 base URL |
+
+### 服务商配置
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `ydsz.message.sms.provider` | String | mock | 短信服务商（aliyun/mock） |
+| `ydsz.message.sms.strategy` | String | ROUND_ROBIN | 多服务商策略（ROUND_ROBIN/WEIGHTED/COST_FIRST/AVAILABILITY_FIRST） |
+| `ydsz.message.push.provider` | String | mock | 推送服务商（getui/mock） |
+| `ydsz.message.wx-mini.provider` | String | mock | 微信小程序服务商（wechat/mock） |
+| `ydsz.message.alipay-mini.provider` | String | mock | 支付宝小程序服务商（alipay/mock） |
+| `ydsz.message.cost.enabled` | Boolean | true | 是否启用成本追踪 |
+
+### 消息归档配置
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `ydsz.message.archive.es-enabled` | Boolean | false | 是否启用 Elasticsearch 归档 |
+
+### 熔断器补充配置（prefix = `ydsz.message.circuit-breaker`）
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `ydsz.message.circuit-breaker.permitted-number-of-calls-in-half-open-state` | Integer | 3 | 半开状态允许探测数 |
+| `ydsz.message.circuit-breaker.minimum-number-of-calls` | Integer | 10 | 最小调用数 |
 
 ## 启动顺序
 

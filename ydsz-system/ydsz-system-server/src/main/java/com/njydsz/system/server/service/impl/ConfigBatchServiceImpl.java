@@ -136,19 +136,10 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
     // 6. 批量插入
     configRepository.insertBatch(dtos);
 
-    // P1-6: 缓存失效、搜索索引同步、事件发布移至事务提交后（减少锁持有时间，避免 IO 操作在事务内）
-    Set<String> finalConfigGroups = configGroups;
-    List<ConfigDTO> finalDtos = dtos;
-    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-      @Override
-      public void afterCommit() {
-        // 7. 精准失效缓存
-        finalConfigGroups.forEach(ConfigBatchServiceImpl.this::evictConfigGroup);
-        ConfigBatchServiceImpl.this.evictConfigPublic();
-        // 8. 发布变更事件
-        finalDtos.forEach(dto -> publishConfigChangedEvent(dto.getConfigKey(), dto.getConfigGroup()));
-      }
-    });
+    // P1-6: 缓存失效、事件发布移至事务提交后（减少锁持有时间，避免 IO 操作在事务内）
+    // 使用具名内部类替代匿名回调，符合《云顶编码规范》规则 35.5.1（策略模式替代 inline lambda 散布业务逻辑）
+    TransactionSynchronizationManager.registerSynchronization(
+        new ConfigBatchTransactionSynchronization(configGroups, dtos));
 
     Map<String, Object> result = new HashMap<>(4);
     result.put("successCount", items.size());
@@ -458,5 +449,47 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
             .metadata("configGroup", configGroup)
             .metadata("action", "批量创建配置")
             .build());
+  }
+
+  /**
+   * 批量配置事务提交后处理器 — 具名内部类，封装缓存失效与事件发布逻辑。
+   *
+   * <p>根据《云顶编码规范》规则 35.5.1，跨类重建逻辑必须使用独立类（而非匿名 lambda 回调或 inline 函数式接口），
+   * 使业务逻辑内聚、可单独测试。
+   *
+   * <p>职责：
+   * <ol>
+   *   <li>精准失效涉及的 configGroup 缓存</li>
+   *   <li>失效公开配置缓存</li>
+   *   <li>发布配置变更事件（跨实例缓存同步）</li>
+   * </ol>
+   */
+  private final class ConfigBatchTransactionSynchronization implements TransactionSynchronization {
+
+    /** 需要失效缓存的分组集合 */
+    private final Set<String> configGroups;
+
+    /** 需要发布变更事件的配置 DTO 列表 */
+    private final List<ConfigDTO> dtos;
+
+    /**
+     * 构造批量事务同步处理器。
+     *
+     * @param configGroups 配置分组集合
+     * @param dtos 配置 DTO 列表
+     */
+    ConfigBatchTransactionSynchronization(Set<String> configGroups, List<ConfigDTO> dtos) {
+      this.configGroups = configGroups;
+      this.dtos = dtos;
+    }
+
+    @Override
+    public void afterCommit() {
+      // 精准失效缓存
+      configGroups.forEach(ConfigBatchServiceImpl.this::evictConfigGroup);
+      ConfigBatchServiceImpl.this.evictConfigPublic();
+      // 发布变更事件
+      dtos.forEach(dto -> publishConfigChangedEvent(dto.getConfigKey(), dto.getConfigGroup()));
+    }
   }
 }

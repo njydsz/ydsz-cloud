@@ -1,10 +1,10 @@
 package com.njydsz.message.server.health;
 
+import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -14,8 +14,6 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
-import com.njydsz.message.infra.entity.MsgLog;
-import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
 
@@ -88,10 +86,11 @@ public class MessageHealthIndicator extends AbstractModuleHealthIndicator {
 
   /** 轻量探针：仅查询指定状态是否存在记录（LIMIT 1），避免 COUNT 扫描大表。 */
   private boolean probeStatus(String status) {
-    IPage<MsgLog> page =
-        msgLogRepository.selectPage(
-            new Page<>(1, 1),
-            new LambdaQueryWrapper<MsgLog>().eq(MsgLog::getStatus, status).last("LIMIT 1"));
-    return page != null && page.getRecords() != null && !page.getRecords().isEmpty();
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setStatus(status);
+    query.setPageNum(1);
+    query.setPageSize(1);
+    List<?> records = msgLogRepository.findList(query);
+    return records != null && !records.isEmpty();
   }
 }

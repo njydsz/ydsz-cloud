@@ -1,6 +1,7 @@
 package com.njydsz.message.server.consumer;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.common.message.MessageExt;
@@ -16,9 +17,12 @@ import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.infra.converter.MessageConverter;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.server.metric.MessageMetrics;
 
 /**
@@ -57,6 +61,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
   private final MsgLogRepository msgLogRepository;
   private final MessageMetrics messageMetrics;
   private final IdempotentStrategy idempotentStrategy;
+  private final MessageConverter converter;
 
   @Override
   public void onMessage(MessageExt messageExt) {
@@ -95,14 +100,12 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
         // 优先按 request.msgId 更新已有记录状态为 DEAD
         String bizMsgId = request != null ? request.getMessageId() : null;
         if (bizMsgId != null && !bizMsgId.isBlank()) {
-          LambdaUpdateWrapper<MsgLog> updateWrapper =
-              new LambdaUpdateWrapper<MsgLog>()
-                  .eq(MsgLog::getMsgId, bizMsgId)
-                  .set(MsgLog::getStatus, MessageStatusEnum.DEAD.name())
-                  .set(MsgLog::getErrorMessage, errorMessage)
-                  .set(MsgLog::getReconsumeTimes, reconsumeTimes);
-          int updated = msgLogRepository.update(null, updateWrapper);
-          if (updated > 0) {
+          MsgLogVO existingVO = findByMsgId(bizMsgId);
+          if (existingVO != null) {
+            existingVO.setStatus(MessageStatusEnum.DEAD.name());
+            existingVO.setErrorMessage(errorMessage);
+            existingVO.setReconsumeTimes(reconsumeTimes);
+            msgLogRepository.update(existingVO);
             log.info("[MessageDlqConsumer] 已更新现有记录为 DEAD: msgId={}", bizMsgId);
             messageMetrics.recordDead(request != null ? request.getChannel() : "UNKNOWN");
             return;
@@ -129,7 +132,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
         logDO.setTopic(originTopic);
         logDO.setReconsumeTimes(reconsumeTimes);
         logDO.setTenantId(TenantContextHolder.getTenantId());
-        msgLogRepository.insert(logDO);
+        msgLogRepository.save(converter.entityToVO(logDO));
         messageMetrics.recordDead(logDO.getChannel());
       } catch (Exception e) {
         log.error("[MessageDlqConsumer] 死信落库失败: msgId={} err={}", msgId, e.getMessage(), e);
@@ -144,5 +147,15 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
           request == null ? null : request.getBizId(),
           request == null ? null : request.getReceiver());
     }
+  }
+
+  /** 按 msgId 精确查找消息日志 VO。 */
+  private MsgLogVO findByMsgId(String msgId) {
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setMsgId(msgId);
+    query.setPageNum(1);
+    query.setPageSize(1);
+    Optional<MsgLogVO> result = msgLogRepository.findOne(query);
+    return result.orElse(null);
   }
 }

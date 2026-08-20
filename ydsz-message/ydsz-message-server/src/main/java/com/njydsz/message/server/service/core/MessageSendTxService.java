@@ -9,8 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.event.OutboxEvent;
 import com.njydsz.message.domain.repository.OutboxEventRepository;
+import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.infra.entity.MsgTraceDO;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
  * 消息发送事务包装服务。
@@ -36,6 +38,7 @@ public class MessageSendTxService {
   private final MsgLogRepository msgLogRepository;
   private final OutboxEventRepository outboxEventRepository;
   private final MessageTraceService messageTraceService;
+  private final MessageConverter converter;
 
   /**
    * 同步发送的事务包装：落库 PENDING + 写 Outbox 在同一事务中。
@@ -51,7 +54,8 @@ public class MessageSendTxService {
    */
   @Transactional(propagation = Propagation.REQUIRED)
   public void insertLogAndOutbox(MsgLog logDO, OutboxEvent outboxEvent) {
-    msgLogRepository.insert(logDO);
+    MsgLogVO vo = converter.entityToVO(logDO);
+    msgLogRepository.save(vo);
     if (outboxEvent != null) {
       outboxEventRepository.save(outboxEvent);
     }

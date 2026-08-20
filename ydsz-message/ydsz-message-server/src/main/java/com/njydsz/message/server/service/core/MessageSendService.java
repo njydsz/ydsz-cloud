@@ -17,6 +17,8 @@ import com.njydsz.message.infra.entity.MsgTraceDO;
 import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.config.RetryStrategyResolver;
@@ -51,6 +53,7 @@ public class MessageSendService {
   private final MessageMetrics messageMetrics;
   private final MessageTraceService messageTraceService;
   private final MessageProperties messageProperties;
+  private final MessageConverter converter;
 
   /**
    * 执行通道分发，包含通道降级与重试逻辑。
@@ -75,7 +78,7 @@ public class MessageSendService {
       logDO.setProviderTraceId(providerTraceId);
       logDO.setCostMs(cost);
       logDO.setCost(calculateCost(channel));
-      msgLogRepository.updateById(logDO);
+      msgLogRepository.update(converter.entityToVO(logDO));
       if (StringUtils.hasText(receiver)) {
         guardService.recordFrequency(receiver, channel, logDO.getBizType());
       }
@@ -142,7 +145,7 @@ public class MessageSendService {
         logDO.setProviderTraceId(providerTraceId);
         logDO.setCostMs(accumulatedCost + cost);
         logDO.setCost(calculateCost(fallbackChannel));
-        msgLogRepository.updateById(logDO);
+        msgLogRepository.update(converter.entityToVO(logDO));
         messageMetrics.recordSend(fallbackChannel, "SUCCESS", cost);
         log.info(
             "[Message] 降级发送成功: msgId={} chain={} final={} cost={}ms",
@@ -174,7 +177,7 @@ public class MessageSendService {
     if (!retryStrategyResolver.isMaxRetriesReached(retryCount, logDO.getChannel())) {
       logDO.setStatus(MessageStatusEnum.RETRY.name());
       logDO.setNextRetryAt(retryStrategyResolver.calcNextRetryAt(retryCount, logDO.getChannel()));
-      msgLogRepository.updateById(logDO);
+      msgLogRepository.update(converter.entityToVO(logDO));
       messageMetrics.recordRetry(logDO.getChannel());
       log.warn(
           "[Message] 发送失败转重试: msgId={} channel={} receiver={} retryCount={} nextRetryAt={} err={}",
@@ -187,7 +190,7 @@ public class MessageSendService {
       return MessageResult.fail(logDO.getChannel(), "发送失败,已加入重试队列: " + e.getMessage());
     }
     logDO.setStatus(MessageStatusEnum.FAILED.name());
-    msgLogRepository.updateById(logDO);
+    msgLogRepository.update(converter.entityToVO(logDO));
     messageMetrics.recordSend(logDO.getChannel(), "FAILED", cost);
     log.error(
         "[Message] 发送失败(重试耗尽): msgId={} channel={} receiver={} retryCount={} err={}",

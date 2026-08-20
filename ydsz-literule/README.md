@@ -24,7 +24,7 @@ ydsz-literule/
 ├── ydsz-literule-domain     # 领域层：实体 DO、领域事件、注解、ModelInputProvider
 ├── ydsz-literule-infra      # 基础设施：MyBatis Mapper、决策表 Excel 导入导出
 ├── ydsz-literule-server     # 应用服务 + 引擎核心：DefaultRuleEngine、LiteExpr、热加载、CEP、回放、审批
-└── ydsz-literule-web        # Web 层：21 个 REST Controller
+└── ydsz-literule-web        # Web 层：22 个 REST Controller
 ```
 
 依赖方向（严格单向）：`web → server → infra → domain → api`
@@ -95,6 +95,7 @@ com.njydsz.literule.server
 ├── cep/             # 复杂事件处理（CEPEngine / CEPPattern）
 ├── config/          # 自动配置 + 注解注册 + ABTest + 热加载 + 冲突检测
 ├── core/            # 引擎核心（DefaultRuleEngine / InferenceEngine / 熔断 / 超时 / 灰度 / 索引 / 生命周期 / 效果评估 / 文档生成 / 异步 Trace / Micrometer 指标 / 并行评估 / 结果缓存）
+├── debug/           # 断点调试（RuleDebugger / DebugSession / Breakpoint / 单步执行）
 ├── distributed/     # 分布式（一致性哈希分片 + Redis 节点注册 + Pub/Sub 广播）
 ├── dsl/             # DSL 解析（规则 DSL + 规则链 DSL）
 ├── engine/liteexpr/ # LiteExpr 表达式引擎（词法 / 语法 / 编译缓存 / 求值 / 沙箱 / 函数注册 / 变量注册 / 校验 / 预览 / Trace）
@@ -134,6 +135,7 @@ com.njydsz.literule.server
 | `CEPController` / `CEPTestController` | `/v1/rule-engine/cep` | 模式管理 / 事件推送 / 命中查询 / 测试 |
 | `RuleAuditLogController` | `/v1/rule-engine/audit` | 审计日志查询 |
 | `RuleDashboardController` | `/v1/rule-engine/dashboard` | 概览 / 趋势 / 分布 / Top 规则 |
+| `RuleDebugController` | `/v1/rule-engine/debug` | 规则断点管理 / 调试会话 / 单步执行（RESUME/STEP_OVER/STEP_INTO/STEP_OUT/TERMINATE） |
 
 ## 使用方式
 

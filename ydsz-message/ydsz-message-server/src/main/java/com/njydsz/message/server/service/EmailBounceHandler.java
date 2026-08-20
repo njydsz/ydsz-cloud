@@ -1,15 +1,15 @@
 package com.njydsz.message.server.service.receipt;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
  * 邮件退信处理器。
@@ -42,13 +42,15 @@ public class EmailBounceHandler {
       return;
     }
     String fullReason = (StringUtils.hasText(bounceType) ? "[" + bounceType + "] " : "") + reason;
-    msgLogRepository.update(
-        new LambdaUpdateWrapper<MsgLog>()
-            .eq(MsgLog::getId, logId)
-            .set(MsgLog::getStatus, "FAILED")
-            .set(MsgLog::getReceiptStatus, "FAILED")
-            .set(MsgLog::getReceiptAt, LocalDateTime.now())
-            .set(MsgLog::getErrorMessage, fullReason));
+    Optional<MsgLogVO> voOpt = msgLogRepository.findById(logId);
+    if (voOpt.isPresent()) {
+      MsgLogVO vo = voOpt.get();
+      vo.setStatus("FAILED");
+      vo.setReceiptStatus("FAILED");
+      vo.setReceiptAt(LocalDateTime.now());
+      vo.setErrorMessage(fullReason);
+      msgLogRepository.update(vo);
+    }
     log.info(
         "[EmailBounce] 退信处理: logId={} type={} recipient={} reason={}",
         logId,
