@@ -493,32 +493,7 @@ public class AuthController {
     SensitiveLevel level = request.getLevel() != null ? request.getLevel() : SensitiveLevel.HIGH;
 
     // 构造 SecondaryAuth 注解实例以复用 TTL 计算逻辑
-    SecondaryAuth annotation = new SecondaryAuth() {
-      @Override
-      public Class<SecondaryAuth> annotationType() {
-        return SecondaryAuth.class;
-      }
-
-      @Override
-      public String scene() {
-        return request.getScene();
-      }
-
-      @Override
-      public int ttlSeconds() {
-        return ttlSeconds;
-      }
-
-      @Override
-      public SensitiveLevel level() {
-        return level;
-      }
-
-      @Override
-      public String value() {
-        return "secondary-auth-" + request.getScene();
-      }
-    };
+    SecondaryAuth annotation = new SecondaryAuthImpl(request.getScene(), ttlSeconds, level);
     java.time.Duration effectiveTtl = SecondaryAuthAspect.resolveEffectiveTtl(annotation);
 
     // 开启安全操作模式
@@ -565,5 +540,51 @@ public class AuthController {
       }
     }
     return YdszResponse.success();
+  }
+
+  /**
+   * {@link SecondaryAuth} 注解的具名实现，用于在 Controller 方法中动态构造注解实例。
+   *
+   * <p>替代匿名内部类，避免 Spring AOP 代理场景下的 this 引用逃逸问题。
+   *
+   * @author ydsz-team
+   * @since 1.0.0
+   */
+  private static class SecondaryAuthImpl implements SecondaryAuth {
+
+    private final String scene;
+    private final int ttlSeconds;
+    private final SensitiveLevel level;
+
+    SecondaryAuthImpl(String scene, int ttlSeconds, SensitiveLevel level) {
+      this.scene = scene;
+      this.ttlSeconds = ttlSeconds;
+      this.level = level;
+    }
+
+    @Override
+    public Class<SecondaryAuth> annotationType() {
+      return SecondaryAuth.class;
+    }
+
+    @Override
+    public String scene() {
+      return scene;
+    }
+
+    @Override
+    public int ttlSeconds() {
+      return ttlSeconds;
+    }
+
+    @Override
+    public SensitiveLevel level() {
+      return level;
+    }
+
+    @Override
+    public String value() {
+      return "secondary-auth-" + scene;
+    }
   }
 }

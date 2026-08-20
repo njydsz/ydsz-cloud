@@ -3,6 +3,7 @@ package com.njydsz.nextwiki.web.controller;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -115,7 +116,7 @@ public class TagController {
   @Operation(summary = "创建标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_CREATE)
   public YdszResponse<TagDTO> createTag(
-      @RequestBody NextwikiDTOs.CreateTagRequest request,
+      @Valid @RequestBody NextwikiDTOs.CreateTagRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     TagDTO tagDTO = tagApplicationService.createTag(request.getName(), request.getColor(), userId);
     return YdszResponse.success(tagDTO);
@@ -154,7 +155,7 @@ public class TagController {
   @Operation(summary = "为文件绑定标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_BIND)
   public YdszResponse<Void> bindTag(
-      @RequestBody NextwikiDTOs.BindTagRequest request,
+      @Valid @RequestBody NextwikiDTOs.BindTagRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     tagApplicationService.batchBindTags(request.getFileNodeId(), request.getTagIds(), userId);
     return YdszResponse.success();

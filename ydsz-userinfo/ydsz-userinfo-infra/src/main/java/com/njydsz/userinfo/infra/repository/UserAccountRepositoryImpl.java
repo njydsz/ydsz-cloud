@@ -252,6 +252,28 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
     return userAccountMapper.selectCount(wrapper);
   }
 
+  @Override
+  public List<String> findIdsByBanTypeAndExpireAtBefore(String banType, java.time.LocalDateTime expireAt) {
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccountDO::getBanType, banType);
+    wrapper.le(UserAccountDO::getBanExpireAt, expireAt);
+    wrapper.select(UserAccountDO::getId);
+    return userAccountMapper.selectList(wrapper).stream()
+        .map(UserAccountDO::getId)
+        .collect(java.util.stream.Collectors.toList());
+  }
+
+  @Override
+  public List<String> findIdsByLockedUntilBefore(java.time.LocalDateTime now) {
+    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.isNotNull(UserAccountDO::getLockedUntil);
+    wrapper.le(UserAccountDO::getLockedUntil, now);
+    wrapper.select(UserAccountDO::getId);
+    return userAccountMapper.selectList(wrapper).stream()
+        .map(UserAccountDO::getId)
+        .collect(java.util.stream.Collectors.toList());
+  }
+
   /**
    * 根据查询参数构建 MyBatis-Plus 查询条件。
    *

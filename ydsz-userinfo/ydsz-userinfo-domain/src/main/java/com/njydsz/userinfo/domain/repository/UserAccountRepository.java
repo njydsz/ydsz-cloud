@@ -283,4 +283,26 @@ public interface UserAccountRepository {
    * @return 封禁用户数
    */
   long countBannedUsers();
+
+  /**
+   * 查询临时封禁到期的用户 ID 列表。
+   *
+   * <p>扫描条件：ban_type = 'TEMPORARY' 且 ban_expire_at &lt;= 当前时间。
+   * 用于定时任务自动解封场景。
+   *
+   * @param expireAt 到期时间阈值（一般传当前时间）
+   * @return 到期用户 ID 列表
+   */
+  List<String> findIdsByBanTypeAndExpireAtBefore(String banType, java.time.LocalDateTime expireAt);
+
+  /**
+   * 查询锁定到期的用户 ID 列表。
+   *
+   * <p>扫描条件：locked_until 非空且 locked_until &lt;= 当前时间。
+   * 用于定时任务自动解锁场景。
+   *
+   * @param now 当前时间阈值
+   * @return 到期用户 ID 列表
+   */
+  List<String> findIdsByLockedUntilBefore(java.time.LocalDateTime now);
 }
