@@ -61,11 +61,6 @@ public class TagRepositoryImpl implements TagRepository {
   }
 
   @Override
-  public List<TagVO> findAll() {
-    return converter.tagListToVO(tagMapper.selectList(null));
-  }
-
-  @Override
   public List<TagVO> findByFileNodeId(String fileNodeId) {
     return converter.tagListToVO(tagMapper.selectByFileNodeId(fileNodeId));
   }

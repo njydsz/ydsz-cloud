@@ -231,21 +231,6 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
       @Param("tenantId") String tenantId);
 
   /**
-   * 查询文件夹下全部后代节点（按路径前缀匹配，不含文件夹自身）。
-   *
-   * <p>利用 LIKE 前缀匹配：路径为 {@code /root/documents/} 时， 所有后代节点路径均以该前缀开头。结果按 level 升序、sort 升序排列。
-   *
-   * @param folderPath 文件夹路径（需以 {@code /} 结尾）
-   * @param tenantId 租户 ID（P1-7：显式租户过滤）
-   * @return 全部后代节点列表，按层级升序排列
-   */
-  @Select(
-      "SELECT * FROM nw_file_node WHERE path LIKE CONCAT(#{folderPath}, '%') "
-          + "AND deleted = 0 AND tenant_id = #{tenantId} ORDER BY level ASC, sort ASC")
-  List<FileNodeDO> selectAllDescendantsByPath(
-      @Param("folderPath") String folderPath, @Param("tenantId") String tenantId);
-
-  /**
    * 分页查询文件夹的后代节点（用于分批复制场景，避免一次全量加载 OOM）。
    *
    * <p>结果按 level 升序、sort 升序排列，确保父节点先于子节点返回。

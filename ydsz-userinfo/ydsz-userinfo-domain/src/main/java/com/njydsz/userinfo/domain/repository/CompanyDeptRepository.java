@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.userinfo.domain.dto.CompanyDeptDTO;
-import com.njydsz.userinfo.domain.dto.CompanyDeptUpdateDTO;
 import com.njydsz.userinfo.domain.vo.CompanyDeptVO;
 
 /**
@@ -60,20 +59,14 @@ public interface CompanyDeptRepository {
   Optional<CompanyDeptVO> findByCompanyIdAndDeptId(String companyId, String deptId);
 
   /**
-   * 保存公司-部门关联（插入）。
+   * 保存公司-部门关联（创建或更新）。
+   *
+   * <p>根据 {@code id} 是否为空判断：为空则创建，非空则更新。
    *
    * @param dto 公司-部门关联 DTO
    * @return 保存后的关联 VO
    */
-  CompanyDeptVO create(CompanyDeptDTO dto);
-
-  /**
-   * 更新公司-部门关联。
-   *
-   * @param dto 公司-部门关联更新 DTO（含 id）
-   * @return 更新后的关联 VO
-   */
-  CompanyDeptVO update(CompanyDeptUpdateDTO dto);
+  CompanyDeptVO save(CompanyDeptDTO dto);
 
   /**
    * 根据公司 ID 删除关联。

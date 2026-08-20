@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
- * 社交账号绑定创建 DTO。
+ * 社交账号绑定统一 DTO（P1-1 CUD 入参）。
  *
  * <p>用于 {@code SocialAccountRepository.save()} 持久化社交账号绑定记录，由 Service 层组装后传入。
  *
@@ -15,7 +15,7 @@ import lombok.Data;
  * @since 1.6.0
  */
 @Data
-public class SocialAccountCreateDTO implements Serializable {
+public class SocialAccountDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 

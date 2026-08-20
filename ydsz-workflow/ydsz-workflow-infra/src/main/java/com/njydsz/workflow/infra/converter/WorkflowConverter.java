@@ -8,6 +8,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import com.njydsz.workflow.domain.dto.FlowDefinitionDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
@@ -225,6 +226,9 @@ FlowRunTaskDO entityToDO(FlowRunTaskVO vo);
 
 /** 运行时任务 DTO → 运行时任务 DO。 */
 FlowRunTaskDO dtoToDO(FlowRunTaskDTO dto);
+
+/** 流程定义 DTO → 流程定义 DO。 */
+FlowDefinitionDO dtoToDO(FlowDefinitionDTO dto);
 
   /** 流程节点 VO → 流程节点 DO。 */
   FlowNodeDO entityToDO(FlowNodeVO vo);

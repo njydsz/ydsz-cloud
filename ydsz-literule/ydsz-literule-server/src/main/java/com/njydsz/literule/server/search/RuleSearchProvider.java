@@ -11,8 +11,8 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.literule.infra.entity.RuleDefinitionDO;
-import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
+import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
+import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 
 /**
  * 规则定义搜索提供者 — 将规则定义数据注册到统一搜索体系。
@@ -23,9 +23,9 @@ import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RuleSearchProvider implements SearchProvider<RuleDefinitionDO> {
+public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
 
-  private final RuleDefinitionMapper ruleDefinitionMapper;
+  private final RuleDefinitionRepository ruleDefinitionRepository;
 
   @Override
   public String getType() {
@@ -37,29 +37,29 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionDO> {
   }
 
   @Override
-  public IndexDocument toIndexDocument(RuleDefinitionDO entity) {
-    if (entity == null || entity.getId() == null) {
+  public IndexDocument toIndexDocument(RuleDefinitionVO vo) {
+    if (vo == null || vo.getId() == null) {
       return null;
     }
     return IndexDocument.builder()
-        .id(entity.getId())
+        .id(vo.getId())
         .type("rule")
-        .title(entity.getRuleName())
-        .subtitle(entity.getCategory())
-        .content(entity.getRuleCode())
-        .snippet(entity.getCategoryPath())
-        .status(entity.getStatus())
-        .path("/literule/rule/" + entity.getId())
-        .tenantId(entity.getTenantId())
-        .createdBy(entity.getCreatedBy())
+        .title(vo.getRuleName())
+        .subtitle(vo.getCategory())
+        .content(vo.getRuleCode())
+        .snippet(vo.getCategoryPath())
+        .status(vo.getStatus())
+        .path("/literule/rule/" + vo.getId())
+        .tenantId(vo.getTenantId())
+        .createdBy(vo.getCreatedBy())
         .createdAt(
-            entity.getCreatedAt() != null
-                ? entity.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()
+            vo.getCreatedAt() != null
+                ? vo.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()
                 : null)
-        .updatedBy(entity.getUpdatedBy())
+        .updatedBy(vo.getUpdatedBy())
         .updatedAt(
-            entity.getUpdatedAt() != null
-                ? entity.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant()
+            vo.getUpdatedAt() != null
+                ? vo.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant()
                 : null)
         .build();
   }
@@ -101,7 +101,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionDO> {
             .build());
   }
 
-  public RuleDefinitionDO loadById(String id) {
-    return ruleDefinitionMapper.selectById(id);
+  public RuleDefinitionVO loadById(String id) {
+    return ruleDefinitionRepository.findById(id).orElse(null);
   }
 }

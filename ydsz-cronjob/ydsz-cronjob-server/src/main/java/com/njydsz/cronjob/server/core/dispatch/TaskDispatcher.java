@@ -1,6 +1,6 @@
 package com.njydsz.cronjob.server.core.dispatch;
 
-import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
  * 任务派发接口。
@@ -28,7 +28,7 @@ public interface TaskDispatcher {
    * @param triggerType 触发类型: CRON 自动 / MANUAL 手动 / RETRY 失败重试 / DEPENDENT 依赖触发
    * @return 执行日志 ID；派发失败返回 null
    */
-  String dispatch(Job job, String executorNode, String triggerType);
+  String dispatch(JobVO job, String executorNode, String triggerType);
 
   /**
    * P1-4: 在本地执行任务（远程派发接收端）。
@@ -49,5 +49,5 @@ public interface TaskDispatcher {
    * @param shardTotal 分片总数（1 表示非分片任务）
    * @return 执行日志 ID；锁被持有或执行失败返回 null
    */
-  String executeLocally(Job job, String triggerType, int shardIndex, int shardTotal);
+  String executeLocally(JobVO job, String triggerType, int shardIndex, int shardTotal);
 }

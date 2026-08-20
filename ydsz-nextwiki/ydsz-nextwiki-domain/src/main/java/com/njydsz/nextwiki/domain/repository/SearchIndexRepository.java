@@ -48,13 +48,6 @@ public interface SearchIndexRepository {
   Optional<SearchIndexVO> findByFileNodeId(String fileNodeId);
 
   /**
-   * 查询所有未删除的索引记录
-   *
-   * @return 搜索索引 VO 列表
-   */
-  List<SearchIndexVO> findAll();
-
-  /**
    * 查询所有未删除的文件节点ID（用于索引重建）
    *
    * @param createdBy 创建人，传 null 查询全部

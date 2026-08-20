@@ -22,7 +22,7 @@ import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.model.core.MsgLog;
 import com.njydsz.message.server.metric.MessageMetrics;
 
 /**

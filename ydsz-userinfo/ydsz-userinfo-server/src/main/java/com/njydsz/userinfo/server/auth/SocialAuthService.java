@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.domain.dto.SocialAccountCreateDTO;
+import com.njydsz.userinfo.domain.dto.SocialAccountDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.SocialAccountRepository;
 import com.njydsz.userinfo.domain.social.SocialAuthException;
@@ -155,8 +155,8 @@ public class SocialAuthService {
               throw new BusinessException(UserInfoExceptionCode.SOCIAL_BIND_EXISTS);
             });
 
-    // 构建创建 DTO
-    SocialAccountCreateDTO dto = new SocialAccountCreateDTO();
+    // 构建 DTO
+    SocialAccountDTO dto = new SocialAccountDTO();
     dto.setUserId(userId);
     dto.setPlatform(platform);
     dto.setOpenId(openId);

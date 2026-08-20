@@ -6,17 +6,10 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.userinfo.domain.dto.CompanyCreateDTO;
 import com.njydsz.userinfo.domain.dto.CompanyDTO;
 import com.njydsz.userinfo.domain.dto.CompanyDeptDTO;
-import com.njydsz.userinfo.domain.dto.CompanyDeptUpdateDTO;
-import com.njydsz.userinfo.domain.dto.CompanyUpdateDTO;
-import com.njydsz.userinfo.domain.dto.DepartmentCreateDTO;
 import com.njydsz.userinfo.domain.dto.DepartmentDTO;
-import com.njydsz.userinfo.domain.dto.DepartmentUpdateDTO;
-import com.njydsz.userinfo.domain.dto.PostCreateDTO;
 import com.njydsz.userinfo.domain.dto.PostDTO;
-import com.njydsz.userinfo.domain.dto.PostUpdateDTO;
 import com.njydsz.userinfo.infra.entity.CompanyDeptDO;
 import com.njydsz.userinfo.infra.entity.CompanyDO;
 import com.njydsz.userinfo.infra.entity.DepartmentDO;
@@ -44,35 +37,6 @@ import com.njydsz.userinfo.domain.vo.PostVO;
 public interface UserInfoOrgConverter {
 
   // ===== CompanyDO =====
-
-  /**
-   * 公司创建 DTO → 公司实体
-   *
-   * @param dto 公司创建 DTO
-   * @return 公司实体（未持久化）
-   */
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  CompanyDO createDtoToEntity(CompanyCreateDTO dto);
-
-  /**
-   * 公司更新 DTO → 公司实体
-   *
-   * @param dto 公司更新 DTO（含 id）
-   * @return 公司实体（含 id）
-   */
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  CompanyDO updateDtoToEntity(CompanyUpdateDTO dto);
 
   /**
    * 公司实体 → 公司 VO
@@ -141,35 +105,6 @@ public interface UserInfoOrgConverter {
   CompanyDO dtoToEntityWithId(CompanyDTO dto);
 
   // ===== DepartmentDO =====
-
-  /**
-   * 部门创建 DTO → 部门实体
-   *
-   * @param dto 部门创建 DTO
-   * @return 部门实体（未持久化）
-   */
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  DepartmentDO createDtoToEntity(DepartmentCreateDTO dto);
-
-  /**
-   * 部门更新 DTO → 部门实体
-   *
-   * @param dto 部门更新 DTO（含 id）
-   * @return 部门实体（含 id）
-   */
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  DepartmentDO updateDtoToEntity(DepartmentUpdateDTO dto);
 
   /**
    * 部门实体 → 部门 VO（扁平结构）
@@ -251,10 +186,10 @@ public interface UserInfoOrgConverter {
   List<CompanyDeptVO> companyDeptListToVO(List<CompanyDeptDO> entities);
 
   /**
-   * 公司-部门关联 DTO → 实体
+   * 公司-部门关联 DTO → 实体（创建场景）
    *
    * @param dto 公司-部门关联 DTO
-   * @return 公司-部门关联实体
+   * @return 公司-部门关联实体（未持久化）
    */
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
@@ -267,11 +202,11 @@ public interface UserInfoOrgConverter {
   CompanyDeptDO dtoToEntity(CompanyDeptDTO dto);
 
   /**
-   * 公司-部门关联更新 DTO → 实体
+   * 公司-部门关联 DTO → 实体（更新场景）
    *
    * <p>保留 id 字段用于定位更新记录，自动填充字段中 updatedBy/updatedAt 由框架更新。
    *
-   * @param dto 公司-部门关联更新 DTO（含 id）
+   * @param dto 公司-部门关联 DTO（含 id）
    * @return 公司-部门关联实体（含 id）
    */
   @Mapping(target = "deleted", ignore = true)
@@ -279,38 +214,9 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  CompanyDeptDO updateDtoToEntity(CompanyDeptUpdateDTO dto);
+  CompanyDeptDO dtoToEntityWithId(CompanyDeptDTO dto);
 
   // ===== PostDO =====
-
-  /**
-   * 岗位创建 DTO → 岗位实体
-   *
-   * @param dto 岗位创建 DTO
-   * @return 岗位实体（未持久化）
-   */
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  PostDO createDtoToEntity(PostCreateDTO dto);
-
-  /**
-   * 岗位更新 DTO → 岗位实体
-   *
-   * @param dto 岗位更新 DTO（含 id）
-   * @return 岗位实体（含 id）
-   */
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  PostDO updateDtoToEntity(PostUpdateDTO dto);
 
   /**
    * 岗位实体 → 岗位 VO

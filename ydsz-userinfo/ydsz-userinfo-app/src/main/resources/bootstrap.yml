@@ -1,0 +1,156 @@
+# =====================================================================
+#  YDSZ 用户信息中心服务 App 端 bootstrap 配置（P1-2 双入口架构）
+#  --------------------------------------------------------------------
+#  端口：9003（与 Web 端 9002 错开）
+#  职责：移动端/应用端 API（用户认证、社交登录、个人资料管理）
+#  依赖：Nacos 服务发现 / 配置中心、PostgreSQL、Redis
+#
+#  启动方式：
+#    java -jar ydsz-userinfo-app.jar --ydsz.userinfo.platform=app
+# =====================================================================
+
+server:
+  port: 9003
+  max-http-request-header-size: 16KB
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: ydsz-userinfo-app
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  main:
+    web-application-type: servlet
+    allow-bean-definition-overriding: true
+  cloud:
+    nacos:
+      discovery:
+        enabled: true
+        register-enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:ydsz}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        metadata:
+          version: 1.0.0
+          port: 9003
+          platform: app
+        ip-type: IPv4
+      config:
+        enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:ydsz}
+        group: ${NACOS_GROUP:${spring.profiles.active}}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        file-extension: yaml
+        refresh-enabled: true
+        shared-configs:
+          - data-id: ydsz-common.yaml
+            group: ${spring.profiles.active}
+            refresh: true
+          - data-id: ydsz-userinfo.yml
+            group: ${spring.profiles.active}
+            refresh: true
+
+ydsz:
+  userinfo:
+    # P1-2: 平台标识 — 激活 App 端组件
+    platform: app
+    health-enabled: true
+
+  safe:
+    ip-access:
+      enabled: true
+      mode: BLACKLIST
+    auto-block:
+      enabled: true
+      threshold: 10
+      window-seconds: 60
+    field-encryption:
+      enabled: true
+      default-key-version: 1
+      failure-strategy: THROW
+      masked-value: "****"
+      keys:
+        1: ${YDSZ_FIELD_ENC_KEY_V1:}
+
+  tenant:
+    enabled: false
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+    anon-urls:
+      - /api/v1/auth/login
+      - /api/v1/auth/refresh
+      - /api/v1/captcha
+      - /api/v1/self-service
+      - /api/v1/oauth2
+      - /api/internal
+    ignore-tables:
+      - ydsz_company
+      - ydsz_department
+      - ydsz_post
+      - ydsz_language
+
+  userinfo:
+    internal-call:
+      enabled: false
+      header-name: X-Internal-Call
+
+  web:
+    api-version:
+      enabled: true
+      default-version: "1"
+      strategy: HEADER
+      header-name: X-API-Version
+      sunset-headers: true
+
+  json:
+    enabled: true
+    date-format: yyyy-MM-dd HH:mm:ss
+    naming-strategy: LOWER_CAMEL_CASE
+    write-nulls: false
+    monitoring-enabled: true
+    warmup-classes:
+      - com.njydsz.userinfo.domain.vo.LoginVO
+      - com.njydsz.userinfo.domain.vo.UserAccountVO
+
+  jdbc:
+    sql-firewall:
+      enabled: true
+      block-drop-table: true
+      block-truncate: true
+      block-delete-without-where: true
+      block-update-without-where: true
+      block-multi-statement: true
+      block-permission-ops: true
+    pagination:
+      max-limit: 500
+    slow-sql:
+      enabled: true
+      threshold-millis: 500
+      alert-threshold-millis: 2000
+    sql-audit:
+      enabled: true
+      audit-select: false
+      audit-insert: true
+      audit-update: true
+      audit-delete: true
+      log-parameters: true
+      max-parameter-length: 500
+
+  security:
+    alert:
+      dedup-ttl-seconds: 300
+      ip-dedup-ttl-seconds: 180
+      brute-force-threshold: 10
+      password-spray-threshold: 5
+      aggregation:
+        enabled: true
+        cron: "0 */5 * * * ?"

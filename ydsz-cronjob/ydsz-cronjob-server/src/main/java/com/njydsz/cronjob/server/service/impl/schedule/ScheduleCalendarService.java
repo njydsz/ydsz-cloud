@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 
 /**
@@ -40,7 +40,7 @@ public class ScheduleCalendarService {
    * @return 触发时间列表
    */
   public List<LocalDateTime> getUpcomingFireTimes(String jobKey, LocalDateTime from, int maxCount) {
-    Job job = jobRepository.selectByJobKey(jobKey);
+    JobVO job = jobRepository.selectByJobKey(jobKey);
     if (job == null || job.getCronExpression() == null || job.getCronExpression().isBlank()) {
       return List.of();
     }
@@ -56,10 +56,10 @@ public class ScheduleCalendarService {
    * @return 触发时间列表（含 jobKey）
    */
   public List<ScheduleItem> getScheduleCalendar(LocalDateTime from, int hours, int maxPerJob) {
-    List<Job> normalJobs = jobRepository.selectAllNormal();
+    List<JobVO> normalJobs = jobRepository.selectAllNormal();
     LocalDateTime to = from.plusHours(hours);
     List<ScheduleItem> items = new ArrayList<>();
-    for (Job job : normalJobs) {
+    for (JobVO job : normalJobs) {
       if (job.getCronExpression() == null || job.getCronExpression().isBlank()) {
         continue;
       }

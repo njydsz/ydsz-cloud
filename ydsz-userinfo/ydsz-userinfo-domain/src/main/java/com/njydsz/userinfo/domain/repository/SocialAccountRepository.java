@@ -3,7 +3,7 @@ package com.njydsz.userinfo.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.njydsz.userinfo.domain.dto.SocialAccountCreateDTO;
+import com.njydsz.userinfo.domain.dto.SocialAccountDTO;
 import com.njydsz.userinfo.domain.vo.SocialAccountVO;
 
 /**
@@ -58,11 +58,11 @@ public interface SocialAccountRepository {
   /**
    * 保存社交账号绑定记录。
    *
-   * <p>由 Service 层传入已填充的创建 DTO，Repository 负责加密敏感字段后持久化。
+   * <p>由 Service 层传入已填充的 DTO，Repository 负责加密敏感字段后持久化。
    *
-   * @param dto 社交账号绑定创建 DTO
+   * @param dto 社交账号绑定 DTO
    */
-  void save(SocialAccountCreateDTO dto);
+  void save(SocialAccountDTO dto);
 
   /**
    * 根据用户 ID 和平台标识删除社交账号绑定（逻辑删除）。

@@ -26,7 +26,7 @@
  *
  * <ul>
  *   <li>仓储接口严格按业务子域拆分，避免大泥球式聚合</li>
- *   <li>DTO（如 {@code UserAccountCreateDTO}、{@code SamlIdpCreateDTO}）用于跨层数据传输</li>
+ *   <li>DTO（如 {@code UserAccountDTO}、{@code SamlIdpDTO}）用于跨层数据传输</li>
  *   <li>枚举（{@code IdentityProviderType}、{@code UserLifecycleStatusEnum}、{@code BanType}）定义领域状态与类型</li>
  * </ul>
  *

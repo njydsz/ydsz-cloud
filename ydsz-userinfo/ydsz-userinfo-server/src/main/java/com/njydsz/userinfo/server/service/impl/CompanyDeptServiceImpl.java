@@ -4,12 +4,10 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.userinfo.domain.dto.CompanyDeptDTO;
-import com.njydsz.userinfo.domain.dto.CompanyDeptUpdateDTO;
 import com.njydsz.userinfo.domain.repository.CompanyDeptRepository;
 import com.njydsz.userinfo.domain.vo.CompanyDeptVO;
 import com.njydsz.userinfo.server.service.CompanyDeptService;
@@ -44,16 +42,14 @@ public class CompanyDeptServiceImpl implements CompanyDeptService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String save(CompanyDeptDTO dto) {
-    CompanyDeptVO vo = companyDeptRepository.create(dto);
+    CompanyDeptVO vo = companyDeptRepository.save(dto);
     return vo.getId();
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(CompanyDeptDTO dto) {
-    CompanyDeptUpdateDTO updateDTO = new CompanyDeptUpdateDTO();
-    BeanUtils.copyProperties(dto, updateDTO);
-    CompanyDeptVO vo = companyDeptRepository.update(updateDTO);
+    CompanyDeptVO vo = companyDeptRepository.save(dto);
     return vo != null;
   }
 

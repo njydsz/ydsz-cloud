@@ -3,6 +3,7 @@ package com.njydsz.workflow.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.workflow.domain.dto.FlowDefinitionDTO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 
 /**
@@ -27,9 +28,20 @@ public interface FlowDefinitionRepository {
   /**
    * 保存流程定义（新增 or 更新）。
    *
-   * @param vo 流程定义 VO
+   * <p><b>合规说明（v2.23 DDD 分层规范）：</b>CUD 入参使用 {@link FlowDefinitionDTO}（dto/ 包），
+   * 符合 §34.2.1（dto/ 命令请求参数 以 DTO 结尾）。
+   *
+   * @param dto 流程定义命令 DTO
    * @return 保存后的流程定义 VO（含生成的 id 与审计字段）
    */
+  FlowDefinitionVO save(FlowDefinitionDTO dto);
+
+  /**
+   * 保存流程定义（已废弃）。
+   *
+   * @deprecated 使用 {@link #save(FlowDefinitionDTO)} 替代，CUD 入参应使用 DTO
+   */
+  @Deprecated
   FlowDefinitionVO save(FlowDefinitionVO vo);
 
   /**
@@ -77,9 +89,19 @@ public interface FlowDefinitionRepository {
   /**
    * 更新流程定义。
    *
-   * @param vo 流程定义 VO（含 id）
+   * <p><b>合规说明（v2.23 DDD 分层规范）：</b>CUD 入参使用 {@link FlowDefinitionDTO}（dto/ 包）。
+   *
+   * @param dto 流程定义命令 DTO（含 id）
    * @return 更新后的流程定义 VO
    */
+  FlowDefinitionVO update(FlowDefinitionDTO dto);
+
+  /**
+   * 更新流程定义（已废弃）。
+   *
+   * @deprecated 使用 {@link #update(FlowDefinitionDTO)} 替代，CUD 入参应使用 DTO
+   */
+  @Deprecated
   FlowDefinitionVO update(FlowDefinitionVO vo);
 
   /**

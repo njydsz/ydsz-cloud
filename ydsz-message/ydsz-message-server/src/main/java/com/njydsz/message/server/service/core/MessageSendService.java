@@ -14,7 +14,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.message.domain.entity.config.MsgRouteRule;
 import com.njydsz.message.infra.entity.MsgTraceDO;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.model.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;

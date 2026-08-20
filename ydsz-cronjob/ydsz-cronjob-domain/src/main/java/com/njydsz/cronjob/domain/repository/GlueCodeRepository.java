@@ -38,6 +38,15 @@ public interface GlueCodeRepository {
   List<GlueCodeVO> findAllByJobId(String jobId);
 
   /**
+   * 根据任务 ID 查询所有版本的 GLUE 代码列表（版本号降序）。
+   * <p>等同于 {@link #findAllByJobId(String)}，语义别名。</p>
+   *
+   * @param jobId 任务 ID
+   * @return GLUE 代码 VO 列表（版本号降序）
+   */
+  List<GlueCodeVO> findByJobIdOrderByVersionDesc(String jobId);
+
+  /**
    * 新增 GLUE 代码记录。
    *
    * @param vo GLUE 代码 VO（不含 id，由雪花生成器填充）

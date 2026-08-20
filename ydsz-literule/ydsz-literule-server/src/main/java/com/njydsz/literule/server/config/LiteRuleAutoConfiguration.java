@@ -38,7 +38,7 @@ import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.domain.model.MockModelInputProvider;
 import com.njydsz.literule.domain.model.ModelInputProvider;
 import com.njydsz.literule.domain.model.ModelInputRegistry;
-import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
+import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
 import com.njydsz.literule.server.approval.ApprovalPermissionChecker;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
 import com.njydsz.literule.server.approval.RuleApprovalService;
@@ -602,7 +602,7 @@ public class LiteRuleAutoConfiguration {
       ObjectProvider<OutboxService> outboxServiceProvider,
       ApplicationEventPublisher eventPublisher,
       LiteRuleProperties properties,
-      RuleDefinitionMapper ruleDefinitionMapper) {
+      RuleDefinitionRepository ruleDefinitionRepository) {
     RuleAdminService service =
         new RuleAdminService(
             ruleEngine,
@@ -610,7 +610,7 @@ public class LiteRuleAutoConfiguration {
             configProvider,
             versionRepoProvider.getIfAvailable(),
             eventPublisher,
-            ruleDefinitionMapper);
+            ruleDefinitionRepository);
     service.setDryRunEnabled(properties.isDryRunEnabled());
     RuleConfigBroadcaster broadcaster = broadcasterProvider.getIfAvailable();
     if (broadcaster != null) {

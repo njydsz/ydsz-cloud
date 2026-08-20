@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
  * 远程派发请求 DTO（P1-4）。
@@ -36,7 +36,7 @@ public class RemoteTaskRequest implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 任务定义 */
-  private Job job;
+  private JobVO job;
 
   /** 触发类型: CRON / MANUAL / RETRY / MISFIRED / DEPENDENT */
   private String triggerType;

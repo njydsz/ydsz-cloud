@@ -11,7 +11,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.core.config.CronjobThreadPoolRegistry;
 
 /**
@@ -66,7 +66,7 @@ public class RetryScheduler {
    * @param executor 重试执行器（函数式接口，由 DefaultTaskDispatcher 传入）
    */
   public void scheduleRetry(
-      Job job,
+      JobVO job,
       boolean holdLock,
       String triggerType,
       int retryCount,
@@ -119,7 +119,7 @@ public class RetryScheduler {
    * @param retryCount 当前重试次数
    * @return 延迟毫秒数
    */
-  private long calculateDelayMs(Job job, int retryCount) {
+  private long calculateDelayMs(JobVO job, int retryCount) {
     Long interval = job.getRetryIntervalMs();
     if (interval == null || interval <= 0) {
       return 0;
@@ -166,6 +166,6 @@ public class RetryScheduler {
      * @param holdLock 是否持锁
      * @param retryCount 当前重试次数
      */
-    void execute(Job job, boolean holdLock, int retryCount);
+    void execute(JobVO job, boolean holdLock, int retryCount);
   }
 }

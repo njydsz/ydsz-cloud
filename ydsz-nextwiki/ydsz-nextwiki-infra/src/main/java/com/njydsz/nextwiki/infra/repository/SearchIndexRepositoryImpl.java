@@ -60,11 +60,6 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
   }
 
   @Override
-  public List<SearchIndexVO> findAll() {
-    return converter.searchIndexListToVO(searchIndexMapper.selectAll());
-  }
-
-  @Override
   public List<String> findAllFileNodeIds(String createdBy) {
     return searchIndexMapper.selectAllFileNodeIds(createdBy);
   }

@@ -6,7 +6,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.userinfo.domain.dto.SocialAccountCreateDTO;
+import com.njydsz.userinfo.domain.dto.SocialAccountDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.dto.UserDeptDTO;
 import com.njydsz.userinfo.domain.dto.UserLoginHistoryDTO;
@@ -301,7 +301,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  SocialAccountDO createDtoToEntity(SocialAccountCreateDTO dto);
+  SocialAccountDO dtoToEntity(SocialAccountDTO dto);
 
   /**
    * 社交账号绑定实体 → 社交账号绑定 VO。

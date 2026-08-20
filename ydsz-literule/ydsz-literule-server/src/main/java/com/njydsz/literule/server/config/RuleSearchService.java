@@ -8,9 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.literule.api.RuleDefinition;
+import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
-import com.njydsz.literule.infra.entity.RuleDefinitionDO;
-import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 
 /**
  * 规则搜索服务
@@ -34,10 +33,10 @@ import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 @Slf4j
 public class RuleSearchService {
 
-  private final RuleDefinitionMapper ruleDefinitionMapper;
+  private final RuleDefinitionRepository ruleDefinitionRepository;
 
-  public RuleSearchService(RuleDefinitionMapper ruleDefinitionMapper) {
-    this.ruleDefinitionMapper = ruleDefinitionMapper;
+  public RuleSearchService(RuleDefinitionRepository ruleDefinitionRepository) {
+    this.ruleDefinitionRepository = ruleDefinitionRepository;
   }
 
   /**
@@ -56,16 +55,11 @@ public class RuleSearchService {
    */
   public List<RuleDefinition> search(
       String query, String status, String category, Boolean enabled, int offset, int limit) {
-    // 使用数据库级搜索
-    IPage<RuleDefinitionDO> page =
-        ruleDefinitionMapper.searchRules(
-            buildSearchQuery(query),
-            status,
-            category,
-            enabled,
-            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
-                (offset / Math.max(limit, 1)) + 1, Math.max(limit, 1)));
-    return page.getRecords().stream().map(this::doToRuleDefinition).toList();
+    return ruleDefinitionRepository
+        .search(query, status, category, enabled, offset, limit)
+        .stream()
+        .map(this::voToRuleDefinition)
+        .toList();
   }
 
   /**
@@ -79,7 +73,7 @@ public class RuleSearchService {
    * @since 1.0.0
    */
   public int searchCount(String query, String status, String category, Boolean enabled) {
-    return ruleDefinitionMapper.searchRulesCount(buildSearchQuery(query), status, category, enabled);
+    return ruleDefinitionRepository.searchCount(query, status, category, enabled);
   }
 
   /**
@@ -95,63 +89,53 @@ public class RuleSearchService {
    */
   public IPage<RuleDefinition> searchPage(
       String query, String status, String category, Boolean enabled, PageQuery pageQuery) {
-    IPage<RuleDefinitionDO> page =
-        ruleDefinitionMapper.searchRules(
-            buildSearchQuery(query),
-            status,
-            category,
-            enabled,
-            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
-                pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize()));
+    IPage<RuleDefinitionVO> voPage =
+        ruleDefinitionRepository.searchPage(query, status, category, enabled, pageQuery);
     List<RuleDefinition> records =
-        page.getRecords().stream().map(this::doToRuleDefinition).toList();
+        voPage.getRecords().stream().map(this::voToRuleDefinition).toList();
     IPage<RuleDefinition> result =
         new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
-            page.getCurrent(), page.getSize(), page.getTotal());
+            voPage.getCurrent(), voPage.getSize(), voPage.getTotal());
     result.setRecords(records);
     return result;
   }
 
-  /** 构建搜索查询字符串 */
-  private String buildSearchQuery(String query) {
-    if (query == null || query.isBlank()) {
-      return null;
-    }
-    // 去除首尾空格，保留空格用于 AND 语义分割
-    return query.trim();
-  }
-
-  /** RuleDefinitionDO → RuleDefinition 转换 */
-  private RuleDefinition doToRuleDefinition(RuleDefinitionDO ruleDO) {
+  /**
+   * RuleDefinitionVO → RuleDefinition 转换
+   *
+   * @param vo 规则定义 VO
+   * @return RuleDefinition
+   */
+  private RuleDefinition voToRuleDefinition(RuleDefinitionVO vo) {
     RuleDefinition def = new RuleDefinition();
-    def.setCode(ruleDO.getRuleCode());
-    def.setName(ruleDO.getRuleName());
-    def.setCategory(ruleDO.getCategory());
-    def.setCategoryPath(ruleDO.getCategoryPath());
-    def.setOwner(ruleDO.getOwner());
-    def.setDescription(ruleDO.getDescription());
-    def.setConditionExpression(ruleDO.getConditionExpression());
-    def.setSeverityExpression(ruleDO.getSeverityExpression());
+    def.setCode(vo.getRuleCode());
+    def.setName(vo.getRuleName());
+    def.setCategory(vo.getCategory());
+    def.setCategoryPath(vo.getCategoryPath());
+    def.setOwner(vo.getOwner());
+    def.setDescription(vo.getDescription());
+    def.setConditionExpression(vo.getConditionExpression());
+    def.setSeverityExpression(vo.getSeverityExpression());
     def.setDefaultSeverity(
-        ruleDO.getDefaultSeverity() != null
-            ? com.njydsz.literule.api.RuleSeverity.fromCode(ruleDO.getDefaultSeverity())
+        vo.getDefaultSeverity() != null
+            ? com.njydsz.literule.api.RuleSeverity.fromCode(vo.getDefaultSeverity())
             : null);
-    def.setTitleTemplate(ruleDO.getTitleTemplate());
-    def.setDescriptionTemplate(ruleDO.getDescriptionTemplate());
-    def.setPriority(ruleDO.getPriority());
-    def.setEnabled(ruleDO.getEnabled() != null && ruleDO.getEnabled());
-    def.setScope(ruleDO.getScope());
-    def.setMutexGroup(ruleDO.getMutexGroup());
-    def.setVersion(ruleDO.getVersion() != null ? ruleDO.getVersion() : 1);
-    def.setStatus(ruleDO.getStatus());
-    def.setEffectiveFrom(ruleDO.getEffectiveFrom());
-    def.setEffectiveTo(ruleDO.getEffectiveTo());
-    def.setReviewedBy(ruleDO.getReviewedBy());
-    def.setReviewedAt(ruleDO.getReviewedAt());
-    def.setReviewComment(ruleDO.getReviewComment());
-    def.setCanaryRatio(ruleDO.getCanaryRatio() != null ? ruleDO.getCanaryRatio() : 0.0);
-    def.setCanaryConditionExpression(ruleDO.getCanaryConditionExpression());
-    def.setCanarySeverityExpression(ruleDO.getCanarySeverityExpression());
+    def.setTitleTemplate(vo.getTitleTemplate());
+    def.setDescriptionTemplate(vo.getDescriptionTemplate());
+    def.setPriority(vo.getPriority());
+    def.setEnabled(vo.getEnabled() != null && vo.getEnabled());
+    def.setScope(vo.getScope());
+    def.setMutexGroup(vo.getMutexGroup());
+    def.setVersion(vo.getVersion() != null ? vo.getVersion() : 1);
+    def.setStatus(vo.getStatus());
+    def.setEffectiveFrom(vo.getEffectiveFrom());
+    def.setEffectiveTo(vo.getEffectiveTo());
+    def.setReviewedBy(vo.getReviewedBy());
+    def.setReviewedAt(vo.getReviewedAt());
+    def.setReviewComment(vo.getReviewComment());
+    def.setCanaryRatio(vo.getCanaryRatio() != null ? vo.getCanaryRatio() : 0.0);
+    def.setCanaryConditionExpression(vo.getCanaryConditionExpression());
+    def.setCanarySeverityExpression(vo.getCanarySeverityExpression());
     return def;
   }
 }

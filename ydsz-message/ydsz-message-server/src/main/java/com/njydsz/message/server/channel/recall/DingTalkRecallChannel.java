@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.model.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageChannelEnum;
 
 /**

@@ -19,7 +19,6 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.cronjob.infra.entity.schedule.GlueCode;
 import com.njydsz.cronjob.domain.repository.GlueCodeRepository;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
@@ -82,7 +81,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     int nextVersion =
         latest == null ? 1 : (latest.getVersion() == null ? 1 : latest.getVersion() + 1);
 
-    GlueCode entity = new GlueCode();
+    GlueCodeVO entity = new GlueCodeVO();
     entity.setJobId(jobId);
     entity.setSourceCode(sourceCode);
     entity.setLanguage(StringUtils.hasText(language) ? language : "GROOVY");
@@ -161,7 +160,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     int nextVersion =
         latest == null ? 1 : (latest.getVersion() == null ? 1 : latest.getVersion() + 1);
 
-    GlueCode entity = new GlueCode();
+    GlueCodeVO entity = new GlueCodeVO();
     entity.setJobId(jobId);
     entity.setSourceCode(target.getSourceCode());
     entity.setLanguage(target.getLanguage());
@@ -450,21 +449,9 @@ public class GlueCodeServiceImpl implements GlueCodeService {
 
   // ==================== Entity <-> VO 转换 ====================
 
-  private GlueCodeVO entityToVo(GlueCode e) {
-    if (e == null) {
-      return null;
-    }
-    GlueCodeVO vo = new GlueCodeVO();
-    vo.setId(e.getId());
-    vo.setJobId(e.getJobId());
-    vo.setSourceCode(e.getSourceCode());
-    vo.setLanguage(e.getLanguage());
-    vo.setVersion(e.getVersion());
-    vo.setRemark(e.getRemark());
-    vo.setCreatedBy(e.getCreatedBy());
-    vo.setCreatedAt(e.getCreatedAt());
-    vo.setUpdatedBy(e.getUpdatedBy());
-    vo.setUpdatedAt(e.getUpdatedAt());
+  /** 身份转换（infra 实体已无引用，保留方法以便兼容可能的外部调用）。 */
+  @SuppressWarnings("unused")
+  private GlueCodeVO entityToVo(GlueCodeVO vo) {
     return vo;
   }
 }

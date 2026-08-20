@@ -7,7 +7,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.dto.SocialAccountCreateDTO;
+import com.njydsz.userinfo.domain.dto.SocialAccountDTO;
 import com.njydsz.userinfo.domain.repository.SocialAccountRepository;
 import com.njydsz.userinfo.domain.vo.SocialAccountVO;
 import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
@@ -52,8 +52,8 @@ public class SocialAccountRepositoryImpl implements SocialAccountRepository {
   }
 
   @Override
-  public void save(SocialAccountCreateDTO dto) {
-    SocialAccountDO entity = converter.createDtoToEntity(dto);
+  public void save(SocialAccountDTO dto) {
+    SocialAccountDO entity = converter.dtoToEntity(dto);
     socialAccountMapper.insert(entity);
   }
 

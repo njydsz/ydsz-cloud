@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.api.RuleExecutionTrace;
 import com.njydsz.literule.server.spi.TraceRecorder;
 
@@ -38,7 +40,7 @@ public class AsyncTraceRecorder implements TraceRecorder {
   private final int batchSize;
   private final long flushIntervalMs;
   private final AtomicBoolean running = new AtomicBoolean(true);
-  private final Thread worker;
+  private final ExecutorService worker;
   private final int queueCapacity;
 
   /** 实际持久化委托（可选） */
@@ -56,9 +58,8 @@ public class AsyncTraceRecorder implements TraceRecorder {
     this.queue = new LinkedBlockingQueue<>(queueCapacity);
     this.batchSize = batchSize;
     this.flushIntervalMs = flushIntervalMs;
-    this.worker = new Thread(this::flushLoop, "literule-trace-writer");
-    this.worker.setDaemon(true);
-    this.worker.start();
+    this.worker = ExecutorUtils.newSingleThreadExecutor("literule-trace-writer");
+    this.worker.submit(this::flushLoop);
     log.info(
         "[LiteRule-Trace] 异步轨迹记录器已启动: queueCapacity={}, batchSize={}, flushIntervalMs={}",
         queueCapacity,
@@ -194,7 +195,7 @@ public class AsyncTraceRecorder implements TraceRecorder {
   public void shutdown(long timeoutSeconds) {
     running.set(false);
     try {
-      worker.join(TimeUnit.SECONDS.toMillis(timeoutSeconds));
+      worker.awaitTermination(timeoutSeconds, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }

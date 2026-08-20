@@ -48,13 +48,6 @@ public interface TagMapper extends BaseMapper<TagDO> {
   TagDO selectByName(@Param("name") String name);
 
   /**
-   * 查询当前租户下的全部标签。
-   *
-   * @return 标签列表
-   */
-  List<TagDO> selectAll();
-
-  /**
    * 查询指定文件节点已绑定的全部标签。
    *
    * @param fileNodeId 文件节点 ID

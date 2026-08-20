@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.njydsz.common.core.response.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -24,9 +25,8 @@ import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.RuleStatus;
 import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.api.expression.ExpressionTraceNode;
-import com.njydsz.literule.infra.entity.RuleDefinitionDO;
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
-import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
+import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
 import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
@@ -73,8 +73,8 @@ public class RuleAdminService {
   /** 搜索索引事件桥接器（可选，用于将规则变更同步到统一搜索索引） */
   private ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
 
-  /** 规则定义 Mapper（用于分页查询） */
-  private final RuleDefinitionMapper ruleDefinitionMapper;
+  /** 规则定义仓库（用于分页查询和搜索） */
+  private final RuleDefinitionRepository ruleDefinitionRepository;
 
   /** 规则搜索服务（数据库级搜索，替代内存过滤） */
   private final RuleSearchService searchService;
@@ -109,14 +109,14 @@ public class RuleAdminService {
       RuleConfigProvider configProvider,
       RuleVersionRepository versionRepository,
       ApplicationEventPublisher eventPublisher,
-      RuleDefinitionMapper ruleDefinitionMapper) {
+      RuleDefinitionRepository ruleDefinitionRepository) {
     this.ruleEngine = ruleEngine;
     this.evaluator = evaluator;
     this.configProvider = configProvider;
     this.versionRepository = versionRepository;
     this.eventPublisher = eventPublisher;
-    this.ruleDefinitionMapper = ruleDefinitionMapper;
-    this.searchService = new RuleSearchService(ruleDefinitionMapper);
+    this.ruleDefinitionRepository = ruleDefinitionRepository;
+    this.searchService = new RuleSearchService(ruleDefinitionRepository);
     this.nodeId = IdGenerator.nextIdStr().substring(0, 8);
   }
 
@@ -227,61 +227,53 @@ public class RuleAdminService {
    */
   public com.baomidou.mybatisplus.core.metadata.IPage<RuleDefinition> pageRuleDefinitions(
       com.njydsz.common.domain.query.PageQuery pageQuery) {
-    com.baomidou.mybatisplus.core.metadata.IPage<RuleDefinitionDO> page =
-        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
-            pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize());
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<RuleDefinitionDO> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-    // 默认按优先级升序、创建时间降序
-    wrapper.orderByAsc(RuleDefinitionDO::getPriority).orderByDesc(RuleDefinitionDO::getCreatedAt);
-    com.baomidou.mybatisplus.core.metadata.IPage<RuleDefinitionDO> doPage =
-        ruleDefinitionMapper.selectPage(page, wrapper);
-    // DO → RuleDefinition 转换
+    IPage<RuleDefinitionVO> voPage = ruleDefinitionRepository.pageRuleDefinitions(pageQuery);
+    // VO → RuleDefinition 转换
     List<RuleDefinition> records =
-        doPage.getRecords().stream().map(this::doToRuleDefinition).toList();
+        voPage.getRecords().stream().map(this::voToRuleDefinition).toList();
     com.baomidou.mybatisplus.core.metadata.IPage<RuleDefinition> result =
         new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
-            doPage.getCurrent(), doPage.getSize(), doPage.getTotal());
+            voPage.getCurrent(), voPage.getSize(), voPage.getTotal());
     result.setRecords(records);
     return result;
   }
 
   /**
-   * RuleDefinitionDO → RuleDefinition 转换
+   * RuleDefinitionVO → RuleDefinition 转换
    *
-   * @param ruleDO 规则定义 DO
+   * @param vo 规则定义 VO
    * @return RuleDefinition
    */
-  private RuleDefinition doToRuleDefinition(RuleDefinitionDO ruleDO) {
+  private RuleDefinition voToRuleDefinition(RuleDefinitionVO vo) {
     RuleDefinition def = new RuleDefinition();
-    def.setCode(ruleDO.getRuleCode());
-    def.setName(ruleDO.getRuleName());
-    def.setCategory(ruleDO.getCategory());
-    def.setCategoryPath(ruleDO.getCategoryPath());
-    def.setOwner(ruleDO.getOwner());
-    def.setDescription(ruleDO.getDescription());
-    def.setConditionExpression(ruleDO.getConditionExpression());
-    def.setSeverityExpression(ruleDO.getSeverityExpression());
+    def.setCode(vo.getRuleCode());
+    def.setName(vo.getRuleName());
+    def.setCategory(vo.getCategory());
+    def.setCategoryPath(vo.getCategoryPath());
+    def.setOwner(vo.getOwner());
+    def.setDescription(vo.getDescription());
+    def.setConditionExpression(vo.getConditionExpression());
+    def.setSeverityExpression(vo.getSeverityExpression());
     def.setDefaultSeverity(
-        ruleDO.getDefaultSeverity() != null
-            ? com.njydsz.literule.api.RuleSeverity.fromCode(ruleDO.getDefaultSeverity())
+        vo.getDefaultSeverity() != null
+            ? com.njydsz.literule.api.RuleSeverity.fromCode(vo.getDefaultSeverity())
             : null);
-    def.setTitleTemplate(ruleDO.getTitleTemplate());
-    def.setDescriptionTemplate(ruleDO.getDescriptionTemplate());
-    def.setPriority(ruleDO.getPriority());
-    def.setEnabled(ruleDO.getEnabled() != null && ruleDO.getEnabled());
-    def.setScope(ruleDO.getScope());
-    def.setMutexGroup(ruleDO.getMutexGroup());
-    def.setVersion(ruleDO.getVersion() != null ? ruleDO.getVersion() : 1);
-    def.setStatus(ruleDO.getStatus());
-    def.setEffectiveFrom(ruleDO.getEffectiveFrom());
-    def.setEffectiveTo(ruleDO.getEffectiveTo());
-    def.setReviewedBy(ruleDO.getReviewedBy());
-    def.setReviewedAt(ruleDO.getReviewedAt());
-    def.setReviewComment(ruleDO.getReviewComment());
-    def.setCanaryRatio(ruleDO.getCanaryRatio() != null ? ruleDO.getCanaryRatio() : 0.0);
-    def.setCanaryConditionExpression(ruleDO.getCanaryConditionExpression());
-    def.setCanarySeverityExpression(ruleDO.getCanarySeverityExpression());
+    def.setTitleTemplate(vo.getTitleTemplate());
+    def.setDescriptionTemplate(vo.getDescriptionTemplate());
+    def.setPriority(vo.getPriority());
+    def.setEnabled(vo.getEnabled() != null && vo.getEnabled());
+    def.setScope(vo.getScope());
+    def.setMutexGroup(vo.getMutexGroup());
+    def.setVersion(vo.getVersion() != null ? vo.getVersion() : 1);
+    def.setStatus(vo.getStatus());
+    def.setEffectiveFrom(vo.getEffectiveFrom());
+    def.setEffectiveTo(vo.getEffectiveTo());
+    def.setReviewedBy(vo.getReviewedBy());
+    def.setReviewedAt(vo.getReviewedAt());
+    def.setReviewComment(vo.getReviewComment());
+    def.setCanaryRatio(vo.getCanaryRatio() != null ? vo.getCanaryRatio() : 0.0);
+    def.setCanaryConditionExpression(vo.getCanaryConditionExpression());
+    def.setCanarySeverityExpression(vo.getCanarySeverityExpression());
     return def;
   }
 

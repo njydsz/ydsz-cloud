@@ -37,6 +37,11 @@ public class GlueCodeRepositoryImpl implements GlueCodeRepository {
   }
 
   @Override
+  public List<GlueCodeVO> findByJobIdOrderByVersionDesc(String jobId) {
+    return findAllByJobId(jobId);
+  }
+
+  @Override
   public String insert(GlueCodeVO vo) {
     GlueCode entity = converter.voToEntity(vo);
     glueCodeMapper.insert(entity);

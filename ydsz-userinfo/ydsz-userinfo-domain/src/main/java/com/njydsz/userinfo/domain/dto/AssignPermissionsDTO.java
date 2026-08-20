@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -28,5 +29,6 @@ public class AssignPermissionsDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 权限 ID 列表（全量覆盖，空列表表示清除所有权限） */
+  @Size(max = 200, message = "单次分配权限数量不能超过 200 个")
   private List<String> permissionIds;
 }

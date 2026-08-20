@@ -47,9 +47,6 @@ public interface SearchIndexMapper extends BaseMapper<SearchIndexDO> {
   /** 根据文件节点ID查询索引 */
   SearchIndexDO selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
-  /** 查询所有未删除的索引记录 */
-  List<SearchIndexDO> selectAll();
-
   /**
    * 查询所有未删除的文件节点ID（用于索引重建）
    *

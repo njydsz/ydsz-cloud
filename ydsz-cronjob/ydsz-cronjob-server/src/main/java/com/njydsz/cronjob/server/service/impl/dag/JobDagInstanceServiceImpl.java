@@ -13,8 +13,8 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dag.DagInstanceStatus;
-import com.njydsz.cronjob.infra.entity.dag.JobDagInstance;
-import com.njydsz.cronjob.infra.entity.dag.JobDagNodeInstance;
+import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
+import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
 import com.njydsz.cronjob.domain.repository.JobDagInstanceRepository;
 import com.njydsz.cronjob.domain.repository.JobDagNodeInstanceRepository;
 import com.njydsz.cronjob.domain.repository.JobDagRepository;
@@ -57,47 +57,42 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
 
   @Override
   @Transactional(readOnly = true)
-  public JobDagInstance getInstanceById(String instanceId) {
-    JobDagInstance instance = jobDagInstanceRepository.selectById(instanceId);
-    if (instance == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.cronjob.msg_dag_instance_not_found")
-          .params(instanceId)
-          .build();
-    }
-    return instance;
+  public JobDagInstanceVO getInstanceById(String instanceId) {
+    return jobDagInstanceRepository.findById(instanceId)
+        .orElseThrow(() -> SysException.builder()
+            .resultCode(YdszResultCode.NOT_FOUND)
+            .key("error.cronjob.msg_dag_instance_not_found")
+            .params(instanceId)
+            .build());
   }
 
   @Override
   @Transactional(readOnly = true)
-  public List<JobDagInstance> listByDagId(String dagId, int limit) {
+  public List<JobDagInstanceVO> listByDagId(String dagId, int limit) {
     int safeLimit = limit > 0 ? limit : 20;
-    return jobDagInstanceRepository.selectByDagId(dagId, safeLimit);
+    return jobDagInstanceRepository.findByDagId(dagId, safeLimit);
   }
 
   @Override
   @Transactional(readOnly = true)
-  public List<JobDagInstance> listByStatus(String status) {
+  public List<JobDagInstanceVO> listByStatus(String status) {
     if (!StringUtils.hasText(status)) {
       return List.of();
     }
-    return jobDagInstanceRepository.selectByStatus(status);
+    return jobDagInstanceRepository.findByStatus(status);
   }
 
   @Override
   @Transactional(readOnly = true)
-  public List<JobDagNodeInstance> listNodes(String dagInstanceId) {
-    return jobDagNodeInstanceRepository.selectByDagInstanceId(dagInstanceId);
+  public List<JobDagNodeInstanceVO> listNodes(String dagInstanceId) {
+    return dagNodeInstanceRepository.findByDagInstanceId(dagInstanceId);
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void pauseInstance(String instanceId) {
     getInstanceById(instanceId);
-    int rows =
-        jobDagInstanceRepository.casUpdateStatus(
-            instanceId, DagInstanceStatus.RUNNING.name(), DagInstanceStatus.PAUSED.name());
+    int rows = jobDagInstanceRepository.markPaused(instanceId);
     if (rows == 0) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -112,9 +107,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
   @Transactional(rollbackFor = Exception.class)
   public void resumeInstance(String instanceId) {
     getInstanceById(instanceId);
-    int rows =
-        jobDagInstanceRepository.casUpdateStatus(
-            instanceId, DagInstanceStatus.PAUSED.name(), DagInstanceStatus.RUNNING.name());
+    int rows = jobDagInstanceRepository.markResumed(instanceId);
     if (rows == 0) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -129,16 +122,12 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
   @Transactional(rollbackFor = Exception.class)
   public void cancelInstance(String instanceId) {
     getInstanceById(instanceId);
-    // RUNNING → CANCELLED
-    int rows =
-        jobDagInstanceRepository.casUpdateStatus(
-            instanceId, DagInstanceStatus.RUNNING.name(), DagInstanceStatus.CANCELLED.name());
-    if (rows == 0) {
-      // PAUSED → CANCELLED
-      rows =
-          jobDagInstanceRepository.casUpdateStatus(
-              instanceId, DagInstanceStatus.PAUSED.name(), DagInstanceStatus.CANCELLED.name());
-    }
+    JobDagInstanceVO dagInstance = getInstanceById(instanceId);
+    LocalDateTime now = LocalDateTime.now();
+    long durationMs = dagInstance.getStartedAt() != null
+        ? java.time.temporal.ChronoUnit.MILLIS.between(dagInstance.getStartedAt(), now)
+        : 0;
+    int rows = jobDagInstanceRepository.markCanceled(instanceId, now, durationMs);
     if (rows == 0) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -161,7 +150,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
   @Transactional(readOnly = true)
   public DagInstanceVisualizationVO getVisualization(String instanceId) {
     // 1. 查询 DAG 实例（不存在时抛 SysException）
-    JobDagInstance instance = getInstanceById(instanceId);
+    JobDagInstanceVO instance = getInstanceById(instanceId);
 
     // 2. 查询 DAG 定义（通过实例.dagId 关联）
     JobDagVO dag = jobDagRepository.findById(instance.getDagId()).orElse(null);
@@ -177,7 +166,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     DagDefinition definition = dagDefinitionCodec.fromJson(dag.getDagDefinition());
 
     // 4. 查询节点实例执行状态
-    List<JobDagNodeInstance> nodeInstances = listNodes(instanceId);
+    List<JobDagNodeInstanceVO> nodeInstances = listNodes(instanceId);
 
     // 5. 组装可视化数据 VO
     DagInstanceVisualizationVO vo = new DagInstanceVisualizationVO();
@@ -193,11 +182,11 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     // 1. 获取可视化数据（复用现有逻辑）
     DagInstanceVisualizationVO visualization = getVisualization(instanceId);
     DagDefinition definition = visualization.getDefinition();
-    List<JobDagNodeInstance> nodeInstances = visualization.getNodeInstances();
+    List<JobDagNodeInstanceVO> nodeInstances = visualization.getNodeInstances();
 
     // 2. 构建 jobKey → nodeStatus 映射
     Map<String, String> statusMap = new HashMap<>(nodeInstances.size());
-    for (JobDagNodeInstance ni : nodeInstances) {
+    for (JobDagNodeInstanceVO ni : nodeInstances) {
       if (ni.getJobKey() != null && ni.getNodeStatus() != null) {
         statusMap.put(ni.getJobKey(), ni.getNodeStatus());
       }

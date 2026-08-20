@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.webhook.WebhookDispatcher;
 import com.njydsz.common.webhook.WebhookSubscription;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.model.core.MsgLog;
 
 /**
  * 出站 Webhook 事件订阅服务（P2-3）。

@@ -31,11 +31,11 @@ import com.njydsz.userinfo.domain.vo.SocialClientVO;
  *
  * <pre>{@code
  * // 热更新场景：管理员新增 GitHub 平台配置
- * SocialClientCreateDTO dto = new SocialClientCreateDTO();
+ * SocialClientDTO dto = new SocialClientDTO();
  * dto.setPlatform("GITHUB");
- * dto.setClientId("gh_xxx");
- * dto.setClientSecret("xxx");
- * service.create(dto);  // 立即生效，无需重启
+ * dto.setAppId("gh_xxx");
+ * dto.setAppSecret("xxx");
+ * service.save(dto);  // 立即生效，无需重启
  *
  * // 获取配置时自动合并
  * SocialAuthProperties.ProviderConfig config = service.getProviderConfig("GITHUB");

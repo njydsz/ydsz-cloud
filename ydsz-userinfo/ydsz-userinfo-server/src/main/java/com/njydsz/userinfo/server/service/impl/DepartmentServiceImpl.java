@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -156,7 +155,7 @@ public class DepartmentServiceImpl implements DepartmentService {
   /**
    * {@inheritDoc}
    *
-   * <p>使用 MapStruct 转换（更新操作暂保留 BeanUtils）
+   * <p>使用 MapStruct 转换（更新操作使用显式字段映射）
    *
    * <p>更新成功后主动失效部门树缓存。
    *
@@ -268,7 +267,12 @@ public class DepartmentServiceImpl implements DepartmentService {
     List<DepartmentTreeVO> voList = all.stream()
         .map(vo -> {
           DepartmentTreeVO treeVO = new DepartmentTreeVO();
-          BeanUtils.copyProperties(vo, treeVO);
+          treeVO.setId(vo.getId());
+          treeVO.setParentId(vo.getParentId());
+          treeVO.setDeptName(vo.getDeptName());
+          treeVO.setDeptCode(vo.getDeptCode());
+          treeVO.setSortOrder(vo.getSortOrder());
+          treeVO.setStatus(vo.getStatus());
           return treeVO;
         })
         .collect(Collectors.toList());

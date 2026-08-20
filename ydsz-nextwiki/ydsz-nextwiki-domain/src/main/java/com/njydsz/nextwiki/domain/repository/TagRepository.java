@@ -48,13 +48,6 @@ public interface TagRepository {
   Optional<TagVO> findByName(String name);
 
   /**
-   * 查询全部标签（用于标签库展示）
-   *
-   * @return 标签 VO 列表
-   */
-  List<TagVO> findAll();
-
-  /**
    * 查询某文件节点已绑定的全部标签
    *
    * @param fileNodeId 文件节点ID

@@ -17,7 +17,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.domain.repository.JobHistoryRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobHistoryVO;
@@ -75,7 +75,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public JobHistoryVO saveHistory(Job job, String changedBy) {
+  public JobHistoryVO saveHistory(JobVO job, String changedBy) {
     if (job == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -103,9 +103,9 @@ public class JobHistoryServiceImpl implements JobHistoryService {
 
   @Override
   public void recordVersionChange(
-      Job beforeJob, Job afterJob, String changeType, String changedBy, String changeRemark) {
+      JobVO beforeJob, JobVO afterJob, String changeType, String changedBy, String changeRemark) {
     try {
-      Job referenceJob = afterJob != null ? afterJob : beforeJob;
+      JobVO referenceJob = afterJob != null ? afterJob : beforeJob;
       if (referenceJob == null) {
         return;
       }
@@ -117,7 +117,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
       history.setBeforeSnapshot(beforeJob != null ? YdszJson.toJson(beforeJob) : null);
       history.setChangeRemark(changeRemark);
       // 冗余字段从 afterJob 取（DELETE 时从 beforeJob 取；referenceJob 已保证非 null）
-      Job displayJob = referenceJob;
+      JobVO displayJob = referenceJob;
       history.setJobName(displayJob.getJobName());
       history.setJobKey(displayJob.getJobKey());
       history.setHandler(displayJob.getHandler());
@@ -161,7 +161,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public Job rollback(String jobId, Integer version) {
+  public JobVO rollback(String jobId, Integer version) {
     if (!StringUtils.hasText(jobId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -183,9 +183,9 @@ public class JobHistoryServiceImpl implements JobHistoryService {
           .build();
     }
     // 反序列化快照为 Job
-    Job snapshotJob = YdszJson.fromJson(targetHistory.getSnapshot(), Job.class);
+    JobVO snapshotJob = YdszJson.fromJson(targetHistory.getSnapshot(), JobVO.class);
     // 查询当前任务（用于保留统计字段等）
-    Job currentJob = jobRepository.selectById(jobId);
+    JobVO currentJob = jobRepository.selectById(jobId);
     if (currentJob == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -229,8 +229,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     if (h1 == null || h2 == null) {
       return Collections.emptyList();
     }
-    Job job1 = YdszJson.fromJson(h1.getSnapshot(), Job.class);
-    Job job2 = YdszJson.fromJson(h2.getSnapshot(), Job.class);
+    JobVO job1 = YdszJson.fromJson(h1.getSnapshot(), JobVO.class);
+    JobVO job2 = YdszJson.fromJson(h2.getSnapshot(), JobVO.class);
     return diffFields(job1, job2);
   }
 
@@ -256,7 +256,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
    * @param job2 新版本任务
    * @return 差异字段列表，每个元素包含 field/oldValue/newValue
    */
-  private List<Map<String, Object>> diffFields(Job job1, Job job2) {
+  private List<Map<String, Object>> diffFields(JobVO job1, JobVO job2) {
     List<Map<String, Object>> diffs = new ArrayList<>();
     Map<String, Object> snapshot1 = YdszJson.parseMap(YdszJson.toJson(job1));
     Map<String, Object> snapshot2 = YdszJson.parseMap(YdszJson.toJson(job2));

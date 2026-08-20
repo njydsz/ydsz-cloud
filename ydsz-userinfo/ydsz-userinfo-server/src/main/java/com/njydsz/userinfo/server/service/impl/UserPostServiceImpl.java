@@ -4,7 +4,6 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,7 +64,8 @@ public class UserPostServiceImpl implements UserPostService {
   @Transactional(rollbackFor = Exception.class)
   public String save(UserPostVO vo) {
     UserPostDTO dto = new UserPostDTO();
-    BeanUtils.copyProperties(vo, dto);
+    dto.setUserId(vo.getUserId());
+    dto.setPostId(vo.getPostId());
     UserPostVO result = userPostRepository.create(dto);
     return result.getId();
   }

@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -172,7 +171,18 @@ public class MenuServiceImpl implements MenuService {
         all.stream()
             .map(menuVO -> {
               MenuTreeVO vo = new MenuTreeVO();
-              BeanUtils.copyProperties(menuVO, vo);
+              vo.setId(menuVO.getId());
+              vo.setParentId(menuVO.getParentId());
+              vo.setMenuName(menuVO.getMenuName());
+              vo.setMenuCode(menuVO.getMenuCode());
+              vo.setMenuType(menuVO.getMenuType());
+              vo.setPath(menuVO.getPath());
+              vo.setComponent(menuVO.getComponent());
+              vo.setIcon(menuVO.getIcon());
+              vo.setSortOrder(menuVO.getSortOrder());
+              vo.setPermissionCode(menuVO.getPermissionCode());
+              vo.setVisible(menuVO.getVisible());
+              vo.setStatus(menuVO.getStatus());
               return vo;
             })
             .collect(Collectors.toList());

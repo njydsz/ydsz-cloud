@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,7 +79,14 @@ public class CompanyServiceImpl implements CompanyService {
     List<CompanyTreeVO> flatList = all.stream()
         .map(vo -> {
           CompanyTreeVO treeVO = new CompanyTreeVO();
-          BeanUtils.copyProperties(vo, treeVO);
+          treeVO.setId(vo.getId());
+          treeVO.setCompanyName(vo.getCompanyName());
+          treeVO.setCompanyCode(vo.getCompanyCode());
+          treeVO.setParentId(vo.getParentId());
+          treeVO.setContactPerson(vo.getContactPerson());
+          treeVO.setContactPhone(vo.getContactPhone());
+          treeVO.setAddress(vo.getAddress());
+          treeVO.setStatus(vo.getStatus());
           return treeVO;
         })
         .collect(Collectors.toList());

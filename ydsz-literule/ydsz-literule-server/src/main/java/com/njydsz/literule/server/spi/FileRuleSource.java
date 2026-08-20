@@ -16,10 +16,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.server.dsl.RuleDsl;
@@ -70,8 +72,8 @@ public class FileRuleSource implements RuleSource {
   /** 变更监听器列表 */
   private final List<Consumer<List<RuleDefinition>>> listeners = new ArrayList<>();
 
-  /** 文件监听线程（watchEnabled=true 时启动） */
-  private Thread watchThread;
+  /** 文件监听线程池（watchEnabled=true 时启动） */
+  private ExecutorService watchThread;
 
   /** 是否已初始化 */
   private volatile boolean initialized = false;
@@ -162,10 +164,10 @@ public class FileRuleSource implements RuleSource {
 
   @Override
   public void destroy() throws Exception {
-    if (watchThread != null && watchThread.isAlive()) {
-      watchThread.interrupt();
+    if (watchThread != null && !watchThread.isShutdown()) {
+      watchThread.shutdownNow();
       try {
-        watchThread.join(1000);
+        watchThread.awaitTermination(1, java.util.concurrent.TimeUnit.SECONDS);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       }
@@ -374,8 +376,10 @@ public class FileRuleSource implements RuleSource {
           StandardWatchEventKinds.ENTRY_CREATE,
           StandardWatchEventKinds.ENTRY_MODIFY,
           StandardWatchEventKinds.ENTRY_DELETE);
-      watchThread =
-          new Thread(
+      ExecutorService watchExecutor =
+          ExecutorUtils.newSingleThreadExecutor("literule-file-watcher");
+      watchThread = watchExecutor;
+      watchExecutor.submit(
               () -> {
                 log.info("[FileRuleSource] 文件监听已启动: path={}", watchPath);
                 while (!Thread.currentThread().isInterrupted()) {
@@ -406,10 +410,7 @@ public class FileRuleSource implements RuleSource {
                 } catch (IOException e) {
                   log.debug("[FileRuleSource] watcher 关闭异常: {}", e.getMessage());
                 }
-              },
-              "FileRuleSource-Watcher");
-      watchThread.setDaemon(true);
-      watchThread.start();
+              });
     } catch (IOException e) {
       log.warn("[FileRuleSource] 启动文件监听失败: {}", e.getMessage());
     }

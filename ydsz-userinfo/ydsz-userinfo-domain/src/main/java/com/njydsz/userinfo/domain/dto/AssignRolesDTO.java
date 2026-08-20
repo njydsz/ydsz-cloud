@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -28,5 +29,6 @@ public class AssignRolesDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 角色 ID 列表（全量覆盖，空列表表示清除所有角色） */
+  @Size(max = 50, message = "单次分配角色数量不能超过 50 个")
   private List<String> roleIds;
 }
