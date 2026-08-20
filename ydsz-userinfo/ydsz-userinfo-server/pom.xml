@@ -111,6 +111,11 @@
             <artifactId>webauthn4j-core</artifactId>
             <version>0.28.0.RELEASE</version>
         </dependency>
+        <!-- Jackson Core (webauthn4j 0.28.0 需要 TypeReference) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
         <!-- JJWT (OidcConfiguration 需要 io.jsonwebtoken.security.Keys) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

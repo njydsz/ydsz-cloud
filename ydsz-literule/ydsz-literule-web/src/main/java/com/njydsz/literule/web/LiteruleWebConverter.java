@@ -4,10 +4,18 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import com.njydsz.literule.api.DecisionTableDefinition;
+import com.njydsz.literule.api.RuleDefinition;
+import com.njydsz.literule.api.RuleEngineStats;
+import com.njydsz.literule.api.RulePack;
+import com.njydsz.literule.api.RuleResult;
+import com.njydsz.literule.api.expression.ExpressionFunctionDef;
 import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
 import com.njydsz.literule.domain.vo.ApprovalFlowVO;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
 import com.njydsz.literule.domain.vo.CategoryNodeVO;
+import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
+import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
 import com.njydsz.literule.domain.vo.ExpressionPreviewResultVO;
 import com.njydsz.literule.domain.vo.InstallResultVO;
 import com.njydsz.literule.domain.vo.PackDiffVO;
@@ -15,6 +23,10 @@ import com.njydsz.literule.domain.vo.PackUpdateInfoVO;
 import com.njydsz.literule.domain.vo.RuleABPolicyVO;
 import com.njydsz.literule.domain.vo.RuleChainGraphVO;
 import com.njydsz.literule.domain.vo.RuleConflictInfoVO;
+import com.njydsz.literule.domain.vo.RuleDefinitionVO;
+import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
+import com.njydsz.literule.domain.vo.RulePackVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.RuleVersionDiffVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.server.approval.ApprovalFlow;
@@ -101,4 +113,36 @@ public interface LiteruleWebConverter {
 
   // ===== RuleABPolicyPutDTO → RuleABPolicyVO =====
   RuleABPolicyVO putDtoToVO(RuleABPolicyPutDTO dto);
+
+  // ===== RuleDefinition (api) → RuleDefinitionVO =====
+  @Mapping(source = "code", target = "ruleCode")
+  @Mapping(source = "name", target = "ruleName")
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "canaryConditions", ignore = true)
+  @Mapping(target = "effectiveFrom", ignore = true)
+  @Mapping(target = "effectiveTo", ignore = true)
+  @Mapping(target = "reviewedAt", ignore = true)
+  RuleDefinitionVO entityToVO(RuleDefinition entity);
+
+  // ===== RuleResult (api) → RuleResultVO =====
+  RuleResultVO entityToVO(RuleResult entity);
+
+  // ===== RuleEngineStats (api) → RuleEngineStatsVO =====
+  RuleEngineStatsVO entityToVO(RuleEngineStats entity);
+
+  // ===== RulePack (api) → RulePackVO =====
+  // api.RulePack 的 tags/ruleCodes 为 List<String>、ruleSnapshots 为 List<RuleDefinition>、
+  // rating 为 double，与 VO 的 String/BigDecimal 不兼容，忽略。
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "tags", ignore = true)
+  @Mapping(target = "ruleCodes", ignore = true)
+  @Mapping(target = "ruleSnapshots", ignore = true)
+  @Mapping(target = "rating", ignore = true)
+  RulePackVO entityToVO(RulePack entity);
+
+  // ===== DecisionTableDefinition (api) → DecisionTableDefinitionVO =====
+  DecisionTableDefinitionVO entityToVO(DecisionTableDefinition entity);
+
+  // ===== ExpressionFunctionDef (api.expr) → ExpressionFunctionDefVO =====
+  ExpressionFunctionDefVO entityToVO(ExpressionFunctionDef entity);
 }

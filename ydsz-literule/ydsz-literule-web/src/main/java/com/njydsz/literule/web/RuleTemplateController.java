@@ -19,7 +19,6 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.server.spi.RuleTemplateProvider;
@@ -60,8 +59,7 @@ public class RuleTemplateController {
    */
   @GetMapping("/templates")
   public YdszResponse<List<RuleTemplateVO>> listTemplates() {
-    return YdszResponse.success(
-        LiteruleConverter.INSTANCE.ruleTemplateListToVO(ruleTemplateProvider.listAll()));
+    return YdszResponse.success(ruleTemplateProvider.listAll());
   }
 
   /**
@@ -72,9 +70,7 @@ public class RuleTemplateController {
    */
   @GetMapping("/templates/category/{category}")
   public YdszResponse<List<RuleTemplateVO>> listTemplatesByCategory(@PathVariable String category) {
-    return YdszResponse.success(
-        LiteruleConverter.INSTANCE.ruleTemplateListToVO(
-            ruleTemplateProvider.listByCategory(category)));
+    return YdszResponse.success(ruleTemplateProvider.listByCategory(category));
   }
 
   /**
@@ -85,9 +81,7 @@ public class RuleTemplateController {
    */
   @GetMapping("/templates/industry/{industry}")
   public YdszResponse<List<RuleTemplateVO>> listTemplatesByIndustry(@PathVariable String industry) {
-    return YdszResponse.success(
-        LiteruleConverter.INSTANCE.ruleTemplateListToVO(
-            ruleTemplateProvider.listByIndustry(industry)));
+    return YdszResponse.success(ruleTemplateProvider.listByIndustry(industry));
   }
 
   /**
@@ -109,7 +103,7 @@ public class RuleTemplateController {
       @PathVariable String templateCode,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANCE.entityToVO(
+        LiteruleWebConverter.INSTANCE.entityToVO(
             ruleTemplateProvider.importTemplate(templateCode, operator)));
   }
 }
