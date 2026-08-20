@@ -12,8 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
-import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 
 /**
  * 用户生命周期自动化定时任务。
@@ -29,7 +27,7 @@ import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
  *
  * <p><b>cron 表达式：</b>通过 {@code ydsz.userinfo.lifecycle.task.cron} 配置，默认每 10 分钟执行一次。
  *
- * <p><b>实现说明：</b>使用 MyBatis-Plus 的 LambdaQueryWrapper 进行条件查询，
+ * <p><b>实现说明：</b>通过 UserAccountRepository 进行条件查询，
  * 直接执行批量更新，避免逐条查询再更新的 N+1 问题。
  *
  * @author ydsz-team
@@ -52,7 +50,6 @@ public class UserLifecycleTask {
   private static final String LOCK_EXPIRED_CACHE_PREFIX = "userinfo:security:locked:count";
 
   private final UserAccountRepository userAccountRepository;
-  private final UserAccountMapper userAccountMapper;
   private final SessionManager sessionManager;
   private final RedisStringOps redisStringOps;
 
@@ -95,20 +92,16 @@ public class UserLifecycleTask {
   @Transactional(rollbackFor = Exception.class)
   public int processExpiredBans() {
     try {
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserAccountDO> wrapper =
-          new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-      wrapper.eq(UserAccountDO::getBanType, "TEMPORARY");
-      wrapper.le(UserAccountDO::getBanExpireAt, LocalDateTime.now());
-
-      java.util.List<UserAccountDO> expiredBans = userAccountMapper.selectList(wrapper);
-      if (expiredBans.isEmpty()) {
+      List<String> expiredBanIds = userAccountRepository.findIdsByBanTypeAndExpireAtBefore(
+          "TEMPORARY", LocalDateTime.now());
+      if (expiredBanIds.isEmpty()) {
         return 0;
       }
 
       int count = 0;
-      for (UserAccountDO user : expiredBans) {
+      for (String userId : expiredBanIds) {
         int updated = userAccountRepository.updateBanFields(
-            user.getId(), null, null, null, "SYSTEM_CRON");
+            userId, null, null, null, "SYSTEM_CRON");
         if (updated > 0) {
           count++;
         }
@@ -138,19 +131,15 @@ public class UserLifecycleTask {
   @Transactional(rollbackFor = Exception.class)
   public int processExpiredLocks() {
     try {
-      com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserAccountDO> wrapper =
-          new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-      wrapper.isNotNull(UserAccountDO::getLockedUntil);
-      wrapper.le(UserAccountDO::getLockedUntil, LocalDateTime.now());
-
-      java.util.List<UserAccountDO> expiredLocks = userAccountMapper.selectList(wrapper);
-      if (expiredLocks.isEmpty()) {
+      List<String> expiredLockIds = userAccountRepository.findIdsByLockedUntilBefore(
+          LocalDateTime.now());
+      if (expiredLockIds.isEmpty()) {
         return 0;
       }
 
       int count = 0;
-      for (UserAccountDO user : expiredLocks) {
-        int updated = userAccountRepository.unlockAccount(user.getId());
+      for (String userId : expiredLockIds) {
+        int updated = userAccountRepository.unlockAccount(userId);
         if (updated > 0) {
           count++;
         }

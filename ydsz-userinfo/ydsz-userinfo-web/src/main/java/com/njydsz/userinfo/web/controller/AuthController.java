@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.Set;
 
 import com.njydsz.common.exception.custom.BusinessException;
+
+import java.time.Duration;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -494,7 +497,7 @@ public class AuthController {
 
     // 构造 SecondaryAuth 注解实例以复用 TTL 计算逻辑
     SecondaryAuth annotation = new SecondaryAuthImpl(request.getScene(), ttlSeconds, level);
-    java.time.Duration effectiveTtl = SecondaryAuthAspect.resolveEffectiveTtl(annotation);
+    Duration effectiveTtl = SecondaryAuthAspect.resolveEffectiveTtl(annotation);
 
     // 开启安全操作模式
     secondaryAuthService.openSafe(request.getPassword(), request.getScene(), effectiveTtl);
