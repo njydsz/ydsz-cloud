@@ -11,6 +11,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.exception.JsonException;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.reader.BeanReader;
@@ -215,7 +216,9 @@ final class BeanDeserializerEngine {
       canonical.setAccessible(true);
       return canonical.newInstance(paramValues);
     } catch (Exception e) {
-      throw new RuntimeException("Failed to deserialize Record: " + clazz.getName(), e);
+      throw new JsonDeserializationException(
+          JsonDeserializationException.NO_DEFAULT_CONSTRUCTOR,
+          "Failed to deserialize Record: " + clazz.getName(), e);
     }
   }
 

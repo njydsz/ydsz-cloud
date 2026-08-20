@@ -222,7 +222,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     // P2-20: 调用 taskService.getById 获取任务，再用 toView 转换为视图
     FlowRunTaskVO task = taskService.getById(taskId);
     if (task == null) {
-      return null;
+      return Collections.emptyMap();
     }
     FlowInstanceViewDTO.FlowTaskViewDTO view = taskService.toView(task);
     return taskViewToMap(view);
@@ -268,12 +268,12 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     String id = instanceId;
     FlowInstanceVO instance = instanceService.getById(id);
     if (instance == null) {
-      return null;
+      return Collections.emptyMap();
     }
     // 通过 definitionService.getDetail 组装 definition + nodes + skips
     Map<String, Object> detail = definitionService.getDetail(instance.getDefinitionId());
-    if (detail == null) {
-      return null;
+    if (detail == null || detail.isEmpty()) {
+      return Collections.emptyMap();
     }
     String currentNodeCode = instance.getCurrentNodeCode();
     // 在每个 node 上标注 active: true/false（currentNodeCode 匹配则为 active）

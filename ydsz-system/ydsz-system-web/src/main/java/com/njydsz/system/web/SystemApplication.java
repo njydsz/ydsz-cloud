@@ -8,6 +8,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
+import com.njydsz.common.base.config.ConditionalOnPlatform;
+import com.njydsz.common.base.config.PlatformMode;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
 

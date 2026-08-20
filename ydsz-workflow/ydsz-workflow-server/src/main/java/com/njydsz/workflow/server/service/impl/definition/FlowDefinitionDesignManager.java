@@ -2,6 +2,7 @@ package com.njydsz.workflow.server.service.impl.definition;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -259,13 +260,13 @@ public class FlowDefinitionDesignManager {
    * 供前端 VueFlow / LogicFlow 直接消费。
    *
    * @param definitionId 流程定义 ID
-   * @return 设计器数据 Map（含 {@code definition/nodes/skips/edges}）；不存在返回 {@code null}
+   * @return 设计器数据 Map（含 {@code definition/nodes/skips/edges}）；不存在返回空 Map
    */
   @Transactional(readOnly = true)
   public Map<String, Object> getDesignerData(String definitionId) {
     Map<String, Object> detail = queryService.getDetail(definitionId);
-    if (detail == null) {
-      return null;
+    if (detail == null || detail.isEmpty()) {
+      return Collections.emptyMap();
     }
     Map<String, Object> result = new LinkedHashMap<>(detail);
     List<FlowSkipDO> skips = MapUtils.safeCastList(detail.get("skips"), FlowSkipDO.class);

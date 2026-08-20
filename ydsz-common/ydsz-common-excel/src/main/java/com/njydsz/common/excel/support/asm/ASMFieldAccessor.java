@@ -10,6 +10,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.excel.exception.ExcelException;
+import com.njydsz.common.excel.exception.ExcelExceptionCode;
+
 /**
  * 字段访问器 - 基于 MethodHandle 的高性能字段访问实现
  *
@@ -151,13 +154,19 @@ public class ASMFieldAccessor {
     try {
       mh = MethodHandles.lookup().unreflectGetter(field);
     } catch (IllegalAccessException e) {
-      throw new RuntimeException("Cannot access field: " + field.getName(), e);
+      throw new ExcelException(
+          ExcelExceptionCode.CONFIG_INVALID_PARAMETER,
+          "Cannot access field: " + field.getName(),
+          e);
     }
     return target -> {
       try {
         return mh.invoke(target);
       } catch (Throwable t) {
-        throw new RuntimeException(t);
+        throw new ExcelException(
+            ExcelExceptionCode.WRITE_DATA_FAILED,
+            "Failed to get field value: " + field.getName(),
+            t);
       }
     };
   }
@@ -192,13 +201,19 @@ public class ASMFieldAccessor {
     try {
       mh = MethodHandles.lookup().unreflectSetter(field);
     } catch (IllegalAccessException e) {
-      throw new RuntimeException("Cannot access field: " + field.getName(), e);
+      throw new ExcelException(
+          ExcelExceptionCode.CONFIG_INVALID_PARAMETER,
+          "Cannot access field: " + field.getName(),
+          e);
     }
     return (target, value) -> {
       try {
         mh.invoke(target, value);
       } catch (Throwable t) {
-        throw new RuntimeException(t);
+        throw new ExcelException(
+            ExcelExceptionCode.WRITE_DATA_FAILED,
+            "Failed to set field value: " + field.getName(),
+            t);
       }
     };
   }
@@ -225,7 +240,10 @@ public class ASMFieldAccessor {
           try {
             return clazz.getDeclaredConstructor().newInstance();
           } catch (Exception e) {
-            throw new RuntimeException("Cannot instantiate: " + clazz.getName(), e);
+            throw new ExcelException(
+                ExcelExceptionCode.WRITE_DATA_FAILED,
+                "Cannot instantiate: " + clazz.getName(),
+                e);
           }
         };
     INSTANTIATOR_CACHE.put(clazz, new SoftReference<>(newInstantiator));

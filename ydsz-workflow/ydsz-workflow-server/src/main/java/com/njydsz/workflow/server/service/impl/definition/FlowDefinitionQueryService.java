@@ -1,6 +1,7 @@
 package com.njydsz.workflow.server.service.impl.definition;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,14 +150,14 @@ public class FlowDefinitionQueryService {
    * <p>组装 {@code definition + nodes + skips} 三元组供设计器回显用。
    *
    * @param definitionId 流程定义 ID
-   * @return 详情 Map（{@code definition/nodes/skips}）；不存在返回 {@code null}
+   * @return 详情 Map（{@code definition/nodes/skips}）；不存在返回空 Map
    */
   @Transactional(readOnly = true)
   public Map<String, Object> getDetail(String definitionId) {
     FlowDefinitionVO definition =
         definitionRepository.findById(definitionId).orElse(null);
     if (definition == null) {
-      return null;
+      return Collections.emptyMap();
     }
     List<FlowNodeVO> nodes = nodeRepository.findByDefinitionId(definitionId);
     List<FlowSkipVO> skips = skipRepository.findByDefinitionId(definitionId);
