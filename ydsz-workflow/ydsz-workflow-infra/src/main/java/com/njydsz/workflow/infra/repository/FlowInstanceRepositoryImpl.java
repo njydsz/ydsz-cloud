@@ -225,4 +225,17 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
     instanceMapper.updateById(entity);
     return vo;
   }
+
+  @Override
+  public List<FlowInstanceVO> findArchiveCandidates(
+      List<String> statuses, LocalDateTime threshold, int limit) {
+    return converter.flowInstanceListToVO(
+        instanceMapper.selectList(
+            new LambdaQueryWrapper<FlowInstanceDO>()
+                .in(FlowInstanceDO::getFlowStatus, statuses)
+                .lt(FlowInstanceDO::getEndAt, threshold)
+                .eq(FlowInstanceDO::getDeleted, 0)
+                .orderByAsc(FlowInstanceDO::getEndAt)
+                .last("LIMIT " + limit)));
+  }
 }

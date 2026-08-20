@@ -4,6 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
 import com.njydsz.literule.domain.vo.ApprovalFlowVO;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
 import com.njydsz.literule.domain.vo.CategoryNodeVO;
@@ -11,6 +12,7 @@ import com.njydsz.literule.domain.vo.ExpressionPreviewResultVO;
 import com.njydsz.literule.domain.vo.InstallResultVO;
 import com.njydsz.literule.domain.vo.PackDiffVO;
 import com.njydsz.literule.domain.vo.PackUpdateInfoVO;
+import com.njydsz.literule.domain.vo.RuleABPolicyVO;
 import com.njydsz.literule.domain.vo.RuleChainGraphVO;
 import com.njydsz.literule.domain.vo.RuleConflictInfoVO;
 import com.njydsz.literule.domain.vo.RuleVersionDiffVO;
@@ -96,4 +98,7 @@ public interface LiteruleWebConverter {
 
   // ===== ExpressionPreviewResult → ExpressionPreviewResultVO =====
   ExpressionPreviewResultVO entityToVO(ExpressionPreviewResult entity);
+
+  // ===== RuleABPolicyPutDTO → RuleABPolicyVO =====
+  RuleABPolicyVO putDtoToVO(RuleABPolicyPutDTO dto);
 }

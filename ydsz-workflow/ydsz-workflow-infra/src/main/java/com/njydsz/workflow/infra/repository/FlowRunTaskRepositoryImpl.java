@@ -380,10 +380,20 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
     return taskMapper.selectWorkloadByAssignee(tenantId, limit);
   }
 
-  @Override
-  public void markProcessed(String taskId, String userId, String comment, LocalDateTime processedAt) {
-    taskMapper.markProcessed(taskId, userId, comment, processedAt);
-  }
+@Override
+public void markProcessed(String taskId, String userId, String comment, LocalDateTime processedAt) {
+taskMapper.markProcessed(taskId, userId, comment, processedAt);
+}
+
+@Override
+public List<FlowRunTaskVO> findPendingTasksByAssignee(String assigneeId) {
+  return converter.flowRunTaskListToVO(
+      taskMapper.selectList(
+          new LambdaQueryWrapper<FlowRunTaskDO>()
+              .eq(FlowRunTaskDO::getAssigneeId, assigneeId)
+              .eq(FlowRunTaskDO::getDeleted, 0)
+              .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")));
+}
 
   @Override
   public void updateApproveFinished(String taskId, int approveFinished) {
