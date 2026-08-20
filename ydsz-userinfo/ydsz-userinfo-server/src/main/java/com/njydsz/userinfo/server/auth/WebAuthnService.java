@@ -21,9 +21,17 @@ import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
 import com.njydsz.userinfo.server.config.WebAuthnProperties;
 
 /**
- * WebAuthn/Passkey 无密码认证服务
+ * WebAuthn/Passkey 无密码认证服务（P3-2 通行 Key 增强）。
  *
  * <p>实现 FIDO2 WebAuthn 协议的核心逻辑，支持 Passkey 注册与认证。
+ *
+ * <p><b>P3-2 Passkey 增强：</b>
+ *
+ * <ul>
+ *   <li>发现式凭证（Discoverable Credential）— 浏览器自动发现可用 Passkey</li>
+ *   <li>条件式 UI（Conditional UI）— 浏览器自动弹出 Passkey 选择器</li>
+ *   <li>无用户名认证（Usernameless）— 无需输入用户名，直接使用 Passkey 登录</li>
+ * </ul>
  *
  * <p><b>注册流程：</b>
  *
@@ -61,6 +69,137 @@ public class WebAuthnService {
   private final WebAuthnProperties webAuthnProperties;
   private final WebAuthnCredentialRepository credentialRepository;
   private final RedisStringOps redisStringOps;
+
+  // ==================== P3-2 Passkey 通行 Key 专用方法 ====================
+
+  /**
+   * 生成 Passkey 注册选项（P3-2 Discoverable Credential）。
+   *
+   * <p>与普通注册选项的区别：
+   *
+   * <ul>
+   *   <li>{@code residentKey: "required"} — 强制要求认证器存储可发现凭证</li>
+   *   <li>{@code userVerification: "preferred"} — 支持生物识别/PIN 验证</li>
+   * </ul>
+   *
+   * <p>使用此选项注册的凭证可在后续认证时通过浏览器自动发现。
+   *
+   * @param userId      用户 ID
+   * @param username    用户名
+   * @param displayName 显示名称
+   * @return Passkey 注册选项 Map
+   */
+  public Map<String, Object> generatePasskeyRegistrationOptions(String userId, String username,
+      String displayName) {
+    // 生成随机挑战码
+    String challenge = generateChallenge();
+
+    // 存储挑战码到 Redis（带 TTL）
+    storeChallenge(challenge, userId, "REGISTER");
+
+    // 构建注册选项（Passkey 模式：residentKey = required）
+    Map<String, Object> options = new HashMap<>();
+    options.put("challenge", challenge);
+    options.put("rp", Map.of(
+        "name", webAuthnProperties.getRelyingPartyName(),
+        "id", webAuthnProperties.getRelyingPartyId()));
+    options.put("user", Map.of(
+        "id", Base64.getUrlEncoder().withoutPadding().encodeToString(userId.getBytes()),
+        "name", username,
+        "displayName", displayName));
+    options.put("pubKeyCredParams", List.of(
+        Map.of("type", "public-key", "alg", -7),   // ES256
+        Map.of("type", "public-key", "alg", -257)  // RS256
+    ));
+    options.put("timeout", 60000);
+    options.put("authenticatorSelection", Map.of(
+        "residentKey", "required",          // P3-2: Passkey 必须使用 discoverable credential
+        "userVerification", "preferred"));
+    options.put("attestation", "none");
+
+    log.debug("Passkey 注册选项已生成（discoverable credential）: userId={}", userId);
+    return options;
+  }
+
+  /**
+   * 生成 Passkey 认证选项（P3-2 无用户名登录）。
+   *
+   * <p>与普通认证选项的区别：
+   *
+   * <ul>
+   *   <li>{@code allowCredentials: []} — 空列表，浏览器自动发现 Passkey</li>
+   *   <li>不需要用户 ID，支持浏览器条件式 UI（Conditional Mediation）</li>
+   * </ul>
+   *
+   * <p>前端配合 {@code mediation: "conditional"} 实现自动填充 Passkey 选择器（浏览器原生 UI）。
+   *
+   * @return Passkey 认证选项 Map
+   */
+  public Map<String, Object> generatePasskeyAuthenticationOptions() {
+    // 生成随机挑战码（无用户绑定）
+    String challenge = generateChallenge();
+
+    // 存储挑战码（用户 ID 为匿名标识）
+    String anonymousUserId = "passkey_anonymous_" + System.currentTimeMillis();
+    storeChallenge(challenge, anonymousUserId, "AUTHENTICATE_PASSKEY");
+
+    // 构建认证选项（Passkey 模式：allowCredentials 为空）
+    Map<String, Object> options = new HashMap<>();
+    options.put("challenge", challenge);
+    options.put("timeout", 60000);
+    options.put("userVerification", "preferred");
+    options.put("rpId", webAuthnProperties.getRelyingPartyId());
+    options.put("allowCredentials", List.of()); // P3-2: 空列表，浏览器自动发现 Passkey
+
+    log.debug("Passkey 认证选项已生成（usernameless）");
+    return options;
+  }
+
+  /**
+   * 验证 Passkey 认证响应（P3-2 无用户名登录）。
+   *
+   * <p>与普通认证的区别：不需要 challenge-userId 匹配（challenge 存储时使用匿名 ID），
+   * 验证通过后直接返回用户 ID 用于签发 Token。
+   *
+   * @param challenge        挑战码
+   * @param credentialId     凭证 ID
+   * @param clientDataJSON   客户端数据
+   * @param authenticatorData 认证器数据
+   * @param signature        签名
+   * @return 验证通过的用户 ID
+   */
+  public String verifyPasskeyAuthentication(String challenge, String credentialId,
+      String clientDataJSON, String authenticatorData, String signature) {
+    // 验证挑战码（使用 AUTHENTICATE_PASSKEY 类型）
+    validateChallenge(challenge, null, "AUTHENTICATE_PASSKEY");
+
+    // 查找凭证（通过 credentialId 找到用户）
+    WebAuthnCredentialVO credential = credentialRepository.findByCredentialId(credentialId)
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.WEBAUTHN_CREDENTIAL_NOT_FOUND));
+
+    // 验证客户端数据
+    validateClientData(clientDataJSON, challenge, "webauthn.get");
+
+    // 验证签名
+    boolean signatureValid = verifySignature(credential.getPublicKey(), clientDataJSON,
+        authenticatorData, signature);
+    if (!signatureValid) {
+      throw new BusinessException(UserInfoExceptionCode.WEBAUTHN_SIGNATURE_INVALID);
+    }
+
+    // 更新签名计数器和最后使用时间
+    credentialRepository.updateSignCount(credentialId, credential.getSignCount() + 1);
+    credentialRepository.updateLastUsedAt(credentialId, LocalDateTime.now());
+
+    // 清除已使用的挑战码
+    deleteChallenge(challenge);
+
+    log.info("Passkey 认证成功（usernameless）: userId={}, credentialId={}",
+        credential.getUserId(), credentialId.substring(0, Math.min(8, credentialId.length())));
+    return credential.getUserId();
+  }
+
+  // ==================== 原有方法 ====================
 
   /**
    * 生成注册选项

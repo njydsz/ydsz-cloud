@@ -138,6 +138,33 @@ public class JobRepositoryImpl implements JobRepository {
   // ===== Web 层查询方法实现 =====
 
   @Override
+  public PageResult<JobVO> page(String keyword, String status, String group, int page, int size) {
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> pageObj =
+        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size);
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    if (keyword != null && !keyword.isBlank()) {
+      wrapper.and(
+          qw ->
+              qw.like(Job::getJobName, keyword)
+                  .or()
+                  .like(Job::getJobKey, keyword)
+                  .or()
+                  .like(Job::getHandler, keyword));
+    }
+    if (status != null && !status.isBlank()) {
+      wrapper.eq(Job::getStatus, status);
+    }
+    if (group != null && !group.isBlank()) {
+      wrapper.eq(Job::getJobGroup, group);
+    }
+    wrapper.eq(Job::getDeleted, 0).orderByDesc(Job::getCreatedAt);
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> result =
+        jobMapper.selectPage(pageObj, wrapper);
+    return new PageResult<>(converter.jobListToVO(result.getRecords()), result.getTotal());
+  }
+
+  @Override
   public PageResult<JobVO> pageByGroup(String jobGroup, int page, int size) {
     com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> pageObj =
         new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size);

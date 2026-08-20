@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.vo.JobVO;
@@ -270,6 +271,15 @@ public interface JobRepository {
 
     public long getTotal() {
       return total;
+    }
+
+    /**
+     * 转换为 PageResponse（供 Service 层直接返回给 Controller）。
+     *
+     * @return PageResponse 对象
+     */
+    public PageResponse<List<T>> toPageResponse() {
+      return PageResponse.success(records, total);
     }
   }
 }

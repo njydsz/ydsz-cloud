@@ -11,8 +11,6 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -966,8 +964,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   @Transactional(readOnly = true)
-  public Page<JobLogVO> pageLog(int page, int size, String jobKey, String status) {
-    return jobLogRepository.pageByJobKeyAndStatus(jobKey, status, page, size).toMybatisPage();
+  public PageResponse<List<JobLogVO>> pageLog(int page, int size, String jobKey, String status) {
+    return jobLogRepository.pageByJobKeyAndStatus(jobKey, status, page, size).toPageResponse();
   }
 
   // ==================== 内部执行逻辑 ====================

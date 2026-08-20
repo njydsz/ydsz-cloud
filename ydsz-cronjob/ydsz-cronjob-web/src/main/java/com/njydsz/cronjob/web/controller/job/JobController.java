@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -33,7 +32,6 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
@@ -410,8 +408,7 @@ public class JobController {
       @RequestParam(required = false) String keyword,
       @RequestParam(required = false) String status,
       @RequestParam(required = false) String group) {
-    Page<JobVO> page = jobService.page(pageNum, size, keyword, status, group);
-    return PageResponses.success(page, vo -> vo);
+    return jobService.page(pageNum, size, keyword, status, group);
   }
 
   /**
@@ -437,8 +434,7 @@ public class JobController {
           int size,
       @RequestParam(required = false) String jobKey,
       @RequestParam(required = false) String status) {
-    Page<JobLogVO> page = jobService.pageLog(pageNum, size, jobKey, status);
-    return PageResponses.success(page, vo -> vo);
+    return jobService.pageLog(pageNum, size, jobKey, status);
   }
 
   /**

@@ -8,12 +8,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.userinfo.server.config.GeoIpProperties;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
  * 登录风险评分服务。
  *
  * <p>基于多维度因素评估登录请求的风险等级，用于动态调整认证策略（如触发 MFA、要求验证码、拒绝登录）。
+ *
+ * <p><b>P3-3 地理围栏新增维度：</b>
+ *
+ * <ul>
+ *   <li><b>地理异常</b>：登录地与上次登录地距离超过阈值时，增加风险评分</li>
+ * </ul>
  *
  * <p><b>风险评分维度（P1-1: 权重配置化）：</b>
  *
@@ -22,6 +29,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  *   <li><b>时间异常</b>：登录时间是否在配置的异常时段内（权重默认 20%，时段可配置）
  *   <li><b>设备异常</b>：User-Agent 是否与历史记录匹配（权重默认 25%，可配置）
  *   <li><b>频率异常</b>：配置窗口内多次登录尝试（权重默认 25%，窗口/阈值可配置）
+ *   <li><b>地理异常</b>：登录地点与上次登录地距离超过阈值（P3-3 地理围栏）
  * </ul>
  *
  * <p><b>风险等级：</b>
@@ -52,6 +60,8 @@ public class RiskScoringService {
 
   /** P1-1: 风险权重配置 */
   private final UserInfoProperties properties;
+  private final GeoIpProperties geoIpProperties;
+  private final GeoIpService geoIpService;
 
   /**
    * 评估登录风险等级。
@@ -105,6 +115,54 @@ public class RiskScoringService {
     RiskLevel level = determineRiskLevel(totalScore);
 
     return new RiskScore(totalScore, level, factors);
+  }
+
+  /**
+   * 评估登录风险等级（含 P3-3 地理围栏）。
+   *
+   * <p>在基础风险评分上增加地理围栏维度：当本次登录地与上次登录地距离超过阈值时，
+   * 增加 {@code geoIpProperties.riskScoreAnomaly} 分的风险评分。
+   *
+   * @param username        用户名
+   * @param loginIp         登录 IP
+   * @param userAgent       用户代理
+   * @param recentFailCount 最近失败次数
+   * @param isNewDevice     是否新设备
+   * @param lastLoginIp     上次登录 IP（可为 null）
+   * @return 风险评分结果
+   */
+  public RiskScore evaluateRiskWithGeo(
+      String username,
+      String loginIp,
+      String userAgent,
+      int recentFailCount,
+      boolean isNewDevice,
+      String lastLoginIp) {
+
+    // 先执行基础评分
+    RiskScore baseScore = evaluateRisk(username, loginIp, userAgent, recentFailCount, isNewDevice);
+
+    // P3-3: 地理围栏检测
+    if (!geoIpProperties.isEnabled() || lastLoginIp == null || lastLoginIp.isBlank()) {
+      return baseScore;
+    }
+
+    GeoIpService.GeoFenceResult geoResult = geoIpService.detectAnomaly(loginIp, lastLoginIp);
+    if (geoResult.isAnomaly()) {
+      int geoAddition = geoResult.getRiskScoreAddition(geoIpProperties.getRiskScoreAnomaly());
+      int newScore = Math.min(baseScore.score() + geoAddition, 100);
+      RiskLevel newLevel = determineRiskLevel(newScore);
+
+      List<String> newFactors = new ArrayList<>(baseScore.factors());
+      newFactors.add("地理异常(" + geoAddition + "): " + geoResult.getDescription());
+
+      log.warn("地理围栏告警: username={}, currentIp={}, lastIp={}, reason={}",
+          username, loginIp, lastLoginIp, geoResult.getDescription());
+
+      return new RiskScore(newScore, newLevel, newFactors);
+    }
+
+    return baseScore;
   }
 
   /**
