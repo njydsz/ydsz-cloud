@@ -20,8 +20,6 @@ import com.njydsz.workflow.domain.enums.FlowAssigneeType;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowSignType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
-import com.njydsz.workflow.infra.mapper.FlowUserMapper;
 
 /**
  * 待办任务 — 加签减签 / 已阅 / 沟通 / 追加处理人 / 暂存待审 子服务实现
@@ -79,14 +77,8 @@ import com.njydsz.workflow.infra.mapper.FlowUserMapper;
 @RequiredArgsConstructor
 public class FlowTaskSignServiceImpl {
 
-  /** 运行时任务 Mapper（保留：updateApproveFinished 自定义 SQL 操作） */
-  private final FlowRunTaskMapper taskMapper;
-
   /** 运行时任务仓储，查询/更新加签减签的任务 */
   private final FlowRunTaskRepository taskRepository;
-
-  /** 用户 Mapper（保留：deleteByMap 复杂删除操作） */
-  private final FlowUserMapper userMapper;
 
   /** 用户仓储，写入/查询流程用户 */
   private final FlowUserRepository userRepository;
@@ -143,8 +135,7 @@ public class FlowTaskSignServiceImpl {
       fu.setTenantId(task.getTenantId());
       fu.setProviderTraceId(task.getProviderTraceId());
       userRepository.save(converter.entityToVO(fu));
-      // 保留 Mapper：自定义 SQL 操作（updateApproveFinished），Repository 暂无等价方法
-      taskMapper.updateApproveFinished(task.getId(), task.getApproveFinished());
+      taskRepository.updateApproveFinished(task.getId(), task.getApproveFinished());
       // approveCount +1
       task.setApproveCount((task.getApproveCount() == null ? 0 : task.getApproveCount()) + 1);
       taskRepository.update(converter.entityToVO(task));
@@ -308,12 +299,8 @@ public class FlowTaskSignServiceImpl {
           .build();
     }
     // 从 ydsz_flow_user 中删除指定用户
-    // 保留 Mapper：复杂 Map 条件删除（复合键 instance_id + node_code + user_id），Repository 暂无等价方法
-    Map<String, Object> deleteMap = new HashMap<>();
-    deleteMap.put("instance_id", task.getInstanceId());
-    deleteMap.put("node_code", task.getNodeCode());
-    deleteMap.put("user_id", String.valueOf(dto.getTargetUserId()));
-    int deleted = userMapper.deleteByMap(deleteMap);
+    int deleted = userRepository.deleteByInstanceAndNodeAndUser(
+        task.getInstanceId(), task.getNodeCode(), String.valueOf(dto.getTargetUserId()));
     if (deleted == 0) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)

@@ -8,9 +8,8 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 
 /**
@@ -34,7 +33,6 @@ public class FlowTaskAuditService {
   private final FlowAuditLogRepository auditLogRepository;
   private final FlowInstanceRepository instanceRepository;
   private final FlowDelegateAuthService delegateAuthService;
-  private final WorkflowConverter converter;
 
   /**
    * 记录委派代理操作日志（CLAIM/DELEGATE_RETURN/PASS 等场景）。
@@ -44,7 +42,7 @@ public class FlowTaskAuditService {
    * @param task 当前任务（assignorId=授权人，assigneeId=被委派人）
    * @param action 动作类型（CLAIM/PASS/DELEGATE_RETURN/...）
    */
-  public void logDelegateOperation(FlowRunTaskDO task, String action) {
+  public void logDelegateOperation(FlowRunTaskVO task, String action) {
     if (task == null) {
       return;
     }
@@ -54,8 +52,7 @@ public class FlowTaskAuditService {
       if (ownerId == null || delegateId == null) {
         return; // 非代理场景
       }
-      FlowAuditLogDO logEntry = new FlowAuditLogDO();
-      logEntry.setTenantId(task.getTenantId());
+      FlowAuditLogVO logEntry = new FlowAuditLogVO();
       logEntry.setInstanceId(task.getInstanceId());
       logEntry.setTaskId(task.getId());
       logEntry.setNodeCode(task.getNodeCode());
@@ -66,10 +63,7 @@ public class FlowTaskAuditService {
       logEntry.setComment(task.getComment());
       logEntry.setOperatedAt(LocalDateTime.now());
       logEntry.setProviderTraceId(task.getProviderTraceId());
-      LocalDateTime now = LocalDateTime.now();
-      logEntry.setCreatedAt(now);
-      logEntry.setUpdatedAt(now);
-      auditLogRepository.save(converter.entityToVO(logEntry));
+      auditLogRepository.save(logEntry);
     } catch (Exception e) {
       FlowTaskAuditService.log.warn(
           "[Flow] 委派代理日志写入失败: taskId={} err={}", task.getId(), e.getMessage());

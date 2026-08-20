@@ -251,7 +251,7 @@ public class ScimController {
    */
   @PatchMapping("/Users/{id}")
   public ResponseEntity<String> patchUser(
-      @PathVariable String id, @RequestBody ScimPatchOp patchOp) {
+      @PathVariable String id, @Valid @RequestBody ScimPatchOp patchOp) {
     if (!scimProperties.isAllowPatch()) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN)
           .body(YdszJson.toJson(

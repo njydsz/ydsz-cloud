@@ -4,6 +4,7 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -85,7 +86,7 @@ public class SocialClientConfigController {
       content = "'新增社交平台配置: platform=' + #dto.platform")
   @PostMapping
   @Operation(summary = "新增配置", description = "创建后立即生效，无需重启服务")
-  public YdszResponse<Void> create(@RequestBody SocialClientDTO dto) {
+  public YdszResponse<Void> create(@Valid @RequestBody SocialClientDTO dto) {
     configService.save(dto);
     return YdszResponse.success();
   }
@@ -105,7 +106,7 @@ public class SocialClientConfigController {
   @PutMapping("/{platform}")
   @Operation(summary = "更新配置", description = "更新后立即生效")
   public YdszResponse<Void> update(
-      @PathVariable String platform, @RequestBody SocialClientDTO dto) {
+      @PathVariable String platform, @Valid @RequestBody SocialClientDTO dto) {
     configService.save(dto);
     return YdszResponse.success();
   }

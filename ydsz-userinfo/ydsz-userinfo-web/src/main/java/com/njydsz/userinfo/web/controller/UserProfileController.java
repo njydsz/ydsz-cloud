@@ -2,6 +2,7 @@ package com.njydsz.userinfo.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -73,7 +74,7 @@ public class UserProfileController {
    */
   @PutMapping("/me")
   @Operation(summary = "更新当前用户资料")
-  public YdszResponse<Boolean> updateCurrentUserProfile(@RequestBody UserProfileUpdateDTO dto) {
+  public YdszResponse<Boolean> updateCurrentUserProfile(@Valid @RequestBody UserProfileUpdateDTO dto) {
     String userId = RequestContext.getUserId();
     boolean result = userAccountService.updateProfile(userId, dto);
     log.info("用户资料更新成功: userId={}", userId);
@@ -184,7 +185,7 @@ public class UserProfileController {
    */
   @PostMapping("/mfa/activate")
   @Operation(summary = "激活 MFA 绑定")
-  public YdszResponse<Boolean> activateMfa(@jakarta.validation.Valid @RequestBody MfaOperationDTO dto) {
+  public YdszResponse<Boolean> activateMfa(@Valid @RequestBody MfaOperationDTO dto) {
     mfaService.activate(RequestContext.getUserId(), dto.getCode());
     return YdszResponse.success(true);
   }
@@ -197,7 +198,7 @@ public class UserProfileController {
    */
   @PostMapping("/mfa/disable")
   @Operation(summary = "解除 MFA 绑定")
-  public YdszResponse<Boolean> disableMfa(@jakarta.validation.Valid @RequestBody MfaOperationDTO dto) {
+  public YdszResponse<Boolean> disableMfa(@Valid @RequestBody MfaOperationDTO dto) {
     mfaService.disable(RequestContext.getUserId(), dto.getCode());
     return YdszResponse.success(true);
   }

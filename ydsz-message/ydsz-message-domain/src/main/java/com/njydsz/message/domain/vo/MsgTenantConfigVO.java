@@ -4,6 +4,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import lombok.Data;
+
 /**
  * 多租户消息配置视图对象（VO）。
  *

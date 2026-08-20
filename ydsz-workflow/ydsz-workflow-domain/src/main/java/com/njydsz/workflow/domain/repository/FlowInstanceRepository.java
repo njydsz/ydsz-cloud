@@ -180,6 +180,16 @@ public interface FlowInstanceRepository {
   java.util.Map<String, Long> countRunningGroupByNode(String definitionId);
 
   /**
+   * 查询某流程定义下运行中的实例，按当前节点分组（含节点名称）。
+   *
+   * <p>返回列表，每项含 currentNodeCode / currentNodeName / cnt。
+   *
+   * @param definitionId 流程定义 ID
+   * @return 节点分组统计列表
+   */
+  List<Map<String, Object>> selectRunningGroupByNode(String definitionId);
+
+  /**
    * 按状态分组统计实例数量（监控概览用）。
    *
    * @param tenantId 租户 ID（可为 null）

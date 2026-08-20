@@ -167,6 +167,11 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   @Override
+  public List<Map<String, Object>> selectRunningGroupByNode(String definitionId) {
+    return instanceMapper.selectRunningGroupByNode(definitionId);
+  }
+
+  @Override
   public List<Map<String, Object>> selectCountGroupByStatus(String tenantId) {
     return instanceMapper.selectCountGroupByStatus(tenantId);
   }

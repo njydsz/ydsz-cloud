@@ -5,6 +5,7 @@ import java.util.Set;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,7 +65,7 @@ public class OAuth2ApplicationController {
   @AuthApiPermission(apiCodes = "admin:oauth2:application")
   @Operation(summary = "注册 OAuth2 应用")
   public YdszResponse<OAuth2Application> register(
-      @RequestBody RegisterApplicationDTO dto) {
+      @Valid @RequestBody RegisterApplicationDTO dto) {
     return YdszResponse.success(applicationService.registerApplication(
         dto.clientName(),
         dto.clientType(),
@@ -129,7 +130,7 @@ public class OAuth2ApplicationController {
   @Operation(summary = "更新应用信息")
   public YdszResponse<OAuth2Application> update(
       @PathVariable String id,
-      @RequestBody UpdateApplicationDTO dto) {
+      @Valid @RequestBody UpdateApplicationDTO dto) {
     OAuth2Application.ApplicationStatus statusEnum = null;
     if (dto.status() != null && !dto.status().isBlank()) {
       try {

@@ -4,6 +4,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import lombok.Data;
+
 /**
  * 灰度实验视图对象（VO）。
  *

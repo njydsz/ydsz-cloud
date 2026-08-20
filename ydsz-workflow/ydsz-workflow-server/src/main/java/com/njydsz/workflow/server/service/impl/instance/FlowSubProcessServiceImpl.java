@@ -25,7 +25,6 @@ import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowEventListener;
@@ -110,9 +109,6 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
 
   /** 流程实例仓储，查询/更新父实例和子流程实例 */
   private final FlowInstanceRepository instanceRepository;
-
-  /** 流程实例 Mapper（保留：listChildren 复杂查询无 Repository 替代） */
-  private final FlowInstanceMapper instanceMapper;
 
   /** DO/VO 转换器 */
   private final WorkflowConverter converter;
@@ -333,13 +329,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (parentInstanceId == null) {
       return List.of();
     }
-    // 保留 Mapper：复杂 QueryWrapper 查询（含 parent_instance_id + deleted + orderBy），Repository 暂无等价方法
-    List<FlowInstanceDO> doList = instanceMapper.selectList(
-        new QueryWrapper<FlowInstanceDO>()
-            .eq("parent_instance_id", parentInstanceId)
-            .eq("deleted", 0)
-            .orderByDesc("start_at"));
-    return WorkflowConverter.INSTANT.flowInstanceListToVO(doList);
+    return instanceRepository.findChildren(parentInstanceId);
   }
 
   @Override

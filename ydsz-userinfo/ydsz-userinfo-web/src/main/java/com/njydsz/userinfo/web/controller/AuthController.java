@@ -229,7 +229,7 @@ public class AuthController {
   @Idempotent(key = "ydsz:userinfo:AuthController:refresh:lock", ttlSeconds = 5)
   @PostMapping("/refresh")
   @Operation(summary = "刷新 Token", description = "使用 refresh_token 获取新的 access_token")
-  public YdszResponse<LoginVO> refresh(@RequestBody RefreshRequest request) {
+  public YdszResponse<LoginVO> refresh(@Valid @RequestBody RefreshRequest request) {
     LoginVO result = authService.refresh(request.getRefreshToken());
     return YdszResponse.success(result);
   }

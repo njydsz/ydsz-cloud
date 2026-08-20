@@ -4,6 +4,7 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -84,7 +85,7 @@ public class AuthPolicyController {
       content = "'新增认证策略: tenantId=' + #dto.tenantId + ', name=' + #dto.name")
   @PostMapping
   @Operation(summary = "新增认证策略")
-  public YdszResponse<Void> create(@RequestBody AuthPolicyDTO dto) {
+  public YdszResponse<Void> create(@Valid @RequestBody AuthPolicyDTO dto) {
     authPolicyService.save(dto);
     return YdszResponse.success();
   }
@@ -104,7 +105,7 @@ public class AuthPolicyController {
   @PutMapping("/{tenantId}")
   @Operation(summary = "更新认证策略")
   public YdszResponse<Void> update(
-      @PathVariable String tenantId, @RequestBody AuthPolicyDTO dto) {
+      @PathVariable String tenantId, @Valid @RequestBody AuthPolicyDTO dto) {
     dto.setTenantId(tenantId);
     authPolicyService.save(dto);
     return YdszResponse.success();

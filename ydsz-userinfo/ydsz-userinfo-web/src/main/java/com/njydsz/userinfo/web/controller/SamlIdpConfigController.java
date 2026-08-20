@@ -4,6 +4,7 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -83,7 +84,7 @@ public class SamlIdpConfigController {
       content = "'新增 SAML IdP: entityId=' + #dto.entityId")
   @PostMapping
   @Operation(summary = "新增 IdP 配置")
-  public YdszResponse<Void> create(@RequestBody SamlIdpDTO dto) {
+  public YdszResponse<Void> create(@Valid @RequestBody SamlIdpDTO dto) {
     configService.save(dto);
     return YdszResponse.success();
   }
@@ -103,7 +104,7 @@ public class SamlIdpConfigController {
   @PutMapping("/{entityId}")
   @Operation(summary = "更新 IdP 配置", description = "URL 中的 entityId 使用 URLEncode 编码")
   public YdszResponse<Void> update(
-      @PathVariable String entityId, @RequestBody SamlIdpDTO dto) {
+      @PathVariable String entityId, @Valid @RequestBody SamlIdpDTO dto) {
     configService.save(dto);
     return YdszResponse.success();
   }

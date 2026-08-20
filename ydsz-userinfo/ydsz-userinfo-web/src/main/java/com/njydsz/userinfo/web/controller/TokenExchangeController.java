@@ -5,6 +5,7 @@ import java.util.Map;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -81,7 +82,7 @@ public class TokenExchangeController {
   @PostMapping("/token-exchange")
   @Operation(summary = "令牌交换", description = "用父域 Token 换取子域可用 Token")
   public YdszResponse<TokenExchangeVO> tokenExchange(
-      HttpServletRequest request, @RequestBody TokenExchangeRequest body) {
+      HttpServletRequest request, @Valid @RequestBody TokenExchangeRequest body) {
     // 校验请求来源 Origin 白名单
     String origin = request.getHeader("Origin");
     if (!crossDomainTokenService.isTrustedDomain(origin, ssoProperties.getTrustedDomains())) {
@@ -187,7 +188,7 @@ public class TokenExchangeController {
   @PostMapping("/logout-notify")
   @Operation(summary = "登出通知", description = "父域登出通知子域清除状态")
   public YdszResponse<LogoutNotifyVO> logoutNotify(
-      HttpServletRequest request, @RequestBody LogoutNotifyRequest body) {
+      HttpServletRequest request, @Valid @RequestBody LogoutNotifyRequest body) {
     // 校验请求来源 Origin 白名单
     String origin = request.getHeader("Origin");
     if (!crossDomainTokenService.isTrustedDomain(origin, ssoProperties.getTrustedDomains())) {

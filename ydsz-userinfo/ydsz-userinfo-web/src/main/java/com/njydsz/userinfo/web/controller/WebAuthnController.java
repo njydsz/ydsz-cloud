@@ -5,6 +5,7 @@ import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -138,7 +139,7 @@ public class WebAuthnController {
   @Operation(
       summary = "验证 Passkey 认证响应（无用户名登录）",
       description = "验证 Passkey 签名，通过后签发 JWT Token 完成登录")
-  public YdszResponse<LoginVO> verifyPasskeyAuthentication(@RequestBody Map<String, Object> assertion) {
+  public YdszResponse<LoginVO> verifyPasskeyAuthentication(@Valid @RequestBody Map<String, Object> assertion) {
     String challenge = (String) assertion.get("challenge");
     String credentialId = (String) assertion.get("credentialId");
     String clientDataJSON = (String) assertion.get("clientDataJSON");
@@ -204,7 +205,7 @@ public class WebAuthnController {
   @Operation(
       summary = "验证并存储注册凭证",
       description = "验证浏览器提交的公钥凭证并持久化存储")
-  public YdszResponse<Void> verifyRegistration(@RequestBody Map<String, Object> credential) {
+  public YdszResponse<Void> verifyRegistration(@Valid @RequestBody Map<String, Object> credential) {
     String userId = AuthContextUtils.getUserId();
     String challenge = (String) credential.get("challenge");
     String credentialId = (String) credential.get("credentialId");
@@ -254,7 +255,7 @@ public class WebAuthnController {
   @Operation(
       summary = "验证认证响应",
       description = "验证浏览器提交的 Passkey 签名，通过后签发 JWT Token 完成登录")
-  public YdszResponse<LoginVO> verifyAuthentication(@RequestBody Map<String, Object> assertion) {
+  public YdszResponse<LoginVO> verifyAuthentication(@Valid @RequestBody Map<String, Object> assertion) {
     String challenge = (String) assertion.get("challenge");
     String credentialId = (String) assertion.get("credentialId");
     String clientDataJSON = (String) assertion.get("clientDataJSON");
