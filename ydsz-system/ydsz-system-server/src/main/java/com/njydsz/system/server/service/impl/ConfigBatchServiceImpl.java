@@ -35,6 +35,7 @@ import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.service.ConfigBatchService;
 import com.njydsz.system.server.service.EntityVersionService;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 系统配置批量操作 Service 实现
@@ -274,7 +275,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
     dto.setDescription(vo.getDescription());
     dto.setIsPublic(vo.getIsPublic());
     dto.setSortOrder(vo.getSortOrder());
-    dto.setId(com.baomidou.mybatisplus.core.toolkit.IdWorker.getIdStr());
+    dto.setId(IdGenerator.nextIdStr());
     dto.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
     return dto;
   }

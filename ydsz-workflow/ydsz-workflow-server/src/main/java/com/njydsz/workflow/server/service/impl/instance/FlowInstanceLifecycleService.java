@@ -1361,13 +1361,13 @@ public class FlowInstanceLifecycleService {
   /** P0-2: 解析节点 ext JSON 为 Map（容错） */
   private Map<String, Object> parseExtMap(FlowNodeDO node) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
-      return null;
+      return Collections.emptyMap();
     }
     try {
       return YdszJson.parseMap(node.getExt());
     } catch (Exception e) {
       log.warn("[Flow] 节点 ext 解析失败: nodeCode={} err={}", node.getNodeCode(), e.getMessage());
-      return null;
+      return Collections.emptyMap();
     }
   }
 

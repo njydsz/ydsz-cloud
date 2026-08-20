@@ -151,6 +151,34 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
           + "       AND retry_count < max_retries")
   int markRetry(@Param("id") String id);
 
+  /**
+   * 根据 DAG 实例 ID 和任务 KEY 查询节点实例（唯一，按 KEY 精确查找）。
+   *
+   * <p>与 {@link #selectByDagInstanceAndJob} 区别：本方法按 jobKey 而非 jobId 查找。
+   */
+  @Select(
+      "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
+          + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
+          + "       result_json, error_message, "
+          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "FROM ydsz_job_dag_node_instance "
+          + "WHERE dag_instance_id = #{dagInstanceId} AND job_key = #{jobKey} AND deleted = 0 "
+          + "LIMIT 1")
+  JobDagNodeInstance selectByDagInstanceAndJobKey(
+      @Param("dagInstanceId") String dagInstanceId, @Param("jobKey") String jobKey);
+
+  /** 根据 DAG 实例 ID 和节点状态查询节点实例列表。 */
+  @Select(
+      "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
+          + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
+          + "       result_json, error_message, "
+          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "FROM ydsz_job_dag_node_instance "
+          + "WHERE dag_instance_id = #{dagInstanceId} AND node_status = #{status} AND deleted = 0 "
+          + "ORDER BY created_at ASC")
+  List<JobDagNodeInstance> selectByDagInstanceIdAndStatus(
+      @Param("dagInstanceId") String dagInstanceId, @Param("status") String status);
+
   /** 批量插入节点实例。 */
   default void insertBatch(List<JobDagNodeInstance> nodes) {
     if (nodes == null || nodes.isEmpty()) {

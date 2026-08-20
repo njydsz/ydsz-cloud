@@ -12,8 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 
-import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.AppInfoPageQuery;
@@ -324,7 +324,7 @@ public class AppInfoServiceImpl implements AppInfoService {
           .data("appKey", dto.getAppKey());
     }
     // 预生成 ID
-    dto.setId(IdWorker.getIdStr());
+    dto.setId(IdGenerator.nextIdStr());
     // 密钥 BCrypt 加密
     if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {
       dto.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));

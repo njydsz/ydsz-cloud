@@ -554,33 +554,33 @@ public class FlowTaskCreateService {
    *
    * <p>逐项校验：ext 含 autoApprove 配置、enabled=true、任务执行模式为 OR（单人审批）。 任一条件不满足时返回 null，调用方直接跳过自动审批。
    *
-   * @return 自动审批配置 Map（满足所有条件时返回），不满足时返回 null
+   * @return 自动审批配置 Map（满足所有条件时返回），不满足时返回空 Map
    */
   private Map<String, Object> checkAutoApproveConditions(FlowNodeDO node, FlowRunTaskDO task) {
     if (node.getExt() == null || node.getExt().isBlank()) {
-      return null;
+      return Collections.emptyMap();
     }
     Map<String, Object> extConfig;
     try {
       extConfig = YdszJson.parseMap(node.getExt());
     } catch (Exception e) {
-      return null;
+      return Collections.emptyMap();
     }
     if (extConfig == null) {
-      return null;
+      return Collections.emptyMap();
     }
     Object autoApproveObj = extConfig.get("autoApprove");
     if (!(autoApproveObj instanceof Map<?, ?> autoApprove)) {
-      return null;
+      return Collections.emptyMap();
     }
     Map<String, Object> cfg = MapUtils.toStringObjectMap(autoApprove);
     Boolean enabled = (Boolean) cfg.get("enabled");
     if (enabled == null || !enabled) {
-      return null;
+      return Collections.emptyMap();
     }
     // 仅单人 OR 模式自动通过
     if (!FlowPerformType.OR.name().equals(task.getPerformType())) {
-      return null;
+      return Collections.emptyMap();
     }
     return cfg;
   }

@@ -23,11 +23,9 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.userinfo.domain.dto.RoleCreateDTO;
 import com.njydsz.userinfo.domain.dto.RoleDTO;
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.RolePermissionDTO;
-import com.njydsz.userinfo.domain.dto.RoleUpdateDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.RolePageQuery;
 import com.njydsz.userinfo.domain.vo.RoleVO;
@@ -163,15 +161,14 @@ public class RoleServiceImpl implements RoleService {
       throw new BusinessException(UserInfoExceptionCode.ROLE_CODE_DUPLICATE);
     }
 
-    RoleCreateDTO createDTO = new RoleCreateDTO();
-    BeanUtils.copyProperties(dto, createDTO);
-    if (createDTO.getStatus() == null) {
-      createDTO.setStatus("ENABLED");
+    // 默认值设置
+    if (dto.getStatus() == null) {
+      dto.setStatus("ENABLED");
     }
-    if (createDTO.getBuiltIn() == null) {
-      createDTO.setBuiltIn(false);
+    if (dto.getBuiltIn() == null) {
+      dto.setBuiltIn(false);
     }
-    RoleVO vo = roleRepository.create(createDTO);
+    RoleVO vo = roleRepository.save(dto);
     log.info("Role created: code={}, id={}", vo.getRoleCode(), vo.getId());
     eventPublisher.publishRoleEntityChanged(vo, "CREATED");
     return vo.getId();
@@ -188,9 +185,7 @@ public class RoleServiceImpl implements RoleService {
     RoleVO existing = roleRepository.findById(dto.getId())
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND));
 
-    RoleUpdateDTO updateDTO = new RoleUpdateDTO();
-    BeanUtils.copyProperties(dto, updateDTO);
-    RoleVO vo = roleRepository.update(updateDTO);
+    RoleVO vo = roleRepository.save(dto);
 
     if (vo != null) {
       // 角色变更后失效其权限缓存

@@ -1,7 +1,5 @@
 package com.njydsz.system.domain.event;
 
-import org.springframework.context.ApplicationEvent;
-
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 
 /**
@@ -22,7 +20,10 @@ import com.njydsz.system.domain.dto.EntityVersionDTO;
  * @since 1.0.0
  * @see EntityVersionDTO 版本创建参数 DTO
  */
-public class VersionSnapshotEvent extends ApplicationEvent {
+public class VersionSnapshotEvent {
+
+  /** 事件源（通常为发布者的 {@code this} 引用） */
+  private final Object source;
 
   /** 版本创建参数（含资源类型/键/分组/版本号/变更说明/快照 JSON） */
   private final EntityVersionDTO versionDto;
@@ -34,8 +35,17 @@ public class VersionSnapshotEvent extends ApplicationEvent {
    * @param versionDto 版本创建参数
    */
   public VersionSnapshotEvent(Object source, EntityVersionDTO versionDto) {
-    super(source);
+    this.source = source;
     this.versionDto = versionDto;
+  }
+
+  /**
+   * 获取事件源。
+   *
+   * @return 事件源对象
+   */
+  public Object getSource() {
+    return source;
   }
 
   /**

@@ -596,7 +596,8 @@ public final class JSONReader {
    */
   public char nextChar() {
     skipWhitespace();
-    if (pos >= len) throw new RuntimeException("Unexpected end of JSON");
+    if (pos >= len) throw new JsonDeserializationException(
+        JsonDeserializationException.PARSE_ERROR, "Unexpected end of JSON at position " + pos);
     return buf[pos++];
   }
 
@@ -1319,7 +1320,8 @@ public final class JSONReader {
       throw new JsonDeserializationException("JSON nesting depth exceeds limit: " + depth, pos);
     }
     skipWhitespace();
-    if (pos >= len || buf[pos] != '[') throw new RuntimeException("Expected [ at position " + pos);
+    if (pos >= len || buf[pos] != '[') throw new JsonDeserializationException(
+        JsonDeserializationException.PARSE_ERROR, "Expected [ at position " + pos);
     pos++;
     List<Object> result = new ArrayList<>();
     while (pos < len) {
@@ -1401,7 +1403,8 @@ public final class JSONReader {
       throw new JsonDeserializationException("JSON nesting depth exceeds limit: " + depth, pos);
     }
     skipWhitespace();
-    if (pos >= len || buf[pos] != '{') throw new RuntimeException("Expected { at position " + pos);
+    if (pos >= len || buf[pos] != '{') throw new JsonDeserializationException(
+        JsonDeserializationException.PARSE_ERROR, "Expected { at position " + pos);
     pos++;
     Map<String, Object> result = new HashMap<>();
     while (pos < len) {

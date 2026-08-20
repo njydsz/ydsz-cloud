@@ -117,13 +117,16 @@ public final class BeanReader<T> {
       }
       if (creator == null) {
         // 既无默认构造也无 @JsonCreator：抛出明确异常
-        throw new RuntimeException(
+        throw new JsonDeserializationException(
+            JsonDeserializationException.NO_DEFAULT_CONSTRUCTOR,
             "No default constructor or @JsonCreator for " + beanType.getName(), e);
       }
     } catch (RuntimeException re) {
       throw re;
     } catch (Exception e) {
-      throw new RuntimeException("No default constructor for " + beanType.getName(), e);
+      throw new JsonDeserializationException(
+          JsonDeserializationException.NO_DEFAULT_CONSTRUCTOR,
+          "No default constructor for " + beanType.getName(), e);
     }
     this.creatorConstructor = creator;
     this.creatorParameterNames = paramNames;
@@ -201,14 +204,17 @@ public final class BeanReader<T> {
         }
         return (T) creatorConstructor.newInstance(args);
       } catch (Exception e) {
-        throw new RuntimeException(
+        throw new JsonDeserializationException(
+            JsonDeserializationException.NO_DEFAULT_CONSTRUCTOR,
             "Failed to create via @JsonCreator for " + beanType.getName(), e);
       }
     }
     try {
       obj = defaultConstructor.newInstance();
     } catch (Exception e) {
-      throw new RuntimeException("Failed to create " + beanType.getName(), e);
+      throw new JsonDeserializationException(
+          JsonDeserializationException.NO_DEFAULT_CONSTRUCTOR,
+          "Failed to create " + beanType.getName(), e);
     }
 
     readObjectFieldsInto(reader, depth, obj, null);
@@ -248,7 +254,9 @@ public final class BeanReader<T> {
       JSONReader reader, int depth, T target, Map<String, Object> pending) {
     reader.skipTo('{');
     if (reader.pos >= reader.len) {
-      throw new RuntimeException("Unexpected end of JSON");
+      throw new JsonDeserializationException(
+          JsonDeserializationException.PARSE_ERROR,
+          "Unexpected end of JSON at position " + reader.pos);
     }
     reader.pos++;
 
@@ -638,7 +646,10 @@ public final class BeanReader<T> {
             break;
         }
       } catch (IllegalAccessException e) {
-        throw new RuntimeException("Failed to set field: " + fieldName, e);
+        throw new JsonDeserializationException(
+            JsonDeserializationException.FIELD_ACCESS_ERROR,
+            "Failed to set field: " + fieldName,
+            e);
       }
     }
 
@@ -796,13 +807,15 @@ public final class BeanReader<T> {
     if (pattern != null) {
       try {
         return LocalDateTime.parse(s, DateTimeFormatter.ofPattern(pattern));
-      } catch (Exception ignored) {
+      } catch (Exception e) {
+        LOGGER.debug("[BeanReader] 日期时间解析失败（指定格式），将尝试标准格式: value={}, pattern={}", s, pattern);
       }
     }
     for (DateTimeFormatter fmt : DATE_TIME_FORMATS) {
       try {
         return LocalDateTime.parse(s, fmt);
-      } catch (Exception ignored) {
+      } catch (Exception e) {
+        LOGGER.debug("[BeanReader] 日期时间解析失败（标准格式），继续尝试下一个格式: value={}", s);
       }
     }
     return null;
@@ -819,13 +832,15 @@ public final class BeanReader<T> {
     if (pattern != null) {
       try {
         return LocalDate.parse(s, DateTimeFormatter.ofPattern(pattern));
-      } catch (Exception ignored) {
+      } catch (Exception e) {
+        LOGGER.debug("[BeanReader] 日期解析失败（指定格式），将尝试标准格式: value={}, pattern={}", s, pattern);
       }
     }
     for (DateTimeFormatter fmt : DATE_FORMATS) {
       try {
         return LocalDate.parse(s, fmt);
-      } catch (Exception ignored) {
+      } catch (Exception e) {
+        LOGGER.debug("[BeanReader] 日期解析失败（标准格式），继续尝试下一个格式: value={}", s);
       }
     }
     return null;
@@ -841,13 +856,15 @@ public final class BeanReader<T> {
     if (s == null || s.isEmpty()) return null;
     try {
       return new Date(Long.parseLong(s));
-    } catch (NumberFormatException ignored) {
+    } catch (NumberFormatException e) {
+      LOGGER.debug("[BeanReader] 日期非数字时间戳格式，继续按字符串解析: value={}", s);
     }
     List<DateTimeFormatter> candidates = new ArrayList<>();
     if (pattern != null) {
       try {
         candidates.add(DateTimeFormatter.ofPattern(pattern));
-      } catch (Exception ignored) {
+      } catch (Exception e) {
+        LOGGER.debug("[BeanReader] 无效日期格式模板，已跳过: pattern={}", pattern);
       }
     }
     candidates.add(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
@@ -857,7 +874,8 @@ public final class BeanReader<T> {
       try {
         LocalDateTime ldt = LocalDateTime.parse(s, fmt);
         return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
-      } catch (Exception ignored) {
+      } catch (Exception e) {
+        LOGGER.debug("[BeanReader] 日期格式匹配失败，继续尝试下一个格式: value={}", s);
       }
     }
     return null;

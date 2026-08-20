@@ -12,10 +12,8 @@ import com.njydsz.userinfo.domain.dto.LanguageUpdateDTO;
 import com.njydsz.userinfo.domain.dto.MenuCreateDTO;
 import com.njydsz.userinfo.domain.dto.MenuDTO;
 import com.njydsz.userinfo.domain.dto.MenuUpdateDTO;
-import com.njydsz.userinfo.domain.dto.RoleCreateDTO;
 import com.njydsz.userinfo.domain.dto.RoleDTO;
 import com.njydsz.userinfo.domain.dto.RolePermissionDTO;
-import com.njydsz.userinfo.domain.dto.RoleUpdateDTO;
 import com.njydsz.userinfo.infra.entity.LanguageDO;
 import com.njydsz.userinfo.infra.entity.MenuDO;
 import com.njydsz.userinfo.infra.entity.RoleDO;
@@ -42,35 +40,6 @@ import com.njydsz.userinfo.domain.vo.RoleVO;
 public interface UserInfoAuthConverter {
 
   // ===== RoleDO =====
-
-  /**
-   * 角色创建 DTO → 角色实体
-   *
-   * @param dto 角色创建 DTO
-   * @return 角色实体（未持久化）
-   */
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  RoleDO createDtoToEntity(RoleCreateDTO dto);
-
-  /**
-   * 角色更新 DTO → 角色实体
-   *
-   * @param dto 角色更新 DTO（含 id）
-   * @return 角色实体（含 id）
-   */
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  RoleDO updateDtoToEntity(RoleUpdateDTO dto);
 
   /**
    * 角色实体 → 角色 VO
