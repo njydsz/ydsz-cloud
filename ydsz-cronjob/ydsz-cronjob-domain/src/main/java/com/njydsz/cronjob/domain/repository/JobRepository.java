@@ -210,6 +210,20 @@ public interface JobRepository {
    */
   long countAll();
 
+  /**
+   * 分页查询任务列表（按关键字/状态/分组过滤，按 created_at 倒序）。
+   *
+   * <p>仅查询 {@code deleted=0} 的任务。
+   *
+   * @param keyword 关键字（任务名/KEY/Handler 模糊匹配，可为空）
+   * @param status 状态过滤（可为空）
+   * @param group 分组过滤（可为空）
+   * @param page 页码（从 1 开始）
+   * @param size 每页条数
+   * @return 分页结果（records=VO列表, total=总条数）
+   */
+  PageResult<JobVO> page(String keyword, String status, String group, int page, int size);
+
   // ===== CUD 操作（入参 DTO，返回影响行数/主键） =====
 
   /**
@@ -256,21 +270,6 @@ public interface JobRepository {
 
     public long getTotal() {
       return total;
-    }
-
-    /**
-     * 转换为 MyBatis-Plus Page 对象（便于 Service 层直接返回给 Controller）。
-     *
-     * @param <E> MyBatis-Plus Page 元素类型（与 T 相同）
-     * @return MyBatis-Plus Page 对象
-     */
-    @SuppressWarnings("unchecked")
-    public <E extends T> com.baomidou.mybatisplus.extension.plugins.pagination.Page<E> toMybatisPage() {
-      com.baomidou.mybatisplus.extension.plugins.pagination.Page<E> page =
-          new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>();
-      page.setRecords((List<E>) records);
-      page.setTotal(total);
-      return page;
     }
   }
 }

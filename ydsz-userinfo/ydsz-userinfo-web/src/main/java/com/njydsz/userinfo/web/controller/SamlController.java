@@ -21,27 +21,33 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.auth.SamlService;
+import com.njydsz.userinfo.server.service.SamlIdpConfigService;
 
 /**
- * SAML 2.0 Service Provider 端点 Controller
+ * SAML 2.0 Service Provider 端点 Controller（P2-1 多租户 IdP 路由）。
  *
  * <p>实现 SAML 2.0 SP 角色的核心端点，包括：
  *
  * <ul>
  *   <li>{@code GET /saml/metadata} — SP 元数据端点（供 IdP 导入）
- *   <li>{@code GET /saml/sso} — SSO 发起端点（重定向至 IdP）
+ *   <li>{@code GET /saml/sso} — SSO 发起端点（重定向至默认 IdP）
+ *   <li>{@code GET /saml2/sso/{idpEntityId}} — 多租户 SSO 发起（动态路由到指定 IdP）
  *   <li>{@code POST /saml/acs} — Assertion Consumer Service（IdP 回调）
+ *   <li>{@code POST /saml2/acs/{idpEntityId}} — 多租户 ACS 回调（使用指定 IdP 证书验证）
+ *   <li>{@code GET /saml/idp-list} — 查询可用 IdP 列表（供登录页展示）
  * </ul>
  *
- * <p><b>SSO 流程：</b>
+ * <p><b>多租户 SSO 流程：</b>
  *
  * <ol>
- *   <li>用户访问 {@code /saml/sso}，SP 生成 AuthnRequest 并重定向至 IdP</li>
- *   <li>用户在 IdP 完成认证，IdP 将 SAML Response POST 至 {@code /saml/acs}</li>
- *   <li>SP 验证签名、时间戳、Audience，提取用户身份并建立会话</li>
- *   <li>重定向用户至业务系统主页</li>
+ *   <li>前端从 {@code /saml/idp-list} 获取可用 IdP 列表</li>
+ *   <li>用户选择 IdP，前端重定向至 {@code /saml2/sso/{idpEntityId}}</li>
+ *   <li>SP 从 DB 查找 IdP 配置，生成 AuthnRequest 并重定向至对应 IdP</li>
+ *   <li>用户在 IdP 认证后，IdP POST SAML Response 至 {@code /saml2/acs/{idpEntityId}}</li>
+ *   <li>SP 使用 IdP 对应证书验证签名，提取用户身份</li>
  * </ol>
  *
  * @author ydsz-team
@@ -52,10 +58,14 @@ import com.njydsz.userinfo.server.auth.SamlService;
 @RequestMapping("/saml")
 @RequiredArgsConstructor
 @Tag(name = "SAML 2.0", description = "SAML Service Provider 标准端点")
+@ApiVersion("1")
 public class SamlController {
 
   /** SAML 2.0 SP 服务 */
   private final SamlService samlService;
+
+  /** SAML IdP 配置服务（P2-1 多租户） */
+  private final SamlIdpConfigService samlIdpConfigService;
 
   /**
    * SAML SP Metadata 端点

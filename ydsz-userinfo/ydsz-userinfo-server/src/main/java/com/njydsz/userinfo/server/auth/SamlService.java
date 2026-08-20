@@ -152,6 +152,58 @@ public class SamlService {
   }
 
   /**
+   * 根据 IdP Entity ID 生成 AuthnRequest URL（P2-1 多租户路由）。
+   *
+   * <p>从 DB 配置中查找指定 IdP 的 SSO 端点，生成对应的 AuthnRequest。
+   * 如果 DB 中未找到指定 IdP，回落到 YAML 全局配置。
+   *
+   * @param idpEntityId IdP Entity ID（如 "https://qy.weixin.qq.com/..."）
+   * @return 重定向 URL
+   */
+  public String buildAuthnRequestUrlByEntityId(String idpEntityId) {
+    SamlIdpConfigVO idpConfig = samlIdpConfigService.findByEntityId(idpEntityId);
+
+    String idpSsoUrl;
+    if (idpConfig != null && "ENABLED".equals(idpConfig.getStatus())) {
+      idpSsoUrl = idpConfig.getSsoUrl();
+      log.info("多租户 IdP 路由: entityId={}, ssoUrl={}", idpEntityId, idpSsoUrl);
+    } else {
+      // 回落到 YAML 全局配置
+      idpSsoUrl = samlProperties.getIdpSsoUrl();
+      if (idpSsoUrl == null || idpSsoUrl.isBlank()) {
+        throw new BusinessException(UserInfoExceptionCode.SAML_CONFIG_MISSING);
+      }
+      log.debug("SAML 回落到 YAML 全局配置: idp={}", samlProperties.getIdpEntityId());
+    }
+
+    String entityId = samlProperties.getEntityId();
+    String acsUrl = samlProperties.getAcsUrl();
+    String requestId = "_" + UUID.randomUUID().toString();
+    String issueInstant = Instant.now().toString();
+
+    StringBuilder authnRequest = new StringBuilder();
+    authnRequest.append("<samlp:AuthnRequest xmlns:samlp=\"").append(SAML2_PROTOCOL_NS).append("\" ");
+    authnRequest.append("xmlns:saml=\"").append(SAML2_ASSERTION_NS).append("\" ");
+    authnRequest.append("ID=\"").append(requestId).append("\" ");
+    authnRequest.append("Version=\"2.0\" ");
+    authnRequest.append("IssueInstant=\"").append(issueInstant).append("\" ");
+    authnRequest.append("Destination=\"").append(escapeXml(idpSsoUrl)).append("\" ");
+    authnRequest.append("AssertionConsumerServiceURL=\"").append(escapeXml(acsUrl)).append("\" ");
+    authnRequest.append("ProtocolBinding=\"urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST\">\n");
+    authnRequest.append("  <saml:Issuer>").append(escapeXml(entityId)).append("</saml:Issuer>\n");
+    authnRequest.append("</samlp:AuthnRequest>");
+
+    String base64Request = Base64.getEncoder()
+        .encodeToString(authnRequest.toString().getBytes(StandardCharsets.UTF_8));
+
+    String redirectUrl = idpSsoUrl + "?SAMLRequest=" + java.net.URLEncoder.encode(
+        base64Request, StandardCharsets.UTF_8);
+
+    log.info("SAML AuthnRequest 已生成（多租户路由）: id={}, idpEntityId={}", requestId, idpEntityId);
+    return redirectUrl;
+  }
+
+  /**
    * 处理 SAML Response 并提取用户身份
    *
    * <p>验证 SAML Response 的签名、时间戳、Audience 限制，成功后从 Assertion 中提取 NameID
@@ -192,6 +244,105 @@ public class SamlService {
     } catch (Exception e) {
       log.error("SAML Response 处理失败", e);
       throw new BusinessException(UserInfoExceptionCode.SAML_RESPONSE_INVALID);
+    }
+  }
+
+  /**
+   * 处理 SAML Response 并提取用户身份（P2-1 多租户路由）。
+   *
+   * <p>使用指定 IdP 的证书验证签名，支持多租户不同 IdP 的独立证书配置。
+   *
+   * @param samlResponse Base64 编码的 SAML Response XML
+   * @param idpEntityId  IdP Entity ID（用于查找对应证书）
+   * @return 用户身份属性 Map（含 nameId、attributes）
+   * @throws BusinessException 验证失败时抛出
+   */
+  public Map<String, String> processSamlResponseWithEntityId(String samlResponse, String idpEntityId) {
+    if (samlResponse == null || samlResponse.isBlank()) {
+      throw new BusinessException(UserInfoExceptionCode.SAML_RESPONSE_INVALID);
+    }
+
+    try {
+      byte[] decoded = Base64.getDecoder().decode(samlResponse);
+      String responseXml = new String(decoded, StandardCharsets.UTF_8);
+
+      Document document = parseXmlDocument(responseXml);
+
+      // 使用指定 IdP 的证书验证签名
+      verifySignatureWithEntityId(document, idpEntityId);
+
+      validateTimestamps(document);
+      validateAudience(document);
+
+      Map<String, String> attributes = extractAttributes(document);
+
+      log.info("SAML Response 验证成功（多租户）: nameId={}, idpEntityId={}",
+          attributes.get("nameId"), idpEntityId);
+      return attributes;
+    } catch (BusinessException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error("SAML Response 处理失败（多租户）: idpEntityId={}", idpEntityId, e);
+      throw new BusinessException(UserInfoExceptionCode.SAML_RESPONSE_INVALID);
+    }
+  }
+
+  /**
+   * 使用指定 IdP 的证书验证 XML 签名（P2-1 多租户）。
+   *
+   * <p>优先使用 DB 中指定 IdP 的证书，未找到时回落到 YAML 全局配置。
+   *
+   * @param document    SAML Response XML 文档
+   * @param idpEntityId IdP Entity ID
+   */
+  private void verifySignatureWithEntityId(Document document, String idpEntityId) throws Exception {
+    SamlIdpConfigVO idpConfig = samlIdpConfigService.findByEntityId(idpEntityId);
+
+    String idpCertPem;
+    if (idpConfig != null && idpConfig.getCertificate() != null && !idpConfig.getCertificate().isBlank()) {
+      idpCertPem = idpConfig.getCertificate();
+      log.debug("使用 DB 配置的 IdP 证书验证签名: entityId={}", idpEntityId);
+    } else {
+      // 回落到 YAML 全局配置
+      idpCertPem = samlProperties.getIdpCertificate();
+      log.debug("回落到 YAML 全局 IdP 证书验证签名");
+    }
+
+    if (idpCertPem == null || idpCertPem.isBlank()) {
+      log.warn("IdP 证书未配置，跳过签名验证");
+      return;
+    }
+
+    NodeList signatureNodes = document.getElementsByTagNameNS(
+        "http://www.w3.org/2000/09/xmldsig#", "Signature");
+    if (signatureNodes.getLength() == 0) {
+      throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_MISSING);
+    }
+
+    String cleanedPem = idpCertPem
+        .replace("-----BEGIN CERTIFICATE-----", "")
+        .replace("-----END CERTIFICATE-----", "")
+        .replaceAll("\\s", "");
+    byte[] certBytes = Base64.getDecoder().decode(cleanedPem);
+    X509EncodedKeySpec keySpec = new X509EncodedKeySpec(certBytes);
+    RSAPublicKey publicKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(keySpec);
+
+    Element signatureElement = (Element) signatureNodes.item(0);
+    NodeList sigValueNodes = signatureElement.getElementsByTagNameNS(
+        "http://www.w3.org/2000/09/xmldsig#", "SignatureValue");
+    if (sigValueNodes.getLength() == 0) {
+      throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
+    }
+
+    String signatureValue = sigValueNodes.item(0).getTextContent().trim();
+    byte[] signatureBytes = Base64.getDecoder().decode(signatureValue);
+
+    Signature signature = Signature.getInstance("SHA256withRSA");
+    signature.initVerify(publicKey);
+    signature.update(document.getDocumentElement().getTextContent().getBytes(StandardCharsets.UTF_8));
+
+    if (!signature.verify(signatureBytes)) {
+      throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
     }
   }
 
