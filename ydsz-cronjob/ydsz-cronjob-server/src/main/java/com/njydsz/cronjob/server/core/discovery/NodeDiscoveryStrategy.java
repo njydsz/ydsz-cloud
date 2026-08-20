@@ -2,7 +2,7 @@ package com.njydsz.cronjob.server.core.discovery;
 
 import java.util.List;
 
-import com.njydsz.cronjob.infra.entity.job.JobNode;
+import com.njydsz.cronjob.domain.vo.JobNodeVO;
 
 /**
  * 执行器节点发现策略（P1-1）。
@@ -24,9 +24,9 @@ public interface NodeDiscoveryStrategy {
   /**
    * 获取所有在线执行器节点。
    *
-   * @return 在线节点列表；无节点时返回空列表
+   * @return 在线节点 VO 列表；无节点时返回空列表
    */
-  List<JobNode> getOnlineNodes();
+  List<JobNodeVO> getOnlineNodes();
 
   /**
    * 获取当前节点 ID。

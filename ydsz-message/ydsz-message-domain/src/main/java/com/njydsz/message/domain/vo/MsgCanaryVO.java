@@ -4,12 +4,10 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import lombok.Data;
-
 /**
- * 灰度桶视图对象（VO）。
+ * 灰度实验视图对象（VO）。
  *
- * <p>用于 Controller 层返回消息灰度发布的桶配置信息，包含分桶总数、选中桶、 灰度比例及实验模板配置，支撑消息 A/B 测试。
+ * <p>用于 Controller 层返回灰度实验的完整信息。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -19,41 +17,38 @@ public class MsgCanaryVO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
-  /** 灰度配置唯一标识（主键） */
+  /** 实验唯一标识（主键） */
   private String id;
 
-  /** 灰度分桶键 */
+  /** 灰度实验唯一键 */
   private String canaryKey;
-
-  /** 分桶总数 */
-  private Integer bucketTotal;
-
-  /** 选中桶（灰度流量分配到的桶号） */
-  private String bucketSelected;
-
-  /** 灰度比例（0~100） */
-  private Integer percentage;
-
-  /** 实验模板编码 */
-  private String experimentTemplateCode;
-
-  /** 实验通道 */
-  private String experimentChannel;
 
   /** A/B 实验名称 */
   private String experimentName;
 
-  /** A/B 实验组：CONTROL / VARIANT */
+  /** 关联模板编码 */
+  private String templateCode;
+
+  /** 通道 */
+  private String channel;
+
+  /** 总分桶数（默认 100） */
+  private Integer bucketTotal;
+
+  /** 命中桶号上限 */
+  private Integer bucketSelected;
+
+  /** 当前放量百分比（0~100） */
+  private Integer percentage;
+
+  /** 实验组：CONTROL 对照组 / VARIANT 实验组 */
   private String experimentGroup;
 
-  /** A/B 目标指标：DELIVERY_RATE / READ_RATE / CLICK_RATE */
+  /** 目标指标 */
   private String metricsGoal;
 
-  /** 状态（ACTIVE/PAUSED/COMPLETED） */
+  /** 实验状态 */
   private String status;
-
-  /** 描述 */
-  private String description;
 
   /** 创建人 */
   private String createdBy;

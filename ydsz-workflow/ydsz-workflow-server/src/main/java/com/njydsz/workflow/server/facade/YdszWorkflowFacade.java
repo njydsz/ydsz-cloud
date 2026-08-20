@@ -20,13 +20,13 @@ import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
+import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
+import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
+import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
-import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTaskService;
@@ -38,6 +38,9 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  *
  * <p>1.0.0 新增能力：加签 / 撤回 / 催办 / 审计轨迹查询。
  *
+ * <p><b>架构合规说明（v2.23 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
+ * 禁止 server 层直接注入 infra Mapper 或直接引用 infra.entity（符合 §34.2.3 / §34.2.1）。
+ *
  * @since 1.0.0
  * @author ydsz-team
  */
@@ -48,10 +51,10 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
   private final FlowInstanceService instanceService;
   private final FlowTaskService taskService;
-  private final FlowAuditLogMapper auditLogMapper;
+  private final FlowAuditLogRepository auditLogRepository;
 
   /** P2-30: 审批轨迹时间线需要查询历史任务 */
-  private final FlowHisTaskMapper hisTaskMapper;
+  private final FlowHisTaskRepository hisTaskRepository;
 
   /** P2-22: 流程图查询需要查询流程定义详情 */
   private final FlowDefinitionService definitionService;
@@ -125,7 +128,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
   @Override
   public List<Map<String, Object>> listDoneTasks(String userId, int page, int size) {
-    // P0-3: 已办走历史表（FlowTaskServiceImpl 内部已切换到 FlowHisTaskMapper）
+    // P0-3: 已办走历史表（FlowTaskServiceImpl 内部已切换到 FlowHisTaskRepository）
     // P2-17: 真分页（SQL LIMIT/OFFSET）
     PageResponse<List<FlowRunTaskVO>> pageResult =
         taskService.listDoneByAssigneePage(
@@ -202,7 +205,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   @Override
   public List<Map<String, Object>> listAuditTrail(String processInstanceId) {
     String instanceId = processInstanceId;
-    List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(instanceId);
+    // 通过 Repository 获取审计日志（符合 §34.2.3，禁止直接注入 Mapper）
+    List<FlowAuditLogVO> logs = auditLogRepository.findByInstanceId(instanceId);
     return logs.stream().map(this::auditToMap).toList();
   }
 
@@ -318,9 +322,9 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
     List<Map<String, Object>> timeline = new ArrayList<>(32);
 
-    // 2. 获取历史任务列表
-    List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(id);
-    for (FlowHisTaskDO his : hisTasks) {
+    // 2. 获取历史任务列表（通过 Repository，符合 §34.2.3）
+    List<FlowHisTaskVO> hisTasks = hisTaskRepository.findByInstanceId(id);
+    for (FlowHisTaskVO his : hisTasks) {
       Map<String, Object> entry = new HashMap<>(8);
       entry.put("type", "HIS_TASK");
       entry.put("timestamp", his.getFinishAt());
@@ -334,9 +338,9 @@ public class YdszWorkflowFacade implements WorkflowFacade {
       timeline.add(entry);
     }
 
-    // 3. 获取审计日志列表
-    List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(id);
-    for (FlowAuditLogDO log : logs) {
+    // 3. 获取审计日志列表（通过 Repository，符合 §34.2.3）
+    List<FlowAuditLogVO> logs = auditLogRepository.findByInstanceId(id);
+    for (FlowAuditLogVO log : logs) {
       Map<String, Object> entry = new HashMap<>(8);
       entry.put("type", "AUDIT_LOG");
       entry.put("timestamp", log.getOperatedAt());
@@ -455,7 +459,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     return m;
   }
 
-  private Map<String, Object> auditToMap(FlowAuditLogDO log) {
+  private Map<String, Object> auditToMap(FlowAuditLogVO log) {
     Map<String, Object> m = new HashMap<>(16);
     m.put("id", log.getId());
     m.put("instanceId", log.getInstanceId());
@@ -525,9 +529,9 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     startStep.put("coordinate", null);
     steps.add(startStep);
 
-    // 2. 历史任务步骤
-    List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(id);
-    for (FlowHisTaskDO his : hisTasks) {
+    // 2. 历史任务步骤（通过 Repository，符合 §34.2.3）
+    List<FlowHisTaskVO> hisTasks = hisTaskRepository.findByInstanceId(id);
+    for (FlowHisTaskVO his : hisTasks) {
       Map<String, Object> step = new HashMap<>(8);
       step.put("type", "HIS_TASK");
       step.put("timestamp", his.getFinishAt());
@@ -545,8 +549,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     }
 
     // 3. 审计日志步骤（URGE/TRANSFER/DELEGATE/JUMP/RECALL 等任务外操作）
-    List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(id);
-    for (FlowAuditLogDO log : logs) {
+    List<FlowAuditLogVO> logs = auditLogRepository.findByInstanceId(id);
+    for (FlowAuditLogVO log : logs) {
       String action = log.getAction();
       if (action == null) continue;
       // 只回放任务外操作（任务自身操作已在 HIS_TASK 中体现）

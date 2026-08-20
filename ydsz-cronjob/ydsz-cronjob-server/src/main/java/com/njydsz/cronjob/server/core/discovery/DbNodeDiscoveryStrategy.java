@@ -1,18 +1,16 @@
 package com.njydsz.cronjob.server.core.discovery;
 
 import java.net.InetAddress;
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.infra.entity.job.JobNode;
-import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
+import com.njydsz.cronjob.domain.repository.JobNodeRepository;
+import com.njydsz.cronjob.domain.vo.JobNodeVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
@@ -33,7 +31,7 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
 @ConditionalOnProperty(name = "ydsz.cronjob.node-discovery.type", havingValue = "db")
 public class DbNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
 
-  private final JobNodeMapper jobNodeMapper;
+  private final JobNodeRepository jobNodeRepository;
   private final CronjobProperties cronjobProperties;
 
   /** 当前节点 ID（hostname:port，与 JobNodeHeartbeat 保持一致） */
@@ -42,15 +40,15 @@ public class DbNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
   /**
    * 构造基于心跳表的节点发现策略。
    *
-   * @param jobNodeMapper 节点表 Mapper
+   * @param jobNodeRepository 节点 Repository
    * @param cronjobProperties 调度配置（读取离线阈值）
    * @param serverPort 本节点服务端口，用于拼接 localNodeId
    */
   public DbNodeDiscoveryStrategy(
-      JobNodeMapper jobNodeMapper,
+      JobNodeRepository jobNodeRepository,
       CronjobProperties cronjobProperties,
       @Value("${server.port:0}") int serverPort) {
-    this.jobNodeMapper = jobNodeMapper;
+    this.jobNodeRepository = jobNodeRepository;
     this.cronjobProperties = cronjobProperties;
     this.localNodeId = resolveHostName() + ":" + serverPort;
     log.info("[DbNodeDiscovery] 初始化完成, localNodeId={}", localNodeId);
@@ -64,16 +62,9 @@ public class DbNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
    * @return 在线节点列表，无可用时返回空列表
    */
   @Override
-  public List<JobNode> getOnlineNodes() {
+  public List<JobNodeVO> getOnlineNodes() {
     try {
-      long threshold = cronjobProperties.getExecutor().getOfflineThresholdSeconds();
-      LocalDateTime cutoff = LocalDateTime.now().minusSeconds(threshold);
-      LambdaQueryWrapper<JobNode> wrapper = new LambdaQueryWrapper<>();
-      wrapper
-          .eq(JobNode::getStatus, "ONLINE")
-          .ge(JobNode::getLastHeartbeat, cutoff)
-          .orderByAsc(JobNode::getNodeId);
-      return jobNodeMapper.selectList(wrapper);
+      return jobNodeRepository.findOnlineNodes();
     } catch (Exception e) {
       log.warn("[DbNodeDiscovery] 查询在线节点失败, 返回空列表: reason={}", e.getMessage());
       return Collections.emptyList();

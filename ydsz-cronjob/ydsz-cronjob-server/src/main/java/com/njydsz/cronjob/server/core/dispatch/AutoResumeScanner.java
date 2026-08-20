@@ -13,8 +13,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronExpression;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
-import com.njydsz.cronjob.infra.entity.job.Job;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 
@@ -49,7 +49,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
 @ConditionalOnBean(LeaderElector.class)
 public class AutoResumeScanner {
 
-  private final JobMapper jobMapper;
+  private final JobRepository jobRepository;
   private final LeaderElector leaderElector;
   private final CronjobProperties cronjobProperties;
 
@@ -91,16 +91,16 @@ public class AutoResumeScanner {
 
   private void doScan() {
     LocalDateTime now = LocalDateTime.now();
-    List<Job> candidates = jobMapper.selectAutoResumeCandidates(now);
+    List<JobVO> candidates = jobRepository.findAutoResumeCandidates(now);
     if (candidates.isEmpty()) {
       return;
     }
     log.info("[AutoResumeScanner] 发现 {} 个可恢复的 AUTO_PAUSED 任务", candidates.size());
 
     int resumed = 0;
-    for (Job job : candidates) {
+    for (JobVO job : candidates) {
       try {
-        int affected = jobMapper.resumeAutoPaused(job.getId());
+        int affected = jobRepository.resumeAutoPaused(job.getId());
         if (affected > 0) {
           resumed++;
           // 重新计算 next_fire_time
@@ -121,7 +121,7 @@ public class AutoResumeScanner {
   }
 
   /** 恢复后重新计算 next_fire_time。 */
-  private void recomputeNextFireTime(Job job) {
+  private void recomputeNextFireTime(JobVO job) {
     if (job.getCronExpression() == null || job.getCronExpression().isBlank()) {
       return;
     }
@@ -129,7 +129,7 @@ public class AutoResumeScanner {
       CronExpression expr = CronExpression.parse(job.getCronExpression());
       LocalDateTime nextFire = expr.next(LocalDateTime.now());
       if (nextFire != null) {
-        jobMapper.updateStats(job.getId(), null, nextFire, null, null, null, null);
+        jobRepository.updateStats(job.getId(), null, nextFire, null, null, null, null);
       }
     } catch (Exception e) {
       log.warn(

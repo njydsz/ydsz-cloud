@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.config;
+package com.njydsz.userinfo.domain.config;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * 社交认证配置属性。
  *
  * <p>集中管理社交登录（OAuth2）的平台配置，支持企业微信、钉钉、飞书等多平台。
- * 通过 {@code SocialAuthConfiguration} 的 {@code @EnableConfigurationProperties} 注册。
+ * 通过 {@code @EnableConfigurationProperties} 注册。
  *
  * <p><b>配置前缀：</b>{@code ydsz.userinfo.social}
  *
@@ -61,10 +61,10 @@ public class SocialAuthProperties {
   @Data
   public static class ProviderConfig {
 
-    /** 应用 ID（平台分配的 appId / clientId） */
+    /** 应用 ID（平台分配 appId / clientId） */
     private String appId;
 
-    /** 应用密钥（平台分配的 appSecret / clientSecret，建议通过环境变量注入） */
+    /** 应用密钥（平台分配 appSecret / clientSecret，建议通过环境变量注入） */
     private String appSecret;
 
     /** OAuth2 授权范围（scope，格式依平台而定） */
