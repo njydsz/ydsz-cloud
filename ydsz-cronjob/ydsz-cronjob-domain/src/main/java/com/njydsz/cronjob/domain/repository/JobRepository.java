@@ -244,12 +244,55 @@ public interface JobRepository {
   int update(JobPutDTO dto);
 
   /**
-   * 按 ID 删除任务（逻辑删除）。
+   * 更新任务（通用更新方法，供 Service 层更新任务状态/字段使用）。
    *
-   * @param id 任务 ID
+   * @param dto 任务更新 DTO（必须含 id）
    * @return 受影响行数
    */
-  int deleteById(String id);
+  int putUpdate(JobPutDTO dto);
+
+  /**
+   * 按 ID 更新任务状态。
+   *
+   * @param id 任务 ID
+   * @param status 任务状态（NORMAL / PAUSED / ERROR / AUTO_PAUSED）
+   * @return 受影响行数
+   */
+  int updateStatus(String id, String status);
+
+  /**
+   * 按 ID 和旧状态原子更新任务状态（CAS）。
+   *
+   * @param id 任务 ID
+   * @param oldStatus 旧状态
+   * @param newStatus 新状态
+   * @return 受影响行数
+   */
+  int casUpdateStatus(String id, String oldStatus, String newStatus);
+
+  /**
+   * 按 ID 更新任务（直接更新 entity 字段，供调度执行内部使用）。
+   *
+   * @param vo 任务 VO（必须含 id）
+   * @return 受影响行数
+   */
+  int updateById(JobVO vo);
+
+  /**
+   * 统计指定条件的任务数量。
+   *
+   * @param status 状态过滤（可为空）
+   * @return 任务数量
+   */
+  long countByStatusNullable(String status);
+
+  /**
+   * 按条件查询任务列表（供诊断等内部场景使用）。
+   *
+   * @param status 状态过滤（可为空）
+   * @return 任务 VO 列表
+   */
+  List<JobVO> findByStatus(String status);
 
   /**
    * 分页查询内部结果对象。

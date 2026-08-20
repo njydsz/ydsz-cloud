@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.dto.MsgLogDTO;
 import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
@@ -17,7 +18,9 @@ import com.njydsz.message.domain.vo.MsgLogVO;
  *
  * <ul>
  *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
- *   <li>所有方法入参和返回值均使用领域 VO（{@link MsgLogVO}）或领域 DTO（{@link MessageLogQueryDTO}）
+ *   <li>查询入参使用领域 Query（{@link MessageLogQueryDTO}）或具体字段
+ *   <li>CUD 入参使用领域 DTO（{@link MsgLogDTO}），禁止 VO 混入</li>
+ *   <li>返回值使用领域 VO（{@link MsgLogVO}）</li>
  *   <li>禁止在 domain 层引入 MyBatis-Plus Wrapper / IPage 等持久化细节
  *   <li>遵循云顶编码规范第 34 节：domain 层定义接口，Infra 层实现接口
  * </ul>
@@ -32,18 +35,18 @@ public interface MsgLogRepository {
   /**
    * 保存消息发送日志（插入）。
    *
-   * @param vo 消息发送日志 VO
+   * @param dto 消息发送日志 DTO
    * @return 保存成功返回 {@code true}
    */
-  boolean save(MsgLogVO vo);
+  boolean save(MsgLogDTO dto);
 
   /**
    * 全量更新消息发送日志。
    *
-   * @param vo 消息发送日志 VO（必须包含主键 ID）
+   * @param dto 消息发送日志 DTO（必须包含主键 ID）
    * @return 更新成功返回 {@code true}
    */
-  boolean update(MsgLogVO vo);
+  boolean update(MsgLogDTO dto);
 
   /**
    * 批量删除消息发送日志。
@@ -98,8 +101,8 @@ public interface MsgLogRepository {
   /**
    * 批量保存消息发送日志。
    *
-   * @param list 消息发送日志 VO 列表
+   * @param list 消息发送日志 DTO 列表
    * @return 保存成功返回 {@code true}
    */
-  boolean saveBatch(List<MsgLogVO> list);
+  boolean saveBatch(List<MsgLogDTO> list);
 }

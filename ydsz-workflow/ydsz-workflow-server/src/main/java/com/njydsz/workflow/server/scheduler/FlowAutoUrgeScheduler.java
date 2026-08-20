@@ -6,19 +6,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskUrgeService;
@@ -39,6 +38,9 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskUrgeService;
  * <p>催办通知通过 {@link FlowNotificationService} 推送，覆盖站内信 + IM（钉钉/企微）双通道。 分布式锁通过 {@link
  * DistributedScheduled} 保证集群只有一个节点执行。
  *
+ * <p><b>架构合规说明（v2.23 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
+ * 禁止 server 层直接注入 infra Mapper（符合 §34.2.3）。
+ *
  * @since 1.0.0
  * @author ydsz-team
  */
@@ -47,8 +49,8 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskUrgeService;
 @RequiredArgsConstructor
 public class FlowAutoUrgeScheduler {
 
-  private final FlowRunTaskMapper taskMapper;
-  private final FlowInstanceMapper instanceMapper;
+  private final FlowRunTaskRepository runTaskRepository;
+  private final FlowInstanceRepository instanceRepository;
   private final FlowTaskUrgeService urgeService;
   private final FlowNotificationService notificationService;
 
@@ -84,17 +86,8 @@ public class FlowAutoUrgeScheduler {
     LocalDateTime thresholdTime = LocalDateTime.now().minusHours(thresholdHours);
     log.info("[AutoUrge] 开始扫描: threshold={} batchSize={}", thresholdTime, batchSize);
 
-    // 查询超时未处理的待办任务
-    LambdaQueryWrapper<FlowRunTaskDO> wrapper =
-        new LambdaQueryWrapper<FlowRunTaskDO>()
-            .eq(FlowRunTaskDO::getDeleted, 0)
-            .in(
-                FlowRunTaskDO::getTaskStatus,
-                FlowTaskStatus.PENDING.name(),
-                FlowTaskStatus.CLAIMED.name())
-            .le(FlowRunTaskDO::getCreatedAt, thresholdTime)
-            .last("LIMIT " + batchSize);
-    List<FlowRunTaskDO> overdueTasks = taskMapper.selectList(wrapper);
+    // 通过 Repository 查询超时未处理的待办任务（符合 §34.2.3，禁止直接注入 Mapper）
+    List<FlowRunTaskVO> overdueTasks = runTaskRepository.findOverdueTasks(thresholdTime, batchSize);
 
     if (overdueTasks.isEmpty()) {
       log.debug("[AutoUrge] 无超时待办");
@@ -104,15 +97,15 @@ public class FlowAutoUrgeScheduler {
     log.info("[AutoUrge] 发现 {} 个超时待办，开始自动催办", overdueTasks.size());
 
     // 按实例分组，同实例只催办一次
-    Map<String, List<FlowRunTaskDO>> byInstance = new HashMap<>();
-    for (FlowRunTaskDO task : overdueTasks) {
+    Map<String, List<FlowRunTaskVO>> byInstance = new HashMap<>();
+    for (FlowRunTaskVO task : overdueTasks) {
       byInstance.computeIfAbsent(task.getInstanceId(), k -> new ArrayList<>()).add(task);
     }
 
     int urgedCount = 0;
-    for (Map.Entry<String, List<FlowRunTaskDO>> entry : byInstance.entrySet()) {
+    for (Map.Entry<String, List<FlowRunTaskVO>> entry : byInstance.entrySet()) {
       String instanceId = entry.getKey();
-      List<FlowRunTaskDO> tasks = entry.getValue();
+      List<FlowRunTaskVO> tasks = entry.getValue();
       try {
         urgedCount += autoUrgeInstance(instanceId, tasks);
       } catch (Exception e) {
@@ -128,16 +121,17 @@ public class FlowAutoUrgeScheduler {
   }
 
   /** 自动催办单个实例的超时任务。 */
-  private int autoUrgeInstance(String instanceId, List<FlowRunTaskDO> tasks) {
-    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
-    if (instance == null) {
+  private int autoUrgeInstance(String instanceId, List<FlowRunTaskVO> tasks) {
+    Optional<FlowInstanceVO> instanceOpt = instanceRepository.findById(instanceId);
+    if (instanceOpt.isEmpty()) {
       log.warn("[AutoUrge] 实例不存在: {}", instanceId);
       return 0;
     }
+    FlowInstanceVO instance = instanceOpt.get();
 
     // 收集被催办人
     List<String> receiverIds = new ArrayList<>();
-    for (FlowRunTaskDO task : tasks) {
+    for (FlowRunTaskVO task : tasks) {
       if (task.getAssigneeId() != null && !receiverIds.contains(task.getAssigneeId())) {
         receiverIds.add(task.getAssigneeId());
       }

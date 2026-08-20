@@ -14,8 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
-import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
+import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.server.agent.AgentDefinitionService;
@@ -152,7 +151,7 @@ public class AgentDefinitionController {
   @Idempotent(key = "ydsz:agent:AgentDefinitionController:create:lock", ttlSeconds = 5)
   @RateLimit(resource = "agent.agentdefinition.create", threshold = 50)
   @PostMapping
-  public YdszResponse<AgentDefinitionVO> create(@Valid @RequestBody AgentDefinitionPostDTO dto) {
+  public YdszResponse<AgentDefinitionVO> create(@Valid @RequestBody AgentDefinitionDTO dto) {
     return YdszResponse.success(agentDefinitionService.create(dto));
   }
 
@@ -173,7 +172,7 @@ public class AgentDefinitionController {
   @RateLimit(resource = "agent.agentdefinition.update", threshold = 50)
   @Idempotent(key = "ydsz:agent:AgentDefinitionController:update:lock", ttlSeconds = 5)
   @PutMapping
-  public YdszResponse<AgentDefinitionVO> update(@Valid @RequestBody AgentDefinitionPutDTO dto) {
+  public YdszResponse<AgentDefinitionVO> update(@Valid @RequestBody AgentDefinitionDTO dto) {
     return YdszResponse.success(agentDefinitionService.update(dto));
   }
 

@@ -510,12 +510,11 @@ public class AuthServiceImpl implements AuthService {
   /**
    * 更新登录成功信息：原子重置失败计数、清除锁定时间、记录最后登录时间/IP， 并标记设备已见（供风险评分识别新设备）。
    *
-   * @param user 登录成功的用户账号
+   * @param user 登录成功的用户账号凭据 VO
    * @param loginIp 登录来源 IP
    * @param userAgent 登录来源 User-Agent（用于设备标记）
    */
-  private void updateLoginSuccess(UserAccountDO user, String loginIp, String userAgent) {
-    user.recordLoginSuccess(loginIp);
+  private void updateLoginSuccess(UserAccountCredentialVO user, String loginIp, String userAgent) {
     userAccountRepository.resetLoginSuccess(user.getId(), loginIp);
     loginAttemptCounterService.markDeviceSeen(
         user.getId(), userAgent, properties.getRiskWindowSeconds());

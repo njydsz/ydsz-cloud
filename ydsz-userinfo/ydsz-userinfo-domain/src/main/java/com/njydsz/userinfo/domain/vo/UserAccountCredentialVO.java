@@ -39,6 +39,14 @@ public class UserAccountCredentialVO {
   /** 租户 ID */
   private String tenantId;
 
+  /** 手机号码 */
+  @com.njydsz.common.safe.sensitive.SensitiveData(com.njydsz.common.safe.sensitive.SensitiveType.PHONE)
+  private String phone;
+
+  /** 邮箱地址 */
+  @com.njydsz.common.safe.sensitive.SensitiveData(com.njydsz.common.safe.sensitive.SensitiveType.EMAIL)
+  private String email;
+
   /** 封禁类型（TEMPORARY/PERMANENT/null），null 表示未封禁 */
   private String banType;
 

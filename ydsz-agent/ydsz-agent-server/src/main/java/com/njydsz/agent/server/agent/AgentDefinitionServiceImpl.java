@@ -11,8 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.agent.domain.agent.AgentDefinition;
-import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
-import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
+import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.repository.AgentDefinitionRepository;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.common.json.YdszJson;
@@ -71,7 +70,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    */
   @Override
   @Transactional
-  public AgentDefinitionVO create(AgentDefinitionPostDTO dto) {
+  public AgentDefinitionVO create(AgentDefinitionDTO dto) {
     // 唯一性校验
     AgentDefinitionVO existing = getByCode(dto.getAgentCode());
     if (existing != null) {
@@ -90,7 +89,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    */
   @Override
   @Transactional
-  public AgentDefinitionVO update(AgentDefinitionPutDTO dto) {
+  public AgentDefinitionVO update(AgentDefinitionDTO dto) {
     AgentDefinitionVO existing = agentDefinitionRepository.findById(dto.getId()).orElse(null);
     if (existing == null) {
       throw new IllegalArgumentException("Agent not found: id=" + dto.getId());

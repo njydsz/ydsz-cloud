@@ -14,8 +14,7 @@ import com.njydsz.agent.domain.dto.AgentTraceStepDTO;
 import com.njydsz.agent.domain.dto.PromptTemplateDTO;
 import com.njydsz.agent.domain.dto.PromptVersionDTO;
 import com.njydsz.agent.domain.dto.TokenUsageRecordDTO;
-import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
-import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
+import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.vo.AgentApprovalVO;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.domain.vo.AgentTraceStepVO;
@@ -74,9 +73,9 @@ public interface AgentConverter {
   List<AgentDefinitionVO> agentDefinitionListToVO(List<AgentDefinitionDO> entities);
 
   /**
-   * PostDTO → Entity 转换（创建场景，系统字段自动忽略）
+   * DTO → Entity 转换（创建场景，系统字段自动忽略）
    *
-   * @param dto 创建请求 DTO
+   * @param dto Agent 定义 DTO（id 不传）
    * @return 数据库实体
    */
   @Mapping(target = "id", ignore = true)
@@ -87,12 +86,12 @@ public interface AgentConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  AgentDefinitionDO postDtoToEntity(AgentDefinitionPostDTO dto);
+  AgentDefinitionDO dtoToEntity(AgentDefinitionDTO dto);
 
   /**
-   * PutDTO → Entity 转换（更新场景，系统字段自动忽略）
+   * DTO（含 ID）→ Entity 转换（更新场景，系统字段自动忽略）
    *
-   * @param dto 更新请求 DTO
+   * @param dto Agent 定义 DTO（含 id）
    * @return 数据库实体
    */
   @Mapping(target = "deleted", ignore = true)
@@ -102,7 +101,7 @@ public interface AgentConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  AgentDefinitionDO putDtoToEntity(AgentDefinitionPutDTO dto);
+  AgentDefinitionDO dtoToEntityWithId(AgentDefinitionDTO dto);
 
   // ===== AgentTrace =====
 

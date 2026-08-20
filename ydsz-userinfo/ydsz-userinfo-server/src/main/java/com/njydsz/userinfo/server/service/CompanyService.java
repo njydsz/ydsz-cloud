@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.userinfo.domain.dto.CompanyDTO;
-import com.njydsz.userinfo.infra.entity.CompanyDO;
 import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 
@@ -27,7 +26,6 @@ import com.njydsz.userinfo.domain.vo.CompanyVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see CompanyDO 公司实体
  */
 public interface CompanyService {
 

@@ -1,6 +1,5 @@
 package com.njydsz.workflow.server.health;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -10,12 +9,8 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
-import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 
 /**
  * 工作流模块健康检查。
@@ -29,6 +24,9 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
  *   <li>SLA 超期任务 — 轻量探针查询超期待办数（P2-6 新增）
  * </ul>
  *
+ * <p><b>架构合规说明（v2.23 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
+ * 禁止 server 层直接注入 infra Mapper（符合 §34.2.3）。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -41,16 +39,16 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
     matchIfMissing = true)
 public class FlowHealthIndicator extends AbstractModuleHealthIndicator {
 
-  private final FlowInstanceMapper instanceMapper;
-  private final FlowRunTaskMapper runTaskMapper;
+  private final FlowInstanceRepository instanceRepository;
+  private final FlowRunTaskRepository runTaskRepository;
   private final ObjectProvider<RedisStringOps> redisServiceProvider;
 
   public FlowHealthIndicator(
-      FlowInstanceMapper instanceMapper,
-      FlowRunTaskMapper runTaskMapper,
+      FlowInstanceRepository instanceRepository,
+      FlowRunTaskRepository runTaskRepository,
       ObjectProvider<RedisStringOps> redisServiceProvider) {
-    this.instanceMapper = instanceMapper;
-    this.runTaskMapper = runTaskMapper;
+    this.instanceRepository = instanceRepository;
+    this.runTaskRepository = runTaskRepository;
     this.redisServiceProvider = redisServiceProvider;
   }
 
@@ -69,27 +67,21 @@ public class FlowHealthIndicator extends AbstractModuleHealthIndicator {
       checkRedisNotConfigured(builder);
     }
 
-    // 流程实例探针
+    // 流程实例探针 — 通过 Repository 获取运行中实例数（符合 §34.2.3，禁止直接注入 Mapper）
     checkTableProbeWithValue(
         builder,
-        "FlowInstanceDO",
+        "FlowInstance",
         () -> {
-          Long runningCount =
-              instanceMapper.selectCount(
-                  new LambdaQueryWrapper<FlowInstanceDO>()
-                      .eq(FlowInstanceDO::getFlowStatus, FlowInstanceStatus.RUNNING.name()));
+          Long runningCount = instanceRepository.countByStatus("RUNNING");
           return "running: " + runningCount;
         });
 
-    // 待办任务探针
+    // 待办任务探针 — 通过 Repository 获取待办任务数
     checkTableProbeWithValue(
         builder,
         "flowTask",
         () -> {
-          Long pendingCount =
-              runTaskMapper.selectCount(
-                  new LambdaQueryWrapper<FlowRunTaskDO>()
-                      .eq(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name()));
+          Long pendingCount = runTaskRepository.countPending();
           return "pending: " + pendingCount;
         });
 
@@ -99,7 +91,7 @@ public class FlowHealthIndicator extends AbstractModuleHealthIndicator {
         "slaOverdue",
         () -> {
           try {
-            Long overdueCount = runTaskMapper.countOverdue(null, null);
+            Long overdueCount = runTaskRepository.countOverdue();
             return "overdue: " + (overdueCount == null ? 0 : overdueCount);
           } catch (Exception e) {
             log.debug("[FlowHealth] SLA 超期查询失败: {}", e.getMessage());

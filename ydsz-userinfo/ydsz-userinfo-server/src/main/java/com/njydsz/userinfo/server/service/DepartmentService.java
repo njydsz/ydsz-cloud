@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.userinfo.domain.dto.DepartmentDTO;
-import com.njydsz.userinfo.infra.entity.DepartmentDO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 
@@ -18,7 +17,6 @@ import com.njydsz.userinfo.domain.vo.DepartmentVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see DepartmentDO 部门实体
  */
 public interface DepartmentService {
 

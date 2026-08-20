@@ -1,5 +1,6 @@
 package com.njydsz.workflow.domain.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -176,4 +177,24 @@ public interface FlowRunTaskRepository {
    * @return 超期任务数量
    */
   long countOverdue();
+
+  /**
+   * 统计所有待办任务数量（状态为 PENDING 且未删除）。
+   *
+   * <p>用于健康检查探针。
+   *
+   * @return 待办任务数量
+   */
+  long countPending();
+
+  /**
+   * 查询超时未处理的待办任务列表（用于自动催办）。
+   *
+   * <p>返回创建于指定时间之前、状态为 PENDING 或 CLAIMED 的任务，按实例去重后可用于催办通知。
+   *
+   * @param thresholdTime 时间阈值（查询创建时间早于此值的任务）
+   * @param limit 返回数量上限
+   * @return 超时任务 VO 列表
+   */
+  List<FlowRunTaskVO> findOverdueTasks(LocalDateTime thresholdTime, int limit);
 }

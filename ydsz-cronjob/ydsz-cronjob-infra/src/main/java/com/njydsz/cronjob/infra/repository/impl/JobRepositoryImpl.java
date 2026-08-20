@@ -241,6 +241,54 @@ public class JobRepositoryImpl implements JobRepository {
   }
 
   @Override
+  public int putUpdate(JobPutDTO dto) {
+    Job entity = converter.putDtoToEntity(dto);
+    return jobMapper.updateById(entity);
+  }
+
+  @Override
+  public int updateStatus(String id, String status) {
+    Job entity = new Job();
+    entity.setId(id);
+    entity.setStatus(status);
+    return jobMapper.updateById(entity);
+  }
+
+  @Override
+  public int casUpdateStatus(String id, String oldStatus, String newStatus) {
+    return jobMapper.casUpdateStatus(id, oldStatus, newStatus);
+  }
+
+  @Override
+  public int updateById(JobVO vo) {
+    Job entity = converter.voToEntity(vo);
+    return jobMapper.updateById(entity);
+  }
+
+  @Override
+  public long countByStatusNullable(String status) {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    if (status != null && !status.isBlank()) {
+      wrapper.eq(Job::getStatus, status);
+    }
+    wrapper.eq(Job::getDeleted, 0);
+    return jobMapper.selectCount(wrapper);
+  }
+
+  @Override
+  public List<JobVO> findByStatus(String status) {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper.eq(Job::getDeleted, 0);
+    if (status != null && !status.isBlank()) {
+      wrapper.eq(Job::getStatus, status);
+    }
+    wrapper.orderByDesc(Job::getCreatedAt);
+    return converter.jobListToVO(jobMapper.selectList(wrapper));
+  }
+
+  @Override
   public int deleteById(String id) {
     return jobMapper.deleteById(id);
   }

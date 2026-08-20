@@ -1,5 +1,6 @@
 package com.njydsz.workflow.infra.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -218,5 +219,24 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   @Override
   public long countOverdue() {
     return taskMapper.countOverdue(null, null);
+  }
+
+  @Override
+  public long countPending() {
+    return taskMapper.selectCount(
+        new LambdaQueryWrapper<FlowRunTaskDO>()
+            .eq(FlowRunTaskDO::getTaskStatus, "PENDING")
+            .eq(FlowRunTaskDO::getDeleted, 0));
+  }
+
+  @Override
+  public List<FlowRunTaskVO> findOverdueTasks(LocalDateTime thresholdTime, int limit) {
+    return converter.flowRunTaskListToVO(
+        taskMapper.selectList(
+            new LambdaQueryWrapper<FlowRunTaskDO>()
+                .eq(FlowRunTaskDO::getDeleted, 0)
+                .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
+                .le(FlowRunTaskDO::getCreatedAt, thresholdTime)
+                .last("LIMIT " + limit)));
   }
 }

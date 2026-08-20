@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
 
+import com.njydsz.message.domain.dto.MsgNotificationDTO;
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.vo.MsgNotificationVO;
 
@@ -19,7 +20,7 @@ import com.njydsz.message.domain.vo.MsgNotificationVO;
  *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
  *   <li>返回领域 VO（{@link MsgNotificationVO}），非 DTO / infra 实体
  *   <li>查询入参使用领域 Query（{@link NotificationQueryDTO}）或具体字段
- *   <li>CUD 入参使用领域 VO（{@link MsgNotificationVO}），禁止接受 infra 实体
+ *   <li>CUD 入参使用领域 DTO（{@link MsgNotificationDTO}），禁止 VO 混入
  * </ul>
  *
  * @author ydsz-team
@@ -30,10 +31,10 @@ public interface MsgNotificationRepository {
   /**
    * 批量保存站内通知。
    *
-   * @param list 站内通知 VO 列表
+   * @param list 站内通知 DTO 列表
    * @return 保存成功返回 {@code true}
    */
-  boolean saveBatch(List<MsgNotificationVO> list);
+  boolean saveBatch(List<MsgNotificationDTO> list);
 
   /**
    * 根据主键查询站内通知。
@@ -46,10 +47,10 @@ public interface MsgNotificationRepository {
   /**
    * 更新站内通知。
    *
-   * @param vo 站内通知 VO
+   * @param dto 站内通知 DTO
    * @return 更新成功返回 {@code true}
    */
-  boolean update(MsgNotificationVO vo);
+  boolean update(MsgNotificationDTO dto);
 
   /**
    * 分页查询站内通知。

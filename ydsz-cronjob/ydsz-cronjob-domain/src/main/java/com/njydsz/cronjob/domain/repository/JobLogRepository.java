@@ -117,6 +117,31 @@ public interface JobLogRepository {
   JobRepository.PageResult<JobLogVO> pageByJobKeyAndStatus(String jobKey, String status, int page, int size);
 
   /**
+   * 按 ID 查询执行日志。
+   *
+   * @param id 日志 ID
+   * @return 日志 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<JobLogVO> findById(String id);
+
+  /**
+   * 按 ID 更新执行日志。
+   *
+   * @param vo 执行日志 VO（必须含 id）
+   * @return 受影响行数
+   */
+  int updateById(JobLogVO vo);
+
+  /**
+   * 统计指定条件的日志数量。
+   *
+   * @param jobId 任务 ID（可为空）
+   * @param status 状态（可为空）
+   * @return 日志数量
+   */
+  long countByJobIdAndStatus(String jobId, String status);
+
+  /**
    * 新增执行日志。
    *
    * @param vo 执行日志 VO

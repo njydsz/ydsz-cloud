@@ -30,6 +30,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-safe</artifactId>
         </dependency>
+        <!-- SnowflakeIdGenerator（领域服务需要分布式 ID 生成能力） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+        </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>

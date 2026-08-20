@@ -5,7 +5,9 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.dto.MsgLogDTO;
+import com.njydsz.message.domain.dto.MsgNotificationDTO;
+import com.njydsz.message.domain.dto.MsgTemplateDTO;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
 import com.njydsz.message.domain.vo.MsgBatchVO;
 import com.njydsz.message.domain.vo.MsgFeedbackVO;
@@ -40,16 +42,16 @@ import com.njydsz.message.infra.entity.MsgVariableSourceDO;
 /**
  * 消息模块统一 MapStruct 转换器（Infra 层）。
  *
- * <p>承担「消息模块」所有 Entity ↔ VO ↔ DTO 的双向转换，遵循云顶编码规范的<b>单一转换器</b>模式：
+ * <p>承担「消息模块」所有 DO ↔ VO ↔ DTO 的双向转换，遵循云顶编码规范的<b>单一转换器</b>模式：
  * 同一业务域的转换规则集中维护，避免散落在各 Service 的 BeanUtils.copyProperties 调用。
  *
  * <p><b>设计要点：</b>
  *
  * <ul>
- *   <li>DO → VO 方向：DO 的 String 类型字段（如 channel、status 等）直接映射到 VO 的 String 字段
- *   <li>VO → DO 方向：VO 的 String 字段直接映射到 DO 的 String 字段
- *   <li>使用 MapStruct 注解处理器，编译期生成实现类，性能优于反射
- *   <li>通过 {@link #INSTANCE} 单例访问，零依赖注入，开箱即用
+ *   <li>DO → VO 方向：用于查询结果转换</li>
+ *   <li>VO → DO 方向：用于 Repository 层将 VO 转换为 DO</li>
+ *   <li>DTO → DO 方向：用于 Repository 层将 CUD 入参 DTO 转换为 DO</li>
+ *   <li>使用 MapStruct 注解处理器，编译期生成实现类，性能优于反射</li>
  * </ul>
  *
  * @author ydsz-team
@@ -147,38 +149,6 @@ public interface MessageConverter {
    */
   MsgLogDO voToDO(MsgLogVO vo);
 
-  // ===== 领域实体 → VO 方向（用于 Server 层迁移） =====
-
-  /**
-   * 消息发送日志领域实体 → 消息发送日志 VO。
-   *
-   * <p>默认方法：先转换为 DO，再转换为 VO。用于 Server 层将领域实体转换为 VO 后调用 Repository 的 VO-based 方法。
-   *
-   * @param entity 消息发送日志领域实体
-   * @return 消息发送日志 VO
-   */
-  default MsgLogVO entityToVO(MsgLog entity) {
-    if (entity == null) {
-      return null;
-    }
-    return doToVO(entityToDO(entity));
-  }
-
-  /**
-   * 消息发送日志 VO → 消息发送日志领域实体。
-   *
-   * <p>默认方法：先转换为 DO，再转换为领域实体。用于 Server 层将 VO 转换为领域实体后调用通道分发等方法。
-   *
-   * @param vo 消息发送日志 VO
-   * @return 消息发送日志领域实体
-   */
-  default MsgLog voToEntity(MsgLogVO vo) {
-    if (vo == null) {
-      return null;
-    }
-    return doToEntity(voToDO(vo));
-  }
-
   /**
    * 消息发送日志 VO 列表 → 消息发送日志 DO 列表。
    *
@@ -189,47 +159,55 @@ public interface MessageConverter {
    */
   List<MsgLogDO> logVoListToDO(List<MsgLogVO> vos);
 
-  // ===== 领域实体 → DO 方向（用于 Repository 层转换） =====
+  // ===== DTO → DO 方向（用于 Repository 层 CUD 操作） =====
 
   /**
-   * 消息发送日志领域实体 → 消息发送日志 DO。
+   * 消息发送日志 DTO → 消息发送日志 DO。
    *
-   * <p>用于 Repository 层将领域实体转换为 DO 后委托 Mapper 执行数据库操作。
-   * 枚举类型字段（如 status、channel）通过 {@code name()} 方法转换为 String。
+   * <p>用于 Repository 层将 CUD 入参 DTO 转换为 DO 后委托 Mapper 执行数据库操作。
    *
-   * @param entity 消息发送日志领域实体
+   * @param dto 消息发送日志 DTO
    * @return 消息发送日志 DO
    */
-  MsgLogDO entityToDO(MsgLog entity);
+  MsgLogDO dtoToDO(MsgLogDTO dto);
 
   /**
-   * 消息发送日志领域实体列表 → 消息发送日志 DO 列表。
+   * 消息发送日志 DTO 列表 → 消息发送日志 DO 列表。
    *
    * <p>用于 Repository 层批量转换。
    *
-   * @param entities 消息发送日志领域实体列表
+   * @param dtos 消息发送日志 DTO 列表
    * @return 消息发送日志 DO 列表
    */
-  List<MsgLogDO> logEntityListToDO(List<MsgLog> entities);
-
-  // ===== DO → 领域实体 方向（用于 Repository 层查询结果转换） =====
+  List<MsgLogDO> logDtoListToDO(List<MsgLogDTO> dtos);
 
   /**
-   * 消息发送日志 DO → 消息发送日志领域实体。
+   * 站内通知 DTO → 站内通知 DO。
    *
-   * <p>用于 Repository 层将 DO 转换为领域实体后返回给 Server 层。
-   * String 类型字段通过枚举 {@code valueOf()} 方法转换为枚举类型。
+   * <p>用于 Repository 层将 CUD 入参 DTO 转换为 DO 后委托 Mapper 执行数据库操作。
    *
-   * @param entity 消息发送日志 DO
-   * @return 消息发送日志领域实体
+   * @param dto 站内通知 DTO
+   * @return 站内通知 DO
    */
-  MsgLog doToEntity(MsgLogDO entity);
+  MsgNotificationDO dtoToDO(MsgNotificationDTO dto);
 
   /**
-   * 消息发送日志 DO 列表 → 消息发送日志领域实体列表。
+   * 站内通知 DTO 列表 → 站内通知 DO 列表。
    *
-   * @param entities 消息发送日志 DO 列表
-   * @return 消息发送日志领域实体列表
+   * <p>用于 Repository 层批量转换。
+   *
+   * @param dtos 站内通知 DTO 列表
+   * @return 站内通知 DO 列表
    */
-  List<MsgLog> logDoListToEntity(List<MsgLogDO> entities);
+  List<MsgNotificationDO> notificationDtoListToDO(List<MsgNotificationDTO> dtos);
+
+  /**
+   * 消息模板 DTO → 消息模板 DO。
+   *
+   * <p>用于 Repository 层将 CUD 入参 DTO 转换为 DO 后委托 Mapper 执行数据库操作。
+   *
+   * @param dto 消息模板 DTO
+   * @return 消息模板 DO
+   */
+  MsgTemplateDO dtoToDO(MsgTemplateDTO dto);
 }

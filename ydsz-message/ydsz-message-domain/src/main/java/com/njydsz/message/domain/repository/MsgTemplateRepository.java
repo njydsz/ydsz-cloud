@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
 
+import com.njydsz.message.domain.dto.MsgTemplateDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 
@@ -19,7 +20,7 @@ import com.njydsz.message.domain.vo.MsgTemplateVO;
  *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
  *   <li>返回领域 VO（{@link MsgTemplateVO}），非 DTO / infra 实体
  *   <li>查询入参使用领域 Query（{@link TemplateQueryDTO}）或具体字段
- *   <li>CUD 入参使用领域 VO（{@link MsgTemplateVO}），禁止接受 infra 实体
+ *   <li>CUD 入参使用领域 DTO（{@link MsgTemplateDTO}），禁止 VO 混入
  * </ul>
  *
  * @author ydsz-team
@@ -30,10 +31,10 @@ public interface MsgTemplateRepository {
   /**
    * 保存消息模板（插入或更新）。
    *
-   * @param vo 消息模板 VO
+   * @param dto 消息模板 DTO
    * @return 保存成功返回 {@code true}
    */
-  boolean save(MsgTemplateVO vo);
+  boolean save(MsgTemplateDTO dto);
 
   /**
    * 根据主键查询消息模板。
@@ -46,10 +47,10 @@ public interface MsgTemplateRepository {
   /**
    * 更新消息模板。
    *
-   * @param vo 消息模板 VO
+   * @param dto 消息模板 DTO
    * @return 更新成功返回 {@code true}
    */
-  boolean update(MsgTemplateVO vo);
+  boolean update(MsgTemplateDTO dto);
 
   /**
    * 根据主键删除消息模板。

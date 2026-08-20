@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.RoleDTO;
-import com.njydsz.userinfo.infra.entity.RoleDO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 
 /**
@@ -18,7 +17,6 @@ import com.njydsz.userinfo.domain.vo.RoleVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see RoleDO 角色实体
  */
 public interface RoleService {
 

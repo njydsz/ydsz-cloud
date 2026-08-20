@@ -13,7 +13,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.config.MfaSecretEncryptor;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.MfaSetupVO;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
+import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 
 /**
  * 双因素认证（MFA）服务。
@@ -196,7 +196,7 @@ public class MfaService {
    * @param mfaCode 用户提交的动态码（TOTP、短信验证码或邮件验证码）
    * @throws BusinessException 动态码缺失、错误或用户无法完成 MFA 时抛出
    */
-  public void validateLoginMfa(UserAccountDO user, String mfaCode) {
+  public void validateLoginMfa(UserAccountCredentialVO user, String mfaCode) {
     String userId = user.getId();
     // readSecret 已自动解密，可直接用于 TOTP 校验
     String secret = readSecret(SECRET_KEY_PREFIX + userId);

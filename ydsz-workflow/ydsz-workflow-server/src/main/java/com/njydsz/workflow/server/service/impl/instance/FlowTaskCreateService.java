@@ -1058,7 +1058,7 @@ public class FlowTaskCreateService {
         updateInstanceNode(instance, nextNodes);
       }
     } finally {
-      AUTO_PASS_DEPTH.set(depth);
+      AUTO_PASS_DEPTH.remove();
     }
   }
 
