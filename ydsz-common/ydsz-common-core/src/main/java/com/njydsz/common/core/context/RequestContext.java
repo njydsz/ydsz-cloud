@@ -65,31 +65,31 @@ import com.njydsz.common.core.constant.HeaderConstants;
  */
 public final class RequestContext {
 
-  /** 上下文键名：用户ID */
+  /** 上下文键名：用户 ID。 */
   public static final String KEY_USER_ID = "userId";
 
-  /** 上下文键名：租户ID */
+  /** 上下文键名：租户 ID。 */
   public static final String KEY_TENANT_ID = "tenantId";
 
-  /** 上下文键名：链路追踪ID（值与 {@link HeaderConstants#MDC_TRACE_ID_KEY} 保持一致） */
+  /** 上下文键名：链路追踪 ID（值与 {@link HeaderConstants#MDC_TRACE_ID_KEY} 保持一致）。 */
   public static final String KEY_TRACE_ID = HeaderConstants.MDC_TRACE_ID_KEY;
 
-  /** 上下文键名：请求ID */
+  /** 上下文键名：请求 ID。 */
   public static final String KEY_REQUEST_ID = "requestId";
 
-  /** 上下文键名：语言区域 */
+  /** 上下文键名：语言区域。 */
   public static final String KEY_LANGUAGE = "language";
 
-  /** 上下文键名：租户隔离跳过标记 */
+  /** 上下文键名：租户隔离跳过标记。 */
   public static final String KEY_TENANT_ISOLATION_SKIPPED = "tenantIsolationSkipped";
 
-  /** 上下文键名：客户端 IP */
+  /** 上下文键名：客户端 IP。 */
   public static final String KEY_CLIENT_IP = "clientIp";
 
-  /** 上下文键名：请求来源（INTERNAL / OPEN_API / WEB_HOOK 等） */
+  /** 上下文键名：请求来源（INTERNAL / OPEN_API / WEB_HOOK 等）。 */
   public static final String KEY_REQUEST_SOURCE = "requestSource";
 
-  /** 上下文键名：API 版本 */
+  /** 上下文键名：API 版本。 */
   public static final String KEY_API_VERSION = "apiVersion";
 
   /**

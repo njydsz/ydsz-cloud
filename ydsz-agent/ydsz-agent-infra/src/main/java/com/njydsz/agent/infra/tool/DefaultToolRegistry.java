@@ -53,7 +53,9 @@ public class DefaultToolRegistry implements ToolRegistry {
    */
   public DefaultToolRegistry(int defaultTimeoutSeconds) {
     this.defaultTimeoutSeconds = defaultTimeoutSeconds > 0 ? defaultTimeoutSeconds : 0;
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 虚拟线程执行器，每个工具调用一个虚拟线程，无平台线程占用
     this.toolExecutorPool = Executors.newVirtualThreadPerTaskExecutor();
+    // CHECKSTYLE.ON: RegexpSinglelineJava
   }
 
   @Override

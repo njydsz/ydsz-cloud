@@ -124,11 +124,13 @@ public class MessageServiceImpl implements MessageService {
   private final MessageSendTxService messageSendTxService;
 
   /** P2-C5: 级联消息发送线程池（固定大小，避免级联消息耗尽主线程池） */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava - 级联消息专用池，线程数固定为4，避免耗尽主线程池
   private final Executor cascadeExecutor = Executors.newFixedThreadPool(4, r -> {
     Thread t = new Thread(r, "msg-cascade-" + System.nanoTime());
     t.setDaemon(true);
     return t;
   });
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   @Override
   public MessageResult send(MessageRequest request) {

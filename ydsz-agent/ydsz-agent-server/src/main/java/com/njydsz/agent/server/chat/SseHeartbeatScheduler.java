@@ -76,7 +76,9 @@ public class SseHeartbeatScheduler {
     log.info("[SseHeartbeatScheduler] 创建 SSE 心跳调度线程池，大小={}", SCHEDULER_POOL_SIZE);
     ThreadFactory virtualThreadFactory =
         Thread.ofVirtual().name(THREAD_NAME_PREFIX, 0).factory();
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - SSE 心跳调度器，线程数固定为2，使用虚拟线程工厂
     return Executors.newScheduledThreadPool(SCHEDULER_POOL_SIZE, virtualThreadFactory);
+    // CHECKSTYLE.ON: RegexpSinglelineJava
   }
 
   /**

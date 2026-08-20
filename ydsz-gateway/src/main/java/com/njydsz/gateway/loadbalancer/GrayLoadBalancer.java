@@ -56,10 +56,19 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
 
   private static final Logger LOG = LoggerFactory.getLogger(GrayLoadBalancer.class);
 
-  /** 灰度标签请求头名,同时作为 exchange attribute key */
+  /**
+   * 灰度标签请求头名，同时作为 Gateway exchange attribute key。
+   *
+   * <p>请求头中携带灰度标识（如 {@code "gray"}），负载均衡器根据此标识将请求路由到灰度实例。
+   */
   public static final String GRAY_TAG_HEADER = "X-Gray-Tag";
 
-  /** exchange attribute key: 灰度路由结果（true=命中灰度实例, false=命中稳定实例） */
+  /**
+   * Gateway exchange attribute key：灰度路由结果。
+   *
+   * <p>值为 {@code true} 表示命中灰度实例，{@code false} 表示命中稳定实例。
+   * 用于下游过滤器/日志记录灰度路由决策结果。
+   */
   public static final String GRAY_HIT_ATTR = "__gray_hit_result";
 
   /** 灰度标识值:灰度实例 */

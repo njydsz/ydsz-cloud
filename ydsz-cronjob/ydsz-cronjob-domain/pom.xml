@@ -27,30 +27,12 @@
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-jdbc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-annotation</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations-jakarta</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
-        </dependency>
-        <!--spring-expression（SpELConditionEvaluator，v1.4.0 自 common-domain 迁入）-->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-expression</artifactId>
-        </dependency>
-        <!--spring-context（SpELConditionEvaluator 使用 MapAccessor）-->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
         </dependency>
         <!-- ydsz-common-cache（SpELConditionEvaluator 表达式缓存，替代 Caffeine） -->
         <dependency>

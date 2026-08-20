@@ -91,7 +91,11 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
   /** Origin 请求头 */
   private static final String HEADER_ORIGIN = "Origin";
 
-  /** exchange attribute key: WebSocket 已认证标记 */
+  /**
+   * Gateway exchange attribute key：WebSocket 已认证标记。
+   *
+   * <p>认证成功后写入 exchange attribute，值为 {@code true}，用于下游过滤器判断当前连接是否已通过认证。
+   */
   public static final String ATTR_WS_AUTHENTICATED = "__ws_authenticated";
 
   /** JWT 缓存校验器 */

@@ -28,10 +28,6 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-jdbc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-safe</artifactId>
         </dependency>
         <dependency>

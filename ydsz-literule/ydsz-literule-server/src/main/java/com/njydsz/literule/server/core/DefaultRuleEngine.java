@@ -152,7 +152,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
   private static ExecutorService createDefaultInjectionExecutor() {
     int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors() * 2);
     // CHECKSTYLE.OFF: RegexpSinglelineJava - 规则注入默认线程池，线程数由 CPU 核数动态计算，守护线程
-    return java.util.concurrent.Executors.newFixedThreadPool(
+    ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(
         poolSize,
         r -> {
           Thread t = new Thread(r, "literule-injection");
@@ -160,6 +160,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
           return t;
         });
     // CHECKSTYLE.ON: RegexpSinglelineJava
+    return executor;
   }
 
   /**

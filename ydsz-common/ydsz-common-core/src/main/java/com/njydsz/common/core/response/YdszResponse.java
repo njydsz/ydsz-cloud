@@ -68,7 +68,11 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  /** 成功状态码 */
+  /**
+   * 成功状态码（复用 {@link YdszResultCode#SUCCESS}，与错误码体系保持一致）。
+   *
+   * <p>该常量表示操作成功（0），用于构造成功响应或判断响应是否成功。
+   */
   public static final String SUCCESS = YdszResultCode.SUCCESS.getCode();
 
   /**
@@ -81,10 +85,10 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
    */
   public static final String UNKNOWN_CODE = YdszResultCode.UNKNOWN.getCode();
 
-  /** 操作成功国际化消息 key（core 模块） */
+  /** 操作成功国际化消息 key（core 模块）。 */
   public static final String MSG_OPERATION_SUCCESS = "core.success";
 
-  /** 操作失败国际化消息 key（core 模块） */
+  /** 操作失败国际化消息 key（core 模块）。 */
   public static final String MSG_OPERATION_FAIL = "core.error";
 
   /** 返回编码 */

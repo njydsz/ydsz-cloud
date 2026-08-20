@@ -86,7 +86,9 @@ public class AgentFacadeImpl implements AgentFacade {
     log.info("[BatchChat] 批量对话启动: itemsCount={}", items.size());
 
     // 虚拟线程池：每个任务一个虚拟线程，适合 I/O 密集型（LLM HTTP 调用）
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 虚拟线程执行器，每个任务一个虚拟线程，无平台线程占用
     ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     try {
       // 为每条请求提交一个异步任务
       List<CompletableFuture<BatchChatResult.BatchResultItem>> futures = new ArrayList<>(items.size());
