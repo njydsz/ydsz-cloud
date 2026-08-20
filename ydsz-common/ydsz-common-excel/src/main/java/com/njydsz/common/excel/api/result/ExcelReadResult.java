@@ -32,27 +32,27 @@ import com.njydsz.common.excel.core.ExcelFacade;
  * // 方式1: 直接获取结果(同步等待)
  * ExcelReadResult<User> result = ExcelFacade.asyncRead("data.xlsx", User.class).submit();
  * List<User> users = result.getData();
- * System.out.println("读取了 " + result.getTotalRows() + " 行数据");
+ * log.info("读取了 {} 行数据", result.getTotalRows());
  *
  * // 方式2: 带超时等待
  * try {
  *     List<User> users = result.get(30, TimeUnit.SECONDS);
  * } catch (TimeoutException e) {
- *     System.out.println("读取超时");
+ *     log.warn("读取超时", e);
  * }
  *
  * // 方式3: 链式处理
  * result.thenAccept(users -> {
- *     System.out.println("处理了 " + users.size() + " 条数据");
+ *     log.info("处理了 {} 条数据", users.size());
  * }).exceptionally(e -> {
- *     System.out.println("读取失败: " + e.getMessage());
+ *     log.error("读取失败", e);
  *     return null;
  * });
  *
  * // 方式4: 获取统计信息
- * System.out.println("总行数: " + result.getTotalRows());
- * System.out.println("读取耗时: " + result.getElapsedTime() + "ms");
- * System.out.println("读取速度: " + result.getRowsPerSecond() + " 行/秒");
+ * log.info("总行数: {}", result.getTotalRows());
+ * log.info("读取耗时: {}ms", result.getElapsedTime());
+ * log.info("读取速度: {} 行/秒", result.getRowsPerSecond());
  * }</pre>
  *
  * @param <T> 泛型参数,表示读取的数据类型

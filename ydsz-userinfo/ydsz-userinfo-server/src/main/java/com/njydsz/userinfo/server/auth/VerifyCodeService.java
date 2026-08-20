@@ -1,7 +1,7 @@
 package com.njydsz.userinfo.server.auth;
 
 import java.time.Duration;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,7 +56,6 @@ public class VerifyCodeService {
   public static final String TARGET_TYPE_EMAIL = "EMAIL";
 
   private final RedisStringOps redisStringOps;
-  private final Random random = new Random();
 
   /**
    * 发送验证码（生成并存储到 Redis，未实际发送短信/邮件）。
@@ -161,7 +160,7 @@ public class VerifyCodeService {
   private String generateCode() {
     StringBuilder sb = new StringBuilder(CODE_LENGTH);
     for (int i = 0; i < CODE_LENGTH; i++) {
-      sb.append(random.nextInt(10));
+      sb.append(ThreadLocalRandom.current().nextInt(10));
     }
     return sb.toString();
   }

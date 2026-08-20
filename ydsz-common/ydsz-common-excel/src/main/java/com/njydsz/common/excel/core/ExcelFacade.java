@@ -35,7 +35,7 @@ import com.njydsz.common.excel.exception.ExcelReadException;
  *     .doRead(new ReadListener<User>() {
  *         @Override
  *         public void onData(AnalysisContext context, User data) {
- *             System.out.println(data);
+ *             log.info("读取到数据: {}", data);
  *         }
  *     });
  *

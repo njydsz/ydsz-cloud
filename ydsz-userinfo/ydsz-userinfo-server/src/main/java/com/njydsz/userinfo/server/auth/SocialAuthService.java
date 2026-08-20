@@ -17,7 +17,7 @@ import com.njydsz.userinfo.domain.social.SocialAuthException;
 import com.njydsz.userinfo.domain.social.SocialAuthProvider;
 import com.njydsz.userinfo.domain.social.SocialUserInfo;
 import com.njydsz.userinfo.domain.vo.SocialAccountVO;
-import com.njydsz.userinfo.domain.config.SocialAuthProperties;
+import com.njydsz.userinfo.infra.config.SocialAuthProperties;
 
 /**
  * 社交认证服务编排实现。

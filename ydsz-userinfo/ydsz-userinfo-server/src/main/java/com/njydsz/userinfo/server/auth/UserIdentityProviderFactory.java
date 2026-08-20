@@ -1,10 +1,12 @@
-package com.njydsz.userinfo.domain.auth;
+package com.njydsz.userinfo.server.auth;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+import com.njydsz.userinfo.domain.auth.UserIdentityProvider;
 import com.njydsz.userinfo.domain.enums.IdentityProviderType;
 
 /**
@@ -29,7 +31,7 @@ public class UserIdentityProviderFactory {
    * @param providers 所有 UserIdentityProvider 实现的 Spring Bean 列表
    */
   public UserIdentityProviderFactory(List<UserIdentityProvider> providers) {
-    providerMap = new java.util.HashMap<>();
+    providerMap = new HashMap<>();
     for (UserIdentityProvider provider : providers) {
       providerMap.put(provider.getType(), provider);
     }

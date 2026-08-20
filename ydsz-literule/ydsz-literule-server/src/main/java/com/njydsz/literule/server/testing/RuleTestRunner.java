@@ -34,7 +34,7 @@ import com.njydsz.literule.server.sdk.LiteRuleSdk;
  *
  * // CI 门禁
  * if (!report.allPassed()) {
- *     System.err.println("回归测试未通过: " + report.getFailedResults());
+ *     log.error("回归测试未通过: {}", report.getFailedResults());
  *     System.exit(1);
  * }
  * }</pre>

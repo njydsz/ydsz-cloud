@@ -1,7 +1,7 @@
 package com.njydsz.common.queue.scheduler;
 
-import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -48,7 +48,6 @@ public class DeadLetterRetryScheduler implements DisposableBean {
   private final DeadLetterQueueService deadLetterQueueService;
   private final QueueProperties queueProperties;
   private final ScheduledExecutorService scheduler;
-  private final Random random;
   private volatile ScheduledFuture<?> scheduledFuture;
 
   public DeadLetterRetryScheduler(
@@ -58,7 +57,6 @@ public class DeadLetterRetryScheduler implements DisposableBean {
     this.deadLetterQueueService = deadLetterQueueService;
     this.queueProperties = queueProperties;
     this.scheduler = scheduler;
-    this.random = new Random();
     scheduleNext();
   }
 
@@ -95,7 +93,7 @@ public class DeadLetterRetryScheduler implements DisposableBean {
     if (maxJitter <= 0) {
       return 0L;
     }
-    return (long) (random.nextDouble() * maxJitter);
+    return (long) (ThreadLocalRandom.current().nextDouble() * maxJitter);
   }
 
   /** 执行扫描并在完成后调度下一次 */

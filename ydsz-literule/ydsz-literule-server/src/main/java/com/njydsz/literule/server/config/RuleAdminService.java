@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
@@ -500,17 +500,12 @@ public class RuleAdminService {
    * @param pageQuery 分页查询参数
    * @return 分页结果
    */
-  public IPage<RuleVersionVO> pageVersions(String ruleCode, PageQuery pageQuery) {
+  public PageResponse<List<RuleVersionVO>> pageVersions(String ruleCode, PageQuery pageQuery) {
     if (versionRepository == null) {
-      IPage<RuleVersionVO> emptyPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
-          pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize());
-      emptyPage.setRecords(List.of());
-      emptyPage.setTotal(0);
-      return emptyPage;
+      return PageResponse.success(List.of(), 0);
     }
-    IPage<RuleVersionVO> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
-        pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize());
-    return versionRepository.pageVersions(ruleCode, page);
+    return versionRepository.pageVersions(
+        ruleCode, pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize());
   }
 
   /**

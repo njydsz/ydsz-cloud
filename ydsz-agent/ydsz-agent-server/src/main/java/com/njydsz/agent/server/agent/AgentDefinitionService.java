@@ -2,6 +2,8 @@ package com.njydsz.agent.server.agent;
 
 import java.util.List;
 
+import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
+import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 
@@ -42,18 +44,18 @@ public interface AgentDefinitionService {
   /**
    * 创建 Agent 定义
    *
-   * @param vo Agent 定义 VO
+   * @param dto Agent 定义创建请求 DTO
    * @return 创建后的 Agent 定义 VO
    */
-  AgentDefinitionVO create(AgentDefinitionVO vo);
+  AgentDefinitionVO create(AgentDefinitionPostDTO dto);
 
   /**
    * 更新 Agent 定义
    *
-   * @param vo Agent 定义 VO
+   * @param dto Agent 定义更新请求 DTO
    * @return 更新后的 Agent 定义 VO
    */
-  AgentDefinitionVO update(AgentDefinitionVO vo);
+  AgentDefinitionVO update(AgentDefinitionPutDTO dto);
 
   /**
    * 逻辑删除

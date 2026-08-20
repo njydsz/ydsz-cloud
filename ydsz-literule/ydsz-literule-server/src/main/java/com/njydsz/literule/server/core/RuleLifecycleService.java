@@ -57,7 +57,7 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
  *
  * // 2. 预览回滚
  * RollbackPreview preview = lifecycleService.previewRollback("R001", 3);
- * System.out.println("差异数: " + preview.getDiffCount());
+ * log.info("差异数: {}", preview.getDiffCount());
  *
  * // 3. 确认后执行回滚
  * RuleDefinitionVO restored = lifecycleService.rollback("R001", 3, "admin");

@@ -71,27 +71,16 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    */
   @Override
   @Transactional
-  public AgentDefinitionVO create(AgentDefinitionVO vo) {
+  public AgentDefinitionVO create(AgentDefinitionPostDTO dto) {
     // 唯一性校验
-    AgentDefinitionVO existing = getByCode(vo.getAgentCode());
+    AgentDefinitionVO existing = getByCode(dto.getAgentCode());
     if (existing != null) {
-      throw new IllegalArgumentException("Agent code already exists: " + vo.getAgentCode());
+      throw new IllegalArgumentException("Agent code already exists: " + dto.getAgentCode());
     }
-    // 构建 PostDTO
-    AgentDefinitionPostDTO postDTO = new AgentDefinitionPostDTO();
-    postDTO.setAgentCode(vo.getAgentCode());
-    postDTO.setAgentName(vo.getAgentName());
-    postDTO.setAgentType(vo.getAgentType());
-    postDTO.setDescription(vo.getDescription());
-    postDTO.setSystemPrompt(vo.getSystemPrompt());
-    postDTO.setModelConfig(vo.getModelConfig());
-    postDTO.setToolNames(vo.getToolNames());
-    postDTO.setTemperature(vo.getTemperature());
-    postDTO.setMaxTokens(vo.getMaxTokens());
-    agentDefinitionRepository.insert(postDTO);
+    agentDefinitionRepository.insert(dto);
     log.info(
-        "[Agent-Def] 创建 Agent: code={}, name={}", vo.getAgentCode(), vo.getAgentName());
-    return vo;
+        "[Agent-Def] 创建 Agent: code={}, name={}", dto.getAgentCode(), dto.getAgentName());
+    return getByCode(dto.getAgentCode());
   }
 
   /**
@@ -101,26 +90,14 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    */
   @Override
   @Transactional
-  public AgentDefinitionVO update(AgentDefinitionVO vo) {
-    AgentDefinitionVO existing = agentDefinitionRepository.findById(vo.getId()).orElse(null);
+  public AgentDefinitionVO update(AgentDefinitionPutDTO dto) {
+    AgentDefinitionVO existing = agentDefinitionRepository.findById(dto.getId()).orElse(null);
     if (existing == null) {
-      throw new IllegalArgumentException("Agent not found: id=" + vo.getId());
+      throw new IllegalArgumentException("Agent not found: id=" + dto.getId());
     }
-    // 构建 PutDTO
-    AgentDefinitionPutDTO putDTO = new AgentDefinitionPutDTO();
-    putDTO.setId(vo.getId());
-    putDTO.setAgentCode(vo.getAgentCode());
-    putDTO.setAgentName(vo.getAgentName());
-    putDTO.setAgentType(vo.getAgentType());
-    putDTO.setDescription(vo.getDescription());
-    putDTO.setSystemPrompt(vo.getSystemPrompt());
-    putDTO.setModelConfig(vo.getModelConfig());
-    putDTO.setToolNames(vo.getToolNames());
-    putDTO.setTemperature(vo.getTemperature());
-    putDTO.setMaxTokens(vo.getMaxTokens());
-    agentDefinitionRepository.updateById(putDTO);
-    log.info("[Agent-Def] 更新 Agent: code={}", vo.getAgentCode());
-    return vo;
+    agentDefinitionRepository.updateById(dto);
+    log.info("[Agent-Def] 更新 Agent: code={}", dto.getAgentCode());
+    return agentDefinitionRepository.findById(dto.getId()).orElseThrow();
   }
 
   /**

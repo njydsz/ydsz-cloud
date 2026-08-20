@@ -153,17 +153,7 @@ public class AgentDefinitionController {
   @RateLimit(resource = "agent.agentdefinition.create", threshold = 50)
   @PostMapping
   public YdszResponse<AgentDefinitionVO> create(@Valid @RequestBody AgentDefinitionPostDTO dto) {
-    AgentDefinitionVO vo = new AgentDefinitionVO();
-    vo.setAgentCode(dto.getAgentCode());
-    vo.setAgentName(dto.getAgentName());
-    vo.setAgentType(dto.getAgentType());
-    vo.setDescription(dto.getDescription());
-    vo.setSystemPrompt(dto.getSystemPrompt());
-    vo.setModelConfig(dto.getModelConfig());
-    vo.setToolNames(dto.getToolNames());
-    vo.setTemperature(dto.getTemperature());
-    vo.setMaxTokens(dto.getMaxTokens());
-    return YdszResponse.success(agentDefinitionService.create(vo));
+    return YdszResponse.success(agentDefinitionService.create(dto));
   }
 
   /**
@@ -184,18 +174,7 @@ public class AgentDefinitionController {
   @Idempotent(key = "ydsz:agent:AgentDefinitionController:update:lock", ttlSeconds = 5)
   @PutMapping
   public YdszResponse<AgentDefinitionVO> update(@Valid @RequestBody AgentDefinitionPutDTO dto) {
-    AgentDefinitionVO vo = new AgentDefinitionVO();
-    vo.setId(dto.getId());
-    vo.setAgentCode(dto.getAgentCode());
-    vo.setAgentName(dto.getAgentName());
-    vo.setAgentType(dto.getAgentType());
-    vo.setDescription(dto.getDescription());
-    vo.setSystemPrompt(dto.getSystemPrompt());
-    vo.setModelConfig(dto.getModelConfig());
-    vo.setToolNames(dto.getToolNames());
-    vo.setTemperature(dto.getTemperature());
-    vo.setMaxTokens(dto.getMaxTokens());
-    return YdszResponse.success(agentDefinitionService.update(vo));
+    return YdszResponse.success(agentDefinitionService.update(dto));
   }
 
   /**

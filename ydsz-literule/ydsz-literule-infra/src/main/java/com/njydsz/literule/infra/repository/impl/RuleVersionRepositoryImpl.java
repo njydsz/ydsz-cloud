@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
@@ -66,15 +67,15 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
   }
 
   @Override
-  public IPage<RuleVersionVO> pageVersions(String ruleCode, IPage<RuleVersionVO> page) {
+  public PageResponse<List<RuleVersionVO>> pageVersions(String ruleCode, int pageNum, int pageSize) {
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<RuleVersionHistory> page =
+        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize);
     LambdaQueryWrapper<RuleVersionHistory> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(RuleVersionHistory::getRuleCode, ruleCode)
            .orderByDesc(RuleVersionHistory::getVersion);
-    // selectPage 会填充 page 的总记录数等元数据
     IPage<RuleVersionHistory> entityPage = ruleVersionHistoryMapper.selectPage(page, wrapper);
-    page.setTotal(entityPage.getTotal());
-    page.setRecords(converter.ruleVersionListToVO(entityPage.getRecords()));
-    return page;
+    return PageResponse.success(
+        converter.ruleVersionListToVO(entityPage.getRecords()), entityPage.getTotal());
   }
 
   @Override

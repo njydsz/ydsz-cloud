@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.userinfo.domain.config.SocialAuthProperties;
+import com.njydsz.userinfo.infra.config.SocialAuthProperties;
 import com.njydsz.userinfo.domain.vo.SocialAccountVO;
 import com.njydsz.userinfo.server.auth.SocialAuthService;
 

@@ -70,7 +70,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  *     .doRead(new ReadListener<User>() {
  *         @Override
  *         public void onData(AnalysisContext context, User data) {
- *             System.out.println(data.getName());
+ *             log.info("读取到用户: {}", data.getName());
  *         }
  *     });
  *

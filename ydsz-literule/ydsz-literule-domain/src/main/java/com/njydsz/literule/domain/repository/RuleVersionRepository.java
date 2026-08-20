@@ -3,7 +3,7 @@ package com.njydsz.literule.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
@@ -41,10 +41,11 @@ public interface RuleVersionRepository {
    * <p>支持大数据量版本历史场景，避免一次性加载全部版本记录导致 OOM。
    *
    * @param ruleCode 规则编码
-   * @param page 分页参数（IPage 由 MyBatis-Plus 插件拦截并执行分页）
+   * @param pageNum 页码（从 1 开始）
+   * @param pageSize 每页条数
    * @return 分页结果
    */
-  IPage<RuleVersionVO> pageVersions(String ruleCode, IPage<RuleVersionVO> page);
+  PageResponse<List<RuleVersionVO>> pageVersions(String ruleCode, int pageNum, int pageSize);
 
   /**
    * 回滚到指定版本

@@ -26,17 +26,17 @@ import com.njydsz.common.excel.core.context.AnalysisContext;
  *     .doRead(new ReadListener<User>() {
  *         @Override
  *         public void onStart(AnalysisContext context) {
- *             System.out.println("开始读取...");
+ *             log.info("开始读取...");
  *         }
  *
  *         @Override
  *         public void onData(AnalysisContext context, User data) {
- *             System.out.println("读到数据: " + data);
+ *             log.info("读到数据: {}", data);
  *         }
  *
  *         @Override
  *         public void onEnd(AnalysisContext context) {
- *             System.out.println("读取完成,共 " + context.getCurrentRow() + " 行");
+ *             log.info("读取完成,共 {} 行", context.getCurrentRow());
  *         }
  *     });
  * }</pre>
@@ -45,7 +45,7 @@ import com.njydsz.common.excel.core.context.AnalysisContext;
  *
  * <pre>{@code
  * ExcelFacade.read("large.xlsx", User.class)
- *     .progress(tracker -> System.out.println("进度: " + tracker.getProgress() + "%"))
+ *     .progress(tracker -> log.info("进度: {}%", tracker.getProgress()))
  *     .doRead(listener);
  * }</pre>
  *
