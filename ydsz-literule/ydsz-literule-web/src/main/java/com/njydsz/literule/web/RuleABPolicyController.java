@@ -62,8 +62,7 @@ public class RuleABPolicyController {
   /** 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略） */
   @GetMapping("/{ruleCode}/ab-policy")
   public YdszResponse<RuleABPolicyVO> getABPolicy(@PathVariable String ruleCode) {
-    RuleABPolicy policy = abTestAutoRollbackProvider.getPolicy(ruleCode);
-    return YdszResponse.success(LiteruleConverter.INSTANCE.entityToVO(policy));
+    return YdszResponse.success(abTestAutoRollbackProvider.getPolicy(ruleCode));
   }
 
   /** 更新规则的 AB Test 自动回滚策略 */
@@ -79,7 +78,7 @@ public class RuleABPolicyController {
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleABPolicyPutDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-    RuleABPolicy policy = LiteruleConverter.INSTANCE.putDtoToEntity(dto);
+    RuleABPolicyVO policy = LiteruleWebConverter.INSTANCE.putDtoToVO(dto);
     policy.setRuleCode(ruleCode);
     abTestAutoRollbackProvider.savePolicy(policy, operator);
     return YdszResponse.success();
@@ -89,8 +88,7 @@ public class RuleABPolicyController {
   @GetMapping("/{ruleCode}/ab-rollbacks")
   public YdszResponse<List<RuleABRollbackVO>> listRollbackHistory(@PathVariable String ruleCode) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANCE.ruleABRollbackListToVO(
-            abTestAutoRollbackProvider.listRollbackHistory(ruleCode)));
+        abTestAutoRollbackProvider.listRollbackHistory(ruleCode));
   }
 
   /** 主动触发 AB Test 评估（人工立即检查） */
