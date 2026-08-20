@@ -89,7 +89,7 @@ public class RuleGraphController {
   @GetMapping("/{ruleCode}/graph")
   public YdszResponse<RuleChainGraphVO> getChainGraph(@PathVariable String ruleCode) {
     return YdszResponse.success(
-        LiteruleWebConverter.INSTANT.entityToVO(ruleChainGraphProvider.getByRuleCode(ruleCode)));
+        LiteruleWebConverter.INSTANCE.entityToVO(ruleChainGraphProvider.getByRuleCode(ruleCode)));
   }
 
   /**
@@ -179,7 +179,7 @@ public class RuleGraphController {
   public YdszResponse<ExpressionPreviewResultVO> previewExpression(
       @RequestParam String expression, @RequestBody Map<String, Object> facts) {
     return YdszResponse.success(
-        LiteruleWebConverter.INSTANT.entityToVO(
+        LiteruleWebConverter.INSTANCE.entityToVO(
             expressionValidationService.previewEvaluate(expression, facts)));
   }
 
@@ -205,7 +205,7 @@ public class RuleGraphController {
     try {
       List<RuleResult> results = graphExecutionProvider.dryRunGraph(ruleCode, facts);
       return YdszResponse.success(
-          results.stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
+          results.stream().map(LiteruleConverter.INSTANCE::entityToVO).toList());
     } catch (IllegalArgumentException e) {
       log.warn("[RuleAdmin] 画布 dry-run 失败: ruleCode={}, err={}", ruleCode, e.getMessage());
       return YdszResponse.error(e.getMessage());
@@ -249,6 +249,6 @@ public class RuleGraphController {
                         || engine.equalsIgnoreCase(f.getSupportedEngines()))
             .toList();
     return YdszResponse.success(
-        filtered.stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
+        filtered.stream().map(LiteruleConverter.INSTANCE::entityToVO).toList());
   }
 }

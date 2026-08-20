@@ -71,4 +71,34 @@ public interface FlowAuditLogRepository {
    * @param id 审计日志 ID
    */
   void deleteById(String id);
+
+  /**
+   * 按业务类型 + 操作人查询审计日志（分页）。
+   *
+   * <p>用于代理人操作日志查询：按 {@code businessType + operatorId} 过滤，
+   * 按时间倒序排列。
+   *
+   * @param businessType 业务类型
+   * @param operatorId 操作人 ID
+   * @param offset 偏移量
+   * @param limit 每页大小
+   * @return 审计日志 VO 列表
+   */
+  List<FlowAuditLogVO> findByBusinessTypeAndOperator(
+      String businessType, String operatorId, int offset, int limit);
+
+  /**
+   * 按业务类型 + 目标人查询审计日志（分页）。
+   *
+   * <p>用于授权人被代理日志查询：按 {@code businessType + targetId} 过滤，
+   * 按时间倒序排列。
+   *
+   * @param businessType 业务类型
+   * @param targetId 目标人 ID
+   * @param offset 偏移量
+   * @param limit 每页大小
+   * @return 审计日志 VO 列表
+   */
+  List<FlowAuditLogVO> findByBusinessTypeAndTarget(
+      String businessType, String targetId, int offset, int limit);
 }

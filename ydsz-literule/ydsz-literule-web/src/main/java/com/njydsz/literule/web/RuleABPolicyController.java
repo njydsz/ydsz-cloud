@@ -65,7 +65,7 @@ public class RuleABPolicyController {
   @GetMapping("/{ruleCode}/ab-policy")
   public YdszResponse<RuleABPolicyVO> getABPolicy(@PathVariable String ruleCode) {
     RuleABPolicy policy = abTestAutoRollbackProvider.getPolicy(ruleCode);
-    return YdszResponse.success(LiteruleConverter.INSTANT.entityToVO(policy));
+    return YdszResponse.success(LiteruleConverter.INSTANCE.entityToVO(policy));
   }
 
   /** 更新规则的 AB Test 自动回滚策略 */
@@ -81,7 +81,7 @@ public class RuleABPolicyController {
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleABPolicyPutDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-    RuleABPolicy policy = LiteruleConverter.INSTANT.putDtoToEntity(dto);
+    RuleABPolicy policy = LiteruleConverter.INSTANCE.putDtoToEntity(dto);
     policy.setRuleCode(ruleCode);
     abTestAutoRollbackProvider.savePolicy(policy, operator);
     return YdszResponse.success();
@@ -91,7 +91,7 @@ public class RuleABPolicyController {
   @GetMapping("/{ruleCode}/ab-rollbacks")
   public YdszResponse<List<RuleABRollbackVO>> listRollbackHistory(@PathVariable String ruleCode) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANT.ruleABRollbackListToVO(
+        LiteruleConverter.INSTANCE.ruleABRollbackListToVO(
             abTestAutoRollbackProvider.listRollbackHistory(ruleCode)));
   }
 
@@ -126,7 +126,7 @@ public class RuleABPolicyController {
       @RequestParam(value = "reason", defaultValue = "MANUAL") String reason,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANT.entityToVO(
+        LiteruleConverter.INSTANCE.entityToVO(
             abTestAutoRollbackProvider.manualRollback(ruleCode, operator, reason)));
   }
 }

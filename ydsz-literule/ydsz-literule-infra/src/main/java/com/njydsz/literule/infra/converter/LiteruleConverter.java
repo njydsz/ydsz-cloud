@@ -58,11 +58,11 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
  */
 public class LiteruleConverter {
 
-  public static final LiteruleConverter INSTANT = new LiteruleConverter();
+  public static final LiteruleConverter INSTANCE = new LiteruleConverter();
 
-  private final RuleCoreConverter core = RuleCoreConverter.INSTANT;
-  private final RuleComponentConverter component = RuleComponentConverter.INSTANT;
-  private final RuleSupportConverter support = RuleSupportConverter.INSTANT;
+  private final RuleCoreConverter core = RuleCoreConverter.INSTANCE;
+  private final RuleComponentConverter component = RuleComponentConverter.INSTANCE;
+  private final RuleSupportConverter support = RuleSupportConverter.INSTANCE;
 
   private LiteruleConverter() {
     // 单例门面

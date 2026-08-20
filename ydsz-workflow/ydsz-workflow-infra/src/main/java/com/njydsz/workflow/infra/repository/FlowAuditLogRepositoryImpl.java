@@ -86,4 +86,28 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
   public void deleteById(String id) {
     auditLogMapper.deleteById(id);
   }
+
+  @Override
+  public List<FlowAuditLogVO> findByBusinessTypeAndOperator(
+      String businessType, String operatorId, int offset, int limit) {
+    return converter.flowAuditLogListToVO(
+        auditLogMapper.selectList(
+            new LambdaQueryWrapper<FlowAuditLogDO>()
+                .eq(FlowAuditLogDO::getBusinessType, businessType)
+                .eq(FlowAuditLogDO::getOperatorId, operatorId)
+                .orderByDesc(FlowAuditLogDO::getCreatedAt)
+                .last("LIMIT " + limit + " OFFSET " + offset)));
+  }
+
+  @Override
+  public List<FlowAuditLogVO> findByBusinessTypeAndTarget(
+      String businessType, String targetId, int offset, int limit) {
+    return converter.flowAuditLogListToVO(
+        auditLogMapper.selectList(
+            new LambdaQueryWrapper<FlowAuditLogDO>()
+                .eq(FlowAuditLogDO::getBusinessType, businessType)
+                .eq(FlowAuditLogDO::getTargetId, targetId)
+                .orderByDesc(FlowAuditLogDO::getCreatedAt)
+                .last("LIMIT " + limit + " OFFSET " + offset)));
+  }
 }

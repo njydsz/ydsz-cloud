@@ -239,4 +239,36 @@ public interface MessageConverter {
   MsgCanaryVO doToVO(MsgCanaryDO entity);
 
   MsgCanaryDO dtoToDO(MsgCanaryDTO dto);
+
+  // ===== 通用类型转换 =====
+
+  /**
+   * Boolean → Integer 转换（逻辑删除字段）。
+   *
+   * <p>领域层 {@code deleted} 使用 Boolean，持久层 {@code deleted} 使用 Integer（0/1）。
+   *
+   * @param value Boolean 值
+   * @return Integer 值（true → 1，false → 0，null → null）
+   */
+  default Integer mapBooleanToInteger(Boolean value) {
+    if (value == null) {
+      return null;
+    }
+    return value ? 1 : 0;
+  }
+
+  /**
+   * Integer → Boolean 转换（逻辑删除字段）。
+   *
+   * <p>持久层 {@code deleted} 使用 Integer（0/1），领域层 {@code deleted} 使用 Boolean。
+   *
+   * @param value Integer 值
+   * @return Boolean 值（1 → true，其他 → false，null → null）
+   */
+  default Boolean mapIntegerToBoolean(Integer value) {
+    if (value == null) {
+      return null;
+    }
+    return value == 1;
+  }
 }

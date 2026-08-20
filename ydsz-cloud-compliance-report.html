@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ydsz-cloud 云顶编码规范合规审查报告</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --border: #e4e7eb;
+    --text: #1f2329;
+    --text-2: #4e5969;
+    --text-3: #86909c;
+    --p0: #f53f3f;
+    --p0-bg: #ffece8;
+    --p1: #ff7d00;
+    --p1-bg: #fff7e8;
+    --p2: #165dff;
+    --p2-bg: #e8f3ff;
+    --green: #00b42a;
+    --green-bg: #e8ffea;
+    --code-bg: #f2f3f5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 32px 20px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  .header {
+    background: linear-gradient(135deg, #165dff 0%, #0fc6c2 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 6px 20px rgba(22,93,255,.18);
+  }
+  .header h1 { font-size: 24px; margin-bottom: 8px; }
+  .header .sub { font-size: 14px; opacity: .92; }
+  .header .meta { margin-top: 14px; font-size: 13px; display: flex; gap: 20px; flex-wrap: wrap; }
+  .header .meta span { background: rgba(255,255,255,.18); padding: 4px 12px; border-radius: 20px; }
+
+  .score-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .score-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    text-align: center;
+  }
+  .score-card .num { font-size: 30px; font-weight: 700; }
+  .score-card .lbl { font-size: 13px; color: var(--text-3); margin-top: 4px; }
+  .n-p0 { color: var(--p0); }
+  .n-p1 { color: var(--p1); }
+  .n-p2 { color: var(--p2); }
+  .n-green { color: var(--green); }
+
+  section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+  }
+  section h2 {
+    font-size: 18px;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  section h2 .tag {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 12px;
+  }
+  section h3 { font-size: 15px; margin: 18px 0 10px; color: var(--text); }
+
+  .badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 6px;
+  }
+  .b-p0 { background: var(--p0-bg); color: var(--p0); }
+  .b-p1 { background: var(--p1-bg); color: var(--p1); }
+  .b-p2 { background: var(--p2-bg); color: var(--p2); }
+  .b-green { background: var(--green-bg); color: var(--green); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 16px;
+    font-size: 13.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th { background: var(--code-bg); font-weight: 600; color: var(--text-2); }
+  tr:hover td { background: #fafbfc; }
+  code, .mono {
+    font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    color: #c5221f;
+  }
+  .file { color: var(--text-3); font-family: monospace; font-size: 12px; }
+
+  .finding {
+    border-left: 4px solid var(--border);
+    padding: 12px 16px;
+    margin: 10px 0;
+    background: #fafbfc;
+    border-radius: 0 8px 8px 0;
+  }
+  .finding.p0 { border-left-color: var(--p0); background: var(--p0-bg); }
+  .finding.p1 { border-left-color: var(--p1); background: var(--p1-bg); }
+  .finding.p2 { border-left-color: var(--p2); background: var(--p2-bg); }
+  .finding .ft { font-weight: 600; margin-bottom: 4px; }
+  .finding .fd { font-size: 13.5px; color: var(--text-2); }
+  .finding .loc { font-size: 12px; color: var(--text-3); margin-top: 6px; font-family: monospace; }
+
+  ul.checklist { list-style: none; padding: 0; }
+  ul.checklist li {
+    padding: 10px 0 10px 32px;
+    border-bottom: 1px dashed var(--border);
+    position: relative;
+    font-size: 14px;
+  }
+  ul.checklist li:last-child { border-bottom: none; }
+  ul.checklist li::before {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 16px;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+  }
+  ul.checklist li .pri { font-weight: 700; margin-right: 6px; }
+  .ok-list { color: var(--green); }
+  .note { font-size: 13px; color: var(--text-3); margin-top: 8px; }
+  .summary-box {
+    background: linear-gradient(135deg, #e8f3ff 0%, #e8ffea 100%);
+    border: 1px solid #d6e4ff;
+    border-radius: 12px;
+    padding: 18px 24px;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  .summary-box strong { color: var(--p0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>ydsz-cloud 云顶编码规范合规审查报告</h1>
+    <div class="sub">基于云顶编码规范 v2.16（checkstyle v3.2）+ L1-L6 分层 + DDD 五层架构</div>
+    <div class="meta">
+      <span>审查范围：9 业务模块 + 30 公共子模块</span>
+      <span>检查维度：7 类红线 + 架构分层 + 构建期门禁</span>
+      <span>审查方式：源码 Grep 实证 + pom 构建配置核查</span>
+    </div>
+  </div>
+
+  <div class="score-bar">
+    <div class="score-card"><div class="num n-green">0</div><div class="lbl">业务层 JSON/POI 违规</div></div>
+    <div class="score-card"><div class="num n-p0">2</div><div class="lbl">P0 构建门禁失效</div></div>
+    <div class="score-card"><div class="num n-p1">3</div><div class="lbl">P1 架构一致性</div></div>
+    <div class="score-card"><div class="num n-p2">4</div><div class="lbl">P2 代码质量/基线</div></div>
+  </div>
+
+  <div class="summary-box">
+    <strong>核心结论：</strong>业务代码层红线守得非常好——第三方 JSON、POI、Caffeine、SimpleDateFormat、System.out 在 9 个业务模块中<strong>零违规</strong>，ydsz-common-json 是纯自研零依赖实现，gateway 与 system DDD 分层完全合规。<strong>但最大风险在构建期</strong>：<code>checkstyle.skip=true</code> 与 <code>l1.module.skip=true</code> 两个开关把已定义完善的纯净度校验全部关停，CI 无法拦截未来违规；且 ArchUnit 架构测试依赖已引入却<strong>零落地</strong>。规范"定义完备 + 执行缺位"，亟需补齐门禁。
+  </div>
+
+  <section>
+    <h2>一、合规绿灯项 <span class="tag" style="background:var(--green-bg);color:var(--green)">已达标</span></h2>
+    <table>
+      <thead><tr><th width="34%">检查维度</th><th>结论</th></tr></thead>
+      <tbody>
+        <tr><td>第三方 JSON 红线</td><td><span class="badge b-green">0 违规</span>全项目 <code>import com.alibaba.fastjson2 / com.fasterxml.jackson / com.google.gson</code> 业务模块零命中。ydsz-common-json 为<strong>纯自研零依赖</strong>实现（移植 FastJSON2 BeanDeserializer，不依赖任何第三方 JSON），合规度极高。</td></tr>
+        <tr><td>Apache POI 红线</td><td><span class="badge b-green">0 违规</span>POI import 仅出现在 ydsz-common-excel / common-docs（能力提供者）。业务模块全部走自研 Excel 组件，无直接 POI 调用。</td></tr>
+        <tr><td>SimpleDateFormat / System.out</td><td><span class="badge b-green">0 违规</span>全项目零命中，日期统一用 DateTimeFormatter，输出统一走 SLF4J。</td></tr>
+        <tr><td>ydsz-gateway 网关</td><td><span class="badge b-green">零违规</span>13 filter / 19 config / 2 loadbalancer，代码层 JSON/POI/Caffeine/Executors 全部无匹配，无 Flyway/Liquibase。</td></tr>
+        <tr><td>ydsz-system DDD 五层</td><td><span class="badge b-green">合规</span>api/domain/infra/server/web 五层齐全，依赖倒置正确（infra RepositoryImpl implements domain Repository），web 不直连 infra/Mapper，跨层依赖零违规。9 实体统一继承 <code>MpBaseEntity</code>，走 common-jdbc 拦截器封装。</td></tr>
+        <tr><td>L1 工具层结构</td><td><span class="badge b-green">正确</span>L1 = json / util / cache / excel 四个工具模块，符合云顶规范分层基准。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>二、P0 阻断级问题 — 构建期门禁失效 <span class="tag" style="background:var(--p0-bg);color:var(--p0)">最高优先级</span></h2>
+
+    <div class="finding p0">
+      <div class="ft"><span class="badge b-p0">P0-1</span>checkstyle 全局校验被跳过，纯净度门禁形同虚设</div>
+      <div class="fd">
+        根 <code>pom.xml</code> 第 47 行 <code>&lt;checkstyle.skip&gt;true&lt;/checkstyle.skip&gt;</code>，导致 checkstyle 插件绑定的 validate 阶段校验全部跳过。checkstyle v3.2 规则定义极其完善（JSON 红线、POI/Caffeine/Ehcache 禁用、Executors 禁用、集合容量、Javadoc、命名、复杂度等），但<strong>构建期完全不执行</strong>——一旦有人引入违规代码，CI 无法拦截，当前业务层"零违规"全靠人工自觉，不可持续。
+      </div>
+      <div class="loc">D:\Code\open\ydsz-cloud\pom.xml:47  &nbsp;|&nbsp; docs\checkstyle.xml（规则已就绪，仅开关关闭）</div>
+    </div>
+
+    <div class="finding p0">
+      <div class="ft"><span class="badge b-p0">P0-2</span>L1 工具层纯净度校验默认跳过</div>
+      <div class="fd">
+        ydsz-common/pom.xml 第 68 行 <code>&lt;l1.module.skip&gt;true&lt;/l1.module.skip&gt;</code>，L1 模块（json/util/cache/excel）禁止反向依赖 L2+ 的 enforcer 规则不生效。L1 模块可能悄悄引入对 core/domain/jdbc/redis 等的反向依赖而不被发现，破坏 L1-L6 单向依赖约束。
+      </div>
+      <div class="loc">D:\Code\open\ydsz-cloud\ydsz-common\pom.xml:68  &nbsp;|&nbsp; enforcer enforce-l1-purity（规则已就绪，仅开关关闭）</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>三、P1 架构一致性问题 <span class="tag" style="background:var(--p1-bg);color:var(--p1)">需收敛</span></h2>
+
+    <div class="finding p1">
+      <div class="ft"><span class="badge b-p1">P1-1</span>ArchUnit 架构测试依赖已引入但零落地</div>
+      <div class="fd">
+        ydsz-common-util 与 ydsz-common 父 pom 声明了 archunit-junit5 依赖（标注 P3-2 编译期 enforce），但全项目搜索 <code>@AnalyzeClasses</code> / <code>ArchRule</code> <strong>零结果</strong>——没有任何架构测试类。编译期架构反模式约束完全缺失，DDD 分层依赖方向、common 层单向依赖目前只能靠 checkstyle（且已被跳过）和人工 review 保证。
+      </div>
+      <div class="loc">搜索 @AnalyzeClasses | ArchRule → No matches found</div>
+    </div>
+
+    <div class="finding p1">
+      <div class="ft"><span class="badge b-p1">P1-2</span>common-redis 绕过 common-cache 直接用 Caffeine</div>
+      <div class="fd">
+        ydsz-common-redis 4 个文件直接 <code>import com.github.benmanes.caffeine</code>（MultiLevelCacheProvider / MultiLevelCacheAutoConfiguration / CacheProvider / RedisProperties）。作为多级缓存的本地层实现，应通过 L1 的 common-cache 统一封装暴露能力，而非 L4 数据层模块直接操作底层缓存库，造成缓存能力分散在两个模块、职责边界不清。
+      </div>
+      <div class="loc">ydsz-common-redis/.../multilevel/MultiLevelCacheProvider.java 等 4 文件</div>
+    </div>
+
+    <div class="finding p1">
+      <div class="ft"><span class="badge b-p1">P1-3</span>多 common 模块各自创建线程池，未统一走 common-thread</div>
+      <div class="fd">
+        common-cache（CacheThreadPoolManager）、common-audit、common-event、common-queue、common-search、common-sentry 等模块各自 <code>new ThreadPoolExecutor / ScheduledThreadPoolExecutor</code>。common-cache 虽用 <code>// CHECKSTYLE.OFF</code> 注释豁免声称"15.4 授权层"，但与"统一线程池管理"理念冲突，导致线程池散落各模块、无法统一监控与调优、关闭时序难以协调。建议这些模块的线程池统一委托 common-thread 管理。
+      </div>
+      <div class="loc">CacheThreadPoolManager.java:140  及 common-audit/event/queue/search/sentry 多处</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>四、P2 代码质量与基线漂移 <span class="tag" style="background:var(--p2-bg);color:var(--p2)">待清理</span></h2>
+
+    <div class="finding p2">
+      <div class="ft"><span class="badge b-p2">P2-1</span>ConfigCliTool 26 处无容量集合初始化</div>
+      <div class="fd">违反 checkstyle 规范 9.1 节（集合初始化须指定容量），因 checkstyle 被跳过而未暴露。属主代码（src/main），非测试代码。</div>
+      <div class="loc">ydsz-common-config/.../cli/ConfigCliTool.java（26 处）</div>
+    </div>
+
+    <div class="finding p2">
+      <div class="ft"><span class="badge b-p2">P2-2</span>ydsz-system 源文件基线漂移（doc drift）</div>
+      <div class="fd">实际 ~136 源文件 vs 预期 ~92；Service impl 14 vs 预期 10（多 4 个 batch/excel/version 辅助 impl）；9 实体 / 13 Controller / 9 Mapper 与预期一致。统计口径与记忆/文档不一致。</div>
+      <div class="loc">ydsz-system/ 五子模块</div>
+    </div>
+
+    <div class="finding p2">
+      <div class="ft"><span class="badge b-p2">P2-3</span>ydsz-gateway filter/config 数量漂移</div>
+      <div class="fd">filter 13（预期 12，多 WebSocketAuthFilter）、config 19（预期 16，真 @Configuration 仅 3 个，其余为 @ConfigurationProperties 与工具类）。增量演进未回写基线。</div>
+      <div class="loc">ydsz-gateway/src/main/java/.../filter、config</div>
+    </div>
+
+    <div class="finding p2">
+      <div class="ft"><span class="badge b-p2">P2-4</span>literule 测试代码直接用 Executors</div>
+      <div class="fd">RuleTimeoutExecutorTest.java 直接 import Executors。checkstyle 不扫 src/test 故未报错，但规范建议统一走 common-thread。</div>
+      <div class="loc">ydsz-literule-server/src/test/.../RuleTimeoutExecutorTest.java</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>五、下一步优化建议（可执行待办）</h2>
+    <p class="note">按 P0 → P1 → P2 顺序推进，每项完成后回写基线文档消除 doc drift。</p>
+
+    <ul class="checklist">
+      <li><span class="pri" style="color:var(--p0)">P0-1</span><strong>恢复 checkstyle 构建门禁</strong>：将 <code>checkstyle.skip</code> 改回 <code>false</code>，先单独执行 <code>mvn checkstyle:check</code> 统计违规量，逐模块清零后再纳入 CI 强制门禁（failOnError=true）。</li>
+      <li><span class="pri" style="color:var(--p0)">P0-2</span><strong>激活 L1 纯净度校验</strong>：将 <code>l1.module.skip</code> 改回 <code>false</code>，校验 json/util/cache/excel 是否存在对 L2+ 的反向依赖，有则先解耦再开启。</li>
+      <li><span class="pri" style="color:var(--p1)">P1-1</span><strong>编写 ArchUnit 架构测试</strong>：在 ydsz-common-core 或新建 arch 模块中编写 <code>@AnalyzeClasses</code> 测试，至少覆盖三条铁律：① 业务模块禁止 import 第三方 JSON/POI/Caffeine；② DDD 五层依赖方向（web→server→domain，infra 实现 domain 接口）；③ common 层 L1 禁止反向依赖 L2+。作为 P0 门禁的架构级补充。</li>
+      <li><span class="pri" style="color:var(--p1)">P1-2</span><strong>收敛 common-redis 缓存职责</strong>：将 common-redis 的 Caffeine 本地缓存使用下沉到 common-cache，由 common-cache 暴露多级缓存统一门面，common-redis 仅负责 Redis 连接与分布式操作；或明确将 common-redis 的多级缓存部分并入 common-cache。</li>
+      <li><span class="pri" style="color:var(--p1)">P1-3</span><strong>统一线程池到 common-thread</strong>：common-cache/audit/event/queue/search/sentry 的线程池改为委托 common-thread 创建与管理（通过 <code>ysz.thread.pools.*</code> 配置），移除各自 <code>new ThreadPoolExecutor</code> 与 CHECKSTYLE.OFF 豁免，实现全链路线程池可观测。</li>
+      <li><span class="pri" style="color:var(--p2)">P2-1</span><strong>修复 ConfigCliTool 集合容量</strong>：26 处 <code>new LinkedHashMap/ConcurrentHashMap</code> 补充初始容量参数。</li>
+      <li><span class="pri" style="color:var(--p2)">P2-2/3</span><strong>回写基线文档</strong>：更新 ydsz-system（136 文件/14 Service impl）与 ydsz-gateway（13 filter/19 config）的统计基线，消除 doc drift。</li>
+      <li><span class="pri" style="color:var(--p2)">P2-4</span><strong>literule 测试线程池改用 common-thread</strong>。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>六、审查方法与覆盖范围</h2>
+    <table>
+      <thead><tr><th width="30%">维度</th><th>检查手段</th><th>结论</th></tr></thead>
+      <tbody>
+        <tr><td>第三方 JSON 违规</td><td>Grep import fastjson2/jackson/gson</td><td>业务模块 0 命中</td></tr>
+        <tr><td>POI 违规</td><td>Grep import org.apache.poi</td><td>业务模块 0，仅 common-excel/docs</td></tr>
+        <tr><td>Caffeine 违规</td><td>Grep import caffeine</td><td>common-redis 4 文件（P1-2）</td></tr>
+        <tr><td>Executors / 线程池</td><td>Grep import Executors + new ThreadPoolExecutor</td><td>common 多模块各自造池（P1-3）</td></tr>
+        <tr><td>SimpleDateFormat</td><td>Grep import</td><td>0 命中</td></tr>
+        <tr><td>System.out / printStackTrace</td><td>Grep</td><td>0 命中</td></tr>
+        <tr><td>无容量集合</td><td>Grep new ArrayList/HashMap...()</td><td>ConfigCliTool 26 处（P2-1）</td></tr>
+        <tr><td>ArchUnit 落地</td><td>Grep @AnalyzeClasses/ArchRule</td><td>0 命中（P1-1）</td></tr>
+        <tr><td>构建门禁</td><td>读 pom.xml checkstyle.skip / l1.module.skip</td><td>均 = true（P0-1/2）</td></tr>
+        <tr><td>gateway 架构</td><td>Agent Glob + Grep 全量扫描</td><td>13/19/2，零违规</td></tr>
+        <tr><td>system DDD</td><td>Agent 五层依赖核查</td><td>依赖倒置正确，零违规</td></tr>
+      </tbody>
+    </table>
+    <p class="note">说明：本次审查基于源码 Grep 实证与 pom 构建配置核查，覆盖 9 业务模块 + 30 公共子模块。checkstyle 当前处于 skip 状态，故"零违规"为人工 Grep 结果，非构建期校验结果——这正是 P0-1 要解决的问题。</p>
+  </section>
+
+</div>
+</body>
+</html>

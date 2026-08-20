@@ -36,7 +36,7 @@ public class RuleTestCaseRepositoryImpl implements RuleTestCaseRepository {
 
   private final RuleTestCaseMapper ruleTestCaseMapper;
 
-  private final LiteruleConverter converter = LiteruleConverter.INSTANT;
+  private final LiteruleConverter converter = LiteruleConverter.INSTANCE;
 
   @Override
   public List<RuleTestCaseVO> findByRuleCode(String ruleCode) {

@@ -41,8 +41,7 @@ import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
-import com.njydsz.cronjob.infra.entity.job.Job;
-import com.njydsz.cronjob.infra.entity.log.JobLog;
+// infra entity imports removed — using domain JobVO / JobLogVO instead
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
@@ -69,7 +68,7 @@ import com.njydsz.cronjob.server.service.job.TenantQuotaService;
  * </ul>
  *
  * <p>手动触发（{@link #trigger(String, boolean)}）始终走 {@link TaskDispatcher}（如果可用）， 否则回退到内部 {@link
- * #executeJob(Job, boolean)} 旧路径。
+ * #executeJob(JobVO, boolean)} 旧路径。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -104,7 +103,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * 任务派发器（P1-7 可选注入）。
    *
    * <p>Leader 模式启用时由 {@link DefaultTaskDispatcher} 提供； Leaderless 模式下若未注册 Dispatcher 则回退到内部 {@link
-   * #executeJob(Job, boolean)} 旧路径。
+   * #executeJob(JobVO, boolean)} 旧路径。
    */
   private final ObjectProvider<TaskDispatcher> taskDispatcherProvider;
 

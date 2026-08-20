@@ -49,7 +49,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
 
   private final RuleDefinitionMapper ruleDefinitionMapper;
 
-  private final LiteruleConverter converter = LiteruleConverter.INSTANT;
+  private final LiteruleConverter converter = LiteruleConverter.INSTANCE;
 
   @Override
   public void saveVersion(RuleVersionSaveDTO saveDTO) {

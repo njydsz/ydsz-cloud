@@ -36,7 +36,7 @@ public class DecisionTableRepositoryImpl implements DecisionTableRepository {
 
   private final DecisionTableMapper decisionTableMapper;
 
-  private final LiteruleConverter converter = LiteruleConverter.INSTANT;
+  private final LiteruleConverter converter = LiteruleConverter.INSTANCE;
 
   @Override
   public List<DecisionTableVO> findAll() {

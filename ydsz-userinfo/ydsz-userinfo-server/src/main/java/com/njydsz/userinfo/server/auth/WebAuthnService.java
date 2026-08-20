@@ -470,12 +470,6 @@ public class WebAuthnService {
       byte[] signatureBytes = Base64.getUrlDecoder().decode(signature);
       byte[] credentialIdBytes = Base64.getUrlDecoder().decode(credential.getCredentialId());
 
-      // 解析认证断言响应
-      AuthenticatorAssertionResponseConverter assertionConverter =
-          new AuthenticatorAssertionResponseConverter(OBJECT_CONVERTER);
-      var assertionResponse = assertionConverter.convert(
-          clientDataJSONBytes, authenticatorDataBytes, signatureBytes);
-
       // 构建 ServerProperty（来源、RP ID、挑战码）
       Origin origin = Origin.create(webAuthnProperties.getOrigin());
       ServerProperty serverProperty = new ServerProperty(
@@ -492,11 +486,11 @@ public class WebAuthnService {
       AuthenticationParameters authenticationParameters = new AuthenticationParameters(
           serverProperty, authenticator);
 
-      // 创建认证请求对象
+      // 创建认证请求对象（webauthn4j 0.28.0 API：直接构造 AuthenticationRequest）
       AuthenticationRequest authenticationRequest = new AuthenticationRequest(
           credentialIdBytes, authenticatorDataBytes, clientDataJSONBytes, signatureBytes);
 
-      // 解析认证数据
+      // 解析认证数据（内部自动完成断言响应转换，无需 AuthenticatorAssertionResponseConverter）
       AuthenticationData authenticationData =
           WEB_AUTHN_MANAGER.parse(authenticationRequest);
 

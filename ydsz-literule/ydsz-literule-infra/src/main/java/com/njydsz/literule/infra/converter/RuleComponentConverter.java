@@ -27,7 +27,7 @@ import com.njydsz.literule.domain.vo.RuleTemplateVO;
 @Mapper
 public interface RuleComponentConverter {
 
-  RuleComponentConverter INSTANT = Mappers.getMapper(RuleComponentConverter.class);
+  RuleComponentConverter INSTANCE = Mappers.getMapper(RuleComponentConverter.class);
 
   // ===== DecisionTableDO =====
   DecisionTableVO entityToVO(DecisionTableDO entity);

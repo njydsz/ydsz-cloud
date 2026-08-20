@@ -206,7 +206,7 @@ public class RuleDecisionTableController {
     try {
       byte[] bytes = file.getBytes();
       DecisionTableDefinition saved = svc.importExcel(bytes, operator);
-      return YdszResponse.success(LiteruleConverter.INSTANT.entityToVO(saved));
+      return YdszResponse.success(LiteruleConverter.INSTANCE.entityToVO(saved));
     } catch (IllegalArgumentException e) {
       log.warn("[DecisionTable] Excel 导入失败: {}", e.getMessage());
       return YdszResponse.error(e.getMessage());

@@ -75,7 +75,7 @@ public class RuleDependencyController {
     Boolean cascade = dto.getCascadeOnDisable() == null ? false : dto.getCascadeOnDisable();
     String description = dto.getDescription();
     return YdszResponse.success(
-        LiteruleConverter.INSTANT.entityToVO(
+        LiteruleConverter.INSTANCE.entityToVO(
             ruleDependencyProvider.add(
                 ruleCode, dependsOn, depType, cascade, description, operator)));
   }
@@ -99,7 +99,7 @@ public class RuleDependencyController {
   @GetMapping("/{ruleCode}/dependencies")
   public YdszResponse<List<RuleDependencyVO>> listDependencies(@PathVariable String ruleCode) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANT.ruleDependencyListToVO(
+        LiteruleConverter.INSTANCE.ruleDependencyListToVO(
             ruleDependencyProvider.listDependencies(ruleCode)));
   }
 
@@ -107,7 +107,7 @@ public class RuleDependencyController {
   @GetMapping("/{ruleCode}/dependents")
   public YdszResponse<List<RuleDependencyVO>> listDependents(@PathVariable String ruleCode) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANT.ruleDependencyListToVO(
+        LiteruleConverter.INSTANCE.ruleDependencyListToVO(
             ruleDependencyProvider.listDependents(ruleCode)));
   }
 

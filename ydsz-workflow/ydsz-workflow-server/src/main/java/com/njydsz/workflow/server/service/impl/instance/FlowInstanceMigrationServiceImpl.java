@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,7 +25,6 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
@@ -148,13 +146,8 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
           .build();
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    LambdaQueryWrapper<FlowInstanceDO> w = new LambdaQueryWrapper<>();
-    w.eq(FlowInstanceDO::getDefinitionId, definitionId)
-        .eq(FlowInstanceDO::getFlowStatus, FlowInstanceStatus.RUNNING.name())
-        .eq(FlowInstanceDO::getTenantId, tid)
-        .eq(FlowInstanceDO::getDeleted, 0);
-    List<FlowInstanceDO> instances = instanceMapper.selectList(w);
-    if (instances == null || instances.isEmpty()) {
+    List<FlowInstanceVO> instances = instanceRepository.findRunningByDefinition(definitionId, tid);
+    if (instances.isEmpty()) {
       return Collections.emptyList();
     }
     return instances.stream().map(i -> String.valueOf(i.getId())).collect(Collectors.toList());
@@ -236,22 +229,16 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         dto.getNodeMapping() != null ? dto.getNodeMapping() : Collections.emptyMap();
 
     // 2. 校验源/目标定义存在且 flowCode 一致
-    // 保留 Mapper：无 FlowDefinitionRepository 可用
-    FlowDefinitionDO sourceDef = definitionMapper.selectById(sourceDefId);
-    if (sourceDef == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.NOT_FOUND)
-          .message("源流程定义不存在: " + sourceDefId)
-          .build();
-    }
-    // 保留 Mapper：无 FlowDefinitionRepository 可用
-    FlowDefinitionDO targetDef = definitionMapper.selectById(targetDefId);
-    if (targetDef == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.NOT_FOUND)
-          .message("目标流程定义不存在: " + targetDefId)
-          .build();
-    }
+    FlowDefinitionVO sourceDef = definitionRepository.findById(sourceDefId)
+        .orElseThrow(() -> SysException.builder()
+            .resultCode(YdszResultCode.NOT_FOUND)
+            .message("源流程定义不存在: " + sourceDefId)
+            .build());
+    FlowDefinitionVO targetDef = definitionRepository.findById(targetDefId)
+        .orElseThrow(() -> SysException.builder()
+            .resultCode(YdszResultCode.NOT_FOUND)
+            .message("目标流程定义不存在: " + targetDefId)
+            .build());
     if (!Objects.equals(sourceDef.getFlowCode(), targetDef.getFlowCode())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -272,13 +259,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
                 .collect(Collectors.toMap(FlowNodeDO::getNodeCode, n -> n, (a, b) -> a));
 
     // 4. 查询源定义下所有运行中实例
-    // 保留 Mapper：复杂 LambdaQueryWrapper 查询（含 definitionId + flowStatus + tenantId + deleted），Repository 暂无等价方法
-    LambdaQueryWrapper<FlowInstanceDO> w = new LambdaQueryWrapper<>();
-    w.eq(FlowInstanceDO::getDefinitionId, sourceDefId)
-        .eq(FlowInstanceDO::getFlowStatus, FlowInstanceStatus.RUNNING.name())
-        .eq(FlowInstanceDO::getTenantId, tenantId)
-        .eq(FlowInstanceDO::getDeleted, 0);
-    List<FlowInstanceDO> instances = instanceMapper.selectList(w);
+    List<FlowInstanceVO> instances = instanceRepository.findRunningByDefinition(sourceDefId, tenantId);
 
     // 5. 逐实例迁移（防御式：每个实例独立 try-catch，单个失败不影响其他）
     List<MigrationDetail> details = new ArrayList<>();
@@ -286,71 +267,68 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     int skippedCount = 0;
     int failedCount = 0;
 
-    if (instances != null) {
-      for (FlowInstanceDO instance : instances) {
-        MigrationDetail detail = new MigrationDetail();
-        detail.setInstanceId(String.valueOf(instance.getId()));
-        detail.setInstanceTitle(instance.getTitle());
-        detail.setOldNodeCode(instance.getCurrentNodeCode());
+    for (FlowInstanceVO instance : instances) {
+      MigrationDetail detail = new MigrationDetail();
+      detail.setInstanceId(String.valueOf(instance.getId()));
+      detail.setInstanceTitle(instance.getTitle());
+      detail.setOldNodeCode(instance.getCurrentNodeCode());
 
-        try {
-          String oldNodeCode = instance.getCurrentNodeCode();
-          String newNodeCode = resolveNewNodeCode(oldNodeCode, nodeMapping, targetNodeMap);
+      try {
+        String oldNodeCode = instance.getCurrentNodeCode();
+        String newNodeCode = resolveNewNodeCode(oldNodeCode, nodeMapping, targetNodeMap);
 
-          // 节点在新定义中不存在且无映射 -> 跳过
-          if (newNodeCode == null) {
-            detail.setStatus("SKIPPED");
-            detail.setNewNodeCode(oldNodeCode);
-            detail.setReason("当前节点 [" + oldNodeCode + "] 在目标定义中不存在且无映射，已跳过");
-            skippedCount++;
-            details.add(detail);
-            continue;
-          }
-
-          detail.setNewNodeCode(newNodeCode);
-
-          if (!dryRun) {
-            // 实际更新：definitionId / flowVersion / currentNodeCode / currentNodeName
-            instance.setDefinitionId(targetDefId);
-            instance.setFlowVersion(targetDef.getFlowVersion());
-            instance.setCurrentNodeCode(newNodeCode);
-            // 同步更新节点名称
-            FlowNodeDO targetNode = targetNodeMap.get(newNodeCode);
-            if (targetNode != null) {
-              instance.setCurrentNodeName(targetNode.getNodeName());
-            }
-            // 保留 Mapper：自定义更新操作（definitionId/flowVersion/currentNodeCode/currentNodeName），Repository 暂无等价方法
-            instanceMapper.updateById(instance);
-
-            // P3-3: 同步迁移该实例下未完成的待办任务（ydsz_flow_run_task）
-            // 仅迁移 PENDING/CLAIMED 状态的任务，已完成的历史任务保持不变
-            int taskMigrated =
-                migrateInstanceTasks(
-                    instance.getId(),
-                    targetDefId,
-                    oldNodeCode,
-                    newNodeCode,
-                    nodeMapping,
-                    targetNodeMap);
-            log.info(
-                "[Flow-Migrate] 实例任务级迁移: instanceId={} taskMigrated={}",
-                instance.getId(),
-                taskMigrated);
-          }
-
-          detail.setStatus("MIGRATED");
-          detail.setReason(dryRun ? "试运行：可迁移" : "迁移成功");
-          migratedCount++;
-        } catch (Exception e) {
-          detail.setStatus("FAILED");
-          detail.setNewNodeCode(instance.getCurrentNodeCode());
-          detail.setReason("迁移异常: " + e.getMessage());
-          failedCount++;
-          log.error(
-              "[Flow-Migrate] 实例迁移失败: instanceId={} err={}", instance.getId(), e.getMessage(), e);
+        // 节点在新定义中不存在且无映射 -> 跳过
+        if (newNodeCode == null) {
+          detail.setStatus("SKIPPED");
+          detail.setNewNodeCode(oldNodeCode);
+          detail.setReason("当前节点 [" + oldNodeCode + "] 在目标定义中不存在且无映射，已跳过");
+          skippedCount++;
+          details.add(detail);
+          continue;
         }
-        details.add(detail);
+
+        detail.setNewNodeCode(newNodeCode);
+
+        if (!dryRun) {
+          // 实际更新：definitionId / flowVersion / currentNodeCode / currentNodeName
+          instance.setDefinitionId(targetDefId);
+          instance.setFlowVersion(targetDef.getFlowVersion());
+          instance.setCurrentNodeCode(newNodeCode);
+          // 同步更新节点名称
+          FlowNodeDO targetNode = targetNodeMap.get(newNodeCode);
+          if (targetNode != null) {
+            instance.setCurrentNodeName(targetNode.getNodeName());
+          }
+          instanceRepository.update(instance);
+
+          // P3-3: 同步迁移该实例下未完成的待办任务（ydsz_flow_run_task）
+          // 仅迁移 PENDING/CLAIMED 状态的任务，已完成的历史任务保持不变
+          int taskMigrated =
+              migrateInstanceTasks(
+                  instance.getId(),
+                  targetDefId,
+                  oldNodeCode,
+                  newNodeCode,
+                  nodeMapping,
+                  targetNodeMap);
+          log.info(
+              "[Flow-Migrate] 实例任务级迁移: instanceId={} taskMigrated={}",
+              instance.getId(),
+              taskMigrated);
+        }
+
+        detail.setStatus("MIGRATED");
+        detail.setReason(dryRun ? "试运行：可迁移" : "迁移成功");
+        migratedCount++;
+      } catch (Exception e) {
+        detail.setStatus("FAILED");
+        detail.setNewNodeCode(instance.getCurrentNodeCode());
+        detail.setReason("迁移异常: " + e.getMessage());
+        failedCount++;
+        log.error(
+            "[Flow-Migrate] 实例迁移失败: instanceId={} err={}", instance.getId(), e.getMessage(), e);
       }
+      details.add(detail);
     }
 
     // 6. 组装结果

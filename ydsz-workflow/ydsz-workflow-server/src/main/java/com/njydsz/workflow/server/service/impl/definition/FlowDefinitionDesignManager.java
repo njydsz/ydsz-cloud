@@ -26,7 +26,6 @@ import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowSkipDO;
-import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.BpmnModel;
 import com.njydsz.workflow.server.engine.BpmnXmlParser;
@@ -90,9 +89,6 @@ public class FlowDefinitionDesignManager {
   /** 查询服务（获取详情数据） */
   private final FlowDefinitionQueryService queryService;
 
-  /** 流程定义 Mapper（仅用于 CAS 加解锁，Repository 暂无对应方法） */
-  private final FlowDefinitionMapper definitionMapper;
-
   public FlowDefinitionDesignManager(
       FlowDefinitionRepository definitionRepository,
       FlowNodeRepository nodeRepository,
@@ -101,8 +97,7 @@ public class FlowDefinitionDesignManager {
       FlowDefinitionCacheService flowDefinitionCacheService,
       FlowProperties flowProperties,
       BpmnXmlParser bpmnXmlParser,
-      FlowDefinitionQueryService queryService,
-      FlowDefinitionMapper definitionMapper) {
+      FlowDefinitionQueryService queryService) {
     this.definitionRepository = definitionRepository;
     this.nodeRepository = nodeRepository;
     this.skipRepository = skipRepository;
@@ -111,7 +106,6 @@ public class FlowDefinitionDesignManager {
     this.flowProperties = flowProperties;
     this.bpmnXmlParser = bpmnXmlParser;
     this.queryService = queryService;
-    this.definitionMapper = definitionMapper;
   }
 
   /**
@@ -484,9 +478,8 @@ public class FlowDefinitionDesignManager {
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime timeoutExpired = now.minusMinutes(flowProperties.getDesignerLockTimeoutMinutes());
 
-    // 保留 Mapper：自定义 CAS 操作，Repository 暂无对应方法
     int affected =
-        definitionMapper.casLock(
+        definitionRepository.casLock(
             definitionId, userId, now, userId, timeoutExpired, def.getRevision());
 
     if (affected == 1) {
@@ -512,9 +505,8 @@ public class FlowDefinitionDesignManager {
           latest.getLockedAt() != null && latest.getLockedAt().isBefore(timeoutExpired);
       if (expired) {
         log.warn("[Flow] 设计器加锁重试（锁已超时但 version 变化）: defId={} holder={}", definitionId, holder);
-        // 保留 Mapper：自定义 CAS 操作，Repository 暂无对应方法
         int retry =
-            definitionMapper.casLock(
+            definitionRepository.casLock(
                 definitionId, userId, now, userId, timeoutExpired, latest.getRevision());
         if (retry == 1) {
           log.info("[Flow] 设计器加锁成功（重试）: defId={} userId={} 抢占自={}", definitionId, userId, holder);
@@ -565,8 +557,7 @@ public class FlowDefinitionDesignManager {
       return true;
     }
 
-    // 保留 Mapper：自定义 CAS 操作，Repository 暂无对应方法
-    int affected = definitionMapper.casUnlock(definitionId, userId, def.getRevision());
+    int affected = definitionRepository.casUnlock(definitionId, userId, def.getRevision());
     if (affected == 1) {
       log.info("[Flow] 设计器解锁成功: defId={} userId={}", definitionId, userId);
       return true;

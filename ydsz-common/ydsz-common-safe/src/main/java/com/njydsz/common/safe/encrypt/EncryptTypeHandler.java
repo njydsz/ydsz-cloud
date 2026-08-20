@@ -173,7 +173,7 @@ public class EncryptTypeHandler extends BaseTypeHandler<String> {
       return version >= 1 && version <= 127;
     } catch (IllegalArgumentException ex) {
       // 不是合法的 Base64，肯定是明文
-      log.debug("[EncryptType] 非加密字段（非法 Base64），按明文处理");
+      LOG.debug("[EncryptType] 非加密字段（非法 Base64），按明文处理");
       return false;
     }
   }

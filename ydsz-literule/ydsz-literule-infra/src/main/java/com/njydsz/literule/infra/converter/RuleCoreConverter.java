@@ -33,7 +33,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
 @Mapper
 public interface RuleCoreConverter {
 
-  RuleCoreConverter INSTANT = Mappers.getMapper(RuleCoreConverter.class);
+  RuleCoreConverter INSTANCE = Mappers.getMapper(RuleCoreConverter.class);
 
   // ===== RuleDefinitionDO ↔ VO =====
   RuleDefinitionVO entityToVO(RuleDefinitionDO entity);

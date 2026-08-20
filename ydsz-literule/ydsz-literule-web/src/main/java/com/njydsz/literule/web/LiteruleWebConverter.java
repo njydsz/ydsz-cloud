@@ -37,9 +37,9 @@ import com.njydsz.literule.server.version.RuleVersionDiff;
  *
  * <ul>
  *   <li>使用 MapStruct 注解处理器，编译期生成实现类，性能优于反射
- *   <li>通过 {@link #INSTANT} 单例访问，零依赖注入
+ *   <li>通过 {@link #INSTANCE} 单例访问，零依赖注入
  *   <li>同名字段自动映射；源类型额外字段自动忽略
- *   <li>列表转换通过 {@code .stream().map(INSTANT::entityToVO).toList()} 完成， 避免泛型类型擦除导致的方法签名冲突
+ *   <li>列表转换通过 {@code .stream().map(INSTANCE::entityToVO).toList()} 完成， 避免泛型类型擦除导致的方法签名冲突
  * </ul>
  *
  * @author ydsz-team
@@ -48,7 +48,7 @@ import com.njydsz.literule.server.version.RuleVersionDiff;
 @Mapper
 public interface LiteruleWebConverter {
 
-  LiteruleWebConverter INSTANT = Mappers.getMapper(LiteruleWebConverter.class);
+  LiteruleWebConverter INSTANCE = Mappers.getMapper(LiteruleWebConverter.class);
 
   // ===== RulePackProvider.InstallResult → InstallResultVO =====
   InstallResultVO entityToVO(InstallResult entity);

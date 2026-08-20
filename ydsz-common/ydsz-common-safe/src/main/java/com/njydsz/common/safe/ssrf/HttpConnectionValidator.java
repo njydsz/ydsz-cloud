@@ -112,8 +112,11 @@ public final class HttpConnectionValidator {
    * @param newProperties 新的 SSRF 配置
    */
   public static void updateProperties(SsrfProperties newProperties) {
-    if (newProperties != null && defaultInstance != null) {
-      defaultInstance.properties = newProperties;
+    if (newProperties != null) {
+      HttpConnectionValidator validator = defaultInstance.get();
+      if (validator != null) {
+        validator.properties = newProperties;
+      }
     }
   }
 

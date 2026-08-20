@@ -39,7 +39,7 @@ public class RuleDefinitionRepositoryImpl implements RuleDefinitionRepository {
 
   private final RuleDefinitionMapper ruleDefinitionMapper;
 
-  private final LiteruleConverter converter = LiteruleConverter.INSTANT;
+  private final LiteruleConverter converter = LiteruleConverter.INSTANCE;
 
   @Override
   public Optional<RuleDefinitionVO> findByCode(String ruleCode) {

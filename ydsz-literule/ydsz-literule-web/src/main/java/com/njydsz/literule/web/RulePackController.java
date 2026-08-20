@@ -78,7 +78,7 @@ public class RulePackController {
   @GetMapping("/packs")
   public YdszResponse<List<RulePackVO>> listPacks() {
     return YdszResponse.success(
-        rulePackProvider.listAll().stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
+        rulePackProvider.listAll().stream().map(LiteruleConverter.INSTANCE::entityToVO).toList());
   }
 
   /** 搜索规则集 */
@@ -87,7 +87,7 @@ public class RulePackController {
       @RequestParam(value = "keyword", required = false) String keyword) {
     return YdszResponse.success(
         rulePackProvider.search(keyword).stream()
-            .map(LiteruleConverter.INSTANT::entityToVO)
+            .map(LiteruleConverter.INSTANCE::entityToVO)
             .toList());
   }
 
@@ -95,7 +95,7 @@ public class RulePackController {
   @GetMapping("/packs/{packCode}/latest")
   public YdszResponse<RulePackVO> getLatestPack(@PathVariable String packCode) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANT.entityToVO(rulePackProvider.getLatest(packCode)));
+        LiteruleConverter.INSTANCE.entityToVO(rulePackProvider.getLatest(packCode)));
   }
 
   /** 查询规则集的所有版本 */
@@ -103,7 +103,7 @@ public class RulePackController {
   public YdszResponse<List<RulePackVO>> listPackVersions(@PathVariable String packCode) {
     return YdszResponse.success(
         rulePackProvider.listVersions(packCode).stream()
-            .map(LiteruleConverter.INSTANT::entityToVO)
+            .map(LiteruleConverter.INSTANCE::entityToVO)
             .toList());
   }
 
@@ -112,7 +112,7 @@ public class RulePackController {
   public YdszResponse<RulePackVO> getPackVersion(
       @PathVariable String packCode, @PathVariable String version) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANT.entityToVO(rulePackProvider.getVersion(packCode, version)));
+        LiteruleConverter.INSTANCE.entityToVO(rulePackProvider.getVersion(packCode, version)));
   }
 
   /** 知识包版本回滚（P2-8）：将该版本固化的规则定义整体恢复到在线规则表 */
@@ -128,7 +128,7 @@ public class RulePackController {
       @RequestParam(value = "version") String version,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     return YdszResponse.success(
-        LiteruleWebConverter.INSTANT.entityToVO(
+        LiteruleWebConverter.INSTANCE.entityToVO(
             rulePackProvider.rollback(packCode, version, operator)));
   }
 
@@ -139,7 +139,7 @@ public class RulePackController {
       @RequestParam(value = "from") String fromVersion,
       @RequestParam(value = "to") String toVersion) {
     return YdszResponse.success(
-        LiteruleWebConverter.INSTANT.entityToVO(
+        LiteruleWebConverter.INSTANCE.entityToVO(
             rulePackProvider.diff(packCode, fromVersion, toVersion)));
   }
 
@@ -156,7 +156,7 @@ public class RulePackController {
       @Valid @RequestBody RulePack pack,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANT.entityToVO(rulePackProvider.publish(pack, operator)));
+        LiteruleConverter.INSTANCE.entityToVO(rulePackProvider.publish(pack, operator)));
   }
 
   /** 安装规则集（一键导入） */
@@ -172,7 +172,7 @@ public class RulePackController {
       @RequestParam(value = "version", required = false) String version,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     return YdszResponse.success(
-        LiteruleWebConverter.INSTANT.entityToVO(
+        LiteruleWebConverter.INSTANCE.entityToVO(
             rulePackProvider.install(packCode, version, operator)));
   }
 
@@ -302,7 +302,7 @@ public class RulePackController {
   public YdszResponse<List<PackUpdateInfoVO>> checkPackUpdates() {
     return YdszResponse.success(
         rulePackProvider.checkPackUpdates().stream()
-            .map(LiteruleWebConverter.INSTANT::entityToVO)
+            .map(LiteruleWebConverter.INSTANCE::entityToVO)
             .toList());
   }
 
@@ -335,6 +335,6 @@ public class RulePackController {
       }
     }
     return YdszResponse.success(
-        results.stream().map(LiteruleWebConverter.INSTANT::entityToVO).toList());
+        results.stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList());
   }
 }

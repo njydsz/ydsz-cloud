@@ -47,7 +47,7 @@ public class RuleConflictController {
   public YdszResponse<List<RuleConflictInfoVO>> detectConflicts() {
     return YdszResponse.success(
         ruleConflictDetectorProvider.detectConflicts().stream()
-            .map(LiteruleWebConverter.INSTANT::entityToVO)
+            .map(LiteruleWebConverter.INSTANCE::entityToVO)
             .toList());
   }
 }

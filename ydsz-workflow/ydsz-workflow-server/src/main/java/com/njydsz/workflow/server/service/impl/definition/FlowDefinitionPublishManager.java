@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.code.YdszResultCode;
@@ -21,7 +20,6 @@ import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
@@ -79,9 +77,6 @@ public class FlowDefinitionPublishManager {
   /** 流程实例迁移服务（一键回滚时迁移在途实例） */
   private final FlowInstanceMigrationService migrationService;
 
-  /** 流程定义 Mapper（仅用于自定义 SQL 操作，Repository 暂无对应方法） */
-  private final FlowDefinitionMapper definitionMapper;
-
   public FlowDefinitionPublishManager(
       FlowDefinitionRepository definitionRepository,
       FlowNodeRepository nodeRepository,
@@ -89,8 +84,7 @@ public class FlowDefinitionPublishManager {
       FlowDefinitionCacheService flowDefinitionCacheService,
       FlowProperties flowProperties,
       FlowDefinitionMigrationManager migrationManager,
-      @Lazy FlowInstanceMigrationService migrationService,
-      FlowDefinitionMapper definitionMapper) {
+      @Lazy FlowInstanceMigrationService migrationService) {
     this.definitionRepository = definitionRepository;
     this.nodeRepository = nodeRepository;
     this.converter = converter;
@@ -98,7 +92,6 @@ public class FlowDefinitionPublishManager {
     this.flowProperties = flowProperties;
     this.migrationManager = migrationManager;
     this.migrationService = migrationService;
-    this.definitionMapper = definitionMapper;
   }
 
   /**
@@ -139,8 +132,7 @@ public class FlowDefinitionPublishManager {
           .build();
     }
     checkPublishCompatibility(def, force);
-    // 保留 Mapper：自定义发布状态更新，Repository 暂无对应方法
-    definitionMapper.publish(definitionId, 1);
+    definitionRepository.publish(definitionId, 1);
     flowDefinitionCacheService.evict(definitionId);
     log.info(
         "[Flow] 发布流程: defId={} flowCode={} version={} force={}",
@@ -162,8 +154,7 @@ public class FlowDefinitionPublishManager {
       value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
   public void deprecate(String definitionId) {
-    // 保留 Mapper：自定义发布状态更新，Repository 暂无对应方法
-    definitionMapper.publish(definitionId, 9);
+    definitionRepository.publish(definitionId, 9);
     flowDefinitionCacheService.evict(definitionId);
     log.info("[Flow] 停用流程: defId={}", definitionId);
   }
@@ -203,9 +194,8 @@ public class FlowDefinitionPublishManager {
           .build();
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    // 保留 Mapper：自定义批量失效 + 发布状态更新，Repository 暂无对应方法
-    definitionMapper.deactivateByFlowCode(flowCode, definitionId, tid);
-    definitionMapper.publish(definitionId, 1);
+    definitionRepository.deactivateByFlowCode(flowCode, definitionId, tid);
+    definitionRepository.publish(definitionId, 1);
     flowDefinitionCacheService.evict(definitionId);
     log.info("[Flow] 切换流程定义版本: flowCode={} → defId={} tenantId={}", flowCode, definitionId, tid);
   }
@@ -218,8 +208,7 @@ public class FlowDefinitionPublishManager {
    * @param definitionId 流程定义 ID
    */
   public void enable(String definitionId) {
-    // 保留 Mapper：自定义状态更新，Repository 暂无对应方法
-    definitionMapper.updateActivityStatus(definitionId, 1);
+    definitionRepository.updateActivityStatus(definitionId, 1);
     flowDefinitionCacheService.evict(definitionId);
     log.info("[Flow] 启用流程定义: defId={}", definitionId);
   }
@@ -232,8 +221,7 @@ public class FlowDefinitionPublishManager {
    * @param definitionId 流程定义 ID
    */
   public void disable(String definitionId) {
-    // 保留 Mapper：自定义状态更新，Repository 暂无对应方法
-    definitionMapper.updateActivityStatus(definitionId, 0);
+    definitionRepository.updateActivityStatus(definitionId, 0);
     flowDefinitionCacheService.evict(definitionId);
     log.info("[Flow] 停用流程定义: defId={}", definitionId);
   }
@@ -270,16 +258,9 @@ public class FlowDefinitionPublishManager {
           .build();
     }
 
-    // 保留 Mapper：自定义复杂查询（LambdaQueryWrapper），Repository 暂无对应方法
-    LambdaQueryWrapper<FlowDefinitionDO> qw = new LambdaQueryWrapper<>();
-    qw.eq(FlowDefinitionDO::getFlowCode, flowCode)
-        .eq(FlowDefinitionDO::getTenantId, tid)
-        .ne(FlowDefinitionDO::getId, currentDef.getId())
-        .eq(FlowDefinitionDO::getIsPublish, 1)
-        .eq(FlowDefinitionDO::getDeleted, 0)
-        .orderByDesc(FlowDefinitionDO::getFlowVersion)
-        .last("LIMIT 1");
-    FlowDefinitionDO previousDef = definitionMapper.selectOne(qw);
+    FlowDefinitionDO previousDef = definitionRepository.findPreviousPublishedVersion(flowCode, tid, currentDef.getId())
+        .map(converter::entityToDO)
+        .orElse(null);
     if (previousDef == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)

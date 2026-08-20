@@ -61,7 +61,7 @@ public class RuleTemplateController {
   @GetMapping("/templates")
   public YdszResponse<List<RuleTemplateVO>> listTemplates() {
     return YdszResponse.success(
-        LiteruleConverter.INSTANT.ruleTemplateListToVO(ruleTemplateProvider.listAll()));
+        LiteruleConverter.INSTANCE.ruleTemplateListToVO(ruleTemplateProvider.listAll()));
   }
 
   /**
@@ -73,7 +73,7 @@ public class RuleTemplateController {
   @GetMapping("/templates/category/{category}")
   public YdszResponse<List<RuleTemplateVO>> listTemplatesByCategory(@PathVariable String category) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANT.ruleTemplateListToVO(
+        LiteruleConverter.INSTANCE.ruleTemplateListToVO(
             ruleTemplateProvider.listByCategory(category)));
   }
 
@@ -86,7 +86,7 @@ public class RuleTemplateController {
   @GetMapping("/templates/industry/{industry}")
   public YdszResponse<List<RuleTemplateVO>> listTemplatesByIndustry(@PathVariable String industry) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANT.ruleTemplateListToVO(
+        LiteruleConverter.INSTANCE.ruleTemplateListToVO(
             ruleTemplateProvider.listByIndustry(industry)));
   }
 
@@ -109,7 +109,7 @@ public class RuleTemplateController {
       @PathVariable String templateCode,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANT.entityToVO(
+        LiteruleConverter.INSTANCE.entityToVO(
             ruleTemplateProvider.importTemplate(templateCode, operator)));
   }
 }

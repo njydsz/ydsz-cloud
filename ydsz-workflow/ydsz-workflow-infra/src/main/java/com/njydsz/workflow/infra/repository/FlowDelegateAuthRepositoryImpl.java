@@ -118,4 +118,42 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
     update.setId(id);
     delegateAuthMapper.updateById(update);
   }
+
+  @Override
+  public List<FlowDelegateAuthVO> selectByOwner(String tenantId, String ownerUserId, String status) {
+    return converter.flowDelegateAuthListToVO(
+        delegateAuthMapper.selectList(
+            new LambdaQueryWrapper<FlowDelegateAuthDO>()
+                .eq(FlowDelegateAuthDO::getTenantId, tenantId)
+                .eq(FlowDelegateAuthDO::getOwnerUserId, ownerUserId)
+                .eq(status != null, FlowDelegateAuthDO::getAuthStatus, status)
+                .eq(FlowDelegateAuthDO::getDeleted, 0)
+                .orderByDesc(FlowDelegateAuthDO::getCreatedAt)));
+  }
+
+  @Override
+  public List<FlowDelegateAuthVO> selectByDelegate(
+      String tenantId, String delegateUserId, String status) {
+    return converter.flowDelegateAuthListToVO(
+        delegateAuthMapper.selectList(
+            new LambdaQueryWrapper<FlowDelegateAuthDO>()
+                .eq(FlowDelegateAuthDO::getTenantId, tenantId)
+                .eq(FlowDelegateAuthDO::getDelegateUserId, delegateUserId)
+                .eq(status != null, FlowDelegateAuthDO::getAuthStatus, status)
+                .eq(FlowDelegateAuthDO::getDeleted, 0)
+                .orderByDesc(FlowDelegateAuthDO::getCreatedAt)));
+  }
+
+  @Override
+  public Optional<FlowDelegateAuthVO> matchAuthByScope(
+      String tenantId, String ownerUserId, String flowCode, String nodeCode, LocalDateTime now) {
+    return Optional.ofNullable(
+            delegateAuthMapper.matchAuth(tenantId, ownerUserId, flowCode, nodeCode, now))
+        .map(converter::entityToVO);
+  }
+
+  @Override
+  public int markExpired(LocalDateTime now, LocalDateTime endTime) {
+    return delegateAuthMapper.markExpired(now, endTime);
+  }
 }

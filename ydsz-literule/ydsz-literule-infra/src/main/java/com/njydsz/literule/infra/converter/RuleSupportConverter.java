@@ -34,7 +34,7 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
 @Mapper
 public interface RuleSupportConverter {
 
-  RuleSupportConverter INSTANT = Mappers.getMapper(RuleSupportConverter.class);
+  RuleSupportConverter INSTANCE = Mappers.getMapper(RuleSupportConverter.class);
 
   // ===== RuleDependencyDO =====
   RuleDependencyVO entityToVO(RuleDependencyDO entity);

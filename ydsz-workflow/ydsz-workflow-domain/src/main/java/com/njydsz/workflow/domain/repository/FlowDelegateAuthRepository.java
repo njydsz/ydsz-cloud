@@ -110,4 +110,57 @@ public interface FlowDelegateAuthRepository {
    * @param status 目标状态（ENABLED / DISABLED / EXPIRED / REVOKED）
    */
   void updateStatus(String id, String status);
+
+  /**
+   * 查询授权人的授权列表（带状态过滤）。
+   *
+   * <p>返回 {@code ownerUserId = ? AND tenantId = ?} 的授权列表，
+   * 按状态过滤（为 null 时返回全部）。
+   *
+   * @param tenantId 租户 ID
+   * @param ownerUserId 授权人 ID
+   * @param status 状态过滤（可为 null）
+   * @return 委托授权 VO 列表
+   */
+  List<FlowDelegateAuthVO> selectByOwner(String tenantId, String ownerUserId, String status);
+
+  /**
+   * 查询代理人的受理授权列表（带状态过滤）。
+   *
+   * <p>返回 {@code delegateUserId = ? AND tenantId = ?} 的授权列表，
+   * 按状态过滤（为 null 时返回全部）。
+   *
+   * @param tenantId 租户 ID
+   * @param delegateUserId 代理人 ID
+   * @param status 状态过滤（可为 null）
+   * @return 委托授权 VO 列表
+   */
+  List<FlowDelegateAuthVO> selectByDelegate(String tenantId, String delegateUserId, String status);
+
+  /**
+   * 匹配某审批任务的代理人（按 scope 优先级）。
+   *
+   * <p>匹配规则：{@code FLOW_NODE > FLOW > ROLE > ALL}，匹配时校验当前时间在 {@code [startTime, endTime]} 区间内且状态为
+   * {@code ENABLED}。
+   *
+   * @param tenantId 租户 ID
+   * @param ownerUserId 原审批人 ID
+   * @param flowCode 流程编码（可为 null）
+   * @param nodeCode 节点编码（可为 null）
+   * @param now 当前时间
+   * @return 匹配的授权（无匹配返回 {@code Optional.empty()}）
+   */
+  Optional<FlowDelegateAuthVO> matchAuthByScope(
+      String tenantId, String ownerUserId, String flowCode, String nodeCode, LocalDateTime now);
+
+  /**
+   * 扫描并标记过期授权。
+   *
+   * <p>将 {@code endTime < now} 且状态为 {@code ENABLED} 的授权标记为 {@code EXPIRED}。
+   *
+   * @param now 当前时间
+   * @param endTime 截止时间阈值
+   * @return 标记过期的授权数
+   */
+  int markExpired(LocalDateTime now, LocalDateTime endTime);
 }

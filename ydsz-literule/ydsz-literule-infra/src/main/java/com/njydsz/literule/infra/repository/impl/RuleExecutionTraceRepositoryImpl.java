@@ -33,7 +33,7 @@ public class RuleExecutionTraceRepositoryImpl implements RuleExecutionTraceRepos
 
   private final RuleExecutionTraceMapper ruleExecutionTraceMapper;
 
-  private final LiteruleConverter converter = LiteruleConverter.INSTANT;
+  private final LiteruleConverter converter = LiteruleConverter.INSTANCE;
 
   @Override
   public List<RuleExecutionTraceVO> findByTraceId(String traceId) {

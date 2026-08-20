@@ -1,5 +1,6 @@
 package com.njydsz.workflow.infra.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -198,5 +199,58 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
                 .eq(tenantId != null, FlowDefinitionDO::getTenantId, tenantId)
                 .eq(FlowDefinitionDO::getDeleted, 0)
                 .orderByDesc(FlowDefinitionDO::getFlowVersion)));
+  }
+
+  @Override
+  public int casLock(
+      String definitionId,
+      String userId,
+      LocalDateTime now,
+      String lockedBy,
+      LocalDateTime timeoutExpired,
+      Integer revision) {
+    return definitionMapper.casLock(definitionId, userId, now, lockedBy, timeoutExpired, revision);
+  }
+
+  @Override
+  public int casUnlock(String definitionId, String userId, Integer revision) {
+    return definitionMapper.casUnlock(definitionId, userId, revision);
+  }
+
+  @Override
+  public void publish(String definitionId, int isPublish) {
+    definitionMapper.publish(definitionId, isPublish);
+  }
+
+  @Override
+  public void deactivateByFlowCode(String flowCode, String targetDefinitionId, String tenantId) {
+    definitionMapper.deactivateByFlowCode(flowCode, targetDefinitionId, tenantId);
+  }
+
+  @Override
+  public void updateActivityStatus(String definitionId, int activityStatus) {
+    FlowDefinitionDO entity = new FlowDefinitionDO();
+    entity.setId(definitionId);
+    entity.setActivityStatus(activityStatus);
+    definitionMapper.updateById(entity);
+  }
+
+  @Override
+  public Optional<FlowDefinitionVO> findPreviousPublishedVersion(
+      String flowCode, String tenantId, String excludeDefinitionId) {
+    return definitionMapper
+        .selectList(
+            new LambdaQueryWrapper<FlowDefinitionDO>()
+                .eq(FlowDefinitionDO::getFlowCode, flowCode)
+                .eq(tenantId != null, FlowDefinitionDO::getTenantId, tenantId)
+                .ne(org.springframework.util.StringUtils.hasText(excludeDefinitionId),
+                    FlowDefinitionDO::getId, excludeDefinitionId)
+                .eq(FlowDefinitionDO::getIsPublish, 1)
+                .eq(FlowDefinitionDO::getDeleted, 0)
+                .orderByDesc(FlowDefinitionDO::getCreatedAt)
+                .last("LIMIT 1"))
+        .stream()
+        .findFirst()
+        .map(converter::entityToVO);
   }
 }

@@ -208,13 +208,15 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   @Override
-  public List<FlowInstanceVO> findRunningByDefinition(String definitionId) {
-    return converter.flowInstanceListToVO(
-        instanceMapper.selectList(
-            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowInstanceDO>()
-                .eq(FlowInstanceDO::getDefinitionId, definitionId)
-                .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
-                .eq(FlowInstanceDO::getDeleted, 0)));
+  public List<FlowInstanceVO> findRunningByDefinition(String definitionId, String tenantId) {
+    LambdaQueryWrapper<FlowInstanceDO> wrapper = new LambdaQueryWrapper<FlowInstanceDO>()
+        .eq(FlowInstanceDO::getDefinitionId, definitionId)
+        .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
+        .eq(FlowInstanceDO::getDeleted, 0);
+    if (tenantId != null) {
+      wrapper.eq(FlowInstanceDO::getTenantId, tenantId);
+    }
+    return converter.flowInstanceListToVO(instanceMapper.selectList(wrapper));
   }
 
   @Override

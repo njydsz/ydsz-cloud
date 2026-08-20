@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
-import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 
 /**
  * P2-7: 跨节点办理人去重策略
@@ -68,7 +67,7 @@ import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see FlowHisTaskMapper 历史任务 Mapper
+ * @see FlowHisTaskRepository 历史任务仓储
  * @see FlowTaskArchiveService 任务归档服务（历史任务来源）
  * @see FlowInstanceService 流程实例服务（在创建下游任务时调用本服务过滤）
  */
@@ -79,17 +78,7 @@ public class FlowAssigneeDedupService {
 
   // ============================== 依赖注入 ==============================
 
-  /** 历史任务 Mapper，负责 {@code ydsz_flow_his_task} 表的查询（已审批人来源） */
-  private final FlowHisTaskMapper hisTaskMapper;
-
-  /**
-   * 历史任务仓储（domain 层契约）。
-   *
-   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #hisTaskMapper} 访问数据，
-   * 因为 {@code selectCompletedAssigneeIds(instanceId)} 在仓储中暂无等价方法，
-   * 且仓储返回 {@code FlowHisTaskVO} 与 Service 使用的 {@code FlowHisTaskDO} 类型不同。
-   * 后续应在仓储中补齐 {@code findCompletedAssigneeIds} 方法并迁移。
-   */
+  /** 历史任务仓储，负责 {@code ydsz_flow_his_task} 表的查询（已审批人来源） */
   private final FlowHisTaskRepository hisTaskRepository;
 
   // ============================== 单点检查 ==============================
@@ -112,8 +101,7 @@ public class FlowAssigneeDedupService {
       return false;
     }
     try {
-      // 保留 Mapper：自定义 SQL 操作，Repository 暂无 selectCompletedAssigneeIds 方法
-      List<String> completedAssignees = hisTaskMapper.selectCompletedAssigneeIds(instanceId);
+      List<String> completedAssignees = hisTaskRepository.selectCompletedAssigneeIds(instanceId);
       if (completedAssignees == null || completedAssignees.isEmpty()) {
         return false;
       }
@@ -144,8 +132,7 @@ public class FlowAssigneeDedupService {
       return new HashSet<>();
     }
     try {
-      // 保留 Mapper：自定义 SQL 操作，Repository 暂无 selectCompletedAssigneeIds 方法
-      List<String> completedAssignees = hisTaskMapper.selectCompletedAssigneeIds(instanceId);
+      List<String> completedAssignees = hisTaskRepository.selectCompletedAssigneeIds(instanceId);
       return completedAssignees != null ? new HashSet<>(completedAssignees) : new HashSet<>();
     } catch (Exception e) {
       log.warn("[FlowDedup] P2-7 获取已审批人列表失败: instanceId={} err={}", instanceId, e.getMessage());

@@ -66,7 +66,7 @@ public class RuleCategoryController {
   @GetMapping("/category-tree")
   public YdszResponse<CategoryNodeVO> categoryTree() {
     return YdszResponse.success(
-        LiteruleWebConverter.INSTANT.entityToVO(ruleCategoryProvider.buildTree()));
+        LiteruleWebConverter.INSTANCE.entityToVO(ruleCategoryProvider.buildTree()));
   }
 
   /**
@@ -79,7 +79,7 @@ public class RuleCategoryController {
       @RequestParam(value = "path", required = false) String path) {
     return YdszResponse.success(
         ruleCategoryProvider.listDefinitionsByCategoryPath(path).stream()
-            .map(LiteruleConverter.INSTANT::entityToVO)
+            .map(LiteruleConverter.INSTANCE::entityToVO)
             .toList());
   }
 
@@ -89,7 +89,7 @@ public class RuleCategoryController {
       @RequestParam(value = "owner") String owner) {
     return YdszResponse.success(
         ruleCategoryProvider.listDefinitionsByOwner(owner).stream()
-            .map(LiteruleConverter.INSTANT::entityToVO)
+            .map(LiteruleConverter.INSTANCE::entityToVO)
             .toList());
   }
 

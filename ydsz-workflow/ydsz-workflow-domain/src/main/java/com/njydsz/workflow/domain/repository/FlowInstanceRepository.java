@@ -247,14 +247,15 @@ public interface FlowInstanceRepository {
   List<FlowInstanceVO> findRunningChildrenByParentId(String parentInstanceId);
 
   /**
-   * 查询某流程定义下运行中的实例列表。
+   * 查询某流程定义下运行中的实例列表（可按租户过滤）。
    *
    * <p>用于流程实例迁移：获取源定义下所有 RUNNING 实例。
    *
    * @param definitionId 流程定义 ID
+   * @param tenantId     租户 ID（可为 null，表示不过滤）
    * @return 运行中实例 VO 列表
    */
-  List<FlowInstanceVO> findRunningByDefinition(String definitionId);
+  List<FlowInstanceVO> findRunningByDefinition(String definitionId, String tenantId);
 
   /**
    * 更新流程实例（全字段更新）。
