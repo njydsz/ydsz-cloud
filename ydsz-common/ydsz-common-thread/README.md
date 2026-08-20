@@ -350,26 +350,24 @@ ExecutorUtils.shutdownGracefully(cpuPool, 30, TimeUnit.SECONDS);
 
 详见 `ExecutorUtils` javadoc 中的「快速选择指南」表格。
 
-### 3. 可观测线程池执行器
+### 3. 线程池指标组件
 
-`com.njydsz.common.thread.executor.MeteredThreadPoolExecutor` 继承 `ThreadPoolExecutor`，提供 Micrometer 指标自动注册与慢任务检测，适用于编程式创建但仍需指标采集的场景：
+本模块提供以下指标采集组件，适用于编程式创建但仍需指标采集的场景：
 
-```java
-MeteredThreadPoolExecutor executor = new MeteredThreadPoolExecutor(
-    "order-process", 8, 16, 60, TimeUnit.SECONDS,
-    new LinkedBlockingQueue<>(1024),
-    new NamedThreadFactory("order"),
-    new ThreadPoolExecutor.CallerRunsPolicy(),
-    Metrics.globalRegistry);
-executor.enableSlowTaskDetection(1000);
-```
+| 类 | 说明 |
+|---|---|
+| `ThreadPoolMetrics` | Micrometer `MeterBinder`，为 `ThreadPoolTaskExecutor` 注册核心 5 项指标（active / pool.size / queue.size / completed / rejected）+ 可选 3 项详细指标 |
+| `ThreadPoolTimerMetrics` | 任务执行耗时 `Timer`（execution / queue.wait）和慢任务 `Counter` |
+| `MeteredRejectedHandler` | 拒绝策略包装器，自动计数拒绝任务数 |
+| `MeteredVirtualExecutorService` | 虚拟线程执行器包装器，自动同步 `VirtualThreadMetrics` 计数器（submitted / completed） |
+| `VirtualThreadMetrics` | 虚拟线程池指标绑定器（submitted / completed 计数器） |
 
 ### 扩展建议
 
 如需自定义线程池行为（如自定义 `ThreadFactory`、`RejectedExecutionHandler`），建议：
 
 1. **优先使用配置驱动**：`ydsz.thread.pools.<name>` 创建托管线程池
-2. **编程式补充**：使用本模块的 `ExecutorUtils` 或 `MeteredThreadPoolExecutor` 创建线程池
+2. **编程式补充**：使用本模块的 `ExecutorUtils` 创建线程池，再通过 `ThreadPoolMetrics` + `MeteredRejectedHandler` 绑定指标
 3. **通过配置属性定制**：`ydsz.thread.pools.<name>.*` 已支持 `reject-policy`、`allow-core-thread-time-out`、`keep-alive-seconds`、`await-termination-seconds`、`task-decorator-bean-names` 等参数
 4. **健康检查**：`ThreadHealthIndicator` 未自动装配，需要时由业务侧显式声明 Bean
 

@@ -48,6 +48,9 @@ public class MessageLogQueryDTO extends PageQuery {
   /** 消息业务 ID（精确匹配，用于幂等查重等场景） */
   @Xss private String msgId;
 
+  /** 回执状态（精确匹配，用于统计查询） */
+  @Xss private String receiptStatus;
+
   /** P2-13: 时间范围开始 */
   @Xss private String startTime;
 

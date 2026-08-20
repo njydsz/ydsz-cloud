@@ -150,6 +150,9 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
     if (query.getMsgId() != null && !query.getMsgId().isBlank()) {
       wrapper.eq("msg_id", query.getMsgId());
     }
+    if (query.getReceiptStatus() != null && !query.getReceiptStatus().isBlank()) {
+      wrapper.eq("receipt_status", query.getReceiptStatus());
+    }
     if (query.getTenantId() != null && !query.getTenantId().isBlank()) {
       wrapper.eq("tenant_id", query.getTenantId());
     }

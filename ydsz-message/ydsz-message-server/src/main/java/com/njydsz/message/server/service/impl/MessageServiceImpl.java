@@ -600,16 +600,20 @@ public class MessageServiceImpl implements MessageService {
       request.setMessageId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     // P0-A1: 幂等校验 —— 同 messageId 的 PENDING/SENDING/SUCCESS 记录已存在时直接返回，避免重复落库
-    MsgLog existingLog =
-        msgLogRepository.selectOne(
-            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<MsgLog>()
-                .eq(MsgLog::getMsgId, request.getMessageId())
-                .in(
-                    MsgLog::getStatus,
-                    MessageStatusEnum.PENDING.name(),
-                    MessageStatusEnum.SENDING.name(),
-                    MessageStatusEnum.SUCCESS.name())
-                .last("LIMIT 1"));
+    MessageLogQueryDTO idempotentQuery = new MessageLogQueryDTO();
+    idempotentQuery.setMsgId(request.getMessageId());
+    idempotentQuery.setPageNum(1);
+    idempotentQuery.setPageSize(10);
+    java.util.List<MsgLogVO> existingLogs = msgLogRepository.findList(idempotentQuery);
+    MsgLogVO existingLog = existingLogs.stream()
+        .filter(vo -> {
+          String s = vo.getStatus();
+          return MessageStatusEnum.PENDING.name().equals(s)
+              || MessageStatusEnum.SENDING.name().equals(s)
+              || MessageStatusEnum.SUCCESS.name().equals(s);
+        })
+        .findFirst()
+        .orElse(null);
     if (existingLog != null) {
       log.info(
           "[Message] 异步消息幂等命中,跳过重复落库: msgId={} status={}",
@@ -636,7 +640,7 @@ public class MessageServiceImpl implements MessageService {
     logDO.setTenantId(TenantContextHolder.getTenantId());
     logDO.setTopic(YdszMessageTopics.TOPIC_MESSAGE);
     try {
-      msgLogRepository.insert(logDO);
+      msgLogRepository.save(converter.entityToVO(logDO));
       log.info(
           "[Message] 异步消息已落库 PENDING: msgId={} channel={}", logDO.getMsgId(), request.getChannel());
     } catch (Exception e) {
