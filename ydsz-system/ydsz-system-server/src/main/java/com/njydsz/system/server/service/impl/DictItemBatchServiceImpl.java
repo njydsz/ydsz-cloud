@@ -18,7 +18,7 @@ import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.DictItemDTO;
-import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
+import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.vo.DictItemVO;
@@ -202,7 +202,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
     eventPublisher.publishEvent(
         new VersionSnapshotEvent(
             this,
-            EntityVersionCreateDTO.builder()
+            EntityVersionDTO.builder()
                 .resourceType(EntityVersionService.RESOURCE_TYPE_DICT)
                 .resourceKey(typeCode)
                 .version(version)

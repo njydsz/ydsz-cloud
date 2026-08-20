@@ -56,7 +56,7 @@ import com.njydsz.userinfo.server.service.PostService;
  * @author ydsz-team
  * @since 1.0.0
  * @see PostService 岗位业务逻辑
- * @see com.njydsz.userinfo.infra.entity.PostDO 岗位实体
+ * @see com.njydsz.userinfo.domain.vo.PostVO 岗位VO
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（兼任岗位维护）
  */
 @Slf4j

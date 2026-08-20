@@ -21,7 +21,7 @@ import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.dto.DictTypeDTO;
-import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
+import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.dto.TenantDTO;
 import com.njydsz.system.domain.dto.TenantPlanDTO;
 import com.njydsz.system.domain.dto.VariableDTO;
@@ -383,7 +383,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  EntityVersionDO dtoToEntity(EntityVersionCreateDTO dto);
+  EntityVersionDO dtoToEntity(EntityVersionDTO dto);
 
   // ===== Tenant =====
 

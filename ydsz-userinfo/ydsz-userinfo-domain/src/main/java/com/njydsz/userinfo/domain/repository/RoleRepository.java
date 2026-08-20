@@ -5,8 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.dto.RoleCreateDTO;
-import com.njydsz.userinfo.domain.dto.RoleUpdateDTO;
+import com.njydsz.userinfo.domain.dto.RoleDTO;
 import com.njydsz.userinfo.domain.query.RolePageQuery;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 
@@ -66,20 +65,14 @@ public interface RoleRepository {
   List<RoleVO> list(RolePageQuery query);
 
   /**
-   * 创建角色。
+   * 保存角色（创建或更新）。
    *
-   * @param dto 创建 DTO
-   * @return 创建后的角色 VO
-   */
-  RoleVO create(RoleCreateDTO dto);
-
-  /**
-   * 更新角色。
+   * <p>统一 DTO：创建时 {@code id} 可不传，更新时 {@code id} 必填。
    *
-   * @param dto 更新 DTO
-   * @return 更新后的角色 VO
+   * @param dto 角色 DTO
+   * @return 保存后的角色 VO
    */
-  RoleVO update(RoleUpdateDTO dto);
+  RoleVO save(RoleDTO dto);
 
   /**
    * 根据 ID 删除角色（逻辑删除）。

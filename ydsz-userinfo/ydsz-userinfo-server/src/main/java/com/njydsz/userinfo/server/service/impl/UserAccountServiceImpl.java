@@ -26,6 +26,7 @@ import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
+import com.njydsz.userinfo.domain.dto.UserProfileUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserRoleDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -190,6 +191,33 @@ public class UserAccountServiceImpl implements UserAccountService {
         authService.evictAllSessions(dto.getId());
         log.info("User {} disabled, all sessions evicted", dto.getId());
       }
+    }
+    return vo != null;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>仅更新用户可自助修改的基本信息字段（realName/phone/email/avatar），未传字段保持原值。
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public boolean updateProfile(String userId, UserProfileUpdateDTO dto) {
+    UserAccountVO existing = userAccountRepository.findById(userId)
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND));
+
+    // 构建更新 DTO，仅携带非空字段
+    UserAccountUpdateDTO updateDTO = new UserAccountUpdateDTO();
+    updateDTO.setId(userId);
+    updateDTO.setRealName(dto.getRealName());
+    updateDTO.setPhone(dto.getPhone());
+    updateDTO.setEmail(dto.getEmail());
+    updateDTO.setAvatar(dto.getAvatar());
+
+    UserAccountVO vo = userAccountRepository.update(updateDTO);
+    if (vo != null) {
+      indexUpsert(vo);
+      eventPublisher.publishUserUpdated(vo);
     }
     return vo != null;
   }

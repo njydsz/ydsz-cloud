@@ -18,10 +18,6 @@
         </dependency>
         <!-- P1: 遵循 DDD 分层，server 层不直接依赖 infra 层；infra 实现由 web/app 层通过组件扫描注入 -->
         <!-- P1-A1: 显式声明 common-auth（使用 @EnableYdszAuth / @AuthApiPermission 等能力） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-auth</artifactId>
-        </dependency>
         <!-- ydsz-common-core: explicit declaration for direct usage (was transitive via common-web) -->
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -33,10 +29,6 @@
             <artifactId>ydsz-common-util</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-cache</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-lock</artifactId>
@@ -58,10 +50,6 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-docs</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-feign</artifactId>
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -100,11 +88,6 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
-        </dependency>
-        <!-- P2-1: 统一配置加密健康检查（ConfigEncryptHealthIndicator 自动激活） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-config</artifactId>
         </dependency>
     </dependencies>
 </project>

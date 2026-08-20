@@ -2,7 +2,7 @@ package com.njydsz.system.domain.event;
 
 import org.springframework.context.ApplicationEvent;
 
-import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
+import com.njydsz.system.domain.dto.EntityVersionDTO;
 
 /**
  * 版本快照创建事件 — 资源写操作（update/remove）成功后发布，由监听器在事务提交后异步创建版本快照。
@@ -20,12 +20,12 @@ import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see EntityVersionCreateDTO 版本创建参数 DTO
+ * @see EntityVersionDTO 版本创建参数 DTO
  */
 public class VersionSnapshotEvent extends ApplicationEvent {
 
   /** 版本创建参数（含资源类型/键/分组/版本号/变更说明/快照 JSON） */
-  private final EntityVersionCreateDTO versionDto;
+  private final EntityVersionDTO versionDto;
 
   /**
    * 构造版本快照事件。
@@ -33,7 +33,7 @@ public class VersionSnapshotEvent extends ApplicationEvent {
    * @param source 事件源（通常为发布者的 {@code this} 引用）
    * @param versionDto 版本创建参数
    */
-  public VersionSnapshotEvent(Object source, EntityVersionCreateDTO versionDto) {
+  public VersionSnapshotEvent(Object source, EntityVersionDTO versionDto) {
     super(source);
     this.versionDto = versionDto;
   }
@@ -43,7 +43,7 @@ public class VersionSnapshotEvent extends ApplicationEvent {
    *
    * @return 版本创建参数 DTO
    */
-  public EntityVersionCreateDTO getVersionDto() {
+  public EntityVersionDTO getVersionDto() {
     return versionDto;
   }
 }

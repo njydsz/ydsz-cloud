@@ -64,7 +64,7 @@ import com.njydsz.userinfo.server.service.LanguageService;
  * @author ydsz-team
  * @since 1.0.0
  * @see LanguageService 语言业务逻辑
- * @see com.njydsz.userinfo.infra.entity.LanguageDO 语言实体
+ * @see com.njydsz.userinfo.domain.vo.LanguageVO 语言VO
  */
 @Slf4j
 @RequestMapping("/api/v1/LanguageDO")

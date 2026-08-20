@@ -26,7 +26,7 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.ConfigDTO;
-import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
+import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -242,7 +242,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
     snapshotEventPublisher.publishEvent(
         new VersionSnapshotEvent(
             this,
-            EntityVersionCreateDTO.builder()
+            EntityVersionDTO.builder()
                 .resourceType(EntityVersionService.RESOURCE_TYPE_CONFIG)
                 .resourceKey(configGroup)
                 .resourceGroup(configGroup)

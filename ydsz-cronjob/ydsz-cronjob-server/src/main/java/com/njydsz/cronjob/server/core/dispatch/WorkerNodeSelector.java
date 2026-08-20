@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.infra.entity.job.JobNode;
+import com.njydsz.cronjob.domain.vo.JobNodeVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.cronjob.server.core.executor.JobNodeHeartbeat;
@@ -64,7 +64,7 @@ public class WorkerNodeSelector {
    *
    * @return 选中的 Worker 节点；无可用 Worker 时返回 null
    */
-  public JobNode selectWorker() {
+  public JobNodeVO selectWorker() {
     return selectWorker(Collections.emptySet());
   }
 
@@ -76,8 +76,8 @@ public class WorkerNodeSelector {
    * @param excludedNodeIds 需要排除的节点 ID 集合（已尝试失败的节点）
    * @return 选中的 Worker 节点；无可用 Worker 时返回 null
    */
-  public JobNode selectWorker(Set<String> excludedNodeIds) {
-    List<JobNode> onlineNodes = getOnlineNodes();
+  public JobNodeVO selectWorker(Set<String> excludedNodeIds) {
+    List<JobNodeVO> onlineNodes = getOnlineNodes();
     if (onlineNodes.isEmpty()) {
       log.debug("[WorkerSelector] 无在线节点");
       return null;
@@ -85,7 +85,7 @@ public class WorkerNodeSelector {
 
     String localNodeId = resolveLocalNodeId();
     // 排除 Leader 节点和已尝试失败的节点
-    List<JobNode> workers =
+    List<JobNodeVO> workers =
         onlineNodes.stream()
             .filter(n -> !n.getNodeId().equals(localNodeId))
             .filter(n -> !excludedNodeIds.contains(n.getNodeId()))
@@ -111,7 +111,7 @@ public class WorkerNodeSelector {
    * @param workers 可用 Worker 列表
    * @return 选中的 Worker 节点
    */
-  private JobNode selectRoundRobin(List<JobNode> workers) {
+  private JobNodeVO selectRoundRobin(List<JobNodeVO> workers) {
     int idx = Math.abs(roundRobinCounter.getAndIncrement()) % workers.size();
     return workers.get(idx);
   }
@@ -124,7 +124,7 @@ public class WorkerNodeSelector {
    * @param workers 可用 Worker 列表
    * @return 选中的 Worker 节点
    */
-  private JobNode selectLeastLoad(List<JobNode> workers) {
+  private JobNodeVO selectLeastLoad(List<JobNodeVO> workers) {
     return workers.stream()
         .min(
             (a, b) -> {
@@ -137,7 +137,7 @@ public class WorkerNodeSelector {
   }
 
   /** 获取在线节点列表。 */
-  private List<JobNode> getOnlineNodes() {
+  private List<JobNodeVO> getOnlineNodes() {
     NodeDiscoveryStrategy strategy = nodeDiscoveryStrategyProvider.getIfAvailable();
     if (strategy != null) {
       return strategy.getOnlineNodes();

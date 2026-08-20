@@ -20,14 +20,6 @@
         <!-- common-web 传递引入: common-base(→core/util/exception), common-auth, common-safe, common-redis -->
         <!-- common-jdbc 传递引入: common-domain -->
         <!-- P1-A1: 显式声明 common-auth（使用 @EnableYdszAuth / @AuthApiPermission 等能力） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-auth</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-jdbc</artifactId>
-        </dependency>
         <!-- ydsz-common-util: StringUtils / DigestUtils / SnowflakeIdGenerator（直接使用，避免隐式传递） -->
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -41,14 +33,6 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-cache</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-feign</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-notify</artifactId>
         </dependency>
         <!-- P0-2: 事务性 Outbox 事件模式 -->
         <dependency>

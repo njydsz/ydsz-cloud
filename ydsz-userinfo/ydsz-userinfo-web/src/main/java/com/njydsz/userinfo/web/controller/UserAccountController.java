@@ -80,7 +80,7 @@ import com.njydsz.userinfo.server.service.UserLifecycleService;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.userinfo.server.service.UserAccountService 用户业务逻辑
- * @see com.njydsz.userinfo.infra.entity.UserAccountDO 用户实体
+ * @see com.njydsz.userinfo.domain.vo.UserAccountVO 用户VO
  */
 @Slf4j
 @RestController

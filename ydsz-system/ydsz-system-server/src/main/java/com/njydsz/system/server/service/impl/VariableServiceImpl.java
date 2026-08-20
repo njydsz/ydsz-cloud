@@ -25,7 +25,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
+import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.event.VersionSnapshotEvent;
@@ -279,7 +279,7 @@ public class VariableServiceImpl implements VariableService {
       eventPublisher.publishEvent(
           new VersionSnapshotEvent(
               this,
-              EntityVersionCreateDTO.builder()
+              EntityVersionDTO.builder()
                   .resourceType(EntityVersionService.RESOURCE_TYPE_VARIABLE)
                   .resourceKey(dto.getVariableKey())
                   .version(SystemVersionUtils.nextVersion())
@@ -320,7 +320,7 @@ public class VariableServiceImpl implements VariableService {
       eventPublisher.publishEvent(
           new VersionSnapshotEvent(
               this,
-              EntityVersionCreateDTO.builder()
+              EntityVersionDTO.builder()
                   .resourceType(EntityVersionService.RESOURCE_TYPE_VARIABLE)
                   .resourceKey(vo.getVariableKey())
                   .version(SystemVersionUtils.nextVersion())

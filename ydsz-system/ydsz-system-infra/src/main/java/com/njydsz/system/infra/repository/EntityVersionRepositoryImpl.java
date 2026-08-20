@@ -1,4 +1,4 @@
-package com.njydsz.system.infra.repository.impl;
+package com.njydsz.system.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,10 +10,10 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.EntityVersion;
+import com.njydsz.system.infra.entity.EntityVersionDO;
 import com.njydsz.system.infra.mapper.EntityVersionMapper;
 import com.njydsz.system.domain.repository.EntityVersionRepository;
-import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
+import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.query.EntityVersionPageQuery;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 
@@ -49,12 +49,12 @@ public class EntityVersionRepositoryImpl implements EntityVersionRepository {
 
   @Override
   public PageResponse<List<EntityVersionVO>> findPageByTypeAndKey(EntityVersionPageQuery query) {
-    Page<EntityVersion> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<EntityVersion> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(EntityVersion::getResourceType, query.getResourceType())
-        .eq(EntityVersion::getResourceKey, query.getResourceKey())
-        .orderByDesc(EntityVersion::getEffectiveDate);
-    com.baomidou.mybatisplus.core.metadata.IPage<EntityVersion> result =
+    Page<EntityVersionDO> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<EntityVersionDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(EntityVersionDO::getResourceType, query.getResourceType())
+        .eq(EntityVersionDO::getResourceKey, query.getResourceKey())
+        .orderByDesc(EntityVersionDO::getEffectiveDate);
+    com.baomidou.mybatisplus.core.metadata.IPage<EntityVersionDO> result =
         entityVersionMapper.selectPage(page, wrapper);
     List<EntityVersionVO> vos = converter.entityVersionListToVO(result.getRecords());
     return PageResponse.success(
@@ -70,8 +70,8 @@ public class EntityVersionRepositoryImpl implements EntityVersionRepository {
   }
 
   @Override
-  public EntityVersionVO save(EntityVersionCreateDTO dto) {
-    EntityVersion entity = converter.dtoToEntity(dto);
+  public EntityVersionVO save(EntityVersionDTO dto) {
+    EntityVersionDO entity = converter.dtoToEntity(dto);
     entityVersionMapper.insert(entity);
     return converter.entityVersionToVO(entity);
   }

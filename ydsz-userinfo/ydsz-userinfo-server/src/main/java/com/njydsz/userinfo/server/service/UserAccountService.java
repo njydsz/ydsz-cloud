@@ -10,6 +10,7 @@ import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
+import com.njydsz.userinfo.domain.dto.UserProfileUpdateDTO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
 /**
@@ -94,6 +95,18 @@ public interface UserAccountService {
    * @return true=成功，false=用户不存在
    */
   boolean update(UserAccountUpdateDTO dto);
+
+  /**
+   * 当前登录用户自助更新个人资料（仅更新非空字段）。
+   *
+   * <p>仅更新用户可自助修改的字段（realName/phone/email/avatar），不涉及状态、角色等管理字段。
+   * 未传字段保持原值不变（动态更新）。
+   *
+   * @param userId 当前用户 ID
+   * @param dto 个人资料更新参数
+   * @return true=成功，false=用户不存在
+   */
+  boolean updateProfile(String userId, UserProfileUpdateDTO dto);
 
   /**
    * 删除用户（逻辑删除）。

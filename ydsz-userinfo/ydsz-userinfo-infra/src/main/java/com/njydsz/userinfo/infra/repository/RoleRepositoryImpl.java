@@ -12,8 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.dto.RoleCreateDTO;
-import com.njydsz.userinfo.domain.dto.RoleUpdateDTO;
+import com.njydsz.userinfo.domain.dto.RoleDTO;
 import com.njydsz.userinfo.domain.query.RolePageQuery;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.domain.vo.RoleVO;
@@ -87,17 +86,18 @@ public class RoleRepositoryImpl implements RoleRepository {
   }
 
   @Override
-  public RoleVO create(RoleCreateDTO dto) {
-    RoleDO entity = converter.createDtoToEntity(dto);
-    roleMapper.insert(entity);
-    return converter.entityToVO(entity);
-  }
-
-  @Override
-  public RoleVO update(RoleUpdateDTO dto) {
-    RoleDO entity = converter.updateDtoToEntity(dto);
-    roleMapper.updateById(entity);
-    return converter.entityToVO(entity);
+  public RoleVO save(RoleDTO dto) {
+    if (dto.getId() == null || dto.getId().isBlank()) {
+      // 创建场景
+      RoleDO entity = converter.dtoToEntity(dto);
+      roleMapper.insert(entity);
+      return converter.entityToVO(entity);
+    } else {
+      // 更新场景
+      RoleDO entity = converter.dtoToEntityWithId(dto);
+      roleMapper.updateById(entity);
+      return converter.entityToVO(entity);
+    }
   }
 
   @Override

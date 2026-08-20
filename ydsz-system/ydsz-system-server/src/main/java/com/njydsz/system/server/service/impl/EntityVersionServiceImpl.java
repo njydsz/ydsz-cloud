@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
+import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.EntityVersionPageQuery;
 import com.njydsz.system.domain.vo.EntityVersionVO;
@@ -61,7 +61,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String createVersion(EntityVersionCreateDTO dto) {
+  public String createVersion(EntityVersionDTO dto) {
     EntityVersionVO saved = entityVersionRepository.save(dto);
     return saved.getId();
   }
@@ -94,7 +94,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
     // 3. 创建新版本（标记回滚来源）
     String newVersion = SystemVersionUtils.nextVersion();
     String changeLog = String.format("回滚自 %s by %s", targetVersion, operatorId);
-    EntityVersionCreateDTO newVersionDto = EntityVersionCreateDTO.builder()
+    EntityVersionDTO newVersionDto = EntityVersionDTO.builder()
         .resourceType(resourceType)
         .resourceKey(resourceKey)
         .resourceGroup(targetVersionVO.getResourceGroup())

@@ -23,7 +23,7 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.DictItemDTO;
-import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
+import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.query.DictItemPageQuery;
@@ -400,7 +400,7 @@ public class DictItemServiceImpl implements DictItemService {
     eventPublisher.publishEvent(
         new VersionSnapshotEvent(
             this,
-            EntityVersionCreateDTO.builder()
+            EntityVersionDTO.builder()
                 .resourceType(EntityVersionService.RESOURCE_TYPE_DICT)
                 .resourceKey(typeCode)
                 .version(SystemVersionUtils.nextVersion())

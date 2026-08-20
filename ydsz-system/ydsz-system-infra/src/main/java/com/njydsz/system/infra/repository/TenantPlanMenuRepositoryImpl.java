@@ -1,4 +1,4 @@
-package com.njydsz.system.infra.repository.impl;
+package com.njydsz.system.infra.repository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.TenantPlanMenu;
+import com.njydsz.system.infra.entity.TenantPlanMenuDO;
 import com.njydsz.system.infra.mapper.TenantPlanMenuMapper;
 import com.njydsz.system.domain.repository.TenantPlanMenuRepository;
 import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
@@ -40,24 +40,24 @@ public class TenantPlanMenuRepositoryImpl implements TenantPlanMenuRepository {
 
   @Override
   public List<TenantPlanMenuVO> findByPlanId(String planId) {
-    LambdaQueryWrapper<TenantPlanMenu> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(TenantPlanMenu::getPlanId, planId);
+    LambdaQueryWrapper<TenantPlanMenuDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(TenantPlanMenuDO::getPlanId, planId);
     return converter.planMenuListToVO(tenantPlanMenuMapper.selectList(wrapper));
   }
 
   @Override
   public boolean deleteByPlanId(String planId) {
-    LambdaQueryWrapper<TenantPlanMenu> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(TenantPlanMenu::getPlanId, planId);
+    LambdaQueryWrapper<TenantPlanMenuDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(TenantPlanMenuDO::getPlanId, planId);
     return tenantPlanMenuMapper.delete(wrapper) > 0;
   }
 
   @Override
   public boolean insertBatch(TenantPlanMenuDTO dto) {
-    List<TenantPlanMenu> entities = new ArrayList<>(dto.getMenuIds() != null ? dto.getMenuIds().size() : 16);
+    List<TenantPlanMenuDO> entities = new ArrayList<>(dto.getMenuIds() != null ? dto.getMenuIds().size() : 16);
     if (dto.getMenuIds() != null) {
       for (String menuId : dto.getMenuIds()) {
-        TenantPlanMenu entity = converter.dtoToEntity(dto.getPlanId(), menuId);
+        TenantPlanMenuDO entity = converter.dtoToEntity(dto.getPlanId(), menuId);
         entities.add(entity);
       }
     }

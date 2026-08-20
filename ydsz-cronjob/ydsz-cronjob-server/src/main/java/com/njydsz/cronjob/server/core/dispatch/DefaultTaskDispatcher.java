@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.alibaba.ttl.TtlRunnable;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -302,7 +301,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @return 执行日志 ID；锁被持有或配额超限时返回 null
    */
   @Override
-  public String dispatch(Job job, String executorNode, String triggerType) {
+  public String dispatch(JobVO job, String executorNode, String triggerType) {
     // 当前实现：executorNode 参数忽略，始终本地执行（P3 阶段扩展远程派发）
     boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
     // P1-2: CONCURRENT 策略不加锁
@@ -346,7 +345,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @return 执行日志 ID；锁被持有或执行失败返回 null
    */
   @Override
-  public String executeLocally(Job job, String triggerType, int shardIndex, int shardTotal) {
+  public String executeLocally(JobVO job, String triggerType, int shardIndex, int shardTotal) {
     boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
     if ("CONCURRENT".equals(job.getBlockStrategy())) {
       holdLock = false;
@@ -367,7 +366,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    *
    * @return null（异步执行，logId 在执行完成后写入日志）
    */
-  private String dispatchAsync(Job job, boolean holdLock, String triggerType, int retryCount) {
+  private String dispatchAsync(JobVO job, boolean holdLock, String triggerType, int retryCount) {
     try {
       // P2-5: 线程池租户隔离（isolation-strategy=none 时返回 null，使用全局池）
       TenantAwareExecutorPool pool = tenantAwareExecutorPoolProvider.getIfAvailable();
@@ -419,7 +418,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * <p>仅对 CRON/RETRY/DEPENDENT/MISFIRED 触发类型调用（MANUAL 不检查）。 配额超限时抛 {@link SysException}，任务不会被派发。
    * 配额服务不可用时降级放行（不影响任务执行）。
    */
-  private void checkExecutionQuota(Job job) {
+  private void checkExecutionQuota(JobVO job) {
     TenantQuotaService quotaService = tenantQuotaServiceProvider.getIfAvailable();
     if (quotaService == null) {
       return;
@@ -454,7 +453,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    *
    * <p>需同时满足：shardTotal > 1 且 ShardingStrategy Bean 可用。 否则 fallback 到非分片模式，保证向后兼容。
    */
-  private boolean isShardedJob(Job job) {
+  private boolean isShardedJob(JobVO job) {
     Integer total = job.getShardTotal();
     if (total == null || total <= 1) {
       return false;
@@ -477,7 +476,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    *
    * @return 第一个成功创建日志的分片 logId；全部被锁或无本地分片返回 null
    */
-  private String executeShardedJob(Job job, boolean holdLock, String triggerType) {
+  private String executeShardedJob(JobVO job, boolean holdLock, String triggerType) {
     int shardTotal = job.getShardTotal();
     ShardingStrategy strategy = shardingStrategyProvider.getIfAvailable();
     if (strategy == null) {
@@ -486,7 +485,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       return executeJob(job, holdLock, triggerType, 0);
     }
 
-    List<JobNode> onlineNodes = getOnlineNodeList();
+    List<JobNodeVO> onlineNodes = getOnlineNodeList();
     String localNodeId = resolveLocalNodeId();
 
     List<ShardAssignment> assignments;
@@ -495,13 +494,13 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       assignments = buildLocalOnlyAssignments(shardTotal, localNodeId);
     } else {
       List<String> nodeIds =
-          onlineNodes.stream().map(JobNode::getNodeId).collect(Collectors.toList());
+          onlineNodes.stream().map(JobNodeVO::getNodeId).collect(Collectors.toList());
       assignments = strategy.assign(shardTotal, nodeIds);
     }
 
-    // 构建 nodeId → JobNode 映射，供远程派发查询节点地址
-    Map<String, JobNode> nodeMap =
-        onlineNodes.stream().collect(Collectors.toMap(JobNode::getNodeId, n -> n, (a, b) -> a));
+    // 构建 nodeId → JobNodeVO 映射，供远程派发查询节点地址
+    Map<String, JobNodeVO> nodeMap =
+        onlineNodes.stream().collect(Collectors.toMap(JobNodeVO::getNodeId, n -> n, (a, b) -> a));
 
     log.info(
         "[Dispatcher] 分片任务派发: key={} shardTotal={} assignments={} localNode={}",
@@ -546,12 +545,12 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @return 执行日志 ID；派发失败且未降级返回 null
    */
   private String dispatchShardRemotely(
-      Job job,
+      JobVO job,
       ShardAssignment assignment,
       int shardTotal,
       boolean holdLock,
       String triggerType,
-      Map<String, JobNode> nodeMap) {
+      Map<String, JobNodeVO> nodeMap) {
     RemoteConfig remoteConfig = cronjobProperties.getRemote();
     if (!remoteConfig.isEnabled()) {
       // 远程派发未启用：本地执行该分片（兼容旧行为）
@@ -565,7 +564,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
           assignment.shardIndex());
       return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
     }
-    JobNode node = nodeMap.get(assignment.nodeId());
+    JobNodeVO node = nodeMap.get(assignment.nodeId());
     if (node == null || node.getHost() == null || node.getPort() == null) {
       log.warn(
           "[Dispatcher] 节点信息缺失, 降级本地执行: key={} shard={} nodeId={}",
@@ -609,7 +608,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * </ul>
    */
   private String executeShard(
-      Job job, int shardIndex, int shardTotal, boolean holdLock, String triggerType) {
+      JobVO job, int shardIndex, int shardTotal, boolean holdLock, String triggerType) {
     String lockKey = null;
     String shardValue = null;
     if (holdLock) {
@@ -700,7 +699,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * <p>从 {@link #executeShard} 拆分出来，使 try-with-resources 作用域清晰。
    */
   private void executeShardCore(
-      Job job,
+      JobVO job,
       int shardIndex,
       int shardTotal,
       String lockKey,
@@ -877,7 +876,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param triggerType 触发类型
    * @return 执行日志 ID；派发失败返回 null
    */
-  private String dispatchToWorker(Job job, String triggerType) {
+  private String dispatchToWorker(JobVO job, String triggerType) {
     WorkerNodeSelector selector = workerNodeSelectorProvider.getIfAvailable();
     if (selector == null) {
       return null;
@@ -892,7 +891,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
     Set<String> excludedNodeIds = new HashSet<>(maxAttempts);
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-      JobNode worker = selector.selectWorker(excludedNodeIds);
+      JobNodeVO worker = selector.selectWorker(excludedNodeIds);
       if (worker == null) {
         // 无更多可用 Worker，停止重试
         break;
@@ -949,7 +948,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @return 任务处理器
    * @throws NoSuchBeanDefinitionException BEAN 模式下找不到对应 Bean
    */
-  private JobHandler resolveHandler(Job job) {
+  private JobHandler resolveHandler(JobVO job) {
     String jobType = job.getJobType();
     if ("HTTP".equals(jobType)) {
       HttpJobHandler httpHandler = httpJobHandlerProvider.getIfAvailable();
@@ -996,7 +995,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param job 任务定义
    * @return 实际使用的 handler Bean 名称
    */
-  private String resolveCanaryHandler(Job job) {
+  private String resolveCanaryHandler(JobVO job) {
     if (job.getCanaryRatio() != null
         && job.getCanaryRatio() > 0
         && job.getCanaryHandler() != null
@@ -1021,7 +1020,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param retryCount 当前重试次数（0=首次执行）
    * @return 执行日志 ID；锁被持有时返回 null
    */
-  private String executeJob(Job job, boolean holdLock, String triggerType, int retryCount) {
+  private String executeJob(JobVO job, boolean holdLock, String triggerType, int retryCount) {
     // P1-3: DISCARD_OVERLAPPING 策略 — 存在 RUNNING 日志时直接丢弃新触发
     if ("DISCARD_OVERLAPPING".equals(job.getBlockStrategy())) {
       if (hasRunningLog(job.getId())) {
@@ -1152,7 +1151,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param job 任务定义
    * @return 幂等锁句柄（key + value，供后续释放）；锁被持有时返回 null（应跳过执行）；降级时返回空句柄（继续执行）
    */
-  private IdempotentLockHandle acquireIdempotentLockForJob(Job job) {
+  private IdempotentLockHandle acquireIdempotentLockForJob(JobVO job) {
     try {
       JobHandler handler = resolveHandler(job);
       String idempotentLockKey = buildIdempotentLockKey(handler, job);
@@ -1183,7 +1182,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * <p>从 {@link #executeJob} 拆分出来，使 try-with-resources 作用域清晰， 同时保持原有执行语义（handler 调用 + 状态更新 + 事件发布）。
    */
   private void executeAndFinalize(
-      Job job,
+      JobVO job,
       String lockKey,
       String lockValue,
       boolean holdLock,
@@ -1314,7 +1313,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param job 任务定义
    * @param log0 任务日志
    */
-  private void dispatchWebhookEvent(String eventType, Job job, JobLog log0) {
+  private void dispatchWebhookEvent(String eventType, JobVO job, JobLogVO log0) {
     WebhookEventDispatcher dispatcher = webhookEventDispatcherProvider.getIfAvailable();
     if (dispatcher == null) {
       return;
@@ -1345,7 +1344,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    *
    * <p>使用 try-catch 包裹，确保事件发布失败不影响主流程。
    */
-  private void publishTaskCompleted(Job job, boolean success, String logId) {
+  private void publishTaskCompleted(JobVO job, boolean success, String logId) {
     try {
       TaskCompletedEvent event =
           new TaskCompletedEvent(job.getId(), job.getJobKey(), success, logId);
@@ -1365,7 +1364,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param job 任务定义
    * @param log0 任务执行日志（携带 errorMessage / durationMs 等）
    */
-  private void publishJobFailureOutboxEvent(Job job, JobLog log0) {
+  private void publishJobFailureOutboxEvent(JobVO job, JobLogVO log0) {
     DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
     if (publisher == null) {
       log.debug(
@@ -1418,7 +1417,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @return 执行日志 ID；中断失败时返回 null
    */
   private String executeWithCoverStrategy(
-      Job job, String lockKey, Duration ttl, String triggerType, int retryCount) {
+      JobVO job, String lockKey, Duration ttl, String triggerType, int retryCount) {
     // 防递归保护：重新派发中如果锁仍被持有，直接降级 DISCARD
     if (Boolean.TRUE.equals(COVER_REDISPATCHING.get())) {
       log.warn("[Dispatcher] COVER 策略: 重新派发时锁仍被持有, 降级 DISCARD: key={}", job.getJobKey());
@@ -1427,7 +1426,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     log.info(
         "[Dispatcher] COVER 策略: 尝试中断当前执行: key={} triggerType={}", job.getJobKey(), triggerType);
     // 1. 查询当前 RUNNING 的日志
-    JobLog runningLog = findRunningLog(job.getJobKey());
+    JobLogVO runningLog = findRunningLog(job.getJobKey());
     if (runningLog == null) {
       // 无 RUNNING 日志，可能锁是异常残留（如节点崩溃未释放），尝试释放并重新执行
       log.warn("[Dispatcher] COVER 策略未找到 RUNNING 日志, 尝试释放残留锁: key={}", job.getJobKey());
@@ -1583,7 +1582,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param success 是否执行成功
    * @param log0 任务日志（含耗时信息）
    */
-  private void triggerAlerts(Job job, boolean success, JobLog log0) {
+  private void triggerAlerts(JobVO job, boolean success, JobLogVO log0) {
     AlertTrigger alertTrigger = alertTriggerProvider.getIfAvailable();
     if (alertTrigger == null) {
       return;
@@ -1740,7 +1739,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param job 任务定义
    * @return 幂等锁 key；handler 为 null 时返回 null
    */
-  private String buildIdempotentLockKey(JobHandler handler, Job job) {
+  private String buildIdempotentLockKey(JobHandler handler, JobVO job) {
     if (handler == null) {
       return null;
     }
@@ -1822,7 +1821,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param success 是否执行成功
    * @param log0 任务日志（含耗时信息）
    */
-  private void recordJobMetrics(Job job, String triggerType, boolean success, JobLog log0) {
+  private void recordJobMetrics(JobVO job, String triggerType, boolean success, JobLogVO log0) {
     CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
     if (metrics == null) {
       return;
@@ -1858,7 +1857,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   }
 
   /** 解析任务实际使用的锁 TTL。 */
-  private Duration resolveLockTtl(Job job) {
+  private Duration resolveLockTtl(JobVO job) {
     Duration taskLevel = null;
     if (job.getLockTtlMs() != null && job.getLockTtlMs() > 0) {
       taskLevel = Duration.ofMillis(job.getLockTtlMs());
@@ -1875,7 +1874,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param job 任务定义（含 cron 表达式和时区）
    * @return 下次触发时间；表达式非法时返回 null
    */
-  private LocalDateTime nextFireTime(Job job) {
+  private LocalDateTime nextFireTime(JobVO job) {
     return nextFireTimeCalculator.calculate(job);
   }
 
@@ -1904,7 +1903,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param holdLock 是否持锁
    * @param retryCount 当前重试次数
    */
-  private void executeJobForRetry(Job job, boolean holdLock, int retryCount) {
+  private void executeJobForRetry(JobVO job, boolean holdLock, int retryCount) {
     executeJob(job, holdLock, TRIGGER_RETRY, retryCount);
   }
 

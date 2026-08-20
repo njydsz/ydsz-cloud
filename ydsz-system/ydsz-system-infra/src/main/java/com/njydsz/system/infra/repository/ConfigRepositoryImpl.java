@@ -1,4 +1,4 @@
-package com.njydsz.system.infra.repository.impl;
+package com.njydsz.system.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.Config;
+import com.njydsz.system.infra.entity.ConfigDO;
 import com.njydsz.system.infra.mapper.ConfigMapper;
 import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.dto.ConfigDTO;
@@ -54,66 +54,66 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   public Optional<ConfigVO> findByKeyIgnoreStatus(String configKey) {
     return Optional.ofNullable(
         configMapper.selectOne(
-            new LambdaQueryWrapper<Config>().eq(Config::getConfigKey, configKey).eq(Config::getDeleted, 0).last("LIMIT 1")))
+            new LambdaQueryWrapper<ConfigDO>().eq(ConfigDO::getConfigKey, configKey).eq(ConfigDO::getDeleted, 0).last("LIMIT 1")))
         .map(converter::entityToVO);
   }
 
   @Override
   public List<ConfigVO> findEnabledByGroup(String configGroup) {
     return converter.configListToVO(configMapper.selectList(
-        new LambdaQueryWrapper<Config>()
-            .eq(Config::getConfigGroup, configGroup)
-            .eq(Config::getStatus, STATUS_ENABLED)
-            .orderByAsc(Config::getSortOrder)));
+        new LambdaQueryWrapper<ConfigDO>()
+            .eq(ConfigDO::getConfigGroup, configGroup)
+            .eq(ConfigDO::getStatus, STATUS_ENABLED)
+            .orderByAsc(ConfigDO::getSortOrder)));
   }
 
   @Override
   public List<ConfigVO> findPublicEnabled() {
     return converter.configListToVO(configMapper.selectList(
-        new LambdaQueryWrapper<Config>()
-            .eq(Config::getIsPublic, 1)
-            .eq(Config::getStatus, STATUS_ENABLED)
-            .orderByAsc(Config::getSortOrder)));
+        new LambdaQueryWrapper<ConfigDO>()
+            .eq(ConfigDO::getIsPublic, 1)
+            .eq(ConfigDO::getStatus, STATUS_ENABLED)
+            .orderByAsc(ConfigDO::getSortOrder)));
   }
 
   @Override
   public boolean existsByGroupAndKey(String configGroup, String configKey) {
     Long count =
         configMapper.selectCount(
-            new LambdaQueryWrapper<Config>()
-                .eq(Config::getConfigGroup, configGroup)
-                .eq(Config::getConfigKey, configKey));
+            new LambdaQueryWrapper<ConfigDO>()
+                .eq(ConfigDO::getConfigGroup, configGroup)
+                .eq(ConfigDO::getConfigKey, configKey));
     return count != null && count > 0;
   }
 
   @Override
   public PageResponse<List<ConfigVO>> findByPage(ConfigPageQuery query) {
-    Page<Config> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
+    Page<ConfigDO> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<ConfigDO> wrapper = new LambdaQueryWrapper<>();
     if (query.getConfigGroup() != null && !query.getConfigGroup().isBlank()) {
-      wrapper.eq(Config::getConfigGroup, query.getConfigGroup());
+      wrapper.eq(ConfigDO::getConfigGroup, query.getConfigGroup());
     }
     if (query.getConfigKey() != null && !query.getConfigKey().isBlank()) {
-      wrapper.like(Config::getConfigKey, query.getConfigKey());
+      wrapper.like(ConfigDO::getConfigKey, query.getConfigKey());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(Config::getStatus, query.getStatus());
+      wrapper.eq(ConfigDO::getStatus, query.getStatus());
     }
-    wrapper.orderByDesc(Config::getCreatedAt);
-    com.baomidou.mybatisplus.core.metadata.IPage<Config> result = configMapper.selectPage(page, wrapper);
+    wrapper.orderByDesc(ConfigDO::getCreatedAt);
+    com.baomidou.mybatisplus.core.metadata.IPage<ConfigDO> result = configMapper.selectPage(page, wrapper);
     List<ConfigVO> vos = converter.configListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
 
   @Override
   public boolean insert(ConfigDTO dto) {
-    Config entity = converter.dtoToEntity(dto);
+    ConfigDO entity = converter.dtoToEntity(dto);
     return configMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean updateById(ConfigDTO dto) {
-    Config entity = converter.dtoToEntityWithId(dto);
+    ConfigDO entity = converter.dtoToEntityWithId(dto);
     return configMapper.updateById(entity) > 0;
   }
 
@@ -129,67 +129,67 @@ public class ConfigRepositoryImpl implements ConfigRepository {
 
   @Override
   public boolean insertBatch(List<ConfigDTO> dtos) {
-    List<Config> entities = converter.configDtosToEntities(dtos);
+    List<ConfigDO> entities = converter.configDtosToEntities(dtos);
     return configMapper.insertBatch(entities) > 0;
   }
 
   @Override
   public List<ConfigVO> findForCursor(String configGroup, String configKey, String cursor, int limit) {
-    LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getDeleted, 0);
+    LambdaQueryWrapper<ConfigDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(ConfigDO::getDeleted, 0);
     if (configGroup != null && !configGroup.isBlank()) {
-      wrapper.eq(Config::getConfigGroup, configGroup);
+      wrapper.eq(ConfigDO::getConfigGroup, configGroup);
     }
     if (configKey != null && !configKey.isBlank()) {
-      wrapper.like(Config::getConfigKey, configKey);
+      wrapper.like(ConfigDO::getConfigKey, configKey);
     }
     if (cursor != null && !cursor.isBlank()) {
-      wrapper.gt(Config::getId, cursor);
+      wrapper.gt(ConfigDO::getId, cursor);
     }
-    wrapper.orderByAsc(Config::getId);
+    wrapper.orderByAsc(ConfigDO::getId);
     wrapper.last("LIMIT " + limit);
     return converter.configListToVO(configMapper.selectList(wrapper));
   }
 
   @Override
   public boolean existsAfterCursor(String configGroup, String configKey, String cursor) {
-    LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getDeleted, 0);
+    LambdaQueryWrapper<ConfigDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(ConfigDO::getDeleted, 0);
     if (configGroup != null && !configGroup.isBlank()) {
-      wrapper.eq(Config::getConfigGroup, configGroup);
+      wrapper.eq(ConfigDO::getConfigGroup, configGroup);
     }
     if (configKey != null && !configKey.isBlank()) {
-      wrapper.like(Config::getConfigKey, configKey);
+      wrapper.like(ConfigDO::getConfigKey, configKey);
     }
     if (cursor != null && !cursor.isBlank()) {
-      wrapper.gt(Config::getId, cursor);
+      wrapper.gt(ConfigDO::getId, cursor);
     }
     return configMapper.selectCount(wrapper) > 0;
   }
 
   @Override
   public List<ConfigVO> findForExport(String configGroup) {
-    LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getDeleted, 0);
+    LambdaQueryWrapper<ConfigDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(ConfigDO::getDeleted, 0);
     if (configGroup != null && !configGroup.isBlank()) {
-      wrapper.eq(Config::getConfigGroup, configGroup).orderByAsc(Config::getSortOrder);
+      wrapper.eq(ConfigDO::getConfigGroup, configGroup).orderByAsc(ConfigDO::getSortOrder);
     } else {
-      wrapper.orderByAsc(Config::getConfigGroup, Config::getSortOrder);
+      wrapper.orderByAsc(ConfigDO::getConfigGroup, ConfigDO::getSortOrder);
     }
     return converter.configListToVO(configMapper.selectList(wrapper));
   }
 
   @Override
   public List<ConfigVO> findEnabledConfigs() {
-    LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getStatus, STATUS_ENABLED).eq(Config::getDeleted, 0);
+    LambdaQueryWrapper<ConfigDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(ConfigDO::getStatus, STATUS_ENABLED).eq(ConfigDO::getDeleted, 0);
     return converter.configListToVO(configMapper.selectList(wrapper));
   }
 
   @Override
   public List<ConfigVO> findByGroup(String configGroup) {
-    LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getConfigGroup, configGroup).eq(Config::getDeleted, 0);
+    LambdaQueryWrapper<ConfigDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(ConfigDO::getConfigGroup, configGroup).eq(ConfigDO::getDeleted, 0);
     return converter.configListToVO(configMapper.selectList(wrapper));
   }
 

@@ -64,7 +64,7 @@ import com.njydsz.userinfo.server.service.CompanyService;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.userinfo.server.service.CompanyService 公司业务逻辑
- * @see com.njydsz.userinfo.infra.entity.CompanyDO 公司实体
+ * @see com.njydsz.userinfo.domain.vo.CompanyVO 公司VO
  */
 @Slf4j
 @RequestMapping("/api/v1/CompanyDO")

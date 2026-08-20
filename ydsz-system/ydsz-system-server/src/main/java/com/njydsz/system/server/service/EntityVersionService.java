@@ -65,12 +65,12 @@ public interface EntityVersionService {
    * 创建版本快照
    *
    * <p>由业务 Service 在写操作成功后调用。入参聚合为 {@link
-   * com.njydsz.system.domain.dto.EntityVersionCreateDTO}（参数 ≤ 5 个，符合《云顶编码规范》）。
+   * com.njydsz.system.domain.dto.EntityVersionDTO}（参数 ≤ 5 个，符合《云顶编码规范》）。
    *
    * @param dto 版本创建参数（含资源类型/键/分组/版本号/变更说明/快照）
    * @return 新建版本记录主键 ID
    */
-  String createVersion(com.njydsz.system.domain.dto.EntityVersionCreateDTO dto);
+  String createVersion(com.njydsz.system.domain.dto.EntityVersionDTO dto);
 
   /**
    * 回滚资源到指定版本

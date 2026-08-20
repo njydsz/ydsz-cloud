@@ -22,12 +22,10 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.MfaOperationDTO;
 import com.njydsz.userinfo.domain.dto.UserProfileUpdateDTO;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.vo.MfaSetupVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
-import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
-import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 import com.njydsz.userinfo.server.auth.MfaService;
+import com.njydsz.userinfo.server.service.UserAccountService;
 
 /**
  * 用户资料 Controller（个人中心）。
@@ -46,14 +44,11 @@ import com.njydsz.userinfo.server.auth.MfaService;
 @Tag(name = "个人中心", description = "用户个人资料管理")
 public class UserProfileController {
 
-  private final UserAccountMapper userAccountMapper;
-  private final UserInfoUserConverter userConverter;
+  /** 用户账号服务（密码修改/资料更新） */
+  private final UserAccountService userAccountService;
 
   /** 双因素认证服务（TOTP 绑定/激活/解除） */
   private final MfaService mfaService;
-
-  /** 用户账号服务（密码修改） */
-  private final com.njydsz.userinfo.server.service.UserAccountService userAccountService;
 
   /**
    * 获取当前登录用户的个人资料。
@@ -64,11 +59,8 @@ public class UserProfileController {
   @Operation(summary = "获取当前用户资料")
   public YdszResponse<UserAccountVO> getCurrentUserProfile() {
     String userId = RequestContext.getUserId();
-    UserAccountDO user = userAccountMapper.selectById(userId);
-    if (user == null) {
-      return YdszResponse.success(null);
-    }
-    return YdszResponse.success(userConverter.entityToVO(user));
+    UserAccountVO user = userAccountService.getById(userId);
+    return YdszResponse.success(user);
   }
 
   /**
@@ -83,28 +75,9 @@ public class UserProfileController {
   @Operation(summary = "更新当前用户资料")
   public YdszResponse<Boolean> updateCurrentUserProfile(@RequestBody UserProfileUpdateDTO dto) {
     String userId = RequestContext.getUserId();
-    UserAccountDO user = userAccountMapper.selectById(userId);
-    if (user == null) {
-      return YdszResponse.success(false);
-    }
-
-    // 仅更新非空字段
-    if (dto.getRealName() != null) {
-      user.setRealName(dto.getRealName());
-    }
-    if (dto.getPhone() != null) {
-      user.setPhone(dto.getPhone());
-    }
-    if (dto.getEmail() != null) {
-      user.setEmail(dto.getEmail());
-    }
-    if (dto.getAvatar() != null) {
-      user.setAvatar(dto.getAvatar());
-    }
-
-    userAccountMapper.updateById(user);
+    boolean result = userAccountService.updateProfile(userId, dto);
     log.info("用户资料更新成功: userId={}", userId);
-    return YdszResponse.success(true);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -166,11 +139,9 @@ public class UserProfileController {
     String avatarUrl = String.format("https://file.ydsz.com/avatar/%s/%s", userId, file.getOriginalFilename());
 
     // 更新用户头像 URL
-    UserAccountDO user = userAccountMapper.selectById(userId);
-    if (user != null) {
-      user.setAvatar(avatarUrl);
-      userAccountMapper.updateById(user);
-    }
+    UserProfileUpdateDTO dto = new UserProfileUpdateDTO();
+    dto.setAvatar(avatarUrl);
+    userAccountService.updateProfile(userId, dto);
 
     log.info("用户头像上传成功: userId={}, url={}", userId, avatarUrl);
     return YdszResponse.success(avatarUrl);
@@ -201,7 +172,7 @@ public class UserProfileController {
   @Operation(summary = "发起 MFA 绑定", description = "返回 TOTP 密钥与 otpauth URI（二维码）")
   public YdszResponse<MfaSetupVO> setupMfa() {
     String userId = RequestContext.getUserId();
-    UserAccountDO user = userAccountMapper.selectById(userId);
+    UserAccountVO user = userAccountService.getById(userId);
     return YdszResponse.success(mfaService.setup(userId, user != null ? user.getUsername() : userId));
   }
 

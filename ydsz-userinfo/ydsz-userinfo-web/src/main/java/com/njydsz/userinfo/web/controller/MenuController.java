@@ -67,7 +67,7 @@ import com.njydsz.userinfo.server.service.MenuService;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.userinfo.server.service.MenuService 菜单业务逻辑
- * @see com.njydsz.userinfo.infra.entity.MenuDO 菜单实体（含 permCode 字段）
+ * @see com.njydsz.userinfo.domain.vo.MenuVO 菜单VO
  * @see com.njydsz.userinfo.web.controller.RoleController 角色 Controller（关联分配）
  */
 @Slf4j
