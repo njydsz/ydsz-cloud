@@ -91,11 +91,6 @@
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-excel</artifactId>
-            <optional>true</optional>
-        </dependency>
 
         <!-- P1-1 多级缓存 L2 + 分布式注册 / 广播依赖 Redisson（强制） -->
         <dependency>

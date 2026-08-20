@@ -1,7 +1,6 @@
 package com.njydsz.message.server.service.config;
 
 import java.time.Duration;
-import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,8 +8,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.infra.entity.MsgTenantConfig;
-import com.njydsz.message.infra.mapper.MsgTenantConfigMapper;
+import com.njydsz.message.domain.repository.MsgTenantConfigRepository;
+import com.njydsz.message.domain.vo.MsgTenantConfigVO;
 
 /**
  * 多租户消息配置服务 — 提供租户级配额查询与通道覆盖决议（P2-A5）。
@@ -21,8 +20,7 @@ import com.njydsz.message.infra.mapper.MsgTenantConfigMapper;
  *   <li><b>配置缓存</b>：Redis 缓存租户配置（TTL 5 分钟），缓存未命中时查 DB 并回填
  *   <li><b>通道开关覆盖决议</b>：{@link #isChannelEnabled} — 优先租户级覆盖，无覆盖则回退全局默认值
  *   <li><b>通道映射覆盖决议</b>：{@link #resolveProvider} — 优先租户级 provider，无覆盖则回退全局配置
- *   <li><b>配额决议</b>：{@link #getDailyLimit} / {@link #getHourlyLimit} — 租户级限
- *       额优先，未配置则回退全局默认值
+ *   <li><b>配额决议</b>：{@link #getDailyLimit} / {@link #getHourlyLimit} — 租户级限额优先，未配置则回退全局默认值
  * </ul>
  *
  * <p><b>多租户硬隔离（P2-A5）：</b>本服务与 ydsz-common-tenant 的逻辑隔离互补，
@@ -39,7 +37,7 @@ import com.njydsz.message.infra.mapper.MsgTenantConfigMapper;
 @RequiredArgsConstructor
 public class TenantConfigService {
 
-  private final MsgTenantConfigMapper tenantConfigMapper;
+  private final MsgTenantConfigRepository msgTenantConfigRepository;
 
   private final RedisTemplate<String, String> redisTemplate;
 
@@ -56,9 +54,9 @@ public class TenantConfigService {
    * 保证可用性（fail-open）。
    *
    * @param tenantId 租户 ID
-   * @return 租户配置实体；未找到返回 null
+   * @return 租户配置 VO；未找到返回 null
    */
-  public MsgTenantConfig getConfig(String tenantId) {
+  public MsgTenantConfigVO getConfig(String tenantId) {
     if (tenantId == null || tenantId.isBlank()) {
       return null;
     }
@@ -69,14 +67,15 @@ public class TenantConfigService {
       String cached = redisTemplate.opsForValue().get(cacheKey);
       if (cached != null && !cached.isBlank()) {
         log.debug("[TenantConfig] 缓存命中: tenant={}", tenantId);
-        return YdszJson.fromJson(cached, MsgTenantConfig.class);
+        return YdszJson.fromJson(cached, MsgTenantConfigVO.class);
       }
     } catch (Exception e) {
       log.warn("[TenantConfig] 缓存读取异常(fail-open): tenant={} err={}", tenantId, e.getMessage(), e);
     }
 
     // 2. 缓存未命中查 DB
-    MsgTenantConfig config = tenantConfigMapper.selectById(tenantId);
+    MsgTenantConfigVO config = msgTenantConfigRepository.findByTenantId(tenantId)
+        .orElse(null);
     if (config == null) {
       log.debug("[TenantConfig] 配置不存在: tenant={}", tenantId);
       return null;
@@ -108,12 +107,12 @@ public class TenantConfigService {
     if (tenantId == null || tenantId.isBlank() || channel == null || channel.isBlank()) {
       return globalDefault;
     }
-    MsgTenantConfig config = getConfig(tenantId);
+    MsgTenantConfigVO config = getConfig(tenantId);
     if (config == null || config.getChannelOverrides() == null || config.getChannelOverrides().isBlank()) {
       return globalDefault;
     }
     try {
-      Map<String, Boolean> overrides =
+      java.util.Map<String, Boolean> overrides =
           YdszJson.fromJsonToMap(config.getChannelOverrides(), String.class, Boolean.class);
       if (overrides != null && overrides.containsKey(channel)) {
         Boolean enabled = overrides.get(channel);
@@ -140,12 +139,12 @@ public class TenantConfigService {
     if (tenantId == null || tenantId.isBlank() || channel == null || channel.isBlank()) {
       return globalProvider;
     }
-    MsgTenantConfig config = getConfig(tenantId);
+    MsgTenantConfigVO config = getConfig(tenantId);
     if (config == null || config.getProviderOverrides() == null || config.getProviderOverrides().isBlank()) {
       return globalProvider;
     }
     try {
-      Map<String, String> overrides =
+      java.util.Map<String, String> overrides =
           YdszJson.fromJsonToMap(config.getProviderOverrides(), String.class, String.class);
       if (overrides != null && overrides.containsKey(channel)) {
         String provider = overrides.get(channel);
@@ -171,7 +170,7 @@ public class TenantConfigService {
     if (tenantId == null || tenantId.isBlank()) {
       return globalDefault;
     }
-    MsgTenantConfig config = getConfig(tenantId);
+    MsgTenantConfigVO config = getConfig(tenantId);
     if (config == null || config.getDailyLimit() == null) {
       return globalDefault;
     }
@@ -192,7 +191,7 @@ public class TenantConfigService {
     if (tenantId == null || tenantId.isBlank()) {
       return globalDefault;
     }
-    MsgTenantConfig config = getConfig(tenantId);
+    MsgTenantConfigVO config = getConfig(tenantId);
     if (config == null || config.getHourlyLimit() == null) {
       return globalDefault;
     }

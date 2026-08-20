@@ -9,35 +9,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.cronjob.infra.entity.job.Job;
-import com.njydsz.cronjob.infra.entity.log.JobLog;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.cronjob.domain.repository.JobLogRepository;
+import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
+import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
  * 任务诊断服务（P3-1：任务诊断 API + 智能运维）。
  *
- * <p>基于任务执行历史，提供智能诊断能力：
+ * <p>基于任务执行历史，提供智能诊断能力。
  *
- * <ul>
- *   <li><b>健康评分</b>：综合成功率、耗时稳定性、超时率等计算任务健康度
- *   <li><b>异常检测</b>：识别执行耗时突增、失败率异常、连续失败等异常模式
- *   <li><b>优化建议</b>：根据诊断结果给出配置优化建议（调整超时、增加重试、降低并发）
- *   <li><b>风险预警</b>：提前发现潜在问题（如执行耗时持续增长趋势）
- * </ul>
- *
- * <h3>诊断维度</h3>
- *
- * <ul>
- *   <li><b>成功率</b>：近 N 次执行的成功率，低于阈值触发警告
- *   <li><b>耗时稳定性</b>：执行耗时的变异系数（CV），过高说明执行时间不稳定
- *   <li><b>超时率</b>：执行超时的比例，高超时率可能需要调整超时配置
- *   <li><b>连续失败</b>：连续失败次数，频繁连续失败可能是配置错误
- * </ul>
- *
- * <h3>对标</h3>
- *
- * <p>对标 Prometheus AlertManager、Grafana ML、Datadog Anomaly Detection。
+ * <p>P2-修正：使用 JobRepository/JobLogRepository 替换 Mapper，使用 VO 替换 Entity，符合 DDD 分层规范。
  *
  * @author ydsz-team
  * @since 1.2.0
@@ -47,8 +29,8 @@ import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 @RequiredArgsConstructor
 public class TaskDiagnosisService {
 
-  private final JobMapper jobMapper;
-  private final JobLogMapper jobLogMapper;
+  private final JobRepository jobRepository;
+  private final JobLogRepository jobLogRepository;
 
   /** 诊断时间窗口（默认 24h） */
   private static final int DIAGNOSIS_WINDOW_HOURS = 24;
@@ -67,11 +49,11 @@ public class TaskDiagnosisService {
    * @return 诊断结果
    */
   public TaskDiagnosis diagnose(String jobKey) {
-    Job job = jobMapper.selectByJobKey(jobKey);
+    JobVO job = jobRepository.findByJobKey(jobKey).orElse(null);
     if (job == null) {
       return TaskDiagnosis.notFound(jobKey);
     }
-    List<JobLog> recentLogs = selectRecentLogs(job.getId(), DIAGNOSIS_WINDOW_HOURS);
+    List<JobLogVO> recentLogs = selectRecentLogs(job.getId(), DIAGNOSIS_WINDOW_HOURS);
     if (recentLogs.size() < MIN_SAMPLE_SIZE) {
       return TaskDiagnosis.insufficientData(jobKey, recentLogs.size());
     }
@@ -84,16 +66,14 @@ public class TaskDiagnosisService {
    * @return 诊断结果列表（按健康分升序，最差的排在前面）
    */
   public List<TaskDiagnosis> diagnoseAll() {
-    List<Job> normalJobs = jobMapper.selectList(
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job>()
-            .eq(Job::getStatus, "NORMAL"));
+    List<JobVO> normalJobs = jobRepository.findByStatus("NORMAL");
     if (normalJobs.isEmpty()) {
       return Collections.emptyList();
     }
     List<TaskDiagnosis> results = new ArrayList<>();
-    for (Job job : normalJobs) {
+    for (JobVO job : normalJobs) {
       try {
-        List<JobLog> recentLogs = selectRecentLogs(job.getId(), DIAGNOSIS_WINDOW_HOURS);
+        List<JobLogVO> recentLogs = selectRecentLogs(job.getId(), DIAGNOSIS_WINDOW_HOURS);
         if (recentLogs.size() >= MIN_SAMPLE_SIZE) {
           results.add(analyze(job.getJobKey(), recentLogs));
         }
@@ -108,12 +88,8 @@ public class TaskDiagnosisService {
 
   /**
    * 分析任务执行历史，生成诊断结果。
-   *
-   * @param jobKey 任务 KEY
-   * @param logs   最近执行日志
-   * @return 诊断结果
    */
-  private TaskDiagnosis analyze(String jobKey, List<JobLog> logs) {
+  private TaskDiagnosis analyze(String jobKey, List<JobLogVO> logs) {
     long total = logs.size();
     long successCount = logs.stream().filter(l -> "SUCCESS".equals(l.getStatus())).count();
     long failedCount = logs.stream().filter(l -> "FAILED".equals(l.getStatus())).count();
@@ -123,7 +99,7 @@ public class TaskDiagnosisService {
     // 计算耗时统计
     List<Long> durations = logs.stream()
         .filter(l -> l.getDurationMs() != null && l.getDurationMs() > 0)
-        .map(JobLog::getDurationMs)
+        .map(JobLogVO::getDurationMs)
         .toList();
     double avgDuration = durations.stream().mapToLong(Long::longValue).average().orElse(0);
     double cvDuration = calculateCV(durations, avgDuration);
@@ -160,11 +136,6 @@ public class TaskDiagnosisService {
         suggestions);
   }
 
-  /**
-   * 计算变异系数（Coefficient of Variation），衡量耗时稳定性。
-   *
-   * <p>CV = 标准差 / 均值，CV > 0.5 说明耗时波动较大。
-   */
   private double calculateCV(List<Long> values, double mean) {
     if (values.isEmpty() || mean <= 0) {
       return 0;
@@ -177,13 +148,10 @@ public class TaskDiagnosisService {
     return stdDev / mean;
   }
 
-  /**
-   * 计算最大连续失败次数。
-   */
-  private int calculateConsecutiveFailures(List<JobLog> logs) {
+  private int calculateConsecutiveFailures(List<JobLogVO> logs) {
     int maxConsecutive = 0;
     int currentConsecutive = 0;
-    for (JobLog log : logs) {
+    for (JobLogVO log : logs) {
       if ("FAILED".equals(log.getStatus()) || "TIMEOUT".equals(log.getStatus())) {
         currentConsecutive++;
         maxConsecutive = Math.max(maxConsecutive, currentConsecutive);
@@ -194,37 +162,15 @@ public class TaskDiagnosisService {
     return maxConsecutive;
   }
 
-  /**
-   * 计算健康评分 (0-100)。
-   *
-   * <p>基于以下因素加权：
-   * <ul>
-   *   <li>成功率（权重 50%）</li>
-   *   <li>耗时稳定性（权重 20%）</li>
-   *   <li>超时率（权重 15%）</li>
-   *   <li>连续失败惩罚（权重 15%）</li>
-   * </ul>
-   */
   private double calculateHealthScore(double successRate, double cvDuration, long timeoutCount, long total, int consecutiveFailures) {
-    // 成功率得分 (0-50)
     double successScore = successRate * 0.5;
-
-    // 耗时稳定性得分 (0-20)，CV 越小得分越高
     double stabilityScore = Math.max(0, 20 - cvDuration * 20);
-
-    // 超时率得分 (0-15)
     double timeoutRate = total > 0 ? (timeoutCount * 100.0) / total : 0;
     double timeoutScore = Math.max(0, 15 - timeoutRate * 0.3);
-
-    // 连续失败惩罚 (0-15)
     double consecutivePenalty = Math.min(15, consecutiveFailures * 3);
-
     return Math.max(0, Math.min(100, successScore + stabilityScore + timeoutScore + (15 - consecutivePenalty)));
   }
 
-  /**
-   * 生成优化建议。
-   */
   private List<String> generateSuggestions(double successRate, double cvDuration, long timeoutCount, long total, int consecutiveFailures, double avgDuration) {
     List<String> suggestions = new ArrayList<>();
 
@@ -252,13 +198,9 @@ public class TaskDiagnosisService {
   /**
    * 查询最近 N 小时的执行日志。
    */
-  private List<JobLog> selectRecentLogs(String jobId, int hours) {
+  private List<JobLogVO> selectRecentLogs(String jobId, int hours) {
     LocalDateTime since = LocalDateTime.now().minusHours(hours);
-    return jobLogMapper.selectList(
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog>()
-            .eq(JobLog::getJobId, jobId)
-            .ge(JobLog::getCreatedAt, since)
-            .orderByDesc(JobLog::getCreatedAt));
+    return jobLogRepository.findByJobIdSince(jobId, since);
   }
 
   /**
@@ -275,17 +217,6 @@ public class TaskDiagnosisService {
 
   /**
    * 任务诊断结果。
-   *
-   * @param jobKey              任务 KEY
-   * @param level               健康级别
-   * @param healthScore         健康评分 (0-100)
-   * @param successRate         成功率 (%)
-   * @param avgDurationMs       平均执行耗时 (ms)
-   * @param cvDuration          耗时变异系数
-   * @param consecutiveFailures 最大连续失败次数
-   * @param sampleSize          样本数量
-   * @param diagnosisTime       诊断时间
-   * @param suggestions         优化建议列表
    */
   public record TaskDiagnosis(
       String jobKey,
@@ -299,13 +230,11 @@ public class TaskDiagnosisService {
       LocalDateTime diagnosisTime,
       List<String> suggestions) {
 
-    /** 任务不存在时的诊断结果。 */
     static TaskDiagnosis notFound(String jobKey) {
       return new TaskDiagnosis(jobKey, HealthLevel.CRITICAL, 0, 0, 0, 0, 0, 0,
           LocalDateTime.now(), List.of("任务不存在: " + jobKey));
     }
 
-    /** 数据不足时的诊断结果。 */
     static TaskDiagnosis insufficientData(String jobKey, int sampleSize) {
       return new TaskDiagnosis(jobKey, HealthLevel.HEALTHY, 100, 0, 0, 0, 0, sampleSize,
           LocalDateTime.now(), List.of("数据不足，至少需要 " + MIN_SAMPLE_SIZE + " 条记录，当前 " + sampleSize + " 条"));

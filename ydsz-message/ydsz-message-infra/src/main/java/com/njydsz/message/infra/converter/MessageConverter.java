@@ -8,6 +8,7 @@ import org.mapstruct.factory.Mappers;
 import com.njydsz.message.domain.dto.MsgLogDTO;
 import com.njydsz.message.domain.dto.MsgNotificationDTO;
 import com.njydsz.message.domain.dto.MsgTemplateDTO;
+import com.njydsz.message.domain.dto.MsgTenantConfigDTO;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
 import com.njydsz.message.domain.vo.MsgBatchVO;
 import com.njydsz.message.domain.vo.MsgFeedbackVO;
@@ -23,6 +24,7 @@ import com.njydsz.message.domain.vo.MsgTemplateVersionVO;
 import com.njydsz.message.domain.vo.MsgTraceVO;
 import com.njydsz.message.domain.vo.MsgUserChannelVO;
 import com.njydsz.message.domain.vo.MsgVariableSourceVO;
+import com.njydsz.message.domain.vo.MsgTenantConfigVO;
 import com.njydsz.message.infra.entity.MsgAggregateDO;
 import com.njydsz.message.infra.entity.MsgBatchDO;
 import com.njydsz.message.infra.entity.MsgFeedbackDO;
@@ -38,6 +40,7 @@ import com.njydsz.message.infra.entity.MsgTemplateVersionDO;
 import com.njydsz.message.infra.entity.MsgTraceDO;
 import com.njydsz.message.infra.entity.MsgUserChannelDO;
 import com.njydsz.message.infra.entity.MsgVariableSourceDO;
+import com.njydsz.message.infra.entity.MsgTenantConfigDO;
 
 /**
  * 消息模块统一 MapStruct 转换器（Infra 层）。
@@ -210,4 +213,9 @@ public interface MessageConverter {
    * @return 消息模板 DO
    */
   MsgTemplateDO dtoToDO(MsgTemplateDTO dto);
+
+  // ===== MsgTenantConfig =====
+  MsgTenantConfigVO doToVO(MsgTenantConfigDO entity);
+
+  MsgTenantConfigDO dtoToDO(MsgTenantConfigDTO dto);
 }

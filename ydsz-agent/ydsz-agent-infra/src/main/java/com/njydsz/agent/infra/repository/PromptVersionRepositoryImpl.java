@@ -1,4 +1,4 @@
-package com.njydsz.agent.infra.repository.impl;
+package com.njydsz.agent.infra.repository;
 
 import java.util.List;
 import java.util.Optional;

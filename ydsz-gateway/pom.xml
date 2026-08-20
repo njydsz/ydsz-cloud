@@ -34,10 +34,6 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-base</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
         <dependency>
@@ -137,15 +133,6 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-sentry</artifactId>
-        </dependency>
-        <!--
-            GAP-P1-2: 接入 ydsz-common-notify 实现实时告警通知
-              - NotifyService: 钉钉/飞书/邮件/短信多渠道通知
-              - 限流触发、黑名单命中、下游 502/504 时实时 IM 通知运维
-        -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-notify</artifactId>
         </dependency>
         <!-- P1-C: 审计日志集成（EventBridge 桥接 Reactive → Servlet-AOP 审计链路） -->
         <!-- provided 作用域避免传递 servlet 依赖（gateway 为 WebFlux 栈） -->
