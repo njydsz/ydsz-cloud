@@ -214,10 +214,7 @@ public class RuleAdminController {
   @GetMapping("/{ruleCode}/versions")
   public com.njydsz.common.core.response.PageResponse<List<RuleVersionVO>> listVersions(
       @PathVariable String ruleCode, @jakarta.validation.Valid PageQuery pageQuery) {
-    com.baomidou.mybatisplus.core.metadata.IPage<RuleVersionVO> page =
-        ruleAdminService.pageVersions(ruleCode, pageQuery);
-    return com.njydsz.common.core.response.PageResponse.success(
-        page.getTotal(), page.getCurrent(), page.getSize(), page.getRecords());
+    return ruleAdminService.pageVersions(ruleCode, pageQuery);
   }
 
   /**

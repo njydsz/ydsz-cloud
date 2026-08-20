@@ -30,10 +30,6 @@
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-annotation</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-literule-api</artifactId>
             <version>${project.version}</version>

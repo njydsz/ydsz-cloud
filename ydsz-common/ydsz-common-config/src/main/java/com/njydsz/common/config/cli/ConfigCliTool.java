@@ -17,6 +17,8 @@ import com.njydsz.common.json.YdszJson;
  * <p>本工具为 CLI 入口（{@code main} 方法），{@link System#out} / {@link System#err} 是 CLI 标准输出通道，
  * 不属于运行时代码的日志场景，因此豁免 checkstyle 日志规范要求。
  *
+ * // CHECKSTYLE.OFF: RegexpSinglelineJava - CLI 工具类，System.out/err 为标准输出通道，非日志场景
+ *
  * <h3>用法</h3>
  *
  * <pre>{@code
