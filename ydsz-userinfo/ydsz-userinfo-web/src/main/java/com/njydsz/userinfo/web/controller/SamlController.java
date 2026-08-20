@@ -146,4 +146,87 @@ public class SamlController {
 
     return YdszResponse.success(userAttributes);
   }
+
+  // ==================== P2-1 多租户 IdP 路由端点 ====================
+
+  /**
+   * 多租户 SSO 发起端点（P2-1）。
+   *
+   * <p>根据 IdP Entity ID 从 DB 配置中查找对应 IdP 的 SSO 端点，生成 AuthnRequest 并重定向。
+   * 支持不同企业使用不同的 SAML IdP（如企业微信 SAML、飞书 SAML、ADFS）。
+   *
+   * @param idpEntityId IdP Entity ID（URL 编码）
+   * @param response    HTTP 响应对象（用于重定向）
+   */
+  @GetMapping("/sso/{idpEntityId}")
+  @Operation(
+      summary = "多租户 SSO 发起",
+      description = "根据 IdP Entity ID 动态路由到指定企业的 SAML IdP")
+  public void initiateSsoByEntityId(@PathVariable String idpEntityId, HttpServletResponse response) {
+    try {
+      String decodedEntityId = java.net.URLDecoder.decode(idpEntityId, java.nio.charset.StandardCharsets.UTF_8);
+      String redirectUrl = samlService.buildAuthnRequestUrlByEntityId(decodedEntityId);
+      log.info("多租户 SAML SSO 发起: idpEntityId={}", decodedEntityId);
+      response.sendRedirect(redirectUrl);
+    } catch (BusinessException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error("多租户 SAML SSO 发起失败: idpEntityId={}", idpEntityId, e);
+      throw new BusinessException(UserInfoExceptionCode.SAML_SSO_INIT_FAILED);
+    }
+  }
+
+  /**
+   * 多租户 ACS 回调端点（P2-1）。
+   *
+   * <p>接收指定 IdP 的 SAML Response，使用 DB 中该 IdP 的证书验证签名。
+   *
+   * @param samlResponse Base64 编码的 SAML Response
+   * @param idpEntityId  IdP Entity ID
+   * @param relayState   重定向状态
+   * @return 用户身份信息
+   */
+  @Audit(
+      module = "SAML",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'多租户 SAML SSO 登录: idpEntityId=' + #idpEntityId")
+  @RateLimit(resource = "userinfo.saml.acs.multi", threshold = 30)
+  @PostMapping(value = "/acs/{idpEntityId}", produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(
+      summary = "多租户 ACS 回调",
+      description = "使用指定 IdP 的证书验证 SAML Response")
+  public YdszResponse<Map<String, String>> assertionConsumerServiceByEntityId(
+      @RequestParam("SAMLResponse") String samlResponse,
+      @PathVariable String idpEntityId,
+      @RequestParam(value = "RelayState", required = false) String relayState) {
+
+    if (samlResponse == null || samlResponse.isBlank()) {
+      throw new BusinessException(UserInfoExceptionCode.SAML_RESPONSE_INVALID);
+    }
+
+    String decodedEntityId = java.net.URLDecoder.decode(idpEntityId, java.nio.charset.StandardCharsets.UTF_8);
+    Map<String, String> userAttributes = samlService.processSamlResponseWithEntityId(
+        samlResponse, decodedEntityId);
+
+    log.info("多租户 SAML ACS 处理成功: nameId={}, idpEntityId={}",
+        userAttributes.get("nameId"), decodedEntityId);
+
+    return YdszResponse.success(userAttributes);
+  }
+
+  /**
+   * 查询可用 IdP 列表（P2-1）。
+   *
+   * <p>供前端登录页展示可用的 SAML IdP 列表，用户可选择对应的 IdP 进行 SSO 登录。
+   *
+   * @return 可用 IdP 列表
+   */
+  @GetMapping("/idp-list")
+  @Operation(
+      summary = "查询可用 IdP 列表",
+      description = "返回所有已启用的 SAML IdP 配置（供登录页展示选择）")
+  public YdszResponse<java.util.List<com.njydsz.userinfo.domain.vo.SamlIdpConfigVO>> listIdps() {
+    return YdszResponse.success(samlIdpConfigService.findEnabled());
+  }
 }

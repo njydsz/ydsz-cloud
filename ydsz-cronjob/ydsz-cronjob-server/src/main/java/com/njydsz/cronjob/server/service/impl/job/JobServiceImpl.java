@@ -951,29 +951,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   @Transactional(readOnly = true)
-  public Page<JobVO> page(int page, int size, String keyword, String status, String group) {
-    Page<Job> p = new Page<>(page, size);
-    LambdaQueryWrapper<Job> w = new LambdaQueryWrapper<>();
-    if (StringUtils.hasText(keyword)) {
-      w.and(
-          qw ->
-              qw.like(Job::getJobName, keyword)
-                  .or()
-                  .like(Job::getJobKey, keyword)
-                  .or()
-                  .like(Job::getHandler, keyword));
-    }
-    if (StringUtils.hasText(status)) {
-      w.eq(Job::getStatus, status);
-    }
-    if (StringUtils.hasText(group)) {
-      w.eq(Job::getJobGroup, group);
-    }
-    w.orderByDesc(Job::getCreatedAt);
-    Page<Job> result = infraJobRepository.selectPage(p, w);
-    Page<JobVO> vp = new Page<>(page, size, result.getTotal());
-    vp.setRecords(result.getRecords().stream().map(this::jobToVo).toList());
-    return vp;
+  public PageResponse<List<JobVO>> page(int page, int size, String keyword, String status, String group) {
+    return jobRepository.page(keyword, status, group, page, size).toPageResponse();
   }
 
   /**

@@ -136,6 +136,19 @@ public interface JobRepository {
   int resumeAutoPaused(String id);
 
   /**
+   * 分页查询任务列表（按关键字/状态/分组过滤，按 created_at 倒序）。
+   *
+   * @param keyword 关键字（任务名/KEY/Handler 模糊匹配，可为空）
+   * @param status 状态过滤（可为空）
+   * @param group 分组过滤（可为空）
+   * @param page 页码（从 1 开始）
+   * @param size 每页条数
+   * @return MyBatis-Plus 分页结果
+   */
+  com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> selectPage(
+      String keyword, String status, String group, int page, int size);
+
+  /**
    * 分页结果封装（供 Web 层查询方法返回分页数据）。
    *
    * <p>P0-FIX：本接口（infra 层）与 domain 层 {@code JobRepository} 同名，infra.repository.impl 包内的
