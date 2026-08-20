@@ -81,4 +81,25 @@ public interface FlowAdminRoleRepository {
    * @return 管理员角色 VO；不存在返回 {@code Optional.empty()}
    */
   Optional<FlowAdminRoleVO> findByUserAndRole(String userId, String roleCode);
+
+  /**
+   * 按用户 ID + 角色编码 + 租户 ID 查询管理员角色。
+   *
+   * <p>用于权限校验场景：判断指定用户是否拥有指定角色（带租户隔离）。
+   *
+   * @param userId 用户 ID
+   * @param roleCode 角色编码
+   * @param tenantId 租户 ID
+   * @return 管理员角色 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<FlowAdminRoleVO> findByUserAndRole(String userId, String roleCode, String tenantId);
+
+  /**
+   * 按用户 ID 查询管理员角色列表（带租户隔离）。
+   *
+   * @param userId 用户 ID
+   * @param tenantId 租户 ID
+   * @return 管理员角色 VO 列表
+   */
+  List<FlowAdminRoleVO> findByUserId(String userId, String tenantId);
 }

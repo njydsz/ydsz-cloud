@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
@@ -26,8 +25,6 @@ import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
-import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
-import com.njydsz.workflow.infra.mapper.FlowDelegateAuthMapper;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
@@ -102,26 +99,11 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
 @RequiredArgsConstructor
 public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
-  /**
-   * 委派授权 Mapper，负责 ydsz_flow_delegate_auth 表。
-   *
-   * <p>保留 Mapper 调用，因为部分方法（如 {@code selectByOwner}、{@code selectByDelegate}、
-   * {@code matchAuth}、{@code markExpired}）在仓储中暂无等价签名。
-   */
-  private final FlowDelegateAuthMapper authMapper;
-
   /** 委托授权仓储（domain 层契约），管理 ydsz_flow_delegate_auth 表 CRUD */
   private final FlowDelegateAuthRepository authRepository;
 
   /** 实体转换器，用于 VO ↔ DO 转换 */
   private final WorkflowConverter converter;
-
-  /**
-   * 审计日志 Mapper，委派代理操作日志已合并到 ydsz_flow_audit_log。
-   *
-   * <p>保留 Mapper 调用，因为复杂条件查询（LambdaQueryWrapper）在 Repository 中暂无等价方法。
-   */
-  private final FlowAuditLogMapper auditLogMapper;
 
   /** 审计日志仓储（domain 层契约），提供基础 CRUD 方法 */
   private final FlowAuditLogRepository auditLogRepository;
@@ -367,8 +349,9 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
       return List.of();
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    // Repository 中 findActiveByOwner 无 status 过滤参数，签名不同，保留 Mapper 调用
-    return authMapper.selectByOwner(tid, ownerUserId, status);
+    return authRepository.selectByOwner(tid, ownerUserId, status).stream()
+        .map(converter::entityToDO)
+        .toList();
   }
 
   /**
@@ -387,8 +370,9 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
       return List.of();
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    // Repository 中暂无 selectByDelegate 等价方法，需补齐
-    return authMapper.selectByDelegate(tid, delegateUserId, status);
+    return authRepository.selectByDelegate(tid, delegateUserId, status).stream()
+        .map(converter::entityToDO)
+        .toList();
   }
 
   /**
@@ -411,8 +395,9 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
       return null;
     }
     try {
-      // Repository 中 matchAuth 签名不同（无 tenantId/nodeCode 参数），保留 Mapper 调用
-      return authMapper.matchAuth(tenantId, ownerUserId, flowCode, nodeCode, LocalDateTime.now());
+      return authRepository.matchAuthByScope(tenantId, ownerUserId, flowCode, nodeCode, LocalDateTime.now())
+          .map(converter::entityToDO)
+          .orElse(null);
     } catch (Exception e) {
       log.error(
           "[FlowDelegate] 匹配代理规则异常: tenant={} owner={} flow={} node={} err={}",
@@ -455,7 +440,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
   @Override
   public int scanAndMarkExpired() {
     try {
-      return authMapper.markExpired(LocalDateTime.now(), LocalDateTime.now());
+      return authRepository.markExpired(LocalDateTime.now(), LocalDateTime.now());
     } catch (Exception e) {
       log.error("[FlowDelegate] 扫描过期标记异常: {}", e.getMessage(), e);
       return 0;
@@ -481,13 +466,13 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
     int safePage = Math.max(1, page);
     int safeSize = size > 0 ? size : 20;
-    LambdaQueryWrapper<FlowAuditLogDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper
-        .eq(FlowAuditLogDO::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY)
-        .eq(FlowAuditLogDO::getOperatorId, delegateUserId)
-        .orderByDesc(FlowAuditLogDO::getCreatedAt)
-        .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
-    List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
+    List<FlowAuditLogDO> list = auditLogRepository
+        .findByBusinessTypeAndOperator(
+            FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY, delegateUserId,
+            (safePage - 1) * safeSize, safeSize)
+        .stream()
+        .map(converter::entityToDO)
+        .toList();
     return PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
   }
 
@@ -510,13 +495,13 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
     int safePage = Math.max(1, page);
     int safeSize = size > 0 ? size : 20;
-    LambdaQueryWrapper<FlowAuditLogDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper
-        .eq(FlowAuditLogDO::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY)
-        .eq(FlowAuditLogDO::getTargetId, ownerUserId)
-        .orderByDesc(FlowAuditLogDO::getCreatedAt)
-        .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
-    List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
+    List<FlowAuditLogDO> list = auditLogRepository
+        .findByBusinessTypeAndTarget(
+            FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY, ownerUserId,
+            (safePage - 1) * safeSize, safeSize)
+        .stream()
+        .map(converter::entityToDO)
+        .toList();
     return PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
   }
 

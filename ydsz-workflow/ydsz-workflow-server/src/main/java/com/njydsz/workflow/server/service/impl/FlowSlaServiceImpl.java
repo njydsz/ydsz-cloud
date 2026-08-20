@@ -25,7 +25,6 @@ import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowSlaAction;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.FlowSlaService;
@@ -79,10 +78,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @RequiredArgsConstructor
 public class FlowSlaServiceImpl implements FlowSlaService {
 
-  /** 运行时任务 Mapper（selectSlaCandidates/incrementUrgeCount/markSlaAction 无 Repository 等价方法，保留） */
-  private final FlowRunTaskMapper taskMapper;
-
-  /** 运行时任务仓储（domain 层契约），查询单条任务 */
+  /** 运行时任务仓储（domain 层契约） */
   private final FlowRunTaskRepository taskRepository;
 
   /** 实体转换器，用于 VO ↔ DO 转换 */
@@ -213,8 +209,9 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       int iterations = 0;
       // P1-6: 游标分页 — 循环处理多批，直到无候选或达到最大迭代次数
       while (iterations < MAX_SCAN_ITERATIONS) {
-        // TODO: Repository 中暂无 selectSlaCandidates 方法，需补齐
-        List<FlowRunTaskDO> candidates = taskMapper.selectSlaCandidates(SCAN_BATCH_SIZE);
+        List<FlowRunTaskDO> candidates = taskRepository.selectSlaCandidates(SCAN_BATCH_SIZE).stream()
+            .map(converter::entityToDO)
+            .toList();
         if (candidates == null || candidates.isEmpty()) {
           break;
         }
@@ -314,8 +311,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     // 6. 未达最大提醒次数：先发一次提醒，再决定
     boolean urged = sendUrge(fresh, action, currentUrges + 1, maxUrges, now);
     if (urged) {
-      // TODO: Repository 中暂无 incrementUrgeCount 方法，需补齐
-      taskMapper.incrementUrgeCount(fresh.getId(), currentUrges + 1, now);
+      taskRepository.incrementUrgeCount(fresh.getId(), currentUrges + 1, now);
     }
     return urged;
   }
@@ -409,8 +405,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       dto.setComment(comment);
       dto.setVariables(Collections.emptyMap());
       taskService.pass(dto);
-      // TODO: Repository 中暂无 markSlaAction 方法，需补齐
-      taskMapper.markSlaAction(task.getId(), FlowSlaAction.AUTO_PASS.name(), 0);
+      taskRepository.markSlaAction(task.getId(), FlowSlaAction.AUTO_PASS.name(), 0);
       log.info("[FlowSla] 自动通过: taskId={} comment={}", task.getId(), comment);
       // P2-3: Prometheus 指标
       if (flowMetrics != null) {
@@ -434,7 +429,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       dto.setComment(comment);
       dto.setVariables(Collections.emptyMap());
       taskService.reject(dto);
-      taskMapper.markSlaAction(task.getId(), FlowSlaAction.AUTO_REJECT.name(), 0);
+      taskRepository.markSlaAction(task.getId(), FlowSlaAction.AUTO_REJECT.name(), 0);
       log.info("[FlowSla] 自动驳回: taskId={} comment={}", task.getId(), comment);
       // P2-3: Prometheus 指标
       if (flowMetrics != null) {
@@ -470,7 +465,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       // 标记升级；使用 transfer 接口
       try {
         taskService.transfer(dto);
-        taskMapper.markSlaAction(task.getId(), FlowSlaAction.ESCALATE.name(), 1);
+        taskRepository.markSlaAction(task.getId(), FlowSlaAction.ESCALATE.name(), 1);
         // 转办后：升级后的任务重新计 SLA
         FlowRunTaskDO afterTransfer = taskRepository.findById(task.getId()).map(converter::entityToDO).orElse(null);
         if (afterTransfer != null) {
@@ -480,7 +475,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
           // 给新任务一个新的 dueAt（基于当前时间 + timeoutMinutes）
           Integer timeoutMinutes = readInt(config, "timeoutMinutes", DEFAULT_TIMEOUT_MINUTES);
           afterTransfer.setDueAt(now.plusMinutes(timeoutMinutes));
-          taskMapper.updateById(afterTransfer);
+          taskRepository.update(converter.entityToVO(afterTransfer));
         }
         log.info("[FlowSla] 升级成功: taskId={} escalateUserId={}", task.getId(), escalateUserId);
         // P2-3: Prometheus 指标
@@ -494,7 +489,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         log.warn("[FlowSla] 转办失败，改用通知: taskId={} err={}", task.getId(), transferEx.getMessage());
         notificationService.notify(
             "INAPP", escalateUserId, "审批任务已升级", comment, "WORKFLOW_TASK_ESCALATED", "URGENT");
-        taskMapper.markSlaAction(task.getId(), FlowSlaAction.ESCALATE.name(), 1);
+        taskRepository.markSlaAction(task.getId(), FlowSlaAction.ESCALATE.name(), 1);
         return true;
       }
     } catch (Exception e) {
@@ -534,7 +529,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
               nullSafe(task.getAssigneeId()));
       notificationService.notifyBatch("INAPP", targets, title, content, "WORKFLOW_URGE", "URGENT");
       // 标记 slaAction=NOTIFY（slaEscalated=0 表示任务仍活跃，未转办）
-      taskMapper.markSlaAction(task.getId(), FlowSlaAction.NOTIFY.name(), 0);
+      taskRepository.markSlaAction(task.getId(), FlowSlaAction.NOTIFY.name(), 0);
       log.info(
           "[FlowSla] NOTIFY 通知已发送: taskId={} targets={} flowCode={} nodeCode={}",
           task.getId(),

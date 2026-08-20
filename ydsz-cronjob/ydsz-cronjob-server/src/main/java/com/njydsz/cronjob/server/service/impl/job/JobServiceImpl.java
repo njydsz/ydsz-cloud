@@ -173,8 +173,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
 
   // ==================== VO/DTO <-> Entity 转换 ====================
 
-  private Job voToJob(JobVO vo) {
-    Job j = new Job();
+  private JobVO voToJob(JobVO vo) {
+    JobVO j = new JobVO();
     j.setId(vo.getId());
     j.setJobKey(vo.getJobKey());
     j.setJobName(vo.getJobName());
@@ -207,8 +207,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     return j;
   }
 
-  private Job dtoToJob(JobPostDTO dto) {
-    Job j = new Job();
+  private JobVO dtoToJob(JobPostDTO dto) {
+    JobVO j = new JobVO();
     j.setId(dto.getId());
     j.setJobKey(dto.getJobKey());
     j.setJobName(dto.getJobName());
