@@ -177,7 +177,7 @@ public class MessageLogServiceImpl implements MessageLogService {
       long start = System.currentTimeMillis();
       try {
         // 将 VO 转换为实体用于通道分发（dispatch 需要 MsgLog 实体）
-        com.njydsz.message.infra.entity.MsgLog logDO = converter.voToEntity(entity);
+        com.njydsz.message.domain.model.core.MsgLog logDO = converter.voToEntity(entity);
         String providerTraceId = channelRouter.dispatch(logDO);
         long cost = System.currentTimeMillis() - start;
         entity.setStatus(MessageStatusEnum.SUCCESS.name());

@@ -6,7 +6,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.userinfo.infra.config.SocialAuthProperties;
+import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 import com.njydsz.userinfo.domain.social.SocialAccessToken;
 import com.njydsz.userinfo.domain.social.SocialAuthException;
 import com.njydsz.userinfo.domain.social.SocialUserInfo;

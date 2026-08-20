@@ -58,6 +58,14 @@ public interface FlowAuditLogRepository {
   List<FlowAuditLogVO> findByInstanceIdAndAction(String instanceId, String action);
 
   /**
+   * 根据任务 ID 查询审计日志列表。
+   *
+   * @param taskId 任务 ID
+   * @return 审计日志 VO 列表
+   */
+  List<FlowAuditLogVO> findByTaskId(String taskId);
+
+  /**
    * 根据 ID 删除审计日志。
    *
    * @param id 审计日志 ID

@@ -4,7 +4,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,10 +19,7 @@ import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.infra.entity.FlowCategoryDO;
 import com.njydsz.workflow.domain.vo.FlowCategoryVO;
-import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
-import com.njydsz.workflow.infra.mapper.FlowCategoryMapper;
-import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
 import com.njydsz.workflow.server.service.FlowCategoryService;
 
 /**
@@ -96,21 +92,8 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
 @RequiredArgsConstructor
 public class FlowCategoryServiceImpl implements FlowCategoryService {
 
-  /** 流程分类 Mapper，用于分类的增删改查 */
-  private final FlowCategoryMapper categoryMapper;
-
-  /**
-   * 流程分类仓储（domain 层契约）。
-   *
-   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #categoryMapper} 访问数据，
-   * 因为仓储返回 {@code FlowCategoryVO} 与 Service 使用的 {@code FlowCategoryDO} 类型不同，
-   * 且部分 Mapper 方法（如 {@code selectCount}）在仓储中暂无等价方法。
-   * 后续应在仓储中补齐对应方法并迁移。
-   */
+  /** 流程分类仓储（domain 层契约），管理 ydsz_flow_category 表 CRUD */
   private final FlowCategoryRepository categoryRepository;
-
-  /** 流程定义 Mapper，删除分类前校验是否有关联的流程定义 */
-  private final FlowDefinitionMapper definitionMapper;
 
   /**
    * 查询当前租户全部分类
@@ -124,12 +107,9 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   @Override
   public List<FlowCategoryDO> listAll(String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
-    // TODO: 迁移至 categoryRepository.findAll(tenantId)，需 VO→DO 转换
-    List<FlowCategoryDO> list =
-        categoryMapper.selectList(
-            new LambdaQueryWrapper<FlowCategoryDO>()
-                .eq(FlowCategoryDO::getTenantId, tid)
-                .eq(FlowCategoryDO::getDeleted, 0));
+    List<FlowCategoryDO> list = categoryRepository.findAll(tid).stream()
+        .map(converter::entityToDO)
+        .toList();
     list.sort(Comparator.comparingInt(c -> c.getSortNum() == null ? 0 : c.getSortNum()));
     return list;
   }
@@ -180,14 +160,8 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   public String create(FlowCategoryDTO dto, String tenantId) {
     // 校验编码唯一
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
-    // TODO: 迁移至 categoryRepository.findByCode(code)，当前仓储返回单条不适合 count 语义
-    Long count =
-        categoryMapper.selectCount(
-            new LambdaQueryWrapper<FlowCategoryDO>()
-                .eq(FlowCategoryDO::getCategoryCode, dto.getCategoryCode())
-                .eq(FlowCategoryDO::getTenantId, tid)
-                .eq(FlowCategoryDO::getDeleted, 0));
-    if (count != null && count > 0) {
+    long count = categoryRepository.countByCodeAndTenantId(dto.getCategoryCode(), tid);
+    if (count > 0) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.msg_category_code_exists")
@@ -203,8 +177,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     category.setIcon(dto.getIcon());
     category.setRemark(dto.getRemark());
     category.setTenantId(tid);
-    // TODO: 迁移至 categoryRepository.save(vo)，需 DO→VO 转换
-    categoryMapper.insert(category);
+    categoryRepository.save(converter.entityToVO(category));
     log.info(
         "[FlowCategoryDO] 新增分类: code={} name={} id={}",
         category.getCategoryCode(),
@@ -231,8 +204,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
           .message("error.workflow.msg_id_required")
           .build();
     }
-    // TODO: 迁移至 categoryRepository.findById(id)，需 VO→DO 转换
-    FlowCategoryDO existing = categoryMapper.selectById(dto.getId());
+    FlowCategoryDO existing = categoryRepository.findById(dto.getId()).map(converter::entityToDO).orElse(null);
     if (existing == null || existing.getDeleted() == 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -253,8 +225,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     if (dto.getRemark() != null) {
       existing.setRemark(dto.getRemark());
     }
-    // TODO: 迁移至 categoryRepository.update(vo)，需 DO→VO 转换
-    categoryMapper.updateById(existing);
+    categoryRepository.update(converter.entityToVO(existing));
   }
 
   /**
@@ -277,37 +248,27 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void delete(String id) {
-    // TODO: 迁移至 categoryRepository.findById(id)，需 VO→DO 转换
-    FlowCategoryDO existing = categoryMapper.selectById(id);
+    FlowCategoryDO existing = categoryRepository.findById(id).map(converter::entityToDO).orElse(null);
     if (existing == null || existing.getDeleted() == 1) {
       return;
     }
     // 校验是否有子分类
-    // TODO: 迁移至 categoryRepository.findByParentId(id)，需 VO→DO 转换
-    Long childCount =
-        categoryMapper.selectCount(
-            new LambdaQueryWrapper<FlowCategoryDO>()
-                .eq(FlowCategoryDO::getParentId, id)
-                .eq(FlowCategoryDO::getDeleted, 0));
-    if (childCount != null && childCount > 0) {
+    long childCount = categoryRepository.countByParentId(id);
+    if (childCount > 0) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_category_has_children")
           .build();
     }
     // 校验是否有关联的流程定义
-    Long defCount =
-        definitionMapper.selectCount(
-            new LambdaQueryWrapper<FlowDefinitionDO>()
-                .eq(FlowDefinitionDO::getCategory, id)
-                .eq(FlowDefinitionDO::getDeleted, 0));
-    if (defCount != null && defCount > 0) {
+    long defCount = categoryRepository.countDefinitionsByCategory(id);
+    if (defCount > 0) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_category_has_definitions")
           .build();
     }
     existing.setDeleted(1);
-    categoryMapper.updateById(existing);
+    categoryRepository.update(converter.entityToVO(existing));
   }
 }

@@ -2,7 +2,7 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.infra.entity.RuleDependency;
+import com.njydsz.literule.domain.vo.RuleDependencyVO;
 
 /**
  * 规则依赖关系提供者 SPI
@@ -26,7 +26,7 @@ public interface RuleDependencyProvider {
    * @param operator 操作人
    * @return 保存后的依赖记录
    */
-  RuleDependency add(
+  RuleDependencyVO add(
       String ruleCode,
       String dependsOnRuleCode,
       String dependencyType,
@@ -48,7 +48,7 @@ public interface RuleDependencyProvider {
    * @param ruleCode 规则编码
    * @return 依赖记录列表
    */
-  List<RuleDependency> listDependencies(String ruleCode);
+  List<RuleDependencyVO> listDependencies(String ruleCode);
 
   /**
    * 查询被依赖（反向：被哪些规则依赖）
@@ -56,7 +56,7 @@ public interface RuleDependencyProvider {
    * @param ruleCode 规则编码
    * @return 被依赖记录列表
    */
-  List<RuleDependency> listDependents(String ruleCode);
+  List<RuleDependencyVO> listDependents(String ruleCode);
 
   /**
    * 计算禁用某条规则时，需要级联禁用的规则列表

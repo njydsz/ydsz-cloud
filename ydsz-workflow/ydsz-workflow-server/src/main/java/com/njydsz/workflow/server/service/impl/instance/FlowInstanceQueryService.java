@@ -33,7 +33,6 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 
 /**
  * 流程实例查询服务
@@ -73,9 +72,6 @@ public class FlowInstanceQueryService {
 
   /** 历史任务仓储，负责 ydsz_flow_his_task 的领域持久化 */
   private final FlowHisTaskRepository hisTaskRepository;
-
-  /** 流程实例 Mapper（聚合查询无 Repository 等价方法，保留） */
-  private final FlowInstanceMapper instanceMapper;
 
   /** 流程变量管理器，负责变量读写与解析 */
   private final FlowInstanceVariableManager variableManager;
@@ -340,7 +336,7 @@ public class FlowInstanceQueryService {
    */
   @Transactional(readOnly = true)
   public List<Map<String, Object>> selectCountGroupByStatus(String tenantId) {
-    return instanceMapper.selectCountGroupByStatus(tenantId);
+    return instanceRepository.selectCountGroupByStatus(tenantId);
   }
 
   /**
@@ -351,7 +347,7 @@ public class FlowInstanceQueryService {
    */
   @Transactional(readOnly = true)
   public Map<String, Object> selectTodayCount(String tenantId) {
-    return instanceMapper.selectTodayCount(tenantId);
+    return instanceRepository.selectTodayCount(tenantId);
   }
 
   /**
@@ -365,7 +361,7 @@ public class FlowInstanceQueryService {
   @Transactional(readOnly = true)
   public List<Map<String, Object>> selectDailyNewCount(
       String tenantId, LocalDateTime start, LocalDateTime end) {
-    return instanceMapper.selectDailyNewCount(tenantId, start, end);
+    return instanceRepository.selectDailyNewCount(tenantId, start, end);
   }
 
   /**
@@ -379,7 +375,7 @@ public class FlowInstanceQueryService {
   @Transactional(readOnly = true)
   public List<Map<String, Object>> selectDailyCompletedCount(
       String tenantId, LocalDateTime start, LocalDateTime end) {
-    return instanceMapper.selectDailyCompletedCount(tenantId, start, end);
+    return instanceRepository.selectDailyCompletedCount(tenantId, start, end);
   }
 
   /**
@@ -393,7 +389,7 @@ public class FlowInstanceQueryService {
   @Transactional(readOnly = true)
   public List<Map<String, Object>> selectFlowTypeDistribution(
       String tenantId, LocalDateTime start, LocalDateTime end) {
-    return instanceMapper.selectFlowTypeDistribution(tenantId, start, end);
+    return instanceRepository.selectFlowTypeDistribution(tenantId, start, end);
   }
 
   // ============================== 私有辅助方法 ==============================

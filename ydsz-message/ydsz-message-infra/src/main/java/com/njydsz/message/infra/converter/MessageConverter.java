@@ -27,6 +27,7 @@ import com.njydsz.message.domain.vo.MsgTraceVO;
 import com.njydsz.message.domain.vo.MsgUserChannelVO;
 import com.njydsz.message.domain.vo.MsgVariableSourceVO;
 import com.njydsz.message.domain.vo.MsgTenantConfigVO;
+import com.njydsz.message.domain.model.core.MsgLog;
 import com.njydsz.message.infra.entity.MsgAggregateDO;
 import com.njydsz.message.infra.entity.MsgBatchDO;
 import com.njydsz.message.infra.entity.MsgCanaryDO;
@@ -164,6 +165,18 @@ public interface MessageConverter {
    * @return 消息发送日志 DO 列表
    */
   List<MsgLogDO> logVoListToDO(List<MsgLogVO> vos);
+
+  // ===== VO → 领域实体方向（用于 Service 层将查询结果转换为领域对象） =====
+
+  /**
+   * 消息发送日志 VO → 消息发送日志领域实体。
+   *
+   * <p>用于 Service 层将 Repository 返回的 VO 转换为领域实体，供领域服务（如通道分发）使用。
+   *
+   * @param vo 消息发送日志 VO
+   * @return 消息发送日志领域实体
+   */
+  MsgLog voToEntity(MsgLogVO vo);
 
   // ===== DTO → DO 方向（用于 Repository 层 CUD 操作） =====
 

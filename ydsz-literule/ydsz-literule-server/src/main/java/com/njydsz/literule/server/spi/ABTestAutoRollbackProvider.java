@@ -2,8 +2,8 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.infra.entity.RuleABPolicy;
-import com.njydsz.literule.infra.entity.RuleABRollback;
+import com.njydsz.literule.domain.vo.RuleABPolicyVO;
+import com.njydsz.literule.domain.vo.RuleABRollbackVO;
 
 /**
  * AB Test 自动回滚提供者 SPI
@@ -22,7 +22,7 @@ public interface ABTestAutoRollbackProvider {
    * @param ruleCode 规则编码
    * @return AB Test 策略
    */
-  RuleABPolicy getPolicy(String ruleCode);
+  RuleABPolicyVO getPolicy(String ruleCode);
 
   /**
    * 保存/更新 AB Test 策略
@@ -30,7 +30,7 @@ public interface ABTestAutoRollbackProvider {
    * @param policy 策略
    * @param operator 操作人
    */
-  void savePolicy(RuleABPolicy policy, String operator);
+  void savePolicy(RuleABPolicyVO policy, String operator);
 
   /**
    * 查询规则的所有回滚历史
@@ -38,7 +38,7 @@ public interface ABTestAutoRollbackProvider {
    * @param ruleCode 规则编码
    * @return 回滚历史列表
    */
-  List<RuleABRollback> listRollbackHistory(String ruleCode);
+  List<RuleABRollbackVO> listRollbackHistory(String ruleCode);
 
   /**
    * 评估单条规则
@@ -56,5 +56,5 @@ public interface ABTestAutoRollbackProvider {
    * @param reason MANUAL / OWNER_REQUEST
    * @return 回滚记录
    */
-  RuleABRollback manualRollback(String ruleCode, String operator, String reason);
+  RuleABRollbackVO manualRollback(String ruleCode, String operator, String reason);
 }

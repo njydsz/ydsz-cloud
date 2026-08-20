@@ -7,7 +7,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.userinfo.infra.config.SocialAuthProperties;
+import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 import com.njydsz.userinfo.domain.social.SocialAuthProvider;
 
 /**

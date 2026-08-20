@@ -32,12 +32,12 @@ public class ShareAccessLogDomainService {
    * @return 构建完成的 {@link ShareAccessLogDTO} 实例（未持久化）
    */
   public ShareAccessLogDTO buildAccessLog(
-      String shareLinkId, String visitorIp, String visitorAgent, String accessType) {
+      String shareId, String visitorIp, String userAgent, String accessType) {
     ShareAccessLogDTO logEntry = new ShareAccessLogDTO();
-    logEntry.setId(snowflakeIdGenerator.nextId());
-    logEntry.setShareLinkId(shareLinkId);
+    logEntry.setId(String.valueOf(snowflakeIdGenerator.nextId()));
+    logEntry.setShareId(shareId);
     logEntry.setVisitorIp(visitorIp);
-    logEntry.setVisitorAgent(visitorAgent);
+    logEntry.setUserAgent(userAgent);
     logEntry.setAccessType(accessType);
     return logEntry;
   }

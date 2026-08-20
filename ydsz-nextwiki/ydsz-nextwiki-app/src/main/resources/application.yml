@@ -1,0 +1,52 @@
+server:
+  port: 8081
+
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  application:
+    name: ydsz-nextwiki-app
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        file-extension: yml
+        shared-configs:
+          - data-id: ydsz-common.yml
+            refresh: true
+
+# NextWiki 移动端模块配置
+nextwiki:
+  app:
+    enabled: true
+    default-page-size: 20
+    max-page-size: 100
+
+# SpringDoc API 文档
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+# Actuator 健康检查
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.njydsz.nextwiki: DEBUG

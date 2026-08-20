@@ -30,6 +30,11 @@
             <artifactId>mapstruct</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- Spring Security Crypto（PasswordEncoder BCrypt 加密） -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
         <!-- 单元测试 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

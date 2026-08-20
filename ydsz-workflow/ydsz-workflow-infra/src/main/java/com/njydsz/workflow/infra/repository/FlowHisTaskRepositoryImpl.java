@@ -126,4 +126,39 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
       String granularity) {
     return hisTaskMapper.selectApprovalTrend(tenantId, startTime, endTime, granularity);
   }
+
+  @Override
+  public List<String> selectCompletedAssigneeIds(String instanceId) {
+    return hisTaskMapper.selectCompletedAssigneeIds(instanceId);
+  }
+
+  @Override
+  public List<FlowHisTaskVO> selectDoneByAssignee(String assigneeId, String tenantId) {
+    return converter.flowHisTaskListToVO(hisTaskMapper.selectDoneByAssignee(assigneeId, tenantId));
+  }
+
+  @Override
+  public List<FlowHisTaskVO> selectDoneByAssigneePage(String assigneeId, String tenantId, int offset, int limit) {
+    return converter.flowHisTaskListToVO(
+        hisTaskMapper.selectDoneByAssigneePage(assigneeId, tenantId, offset, limit));
+  }
+
+  @Override
+  public List<FlowHisTaskVO> selectDonePage(String assigneeId, String businessType, String flowCode,
+      java.time.LocalDateTime startTime, java.time.LocalDateTime endTime,
+      String tenantId, int offset, int limit) {
+    return converter.flowHisTaskListToVO(
+        hisTaskMapper.selectDonePage(assigneeId, businessType, flowCode, startTime, endTime, tenantId, offset, limit));
+  }
+
+  @Override
+  public long countDoneByAssignee(String assigneeId, String tenantId) {
+    return hisTaskMapper.countDoneByAssignee(assigneeId, tenantId);
+  }
+
+  @Override
+  public long countDone(String assigneeId, String businessType, String flowCode,
+      java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, String tenantId) {
+    return hisTaskMapper.countDone(assigneeId, businessType, flowCode, startTime, endTime, tenantId);
+  }
 }

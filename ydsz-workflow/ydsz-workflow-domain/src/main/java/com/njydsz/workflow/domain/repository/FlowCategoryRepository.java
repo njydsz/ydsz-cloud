@@ -87,4 +87,20 @@ public interface FlowCategoryRepository {
    * @return 匹配的分类数量
    */
   long countByCodeAndTenantId(String code, String tenantId);
+
+  /**
+   * 统计指定父级 ID 下的子分类数量。
+   *
+   * @param parentId 父级 ID
+   * @return 子分类数量
+   */
+  long countByParentId(String parentId);
+
+  /**
+   * 统计指定分类下已关联的流程定义数量（用于删除前引用校验）。
+   *
+   * @param categoryId 分类 ID
+   * @return 关联的流程定义数量
+   */
+  long countDefinitionsByCategory(String categoryId);
 }

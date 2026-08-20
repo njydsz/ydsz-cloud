@@ -110,4 +110,64 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
         .findFirst()
         .map(converter::entityToVO);
   }
+
+  @Override
+  public Optional<FlowTemplateVO> findByTemplateCode(String templateCode) {
+    return templateMapper
+        .selectList(
+            new LambdaQueryWrapper<FlowTemplateDO>()
+                .eq(FlowTemplateDO::getTemplateCode, templateCode)
+                .eq(FlowTemplateDO::getIsLatest, 1)
+                .eq(FlowTemplateDO::getDeleted, 0)
+                .last("LIMIT 1"))
+        .stream()
+        .findFirst()
+        .map(converter::entityToVO);
+  }
+
+  @Override
+  public List<FlowTemplateVO> findLatestByCategory(String category) {
+    return converter.flowTemplateListToVO(
+        templateMapper.selectList(
+            new LambdaQueryWrapper<FlowTemplateDO>()
+                .eq(category != null && !category.isEmpty(), FlowTemplateDO::getCategory, category)
+                .eq(FlowTemplateDO::getIsLatest, 1)
+                .eq(FlowTemplateDO::getDeleted, 0)
+                .orderByAsc(FlowTemplateDO::getSortOrder)));
+  }
+
+  @Override
+  public void incrementUseCount(String templateCode) {
+    templateMapper.incrementUseCount(templateCode);
+  }
+
+  @Override
+  public void markAsNotLatest(String templateCode) {
+    templateMapper.markAsNotLatest(templateCode);
+  }
+
+  @Override
+  public Optional<Integer> selectMaxVersion(String templateCode) {
+    return Optional.ofNullable(templateMapper.selectMaxVersion(templateCode));
+  }
+
+  @Override
+  public List<FlowTemplateVO> findVersionsByTemplateCode(String templateCode) {
+    return converter.flowTemplateListToVO(
+        templateMapper.selectList(
+            new LambdaQueryWrapper<FlowTemplateDO>()
+                .eq(FlowTemplateDO::getTemplateCode, templateCode)
+                .eq(FlowTemplateDO::getDeleted, 0)
+                .orderByDesc(FlowTemplateDO::getVersion)));
+  }
+
+  @Override
+  public List<FlowTemplateVO> findByParentTemplateId(String parentTemplateId) {
+    return converter.flowTemplateListToVO(
+        templateMapper.selectList(
+            new LambdaQueryWrapper<FlowTemplateDO>()
+                .eq(FlowTemplateDO::getParentTemplateId, parentTemplateId)
+                .eq(FlowTemplateDO::getIsLatest, 1)
+                .eq(FlowTemplateDO::getDeleted, 0)));
+  }
 }

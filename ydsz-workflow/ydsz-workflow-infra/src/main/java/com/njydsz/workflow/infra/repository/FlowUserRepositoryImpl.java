@@ -88,4 +88,20 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
     userMapper.updateById(entity);
     return vo;
   }
+
+  @Override
+  public List<String> selectTaskIdsByUser(String userId, String tenantId) {
+    List<Long> ids = userMapper.selectTaskIdsByUser(userId, tenantId);
+    return ids == null ? Collections.emptyList().stream().map(String::valueOf).toList()
+        : ids.stream().map(String::valueOf).toList();
+  }
+
+  @Override
+  public int deleteByInstanceAndNodeAndUser(String instanceId, String nodeCode, String userId) {
+    Map<String, Object> deleteMap = new HashMap<>();
+    deleteMap.put("instance_id", instanceId);
+    deleteMap.put("node_code", nodeCode);
+    deleteMap.put("user_id", userId);
+    return userMapper.deleteByMap(deleteMap);
+  }
 }

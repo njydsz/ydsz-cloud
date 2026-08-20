@@ -17,6 +17,7 @@
         <module>ydsz-nextwiki-infra</module>
         <module>ydsz-nextwiki-server</module>
         <module>ydsz-nextwiki-web</module>
+        <module>ydsz-nextwiki-app</module>
     </modules>
 
 </project>

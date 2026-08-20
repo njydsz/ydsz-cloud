@@ -90,4 +90,60 @@ public interface FlowTemplateRepository {
    * @return 默认模板 VO；不存在返回 {@code Optional.empty()}
    */
   Optional<FlowTemplateVO> findDefaultByCategory(String businessType, String tenantId);
+
+  /**
+   * 按模板编码查询最新版本模板。
+   *
+   * @param templateCode 模板编码
+   * @return 模板 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<FlowTemplateVO> findByTemplateCode(String templateCode);
+
+  /**
+   * 按分类查询所有最新版本模板。
+   *
+   * <p>返回 {@code category = ? AND isLatest = 1} 的模板列表，{@code null} 或空表示全部分类。
+   *
+   * @param category 模板分类（可为 null，表示全部分类）
+   * @return 模板 VO 列表
+   */
+  List<FlowTemplateVO> findLatestByCategory(String category);
+
+  /**
+   * 递增模板使用次数。
+   *
+   * @param templateCode 模板编码
+   */
+  void incrementUseCount(String templateCode);
+
+  /**
+   * 将指定模板编码下所有版本标记为非最新版本。
+   *
+   * @param templateCode 模板编码
+   */
+  void markAsNotLatest(String templateCode);
+
+  /**
+   * 查询模板编码下的最大版本号。
+   *
+   * @param templateCode 模板编码
+   * @return 最大版本号，无版本时返回 {@code Optional.empty()}
+   */
+  Optional<Integer> selectMaxVersion(String templateCode);
+
+  /**
+   * 按模板编码查询所有版本列表。
+   *
+   * @param templateCode 模板编码
+   * @return 模板 VO 列表（按版本号降序）
+   */
+  List<FlowTemplateVO> findVersionsByTemplateCode(String templateCode);
+
+  /**
+   * 按父模板 ID 查询所有子模板。
+   *
+   * @param parentTemplateId 父模板 ID
+   * @return 模板 VO 列表
+   */
+  List<FlowTemplateVO> findByParentTemplateId(String parentTemplateId);
 }

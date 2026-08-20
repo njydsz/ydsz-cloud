@@ -148,4 +148,77 @@ public interface FlowHisTaskRepository {
    */
   List<Map<String, Object>> selectApprovalTrend(
       String tenantId, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, String granularity);
+
+  /**
+   * 查询实例下已审批完成的去重审批人 ID 列表。
+   *
+   * <p>查询 ydsz_flow_his_task 中属于该实例、已完成的审批人去重后 ID。
+   * 用于 P2-7 跨节点去重场景：获取已审批人集合。
+   *
+   * @param instanceId 实例 ID
+   * @return 已审批人 ID 列表
+   */
+  List<String> selectCompletedAssigneeIds(String instanceId);
+
+  /**
+   * 查询办理人的已办列表（按完成时间倒序）。
+   *
+   * <p>走历史表 ydsz_flow_his_task，查询 assigneeId 对应的已完成任务。
+   *
+   * @param assigneeId 办理人 ID
+   * @param tenantId   租户 ID
+   * @return 历史任务 VO 列表
+   */
+  List<FlowHisTaskVO> selectDoneByAssignee(String assigneeId, String tenantId);
+
+  /**
+   * 查询办理人的已办分页（真分页：SQL LIMIT/OFFSET）。
+   *
+   * @param assigneeId 办理人 ID
+   * @param tenantId   租户 ID
+   * @param offset     偏移量
+   * @param limit      每页大小
+   * @return 历史任务 VO 列表
+   */
+  List<FlowHisTaskVO> selectDoneByAssigneePage(String assigneeId, String tenantId, int offset, int limit);
+
+  /**
+   * 已办多维筛选分页查询。
+   *
+   * @param assigneeId   办理人 ID
+   * @param businessType 业务类型（可为 null）
+   * @param flowCode     流程编码（可为 null）
+   * @param startTime    开始时间（可为 null）
+   * @param endTime      结束时间（可为 null）
+   * @param tenantId     租户 ID
+   * @param offset       偏移量
+   * @param limit        每页大小
+   * @return 历史任务 VO 列表
+   */
+  List<FlowHisTaskVO> selectDonePage(String assigneeId, String businessType, String flowCode,
+      java.time.LocalDateTime startTime, java.time.LocalDateTime endTime,
+      String tenantId, int offset, int limit);
+
+  /**
+   * 统计办理人的已办总数。
+   *
+   * @param assigneeId 办理人 ID
+   * @param tenantId   租户 ID
+   * @return 已办总数
+   */
+  long countDoneByAssignee(String assigneeId, String tenantId);
+
+  /**
+   * 多维条件统计已办总数。
+   *
+   * @param assigneeId   办理人 ID
+   * @param businessType 业务类型
+   * @param flowCode     流程编码
+   * @param startTime    开始时间
+   * @param endTime      结束时间
+   * @param tenantId     租户 ID
+   * @return 符合条件的已办总数
+   */
+  long countDone(String assigneeId, String businessType, String flowCode,
+      java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, String tenantId);
 }

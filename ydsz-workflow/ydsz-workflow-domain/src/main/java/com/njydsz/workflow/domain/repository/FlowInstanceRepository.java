@@ -65,6 +65,15 @@ public interface FlowInstanceRepository {
   List<FlowInstanceVO> findByInitiatorId(String initiatorId);
 
   /**
+   * 查询发起人发起的指定流程编码的实例列表。
+   *
+   * @param initiatorId 发起人 ID
+   * @param flowCode 流程编码（可为 null，表示不过滤）
+   * @return 流程实例 VO 列表
+   */
+  List<FlowInstanceVO> selectByInitiator(String initiatorId, String flowCode);
+
+  /**
    * 查询父流程下的子流程实例。
    *
    * @param parentInstanceId 父流程实例 ID
@@ -216,4 +225,14 @@ public interface FlowInstanceRepository {
    */
   List<Map<String, Object>> selectFlowTypeDistribution(
       String tenantId, LocalDateTime start, LocalDateTime end);
+
+  /**
+   * 查询父流程下运行中的子流程实例（RUNNING 状态）。
+   *
+   * <p>用于批量终止时级联终止子流程 / 子流程列表查询。
+   *
+   * @param parentInstanceId 父流程实例 ID
+   * @return 运行中的子流程实例 VO 列表
+   */
+  List<FlowInstanceVO> findRunningChildrenByParentId(String parentInstanceId);
 }

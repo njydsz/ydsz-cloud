@@ -73,6 +73,16 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
   }
 
   @Override
+  public List<FlowAuditLogVO> findByTaskId(String taskId) {
+    return converter.flowAuditLogListToVO(
+        auditLogMapper.selectList(
+            new LambdaQueryWrapper<FlowAuditLogDO>()
+                .eq(FlowAuditLogDO::getTaskId, taskId)
+                .eq(FlowAuditLogDO::getDeleted, 0)
+                .orderByDesc(FlowAuditLogDO::getOperatedAt)));
+  }
+
+  @Override
   public void deleteById(String id) {
     auditLogMapper.deleteById(id);
   }

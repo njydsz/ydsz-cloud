@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: ydsz-nextwiki-app
+  cloud:
+    nacos:
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        file-extension: yml
+        shared-configs:
+          - data-id: ydsz-common.yml
+            refresh: true

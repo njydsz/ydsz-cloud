@@ -11,7 +11,9 @@ import com.njydsz.workflow.domain.repository.FlowCategoryRepository;
 import com.njydsz.workflow.domain.vo.FlowCategoryVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowCategoryDO;
+import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.infra.mapper.FlowCategoryMapper;
+import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
 
 /**
  * 流程分类仓储实现（Infra 层）。
@@ -35,6 +37,8 @@ import com.njydsz.workflow.infra.mapper.FlowCategoryMapper;
 public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
 
   private final FlowCategoryMapper categoryMapper;
+
+  private final FlowDefinitionMapper definitionMapper;
 
   private final WorkflowConverter converter;
 
@@ -103,5 +107,21 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
             .eq(FlowCategoryDO::getCategoryCode, code)
             .eq(tenantId != null, FlowCategoryDO::getTenantId, tenantId)
             .eq(FlowCategoryDO::getDeleted, 0));
+  }
+
+  @Override
+  public long countByParentId(String parentId) {
+    return categoryMapper.selectCount(
+        new LambdaQueryWrapper<FlowCategoryDO>()
+            .eq(FlowCategoryDO::getParentId, parentId)
+            .eq(FlowCategoryDO::getDeleted, 0));
+  }
+
+  @Override
+  public long countDefinitionsByCategory(String categoryId) {
+    return definitionMapper.selectCount(
+        new LambdaQueryWrapper<FlowDefinitionDO>()
+            .eq(FlowDefinitionDO::getCategory, categoryId)
+            .eq(FlowDefinitionDO::getDeleted, 0));
   }
 }

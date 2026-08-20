@@ -82,6 +82,17 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   @Override
+  public List<FlowInstanceVO> selectByInitiator(String initiatorId, String flowCode) {
+    return converter.flowInstanceListToVO(
+        instanceMapper.selectList(
+            new LambdaQueryWrapper<FlowInstanceDO>()
+                .eq(FlowInstanceDO::getInitiatorId, initiatorId)
+                .eq(flowCode != null, FlowInstanceDO::getFlowCode, flowCode)
+                .eq(FlowInstanceDO::getDeleted, 0)
+                .orderByDesc(FlowInstanceDO::getCreatedAt)));
+  }
+
+  @Override
   public List<FlowInstanceVO> findChildren(String parentInstanceId) {
     return converter.flowInstanceListToVO(
         instanceMapper.selectList(
@@ -179,5 +190,15 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   public List<Map<String, Object>> selectFlowTypeDistribution(
       String tenantId, LocalDateTime start, LocalDateTime end) {
     return instanceMapper.selectFlowTypeDistribution(tenantId, start, end);
+  }
+
+  @Override
+  public List<FlowInstanceVO> findRunningChildrenByParentId(String parentInstanceId) {
+    return converter.flowInstanceListToVO(
+        instanceMapper.selectList(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowInstanceDO>()
+                .eq(FlowInstanceDO::getParentInstanceId, parentInstanceId)
+                .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
+                .eq(FlowInstanceDO::getDeleted, 0)));
   }
 }
