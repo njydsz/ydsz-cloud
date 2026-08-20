@@ -87,8 +87,8 @@ public class LanguageController {
    */
   @GetMapping("/page")
   @Operation(summary = "分页查询")
-  public PageResponse<List<LanguageVO>> page(LanguagePageQuery query) {
-    return service.page(query);
+  public YdszResponse<PageResponse<List<LanguageVO>>> page(LanguagePageQuery query) {
+    return YdszResponse.success(service.page(query));
   }
 
   /**

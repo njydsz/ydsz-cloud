@@ -5,7 +5,7 @@ import java.util.Optional;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.dto.ReceiptResult;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
  * 消息通道 SPI 接口。
@@ -41,10 +41,10 @@ public interface MessageChannel {
    *
    * <p>默认返回 {@link Optional#empty()} 表示该渠道不支持主动拉取回执 （如 INAPP 站内信、WEBHOOK 等无需回执的渠道），实现类按需覆盖。
    *
-   * @param logDO 消息日志实体（含 providerTraceId 用于查询）
+   * @param logVO 消息日志VO（含 providerTraceId 用于查询）
    * @return 回执结果；空表示渠道不支持或暂无回执
    */
-  default Optional<ReceiptResult> queryReceipt(MsgLog logDO) {
+  default Optional<ReceiptResult> queryReceipt(MsgLogVO logVO) {
     return Optional.empty();
   }
 }

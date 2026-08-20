@@ -12,7 +12,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.ReceiptResult;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.infra.entity.MsgTemplate;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.server.channel.MessageChannel;
@@ -99,13 +99,13 @@ public class SmsChannel implements MessageChannel {
 
   /** P0-4: 查询短信回执（委托给 provider）。 */
   @Override
-  public Optional<ReceiptResult> queryReceipt(MsgLog logDO) {
+  public Optional<ReceiptResult> queryReceipt(MsgLogVO logVO) {
     SmsProvider provider = selectProvider();
     if (!"aliyun".equals(provider.providerType())) {
       return Optional.empty();
     }
-    String traceId = logDO.getProviderTraceId();
-    String phone = logDO.getReceiver();
+    String traceId = logVO.getProviderTraceId();
+    String phone = logVO.getReceiver();
     if (!StringUtils.hasText(traceId) || !StringUtils.hasText(phone)) {
       return Optional.empty();
     }

@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,11 +13,11 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.domain.constant.MessageConstants;
-import com.njydsz.message.domain.dto.ReceiptResult;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.MessageProperties;
@@ -88,33 +87,33 @@ public class ReceiptPuller {
     LocalDateTime timeoutThreshold = now.minusMinutes(messageProperties.getReceiptTimeoutMinutes());
 
     // ① 先批量处理超时消息:createdAt < timeoutThreshold → 标记 TIMEOUT
-    List<MsgLog> timeoutMsgs =
-        msgLogRepository.selectList(
-            new LambdaQueryWrapper<MsgLog>()
-                .eq(MsgLog::getStatus, MessageStatusEnum.SUCCESS.name())
-                .eq(MsgLog::getReceiptStatus, ReceiptStatusEnum.NONE.name())
-                .lt(MsgLog::getCreatedAt, timeoutThreshold)
-                .last("LIMIT " + MessageConstants.RECEIPT_PULL_BATCH_SIZE));
+    MessageLogQueryDTO timeoutQuery = new MessageLogQueryDTO();
+    timeoutQuery.setStatus(MessageStatusEnum.SUCCESS.name());
+    timeoutQuery.setReceiptStatus(ReceiptStatusEnum.NONE.name());
+    timeoutQuery.setEndTime(timeoutThreshold.toString());
+    timeoutQuery.setPageNum(1);
+    timeoutQuery.setPageSize(MessageConstants.RECEIPT_PULL_BATCH_SIZE);
+    List<MsgLogVO> timeoutMsgs = msgLogRepository.findList(timeoutQuery);
     int timeout = 0;
-    for (MsgLog logDO : timeoutMsgs) {
+    for (MsgLogVO logVO : timeoutMsgs) {
       try {
         messageLogService.updateReceipt(
-            logDO.getId(), ReceiptStatusEnum.TIMEOUT.name(), LocalDateTime.now());
+            logVO.getId(), ReceiptStatusEnum.TIMEOUT.name(), LocalDateTime.now());
         timeout++;
       } catch (Exception e) {
-        log.warn("[ReceiptPuller] 标记超时异常: logId={} err={}", logDO.getId(), e.getMessage());
+        log.warn("[ReceiptPuller] 标记超时异常: logId={} err={}", logVO.getId(), e.getMessage());
       }
     }
 
     // ② 查询待主动拉取的消息:timeoutThreshold <= createdAt < pullThreshold
-    List<MsgLog> pending =
-        msgLogRepository.selectList(
-            new LambdaQueryWrapper<MsgLog>()
-                .eq(MsgLog::getStatus, MessageStatusEnum.SUCCESS.name())
-                .eq(MsgLog::getReceiptStatus, ReceiptStatusEnum.NONE.name())
-                .ge(MsgLog::getCreatedAt, timeoutThreshold)
-                .lt(MsgLog::getCreatedAt, pullThreshold)
-                .last("LIMIT " + MessageConstants.RECEIPT_PULL_BATCH_SIZE));
+    MessageLogQueryDTO pendingQuery = new MessageLogQueryDTO();
+    pendingQuery.setStatus(MessageStatusEnum.SUCCESS.name());
+    pendingQuery.setReceiptStatus(ReceiptStatusEnum.NONE.name());
+    pendingQuery.setStartTime(timeoutThreshold.toString());
+    pendingQuery.setEndTime(pullThreshold.toString());
+    pendingQuery.setPageNum(1);
+    pendingQuery.setPageSize(MessageConstants.RECEIPT_PULL_BATCH_SIZE);
+    List<MsgLogVO> pending = msgLogRepository.findList(pendingQuery);
     if (pending.isEmpty() && timeoutMsgs.isEmpty()) {
       return;
     }
@@ -123,23 +122,23 @@ public class ReceiptPuller {
     int pulled = 0;
     int updated = 0;
     int skipped = 0;
-    for (MsgLog logDO : pending) {
+    for (MsgLogVO logVO : pending) {
       try {
         pulled++;
         // 主动拉取：调用渠道 queryReceipt
-        MessageChannel channel = channelRouter.route(logDO.getChannel());
-        Optional<ReceiptResult> result = channel.queryReceipt(logDO);
+        MessageChannel channel = channelRouter.route(logVO.getChannel());
+        Optional<com.njydsz.message.domain.dto.ReceiptResult> result = channel.queryReceipt(logVO);
         if (result.isEmpty()) {
           // 渠道不支持主动拉取，跳过等待被动回调
           skipped++;
           continue;
         }
-        ReceiptResult receipt = result.get();
+        com.njydsz.message.domain.dto.ReceiptResult receipt = result.get();
         messageLogService.updateReceipt(
-            logDO.getId(), receipt.getStatus().name(), LocalDateTime.now());
+            logVO.getId(), receipt.getStatus().name(), LocalDateTime.now());
         updated++;
       } catch (Exception e) {
-        log.warn("[ReceiptPuller] 拉取回执异常: logId={} err={}", logDO.getId(), e.getMessage());
+        log.warn("[ReceiptPuller] 拉取回执异常: logId={} err={}", logVO.getId(), e.getMessage());
         skipped++;
       }
     }

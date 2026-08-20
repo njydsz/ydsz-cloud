@@ -397,7 +397,7 @@ public class JobController {
    */
   @Operation(summary = "分页查询任务")
   @GetMapping("/page")
-  public PageResponse<List<JobVO>> page(
+  public YdszResponse<PageResponse<List<JobVO>>> page(
       @RequestParam(defaultValue = "1")
           @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}")
           int pageNum,
@@ -408,7 +408,7 @@ public class JobController {
       @RequestParam(required = false) String keyword,
       @RequestParam(required = false) String status,
       @RequestParam(required = false) String group) {
-    return jobService.page(pageNum, size, keyword, status, group);
+    return YdszResponse.success(jobService.page(pageNum, size, keyword, status, group));
   }
 
   /**
@@ -424,7 +424,7 @@ public class JobController {
    */
   @Operation(summary = "分页查询任务执行日志")
   @GetMapping("/log/page")
-  public PageResponse<List<JobLogVO>> pageLog(
+  public YdszResponse<PageResponse<List<JobLogVO>>> pageLog(
       @RequestParam(defaultValue = "1")
           @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}")
           int pageNum,
@@ -434,7 +434,7 @@ public class JobController {
           int size,
       @RequestParam(required = false) String jobKey,
       @RequestParam(required = false) String status) {
-    return jobService.pageLog(pageNum, size, jobKey, status);
+    return YdszResponse.success(jobService.pageLog(pageNum, size, jobKey, status));
   }
 
   /**

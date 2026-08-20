@@ -380,7 +380,7 @@ public class FlowInstanceController {
    */
   @Operation(summary = "实例多维分页查询")
   @GetMapping("/instance/page")
-  public PageResponse<List<FlowInstanceVO>> instancePage(
+  public YdszResponse<PageResponse<List<FlowInstanceVO>>> instancePage(
       @RequestParam(defaultValue = "1") @Min(1) int pageNo,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
       @RequestParam(required = false) String businessType,
@@ -399,7 +399,7 @@ public class FlowInstanceController {
     query.setStartTime(startTime);
     query.setEndTime(endTime);
     query.setTenantId(tid);
-    return instanceService.page(query);
+    return YdszResponse.success(instanceService.page(query));
   }
 
   /**
@@ -416,7 +416,7 @@ public class FlowInstanceController {
    */
   @Operation(summary = "我发起的流程实例分页查询")
   @GetMapping("/instance/my")
-  public PageResponse<List<FlowInstanceVO>> instanceMy(
+  public YdszResponse<PageResponse<List<FlowInstanceVO>>> instanceMy(
       @RequestParam(required = false) String flowCode,
       @RequestParam(required = false) String flowName,
       @RequestParam(required = false) String status,
@@ -432,7 +432,7 @@ public class FlowInstanceController {
     query.setStartTime(startTime);
     query.setEndTime(endTime);
     query.setTenantId(AuthContextUtils.getTenantIdOrDefault());
-    return instanceService.page(query);
+    return YdszResponse.success(instanceService.page(query));
   }
 
   /**
@@ -451,15 +451,15 @@ public class FlowInstanceController {
   @GetMapping("/instance/all")
   @Operation(summary = "全部流程实例查询")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
-  public PageResponse<List<FlowInstanceVO>> instanceAll(
+  public YdszResponse<PageResponse<List<FlowInstanceVO>>> instanceAll(
       @RequestParam(defaultValue = "1") @Min(1) int page,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
       @RequestParam(required = false) String businessType,
       @RequestParam(required = false) String flowStatus,
       @RequestParam(required = false) LocalDateTime startTime,
       @RequestParam(required = false) LocalDateTime endTime) {
-    return workflowFacade.listAllInstances(
-        businessType, flowStatus, startTime, endTime, page, size);
+    return YdszResponse.success(workflowFacade.listAllInstances(
+        businessType, flowStatus, startTime, endTime, page, size));
   }
 
   /**

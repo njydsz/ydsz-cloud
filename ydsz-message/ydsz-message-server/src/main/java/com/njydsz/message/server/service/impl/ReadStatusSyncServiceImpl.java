@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,10 +12,11 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.message.infra.entity.MsgLog;
-import com.njydsz.message.infra.entity.MsgNotification;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.infra.entity.MsgNotification;
 import com.njydsz.message.infra.repository.MsgNotificationRepository;
 import com.njydsz.message.server.realtime.RealtimePushService;
 import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
@@ -66,26 +65,27 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
           .message("消息 ID 和用户 ID 不能为空")
           .build();
     }
-    // 更新消息日志的 receipt_status
-    int updated =
-        msgLogRepository.update(
-            null,
-            new LambdaUpdateWrapper<MsgLog>()
-                .eq(MsgLog::getMsgId, msgId)
-                .eq(MsgLog::getReceiver, userId)
-                .ne(MsgLog::getReceiptStatus, ReceiptStatusEnum.READ.name())
-                .set(MsgLog::getReceiptStatus, ReceiptStatusEnum.READ.name())
-                .set(MsgLog::getReceiptAt, LocalDateTime.now()));
-
-    if (updated > 0) {
-      // 推送已读状态变更到前端
-      realtimePushService.pushToUser(
-          userId,
-          "MESSAGE_READ",
-          Map.of("msgId", msgId, "status", "READ", "timestamp", System.currentTimeMillis()));
-      log.info("[ReadStatus] 消息已读: msgId={} user={}", msgId, userId);
+    // 查找消息日志
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setMsgId(msgId);
+    query.setReceiver(userId);
+    query.setPageNum(1);
+    query.setPageSize(1);
+    MsgLogVO vo = msgLogRepository.findOne(query).orElse(null);
+    if (vo == null || ReceiptStatusEnum.READ.name().equals(vo.getReceiptStatus())) {
+      return false;
     }
-    return updated > 0;
+    vo.setReceiptStatus(ReceiptStatusEnum.READ.name());
+    vo.setReceiptAt(LocalDateTime.now());
+    msgLogRepository.update(vo);
+
+    // 推送已读状态变更到前端
+    realtimePushService.pushToUser(
+        userId,
+        "MESSAGE_READ",
+        Map.of("msgId", msgId, "status", "READ", "timestamp", System.currentTimeMillis()));
+    log.info("[ReadStatus] 消息已读: msgId={} user={}", msgId, userId);
+    return true;
   }
 
   /**
@@ -103,16 +103,21 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     if (msgIds == null || msgIds.isEmpty() || !StringUtils.hasText(userId)) {
       return 0;
     }
-    int updated =
-        msgLogRepository.update(
-            null,
-            new LambdaUpdateWrapper<MsgLog>()
-                .in(MsgLog::getMsgId, msgIds)
-                .eq(MsgLog::getReceiver, userId)
-                .ne(MsgLog::getReceiptStatus, ReceiptStatusEnum.READ.name())
-                .set(MsgLog::getReceiptStatus, ReceiptStatusEnum.READ.name())
-                .set(MsgLog::getReceiptAt, LocalDateTime.now()));
-
+    int updated = 0;
+    for (String msgId : msgIds) {
+      MessageLogQueryDTO query = new MessageLogQueryDTO();
+      query.setMsgId(msgId);
+      query.setReceiver(userId);
+      query.setPageNum(1);
+      query.setPageSize(1);
+      MsgLogVO vo = msgLogRepository.findOne(query).orElse(null);
+      if (vo != null && !ReceiptStatusEnum.READ.name().equals(vo.getReceiptStatus())) {
+        vo.setReceiptStatus(ReceiptStatusEnum.READ.name());
+        vo.setReceiptAt(LocalDateTime.now());
+        msgLogRepository.update(vo);
+        updated++;
+      }
+    }
     if (updated > 0) {
       // 推送批量已读状态到前端
       realtimePushService.pushToUser(
@@ -146,7 +151,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     int updated =
         msgNotificationRepository.update(
             null,
-            new LambdaUpdateWrapper<MsgNotification>()
+            new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<MsgNotification>()
                 .eq(MsgNotification::getId, notificationId)
                 .eq(MsgNotification::getReceiverId, userId)
                 .eq(MsgNotification::getReadStatus, 0)
@@ -177,8 +182,8 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     if (!StringUtils.hasText(userId)) {
       return 0;
     }
-    LambdaUpdateWrapper<MsgNotification> wrapper =
-        new LambdaUpdateWrapper<MsgNotification>()
+    com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<MsgNotification> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<MsgNotification>()
             .eq(MsgNotification::getReceiverId, userId)
             .eq(MsgNotification::getReadStatus, 0)
             .eq(MsgNotification::getRecallStatus, "NONE")
@@ -214,7 +219,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     // 站内通知未读数
     Long notifCount =
         msgNotificationRepository.selectCount(
-            new LambdaQueryWrapper<MsgNotification>()
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<MsgNotification>()
                 .eq(MsgNotification::getReceiverId, userId)
                 .eq(MsgNotification::getReadStatus, 0)
                 .eq(MsgNotification::getRecallStatus, "NONE"));
@@ -243,14 +248,25 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     if ("INAPP".equalsIgnoreCase(channel)) {
       return getUnreadCount(userId);
     }
-    // 其他通道按消息日志查询 receipt_status != READ
-    Long count =
-        msgLogRepository.selectCount(
-            new LambdaQueryWrapper<MsgLog>()
-                .eq(MsgLog::getReceiver, userId)
-                .eq(MsgLog::getChannel, channel.toUpperCase())
-                .ne(MsgLog::getReceiptStatus, ReceiptStatusEnum.READ.name())
-                .ne(MsgLog::getStatus, "FAILED"));
-    return count == null ? 0 : count;
+    // 其他通道按消息日志查询 receipt_status != READ 且 status != FAILED
+    // 由于 DTO 不支持 ne 条件，先查总数再减去已读和失败的
+    MessageLogQueryDTO totalQuery = new MessageLogQueryDTO();
+    totalQuery.setReceiver(userId);
+    totalQuery.setChannel(channel.toUpperCase());
+    long total = msgLogRepository.count(totalQuery);
+
+    MessageLogQueryDTO readQuery = new MessageLogQueryDTO();
+    readQuery.setReceiver(userId);
+    readQuery.setChannel(channel.toUpperCase());
+    readQuery.setReceiptStatus(ReceiptStatusEnum.READ.name());
+    long readCount = msgLogRepository.count(readQuery);
+
+    MessageLogQueryDTO failedQuery = new MessageLogQueryDTO();
+    failedQuery.setReceiver(userId);
+    failedQuery.setChannel(channel.toUpperCase());
+    failedQuery.setStatus("FAILED");
+    long failedCount = msgLogRepository.count(failedQuery);
+
+    return Math.max(0, total - readCount - failedCount);
   }
 }

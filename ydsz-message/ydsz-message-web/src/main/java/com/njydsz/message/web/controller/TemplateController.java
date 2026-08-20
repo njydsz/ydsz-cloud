@@ -171,9 +171,9 @@ public class TemplateController {
   @Operation(summary = "模板分页")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_LIST)
   @GetMapping("/page")
-  public PageResponse<List<MsgTemplateVO>> page(TemplateQueryDTO query) {
+  public YdszResponse<PageResponse<List<MsgTemplateVO>>> page(TemplateQueryDTO query) {
     Page<MsgTemplate> page = templateService.page(query);
-    return PageResponses.success(page, MessageConverter.INSTANT::entityToVO);
+    return YdszResponse.success(PageResponses.success(page, MessageConverter.INSTANT::entityToVO));
   }
 
   /**

@@ -125,6 +125,15 @@
 
 特性：超级管理员（tenantId = null 或 "0"）不添加前缀，仅对 key 序列化生效，value 不受影响。
 
+### 13. 多级缓存
+
+| 类 | 说明 |
+|---|---|
+| `MultiLevelCacheProvider` | 多级缓存提供者（L1 Caffeine 本地缓存 + L2 Redis 远程缓存），@since 1.4.0 |
+| `MultiLevelCacheAutoConfiguration` | 多级缓存自动配置，条件：Caffeine 在 classpath + `ydsz.redis.multilevel.enabled=true` |
+
+读取流程：L1（Caffeine）→ L2（Redis）→ Supplier（回源）；写入流程：写 L2 → 失效 L1；删除流程：删 L2 → 失效 L1。L1 TTL 应显著小于 L2 TTL 以保证数据新鲜度。
+
 ## 接入方式
 
 ### 1. POM 引入依赖
@@ -210,6 +219,14 @@ String value = stringOps.get("key", String.class);
 | `ydsz.redis.client.pool.enabled` | `true` | 是否启用连接池 |
 | `ydsz.redis.client.ssl.enabled` | `false` | 是否启用 SSL |
 
+### 多级缓存配置（`ydsz.redis.multilevel.*`）
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.redis.multilevel.enabled` | `false` | 是否启用多级缓存（需 Caffeine 在 classpath） |
+| `ydsz.redis.multilevel.l1-max-size` | `1000` | L1 Caffeine 缓存最大条目数 |
+| `ydsz.redis.multilevel.l1-ttl-seconds` | `60` | L1 Caffeine 缓存过期时间（秒），建议为 L2 TTL 的 1/5 ~ 1/10 |
+
 ## 使用示例
 
 ### 1. 滑动窗口限流
@@ -277,4 +294,5 @@ public User getUserById(Long userId) {
 
 ## 变更记录
 
+- **v1.4.1**（2026-08-17）：补全多级缓存（`MultiLevelCacheProvider` / `MultiLevelCacheAutoConfiguration`）章节与配置项文档
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节

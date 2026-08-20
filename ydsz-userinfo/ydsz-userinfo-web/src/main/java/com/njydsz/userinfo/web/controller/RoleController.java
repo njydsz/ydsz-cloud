@@ -92,9 +92,9 @@ public class RoleController {
    */
   @GetMapping("/page")
   @Operation(summary = "分页查询角色列表")
-  public PageResponse<List<RoleVO>> page(@Valid RolePageQueryDTO query) {
+  public YdszResponse<PageResponse<List<RoleVO>>> page(@Valid RolePageQueryDTO query) {
     Page<RoleVO> page = service.page(query);
-    return PageResponses.success(page);
+    return YdszResponse.success(PageResponses.success(page));
   }
 
   /**

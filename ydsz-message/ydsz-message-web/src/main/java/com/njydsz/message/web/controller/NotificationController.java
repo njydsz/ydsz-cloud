@@ -137,9 +137,9 @@ public class NotificationController {
   @Operation(summary = "收件箱分页", description = "分页查询当前登录用户的站内通知列表。支持按已读状态、通知类型、关键词、时间范围过滤。返回分页结果含 MsgNotificationVO（通知 ID、标题、内容、类型、已读状态、发送时间）。")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
   @GetMapping("/inbox")
-  public PageResponse<List<MsgNotificationVO>> inbox(NotificationQueryDTO query) {
+  public YdszResponse<PageResponse<List<MsgNotificationVO>>> inbox(NotificationQueryDTO query) {
     Page<MsgNotification> page = notificationService.inbox(AuthContextUtils.getUserId(), query);
-    return PageResponses.success(page, MessageConverter.INSTANT::entityToVO);
+    return YdszResponse.success(PageResponses.success(page, MessageConverter.INSTANT::entityToVO));
   }
 
   /**

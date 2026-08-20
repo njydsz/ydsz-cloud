@@ -79,7 +79,7 @@ public class JobTaskController {
    */
   @Operation(summary = "分页查询子任务")
   @GetMapping("/page")
-  public PageResponse<List<JobTaskVO>> page(
+  public YdszResponse<PageResponse<List<JobTaskVO>>> page(
       @RequestParam String logId,
       @RequestParam(defaultValue = "1")
           @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}")
@@ -90,7 +90,7 @@ public class JobTaskController {
           int size) {
     // 通过 Repository 分页查询（封装了 MyBatis-Plus Page 和 Entity→VO 转换）
     JobRepository.PageResult<JobTaskVO> result = jobTaskRepository.pageByLogId(logId, page, size);
-    return PageResponse.success((long) page, (long) size, result.getTotal(), result.getRecords());
+    return YdszResponse.success(PageResponse.success((long) page, (long) size, result.getTotal(), result.getRecords()));
   }
 
   /**

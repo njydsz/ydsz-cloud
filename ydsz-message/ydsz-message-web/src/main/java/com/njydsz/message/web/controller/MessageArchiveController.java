@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.tenant.TenantContextHolder;
@@ -101,7 +102,7 @@ public class MessageArchiveController {
   @Operation(summary = "全文搜索消息日志")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
   @GetMapping
-  public PageResponse<List<MsgLogVO>> search(
+  public YdszResponse<PageResponse<List<MsgLogVO>>> search(
       @RequestParam(required = false) String keyword,
       @RequestParam(required = false) String channel,
       @RequestParam(required = false) String status,
@@ -112,7 +113,7 @@ public class MessageArchiveController {
           LocalDateTime endTime,
       @RequestParam(defaultValue = "1") int pageNum,
       @RequestParam(defaultValue = "20") int pageSize) {
-    return messageArchiveService.search(
+    return YdszResponse.success(messageArchiveService.search(
         keyword,
         channel,
         status,
@@ -121,6 +122,6 @@ public class MessageArchiveController {
         endTime,
         TenantContextHolder.getTenantId(),
         pageNum,
-        pageSize);
+        pageSize));
   }
 }

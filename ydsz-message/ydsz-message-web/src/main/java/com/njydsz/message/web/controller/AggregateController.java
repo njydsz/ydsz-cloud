@@ -93,9 +93,9 @@ public class AggregateController {
   @Operation(summary = "聚合批次分页")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_LIST)
   @GetMapping("/page")
-  public PageResponse<List<MsgAggregateVO>> page(PageQuery query) {
+  public YdszResponse<PageResponse<List<MsgAggregateVO>>> page(PageQuery query) {
     Page<MsgAggregate> page = aggregateService.page(query);
-    return PageResponses.success(page, MessageConverter.INSTANT::entityToVO);
+    return YdszResponse.success(PageResponses.success(page, MessageConverter.INSTANT::entityToVO));
   }
 
   /**

@@ -106,13 +106,13 @@ public class JobGroupController {
   @Operation(summary = "按分组分页查询任务")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/{jobGroup}/page")
-  public PageResponse<List<JobVO>> pageByGroup(
+  public YdszResponse<PageResponse<List<JobVO>>> pageByGroup(
       @PathVariable String jobGroup,
       @RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "20") int size) {
     // 通过 Repository 分页查询（封装了 MyBatis-Plus Page 和 Entity→VO 转换）
     JobRepository.PageResult<JobVO> result = jobRepository.pageByGroup(jobGroup, page, size);
-    return PageResponse.success((long) page, (long) size, result.getTotal(), result.getRecords());
+    return YdszResponse.success(PageResponse.success((long) page, (long) size, result.getTotal(), result.getRecords()));
   }
 
   /**

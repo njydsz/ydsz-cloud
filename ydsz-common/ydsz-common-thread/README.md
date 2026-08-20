@@ -507,6 +507,7 @@ ExecutorUtils.shutdownGracefully(cpuPool, 30, TimeUnit.SECONDS);
   - **增强 P2-2**：新增任务执行耗时 `Timer` 指标（`execution` / `queue.wait`）和慢任务 `Counter`
   - **增强 P2-3**：`ThreadPoolProperties` 启用 `@Validated` 校验，`maxSize >= coreSize` 违规时启动失败
   - **增强 P2-4**：`ThreadPoolRegistrar` 提供 `getManagedBeanNames()` 方法，便于下游按配置 key 查找 Bean 名称
+- **v1.5.1**（2026-08-17）：修正 README — 移除不存在的 `MeteredThreadPoolExecutor` 类，替换为实际指标组件（`ThreadPoolMetrics` / `ThreadPoolTimerMetrics` / `MeteredRejectedHandler` / `MeteredVirtualExecutorService` / `VirtualThreadMetrics`）
 - **v1.3.0**（2026-08-10）：新增 Micrometer 指标绑定、拒绝策略自动包装、TaskDecorator 配置化上下文传播、热更新监听器提取
 - **v1.2.0**（2026-08-05）：`ThreadHealthIndicator` 支持虚拟线程池感知；`ThreadPoolRegistrar` 提取为独立组件
 - **v1.0.0**（2026-08-02）：初始版本。提供配置驱动的多线程池自动装配、平台/虚拟线程双模式配置、健康检查、Micrometer 指标、优雅关闭

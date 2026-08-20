@@ -170,9 +170,9 @@ public class RouteRuleController {
   @Operation(summary = "路由规则分页")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
   @GetMapping("/page")
-  public PageResponse<List<MsgRouteRuleVO>> page(PageQuery query) {
+  public YdszResponse<PageResponse<List<MsgRouteRuleVO>>> page(PageQuery query) {
     Page<MsgRouteRule> page = routeRuleService.page(query);
-    return PageResponses.success(page, MessageConverter.INSTANT::entityToVO);
+    return YdszResponse.success(PageResponses.success(page, MessageConverter.INSTANT::entityToVO));
   }
 
   /**

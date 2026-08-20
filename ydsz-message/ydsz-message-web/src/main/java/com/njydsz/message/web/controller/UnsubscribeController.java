@@ -140,10 +140,10 @@ public class UnsubscribeController {
   @Operation(summary = "分页查询已退订记录")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_VIEW)
   @GetMapping("/page")
-  public PageResponse<List<MsgSubscriptionVO>> page(UnsubscribeQueryDTO query) {
+  public YdszResponse<PageResponse<List<MsgSubscriptionVO>>> page(UnsubscribeQueryDTO query) {
     PageResponse<List<MsgSubscription>> page = unsubscribeService.pageUnsubscribed(query);
     List<MsgSubscriptionVO> voList = MessageConverter.INSTANT.subscriptionListToVO(page.getData());
-    return PageResponse.success(page.getTotal(), page.getPageNum(), page.getPageSize(), voList);
+    return YdszResponse.success(PageResponse.success(page.getTotal(), page.getPageNum(), page.getPageSize(), voList));
   }
 
   /**

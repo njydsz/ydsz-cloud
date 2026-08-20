@@ -537,7 +537,7 @@ public class FlowTaskController {
    */
   @GetMapping("/task/todo")
   @Operation(summary = "查询待办任务列表")
-  public PageResponse<List<FlowRunTaskVO>> todo(
+  public YdszResponse<PageResponse<List<FlowRunTaskVO>>> todo(
       @RequestParam(defaultValue = "1") @Min(1) int page,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
       @RequestParam(required = false) String flowCode,
@@ -546,7 +546,7 @@ public class FlowTaskController {
       @RequestParam(required = false) LocalDateTime endTime) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return taskService.pageTodoVO(userId, tenantId, flowCode, businessType, startTime, endTime, page, size);
+    return YdszResponse.success(taskService.pageTodoVO(userId, tenantId, flowCode, businessType, startTime, endTime, page, size));
   }
 
   /**
@@ -562,7 +562,7 @@ public class FlowTaskController {
    */
   @GetMapping("/task/done")
   @Operation(summary = "查询已办任务列表")
-  public PageResponse<List<FlowRunTaskVO>> done(
+  public YdszResponse<PageResponse<List<FlowRunTaskVO>>> done(
       @RequestParam(defaultValue = "1") @Min(1) int page,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
       @RequestParam(required = false) String flowCode,
@@ -571,7 +571,7 @@ public class FlowTaskController {
       @RequestParam(required = false) LocalDateTime endTime) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return taskService.pageDoneVO(userId, tenantId, flowCode, businessType, startTime, endTime, page, size);
+    return YdszResponse.success(taskService.pageDoneVO(userId, tenantId, flowCode, businessType, startTime, endTime, page, size));
   }
 
   /**
@@ -604,7 +604,7 @@ public class FlowTaskController {
    */
   @GetMapping("/task/done/search")
   @Operation(summary = "多维筛选已办任务")
-  public PageResponse<List<FlowRunTaskVO>> doneSearch(
+  public YdszResponse<PageResponse<List<FlowRunTaskVO>>> doneSearch(
       @RequestParam(defaultValue = "1") @Min(1) int page,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
       @RequestParam(required = false) String flowCode,
@@ -614,8 +614,8 @@ public class FlowTaskController {
       @RequestParam(required = false) String keyword) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return taskService.pageDoneSearchVO(
-        userId, tenantId, flowCode, businessType, startTime, endTime, keyword, page, size);
+    return YdszResponse.success(taskService.pageDoneSearchVO(
+        userId, tenantId, flowCode, businessType, startTime, endTime, keyword, page, size));
   }
 
   /**
