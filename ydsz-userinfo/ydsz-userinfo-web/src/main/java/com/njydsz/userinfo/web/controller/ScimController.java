@@ -160,11 +160,11 @@ public class ScimController {
                   .build()));
     }
 
-    // 转换为 ydsz 创建 DTO
-    com.njydsz.userinfo.domain.dto.UserAccountCreateDTO createDTO =
+    // 转换为 ydsz 统一 DTO
+    com.njydsz.userinfo.domain.dto.UserAccountDTO createDTO =
         ScimConverter.toCreateDTO(scimUser);
 
-    String userId = userAccountService.create(createDTO);
+    String userId = userAccountService.save(createDTO);
 
     // 查询创建后的用户并返回
     UserAccountVO createdUser = userAccountService.getById(userId);
@@ -206,12 +206,12 @@ public class ScimController {
                   .build()));
     }
 
-    // 转换为 ydsz 更新 DTO
-    com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO updateDTO =
+    // 转换为 ydsz 统一 DTO
+    com.njydsz.userinfo.domain.dto.UserAccountDTO updateDTO =
         ScimConverter.toUpdateDTO(scimUser);
     updateDTO.setId(id);
 
-    userAccountService.update(updateDTO);
+    userAccountService.save(updateDTO);
 
     // 查询更新后的用户并返回
     UserAccountVO updatedUser = userAccountService.getById(id);

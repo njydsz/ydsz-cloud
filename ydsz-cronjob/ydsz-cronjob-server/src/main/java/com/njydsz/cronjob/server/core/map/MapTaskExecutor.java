@@ -24,7 +24,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.infra.entity.job.Job;
 import com.njydsz.cronjob.infra.entity.job.JobNode;
-import com.njydsz.cronjob.infra.entity.job.JobTask;
+import com.njydsz.cronjob.domain.vo.JobTaskVO;
 import com.njydsz.cronjob.infra.entity.log.JobLog;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobLogger;
@@ -33,7 +33,7 @@ import com.njydsz.cronjob.domain.job.MapProcessor;
 import com.njydsz.cronjob.domain.job.MapReduceProcessor;
 import com.njydsz.cronjob.domain.job.MapTask;
 import com.njydsz.cronjob.domain.job.ProcessResult;
-import com.njydsz.cronjob.infra.mapper.job.JobTaskMapper;
+import com.njydsz.cronjob.domain.repository.JobTaskRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.MapReduceConfig;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
@@ -98,7 +98,7 @@ public class MapTaskExecutor {
   private static final String STATUS_SUCCESS = "SUCCESS";
   private static final String STATUS_FAILED = "FAILED";
 
-  private final JobTaskMapper jobTaskMapper;
+  private final JobTaskRepository jobTaskRepository;
   private final ApplicationContext applicationContext;
   private final CronjobProperties cronjobProperties;
   private final NodeDiscoveryStrategy nodeDiscoveryStrategy;
@@ -172,9 +172,9 @@ public class MapTaskExecutor {
       return ProcessResult.failed("获取 MapProcessor Bean 失败: " + e.getMessage());
     }
 
-    // 2. 创建 ROOT TaskDO 记录，status=PENDING
-    JobTask rootTaskDO =
-        createTaskDO(
+    // 2. 创建 ROOT TaskVO 记录，status=PENDING
+    JobTaskVO rootTaskVO =
+        createTaskVO(
             jobId,
             logId,
             jobKey,
@@ -182,7 +182,7 @@ public class MapTaskExecutor {
             job.getParamsJson(),
             TASK_TYPE_ROOT,
             STATUS_PENDING);
-    jobTaskMapper.insert(rootTaskDO);
+    jobTaskRepository.insert(rootTaskVO);
 
     // 3. 构造 root MapContext，调用 processor.process 处理 root task
     MapContext rootContext = new MapContext();
@@ -192,7 +192,7 @@ public class MapTaskExecutor {
     rootContext.setTaskName(ROOT_TASK_NAME);
     rootContext.setTaskParams(job.getParamsJson());
     rootContext.setRoot(true);
-    ProcessResult rootResult = executeTask(processor, rootContext, rootTaskDO, jobKey, logId);
+    ProcessResult rootResult = executeTask(processor, rootContext, rootTaskVO, jobKey, logId);
 
     // 4. root task 失败时不产生子任务，直接返回
     if (!rootResult.isSuccess()) {
@@ -407,9 +407,9 @@ public class MapTaskExecutor {
     AtomicInteger nodeIndex = new AtomicInteger(0);
 
     for (MapTask subTask : subTasks) {
-      // 创建 TaskDO
-      JobTask subTaskDO =
-          createTaskDO(
+      // 创建 TaskVO
+      JobTaskVO subTaskVO =
+          createTaskVO(
               jobId,
               logId,
               jobKey,
@@ -417,7 +417,7 @@ public class MapTaskExecutor {
               subTask.getTaskParams(),
               TASK_TYPE_SUB_TASK,
               STATUS_PENDING);
-      jobTaskMapper.insert(subTaskDO);
+      jobTaskRepository.insert(subTaskVO);
 
       // 选择目标节点（round-robin）
       JobNode targetNode = onlineNodes.get(nodeIndex.getAndIncrement() % onlineNodes.size());
@@ -431,7 +431,7 @@ public class MapTaskExecutor {
                 } catch (InterruptedException e) {
                   Thread.currentThread().interrupt();
                   ProcessResult failResult = ProcessResult.failed("线程中断等待信号量");
-                  updateTaskStatus(subTaskDO, failResult);
+                  updateTaskStatus(subTaskVO, failResult);
                   return failResult;
                 }
                 try {
@@ -439,10 +439,10 @@ public class MapTaskExecutor {
                   if (isLocal) {
                     // 本地执行
                     result =
-                        executeTaskRemotely(processor, subTask, subTaskDO, jobId, logId, jobKey);
+                        executeTaskRemotely(processor, subTask, subTaskVO, jobId, logId, jobKey);
                   } else {
                     // 远程派发
-                    result = dispatchSubTaskToNode(targetNode, job, subTask, subTaskDO, traceId);
+                    result = dispatchSubTaskToNode(targetNode, job, subTask, subTaskVO, traceId);
                     // 远程失败时降级本地执行
                     if (!result.isSuccess()
                         && cronjobProperties.getMapReduce().isFallbackToLocal()) {
@@ -453,7 +453,7 @@ public class MapTaskExecutor {
                           targetNode.getNodeId(),
                           result.getErrorMessage());
                       result =
-                          executeTaskRemotely(processor, subTask, subTaskDO, jobId, logId, jobKey);
+                          executeTaskRemotely(processor, subTask, subTaskVO, jobId, logId, jobKey);
                     }
                   }
                   return result;
@@ -501,8 +501,8 @@ public class MapTaskExecutor {
       MapProcessor processor, List<MapTask> subTasks, String jobId, String logId, String jobKey) {
     List<ProcessResult> results = new ArrayList<>(subTasks.size());
     for (MapTask subTask : subTasks) {
-      JobTask subTaskDO =
-          createTaskDO(
+      JobTaskVO subTaskVO =
+          createTaskVO(
               jobId,
               logId,
               jobKey,
@@ -510,7 +510,7 @@ public class MapTaskExecutor {
               subTask.getTaskParams(),
               TASK_TYPE_SUB_TASK,
               STATUS_PENDING);
-      jobTaskMapper.insert(subTaskDO);
+      jobTaskRepository.insert(subTaskVO);
 
       MapContext subContext = new MapContext();
       subContext.setJobId(jobId);
@@ -519,7 +519,7 @@ public class MapTaskExecutor {
       subContext.setTaskName(subTask.getTaskName());
       subContext.setTaskParams(subTask.getTaskParams());
       subContext.setRoot(false);
-      ProcessResult subResult = executeTask(processor, subContext, subTaskDO, jobKey, logId);
+      ProcessResult subResult = executeTask(processor, subContext, subTaskVO, jobKey, logId);
       results.add(subResult);
     }
     return results;
@@ -536,16 +536,16 @@ public class MapTaskExecutor {
    * @return 处理结果
    */
   private ProcessResult dispatchSubTaskToNode(
-      JobNode targetNode, Job job, MapTask subTask, JobTask subTaskDO, String traceId) {
+      JobNode targetNode, Job job, MapTask subTask, JobTaskVO subTaskVO, String traceId) {
     // 更新状态为 RUNNING
-    jobTaskMapper.updateStatus(subTaskDO.getId(), STATUS_RUNNING, null, null, LocalDateTime.now());
-    jobTaskMapper.updateExecNodeId(subTaskDO.getId(), targetNode.getNodeId(), LocalDateTime.now());
-    subTaskDO.setExecNodeId(targetNode.getNodeId());
+    jobTaskRepository.updateStatus(subTaskVO.getId(), STATUS_RUNNING, null, null, LocalDateTime.now());
+    jobTaskRepository.updateExecNodeId(subTaskVO.getId(), targetNode.getNodeId(), LocalDateTime.now());
+    subTaskVO.setExecNodeId(targetNode.getNodeId());
 
     RemoteSubTaskRequest request =
         new RemoteSubTaskRequest(
             job.getId(),
-            subTaskDO.getLogId(),
+            subTaskVO.getLogId(),
             job.getJobKey(),
             job.getHandler(),
             subTask.getTaskName(),
@@ -580,8 +580,8 @@ public class MapTaskExecutor {
       result = ProcessResult.failed("远程派发异常: " + e.getMessage());
     }
 
-    // 更新 TaskDO 状态
-    updateTaskStatus(subTaskDO, result);
+    // 更新 TaskVO 状态
+    updateTaskStatus(subTaskVO, result);
     return result;
   }
 
@@ -601,7 +601,7 @@ public class MapTaskExecutor {
   private ProcessResult executeTaskRemotely(
       MapProcessor processor,
       MapTask subTask,
-      JobTask subTaskDO,
+      JobTaskVO subTaskVO,
       String jobId,
       String logId,
       String jobKey) {
@@ -612,20 +612,20 @@ public class MapTaskExecutor {
     subContext.setTaskName(subTask.getTaskName());
     subContext.setTaskParams(subTask.getTaskParams());
     subContext.setRoot(false);
-    return executeTask(processor, subContext, subTaskDO, jobKey, logId);
+    return executeTask(processor, subContext, subTaskVO, jobKey, logId);
   }
 
   /**
-   * 更新 TaskDO 状态为最终结果。
+   * 更新 TaskVO 状态为最终结果。
    *
-   * @param taskDO 子任务 DO
+   * @param taskVO 子任务 VO
    * @param result 处理结果
    */
-  private void updateTaskStatus(JobTask taskDO, ProcessResult result) {
+  private void updateTaskStatus(JobTaskVO taskVO, ProcessResult result) {
     LocalDateTime now = LocalDateTime.now();
     String status = result.isSuccess() ? STATUS_SUCCESS : STATUS_FAILED;
-    jobTaskMapper.updateStatus(
-        taskDO.getId(), status, result.getResult(), result.getErrorMessage(), now);
+    jobTaskRepository.updateStatus(
+        taskVO.getId(), status, result.getResult(), result.getErrorMessage(), now);
   }
 
   /**

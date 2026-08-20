@@ -6,18 +6,18 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.infra.entity.OutboxEvent;
 import com.njydsz.cronjob.domain.repository.outbox.OutboxEventRepository;
+import com.njydsz.cronjob.domain.vo.OutboxEventVO;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
+import com.njydsz.cronjob.infra.entity.OutboxEvent;
 import com.njydsz.cronjob.infra.mapper.outbox.OutboxEventMapper;
 
 /**
- * Outbox 事件仓储实现（P0-2：事务性 Outbox 事件模式）。
+ * Outbox 事件仓储实现（Infra 层）。
  *
- * <p>提供事件写入、查询、状态变更的 MyBatis 实现。事件写入通过 {@link OutboxEventMapper} 完成，
- * 可与业务操作共用同一事务（通过 Spring 事务管理）。
+ * <p>实现 {@link OutboxEventRepository} 接口，封装 OutboxEventMapper 数据访问细节。
  *
- * <p><b>注意</b>：{@link #save(OutboxEvent)} 和 {@link #saveAll(List)} 方法应在业务事务内调用，
- * 不使用独立事务（{@code @Transactional(propagation = Propagation.MANDATORY)} 语义由调用方保证）。
+ * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
  * @since 1.2.0
@@ -28,57 +28,27 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
 
   private final OutboxEventMapper outboxEventMapper;
 
+  private final CronjobConverter converter;
+
   @Override
-  public OutboxEvent save(OutboxEvent event) {
-    if (event == null) {
-      throw new IllegalArgumentException("OutboxEvent 不能为空");
-    }
-    LocalDateTime now = LocalDateTime.now();
-    if (event.getCreateTime() == null) {
-      event.setCreateTime(now);
-    }
-    if (event.getStatus() == null) {
-      event.setStatus(OutboxEvent.OutboxStatus.PENDING);
-    }
-    if (event.getRetryCount() == null) {
-      event.setRetryCount(0);
-    }
-    if (event.getNextRetryTime() == null) {
-      event.setNextRetryTime(now);
-    }
-    event.setUpdateTime(now);
-    outboxEventMapper.insert(event);
-    return event;
+  public OutboxEventVO save(OutboxEventVO event) {
+    OutboxEvent entity = converter.voToEntity(event);
+    outboxEventMapper.insert(entity);
+    return converter.entityToVO(entity);
   }
 
   @Override
-  public List<OutboxEvent> saveAll(List<OutboxEvent> events) {
-    if (events == null || events.isEmpty()) {
-      throw new IllegalArgumentException("OutboxEvent 列表不能为空");
+  public List<OutboxEventVO> saveAll(List<OutboxEventVO> events) {
+    List<OutboxEvent> entities = converter.outboxEventVOsToEntities(events);
+    for (OutboxEvent entity : entities) {
+      outboxEventMapper.insert(entity);
     }
-    LocalDateTime now = LocalDateTime.now();
-    for (OutboxEvent event : events) {
-      if (event.getCreateTime() == null) {
-        event.setCreateTime(now);
-      }
-      if (event.getStatus() == null) {
-        event.setStatus(OutboxEvent.OutboxStatus.PENDING);
-      }
-      if (event.getRetryCount() == null) {
-        event.setRetryCount(0);
-      }
-      if (event.getNextRetryTime() == null) {
-        event.setNextRetryTime(now);
-      }
-      event.setUpdateTime(now);
-      outboxEventMapper.insert(event);
-    }
-    return events;
+    return converter.outboxEventListToVO(entities);
   }
 
   @Override
-  public List<OutboxEvent> findPending(LocalDateTime now, int maxRetry, int batchSize) {
-    return outboxEventMapper.selectPending(now, maxRetry, batchSize);
+  public List<OutboxEventVO> findPending(LocalDateTime now, int maxRetry, int batchSize) {
+    return converter.outboxEventListToVO(outboxEventMapper.selectPending(now, maxRetry, batchSize));
   }
 
   @Override

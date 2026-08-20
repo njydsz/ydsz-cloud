@@ -4,9 +4,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.workflow.domain.query.FlowCcQuery;
 import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
 import com.njydsz.workflow.domain.vo.FlowCcVO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
 
 /**
  * GAP-P1: 流程抄送服务
@@ -70,26 +71,42 @@ public interface FlowCcService {
    * @param node 抄送节点定义
    * @param variables 流程变量（用于 SpEL 解析）
    */
-  void handleCcNode(String instanceId, FlowNodeDO node, Map<String, Object> variables);
+  void handleCcNode(String instanceId, FlowNodeVO node, Map<String, Object> variables);
 
   /**
-   * 查"抄送我的"分页（便捷方法，使用 DTO 参数）
+   * 查"抄送我的"分页（便捷方法）。
    *
    * @param tenantId 租户 ID
    * @param userId 接收人 ID
-   * @param query 查询条件 DTO
+   * @param query 查询条件
    * @return 抄送记录列表
    */
+  List<FlowCcVO> pageMyCc(String tenantId, String userId, FlowCcQuery query);
+
+  /**
+   * 查"抄送我的"分页（已废弃）。
+   *
+   * @deprecated 使用 {@link #pageMyCc(String, String, FlowCcQuery)} 替代
+   */
+  @Deprecated
   List<FlowCcVO> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query);
 
   /**
-   * 查"抄送我的"总数（便捷方法，使用 DTO 参数）
+   * 查"抄送我的"总数（便捷方法）。
    *
    * @param tenantId 租户 ID
    * @param userId 接收人 ID
-   * @param query 查询条件 DTO
+   * @param query 查询条件
    * @return 总数
    */
+  long countMyCc(String tenantId, String userId, FlowCcQuery query);
+
+  /**
+   * 查"抄送我的"总数（已废弃）。
+   *
+   * @deprecated 使用 {@link #countMyCc(String, String, FlowCcQuery)} 替代
+   */
+  @Deprecated
   long countMyCc(String tenantId, String userId, FlowCcQueryDTO query);
 
   /**

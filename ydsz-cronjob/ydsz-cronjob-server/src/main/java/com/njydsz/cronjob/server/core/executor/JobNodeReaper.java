@@ -10,7 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
+import com.njydsz.cronjob.domain.repository.JobNodeRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 
@@ -55,7 +55,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
 @ConditionalOnProperty(name = "ydsz.cronjob.node-discovery.type", havingValue = "db")
 public class JobNodeReaper {
 
-  private final JobNodeMapper jobNodeMapper;
+  private final JobNodeRepository jobNodeRepository;
   private final LeaderElector leaderElector;
   private final CronjobProperties cronjobProperties;
 
@@ -106,7 +106,7 @@ public class JobNodeReaper {
     LocalDateTime cutoff = LocalDateTime.now().minusSeconds(offlineThreshold);
 
     // 标记为 OFFLINE
-    int affected = jobNodeMapper.markStaleOnlineAsOffline(cutoff);
+    int affected = jobNodeRepository.markStaleOnlineAsOffline(cutoff);
     if (affected > 0) {
       log.warn("[JobNodeReaper] 标记 {} 个僵尸节点为 OFFLINE (heartbeat < {})", affected, cutoff);
     }
@@ -115,7 +115,7 @@ public class JobNodeReaper {
   /** 物理删除已离线超过 30 分钟的节点记录。 */
   private void deleteStaleRecords() {
     LocalDateTime cutoff = LocalDateTime.now().minusMinutes(STALE_NODE_RETENTION_MINUTES);
-    int affected = jobNodeMapper.deleteStaleOfflineNodes(cutoff);
+    int affected = jobNodeRepository.deleteStaleOfflineNodes(cutoff);
     if (affected > 0) {
       log.info("[JobNodeReaper] 清理 {} 个过期离线节点记录 (heartbeat < {})", affected, cutoff);
     }

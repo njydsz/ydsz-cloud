@@ -32,7 +32,9 @@ import com.njydsz.cronjob.infra.entity.job.JobTask;
 import com.njydsz.cronjob.infra.entity.job.JobWebhook;
 import com.njydsz.cronjob.infra.entity.job.TenantQuota;
 import com.njydsz.cronjob.infra.entity.schedule.GlueCode;
+import com.njydsz.cronjob.infra.entity.OutboxEvent;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
+import com.njydsz.cronjob.domain.vo.OutboxEventVO;
 import com.njydsz.cronjob.domain.vo.TenantQuotaVO;
 import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
 import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
@@ -421,4 +423,16 @@ public interface CronjobConverter {
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   JobDag putDtoToEntity(JobDagPutDTO dto);
+
+  // ===== OutboxEvent =====
+  OutboxEventVO entityToVO(OutboxEvent entity);
+
+  List<OutboxEventVO> outboxEventListToVO(List<OutboxEvent> entities);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "createTime", ignore = true)
+  @Mapping(target = "updateTime", ignore = true)
+  OutboxEvent voToEntity(OutboxEventVO vo);
+
+  List<OutboxEvent> outboxEventVOsToEntities(List<OutboxEventVO> vos);
 }

@@ -37,7 +37,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
-import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
+import com.njydsz.workflow.domain.query.FlowCcQuery;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
@@ -1060,7 +1060,7 @@ public class FlowTaskController {
       content = "'pageCc'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
   @Operation(summary = "抄送中心分页查询")
-  public YdszResponse<List<FlowCcVO>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
+  public YdszResponse<List<FlowCcVO>> pageCc(@Valid @RequestBody FlowCcQuery query) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     String userId = AuthContextUtils.getUserId();
     int pageNo = query.getPageNum();

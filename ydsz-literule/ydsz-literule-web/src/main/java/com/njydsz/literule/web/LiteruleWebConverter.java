@@ -19,7 +19,7 @@ import com.njydsz.literule.server.approval.ApprovalFlow;
 import com.njydsz.literule.server.approval.ApprovalRecord;
 import com.njydsz.literule.server.expression.ExpressionPreviewResult;
 import com.njydsz.literule.server.orchestrator.RuleChainGraph;
-import com.njydsz.literule.server.spi.RuleCategoryProvider.CategoryNode;
+import com.njydsz.literule.server.spi.CategoryTreeNode;
 import com.njydsz.literule.server.spi.RuleConflictDetectorProvider.RuleConflictInfo;
 import com.njydsz.literule.server.spi.RulePackProvider.InstallResult;
 import com.njydsz.literule.server.spi.RulePackProvider.PackDiff;
@@ -68,8 +68,10 @@ public interface LiteruleWebConverter {
   // ===== RuleConflictDetectorProvider.RuleConflictInfo → RuleConflictInfoVO =====
   RuleConflictInfoVO entityToVO(RuleConflictInfo entity);
 
-  // ===== RuleCategoryProvider.CategoryNode → CategoryNodeVO =====
-  CategoryNodeVO entityToVO(CategoryNode entity);
+  // ===== CategoryTreeNode → CategoryNodeVO =====
+  // 注意：TreeNode.level → VO.depth 字段名不同；TreeNode 的 id/parentId/sort/leaf/children 在 VO 中无对应字段，忽略。
+  @Mapping(source = "level", target = "depth")
+  CategoryNodeVO entityToVO(CategoryTreeNode entity);
 
   // ===== RuleVersion → RuleVersionVO =====
   RuleVersionVO entityToVO(RuleVersion entity);

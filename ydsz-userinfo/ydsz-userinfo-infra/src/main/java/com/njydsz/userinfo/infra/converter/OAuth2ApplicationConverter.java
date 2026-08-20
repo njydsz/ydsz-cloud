@@ -2,7 +2,7 @@ package com.njydsz.userinfo.infra.converter;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application;
 import com.njydsz.userinfo.infra.entity.OAuth2ApplicationDO;
@@ -15,11 +15,9 @@ import com.njydsz.userinfo.infra.entity.OAuth2ApplicationDO;
  * @author ydsz-team
  * @since 2.18.0
  */
-@Mapper
+@Mapper(componentModel = "spring")
+@Component
 public interface OAuth2ApplicationConverter {
-
-  /** MapStruct 生成的转换器单例。 */
-  OAuth2ApplicationConverter INSTANT = Mappers.getMapper(OAuth2ApplicationConverter.class);
 
   /**
    * 应用实体 → 领域模型。

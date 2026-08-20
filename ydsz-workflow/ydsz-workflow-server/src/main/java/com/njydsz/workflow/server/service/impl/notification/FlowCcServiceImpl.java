@@ -17,7 +17,7 @@ import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
+import com.njydsz.workflow.domain.query.FlowCcQuery;
 import com.njydsz.workflow.domain.repository.FlowCcRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowCcVO;
@@ -194,7 +194,7 @@ public class FlowCcServiceImpl implements FlowCcService {
    */
   @Override
   @Transactional(readOnly = true)
-  public List<FlowCcVO> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query) {
+  public List<FlowCcVO> pageMyCc(String tenantId, String userId, FlowCcQuery query) {
     try {
       if (userId == null || query == null) {
         return List.of();
@@ -220,7 +220,7 @@ public class FlowCcServiceImpl implements FlowCcService {
    */
   @Override
   @Transactional(readOnly = true)
-  public long countMyCc(String tenantId, String userId, FlowCcQueryDTO query) {
+  public long countMyCc(String tenantId, String userId, FlowCcQuery query) {
     try {
       if (userId == null || query == null) {
         return 0L;

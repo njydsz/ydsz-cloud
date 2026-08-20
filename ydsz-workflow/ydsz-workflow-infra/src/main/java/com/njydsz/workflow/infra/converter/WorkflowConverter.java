@@ -9,6 +9,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
+import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.dto.FlowDelegateAuthPutDTO;
 import com.njydsz.workflow.infra.entity.FlowAdminRoleDO;
@@ -219,8 +220,11 @@ public interface WorkflowConverter {
   /** 流程实例 VO → 流程实例 DO。 */
   FlowInstanceDO entityToDO(FlowInstanceVO vo);
 
-  /** 运行时任务 VO → 运行时任务 DO。 */
-  FlowRunTaskDO entityToDO(FlowRunTaskVO vo);
+/** 运行时任务 VO → 运行时任务 DO。 */
+FlowRunTaskDO entityToDO(FlowRunTaskVO vo);
+
+/** 运行时任务 DTO → 运行时任务 DO。 */
+FlowRunTaskDO dtoToDO(FlowRunTaskDTO dto);
 
   /** 流程节点 VO → 流程节点 DO。 */
   FlowNodeDO entityToDO(FlowNodeVO vo);

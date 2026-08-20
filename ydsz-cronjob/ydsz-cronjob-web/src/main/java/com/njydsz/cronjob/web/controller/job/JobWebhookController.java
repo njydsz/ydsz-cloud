@@ -213,8 +213,7 @@ public class JobWebhookController {
       return YdszResponse.error(CronjobExceptionCode.WEBHOOK_NOT_FOUND, "WebHook not found");
     }
     // P0-F3: 通过 WebhookEventDispatcher 真实发送测试事件（含重试）
-    var webhook = CronjobConverter.INSTANT.voToEntity(webhookVO);
-    boolean sent = webhookEventDispatcher.sendTest(webhook);
+    boolean sent = webhookEventDispatcher.sendTest(webhookVO);
     if (!sent) {
       return YdszResponse.error(
           CronjobExceptionCode.WEBHOOK_SEND_FAILED, "WebHook 测试推送失败，请检查 URL / 网络 / 签名配置");

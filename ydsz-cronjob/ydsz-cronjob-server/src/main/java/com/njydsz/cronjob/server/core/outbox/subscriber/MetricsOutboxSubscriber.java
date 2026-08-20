@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.infra.entity.OutboxEvent;
+import com.njydsz.cronjob.domain.vo.OutboxEventVO;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
 /**
@@ -18,14 +18,14 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MetricsOutboxSubscriber implements java.util.function.Consumer<OutboxEvent> {
+public class MetricsOutboxSubscriber implements java.util.function.Consumer<OutboxEventVO> {
 
   private static final String TOPIC = "metrics";
 
   private final CronjobMetrics cronjobMetrics;
 
   @Override
-  public void accept(OutboxEvent event) {
+  public void accept(OutboxEventVO event) {
     if (!TOPIC.equals(event.getTopic())) {
       return;
     }

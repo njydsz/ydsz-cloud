@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.cronjob.infra.entity.log.JobDailyStats;
-import com.njydsz.cronjob.infra.mapper.log.JobDailyStatsMapper;
+import com.njydsz.cronjob.domain.vo.JobDailyStatsVO;
+import com.njydsz.cronjob.domain.repository.JobDailyStatsRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 
@@ -45,7 +45,7 @@ public class DailyStatsAggregator {
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-  private final JobDailyStatsMapper jobDailyStatsMapper;
+  private final JobDailyStatsRepository jobDailyStatsRepository;
   private final LeaderElector leaderElector;
   private final CronjobProperties cronjobProperties;
 
@@ -100,7 +100,7 @@ public class DailyStatsAggregator {
 
     List<Map<String, Object>> rows;
     try {
-      rows = jobDailyStatsMapper.aggregateDaily(start, end);
+      rows = jobDailyStatsRepository.aggregateDaily(start, end);
     } catch (Exception e) {
       log.error(
           "[DailyStatsAggregator] 聚合查询异常: statsDate={} reason={}", statsDate, e.getMessage(), e);
@@ -116,8 +116,8 @@ public class DailyStatsAggregator {
     int failed = 0;
     for (Map<String, Object> row : rows) {
       try {
-        JobDailyStats stats = toStats(row, statsDate);
-        jobDailyStatsMapper.upsert(stats);
+        JobDailyStatsVO stats = toStats(row, statsDate);
+        jobDailyStatsRepository.upsert(stats);
         success++;
       } catch (Exception e) {
         failed++;
@@ -138,14 +138,14 @@ public class DailyStatsAggregator {
   }
 
   /**
-   * 将聚合查询的 Map 行转换为 {@link JobDailyStats} 实体。
+   * 将聚合查询的 Map 行转换为 {@link JobDailyStatsVO}。
    *
    * @param row 聚合行
    * @param statsDate 统计日期
-   * @return 统计实体
+   * @return 统计 VO
    */
-  private JobDailyStats toStats(Map<String, Object> row, LocalDate statsDate) {
-    JobDailyStats stats = new JobDailyStats();
+  private JobDailyStatsVO toStats(Map<String, Object> row, LocalDate statsDate) {
+    JobDailyStatsVO stats = new JobDailyStatsVO();
     stats.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     stats.setJobId((String) row.get("job_id"));
     stats.setJobKey((String) row.get("job_key"));
@@ -159,7 +159,6 @@ public class DailyStatsAggregator {
     stats.setMinDurationMs(toLongOrNull(row.get("min_duration_ms")));
     stats.setP95DurationMs(toLongOrNull(row.get("p95_duration_ms")));
     stats.setCreatedAt(LocalDateTime.now());
-    stats.setDeleted(0);
     return stats;
   }
 

@@ -1,47 +1,46 @@
 package com.njydsz.cronjob.server.core.executor;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.net.InetAddress;
 import java.time.LocalDateTime;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Optional;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.context.event.EventListener;
 
-import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.cronjob.infra.entity.job.JobNode;
-import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
+import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.cronjob.domain.repository.JobNodeRepository;
+import com.njydsz.cronjob.domain.vo.JobNodeVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
-import com.njydsz.cronjob.server.config.ExecutorConfig;
+import com.njydsz.cronjob.server.core.metrics.SystemMetricsCollector;
 
 /**
- * 调度节点心跳上报组件。
+ * 节点心跳上报器（P0-14 节点上下线）。
  *
- * <p>每个 cronjob 实例启动时注册到 {@code ydsz_job_node} 表， 定时（默认 10s）更新 {@code last_heartbeat} + {@code
- * running_count} + CPU/内存使用率。 Leader 节点通过 {@code last_heartbeat} 判断节点是否在线。
+ * <p>应用启动后启动心跳线程，周期性向中心注册心跳（{@code ydsz_job_node} 表）， 标记本机为 ONLINE。Leader 节点的 {@link
+ * JobNodeReaper} 根据此心跳检测离线节点并标记 OFFLINE。
  *
- * <h3>生命周期</h3>
+ * <h3>上下线行为</h3>
  *
- * <ol>
- *   <li>{@link #register()}: 启动时插入/更新节点记录，status=ONLINE
- *   <li>{@link #heartbeat()}: 定时更新 last_heartbeat + 运行指标
- *   <li>{@link #shutdown()}: 优雅下线时标记 status=OFFLINE（或 DRAINING）
- * </ol>
+ * <ul>
+ *   <li><b>注册</b>：启动时通过存在即更新（Upsert by nodeId）方式注册节点， 如果节点不存在则插入新记录
+ *   <li><b>心跳</b>：每 {@code ydsz.cronjob.node.heartbeat-interval-ms}（默认 10s）更新 lastHeartbeat
+ *       + 系统指标（CPU / 内存使用率, runningCount）
+ *       <ul>
+ *         <li>节点记录不存在时的处理（db-sync 数据丢失场景）：重新注册节点而不是静默跳过
+ *       </ul>
+ *   <li><b>下线</b>：应用停止前（{@link PreDestroy}）更新 status=OFFLINE + 清理 metrics 指标
+ * </ul>
  *
- * <p>仅在 {@code ydsz.cronjob.leader.enabled=true} 时启用，避免 Leaderless 模式下产生无用记录。
- *
- * <p>P1-1: 仅在 {@code ydsz.cronjob.node-discovery.type=db} 时注册。 当 {@code type=nacos}（默认）时由 Nacos
- * 服务发现自动管理节点上下线，无需心跳。
+ * <hr>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -49,217 +48,191 @@ import com.njydsz.cronjob.server.config.ExecutorConfig;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "ydsz.cronjob.node-discovery.type", havingValue = "db")
+@ConditionalOnBean(JobNodeRepository.class)
 public class JobNodeHeartbeat {
 
-  private final JobNodeMapper jobNodeMapper;
+  private final JobNodeRepository jobNodeRepository;
   private final CronjobProperties cronjobProperties;
+  private final SystemMetricsCollector metricsCollector;
 
-  /** P0-5: 服务端口（通过 @Value 注入，修正之前返回 PID 的问题） */
-  @Value("${server.port:0}")
-  private int serverPort;
+  private ScheduledExecutorService heartbeatExecutor;
+  private final AtomicBoolean running = new AtomicBoolean(false);
 
-  /** 当前节点 ID（hostname:port，P0-5 修复：之前用 hostname:pid 导致重启后僵尸记录） */
-  private String nodeId;
-
-  /** 当前节点正在执行的任务数（由 TaskExecutor 维护） */
-  private final AtomicInteger runningCount = new AtomicInteger(0);
-
-  /** 排空间隔（毫秒）：等待运行中任务完成时的轮询间隔 */
-  private static final long DRAIN_POLL_INTERVAL_MS = 500L;
-
-  /** 操作系统 MXBean（用于采集 CPU/内存指标） */
-  private final OperatingSystemMXBean osMxBean = ManagementFactory.getOperatingSystemMXBean();
-
-  /** 启动时注册节点到 ydsz_job_node 表。 */
-  @PostConstruct
-  public void register() {
-    if (!cronjobProperties.getLeader().isEnabled()) {
-      log.info("[JobNodeHeartbeat] leader.enabled=false, 跳过节点注册（Leaderless 模式）");
-      return;
-    }
-    if (!cronjobProperties.getExecutor().isRegisterOnStartup()) {
-      log.info("[JobNodeHeartbeat] register-on-startup=false, 跳过节点注册");
-      return;
-    }
-    nodeId = initNodeId();
-    JobNode node = buildNodeRecord();
-    node.setStatus(JobNode.STATUS_ONLINE);
-    // upsert：存在则更新，不存在则插入
-    JobNode existing = jobNodeMapper.selectById(nodeId);
-    if (existing == null) {
-      jobNodeMapper.insert(node);
-    } else {
-      jobNodeMapper.updateById(node);
-    }
-    log.info("[JobNodeHeartbeat] 节点注册成功: nodeId={} host={}", nodeId, node.getHost());
-  }
+  /** 节点元信息缓存（注册时复用，避免每次心跳反射/环境查询） */
+  private final AtomicReference<JobNodeVO> nodeInfo = new AtomicReference<>();
 
   /**
-   * 定时上报心跳（默认 10s 一次）。
+   * 应用就绪后启动心跳线程。
    *
-   * <p>更新 last_heartbeat + CPU/内存使用率 + running_count。
+   * <p>先到先得：先注册节点（ONLINE），再启动心跳循环。如果注册失败（如 DB 不可用）则不启动心跳。
    */
-  @Scheduled(fixedDelayString = "${ydsz.cronjob.executor.heartbeat-interval-seconds:10}s")
-  public void heartbeat() {
-    if (nodeId == null) {
-      return;
-    }
+  @EventListener(ApplicationReadyEvent.class)
+  public void onApplicationReady() {
     if (!cronjobProperties.getLeader().isEnabled()) {
       return;
     }
     try {
-      LambdaUpdateWrapper<JobNode> wrapper = new LambdaUpdateWrapper<>();
-      wrapper
-          .eq(JobNode::getNodeId, nodeId)
-          .set(JobNode::getLastHeartbeat, LocalDateTime.now())
-          .set(JobNode::getRunningCount, runningCount.get())
-          .set(JobNode::getCpuUsage, collectCpuUsage())
-          .set(JobNode::getMemUsagePct, collectMemUsagePct())
-          .set(JobNode::getStatus, JobNode.STATUS_ONLINE);
-      jobNodeMapper.update(null, wrapper);
+      registerNode();
+      startHeartbeatLoop();
+      log.info("[NodeHeartbeat] 心跳线程启动成功: role={}", cronjobProperties.getLeader().getRole());
     } catch (Exception e) {
-      log.warn("[JobNodeHeartbeat] 心跳上报失败: nodeId={} reason={}", nodeId, e.getMessage());
+      log.error("[NodeHeartbeat] 启动失败: reason={}", e.getMessage(), e);
     }
   }
 
-  /**
-   * 优雅下线：标记节点为 OFFLINE。
-   *
-   * <p>当 {@code drain-on-shutdown=true} 时，先标记 DRAINING，等待在执行任务完成后再标记 OFFLINE。
-   */
+  /** 应用停止前标记 OFFLINE + 停止心跳线程。 */
   @PreDestroy
   public void shutdown() {
-    if (nodeId == null) {
-      return;
-    }
-    if (!cronjobProperties.getLeader().isEnabled()) {
-      return;
-    }
     try {
-      ExecutorConfig cfg = cronjobProperties.getExecutor();
-      if (cfg.isDrainOnShutdown() && runningCount.get() > 0) {
-        log.info(
-            "[JobNodeHeartbeat] 标记节点为 DRAINING, 等待 {} 个任务完成: nodeId={}",
-            runningCount.get(),
-            nodeId);
-        markStatus(JobNode.STATUS_DRAINING);
-        long deadline = System.currentTimeMillis() + cfg.getDrainTimeoutSeconds() * 1000;
-        while (runningCount.get() > 0 && System.currentTimeMillis() < deadline) {
-          Thread.sleep(DRAIN_POLL_INTERVAL_MS);
-        }
-      }
-      markStatus(JobNode.STATUS_OFFLINE);
-      log.info("[JobNodeHeartbeat] 节点已下线: nodeId={} remainingTasks={}", nodeId, runningCount.get());
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      markStatus(JobNode.STATUS_OFFLINE);
+      markOffline();
+      stopHeartbeatLoop();
+      log.info("[NodeHeartbeat] 已标记 OFFLINE 并停止心跳");
     } catch (Exception e) {
-      log.warn("[JobNodeHeartbeat] 下线处理失败: nodeId={} reason={}", nodeId, e.getMessage());
+      log.error("[NodeHeartbeat] shutdown 异常: reason={}", e.getMessage());
     }
-  }
-
-  /** 任务开始执行时调用，递增 running_count。 */
-  public void onTaskStart() {
-    runningCount.incrementAndGet();
-  }
-
-  /** 任务执行完成时调用，递减 running_count。 */
-  public void onTaskComplete() {
-    runningCount.decrementAndGet();
   }
 
   /**
-   * 获取当前节点 ID。
+   * 注册或更新节点信息（upsert by nodeId）。
    *
-   * @return 节点 ID；未注册时返回 null
+   * <p>如果节点记录已存在则更新，否则插入新记录。心跳线程依赖节点记录存在，如果注册失败则后续心跳会触发 re-register 兜底。
    */
-  public String getNodeId() {
-    return nodeId;
+  public void registerNode() {
+    try {
+      JobNodeVO newNode = buildNodeInfo();
+      nodeInfo.set(newNode);
+
+      Optional<JobNodeVO> existing = jobNodeRepository.findById(newNode.getNodeId());
+      if (existing.isPresent()) {
+        // 更新已有记录
+        newNode.setLastHeartbeat(LocalDateTime.now());
+        newNode.setStatus("ONLINE");
+        int updated = jobNodeRepository.updateByNodeId(newNode);
+        if (updated > 0) {
+          log.info(
+              "[NodeHeartbeat] 节点信息更新成功: nodeId={} nodeRole={}",
+              newNode.getNodeId(),
+              newNode.getNodeRole());
+        } else {
+          log.warn("[NodeHeartbeat] 节点更新影响行数为 0: nodeId={}", newNode.getNodeId());
+          // 重新插入
+          jobNodeRepository.insert(newNode);
+        }
+      } else {
+        // 插入新记录
+        newNode.setStatus("ONLINE");
+        newNode.setLastHeartbeat(LocalDateTime.now());
+        newNode.setRunningCount(0);
+        jobNodeRepository.insert(newNode);
+        log.info(
+            "[NodeHeartbeat] 节点注册成功: nodeId={} nodeRole={}",
+            newNode.getNodeId(),
+            newNode.getNodeRole());
+      }
+    } catch (Exception e) {
+      log.error("[NodeHeartbeat] 节点注册失败: reason={}", e.getMessage(), e);
+    }
   }
 
-  // ==================== 内部辅助方法 ====================
-
-  private String initNodeId() {
-    // P0-5: 改用 hostname:port 作为节点 ID，重启后端口不变则 nodeId 稳定
-    // 之前用 hostname:pid 导致每次重启 PID 变化，DB 中累积大量僵尸节点记录
-    return getHostName() + ":" + serverPort;
-  }
-
-  private JobNode buildNodeRecord() {
-    JobNode node = new JobNode();
-    node.setNodeId(nodeId);
-    node.setAppName(FeignClientConstants.CRONJOB);
-    node.setHost(getHostName());
-    node.setPort(getServerPort());
-    node.setLastHeartbeat(LocalDateTime.now());
+  /** 构建当前节点的 JobNodeVO。 */
+  private JobNodeVO buildNodeInfo() {
+    CronjobProperties.Leader leader = cronjobProperties.getLeader();
+    JobNodeVO node = new JobNodeVO();
+    node.setNodeId(resolveNodeId());
+    node.setAppName(leader.getAppname());
+    node.setNodeRole(leader.getRole());
+    node.setHost(resolveHost());
+    node.setPort(leader.getPort());
     node.setRunningCount(0);
-    node.setCpuUsage(collectCpuUsage());
-    node.setMemUsagePct(collectMemUsagePct());
+    node.setStatus("ONLINE");
     return node;
   }
 
-  private void markStatus(String status) {
-    LambdaUpdateWrapper<JobNode> wrapper = new LambdaUpdateWrapper<>();
-    wrapper
-        .eq(JobNode::getNodeId, nodeId)
-        .set(JobNode::getStatus, status)
-        .set(JobNode::getLastHeartbeat, LocalDateTime.now());
-    jobNodeMapper.update(null, wrapper);
-  }
-
-  private String getHostName() {
-    try {
-      return InetAddress.getLocalHost().getHostName();
-    } catch (Exception e) {
-      return "unknown";
+  /** 启动心跳循环（fixedRate, 每次以 daemon 线程执行）。 */
+  private void startHeartbeatLoop() {
+    if (!running.compareAndSet(false, true)) {
+      return;
     }
+    // 使用 common-thread ExecutorUtils 创建心跳线程池（符合云顶规范 15.4）
+    heartbeatExecutor = ExecutorUtils.newScheduledThreadPool(1, "job-heartbeat-");
+    long intervalMs = cronjobProperties.getNode().getHeartbeatIntervalMs();
+    heartbeatExecutor.scheduleAtFixedRate(this::doHeartbeat, intervalMs, intervalMs, TimeUnit.MILLISECONDS);
   }
 
-  private int getServerPort() {
-    // P0-5: 直接返回 Spring 注入的 server.port，修复之前返回 PID 的问题
-    return serverPort;
+  /** 停止心跳循环。 */
+  private void stopHeartbeatLoop() {
+    running.set(false);
+    if (heartbeatExecutor != null) {
+      heartbeatExecutor.shutdown();
+      try {
+        if (!heartbeatExecutor.awaitTermination(3, TimeUnit.SECONDS)) {
+          heartbeatExecutor.shutdownNow();
+        }
+      } catch (InterruptedException e) {
+        heartbeatExecutor.shutdownNow();
+        Thread.currentThread().interrupt();
+      }
+    }
   }
 
   /**
-   * 采集 CPU 使用率（百分比）。
+   * 心跳主逻辑：更新 lastHeartbeat + metrics。
    *
-   * <p>使用 com.sun.management.OperatingSystemMXBean.getCpuLoad()，JDK 14+ 可用。 返回 null 表示不可用。
+   * <p>节点记录不存在时（db-sync 数据丢失）重新注册而不是静默跳过，确保 Leader 不会因短暂 DB
+   * 不一致而标记本节点 OFFLINE。
    */
-  private BigDecimal collectCpuUsage() {
+  private void doHeartbeat() {
     try {
-      if (osMxBean
-          instanceof
-          com.sun.management.OperatingSystemMXBean
-                  sunOs) { // FQN-OK: name conflict with java.lang.management.OperatingSystemMXBean
-        double cpuLoad = sunOs.getCpuLoad();
-        if (cpuLoad >= 0) {
-          return BigDecimal.valueOf(cpuLoad * 100).setScale(2, RoundingMode.HALF_UP);
-        }
+      JobNodeVO info = nodeInfo.get();
+      if (info == null) {
+        registerNode();
+        return;
       }
-    } catch (Exception ignored) {
-      // 采集失败返回 null
+      BigDecimal cpuUsage = metricsCollector.collectCpuUsage();
+      BigDecimal memUsage = metricsCollector.collectMemUsagePct();
+      int runningCount = metricsCollector.collectRunningCount();
+      LocalDateTime now = LocalDateTime.now();
+      int updated =
+          jobNodeRepository.updateHeartbeat(
+              info.getNodeId(), now, runningCount, cpuUsage, memUsage, "ONLINE");
+      if (updated == 0) {
+        // 节点记录不存在（可能被意外删除），重新注册
+        log.warn("[NodeHeartbeat] 节点记录丢失, 重新注册: nodeId={}", info.getNodeId());
+        registerNode();
+      }
+    } catch (Exception e) {
+      // 心跳失败不抛出，下次心跳再试，避免 cancel scheduled task
+      log.warn("[NodeHeartbeat] 心跳执行异常(下次重试): reason={}", e.getMessage());
     }
-    return null;
   }
 
-  /** 采集内存使用率（百分比）。 */
-  private BigDecimal collectMemUsagePct() {
+  /** 标记节点 OFFLINE（应用停止前）。 */
+  private void markOffline() {
     try {
-      if (osMxBean
-          instanceof
-          com.sun.management.OperatingSystemMXBean
-                  sunOs) { // FQN-OK: name conflict with java.lang.management.OperatingSystemMXBean
-        long total = sunOs.getTotalMemorySize();
-        long free = sunOs.getFreeMemorySize();
-        if (total > 0) {
-          double usedPct = (double) (total - free) / total * 100;
-          return BigDecimal.valueOf(usedPct).setScale(2, RoundingMode.HALF_UP);
-        }
+      JobNodeVO info = nodeInfo.get();
+      if (info != null) {
+        jobNodeRepository.updateStatus(info.getNodeId(), "OFFLINE", LocalDateTime.now());
       }
-    } catch (Exception ignored) {
-      // 采集失败返回 null
+    } catch (Exception e) {
+      log.warn("[NodeHeartbeat] 标记 OFFLINE 失败: reason={}", e.getMessage());
     }
-    return null;
+  }
+
+  /** 解析节点 ID（node-id 配置 > hostname:port > appId:port）。 */
+  private String resolveNodeId() {
+    CronjobProperties.Leader leader = cronjobProperties.getLeader();
+    if (leader.getNodeId() != null && !leader.getNodeId().isBlank()) {
+      return leader.getNodeId();
+    }
+    return leader.getAppname() + ":" + leader.getPort();
+  }
+
+  /** 尝试解析本机 hostname；解析失败时回退到 "unknown"。 */
+  private String resolveHost() {
+    try {
+      return java.net.InetAddress.getLocalHost().getHostName();
+    } catch (Exception e) {
+      return "unknown";
+    }
   }
 }

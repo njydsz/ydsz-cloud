@@ -3,9 +3,7 @@ package com.njydsz.literule.server.config;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,6 +32,7 @@ import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.tenant.config.TenantProperties;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.domain.model.MockModelInputProvider;
@@ -338,27 +337,14 @@ public class LiteRuleAutoConfiguration {
    */
   @SuppressWarnings("PMD.AvoidThreadGroup")
   private static ExecutorService createFallbackTimeoutExecutor(int poolSize) {
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
-    ThreadFactory factory =
-        new ThreadFactory() {
-          private final AtomicInteger counter = new AtomicInteger(0);
-
-          @Override
-          public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, "literule-timeout-" + counter.getAndIncrement());
-            t.setDaemon(true);
-            return t;
-          }
-        };
-    return new ThreadPoolExecutor(
-        poolSize,
-        poolSize,
-        0L,
-        TimeUnit.MILLISECONDS,
-        new LinkedBlockingQueue<>(1024),
-        factory,
-        new ThreadPoolExecutor.CallerRunsPolicy());
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+    // 使用 common-thread ExecutorUtils 创建超时线程池（符合云顶规范 15.4）
+    return ExecutorUtils.builder()
+        .corePoolSize(poolSize)
+        .maxPoolSize(poolSize)
+        .queueCapacity(1024)
+        .threadNamePrefix("literule-timeout-")
+        .daemon(true)
+        .build();
   }
 
   /**
@@ -423,30 +409,16 @@ public class LiteRuleAutoConfiguration {
     int poolSize = injection.getPoolSize();
     long keepAliveSeconds = injection.getKeepAliveSeconds();
 
-    ThreadFactory threadFactory =
-        new ThreadFactory() {
-          private final AtomicInteger threadNumber = new AtomicInteger(1);
-
-          @Override
-          public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, "literule-injection-" + threadNumber.getAndIncrement());
-            t.setDaemon(true);
-            return t;
-          }
-        };
-
-    // 使用 ThreadPoolExecutor 替代 Executors.newFixedThreadPool，提供更精细的控制
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - 规则注入专用线程池，线程数由配置控制，守护线程
+    // 使用 common-thread ExecutorUtils 创建注入线程池（符合云顶规范 15.4）
     ExecutorService injectionExecutor =
-        new ThreadPoolExecutor(
-            poolSize,
-            poolSize,
-            keepAliveSeconds,
-            TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(512),
-            threadFactory,
-            new ThreadPoolExecutor.CallerRunsPolicy());
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+        ExecutorUtils.builder()
+            .corePoolSize(poolSize)
+            .maxPoolSize(poolSize)
+            .keepAliveTime(keepAliveSeconds, TimeUnit.SECONDS)
+            .queueCapacity(512)
+            .threadNamePrefix("literule-injection-")
+            .daemon(true)
+            .build();
 
     engine.setInjectionExecutor(injectionExecutor);
     log.info("[LiteRule] 注入线程池已配置 (poolSize={}, keepAliveSeconds={}s, queue=512, policy=CallerRunsPool)",

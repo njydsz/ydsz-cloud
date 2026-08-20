@@ -80,4 +80,19 @@ public class JobTaskRepositoryImpl implements JobTaskRepository {
     wrapper.eq(JobTask::getLogId, logId).eq(JobTask::getDeleted, 0);
     return jobTaskMapper.selectCount(wrapper);
   }
+
+  @Override
+  public void insert(JobTaskVO task) {
+    jobTaskMapper.insert(converter.voToEntity(task));
+  }
+
+  @Override
+  public int updateById(JobTaskVO task) {
+    return jobTaskMapper.updateById(converter.voToEntity(task));
+  }
+
+  @Override
+  public JobTaskVO findById(String id) {
+    return converter.entityToVO(jobTaskMapper.selectById(id));
+  }
 }

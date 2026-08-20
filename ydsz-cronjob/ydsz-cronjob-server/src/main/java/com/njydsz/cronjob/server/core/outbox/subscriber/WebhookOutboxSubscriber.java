@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.cronjob.infra.entity.OutboxEvent;
+import com.njydsz.cronjob.domain.vo.OutboxEventVO;
 import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
 
 /**
@@ -24,14 +24,14 @@ import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class WebhookOutboxSubscriber implements java.util.function.Consumer<OutboxEvent> {
+public class WebhookOutboxSubscriber implements java.util.function.Consumer<OutboxEventVO> {
 
   private static final String TOPIC = "webhook";
 
   private final WebhookEventDispatcher webhookEventDispatcher;
 
   @Override
-  public void accept(OutboxEvent event) {
+  public void accept(OutboxEventVO event) {
     if (!TOPIC.equals(event.getTopic())) {
       return;
     }

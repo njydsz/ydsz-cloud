@@ -18,8 +18,8 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
-import com.njydsz.cronjob.infra.entity.job.JobWebhook;
-import com.njydsz.cronjob.infra.mapper.job.JobWebhookMapper;
+import com.njydsz.cronjob.domain.repository.JobWebhookRepository;
+import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 
 /**
  * WebHook 事件分发器（P3-13 WebHook 事件订阅）。
@@ -59,7 +59,7 @@ import com.njydsz.cronjob.infra.mapper.job.JobWebhookMapper;
 @RequiredArgsConstructor
 public class WebhookEventDispatcher {
 
-  private final JobWebhookMapper webhookMapper;
+  private final JobWebhookRepository jobWebhookRepository;
   private final HttpClient httpClient =
       HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
@@ -73,7 +73,7 @@ public class WebhookEventDispatcher {
   @Async
   public void dispatchEvent(String eventType, String jobKey, Map<String, Object> payload) {
     try {
-      List<JobWebhook> webhooks = webhookMapper.selectActiveByEventAndJob(eventType, jobKey);
+      List<JobWebhookVO> webhooks = jobWebhookRepository.findActiveByEventAndJob(eventType, jobKey);
       if (webhooks.isEmpty()) {
         return;
       }
@@ -83,7 +83,7 @@ public class WebhookEventDispatcher {
       eventBody.put("timestamp", LocalDateTime.now().toString());
       eventBody.put("data", payload);
 
-      for (JobWebhook webhook : webhooks) {
+      for (JobWebhookVO webhook : webhooks) {
         sendWebhookWithRetry(webhook, eventBody);
       }
     } catch (Exception e) {
@@ -105,7 +105,7 @@ public class WebhookEventDispatcher {
    * @param webhook WebHook 订阅配置
    * @return true=推送成功；false=重试耗尽仍失败
    */
-  public boolean sendTest(JobWebhook webhook) {
+  public boolean sendTest(JobWebhookVO webhook) {
     ObjectNode body = new ObjectNode();
     body.put("eventType", "TEST_WEBHOOK");
     body.put("jobKey", webhook.getJobKey() != null ? webhook.getJobKey() : "");
@@ -129,7 +129,7 @@ public class WebhookEventDispatcher {
    *
    * @return true 推送成功；false 重试耗尽仍失败
    */
-  private boolean sendWebhookWithRetry(JobWebhook webhook, ObjectNode body) {
+  private boolean sendWebhookWithRetry(JobWebhookVO webhook, ObjectNode body) {
     Throwable lastError = null;
     for (int attempt = 1; attempt <= RETRY_BACKOFF_MS.length + 1; attempt++) {
       try {
@@ -173,7 +173,7 @@ public class WebhookEventDispatcher {
   }
 
   /** 单次 HTTP 推送（IOException/InterruptedException 由调用方 sendWebhookWithRetry 捕获）。 */
-  private boolean doSend(JobWebhook webhook, ObjectNode body) throws java.io.IOException, InterruptedException {
+  private boolean doSend(JobWebhookVO webhook, ObjectNode body) throws java.io.IOException, InterruptedException {
     String method = webhook.getHttpMethod() != null ? webhook.getHttpMethod() : "POST";
     HttpRequest.Builder builder =
         HttpRequest.newBuilder()

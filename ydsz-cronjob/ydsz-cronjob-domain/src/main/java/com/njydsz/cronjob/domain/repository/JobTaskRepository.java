@@ -105,4 +105,27 @@ public interface JobTaskRepository {
    * @return 子任务总数
    */
   int countByLogId(String logId);
+
+  /**
+   * 插入一条子任务记录。
+   *
+   * @param task 子任务 VO（非空）
+   */
+  void insert(JobTaskVO task);
+
+  /**
+   * 根据 ID 更新子任务记录。
+   *
+   * @param task 子任务 VO（含 id）
+   * @return 受影响行数
+   */
+  int updateById(JobTaskVO task);
+
+  /**
+   * 根据 ID 查询子任务。
+   *
+   * @param id 子任务 ID
+   * @return 子任务 VO（不存在返回 null）
+   */
+  JobTaskVO findById(String id);
 }

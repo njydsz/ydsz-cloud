@@ -9,7 +9,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.workflow.domain.query.FlowTaskQuery;
 import com.njydsz.workflow.domain.dto.FlowTaskQueryDTO;
+import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
@@ -42,6 +44,15 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   private final WorkflowConverter converter;
 
   @Override
+  public FlowRunTaskVO save(FlowRunTaskDTO dto) {
+    FlowRunTaskDO entity = converter.dtoToDO(dto);
+    taskMapper.insert(entity);
+    // 转换回 VO 返回
+    return converter.entityToVO(entity);
+  }
+
+  @Override
+  @Deprecated
   public FlowRunTaskVO save(FlowRunTaskVO vo) {
     FlowRunTaskDO entity = converter.entityToDO(vo);
     taskMapper.insert(entity);
@@ -165,36 +176,71 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   @Override
-  public List<FlowRunTaskVO> findByCondition(FlowTaskQueryDTO condition) {
+  public List<FlowRunTaskVO> findByCondition(FlowTaskQuery query) {
     LambdaQueryWrapper<FlowRunTaskDO> wrapper = new LambdaQueryWrapper<FlowRunTaskDO>()
-        .eq(condition.getFlowCode() != null, FlowRunTaskDO::getFlowCode, condition.getFlowCode())
-        .eq(condition.getInstanceId() != null, FlowRunTaskDO::getInstanceId, condition.getInstanceId())
-        .eq(condition.getNodeCode() != null, FlowRunTaskDO::getNodeCode, condition.getNodeCode())
-        .eq(condition.getAssigneeId() != null, FlowRunTaskDO::getAssigneeId, condition.getAssigneeId())
-        .eq(condition.getTaskStatus() != null, FlowRunTaskDO::getTaskStatus, condition.getTaskStatus())
-        .eq(condition.getBusinessType() != null, FlowRunTaskDO::getBusinessType, condition.getBusinessType())
-        .eq(condition.getBusinessId() != null, FlowRunTaskDO::getBusinessId, condition.getBusinessId())
-        .eq(condition.getPriority() != null, FlowRunTaskDO::getPriority, condition.getPriority())
-        .ge(condition.getCreatedAtFrom() != null, FlowRunTaskDO::getCreatedAt, condition.getCreatedAtFrom())
-        .le(condition.getCreatedAtTo() != null, FlowRunTaskDO::getCreatedAt, condition.getCreatedAtTo())
-        .ge(condition.getDueAtFrom() != null, FlowRunTaskDO::getDueAt, condition.getDueAtFrom())
-        .le(condition.getDueAtTo() != null, FlowRunTaskDO::getDueAt, condition.getDueAtTo())
+        .eq(query.getFlowCode() != null, FlowRunTaskDO::getFlowCode, query.getFlowCode())
+        .eq(query.getInstanceId() != null, FlowRunTaskDO::getInstanceId, query.getInstanceId())
+        .eq(query.getNodeCode() != null, FlowRunTaskDO::getNodeCode, query.getNodeCode())
+        .eq(query.getAssigneeId() != null, FlowRunTaskDO::getAssigneeId, query.getAssigneeId())
+        .eq(query.getTaskStatus() != null, FlowRunTaskDO::getTaskStatus, query.getTaskStatus())
+        .eq(query.getBusinessType() != null, FlowRunTaskDO::getBusinessType, query.getBusinessType())
+        .eq(query.getBusinessId() != null, FlowRunTaskDO::getBusinessId, query.getBusinessId())
+        .eq(query.getPriority() != null, FlowRunTaskDO::getPriority, query.getPriority())
+        .ge(query.getCreatedAtFrom() != null, FlowRunTaskDO::getCreatedAt, query.getCreatedAtFrom())
+        .le(query.getCreatedAtTo() != null, FlowRunTaskDO::getCreatedAt, query.getCreatedAtTo())
+        .ge(query.getDueAtFrom() != null, FlowRunTaskDO::getDueAt, query.getDueAtFrom())
+        .le(query.getDueAtTo() != null, FlowRunTaskDO::getDueAt, query.getDueAtTo())
         .eq(FlowRunTaskDO::getDeleted, 0);
 
     // 排序处理
-    if ("ASC".equalsIgnoreCase(condition.getOrderDirection())) {
+    if ("ASC".equalsIgnoreCase(query.getOrderDirection())) {
       wrapper.orderByAsc(
-          condition.getOrderBy() != null ? FlowRunTaskDO::getCreatedAt : FlowRunTaskDO::getCreatedAt);
+          query.getOrderBy() != null ? FlowRunTaskDO::getCreatedAt : FlowRunTaskDO::getCreatedAt);
     } else {
       wrapper.orderByDesc(FlowRunTaskDO::getCreatedAt);
     }
 
     // 分页
-    if (condition.getLimit() > 0) {
-      wrapper.last("LIMIT " + condition.getLimit() + " OFFSET " + condition.getOffset());
+    if (query.getLimit() > 0) {
+      wrapper.last("LIMIT " + query.getLimit() + " OFFSET " + query.getOffset());
     }
 
     return converter.flowRunTaskListToVO(taskMapper.selectList(wrapper));
+  }
+
+  @Override
+  public List<FlowRunTaskVO> findByCondition(FlowTaskQueryDTO condition) {
+    // 委托给新的 findByCondition(FlowTaskQuery) 实现
+    return findByCondition(convertToQuery(condition));
+  }
+
+  /** 将旧的 FlowTaskQueryDTO 转换为新的 FlowTaskQuery */
+  private FlowTaskQuery convertToQuery(FlowTaskQueryDTO dto) {
+    FlowTaskQuery query = new FlowTaskQuery();
+    query.setTenantId(dto.getTenantId());
+    query.setFlowCode(dto.getFlowCode());
+    query.setInstanceId(dto.getInstanceId());
+    query.setNodeCode(dto.getNodeCode());
+    query.setAssigneeId(dto.getAssigneeId());
+    query.setTaskStatus(dto.getTaskStatus());
+    query.setBusinessType(dto.getBusinessType());
+    query.setBusinessId(dto.getBusinessId());
+    query.setPriority(dto.getPriority());
+    query.setCreatedAtFrom(dto.getCreatedAtFrom());
+    query.setCreatedAtTo(dto.getCreatedAtTo());
+    query.setDueAtFrom(dto.getDueAtFrom());
+    query.setDueAtTo(dto.getDueAtTo());
+    query.setOrderBy(dto.getOrderBy());
+    query.setOrderDirection(dto.getOrderDirection());
+    query.setOffset(dto.getOffset());
+    query.setLimit(dto.getLimit());
+    return query;
+  }
+
+  @Override
+  @Deprecated
+  public List<FlowRunTaskVO> findByCondition(FlowTaskQueryDTO condition) {
+    return findByCondition(convertToQuery(condition));
   }
 
   @Override

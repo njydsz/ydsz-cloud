@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.infra.entity.OutboxEvent;
+import com.njydsz.cronjob.domain.vo.OutboxEventVO;
 
 /**
  * 审计事件订阅者（P0-2：Outbox 模式）。
@@ -19,12 +19,12 @@ import com.njydsz.cronjob.infra.entity.OutboxEvent;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AuditOutboxSubscriber implements java.util.function.Consumer<OutboxEvent> {
+public class AuditOutboxSubscriber implements java.util.function.Consumer<OutboxEventVO> {
 
   private static final String TOPIC = "audit";
 
   @Override
-  public void accept(OutboxEvent event) {
+  public void accept(OutboxEventVO event) {
     if (!TOPIC.equals(event.getTopic())) {
       return;
     }

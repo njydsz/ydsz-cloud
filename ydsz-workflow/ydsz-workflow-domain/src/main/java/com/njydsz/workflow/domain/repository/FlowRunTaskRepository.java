@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import com.njydsz.workflow.domain.query.FlowTaskQuery;
 import com.njydsz.workflow.domain.dto.FlowTaskQueryDTO;
+import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 
 /**
@@ -30,9 +31,20 @@ public interface FlowRunTaskRepository {
   /**
    * 保存运行时任务（新增）。
    *
-   * @param vo 运行时任务 VO
+   * <p><b>合规说明（v2.23 DDD 分层规范）：</b>CUD 入参使用 {@link FlowRunTaskDTO}（dto/ 包），
+   * 符合 §34.2.1（dto/ 命令请求参数 以 DTO 结尾）。
+   *
+   * @param dto 运行时任务命令 DTO
    * @return 保存后的运行时任务 VO（含生成的 id 与审计字段）
    */
+  FlowRunTaskVO save(FlowRunTaskDTO dto);
+
+  /**
+   * 保存运行时任务（新增，已废弃）。
+   *
+   * @deprecated 使用 {@link #save(FlowRunTaskDTO)} 替代，CUD 入参应使用 DTO
+   */
+  @Deprecated
   FlowRunTaskVO save(FlowRunTaskVO vo);
 
   /**
@@ -145,9 +157,20 @@ public interface FlowRunTaskRepository {
    * <p>支持多条件组合过滤：流程编码、实例 ID、节点编码、办理人、任务状态、业务类型、
    * 优先级、创建时间范围、截止时间范围等。所有条件均为可选，为空时忽略。
    *
-   * @param condition 查询条件 DTO
+   * <p><b>命名合规说明（v2.23 DDD 分层规范）：</b>查询参数使用 {@link FlowTaskQuery}（query/ 包），
+   * 符合 §34.2.1 表格规定（query/ 查询请求参数 以 Query 结尾）。
+   *
+   * @param query 查询条件
    * @return 运行时任务 VO 列表
    */
+  List<FlowRunTaskVO> findByCondition(FlowTaskQuery query);
+
+  /**
+   * 根据复杂条件查询运行时任务列表（已废弃）。
+   *
+   * @deprecated 使用 {@link #findByCondition(FlowTaskQuery)} 替代，查询参数应置于 query/ 包并以 Query 结尾
+   */
+  @Deprecated
   List<FlowRunTaskVO> findByCondition(FlowTaskQueryDTO condition);
 
   /**

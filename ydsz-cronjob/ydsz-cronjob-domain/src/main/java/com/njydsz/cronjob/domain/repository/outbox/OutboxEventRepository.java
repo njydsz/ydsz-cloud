@@ -3,15 +3,17 @@ package com.njydsz.cronjob.domain.repository.outbox;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.njydsz.cronjob.infra.entity.OutboxEvent;
+import com.njydsz.cronjob.domain.vo.OutboxEventVO;
 
 /**
  * Outbox 事件仓储接口（P0-2：事务性 Outbox 事件模式）。
  *
  * <p>定义事件写入、查询、状态变更的契约。实现层位于 infra 模块，保证事件写入可与业务操作共用同一事务。
  *
- * <p>调用方通过 {@link #save(OutboxEvent)} 写入事件（在业务事务内），再由
+ * <p>调用方通过 {@link #save(OutboxEventVO)} 写入事件（在业务事务内），再由
  * {@link com.njydsz.cronjob.server.core.outbox.OutboxPublisher} 异步扫描并发布。
+ *
+ * <p>所有方法返回领域 VO（{@link OutboxEventVO}），禁止泄露 infra 实体。
  *
  * @author ydsz-team
  * @since 1.2.0
@@ -26,7 +28,7 @@ public interface OutboxEventRepository {
    * @param event 待写入的事件（非空）
    * @return 写入后的事件（含生成的 ID）
    */
-  OutboxEvent save(OutboxEvent event);
+  OutboxEventVO save(OutboxEventVO event);
 
   /**
    * 批量写入 Outbox 事件。
@@ -36,7 +38,7 @@ public interface OutboxEventRepository {
    * @param events 待写入的事件列表（非空）
    * @return 写入后的事件列表（含生成的 ID）
    */
-  List<OutboxEvent> saveAll(List<OutboxEvent> events);
+  List<OutboxEventVO> saveAll(List<OutboxEventVO> events);
 
   /**
    * 查询待发布的事件（下次重试时间已到，且重试次数未超限）。
@@ -48,7 +50,7 @@ public interface OutboxEventRepository {
    * @param batchSize 批次大小
    * @return 待发布事件列表
    */
-  List<OutboxEvent> findPending(LocalDateTime now, int maxRetry, int batchSize);
+  List<OutboxEventVO> findPending(LocalDateTime now, int maxRetry, int batchSize);
 
   /**
    * 将事件标记为已发布（CAS 语义：仅 PENDING 状态可更新）。

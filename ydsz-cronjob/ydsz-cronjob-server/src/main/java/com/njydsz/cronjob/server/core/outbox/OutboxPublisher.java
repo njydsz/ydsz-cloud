@@ -8,13 +8,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.cronjob.infra.entity.OutboxEvent;
+import com.njydsz.cronjob.domain.vo.OutboxEventVO;
 import com.njydsz.cronjob.domain.repository.outbox.OutboxEventRepository;
 
 /**
  * Outbox 事件发布器（P0-2：事务性 Outbox 事件模式）。
  *
- * <p>扫描 {@code ydsz_job_outbox} 表中待发布的事件，根据 {@link OutboxEvent#getTopic()} 路由到对应的
+ * <p>扫描 {@code ydsz_job_outbox} 表中待发布的事件，根据 {@link OutboxEventVO#getTopic()} 路由到对应的
  * 订阅者（WebHook / Metrics / Audit），发布成功后标记为 PUBLISHED，失败则递增重试计数。
  *
  * <h3>投递语义</h3>
@@ -49,7 +49,7 @@ public class OutboxPublisher {
   private static final int PUBLISHED_RETAIN_DAYS = 7;
 
   /** 订阅者列表（按 topic 过滤） */
-  private final List<Consumer<OutboxEvent>> subscribers;
+  private final List<Consumer<OutboxEventVO>> subscribers;
 
   /**
    * 执行一次事件发布扫描。
@@ -57,7 +57,7 @@ public class OutboxPublisher {
    * <p>查询待发布事件，路由到对应订阅者，处理成功后标记 PUBLISHED，失败则递增重试。
    */
   public void publishPending() {
-    List<OutboxEvent> pendingEvents =
+    List<OutboxEventVO> pendingEvents =
         outboxEventRepository.findPending(LocalDateTime.now(), MAX_RETRY, BATCH_SIZE);
     if (pendingEvents.isEmpty()) {
       return;
@@ -67,7 +67,7 @@ public class OutboxPublisher {
     int published = 0;
     int failed = 0;
     int dead = 0;
-    for (OutboxEvent event : pendingEvents) {
+    for (OutboxEventVO event : pendingEvents) {
       PublishResult result = publishSingle(event);
       switch (result) {
         case SUCCESS -> published++;
@@ -87,9 +87,9 @@ public class OutboxPublisher {
    * @param event 待发布事件
    * @return 发布结果
    */
-  private PublishResult publishSingle(OutboxEvent event) {
+  private PublishResult publishSingle(OutboxEventVO event) {
     // 查找匹配的订阅者（按 topic 过滤）
-    Consumer<OutboxEvent> matchedSubscriber = subscribers.stream()
+    Consumer<OutboxEventVO> matchedSubscriber = subscribers.stream()
         .filter(sub -> supportsTopic(sub, event.getTopic()))
         .findFirst()
         .orElse(null);
@@ -121,7 +121,7 @@ public class OutboxPublisher {
    * @param topic      主题
    * @return true 表示支持
    */
-  private boolean supportsTopic(Consumer<OutboxEvent> subscriber, String topic) {
+  private boolean supportsTopic(Consumer<OutboxEventVO> subscriber, String topic) {
     String className = subscriber.getClass().getSimpleName().toLowerCase();
     return className.contains(topic.toLowerCase());
   }
@@ -132,7 +132,7 @@ public class OutboxPublisher {
    * @param event 失败的事件
    * @return 发布结果
    */
-  private PublishResult handleFailure(OutboxEvent event) {
+  private PublishResult handleFailure(OutboxEventVO event) {
     int currentRetry = event.getRetryCount() != null ? event.getRetryCount() : 0;
     if (currentRetry >= MAX_RETRY - 1) {
       // 重试耗尽，标记死亡信（需要人工介入）

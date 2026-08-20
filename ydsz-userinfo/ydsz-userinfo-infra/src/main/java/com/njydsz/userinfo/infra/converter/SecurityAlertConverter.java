@@ -2,7 +2,7 @@ package com.njydsz.userinfo.infra.converter;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.infra.entity.SecurityAlertDO;
@@ -15,11 +15,9 @@ import com.njydsz.userinfo.infra.entity.SecurityAlertDO;
  * @author ydsz-team
  * @since 2.18.0
  */
-@Mapper
+@Mapper(componentModel = "spring")
+@Component
 public interface SecurityAlertConverter {
-
-  /** MapStruct 生成的转换器单例。 */
-  SecurityAlertConverter INSTANT = Mappers.getMapper(SecurityAlertConverter.class);
 
   /**
    * 安全告警实体 → 领域模型。

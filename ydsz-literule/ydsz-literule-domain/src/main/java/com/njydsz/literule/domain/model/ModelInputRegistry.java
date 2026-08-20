@@ -84,21 +84,16 @@ public class ModelInputRegistry {
   public ModelInputRegistry(long timeoutMs, boolean fallbackOnError) {
     this.timeoutMs = timeoutMs;
     this.fallbackOnError = fallbackOnError;
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
+    // 使用 common-thread ExecutorUtils 创建线程池（符合云顶规范 15.4）
     this.executor =
-        new ThreadPoolExecutor(
-            0,
-            60,
-            60L,
-            TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(1024),
-            r -> {
-              Thread t = new Thread(r, "literule-model-input");
-              t.setDaemon(true);
-              return t;
-            },
-            new ThreadPoolExecutor.CallerRunsPolicy());
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+        ExecutorUtils.builder()
+            .corePoolSize(0)
+            .maxPoolSize(60)
+            .keepAliveTime(60L, TimeUnit.SECONDS)
+            .queueCapacity(1024)
+            .threadNamePrefix("literule-model-input-")
+            .daemon(true)
+            .build();
     this.ownsExecutor = true;
   }
 

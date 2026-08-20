@@ -9,8 +9,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import com.njydsz.cronjob.infra.entity.job.Job;
-import com.njydsz.cronjob.infra.entity.job.JobNode;
+import com.njydsz.cronjob.domain.vo.JobNodeVO;
+import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
  * 默认节点选择策略：最少负载优先。
@@ -38,7 +38,7 @@ import com.njydsz.cronjob.infra.entity.job.JobNode;
 public class LeastLoadNodeSelector implements NodeSelector {
 
   @Override
-  public JobNode select(Job job, List<JobNode> candidates) {
+  public JobNodeVO select(JobVO job, List<JobNodeVO> candidates) {
     if (candidates == null || candidates.isEmpty()) {
       log.warn("[NodeSelector] 无可用执行节点: jobKey={}", job.getJobKey());
       return null;
@@ -50,17 +50,17 @@ public class LeastLoadNodeSelector implements NodeSelector {
         .min(
             Comparator.comparingInt(this::safeRunningCount)
                 .thenComparing(this::safeCpuUsage)
-                .thenComparing(JobNode::getNodeId))
+                .thenComparing(JobNodeVO::getNodeId))
         .orElse(candidates.get(0));
   }
 
   /** 安全获取 running_count（null 视为 0）。 */
-  private int safeRunningCount(JobNode node) {
+  private int safeRunningCount(JobNodeVO node) {
     return node.getRunningCount() != null ? node.getRunningCount() : 0;
   }
 
   /** 安全获取 cpu_usage（null 视为 0，即最低优先）。 */
-  private BigDecimal safeCpuUsage(JobNode node) {
+  private BigDecimal safeCpuUsage(JobNodeVO node) {
     return node.getCpuUsage() != null ? node.getCpuUsage() : BigDecimal.ZERO;
   }
 }
