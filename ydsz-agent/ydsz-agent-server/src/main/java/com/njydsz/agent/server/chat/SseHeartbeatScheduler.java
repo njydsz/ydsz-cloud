@@ -2,6 +2,7 @@ package com.njydsz.agent.server.chat;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
 
@@ -42,7 +43,7 @@ public class SseHeartbeatScheduler {
   private final AtomicBoolean initialized = new AtomicBoolean(false);
 
   /** 引用计数：追踪当前使用的 SseExecutor 实例数量 */
-  private int referenceCount;
+  private final AtomicInteger referenceCount = new AtomicInteger(0);
 
   /**
    * 获取共享的心跳调度器。
@@ -79,10 +80,10 @@ public class SseHeartbeatScheduler {
    *
    * @return 增加后的引用计数
    */
-  public synchronized int incrementReference() {
-    referenceCount++;
-    log.debug("[SseHeartbeatScheduler] 增加引用，当前引用数={}", referenceCount);
-    return referenceCount;
+  public int incrementReference() {
+    int count = referenceCount.incrementAndGet();
+    log.debug("[SseHeartbeatScheduler] 增加引用，当前引用数={}", count);
+    return count;
   }
 
   /**
@@ -90,10 +91,10 @@ public class SseHeartbeatScheduler {
    *
    * @return 减少后的引用计数
    */
-  public synchronized int decrementReference() {
-    referenceCount--;
-    log.debug("[SseHeartbeatScheduler] 减少引用，当前引用数={}", referenceCount);
-    return referenceCount;
+  public int decrementReference() {
+    int count = referenceCount.decrementAndGet();
+    log.debug("[SseHeartbeatScheduler] 减少引用，当前引用数={}", count);
+    return count;
   }
 
   /**

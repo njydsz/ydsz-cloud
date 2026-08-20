@@ -197,4 +197,64 @@ public interface FlowRunTaskRepository {
    * @return 超时任务 VO 列表
    */
   List<FlowRunTaskVO> findOverdueTasks(LocalDateTime thresholdTime, int limit);
+
+  /**
+   * 查询 SLA 候选任务（超期待办扫描专用）。
+   *
+   * <p>返回满足 SLA 扫描条件的待办任务：状态为 PENDING/CLAIMED、未删除、已超期。
+   *
+   * @param limit 返回数量上限
+   * @return SLA 候选任务 VO 列表
+   */
+  List<FlowRunTaskVO> selectSlaCandidates(int limit);
+
+  /**
+   * 递增任务的催办计数。
+   *
+   * @param taskId 任务 ID
+   * @param newUrgeCount 新的催办次数
+   * @param urgeAt 催办时间
+   */
+  void incrementUrgeCount(String taskId, int newUrgeCount, LocalDateTime urgeAt);
+
+  /**
+   * 标记任务的 SLA 动作。
+   *
+   * @param taskId 任务 ID
+   * @param slaAction SLA 动作（AUTO_PASS/AUTO_REJECT/ESCALATE/NOTIFY）
+   * @param slaEscalated 是否已升级（0/1）
+   */
+  void markSlaAction(String taskId, String slaAction, int slaEscalated);
+
+  /**
+   * 完成任务（更新状态为 COMPLETED / TIMEOUT 等终态）。
+   *
+   * <p>更新 {@code taskStatus, finishAt, durationMs}。
+   *
+   * @param taskId 任务 ID
+   * @param taskStatus 目标状态
+   * @param finishAt 完成时间
+   * @param durationMs 耗时（毫秒）
+   */
+  void completeTask(String taskId, String taskStatus, LocalDateTime finishAt, Long durationMs);
+
+  /**
+   * 取消任务（更新状态为 CANCELLED）。
+   *
+   * <p>更新 {@code taskStatus = 'CANCELLED', comment, finishAt = now()}。
+   *
+   * @param taskId 任务 ID
+   * @param taskStatus 目标状态（通常为 CANCELLED）
+   * @param comment 取消原因
+   */
+  void cancelTask(String taskId, String taskStatus, String comment);
+
+  /**
+   * 查询 WAITING 事件订阅的任务列表（按实例ID + 节点编码）。
+   *
+   * @param instanceId 实例 ID
+   * @param nodeCode 节点编码
+   * @return 运行时任务 VO 列表
+   */
+  List<FlowRunTaskVO> findByInstanceAndNode(String instanceId, String nodeCode);
 }

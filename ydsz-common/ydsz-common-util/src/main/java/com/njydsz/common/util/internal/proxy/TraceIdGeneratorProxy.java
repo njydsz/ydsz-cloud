@@ -3,6 +3,7 @@ package com.njydsz.common.util.internal.proxy;
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +32,8 @@ public final class TraceIdGeneratorProxy {
   /** 反射 Method 缓存 */
   private static final ConcurrentMap<String, Method> METHOD_CACHE = new ConcurrentHashMap<>();
 
-  /** 是否可用的标记 */
-  private static volatile Boolean available;
+  /** 是否可用的标记（null=未检查，TRUE=可用，FALSE=不可用） */
+  private static final AtomicReference<Boolean> available = new AtomicReference<>();
 
   /** Trace ID 长度（32 位十六进制 = 128 bit） */
   private static final int TRACE_ID_LENGTH = 32;
@@ -50,20 +51,20 @@ public final class TraceIdGeneratorProxy {
    * @return true 表示可用
    */
   public static boolean isAvailable() {
-    if (available == null) {
-      synchronized (TraceIdGeneratorProxy.class) {
-        if (available == null) {
-          try {
-            Class.forName(GENERATOR_CLASS);
-            available = Boolean.TRUE;
-          } catch (ClassNotFoundException e) {
-            available = Boolean.FALSE;
-            LOG.debug("ydsz-common-core 不在 classpath 中，TraceId 将使用内置简易实现");
-          }
-        }
-      }
+    Boolean result = available.get();
+    if (result != null) {
+      return result;
     }
-    return available;
+    try {
+      Class.forName(GENERATOR_CLASS);
+      if (available.compareAndSet(null, Boolean.TRUE)) {
+        return true;
+      }
+    } catch (ClassNotFoundException e) {
+      available.compareAndSet(null, Boolean.FALSE);
+      LOG.debug("ydsz-common-core 不在 classpath 中，TraceId 将使用内置简易实现");
+    }
+    return available.get();
   }
 
   /**
@@ -195,20 +196,16 @@ public final class TraceIdGeneratorProxy {
   private static Method getCachedMethod(String methodName, Class<?>... paramTypes) {
     String cacheKey = methodName + "_" + paramTypes.length;
     Method method = METHOD_CACHE.get(cacheKey);
-    if (method == null) {
-      synchronized (TraceIdGeneratorProxy.class) {
-        method = METHOD_CACHE.get(cacheKey);
-        if (method == null) {
-          try {
-            Class<?> clazz = Class.forName(GENERATOR_CLASS);
-            method = clazz.getMethod(methodName, paramTypes);
-            method.setAccessible(true);
-            METHOD_CACHE.put(cacheKey, method);
-          } catch (NoSuchMethodException | ClassNotFoundException e) {
-            return null;
-          }
-        }
-      }
+    if (method != null) {
+      return method;
+    }
+    try {
+      Class<?> clazz = Class.forName(GENERATOR_CLASS);
+      method = clazz.getMethod(methodName, paramTypes);
+      method.setAccessible(true);
+      METHOD_CACHE.put(cacheKey, method);
+    } catch (NoSuchMethodException | ClassNotFoundException e) {
+      return null;
     }
     return method;
   }

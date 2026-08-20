@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.gateway.Text2SQLService;
+import com.njydsz.agent.domain.tool.ToolExecutionException;
 import com.njydsz.agent.domain.tool.ToolExecutor;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.tenant.TenantContextHolder;
@@ -32,7 +33,7 @@ public class Text2SQLTool implements ToolExecutor {
   private final Text2SQLService text2SQLService;
 
   @Override
-  public String execute(Map<String, Object> arguments) throws Exception {
+  public String execute(Map<String, Object> arguments) throws ToolExecutionException {
     if (arguments == null || !arguments.containsKey(PARAM_QUERY)) {
       return YdszJson.toJson(Map.of("error", "缺少必需参数: query"));
     }

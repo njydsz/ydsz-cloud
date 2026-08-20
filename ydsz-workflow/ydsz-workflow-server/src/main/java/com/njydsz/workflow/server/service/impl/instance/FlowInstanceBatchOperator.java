@@ -5,7 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -14,8 +13,8 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 
 /**
  * 流程实例批量操作器
@@ -43,8 +42,8 @@ public class FlowInstanceBatchOperator {
   /** 流程实例生命周期管理器，单条操作的实际执行者（每条操作独立事务） */
   private final FlowInstanceLifecycleManager lifecycleManager;
 
-  /** 流程实例 Mapper，负责 ydsz_flow_instance 表的增删改查 */
-  private final FlowInstanceMapper instanceMapper;
+  /** 流程实例仓储，负责 ydsz_flow_instance 的领域持久化 */
+  private final FlowInstanceRepository instanceRepository;
 
   /**
    * P2-6: 批量发起流程实例。
@@ -134,13 +133,10 @@ public class FlowInstanceBatchOperator {
         lifecycleManager.terminate(instanceId, reason);
         count++;
         // 级联终止子流程实例
-        // 保留 Mapper：复杂 LambdaQueryWrapper 查询（含 flowStatus 过滤），Repository 暂无等价方法
-        List<FlowInstanceDO> children =
-            instanceMapper.selectList(
-                new LambdaQueryWrapper<FlowInstanceDO>()
-                    .eq(FlowInstanceDO::getParentInstanceId, instanceId)
-                    .eq(FlowInstanceDO::getFlowStatus, FlowInstanceStatus.RUNNING.name()));
-        for (FlowInstanceDO child : children) {
+        List<FlowInstanceVO> children = instanceRepository.findChildren(instanceId).stream()
+            .filter(c -> FlowInstanceStatus.RUNNING.name().equals(c.getFlowStatus()))
+            .toList();
+        for (FlowInstanceVO child : children) {
           try {
             lifecycleManager.terminate(child.getId(), "级联终止: " + reason);
             count++;

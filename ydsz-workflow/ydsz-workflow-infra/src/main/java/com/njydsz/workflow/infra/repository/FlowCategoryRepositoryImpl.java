@@ -95,4 +95,13 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
     categoryMapper.updateById(entity);
     return vo;
   }
+
+  @Override
+  public long countByCodeAndTenantId(String code, String tenantId) {
+    return categoryMapper.selectCount(
+        new LambdaQueryWrapper<FlowCategoryDO>()
+            .eq(FlowCategoryDO::getCategoryCode, code)
+            .eq(tenantId != null, FlowCategoryDO::getTenantId, tenantId)
+            .eq(FlowCategoryDO::getDeleted, 0));
+  }
 }

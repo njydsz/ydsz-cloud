@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
@@ -320,9 +321,9 @@ public class RememberMeService {
    *
    * @param userId 用户 ID
    * @return Base64 编码的加密结果
-   * @throws Exception 加密失败时抛出
+   * @throws GeneralSecurityException 加密失败时抛出
    */
-  private String encryptUserId(String userId) throws Exception {
+  private String encryptUserId(String userId) throws GeneralSecurityException {
     byte[] iv = new byte[GCM_IV_LENGTH];
     SecureRandom.getInstanceStrong().nextBytes(iv);
 
@@ -347,9 +348,9 @@ public class RememberMeService {
    *
    * @param encrypted Base64 编码的加密结果
    * @return 解密后的用户 ID
-   * @throws Exception 解密失败时抛出
+   * @throws GeneralSecurityException 解密失败时抛出
    */
-  private String decryptUserId(String encrypted) throws Exception {
+  private String decryptUserId(String encrypted) throws GeneralSecurityException {
     byte[] decoded = Base64.getDecoder().decode(encrypted);
 
     if (decoded.length <= GCM_IV_LENGTH) {

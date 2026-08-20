@@ -82,4 +82,11 @@ public class JobDagRepositoryImpl implements JobDagRepository {
     JobDag entity = converter.voToEntity(vo);
     return jobDagMapper.updateById(entity);
   }
+
+  @Override
+  public String insert(JobDagVO vo) {
+    JobDag entity = converter.voToEntity(vo);
+    jobDagMapper.insert(entity);
+    return entity.getId();
+  }
 }

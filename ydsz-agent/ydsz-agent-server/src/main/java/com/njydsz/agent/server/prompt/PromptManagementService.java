@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import com.njydsz.agent.domain.vo.PromptVersionVO;
@@ -53,7 +54,7 @@ public class PromptManagementService {
   private final PromptVersionRepository versionRepository;
 
   /** 是否已执行缓存预热 */
-  private volatile boolean cacheWarmed = false;
+  private final AtomicBoolean cacheWarmed = new AtomicBoolean(false);
 
   public PromptManagementService(
       PromptTemplateRepository templateRepository, PromptVersionRepository versionRepository) {
@@ -295,8 +296,8 @@ public class PromptManagementService {
   }
 
   /** 缓存预热：首次读取时从数据库全量加载 */
-  private synchronized void warmCacheIfNeeded() {
-    if (cacheWarmed) {
+  private void warmCacheIfNeeded() {
+    if (!cacheWarmed.compareAndSet(false, true)) {
       return;
     }
     List<PromptTemplateVO> allTemplates = templateRepository.findAllActive();
@@ -313,7 +314,6 @@ public class PromptManagementService {
               t.getCreatedAt(),
               t.getUpdatedAt()));
     }
-    cacheWarmed = true;
     log.info("[Prompt] 缓存预热完成, count={}", allTemplates.size());
   }
 

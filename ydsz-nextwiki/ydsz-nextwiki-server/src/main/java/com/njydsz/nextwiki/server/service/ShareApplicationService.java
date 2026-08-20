@@ -5,10 +5,12 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.nextwiki.domain.dto.ShareAccessLogDTO;
 import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -16,6 +18,8 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.ShareAccessLogRepository;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
+import com.njydsz.nextwiki.domain.service.ShareAccessLogDomainService;
+import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.ShareAccessLogVO;
 import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
@@ -37,6 +41,15 @@ import com.njydsz.nextwiki.domain.vo.ShareRecipientVO;
 @RequiredArgsConstructor
 public class ShareApplicationService {
 
+  /** 防暴力破解 Redis Key 前缀 */
+  private static final String KEY_SHARE_FAIL = "nextwiki:share:fail:";
+
+  /** 最大失败次数 */
+  private static final int MAX_FAIL_COUNT = 5;
+
+  /** 锁定时长（分钟） */
+  private static final long LOCK_DURATION_MINUTES = 30;
+
   private final ShareLinkDomainService shareLinkDomainService;
   private final ShareAccessLogDomainService shareAccessLogDomainService;
   private final ShareLinkRepository shareLinkRepository;
@@ -44,6 +57,8 @@ public class ShareApplicationService {
   private final ShareRecipientRepository shareRecipientRepository;
   private final FilePermissionService filePermissionService;
   private final FileNodeRepository fileNodeRepository;
+  private final BCryptPasswordEncoder passwordEncoder;
+  private final RedisStringOps stringOps;
 
   /**
    * 创建文件分享链接。
@@ -70,8 +85,11 @@ public class ShareApplicationService {
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("fileNodeId", fileNodeId));
     filePermissionService.checkShare(fileNodeId, userId);
 
+    // DDD 合规：密码哈希由应用层（基础设施）完成后传入 domain 层
+    String hashedPassword =
+        password != null && !password.isEmpty() ? passwordEncoder.encode(password) : null;
     ShareLinkDomainService.CreateShareResult result = shareLinkDomainService.createShare(
-        node, shareType, password, expireTime, maxAccessCount, userId);
+        node, shareType, hashedPassword, expireTime, maxAccessCount, userId);
     ShareLinkVO saved = shareLinkRepository.save(result.shareLink());
     if (result.recipients() != null && !result.recipients().isEmpty()) {
       shareRecipientRepository.saveBatch(result.recipients());
@@ -106,8 +124,11 @@ public class ShareApplicationService {
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("fileNodeId", fileNodeId));
     filePermissionService.checkShare(fileNodeId, userId);
 
+    // DDD 合规：密码哈希由应用层（基础设施）完成后传入 domain 层
+    String hashedPassword =
+        password != null && !password.isEmpty() ? passwordEncoder.encode(password) : null;
     ShareLinkDomainService.CreateShareResult result = shareLinkDomainService.createShare(
-        node, shareType, password, expireTime, maxAccessCount, targetUserIds, title, userId);
+        node, shareType, hashedPassword, expireTime, maxAccessCount, targetUserIds, title, userId);
     ShareLinkVO saved = shareLinkRepository.save(result.shareLink());
     if (result.recipients() != null && !result.recipients().isEmpty()) {
       shareRecipientRepository.saveBatch(result.recipients());
@@ -131,7 +152,32 @@ public class ShareApplicationService {
     ShareLinkVO vo = shareLinkRepository.findByShareCode(shareCode)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SHARE_NOT_FOUND).data("shareCode", shareCode));
     ShareLinkDTO dto = shareLinkToDTO(vo);
-    ShareLinkDTO verified = shareLinkDomainService.verifyAccess(dto, extractCode, password);
+
+    // DDD 合规：防暴力破解由应用层（Redis 基础设施）负责
+    String failKey = KEY_SHARE_FAIL + shareCode;
+    String failCountStr = stringOps.get(failKey, String.class);
+    if (failCountStr != null && Integer.parseInt(failCountStr) >= MAX_FAIL_COUNT) {
+      throw new BusinessException(NextwikiExceptionCode.SHARE_LOCKED);
+    }
+
+    // 领域层验证（状态/过期/访问次数/提取码）
+    ShareLinkDTO verified = shareLinkDomainService.verifyAccess(dto, extractCode);
+
+    // DDD 合规：密码匹配由应用层（BCrypt 基础设施）负责
+    if (verified.getPassword() != null && !verified.getPassword().isEmpty()) {
+      if (password == null || !passwordEncoder.matches(password, verified.getPassword())) {
+        // 记录失败次数
+        Long failCount = stringOps.incr(failKey, 1);
+        if (failCount != null && failCount == 1) {
+          stringOps.expire(failKey, java.time.Duration.ofMinutes(LOCK_DURATION_MINUTES));
+        }
+        throw new BusinessException(NextwikiExceptionCode.SHARE_PASSWORD_ERROR);
+      }
+    }
+
+    // 验证成功，清除失败计数
+    stringOps.del(failKey);
+
     return shareLinkRepository.save(verified);
   }
 

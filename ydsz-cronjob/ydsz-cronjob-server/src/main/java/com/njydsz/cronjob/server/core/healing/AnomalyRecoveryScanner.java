@@ -2,12 +2,10 @@ package com.njydsz.cronjob.server.core.healing;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,11 +18,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.cronjob.infra.entity.job.Job;
-import com.njydsz.cronjob.infra.entity.job.JobNode;
-import com.njydsz.cronjob.infra.entity.log.JobLog;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.cronjob.domain.repository.JobLogRepository;
+import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
+import com.njydsz.cronjob.domain.vo.JobVO;
+import com.njydsz.cronjob.domain.vo.JobNodeVO;
 import com.njydsz.cronjob.server.config.AnomalyRecoveryConfig;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.LockKeyUtil;
@@ -67,8 +65,8 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @ConditionalOnBean(LeaderElector.class)
 public class AnomalyRecoveryScanner {
 
-  private final JobLogMapper jobLogMapper;
-  private final JobMapper jobMapper;
+  private final JobLogRepository jobLogRepository;
+  private final JobRepository jobRepository;
   private final TaskDispatcher taskDispatcher;
   private final LeaderElector leaderElector;
   private final CronjobProperties cronjobProperties;
@@ -179,7 +177,7 @@ public class AnomalyRecoveryScanner {
       return;
     }
 
-    List<JobNode> onlineNodes;
+    List<JobNodeVO> onlineNodes;
     try {
       onlineNodes = strategy.getOnlineNodes();
     } catch (Exception e) {
@@ -188,7 +186,7 @@ public class AnomalyRecoveryScanner {
     }
     Set<String> onlineNodeIds =
         onlineNodes.stream()
-            .map(JobNode::getNodeId)
+            .map(JobNodeVO::getNodeId)
             .filter(nodeId -> nodeId != null && !nodeId.isBlank())
             .collect(Collectors.toSet());
 
@@ -241,16 +239,16 @@ public class AnomalyRecoveryScanner {
    */
   private Set<String> getRunningNodeIds() {
     try {
-      List<String> nodeIds = jobLogMapper.selectRunningNodeIds();
+      List<String> nodeIds = jobLogRepository.findRunningNodeIds();
       if (nodeIds == null || nodeIds.isEmpty()) {
-        return Collections.emptySet();
+        return Set.of();
       }
       return nodeIds.stream()
           .filter(nodeId -> nodeId != null && !nodeId.isBlank())
           .collect(Collectors.toSet());
     } catch (Exception e) {
       log.warn("[AnomalyRecovery] 查询 RUNNING 任务节点失败: reason={}", e.getMessage());
-      return Collections.emptySet();
+      return Set.of();
     }
   }
 
@@ -263,7 +261,7 @@ public class AnomalyRecoveryScanner {
    */
   private int recoverOfflineNode(String nodeId, AnomalyRecoveryConfig config) {
     LocalDateTime now = LocalDateTime.now();
-    List<JobLog> runningLogs = jobLogMapper.selectRunningByNode(nodeId);
+    List<JobLogVO> runningLogs = jobLogRepository.findRunningByNode(nodeId);
     if (runningLogs.isEmpty()) {
       return 0;
     }
@@ -277,7 +275,7 @@ public class AnomalyRecoveryScanner {
 
     // 1. 先释放死节点持有的任务锁
     int releasedLocks = 0;
-    for (JobLog logEntry : runningLogs) {
+    for (JobLogVO logEntry : runningLogs) {
       if (releaseJobLock(logEntry.getJobKey(), logEntry.getShardIndex(), logEntry.getLockHolder())) {
         releasedLocks++;
       }
@@ -293,7 +291,7 @@ public class AnomalyRecoveryScanner {
     // 2. 标记为 FAILED（批量 CAS 语义）
     int markedFailed = 0;
     try {
-      markedFailed = jobLogMapper.markFailedByNodeOffline(nodeId, now);
+      markedFailed = jobLogRepository.markFailedByNodeOffline(nodeId, now);
     } catch (Exception e) {
       log.error(
           "[AnomalyRecovery] 标记节点任务 FAILED 失败: nodeId={} reason={}",
@@ -305,7 +303,7 @@ public class AnomalyRecoveryScanner {
     // 3. 重新派发任务
     int redispatched = 0;
     CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
-    for (JobLog logEntry : runningLogs) {
+    for (JobLogVO logEntry : runningLogs) {
       if (redispatched >= taskLimit) {
         log.warn(
             "[AnomalyRecovery] 达到单节点转移上限 {}, 剩余任务不再派发: nodeId={} total={}",
@@ -315,7 +313,7 @@ public class AnomalyRecoveryScanner {
         break;
       }
       try {
-        Job job = jobMapper.selectById(logEntry.getJobId());
+        JobVO job = jobRepository.findById(logEntry.getJobId()).orElse(null);
         if (job == null) {
           log.debug(
               "[AnomalyRecovery] 任务已删除, 跳过: jobId={} logId={}",
@@ -373,12 +371,7 @@ public class AnomalyRecoveryScanner {
     LocalDateTime threshold =
         LocalDateTime.now().minusSeconds(config.getStuckThresholdSeconds());
 
-    List<JobLog> stuckLogs =
-        jobLogMapper.selectList(
-            new LambdaQueryWrapper<JobLog>()
-                .eq(JobLog::getStatus, "RUNNING")
-                .lt(JobLog::getStartTime, threshold)
-                .last("LIMIT " + config.getMaxHealPerScan()));
+    List<JobLogVO> stuckLogs = jobLogRepository.findStuckTasks(threshold, config.getMaxHealPerScan());
 
     if (stuckLogs.isEmpty()) {
       return;
@@ -387,7 +380,7 @@ public class AnomalyRecoveryScanner {
     log.warn("[AnomalyRecovery] 发现 {} 个卡死任务, 开始修复", stuckLogs.size());
     int healed = 0;
     int failed = 0;
-    for (JobLog stuckLog : stuckLogs) {
+    for (JobLogVO stuckLog : stuckLogs) {
       try {
         healSingleStuckTask(stuckLog, config);
         healed++;
@@ -416,7 +409,7 @@ public class AnomalyRecoveryScanner {
    * @param stuckLog 卡死任务日志
    * @param config 异常修复配置
    */
-  private void healSingleStuckTask(JobLog stuckLog, AnomalyRecoveryConfig config) {
+  private void healSingleStuckTask(JobLogVO stuckLog, AnomalyRecoveryConfig config) {
     LocalDateTime now = LocalDateTime.now();
     long durationMs = Duration.between(stuckLog.getStartTime(), now).toMillis();
     String errorMsg =
@@ -429,7 +422,7 @@ public class AnomalyRecoveryScanner {
             + "ms)";
 
     // 1. CAS 标记日志为 FAILED
-    int affected = jobLogMapper.markTimeout(stuckLog.getId(), now, durationMs, errorMsg);
+    int affected = jobLogRepository.markTimeout(stuckLog.getId(), now, durationMs, errorMsg);
     if (affected == 0) {
       log.debug("[AnomalyRecovery] 日志已非 RUNNING 状态, 跳过: logId={}", stuckLog.getId());
       return;
@@ -440,7 +433,7 @@ public class AnomalyRecoveryScanner {
 
     // 3. 更新任务统计
     try {
-      jobMapper.updateStats(
+      jobRepository.updateStats(
           stuckLog.getJobId(), stuckLog.getStartTime(), null, null, 0L, 1L, "ERROR");
     } catch (Exception e) {
       log.warn(
@@ -472,7 +465,7 @@ public class AnomalyRecoveryScanner {
    * @param stuckLog 卡死任务日志
    * @param config 异常修复配置
    */
-  private void tryRedispatch(JobLog stuckLog, AnomalyRecoveryConfig config) {
+  private void tryRedispatch(JobLogVO stuckLog, AnomalyRecoveryConfig config) {
     String retryKey = HEAL_RETRY_PREFIX + stuckLog.getJobKey();
     try {
       Long retryCount = redisStringOps.incr(retryKey, 1);
@@ -494,12 +487,12 @@ public class AnomalyRecoveryScanner {
             "[AnomalyRecovery] 任务重试次数超限, 标记 AUTO_PAUSED: jobKey={} retries={}",
             stuckLog.getJobKey(),
             retryCount);
-        jobMapper.markAutoPaused(stuckLog.getJobId());
+        jobRepository.markAutoPaused(stuckLog.getJobId());
         return;
       }
 
       // 查询任务定义，确认仍为 NORMAL 状态
-      Job job = jobMapper.selectById(stuckLog.getJobId());
+      JobVO job = jobRepository.findById(stuckLog.getJobId()).orElse(null);
       if (job == null || !"NORMAL".equals(job.getStatus())) {
         log.debug(
             "[AnomalyRecovery] 任务非 NORMAL 状态, 跳过重派: jobKey={} status={}",
@@ -534,25 +527,21 @@ public class AnomalyRecoveryScanner {
    * @param config 异常修复配置
    */
   private void healAutoPausedTasks(AnomalyRecoveryConfig config) {
+    // 查找 AUTO_PAUSED 状态且 lastFireTime 超过 1 小时的任务
     LocalDateTime threshold = LocalDateTime.now().minusHours(1);
-    List<Job> autoPausedJobs =
-        jobMapper.selectList(
-            new LambdaQueryWrapper<Job>()
-                .eq(Job::getStatus, "AUTO_PAUSED")
-                .lt(Job::getLastFireTime, threshold)
-                .last("LIMIT " + config.getMaxHealPerScan()));
+    List<JobVO> autoPausedJobs = jobRepository.findAutoResumeCandidates(threshold);
 
     if (autoPausedJobs.isEmpty()) {
       return;
     }
 
     log.info("[AnomalyRecovery] 发现 {} 个 AUTO_PAUSED 任务待恢复", autoPausedJobs.size());
-    for (Job job : autoPausedJobs) {
+    for (JobVO job : autoPausedJobs) {
       try {
         // 清除重试计数
         redisStringOps.del(HEAL_RETRY_PREFIX + job.getJobKey());
         // 恢复为 NORMAL
-        jobMapper.resumeAutoPaused(job.getId());
+        jobRepository.resumeAutoPaused(job.getId());
         log.info("[AnomalyRecovery] 任务已自动恢复: jobKey={}", job.getJobKey());
       } catch (Exception e) {
         log.warn(
@@ -584,7 +573,7 @@ public class AnomalyRecoveryScanner {
       String lockKey = LockKeyUtil.buildJobLockKey(jobKey, shardIndex);
       Long released =
           redisTemplate.execute(
-              RELEASE_LOCK_SCRIPT, Collections.singletonList(lockKey), lockHolder);
+              RELEASE_LOCK_SCRIPT, List.of(lockKey), lockHolder);
       if (released != null && released > 0) {
         log.info(
             "[AnomalyRecovery] 释放任务锁成功: jobKey={} shardIndex={} lockKey={}",
@@ -610,10 +599,10 @@ public class AnomalyRecoveryScanner {
   /**
    * 触发修复告警。
    *
-   * @param stuckLog 被修复的日志记录
+   * @param stuckLog 被修复的日志记录 VO
    * @param durationMs 卡死持续时间（毫秒）
    */
-  private void triggerRecoveryAlert(JobLog stuckLog, long durationMs) {
+  private void triggerRecoveryAlert(JobLogVO stuckLog, long durationMs) {
     AlertTrigger trigger = alertTriggerProvider.getIfAvailable();
     if (trigger == null) {
       return;

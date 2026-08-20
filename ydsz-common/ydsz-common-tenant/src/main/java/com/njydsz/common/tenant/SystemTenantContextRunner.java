@@ -2,6 +2,8 @@ package com.njydsz.common.tenant;
 
 import java.util.concurrent.Callable;
 
+import com.njydsz.common.exception.custom.BusinessException;
+
 /**
  * 系统租户上下文执行器。
  *
@@ -81,8 +83,10 @@ public final class SystemTenantContextRunner {
     applySystemTenant();
     try {
       return callable.call();
+    } catch (RuntimeException e) {
+      throw e;
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new BusinessException("系统租户上下文执行异常: " + e.getMessage(), e);
     } finally {
       clearTenant();
     }

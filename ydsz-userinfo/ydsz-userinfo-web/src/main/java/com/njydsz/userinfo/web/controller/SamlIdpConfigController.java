@@ -21,8 +21,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.web.version.ApiVersion;
-import com.njydsz.userinfo.domain.dto.SamlIdpCreateDTO;
-import com.njydsz.userinfo.domain.dto.SamlIdpUpdateDTO;
+import com.njydsz.userinfo.domain.dto.SamlIdpDTO;
 import com.njydsz.userinfo.domain.query.SamlIdpPageQuery;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 import com.njydsz.userinfo.server.service.SamlIdpConfigService;
@@ -74,7 +73,7 @@ public class SamlIdpConfigController {
   /**
    * 新增 SAML IdP 配置。
    *
-   * @param dto 创建 DTO
+   * @param dto 统一 DTO
    * @return 创建结果
    */
   @Audit(
@@ -84,8 +83,8 @@ public class SamlIdpConfigController {
       content = "'新增 SAML IdP: entityId=' + #dto.entityId")
   @PostMapping
   @Operation(summary = "新增 IdP 配置")
-  public YdszResponse<Void> create(@RequestBody SamlIdpCreateDTO dto) {
-    configService.create(dto);
+  public YdszResponse<Void> create(@RequestBody SamlIdpDTO dto) {
+    configService.save(dto);
     return YdszResponse.success();
   }
 
@@ -93,7 +92,7 @@ public class SamlIdpConfigController {
    * 更新 SAML IdP 配置。
    *
    * @param entityId IdP Entity ID
-   * @param dto 更新 DTO
+   * @param dto 统一 DTO
    * @return 更新结果
    */
   @Audit(
@@ -104,8 +103,8 @@ public class SamlIdpConfigController {
   @PutMapping("/{entityId}")
   @Operation(summary = "更新 IdP 配置", description = "URL 中的 entityId 使用 URLEncode 编码")
   public YdszResponse<Void> update(
-      @PathVariable String entityId, @RequestBody SamlIdpUpdateDTO dto) {
-    configService.update(entityId, dto);
+      @PathVariable String entityId, @RequestBody SamlIdpDTO dto) {
+    configService.save(dto);
     return YdszResponse.success();
   }
 

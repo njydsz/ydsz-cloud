@@ -1,5 +1,6 @@
 package com.njydsz.workflow.domain.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -92,6 +93,20 @@ public interface FlowEventSubscriptionRepository {
   List<FlowEventSubscriptionVO> findWaitingByEvent(String eventType, String flowCode);
 
   /**
+   * 按事件类型 + 租户 + eventRef 查询等待中的事件订阅。
+   *
+   * <p>与 {@link #findWaitingByEvent(String, String)} 类似，但额外支持租户隔离和 eventRef 条件，
+   * 用于 Error / Signal 事件触发时精确匹配。
+   *
+   * @param tenantId 租户 ID
+   * @param eventType 事件类型（MESSAGE / ERROR / SIGNAL）
+   * @param eventRef 事件引用标识
+   * @return 事件订阅 VO 列表
+   */
+  List<FlowEventSubscriptionVO> findWaitingByEvent(
+      String tenantId, String eventType, String eventRef);
+
+  /**
    * 标记事件订阅为已触发。
    *
    * <p>更新 {@code subscriptionStatus = 'COMPLETED', triggeredAt = now()}。
@@ -99,6 +114,20 @@ public interface FlowEventSubscriptionRepository {
    * @param id 事件订阅 ID
    */
   void markTriggered(String id);
+
+  /**
+   * 标记事件订阅为已触发（含 payload / triggerSource / 时间戳）。
+   *
+   * <p>与 {@link #markTriggered(String)} 类似，但额外记录 payload 与触发来源，
+   * 用于需要追溯触发来源的场景。
+   *
+   * @param id 事件订阅 ID
+   * @param eventPayload 触发事件有效载荷
+   * @param triggerSource 触发来源标识（API / SCHEDULER / SYSTEM）
+   * @param triggeredAt 触发时间
+   */
+  void markTriggered(
+      String id, String eventPayload, String triggerSource, LocalDateTime triggeredAt);
 
   /**
    * 重置事件订阅为等待状态。
@@ -109,4 +138,26 @@ public interface FlowEventSubscriptionRepository {
    * @param id 事件订阅 ID
    */
   void resetToWaiting(String id);
+
+  /**
+   * 取消边界任务关联的事件订阅（边界事件触发或任务取消时调用）。
+   *
+   * <p>更新 {@code subscriptionStatus = 'CANCELLED', cancelReason = reason}。
+   *
+   * @param boundaryTaskId 边界任务 ID
+   * @param reason 取消原因
+   * @return 受影响行数
+   */
+  int cancelByTask(String boundaryTaskId, String reason);
+
+  /**
+   * 取消指定实例下所有 WAITING 事件订阅（流程结束时调用）。
+   *
+   * <p>更新 {@code subscriptionStatus = 'CANCELLED', cancelReason = reason}。
+   *
+   * @param instanceId 实例 ID
+   * @param reason 取消原因
+   * @return 受影响行数
+   */
+  int cancelByInstance(String instanceId, String reason);
 }

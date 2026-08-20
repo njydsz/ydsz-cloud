@@ -16,9 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.userinfo.domain.dto.CompanyCreateDTO;
 import com.njydsz.userinfo.domain.dto.CompanyDTO;
-import com.njydsz.userinfo.domain.dto.CompanyUpdateDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.CompanyPageQuery;
 import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
@@ -104,10 +102,7 @@ public class CompanyServiceImpl implements CompanyService {
     if (companyRepository.countByQuery(query) > 0) {
       throw new BusinessException(UserInfoExceptionCode.COMPANY_CODE_DUPLICATE);
     }
-
-    CompanyCreateDTO createDTO = new CompanyCreateDTO();
-    BeanUtils.copyProperties(dto, createDTO);
-    CompanyVO vo = companyRepository.create(createDTO);
+    CompanyVO vo = companyRepository.save(dto);
     log.info("Company created: code={}, id={}", dto.getCompanyCode(), vo.getId());
     return vo.getId();
   }
@@ -115,12 +110,9 @@ public class CompanyServiceImpl implements CompanyService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(CompanyDTO dto) {
-    CompanyVO existing = companyRepository.findById(dto.getId())
+    companyRepository.findById(dto.getId())
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND));
-    BeanUpdateUtil.copyNonNull(dto, existing, "id");
-    CompanyUpdateDTO updateDTO = new CompanyUpdateDTO();
-    BeanUtils.copyProperties(dto, updateDTO);
-    CompanyVO vo = companyRepository.update(updateDTO);
+    CompanyVO vo = companyRepository.save(dto);
     return vo != null;
   }
 

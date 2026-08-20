@@ -8,8 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.dto.SamlIdpCreateDTO;
-import com.njydsz.userinfo.domain.dto.SamlIdpUpdateDTO;
+import com.njydsz.userinfo.domain.dto.SamlIdpDTO;
 import com.njydsz.userinfo.domain.query.SamlIdpPageQuery;
 import com.njydsz.userinfo.domain.repository.SamlIdpConfigRepository;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
@@ -67,58 +66,55 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
   }
 
   @Override
-  public void save(SamlIdpCreateDTO dto) {
-    SamlIdpConfigDO entity = new SamlIdpConfigDO();
-    entity.setName(dto.getName());
-    entity.setEntityId(dto.getEntityId());
-    entity.setSsoUrl(dto.getSsoUrl());
-    entity.setCertificate(dto.getCertificate());
-    entity.setEmailAttribute(dto.getEmailAttribute() != null ? dto.getEmailAttribute() : "email");
-    entity.setDisplayNameAttribute(
-        dto.getDisplayNameAttribute() != null ? dto.getDisplayNameAttribute() : "displayName");
-    entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
-    entity.setSortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 100);
-    entity.setRemark(dto.getRemark());
+  public void save(SamlIdpDTO dto) {
+    SamlIdpConfigDO existing = mapper.selectByEntityId(dto.getEntityId());
 
-    mapper.insert(entity);
-    log.info("SAML IdP 配置已创建: entityId={}", dto.getEntityId());
-  }
-
-  @Override
-  public void update(String entityId, SamlIdpUpdateDTO dto) {
-    SamlIdpConfigDO entity = mapper.selectByEntityId(entityId);
-    if (entity == null) {
-      log.warn("尝试更新不存在的 SAML IdP 配置: entityId={}", entityId);
-      return;
-    }
-
-    if (dto.getName() != null) {
+    if (existing == null) {
+      // 创建场景
+      SamlIdpConfigDO entity = new SamlIdpConfigDO();
       entity.setName(dto.getName());
-    }
-    if (dto.getSsoUrl() != null) {
+      entity.setEntityId(dto.getEntityId());
       entity.setSsoUrl(dto.getSsoUrl());
-    }
-    if (dto.getCertificate() != null) {
       entity.setCertificate(dto.getCertificate());
-    }
-    if (dto.getEmailAttribute() != null) {
-      entity.setEmailAttribute(dto.getEmailAttribute());
-    }
-    if (dto.getDisplayNameAttribute() != null) {
-      entity.setDisplayNameAttribute(dto.getDisplayNameAttribute());
-    }
-    if (dto.getStatus() != null) {
-      entity.setStatus(dto.getStatus());
-    }
-    if (dto.getSortOrder() != null) {
-      entity.setSortOrder(dto.getSortOrder());
-    }
-    if (dto.getRemark() != null) {
+      entity.setEmailAttribute(dto.getEmailAttribute() != null ? dto.getEmailAttribute() : "email");
+      entity.setDisplayNameAttribute(
+          dto.getDisplayNameAttribute() != null ? dto.getDisplayNameAttribute() : "displayName");
+      entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
+      entity.setSortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 100);
       entity.setRemark(dto.getRemark());
-    }
 
-    mapper.updateById(entity);
-    log.info("SAML IdP 配置已更新: entityId={}", entityId);
+      mapper.insert(entity);
+      log.info("SAML IdP 配置已创建: entityId={}", dto.getEntityId());
+    } else {
+      // 更新场景（仅修改非 null 字段）
+      if (dto.getName() != null) {
+        existing.setName(dto.getName());
+      }
+      if (dto.getSsoUrl() != null) {
+        existing.setSsoUrl(dto.getSsoUrl());
+      }
+      if (dto.getCertificate() != null) {
+        existing.setCertificate(dto.getCertificate());
+      }
+      if (dto.getEmailAttribute() != null) {
+        existing.setEmailAttribute(dto.getEmailAttribute());
+      }
+      if (dto.getDisplayNameAttribute() != null) {
+        existing.setDisplayNameAttribute(dto.getDisplayNameAttribute());
+      }
+      if (dto.getStatus() != null) {
+        existing.setStatus(dto.getStatus());
+      }
+      if (dto.getSortOrder() != null) {
+        existing.setSortOrder(dto.getSortOrder());
+      }
+      if (dto.getRemark() != null) {
+        existing.setRemark(dto.getRemark());
+      }
+
+      mapper.updateById(existing);
+      log.info("SAML IdP 配置已更新: entityId={}", dto.getEntityId());
+    }
   }
 
   @Override

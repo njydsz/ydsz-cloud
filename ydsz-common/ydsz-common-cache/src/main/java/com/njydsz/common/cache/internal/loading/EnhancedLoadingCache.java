@@ -14,6 +14,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 
 import org.slf4j.Logger;
@@ -60,10 +61,11 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
    *
    * <p>使用 CacheThreadPoolManager 统一管理线程池，避免 ForkJoinPool.commonPool() 污染。
    */
-  private static volatile ExecutorService sharedExecutor;
+  private static final AtomicReference<ExecutorService> sharedExecutor = new AtomicReference<>();
 
   /** 全局共享刷新调度器（守护线程，不阻止 JVM 退出） */
-  private static volatile ScheduledExecutorService sharedRefreshScheduler;
+  private static final AtomicReference<ScheduledExecutorService> sharedRefreshScheduler =
+      new AtomicReference<>();
 
   /** 共享资源是否已关闭 */
   private static volatile boolean sharedResourcesShutdown = false;
@@ -73,19 +75,17 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     if (sharedResourcesShutdown) {
       return Runnable::run;
     }
-    if (sharedExecutor == null) {
-      synchronized (EnhancedLoadingCache.class) {
-        if (sharedExecutor == null) {
-          sharedExecutor =
-              CacheThreadPoolManager.getInstance()
-                  .getOrCreatePool(
-                      "enhanced-loading-async",
-                      Runtime.getRuntime().availableProcessors(),
-                      Runtime.getRuntime().availableProcessors() * 2);
-        }
-      }
+    ExecutorService executor = sharedExecutor.get();
+    if (executor != null) {
+      return executor;
     }
-    return sharedExecutor;
+    ExecutorService created =
+        CacheThreadPoolManager.getInstance()
+            .getOrCreatePool(
+                "enhanced-loading-async",
+                Runtime.getRuntime().availableProcessors(),
+                Runtime.getRuntime().availableProcessors() * 2);
+    return sharedExecutor.compareAndSet(null, created) ? created : sharedExecutor.get();
   }
 
   /** 获取共享刷新调度器（懒加载，线程安全） */
@@ -93,26 +93,23 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     if (sharedResourcesShutdown) {
       return null;
     }
-    if (sharedRefreshScheduler == null) {
-      synchronized (EnhancedLoadingCache.class) {
-        if (sharedRefreshScheduler == null) {
-          // CHECKSTYLE.OFF: RegexpSinglelineJava - 缓存刷新共享调度器，单线程固定，守护线程
-          ScheduledThreadPoolExecutor exec =
-              new ScheduledThreadPoolExecutor(
-                  1,
-                  r -> {
-                    Thread t = new Thread(r, "ydsz-cache-shared-refresher");
-                    t.setDaemon(true);
-                    t.setPriority(Thread.NORM_PRIORITY - 1);
-                    return t;
-                  });
-          // CHECKSTYLE.ON: RegexpSinglelineJava
-          exec.setRemoveOnCancelPolicy(true);
-          sharedRefreshScheduler = exec;
-        }
-      }
+    ScheduledExecutorService scheduler = sharedRefreshScheduler.get();
+    if (scheduler != null) {
+      return scheduler;
     }
-    return sharedRefreshScheduler;
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 缓存刷新共享调度器，单线程固定，守护线程
+    ScheduledThreadPoolExecutor exec =
+        new ScheduledThreadPoolExecutor(
+            1,
+            r -> {
+              Thread t = new Thread(r, "ydsz-cache-shared-refresher");
+              t.setDaemon(true);
+              t.setPriority(Thread.NORM_PRIORITY - 1);
+              return t;
+            });
+    // CHECKSTYLE.ON: RegexpSinglelineJava
+    exec.setRemoveOnCancelPolicy(true);
+    return sharedRefreshScheduler.compareAndSet(null, exec) ? exec : sharedRefreshScheduler.get();
   }
 
   /**
@@ -122,7 +119,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
    */
   public static void shutdownSharedResources() {
     sharedResourcesShutdown = true;
-    ExecutorService exec = sharedExecutor;
+    ExecutorService exec = sharedExecutor.getAndSet(null);
     if (exec != null) {
       exec.shutdown();
       try {
@@ -134,7 +131,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
         Thread.currentThread().interrupt();
       }
     }
-    ScheduledExecutorService scheduler = sharedRefreshScheduler;
+    ScheduledExecutorService scheduler = sharedRefreshScheduler.getAndSet(null);
     if (scheduler != null) {
       scheduler.shutdown();
       try {

@@ -13,7 +13,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
@@ -113,7 +113,7 @@ public class PartitionLeaderManager {
    * @param job 任务定义
    * @return true 属于本节点分区（应扫描派发）；false 不属于（跳过）
    */
-  public boolean isMyPartition(Job job) {
+  public boolean isMyPartition(JobVO job) {
     int partition = computePartition(job);
     return heldPartitions.contains(partition);
   }
@@ -124,7 +124,7 @@ public class PartitionLeaderManager {
    * @param job 任务定义
    * @return 分区索引 [0, totalPartitions)
    */
-  public int computePartition(Job job) {
+  public int computePartition(JobVO job) {
     String hashStrategy = cronjobProperties.getLeader().getPartition().getHashStrategy();
     String hashKey;
     if ("job_group".equalsIgnoreCase(hashStrategy)) {

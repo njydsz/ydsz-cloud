@@ -102,6 +102,13 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
   }
 
   @Override
+  public List<FlowEventSubscriptionVO> findWaitingByEvent(
+      String tenantId, String eventType, String eventRef) {
+    return converter.flowEventSubscriptionListToVO(
+        eventSubscriptionMapper.selectWaitingByEvent(tenantId, eventType, eventRef));
+  }
+
+  @Override
   public void markTriggered(String id) {
     FlowEventSubscriptionDO update = new FlowEventSubscriptionDO();
     update.setSubscriptionStatus("COMPLETED");
@@ -111,11 +118,27 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
   }
 
   @Override
+  public void markTriggered(
+      String id, String eventPayload, String triggerSource, LocalDateTime triggeredAt) {
+    eventSubscriptionMapper.markTriggered(id, eventPayload, triggerSource, triggeredAt);
+  }
+
+  @Override
   public void resetToWaiting(String id) {
     FlowEventSubscriptionDO update = new FlowEventSubscriptionDO();
     update.setSubscriptionStatus("WAITING");
     update.setTriggeredAt(null);
     update.setId(id);
     eventSubscriptionMapper.updateById(update);
+  }
+
+  @Override
+  public int cancelByTask(String boundaryTaskId, String reason) {
+    return eventSubscriptionMapper.cancelByTask(boundaryTaskId, reason);
+  }
+
+  @Override
+  public int cancelByInstance(String instanceId, String reason) {
+    return eventSubscriptionMapper.cancelByInstance(instanceId, reason);
   }
 }

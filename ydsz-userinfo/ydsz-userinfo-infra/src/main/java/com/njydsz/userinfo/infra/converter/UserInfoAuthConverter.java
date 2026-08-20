@@ -6,12 +6,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.userinfo.domain.dto.LanguageCreateDTO;
 import com.njydsz.userinfo.domain.dto.LanguageDTO;
-import com.njydsz.userinfo.domain.dto.LanguageUpdateDTO;
-import com.njydsz.userinfo.domain.dto.MenuCreateDTO;
 import com.njydsz.userinfo.domain.dto.MenuDTO;
-import com.njydsz.userinfo.domain.dto.MenuUpdateDTO;
 import com.njydsz.userinfo.domain.dto.RoleDTO;
 import com.njydsz.userinfo.domain.dto.RolePermissionDTO;
 import com.njydsz.userinfo.infra.entity.LanguageDO;
@@ -123,35 +119,6 @@ public interface UserInfoAuthConverter {
   // ===== MenuDO =====
 
   /**
-   * 菜单创建 DTO → 菜单实体
-   *
-   * @param dto 菜单创建 DTO
-   * @return 菜单实体（未持久化）
-   */
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  MenuDO createDtoToEntity(MenuCreateDTO dto);
-
-  /**
-   * 菜单更新 DTO → 菜单实体
-   *
-   * @param dto 菜单更新 DTO（含 id）
-   * @return 菜单实体（含 id）
-   */
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  MenuDO updateDtoToEntity(MenuUpdateDTO dto);
-
-  /**
    * 菜单实体 → 菜单 VO（扁平结构）
    *
    * @param entity 菜单实体
@@ -213,35 +180,6 @@ public interface UserInfoAuthConverter {
   MenuDO dtoToEntityWithId(MenuDTO dto);
 
   // ===== LanguageDO =====
-
-  /**
-   * 语言创建 DTO → 语言实体
-   *
-   * @param dto 语言创建 DTO
-   * @return 语言实体（未持久化）
-   */
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  LanguageDO createDtoToEntity(LanguageCreateDTO dto);
-
-  /**
-   * 语言更新 DTO → 语言实体
-   *
-   * @param dto 语言更新 DTO（含 id）
-   * @return 语言实体（含 id）
-   */
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  LanguageDO updateDtoToEntity(LanguageUpdateDTO dto);
 
   /**
    * 语言实体 → 语言 VO

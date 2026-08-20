@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.constant.RedisScriptConstants;
 import com.njydsz.common.redis.enums.FailOpenPolicy;
+import com.njydsz.common.redis.enums.RedisOperationException;
 
 /**
  * 分布式限流器（基于 Redis + Lua）
@@ -326,7 +327,7 @@ public class RedisRateLimiter {
       }
       case FAIL_THROW -> {
         log.error("【RedisRateLimiter】{} 异常，策略=FAIL_THROW，抛出异常 | key={}", operation, key);
-        throw new RuntimeException("限流器异常: " + operation, e);
+        throw new RedisOperationException(key, "RATE_LIMITER_" + operation, e);
       }
     };
   }

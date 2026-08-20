@@ -151,4 +151,69 @@ public interface FlowInstanceRepository {
    * @return 总数
    */
   long countPage(FlowInstancePageQuery query);
+
+  /**
+   * 统计某流程定义下正在运行的实例数量。
+   *
+   * @param definitionId 流程定义 ID
+   * @return 运行中实例数量
+   */
+  long countRunningByDefinition(String definitionId);
+
+  /**
+   * 查询某流程定义下运行中的实例，按当前节点分组。
+   *
+   * <p>返回 Map，key 为 nodeCode，value 为该节点上的运行中实例数量。
+   *
+   * @param definitionId 流程定义 ID
+   * @return 节点 → 实例数映射
+   */
+  java.util.Map<String, Long> countRunningGroupByNode(String definitionId);
+
+  /**
+   * 按状态分组统计实例数量（监控概览用）。
+   *
+   * @param tenantId 租户 ID（可为 null）
+   * @return 状态分组计数列表，每项含 flowStatus / cnt
+   */
+  List<Map<String, Object>> selectCountGroupByStatus(String tenantId);
+
+  /**
+   * 查询今日新增/完成计数。
+   *
+   * @param tenantId 租户 ID（可为 null）
+   * @return Map 含 todayNewCount / todayCompletedCount
+   */
+  Map<String, Object> selectTodayCount(String tenantId);
+
+  /**
+   * 按日期分组统计新增实例数。
+   *
+   * @param tenantId 租户 ID（可为 null）
+   * @param start 开始时间
+   * @param end 结束时间
+   * @return 每日新增列表
+   */
+  List<Map<String, Object>> selectDailyNewCount(String tenantId, LocalDateTime start, LocalDateTime end);
+
+  /**
+   * 按日期分组统计完成实例数。
+   *
+   * @param tenantId 租户 ID（可为 null）
+   * @param start 开始时间
+   * @param end 结束时间
+   * @return 每日完成列表
+   */
+  List<Map<String, Object>> selectDailyCompletedCount(String tenantId, LocalDateTime start, LocalDateTime end);
+
+  /**
+   * 按流程编码分组统计实例数（监控分布图用）。
+   *
+   * @param tenantId 租户 ID（可为 null）
+   * @param start 开始时间下界（可为 null）
+   * @param end 开始时间上界（可为 null）
+   * @return 流程类型分布列表
+   */
+  List<Map<String, Object>> selectFlowTypeDistribution(
+      String tenantId, LocalDateTime start, LocalDateTime end);
 }

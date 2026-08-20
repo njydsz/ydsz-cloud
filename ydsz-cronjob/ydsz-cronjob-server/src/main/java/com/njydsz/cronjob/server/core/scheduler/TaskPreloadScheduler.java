@@ -17,7 +17,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.PrecisionConfig;
 import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
@@ -114,12 +114,12 @@ public class TaskPreloadScheduler {
     try {
       LocalDateTime now = LocalDateTime.now();
       LocalDateTime windowEnd = now.plusSeconds(cfg.getWindowSeconds());
-      List<Job> dueJobs =
+      List<JobVO> dueJobs =
           jobTransactionService.acquireDueJobsInWindow(now, windowEnd, cfg.getBatchSize());
       if (dueJobs.isEmpty()) {
         return;
       }
-      for (Job job : dueJobs) {
+      for (JobVO job : dueJobs) {
         if (job.getNextFireTime() == null || pendingJobs.containsKey(job.getId())) {
           continue;
         }
@@ -131,7 +131,7 @@ public class TaskPreloadScheduler {
   }
 
   /** 将任务注册到内存调度器，到期精确触发。 */
-  private void schedulePreciseFire(Job job, LocalDateTime now) {
+  private void schedulePreciseFire(JobVO job, LocalDateTime now) {
     long delayMs = Math.max(0, Duration.between(now, job.getNextFireTime()).toMillis());
     try {
       ScheduledFuture<?> future =
@@ -148,7 +148,7 @@ public class TaskPreloadScheduler {
   }
 
   /** 精准触发：CAS 推进 next_fire_time 后派发（CAS 失败说明已被主扫描器处理，跳过）。 */
-  private void fireJob(Job job) {
+  private void fireJob(JobVO job) {
     pendingJobs.remove(job.getId());
     try {
       LocalDateTime now = LocalDateTime.now();

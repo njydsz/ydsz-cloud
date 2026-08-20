@@ -21,6 +21,7 @@ import org.w3c.dom.NodeList;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
+import com.njydsz.userinfo.server.auth.SamlException;
 import com.njydsz.userinfo.server.config.SamlProperties;
 import com.njydsz.userinfo.server.service.SamlIdpConfigService;
 
@@ -295,7 +296,8 @@ public class SamlService {
    * @param document    SAML Response XML 文档
    * @param idpEntityId IdP Entity ID
    */
-  private void verifySignatureWithEntityId(Document document, String idpEntityId) throws Exception {
+  private void verifySignatureWithEntityId(Document document, String idpEntityId)
+      throws SamlException {
     SamlIdpConfigVO idpConfig = samlIdpConfigService.findByEntityId(idpEntityId);
 
     String idpCertPem;
@@ -325,24 +327,24 @@ public class SamlService {
         .replaceAll("\\s", "");
     byte[] certBytes = Base64.getDecoder().decode(cleanedPem);
     X509EncodedKeySpec keySpec = new X509EncodedKeySpec(certBytes);
-    RSAPublicKey publicKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(keySpec);
-
-    Element signatureElement = (Element) signatureNodes.item(0);
-    NodeList sigValueNodes = signatureElement.getElementsByTagNameNS(
-        "http://www.w3.org/2000/09/xmldsig#", "SignatureValue");
-    if (sigValueNodes.getLength() == 0) {
-      throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
-    }
-
-    String signatureValue = sigValueNodes.item(0).getTextContent().trim();
-    byte[] signatureBytes = Base64.getDecoder().decode(signatureValue);
-
-    Signature signature = Signature.getInstance("SHA256withRSA");
-    signature.initVerify(publicKey);
-    signature.update(document.getDocumentElement().getTextContent().getBytes(StandardCharsets.UTF_8));
-
-    if (!signature.verify(signatureBytes)) {
-      throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
+    try {
+      RSAPublicKey publicKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(keySpec);
+      Element signatureElement = (Element) signatureNodes.item(0);
+      NodeList sigValueNodes = signatureElement.getElementsByTagNameNS(
+          "http://www.w3.org/2000/09/xmldsig#", "SignatureValue");
+      if (sigValueNodes.getLength() == 0) {
+        throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
+      }
+      String signatureValue = sigValueNodes.item(0).getTextContent().trim();
+      byte[] signatureBytes = Base64.getDecoder().decode(signatureValue);
+      Signature signature = Signature.getInstance("SHA256withRSA");
+      signature.initVerify(publicKey);
+      signature.update(document.getDocumentElement().getTextContent().getBytes(StandardCharsets.UTF_8));
+      if (!signature.verify(signatureBytes)) {
+        throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
+      }
+    } catch (java.security.GeneralSecurityException e) {
+      throw new SamlException("SIGNATURE_VERIFY", "签名验证加密操作失败: " + e.getMessage(), e);
     }
   }
 
@@ -351,18 +353,22 @@ public class SamlService {
    *
    * @param xml XML 字符串
    * @return Document 对象
-   * @throws Exception 解析失败时抛出
+   * @throws SamlException 解析失败时抛出
    */
-  private Document parseXmlDocument(String xml) throws Exception {
-    javax.xml.parsers.DocumentBuilderFactory factory =
-        javax.xml.parsers.DocumentBuilderFactory.newInstance();
-    factory.setNamespaceAware(true);
-    // 禁用外部实体注入（XXE 防护）
-    factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-    factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-    factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-    return factory.newDocumentBuilder().parse(
-        new org.xml.sax.InputSource(new java.io.StringReader(xml)));
+  private Document parseXmlDocument(String xml) throws SamlException {
+    try {
+      javax.xml.parsers.DocumentBuilderFactory factory =
+          javax.xml.parsers.DocumentBuilderFactory.newInstance();
+      factory.setNamespaceAware(true);
+      // 禁用外部实体注入（XXE 防护）
+      factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+      factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+      factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+      return factory.newDocumentBuilder().parse(
+          new org.xml.sax.InputSource(new java.io.StringReader(xml)));
+    } catch (Exception e) {
+      throw new SamlException("PARSE", "XML 文档解析失败: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -371,9 +377,9 @@ public class SamlService {
    * <p>使用 IdP 公钥验证 SAML Response 的 XML 签名，确保消息完整性和来源可信。
    *
    * @param document SAML Response XML 文档
-   * @throws Exception 签名验证失败时抛出
+   * @throws SamlException 签名验证失败时抛出
    */
-  private void verifySignature(Document document) throws Exception {
+  private void verifySignature(Document document) throws SamlException {
     String idpCertPem = samlProperties.getIdpCertificate();
     if (idpCertPem == null || idpCertPem.isBlank()) {
       log.warn("IdP 证书未配置，跳过签名验证");
@@ -394,26 +400,24 @@ public class SamlService {
     byte[] certBytes = Base64.getDecoder().decode(cleanedPem);
     X509EncodedKeySpec keySpec = new X509EncodedKeySpec(certBytes);
     // 注意：实际生产环境应使用 CertificateFactory 解析 X509Certificate
-    RSAPublicKey publicKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(keySpec);
-
-    // 验证签名（简化实现，完整实现需使用 XMLSignature 类）
-    Element signatureElement = (Element) signatureNodes.item(0);
-    NodeList sigValueNodes = signatureElement.getElementsByTagNameNS(
-        "http://www.w3.org/2000/09/xmldsig#", "SignatureValue");
-    if (sigValueNodes.getLength() == 0) {
-      throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
-    }
-
-    String signatureValue = sigValueNodes.item(0).getTextContent().trim();
-    byte[] signatureBytes = Base64.getDecoder().decode(signatureValue);
-
-    Signature signature = Signature.getInstance("SHA256withRSA");
-    signature.initVerify(publicKey);
-    // 实际应规范化并签名 SignedInfo 元素
-    signature.update(document.getDocumentElement().getTextContent().getBytes(StandardCharsets.UTF_8));
-
-    if (!signature.verify(signatureBytes)) {
-      throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
+    try {
+      RSAPublicKey publicKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(keySpec);
+      Element signatureElement = (Element) signatureNodes.item(0);
+      NodeList sigValueNodes = signatureElement.getElementsByTagNameNS(
+          "http://www.w3.org/2000/09/xmldsig#", "SignatureValue");
+      if (sigValueNodes.getLength() == 0) {
+        throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
+      }
+      String signatureValue = sigValueNodes.item(0).getTextContent().trim();
+      byte[] signatureBytes = Base64.getDecoder().decode(signatureValue);
+      Signature signature = Signature.getInstance("SHA256withRSA");
+      signature.initVerify(publicKey);
+      signature.update(document.getDocumentElement().getTextContent().getBytes(StandardCharsets.UTF_8));
+      if (!signature.verify(signatureBytes)) {
+        throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
+      }
+    } catch (java.security.GeneralSecurityException e) {
+      throw new SamlException("SIGNATURE_VERIFY", "签名验证加密操作失败: " + e.getMessage(), e);
     }
   }
 

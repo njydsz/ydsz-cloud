@@ -10,8 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.dto.CompanyCreateDTO;
-import com.njydsz.userinfo.domain.dto.CompanyUpdateDTO;
+import com.njydsz.userinfo.domain.dto.CompanyDTO;
 import com.njydsz.userinfo.domain.query.CompanyPageQuery;
 import com.njydsz.userinfo.domain.repository.CompanyRepository;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
@@ -76,17 +75,16 @@ public class CompanyRepositoryImpl implements CompanyRepository {
   }
 
   @Override
-  public CompanyVO create(CompanyCreateDTO dto) {
-    CompanyDO entity = converter.createDtoToEntity(dto);
-    companyMapper.insert(entity);
-    return converter.entityToVO(entity);
-  }
-
-  @Override
-  public CompanyVO update(CompanyUpdateDTO dto) {
-    CompanyDO entity = converter.updateDtoToEntity(dto);
-    companyMapper.updateById(entity);
-    return converter.entityToVO(entity);
+  public CompanyVO save(CompanyDTO dto) {
+    if (dto.getId() == null || dto.getId().isBlank()) {
+      CompanyDO entity = converter.dtoToEntity(dto);
+      companyMapper.insert(entity);
+      return converter.entityToVO(entity);
+    } else {
+      CompanyDO entity = converter.dtoToEntityWithId(dto);
+      companyMapper.updateById(entity);
+      return converter.entityToVO(entity);
+    }
   }
 
   @Override

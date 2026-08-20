@@ -102,4 +102,27 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
                 .eq(FlowCommentDO::getDeleted, 0)
                 .orderByAsc(FlowCommentDO::getCreatedAt)));
   }
+
+  @Override
+  public List<FlowCommentVO> findByInstanceAndTenant(String tenantId, String instanceId) {
+    return converter.flowCommentListToVO(
+        commentMapper.selectList(
+            new LambdaQueryWrapper<FlowCommentDO>()
+                .eq(FlowCommentDO::getTenantId, tenantId)
+                .eq(FlowCommentDO::getInstanceId, instanceId)
+                .eq(FlowCommentDO::getDeleted, 0)
+                .orderByAsc(FlowCommentDO::getCreatedAt)));
+  }
+
+  @Override
+  public List<FlowCommentVO> findRootCommentsByTenant(String tenantId, String instanceId) {
+    return converter.flowCommentListToVO(
+        commentMapper.selectList(
+            new LambdaQueryWrapper<FlowCommentDO>()
+                .eq(FlowCommentDO::getTenantId, tenantId)
+                .eq(FlowCommentDO::getInstanceId, instanceId)
+                .isNull(FlowCommentDO::getParentCommentId)
+                .eq(FlowCommentDO::getDeleted, 0)
+                .orderByAsc(FlowCommentDO::getCreatedAt)));
+  }
 }

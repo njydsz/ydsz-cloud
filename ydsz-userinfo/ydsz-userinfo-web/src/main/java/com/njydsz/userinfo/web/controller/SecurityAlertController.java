@@ -83,6 +83,7 @@ public class SecurityAlertController {
         alertStatus = SecurityAlert.AlertStatus.valueOf(status.toUpperCase());
       } catch (IllegalArgumentException e) {
         // 忽略无效的状态值
+        log.debug("[SecurityAlert] 忽略无效的告警状态值: status={}", status);
       }
     }
     SecurityAlert.RiskLevel riskLevelEnum = null;
@@ -91,6 +92,7 @@ public class SecurityAlertController {
         riskLevelEnum = SecurityAlert.RiskLevel.valueOf(riskLevel.toUpperCase());
       } catch (IllegalArgumentException e) {
         // 忽略无效的风险等级值
+        log.debug("[SecurityAlert] 忽略无效的风险等级值: riskLevel={}", riskLevel);
       }
     }
     LocalDateTime startTime = start != null ? start.atStartOfDay() : null;

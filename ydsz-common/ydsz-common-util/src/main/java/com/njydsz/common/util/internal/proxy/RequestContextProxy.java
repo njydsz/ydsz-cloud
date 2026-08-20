@@ -3,6 +3,7 @@ package com.njydsz.common.util.internal.proxy;
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +37,8 @@ public final class RequestContextProxy {
   /** 反射 Method 缓存 */
   private static final ConcurrentMap<String, Method> METHOD_CACHE = new ConcurrentHashMap<>();
 
-  /** RequestContext 是否可用的标记（volatile 保证可见性，一次性检查后缓存） */
-  private static volatile Boolean available;
+  /** RequestContext 是否可用的标记（null=未检查，TRUE=可用，FALSE=不可用） */
+  private static final AtomicReference<Boolean> available = new AtomicReference<>();
 
   private RequestContextProxy() {
     throw new UnsupportedOperationException("Utility class should not be instantiated");
@@ -49,20 +50,20 @@ public final class RequestContextProxy {
    * @return true 表示可用，false 表示不可用（util 模块被独立使用时）
    */
   public static boolean isAvailable() {
-    if (available == null) {
-      synchronized (RequestContextProxy.class) {
-        if (available == null) {
-          try {
-            Class.forName(REQUEST_CONTEXT_CLASS);
-            available = Boolean.TRUE;
-          } catch (ClassNotFoundException e) {
-            available = Boolean.FALSE;
-            LOG.debug("ydsz-common-core 不在 classpath 中，RequestContext 功能将降级为无操作");
-          }
-        }
-      }
+    Boolean result = available.get();
+    if (result != null) {
+      return result;
     }
-    return available;
+    try {
+      Class.forName(REQUEST_CONTEXT_CLASS);
+      if (available.compareAndSet(null, Boolean.TRUE)) {
+        return true;
+      }
+    } catch (ClassNotFoundException e) {
+      available.compareAndSet(null, Boolean.FALSE);
+      LOG.debug("ydsz-common-core 不在 classpath 中，RequestContext 功能将降级为无操作");
+    }
+    return available.get();
   }
 
   /**
@@ -176,21 +177,17 @@ public final class RequestContextProxy {
   private static Method getCachedMethod(String methodName, Class<?>... paramTypes) {
     String cacheKey = methodName + "_" + paramTypes.length;
     Method method = METHOD_CACHE.get(cacheKey);
-    if (method == null) {
-      synchronized (RequestContextProxy.class) {
-        method = METHOD_CACHE.get(cacheKey);
-        if (method == null) {
-          try {
-            Class<?> clazz = Class.forName(REQUEST_CONTEXT_CLASS);
-            method = clazz.getMethod(methodName, paramTypes);
-            method.setAccessible(true);
-            METHOD_CACHE.put(cacheKey, method);
-          } catch (NoSuchMethodException | ClassNotFoundException e) {
-            LOG.debug("查找 RequestContext.{} 方法失败: {}", methodName, e.getMessage());
-            return null;
-          }
-        }
-      }
+    if (method != null) {
+      return method;
+    }
+    try {
+      Class<?> clazz = Class.forName(REQUEST_CONTEXT_CLASS);
+      method = clazz.getMethod(methodName, paramTypes);
+      method.setAccessible(true);
+      METHOD_CACHE.put(cacheKey, method);
+    } catch (NoSuchMethodException | ClassNotFoundException e) {
+      LOG.debug("查找 RequestContext.{} 方法失败: {}", methodName, e.getMessage());
+      return null;
     }
     return method;
   }
@@ -202,6 +199,6 @@ public final class RequestContextProxy {
    */
   public static void clearCache() {
     METHOD_CACHE.clear();
-    available = null;
+    available.set(null);
   }
 }

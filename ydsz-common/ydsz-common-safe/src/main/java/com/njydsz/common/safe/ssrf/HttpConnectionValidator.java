@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +73,8 @@ public final class HttpConnectionValidator {
           Pattern.compile("^::ffff:192\\.168\\."),
           Pattern.compile("^::ffff:127\\."));
 
-  private static volatile HttpConnectionValidator defaultInstance;
+  private static final AtomicReference<HttpConnectionValidator> defaultInstance =
+      new AtomicReference<>();
 
   private volatile SsrfProperties properties;
 
@@ -86,14 +88,12 @@ public final class HttpConnectionValidator {
    * @return 默认 SSRF 校验器
    */
   public static HttpConnectionValidator getDefault() {
-    if (defaultInstance == null) {
-      synchronized (HttpConnectionValidator.class) {
-        if (defaultInstance == null) {
-          defaultInstance = new HttpConnectionValidator(null);
-        }
-      }
+    HttpConnectionValidator validator = defaultInstance.get();
+    if (validator == null) {
+      HttpConnectionValidator created = new HttpConnectionValidator(null);
+      return defaultInstance.compareAndSet(null, created) ? created : defaultInstance.get();
     }
-    return defaultInstance;
+    return validator;
   }
 
   /**

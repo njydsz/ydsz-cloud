@@ -1,6 +1,5 @@
-package com.njydsz.nextwiki.server.service;
+package com.njydsz.nextwiki.domain.service;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,10 +7,8 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
@@ -25,9 +22,13 @@ import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
  * <p>管理分享链接的生命周期：创建、验证访问、撤销、到期提醒。
  *
  * <p><b>防暴力破解：</b>通过 Redis 记录连续失败次数，超过阈值临时锁定。
+ * 此部分逻辑由 server 层负责（需要 Redis 基础设施），本服务仅包含纯领域逻辑。
  *
- * <p><b>设计原则：</b>本服务仅包含纯领域逻辑，不直接依赖 Repository 接口。数据访问由 server 层负责，
- * 所需数据通过方法参数传入。
+ * <p><b>设计原则：</b>本服务仅包含纯领域逻辑，不直接依赖 Repository 接口。
+ * 数据访问由 server 层负责，所需数据通过方法参数传入。
+ *
+ * <p><b>DDD 合规：</b>本服务不依赖 Spring Security {@code BCryptPasswordEncoder}，
+ * 密码哈希由 server 层完成后传入；Redis 防暴力破解由 server 层负责。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -39,59 +40,52 @@ public class ShareLinkDomainService {
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-  private final RedisStringOps stringOps;
-
-  private final BCryptPasswordEncoder passwordEncoder;
-
-  /** 防暴力破解 Redis Key 前缀 */
-  private static final String KEY_SHARE_FAIL = "nextwiki:share:fail:";
-
-  /** 最大失败次数 */
-  private static final int MAX_FAIL_COUNT = 5;
-
-  /** 锁定时长（分钟） */
-  private static final long LOCK_DURATION_MINUTES = 30;
-
   // ==================== 创建分享 ====================
 
   /**
    * 创建分享链接（基础版，公开分享）。
    *
-   * @param node           文件节点 VO（由 server 层查询后传入）
-   * @param shareType      分享类型（view/download/edit）
-   * @param password       访问密码（可为空）
-   * @param expireTime     过期时间（可为空）
+   * <p><b>DDD 合规：</b>密码哈希由 server 层通过 {@code BCryptPasswordEncoder} 完成后传入，
+   * 本服务不依赖 Spring Security。
+   *
+   * @param node 文件节点 VO（由 server 层查询后传入）
+   * @param shareType 分享类型（view/download/edit）
+   * @param hashedPassword 已哈希的访问密码（可为空；由 server 层哈希后传入）
+   * @param expireTime 过期时间（可为空）
    * @param maxAccessCount 最大访问次数（可为空）
-   * @param userId         创建者 ID
+   * @param userId 创建者 ID
    * @return 分享链接实体与接收者列表
    */
   public CreateShareResult createShare(
       FileNodeVO node,
       String shareType,
-      String password,
+      String hashedPassword,
       LocalDateTime expireTime,
       Integer maxAccessCount,
       String userId) {
-    return createShare(node, shareType, password, expireTime, maxAccessCount, null, null, userId);
+    return createShare(node, shareType, hashedPassword, expireTime, maxAccessCount, null, null, userId);
   }
 
   /**
    * 创建分享链接（增强版，支持定向分享和自定义标题）。
    *
-   * @param node           文件节点 VO（由 server 层查询后传入）
-   * @param shareType      分享类型（view/download/edit）
-   * @param password       访问密码（可为空）
-   * @param expireTime     过期时间（可为空）
+   * <p><b>DDD 合规：</b>密码哈希由 server 层通过 {@code BCryptPasswordEncoder} 完成后传入，
+   * 本服务不依赖 Spring Security。
+   *
+   * @param node 文件节点 VO（由 server 层查询后传入）
+   * @param shareType 分享类型（view/download/edit）
+   * @param hashedPassword 已哈希的访问密码（可为空；由 server 层哈希后传入）
+   * @param expireTime 过期时间（可为空）
    * @param maxAccessCount 最大访问次数（可为空）
-   * @param targetUserIds  目标用户 ID 列表（定向分享，可为空）
-   * @param title          分享标题（可为空）
-   * @param userId         创建者 ID
+   * @param targetUserIds 目标用户 ID 列表（定向分享，可为空）
+   * @param title 分享标题（可为空）
+   * @param userId 创建者 ID
    * @return 分享链接实体与接收者列表
    */
   public CreateShareResult createShare(
       FileNodeVO node,
       String shareType,
-      String password,
+      String hashedPassword,
       LocalDateTime expireTime,
       Integer maxAccessCount,
       List<String> targetUserIds,
@@ -118,8 +112,7 @@ public class ShareLinkDomainService {
             .maxAccessCount(maxAccessCount)
             .accessCount(0)
             .status(ShareStatus.ACTIVE.getCode())
-            .password(
-                password != null && !password.isEmpty() ? passwordEncoder.encode(password) : null)
+            .password(hashedPassword)
             .shareTargetType(shareTargetType)
             .reminderSent(false)
             .title(title)
@@ -162,28 +155,20 @@ public class ShareLinkDomainService {
   // ==================== 验证访问 ====================
 
   /**
-   * 验证分享链接访问（含防暴力破解）。
+   * 验证分享链接访问（纯领域逻辑，不含 Redis/BCrypt 基础设施）。
+   *
+   * <p><b>DDD 合规：</b>本方法仅执行领域验证逻辑（状态、过期、访问次数），
+   * 防暴力破解（Redis）和密码匹配（BCrypt）由 server 层负责。
    *
    * <p>注意：本方法仅执行领域验证逻辑，不执行持久化操作。若状态变更为 EXPIRED，调用方（server 层）
    * 应通过 Repository 更新 DTO。
    *
-   * @param shareLink  分享链接 DTO（由 server 层查询后传入）
+   * @param shareLink 分享链接 DTO（由 server 层查询后传入）
    * @param extractCode 提取码
-   * @param password   访问密码
    * @return 验证通过的分享链接 DTO（状态可能已更新为 EXPIRED）
-   * @throws BusinessException 链接不存在/过期/访问受限/密码错误/提取码错误/已锁定时抛出
+   * @throws BusinessException 链接不存在/过期/访问受限/提取码错误时抛出
    */
-  public ShareLinkDTO verifyAccess(ShareLinkDTO shareLink, String extractCode, String password) {
-    String shareCode = shareLink.getShareCode();
-
-    // 防暴力破解——检查失败次数是否超限
-    String failKey = KEY_SHARE_FAIL + shareCode;
-    String failCountStr = stringOps.get(failKey, String.class);
-    if (failCountStr != null && Integer.parseInt(failCountStr) >= MAX_FAIL_COUNT) {
-      log.warn("[ShareLinkDomainService] 分享链接已被临时锁定: shareCode={}", shareCode);
-      throw new BusinessException(NextwikiExceptionCode.SHARE_LOCKED);
-    }
-
+  public ShareLinkDTO verifyAccess(ShareLinkDTO shareLink, String extractCode) {
     ShareStatus currentStatus = ShareStatus.fromCode(shareLink.getStatus());
     if (currentStatus == null || currentStatus.isTerminal()) {
       throw new BusinessException(NextwikiExceptionCode.SHARE_EXPIRED);
@@ -203,33 +188,9 @@ public class ShareLinkDomainService {
       throw new BusinessException(NextwikiExceptionCode.SHARE_ACCESS_LIMIT);
     }
 
-    boolean verifyFailed = false;
-
     if (shareLink.getExtractCode() != null && !shareLink.getExtractCode().equals(extractCode)) {
-      verifyFailed = true;
+      throw new BusinessException(NextwikiExceptionCode.SHARE_EXTRACT_CODE_ERROR);
     }
-
-    if (!verifyFailed && shareLink.getPassword() != null && !shareLink.getPassword().isEmpty()) {
-      if (password == null || !passwordEncoder.matches(password, shareLink.getPassword())) {
-        verifyFailed = true;
-      }
-    }
-
-    if (verifyFailed) {
-      // 记录失败次数
-      Long failCount = stringOps.incr(failKey, 1);
-      if (failCount != null && failCount == 1) {
-        stringOps.expire(failKey, Duration.ofMinutes(LOCK_DURATION_MINUTES));
-      }
-      log.warn("[ShareLinkDomainService] 验证失败: shareCode={}, failCount={}", shareCode, failCount);
-      throw new BusinessException(
-          shareLink.getExtractCode() != null
-              ? NextwikiExceptionCode.SHARE_EXTRACT_CODE_ERROR
-              : NextwikiExceptionCode.SHARE_PASSWORD_ERROR);
-    }
-
-    // 验证成功，清除失败计数
-    stringOps.del(failKey);
 
     return shareLink;
   }
@@ -242,7 +203,7 @@ public class ShareLinkDomainService {
    * <p>注意：本方法仅修改 DTO 状态，持久化由 server 层负责。
    *
    * @param shareLink 分享链接 DTO（由 server 层查询后传入）
-   * @param userId    操作人 ID
+   * @param userId 操作人 ID
    */
   public void revoke(ShareLinkDTO shareLink, String userId) {
     shareLink.setStatus(ShareStatus.REVOKED.getCode());
@@ -276,7 +237,7 @@ public class ShareLinkDomainService {
    *
    * <p>注意：本方法仅修改实体状态，持久化由 server 层负责。
    *
-   * @param ShareLinkDO 分享链接实体（由 server 层查询后传入）
+   * @param shareLink 分享链接实体（由 server 层查询后传入）
    */
   public void markReminderSent(ShareLinkDTO shareLink) {
     shareLink.setReminderSent(true);
@@ -288,7 +249,7 @@ public class ShareLinkDomainService {
    * 从给定列表中筛选用户的有效分享链接。
    *
    * @param shareLinks 分享链接列表（由 server 层查询后传入）
-   * @param userId     用户 ID
+   * @param userId 用户 ID
    * @return 该用户的有效分享链接列表
    */
   public List<ShareLinkDTO> findByUserId(List<ShareLinkDTO> shareLinks, String userId) {
@@ -315,7 +276,7 @@ public class ShareLinkDomainService {
   /**
    * 创建分享链接的结果。
    *
-   * @param ShareLinkDO  分享链接实体
+   * @param shareLink 分享链接实体
    * @param recipients 定向分享接收者列表（公开分享时为空列表）
    */
   public record CreateShareResult(ShareLinkDTO shareLink, List<ShareRecipientDTO> recipients) {}

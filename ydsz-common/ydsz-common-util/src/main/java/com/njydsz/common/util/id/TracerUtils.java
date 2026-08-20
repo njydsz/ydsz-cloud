@@ -1,6 +1,7 @@
 package com.njydsz.common.util.id;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +72,7 @@ public final class TracerUtils {
   /** SkyWalking TraceContext.traceId() 反射缓存 */
   private static volatile Method skywalkingTraceIdMethod;
 
-  private static volatile boolean skywalkingChecked = false;
+  private static final AtomicBoolean skywalkingChecked = new AtomicBoolean(false);
   private static volatile boolean skywalkingAvailable = false;
 
   private TracerUtils() {
@@ -87,19 +88,14 @@ public final class TracerUtils {
    * @return SkyWalking traceId，或 null（不可用时）
    */
   private static String getSkyWalkingTraceId() {
-    if (!skywalkingChecked) {
-      synchronized (TracerUtils.class) {
-        if (!skywalkingChecked) {
-          try {
-            Class<?> clazz = Class.forName(SKYWALKING_TRACE_CONTEXT_CLASS);
-            skywalkingTraceIdMethod = clazz.getMethod("traceId");
-            skywalkingAvailable = true;
-          } catch (ClassNotFoundException | NoSuchMethodException e) {
-            skywalkingAvailable = false;
-            LOG.debug("SkyWalking TraceContext not available, trace ID will fallback to MDC only");
-          }
-          skywalkingChecked = true;
-        }
+    if (skywalkingChecked.compareAndSet(false, true)) {
+      try {
+        Class<?> clazz = Class.forName(SKYWALKING_TRACE_CONTEXT_CLASS);
+        skywalkingTraceIdMethod = clazz.getMethod("traceId");
+        skywalkingAvailable = true;
+      } catch (ClassNotFoundException | NoSuchMethodException e) {
+        skywalkingAvailable = false;
+        LOG.debug("SkyWalking TraceContext not available, trace ID will fallback to MDC only");
       }
     }
     if (!skywalkingAvailable || skywalkingTraceIdMethod == null) {

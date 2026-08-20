@@ -33,6 +33,7 @@ import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.StatsRecorder;
 import com.njydsz.literule.domain.model.ModelInputRegistry;
 import com.njydsz.literule.domain.model.ModelInvocationException;
+import com.njydsz.literule.server.core.RuleEvaluationException;
 import com.njydsz.literule.server.spi.FactCollectionException;
 import com.njydsz.literule.server.spi.FactProviderRegistry;
 import com.njydsz.literule.server.spi.RuleActionDispatcher;
@@ -459,7 +460,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
       return registry.collectAllFacts(context);
     } catch (FactCollectionException e) {
       log.warn("[LiteRule-Fact] 事实采集失败（fallbackOnError=false），中断评估: {}", e.getMessage());
-      throw new RuntimeException(e);
+      throw RuleEvaluationException.evaluationError("fact-collection", e);
     }
   }
 
@@ -476,7 +477,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
       return registry.collectAllModelOutputs(context);
     } catch (ModelInvocationException e) {
       log.warn("[LiteRule-Model] 模型调用失败（fallbackOnError=false），中断评估: {}", e.getMessage());
-      throw new RuntimeException(e);
+      throw RuleEvaluationException.evaluationError("model-invocation", e);
     }
   }
 

@@ -5,8 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.dto.CompanyCreateDTO;
-import com.njydsz.userinfo.domain.dto.CompanyUpdateDTO;
+import com.njydsz.userinfo.domain.dto.CompanyDTO;
 import com.njydsz.userinfo.domain.query.CompanyPageQuery;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 
@@ -63,20 +62,14 @@ public interface CompanyRepository {
   List<CompanyVO> listByIds(Collection<String> ids);
 
   /**
-   * 创建公司。
+   * 保存公司（创建或更新）。
    *
-   * @param dto 创建 DTO
-   * @return 创建后的公司 VO
-   */
-  CompanyVO create(CompanyCreateDTO dto);
-
-  /**
-   * 更新公司。
+   * <p>统一 DTO：创建时 {@code id} 可不传，更新时 {@code id} 必填。
    *
-   * @param dto 更新 DTO
-   * @return 更新后的公司 VO
+   * @param dto 公司 DTO
+   * @return 保存后的公司 VO
    */
-  CompanyVO update(CompanyUpdateDTO dto);
+  CompanyVO save(CompanyDTO dto);
 
   /**
    * 根据 ID 删除公司（逻辑删除）。

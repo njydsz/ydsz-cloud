@@ -10,8 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.dto.PostCreateDTO;
-import com.njydsz.userinfo.domain.dto.PostUpdateDTO;
+import com.njydsz.userinfo.domain.dto.PostDTO;
 import com.njydsz.userinfo.domain.query.PostPageQuery;
 import com.njydsz.userinfo.domain.repository.PostRepository;
 import com.njydsz.userinfo.domain.vo.PostVO;
@@ -76,17 +75,16 @@ public class PostRepositoryImpl implements PostRepository {
   }
 
   @Override
-  public PostVO create(PostCreateDTO dto) {
-    PostDO entity = converter.createDtoToEntity(dto);
-    postMapper.insert(entity);
-    return converter.entityToVO(entity);
-  }
-
-  @Override
-  public PostVO update(PostUpdateDTO dto) {
-    PostDO entity = converter.updateDtoToEntity(dto);
-    postMapper.updateById(entity);
-    return converter.entityToVO(entity);
+  public PostVO save(PostDTO dto) {
+    if (dto.getId() == null || dto.getId().isBlank()) {
+      PostDO entity = converter.dtoToEntity(dto);
+      postMapper.insert(entity);
+      return converter.entityToVO(entity);
+    } else {
+      PostDO entity = converter.dtoToEntityWithId(dto);
+      postMapper.updateById(entity);
+      return converter.entityToVO(entity);
+    }
   }
 
   @Override

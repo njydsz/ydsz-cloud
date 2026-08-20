@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.provider.SerializationProvider;
@@ -47,7 +48,7 @@ public final class JsonConfig implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  private static volatile JsonConfig instance;
+  private static final AtomicReference<JsonConfig> instance = new AtomicReference<>();
 
   /**
    * 全局配置版本号，每次 install() 自增。
@@ -165,12 +166,8 @@ public final class JsonConfig implements Serializable {
     if (newConfig == null) {
       throw new IllegalArgumentException("JsonConfig.install: config must not be null");
     }
-    JsonConfig oldConfig;
-    synchronized (JsonConfig.class) {
-      oldConfig = instance;
-      instance = newConfig;
-    }
-    instance.apply();
+    JsonConfig oldConfig = instance.getAndSet(newConfig);
+    newConfig.apply();
     // 触发 YdszJson 静态方法委托的默认 Mapper 重建，使配置变更立即生效
     com.njydsz.common.json.YdszJson.reloadDefaultMapper();
     // 自增版本号，供缓存组件检测配置变更
@@ -250,14 +247,12 @@ public final class JsonConfig implements Serializable {
    * @return JsonConfig 实例（默认配置）
    */
   public static JsonConfig getInstance() {
-    if (instance == null) {
-      synchronized (JsonConfig.class) {
-        if (instance == null) {
-          instance = builder().build();
-        }
-      }
+    JsonConfig config = instance.get();
+    if (config == null) {
+      JsonConfig created = builder().build();
+      return instance.compareAndSet(null, created) ? created : instance.get();
     }
-    return instance;
+    return config;
   }
 
   /**

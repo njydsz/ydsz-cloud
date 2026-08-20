@@ -10,9 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
+import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
-import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
@@ -67,22 +66,23 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   }
 
   @Override
-  public UserAccountVO create(UserAccountCreateDTO dto) {
-    UserAccountDO entity = converter.createDtoToEntity(dto);
-    userAccountMapper.insert(entity);
-    return converter.entityToVO(entity);
-  }
-
-  @Override
-  public UserAccountVO update(UserAccountUpdateDTO dto) {
-    UserAccountDO entity = converter.updateDtoToEntity(dto);
-    // P1-6: 检查乐观锁冲突（entity.revision 非 null 时 MP 自动带 WHERE revision = ?）
-    int affected = userAccountMapper.updateById(entity);
-    if (affected == 0) {
-      throw new com.njydsz.common.exception.custom.BusinessException(
-          com.njydsz.userinfo.domain.enums.UserInfoExceptionCode.USER_UPDATE_CONFLICT);
+  public UserAccountVO save(UserAccountDTO dto) {
+    if (dto.getId() == null || dto.getId().isBlank()) {
+      // 创建场景
+      UserAccountDO entity = converter.dtoToEntity(dto);
+      userAccountMapper.insert(entity);
+      return converter.entityToVO(entity);
+    } else {
+      // 更新场景
+      UserAccountDO entity = converter.dtoToEntityWithId(dto);
+      // P1-6: 检查乐观锁冲突（entity.revision 非 null 时 MP 自动带 WHERE revision = ?）
+      int affected = userAccountMapper.updateById(entity);
+      if (affected == 0) {
+        throw new com.njydsz.common.exception.custom.BusinessException(
+            com.njydsz.userinfo.domain.enums.UserInfoExceptionCode.USER_UPDATE_CONFLICT);
+      }
+      return converter.entityToVO(entity);
     }
-    return converter.entityToVO(entity);
   }
 
   @Override
@@ -137,8 +137,8 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   }
 
   @Override
-  public int increaseLoginFailCount(String id, int threshold, int lockMinutes) {
-    return userAccountMapper.increaseLoginFailCount(id, threshold, lockMinutes);
+  public int increaseLoginFailCount(String id, int threshold, java.time.LocalDateTime lockUntil) {
+    return userAccountMapper.increaseLoginFailCount(id, threshold, lockUntil);
   }
 
   @Override

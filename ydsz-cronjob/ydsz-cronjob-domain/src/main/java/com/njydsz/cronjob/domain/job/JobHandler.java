@@ -16,9 +16,9 @@ public interface JobHandler {
    *
    * @param paramsJson 任务参数 JSON 字符串（可空）
    * @return 执行结果（可空，用于日志记录和回写任务日志）
-   * @throws Exception 执行异常
+   * @throws JobExecutionException 执行异常
    */
-  Object execute(String paramsJson) throws Exception;
+  Object execute(String paramsJson) throws JobExecutionException;
 
   /**
    * 执行分片任务。
@@ -26,9 +26,9 @@ public interface JobHandler {
    * @param paramsJson 任务参数 JSON 字符串（可空）
    * @param ctx 分片上下文
    * @return 执行结果（可空）
-   * @throws Exception 执行异常
+   * @throws JobExecutionException 执行异常
    */
-  default Object execute(String paramsJson, ShardingContext ctx) throws Exception {
+  default Object execute(String paramsJson, ShardingContext ctx) throws JobExecutionException {
     return execute(paramsJson);
   }
 

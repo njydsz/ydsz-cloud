@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.dag.JobDagSaveDTO;
-import com.njydsz.cronjob.infra.entity.dag.JobDag;
-import com.njydsz.cronjob.infra.entity.dag.JobDagVersion;
+import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
+import com.njydsz.cronjob.domain.vo.JobDagVO;
 
 /**
  * DAG 工作流定义 Service
@@ -33,8 +33,8 @@ import com.njydsz.cronjob.infra.entity.dag.JobDagVersion;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.cronjob.domain.entity.dag.JobDag DAG 定义实体
- * @see com.njydsz.cronjob.domain.entity.dag.JobDagVersion DAG 版本实体
+ * @see com.njydsz.cronjob.domain.vo.JobDagVO DAG 定义视图对象
+ * @see com.njydsz.cronjob.domain.vo.JobDagVersionVO DAG 版本视图对象
  * @see JobDagInstanceService DAG 实例 Service
  */
 public interface JobDagService {
@@ -85,33 +85,33 @@ public interface JobDagService {
    * 查询 DAG 定义。
    *
    * @param dagId DAG ID
-   * @return DAG 定义
+   * @return DAG 定义 VO
    * @throws SysException 当 DAG 不存在时抛出
    */
-  JobDag getDagById(String dagId);
+  JobDagVO getDagById(String dagId);
 
   /**
    * 根据 KEY 查询 DAG 定义。
    *
    * @param dagKey DAG KEY
-   * @return DAG 定义
+   * @return DAG 定义 VO
    * @throws SysException 当 DAG 不存在时抛出
    */
-  JobDag getDagByKey(String dagKey);
+  JobDagVO getDagByKey(String dagKey);
 
   /**
    * 查询所有启用的 DAG。
    *
-   * @return 启用状态的 DAG 列表
+   * @return 启用状态的 DAG VO 列表
    */
-  List<JobDag> listEnabledDags();
+  List<JobDagVO> listEnabledDags();
 
   /**
    * 查询所有 CRON 触发的启用 DAG（调度器扫描用）。
    *
-   * @return CRON 启用状态的 DAG 列表
+   * @return CRON 启用状态的 DAG VO 列表
    */
-  List<JobDag> listCronEnabledDags();
+  List<JobDagVO> listCronEnabledDags();
 
   /**
    * 手动触发 DAG 执行。
@@ -130,19 +130,19 @@ public interface JobDagService {
    *
    * @param dagId DAG ID
    * @param limit 最多返回条数（默认 50）
-   * @return 版本历史列表（按版本号倒序）
+   * @return 版本历史 VO 列表（按版本号倒序）
    */
-  List<JobDagVersion> listDagVersions(String dagId, int limit);
+  List<JobDagVersionVO> listDagVersions(String dagId, int limit);
 
   /**
    * P1-8: 查询指定版本的 DAG 快照。
    *
    * @param dagId DAG ID
    * @param version 版本号
-   * @return 版本快照
+   * @return 版本快照 VO
    * @throws SysException 当版本不存在时抛出
    */
-  JobDagVersion getDagVersion(String dagId, int version);
+  JobDagVersionVO getDagVersion(String dagId, int version);
 
   /**
    * P1-8: 回滚 DAG 到指定版本。

@@ -12,9 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.userinfo.domain.dto.MenuCreateDTO;
 import com.njydsz.userinfo.domain.dto.MenuDTO;
-import com.njydsz.userinfo.domain.dto.MenuUpdateDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.MenuPageQuery;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
@@ -91,9 +89,10 @@ public class MenuServiceImpl implements MenuService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String create(MenuDTO dto) {
-    MenuCreateDTO createDTO = new MenuCreateDTO();
-    BeanUtils.copyProperties(dto, createDTO);
-    MenuVO vo = menuRepository.create(createDTO);
+    if (dto.getStatus() == null || dto.getStatus().isBlank()) {
+      dto.setStatus("ENABLED");
+    }
+    MenuVO vo = menuRepository.save(dto);
     log.info("Menu created: code={}, id={}", dto.getMenuCode(), vo.getId());
     invalidatePermissionCache();
     return vo.getId();
@@ -102,8 +101,6 @@ public class MenuServiceImpl implements MenuService {
   /**
    * {@inheritDoc}
    *
-   * <p>使用 MapStruct 转换（更新操作暂保留 BeanUtils）
-   *
    * @throws BusinessException 当菜单不存在或已删除时抛出
    */
   @Override
@@ -111,9 +108,7 @@ public class MenuServiceImpl implements MenuService {
   public boolean update(MenuDTO dto) {
     menuRepository.findById(dto.getId())
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.MENU_NOT_FOUND));
-    MenuUpdateDTO updateDTO = new MenuUpdateDTO();
-    BeanUtils.copyProperties(dto, updateDTO);
-    MenuVO vo = menuRepository.update(updateDTO);
+    MenuVO vo = menuRepository.save(dto);
     if (vo != null) {
       invalidatePermissionCache();
     }

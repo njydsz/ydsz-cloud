@@ -20,6 +20,7 @@ import com.njydsz.common.seata.api.SagaStateMachineLog;
 import com.njydsz.common.seata.api.SagaStateMachineLogStore;
 import com.njydsz.common.seata.api.SagaStep;
 import com.njydsz.common.seata.api.StepTimeoutException;
+import com.njydsz.common.seata.api.TransactionException;
 import com.njydsz.common.seata.api.TransactionType;
 import com.njydsz.common.seata.audit.TransactionAuditLogger;
 import com.njydsz.common.seata.config.SeataProperties;
@@ -271,7 +272,11 @@ public class SagaOrchestrator extends AbstractTransactionManager {
               try {
                 return step.getForwardAction().call();
               } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new TransactionException(
+                    "SAGA step execution failed: " + step.getStepName(),
+                    null,
+                    null,
+                    e);
               }
             },
             TIMEOUT_SCHEDULER);

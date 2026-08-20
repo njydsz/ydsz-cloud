@@ -30,6 +30,7 @@ import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.api.ScriptDefinition;
+import com.njydsz.literule.server.core.RuleEvaluationException;
 
 /**
  * 脚本规则：基于 JSR-223 多语言脚本动态评估
@@ -674,7 +675,8 @@ public class ScriptRule implements Rule {
     try {
       return compiledScript.eval(bindings);
     } catch (javax.script.ScriptException e) {
-      throw new RuntimeException("脚本执行异常: " + e.getMessage(), e);
+      throw RuleEvaluationException.evaluationError(
+          getCode(), "script-eval", e);
     }
   }
 

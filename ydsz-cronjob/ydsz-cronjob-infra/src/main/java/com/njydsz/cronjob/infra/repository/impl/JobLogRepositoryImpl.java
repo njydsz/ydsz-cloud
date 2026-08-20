@@ -68,6 +68,11 @@ public class JobLogRepositoryImpl implements JobLogRepository {
   }
 
   @Override
+  public List<JobLogVO> findStuckTasks(LocalDateTime threshold, int limit) {
+    return converter.jobLogListToVO(jobLogMapper.selectStuckTasks(threshold, limit));
+  }
+
+  @Override
   public Map<String, Object> countByJobIdSince(String jobId, LocalDateTime since) {
     return jobLogMapper.countByJobIdSince(jobId, since);
   }

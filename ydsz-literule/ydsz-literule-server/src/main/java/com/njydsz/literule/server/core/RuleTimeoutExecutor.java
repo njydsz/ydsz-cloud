@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
+import com.njydsz.literule.server.core.RuleEvaluationException;
 
 /**
  * 规则超时执行器
@@ -86,7 +87,7 @@ public class RuleTimeoutExecutor {
     } catch (ExecutionException e) {
       Throwable cause = e.getCause() != null ? e.getCause() : e;
       if (cause instanceof RuntimeException re) throw re;
-      throw new RuntimeException("规则评估异常: " + rule.getCode(), cause);
+      throw RuleEvaluationException.timeout(rule.getCode(), cause);
     }
   }
 

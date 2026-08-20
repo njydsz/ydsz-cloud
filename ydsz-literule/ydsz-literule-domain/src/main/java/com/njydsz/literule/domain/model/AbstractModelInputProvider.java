@@ -1,6 +1,7 @@
 package com.njydsz.literule.domain.model;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +42,7 @@ import com.njydsz.literule.api.RuleContext;
 public abstract class AbstractModelInputProvider implements ModelInputProvider {
 
   /** 初始化标记 */
-  private volatile boolean initialized = false;
+  private final AtomicBoolean initialized = new AtomicBoolean(false);
 
   @Override
   public final Map<String, Object> getModelOutput(RuleContext context) {
@@ -58,13 +59,8 @@ public abstract class AbstractModelInputProvider implements ModelInputProvider {
   }
 
   private void ensureInit() {
-    if (!initialized) {
-      synchronized (this) {
-        if (!initialized) {
-          onInit();
-          initialized = true;
-        }
-      }
+    if (initialized.compareAndSet(false, true)) {
+      onInit();
     }
   }
 

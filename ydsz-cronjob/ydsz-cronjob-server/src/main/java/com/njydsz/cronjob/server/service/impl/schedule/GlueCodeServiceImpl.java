@@ -365,7 +365,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
    * </ul>
    */
   private Object executeByLanguage(String sourceCode, String language, String paramsJson)
-      throws Exception {
+      throws JobExecutionException {
     switch (language) {
       case "GROOVY", "JAVA" -> {
         try (GroovyClassLoader classLoader = new GroovyClassLoader()) {

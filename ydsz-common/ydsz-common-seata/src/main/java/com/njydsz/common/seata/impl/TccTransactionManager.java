@@ -19,6 +19,7 @@ import com.njydsz.common.seata.api.TccBranchStatus;
 import com.njydsz.common.seata.api.TccContext;
 import com.njydsz.common.seata.api.TccTransactionLog;
 import com.njydsz.common.seata.api.TccTransactionLogStore;
+import com.njydsz.common.seata.api.TransactionException;
 import com.njydsz.common.seata.api.TransactionType;
 import com.njydsz.common.seata.audit.TransactionAuditLogger;
 import com.njydsz.common.seata.config.SeataProperties;
@@ -363,9 +364,11 @@ public class TccTransactionManager extends AbstractTransactionManager
         executeCancelWithRetry(transactionName, xid, branchId, txLog, tccAction, context);
       } catch (Exception cancelEx) {
         LOG.error("TCC Async Cancel also failed: name={}, xid={}", transactionName, xid, cancelEx);
-        throw new RuntimeException("TCC Async Confirm failed: " + transactionName, cancelEx);
+            throw new TransactionException(
+                "TCC Async Confirm failed", transactionName, xid, cancelEx);
       }
-      throw new RuntimeException("TCC Async Confirm failed: " + transactionName, e);
+      throw new TransactionException(
+          "TCC Async Confirm failed", transactionName, xid, e);
     } finally {
       localActionCache.remove(xid);
       endXid();

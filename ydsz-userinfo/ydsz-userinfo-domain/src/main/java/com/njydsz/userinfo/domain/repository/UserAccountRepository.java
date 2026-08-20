@@ -5,9 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
+import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
-import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
@@ -69,20 +68,15 @@ public interface UserAccountRepository {
   Optional<UserAccountCredentialVO> findCredentialById(String id);
 
   /**
-   * 创建用户账号。
+   * 保存用户账号（创建或更新）。
    *
-   * @param dto 用户创建 DTO
-   * @return 创建后的用户账号 VO（含生成的 ID）
-   */
-  UserAccountVO create(UserAccountCreateDTO dto);
-
-  /**
-   * 更新用户账号。
+   * <p>根据 {@code id} 是否为空判断：为空则创建，非空则更新。
+   * 创建时 {@code username}/{@code password} 必填，更新时 {@code id} 必填。
    *
-   * @param dto 用户更新 DTO
-   * @return 更新后的用户账号 VO
+   * @param dto 统一 DTO
+   * @return 保存后的用户账号 VO
    */
-  UserAccountVO update(UserAccountUpdateDTO dto);
+  UserAccountVO save(UserAccountDTO dto);
 
   /**
    * 根据 ID 删除用户账号（逻辑删除）。
@@ -143,12 +137,15 @@ public interface UserAccountRepository {
   /**
    * 原子递增登录失败次数，并在达到阈值时同步设置账号锁定时间。
    *
+   * <p><b>数据库兼容性：</b>锁定时间戳由调用方预计算后传入（{@code lockUntil}），
+   * 避免在 SQL 中使用数据库特定的 INTERVAL 语法，实现数据库无关。
+   *
    * @param id 用户 ID
    * @param threshold 锁定阈值（登录失败次数）
-   * @param lockMinutes 锁定时长（分钟）
+   * @param lockUntil 账号锁定到期时间（由 Service 层根据 lockDurationMinutes 计算后传入）
    * @return 影响行数（用户不存在或已删除时为 0）
    */
-  int increaseLoginFailCount(String id, int threshold, int lockMinutes);
+  int increaseLoginFailCount(String id, int threshold, java.time.LocalDateTime lockUntil);
 
   /**
    * 原子重置登录成功状态：清零失败计数、清除锁定时间、记录最近登录信息。

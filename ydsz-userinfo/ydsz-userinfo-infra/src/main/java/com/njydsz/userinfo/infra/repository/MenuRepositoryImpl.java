@@ -10,8 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.dto.MenuCreateDTO;
-import com.njydsz.userinfo.domain.dto.MenuUpdateDTO;
+import com.njydsz.userinfo.domain.dto.MenuDTO;
 import com.njydsz.userinfo.domain.query.MenuPageQuery;
 import com.njydsz.userinfo.domain.repository.MenuRepository;
 import com.njydsz.userinfo.domain.vo.MenuVO;
@@ -76,17 +75,16 @@ public class MenuRepositoryImpl implements MenuRepository {
   }
 
   @Override
-  public MenuVO create(MenuCreateDTO dto) {
-    MenuDO entity = converter.createDtoToEntity(dto);
-    menuMapper.insert(entity);
-    return converter.entityToVO(entity);
-  }
-
-  @Override
-  public MenuVO update(MenuUpdateDTO dto) {
-    MenuDO entity = converter.updateDtoToEntity(dto);
-    menuMapper.updateById(entity);
-    return converter.entityToVO(entity);
+  public MenuVO save(MenuDTO dto) {
+    if (dto.getId() == null || dto.getId().isBlank()) {
+      MenuDO entity = converter.dtoToEntity(dto);
+      menuMapper.insert(entity);
+      return converter.entityToVO(entity);
+    } else {
+      MenuDO entity = converter.dtoToEntityWithId(dto);
+      menuMapper.updateById(entity);
+      return converter.entityToVO(entity);
+    }
   }
 
   @Override

@@ -14,7 +14,16 @@ import com.njydsz.nextwiki.domain.vo.FileVersionVO;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 违反云顶编码规范§34.2.2 — Converter 只能放在 infra 层。
+ *             <p><b>DDD 合规路径：</b>
+ *             <ul>
+ *               <li>Repository 接口应直接接受/返回 VO（domain 层定义）
+ *               <li>infra 层 MapStruct Converter 负责 DO ↔ VO 转换
+ *               <li>server 层直接使用 VO，无需 VO ↔ DTO 转换
+ *             </ul>
+ *             <p>待 Repository 接口重构为 VO 入参/出参后删除本类。
  */
+@Deprecated
 public final class NextwikiConverter {
 
   /** 单例实例 */

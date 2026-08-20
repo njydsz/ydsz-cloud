@@ -24,8 +24,9 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.ObjectNode;
-import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
+import com.njydsz.cronjob.domain.job.JobExecutionException;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.domain.job.JobLogger;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -108,7 +109,7 @@ public class ScriptJobHandler implements JobHandler {
   }
 
   @Override
-  public Object execute(String paramsJson) throws Exception {
+  public Object execute(String paramsJson) throws JobExecutionException {
     if (!StringUtils.hasText(paramsJson)) {
       throw new IllegalArgumentException("SHELL 任务参数(paramsJson)为空");
     }
@@ -142,9 +143,9 @@ public class ScriptJobHandler implements JobHandler {
    * @param job 任务定义（用于读取 timeoutMs）
    * @param paramsJson 参数 JSON
    * @return 执行结果（含退出码、stdout、stderr）
-   * @throws Exception 执行失败时抛出
+   * @throws JobExecutionException 执行失败时抛出
    */
-  public Object execute(Job job, String paramsJson) throws Exception {
+  public Object execute(JobVO job, String paramsJson) throws JobExecutionException {
     ScriptResult result = (ScriptResult) execute(paramsJson);
     // 任务级 timeoutMs 覆盖（仅当 paramsJson 中未指定时）
     if (job != null && job.getTimeoutMs() != null && job.getTimeoutMs() > 0) {
@@ -165,10 +166,10 @@ public class ScriptJobHandler implements JobHandler {
    * @param args 脚本参数
    * @param timeoutMs 超时毫秒（0 表示不限）
    * @return 执行结果
-   * @throws Exception 失败时抛出
+   * @throws JobExecutionException 失败时抛出
    */
   private ScriptResult executeScript(
-      String language, String script, List<String> args, long timeoutMs) throws Exception {
+      String language, String script, List<String> args, long timeoutMs) throws JobExecutionException {
     // P3-11: 沙箱模式启用时，委托给 SandboxScriptExecutor 执行
     if (cronjobProperties.getSandbox().isEnabled()) {
       return executeInSandbox(language, script, args, timeoutMs);
@@ -186,10 +187,10 @@ public class ScriptJobHandler implements JobHandler {
    * @param args 脚本参数
    * @param timeoutMs 超时毫秒（0 表示使用沙箱默认超时）
    * @return 执行结果
-   * @throws Exception 沙箱不可用或执行失败时抛出
+   * @throws JobExecutionException 沙箱不可用或执行失败时抛出
    */
   private ScriptResult executeInSandbox(
-      String language, String script, List<String> args, long timeoutMs) throws Exception {
+      String language, String script, List<String> args, long timeoutMs) throws JobExecutionException {
     SandboxScriptExecutor sandboxExecutor = sandboxExecutorProvider.getIfAvailable();
     if (sandboxExecutor == null) {
       log.warn("[ScriptJobHandler] 沙箱执行器未注册, 降级到原始执行模式");
@@ -225,7 +226,7 @@ public class ScriptJobHandler implements JobHandler {
 
   /** 解析脚本文件：行内脚本写入临时文件，file: 前缀直接返回路径。 */
   private ScriptResult executeScriptDirectly(
-      String language, String script, List<String> args, long timeoutMs) throws Exception {
+      String language, String script, List<String> args, long timeoutMs) throws JobExecutionException {
     // 解析脚本来源（行内脚本 → 临时文件；file: 前缀 → 直接使用路径）
     Path scriptFile = resolveScriptFile(language, script);
     boolean isTempFile = !script.startsWith(FILE_PREFIX);

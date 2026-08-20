@@ -37,6 +37,11 @@ public class CacheThreadPoolManager implements DisposableBean {
   /** 全局单例实例（供非 Spring 管理的组件使用） */
   private static volatile CacheThreadPoolManager instance;
 
+  /** 单例持有者（Initialization-on-demand holder idiom） */
+  private static final class SingletonHolder {
+    static final CacheThreadPoolManager LAZY = new CacheThreadPoolManager();
+  }
+
   /**
    * 获取全局单例实例
    *
@@ -46,11 +51,7 @@ public class CacheThreadPoolManager implements DisposableBean {
    */
   public static CacheThreadPoolManager getInstance() {
     if (instance == null) {
-      synchronized (CacheThreadPoolManager.class) {
-        if (instance == null) {
-          instance = new CacheThreadPoolManager();
-        }
-      }
+      instance = SingletonHolder.LAZY;
     }
     return instance;
   }

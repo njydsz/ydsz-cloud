@@ -7,8 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.userinfo.domain.dto.AuthPolicyCreateDTO;
-import com.njydsz.userinfo.domain.dto.AuthPolicyUpdateDTO;
+import com.njydsz.userinfo.domain.dto.AuthPolicyDTO;
 import com.njydsz.userinfo.domain.query.AuthPolicyPageQuery;
 import com.njydsz.userinfo.domain.repository.AuthPolicyRepository;
 import com.njydsz.userinfo.domain.vo.AuthPolicyVO;
@@ -73,24 +72,13 @@ public class AuthPolicyService {
   }
 
   /**
-   * 创建认证策略。
+   * 保存认证策略（创建或更新）。
    *
-   * @param dto 创建 DTO
+   * @param dto 认证策略 DTO
    */
-  public void create(AuthPolicyCreateDTO dto) {
+  public void save(AuthPolicyDTO dto) {
     authPolicyRepository.save(dto);
-    log.info("认证策略已创建: tenantId={}, name={}", dto.getTenantId(), dto.getName());
-  }
-
-  /**
-   * 更新认证策略。
-   *
-   * @param tenantId 租户 ID
-   * @param dto 更新 DTO
-   */
-  public void update(String tenantId, AuthPolicyUpdateDTO dto) {
-    authPolicyRepository.update(tenantId, dto);
-    log.info("认证策略已更新: tenantId={}", tenantId);
+    log.info("认证策略已保存: tenantId={}, name={}", dto.getTenantId(), dto.getName());
   }
 
   /**

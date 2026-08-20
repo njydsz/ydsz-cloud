@@ -90,4 +90,24 @@ public interface FlowCommentRepository {
    * @return 回复评论 VO 列表
    */
   List<FlowCommentVO> findReplies(String commentId);
+
+  /**
+   * 查询实例下全部评论（一级 + 回复），带租户隔离。
+   *
+   * <p>前端一次性拉取后本地组装树结构，避免 N+1 查询。
+   *
+   * @param tenantId 租户 ID
+   * @param instanceId 实例 ID
+   * @return 全部评论 VO 列表
+   */
+  List<FlowCommentVO> findByInstanceAndTenant(String tenantId, String instanceId);
+
+  /**
+   * 查询实例下全部根评论（一级评论），带租户隔离。
+   *
+   * @param tenantId 租户 ID
+   * @param instanceId 实例 ID
+   * @return 根评论 VO 列表
+   */
+  List<FlowCommentVO> findRootCommentsByTenant(String tenantId, String instanceId);
 }

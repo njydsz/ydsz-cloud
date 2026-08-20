@@ -15,9 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.userinfo.domain.dto.PostCreateDTO;
 import com.njydsz.userinfo.domain.dto.PostDTO;
-import com.njydsz.userinfo.domain.dto.PostUpdateDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.PostPageQuery;
 import com.njydsz.userinfo.domain.vo.PostVO;
@@ -94,9 +92,7 @@ public class PostServiceImpl implements PostService {
       throw new BusinessException(UserInfoExceptionCode.POST_CODE_DUPLICATE);
     }
 
-    PostCreateDTO createDTO = new PostCreateDTO();
-    BeanUtils.copyProperties(dto, createDTO);
-    PostVO vo = postRepository.create(createDTO);
+    PostVO vo = postRepository.save(dto);
     log.info("Post created: code={}, id={}", dto.getPostCode(), vo.getId());
     return vo.getId();
   }
@@ -113,9 +109,7 @@ public class PostServiceImpl implements PostService {
   public boolean update(PostDTO dto) {
     postRepository.findById(dto.getId())
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND));
-    PostUpdateDTO updateDTO = new PostUpdateDTO();
-    BeanUtils.copyProperties(dto, updateDTO);
-    PostVO vo = postRepository.update(updateDTO);
+    PostVO vo = postRepository.save(dto);
     return vo != null;
   }
 

@@ -4,8 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.dto.LanguageCreateDTO;
-import com.njydsz.userinfo.domain.dto.LanguageUpdateDTO;
+import com.njydsz.userinfo.domain.dto.LanguageDTO;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
 
@@ -61,20 +60,14 @@ public interface LanguageRepository {
   List<LanguageVO> list(LanguagePageQuery query);
 
   /**
-   * 创建语言配置。
+   * 保存语言配置（创建或更新）。
    *
-   * @param dto 创建 DTO
-   * @return 创建后的语言 VO
-   */
-  LanguageVO create(LanguageCreateDTO dto);
-
-  /**
-   * 更新语言配置。
+   * <p>统一 DTO：创建时 {@code id} 可不传，更新时 {@code id} 必填。
    *
-   * @param dto 更新 DTO
-   * @return 更新后的语言 VO
+   * @param dto 语言 DTO
+   * @return 保存后的语言 VO
    */
-  LanguageVO update(LanguageUpdateDTO dto);
+  LanguageVO save(LanguageDTO dto);
 
   /**
    * 根据 ID 删除语言配置（逻辑删除）。

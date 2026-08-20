@@ -131,7 +131,9 @@ public class AuthServiceImpl implements AuthService {
         userAgent);
     userInfoMetrics.recordLoginSuccess();
     userInfoMetrics.stopTimer(sample);
-    userDomainEventPublisher.publishUserLogin(user.getId());
+    String deviceType = DeviceType.resolve(loginDTO.getUserAgent(), loginDTO.getPlatform()).getCode();
+    userDomainEventPublisher.publishLoginSuccess(
+        user.getId(), user.getUsername(), loginIp, userAgent, deviceType);
 
     return buildLoginResult(user, roles, tokenResult);
   }
@@ -381,6 +383,8 @@ public class AuthServiceImpl implements AuthService {
     }
     sessionManager.revokeSession(accessToken);
     userInfoMetrics.recordLogout();
+    userDomainEventPublisher.publishLogout(
+        null, null, null, 0);
     log.info("User logged out, token blacklisted");
   }
 
@@ -456,6 +460,7 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public void kickOutUser(String userId) {
     sessionManager.evictAllSessions(userId);
+    userDomainEventPublisher.publishSessionEvicted(userId, null, "ADMIN_KICK", "User kicked out by admin");
     log.info("User {} has been kicked out, all sessions invalidated", userId);
   }
 

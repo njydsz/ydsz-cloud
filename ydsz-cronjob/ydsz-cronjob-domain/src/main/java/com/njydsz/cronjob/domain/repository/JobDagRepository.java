@@ -104,4 +104,12 @@ public interface JobDagRepository {
    * @return 受影响行数
    */
   int updateById(JobDagVO vo);
+
+  /**
+   * 新增 DAG（内部服务使用，接受 VO 参数）。
+   *
+   * @param vo DAG VO
+   * @return 新 DAG ID
+   */
+  String insert(JobDagVO vo);
 }

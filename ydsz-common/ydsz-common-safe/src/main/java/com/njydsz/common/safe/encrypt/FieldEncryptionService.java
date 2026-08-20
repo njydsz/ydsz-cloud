@@ -14,6 +14,8 @@ import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.util.security.crypto.CryptoException;
+
 /**
  * 字段加密服务
  *
@@ -105,7 +107,7 @@ public class FieldEncryptionService {
       return Base64.getEncoder().encodeToString(byteBuffer.array());
     } catch (Exception e) {
       LOG.error("加密失败: keyVersion={}", keyVersion, e);
-      throw new RuntimeException("加密失败", e);
+      throw new CryptoException("加密失败: keyVersion=" + keyVersion, e);
     }
   }
 
@@ -153,7 +155,7 @@ public class FieldEncryptionService {
       return new String(plaintextBytes, StandardCharsets.UTF_8);
     } catch (Exception e) {
       LOG.error("解密失败", e);
-      throw new RuntimeException("解密失败", e);
+      throw new CryptoException("解密失败", e);
     }
   }
 }

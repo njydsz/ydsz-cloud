@@ -12,7 +12,7 @@ import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
  * 下次触发时间计算器（P1-3：统一 Cron next_fire_time 计算）。
@@ -73,7 +73,7 @@ public class NextFireTimeCalculator {
    * @param job 任务定义（含调度类型、cron 表达式与可选时区）
    * @return 下次触发时间；表达式非法或类型不支持时返回 null
    */
-  public LocalDateTime calculate(Job job) {
+  public LocalDateTime calculate(JobVO job) {
     if (job == null) {
       return null;
     }

@@ -1,5 +1,6 @@
 package com.njydsz.workflow.domain.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -112,4 +113,78 @@ public interface FlowCcRepository {
    * @param id 抄送 ID
    */
   void markRead(String id);
+
+  /**
+   * 标记单条抄送为已读（带操作人与时间戳）。
+   *
+   * <p>更新 {@code readStatus = 'READ', readAt = readAt}，限制仅抄送接收人本人可操作。
+   *
+   * @param id 抄送 ID
+   * @param userId 当前用户 ID
+   * @param readAt 已读时间
+   * @return 受影响行数
+   */
+  int markRead(String id, String userId, LocalDateTime readAt);
+
+  /**
+   * 标记某用户当前租户下所有未读抄送为已读。
+   *
+   * @param tenantId 租户 ID
+   * @param userId 用户 ID
+   * @param readAt 已读时间
+   * @return 受影响行数
+   */
+  int markAllRead(String tenantId, String userId, LocalDateTime readAt);
+
+  /**
+   * 统计用户当前租户下未读抄送数。
+   *
+   * @param userId 用户 ID
+   * @param tenantId 租户 ID
+   * @return 未读抄送数
+   */
+  long countUnread(String userId, String tenantId);
+
+  /**
+   * 分页查询抄送我的列表（支持 readStatus / flowCode 过滤）。
+   *
+   * <p>与 {@link #findCcByUserPage(String, String, int, int)} 类似，
+   * 但额外支持已读状态与流程编码过滤，用于前端「抄送我的」高级查询。
+   *
+   * @param userId 接收人 ID
+   * @param tenantId 租户 ID
+   * @param readStatus 已读状态过滤（可为 null 表示不过滤）
+   * @param flowCode 流程编码过滤（可为 null 表示不过滤）
+   * @param offset 偏移量
+   * @param limit 每页大小
+   * @return 抄送 VO 列表
+   */
+  List<FlowCcVO> findCcByUserPage(
+      String userId, String tenantId, String readStatus, String flowCode, int offset, int limit);
+
+  /**
+   * 统计抄送我的数量（支持 readStatus / flowCode 过滤）。
+   *
+   * <p>与 {@link #countCcByUser(String, String)} 类似，
+   * 但额外支持已读状态与流程编码过滤。
+   *
+   * @param userId 接收人 ID
+   * @param tenantId 租户 ID
+   * @param readStatus 已读状态过滤（可为 null 表示不过滤）
+   * @param flowCode 流程编码过滤（可为 null 表示不过滤）
+   * @return 抄送数量
+   */
+  long countCcByUser(String userId, String tenantId, String readStatus, String flowCode);
+
+  /**
+   * 按实例 ID + 租户查询抄送列表。
+   *
+   * <p>用于审批详情页「抄送人」Tab 展示。与 {@link #findByInstanceId(String)} 类似，
+   * 但增加租户隔离条件。
+   *
+   * @param tenantId 租户 ID
+   * @param instanceId 实例 ID
+   * @return 抄送 VO 列表
+   */
+  List<FlowCcVO> findByInstanceIdAndTenant(String tenantId, String instanceId);
 }

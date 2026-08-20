@@ -5,6 +5,7 @@ import java.security.MessageDigest;
 import java.util.HexFormat;
 import java.util.Locale;
 import java.util.ServiceLoader;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
@@ -306,7 +307,8 @@ public final class PwdUtils {
    * <p>通过 {@code META-INF/services/com.njydsz.common.util.password.PasswordStrengthChecker}
    * 注册的自定义实现，可被第三方覆盖以适配企业密码策略。
    */
-  private static volatile PasswordStrengthChecker strengthChecker;
+  private static final AtomicReference<PasswordStrengthChecker> strengthChecker =
+      new AtomicReference<>();
 
   /**
    * 获取密码强度检查器实例。
@@ -317,24 +319,20 @@ public final class PwdUtils {
    * @return 密码强度检查器（不为 null）
    */
   public static PasswordStrengthChecker getPasswordStrengthChecker() {
-    PasswordStrengthChecker checker = strengthChecker;
-    if (checker == null) {
-      synchronized (PwdUtils.class) {
-        checker = strengthChecker;
-        if (checker == null) {
-          ServiceLoader<PasswordStrengthChecker> loader =
-              ServiceLoader.load(PasswordStrengthChecker.class);
-          PasswordStrengthChecker found = null;
-          for (PasswordStrengthChecker impl : loader) {
-            found = impl;
-            break; // 取第一个注册实现
-          }
-          strengthChecker =
-              checker = (found != null) ? found : DefaultPasswordStrengthChecker.INSTANCE;
-        }
-      }
+    PasswordStrengthChecker checker = strengthChecker.get();
+    if (checker != null) {
+      return checker;
     }
-    return checker;
+    ServiceLoader<PasswordStrengthChecker> loader =
+        ServiceLoader.load(PasswordStrengthChecker.class);
+    PasswordStrengthChecker found = null;
+    for (PasswordStrengthChecker impl : loader) {
+      found = impl;
+      break; // 取第一个注册实现
+    }
+    PasswordStrengthChecker created =
+        (found != null) ? found : DefaultPasswordStrengthChecker.INSTANCE;
+    return strengthChecker.compareAndSet(null, created) ? created : strengthChecker.get();
   }
 
   /**

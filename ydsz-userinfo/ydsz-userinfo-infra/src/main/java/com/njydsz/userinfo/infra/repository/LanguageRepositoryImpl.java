@@ -9,8 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.dto.LanguageCreateDTO;
-import com.njydsz.userinfo.domain.dto.LanguageUpdateDTO;
+import com.njydsz.userinfo.domain.dto.LanguageDTO;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.repository.LanguageRepository;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
@@ -77,17 +76,16 @@ public class LanguageRepositoryImpl implements LanguageRepository {
   }
 
   @Override
-  public LanguageVO create(LanguageCreateDTO dto) {
-    LanguageDO entity = converter.createDtoToEntity(dto);
-    languageMapper.insert(entity);
-    return converter.entityToVO(entity);
-  }
-
-  @Override
-  public LanguageVO update(LanguageUpdateDTO dto) {
-    LanguageDO entity = converter.updateDtoToEntity(dto);
-    languageMapper.updateById(entity);
-    return converter.entityToVO(entity);
+  public LanguageVO save(LanguageDTO dto) {
+    if (dto.getId() == null || dto.getId().isBlank()) {
+      LanguageDO entity = converter.dtoToEntity(dto);
+      languageMapper.insert(entity);
+      return converter.entityToVO(entity);
+    } else {
+      LanguageDO entity = converter.dtoToEntityWithId(dto);
+      languageMapper.updateById(entity);
+      return converter.entityToVO(entity);
+    }
   }
 
   @Override

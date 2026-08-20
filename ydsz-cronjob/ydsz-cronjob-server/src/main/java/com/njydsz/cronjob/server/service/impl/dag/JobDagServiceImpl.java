@@ -23,12 +23,12 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dag.DagInstanceStatus;
 import com.njydsz.cronjob.domain.dag.DagVersionSnapshotEvent;
 import com.njydsz.cronjob.domain.dto.dag.JobDagSaveDTO;
-import com.njydsz.cronjob.infra.entity.dag.JobDag;
-import com.njydsz.cronjob.infra.entity.dag.JobDagInstance;
-import com.njydsz.cronjob.infra.entity.dag.JobDagVersion;
 import com.njydsz.cronjob.domain.repository.JobDagInstanceRepository;
 import com.njydsz.cronjob.domain.repository.JobDagRepository;
 import com.njydsz.cronjob.domain.repository.JobDagVersionRepository;
+import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
+import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
+import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 import com.njydsz.cronjob.server.core.dag.DagEdge;
@@ -90,7 +90,7 @@ public class JobDagServiceImpl implements JobDagService {
   @Transactional(rollbackFor = Exception.class)
   public String createDag(JobDagSaveDTO dto) {
     // 校验 dagKey 唯一性
-    if (jobDagRepository.selectByDagKey(dto.getDagKey()) != null) {
+    if (jobDagRepository.findByDagKey(dto.getDagKey()).isPresent()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_already_exists")
@@ -102,11 +102,11 @@ public class JobDagServiceImpl implements JobDagService {
     // 校验 CRON 触发类型必须提供 cronExpression
     validateCronExpression(dto.getTriggerType(), dto.getCronExpression());
 
-    JobDag dag = new JobDag();
+    JobDagVO dag = new JobDagVO();
     dag.setDagKey(dto.getDagKey());
     dag.setDagName(dto.getDagName());
     dag.setDagDefinition(dto.getDagDefinition());
-    dag.setStatus(StringUtils.hasText(dto.getStatus()) ? dto.getStatus() : "DRAFT");
+    dag.setDagStatus(StringUtils.hasText(dto.getStatus()) ? dto.getStatus() : "DRAFT");
     dag.setTriggerType(StringUtils.hasText(dto.getTriggerType()) ? dto.getTriggerType() : "MANUAL");
     dag.setCronExpression(
         StringUtils.hasText(dto.getCronExpression()) ? dto.getCronExpression() : null);
@@ -126,21 +126,21 @@ public class JobDagServiceImpl implements JobDagService {
     if ("CRON".equals(dag.getTriggerType()) && StringUtils.hasText(dag.getCronExpression())) {
       dag.setNextFireTime(nextFireTime(dag.getCronExpression()));
     }
-    jobDagRepository.insert(dag);
+    String newId = jobDagRepository.insert(dag);
     // P1-8: 发布版本快照事件（事务提交后异步创建快照）
-    eventPublisher.publishEvent(new DagVersionSnapshotEvent(this, dag.getId(), "初始创建"));
+    eventPublisher.publishEvent(new DagVersionSnapshotEvent(this, newId, "初始创建"));
     log.info(
         "[JobDag] 创建 DAG: dagId={} dagKey={} dagName={}",
-        dag.getId(),
+        newId,
         dag.getDagKey(),
         dag.getDagName());
-    return dag.getId();
+    return newId;
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void updateDag(String dagId, JobDagSaveDTO dto) {
-    JobDag exists = jobDagRepository.selectById(dagId);
+    JobDagVO exists = jobDagRepository.findById(dagId).orElse(null);
     if (exists == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -149,7 +149,7 @@ public class JobDagServiceImpl implements JobDagService {
           .build();
     }
     // 校验 dagKey 唯一性（排除自身）
-    JobDag byKey = jobDagRepository.selectByDagKey(dto.getDagKey());
+    JobDagVO byKey = jobDagRepository.findByDagKey(dto.getDagKey()).orElse(null);
     if (byKey != null && !dagId.equals(byKey.getId())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -165,7 +165,7 @@ public class JobDagServiceImpl implements JobDagService {
     exists.setDagName(dto.getDagName());
     exists.setDagDefinition(dto.getDagDefinition());
     if (StringUtils.hasText(dto.getStatus())) {
-      exists.setStatus(dto.getStatus());
+      exists.setDagStatus(dto.getStatus());
     }
     if (StringUtils.hasText(dto.getTriggerType())) {
       exists.setTriggerType(dto.getTriggerType());
@@ -202,7 +202,7 @@ public class JobDagServiceImpl implements JobDagService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void deleteDag(String dagId) {
-    JobDag exists = jobDagRepository.selectById(dagId);
+    JobDagVO exists = jobDagRepository.findById(dagId).orElse(null);
     if (exists == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -217,7 +217,7 @@ public class JobDagServiceImpl implements JobDagService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void enableDag(String dagId) {
-    JobDag exists = jobDagRepository.selectById(dagId);
+    JobDagVO exists = jobDagRepository.findById(dagId).orElse(null);
     if (exists == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -225,14 +225,14 @@ public class JobDagServiceImpl implements JobDagService {
           .params(dagId)
           .build();
     }
-    if (!"DRAFT".equals(exists.getStatus()) && !"DISABLED".equals(exists.getStatus())) {
+    if (!"DRAFT".equals(exists.getDagStatus()) && !"DISABLED".equals(exists.getDagStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_status_invalid")
-          .params(exists.getStatus())
+          .params(exists.getDagStatus())
           .build();
     }
-    exists.setStatus("ENABLED");
+    exists.setDagStatus("ENABLED");
     // CRON 模式计算 nextFireTime
     if ("CRON".equals(exists.getTriggerType()) && StringUtils.hasText(exists.getCronExpression())) {
       exists.setNextFireTime(nextFireTime(exists.getCronExpression()));
@@ -249,7 +249,7 @@ public class JobDagServiceImpl implements JobDagService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void disableDag(String dagId) {
-    JobDag exists = jobDagRepository.selectById(dagId);
+    JobDagVO exists = jobDagRepository.findById(dagId).orElse(null);
     if (exists == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -257,14 +257,14 @@ public class JobDagServiceImpl implements JobDagService {
           .params(dagId)
           .build();
     }
-    if (!"ENABLED".equals(exists.getStatus())) {
+    if (!"ENABLED".equals(exists.getDagStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_status_invalid")
-          .params(exists.getStatus())
+          .params(exists.getDagStatus())
           .build();
     }
-    exists.setStatus("DISABLED");
+    exists.setDagStatus("DISABLED");
     exists.setNextFireTime(null);
     exists.setVersion((exists.getVersion() == null ? 0 : exists.getVersion()) + 1);
     jobDagRepository.updateById(exists);
@@ -273,8 +273,8 @@ public class JobDagServiceImpl implements JobDagService {
 
   @Override
   @Transactional(readOnly = true)
-  public JobDag getDagById(String dagId) {
-    JobDag dag = jobDagRepository.selectById(dagId);
+  public JobDagVO getDagById(String dagId) {
+    JobDagVO dag = jobDagRepository.findById(dagId).orElse(null);
     if (dag == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -287,8 +287,8 @@ public class JobDagServiceImpl implements JobDagService {
 
   @Override
   @Transactional(readOnly = true)
-  public JobDag getDagByKey(String dagKey) {
-    JobDag dag = jobDagRepository.selectByDagKey(dagKey);
+  public JobDagVO getDagByKey(String dagKey) {
+    JobDagVO dag = jobDagRepository.findByDagKey(dagKey).orElse(null);
     if (dag == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -301,20 +301,20 @@ public class JobDagServiceImpl implements JobDagService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<JobDag> listEnabledDags() {
-    return jobDagRepository.selectEnabledDags();
+  public List<JobDagVO> listEnabledDags() {
+    return jobDagRepository.findEnabledDags();
   }
 
   @Override
   @Transactional(readOnly = true)
-  public List<JobDag> listCronEnabledDags() {
-    return jobDagRepository.selectCronEnabledDags();
+  public List<JobDagVO> listCronEnabledDags() {
+    return jobDagRepository.findCronEnabledDags();
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String triggerDag(String dagKey, String triggerBy) {
-    JobDag dag = jobDagRepository.selectByDagKey(dagKey);
+    JobDagVO dag = jobDagRepository.findByDagKey(dagKey).orElse(null);
     if (dag == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -322,7 +322,7 @@ public class JobDagServiceImpl implements JobDagService {
           .params(dagKey)
           .build();
     }
-    if (!"ENABLED".equals(dag.getStatus())) {
+    if (!"ENABLED".equals(dag.getDagStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_dag_not_enabled")
@@ -343,10 +343,10 @@ public class JobDagServiceImpl implements JobDagService {
       }
     }
     // 创建 DAG 实例
-    JobDagInstance instance = new JobDagInstance();
+    JobDagInstanceVO instance = new JobDagInstanceVO();
     instance.setDagId(dag.getId());
     instance.setDagKey(dag.getDagKey());
-    instance.setStatus(DagInstanceStatus.PENDING.name());
+    instance.setInstanceStatus(DagInstanceStatus.PENDING.name());
     instance.setTriggerType("MANUAL");
     instance.setTriggerBy(triggerBy);
     String triggerTraceId = RequestContext.getTraceId();
@@ -382,29 +382,29 @@ public class JobDagServiceImpl implements JobDagService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<JobDagVersion> listDagVersions(String dagId, int limit) {
+  public List<JobDagVersionVO> listDagVersions(String dagId, int limit) {
     int effectiveLimit = limit > 0 ? limit : 50;
-    return jobDagVersionRepository.selectByVersionDesc(dagId, effectiveLimit);
+    return jobDagVersionRepository.findByVersionDesc(dagId, effectiveLimit);
   }
 
   @Override
   @Transactional(readOnly = true)
-  public JobDagVersion getDagVersion(String dagId, int version) {
-    JobDagVersion versionDO = jobDagVersionRepository.selectByVersion(dagId, version);
-    if (versionDO == null) {
+  public JobDagVersionVO getDagVersion(String dagId, int version) {
+    JobDagVersionVO versionVO = jobDagVersionRepository.findByVersion(dagId, version).orElse(null);
+    if (versionVO == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.cronjob.msg_dag_version_not_found")
           .params(dagId, version)
           .build();
     }
-    return versionDO;
+    return versionVO;
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public int rollbackDagVersion(String dagId, int targetVersion, String changedBy) {
-    JobDag dag = jobDagRepository.selectById(dagId);
+    JobDagVO dag = jobDagRepository.findById(dagId).orElse(null);
     if (dag == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -412,8 +412,8 @@ public class JobDagServiceImpl implements JobDagService {
           .params(dagId)
           .build();
     }
-    JobDagVersion targetVersionDO = jobDagVersionRepository.selectByVersion(dagId, targetVersion);
-    if (targetVersionDO == null) {
+    JobDagVersionVO targetVersionVO = jobDagVersionRepository.findByVersion(dagId, targetVersion).orElse(null);
+    if (targetVersionVO == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.cronjob.msg_dag_version_not_found")
@@ -421,11 +421,11 @@ public class JobDagServiceImpl implements JobDagService {
           .build();
     }
     // 回滚：将目标版本的 dagDefinition 复制到当前 DAG
-    dag.setDagDefinition(targetVersionDO.getDagDefinition());
-    dag.setDagName(targetVersionDO.getDagName());
-    dag.setTriggerType(targetVersionDO.getTriggerType());
-    dag.setCronExpression(targetVersionDO.getCronExpression());
-    dag.setFailStrategy(targetVersionDO.getFailStrategy());
+    dag.setDagDefinition(targetVersionVO.getDagDefinition());
+    dag.setDagName(targetVersionVO.getDagName());
+    dag.setTriggerType(targetVersionVO.getTriggerType());
+    dag.setCronExpression(targetVersionVO.getCronExpression());
+    dag.setFailStrategy(targetVersionVO.getFailStrategy());
     // 重新计算 nextFireTime
     if ("CRON".equals(dag.getTriggerType()) && StringUtils.hasText(dag.getCronExpression())) {
       dag.setNextFireTime(nextFireTime(dag.getCronExpression()));

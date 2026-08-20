@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 租户套餐菜单关联实体
  *
- * <p>对应数据库表 {@code ydsz_tenant_plan_menu}，维护 {@link TenantPlan} 与菜单权限的<b>多对多</b>关联。
+ * <p>对应数据库表 {@code ydsz_tenant_plan_menu}，维护 {@link TenantPlanDO} 与菜单权限的<b>多对多</b>关联。
  * 一条记录代表「某个套餐包含某个菜单权限」，是 SaaS 多租户体系下「按套餐开关功能」的核心数据。
  *
  * <p><b>典型使用：</b>
@@ -32,8 +32,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see TenantPlan 租户套餐
- * @see Tenant 租户
+ * @see TenantPlanDO 租户套餐
+ * @see TenantDO 租户
  */
 @Data
 @SuperBuilder

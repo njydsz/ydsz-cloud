@@ -3,8 +3,8 @@ package com.njydsz.cronjob.server.service.dag;
 import java.util.List;
 
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.cronjob.infra.entity.dag.JobDagInstance;
-import com.njydsz.cronjob.infra.entity.dag.JobDagNodeInstance;
+import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
+import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
 import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
 
 /**
@@ -29,8 +29,8 @@ import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.cronjob.domain.entity.dag.JobDagInstance DAG 实例实体
- * @see com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance DAG 节点实例实体
+ * @see com.njydsz.cronjob.domain.vo.JobDagInstanceVO DAG 实例视图对象
+ * @see com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO DAG 节点实例视图对象
  * @see JobDagService DAG 定义 Service
  */
 public interface JobDagInstanceService {
@@ -39,35 +39,35 @@ public interface JobDagInstanceService {
    * 查询 DAG 实例详情。
    *
    * @param instanceId 实例 ID
-   * @return DAG 实例
+   * @return DAG 实例 VO
    * @throws SysException 当实例不存在时抛出
    */
-  JobDagInstance getInstanceById(String instanceId);
+  JobDagInstanceVO getInstanceById(String instanceId);
 
   /**
    * 查询指定 DAG 的实例列表（按创建时间倒序）。
    *
    * @param dagId DAG 定义 ID
    * @param limit 最多返回条数
-   * @return DAG 实例列表
+   * @return DAG 实例 VO 列表
    */
-  List<JobDagInstance> listByDagId(String dagId, int limit);
+  List<JobDagInstanceVO> listByDagId(String dagId, int limit);
 
   /**
    * 按状态查询 DAG 实例。
    *
    * @param status 实例状态
-   * @return DAG 实例列表
+   * @return DAG 实例 VO 列表
    */
-  List<JobDagInstance> listByStatus(String status);
+  List<JobDagInstanceVO> listByStatus(String status);
 
   /**
    * 查询 DAG 实例的节点列表。
    *
    * @param dagInstanceId DAG 实例 ID
-   * @return 节点实例列表
+   * @return 节点实例 VO 列表
    */
-  List<JobDagNodeInstance> listNodes(String dagInstanceId);
+  List<JobDagNodeInstanceVO> listNodes(String dagInstanceId);
 
   /**
    * 暂停 DAG 实例（RUNNING → PAUSED）。

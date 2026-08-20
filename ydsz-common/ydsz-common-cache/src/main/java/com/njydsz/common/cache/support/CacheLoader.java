@@ -95,7 +95,7 @@ public interface CacheLoader<K, V> {
           try {
             return load(key);
           } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new CacheLoadException(key, "LOAD", e);
           }
         });
   }
@@ -114,7 +114,7 @@ public interface CacheLoader<K, V> {
           try {
             return loadAll(keys);
           } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new CacheLoadException(null, "LOAD_ALL", e);
           }
         });
   }

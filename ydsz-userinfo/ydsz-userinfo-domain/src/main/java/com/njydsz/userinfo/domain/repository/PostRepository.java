@@ -5,8 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.dto.PostCreateDTO;
-import com.njydsz.userinfo.domain.dto.PostUpdateDTO;
+import com.njydsz.userinfo.domain.dto.PostDTO;
 import com.njydsz.userinfo.domain.query.PostPageQuery;
 import com.njydsz.userinfo.domain.vo.PostVO;
 
@@ -63,20 +62,14 @@ public interface PostRepository {
   List<PostVO> listByIds(Collection<String> ids);
 
   /**
-   * 创建岗位。
+   * 保存岗位（创建或更新）。
    *
-   * @param dto 创建 DTO
-   * @return 创建后的岗位 VO
-   */
-  PostVO create(PostCreateDTO dto);
-
-  /**
-   * 更新岗位。
+   * <p>统一 DTO：创建时 {@code id} 可不传，更新时 {@code id} 必填。
    *
-   * @param dto 更新 DTO
-   * @return 更新后的岗位 VO
+   * @param dto 岗位 DTO
+   * @return 保存后的岗位 VO
    */
-  PostVO update(PostUpdateDTO dto);
+  PostVO save(PostDTO dto);
 
   /**
    * 根据 ID 删除岗位（逻辑删除）。

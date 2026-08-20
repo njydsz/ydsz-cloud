@@ -78,4 +78,13 @@ public interface FlowCategoryRepository {
    * @return 更新后的流程分类 VO
    */
   FlowCategoryVO update(FlowCategoryVO vo);
+
+  /**
+   * 统计指定租户下某编码的分类数量（用于编码唯一性校验）。
+   *
+   * @param code 分类编码
+   * @param tenantId 租户 ID
+   * @return 匹配的分类数量
+   */
+  long countByCodeAndTenantId(String code, String tenantId);
 }

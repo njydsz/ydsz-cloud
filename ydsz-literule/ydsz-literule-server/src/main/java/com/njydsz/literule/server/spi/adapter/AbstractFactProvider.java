@@ -1,6 +1,7 @@
 package com.njydsz.literule.server.spi.adapter;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,8 +42,8 @@ import com.njydsz.literule.server.spi.FactProvider;
 @Slf4j
 public abstract class AbstractFactProvider implements FactProvider {
 
-  /** 初始化标记（volatile 保证可见性） */
-  private volatile boolean initialized = false;
+  /** 初始化标记 */
+  private final AtomicBoolean initialized = new AtomicBoolean(false);
 
   @Override
   public final Map<String, Object> getFacts(RuleContext context) {
@@ -59,17 +60,10 @@ public abstract class AbstractFactProvider implements FactProvider {
     }
   }
 
-  /**
-   * 确保初始化仅执行一次（线程安全）
-   */
+  /** 确保初始化仅执行一次（线程安全） */
   private void ensureInit() {
-    if (!initialized) {
-      synchronized (this) {
-        if (!initialized) {
-          onInit();
-          initialized = true;
-        }
-      }
+    if (initialized.compareAndSet(false, true)) {
+      onInit();
     }
   }
 

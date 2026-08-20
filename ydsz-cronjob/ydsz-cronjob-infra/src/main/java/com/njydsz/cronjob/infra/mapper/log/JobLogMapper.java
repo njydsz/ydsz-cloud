@@ -211,6 +211,26 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
   List<String> selectRunningNodeIds();
 
   /**
+   * 查询 RUNNING 状态超过指定起始时间阈值的卡死任务。
+   *
+   * @param threshold 起始时间阈值（start_time 早于此值即为卡死）
+   * @param limit 最多返回条数
+   * @return 卡死任务日志列表
+   */
+  @Select(
+      "SELECT id, job_id, job_key, start_time, end_time, duration_ms, "
+          + "       status, error_message, params_json, result_json, trace_id, "
+          + "       trigger_type, lock_holder, exec_node_id, exec_thread_id, "
+          + "       shard_index, shard_total, "
+          + "       created_at, deleted "
+          + "FROM ydsz_job_log "
+          + "WHERE status = 'RUNNING' AND deleted = 0 AND start_time < #{threshold} "
+          + "ORDER BY start_time ASC "
+          + "LIMIT #{limit}")
+  List<JobLog> selectStuckTasks(
+      @Param("threshold") LocalDateTime threshold, @Param("limit") int limit);
+
+  /**
    * P3-2: 统计指定任务在时间窗口内的执行次数和失败次数。
    *
    * <p>用于 FAIL_RATE 告警计算：失败率 = failed / total * 100。

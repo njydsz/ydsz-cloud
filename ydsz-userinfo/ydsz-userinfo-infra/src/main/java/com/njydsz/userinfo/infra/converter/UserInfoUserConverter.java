@@ -7,8 +7,7 @@ import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.userinfo.domain.dto.SocialAccountCreateDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
+import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.dto.UserDeptDTO;
 import com.njydsz.userinfo.domain.dto.UserLoginHistoryDTO;
 import com.njydsz.userinfo.domain.dto.UserPasswordHistoryDTO;
@@ -68,12 +67,12 @@ public interface UserInfoUserConverter {
   List<UserAccountVO> userAccountListToVO(List<UserAccountDO> entities);
 
   /**
-   * 用户创建 DTO → 用户账号实体
+   * 用户统一 DTO → 用户账号实体（创建场景）
    *
-   * <p>用于创建用户场景，password 字段由 Service 层加密后设置。
+   * <p>用于创建用户场景，id 由数据库生成，password 字段由 Service 层加密后设置。
    *
-   * @param dto 用户创建 DTO
-   * @return 用户账号实体（未持久化，password 为 null 需 Service 层填充）
+   * @param dto 用户统一 DTO
+   * @return 用户账号实体（未持久化，id 为 null，password 为 null 需 Service 层填充）
    */
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
@@ -83,24 +82,24 @@ public interface UserInfoUserConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  UserAccountDO createDtoToEntity(UserAccountCreateDTO dto);
+  UserAccountDO dtoToEntity(UserAccountDTO dto);
 
   /**
-   * 用户更新 DTO → 用户账号实体
+   * 用户统一 DTO → 用户账号实体（更新场景）
    *
    * <p>用于更新用户场景，保留 id 字段用于定位更新记录。
    *
    * <p>P1-6: revision 不再 ignore —— 由 DTO 携带的版本号参与乐观锁冲突检测；
    * DTO 未传（null）时由 Service 层回填当前版本，保持兼容。
    *
-   * @param dto 用户更新 DTO
+   * @param dto 用户统一 DTO（含 id）
    * @return 用户账号实体（含 id，用于条件更新）
    */
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  UserAccountDO updateDtoToEntity(UserAccountUpdateDTO dto);
+  UserAccountDO dtoToEntityWithId(UserAccountDTO dto);
 
   /**
    * 用户实体 → 用户认证凭据 VO

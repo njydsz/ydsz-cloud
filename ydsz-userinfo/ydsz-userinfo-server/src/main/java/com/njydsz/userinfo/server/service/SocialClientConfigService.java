@@ -11,8 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.userinfo.domain.config.SocialAuthProperties;
-import com.njydsz.userinfo.domain.dto.SocialClientCreateDTO;
-import com.njydsz.userinfo.domain.dto.SocialClientUpdateDTO;
+import com.njydsz.userinfo.domain.dto.SocialClientDTO;
 import com.njydsz.userinfo.domain.query.SocialClientPageQuery;
 import com.njydsz.userinfo.domain.repository.SocialClientRepository;
 import com.njydsz.userinfo.domain.vo.SocialClientVO;
@@ -130,24 +129,13 @@ public class SocialClientConfigService {
   }
 
   /**
-   * 创建社交平台客户端配置（立即生效，无需重启）。
+   * 保存社交平台客户端配置（创建或更新，立即生效）。
    *
-   * @param dto 创建 DTO
+   * @param dto 统一 DTO
    */
-  public void create(SocialClientCreateDTO dto) {
+  public void save(SocialClientDTO dto) {
     socialClientRepository.save(dto);
-    log.info("社交平台客户端配置已创建并生效: platform={}", dto.getPlatform());
-  }
-
-  /**
-   * 更新社交平台客户端配置（立即生效）。
-   *
-   * @param platform 平台标识
-   * @param dto 更新 DTO
-   */
-  public void update(String platform, SocialClientUpdateDTO dto) {
-    socialClientRepository.update(platform, dto);
-    log.info("社交平台客户端配置已更新: platform={}", platform);
+    log.info("社交平台客户端配置已保存: platform={}", dto.getPlatform());
   }
 
   /**

@@ -2,6 +2,7 @@ package com.njydsz.workflow.infra.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -142,5 +143,41 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   @Override
   public long countPage(FlowInstancePageQuery query) {
     return instanceMapper.countPage(query);
+  }
+
+  @Override
+  public long countRunningByDefinition(String definitionId) {
+    return instanceMapper.countRunningByDefinition(definitionId);
+  }
+
+  @Override
+  public Map<String, Long> countRunningGroupByNode(String definitionId) {
+    return instanceMapper.selectRunningGroupByNode(definitionId);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectCountGroupByStatus(String tenantId) {
+    return instanceMapper.selectCountGroupByStatus(tenantId);
+  }
+
+  @Override
+  public Map<String, Object> selectTodayCount(String tenantId) {
+    return instanceMapper.selectTodayCount(tenantId);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectDailyNewCount(String tenantId, LocalDateTime start, LocalDateTime end) {
+    return instanceMapper.selectDailyNewCount(tenantId, start, end);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectDailyCompletedCount(String tenantId, LocalDateTime start, LocalDateTime end) {
+    return instanceMapper.selectDailyCompletedCount(tenantId, start, end);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectFlowTypeDistribution(
+      String tenantId, LocalDateTime start, LocalDateTime end) {
+    return instanceMapper.selectFlowTypeDistribution(tenantId, start, end);
   }
 }

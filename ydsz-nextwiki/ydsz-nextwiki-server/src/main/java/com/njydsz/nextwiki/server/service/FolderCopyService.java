@@ -17,6 +17,8 @@ import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.service.StorageReferenceService;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
+import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
+import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 

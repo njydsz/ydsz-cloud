@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.nextwiki.domain.dto.TagDTO;
+import com.njydsz.nextwiki.domain.service.TagDomainService;
 import com.njydsz.nextwiki.domain.vo.TagVO;
 
 /**

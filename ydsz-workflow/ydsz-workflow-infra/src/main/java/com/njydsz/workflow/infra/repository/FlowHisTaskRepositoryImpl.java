@@ -91,4 +91,39 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
                 .orderByDesc(FlowHisTaskDO::getFinishAt)
                 .last("LIMIT " + limit)));
   }
+
+  @Override
+  public Map<String, Object> selectOverviewStats(
+      String tenantId, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime) {
+    return hisTaskMapper.selectOverviewStats(tenantId, startTime, endTime);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectApproverEfficiency(
+      String tenantId,
+      java.time.LocalDateTime startTime,
+      java.time.LocalDateTime endTime,
+      int limit) {
+    return hisTaskMapper.selectApproverEfficiency(tenantId, startTime, endTime, limit);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectFlowEfficiencyComparison(
+      String tenantId, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime) {
+    return hisTaskMapper.selectFlowEfficiencyComparison(tenantId, startTime, endTime);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectNodeDurationStats(String flowCode, String tenantId) {
+    return hisTaskMapper.nodeDurationStats(flowCode, tenantId);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectApprovalTrend(
+      String tenantId,
+      java.time.LocalDateTime startTime,
+      java.time.LocalDateTime endTime,
+      String granularity) {
+    return hisTaskMapper.selectApprovalTrend(tenantId, startTime, endTime, granularity);
+  }
 }

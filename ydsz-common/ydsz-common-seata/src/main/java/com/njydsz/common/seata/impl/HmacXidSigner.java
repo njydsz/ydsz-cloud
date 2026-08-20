@@ -11,6 +11,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.seata.api.TransactionException;
 import com.njydsz.common.seata.api.XidSigner;
 
 /**
@@ -163,7 +164,7 @@ public class HmacXidSigner implements XidSigner {
       }
       return hexString.toString();
     } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-      throw new RuntimeException("HMAC-SHA256 algorithm not available", e);
+      throw new TransactionException("HMAC-SHA256 algorithm not available", e);
     }
   }
 }

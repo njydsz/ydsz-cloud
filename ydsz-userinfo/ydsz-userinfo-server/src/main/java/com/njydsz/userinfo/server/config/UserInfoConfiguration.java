@@ -59,7 +59,10 @@ import com.njydsz.userinfo.server.health.UserInfoHealthIndicator;
   InternalCallProperties.class,
   CrossDomainSsoProperties.class,
   ApiSignatureProperties.class,
-  GeoIpProperties.class
+  GeoIpProperties.class,
+  UserTokenProperties.class,
+  UserSecurityProperties.class,
+  UserLoginRiskProperties.class
 })
 public class UserInfoConfiguration {
 

@@ -3,6 +3,7 @@ package com.njydsz.common.util.id;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +64,7 @@ public final class IdGenerator {
   private static volatile boolean fallbackToUuid = false;
 
   /** 缓存 Bean 引用以跳过多次 SpringContextHolder 查找（仅成功结果被永久缓存） */
-  private static volatile SnowflakeIdGenerator cached;
+  private static final AtomicReference<SnowflakeIdGenerator> cached = new AtomicReference<>();
 
   /**
    * 上次获取失败的时间戳（毫秒）。
@@ -122,7 +123,7 @@ public final class IdGenerator {
   }
 
   private static SnowflakeIdGenerator getGenerator() {
-    SnowflakeIdGenerator gen = cached;
+    SnowflakeIdGenerator gen = cached.get();
     if (gen != null) {
       return gen;
     }
@@ -136,28 +137,19 @@ public final class IdGenerator {
     if (now - lastFailureMillis < FAILURE_COOLDOWN_MILLIS) {
       return null;
     }
-    synchronized (IdGenerator.class) {
-      gen = cached;
-      if (gen != null) {
-        return gen;
-      }
-      if (System.currentTimeMillis() - lastFailureMillis < FAILURE_COOLDOWN_MILLIS) {
+    try {
+      gen = supplier.get();
+      if (gen == null) {
+        warnFallback(
+            "SnowflakeIdGenerator Bean 不可用（可能被 ydsz.util.snowflake.enabled=false 禁用），ID 降级为随机数");
         return null;
       }
-      try {
-        gen = supplier.get();
-        if (gen == null) {
-          warnFallback(
-              "SnowflakeIdGenerator Bean 不可用（可能被 ydsz.util.snowflake.enabled=false 禁用），ID 降级为随机数");
-          return null;
-        }
-        cached = gen;
-        return gen;
-      } catch (Exception e) {
-        lastFailureMillis = System.currentTimeMillis();
-        log.warn("获取 SnowflakeIdGenerator Bean 失败，ID 降级为随机数，原因: {}", e.getMessage());
-        return null;
-      }
+      cached.compareAndSet(null, gen);
+      return cached.get();
+    } catch (Exception e) {
+      lastFailureMillis = System.currentTimeMillis();
+      log.warn("获取 SnowflakeIdGenerator Bean 失败，ID 降级为随机数，原因: {}", e.getMessage());
+      return null;
     }
   }
 
@@ -178,7 +170,7 @@ public final class IdGenerator {
 
   /** 测试用：重置缓存与失败冷却。 */
   static void resetForTesting() {
-    cached = null;
+    cached.set(null);
     lastFailureMillis = 0L;
     DEGRADED_WARNED.set(false);
   }

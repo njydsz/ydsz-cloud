@@ -1,23 +1,21 @@
 package com.njydsz.nextwiki.server.config;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.server.service.FilePermissionDomainService;
-import com.njydsz.nextwiki.server.service.FileVersionDomainService;
-import com.njydsz.nextwiki.server.service.FolderDomainService;
-import com.njydsz.nextwiki.server.service.QuotaDomainService;
-import com.njydsz.nextwiki.server.service.SearchDomainService;
+import com.njydsz.nextwiki.domain.service.FilePermissionDomainService;
+import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
+import com.njydsz.nextwiki.domain.service.FolderDomainService;
+import com.njydsz.nextwiki.domain.service.QuotaDomainService;
+import com.njydsz.nextwiki.domain.service.SearchDomainService;
+import com.njydsz.nextwiki.domain.service.ShareAccessLogDomainService;
+import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
+import com.njydsz.nextwiki.domain.service.SpaceDomainService;
+import com.njydsz.nextwiki.domain.service.TagDomainService;
+import com.njydsz.nextwiki.domain.service.TrashDomainService;
 import com.njydsz.nextwiki.server.service.SearchQueryParser;
-import com.njydsz.nextwiki.server.service.ShareAccessLogDomainService;
-import com.njydsz.nextwiki.server.service.ShareLinkDomainService;
-import com.njydsz.nextwiki.server.service.SpaceDomainService;
-import com.njydsz.nextwiki.server.service.TagDomainService;
-import com.njydsz.nextwiki.server.service.TrashDomainService;
 
 /**
  * NextWiki 领域服务 Bean 注册配置。
@@ -52,14 +50,15 @@ public class NextwikiBeanConfig {
   /**
    * 注册回收站领域服务 Bean。
    *
+   * <p><b>DDD 合规：</b>domain 层 {@link TrashDomainService} 不依赖 Spring {@code ApplicationEventPublisher}，
+   * 事件由应用层发布。
+   *
    * @param snowflakeIdGenerator 分布式 ID 生成器
-   * @param eventPublisher Spring 事件发布器
    * @return TrashDomainService 实例
    */
   @Bean
-  public TrashDomainService trashDomainService(
-      SnowflakeIdGenerator snowflakeIdGenerator, ApplicationEventPublisher eventPublisher) {
-    return new TrashDomainService(snowflakeIdGenerator, eventPublisher);
+  public TrashDomainService trashDomainService(SnowflakeIdGenerator snowflakeIdGenerator) {
+    return new TrashDomainService(snowflakeIdGenerator);
   }
 
   /**
@@ -86,17 +85,16 @@ public class NextwikiBeanConfig {
   /**
    * 注册分享链接领域服务 Bean。
    *
+   * <p><b>DDD 合规：</b>domain 层 {@link ShareLinkDomainService} 不依赖 Redis 或 BCrypt，
+   * 密码哈希由应用层通过 {@code BCryptPasswordEncoder} 完成后传入，Redis 防暴力破解由应用层负责。
+   *
    * @param snowflakeIdGenerator 分布式 ID 生成器
-   * @param stringOps Redis 字符串操作
-   * @param passwordEncoder BCrypt 密码编码器
    * @return ShareLinkDomainService 实例
    */
   @Bean
   public ShareLinkDomainService shareLinkDomainService(
-      SnowflakeIdGenerator snowflakeIdGenerator,
-      RedisStringOps stringOps,
-      BCryptPasswordEncoder passwordEncoder) {
-    return new ShareLinkDomainService(snowflakeIdGenerator, stringOps, passwordEncoder);
+      SnowflakeIdGenerator snowflakeIdGenerator) {
+    return new ShareLinkDomainService(snowflakeIdGenerator);
   }
 
   /**

@@ -11,9 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.userinfo.domain.dto.LanguageCreateDTO;
 import com.njydsz.userinfo.domain.dto.LanguageDTO;
-import com.njydsz.userinfo.domain.dto.LanguageUpdateDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
@@ -55,21 +53,16 @@ public class LanguageServiceImpl implements LanguageService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String create(LanguageDTO dto) {
-    LanguageCreateDTO createDTO = new LanguageCreateDTO();
-    BeanUtils.copyProperties(dto, createDTO);
-    LanguageVO vo = languageRepository.create(createDTO);
+    LanguageVO vo = languageRepository.save(dto);
     return vo.getId();
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(LanguageDTO dto) {
-    LanguageVO existing = languageRepository.findById(dto.getId())
+    languageRepository.findById(dto.getId())
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND));
-    BeanUpdateUtil.copyNonNull(dto, existing, "id");
-    LanguageUpdateDTO updateDTO = new LanguageUpdateDTO();
-    BeanUtils.copyProperties(dto, updateDTO);
-    LanguageVO vo = languageRepository.update(updateDTO);
+    LanguageVO vo = languageRepository.save(dto);
     return vo != null;
   }
 

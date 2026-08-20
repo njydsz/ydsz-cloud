@@ -11,6 +11,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.exception.ExcelWriteException;
 import com.njydsz.literule.api.DecisionTableDefinition;
 import com.njydsz.literule.api.HitPolicy;
 
@@ -83,7 +84,7 @@ public class DecisionTableExcelExporter {
    */
   public byte[] exportToExcel(DecisionTableDefinition definition) {
     if (definition == null) {
-      throw new RuntimeException("决策表定义不能为 null");
+      throw new IllegalArgumentException("决策表定义不能为 null");
     }
     try {
       List<DecisionTableDefinition.Column> conditionColumns =
@@ -178,7 +179,9 @@ public class DecisionTableExcelExporter {
       log.debug("[Excel导出] 决策表 {} 导出完成，共 {} 行", definition.getTableCode(), rows.size());
       return out.toByteArray();
     } catch (Exception e) {
-      throw new RuntimeException("导出决策表 Excel 失败: " + definition.getTableCode(), e);
+      throw new ExcelWriteException(
+          "导出决策表 Excel 失败: tableCode=" + definition.getTableCode() + ", error=" + e.getMessage(),
+          e);
     }
   }
 

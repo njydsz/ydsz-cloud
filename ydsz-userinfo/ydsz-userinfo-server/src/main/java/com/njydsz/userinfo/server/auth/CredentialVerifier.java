@@ -14,6 +14,7 @@ import com.njydsz.common.safe.alert.SecurityEventType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
+import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 import com.njydsz.userinfo.server.service.LoginAttemptContext;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
@@ -42,6 +43,7 @@ public class CredentialVerifier {
   private final ObjectProvider<SecurityEventPublisher> securityEventPublisherProvider;
   private final UserInfoMetrics userInfoMetrics;
   private final UserInfoProperties properties;
+  private final UserDomainEventPublisher eventPublisher;
 
   /**
    * 校验密码（本地 BCrypt 优先，失败后回退 LDAP）。
@@ -81,13 +83,26 @@ public class CredentialVerifier {
   }
 
   /**
-   * 记录登录失败：原子自增失败计数，达到阈值时由 SQL 原子设置锁定时间。
+   * 记录登录失败：原子自增失败计数，达到阈值时由 SQL 原子设置锁定时间，并发布登录失败事件。
+   *
+   * <p>锁定时间戳由 Service 层预计算后传入，避免 Mapper SQL 使用数据库特定的 INTERVAL 语法。
    *
    * @param user 登录失败的用户账号凭据 VO
    */
   private void recordLoginFailure(UserAccountCredentialVO user) {
+    int lockMinutes = properties.getLockDurationMinutes();
+    java.time.LocalDateTime lockUntil = java.time.LocalDateTime.now().plusMinutes(lockMinutes);
     userAccountRepository.increaseLoginFailCount(
-        user.getId(), properties.getMaxLoginFailCount(), properties.getLockDurationMinutes());
+        user.getId(), properties.getMaxLoginFailCount(), lockUntil);
+    eventPublisher.publishLoginFailed(
+        user.getId(), user.getUsername(), null, "PASSWORD_INCORRECT", properties.getMaxLoginFailCount());
+    // 锁定事件：递增后若账号被锁定，发布 AccountLockedEvent
+    userAccountRepository.findCredentialById(user.getId()).ifPresent(cred -> {
+      if (cred.isLocked()) {
+        eventPublisher.publishAccountLocked(
+            user.getId(), user.getUsername(), lockMinutes, "TOO_MANY_FAILED_ATTEMPTS");
+      }
+    });
     log.warn("User [{}] login failed, fail count incremented atomically", user.getUsername());
   }
 

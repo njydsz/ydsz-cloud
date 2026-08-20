@@ -3,6 +3,7 @@ package com.njydsz.common.json.serializer;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 
@@ -33,7 +34,7 @@ import com.njydsz.common.json.deserializer.JsonDeserializer;
  */
 public final class SerializerRegistry {
 
-  private static volatile SerializerRegistry instance;
+  private static final AtomicReference<SerializerRegistry> instance = new AtomicReference<>();
 
   private final Map<Class<?>, JsonSerializer<?>> serializers = new ConcurrentHashMap<>();
 
@@ -47,14 +48,12 @@ public final class SerializerRegistry {
    * @return 注册中心实例
    */
   public static SerializerRegistry getInstance() {
-    if (instance == null) {
-      synchronized (SerializerRegistry.class) {
-        if (instance == null) {
-          instance = new SerializerRegistry();
-        }
-      }
+    SerializerRegistry registry = instance.get();
+    if (registry == null) {
+      SerializerRegistry created = new SerializerRegistry();
+      return instance.compareAndSet(null, created) ? created : instance.get();
     }
-    return instance;
+    return registry;
   }
 
   /**

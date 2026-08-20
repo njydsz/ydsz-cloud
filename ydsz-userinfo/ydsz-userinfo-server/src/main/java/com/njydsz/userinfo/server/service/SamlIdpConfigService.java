@@ -6,8 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.userinfo.domain.dto.SamlIdpCreateDTO;
-import com.njydsz.userinfo.domain.dto.SamlIdpUpdateDTO;
+import com.njydsz.userinfo.domain.dto.SamlIdpDTO;
 import com.njydsz.userinfo.domain.query.SamlIdpPageQuery;
 import com.njydsz.userinfo.domain.repository.SamlIdpConfigRepository;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
@@ -65,24 +64,13 @@ public class SamlIdpConfigService {
   }
 
   /**
-   * 创建 SAML IdP 配置。
+   * 保存 SAML IdP 配置（创建或更新）。
    *
-   * @param dto 创建 DTO
+   * @param dto 统一 DTO
    */
-  public void create(SamlIdpCreateDTO dto) {
+  public void save(SamlIdpDTO dto) {
     samlIdpConfigRepository.save(dto);
-    log.info("SAML IdP 配置已创建: entityId={}", dto.getEntityId());
-  }
-
-  /**
-   * 更新 SAML IdP 配置。
-   *
-   * @param entityId IdP Entity ID
-   * @param dto 更新 DTO
-   */
-  public void update(String entityId, SamlIdpUpdateDTO dto) {
-    samlIdpConfigRepository.update(entityId, dto);
-    log.info("SAML IdP 配置已更新: entityId={}", entityId);
+    log.info("SAML IdP 配置已保存: entityId={}", dto.getEntityId());
   }
 
   /**

@@ -110,6 +110,34 @@ public interface FlowTimerRepository {
   void cancelByTask(String taskId);
 
   /**
+   * 按实例 ID 查询定时器列表（按触发时间升序）。
+   *
+   * <p>与 {@link #findByInstanceId(String)} 类似，但按 fireAt 升序排列，
+   * 用于定时器调度器确定下一个待触发的定时器。
+   *
+   * @param instanceId 实例 ID
+   * @return 定时器 VO 列表
+   */
+  List<FlowTimerVO> findByInstanceIdOrderByFireTime(String instanceId);
+
+  /**
+   * 按实例 ID 取消所有定时器（更新状态为 CANCELLED）。
+   *
+   * @param instanceId 实例 ID
+   * @param reason 取消原因
+   * @return 受影响行数
+   */
+  int cancelByInstance(String instanceId, String reason);
+
+  /**
+   * 按实例 ID 统计 PENDING 状态的定时器数量。
+   *
+   * @param instanceId 实例 ID
+   * @return PENDING 定时器数量
+   */
+  long countPendingByInstance(String instanceId);
+
+  /**
    * 标记定时器为延后（重新设置触发时间）。
    *
    * <p>更新 {@code fireAt = nextTime, timerStatus = 'PENDING'}，用于循环定时器或手动延后场景。

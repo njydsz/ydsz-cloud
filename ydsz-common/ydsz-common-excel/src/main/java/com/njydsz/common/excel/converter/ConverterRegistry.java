@@ -2,6 +2,7 @@ package com.njydsz.common.excel.converter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.njydsz.common.excel.converter.impl.BigDecimalConverter;
 import com.njydsz.common.excel.converter.impl.BooleanConverter;
@@ -50,7 +51,7 @@ import com.njydsz.common.excel.converter.impl.YearMonthConverter;
  */
 public class ConverterRegistry {
 
-  private static volatile ConverterChain defaultChain;
+  private static final AtomicReference<ConverterChain> defaultChain = new AtomicReference<>();
 
   private ConverterRegistry() {}
 
@@ -62,14 +63,12 @@ public class ConverterRegistry {
    * @return 默认转换器链
    */
   public static ConverterChain getDefaultChain() {
-    if (defaultChain == null) {
-      synchronized (ConverterRegistry.class) {
-        if (defaultChain == null) {
-          defaultChain = createDefaultChain();
-        }
-      }
+    ConverterChain chain = defaultChain.get();
+    if (chain == null) {
+      ConverterChain created = createDefaultChain();
+      return defaultChain.compareAndSet(null, created) ? created : defaultChain.get();
     }
-    return defaultChain;
+    return chain;
   }
 
   /**
@@ -89,9 +88,7 @@ public class ConverterRegistry {
    * <p>主要用于测试场景，恢复默认的内置转换器链。
    */
   public static void reset() {
-    synchronized (ConverterRegistry.class) {
-      defaultChain = null;
-    }
+    defaultChain.set(null);
   }
 
   private static ConverterChain createDefaultChain() {

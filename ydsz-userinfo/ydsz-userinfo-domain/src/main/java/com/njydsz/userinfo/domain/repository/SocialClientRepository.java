@@ -3,8 +3,7 @@ package com.njydsz.userinfo.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.njydsz.userinfo.domain.dto.SocialClientCreateDTO;
-import com.njydsz.userinfo.domain.dto.SocialClientUpdateDTO;
+import com.njydsz.userinfo.domain.dto.SocialClientDTO;
 import com.njydsz.userinfo.domain.query.SocialClientPageQuery;
 import com.njydsz.userinfo.domain.vo.SocialClientVO;
 
@@ -51,19 +50,13 @@ public interface SocialClientRepository {
   Optional<SocialClientVO> findByPlatform(String platform);
 
   /**
-   * 新增社交平台客户端配置。
+   * 保存社交平台客户端配置（创建或更新）。
    *
-   * @param dto 创建 DTO
-   */
-  void save(SocialClientCreateDTO dto);
-
-  /**
-   * 更新社交平台客户端配置。
+   * <p>根据平台标识判断：不存在则创建，存在则更新。
    *
-   * @param platform 平台标识
-   * @param dto 更新 DTO
+   * @param dto 统一 DTO（创建时 {@code platform} 必填，更新时 {@code id} 必填）
    */
-  void update(String platform, SocialClientUpdateDTO dto);
+  void save(SocialClientDTO dto);
 
   /**
    * 根据平台标识删除客户端配置（逻辑删除）。

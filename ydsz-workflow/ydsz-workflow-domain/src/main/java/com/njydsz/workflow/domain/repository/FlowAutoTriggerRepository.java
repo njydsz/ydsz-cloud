@@ -70,4 +70,26 @@ public interface FlowAutoTriggerRepository {
    * @return 更新后的自动触发 VO
    */
   FlowAutoTriggerVO update(FlowAutoTriggerVO vo);
+
+  /**
+   * 按源流程编码查询所有启用的触发规则。
+   *
+   * @param sourceFlowCode 源流程编码
+   * @return 启用的触发规则 VO 列表
+   */
+  List<FlowAutoTriggerVO> findEnabledBySourceFlowCode(String sourceFlowCode);
+
+  /**
+   * 按源流程编码删除触发规则。
+   *
+   * @param sourceFlowCode 源流程编码
+   */
+  void deleteBySourceFlowCode(String sourceFlowCode);
+
+  /**
+   * 查询所有触发规则（按 sortOrder 升序、id 升序）。
+   *
+   * @return 全部触发规则 VO 列表
+   */
+  List<FlowAutoTriggerVO> findAllOrderBySort();
 }

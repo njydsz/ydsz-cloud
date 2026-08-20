@@ -84,4 +84,68 @@ public interface FlowHisTaskRepository {
    * @return 历史任务 VO 列表
    */
   List<FlowHisTaskVO> findByAssignee(String userId, int limit);
+
+  /**
+   * 查询历史任务概览统计（用于分析仪表盘）。
+   *
+   * <p>返回 total / passed / rejected / avgDurationMs 等聚合指标。
+   *
+   * @param tenantId 租户 ID（可为 null 表示不过滤）
+   * @param startTime 开始时间（可为 null）
+   * @param endTime 结束时间（可为 null）
+   * @return 统计指标 Map
+   */
+  Map<String, Object> selectOverviewStats(String tenantId, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime);
+
+  /**
+   * 查询审批人效率排行。
+   *
+   * <p>返回每个审批人的：taskCount / avgDurationMs / passRate 等。
+   *
+   * @param tenantId 租户 ID
+   * @param startTime 开始时间
+   * @param endTime 结束时间
+   * @param limit 返回数量上限
+   * @return 审批人效率统计列表
+   */
+  List<Map<String, Object>> selectApproverEfficiency(
+      String tenantId, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, int limit);
+
+  /**
+   * 查询流程效率对比。
+   *
+   * <p>按 flowCode 分组统计每个流程的平均耗时和完成率。
+   *
+   * @param tenantId 租户 ID
+   * @param startTime 开始时间
+   * @param endTime 结束时间
+   * @return 流程效率对比列表
+   */
+  List<Map<String, Object>> selectFlowEfficiencyComparison(
+      String tenantId, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime);
+
+  /**
+   * 查询节点耗时统计。
+   *
+   * <p>按 nodeCode 分组统计每个节点的平均耗时。
+   *
+   * @param flowCode 流程编码（可为 null）
+   * @param tenantId 租户 ID
+   * @return 节点耗时统计列表
+   */
+  List<Map<String, Object>> selectNodeDurationStats(String flowCode, String tenantId);
+
+  /**
+   * 查询审批趋势。
+   *
+   * <p>按时间粒度（day/week/month）统计审批量趋势。
+   *
+   * @param tenantId 租户 ID
+   * @param startTime 开始时间
+   * @param endTime 结束时间
+   * @param granularity 时间粒度（day/week/month）
+   * @return 趋势数据列表
+   */
+  List<Map<String, Object>> selectApprovalTrend(
+      String tenantId, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, String granularity);
 }

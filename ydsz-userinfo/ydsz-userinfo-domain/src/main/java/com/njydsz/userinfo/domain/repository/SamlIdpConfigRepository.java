@@ -3,8 +3,7 @@ package com.njydsz.userinfo.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.njydsz.userinfo.domain.dto.SamlIdpCreateDTO;
-import com.njydsz.userinfo.domain.dto.SamlIdpUpdateDTO;
+import com.njydsz.userinfo.domain.dto.SamlIdpDTO;
 import com.njydsz.userinfo.domain.query.SamlIdpPageQuery;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 
@@ -51,19 +50,13 @@ public interface SamlIdpConfigRepository {
   List<SamlIdpConfigVO> findEnabled();
 
   /**
-   * 新增 IdP 配置。
+   * 保存 IdP 配置（创建或更新）。
    *
-   * @param dto 创建 DTO
-   */
-  void save(SamlIdpCreateDTO dto);
-
-  /**
-   * 更新 IdP 配置。
+   * <p>统一 DTO：创建时如果 {@code entityId} 已存在则更新，否则创建。
    *
-   * @param entityId IdP Entity ID
-   * @param dto 更新 DTO
+   * @param dto SAML IdP DTO
    */
-  void update(String entityId, SamlIdpUpdateDTO dto);
+  void save(SamlIdpDTO dto);
 
   /**
    * 根据 Entity ID 删除 IdP 配置（逻辑删除）。

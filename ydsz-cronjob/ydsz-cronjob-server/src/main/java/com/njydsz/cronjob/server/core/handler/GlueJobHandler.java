@@ -25,8 +25,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.cronjob.infra.entity.schedule.GlueCode;
+import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
+import com.njydsz.cronjob.domain.job.JobExecutionException;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
@@ -249,7 +250,7 @@ public class GlueJobHandler implements JobHandler {
   }
 
   @Override
-  public Object execute(String paramsJson) throws Exception {
+  public Object execute(String paramsJson) throws JobExecutionException {
     // 从 JobExecutionContext 获取当前 jobId
     String jobId = JobExecutionContext.getShardingContext().getJobId();
     if (!StringUtils.hasText(jobId)) {
@@ -262,7 +263,7 @@ public class GlueJobHandler implements JobHandler {
     }
 
     // 获取最新版本代码
-    GlueCode glueCode = glueCodeService.getLatest(jobId);
+    GlueCodeVO glueCode = glueCodeService.getLatest(jobId);
     if (glueCode == null
         || glueCode.getSourceCode() == null
         || glueCode.getSourceCode().isBlank()) {
@@ -290,7 +291,7 @@ public class GlueJobHandler implements JobHandler {
 
   /** P1-7: 执行 Groovy 脚本（原有逻辑）。 */
   private Object executeGroovy(String jobId, String sourceCode, String paramsJson)
-      throws Exception {
+      throws JobExecutionException {
     Class<?> clazz = compileWithCache(jobId, sourceCode);
     Object instance;
     try {
@@ -306,7 +307,7 @@ public class GlueJobHandler implements JobHandler {
    *
    * <p>paramsJson 通过环境变量 {@code JOB_PARAMS} 传入， stdout 作为执行结果返回。
    */
-  private Object executePython(String sourceCode, String paramsJson) throws Exception {
+  private Object executePython(String sourceCode, String paramsJson) throws JobExecutionException {
     SandboxScriptExecutor executor = sandboxExecutorProvider.getIfAvailable();
     if (executor == null) {
       throw new IllegalStateException("SandboxScriptExecutor 未注册，Python GLUE 任务无法执行");
@@ -326,7 +327,7 @@ public class GlueJobHandler implements JobHandler {
    *
    * <p>paramsJson 通过环境变量 {@code JOB_PARAMS} 传入， stdout 作为执行结果返回。
    */
-  private Object executeShell(String sourceCode, String paramsJson) throws Exception {
+  private Object executeShell(String sourceCode, String paramsJson) throws JobExecutionException {
     SandboxScriptExecutor executor = sandboxExecutorProvider.getIfAvailable();
     if (executor == null) {
       throw new IllegalStateException("SandboxScriptExecutor 未注册，Shell GLUE 任务无法执行");
@@ -347,7 +348,7 @@ public class GlueJobHandler implements JobHandler {
    * <p>paramsJson 通过全局变量 {@code paramsJson} 传入， 脚本可通过 {@code execute(paramsJson)} 函数返回结果，
    * 或直接将最后一行表达式作为返回值。
    */
-  private Object executeJavaScript(String sourceCode, String paramsJson) throws Exception {
+  private Object executeJavaScript(String sourceCode, String paramsJson) throws JobExecutionException {
     if (jsEngine == null) {
       throw new IllegalStateException("JavaScript 引擎不可用，请添加 Nashorn 或 GraalJS 依赖");
     }
@@ -416,9 +417,9 @@ public class GlueJobHandler implements JobHandler {
    * @param instance 脚本实例
    * @param paramsJson 参数 JSON
    * @return 执行结果
-   * @throws Exception 执行失败时抛出
+   * @throws JobExecutionException 执行失败时抛出
    */
-  private Object invokeExecute(Object instance, String paramsJson) throws Exception {
+  private Object invokeExecute(Object instance, String paramsJson) throws JobExecutionException {
     // 优先走 JobHandler 接口
     if (instance instanceof JobHandler handler) {
       return handler.execute(paramsJson);

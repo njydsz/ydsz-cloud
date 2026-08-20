@@ -27,7 +27,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see DictItem 字典项实体（字典两级体系下层）
+ * @see DictItemDO 字典项实体（字典两级体系下层）
  * @see com.njydsz.system.server.service.DictVersionService 字典版本管理
  */
 @Data

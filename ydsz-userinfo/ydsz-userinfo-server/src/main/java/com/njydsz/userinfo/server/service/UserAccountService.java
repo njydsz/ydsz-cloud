@@ -7,9 +7,8 @@ import java.util.Map;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
+import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
-import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserProfileUpdateDTO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
@@ -76,25 +75,16 @@ public interface UserAccountService {
   List<UserAccountVO> list();
 
   /**
-   * 创建用户（含密码 BCrypt 加密）。
+   * 保存用户（创建或更新，含密码 BCrypt 加密）。
    *
-   * <p>校验：① 用户名唯一性；② 密码强度（可选）；③ 角色 ID 列表有效性。
+   * <p>根据 {@code id} 是否为空判断：为空则创建，非空则更新。
+   * 创建时校验：① 用户名唯一性；② 密码强度（可选）；③ 角色 ID 列表有效性。
    *
-   * @param dto 创建参数
-   * @return 新用户 ID（雪花算法字符串）
+   * @param dto 统一 DTO
+   * @return 用户 ID（创建时为新生成的 ID，更新时为原 ID）
    * @throws com.njydsz.common.exception.BizException 用户名已存在时抛出
    */
-  String create(UserAccountCreateDTO dto);
-
-  /**
-   * 更新用户信息。
-   *
-   * <p>不允许通过此接口修改密码（请用 {@link #changePassword} 或 {@link #resetPassword}）。
-   *
-   * @param dto 更新参数
-   * @return true=成功，false=用户不存在
-   */
-  boolean update(UserAccountUpdateDTO dto);
+  String save(UserAccountDTO dto);
 
   /**
    * 当前登录用户自助更新个人资料（仅更新非空字段）。

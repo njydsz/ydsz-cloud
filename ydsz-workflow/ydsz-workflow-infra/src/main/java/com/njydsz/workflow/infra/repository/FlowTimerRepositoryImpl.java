@@ -126,6 +126,38 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
   }
 
   @Override
+  public List<FlowTimerVO> findByInstanceIdOrderByFireTime(String instanceId) {
+    return converter.flowTimerListToVO(
+        timerMapper.selectList(
+            new LambdaQueryWrapper<FlowTimerDO>()
+                .eq(FlowTimerDO::getInstanceId, instanceId)
+                .eq(FlowTimerDO::getDeleted, 0)
+                .orderByAsc(FlowTimerDO::getFireAt)));
+  }
+
+  @Override
+  public int cancelByInstance(String instanceId, String reason) {
+    FlowTimerDO update = new FlowTimerDO();
+    update.setTimerStatus("CANCELLED");
+    update.setCancelReason(reason);
+    return timerMapper.update(
+        update,
+        new LambdaQueryWrapper<FlowTimerDO>()
+            .eq(FlowTimerDO::getInstanceId, instanceId)
+            .eq(FlowTimerDO::getTimerStatus, "PENDING")
+            .eq(FlowTimerDO::getDeleted, 0));
+  }
+
+  @Override
+  public long countPendingByInstance(String instanceId) {
+    return timerMapper.selectCount(
+        new LambdaQueryWrapper<FlowTimerDO>()
+            .eq(FlowTimerDO::getInstanceId, instanceId)
+            .eq(FlowTimerDO::getTimerStatus, "PENDING")
+            .eq(FlowTimerDO::getDeleted, 0));
+  }
+
+  @Override
   public void markSnoozed(String id, LocalDateTime nextTime) {
     FlowTimerDO update = new FlowTimerDO();
     update.setFireAt(nextTime);

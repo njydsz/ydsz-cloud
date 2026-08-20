@@ -5,8 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.dto.MenuCreateDTO;
-import com.njydsz.userinfo.domain.dto.MenuUpdateDTO;
+import com.njydsz.userinfo.domain.dto.MenuDTO;
 import com.njydsz.userinfo.domain.query.MenuPageQuery;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 
@@ -63,20 +62,14 @@ public interface MenuRepository {
   List<MenuVO> list(MenuPageQuery query);
 
   /**
-   * 创建菜单。
+   * 保存菜单（创建或更新）。
    *
-   * @param dto 创建 DTO
-   * @return 创建后的菜单 VO
-   */
-  MenuVO create(MenuCreateDTO dto);
-
-  /**
-   * 更新菜单。
+   * <p>统一 DTO：创建时 {@code id} 可不传，更新时 {@code id} 必填。
    *
-   * @param dto 更新 DTO
-   * @return 更新后的菜单 VO
+   * @param dto 菜单 DTO
+   * @return 保存后的菜单 VO
    */
-  MenuVO update(MenuUpdateDTO dto);
+  MenuVO save(MenuDTO dto);
 
   /**
    * 根据 ID 删除菜单（逻辑删除）。

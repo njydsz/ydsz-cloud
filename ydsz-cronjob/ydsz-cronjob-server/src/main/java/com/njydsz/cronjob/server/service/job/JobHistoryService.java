@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.cronjob.domain.vo.JobHistoryVO;
-import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
  * 任务配置历史版本服务（P1-6 任务版本管理）。
@@ -28,7 +28,7 @@ public interface JobHistoryService {
    * @param changedBy 修改人 ID
    * @return 新创建的历史版本 VO
    */
-  JobHistoryVO saveHistory(Job job, String changedBy);
+  JobHistoryVO saveHistory(JobVO job, String changedBy);
 
   /**
    * 获取指定任务的版本列表（按版本号降序）。
@@ -57,7 +57,7 @@ public interface JobHistoryService {
    * @param version 目标版本号
    * @return 回滚后的 Job
    */
-  Job rollback(String jobId, Integer version);
+  JobVO rollback(String jobId, Integer version);
 
   /**
    * 对比两个版本的差异。
@@ -82,5 +82,5 @@ public interface JobHistoryService {
    * @param changeRemark 变更说明
    */
   void recordVersionChange(
-      Job beforeJob, Job afterJob, String changeType, String changedBy, String changeRemark);
+      JobVO beforeJob, JobVO afterJob, String changeType, String changedBy, String changeRemark);
 }

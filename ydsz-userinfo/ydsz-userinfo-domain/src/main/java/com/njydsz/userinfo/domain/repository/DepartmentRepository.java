@@ -6,8 +6,6 @@ import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.DepartmentDTO;
-import com.njydsz.userinfo.domain.dto.DepartmentCreateDTO;
-import com.njydsz.userinfo.domain.dto.DepartmentUpdateDTO;
 import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 
@@ -72,20 +70,14 @@ public interface DepartmentRepository {
   List<DepartmentVO> listByIds(Collection<String> ids);
 
   /**
-   * 创建部门。
+   * 保存部门（创建或更新）。
    *
-   * @param dto 创建 DTO
-   * @return 创建后的部门 VO
-   */
-  DepartmentVO create(DepartmentCreateDTO dto);
-
-  /**
-   * 更新部门。
+   * <p>统一 DTO：创建时 {@code id} 可不传，更新时 {@code id} 必填。
    *
-   * @param dto 更新 DTO
-   * @return 更新后的部门 VO
+   * @param dto 部门 DTO
+   * @return 保存后的部门 VO
    */
-  DepartmentVO update(DepartmentUpdateDTO dto);
+  DepartmentVO save(DepartmentDTO dto);
 
   /**
    * 根据 ID 删除部门（逻辑删除）。

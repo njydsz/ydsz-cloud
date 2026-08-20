@@ -7,15 +7,19 @@ import lombok.Data;
 import com.njydsz.common.safe.annotation.Xss;
 
 /**
- * 社交平台客户端配置创建 DTO（P1-1 CUD 入参）。
+ * 社交平台客户端配置统一 DTO（P1-1 CUD 入参）。
  *
- * <p>用于新增社交平台客户端配置，前端或 OAuth2 应用注册接口传入。
+ * <p>同时用于创建和更新场景：创建时 {@code platform} 必填，更新时 {@code id} 必填。
  *
  * @author ydsz-team
  * @since 2.24.0
  */
 @Data
-public class SocialClientCreateDTO {
+public class SocialClientDTO {
+
+  /** 平台 ID（更新时必填） */
+  @Xss(message = "平台 ID 包含非法内容")
+  private String id;
 
   /** 平台标识（如 GITHUB/DINGTALK/ENTERPRISE_WECHAT/FEISHU） */
   @NotBlank(message = "平台标识不能为空")
@@ -35,7 +39,6 @@ public class SocialClientCreateDTO {
   private String appId;
 
   /** 应用明文密钥（BCrypt 加密后存储） */
-  @NotBlank(message = "应用密钥不能为空")
   @Size(max = 255, message = "应用密钥长度不能超过 255 个字符")
   private String appSecret;
 

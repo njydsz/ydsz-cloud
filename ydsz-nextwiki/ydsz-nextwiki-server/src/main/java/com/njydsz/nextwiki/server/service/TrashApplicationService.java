@@ -4,6 +4,7 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,8 +13,10 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
 import com.njydsz.nextwiki.domain.vo.TrashItemVO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
+import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
+import com.njydsz.nextwiki.domain.service.TrashDomainService;
 
 /**
  * 回收站应用服务。
@@ -28,12 +31,15 @@ import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
 @RequiredArgsConstructor
 public class TrashApplicationService {
 
-  /** 回收站领域服务 */
+  /** 回收站领域服务（domain 层，不依赖 Spring） */
   private final TrashDomainService trashDomainService;
 
   private final TrashItemRepository trashItemRepository;
 
   private final FileNodeRepository fileNodeRepository;
+
+  /** Spring 事件发布器（用于发布领域服务返回的事件） */
+  private final ApplicationEventPublisher eventPublisher;
 
   /**
    * 查询用户回收站列表。
@@ -67,7 +73,9 @@ public class TrashApplicationService {
     FileNodeVO node = fileNodeRepository.findById(trashItem.getFileNodeId()).orElse(null);
 
     TrashItemDTO trashDTO = trashItemToDTO(trashItem);
-    trashDomainService.restore(trashDTO, node, userId);
+    // DDD 合规：domain 层返回事件，由应用层发布
+    FileOperatedEvent restoreEvent = trashDomainService.restore(trashDTO, node, userId);
+    eventPublisher.publishEvent(restoreEvent);
 
     if (node != null) {
       fileNodeRepository.restore(trashItem.getFileNodeId());

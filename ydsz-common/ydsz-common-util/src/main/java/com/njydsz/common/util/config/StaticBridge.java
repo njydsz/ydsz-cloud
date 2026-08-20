@@ -1,5 +1,6 @@
 package com.njydsz.common.util.config;
 
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 /**
@@ -41,7 +42,7 @@ import java.util.function.Supplier;
  */
 public final class StaticBridge<T> {
 
-  private volatile T cached;
+  private final AtomicReference<T> cached = new AtomicReference<>();
 
   private volatile Supplier<T> supplier;
 
@@ -54,7 +55,7 @@ public final class StaticBridge<T> {
    */
   public void registerSupplier(Supplier<T> supplier) {
     this.supplier = supplier;
-    this.cached = null;
+    this.cached.set(null);
   }
 
   /**
@@ -65,7 +66,7 @@ public final class StaticBridge<T> {
    * @return Bean 实例；不可用时返回 null
    */
   public T getIfAvailable() {
-    T result = cached;
+    T result = cached.get();
     if (result != null) {
       return result;
     }
@@ -73,25 +74,20 @@ public final class StaticBridge<T> {
     if (s == null) {
       return null;
     }
-    synchronized (this) {
-      if (cached != null) {
-        return cached;
+    try {
+      T bean = s.get();
+      if (bean != null) {
+        cached.compareAndSet(null, bean);
       }
-      try {
-        T bean = s.get();
-        if (bean != null) {
-          cached = bean;
-        }
-        return bean;
-      } catch (Exception e) {
-        return null;
-      }
+      return bean;
+    } catch (Exception e) {
+      return null;
     }
   }
 
   /** 测试用：清空缓存与 Supplier。 */
   public void resetForTesting() {
-    cached = null;
+    cached.set(null);
     supplier = null;
   }
 }

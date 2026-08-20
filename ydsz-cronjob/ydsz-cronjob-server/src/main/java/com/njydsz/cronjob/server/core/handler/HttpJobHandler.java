@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.cronjob.domain.job.JobExecutionException;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.HttpConfig;
@@ -83,7 +84,7 @@ public class HttpJobHandler implements JobHandler {
   }
 
   @Override
-  public Object execute(String paramsJson) throws Exception {
+  public Object execute(String paramsJson) throws JobExecutionException {
     if (paramsJson == null || paramsJson.isBlank()) {
       throw new IllegalArgumentException("HTTP 任务参数(paramsJson)为空");
     }

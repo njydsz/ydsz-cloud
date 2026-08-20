@@ -120,4 +120,76 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
     update.setId(id);
     ccMapper.updateById(update);
   }
+
+  @Override
+  public int markRead(String id, String userId, LocalDateTime readAt) {
+    FlowCcDO update = new FlowCcDO();
+    update.setReadStatus("READ");
+    update.setReadAt(readAt);
+    return ccMapper.update(
+        update,
+        new LambdaQueryWrapper<FlowCcDO>()
+            .eq(FlowCcDO::getId, id)
+            .eq(FlowCcDO::getCcUserId, userId));
+  }
+
+  @Override
+  public int markAllRead(String tenantId, String userId, LocalDateTime readAt) {
+    FlowCcDO update = new FlowCcDO();
+    update.setReadStatus("READ");
+    update.setReadAt(readAt);
+    return ccMapper.update(
+        update,
+        new LambdaQueryWrapper<FlowCcDO>()
+            .eq(FlowCcDO::getTenantId, tenantId)
+            .eq(FlowCcDO::getCcUserId, userId)
+            .eq(FlowCcDO::getReadStatus, "UNREAD"));
+  }
+
+  @Override
+  public long countUnread(String userId, String tenantId) {
+    return ccMapper.selectCount(
+        new LambdaQueryWrapper<FlowCcDO>()
+            .eq(FlowCcDO::getCcUserId, userId)
+            .eq(FlowCcDO::getTenantId, tenantId)
+            .eq(FlowCcDO::getReadStatus, "UNREAD")
+            .eq(FlowCcDO::getDeleted, 0));
+  }
+
+  @Override
+  public List<FlowCcVO> findCcByUserPage(
+      String userId, String tenantId, String readStatus, String flowCode, int offset, int limit) {
+    return converter.flowCcListToVO(
+        ccMapper.selectList(
+            new LambdaQueryWrapper<FlowCcDO>()
+                .eq(FlowCcDO::getCcUserId, userId)
+                .eq(FlowCcDO::getTenantId, tenantId)
+                .eq(readStatus != null, FlowCcDO::getReadStatus, readStatus)
+                .eq(flowCode != null, FlowCcDO::getFlowCode, flowCode)
+                .eq(FlowCcDO::getDeleted, 0)
+                .orderByDesc(FlowCcDO::getCreatedAt)
+                .last("LIMIT " + limit + " OFFSET " + offset)));
+  }
+
+  @Override
+  public long countCcByUser(
+      String userId, String tenantId, String readStatus, String flowCode) {
+    return ccMapper.selectCount(
+        new LambdaQueryWrapper<FlowCcDO>()
+            .eq(FlowCcDO::getCcUserId, userId)
+            .eq(FlowCcDO::getTenantId, tenantId)
+            .eq(readStatus != null, FlowCcDO::getReadStatus, readStatus)
+            .eq(flowCode != null, FlowCcDO::getFlowCode, flowCode)
+            .eq(FlowCcDO::getDeleted, 0));
+  }
+
+  @Override
+  public List<FlowCcVO> findByInstanceIdAndTenant(String tenantId, String instanceId) {
+    return converter.flowCcListToVO(
+        ccMapper.selectList(
+            new LambdaQueryWrapper<FlowCcDO>()
+                .eq(FlowCcDO::getTenantId, tenantId)
+                .eq(FlowCcDO::getInstanceId, instanceId)
+                .eq(FlowCcDO::getDeleted, 0)));
+  }
 }

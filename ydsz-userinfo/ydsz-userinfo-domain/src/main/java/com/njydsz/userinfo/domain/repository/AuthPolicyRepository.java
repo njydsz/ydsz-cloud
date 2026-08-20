@@ -3,8 +3,7 @@ package com.njydsz.userinfo.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.njydsz.userinfo.domain.dto.AuthPolicyCreateDTO;
-import com.njydsz.userinfo.domain.dto.AuthPolicyUpdateDTO;
+import com.njydsz.userinfo.domain.dto.AuthPolicyDTO;
 import com.njydsz.userinfo.domain.query.AuthPolicyPageQuery;
 import com.njydsz.userinfo.domain.vo.AuthPolicyVO;
 
@@ -43,19 +42,14 @@ public interface AuthPolicyRepository {
   List<AuthPolicyVO> findByPage(AuthPolicyPageQuery query);
 
   /**
-   * 新增认证策略。
+   * 保存认证策略（创建或更新）。
    *
-   * @param dto 创建 DTO
-   */
-  void save(AuthPolicyCreateDTO dto);
-
-  /**
-   * 更新认证策略。
+   * <p>统一 DTO：创建时 {@code tenantId} 可不传（为空表示全局默认策略），
+   * 更新时 {@code tenantId} 必填。更新时仅修改非 null 字段。
    *
-   * @param tenantId 租户 ID
-   * @param dto 更新 DTO
+   * @param dto 认证策略 DTO
    */
-  void update(String tenantId, AuthPolicyUpdateDTO dto);
+  void save(AuthPolicyDTO dto);
 
   /**
    * 根据租户 ID 删除认证策略（逻辑删除）。

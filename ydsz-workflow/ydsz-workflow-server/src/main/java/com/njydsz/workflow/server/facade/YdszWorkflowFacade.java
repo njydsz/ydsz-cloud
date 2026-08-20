@@ -708,8 +708,10 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         if (parsed != null && !parsed.isEmpty()) {
           result.put(n.getNodeCode(), parsed);
         }
-      } catch (Exception ignore) {
+      } catch (Exception e) {
         // coordinate 解析失败：跳过此节点
+        log.warn("[WorkflowFacade] coordinate 解析失败，跳过此节点: nodeCode={}, err={}",
+            n.getNodeCode(), e.getMessage());
       }
     }
     return result;

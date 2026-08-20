@@ -10,8 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.dto.DepartmentCreateDTO;
-import com.njydsz.userinfo.domain.dto.DepartmentUpdateDTO;
+import com.njydsz.userinfo.domain.dto.DepartmentDTO;
 import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
 import com.njydsz.userinfo.domain.repository.DepartmentRepository;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
@@ -84,17 +83,16 @@ public class DepartmentRepositoryImpl implements DepartmentRepository {
   }
 
   @Override
-  public DepartmentVO create(DepartmentCreateDTO dto) {
-    DepartmentDO entity = converter.createDtoToEntity(dto);
-    departmentMapper.insert(entity);
-    return converter.entityToVO(entity);
-  }
-
-  @Override
-  public DepartmentVO update(DepartmentUpdateDTO dto) {
-    DepartmentDO entity = converter.updateDtoToEntity(dto);
-    departmentMapper.updateById(entity);
-    return converter.entityToVO(entity);
+  public DepartmentVO save(DepartmentDTO dto) {
+    if (dto.getId() == null || dto.getId().isBlank()) {
+      DepartmentDO entity = converter.dtoToEntity(dto);
+      departmentMapper.insert(entity);
+      return converter.entityToVO(entity);
+    } else {
+      DepartmentDO entity = converter.dtoToEntityWithId(dto);
+      departmentMapper.updateById(entity);
+      return converter.entityToVO(entity);
+    }
   }
 
   @Override

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -54,7 +55,7 @@ public final class JsonModuleRegistry {
 
   private static final Logger LOG = LoggerFactory.getLogger(JsonModuleRegistry.class);
 
-  private static volatile JsonModuleRegistry instance;
+  private static final AtomicReference<JsonModuleRegistry> instance = new AtomicReference<>();
 
   /**
    * 模块来源的序列化器类型集合（P1-6：单一事实源改造）。
@@ -83,15 +84,13 @@ public final class JsonModuleRegistry {
    * @return 注册中心实例
    */
   public static JsonModuleRegistry getInstance() {
-    if (instance == null) {
-      synchronized (JsonModuleRegistry.class) {
-        if (instance == null) {
-          instance = new JsonModuleRegistry();
-          instance.loadSpiModules();
-        }
-      }
+    JsonModuleRegistry registry = instance.get();
+    if (registry == null) {
+      JsonModuleRegistry created = new JsonModuleRegistry();
+      created.loadSpiModules();
+      return instance.compareAndSet(null, created) ? created : instance.get();
     }
-    return instance;
+    return registry;
   }
 
   /**

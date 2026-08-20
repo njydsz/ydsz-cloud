@@ -56,6 +56,15 @@ public interface JobLogRepository {
   List<String> findRunningNodeIds();
 
   /**
+   * 查询 RUNNING 状态超过指定起始时间阈值的卡死任务。
+   *
+   * @param threshold 起始时间阈值（含）
+   * @param limit 最多返回条数
+   * @return 卡死任务日志 VO 列表
+   */
+  List<JobLogVO> findStuckTasks(LocalDateTime threshold, int limit);
+
+  /**
    * P3-2: 统计指定任务在时间窗口内的执行次数和失败次数。
    */
   Map<String, Object> countByJobIdSince(String jobId, LocalDateTime since);

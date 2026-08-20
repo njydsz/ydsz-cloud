@@ -1,6 +1,7 @@
 package com.njydsz.common.queue.serializer;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicReference;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,8 +40,8 @@ public class ProtobufMessageSerializer implements MessageSerializer {
   /** protobuf Message 类名（反射检测） */
   private static final String PROTOBUF_MESSAGE_CLASS = "com.google.protobuf.Message";
 
-  /** protobuf 是否可用的缓存标记 */
-  private static volatile Boolean protobufAvailable;
+  /** protobuf 是否可用的缓存标记（null=未检查，TRUE=可用，FALSE=不可用） */
+  private static final AtomicReference<Boolean> protobufAvailable = new AtomicReference<>();
 
   /**
    * 检测 protobuf 运行时是否可用
@@ -48,21 +49,20 @@ public class ProtobufMessageSerializer implements MessageSerializer {
    * @return true 如果 protobuf-java 在 classpath 中
    */
   public static boolean isProtobufAvailable() {
-    if (protobufAvailable != null) {
-      return protobufAvailable;
+    Boolean result = protobufAvailable.get();
+    if (result != null) {
+      return result;
     }
-    synchronized (ProtobufMessageSerializer.class) {
-      if (protobufAvailable == null) {
-        try {
-          Class.forName(PROTOBUF_MESSAGE_CLASS);
-          protobufAvailable = true;
-        } catch (ClassNotFoundException e) {
-          protobufAvailable = false;
-          log.debug("protobuf-java 不可用，ProtobufMessageSerializer 将不可用");
-        }
+    try {
+      Class.forName(PROTOBUF_MESSAGE_CLASS);
+      if (protobufAvailable.compareAndSet(null, Boolean.TRUE)) {
+        return true;
       }
-      return protobufAvailable;
+    } catch (ClassNotFoundException e) {
+      protobufAvailable.compareAndSet(null, Boolean.FALSE);
+      log.debug("protobuf-java 不可用，ProtobufMessageSerializer 将不可用");
     }
+    return protobufAvailable.get();
   }
 
   @Override

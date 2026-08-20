@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.util.id.IdGenerator;
@@ -60,7 +61,9 @@ public final class RuleContext implements Serializable {
    * <p>{@code transient} 不随上下文序列化；仅在单次 {@code evaluate} 生命周期内有效， 随 {@link RuleContext} 一起被
    * GC，无需额外失效/清理逻辑。 key=表达式字符串，value=该表达式在当前 facts 下的求值结果。 跨规则、同规则内（条件/严重度/模板）重复表达式均可复用，避免冗余计算。
    */
-  private transient Map<String, Object> expressionCache;
+  private transient volatile Map<String, Object> expressionCache;
+  private final transient AtomicReference<Map<String, Object>> expressionCacheRef =
+      new AtomicReference<>();
 
   private RuleContext(
       Map<String, Object> facts,
@@ -231,15 +234,15 @@ public final class RuleContext implements Serializable {
    * @since 1.0.0
    */
   public Map<String, Object> getExpressionCache() {
-    // P0-4 修复：双重检查锁确保线程安全的懒初始化
+    // P0-4 修复：AtomicReference 确保线程安全的懒初始化
     // 多线程场景（如 ParallelRuleEvaluator）下可能并发调用此方法
-    Map<String, Object> cache = expressionCache;
+    Map<String, Object> cache = expressionCacheRef.get();
     if (cache == null) {
-      synchronized (this) {
-        cache = expressionCache;
-        if (cache == null) {
-          expressionCache = cache = new ConcurrentHashMap<>();
-        }
+      cache = new ConcurrentHashMap<>();
+      if (expressionCacheRef.compareAndSet(null, cache)) {
+        expressionCache = cache;
+      } else {
+        cache = expressionCacheRef.get();
       }
     }
     return cache;
@@ -253,8 +256,9 @@ public final class RuleContext implements Serializable {
    * @since 1.0.0
    */
   public void clearExpressionCache() {
-    if (expressionCache != null) {
-      expressionCache.clear();
+    Map<String, Object> cache = expressionCacheRef.get();
+    if (cache != null) {
+      cache.clear();
     }
   }
 

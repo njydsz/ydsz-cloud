@@ -185,7 +185,21 @@ public interface CronjobConverter {
   @Mapping(target = "version", ignore = true)
   @Mapping(target = "lastFireTime", ignore = true)
   @Mapping(target = "nextFireTime", ignore = true)
+  @Mapping(target = "dagStatus", source = "status")
   JobDag dtoToEntity(JobDagSaveDTO dto);
+
+  /**
+   * 将 JobDagVO 转换为 infra 实体（内部服务新增/更新场景）。
+   *
+   * <p>VO 与实体字段名基本一致（除审计字段、级联字段外），MapStruct 可自动映射。
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobDag voToEntity(JobDagVO vo);
 
   // ===== JobDagInstance =====
   JobDagInstanceVO entityToVO(JobDagInstance entity);

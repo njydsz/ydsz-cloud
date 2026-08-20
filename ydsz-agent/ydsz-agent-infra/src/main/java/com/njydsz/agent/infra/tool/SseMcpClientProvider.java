@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.IdGenerator;
 import lombok.extern.slf4j.Slf4j;
@@ -116,7 +117,10 @@ public class SseMcpClientProvider implements McpClientProvider {
                     "[MCP-SSE] 会话初始化完成: server={}, sessionId={}", name, sessionId);
                 return new SessionEntry(sessionId, System.currentTimeMillis());
               } catch (Exception e) {
-                throw new RuntimeException("MCP 会话初始化失败: " + name, e);
+                throw new LlmException(
+                    "MCP 会话初始化失败: server=" + name + ", error=" + e.getMessage(),
+                    LlmException.ErrorType.PROVIDER_ERROR,
+                    e);
               }
             })
         .sessionId();
@@ -147,7 +151,7 @@ public class SseMcpClientProvider implements McpClientProvider {
       String sessionId,
       String method,
       Map<String, Object> params)
-      throws Exception {
+      throws LlmException {
     // P0 修复：使用雪花 ID 保证 JSON-RPC id 全局唯一，替代毫秒时间戳（高并发下同毫秒碰撞导致响应错配）
     String requestId = IdGenerator.nextIdStr();
     Map<String, Object> jsonRpcRequest =
@@ -166,14 +170,32 @@ public class SseMcpClientProvider implements McpClientProvider {
             .timeout(Duration.ofSeconds(server.getTimeoutSeconds()))
             .POST(HttpRequest.BodyPublishers.ofString(requestBody))
             .build();
-    HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    HttpResponse<String> response;
+    try {
+      response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    } catch (java.io.IOException e) {
+      throw new LlmException(
+          "MCP 网络请求失败: server=" + server.getName() + ", error=" + e.getMessage(),
+          LlmException.ErrorType.NETWORK_TIMEOUT,
+          e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new LlmException(
+          "MCP 请求被中断: server=" + server.getName(),
+          LlmException.ErrorType.CANCELED,
+          e);
+    }
     if (response.statusCode() == HTTP_UNAUTHORIZED) {
       // 会话可能已被服务端销毁，失效缓存并在下次调用时重连
       invalidateSession(server.getName());
-      throw new RuntimeException("MCP 会话已失效（401），将自动重连: " + server.getName());
+      throw new LlmException(
+          "MCP 会话已失效（401），将自动重连: server=" + server.getName(),
+          LlmException.ErrorType.AUTH_FAILED);
     }
     if (response.statusCode() >= 400) {
-      throw new RuntimeException("MCP 请求失败: HTTP " + response.statusCode());
+      throw new LlmException(
+          "MCP 请求失败: HTTP " + response.statusCode() + ", server=" + server.getName(),
+          LlmException.ErrorType.PROVIDER_ERROR);
     }
     return response.body();
   }

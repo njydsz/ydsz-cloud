@@ -26,6 +26,7 @@ import com.njydsz.nextwiki.domain.query.SearchQuery;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.domain.repository.TagRepository;
+import com.njydsz.nextwiki.domain.service.SearchDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.SearchIndexVO;
 import com.njydsz.nextwiki.domain.vo.SearchResultVO;

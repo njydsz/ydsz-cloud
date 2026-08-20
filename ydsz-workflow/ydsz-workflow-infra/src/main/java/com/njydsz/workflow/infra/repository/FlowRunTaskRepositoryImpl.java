@@ -1,6 +1,7 @@
 package com.njydsz.workflow.infra.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -238,5 +239,41 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
                 .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
                 .le(FlowRunTaskDO::getCreatedAt, thresholdTime)
                 .last("LIMIT " + limit)));
+  }
+
+  @Override
+  public List<FlowRunTaskVO> selectSlaCandidates(int limit) {
+    List<FlowRunTaskDO> candidates = taskMapper.selectSlaCandidates(limit);
+    return candidates == null ? Collections.emptyList() : converter.flowRunTaskListToVO(candidates);
+  }
+
+  @Override
+  public void incrementUrgeCount(String taskId, int newUrgeCount, LocalDateTime urgeAt) {
+    taskMapper.incrementUrgeCount(taskId, newUrgeCount, urgeAt);
+  }
+
+  @Override
+  public void markSlaAction(String taskId, String slaAction, int slaEscalated) {
+    taskMapper.markSlaAction(taskId, slaAction, slaEscalated);
+  }
+
+  @Override
+  public void completeTask(String taskId, String taskStatus, LocalDateTime finishAt, Long durationMs) {
+    taskMapper.completeTask(taskId, taskStatus, "FLOW_TIMER", finishAt, durationMs);
+  }
+
+  @Override
+  public void cancelTask(String taskId, String taskStatus, String comment) {
+    taskMapper.cancelTask(taskId, taskStatus, comment);
+  }
+
+  @Override
+  public List<FlowRunTaskVO> findByInstanceAndNode(String instanceId, String nodeCode) {
+    return converter.flowRunTaskListToVO(
+        taskMapper.selectList(
+            new LambdaQueryWrapper<FlowRunTaskDO>()
+                .eq(FlowRunTaskDO::getInstanceId, instanceId)
+                .eq(FlowRunTaskDO::getNodeCode, nodeCode)
+                .eq(FlowRunTaskDO::getDeleted, 0)));
   }
 }

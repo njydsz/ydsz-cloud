@@ -6,15 +6,16 @@ import lombok.Data;
 import com.njydsz.common.safe.annotation.Xss;
 
 /**
- * 认证策略创建 DTO（P3-1 多租户认证域隔离）。
+ * 认证策略统一 DTO（P3-1 多租户认证域隔离）。
  *
- * <p>用于创建租户级认证策略，未配置的策略项继承全局默认值。
+ * <p>同时用于创建和更新场景：创建时 {@code tenantId} 可不传（为空表示全局默认策略），
+ * 更新时 {@code tenantId} 必填。
  *
  * @author ydsz-team
  * @since 2.24.0
  */
 @Data
-public class AuthPolicyCreateDTO {
+public class AuthPolicyDTO {
 
   /** 租户 ID（为空表示全局默认策略） */
   @Xss(message = "租户ID包含非法内容")

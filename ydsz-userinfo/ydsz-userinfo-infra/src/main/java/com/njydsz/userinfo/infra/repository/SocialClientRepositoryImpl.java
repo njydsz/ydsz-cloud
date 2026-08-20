@@ -9,8 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.dto.SocialClientCreateDTO;
-import com.njydsz.userinfo.domain.dto.SocialClientUpdateDTO;
+import com.njydsz.userinfo.domain.dto.SocialClientDTO;
 import com.njydsz.userinfo.domain.query.SocialClientPageQuery;
 import com.njydsz.userinfo.domain.repository.SocialClientRepository;
 import com.njydsz.userinfo.domain.vo.SocialClientVO;
@@ -71,61 +70,53 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
   }
 
   @Override
-  public void save(SocialClientCreateDTO dto) {
-    SocialClientDO entity = new SocialClientDO();
-    entity.setPlatform(dto.getPlatform().toUpperCase());
-    entity.setPlatformName(dto.getPlatformName());
-    entity.setAppId(dto.getAppId());
-    // 应用密钥 BCrypt 加密存储
-    if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {
-      entity.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
-    }
-    entity.setScope(dto.getScope());
-    entity.setRedirectUri(dto.getRedirectUri());
-    entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
-    entity.setSortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 100);
-    entity.setRemark(dto.getRemark());
-
-    mapper.insert(entity);
-    log.info("社交平台客户端配置已创建: platform={}", dto.getPlatform());
-  }
-
-  @Override
-  public void update(String platform, SocialClientUpdateDTO dto) {
-    SocialClientDO entity = mapper.selectByPlatform(platform.toUpperCase());
-    if (entity == null) {
-      log.warn("尝试更新不存在的社交平台客户端配置: platform={}", platform);
-      return;
-    }
-
-    if (dto.getPlatformName() != null) {
+  public void save(SocialClientDTO dto) {
+    SocialClientDO existing = mapper.selectByPlatform(dto.getPlatform().toUpperCase());
+    if (existing != null) {
+      // 更新场景：仅在字段非空时更新
+      if (dto.getPlatformName() != null) {
+        existing.setPlatformName(dto.getPlatformName());
+      }
+      if (dto.getAppId() != null) {
+        existing.setAppId(dto.getAppId());
+      }
+      if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {
+        existing.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
+      }
+      if (dto.getScope() != null) {
+        existing.setScope(dto.getScope());
+      }
+      if (dto.getRedirectUri() != null) {
+        existing.setRedirectUri(dto.getRedirectUri());
+      }
+      if (dto.getStatus() != null) {
+        existing.setStatus(dto.getStatus());
+      }
+      if (dto.getSortOrder() != null) {
+        existing.setSortOrder(dto.getSortOrder());
+      }
+      if (dto.getRemark() != null) {
+        existing.setRemark(dto.getRemark());
+      }
+      mapper.updateById(existing);
+      log.info("社交平台客户端配置已更新: platform={}", dto.getPlatform());
+    } else {
+      // 创建场景：全部字段写入
+      SocialClientDO entity = new SocialClientDO();
+      entity.setPlatform(dto.getPlatform().toUpperCase());
       entity.setPlatformName(dto.getPlatformName());
-    }
-    if (dto.getAppId() != null) {
       entity.setAppId(dto.getAppId());
-    }
-    // 应用密钥仅在传入时更新（BCrypt 加密）
-    if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {
-      entity.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
-    }
-    if (dto.getScope() != null) {
+      if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {
+        entity.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
+      }
       entity.setScope(dto.getScope());
-    }
-    if (dto.getRedirectUri() != null) {
       entity.setRedirectUri(dto.getRedirectUri());
-    }
-    if (dto.getStatus() != null) {
-      entity.setStatus(dto.getStatus());
-    }
-    if (dto.getSortOrder() != null) {
-      entity.setSortOrder(dto.getSortOrder());
-    }
-    if (dto.getRemark() != null) {
+      entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
+      entity.setSortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 100);
       entity.setRemark(dto.getRemark());
+      mapper.insert(entity);
+      log.info("社交平台客户端配置已创建: platform={}", dto.getPlatform());
     }
-
-    mapper.updateById(entity);
-    log.info("社交平台客户端配置已更新: platform={}", platform);
   }
 
   @Override

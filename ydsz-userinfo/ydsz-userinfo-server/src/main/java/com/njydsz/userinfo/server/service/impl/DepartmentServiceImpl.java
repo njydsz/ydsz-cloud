@@ -22,9 +22,7 @@ import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.domain.dto.DepartmentCreateDTO;
 import com.njydsz.userinfo.domain.dto.DepartmentDTO;
-import com.njydsz.userinfo.domain.dto.DepartmentUpdateDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
@@ -144,9 +142,7 @@ public class DepartmentServiceImpl implements DepartmentService {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_CODE_DUPLICATE);
     }
 
-    DepartmentCreateDTO createDTO = new DepartmentCreateDTO();
-    BeanUtils.copyProperties(dto, createDTO);
-    DepartmentVO vo = departmentRepository.create(createDTO);
+    DepartmentVO vo = departmentRepository.save(dto);
     log.info("Department created: code={}, id={}", dto.getDeptCode(), vo.getId());
 
     // 部门变更后失效缓存
@@ -171,9 +167,7 @@ public class DepartmentServiceImpl implements DepartmentService {
   public boolean update(DepartmentDTO dto) {
     departmentRepository.findById(dto.getId())
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.DEPARTMENT_NOT_FOUND));
-    DepartmentUpdateDTO updateDTO = new DepartmentUpdateDTO();
-    BeanUtils.copyProperties(dto, updateDTO);
-    DepartmentVO vo = departmentRepository.update(updateDTO);
+    DepartmentVO vo = departmentRepository.save(dto);
 
     if (vo != null) {
       // 部门变更后失效缓存（部门树 + 部门负责人工作流缓存）

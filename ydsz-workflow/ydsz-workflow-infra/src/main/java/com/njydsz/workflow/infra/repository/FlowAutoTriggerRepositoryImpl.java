@@ -80,4 +80,31 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
     autoTriggerMapper.updateById(entity);
     return vo;
   }
+
+  @Override
+  public List<FlowAutoTriggerVO> findEnabledBySourceFlowCode(String sourceFlowCode) {
+    return converter.flowAutoTriggerListToVO(
+        autoTriggerMapper.selectList(
+            new LambdaQueryWrapper<FlowAutoTriggerDO>()
+                .eq(FlowAutoTriggerDO::getSourceFlowCode, sourceFlowCode)
+                .eq(FlowAutoTriggerDO::getEnabled, 1)
+                .eq(FlowAutoTriggerDO::getDeleted, 0)));
+  }
+
+  @Override
+  public void deleteBySourceFlowCode(String sourceFlowCode) {
+    autoTriggerMapper.delete(
+        new LambdaQueryWrapper<FlowAutoTriggerDO>()
+            .eq(FlowAutoTriggerDO::getSourceFlowCode, sourceFlowCode));
+  }
+
+  @Override
+  public List<FlowAutoTriggerVO> findAllOrderBySort() {
+    return converter.flowAutoTriggerListToVO(
+        autoTriggerMapper.selectList(
+            new LambdaQueryWrapper<FlowAutoTriggerDO>()
+                .eq(FlowAutoTriggerDO::getDeleted, 0)
+                .orderByAsc(FlowAutoTriggerDO::getSortOrder)
+                .orderByAsc(FlowAutoTriggerDO::getId)));
+  }
 }

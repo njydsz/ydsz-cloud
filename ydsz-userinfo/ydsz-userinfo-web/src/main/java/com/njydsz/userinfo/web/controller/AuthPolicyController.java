@@ -21,8 +21,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.web.version.ApiVersion;
-import com.njydsz.userinfo.domain.dto.AuthPolicyCreateDTO;
-import com.njydsz.userinfo.domain.dto.AuthPolicyUpdateDTO;
+import com.njydsz.userinfo.domain.dto.AuthPolicyDTO;
 import com.njydsz.userinfo.domain.query.AuthPolicyPageQuery;
 import com.njydsz.userinfo.domain.vo.AuthPolicyVO;
 import com.njydsz.userinfo.server.service.AuthPolicyService;
@@ -85,8 +84,8 @@ public class AuthPolicyController {
       content = "'新增认证策略: tenantId=' + #dto.tenantId + ', name=' + #dto.name")
   @PostMapping
   @Operation(summary = "新增认证策略")
-  public YdszResponse<Void> create(@RequestBody AuthPolicyCreateDTO dto) {
-    authPolicyService.create(dto);
+  public YdszResponse<Void> create(@RequestBody AuthPolicyDTO dto) {
+    authPolicyService.save(dto);
     return YdszResponse.success();
   }
 
@@ -105,8 +104,9 @@ public class AuthPolicyController {
   @PutMapping("/{tenantId}")
   @Operation(summary = "更新认证策略")
   public YdszResponse<Void> update(
-      @PathVariable String tenantId, @RequestBody AuthPolicyUpdateDTO dto) {
-    authPolicyService.update(tenantId, dto);
+      @PathVariable String tenantId, @RequestBody AuthPolicyDTO dto) {
+    dto.setTenantId(tenantId);
+    authPolicyService.save(dto);
     return YdszResponse.success();
   }
 

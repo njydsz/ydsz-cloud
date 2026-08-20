@@ -21,8 +21,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.web.version.ApiVersion;
-import com.njydsz.userinfo.domain.dto.SocialClientCreateDTO;
-import com.njydsz.userinfo.domain.dto.SocialClientUpdateDTO;
+import com.njydsz.userinfo.domain.dto.SocialClientDTO;
 import com.njydsz.userinfo.domain.query.SocialClientPageQuery;
 import com.njydsz.userinfo.domain.vo.SocialClientVO;
 import com.njydsz.userinfo.server.service.SocialClientConfigService;
@@ -76,7 +75,7 @@ public class SocialClientConfigController {
   /**
    * 新增社交平台客户端配置。
    *
-   * @param dto 创建 DTO
+   * @param dto 统一 DTO
    * @return 创建结果
    */
   @Audit(
@@ -86,8 +85,8 @@ public class SocialClientConfigController {
       content = "'新增社交平台配置: platform=' + #dto.platform")
   @PostMapping
   @Operation(summary = "新增配置", description = "创建后立即生效，无需重启服务")
-  public YdszResponse<Void> create(@RequestBody SocialClientCreateDTO dto) {
-    configService.create(dto);
+  public YdszResponse<Void> create(@RequestBody SocialClientDTO dto) {
+    configService.save(dto);
     return YdszResponse.success();
   }
 
@@ -95,7 +94,7 @@ public class SocialClientConfigController {
    * 更新社交平台客户端配置。
    *
    * @param platform 平台标识
-   * @param dto 更新 DTO
+   * @param dto 统一 DTO
    * @return 更新结果
    */
   @Audit(
@@ -106,8 +105,8 @@ public class SocialClientConfigController {
   @PutMapping("/{platform}")
   @Operation(summary = "更新配置", description = "更新后立即生效")
   public YdszResponse<Void> update(
-      @PathVariable String platform, @RequestBody SocialClientUpdateDTO dto) {
-    configService.update(platform, dto);
+      @PathVariable String platform, @RequestBody SocialClientDTO dto) {
+    configService.save(dto);
     return YdszResponse.success();
   }
 
