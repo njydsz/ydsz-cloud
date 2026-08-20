@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -24,6 +23,7 @@ import com.njydsz.cronjob.server.config.PrecisionConfig;
 import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 import com.njydsz.cronjob.server.core.dispatch.JobTransactionService;
 import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 
 /**
@@ -75,15 +75,7 @@ public class TaskPreloadScheduler {
 
   @PostConstruct
   public void init() {
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - 单线程调度器，用于秒级预读触发，数量固定为1
-    this.precisionScheduler =
-        Executors.newSingleThreadScheduledExecutor(
-            r -> {
-              Thread t = new Thread(r, "ydsz-job-preload");
-              t.setDaemon(true);
-              return t;
-            });
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+    this.precisionScheduler = ExecutorUtils.newScheduledThreadPool(1, "job-preload-");
     PrecisionConfig cfg = cronjobProperties.getPreload();
     log.info(
         "[Preload] 秒级预读调度器初始化: enabled={} scanInterval={}ms window={}s batch={}",

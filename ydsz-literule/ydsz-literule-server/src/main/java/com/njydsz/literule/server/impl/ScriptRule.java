@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
@@ -29,6 +28,7 @@ import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.api.ScriptDefinition;
 
 /**
@@ -116,7 +116,7 @@ public class ScriptRule implements Rule {
    */
   // CHECKSTYLE.OFF: RegexpSinglelineJava - 虚拟线程执行器，每个任务一个虚拟线程，无平台线程占用
   private static final java.util.concurrent.ExecutorService SCRIPT_EXECUTOR =
-      Executors.newVirtualThreadPerTaskExecutor();
+      ExecutorUtils.newVirtualThreadExecutor("literule-script-exec");
   // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /** ScriptEngine 缓存（按语言名，全局共享，线程安全） */

@@ -6,7 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
 import lombok.extern.slf4j.Slf4j;
@@ -39,10 +40,8 @@ public class CostAnalysisService {
    *
    * <p>用量写入是旁路统计，不允许阻塞 LLM 调用主流程（P1 修复：原实现注释声称异步但实际同步 insert）。
    */
-  // CHECKSTYLE.OFF: ThreadPoolCreate
   private static final ExecutorService USAGE_WRITE_EXECUTOR =
-      Executors.newVirtualThreadPerTaskExecutor();
-  // CHECKSTYLE.ON: ThreadPoolCreate
+      ExecutorUtils.newVirtualThreadExecutor("agent-cost-analysis-");
 
   /** Token 用量记录 Repository */
   private final TokenUsageRecordRepository tokenUsageRecordRepository;

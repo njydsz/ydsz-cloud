@@ -150,6 +150,23 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
     if (query.getMsgId() != null && !query.getMsgId().isBlank()) {
       wrapper.eq("msg_id", query.getMsgId());
     }
+    if (query.getTenantId() != null && !query.getTenantId().isBlank()) {
+      wrapper.eq("tenant_id", query.getTenantId());
+    }
+    if (query.getStartTime() != null && !query.getStartTime().isBlank()) {
+      try {
+        wrapper.ge("created_at", java.time.LocalDateTime.parse(query.getStartTime()));
+      } catch (java.time.format.DateTimeParseException e) {
+        // ignore invalid date format
+      }
+    }
+    if (query.getEndTime() != null && !query.getEndTime().isBlank()) {
+      try {
+        wrapper.le("created_at", java.time.LocalDateTime.parse(query.getEndTime()));
+      } catch (java.time.format.DateTimeParseException e) {
+        // ignore invalid date format
+      }
+    }
     wrapper.eq("deleted", 0);
     return wrapper;
   }

@@ -1,9 +1,9 @@
 package com.njydsz.agent.server.chat;
 
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -34,9 +34,6 @@ public class SseHeartbeatScheduler {
 
   /** 调度线程池大小：2 个足够覆盖常规 SSE 连接的心跳调度需求 */
   private static final int SCHEDULER_POOL_SIZE = 2;
-
-  /** 调度线程名前缀 */
-  private static final String THREAD_NAME_PREFIX = "agent-sse-heartbeat-";
 
   /** 共享调度器实例 */
   private static volatile ScheduledExecutorService sharedScheduler;
@@ -74,11 +71,7 @@ public class SseHeartbeatScheduler {
    */
   private static ScheduledExecutorService createScheduler() {
     log.info("[SseHeartbeatScheduler] 创建 SSE 心跳调度线程池，大小={}", SCHEDULER_POOL_SIZE);
-    ThreadFactory virtualThreadFactory =
-        Thread.ofVirtual().name(THREAD_NAME_PREFIX, 0).factory();
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - SSE 心跳调度器，线程数固定为2，使用虚拟线程工厂
-    return Executors.newScheduledThreadPool(SCHEDULER_POOL_SIZE, virtualThreadFactory);
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+    return ExecutorUtils.newScheduledThreadPool(SCHEDULER_POOL_SIZE, "agent-sse-heartbeat-");
   }
 
   /**

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
@@ -14,6 +13,7 @@ import java.util.concurrent.atomic.LongAdder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.server.config.RuleAdminService;
 
@@ -85,7 +85,7 @@ public class RuleStressTestService {
 
     // 每个线程分配独立的事实数据游标，避免共享竞争
     // CHECKSTYLE.OFF: RegexpSinglelineJava - 压测工具类，线程数由调用方传入，用于性能基准测试
-    ExecutorService executor = Executors.newFixedThreadPool(threads);
+    ExecutorService executor = ExecutorUtils.newFixedThreadPool(threads, "literule-stress-test");
     // CHECKSTYLE.ON: RegexpSinglelineJava
     final List<Map<String, Object>> finalFactsList = factsList;
     final int finalIterations = iterations;

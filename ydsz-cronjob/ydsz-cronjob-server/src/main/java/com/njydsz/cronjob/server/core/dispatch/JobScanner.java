@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.infra.entity.job.Job;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -135,21 +136,15 @@ public class JobScanner {
               cronjobProperties.getScanner().getBatchSize());
         } catch (Exception e) {
           int poolSize = cronjobProperties.getScanner().getParallelDispatchPoolSize();
-          // CHECKSTYLE.OFF: RegexpSinglelineJava - common-thread 未配置时的降级兜底池
+          // 使用 common-thread ExecutorUtils 创建降级线程池（符合云顶规范 15.4）
           this.dispatchPool =
-              new ThreadPoolExecutor(
-                  poolSize,
-                  poolSize,
-                  0L,
-                  TimeUnit.MILLISECONDS,
-                  new LinkedBlockingQueue<>(1024),
-                  r -> {
-                    Thread t = new Thread(r, "job-scanner-dispatch");
-                    t.setDaemon(true);
-                    return t;
-                  },
-                  new ThreadPoolExecutor.CallerRunsPolicy());
-          // CHECKSTYLE.ON: RegexpSinglelineJava
+              ExecutorUtils.builder()
+                  .corePoolSize(poolSize)
+                  .maxPoolSize(poolSize)
+                  .queueCapacity(1024)
+                  .threadNamePrefix("job-scanner-dispatch-")
+                  .daemon(true)
+                  .build();
           this.useExternalDispatchPool = false;
           log.info(
               "[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=true poolSize={} (manual fallback)",

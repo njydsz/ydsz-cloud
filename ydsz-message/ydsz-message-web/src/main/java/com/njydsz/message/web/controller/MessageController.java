@@ -2,7 +2,6 @@ package com.njydsz.message.web.controller.core;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,15 +25,12 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.domain.dto.BatchSendResult;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
-import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.SendStrategyEnum;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.service.core.MessageService;
@@ -232,8 +228,7 @@ public class MessageController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/log/page")
   public PageResponse<List<MsgLogVO>> pageLog(MessageLogQueryDTO query) {
-    Page<MsgLog> page = messageService.pageLog(query);
-    return PageResponses.success(page, MessageConverter.INSTANT::entityToVO);
+    return messageService.pageLog(query);
   }
 
   /**
@@ -344,8 +339,7 @@ public class MessageController {
     query.setBizId(batchId);
     query.setPageNum((int) page);
     query.setPageSize((int) size);
-    Page<MsgLog> result = messageService.pageLog(query);
-    return PageResponses.success(result, MessageConverter.INSTANT::entityToVO);
+    return messageService.pageLog(query);
   }
 
   // ===== 私有辅助方法 =====

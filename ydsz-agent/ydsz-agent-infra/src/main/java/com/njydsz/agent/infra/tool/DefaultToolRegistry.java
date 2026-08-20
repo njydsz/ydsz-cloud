@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -37,9 +38,7 @@ public class DefaultToolRegistry implements ToolRegistry {
   private final int defaultTimeoutSeconds;
 
   /** 工具执行线程池（JDK 21 虚拟线程，规范豁免场景） */
-  // CHECKSTYLE.OFF: RegexpSinglelineJava - 虚拟线程执行器，每个任务一个虚拟线程，无界但无平台线程占用
   private final ExecutorService toolExecutorPool;
-  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /** 默认构造器（30 秒超时） */
   public DefaultToolRegistry() {
@@ -53,9 +52,7 @@ public class DefaultToolRegistry implements ToolRegistry {
    */
   public DefaultToolRegistry(int defaultTimeoutSeconds) {
     this.defaultTimeoutSeconds = defaultTimeoutSeconds > 0 ? defaultTimeoutSeconds : 0;
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - 虚拟线程执行器，每个工具调用一个虚拟线程，无平台线程占用
-    this.toolExecutorPool = Executors.newVirtualThreadPerTaskExecutor();
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+    this.toolExecutorPool = ExecutorUtils.newVirtualThreadExecutor("agent-tool-registry-");
   }
 
   @Override

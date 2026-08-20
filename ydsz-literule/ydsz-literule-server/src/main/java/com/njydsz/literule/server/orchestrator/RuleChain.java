@@ -9,8 +9,6 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -20,6 +18,7 @@ import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.StatsRecorder;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.api.expression.ExpressionEngine;
 
 /**
@@ -65,18 +64,14 @@ public class RuleChain {
    */
   // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
   private static final ExecutorService WHEN_FALLBACK_EXECUTOR =
-      new ThreadPoolExecutor(
-          Math.max(2, Runtime.getRuntime().availableProcessors()),
-          Math.max(2, Runtime.getRuntime().availableProcessors()),
-          0L,
-          TimeUnit.MILLISECONDS,
-          new LinkedBlockingQueue<>(1024),
-          r -> {
-            Thread t = new Thread(r, "literule-when-fallback");
-            t.setDaemon(true);
-            return t;
-          },
-          new ThreadPoolExecutor.CallerRunsPolicy());
+      ExecutorUtils.builder()
+          .corePoolSize(Math.max(2, Runtime.getRuntime().availableProcessors()))
+          .maxPoolSize(Math.max(2, Runtime.getRuntime().availableProcessors()))
+          .keepAliveTime(0L, TimeUnit.MILLISECONDS)
+          .queueCapacity(1024)
+          .threadNamePrefix("literule-when-fallback")
+          .daemon(true)
+          .build();
   // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /**

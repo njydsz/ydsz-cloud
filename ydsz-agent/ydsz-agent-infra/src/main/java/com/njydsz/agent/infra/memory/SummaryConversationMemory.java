@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import lombok.extern.slf4j.Slf4j;
@@ -90,9 +91,8 @@ public class SummaryConversationMemory implements ConversationMemory {
   private final ConcurrentMap<String, String> conversationSummaries = new ConcurrentHashMap<>();
 
   /** 异步压缩虚拟线程池（JDK 21 虚拟线程，规范豁免场景） */
-  // CHECKSTYLE.OFF: ThreadPoolCreate
-  private final ExecutorService summaryExecutor = Executors.newVirtualThreadPerTaskExecutor();
-  // CHECKSTYLE.ON: ThreadPoolCreate
+  private final ExecutorService summaryExecutor =
+      ExecutorUtils.newVirtualThreadExecutor("agent-memory-summary-");
 
   public SummaryConversationMemory(
       ConversationMemory delegate,

@@ -2,10 +2,9 @@ package com.njydsz.message.server.service.core;
 
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
  * 消息发送日志 Service
@@ -28,7 +27,7 @@ import com.njydsz.message.infra.entity.MsgLog;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see MsgLog 消息日志实体
+ * @see MsgLogVO 消息日志 VO
  * @see MessageStatsService 消息统计服务
  */
 public interface MessageLogService {
@@ -37,9 +36,9 @@ public interface MessageLogService {
    * 根据 ID 查询日志
    *
    * @param id 日志 ID
-   * @return 日志实体
+   * @return 日志 VO
    */
-  MsgLog getById(String id);
+  MsgLogVO getById(String id);
 
   /**
    * 分页查询日志
@@ -47,7 +46,7 @@ public interface MessageLogService {
    * @param query 查询参数
    * @return 分页结果
    */
-  Page<MsgLog> page(MessageLogQueryDTO query);
+  PageResponse<List<MsgLogVO>> page(MessageLogQueryDTO query);
 
   /**
    * 标记日志为重试中,并设置下次重试时间

@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -16,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.core.constant.SystemConstants;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
@@ -38,8 +39,10 @@ import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.event.OutboxEvent;
 import com.njydsz.message.domain.repository.OutboxEventRepository;
+import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.infra.entity.MsgTraceDO;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
@@ -123,13 +126,12 @@ public class MessageServiceImpl implements MessageService {
   /** P2-A6: 消息发送事务包装（解决同类 self-invocation 事务不生效问题） */
   private final MessageSendTxService messageSendTxService;
 
+  /** 消息转换器 */
+  private final MessageConverter converter;
+
   /** P2-C5: 级联消息发送线程池（固定大小，避免级联消息耗尽主线程池） */
   // CHECKSTYLE.OFF: RegexpSinglelineJava - 级联消息专用池，线程数固定为4，避免耗尽主线程池
-  private final Executor cascadeExecutor = Executors.newFixedThreadPool(4, r -> {
-    Thread t = new Thread(r, "msg-cascade-" + System.nanoTime());
-    t.setDaemon(true);
-    return t;
-  });
+  private final Executor cascadeExecutor = ExecutorUtils.newFixedThreadPool(4, "message-cascade");
   // CHECKSTYLE.ON: RegexpSinglelineJava
 
   @Override
@@ -319,7 +321,7 @@ public class MessageServiceImpl implements MessageService {
     // ⑧-2 P0-3: 定时消息 —— scheduledAt 非空且在未来时,落库 SCHEDULED 不立即发送
     if (request.getScheduledAt() != null && request.getScheduledAt().isAfter(LocalDateTime.now())) {
       logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
-      msgLogRepository.insert(logDO);
+      msgLogRepository.save(converter.entityToVO(logDO));
       log.info(
           "[Message] 定时消息已入库: msgId={} scheduledAt={} channel={}",
           logDO.getMsgId(),
@@ -339,7 +341,7 @@ public class MessageServiceImpl implements MessageService {
           request.setScheduledAt(optimalTime);
           logDO.setScheduledAt(optimalTime);
           logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
-          msgLogRepository.insert(logDO);
+          msgLogRepository.save(converter.entityToVO(logDO));
           messageTraceService.recordTrace(
               logDO.getMsgId(),
               MsgTraceDO.Node.SCHEDULED,
@@ -474,7 +476,7 @@ public class MessageServiceImpl implements MessageService {
   }
 
   @Override
-  public Page<MsgLog> pageLog(MessageLogQueryDTO query) {
+  public PageResponse<List<MsgLogVO>> pageLog(MessageLogQueryDTO query) {
     return messageQueryService.pageLog(query);
   }
 
@@ -483,22 +485,22 @@ public class MessageServiceImpl implements MessageService {
     if (!StringUtils.hasText(msgId)) {
       return MessageResult.fail(null, "消息 ID 不能为空");
     }
-    MsgLog logDO =
-        msgLogRepository.selectOne(
-            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<MsgLog>()
-                .eq(MsgLog::getMsgId, msgId)
-                .last("LIMIT 1"));
-    if (logDO == null) {
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setMsgId(msgId);
+    query.setPageNum(1);
+    query.setPageSize(1);
+    MsgLogVO logVO = msgLogRepository.findOne(query).orElse(null);
+    if (logVO == null) {
       return MessageResult.fail(null, "消息不存在: " + msgId);
     }
-    if (!MessageStatusEnum.SCHEDULED.name().equals(logDO.getStatus())) {
-      return MessageResult.fail(logDO.getChannel(), "仅允许取消定时消息（当前状态: " + logDO.getStatus() + "）");
+    if (!MessageStatusEnum.SCHEDULED.name().equals(logVO.getStatus())) {
+      return MessageResult.fail(logVO.getChannel(), "仅允许取消定时消息（当前状态: " + logVO.getStatus() + "）");
     }
-    logDO.setStatus(MessageStatusEnum.SKIPPED.name());
-    logDO.setErrorMessage("USER_CANCELLED");
-    msgLogRepository.updateById(logDO);
-    log.info("[Message] 定时消息已取消: msgId={} channel={}", msgId, logDO.getChannel());
-    return MessageResult.ok(logDO.getChannel(), msgId);
+    logVO.setStatus(MessageStatusEnum.SKIPPED.name());
+    logVO.setErrorMessage("USER_CANCELLED");
+    msgLogRepository.update(logVO);
+    log.info("[Message] 定时消息已取消: msgId={} channel={}", msgId, logVO.getChannel());
+    return MessageResult.ok(logVO.getChannel(), msgId);
   }
 
   private String resolvePriority() {

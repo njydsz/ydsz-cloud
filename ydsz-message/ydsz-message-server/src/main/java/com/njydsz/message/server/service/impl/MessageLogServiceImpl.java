@@ -3,8 +3,7 @@ package com.njydsz.message.server.service.impl;
 import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.common.core.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -12,14 +11,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
-import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
-import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.config.RetryStrategyResolver;
@@ -45,6 +44,9 @@ public class MessageLogServiceImpl implements MessageLogService {
   /** 消息日志 Repository */
   private final MsgLogRepository msgLogRepository;
 
+  /** 消息转换器 */
+  private final MessageConverter converter;
+
   /** 通道路由器（重发时分发） */
   private final ChannelRouter channelRouter;
 
@@ -64,50 +66,28 @@ public class MessageLogServiceImpl implements MessageLogService {
   private final ConcurrentHashMap<String, Long> lastAlertTimeMap = new ConcurrentHashMap<>();
 
   @Override
-  public MsgLog getById(String id) {
+  public MsgLogVO getById(String id) {
     if (!StringUtils.hasText(id)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("日志 ID 不能为空")
           .build();
     }
-    MsgLog entity = msgLogRepository.selectById(id);
-    if (entity == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.NOT_FOUND)
-          .message("日志不存在: " + id)
-          .build();
-    }
-    return entity;
+    return msgLogRepository.findById(id)
+        .orElseThrow(() -> SysException.builder()
+            .resultCode(YdszResultCode.NOT_FOUND)
+            .message("日志不存在: " + id)
+            .build());
   }
 
   @Override
-  public Page<MsgLog> page(MessageLogQueryDTO query) {
-    Page<MsgLog> page =
-        new Page<>(
-            query == null ? 1 : query.getPageNum(),
-            Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-    LambdaQueryWrapper<MsgLog> w = new LambdaQueryWrapper<>();
-    if (query != null) {
-      w.eq(StringUtils.hasText(query.getChannel()), MsgLog::getChannel, query.getChannel());
-      w.eq(StringUtils.hasText(query.getBizType()), MsgLog::getBizType, query.getBizType());
-      w.eq(StringUtils.hasText(query.getBizId()), MsgLog::getBizId, query.getBizId());
-      w.eq(StringUtils.hasText(query.getStatus()), MsgLog::getStatus, query.getStatus());
-      w.eq(StringUtils.hasText(query.getReceiver()), MsgLog::getReceiver, query.getReceiver());
-      w.eq(StringUtils.hasText(query.getPriority()), MsgLog::getPriority, query.getPriority());
-      w.eq(
-          StringUtils.hasText(query.getRecallStatus()),
-          MsgLog::getRecallStatus,
-          query.getRecallStatus());
-      w.eq(StringUtils.hasText(query.getTenantId()), MsgLog::getTenantId, query.getTenantId());
-    }
-    w.orderByDesc(MsgLog::getCreatedAt);
-    return msgLogRepository.selectPage(page, w);
+  public PageResponse<List<MsgLogVO>> page(MessageLogQueryDTO query) {
+    return msgLogRepository.findPage(query);
   }
 
   @Override
   public void markRetry(String id, LocalDateTime nextRetryAt) {
-    MsgLog entity = getById(id);
+    MsgLogVO entity = getById(id);
     MessageStatusEnum current = parseStatus(entity.getStatus());
     if (!current.canTransitTo(MessageStatusEnum.RETRY)) {
       throw SysException.builder()
@@ -118,7 +98,7 @@ public class MessageLogServiceImpl implements MessageLogService {
     entity.setStatus(MessageStatusEnum.RETRY.name());
     entity.setNextRetryAt(nextRetryAt);
     entity.setRetryCount(entity.getRetryCount() == null ? 1 : entity.getRetryCount() + 1);
-    msgLogRepository.updateById(entity);
+    msgLogRepository.update(entity);
     log.info(
         "[MessageLog] 标记重试: id={} nextRetryAt={} retryCount={}",
         id,
@@ -128,7 +108,7 @@ public class MessageLogServiceImpl implements MessageLogService {
 
   @Override
   public void markDead(String id, String errorMessage) {
-    MsgLog entity = getById(id);
+    MsgLogVO entity = getById(id);
     MessageStatusEnum current = parseStatus(entity.getStatus());
     if (!current.canTransitTo(MessageStatusEnum.DEAD)) {
       // 仅 RETRY 可流转到 DEAD；其他状态强制记录但仍校验，非法抛异常
@@ -139,7 +119,7 @@ public class MessageLogServiceImpl implements MessageLogService {
     }
     entity.setStatus(MessageStatusEnum.DEAD.name());
     entity.setErrorMessage(errorMessage);
-    msgLogRepository.updateById(entity);
+    msgLogRepository.update(entity);
     log.warn("[MessageLog] 标记死信: id={} err={}", id, errorMessage);
     // P1-4: 死信告警检测
     checkAndFireDeadLetterAlert(entity.getChannel());
@@ -147,15 +127,15 @@ public class MessageLogServiceImpl implements MessageLogService {
 
   @Override
   public void updateReceipt(String id, String receiptStatus, LocalDateTime receiptAt) {
-    MsgLog entity = getById(id);
+    MsgLogVO entity = getById(id);
     entity.setReceiptStatus(receiptStatus);
     entity.setReceiptAt(receiptAt);
-    msgLogRepository.updateById(entity);
+    msgLogRepository.update(entity);
   }
 
   @Override
   public void markRecalled(String id) {
-    MsgLog entity = getById(id);
+    MsgLogVO entity = getById(id);
     MessageStatusEnum current = parseStatus(entity.getStatus());
     if (!current.canTransitTo(MessageStatusEnum.RECALLED)) {
       throw SysException.builder()
@@ -166,18 +146,18 @@ public class MessageLogServiceImpl implements MessageLogService {
     entity.setStatus(MessageStatusEnum.RECALLED.name());
     entity.setRecallStatus(RecallStatusEnum.RECALLED.name());
     entity.setRecallAt(LocalDateTime.now());
-    msgLogRepository.updateById(entity);
+    msgLogRepository.update(entity);
   }
 
   /**
    * P1-4: 手动重发死信。
    *
    * <p>仅 DEAD 状态可重发。重置 retryCount / errorMessage / nextRetryAt， 流转为 SENDING 后立即通过 {@link
-   * ChannelRouter#dispatch(MsgLog)} 重新投递。 投递失败则进入 RETRY 状态（retryCount=1）走正常重试调度，而非立即再次死信。
+   * ChannelRouter#dispatch(MsgLogVO)} 重新投递。 投递失败则进入 RETRY 状态（retryCount=1）走正常重试调度，而非立即再次死信。
    */
   @Override
   public void resendDead(String logId) {
-    MsgLog entity = getById(logId);
+    MsgLogVO entity = getById(logId);
     MessageStatusEnum current = parseStatus(entity.getStatus());
     if (current != MessageStatusEnum.DEAD) {
       throw SysException.builder()
@@ -191,17 +171,19 @@ public class MessageLogServiceImpl implements MessageLogService {
       entity.setErrorMessage(null);
       entity.setNextRetryAt(null);
       entity.setStatus(MessageStatusEnum.SENDING.name());
-      msgLogRepository.updateById(entity);
+      msgLogRepository.update(entity);
       log.info("[MessageLog] 手动重发死信: logId={} channel={}", logId, entity.getChannel());
 
       long start = System.currentTimeMillis();
       try {
-        String providerTraceId = channelRouter.dispatch(entity);
+        // 将 VO 转换为实体用于通道分发（dispatch 需要 MsgLog 实体）
+        com.njydsz.message.infra.entity.MsgLog logDO = converter.voToEntity(entity);
+        String providerTraceId = channelRouter.dispatch(logDO);
         long cost = System.currentTimeMillis() - start;
         entity.setStatus(MessageStatusEnum.SUCCESS.name());
         entity.setProviderTraceId(providerTraceId);
         entity.setCostMs(cost);
-        msgLogRepository.updateById(entity);
+        msgLogRepository.update(entity);
         messageMetrics.recordSend(entity.getChannel(), "SUCCESS", cost);
         log.info("[MessageLog] 死信重发成功: logId={} providerTraceId={}", logId, providerTraceId);
       } catch (Exception e) {
@@ -214,7 +196,7 @@ public class MessageLogServiceImpl implements MessageLogService {
         entity.setStatus(MessageStatusEnum.RETRY.name());
         entity.setNextRetryAt(
             retryStrategyResolver.calcNextRetryAt(newRetryCount, entity.getChannel()));
-        msgLogRepository.updateById(entity);
+        msgLogRepository.update(entity);
         messageMetrics.recordRetry(entity.getChannel());
         log.warn(
             "[MessageLog] 死信重发失败转重试: logId={} err={} nextRetryAt={}",
@@ -250,13 +232,11 @@ public class MessageLogServiceImpl implements MessageLogService {
       }
       // 统计窗口内死信数量
       LocalDateTime windowStart = LocalDateTime.now().minusMinutes(cfg.getWindowMinutes());
-      Long count =
-          msgLogRepository.selectCount(
-              new LambdaQueryWrapper<MsgLog>()
-                  .eq(MsgLog::getStatus, MessageStatusEnum.DEAD.name())
-                  .eq(MsgLog::getChannel, channel)
-                  .ge(MsgLog::getCreatedAt, windowStart));
-      long currentCount = count == null ? 0L : count;
+      MessageLogQueryDTO query = new MessageLogQueryDTO();
+      query.setStatus(MessageStatusEnum.DEAD.name());
+      query.setChannel(channel);
+      query.setStartTime(windowStart.toString());
+      long currentCount = msgLogRepository.count(query);
       if (currentCount >= cfg.getThreshold()) {
         lastAlertTimeMap.put(channel, now);
         DeadLetterAlertEvent event =

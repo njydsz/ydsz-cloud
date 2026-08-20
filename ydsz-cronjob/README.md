@@ -38,30 +38,30 @@
 | **调度器-执行器分离** | `scheduler-executor-separation.enabled` Leader 仅调度，Worker 执行 |
 | **Webhook** | 出站回调 + HMAC-SHA256 签名 + 5 事件类型 + 失败指数退避重试（1s/5s，最多 3 次） |
 
-### 2. 关键 Controller（基路径 `/api/v1/cronjob`，共 16 个）
+### 2. 关键 Controller（基路径 `/api/v1/cronjob`，共 17 个）
 
-| 路径前缀 | 作用 |
-|---|---|
-| `/job` | 任务 CRUD + 版本回滚 |
-| `/job/log` | 执行日志（分页） |
-| `/job/alert` | 告警规则管理 + 告警日志（`/logs/{jobId}`） |
-| `/job/history` | 历史任务 + 版本管理 |
-| `/job/dag` | DAG 定义管理 |
-| `/job/dag-instance` | DAG 实例控制（启动/暂停/恢复） |
-| `/job/task` | 分片任务管理 |
-| `/job/webhook` | WebHook 订阅管理 |
-| `/job/stats` | 任务统计 |
-| `/job/glue` | 胶水代码在线编辑 |
-| `/job/connector` | 数据连接器管理 |
-| `/job/group` | 任务分组管理 |
-| `/job/queue` | 任务队列视图 |
-| `/job/topology` | 任务拓扑视图 |
-| `/calendar` | 调度日历 |
-| `/internal` | 内部调用端点 |
+| 路径前缀 | Controller | 作用 |
+|---|---|---|
+| `/job` | `JobController` | 任务 CRUD + 版本回滚 |
+| `/job/history` | `JobHistoryController` | 历史任务 + 版本管理 |
+| `/job/alert` | `AlertController` | 告警规则管理 + 告警日志 |
+| `/job/dag` | `JobDagController` | DAG 定义管理 |
+| `/job/dag/instance` | `JobDagInstanceController` / `DagInstanceControlController` | DAG 实例控制（启动/暂停/恢复） |
+| `/job/task` | `JobTaskController` | 分片任务管理 |
+| `/job/webhook` | `JobWebhookController` | WebHook 订阅管理 |
+| `/job/stats` | `JobStatsController` | 任务统计 |
+| `/job/glue` | `GlueCodeController` | 胶水代码在线编辑 |
+| `/job/connector` | `ConnectorController` | 数据连接器管理 |
+| `/job/group` | `JobGroupController` | 任务分组管理 |
+| `/job/queue` | `JobQueueController` | 任务队列视图 |
+| `/job/topology` | `TaskTopologyController` | 任务拓扑视图 |
+| `/monitor/diagnosis` | `JobDiagnosisController` | 任务诊断 |
+| `/calendar` | `ScheduleCalendarController` | 调度日历 |
+| `/internal` | `InternalJobController` | 内部调用端点 |
 
 ## 数据库表设计
 
-实体 `@TableName` 共映射 **17 张表**（DDL 由各部署环境统一维护，不在模块内）：
+实体 `@TableName` 共映射 **18 张表**（DDL 由各部署环境统一维护，不在模块内）：
 
 | 业务域 | 表名 | 说明 |
 |---|---|---|
@@ -75,13 +75,14 @@
 | | `ydsz_job_dag_node_instance` | DAG 节点实例 |
 | **执行日志** | `ydsz_job_log` | 执行日志（分页） |
 | | `ydsz_job_log_content` | 日志详情（TOAST 大字段） |
-| **告警** | `ydsz_alert_dispatch` | 告警派发日志（原 `ydsz_job_alert_log` 合并至此） |
+| **告警** | `ydsz_alert_dispatch` | 告警派发日志 |
 | | `ydsz_job_alert_rule` | 告警规则（失败/超时/阻塞） |
 | **执行器** | `ydsz_job_node` | 执行器节点（注册/心跳） |
 | **Webhook** | `ydsz_job_webhook` | 任务完成回调 |
 | **产物** | `ydsz_job_artifact` | 任务产物（报表/MinIO） |
 | **统计** | `ydsz_job_daily_stats` | 每日统计（成功率/平均耗时） |
 | **配额** | `ydsz_tenant_quota` | 租户级任务数/并发/日执行量 |
+| **Outbox 事件** | `ydsz_job_outbox` | 领域事件 Outbox（事务消息） |
 
 ## 目录结构
 
@@ -152,45 +153,86 @@ ydsz-cronjob/                          # 父 POM
 | `ydsz.cronjob.leader.enabled` | `true` | 启用 Leader 选举 |
 | `ydsz.cronjob.leader.role` | `ydsz-job-scheduler` | 角色标识 |
 | `ydsz.cronjob.leader.lease-seconds` | `30` | 租约时长 |
+| `ydsz.cronjob.leader.renew-interval-seconds` | `10` | Leader 续期间隔（秒） |
 | `ydsz.cronjob.leader.partition.enabled` | `false` | 多分区调度 |
 | `ydsz.cronjob.leader.partition.total-partitions` | `4` | 分区总数 |
+| `ydsz.cronjob.leader.partition.hash-strategy` | `job_key` | 分片分配策略（job_key/job_group） |
 | `ydsz.cronjob.scanner.interval-ms` | `5000` | 任务扫描间隔 |
 | `ydsz.cronjob.scanner.batch-size` | `500` | 单批触发任务数 |
+| `ydsz.cronjob.scanner.lock-ttl-seconds` | `30` | 扫描锁 TTL（秒） |
+| `ydsz.cronjob.scanner.misfire-grace-minutes` | `30` | Misfire 宽容窗口（分钟） |
 | `ydsz.cronjob.scanner.parallel-dispatch-enabled` | `true` | 并行派发 |
+| `ydsz.cronjob.scanner.parallel-dispatch-pool-size` | `8` | 并行派发线程池大小 |
 | `ydsz.cronjob.preload.enabled` | `false` | 秒级预读调度（CRON 任务毫秒级触发） |
 | `ydsz.cronjob.preload.window-seconds` | `30` | 预读窗口（秒） |
+| `ydsz.cronjob.preload.scan-interval-ms` | `3000` | 预读扫描周期（毫秒） |
+| `ydsz.cronjob.preload.batch-size` | `200` | 单批预读最大任务数 |
 | `ydsz.cronjob.sharding.strategy` | `average` | 分片策略：`average`（轮询）/ `consistent_hash`（一致性哈希） |
-| `ydsz.cronjob.executor.running-counter-renew-ms` | `600000` | 运行中任务计数 TTL 续期间隔 |
+| `ydsz.cronjob.executor.register-on-startup` | `true` | 启动时注册到节点表 |
+| `ydsz.cronjob.executor.heartbeat-interval-seconds` | `10` | 心跳上报间隔（秒） |
+| `ydsz.cronjob.executor.offline-threshold-seconds` | `30` | 节点离线判定阈值（秒） |
+| `ydsz.cronjob.executor.drain-on-shutdown` | `true` | 优雅下线时排空在执行任务 |
+| `ydsz.cronjob.executor.drain-timeout-seconds` | `60` | 排空超时时间（秒） |
 | `ydsz.cronjob.executor.max-concurrent` | `16` | 最大并发 |
 | `ydsz.cronjob.executor.isolation-strategy` | `none` | `none` / `tenant` / `job_group` |
 | `ydsz.cronjob.executor.queue-capacity` | `32` | 线程池队列容量 |
-| `ydsz.cronjob.executor.tenant-pool-size` | `10` | 租户隔离池大小 |
+| `ydsz.cronjob.executor.thread-name-prefix` | `job-exec-` | 线程名前缀 |
+| `ydsz.cronjob.executor.tenant-pool-size` | `10` | 租户隔离池核心线程数 |
+| `ydsz.cronjob.executor.tenant-pool-queue-capacity` | `200` | 租户隔离池队列容量 |
+| `ydsz.cronjob.executor.isolation-buckets` | `8` | 分桶隔离的桶数量 |
 
 ### 故障转移 & 异常自愈（`ydsz.cronjob.anomaly-recovery.*`）
 
 | 配置项 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.cronjob.anomaly-recovery.failover-enabled` | `true` | 启用故障转移 |
-| `ydsz.cronjob.anomaly-recovery.scan-interval-seconds` | `30` | 扫描间隔（秒） |
 | `ydsz.cronjob.anomaly-recovery.self-healing-enabled` | `false` | 启用异常自愈 |
+| `ydsz.cronjob.anomaly-recovery.scan-interval-seconds` | `30` | 扫描间隔（秒） |
+| `ydsz.cronjob.anomaly-recovery.scan-node-limit` | `10` | 单批最多扫描节点数 |
+| `ydsz.cronjob.anomaly-recovery.failover-task-limit` | `50` | 单节点最多转移任务数 |
 | `ydsz.cronjob.anomaly-recovery.stuck-threshold-seconds` | `300` | 卡死超时阈值 |
+| `ydsz.cronjob.anomaly-recovery.max-heal-per-scan` | `20` | 单次扫描最大修复任务数 |
+| `ydsz.cronjob.anomaly-recovery.auto-redispatch` | `true` | 是否自动重新派发修复后的任务 |
+| `ydsz.cronjob.anomaly-recovery.max-redispatch-retries` | `3` | 重新派发最大重试次数 |
 
 ### 高级功能
 
 | 配置项 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.cronjob.adaptive-batch.enabled` | `false` | 自适应批量调度 |
+| `ydsz.cronjob.adaptive-batch.min-batch-size` | `50` | 最小批量大小 |
+| `ydsz.cronjob.adaptive-batch.max-batch-size` | `1000` | 最大批量大小 |
 | `ydsz.cronjob.map-reduce.enabled` | `true` | MapReduce 分布式并行 |
+| `ydsz.cronjob.map-reduce.max-parallel-sub-tasks` | `8` | 最大并行子任务数 |
 | `ydsz.cronjob.scheduler-executor-separation.enabled` | `true` | 调度器-执行器分离 |
 | `ydsz.cronjob.remote.enabled` | `true` | 远程派发 |
+| `ydsz.cronjob.remote.connect-timeout-seconds` | `5` | 远程派发连接超时（秒） |
+| `ydsz.cronjob.remote.request-timeout-seconds` | `60` | 远程派发请求超时（秒） |
 | `ydsz.cronjob.remote.fallback-to-local` | `true` | 远程失败降级本地 |
-| `ydsz.cronjob.sandbox.enabled` | `true` | 脚本执行沙箱（默认开启） |
+| `ydsz.cronjob.sandbox.enabled` | `false` | 脚本执行沙箱 |
 | `ydsz.cronjob.sandbox.docker-enabled` | `false` | Docker 容器沙箱 |
 | `ydsz.cronjob.quota.enabled` | `false` | 租户配额 |
 | `ydsz.cronjob.log-retention.retention-days` | `30` | 日志保留天数 |
+| `ydsz.cronjob.log-retention.batch-size` | `1000` | 单批删除条数 |
+| `ydsz.cronjob.log-retention.cron` | `0 0 3 * * ?` | 定时清理 cron |
 | `ydsz.cronjob.http.connect-timeout-seconds` | `10` | HTTP 任务连接超时 |
 | `ydsz.cronjob.http.request-timeout-seconds` | `30` | HTTP 任务请求超时 |
+| `ydsz.cronjob.http.success-status-range` | `200-299` | HTTP 任务成功状态码范围 |
+| `ydsz.cronjob.http.follow-redirects` | `true` | HTTP 任务是否跟随重定向 |
 | `ydsz.cronjob.alert.scan-interval-ms` | `300000` | 告警扫描间隔 |
+| `ydsz.cronjob.alert.rule-cache-ttl-seconds` | `60` | 告警规则本地缓存 TTL（秒） |
+| `ydsz.cronjob.timeout-monitor.interval-ms` | `10000` | 超时监控扫描间隔（毫秒） |
+| `ydsz.cronjob.slow-task-detector.interval-ms` | `30000` | 慢任务诊断扫描间隔（毫秒） |
+
+### 分布式锁配置
+
+| 配置项 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.cronjob.job-lock-ttl` | `5m` | 分布式锁默认 TTL |
+| `ydsz.cronjob.job-lock-ttl-min` | `30s` | 任务级 TTL 下限 |
+| `ydsz.cronjob.job-lock-ttl-max` | `24h` | 任务级 TTL 上限 |
+| `ydsz.cronjob.scheduler-pool-size` | `8` | 调度器线程池大小 |
+| `ydsz.cronjob.scheduler-await-termination-seconds` | `30` | 调度器优雅关闭等待时间（秒） |
 
 ## 启动
 
@@ -214,9 +256,9 @@ mvn -pl ydsz-cronjob spring-boot:run
 
 ### Q2：故障转移不生效
 
-- 检查 `ydsz.cronjob.failover.enabled=true`
+- 检查 `ydsz.cronjob.anomaly-recovery.failover-enabled=true`
 - `JobNodeHeartbeat` 是否在执行器节点正常上报
-- 离线阈值（`offline-threshold-seconds`）是否合理
+- 离线阈值（`ydsz.cronjob.executor.offline-threshold-seconds`）是否合理
 
 ### Q3：DAG 任务卡住
 

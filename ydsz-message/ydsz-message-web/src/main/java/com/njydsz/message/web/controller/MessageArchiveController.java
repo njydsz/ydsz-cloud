@@ -3,8 +3,6 @@ package com.njydsz.message.web.controller.archive;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.message.infra.entity.MsgLog;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -17,10 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.service.archive.MessageArchiveService;
 
@@ -116,17 +112,15 @@ public class MessageArchiveController {
           LocalDateTime endTime,
       @RequestParam(defaultValue = "1") int pageNum,
       @RequestParam(defaultValue = "20") int pageSize) {
-    Page<MsgLog> result =
-        messageArchiveService.search(
-            keyword,
-            channel,
-            status,
-            bizType,
-            startTime,
-            endTime,
-            TenantContextHolder.getTenantId(),
-            pageNum,
-            pageSize);
-    return PageResponses.success(result, MessageConverter.INSTANT::entityToVO);
+    return messageArchiveService.search(
+        keyword,
+        channel,
+        status,
+        bizType,
+        startTime,
+        endTime,
+        TenantContextHolder.getTenantId(),
+        pageNum,
+        pageSize);
   }
 }

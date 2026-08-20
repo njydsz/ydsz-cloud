@@ -15,7 +15,7 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.Executors;
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 跨实例缓存失效消息订阅者。
@@ -59,11 +59,7 @@ public class CacheInvalidationSubscriber implements MessageListener {
       container = new RedisMessageListenerContainer();
       container.setConnectionFactory(connectionFactory);
       // CHECKSTYLE.OFF: RegexpSinglelineJava - Redis 订阅容器单线程执行器，用于异步订阅缓存失效消息
-      container.setTaskExecutor(Executors.newSingleThreadExecutor(r -> {
-        Thread t = new Thread(r, "cache-invalidation-subscriber");
-        t.setDaemon(true);
-        return t;
-      }));
+      container.setTaskExecutor(ExecutorUtils.newSingleThreadExecutor("system-cache-invalidation"));
       // CHECKSTYLE.ON: RegexpSinglelineJava
       container.addMessageListener(this, new ChannelTopic(CacheInvalidationPublisher.CHANNEL));
       container.start();

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.infra.entity.job.Job;
 import com.njydsz.cronjob.infra.entity.job.JobNode;
@@ -121,21 +122,15 @@ public class MapTaskExecutor {
     } catch (Exception e) {
       MapReduceConfig mrConfig = cronjobProperties.getMapReduce();
       int maxParallel = Math.max(2, mrConfig.getMaxParallelSubTasks());
-      // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
+      // 使用 common-thread ExecutorUtils 创建降级线程池（符合云顶规范 15.4）
       this.subTaskExecutor =
-          new ThreadPoolExecutor(
-              maxParallel,
-              maxParallel,
-              0L,
-              TimeUnit.MILLISECONDS,
-              new LinkedBlockingQueue<>(256),
-              r -> {
-                Thread t = new Thread(r, "job-map-reduce-fallback");
-                t.setDaemon(true);
-                return t;
-              },
-              new ThreadPoolExecutor.CallerRunsPolicy());
-      // CHECKSTYLE.ON: RegexpSinglelineJava
+          ExecutorUtils.builder()
+              .corePoolSize(maxParallel)
+              .maxPoolSize(maxParallel)
+              .queueCapacity(256)
+              .threadNamePrefix("job-map-reduce-fallback-")
+              .daemon(true)
+              .build();
       log.warn(
           "[MapTaskExecutor] 获取 cronjobMapReduceExecutor 失败, 回退降级线程池: reason={}",
           e.getMessage());

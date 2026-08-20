@@ -4,12 +4,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -91,15 +91,8 @@ public class MaintenanceScheduler {
       log.info("[MaintenanceScheduler] 无注册 ScanTask, 跳过初始化");
       return;
     }
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - 统一维护调度器，线程数固定（最多4个），按 ScanTask 数量动态调整
-    this.scheduler = Executors.newScheduledThreadPool(
-        Math.min(scanTasks.size(), 4),
-        r -> {
-          Thread t = new Thread(r, "maintenance-scheduler");
-          t.setDaemon(true);
-          return t;
-        });
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+    this.scheduler = ExecutorUtils.newScheduledThreadPool(
+        Math.min(scanTasks.size(), 4), "job-maintenance-");
     for (ScanTask task : scanTasks) {
       registerTask(task);
     }

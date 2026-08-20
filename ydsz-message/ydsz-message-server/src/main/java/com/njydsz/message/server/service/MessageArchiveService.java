@@ -3,8 +3,8 @@ package com.njydsz.message.server.service.archive;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.infra.entity.MsgLog;
 
 /**
@@ -45,7 +45,7 @@ public interface MessageArchiveService {
    * @param pageSize 每页条数
    * @return 分页结果
    */
-  Page<MsgLog> search(
+  PageResponse<List<MsgLogVO>> search(
       String keyword,
       String channel,
       String status,

@@ -1,18 +1,13 @@
 package com.njydsz.message.server.service.core;
 
-import java.time.LocalDateTime;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.common.core.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
-import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
  * 消息查询服务。
@@ -37,47 +32,7 @@ public class MessageQueryService {
    * @param query 查询参数（pageNum / pageSize / 多条件）
    * @return 分页结果
    */
-  public Page<MsgLog> pageLog(MessageLogQueryDTO query) {
-    Page<MsgLog> page =
-        new Page<>(
-            query == null ? 1 : query.getPageNum(),
-            Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-    LambdaQueryWrapper<MsgLog> w = new LambdaQueryWrapper<>();
-    if (query != null) {
-      w.eq(StringUtils.hasText(query.getChannel()), MsgLog::getChannel, query.getChannel());
-      w.eq(StringUtils.hasText(query.getBizType()), MsgLog::getBizType, query.getBizType());
-      w.eq(StringUtils.hasText(query.getBizId()), MsgLog::getBizId, query.getBizId());
-      w.eq(StringUtils.hasText(query.getStatus()), MsgLog::getStatus, query.getStatus());
-      w.eq(StringUtils.hasText(query.getReceiver()), MsgLog::getReceiver, query.getReceiver());
-      w.eq(StringUtils.hasText(query.getPriority()), MsgLog::getPriority, query.getPriority());
-      w.eq(
-          StringUtils.hasText(query.getRecallStatus()),
-          MsgLog::getRecallStatus,
-          query.getRecallStatus());
-      w.eq(StringUtils.hasText(query.getTenantId()), MsgLog::getTenantId, query.getTenantId());
-      if (StringUtils.hasText(query.getKeyword())) {
-        String kw = query.getKeyword().trim();
-        w.and(
-            wrapper ->
-                wrapper
-                    .like(MsgLog::getContent, kw)
-                    .or()
-                    .like(MsgLog::getReceiver, kw)
-                    .or()
-                    .like(MsgLog::getTemplateCode, kw)
-                    .or()
-                    .like(MsgLog::getMsgId, kw)
-                    .or()
-                    .like(MsgLog::getBizId, kw));
-      }
-      if (StringUtils.hasText(query.getStartTime())) {
-        w.ge(MsgLog::getCreatedAt, LocalDateTime.parse(query.getStartTime()));
-      }
-      if (StringUtils.hasText(query.getEndTime())) {
-        w.le(MsgLog::getCreatedAt, LocalDateTime.parse(query.getEndTime()));
-      }
-    }
-    w.orderByDesc(MsgLog::getCreatedAt);
-    return msgLogRepository.selectPage(page, w);
+  public PageResponse<List<MsgLogVO>> pageLog(MessageLogQueryDTO query) {
+    return msgLogRepository.findPage(query);
   }
 }

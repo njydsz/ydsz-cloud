@@ -128,7 +128,10 @@ public class WorkbookFactory {
           }
         } else {
           HSSFWorkbook hssfWorkbook;
-          hssfWorkbook = new HSSFWorkbook(new FileInputStream(existingFile));
+          // 使用 try-with-resources 确保 FileInputStream 正确关闭（符合云顶规范 20.1.1）
+          try (FileInputStream fis = new FileInputStream(existingFile)) {
+            hssfWorkbook = new HSSFWorkbook(fis);
+          }
           int sheetIndex = getOrCreateSheetIndex(hssfWorkbook, metadata);
           HSSFSheet sourceSheet = hssfWorkbook.getSheetAt(sheetIndex);
           Sheet sheet;

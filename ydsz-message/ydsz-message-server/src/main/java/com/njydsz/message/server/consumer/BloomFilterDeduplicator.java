@@ -2,7 +2,6 @@ package com.njydsz.message.server.consumer;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -10,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -89,8 +89,7 @@ public class BloomFilterDeduplicator {
    */
   // CHECKSTYLE.OFF: RegexpSinglelineJava - BloomFilter 窗口翻转调度器，单线程固定
   private final ScheduledExecutorService scheduler =
-      Executors.newSingleThreadScheduledExecutor(
-          r -> new Thread(r, "bloom-filter-rotator"));
+      ExecutorUtils.newScheduledThreadPool(1, "message-bloom-rotator");
   // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /** 预期最大消息数/窗口 */

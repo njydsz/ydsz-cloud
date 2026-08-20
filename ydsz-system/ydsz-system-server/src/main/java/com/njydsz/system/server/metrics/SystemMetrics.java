@@ -13,9 +13,16 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  * <p>{@code ydsz-system} 微服务的 Prometheus 指标出口，继承 {@link SentryMetricsAdapter} 实现指标统一管理。 通过 Spring
  * Boot Actuator 在 {@code /actuator/prometheus} 端点暴露，供 Grafana / Prometheus 抓取。
  *
- * <p><b>架构优化（P2-2）：</b>继承 {@link SentryMetricsAdapter}，统一指标前缀 {@code ydsz_system_}，
- * 仅<b>保留安全校验和数据质量指标</b>。配置/字典/变量等低频管理操作的详细读/缓存指标已移除，
- * 如需接口级监控可通过 AOP + {@code @Timed} 注解统一采集。
+ * <p><b>架构合规说明（v2.23 过度设计评估）：</b>
+ * <ul>
+ *   <li>当前继承 {@link SentryMetricsAdapter} 符合《云顶编码规范》规则 35.6.2（强制要求业务 Metrics 类继承本基类）</li>
+ *   <li>本模块仅保留 3 个 Counter 指标（安全校验 + 数据质量），无 Timer/Gauge，已属精简设计</li>
+ *   <li>长期优化方向：当规范委员会评估通过"极简指标类允许组合替代继承"方案后，
+ *       可考虑改为持有 {@code SentryService} 引用直接调用 {@code incrementCounter}，减少继承层级</li>
+ * </ul>
+ *
+ * <p><b>架构优化（P3-2）：</b>移除低频管理操作的详细读/缓存指标，保留安全关键指标。
+ * 如需接口级监控可通过 AOP + {@code @Timed} 注解统一采集（已在 {@code WebConfig} 中配置）。
  *
  * <p><b>暴露指标清单：</b>
  *

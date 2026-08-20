@@ -50,24 +50,24 @@ ydsz-nextwiki/
 ├── ydsz-nextwiki-domain/              # 领域层：领域服务 + Repository 接口 + VO/DTO/事件/枚举
 │   └── src/main/java/com/njydsz/nextwiki/domain/
 │       ├── dto/                       # 数据传输对象（FileNodeDTO / FileVersionDTO / TrashItemDTO 等）
-│       ├── vo/                        # 视图对象（FileNodeVO / SearchResultVO / ShareLinkVO 等 13 个）
+│       ├── vo/                        # 视图对象（16 个：FileNodeVO / FileVersionVO / FileAclVO / FileCommentVO / FileTagVO / SearchIndexVO / SearchResultVO / ShareLinkVO / ShareAccessLogVO / ShareRecipientVO / SpaceVO / StorageQuotaVO / TagVO / TrashItemVO / UserFavoriteVO / UserRecentVO）
 │       ├── query/                     # 查询对象（FileNodeQuery / FileVersionQuery 等）
-│       ├── repository/                # 仓储接口（11 个）
+│       ├── repository/                # 仓储接口（16 个）
 │       ├── service/                   # 领域服务（Folder/FileVersion/Quota/Search/Share/Tag/Trash/FilePermission/ShareAccessLog/ShareLink/StorageReference）
 │       ├── event/                     # 领域事件（FileOperatedEvent / AuditEvent）
 │       ├── enums/                     # 枚举（NextwikiEnums / NextwikiExceptionCode）
 │       └── config/                    # 领域安全配置
 ├── ydsz-nextwiki-infra/               # 基础设施层：DO 实体 + Mapper + 仓储实现
 │   └── src/main/java/com/njydsz/nextwiki/infra/
-│       ├── entity/                    # 持久化实体（12 个 DO：FileNodeDO / FileVersionDO / FileAclDO 等）
-│       ├── mapper/                    # MyBatis Mapper（10 个）
-│       ├── repository/                # 仓储实现（11 个）
+│       ├── entity/                    # 持久化实体（17 个 DO：FileNodeDO / FileVersionDO / FileAclDO / FileCommentDO / FileTagDO / SearchIndexDO / ShareLinkDO / ShareAccessLogDO / ShareRecipientDO / SpaceDO / SpaceMemberDO / SpaceTemplateDO / StorageQuotaDO / TagDO / TrashItemDO / UserFavoriteDO / UserRecentDO）
+│       ├── mapper/                    # MyBatis Mapper（16 个）
+│       ├── repository/                # 仓储实现（16 个）
 │       └── converter/                 # MapStruct 转换器（DO ↔ VO / DTO）
 ├── ydsz-nextwiki-server/              # 应用层（命名沿用 server）：应用服务 + 配置 + 缓存 + 监听器 + 定时任务
 └── ydsz-nextwiki-web/                 # Web 层：Controller + 启动类
     └── src/main/java/com/njydsz/nextwiki/web/
         ├── NextwikiApplication.java   # 启动类（位于 web 根包下）
-        └── controller/                # 17 个 Controller
+        └── controller/                # 21 个 Controller
             ├── FileController.java          # /api/v1/nextwiki/files
             ├── FileChunkController.java     # /api/v1/nextwiki/files/chunk
             ├── FileBatchController.java     # /api/v1/nextwiki/files/batch/*（异步任务）
@@ -82,6 +82,10 @@ ydsz-nextwiki/
             ├── BatchImportController.java   # /api/v1/nextwiki/import
             ├── AnalysisController.java      # /api/v1/nextwiki/analysis
             ├── PreviewController.java       # /api/v1/nextwiki/preview
+            ├── SpaceController.java         # /api/v1/nextwiki/spaces
+            ├── SpaceTemplateController.java # /api/v1/nextwiki/templates
+            ├── UserFavoriteController.java  # /api/v1/nextwiki/favorites
+            ├── UserRecentController.java    # /api/v1/nextwiki/recent
             ├── WopiController.java          # /api/v1/nextwiki/wopi
             ├── AiController.java            # /api/v1/nextwiki/ai（文档摘要/状态）
             └── storage/PresignedUrlController.java # /api/v1/nextwiki/storage（预签名上传/下载）
@@ -126,8 +130,10 @@ ydsz-nextwiki/
 | `POST /api/v1/nextwiki/import/batch-upload` | 批量上传 |
 | `POST /api/v1/nextwiki/import/zip` | ZIP 导入 |
 | `GET /api/v1/nextwiki/analysis/overview` | 存储概览 |
+| `GET /api/v1/nextwiki/analysis/by-type` | 按文件类型统计 |
+| `GET /api/v1/nextwiki/analysis/top-large-files` | 大文件 Top-N |
 | `POST /api/v1/nextwiki/analysis/summary` | 生成文档摘要 |
-| `POST /api/v1/nextwiki/ai/summary` `GET /api/v1/nextwiki/ai/status` | AI 文档摘要 / 任务状态 |
+| `POST /api/v1/nextwiki/ai/summary` `GET /api/v1/nextwiki/ai/status` `GET /api/v1/nextwiki/ai/supported-types` | AI 文档摘要 / 任务状态 / 支持的文件类型 |
 | `POST /api/v1/nextwiki/storage/presigned-upload` `/presigned-download` | 预签名直传 / 直下 |
 
 ### 收藏夹 / 最近访问（S2-P1-06）
@@ -137,10 +143,13 @@ ydsz-nextwiki/
 | `GET /api/v1/nextwiki/favorites` | 查询收藏列表 |
 | `POST /api/v1/nextwiki/favorites/{nodeId}` | 添加收藏 |
 | `DELETE /api/v1/nextwiki/favorites/{nodeId}` | 取消收藏 |
-| `PUT /api/v1/nextwiki/favorites/{nodeId}/sort` | 更新收藏排序 |
+| `GET /api/v1/nextwiki/favorites/{nodeId}/is-favorited` | 检查是否已收藏 |
+| `POST /api/v1/nextwiki/favorites/{nodeId}/sort` | 更新收藏排序 |
+| `GET /api/v1/nextwiki/favorites/count` | 查询收藏数量 |
 | `GET /api/v1/nextwiki/recent` | 查询最近访问列表 |
 | `POST /api/v1/nextwiki/recent/{nodeId}` | 记录访问 |
 | `DELETE /api/v1/nextwiki/recent` | 清空最近访问 |
+| `DELETE /api/v1/nextwiki/recent/{nodeId}` | 删除单条访问记录 |
 
 ### 空间管理（S3-P2-01）
 
@@ -175,6 +184,30 @@ ydsz-nextwiki/
 | `POST /api/v1/nextwiki/wopi/files/{fileId}/contents` | PutFile |
 | `POST /api/v1/nextwiki/wopi/files/{fileId}/lock` | Lock |
 | `POST /api/v1/nextwiki/wopi/files/{fileId}/unlock` | Unlock |
+
+## 数据库
+
+实体 `@TableName` 共映射 **17 张表**，DDL 由 Flyway 迁移脚本维护（`ydsz-nextwiki-infra/src/main/resources/db/`），包含 V1 初始建表 + V2~V6 增量迁移。
+
+| 表名 | 实体类 | 用途 |
+|---|---|---|
+| `nw_file_node` | `FileNodeDO` | 文件/目录节点聚合根 |
+| `nw_file_version` | `FileVersionDO` | 文件版本历史 |
+| `nw_file_acl` | `FileAclDO` | ACL 权限控制 |
+| `nw_file_comment` | `FileCommentDO` | 文件评论 |
+| `nw_file_tag` | `FileTagDO` | 文件-标签关联 |
+| `nw_search_index` | `SearchIndexDO` | 搜索索引 |
+| `nw_share_link` | `ShareLinkDO` | 分享链接 |
+| `nw_share_access_log` | `ShareAccessLogDO` | 分享访问日志 |
+| `nw_share_recipient` | `ShareRecipientDO` | 分享接收人 |
+| `nw_space` | `SpaceDO` | 知识库空间聚合根 |
+| `nw_space_member` | `SpaceMemberDO` | 空间成员（RBAC） |
+| `nw_space_template` | `SpaceTemplateDO` | 空间模板 |
+| `nw_storage_quota` | `StorageQuotaDO` | 存储配额 |
+| `nw_tag` | `TagDO` | 标签定义 |
+| `nw_trash_item` | `TrashItemDO` | 回收站 |
+| `nw_user_favorite` | `UserFavoriteDO` | 用户收藏夹 |
+| `nw_user_recent` | `UserRecentDO` | 用户最近访问 |
 
 ## 配置项
 
@@ -232,6 +265,10 @@ mvn -pl ydsz-nextwiki spring-boot:run
 1. 检查 `nextwiki.wopi.editor-url` 是否配置
 2. WOPI 协议要求 OnlyOffice/Collabora 服务可访问 nextwiki 后端
 3. 文件被锁定时，只有锁持有者可保存
+
+### Q5：收藏夹 / 最近访问端点返回 404
+
+`UserFavoriteController` 与 `UserRecentController` 从 v1.1.0 起独立部署，需确认 nextwiki 服务版本 >= 1.1.0。收藏排序更新使用 `POST /favorites/{nodeId}/sort`（非 PUT），注意 HTTP 方法。
 
 ---
 

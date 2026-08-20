@@ -1,7 +1,6 @@
 package com.njydsz.literule.server.distributed;
 
 import java.net.InetAddress;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -18,6 +17,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.server.config.LiteRuleProperties;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 
 /**
@@ -127,13 +127,7 @@ public class DistributedAutoConfiguration {
 
     // 启动定时心跳 + 节点刷新
     // CHECKSTYLE.OFF: RegexpSinglelineJava - 分布式心跳调度器，单线程固定，定时刷新节点状态
-    scheduler =
-        Executors.newSingleThreadScheduledExecutor(
-            r -> {
-              Thread t = new Thread(r, "literule-distributed-refresh");
-              t.setDaemon(true);
-              return t;
-            });
+    scheduler = ExecutorUtils.newScheduledThreadPool(1, "literule-distributed-refresh");
     // CHECKSTYLE.ON: RegexpSinglelineJava
     scheduler.scheduleAtFixedRate(
         () -> {

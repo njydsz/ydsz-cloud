@@ -2,7 +2,6 @@ package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +19,10 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
-import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.service.core.MessageLogService;
@@ -108,8 +104,7 @@ public class DeadLetterController {
       query = new MessageLogQueryDTO();
     }
     query.setStatus(MessageStatusEnum.DEAD.name());
-    Page<MsgLog> page = messageLogService.page(query);
-    return PageResponses.success(page, MessageConverter.INSTANT::entityToVO);
+    return messageLogService.page(query);
   }
 
   /**

@@ -9,14 +9,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.api.RuleContext;
 
 /**
@@ -86,18 +85,14 @@ public class FactProviderRegistry {
     this.fallbackOnError = fallbackOnError;
     // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
     this.executor =
-        new ThreadPoolExecutor(
-            0,
-            60,
-            60L,
-            TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(1024),
-            r -> {
-              Thread t = new Thread(r, "literule-fact-provider");
-              t.setDaemon(true);
-              return t;
-            },
-            new ThreadPoolExecutor.CallerRunsPolicy());
+        ExecutorUtils.builder()
+            .corePoolSize(0)
+            .maxPoolSize(60)
+            .keepAliveTime(60L, TimeUnit.SECONDS)
+            .queueCapacity(1024)
+            .threadNamePrefix("literule-fact-provider")
+            .daemon(true)
+            .build();
     // CHECKSTYLE.ON: RegexpSinglelineJava
     this.ownsExecutor = true;
   }

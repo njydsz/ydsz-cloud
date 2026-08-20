@@ -6,7 +6,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
 import java.util.function.Consumer;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
@@ -59,9 +60,8 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
    *
    * <p>多个 tool call 并行执行以缩短单轮迭代耗时；虚拟线程在 IO 密集型工具场景下近乎零成本。
    */
-  // CHECKSTYLE.OFF: ThreadPoolCreate
-  private static final ExecutorService TOOL_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
-  // CHECKSTYLE.ON: ThreadPoolCreate
+  private static final ExecutorService TOOL_EXECUTOR =
+      ExecutorUtils.newVirtualThreadExecutor("agent-react-executor-");
 
   /** 工具注册中心 */
   private final ToolRegistry toolRegistry;

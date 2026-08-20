@@ -76,7 +76,7 @@ ydsz-literule/
 | **索引模式** | 规则数 > 200 时按租户+环境+场景+互斥组+字段倒排自动启用 | `RuleIndexer` |
 | **Micrometer 指标** | 评估次数 / 触发次数 / 错误数 / 耗时 P50/P95/P99 / 熔断状态 / 队列大小 | `MicrometerRuleMetrics` |
 | **异步 Trace** | 队列缓冲 + 批量写入 + 背压丢弃 | `AsyncTraceRecorder` |
-| **分布式执行** | 一致性哈希分片 + Redis Pub/Sub 广播 | `DistributedAutoConfiguration` / `ConsistentHashSharder` |
+| **断点调试** | 规则级/表达式节点级断点、调试会话、单步执行（RESUME/STEP_OVER/STEP_INTO/STEP_OUT/TERMINATE） | `RuleDebugger` / `DebugSession` / `Breakpoint` |
 | **多环境隔离** | default/dev/staging/prod，仅放行匹配环境的规则 | `RuleEnvironment` |
 | **声明式注解** | `@LiteRule` 标注 Spring Bean 自动注册 | `LiteRuleAnnotationRegistrar` |
 | **DSL 解析** | YAML/JSON 规则与规则链 DSL | `RuleDslParser` / `RuleChainDslParser` |
@@ -112,7 +112,7 @@ com.njydsz.literule.server
 
 > 其余目录：`health/`（健康检查）、`json/`、`listener/`、`metrics/`、`search/`（规则搜索）等。
 
-### 4. Web 层 Controller（21 个，路径前缀均以 `/v1/rule-engine` 开头）
+### 4. Web 层 Controller（22 个，路径前缀均以 `/v1/rule-engine` 开头）
 
 | Controller | 路径前缀 | 主要端点 |
 |---|---|---|

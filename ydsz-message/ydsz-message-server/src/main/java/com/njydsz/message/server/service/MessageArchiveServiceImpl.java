@@ -3,15 +3,16 @@ package com.njydsz.message.server.service.archive.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.common.core.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.archive.MessageArchiveService;
 
@@ -91,7 +92,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
    * @return 消息分页结果
    */
   @Override
-  public Page<MsgLog> search(
+  public PageResponse<List<MsgLogVO>> search(
       String keyword,
       String channel,
       String status,
@@ -126,7 +127,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
   }
 
   /** 数据库 LIKE 降级搜索。 */
-  private Page<MsgLog> searchByDatabase(
+  private PageResponse<List<MsgLogVO>> searchByDatabase(
       String keyword,
       String channel,
       String status,
@@ -136,27 +137,20 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
       String tenantId,
       int pageNum,
       int pageSize) {
-    Page<MsgLog> page = new Page<>(pageNum, pageSize);
-    LambdaQueryWrapper<MsgLog> wrapper =
-        new LambdaQueryWrapper<MsgLog>()
-            .eq(MsgLog::getTenantId, tenantId)
-            .eq(StringUtils.hasText(channel), MsgLog::getChannel, channel)
-            .eq(StringUtils.hasText(status), MsgLog::getStatus, status)
-            .eq(StringUtils.hasText(bizType), MsgLog::getBizType, bizType)
-            .ge(startTime != null, MsgLog::getCreatedAt, startTime)
-            .le(endTime != null, MsgLog::getCreatedAt, endTime)
-            .and(
-                StringUtils.hasText(keyword),
-                w ->
-                    w.like(MsgLog::getContent, keyword)
-                        .or()
-                        .like(MsgLog::getReceiver, keyword)
-                        .or()
-                        .like(MsgLog::getTemplateCode, keyword)
-                        .or()
-                        .like(MsgLog::getBizId, keyword))
-            .orderByDesc(MsgLog::getCreatedAt);
-
-    return msgLogRepository.selectPage(page, wrapper);
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setTenantId(tenantId);
+    query.setChannel(channel);
+    query.setStatus(status);
+    query.setBizType(bizType);
+    query.setKeyword(keyword);
+    query.setPageNum(pageNum);
+    query.setPageSize(pageSize);
+    if (startTime != null) {
+      query.setStartTime(startTime.toString());
+    }
+    if (endTime != null) {
+      query.setEndTime(endTime.toString());
+    }
+    return msgLogRepository.findPage(query);
   }
 }

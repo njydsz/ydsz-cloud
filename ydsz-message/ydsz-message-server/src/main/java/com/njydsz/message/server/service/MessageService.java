@@ -2,14 +2,13 @@ package com.njydsz.message.server.service.core;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.dto.BatchSendResult;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
  * 消息发送 Service 接口（多渠道核心入口）
@@ -86,7 +85,7 @@ public interface MessageService {
    * @param query 查询参数（pageNum / pageSize / 多条件）
    * @return 分页结果
    */
-  Page<MsgLog> pageLog(MessageLogQueryDTO query);
+  PageResponse<List<MsgLogVO>> pageLog(MessageLogQueryDTO query);
 
   /**
    * P2-3: 事务消息发送（RocketMQ 半消息）。

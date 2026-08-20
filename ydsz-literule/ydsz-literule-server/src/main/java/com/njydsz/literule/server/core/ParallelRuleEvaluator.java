@@ -12,15 +12,12 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
@@ -319,26 +316,15 @@ public class ParallelRuleEvaluator {
    * @return 降级线程池
    */
   private static ExecutorService createExecutor(int poolSize) {
-    ThreadFactory factory =
-        new ThreadFactory() {
-          private final AtomicInteger counter = new AtomicInteger(0);
-
-          @Override
-          public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, "ydsz-literule-parallel-" + counter.getAndIncrement());
-            t.setDaemon(true);
-            return t;
-          }
-        };
     // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
-    return new ThreadPoolExecutor(
-        poolSize,
-        poolSize,
-        0L,
-        TimeUnit.MILLISECONDS,
-        new LinkedBlockingQueue<>(1024),
-        factory,
-        new ThreadPoolExecutor.CallerRunsPolicy());
+    return ExecutorUtils.builder()
+        .corePoolSize(poolSize)
+        .maxPoolSize(poolSize)
+        .keepAliveTime(0L, TimeUnit.MILLISECONDS)
+        .queueCapacity(1024)
+        .threadNamePrefix("literule-parallel")
+        .daemon(true)
+        .build();
     // CHECKSTYLE.ON: RegexpSinglelineJava
   }
 

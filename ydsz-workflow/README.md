@@ -195,8 +195,27 @@ ydsz-workflow/
 
 ## 配置文件
 
-标准 `DB_*` / `REDIS_*` / `NACOS_*` 环境变量。模块级配置统一在 `ydsz.flow.*` 前缀下（`FlowProperties`，
-含模块开关、设计器锁定、子流程、附件预览、自动催办、定义缓存、历史归档等配置项）。
+标准 `DB_*` / `REDIS_*` / `NACOS_*` 环境变量。模块级配置统一在 `ydsz.flow.*` 前缀下（`FlowProperties`）。
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `ydsz.flow.enabled` | Boolean | true | 是否启用工作流模块 |
+| `ydsz.flow.health-enabled` | Boolean | true | 是否启用健康检查 |
+| `ydsz.flow.publish-block-on-high-risk` | Boolean | true | 发布时是否阻断 HIGH 风险 |
+| `ydsz.flow.designer-lock-timeout-minutes` | Long | 30 | 设计器协同编辑锁定超时（分钟） |
+| `ydsz.flow.subprocess.max-nesting-depth` | Integer | 3 | 子流程最大嵌套深度 |
+| `ydsz.flow.attachment.preview-server-url` | String | （空） | 附件预览服务地址 |
+| `ydsz.flow.auto-urge.threshold-hours` | Long | 24 | 自动催办超时阈值（小时） |
+| `ydsz.flow.auto-urge.batch-size` | Integer | 100 | 自动催办单次扫描批量 |
+| `ydsz.flow.definition-cache.definition-cache-ttl-minutes` | Long | 60 | 定义缓存 TTL（分钟） |
+| `ydsz.flow.definition-cache.definition-cache-max-size` | Long | 1000 | 定义缓存最大容量 |
+| `ydsz.flow.history.archive-enabled` | Boolean | true | 是否启用历史归档 |
+| `ydsz.flow.history.retention-days` | Integer | 30 | 归档阈值天数 |
+| `ydsz.flow.history.batch-size` | Integer | 100 | 单次归档批量 |
+| `ydsz.flow.history.max-process-ms` | Long | 30000 | 单次归档最大耗时（毫秒） |
+| `ydsz.flow.history.cron-expression` | String | 0 0 3 * * ? | 归档任务 cron |
+| `ydsz.flow.history.purge-enabled` | Boolean | false | 是否启用归档数据清理 |
+| `ydsz.flow.history.purge-days` | Integer | 1825 | 归档清理阈值天数（默认5年） |
 
 ## 启动
 
@@ -234,8 +253,8 @@ mvn -pl ydsz-workflow spring-boot:run
 
 ### Q3：流程超时未触发
 
-- 检查 `ydsz.cronjob.sla.enabled`（实际在 cronjob 模块执行）
 - 流程引擎只负责标记 `dueDate`，超时扫描由 cronjob 模块承担
+- 确认 cronjob 模块中对应的 SLA 扫描 JobHandler 已注册并启用
 
 ---
 

@@ -46,6 +46,7 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.RandomUtils;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.infra.entity.job.Job;
 import com.njydsz.cronjob.infra.entity.job.JobNode;
@@ -1975,25 +1976,19 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     int corePoolSize = Math.max(1, execConfig.getMaxConcurrent());
     int maxPoolSize = Math.max(corePoolSize, execConfig.getMaxConcurrent());
     int queueCapacity = Math.max(0, execConfig.getExecutorQueueCapacity());
-    BlockingQueue<Runnable> workQueue =
-        queueCapacity == 0 ? new SynchronousQueue<>() : new PriorityBlockingQueue<>();
-    AtomicInteger threadCounter = new AtomicInteger(0);
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - 全局任务执行池，线程数由配置控制，注册到 CronjobThreadPoolRegistry 供热更新
     this.taskExecutorPool =
-        new ThreadPoolExecutor(
-            corePoolSize,
-            maxPoolSize,
-            60L,
-            TimeUnit.SECONDS,
-            workQueue,
-            r -> {
-              Thread t =
-                  new Thread(r, execConfig.getThreadNamePrefix() + threadCounter.incrementAndGet());
-              t.setDaemon(true);
-              return t;
-            },
-            new ThreadPoolExecutor.CallerRunsPolicy());
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+        ExecutorUtils.builder()
+            .corePoolSize(corePoolSize)
+            .maxPoolSize(maxPoolSize)
+            .keepAliveTime(60L, TimeUnit.SECONDS)
+            .queueCapacity(queueCapacity)
+            .queueType(
+                queueCapacity == 0
+                    ? ExecutorUtils.BlockingQueueType.SYNCHRONOUS
+                    : ExecutorUtils.BlockingQueueType.PRIORITY)
+            .threadNamePrefix(execConfig.getThreadNamePrefix())
+            .daemon(true)
+            .build();
     // P1-A2: 注册线程池到注册表，供热更新监听器统一访问
     registerPoolsToRegistry();
     log.info(

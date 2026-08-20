@@ -1,7 +1,6 @@
 package com.njydsz.cronjob.server.core.dispatch;
 
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -11,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.cronjob.infra.entity.job.Job;
 import com.njydsz.cronjob.server.core.config.CronjobThreadPoolRegistry;
 
@@ -38,20 +38,10 @@ public class RetryScheduler {
   /**
    * 重试调度线程池（固定2线程，守护线程，CallerRunsPolicy 自然背压）。
    *
-   * <p>CHECKSTYLE.OFF 原因：重试调度器需要独立于全局执行池，避免重试任务阻塞新任务派发；
-   * 线程数固定为2，不随负载增长，不属于无限创建场景。
+   * <p>使用 common-thread ExecutorUtils 统一管理（符合云顶规范 15.4）。
    */
-  // CHECKSTYLE.OFF: RegexpSinglelineJava - 重试调度专用池，线程数固定为2
   private final ScheduledExecutorService retryScheduler =
-      new ScheduledThreadPoolExecutor(
-          2,
-          r -> {
-            Thread t = new Thread(r, "ydsz-job-retry");
-            t.setDaemon(true);
-            return t;
-          },
-          new ThreadPoolExecutor.CallerRunsPolicy());
-  // CHECKSTYLE.ON: RegexpSinglelineJava
+      ExecutorUtils.newScheduledThreadPool(2, "job-retry-");
 
   /** 构造函数：注入线程池注册表 */
   public RetryScheduler(ObjectProvider<CronjobThreadPoolRegistry> registryProvider) {

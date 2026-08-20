@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.ExecutorConfig;
 
@@ -138,24 +139,17 @@ public class TenantAwareExecutorPool {
     ExecutorConfig execConfig = cronjobProperties.getExecutor();
     int corePoolSize = Math.max(1, execConfig.getTenantPoolSize());
     int maxPoolSize = Math.max(corePoolSize, execConfig.getTenantPoolSize());
-    int queueCapacity = Math.max(0, execConfig.getTenantPoolQueueCapacity());
-    LinkedBlockingQueue<Runnable> workQueue =
-        queueCapacity == 0 ? new LinkedBlockingQueue<>() : new LinkedBlockingQueue<>(queueCapacity);
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - 分桶隔离池，桶数量固定且有限
+    int queueCapacity = Math.max(1, execConfig.getTenantPoolQueueCapacity());
+    // 使用 common-thread ExecutorUtils 创建分桶线程池（符合云顶规范 15.4）
     ThreadPoolExecutor pool =
-        new ThreadPoolExecutor(
-            corePoolSize,
-            maxPoolSize,
-            60L,
-            TimeUnit.SECONDS,
-            workQueue,
-            r -> {
-              Thread t = new Thread(r, "job-tenant-bucket-" + bucketIndex + "-" + System.nanoTime());
-              t.setDaemon(true);
-              return t;
-            },
-            new ThreadPoolExecutor.CallerRunsPolicy());
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+        ExecutorUtils.builder()
+            .corePoolSize(corePoolSize)
+            .maxPoolSize(maxPoolSize)
+            .keepAliveTime(60L, TimeUnit.SECONDS)
+            .queueCapacity(queueCapacity)
+            .threadNamePrefix("job-tenant-bucket-" + bucketIndex + "-")
+            .daemon(true)
+            .build();
     log.debug("[TenantAwarePool] 创建分桶池: index={} core={} max={} queue={}",
         bucketCount, corePoolSize, maxPoolSize, queueCapacity);
     return pool;

@@ -237,12 +237,23 @@ public class JdbcText2SQLService implements Text2SQLService {
   /**
    * 执行 SQL 并返回结果。
    *
+   * <p><b>安全说明：</b>本服务用于执行 LLM 生成的 SELECT 语句，SQL 由模型动态生成无法参数化， 因此使用 Statement 而非
+   * PreparedStatement。 已通过以下机制降低风险：
+   *
+   * <ul>
+   *   <li>{@link #validateSql(String)} 严格校验仅允许 SELECT/WITH 开头
+   *   <li>注入模式检测（注释、多语句、DDL/DML 关键词）
+   *   <li>执行超时 10 秒 + 结果行数上限 100
+   *   <li>所有执行记录记入审计日志
+   * </ul>
+   *
    * @param sql 经过校验的 SELECT SQL
    * @return 查询结果
    * @throws Text2SQLException 执行失败
    */
   private Text2SQLResult executeSql(String sql) throws Text2SQLException {
     long start = System.currentTimeMillis();
+    // 使用 Statement 执行 LLM 生成的 SQL（无法参数化，依赖前置安全校验）
     try (Connection conn = dataSource.getConnection();
         Statement stmt = conn.createStatement()) {
       stmt.setQueryTimeout(EXEC_TIMEOUT_SECONDS);
@@ -263,12 +274,17 @@ public class JdbcText2SQLService implements Text2SQLService {
           rows.add(row);
         }
         long duration = System.currentTimeMillis() - start;
-        log.info("[Text2SQL] 执行完成: rows={}, duration={}ms", rows.size(), duration);
+        // 审计日志：记录 Text2SQL 执行的完整 SQL 和耗时（符合云顶规范 19.1.3）
+        log.info("[Text2SQL] 执行完成: rows={}, duration={}ms, sql={}", rows.size(), duration, sql);
         return new Text2SQLResult(columns, rows, rows.size(), sql, duration);
       }
     } catch (Text2SQLException e) {
+      // 审计日志：记录执行失败
+      log.warn("[Text2SQL] 执行失败: reason={}, sql={}", e.getMessage(), sql);
       throw e;
     } catch (Exception e) {
+      // 审计日志：记录异常
+      log.error("[Text2SQL] 执行异常: reason={}, sql={}", e.getMessage(), sql);
       throw new Text2SQLException("SQL 执行失败: " + e.getMessage(), "TEXT2SQL_EXEC_ERROR", e);
     }
   }
