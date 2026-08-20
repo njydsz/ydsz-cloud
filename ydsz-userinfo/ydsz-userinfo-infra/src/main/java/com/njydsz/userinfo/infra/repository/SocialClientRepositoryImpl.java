@@ -21,7 +21,8 @@ import com.njydsz.userinfo.infra.mapper.SocialClientMapper;
 /**
  * 社交平台客户端配置仓储实现（P1-1）。
  *
- * <p>通过 {@link SocialClientMapper} 访问数据库，使用 {@link SocialClientConverter} 完成 DO ↔ VO 转换。
+ * <p>通过 {@link SocialClientMapper} 访问数据库，使用注入的 {@link SocialClientConverter} 完成 DO ↔ VO 转换。
+ * P1-2: 升级为 Spring 注入模式，替代静态单例 INSTANT 访问，提升可测试性。
  *
  * @author ydsz-team
  * @since 2.24.0
@@ -32,6 +33,7 @@ import com.njydsz.userinfo.infra.mapper.SocialClientMapper;
 public class SocialClientRepositoryImpl implements SocialClientRepository {
 
   private final SocialClientMapper mapper;
+  private final SocialClientConverter socialClientConverter;
   private final PasswordEncoder passwordEncoder;
 
   @Override
@@ -48,7 +50,7 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
 
     List<SocialClientDO> entities = mapper.selectList(wrapper);
     return entities.stream()
-        .map(SocialClientConverter.INSTANT::entityToVo)
+        .map(socialClientConverter::entityToVo)
         .toList();
   }
 
@@ -56,7 +58,7 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
   public List<SocialClientVO> findEnabled() {
     List<SocialClientDO> entities = mapper.selectEnabledClients();
     return entities.stream()
-        .map(SocialClientConverter.INSTANT::entityToVo)
+        .map(socialClientConverter::entityToVo)
         .toList();
   }
 
@@ -64,7 +66,7 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
   public Optional<SocialClientVO> findByPlatform(String platform) {
     SocialClientDO entity = mapper.selectByPlatform(platform.toUpperCase());
     return entity != null
-        ? Optional.of(SocialClientConverter.INSTANT.entityToVo(entity))
+        ? Optional.of(socialClientConverter.entityToVo(entity))
         : Optional.empty();
   }
 

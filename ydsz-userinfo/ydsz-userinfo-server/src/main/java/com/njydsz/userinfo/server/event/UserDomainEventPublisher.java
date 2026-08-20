@@ -28,7 +28,6 @@ import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.infra.entity.DepartmentDO;
 import com.njydsz.userinfo.infra.entity.RoleDO;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
 
 /**
  * 用户模块领域事件发布器。
@@ -37,7 +36,7 @@ import com.njydsz.userinfo.infra.entity.UserAccountDO;
  *
  * <p><b>事件类型枚举：</b>使用 {@link UserDomainEventType} 替代硬编码字符串，提供类型安全。
  *
- * <p><b>DDD 合规：</b>同时支持 {@link UserAccountDO}（infra 层）和 {@link UserAccountVO}（domain 层），新代码应优先使用 VO 版本。
+ * <p><b>DDD 合规：</b>仅使用 {@link UserAccountVO}（domain 层）发布事件，不依赖 infra 层实体。
  *
  * <p><b>认证事件（v1.6.0+）：</b>新增的认证事件发布方法通过 {@link UserAuthEventDispatcher} 分发，替代旧的 {@code publishUserLogin} 等字符串事件。
  *
@@ -78,27 +77,6 @@ public class UserDomainEventPublisher {
   }
 
   /**
-   * 发布用户创建事件（DO 版本，兼容已有代码）。
-   *
-   * @param user 新建的用户实体
-   * @deprecated 使用 {@link #publishUserCreated(UserAccountVO)} 替代
-   */
-  @Deprecated
-  public void publishUserCreated(UserAccountDO user) {
-    if (user == null) {
-      return;
-    }
-    publish(
-        UserDomainEventType.USER_CREATED,
-        user.getId(),
-        "USER",
-        UserDomainEvent.of(
-            UserDomainEventType.USER_CREATED,
-            user.getId(),
-            Map.of("username", user.getUsername(), "realName", orEmpty(user.getRealName()))));
-  }
-
-  /**
    * 发布用户更新事件（VO 版本，推荐新代码使用）。
    *
    * @param userVO 更新后的用户领域 VO
@@ -118,27 +96,6 @@ public class UserDomainEventPublisher {
   }
 
   /**
-   * 发布用户更新事件（DO 版本，兼容已有代码）。
-   *
-   * @param user 更新后的用户实体
-   * @deprecated 使用 {@link #publishUserUpdated(UserAccountVO)} 替代
-   */
-  @Deprecated
-  public void publishUserUpdated(UserAccountDO user) {
-    if (user == null) {
-      return;
-    }
-    publish(
-        UserDomainEventType.USER_UPDATED,
-        user.getId(),
-        "USER",
-        UserDomainEvent.of(
-            UserDomainEventType.USER_UPDATED,
-            user.getId(),
-            Map.of("username", user.getUsername(), "status", String.valueOf(user.getStatus()))));
-  }
-
-  /**
    * 发布用户删除事件。
    *
    * @param userId 被删除的用户 ID
@@ -150,21 +107,6 @@ public class UserDomainEventPublisher {
         userId,
         "USER",
         UserDomainEvent.of(UserDomainEventType.USER_DELETED, userId, Map.of("username", username)));
-  }
-
-  /**
-   * 发布用户登录事件。
-   *
-   * @param userId 登录用户 ID
-   * @deprecated 使用 {@link #publishLoginSuccess(String, String, String, String)} 替代，新方式携带更丰富的认证上下文信息
-   */
-  @Deprecated
-  public void publishUserLogin(String userId) {
-    publish(
-        UserDomainEventType.USER_LOGIN,
-        userId,
-        "USER",
-        UserDomainEvent.of(UserDomainEventType.USER_LOGIN, userId, Map.of()));
   }
 
   // ==================== 认证事件（v1.6.0+，通过 UserAuthEventDispatcher 分发） ====================

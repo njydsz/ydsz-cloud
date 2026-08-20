@@ -153,20 +153,6 @@ public class PathExcludeService {
   }
 
   /**
-   * 检查路径是否匹配任一模式。
-   *
-   * @param path    请求路径
-   * @param patterns 模式集合
-   * @return true 表示匹配任一模式
-   */
-  private boolean matchesAny(String path, List<String> patterns) {
-    if (patterns == null || patterns.isEmpty()) {
-      return false;
-    }
-    return patterns.stream().anyMatch(pattern -> matchAntPattern(path, pattern));
-  }
-
-  /**
    * Ant 风格路径匹配。
    *
    * <p>支持 {@code *}（单层通配）和 {@code **}（多层通配）。

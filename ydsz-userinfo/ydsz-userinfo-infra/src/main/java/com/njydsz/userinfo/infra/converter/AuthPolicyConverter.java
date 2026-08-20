@@ -1,7 +1,7 @@
 package com.njydsz.userinfo.infra.converter;
 
 import org.mapstruct.Mapper;
-import org.mapstruct.factory.Mappers;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.userinfo.domain.vo.AuthPolicyVO;
 import com.njydsz.userinfo.infra.entity.AuthPolicyDO;
@@ -9,16 +9,15 @@ import com.njydsz.userinfo.infra.entity.AuthPolicyDO;
 /**
  * 认证策略 MapStruct 转换器（P3-1）。
  *
- * <p>提供 AuthPolicyDO ↔ AuthPolicyVO 的转换方法。
+ * <p>提供 AuthPolicyDO → AuthPolicyVO 的转换方法。
+ * 使用 Spring 注入模式，替代静态单例 INSTANT，提升可测试性。
  *
  * @author ydsz-team
  * @since 2.24.0
  */
-@Mapper
+@Component
+@Mapper(componentModel = "spring")
 public interface AuthPolicyConverter {
-
-  /** MapStruct 生成的转换器单例。 */
-  AuthPolicyConverter INSTANT = Mappers.getMapper(AuthPolicyConverter.class);
 
   /**
    * 实体 → 视图出参。

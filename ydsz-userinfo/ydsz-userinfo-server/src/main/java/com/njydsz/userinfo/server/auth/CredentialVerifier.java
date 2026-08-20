@@ -11,13 +11,13 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.alert.SecurityEvent;
 import com.njydsz.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.common.safe.alert.SecurityEventType;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
+import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 import com.njydsz.userinfo.server.service.LoginAttemptContext;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
+import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 
 /**
  * 凭据校验器。
@@ -35,7 +35,7 @@ import com.njydsz.userinfo.server.service.LoginHistoryService;
 @RequiredArgsConstructor
 public class CredentialVerifier {
 
-  private final UserAccountMapper userAccountMapper;
+  private final UserAccountRepository userAccountRepository;
   private final PasswordEncoder passwordEncoder;
   private final ObjectProvider<LdapAuthenticationProvider> ldapProviderProvider;
   private final LoginHistoryService loginHistoryService;
@@ -54,7 +54,7 @@ public class CredentialVerifier {
    * @param userAgent 用户代理
    * @throws BusinessException 密码校验失败时抛出
    */
-  public void verify(UserAccountDO user, String password, String loginIp, String userAgent) {
+  public void verify(UserAccountCredentialVO user, String password, String loginIp, String userAgent) {
     String username = user.getUsername();
     boolean passwordMatched = passwordEncoder.matches(password, user.getPassword());
     if (!passwordMatched) {
@@ -83,13 +83,11 @@ public class CredentialVerifier {
   /**
    * 记录登录失败：原子自增失败计数，达到阈值时由 SQL 原子设置锁定时间。
    *
-   * @param user 登录失败的用户账号
+   * @param user 登录失败的用户账号凭据 VO
    */
-  private void recordLoginFailure(UserAccountDO user) {
-    userAccountMapper.increaseLoginFailCount(
+  private void recordLoginFailure(UserAccountCredentialVO user) {
+    userAccountRepository.increaseLoginFailCount(
         user.getId(), properties.getMaxLoginFailCount(), properties.getLockDurationMinutes());
-    // 同步内存状态（原子 SQL 不返回更新后的实体，通过领域方法模拟）
-    user.recordLoginFailure(properties.getMaxLoginFailCount(), properties.getLockDurationMinutes());
     log.warn("User [{}] login failed, fail count incremented atomically", user.getUsername());
   }
 

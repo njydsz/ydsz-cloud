@@ -483,7 +483,7 @@ ydsz:
 | `CsrfTokenRepository` | CSRF Token 存储接口 | `RedisCsrfTokenRepository`（@Primary）、`InMemoryCsrfTokenRepository` |
 | `CsrfTokenGenerator` | CSRF Token 生成接口 | `DefaultCsrfTokenGenerator` |
 | `ClusterRateLimiter` | 集群限流器接口 | `RedisClusterRateLimiter`（基于 StringRedisTemplate） |
-| `RateLimiter` | 限流算法接口 | `TokenBucketLimiter`（令牌桶）、`ConcurrencyLimiter`（并发限制） |
+| `RateLimiter` | 限流算法接口 | `TokenBucketLimiter`（令牌桶） |
 | `SecurityAlertListener` | 安全告警监听器接口 | `DefaultSecurityAlertLogger` |
 
 ## 健康检查
@@ -526,6 +526,7 @@ ydsz:
 
 ## 变更记录
 
+- **v1.2.1**（2026-08-17）：补全 SSRF 防护（`SsrfHttpRequestInterceptor` / `HttpConnectionValidator`）、`SafeFilterChainBuilder`（过滤器链构建器）、`RateLimitResponseDecorator`（限流响应装饰器）文档
 - **v1.2.0**（2026-08-16）：删除低价值模块（BotDetection、Captcha）；SecurityEventRingBuffer 标记 @Deprecated；限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；配置前缀收敛（`ydsz.ratelimit` → `ydsz.safe.ratelimit`）；引入 Sentinel 限流扩展；建立度量标准（SLO/指标/热更新）；补全 FieldEncryptionService 测试。
 - **v1.1.0**（2026-08-16）：限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；配置前缀收敛（`ydsz.ratelimit` → `ydsz.safe.ratelimit`）；补全 FieldEncryptionService 测试。
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节，覆盖 14 项核心能力、10 个 Properties 配置类、9 个 SPI 接口、1 个 HealthIndicator。

@@ -30,6 +30,9 @@
 |---|---|
 | `BaseTimezoneConfiguration` | 时区配置抽象基类，`@PostConstruct` 强制将 JVM 默认时区设置为配置值（默认 `Asia/Shanghai`，UTC+8），保证全局时间一致性；通过 `ydsz.base.timezone` 自定义 |
 | `BaseI18nConfiguration` | 国际化配置抽象基类，子类覆盖 `getBasenames()` 接入不同 i18n 资源文件；默认 `Accept-Language` 解析，支持 `zh_CN` 和 `en_US`，缺失 key 时回退到 code 而非抛异常 |
+| `SpringMessageResolver` | Spring MessageSource 适配器（将 i18n 解析绑定到 YdszResponse 消息体系） |
+| `MessageResolverRegistry` | 消息解析器注册中心（管理多个 MessageResolver 实例，按 Locale 路由） |
+| `MessageResolverHolder` | 消息解析器持有者（静态门面，供非 Spring 注入场景便捷访问 i18n 消息） |
 
 ### 3. 过滤器链
 
@@ -85,15 +88,32 @@
 | 类 | 说明 |
 |---|---|
 | `BaseHealthIndicator` | 健康指标，报告时区配置、安全响应头状态、文档功能状态；当安全响应头启用但 `frameOptions` 为空、或生产环境文档启用但 Basic 认证未开启时标记为 DOWN |
+| `CoreHealthIndicator` | 核心模块健康指标（报告 core 模块运行状态） |
 | `ConfigRegistryEndpoint` | Actuator 端点（`@Endpoint(id="config-registry")`），暴露 `GET /actuator/config-registry` 查看所有 `ydsz.*` 配置，`GET /actuator/config-registry/{prefix}` 查看指定前缀下的配置 |
 
-### 10. 模块指标基类
+### 10. 限流与幂等
+
+| 类 | 说明 |
+|---|---|
+| `RateLimiter` | 限流器接口（`tryAcquire` / `tryAcquire(permits)` / `getAvailablePermits`） |
+| `InMemoryRateLimiter` | 内存限流器实现（令牌桶算法，单实例适用） |
+| `RateLimitInterceptor` | 限流拦截器（基于 `RateLimiter`，按资源键限流） |
+| `RateLimit` | 限流注解（标记方法需限流，指定资源键与限流参数） |
+| `RateLimitAutoConfiguration` | 限流自动配置（注册限流器与拦截器） |
+| `IdempotentStore` | 幂等存储接口（`checkAndMark` / `remove` / `contains`） |
+| `InMemoryIdempotentStore` | 内存幂等存储实现 |
+| `IdempotentInterceptor` | 幂等拦截器（基于 `IdempotentStore`，自动去重） |
+| `Idempotent` | 幂等注解（标记方法需幂等保护） |
+| `IdempotentException` | 幂等异常（请求重复时抛出） |
+| `IdempotentAutoConfiguration` | 幂等自动配置（注册幂等存储与拦截器） |
+
+### 11. 模块指标基类
 
 | 类 | 说明 |
 |---|---|
 | `AbstractMetricsHolder` | 模块指标工具类，提供静态方法 `registerCounter` / `registerTimer` / `recordDuration`，统一管理 Micrometer 指标命名与实例缓存 |
 
-### 11. 常量与认证上下文基类
+### 12. 常量与认证上下文基类
 
 | 类 | 说明 |
 |---|---|
@@ -368,4 +388,5 @@ AbstractMetricsHolder.recordDuration(registry, "ydsz_flow_", "eval_duration_ms",
 
 ## 变更记录
 
+- **v1.0.1**（2026-08-17）：补全限流（`RateLimiter` / `InMemoryRateLimiter` / `RateLimitInterceptor` / `RateLimit` / `RateLimitAutoConfiguration`）、幂等（`IdempotentStore` / `InMemoryIdempotentStore` / `IdempotentInterceptor` / `Idempotent` / `IdempotentException` / `IdempotentAutoConfiguration`）、i18n（`SpringMessageResolver` / `MessageResolverRegistry` / `MessageResolverHolder`）、`CoreHealthIndicator` 文档
 - **v1.0.0**（2026-08-02）：按 ydsz-common-jdbc 9 章节标准重构 README；补全横切点执行顺序表、SPI 扩展点（含抽象基类扩展点）、健康检查端点、注意事项；统一版本号为 1.0.0

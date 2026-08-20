@@ -46,6 +46,7 @@ import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
+import com.njydsz.nextwiki.domain.event.FileVersionSnapshotEvent;
 import com.njydsz.nextwiki.domain.query.FileNodeQuery;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
@@ -275,24 +276,19 @@ public class FileApplicationService {
       FileNodeVO saved = fileNodeRepository.save(dedupedNode);
       indexUpsert(saved);
       storageReferenceService.increment(ctx.dedupExisting.getStorageKey());
-      List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
-          versionRepository.findByFileNodeId(saved.getId()));
-      FileVersionDomainService.VersionCreateResult versionResult =
-          versionDomainService.createVersion(
-              saved,
-              existingVersionDTOs,
+      storageQuotaRepository.addUsage("user", ctx.userId, ctx.dedupExisting.getSize(), 1);
+      publishUploadEvent(saved, ctx.fileName, ctx.userId);
+      // P3-2: 发布版本快照事件（事务提交后异步创建版本记录）
+      eventPublisher.publishEvent(
+          new FileVersionSnapshotEvent(
+              this,
+              saved.getId(),
               ctx.dedupExisting.getStorageKey(),
               ctx.dedupExisting.getSize(),
               ctx.fileHash,
               ctx.dedupExisting.getMimeType(),
               "秒传",
-              ctx.userId);
-      versionRepository.setActiveVersion(saved.getId(), -1);
-      versionRepository.save(versionResult.newVersion());
-      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
-      cleanupExcessVersions(saved.getId());
-      storageQuotaRepository.addUsage("user", ctx.userId, ctx.dedupExisting.getSize(), 1);
-      publishUploadEvent(saved, ctx.fileName, ctx.userId);
+              ctx.userId));
 
       log.info("[FileApplicationService] 秒传上传成功: name={}, hash={}", ctx.fileName, ctx.fileHash);
       return saved;
@@ -340,25 +336,19 @@ public class FileApplicationService {
       FileNodeVO saved = fileNodeRepository.save(nodeDto);
       indexUpsert(saved);
       storageReferenceService.increment(ctx.storageKey);
-
-      List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
-          versionRepository.findByFileNodeId(saved.getId()));
-      FileVersionDomainService.VersionCreateResult versionResult =
-          versionDomainService.createVersion(
-              saved,
-              existingVersionDTOs,
+      storageQuotaRepository.addUsage("user", ctx.userId, ctx.uploaded.getSize(), 1);
+      publishUploadEvent(saved, ctx.fileName, ctx.userId);
+      // P3-2: 发布版本快照事件（事务提交后异步创建版本记录）
+      eventPublisher.publishEvent(
+          new FileVersionSnapshotEvent(
+              this,
+              saved.getId(),
               ctx.storageKey,
               ctx.uploaded.getSize(),
               ctx.fileHash,
               ctx.uploaded.getMimeType(),
               ctx.versionRemark,
-              ctx.userId);
-      versionRepository.setActiveVersion(saved.getId(), -1);
-      versionRepository.save(versionResult.newVersion());
-      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
-      cleanupExcessVersions(saved.getId());
-      storageQuotaRepository.addUsage("user", ctx.userId, ctx.uploaded.getSize(), 1);
-      publishUploadEvent(saved, ctx.fileName, ctx.userId);
+              ctx.userId));
 
       log.info("[FileApplicationService] 文件上传成功: name={}, size={}, userId={}",
           ctx.fileName, ctx.uploaded.getSize(), ctx.userId);

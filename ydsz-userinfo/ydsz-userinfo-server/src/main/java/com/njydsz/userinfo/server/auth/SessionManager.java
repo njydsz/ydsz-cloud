@@ -19,7 +19,7 @@ import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.DeviceType;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
+import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
@@ -102,7 +102,7 @@ public class SessionManager {
   public void createSession(
       String accessToken,
       String refreshToken,
-      UserAccountDO user,
+      UserAccountCredentialVO user,
       String roleCodes,
       String roleNames,
       DeviceType deviceType) {
@@ -124,7 +124,7 @@ public class SessionManager {
   public void createSession(
       String accessToken,
       String refreshToken,
-      UserAccountDO user,
+      UserAccountCredentialVO user,
       String roleCodes,
       String roleNames,
       DeviceType deviceType,

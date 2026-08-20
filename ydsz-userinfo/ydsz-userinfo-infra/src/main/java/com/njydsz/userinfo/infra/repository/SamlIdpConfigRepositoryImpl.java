@@ -20,7 +20,8 @@ import com.njydsz.userinfo.infra.mapper.SamlIdpConfigMapper;
 /**
  * SAML 身份提供者配置仓储实现（P2-1）。
  *
- * <p>通过 {@link SamlIdpConfigMapper} 访问数据库，使用 {@link SamlIdpConfigConverter} 完成 DO ↔ VO 转换。
+ * <p>通过 {@link SamlIdpConfigMapper} 访问数据库，使用注入的 {@link SamlIdpConfigConverter} 完成 DO ↔ VO 转换。
+ * P1-2: 升级为 Spring 注入模式，替代静态单例 INSTANT 访问，提升可测试性。
  *
  * @author ydsz-team
  * @since 2.24.0
@@ -31,12 +32,13 @@ import com.njydsz.userinfo.infra.mapper.SamlIdpConfigMapper;
 public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
 
   private final SamlIdpConfigMapper mapper;
+  private final SamlIdpConfigConverter samlIdpConfigConverter;
 
   @Override
   public Optional<SamlIdpConfigVO> findByEntityId(String entityId) {
     SamlIdpConfigDO entity = mapper.selectByEntityId(entityId);
     return entity != null
-        ? Optional.of(SamlIdpConfigConverter.INSTANT.entityToVo(entity))
+        ? Optional.of(samlIdpConfigConverter.entityToVo(entity))
         : Optional.empty();
   }
 
@@ -52,7 +54,7 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
 
     List<SamlIdpConfigDO> entities = mapper.selectList(wrapper);
     return entities.stream()
-        .map(SamlIdpConfigConverter.INSTANT::entityToVo)
+        .map(samlIdpConfigConverter::entityToVo)
         .toList();
   }
 
@@ -60,7 +62,7 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
   public List<SamlIdpConfigVO> findEnabled() {
     List<SamlIdpConfigDO> entities = mapper.selectEnabledConfigs();
     return entities.stream()
-        .map(SamlIdpConfigConverter.INSTANT::entityToVo)
+        .map(samlIdpConfigConverter::entityToVo)
         .toList();
   }
 

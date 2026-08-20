@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dag.DagInstanceStatus;
+import com.njydsz.cronjob.domain.dag.DagVersionSnapshotEvent;
 import com.njydsz.cronjob.domain.dto.dag.JobDagSaveDTO;
 import com.njydsz.cronjob.infra.entity.dag.JobDag;
 import com.njydsz.cronjob.infra.entity.dag.JobDagInstance;
@@ -81,6 +83,9 @@ public class JobDagServiceImpl implements JobDagService {
    */
   private final ObjectProvider<DagInstanceExecutor> dagInstanceExecutorProvider;
 
+  /** 事件发布器（用于异步创建版本快照） */
+  private final ApplicationEventPublisher eventPublisher;
+
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String createDag(JobDagSaveDTO dto) {
@@ -122,8 +127,8 @@ public class JobDagServiceImpl implements JobDagService {
       dag.setNextFireTime(nextFireTime(dag.getCronExpression()));
     }
     jobDagRepository.insert(dag);
-    // P1-8: 保存 V1 版本快照
-    saveVersionSnapshot(dag, "初始创建");
+    // P1-8: 发布版本快照事件（事务提交后异步创建快照）
+    eventPublisher.publishEvent(new DagVersionSnapshotEvent(this, dag.getId(), "初始创建"));
     log.info(
         "[JobDag] 创建 DAG: dagId={} dagKey={} dagName={}",
         dag.getId(),
@@ -185,8 +190,8 @@ public class JobDagServiceImpl implements JobDagService {
     // version + 1（乐观锁）
     exists.setVersion((exists.getVersion() == null ? 0 : exists.getVersion()) + 1);
     jobDagRepository.updateById(exists);
-    // P1-8: 保存版本快照
-    saveVersionSnapshot(exists, "更新 DAG 定义");
+    // P1-8: 发布版本快照事件（事务提交后异步创建快照）
+    eventPublisher.publishEvent(new DagVersionSnapshotEvent(this, exists.getId(), "更新 DAG 定义"));
     log.info(
         "[JobDag] 更新 DAG: dagId={} dagKey={} version={}",
         dagId,
@@ -431,8 +436,8 @@ public class JobDagServiceImpl implements JobDagService {
     int newVersion = (dag.getVersion() == null ? 0 : dag.getVersion()) + 1;
     dag.setVersion(newVersion);
     jobDagRepository.updateById(dag);
-    // 保存回滚版本快照
-    saveVersionSnapshot(dag, "回滚到版本 V" + targetVersion);
+    // P1-8: 发布版本快照事件（事务提交后异步创建快照）
+    eventPublisher.publishEvent(new DagVersionSnapshotEvent(this, dag.getId(), "回滚到版本 V" + targetVersion));
     log.info(
         "[JobDag] 回滚 DAG 版本: dagId={} fromV={} toV={} newV={} changedBy={}",
         dagId,
@@ -441,26 +446,6 @@ public class JobDagServiceImpl implements JobDagService {
         newVersion,
         changedBy);
     return newVersion;
-  }
-
-  /**
-   * P1-8: 保存 DAG 版本快照。
-   *
-   * @param dag DAG 定义
-   * @param remark 版本备注
-   */
-  private void saveVersionSnapshot(JobDag dag, String remark) {
-    JobDagVersion versionDO = new JobDagVersion();
-    versionDO.setDagId(dag.getId());
-    versionDO.setDagKey(dag.getDagKey());
-    versionDO.setVersion(dag.getVersion());
-    versionDO.setDagDefinition(dag.getDagDefinition());
-    versionDO.setDagName(dag.getDagName());
-    versionDO.setTriggerType(dag.getTriggerType());
-    versionDO.setCronExpression(dag.getCronExpression());
-    versionDO.setFailStrategy(dag.getFailStrategy());
-    versionDO.setRemark(remark);
-    jobDagVersionRepository.insert(versionDO);
   }
 
   // ==================== 内部辅助方法 ====================

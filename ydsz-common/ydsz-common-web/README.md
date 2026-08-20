@@ -25,6 +25,7 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 | `WebCorsProperties` | CORS 配置（`@Validated`） |
 | `WebTraceProperties` | Trace 配置（`@Validated`） |
 | `WebContentCacheProperties` | 请求体缓存配置 |
+| `WebCoreAutoConfiguration` | Web 核心自动配置（注册 Web 端核心组件，如拦截器、过滤器、健康检查等） |
 | `UserAgentConfiguration` | UserAgent 解析配置（`@ConditionalOnProperty` 门控） |
 
 ### 2. 全局响应包装
@@ -157,6 +158,7 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 | 类 | 说明 |
 |---|---|
 | `WebHealthIndicator` | Actuator 健康检查（CORS / Trace / Session / Security / UserAgent 状态报告） |
+| `AbstractModuleHealthIndicator` | 模块健康检查抽象基类（提供通用健康检查模板，子类覆盖 `doHealthCheck` 添加模块特定检查项） |
 | `WebMetrics` | Micrometer 指标采集（认证 / 请求计数 + 耗时，接入 `WebAuthFilter` + `RequestLogInterceptor` 调用链） |
 
 ### 异常处理
@@ -509,4 +511,5 @@ ydsz:
 
 ## 变更记录
 
+- **v1.0.1**（2026-08-17）：补全 `AbstractModuleHealthIndicator`（模块健康检查抽象基类）、`WebCoreAutoConfiguration`（Web 核心自动配置）文档
 - **v1.0.0**（2026-08-02）：补全 API 版本控制、Multipart 文件上传、Webhook 调度、优雅停机章节；新增接入方式、使用示例、注意事项章节；扩充配置项与自动配置表。响应压缩章节已删除（未实现）。

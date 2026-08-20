@@ -20,7 +20,8 @@ import com.njydsz.userinfo.infra.mapper.AuthPolicyMapper;
 /**
  * 认证策略仓储实现（P3-1）。
  *
- * <p>通过 {@link AuthPolicyMapper} 访问数据库，使用 {@link AuthPolicyConverter} 完成 DO ↔ VO 转换。
+ * <p>通过 {@link AuthPolicyMapper} 访问数据库，使用注入的 {@link AuthPolicyConverter} 完成 DO ↔ VO 转换。
+ * P1-2: 升级为 Spring 注入模式，替代静态单例 INSTANT 访问，提升可测试性。
  *
  * @author ydsz-team
  * @since 2.24.0
@@ -31,13 +32,14 @@ import com.njydsz.userinfo.infra.mapper.AuthPolicyMapper;
 public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
 
   private final AuthPolicyMapper mapper;
+  private final AuthPolicyConverter authPolicyConverter;
 
   @Override
   public Optional<AuthPolicyVO> findByTenantId(String tenantId) {
     String tid = (tenantId == null || tenantId.isBlank()) ? null : tenantId;
     AuthPolicyDO entity = mapper.selectByTenantId(tid);
     return entity != null
-        ? Optional.of(AuthPolicyConverter.INSTANT.entityToVo(entity))
+        ? Optional.of(authPolicyConverter.entityToVo(entity))
         : Optional.empty();
   }
 
@@ -51,7 +53,7 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
 
     List<AuthPolicyDO> entities = mapper.selectList(wrapper);
     return entities.stream()
-        .map(AuthPolicyConverter.INSTANT::entityToVo)
+        .map(authPolicyConverter::entityToVo)
         .toList();
   }
 

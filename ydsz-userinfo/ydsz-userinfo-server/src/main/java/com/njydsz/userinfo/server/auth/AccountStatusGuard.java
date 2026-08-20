@@ -10,12 +10,10 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.enums.BanType;
-import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 import com.njydsz.userinfo.server.service.LoginAttemptContext;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
@@ -58,10 +56,10 @@ public class AccountStatusGuard {
    * @param username 登录用户名
    * @param loginIp 登录来源 IP
    * @param userAgent 用户代理
-   * @return 有效的用户账号实体（由领域凭据 VO 转换而来，兼容现有调用方）
+   * @return 有效的用户账号凭据 VO
    * @throws BusinessException 用户不存在、未激活、已暂停、已离职、已禁用或已锁定时抛出
    */
-  public UserAccountDO findValidUser(String username, String loginIp, String userAgent) {
+  public UserAccountCredentialVO findValidUser(String username, String loginIp, String userAgent) {
     Optional<UserAccountCredentialVO> credentialOpt = userAccountRepository.findCredentialByUsername(username);
 
     if (credentialOpt.isEmpty()) {
@@ -127,7 +125,7 @@ public class AccountStatusGuard {
       throw new BusinessException(UserInfoExceptionCode.ACCOUNT_LOCKED);
     }
 
-    return toUserAccountDO(credential);
+    return credential;
   }
 
   /**
@@ -141,22 +139,6 @@ public class AccountStatusGuard {
       return null;
     }
     return UserLifecycleStatusEnum.parse(String.valueOf(credential.getStatus()));
-  }
-
-  /**
-   * 判断账号是否被禁用（向后兼容）。
-   *
-   * @param credential 用户认证凭据 VO
-   * @return true 表示账号被禁用
-   * @deprecated 使用 {@link #resolveLifecycleStatus(UserAccountCredentialVO)} 替代
-   */
-  @Deprecated
-  private boolean isDisabled(UserAccountCredentialVO credential) {
-    if (credential.getStatus() == null) {
-      return false;
-    }
-    EnableStatusEnum statusEnum = EnableStatusEnum.parse(String.valueOf(credential.getStatus()));
-    return statusEnum == EnableStatusEnum.DISABLED;
   }
 
   /**
@@ -179,23 +161,4 @@ public class AccountStatusGuard {
     userInfoMetrics.recordLoginFail();
   }
 
-  /**
-   * 将领域凭据 VO 转换为 DO（兼容现有调用方）。
-   *
-   * <p><b>注意：</b>此方法仅为迁移期兼容，新代码应直接使用 {@link UserAccountCredentialVO}。
-   *
-   * @param credential 用户认证凭据 VO
-   * @return 用户账号 DO（仅包含必要字段）
-   */
-  private UserAccountDO toUserAccountDO(UserAccountCredentialVO credential) {
-    UserAccountDO user = new UserAccountDO();
-    user.setId(credential.getId());
-    user.setUsername(credential.getUsername());
-    user.setPassword(credential.getPassword());
-    user.setTenantId(credential.getTenantId());
-    user.setStatus(String.valueOf(credential.getStatus()));
-    user.setLoginFailCount(credential.getLoginFailCount());
-    user.setLockedUntil(credential.getLockedUntil());
-    return user;
-  }
 }

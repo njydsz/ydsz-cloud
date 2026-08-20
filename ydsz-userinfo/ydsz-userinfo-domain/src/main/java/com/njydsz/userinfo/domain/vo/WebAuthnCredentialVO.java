@@ -3,6 +3,8 @@ package com.njydsz.userinfo.domain.vo;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import lombok.Data;
+
 /**
  * WebAuthn 凭证视图对象
  *
@@ -11,6 +13,7 @@ import java.time.LocalDateTime;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Data
 public class WebAuthnCredentialVO implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -41,76 +44,4 @@ public class WebAuthnCredentialVO implements Serializable {
 
   /** 最后使用时间 */
   private LocalDateTime lastUsedAt;
-
-  public String getCredentialId() {
-    return credentialId;
-  }
-
-  public void setCredentialId(String credentialId) {
-    this.credentialId = credentialId;
-  }
-
-  public String getUserId() {
-    return userId;
-  }
-
-  public void setUserId(String userId) {
-    this.userId = userId;
-  }
-
-  public String getPublicKey() {
-    return publicKey;
-  }
-
-  public void setPublicKey(String publicKey) {
-    this.publicKey = publicKey;
-  }
-
-  public long getSignCount() {
-    return signCount;
-  }
-
-  public void setSignCount(long signCount) {
-    this.signCount = signCount;
-  }
-
-  public String getCredentialType() {
-    return credentialType;
-  }
-
-  public void setCredentialType(String credentialType) {
-    this.credentialType = credentialType;
-  }
-
-  public String getAaguid() {
-    return aaguid;
-  }
-
-  public void setAaguid(String aaguid) {
-    this.aaguid = aaguid;
-  }
-
-  public String getDisplayName() {
-    return displayName;
-  }
-
-  public void setDisplayName(String displayName) {
-    this.displayName = displayName;
-  }
-
-  public LocalDateTime getRegisteredAt() {
-    return registeredAt;
-  }
-
-  public void setRegisteredAt(LocalDateTime registeredAt) {
-    this.registeredAt = registeredAt;
-  }
-
-  public LocalDateTime getLastUsedAt() {
-    return lastUsedAt;
-  }
-
-  public void setLastUsedAt(LocalDateTime lastUsedAt) {
-    this.lastUsedAt = lastUsedAt;
-  }
 }

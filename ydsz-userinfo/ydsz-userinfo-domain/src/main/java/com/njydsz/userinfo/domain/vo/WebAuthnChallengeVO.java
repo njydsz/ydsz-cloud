@@ -2,6 +2,8 @@ package com.njydsz.userinfo.domain.vo;
 
 import java.io.Serializable;
 
+import lombok.Data;
+
 /**
  * WebAuthn 挑战码视图对象
  *
@@ -11,6 +13,7 @@ import java.io.Serializable;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Data
 public class WebAuthnChallengeVO implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -29,44 +32,4 @@ public class WebAuthnChallengeVO implements Serializable {
 
   /** 有效期（秒） */
   private long ttlSeconds;
-
-  public String getChallenge() {
-    return challenge;
-  }
-
-  public void setChallenge(String challenge) {
-    this.challenge = challenge;
-  }
-
-  public String getUserId() {
-    return userId;
-  }
-
-  public void setUserId(String userId) {
-    this.userId = userId;
-  }
-
-  public String getType() {
-    return type;
-  }
-
-  public void setType(String type) {
-    this.type = type;
-  }
-
-  public long getCreatedAt() {
-    return createdAt;
-  }
-
-  public void setCreatedAt(long createdAt) {
-    this.createdAt = createdAt;
-  }
-
-  public long getTtlSeconds() {
-    return ttlSeconds;
-  }
-
-  public void setTtlSeconds(long ttlSeconds) {
-    this.ttlSeconds = ttlSeconds;
-  }
 }
