@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.NotificationSendDTO;
-import com.njydsz.message.infra.entity.MsgNotification;
+import com.njydsz.message.domain.model.core.MsgNotification;
 import com.njydsz.message.domain.vo.NotificationGroupVO;
 
 /**

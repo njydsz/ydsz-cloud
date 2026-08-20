@@ -281,4 +281,114 @@ public interface FlowRunTaskRepository {
    * @return 运行时任务 VO 列表
    */
   List<FlowRunTaskVO> findByInstanceAndNode(String instanceId, String nodeCode);
+
+  /**
+   * 查询实例下指定节点上已审批完成的 previous tasks。
+   *
+   * <p>查询条件：instanceId + nodeCode + taskStatus IN ('COMPLETED','REJECTED') + deleted=0。
+   * 用于任务创建时判断「跨节点去重」历史。
+   *
+   * @param instanceId 实例 ID
+   * @param nodeCode 节点编码
+   * @return 运行时任务 VO 列表
+   */
+  List<FlowRunTaskVO> findCompletedByInstanceAndNode(String instanceId, String nodeCode);
+
+  /**
+   * 查询指定办理人的待办任务列表（自定义 SQL：带租户隔离）。
+   *
+   * <p>用于「我的待办」查询，额外包含 assigneeType  Widening 匹配（USER/ROLE/DEPT）。
+   *
+   * @param assigneeId 办理人 ID
+   * @param tenantId 租户 ID
+   * @return 运行时任务 VO 列表
+   */
+  List<FlowRunTaskVO> selectTodoByAssignee(String assigneeId, String tenantId);
+
+  /**
+   * 查询用户的待办任务分页（真分页：SQL LIMIT/OFFSET）。
+   *
+   * @param assigneeId 办理人 ID
+   * @param tenantId 租户 ID
+   * @param offset 偏移量
+   * @param limit 每页大小
+   * @return 运行时任务 VO 列表
+   */
+  List<FlowRunTaskVO> selectTodoByAssigneePage(String assigneeId, String tenantId, int offset, int limit);
+
+  /**
+   * 统计用户的待办任务数量。
+   *
+   * @param assigneeId 办理人 ID
+   * @param tenantId 租户 ID
+   * @return 待办任务数量
+   */
+  long countTodoByAssignee(String assigneeId, String tenantId);
+
+  /**
+   * 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED）。
+   *
+   * @param assigneeId 办理人 ID（可为 null，表示不过滤）
+   * @param tenantId 租户 ID
+   * @param limit 返回数量上限
+   * @return 运行时任务 VO 列表
+   */
+  List<FlowRunTaskVO> selectOverdue(String assigneeId, String tenantId, int limit);
+
+  /**
+   * 统计超期任务数量。
+   *
+   * @param assigneeId 办理人 ID（可为 null）
+   * @param tenantId 租户 ID
+   * @return 超期任务数量
+   */
+  long countOverdueByAssignee(String assigneeId, String tenantId);
+
+  /**
+   * 统计指定租户下 PENDING/CLAIMED 任务总数。
+   *
+   * @param tenantId 租户 ID
+   * @return 待办任务数量
+   */
+  long countPendingByTenantId(String tenantId);
+
+  /**
+   * 查询超期任务 Top N（按超期时长降序，监控用）。
+   *
+   * @param tenantId 租户 ID
+   * @param limit 返回条数上限
+   * @return 超期任务列表（Map 形式：taskId / instanceId / nodeCode / assigneeId / overdueHours）
+   */
+  List<Map<String, Object>> selectOverdueTopN(String tenantId, int limit);
+
+  /**
+   * 查询审批人负载分布（当前待办数量）。
+   *
+   * @param tenantId 租户 ID
+   * @param limit 返回条数上限
+   * @return 审批人负载列表（Map 形式：assigneeId / assigneeName / taskCount）
+   */
+  List<Map<String, Object>> selectWorkloadByAssignee(String tenantId, int limit);
+
+  /**
+   * 标记审批人已处理（更新 ydsz_flow_user）。
+   *
+   * <p>更新 ydsz_flow_user 表的 processed=1，并记录 comment 和 processedAt。
+   *
+   * @param taskId 任务 ID
+   * @param userId 审批人 ID
+   * @param comment 审批意见
+   * @param processedAt 处理时间
+   */
+  void markProcessed(String taskId, String userId, String comment, LocalDateTime processedAt);
+
+  /**
+   * 更新任务的 approveFinished 字段。
+   *
+   * <p>用于加签场景：更新 ydsz_flow_run_task 表的 approve_finished 字段。
+   *
+   * @param taskId 任务 ID
+   * @param approveFinished 新的 approveFinished 值
+   */
+  void updateApproveFinished(String taskId, int approveFinished);
 }

@@ -1,7 +1,7 @@
 package com.njydsz.message.infra.mapper.template;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.model.core.MsgTemplate;
 import org.apache.ibatis.annotations.Mapper;
 
 import com.njydsz.message.infra.entity.MsgTemplateDO;

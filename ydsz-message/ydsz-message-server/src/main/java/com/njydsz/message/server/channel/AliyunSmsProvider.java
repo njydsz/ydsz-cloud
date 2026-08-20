@@ -21,7 +21,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.model.core.MsgTemplate;
 import com.njydsz.message.server.config.MessageProperties;
 
 /**

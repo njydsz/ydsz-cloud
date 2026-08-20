@@ -322,4 +322,71 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
                 .eq(FlowRunTaskDO::getNodeCode, nodeCode)
                 .eq(FlowRunTaskDO::getDeleted, 0)));
   }
+
+  @Override
+  public List<FlowRunTaskVO> findCompletedByInstanceAndNode(String instanceId, String nodeCode) {
+    return converter.flowRunTaskListToVO(
+        taskMapper.selectList(
+            new LambdaQueryWrapper<FlowRunTaskDO>()
+                .eq(FlowRunTaskDO::getInstanceId, instanceId)
+                .eq(FlowRunTaskDO::getNodeCode, nodeCode)
+                .in(FlowRunTaskDO::getTaskStatus, "COMPLETED", "REJECTED")
+                .eq(FlowRunTaskDO::getDeleted, 0)));
+  }
+
+  @Override
+  public List<FlowRunTaskVO> selectTodoByAssignee(String assigneeId, String tenantId) {
+    List<FlowRunTaskDO> list = taskMapper.selectTodoByAssignee(assigneeId, tenantId);
+    return list == null ? Collections.emptyList() : converter.flowRunTaskListToVO(list);
+  }
+
+  @Override
+  public List<FlowRunTaskVO> selectTodoByAssigneePage(String assigneeId, String tenantId, int offset, int limit) {
+    List<FlowRunTaskDO> list = taskMapper.selectTodoByAssigneePage(assigneeId, tenantId, offset, limit);
+    return list == null ? Collections.emptyList() : converter.flowRunTaskListToVO(list);
+  }
+
+  @Override
+  public long countTodoByAssignee(String assigneeId, String tenantId) {
+    return taskMapper.countTodoByAssignee(assigneeId, tenantId);
+  }
+
+  @Override
+  public List<FlowRunTaskVO> selectOverdue(String assigneeId, String tenantId, int limit) {
+    List<FlowRunTaskDO> list = taskMapper.selectOverdue(assigneeId, tenantId, limit);
+    return list == null ? Collections.emptyList() : converter.flowRunTaskListToVO(list);
+  }
+
+  @Override
+  public long countOverdueByAssignee(String assigneeId, String tenantId) {
+    return taskMapper.countOverdue(assigneeId, tenantId);
+  }
+
+  @Override
+  public long countPendingByTenantId(String tenantId) {
+    return taskMapper.selectCount(
+        new LambdaQueryWrapper<FlowRunTaskDO>()
+            .eq(FlowRunTaskDO::getTenantId, tenantId)
+            .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED"));
+  }
+
+  @Override
+  public List<Map<String, Object>> selectOverdueTopN(String tenantId, int limit) {
+    return taskMapper.selectOverdueTopN(tenantId, limit);
+  }
+
+  @Override
+  public List<Map<String, Object>> selectWorkloadByAssignee(String tenantId, int limit) {
+    return taskMapper.selectWorkloadByAssignee(tenantId, limit);
+  }
+
+  @Override
+  public void markProcessed(String taskId, String userId, String comment, LocalDateTime processedAt) {
+    taskMapper.markProcessed(taskId, userId, comment, processedAt);
+  }
+
+  @Override
+  public void updateApproveFinished(String taskId, int approveFinished) {
+    taskMapper.updateApproveFinished(taskId, approveFinished);
+  }
 }

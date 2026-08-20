@@ -31,7 +31,7 @@ import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.domain.dto.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.model.core.MsgTemplate;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.service.template.TemplateService;
 

@@ -20,7 +20,7 @@ import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.model.core.MsgTemplate;
 import com.njydsz.message.domain.enums.template.TemplateAuditStatusEnum;
 import com.njydsz.message.infra.repository.MsgTemplateRepository;
 import com.njydsz.message.server.service.template.TemplateService;

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.model.core.MsgTemplate;
 
 /**
  * Mock 短信服务商（降级实现）。

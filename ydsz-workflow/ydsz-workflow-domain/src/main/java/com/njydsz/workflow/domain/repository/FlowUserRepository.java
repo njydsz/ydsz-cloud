@@ -79,4 +79,28 @@ public interface FlowUserRepository {
    * @return 更新后的流程用户 VO
    */
   FlowUserVO update(FlowUserVO vo);
+
+  /**
+   * 根据用户 ID 查询关联的任务 ID 列表（通过 ydsz_flow_user 关联表）。
+   *
+   * <p>查询条件：user_id = ? AND tenant_id = ? AND processed = 0。
+   * 用于 listTodoByUser 场景：获取通过 ydsz_flow_user 关联到该用户的任务。
+   *
+   * @param userId 用户 ID
+   * @param tenantId 租户 ID
+   * @return 任务 ID 列表
+   */
+  List<String> selectTaskIdsByUser(String userId, String tenantId);
+
+  /**
+   * 根据 (instanceId, nodeCode, userId) 复合键删除审批人。
+   *
+   * <p>用于减签场景：从 ydsz_flow_user 中按复合键删除。
+   *
+   * @param instanceId 实例 ID
+   * @param nodeCode 节点编码
+   * @param userId 用户 ID
+   * @return 删除行数
+   */
+  int deleteByInstanceAndNodeAndUser(String instanceId, String nodeCode, String userId);
 }

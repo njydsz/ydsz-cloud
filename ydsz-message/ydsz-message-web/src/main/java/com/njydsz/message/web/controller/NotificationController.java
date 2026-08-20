@@ -37,7 +37,7 @@ import com.njydsz.common.socket.trace.WebSocketTraceContext;
 import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.NotificationSendDTO;
-import com.njydsz.message.infra.entity.MsgNotification;
+import com.njydsz.message.domain.model.core.MsgNotification;
 import com.njydsz.message.domain.vo.MsgNotificationVO;
 import com.njydsz.message.server.realtime.RealtimePushService;
 import com.njydsz.message.server.service.core.NotificationService;

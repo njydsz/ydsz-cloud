@@ -16,7 +16,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.TemplateTestSendDTO;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.model.core.MsgTemplate;
 import com.njydsz.message.domain.entity.template.MsgTemplateVersion;
 import com.njydsz.message.infra.repository.MsgTemplateRepository;
 import com.njydsz.message.infra.repository.MsgTemplateVersionRepository;
