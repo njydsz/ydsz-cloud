@@ -8,14 +8,12 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.cronjob.infra.entity.job.Job;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
  * 定时任务搜索提供者 — 将任务定义注册到统一搜索体系。
  *
- * <p>P0-FIX: 移除旧版 SearchProvider 接口已删除的方法（getTypeLabel/getSearchableFields/loadById），
- * 仅保留新接口契约（getType/toIndexDocument），消除"方法不覆盖"编译错误。
+ * <p>P2-修正：移除未使用的 Mapper 注入，改用 VO 作为入参类型以符合 DDD 分层规范。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -23,9 +21,7 @@ import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JobSearchProvider implements SearchProvider<Job> {
-
-  private final JobMapper jobMapper;
+public class JobSearchProvider implements SearchProvider<JobVO> {
 
   @Override
   public String getType() {
@@ -33,29 +29,29 @@ public class JobSearchProvider implements SearchProvider<Job> {
   }
 
   @Override
-  public IndexDocument toIndexDocument(Job entity) {
-    if (entity == null || entity.getId() == null) {
+  public IndexDocument toIndexDocument(JobVO vo) {
+    if (vo == null || vo.getId() == null) {
       return null;
     }
     return IndexDocument.builder()
-        .id(entity.getId())
+        .id(vo.getId())
         .type("job")
-        .title(entity.getJobName())
-        .subtitle(entity.getJobKey())
-        .content(entity.getJobRemark())
-        .snippet(entity.getCronExpression())
-        .status(entity.getScheduleType() != null ? entity.getScheduleType() : "CRON")
-        .path("/cronjob/job/" + entity.getId())
-        .tenantId(entity.getTenantId())
-        .createdBy(entity.getCreatedBy())
+        .title(vo.getJobName())
+        .subtitle(vo.getJobKey())
+        .content(vo.getJobRemark())
+        .snippet(vo.getCronExpression())
+        .status(vo.getScheduleType() != null ? vo.getScheduleType() : "CRON")
+        .path("/cronjob/job/" + vo.getId())
+        .tenantId(vo.getTenantId())
+        .createdBy(vo.getCreatedBy())
         .createdAt(
-            entity.getCreatedAt() != null
-                ? entity.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()
+            vo.getCreatedAt() != null
+                ? vo.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()
                 : null)
-        .updatedBy(entity.getUpdatedBy())
+        .updatedBy(vo.getUpdatedBy())
         .updatedAt(
-            entity.getUpdatedAt() != null
-                ? entity.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant()
+            vo.getUpdatedAt() != null
+                ? vo.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant()
                 : null)
         .build();
   }

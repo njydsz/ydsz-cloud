@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.literule.infra.entity.RuleABPolicy;
+import com.njydsz.literule.infra.entity.RuleABPolicyDO;
 
 /**
  * 规则 A/B 策略 Mapper
@@ -26,12 +26,12 @@ import com.njydsz.literule.infra.entity.RuleABPolicy;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see RuleABPolicy A/B 策略实体
+ * @see RuleABPolicyDO A/B 策略实体
  * @see com.njydsz.literule.server.service.RuleABPolicyService A/B Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface RuleABPolicyMapper extends BaseMapper<RuleABPolicy> {
+public interface RuleABPolicyMapper extends BaseMapper<RuleABPolicyDO> {
 
   /**
    * 根据规则编码查询 AB Test 策略。
@@ -39,5 +39,5 @@ public interface RuleABPolicyMapper extends BaseMapper<RuleABPolicy> {
    * @param ruleCode 规则编码
    * @return AB Test 策略实体；不存在时返回 null
    */
-  RuleABPolicy selectByRuleCode(@Param("ruleCode") String ruleCode);
+  RuleABPolicyDO selectByRuleCode(@Param("ruleCode") String ruleCode);
 }

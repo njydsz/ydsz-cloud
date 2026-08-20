@@ -18,7 +18,7 @@ import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 
@@ -26,7 +26,7 @@ import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
  * 用户账号 Repository 实现
  *
  * <p>基于 MyBatis-Plus 实现 domain 层 {@link UserAccountRepository} 接口。
- * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
+ * 所有返回值通过 {@link UserInfoUserConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 2.18.0
@@ -36,7 +36,7 @@ import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 public class UserAccountRepositoryImpl implements UserAccountRepository {
 
   private final UserAccountMapper userAccountMapper;
-  private final UserInfoConverter converter;
+  private final UserInfoUserConverter converter;
 
   @Override
   public Optional<UserAccountVO> findById(String id) {

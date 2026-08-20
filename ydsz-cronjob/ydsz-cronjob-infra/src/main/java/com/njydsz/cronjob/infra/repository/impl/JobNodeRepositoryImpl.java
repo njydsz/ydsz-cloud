@@ -25,6 +25,7 @@ import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
 public class JobNodeRepositoryImpl implements JobNodeRepository {
 
   private final JobNodeMapper jobNodeMapper;
+  private final CronjobConverter converter;
 
   @Override
   public int markStaleOnlineAsOffline(LocalDateTime staleThreshold) {
@@ -39,5 +40,23 @@ public class JobNodeRepositoryImpl implements JobNodeRepository {
   @Override
   public int deleteStaleOfflineNodes(LocalDateTime offlineThreshold) {
     return jobNodeMapper.deleteStaleOfflineNodes(offlineThreshold);
+  }
+
+  @Override
+  public List<JobNodeVO> findOnlineNodes() {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobNode> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper.eq(JobNode::getStatus, "ONLINE");
+    return converter.jobNodeListToVO(jobNodeMapper.selectList(wrapper));
+  }
+
+  @Override
+  public List<JobNodeVO> findByStatus(String status) {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobNode> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    if (status != null && !status.isBlank()) {
+      wrapper.eq(JobNode::getStatus, status);
+    }
+    return converter.jobNodeListToVO(jobNodeMapper.selectList(wrapper));
   }
 }

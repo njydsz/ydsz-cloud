@@ -26,8 +26,6 @@ import com.njydsz.userinfo.domain.event.auth.SessionEvictedEvent;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
-import com.njydsz.userinfo.infra.entity.DepartmentDO;
-import com.njydsz.userinfo.infra.entity.RoleDO;
 
 /**
  * 用户模块领域事件发布器。
@@ -288,27 +286,6 @@ public class UserDomainEventPublisher {
 
   /**
    * 发布角色实体变更事件。
-   *
-   * @param RoleDO 角色实体
-   * @param action 操作类型（CREATED / UPDATED / DELETED）
-   */
-  public void publishRoleEntityChanged(RoleDO RoleDO, String action) {
-    if (RoleDO == null) {
-      return;
-    }
-    publish(
-        UserDomainEventType.ROLE_CHANGED,
-        RoleDO.getId(),
-        "RoleDO",
-        new UserDomainEvent(
-            UserDomainEventType.ROLE_CHANGED,
-            RoleDO.getId(),
-            "RoleDO",
-            Map.of("roleId", RoleDO.getId(), "roleCode", orEmpty(RoleDO.getRoleCode()), "action", action)));
-  }
-
-  /**
-   * 发布角色实体变更事件（VO 版本，推荐新代码使用）。
    *
    * @param roleVO 角色 VO
    * @param action 操作类型（CREATED / UPDATED / DELETED）

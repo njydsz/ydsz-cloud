@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -17,10 +18,10 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
 import com.njydsz.workflow.server.queue.FlowQueuePublisher;
@@ -45,6 +46,9 @@ import com.njydsz.workflow.server.service.FlowSubProcessService;
  *   <li>通知触达（对标用友 BPM / 钉钉审批的实时通知能力）
  * </ol>
  *
+ * <p><b>架构合规说明（v2.23 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
+ * 禁止 server 层直接注入 infra Mapper 或直接引用 infra.entity（符合 §34.2.3 / §34.2.1）。
+ *
  * @since 1.0.0
  * @author ydsz-team
  */
@@ -66,8 +70,8 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
   private static final String ACTION_MARK_REJECTED = "markRejected";
 
   private final FlowNotificationService notificationService;
-  private final FlowInstanceMapper instanceMapper;
-  private final FlowRunTaskMapper taskMapper;
+  private final FlowInstanceRepository instanceRepository;
+  private final FlowRunTaskRepository runTaskRepository;
 
   /** P1-3: 子流程服务（监听器作为子流程完成回调的入口） */
   private final FlowSubProcessService subProcessService;
@@ -85,10 +89,10 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         instanceId,
         variables == null ? Collections.emptySet() : variables.keySet());
     // P0-7: 流程启动 → 发布立项状态联动事件（markProcessing）到 MQ
-    FlowInstanceDO instance = instanceId == null ? null : instanceMapper.selectById(instanceId);
-    String initiationId = resolveInitiationId(instance);
+    Optional<FlowInstanceVO> instanceOpt = instanceId == null ? Optional.empty() : instanceRepository.findById(instanceId);
+    String initiationId = instanceOpt.map(this::resolveInitiationId).orElse(null);
     if (initiationId != null) {
-      publishInitiationStatusSync(initiationId, ACTION_MARK_PROCESSING, instanceId, instance);
+      publishInitiationStatusSync(initiationId, ACTION_MARK_PROCESSING, instanceId, instanceOpt.orElse(null));
     }
   }
 
@@ -98,10 +102,11 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (taskId == null) {
       return;
     }
-    FlowRunTaskDO task = taskMapper.selectById(taskId);
-    if (task == null) {
+    Optional<FlowRunTaskVO> taskOpt = runTaskRepository.findById(taskId);
+    if (taskOpt.isEmpty()) {
       return;
     }
+    FlowRunTaskVO task = taskOpt.get();
     String assigneeId = task.getAssigneeId();
     if (assigneeId == null) {
       return;
@@ -130,10 +135,11 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (instanceId == null) {
       return;
     }
-    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
-    if (instance == null || instance.getInitiatorId() == null) {
+    Optional<FlowInstanceVO> instanceOpt = instanceRepository.findById(instanceId);
+    if (instanceOpt.isEmpty() || instanceOpt.get().getInitiatorId() == null) {
       return;
     }
+    FlowInstanceVO instance = instanceOpt.get();
     // P1-3: 子流程完成 → 回调父流程
     if (instance.getParentInstanceId() != null) {
       try {
@@ -169,10 +175,11 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (instanceId == null) {
       return;
     }
-    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
-    if (instance == null || instance.getInitiatorId() == null) {
+    Optional<FlowInstanceVO> instanceOpt = instanceRepository.findById(instanceId);
+    if (instanceOpt.isEmpty() || instanceOpt.get().getInitiatorId() == null) {
       return;
     }
+    FlowInstanceVO instance = instanceOpt.get();
     // P1-3: 子流程驳回 → 同步父流程驳回
     if (instance.getParentInstanceId() != null) {
       try {
@@ -211,10 +218,10 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (instanceId == null) {
       return;
     }
-    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
-    String initiationId = resolveInitiationId(instance);
+    Optional<FlowInstanceVO> instanceOpt = instanceRepository.findById(instanceId);
+    String initiationId = instanceOpt.map(this::resolveInitiationId).orElse(null);
     if (initiationId != null) {
-      publishInitiationStatusSync(initiationId, ACTION_MARK_PROCESSING, instanceId, instance);
+      publishInitiationStatusSync(initiationId, ACTION_MARK_PROCESSING, instanceId, instanceOpt.orElse(null));
     }
   }
 
@@ -247,17 +254,17 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (instanceId == null) {
       return;
     }
-    List<FlowRunTaskDO> pending = taskMapper.selectPendingByInstance(instanceId);
+    List<FlowRunTaskVO> pending = runTaskRepository.findPendingByInstance(instanceId);
     List<String> receivers =
-        pending == null
+        pending.isEmpty()
             ? Collections.emptyList()
             : pending.stream()
-                .map(t -> t.getAssigneeId())
+                .map(FlowRunTaskVO::getAssigneeId)
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
-    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
-    String flowName = instance == null ? "" : nullSafe(instance.getFlowName());
+    Optional<FlowInstanceVO> instanceOpt = instanceRepository.findById(instanceId);
+    String flowName = instanceOpt.map(FlowInstanceVO::getFlowName).orElse("");
     String title = "审批催办";
     String content = String.format("【%s】 您有一个待办任务被催办，请尽快处理", flowName);
     notificationService.notifyBatch("INAPP", receivers, title, content, "WORKFLOW_URGE", "URGENT");
@@ -269,10 +276,11 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (instanceId == null) {
       return;
     }
-    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
-    if (instance == null || instance.getInitiatorId() == null) {
+    Optional<FlowInstanceVO> instanceOpt = instanceRepository.findById(instanceId);
+    if (instanceOpt.isEmpty() || instanceOpt.get().getInitiatorId() == null) {
       return;
     }
+    FlowInstanceVO instance = instanceOpt.get();
     notificationService.notify(
         "INAPP",
         instance.getInitiatorId(),
@@ -292,17 +300,17 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (instanceId == null) {
       return;
     }
-    List<FlowRunTaskDO> pending = taskMapper.selectPendingByInstance(instanceId);
+    List<FlowRunTaskVO> pending = runTaskRepository.findPendingByInstance(instanceId);
     List<String> receivers =
-        pending == null
+        pending.isEmpty()
             ? Collections.emptyList()
             : pending.stream()
-                .map(t -> t.getAssigneeId())
+                .map(FlowRunTaskVO::getAssigneeId)
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
-    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
-    String flowName = instance == null ? "" : nullSafe(instance.getFlowName());
+    Optional<FlowInstanceVO> instanceOpt = instanceRepository.findById(instanceId);
+    String flowName = instanceOpt.map(FlowInstanceVO::getFlowName).orElse("");
     String title = "审批已撤回";
     String content = String.format("【%s】 该流程已被发起人撤回", flowName);
     notificationService.notifyBatch(
@@ -315,10 +323,11 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (taskId == null || toUserId == null) {
       return;
     }
-    FlowRunTaskDO task = taskMapper.selectById(taskId);
-    if (task == null) {
+    Optional<FlowRunTaskVO> taskOpt = runTaskRepository.findById(taskId);
+    if (taskOpt.isEmpty()) {
       return;
     }
+    FlowRunTaskVO task = taskOpt.get();
     notificationService.notify(
         "INAPP",
         toUserId,
@@ -336,10 +345,11 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (taskId == null || toUserId == null) {
       return;
     }
-    FlowRunTaskDO task = taskMapper.selectById(taskId);
-    if (task == null) {
+    Optional<FlowRunTaskVO> taskOpt = runTaskRepository.findById(taskId);
+    if (taskOpt.isEmpty()) {
       return;
     }
+    FlowRunTaskVO task = taskOpt.get();
     notificationService.notify(
         "INAPP",
         toUserId,
@@ -357,10 +367,11 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (taskId == null) {
       return;
     }
-    FlowRunTaskDO task = taskMapper.selectById(taskId);
-    if (task == null) {
+    Optional<FlowRunTaskVO> taskOpt = runTaskRepository.findById(taskId);
+    if (taskOpt.isEmpty()) {
       return;
     }
+    FlowRunTaskVO task = taskOpt.get();
     String assigneeId = task.getAssigneeId();
     if (assigneeId == null) {
       return;
@@ -387,7 +398,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
    * @param instance 流程实例（可空）
    * @return 立项 ID，解析失败返回 null
    */
-  private String resolveInitiationId(FlowInstanceDO instance) {
+  private String resolveInitiationId(FlowInstanceVO instance) {
     if (instance == null) {
       return null;
     }
@@ -428,7 +439,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
       String initiationId,
       String action,
       String instanceId,
-      FlowInstanceDO instance,
+      FlowInstanceVO instance,
       String... reason) {
     if (queuePublisher == null || initiationId == null || action == null) {
       return;
