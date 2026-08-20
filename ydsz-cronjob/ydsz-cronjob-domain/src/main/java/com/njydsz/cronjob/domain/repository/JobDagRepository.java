@@ -96,4 +96,12 @@ public interface JobDagRepository {
    * @return 受影响行数
    */
   int deleteById(String dagId);
+
+  /**
+   * 按 ID 更新 DAG（直接更新 VO 字段，供内部服务使用）。
+   *
+   * @param vo DAG VO（必须含 id）
+   * @return 受影响行数
+   */
+  int updateById(JobDagVO vo);
 }

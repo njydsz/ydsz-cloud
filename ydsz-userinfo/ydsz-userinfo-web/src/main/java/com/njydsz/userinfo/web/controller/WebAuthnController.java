@@ -19,11 +19,16 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.auth.model.UserInfo;
+import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.web.version.ApiVersion;
+import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
+import com.njydsz.userinfo.server.auth.RoleCacheService;
 import com.njydsz.userinfo.server.auth.WebAuthnService;
+import com.njydsz.userinfo.domain.vo.RoleVO;
 
 /**
  * WebAuthn/Passkey 无密码认证 Controller（P3-2 通行 Key 增强）。
@@ -42,7 +47,7 @@ import com.njydsz.userinfo.server.auth.WebAuthnService;
  *   <li>前端访问 {@code /passkey/options} 获取认证选项（空 allowCredentials）</li>
  *   <li>浏览器自动弹出 Passkey 选择器（需配合 {@code mediation: "conditional"}）</li>
  *   <li>用户选择 Passkey 后，前端提交签名至 {@code /passkey/verify}</li>
- *   <li>验证通过后签发 JWT Token，用户无需输入密码完成登录</li>
+ *   <li>验证通过后签发 JWT Token（access_token + refresh_token），用户无需输入密码完成登录</li>
  * </ol>
  *
  * @author ydsz-team
@@ -58,6 +63,12 @@ public class WebAuthnController {
 
   /** WebAuthn 服务 */
   private final WebAuthnService webAuthnService;
+
+  /** Token 服务（签发 access/refresh token） */
+  private final TokenService tokenService;
+
+  /** 角色缓存服务（加载用户角色用于 Token 声明） */
+  private final RoleCacheService roleCacheService;
 
   // ==================== P3-2 Passkey 通行 Key 专用端点 ====================
 
@@ -111,10 +122,11 @@ public class WebAuthnController {
   /**
    * 验证 Passkey 认证响应（P3-2 无用户名登录）。
    *
-   * <p>验证 Passkey 签名后返回用户 ID，前端可据以完成登录流程（获取 Token）。
+   * <p>验证 Passkey 签名后签发 JWT Token（access_token + refresh_token），
+   * 用户无需输入密码完成登录。签名验证使用 webauthn4j 进行真实的 ECDSA/RSA 密码学验证。
    *
    * @param assertion 认证断言数据（challenge、credentialId、clientDataJSON、authenticatorData、signature）
-   * @return 认证通过的用户 ID
+   * @return 登录结果（accessToken、refreshToken、tokenType）
    */
   @Audit(
       module = "WebAuthn",
@@ -125,8 +137,8 @@ public class WebAuthnController {
   @PostMapping("/passkey/verify")
   @Operation(
       summary = "验证 Passkey 认证响应（无用户名登录）",
-      description = "验证 Passkey 签名，返回用户 ID 用于签发 Token")
-  public YdszResponse<String> verifyPasskeyAuthentication(@RequestBody Map<String, Object> assertion) {
+      description = "验证 Passkey 签名，通过后签发 JWT Token 完成登录")
+  public YdszResponse<LoginVO> verifyPasskeyAuthentication(@RequestBody Map<String, Object> assertion) {
     String challenge = (String) assertion.get("challenge");
     String credentialId = (String) assertion.get("credentialId");
     String clientDataJSON = (String) assertion.get("clientDataJSON");
@@ -136,9 +148,10 @@ public class WebAuthnController {
     String userId = webAuthnService.verifyPasskeyAuthentication(
         challenge, credentialId, clientDataJSON, authenticatorData, signature);
 
-    // TODO: 根据 userId 查询用户信息并签发 JWT Token
+    // 根据 userId 查询用户信息并签发 JWT Token
+    LoginVO loginVO = issueTokensForUser(userId);
 
-    return YdszResponse.success(userId);
+    return YdszResponse.success(loginVO);
   }
 
   // ==================== 原有 WebAuthn 端点 ====================
@@ -225,10 +238,11 @@ public class WebAuthnController {
   /**
    * 验证认证响应
    *
-   * <p>验证浏览器提交的认证响应（assertion），验证成功后返回用户 ID（由上层签发 Token）。
+   * <p>使用 webauthn4j 对浏览器提交的认证响应（assertion）进行真实的 ECDSA/RSA 密码学验证。
+   * 验证成功后签发 JWT Token（access_token + refresh_token）完成登录。
    *
    * @param assertion 认证断言数据
-   * @return 认证通过的用户 ID
+   * @return 登录结果（accessToken、refreshToken、tokenType）
    */
   @Audit(
       module = "WebAuthn",
@@ -239,8 +253,8 @@ public class WebAuthnController {
   @PostMapping("/authentication/verify")
   @Operation(
       summary = "验证认证响应",
-      description = "验证浏览器提交的 Passkey 签名，成功后建立会话")
-  public YdszResponse<String> verifyAuthentication(@RequestBody Map<String, Object> assertion) {
+      description = "验证浏览器提交的 Passkey 签名，通过后签发 JWT Token 完成登录")
+  public YdszResponse<LoginVO> verifyAuthentication(@RequestBody Map<String, Object> assertion) {
     String challenge = (String) assertion.get("challenge");
     String credentialId = (String) assertion.get("credentialId");
     String clientDataJSON = (String) assertion.get("clientDataJSON");
@@ -250,9 +264,10 @@ public class WebAuthnController {
     String userId = webAuthnService.verifyAuthenticationResponse(
         challenge, credentialId, clientDataJSON, authenticatorData, signature);
 
-    // TODO: 签发 JWT Token 或建立会话
+    // 根据 userId 查询用户信息并签发 JWT Token
+    LoginVO loginVO = issueTokensForUser(userId);
 
-    return YdszResponse.success(userId);
+    return YdszResponse.success(loginVO);
   }
 
   /**
@@ -289,5 +304,51 @@ public class WebAuthnController {
     String userId = AuthContextUtils.getUserId();
     webAuthnService.deleteCredential(userId, credentialId);
     return YdszResponse.success();
+  }
+
+  // ==================== 私有方法 ====================
+
+  /**
+   * 根据用户 ID 查询用户信息并签发 JWT Token（access_token + refresh_token）
+   *
+   * <p>流程：
+   * <ol>
+   *   <li>根据 userId 查询用户账号信息</li>
+   *   <li>加载用户角色列表</li>
+   *   <li>构建 UserInfo 并签发 Token</li>
+   *   <li>组装 LoginVO 返回</li>
+   * </ol>
+   *
+   * @param userId 用户 ID
+   * @return 登录结果 VO（含 accessToken、refreshToken）
+   */
+  private LoginVO issueTokensForUser(String userId) {
+    // 查询用户账号信息
+    var userAccount = webAuthnService.findUserById(userId);
+
+    // 加载用户角色
+    List<RoleVO> roles = roleCacheService.loadUserRoles(userId);
+    String roleCodes = roles.stream().map(RoleVO::getRoleCode).reduce((a, b) -> a + "," + b).orElse("");
+    String roleNames = roles.stream().map(RoleVO::getRoleName).reduce((a, b) -> a + "," + b).orElse("");
+
+    // 构建 UserInfo 用于 Token 签发
+    UserInfo userInfo = new UserInfo();
+    userInfo.setUserId(userAccount.getId());
+    userInfo.setUsername(userAccount.getUsername());
+    userInfo.setRoleCode(roleCodes);
+    userInfo.setRoleName(roleNames);
+    userInfo.setTenantId(userAccount.getTenantId());
+
+    // 签发 access_token 和 refresh_token
+    String accessToken = tokenService.issueAccessToken(userInfo);
+    String refreshToken = tokenService.issueRefreshToken(userInfo);
+
+    // 组装登录结果
+    LoginVO loginVO = new LoginVO();
+    loginVO.setAccessToken(accessToken);
+    loginVO.setRefreshToken(refreshToken);
+    loginVO.setTokenType("Bearer");
+
+    return loginVO;
   }
 }

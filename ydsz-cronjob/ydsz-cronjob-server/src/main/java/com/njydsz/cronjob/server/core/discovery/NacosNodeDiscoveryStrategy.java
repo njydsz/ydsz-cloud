@@ -15,7 +15,7 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.cronjob.infra.entity.job.JobNode;
+import com.njydsz.cronjob.domain.vo.JobNodeVO;
 
 /**
  * 基于 Nacos 服务发现的节点发现策略（P1-1）。
@@ -68,33 +68,33 @@ public class NacosNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
   /**
    * 通过 Nacos 获取在线执行器节点。
    *
-   * <p>Nacos 实例本身即存活节点，直接转换为 {@link JobNode}（心跳取当前时间）， 按 nodeId 升序保证分片分配在各节点一致。异常时返回空列表。
+   * <p>Nacos 实例本身即存活节点，直接转换为 {@link JobNodeVO}（心跳取当前时间）， 按 nodeId 升序保证分片分配在各节点一致。异常时返回空列表。
    *
-   * @return 在线节点列表，无可用时返回空列表
+   * @return 在线节点 VO 列表，无可用时返回空列表
    */
   @Override
-  public List<JobNode> getOnlineNodes() {
+  public List<JobNodeVO> getOnlineNodes() {
     try {
       List<ServiceInstance> instances = discoveryClient.getInstances(SERVICE_ID);
       if (instances == null || instances.isEmpty()) {
         log.debug("[NacosNodeDiscovery] 无在线节点实例");
         return Collections.emptyList();
       }
-      List<JobNode> nodes = new ArrayList<>(instances.size());
+      List<JobNodeVO> nodes = new ArrayList<>(instances.size());
       LocalDateTime now = LocalDateTime.now();
       for (ServiceInstance instance : instances) {
-        JobNode node = new JobNode();
+        JobNodeVO node = new JobNodeVO();
         node.setNodeId(instance.getHost() + ":" + instance.getPort());
         node.setHost(instance.getHost());
         node.setPort(instance.getPort());
-        node.setStatus("ONLINE");
+        node.setNodeStatus("ONLINE");
         // Nacos 实例本身就是存活的，用当前时间作为心跳时间
         node.setLastHeartbeat(now);
         node.setAppName(SERVICE_ID);
         nodes.add(node);
       }
       // 按 nodeId 升序保证分片分配确定性
-      nodes.sort(Comparator.comparing(JobNode::getNodeId));
+      nodes.sort(Comparator.comparing(JobNodeVO::getNodeId));
       log.debug("[NacosNodeDiscovery] 获取在线节点: count={}", nodes.size());
       return nodes;
     } catch (Exception e) {

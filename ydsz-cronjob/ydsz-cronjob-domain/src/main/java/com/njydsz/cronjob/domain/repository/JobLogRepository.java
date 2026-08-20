@@ -156,4 +156,13 @@ public interface JobLogRepository {
    * @return 受影响行数
    */
   int update(JobLogVO vo);
+
+  /**
+   * 按任务 ID 和时间点查询执行日志（诊断用）。
+   *
+   * @param jobId 任务 ID
+   * @param since 时间起点（含）
+   * @return 日志 VO 列表（按创建时间倒序）
+   */
+  List<JobLogVO> findByJobIdSince(String jobId, LocalDateTime since);
 }

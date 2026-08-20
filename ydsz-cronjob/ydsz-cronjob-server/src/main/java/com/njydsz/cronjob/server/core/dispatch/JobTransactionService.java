@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.cronjob.infra.entity.job.Job;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
  * 任务事务服务（P0-2: 修复 @Transactional 自调用失效）。
@@ -38,7 +38,7 @@ import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 @RequiredArgsConstructor
 public class JobTransactionService {
 
-  private final JobMapper jobMapper;
+  private final JobRepository jobRepository;
 
   /**
    * 抢占式扫描待触发任务（读写事务内）。
@@ -53,8 +53,8 @@ public class JobTransactionService {
    * @return 待触发任务列表
    */
   @Transactional(rollbackFor = Exception.class)
-  public List<Job> acquireDueJobs(LocalDateTime now, int batchSize) {
-    return jobMapper.selectDueJobs(now, batchSize);
+  public List<JobVO> acquireDueJobs(LocalDateTime now, int batchSize) {
+    return jobRepository.findDueJobs(now, batchSize);
   }
 
   /**
@@ -69,8 +69,8 @@ public class JobTransactionService {
    * @return 窗口内待预读任务列表
    */
   @Transactional(rollbackFor = Exception.class)
-  public List<Job> acquireDueJobsInWindow(LocalDateTime now, LocalDateTime windowEnd, int batchSize) {
-    return jobMapper.selectDueJobsInWindow(now, windowEnd, batchSize);
+  public List<JobVO> acquireDueJobsInWindow(LocalDateTime now, LocalDateTime windowEnd, int batchSize) {
+    return jobRepository.findDueJobsInWindow(now, windowEnd, batchSize);
   }
 
   /**
@@ -86,12 +86,12 @@ public class JobTransactionService {
    */
   @Transactional(rollbackFor = Exception.class)
   public boolean advanceNextFireTime(
-      Job job, LocalDateTime oldNext, LocalDateTime newNext, LocalDateTime lastFire) {
+      JobVO job, LocalDateTime oldNext, LocalDateTime newNext, LocalDateTime lastFire) {
     if (oldNext == null) {
       log.warn("[JobTx] next_fire_time 为 null, 跳过 CAS: key={}", job.getJobKey());
       return false;
     }
-    int affected = jobMapper.advanceNextFireTime(job.getId(), oldNext, newNext, lastFire);
+    int affected = jobRepository.advanceNextFireTime(job.getId(), oldNext, newNext, lastFire);
     return affected > 0;
   }
 }

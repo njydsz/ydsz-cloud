@@ -19,6 +19,7 @@ import com.njydsz.userinfo.domain.scim.ScimPatchOp;
 import com.njydsz.userinfo.domain.scim.ScimPhone;
 import com.njydsz.userinfo.domain.scim.ScimUser;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.userinfo.domain.scim.ScimConverter;
 import com.njydsz.userinfo.server.config.ScimProperties;
 import com.njydsz.userinfo.server.service.UserAccountService;
 
@@ -100,7 +101,7 @@ public class ScimPatchHandler {
 
     // 返回更新后的用户
     UserAccountVO updatedUser = userAccountService.getById(userId);
-    return com.njydsz.userinfo.infra.converter.ScimConverter.toScimUser(updatedUser);
+    return ScimConverter.toScimUser(updatedUser);
   }
 
   /**

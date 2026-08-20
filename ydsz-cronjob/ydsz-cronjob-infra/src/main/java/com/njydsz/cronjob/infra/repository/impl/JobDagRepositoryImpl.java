@@ -76,4 +76,10 @@ public class JobDagRepositoryImpl implements JobDagRepository {
   public int deleteById(String dagId) {
     return jobDagMapper.deleteById(dagId);
   }
+
+  @Override
+  public int updateById(JobDagVO vo) {
+    JobDag entity = converter.voToEntity(vo);
+    return jobDagMapper.updateById(entity);
+  }
 }

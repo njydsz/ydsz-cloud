@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.userinfo.domain.scim.ScimConverter;
 import com.njydsz.userinfo.domain.scim.ScimListResponse;
 import com.njydsz.userinfo.domain.scim.ScimPatchOp;
 import com.njydsz.userinfo.domain.scim.ScimUser;
@@ -104,7 +105,7 @@ public class ScimController {
 
     // 转换为 SCIM User
     List<ScimUser> scimUsers = pageUsers.stream()
-        .map(com.njydsz.userinfo.infra.converter.ScimConverter::toScimUser)
+        .map(ScimConverter::toScimUser)
         .toList();
 
     ScimListResponse<ScimUser> response = ScimListResponse.<ScimUser>builder()
@@ -137,7 +138,7 @@ public class ScimController {
                   .build()));
     }
 
-    ScimUser scimUser = com.njydsz.userinfo.infra.converter.ScimConverter.toScimUser(user);
+    ScimUser scimUser = ScimConverter.toScimUser(user);
     return ResponseEntity.ok(YdszJson.toJson(scimUser));
   }
 
@@ -161,13 +162,13 @@ public class ScimController {
 
     // 转换为 ydsz 创建 DTO
     com.njydsz.userinfo.domain.dto.UserAccountCreateDTO createDTO =
-        com.njydsz.userinfo.infra.converter.ScimConverter.toCreateDTO(scimUser);
+        ScimConverter.toCreateDTO(scimUser);
 
     String userId = userAccountService.create(createDTO);
 
     // 查询创建后的用户并返回
     UserAccountVO createdUser = userAccountService.getById(userId);
-    ScimUser result = com.njydsz.userinfo.infra.converter.ScimConverter.toScimUser(createdUser);
+    ScimUser result = ScimConverter.toScimUser(createdUser);
 
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(YdszJson.toJson(result));
@@ -207,14 +208,14 @@ public class ScimController {
 
     // 转换为 ydsz 更新 DTO
     com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO updateDTO =
-        com.njydsz.userinfo.infra.converter.ScimConverter.toUpdateDTO(scimUser);
+        ScimConverter.toUpdateDTO(scimUser);
     updateDTO.setId(id);
 
     userAccountService.update(updateDTO);
 
     // 查询更新后的用户并返回
     UserAccountVO updatedUser = userAccountService.getById(id);
-    ScimUser result = com.njydsz.userinfo.infra.converter.ScimConverter.toScimUser(updatedUser);
+    ScimUser result = ScimConverter.toScimUser(updatedUser);
 
     return ResponseEntity.ok(YdszJson.toJson(result));
   }

@@ -44,9 +44,15 @@ public class JobNodeRepositoryImpl implements JobNodeRepository {
 
   @Override
   public List<JobNodeVO> findOnlineNodes() {
+    // 默认心跳阈值：60 秒（与 DbNodeDiscoveryStrategy 离线阈值默认值保持一致）
+    long thresholdSeconds = 60L;
+    LocalDateTime cutoff = LocalDateTime.now().minusSeconds(thresholdSeconds);
     com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobNode> wrapper =
         new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-    wrapper.eq(JobNode::getStatus, "ONLINE");
+    wrapper
+        .eq(JobNode::getStatus, "ONLINE")
+        .ge(JobNode::getLastHeartbeat, cutoff)
+        .orderByAsc(JobNode::getNodeId);
     return converter.jobNodeListToVO(jobNodeMapper.selectList(wrapper));
   }
 

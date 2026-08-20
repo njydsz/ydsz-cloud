@@ -1,19 +1,12 @@
-package com.njydsz.userinfo.infra.converter;
+package com.njydsz.userinfo.domain.scim;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.stereotype.Component;
-
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
-import com.njydsz.userinfo.domain.scim.ScimEmail;
-import com.njydsz.userinfo.domain.scim.ScimMeta;
-import com.njydsz.userinfo.domain.scim.ScimName;
-import com.njydsz.userinfo.domain.scim.ScimPhone;
-import com.njydsz.userinfo.domain.scim.ScimUser;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
 /**
@@ -37,7 +30,6 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  * @author ydsz-team
  * @since 1.6.0
  */
-@Component
 public final class ScimConverter {
 
   /** ISO 8601 日期时间格式。 */

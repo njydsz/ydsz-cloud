@@ -5,12 +5,14 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
+import com.njydsz.message.domain.dto.MsgCanaryDTO;
 import com.njydsz.message.domain.dto.MsgLogDTO;
 import com.njydsz.message.domain.dto.MsgNotificationDTO;
 import com.njydsz.message.domain.dto.MsgTemplateDTO;
 import com.njydsz.message.domain.dto.MsgTenantConfigDTO;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
 import com.njydsz.message.domain.vo.MsgBatchVO;
+import com.njydsz.message.domain.vo.MsgCanaryVO;
 import com.njydsz.message.domain.vo.MsgFeedbackVO;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.domain.vo.MsgNotificationVO;
@@ -27,6 +29,7 @@ import com.njydsz.message.domain.vo.MsgVariableSourceVO;
 import com.njydsz.message.domain.vo.MsgTenantConfigVO;
 import com.njydsz.message.infra.entity.MsgAggregateDO;
 import com.njydsz.message.infra.entity.MsgBatchDO;
+import com.njydsz.message.infra.entity.MsgCanaryDO;
 import com.njydsz.message.infra.entity.MsgFeedbackDO;
 import com.njydsz.message.infra.entity.MsgLogDO;
 import com.njydsz.message.infra.entity.MsgNotificationDO;
@@ -218,4 +221,9 @@ public interface MessageConverter {
   MsgTenantConfigVO doToVO(MsgTenantConfigDO entity);
 
   MsgTenantConfigDO dtoToDO(MsgTenantConfigDTO dto);
+
+  // ===== MsgCanary =====
+  MsgCanaryVO doToVO(MsgCanaryDO entity);
+
+  MsgCanaryDO dtoToDO(MsgCanaryDTO dto);
 }

@@ -9,8 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.message.infra.entity.MsgCanary;
-import com.njydsz.message.infra.mapper.MsgCanaryMapper;
+import com.njydsz.message.domain.dto.MsgCanaryDTO;
+import com.njydsz.message.domain.enums.core.MessageStatusEnum;
+import com.njydsz.message.domain.repository.MsgCanaryRepository;
+import com.njydsz.message.domain.vo.MsgCanaryVO;
 import com.njydsz.message.server.service.config.CanaryExperimentService;
 
 /**
@@ -38,15 +40,14 @@ import com.njydsz.message.server.service.config.CanaryExperimentService;
  * @author ydsz-team
  * @since 1.0.0
  * @see CanaryExperimentService
- * @see MsgCanary
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class CanaryExperimentServiceImpl implements CanaryExperimentService {
 
-  /** 灰度实验 Mapper（CRUD） */
-  private final MsgCanaryMapper msgCanaryMapper;
+  /** 灰度实验 Repository */
+  private final MsgCanaryRepository msgCanaryRepository;
 
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -84,7 +85,7 @@ public class CanaryExperimentServiceImpl implements CanaryExperimentService {
 
     int bucketSelected = Math.min(canaryPercent, DEFAULT_BUCKET_TOTAL);
 
-    MsgCanary canary = MsgCanary.builder()
+    MsgCanaryDTO canary = MsgCanaryDTO.builder()
         .id(String.valueOf(snowflakeIdGenerator.nextId()))
         .canaryKey(canaryKey)
         .experimentName(experimentName)
@@ -99,7 +100,7 @@ public class CanaryExperimentServiceImpl implements CanaryExperimentService {
         .createdAt(LocalDateTime.now())
         .build();
 
-    msgCanaryMapper.insert(canary);
+    msgCanaryRepository.save(canary);
 
     log.info("[CanaryExperiment] 创建实验成功: canaryKey={}, templateCode={}, percent={}",
         canaryKey, templateCode, canaryPercent);
@@ -121,7 +122,7 @@ public class CanaryExperimentServiceImpl implements CanaryExperimentService {
   @Override
   public String assignBucket(String experimentId, String requestKey) {
 
-    MsgCanary canary = selectByCanaryKey(experimentId);
+    MsgCanaryVO canary = selectByCanaryKey(experimentId);
 
     if (canary == null || !STATUS_ACTIVE.equals(canary.getStatus())) {
       log.info("[CanaryExperiment] 实验不存在或非ACTIVE: experimentId={}, 返回 CONTROL", experimentId);
@@ -159,12 +160,11 @@ public class CanaryExperimentServiceImpl implements CanaryExperimentService {
    * 根据 canaryKey 查询实验（排除已删除）。
    *
    * @param canaryKey 实验唯一键
-   * @return 实验实体，不存在或已删除返回 null
+   * @return 实验 VO，不存在或已删除返回 null
    */
-  private MsgCanary selectByCanaryKey(String canaryKey) {
-    return msgCanaryMapper.selectOne(new LambdaQueryWrapper<MsgCanary>()
-        .eq(MsgCanary::getCanaryKey, canaryKey)
-        .eq(MsgCanary::getDeleted, false));
+  private MsgCanaryVO selectByCanaryKey(String canaryKey) {
+    return msgCanaryRepository.findByCanaryKey(canaryKey)
+        .orElse(null);
   }
 
   /**

@@ -48,17 +48,17 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.RandomUtils;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.cronjob.infra.entity.job.Job;
-import com.njydsz.cronjob.infra.entity.job.JobNode;
-import com.njydsz.cronjob.infra.entity.log.JobLog;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
+import com.njydsz.cronjob.domain.vo.JobNodeVO;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.domain.job.ExecutionContextScope;
 import com.njydsz.cronjob.domain.job.ProcessResult;
 import com.njydsz.cronjob.domain.job.ShardingContext;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
-import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.cronjob.domain.repository.JobLogRepository;
+import com.njydsz.cronjob.domain.repository.JobNodeRepository;
+import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.ExecutorConfig;
 import com.njydsz.cronjob.server.config.RemoteConfig;
@@ -113,8 +113,8 @@ import com.njydsz.cronjob.server.service.log.JobLogContentService;
 @ConditionalOnMissingBean(TaskDispatcher.class)
 public class DefaultTaskDispatcher implements TaskDispatcher {
 
-  private final JobMapper jobMapper;
-  private final JobLogMapper jobLogMapper;
+  private final JobRepository jobRepository;
+  private final JobLogRepository jobLogRepository;
   private final ApplicationContext applicationContext;
   private final RedisTemplate<String, Object> redisTemplate;
   private final CronjobProperties cronjobProperties;
@@ -125,8 +125,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /** P1-1: 心跳组件（可选注入，type=nacos 时不注册） */
   private final ObjectProvider<JobNodeHeartbeat> jobNodeHeartbeatProvider;
 
-  /** P3: 节点 Mapper，用于查询在线节点列表做分片分配 */
-  private final JobNodeMapper jobNodeMapper;
+  /** P3: 节点 Repository，用于查询在线节点列表做分片分配 */
+  private final JobNodeRepository jobNodeRepository;
 
   /** P1-1: 节点发现策略（可选注入，优先使用；不可用时回退到 DB 查询） */
   private final ObjectProvider<NodeDiscoveryStrategy> nodeDiscoveryStrategyProvider;
@@ -661,7 +661,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     log0.setExecThreadId(Thread.currentThread().threadId());
     log0.setCreatedAt(LocalDateTime.now());
     log0.setDeleted(0);
-    jobLogMapper.insert(log0);
+    jobLogRepository.insert(log0);
 
     // P1-2: 递增运行中任务数（Redis 维护，供 Gauge 直接读取）
     RunningTaskCounter shardCounter = runningTaskCounterProvider.getIfAvailable();
@@ -737,7 +737,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       log0.setEndTime(LocalDateTime.now());
       log0.setDurationMs(Duration.between(log0.getStartTime(), log0.getEndTime()).toMillis());
       log0.setStatus(success ? "SUCCESS" : "FAILED");
-      jobLogMapper.updateById(log0);
+      jobLogRepository.updateById(log0);
 
       // P1-2: 递减运行中任务数
       if (shardCounter != null) {
@@ -748,7 +748,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       Long incFire = 1L;
       Long incSucc = success ? 1L : 0L;
       Long incFail = success ? 0L : 1L;
-      jobMapper.updateStats(
+      jobRepository.updateStats(
           job.getId(), null, null, incFire, incSucc, incFail, success ? null : "ERROR");
 
       // P0-A2: 释放分片锁（优先 JobLockManager，回退 Lua 脚本安全释放）
@@ -787,7 +787,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * <p>P1-1: 优先使用 {@link NodeDiscoveryStrategy}（Nacos/DB），不可用时回退到 DB 查询。 P1-4: 返回完整的 {@link
    * JobNode} 列表，供远程派发获取 host/port。
    */
-  private List<JobNode> getOnlineNodeList() {
+  private List<JobNodeVO> getOnlineNodeList() {
     // P1-1: 优先使用节点发现策略
     NodeDiscoveryStrategy strategy = nodeDiscoveryStrategyProvider.getIfAvailable();
     if (strategy != null) {
@@ -795,14 +795,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
     // 回退到 DB 查询（现有逻辑，向后兼容）
     try {
-      long threshold = cronjobProperties.getExecutor().getOfflineThresholdSeconds();
-      LocalDateTime cutoff = LocalDateTime.now().minusSeconds(threshold);
-      LambdaQueryWrapper<JobNode> wrapper = new LambdaQueryWrapper<>();
-      wrapper
-          .eq(JobNode::getStatus, "ONLINE")
-          .ge(JobNode::getLastHeartbeat, cutoff)
-          .orderByAsc(JobNode::getNodeId);
-      return jobNodeMapper.selectList(wrapper);
+      return jobNodeRepository.findOnlineNodes();
     } catch (Exception e) {
       log.warn("[Dispatcher] 查询在线节点失败, fallback 到本地执行全部分片: reason={}", e.getMessage());
       return Collections.emptyList();

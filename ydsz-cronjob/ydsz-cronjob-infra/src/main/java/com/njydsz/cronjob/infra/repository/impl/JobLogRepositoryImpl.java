@@ -199,4 +199,14 @@ public class JobLogRepositoryImpl implements JobLogRepository {
     }
     return jobLogMapper.selectCount(wrapper);
   }
+
+  @Override
+  public List<JobLogVO> findByJobIdSince(String jobId, LocalDateTime since) {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper.eq(JobLog::getJobId, jobId)
+        .ge(JobLog::getCreatedAt, since)
+        .orderByDesc(JobLog::getCreatedAt);
+    return converter.jobLogListToVO(jobLogMapper.selectList(wrapper));
+  }
 }

@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.message.infra.mapper.MsgCanaryMapper">
 
-        <resultMap id="BaseResultMap" type="com.njydsz.message.infra.entity.MsgCanary">
+        <resultMap id="BaseResultMap" type="com.njydsz.message.infra.entity.MsgCanaryDO">
         <id column="id" property="id"/>
         <result column="canary_key" property="canaryKey"/>
         <result column="bucket_total" property="bucketTotal"/>
