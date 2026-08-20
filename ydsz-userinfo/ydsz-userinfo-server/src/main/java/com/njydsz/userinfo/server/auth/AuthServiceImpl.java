@@ -16,13 +16,12 @@ import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
-import com.njydsz.userinfo.infra.entity.RoleDO;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.LoginVO;
+import com.njydsz.userinfo.domain.vo.RoleVO;
+import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.server.config.CrossDomainSsoProperties;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
@@ -107,7 +106,7 @@ public class AuthServiceImpl implements AuthService {
     checkIpNotBlocked(loginIp, loginDTO.getUsername(), userAgent);
 
     // 查询用户 + 状态/锁定校验
-    UserAccountDO user = accountStatusGuard.findValidUser(loginDTO.getUsername(), loginIp, userAgent);
+    UserAccountCredentialVO user = accountStatusGuard.findValidUser(loginDTO.getUsername(), loginIp, userAgent);
 
     // 登录风险评估（基于 IP、时间、设备、频率等多维度）
     RiskScoringService.RiskScore risk = evaluateLoginRisk(user, loginIp, userAgent);
@@ -120,7 +119,7 @@ public class AuthServiceImpl implements AuthService {
     credentialVerifier.verify(user, loginDTO.getPassword(), loginIp, userAgent);
 
     // 加载角色 + 签发 Token + 存储会话
-    List<RoleDO> roles = roleCacheService.loadUserRoles(user.getId());
+    List<RoleVO> roles = roleCacheService.loadUserRoles(user.getId());
     TokenResult tokenResult = issueTokensAndCreateSession(user, roles, loginDTO, response);
 
     // 更新登录状态 + 审计
@@ -191,7 +190,7 @@ public class AuthServiceImpl implements AuthService {
    * @throws BusinessException 风险为 HIGH 且 MFA 校验未通过时抛出
    */
   private void validateMfaIfRequired(
-      UserAccountDO user, LoginDTO loginDTO, RiskScoringService.RiskScore risk) {
+      UserAccountCredentialVO user, LoginDTO loginDTO, RiskScoringService.RiskScore risk) {
     if (risk == null || risk.level() != RiskScoringService.RiskLevel.HIGH || risk.shouldReject()) {
       return;
     }
@@ -208,7 +207,7 @@ public class AuthServiceImpl implements AuthService {
    * @throws BusinessException 风险等级为 CRITICAL 时拒绝登录
    */
   private RiskScoringService.RiskScore evaluateLoginRisk(
-      UserAccountDO user, String loginIp, String userAgent) {
+      UserAccountCredentialVO user, String loginIp, String userAgent) {
     int recentFailCount = getRecentFailCount(loginIp);
     boolean isNewDevice = checkIfNewDevice(user.getId(), userAgent);
     RiskScoringService.RiskScore riskScore =
@@ -279,9 +278,9 @@ public class AuthServiceImpl implements AuthService {
    * @return 包含 accessToken 和 refreshToken 的结果对象
    */
   private TokenResult issueTokensAndCreateSession(
-      UserAccountDO user, List<RoleDO> roles, LoginDTO loginDTO, HttpServletResponse response) {
-    String roleCodes = roles.stream().map(RoleDO::getRoleCode).collect(Collectors.joining(","));
-    String roleNames = roles.stream().map(RoleDO::getRoleName).collect(Collectors.joining(","));
+      UserAccountCredentialVO user, List<RoleVO> roles, LoginDTO loginDTO, HttpServletResponse response) {
+    String roleCodes = roles.stream().map(RoleVO::getRoleCode).collect(Collectors.joining(","));
+    String roleNames = roles.stream().map(RoleVO::getRoleName).collect(Collectors.joining(","));
 
     // 推断设备类型（优先 X-Platform 头，其次 User-Agent）
     DeviceType deviceType =
@@ -346,9 +345,9 @@ public class AuthServiceImpl implements AuthService {
    * @param tokenResult 包含 accessToken 和 refreshToken 的结果对象
    * @return 登录结果 VO
    */
-  private LoginVO buildLoginResult(UserAccountDO user, List<RoleDO> roles, TokenResult tokenResult) {
-    String roleCodes = roles.stream().map(RoleDO::getRoleCode).collect(Collectors.joining(","));
-    String roleNames = roles.stream().map(RoleDO::getRoleName).collect(Collectors.joining(","));
+  private LoginVO buildLoginResult(UserAccountCredentialVO user, List<RoleVO> roles, TokenResult tokenResult) {
+    String roleCodes = roles.stream().map(RoleVO::getRoleCode).collect(Collectors.joining(","));
+    String roleNames = roles.stream().map(RoleVO::getRoleName).collect(Collectors.joining(","));
 
     LoginVO result = new LoginVO();
     result.setAccessToken(tokenResult.accessToken());
@@ -357,7 +356,10 @@ public class AuthServiceImpl implements AuthService {
     result.setExpiresIn(properties.getTokenTtlSeconds());
     result.setScope("read write");
 
-    LoginVO.UserInfoVO userInfoVO = UserInfoConverter.INSTANT.entityToUserInfoVO(user);
+    LoginVO.UserInfoVO userInfoVO = new LoginVO.UserInfoVO();
+    userInfoVO.setUserId(user.getId());
+    userInfoVO.setUsername(user.getUsername());
+    userInfoVO.setTenantId(user.getTenantId());
     userInfoVO.setRoleCode(roleCodes);
     userInfoVO.setRoleName(roleNames);
     result.setUserInfo(userInfoVO);

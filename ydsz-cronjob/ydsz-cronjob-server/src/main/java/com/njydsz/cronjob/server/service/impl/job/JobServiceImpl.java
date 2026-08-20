@@ -130,9 +130,6 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
 
-  /** 任务定义 Infra Repository（用于分页/统计等 query 操作） */
-  private final com.njydsz.cronjob.infra.repository.JobRepository infraJobRepository;
-
   /** 调度器 */
   private TaskScheduler taskScheduler;
 

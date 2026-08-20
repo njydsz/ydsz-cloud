@@ -3,9 +3,80 @@ package com.njydsz.agent.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
-import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
+import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
+
+/**
+ * Agent 定义 Repository
+ *
+ * <p>封装 {@code ydsz_agent_def} 表的数据库访问，为 server 层提供业务语义化的数据操作接口。
+ *
+ * <p><b>主要索引：</b>
+ *
+ * <ul>
+ *   <li>uk_agent_code — Agent 编码唯一索引
+ *   <li>idx_status — 状态过滤索引（DRAFT/PUBLISHED/DEPRECATED）
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
+ *
+ * <p><b>DTO 规范：</b>使用统一 {@link AgentDefinitionDTO}，不区分 Create/Update。
+ * 创建时 {@code id} 不传，更新时传入 {@code id}。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public interface AgentDefinitionRepository {
+
+  /**
+   * 根据 ID 查询 Agent 定义
+   *
+   * @param id 主键 ID
+   * @return Agent 定义 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<AgentDefinitionVO> findById(String id);
+
+  /**
+   * 根据 Agent 编码查询（过滤已删除记录）
+   *
+   * @param agentCode Agent 编码
+   * @return Agent 定义 VO；不存在或已删除返回 {@code Optional.empty()}
+   */
+  Optional<AgentDefinitionVO> findByCode(String agentCode);
+
+  /**
+   * 查询活跃 Agent 定义列表（状态为 ACTIVE，过滤已删除记录，按创建时间降序）
+   *
+   * @return Agent 定义 VO 列表
+   */
+  List<AgentDefinitionVO> findActive();
+
+  /**
+   * 插入 Agent 定义
+   *
+   * @param dto Agent 定义 DTO（id 字段不传）
+   * @return 插入成功返回 {@code true}
+   */
+  boolean insert(AgentDefinitionDTO dto);
+
+  /**
+   * 根据 ID 更新 Agent 定义
+   *
+   * @param dto Agent 定义 DTO（含 id）
+   * @return 更新成功返回 {@code true}
+   */
+  boolean updateById(AgentDefinitionDTO dto);
+
+  /**
+   * 根据 ID 逻辑删除 Agent 定义
+   *
+   * @param id 主键 ID
+   * @return 删除成功返回 {@code true}
+   */
+  boolean deleteById(String id);
+}
 
 /**
  * Agent 定义 Repository
