@@ -1,7 +1,7 @@
 package com.njydsz.cronjob.server.service.job;
 
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.cronjob.infra.entity.job.TenantQuota;
+import com.njydsz.cronjob.domain.vo.TenantQuotaVO;
 
 /**
  * 租户级配额服务（P7-2 / P7-3）。
@@ -44,9 +44,9 @@ public interface TenantQuotaService {
    * 获取指定租户的配额记录。
    *
    * @param tenantId 租户 ID
-   * @return 配额记录；不存在时返回 null
+   * @return 配额视图对象；不存在时返回 null
    */
-  TenantQuota getQuota(String tenantId);
+  TenantQuotaVO getQuota(String tenantId);
 
   /**
    * 检查租户是否可以创建新任务（任务数配额检查，P7-2）。
@@ -63,7 +63,7 @@ public interface TenantQuotaService {
    * 检查租户是否可以启动新的并发执行（并发数配额检查，P7-3）。
    *
    * <p>通过 Redis 实时计数器 {@code ydsz:quota:concurrent:{tenantId}} 获取当前并发数， 与 {@link
-   * TenantQuota#getMaxConcurrent()} 或全局默认比较。
+   * TenantQuotaVO#getMaxConcurrent()} 或全局默认比较。
    *
    * @param tenantId 租户 ID
    * @throws SysException 当超过并发上限时抛出（错误码 QUOTA_EXCEEDED）
@@ -74,7 +74,7 @@ public interface TenantQuotaService {
    * 检查租户是否可以执行新任务（日执行量配额检查，P7-3）。
    *
    * <p>通过 Redis 日计数器 {@code ydsz:quota:daily:{tenantId}:{yyyyMMdd}} 获取当日执行数， 与 {@link
-   * TenantQuota#getMaxDailyExecutions()} 或全局默认比较。
+   * TenantQuotaVO#getMaxDailyExecutions()} 或全局默认比较。
    *
    * @param tenantId 租户 ID
    * @throws SysException 当超过日执行量上限时抛出（错误码 QUOTA_EXCEEDED）

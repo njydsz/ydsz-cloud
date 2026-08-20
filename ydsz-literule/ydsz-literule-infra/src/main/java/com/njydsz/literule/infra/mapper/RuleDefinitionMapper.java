@@ -1,6 +1,7 @@
 package com.njydsz.literule.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -41,4 +42,38 @@ public interface RuleDefinitionMapper extends BaseMapper<RuleDefinitionDO> {
    * @return 规则定义 DO
    */
   RuleDefinitionDO selectByCode(@Param("ruleCode") String ruleCode);
+
+  /**
+   * 全文搜索规则（数据库级 LIKE 查询）
+   *
+   * @param query 搜索关键词（空格分隔为 AND 条件，null/空返回全部）
+   * @param status 状态过滤（null=不过滤）
+   * @param category 分类过滤（null=不过滤）
+   * @param enabled 启停过滤（null=不过滤）
+   * @param page 分页参数
+   * @return 分页结果
+   * @since 1.0.0
+   */
+  IPage<RuleDefinitionDO> searchRules(
+      @Param("query") String query,
+      @Param("status") String status,
+      @Param("category") String category,
+      @Param("enabled") Boolean enabled,
+      IPage<RuleDefinitionDO> page);
+
+  /**
+   * 统计搜索结果总数
+   *
+   * @param query 搜索关键词
+   * @param status 状态过滤
+   * @param category 分类过滤
+   * @param enabled 启停过滤
+   * @return 匹配的规则总数
+   * @since 1.0.0
+   */
+  int searchRulesCount(
+      @Param("query") String query,
+      @Param("status") String status,
+      @Param("category") String category,
+      @Param("enabled") Boolean enabled);
 }

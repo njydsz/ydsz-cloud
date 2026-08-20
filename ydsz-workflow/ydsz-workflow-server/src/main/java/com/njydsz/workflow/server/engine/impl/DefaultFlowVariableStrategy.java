@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.workflow.server.engine.FlowVariableStrategy;
 import com.njydsz.workflow.server.engine.expr.ExpressionEvaluator;
 
 /**
@@ -64,7 +63,7 @@ import com.njydsz.workflow.server.engine.expr.ExpressionEvaluator;
  */
 @Slf4j
 @Component
-public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
+public class DefaultFlowVariableStrategy {
 
   /**
    * Aviator 表达式求值器（可选注入）。
@@ -98,7 +97,6 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
     this.assigneeResolverLegacy = assigneeResolverLegacy;
   }
 
-  @Override
   public boolean evaluate(String condition, Map<String, Object> variables) {
     if (condition == null || condition.isBlank()) {
       return true;
@@ -136,7 +134,6 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
     return expressionEvaluatorLegacy.evaluateLegacy(condition, variables);
   }
 
-  @Override
   public String resolveAssignee(String expression, Map<String, Object> variables) {
     if (expression == null || expression.isBlank()) {
       return null;

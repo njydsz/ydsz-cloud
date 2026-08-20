@@ -50,27 +50,6 @@ public class RuleConfigRefreshEvent extends DomainEvent {
   }
 
   /**
-   * 构造规则包批量重载事件（P0-F4）
-   *
-   * @param packCode 规则包编码
-   * @param operator 操作人
-   * @return 事件实例
-   */
-  public static RuleConfigRefreshEvent packReload(String packCode, String operator) {
-    return new RuleConfigRefreshEvent(packCode, ChangeType.PACK_RELOAD, operator);
-  }
-
-  /**
-   * 构造全量刷新事件
-   *
-   * @param operator 操作人
-   * @return 事件实例
-   */
-  public static RuleConfigRefreshEvent fullReload(String operator) {
-    return new RuleConfigRefreshEvent(null, ChangeType.FULL_RELOAD, operator);
-  }
-
-  /**
    * 构造单条规则变更事件
    *
    * @param ruleCode 规则编码

@@ -461,7 +461,7 @@ public class FlowMonitorDashboardController {
 
     if (instanceId instanceof Number n) {
       try {
-        FlowInstanceVO inst = instanceService.getByIdVO(String.valueOf(n.longValue()));
+        FlowInstanceVO inst = instanceService.getById(String.valueOf(n.longValue()));
         if (inst != null) {
           item.put("flowCode", inst.getFlowCode());
           item.put("flowName", inst.getFlowName());

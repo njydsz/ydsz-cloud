@@ -2,20 +2,19 @@ package com.njydsz.workflow.server.metrics;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 
 /**
  * 流程引擎 Prometheus 指标收集器
@@ -64,8 +63,8 @@ public class FlowMetrics extends SentryMetricsAdapter {
   /** Gauge 类型标签值：超期任务数 */
   public static final String TYPE_TASK_OVERDUE = "task_overdue";
 
-  private final FlowInstanceMapper instanceMapper;
-  private final FlowRunTaskMapper taskMapper;
+  private final FlowInstanceRepository instanceRepository;
+  private final FlowRunTaskRepository taskRepository;
 
   private final AtomicReference<GaugeSnapshot> gaugeCache = new AtomicReference<>();
 
@@ -77,11 +76,11 @@ public class FlowMetrics extends SentryMetricsAdapter {
       long cachedAtNanos) {}
 
   public FlowMetrics(
-      ObjectProvider<FlowInstanceMapper> instanceMapperProvider,
-      ObjectProvider<FlowRunTaskMapper> taskMapperProvider) {
+      FlowInstanceRepository instanceRepository,
+      FlowRunTaskRepository taskRepository) {
     super("ydsz_flow_");
-    this.instanceMapper = instanceMapperProvider.getIfAvailable();
-    this.taskMapper = taskMapperProvider.getIfAvailable();
+    this.instanceRepository = instanceRepository;
+    this.taskRepository = taskRepository;
     registerGauges();
   }
 
@@ -146,7 +145,7 @@ public class FlowMetrics extends SentryMetricsAdapter {
    * @param instance 流程实例
    * @param result 结果状态
    */
-  public void recordInstanceDuration(FlowInstanceDO instance, String result) {
+  public void recordInstanceDuration(FlowInstanceVO instance, String result) {
     if (instance == null || instance.getStartAt() == null) {
       return;
     }
@@ -169,7 +168,7 @@ public class FlowMetrics extends SentryMetricsAdapter {
    * @param task 任务
    * @param result 结果状态
    */
-  public void recordTaskDuration(FlowRunTaskDO task, String result) {
+  public void recordTaskDuration(FlowRunTaskVO task, String result) {
     if (task == null || task.getCreatedAt() == null) {
       return;
     }
@@ -239,23 +238,17 @@ public class FlowMetrics extends SentryMetricsAdapter {
   }
 
   private Long queryRunningInstanceCount() {
-    if (instanceMapper == null) return 0L;
-    return instanceMapper.selectCount(
-        new LambdaQueryWrapper<FlowInstanceDO>()
-            .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
-            .eq(FlowInstanceDO::getDeleted, 0));
+    if (instanceRepository == null) return 0L;
+    return instanceRepository.countByStatus("RUNNING");
   }
 
   private Long queryPendingTaskCount() {
-    if (taskMapper == null) return 0L;
-    return taskMapper.selectCount(
-        new LambdaQueryWrapper<FlowRunTaskDO>()
-            .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
-            .eq(FlowRunTaskDO::getDeleted, 0));
+    if (taskRepository == null) return 0L;
+    return taskRepository.countByStatusIn(List.of("PENDING", "CLAIMED"));
   }
 
   private Long queryOverdueTaskCount() {
-    if (taskMapper == null) return 0L;
-    return taskMapper.countOverdue(null, null);
+    if (taskRepository == null) return 0L;
+    return taskRepository.countOverdue();
   }
 }

@@ -21,6 +21,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.infra.entity.schedule.GlueCode;
 import com.njydsz.cronjob.domain.repository.GlueCodeRepository;
+import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
 
@@ -58,12 +59,12 @@ public class GlueCodeServiceImpl implements GlueCodeService {
    * @param sourceCode 源代码内容
    * @param language 编程语言（GROOVY/PYTHON/SHELL/JAVASCRIPT），为空时默认 GROOVY
    * @param remark 版本备注
-   * @return 新创建的 GLUE 代码版本记录
+   * @return 新创建的 GLUE 代码版本视图对象
    * @throws SysException 当 jobId 为空或 sourceCode 为空白时抛出
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public GlueCode save(String jobId, String sourceCode, String language, String remark) {
+  public GlueCodeVO save(String jobId, String sourceCode, String language, String remark) {
     if (!StringUtils.hasText(jobId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -77,7 +78,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
           .build();
     }
     // 计算新版本号
-    GlueCode latest = glueCodeRepository.selectLatestByJobId(jobId);
+    GlueCodeVO latest = getLatest(jobId);
     int nextVersion =
         latest == null ? 1 : (latest.getVersion() == null ? 1 : latest.getVersion() + 1);
 
@@ -89,21 +90,21 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     entity.setRemark(remark);
     glueCodeRepository.insert(entity);
     log.info("[Glue] 保存 GLUE 代码: jobId={} version={} remark={}", jobId, nextVersion, remark);
-    return entity;
+    return entityToVo(entity);
   }
 
   /**
    * {@inheritDoc}
    *
    * @param jobId 任务 ID
-   * @return 最新版本的 GLUE 代码记录，jobId 为空或不存在时返回 null
+   * @return 最新版本的 GLUE 代码视图对象，jobId 为空或不存在时返回 null
    */
   @Override
-  public GlueCode getLatest(String jobId) {
+  public GlueCodeVO getLatest(String jobId) {
     if (!StringUtils.hasText(jobId)) {
       return null;
     }
-    return glueCodeRepository.selectLatestByJobId(jobId);
+    return glueCodeRepository.findLatestByJobId(jobId).orElse(null);
   }
 
   /**
@@ -112,16 +113,14 @@ public class GlueCodeServiceImpl implements GlueCodeService {
    * <p>按版本号降序排列返回全部历史版本。
    *
    * @param jobId 任务 ID
-   * @return 版本列表（降序），jobId 为空时返回空列表
+   * @return 版本视图对象列表（降序），jobId 为空时返回空列表
    */
   @Override
-  public List<GlueCode> listVersions(String jobId) {
+  public List<GlueCodeVO> listVersions(String jobId) {
     if (!StringUtils.hasText(jobId)) {
       return Collections.emptyList();
     }
-    LambdaQueryWrapper<GlueCode> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(GlueCode::getJobId, jobId).orderByDesc(GlueCode::getVersion);
-    return glueCodeRepository.selectList(wrapper);
+    return glueCodeRepository.findByJobIdOrderByVersionDesc(jobId);
   }
 
   /**
@@ -131,12 +130,12 @@ public class GlueCodeServiceImpl implements GlueCodeService {
    *
    * @param jobId 任务 ID
    * @param version 要回滚到的目标版本号
-   * @return 回滚后生成的新版本记录
+   * @return 回滚后生成的新版本视图对象
    * @throws SysException 当 jobId 为空、版本号无效或目标版本不存在时抛出
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public GlueCode rollback(String jobId, Integer version) {
+  public GlueCodeVO rollback(String jobId, Integer version) {
     if (!StringUtils.hasText(jobId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -150,9 +149,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
           .build();
     }
     // 查询目标版本
-    LambdaQueryWrapper<GlueCode> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(GlueCode::getJobId, jobId).eq(GlueCode::getVersion, version);
-    GlueCode target = glueCodeRepository.selectOne(wrapper);
+    GlueCodeVO target = getVersionVo(jobId, version);
     if (target == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -160,7 +157,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
           .build();
     }
     // 创建新版本（内容为目标版本代码）
-    GlueCode latest = glueCodeRepository.selectLatestByJobId(jobId);
+    GlueCodeVO latest = getLatest(jobId);
     int nextVersion =
         latest == null ? 1 : (latest.getVersion() == null ? 1 : latest.getVersion() + 1);
 
@@ -173,7 +170,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     glueCodeRepository.insert(entity);
     log.info(
         "[Glue] 回滚 GLUE 代码: jobId={} fromVersion={} toNewVersion={}", jobId, version, nextVersion);
-    return entity;
+    return entityToVo(entity);
   }
 
   // ==================== P1-1: 在线测试 / 模板 / 差异对比 ====================
@@ -317,8 +314,8 @@ public class GlueCodeServiceImpl implements GlueCodeService {
           .build();
     }
     // 查询两个版本
-    GlueCode codeA = getVersion(jobId, versionA);
-    GlueCode codeB = getVersion(jobId, versionB);
+    GlueCodeVO codeA = getVersionVo(jobId, versionA);
+    GlueCodeVO codeB = getVersionVo(jobId, versionB);
     if (codeA == null || codeB == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -351,6 +348,8 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     result.put("diff", computeLineDiff(codeA.getSourceCode(), codeB.getSourceCode()));
     return result;
   }
+
+  // ==================== 内部执行逻辑 ====================
 
   /**
    * 根据语言执行代码（内存编译，不持久化）。
@@ -423,11 +422,9 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     }
   }
 
-  /** 查询指定版本。 */
-  private GlueCode getVersion(String jobId, Integer version) {
-    LambdaQueryWrapper<GlueCode> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(GlueCode::getJobId, jobId).eq(GlueCode::getVersion, version);
-    return glueCodeRepository.selectOne(wrapper);
+  /** 查询指定版本（返回 VO）。 */
+  private GlueCodeVO getVersionVo(String jobId, Integer version) {
+    return glueCodeRepository.findByJobIdAndVersion(jobId, version).orElse(null);
   }
 
   /** 计算行级差异（简单实现）。 */
@@ -449,5 +446,25 @@ public class GlueCodeServiceImpl implements GlueCodeService {
       }
     }
     return diffs;
+  }
+
+  // ==================== Entity <-> VO 转换 ====================
+
+  private GlueCodeVO entityToVo(GlueCode e) {
+    if (e == null) {
+      return null;
+    }
+    GlueCodeVO vo = new GlueCodeVO();
+    vo.setId(e.getId());
+    vo.setJobId(e.getJobId());
+    vo.setSourceCode(e.getSourceCode());
+    vo.setLanguage(e.getLanguage());
+    vo.setVersion(e.getVersion());
+    vo.setRemark(e.getRemark());
+    vo.setCreatedBy(e.getCreatedBy());
+    vo.setCreatedAt(e.getCreatedAt());
+    vo.setUpdatedBy(e.getUpdatedBy());
+    vo.setUpdatedAt(e.getUpdatedAt());
+    return vo;
   }
 }

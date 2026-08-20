@@ -155,35 +155,59 @@ public class SearchApplicationService {
     return result;
   }
 
+  /** 每页大小（分页重建索引批次） */
+  private static final int REBUILD_BATCH_SIZE = 200;
+
   /**
    * 重建全量搜索索引（通常由定时任务或运维操作触发）。
    *
-   * <p>遍历全部文件节点，构建搜索索引 DTO 并 upsert 到 DB 降级索引表
+   * <p>分页批次遍历全部文件节点，构建搜索索引 DTO 并 upsert 到 DB 降级索引表
    * （统一搜索引擎主索引由 {@code NextwikiScheduledJobs#rebuildSearchIndex} 通过
    * {@code IndexRebuildService} 维护）。双索引链路在此保持同步。
    *
+   * <p><b>S3-P2-3 优化：</b>采用分页批次处理，避免一次性全量加载导致 OOM。
+   *
    * @return 无返回值
-   * @complexity O(N)（N 为文件总数，遍历重新建索引，耗时较长）
+   * @complexity O(N)（N 为文件总数，分页批次遍历重建索引，耗时较长）
    * @note 非事务（批量操作）；执行期间建议避开高峰期，避免影响在线搜索
    * @see com.njydsz.nextwiki.server.job.NextwikiScheduledJobs#rebuildSearchIndex()
    */
   public void rebuildAllIndices() {
-    List<FileNodeVO> allNodes = fileNodeRepository.findAll();
-    int count = 0;
-    for (FileNodeVO node : allNodes) {
-      try {
-        List<TagVO> tags = tagRepository.findByFileNodeId(node.getId());
-        SearchIndexDTO dto = searchDomainService.buildSearchIndex(node, tags, null, null);
-        searchIndexRepository.upsert(dto);
-        count++;
-      } catch (Exception e) {
-        log.warn(
-            "[SearchApplicationService] 索引重建跳过节点: nodeId={}, error={}",
-            node.getId(),
-            e.getMessage());
+    int offset = 0;
+    int totalRebuilt = 0;
+    long totalProcessed = 0;
+
+    while (true) {
+      PageResponse<List<FileNodeVO>> pageResult = fileNodeRepository.findAllWithPage(offset, REBUILD_BATCH_SIZE);
+      List<FileNodeVO> batch = pageResult.getData();
+      if (batch == null || batch.isEmpty()) {
+        break;
+      }
+
+      for (FileNodeVO node : batch) {
+        try {
+          List<TagVO> tags = tagRepository.findByFileNodeId(node.getId());
+          SearchIndexDTO dto = searchDomainService.buildSearchIndex(node, tags, null, null);
+          searchIndexRepository.upsert(dto);
+          totalRebuilt++;
+        } catch (Exception e) {
+          log.warn(
+              "[SearchApplicationService] 索引重建跳过节点: nodeId={}, error={}",
+              node.getId(),
+              e.getMessage());
+        }
+      }
+
+      totalProcessed += batch.size();
+      offset += REBUILD_BATCH_SIZE;
+
+      // 如果本批次未满，说明已到末页
+      if (batch.size() < REBUILD_BATCH_SIZE) {
+        break;
       }
     }
-    log.info("[SearchApplicationService] 全量索引重建完成: total={}, rebuilt={}", allNodes.size(), count);
+
+    log.info("[SearchApplicationService] 全量索引重建完成: total={}, rebuilt={}", totalProcessed, totalRebuilt);
   }
 
   /**

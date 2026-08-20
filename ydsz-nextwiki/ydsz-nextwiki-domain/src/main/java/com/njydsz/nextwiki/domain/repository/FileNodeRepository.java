@@ -44,14 +44,6 @@ public interface FileNodeRepository {
   List<FileNodeVO> findChildren(String parentId);
 
   /**
-   * 查询子节点数量
-   *
-   * @param parentId 父节点ID
-   * @return 子节点数量
-   */
-  int countChildren(String parentId);
-
-  /**
    * 数据库分页查询子节点（支持类型过滤与排序）
    *
    * @param query 分页查询参数
@@ -171,15 +163,6 @@ public interface FileNodeRepository {
    * @param sizeDelta 大小变化量
    */
   void updateSize(String id, Long sizeDelta);
-
-  /**
-   * 按文件名搜索（LIKE）
-   *
-   * @param keyword 搜索关键词
-   * @param createdBy 创建人
-   * @return 文件节点 VO 列表
-   */
-  List<FileNodeVO> searchByName(String keyword, String createdBy);
 
   /**
    * 统计用户文件数量
@@ -304,8 +287,21 @@ public interface FileNodeRepository {
    * 查询全部未删除节点（用于全量索引重建等批量场景）
    *
    * @return 全部节点 VO 列表（含文件夹与文件）
+   * @deprecated 全量查询可能导致内存溢出，建议使用 {@link #findAllWithPage} 分页批次处理
    */
+  @Deprecated
   List<FileNodeVO> findAll();
+
+  /**
+   * 分页查询全部未删除节点（用于全量索引重建等批量场景）
+   *
+   * <p>相比 {@link #findAll()}，分页批次处理可避免一次性加载全部数据导致内存溢出。
+   *
+   * @param offset 偏移量
+   * @param limit 每页数量
+   * @return 分页结果
+   */
+  PageResponse<List<FileNodeVO>> findAllWithPage(int offset, int limit);
 
   /** 文件类型统计结果 */
   record FileTypeStat(String suffix, int fileCount, long totalSize) {}

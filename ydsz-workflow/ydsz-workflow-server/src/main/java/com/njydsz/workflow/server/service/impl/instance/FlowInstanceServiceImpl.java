@@ -12,9 +12,7 @@ import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 
 /**
@@ -101,10 +99,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
    * 按 ID 查询流程实例
    *
    * @param id 实例 ID
-   * @return 流程实例 DO，不存在返回 null
+   * @return 流程实例 VO，不存在返回 null
    */
   @Override
-  public FlowInstanceDO getById(String id) {
+  public FlowInstanceVO getById(String id) {
     return queryService.getById(id);
   }
 
@@ -113,10 +111,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
    *
    * @param businessType 业务类型
    * @param businessId 业务 ID
-   * @return 流程实例 DO，未发起时返回 null
+   * @return 流程实例 VO，未发起时返回 null
    */
   @Override
-  public FlowInstanceDO getByBusiness(String businessType, String businessId) {
+  public FlowInstanceVO getByBusiness(String businessType, String businessId) {
     return queryService.getByBusiness(businessType, businessId);
   }
 
@@ -177,13 +175,13 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
   /**
    * 转化为视图对象（含当前节点任务列表）
    *
-   * @param instance 流程实例 DO
+   * @param instance 流程实例 VO
    * @param currentTasks 当前节点的待办任务列表
    * @return 流程实例视图 VO
    */
   @Override
   public FlowInstanceViewDTO toView(
-      FlowInstanceDO instance, List<FlowInstanceViewDTO.FlowTaskViewDTO> currentTasks) {
+      FlowInstanceVO instance, List<FlowInstanceViewDTO.FlowTaskViewDTO> currentTasks) {
     return queryService.toView(instance, currentTasks);
   }
 
@@ -195,7 +193,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
    * @return 该发起人指定状态的实例列表
    */
   @Override
-  public List<FlowInstanceDO> listByInitiator(String initiatorId, String flowStatus) {
+  public List<FlowInstanceVO> listByInitiator(String initiatorId, String flowStatus) {
     return queryService.listByInitiator(initiatorId, flowStatus);
   }
 
@@ -255,27 +253,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
    * P2-23: 实例多维分页查询
    *
    * @param query 分页查询参数对象（含筛选条件、分页信息）
-   * @return 分页结果
-   */
-  @Override
-  public PageResponse<List<FlowInstanceDO>> page(FlowInstancePageQuery query) {
-    return queryService.page(query);
-  }
-
-  /**
-   * P2-23: 实例多维分页查询（VO 版本，避免 Controller 层接触 DO）
-   *
-   * @param query 分页查询参数对象（含筛选条件、分页信息）
    * @return 分页结果（VO）
    */
   @Override
-  public PageResponse<List<FlowInstanceVO>> pageVO(FlowInstancePageQuery query) {
-    PageResponse<List<FlowInstanceDO>> result = queryService.page(query);
-    return PageResponse.success(
-        result.getTotal(),
-        result.getPageNum(),
-        result.getPageSize(),
-        WorkflowConverter.INSTANT.flowInstanceListToVO(result.getData()));
+  public PageResponse<List<FlowInstanceVO>> page(FlowInstancePageQuery query) {
+    return queryService.page(query);
   }
 
   /**
@@ -313,7 +295,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
   }
 
   /**
-   * 引擎内部方法：创建第一个待办任务（供 FlowAdvancer 调用）
+   * 引擎内部方法：创建第一个待办任务（供 DefaultFlowAdvancer 调用）
    *
    * @param instanceId 流程实例 ID
    * @param startNode 开始节点
@@ -321,12 +303,12 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
    * @return 实例 ID
    */
   public String createFirstTask(
-      String instanceId, FlowNodeDO startNode, Map<String, Object> variables) {
+      String instanceId, FlowNodeVO startNode, Map<String, Object> variables) {
     return lifecycleManager.createFirstTask(instanceId, startNode, variables);
   }
 
   /**
-   * 引擎内部方法：推进后批量生成任务（供 FlowAdvancer / FlowTaskService 调用）
+   * 引擎内部方法：推进后批量生成任务（供 DefaultFlowAdvancer / FlowTaskService 调用）
    *
    * @param instanceId 流程实例 ID
    * @param nextNodes 推进后的下一节点列表
@@ -334,7 +316,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
    */
   @Override
   public void generateTasksForNodes(
-      String instanceId, List<FlowNodeDO> nextNodes, Map<String, Object> variables) {
+      String instanceId, List<FlowNodeVO> nextNodes, Map<String, Object> variables) {
     lifecycleManager.generateTasksForNodes(instanceId, nextNodes, variables);
   }
 
@@ -397,11 +379,6 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
   }
 
   // ============================== 监控聚合查询 ==============================
-
-  @Override
-  public FlowInstanceVO getByIdVO(String id) {
-    return queryService.getByIdVO(id);
-  }
 
   @Override
   public List<Map<String, Object>> selectCountGroupByStatus(String tenantId) {

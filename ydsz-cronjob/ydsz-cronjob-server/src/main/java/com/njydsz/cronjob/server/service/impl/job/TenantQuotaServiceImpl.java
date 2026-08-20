@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -13,9 +14,9 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.cronjob.infra.entity.job.TenantQuota;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.TenantQuotaRepository;
+import com.njydsz.cronjob.domain.vo.TenantQuotaVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 
@@ -64,11 +65,11 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
   @Override
-  public TenantQuota getQuota(String tenantId) {
+  public TenantQuotaVO getQuota(String tenantId) {
     if (tenantId == null || tenantId.isBlank()) {
       return null;
     }
-    return tenantQuotaRepository.selectByTenantId(tenantId);
+    return tenantQuotaRepository.findByTenantId(tenantId).orElse(null);
   }
 
   // ==================== P7-2: 任务数配额 ====================
@@ -200,13 +201,13 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
 
   /** 解析任务数上限：优先 DB 记录，其次全局默认，最后 null（unlimited）。 */
   private Integer resolveMaxJobs(String tenantId) {
-    TenantQuota quota = getQuota(tenantId);
-    if (quota != null && Boolean.FALSE.equals(isEnabled(quota))) {
+    Optional<TenantQuotaVO> quota = getQuotaOpt(tenantId);
+    if (quota.isPresent() && Boolean.FALSE.equals(isEnabled(quota.get()))) {
       // 租户级禁用配额检查
       return null;
     }
-    if (quota != null && quota.getMaxJobs() != null) {
-      return quota.getMaxJobs();
+    if (quota.isPresent() && quota.get().getMaxJobs() != null) {
+      return quota.get().getMaxJobs();
     }
     // 降级到全局默认
     return cronjobProperties.getQuota() != null
@@ -215,12 +216,12 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   }
 
   private Integer resolveMaxConcurrent(String tenantId) {
-    TenantQuota quota = getQuota(tenantId);
-    if (quota != null && Boolean.FALSE.equals(isEnabled(quota))) {
+    Optional<TenantQuotaVO> quota = getQuotaOpt(tenantId);
+    if (quota.isPresent() && Boolean.FALSE.equals(isEnabled(quota.get()))) {
       return null;
     }
-    if (quota != null && quota.getMaxConcurrent() != null) {
-      return quota.getMaxConcurrent();
+    if (quota.isPresent() && quota.get().getMaxConcurrent() != null) {
+      return quota.get().getMaxConcurrent();
     }
     return cronjobProperties.getQuota() != null
         ? cronjobProperties.getQuota().getDefaultMaxConcurrent()
@@ -228,12 +229,12 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   }
 
   private Integer resolveMaxDailyExecutions(String tenantId) {
-    TenantQuota quota = getQuota(tenantId);
-    if (quota != null && Boolean.FALSE.equals(isEnabled(quota))) {
+    Optional<TenantQuotaVO> quota = getQuotaOpt(tenantId);
+    if (quota.isPresent() && Boolean.FALSE.equals(isEnabled(quota.get()))) {
       return null;
     }
-    if (quota != null && quota.getMaxDailyExecutions() != null) {
-      return quota.getMaxDailyExecutions();
+    if (quota.isPresent() && quota.get().getMaxDailyExecutions() != null) {
+      return quota.get().getMaxDailyExecutions();
     }
     return cronjobProperties.getQuota() != null
         ? cronjobProperties.getQuota().getDefaultMaxDailyExecutions()
@@ -241,8 +242,15 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   }
 
   /** 判断租户配额记录是否启用检查。 */
-  private Boolean isEnabled(TenantQuota quota) {
+  private Boolean isEnabled(TenantQuotaVO quota) {
     return quota.getEnabled() != null && quota.getEnabled() == 1;
+  }
+
+  private Optional<TenantQuotaVO> getQuotaOpt(String tenantId) {
+    if (tenantId == null || tenantId.isBlank()) {
+      return Optional.empty();
+    }
+    return tenantQuotaRepository.findByTenantId(tenantId);
   }
 
   /**

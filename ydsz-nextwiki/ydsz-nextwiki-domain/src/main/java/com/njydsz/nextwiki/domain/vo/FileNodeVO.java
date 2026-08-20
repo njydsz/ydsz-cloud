@@ -270,4 +270,49 @@ public class FileNodeVO implements Serializable {
     sb.append('/');
     return sb.toString();
   }
+
+  // ==================== 状态变更方法（封装 setter，表达领域意图） ====================
+
+  /**
+   * 变更父节点（移动操作）。
+   *
+   * <p>封装 parentId、path、level、sort 的更新，表达"移动到目标父节点下"的领域意图。
+   *
+   * @param newParentId 新父节点 ID
+   * @param newPath 新路径
+   * @param newLevel 新层级
+   * @param newSort 新排序号
+   * @param operatorId 操作人 ID
+   */
+  public void changeParent(String newParentId, String newPath, int newLevel, int newSort, String operatorId) {
+    this.parentId = newParentId;
+    this.path = newPath;
+    this.level = newLevel;
+    this.sort = newSort;
+    this.updatedBy = operatorId;
+  }
+
+  /**
+   * 变更名称（重命名操作）。
+   *
+   * <p>封装 name、path 的更新，表达"重命名"的领域意图。
+   *
+   * @param newName 新名称
+   * @param newPath 新路径
+   * @param operatorId 操作人 ID
+   */
+  public void changeName(String newName, String newPath, String operatorId) {
+    this.name = newName;
+    this.path = newPath;
+    this.updatedBy = operatorId;
+  }
+
+  /**
+   * 更新操作人（通用）。
+   *
+   * @param operatorId 操作人 ID
+   */
+  public void markUpdatedBy(String operatorId) {
+    this.updatedBy = operatorId;
+  }
 }

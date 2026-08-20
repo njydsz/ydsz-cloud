@@ -5,12 +5,8 @@ import java.util.List;
 /**
  * 集群节点注册表（P2-16 分布式执行）
  *
- * <p>提供节点注册、注销、心跳、查询存活节点列表等能力。 实现方案包括：
- *
- * <ul>
- *   <li>{@link InMemoryNodeRegistry} - 基于内存的本地注册表（单节点/开发环境）
- *   <li>RedisNodeRegistry - 基于 Redis 的分布式注册表（生产环境，由消费方实现）
- * </ul>
+ * <p>提供节点注册、注销、心跳、查询存活节点列表等能力。
+ * 生产环境使用 Redis 实现（{@link RedisNodeRegistry}），确保跨实例节点发现与心跳管理。
  *
  * @since 1.0.0
  * @author ydsz-team

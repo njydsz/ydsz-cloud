@@ -4,6 +4,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.workflow.domain.vo.FlowEfficiencyStatsVO;
+import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
+import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO;
+import com.njydsz.workflow.domain.vo.FlowTrendVO;
+import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
+
 /**
  * 流程效率分析服务。
  *
@@ -20,9 +26,9 @@ public interface FlowEfficiencyService {
    * @param tenantId 租户 ID
    * @param startTime 开始时间（格式 yyyy-MM-dd HH:mm:ss，可空）
    * @param endTime 结束时间（格式 yyyy-MM-dd HH:mm:ss，可空）
-   * @return 统计结果 Map，包含 totalCount / avgDurationMs / proxyRate / overdueRate
+   * @return 统计结果 VO，包含 totalCount / avgDurationMs / proxyRate / overdueRate
    */
-  Map<String, Object> efficiencyStats(String tenantId, String startTime, String endTime);
+  FlowEfficiencyStatsVO efficiencyStats(String tenantId, String startTime, String endTime);
 
   /**
    * 节点瓶颈排名 — 按平均耗时降序
@@ -32,7 +38,7 @@ public interface FlowEfficiencyService {
    * @param limit 返回条数上限
    * @return 瓶颈节点列表，每行含 nodeCode / nodeName / avgDurationMs / count
    */
-  List<Map<String, Object>> bottleneckRanking(String tenantId, String flowCode, int limit);
+  List<FlowBottleneckVO> bottleneckRanking(String tenantId, String flowCode, int limit);
 
   /**
    * 审批人效率排名 — 按处理量/平均耗时
@@ -43,7 +49,7 @@ public interface FlowEfficiencyService {
    * @param limit 返回条数上限
    * @return 审批人排名列表，每行含 assigneeId / assigneeName / handleCount / avgDurationMs
    */
-  List<Map<String, Object>> approverRanking(
+  List<FlowApproverEfficiencyVO> approverRanking(
       String tenantId, String startTime, String endTime, int limit);
 
   /**
@@ -55,7 +61,7 @@ public interface FlowEfficiencyService {
    * @param endTime 结束时间（可空）
    * @return 趋势列表，每行含 timeLabel / count / avgDurationMs
    */
-  List<Map<String, Object>> approvalTrend(
+  List<FlowTrendVO> approvalTrend(
       String tenantId, String interval, String startTime, String endTime);
 
   /**
@@ -73,9 +79,9 @@ public interface FlowEfficiencyService {
    * @param limit 返回条数上限
    * @param stuckHours 卡单阈值（小时），默认 24
    * @param longRunningDays 长期运行阈值（天），默认 7
-   * @return 异常记录列表，每行含 type / 描述字段
+   * @return 异常记录列表
    */
-  List<Map<String, Object>> detectAnomalies(
+  List<FlowAnomalyVO> detectAnomalies(
       String tenantId, int limit, int stuckHours, int longRunningDays);
 
   /**
@@ -86,7 +92,7 @@ public interface FlowEfficiencyService {
    * @param stuckHours 卡单阈值（小时）
    * @return 卡单任务列表，每行含 type=STUCK / taskId / nodeCode / nodeName / stuckHours / createdAt
    */
-  List<Map<String, Object>> detectStuckTasks(String tenantId, int limit, int stuckHours);
+  List<FlowAnomalyVO> detectStuckTasks(String tenantId, int limit, int stuckHours);
 
   /**
    * 检测高驳回率节点 — 最近 100 个任务中驳回率超过 50% 的节点
@@ -95,7 +101,7 @@ public interface FlowEfficiencyService {
    * @return 高驳回率节点列表，每行含 type=HIGH_REJECTION / nodeCode / nodeName / totalCount / rejectedCount /
    *     rejectionRate
    */
-  List<Map<String, Object>> detectHighRejectionNodes(String tenantId);
+  List<FlowAnomalyVO> detectHighRejectionNodes(String tenantId);
 
   /**
    * 检测长期运行实例 — 运行时间超过阈值天数的实例

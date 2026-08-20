@@ -7,7 +7,7 @@ import com.lmax.disruptor.EventHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 
-import com.njydsz.cronjob.infra.entity.log.JobLogContent;
+import com.njydsz.cronjob.domain.vo.JobLogContentVO;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
 /**
@@ -35,7 +35,7 @@ public class DisruptorLogEventHandler implements EventHandler<DisruptorLogEvent>
   private final ObjectProvider<JobLogContentService> jobLogContentServiceProvider;
 
   /** 待写入缓冲区 */
-  private final List<JobLogContent> buffer = new ArrayList<>(BATCH_SIZE);
+  private final List<JobLogContentVO> buffer = new ArrayList<>(BATCH_SIZE);
 
   public DisruptorLogEventHandler(
       ObjectProvider<JobLogContentService> jobLogContentServiceProvider) {

@@ -16,20 +16,17 @@ import com.njydsz.literule.infra.entity.RuleDependency;
 import com.njydsz.literule.infra.entity.RuleExecutionTraceDO;
 import com.njydsz.literule.infra.entity.RulePackDO;
 import com.njydsz.literule.infra.entity.RuleTestCaseDO;
-import com.njydsz.literule.infra.entity.RuleVariableDef;
 import com.njydsz.literule.infra.entity.RuleVersionHistory;
 import com.njydsz.literule.domain.vo.RuleDependencyVO;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.RuleTestCaseVO;
-import com.njydsz.literule.domain.vo.RuleVariableDefVO;
-import com.njydsz.literule.domain.vo.RuleVersionHistoryVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 
 /**
  * 规则支撑转换器（P2-2 拆分）
  *
- * <p>承载规则依赖、执行轨迹、规则包、测试用例、变量定义、版本历史等支撑实体的 Entity ↔ VO 以及 DTO → Entity 转换。
+ * <p>承载规则依赖、执行轨迹、规则包、测试用例、版本历史等支撑实体的 Entity ↔ VO 以及 DTO → Entity 转换。
  *
  * @author ydsz-team
  * @since 2.1.0
@@ -58,16 +55,6 @@ public interface RuleSupportConverter {
   RuleTestCaseVO entityToVO(RuleTestCaseDO entity);
 
   List<RuleTestCaseVO> ruleTestCaseListToVO(List<RuleTestCaseDO> entities);
-
-  // ===== RuleVariableDef =====
-  RuleVariableDefVO entityToVO(RuleVariableDef entity);
-
-  List<RuleVariableDefVO> ruleVariableDefListToVO(List<RuleVariableDef> entities);
-
-  // ===== RuleVersionHistory =====
-  RuleVersionHistoryVO entityToVO(RuleVersionHistory entity);
-
-  List<RuleVersionHistoryVO> ruleVersionHistoryListToVO(List<RuleVersionHistory> entities);
 
   // ===== RuleVersionHistory → RuleVersionVO =====
   @Mapping(target = "id", source = "id")

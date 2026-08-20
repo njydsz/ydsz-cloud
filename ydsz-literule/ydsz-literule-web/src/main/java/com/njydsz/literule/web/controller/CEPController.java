@@ -319,21 +319,12 @@ public class CEPController {
   private CEPPatternVO toPatternVO(CEPPattern p) {
     CEPPatternVO vo = new CEPPatternVO();
     vo.setId(p.getId());
-    vo.setType(p.getType() != null ? p.getType().name() : null);
     vo.setRuleCode(p.getRuleCode());
     vo.setName(p.getName());
     vo.setWindow(p.getWindow());
-    vo.setSlide(p.getSlide());
-    vo.setWindowType(p.getWindowType() != null ? p.getWindowType().name() : null);
-    vo.setSessionGap(p.getSessionGap());
     vo.setThreshold(p.getThreshold());
     vo.setEventType(p.getEventType());
     vo.setFilter(p.getFilter());
-    vo.setAggregateFunction(
-        p.getAggregateFunction() != null ? p.getAggregateFunction().name() : null);
-    vo.setAggregateField(p.getAggregateField());
-    vo.setSequence(
-        p.getSequence() == null ? null : p.getSequence().stream().map(e -> (Object) e).toList());
     vo.setDescription(p.getDescription());
     return vo;
   }

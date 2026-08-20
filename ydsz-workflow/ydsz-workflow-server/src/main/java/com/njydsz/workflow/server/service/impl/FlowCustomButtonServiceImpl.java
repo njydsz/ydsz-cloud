@@ -20,6 +20,7 @@ import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.service.FlowCustomButtonService;
@@ -118,7 +119,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
 
   @Override
   public List<Map<String, Object>> getCustomButtons(String definitionId, String nodeCode) {
-    FlowNodeDO node = definitionCacheService.getNodeByCode(definitionId, nodeCode);
+    FlowNodeVO node = definitionCacheService.getNodeByCode(definitionId, nodeCode);
     if (node == null || !StringUtils.hasText(node.getExt())) {
       return List.of();
     }

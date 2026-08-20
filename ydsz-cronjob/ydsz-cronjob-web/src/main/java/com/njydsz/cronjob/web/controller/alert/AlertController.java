@@ -28,7 +28,6 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
 import com.njydsz.cronjob.domain.dto.post.AlertRulePostDTO;
 import com.njydsz.cronjob.domain.dto.put.AlertRulePutDTO;
@@ -151,7 +150,7 @@ public class AlertController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
   @GetMapping("/rule/{id}")
   public YdszResponse<JobAlertRuleVO> getRuleById(@PathVariable String id) {
-    return YdszResponse.success(CronjobConverter.INSTANT.entityToVO(alertService.getRuleById(id)));
+    return YdszResponse.success(alertService.getRuleById(id));
   }
 
   /**
@@ -165,8 +164,7 @@ public class AlertController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
   @GetMapping("/rules")
   public YdszResponse<List<JobAlertRuleVO>> listRules() {
-    return YdszResponse.success(
-        CronjobConverter.INSTANT.jobAlertRuleListToVO(alertService.listRules()));
+    return YdszResponse.success(alertService.listRules());
   }
 
   /**

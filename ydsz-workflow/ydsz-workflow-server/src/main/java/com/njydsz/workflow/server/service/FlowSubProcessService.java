@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 
 /**
@@ -26,7 +26,7 @@ public interface FlowSubProcessService {
    * @return 子流程实例 ID
    */
   String startSubProcess(
-      FlowInstanceDO parentInstance, FlowNodeDO callActivityNode, Map<String, Object> variables);
+      FlowInstanceVO parentInstance, FlowNodeDO callActivityNode, Map<String, Object> variables);
 
   /**
    * 子流程完成事件回调（由 ProjectInitiationFlowListener 调用）
@@ -50,11 +50,11 @@ public interface FlowSubProcessService {
    * @param parentInstanceId 父流程实例 ID
    * @return 子流程实例列表
    */
-  List<FlowInstanceDO> listChildren(String parentInstanceId);
+  List<FlowInstanceVO> listChildren(String parentInstanceId);
 
   /** DTO 构造工具：把子流程启动所需参数封装 */
   FlowStartProcessDTO buildSubProcessStartDTO(
-      FlowInstanceDO parentInstance, String subFlowCode, Map<String, Object> variables);
+      FlowInstanceVO parentInstance, String subFlowCode, Map<String, Object> variables);
 
   /**
    * 获取子流程完整上下文（父流程变量 + 子流程自身变量）

@@ -59,11 +59,6 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public int countChildren(String parentId) {
-    return fileNodeMapper.countChildren(parentId);
-  }
-
-  @Override
   public PageResponse<List<FileNodeVO>> findPageChildren(FileNodeQuery query) {
     Page<FileNodeDO> pageParam = new Page<>(query.getPage(), query.getPageSize());
     IPage<FileNodeDO> result =
@@ -202,12 +197,6 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public List<FileNodeVO> searchByName(String keyword, String createdBy) {
-    return converter.fileNodeListToVO(
-        fileNodeMapper.searchByName(keyword, createdBy, TenantContextHolder.getTenantId()));
-  }
-
-  @Override
   public int countByUser(String userId) {
     return fileNodeMapper.countByUser(userId);
   }
@@ -342,5 +331,15 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   @Override
   public List<FileNodeVO> findAll() {
     return converter.fileNodeListToVO(fileNodeMapper.selectList(null));
+  }
+
+  @Override
+  public PageResponse<List<FileNodeVO>> findAllWithPage(int offset, int limit) {
+    Page<FileNodeDO> pageParam = new Page<>(offset / limit + 1, limit);
+    IPage<FileNodeDO> result = fileNodeMapper.selectAllWithPage(pageParam);
+    List<FileNodeVO> vos = converter.fileNodeListToVO(result.getRecords());
+    Page<FileNodeVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
+    voPage.setRecords(vos);
+    return PageResponses.success(voPage);
   }
 }

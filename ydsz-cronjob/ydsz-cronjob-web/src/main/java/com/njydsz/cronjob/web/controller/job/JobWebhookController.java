@@ -30,7 +30,6 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.cronjob.domain.constants.CronjobConstants;
 import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
-import com.njydsz.cronjob.infra.entity.job.JobWebhook;
 import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.JobWebhookRepository;
@@ -87,18 +86,15 @@ public class JobWebhookController {
   @RateLimit(resource = "cronjob.jobwebhook.create", threshold = 50)
   @PostMapping
   public YdszResponse<String> create(@RequestBody JobWebhookPostDTO dto) {
-    // 1. DTO → Entity（MapStruct 转换）
-    JobWebhook entity = CronjobConverter.INSTANT.postDtoToEntity(dto);
-    entity.setStatus(CronjobConstants.WEBHOOK_STATUS_ACTIVE);
-    entity.setCreatedAt(LocalDateTime.now());
-    entity.setUpdatedAt(LocalDateTime.now());
-    entity.setDeleted(0);
-    if (entity.getHttpMethod() == null || entity.getHttpMethod().isBlank()) {
-      entity.setHttpMethod(CronjobConstants.HTTP_METHOD_POST);
+    // 1. DTO → VO（经 Entity 转换，Repository 层接受 VO）
+    JobWebhookVO vo = CronjobConverter.INSTANT.entityToVO(CronjobConverter.INSTANT.postDtoToEntity(dto));
+    vo.setWebhookStatus(CronjobConstants.WEBHOOK_STATUS_ACTIVE);
+    vo.setCreatedAt(LocalDateTime.now());
+    vo.setUpdatedAt(LocalDateTime.now());
+    if (vo.getHttpMethod() == null || vo.getHttpMethod().isBlank()) {
+      vo.setHttpMethod(CronjobConstants.HTTP_METHOD_POST);
     }
-    // 2. Entity → VO（Repository 层接受 VO）
-    JobWebhookVO vo = CronjobConverter.INSTANT.entityToVO(entity);
-    // 3. 通过 Repository 新增
+    // 2. 通过 Repository 新增
     String newId = webhookRepository.create(vo);
     return YdszResponse.success(newId);
   }
@@ -122,10 +118,10 @@ public class JobWebhookController {
   @RateLimit(resource = "cronjob.jobwebhook.update", threshold = 50)
   @PutMapping
   public YdszResponse<Void> update(@RequestBody JobWebhookPutDTO dto) {
-    // DTO → Entity → VO
-    JobWebhook entity = CronjobConverter.INSTANT.putDtoToEntity(dto);
-    entity.setUpdatedAt(LocalDateTime.now());
-    webhookRepository.update(CronjobConverter.INSTANT.entityToVO(entity));
+    // DTO → VO（经 Entity 转换）
+    JobWebhookVO vo = CronjobConverter.INSTANT.entityToVO(CronjobConverter.INSTANT.putDtoToEntity(dto));
+    vo.setUpdatedAt(LocalDateTime.now());
+    webhookRepository.update(vo);
     return YdszResponse.success();
   }
 
@@ -217,7 +213,7 @@ public class JobWebhookController {
       return YdszResponse.error(CronjobExceptionCode.WEBHOOK_NOT_FOUND, "WebHook not found");
     }
     // P0-F3: 通过 WebhookEventDispatcher 真实发送测试事件（含重试）
-    JobWebhook webhook = CronjobConverter.INSTANT.voToEntity(webhookVO);
+    var webhook = CronjobConverter.INSTANT.voToEntity(webhookVO);
     boolean sent = webhookEventDispatcher.sendTest(webhook);
     if (!sent) {
       return YdszResponse.error(

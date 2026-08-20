@@ -7,15 +7,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
-import com.njydsz.cronjob.infra.entity.job.JobAlertRule;
 import com.njydsz.cronjob.domain.repository.JobAlertLogRepository;
 import com.njydsz.cronjob.domain.repository.JobAlertRuleRepository;
 import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
+import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.server.core.alert.AlertTrigger;
 import com.njydsz.cronjob.server.core.alert.AlertType;
 import com.njydsz.cronjob.server.service.alert.AlertService;
@@ -50,47 +49,49 @@ public class AlertServiceImpl implements AlertService {
   @Transactional(rollbackFor = Exception.class)
   public String createRule(AlertRuleSaveDTO dto) {
     validateRuleConstraints(dto);
-    JobAlertRule rule = new JobAlertRule();
-    applyDtoToEntity(dto, rule);
-    jobAlertRuleRepository.insert(rule);
+    String ruleId = jobAlertRuleRepository.insert(dto);
     // P1-P5: 规则变更后失效本地缓存，确保新规则下次告警触发时加载
-    alertTrigger.invalidateAlertRuleCache(rule.getJobId());
+    alertTrigger.invalidateAlertRuleCache(dto.getJobId());
     log.info(
         "[Alert] 创建告警规则: ruleId={} ruleName={} alertType={}",
-        rule.getId(),
-        rule.getRuleName(),
-        rule.getAlertType());
-    return rule.getId();
+        ruleId,
+        dto.getRuleName(),
+        dto.getAlertType());
+    return ruleId;
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void updateRule(String id, AlertRuleSaveDTO dto) {
-    JobAlertRule exists = jobAlertRuleRepository.selectById(id);
-    if (exists == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.NOT_FOUND)
-          .message("error.cronjob.msg_alert_not_found")
-          .build();
-    }
+    JobAlertRuleVO exists =
+        jobAlertRuleRepository
+            .findById(id)
+            .orElseThrow(
+                () ->
+                    SysException.builder()
+                        .resultCode(YdszResultCode.NOT_FOUND)
+                        .message("error.cronjob.msg_alert_not_found")
+                        .build());
     validateRuleConstraints(dto);
-    applyDtoToEntity(dto, exists);
-    jobAlertRuleRepository.updateById(exists);
+    dto.setId(id);
+    jobAlertRuleRepository.update(dto);
     // P1-P5: 规则变更后失效本地缓存
     alertTrigger.invalidateAlertRuleCache(exists.getJobId());
-    log.info("[Alert] 更新告警规则: ruleId={} ruleName={}", id, exists.getRuleName());
+    log.info("[Alert] 更新告警规则: ruleId={} ruleName={}", id, dto.getRuleName());
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void deleteRule(String id) {
-    JobAlertRule exists = jobAlertRuleRepository.selectById(id);
-    if (exists == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.NOT_FOUND)
-          .message("error.cronjob.msg_alert_not_found")
-          .build();
-    }
+    JobAlertRuleVO exists =
+        jobAlertRuleRepository
+            .findById(id)
+            .orElseThrow(
+                () ->
+                    SysException.builder()
+                        .resultCode(YdszResultCode.NOT_FOUND)
+                        .message("error.cronjob.msg_alert_not_found")
+                        .build());
     String jobId = exists.getJobId();
     jobAlertRuleRepository.deleteById(id);
     // P1-P5: 规则变更后失效本地缓存
@@ -99,20 +100,20 @@ public class AlertServiceImpl implements AlertService {
   }
 
   @Override
-  public JobAlertRule getRuleById(String id) {
-    JobAlertRule rule = jobAlertRuleRepository.selectById(id);
-    if (rule == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.NOT_FOUND)
-          .message("error.cronjob.msg_alert_not_found")
-          .build();
-    }
-    return rule;
+  public JobAlertRuleVO getRuleById(String id) {
+    return jobAlertRuleRepository
+        .findById(id)
+        .orElseThrow(
+            () ->
+                SysException.builder()
+                    .resultCode(YdszResultCode.NOT_FOUND)
+                    .message("error.cronjob.msg_alert_not_found")
+                    .build());
   }
 
   @Override
-  public List<JobAlertRule> listRules() {
-    return jobAlertRuleRepository.selectList();
+  public List<JobAlertRuleVO> listRules() {
+    return jobAlertRuleRepository.findAllEnabled();
   }
 
   @Override
@@ -124,15 +125,29 @@ public class AlertServiceImpl implements AlertService {
           .message("error.cronjob.msg_alert_invalid_enabled")
           .build();
     }
-    JobAlertRule exists = jobAlertRuleRepository.selectById(id);
-    if (exists == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.NOT_FOUND)
-          .message("error.cronjob.msg_alert_not_found")
-          .build();
-    }
-    exists.setEnabled(enabled);
-    jobAlertRuleRepository.updateById(exists);
+    JobAlertRuleVO exists =
+        jobAlertRuleRepository
+            .findById(id)
+            .orElseThrow(
+                () ->
+                    SysException.builder()
+                        .resultCode(YdszResultCode.NOT_FOUND)
+                        .message("error.cronjob.msg_alert_not_found")
+                        .build());
+    AlertRuleSaveDTO dto = new AlertRuleSaveDTO();
+    dto.setId(id);
+    dto.setRuleName(exists.getRuleName());
+    dto.setJobId(exists.getJobId());
+    dto.setJobKey(exists.getJobKey());
+    dto.setAlertType(exists.getAlertType());
+    dto.setAlertLevel(exists.getAlertLevel());
+    dto.setThreshold(exists.getThreshold() != null ? exists.getThreshold().doubleValue() : null);
+    dto.setTimeWindowMinutes(exists.getTimeWindowMinutes());
+    dto.setChannels(exists.getChannels());
+    dto.setReceivers(exists.getReceivers());
+    dto.setCooldownMinutes(exists.getCooldownMinutes());
+    dto.setEnabled(enabled);
+    jobAlertRuleRepository.update(dto);
     // P1-P5: 规则变更后失效本地缓存
     alertTrigger.invalidateAlertRuleCache(exists.getJobId());
     log.info("[Alert] 切换规则启用状态: ruleId={} enabled={}", id, enabled);
@@ -179,20 +194,5 @@ public class AlertServiceImpl implements AlertService {
           .params(dto.getAlertType())
           .build();
     }
-  }
-
-  /** 将 DTO 字段应用到实体（创建/更新共用）。 */
-  private void applyDtoToEntity(AlertRuleSaveDTO dto, JobAlertRule rule) {
-    rule.setRuleName(dto.getRuleName());
-    rule.setJobId(StringUtils.hasText(dto.getJobId()) ? dto.getJobId() : null);
-    rule.setJobKey(StringUtils.hasText(dto.getJobKey()) ? dto.getJobKey() : null);
-    rule.setAlertType(dto.getAlertType());
-    rule.setAlertLevel(StringUtils.hasText(dto.getAlertLevel()) ? dto.getAlertLevel() : "WARN");
-    rule.setThreshold(dto.getThreshold());
-    rule.setTimeWindowMinutes(dto.getTimeWindowMinutes());
-    rule.setChannels(dto.getChannels());
-    rule.setReceivers(dto.getReceivers());
-    rule.setCooldownMinutes(dto.getCooldownMinutes() != null ? dto.getCooldownMinutes() : 10);
-    rule.setEnabled(dto.getEnabled());
   }
 }

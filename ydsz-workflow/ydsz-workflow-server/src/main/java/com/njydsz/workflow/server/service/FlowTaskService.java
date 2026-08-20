@@ -74,7 +74,7 @@ public interface FlowTaskService {
    * @param taskId 任务 ID
    * @return 任务 DO，不存在返回 null
    */
-  FlowRunTaskDO getById(String taskId);
+  FlowRunTaskVO getById(String taskId);
 
   /**
    * 签收任务（多人任务转单人办理）
@@ -145,7 +145,7 @@ public interface FlowTaskService {
    * @param instanceId 流程实例 ID
    * @return 当前所有 PENDING 状态的任务列表（含 CLAIMED）
    */
-  List<FlowRunTaskDO> listPendingByInstance(String instanceId);
+  List<FlowRunTaskVO> listPendingByInstance(String instanceId);
 
   /**
    * 查用户的待办（不分页）
@@ -154,7 +154,7 @@ public interface FlowTaskService {
    * @param tenantId 租户 ID
    * @return 用户的待办任务列表
    */
-  List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, String tenantId);
+  List<FlowRunTaskVO> listTodoByAssignee(String assigneeId, String tenantId);
 
   /**
    * P2-17: 查用户的待办（真分页：SQL LIMIT/OFFSET）
@@ -165,7 +165,7 @@ public interface FlowTaskService {
    * @param size 每页大小
    * @return 分页结果
    */
-  PageResponse<List<FlowRunTaskDO>> listTodoByAssigneePage(
+  PageResponse<List<FlowRunTaskVO>> listTodoByAssigneePage(
       String assigneeId, String tenantId, int page, int size);
 
   /**
@@ -175,7 +175,7 @@ public interface FlowTaskService {
    * @param tenantId 租户 ID
    * @return 用户的已办任务列表（按完成时间倒序）
    */
-  List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, String tenantId);
+  List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId);
 
   /**
    * P2-17: 查用户的已办（真分页：SQL LIMIT/OFFSET）
@@ -186,7 +186,7 @@ public interface FlowTaskService {
    * @param size 每页大小
    * @return 分页结果
    */
-  PageResponse<List<FlowRunTaskDO>> listDoneByAssigneePage(
+  PageResponse<List<FlowRunTaskVO>> listDoneByAssigneePage(
       String assigneeId, String tenantId, int page, int size);
 
   /**
@@ -197,7 +197,7 @@ public interface FlowTaskService {
    * @param deptIds 用户所属部门 ID（字符串形式，可空）
    * @param tenantId 租户 ID（可空，默认 1L）
    */
-  List<FlowRunTaskDO> listTodoByUser(
+  List<FlowRunTaskVO> listTodoByUser(
       String userId, List<String> roleCodes, List<String> deptIds, String tenantId);
 
   /**
@@ -361,7 +361,7 @@ public interface FlowTaskService {
    * @param limit 返回条数上限
    * @return 超期任务列表
    */
-  List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId, int limit);
+  List<FlowRunTaskVO> listOverdue(String assigneeId, String tenantId, int limit);
 
   /**
    * P2-32: 统计超期任务数量
@@ -393,7 +393,7 @@ public interface FlowTaskService {
    * @param size 每页大小
    * @return 分页结果
    */
-  PageResponse<List<FlowRunTaskDO>> listDoneByAssigneePageMulti(
+  PageResponse<List<FlowRunTaskVO>> listDoneByAssigneePageMulti(
       String assigneeId,
       String businessType,
       String flowCode,

@@ -22,12 +22,12 @@ import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.server.config.FlowProperties;
-import com.njydsz.workflow.server.engine.FlowAdvancer;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
@@ -91,7 +91,7 @@ import com.njydsz.workflow.server.service.FlowSubProcessService;
  * @since 1.0.0
  * @see FlowSubProcessService 接口定义
  * @see WorkflowFacade 工作流门面
- * @see FlowAdvancer 流程推进引擎
+ * @see com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer 流程推进引擎
  * @see FlowSlaServiceImpl SLA 监控
  * @see com.njydsz.workflow.domain.enums.FlowNodeType#CALL_ACTIVITY CallActivity 节点类型
  */
@@ -124,7 +124,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   private final FlowInstanceService instanceService;
 
   /** 流程推进引擎，子流程完成后推进父流程 */
-  private final FlowAdvancer advancer;
+  private final DefaultFlowAdvancer advancer;
 
   /** 工作流门面，启动子流程实例的统一入口 */
   private final WorkflowFacade workflowFacade;
@@ -138,7 +138,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String startSubProcess(
-      FlowInstanceDO parentInstance, FlowNodeDO callActivityNode, Map<String, Object> variables) {
+      FlowInstanceVO parentInstance, FlowNodeDO callActivityNode, Map<String, Object> variables) {
     if (parentInstance == null || callActivityNode == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -221,7 +221,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (childInstanceId == null) {
       return;
     }
-    FlowInstanceDO child = instanceRepository.findById(childInstanceId).map(converter::entityToDO).orElse(null);
+    FlowInstanceVO child = instanceRepository.findById(childInstanceId).orElse(null);
     if (child == null) {
       log.warn("[SubProcess] 子实例不存在: id={}", childInstanceId);
       return;
@@ -232,7 +232,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
       // 非子流程场景
       return;
     }
-    FlowInstanceDO parent = instanceRepository.findById(parentId).map(converter::entityToDO).orElse(null);
+    FlowInstanceVO parent = instanceRepository.findById(parentId).orElse(null);
     if (parent == null) {
       log.warn("[SubProcess] 父实例不存在: id={}", parentId);
       return;
@@ -290,7 +290,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (childInstanceId == null) {
       return;
     }
-    FlowInstanceDO child = instanceRepository.findById(childInstanceId).map(converter::entityToDO).orElse(null);
+    FlowInstanceVO child = instanceRepository.findById(childInstanceId).orElse(null);
     if (child == null) {
       return;
     }
@@ -299,7 +299,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (parentId == null || parentNodeCode == null) {
       return;
     }
-    FlowInstanceDO parent = instanceRepository.findById(parentId).map(converter::entityToDO).orElse(null);
+    FlowInstanceVO parent = instanceRepository.findById(parentId).orElse(null);
     if (parent == null) {
       return;
     }
@@ -329,21 +329,22 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<FlowInstanceDO> listChildren(String parentInstanceId) {
+  public List<FlowInstanceVO> listChildren(String parentInstanceId) {
     if (parentInstanceId == null) {
       return List.of();
     }
     // 保留 Mapper：复杂 QueryWrapper 查询（含 parent_instance_id + deleted + orderBy），Repository 暂无等价方法
-    return instanceMapper.selectList(
+    List<FlowInstanceDO> doList = instanceMapper.selectList(
         new QueryWrapper<FlowInstanceDO>()
             .eq("parent_instance_id", parentInstanceId)
             .eq("deleted", 0)
             .orderByDesc("start_at"));
+    return WorkflowConverter.INSTANT.flowInstanceListToVO(doList);
   }
 
   @Override
   public FlowStartProcessDTO buildSubProcessStartDTO(
-      FlowInstanceDO parentInstance, String subFlowCode, Map<String, Object> variables) {
+      FlowInstanceVO parentInstance, String subFlowCode, Map<String, Object> variables) {
     FlowStartProcessDTO dto = new FlowStartProcessDTO();
     dto.setFlowCode(subFlowCode);
     dto.setTitle(
@@ -369,7 +370,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (childInstanceId == null) {
       return new HashMap<>();
     }
-    FlowInstanceDO child = instanceRepository.findById(childInstanceId).map(converter::entityToDO).orElse(null);
+    FlowInstanceVO child = instanceRepository.findById(childInstanceId).orElse(null);
     if (child == null) {
       log.warn("[SubProcess] getSubProcessContext 子实例不存在: id={}", childInstanceId);
       return new HashMap<>();
@@ -404,8 +405,8 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (parentInstanceId == null) {
       return tree;
     }
-    List<FlowInstanceDO> children = listChildren(parentInstanceId);
-    for (FlowInstanceDO child : children) {
+    List<FlowInstanceVO> children = listChildren(parentInstanceId);
+    for (FlowInstanceVO child : children) {
       Map<String, Object> node = new LinkedHashMap<>();
       node.put("instanceId", child.getId());
       node.put("instanceName", child.getTitle());
@@ -478,7 +479,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     // 防止无限循环：上限 = 配置最大深度 + 10 安全余量
     int maxIterations = flowProperties.getSubProcess().getMaxNestingDepth() + 10;
     while (currentId != null && depth < maxIterations) {
-      FlowInstanceDO instance = instanceRepository.findById(currentId).map(converter::entityToDO).orElse(null);
+      FlowInstanceVO instance = instanceRepository.findById(currentId).orElse(null);
       if (instance == null) {
         break;
       }

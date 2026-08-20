@@ -22,7 +22,7 @@ import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 import java.util.stream.Collectors;
@@ -137,7 +137,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     }
 
     // 1. 查流程实例
-    FlowInstanceDO instance = instanceService.getByBusiness(businessType, businessId);
+    FlowInstanceVO instance = instanceService.getByBusiness(businessType, businessId);
     if (instance == null) {
       // 未发起流程，返回空面板（前端可点击"发起审批"按钮）
       return EmbeddedApprovalViewDTO.builder()
@@ -217,7 +217,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
           .build();
     }
     String action = dto.getAction() == null ? "" : dto.getAction().toUpperCase();
-    FlowInstanceDO instance =
+    FlowInstanceVO instance =
         instanceService.getByBusiness(dto.getBusinessType(), dto.getBusinessId());
     if (instance == null) {
       throw SysException.builder()
@@ -312,7 +312,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
   // ============ 私有方法 ============
 
   /** 计算当前用户在流程中的角色 */
-  private String computeMyRole(FlowInstanceDO instance, List<FlowRunTaskDO> pending, String userId) {
+  private String computeMyRole(FlowInstanceVO instance, List<FlowRunTaskDO> pending, String userId) {
     if (userId == null) {
       return ROLE_OBSERVER;
     }
@@ -331,7 +331,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
 
   /** 计算当前用户可执行的操作 */
   private List<String> computeActions(
-      FlowInstanceDO instance, List<FlowRunTaskDO> pending, String userId) {
+      FlowInstanceVO instance, List<FlowRunTaskDO> pending, String userId) {
     List<String> actions = new ArrayList<>();
     if (userId == null) {
       return actions;
@@ -385,7 +385,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
    *   <li>【P0-4 新增】无已完成的历史任务 — 如果有审批人已处理过任务，说明流程已推进到下游，不可撤回
    * </ol>
    */
-  private boolean canRecall(FlowInstanceDO instance, List<FlowRunTaskDO> pending, String userId) {
+  private boolean canRecall(FlowInstanceVO instance, List<FlowRunTaskDO> pending, String userId) {
     if (userId == null) {
       return false;
     }
@@ -517,7 +517,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
    * <p>嵌入式场景下流程图较大（包含 definition/nodes/skips），由前端按需通过 GET /workflow/engine/instance/{id}/diagram
    * 单独拉取，本接口不返回以保持轻量。 仅返回最简的节点信息用于高亮当前节点。
    */
-  private Map<String, Object> loadDiagram(FlowInstanceDO instance) {
+  private Map<String, Object> loadDiagram(FlowInstanceVO instance) {
     Map<String, Object> light = new LinkedHashMap<>();
     light.put("currentNodeCode", instance.getCurrentNodeCode());
     light.put("currentNodeName", instance.getCurrentNodeName());

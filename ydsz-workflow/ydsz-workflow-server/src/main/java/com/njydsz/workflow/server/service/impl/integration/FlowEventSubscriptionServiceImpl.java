@@ -23,13 +23,13 @@ import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowEventSubscriptionMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
-import com.njydsz.workflow.server.engine.FlowAdvancer;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 
@@ -57,7 +57,7 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
  *   <li>匹配 WAITING 订阅 → 标记 COMPLETED
  *   <li>边界事件：取消关联的 userTask（{@code boundaryTaskId}）
  *   <li>合并 payload 到流程变量（{@code flow_variables}）
- *   <li>调用 {@link FlowAdvancer#advance} 从事件捕获节点推进到下游
+   *<li>调用 {@link com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer#advance} 从事件捕获节点推进到下游
  *   <li>调用 {@link FlowInstanceService#generateTasksForNodes} 创建下游任务
  * </ol>
  *
@@ -93,7 +93,7 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
  * @since 1.0.0
  * @see FlowEventSubscriptionService 接口定义
  * @see com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO 事件订阅实体
- * @see FlowAdvancer 流程推进引擎
+ * @see com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer 流程推进引擎
  * @see FlowInstanceService 流程实例服务
  */
 @Slf4j
@@ -123,7 +123,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
   private final FlowRunTaskRepository taskRepository;
 
   /** 流程推进引擎，事件触发后推进流程 */
-  private final FlowAdvancer advancer;
+  private final DefaultFlowAdvancer advancer;
 
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -135,7 +135,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
           .message("instanceId/node 不能为空")
           .build();
     }
-    FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
+    FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -322,7 +322,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     }
 
     // 3. 推进流程
-    FlowInstanceDO instance = instanceRepository.findById(sub.getInstanceId()).map(converter::entityToDO).orElse(null);
+    FlowInstanceVO instance = instanceRepository.findById(sub.getInstanceId()).orElse(null);
     if (instance == null) {
       log.warn("[Flow] 订阅触发时实例不存在: subId={} instanceId={}", sub.getId(), sub.getInstanceId());
       return;

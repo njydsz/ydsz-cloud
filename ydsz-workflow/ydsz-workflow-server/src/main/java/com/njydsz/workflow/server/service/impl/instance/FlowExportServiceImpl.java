@@ -19,7 +19,7 @@ import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.server.service.FlowExportService;
 import java.util.stream.Collectors;
 
@@ -82,7 +82,7 @@ import java.util.stream.Collectors;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowExportService 接口定义
- * @see com.njydsz.workflow.infra.entity.FlowInstanceDO 流程实例实体
+ * @see com.njydsz.workflow.domain.vo.FlowInstanceVO 流程实例视图对象
  * @see com.njydsz.workflow.infra.entity.FlowHisTaskDO 历史任务实体
  */
 @Slf4j
@@ -98,7 +98,7 @@ public class FlowExportServiceImpl implements FlowExportService {
 
   @Override
   public String exportHtml(String instanceId, String userId, String userName) {
-    FlowInstanceDO instance = loadInstance(instanceId);
+    FlowInstanceVO instance = loadInstance(instanceId);
     List<FlowHisTaskDO> history = loadHistory(instanceId);
     Map<String, Object> formData = parseVariables(instance.getVariable());
     String watermark = buildWatermark(userName != null ? userName : userId);
@@ -220,8 +220,8 @@ public class FlowExportServiceImpl implements FlowExportService {
 
   // ============================== 辅助方法 ==============================
 
-  private FlowInstanceDO loadInstance(String instanceId) {
-    FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
+  private FlowInstanceVO loadInstance(String instanceId) {
+    FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)

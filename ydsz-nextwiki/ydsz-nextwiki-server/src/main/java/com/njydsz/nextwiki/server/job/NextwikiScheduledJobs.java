@@ -6,7 +6,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
@@ -14,6 +13,7 @@ import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
 import com.njydsz.nextwiki.server.service.TrashDomainService;
 import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
 import com.njydsz.nextwiki.domain.vo.TrashItemVO;
+import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
 import com.njydsz.nextwiki.server.service.SearchApplicationService;
 
 /**
@@ -32,6 +32,7 @@ public class NextwikiScheduledJobs {
   private final TrashDomainService trashDomainService;
   private final TrashItemRepository trashItemRepository;
   private final SearchApplicationService searchApplicationService;
+  private final NextwikiConverter nextwikiConverter;
 
   /** 每天凌晨 2 点清理过期回收站条目 */
   @Scheduled(cron = "0 0 2 * * ?")
@@ -39,20 +40,7 @@ public class NextwikiScheduledJobs {
   public void cleanupExpiredTrash() {
     log.info("[NextwikiScheduledJobs] 开始清理过期回收站条目");
     List<TrashItemVO> expiredVOs = trashItemRepository.findExpiredItems(100);
-    List<TrashItemDTO> expiredDTOs = expiredVOs.stream().map(vo -> {
-      TrashItemDTO dto = new TrashItemDTO();
-      dto.setId(vo.getId());
-      dto.setFileNodeId(vo.getFileNodeId());
-      dto.setOriginalName(vo.getOriginalName());
-      dto.setOriginalPath(vo.getOriginalPath());
-      dto.setOriginalParentId(vo.getOriginalParentId());
-      dto.setNodeType(vo.getNodeType());
-      dto.setSize(vo.getSize());
-      dto.setDeletedTime(vo.getDeletedTime());
-      dto.setPurgeTime(vo.getPurgeTime());
-      dto.setStatus(vo.getStatus());
-      return dto;
-    }).collect(Collectors.toList());
+    List<TrashItemDTO> expiredDTOs = nextwikiConverter.trashItemListToDTO(expiredVOs);
     int cleaned = trashDomainService.cleanupExpiredItems(expiredDTOs, SystemConstants.SYSTEM_USER_ID);
     log.info("[NextwikiScheduledJobs] 清理完成: count={}", cleaned);
   }

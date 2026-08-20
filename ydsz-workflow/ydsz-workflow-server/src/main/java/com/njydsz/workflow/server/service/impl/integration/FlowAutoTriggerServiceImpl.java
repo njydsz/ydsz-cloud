@@ -18,11 +18,11 @@ import com.njydsz.workflow.domain.repository.FlowAutoTriggerRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowAutoTriggerDO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.mapper.FlowAutoTriggerMapper;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
-import com.njydsz.workflow.server.service.FlowRoutingService;
+import com.njydsz.workflow.server.service.impl.instance.DefaultFlowRoutingService;
 
 /**
  * 流程自动触发服务实现
@@ -96,7 +96,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
   private final WorkflowConverter converter;
 
   /** 智能路由服务，解析触发条件表达式 */
-  private final FlowRoutingService routingService;
+  private final DefaultFlowRoutingService routingService;
 
   /** 工作流门面，自动发起后续流程实例 */
   private final WorkflowFacade workflowFacade;
@@ -114,7 +114,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     }
 
     // 1. 获取已完成的实例
-    FlowInstanceDO instance = instanceService.getById(instanceId);
+    FlowInstanceVO instance = instanceService.getById(instanceId);
     if (instance == null) {
       log.warn("[FlowAutoTriggerDO] 实例不存在，跳过自动触发: instanceId={}", instanceId);
       return;
@@ -167,7 +167,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
    * <p>通过卫语句（Guard Clause）提前返回不满足条件的触发， 成功路径保持线性流程 → 评估条件 → 启动目标流程 → 写审计日志。
    */
   private void processTrigger(
-      FlowAutoTriggerDO trigger, FlowInstanceDO instance, Map<String, Object> variables) {
+      FlowAutoTriggerDO trigger, FlowInstanceVO instance, Map<String, Object> variables) {
     // Guard: 条件表达式非空时评估，不满足则跳过
     if (StringUtils.hasText(trigger.getConditionExpression())
         && !evaluateCondition(trigger, variables)) {
@@ -219,7 +219,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
   /** 构建目标流程的启动 DTO。 */
   private FlowStartProcessDTO buildStartProcessDTO(
-      FlowAutoTriggerDO trigger, FlowInstanceDO instance, Map<String, Object> variables) {
+      FlowAutoTriggerDO trigger, FlowInstanceVO instance, Map<String, Object> variables) {
     FlowStartProcessDTO startDto = new FlowStartProcessDTO();
     startDto.setFlowCode(trigger.getTargetFlowCode());
     startDto.setBusinessType(instance.getBusinessType());
@@ -235,7 +235,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
   }
 
   /** 构建自动触发流程的标题 */
-  private String buildTriggerTitle(FlowAutoTriggerDO trigger, FlowInstanceDO instance) {
+  private String buildTriggerTitle(FlowAutoTriggerDO trigger, FlowInstanceVO instance) {
     String base =
         StringUtils.hasText(trigger.getDescription())
             ? trigger.getDescription()
@@ -245,7 +245,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
   /** 写入审计日志 */
   private void writeAuditLog(
-      FlowInstanceDO instance, FlowAutoTriggerDO trigger, boolean success, String comment) {
+      FlowInstanceVO instance, FlowAutoTriggerDO trigger, boolean success, String comment) {
     try {
       auditLogRepository.save(converter.entityToVO(buildAuditLogEntry(instance, trigger, success, comment)));
     } catch (Exception e) {
@@ -259,7 +259,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
   /** 构造审计日志实体（供 {@link #writeAuditLog} 调用）。 */
   private FlowAuditLogDO buildAuditLogEntry(
-      FlowInstanceDO instance, FlowAutoTriggerDO trigger, boolean success, String comment) {
+      FlowInstanceVO instance, FlowAutoTriggerDO trigger, boolean success, String comment) {
     FlowAuditLogDO logEntry = new FlowAuditLogDO();
     logEntry.setInstanceId(instance.getId());
     logEntry.setTaskId(null);

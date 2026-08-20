@@ -30,6 +30,7 @@ import com.njydsz.nextwiki.domain.vo.ShareRecipientVO;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 import com.njydsz.nextwiki.domain.vo.TagVO;
 import com.njydsz.nextwiki.domain.vo.FileTagVO;
+import com.njydsz.nextwiki.domain.vo.SpaceVO;
 import com.njydsz.nextwiki.infra.entity.FileAclDO;
 import com.njydsz.nextwiki.infra.entity.FileCommentDO;
 import com.njydsz.nextwiki.infra.entity.FileNodeDO;
@@ -350,6 +351,44 @@ public interface NextwikiConverter {
   @Mapping(target = "updatedAt", ignore = true)
   List<com.njydsz.nextwiki.infra.entity.TrashItemDO> trashItemDtosToEntities(
       List<com.njydsz.nextwiki.domain.dto.TrashItemDTO> dtos);
+
+  // ===== VO → DTO 转换（定时任务使用） =====
+
+  /**
+   * 回收站条目 VO → 回收站条目 DTO
+   *
+   * @param vo 回收站条目 VO
+   * @return 回收站条目 DTO
+   */
+  com.njydsz.nextwiki.domain.dto.TrashItemDTO voToTrashItemDTO(
+      com.njydsz.nextwiki.domain.vo.TrashItemVO vo);
+
+  /**
+   * 回收站条目 VO 列表 → 回收站条目 DTO 列表
+   *
+   * @param vos 回收站条目 VO 列表
+   * @return 回收站条目 DTO 列表
+   */
+  List<com.njydsz.nextwiki.domain.dto.TrashItemDTO> trashItemListToDTO(
+      List<com.njydsz.nextwiki.domain.vo.TrashItemVO> vos);
+
+  /**
+   * 分享链接 VO → 分享链接 DTO
+   *
+   * @param vo 分享链接 VO
+   * @return 分享链接 DTO
+   */
+  com.njydsz.nextwiki.domain.dto.ShareLinkDTO voToShareLinkDTO(
+      com.njydsz.nextwiki.domain.vo.ShareLinkVO vo);
+
+  /**
+   * 分享链接 VO 列表 → 分享链接 DTO 列表
+   *
+   * @param vos 分享链接 VO 列表
+   * @return 分享链接 DTO 列表
+   */
+  List<com.njydsz.nextwiki.domain.dto.ShareLinkDTO> shareLinkListToDTO(
+      List<com.njydsz.nextwiki.domain.vo.ShareLinkVO> vos);
 
 // ===== Tag =====
 
@@ -724,6 +763,22 @@ public interface NextwikiConverter {
    */
   com.njydsz.nextwiki.domain.dto.SpaceDTO toSpaceDTO(
       com.njydsz.nextwiki.infra.entity.SpaceDO entity);
+
+  /**
+   * 空间实体 → 空间 VO
+   *
+   * @param entity 空间实体
+   * @return 空间 VO
+   */
+  SpaceVO entityToVO(com.njydsz.nextwiki.infra.entity.SpaceDO entity);
+
+  /**
+   * 空间实体列表 → 空间 VO 列表
+   *
+   * @param entities 空间实体列表
+   * @return 空间 VO 列表
+   */
+  List<SpaceVO> spaceListToVO(List<com.njydsz.nextwiki.infra.entity.SpaceDO entities);
 
   /**
    * 空间成员 DTO → 空间成员实体

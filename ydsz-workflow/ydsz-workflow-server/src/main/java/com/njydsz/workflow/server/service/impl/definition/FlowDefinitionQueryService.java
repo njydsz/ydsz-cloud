@@ -17,8 +17,6 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowSkipDO;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -95,14 +93,13 @@ public class FlowDefinitionQueryService {
       value = CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
       key = "#flowCode + ':' + #version + ':' + #tenantId",
       unless = "#result == null")
-  public FlowDefinitionDO getPublished(String flowCode, String version, String tenantId) {
+  public FlowDefinitionVO getPublished(String flowCode, String version, String tenantId) {
     if (!StringUtils.hasText(version)) {
       version = "1.0";
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
     return definitionRepository
         .findPublished(flowCode, version, tid)
-        .map(converter::entityToDO)
         .orElse(null);
   }
 
@@ -121,11 +118,10 @@ public class FlowDefinitionQueryService {
       value = CacheConstants.FLOW_DEF_LATEST_CACHE,
       key = "#flowCode + ':' + #tenantId",
       unless = "#result == null")
-  public FlowDefinitionDO getLatestByCode(String flowCode, String tenantId) {
+  public FlowDefinitionVO getLatestByCode(String flowCode, String tenantId) {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
     return definitionRepository
         .findLatestByCode(flowCode, tid)
-        .map(converter::entityToDO)
         .orElse(null);
   }
 
@@ -142,12 +138,9 @@ public class FlowDefinitionQueryService {
    * @return 流程定义列表
    */
   @Transactional(readOnly = true)
-  public List<FlowDefinitionDO> page(int pageNo, int pageSize, String category, String flowCode) {
+  public List<FlowDefinitionVO> page(int pageNo, int pageSize, String category, String flowCode) {
     return definitionRepository
-        .findActivePage(pageNo, pageSize, category, flowCode)
-        .stream()
-        .map(converter::entityToDO)
-        .toList();
+        .findActivePage(pageNo, pageSize, category, flowCode);
   }
 
   /**
@@ -160,19 +153,13 @@ public class FlowDefinitionQueryService {
    */
   @Transactional(readOnly = true)
   public Map<String, Object> getDetail(String definitionId) {
-    FlowDefinitionDO definition =
-        definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
+    FlowDefinitionVO definition =
+        definitionRepository.findById(definitionId).orElse(null);
     if (definition == null) {
       return null;
     }
-    List<FlowNodeDO> nodes =
-        nodeRepository.findByDefinitionId(definitionId).stream()
-            .map(converter::entityToDO)
-            .toList();
-    List<FlowSkipDO> skips =
-        skipRepository.findByDefinitionId(definitionId).stream()
-            .map(converter::entityToDO)
-            .toList();
+    List<FlowNodeVO> nodes = nodeRepository.findByDefinitionId(definitionId);
+    List<FlowSkipVO> skips = skipRepository.findByDefinitionId(definitionId);
     Map<String, Object> result = new java.util.HashMap<>();
     result.put("definition", definition);
     result.put("nodes", nodes);

@@ -47,10 +47,9 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.server.engine.FlowAdvancer;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
@@ -108,7 +107,7 @@ public class FlowInstanceLifecycleManager {
   private final FlowDefinitionService definitionService;
 
   /** 流程推进引擎，负责节点推进/跳转/网关条件求值 */
-  private final FlowAdvancer advancer;
+  private final DefaultFlowAdvancer advancer;
 
   /** 流程任务服务，创建/推进/终止任务 */
   private final FlowTaskService taskService;
@@ -137,7 +136,7 @@ public class FlowInstanceLifecycleManager {
   /**
    * P0-1: BPMN 事件订阅服务 — 流程推进到事件捕获节点时创建订阅
    *
-   * <p>使用 @Lazy 避免循环依赖：FlowEventSubscriptionServiceImpl → FlowAdvancer → FlowInstanceService →
+   * <p>使用 @Lazy 避免循环依赖：FlowEventSubscriptionServiceImpl → DefaultFlowAdvancer → FlowInstanceService →
    * FlowEventSubscriptionService
    */
   @Lazy
@@ -155,7 +154,7 @@ public class FlowInstanceLifecycleManager {
   /**
    * P0-2: 定时器服务 — boundaryEvent 含 timer 配置时注册边界定时器自动触发
    *
-   * <p>使用 @Lazy 避免循环依赖：FlowTimerServiceImpl → FlowAdvancer → FlowInstanceService → FlowTimerService
+   * <p>使用 @Lazy 避免循环依赖：FlowTimerServiceImpl → DefaultFlowAdvancer → FlowInstanceService → FlowTimerService
    */
   @Lazy
   private final FlowTimerService timerService;
@@ -179,7 +178,7 @@ public class FlowInstanceLifecycleManager {
    *   <li><b>定义解析</b>：通过 {@link FlowDefinitionService#getPublished} 查询最新已发布流程定义
    *   <li><b>变量策略</b>：合并发起人自选审批人变量
    *   <li><b>实例落库</b>：{@code ydsz_flow_instance} 写入，{@code flowStatus=RUNNING}
-   *   <li><b>推进到开始节点</b>：通过 {@link FlowAdvancer} 计算下一节点并创建首个待办任务
+   *<li><b>推进到开始节点</b>：通过 {@link com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer} 计算下一节点并创建首个待办任务
    *   <li><b>事件触发</b>：发布 {@code onInstanceStart} 事件
    * </ol>
    *
@@ -202,9 +201,8 @@ public class FlowInstanceLifecycleManager {
     // 0. 幂等：同 business 已有活跃实例（RUNNING/SUSPENDED）则直接返回
     String tenantId =
         dto.getTenantId() != null ? dto.getTenantId() : AuthContextUtils.getTenantIdOrDefault();
-    FlowInstanceDO existing =
+    FlowInstanceVO existing =
         instanceRepository.findByBusiness(tenantId, dto.getBusinessType(), dto.getBusinessId())
-            .map(converter::entityToDO)
             .orElse(null);
     if (existing != null) {
       log.info(
@@ -310,7 +308,7 @@ public class FlowInstanceLifecycleManager {
   @Transactional(rollbackFor = Exception.class)
   @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
   public void terminate(String instanceId, String reason) {
-    FlowInstanceDO instance = getByIdOrThrow(instanceId);
+    FlowInstanceVO instance = getByIdOrThrow(instanceId);
     if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -365,7 +363,7 @@ public class FlowInstanceLifecycleManager {
   @Transactional(rollbackFor = Exception.class)
   @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
   public void suspend(String instanceId) {
-    FlowInstanceDO instance = getByIdOrThrow(instanceId);
+    FlowInstanceVO instance = getByIdOrThrow(instanceId);
     if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -400,7 +398,7 @@ public class FlowInstanceLifecycleManager {
   @Transactional(rollbackFor = Exception.class)
   @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
   public void activate(String instanceId) {
-    FlowInstanceDO instance = getByIdOrThrow(instanceId);
+    FlowInstanceVO instance = getByIdOrThrow(instanceId);
     if (!FlowInstanceStatus.SUSPENDED.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -436,7 +434,7 @@ public class FlowInstanceLifecycleManager {
   @Transactional(rollbackFor = Exception.class)
   @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
   public void complete(String instanceId, String endNodeCode) {
-    FlowInstanceDO instance = getByIdOrThrow(instanceId);
+    FlowInstanceVO instance = getByIdOrThrow(instanceId);
     if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
       return;
     }
@@ -483,7 +481,7 @@ public class FlowInstanceLifecycleManager {
       return recall(instanceId, initiatorId);
     }
 
-    FlowInstanceDO instance = getByIdOrThrow(instanceId);
+    FlowInstanceVO instance = getByIdOrThrow(instanceId);
     // 校验：仅发起人可撤回
     if (!instance.getInitiatorId().equals(initiatorId)) {
       throw SysException.builder()
@@ -577,7 +575,7 @@ public class FlowInstanceLifecycleManager {
   @Transactional(rollbackFor = Exception.class)
   @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
   public boolean recall(String instanceId, String initiatorId) {
-    FlowInstanceDO instance = getByIdOrThrow(instanceId);
+    FlowInstanceVO instance = getByIdOrThrow(instanceId);
     // 校验：仅发起人可撤回
     if (!instance.getInitiatorId().equals(initiatorId)) {
       throw SysException.builder()
@@ -646,7 +644,7 @@ public class FlowInstanceLifecycleManager {
   @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
   public boolean rollback(
       String instanceId, String operatorId, String reason, int maxRollbackDays) {
-    FlowInstanceDO instance = getByIdOrThrow(instanceId);
+    FlowInstanceVO instance = getByIdOrThrow(instanceId);
 
     // 1. 校验：仅 COMPLETED 状态可回滚
     if (!FlowInstanceStatus.COMPLETED.name().equals(instance.getFlowStatus())) {
@@ -755,7 +753,7 @@ public class FlowInstanceLifecycleManager {
   @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
   public String resubmit(
       String instanceId, String initiatorId, Map<String, Object> variables, String comment) {
-    FlowInstanceDO instance = getByIdOrThrow(instanceId);
+    FlowInstanceVO instance = getByIdOrThrow(instanceId);
     // 1. 状态校验：仅 REJECTED 可重审
     FlowInstanceStatus status = FlowInstanceStatus.valueOf(instance.getFlowStatus());
     if (status != FlowInstanceStatus.REJECTED) {
@@ -858,19 +856,19 @@ public class FlowInstanceLifecycleManager {
 
   // ============================== 内部方法 ==============================
 
-  /** 内部方法：创建第一个待办任务（供 FlowAdvancer 调用） */
+  /** 内部方法：创建第一个待办任务（供 DefaultFlowAdvancer 调用） */
   public String createFirstTask(
-      String instanceId, FlowNodeDO startNode, Map<String, Object> variables) {
-    FlowInstanceDO instance = getByIdOrThrow(instanceId);
-    List<FlowNodeDO> nextNodes =
+      String instanceId, FlowNodeVO startNode, Map<String, Object> variables) {
+    FlowInstanceVO instance = getByIdOrThrow(instanceId);
+    List<FlowNodeVO> nextNodes =
         advancer.advance(instance, startNode.getNodeCode(), "PASS", null, variables);
     if (nextNodes.isEmpty()) {
       log.warn("[Flow] 流程无下游节点: instanceId={}", instanceId);
       complete(instanceId, startNode.getNodeCode());
       return null;
     }
-    for (FlowNodeDO node : nextNodes) {
-      taskService.createTask(instanceId, node, variables);
+    for (FlowNodeVO node : nextNodes) {
+      taskService.createTask(instanceId, converter.entityToDO(node), variables);
     }
     instanceRepository.updateStatus(
         instanceId,
@@ -882,13 +880,14 @@ public class FlowInstanceLifecycleManager {
     return instanceId;
   }
 
-  /** 内部方法：推进后批量生成任务（供 FlowAdvancer 调用） */
+  /** 内部方法：推进后批量生成任务（供 DefaultFlowAdvancer 调用） */
   public void generateTasksForNodes(
-      String instanceId, List<FlowNodeDO> nextNodes, Map<String, Object> variables) {
+      String instanceId, List<FlowNodeVO> nextNodes, Map<String, Object> variables) {
     if (nextNodes == null || nextNodes.isEmpty()) {
       return;
     }
-    for (FlowNodeDO node : nextNodes) {
+    List<FlowNodeDO> doNodes = nextNodes.stream().map(converter::entityToDO).toList();
+    for (FlowNodeDO node : doNodes) {
       // P0-2: 优先判断事件捕获节点（boundaryEvent / intermediateCatchEvent）
       if (eventSubscriptionService.isEventCatchNode(node)) {
         String boundaryTaskId = resolveBoundaryTaskId(node, instanceId);
@@ -918,9 +917,9 @@ public class FlowInstanceLifecycleManager {
               e.getMessage());
         }
         // 抄送节点是穿透节点：自动推进到下游
-        FlowInstanceDO ccInstance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
+        FlowInstanceVO ccInstance = instanceRepository.findById(instanceId).orElse(null);
         if (ccInstance != null) {
-          List<FlowNodeDO> ccNext =
+          List<FlowNodeVO> ccNext =
               advancer.advance(ccInstance, node.getNodeCode(), "PASS", null, variables);
           if (!ccNext.isEmpty()) {
             generateTasksForNodes(instanceId, ccNext, variables);
@@ -935,7 +934,7 @@ public class FlowInstanceLifecycleManager {
       // P1-3 / fix-1: SUBPROCESS 节点或 ext 中含 callActivityFlowCode 的节点触发子流程
       if (node.getNodeType().equals(FlowNodeType.SUBPROCESS.getCode()) || isCallActivity(node)) {
         try {
-          FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
+          FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
           subProcessService.startSubProcess(instance, node, variables);
           // 子流程启动后，父流程"停在" callActivity 节点，更新 currentNodeCode
           instanceRepository.updateStatus(
@@ -968,8 +967,8 @@ public class FlowInstanceLifecycleManager {
 
   // ============================== 私有辅助方法 ==============================
 
-  private FlowInstanceDO getByIdOrThrow(String id) {
-    FlowInstanceDO instance = instanceRepository.findById(id).map(converter::entityToDO).orElse(null);
+  private FlowInstanceVO getByIdOrThrow(String id) {
+    FlowInstanceVO instance = instanceRepository.findById(id).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -986,7 +985,7 @@ public class FlowInstanceLifecycleManager {
    */
   private String resubmitAsNewInstance(
       String instanceId, String initiatorId, Map<String, Object> variables, String comment) {
-    FlowInstanceDO instance = getByIdOrThrow(instanceId);
+    FlowInstanceVO instance = getByIdOrThrow(instanceId);
     // 1. 状态校验：仅非运行态可重做（RUNNING / SUSPENDED 不可）
     FlowInstanceStatus status = FlowInstanceStatus.valueOf(instance.getFlowStatus());
     if (status == FlowInstanceStatus.RUNNING || status == FlowInstanceStatus.SUSPENDED) {
@@ -1226,7 +1225,7 @@ public class FlowInstanceLifecycleManager {
    * @return 事件上下文
    */
   private FlowEventContext buildContext(
-      String instanceId, String taskId, String operatorId, String action, FlowInstanceDO instance) {
+      String instanceId, String taskId, String operatorId, String action, FlowInstanceVO instance) {
     FlowEventContext ctx = new FlowEventContext();
     ctx.setInstanceId(instanceId);
     ctx.setTaskId(taskId);

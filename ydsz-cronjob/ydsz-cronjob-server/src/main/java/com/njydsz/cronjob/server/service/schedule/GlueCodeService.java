@@ -3,7 +3,7 @@ package com.njydsz.cronjob.server.service.schedule;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.cronjob.infra.entity.schedule.GlueCode;
+import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 
 /**
  * GLUE 在线编码 Service
@@ -29,7 +29,7 @@ import com.njydsz.cronjob.infra.entity.schedule.GlueCode;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.cronjob.domain.entity.schedule.GlueCode GLUE 代码实体
+ * @see com.njydsz.cronjob.domain.vo.GlueCodeVO GLUE 代码视图对象
  * @see JobService 任务主 Service(创建 GLUE 任务时调用 save)
  */
 public interface GlueCodeService {
@@ -43,25 +43,25 @@ public interface GlueCodeService {
    * @param sourceCode 源代码内容
    * @param language 语言（GROOVY / JAVA），为空时默认 GROOVY
    * @param remark 版本备注（可空）
-   * @return 新创建的 GLUE 代码版本
+   * @return 新创建的 GLUE 代码版本视图对象
    */
-  GlueCode save(String jobId, String sourceCode, String language, String remark);
+  GlueCodeVO save(String jobId, String sourceCode, String language, String remark);
 
   /**
    * 获取指定任务的最新版本 GLUE 代码。
    *
    * @param jobId 任务 ID
-   * @return 最新版本 GLUE 代码；不存在时返回 null
+   * @return 最新版本 GLUE 代码视图对象；不存在时返回 null
    */
-  GlueCode getLatest(String jobId);
+  GlueCodeVO getLatest(String jobId);
 
   /**
    * 获取指定任务的全部版本列表（按版本号降序）。
    *
    * @param jobId 任务 ID
-   * @return 版本列表；无记录时返回空列表
+   * @return 版本视图对象列表；无记录时返回空列表
    */
-  List<GlueCode> listVersions(String jobId);
+  List<GlueCodeVO> listVersions(String jobId);
 
   /**
    * 回滚到指定版本。
@@ -70,9 +70,9 @@ public interface GlueCodeService {
    *
    * @param jobId 任务 ID
    * @param version 目标版本号
-   * @return 新创建的回滚版本
+   * @return 新创建的回滚版本视图对象
    */
-  GlueCode rollback(String jobId, Integer version);
+  GlueCodeVO rollback(String jobId, Integer version);
 
   /**
    * P1-1: 在线测试 GLUE 代码（不保存版本，直接执行）。

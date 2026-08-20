@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.cronjob.infra.entity.log.JobLogContent;
 import com.njydsz.cronjob.domain.repository.JobLogContentRepository;
+import com.njydsz.cronjob.domain.vo.JobLogContentVO;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
 /**
@@ -28,24 +28,24 @@ public class JobLogContentServiceImpl implements JobLogContentService {
   private final JobLogContentRepository jobLogContentRepository;
 
   @Override
-  public void batchSave(List<JobLogContent> contents) {
+  public void batchSave(List<JobLogContentVO> contents) {
     if (contents == null || contents.isEmpty()) {
       return;
     }
-    for (JobLogContent content : contents) {
+    for (JobLogContentVO content : contents) {
       jobLogContentRepository.insert(content);
     }
   }
 
   @Override
-  public List<JobLogContent> pageByLogId(String logId, int page, int size) {
+  public List<JobLogContentVO> pageByLogId(String logId, int page, int size) {
     int offset = Math.max(0, (page - 1) * size);
-    return jobLogContentRepository.selectByLogId(logId, offset, size);
+    return jobLogContentRepository.findByLogId(logId, offset, size);
   }
 
   @Override
-  public List<JobLogContent> listAfterLine(String logId, int fromLineNo) {
-    return jobLogContentRepository.selectAfterLine(logId, fromLineNo);
+  public List<JobLogContentVO> listAfterLine(String logId, int fromLineNo) {
+    return jobLogContentRepository.findAfterLine(logId, fromLineNo);
   }
 
   @Override
@@ -54,11 +54,11 @@ public class JobLogContentServiceImpl implements JobLogContentService {
   }
 
   @Override
-  public List<JobLogContent> searchByKeyword(String logId, String keyword, int page, int size) {
+  public List<JobLogContentVO> searchByKeyword(String logId, String keyword, int page, int size) {
     if (logId == null || logId.isBlank() || keyword == null || keyword.isBlank()) {
       return Collections.emptyList();
     }
     int offset = Math.max(0, (page - 1) * size);
-    return jobLogContentRepository.selectByLogIdAndKeyword(logId, keyword, offset, size);
+    return jobLogContentRepository.findByLogIdAndKeyword(logId, keyword, offset, size);
   }
 }

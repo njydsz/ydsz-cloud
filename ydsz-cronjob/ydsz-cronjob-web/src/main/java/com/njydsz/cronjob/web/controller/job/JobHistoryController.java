@@ -22,7 +22,6 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.vo.JobHistoryVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobHistoryService;
@@ -70,8 +69,7 @@ public class JobHistoryController {
   @Operation(summary = "获取任务版本列表")
   @GetMapping("/versions")
   public YdszResponse<List<JobHistoryVO>> versions(@RequestParam String jobId) {
-    return YdszResponse.success(
-        CronjobConverter.INSTANT.jobHistoryListToVO(jobHistoryService.listVersions(jobId)));
+    return YdszResponse.success(jobHistoryService.listVersions(jobId));
   }
 
   /**
@@ -88,8 +86,7 @@ public class JobHistoryController {
   @GetMapping("/detail")
   public YdszResponse<JobHistoryVO> detail(
       @RequestParam String jobId, @RequestParam Integer version) {
-    return YdszResponse.success(
-        CronjobConverter.INSTANT.entityToVO(jobHistoryService.getVersion(jobId, version)));
+    return YdszResponse.success(jobHistoryService.getVersion(jobId, version));
   }
 
   /**

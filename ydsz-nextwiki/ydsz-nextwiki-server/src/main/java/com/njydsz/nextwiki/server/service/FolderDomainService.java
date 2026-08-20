@@ -106,11 +106,8 @@ public class FolderDomainService {
     String newPath = buildPath(targetParent.getPath(), node.getName());
     int newLevel = targetParent.getLevel() + 1;
 
-    node.setParentId(targetParent.getId());
-    node.setPath(newPath);
-    node.setLevel(newLevel);
-    node.setSort(targetSiblings.size());
-    node.setUpdatedBy(userId);
+    // S3-P1-1：使用领域方法替代直接 setter
+    node.changeParent(targetParent.getId(), newPath, newLevel, targetSiblings.size(), userId);
 
     log.info(
         "[FolderDomainService] 移动: nodeId={}, oldPath={}, newPath={}", node.getId(), oldPath, newPath);
@@ -132,9 +129,8 @@ public class FolderDomainService {
     String oldName = node.getName();
     String newPath = parent != null ? buildPath(parent.getPath(), newName) : "/" + newName + "/";
 
-    node.setName(newName);
-    node.setPath(newPath);
-    node.setUpdatedBy(userId);
+    // S3-P1-1：使用领域方法替代直接 setter
+    node.changeName(newName, newPath, userId);
 
     log.info(
         "[FolderDomainService] 重命名: nodeId={}, oldName={}, newName={}", node.getId(), oldName, newName);

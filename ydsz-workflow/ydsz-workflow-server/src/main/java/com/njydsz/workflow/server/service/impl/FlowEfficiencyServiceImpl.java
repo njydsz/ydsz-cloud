@@ -23,6 +23,11 @@ import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowEfficiencyStatsVO;
+import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
+import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO;
+import com.njydsz.workflow.domain.vo.FlowTrendVO;
+import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
@@ -185,8 +190,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   private static final int HIGH_REJECTION_MIN_SAMPLE = 5;
 
   @Override
-  public Map<String, Object> efficiencyStats(String tenantId, String startTime, String endTime) {
-    Map<String, Object> result = new LinkedHashMap<>();
+  public FlowEfficiencyStatsVO efficiencyStats(String tenantId, String startTime, String endTime) {
+    FlowEfficiencyStatsVO result = new FlowEfficiencyStatsVO();
     try {
       List<FlowHisTaskDO> records = queryHisTasks(tenantId, startTime, endTime, null);
       long totalCount = records.size();
@@ -207,12 +212,10 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
       long overdueCount = records.stream().filter(r -> "TIMEOUT".equals(r.getTaskStatus())).count();
       double overdueRate = totalCount > 0 ? (double) overdueCount / totalCount : 0.0;
 
-      result.put("totalCount", totalCount);
-      result.put("avgDurationMs", Math.round(avgDurationMs));
-      result.put("proxyRate", Math.round(proxyRate * 10000) / 10000.0);
-      result.put("overdueRate", Math.round(overdueRate * 10000) / 10000.0);
-      result.put("proxyCount", proxyCount);
-      result.put("overdueCount", overdueCount);
+      result.setTotalCount(totalCount);
+      result.setAvgDurationMs(Math.round(avgDurationMs));
+      result.setProxyRate(Math.round(proxyRate * 10000) / 10000.0);
+      result.setOverdueRate(Math.round(overdueRate * 10000) / 10000.0);
 
       log.info(
           "[FlowEfficiency] 效率统计: tenantId={} total={} avgMs={} proxyRate={} overdueRate={}",
@@ -223,10 +226,10 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
           overdueRate);
     } catch (Exception e) {
       log.error("[FlowEfficiency] 效率统计异常: tenantId={} err={}", tenantId, e.getMessage(), e);
-      result.put("totalCount", 0);
-      result.put("avgDurationMs", 0);
-      result.put("proxyRate", 0.0);
-      result.put("overdueRate", 0.0);
+      result.setTotalCount(0);
+      result.setAvgDurationMs(0);
+      result.setProxyRate(0.0);
+      result.setOverdueRate(0.0);
     }
     return result;
   }
@@ -259,7 +262,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   }
 
   @Override
-  public List<Map<String, Object>> bottleneckRanking(String tenantId, String flowCode, int limit) {
+  public List<FlowBottleneckVO> bottleneckRanking(String tenantId, String flowCode, int limit) {
     try {
       // 直接使用 Mapper 已有的 nodeDurationStats（SQL GROUP BY 聚合）
       List<Map<String, Object>> stats = hisTaskMapper.nodeDurationStats(flowCode, tenantId);
@@ -271,6 +274,14 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
       return stats.stream()
           .sorted(Comparator.comparingDouble(this::extractAvgDuration).reversed())
           .limit(top)
+          .map(row -> {
+            FlowBottleneckVO vo = new FlowBottleneckVO();
+            vo.setNodeCode((String) row.get("nodeCode"));
+            vo.setNodeName((String) row.get("nodeName"));
+            vo.setAvgDurationMs(toLong(row.get("avgDurationMs")));
+            vo.setCount(toLong(row.get("count")));
+            return vo;
+          })
           .collect(Collectors.toList());
     } catch (Exception e) {
       log.error(
@@ -284,7 +295,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   }
 
   @Override
-  public List<Map<String, Object>> approverRanking(
+  public List<FlowApproverEfficiencyVO> approverRanking(
       String tenantId, String startTime, String endTime, int limit) {
     try {
       List<FlowHisTaskDO> records = queryHisTasks(tenantId, startTime, endTime, null);
@@ -303,23 +314,26 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
           .map(
               entry -> {
                 List<FlowHisTaskDO> tasks = entry.getValue();
-                Map<String, Object> row = new LinkedHashMap<>();
-                row.put("assigneeId", entry.getKey());
-                row.put("assigneeName", tasks.get(0).getAssigneeName());
-                row.put("handleCount", tasks.size());
+                FlowApproverEfficiencyVO vo = new FlowApproverEfficiencyVO();
+                vo.setUserId(entry.getKey());
+                vo.setUserName(tasks.get(0).getAssigneeName());
+                vo.setCompletedCount(tasks.size());
                 double avgMs =
                     tasks.stream()
                         .filter(t -> t.getDurationMs() != null && t.getDurationMs() > 0)
                         .mapToLong(FlowHisTaskDO::getDurationMs)
                         .average()
                         .orElse(0.0);
-                row.put("avgDurationMs", Math.round(avgMs));
-                return row;
+                vo.setAvgDurationMs(Math.round(avgMs));
+                long totalMs =
+                    tasks.stream()
+                        .filter(t -> t.getDurationMs() != null && t.getDurationMs() > 0)
+                        .mapToLong(FlowHisTaskDO::getDurationMs)
+                        .sum();
+                vo.setTotalDurationMs(totalMs);
+                return vo;
               })
-          .sorted(
-              Comparator.comparingInt(
-                      (Map<String, Object> r) -> ((Number) r.get("handleCount")).intValue())
-                  .reversed())
+          .sorted(Comparator.comparingLong(FlowApproverEfficiencyVO::getCompletedCount).reversed())
           .limit(top)
           .collect(Collectors.toList());
     } catch (Exception e) {
@@ -329,7 +343,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   }
 
   @Override
-  public List<Map<String, Object>> approvalTrend(
+  public List<FlowTrendVO> approvalTrend(
       String tenantId, String interval, String startTime, String endTime) {
     try {
       List<FlowHisTaskDO> records = queryHisTasks(tenantId, startTime, endTime, null);
@@ -350,24 +364,24 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
       }
 
       // 聚合输出
-      List<Map<String, Object>> result = new ArrayList<>();
+      List<FlowTrendVO> result = new ArrayList<>();
       for (Map.Entry<String, List<FlowHisTaskDO>> entry : grouped.entrySet()) {
         List<FlowHisTaskDO> tasks = entry.getValue();
-        Map<String, Object> row = new LinkedHashMap<>();
-        row.put("timeLabel", entry.getKey());
-        row.put("count", tasks.size());
+        FlowTrendVO vo = new FlowTrendVO();
+        vo.setTimeLabel(entry.getKey());
+        vo.setCount(tasks.size());
         double avgMs =
             tasks.stream()
                 .filter(t -> t.getDurationMs() != null && t.getDurationMs() > 0)
                 .mapToLong(FlowHisTaskDO::getDurationMs)
                 .average()
                 .orElse(0.0);
-        row.put("avgDurationMs", Math.round(avgMs));
-        result.add(row);
+        vo.setAvgDurationMs(Math.round(avgMs));
+        result.add(vo);
       }
 
       // 按时间标签排序
-      result.sort(Comparator.comparing(row -> (String) row.get("timeLabel")));
+      result.sort(Comparator.comparing(FlowTrendVO::getTimeLabel));
       return result;
     } catch (Exception e) {
       log.error(
@@ -443,13 +457,13 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   // ============================== 异常检测 ==============================
 
   @Override
-  public List<Map<String, Object>> detectAnomalies(
+  public List<FlowAnomalyVO> detectAnomalies(
       String tenantId, int limit, int stuckHours, int longRunningDays) {
     int effectiveLimit = limit > 0 ? limit : 20;
     int effectiveStuckHours = stuckHours > 0 ? stuckHours : 24;
     int effectiveLongRunningDays = longRunningDays > 0 ? longRunningDays : 7;
 
-    List<Map<String, Object>> anomalies = new ArrayList<>();
+    List<FlowAnomalyVO> anomalies = new ArrayList<>();
 
     // 1. 卡单任务（优先级最高）
     try {
@@ -471,7 +485,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     if (anomalies.size() < effectiveLimit) {
       try {
         int remaining = effectiveLimit - anomalies.size();
-        anomalies.addAll(detectLongRunningInstances(tenantId, remaining, effectiveLongRunningDays));
+        List<Map<String, Object>> longRunning = detectLongRunningInstances(tenantId, remaining, effectiveLongRunningDays);
+        anomalies.addAll(convertLongRunningToAnomalyVO(longRunning));
       } catch (Exception e) {
         log.warn("[FlowEfficiency] 长期运行实例检测异常: tenantId={} err={}", tenantId, e.getMessage());
       }
@@ -490,7 +505,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   }
 
   @Override
-  public List<Map<String, Object>> detectStuckTasks(String tenantId, int limit, int stuckHours) {
+  public List<FlowAnomalyVO> detectStuckTasks(String tenantId, int limit, int stuckHours) {
     int effectiveLimit = limit > 0 ? limit : 20;
     int effectiveStuckHours = stuckHours > 0 ? stuckHours : 24;
 
@@ -511,28 +526,26 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     }
 
     LocalDateTime now = LocalDateTime.now();
-    List<Map<String, Object>> result = new ArrayList<>();
+    List<FlowAnomalyVO> result = new ArrayList<>();
     for (FlowRunTaskDO task : stuckTasks) {
       long hours =
           task.getCreatedAt() != null
               ? Duration.between(task.getCreatedAt(), now).toHours()
               : effectiveStuckHours;
 
-      Map<String, Object> anomaly = new LinkedHashMap<>();
-      anomaly.put("type", "STUCK");
-      anomaly.put("taskId", task.getId());
-      anomaly.put("instanceId", task.getInstanceId());
-      anomaly.put("nodeCode", task.getNodeCode());
-      anomaly.put("nodeName", task.getNodeName());
-      anomaly.put("assigneeId", task.getAssigneeId());
-      anomaly.put("assigneeName", task.getAssigneeName());
-      anomaly.put("stuckHours", hours);
-      anomaly.put("createdAt", task.getCreatedAt() != null ? task.getCreatedAt().toString() : null);
-      anomaly.put("taskStatus", task.getTaskStatus());
-      anomaly.put(
-          "description",
+      FlowAnomalyVO vo = new FlowAnomalyVO();
+      vo.setType("STUCK");
+      vo.setWarnLevel("RED");
+      vo.setAnomalyType("卡单任务");
+      vo.setInstanceId(task.getInstanceId());
+      vo.setTaskId(task.getId());
+      vo.setNodeCode(task.getNodeCode());
+      vo.setNodeName(task.getNodeName());
+      vo.setStuckHours(hours);
+      vo.setCreatedAt(task.getCreatedAt());
+      vo.setDescription(
           "任务卡单超过 " + hours + " 小时: " + task.getNodeName() + " (创建时间 " + task.getCreatedAt() + ")");
-      result.add(anomaly);
+      result.add(vo);
     }
 
     log.info(
@@ -544,7 +557,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   }
 
   @Override
-  public List<Map<String, Object>> detectHighRejectionNodes(String tenantId) {
+  public List<FlowAnomalyVO> detectHighRejectionNodes(String tenantId) {
     // 查询最近 100 个历史任务（按完成时间倒序）
     LambdaQueryWrapper<FlowHisTaskDO> wrapper = new LambdaQueryWrapper<>();
     wrapper
@@ -565,7 +578,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
                 Collectors.groupingBy(
                     FlowHisTaskDO::getNodeCode, LinkedHashMap::new, Collectors.toList()));
 
-    List<Map<String, Object>> result = new ArrayList<>();
+    List<FlowAnomalyVO> result = new ArrayList<>();
     for (Map.Entry<String, List<FlowHisTaskDO>> entry : byNode.entrySet()) {
       List<FlowHisTaskDO> tasks = entry.getValue();
       int total = tasks.size();
@@ -586,15 +599,16 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
                 .findFirst()
                 .orElse(entry.getKey());
 
-        Map<String, Object> anomaly = new LinkedHashMap<>();
-        anomaly.put("type", "HIGH_REJECTION");
-        anomaly.put("nodeCode", entry.getKey());
-        anomaly.put("nodeName", nodeName);
-        anomaly.put("totalCount", total);
-        anomaly.put("rejectedCount", rejected);
-        anomaly.put("rejectionRate", Math.round(rejectionRate * 10000) / 10000.0);
-        anomaly.put(
-            "description",
+        FlowAnomalyVO vo = new FlowAnomalyVO();
+        vo.setType("HIGH_REJECTION");
+        vo.setWarnLevel("ORANGE");
+        vo.setAnomalyType("高驳回率节点");
+        vo.setNodeCode(entry.getKey());
+        vo.setNodeName(nodeName);
+        vo.setTotalCount((long) total);
+        vo.setRejectedCount(rejected);
+        vo.setRejectionRate(Math.round(rejectionRate * 10000) / 10000.0);
+        vo.setDescription(
             "节点驳回率过高: "
                 + nodeName
                 + " (最近 "
@@ -604,15 +618,12 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
                 + " 个被驳回，驳回率 "
                 + Math.round(rejectionRate * 100)
                 + "%)");
-        result.add(anomaly);
+        result.add(vo);
       }
     }
 
     // 按驳回率降序排序
-    result.sort(
-        Comparator.comparingDouble(
-                (Map<String, Object> a) -> ((Number) a.get("rejectionRate")).doubleValue())
-            .reversed());
+    result.sort(Comparator.comparingDouble(FlowAnomalyVO::getRejectionRate).reversed());
 
     log.info(
         "[FlowEfficiency] 高驳回率检测: tenantId={} sampleSize={} 发现 {} 个高驳回率节点",
@@ -687,6 +698,27 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   }
 
   /**
+   * 将 detectLongRunningInstances 返回的 Map 列表转换为 FlowAnomalyVO 列表
+   */
+  private List<FlowAnomalyVO> convertLongRunningToAnomalyVO(List<Map<String, Object>> rows) {
+    if (rows == null || rows.isEmpty()) {
+      return List.of();
+    }
+    return rows.stream().map(row -> {
+      FlowAnomalyVO vo = new FlowAnomalyVO();
+      vo.setType("LONG_RUNNING");
+      vo.setWarnLevel("YELLOW");
+      vo.setAnomalyType("长期运行实例");
+      vo.setInstanceId((String) row.get("instanceId"));
+      vo.setNodeCode((String) row.get("currentNodeCode"));
+      vo.setNodeName((String) row.get("currentNodeName"));
+      vo.setDescription((String) row.get("description"));
+      vo.setStuckHours(null);
+      return vo;
+    }).collect(Collectors.toList());
+  }
+
+  /**
    * P1: 流程健康度综合评分
    *
    * <p>评分维度与权重：
@@ -703,14 +735,14 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     Map<String, Object> result = new LinkedHashMap<>();
     try {
       // 复用效率统计
-      Map<String, Object> stats = efficiencyStats(tenantId, startTime, endTime);
-      double overdueRate = toDouble(stats.get("overdueRate"));
-      double proxyRate = toDouble(stats.get("proxyRate"));
-      double avgDurationMs = toDouble(stats.get("avgDurationMs"));
-      long totalCount = toLong(stats.get("totalCount"));
+      FlowEfficiencyStatsVO stats = efficiencyStats(tenantId, startTime, endTime);
+      double overdueRate = stats.getOverdueRate();
+      double proxyRate = stats.getProxyRate();
+      double avgDurationMs = stats.getAvgDurationMs();
+      long totalCount = stats.getTotalCount();
 
       // 复用异常检测
-      List<Map<String, Object>> anomalies = detectAnomalies(tenantId, 50, 24, 7);
+      List<FlowAnomalyVO> anomalies = detectAnomalies(tenantId, 50, 24, 7);
       int anomalyCount = anomalies != null ? anomalies.size() : 0;
 
       // 计算扣分明细

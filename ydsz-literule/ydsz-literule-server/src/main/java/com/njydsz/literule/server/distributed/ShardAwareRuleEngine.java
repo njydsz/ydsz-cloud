@@ -1,8 +1,6 @@
 package com.njydsz.literule.server.distributed;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +29,7 @@ import com.njydsz.literule.api.RuleResult;
  *
  * <pre>
  * RuleEngine delegate = new DefaultRuleEngine();
- * NodeRegistry registry = new InMemoryNodeRegistry("node-1");
+ * NodeRegistry registry = ...; // 注入实际的 NodeRegistry 实现
  * ConsistentHashSharder sharder = new ConsistentHashSharder();
  * ShardAwareRuleEngine engine = new ShardAwareRuleEngine(delegate, registry, sharder);
  * engine.refreshNodes(); // 刷新节点列表
@@ -103,11 +101,8 @@ public class ShardAwareRuleEngine implements RuleEngine {
 
   @Override
   public List<RuleResult> evaluate(RuleContext context) {
-    if (!shardingEnabled) {
-      return delegate.evaluate(context);
-    }
-    List<Rule> mine = filterMineRules();
-    return evaluateSubset(mine, context, false);
+    // 统一使用 delegate.evaluate()，确保统计、监控、熔断、轨迹等横切关注点正常生效
+    return delegate.evaluate(context);
   }
 
   @Override
@@ -121,11 +116,8 @@ public class ShardAwareRuleEngine implements RuleEngine {
 
   @Override
   public List<RuleResult> dryRun(RuleContext context) {
-    if (!shardingEnabled) {
-      return delegate.dryRun(context);
-    }
-    List<Rule> mine = filterMineRules();
-    return evaluateSubset(mine, context, true);
+    // 统一使用 delegate.dryRun()，确保与 evaluate() 路径一致
+    return delegate.dryRun(context);
   }
 
   @Override
@@ -136,47 +128,6 @@ public class ShardAwareRuleEngine implements RuleEngine {
   @Override
   public RuleEngineStats getStats() {
     return delegate.getStats();
-  }
-
-  /** 过滤出属于当前节点的规则 */
-  private List<Rule> filterMineRules() {
-    String selfId = nodeRegistry.getSelfNodeId();
-    return delegate.getRules().stream()
-        .filter(
-            r -> {
-              if (r == null || r.getCode() == null) return true;
-              return sharder.isMine(r.getCode(), selfId);
-            })
-        .collect(Collectors.toList());
-  }
-
-  /**
-   * 对子集规则执行评估
-   *
-   * <p>由于 {@link RuleEngine#evaluate} 是对全部已注册规则执行的， 这里通过临时注册/注销实现子集执行不现实，因此直接调用规则的 evaluate 方法。
-   */
-  private List<RuleResult> evaluateSubset(List<Rule> rules, RuleContext context, boolean dryRun) {
-    if (rules == null || rules.isEmpty()) {
-      return new ArrayList<>();
-    }
-    List<RuleResult> results = new ArrayList<>(rules.size());
-    for (Rule rule : rules) {
-      try {
-        RuleResult result = dryRun ? rule.evaluate(context) : rule.evaluate(context);
-        if (result != null && (result.isTriggered() || dryRun)) {
-          results.add(result);
-        }
-      } catch (Exception e) {
-        LOG.warn("[ShardEngine] 规则 {} 执行异常: {}", rule.getCode(), e.getMessage());
-      }
-    }
-    results.sort(
-        (a, b) -> {
-          int sa = a.getSeverity() == null ? 0 : a.getSeverity().getWeight();
-          int sb = b.getSeverity() == null ? 0 : b.getSeverity().getWeight();
-          return Integer.compare(sb, sa);
-        });
-    return results;
   }
 
   /** 判断指定规则编码是否属于当前节点 */

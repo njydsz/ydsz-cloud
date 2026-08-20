@@ -124,22 +124,19 @@
         ORDER BY level ASC, sort ASC
     </select>
 
-    <select id="searchByName" resultMap="FileNodeResult">
-        SELECT * FROM nw_file_node
-        WHERE deleted = 0 AND node_type = 'file'
-        AND name ILIKE CONCAT('%', #{keyword}, '%')
-        AND created_by = #{createdBy}
-        AND tenant_id = #{tenantId}
-        ORDER BY updated_at DESC
-        LIMIT 50
-    </select>
-
     <select id="selectRootByUser" resultMap="FileNodeResult">
         SELECT * FROM nw_file_node
         WHERE deleted = 0 AND node_type = 'folder' AND parent_id = '0'
         AND created_by = #{createdBy}
         AND tenant_id = #{tenantId}
         LIMIT 1
+    </select>
+
+    <!-- 分页查询全部未删除节点（用于全量索引重建等批量场景，避免 OOM） -->
+    <select id="selectAllWithPage" resultMap="FileNodeResult">
+        SELECT * FROM nw_file_node
+        WHERE deleted = 0
+        ORDER BY created_at ASC
     </select>
 
 </mapper>

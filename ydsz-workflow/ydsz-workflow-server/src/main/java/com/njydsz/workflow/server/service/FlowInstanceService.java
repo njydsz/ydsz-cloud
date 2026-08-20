@@ -8,8 +8,7 @@ import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
 
 /**
  * 流程实例 Service
@@ -55,7 +54,7 @@ public interface FlowInstanceService {
    *
    * <p>幂等性保证：基于 {@code (businessType, businessId)} 唯一索引，同一业务单据 重复调用时返回原实例 ID，不会产生新实例。
    *
-   * <p>启动过程：① 解析流程定义 + 起始节点；② 创建实例（{@link FlowInstanceDO}）； ③ 在起始节点创建待办；④ 发布 {@code FlowStartedEvent}
+   * <p>启动过程：① 解析流程定义 + 起始节点；② 创建实例（{@link FlowInstanceVO}）； ③ 在起始节点创建待办；④ 发布 {@code FlowStartedEvent}
    * 事件。
    *
    * @param dto 启动参数（flowCode / businessType / businessId / variables / starterId）
@@ -94,9 +93,9 @@ public interface FlowInstanceService {
    * 按 ID 查询流程实例
    *
    * @param id 实例 ID
-   * @return 流程实例 DO，不存在返回 null
+   * @return 流程实例 VO，不存在返回 null
    */
-  FlowInstanceDO getById(String id);
+  FlowInstanceVO getById(String id);
 
   /**
    * 业务关联查询（通过业务类型 + 业务 ID 查实例）
@@ -105,9 +104,9 @@ public interface FlowInstanceService {
    *
    * @param businessType 业务类型（如 {@code project_initiation}）
    * @param businessId 业务 ID
-   * @return 流程实例 DO，未发起时返回 null
+   * @return 流程实例 VO，未发起时返回 null
    */
-  FlowInstanceDO getByBusiness(String businessType, String businessId);
+  FlowInstanceVO getByBusiness(String businessType, String businessId);
 
   /**
    * 终止流程（管理员强制终止）
@@ -163,12 +162,12 @@ public interface FlowInstanceService {
    *
    * <p>用于「流程详情」页组装，拼接富化字段（发起人姓名、当前节点名称、审批人姓名）。
    *
-   * @param instance 流程实例 DO
+   * @param instance 流程实例 VO
    * @param currentTasks 当前节点的待办任务列表
    * @return 流程实例视图 VO
    */
   FlowInstanceViewDTO toView(
-      FlowInstanceDO instance, List<FlowInstanceViewDTO.FlowTaskViewDTO> currentTasks);
+      FlowInstanceVO instance, List<FlowInstanceViewDTO.FlowTaskViewDTO> currentTasks);
 
   /**
    * 发起人维度查询（我的发起）
@@ -177,7 +176,7 @@ public interface FlowInstanceService {
    * @param flowStatus 流程状态过滤（RUNNING / COMPLETED / REJECTED / TERMINATED，null 表示全部）
    * @return 该发起人指定状态的实例列表
    */
-  List<FlowInstanceDO> listByInitiator(String initiatorId, String flowStatus);
+  List<FlowInstanceVO> listByInitiator(String initiatorId, String flowStatus);
 
   /**
    * P1-8: 撤回流程（仅发起人可撤回，仅运行中可撤回，下一节点未被处理才可撤回）
@@ -255,17 +254,9 @@ public interface FlowInstanceService {
    * P2-23: 实例多维分页查询
    *
    * @param query 分页查询参数对象（含筛选条件、分页信息）
-   * @return 分页结果
-   */
-  PageResponse<List<FlowInstanceDO>> page(FlowInstancePageQuery query);
-
-  /**
-   * P2-23: 实例多维分页查询（VO 版本，避免 Controller 层接触 DO）
-   *
-   * @param query 分页查询参数对象（含筛选条件、分页信息）
    * @return 分页结果（VO）
    */
-  PageResponse<List<FlowInstanceVO>> pageVO(FlowInstancePageQuery query);
+  PageResponse<List<FlowInstanceVO>> page(FlowInstancePageQuery query);
 
   /**
    * P2-24: 读取实例流程变量
@@ -293,14 +284,14 @@ public interface FlowInstanceService {
   void setVariables(String instanceId, Map<String, Object> variables);
 
   /**
-   * 引擎内部方法：推进后批量生成任务（供 FlowAdvancer / FlowTaskService 调用）
+   * 引擎内部方法：推进后批量生成任务（供 DefaultFlowAdvancer / FlowTaskService 调用）
    *
    * @param instanceId 流程实例 ID
    * @param nextNodes 推进后的下一节点列表
    * @param variables 流程变量
    */
   void generateTasksForNodes(
-      String instanceId, List<FlowNodeDO> nextNodes, Map<String, Object> variables);
+      String instanceId, List<FlowNodeVO> nextNodes, Map<String, Object> variables);
 
   /**
    * GAP-V2-02: 获取表单渲染数据 — 根据当前任务所在节点返回字段权限配置
@@ -320,14 +311,6 @@ public interface FlowInstanceService {
    * @param dueAt 超时时间（传 null 清除超时标记）
    */
   void setDueAt(String instanceId, LocalDateTime dueAt);
-
-  /**
-   * 按 ID 查询流程实例（VO 版本，避免 Controller 层接触 DO）
-   *
-   * @param id 实例 ID
-   * @return 流程实例 VO，不存在返回 null
-   */
-  FlowInstanceVO getByIdVO(String id);
 
   /**
    * 按状态分组统计实例数量

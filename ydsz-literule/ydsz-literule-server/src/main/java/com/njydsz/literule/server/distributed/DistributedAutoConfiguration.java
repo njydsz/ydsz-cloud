@@ -72,19 +72,6 @@ public class DistributedAutoConfiguration {
     return registry;
   }
 
-  /** 节点注册表（内存实现，Redisson 不可用时的降级方案） */
-  @Bean
-  @ConditionalOnMissingBean(NodeRegistry.class)
-  public NodeRegistry inMemoryNodeRegistry(String nodeId, LiteRuleProperties properties) {
-    InMemoryNodeRegistry registry =
-        new InMemoryNodeRegistry(nodeId, properties.getDistributed().getHeartbeatTimeoutMs());
-    // 注册自身
-    ClusterNode self = new ClusterNode(nodeId, nodeId);
-    registry.register(self);
-    LOG.info("[Distributed] 节点注册表已初始化（self={}, type=InMemory）", nodeId);
-    return registry;
-  }
-
   /**
    * 规则配置广播器（Redis Pub/Sub 实现，Redisson 可用时优先）
    *
@@ -103,9 +90,14 @@ public class DistributedAutoConfiguration {
     return broadcaster;
   }
 
-  /** 一致性 hash 分片器 */
+  /**
+   * 一致性 hash 分片器
+   *
+   * <p>仅在显式开启时激活，避免非分片场景下的冗余 Bean 注册。
+   */
   @Bean
   @ConditionalOnMissingBean
+  @ConditionalOnProperty(prefix = "ydsz.literule.distributed", name = "sharder-enabled", havingValue = "true")
   public ConsistentHashSharder consistentHashSharder() {
     ConsistentHashSharder sharder = new ConsistentHashSharder();
     LOG.info("[Distributed] 一致性 Hash 分片器已初始化（vnodes={}）", ConsistentHashSharder.DEFAULT_VNODES);

@@ -52,10 +52,6 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
   /** 带 revision 乐观锁的更新（更新失败返回 0） */
   int updateWithRevision(@Param("node") FileNodeDO node);
 
-  /** 统计子节点数量（未删除），避免全量加载 */
-  @Select("SELECT COUNT(*) FROM nw_file_node WHERE parent_id = #{parentId} AND deleted = 0")
-  int countChildren(@Param("parentId") String parentId);
-
   /** 按路径前缀查询（用于递归操作，P1-7：显式带租户过滤） */
   List<FileNodeDO> selectByPathPrefix(
       @Param("pathPrefix") String pathPrefix, @Param("tenantId") String tenantId);
@@ -185,12 +181,6 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
       "UPDATE nw_file_node SET size = size + #{sizeDelta}, updated_at = NOW() "
           + "WHERE id = #{id} AND deleted = 0")
   int updateSize(@Param("id") String id, @Param("sizeDelta") Long sizeDelta);
-
-  /** 搜索文件名（LIKE） */
-  List<FileNodeDO> searchByName(
-      @Param("keyword") String keyword,
-      @Param("createdBy") String createdBy,
-      @Param("tenantId") String tenantId);
 
   /** 查询用户根目录 */
   FileNodeDO selectRootByUser(
@@ -327,4 +317,14 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
           + "AND updated_at &lt; #{threshold} "
           + "AND (storage_class IS NULL OR storage_class = 'STANDARD')")
   long countColdNodes(@Param("threshold") LocalDateTime threshold);
+
+  /**
+   * 分页查询全部未删除节点（用于全量索引重建等批量场景）。
+   *
+   * <p>通过 MyBatis-Plus Page 对象自动添加 LIMIT/OFFSET，避免一次性全量加载导致 OOM。
+   *
+   * @param page MyBatis-Plus 分页对象
+   * @return 分页结果
+   */
+  IPage<FileNodeDO> selectAllWithPage(IPage<FileNodeDO> page);
 }

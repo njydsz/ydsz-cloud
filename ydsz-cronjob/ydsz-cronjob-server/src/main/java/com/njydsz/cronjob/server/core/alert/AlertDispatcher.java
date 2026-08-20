@@ -26,7 +26,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
-import com.njydsz.cronjob.infra.entity.job.JobAlertLog;
+import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
 import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.domain.repository.JobAlertLogRepository;
 import com.njydsz.cronjob.domain.repository.JobAlertRuleRepository;
@@ -527,7 +527,7 @@ public class AlertDispatcher {
   private void persistAlertLog(
       AlertContext context, JobAlertRuleVO rule, String status, String errorMessage) {
     try {
-      JobAlertLog alertLog = new JobAlertLog();
+      JobAlertLogVO alertLog = new JobAlertLogVO();
       // P3-1-merge: 生成唯一 alert_code
       alertLog.setAlertCode("CRONJOB-" + System.currentTimeMillis() + "-" + rule.getId());
       // P3-1-merge: 标记来源为 CRONJOB
@@ -546,9 +546,7 @@ public class AlertDispatcher {
       alertLog.setErrorMessage(errorMessage);
       alertLog.setTraceId(context.traceId());
       alertLog.setTriggerLogId(context.triggerLogId());
-      alertLog.setTenantId(context.tenantId());
       alertLog.setCreatedAt(LocalDateTime.now());
-      alertLog.setDeleted(0);
       jobAlertLogRepository.insert(alertLog);
     } catch (Exception e) {
       // 日志写入失败不影响告警主流程

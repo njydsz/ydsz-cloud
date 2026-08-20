@@ -1,7 +1,6 @@
 package com.njydsz.literule.domain.repository;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 
@@ -56,12 +55,4 @@ public interface RuleExecutionTraceRepository {
    * @return 执行轨迹 VO 列表（按 ID 降序）
    */
   List<RuleExecutionTraceVO> findRecentByRuleCode(String ruleCode, int limit);
-
-  /**
-   * 根据 traceId 查询单条 trace（用于批量回放取第一条）。
-   *
-   * @param traceId 追踪 ID
-   * @return 执行轨迹 VO；不存在返回 {@code Optional.empty()}
-   */
-  Optional<RuleExecutionTraceVO> findFirstByTraceId(String traceId);
 }

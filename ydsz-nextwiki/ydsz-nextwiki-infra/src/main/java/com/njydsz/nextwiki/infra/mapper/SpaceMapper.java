@@ -3,6 +3,8 @@ package com.njydsz.nextwiki.infra.mapper;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -30,12 +32,14 @@ public interface SpaceMapper extends BaseMapper<SpaceDO> {
   /**
    * 分页查询租户下的空间列表。
    *
+   * @param page MyBatis-Plus 分页对象
    * @param tenantId 租户ID
    * @param offset 偏移量
    * @param limit 每页数量
-   * @return 空间列表
+   * @return 空间分页结果
    */
-  List<SpaceDO> selectByTenantIdWithPage(
+  IPage<SpaceDO> selectByTenantIdWithPage(
+      Page<SpaceDO> page,
       @Param("tenantId") String tenantId,
       @Param("offset") int offset,
       @Param("limit") int limit);

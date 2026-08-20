@@ -16,7 +16,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
@@ -27,7 +27,7 @@ import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.mapper.FlowUserMapper;
-import com.njydsz.workflow.server.engine.FlowAdvancer;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.form.FlowFormEngineService;
 import com.njydsz.workflow.server.form.FlowFormSchema;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
@@ -69,7 +69,7 @@ public class FlowTaskPassService {
   private final WorkflowConverter converter;
 
   /** 流程推进引擎，会签完成后推进到下一节点 */
-  private final FlowAdvancer advancer;
+  private final DefaultFlowAdvancer advancer;
 
   /** 流程实例服务，更新实例状态和变量 */
   private final FlowInstanceService instanceService;
@@ -118,7 +118,7 @@ public class FlowTaskPassService {
     }
     Map<String, Object> variables =
         dto.getVariables() == null ? Collections.emptyMap() : dto.getVariables();
-    FlowInstanceDO instance = instanceRepository.findById(task.getInstanceId()).map(converter::entityToDO).orElse(null);
+    FlowInstanceVO instance = instanceRepository.findById(task.getInstanceId()).orElse(null);
     Map<String, Object> mergedVars = mergeVariables(instance, variables);
 
     // P0-2: 表单字段权限校验
@@ -186,7 +186,7 @@ public class FlowTaskPassService {
     // P2-3: Prometheus 指标
     if (flowMetrics != null) {
       flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "passed");
-      flowMetrics.recordTaskDuration(task, "PASSED");
+      flowMetrics.recordTaskDuration(converter.entityToVO(task), "PASSED");
     }
   }
 
@@ -206,7 +206,7 @@ public class FlowTaskPassService {
 
   /** 表单字段权限校验 + P0-3 表单 Schema 校验 */
   private void validateFormFieldPerms(
-      FlowRunTaskDO task, Map<String, Object> variables, FlowInstanceDO instance) {
+      FlowRunTaskDO task, Map<String, Object> variables, FlowInstanceVO instance) {
     FlowNodeDO formNode = nodeRepository.findByCode(task.getDefinitionId(), task.getNodeCode()).map(converter::entityToDO).orElse(null);
     if (formNode == null) {
       return;
@@ -229,7 +229,7 @@ public class FlowTaskPassService {
 
   /** 流程推进 */
   private void advanceProcess(
-      FlowInstanceDO instance,
+      FlowInstanceVO instance,
       FlowRunTaskDO task,
       Map<String, Object> vars,
       FlowPerformType performType,
@@ -249,7 +249,7 @@ public class FlowTaskPassService {
   }
 
   /** 更新实例当前节点 */
-  private void updateInstanceNode(FlowInstanceDO instance, List<FlowNodeDO> nextNodes) {
+  private void updateInstanceNode(FlowInstanceVO instance, List<FlowNodeDO> nextNodes) {
     if (!nextNodes.isEmpty() && nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {
       instanceRepository.updateStatus(
           instance.getId(),
@@ -262,7 +262,7 @@ public class FlowTaskPassService {
   }
 
   /** 合并流程变量：实例已有变量 + dto 增量 */
-  private Map<String, Object> mergeVariables(FlowInstanceDO instance, Map<String, Object> extra) {
+  private Map<String, Object> mergeVariables(FlowInstanceVO instance, Map<String, Object> extra) {
     if (instance == null || !StringUtils.hasText(instance.getVariable())) {
       return extra == null ? Collections.emptyMap() : extra;
     }

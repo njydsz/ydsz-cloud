@@ -13,4 +13,75 @@
         FROM ydsz_rule_def WHERE rule_code = #{ruleCode}
     </select>
 
+    <!-- 全文搜索规则（数据库级 LIKE 查询） -->
+    <select id="searchRules" resultType="com.njydsz.literule.infra.entity.RuleDefinitionDO">
+        SELECT id, rule_code, rule_name, category, category_path, owner, description,
+               condition_expression, severity_expression, default_severity,
+               title_template, description_template, priority, enabled, scope, mutex_group,
+               drilldown_available, version, tenant_id, status,
+               effective_from, effective_to, reviewed_by, reviewed_at, review_comment,
+               canary_ratio, canary_conditions, canary_condition_expression, canary_severity_expression,
+               created_by, created_at, updated_by, updated_at
+        FROM ydsz_rule_def
+        <where>
+            <!-- 关键词全文搜索（多关键词 AND 语义） -->
+            <if test="query != null and query != ''">
+                <foreach item="kw" collection="query.split('\\s+')" open="(" separator="AND" close=")">
+                    (rule_code LIKE CONCAT('%', #{kw}, '%')
+                     OR rule_name LIKE CONCAT('%', #{kw}, '%')
+                     OR description LIKE CONCAT('%', #{kw}, '%')
+                     OR condition_expression LIKE CONCAT('%', #{kw}, '%')
+                     OR category LIKE CONCAT('%', #{kw}, '%')
+                     OR category_path LIKE CONCAT('%', #{kw}, '%')
+                     OR owner LIKE CONCAT('%', #{kw}, '%'))
+                </foreach>
+            </if>
+            <!-- 状态过滤 -->
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <!-- 分类过滤 -->
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <!-- 启停过滤 -->
+            <if test="enabled != null">
+                AND enabled = #{enabled}
+            </if>
+        </where>
+        ORDER BY priority ASC, created_at DESC
+    </select>
+
+    <!-- 统计搜索结果总数 -->
+    <select id="searchRulesCount" resultType="int">
+        SELECT COUNT(*)
+        FROM ydsz_rule_def
+        <where>
+            <!-- 关键词全文搜索（多关键词 AND 语义） -->
+            <if test="query != null and query != ''">
+                <foreach item="kw" collection="query.split('\\s+')" open="(" separator="AND" close=")">
+                    (rule_code LIKE CONCAT('%', #{kw}, '%')
+                     OR rule_name LIKE CONCAT('%', #{kw}, '%')
+                     OR description LIKE CONCAT('%', #{kw}, '%')
+                     OR condition_expression LIKE CONCAT('%', #{kw}, '%')
+                     OR category LIKE CONCAT('%', #{kw}, '%')
+                     OR category_path LIKE CONCAT('%', #{kw}, '%')
+                     OR owner LIKE CONCAT('%', #{kw}, '%'))
+                </foreach>
+            </if>
+            <!-- 状态过滤 -->
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <!-- 分类过滤 -->
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <!-- 启停过滤 -->
+            <if test="enabled != null">
+                AND enabled = #{enabled}
+            </if>
+        </where>
+    </select>
+
 </mapper>

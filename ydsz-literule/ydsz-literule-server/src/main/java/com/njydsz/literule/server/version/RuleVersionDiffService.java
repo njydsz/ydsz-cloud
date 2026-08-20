@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleSeverity;
@@ -28,6 +29,7 @@ import com.njydsz.literule.api.RuleSeverity;
  * @since 1.0.0
  */
 @Slf4j
+@Service
 public class RuleVersionDiffService {
 
   /**

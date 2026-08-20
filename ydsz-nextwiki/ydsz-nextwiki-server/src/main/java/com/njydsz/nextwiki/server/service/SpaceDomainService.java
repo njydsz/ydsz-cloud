@@ -1,8 +1,8 @@
 package com.njydsz.nextwiki.server.service;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.nextwiki.domain.dto.SpaceDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
+import com.njydsz.nextwiki.domain.vo.SpaceVO;
 
 /**
  * 知识库空间领域服务
@@ -25,10 +25,10 @@ public class SpaceDomainService {
   /**
    * 校验空间创建参数。
    *
-   * @param space 空间DTO
+   * @param space 空间VO
    * @throws BusinessException 参数不合法时抛出
    */
-  public void validateCreate(SpaceDTO space) {
+  public void validateCreate(SpaceVO space) {
     if (space == null) {
       throw BusinessException.of(NextwikiExceptionCode.PARAM_ERROR).data("field", "space");
     }
@@ -96,11 +96,11 @@ public class SpaceDomainService {
   /**
    * 执行状态转换。
    *
-   * @param space 空间DTO
+   * @param space 空间VO
    * @param targetStatus 目标状态
    * @throws BusinessException 转换不合法时抛出
    */
-  public void transitionStatus(SpaceDTO space, String targetStatus) {
+  public void transitionStatus(SpaceVO space, String targetStatus) {
     if (!canTransitionStatus(space.getStatus(), targetStatus)) {
       throw BusinessException.of(NextwikiExceptionCode.SPACE_STATUS_TRANSITION_INVALID)
           .data("current", space.getStatus())

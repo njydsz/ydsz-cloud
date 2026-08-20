@@ -206,4 +206,17 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
         .eq(FlowRunTaskDO::getTaskStatus, fromStatus);
     return taskMapper.update(update, wrapper);
   }
+
+  @Override
+  public long countByStatusIn(List<String> statuses) {
+    return taskMapper.selectCount(
+        new LambdaQueryWrapper<FlowRunTaskDO>()
+            .in(FlowRunTaskDO::getTaskStatus, statuses)
+            .eq(FlowRunTaskDO::getDeleted, 0));
+  }
+
+  @Override
+  public long countOverdue() {
+    return taskMapper.countOverdue(null, null);
+  }
 }

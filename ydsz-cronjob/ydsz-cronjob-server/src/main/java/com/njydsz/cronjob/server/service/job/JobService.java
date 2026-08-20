@@ -6,8 +6,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.BatchResult;
-import com.njydsz.cronjob.infra.entity.log.JobLog;
-import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
+import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
+import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
  * 任务调度 Service 接口
@@ -33,7 +35,7 @@ import com.njydsz.cronjob.infra.entity.job.Job;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.cronjob.domain.entity.job.Job 任务实体
+ * @see com.njydsz.cronjob.domain.vo.JobVO 任务视图对象
  * @see com.njydsz.cronjob.server.service.JobHistoryService 任务历史 Service
  */
 public interface JobService {
@@ -43,21 +45,21 @@ public interface JobService {
    *
    * <p>创建任务时同时注册到调度器（{@code NORMAL} 状态）。
    *
-   * @param job 任务定义
+   * @param dto 任务创建 DTO
    * @return 新增任务 ID
    * @throws SysException 当 jobKey 已存在或参数非法时抛出
    */
-  String create(Job job);
+  String create(JobPostDTO dto);
 
   /**
    * 更新任务
    *
    * <p>更新后需重新注册到调度器（{@link #reschedule}）。
    *
-   * @param job 任务定义
+   * @param dto 任务更新 DTO
    * @throws SysException 当任务不存在或 cron 表达式非法时抛出
    */
-  void update(Job job);
+  void update(JobPutDTO dto);
 
   /**
    * 删除任务
@@ -158,10 +160,10 @@ public interface JobService {
    *
    * <p>由 {@link #loadOnStartup} 或 {@link #create} 调用。
    *
-   * @param job 任务定义
+   * @param dto 任务创建 DTO
    * @return 注册成功返回 true，否则返回 false
    */
-  boolean register(Job job);
+  boolean register(JobPostDTO dto);
 
   /**
    * 取消注册
@@ -178,19 +180,19 @@ public interface JobService {
    *
    * <p>先取消旧触发器，再注册新触发器（实现 cron 表达式热更新）。
    *
-   * @param job 任务定义
+   * @param dto 任务更新 DTO
    * @return 重新注册成功返回 true，否则返回 false
    */
-  boolean reschedule(Job job);
+  boolean reschedule(JobPutDTO dto);
 
   /**
    * 任务详情查询
    *
    * @param id 任务 ID
-   * @return 任务定义
+   * @return 任务视图对象
    * @throws SysException 当任务不存在时抛出
    */
-  Job getById(String id);
+  JobVO getById(String id);
 
   /**
    * 分页查询任务
@@ -204,7 +206,7 @@ public interface JobService {
    * @param group 分组过滤（可选）
    * @return 任务分页数据
    */
-  Page<Job> page(int page, int size, String keyword, String status, String group);
+  Page<JobVO> page(int page, int size, String keyword, String status, String group);
 
   /**
    * 分页查询执行日志
@@ -217,7 +219,7 @@ public interface JobService {
    * @param status 状态过滤（可选）
    * @return 执行日志分页数据
    */
-  Page<JobLog> pageLog(int page, int size, String jobKey, String status);
+  Page<JobLogVO> pageLog(int page, int size, String jobKey, String status);
 
   /**
    * 应用启动时加载所有 NORMAL 任务

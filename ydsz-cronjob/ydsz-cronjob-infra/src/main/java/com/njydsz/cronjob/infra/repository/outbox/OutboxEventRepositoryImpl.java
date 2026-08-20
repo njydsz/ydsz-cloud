@@ -6,7 +6,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.cronjob.domain.entity.outbox.OutboxEvent;
+import com.njydsz.cronjob.infra.entity.OutboxEvent;
 import com.njydsz.cronjob.domain.repository.outbox.OutboxEventRepository;
 import com.njydsz.cronjob.infra.mapper.outbox.OutboxEventMapper;
 

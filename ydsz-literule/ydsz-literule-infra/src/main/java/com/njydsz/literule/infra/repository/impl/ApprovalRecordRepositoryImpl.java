@@ -1,11 +1,9 @@
 package com.njydsz.literule.infra.repository.impl;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -67,24 +65,6 @@ public class ApprovalRecordRepositoryImpl implements ApprovalRecordRepository {
       return List.of();
     }
     return List.of(toVO(dto));
-  }
-
-  @Override
-  public List<ApprovalRecordVO> findByApprover(String approver) {
-    if (approver == null) {
-      return List.of();
-    }
-    // 遍历所有记录，查找审批日志中包含该审批人的记录
-    return store.values().stream()
-        .filter(dto -> dto.getLogs() != null && dto.getLogs().stream()
-            .anyMatch(log -> approver.equals(log.getApprover())))
-        .map(this::toVO)
-        .collect(Collectors.toList());
-  }
-
-  @Override
-  public List<ApprovalRecordVO> findAll() {
-    return store.values().stream().map(this::toVO).collect(Collectors.toList());
   }
 
   /**

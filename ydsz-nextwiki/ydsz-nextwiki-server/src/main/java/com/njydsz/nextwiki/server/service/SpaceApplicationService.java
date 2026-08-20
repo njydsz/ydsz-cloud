@@ -109,7 +109,8 @@ public class SpaceApplicationService {
 
     log.info("[SpaceApplicationService] 创建空间: spaceId={}, name={}, userId={}", space.getId(), name, userId);
 
-    return toSpaceVO(space);
+    // 返回新创建的 VO
+    return spaceRepository.findById(space.getId()).orElseThrow();
   }
 
   /**
@@ -125,7 +126,7 @@ public class SpaceApplicationService {
   @Transactional(rollbackFor = Exception.class)
   @SpacePermission(level = Level.ADMIN)
   public SpaceVO updateSpace(String spaceId, String name, String description, String visibility, String userId) {
-    SpaceDTO space = spaceRepository.findById(spaceId)
+    SpaceVO space = spaceRepository.findById(spaceId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SPACE_NOT_FOUND).data("spaceId", spaceId));
 
     // 更新字段
@@ -143,10 +144,27 @@ public class SpaceApplicationService {
     space.setUpdatedBy(userId);
     space.setUpdatedAt(LocalDateTime.now());
 
-    spaceRepository.update(space);
+    // 转换为 DTO 进行更新
+    SpaceDTO updateDTO = SpaceDTO.builder()
+        .id(space.getId())
+        .name(space.getName())
+        .description(space.getDescription())
+        .visibility(space.getVisibility())
+        .status(space.getStatus())
+        .ownerId(space.getOwnerId())
+        .sortOrder(space.getSortOrder())
+        .memberCount(space.getMemberCount())
+        .nodeCount(space.getNodeCount())
+        .quotaLimit(space.getQuotaLimit())
+        .quotaUsed(space.getQuotaUsed())
+        .createdAt(space.getCreatedAt())
+        .updatedAt(space.getUpdatedAt())
+        .updatedBy(space.getUpdatedBy())
+        .build();
+    spaceRepository.update(updateDTO);
 
     log.info("[SpaceApplicationService] 更新空间: spaceId={}, userId={}", spaceId, userId);
-    return toSpaceVO(space);
+    return spaceRepository.findById(spaceId).orElseThrow();
   }
 
   /**
@@ -158,13 +176,31 @@ public class SpaceApplicationService {
   @Transactional(rollbackFor = Exception.class)
   @SpacePermission(level = Level.ADMIN)
   public void archiveSpace(String spaceId, String userId) {
-    SpaceDTO space = spaceRepository.findById(spaceId)
+    SpaceVO space = spaceRepository.findById(spaceId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SPACE_NOT_FOUND).data("spaceId", spaceId));
 
     spaceDomainService.transitionStatus(space, "archived");
     space.setUpdatedBy(userId);
     space.setUpdatedAt(LocalDateTime.now());
-    spaceRepository.update(space);
+
+    // 转换为 DTO 进行更新
+    SpaceDTO updateDTO = SpaceDTO.builder()
+        .id(space.getId())
+        .name(space.getName())
+        .description(space.getDescription())
+        .visibility(space.getVisibility())
+        .status(space.getStatus())
+        .ownerId(space.getOwnerId())
+        .sortOrder(space.getSortOrder())
+        .memberCount(space.getMemberCount())
+        .nodeCount(space.getNodeCount())
+        .quotaLimit(space.getQuotaLimit())
+        .quotaUsed(space.getQuotaUsed())
+        .createdAt(space.getCreatedAt())
+        .updatedAt(space.getUpdatedAt())
+        .updatedBy(space.getUpdatedBy())
+        .build();
+    spaceRepository.update(updateDTO);
 
     log.info("[SpaceApplicationService] 归档空间: spaceId={}, userId={}", spaceId, userId);
   }
@@ -178,7 +214,7 @@ public class SpaceApplicationService {
   @Transactional(rollbackFor = Exception.class)
   @SpacePermission(level = Level.OWNER)
   public void deleteSpace(String spaceId, String userId) {
-    SpaceDTO space = spaceRepository.findById(spaceId)
+    spaceRepository.findById(spaceId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SPACE_NOT_FOUND).data("spaceId", spaceId));
 
     spaceRepository.deleteById(spaceId);
@@ -194,10 +230,9 @@ public class SpaceApplicationService {
    */
   public List<SpaceVO> listSpaces(String userId) {
     String tenantId = TenantContext.getTenantId();
-    List<SpaceDTO> spaces = spaceRepository.findByTenantId(tenantId);
+    List<SpaceVO> spaces = spaceRepository.findByTenantId(tenantId);
     return spaces.stream()
         .filter(s -> hasSpaceReadPermission(s.getId(), userId))
-        .map(this::toSpaceVO)
         .collect(Collectors.toList());
   }
 
@@ -210,10 +245,8 @@ public class SpaceApplicationService {
    */
   @SpacePermission(level = Level.VIEWER)
   public SpaceVO getSpace(String spaceId, String userId) {
-    SpaceDTO space = spaceRepository.findById(spaceId)
+    return spaceRepository.findById(spaceId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SPACE_NOT_FOUND).data("spaceId", spaceId));
-
-    return toSpaceVO(space);
   }
 
   /**
@@ -228,7 +261,7 @@ public class SpaceApplicationService {
   @SpacePermission(level = Level.ADMIN)
   public void addMember(String spaceId, String targetUserId, String role, String operatorId) {
     // 校验空间存在
-    SpaceDTO space = spaceRepository.findById(spaceId)
+    SpaceVO space = spaceRepository.findById(spaceId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SPACE_NOT_FOUND).data("spaceId", spaceId));
 
     // 校验角色合法性
@@ -263,7 +296,25 @@ public class SpaceApplicationService {
       // 更新成员数量
       int count = spaceMemberRepository.countBySpaceId(spaceId);
       space.setMemberCount(count);
-      spaceRepository.update(space);
+
+      // 转换为 DTO 进行更新
+      SpaceDTO updateDTO = SpaceDTO.builder()
+          .id(space.getId())
+          .name(space.getName())
+          .description(space.getDescription())
+          .visibility(space.getVisibility())
+          .status(space.getStatus())
+          .ownerId(space.getOwnerId())
+          .sortOrder(space.getSortOrder())
+          .memberCount(space.getMemberCount())
+          .nodeCount(space.getNodeCount())
+          .quotaLimit(space.getQuotaLimit())
+          .quotaUsed(space.getQuotaUsed())
+          .createdAt(space.getCreatedAt())
+          .updatedAt(space.getUpdatedAt())
+          .updatedBy(space.getUpdatedBy())
+          .build();
+      spaceRepository.update(updateDTO);
     }
 
     log.info("[SpaceApplicationService] 添加空间成员: spaceId={}, userId={}, role={}", spaceId, targetUserId, role);
@@ -290,10 +341,28 @@ public class SpaceApplicationService {
     spaceMemberRepository.deleteBySpaceIdAndUserId(spaceId, targetUserId);
 
     // 更新成员数量
-    SpaceDTO space = spaceRepository.findById(spaceId).orElseThrow();
+    SpaceVO space = spaceRepository.findById(spaceId).orElseThrow();
     int count = spaceMemberRepository.countBySpaceId(spaceId);
     space.setMemberCount(count);
-    spaceRepository.update(space);
+
+    // 转换为 DTO 进行更新
+    SpaceDTO updateDTO = SpaceDTO.builder()
+        .id(space.getId())
+        .name(space.getName())
+        .description(space.getDescription())
+        .visibility(space.getVisibility())
+        .status(space.getStatus())
+        .ownerId(space.getOwnerId())
+        .sortOrder(space.getSortOrder())
+        .memberCount(space.getMemberCount())
+        .nodeCount(space.getNodeCount())
+        .quotaLimit(space.getQuotaLimit())
+        .quotaUsed(space.getQuotaUsed())
+        .createdAt(space.getCreatedAt())
+        .updatedAt(space.getUpdatedAt())
+        .updatedBy(space.getUpdatedBy())
+        .build();
+    spaceRepository.update(updateDTO);
 
     log.info("[SpaceApplicationService] 移除空间成员: spaceId={}, userId={}", spaceId, targetUserId);
   }
@@ -328,7 +397,7 @@ public class SpaceApplicationService {
    */
   private boolean hasSpaceReadPermission(String spaceId, String userId) {
     // 公开空间所有人可读
-    SpaceDTO space = spaceRepository.findById(spaceId).orElse(null);
+    SpaceVO space = spaceRepository.findById(spaceId).orElse(null);
     if (space != null && "public".equals(space.getVisibility())) {
       return true;
     }
@@ -341,28 +410,5 @@ public class SpaceApplicationService {
    */
   private boolean isValidRole(String role) {
     return "owner".equals(role) || "admin".equals(role) || "editor".equals(role) || "viewer".equals(role);
-  }
-
-  /**
-   * DTO → VO 转换。
-   */
-  private SpaceVO toSpaceVO(SpaceDTO dto) {
-    return SpaceVO.builder()
-        .id(dto.getId())
-        .name(dto.getName())
-        .description(dto.getDescription())
-        .iconUrl(dto.getIconUrl())
-        .coverUrl(dto.getCoverUrl())
-        .ownerId(dto.getOwnerId())
-        .status(dto.getStatus())
-        .visibility(dto.getVisibility())
-        .sortOrder(dto.getSortOrder())
-        .memberCount(dto.getMemberCount())
-        .nodeCount(dto.getNodeCount())
-        .quotaLimit(dto.getQuotaLimit())
-        .quotaUsed(dto.getQuotaUsed())
-        .createdAt(dto.getCreatedAt())
-        .updatedAt(dto.getUpdatedAt())
-        .build();
   }
 }

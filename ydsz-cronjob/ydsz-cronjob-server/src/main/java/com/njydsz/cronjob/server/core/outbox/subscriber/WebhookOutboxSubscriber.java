@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.cronjob.domain.entity.outbox.OutboxEvent;
+import com.njydsz.cronjob.infra.entity.OutboxEvent;
 import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
 
 /**

@@ -11,11 +11,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowAnalyticsOverviewVO;
+import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO;
+import com.njydsz.workflow.domain.vo.FlowEfficiencyComparisonVO;
+import com.njydsz.workflow.domain.vo.FlowNodeDurationVO;
+import com.njydsz.workflow.domain.vo.FlowTrendVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
@@ -29,11 +34,11 @@ import com.njydsz.workflow.server.service.FlowAnalyticsService;
  * <p><b>核心职责：</b>
  *
  * <ul>
- *   <li><b>总览数据（{@link #getOverview}）</b>：总览指标 （今日发起 / 本周发起 / 累计发起 / 在途任务 / 平均耗时）
- *   <li><b>趋势分析（{@link #getTrend}）</b>：按时间维度（天 / 周 / 月）的趋势数据
- *   <li><b>流程排行（{@link #getFlowRanking}）</b>：TOP 10 流程 （按发起量 / 通过量 / 驳回量）
- *   <li><b>用户排行（{@link #getUserRanking}）</b>：TOP 10 审批人 / 发起人 （按审批量 / 发起量）
- *   <li><b>部门统计（{@link #getDeptStatistics}）</b>：按部门维度的审批数据统计
+ *   <li><b>总览数据（{@link #overview}）</b>：总览指标 （今日发起 / 本周发起 / 累计发起 / 在途任务 / 平均耗时）
+ *   <li><b>趋势分析（{@link #approvalTrend}）</b>：按时间维度（天 / 周 / 月）的趋势数据
+ *   <li><b>流程排行（{@link #flowEfficiencyComparison}）</b>：TOP 10 流程 （按发起量 / 通过量 / 驳回量）
+ *   <li><b>用户排行（{@link #approverEfficiency}）</b>：TOP 10 审批人 / 发起人 （按审批量 / 发起量）
+ *   <li><b>节点耗时分析（{@link #nodeDurationStats}）</b>：按节点维度的耗时分布
  *   <li><b>状态分布（{@link #getStatusDistribution}）</b>：流程状态分布 （PENDING / COMPLETED / TERMINATED /
  *       RECALLED）
  * </ul>
@@ -80,12 +85,12 @@ import com.njydsz.workflow.server.service.FlowAnalyticsService;
  *
  * <pre>{@code
  * // 1. 获取总览数据
- * AnalyticsOverview overview = analyticsService.getOverview(tenantId);
- * // overview.todayStartedCount = 23
+ * FlowAnalyticsOverviewVO overview = analyticsService.overview(startTime, endTime, tenantId);
+ * // overview.getTotalTasks() = 23
  *
  * // 2. 获取趋势数据（最近 30 天）
- * List<TrendPoint> trend = analyticsService.getTrend(
- *     tenantId, LocalDate.now().minusDays(30), LocalDate.now());
+ * List&lt;FlowTrendVO&gt; trend = analyticsService.approvalTrend(
+ *     startTime, endTime, tenantId, "DAY");
  * }</pre>
  *
  * @author ydsz-team
@@ -131,7 +136,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
   private final WorkflowConverter converter;
 
   @Override
-  public Map<String, Object> overview(
+  public FlowAnalyticsOverviewVO overview(
       LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
 
@@ -168,42 +173,80 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
                     FlowTaskStatus.CLAIMED.name())
                 .lt(FlowRunTaskDO::getDueAt, LocalDateTime.now()));
 
-    Map<String, Object> result = new LinkedHashMap<>();
-    result.put("totalTasks", totalHis);
-    result.put("completedTasks", completedCount);
-    result.put("rejectedTasks", rejectedCount);
-    result.put("pendingTasks", pendingCount);
-    result.put("overdueCount", overdueCount);
-    result.put("rejectionRate", Math.round(rejectionRate * 10000) / 10000.0);
-    result.put("avgDurationMs", Math.round(avgDurationMs));
-    result.put("startTime", startTime);
-    result.put("endTime", endTime);
+    FlowAnalyticsOverviewVO result = new FlowAnalyticsOverviewVO();
+    result.setTotalTasks(totalHis);
+    result.setCompletedTasks(completedCount);
+    result.setRejectedTasks(rejectedCount);
+    result.setPendingTasks(pendingCount);
+    result.setOverdueCount(overdueCount);
+    result.setRejectionRate(Math.round(rejectionRate * 10000) / 10000.0);
+    result.setAvgDurationMs(Math.round(avgDurationMs));
     return result;
   }
 
   @Override
-  public Object approverEfficiency(
+  public List<FlowApproverEfficiencyVO> approverEfficiency(
       LocalDateTime startTime, LocalDateTime endTime, String tenantId, int limit) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
     int l = Math.max(1, Math.min(limit, 100));
-    return hisTaskMapper.selectApproverEfficiency(tid, startTime, endTime, l);
+    List<Map<String, Object>> rows = hisTaskMapper.selectApproverEfficiency(tid, startTime, endTime, l);
+    if (rows == null) {
+      return List.of();
+    }
+    return rows.stream().map(row -> {
+      FlowApproverEfficiencyVO vo = new FlowApproverEfficiencyVO();
+      vo.setUserId(String.valueOf(row.get("assigneeId")));
+      vo.setUserName((String) row.get("assigneeName"));
+      vo.setCompletedCount(toLong(row.get("completedCount")));
+      vo.setAvgDurationMs(toLong(row.get("avgDurationMs")));
+      vo.setTotalDurationMs(toLong(row.get("totalDurationMs")));
+      return vo;
+    }).toList();
   }
 
   @Override
-  public Object flowEfficiencyComparison(
+  public List<FlowEfficiencyComparisonVO> flowEfficiencyComparison(
       LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
-    return hisTaskMapper.selectFlowEfficiencyComparison(tid, startTime, endTime);
+    List<Map<String, Object>> rows = hisTaskMapper.selectFlowEfficiencyComparison(tid, startTime, endTime);
+    if (rows == null) {
+      return List.of();
+    }
+    return rows.stream().map(row -> {
+      FlowEfficiencyComparisonVO vo = new FlowEfficiencyComparisonVO();
+      vo.setFlowCode((String) row.get("flowCode"));
+      vo.setFlowName((String) row.get("flowName"));
+      vo.setTotalCount(toLong(row.get("totalCount")));
+      vo.setCompletedCount(toLong(row.get("completedCount")));
+      vo.setAvg DurationMs(toLong(row.get("avgDurationMs")));
+      vo.setRejectionRate(toDouble(row.get("rejectionRate")));
+      vo.setOverdueRate(0.0);
+      return vo;
+    }).toList();
   }
 
   @Override
-  public Object nodeDurationStats(String flowCode, String tenantId) {
+  public List<FlowNodeDurationVO> nodeDurationStats(String flowCode, String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
-    return hisTaskMapper.nodeDurationStats(flowCode, tid);
+    List<Map<String, Object>> rows = hisTaskMapper.nodeDurationStats(flowCode, tid);
+    if (rows == null) {
+      return List.of();
+    }
+    return rows.stream().map(row -> {
+      FlowNodeDurationVO vo = new FlowNodeDurationVO();
+      vo.setNodeCode((String) row.get("nodeCode"));
+      vo.setNodeName((String) row.get("nodeName"));
+      vo.setAvgDurationMs(toLong(row.get("avgDurationMs")));
+      vo.setMaxDurationMs(0L);
+      vo.setP50DurationMs(0L);
+      vo.setP90DurationMs(0L);
+      vo.setCount(toLong(row.get("count")));
+      return vo;
+    }).toList();
   }
 
   @Override
-  public Object approvalTrend(
+  public List<FlowTrendVO> approvalTrend(
       LocalDateTime startTime, LocalDateTime endTime, String tenantId, String granularity) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
     // P1-5: 使用 SQL date_trunc 聚合，替代前端聚合
@@ -217,14 +260,19 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
         && !"year".equals(gran)) {
       gran = "day";
     }
-    List<Map<String, Object>> data =
+    List<Map<String, Object>> rows =
         hisTaskMapper.selectApprovalTrend(tid, startTime, endTime, gran);
-    Map<String, Object> result = new LinkedHashMap<>();
-    result.put("granularity", gran.toUpperCase());
-    result.put("data", data);
-    result.put("startTime", startTime);
-    result.put("endTime", endTime);
-    return result;
+    if (rows == null) {
+      return List.of();
+    }
+    return rows.stream().map(row -> {
+      FlowTrendVO vo = new FlowTrendVO();
+      Object dateObj = row.get("date");
+      vo.setTimeLabel(dateObj != null ? dateObj.toString() : null);
+      vo.setCount(toLong(row.get("totalCount")));
+      vo.setAvgDurationMs(toLong(row.get("avgDurationMs")));
+      return vo;
+    }).toList();
   }
 
   // ============================== 工具方法 ==============================

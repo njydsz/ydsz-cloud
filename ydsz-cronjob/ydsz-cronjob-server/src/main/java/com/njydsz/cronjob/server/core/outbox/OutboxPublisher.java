@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.cronjob.domain.entity.outbox.OutboxEvent;
+import com.njydsz.cronjob.infra.entity.OutboxEvent;
 import com.njydsz.cronjob.domain.repository.outbox.OutboxEventRepository;
 
 /**

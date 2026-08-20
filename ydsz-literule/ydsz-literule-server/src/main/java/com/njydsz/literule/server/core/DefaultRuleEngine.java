@@ -10,11 +10,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 import jakarta.annotation.PreDestroy;
@@ -23,9 +21,6 @@ import org.slf4j.MDC;
 
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.sentry.SentryObservation;
-import com.njydsz.common.sentry.domain.AlertEvent;
-import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
@@ -130,23 +125,11 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
   /** 并行评估触发阈值（候选规则数 ≥ 此值时启用并行），默认 50 */
   private volatile int parallelThreshold = 50;
 
-  /**
-   * 慢规则阈值（毫秒，P2-4）
-   *
-   * <p>单规则评估耗时超过此值时记录慢规则告警（{@link RuleMetrics#recordSlowRule}）。 0 表示不启用慢规则检测（默认）。
-   */
-  private volatile long slowRuleThresholdMs = 0L;
+  /** 统计记录器（封装统计计数器、慢规则检测和告警） */
+  private final RuleStatistics statistics = new RuleStatistics();
 
-  /** 统计计数器 */
-  private final AtomicLong totalEvaluations = new AtomicLong(0);
-
-  private final AtomicLong totalTriggered = new AtomicLong(0);
-  private final AtomicLong totalErrors = new AtomicLong(0);
-  private final AtomicLong totalElapsedMs = new AtomicLong(0);
-
-  /** 按规则编码的统计明细 */
-  private final ConcurrentHashMap<String, RuleEngineStats.RuleStat> perRuleStats =
-      new ConcurrentHashMap<>();
+  /** 轨迹构建器 */
+  private final RuleTraceBuilder traceBuilder = new RuleTraceBuilder();
 
   /** 评估结果缓存（P1-7：可选，通过 setEvaluationResultCache 注入） */
   private volatile EvaluationResultCache evaluationResultCache;
@@ -280,8 +263,8 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     if (ruleCode == null) return;
     rules.removeIf(r -> ruleCode.equals(r.getCode()));
     ruleIndexer.removeFromIndex(ruleCode);
-    // P1-6: 注销规则时同步清理该规则的统计数据，避免 perRuleStats Map 无限增长
-    perRuleStats.remove(ruleCode);
+    // P1-6: 注销规则时同步清理该规则的统计数据，避免统计数据 Map 无限增长
+    statistics.removeRuleStats(ruleCode);
     // 清理熔断器状态
     if (circuitBreaker != null) {
       circuitBreaker.reset(ruleCode);
@@ -298,6 +281,15 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     if (metrics != null) {
       metrics.recordRegisteredRules(rules.size());
     }
+  }
+
+  /**
+   * 获取统计记录器（供外部访问统计信息）
+   *
+   * @return 统计记录器
+   */
+  public RuleStatistics getStatistics() {
+    return statistics;
   }
 
   /**
@@ -1041,37 +1033,12 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    */
   @Override
   public RuleEngineStats getStats() {
-    // P2-7: 使用 HashMap 替代 ConcurrentHashMap 构建快照
-    // （快照本身是一次性局部变量，无需线程安全容器，减少不必要的开销）
-    Map<String, RuleEngineStats.RuleStat> snapshot = new HashMap<>(perRuleStats.size());
-    perRuleStats.forEach(
-        (k, v) ->
-            snapshot.put(
-                k,
-                RuleEngineStats.RuleStat.builder()
-                    .executions(v.getExecutions())
-                    .triggered(v.getTriggered())
-                    .errors(v.getErrors())
-                    .totalElapsedMs(v.getTotalElapsedMs())
-                    .build()));
-    return RuleEngineStats.builder()
-        .totalEvaluations(totalEvaluations.get())
-        .totalTriggered(totalTriggered.get())
-        .totalErrors(totalErrors.get())
-        .totalElapsedMs(totalElapsedMs.get())
-        .registeredRules(rules.size())
-        .lastEvaluatedRules(metrics != null ? metrics.getLastEvaluatedRules() : 0)
-        .perRuleStats(snapshot)
-        .build();
+    return statistics.snapshot(rules.size(), metrics != null ? metrics.getLastEvaluatedRules() : 0);
   }
 
   /** 重置统计 */
   public void resetStats() {
-    totalEvaluations.set(0);
-    totalTriggered.set(0);
-    totalErrors.set(0);
-    totalElapsedMs.set(0);
-    perRuleStats.clear();
+    statistics.reset();
   }
 
   /**
@@ -1081,7 +1048,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    * @since 1.0.0
    */
   public void setStatsEnabled(boolean statsEnabled) {
-    this.statsEnabled = statsEnabled;
+    statistics.setStatsEnabled(statsEnabled);
   }
 
   /**
@@ -1091,7 +1058,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    * @since 1.0.0
    */
   public boolean isStatsEnabled() {
-    return statsEnabled;
+    return statistics.isStatsEnabled();
   }
 
   /**
@@ -1172,6 +1139,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    */
   public void setMetrics(RuleMetrics metrics) {
     this.metrics = metrics;
+    statistics.setMetrics(metrics);
   }
 
   /**
@@ -1374,7 +1342,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    * @since 1.0.0
    */
   public void setSlowRuleThresholdMs(long thresholdMs) {
-    this.slowRuleThresholdMs = thresholdMs;
+    statistics.setSlowRuleThresholdMs(thresholdMs);
     if (thresholdMs > 0) {
       log.info("[LiteRule-Performance] 慢规则告警已启用 (threshold={}ms)", thresholdMs);
     }
@@ -1491,8 +1459,8 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     long elapsed = (System.nanoTime() - start) / 1_000_000;
     RuleEvaluationOutcome outcome = new RuleEvaluationOutcome(result, caughtException, elapsed);
 
-    // 统计记录
-    record(rule.getCode(), outcome.isTriggered, outcome.isError, elapsed);
+    // 统计记录（含慢规则检测与告警）
+    statistics.record(rule.getCode(), outcome.isTriggered, outcome.isError, elapsed);
 
     // 熔断器记录结果
     if (circuitBreaker != null) {
@@ -1521,7 +1489,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     // 异步记录 Trace（即使异常也记录，便于排查）
     if (traceRecorder != null && traceRecorder.isEnabled()) {
       try {
-        RuleExecutionTrace trace = buildTrace(context, rule, result, elapsed, caughtException);
+        RuleExecutionTrace trace = traceBuilder.buildTrace(context, rule, result, elapsed, caughtException);
         traceRecorder.record(trace);
       } catch (Exception te) {
         log.debug("{} Trace 记录失败: {}", logTag, te.getMessage());
@@ -1623,45 +1591,6 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         });
   }
 
-  /**
-   * 构建执行轨迹记录
-   *
-   * @param context 规则上下文
-   * @param rule 规则
-   * @param result 评估结果（可能为 null）
-   * @param elapsedMs 耗时
-   * @param exception 评估异常（可能为 null）
-   * @return 轨迹记录
-   * @since 1.0.0
-   */
-  private RuleExecutionTrace buildTrace(
-      RuleContext context, Rule rule, RuleResult result, long elapsedMs, Exception exception) {
-    String severity =
-        result != null && result.getSeverity() != null ? result.getSeverity().getCode() : null;
-    String conditionResult =
-        result != null && result.getThreshold() != null ? result.getThreshold() : null;
-
-    Map<String, Object> resultSnapshot = new LinkedHashMap<>();
-    if (result != null) {
-      resultSnapshot.put("triggered", result.isTriggered());
-      resultSnapshot.put("severity", severity);
-      resultSnapshot.put("title", result.getTitle());
-      resultSnapshot.put("description", result.getDescription());
-    }
-
-    return new RuleExecutionTrace(
-        context.getTraceId(),
-        rule.getCode(),
-        rule.getName(),
-        context.getScenario(),
-        result != null && result.isTriggered(),
-        severity,
-        conditionResult,
-        elapsedMs,
-        new LinkedHashMap<>(context.getFacts()),
-        resultSnapshot,
-        exception != null ? exception.getMessage() : null);
-  }
 
   /**
    * 优雅关闭：释放 TraceRecorder、超时执行器、并行评估器、注入线程池与注册表资源
@@ -1753,6 +1682,8 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
   /**
    * 记录统计（实现 {@link StatsRecorder}）
    *
+   * <p>委托给 {@link RuleStatistics} 组件，保持向后兼容。
+   *
    * @param ruleCode 规则编码
    * @param triggered 是否触发
    * @param error 是否异常
@@ -1760,50 +1691,6 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    */
   @Override
   public void record(String ruleCode, boolean triggered, boolean error, long elapsedMs) {
-    if (!statsEnabled) {
-      return;
-    }
-    totalEvaluations.incrementAndGet();
-    totalElapsedMs.addAndGet(elapsedMs);
-    if (triggered) totalTriggered.incrementAndGet();
-    if (error) totalErrors.incrementAndGet();
-    perRuleStats.compute(
-        ruleCode,
-        (k, v) -> {
-          if (v == null) v = RuleEngineStats.RuleStat.builder().build();
-          v.setExecutions(v.getExecutions() + 1);
-          if (triggered) v.setTriggered(v.getTriggered() + 1);
-          if (error) v.setErrors(v.getErrors() + 1);
-          v.setTotalElapsedMs(v.getTotalElapsedMs() + elapsedMs);
-          return v;
-        });
-    // P2-4 慢规则告警：超过阈值时上报监控指标 + sentry 告警收敛
-    if (slowRuleThresholdMs > 0 && elapsedMs >= slowRuleThresholdMs) {
-      if (metrics != null) {
-        metrics.recordSlowRule(ruleCode, elapsedMs, slowRuleThresholdMs);
-      }
-      // 慢规则告警 → sentry 告警收敛（P2 性能事件）
-      SentryObservation.alert(
-          AlertEvent.builder()
-              .name("literule.slow_rule")
-              .severity(AlertSeverity.P2)
-              .summary("慢规则检测：规则 " + ruleCode + " 评估耗时超阈值")
-              .description("规则评估耗时 " + elapsedMs + "ms，超过阈值 " + slowRuleThresholdMs + "ms")
-              .category("performance")
-              .labels(
-                  Map.of(
-                      "rule_code",
-                      ruleCode,
-                      "elapsed_ms",
-                      String.valueOf(elapsedMs),
-                      "threshold_ms",
-                      String.valueOf(slowRuleThresholdMs)))
-              .build());
-      log.warn(
-          "[LiteRule-SlowRule] rule={}, elapsed={}ms, threshold={}ms",
-          ruleCode,
-          elapsedMs,
-          slowRuleThresholdMs);
-    }
+    statistics.record(ruleCode, triggered, error, elapsedMs);
   }
 }

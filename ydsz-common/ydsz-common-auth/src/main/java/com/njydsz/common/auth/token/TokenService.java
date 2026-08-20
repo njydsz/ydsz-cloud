@@ -76,6 +76,16 @@ public interface TokenService {
   String refreshAccessToken(String refreshToken);
 
   /**
+   * 获取访问令牌剩余有效时间（秒）（P1-2 Token 自动续签）。
+   *
+   * <p>用于判断 Token 是否临近过期，当剩余有效期低于阈值时自动续签。
+   *
+   * @param token 访问令牌
+   * @return 剩余有效时间（秒）；令牌无效或已过期返回 0
+   */
+  long getAccessTokenRemainingTtl(String token);
+
+  /**
    * 签发 OIDC ID Token
    *
    * <p>ID Token 是 OpenID Connect 协议的核心令牌，用于向客户端证明用户身份。 包含标准 OIDC 声明（iss, sub, aud, exp, iat, nonce）， 有效期较短（默认

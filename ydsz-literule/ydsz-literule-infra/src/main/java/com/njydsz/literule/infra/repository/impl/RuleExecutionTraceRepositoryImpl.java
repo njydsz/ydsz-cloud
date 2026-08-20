@@ -1,7 +1,6 @@
 package com.njydsz.literule.infra.repository.impl;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -76,19 +75,5 @@ public class RuleExecutionTraceRepositoryImpl implements RuleExecutionTraceRepos
                 .orderByDesc(RuleExecutionTraceDO::getId)
                 .last("LIMIT " + limit));
     return converter.ruleExecutionTraceListToVO(entities);
-  }
-
-  @Override
-  public Optional<RuleExecutionTraceVO> findFirstByTraceId(String traceId) {
-    List<RuleExecutionTraceDO> entities =
-        ruleExecutionTraceMapper.selectList(
-            new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                .eq(RuleExecutionTraceDO::getTraceId, traceId)
-                .orderByAsc(RuleExecutionTraceDO::getId)
-                .last("LIMIT 1"));
-    if (entities.isEmpty()) {
-      return Optional.empty();
-    }
-    return Optional.of(converter.entityToVO(entities.get(0)));
   }
 }

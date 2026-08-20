@@ -23,11 +23,11 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowCcVO;
 import com.njydsz.workflow.infra.entity.FlowCcDO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.mapper.FlowCcMapper;
 import com.njydsz.workflow.server.engine.FlowAssigneeResolver;
-import com.njydsz.workflow.server.engine.FlowVariableStrategy;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowVariableStrategy;
 import com.njydsz.workflow.server.service.FlowCcService;
 
 /**
@@ -65,7 +65,7 @@ import com.njydsz.workflow.server.service.FlowCcService;
  * @see FlowCcService 接口定义
  * @see FlowCcDO 抄送实体
  * @see FlowAssigneeResolver 审批人解析器（{@code role:/dept:} 展开）
- * @see FlowVariableStrategy 变量解析策略（SpEL 表达式）
+ * @see DefaultFlowVariableStrategy 变量解析策略（Aviator 表达式）
  */
 @Slf4j
 @Service
@@ -85,7 +85,7 @@ public class FlowCcServiceImpl implements FlowCcService {
   private final WorkflowConverter converter;
 
   /** 流程变量解析策略，解析 permissionFlag 中的动态变量（如 ${initiator}） */
-  private final FlowVariableStrategy variableStrategy;
+  private final DefaultFlowVariableStrategy variableStrategy;
 
   /** 审批人解析器，将 role:/dept:/position:/leader: 等标识展开为具体用户 ID 列表 */
   private final FlowAssigneeResolver assigneeResolver;
@@ -121,7 +121,7 @@ public class FlowCcServiceImpl implements FlowCcService {
       }
 
       // 1. 获取流程实例（取 flowCode/flowName/businessKey 等冗余字段）
-      FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
+      FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
       if (instance == null) {
         log.warn("[FlowCcDO] 流程实例不存在: instanceId={}", instanceId);
         return;
@@ -460,7 +460,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
   /** 构建 FlowCcDO 记录 */
   private FlowCcDO buildCcDO(
-      FlowInstanceDO instance, FlowNodeDO node, String userId, LocalDateTime now, String traceId) {
+      FlowInstanceVO instance, FlowNodeDO node, String userId, LocalDateTime now, String traceId) {
     FlowCcDO cc = new FlowCcDO();
     cc.setTenantId(instance.getTenantId());
     cc.setInstanceId(instance.getId());

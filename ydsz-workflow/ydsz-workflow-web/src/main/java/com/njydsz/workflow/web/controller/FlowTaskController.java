@@ -41,9 +41,12 @@ import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
+import com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO;
 import com.njydsz.workflow.domain.vo.FlowCcVO;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
+import com.njydsz.workflow.domain.vo.FlowRejectableNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
+import com.njydsz.workflow.domain.vo.FlowTaskDetailVO;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
 import com.njydsz.workflow.server.service.FlowCcService;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
@@ -142,7 +145,7 @@ public class FlowTaskController {
             description = "无权限查看该任务",
             content = @Content(schema = @Schema(hidden = true)))
       })
-  public YdszResponse<Map<String, Object>> taskDetail(
+  public YdszResponse<FlowTaskDetailVO> taskDetail(
       @Parameter(description = "任务 ID", required = true, example = "task-abc123")
           @PathVariable String taskId) {
     return YdszResponse.success(workflowFacade.getTaskDetail(taskId));
@@ -237,12 +240,12 @@ public class FlowTaskController {
    */
   @GetMapping("/task/{taskId}/rejectableNodes")
   @Operation(summary = "查询任务所属实例的历史节点")
-  public YdszResponse<List<Map<String, Object>>> rejectableNodes(@PathVariable String taskId) {
+  public YdszResponse<List<FlowRejectableNodeVO>> rejectableNodes(@PathVariable String taskId) {
     String instanceId = taskService.getTaskInstanceId(taskId);
     if (instanceId == null) {
       return YdszResponse.success(List.of());
     }
-    List<Map<String, Object>> nodes = taskService.listPassedNodes(instanceId);
+    List<FlowRejectableNodeVO> nodes = taskService.listPassedNodes(instanceId);
     return YdszResponse.success(nodes);
   }
 
@@ -494,7 +497,7 @@ public class FlowTaskController {
       content = "'batchUrge'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "批量催办任务")
-  public YdszResponse<Map<String, Object>> batchUrge(
+  public YdszResponse<FlowBatchUrgeResultVO> batchUrge(
       @RequestBody List<String> instanceIds, @RequestParam(required = false) String comment) {
     return YdszResponse.success(
         workflowFacade.batchUrge(instanceIds, AuthContextUtils.getUserId(), comment));

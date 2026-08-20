@@ -77,6 +77,16 @@ public interface CronjobConverter {
 
   List<TenantQuotaVO> tenantQuotaListToVO(List<TenantQuota> entities);
 
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  TenantQuota voToEntity(TenantQuotaVO vo);
+
   // ===== GlueCode =====
   GlueCodeVO entityToVO(GlueCode entity);
 
@@ -96,6 +106,16 @@ public interface CronjobConverter {
   JobVO entityToVO(Job entity);
 
   List<JobVO> jobListToVO(List<Job> entities);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  Job voToEntity(JobVO vo);
 
   // ===== JobAlertLog =====
   JobAlertLogVO entityToVO(JobAlertLog entity);
@@ -296,6 +316,16 @@ public interface CronjobConverter {
   JobNodeVO entityToVO(JobNode entity);
 
   List<JobNodeVO> jobNodeListToVO(List<JobNode> entities);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobNode voToEntity(JobNodeVO vo);
 
   // ===== JobTask =====
   JobTaskVO entityToVO(JobTask entity);

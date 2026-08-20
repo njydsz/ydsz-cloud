@@ -1,6 +1,6 @@
 package com.njydsz.cronjob.server.core.logger;
 
-import com.njydsz.cronjob.infra.entity.log.JobLogContent;
+import com.njydsz.cronjob.domain.vo.JobLogContentVO;
 
 /**
  * P2-3: Disruptor 日志事件（预分配对象，避免 GC）。
@@ -69,18 +69,18 @@ public class DisruptorLogEvent {
   }
 
   /**
-   * 转换为 JobLogContent 实体（消费者调用）。
+   * 转换为 JobLogContentVO（消费者调用）。
    *
-   * @return JobLogContent 实例
+   * @return JobLogContentVO 实例
    */
-  public JobLogContent toLogContent() {
-    JobLogContent logContent = new JobLogContent();
-    logContent.setLogId(this.logId);
-    logContent.setJobKey(this.jobKey);
-    logContent.setLineNo(this.lineNo);
-    logContent.setContent(this.content);
-    logContent.setLogLevel(this.level);
-    return logContent;
+  public JobLogContentVO toLogContent() {
+    JobLogContentVO vo = new JobLogContentVO();
+    vo.setLogId(this.logId);
+    vo.setJobKey(this.jobKey);
+    vo.setLineNo(this.lineNo);
+    vo.setContent(this.content);
+    vo.setLogLevel(this.level);
+    return vo;
   }
 
   public String getLogId() {

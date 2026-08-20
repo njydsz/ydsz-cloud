@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.outbox.OutboxEvent;
+import com.njydsz.cronjob.infra.entity.OutboxEvent;
 
 /**
  * Outbox 事件 Mapper。

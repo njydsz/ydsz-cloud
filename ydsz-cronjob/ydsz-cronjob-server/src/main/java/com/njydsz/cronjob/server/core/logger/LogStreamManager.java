@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.njydsz.cronjob.infra.entity.log.JobLogContent;
+import com.njydsz.cronjob.domain.vo.JobLogContentVO;
 
 /**
  * P0-2: 日志流推送管理器（SSE 实时推送）。
@@ -99,7 +99,7 @@ public class LogStreamManager {
    * @param logId 执行日志 ID
    * @param line 日志行
    */
-  public void pushLogLine(String logId, JobLogContent line) {
+  public void pushLogLine(String logId, JobLogContentVO line) {
     CopyOnWriteArrayList<SseEmitter> emitters = emittersMap.get(logId);
     if (emitters == null || emitters.isEmpty()) {
       return;
@@ -120,7 +120,7 @@ public class LogStreamManager {
    * @param logId 执行日志 ID
    * @param lines 日志行列表
    */
-  public void pushHistory(String logId, List<JobLogContent> lines) {
+  public void pushHistory(String logId, List<JobLogContentVO> lines) {
     if (lines == null || lines.isEmpty()) {
       return;
     }
@@ -128,7 +128,7 @@ public class LogStreamManager {
     if (emitters == null || emitters.isEmpty()) {
       return;
     }
-    for (JobLogContent line : lines) {
+    for (JobLogContentVO line : lines) {
       pushLogLine(logId, line);
     }
   }

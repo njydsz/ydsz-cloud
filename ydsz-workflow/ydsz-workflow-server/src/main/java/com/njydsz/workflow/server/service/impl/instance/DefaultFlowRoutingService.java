@@ -20,10 +20,9 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.engine.expr.ExpressionEvaluator;
-import com.njydsz.workflow.server.service.FlowRoutingService;
 import java.util.stream.Collectors;
 
 /**
@@ -31,8 +30,7 @@ import java.util.stream.Collectors;
  *
  * <p>基于引擎内置的 {@link ExpressionEvaluator}（默认 Aviator 引擎）提供<b>路由条件评估</b>和<b>异常检测</b>能力。
  *
- * <p>业务系统如需更强大的规则引擎能力（如规则链、决策表、复杂规则编排），可自行实现 {@link FlowRoutingService} 并注册为
- * Bean 覆盖本实现。
+ * <p>业务系统如需更强大的规则引擎能力（如规则链、决策表、复杂规则编排），可实现本类的同名 Spring Bean 覆盖注册。
  *
  * <p><b>设计要点：</b>
  *
@@ -44,13 +42,12 @@ import java.util.stream.Collectors;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see FlowRoutingService 接口定义
  * @see ExpressionEvaluator 表达式求值器 SPI
  */
 @Slf4j
 @Service
-@ConditionalOnMissingBean(FlowRoutingService.class)
-public class DefaultFlowRoutingService implements FlowRoutingService {
+@ConditionalOnMissingBean(DefaultFlowRoutingService.class)
+public class DefaultFlowRoutingService {
 
   /** 表达式求值器，评估路由条件表达式 */
   private final ExpressionEvaluator expressionEvaluator;
@@ -82,7 +79,6 @@ public class DefaultFlowRoutingService implements FlowRoutingService {
 
   // ============================== 路由评估 ==============================
 
-  @Override
   public String evaluateRoute(String conditionExpression, Map<String, Object> variables) {
     if (conditionExpression == null || conditionExpression.isBlank()) {
       log.debug("[FlowRoute] 路由表达式为空，返回 null");
@@ -103,7 +99,6 @@ public class DefaultFlowRoutingService implements FlowRoutingService {
     }
   }
 
-  @Override
   public boolean evaluateCondition(String conditionExpression, Map<String, Object> variables) {
     if (conditionExpression == null || conditionExpression.isBlank()) {
       return true;
@@ -121,13 +116,12 @@ public class DefaultFlowRoutingService implements FlowRoutingService {
 
   // ============================== 异常检测 ==============================
 
-  @Override
   @Transactional(readOnly = true)
   public List<Map<String, Object>> detectAnomalies(String instanceId) {
     if (instanceId == null) {
       return Collections.emptyList();
     }
-    FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
+    FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
     if (instance == null) {
       log.warn("[FlowRoute] 实例不存在，跳过异常检测: instanceId={}", instanceId);
       return Collections.emptyList();
@@ -142,7 +136,6 @@ public class DefaultFlowRoutingService implements FlowRoutingService {
     return anomalies;
   }
 
-  @Override
   @Transactional(readOnly = true)
   public boolean isAnomaly(String instanceId) {
     return !detectAnomalies(instanceId).isEmpty();

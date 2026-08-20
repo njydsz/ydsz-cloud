@@ -4,6 +4,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.workflow.domain.vo.FlowBatchDeployResultVO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionDetailVO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionDiffVO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVersionVO;
+import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
+import com.njydsz.workflow.domain.vo.FlowRollbackResultVO;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -33,8 +40,8 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.util.collection.MapUtils;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
@@ -146,7 +153,7 @@ public class FlowDefinitionController {
   @PostMapping(value = "/definition/batchDeployZip", consumes = "multipart/form-data")
   @Operation(summary = "BPMN 部署包 .zip 批量导入")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
-  public YdszResponse<Map<String, Object>> batchDeployFromZip(
+  public YdszResponse<FlowBatchDeployResultVO> batchDeployFromZip(
       @RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
       return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "zip 文件不能为空");
@@ -218,9 +225,7 @@ public class FlowDefinitionController {
       @PathVariable String code,
       @RequestParam(required = false) String version,
       @RequestParam(required = false) String tenantId) {
-    return YdszResponse.success(
-        WorkflowConverter.INSTANT.entityToVO(
-            definitionService.getPublished(code, version, tenantId)));
+    return YdszResponse.success(definitionService.getPublished(code, version, tenantId));
   }
 
   /**
@@ -239,9 +244,7 @@ public class FlowDefinitionController {
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
       @RequestParam(required = false) String category,
       @RequestParam(required = false) String flowCode) {
-    return YdszResponse.success(
-        WorkflowConverter.INSTANT.flowDefinitionListToVO(
-            definitionService.page(pageNo, pageSize, category, flowCode)));
+    return YdszResponse.success(definitionService.page(pageNo, pageSize, category, flowCode));
   }
 
   /**
@@ -252,7 +255,7 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/{id}")
   @Operation(summary = "查询流程定义详情（含节点与跳转）")
-  public YdszResponse<Map<String, Object>> getDefinitionDetail(@PathVariable String id) {
+  public YdszResponse<FlowDefinitionDetailVO> getDefinitionDetail(@PathVariable String id) {
     return YdszResponse.success(definitionService.getDetail(id));
   }
 
@@ -264,9 +267,9 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/{id}/preview")
   @Operation(summary = "流程定义预览（只读）")
-  public YdszResponse<Map<String, Object>> getDefinitionPreview(@PathVariable String id) {
-    Map<String, Object> detail = definitionService.getDetail(id);
-    detail.put("readOnly", true);
+  public YdszResponse<FlowDefinitionDetailVO> getDefinitionPreview(@PathVariable String id) {
+    FlowDefinitionDetailVO detail = definitionService.getDetail(id);
+    detail.setReadOnly(true);
     return YdszResponse.success(detail);
   }
 
@@ -345,7 +348,7 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/{id}/versions")
   @Operation(summary = "列出流程定义的所有历史版本")
-  public YdszResponse<List<Map<String, Object>>> listVersions(@PathVariable String id) {
+  public YdszResponse<List<FlowDefinitionVersionVO>> listVersions(@PathVariable String id) {
     return YdszResponse.success(definitionService.listVersions(id));
   }
 
@@ -359,7 +362,7 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/{id}/diff")
   @Operation(summary = "流程定义版本差异对比")
-  public YdszResponse<Map<String, Object>> diffVersions(
+  public YdszResponse<FlowDefinitionDiffVO> diffVersions(
       @PathVariable String id, @RequestParam Integer v1, @RequestParam Integer v2) {
     return YdszResponse.success(definitionService.diffVersions(id, v1, v2));
   }
@@ -375,7 +378,7 @@ public class FlowDefinitionController {
   @PostMapping("/definition/rollback")
   @Operation(summary = "一键回滚流程定义到上一版本")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-  public YdszResponse<Map<String, Object>> rollbackDefinition(@RequestParam String flowCode) {
+  public YdszResponse<FlowRollbackResultVO> rollbackDefinition(@RequestParam String flowCode) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     return YdszResponse.success(definitionService.rollbackDefinition(flowCode, tenantId));
   }
@@ -486,7 +489,7 @@ public class FlowDefinitionController {
   @GetMapping("/definition/migrationImpact")
   @Operation(summary = "变更影响分析报告（评估版本升级对在途实例的影响）")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-  public YdszResponse<Map<String, Object>> analyzeMigrationImpact(
+  public YdszResponse<FlowMigrationImpactVO> analyzeMigrationImpact(
       @RequestParam String oldDefinitionId, @RequestParam String newDefinitionId) {
     return YdszResponse.success(
         definitionService.analyzeMigrationImpact(oldDefinitionId, newDefinitionId));

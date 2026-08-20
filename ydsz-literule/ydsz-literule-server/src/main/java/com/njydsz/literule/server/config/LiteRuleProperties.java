@@ -757,26 +757,15 @@ public class LiteRuleProperties {
   }
 
   /**
-   * CEP 复杂事件处理配置（P3 高吞吐异步化）
+   * CEP 复杂事件处理配置
    *
-   * <p>控制 {@code CEPEngine} 的投递模式。
+   * <p>控制 {@code CEPEngine} 的行为。
    *
    * @since 1.0.0
    */
   @Data
   public static class CepConfig {
-
-    /**
-     * 是否启用异步投递模式
-     *
-     * <p>true：{@code feed} 仅入队，由内部守护线程异步消费， 将模式匹配从调用方线程剥离（高吞吐场景，如万级 TPS）；
-     * false（默认）：同步投递，向后兼容。
-     */
-    private boolean asyncEnabled = false;
-
-    /** 异步队列容量（默认 10000，队列满时丢弃最旧事件并告警） */
-    @Min(1)
-    private int asyncQueueCapacity = 10_000;
+    // 当前无特殊配置项，保留配置类以便未来扩展
   }
 
   /**

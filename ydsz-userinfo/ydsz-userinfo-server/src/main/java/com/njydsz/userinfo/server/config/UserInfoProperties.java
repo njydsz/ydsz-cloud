@@ -245,6 +245,38 @@ public class UserInfoProperties {
    */
   private List<String> trustedProxies = List.of();
 
+  // ==================== P1-2 Token 自动续签配置 ====================
+
+  /**
+   * P1-2: 是否启用 Token 自动续签。
+   *
+   * <p>开启后，当 access_token 剩余有效期低于阈值时，自动签发新 Token 并在响应头 {@code X-Access-Token} 中返回。
+   * 前端检测到该响应头后替换本地存储的 Token，实现无感续期。
+   */
+  private boolean tokenAutoRenewalEnabled = true;
+
+  /**
+   * P1-2: Token 自动续签阈值百分比（0-100）。
+   *
+   * <p>当 access_token 剩余有效期 ＜ TTL × thresholdPercent / 100 时触发续签。
+   * 默认 10%（即 TTL 7200 秒时，剩余 720 秒触发续签）。
+   */
+  private int tokenAutoRenewalThresholdPercent = 10;
+
+  // ==================== P1-3 路径排除配置 ====================
+
+  /**
+   * P1-3: 不需要鉴权的路径列表（Ant 风格）。
+   *
+   * <p>对标 XXL-SSO 的路径排除能力，用于排除健康检查、Swagger、actuator 等无需鉴权的路径。
+   * 排除的路径不会经过 Spring Security 的认证过滤器链。
+   */
+  private List<String> authExcludePaths = List.of(
+      "/actuator/**",
+      "/swagger-ui/**",
+      "/v3/api-docs/**",
+      "/favicon.ico");
+
   // ==================== 安全告警配置 ====================
 
   /** 安全告警：告警去重时间窗口（秒），默认 300 秒（5 分钟） */

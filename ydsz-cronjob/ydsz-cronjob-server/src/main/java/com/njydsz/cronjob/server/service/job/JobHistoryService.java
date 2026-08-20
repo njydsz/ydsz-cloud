@@ -3,8 +3,8 @@ package com.njydsz.cronjob.server.service.job;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.cronjob.domain.vo.JobHistoryVO;
 import com.njydsz.cronjob.infra.entity.job.Job;
-import com.njydsz.cronjob.infra.entity.job.JobHistory;
 
 /**
  * 任务配置历史版本服务（P1-6 任务版本管理）。
@@ -26,9 +26,9 @@ public interface JobHistoryService {
    *
    * @param job 任务定义（更新前的当前状态）
    * @param changedBy 修改人 ID
-   * @return 新创建的历史版本记录
+   * @return 新创建的历史版本 VO
    */
-  JobHistory saveHistory(Job job, String changedBy);
+  JobHistoryVO saveHistory(Job job, String changedBy);
 
   /**
    * 获取指定任务的版本列表（按版本号降序）。
@@ -36,16 +36,16 @@ public interface JobHistoryService {
    * @param jobId 任务 ID
    * @return 历史版本列表；无记录时返回空列表
    */
-  List<JobHistory> listVersions(String jobId);
+  List<JobHistoryVO> listVersions(String jobId);
 
   /**
    * 获取指定任务的指定历史版本详情。
    *
    * @param jobId 任务 ID
    * @param version 版本号
-   * @return 历史版本记录；不存在时返回 null
+   * @return 历史版本 VO；不存在时返回 null
    */
-  JobHistory getVersion(String jobId, Integer version);
+  JobHistoryVO getVersion(String jobId, Integer version);
 
   /**
    * 回滚到指定版本。

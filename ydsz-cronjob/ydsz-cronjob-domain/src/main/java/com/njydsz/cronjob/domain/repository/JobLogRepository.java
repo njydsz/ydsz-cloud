@@ -106,6 +106,17 @@ public interface JobLogRepository {
   long countByTimeRange(LocalDateTime start, LocalDateTime end);
 
   /**
+   * 按任务 KEY 和状态分页查询执行日志。
+   *
+   * @param jobKey 任务 KEY（可为空表示不限）
+   * @param status 状态过滤（可为空表示不限）
+   * @param page 页码（从 1 开始）
+   * @param size 每页条数
+   * @return 分页结果（records=VO列表, total=总条数）
+   */
+  JobRepository.PageResult<JobLogVO> pageByJobKeyAndStatus(String jobKey, String status, int page, int size);
+
+  /**
    * 新增执行日志。
    *
    * @param vo 执行日志 VO

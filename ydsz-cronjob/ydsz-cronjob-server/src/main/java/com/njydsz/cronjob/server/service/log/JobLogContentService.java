@@ -2,7 +2,7 @@ package com.njydsz.cronjob.server.service.log;
 
 import java.util.List;
 
-import com.njydsz.cronjob.infra.entity.log.JobLogContent;
+import com.njydsz.cronjob.domain.vo.JobLogContentVO;
 
 /**
  * 任务执行日志内容 Service。
@@ -18,9 +18,9 @@ public interface JobLogContentService {
   /**
    * 批量写入日志内容。
    *
-   * @param lines 待写入的日志行（非空）
+   * @param lines 待写入的日志行 VO（非空）
    */
-  void batchSave(List<JobLogContent> lines);
+  void batchSave(List<JobLogContentVO> lines);
 
   /**
    * 按日志 ID 分页查询日志内容（按行号升序）。
@@ -28,18 +28,18 @@ public interface JobLogContentService {
    * @param logId 日志 ID
    * @param page 页码（从 1 开始）
    * @param size 每页条数
-   * @return 日志内容列表
+   * @return 日志内容 VO 列表
    */
-  List<JobLogContent> pageByLogId(String logId, int page, int size);
+  List<JobLogContentVO> pageByLogId(String logId, int page, int size);
 
   /**
    * 查询指定行号之后的日志内容（增量拉取，供 SSE 实时滚动）。
    *
    * @param logId 日志 ID
    * @param fromLineNo 起始行号（不含）
-   * @return 日志内容列表
+   * @return 日志内容 VO 列表
    */
-  List<JobLogContent> listAfterLine(String logId, int fromLineNo);
+  List<JobLogContentVO> listAfterLine(String logId, int fromLineNo);
 
   /**
    * 统计日志总行数。
@@ -56,7 +56,7 @@ public interface JobLogContentService {
    * @param keyword 搜索关键词
    * @param page 页码（从 1 开始）
    * @param size 每页条数
-   * @return 匹配的日志内容列表；参数为空时返回空列表
+   * @return 匹配的日志内容 VO 列表；参数为空时返回空列表
    */
-  List<JobLogContent> searchByKeyword(String logId, String keyword, int page, int size);
+  List<JobLogContentVO> searchByKeyword(String logId, String keyword, int page, int size);
 }

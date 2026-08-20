@@ -45,7 +45,6 @@
     FROM nw_space
     WHERE tenant_id = #{tenantId} AND deleted = FALSE
     ORDER BY sort_order ASC, created_at DESC
-    LIMIT #{limit} OFFSET #{offset}
   </select>
 
   <!-- 根据租户ID和名称查询空间 -->

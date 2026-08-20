@@ -18,9 +18,9 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.cronjob.infra.entity.job.Job;
-import com.njydsz.cronjob.infra.entity.job.JobHistory;
 import com.njydsz.cronjob.domain.repository.JobHistoryRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.vo.JobHistoryVO;
 import com.njydsz.cronjob.server.service.job.JobHistoryService;
 
 /**
@@ -75,14 +75,14 @@ public class JobHistoryServiceImpl implements JobHistoryService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public JobHistory saveHistory(Job job, String changedBy) {
+  public JobHistoryVO saveHistory(Job job, String changedBy) {
     if (job == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_history_job_required")
           .build();
     }
-    JobHistory history = new JobHistory();
+    JobHistoryVO history = new JobHistoryVO();
     history.setJobId(job.getId());
     history.setVersion(job.getVersion());
     history.setSnapshot(YdszJson.toJson(job));
@@ -96,8 +96,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     history.setChangedBy(StringUtils.hasText(changedBy) ? changedBy : "SYSTEM");
     history.setChangedAt(LocalDateTime.now());
     history.setHistoryDeleted(0);
-    jobHistoryRepository.insert(history);
-    log.info("[History] 保存任务历史版本: jobId={} version={},", job.getId(), job.getVersion());
+    String newId = jobHistoryRepository.insert(history);
+    log.info("[History] 保存任务历史版本: jobId={} version={} newId={}", job.getId(), job.getVersion(), newId);
     return history;
   }
 
@@ -109,7 +109,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
       if (referenceJob == null) {
         return;
       }
-      JobHistory history = new JobHistory();
+      JobHistoryVO history = new JobHistoryVO();
       history.setJobId(referenceJob.getId());
       history.setVersion(referenceJob.getVersion() != null ? referenceJob.getVersion() : 1);
       history.setChangeType(changeType);
@@ -144,19 +144,19 @@ public class JobHistoryServiceImpl implements JobHistoryService {
   }
 
   @Override
-  public List<JobHistory> listVersions(String jobId) {
+  public List<JobHistoryVO> listVersions(String jobId) {
     if (!StringUtils.hasText(jobId)) {
       return Collections.emptyList();
     }
-    return jobHistoryRepository.selectByJobIdOrderByVersionDesc(jobId);
+    return jobHistoryRepository.findByJobIdOrderByVersionDesc(jobId);
   }
 
   @Override
-  public JobHistory getVersion(String jobId, Integer version) {
+  public JobHistoryVO getVersion(String jobId, Integer version) {
     if (!StringUtils.hasText(jobId) || version == null) {
       return null;
     }
-    return jobHistoryRepository.selectByVersion(jobId, version);
+    return jobHistoryRepository.findByVersion(jobId, version).orElse(null);
   }
 
   @Override
@@ -175,7 +175,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
           .build();
     }
     // 查询目标历史版本
-    JobHistory targetHistory = jobHistoryRepository.selectByVersion(jobId, version);
+    JobHistoryVO targetHistory = jobHistoryRepository.findByVersion(jobId, version).orElse(null);
     if (targetHistory == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -224,8 +224,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     if (version1 == null || version2 == null) {
       return Collections.emptyList();
     }
-    JobHistory h1 = jobHistoryRepository.selectByVersion(jobId, version1);
-    JobHistory h2 = jobHistoryRepository.selectByVersion(jobId, version2);
+    JobHistoryVO h1 = jobHistoryRepository.findByVersion(jobId, version1).orElse(null);
+    JobHistoryVO h2 = jobHistoryRepository.findByVersion(jobId, version2).orElse(null);
     if (h1 == null || h2 == null) {
       return Collections.emptyList();
     }
@@ -241,7 +241,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
    * @return 下一个版本号；无历史记录时返回 1
    */
   private int getNextVersion(String jobId) {
-    List<JobHistory> versions = jobHistoryRepository.selectByJobIdOrderByVersionDesc(jobId);
+    List<JobHistoryVO> versions = jobHistoryRepository.findByJobIdOrderByVersionDesc(jobId);
     if (versions == null || versions.isEmpty()) {
       return 1;
     }

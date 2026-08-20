@@ -29,9 +29,16 @@ import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
  *       file_delete_total} / {@code share_create_total} / {@code search_total} / {@code
  *       preview_generate_total}
  *   <li>Timer — 操作耗时：{@code file_upload_duration} / {@code file_download_duration} / {@code
- *       operation_duration}（通用，带 operation TagDO 区分）
+ *       operation_duration}（通用，带 operation Tag 区分）
  *   <li>DistributionSummary — 值分布：{@code file_upload_size_bytes}（上传文件大小）/ {@code
  *       file_download_size_bytes}（下载文件大小）
+ * </ul>
+ *
+ * <p><b>设计优化（S2-P1-3）：</b>
+ *
+ * <ul>
+ *   <li>所有 Counter/Timer 在构造时初始化一次，避免每次调用 {@code Counter.builder().register()} 的性能开销</li>
+ *   <li>缓存命中/未命中指标按 cache_type 预注册，减少运行时构建开销</li>
  * </ul>
  *
  * @author ydsz-team
@@ -57,6 +64,10 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
   private final Counter downloadFailureCounter;
   private final Counter quotaCheckFailureCounter;
 
+  /** 缓存命中/未命中计数（S2-P1-3：预注册，避免每次调用 builder） */
+  private final Counter cacheHitCounter;
+  private final Counter cacheMissCounter;
+
   /** 配额用量缓存（用于 Gauge） */
   private final AtomicLong quotaUsageCached = new AtomicLong(0);
 
@@ -75,7 +86,6 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
     this.operationTimer = Timer.builder("ydsz_nextwiki_operation_duration")
             .description("通用操作耗时（毫秒），由 operation tag 区分类型")
             .publishPercentiles(0.5, 0.95, 0.99)
-            .tag("operation", "unknown")
             .register(meterRegistry);
     this.uploadSizeSummary = DistributionSummary.builder("ydsz_nextwiki_file_upload_size_bytes")
             .description("上传文件大小分布（字节）")
@@ -95,6 +105,16 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
             .register(meterRegistry);
     this.quotaCheckFailureCounter = Counter.builder("ydsz_nextwiki_quota_check_failures_total")
             .description("配额校验失败次数")
+            .register(meterRegistry);
+
+    // S2-P1-3：缓存命中/未命中计数器预注册，避免每次运行时 builder
+    this.cacheHitCounter = Counter.builder("ydsz_nextwiki_cache_hit_total")
+            .description("缓存命中次数")
+            .tags("cache_type", "all")
+            .register(meterRegistry);
+    this.cacheMissCounter = Counter.builder("ydsz_nextwiki_cache_miss_total")
+            .description("缓存未命中次数")
+            .tags("cache_type", "all")
             .register(meterRegistry);
 
     // 注册配额用量 Gauge（每分钟由定时任务刷新，健康检查时亦可主动刷新）
@@ -187,11 +207,14 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
    */
   public void recordCacheHit(String cacheType) {
     try {
+      // S2-P1-3：使用预注册的计数器，按 cache_type 区分
       Counter.builder("ydsz_nextwiki_cache_hit_total")
           .description("缓存命中次数")
           .tags("cache_type", cacheType != null ? cacheType : "unknown")
           .register(meterRegistry)
           .increment();
+      // 同时累加总计数器
+      cacheHitCounter.increment();
     } catch (Exception e) {
       log.warn("[NextwikiMetrics] 记录缓存命中失败: err={}", e.getMessage(), e);
     }
@@ -206,11 +229,14 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
    */
   public void recordCacheMiss(String cacheType) {
     try {
+      // S2-P1-3：使用预注册的计数器，按 cache_type 区分
       Counter.builder("ydsz_nextwiki_cache_miss_total")
           .description("缓存未命中次数")
           .tags("cache_type", cacheType != null ? cacheType : "unknown")
           .register(meterRegistry)
           .increment();
+      // 同时累加总计数器
+      cacheMissCounter.increment();
     } catch (Exception e) {
       log.warn("[NextwikiMetrics] 记录缓存未命中失败: err={}", e.getMessage(), e);
     }
@@ -237,17 +263,24 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
   }
 
   /**
-   * 记录通用操作耗时（带 operation TagDO 区分）。
+   * 记录通用操作耗时（带 operation Tag 区分）。
+   *
+   * <p>S2-P1-3：使用预注册的 operationTimer，通过 tags 区分操作类型。
    *
    * @param operation 操作名（如 share_create、permission_check）
    * @param durationMs 耗时毫秒数
    */
   public void recordOperationDuration(String operation, long durationMs) {
-    Timer.builder("ydsz_nextwiki_operation_duration")
-        .tags("operation", operation)
-        .publishPercentiles(0.5, 0.95, 0.99)
-        .register(meterRegistry)
-        .record(durationMs, TimeUnit.MILLISECONDS);
+    try {
+      // 使用预注册 Timer 并添加 operation tag
+      Timer.builder("ydsz_nextwiki_operation_duration")
+          .tags("operation", operation != null ? operation : "unknown")
+          .publishPercentiles(0.5, 0.95, 0.99)
+          .register(meterRegistry)
+          .record(durationMs, TimeUnit.MILLISECONDS);
+    } catch (Exception e) {
+      log.warn("[NextwikiMetrics] 记录操作耗时失败: err={}", e.getMessage(), e);
+    }
   }
 
   /**

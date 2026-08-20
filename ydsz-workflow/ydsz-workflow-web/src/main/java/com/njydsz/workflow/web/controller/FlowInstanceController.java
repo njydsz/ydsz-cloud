@@ -37,8 +37,13 @@ import com.njydsz.workflow.domain.dto.FlowInstanceVariablesDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
+import com.njydsz.workflow.domain.vo.FlowAuditTrailVO;
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionDetailVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowRecallableNodeVO;
+import com.njydsz.workflow.domain.vo.FlowReplayStepVO;
+import com.njydsz.workflow.domain.vo.FlowTimelineVO;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
@@ -250,7 +255,7 @@ public class FlowInstanceController {
   @GetMapping("/instance/{id}/recallableNodes")
   @Operation(summary = "查询可撤回的历史节点列表")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
-  public YdszResponse<List<Map<String, Object>>> listRecallableNodes(@PathVariable String id) {
+  public YdszResponse<List<FlowRecallableNodeVO>> listRecallableNodes(@PathVariable String id) {
     return YdszResponse.success(
         instanceService.listRecallableNodes(id, AuthContextUtils.getUserId()));
   }
@@ -320,7 +325,7 @@ public class FlowInstanceController {
    */
   @Operation(summary = "审计轨迹查询")
   @GetMapping("/instance/{id}/auditTrail")
-  public YdszResponse<List<Map<String, Object>>> auditTrail(@PathVariable String id) {
+  public YdszResponse<List<FlowAuditTrailVO>> auditTrail(@PathVariable String id) {
     return YdszResponse.success(workflowFacade.listAuditTrail(id));
   }
 
@@ -332,7 +337,7 @@ public class FlowInstanceController {
    */
   @Operation(summary = "审批轨迹时间线查询")
   @GetMapping("/instance/{id}/timeline")
-  public YdszResponse<List<Map<String, Object>>> timeline(@PathVariable String id) {
+  public YdszResponse<List<FlowTimelineVO>> timeline(@PathVariable String id) {
     return YdszResponse.success(workflowFacade.getTimeline(id));
   }
 
@@ -344,7 +349,7 @@ public class FlowInstanceController {
    */
   @Operation(summary = "流程图查询")
   @GetMapping("/instance/{id}/diagram")
-  public YdszResponse<Map<String, Object>> diagram(@PathVariable String id) {
+  public YdszResponse<FlowDefinitionDetailVO> diagram(@PathVariable String id) {
     return YdszResponse.success(workflowFacade.getDiagram(id));
   }
 
@@ -356,7 +361,7 @@ public class FlowInstanceController {
    */
   @Operation(summary = "流程回放步骤序列")
   @GetMapping("/instance/{id}/replay")
-  public YdszResponse<List<Map<String, Object>>> replay(@PathVariable String id) {
+  public YdszResponse<List<FlowReplayStepVO>> replay(@PathVariable String id) {
     return YdszResponse.success(workflowFacade.getReplaySteps(id));
   }
 
@@ -394,7 +399,7 @@ public class FlowInstanceController {
     query.setStartTime(startTime);
     query.setEndTime(endTime);
     query.setTenantId(tid);
-    return instanceService.pageVO(query);
+    return instanceService.page(query);
   }
 
   /**
@@ -427,7 +432,7 @@ public class FlowInstanceController {
     query.setStartTime(startTime);
     query.setEndTime(endTime);
     query.setTenantId(AuthContextUtils.getTenantIdOrDefault());
-    return instanceService.pageVO(query);
+    return instanceService.page(query);
   }
 
   /**
@@ -441,12 +446,12 @@ public class FlowInstanceController {
    * @param flowStatus 流程状态（可选）
    * @param startTime 开始时间下界（可选）
    * @param endTime 开始时间上界（可选）
-   * @return 统一响应结果，包含分页实例 Map 列表
+   * @return 统一响应结果，包含分页实例列表
    */
   @GetMapping("/instance/all")
   @Operation(summary = "全部流程实例查询")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
-  public PageResponse<List<Map<String, Object>>> instanceAll(
+  public PageResponse<List<FlowInstanceVO>> instanceAll(
       @RequestParam(defaultValue = "1") @Min(1) int page,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
       @RequestParam(required = false) String businessType,

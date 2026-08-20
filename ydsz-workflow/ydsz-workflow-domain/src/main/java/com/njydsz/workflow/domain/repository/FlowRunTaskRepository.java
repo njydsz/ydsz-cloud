@@ -161,4 +161,19 @@ public interface FlowRunTaskRepository {
    * @return 更新行数
    */
   int updateStatusByCondition(String instanceId, String nodeCode, String fromStatus, String toStatus);
+
+  /**
+   * 统计指定状态列表下的任务数量。
+   *
+   * @param statuses 任务状态列表
+   * @return 任务数量
+   */
+  long countByStatusIn(List<String> statuses);
+
+  /**
+   * 统计超期任务数量（dueAt < now 且状态为 PENDING/CLAIMED）。
+   *
+   * @return 超期任务数量
+   */
+  long countOverdue();
 }

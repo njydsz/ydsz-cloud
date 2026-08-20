@@ -25,6 +25,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
@@ -436,12 +437,12 @@ public class FileApplicationService {
    * @param type 过滤类型：all / file / folder（默认 all）
    * @param page 页码（从 1 开始）
    * @param pageSize 每页大小
-   * @return 分页结果 {@link PageResponse}，元素为 {@link FileNodeVO}
+   * @return 统一响应结果，data 为分页结果 {@link PageResponse}，元素为 {@link FileNodeVO}
    * @throws BusinessException 父目录不存在/非目录时抛出
    * @complexity O(query)（一次数据库分页查询 + 结果映射）
    * @note 只读、无事务边界；分页由 DB 完成，不存在内存爆量风险
    */
-  public PageResponse<List<FileNodeVO>> listFiles(
+  public YdszResponse<PageResponse<List<FileNodeVO>>> listFiles(
       String parentId,
       String userId,
       String sortBy,
@@ -465,7 +466,7 @@ public class FileApplicationService {
                 .pageSize(pageSize)
                 .build());
 
-    return pageResult;
+    return YdszResponse.success(pageResult);
   }
 
   /**

@@ -187,7 +187,7 @@ public class FileController {
   @GetMapping("/list")
   @Operation(summary = "列出目录内容", description = "支持排序、过滤、分页（数据库分页）")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_LIST)
-  public PageResponse<List<FileNodeVO>> listFiles(
+  public YdszResponse<PageResponse<List<FileNodeVO>>> listFiles(
       @RequestParam(value = "parentId", required = false) String parentId,
       @RequestParam(value = "sortBy", required = false) String sortBy,
       @RequestParam(value = "sortDir", required = false) String sortDir,

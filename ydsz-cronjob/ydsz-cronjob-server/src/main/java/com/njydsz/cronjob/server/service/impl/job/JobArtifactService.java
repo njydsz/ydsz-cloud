@@ -12,9 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.cronjob.infra.entity.job.JobArtifact;
 import com.njydsz.cronjob.domain.repository.JobArtifactRepository;
+import com.njydsz.cronjob.domain.vo.JobArtifactVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
@@ -31,9 +30,6 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
 @Service
 @RequiredArgsConstructor
 public class JobArtifactService {
-
-  /** 分布式 ID 生成器 */
-  private final SnowflakeIdGenerator snowflakeIdGenerator;
 
   private final JobArtifactRepository artifactRepository;
 
@@ -72,7 +68,7 @@ public class JobArtifactService {
       Files.write(fullPath, content);
 
       // 记录元数据
-      JobArtifact artifact = new JobArtifact();
+      JobArtifactVO artifact = new JobArtifactVO();
       artifact.setJobId(jobId);
       artifact.setLogId(logId);
       artifact.setJobKey(jobKey);
@@ -83,15 +79,14 @@ public class JobArtifactService {
       artifact.setContentType(contentType);
       artifact.setMetadata(metadata);
       artifact.setExpireAt(LocalDateTime.now().plusDays(retentionDays));
-      artifact.setDeleted(0);
-      artifactRepository.insert(artifact);
+      String newId = artifactRepository.insert(artifact);
 
       log.info(
           "[ArtifactService] 产物已保存: logId={} name={} size={}B",
           logId,
           artifactName,
           content.length);
-      return artifact.getId();
+      return newId;
     } catch (IOException e) {
       log.error(
           "[ArtifactService] 保存产物异常: logId={} name={} reason={}",
@@ -104,13 +99,13 @@ public class JobArtifactService {
   }
 
   /** 查询任务执行产物列表。 */
-  public List<JobArtifact> getArtifactsByLogId(String logId) {
-    return artifactRepository.selectByLogId(logId);
+  public List<JobArtifactVO> getArtifactsByLogId(String logId) {
+    return artifactRepository.findByLogId(logId);
   }
 
   /** 读取产物内容。 */
   public byte[] readArtifact(String artifactId) {
-    JobArtifact artifact = artifactRepository.selectById(artifactId);
+    JobArtifactVO artifact = artifactRepository.findById(artifactId).orElse(null);
     if (artifact == null) {
       return null;
     }

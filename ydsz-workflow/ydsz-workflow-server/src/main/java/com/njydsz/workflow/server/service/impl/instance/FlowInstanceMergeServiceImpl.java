@@ -24,7 +24,7 @@ import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.server.service.FlowInstanceMergeService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -143,7 +143,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     // 校验所有实例存在且类型相同
     Set<String> flowCodes = new LinkedHashSet<>();
     for (String instanceId : instanceIds) {
-        FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
+        FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
         if (instance == null) {
           throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -306,7 +306,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     // 获取实例摘要
     List<Map<String, Object>> instanceDetails = new ArrayList<>();
     for (String instanceId : instanceIds) {
-      FlowInstanceDO instance = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
+      FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
       if (instance != null) {
         Map<String, Object> info = new LinkedHashMap<>();
         info.put("instanceId", instance.getId());

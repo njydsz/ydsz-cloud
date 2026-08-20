@@ -31,8 +31,6 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
@@ -76,9 +74,6 @@ public class FlowInstanceQueryService {
   /** 历史任务仓储，负责 ydsz_flow_his_task 的领域持久化 */
   private final FlowHisTaskRepository hisTaskRepository;
 
-  /** MapStruct 转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
-
   /** 流程实例 Mapper（聚合查询无 Repository 等价方法，保留） */
   private final FlowInstanceMapper instanceMapper;
 
@@ -93,14 +88,14 @@ public class FlowInstanceQueryService {
   /**
    * 按 ID 查询流程实例
    *
-   * <p>读路径兜底富化 initiatorName：当 FlowInstanceDO.initiatorName 在写时未持久化（历史数据或某些路径遗漏）时， 通过 NameAssembler 调用
+   * <p>读路径兜底富化 initiatorName：当 FlowInstanceVO.initiatorName 在写时未持久化（历史数据或某些路径遗漏）时， 通过 NameAssembler 调用
    * ydsz-userinfo 服务的 batch-names 端点， 用 initiatorId 实时解析 realName 并回填到返回对象。
    *
    * @param id 实例 ID
-   * @return 流程实例 DO，不存在返回 null
+   * @return 流程实例 VO，不存在返回 null
    */
   @Transactional(readOnly = true)
-  public FlowInstanceDO getById(String id) {
+  public FlowInstanceVO getById(String id) {
     FlowInstanceVO instance = instanceRepository.findById(id).orElse(null);
     if (instance == null) {
       return null;
@@ -111,7 +106,7 @@ public class FlowInstanceQueryService {
       nameAssembler.enrichOne(
           instance, FlowInstanceVO::getInitiatorId, FlowInstanceVO::setInitiatorName, NameType.USER);
     }
-    return converter.entityToDO(instance);
+    return instance;
   }
 
   /**
@@ -121,14 +116,13 @@ public class FlowInstanceQueryService {
    *
    * @param businessType 业务类型（如 {@code project_initiation}）
    * @param businessId 业务 ID
-   * @return 流程实例 DO，未发起时返回 null
+   * @return 流程实例 VO，未发起时返回 null
    */
   @Transactional(readOnly = true)
-  public FlowInstanceDO getByBusiness(String businessType, String businessId) {
+  public FlowInstanceVO getByBusiness(String businessType, String businessId) {
     // P1-2: 增加 tenantId 过滤，防止跨租户串号；仅返回活跃实例（RUNNING/SUSPENDED）
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     return instanceRepository.findByBusiness(tenantId, businessType, businessId)
-        .map(converter::entityToDO)
         .orElse(null);
   }
 
@@ -140,10 +134,9 @@ public class FlowInstanceQueryService {
    * @return 该发起人指定状态的实例列表
    */
   @Transactional(readOnly = true)
-  public List<FlowInstanceDO> listByInitiator(String initiatorId, String flowStatus) {
+  public List<FlowInstanceVO> listByInitiator(String initiatorId, String flowStatus) {
     return instanceRepository.findByInitiatorId(initiatorId).stream()
         .filter(vo -> flowStatus == null || flowStatus.equals(vo.getFlowStatus()))
-        .map(converter::entityToDO)
         .toList();
   }
 
@@ -160,7 +153,7 @@ public class FlowInstanceQueryService {
    */
   @Transactional(readOnly = true)
   public List<Map<String, Object>> listRecallableNodes(String instanceId, String initiatorId) {
-    FlowInstanceDO instance = getByIdOrThrow(instanceId);
+    FlowInstanceVO instance = getByIdOrThrow(instanceId);
     // 校验：仅发起人可查询
     if (!instance.getInitiatorId().equals(initiatorId)) {
       throw SysException.builder()
@@ -196,11 +189,11 @@ public class FlowInstanceQueryService {
    * P2-23: 实例多维分页查询
    *
    * @param query 分页查询参数对象（含筛选条件、分页信息）
-   * @return 分页结果
+   * @return 分页结果（VO）
    */
   @Transactional(readOnly = true)
   @DataScope(deptAlias = "", userAlias = "", userColumn = "initiator_id")
-  public PageResponse<List<FlowInstanceDO>> page(FlowInstancePageQuery query) {
+  public PageResponse<List<FlowInstanceVO>> page(FlowInstancePageQuery query) {
     // P1-3: 数据权限 SQL 片段（由 DataScopeAspect ThreadLocal 传递，DataScopeHelper 构造）
     try {
       String dataScopeFilter = DataScopeHelper.buildSqlFragment("", "", "dept_id", "initiator_id");
@@ -208,8 +201,7 @@ public class FlowInstanceQueryService {
     } catch (Exception e) {
       log.debug("[Flow] 数据权限片段构建失败（无登录用户上下文）: {}", e.getMessage());
     }
-    List<FlowInstanceDO> list = instanceRepository.findPage(query)
-        .stream().map(converter::entityToDO).toList();
+    List<FlowInstanceVO> list = instanceRepository.findPage(query);
     long total = instanceRepository.countPage(query);
     return PageResponse.success(total, (long) query.getPageNum(), (long) query.getPageSize(), list);
   }
@@ -219,12 +211,12 @@ public class FlowInstanceQueryService {
    *
    * <p>用于「流程详情」页组装，拼接富化字段（发起人姓名、当前节点名称、审批人姓名）。
    *
-   * @param instance 流程实例 DO
+   * @param instance 流程实例 VO
    * @param currentTasks 当前节点的待办任务列表
    * @return 流程实例视图 VO
    */
   public FlowInstanceViewDTO toView(
-      FlowInstanceDO instance, List<FlowInstanceViewDTO.FlowTaskViewDTO> currentTasks) {
+      FlowInstanceVO instance, List<FlowInstanceViewDTO.FlowTaskViewDTO> currentTasks) {
     if (instance == null) {
       return null;
     }
@@ -341,17 +333,6 @@ public class FlowInstanceQueryService {
   // ============================== 监控聚合查询（供 Controller 层使用，避免 DO 泄漏） ==============================
 
   /**
-   * 按 ID 查询流程实例（VO 版本）
-   *
-   * @param id 实例 ID
-   * @return 流程实例 VO，不存在返回 null
-   */
-  @Transactional(readOnly = true)
-  public FlowInstanceVO getByIdVO(String id) {
-    return instanceRepository.findById(id).orElse(null);
-  }
-
-  /**
    * 按状态分组统计实例数量
    *
    * @param tenantId 租户 ID
@@ -417,7 +398,7 @@ public class FlowInstanceQueryService {
 
   // ============================== 私有辅助方法 ==============================
 
-  private FlowInstanceDO getByIdOrThrow(String id) {
+  private FlowInstanceVO getByIdOrThrow(String id) {
     FlowInstanceVO instance = instanceRepository.findById(id).orElse(null);
     if (instance == null) {
       throw SysException.builder()
@@ -426,6 +407,6 @@ public class FlowInstanceQueryService {
           .params(id)
           .build();
     }
-    return converter.entityToDO(instance);
+    return instance;
   }
 }

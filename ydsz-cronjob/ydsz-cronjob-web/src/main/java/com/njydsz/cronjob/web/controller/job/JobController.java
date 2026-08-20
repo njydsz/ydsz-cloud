@@ -39,13 +39,10 @@ import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.dto.BatchResult;
 import com.njydsz.cronjob.domain.dto.job.JobBatchDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
-import com.njydsz.cronjob.infra.entity.log.JobLog;
-import com.njydsz.cronjob.infra.entity.job.Job;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobService;
@@ -115,8 +112,7 @@ public class JobController {
   @RateLimit(resource = "cronjob.job.create", threshold = 50)
   @PostMapping
   public YdszResponse<String> create(@Valid @RequestBody JobPostDTO dto) {
-    Job job = CronjobConverter.INSTANT.postDtoToEntity(dto);
-    return YdszResponse.success(jobService.create(job));
+    return YdszResponse.success(jobService.create(dto));
   }
 
   /**
@@ -138,8 +134,7 @@ public class JobController {
   @RateLimit(resource = "cronjob.job.update", threshold = 50)
   @PutMapping
   public YdszResponse<Void> update(@Valid @RequestBody JobPutDTO dto) {
-    Job job = CronjobConverter.INSTANT.putDtoToEntity(dto);
-    jobService.update(job);
+    jobService.update(dto);
     return YdszResponse.success();
   }
 
@@ -379,8 +374,7 @@ public class JobController {
   /**
    * 任务详情
    *
-   * <p>按 ID 查询任务的完整定义（不含运行态信息，运行态见 {@code /log/page}）。 返回的 VO 经过 {@link CronjobConverter}
-   * 转换，包含创建人/修改人姓名（由 NameAssembler 装配）。
+   * <p>按 ID 查询任务的完整定义（不含运行态信息，运行态见 {@code /log/page}）。 返回的 VO 包含创建人/修改人姓名（由 NameAssembler 装配）。
    *
    * @param id 任务 ID
    * @return 任务详情 VO
@@ -388,7 +382,7 @@ public class JobController {
   @Operation(summary = "任务详情")
   @GetMapping("/{id}")
   public YdszResponse<JobVO> getById(@PathVariable String id) {
-    return YdszResponse.success(CronjobConverter.INSTANT.entityToVO(jobService.getById(id)));
+    return YdszResponse.success(jobService.getById(id));
   }
 
   /**
@@ -416,8 +410,8 @@ public class JobController {
       @RequestParam(required = false) String keyword,
       @RequestParam(required = false) String status,
       @RequestParam(required = false) String group) {
-    Page<Job> page = jobService.page(pageNum, size, keyword, status, group);
-    return PageResponses.success(page, CronjobConverter.INSTANT::entityToVO);
+    Page<JobVO> page = jobService.page(pageNum, size, keyword, status, group);
+    return PageResponses.success(page, vo -> vo);
   }
 
   /**
@@ -443,8 +437,8 @@ public class JobController {
           int size,
       @RequestParam(required = false) String jobKey,
       @RequestParam(required = false) String status) {
-    Page<JobLog> page = jobService.pageLog(pageNum, size, jobKey, status);
-    return PageResponses.success(page, CronjobConverter.INSTANT::entityToVO);
+    Page<JobLogVO> page = jobService.pageLog(pageNum, size, jobKey, status);
+    return PageResponses.success(page, vo -> vo);
   }
 
   /**

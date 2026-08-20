@@ -257,5 +257,20 @@ public interface JobRepository {
     public long getTotal() {
       return total;
     }
+
+    /**
+     * 转换为 MyBatis-Plus Page 对象（便于 Service 层直接返回给 Controller）。
+     *
+     * @param <E> MyBatis-Plus Page 元素类型（与 T 相同）
+     * @return MyBatis-Plus Page 对象
+     */
+    @SuppressWarnings("unchecked")
+    public <E extends T> com.baomidou.mybatisplus.extension.plugins.pagination.Page<E> toMybatisPage() {
+      com.baomidou.mybatisplus.extension.plugins.pagination.Page<E> page =
+          new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>();
+      page.setRecords((List<E>) records);
+      page.setTotal(total);
+      return page;
+    }
   }
 }

@@ -146,6 +146,24 @@ public class JobLogRepositoryImpl implements JobLogRepository {
   }
 
   @Override
+  public JobRepository.PageResult<JobLogVO> pageByJobKeyAndStatus(String jobKey, String status, int page, int size) {
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<JobLog> pageObj =
+        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size);
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    if (jobKey != null && !jobKey.isBlank()) {
+      wrapper.eq(JobLog::getJobKey, jobKey);
+    }
+    if (status != null && !status.isBlank()) {
+      wrapper.eq(JobLog::getStatus, status);
+    }
+    wrapper.orderByDesc(JobLog::getStartTime);
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<JobLog> result =
+        jobLogMapper.selectPage(pageObj, wrapper);
+    return new JobRepository.PageResult<>(converter.jobLogListToVO(result.getRecords()), result.getTotal());
+  }
+
+  @Override
   public String insert(JobLogVO vo) {
     JobLog entity = converter.voToEntity(vo);
     jobLogMapper.insert(entity);

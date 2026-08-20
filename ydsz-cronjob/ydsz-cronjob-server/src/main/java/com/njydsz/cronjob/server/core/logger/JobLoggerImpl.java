@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.cronjob.infra.entity.log.JobLogContent;
+import com.njydsz.cronjob.domain.vo.JobLogContentVO;
 import com.njydsz.cronjob.domain.job.JobLogger;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
@@ -66,7 +66,7 @@ public class JobLoggerImpl implements JobLogger {
   private final AtomicInteger lineNo = new AtomicInteger(0);
 
   /** 日志行缓冲区（达 FLUSH_THRESHOLD 行自动 flush） */
-  private final List<JobLogContent> buffer = new ArrayList<>(FLUSH_THRESHOLD);
+  private final List<JobLogContentVO> buffer = new ArrayList<>(FLUSH_THRESHOLD);
 
   /**
    * 构造任务日志器。
@@ -155,7 +155,6 @@ public class JobLoggerImpl implements JobLogger {
   public void error(String message, Throwable t) {
     String content = message;
     if (t != null) {
-      // 将异常堆栈转为字符串追加到消息后
       content = message + "\n" + throwableToString(t);
     }
     append("ERROR", content);
@@ -178,7 +177,7 @@ public class JobLoggerImpl implements JobLogger {
       return;
     }
     // 缓冲区模式：手动 flush
-    List<JobLogContent> snapshot;
+    List<JobLogContentVO> snapshot;
     synchronized (buffer) {
       if (buffer.isEmpty()) {
         return;
@@ -187,13 +186,11 @@ public class JobLoggerImpl implements JobLogger {
       buffer.clear();
     }
     if (jobLogContentService == null) {
-      // Service 不可用（降级模式），丢弃日志
       return;
     }
     try {
       jobLogContentService.batchSave(snapshot);
     } catch (Exception e) {
-      // 批量写入失败不影响主流程，仅记录警告
       log.warn(
           "[JobLogger] 批量写入日志失败(不影响主流程): logId={} lines={} reason={}",
           logId,
@@ -219,7 +216,6 @@ public class JobLoggerImpl implements JobLogger {
     // P2-3: Disruptor 模式 — 直接发布事件（无锁，高性能）
     if (disruptorPublisher != null) {
       disruptorPublisher.publish(logId, jobKey, currentLineNo, truncatedContent, level);
-      // SSE 推送仍需要构建 JobLogContent（异步推送，不影响主流程）
       if (logStreamManager != null) {
         pushToSse(currentLineNo, truncatedContent, level);
       }
@@ -227,13 +223,12 @@ public class JobLoggerImpl implements JobLogger {
     }
 
     // 缓冲区模式（Disruptor 不可用时的降级方案）
-    JobLogContent line = buildLine(level, content, currentLineNo);
+    JobLogContentVO line = buildLine(level, content, currentLineNo);
     boolean needFlush;
     synchronized (buffer) {
       buffer.add(line);
       needFlush = buffer.size() >= FLUSH_THRESHOLD;
     }
-    // P0-2: 实时推送到 SSE 订阅者（不影响主流程）
     if (logStreamManager != null) {
       try {
         logStreamManager.pushLogLine(logId, line);
@@ -253,7 +248,7 @@ public class JobLoggerImpl implements JobLogger {
   /** 推送日志行到 SSE（Disruptor 模式下使用） */
   private void pushToSse(int currentLineNo, String truncatedContent, String level) {
     try {
-      JobLogContent line = new JobLogContent();
+      JobLogContentVO line = new JobLogContentVO();
       line.setLogId(logId);
       line.setJobKey(jobKey);
       line.setLineNo(currentLineNo);
@@ -270,29 +265,26 @@ public class JobLoggerImpl implements JobLogger {
   }
 
   /**
-   * 构建日志行实体（缓冲区模式使用）。
+   * 构建日志行 VO（缓冲区模式使用）。
    *
    * @param level 日志级别
    * @param content 日志内容（未截断）
    * @param currentLineNo 当前行号（由调用方预先生成）
-   * @return 日志行实体
+   * @return 日志行 VO
    */
-  private JobLogContent buildLine(String level, String content, int currentLineNo) {
-    JobLogContent line = new JobLogContent();
+  private JobLogContentVO buildLine(String level, String content, int currentLineNo) {
+    JobLogContentVO line = new JobLogContentVO();
     line.setLogId(logId);
     line.setJobKey(jobKey);
     line.setLineNo(currentLineNo);
     line.setLogLevel(level);
     line.setContent(truncateIfNeeded(content));
     line.setCreatedAt(LocalDateTime.now());
-    line.setDeleted(0);
     return line;
   }
 
   /**
    * 格式化消息：SLF4J 风格 {@code {}} 占位符替换。
-   *
-   * <p>逐个参数替换第一个出现的 {@code {}}，参数不足时保留剩余占位符。
    *
    * @param format 格式字符串
    * @param args 占位参数

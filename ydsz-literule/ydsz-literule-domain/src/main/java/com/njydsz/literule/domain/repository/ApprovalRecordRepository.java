@@ -29,19 +29,4 @@ public interface ApprovalRecordRepository {
    * @return 审批记录 VO 列表
    */
   List<ApprovalRecordVO> findByRuleCode(String ruleCode);
-
-  /**
-   * 根据审批人查询审批记录
-   *
-   * @param approver 审批人
-   * @return 审批记录 VO 列表
-   */
-  List<ApprovalRecordVO> findByApprover(String approver);
-
-  /**
-   * 查询所有审批记录
-   *
-   * @return 全部审批记录 VO 列表
-   */
-  List<ApprovalRecordVO> findAll();
 }

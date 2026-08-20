@@ -2,6 +2,7 @@ package com.njydsz.cronjob.domain.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import com.njydsz.cronjob.domain.vo.JobArtifactVO;
 
@@ -17,6 +18,11 @@ public interface JobArtifactRepository {
    * 根据日志 ID 查询产物列表。
    */
   List<JobArtifactVO> findByLogId(String logId);
+
+  /**
+   * 按 ID 查询产物。
+   */
+  Optional<JobArtifactVO> findById(String id);
 
   /**
    * 清理过期产物记录。

@@ -11,6 +11,7 @@ import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.server.service.ShareLinkDomainService;
 import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
+import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
 
 /**
  * 分享链接到期提醒定时任务。
@@ -32,6 +33,7 @@ public class ShareExpiryReminderTask {
 
   private final ShareLinkDomainService shareLinkDomainService;
   private final ShareLinkRepository shareLinkRepository;
+  private final NextwikiConverter nextwikiConverter;
 
   /**
    * 扫描即将到期的分享链接并触发提醒。
@@ -49,9 +51,7 @@ public class ShareExpiryReminderTask {
       }
 
       // 转换为 DTO 并调用领域服务过滤（仅 Active 状态 + 未发送提醒）
-      List<ShareLinkDTO> expiringDTOs = expiringVOs.stream()
-          .map(this::toDTO)
-          .toList();
+      List<ShareLinkDTO> expiringDTOs = nextwikiConverter.shareLinkListToDTO(expiringVOs);
       List<ShareLinkDTO> toRemind = shareLinkDomainService.findExpiringShares(expiringDTOs, EXPIRY_REMINDER_HOURS);
 
       if (toRemind.isEmpty()) {
@@ -74,19 +74,5 @@ public class ShareExpiryReminderTask {
     } catch (Exception e) {
       log.error("[ShareExpiryReminder] 扫描到期分享失败", e);
     }
-  }
-
-  /** ShareLinkVO → ShareLinkDTO 转换 */
-  private ShareLinkDTO toDTO(ShareLinkVO vo) {
-    return ShareLinkDTO.builder()
-        .id(vo.getId())
-        .shareCode(vo.getShareCode())
-        .extractCode(vo.getExtractCode())
-        .shareType(vo.getShareType())
-        .expireTime(vo.getExpireTime())
-        .maxAccessCount(vo.getMaxAccessCount())
-        .accessCount(vo.getAccessCount())
-        .status(vo.getStatus())
-        .build();
   }
 }

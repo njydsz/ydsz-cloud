@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
 import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
-import com.njydsz.cronjob.infra.entity.job.JobAlertRule;
+import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 
 /**
  * 告警规则 Service
@@ -29,8 +29,6 @@ import com.njydsz.cronjob.infra.entity.job.JobAlertRule;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.cronjob.domain.entity.job.JobAlertRule 告警规则实体
- * @see com.njydsz.cronjob.domain.entity.job.JobAlertLog 告警日志实体
  * @see JobService 任务 Service(执行后由告警调度器评估规则)
  */
 public interface AlertService {
@@ -62,16 +60,16 @@ public interface AlertService {
    * 查询规则详情。
    *
    * @param id 规则 ID
-   * @return 规则详情
+   * @return 规则详情 VO
    */
-  JobAlertRule getRuleById(String id);
+  JobAlertRuleVO getRuleById(String id);
 
   /**
    * 查询全部告警规则。
    *
    * @return 规则列表
    */
-  List<JobAlertRule> listRules();
+  List<JobAlertRuleVO> listRules();
 
   /**
    * 启用/禁用规则。

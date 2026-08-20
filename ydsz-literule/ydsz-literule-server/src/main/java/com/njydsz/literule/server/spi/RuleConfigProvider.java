@@ -1,6 +1,7 @@
 package com.njydsz.literule.server.spi;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEnvironment;
@@ -9,6 +10,8 @@ import com.njydsz.literule.api.RuleEnvironment;
  * 规则配置提供者接口（SPI）
  *
  * <p>由消费方（如 execution 模块）提供实现，从数据库/配置中心加载规则定义。 literule 模块本身不依赖任何持久层实现，通过此接口反转依赖。
+ *
+ * <p>合并了原 {@code RuleSource} 的 Watch 监听能力，支持配置中心推送变更通知。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -125,5 +128,85 @@ public interface RuleConfigProvider {
                   || environment.equals(ruleEnv);
             })
         .toList();
+  }
+
+  // ==================== Watch 监听能力（原 RuleSource） ====================
+
+  /** 数据源类型 */
+  enum SourceType {
+    /** 数据库 */
+    DB,
+    /** Nacos 配置中心 */
+    NACOS,
+    /** Apollo 配置中心 */
+    APOLLO,
+    /** ZooKeeper */
+    ZOOKEEPER,
+    /** Redis */
+    REDIS,
+    /** 文件（YAML/JSON） */
+    FILE,
+    /** 自定义 */
+    CUSTOM
+  }
+
+  /**
+   * 获取数据源类型
+   *
+   * @return 数据源类型
+   */
+  default SourceType getType() {
+    return SourceType.DB;
+  }
+
+  /**
+   * 注册规则变更监听器
+   *
+   * <p>当配置中心的规则发生变更时，调用 {@code listener} 回调通知。对于不支持监听的数据源（如 DB），此方法为 no-op。
+   *
+   * @param listener 变更监听器，接收变更后的规则定义列表
+   */
+  default void addChangeListener(Consumer<List<RuleDefinition>> listener) {
+    // 默认不支持监听，子类按需实现
+  }
+
+  /**
+   * 初始化数据源连接
+   *
+   * <p>在 Bean 初始化后调用，用于建立与配置中心的连接、注册监听器等。
+   *
+   * @throws Exception 初始化失败
+   */
+  default void init() throws Exception {
+    // 默认无操作
+  }
+
+  /**
+   * 销毁数据源连接
+   *
+   * <p>在 Bean 销毁前调用，释放连接、取消监听器等。
+   *
+   * @throws Exception 销毁失败
+   */
+  default void destroy() throws Exception {
+    // 默认无操作
+  }
+
+  /**
+   * 是否支持变更监听
+   *
+   * @return true=支持 Watch 推送（如 Nacos/ZK/Apollo）；false=仅支持轮询拉取
+   */
+  default boolean supportsWatch() {
+    return false;
+  }
+
+  /**
+   * 是否可用
+   *
+   * @return true=数据源已连接且可正常工作
+   */
+  default boolean isAvailable() {
+    return true;
   }
 }

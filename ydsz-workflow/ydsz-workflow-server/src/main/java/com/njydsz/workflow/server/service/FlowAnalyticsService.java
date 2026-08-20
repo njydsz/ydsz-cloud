@@ -1,7 +1,13 @@
 package com.njydsz.workflow.server.service;
 
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.List;
+
+import com.njydsz.workflow.domain.vo.FlowAnalyticsOverviewVO;
+import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO;
+import com.njydsz.workflow.domain.vo.FlowEfficiencyComparisonVO;
+import com.njydsz.workflow.domain.vo.FlowNodeDurationVO;
+import com.njydsz.workflow.domain.vo.FlowTrendVO;
 
 /**
  * 流程分析服务。
@@ -31,9 +37,9 @@ public interface FlowAnalyticsService {
    * @param startTime 起始时间（可空）
    * @param endTime 截止时间（可空）
    * @param tenantId 租户 ID（可空）
-   * @return 指标 Map
+   * @return 指标 VO
    */
-  Map<String, Object> overview(LocalDateTime startTime, LocalDateTime endTime, String tenantId);
+  FlowAnalyticsOverviewVO overview(LocalDateTime startTime, LocalDateTime endTime, String tenantId);
 
   /**
    * 办理人效率排行
@@ -44,7 +50,7 @@ public interface FlowAnalyticsService {
    * @param limit 返回条数（默认 20）
    * @return 办理人效率列表
    */
-  Object approverEfficiency(
+  List<FlowApproverEfficiencyVO> approverEfficiency(
       LocalDateTime startTime, LocalDateTime endTime, String tenantId, int limit);
 
   /**
@@ -55,7 +61,8 @@ public interface FlowAnalyticsService {
    * @param tenantId 租户 ID
    * @return 流程效率列表
    */
-  Object flowEfficiencyComparison(LocalDateTime startTime, LocalDateTime endTime, String tenantId);
+  List<FlowEfficiencyComparisonVO> flowEfficiencyComparison(
+      LocalDateTime startTime, LocalDateTime endTime, String tenantId);
 
   /**
    * 节点耗时分析
@@ -64,7 +71,7 @@ public interface FlowAnalyticsService {
    * @param tenantId 租户 ID
    * @return 节点耗时统计列表
    */
-  Object nodeDurationStats(String flowCode, String tenantId);
+  List<FlowNodeDurationVO> nodeDurationStats(String flowCode, String tenantId);
 
   /**
    * 审批趋势分析（按天/周/月聚合）
@@ -75,6 +82,6 @@ public interface FlowAnalyticsService {
    * @param granularity 粒度：DAY / WEEK / MONTH
    * @return 趋势数据列表
    */
-  Object approvalTrend(
+  List<FlowTrendVO> approvalTrend(
       LocalDateTime startTime, LocalDateTime endTime, String tenantId, String granularity);
 }

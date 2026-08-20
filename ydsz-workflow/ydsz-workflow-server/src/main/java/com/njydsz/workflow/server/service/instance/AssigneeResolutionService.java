@@ -7,11 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.workflow.domain.dto.FlowAssigneeDTO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowAssigneeType;
-import com.njydsz.workflow.server.engine.FlowVariableStrategy;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowVariableStrategy;
 
 /**
  * 办理人解析服务
@@ -32,16 +32,16 @@ import com.njydsz.workflow.server.engine.FlowVariableStrategy;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.workflow.server.service.impl.instance.FlowTaskCreateService 任务创建服务（调用方）
- * @see FlowVariableStrategy 变量表达式策略
+ * @see DefaultFlowVariableStrategy 变量表达式策略
  */
 @Slf4j
 @Service
 public class AssigneeResolutionService {
 
   /** 变量策略，解析节点 permissionFlag 中的表达式 */
-  private final FlowVariableStrategy variableStrategy;
+  private final DefaultFlowVariableStrategy variableStrategy;
 
-  public AssigneeResolutionService(FlowVariableStrategy variableStrategy) {
+  public AssigneeResolutionService(DefaultFlowVariableStrategy variableStrategy) {
     this.variableStrategy = variableStrategy;
   }
 
@@ -53,7 +53,7 @@ public class AssigneeResolutionService {
    * <ol>
    *   <li>{@code explicit} 非空 — 直接使用显式指定的办理人
    *   <li>{@code permissionFlag} 为空 — 回退为发起人（INITIATOR）
-   *   <li>通过 {@link FlowVariableStrategy#resolveAssignee} 解析表达式
+   *   <li>通过 {@link DefaultFlowVariableStrategy#resolveAssignee} 解析表达式
    * </ol>
    *
    * @param task 待填充的运行时任务（直接修改其 assignee 字段）
@@ -67,7 +67,7 @@ public class AssigneeResolutionService {
       FlowNodeDO node,
       Map<String, Object> variables,
       FlowAssigneeDTO explicit,
-      FlowInstanceDO instance) {
+      FlowInstanceVO instance) {
     String perm = node.getPermissionFlag();
     if (explicit != null) {
       task.setAssigneeType(explicit.getUserType());

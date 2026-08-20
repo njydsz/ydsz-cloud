@@ -101,6 +101,9 @@ public class RuleAdminController {
   /** 表达式校验服务 */
   private final ExpressionValidationService expressionValidationService;
 
+  /** 版本 Diff 服务 */
+  private final RuleVersionDiffService ruleVersionDiffService;
+
   /**
    * 分页查询规则定义（P1-2 分页标准化）
    *
@@ -246,9 +249,8 @@ public class RuleAdminController {
     try {
       RuleDefinition oldDef = YdszJson.fromJson(oldV.getDefinitionJson(), RuleDefinition.class);
       RuleDefinition newDef = YdszJson.fromJson(newV.getDefinitionJson(), RuleDefinition.class);
-      RuleVersionDiffService diffService = new RuleVersionDiffService();
       return YdszResponse.success(
-          LiteruleWebConverter.INSTANT.entityToVO(diffService.diff(oldDef, newDef)));
+          LiteruleWebConverter.INSTANT.entityToVO(ruleVersionDiffService.diff(oldDef, newDef)));
     } catch (Exception e) {
       log.error(
           "[LiteRule] 版本 Diff 失败: ruleCode={}, oldV={}, newV={}",

@@ -2,6 +2,7 @@ package com.njydsz.cronjob.infra.repository.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -28,6 +29,12 @@ public class JobArtifactRepositoryImpl implements JobArtifactRepository {
   @Override
   public List<JobArtifactVO> findByLogId(String logId) {
     return converter.jobArtifactListToVO(jobArtifactMapper.selectByLogId(logId));
+  }
+
+  @Override
+  public Optional<JobArtifactVO> findById(String id) {
+    return Optional.ofNullable(jobArtifactMapper.selectById(id))
+        .map(converter::entityToVO);
   }
 
   @Override

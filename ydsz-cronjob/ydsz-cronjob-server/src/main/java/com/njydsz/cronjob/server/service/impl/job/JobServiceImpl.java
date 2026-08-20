@@ -39,6 +39,10 @@ import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.dto.BatchResult;
+import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
+import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.infra.entity.job.Job;
 import com.njydsz.cronjob.infra.entity.log.JobLog;
 import com.njydsz.cronjob.domain.job.JobHandler;
@@ -128,6 +132,9 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
 
+  /** 任务定义 Infra Repository（用于分页/统计等 query 操作） */
+  private final com.njydsz.cronjob.infra.repository.JobRepository infraJobRepository;
+
   /** 调度器 */
   private TaskScheduler taskScheduler;
 
@@ -168,6 +175,128 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end");
     script.setResultType(Long.class);
     return script;
+  }
+
+  // ==================== VO/DTO <-> Entity 转换 ====================
+
+  private Job voToJob(JobVO vo) {
+    Job j = new Job();
+    j.setId(vo.getId());
+    j.setJobKey(vo.getJobKey());
+    j.setJobName(vo.getJobName());
+    j.setJobGroup(vo.getJobGroup());
+    j.setCronExpression(vo.getCronExpression());
+    j.setHandler(vo.getHandler());
+    j.setParamsJson(vo.getParamsJson());
+    j.setStatus(vo.getStatus());
+    j.setJobRemark(vo.getJobRemark());
+    j.setScheduleType(vo.getScheduleType());
+    j.setFixedRateMs(vo.getFixedRateMs());
+    j.setFixedDelayMs(vo.getFixedDelayMs());
+    j.setNextFireTime(vo.getNextFireTime());
+    j.setLockTtlMs(vo.getLockTtlMs());
+    j.setTimeoutMs(vo.getTimeoutMs());
+    j.setMisfirePolicy(vo.getMisfirePolicy());
+    j.setShardTotal(vo.getShardTotal());
+    j.setSlowThresholdMs(vo.getSlowThresholdMs());
+    j.setCluster(vo.getCluster());
+    j.setTimezone(vo.getTimezone());
+    j.setFireCount(vo.getFireCount());
+    j.setSuccessCount(vo.getSuccessCount());
+    j.setFailCount(vo.getFailCount());
+    j.setVersion(vo.getVersion());
+    j.setTenantId(vo.getTenantId());
+    j.setCreatedAt(vo.getCreatedAt());
+    j.setUpdatedAt(vo.getUpdatedAt());
+    j.setCreatedBy(vo.getCreatedBy());
+    j.setUpdatedBy(vo.getUpdatedBy());
+    return j;
+  }
+
+  private Job dtoToJob(JobPostDTO dto) {
+    Job j = new Job();
+    j.setId(dto.getId());
+    j.setJobKey(dto.getJobKey());
+    j.setJobName(dto.getJobName());
+    j.setJobGroup(dto.getJobGroup());
+    j.setCronExpression(dto.getCronExpression());
+    j.setHandler(dto.getHandler());
+    j.setParamsJson(dto.getParamsJson());
+    j.setStatus(dto.getStatus());
+    j.setJobRemark(dto.getRemark());
+    j.setScheduleType(dto.getScheduleType());
+    j.setFixedRateMs(dto.getFixedRateMs());
+    j.setFixedDelayMs(dto.getFixedDelayMs());
+    j.setLockTtlMs(dto.getLockTtlMs());
+    j.setTimeoutMs(dto.getTimeoutMs());
+    j.setMisfirePolicy(dto.getMisfirePolicy());
+    j.setShardTotal(dto.getShardTotal());
+    j.setSlowThresholdMs(dto.getSlowThresholdMs());
+    j.setCluster(dto.getCluster());
+    j.setTimezone(dto.getTimezone());
+    j.setTenantId(dto.getTenantId());
+    j.setMaxRetries(dto.getMaxRetries());
+    j.setRetryIntervalMs(dto.getRetryIntervalMs());
+    return j;
+  }
+
+  private Job dtoToJob(JobPutDTO dto) {
+    Job j = new Job();
+    j.setId(dto.getId());
+    j.setJobKey(dto.getJobKey());
+    j.setJobName(dto.getJobName());
+    j.setJobGroup(dto.getJobGroup());
+    j.setCronExpression(dto.getCronExpression());
+    j.setHandler(dto.getHandler());
+    j.setParamsJson(dto.getParamsJson());
+    j.setStatus(dto.getStatus());
+    j.setJobRemark(dto.getJobRemark());
+    j.setScheduleType(dto.getScheduleType());
+    j.setFixedRateMs(dto.getFixedRateMs());
+    j.setFixedDelayMs(dto.getFixedDelayMs());
+    j.setLockTtlMs(dto.getLockTtlMs());
+    j.setTimeoutMs(dto.getTimeoutMs());
+    j.setMisfirePolicy(dto.getMisfirePolicy());
+    j.setShardTotal(dto.getShardTotal());
+    j.setSlowThresholdMs(dto.getSlowThresholdMs());
+    j.setCluster(dto.getCluster());
+    j.setTimezone(dto.getTimezone());
+    j.setTenantId(dto.getTenantId());
+    return j;
+  }
+
+  private JobVO jobToVo(Job j) {
+    JobVO vo = new JobVO();
+    vo.setId(j.getId());
+    vo.setJobKey(j.getJobKey());
+    vo.setJobName(j.getJobName());
+    vo.setJobGroup(j.getJobGroup());
+    vo.setCronExpression(j.getCronExpression());
+    vo.setHandler(j.getHandler());
+    vo.setParamsJson(j.getParamsJson());
+    vo.setStatus(j.getStatus());
+    vo.setJobRemark(j.getJobRemark());
+    vo.setScheduleType(j.getScheduleType());
+    vo.setFixedRateMs(j.getFixedRateMs());
+    vo.setFixedDelayMs(j.getFixedDelayMs());
+    vo.setNextFireTime(j.getNextFireTime());
+    vo.setLockTtlMs(j.getLockTtlMs());
+    vo.setTimeoutMs(j.getTimeoutMs());
+    vo.setMisfirePolicy(j.getMisfirePolicy());
+    vo.setShardTotal(j.getShardTotal());
+    vo.setSlowThresholdMs(j.getSlowThresholdMs());
+    vo.setCluster(j.getCluster());
+    vo.setTimezone(j.getTimezone());
+    vo.setFireCount(j.getFireCount());
+    vo.setSuccessCount(j.getSuccessCount());
+    vo.setFailCount(j.getFailCount());
+    vo.setVersion(j.getVersion());
+    vo.setTenantId(j.getTenantId());
+    vo.setCreatedAt(j.getCreatedAt());
+    vo.setUpdatedAt(j.getUpdatedAt());
+    vo.setCreatedBy(j.getCreatedBy());
+    vo.setUpdatedBy(j.getUpdatedBy());
+    return vo;
   }
 
   /** 初始化任务调度器（线程池大小可配置，关闭时等待任务完成） */
@@ -222,13 +351,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   @Override
   @Transactional(readOnly = true)
   public void loadOnStartup() {
-    List<Job> list = jobRepository.selectAllNormal();
+    List<JobVO> list = jobRepository.findAllNormal();
     log.info("[Cronjob] 启动加载任务数量: {}", list.size());
-    for (Job j : list) {
+    for (JobVO vo : list) {
       try {
-        register(j);
+        register(voToJob(vo));
       } catch (Exception e) {
-        log.warn("[Cronjob] 注册任务失败: key={} reason={}", j.getJobKey(), e.getMessage());
+        log.warn("[Cronjob] 注册任务失败: key={} reason={}", vo.getJobKey(), e.getMessage());
       }
     }
   }
@@ -250,64 +379,66 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String create(Job job) {
+  public String create(JobPostDTO dto) {
     // P0-3: scheduleType 默认为 CRON（向后兼容）
-    if (!StringUtils.hasText(job.getScheduleType())) {
-      job.setScheduleType(ScheduleType.CRON.name());
+    if (!StringUtils.hasText(dto.getScheduleType())) {
+      dto.setScheduleType(ScheduleType.CRON.name());
     }
-    validate(job);
-    if (jobRepository.selectByJobKey(job.getJobKey()) != null) {
+    validate(dto);
+    if (jobRepository.findByJobKey(dto.getJobKey()).isPresent()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_7e5ef640")
-          .params(job.getJobKey())
+          .params(dto.getJobKey())
           .build();
     }
-    if (job.getStatus() == null) {
-      job.setStatus("NORMAL");
+    if (dto.getStatus() == null) {
+      dto.setStatus("NORMAL");
     }
-    if (job.getJobGroup() == null) {
-      job.setJobGroup("DEFAULT");
+    if (dto.getJobGroup() == null) {
+      dto.setJobGroup("DEFAULT");
     }
-    if (job.getTenantId() == null) {
-      job.setTenantId(TenantContextHolder.getTenantId());
+    if (dto.getTenantId() == null) {
+      dto.setTenantId(TenantContextHolder.getTenantId());
     }
     // P7-2: 租户级配额检查（在 insert 之前调用，避免任务计数提前增加导致误判）
-    tenantQuotaService.checkJobQuota(job.getTenantId());
+    tenantQuotaService.checkJobQuota(dto.getTenantId());
     // P3 收尾: 分片/misfire 默认值规整
-    if (job.getShardTotal() == null || job.getShardTotal() < 1) {
-      job.setShardTotal(1);
+    if (dto.getShardTotal() == null || dto.getShardTotal() < 1) {
+      dto.setShardTotal(1);
     }
-    if (!StringUtils.hasText(job.getMisfirePolicy())) {
-      job.setMisfirePolicy("FIRE_NOW");
+    if (!StringUtils.hasText(dto.getMisfirePolicy())) {
+      dto.setMisfirePolicy("FIRE_NOW");
     }
-    // P1-2: CRON / FIXED_RATE / FIXED_DELAY 均初始化 next_fire_time，
-    // Leader 模式下由 JobScanner 统一扫描推进（固定频率任务也具备故障转移能力）；
-    // API 类型不计算（仅手动触发）
-    ScheduleType type = ScheduleType.parse(job.getScheduleType());
+    // 先插入 DB 获取 ID
+    String id = jobRepository.insert(dto);
+    // 读取完整 VO 用于后续调度器注册
+    JobVO vo = jobRepository.findById(id).orElseThrow(() -> SysException.builder()
+        .resultCode(YdszResultCode.INTERNAL_ERROR)
+        .message("error.cronjob.msg_create_readback")
+        .build());
+    // P1-2: CRON / FIXED_RATE / FIXED_DELAY 计算 next_fire_time
+    Job j = voToJob(vo);
+    ScheduleType type = ScheduleType.parse(j.getScheduleType());
     if (type != ScheduleType.API) {
-      LocalDateTime next = nextFireTime(job);
-      job.setNextFireTime(next);
+      j.setNextFireTime(nextFireTime(j));
+      jobRepository.updateById(j);
     }
-    jobRepository.insert(job);
-    if ("NORMAL".equals(job.getStatus())) {
-      register(job);
+    if ("NORMAL".equals(j.getStatus())) {
+      register(j);
     }
     log.info(
         "[Cronjob] 创建任务: key={} scheduleType={} cron={} handler={} shardTotal={}",
-        job.getJobKey(),
-        job.getScheduleType(),
-        job.getCronExpression(),
-        job.getHandler(),
-        job.getShardTotal());
+        j.getJobKey(), j.getScheduleType(), j.getCronExpression(), j.getHandler(),
+        j.getShardTotal());
     // P1-6: 记录版本变更快照（统一走 JobHistoryService）
     JobHistoryService historyService = jobHistoryServiceProvider.getIfAvailable();
     if (historyService != null) {
-      historyService.recordVersionChange(null, job, "CREATE", job.getCreatedBy(), "任务创建");
+      historyService.recordVersionChange(null, j, "CREATE", j.getCreatedBy(), "任务创建");
     }
     // 同步到统一搜索索引（ydsz-common-search）
-    syncSearchIndex("job", job);
-    return job.getId();
+    syncSearchIndex("job", j);
+    return id;
   }
 
   /**
@@ -320,42 +451,39 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public void update(Job job) {
-    if (job.getId() == null) {
+  public void update(JobPutDTO dto) {
+    if (dto.getId() == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_ce91ca69")
           .build();
     }
-    Job exists = jobRepository.selectById(job.getId());
-    if (exists == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.NOT_FOUND)
-          .message("error.cronjob.msg_c0d8369f")
-          .build();
-    }
+    JobVO existsVo = jobRepository.findById(dto.getId()).orElseThrow(() -> SysException.builder()
+        .resultCode(YdszResultCode.NOT_FOUND)
+        .message("error.cronjob.msg_c0d8369f")
+        .build());
+    Job exists = voToJob(existsVo);
     // P1-6: 保存历史版本（在更新之前保存当前快照）
     JobHistoryService historyService = jobHistoryServiceProvider.getIfAvailable();
     if (historyService != null) {
-      historyService.saveHistory(exists, job.getUpdatedBy());
+      historyService.saveHistory(exists, dto.getUpdatedBy());
     }
     // P0-3: 同步 scheduleType（空值不覆盖，保持原值）
-    if (StringUtils.hasText(job.getScheduleType())) {
-      exists.setScheduleType(job.getScheduleType());
+    if (StringUtils.hasText(dto.getScheduleType())) {
+      exists.setScheduleType(dto.getScheduleType());
     }
     // P0-3: 同步 fixedRateMs/fixedDelayMs（允许清空为 null）
-    exists.setFixedRateMs(job.getFixedRateMs());
-    exists.setFixedDelayMs(job.getFixedDelayMs());
+    exists.setFixedRateMs(dto.getFixedRateMs());
+    exists.setFixedDelayMs(dto.getFixedDelayMs());
     // P2-8: 同步时区（允许清空为 null，使用默认时区）
-    exists.setTimezone(job.getTimezone());
+    exists.setTimezone(dto.getTimezone());
     // 按新调度类型校验
     ScheduleType type = ScheduleType.parse(exists.getScheduleType());
     if (type == ScheduleType.CRON) {
-      if (StringUtils.hasText(job.getCronExpression())) {
-        validateCron(job.getCronExpression());
+      if (StringUtils.hasText(dto.getCronExpression())) {
+        validateCron(dto.getCronExpression());
       }
-      // 重新计算 nextFireTime（CRON 类型）
-      if (StringUtils.hasText(job.getCronExpression())) {
+      if (StringUtils.hasText(dto.getCronExpression())) {
         exists.setNextFireTime(nextFireTime(exists));
       }
     } else if (type == ScheduleType.FIXED_RATE) {
@@ -366,7 +494,6 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             .params("fixedRateMs 必须为正数")
             .build();
       }
-      // P1-2: 重新计算 next_fire_time（Leader 模式由 JobScanner 统一扫描推进）
       exists.setNextFireTime(nextFireTime(exists));
     } else if (type == ScheduleType.FIXED_DELAY) {
       if (exists.getFixedDelayMs() == null || exists.getFixedDelayMs() <= 0) {
@@ -376,32 +503,29 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             .params("fixedDelayMs 必须为正数")
             .build();
       }
-      // P1-2: 重新计算 next_fire_time（Leader 模式由 JobScanner 统一扫描推进）
       exists.setNextFireTime(nextFireTime(exists));
     }
-    if (StringUtils.hasText(job.getCronExpression()))
-      exists.setCronExpression(job.getCronExpression());
-    if (StringUtils.hasText(job.getHandler())) exists.setHandler(job.getHandler());
-    if (StringUtils.hasText(job.getJobName())) exists.setJobName(job.getJobName());
-    if (StringUtils.hasText(job.getJobGroup())) exists.setJobGroup(job.getJobGroup());
-    if (job.getParamsJson() != null) exists.setParamsJson(job.getParamsJson());
-    if (StringUtils.hasText(job.getStatus())) exists.setStatus(job.getStatus());
-    if (job.getJobRemark() != null) exists.setJobRemark(job.getJobRemark());
+    if (StringUtils.hasText(dto.getCronExpression()))
+      exists.setCronExpression(dto.getCronExpression());
+    if (StringUtils.hasText(dto.getHandler())) exists.setHandler(dto.getHandler());
+    if (StringUtils.hasText(dto.getJobName())) exists.setJobName(dto.getJobName());
+    if (StringUtils.hasText(dto.getJobGroup())) exists.setJobGroup(dto.getJobGroup());
+    if (dto.getParamsJson() != null) exists.setParamsJson(dto.getParamsJson());
+    if (StringUtils.hasText(dto.getStatus())) exists.setStatus(dto.getStatus());
+    if (dto.getJobRemark() != null) exists.setJobRemark(dto.getJobRemark());
     // P0/P2/P3 收尾: 同步 lockTtlMs/timeoutMs/misfirePolicy/shardTotal
-    if (job.getLockTtlMs() != null) exists.setLockTtlMs(job.getLockTtlMs());
-    if (job.getTimeoutMs() != null) exists.setTimeoutMs(job.getTimeoutMs());
-    if (StringUtils.hasText(job.getMisfirePolicy()))
-      exists.setMisfirePolicy(job.getMisfirePolicy());
-    if (job.getShardTotal() != null && job.getShardTotal() >= 1)
-      exists.setShardTotal(job.getShardTotal());
+    if (dto.getLockTtlMs() != null) exists.setLockTtlMs(dto.getLockTtlMs());
+    if (dto.getTimeoutMs() != null) exists.setTimeoutMs(dto.getTimeoutMs());
+    if (StringUtils.hasText(dto.getMisfirePolicy()))
+      exists.setMisfirePolicy(dto.getMisfirePolicy());
+    if (dto.getShardTotal() != null && dto.getShardTotal() >= 1)
+      exists.setShardTotal(dto.getShardTotal());
     // P6-3: 同步慢任务阈值（null 表示不检测，允许清空）
-    exists.setSlowThresholdMs(job.getSlowThresholdMs());
+    exists.setSlowThresholdMs(dto.getSlowThresholdMs());
     // P3-12: 同步目标集群（允许清空为 null，使用本地集群）
-    exists.setCluster(job.getCluster());
-    // P4-8: 版本号 +1
-    int newVersion = (exists.getVersion() != null ? exists.getVersion() : 1) + 1;
-    exists.setVersion(newVersion);
-    jobRepository.updateById(exists);
+    exists.setCluster(dto.getCluster());
+    // 写入 DB（版本号由 domain repository 内部 +1）
+    jobRepository.update(dto);
 
     // 重新调度：先注销旧的本地调度（CRON/FIXED_RATE/FIXED_DELAY 共用 scheduledMap）
     unregister(exists.getJobKey());
@@ -413,7 +537,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     // P1-6: 记录版本变更快照（统一走 JobHistoryService）
     JobHistoryService historyService2 = jobHistoryServiceProvider.getIfAvailable();
     if (historyService2 != null) {
-      historyService2.recordVersionChange(exists, exists, "UPDATE", job.getUpdatedBy(), "任务更新");
+      historyService2.recordVersionChange(exists, exists, "UPDATE", dto.getUpdatedBy(), "任务更新");
     }
     // 同步到统一搜索索引（ydsz-common-search）
     syncSearchIndex("job", exists);
@@ -427,13 +551,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   public void delete(String id) {
-    Job j = jobRepository.selectById(id);
-    if (j == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.NOT_FOUND)
-          .message("error.cronjob.msg_c0d8369f")
-          .build();
-    }
+    JobVO vo = jobRepository.findById(id).orElseThrow(() -> SysException.builder()
+        .resultCode(YdszResultCode.NOT_FOUND)
+        .message("error.cronjob.msg_c0d8369f")
+        .build());
+    Job j = voToJob(vo);
     unregister(j.getJobKey());
     jobRepository.deleteById(id);
     log.info("[Cronjob] 删除任务: key={}", j.getJobKey());
@@ -454,7 +576,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   public void pause(String id) {
-    Job j = getById(id);
+    JobVO vo = jobRepository.findById(id).orElseThrow(() -> SysException.builder()
+        .resultCode(YdszResultCode.NOT_FOUND)
+        .message("error.cronjob.msg_c0d8369f")
+        .build());
+    Job j = voToJob(vo);
     if (!"NORMAL".equals(j.getStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -476,7 +602,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   public void resume(String id) {
-    Job j = getById(id);
+    JobVO vo = jobRepository.findById(id).orElseThrow(() -> SysException.builder()
+        .resultCode(YdszResultCode.NOT_FOUND)
+        .message("error.cronjob.msg_c0d8369f")
+        .build());
+    Job j = voToJob(vo);
     if ("NORMAL".equals(j.getStatus())) {
       if (!scheduledMap.containsKey(j.getJobKey())) {
         register(j);
@@ -521,7 +651,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   public String trigger(String id, boolean holdLock) {
-    Job j = getById(id);
+    JobVO vo = jobRepository.findById(id).orElseThrow(() -> SysException.builder()
+        .resultCode(YdszResultCode.NOT_FOUND)
+        .message("error.cronjob.msg_c0d8369f")
+        .build());
+    Job j = voToJob(vo);
     TaskDispatcher dispatcher =
         taskDispatcherProvider != null ? taskDispatcherProvider.getIfAvailable() : null;
     if (dispatcher != null) {
@@ -655,7 +789,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @return 注册成功返回 true，否则返回 false
    */
   @Override
-  public boolean register(Job job) {
+  public boolean register(JobPostDTO dto) {
+    Job job = dtoToJob(dto);
     if (!"NORMAL".equals(job.getStatus())) {
       return false;
     }
@@ -782,9 +917,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @return 重新注册成功返回 true，否则返回 false
    */
   @Override
-  public boolean reschedule(Job job) {
+  public boolean reschedule(JobPutDTO dto) {
+    Job job = dtoToJob(dto);
     unregister(job.getJobKey());
-    return register(job);
+    return register(dto);
   }
 
   /**
@@ -796,15 +932,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   @Transactional(readOnly = true)
-  public Job getById(String id) {
-    Job j = jobRepository.selectById(id);
-    if (j == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.NOT_FOUND)
-          .message("error.cronjob.msg_c0d8369f")
-          .build();
-    }
-    return j;
+  public JobVO getById(String id) {
+    return jobRepository.findById(id).orElseThrow(() -> SysException.builder()
+        .resultCode(YdszResultCode.NOT_FOUND)
+        .message("error.cronjob.msg_c0d8369f")
+        .build());
   }
 
   /**
@@ -819,7 +951,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   @Transactional(readOnly = true)
-  public Page<Job> page(int page, int size, String keyword, String status, String group) {
+  public Page<JobVO> page(int page, int size, String keyword, String status, String group) {
     Page<Job> p = new Page<>(page, size);
     LambdaQueryWrapper<Job> w = new LambdaQueryWrapper<>();
     if (StringUtils.hasText(keyword)) {
@@ -838,7 +970,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       w.eq(Job::getJobGroup, group);
     }
     w.orderByDesc(Job::getCreatedAt);
-    return jobRepository.selectPage(p, w);
+    Page<Job> result = infraJobRepository.selectPage(p, w);
+    Page<JobVO> vp = new Page<>(page, size, result.getTotal());
+    vp.setRecords(result.getRecords().stream().map(this::jobToVo).toList());
+    return vp;
   }
 
   /**
@@ -852,17 +987,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   @Transactional(readOnly = true)
-  public Page<JobLog> pageLog(int page, int size, String jobKey, String status) {
-    Page<JobLog> p = new Page<>(page, size);
-    LambdaQueryWrapper<JobLog> w = new LambdaQueryWrapper<>();
-    if (StringUtils.hasText(jobKey)) {
-      w.eq(JobLog::getJobKey, jobKey);
-    }
-    if (StringUtils.hasText(status)) {
-      w.eq(JobLog::getStatus, status);
-    }
-    w.orderByDesc(JobLog::getStartTime);
-    return jobLogRepository.selectPage(p, w);
+  public Page<JobLogVO> pageLog(int page, int size, String jobKey, String status) {
+    return jobLogRepository.pageByJobKeyAndStatus(jobKey, status, page, size).toMybatisPage();
   }
 
   // ==================== 内部执行逻辑 ====================
@@ -896,15 +1022,14 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     }
 
     // 写开始日志
-    JobLog log0 = new JobLog();
+    JobLogVO log0 = new JobLogVO();
     log0.setJobId(job.getId());
     log0.setJobKey(job.getJobKey());
     log0.setStartTime(LocalDateTime.now());
     log0.setStatus("RUNNING");
     log0.setParamsJson(job.getParamsJson());
     log0.setTraceId(TracerUtils.getTraceId());
-    log0.setDeleted(0);
-    jobLogRepository.insert(log0);
+    String logId = jobLogRepository.insert(log0);
 
     boolean success = false;
     String error = null;
@@ -924,10 +1049,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       error = e.getClass().getSimpleName() + ": " + e.getMessage();
       log0.setErrorMessage(error);
     } finally {
+      log0.setId(logId);
       log0.setEndTime(LocalDateTime.now());
       log0.setDurationMs(Duration.between(log0.getStartTime(), log0.getEndTime()).toMillis());
       log0.setStatus(success ? "SUCCESS" : "FAILED");
-      jobLogRepository.updateById(log0);
+      jobLogRepository.update(log0);
 
       // 更新任务统计
       Long incFire = 1L;
@@ -993,6 +1119,60 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @param job 任务定义
    * @throws SysException 当 jobKey/handler 为空或调度参数非法时抛出
    */
+  private void validate(JobPostDTO dto) {
+    if (!StringUtils.hasText(dto.getJobKey())) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("error.cronjob.msg_884214e7")
+          .build();
+    }
+    if (!StringUtils.hasText(dto.getHandler())) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("error.cronjob.msg_04ebee77")
+          .build();
+    }
+    if (StringUtils.hasText(dto.getTimezone())) {
+      try {
+        ZoneId.of(dto.getTimezone());
+      } catch (Exception e) {
+        throw SysException.builder()
+            .resultCode(YdszResultCode.BAD_REQUEST)
+            .key("error.cronjob.msg_5d0044ca")
+            .params("无效的时区 ID: " + dto.getTimezone())
+            .build();
+      }
+    }
+    ScheduleType type = ScheduleType.parse(dto.getScheduleType());
+    switch (type) {
+      case CRON:
+        validateCron(dto.getCronExpression());
+        break;
+      case FIXED_RATE:
+        if (dto.getFixedRateMs() == null || dto.getFixedRateMs() <= 0) {
+          throw SysException.builder()
+              .resultCode(YdszResultCode.BAD_REQUEST)
+              .key("error.cronjob.msg_5d0044ca")
+              .params("fixedRateMs 必须为正数")
+              .build();
+        }
+        break;
+      case FIXED_DELAY:
+        if (dto.getFixedDelayMs() == null || dto.getFixedDelayMs() <= 0) {
+          throw SysException.builder()
+              .resultCode(YdszResultCode.BAD_REQUEST)
+              .key("error.cronjob.msg_5d0044ca")
+              .params("fixedDelayMs 必须为正数")
+              .build();
+        }
+        break;
+      case API:
+        break;
+      default:
+        validateCron(dto.getCronExpression());
+    }
+  }
+
   private void validate(Job job) {
     if (!StringUtils.hasText(job.getJobKey())) {
       throw SysException.builder()

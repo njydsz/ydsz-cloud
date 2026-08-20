@@ -3,7 +3,7 @@ package com.njydsz.cronjob.domain.repository.outbox;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.njydsz.cronjob.domain.entity.outbox.OutboxEvent;
+import com.njydsz.cronjob.infra.entity.OutboxEvent;
 
 /**
  * Outbox 事件仓储接口（P0-2：事务性 Outbox 事件模式）。

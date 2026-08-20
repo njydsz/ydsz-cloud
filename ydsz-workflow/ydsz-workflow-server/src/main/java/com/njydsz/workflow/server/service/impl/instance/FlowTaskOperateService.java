@@ -24,7 +24,7 @@ import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
@@ -181,7 +181,7 @@ public class FlowTaskOperateService {
           .message("error.workflow.msg_09c299d0")
           .build();
     }
-    FlowInstanceDO instance = instanceRepository.findById(task.getInstanceId()).map(converter::entityToDO).orElse(null);
+    FlowInstanceVO instance = instanceRepository.findById(task.getInstanceId()).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -270,7 +270,7 @@ public class FlowTaskOperateService {
           .build();
     }
     // 4. 校验：实例存在且为 RUNNING
-    FlowInstanceDO instance = instanceRepository.findById(hisTask.getInstanceId()).map(converter::entityToDO).orElse(null);
+    FlowInstanceVO instance = instanceRepository.findById(hisTask.getInstanceId()).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -388,7 +388,7 @@ public class FlowTaskOperateService {
   }
 
   /** 合并流程变量：实例已有变量 + dto 增量。 */
-  private Map<String, Object> mergeVariables(FlowInstanceDO instance, Map<String, Object> extra) {
+  private Map<String, Object> mergeVariables(FlowInstanceVO instance, Map<String, Object> extra) {
     if (instance == null || !StringUtils.hasText(instance.getVariable())) {
       return extra == null ? Collections.emptyMap() : extra;
     }

@@ -16,6 +16,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
+        <!-- ydsz-common-domain（PageQuery 基类，分页查询参数） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
         <!-- ydsz-common-exception（错误码枚举实现 ExceptionCode 接口） -->
         <dependency>
             <groupId>com.njydsz</groupId>

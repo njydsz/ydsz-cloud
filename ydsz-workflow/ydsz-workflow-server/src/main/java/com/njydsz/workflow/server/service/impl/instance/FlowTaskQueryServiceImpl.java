@@ -108,29 +108,29 @@ public class FlowTaskQueryServiceImpl {
    * P2-20: 按 ID 查任务（任务详情查询）
    *
    * @param taskId 任务 ID
-   * @return 任务 DO，不存在返回 null
+   * @return 任务 VO，不存在返回 null
    */
-  public FlowRunTaskDO getById(String taskId) {
+  public FlowRunTaskVO getById(String taskId) {
     if (taskId == null) {
       return null;
     }
-    return taskRepository.findById(taskId).map(converter::entityToDO).orElse(null);
+    return taskRepository.findById(taskId).map(converter::entityToVO).orElse(null);
   }
 
   // ============================== 列表查询 ==============================
 
   /** 查实例的当前 PENDING 任务 */
-  public List<FlowRunTaskDO> listPendingByInstance(String instanceId) {
-    return taskRepository.findPendingByInstance(instanceId).stream().map(converter::entityToDO).toList();
+  public List<FlowRunTaskVO> listPendingByInstance(String instanceId) {
+    return taskRepository.findPendingByInstance(instanceId).stream().map(converter::entityToVO).toList();
   }
 
   /** 查用户的待办 */
   @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
-  public List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, String tenantId) {
+  public List<FlowRunTaskVO> listTodoByAssignee(String assigneeId, String tenantId) {
     // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
     // 保留 Mapper：自定义 SQL 操作（selectTodoByAssignee），Repository 暂无等价方法
-    return taskMapper.selectTodoByAssignee(assigneeId, tid);
+    return converter.flowRunTaskListToVO(taskMapper.selectTodoByAssignee(assigneeId, tid));
   }
 
   /**
@@ -142,20 +142,20 @@ public class FlowTaskQueryServiceImpl {
    * @param tenantId 租户 ID（可空，默认 "1"）
    */
   @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
-  public List<FlowRunTaskDO> listTodoByUser(
+  public List<FlowRunTaskVO> listTodoByUser(
       String userId, List<String> roleCodes, List<String> deptIds, String tenantId) {
     // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    Set<FlowRunTaskDO> result = new LinkedHashSet<>();
+    Set<FlowRunTaskVO> result = new LinkedHashSet<>();
     // 1. 直接分配给该用户的任务
     // 保留 Mapper：自定义 SQL 操作（selectTodoByAssignee），Repository 暂无等价方法
-    result.addAll(taskMapper.selectTodoByAssignee(String.valueOf(userId), tid));
+    result.addAll(converter.flowRunTaskListToVO(taskMapper.selectTodoByAssignee(String.valueOf(userId), tid)));
     // 2. 通过 ydsz_flow_user 关联的任务
     // 保留 Mapper：自定义 SQL 操作（selectTaskIdsByUser），Repository 暂无等价方法
     List<Long> taskIds = userMapper.selectTaskIdsByUser(String.valueOf(userId), tid);
     if (taskIds != null && !taskIds.isEmpty()) {
       for (Long tid2 : taskIds) {
-        FlowRunTaskDO t = taskRepository.findById(String.valueOf(tid2)).map(converter::entityToDO).orElse(null);
+        FlowRunTaskVO t = taskRepository.findById(String.valueOf(tid2)).map(converter::entityToVO).orElse(null);
         if (t != null && !FlowTaskStatus.valueOf(t.getTaskStatus()).isFinished()) {
           result.add(t);
         }
@@ -165,13 +165,13 @@ public class FlowTaskQueryServiceImpl {
     if (roleCodes != null) {
       // 保留 Mapper：自定义 SQL 操作（selectTodoByAssignee），Repository 暂无等价方法
       for (String rc : roleCodes) {
-        result.addAll(taskMapper.selectTodoByAssignee(rc, tid));
+        result.addAll(converter.flowRunTaskListToVO(taskMapper.selectTodoByAssignee(rc, tid)));
       }
     }
     if (deptIds != null) {
       // 保留 Mapper：自定义 SQL 操作（selectTodoByAssignee），Repository 暂无等价方法
       for (String did : deptIds) {
-        result.addAll(taskMapper.selectTodoByAssignee(did, tid));
+        result.addAll(converter.flowRunTaskListToVO(taskMapper.selectTodoByAssignee(did, tid)));
       }
     }
     return new ArrayList<>(result);
@@ -179,15 +179,15 @@ public class FlowTaskQueryServiceImpl {
 
   /** 查用户的已办 */
   @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
-  public List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, String tenantId) {
+  public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId) {
     // P0-3: 改查历史表
     // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
     // 保留 Mapper：自定义 SQL 操作（selectDoneByAssignee），Repository 暂无等价方法
     List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectDoneByAssignee(assigneeId, tid);
-    List<FlowRunTaskDO> result = new ArrayList<>();
+    List<FlowRunTaskVO> result = new ArrayList<>();
     for (FlowHisTaskDO his : hisTasks) {
-      result.add(hisToTask(his));
+      result.add(converter.entityToVO(hisToTask(his)));
     }
     return result;
   }
@@ -195,7 +195,7 @@ public class FlowTaskQueryServiceImpl {
   // ============================== 分页查询 ==============================
 
   /** P2-17: 查用户的待办（真分页：SQL LIMIT/OFFSET） */
-  public PageResponse<List<FlowRunTaskDO>> listTodoByAssigneePage(
+  public PageResponse<List<FlowRunTaskVO>> listTodoByAssigneePage(
       String assigneeId, String tenantId, int page, int size) {
     // P2-17: 真分页（SQL LIMIT/OFFSET）
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
@@ -203,13 +203,13 @@ public class FlowTaskQueryServiceImpl {
     int safeSize = size > 0 ? size : 20;
     int offset = (safePage - 1) * safeSize;
     // 保留 Mapper：自定义 SQL 操作（selectTodoByAssigneePage/countTodoByAssignee），Repository 暂无等价方法
-    List<FlowRunTaskDO> list = taskMapper.selectTodoByAssigneePage(assigneeId, tid, offset, safeSize);
+    List<FlowRunTaskVO> list = converter.flowRunTaskListToVO(taskMapper.selectTodoByAssigneePage(assigneeId, tid, offset, safeSize));
     long total = taskMapper.countTodoByAssignee(assigneeId, tid);
     return PageResponse.success(total, (long) safePage, (long) safeSize, list);
   }
 
   /** P2-17: 查用户的已办（真分页：SQL LIMIT/OFFSET） */
-  public PageResponse<List<FlowRunTaskDO>> listDoneByAssigneePage(
+  public PageResponse<List<FlowRunTaskVO>> listDoneByAssigneePage(
       String assigneeId, String tenantId, int page, int size) {
     // P2-17: 真分页（SQL LIMIT/OFFSET） — 走历史表
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
@@ -219,9 +219,9 @@ public class FlowTaskQueryServiceImpl {
     // 保留 Mapper：自定义 SQL 操作（selectDoneByAssigneePage），Repository 暂无等价方法
     List<FlowHisTaskDO> hisTasks =
         hisTaskMapper.selectDoneByAssigneePage(assigneeId, tid, offset, safeSize);
-    List<FlowRunTaskDO> list = new ArrayList<>();
+    List<FlowRunTaskVO> list = new ArrayList<>();
     for (FlowHisTaskDO his : hisTasks) {
-      list.add(hisToTask(his));
+      list.add(converter.entityToVO(hisToTask(his)));
     }
     // 保留 Mapper：自定义 SQL 操作（countDoneByAssignee），Repository 暂无等价方法
     long total = hisTaskMapper.countDoneByAssignee(assigneeId, tid);
@@ -229,7 +229,7 @@ public class FlowTaskQueryServiceImpl {
   }
 
   /** P2-33: 已办多维筛选分页查询（真分页：SQL LIMIT/OFFSET） */
-  public PageResponse<List<FlowRunTaskDO>> listDoneByAssigneePageMulti(
+  public PageResponse<List<FlowRunTaskVO>> listDoneByAssigneePageMulti(
       String assigneeId,
       String businessType,
       String flowCode,
@@ -246,9 +246,9 @@ public class FlowTaskQueryServiceImpl {
     List<FlowHisTaskDO> hisTasks =
         hisTaskMapper.selectDonePage(
             assigneeId, businessType, flowCode, startTime, endTime, tid, offset, safeSize);
-    List<FlowRunTaskDO> list = new ArrayList<>();
+    List<FlowRunTaskVO> list = new ArrayList<>();
     for (FlowHisTaskDO his : hisTasks) {
-      list.add(hisToTask(his));
+      list.add(converter.entityToVO(hisToTask(his)));
     }
     // 保留 Mapper：自定义 SQL 操作（countDone），Repository 暂无等价方法
     long total =
@@ -265,10 +265,10 @@ public class FlowTaskQueryServiceImpl {
   }
 
   /** P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED） */
-  public List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId, int limit) {
+  public List<FlowRunTaskVO> listOverdue(String assigneeId, String tenantId, int limit) {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
     // 保留 Mapper：自定义 SQL 操作（selectOverdue），Repository 暂无等价方法
-    return taskMapper.selectOverdue(assigneeId, tid, limit);
+    return converter.flowRunTaskListToVO(taskMapper.selectOverdue(assigneeId, tid, limit));
   }
 
   /** P2-32: 统计超期任务数量 */
@@ -290,7 +290,7 @@ public class FlowTaskQueryServiceImpl {
   // ============================== 视图转换 ==============================
 
   /** 转视图 */
-  public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskDO task) {
+  public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskVO task) {
     if (task == null) {
       return null;
     }

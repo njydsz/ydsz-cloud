@@ -13,7 +13,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.engine.FlowUrgeLimiter;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
@@ -112,7 +112,7 @@ public class FlowTaskUrgeService {
       return;
     }
     try {
-      FlowInstanceDO ins = instanceRepository.findById(instanceId).map(converter::entityToDO).orElse(null);
+      FlowInstanceVO ins = instanceRepository.findById(instanceId).orElse(null);
       flowMetrics.incTask(ins != null ? ins.getFlowCode() : "unknown", "", "urged");
     } catch (Exception e) {
       flowMetrics.incTask("unknown", "", "urged");

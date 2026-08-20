@@ -31,7 +31,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  *
  * <ul>
  *   <li>{@link FlowTaskQueryServiceImpl} — 查询类（待办 / 已办 / 详情 / 统计 / 视图）
- *   <li>{@link FlowTaskCompleteServiceImpl} — 完成类（创建 / 签收 / 通过 / 驳回 / 转办 / 委派 / 跳转 / 超时 / 取消 / 催办）
+ *   <li>{@link FlowTaskCoreService} — 核心操作类（创建 / 签收 / 通过 / 驳回 / 转办 / 委派 / 跳转 / 超时 / 取消 / 催办）
  *   <li>{@link FlowTaskSignServiceImpl} — 加签减签类（前 / 后加签、减签、追加处理人、已阅、沟通、暂存）
  *   <li>{@link FlowTaskBatchServiceImpl} — 批量操作（批量审批）
  *   <li>{@link com.njydsz.workflow.server.service.impl.instance.FlowTaskSupport} — 跨子 Service 共享的校验
@@ -59,7 +59,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * @see FlowTaskService 接口定义
  * @see FlowRunTaskDO 待办任务实体
  * @see FlowTaskQueryServiceImpl 查询子服务
- * @see FlowTaskCompleteServiceImpl 完成子服务
+ * @see FlowTaskCoreService 核心操作子服务
  * @see FlowTaskSignServiceImpl 加签减签子服务
  * @see FlowTaskBatchServiceImpl 批量操作子服务
  */
@@ -70,8 +70,8 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /** 查询子服务，处理待办/已办/详情/统计等只读查询 */
   private final FlowTaskQueryServiceImpl queryService;
 
-  /** 完成子服务门面，协调创建/签收/通过/驳回/转办/委派等写操作 */
-  private final FlowTaskCompleteServiceImpl completeService;
+  /** 核心操作子服务，协调创建/签收/通过/驳回/转办/委派等写操作 */
+  private final FlowTaskCoreService completeService;
 
   /** 加签减签子服务，处理前/后加签、减签、追加处理人等 */
   private final FlowTaskSignServiceImpl signService;
@@ -92,7 +92,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   // ============================== 详情查询 ==============================
 
   @Override
-  public FlowRunTaskDO getById(String taskId) {
+  public FlowRunTaskVO getById(String taskId) {
     return queryService.getById(taskId);
   }
 
@@ -169,34 +169,34 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   // ============================== 待办 / 已办 / 实例列表 ==============================
 
   @Override
-  public List<FlowRunTaskDO> listPendingByInstance(String instanceId) {
+  public List<FlowRunTaskVO> listPendingByInstance(String instanceId) {
     return queryService.listPendingByInstance(instanceId);
   }
 
   @Override
-  public List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, String tenantId) {
+  public List<FlowRunTaskVO> listTodoByAssignee(String assigneeId, String tenantId) {
     return queryService.listTodoByAssignee(assigneeId, tenantId);
   }
 
   @Override
-  public PageResponse<List<FlowRunTaskDO>> listTodoByAssigneePage(
+  public PageResponse<List<FlowRunTaskVO>> listTodoByAssigneePage(
       String assigneeId, String tenantId, int page, int size) {
     return queryService.listTodoByAssigneePage(assigneeId, tenantId, page, size);
   }
 
   @Override
-  public List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, String tenantId) {
+  public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId) {
     return queryService.listDoneByAssignee(assigneeId, tenantId);
   }
 
   @Override
-  public PageResponse<List<FlowRunTaskDO>> listDoneByAssigneePage(
+  public PageResponse<List<FlowRunTaskVO>> listDoneByAssigneePage(
       String assigneeId, String tenantId, int page, int size) {
     return queryService.listDoneByAssigneePage(assigneeId, tenantId, page, size);
   }
 
   @Override
-  public List<FlowRunTaskDO> listTodoByUser(
+  public List<FlowRunTaskVO> listTodoByUser(
       String userId, List<String> roleCodes, List<String> deptIds, String tenantId) {
     return queryService.listTodoByUser(userId, roleCodes, deptIds, tenantId);
   }
@@ -311,7 +311,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
   @Override
   public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskDO task) {
-    return queryService.toView(task);
+    return queryService.toView(WorkflowConverter.INSTANT.entityToVO(task));
   }
 
   @Override
@@ -320,7 +320,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   }
 
   @Override
-  public List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId, int limit) {
+  public List<FlowRunTaskVO> listOverdue(String assigneeId, String tenantId, int limit) {
     return queryService.listOverdue(assigneeId, tenantId, limit);
   }
 
@@ -335,7 +335,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   }
 
   @Override
-  public PageResponse<List<FlowRunTaskDO>> listDoneByAssigneePageMulti(
+  public PageResponse<List<FlowRunTaskVO>> listDoneByAssigneePageMulti(
       String assigneeId,
       String businessType,
       String flowCode,
@@ -352,7 +352,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
   @Override
   public String getTaskInstanceId(String taskId) {
-    FlowRunTaskDO task = queryService.getById(taskId);
+    FlowRunTaskVO task = queryService.getById(taskId);
     return task != null ? task.getInstanceId() : null;
   }
 
@@ -365,40 +365,27 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   public PageResponse<List<FlowRunTaskVO>> pageTodoVO(
       String userId, String tenantId, String flowCode, String businessType,
       LocalDateTime startTime, LocalDateTime endTime, int page, int size) {
-    PageResponse<List<FlowRunTaskDO>> result =
-        queryService.listTodoByAssigneePage(userId, tenantId, page, size);
-    return PageResponse.success(
-        result.getTotal(), result.getPageNum(), result.getPageSize(),
-        WorkflowConverter.INSTANT.flowRunTaskListToVO(result.getData()));
+    return queryService.listTodoByAssigneePage(userId, tenantId, page, size);
   }
 
   @Override
   public PageResponse<List<FlowRunTaskVO>> pageDoneVO(
       String userId, String tenantId, String flowCode, String businessType,
       LocalDateTime startTime, LocalDateTime endTime, int page, int size) {
-    PageResponse<List<FlowRunTaskDO>> result =
-        queryService.listDoneByAssigneePage(userId, tenantId, page, size);
-    return PageResponse.success(
-        result.getTotal(), result.getPageNum(), result.getPageSize(),
-        WorkflowConverter.INSTANT.flowRunTaskListToVO(result.getData()));
+    return queryService.listDoneByAssigneePage(userId, tenantId, page, size);
   }
 
   @Override
   public PageResponse<List<FlowRunTaskVO>> pageDoneSearchVO(
       String userId, String tenantId, String flowCode, String businessType,
       LocalDateTime startTime, LocalDateTime endTime, String keyword, int page, int size) {
-    PageResponse<List<FlowRunTaskDO>> result =
-        queryService.listDoneByAssigneePageMulti(
-            userId, businessType, flowCode, startTime, endTime, tenantId, page, size);
-    return PageResponse.success(
-        result.getTotal(), result.getPageNum(), result.getPageSize(),
-        WorkflowConverter.INSTANT.flowRunTaskListToVO(result.getData()));
+    return queryService.listDoneByAssigneePageMulti(
+        userId, businessType, flowCode, startTime, endTime, tenantId, page, size);
   }
 
   @Override
   public List<FlowRunTaskVO> listOverdueVO(String userId, String tenantId, int limit) {
-    return WorkflowConverter.INSTANT.flowRunTaskListToVO(
-        queryService.listOverdue(userId, tenantId, limit));
+    return queryService.listOverdue(userId, tenantId, limit);
   }
 
   @Override
@@ -413,12 +400,12 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
   @Override
   public int passAll(String userId, String userName) {
-    List<FlowRunTaskDO> todos = queryService.listTodoByAssignee(userId, null);
+    List<FlowRunTaskVO> todos = queryService.listTodoByAssignee(userId, null);
     if (todos == null || todos.isEmpty()) {
       return 0;
     }
     List<String> taskIds = new ArrayList<>();
-    for (FlowRunTaskDO task : todos) {
+    for (FlowRunTaskVO task : todos) {
       taskIds.add(task.getId());
     }
     batchPass(taskIds, userId, userName);
@@ -451,10 +438,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
   @Override
   public Boolean slaProcessByTaskId(String taskId) {
-    FlowRunTaskDO task = queryService.getById(taskId);
+    FlowRunTaskVO task = queryService.getById(taskId);
     if (task == null) {
       return null;
     }
-    return slaService.processOverdue(task);
+    return slaService.processOverdue(WorkflowConverter.INSTANT.entityToDO(task));
   }
 }

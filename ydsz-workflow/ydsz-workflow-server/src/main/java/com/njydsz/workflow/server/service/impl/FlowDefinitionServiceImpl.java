@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
-import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.impl.definition.FlowDefinitionDeployManager;
 import com.njydsz.workflow.server.service.impl.definition.FlowDefinitionDesignManager;
@@ -98,17 +98,17 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
   }
 
   @Override
-  public FlowDefinitionDO getPublished(String flowCode, String version, String tenantId) {
+  public FlowDefinitionVO getPublished(String flowCode, String version, String tenantId) {
     return queryService.getPublished(flowCode, version, tenantId);
   }
 
   @Override
-  public FlowDefinitionDO getLatestByCode(String flowCode, String tenantId) {
+  public FlowDefinitionVO getLatestByCode(String flowCode, String tenantId) {
     return queryService.getLatestByCode(flowCode, tenantId);
   }
 
   @Override
-  public List<FlowDefinitionDO> page(int pageNo, int pageSize, String category, String flowCode) {
+  public List<FlowDefinitionVO> page(int pageNo, int pageSize, String category, String flowCode) {
     return queryService.page(pageNo, pageSize, category, flowCode);
   }
 
