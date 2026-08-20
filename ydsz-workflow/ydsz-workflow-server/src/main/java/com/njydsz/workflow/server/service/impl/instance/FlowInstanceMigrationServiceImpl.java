@@ -21,16 +21,15 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO.MigrationDetail;
-import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 
 /**
@@ -113,14 +112,14 @@ import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 @RequiredArgsConstructor
 public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationService {
 
-  /** 流程实例 Mapper，查询/更新待迁移的运行中实例 */
-  private final FlowInstanceMapper instanceMapper;
+  /** 流程实例仓储，查询/更新待迁移的运行中实例 */
+  private final com.njydsz.workflow.domain.repository.FlowInstanceRepository instanceRepository;
 
   /** 流程节点仓储，查询新旧版本节点映射关系 */
   private final FlowNodeRepository nodeRepository;
 
-  /** 流程定义 Mapper（保留：无 FlowDefinitionRepository 可用） */
-  private final FlowDefinitionMapper definitionMapper;
+  /** 流程定义仓储，查询源/目标流程定义 */
+  private final FlowDefinitionRepository definitionRepository;
 
   /** 运行时任务仓储，迁移后同步更新待办任务的 definitionId 和 nodeCode */
   private final FlowRunTaskRepository taskRepository;

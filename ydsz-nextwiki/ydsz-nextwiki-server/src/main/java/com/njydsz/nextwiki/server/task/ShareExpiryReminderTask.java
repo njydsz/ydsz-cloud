@@ -11,7 +11,7 @@ import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
 import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
-import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
+import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 
 /**
  * 分享链接到期提醒定时任务。

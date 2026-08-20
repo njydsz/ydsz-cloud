@@ -21,5 +21,16 @@
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
         </dependency>
+        <!-- MyBatis-Plus（DO 实体使用 @TableName注解、Mapper 继承 BaseMapper） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
+            <version>${mybatis-plus.version}</version>
+        </dependency>
+        <!-- ydsz-common-jdbc（MpBaseEntity / MpBaseIdEntity 基类） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-jdbc</artifactId>
+        </dependency>
     </dependencies>
 </project>

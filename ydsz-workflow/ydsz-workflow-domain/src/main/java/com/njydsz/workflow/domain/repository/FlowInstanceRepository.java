@@ -245,4 +245,24 @@ public interface FlowInstanceRepository {
    * @return 运行中的子流程实例 VO 列表
    */
   List<FlowInstanceVO> findRunningChildrenByParentId(String parentInstanceId);
+
+  /**
+   * 查询某流程定义下运行中的实例列表。
+   *
+   * <p>用于流程实例迁移：获取源定义下所有 RUNNING 实例。
+   *
+   * @param definitionId 流程定义 ID
+   * @return 运行中实例 VO 列表
+   */
+  List<FlowInstanceVO> findRunningByDefinition(String definitionId);
+
+  /**
+   * 更新流程实例（全字段更新）。
+   *
+   * <p>用于流程实例迁移：更新 definitionId / flowVersion / currentNodeCode / currentNodeName 等字段。
+   *
+   * @param vo 流程实例 VO（含 id）
+   * @return 更新后的流程实例 VO
+   */
+  FlowInstanceVO update(FlowInstanceVO vo);
 }

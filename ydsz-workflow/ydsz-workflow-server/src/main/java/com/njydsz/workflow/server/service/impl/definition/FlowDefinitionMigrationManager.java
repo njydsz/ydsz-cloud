@@ -14,13 +14,14 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
+import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.repository.FlowSkipRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowSkipDO;
-import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
-import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -50,17 +51,20 @@ import org.springframework.util.StringUtils;
 @Component
 public class FlowDefinitionMigrationManager {
 
-  /** 流程定义 Mapper */
-  private final FlowDefinitionMapper definitionMapper;
+  /** 流程定义仓储 */
+  private final FlowDefinitionRepository definitionRepository;
 
-  /** 流程节点 Mapper */
-  private final FlowNodeMapper nodeMapper;
+  /** 流程节点仓储 */
+  private final FlowNodeRepository nodeRepository;
 
-  /** 流程跳转 Mapper */
-  private final FlowSkipMapper skipMapper;
+  /** 节点跳转仓储 */
+  private final FlowSkipRepository skipRepository;
 
-  /** 流程实例 Mapper（变更影响分析） */
-  private final FlowInstanceMapper instanceMapper;
+  /** 流程实例仓储（变更影响分析） */
+  private final FlowInstanceRepository instanceRepository;
+
+  /** DO/VO 转换器 */
+  private final WorkflowConverter converter;
 
   /** 流程定义元数据缓存 */
   private final FlowDefinitionCacheService flowDefinitionCacheService;
@@ -72,17 +76,19 @@ public class FlowDefinitionMigrationManager {
   private final FlowDefinitionQueryService queryService;
 
   public FlowDefinitionMigrationManager(
-      FlowDefinitionMapper definitionMapper,
-      FlowNodeMapper nodeMapper,
-      FlowSkipMapper skipMapper,
-      FlowInstanceMapper instanceMapper,
+      FlowDefinitionRepository definitionRepository,
+      FlowNodeRepository nodeRepository,
+      FlowSkipRepository skipRepository,
+      FlowInstanceRepository instanceRepository,
+      WorkflowConverter converter,
       FlowDefinitionCacheService flowDefinitionCacheService,
       FlowDefinitionDeployManager deployManager,
       FlowDefinitionQueryService queryService) {
-    this.definitionMapper = definitionMapper;
-    this.nodeMapper = nodeMapper;
-    this.skipMapper = skipMapper;
-    this.instanceMapper = instanceMapper;
+    this.definitionRepository = definitionRepository;
+    this.nodeRepository = nodeRepository;
+    this.skipRepository = skipRepository;
+    this.instanceRepository = instanceRepository;
+    this.converter = converter;
     this.flowDefinitionCacheService = flowDefinitionCacheService;
     this.deployManager = deployManager;
     this.queryService = queryService;
@@ -236,7 +242,7 @@ public class FlowDefinitionMigrationManager {
    */
   @Transactional(readOnly = true)
   public Map<String, Object> diffVersions(String definitionId, Integer version1, Integer version2) {
-    FlowDefinitionDO baseDef = definitionMapper.selectById(definitionId);
+    FlowDefinitionDO baseDef = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (baseDef == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -245,8 +251,9 @@ public class FlowDefinitionMigrationManager {
     }
     String tenantId = baseDef.getTenantId() != null ? baseDef.getTenantId() : "1";
 
-    List<FlowDefinitionDO> allVersions =
-        definitionMapper.selectByFlowCode(baseDef.getFlowCode(), tenantId);
+    List<FlowDefinitionDO> allVersions = definitionRepository.findByFlowCode(baseDef.getFlowCode()).stream()
+        .map(converter::entityToDO)
+        .toList();
     String v1Str = String.valueOf(version1);
     String v2Str = String.valueOf(version2);
     FlowDefinitionDO defV1 =
@@ -267,10 +274,10 @@ public class FlowDefinitionMigrationManager {
           .build();
     }
 
-    List<FlowNodeDO> nodesV1 = nodeMapper.selectByDefinitionId(defV1.getId());
-    List<FlowNodeDO> nodesV2 = nodeMapper.selectByDefinitionId(defV2.getId());
-    List<FlowSkipDO> skipsV1 = skipMapper.selectByDefinitionId(defV1.getId());
-    List<FlowSkipDO> skipsV2 = skipMapper.selectByDefinitionId(defV2.getId());
+    List<FlowNodeDO> nodesV1 = nodeRepository.findByDefinitionId(defV1.getId()).stream().map(converter::entityToDO).toList();
+    List<FlowNodeDO> nodesV2 = nodeRepository.findByDefinitionId(defV2.getId()).stream().map(converter::entityToDO).toList();
+    List<FlowSkipDO> skipsV1 = skipRepository.findByDefinitionId(defV1.getId()).stream().map(converter::entityToDO).toList();
+    List<FlowSkipDO> skipsV2 = skipRepository.findByDefinitionId(defV2.getId()).stream().map(converter::entityToDO).toList();
 
     Map<String, FlowNodeDO> nodeMapV1 =
         nodesV1.stream().collect(Collectors.toMap(FlowNodeDO::getNodeCode, n -> n, (a, b) -> a));
@@ -456,7 +463,7 @@ public class FlowDefinitionMigrationManager {
           .build();
     }
 
-    FlowDefinitionDO oldDef = definitionMapper.selectById(oldDefinitionId);
+    FlowDefinitionDO oldDef = definitionRepository.findById(oldDefinitionId).map(converter::entityToDO).orElse(null);
     if (oldDef == null || (oldDef.getDeleted() != null && oldDef.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -464,7 +471,7 @@ public class FlowDefinitionMigrationManager {
           .params(oldDefinitionId)
           .build();
     }
-    FlowDefinitionDO newDef = definitionMapper.selectById(newDefinitionId);
+    FlowDefinitionDO newDef = definitionRepository.findById(newDefinitionId).map(converter::entityToDO).orElse(null);
     if (newDef == null || (newDef.getDeleted() != null && newDef.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -483,9 +490,8 @@ public class FlowDefinitionMigrationManager {
     Integer v2 = parseVersionInt(newDef.getFlowVersion());
     Map<String, Object> diff = diffVersions(oldDefinitionId, v1, v2);
 
-    long runningTotal = instanceMapper.countRunningByDefinition(oldDefinitionId);
-    List<Map<String, Object>> runningByNode =
-        instanceMapper.selectRunningGroupByNode(oldDefinitionId);
+    long runningTotal = instanceRepository.countRunningByDefinition(oldDefinitionId);
+    List<Map<String, Object>> runningByNode = instanceRepository.selectRunningGroupByNode(oldDefinitionId);
 
     Map<String, Object> nodeChanges = MapUtils.safeCastMap(diff.get("nodeChanges"));
     List<Map<String, Object>> removedNodes = MapUtils.getListOfMaps(nodeChanges, "removed");

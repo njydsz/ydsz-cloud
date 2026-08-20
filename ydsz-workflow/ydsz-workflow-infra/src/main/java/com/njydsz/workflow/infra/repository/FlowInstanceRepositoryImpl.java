@@ -206,4 +206,21 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
                 .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
                 .eq(FlowInstanceDO::getDeleted, 0)));
   }
+
+  @Override
+  public List<FlowInstanceVO> findRunningByDefinition(String definitionId) {
+    return converter.flowInstanceListToVO(
+        instanceMapper.selectList(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowInstanceDO>()
+                .eq(FlowInstanceDO::getDefinitionId, definitionId)
+                .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
+                .eq(FlowInstanceDO::getDeleted, 0)));
+  }
+
+  @Override
+  public FlowInstanceVO update(FlowInstanceVO vo) {
+    FlowInstanceDO entity = converter.entityToDOWithId(vo);
+    instanceMapper.updateById(entity);
+    return vo;
+  }
 }

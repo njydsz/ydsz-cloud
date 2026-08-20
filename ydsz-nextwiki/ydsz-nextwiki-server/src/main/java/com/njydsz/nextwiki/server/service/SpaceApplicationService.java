@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.util.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.nextwiki.domain.dto.SpaceDTO;
 import com.njydsz.nextwiki.domain.dto.SpaceMemberDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -18,6 +18,7 @@ import com.njydsz.nextwiki.domain.repository.SpaceMemberRepository;
 import com.njydsz.nextwiki.domain.repository.SpaceRepository;
 import com.njydsz.nextwiki.domain.service.SpaceDomainService;
 import com.njydsz.nextwiki.domain.vo.SpaceVO;
+import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 import com.njydsz.nextwiki.server.security.SpacePermission;
 import com.njydsz.nextwiki.server.security.SpacePermission.Level;
 

@@ -168,4 +168,77 @@ public interface FlowDefinitionRepository {
    * @return 流程定义 VO 列表
    */
   List<FlowDefinitionVO> findEnabledByCategory(String categoryCode, String tenantId);
+
+  /**
+   * CAS 加锁流程定义（设计器协同编辑）。
+   *
+   * <p>通过 CAS 乐观锁实现多用户并发加锁：
+   * 当当前锁定人非指定用户或锁已超时或未锁定时，更新锁定人为指定用户。
+   *
+   * @param definitionId 流程定义 ID
+   * @param userId 加锁用户 ID
+   * @param now 当前时间
+   * @param lockedBy 锁定人 ID（用于 WHERE 条件匹配）
+   * @param timeoutExpired 超时时间阈值
+   * @param revision 当前版本号（乐观锁 CAS 条件）
+   * @return 更新行数（1=加锁成功，0=失败）
+   */
+  int casLock(
+      String definitionId,
+      String userId,
+      java.time.LocalDateTime now,
+      String lockedBy,
+      java.time.LocalDateTime timeoutExpired,
+      Integer revision);
+
+  /**
+   * CAS 解锁流程定义（设计器协同编辑）。
+   *
+   * <p>仅持锁人本人可解锁：当当前锁定人等于指定用户时，清空锁定人。
+   *
+   * @param definitionId 流程定义 ID
+   * @param userId 解锁用户 ID
+   * @param revision 当前版本号（乐观锁 CAS 条件）
+   * @return 更新行数（1=解锁成功，0=失败）
+   */
+  int casUnlock(String definitionId, String userId, Integer revision);
+
+  /**
+   * 发布流程定义（更新 isPublish 状态）。
+   *
+   * @param definitionId 流程定义 ID
+   * @param isPublish 目标发布状态（1=已发布，9=已废弃）
+   */
+  void publish(String definitionId, int isPublish);
+
+  /**
+   * 按流程编码批量失效已发布版本（切换激活版本用）。
+   *
+   * <p>将指定 flowCode 下除 targetDefinitionId 外的所有已发布版本置为 isPublish=0。
+   *
+   * @param flowCode 流程编码
+   * @param targetDefinitionId 目标定义 ID（排除在外）
+   * @param tenantId 租户 ID
+   */
+  void deactivateByFlowCode(String flowCode, String targetDefinitionId, String tenantId);
+
+  /**
+   * 更新流程定义的 activityStatus。
+   *
+   * @param definitionId 流程定义 ID
+   * @param activityStatus 目标启用状态（1=启用，0=停用）
+   */
+  void updateActivityStatus(String definitionId, int activityStatus);
+
+  /**
+   * 查询上一已发布版本（回滚用）。
+   *
+   * <p>返回指定 flowCode 下除当前定义 ID 外的最新已发布版本。
+   *
+   * @param flowCode 流程编码
+   * @param tenantId 租户 ID
+   * @param excludeDefinitionId 排除的定义 ID
+   * @return 上一已发布版本 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<FlowDefinitionVO> findPreviousPublishedVersion(String flowCode, String tenantId, String excludeDefinitionId);
 }

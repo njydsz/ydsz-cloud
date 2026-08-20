@@ -23,7 +23,7 @@ import com.njydsz.userinfo.server.config.WebAuthnProperties;
 import com.webauthn4j.WebAuthnManager;
 import com.webauthn4j.authenticator.Authenticator;
 import com.webauthn4j.authenticator.CoreAuthenticatorImpl;
-import com.webauthn4j.converter.AuthenticatorAssertionResponseConverter;
+import com.webauthn4j.converter.exception.VerificationException;
 import com.webauthn4j.converter.util.ObjectConverter;
 import com.webauthn4j.data.AuthenticationData;
 import com.webauthn4j.data.AuthenticationParameters;
@@ -31,7 +31,6 @@ import com.webauthn4j.data.AuthenticationRequest;
 import com.webauthn4j.data.client.Origin;
 import com.webauthn4j.data.attestation.authenticator.COSEKey;
 import com.webauthn4j.server.ServerProperty;
-import com.webauthn4j.verification.exception.VerificationException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
