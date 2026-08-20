@@ -46,8 +46,8 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
   /** 企业微信用户信息端点（可通过 ydsz.userinfo.social.providers.enterprise_wechat.user-info-url 覆盖） */
   private static final String DEFAULT_USER_INFO_URL = "https://qyapi.weixin.qq.com/cgi-bin/user/getuserinfo";
 
-  /** 企业微信用户详情端点 */
-  private static final String USER_DETAIL_URL = "https://qyapi.weixin.qq.com/cgi-bin/user/get";
+  /** 企业微信用户详情端点（可通过 ydsz.userinfo.social.providers.enterprise_wechat.user-detail-url 覆盖） */
+  private static final String DEFAULT_USER_DETAIL_URL = "https://qyapi.weixin.qq.com/cgi-bin/user/get";
 
   /**
    * 构造企业微信认证提供者。
@@ -134,11 +134,12 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
     }
 
     // 获取用户详情
+    String detailUrl = config.getOrDefaultUserDetailUrl(DEFAULT_USER_DETAIL_URL);
     Map<String, String> params = new HashMap<>();
     params.put("access_token", token.accessToken());
     params.put("userid", token.openId());
 
-    Map<String, Object> detailResponse = httpClient.getForMap(USER_DETAIL_URL, null, params);
+    Map<String, Object> detailResponse = httpClient.getForMap(detailUrl, null, params);
 
     String name = getStr(detailResponse, "name");
     String avatar = getStr(detailResponse, "avatar");

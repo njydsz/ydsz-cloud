@@ -34,9 +34,8 @@ import com.njydsz.userinfo.domain.dto.BatchUserStatusDTO;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.SensitiveVerifyDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
+import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
-import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserImportResultDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
@@ -160,8 +159,8 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccountDO.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建用户")
-  public YdszResponse<String> create(@Valid @RequestBody UserAccountCreateDTO dto) {
-    return YdszResponse.success(service.create(dto));
+  public YdszResponse<String> create(@Valid @RequestBody UserAccountDTO dto) {
+    return YdszResponse.success(service.save(dto));
   }
 
   /**
@@ -185,8 +184,8 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccountDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新用户信息")
-  public YdszResponse<Boolean> update(@Valid @RequestBody UserAccountUpdateDTO dto) {
-    return YdszResponse.success(service.update(dto));
+  public YdszResponse<String> update(@Valid @RequestBody UserAccountDTO dto) {
+    return YdszResponse.success(service.save(dto));
   }
 
   /**

@@ -27,7 +27,7 @@ import com.njydsz.userinfo.server.service.UserAccountService;
  * SCIM 2.0 PATCH 操作处理器。
  *
  * <p>解析并执行 RFC 7644 Section 3.5.2 定义的 PATCH 操作，将增量修改转换为
- * ydsz {@link UserAccountUpdateDTO} 并委托 {@link UserAccountService} 执行更新。
+ * ydsz {@link UserAccountDTO} 并委托 {@link UserAccountService} 执行更新。
  *
  * <p><b>支持的属性路径：</b>
  *
@@ -58,7 +58,7 @@ public class ScimPatchHandler {
   /**
    * 执行 PATCH 操作。
    *
-   * <p>解析操作列表，将每个操作转换为 {@link UserAccountUpdateDTO} 的对应字段变更，
+   * <p>解析操作列表，将每个操作转换为 {@link UserAccountDTO} 的对应字段变更，
    * 最终委托 {@link UserAccountService#update} 执行。
    *
    * @param userId 目标用户 ID

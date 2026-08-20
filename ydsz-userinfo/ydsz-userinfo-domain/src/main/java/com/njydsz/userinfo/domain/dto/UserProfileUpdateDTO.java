@@ -8,7 +8,7 @@ import lombok.Data;
 /**
  * 用户资料更新 DTO（当前登录用户修改自己的资料）。
  *
- * <p>与 {@link com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO} 不同，此 DTO 不包含状态、角色等管理字段，仅包含用户可自助修改的基本信息。
+ * <p>与 {@link com.njydsz.userinfo.domain.dto.UserAccountDTO} 不同，此 DTO 不包含状态、角色等管理字段，仅包含用户可自助修改的基本信息。
  *
  * @author ydsz-team
  * @since 1.0.0

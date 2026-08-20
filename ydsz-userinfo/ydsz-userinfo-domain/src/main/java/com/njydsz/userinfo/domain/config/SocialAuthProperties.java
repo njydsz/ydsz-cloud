@@ -100,6 +100,14 @@ public class SocialAuthProperties {
     private String userInfoUrl;
 
     /**
+     * 自定义用户详情端点 URL（可选）。
+     *
+     * <p>用于私有化部署或内部代理场景，覆盖默认的公开端点。为空时使用平台默认端点。
+     * <p>仅有部分平台需要独立的详情端点（如企业微信），不需要时保持 null 即可。
+     */
+    private String userDetailUrl;
+
+    /**
      * 获取授权端点 URL（优先使用自定义值，为空时返回默认值）。
      *
      * @param defaultUrl 默认端点 URL
@@ -127,6 +135,16 @@ public class SocialAuthProperties {
      */
     public String getOrDefaultUserInfoUrl(String defaultUrl) {
       return (userInfoUrl != null && !userInfoUrl.isBlank()) ? userInfoUrl : defaultUrl;
+    }
+
+    /**
+     * 获取用户详情端点 URL（优先使用自定义值，为空时返回默认值）。
+     *
+     * @param defaultUrl 默认端点 URL
+     * @return 实际使用的端点 URL
+     */
+    public String getOrDefaultUserDetailUrl(String defaultUrl) {
+      return (userDetailUrl != null && !userDetailUrl.isBlank()) ? userDetailUrl : defaultUrl;
     }
   }
 
