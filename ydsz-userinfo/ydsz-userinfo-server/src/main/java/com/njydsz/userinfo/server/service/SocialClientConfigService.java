@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.userinfo.infra.config.SocialAuthProperties;
+import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 import com.njydsz.userinfo.domain.dto.SocialClientCreateDTO;
 import com.njydsz.userinfo.domain.dto.SocialClientUpdateDTO;
 import com.njydsz.userinfo.domain.query.SocialClientPageQuery;

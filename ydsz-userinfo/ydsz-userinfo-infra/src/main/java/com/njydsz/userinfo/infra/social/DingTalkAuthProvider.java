@@ -36,14 +36,14 @@ public class DingTalkAuthProvider extends AbstractSocialAuthProvider {
   /** 钉钉平台标识 */
   private static final String PLATFORM = "DINGTALK";
 
-  /** 钉钉扫码登录授权端点 */
-  private static final String AUTHORIZE_URL = "https://login.dingtalk.com/oauth2/auth";
+  /** 钉钉扫码登录授权端点（可通过 ydsz.userinfo.social.providers.dingtalk.authorize-url 覆盖） */
+  private static final String DEFAULT_AUTHORIZE_URL = "https://login.dingtalk.com/oauth2/auth";
 
-  /** 钉钉令牌端点 */
-  private static final String ACCESS_TOKEN_URL = "https://api.dingtalk.com/v1.0/oauth2/userAccessToken";
+  /** 钉钉令牌端点（可通过 ydsz.userinfo.social.providers.dingtalk.access-token-url 覆盖） */
+  private static final String DEFAULT_ACCESS_TOKEN_URL = "https://api.dingtalk.com/v1.0/oauth2/userAccessToken";
 
-  /** 钉钉用户信息端点 */
-  private static final String USER_INFO_URL = "https://api.dingtalk.com/v1.0/contact/users";
+  /** 钉钉用户信息端点（可通过 ydsz.userinfo.social.providers.dingtalk.user-info-url 覆盖） */
+  private static final String DEFAULT_USER_INFO_URL = "https://api.dingtalk.com/v1.0/contact/users";
 
   /**
    * 构造钉钉认证提供者。
@@ -71,7 +71,9 @@ public class DingTalkAuthProvider extends AbstractSocialAuthProvider {
     String clientId = config.getAppId();
     String scope = config.getScope() != null ? config.getScope() : "openid";
 
-    String url = AUTHORIZE_URL
+    String authorizeUrl = config.getOrDefaultAuthorizeUrl(DEFAULT_AUTHORIZE_URL);
+
+    String url = authorizeUrl
         + "?prompt=consent"
         + "&client_id=" + urlEncode(clientId)
         + "&redirect_uri=" + urlEncode(redirectUri)
@@ -90,13 +92,15 @@ public class DingTalkAuthProvider extends AbstractSocialAuthProvider {
       throw new SocialAuthException("钉钉配置未找到");
     }
 
+    String tokenUrl = config.getOrDefaultAccessTokenUrl(DEFAULT_ACCESS_TOKEN_URL);
+
     Map<String, String> tokenParams = new HashMap<>();
     tokenParams.put("clientId", config.getAppId());
     tokenParams.put("clientSecret", config.getAppSecret());
     tokenParams.put("code", code);
     tokenParams.put("grantType", "authorization_code");
 
-    Map<String, Object> tokenResponse = httpClient.postJsonForMap(ACCESS_TOKEN_URL, tokenParams);
+    Map<String, Object> tokenResponse = httpClient.postJsonForMap(tokenUrl, tokenParams);
 
     String accessToken = getStr(tokenResponse, "accessToken");
     if (accessToken == null || accessToken.isBlank()) {
@@ -111,9 +115,14 @@ public class DingTalkAuthProvider extends AbstractSocialAuthProvider {
 
   @Override
   public SocialUserInfo getUserInfo(SocialAccessToken token) {
-    // 钉钉通过 access_token 查询用户信息
-    String userInfoUrl = USER_INFO_URL + "/" + token.openId();
-    Map<String, Object> userResponse = httpClient.getForMap(userInfoUrl, token.accessToken(), null);
+    SocialAuthProperties.ProviderConfig config = getProviderConfig();
+    if (config == null) {
+      throw new SocialAuthException("钉钉配置未找到");
+    }
+
+    String userInfoUrl = config.getOrDefaultUserInfoUrl(DEFAULT_USER_INFO_URL);
+    String url = userInfoUrl + "/" + token.openId();
+    Map<String, Object> userResponse = httpClient.getForMap(url, token.accessToken(), null);
 
     String nick = getStr(userResponse, "nick");
     String avatar = getStr(userResponse, "avatarUrl");

@@ -289,6 +289,21 @@ public class JobRepositoryImpl implements JobRepository {
   }
 
   @Override
+  public int resetConsecutiveFail(String jobId) {
+    return jobMapper.resetConsecutiveFail(jobId);
+  }
+
+  @Override
+  public int incrementConsecutiveFail(String jobId) {
+    return jobMapper.incrementConsecutiveFail(jobId);
+  }
+
+  @Override
+  public Integer findConsecutiveFailCount(String jobId) {
+    return jobMapper.selectConsecutiveFailCount(jobId);
+  }
+
+  @Override
   public int deleteById(String id) {
     return jobMapper.deleteById(id);
   }

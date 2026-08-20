@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.AppInfo;
+import com.njydsz.system.infra.entity.AppInfoDO;
 import com.njydsz.system.infra.mapper.AppInfoMapper;
 import com.njydsz.system.domain.repository.AppInfoRepository;
 import com.njydsz.system.domain.dto.AppInfoDTO;
@@ -50,7 +50,7 @@ public class AppInfoRepositoryImpl implements AppInfoRepository {
   @Override
   public boolean existsByAppKey(String appKey) {
     Long count = appInfoMapper.selectCount(
-        new LambdaQueryWrapper<AppInfo>().eq(AppInfo::getAppKey, appKey).eq(AppInfo::getDeleted, 0));
+        new LambdaQueryWrapper<AppInfoDO>().eq(AppInfoDO::getAppKey, appKey).eq(AppInfoDO::getDeleted, 0));
     return count != null && count > 0;
   }
 
@@ -61,16 +61,16 @@ public class AppInfoRepositoryImpl implements AppInfoRepository {
 
   @Override
   public PageResponse<List<AppInfoVO>> findByPage(AppInfoPageQuery query) {
-    Page<AppInfo> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<AppInfo> wrapper = new LambdaQueryWrapper<>();
+    Page<AppInfoDO> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<AppInfoDO> wrapper = new LambdaQueryWrapper<>();
     if (query.getAppName() != null && !query.getAppName().isBlank()) {
-      wrapper.like(AppInfo::getAppName, query.getAppName());
+      wrapper.like(AppInfoDO::getAppName, query.getAppName());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(AppInfo::getStatus, query.getStatus());
+      wrapper.eq(AppInfoDO::getStatus, query.getStatus());
     }
-    wrapper.orderByDesc(AppInfo::getCreatedAt);
-    com.baomidou.mybatisplus.core.metadata.IPage<AppInfo> result = appInfoMapper.selectPage(page, wrapper);
+    wrapper.orderByDesc(AppInfoDO::getCreatedAt);
+    com.baomidou.mybatisplus.core.metadata.IPage<AppInfoDO> result = appInfoMapper.selectPage(page, wrapper);
     List<AppInfoVO> vos = converter.appInfoListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
   }
@@ -82,13 +82,13 @@ public class AppInfoRepositoryImpl implements AppInfoRepository {
 
   @Override
   public boolean insert(AppInfoDTO dto) {
-    AppInfo entity = converter.dtoToEntity(dto);
+    AppInfoDO entity = converter.dtoToEntity(dto);
     return appInfoMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean updateById(AppInfoDTO dto) {
-    AppInfo entity = converter.dtoToEntityWithId(dto);
+    AppInfoDO entity = converter.dtoToEntityWithId(dto);
     return appInfoMapper.updateById(entity) > 0;
   }
 

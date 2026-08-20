@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.system.infra.entity.Config;
+import com.njydsz.system.infra.entity.ConfigDO;
 
 /**
  * 系统配置 Mapper
@@ -29,12 +29,12 @@ import com.njydsz.system.infra.entity.Config;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see Config 配置实体
+ * @see ConfigDO 配置实体
  * @see com.njydsz.system.server.service.ConfigService 配置 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface ConfigMapper extends BaseMapper<Config> {
+public interface ConfigMapper extends BaseMapper<ConfigDO> {
 
   /**
    * 按配置键查询启用的配置项
@@ -46,7 +46,7 @@ public interface ConfigMapper extends BaseMapper<Config> {
    */
   @Select(
       "SELECT * FROM ydsz_config WHERE config_key = #{configKey} AND deleted = 0 AND status = 'ENABLED' LIMIT 1")
-  Config selectByConfigKey(@Param("configKey") String configKey);
+  ConfigDO selectByConfigKey(@Param("configKey") String configKey);
 
   /**
    * 批量插入配置项（一次 SQL 批量写入）
@@ -60,5 +60,5 @@ public interface ConfigMapper extends BaseMapper<Config> {
    * @param items 配置实体列表
    * @return 插入的记录数
    */
-  int insertBatch(@Param("items") List<Config> items);
+  int insertBatch(@Param("items") List<ConfigDO> items);
 }

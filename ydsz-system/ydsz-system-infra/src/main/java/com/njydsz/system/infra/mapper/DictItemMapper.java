@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.system.infra.entity.DictItem;
+import com.njydsz.system.infra.entity.DictItemDO;
 
 /**
  * 字典项 Mapper 接口
@@ -32,11 +32,11 @@ import com.njydsz.system.infra.entity.DictItem;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see DictItem 字典项实体
+ * @see DictItemDO 字典项实体
  * @see com.njydsz.system.server.service.DictItemService 字典项 Service
  */
 @Mapper
-public interface DictItemMapper extends BaseMapper<DictItem> {
+public interface DictItemMapper extends BaseMapper<DictItemDO> {
 
   /**
    * 按类型编码和字典项编码查询启用的字典项
@@ -50,7 +50,7 @@ public interface DictItemMapper extends BaseMapper<DictItem> {
   @Select(
       "SELECT * FROM ydsz_dict_item WHERE type_code = #{typeCode} AND item_code = #{itemCode} "
           + "AND deleted = 0 AND status = 'ENABLED' LIMIT 1")
-  DictItem selectByTypeAndCode(
+  DictItemDO selectByTypeAndCode(
       @Param("typeCode") String typeCode, @Param("itemCode") String itemCode);
 
   /**
@@ -64,7 +64,7 @@ public interface DictItemMapper extends BaseMapper<DictItem> {
   @Select(
       "SELECT * FROM ydsz_dict_item WHERE type_code = #{typeCode} AND deleted = 0 AND status = 'ENABLED' "
           + "ORDER BY sort_order ASC")
-  List<DictItem> listEnabledByTypeCode(@Param("typeCode") String typeCode);
+  List<DictItemDO> listEnabledByTypeCode(@Param("typeCode") String typeCode);
 
   /**
    * 物理删除指定类型编码下的所有字典项（含逻辑删除标记的记录）
@@ -88,5 +88,5 @@ public interface DictItemMapper extends BaseMapper<DictItem> {
    * @param items 字典项实体列表
    * @return 插入的记录数
    */
-  int insertBatch(@Param("items") List<DictItem> items);
+  int insertBatch(@Param("items") List<DictItemDO> items);
 }

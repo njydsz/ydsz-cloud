@@ -1,7 +1,6 @@
 package com.njydsz.userinfo.server.event.listener;
 
-import java.time.LocalDateTime;
-
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -19,11 +18,13 @@ import com.njydsz.userinfo.domain.event.auth.MfaTriggeredEvent;
 import com.njydsz.userinfo.domain.event.auth.MfaVerifiedEvent;
 import com.njydsz.userinfo.domain.event.auth.PasswordChangedEvent;
 import com.njydsz.userinfo.domain.event.auth.SessionEvictedEvent;
+import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 
 /**
  * 认证指标事件监听器。
  *
- * <p>监听所有认证事件，记录认证指标统计。 实际项目中可对接 Micrometer 输出到 Prometheus 等监控系统。
+ * <p>监听所有认证事件，通过 {@link UserInfoMetrics} 记录认证指标统计。
+ * 实际项目中可对接 Micrometer 输出到 Prometheus 等监控系统。
  *
  * <p>优先级 200（低优先级，指标统计不影响关键业务逻辑）。
  *
@@ -33,21 +34,27 @@ import com.njydsz.userinfo.domain.event.auth.SessionEvictedEvent;
 @Slf4j
 @Order(200)
 @Component
+@RequiredArgsConstructor
 public class MetricsEventListener implements UserAuthEventListener {
+
+  private final UserInfoMetrics userInfoMetrics;
 
   @Override
   public void onLoginSuccess(LoginSuccessEvent event) {
     log.debug("认证指标-登录成功: userId={}, deviceType={}", event.userId(), event.deviceType());
+    userInfoMetrics.recordLoginSuccess();
   }
 
   @Override
   public void onLoginFailed(LoginFailedEvent event) {
     log.debug("认证指标-登录失败: userId={}, reason={}", event.userId(), event.reason());
+    userInfoMetrics.recordLoginFail();
   }
 
   @Override
   public void onLogout(LogoutEvent event) {
     log.debug("认证指标-注销: userId={}, sessionDuration={}", event.userId(), event.sessionDuration());
+    userInfoMetrics.recordLogout();
   }
 
   @Override

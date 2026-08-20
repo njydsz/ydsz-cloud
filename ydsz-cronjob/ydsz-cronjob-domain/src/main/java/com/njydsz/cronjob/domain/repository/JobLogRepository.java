@@ -165,4 +165,12 @@ public interface JobLogRepository {
    * @return 日志 VO 列表（按创建时间倒序）
    */
   List<JobLogVO> findByJobIdSince(String jobId, LocalDateTime since);
+
+  /**
+   * 按任务 KEY 查询最新一条 RUNNING 状态的执行日志。
+   *
+   * @param jobKey 任务 KEY
+   * @return RUNNING 日志；无记录时返回 empty
+   */
+  Optional<JobLogVO> findLatestByJobKeyAndRunning(String jobKey);
 }

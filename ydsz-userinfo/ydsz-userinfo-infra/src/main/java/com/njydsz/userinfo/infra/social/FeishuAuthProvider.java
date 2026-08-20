@@ -36,14 +36,14 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
   /** 飞书平台标识 */
   private static final String PLATFORM = "FEISHU";
 
-  /** 飞书授权端点 */
-  private static final String AUTHORIZE_URL = "https://open.feishu.cn/open-apis/authen/v1/authorize";
+  /** 飞书授权端点（可通过 ydsz.userinfo.social.providers.feishu.authorize-url 覆盖） */
+  private static final String DEFAULT_AUTHORIZE_URL = "https://open.feishu.cn/open-apis/authen/v1/authorize";
 
-  /** 飞书令牌端点 */
-  private static final String ACCESS_TOKEN_URL = "https://open.feishu.cn/open-apis/authen/v1/oidc/access_token";
+  /** 飞书令牌端点（可通过 ydsz.userinfo.social.providers.feishu.access-token-url 覆盖） */
+  private static final String DEFAULT_ACCESS_TOKEN_URL = "https://open.feishu.cn/open-apis/authen/v1/oidc/access_token";
 
-  /** 飞书用户信息端点 */
-  private static final String USER_INFO_URL = "https://open.feishu.cn/open-apis/authen/v1/user_info";
+  /** 飞书用户信息端点（可通过 ydsz.userinfo.social.providers.feishu.user-info-url 覆盖） */
+  private static final String DEFAULT_USER_INFO_URL = "https://open.feishu.cn/open-apis/authen/v1/user_info";
 
   /**
    * 构造飞书认证提供者。
@@ -71,7 +71,9 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
     String appId = config.getAppId();
     String scope = config.getScope() != null ? config.getScope() : "openid";
 
-    String url = AUTHORIZE_URL
+    String authorizeUrl = config.getOrDefaultAuthorizeUrl(DEFAULT_AUTHORIZE_URL);
+
+    String url = authorizeUrl
         + "?app_id=" + urlEncode(appId)
         + "&redirect_uri=" + urlEncode(redirectUri)
         + "&scope=" + urlEncode(scope)
@@ -88,6 +90,8 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
       throw new SocialAuthException("飞书配置未找到");
     }
 
+    String tokenUrl = config.getOrDefaultAccessTokenUrl(DEFAULT_ACCESS_TOKEN_URL);
+
     Map<String, String> tokenParams = new HashMap<>();
     tokenParams.put("app_id", config.getAppId());
     tokenParams.put("app_secret", config.getAppSecret());
@@ -95,7 +99,7 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
     tokenParams.put("grant_type", "authorization_code");
     tokenParams.put("redirect_uri", redirectUri);
 
-    Map<String, Object> tokenResponse = httpClient.postJsonForMap(ACCESS_TOKEN_URL, tokenParams);
+    Map<String, Object> tokenResponse = httpClient.postJsonForMap(tokenUrl, tokenParams);
 
     // 飞书返回嵌套结构：data.access_token
     Object data = tokenResponse.get("data");
@@ -120,8 +124,14 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
 
   @Override
   public SocialUserInfo getUserInfo(SocialAccessToken token) {
+    SocialAuthProperties.ProviderConfig config = getProviderConfig();
+    if (config == null) {
+      throw new SocialAuthException("飞书配置未找到");
+    }
+
+    String userInfoUrl = config.getOrDefaultUserInfoUrl(DEFAULT_USER_INFO_URL);
     Map<String, Object> userResponse = httpClient.getForMap(
-        USER_INFO_URL, token.accessToken(), null);
+        userInfoUrl, token.accessToken(), null);
 
     Object data = userResponse.get("data");
     if (!(data instanceof Map)) {

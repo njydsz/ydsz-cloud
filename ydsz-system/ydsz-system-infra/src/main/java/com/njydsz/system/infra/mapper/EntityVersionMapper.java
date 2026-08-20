@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.system.infra.entity.EntityVersion;
+import com.njydsz.system.infra.entity.EntityVersionDO;
 
 /**
  * 统一实体版本管理 Mapper
@@ -20,11 +20,11 @@ import com.njydsz.system.infra.entity.EntityVersion;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see EntityVersion 实体版本实体
+ * @see EntityVersionDO 实体版本实体
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface EntityVersionMapper extends BaseMapper<EntityVersion> {
+public interface EntityVersionMapper extends BaseMapper<EntityVersionDO> {
 
   /**
    * 按资源类型 + 资源键查询版本历史（按生效时间倒序）
@@ -40,7 +40,7 @@ public interface EntityVersionMapper extends BaseMapper<EntityVersion> {
       "SELECT * FROM ydsz_entity_version WHERE resource_type = #{resourceType} "
           + "AND resource_key = #{resourceKey} AND deleted = 0 "
           + "ORDER BY effective_date DESC")
-  List<EntityVersion> listByResourceTypeAndKey(
+  List<EntityVersionDO> listByResourceTypeAndKey(
       @Param("resourceType") String resourceType, @Param("resourceKey") String resourceKey);
 
   /**
@@ -55,7 +55,7 @@ public interface EntityVersionMapper extends BaseMapper<EntityVersion> {
       "SELECT * FROM ydsz_entity_version WHERE resource_type = #{resourceType} "
           + "AND resource_key = #{resourceKey} AND version = #{version} "
           + "AND deleted = 0 LIMIT 1")
-  EntityVersion selectByTypeAndKeyAndVersion(
+  EntityVersionDO selectByTypeAndKeyAndVersion(
       @Param("resourceType") String resourceType,
       @Param("resourceKey") String resourceKey,
       @Param("version") String version);

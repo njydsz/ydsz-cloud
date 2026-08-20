@@ -37,14 +37,14 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
   /** 企业微信平台标识 */
   private static final String PLATFORM = "ENTERPRISE_WECHAT";
 
-  /** 企业微信授权端点 */
-  private static final String AUTHORIZE_URL = "https://open.work.weixin.qq.com/wwopen/sso/3rd_qrConnect";
+  /** 企业微信授权端点（可通过 ydsz.userinfo.social.providers.enterprise_wechat.authorize-url 覆盖） */
+  private static final String DEFAULT_AUTHORIZE_URL = "https://open.work.weixin.qq.com/wwopen/sso/3rd_qrConnect";
 
-  /** 企业微信令牌端点 */
-  private static final String ACCESS_TOKEN_URL = "https://qyapi.weixin.qq.com/cgi-bin/gettoken";
+  /** 企业微信令牌端点（可通过 ydsz.userinfo.social.providers.enterprise_wechat.access-token-url 覆盖） */
+  private static final String DEFAULT_ACCESS_TOKEN_URL = "https://qyapi.weixin.qq.com/cgi-bin/gettoken";
 
-  /** 企业微信用户信息端点 */
-  private static final String USER_INFO_URL = "https://qyapi.weixin.qq.com/cgi-bin/user/getuserinfo";
+  /** 企业微信用户信息端点（可通过 ydsz.userinfo.social.providers.enterprise_wechat.user-info-url 覆盖） */
+  private static final String DEFAULT_USER_INFO_URL = "https://qyapi.weixin.qq.com/cgi-bin/user/getuserinfo";
 
   /** 企业微信用户详情端点 */
   private static final String USER_DETAIL_URL = "https://qyapi.weixin.qq.com/cgi-bin/user/get";
@@ -75,7 +75,9 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
     String appId = config.getAppId();
     String agentId = config.getScope(); // 企业微信使用 scope 字段存储 agentid
 
-    String url = AUTHORIZE_URL
+    String authorizeUrl = config.getOrDefaultAuthorizeUrl(DEFAULT_AUTHORIZE_URL);
+
+    String url = authorizeUrl
         + "?appid=" + urlEncode(appId)
         + "&agentid=" + urlEncode(agentId)
         + "&redirect_uri=" + urlEncode(redirectUri)
@@ -93,11 +95,13 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
     }
 
     // 企业微信需要先获取 access_token（企业级别的）
+    String tokenUrl = config.getOrDefaultAccessTokenUrl(DEFAULT_ACCESS_TOKEN_URL);
+
     Map<String, String> tokenParams = new HashMap<>();
     tokenParams.put("corpid", config.getAppId());
     tokenParams.put("corpsecret", config.getAppSecret());
 
-    Map<String, Object> tokenResponse = httpClient.postFormForMap(ACCESS_TOKEN_URL, tokenParams);
+    Map<String, Object> tokenResponse = httpClient.postFormForMap(tokenUrl, tokenParams);
 
     String accessToken = getStr(tokenResponse, "access_token");
     if (accessToken == null || accessToken.isBlank()) {
@@ -107,11 +111,12 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
     }
 
     // 用 access_token 和 code 获取用户信息
+    String userInfoUrl = config.getOrDefaultUserInfoUrl(DEFAULT_USER_INFO_URL);
     Map<String, String> userParams = new HashMap<>();
     userParams.put("access_token", accessToken);
     userParams.put("code", code);
 
-    Map<String, Object> userResponse = httpClient.getForMap(USER_INFO_URL, null, userParams);
+    Map<String, Object> userResponse = httpClient.getForMap(userInfoUrl, null, userParams);
 
     String userId = getStr(userResponse, "UserId");
     if (userId == null || userId.isBlank()) {

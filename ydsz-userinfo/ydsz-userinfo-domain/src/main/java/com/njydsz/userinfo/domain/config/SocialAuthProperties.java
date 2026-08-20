@@ -77,6 +77,57 @@ public class SocialAuthProperties {
      * 必须与平台管理后台注册的回调地址完全一致，否则授权平台会拒绝请求。
      */
     private String redirectUri;
+
+    /**
+     * 自定义授权端点 URL（可选）。
+     *
+     * <p>用于私有化部署或内部代理场景，覆盖默认的公开端点。为空时使用平台默认端点。
+     */
+    private String authorizeUrl;
+
+    /**
+     * 自定义令牌端点 URL（可选）。
+     *
+     * <p>用于私有化部署或内部代理场景，覆盖默认的公开端点。为空时使用平台默认端点。
+     */
+    private String accessTokenUrl;
+
+    /**
+     * 自定义用户信息端点 URL（可选）。
+     *
+     * <p>用于私有化部署或内部代理场景，覆盖默认的公开端点。为空时使用平台默认端点。
+     */
+    private String userInfoUrl;
+
+    /**
+     * 获取授权端点 URL（优先使用自定义值，为空时返回默认值）。
+     *
+     * @param defaultUrl 默认端点 URL
+     * @return 实际使用的端点 URL
+     */
+    public String getOrDefaultAuthorizeUrl(String defaultUrl) {
+      return (authorizeUrl != null && !authorizeUrl.isBlank()) ? authorizeUrl : defaultUrl;
+    }
+
+    /**
+     * 获取令牌端点 URL（优先使用自定义值，为空时返回默认值）。
+     *
+     * @param defaultUrl 默认端点 URL
+     * @return 实际使用的端点 URL
+     */
+    public String getOrDefaultAccessTokenUrl(String defaultUrl) {
+      return (accessTokenUrl != null && !accessTokenUrl.isBlank()) ? accessTokenUrl : defaultUrl;
+    }
+
+    /**
+     * 获取用户信息端点 URL（优先使用自定义值，为空时返回默认值）。
+     *
+     * @param defaultUrl 默认端点 URL
+     * @return 实际使用的端点 URL
+     */
+    public String getOrDefaultUserInfoUrl(String defaultUrl) {
+      return (userInfoUrl != null && !userInfoUrl.isBlank()) ? userInfoUrl : defaultUrl;
+    }
   }
 
   /**

@@ -33,7 +33,7 @@ import com.njydsz.userinfo.domain.vo.PostVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.userinfo.infra.entity.PostDO 岗位实体
+ * @see com.njydsz.userinfo.domain.vo.PostVO 岗位VO
  * @see com.njydsz.userinfo.web.controller.PostController 岗位 Controller
  */
 public interface PostService {

@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.system.infra.entity.AppInfo;
+import com.njydsz.system.infra.entity.AppInfoDO;
 
 /**
  * 应用信息 Mapper
@@ -26,12 +26,12 @@ import com.njydsz.system.infra.entity.AppInfo;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see AppInfo 应用实体
+ * @see AppInfoDO 应用实体
  * @see com.njydsz.system.server.service.AppInfoService 应用 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface AppInfoMapper extends BaseMapper<AppInfo> {
+public interface AppInfoMapper extends BaseMapper<AppInfoDO> {
 
   /**
    * 按应用 Key 查询启用的应用信息（含 appSecret 用于密钥校验）
@@ -44,5 +44,5 @@ public interface AppInfoMapper extends BaseMapper<AppInfo> {
    */
   @Select(
       "SELECT * FROM ydsz_app_info WHERE app_key = #{appKey} AND deleted = 0 AND status = 'ENABLED' LIMIT 1")
-  AppInfo selectEnabledByAppKey(@Param("appKey") String appKey);
+  AppInfoDO selectEnabledByAppKey(@Param("appKey") String appKey);
 }

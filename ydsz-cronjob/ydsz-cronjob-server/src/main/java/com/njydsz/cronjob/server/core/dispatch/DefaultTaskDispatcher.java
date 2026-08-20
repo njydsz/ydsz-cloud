@@ -643,7 +643,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
     notifyTaskStart();
 
-    JobLog log0 = new JobLog();
+    JobLogVO log0 = new JobLogVO();
     log0.setJobId(job.getId());
     log0.setJobKey(job.getJobKey());
     log0.setStartTime(LocalDateTime.now());
@@ -707,7 +707,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       String shardValue,
       RunningTaskCounter shardCounter,
       String triggerType,
-      JobLog log0,
+      JobLogVO log0,
       JobLoggerImpl jobLogger) {
     boolean success = false;
     Object result = null;
@@ -1081,7 +1081,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     notifyTaskStart();
 
     // 写开始日志
-    JobLog log0 = new JobLog();
+    JobLogVO log0 = new JobLogVO();
     log0.setJobId(job.getId());
     log0.setJobKey(job.getJobKey());
     log0.setStartTime(LocalDateTime.now());
@@ -1099,7 +1099,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     log0.setExecThreadId(Thread.currentThread().threadId());
     log0.setCreatedAt(LocalDateTime.now());
     log0.setDeleted(0);
-    jobLogMapper.insert(log0);
+    jobLogRepository.insert(log0);
 
     // P1-2: 递增运行中任务数（Redis 维护，供 Gauge 直接读取）
     RunningTaskCounter counter = runningTaskCounterProvider.getIfAvailable();
@@ -1189,7 +1189,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       boolean holdLock,
       String triggerType,
       int retryCount,
-      JobLog log0,
+      JobLogVO log0,
       JobLoggerImpl jobLogger,
       ShardingContext shardingCtx) {
     boolean success = false;
@@ -1236,7 +1236,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       log0.setEndTime(LocalDateTime.now());
       log0.setDurationMs(Duration.between(log0.getStartTime(), log0.getEndTime()).toMillis());
       log0.setStatus(success ? "SUCCESS" : "FAILED");
-      jobLogMapper.updateById(log0);
+      jobLogRepository.updateById(log0);
 
       // P1-2: 递减运行中任务数
       RunningTaskCounter counter = runningTaskCounterProvider.getIfAvailable();
@@ -1256,7 +1256,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
           (TRIGGER_CRON.equals(triggerType) && !leaderEnabled) ? nextFireTime(job) : null;
       // P1-6: 熔断逻辑 - 成功时不改 status（保持 NORMAL），失败时只在非重试场景改 ERROR
       String statusOnError = success ? null : "ERROR";
-      jobMapper.updateStats(
+      jobRepository.updateStats(
           job.getId(), log0.getStartTime(), next, incFire, incSucc, incFail, statusOnError);
 
       // P1-6: 熔断计数（成功归零，失败递增 + 达到阈值自动暂停）
@@ -1484,16 +1484,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param jobKey 任务 KEY
    * @return RUNNING 日志；无记录时返回 null
    */
-  private JobLog findRunningLog(String jobKey) {
+  private JobLogVO findRunningLog(String jobKey) {
     try {
-      LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
-      wrapper
-          .eq(JobLog::getJobKey, jobKey)
-          .eq(JobLog::getStatus, "RUNNING")
-          .eq(JobLog::getDeleted, 0)
-          .orderByDesc(JobLog::getCreatedAt)
-          .last("LIMIT 1");
-      return jobLogMapper.selectOne(wrapper);
+      return jobLogRepository.findLatestByJobKeyAndRunning(jobKey).orElse(null);
     } catch (Exception e) {
       log.warn(
           "[Dispatcher] 查询 RUNNING 日志失败(降级 DISCARD): key={} reason={}", jobKey, e.getMessage());
@@ -1895,13 +1888,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @return true 表示存在 RUNNING 日志
    */
   private boolean hasRunningLog(String jobId) {
-    Long count =
-        jobLogMapper.selectCount(
-            new LambdaQueryWrapper<JobLog>()
-                .eq(JobLog::getJobId, jobId)
-                .eq(JobLog::getStatus, "RUNNING")
-                .eq(JobLog::getDeleted, 0));
-    return count != null && count > 0;
+    long count = jobLogRepository.countByJobIdAndStatus(jobId, "RUNNING");
+    return count > 0;
   }
 
   private static String initInstanceId() {
@@ -1926,17 +1914,17 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param job 任务定义
    * @param success 是否执行成功
    */
-  private void updateCircuitBreaker(Job job, boolean success) {
+  private void updateCircuitBreaker(JobVO job, boolean success) {
     try {
       if (success) {
-        jobMapper.resetConsecutiveFail(job.getId());
+        jobRepository.resetConsecutiveFail(job.getId());
       } else {
-        jobMapper.incrementConsecutiveFail(job.getId());
+        jobRepository.incrementConsecutiveFail(job.getId());
         Integer maxFails = job.getMaxConsecutiveFails();
         if (maxFails != null && maxFails > 0) {
-          Integer current = jobMapper.selectConsecutiveFailCount(job.getId());
+          Integer current = jobRepository.findConsecutiveFailCount(job.getId());
           if (current != null && current >= maxFails) {
-            jobMapper.markAutoPaused(job.getId());
+            jobRepository.markAutoPaused(job.getId());
             log.warn(
                 "[Dispatcher] 任务熔断, 自动暂停: key={} consecutiveFails={}/{}",
                 job.getJobKey(),

@@ -57,10 +57,10 @@ public class AesMfaSecretEncryptor implements MfaSecretEncryptor {
   /**
    * 构造 AES-GCM 加密器。
    *
-   * @param encryptionKey Base64 编码的 32 字节 AES 密钥
+   * @param encryptionKey Base64 编码的 32 字节 AES 密钥（从配置 ydsz.userinfo.mfa.encryption-key 注入）
    * @throws IllegalArgumentException 密钥长度不为 32 字节时抛出
    */
-  public AesMfaSecretEncryptor(String encryptionKey) {
+  public AesMfaSecretEncryptor(@Value("${ydsz.userinfo.mfa.encryption-key}") String encryptionKey) {
     byte[] keyBytes = Base64.getDecoder().decode(encryptionKey);
     if (keyBytes.length != AES_KEY_LENGTH) {
       throw new IllegalArgumentException(

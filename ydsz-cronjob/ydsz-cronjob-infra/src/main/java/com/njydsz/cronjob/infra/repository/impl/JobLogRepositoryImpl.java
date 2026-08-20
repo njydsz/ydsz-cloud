@@ -209,4 +209,17 @@ public class JobLogRepositoryImpl implements JobLogRepository {
         .orderByDesc(JobLog::getCreatedAt);
     return converter.jobLogListToVO(jobLogMapper.selectList(wrapper));
   }
+
+  @Override
+  public Optional<JobLogVO> findLatestByJobKeyAndRunning(String jobKey) {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper.eq(JobLog::getJobKey, jobKey)
+        .eq(JobLog::getStatus, "RUNNING")
+        .eq(JobLog::getDeleted, 0)
+        .orderByDesc(JobLog::getCreatedAt)
+        .last("LIMIT 1");
+    return Optional.ofNullable(jobLogMapper.selectOne(wrapper))
+        .map(converter::jobLogToVO);
+  }
 }

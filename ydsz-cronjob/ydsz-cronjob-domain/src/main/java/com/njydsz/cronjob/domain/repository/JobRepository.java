@@ -295,6 +295,30 @@ public interface JobRepository {
   List<JobVO> findByStatus(String status);
 
   /**
+   * 重置连续失败计数。
+   *
+   * @param jobId 任务 ID
+   * @return 受影响行数
+   */
+  int resetConsecutiveFail(String jobId);
+
+  /**
+   * 递增连续失败计数。
+   *
+   * @param jobId 任务 ID
+   * @return 受影响行数
+   */
+  int incrementConsecutiveFail(String jobId);
+
+  /**
+   * 查询连续失败计数。
+   *
+   * @param jobId 任务 ID
+   * @return 当前连续失败计数
+   */
+  Integer findConsecutiveFailCount(String jobId);
+
+  /**
    * 分页查询内部结果对象。
    *
    * @param <T> 记录类型

@@ -30,9 +30,8 @@ import com.njydsz.userinfo.domain.vo.CompanyDeptVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see CompanyDeptDO 公司-部门关联实体
- * @see com.njydsz.userinfo.infra.entity.CompanyDO 公司实体
- * @see com.njydsz.userinfo.infra.entity.DepartmentDO 部门实体
+ * @see com.njydsz.userinfo.domain.vo.CompanyVO 公司VO
+ * @see com.njydsz.userinfo.domain.vo.DepartmentVO 部门VO
  */
 public interface CompanyDeptService {
 

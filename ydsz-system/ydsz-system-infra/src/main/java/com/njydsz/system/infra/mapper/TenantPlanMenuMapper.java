@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.system.infra.entity.TenantPlanMenu;
+import com.njydsz.system.infra.entity.TenantPlanMenuDO;
 
 /**
  * 租户套餐-菜单关联 Mapper
@@ -27,12 +27,12 @@ import com.njydsz.system.infra.entity.TenantPlanMenu;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see TenantPlanMenu 套餐-菜单关联实体
+ * @see TenantPlanMenuDO 套餐-菜单关联实体
  * @see com.njydsz.system.server.service.TenantPlanService 套餐 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface TenantPlanMenuMapper extends BaseMapper<TenantPlanMenu> {
+public interface TenantPlanMenuMapper extends BaseMapper<TenantPlanMenuDO> {
 
   /**
    * 批量插入套餐-菜单关联（一次 SQL 批量写入）。
@@ -44,5 +44,5 @@ public interface TenantPlanMenuMapper extends BaseMapper<TenantPlanMenu> {
    * @param items 关联实体列表
    * @return 插入的记录数
    */
-  int insertBatch(@Param("items") List<TenantPlanMenu> items);
+  int insertBatch(@Param("items") List<TenantPlanMenuDO> items);
 }
