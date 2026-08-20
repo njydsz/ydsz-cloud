@@ -84,16 +84,14 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
   }
 
   @Override
-  public List<FlowDelegateAuthVO> findActiveByOwner(
-      String ownerId, String tenantId, LocalDateTime now) {
+  public List<FlowDelegateAuthVO> findActiveByOwner(String ownerId, LocalDateTime now) {
     return converter.flowDelegateAuthListToVO(
         delegateAuthMapper.selectList(
             new LambdaQueryWrapper<FlowDelegateAuthDO>()
                 .eq(FlowDelegateAuthDO::getOwnerUserId, ownerId)
-                .eq(FlowDelegateAuthDO::getTenantId, tenantId)
-                .eq(FlowDelegateAuthDO::getAuthStatus, "ENABLED")
+                .eq(FlowDelegateAuthDO::getAuthStatus, "ACTIVE")
                 .le(FlowDelegateAuthDO::getStartTime, now)
-                .ge(FlowDelegateAuthDO::getEndTime, now)
+                .and(w -> w.isNull(FlowDelegateAuthDO::getEndTime).or().ge(FlowDelegateAuthDO::getEndTime, now))
                 .eq(FlowDelegateAuthDO::getDeleted, 0)));
   }
 

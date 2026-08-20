@@ -266,4 +266,17 @@ public interface FlowInstanceRepository {
    * @return 更新后的流程实例 VO
    */
   FlowInstanceVO update(FlowInstanceVO vo);
+
+  /**
+   * 查询待归档的已完成实例列表。
+   *
+   * <p>返回满足归档条件的实例：状态为 COMPLETED/TERMINATED/REJECTED 且 endAt 早于指定阈值，
+   * 按 endAt 升序排列（先结束先归档）。
+   *
+   * @param statuses 目标状态列表
+   * @param threshold 结束时间阈值
+   * @param limit 返回数量上限
+   * @return 流程实例 VO 列表
+   */
+  List<FlowInstanceVO> findArchiveCandidates(List<String> statuses, LocalDateTime threshold, int limit);
 }

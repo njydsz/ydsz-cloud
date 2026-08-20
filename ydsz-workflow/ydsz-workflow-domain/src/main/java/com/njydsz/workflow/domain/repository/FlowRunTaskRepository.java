@@ -383,6 +383,16 @@ public interface FlowRunTaskRepository {
   void markProcessed(String taskId, String userId, String comment, LocalDateTime processedAt);
 
   /**
+   * 查询办理人的全部待办任务（无分页，用于离职转交场景）。
+   *
+   * <p>返回条件：assigneeId + deleted=0 + taskStatus IN (PENDING, CLAIMED)。
+   *
+   * @param assigneeId 办理人 ID
+   * @return 运行时任务 VO 列表
+   */
+  List<FlowRunTaskVO> findPendingTasksByAssignee(String assigneeId);
+
+  /**
    * 更新任务的 approveFinished 字段。
    *
    * <p>用于加签场景：更新 ydsz_flow_run_task 表的 approve_finished 字段。

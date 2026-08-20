@@ -76,16 +76,15 @@ public interface FlowDelegateAuthRepository {
   /**
    * 查询委托人的有效委托授权列表。
    *
-   * <p>返回 {@code ownerUserId = ? AND tenantId = ? AND authStatus = 'ENABLED'
-   * AND startTime <= now AND endTime >= now} 的授权列表，
-   * 用于委托匹配时获取当前生效的授权规则。
+   * <p>返回 {@code ownerUserId = ? AND authStatus = 'ACTIVE'
+   * AND startTime <= now AND (endTime IS NULL OR endTime >= now)} 的授权列表，
+   * 用于离职转交等场景获取当前生效的授权规则。
    *
    * @param ownerId 委托人 ID
-   * @param tenantId 租户 ID
    * @param now 当前时间
    * @return 委托授权 VO 列表
    */
-  List<FlowDelegateAuthVO> findActiveByOwner(String ownerId, String tenantId, LocalDateTime now);
+  List<FlowDelegateAuthVO> findActiveByOwner(String ownerId, LocalDateTime now);
 
   /**
    * 匹配委托权限（按委托人和流程编码）。

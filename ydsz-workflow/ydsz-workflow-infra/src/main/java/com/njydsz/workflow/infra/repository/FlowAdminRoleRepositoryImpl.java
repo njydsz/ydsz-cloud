@@ -94,4 +94,29 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
         .findFirst()
         .map(converter::entityToVO);
   }
+
+  @Override
+  public Optional<FlowAdminRoleVO> findByUserAndRole(String userId, String roleCode, String tenantId) {
+    return adminRoleMapper
+        .selectList(
+            new LambdaQueryWrapper<FlowAdminRoleDO>()
+                .eq(FlowAdminRoleDO::getUserId, userId)
+                .eq(FlowAdminRoleDO::getRoleCode, roleCode)
+                .eq(tenantId != null, FlowAdminRoleDO::getTenantId, tenantId)
+                .eq(FlowAdminRoleDO::getDeleted, 0)
+                .last("LIMIT 1"))
+        .stream()
+        .findFirst()
+        .map(converter::entityToVO);
+  }
+
+  @Override
+  public List<FlowAdminRoleVO> findByUserId(String userId, String tenantId) {
+    return converter.flowAdminRoleListToVO(
+        adminRoleMapper.selectList(
+            new LambdaQueryWrapper<FlowAdminRoleDO>()
+                .eq(FlowAdminRoleDO::getUserId, userId)
+                .eq(tenantId != null, FlowAdminRoleDO::getTenantId, tenantId)
+                .eq(FlowAdminRoleDO::getDeleted, 0)));
+  }
 }

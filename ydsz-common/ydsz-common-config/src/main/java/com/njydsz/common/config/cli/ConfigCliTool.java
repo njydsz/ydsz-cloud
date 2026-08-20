@@ -180,7 +180,7 @@ public class ConfigCliTool {
 
   /** 输出 JSON 格式结果 */
   private static void printJsonResult(String operation, String algorithm, String result) {
-    Map<String, Object> output = new LinkedHashMap<>();
+    Map<String, Object> output = new LinkedHashMap<>(4);
     output.put("operation", operation);
     output.put("algorithm", algorithm);
     output.put("result", result);
@@ -190,7 +190,7 @@ public class ConfigCliTool {
 
   /** 输出 JSON 格式错误 */
   private static void printJsonError(String message) {
-    Map<String, Object> output = new LinkedHashMap<>();
+    Map<String, Object> output = new LinkedHashMap<>(2);
     output.put("error", message);
     output.put("timestamp", Instant.now().toString());
     System.err.println(YdszJson.toJson(output));

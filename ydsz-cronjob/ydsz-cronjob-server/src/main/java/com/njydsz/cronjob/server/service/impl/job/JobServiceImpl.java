@@ -234,8 +234,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     return j;
   }
 
-  private Job dtoToJob(JobPutDTO dto) {
-    Job j = new Job();
+  private JobVO dtoToJob(JobPutDTO dto) {
+    JobVO j = new JobVO();
     j.setId(dto.getId());
     j.setJobKey(dto.getJobKey());
     j.setJobName(dto.getJobName());
@@ -259,7 +259,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     return j;
   }
 
-  private JobVO jobToVo(Job j) {
+  private JobVO jobToVo(JobVO j) {
     JobVO vo = new JobVO();
     vo.setId(j.getId());
     vo.setJobKey(j.getJobKey());
@@ -412,7 +412,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         .message("error.cronjob.msg_create_readback")
         .build());
     // P1-2: CRON / FIXED_RATE / FIXED_DELAY 计算 next_fire_time
-    Job j = voToJob(vo);
+    JobVO j = voToJob(vo);
     ScheduleType type = ScheduleType.parse(j.getScheduleType());
     if (type != ScheduleType.API) {
       j.setNextFireTime(nextFireTime(j));
@@ -456,7 +456,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         .resultCode(YdszResultCode.NOT_FOUND)
         .message("error.cronjob.msg_c0d8369f")
         .build());
-    Job exists = voToJob(existsVo);
+    JobVO exists = voToJob(existsVo);
     // P1-6: 保存历史版本（在更新之前保存当前快照）
     JobHistoryService historyService = jobHistoryServiceProvider.getIfAvailable();
     if (historyService != null) {
