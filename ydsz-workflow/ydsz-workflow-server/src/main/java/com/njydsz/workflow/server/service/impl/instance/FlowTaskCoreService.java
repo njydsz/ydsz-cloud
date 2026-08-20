@@ -34,7 +34,6 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowUserMapper;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.form.FlowFormEngineService;
 import com.njydsz.workflow.server.form.FlowFormSchema;
@@ -114,9 +113,6 @@ public class FlowTaskCoreService {
 
   /** 运行时任务仓储，查询/更新任务状态 */
   private final FlowRunTaskRepository taskRepository;
-
-  /** 用户 Mapper，查询审批人用户信息（markProcessed 暂无 Repository 替代） */
-  private final FlowUserMapper userMapper;
 
   /** 流程实例仓储，查询实例状态和流程变量 */
   private final FlowInstanceRepository instanceRepository;
@@ -230,8 +226,7 @@ public class FlowTaskCoreService {
 
     // 标记当前用户已处理（ydsz_flow_user）
     if (dto.getUserId() != null) {
-      // 保留 Mapper：自定义 SQL 操作（markProcessed），Repository 暂无等价方法
-      userMapper.markProcessed(
+      taskRepository.markProcessed(
           task.getId(), String.valueOf(dto.getUserId()), dto.getComment(), LocalDateTime.now());
     }
 

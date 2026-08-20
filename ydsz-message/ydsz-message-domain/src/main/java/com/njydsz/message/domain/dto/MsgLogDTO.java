@@ -5,6 +5,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import lombok.Data;
+
 /**
  * 消息发送日志 DTO（命令请求参数）。
  *

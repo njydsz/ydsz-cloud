@@ -3,6 +3,8 @@ package com.njydsz.message.domain.dto;
 import java.io.Serial;
 import java.io.Serializable;
 
+import lombok.Data;
+
 /**
  * 多租户消息配置 DTO（命令请求参数）。
  *
