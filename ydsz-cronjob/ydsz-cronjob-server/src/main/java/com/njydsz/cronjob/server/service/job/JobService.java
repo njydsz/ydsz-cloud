@@ -2,8 +2,7 @@ package com.njydsz.cronjob.server.service.job;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.BatchResult;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
@@ -206,7 +205,7 @@ public interface JobService {
    * @param group 分组过滤（可选）
    * @return 任务分页数据
    */
-  Page<JobVO> page(int page, int size, String keyword, String status, String group);
+  PageResponse<List<JobVO>> page(int page, int size, String keyword, String status, String group);
 
   /**
    * 分页查询执行日志
@@ -219,7 +218,7 @@ public interface JobService {
    * @param status 状态过滤（可选）
    * @return 执行日志分页数据
    */
-  Page<JobLogVO> pageLog(int page, int size, String jobKey, String status);
+  PageResponse<List<JobLogVO>> pageLog(int page, int size, String jobKey, String status);
 
   /**
    * 应用启动时加载所有 NORMAL 任务

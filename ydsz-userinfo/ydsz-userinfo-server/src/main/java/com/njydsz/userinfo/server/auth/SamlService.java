@@ -20,10 +20,12 @@ import org.w3c.dom.NodeList;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 import com.njydsz.userinfo.server.config.SamlProperties;
+import com.njydsz.userinfo.server.service.SamlIdpConfigService;
 
 /**
- * SAML 2.0 Service Provider 服务
+ * SAML 2.0 Service Provider 服务（P2-1 多租户 IdP 路由）。
  *
  * <p>处理 SAML 2.0 协议的核心逻辑，包括：
  *
@@ -32,6 +34,14 @@ import com.njydsz.userinfo.server.config.SamlProperties;
  *   <li>生成 AuthnRequest（重定向用户至 IdP）
  *   <li>验证 SAML Response 签名与断言
  *   <li>从 Assertion 提取用户身份属性
+ * </ul>
+ *
+ * <p><b>P2-1 多租户路由：</b>
+ *
+ * <ul>
+ *   <li>支持指定 IdP Entity ID 动态路由到不同企业 IdP</li>
+ *   <li>路由优先级：DB 配置的 IdP ＞ YAML 全局配置</li>
+ *   <li>不支持 RBAC 协议仅由业务需求决定（未来可开放）</li>
  * </ul>
  *
  * <p><b>安全机制：</b>
@@ -61,6 +71,7 @@ public class SamlService {
   private static final String SAML2_ASSERTION_NS = "urn:oasis:names:tc:SAML:2.0:assertion";
 
   private final SamlProperties samlProperties;
+  private final SamlIdpConfigService samlIdpConfigService;
 
   /**
    * 生成 SP Metadata XML
