@@ -11,7 +11,7 @@ import com.njydsz.userinfo.domain.dto.CompanyDeptDTO;
 import com.njydsz.userinfo.domain.dto.CompanyDeptUpdateDTO;
 import com.njydsz.userinfo.domain.repository.CompanyDeptRepository;
 import com.njydsz.userinfo.domain.vo.CompanyDeptVO;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoOrgConverter;
 import com.njydsz.userinfo.infra.entity.CompanyDeptDO;
 import com.njydsz.userinfo.infra.mapper.CompanyDeptMapper;
 
@@ -19,7 +19,7 @@ import com.njydsz.userinfo.infra.mapper.CompanyDeptMapper;
  * 公司-部门关联 Repository 实现
  *
  * <p>基于 MyBatis-Plus 的 {@link CompanyDeptMapper} 实现公司-部门关联的数据访问。
- * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
+ * 所有返回值通过 {@link UserInfoOrgConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -29,7 +29,7 @@ import com.njydsz.userinfo.infra.mapper.CompanyDeptMapper;
 public class CompanyDeptRepositoryImpl implements CompanyDeptRepository {
 
   private final CompanyDeptMapper companyDeptMapper;
-  private final UserInfoConverter converter;
+  private final UserInfoOrgConverter converter;
 
   @Override
   public List<CompanyDeptVO> list() {

@@ -14,7 +14,7 @@ import com.njydsz.userinfo.domain.dto.LanguageUpdateDTO;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.repository.LanguageRepository;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoAuthConverter;
 import com.njydsz.userinfo.infra.entity.LanguageDO;
 import com.njydsz.userinfo.infra.mapper.LanguageMapper;
 
@@ -22,7 +22,7 @@ import com.njydsz.userinfo.infra.mapper.LanguageMapper;
  * 语言配置 Repository 实现
  *
  * <p>基于 MyBatis-Plus 的 {@link LanguageMapper} 实现语言配置的数据访问。
- * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
+ * 所有返回值通过 {@link UserInfoAuthConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -32,7 +32,7 @@ import com.njydsz.userinfo.infra.mapper.LanguageMapper;
 public class LanguageRepositoryImpl implements LanguageRepository {
 
   private final LanguageMapper languageMapper;
-  private final UserInfoConverter converter;
+  private final UserInfoAuthConverter converter;
 
   @Override
   public Optional<LanguageVO> findById(String id) {

@@ -25,7 +25,7 @@ import com.njydsz.userinfo.domain.dto.UserProfileUpdateDTO;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.vo.MfaSetupVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 import com.njydsz.userinfo.server.auth.MfaService;
 
@@ -47,6 +47,7 @@ import com.njydsz.userinfo.server.auth.MfaService;
 public class UserProfileController {
 
   private final UserAccountMapper userAccountMapper;
+  private final UserInfoUserConverter userConverter;
 
   /** 双因素认证服务（TOTP 绑定/激活/解除） */
   private final MfaService mfaService;
@@ -67,7 +68,7 @@ public class UserProfileController {
     if (user == null) {
       return YdszResponse.success(null);
     }
-    return YdszResponse.success(UserInfoConverter.INSTANT.entityToVO(user));
+    return YdszResponse.success(userConverter.entityToVO(user));
   }
 
   /**

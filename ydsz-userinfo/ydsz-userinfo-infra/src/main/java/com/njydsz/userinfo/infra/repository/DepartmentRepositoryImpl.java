@@ -15,7 +15,7 @@ import com.njydsz.userinfo.domain.dto.DepartmentUpdateDTO;
 import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
 import com.njydsz.userinfo.domain.repository.DepartmentRepository;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoOrgConverter;
 import com.njydsz.userinfo.infra.entity.DepartmentDO;
 import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
 
@@ -23,7 +23,7 @@ import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
  * 部门 Repository 实现
  *
  * <p>基于 MyBatis-Plus 的 {@link DepartmentMapper} 实现部门的数据访问。
- * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
+ * 所有返回值通过 {@link UserInfoOrgConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -33,7 +33,7 @@ import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
 public class DepartmentRepositoryImpl implements DepartmentRepository {
 
   private final DepartmentMapper departmentMapper;
-  private final UserInfoConverter converter;
+  private final UserInfoOrgConverter converter;
 
   @Override
   public Optional<DepartmentVO> findById(String id) {

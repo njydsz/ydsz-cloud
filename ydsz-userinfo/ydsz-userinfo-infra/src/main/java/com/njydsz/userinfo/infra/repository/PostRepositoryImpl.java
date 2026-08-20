@@ -15,7 +15,7 @@ import com.njydsz.userinfo.domain.dto.PostUpdateDTO;
 import com.njydsz.userinfo.domain.query.PostPageQuery;
 import com.njydsz.userinfo.domain.repository.PostRepository;
 import com.njydsz.userinfo.domain.vo.PostVO;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoOrgConverter;
 import com.njydsz.userinfo.infra.entity.PostDO;
 import com.njydsz.userinfo.infra.mapper.PostMapper;
 
@@ -23,7 +23,7 @@ import com.njydsz.userinfo.infra.mapper.PostMapper;
  * 岗位 Repository 实现
  *
  * <p>基于 MyBatis-Plus 的 {@link PostMapper} 实现岗位的数据访问。
- * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
+ * 所有返回值通过 {@link UserInfoOrgConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -33,7 +33,7 @@ import com.njydsz.userinfo.infra.mapper.PostMapper;
 public class PostRepositoryImpl implements PostRepository {
 
   private final PostMapper postMapper;
-  private final UserInfoConverter converter;
+  private final UserInfoOrgConverter converter;
 
   @Override
   public Optional<PostVO> findById(String id) {

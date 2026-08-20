@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
-import com.njydsz.literule.infra.entity.DecisionTable;
+import com.njydsz.literule.infra.entity.DecisionTableDO;
 import com.njydsz.literule.domain.repository.DecisionTableRepository;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
@@ -45,15 +45,15 @@ public class DecisionTableRepositoryImpl implements DecisionTableRepository {
 
   @Override
   public Optional<DecisionTableVO> findByTableCode(String tableCode) {
-    DecisionTable entity =
+    DecisionTableDO entity =
         decisionTableMapper.selectOne(
-            new LambdaQueryWrapper<DecisionTable>().eq(DecisionTable::getTableCode, tableCode));
+            new LambdaQueryWrapper<DecisionTableDO>().eq(DecisionTableDO::getTableCode, tableCode));
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public DecisionTableVO save(DecisionTablePostDTO dto) {
-    DecisionTable entity = converter.postDtoToEntity(dto);
+    DecisionTableDO entity = converter.postDtoToEntity(dto);
     if (entity.getId() != null) {
       decisionTableMapper.updateById(entity);
     } else {

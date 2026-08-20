@@ -5,11 +5,11 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
-import com.njydsz.literule.infra.entity.DecisionTable;
-import com.njydsz.literule.infra.entity.RuleABPolicy;
-import com.njydsz.literule.infra.entity.RuleABRollback;
+import com.njydsz.literule.infra.entity.DecisionTableDO;
+import com.njydsz.literule.infra.entity.RuleABPolicyDO;
+import com.njydsz.literule.infra.entity.RuleABRollbackDO;
 import com.njydsz.literule.infra.entity.RuleChainGraphDO;
-import com.njydsz.literule.infra.entity.RuleTemplate;
+import com.njydsz.literule.infra.entity.RuleTemplateDO;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.domain.vo.RuleABPolicyVO;
 import com.njydsz.literule.domain.vo.RuleABRollbackVO;
@@ -29,28 +29,28 @@ public interface RuleComponentConverter {
 
   RuleComponentConverter INSTANT = Mappers.getMapper(RuleComponentConverter.class);
 
-  // ===== DecisionTable =====
-  DecisionTableVO entityToVO(DecisionTable entity);
+  // ===== DecisionTableDO =====
+  DecisionTableVO entityToVO(DecisionTableDO entity);
 
-  List<DecisionTableVO> decisionTableListToVO(List<DecisionTable> entities);
+  List<DecisionTableVO> decisionTableListToVO(List<DecisionTableDO> entities);
 
-  // ===== RuleABPolicy =====
-  RuleABPolicyVO entityToVO(RuleABPolicy entity);
+  // ===== RuleABPolicyDO =====
+  RuleABPolicyVO entityToVO(RuleABPolicyDO entity);
 
-  List<RuleABPolicyVO> ruleABPolicyListToVO(List<RuleABPolicy> entities);
+  List<RuleABPolicyVO> ruleABPolicyListToVO(List<RuleABPolicyDO> entities);
 
-  // ===== RuleABRollback =====
-  RuleABRollbackVO entityToVO(RuleABRollback entity);
+  // ===== RuleABRollbackDO =====
+  RuleABRollbackVO entityToVO(RuleABRollbackDO entity);
 
-  List<RuleABRollbackVO> ruleABRollbackListToVO(List<RuleABRollback> entities);
+  List<RuleABRollbackVO> ruleABRollbackListToVO(List<RuleABRollbackDO> entities);
 
   // ===== RuleChainGraphDO =====
   RuleChainGraphVO entityToVO(RuleChainGraphDO entity);
 
   List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraphDO> entities);
 
-  // ===== RuleTemplate =====
-  RuleTemplateVO entityToVO(RuleTemplate entity);
+  // ===== RuleTemplateDO =====
+  RuleTemplateVO entityToVO(RuleTemplateDO entity);
 
-  List<RuleTemplateVO> ruleTemplateListToVO(List<RuleTemplate> entities);
+  List<RuleTemplateVO> ruleTemplateListToVO(List<RuleTemplateDO> entities);
 }

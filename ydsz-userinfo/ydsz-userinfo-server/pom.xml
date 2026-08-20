@@ -103,7 +103,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-sentry</artifactId>
         </dependency>
-        <!-- P2-2: 通知渠道（用户注册/密码修改/角色变更通知）—— 预留，待实现时引入 -->
         <!-- P1-2: 统一线程池管理（common-thread） -->
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -118,6 +117,12 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-config</artifactId>
+        </dependency>
+        <!-- webauthn4j: FIDO2 WebAuthn 密码学原语 -->
+        <dependency>
+            <groupId>com.webauthn4j</groupId>
+            <artifactId>webauthn4j-core</artifactId>
+            <version>0.28.0.RELEASE</version>
         </dependency>
         <!-- JJWT (OidcConfiguration 需要 io.jsonwebtoken.security.Keys) -->
         <dependency>

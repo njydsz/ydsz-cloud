@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.server.core.config.CronjobThreadPoolRegistry;
 import com.njydsz.cronjob.server.core.config.ThreadPoolMetricsEndpoint;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
@@ -23,10 +23,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  *
  * <p>注册调度引擎核心组件，启用 @Scheduled 定时任务支持。 通过 {@code ydsz.cronjob.enabled=true}（默认启用）控制是否加载。
  *
- * <h3>对标</h3>
- *
- * <p>对标 XXL-Job 的 XxlJobAdminConfig 和 PowerJob 的 PowerJobAutoConfiguration， 提供标准 Spring Boot
- * 自动配置能力。
+ * <p>P2-修正：使用 JobRepository 替换 JobMapper 传递，符合 DDD 分层规范。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -47,13 +44,13 @@ public class CronjobAutoConfiguration {
   public CronjobHealthIndicator cronjobHealthIndicator(
       ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider,
       ObjectProvider<LeaderElector> leaderElectorProvider,
-      ObjectProvider<JobMapper> jobMapperProvider,
+      ObjectProvider<JobRepository> jobRepositoryProvider,
       ObjectProvider<CronjobMetrics> cronjobMetricsProvider,
       CronjobProperties cronjobProperties) {
     return new CronjobHealthIndicator(
         redisConnectionFactoryProvider,
         leaderElectorProvider,
-        jobMapperProvider,
+        jobRepositoryProvider,
         cronjobMetricsProvider,
         cronjobProperties);
   }

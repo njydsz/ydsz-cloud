@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.userinfo.domain.dto.UserRoleDTO;
 import com.njydsz.userinfo.domain.repository.UserRoleRepository;
 import com.njydsz.userinfo.domain.vo.UserRoleVO;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
 import com.njydsz.userinfo.infra.entity.UserRoleDO;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 
@@ -19,7 +19,7 @@ import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
  * 用户-角色关联 Repository 实现
  *
  * <p>基于 MyBatis-Plus 的 {@link UserRoleMapper} 实现用户-角色关联的数据访问。
- * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
+ * 所有返回值通过 {@link UserInfoUserConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -29,7 +29,7 @@ import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 public class UserRoleRepositoryImpl implements UserRoleRepository {
 
   private final UserRoleMapper userRoleMapper;
-  private final UserInfoConverter converter;
+  private final UserInfoUserConverter converter;
 
   @Override
   public List<UserRoleVO> findByUserId(String userId) {

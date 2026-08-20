@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.userinfo.domain.dto.SocialAccountCreateDTO;
 import com.njydsz.userinfo.domain.repository.SocialAccountRepository;
 import com.njydsz.userinfo.domain.vo.SocialAccountVO;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
 import com.njydsz.userinfo.infra.entity.SocialAccountDO;
 import com.njydsz.userinfo.infra.mapper.SocialAccountMapper;
 
@@ -18,7 +18,7 @@ import com.njydsz.userinfo.infra.mapper.SocialAccountMapper;
  * 社交账号绑定 Repository 实现。
  *
  * <p>基于 MyBatis-Plus 实现 domain 层 {@link SocialAccountRepository} 接口。
- * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
+ * 所有返回值通过 {@link UserInfoUserConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.6.0
@@ -28,7 +28,7 @@ import com.njydsz.userinfo.infra.mapper.SocialAccountMapper;
 public class SocialAccountRepositoryImpl implements SocialAccountRepository {
 
   private final SocialAccountMapper socialAccountMapper;
-  private final UserInfoConverter converter;
+  private final UserInfoUserConverter converter;
 
   @Override
   public Optional<SocialAccountVO> findByPlatformAndOpenId(String platform, String openId) {

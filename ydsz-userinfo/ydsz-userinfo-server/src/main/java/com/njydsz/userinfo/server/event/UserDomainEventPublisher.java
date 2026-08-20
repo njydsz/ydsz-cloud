@@ -306,7 +306,7 @@ public class UserDomainEventPublisher {
   }
 
   /**
-   * 发布部门变更事件（VO 版本，推荐新代码使用）。
+   * 发布部门变更事件。
    *
    * @param deptVO 部门 VO
    * @param action 操作类型（CREATED / UPDATED / DELETED）
@@ -330,35 +330,6 @@ public class UserDomainEventPublisher {
                 orEmpty(deptVO.getDeptCode()),
                 "deptName",
                 orEmpty(deptVO.getDeptName()),
-                "action",
-                action)));
-  }
-
-  /**
-   * 发布部门变更事件。
-   *
-   * @param dept 部门实体
-   * @param action 操作类型（CREATED / UPDATED / DELETED）
-   */
-  public void publishDepartmentChanged(DepartmentDO dept, String action) {
-    if (dept == null) {
-      return;
-    }
-    publish(
-        UserDomainEventType.ORG_STRUCTURE_CHANGED,
-        dept.getId(),
-        "DepartmentDO",
-        new UserDomainEvent(
-            UserDomainEventType.ORG_STRUCTURE_CHANGED,
-            dept.getId(),
-            "DepartmentDO",
-            Map.of(
-                "deptId",
-                dept.getId(),
-                "deptCode",
-                orEmpty(dept.getDeptCode()),
-                "deptName",
-                orEmpty(dept.getDeptName()),
                 "action",
                 action)));
   }

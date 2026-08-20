@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.userinfo.domain.dto.RolePermissionDTO;
 import com.njydsz.userinfo.domain.repository.RolePermissionRepository;
 import com.njydsz.userinfo.domain.vo.RolePermissionVO;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoAuthConverter;
 import com.njydsz.userinfo.infra.entity.RolePermissionDO;
 import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
 
@@ -19,7 +19,7 @@ import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
  * 角色-权限关联 Repository 实现
  *
  * <p>基于 MyBatis-Plus 的 {@link RolePermissionMapper} 实现角色-权限关联的数据访问。
- * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
+ * 所有返回值通过 {@link UserInfoAuthConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -29,7 +29,7 @@ import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
 public class RolePermissionRepositoryImpl implements RolePermissionRepository {
 
   private final RolePermissionMapper rolePermissionMapper;
-  private final UserInfoConverter converter;
+  private final UserInfoAuthConverter converter;
 
   @Override
   public List<RolePermissionVO> findByRoleId(String roleId) {

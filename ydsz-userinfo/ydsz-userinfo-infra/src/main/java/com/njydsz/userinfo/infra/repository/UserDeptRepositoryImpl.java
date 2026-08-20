@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.userinfo.domain.dto.UserDeptDTO;
 import com.njydsz.userinfo.domain.repository.UserDeptRepository;
 import com.njydsz.userinfo.domain.vo.UserDeptVO;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
 import com.njydsz.userinfo.infra.entity.UserDeptDO;
 import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 
@@ -19,7 +19,7 @@ import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
  * 用户-部门关联 Repository 实现
  *
  * <p>基于 MyBatis-Plus 的 {@link UserDeptMapper} 实现用户-部门关联的数据访问。
- * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
+ * 所有返回值通过 {@link UserInfoUserConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -29,7 +29,7 @@ import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 public class UserDeptRepositoryImpl implements UserDeptRepository {
 
   private final UserDeptMapper userDeptMapper;
-  private final UserInfoConverter converter;
+  private final UserInfoUserConverter converter;
 
   @Override
   public Optional<UserDeptVO> findById(String id) {

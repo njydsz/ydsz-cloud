@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.message.domain.dto.MsgNotificationDTO;
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.repository.MsgNotificationRepository;
 import com.njydsz.message.domain.vo.MsgNotificationVO;
@@ -34,11 +35,11 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
   private final MessageConverter converter;
 
   @Override
-  public boolean saveBatch(List<MsgNotificationVO> list) {
+  public boolean saveBatch(List<MsgNotificationDTO> list) {
     if (list == null || list.isEmpty()) {
       return false;
     }
-    List<MsgNotificationDO> entities = list.stream().map(this::voToDO).toList();
+    List<MsgNotificationDO> entities = converter.notificationDtoListToDO(list);
     return msgNotificationMapper.insertBatch(entities) > 0;
   }
 
@@ -48,8 +49,8 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
   }
 
   @Override
-  public boolean update(MsgNotificationVO vo) {
-    MsgNotificationDO entity = voToDO(vo);
+  public boolean update(MsgNotificationDTO dto) {
+    MsgNotificationDO entity = converter.dtoToDO(dto);
     return msgNotificationMapper.updateById(entity) > 0;
   }
 
@@ -113,34 +114,5 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
     return wrapper;
   }
 
-  private MsgNotificationDO voToDO(MsgNotificationVO vo) {
-    if (vo == null) {
-      return null;
-    }
-    MsgNotificationDO entity = new MsgNotificationDO();
-    entity.setId(vo.getId());
-    entity.setTitle(vo.getTitle());
-    entity.setContent(vo.getContent());
-    entity.setLevel(vo.getLevel());
-    entity.setCategory(vo.getCategory());
-    entity.setPriority(vo.getPriority());
-    entity.setSenderId(vo.getSenderId());
-    entity.setReceiverId(vo.getReceiverId());
-    entity.setBizType(vo.getBizType());
-    entity.setBizId(vo.getBizId());
-    entity.setMessageGroup(vo.getMessageGroup());
-    entity.setBatchId(vo.getBatchId());
-    entity.setActionUrl(vo.getActionUrl());
-    entity.setActionText(vo.getActionText());
-    entity.setIcon(vo.getIcon());
-    entity.setExtra(vo.getExtra());
-    entity.setSourceModule(vo.getSourceModule());
-    entity.setReadStatus(vo.getReadStatus());
-    entity.setReadTime(vo.getReadTime());
-    entity.setRecallStatus(vo.getRecallStatus());
-    entity.setRecallAt(vo.getRecallAt());
-    entity.setExpiredAt(vo.getExpiredAt());
-    entity.setMentionUserIds(vo.getMentionUserIds());
-    return entity;
-  }
 }
+

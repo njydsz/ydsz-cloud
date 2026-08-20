@@ -17,7 +17,7 @@ import com.njydsz.userinfo.domain.dto.RoleUpdateDTO;
 import com.njydsz.userinfo.domain.query.RolePageQuery;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.domain.vo.RoleVO;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoAuthConverter;
 import com.njydsz.userinfo.infra.entity.RoleDO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 
@@ -25,7 +25,7 @@ import com.njydsz.userinfo.infra.mapper.RoleMapper;
  * 角色 Repository 实现
  *
  * <p>基于 MyBatis-Plus 的 {@link RoleMapper} 实现角色的数据访问。
- * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
+ * 所有返回值通过 {@link UserInfoAuthConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -35,7 +35,7 @@ import com.njydsz.userinfo.infra.mapper.RoleMapper;
 public class RoleRepositoryImpl implements RoleRepository {
 
   private final RoleMapper roleMapper;
-  private final UserInfoConverter converter;
+  private final UserInfoAuthConverter converter;
 
   @Override
   public Optional<RoleVO> findById(String id) {

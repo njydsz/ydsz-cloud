@@ -15,7 +15,7 @@ import com.njydsz.userinfo.domain.dto.CompanyUpdateDTO;
 import com.njydsz.userinfo.domain.query.CompanyPageQuery;
 import com.njydsz.userinfo.domain.repository.CompanyRepository;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoOrgConverter;
 import com.njydsz.userinfo.infra.entity.CompanyDO;
 import com.njydsz.userinfo.infra.mapper.CompanyMapper;
 
@@ -23,7 +23,7 @@ import com.njydsz.userinfo.infra.mapper.CompanyMapper;
  * 公司 Repository 实现
  *
  * <p>基于 MyBatis-Plus 的 {@link CompanyMapper} 实现公司的数据访问。
- * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
+ * 所有返回值通过 {@link UserInfoOrgConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -33,7 +33,7 @@ import com.njydsz.userinfo.infra.mapper.CompanyMapper;
 public class CompanyRepositoryImpl implements CompanyRepository {
 
   private final CompanyMapper companyMapper;
-  private final UserInfoConverter converter;
+  private final UserInfoOrgConverter converter;
 
   @Override
   public Optional<CompanyVO> findById(String id) {

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.userinfo.domain.dto.UserLoginHistoryDTO;
 import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
 import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
 import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
 import com.njydsz.userinfo.infra.mapper.UserLoginHistoryMapper;
 
@@ -18,7 +18,7 @@ import com.njydsz.userinfo.infra.mapper.UserLoginHistoryMapper;
  * 用户登录历史 Repository 实现
  *
  * <p>基于 MyBatis-Plus 的 {@link UserLoginHistoryMapper} 实现登录历史的数据访问。
- * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
+ * 所有返回值通过 {@link UserInfoUserConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -28,7 +28,7 @@ import com.njydsz.userinfo.infra.mapper.UserLoginHistoryMapper;
 public class UserLoginHistoryRepositoryImpl implements UserLoginHistoryRepository {
 
   private final UserLoginHistoryMapper userLoginHistoryMapper;
-  private final UserInfoConverter converter;
+  private final UserInfoUserConverter converter;
 
   @Override
   public UserLoginHistoryVO create(UserLoginHistoryDTO dto) {

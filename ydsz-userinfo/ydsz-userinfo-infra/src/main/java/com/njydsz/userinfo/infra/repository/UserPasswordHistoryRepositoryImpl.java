@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.userinfo.domain.dto.UserPasswordHistoryDTO;
 import com.njydsz.userinfo.domain.repository.UserPasswordHistoryRepository;
 import com.njydsz.userinfo.domain.vo.UserPasswordHistoryVO;
-import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
 import com.njydsz.userinfo.infra.entity.UserPasswordHistoryDO;
 import com.njydsz.userinfo.infra.mapper.UserPasswordHistoryMapper;
 
@@ -19,7 +19,7 @@ import com.njydsz.userinfo.infra.mapper.UserPasswordHistoryMapper;
  * 密码历史 Repository 实现
  *
  * <p>基于 MyBatis-Plus 的 {@link UserPasswordHistoryMapper} 实现密码历史的数据访问。
- * 所有返回值通过 {@link UserInfoConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
+ * 所有返回值通过 {@link UserInfoUserConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -29,7 +29,7 @@ import com.njydsz.userinfo.infra.mapper.UserPasswordHistoryMapper;
 public class UserPasswordHistoryRepositoryImpl implements UserPasswordHistoryRepository {
 
   private final UserPasswordHistoryMapper userPasswordHistoryMapper;
-  private final UserInfoConverter converter;
+  private final UserInfoUserConverter converter;
 
   @Override
   public UserPasswordHistoryVO create(UserPasswordHistoryDTO dto) {

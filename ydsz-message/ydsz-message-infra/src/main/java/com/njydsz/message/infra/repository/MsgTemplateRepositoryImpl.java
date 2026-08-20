@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.message.domain.dto.MsgTemplateDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
@@ -34,8 +35,8 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
   private final MessageConverter converter;
 
   @Override
-  public boolean save(MsgTemplateVO vo) {
-    MsgTemplateDO entity = voToDO(vo);
+  public boolean save(MsgTemplateDTO dto) {
+    MsgTemplateDO entity = converter.dtoToDO(dto);
     return msgTemplateMapper.insert(entity) > 0;
   }
 
@@ -45,8 +46,8 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
   }
 
   @Override
-  public boolean update(MsgTemplateVO vo) {
-    MsgTemplateDO entity = voToDO(vo);
+  public boolean update(MsgTemplateDTO dto) {
+    MsgTemplateDO entity = converter.dtoToDO(dto);
     return msgTemplateMapper.updateById(entity) > 0;
   }
 
@@ -98,30 +99,5 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
     return wrapper;
   }
 
-  private MsgTemplateDO voToDO(MsgTemplateVO vo) {
-    if (vo == null) {
-      return null;
-    }
-    MsgTemplateDO entity = new MsgTemplateDO();
-    entity.setId(vo.getId());
-    entity.setTemplateCode(vo.getTemplateCode());
-    entity.setChannel(vo.getChannel());
-    entity.setLocale(vo.getLocale());
-    entity.setVersion(vo.getVersion());
-    entity.setCategory(vo.getCategory());
-    entity.setSceneCode(vo.getSceneCode());
-    entity.setSubject(vo.getSubject());
-    entity.setContent(vo.getContent());
-    entity.setProvider(vo.getProvider());
-    entity.setProviderKey(vo.getProviderKey());
-    entity.setSignName(vo.getSignName());
-    entity.setStatus(vo.getStatus());
-    entity.setAuditStatus(vo.getAuditStatus());
-    entity.setAuditBy(vo.getAuditBy());
-    entity.setAuditAt(vo.getAuditAt());
-    entity.setAuditRemark(vo.getAuditRemark());
-    entity.setDescription(vo.getDescription());
-    entity.setVariableDefs(vo.getVariableDefs());
-    return entity;
-  }
 }
+
