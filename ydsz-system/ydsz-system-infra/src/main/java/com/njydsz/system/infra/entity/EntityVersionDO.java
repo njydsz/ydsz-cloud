@@ -39,7 +39,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_entity_version")
-public class EntityVersion extends MpBaseEntity<String> {
+public class EntityVersionDO extends MpBaseEntity<String> {
 
   /** 资源类型：CONFIG/DICT/VARIABLE */
   private String resourceType;

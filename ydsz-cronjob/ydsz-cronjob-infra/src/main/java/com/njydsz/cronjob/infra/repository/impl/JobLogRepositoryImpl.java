@@ -175,4 +175,28 @@ public class JobLogRepositoryImpl implements JobLogRepository {
     JobLog entity = converter.voToEntity(vo);
     return jobLogMapper.updateById(entity);
   }
+
+  @Override
+  public Optional<JobLogVO> findById(String id) {
+    return Optional.ofNullable(jobLogMapper.selectById(id)).map(converter::entityToVO);
+  }
+
+  @Override
+  public int updateById(JobLogVO vo) {
+    JobLog entity = converter.voToEntity(vo);
+    return jobLogMapper.updateById(entity);
+  }
+
+  @Override
+  public long countByJobIdAndStatus(String jobId, String status) {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    if (jobId != null && !jobId.isBlank()) {
+      wrapper.eq(JobLog::getJobId, jobId);
+    }
+    if (status != null && !status.isBlank()) {
+      wrapper.eq(JobLog::getStatus, status);
+    }
+    return jobLogMapper.selectCount(wrapper);
+  }
 }

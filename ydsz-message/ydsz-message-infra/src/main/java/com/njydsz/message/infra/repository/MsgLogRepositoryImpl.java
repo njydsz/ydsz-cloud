@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.dto.MsgLogDTO;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.infra.converter.MessageConverter;
@@ -26,8 +27,9 @@ import com.njydsz.message.infra.mapper.core.MsgLogMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link MessageConverter} 实现 VO ↔ DO 的双向转换
+ *   <li>通过 {@link MessageConverter} 实现 DO ↔ VO ↔ DTO 的双向转换
  *   <li>查询入参使用领域 Query（{@link MessageLogQueryDTO}），返回领域 VO（{@link MsgLogVO}）
+ *   <li>CUD 入参使用领域 DTO（{@link MsgLogDTO}），通过 Converter 转换为 DO
  * </ul>
  *
  * @author ydsz-team
@@ -44,14 +46,14 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
   // ===== 基本 CRUD =====
 
   @Override
-  public boolean save(MsgLogVO vo) {
-    MsgLogDO entity = converter.voToDO(vo);
+  public boolean save(MsgLogDTO dto) {
+    MsgLogDO entity = converter.dtoToDO(dto);
     return msgLogMapper.insert(entity) > 0;
   }
 
   @Override
-  public boolean update(MsgLogVO vo) {
-    MsgLogDO entity = converter.voToDO(vo);
+  public boolean update(MsgLogDTO dto) {
+    MsgLogDO entity = converter.dtoToDO(dto);
     return msgLogMapper.updateById(entity) > 0;
   }
 
@@ -71,9 +73,6 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
   @Override
   public Optional<MsgLogVO> findOne(MessageLogQueryDTO query) {
     QueryWrapper<MsgLogDO> wrapper = buildWrapper(query);
-    if (query != null && query.getPageSize() != null && query.getPageSize() > 0) {
-      // 如果调用方通过 pageSize 暗示 LIMIT，这里不做额外处理，由 buildWrapper 的调用方决定
-    }
     MsgLogDO entity = msgLogMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::doToVO);
   }
@@ -103,11 +102,11 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
   }
 
   @Override
-  public boolean saveBatch(List<MsgLogVO> list) {
+  public boolean saveBatch(List<MsgLogDTO> list) {
     if (list == null || list.isEmpty()) {
       return false;
     }
-    List<MsgLogDO> entities = converter.logVoListToDO(list);
+    List<MsgLogDO> entities = converter.logDtoListToDO(list);
     return msgLogMapper.insertBatch(entities) > 0;
   }
 
