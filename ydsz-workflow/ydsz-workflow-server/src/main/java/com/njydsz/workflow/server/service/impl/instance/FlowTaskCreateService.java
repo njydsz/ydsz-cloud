@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
@@ -41,7 +40,6 @@ import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowUserRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowAssigneeResolver;
 import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
@@ -164,9 +162,6 @@ public class FlowTaskCreateService {
 
   /** 流程节点仓储，查询节点配置（审批人/权限/SLA 等） */
   private final FlowNodeRepository nodeRepository;
-
-  /** 运行时任务 Mapper（保留：selectList 复杂查询无 Repository 替代） */
-  private final FlowRunTaskMapper taskMapper;
 
   /** MapStruct 转换器（DO/VO/DTO 转换） */
   private final WorkflowConverter converter;
@@ -1180,17 +1175,15 @@ public class FlowTaskCreateService {
       Map<String, Object> variables,
       String currentAssigneeId) {
     try {
-      // 保留 Mapper：复杂 LambdaQueryWrapper 查询（instanceId + status + orderBy + LIMIT），Repository 暂无等价方法
-      LambdaQueryWrapper<FlowRunTaskDO> qw = new LambdaQueryWrapper<>();
-      qw.eq(FlowRunTaskDO::getInstanceId, instance.getId())
-          .eq(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.COMPLETED.name())
-          .orderByDesc(FlowRunTaskDO::getId)
-          .last("LIMIT 1");
-      List<FlowRunTaskDO> prevTasks = taskMapper.selectList(qw);
+      List<FlowRunTaskDO> prevTasks = taskRepository.findByInstanceId(instance.getId()).stream()
+          .filter(t -> FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()))
+          .sorted((a, b) -> b.getId().compareTo(a.getId()))
+          .limit(1)
+          .collect(java.util.stream.Collectors.toList());
       if (prevTasks.isEmpty()) {
         return null;
       }
-      FlowRunTaskDO prevTask = prevTasks.get(0);
+      FlowRunTaskDO prevTask = converter.entityToDO(prevTasks.get(0));
       String prevAssigneeId = prevTask.getAssigneeId();
       if (prevAssigneeId == null
           || !prevAssigneeId.equals(currentAssigneeId)
@@ -1225,11 +1218,10 @@ public class FlowTaskCreateService {
   private List<String> applyCrossNodeDedup(List<String> userIds, String instanceId, FlowNodeDO node) {
     try {
       // 查询实例下已审批过的人员（COMPLETED 状态）
-      // 保留 Mapper：复杂 LambdaQueryWrapper 查询（instanceId + status），Repository 暂无等价方法
-      LambdaQueryWrapper<FlowRunTaskDO> qw = new LambdaQueryWrapper<>();
-      qw.eq(FlowRunTaskDO::getInstanceId, instanceId)
-          .eq(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.COMPLETED.name());
-      List<FlowRunTaskDO> done = taskMapper.selectList(qw);
+      List<FlowRunTaskDO> done = taskRepository.findByInstanceId(instanceId).stream()
+          .filter(t -> FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()))
+          .map(converter::entityToDO)
+          .collect(java.util.stream.Collectors.toList());
       Set<String> excluded = new HashSet<>();
       for (FlowRunTaskDO t : done) {
         if (t.getAssigneeId() != null && !"SYSTEM_AUTO_PASS".equals(t.getAssigneeName())) {

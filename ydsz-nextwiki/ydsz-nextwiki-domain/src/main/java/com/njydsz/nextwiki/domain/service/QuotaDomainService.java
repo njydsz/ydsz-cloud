@@ -28,15 +28,15 @@ public class QuotaDomainService {
    * @throws BusinessException 超出配额时抛出
    */
   public void checkQuota(StorageQuotaDTO quota, long fileSize) {
-    if (quota == null || quota.getCapacity() == null) {
-      throw new BusinessException(NextwikiExceptionCode.QUOTA_NOT_CONFIGURED);
+    if (quota == null || quota.getQuotaLimit() == null) {
+      throw new BusinessException(NextwikiExceptionCode.QUOTA_NOT_FOUND);
     }
 
-    long capacity = quota.getCapacity();
-    long used = quota.getUsedSize() != null ? quota.getUsedSize() : 0L;
+    long capacity = quota.getQuotaLimit();
+    long used = quota.getQuotaUsed() != null ? quota.getQuotaUsed() : 0L;
 
     if (used + fileSize > capacity) {
-      throw BusinessException.of(NextwikiExceptionCode.QUOTA_EXCEEDED)
+      throw BusinessException.of(NextwikiExceptionCode.QUOTA_INSUFFICIENT)
           .data("capacity", capacity)
           .data("used", used)
           .data("fileSize", fileSize);
@@ -52,12 +52,12 @@ public class QuotaDomainService {
    * @return 剩余可用字节数
    */
   public long getRemainingSpace(StorageQuotaDTO quota) {
-    if (quota == null || quota.getCapacity() == null) {
+    if (quota == null || quota.getQuotaLimit() == null) {
       return 0L;
     }
 
-    long capacity = quota.getCapacity();
-    long used = quota.getUsedSize() != null ? quota.getUsedSize() : 0L;
+    long capacity = quota.getQuotaLimit();
+    long used = quota.getQuotaUsed() != null ? quota.getQuotaUsed() : 0L;
     return Math.max(0, capacity - used);
   }
 
@@ -69,12 +69,12 @@ public class QuotaDomainService {
    * @return {@code true} 表示已使用超过指定百分比
    */
   public boolean isOverPercentage(StorageQuotaDTO quota, int percentage) {
-    if (quota == null || quota.getCapacity() == null || quota.getCapacity() == 0) {
+    if (quota == null || quota.getQuotaLimit() == null || quota.getQuotaLimit() == 0) {
       return false;
     }
 
-    long capacity = quota.getCapacity();
-    long used = quota.getUsedSize() != null ? quota.getUsedSize() : 0L;
+    long capacity = quota.getQuotaLimit();
+    long used = quota.getQuotaUsed() != null ? quota.getQuotaUsed() : 0L;
     double ratio = (double) used / capacity * 100;
     return ratio >= percentage;
   }

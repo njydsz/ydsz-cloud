@@ -464,7 +464,9 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .message("error.workflow.msg_f68a3fa3")
             .build();
       }
-      List<FlowTemplateDO> versions = templateMapper.selectVersionsByTemplateCode(templateCode);
+      List<FlowTemplateDO> versions = templateRepository.findVersionsByTemplateCode(templateCode).stream()
+          .map(converter::entityToDO)
+          .toList();
       return versions.stream().map(this::toSummaryMap).collect(Collectors.toList());
     } catch (SysException e) {
       throw e;
@@ -494,7 +496,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       }
       // version 为空 → 返回最新版本（保持与 getTemplate 一致的语义）
       if (version == null) {
-        FlowTemplateDO latest = templateMapper.selectByTemplateCode(templateCode);
+        FlowTemplateDO latest = templateRepository.findByTemplateCode(templateCode).map(converter::entityToDO).orElse(null);
         if (latest == null) {
           throw SysException.builder()
               .resultCode(YdszResultCode.NOT_FOUND)
@@ -512,7 +514,9 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 在所有版本中筛选指定版本
-      List<FlowTemplateDO> versions = templateMapper.selectVersionsByTemplateCode(templateCode);
+      List<FlowTemplateDO> versions = templateRepository.findVersionsByTemplateCode(templateCode).stream()
+          .map(converter::entityToDO)
+          .toList();
       if (versions.isEmpty()) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -570,7 +574,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 读取当前最新版本作为复制源
-      FlowTemplateDO source = templateMapper.selectByTemplateCode(templateCode);
+      FlowTemplateDO source = templateRepository.findByTemplateCode(templateCode).map(converter::entityToDO).orElse(null);
       if (source == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -586,9 +590,8 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 旧版本统一降级
-      templateMapper.markAsNotLatest(templateCode);
-      Integer maxVersion = templateMapper.selectMaxVersion(templateCode);
-      int newVersion = (maxVersion == null ? 0 : maxVersion) + 1;
+      templateRepository.markAsNotLatest(templateCode);
+      int newVersion = templateRepository.selectMaxVersion(templateCode).map(v -> v + 1).orElse(1);
 
       FlowTemplateDO newVer = new FlowTemplateDO();
       newVer.setTemplateCode(templateCode);
@@ -608,7 +611,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       newVer.setInheritType(
           source.getInheritType() != null ? source.getInheritType() : "STANDALONE");
       newVer.setIsLatest(1);
-      templateMapper.insert(newVer);
+      templateRepository.save(converter.entityToVO(newVer));
       syncSearchIndex(newVer);
 
       log.info(
@@ -713,7 +716,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 读取源模板最新版本
-      FlowTemplateDO source = templateMapper.selectByTemplateCode(sourceTemplateCode);
+      FlowTemplateDO source = templateRepository.findByTemplateCode(sourceTemplateCode).map(converter::entityToDO).orElse(null);
       if (source == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -722,7 +725,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 校验新编码未占用
-      FlowTemplateDO existing = templateMapper.selectByTemplateCode(newTemplateCode);
+      FlowTemplateDO existing = templateRepository.findByTemplateCode(newTemplateCode).map(converter::entityToDO).orElse(null);
       if (existing != null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
@@ -748,7 +751,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       newTemplate.setVersionLabel("v1.0");
       newTemplate.setInheritType(inheritType);
       newTemplate.setIsLatest(1);
-      templateMapper.insert(newTemplate);
+      templateRepository.save(converter.entityToVO(newTemplate));
       syncSearchIndex(newTemplate);
 
       log.info(
@@ -795,7 +798,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 先查出父模板主键 ID
-      FlowTemplateDO parent = templateMapper.selectByTemplateCode(parentTemplateCode);
+      FlowTemplateDO parent = templateRepository.findByTemplateCode(parentTemplateCode).map(converter::entityToDO).orElse(null);
       if (parent == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -803,7 +806,9 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .params(parentTemplateCode)
             .build();
       }
-      List<FlowTemplateDO> children = templateMapper.selectByParentTemplateId(parent.getId());
+      List<FlowTemplateDO> children = templateRepository.findByParentTemplateId(parent.getId()).stream()
+          .map(converter::entityToDO)
+          .toList();
       return children.stream().map(this::toSummaryMap).collect(Collectors.toList());
     } catch (SysException e) {
       throw e;
@@ -840,7 +845,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 读取子模板最新版本
-      FlowTemplateDO child = templateMapper.selectByTemplateCode(childTemplateCode);
+      FlowTemplateDO child = templateRepository.findByTemplateCode(childTemplateCode).map(converter::entityToDO).orElse(null);
       if (child == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -866,7 +871,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .params(childTemplateCode)
             .build();
       }
-      FlowTemplateDO parent = templateMapper.selectById(parentId);
+      FlowTemplateDO parent = templateRepository.findById(parentId).map(converter::entityToDO).orElse(null);
       if (parent == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -882,9 +887,8 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 旧版本降级
-      templateMapper.markAsNotLatest(childTemplateCode);
-      Integer maxVersion = templateMapper.selectMaxVersion(childTemplateCode);
-      int newVersion = (maxVersion == null ? 0 : maxVersion) + 1;
+      templateRepository.markAsNotLatest(childTemplateCode);
+      int newVersion = templateRepository.selectMaxVersion(childTemplateCode).map(v -> v + 1).orElse(1);
 
       // 以父模板内容创建子模板新版本，保留子模板自身编码/名称/分类/排序
       FlowTemplateDO newVer = new FlowTemplateDO();
@@ -903,7 +907,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       newVer.setVersionLabel("v" + newVersion + ".0-synced");
       newVer.setInheritType("INHERIT");
       newVer.setIsLatest(1);
-      templateMapper.insert(newVer);
+      templateRepository.save(converter.entityToVO(newVer));
       syncSearchIndex(newVer);
 
       log.info(

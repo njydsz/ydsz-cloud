@@ -83,7 +83,8 @@ public class DecisionTableExcelExporter implements DecisionTableExcelService {
    * @return xlsx 字节数组
    * @throws RuntimeException 导出失败
    */
-  public byte[] exportToExcel(DecisionTableDefinition definition) {
+  @Override
+public byte[] exportToExcel(DecisionTableDefinition definition) {
     if (definition == null) {
       throw new IllegalArgumentException("决策表定义不能为 null");
     }
@@ -193,7 +194,8 @@ public class DecisionTableExcelExporter implements DecisionTableExcelService {
    * @return 决策表定义
    * @throws IllegalArgumentException 导入失败（格式错误/数据缺失）
    */
-  public DecisionTableDefinition importFromExcel(byte[] excelBytes) {
+  @Override
+public DecisionTableDefinition importFromExcel(byte[] excelBytes) {
     if (excelBytes == null || excelBytes.length == 0) {
       throw new IllegalArgumentException("Excel 数据不能为空");
     }
@@ -349,7 +351,8 @@ public class DecisionTableExcelExporter implements DecisionTableExcelService {
    *
    * @return xlsx 字节数组
    */
-  public byte[] exportTemplate() {
+  @Override
+public byte[] exportTemplate() {
     DecisionTableDefinition template =
         DecisionTableDefinition.builder()
             .tableCode("DT_TEMPLATE")
