@@ -55,6 +55,8 @@
 
 ### 6. 变更差异计算
 
+> **说明**：差异计算能力由 `ydsz-common-util` 提供（`com.njydsz.common.util.diff` 包），非本模块类。
+
 | 类 / 注解 | 说明 |
 |---|---|
 | `DiffCalculator` | 差异计算入口（before / after 对比，自动识别 `@DiffField` 注解） |
@@ -87,11 +89,13 @@
 | `AuditLog` | 审计日志实体（对齐 `sys_audit_log` 表） |
 | `OperationLogEvent` | 操作日志事件（含 beforeData / afterData 变更差异） |
 | `DataExportAuditEvent` | 数据导出审计事件 |
+| `GatewayAuditEventBridge` | 网关审计事件桥接器（接收网关侧审计事件，转换为本地审计事件） |
 | `AuditContext` | 审计上下文（traceId / tenantId / userId） |
 | `AuditType` | 审计类型枚举（OPERATION / LOGIN / DATA / PERMISSION / CONFIG / FILE / API / SYSTEM / CUSTOM） |
 | `AuditAction` | 审计操作枚举（CREATE / UPDATE / DELETE / QUERY / IMPORT / EXPORT / LOGIN / GRANT 等 24 种） |
 | `AuditStatus` | 审计状态枚举 |
 | `AuditException` | 审计模块异常 |
+| `AuditWriteException` | 审计写入异常 |
 
 ### 10. 事件监听与异步执行
 

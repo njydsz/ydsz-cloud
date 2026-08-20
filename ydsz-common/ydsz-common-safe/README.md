@@ -69,6 +69,7 @@
 | `RateLimitRuleCache` | 规则缓存 |
 | `RateLimitMetricsCollector` | Micrometer 指标采集 |
 | `RateLimitService` | 限流服务封装 |
+| `RateLimitResponseDecorator` | 限流响应装饰器（标准化限流拒绝响应体） |
 
 **支持的限流算法**（`RateLimitAlgorithm` 枚举）：`TOKEN_BUCKET`（令牌桶）。
 
@@ -140,12 +141,20 @@
 | `SafeMetrics` | Micrometer 指标采集（XSS / SQL / CSRF / 限流 / IP 封禁 Counter + Filter Timer） |
 | `SecurityAuditLogger` | 安全审计日志（结构化 JSON + traceId 关联） |
 
-### 14. 工具类与开关注解
+### 14. SSRF 防护
+
+| 类 | 说明 |
+|---|---|
+| `SsrfHttpRequestInterceptor` | HTTP 请求拦截器（RestTemplate / WebClient 调用前校验目标地址，阻断内网 IP / 非法协议） |
+| `HttpConnectionValidator` | 连接验证器（目标地址私有 IP 段 / 回环地址 / 链路本地地址检测，抛出 `SsrfBlockedException`） |
+
+### 15. 工具类与开关注解
 
 | 类 / 注解 | 说明 |
 |---|---|
 | `ClientIpResolver` | 统一客户端 IP 解析（多级代理 + 内网判断） |
 | `CachedBodyHttpServletRequestWrapper` | 请求体缓存包装器（多次读取） |
+| `SafeFilterChainBuilder` | 安全过滤器链编程式构建器（动态注册过滤器 + 排序） |
 | `@EnableYdszSafe` | 启用 ydsz 安全模块自动装配（显式开启所有过滤器和 AOP 切面） |
 
 ## 接入方式

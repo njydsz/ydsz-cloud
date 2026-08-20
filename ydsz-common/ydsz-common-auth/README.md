@@ -60,13 +60,13 @@ YDSZ 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按
 | `RbacUserInfoService` / `RedisRbacUserInfoService` | 用户信息查询（Redis Hash 存储） |
 | `RolePermissionLoader` / `RedisRolePermissionLoader` | 角色-权限加载器（支持 `loadByRoleCode` / `loadByRoleCodes` 批量 MGET） |
 | `RolePermissions` | 角色权限模型（菜单 / 按钮 / API 三类权限集合） |
+| `LoginUser` | 登录用户基础模型（用户 ID / 用户名 / 角色等身份信息） |
 
 ### 6. 数据权限
 
 | 类 | 说明 |
 |---|---|
 | `DataPermissionResolver` / `RedisRoleDataPermissionResolver` | 数据权限解析器 |
-| `DataPermissionCustomSqlProvider` | 数据权限动态 SQL 提供者（SPI 扩展点） |
 | `DataScopeInfo` / `DataScopeAware` | 数据范围信息（租户/公司/部门/项目/区域） |
 
 ### 7. 列权限
@@ -115,10 +115,11 @@ YDSZ 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按
 
 | 类 | 说明 |
 |---|---|
-| `TokenBlacklistService` | 同步黑名单（Redis 存储，Token 以 SHA-256 摘要落键 `auth:token:blacklist:<sha256>` + 分布式锁） |
+| `TokenBlacklistService` | 同步黑名单（Redis 存储，Token 以 SHA-256 摘要落键 `auth:token:blacklist:<sha256>` + 分布式锁 + 布隆过滤器前置过滤） |
 | `ReactiveTokenBlacklistService` | 响应式黑名单（WebFlux 网关专用，基于 `ReactiveStringRedisTemplate`，返回 `Mono`） |
+| `BloomFilter` | 布隆过滤器工具（BitSet 实现，14 个哈希函数约 0.01% 误判率，用于黑名单前置过滤以短路 Redis 查询） |
 
-> 说明：黑名单实现为 SHA-256 摘要 + 分布式锁，**未使用布隆过滤器**（历史版本曾规划 `TokenBlacklistBloomFilter`，未实现）。
+> 说明：黑名单实现为 SHA-256 摘要 + 分布式锁 + 布隆过滤器前置。布隆过滤器基于本地内存判断 Token「一定不在」集合中，从而避免对已知无效 Token 发起 Redis 查询，降低高 QPS 下 Redis 开销。
 
 ### 13. CSRF
 
@@ -153,6 +154,9 @@ YDSZ 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按
 | `AccessTokenUtils` / `PermissionMerger` / `PermissionUtils` | 工具类（见第 1、4 节） |
 | `AuthErrorCode` / `PermissionDeniedException` | 错误码与异常 |
 | `PermissionCodes` | 权限码常量 |
+| `TotpAuthenticator` | TOTP 双因子认证器（基于 HMAC-SHA1，兼容 Google Authenticator） |
+| `DataScopeHelper` | 数据范围辅助工具（构建数据权限 SQL 条件片段） |
+| `AuthCurrentUserIdResolver` | 当前用户 ID 解析器（实现 `CurrentUserIdResolver` 接口） |
 
 ### 18. 指标（新增）
 
@@ -362,7 +366,6 @@ boolean ok = permissionHierarchyService.hasPermission(granted, "sys:user:list");
 |---|---|
 | `AuthHandler` | 认证信息解析（自定义请求头解析） |
 | `DataPermissionResolver` | 数据权限解析（自定义数据范围策略） |
-| `DataPermissionCustomSqlProvider` | 数据权限动态 SQL（自定义 WHERE 拼接） |
 | `RolePermissionLoader` | 角色权限加载（自定义权限存储源） |
 | `ColumnPermissionResolver` | 列级权限解析（自定义列权限策略） |
 | `RbacUserInfoService` | RBAC 用户信息加载（自定义用户存储源） |
