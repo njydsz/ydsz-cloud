@@ -25,7 +25,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_ab_policy")
-public class RuleABPolicy extends MpBaseEntity<String> {
+public class RuleABPolicyDO extends MpBaseEntity<String> {
 
   /** 关联规则编码（一对一） */
   private String ruleCode;

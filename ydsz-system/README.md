@@ -75,7 +75,7 @@ ydsz-system/
 │       └── converter/                  # SystemConverter（MapStruct）
 ├── ydsz-system-server/                 # 应用层：Service + Config + Health + Metrics + Cache + Listener + Schedule
 │   └── src/main/java/com/njydsz/system/server/
-│       ├── config/                     # SystemProperties + SystemConfiguration + CacheConfig + InternalApiIpFilter + RedisConfig
+│       ├── config/                     # SystemProperties + SystemConfiguration + CacheConfig + InternalApiIpFilter
 │       ├── service/                    # 14 个 Service 接口 + impl
 │       │   ├── AppInfoService.java
 │       │   ├── ConfigService.java
@@ -99,12 +99,9 @@ ydsz-system/
 │       │           └── DictItemRollbackStrategy.java
 │       ├── cache/                     # 缓存组件
 │       │   ├── CacheKeyBuilder.java    # 缓存键构造器
-│       │   ├── CacheInvalidationPublisher.java  # Redis Pub/Sub 缓存失效发布
-│       │   ├── CacheInvalidationSubscriber.java # Redis Pub/Sub 缓存失效订阅
 │       │   └── CacheWarmer.java        # 缓存预热
 │       ├── listener/                  # 事件监听器
-│       │   ├── VersionSnapshotListener.java    # 版本快照监听
-│       │   └── CrossModuleEventListener.java   # 跨模块事件监听
+│       │   └── VersionSnapshotListener.java    # 版本快照监听
 │       ├── schedule/                  # 定时任务
 │       │   └── TenantExpireScheduler.java      # 租户到期检查
 │       ├── health/                    # SystemHealthIndicator（Redis + DataSource 探针）
@@ -170,7 +167,7 @@ ydsz-system/
 - TTL 通过 `ydsz.system.config.cache-ttl-minutes` 配置（默认 **15 分钟**）
 - 缓存穿透防护：空值缓存
 - 写操作（save/update/delete）自动清除缓存 + 发布 `CONFIG_CHANGED` 事件
-- 跨实例缓存失效：通过 Redis Pub/Sub 实现（`CacheInvalidationPublisher`/`CacheInvalidationSubscriber`），由 `ydsz.system.cache.crossInstanceEnabled` 控制（默认 false）
+- 缓存失效：由 Service 层 `@CacheEvict` 单点执行（规范 35.4.1），单实例部署下无需跨实例同步
 - 缓存预热：`CacheWarmer` 在启动时加载热点数据
 
 ### 字典缓存

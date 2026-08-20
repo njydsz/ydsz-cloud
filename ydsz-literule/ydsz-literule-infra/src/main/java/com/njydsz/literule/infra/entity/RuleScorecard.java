@@ -24,7 +24,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "ydsz_rule_scorecard", autoResultMap = true)
-public class RuleScorecard extends MpBaseEntity<String> {
+public class RuleScorecardDO extends MpBaseEntity<String> {
 
   /** 规则编码 */
   private String ruleCode;

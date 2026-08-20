@@ -21,7 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "ydsz_rule_script", autoResultMap = true)
-public class RuleScript extends MpBaseEntity<String> {
+public class RuleScriptDO extends MpBaseEntity<String> {
 
   /** 规则编码 */
   private String ruleCode;

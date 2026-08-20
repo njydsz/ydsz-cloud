@@ -21,7 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "ydsz_rule_decision_tree", autoResultMap = true)
-public class RuleDecisionTree extends MpBaseEntity<String> {
+public class RuleDecisionTreeDO extends MpBaseEntity<String> {
 
   /** 规则编码 */
   private String ruleCode;

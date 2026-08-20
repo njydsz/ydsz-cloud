@@ -23,7 +23,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_canary_bucket")
-public class RuleCanaryBucket extends MpBaseEntity<String> {
+public class RuleCanaryBucketDO extends MpBaseEntity<String> {
 
   /** 规则编码 */
   private String ruleCode;

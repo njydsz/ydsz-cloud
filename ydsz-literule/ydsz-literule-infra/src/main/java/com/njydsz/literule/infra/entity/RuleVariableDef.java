@@ -23,7 +23,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_variable_def")
-public class RuleVariableDef extends MpBaseEntity<String> {
+public class RuleVariableDefDO extends MpBaseEntity<String> {
 
   /** 变量名（如 cpi / budgetAmount / evmRedCount） */
   private String varName;

@@ -13,7 +13,6 @@ import com.njydsz.userinfo.domain.dto.UserPostDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.UserPostVO;
 import com.njydsz.userinfo.domain.repository.UserPostRepository;
-import com.njydsz.userinfo.infra.entity.UserPostDO;
 import com.njydsz.userinfo.server.service.UserPostService;
 
 /**
@@ -41,12 +40,9 @@ public class UserPostServiceImpl implements UserPostService {
    * @throws BusinessException 当用户-岗位关联不存在时抛出
    */
   @Override
-  public UserPostDO getById(String id) {
-    UserPostVO vo = userPostRepository.findById(id)
+  public UserPostVO getById(String id) {
+    return userPostRepository.findById(id)
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND));
-    UserPostDO entity = new UserPostDO();
-    BeanUtils.copyProperties(vo, entity);
-    return entity;
   }
 
   /**
@@ -55,7 +51,7 @@ public class UserPostServiceImpl implements UserPostService {
    * <p>⚠️ UserPostRepository 不支持无过滤条件的全量查询，请使用 {@link UserPostRepository#findByUserId(String)}。
    */
   @Override
-  public List<UserPostDO> list() {
+  public List<UserPostVO> list() {
     throw new UnsupportedOperationException(
         "UserPostRepository 不支持无过滤条件的全量列表查询，请使用 findByUserId");
   }
@@ -67,11 +63,11 @@ public class UserPostServiceImpl implements UserPostService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String save(UserPostDO entity) {
+  public String save(UserPostVO vo) {
     UserPostDTO dto = new UserPostDTO();
-    BeanUtils.copyProperties(entity, dto);
-    UserPostVO vo = userPostRepository.create(dto);
-    return vo.getId();
+    BeanUtils.copyProperties(vo, dto);
+    UserPostVO result = userPostRepository.create(dto);
+    return result.getId();
   }
 
   /**
@@ -81,7 +77,7 @@ public class UserPostServiceImpl implements UserPostService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean updateById(UserPostDO entity) {
+  public boolean updateById(UserPostVO vo) {
     throw new UnsupportedOperationException(
         "UserPostRepository 不支持 update 操作，请使用 delete + create 实现关联变更");
   }

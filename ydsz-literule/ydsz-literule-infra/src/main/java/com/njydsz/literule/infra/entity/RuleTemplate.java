@@ -21,7 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_template")
-public class RuleTemplate extends MpBaseEntity<String> {
+public class RuleTemplateDO extends MpBaseEntity<String> {
 
   /** 模板编码，业务唯一 */
   private String templateCode;

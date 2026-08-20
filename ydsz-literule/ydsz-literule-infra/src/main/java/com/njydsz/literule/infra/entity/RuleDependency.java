@@ -29,7 +29,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_dependency")
-public class RuleDependency extends MpBaseEntity<String> {
+public class RuleDependencyDO extends MpBaseEntity<String> {
 
   /** 主规则编码（依赖方） */
   private String ruleCode;

@@ -21,7 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_pack_install")
-public class RulePackInstall extends MpBaseEntity<String> {
+public class RulePackInstallDO extends MpBaseEntity<String> {
 
   /** 安装操作人 ID */
   private String installedBy;

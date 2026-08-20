@@ -43,4 +43,19 @@ public interface JobNodeRepository {
    * @return 受影响行数
    */
   int deleteStaleOfflineNodes(LocalDateTime offlineThreshold);
+
+  /**
+   * 查询所有 ONLINE 状态的节点列表。
+   *
+   * @return ONLINE 节点列表
+   */
+  List<JobNodeVO> findOnlineNodes();
+
+  /**
+   * 根据条件查询节点列表。
+   *
+   * @param status 状态过滤（可为空）
+   * @return 节点列表
+   */
+  List<JobNodeVO> findByStatus(String status);
 }

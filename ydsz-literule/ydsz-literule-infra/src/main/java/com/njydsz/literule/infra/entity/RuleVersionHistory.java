@@ -21,7 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_version_history")
-public class RuleVersionHistory extends MpBaseIdEntity<String> {
+public class RuleVersionHistoryDO extends MpBaseIdEntity<String> {
 
   /** 规则编码 */
   private String ruleCode;
