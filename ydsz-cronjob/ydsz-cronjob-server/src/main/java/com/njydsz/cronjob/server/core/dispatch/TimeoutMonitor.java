@@ -17,9 +17,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
-import com.njydsz.cronjob.infra.entity.log.JobLog;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.cronjob.domain.repository.JobLogRepository;
+import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.LockKeyUtil;
 import com.njydsz.cronjob.server.core.alert.AlertContext;
@@ -65,8 +65,8 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @ConditionalOnBean(LeaderElector.class)
 public class TimeoutMonitor {
 
-  private final JobMapper jobMapper;
-  private final JobLogMapper jobLogMapper;
+  private final JobRepository jobRepository;
+  private final JobLogRepository jobLogRepository;
   private final LeaderElector leaderElector;
   private final RedisTemplate<String, Object> redisTemplate;
   private final CronjobProperties cronjobProperties;
@@ -135,12 +135,12 @@ public class TimeoutMonitor {
 
   /** 扫描已超时的日志（硬超时，标记 TIMEOUT + 释放锁）。 */
   private void scanTimedOutLogs(LocalDateTime now) {
-    List<JobLog> timedOut = jobLogMapper.selectTimedOutLogs(now, BATCH_SIZE);
+    List<JobLogVO> timedOut = jobLogRepository.findTimedOutLogs(now, BATCH_SIZE);
     if (timedOut.isEmpty()) {
       return;
     }
     log.warn("[TimeoutMonitor] 发现 {} 个超时任务: role={}", timedOut.size(), leaderRole);
-    for (JobLog log0 : timedOut) {
+    for (JobLogVO log0 : timedOut) {
       try {
         handleTimeout(log0, now);
       } catch (Exception e) {
@@ -160,12 +160,12 @@ public class TimeoutMonitor {
    * <p>对每条达到 80% slaMs 的日志触发 SLA_WARNING 预警，通知运维关注。 预警不修改日志状态、不释放锁，任务继续执行。
    */
   private void scanApproachingSlaLogs(LocalDateTime now) {
-    List<JobLog> approaching = jobLogMapper.selectApproachingSlaLogs(now, BATCH_SIZE);
+    List<JobLogVO> approaching = jobLogRepository.findApproachingSlaLogs(now, BATCH_SIZE);
     if (approaching.isEmpty()) {
       return;
     }
     log.info("[TimeoutMonitor] 发现 {} 个任务达到 SLA 80% 预警线: role={}", approaching.size(), leaderRole);
-    for (JobLog log0 : approaching) {
+    for (JobLogVO log0 : approaching) {
       try {
         triggerSlaWarningAlert(log0, now);
       } catch (Exception e) {
@@ -175,7 +175,7 @@ public class TimeoutMonitor {
   }
 
   /** P2-F2: 触发 SLA 80% 预警（软告警，不中断执行）。 */
-  private void triggerSlaWarningAlert(JobLog log0, LocalDateTime now) {
+  private void triggerSlaWarningAlert(JobLogVO log0, LocalDateTime now) {
     AlertTrigger alertTrigger = alertTriggerProvider.getIfAvailable();
     if (alertTrigger == null) {
       return;
@@ -201,7 +201,7 @@ public class TimeoutMonitor {
 
   /** 处理单个超时日志（事务内）。 */
   @Transactional(rollbackFor = Exception.class)
-  protected void handleTimeout(JobLog log0, LocalDateTime now) {
+  protected void handleTimeout(JobLogVO log0, LocalDateTime now) {
     long durationMs = Duration.between(log0.getStartTime(), now).toMillis();
     String errorMsg =
         "Task timed out (start="
@@ -212,7 +212,7 @@ public class TimeoutMonitor {
             + durationMs
             + "ms)";
     // 标记日志为 TIMEOUT（CAS: 仅当 status 仍为 RUNNING 时才更新）
-    int affected = jobLogMapper.markTimeout(log0.getId(), now, durationMs, errorMsg);
+    int affected = jobLogRepository.markTimeout(log0.getId(), now, durationMs, errorMsg);
     if (affected == 0) {
       log.debug("[TimeoutMonitor] 日志已非 RUNNING 状态, 跳过: logId={}", log0.getId());
       return;
@@ -256,7 +256,8 @@ public class TimeoutMonitor {
     }
     // 更新任务统计：失败次数 +1，status=ERROR
     try {
-      jobMapper.updateStats(log0.getJobId(), log0.getStartTime(), null, null, 0L, 1L, "ERROR");
+      jobRepository.updateStats(
+          log0.getJobId(), log0.getStartTime(), null, null, 0L, 1L, "ERROR");
       log.warn(
           "[TimeoutMonitor] 任务已标记 ERROR: jobId={} jobKey={} logId={}",
           log0.getJobId(),
@@ -270,7 +271,7 @@ public class TimeoutMonitor {
   }
 
   /** P5: 触发超时告警。 */
-  private void triggerTimeoutAlert(JobLog log0, long durationMs) {
+  private void triggerTimeoutAlert(JobLogVO log0, long durationMs) {
     AlertTrigger alertTrigger = alertTriggerProvider.getIfAvailable();
     if (alertTrigger == null) {
       return;

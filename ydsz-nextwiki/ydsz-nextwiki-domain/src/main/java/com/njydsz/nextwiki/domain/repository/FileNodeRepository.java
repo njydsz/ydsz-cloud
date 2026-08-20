@@ -232,14 +232,6 @@ public interface FileNodeRepository {
   List<FileNodeVO> findByNameAndParent(String name, String parentId, String createdBy);
 
   /**
-   * 查询文件夹下全部后代节点（按路径前缀匹配）
-   *
-   * @param folderPath 文件夹路径
-   * @return 后代节点 VO 列表
-   */
-  List<FileNodeVO> findAllDescendantsByPath(String folderPath);
-
-  /**
    * 分页查询文件夹的后代节点
    *
    * @param folderPath 文件夹路径
@@ -284,18 +276,9 @@ public interface FileNodeRepository {
   long countColdNodes(LocalDateTime threshold);
 
   /**
-   * 查询全部未删除节点（用于全量索引重建等批量场景）
-   *
-   * @return 全部节点 VO 列表（含文件夹与文件）
-   * @deprecated 全量查询可能导致内存溢出，建议使用 {@link #findAllWithPage} 分页批次处理
-   */
-  @Deprecated
-  List<FileNodeVO> findAll();
-
-  /**
    * 分页查询全部未删除节点（用于全量索引重建等批量场景）
    *
-   * <p>相比 {@link #findAll()}，分页批次处理可避免一次性加载全部数据导致内存溢出。
+   * <p>相比已废弃的 {@code findAll()}，分页批次处理可避免一次性加载全部数据导致内存溢出。
    *
    * @param offset 偏移量
    * @param limit 每页数量

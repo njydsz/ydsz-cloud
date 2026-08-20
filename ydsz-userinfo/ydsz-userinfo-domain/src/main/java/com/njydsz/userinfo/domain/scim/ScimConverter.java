@@ -4,8 +4,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
-import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
+import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
@@ -91,20 +90,20 @@ public final class ScimConverter {
   }
 
   /**
-   * 将 SCIM User 资源转换为 ydsz 用户创建 DTO。
+   * 将 SCIM User 资源转换为 ydsz 用户统一 DTO。
    *
    * <p>SCIM 的 {@code userName} 映射为 {@code username}，{@code name.formatted} 映射为 {@code realName}。
    * SCIM 创建用户时不设置密码（需通过后续邀请流程设置）。
    *
    * @param scimUser SCIM User 资源，不可为 null
-   * @return 用户创建 DTO
+   * @return 用户统一 DTO（id 为 null，表示创建场景）
    */
-  public static UserAccountCreateDTO toCreateDTO(ScimUser scimUser) {
+  public static UserAccountDTO toCreateDTO(ScimUser scimUser) {
     if (scimUser == null) {
       return null;
     }
 
-    UserAccountCreateDTO dto = new UserAccountCreateDTO();
+    UserAccountDTO dto = new UserAccountDTO();
     dto.setUsername(scimUser.getUserName());
     dto.setExternalId(scimUser.getExternalId());
 
@@ -154,19 +153,19 @@ public final class ScimConverter {
   }
 
   /**
-   * 将 SCIM User 资源转换为 ydsz 用户更新 DTO。
+   * 将 SCIM User 资源转换为 ydsz 用户统一 DTO（更新场景）。
    *
    * <p>SCIM PUT 请求的语义为全量更新，所有非空字段将覆盖 ydsz 用户对应字段。
    *
    * @param scimUser SCIM User 资源（需包含 id），不可为 null
-   * @return 用户更新 DTO
+   * @return 用户统一 DTO（含 id，表示更新场景）
    */
-  public static UserAccountUpdateDTO toUpdateDTO(ScimUser scimUser) {
+  public static UserAccountDTO toUpdateDTO(ScimUser scimUser) {
     if (scimUser == null) {
       return null;
     }
 
-    UserAccountUpdateDTO dto = new UserAccountUpdateDTO();
+    UserAccountDTO dto = new UserAccountDTO();
     dto.setId(scimUser.getId());
 
     // 姓名映射

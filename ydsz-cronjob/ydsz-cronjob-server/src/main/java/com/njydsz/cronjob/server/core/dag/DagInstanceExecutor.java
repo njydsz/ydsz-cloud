@@ -753,7 +753,8 @@ public class DagInstanceExecutor {
       if (parsed != null) {
         return parsed;
       }
-    } catch (Exception ignored) {
+    } catch (Exception e) {
+      log.warn("[DagExecutor] 上下文JSON解析失败，使用空上下文: error={}", e.getMessage());
     }
     return new ObjectNode();
   }

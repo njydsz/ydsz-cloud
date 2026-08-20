@@ -79,4 +79,68 @@ public interface JobNodeMapper extends BaseMapper<JobNode> {
       "DELETE FROM ydsz_job_node "
           + "WHERE status IN ('OFFLINE', 'DRAINING') AND last_heartbeat < #{cutoff}")
   int deleteStaleOfflineNodes(@Param("cutoff") LocalDateTime cutoff);
+
+  /**
+   * 按 nodeId 更新节点记录（心跳/信息更新场景）。
+   *
+   * @param node 节点实体（node_id 为更新条件）
+   * @return 受影响行数
+   */
+  @Update(
+      "<script>UPDATE ydsz_job_node "
+          + "<set>"
+          + "<if test='appName != null'>app_name = #{appName},</if>"
+          + "<if test='host != null'>host = #{host},</if>"
+          + "<if test='port != null'>port = #{port},</if>"
+          + "<if test='lastHeartbeat != null'>last_heartbeat = #{lastHeartbeat},</if>"
+          + "<if test='runningCount != null'>running_count = #{runningCount},</if>"
+          + "<if test='cpuUsage != null'>cpu_usage = #{cpuUsage},</if>"
+          + "<if test='memUsagePct != null'>mem_usage_pct = #{memUsagePct},</if>"
+          + "<if test='status != null'>status = #{status},</if>"
+          + "</set>"
+          + "WHERE node_id = #{nodeId} AND deleted = 0"
+          + "</script>")
+  int updateByNodeId(JobNode node);
+
+  /**
+   * 更新节点心跳与运行指标。
+   *
+   * @param nodeId 节点 ID
+   * @param lastHeartbeat 心跳时间
+   * @param runningCount 运行任务数
+   * @param cpuUsage CPU 使用率
+   * @param memUsagePct 内存使用率
+   * @param status 状态
+   * @return 受影响行数
+   */
+  @Update(
+      "UPDATE ydsz_job_node "
+          + "SET last_heartbeat = #{lastHeartbeat}, running_count = #{runningCount}, "
+          + "    cpu_usage = #{cpuUsage}, mem_usage_pct = #{memUsagePct}, "
+          + "    status = #{status} "
+          + "WHERE node_id = #{nodeId} AND deleted = 0")
+  int updateHeartbeat(
+      @Param("nodeId") String nodeId,
+      @Param("lastHeartbeat") LocalDateTime lastHeartbeat,
+      @Param("runningCount") int runningCount,
+      @Param("cpuUsage") java.math.BigDecimal cpuUsage,
+      @Param("memUsagePct") java.math.BigDecimal memUsagePct,
+      @Param("status") String status);
+
+  /**
+   * 更新节点状态。
+   *
+   * @param nodeId 节点 ID
+   * @param status 目标状态
+   * @param lastHeartbeat 心跳时间
+   * @return 受影响行数
+   */
+  @Update(
+      "UPDATE ydsz_job_node "
+          + "SET status = #{status}, last_heartbeat = #{lastHeartbeat} "
+          + "WHERE node_id = #{nodeId} AND deleted = 0")
+  int updateStatus(
+      @Param("nodeId") String nodeId,
+      @Param("status") String status,
+      @Param("lastHeartbeat") LocalDateTime lastHeartbeat);
 }

@@ -98,6 +98,7 @@ public class OAuth2ApplicationController {
         statusEnum = OAuth2Application.ApplicationStatus.valueOf(status.toUpperCase());
       } catch (IllegalArgumentException e) {
         // 忽略无效的状态值
+        log.debug("[OAuth2] 忽略无效的应用状态值: status={}", status);
       }
     }
     return YdszResponse.success(applicationService.page(statusEnum, keyword, pageNum, pageSize));
@@ -135,6 +136,7 @@ public class OAuth2ApplicationController {
         statusEnum = OAuth2Application.ApplicationStatus.valueOf(dto.status().toUpperCase());
       } catch (IllegalArgumentException e) {
         // 忽略无效的状态值
+        log.debug("[OAuth2] 忽略无效的应用状态值: status={}", dto.status());
       }
     }
     return YdszResponse.success(applicationService.updateApplication(

@@ -120,6 +120,7 @@ public class SecurityAlertController {
         riskLevelEnum = SecurityAlert.RiskLevel.valueOf(riskLevel.toUpperCase());
       } catch (IllegalArgumentException e) {
         // 忽略无效的风险等级值
+        log.debug("[SecurityAlert] 忽略无效的风险等级值: riskLevel={}", riskLevel);
       }
     }
     return YdszResponse.success(alertRepository.findPendingAlerts(riskLevelEnum, limit));

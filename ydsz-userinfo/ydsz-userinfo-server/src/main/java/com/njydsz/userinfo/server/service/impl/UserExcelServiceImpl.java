@@ -18,7 +18,7 @@ import com.njydsz.common.excel.core.context.AnalysisContext;
 import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
+import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserImportResultDTO;
 import com.njydsz.userinfo.server.dto.UserImportDTO;
@@ -352,7 +352,7 @@ public class UserExcelServiceImpl implements UserExcelService {
    * @param leaderId 上级用户 ID
    */
   private void createUser(UserImportDTO importDTO, String deptId, String leaderId) {
-    UserAccountCreateDTO createDTO = new UserAccountCreateDTO();
+    UserAccountDTO createDTO = new UserAccountDTO();
     createDTO.setUsername(importDTO.getUsername());
     createDTO.setRealName(importDTO.getRealName());
     createDTO.setPassword(importDTO.getPassword());
@@ -361,6 +361,6 @@ public class UserExcelServiceImpl implements UserExcelService {
     createDTO.setDeptId(deptId);
     createDTO.setPositionCode(importDTO.getPositionCode());
     createDTO.setLeaderId(leaderId);
-    userAccountService.create(createDTO);
+    userAccountService.save(createDTO);
   }
 }

@@ -275,12 +275,6 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public List<FileNodeVO> findAllDescendantsByPath(String folderPath) {
-    return converter.fileNodeListToVO(
-        fileNodeMapper.selectAllDescendantsByPath(folderPath, TenantContextHolder.getTenantId()));
-  }
-
-  @Override
   public List<FileNodeVO> findDescendantsByPage(String folderPath, int offset, int limit) {
     if (folderPath == null || folderPath.isEmpty()) {
       return new ArrayList<>();
@@ -326,11 +320,6 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   @Override
   public long countColdNodes(LocalDateTime threshold) {
     return fileNodeMapper.countColdNodes(threshold);
-  }
-
-  @Override
-  public List<FileNodeVO> findAll() {
-    return converter.fileNodeListToVO(fileNodeMapper.selectList(null));
   }
 
   @Override

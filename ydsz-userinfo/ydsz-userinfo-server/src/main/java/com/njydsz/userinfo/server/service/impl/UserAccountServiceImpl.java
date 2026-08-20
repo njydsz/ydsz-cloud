@@ -23,9 +23,8 @@ import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
+import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
-import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserProfileUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserRoleDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
@@ -135,64 +134,59 @@ public class UserAccountServiceImpl implements UserAccountService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String create(UserAccountCreateDTO dto) {
-    if (userAccountRepository.existsByUsername(dto.getUsername())) {
-      throw new BusinessException(UserInfoExceptionCode.USERNAME_DUPLICATE);
-    }
-
-    // 密码策略校验
-    passwordPolicyValidator.validate(dto.getPassword(), dto.getUsername());
-
-    // BCrypt 加密密码（DTO 中的 plaintext 密码替换为哈希后写入 DB）
-    String passwordHash = passwordEncoder.encode(dto.getPassword());
-
-    // 设置默认值
-    if (dto.getStatus() == null) {
-      dto.setStatus(EnableStatusEnum.ENABLED);
-    }
-    if (dto.getTenantId() == null || dto.getTenantId().isBlank()) {
-      dto.setTenantId("1");
-    }
-
-    UserAccountVO vo = userAccountRepository.create(dto);
-    log.info("User created: username={}, id={}", dto.getUsername(), vo.getId());
-
-    // 记录初始密码到密码历史
-    passwordHistoryService.recordPasswordHistory(
-        vo.getId(), passwordHash, properties.getPasswordHistoryCount());
-
-    indexUpsert(vo);
-    eventPublisher.publishUserCreated(vo);
-    return vo.getId();
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @throws BusinessException 当用户不存在时时抛出
-   */
-  @Override
-  @Transactional(rollbackFor = Exception.class)
-  public boolean update(UserAccountUpdateDTO dto) {
-    UserAccountVO existing = userAccountRepository.findById(dto.getId())
-        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND));
-
-    // P1-6: 乐观锁版本回填 —— DTO 未携带版本号时使用当前版本（兼容旧调用方）
-    if (dto.getRevision() == null) {
-      dto.setRevision(existing.getRevision());
-    }
-
-    UserAccountVO vo = userAccountRepository.update(dto);
-    if (vo != null) {
-      indexUpsert(vo);
-      eventPublisher.publishUserUpdated(vo);
-      // 用户被禁用时驱逐全部会话
-      if (vo.getStatus() != null && vo.getStatus() == 0) {
-        authService.evictAllSessions(dto.getId());
-        log.info("User {} disabled, all sessions evicted", dto.getId());
+  public String save(UserAccountDTO dto) {
+    if (dto.getId() == null || dto.getId().isBlank()) {
+      // ========== 创建场景 ==========
+      if (userAccountRepository.existsByUsername(dto.getUsername())) {
+        throw new BusinessException(UserInfoExceptionCode.USERNAME_DUPLICATE);
       }
+
+      // 密码策略校验
+      passwordPolicyValidator.validate(dto.getPassword(), dto.getUsername());
+
+      // BCrypt 加密密码（DTO 中的 plaintext 密码替换为哈希后写入 DB）
+      String passwordHash = passwordEncoder.encode(dto.getPassword());
+
+      // 设置默认值
+      if (dto.getStatus() == null) {
+        dto.setStatus(EnableStatusEnum.ENABLED);
+      }
+      if (dto.getTenantId() == null || dto.getTenantId().isBlank()) {
+        dto.setTenantId("1");
+      }
+
+      UserAccountVO vo = userAccountRepository.save(dto);
+      log.info("User created: username={}, id={}", dto.getUsername(), vo.getId());
+
+      // 记录初始密码到密码历史
+      passwordHistoryService.recordPasswordHistory(
+          vo.getId(), passwordHash, properties.getPasswordHistoryCount());
+
+      indexUpsert(vo);
+      eventPublisher.publishUserCreated(vo);
+      return vo.getId();
+    } else {
+      // ========== 更新场景 ==========
+      UserAccountVO existing = userAccountRepository.findById(dto.getId())
+          .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND));
+
+      // P1-6: 乐观锁版本回填 —— DTO 未携带版本号时使用当前版本（兼容旧调用方）
+      if (dto.getRevision() == null) {
+        dto.setRevision(existing.getRevision());
+      }
+
+      UserAccountVO vo = userAccountRepository.save(dto);
+      if (vo != null) {
+        indexUpsert(vo);
+        eventPublisher.publishUserUpdated(vo);
+        // 用户被禁用时驱逐全部会话
+        if (vo.getStatus() != null && vo.getStatus() == 0) {
+          authService.evictAllSessions(dto.getId());
+          log.info("User {} disabled, all sessions evicted", dto.getId());
+        }
+      }
+      return dto.getId();
     }
-    return vo != null;
   }
 
   /**
@@ -207,14 +201,14 @@ public class UserAccountServiceImpl implements UserAccountService {
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND));
 
     // 构建更新 DTO，仅携带非空字段
-    UserAccountUpdateDTO updateDTO = new UserAccountUpdateDTO();
+    UserAccountDTO updateDTO = new UserAccountDTO();
     updateDTO.setId(userId);
     updateDTO.setRealName(dto.getRealName());
     updateDTO.setPhone(dto.getPhone());
     updateDTO.setEmail(dto.getEmail());
     updateDTO.setAvatar(dto.getAvatar());
 
-    UserAccountVO vo = userAccountRepository.update(updateDTO);
+    UserAccountVO vo = userAccountRepository.save(updateDTO);
     if (vo != null) {
       indexUpsert(vo);
       eventPublisher.publishUserUpdated(vo);

@@ -16,7 +16,7 @@ import com.njydsz.userinfo.domain.dto.AccountUnlockDTO;
 import com.njydsz.userinfo.domain.dto.ForgotPasswordDTO;
 import com.njydsz.userinfo.domain.dto.SelfRegisterDTO;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
+import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
@@ -111,8 +111,8 @@ public class SelfServiceServiceImpl implements SelfServiceService {
 
     // 4. 创建用户（启用状态，默认租户）
     String passwordHash = passwordEncoder.encode(dto.getPassword());
-    UserAccountCreateDTO createDTO = buildCreateDTO(dto, passwordHash);
-    UserAccountVO createdUser = userAccountRepository.create(createDTO);
+    UserAccountDTO createDTO = buildCreateDTO(dto, passwordHash);
+    UserAccountVO createdUser = userAccountRepository.save(createDTO);
     log.info("用户自助注册成功: userId={}, username={}", createdUser.getId(), createdUser.getUsername());
 
     // 5. 记录初始密码到历史（防重用）
@@ -241,8 +241,8 @@ public class SelfServiceServiceImpl implements SelfServiceService {
    * @param passwordHash 密码哈希
    * @return 用户创建 DTO
    */
-  private UserAccountCreateDTO buildCreateDTO(SelfRegisterDTO dto, String passwordHash) {
-    UserAccountCreateDTO createDTO = new UserAccountCreateDTO();
+  private UserAccountDTO buildCreateDTO(SelfRegisterDTO dto, String passwordHash) {
+    UserAccountDTO createDTO = new UserAccountDTO();
     createDTO.setUsername(dto.getUsername());
     createDTO.setPassword(passwordHash);
     createDTO.setRealName(dto.getRealName());

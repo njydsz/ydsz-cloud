@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
+import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.scim.ScimEmail;
 import com.njydsz.userinfo.domain.scim.ScimPatchOp;
@@ -81,7 +81,7 @@ public class ScimPatchHandler {
       throw new BusinessException(UserInfoExceptionCode.SCIM_USER_NOT_FOUND);
     }
 
-    UserAccountUpdateDTO updateDTO = new UserAccountUpdateDTO();
+    UserAccountDTO updateDTO = new UserAccountDTO();
     updateDTO.setId(userId);
     boolean hasChanges = false;
 
@@ -95,7 +95,7 @@ public class ScimPatchHandler {
 
     // 执行更新
     if (hasChanges) {
-      userAccountService.update(updateDTO);
+      userAccountService.save(updateDTO);
       log.info("SCIM PATCH applied: userId={}, operations={}", userId, patchOp.getOperations().size());
     }
 
@@ -114,7 +114,7 @@ public class ScimPatchHandler {
    * @throws BusinessException 操作类型不支持或路径无法解析时抛出
    */
   private boolean applyOperation(
-      UserAccountUpdateDTO updateDTO,
+      UserAccountDTO updateDTO,
       ScimPatchOp.ScimPatchOperation operation,
       UserAccountVO currentUser) {
     String op = operation.getOp() != null ? operation.getOp().toLowerCase() : null;
@@ -142,7 +142,7 @@ public class ScimPatchHandler {
    * @param value 操作值（应为 Map 结构）
    * @return true 表示有实际变更
    */
-  private boolean applyWholeResource(UserAccountUpdateDTO updateDTO, String op, Object value) {
+  private boolean applyWholeResource(UserAccountDTO updateDTO, String op, Object value) {
     if ("replace".equals(op) && value instanceof Map<?, ?> mapValue) {
       // 全量替换语义：遍历 Map 中的每个字段
       boolean changed = false;
@@ -167,7 +167,7 @@ public class ScimPatchHandler {
    * @return true 表示有实际变更
    */
   private boolean applyAttributeUpdate(
-      UserAccountUpdateDTO updateDTO,
+      UserAccountDTO updateDTO,
       String op,
       String path,
       Object value,
@@ -206,7 +206,7 @@ public class ScimPatchHandler {
    * @return true 表示有实际变更
    */
   private boolean applyFilteredUpdate(
-      UserAccountUpdateDTO updateDTO,
+      UserAccountDTO updateDTO,
       String op,
       Matcher matcher,
       Object value,
@@ -237,7 +237,7 @@ public class ScimPatchHandler {
    * @return true 表示有实际变更
    */
   private boolean applySimpleUpdate(
-      UserAccountUpdateDTO updateDTO, String op, String fieldName, Object value) {
+      UserAccountDTO updateDTO, String op, String fieldName, Object value) {
     return switch (op) {
       case "add", "replace" -> setAttribute(updateDTO, fieldName, value, true);
       case "remove" -> setAttribute(updateDTO, fieldName, null, false);
@@ -255,7 +255,7 @@ public class ScimPatchHandler {
    * @return true 表示有实际变更
    */
   private boolean applyEmailUpdate(
-      UserAccountUpdateDTO updateDTO, String op, Object value, UserAccountVO currentUser) {
+      UserAccountDTO updateDTO, String op, Object value, UserAccountVO currentUser) {
     return switch (op) {
       case "add", "replace" -> {
         if (value instanceof String email) {
@@ -288,7 +288,7 @@ public class ScimPatchHandler {
    * @return true 表示有实际变更
    */
   private boolean applyPhoneUpdate(
-      UserAccountUpdateDTO updateDTO, String op, Object value, UserAccountVO currentUser) {
+      UserAccountDTO updateDTO, String op, Object value, UserAccountVO currentUser) {
     return switch (op) {
       case "add", "replace" -> {
         if (value instanceof String phone) {
@@ -319,7 +319,7 @@ public class ScimPatchHandler {
    * @param value 操作值
    * @return true 表示有实际变更
    */
-  private boolean applyActiveUpdate(UserAccountUpdateDTO updateDTO, String op, Object value) {
+  private boolean applyActiveUpdate(UserAccountDTO updateDTO, String op, Object value) {
     if ("add".equals(op) || "replace".equals(op)) {
       if (value instanceof Boolean active) {
         updateDTO.setStatus(
@@ -348,7 +348,7 @@ public class ScimPatchHandler {
    * @return true 表示有实际变更
    */
   private boolean setAttribute(
-      UserAccountUpdateDTO updateDTO, String fieldName, Object value, boolean isReplace) {
+      UserAccountDTO updateDTO, String fieldName, Object value, boolean isReplace) {
     String strValue = value != null ? value.toString() : null;
     return switch (fieldName) {
       // username 创建后不可修改（返回 false 表示忽略）

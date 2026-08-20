@@ -1,7 +1,11 @@
 package com.njydsz.cronjob.domain.repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+
+import com.njydsz.cronjob.domain.vo.JobNodeVO;
 
 /**
  * 调度节点 Repository（domain 层契约）。
@@ -58,4 +62,56 @@ public interface JobNodeRepository {
    * @return 节点列表
    */
   List<JobNodeVO> findByStatus(String status);
+
+  /**
+   * 根据节点 ID 查询节点。
+   *
+   * @param nodeId 节点 ID
+   * @return 节点 VO
+   */
+  Optional<JobNodeVO> findById(String nodeId);
+
+  /**
+   * 插入新节点记录。
+   *
+   * @param node 节点 VO
+   */
+  void insert(JobNodeVO node);
+
+  /**
+   * 更新节点记录（按 nodeId 匹配）。
+   *
+   * @param node 节点 VO
+   * @return 受影响行数
+   */
+  int updateByNodeId(JobNodeVO node);
+
+  /**
+   * 更新节点心跳与运行指标。
+   *
+   * @param nodeId 节点 ID
+   * @param lastHeartbeat 最后心跳时间
+   * @param runningCount 运行中任务数
+   * @param cpuUsage CPU 使用率
+   * @param memUsagePct 内存使用率
+   * @param status 节点状态
+   * @return 受影响行数
+   */
+  int updateHeartbeat(
+      String nodeId,
+      LocalDateTime lastHeartbeat,
+      int runningCount,
+      BigDecimal cpuUsage,
+      BigDecimal memUsagePct,
+      String status);
+
+  /**
+   * 更新节点状态。
+   *
+   * @param nodeId 节点 ID
+   * @param status 目标状态
+   * @param lastHeartbeat 最后心跳时间
+   * @return 受影响行数
+   */
+  int updateStatus(String nodeId, String status, LocalDateTime lastHeartbeat);
 }

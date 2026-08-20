@@ -1,7 +1,9 @@
 package com.njydsz.cronjob.infra.repository.impl;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -64,5 +66,43 @@ public class JobNodeRepositoryImpl implements JobNodeRepository {
       wrapper.eq(JobNode::getStatus, status);
     }
     return converter.jobNodeListToVO(jobNodeMapper.selectList(wrapper));
+  }
+
+  @Override
+  public Optional<JobNodeVO> findById(String nodeId) {
+    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobNode> wrapper =
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    wrapper.eq(JobNode::getNodeId, nodeId);
+    JobNode entity = jobNodeMapper.selectOne(wrapper);
+    return Optional.ofNullable(converter.entityToVO(entity));
+  }
+
+  @Override
+  public void insert(JobNodeVO node) {
+    JobNode entity = converter.voToEntity(node);
+    jobNodeMapper.insert(entity);
+  }
+
+  @Override
+  public int updateByNodeId(JobNodeVO node) {
+    JobNode entity = converter.voToEntity(node);
+    return jobNodeMapper.updateByNodeId(entity);
+  }
+
+  @Override
+  public int updateHeartbeat(
+      String nodeId,
+      LocalDateTime lastHeartbeat,
+      int runningCount,
+      BigDecimal cpuUsage,
+      BigDecimal memUsagePct,
+      String status) {
+    return jobNodeMapper.updateHeartbeat(
+        nodeId, lastHeartbeat, runningCount, cpuUsage, memUsagePct, status);
+  }
+
+  @Override
+  public int updateStatus(String nodeId, String status, LocalDateTime lastHeartbeat) {
+    return jobNodeMapper.updateStatus(nodeId, status, lastHeartbeat);
   }
 }

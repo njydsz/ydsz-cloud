@@ -6,7 +6,6 @@ import java.util.Map;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
 import com.njydsz.workflow.domain.vo.FlowCcVO;
-import com.njydsz.workflow.infra.entity.FlowCcDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 
 /**
@@ -64,7 +63,7 @@ public interface FlowCcService {
    *         <li>user: 前缀 → 直接取用户 ID
    *         <li>role:/dept: 前缀 → 通过 assigneeResolver.expandUsers() 展开为用户列表
    *       </ul>
-   *   <li>为每个 userId 写入一条 FlowCcDO（ccType=CC_NODE, readStatus=UNREAD）
+   * <li>为每个 userId 写入一条 FlowCcVO（ccType=CC_NODE, readStatus=UNREAD）
    * </ol>
    *
    * @param instanceId 流程实例 ID
@@ -81,7 +80,7 @@ public interface FlowCcService {
    * @param query 查询条件 DTO
    * @return 抄送记录列表
    */
-  List<FlowCcDO> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query);
+  List<FlowCcVO> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query);
 
   /**
    * 查"抄送我的"总数（便捷方法，使用 DTO 参数）
@@ -141,5 +140,5 @@ public interface FlowCcService {
    * @param tenantId 租户 ID
    * @return 抄送记录列表
    */
-  List<FlowCcDO> listByInstance(String instanceId, String tenantId);
+  List<FlowCcVO> listByInstance(String instanceId, String tenantId);
 }

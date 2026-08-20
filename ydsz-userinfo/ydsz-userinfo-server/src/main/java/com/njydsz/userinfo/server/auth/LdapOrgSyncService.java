@@ -25,10 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.core.DistributedLocker;
-import com.njydsz.userinfo.domain.dto.DepartmentCreateDTO;
-import com.njydsz.userinfo.domain.dto.DepartmentUpdateDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
-import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
+import com.njydsz.userinfo.domain.dto.DepartmentDTO;
+import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.dto.UserDeptDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -243,24 +241,24 @@ public class LdapOrgSyncService {
         Optional<DepartmentVO> existing = departmentRepository.findByDeptCode(deptCode);
         if (existing.isPresent()) {
           // 更新现有部门
-          DepartmentUpdateDTO updateDTO = new DepartmentUpdateDTO();
+          DepartmentDTO updateDTO = new DepartmentDTO();
           updateDTO.setId(existing.get().getId());
           updateDTO.setDeptName(ldapDept.ou());
           updateDTO.setDescription(ldapDept.description());
           updateDTO.setParentId(parentId);
-          departmentRepository.update(updateDTO);
+          departmentRepository.save(updateDTO);
           dnToDeptId.put(ldapDept.dn(), existing.get().getId());
           updated++;
           log.debug("Department updated: code={}, id={}", deptCode, existing.get().getId());
         } else {
           // 创建新部门
-          DepartmentCreateDTO createDTO = new DepartmentCreateDTO();
+          DepartmentDTO createDTO = new DepartmentDTO();
           createDTO.setDeptCode(deptCode);
           createDTO.setDeptName(ldapDept.ou());
           createDTO.setDescription(ldapDept.description());
           createDTO.setParentId(parentId);
           createDTO.setStatus(EnableStatusEnum.ENABLED.name());
-          DepartmentVO vo = departmentRepository.create(createDTO);
+          DepartmentVO vo = departmentRepository.save(createDTO);
           dnToDeptId.put(ldapDept.dn(), vo.getId());
           created++;
           log.info("Department created: code={}, id={}", deptCode, vo.getId());
@@ -316,18 +314,18 @@ public class LdapOrgSyncService {
         Optional<UserAccountVO> existing = userAccountRepository.findByUsername(user.username());
         if (existing.isPresent()) {
           // 更新现有用户
-          UserAccountUpdateDTO updateDTO = new UserAccountUpdateDTO();
+          UserAccountDTO updateDTO = new UserAccountDTO();
           updateDTO.setId(existing.get().getId());
           updateDTO.setRealName(user.realName());
           updateDTO.setEmail(user.email());
           updateUserDepartment(existing.get().getId(), user);
-          userAccountRepository.update(updateDTO);
+          userAccountRepository.save(updateDTO);
           updated++;
           log.debug("User updated: username={}, id={}", user.username(), existing.get().getId());
         } else {
           // 创建新用户
-          UserAccountCreateDTO createDTO = buildUserCreateDTO(user);
-          UserAccountVO vo = userAccountRepository.create(createDTO);
+          UserAccountDTO createDTO = buildUserCreateDTO(user);
+          UserAccountVO vo = userAccountRepository.save(createDTO);
           linkUserToDepartment(vo.getId(), user);
           created++;
           log.info("User created: username={}, id={}", user.username(), vo.getId());
@@ -442,8 +440,8 @@ public class LdapOrgSyncService {
    * @param ldapUser LDAP 用户
    * @return 用户创建 DTO
    */
-  private UserAccountCreateDTO buildUserCreateDTO(LdapUser ldapUser) {
-    UserAccountCreateDTO dto = new UserAccountCreateDTO();
+  private UserAccountDTO buildUserCreateDTO(LdapUser ldapUser) {
+    UserAccountDTO dto = new UserAccountDTO();
     dto.setUsername(ldapUser.username());
     dto.setRealName(ldapUser.realName());
     dto.setEmail(ldapUser.email());
