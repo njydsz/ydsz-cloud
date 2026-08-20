@@ -16,11 +16,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-workflow-domain</artifactId>
         </dependency>
-        <!-- ydsz-workflow-infra: entity 与 mapper（单元测试引用 FlowNodeDO/FlowSkipDO） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-workflow-infra</artifactId>
-        </dependency>
+        <!-- P1-2: 移除 server 对 infra 的直接依赖，符合 DDD 分层（server 仅依赖 domain，infra 由 web 层引入并通过 Spring 自动装配注入 Repository 实现） -->
         <!-- P2-3: 显式声明 common-util（多文件使用 FileTypeUtils/DateUtils 等工具类） -->
         <dependency>
             <groupId>com.njydsz</groupId>

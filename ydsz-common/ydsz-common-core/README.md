@@ -189,7 +189,7 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | `constant` | `HeaderConstants` | 统一 HTTP 请求头常量（认证入口、幂等、链路追踪、网络信息） |
 | `constant` | `DataScopeConstants` | 数据权限范围常量 |
 | `config` | `CoreAutoConfiguration` | Spring Boot 自动配置入口，注册 springMessageResolver、pageConstantsInitializer |
-| `config` | `CoreProperties` | 配置属性绑定（`@ConfigurationProperties("ydsz.core")`） |
+| `config` | `CoreProperties` | 配置属性绑定（`@ConfigurationProperties("ydsz.core")`），含 `feature-flags` 映射支持 |
 | `config` | `SpringMessageResolver` | Spring MessageSource 适配器，将 i18n 解析绑定到 YdszResponse |
 
 ---

@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,9 +15,9 @@ import org.springframework.stereotype.Service;
 import com.njydsz.message.domain.dto.ChannelStatsVO;
 import com.njydsz.message.domain.dto.CostStatsVO;
 import com.njydsz.message.domain.dto.FunnelStatsVO;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageStatsVO;
 import com.njydsz.message.domain.dto.ReceiptStatsVO;
-import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageChannelEnum;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
@@ -141,38 +140,32 @@ public class MessageStatsServiceImpl implements MessageStatsService {
 
   /** 按状态统计数量（带时间范围）。 */
   private long countByStatus(MessageStatusEnum status, LocalDateTime start, LocalDateTime end) {
-    Long count =
-        msgLogRepository.selectCount(
-            new LambdaQueryWrapper<MsgLog>()
-                .eq(MsgLog::getStatus, status.name())
-                .ge(MsgLog::getCreatedAt, start)
-                .le(MsgLog::getCreatedAt, end));
-    return count == null ? 0L : count;
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setStatus(status.name());
+    query.setStartTime(start.toString());
+    query.setEndTime(end.toString());
+    return msgLogRepository.count(query);
   }
 
   /** 按状态 + 通道统计数量（带时间范围）。 */
   private long countByStatusAndChannel(
       MessageStatusEnum status, String channel, LocalDateTime start, LocalDateTime end) {
-    Long count =
-        msgLogRepository.selectCount(
-            new LambdaQueryWrapper<MsgLog>()
-                .eq(MsgLog::getStatus, status.name())
-                .eq(MsgLog::getChannel, channel)
-                .ge(MsgLog::getCreatedAt, start)
-                .le(MsgLog::getCreatedAt, end));
-    return count == null ? 0L : count;
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setStatus(status.name());
+    query.setChannel(channel);
+    query.setStartTime(start.toString());
+    query.setEndTime(end.toString());
+    return msgLogRepository.count(query);
   }
 
   /** 按回执状态统计数量（带时间范围）。 */
   private long countByReceiptStatus(
       ReceiptStatusEnum status, LocalDateTime start, LocalDateTime end) {
-    Long count =
-        msgLogRepository.selectCount(
-            new LambdaQueryWrapper<MsgLog>()
-                .eq(MsgLog::getReceiptStatus, status.name())
-                .ge(MsgLog::getCreatedAt, start)
-                .le(MsgLog::getCreatedAt, end));
-    return count == null ? 0L : count;
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setReceiptStatus(status.name());
+    query.setStartTime(start.toString());
+    query.setEndTime(end.toString());
+    return msgLogRepository.count(query);
   }
 
   @Override
@@ -254,13 +247,12 @@ public class MessageStatsServiceImpl implements MessageStatsService {
       String channel = entry.getKey();
       BigDecimal unitPrice = entry.getValue();
       // 统计该通道 SUCCESS 消息数
-      LambdaQueryWrapper<MsgLog> w = new LambdaQueryWrapper<>();
-      w.eq(MsgLog::getChannel, channel);
-      w.eq(MsgLog::getStatus, MessageStatusEnum.SUCCESS.name());
-      w.ge(MsgLog::getCreatedAt, actualStart);
-      w.le(MsgLog::getCreatedAt, actualEnd);
-      Long count = msgLogRepository.selectCount(w);
-      long msgCount = count == null ? 0L : count;
+      MessageLogQueryDTO query = new MessageLogQueryDTO();
+      query.setChannel(channel);
+      query.setStatus(MessageStatusEnum.SUCCESS.name());
+      query.setStartTime(actualStart.toString());
+      query.setEndTime(actualEnd.toString());
+      long msgCount = msgLogRepository.count(query);
 
       BigDecimal channelCost = unitPrice.multiply(BigDecimal.valueOf(msgCount));
 
@@ -284,11 +276,11 @@ public class MessageStatsServiceImpl implements MessageStatsService {
   /**
    * P2-2: 漏斗通用计数查询。
    *
-   * <p>按 status（精确）或 receiptStatus（IN 集合）过滤,同时支持可选的 channel / templateCode 维度过滤。 status 与
+   * <p>按 status（精确）或 receiptStatusList（多值）过滤,同时支持可选的 channel / templateCode 维度过滤。 status 与
    * receiptStatusList 互斥：status 非空时按 status 查,否则按 receiptStatusList 查。
    *
    * @param status 发送状态（非空时按此过滤）
-   * @param receiptStatusList 回执状态集合（status 为空时按此 IN 过滤）
+   * @param receiptStatusList 回执状态集合（status 为空时按此查）
    * @param channel 通道过滤（可选）
    * @param templateCode 模板编码过滤（可选）
    * @param start 起始时间
@@ -302,22 +294,40 @@ public class MessageStatsServiceImpl implements MessageStatsService {
       String templateCode,
       LocalDateTime start,
       LocalDateTime end) {
-    LambdaQueryWrapper<MsgLog> w = new LambdaQueryWrapper<>();
+    // status 优先
     if (status != null) {
-      w.eq(MsgLog::getStatus, status);
-    } else if (receiptStatusList != null && !receiptStatusList.isEmpty()) {
-      w.in(MsgLog::getReceiptStatus, receiptStatusList);
+      MessageLogQueryDTO query = new MessageLogQueryDTO();
+      query.setStatus(status);
+      if (channel != null && !channel.isBlank()) {
+        query.setChannel(channel);
+      }
+      if (templateCode != null && !templateCode.isBlank()) {
+        // templateCode 通过 keyword 模糊匹配
+        query.setKeyword(templateCode);
+      }
+      query.setStartTime(start.toString());
+      query.setEndTime(end.toString());
+      return msgLogRepository.count(query);
     }
-    if (channel != null && !channel.isBlank()) {
-      w.eq(MsgLog::getChannel, channel);
+    // receiptStatusList 需要逐项查询后累加（因为 DTO 只支持单值）
+    if (receiptStatusList != null && !receiptStatusList.isEmpty()) {
+      long total = 0;
+      for (String rs : receiptStatusList) {
+        MessageLogQueryDTO query = new MessageLogQueryDTO();
+        query.setReceiptStatus(rs);
+        if (channel != null && !channel.isBlank()) {
+          query.setChannel(channel);
+        }
+        if (templateCode != null && !templateCode.isBlank()) {
+          query.setKeyword(templateCode);
+        }
+        query.setStartTime(start.toString());
+        query.setEndTime(end.toString());
+        total += msgLogRepository.count(query);
+      }
+      return total;
     }
-    if (templateCode != null && !templateCode.isBlank()) {
-      w.eq(MsgLog::getTemplateCode, templateCode);
-    }
-    w.ge(MsgLog::getCreatedAt, start);
-    w.le(MsgLog::getCreatedAt, end);
-    Long count = msgLogRepository.selectCount(w);
-    return count == null ? 0L : count;
+    return 0;
   }
 
   /** 规范化时间范围：start 为 null 时取 24h 前，end 为 null 时取当前时间。 */
