@@ -15,7 +15,7 @@ import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
-import com.njydsz.literule.infra.excel.DecisionTableExcelExporter;
+import com.njydsz.literule.domain.service.DecisionTableExcelService;
 import com.njydsz.literule.server.impl.DecisionTableRule;
 import com.njydsz.literule.server.spi.DecisionTableConfigProvider;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
@@ -37,8 +37,8 @@ public class DecisionTableAdminService {
   private RuleConfigBroadcaster broadcaster;
   private String nodeId;
 
-  /** Excel 导入导出器（懒加载，避免 POI 不在 classpath 时初始化失败） */
-  private DecisionTableExcelExporter excelExporter;
+  /** Excel 导入导出服务（懒加载，避免 POI 不在 classpath 时初始化失败） */
+  private DecisionTableExcelService excelService;
 
   public DecisionTableAdminService(
       RuleEngine ruleEngine,
@@ -134,7 +134,7 @@ public class DecisionTableAdminService {
     if (def == null) {
       throw new IllegalArgumentException("决策表不存在: " + tableCode);
     }
-    byte[] bytes = getExcelExporter().exportToExcel(def);
+    byte[] bytes = getExcelService().exportToExcel(def);
     log.info("[LiteRule-DecisionTable] 决策表已导出 Excel: code={}, bytes={}", tableCode, bytes.length);
     return bytes;
   }
@@ -148,7 +148,7 @@ public class DecisionTableAdminService {
    * @throws IllegalArgumentException 导入失败
    */
   public DecisionTableDefinition importExcel(byte[] excelBytes, String operator) {
-    DecisionTableDefinition def = getExcelExporter().importFromExcel(excelBytes);
+    DecisionTableDefinition def = getExcelService().importFromExcel(excelBytes);
     DecisionTableDefinition saved = save(def, operator, "Excel 导入决策表");
     log.info(
         "[LiteRule-DecisionTable] 决策表已导入 Excel: code={}, operator={}",
@@ -163,17 +163,17 @@ public class DecisionTableAdminService {
    * @return xlsx 字节数组
    */
   public byte[] exportExcelTemplate() {
-    byte[] bytes = getExcelExporter().exportTemplate();
+    byte[] bytes = getExcelService().exportTemplate();
     log.info("[LiteRule-DecisionTable] Excel 模板已导出, bytes={}", bytes.length);
     return bytes;
   }
 
-  /** 获取 Excel 导入导出器（懒加载） */
-  private DecisionTableExcelExporter getExcelExporter() {
-    if (excelExporter == null) {
-      excelExporter = new DecisionTableExcelExporter();
+  /** 获取 Excel 导入导出服务（懒加载） */
+  private DecisionTableExcelService getExcelService() {
+    if (excelService == null) {
+      excelService = new com.njydsz.literule.infra.excel.DecisionTableExcelExporter();
     }
-    return excelExporter;
+    return excelService;
   }
 
   private void validate(DecisionTableDefinition def) {

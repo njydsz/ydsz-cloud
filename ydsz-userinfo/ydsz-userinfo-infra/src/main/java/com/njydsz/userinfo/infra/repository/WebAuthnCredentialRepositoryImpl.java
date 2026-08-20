@@ -1,9 +1,11 @@
 package com.njydsz.userinfo.infra.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -32,7 +34,7 @@ public class WebAuthnCredentialRepositoryImpl implements WebAuthnCredentialRepos
   private final WebAuthnCredentialConverter webAuthnCredentialConverter;
 
   @Override
-  public Optional<WebAuthnCredentialVO> findById(String credentialId) {
+  public Optional<WebAuthnCredentialVO> findByCredentialId(String credentialId) {
     LambdaQueryWrapper<WebAuthnCredentialDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(WebAuthnCredentialDO::getCredentialId, credentialId);
     WebAuthnCredentialDO entity = mapper.selectOne(wrapper);
@@ -59,9 +61,39 @@ public class WebAuthnCredentialRepositoryImpl implements WebAuthnCredentialRepos
   }
 
   @Override
-  public void deleteByCredentialId(String credentialId) {
+  public void updateSignCount(String credentialId, long signCount) {
+    LambdaUpdateWrapper<WebAuthnCredentialDO> wrapper = new LambdaUpdateWrapper<>();
+    wrapper.eq(WebAuthnCredentialDO::getCredentialId, credentialId)
+        .set(WebAuthnCredentialDO::getSignCount, signCount);
+    mapper.update(null, wrapper);
+  }
+
+  @Override
+  public void updateLastUsedAt(String credentialId, LocalDateTime lastUsedAt) {
+    LambdaUpdateWrapper<WebAuthnCredentialDO> wrapper = new LambdaUpdateWrapper<>();
+    wrapper.eq(WebAuthnCredentialDO::getCredentialId, credentialId)
+        .set(WebAuthnCredentialDO::getLastUsedAt, lastUsedAt);
+    mapper.update(null, wrapper);
+  }
+
+  @Override
+  public boolean deleteByCredentialId(String credentialId) {
     LambdaQueryWrapper<WebAuthnCredentialDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(WebAuthnCredentialDO::getCredentialId, credentialId);
-    mapper.delete(wrapper);
+    return mapper.delete(wrapper) > 0;
+  }
+
+  @Override
+  public int deleteByUserId(String userId) {
+    LambdaQueryWrapper<WebAuthnCredentialDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(WebAuthnCredentialDO::getUserId, userId);
+    return mapper.delete(wrapper);
+  }
+
+  @Override
+  public long countByUserId(String userId) {
+    LambdaQueryWrapper<WebAuthnCredentialDO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(WebAuthnCredentialDO::getUserId, userId);
+    return mapper.selectCount(wrapper);
   }
 }

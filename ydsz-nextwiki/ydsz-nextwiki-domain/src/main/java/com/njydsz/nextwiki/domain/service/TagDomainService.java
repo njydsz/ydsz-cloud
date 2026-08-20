@@ -42,11 +42,12 @@ public class TagDomainService {
       throw new BusinessException(NextwikiExceptionCode.TAG_NAME_EMPTY);
     }
 
-    TagVO tag = new TagVO();
-    tag.setId(String.valueOf(snowflakeIdGenerator.nextId()));
-    tag.setName(name.trim());
-    tag.setColor(color);
-    tag.setCreatedBy(userId);
+    TagVO tag = TagVO.builder()
+        .id(String.valueOf(snowflakeIdGenerator.nextId()))
+        .name(name.trim())
+        .color(color)
+        .createdBy(userId)
+        .build();
     return tag;
   }
 
@@ -60,8 +61,8 @@ public class TagDomainService {
    */
   public FileTagDTO buildFileTag(String fileId, String tagId, String userId) {
     FileTagDTO fileTag = new FileTagDTO();
-    fileTag.setId(snowflakeIdGenerator.nextId());
-    fileTag.setFileId(fileId);
+    fileTag.setId(String.valueOf(snowflakeIdGenerator.nextId()));
+    fileTag.setFileNodeId(fileId);
     fileTag.setTagId(tagId);
     fileTag.setCreatedBy(userId);
     return fileTag;

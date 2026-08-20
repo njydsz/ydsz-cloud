@@ -14,6 +14,7 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.exception.ExcelWriteException;
 import com.njydsz.literule.api.DecisionTableDefinition;
 import com.njydsz.literule.api.HitPolicy;
+import com.njydsz.literule.domain.service.DecisionTableExcelService;
 
 /**
  * 决策表 Excel 导入导出器（P0-3）
@@ -55,7 +56,7 @@ import com.njydsz.literule.api.HitPolicy;
  * @since 1.0.0
  */
 @Slf4j
-public class DecisionTableExcelExporter {
+public class DecisionTableExcelExporter implements DecisionTableExcelService {
 
   /** 元数据行数（HitPolicy/TableCode 等占 2 行） */
   private static final int METADATA_ROWS = 2;

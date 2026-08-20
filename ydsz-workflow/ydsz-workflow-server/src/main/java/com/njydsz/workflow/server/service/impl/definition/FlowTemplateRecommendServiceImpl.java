@@ -12,10 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowTemplateRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowTemplateDO;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowTemplateMapper;
 import com.njydsz.workflow.server.service.FlowTemplateRecommendService;
 
 /**
@@ -33,8 +34,9 @@ import com.njydsz.workflow.server.service.FlowTemplateRecommendService;
 @RequiredArgsConstructor
 public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendService {
 
-  private final FlowTemplateMapper templateMapper;
-  private final FlowInstanceMapper instanceMapper;
+  private final FlowTemplateRepository templateRepository;
+  private final FlowInstanceRepository instanceRepository;
+  private final WorkflowConverter converter;
 
   /** 业务类型到模板分类的映射 */
   private static final Map<String, String> BUSINESS_CATEGORY_MAP = new LinkedHashMap<>();
@@ -63,7 +65,9 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
     int limit = Math.min(topN, 10);
 
     // 1. 获取全部模板（最新版本）
-    List<FlowTemplateDO> allTemplates = templateMapper.selectByCategory(null);
+    List<FlowTemplateDO> allTemplates = templateRepository.findLatestByCategory(null).stream()
+        .map(converter::entityToDO)
+        .toList();
     if (allTemplates == null || allTemplates.isEmpty()) {
       return List.of();
     }
@@ -71,7 +75,9 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
     // 2. 获取用户历史发起记录
     Map<String, Integer> userFlowCount = new LinkedHashMap<>();
     try {
-      List<FlowInstanceDO> instances = instanceMapper.selectByInitiator(userId, null);
+      List<FlowInstanceDO> instances = instanceRepository.selectByInitiator(userId, null).stream()
+          .map(converter::entityToDO)
+          .toList();
       if (instances != null) {
         for (FlowInstanceDO inst : instances) {
           String flowCode = inst.getFlowCode();
@@ -148,10 +154,14 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
             businessType != null ? businessType.toUpperCase() : "", "GENERAL");
 
     // 获取该分类的模板
-    List<FlowTemplateDO> templates = templateMapper.selectByCategory(targetCategory);
-    if (templates == null || templates.isEmpty()) {
+    List<FlowTemplateDO> templates = templateRepository.findLatestByCategory(targetCategory).stream()
+        .map(converter::entityToDO)
+        .toList();
+    if (templates.isEmpty()) {
       // 兜底：返回全部模板
-      templates = templateMapper.selectByCategory(null);
+      templates = templateRepository.findLatestByCategory(null).stream()
+          .map(converter::entityToDO)
+          .toList();
       if (templates == null || templates.isEmpty()) {
         return List.of();
       }

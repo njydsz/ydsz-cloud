@@ -126,7 +126,7 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
         .eq(SocialClientDO::getDeleted, false);
     SocialClientDO entity = mapper.selectOne(wrapper);
     if (entity != null) {
-      entity.setDeleted(true);
+      entity.setDeleted(1);
       mapper.updateById(entity);
       log.info("社交平台客户端配置已删除: platform={}", platform);
     }

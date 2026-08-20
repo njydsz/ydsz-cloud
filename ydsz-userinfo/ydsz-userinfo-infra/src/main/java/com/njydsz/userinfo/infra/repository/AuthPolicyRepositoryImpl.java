@@ -121,7 +121,7 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
     String tid = (tenantId == null || tenantId.isBlank()) ? null : tenantId;
     AuthPolicyDO entity = mapper.selectByTenantId(tid);
     if (entity != null) {
-      entity.setDeleted(true);
+      entity.setDeleted(1);
       mapper.updateById(entity);
       log.info("认证策略已删除: tenantId={}", tenantId);
     }

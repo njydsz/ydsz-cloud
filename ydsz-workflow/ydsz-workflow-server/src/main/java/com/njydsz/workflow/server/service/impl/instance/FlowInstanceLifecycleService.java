@@ -52,7 +52,6 @@ import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
@@ -169,9 +168,6 @@ public class FlowInstanceLifecycleService {
    * P0-4: 跨服务名称解析门面，用于读路径兜底富化 initiatorName。
    */
   private final NameAssembler nameAssembler;
-
-  /** 流程实例 Mapper，负责 ydsz_flow_instance 表的增删改查 */
-  private final FlowInstanceMapper instanceMapper;
 
   // ============================== 生命周期操作 ==============================
 
@@ -599,13 +595,8 @@ public class FlowInstanceLifecycleService {
         terminateInstance(instanceId, reason);
         count++;
         // 级联终止子流程实例
-        // 保留 Mapper：复杂 LambdaQueryWrapper 查询（含 flowStatus 过滤），Repository 暂无等价方法
-        List<FlowInstanceDO> children =
-            instanceMapper.selectList(
-                new LambdaQueryWrapper<FlowInstanceDO>()
-                    .eq(FlowInstanceDO::getParentInstanceId, instanceId)
-                    .eq(FlowInstanceDO::getFlowStatus, FlowInstanceStatus.RUNNING.name()));
-        for (FlowInstanceDO child : children) {
+        List<FlowInstanceVO> children = instanceRepository.findRunningChildrenByParentId(instanceId);
+        for (FlowInstanceVO child : children) {
           try {
             terminateInstance(child.getId(), "级联终止: " + reason);
             count++;

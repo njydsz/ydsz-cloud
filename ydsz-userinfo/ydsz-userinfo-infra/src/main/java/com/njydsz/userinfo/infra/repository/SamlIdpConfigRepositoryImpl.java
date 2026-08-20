@@ -124,7 +124,7 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
         .eq(SamlIdpConfigDO::getDeleted, false);
     SamlIdpConfigDO entity = mapper.selectOne(wrapper);
     if (entity != null) {
-      entity.setDeleted(true);
+      entity.setDeleted(1);
       mapper.updateById(entity);
       log.info("SAML IdP 配置已删除: entityId={}", entityId);
     }

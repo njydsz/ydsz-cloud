@@ -3,7 +3,7 @@ package com.njydsz.literule.server.spi;
 import java.util.List;
 
 import com.njydsz.literule.api.RuleDefinition;
-import com.njydsz.literule.infra.entity.RuleTemplate;
+import com.njydsz.literule.domain.vo.RuleTemplateVO;
 
 /**
  * 规则模板提供者 SPI
@@ -23,7 +23,7 @@ public interface RuleTemplateProvider {
    *
    * @return 模板列表（按优先级升序）
    */
-  List<RuleTemplate> listAll();
+  List<RuleTemplateVO> listAll();
 
   /**
    * 按类别查询模板
@@ -31,7 +31,7 @@ public interface RuleTemplateProvider {
    * @param category 模板类别（如 FINANCE / EVM / BENCH）
    * @return 模板列表
    */
-  List<RuleTemplate> listByCategory(String category);
+  List<RuleTemplateVO> listByCategory(String category);
 
   /**
    * 按行业查询模板
@@ -39,7 +39,7 @@ public interface RuleTemplateProvider {
    * @param industry 行业编码
    * @return 模板列表
    */
-  List<RuleTemplate> listByIndustry(String industry);
+  List<RuleTemplateVO> listByIndustry(String industry);
 
   /**
    * 导入模板为规则定义

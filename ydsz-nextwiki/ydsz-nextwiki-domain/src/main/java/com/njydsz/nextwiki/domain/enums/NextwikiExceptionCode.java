@@ -145,16 +145,20 @@ public enum NextwikiExceptionCode implements ExceptionCode {
   // 空间相关 W12xxx（S3-P2-01 新增）
   /** 空间不存在 */
   SPACE_NOT_FOUND("W12001", "nextwiki.space.not.found", 404),
+  /** 空间名称为空 */
+  SPACE_NAME_EMPTY("W12002", "nextwiki.space.name.empty"),
+  /** 空间名称过长 */
+  SPACE_NAME_TOO_LONG("W12003", "nextwiki.space.name.too.long"),
   /** 空间名称重复 */
-  SPACE_NAME_DUPLICATE("W12002", "nextwiki.space.name.duplicate"),
+  SPACE_NAME_DUPLICATE("W12004", "nextwiki.space.name.duplicate"),
   /** 空间状态转换不合法 */
-  SPACE_STATUS_TRANSITION_INVALID("W12003", "nextwiki.space.status.transition.invalid"),
+  SPACE_STATUS_TRANSITION_INVALID("W12005", "nextwiki.space.status.transition.invalid"),
   /** 空间成员不存在 */
-  SPACE_MEMBER_NOT_FOUND("W12004", "nextwiki.space.member.not.found", 404),
+  SPACE_MEMBER_NOT_FOUND("W12006", "nextwiki.space.member.not.found", 404),
   /** 空间成员角色不合法 */
-  SPACE_MEMBER_ROLE_INVALID("W12005", "nextwiki.space.member.role.invalid"),
+  SPACE_MEMBER_ROLE_INVALID("W12007", "nextwiki.space.member.role.invalid"),
   /** 空间不存在所有者（数据异常） */
-  SPACE_NO_OWNER("W12006", "nextwiki.space.no.owner"),
+  SPACE_NO_OWNER("W12008", "nextwiki.space.no.owner"),
 
   // 模板相关 W13xxx（S4-P3-02 新增）
   /** 模板不存在 */
