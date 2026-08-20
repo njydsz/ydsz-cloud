@@ -298,7 +298,7 @@ public class RuleAuditLogService {
   }
 
   private Map<String, Object> toSnapshot(RuleDefinition def) {
-    if (def == null) return null;
+    if (def == null) return Collections.emptyMap();
     Map<String, Object> snapshot = new LinkedHashMap<>();
     snapshot.put("code", def.getCode());
     snapshot.put("name", def.getName());

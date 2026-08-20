@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.infra.mapper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -46,9 +47,12 @@ public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
    *
    * <p>通过单条 SQL 完成「自增 + 条件锁定」，避免业务层先读后写的并发竞态 （并发失败时计数丢失、锁定阈值无法达成的安全漏洞）。
    *
+   * <p><b>数据库兼容性：</b>锁定时间戳由 Service 层预计算后传入（{@code lockUntil}）， 避免在 SQL 中使用数据库特定的 INTERVAL 语法（如
+   * PostgreSQL {@code INTERVAL '1 minute'} vs MySQL {@code DATE_ADD}），实现数据库无关。
+   *
    * @param id 用户 ID
    * @param threshold 锁定阈值（登录失败次数）
-   * @param lockMinutes 锁定时长（分钟）
+   * @param lockUntil 账号锁定到期时间（由 Service 层根据 lockDurationMinutes 计算后传入）
    * @return 影响行数（用户不存在或已删除时为 0）
    */
   @Update(
@@ -57,7 +61,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
             SET login_fail_count = login_fail_count + 1,
                 locked_until = CASE
                     WHEN login_fail_count + 1 >= #{threshold}
-                        THEN CURRENT_TIMESTAMP + (#{lockMinutes} * INTERVAL '1 minute')
+                        THEN #{lockUntil}
                     ELSE locked_until
                 END,
                 updated_at = CURRENT_TIMESTAMP
@@ -66,7 +70,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
   int increaseLoginFailCount(
       @Param("id") String id,
       @Param("threshold") int threshold,
-      @Param("lockMinutes") int lockMinutes);
+      @Param("lockUntil") LocalDateTime lockUntil);
 
   /**
    * 原子重置登录成功状态：清零失败计数、清除锁定时间、记录最近登录信息。

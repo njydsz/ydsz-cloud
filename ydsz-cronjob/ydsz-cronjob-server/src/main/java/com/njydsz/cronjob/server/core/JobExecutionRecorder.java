@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.cronjob.infra.entity.log.JobLog;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
 
 /**
  * P2-1: 任务执行记录器（从 DefaultTaskDispatcher 提取）。
@@ -32,6 +32,17 @@ import com.njydsz.cronjob.infra.entity.log.JobLog;
 @Slf4j
 public class JobExecutionRecorder {
 
+  /** 任务执行状态：待执行 */
+  public static final String STATUS_PENDING = "PENDING";
+  /** 任务执行状态：执行中 */
+  public static final String STATUS_RUNNING = "RUNNING";
+  /** 任务执行状态：成功 */
+  public static final String STATUS_SUCCESS = "SUCCESS";
+  /** 任务执行状态：失败 */
+  public static final String STATUS_FAILED = "FAILED";
+  /** 任务执行状态：超时 */
+  public static final String STATUS_TIMEOUT = "TIMEOUT";
+
   /** 超时错误消息 */
   private static final String TIMEOUT_ERROR_MESSAGE = "任务执行超时";
 
@@ -41,30 +52,30 @@ public class JobExecutionRecorder {
    * @param jobId 任务 ID
    * @param jobKey 任务 KEY
    * @param triggerType 触发类型
-   * @return 初始化的 JobLog（status=PENDING，待持久化）
+   * @return 初始化的 JobLogVO（status=PENDING，待持久化）
    */
-  public JobLog createLog(String jobId, String jobKey, String triggerType) {
-    JobLog logDO = new JobLog();
-    logDO.setJobId(jobId);
-    logDO.setJobKey(jobKey);
-    logDO.setStatus(JobLog.STATUS_PENDING);
-    logDO.setTriggerType(triggerType);
-    logDO.setCreatedAt(LocalDateTime.now());
-    logDO.setDeleted(0);
-    return logDO;
+  public JobLogVO createLog(String jobId, String jobKey, String triggerType) {
+    JobLogVO logVO = new JobLogVO();
+    logVO.setJobId(jobId);
+    logVO.setJobKey(jobKey);
+    logVO.setStatus(STATUS_PENDING);
+    logVO.setTriggerType(triggerType);
+    logVO.setCreatedAt(LocalDateTime.now());
+    logVO.setDeleted(0);
+    return logVO;
   }
 
   /**
    * 标记日志为 RUNNING 状态。
    *
-   * @param logDO 执行日志
+   * @param logDO 执行日志 VO
    * @param lockHolder 持锁者标识
    * @param execNodeId 执行节点 ID
    * @param execThreadId 执行线程 ID
    */
-  public void markRunning(JobLog logDO, String lockHolder, String execNodeId, Long execThreadId) {
+  public void markRunning(JobLogVO logDO, String lockHolder, String execNodeId, Long execThreadId) {
     LocalDateTime now = LocalDateTime.now();
-    logDO.setStatus(JobLog.STATUS_RUNNING);
+    logDO.setStatus(STATUS_RUNNING);
     logDO.setStartTime(now);
     logDO.setLockHolder(lockHolder);
     logDO.setExecNodeId(execNodeId);
@@ -77,13 +88,13 @@ public class JobExecutionRecorder {
   /**
    * 标记日志为 SUCCESS 状态。
    *
-   * @param logDO 执行日志
+   * @param logDO 执行日志 VO
    * @param resultJson 执行结果 JSON
    * @param handlerEndTime Handler 结束时间（P1-2 执行轨迹）
    */
-  public void markSuccess(JobLog logDO, String resultJson, LocalDateTime handlerEndTime) {
+  public void markSuccess(JobLogVO logDO, String resultJson, LocalDateTime handlerEndTime) {
     LocalDateTime now = LocalDateTime.now();
-    logDO.setStatus(JobLog.STATUS_SUCCESS);
+    logDO.setStatus(STATUS_SUCCESS);
     logDO.setEndTime(now);
     logDO.setResultJson(resultJson);
     // P1-2: 执行轨迹 — Handler 结束时间
@@ -97,13 +108,13 @@ public class JobExecutionRecorder {
   /**
    * 标记日志为 FAILED 状态。
    *
-   * @param logDO 执行日志
+   * @param logDO 执行日志 VO
    * @param errorMessage 错误信息
    * @param handlerEndTime Handler 结束时间（P1-2 执行轨迹）
    */
-  public void markFailed(JobLog logDO, String errorMessage, LocalDateTime handlerEndTime) {
+  public void markFailed(JobLogVO logDO, String errorMessage, LocalDateTime handlerEndTime) {
     LocalDateTime now = LocalDateTime.now();
-    logDO.setStatus(JobLog.STATUS_FAILED);
+    logDO.setStatus(STATUS_FAILED);
     logDO.setEndTime(now);
     logDO.setErrorMessage(errorMessage);
     logDO.setHandlerEndTime(handlerEndTime);
@@ -116,11 +127,11 @@ public class JobExecutionRecorder {
   /**
    * 标记日志为 TIMEOUT 状态。
    *
-   * @param logDO 执行日志
+   * @param logDO 执行日志 VO
    */
-  public void markTimeout(JobLog logDO) {
+  public void markTimeout(JobLogVO logDO) {
     LocalDateTime now = LocalDateTime.now();
-    logDO.setStatus(JobLog.STATUS_TIMEOUT);
+    logDO.setStatus(STATUS_TIMEOUT);
     logDO.setEndTime(now);
     logDO.setErrorMessage(TIMEOUT_ERROR_MESSAGE);
     if (logDO.getStartTime() != null) {

@@ -11,6 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.njydsz.common.excel.annotation.ExcelProperty;
 import com.njydsz.common.excel.annotation.ExcelStyle;
 import com.njydsz.common.excel.core.config.ExcelConfig;
+import com.njydsz.common.excel.exception.ExcelException;
+import com.njydsz.common.excel.exception.ExcelExceptionCode;
 
 /**
  * 元数据预计算缓存 - 避免重复解析注解
@@ -180,7 +182,10 @@ public class MetadataCache {
       try {
         return field.get(obj);
       } catch (IllegalAccessException e) {
-        throw new RuntimeException("获取字段值失败: " + field.getName(), e);
+        throw new ExcelException(
+            ExcelExceptionCode.WRITE_DATA_FAILED,
+            "获取字段值失败: fieldName=" + field.getName(),
+            e);
       }
     }
   }

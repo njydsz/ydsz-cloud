@@ -28,6 +28,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAudit
 @EnableYdszSafe
 @EnableYdszFeign
+@ConditionalOnPlatform(PlatformMode.WEB)
 @MapperScan("com.njydsz.system.infra.mapper")
 @EnableScheduling
 public class SystemApplication {

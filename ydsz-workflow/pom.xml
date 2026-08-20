@@ -17,5 +17,6 @@
         <module>ydsz-workflow-infra</module>
         <module>ydsz-workflow-server</module>
         <module>ydsz-workflow-web</module>
+        <module>ydsz-workflow-app</module>
     </modules>
 </project>

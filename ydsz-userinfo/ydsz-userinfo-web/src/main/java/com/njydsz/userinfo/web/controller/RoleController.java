@@ -27,8 +27,8 @@ import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.AssignPermissionsDTO;
-import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.RoleDTO;
+import com.njydsz.userinfo.domain.query.RolePageQuery;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.server.service.RoleService;
 
@@ -92,7 +92,7 @@ public class RoleController {
    */
   @GetMapping("/page")
   @Operation(summary = "分页查询角色列表")
-  public YdszResponse<PageResponse<List<RoleVO>>> page(@Valid RolePageQueryDTO query) {
+  public YdszResponse<PageResponse<List<RoleVO>>> page(@Valid RolePageQuery query) {
     Page<RoleVO> page = service.page(query);
     return YdszResponse.success(PageResponses.success(page));
   }

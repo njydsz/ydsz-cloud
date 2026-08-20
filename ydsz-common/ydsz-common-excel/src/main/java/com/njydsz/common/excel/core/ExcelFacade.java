@@ -20,6 +20,7 @@ import com.njydsz.common.excel.core.metadata.ReadMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
 import com.njydsz.common.excel.core.model.SheetData;
 import com.njydsz.common.excel.exception.ExcelReadException;
+import com.njydsz.common.excel.exception.ExcelWriteException;
 
 /**
  * Excel 门面类 — 整个框架的统一入口。
@@ -316,7 +317,8 @@ public class ExcelFacade {
       try {
         firstWriter.finish();
       } catch (IOException e) {
-        throw new RuntimeException("多Sheet写入失败", e);
+        throw new ExcelWriteException(
+            "多Sheet写入失败: error=" + e.getMessage(), e);
       }
     }
   }

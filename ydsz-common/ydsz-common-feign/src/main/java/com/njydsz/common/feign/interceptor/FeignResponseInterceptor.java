@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 
 import com.njydsz.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
+import com.njydsz.common.feign.exception.OpenFeignException;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -122,7 +123,9 @@ public class FeignResponseInterceptor implements ResponseInterceptor {
 
     if (circuitBreaker != null && !circuitBreaker.allowRequest(serviceName)) {
       log.warn("[Feign] 熔断器拒绝请求 | service={} | method={}", serviceName, httpMethod);
-      throw new RuntimeException("Circuit breaker is open for service: " + serviceName);
+      throw new OpenFeignException(
+          "CIRCUIT_OPEN",
+          "Circuit breaker is open for service: " + serviceName);
     }
 
     try {

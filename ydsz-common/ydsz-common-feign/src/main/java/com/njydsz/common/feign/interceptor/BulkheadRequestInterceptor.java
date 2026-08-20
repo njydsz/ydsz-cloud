@@ -14,6 +14,8 @@ import feign.RequestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.feign.exception.OpenFeignException;
+
 import com.njydsz.common.feign.config.FeignProperties;
 
 /**
@@ -148,12 +150,14 @@ public class BulkheadRequestInterceptor implements RequestInterceptor {
     try {
       if (!semaphore.tryAcquire(acquireTimeoutMillis, TimeUnit.MILLISECONDS)) {
         LOG.warn("[Bulkhead] 服务 {} 并发请求超限({}), 快速失败", serviceName, maxConcurrent);
-        throw new RuntimeException(
+        throw new OpenFeignException(
+            "BULKHEAD_FULL",
             "Bulkhead full for service: " + serviceName + ", max concurrent: " + maxConcurrent);
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new RuntimeException(
+      throw new OpenFeignException(
+          "BULKHEAD_INTERRUPTED",
           "Thread interrupted while acquiring bulkhead permit for: " + serviceName, e);
     }
 

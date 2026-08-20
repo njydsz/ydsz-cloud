@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.server.core.outbox.subscriber;
 
+import java.util.Collections;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -58,18 +59,18 @@ public class WebhookOutboxSubscriber implements java.util.function.Consumer<Outb
    * <p>P0-FIX: YdszJson.parseObject 仅支持单参（返回 ObjectNode），改用 {@link YdszJson#fromJson}。
    *
    * @param payloadJson payload JSON 字符串
-   * @return 解析后的 Map（解析失败返回 null）
+   * @return 解析后的 Map（解析失败返回空 Map）
    */
   @SuppressWarnings("unchecked")
   private Map<String, Object> parsePayload(String payloadJson) {
     if (payloadJson == null || payloadJson.isBlank()) {
-      return null;
+      return Collections.emptyMap();
     }
     try {
       return YdszJson.fromJson(payloadJson, Map.class);
     } catch (Exception e) {
       log.warn("[WebhookSubscriber] payload 解析失败: {}", e.getMessage());
-      return null;
+      return Collections.emptyMap();
     }
   }
 }

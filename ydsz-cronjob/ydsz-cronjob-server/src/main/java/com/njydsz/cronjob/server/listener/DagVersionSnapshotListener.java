@@ -9,8 +9,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import com.njydsz.cronjob.domain.dag.DagVersionSnapshotEvent;
 import com.njydsz.cronjob.domain.repository.JobDagRepository;
 import com.njydsz.cronjob.domain.repository.JobDagVersionRepository;
-import com.njydsz.cronjob.infra.entity.dag.JobDag;
-import com.njydsz.cronjob.infra.entity.dag.JobDagVersion;
+import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
+import com.njydsz.cronjob.domain.vo.JobDagVO;
 
 /**
  * DAG 版本快照事件监听器 — 在主写事务提交后异步创建版本快照。
@@ -52,24 +52,24 @@ public class DagVersionSnapshotListener {
   public void onDagVersionSnapshot(DagVersionSnapshotEvent event) {
     try {
       String dagId = event.getDagId();
-      JobDag dag = jobDagRepository.selectById(dagId);
+      JobDagVO dag = jobDagRepository.findById(dagId).orElse(null);
       if (dag == null) {
         log.error(
             "[DagVersionSnapshotListener] DAG 不存在，跳过快照创建: dagId={}",
             dagId);
         return;
       }
-      JobDagVersion versionDO = new JobDagVersion();
-      versionDO.setDagId(dag.getId());
-      versionDO.setDagKey(dag.getDagKey());
-      versionDO.setVersion(dag.getVersion());
-      versionDO.setDagDefinition(dag.getDagDefinition());
-      versionDO.setDagName(dag.getDagName());
-      versionDO.setTriggerType(dag.getTriggerType());
-      versionDO.setCronExpression(dag.getCronExpression());
-      versionDO.setFailStrategy(dag.getFailStrategy());
-      versionDO.setRemark(event.getRemark());
-      jobDagVersionRepository.insert(versionDO);
+      JobDagVersionVO versionVO = new JobDagVersionVO();
+      versionVO.setDagId(dag.getId());
+      versionVO.setDagKey(dag.getDagKey());
+      versionVO.setVersion(dag.getVersion());
+      versionVO.setDagDefinition(dag.getDagDefinition());
+      versionVO.setDagName(dag.getDagName());
+      versionVO.setTriggerType(dag.getTriggerType());
+      versionVO.setCronExpression(dag.getCronExpression());
+      versionVO.setFailStrategy(dag.getFailStrategy());
+      versionVO.setRemark(event.getRemark());
+      jobDagVersionRepository.insert(versionVO);
       log.debug(
           "[DagVersionSnapshotListener] DAG 版本快照创建成功: dagId={}, dagKey={}, version={}",
           dag.getId(),

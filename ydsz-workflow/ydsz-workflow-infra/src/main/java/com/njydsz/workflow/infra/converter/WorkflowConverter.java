@@ -1,5 +1,6 @@
 package com.njydsz.workflow.infra.converter;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -286,7 +287,7 @@ public interface WorkflowConverter {
   /** 字符串列表 → {@link StringVO} 列表（如已审批人 ID 列表包装）。 */
   default List<StringVO> stringListToVO(List<String> values) {
     if (values == null) {
-      return null;
+      return Collections.emptyList();
     }
     return values.stream().map(this::entityToVO).collect(Collectors.toList());
   }

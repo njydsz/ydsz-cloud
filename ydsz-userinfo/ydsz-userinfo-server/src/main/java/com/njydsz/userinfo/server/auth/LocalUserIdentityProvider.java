@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.auth;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,7 +52,7 @@ public class LocalUserIdentityProvider implements UserIdentityProvider {
   @Override
   public Map<String, String> authenticate(String username, String credentials) {
     if (username == null || username.isBlank() || credentials == null) {
-      return null;
+      return Collections.emptyMap();
     }
 
     UserAccountCredentialVO credential = userAccountRepository

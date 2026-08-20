@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +23,6 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.domain.dto.RoleDTO;
-import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.RolePermissionDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.RolePageQuery;
@@ -120,13 +118,11 @@ public class RoleServiceImpl implements RoleService {
    */
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "created_by")
-  public Page<RoleVO> page(RolePageQueryDTO queryDTO) {
-    RolePageQuery query = new RolePageQuery();
-    BeanUtils.copyProperties(queryDTO, query);
+  public Page<RoleVO> page(RolePageQuery query) {
     PageResponse<List<RoleVO>> pageResponse = roleRepository.page(query);
     Page<RoleVO> voPage = new Page<>(
-        pageResponse.getPageNum() != null ? pageResponse.getPageNum() : queryDTO.getEffectivePageNum(),
-        pageResponse.getPageSize() != null ? pageResponse.getPageSize() : queryDTO.getEffectivePageSize(),
+        pageResponse.getPageNum() != null ? pageResponse.getPageNum() : query.getEffectivePageNum(),
+        pageResponse.getPageSize() != null ? pageResponse.getPageSize() : query.getEffectivePageSize(),
         pageResponse.getTotal() != null ? pageResponse.getTotal() : 0L);
     voPage.setRecords(pageResponse.getData() != null ? pageResponse.getData() : List.of());
     return voPage;

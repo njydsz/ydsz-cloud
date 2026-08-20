@@ -1,5 +1,6 @@
 package com.njydsz.common.redis.service.ops;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -68,13 +69,13 @@ public class RedisTransactionOps {
    *
    * @param callback 事务回调函数，参数为 RedisTemplate 实例
    * @param <T> 回调返回值类型
-   * @return 事务执行结果列表（EXEC 返回值），失败时返回 null
+   * @return 事务执行结果列表（EXEC 返回值），失败时返回空列表
    */
   public <T> List<Object> executeInTransaction(
       Function<RedisTemplate<String, Object>, T> callback) {
     if (callback == null) {
       log.warn("【Redis】事务执行失败：回调函数不能为空");
-      return null;
+      return Collections.emptyList();
     }
     if (metricsCollector != null) {
       return metricsCollector.recordOperation(

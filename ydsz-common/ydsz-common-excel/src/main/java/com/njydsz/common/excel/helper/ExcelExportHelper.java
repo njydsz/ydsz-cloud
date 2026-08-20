@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.ExcelWriter;
+import com.njydsz.common.excel.exception.ExcelWriteException;
 
 /**
  * 统一 Excel 导出辅助类 — 封装 common-excel 的导出能力。
@@ -47,7 +48,8 @@ public class ExcelExportHelper {
       return out.toByteArray();
     } catch (Exception e) {
       LOG.error("[ExcelExportHelper] 导出失败: sheet={}, error={}", sheetName, e.getMessage(), e);
-      throw new RuntimeException("Excel 导出失败: " + e.getMessage(), e);
+      throw new ExcelWriteException(
+          "Excel 导出失败: sheet=" + sheetName + ", error=" + e.getMessage(), e);
     }
   }
 
@@ -80,7 +82,8 @@ public class ExcelExportHelper {
       return out.toByteArray();
     } catch (Exception e) {
       LOG.error("[ExcelExportHelper] 动态导出失败: sheet={}, error={}", sheetName, e.getMessage(), e);
-      throw new RuntimeException("Excel 导出失败: " + e.getMessage(), e);
+      throw new ExcelWriteException(
+          "Excel 动态导出失败: sheet=" + sheetName + ", error=" + e.getMessage(), e);
     }
   }
 

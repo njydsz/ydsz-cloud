@@ -121,13 +121,13 @@ public class EvaluationResultCache {
    * 尝试获取缓存结果
    *
    * @param context 规则上下文
-   * @return 缓存的评估结果；未命中或已过期返回 null
+   * @return 缓存的评估结果；未命中或已过期返回空列表
    */
   public List<RuleResult> get(RuleContext context) {
     String key = buildCacheKey(context);
     List<RuleResult> result = cache.getIfPresent(key);
     if (result == null) {
-      return null;
+      return Collections.emptyList();
     }
     // 返回防御性副本
     return new ArrayList<>(result);

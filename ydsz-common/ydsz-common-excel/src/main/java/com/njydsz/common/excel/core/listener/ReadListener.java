@@ -3,6 +3,7 @@ package com.njydsz.common.excel.core.listener;
 import java.util.List;
 
 import com.njydsz.common.excel.core.context.AnalysisContext;
+import com.njydsz.common.excel.exception.ExcelReadException;
 
 /**
  * Excel 读取监听器 — 数据读取回调接口
@@ -113,7 +114,9 @@ public interface ReadListener<T> {
    * @param e 发生的异常
    */
   default void onError(AnalysisContext context, Exception e) {
-    throw new RuntimeException("Excel读取异常", e);
+    throw new ExcelReadException(
+        "Excel读取异常: sheet=" + (context != null ? context.getSheetName() : "unknown"),
+        e);
   }
 
   /**

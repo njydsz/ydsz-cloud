@@ -6,8 +6,8 @@ import java.util.Map;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
-import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.RoleDTO;
+import com.njydsz.userinfo.domain.query.RolePageQuery;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 
 /**
@@ -34,7 +34,7 @@ public interface RoleService {
    * @param query 分页查询条件
    * @return 分页结果
    */
-  Page<RoleVO> page(RolePageQueryDTO query);
+  Page<RoleVO> page(RolePageQuery query);
 
   /**
    * 查询全部角色列表（无分页）。

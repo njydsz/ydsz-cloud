@@ -11,6 +11,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
+import com.njydsz.common.excel.exception.ExcelReadException;
+
 /**
  * Excel Sheet信息查询工具
  *
@@ -60,7 +62,8 @@ public class ExcelSheetInfo {
         Workbook workbook = WorkbookFactory.create(is)) {
       return getSheetInfoList(workbook);
     } catch (IOException e) {
-      throw new RuntimeException("读取Sheet信息失败: " + e.getMessage(), e);
+      throw new ExcelReadException(
+          "读取Sheet信息失败: fileName=" + fileName + ", error=" + e.getMessage(), e);
     }
   }
 
@@ -75,7 +78,8 @@ public class ExcelSheetInfo {
         Workbook workbook = WorkbookFactory.create(is)) {
       return getSheetInfoList(workbook);
     } catch (IOException e) {
-      throw new RuntimeException("读取Sheet信息失败: " + e.getMessage(), e);
+      throw new ExcelReadException(
+          "读取Sheet信息失败: file=" + file.getName() + ", error=" + e.getMessage(), e);
     }
   }
 
