@@ -106,7 +106,9 @@ public class ExcelTemplateWriter {
    */
   public void doWrite(Object data) {
     List<?> list = data instanceof List ? (List<?>) data : Collections.singletonList(data);
-    if (list.isEmpty()) return;
+    if (list.isEmpty()) {
+      return;
+    }
 
     try (InputStream templateIs = new FileInputStream(templatePath);
         XSSFWorkbook workbook = new XSSFWorkbook(templateIs)) {
@@ -164,7 +166,9 @@ public class ExcelTemplateWriter {
   private Map<Integer, Field> buildColumnMapping(Sheet sheet, int headerRow, Field[] fields) {
     Map<Integer, Field> mapping = new LinkedHashMap<>();
     Row row = sheet.getRow(headerRow);
-    if (row == null) return mapping;
+    if (row == null) {
+      return mapping;
+    }
 
     Map<String, Field> nameToField = new HashMap<>();
     for (Field field : fields) {

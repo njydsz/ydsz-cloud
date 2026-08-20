@@ -399,4 +399,16 @@ public List<FlowRunTaskVO> findPendingTasksByAssignee(String assigneeId) {
   public void updateApproveFinished(String taskId, int approveFinished) {
     taskMapper.updateApproveFinished(taskId, approveFinished);
   }
+
+  @Override
+  public List<FlowRunTaskVO> selectPendingByAssignee(String assigneeId, String flowCode, String tenantId) {
+    return converter.flowRunTaskListToVO(
+        taskMapper.selectList(
+            new LambdaQueryWrapper<FlowRunTaskDO>()
+                .eq(FlowRunTaskDO::getAssigneeId, assigneeId)
+                .eq(FlowRunTaskDO::getDeleted, 0)
+                .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
+                .eq(org.springframework.util.StringUtils.hasText(flowCode), FlowRunTaskDO::getFlowCode, flowCode)
+                .eq(org.springframework.util.StringUtils.hasText(tenantId), FlowRunTaskDO::getTenantId, tenantId)));
+  }
 }

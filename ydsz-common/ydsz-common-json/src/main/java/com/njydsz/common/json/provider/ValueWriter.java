@@ -483,7 +483,9 @@ public final class ValueWriter {
     sb.append('[');
     int len = Array.getLength(array);
     for (int i = 0; i < len; i++) {
-      if (i > 0) sb.append(',');
+      if (i > 0) {
+        sb.append(',');
+      }
       writeValueDirect(Array.get(array, i), sb);
     }
     sb.append(']');
@@ -494,7 +496,9 @@ public final class ValueWriter {
     int size = list.size();
     sb.append('[');
     for (int i = 0; i < size; i++) {
-      if (i > 0) sb.append(',');
+      if (i > 0) {
+        sb.append(',');
+      }
       Object item = list.get(i);
       if (item == null) {
         sb.append("null");
@@ -518,7 +522,9 @@ public final class ValueWriter {
     sb.append('{');
     boolean first = true;
     for (Map.Entry<?, ?> entry : map.entrySet()) {
-      if (!first) sb.append(',');
+      if (!first) {
+        sb.append(',');
+      }
       first = false;
 
       Object key = entry.getKey();
@@ -619,7 +625,9 @@ public final class ValueWriter {
           continue;
         }
 
-        if (!first) sb.append(',');
+        if (!first) {
+          sb.append(',');
+        }
         first = false;
 
         String jsonName = field.jsonName;
@@ -655,7 +663,9 @@ public final class ValueWriter {
       try {
         Object computedValue = computedMethod.invoke(obj);
         if (computedValue != null) {
-          if (!first) sb.append(',');
+          if (!first) {
+            sb.append(',');
+          }
           first = false;
           String propName = FieldMetadataLoader.getComputedPropertyName(computedMethod);
           sb.append('"').append(propName).append("\":");
@@ -710,7 +720,9 @@ public final class ValueWriter {
             strVal = null;
           }
           if (strVal != null) {
-            if (!first) sb.append(',');
+            if (!first) {
+              sb.append(',');
+            }
             first = false;
             sb.append(field.jsonKey);
             // 快速路径：内联字符串检查
@@ -741,7 +753,9 @@ public final class ValueWriter {
             intVal = 0;
           }
           if (intVal != 0 || field.type == int.class) {
-            if (!first) sb.append(',');
+            if (!first) {
+              sb.append(',');
+            }
             first = false;
             sb.append(field.jsonKey);
             // 小整数快速路径
@@ -761,7 +775,9 @@ public final class ValueWriter {
             longVal = 0L;
           }
           if (longVal != 0L || field.type == long.class) {
-            if (!first) sb.append(',');
+            if (!first) {
+              sb.append(',');
+            }
             first = false;
             sb.append(field.jsonKey);
             // 小长整数快速路径
@@ -781,7 +797,9 @@ public final class ValueWriter {
             doubleVal = 0.0;
           }
           if (doubleVal != 0.0 || field.type == double.class) {
-            if (!first) sb.append(',');
+            if (!first) {
+              sb.append(',');
+            }
             first = false;
             sb.append(field.jsonKey);
             sb.append(doubleVal);
@@ -795,7 +813,9 @@ public final class ValueWriter {
           } catch (Throwable e) {
             boolVal = false;
           }
-          if (!first) sb.append(',');
+          if (!first) {
+            sb.append(',');
+          }
           first = false;
           sb.append(field.jsonKey);
           sb.append(boolVal ? "true" : "false");
@@ -810,7 +830,9 @@ public final class ValueWriter {
           if (value == null) {
             break;
           }
-          if (!first) sb.append(',');
+          if (!first) {
+            sb.append(',');
+          }
           first = false;
           sb.append(field.jsonKey);
           writeValueByTypeCodeFast(value, sb, (byte) typeCode);
@@ -892,7 +914,9 @@ public final class ValueWriter {
 
   /** 格式化日期（带模式） */
   public static String formatDateWithPattern(Object value, String pattern) {
-    if (value == null) return null;
+    if (value == null) {
+      return null;
+    }
     try {
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
       if (value instanceof TemporalAccessor temporal) {
@@ -927,7 +951,9 @@ public final class ValueWriter {
    * @since 1.0.0
    */
   public static String formatDateValue(Object value) {
-    if (value == null) return null;
+    if (value == null) {
+      return null;
+    }
 
     // 优先从当前线程的 SerializationContext 读取 dateFormat（支持 JsonMapper 独立配置）
     String globalFormat = SerializationProvider.getDateFormat();

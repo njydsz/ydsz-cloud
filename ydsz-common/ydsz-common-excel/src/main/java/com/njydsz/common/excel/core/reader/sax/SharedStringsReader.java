@@ -70,7 +70,9 @@ public class SharedStringsReader {
     int pos = 0;
     while (pos < len) {
       int siStart = findSubstring(rawData, pos, len, "<si>");
-      if (siStart == -1) break;
+      if (siStart == -1) {
+        break;
+      }
       count++;
       pos = siStart + 4;
     }
@@ -92,7 +94,9 @@ public class SharedStringsReader {
       int idx = 0;
       while (pos < len) {
         int siStart = findSubstring(rawData, pos, len, "<si>");
-        if (siStart == -1) break;
+        if (siStart == -1) {
+          break;
+        }
 
         int tStart = findSubstring(rawData, siStart + 4, len, "<t");
         if (tStart == -1) {
@@ -131,7 +135,9 @@ public class SharedStringsReader {
     int idx = 0;
     while (pos < len) {
       int siStart = findSubstring(rawData, pos, len, "<si>");
-      if (siStart == -1) break;
+      if (siStart == -1) {
+        break;
+      }
 
       int tStart = findSubstring(rawData, siStart + 4, len, "<t");
       if (tStart == -1) {
@@ -182,14 +188,18 @@ public class SharedStringsReader {
           break;
         }
       }
-      if (match) return i;
+      if (match) {
+        return i;
+      }
     }
     return -1;
   }
 
   private int findChar(byte[] data, int start, int len, char ch) {
     for (int i = start; i < len; i++) {
-      if (data[i] == (byte) ch) return i;
+      if (data[i] == (byte) ch) {
+        return i;
+      }
     }
     return -1;
   }
@@ -267,7 +277,9 @@ public class SharedStringsReader {
 
   private int getEntityLength(byte[] data, int start, int end) {
     for (int i = start + 1; i < end && i < start + 10; i++) {
-      if (data[i] == ';') return i - start + 1;
+      if (data[i] == ';') {
+        return i - start + 1;
+      }
     }
     return 1;
   }

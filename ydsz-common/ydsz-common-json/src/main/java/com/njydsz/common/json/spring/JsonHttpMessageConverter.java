@@ -123,7 +123,9 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
       Class<?> rawClass = type instanceof Class<?> c ? c : Object.class;
       return YdszJson.fromJsonBytes(body, rawClass);
     } catch (Exception e) {
-      if (e instanceof IOException) throw (IOException) e;
+      if (e instanceof IOException) {
+        throw (IOException) e;
+      }
       throw new HttpMessageNotReadableException("JSON 解析失败：" + e.getMessage(), e, inputMessage);
     } finally {
       // 请求结束后清理 ThreadLocal 资源，防止 Tomcat 线程池泄漏

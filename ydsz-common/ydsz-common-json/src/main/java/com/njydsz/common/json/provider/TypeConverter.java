@@ -50,8 +50,12 @@ final class TypeConverter {
    * @return 转换后的值，输入为 null 时返回 null
    */
   static Object convertValue(Object value, Class<?> targetType) {
-    if (value == null) return null;
-    if (targetType.isInstance(value)) return value;
+    if (value == null) {
+      return null;
+    }
+    if (targetType.isInstance(value)) {
+      return value;
+    }
 
     if (value instanceof Number) {
       Number num = (Number) value;

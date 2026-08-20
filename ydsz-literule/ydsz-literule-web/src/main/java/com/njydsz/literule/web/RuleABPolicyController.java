@@ -122,7 +122,6 @@ public class RuleABPolicyController {
       @RequestParam(value = "reason", defaultValue = "MANUAL") String reason,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     return YdszResponse.success(
-        LiteruleConverter.INSTANCE.entityToVO(
-            abTestAutoRollbackProvider.manualRollback(ruleCode, operator, reason)));
+        abTestAutoRollbackProvider.manualRollback(ruleCode, operator, reason));
   }
 }

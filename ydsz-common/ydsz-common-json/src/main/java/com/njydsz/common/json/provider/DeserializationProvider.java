@@ -291,31 +291,65 @@ public final class DeserializationProvider {
       return null;
     }
     // 基本类型：显式拆箱（避免 Class.cast 对 primitive 抛 ClassCastException）
-    if (clazz == int.class) return (T) Integer.valueOf(((Number) result).intValue());
-    if (clazz == long.class) return (T) Long.valueOf(((Number) result).longValue());
-    if (clazz == double.class) return (T) Double.valueOf(((Number) result).doubleValue());
-    if (clazz == float.class) return (T) Float.valueOf(((Number) result).floatValue());
-    if (clazz == short.class) return (T) Short.valueOf(((Number) result).shortValue());
-    if (clazz == byte.class) return (T) Byte.valueOf(((Number) result).byteValue());
-    if (clazz == char.class) return (T) Character.valueOf(result.toString().charAt(0));
-    if (clazz == boolean.class) return (T) Boolean.valueOf((Boolean) result);
+    if (clazz == int.class) {
+      return (T) Integer.valueOf(((Number) result).intValue());
+    }
+    if (clazz == long.class) {
+      return (T) Long.valueOf(((Number) result).longValue());
+    }
+    if (clazz == double.class) {
+      return (T) Double.valueOf(((Number) result).doubleValue());
+    }
+    if (clazz == float.class) {
+      return (T) Float.valueOf(((Number) result).floatValue());
+    }
+    if (clazz == short.class) {
+      return (T) Short.valueOf(((Number) result).shortValue());
+    }
+    if (clazz == byte.class) {
+      return (T) Byte.valueOf(((Number) result).byteValue());
+    }
+    if (clazz == char.class) {
+      return (T) Character.valueOf(result.toString().charAt(0));
+    }
+    if (clazz == boolean.class) {
+      return (T) Boolean.valueOf((Boolean) result);
+    }
     // 引用类型：标准 cast
     return (T) clazz.cast(result);
   }
 
   private static Object deserializeValue(String json, Class<?> type) {
     // 快速路径：基本类型直接判断（无需缓存查找开销）
-    if (type == String.class) return TypeConverter.parseStringValue(json);
-    if (type == Integer.class || type == int.class) return TypeConverter.parseIntValue(json);
-    if (type == Long.class || type == long.class) return TypeConverter.parseLongValue(json);
-    if (type == Double.class || type == double.class) return TypeConverter.parseDoubleValue(json);
-    if (type == Float.class || type == float.class) return TypeConverter.parseFloatValue(json);
+    if (type == String.class) {
+      return TypeConverter.parseStringValue(json);
+    }
+    if (type == Integer.class || type == int.class) {
+      return TypeConverter.parseIntValue(json);
+    }
+    if (type == Long.class || type == long.class) {
+      return TypeConverter.parseLongValue(json);
+    }
+    if (type == Double.class || type == double.class) {
+      return TypeConverter.parseDoubleValue(json);
+    }
+    if (type == Float.class || type == float.class) {
+      return TypeConverter.parseFloatValue(json);
+    }
     if (type == Boolean.class || type == boolean.class)
       return TypeConverter.parseBooleanValue(json);
-    if (type == BigDecimal.class) return parseBigDecimal(json);
-    if (type == BigInteger.class) return parseBigInteger(json);
-    if (type == Object.class) return parseValue(json);
-    if (type == Map.class) return JsonParserUtil.parseObject(json);
+    if (type == BigDecimal.class) {
+      return parseBigDecimal(json);
+    }
+    if (type == BigInteger.class) {
+      return parseBigInteger(json);
+    }
+    if (type == Object.class) {
+      return parseValue(json);
+    }
+    if (type == Map.class) {
+      return JsonParserUtil.parseObject(json);
+    }
     if (type == List.class)
       return BeanDeserializerEngine.deserializeArrayZeroCopy(json, Object.class);
 
@@ -527,7 +561,9 @@ public final class DeserializationProvider {
             }
           };
       List<?> list = (List<?>) deserializeToObject(json, listType);
-      if (list == null) return null;
+      if (list == null) {
+        return null;
+      }
       Class<?> componentClass = componentType instanceof Class<?> c ? c : Object.class;
       Object array = Array.newInstance(componentClass, list.size());
       for (int i = 0; i < list.size(); i++) {
@@ -556,7 +592,9 @@ public final class DeserializationProvider {
           || rawType == TreeMap.class) {
         Type[] typeArgs = pt.getActualTypeArguments();
         Map<String, Object> parsed = JsonParserUtil.parseObject(json);
-        if (parsed == null) return null;
+        if (parsed == null) {
+          return null;
+        }
         // 当 value 类型为已知简单类型时，转换解析结果（如 Long → Integer）
         if (typeArgs.length == 2 && typeArgs[1] instanceof Class<?> valueClass) {
           if (valueClass != Object.class) {
@@ -578,11 +616,15 @@ public final class DeserializationProvider {
         if (elementType instanceof Class<?> elementClass) {
           if (BeanDeserializerEngine.isSimpleType(elementClass)) {
             List<?> list = BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass);
-            if (list == null) return null;
+            if (list == null) {
+              return null;
+            }
             return createSet(rawType, list);
           } else {
             List<?> list = BeanDeserializerEngine.deserializeBeanListFast(json, elementClass);
-            if (list == null) return null;
+            if (list == null) {
+              return null;
+            }
             return createSet(rawType, list);
           }
         }

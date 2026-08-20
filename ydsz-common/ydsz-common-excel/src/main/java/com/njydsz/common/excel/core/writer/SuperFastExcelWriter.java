@@ -373,7 +373,9 @@ public class SuperFastExcelWriter {
 
     for (int col = 0; col < fieldInfoSize; col++) {
       FieldAccessorInfo info = fieldInfoArray[col];
-      if (info == null) continue;
+      if (info == null) {
+        continue;
+      }
 
       Object value;
       if (info.getter != null) {
@@ -664,7 +666,9 @@ public class SuperFastExcelWriter {
   }
 
   private void writeStringToBuffer(String str, boolean needsEscape) {
-    if (str == null) return;
+    if (str == null) {
+      return;
+    }
 
     if (!needsEscape) {
       int len = str.length();
@@ -873,7 +877,9 @@ public class SuperFastExcelWriter {
 
     for (int col = 0; col < fieldInfoSize; col++) {
       FieldAccessorInfo info = fieldInfoArray[col];
-      if (info == null || info.headerName == null) continue;
+      if (info == null || info.headerName == null) {
+        continue;
+      }
       writeStringCell(col, info.headerName, ss);
     }
 
@@ -907,7 +913,9 @@ public class SuperFastExcelWriter {
      * @return 字符串索引，不存在返回 -1
      */
     public int add(String str) {
-      if (str == null) return -1;
+      if (str == null) {
+        return -1;
+      }
 
       Integer existing = stringToIndex.get(str);
       if (existing != null) {

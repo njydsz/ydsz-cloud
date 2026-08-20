@@ -401,4 +401,16 @@ public interface FlowRunTaskRepository {
    * @param approveFinished 新的 approveFinished 值
    */
   void updateApproveFinished(String taskId, int approveFinished);
+
+  /**
+   * 查询办理人名下的待办任务（带可选的流程编码和租户过滤）。
+   *
+   * <p>用于离线自动转发：查询指定办理人的 PENDING/CLAIMED 任务，按流程编码和租户过滤。
+   *
+   * @param assigneeId 办理人 ID
+   * @param flowCode 流程编码（可为 null，表示不过滤）
+   * @param tenantId 租户 ID（可为 null，表示不过滤）
+   * @return 运行时任务 VO 列表
+   */
+  List<FlowRunTaskVO> selectPendingByAssignee(String assigneeId, String flowCode, String tenantId);
 }

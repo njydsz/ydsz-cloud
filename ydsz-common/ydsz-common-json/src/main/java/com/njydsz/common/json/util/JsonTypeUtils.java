@@ -61,12 +61,24 @@ public final class JsonTypeUtils {
    * @return 类型码
    */
   public static int getTypeCode(Class<?> type) {
-    if (type == int.class || type == Integer.class) return 1;
-    if (type == long.class || type == Long.class) return 2;
-    if (type == double.class || type == Double.class) return 3;
-    if (type == float.class || type == Float.class) return 4;
-    if (type == boolean.class || type == Boolean.class) return 5;
-    if (type == String.class) return 6;
+    if (type == int.class || type == Integer.class) {
+      return 1;
+    }
+    if (type == long.class || type == Long.class) {
+      return 2;
+    }
+    if (type == double.class || type == Double.class) {
+      return 3;
+    }
+    if (type == float.class || type == Float.class) {
+      return 4;
+    }
+    if (type == boolean.class || type == Boolean.class) {
+      return 5;
+    }
+    if (type == String.class) {
+      return 6;
+    }
     return 0;
   }
 }

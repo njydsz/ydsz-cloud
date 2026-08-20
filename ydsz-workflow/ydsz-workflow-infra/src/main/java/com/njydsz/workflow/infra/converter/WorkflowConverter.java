@@ -148,6 +148,9 @@ public interface WorkflowConverter {
 
   List<FlowHisInstanceVO> flowHisInstanceListToVO(List<FlowHisInstanceDO> entities);
 
+  /** 历史实例 VO → 历史实例 DO。 */
+  FlowHisInstanceDO entityToDO(FlowHisInstanceVO vo);
+
   // ===== FlowHisTaskDO =====
   FlowHisTaskVO entityToVO(FlowHisTaskDO entity);
 

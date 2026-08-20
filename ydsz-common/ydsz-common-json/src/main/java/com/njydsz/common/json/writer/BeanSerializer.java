@@ -426,7 +426,9 @@ public final class BeanSerializer {
     boolean firstAny = true;
     for (Map.Entry<?, ?> entry : map.entrySet()) {
       Object value = entry.getValue();
-      if (value == null) continue;
+      if (value == null) {
+        continue;
+      }
 
       String key = String.valueOf(entry.getKey());
       writer.ensureCapacity(32 + key.length() * 2);

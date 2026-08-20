@@ -228,7 +228,9 @@ public final class SerializationProvider {
     StringBuilder sb = new StringBuilder(128);
     boolean first = true;
     for (String segment : stack) {
-      if (!first) sb.append('.');
+      if (!first) {
+        sb.append('.');
+      }
       sb.append(segment);
       first = false;
     }
@@ -662,7 +664,9 @@ public final class SerializationProvider {
     if (isBeanType && !skipCycleDetection) {
       if (objects.contains(obj)) {
         String strategy = ctx.circularRefStrategy;
-        if (strategy == null) strategy = "REF";
+        if (strategy == null) {
+          strategy = "REF";
+        }
         switch (strategy) {
           case "ERROR":
             // 回滚深度计数并抛出受控异常（非 StackOverflowError）

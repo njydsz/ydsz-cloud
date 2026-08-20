@@ -97,7 +97,9 @@ public class SheetXmlReader {
 
     while (pos < len) {
       int rowStart = findTag(data, pos, len, "row");
-      if (rowStart == -1) break;
+      if (rowStart == -1) {
+        break;
+      }
 
       int rowAttrEnd = findChar(data, rowStart, len, '>');
       if (rowAttrEnd == -1) {
@@ -221,14 +223,18 @@ public class SheetXmlReader {
           break;
         }
       }
-      if (match) return i;
+      if (match) {
+        return i;
+      }
     }
     return -1;
   }
 
   private int findChar(byte[] data, int start, int len, char ch) {
     for (int i = start; i < len; i++) {
-      if (data[i] == (byte) ch) return i;
+      if (data[i] == (byte) ch) {
+        return i;
+      }
     }
     return -1;
   }
@@ -262,7 +268,9 @@ public class SheetXmlReader {
           break;
         }
       }
-      if (match) return i;
+      if (match) {
+        return i;
+      }
     }
     return -1;
   }
@@ -271,7 +279,9 @@ public class SheetXmlReader {
     int pos = start;
     while (pos < end) {
       int cellStart = findTag(data, pos, end, "c");
-      if (cellStart == -1 || cellStart >= end) break;
+      if (cellStart == -1 || cellStart >= end) {
+        break;
+      }
 
       int cellAttrEnd = findChar(data, cellStart, end, '>');
       if (cellAttrEnd == -1 || cellAttrEnd >= end) {
@@ -346,7 +356,9 @@ public class SheetXmlReader {
   }
 
   private int parseCellRef(String ref) {
-    if (ref == null || ref.isEmpty()) return -1;
+    if (ref == null || ref.isEmpty()) {
+      return -1;
+    }
 
     int col = 0;
     for (int i = 0; i < ref.length(); i++) {

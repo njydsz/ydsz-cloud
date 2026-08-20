@@ -169,7 +169,9 @@ final class BuilderResolver {
    * @return 首字母大写的字符串，null 或空字符串原样返回
    */
   static String capitalize(String str) {
-    if (str == null || str.isEmpty()) return str;
+    if (str == null || str.isEmpty()) {
+      return str;
+    }
     return Character.toUpperCase(str.charAt(0)) + str.substring(1);
   }
 }

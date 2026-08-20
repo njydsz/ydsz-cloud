@@ -23,7 +23,6 @@ import com.njydsz.userinfo.server.config.WebAuthnProperties;
 import com.webauthn4j.WebAuthnManager;
 import com.webauthn4j.authenticator.Authenticator;
 import com.webauthn4j.authenticator.CoreAuthenticatorImpl;
-import com.webauthn4j.converter.exception.VerificationException;
 import com.webauthn4j.converter.util.ObjectConverter;
 import com.webauthn4j.data.AuthenticationData;
 import com.webauthn4j.data.AuthenticationParameters;
@@ -500,14 +499,12 @@ public class WebAuthnService {
       // 返回认证器数据中的 signCount（用于克隆检测）
       return authenticationData.getAuthenticatorData().getSignCount();
 
-    } catch (VerificationException e) {
-      log.warn("WebAuthn 签名验证失败: credentialId={}, error={}",
-          credential.getCredentialId().substring(0, Math.min(8, credential.getCredentialId().length())),
-          e.getMessage());
-      throw new BusinessException(UserInfoExceptionCode.WEBAUTHN_SIGNATURE_INVALID);
     } catch (BusinessException e) {
       throw e;
     } catch (Exception e) {
+      log.warn("WebAuthn 签名验证失败: credentialId={}, error={}",
+          credential.getCredentialId().substring(0, Math.min(8, credential.getCredentialId().length())),
+          e.getMessage());
       log.error("WebAuthn 签名验证异常: credentialId={}, error={}",
           credential.getCredentialId().substring(0, Math.min(8, credential.getCredentialId().length())),
           e.getMessage(), e);

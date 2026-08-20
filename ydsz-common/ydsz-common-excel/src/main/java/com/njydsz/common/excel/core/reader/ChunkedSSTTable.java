@@ -153,7 +153,9 @@ public class ChunkedSSTTable {
     int tempPos = 0;
     while (tempPos < simpleStrings.length) {
       tempPos = indexOf(simpleStrings, "<si>", tempPos);
-      if (tempPos == -1) break;
+      if (tempPos == -1) {
+        break;
+      }
       tempPos += 4;
       tempCount++;
     }
@@ -164,9 +166,13 @@ public class ChunkedSSTTable {
     int pos = 0;
     while (pos < simpleStrings.length) {
       int tagStart = indexOf(simpleStrings, "<si>", pos);
-      if (tagStart == -1) break;
+      if (tagStart == -1) {
+        break;
+      }
       int tagEnd = indexOf(simpleStrings, "</si>", tagStart);
-      if (tagEnd == -1) break;
+      if (tagEnd == -1) {
+        break;
+      }
 
       int contentStart = tagStart + 5;
       int contentEnd = findContentEnd(simpleStrings, contentStart, tagEnd);
@@ -263,11 +269,15 @@ public class ChunkedSSTTable {
     int stringIndex = 0;
     while (pos < data.length && stringIndex < totalStrings) {
       int siTag = indexOf(data, "<si>", pos);
-      if (siTag == -1) break;
+      if (siTag == -1) {
+        break;
+      }
 
       int contentStart = siTag + 5;
       int contentEnd = indexOf(data, "</si>", contentStart);
-      if (contentEnd == -1) break;
+      if (contentEnd == -1) {
+        break;
+      }
 
       int tAttr = indexOf(data, " t=\"", siTag);
       if (tAttr != -1 && tAttr < contentEnd) {

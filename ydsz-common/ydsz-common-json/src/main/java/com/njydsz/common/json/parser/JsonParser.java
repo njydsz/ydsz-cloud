@@ -344,8 +344,12 @@ public class JsonParser implements Closeable {
     if (currentToken == JsonToken.VALUE_NULL || currentToken == null) {
       return null;
     }
-    if (currentToken == JsonToken.VALUE_TRUE) return "true";
-    if (currentToken == JsonToken.VALUE_FALSE) return "false";
+    if (currentToken == JsonToken.VALUE_TRUE) {
+      return "true";
+    }
+    if (currentToken == JsonToken.VALUE_FALSE) {
+      return "false";
+    }
     return textValue != null ? textValue : currentToken.name();
   }
 
@@ -359,8 +363,12 @@ public class JsonParser implements Closeable {
     if (textValue != null) {
       return Integer.parseInt(textValue);
     }
-    if (currentToken == JsonToken.VALUE_TRUE) return 1;
-    if (currentToken == JsonToken.VALUE_FALSE) return 0;
+    if (currentToken == JsonToken.VALUE_TRUE) {
+      return 1;
+    }
+    if (currentToken == JsonToken.VALUE_FALSE) {
+      return 0;
+    }
     throw new IllegalStateException("Not a number token: " + currentToken);
   }
 
@@ -373,8 +381,12 @@ public class JsonParser implements Closeable {
     if (textValue != null) {
       return Long.parseLong(textValue);
     }
-    if (currentToken == JsonToken.VALUE_TRUE) return 1L;
-    if (currentToken == JsonToken.VALUE_FALSE) return 0L;
+    if (currentToken == JsonToken.VALUE_TRUE) {
+      return 1L;
+    }
+    if (currentToken == JsonToken.VALUE_FALSE) {
+      return 0L;
+    }
     throw new IllegalStateException("Not a number token: " + currentToken);
   }
 
@@ -420,8 +432,12 @@ public class JsonParser implements Closeable {
    * @return true 或 false
    */
   public boolean getBooleanValue() {
-    if (currentToken == JsonToken.VALUE_TRUE) return true;
-    if (currentToken == JsonToken.VALUE_FALSE) return false;
+    if (currentToken == JsonToken.VALUE_TRUE) {
+      return true;
+    }
+    if (currentToken == JsonToken.VALUE_FALSE) {
+      return false;
+    }
     throw new IllegalStateException("Not a boolean token: " + currentToken);
   }
 

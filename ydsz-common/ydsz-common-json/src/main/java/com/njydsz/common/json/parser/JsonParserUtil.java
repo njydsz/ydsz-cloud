@@ -1101,14 +1101,20 @@ public final class JsonParserUtil {
     int len = json.length();
     int i = 0;
     // 跳过前导空白
-    while (i < len && json.charAt(i) <= ' ') i++;
+    while (i < len && json.charAt(i) <= ' ') {
+      i++;
+    }
     if (i >= len || json.charAt(i) != '{') return fieldPositions;
     i++; // 跳过 '{'
 
     while (i < len) {
       // 跳过空白
-      while (i < len && json.charAt(i) <= ' ') i++;
-      if (i >= len) break;
+      while (i < len && json.charAt(i) <= ' ') {
+        i++;
+      }
+      if (i >= len) {
+        break;
+      }
       if (json.charAt(i) == '}') break;
       if (json.charAt(i) == ',') {
         i++;
@@ -1116,20 +1122,28 @@ public final class JsonParserUtil {
       }
 
       // 读取字段名（带引号）
-      if (json.charAt(i) != '"') break;
+      if (json.charAt(i) != '"') {
+        break;
+      }
       i++; // 跳过起始引号
       int nameStart = i;
       while (i < len && json.charAt(i) != '"') {
-        if (json.charAt(i) == '\\') i++;
+        if (json.charAt(i) == '\\') {
+          i++;
+        }
         i++;
       }
       String fieldName = json.substring(nameStart, i);
       i++; // 跳过结束引号
 
       // 跳过冒号和空白
-      while (i < len && json.charAt(i) != ':') i++;
+      while (i < len && json.charAt(i) != ':') {
+        i++;
+      }
       i++; // 跳过冒号
-      while (i < len && json.charAt(i) <= ' ') i++;
+      while (i < len && json.charAt(i) <= ' ') {
+        i++;
+      }
 
       // 记录值起始位置
       fieldPositions.put(fieldName, i);
@@ -1143,7 +1157,9 @@ public final class JsonParserUtil {
   /** 跳过 JSON 值，返回值结束后的下一个位置。 */
   private static int skipValue(String json, int start) {
     int len = json.length();
-    if (start >= len) return start;
+    if (start >= len) {
+      return start;
+    }
     char c = json.charAt(start);
     if (c == '"') {
       // 字符串值
@@ -1153,7 +1169,9 @@ public final class JsonParserUtil {
           i += 2;
           continue;
         }
-        if (json.charAt(i) == '"') return i + 1;
+        if (json.charAt(i) == '"') {
+          return i + 1;
+        }
         i++;
       }
       return i;
@@ -1179,7 +1197,9 @@ public final class JsonParserUtil {
             depth++;
           } else if (ch == '}' || ch == ']') {
             depth--;
-            if (depth == 0) return i + 1;
+            if (depth == 0) {
+              return i + 1;
+            }
           }
         }
       }
@@ -1237,7 +1257,9 @@ public final class JsonParserUtil {
   public static int parseIntField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
-    if (fieldPos == -1) return 0;
+    if (fieldPos == -1) {
+      return 0;
+    }
 
     int valueStart = fieldPos + fieldJson.length();
     while (valueStart < json.length() && json.charAt(valueStart) <= ' ') {
@@ -1261,7 +1283,9 @@ public final class JsonParserUtil {
   public static long parseLongField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
-    if (fieldPos == -1) return 0L;
+    if (fieldPos == -1) {
+      return 0L;
+    }
 
     int valueStart = fieldPos + fieldJson.length();
     while (valueStart < json.length() && json.charAt(valueStart) <= ' ') {
@@ -1285,7 +1309,9 @@ public final class JsonParserUtil {
   public static double parseDoubleField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
-    if (fieldPos == -1) return 0.0;
+    if (fieldPos == -1) {
+      return 0.0;
+    }
 
     int valueStart = fieldPos + fieldJson.length();
     while (valueStart < json.length() && json.charAt(valueStart) <= ' ') {
@@ -1311,7 +1337,9 @@ public final class JsonParserUtil {
   public static String parseStringField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
-    if (fieldPos == -1) return null;
+    if (fieldPos == -1) {
+      return null;
+    }
 
     int valueStart = fieldPos + fieldJson.length();
     while (valueStart < json.length() && json.charAt(valueStart) <= ' ') {
@@ -1345,7 +1373,9 @@ public final class JsonParserUtil {
   public static boolean parseBooleanField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
-    if (fieldPos == -1) return false;
+    if (fieldPos == -1) {
+      return false;
+    }
 
     int valueStart = fieldPos + fieldJson.length();
     while (valueStart < json.length() && json.charAt(valueStart) <= ' ') {
@@ -1372,7 +1402,9 @@ public final class JsonParserUtil {
   public static Object parseObjectField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
-    if (fieldPos == -1) return null;
+    if (fieldPos == -1) {
+      return null;
+    }
 
     int valueStart = fieldPos + fieldJson.length();
     while (valueStart < json.length() && json.charAt(valueStart) <= ' ') {
@@ -1423,7 +1455,9 @@ public final class JsonParserUtil {
   /** 解析 JSON 数组（带类型参数，用于降级） */
   public static <T> List<T> parseArray(String json, Class<T> clazz) {
     List<Object> list = parseArray(json);
-    if (list == null) return null;
+    if (list == null) {
+      return null;
+    }
     List<T> typedList = new ArrayList<>(list.size());
     for (Object item : list) {
       typedList.add(clazz.cast(item));
@@ -1436,12 +1470,16 @@ public final class JsonParserUtil {
     // Map 及其子类直接 cast 返回
     if (Map.class.isAssignableFrom(clazz)) {
       Map<String, Object> map = parseObject(json);
-      if (map == null) return null;
+      if (map == null) {
+        return null;
+      }
       return clazz.cast(map);
     }
     // 非 Map 类型：解析为 Map 后委托 YdszJson 反序列化为目标 Bean
     Map<String, Object> map = parseObject(json);
-    if (map == null) return null;
+    if (map == null) {
+      return null;
+    }
     return YdszJson.fromJson(YdszJson.toJson(map), clazz);
   }
 }

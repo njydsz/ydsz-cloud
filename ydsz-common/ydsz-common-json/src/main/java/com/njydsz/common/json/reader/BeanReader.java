@@ -267,7 +267,9 @@ public final class BeanReader<T> {
       char ch = buf[reader.pos];
       while (ch <= ' ') {
         reader.pos++;
-        if (reader.pos >= len) return;
+        if (reader.pos >= len) {
+          return;
+        }
         ch = buf[reader.pos];
       }
 
@@ -287,10 +289,14 @@ public final class BeanReader<T> {
       }
 
       String fieldName = reader.readString();
-      if (fieldName == null) return;
+      if (fieldName == null) {
+        return;
+      }
 
       reader.skipTo(':');
-      if (reader.pos < len) reader.pos++;
+      if (reader.pos < len) {
+        reader.pos++;
+      }
 
       int hash = fieldName.hashCode();
       boolean matched = false;
@@ -509,7 +515,9 @@ public final class BeanReader<T> {
           case 2: // int / Integer
             if (reader.isNull()) {
               reader.readNull();
-              if (fieldType == Integer.class) field.set(obj, null);
+              if (fieldType == Integer.class) {
+                field.set(obj, null);
+              }
             } else {
               int val = reader.readInt();
               if (fieldType == int.class) {
@@ -522,7 +530,9 @@ public final class BeanReader<T> {
           case 3: // long / Long
             if (reader.isNull()) {
               reader.readNull();
-              if (fieldType == Long.class) field.set(obj, null);
+              if (fieldType == Long.class) {
+                field.set(obj, null);
+              }
             } else {
               long val = reader.readLong();
               if (fieldType == long.class) {
@@ -535,7 +545,9 @@ public final class BeanReader<T> {
           case 4: // double / Double
             if (reader.isNull()) {
               reader.readNull();
-              if (fieldType == Double.class) field.set(obj, null);
+              if (fieldType == Double.class) {
+                field.set(obj, null);
+              }
             } else {
               double val = reader.readDouble();
               if (fieldType == double.class) {
@@ -548,7 +560,9 @@ public final class BeanReader<T> {
           case 5: // float / Float
             if (reader.isNull()) {
               reader.readNull();
-              if (fieldType == Float.class) field.set(obj, null);
+              if (fieldType == Float.class) {
+                field.set(obj, null);
+              }
             } else {
               float val = reader.readFloat();
               if (fieldType == float.class) {
@@ -561,7 +575,9 @@ public final class BeanReader<T> {
           case 6: // boolean / Boolean
             if (reader.isNull()) {
               reader.readNull();
-              if (fieldType == Boolean.class) field.set(obj, null);
+              if (fieldType == Boolean.class) {
+                field.set(obj, null);
+              }
             } else {
               boolean val = reader.readBoolean();
               if (fieldType == boolean.class) {
@@ -574,7 +590,9 @@ public final class BeanReader<T> {
           case 7: // short
             if (reader.isNull()) {
               reader.readNull();
-              if (fieldType == Short.class) field.set(obj, null);
+              if (fieldType == Short.class) {
+                field.set(obj, null);
+              }
             } else {
               short val = (short) reader.readInt();
               if (fieldType == short.class) {
@@ -587,7 +605,9 @@ public final class BeanReader<T> {
           case 8: // byte
             if (reader.isNull()) {
               reader.readNull();
-              if (fieldType == Byte.class) field.set(obj, null);
+              if (fieldType == Byte.class) {
+                field.set(obj, null);
+              }
             } else {
               byte val = (byte) reader.readInt();
               if (fieldType == byte.class) {
@@ -600,7 +620,9 @@ public final class BeanReader<T> {
           case 9: // char
             if (reader.isNull()) {
               reader.readNull();
-              if (fieldType == Character.class) field.set(obj, null);
+              if (fieldType == Character.class) {
+                field.set(obj, null);
+              }
             } else {
               String s = reader.readString();
               if (s != null && s.length() > 0) {
@@ -654,15 +676,33 @@ public final class BeanReader<T> {
     }
 
     private static int getTypeCode(Class<?> type) {
-      if (type == String.class) return 1;
-      if (type == int.class || type == Integer.class) return 2;
-      if (type == long.class || type == Long.class) return 3;
-      if (type == double.class || type == Double.class) return 4;
-      if (type == float.class || type == Float.class) return 5;
-      if (type == boolean.class || type == Boolean.class) return 6;
-      if (type == short.class || type == Short.class) return 7;
-      if (type == byte.class || type == Byte.class) return 8;
-      if (type == char.class || type == Character.class) return 9;
+      if (type == String.class) {
+        return 1;
+      }
+      if (type == int.class || type == Integer.class) {
+        return 2;
+      }
+      if (type == long.class || type == Long.class) {
+        return 3;
+      }
+      if (type == double.class || type == Double.class) {
+        return 4;
+      }
+      if (type == float.class || type == Float.class) {
+        return 5;
+      }
+      if (type == boolean.class || type == Boolean.class) {
+        return 6;
+      }
+      if (type == short.class || type == Short.class) {
+        return 7;
+      }
+      if (type == byte.class || type == Byte.class) {
+        return 8;
+      }
+      if (type == char.class || type == Character.class) {
+        return 9;
+      }
       return 10;
     }
 
@@ -802,7 +842,9 @@ public final class BeanReader<T> {
 
   @SuppressWarnings("deprecation")
   private static LocalDateTime parseLocalDateTime(String s, String pattern) {
-    if (s == null || s.isEmpty()) return null;
+    if (s == null || s.isEmpty()) {
+      return null;
+    }
     // @JsonFormat 指定格式优先
     if (pattern != null) {
       try {
@@ -828,7 +870,9 @@ public final class BeanReader<T> {
 
   @SuppressWarnings("deprecation")
   private static LocalDate parseLocalDate(String s, String pattern) {
-    if (s == null || s.isEmpty()) return null;
+    if (s == null || s.isEmpty()) {
+      return null;
+    }
     if (pattern != null) {
       try {
         return LocalDate.parse(s, DateTimeFormatter.ofPattern(pattern));
@@ -853,7 +897,9 @@ public final class BeanReader<T> {
 
   @SuppressWarnings("deprecation")
   private static Date parseDate(String s, String pattern) {
-    if (s == null || s.isEmpty()) return null;
+    if (s == null || s.isEmpty()) {
+      return null;
+    }
     try {
       return new Date(Long.parseLong(s));
     } catch (NumberFormatException e) {
@@ -883,7 +929,9 @@ public final class BeanReader<T> {
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   private static Object parseEnum(Class<?> enumType, String s) {
-    if (s == null || s.isEmpty()) return null;
+    if (s == null || s.isEmpty()) {
+      return null;
+    }
     try {
       return Enum.valueOf((Class<Enum>) enumType, s);
     } catch (IllegalArgumentException ignored) {

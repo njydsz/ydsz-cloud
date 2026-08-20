@@ -238,19 +238,39 @@ final class BeanDeserializerEngine {
     }
     // 数字类型转换
     if (value instanceof Number num) {
-      if (targetType == int.class || targetType == Integer.class) return num.intValue();
-      if (targetType == long.class || targetType == Long.class) return num.longValue();
-      if (targetType == double.class || targetType == Double.class) return num.doubleValue();
-      if (targetType == float.class || targetType == Float.class) return num.floatValue();
-      if (targetType == short.class || targetType == Short.class) return num.shortValue();
-      if (targetType == byte.class || targetType == Byte.class) return num.byteValue();
+      if (targetType == int.class || targetType == Integer.class) {
+        return num.intValue();
+      }
+      if (targetType == long.class || targetType == Long.class) {
+        return num.longValue();
+      }
+      if (targetType == double.class || targetType == Double.class) {
+        return num.doubleValue();
+      }
+      if (targetType == float.class || targetType == Float.class) {
+        return num.floatValue();
+      }
+      if (targetType == short.class || targetType == Short.class) {
+        return num.shortValue();
+      }
+      if (targetType == byte.class || targetType == Byte.class) {
+        return num.byteValue();
+      }
     }
     // String → 其他类型
     if (value instanceof String str) {
-      if (targetType == int.class || targetType == Integer.class) return Integer.parseInt(str);
-      if (targetType == long.class || targetType == Long.class) return Long.parseLong(str);
-      if (targetType == double.class || targetType == Double.class) return Double.parseDouble(str);
-      if (targetType == float.class || targetType == Float.class) return Float.parseFloat(str);
+      if (targetType == int.class || targetType == Integer.class) {
+        return Integer.parseInt(str);
+      }
+      if (targetType == long.class || targetType == Long.class) {
+        return Long.parseLong(str);
+      }
+      if (targetType == double.class || targetType == Double.class) {
+        return Double.parseDouble(str);
+      }
+      if (targetType == float.class || targetType == Float.class) {
+        return Float.parseFloat(str);
+      }
       if (targetType == boolean.class || targetType == Boolean.class)
         return Boolean.parseBoolean(str);
     }

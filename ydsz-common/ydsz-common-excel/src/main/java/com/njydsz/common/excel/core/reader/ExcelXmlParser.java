@@ -535,7 +535,9 @@ public class ExcelXmlParser {
           } else {
             boolean isEndTag = false;
             for (int i = 1; i < 5; i++) {
-              if (pos + i >= limit) break;
+              if (pos + i >= limit) {
+                break;
+              }
               if (data[pos + i] == '/') {
                 isEndTag = true;
                 break;

@@ -549,7 +549,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         .resultCode(YdszResultCode.NOT_FOUND)
         .message("error.cronjob.msg_c0d8369f")
         .build());
-    Job j = voToJob(vo);
+    JobVO j = voToJob(vo);
     unregister(j.getJobKey());
     jobRepository.deleteById(id);
     log.info("[Cronjob] 删除任务: key={}", j.getJobKey());
@@ -574,7 +574,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         .resultCode(YdszResultCode.NOT_FOUND)
         .message("error.cronjob.msg_c0d8369f")
         .build());
-    Job j = voToJob(vo);
+    JobVO j = voToJob(vo);
     if (!"NORMAL".equals(j.getStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -600,7 +600,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         .resultCode(YdszResultCode.NOT_FOUND)
         .message("error.cronjob.msg_c0d8369f")
         .build());
-    Job j = voToJob(vo);
+    JobVO j = voToJob(vo);
     if ("NORMAL".equals(j.getStatus())) {
       if (!scheduledMap.containsKey(j.getJobKey())) {
         register(j);
@@ -649,7 +649,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         .resultCode(YdszResultCode.NOT_FOUND)
         .message("error.cronjob.msg_c0d8369f")
         .build());
-    Job j = voToJob(vo);
+    JobVO j = voToJob(vo);
     TaskDispatcher dispatcher =
         taskDispatcherProvider != null ? taskDispatcherProvider.getIfAvailable() : null;
     if (dispatcher != null) {
@@ -784,55 +784,55 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   public boolean register(JobPostDTO dto) {
-    Job job = dtoToJob(dto);
-    if (!"NORMAL".equals(job.getStatus())) {
+    JobVO jobVo = dtoToJob(dto);
+    if (!"NORMAL".equals(jobVo.getStatus())) {
       return false;
     }
-    ScheduleType type = ScheduleType.parse(job.getScheduleType());
+    ScheduleType type = ScheduleType.parse(jobVo.getScheduleType());
     // P0-3: API 类型不注册任何调度
     if (type == ScheduleType.API) {
-      log.info("[Cronjob] API 类型任务不注册调度: key={}", job.getJobKey());
+      log.info("[Cronjob] API 类型任务不注册调度: key={}", jobVo.getJobKey());
       return true;
     }
     // FIXED_RATE / FIXED_DELAY：Leader 模式由 JobScanner 统一扫描推进（跳过本地注册，避免双触发）；
     // Leaderless 模式回退本地 TaskScheduler（向后兼容）
     if (type == ScheduleType.FIXED_RATE || type == ScheduleType.FIXED_DELAY) {
       if (cronjobProperties.getLeader().isEnabled()) {
-        if (job.getNextFireTime() == null) {
-          job.setNextFireTime(nextFireTime(job));
-          jobRepository.updateById(job);
+        if (jobVo.getNextFireTime() == null) {
+          jobVo.setNextFireTime(nextFireTime(jobVo));
+          jobRepository.updateById(jobVo);
         }
         log.debug(
-            "[Cronjob] Leader 模式跳过固定频率本地注册: key={}（由 JobScanner 扫描派发）", job.getJobKey());
+            "[Cronjob] Leader 模式跳过固定频率本地注册: key={}（由 JobScanner 扫描派发）", jobVo.getJobKey());
         return true;
       }
-      return registerFixedRateJob(job, type);
+      return registerFixedRateJob(jobVo, type);
     }
     // CRON 类型走原有逻辑
-    if (!StringUtils.hasText(job.getCronExpression())) {
-      log.warn("[Cronjob] 注册失败: 任务 {} cron 表达式为空", job.getJobKey());
+    if (!StringUtils.hasText(jobVo.getCronExpression())) {
+      log.warn("[Cronjob] 注册失败: 任务 {} cron 表达式为空", jobVo.getJobKey());
       return false;
     }
     // P1-7: Leader 模式下跳过本地 CronTrigger 注册，仅确保 next_fire_time 已计算
     if (cronjobProperties.getLeader().isEnabled()) {
-      if (job.getNextFireTime() == null) {
-        job.setNextFireTime(nextFireTime(job));
-        jobRepository.updateById(job);
+      if (jobVo.getNextFireTime() == null) {
+        jobVo.setNextFireTime(nextFireTime(jobVo));
+        jobRepository.updateById(jobVo);
       }
-      log.debug("[Cronjob] Leader 模式跳过本地注册: key={}（由 JobScanner 扫描派发）", job.getJobKey());
+      log.debug("[Cronjob] Leader 模式跳过本地注册: key={}（由 JobScanner 扫描派发）", jobVo.getJobKey());
       return true;
     }
-    if (scheduledMap.containsKey(job.getJobKey())) {
-      unregister(job.getJobKey());
+    if (scheduledMap.containsKey(jobVo.getJobKey())) {
+      unregister(jobVo.getJobKey());
     }
     try {
-      CronTrigger trigger = buildTrigger(job);
-      ScheduledFuture<?> f = taskScheduler.schedule(() -> executeJob(job, false), trigger);
-      scheduledMap.put(job.getJobKey(), f);
-      log.info("[Cronjob] 注册任务成功: key={} cron={}", job.getJobKey(), job.getCronExpression());
+      CronTrigger trigger = buildTrigger(jobVo);
+      ScheduledFuture<?> f = taskScheduler.schedule(() -> executeJob(jobVo, false), trigger);
+      scheduledMap.put(jobVo.getJobKey(), f);
+      log.info("[Cronjob] 注册任务成功: key={} cron={}", jobVo.getJobKey(), jobVo.getCronExpression());
       return true;
     } catch (Exception e) {
-      log.error("[Cronjob] 注册任务失败: key={} reason={}", job.getJobKey(), e.getMessage());
+      log.error("[Cronjob] 注册任务失败: key={} reason={}", jobVo.getJobKey(), e.getMessage());
       return false;
     }
   }
@@ -847,42 +847,42 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @param type 调度类型（FIXED_RATE / FIXED_DELAY）
    * @return 注册成功返回 true，否则返回 false
    */
-  private boolean registerFixedRateJob(Job job, ScheduleType type) {
+  private boolean registerFixedRateJob(JobVO jobVo, ScheduleType type) {
     // 注册到本地 TaskScheduler（Leader 和 Leaderless 模式统一处理）
     long intervalMs;
     if (type == ScheduleType.FIXED_RATE) {
-      intervalMs = job.getFixedRateMs() == null ? 0 : job.getFixedRateMs();
+      intervalMs = jobVo.getFixedRateMs() == null ? 0 : jobVo.getFixedRateMs();
     } else {
-      intervalMs = job.getFixedDelayMs() == null ? 0 : job.getFixedDelayMs();
+      intervalMs = jobVo.getFixedDelayMs() == null ? 0 : jobVo.getFixedDelayMs();
     }
     if (intervalMs <= 0) {
       log.warn(
           "[Cronjob] 注册失败: 任务 {} 间隔非法, type={} fixedRateMs={} fixedDelayMs={}",
-          job.getJobKey(),
+          jobVo.getJobKey(),
           type,
-          job.getFixedRateMs(),
-          job.getFixedDelayMs());
+          jobVo.getFixedRateMs(),
+          jobVo.getFixedDelayMs());
       return false;
     }
-    if (scheduledMap.containsKey(job.getJobKey())) {
-      unregister(job.getJobKey());
+    if (scheduledMap.containsKey(jobVo.getJobKey())) {
+      unregister(jobVo.getJobKey());
     }
     try {
       ScheduledFuture<?> f;
       if (type == ScheduleType.FIXED_RATE) {
         f =
             taskScheduler.scheduleAtFixedRate(
-                () -> executeJob(job, false), Duration.ofMillis(intervalMs));
+                () -> executeJob(jobVo, false), Duration.ofMillis(intervalMs));
       } else {
         f =
             taskScheduler.scheduleWithFixedDelay(
-                () -> executeJob(job, false), Duration.ofMillis(intervalMs));
+                () -> executeJob(jobVo, false), Duration.ofMillis(intervalMs));
       }
-      scheduledMap.put(job.getJobKey(), f);
-      log.info("[Cronjob] 注册 {} 任务成功: key={} intervalMs={}", type, job.getJobKey(), intervalMs);
+      scheduledMap.put(jobVo.getJobKey(), f);
+      log.info("[Cronjob] 注册 {} 任务成功: key={} intervalMs={}", type, jobVo.getJobKey(), intervalMs);
       return true;
     } catch (Exception e) {
-      log.error("[Cronjob] 注册 {} 任务失败: key={} reason={}", type, job.getJobKey(), e.getMessage());
+      log.error("[Cronjob] 注册 {} 任务失败: key={} reason={}", type, jobVo.getJobKey(), e.getMessage());
       return false;
     }
   }
@@ -912,8 +912,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   public boolean reschedule(JobPutDTO dto) {
-    Job job = dtoToJob(dto);
-    unregister(job.getJobKey());
+    JobVO jobVo = dtoToJob(dto);
+    unregister(jobVo.getJobKey());
     return register(dto);
   }
 
@@ -976,31 +976,31 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @param manual 是否手动触发（手动触发不加分布式锁）
    * @return 执行日志 ID；定时触发且锁已被持有时返回 null
    */
-  private String executeJob(Job job, boolean manual) {
+  private String executeJob(JobVO jobVo, boolean manual) {
     // 定时触发（非手动）时获取分布式锁，防止多实例重复执行
     // P0-4: TTL 支持任务级 override + 全局配置 + 上下限规整
     String lockValue = null;
     if (!manual) {
-      Duration ttl = resolveLockTtl(job);
-      lockValue = jobLockManager.tryAcquireLock(job.getJobKey(), null, ttl.toMillis());
+      Duration ttl = resolveLockTtl(jobVo);
+      lockValue = jobLockManager.tryAcquireLock(jobVo.getJobKey(), null, ttl.toMillis());
       if (lockValue == null) {
-        log.info("[Cronjob] 任务已被其他实例持有锁, 跳过本次执行: key={}", job.getJobKey());
+        log.info("[Cronjob] 任务已被其他实例持有锁, 跳过本次执行: key={}", jobVo.getJobKey());
         return null;
       }
       log.debug(
           "[Cronjob] 获取分布式锁成功: key={} holder={} ttl={}ms",
-          job.getJobKey(),
+          jobVo.getJobKey(),
           lockValue,
           ttl.toMillis());
     }
 
     // 写开始日志
     JobLogVO log0 = new JobLogVO();
-    log0.setJobId(job.getId());
-    log0.setJobKey(job.getJobKey());
+    log0.setJobId(jobVo.getId());
+    log0.setJobKey(jobVo.getJobKey());
     log0.setStartTime(LocalDateTime.now());
     log0.setStatus("RUNNING");
-    log0.setParamsJson(job.getParamsJson());
+    log0.setParamsJson(jobVo.getParamsJson());
     log0.setTraceId(TracerUtils.getTraceId());
     String logId = jobLogRepository.insert(log0);
 
@@ -1008,15 +1008,15 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     String error = null;
     Object result = null;
     try {
-      JobHandler handler = applicationContext.getBean(job.getHandler(), JobHandler.class);
-      result = handler.execute(job.getParamsJson());
+      JobHandler handler = applicationContext.getBean(jobVo.getHandler(), JobHandler.class);
+      result = handler.execute(jobVo.getParamsJson());
       success = true;
       log0.setResultJson(result == null ? null : YdszJson.toJson(result));
     } catch (Exception e) {
       log.error(
           "[Cronjob] 任务执行失败: key={} handler={} reason={}",
-          job.getJobKey(),
-          job.getHandler(),
+          jobVo.getJobKey(),
+          jobVo.getHandler(),
           e.getMessage(),
           e);
       error = e.getClass().getSimpleName() + ": " + e.getMessage();
@@ -1034,10 +1034,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       Long incFail = success ? 0L : 1L;
       LocalDateTime next = null;
       if (!manual) {
-        next = nextFireTime(job);
+        next = nextFireTime(jobVo);
       }
       jobRepository.updateStats(
-          job.getId(),
+          jobVo.getId(),
           log0.getStartTime(),
           next,
           incFire,
@@ -1048,11 +1048,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       // 释放分布式锁（JobLockManager 安全释放: 仅持有者可释放）
       if (lockValue != null) {
         try {
-          jobLockManager.releaseLock(job.getJobKey(), null, lockValue);
+          jobLockManager.releaseLock(jobVo.getJobKey(), null, lockValue);
         } catch (Exception e) {
           log.warn(
               "[Cronjob] 释放分布式锁失败(将等待 TTL 自动过期): key={} reason={}",
-              job.getJobKey(),
+              jobVo.getJobKey(),
               e.getMessage());
         }
       }
@@ -1069,10 +1069,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @param job 任务定义
    * @return 规整化后的锁 TTL
    */
-  private Duration resolveLockTtl(Job job) {
+  private Duration resolveLockTtl(JobVO jobVo) {
     Duration taskLevel = null;
-    if (job.getLockTtlMs() != null && job.getLockTtlMs() > 0) {
-      taskLevel = Duration.ofMillis(job.getLockTtlMs());
+    if (jobVo.getLockTtlMs() != null && jobVo.getLockTtlMs() > 0) {
+      taskLevel = Duration.ofMillis(jobVo.getLockTtlMs());
     }
     return cronjobProperties.normalizeTtl(taskLevel);
   }
@@ -1146,38 +1146,38 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     }
   }
 
-  private void validate(Job job) {
-    if (!StringUtils.hasText(job.getJobKey())) {
+  private void validate(JobVO jobVo) {
+    if (!StringUtils.hasText(jobVo.getJobKey())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_884214e7")
           .build();
     }
-    if (!StringUtils.hasText(job.getHandler())) {
+    if (!StringUtils.hasText(jobVo.getHandler())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_04ebee77")
           .build();
     }
     // P2-8: 校验任务级时区（非空时必须为有效时区 ID）
-    if (StringUtils.hasText(job.getTimezone())) {
+    if (StringUtils.hasText(jobVo.getTimezone())) {
       try {
-        ZoneId.of(job.getTimezone());
+        ZoneId.of(jobVo.getTimezone());
       } catch (Exception e) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_5d0044ca")
-            .params("无效的时区 ID: " + job.getTimezone())
+            .params("无效的时区 ID: " + jobVo.getTimezone())
             .build();
       }
     }
-    ScheduleType type = ScheduleType.parse(job.getScheduleType());
+    ScheduleType type = ScheduleType.parse(jobVo.getScheduleType());
     switch (type) {
       case CRON:
-        validateCron(job.getCronExpression());
+        validateCron(jobVo.getCronExpression());
         break;
       case FIXED_RATE:
-        if (job.getFixedRateMs() == null || job.getFixedRateMs() <= 0) {
+        if (jobVo.getFixedRateMs() == null || jobVo.getFixedRateMs() <= 0) {
           throw SysException.builder()
               .resultCode(YdszResultCode.BAD_REQUEST)
               .key("error.cronjob.msg_5d0044ca")
@@ -1186,7 +1186,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         }
         break;
       case FIXED_DELAY:
-        if (job.getFixedDelayMs() == null || job.getFixedDelayMs() <= 0) {
+        if (jobVo.getFixedDelayMs() == null || jobVo.getFixedDelayMs() <= 0) {
           throw SysException.builder()
               .resultCode(YdszResultCode.BAD_REQUEST)
               .key("error.cronjob.msg_5d0044ca")
@@ -1199,7 +1199,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         break;
       default:
         // 不会到达此处（parse 方法已兜底）
-        validateCron(job.getCronExpression());
+        validateCron(jobVo.getCronExpression());
     }
   }
 
@@ -1235,10 +1235,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @param job 任务定义（含 cron 表达式和时区）
    * @return CronTrigger 实例
    */
-  private CronTrigger buildTrigger(Job job) {
+  private CronTrigger buildTrigger(JobVO jobVo) {
     String tz =
-        StringUtils.hasText(job.getTimezone()) ? job.getTimezone() : SCHEDULE_TIMEZONE.getID();
-    return new CronTrigger(job.getCronExpression(), TimeZone.getTimeZone(tz));
+        StringUtils.hasText(jobVo.getTimezone()) ? jobVo.getTimezone() : SCHEDULE_TIMEZONE.getID();
+    return new CronTrigger(jobVo.getCronExpression(), TimeZone.getTimeZone(tz));
   }
 
   /**
@@ -1250,8 +1250,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @param job 任务定义（含 cron 表达式和时区）
    * @return 下次触发时间；表达式非法时返回 null
    */
-  private LocalDateTime nextFireTime(Job job) {
-    return nextFireTimeCalculator.calculate(job);
+  private LocalDateTime nextFireTime(JobVO jobVo) {
+    return nextFireTimeCalculator.calculate(jobVo);
   }
 
   /** 发布领域事件到 Outbox（DomainEventPublisher 不可用时静默跳过）。 */
@@ -1277,7 +1277,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @param type 实体类型标识（如 "job"）
    * @param entity 业务实体
    */
-  private void syncSearchIndex(String type, Job entity) {
+  private void syncSearchIndex(String type, JobVO entity) {
     SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
     if (bridge != null) {
       bridge.indexUpsert(type, entity);

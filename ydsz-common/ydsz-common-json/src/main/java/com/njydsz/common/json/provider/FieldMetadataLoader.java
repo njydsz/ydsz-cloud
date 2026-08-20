@@ -545,7 +545,9 @@ public final class FieldMetadataLoader {
    * </ul>
    */
   public static boolean hasFieldAnnotations(FieldMeta[] fields) {
-    if (fields == null) return false;
+    if (fields == null) {
+      return false;
+    }
     for (FieldMeta field : fields) {
       if (field.isDateType() || field.includeStrategy != JsonInclude.Include.ALWAYS) {
         return true;

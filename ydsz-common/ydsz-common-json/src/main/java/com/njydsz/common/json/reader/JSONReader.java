@@ -512,7 +512,9 @@ public final class JSONReader {
    * @throws IllegalStateException 当已到达 JSON 末尾（pos >= len）
    */
   public char readChar() {
-    if (pos >= len) throw new IllegalStateException("Unexpected end of JSON");
+    if (pos >= len) {
+      throw new IllegalStateException("Unexpected end of JSON");
+    }
     return buf[pos++];
   }
 
@@ -522,7 +524,9 @@ public final class JSONReader {
    * <p>仅在 {@code pos > 0} 时回退，不会造成越界；用于试探性读取后的回溯。
    */
   public void back() {
-    if (pos > 0) pos--;
+    if (pos > 0) {
+      pos--;
+    }
   }
 
   /**
@@ -558,8 +562,12 @@ public final class JSONReader {
    * @return 字段名字符串，或 null（当前非字符串字段名）
    */
   public String readFieldNameFast() {
-    if (pos >= len) return null;
-    if (buf[pos] != '"') return null;
+    if (pos >= len) {
+      return null;
+    }
+    if (buf[pos] != '"') {
+      return null;
+    }
     return readString();
   }
 
@@ -569,7 +577,9 @@ public final class JSONReader {
    * <p>JSON 规范中空白为空格、制表符、换行、回车；本实现以 {@code <= ' '} 统一处理。
    */
   public void skipWhitespace() {
-    while (pos < len && buf[pos] <= ' ') pos++;
+    while (pos < len && buf[pos] <= ' ') {
+      pos++;
+    }
   }
 
   /**
@@ -582,8 +592,12 @@ public final class JSONReader {
   public void skipTo(char target) {
     while (pos < len) {
       char c = buf[pos];
-      if (c == target) return;
-      if (c > ' ') return;
+      if (c == target) {
+        return;
+      }
+      if (c > ' ') {
+        return;
+      }
       pos++;
     }
   }
@@ -612,25 +626,35 @@ public final class JSONReader {
    */
   public boolean matchField(String fieldName) {
     skipWhitespace();
-    if (pos >= len || buf[pos] != '"') return false;
+    if (pos >= len || buf[pos] != '"') {
+      return false;
+    }
     pos++;
     int fieldLen = fieldName.length();
-    if (pos + fieldLen > len) return false;
+    if (pos + fieldLen > len) {
+      return false;
+    }
     for (int i = 0; i < fieldLen; i++) {
       if (buf[pos + i] != fieldName.charAt(i)) {
         // 字段名不匹配：先跳过剩余字段名（到下一个 \"），再跳过 : 和值\n                while (pos < len && buf[pos] != '"')
         // pos++;
         if (pos < len && buf[pos] == '"') pos++; // 跳过结束引号
         skipWhitespace();
-        if (pos < len && buf[pos] == ':') pos++;
+        if (pos < len && buf[pos] == ':') {
+          pos++;
+        }
         skipValue();
         return false;
       }
     }
     pos += fieldLen;
-    if (pos < len && buf[pos] == '"') pos++;
+    if (pos < len && buf[pos] == '"') {
+      pos++;
+    }
     skipWhitespace();
-    if (pos < len && buf[pos] == ':') pos++;
+    if (pos < len && buf[pos] == ':') {
+      pos++;
+    }
     return true;
   }
 
@@ -653,7 +677,9 @@ public final class JSONReader {
    */
   public float readFloat() {
     skipWhitespace();
-    if (pos >= len) throw new IllegalStateException("Unexpected end of JSON");
+    if (pos >= len) {
+      throw new IllegalStateException("Unexpected end of JSON");
+    }
 
     final int start = pos;
     boolean negative = false;
@@ -709,7 +735,9 @@ public final class JSONReader {
           break;
         }
       }
-      if (negativeExp) exponent = -exponent;
+      if (negativeExp) {
+        exponent = -exponent;
+      }
     }
 
     int totalDigits = intDigits + scale;
@@ -741,7 +769,9 @@ public final class JSONReader {
    */
   public String readRawValue() {
     skipWhitespace();
-    if (pos >= len) return "null";
+    if (pos >= len) {
+      return "null";
+    }
     int start = pos;
     char ch = buf[pos];
     if (ch == '{') {
@@ -762,7 +792,9 @@ public final class JSONReader {
       int depth = 1;
       while (depth > 0 && pos < len) {
         char ch2 = buf[pos];
-        if (ch2 == '[') depth++;
+        if (ch2 == '[') {
+          depth++;
+        }
         else if (ch2 == ']') depth--;
         else if (ch2 == '"') {
           skipStringValue();
@@ -817,11 +849,17 @@ public final class JSONReader {
     int end = pos;
     while (end < len) {
       char ch = buf[end];
-      if (ch == quote) break;
-      if (ch == '\\') return readStringWithEscape(start);
+      if (ch == quote) {
+        break;
+      }
+      if (ch == '\\') {
+        return readStringWithEscape(start);
+      }
       end++;
     }
-    if (end >= len) throw new IllegalStateException("Unexpected end of JSON string");
+    if (end >= len) {
+      throw new IllegalStateException("Unexpected end of JSON string");
+    }
     String result = new String(buf, start, end - start);
     pos = end + 1;
     return result;
@@ -831,9 +869,13 @@ public final class JSONReader {
     StringBuilder sb = new StringBuilder(len - start);
     while (pos < len) {
       char ch = buf[pos++];
-      if (ch == '"') break;
+      if (ch == '"') {
+        break;
+      }
       if (ch == '\\') {
-        if (pos >= len) throw new IllegalStateException("Unexpected end of JSON string");
+        if (pos >= len) {
+          throw new IllegalStateException("Unexpected end of JSON string");
+        }
         char escaped = buf[pos++];
         switch (escaped) {
           case '"':
@@ -861,7 +903,9 @@ public final class JSONReader {
             sb.append('\f');
             break;
           case 'u':
-            if (pos + 4 > len) throw new IllegalStateException("Unexpected end of JSON string");
+            if (pos + 4 > len) {
+              throw new IllegalStateException("Unexpected end of JSON string");
+            }
             char unicode = (char) Integer.parseInt(new String(buf, pos, 4), 16);
             pos += 4;
             // 处理代理对（U+D800-U+DFFF），emoji 等补充字符在 JSON 中编码为两个反斜杠u 序列
@@ -899,7 +943,9 @@ public final class JSONReader {
    */
   public int readInt() {
     skipWhitespace();
-    if (pos >= len) throw new IllegalStateException("Unexpected end of JSON");
+    if (pos >= len) {
+      throw new IllegalStateException("Unexpected end of JSON");
+    }
     boolean negative = false;
     if (buf[pos] == '-') {
       negative = true;
@@ -924,7 +970,9 @@ public final class JSONReader {
    */
   public long readLong() {
     skipWhitespace();
-    if (pos >= len) throw new IllegalStateException("Unexpected end of JSON");
+    if (pos >= len) {
+      throw new IllegalStateException("Unexpected end of JSON");
+    }
     boolean negative = false;
     if (buf[pos] == '-') {
       negative = true;
@@ -950,7 +998,9 @@ public final class JSONReader {
    */
   public double readDouble() {
     skipWhitespace();
-    if (pos >= len) throw new IllegalStateException("Unexpected end of JSON");
+    if (pos >= len) {
+      throw new IllegalStateException("Unexpected end of JSON");
+    }
 
     final int start = pos;
     boolean negative = false;
@@ -1006,7 +1056,9 @@ public final class JSONReader {
           break;
         }
       }
-      if (negativeExp) exponent = -exponent;
+      if (negativeExp) {
+        exponent = -exponent;
+      }
     }
 
     int totalDigits = intDigits + scale;
@@ -1113,7 +1165,9 @@ public final class JSONReader {
    * @throws IllegalStateException 当当前字符非 {@code '['}
    */
   public void readArrayStart() {
-    if (nextChar() != '[') throw new IllegalStateException("Expected '['");
+    if (nextChar() != '[') {
+      throw new IllegalStateException("Expected '['");
+    }
   }
 
   /**
@@ -1122,7 +1176,9 @@ public final class JSONReader {
    * @throws IllegalStateException 当当前字符非 {@code ']'}
    */
   public void readArrayEnd() {
-    if (nextChar() != ']') throw new IllegalStateException("Expected ']'");
+    if (nextChar() != ']') {
+      throw new IllegalStateException("Expected ']'");
+    }
   }
 
   /**
@@ -1133,11 +1189,15 @@ public final class JSONReader {
    * @return 字段名字符串，或 null 表示对象已结束
    */
   public String readFieldName() {
-    if (pos >= len) return null;
+    if (pos >= len) {
+      return null;
+    }
     char ch = buf[pos];
     while (ch <= ' ') {
       pos++;
-      if (pos >= len) return null;
+      if (pos >= len) {
+        return null;
+      }
       ch = buf[pos];
     }
     if (ch == '}') {
@@ -1148,26 +1208,40 @@ public final class JSONReader {
       pos++;
       while (pos < len) {
         ch = buf[pos];
-        if (ch == '"') break;
+        if (ch == '"') {
+          break;
+        }
         pos++;
       }
     }
-    if (pos >= len || buf[pos] != '"') return null;
+    if (pos >= len || buf[pos] != '"') {
+      return null;
+    }
     String name = readString();
     // 消费冒号（含前置空白）
-    while (pos < len && buf[pos] <= ' ') pos++;
-    if (pos < len && buf[pos] == ':') pos++;
-    while (pos < len && buf[pos] <= ' ') pos++;
+    while (pos < len && buf[pos] <= ' ') {
+      pos++;
+    }
+    if (pos < len && buf[pos] == ':') {
+      pos++;
+    }
+    while (pos < len && buf[pos] <= ' ') {
+      pos++;
+    }
     return name;
   }
 
   /** 读取字段名哈希码（FNV-1a，避免创建 String 对象） */
   public long readFieldNameHash() {
-    if (pos >= len) return -1;
+    if (pos >= len) {
+      return -1;
+    }
     char ch = buf[pos];
     while (ch <= ' ') {
       pos++;
-      if (pos >= len) return -1;
+      if (pos >= len) {
+        return -1;
+      }
       ch = buf[pos];
     }
     if (ch == '}') {
@@ -1178,11 +1252,15 @@ public final class JSONReader {
       pos++;
       while (pos < len) {
         ch = buf[pos];
-        if (ch == '"') break;
+        if (ch == '"') {
+          break;
+        }
         pos++;
       }
     }
-    if (pos >= len || buf[pos] != '"') return -1;
+    if (pos >= len || buf[pos] != '"') {
+      return -1;
+    }
     pos++;
     long hash = 0x811c9dc5;
     while (pos < len) {
@@ -1195,9 +1273,15 @@ public final class JSONReader {
       hash *= 0x100000001b3L;
       pos++;
     }
-    while (pos < len && buf[pos] <= ' ') pos++;
-    if (pos < len && buf[pos] == ':') pos++;
-    while (pos < len && buf[pos] <= ' ') pos++;
+    while (pos < len && buf[pos] <= ' ') {
+      pos++;
+    }
+    if (pos < len && buf[pos] == ':') {
+      pos++;
+    }
+    while (pos < len && buf[pos] <= ' ') {
+      pos++;
+    }
     return hash;
   }
 
@@ -1234,7 +1318,9 @@ public final class JSONReader {
    */
   public void skipValue() {
     skipWhitespace();
-    if (pos >= len) return;
+    if (pos >= len) {
+      return;
+    }
     char ch = buf[pos];
     if (ch == '{') {
       pos++;
@@ -1254,7 +1340,9 @@ public final class JSONReader {
       int depth = 1;
       while (depth > 0 && pos < len) {
         char ch2 = buf[pos];
-        if (ch2 == '[') depth++;
+        if (ch2 == '[') {
+          depth++;
+        }
         else if (ch2 == ']') depth--;
         else if (ch2 == '"') {
           skipStringValue();
@@ -1326,7 +1414,9 @@ public final class JSONReader {
     List<Object> result = new ArrayList<>();
     while (pos < len) {
       skipWhitespace();
-      if (pos >= len) break;
+      if (pos >= len) {
+        break;
+      }
       if (buf[pos] == ']') {
         pos++;
         return result;
@@ -1346,13 +1436,23 @@ public final class JSONReader {
   }
 
   private Object readArrayElement(Class<?> elementType, int depth) {
-    if (elementType == null || elementType == Object.class) return readAnyValue(depth);
-    if (elementType == String.class) return readString();
-    if (elementType == int.class || elementType == Integer.class) return Integer.valueOf(readInt());
-    if (elementType == long.class || elementType == Long.class) return Long.valueOf(readLong());
+    if (elementType == null || elementType == Object.class) {
+      return readAnyValue(depth);
+    }
+    if (elementType == String.class) {
+      return readString();
+    }
+    if (elementType == int.class || elementType == Integer.class) {
+      return Integer.valueOf(readInt());
+    }
+    if (elementType == long.class || elementType == Long.class) {
+      return Long.valueOf(readLong());
+    }
     if (elementType == double.class || elementType == Double.class)
       return Double.valueOf(readDouble());
-    if (elementType == float.class || elementType == Float.class) return Float.valueOf(readFloat());
+    if (elementType == float.class || elementType == Float.class) {
+      return Float.valueOf(readFloat());
+    }
     if (elementType == boolean.class || elementType == Boolean.class)
       return Boolean.valueOf(readBoolean());
     return readAnyValue(depth);
@@ -1364,11 +1464,17 @@ public final class JSONReader {
 
   private Object readAnyValue(int depth) {
     skipWhitespace();
-    if (pos >= len) return null;
+    if (pos >= len) {
+      return null;
+    }
     char ch = buf[pos];
-    if (ch == '"') return readString();
+    if (ch == '"') {
+      return readString();
+    }
     if (ch == '{') return readObjectMap(depth + 1);
-    if (ch == '[') return readArray(Object.class, depth + 1);
+    if (ch == '[') {
+      return readArray(Object.class, depth + 1);
+    }
     if (ch == 't') {
       pos += 4;
       return true;
@@ -1409,7 +1515,9 @@ public final class JSONReader {
     Map<String, Object> result = new HashMap<>();
     while (pos < len) {
       skipWhitespace();
-      if (pos >= len) break;
+      if (pos >= len) {
+        break;
+      }
       if (buf[pos] == '}') {
         pos++;
         return result;
@@ -1419,9 +1527,13 @@ public final class JSONReader {
         continue;
       }
       String key = readFieldNameFast();
-      if (key == null) break;
+      if (key == null) {
+        break;
+      }
       skipTo(':');
-      if (pos < len) pos++;
+      if (pos < len) {
+        pos++;
+      }
       Object value = readAnyValue(depth + 1);
       result.put(key, value);
     }

@@ -52,7 +52,9 @@ public enum FieldTypeCode {
   /** 按当前编码方案获取枚举（直接匹配）。 */
   public static FieldTypeCode of(int code) {
     for (FieldTypeCode tc : values()) {
-      if (tc.code == code) return tc;
+      if (tc.code == code) {
+        return tc;
+      }
     }
     return NESTED_OBJECT;
   }

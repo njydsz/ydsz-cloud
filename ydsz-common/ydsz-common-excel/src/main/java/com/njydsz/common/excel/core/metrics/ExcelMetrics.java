@@ -61,7 +61,9 @@ public class ExcelMetrics {
    * @param success 是否成功
    */
   public static void recordWrite(Duration duration, int rows, String engine, boolean success) {
-    if (registry == null) return;
+    if (registry == null) {
+      return;
+    }
 
     Timer.builder("excel.write.duration")
         .description("Excel write operation duration")
@@ -87,7 +89,9 @@ public class ExcelMetrics {
    * @param success 是否成功
    */
   public static void recordRead(Duration duration, int rows, String engine, boolean success) {
-    if (registry == null) return;
+    if (registry == null) {
+      return;
+    }
 
     Timer.builder("excel.read.duration")
         .description("Excel read operation duration")
@@ -106,13 +110,17 @@ public class ExcelMetrics {
 
   /** 记录缓存命中 */
   public static void recordCacheHit(String cacheName) {
-    if (registry == null) return;
+    if (registry == null) {
+      return;
+    }
     registry.counter("excel.cache.hits", Tags.of(Tag.of("cache", cacheName))).increment();
   }
 
   /** 记录缓存未命中 */
   public static void recordCacheMiss(String cacheName) {
-    if (registry == null) return;
+    if (registry == null) {
+      return;
+    }
     registry.counter("excel.cache.misses", Tags.of(Tag.of("cache", cacheName))).increment();
   }
 
@@ -123,7 +131,9 @@ public class ExcelMetrics {
    * @param value 数值提供者
    */
   public static void registerGauge(String name, AtomicLong value) {
-    if (registry == null) return;
+    if (registry == null) {
+      return;
+    }
     gaugeMap.put(name, value);
     registry.gauge("excel." + name, value);
   }

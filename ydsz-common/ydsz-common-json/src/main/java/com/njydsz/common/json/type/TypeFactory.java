@@ -149,8 +149,12 @@ public class TypeFactory {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (!(o instanceof ParameterizedType)) return false;
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof ParameterizedType)) {
+        return false;
+      }
       ParameterizedType that = (ParameterizedType) o;
       return Objects.equals(rawType, that.getRawType())
           && Arrays.equals(actualTypeArguments, that.getActualTypeArguments());
@@ -172,7 +176,9 @@ public class TypeFactory {
       if (actualTypeArguments.length > 0) {
         sb.append("<");
         for (int i = 0; i < actualTypeArguments.length; i++) {
-          if (i > 0) sb.append(",");
+          if (i > 0) {
+            sb.append(",");
+          }
           sb.append(actualTypeArguments[i].getTypeName());
         }
         sb.append(">");

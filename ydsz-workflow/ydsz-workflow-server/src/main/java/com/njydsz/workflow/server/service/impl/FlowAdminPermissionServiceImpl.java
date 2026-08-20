@@ -16,7 +16,6 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.repository.FlowAdminRoleRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAdminRoleDO;
-import com.njydsz.workflow.infra.mapper.FlowAdminRoleMapper;
 import com.njydsz.workflow.server.service.FlowAdminPermissionService;
 
 /**
@@ -106,14 +105,6 @@ import com.njydsz.workflow.server.service.FlowAdminPermissionService;
 @RequiredArgsConstructor
 public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionService {
 
-  /**
-   * 管理员角色 Mapper，查询 ydsz_flow_admin_role 表。
-   *
-   * <p>保留 Mapper 调用，因为部分方法（如 {@code selectByUserAndRole}、{@code selectByUserId}）
-   * 需要 tenantId 参数，与 Repository 中对应方法签名不同。
-   */
-  private final FlowAdminRoleMapper adminRoleMapper;
-
   /** 管理员角色仓储（domain 层契约），管理 ydsz_flow_admin_role 表 CRUD */
   private final FlowAdminRoleRepository adminRoleRepository;
 
@@ -135,8 +126,9 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
       return false;
     }
     String tenantId = TenantContextHolder.getTenantId();
-    // Repository 中 findByUserAndRole 暂无 tenantId 参数，签名不同，保留 Mapper 调用
-    FlowAdminRoleDO role = adminRoleMapper.selectByUserAndRole(userId, roleCode, tenantId);
+    FlowAdminRoleDO role = adminRoleRepository.findByUserAndRole(userId, roleCode, tenantId)
+        .map(converter::entityToDO)
+        .orElse(null);
     return role != null && isRoleValid(role);
   }
 
@@ -172,8 +164,9 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
       return List.of();
     }
     String tenantId = TenantContextHolder.getTenantId();
-    // Repository 中 findByUserId 暂无 tenantId 参数，签名不同，保留 Mapper 调用
-    List<FlowAdminRoleDO> roles = adminRoleMapper.selectByUserId(userId, tenantId);
+    List<FlowAdminRoleDO> roles = adminRoleRepository.findByUserId(userId, tenantId).stream()
+        .map(converter::entityToDO)
+        .toList();
     return roles.stream()
         .filter(this::isRoleValid)
         .map(FlowAdminRoleDO::getRoleCode)
@@ -191,8 +184,9 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
           .build();
     }
     // 检查是否已存在
-    // Repository 中 findByUserAndRole 暂无 tenantId 参数，签名不同，保留 Mapper 调用
-    FlowAdminRoleDO existing = adminRoleMapper.selectByUserAndRole(userId, roleCode, tenantId);
+    FlowAdminRoleDO existing = adminRoleRepository.findByUserAndRole(userId, roleCode, tenantId)
+        .map(converter::entityToDO)
+        .orElse(null);
     if (existing != null) {
       if (isRoleValid(existing)) {
         log.info("[FlowAdmin] 用户已有该角色，跳过: userId={} role={}", userId, roleCode);
@@ -223,8 +217,9 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
       return;
     }
     String tenantId = TenantContextHolder.getTenantId();
-    // Repository 中 findByUserAndRole 暂无 tenantId 参数，签名不同，保留 Mapper 调用
-    FlowAdminRoleDO existing = adminRoleMapper.selectByUserAndRole(userId, roleCode, tenantId);
+    FlowAdminRoleDO existing = adminRoleRepository.findByUserAndRole(userId, roleCode, tenantId)
+        .map(converter::entityToDO)
+        .orElse(null);
     if (existing == null) {
       return;
     }

@@ -3,7 +3,6 @@ package com.njydsz.workflow.server.service.impl.delegate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,11 +11,10 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -112,13 +110,8 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
   /** 实体转换器，用于 VO ↔ DO 转换 */
   private final WorkflowConverter converter;
 
-  /**
-   * 运行时任务 Mapper，查询原办理人名下的待办任务。
-   *
-   * <p>保留 Mapper 调用，因为复杂条件查询（assigneeId + taskStatus IN + deleted + 可选 flowCode/tenantId）
-   * 在 Repository 中暂无等价方法，后续应在 FlowRunTaskRepository 中补齐对应方法。
-   */
-  private final FlowRunTaskMapper taskMapper;
+  /** 运行时任务仓储（domain 层契约），查询原办理人名下的待办任务 */
+  private final FlowRunTaskRepository taskRepository;
 
   /** 流程任务服务，调用 transfer 接口执行批量转办 */
   private final FlowTaskService taskService;
@@ -222,22 +215,9 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
       String reason,
       String operatorId) {
     // 查询原办理人名下的待办
-    LambdaQueryWrapper<FlowRunTaskDO> wrapper =
-        new LambdaQueryWrapper<FlowRunTaskDO>()
-            .eq(FlowRunTaskDO::getAssigneeId, userId)
-            .eq(FlowRunTaskDO::getDeleted, 0)
-            .in(
-                FlowRunTaskDO::getTaskStatus,
-                FlowTaskStatus.PENDING.name(),
-                FlowTaskStatus.CLAIMED.name());
-    if (StringUtils.hasText(flowCode)) {
-      wrapper.eq(FlowRunTaskDO::getFlowCode, flowCode);
-    }
-    if (StringUtils.hasText(tenantId)) {
-      wrapper.eq(FlowRunTaskDO::getTenantId, tenantId);
-    }
-
-    List<FlowRunTaskDO> tasks = taskMapper.selectList(wrapper);
+    List<FlowRunTaskDO> tasks = taskRepository.selectPendingByAssignee(userId, flowCode, tenantId).stream()
+        .map(converter::entityToDO)
+        .toList();
     if (tasks.isEmpty()) {
       log.info("[OfflineForward] 无待办需要转发: userId={} flowCode={}", userId, flowCode);
       return 0;

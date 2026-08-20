@@ -25,6 +25,9 @@ public class SamlIdpConfigVO {
   /** IdP SSO 端点 URL */
   private String ssoUrl;
 
+  /** IdP 公钥证书（PEM 格式，用于验证 SAML Response 签名） */
+  private String certificate;
+
   /** 邮箱属性名 */
   private String emailAttribute;
 

@@ -327,7 +327,9 @@ public final class JSONWriter {
         long decPart = longValue2 % 100;
         pos += NumberUtils.writeLong(intPart, buf, pos);
         buf[pos++] = '.';
-        if (decPart < 10) buf[pos++] = '0';
+        if (decPart < 10) {
+          buf[pos++] = '0';
+        }
         pos += NumberUtils.writeLong(decPart, buf, pos);
         return;
       }
@@ -793,7 +795,9 @@ public final class JSONWriter {
    * @param obj 待序列化对象
    */
   public void preAllocateForObject(Object obj) {
-    if (obj == null || buf == null) return;
+    if (obj == null || buf == null) {
+      return;
+    }
 
     int estimated = 0;
     if (obj instanceof Collection) {

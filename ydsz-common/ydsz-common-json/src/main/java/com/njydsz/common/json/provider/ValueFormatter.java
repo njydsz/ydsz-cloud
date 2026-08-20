@@ -175,7 +175,9 @@ public final class ValueFormatter {
     for (FieldMeta field : fields) {
       try {
         Object value = field.getValue(obj);
-        if (!first) sb.append(",\n");
+        if (!first) {
+          sb.append(",\n");
+        }
         first = false;
         appendIndent(sb, indent + 1);
         sb.append("\"").append(field.jsonName).append("\": ");

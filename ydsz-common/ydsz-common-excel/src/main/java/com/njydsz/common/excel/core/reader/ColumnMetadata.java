@@ -112,20 +112,48 @@ public final class ColumnMetadata {
    * @version 1.0.0
    */
   private static int resolveTypeId(Class<?> targetType) {
-    if (targetType == String.class) return TYPE_STRING;
-    if (targetType == Integer.class || targetType == int.class) return TYPE_INT;
-    if (targetType == Long.class || targetType == long.class) return TYPE_LONG;
-    if (targetType == Double.class || targetType == double.class) return TYPE_DOUBLE;
-    if (targetType == Float.class || targetType == float.class) return TYPE_FLOAT;
-    if (targetType == Short.class || targetType == short.class) return TYPE_SHORT;
-    if (targetType == Byte.class || targetType == byte.class) return TYPE_BYTE;
-    if (targetType == Boolean.class || targetType == boolean.class) return TYPE_BOOLEAN;
-    if (targetType == Date.class) return TYPE_DATE;
-    if (targetType == LocalDateTime.class) return TYPE_LOCAL_DATE_TIME;
-    if (targetType == LocalDate.class) return TYPE_LOCAL_DATE;
-    if (targetType == Timestamp.class) return TYPE_TIMESTAMP;
-    if (targetType.getName().equals("java.sql.Date")) return TYPE_SQL_DATE;
-    if (targetType == BigDecimal.class) return TYPE_BIG_DECIMAL;
+    if (targetType == String.class) {
+      return TYPE_STRING;
+    }
+    if (targetType == Integer.class || targetType == int.class) {
+      return TYPE_INT;
+    }
+    if (targetType == Long.class || targetType == long.class) {
+      return TYPE_LONG;
+    }
+    if (targetType == Double.class || targetType == double.class) {
+      return TYPE_DOUBLE;
+    }
+    if (targetType == Float.class || targetType == float.class) {
+      return TYPE_FLOAT;
+    }
+    if (targetType == Short.class || targetType == short.class) {
+      return TYPE_SHORT;
+    }
+    if (targetType == Byte.class || targetType == byte.class) {
+      return TYPE_BYTE;
+    }
+    if (targetType == Boolean.class || targetType == boolean.class) {
+      return TYPE_BOOLEAN;
+    }
+    if (targetType == Date.class) {
+      return TYPE_DATE;
+    }
+    if (targetType == LocalDateTime.class) {
+      return TYPE_LOCAL_DATE_TIME;
+    }
+    if (targetType == LocalDate.class) {
+      return TYPE_LOCAL_DATE;
+    }
+    if (targetType == Timestamp.class) {
+      return TYPE_TIMESTAMP;
+    }
+    if (targetType.getName().equals("java.sql.Date")) {
+      return TYPE_SQL_DATE;
+    }
+    if (targetType == BigDecimal.class) {
+      return TYPE_BIG_DECIMAL;
+    }
     return TYPE_DEFAULT;
   }
 
