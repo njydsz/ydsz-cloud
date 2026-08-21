@@ -1,6 +1,7 @@
 package com.njydsz.userinfo.web.vo;
 
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.X509EncodedKeySpec;
@@ -65,7 +66,7 @@ public class JwksEndpoint {
     return key;
   }
 
-  private Map<String, Object> buildRsaKey(String pem) throws Exception {
+  private Map<String, Object> buildRsaKey(String pem) throws GeneralSecurityException, IllegalArgumentException {
     String cleaned = pem.replace(PEM_RSA_HEADER, "")
         .replace(PEM_RSA_FOOTER, "")
         .replaceAll("\\s", "");
