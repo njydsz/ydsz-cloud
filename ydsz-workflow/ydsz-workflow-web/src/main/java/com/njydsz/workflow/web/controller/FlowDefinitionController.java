@@ -123,7 +123,7 @@ public class FlowDefinitionController {
    * @param dto 流程部署参数
    * @return 统一响应结果，包含流程定义 ID
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:deploy:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:definition:deploy", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowDefinitionDO.deploy", threshold = 50)
   @PostMapping("/definition/deploy")
   @Audit(
@@ -175,7 +175,7 @@ public class FlowDefinitionController {
    * @param force 是否强制发布（跳过 HIGH 风险阻断），默认 false
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:publish:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:definition:publish", ttlSeconds = 5)
   @PostMapping("/definition/{id}/publish")
   @Audit(
       module = "流程定义",
@@ -196,7 +196,7 @@ public class FlowDefinitionController {
    * @param id 流程定义 ID
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:deprecate:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:definition:deprecate", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowDefinitionDO.deprecate", threshold = 50)
   @PostMapping("/definition/{id}/deprecate")
   @Audit(
@@ -281,7 +281,7 @@ public class FlowDefinitionController {
    * @param tenantId 租户 ID（可选）
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:switchVersion:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:definition:switchVersion", ttlSeconds = 5)
   @PostMapping("/definition/{code}/switchVersion")
   @Audit(
       module = "流程定义",
@@ -304,7 +304,7 @@ public class FlowDefinitionController {
    * @param id 流程定义 ID
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:enable:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:definition:enable", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowDefinitionDO.enable", threshold = 50)
   @PostMapping("/definition/{id}/enable")
   @Audit(
@@ -325,7 +325,7 @@ public class FlowDefinitionController {
    * @param id 流程定义 ID
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:disable:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:definition:disable", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowDefinitionDO.disable", threshold = 50)
   @PostMapping("/definition/{id}/disable")
   @Audit(
@@ -418,7 +418,7 @@ public class FlowDefinitionController {
    * @param dto 部署参数（含更新后的元数据与节点/跳转）
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:updateDefinition:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:definition:update", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowDefinitionDO.updateDefinition", threshold = 50)
   @PutMapping("/definition/{id}")
   @Audit(
@@ -453,7 +453,7 @@ public class FlowDefinitionController {
    * @param tenantId 租户 ID（可选，默认从上下文获取）
    * @return 统一响应结果，包含新创建的流程定义 ID
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:importDefinition:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:definition:import", ttlSeconds = 5)
   @PostMapping("/definition/import")
   @Audit(
       module = "流程定义",
@@ -518,7 +518,7 @@ public class FlowDefinitionController {
    * @param tenantId 租户 ID（可选）
    * @return 触发的订阅数量
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:correlateMessage:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:event:correlateMessage", ttlSeconds = 5)
   @PostMapping("/event/correlateMessage")
   @Audit(
       module = "流程事件",
@@ -545,7 +545,7 @@ public class FlowDefinitionController {
    * @param tenantId 租户 ID（可选）
    * @return 触发的订阅数量
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:throwError:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:event:throwError", ttlSeconds = 5)
   @PostMapping("/event/throwError")
   @Audit(
       module = "流程事件",
@@ -585,7 +585,7 @@ public class FlowDefinitionController {
    *
    * @return 本轮扫描处理的任务数
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:slaScan:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:sla:scan", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowsla.slaScan", threshold = 50)
   @PostMapping("/sla/scan")
   @Audit(
@@ -606,7 +606,7 @@ public class FlowDefinitionController {
    * @param taskId 任务 ID
    * @return 是否处理成功
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:slaProcess:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:sla:process", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowsla.slaProcess", threshold = 50)
   @PostMapping("/sla/process/{taskId}")
   @Audit(
@@ -632,7 +632,7 @@ public class FlowDefinitionController {
    * @param body 请求体，需包含 conditionJson 和可选的 engine（默认 AVIATOR）
    * @return 转换后的表达式字符串
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:buildExpression:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:conditionExpr:build", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowconditionexpr.build", threshold = 50)
   @PostMapping("/definition/conditionExpr/build")
   @Audit(
@@ -653,7 +653,7 @@ public class FlowDefinitionController {
    * @param body 请求体，需包含 expression 和可选的 engine（默认 AVIATOR）
    * @return 转换后的结构化条件 JSON 字符串
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:parseExpression:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:conditionExpr:parse", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowconditionexpr.parse", threshold = 50)
   @PostMapping("/definition/conditionExpr/parse")
   @Audit(
@@ -674,7 +674,7 @@ public class FlowDefinitionController {
    * @param body 请求体，需包含 expression 和可选的 engine（默认 AVIATOR）
    * @return 校验结果（valid / errors 等字段）
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:validateExpression:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:conditionExpr:validate", ttlSeconds = 5)
   @PostMapping("/definition/conditionExpr/validate")
   @Operation(summary = "校验表达式语法")
   public YdszResponse<Map<String, Object>> validateExpression(@RequestBody Map<String, String> body) {
@@ -775,7 +775,7 @@ public class FlowDefinitionController {
    * @param buttons 按钮配置列表（含 buttonCode / buttonName / type / beanName / methodName / webhookUrl 等）
    * @return 空响应
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:saveCustomButtons:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:customButton:save", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowcustombutton.save", threshold = 50)
   @PostMapping("/definition/customButtons")
   @Audit(
@@ -805,7 +805,7 @@ public class FlowDefinitionController {
    * @param variables 流程变量（可选）
    * @return 按钮执行结果（含 success / message / outputVars）
    */
-  @Idempotent(key = "ydsz:workflow:FlowDefinitionController:executeCustomButton:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:customButton:execute", ttlSeconds = 5)
   @PostMapping("/definition/customButtons/execute")
   @Operation(summary = "执行自定义按钮操作")
   public YdszResponse<Map<String, Object>> executeCustomButton(
