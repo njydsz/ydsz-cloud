@@ -15,7 +15,13 @@ import java.util.stream.Collectors;
 
 import com.obs.services.ObsClient;
 import com.obs.services.ObsConfiguration;
+import com.obs.services.model.AbortMultipartUploadRequest;
 import com.obs.services.model.CompleteMultipartUploadRequest;
+import com.obs.services.model.CreateBucketRequest;
+import com.obs.services.model.DeleteObjectRequest;
+import com.obs.services.model.GetObjectRequest;
+import com.obs.services.model.HttpMethodEnum;
+import com.obs.services.model.InitiateMultipartUploadRequest;
 import com.obs.services.model.InitiateMultipartUploadResult;
 import com.obs.services.model.ListObjectsRequest;
 import com.obs.services.model.ListPartsRequest;
@@ -25,6 +31,9 @@ import com.obs.services.model.ObsObject;
 import com.obs.services.model.ObjectListing;
 import com.obs.services.model.PartEtag;
 import com.obs.services.model.PutObjectRequest;
+import com.obs.services.model.TemporarySignatureRequest;
+import com.obs.services.model.TemporarySignatureResponse;
+import com.obs.services.model.UploadPartRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
