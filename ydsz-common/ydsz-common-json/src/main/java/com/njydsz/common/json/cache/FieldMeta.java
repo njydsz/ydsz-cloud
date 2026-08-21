@@ -351,7 +351,7 @@ public final class FieldMeta {
       }
     } catch (Exception e) {
       // 反射操作失败，setter/getter 保持 null，运行时回退到 field.get/set
-      LOGGER.debug("Failed to unreflect field handles for " + fieldName + ": " + e.getMessage());
+      LOGGER.debug("Failed to unreflect field handles for {}: {}", fieldName, e.getMessage());
     }
     return new MethodHandleBundle(s, g, vh);
   }
@@ -417,14 +417,14 @@ public final class FieldMeta {
       try {
         return varHandle.get(obj);
       } catch (Exception e) {
-        LOGGER.debug("VarHandle.get failed for field " + name + ": " + e.getMessage());
+        LOGGER.debug("VarHandle.get failed for field {}: {}", name, e.getMessage());
       }
     }
     if (getter != null) {
       try {
         return getter.invoke(obj);
       } catch (Throwable e) {
-        LOGGER.debug("MethodHandle.invoke failed for field " + name + ": " + e.getMessage());
+        LOGGER.debug("MethodHandle.invoke failed for field {}: {}", name, e.getMessage());
       }
     }
     try {
@@ -446,13 +446,13 @@ public final class FieldMeta {
       try {
         return (String) getter.invoke(obj);
       } catch (Throwable e) {
-        LOGGER.debug("MethodHandle.invoke failed for String field " + name + ": " + e.getMessage());
+        LOGGER.debug("MethodHandle.invoke failed for String field {}: {}", name, e.getMessage());
       }
     }
     try {
       return (String) field.get(obj);
     } catch (IllegalAccessException e) {
-      LOGGER.warn("Failed to get String field " + name + ": " + e.getMessage());
+      LOGGER.warn("Failed to get String field {}: {}", name, e.getMessage());
       return null;
     }
   }
@@ -482,13 +482,13 @@ public final class FieldMeta {
       try {
         return (Integer) getter.invoke(obj);
       } catch (Throwable e) {
-        LOGGER.debug("MethodHandle.invoke failed for int field " + name + ": " + e.getMessage());
+        LOGGER.debug("MethodHandle.invoke failed for int field {}: {}", name, e.getMessage());
       }
     }
     try {
       return field.getInt(obj);
     } catch (IllegalAccessException e) {
-      LOGGER.warn("Failed to get int field " + name + ": " + e.getMessage());
+      LOGGER.warn("Failed to get int field {}: {}", name, e.getMessage());
       return 0;
     }
   }
@@ -518,13 +518,13 @@ public final class FieldMeta {
       try {
         return (Long) getter.invoke(obj);
       } catch (Throwable e) {
-        LOGGER.debug("MethodHandle.invoke failed for long field " + name + ": " + e.getMessage());
+        LOGGER.debug("MethodHandle.invoke failed for long field {}: {}", name, e.getMessage());
       }
     }
     try {
       return field.getLong(obj);
     } catch (IllegalAccessException e) {
-      LOGGER.warn("Failed to get long field " + name + ": " + e.getMessage());
+      LOGGER.warn("Failed to get long field {}: {}", name, e.getMessage());
       return 0L;
     }
   }
@@ -554,13 +554,13 @@ public final class FieldMeta {
       try {
         return (Double) getter.invoke(obj);
       } catch (Throwable e) {
-        LOGGER.debug("MethodHandle.invoke failed for double field " + name + ": " + e.getMessage());
+        LOGGER.debug("MethodHandle.invoke failed for double field {}: {}", name, e.getMessage());
       }
     }
     try {
       return field.getDouble(obj);
     } catch (IllegalAccessException e) {
-      LOGGER.warn("Failed to get double field " + name + ": " + e.getMessage());
+      LOGGER.warn("Failed to get double field {}: {}", name, e.getMessage());
       return 0.0;
     }
   }
@@ -590,14 +590,13 @@ public final class FieldMeta {
       try {
         return (Boolean) getter.invoke(obj);
       } catch (Throwable e) {
-        LOGGER.debug(
-            "MethodHandle.invoke failed for boolean field " + name + ": " + e.getMessage());
+        LOGGER.debug("MethodHandle.invoke failed for boolean field {}: {}", name, e.getMessage());
       }
     }
     try {
       return field.getBoolean(obj);
     } catch (IllegalAccessException e) {
-      LOGGER.warn("Failed to get boolean field " + name + ": " + e.getMessage());
+      LOGGER.warn("Failed to get boolean field {}: {}", name, e.getMessage());
       return false;
     }
   }
@@ -629,7 +628,7 @@ public final class FieldMeta {
         varHandle.set(obj, value);
         return;
       } catch (Exception e) {
-        LOGGER.debug("VarHandle.set failed for field " + name + ": " + e.getMessage());
+        LOGGER.debug("VarHandle.set failed for field {}: {}", name, e.getMessage());
       }
     }
     if (setter != null) {
@@ -637,7 +636,7 @@ public final class FieldMeta {
         setter.invoke(obj, value);
         return;
       } catch (Throwable e) {
-        LOGGER.debug("MethodHandle.invoke failed for field " + name + ": " + e.getMessage());
+        LOGGER.debug("MethodHandle.invoke failed for field {}: {}", name, e.getMessage());
       }
     }
     try {

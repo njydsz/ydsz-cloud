@@ -2,6 +2,7 @@ package com.njydsz.common.event.service;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -348,7 +349,7 @@ public class OutboxService {
     String tenantId = resolveTenantId();
     String traceId = resolveTraceId();
 
-    List<OutboxMessage> messages = new java.util.ArrayList<>(events.size());
+    List<OutboxMessage> messages = new ArrayList<>(events.size());
     for (DomainEvent event : events) {
       String payload = YdszJson.toJson(event);
       validatePayloadSize(payload);

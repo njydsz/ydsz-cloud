@@ -7,6 +7,8 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.repository.JobRepository;
@@ -110,12 +112,10 @@ public class JobRepositoryImpl implements JobRepository {
   }
 
   @Override
-  public com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> selectPage(
+  public Page<Job> selectPage(
       String keyword, String status, String group, int page, int size) {
-    com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> pageObj =
-        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size);
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    Page<Job> pageObj = new Page<>(page, size);
+    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
     if (keyword != null && !keyword.isBlank()) {
       wrapper.and(
           qw ->
@@ -139,10 +139,8 @@ public class JobRepositoryImpl implements JobRepository {
 
   @Override
   public PageResult<JobVO> page(String keyword, String status, String group, int page, int size) {
-    com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> pageObj =
-        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size);
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    Page<Job> pageObj = new Page<>(page, size);
+    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
     if (keyword != null && !keyword.isBlank()) {
       wrapper.and(
           qw ->
@@ -159,27 +157,22 @@ public class JobRepositoryImpl implements JobRepository {
       wrapper.eq(Job::getJobGroup, group);
     }
     wrapper.eq(Job::getDeleted, 0).orderByDesc(Job::getCreatedAt);
-    com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> result =
-        jobMapper.selectPage(pageObj, wrapper);
+    Page<Job> result = jobMapper.selectPage(pageObj, wrapper);
     return new PageResult<>(converter.jobListToVO(result.getRecords()), result.getTotal());
   }
 
   @Override
   public PageResult<JobVO> pageByGroup(String jobGroup, int page, int size) {
-    com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> pageObj =
-        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size);
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    Page<Job> pageObj = new Page<>(page, size);
+    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getDeleted, 0).orderByDesc(Job::getCreatedAt);
-    com.baomidou.mybatisplus.extension.plugins.pagination.Page<Job> result =
-        jobMapper.selectPage(pageObj, wrapper);
+    Page<Job> result = jobMapper.selectPage(pageObj, wrapper);
     return new PageResult<>(converter.jobListToVO(result.getRecords()), result.getTotal());
   }
 
   @Override
   public List<JobVO> findByGroupAndStatus(String jobGroup, String status) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getDeleted, 0);
     if (status != null) {
       wrapper.eq(Job::getStatus, status);
@@ -190,8 +183,7 @@ public class JobRepositoryImpl implements JobRepository {
 
   @Override
   public List<String> listDistinctGroups() {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Job::getDeleted, 0).select(Job::getJobGroup);
     return jobMapper.selectList(wrapper).stream()
         .map(Job::getJobGroup)
@@ -203,24 +195,21 @@ public class JobRepositoryImpl implements JobRepository {
 
   @Override
   public long countByGroup(String jobGroup) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getDeleted, 0);
     return jobMapper.selectCount(wrapper);
   }
 
   @Override
   public long countByStatus(String status) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Job::getStatus, status).eq(Job::getDeleted, 0);
     return jobMapper.selectCount(wrapper);
   }
 
   @Override
   public long countAll() {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Job::getDeleted, 0);
     return jobMapper.selectCount(wrapper);
   }
@@ -267,8 +256,7 @@ public class JobRepositoryImpl implements JobRepository {
 
   @Override
   public long countByStatusNullable(String status) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
     if (status != null && !status.isBlank()) {
       wrapper.eq(Job::getStatus, status);
     }
@@ -278,8 +266,7 @@ public class JobRepositoryImpl implements JobRepository {
 
   @Override
   public List<JobVO> findByStatus(String status) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Job> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Job::getDeleted, 0);
     if (status != null && !status.isBlank()) {
       wrapper.eq(Job::getStatus, status);

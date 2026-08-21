@@ -2,6 +2,7 @@ package com.njydsz.literule.server.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -604,7 +605,7 @@ public class RuleIndexer {
     if (expr == null || expr.isBlank()) {
       return Collections.emptyMap();
     }
-    Map<String, Set<String>> result = new java.util.HashMap<>();
+    Map<String, Set<String>> result = new HashMap<>();
     // 匹配 var OP value 或 var OP value 的子句（AND 拆分后）
     for (String clause : expr.split("&&|\\|\\|")) {
       Matcher m = COMPARISON_PATTERN.matcher(clause.trim());

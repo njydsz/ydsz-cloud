@@ -2,6 +2,7 @@ package com.njydsz.workflow.server.service.impl.definition;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -161,7 +162,7 @@ public class FlowDefinitionQueryService {
     }
     List<FlowNodeVO> nodes = nodeRepository.findByDefinitionId(definitionId);
     List<FlowSkipVO> skips = skipRepository.findByDefinitionId(definitionId);
-    Map<String, Object> result = new java.util.HashMap<>();
+    Map<String, Object> result = new HashMap<>();
     result.put("definition", definition);
     result.put("nodes", nodes);
     result.put("skips", skips);

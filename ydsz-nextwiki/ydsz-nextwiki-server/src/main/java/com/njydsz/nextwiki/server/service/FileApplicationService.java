@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -618,7 +619,7 @@ public class FileApplicationService {
 
     // 批量查询节点，避免 N 次单条查询
     List<FileNodeVO> nodes = fileNodeRepository.findByIds(nodeIds);
-    Map<String, FileNodeVO> nodeMap = new java.util.HashMap<>();
+    Map<String, FileNodeVO> nodeMap = new HashMap<>();
     for (FileNodeVO node : nodes) {
       nodeMap.put(node.getId(), node);
     }
@@ -1029,10 +1030,10 @@ public class FileApplicationService {
     }
 
     // 组装更新 DTO 列表
-    List<com.njydsz.nextwiki.domain.dto.FileNodeDTO> updateDTOs = new ArrayList<>(items.size());
+    List<FileNodeDTO> updateDTOs = new ArrayList<>(items.size());
     LocalDateTime now = LocalDateTime.now();
     for (com.njydsz.nextwiki.api.dto.NextwikiDTOs.SortItem item : items) {
-      com.njydsz.nextwiki.domain.dto.FileNodeDTO dto = new com.njydsz.nextwiki.domain.dto.FileNodeDTO();
+      FileNodeDTO dto = new FileNodeDTO();
       dto.setId(item.getNodeId());
       dto.setSort(item.getSort());
       dto.setUpdatedBy(userId);
@@ -1042,7 +1043,7 @@ public class FileApplicationService {
 
     // 批量更新（循环单条，因字段级部分更新批量 SQL 较复杂；数据量 < 100 场景性能可接受）
     int updated = 0;
-    for (com.njydsz.nextwiki.domain.dto.FileNodeDTO dto : updateDTOs) {
+    for (FileNodeDTO dto : updateDTOs) {
       fileNodeRepository.update(dto);
       updated++;
     }

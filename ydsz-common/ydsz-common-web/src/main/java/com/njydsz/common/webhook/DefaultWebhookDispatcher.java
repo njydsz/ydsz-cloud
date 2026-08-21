@@ -214,9 +214,12 @@ public class DefaultWebhookDispatcher implements WebhookDispatcher {
     }
   }
 
+/** 基础退避时间基数（毫秒） */
+  private static final long BACKOFF_BASE_MS = 1000L;
+
   private void sleepBackoff(int attempt) {
     try {
-      Thread.sleep(1000L * attempt * attempt);
+      Thread.sleep(BACKOFF_BASE_MS * attempt * attempt);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }

@@ -1,8 +1,12 @@
 package com.njydsz.common.event.repository;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -110,9 +115,9 @@ public class OutboxRepository {
 
     jdbcTemplate.batchUpdate(
         sql,
-        new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+        new BatchPreparedStatementSetter() {
           @Override
-          public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+          public void setValues(PreparedStatement ps, int i) throws SQLException {
             OutboxMessage msg = messages.get(i);
             ps.setString(1, msg.getId());
             ps.setString(2, msg.getAggregateId());
@@ -440,7 +445,7 @@ public class OutboxRepository {
     // tableName validated at construction (see findPending) — safe from SQL injection
     StringBuilder sql =
         new StringBuilder("SELECT * FROM ").append(tableName).append(" WHERE status = ?");
-    java.util.List<Object> params = new java.util.ArrayList<>();
+    List<Object> params = new ArrayList<>();
     params.add(status.name());
 
     if (eventTypeFilter != null && !eventTypeFilter.isBlank()) {
@@ -459,7 +464,7 @@ public class OutboxRepository {
     // COUNT 查询
     StringBuilder countSql =
         new StringBuilder("SELECT COUNT(*) FROM ").append(tableName).append(" WHERE status = ?");
-    List<Object> countParams = new java.util.ArrayList<>();
+    List<Object> countParams = new ArrayList<>();
     countParams.add(status.name());
     if (eventTypeFilter != null && !eventTypeFilter.isBlank()) {
       countSql.append(" AND event_type = ?");
@@ -509,7 +514,7 @@ public class OutboxRepository {
             .append(
                 " SET status = ?, retry_count = 0, next_retry_at = ?, updated_at = ?, error_message = NULL")
             .append(" WHERE status = ?");
-    java.util.List<Object> params = new java.util.ArrayList<>();
+    List<Object> params = new ArrayList<>();
     params.add(OutboxStatus.PENDING.name());
     params.add(Timestamp.from(Instant.now()));
     params.add(Timestamp.from(Instant.now()));
@@ -529,14 +534,14 @@ public class OutboxRepository {
    * @param terminalStatuses 允许删除的终态状态列表
    * @return 成功删除的行数
    */
-  public int deleteIfTerminal(String id, java.util.Collection<OutboxStatus> terminalStatuses) {
+  public int deleteIfTerminal(String id, Collection<OutboxStatus> terminalStatuses) {
     if (terminalStatuses == null || terminalStatuses.isEmpty()) {
       return 0;
     }
     // tableName validated at construction (see findPending) — safe from SQL injection
     StringBuilder sql =
         new StringBuilder("DELETE FROM ").append(tableName).append(" WHERE id = ? AND status IN (");
-    java.util.List<Object> params = new java.util.ArrayList<>();
+    List<Object> params = new ArrayList<>();
     params.add(id);
     int i = 0;
     for (OutboxStatus s : terminalStatuses) {

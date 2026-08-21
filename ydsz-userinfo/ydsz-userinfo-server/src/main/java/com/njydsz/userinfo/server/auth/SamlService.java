@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.auth;
 
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.Signature;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -364,8 +366,7 @@ public class SamlService {
       factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
       factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
       factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-      return factory.newDocumentBuilder().parse(
-          new org.xml.sax.InputSource(new java.io.StringReader(xml)));
+      return factory.newDocumentBuilder().parse(new InputSource(new StringReader(xml)));
     } catch (Exception e) {
       throw new SamlException("PARSE", "XML 文档解析失败: " + e.getMessage(), e);
     }

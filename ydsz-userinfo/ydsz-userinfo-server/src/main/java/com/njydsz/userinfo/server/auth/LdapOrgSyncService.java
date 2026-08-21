@@ -524,8 +524,7 @@ public class LdapOrgSyncService {
       return dept;
     }
     // 按名称精确匹配（遍历所有部门）
-    com.njydsz.userinfo.domain.query.DepartmentPageQuery query =
-        new com.njydsz.userinfo.domain.query.DepartmentPageQuery();
+    DepartmentPageQuery query = new DepartmentPageQuery();
     return departmentRepository.list(query).stream()
         .filter(d -> deptName.equals(d.getDeptName()))
         .findFirst();

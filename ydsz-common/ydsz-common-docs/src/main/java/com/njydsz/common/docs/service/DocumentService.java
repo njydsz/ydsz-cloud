@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -319,7 +320,7 @@ public class DocumentService {
     try {
       tempFile = tempFileManager.createAndWrite("ydsz-docs-scan-", ".tmp", inputStream);
 
-      List<SecurityScanResult.SecurityFinding> allFindings = new java.util.ArrayList<>();
+      List<SecurityScanResult.SecurityFinding> allFindings = new ArrayList<>();
       boolean allSuccess = true;
       String lastError = null;
 
@@ -375,7 +376,7 @@ public class DocumentService {
       return List.of();
     }
 
-    List<PiiFinding> allFindings = new java.util.ArrayList<>();
+    List<PiiFinding> allFindings = new ArrayList<>();
     for (PiiDetector detector : piiDetectors) {
       try {
         List<PiiFinding> findings = detector.detect(content);

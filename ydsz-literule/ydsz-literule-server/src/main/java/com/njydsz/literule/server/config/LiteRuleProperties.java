@@ -1,5 +1,6 @@
 package com.njydsz.literule.server.config;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -747,13 +748,13 @@ public class LiteRuleProperties {
   public static class SandboxPolicyConfig {
 
     /** 追加的危险方法名（如 exec / connect / delete） */
-    private List<String> forbiddenMethods = new java.util.ArrayList<>();
+    private List<String> forbiddenMethods = new ArrayList<>();
 
     /** 追加的危险类/属性链根（如 java.net.Socket / MyDangerousClass） */
-    private List<String> forbiddenRoots = new java.util.ArrayList<>();
+    private List<String> forbiddenRoots = new ArrayList<>();
 
     /** 追加的白名单函数（业务自定义函数，合并到函数白名单） */
-    private List<String> allowedFunctions = new java.util.ArrayList<>();
+    private List<String> allowedFunctions = new ArrayList<>();
   }
 
   /**

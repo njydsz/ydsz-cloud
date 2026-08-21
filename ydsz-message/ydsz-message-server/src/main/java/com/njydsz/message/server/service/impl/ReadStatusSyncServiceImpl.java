@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
@@ -151,7 +153,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     int updated =
         msgNotificationRepository.update(
             null,
-            new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<MsgNotification>()
+            new LambdaUpdateWrapper<MsgNotification>()
                 .eq(MsgNotification::getId, notificationId)
                 .eq(MsgNotification::getReceiverId, userId)
                 .eq(MsgNotification::getReadStatus, 0)
@@ -182,8 +184,8 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     if (!StringUtils.hasText(userId)) {
       return 0;
     }
-    com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<MsgNotification> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<MsgNotification>()
+    LambdaUpdateWrapper<MsgNotification> wrapper =
+        new LambdaUpdateWrapper<MsgNotification>()
             .eq(MsgNotification::getReceiverId, userId)
             .eq(MsgNotification::getReadStatus, 0)
             .eq(MsgNotification::getRecallStatus, "NONE")
@@ -219,7 +221,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     // 站内通知未读数
     Long notifCount =
         msgNotificationRepository.selectCount(
-            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<MsgNotification>()
+            new LambdaQueryWrapper<MsgNotification>()
                 .eq(MsgNotification::getReceiverId, userId)
                 .eq(MsgNotification::getReadStatus, 0)
                 .eq(MsgNotification::getRecallStatus, "NONE"));

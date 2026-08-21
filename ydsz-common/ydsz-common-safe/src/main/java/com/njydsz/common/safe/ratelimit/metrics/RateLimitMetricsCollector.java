@@ -47,49 +47,6 @@ public class RateLimitMetricsCollector {
     meterRegistry.gauge("ydsz_ratelimit_pass_total", totalPassed);
   }
 
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
-   * @param decision decision 参数
   /** 记录一次决策 */
   public void record(RateLimitDecision decision) {
     if (decision == null || meterRegistry == null) {

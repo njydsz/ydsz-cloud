@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.TaskScheduler;
 
 import com.njydsz.common.lock.core.DistributedLocker;
@@ -58,10 +59,10 @@ public class RedisMultiLock implements DistributedLocker {
    *
    * <p>返回值 1 表示续期成功，0 表示 value 不匹配（锁已被抢占），nil 表示 key 不存在。
    */
-  private static final org.springframework.data.redis.core.script.DefaultRedisScript<Long> RENEW_SCRIPT;
+  private static final DefaultRedisScript<Long> RENEW_SCRIPT;
 
   static {
-    RENEW_SCRIPT = new org.springframework.data.redis.core.script.DefaultRedisScript<>();
+    RENEW_SCRIPT = new DefaultRedisScript<>();
     RENEW_SCRIPT.setScriptText(
         "if redis.call('get', KEYS[1]) == ARGV[1] then "
             + "return redis.call('pexpire', KEYS[1], ARGV[2]) "

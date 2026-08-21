@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
+import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.util.DaemonThreadFactory;
@@ -63,7 +64,7 @@ public class DisruptorLogPublisher {
             DaemonThreadFactory.INSTANCE,
             // P0-FIX: ProducerType 位于 dsl 子包（3.4.4），非 com.lmax.disruptor 根包
             com.lmax.disruptor.dsl.ProducerType.MULTI,
-            new com.lmax.disruptor.BlockingWaitStrategy());
+            new BlockingWaitStrategy());
     disruptor.handleEventsWith(new DisruptorLogEventHandler(jobLogContentServiceProvider));
     disruptor.start();
     ringBuffer = disruptor.getRingBuffer();
