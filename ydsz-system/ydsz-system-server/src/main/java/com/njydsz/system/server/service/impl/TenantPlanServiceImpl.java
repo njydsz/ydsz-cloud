@@ -11,6 +11,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.dto.TenantPlanDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.query.TenantPageQuery;
 import com.njydsz.system.domain.query.TenantPlanPageQuery;
 import com.njydsz.system.domain.query.TenantPlanQuery;
 import com.njydsz.system.domain.vo.TenantPlanVO;
@@ -139,8 +140,7 @@ public class TenantPlanServiceImpl implements TenantPlanService {
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
     // 关联校验：是否存在引用该套餐的租户
-    com.njydsz.system.domain.query.TenantPageQuery tenantQuery =
-        new com.njydsz.system.domain.query.TenantPageQuery();
+    TenantPageQuery tenantQuery = new TenantPageQuery();
     tenantQuery.setSearchKey(id);
     if (tenantRepository.countByCondition(tenantQuery) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_LINKED).data("planId", id);

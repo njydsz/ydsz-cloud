@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.userinfo.domain.dto.LoginDTO;
+import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.CasService;
@@ -264,13 +266,12 @@ public class CasController {
       String username, String password, String service, HttpServletResponse response) {
     try {
       // 1. 构建登录 DTO
-      com.njydsz.userinfo.domain.dto.LoginDTO loginDTO =
-          new com.njydsz.userinfo.domain.dto.LoginDTO();
+      LoginDTO loginDTO = new LoginDTO();
       loginDTO.setUsername(username);
       loginDTO.setPassword(password);
 
       // 2. 认证用户
-      com.njydsz.userinfo.domain.vo.LoginVO loginVO = authService.login(loginDTO, response);
+      LoginVO loginVO = authService.login(loginDTO, response);
       if (loginVO == null || loginVO.getUserInfo() == null) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(buildLoginPageHtml(service, "用户名或密码错误"));

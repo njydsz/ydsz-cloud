@@ -201,7 +201,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   public List<FlowInstanceVO> findRunningChildrenByParentId(String parentInstanceId) {
     return converter.flowInstanceListToVO(
         instanceMapper.selectList(
-            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowInstanceDO>()
+            new LambdaQueryWrapper<FlowInstanceDO>()
                 .eq(FlowInstanceDO::getParentInstanceId, parentInstanceId)
                 .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
                 .eq(FlowInstanceDO::getDeleted, 0)));

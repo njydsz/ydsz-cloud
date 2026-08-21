@@ -19,10 +19,12 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.MfaOperationDTO;
 import com.njydsz.userinfo.domain.dto.UserProfileUpdateDTO;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.MfaSetupVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.auth.MfaService;
@@ -129,8 +131,7 @@ public class UserProfileController {
   public YdszResponse<String> uploadAvatar(
       @RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
-      throw new com.njydsz.common.exception.custom.BusinessException(
-          com.njydsz.userinfo.domain.enums.UserInfoExceptionCode.IMPORT_FILE_EMPTY);
+      throw new BusinessException(UserInfoExceptionCode.IMPORT_FILE_EMPTY);
     }
 
     String userId = RequestContext.getUserId();
