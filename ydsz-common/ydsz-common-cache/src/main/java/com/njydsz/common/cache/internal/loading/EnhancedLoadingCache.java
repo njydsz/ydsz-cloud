@@ -75,7 +75,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     if (sharedResourcesShutdown) {
       return Runnable::run;
     }
-    ExecutorService executor = sharedExecutor.get();
+    ExecutorService executor = SHARED_EXECUTOR.get();
     if (executor != null) {
       return executor;
     }
@@ -85,7 +85,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
                 "enhanced-loading-async",
                 Runtime.getRuntime().availableProcessors(),
                 Runtime.getRuntime().availableProcessors() * 2);
-    return sharedExecutor.compareAndSet(null, created) ? created : sharedExecutor.get();
+    return SHARED_EXECUTOR.compareAndSet(null, created) ? created : SHARED_EXECUTOR.get();
   }
 
   /** 获取共享刷新调度器（懒加载，线程安全） */
@@ -93,7 +93,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     if (sharedResourcesShutdown) {
       return null;
     }
-    ScheduledExecutorService scheduler = sharedRefreshScheduler.get();
+    ScheduledExecutorService scheduler = SHARED_REFRESH_SCHEDULER.get();
     if (scheduler != null) {
       return scheduler;
     }
@@ -109,7 +109,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
             });
     // CHECKSTYLE.ON: RegexpSinglelineJava
     exec.setRemoveOnCancelPolicy(true);
-    return sharedRefreshScheduler.compareAndSet(null, exec) ? exec : sharedRefreshScheduler.get();
+    return SHARED_REFRESH_SCHEDULER.compareAndSet(null, exec) ? exec : SHARED_REFRESH_SCHEDULER.get();
   }
 
   /**
@@ -119,7 +119,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
    */
   public static void shutdownSharedResources() {
     sharedResourcesShutdown = true;
-    ExecutorService exec = sharedExecutor.getAndSet(null);
+    ExecutorService exec = SHARED_EXECUTOR.getAndSet(null);
     if (exec != null) {
       exec.shutdown();
       try {
@@ -131,7 +131,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
         Thread.currentThread().interrupt();
       }
     }
-    ScheduledExecutorService scheduler = sharedRefreshScheduler.getAndSet(null);
+    ScheduledExecutorService scheduler = SHARED_REFRESH_SCHEDULER.getAndSet(null);
     if (scheduler != null) {
       scheduler.shutdown();
       try {
