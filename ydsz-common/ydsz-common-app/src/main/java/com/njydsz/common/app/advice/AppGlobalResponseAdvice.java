@@ -6,16 +6,16 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.njydsz.common.app.annotation.AppApi;
 import com.njydsz.common.base.advice.BaseGlobalResponseAdvice;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.YdszResponse;
 
 /**
  * App 端全局响应包装 Advice
  *
- * <p>继承 {@link BaseGlobalResponseAdvice}，对 Controller 返回的字符串类型响应 进行统一封装为 {@link BaseResponse}
+ * <p>继承 {@link BaseGlobalResponseAdvice}，对 Controller 返回的字符串类型响应 进行统一封装为 {@link YdszResponse}
  * 标准格式。与 Web 端的差异在于：
  *
  * <ul>
- *   <li>App 端通常不关心 HTTP 状态码细节，统一使用 {@code BaseResponse.successMsg} 包装
+ *   <li>App 端通常不关心 HTTP 状态码细节，统一使用 {@code YdszResponse.successMsg} 包装
  *   <li>包装后的消息体直接使用原始字符串作为业务消息
  * </ul>
  *
@@ -40,18 +40,18 @@ import com.njydsz.common.core.response.BaseResponse;
 public class AppGlobalResponseAdvice extends BaseGlobalResponseAdvice {
 
   /**
-   * 将 Controller 返回的字符串响应包装为标准 {@link BaseResponse}
+   * 将 Controller 返回的字符串响应包装为标准 {@link YdszResponse}
    *
    * <p>App 端约定业务成功时直接使用原始字符串作为业务消息字段， 业务码统一为 {@code SUCCESS}。
    *
-   * <p>ydsz-common-core 精简后移除了 {@code successMsg} 静态方法， 此处通过 {@link BaseResponse#success(String,
+   * <p>ydsz-common-core 精简后移除了 {@code successMsg} 静态方法， 此处通过 {@link YdszResponse#success(String,
    * Object)}（msg + data）实现等价语义。
    *
    * @param body Controller 原始返回的字符串
    * @return 包装后的标准响应
    */
   @Override
-  protected BaseResponse<String> wrapStringBody(String body) {
-    return BaseResponse.success(body, null);
+  protected YdszResponse<String> wrapStringBody(String body) {
+    return YdszResponse.success(body, null);
   }
 }
