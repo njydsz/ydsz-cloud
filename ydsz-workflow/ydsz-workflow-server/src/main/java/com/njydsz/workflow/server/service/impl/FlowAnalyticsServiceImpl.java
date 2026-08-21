@@ -176,7 +176,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
       vo.setFlowName((String) row.get("flowName"));
       vo.setTotalCount(toLong(row.get("totalCount")));
       vo.setCompletedCount(toLong(row.get("completedCount")));
-      vo.setAvg DurationMs(toLong(row.get("avgDurationMs")));
+      vo.setAvgDuration(toLong(row.get("avgDurationMs")));
       vo.setRejectionRate(toDouble(row.get("rejectionRate")));
       vo.setOverdueRate(0.0);
       return vo;

@@ -24,7 +24,6 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowAssigneeDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
@@ -54,6 +53,7 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 import com.njydsz.workflow.server.service.instance.AssigneeResolutionService;
 import com.njydsz.workflow.server.service.instance.DelegateRedirectService;
 import com.njydsz.workflow.server.service.instance.EmptyAssigneeStrategyService;
+import com.njydsz.workflow.server.service.instance.ServiceNodeExecuteService;
 
 /**
  * 任务创建服务（拆分自 FlowTaskCompleteServiceImpl）
@@ -67,8 +67,8 @@ import com.njydsz.workflow.server.service.instance.EmptyAssigneeStrategyService;
  * <ul>
  *   <li>[已完成] {@link AssigneeResolutionService} — 办理人解析（resolveAssignee / resolveInitiatorId）
  *   <li>[已完成] {@link DelegateRedirectService} — 长期授权委派改写（applyDelegateRedirect）
- *   <li>[TODO] {@code EmptyAssigneeStrategyService} — 审批人为空兜底策略（handleEmptyAssignee 四策略分发）
- *   <li>[TODO] {@code ServiceNodeExecuteService} — 服务节点 HTTP/SCRIPT/AUTO_PASS
+ *   <li>[已完成] {@link EmptyAssigneeStrategyService} — 审批人为空兜底策略（handleEmptyAssignee 四策略分发）
+ *   <li>[已完成] {@link ServiceNodeExecuteService} — 服务节点 HTTP/SCRIPT/AUTO_PASS
  *       执行（executeServiceNode）
  * </ul>
  *
@@ -214,6 +214,66 @@ public class FlowTaskCreateService {
   /** P0-1: 审批人为空兜底策略服务（从本类抽出，组合模式接入） */
   private EmptyAssigneeStrategyService emptyAssigneeStrategyService;
 
+  /** P1-4: 服务节点执行服务（从本类抽出，组合模式接入） */
+  private ServiceNodeExecuteService serviceNodeExecuteService;
+
+  /**
+   * 初始化 EmptyAssigneeStrategyService
+   *
+   * <p>由于该服务需要引用本类的 advanceAfterAutoPass 方法作为回调，
+   * 无法通过构造函数注入，需要在 @PostConstruct 中手动创建。
+   */
+  @PostConstruct
+  void initEmptyAssigneeStrategyService() {
+    this.emptyAssigneeStrategyService = new EmptyAssigneeStrategyService(
+        taskRepository,
+        converter,
+        archiveService,
+        support,
+        assigneeResolutionService,
+        this::handleAdvanceAfterAutoPass);
+  }
+
+  /**
+   * 处理自动通过后的推进逻辑（回调方法，供 EmptyAssigneeStrategyService 使用）
+   *
+   * <p>将 advanceAfterAutoPass 的调用封装为回调，解耦递归深度保护逻辑。
+   */
+  private Void handleAdvanceAfterAutoPass(EmptyAssigneeStrategyService.AdvanceContext ctx) {
+    advanceAfterAutoPass(ctx.getInstance(), ctx.getNode(), ctx.getVariables());
+    return null;
+  }
+
+  /**
+   * 初始化 ServiceNodeExecuteService
+   *
+   * <p>由于该服务需要引用本类的 advanceAfterAutoPass 方法作为回调，
+   * 无法通过构造函数注入，需要在 @PostConstruct 中手动创建。
+   */
+  @PostConstruct
+  void initServiceNodeExecuteService() {
+    this.serviceNodeExecuteService = new ServiceNodeExecuteService(
+        serviceNodeExecutor,
+        taskRepository,
+        converter,
+        archiveService,
+        support,
+        eventSubscriptionService,
+        nodeRepository,
+        instanceRepository,
+        this::handleAdvanceAfterServiceNode);
+  }
+
+  /**
+   * 处理服务节点执行成功后的推进逻辑（回调方法，供 ServiceNodeExecuteService 使用）
+   *
+   * <p>将 advanceAfterAutoPass 的调用封装为回调，解耦递归深度保护逻辑。
+   */
+  private Void handleAdvanceAfterServiceNode(ServiceNodeExecuteService.AdvanceContext ctx) {
+    advanceAfterAutoPass(ctx.getInstance(), ctx.getNode(), ctx.getVariables());
+    return null;
+  }
+
   // ============================== 公共创建入口 ==============================
 
   /** 创建任务（向后兼容重载） */
@@ -238,7 +298,7 @@ public class FlowTaskCreateService {
 
     // 特殊节点创建路径（提前返回）
     if (isNodeType(node, FlowNodeType.SERVICE)) {
-      return executeServiceNode(instance, node, variables);
+      return serviceNodeExecuteService.executeServiceNode(instance, node, variables);
     }
     if (isNodeType(node, FlowNodeType.FOREACH)) {
       return createForeachTasks(instance, node, variables, explicitAssignees);
@@ -306,8 +366,8 @@ public class FlowTaskCreateService {
       if (autoDedup) {
         return new TaskBuildResult(handleAutoDedupSkip(task, instance, node, variables), null);
       }
-      // P0-1: 审批人为空兜底处理
-      return new TaskBuildResult(handleEmptyAssignee(task, instance, node, variables), null);
+      // P0-1: 审批人为空兜底处理（委托给 EmptyAssigneeStrategyService）
+      return new TaskBuildResult(emptyAssigneeStrategyService.handleEmptyAssignee(task, instance, node, variables), null);
     }
 
     // 正常路径：设置首个办理人
@@ -432,91 +492,6 @@ public class FlowTaskCreateService {
     return task.getId();
   }
 
-  /**
-   * P0-1: 审批人为空兜底处理
-   *
-   * <p>按 ext 配置的 emptyStrategy 分发到对应策略：
-   *
-   * <ul>
-   *   <li>{@code AUTO_PASS} — 自动通过并推进到下一节点
-   *   <li>{@code TRANSFER_ADMIN} — 转交管理员
-   *   <li>{@code ASSIGN_SPECIFIED} — 指定人员
-   *   <li>其它（{@code FALLBACK}）— 回退到 resolveAssignee 逻辑
-   * </ul>
-   */
-  private String handleEmptyAssignee(
-      FlowRunTaskDO task, FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
-    Map<String, Object> extConfig = parseExtConfig(node.getExt());
-    String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", DEFAULT_EMPTY_STRATEGY);
-
-    return switch (emptyStrategy) {
-      case "AUTO_PASS" -> handleAutoPass(task, instance, node, variables);
-      case "TRANSFER_ADMIN" ->
-          assignToFallbackUser(
-              task,
-              instance,
-              node,
-              parseLongConfig(extConfig, "adminUserId", "1"),
-              "ADMIN_FALLBACK",
-              "[Flow] 审批人为空转管理员: instanceId={} node={} adminId={}");
-      case "ASSIGN_SPECIFIED" ->
-          assignToFallbackUser(
-              task,
-              instance,
-              node,
-              parseLongConfig(extConfig, "specifiedUserId", "1"),
-              "SPECIFIED_FALLBACK",
-              "[Flow] 审批人为空指定人员: instanceId={} node={} userId={}");
-      default -> fallbackToResolveAssignee(task, instance, node, variables);
-    };
-  }
-
-  /** AUTO_PASS 策略：标记任务为已完成（自动通过），归档并推进到下一节点。 */
-  private String handleAutoPass(
-      FlowRunTaskDO task, FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
-    task.setAssigneeType(FlowAssigneeType.USER.name());
-    task.setAssigneeId("0");
-    task.setAssigneeName("SYSTEM_AUTO_PASS");
-    task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
-    LocalDateTime now = LocalDateTime.now();
-    task.setFinishAt(now);
-    task.setDurationMs(0L);
-    taskRepository.save(converter.entityToVO(task));
-    archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
-    support.audit(task, "AUTO_PASS", null, null, "审批人为空，自动通过");
-    log.info("[Flow] 审批人为空自动通过: instanceId={} node={}", instance.getId(), node.getNodeCode());
-    advanceAfterAutoPass(instance, node, variables);
-    return task.getId();
-  }
-
-  /**
-   * 将任务分配给指定的回退用户（管理员或指定人员）。
-   *
-   * @param logMsg 日志模板（包含 3 个 {} 占位符：instanceId, nodeCode, userId）
-   */
-  private String assignToFallbackUser(
-      FlowRunTaskDO task,
-      FlowInstanceVO instance,
-      FlowNodeDO node,
-      String userId,
-      String fallbackName,
-      String logMsg) {
-    task.setAssigneeType(FlowAssigneeType.USER.name());
-    task.setAssigneeId(userId);
-    task.setAssigneeName(fallbackName);
-    taskRepository.save(converter.entityToVO(task));
-    log.info(logMsg, instance.getId(), node.getNodeCode(), userId);
-    return task.getId();
-  }
-
-  /** FALLBACK 策略：回退到原有 resolveAssignee 逻辑。 */
-  private String fallbackToResolveAssignee(
-      FlowRunTaskDO task, FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
-    taskRepository.save(converter.entityToVO(task));
-    resolveAssignee(task, node, variables, null, instance);
-    taskRepository.update(converter.entityToVO(task));
-    return task.getId();
-  }
 
   /**
    * P2-4 (GAP-14) / P0-4: 自动审批节点（配置化规则引擎）
@@ -1424,160 +1399,6 @@ public class FlowTaskCreateService {
       FlowAssigneeDTO explicit,
       FlowInstanceVO instance) {
     assigneeResolutionService.resolveAssignee(task, node, variables, explicit, instance);
-  }
-
-  /**
-   * P1-4: 执行 SERVICE 服务节点（HTTP/SCRIPT/AUTO_PASS 自动执行）
-   *
-   * <p>创建 COMPLETED/TIMEOUT 任务记录（仅用于审计追溯），归档，审计。 成功时推进到下一节点；失败时优先触发 error boundary 事件，否则标记实例异常。
-   */
-  private String executeServiceNode(
-      FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
-    // 1. 执行服务节点逻辑
-    FlowServiceNodeExecutor.ServiceExecutionResult result;
-    try {
-      result = serviceNodeExecutor.execute(node, variables);
-    } catch (Exception e) {
-      log.error(
-          "[Flow] 服务节点执行异常: instanceId={} node={} err={}",
-          instance.getId(),
-          node.getNodeCode(),
-          e.getMessage(),
-          e);
-      result =
-          new FlowServiceNodeExecutor.ServiceExecutionResult(false, "服务节点执行异常: " + e.getMessage());
-    }
-
-    // 2. 创建任务记录（用于审计追溯）
-    FlowRunTaskDO task = new FlowRunTaskDO();
-    task.setInstanceId(instance.getId());
-    task.setFlowCode(instance.getFlowCode());
-    task.setDefinitionId(instance.getDefinitionId());
-    task.setNodeCode(node.getNodeCode());
-    task.setNodeName(node.getNodeName());
-    task.setNodeType(node.getNodeType());
-    task.setBusinessType(instance.getBusinessType());
-    task.setBusinessId(instance.getBusinessId());
-    task.setBusinessNo(instance.getBusinessNo());
-    task.setFlowName(instance.getFlowName());
-    task.setTitle(instance.getTitle());
-    task.setPermissionFlag(node.getPermissionFlag());
-    task.setPerformType(FlowPerformType.OR.name());
-    task.setApproveCount(1);
-    task.setApproveFinished(1);
-    task.setAssigneeType(FlowAssigneeType.USER.name());
-    task.setAssigneeId("0");
-    task.setAssigneeName("SYSTEM_SERVICE");
-    task.setTenantId(instance.getTenantId());
-    task.setProviderTraceId(instance.getProviderTraceId());
-    LocalDateTime now = LocalDateTime.now();
-    task.setFinishAt(now);
-    task.setDurationMs(0L);
-
-    if (result.success()) {
-      // 3a. 成功：标记 COMPLETED，归档，审计，推进
-      task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
-      task.setComment(result.message());
-      taskRepository.save(converter.entityToVO(task));
-      archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
-      support.audit(task, "SERVICE_EXECUTE", null, null, "服务节点执行成功: " + result.message());
-      log.info(
-          "[Flow] 服务节点执行成功: instanceId={} node={} msg={}",
-          instance.getId(),
-          node.getNodeCode(),
-          result.message());
-      advanceAfterAutoPass(instance, node, variables);
-    } else {
-      // 3b. 失败：优先尝试触发 error boundary 接管流程
-      boolean errorBoundaryTriggered =
-          triggerErrorBoundaryIfExists(instance, node, result.message());
-      task.setTaskStatus(FlowTaskStatus.TIMEOUT.name());
-      if (errorBoundaryTriggered) {
-        task.setComment("服务节点失败，error boundary 已触发: " + result.message());
-      } else {
-        task.setComment("服务节点执行失败: " + result.message());
-      }
-      taskRepository.save(converter.entityToVO(task));
-      archiveService.archiveToHistory(task, FlowTaskStatus.TIMEOUT);
-      if (errorBoundaryTriggered) {
-        support.audit(
-            task,
-            "SERVICE_ERROR_BOUNDARY",
-            null,
-            null,
-            "服务节点失败，error boundary 触发: " + result.message());
-        log.info(
-            "[Flow] 服务节点失败，error boundary 已触发: instanceId={} node={}",
-            instance.getId(),
-            node.getNodeCode());
-      } else {
-        support.audit(task, "SERVICE_ERROR", null, null, "服务节点执行失败: " + result.message());
-        instanceRepository.updateStatus(
-            instance.getId(),
-            FlowInstanceStatus.ERROR.name(),
-            node.getNodeCode(),
-            node.getNodeName(),
-            null,
-            null);
-        log.error(
-            "[Flow] 服务节点执行失败，实例标记为异常: instanceId={} node={} msg={}",
-            instance.getId(),
-            node.getNodeCode(),
-            result.message());
-      }
-    }
-    return task.getId();
-  }
-
-  /** P0-2: 触发附着在 serviceNode 上的 error boundary 事件 */
-  private boolean triggerErrorBoundaryIfExists(
-      FlowInstanceVO instance, FlowNodeDO serviceNode, String errorMsg) {
-    if (eventSubscriptionService == null) {
-      return false;
-    }
-    try {
-      List<FlowNodeDO> allNodes = nodeRepository.findByDefinitionId(instance.getDefinitionId()).stream().map(converter::entityToDO).toList();
-      if (allNodes == null || allNodes.isEmpty()) {
-        return false;
-      }
-      List<FlowNodeDO> errorBoundaries =
-          allNodes.stream()
-              .filter(
-                  n -> {
-                    if (!eventSubscriptionService.isEventCatchNode(n)) {
-                      return false;
-                    }
-                    Map<String, Object> ext = parseExtConfig(n.getExt());
-                    String attachedTo = (String) ext.get("attachedToRef");
-                    String eventType = (String) ext.get("eventType");
-                    return serviceNode.getNodeCode().equals(attachedTo)
-                        && "ERROR".equalsIgnoreCase(eventType);
-                  })
-              .toList();
-      if (errorBoundaries.isEmpty()) {
-        return false;
-      }
-      for (FlowNodeDO boundary : errorBoundaries) {
-        Map<String, Object> ext = parseExtConfig(boundary.getExt());
-        String errorRef = (String) ext.getOrDefault("errorRef", "SERVICE_ERROR");
-        eventSubscriptionService.throwError(
-            instance.getTenantId(), instance.getId(), errorRef, errorMsg);
-        log.info(
-            "[Flow] error boundary 触发: instanceId={} serviceNode={} boundary={} errorRef={}",
-            instance.getId(),
-            serviceNode.getNodeCode(),
-            boundary.getNodeCode(),
-            errorRef);
-      }
-      return true;
-    } catch (Exception e) {
-      log.warn(
-          "[Flow] 触发 error boundary 失败，降级到标记实例异常: instanceId={} node={} err={}",
-          instance.getId(),
-          serviceNode.getNodeCode(),
-          e.getMessage());
-      return false;
-    }
   }
 
   /** 解析 node.ext JSON 为 Map */
