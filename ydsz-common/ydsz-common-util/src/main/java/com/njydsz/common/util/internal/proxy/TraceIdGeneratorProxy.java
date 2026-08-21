@@ -52,20 +52,20 @@ public final class TraceIdGeneratorProxy {
    * @return true 表示可用
    */
   public static boolean isAvailable() {
-    Boolean result = available.get();
+    Boolean result = AVAILABLE.get();
     if (result != null) {
       return result;
     }
     try {
       Class.forName(GENERATOR_CLASS);
-      if (available.compareAndSet(null, Boolean.TRUE)) {
+      if (AVAILABLE.compareAndSet(null, Boolean.TRUE)) {
         return true;
       }
     } catch (ClassNotFoundException e) {
-      available.compareAndSet(null, Boolean.FALSE);
+      AVAILABLE.compareAndSet(null, Boolean.FALSE);
       LOG.debug("ydsz-common-core 不在 classpath 中，TraceId 将使用内置简易实现");
     }
-    return available.get();
+    return AVAILABLE.get();
   }
 
   /**

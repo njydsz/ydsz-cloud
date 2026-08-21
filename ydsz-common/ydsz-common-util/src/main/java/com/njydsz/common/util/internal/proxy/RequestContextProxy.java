@@ -50,20 +50,20 @@ public final class RequestContextProxy {
    * @return true 表示可用，false 表示不可用（util 模块被独立使用时）
    */
   public static boolean isAvailable() {
-    Boolean result = available.get();
+    Boolean result = AVAILABLE.get();
     if (result != null) {
       return result;
     }
     try {
       Class.forName(REQUEST_CONTEXT_CLASS);
-      if (available.compareAndSet(null, Boolean.TRUE)) {
+      if (AVAILABLE.compareAndSet(null, Boolean.TRUE)) {
         return true;
       }
     } catch (ClassNotFoundException e) {
-      available.compareAndSet(null, Boolean.FALSE);
+      AVAILABLE.compareAndSet(null, Boolean.FALSE);
       LOG.debug("ydsz-common-core 不在 classpath 中，RequestContext 功能将降级为无操作");
     }
-    return available.get();
+    return AVAILABLE.get();
   }
 
   /**
@@ -199,6 +199,6 @@ public final class RequestContextProxy {
    */
   public static void clearCache() {
     METHOD_CACHE.clear();
-    available.set(null);
+    AVAILABLE.set(null);
   }
 }

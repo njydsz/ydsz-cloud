@@ -88,7 +88,7 @@ public final class TracerUtils {
    * @return SkyWalking traceId，或 null（不可用时）
    */
   private static String getSkyWalkingTraceId() {
-    if (skywalkingChecked.compareAndSet(false, true)) {
+    if (SKYWALKING_CHECKED.compareAndSet(false, true)) {
       try {
         Class<?> clazz = Class.forName(SKYWALKING_TRACE_CONTEXT_CLASS);
         skywalkingTraceIdMethod = clazz.getMethod("traceId");

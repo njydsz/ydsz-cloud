@@ -123,7 +123,7 @@ public final class IdGenerator {
   }
 
   private static SnowflakeIdGenerator getGenerator() {
-    SnowflakeIdGenerator gen = cached.get();
+    SnowflakeIdGenerator gen = CACHED.get();
     if (gen != null) {
       return gen;
     }
@@ -144,8 +144,8 @@ public final class IdGenerator {
             "SnowflakeIdGenerator Bean 不可用（可能被 ydsz.util.snowflake.enabled=false 禁用），ID 降级为随机数");
         return null;
       }
-      cached.compareAndSet(null, gen);
-      return cached.get();
+      CACHED.compareAndSet(null, gen);
+      return CACHED.get();
     } catch (Exception e) {
       lastFailureMillis = System.currentTimeMillis();
       log.warn("获取 SnowflakeIdGenerator Bean 失败，ID 降级为随机数，原因: {}", e.getMessage());
@@ -170,7 +170,7 @@ public final class IdGenerator {
 
   /** 测试用：重置缓存与失败冷却。 */
   static void resetForTesting() {
-    cached.set(null);
+    CACHED.set(null);
     lastFailureMillis = 0L;
     DEGRADED_WARNED.set(false);
   }

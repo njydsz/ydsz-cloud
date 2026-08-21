@@ -327,7 +327,7 @@ public final class PwdUtils {
    * @return 密码强度检查器（不为 null）
    */
   public static PasswordStrengthChecker getPasswordStrengthChecker() {
-    PasswordStrengthChecker checker = strengthChecker.get();
+    PasswordStrengthChecker checker = STRENGTH_CHECKER.get();
     if (checker != null) {
       return checker;
     }
@@ -340,7 +340,7 @@ public final class PwdUtils {
     }
     PasswordStrengthChecker created =
         (found != null) ? found : DefaultPasswordStrengthChecker.INSTANCE;
-    return strengthChecker.compareAndSet(null, created) ? created : strengthChecker.get();
+    return STRENGTH_CHECKER.compareAndSet(null, created) ? created : STRENGTH_CHECKER.get();
   }
 
   /**
