@@ -71,48 +71,6 @@ public class SafeFilterChainBuilder {
     return descriptors.size();
   }
 
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
-   * @param sorted sorted 参数
   /** 检测同 order 冲突并记录警告日志 */
   private void detectOrderConflict(List<FilterRegistrationDescriptor<?>> sorted) {
     for (int i = 1; i < sorted.size(); i++) {

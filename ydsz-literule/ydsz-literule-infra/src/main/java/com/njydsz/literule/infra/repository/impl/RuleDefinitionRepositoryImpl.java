@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -56,9 +57,8 @@ public class RuleDefinitionRepositoryImpl implements RuleDefinitionRepository {
 
   @Override
   public PageResponse<List<RuleDefinitionVO>> pageRuleDefinitions(PageQuery pageQuery) {
-    com.baomidou.mybatisplus.extension.plugins.pagination.Page<RuleDefinitionDO> page =
-        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
-            pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize());
+    Page<RuleDefinitionDO> page = new Page<>(
+        pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize());
     LambdaQueryWrapper<RuleDefinitionDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.orderByAsc(RuleDefinitionDO::getPriority).orderByDesc(RuleDefinitionDO::getCreatedAt);
     IPage<RuleDefinitionDO> doPage = ruleDefinitionMapper.selectPage(page, wrapper);
@@ -78,8 +78,7 @@ public class RuleDefinitionRepositoryImpl implements RuleDefinitionRepository {
             status,
             category,
             enabled,
-            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
-                (offset / Math.max(limit, 1)) + 1, Math.max(limit, 1)));
+            new Page<>((offset / Math.max(limit, 1)) + 1, Math.max(limit, 1)));
     return converter.ruleDefinitionListToVO(page.getRecords());
   }
 
@@ -97,8 +96,7 @@ public class RuleDefinitionRepositoryImpl implements RuleDefinitionRepository {
             status,
             category,
             enabled,
-            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
-                pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize()));
+            new Page<>(pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize()));
     List<RuleDefinitionVO> records = converter.ruleDefinitionListToVO(page.getRecords());
     return PageResponse.success(
         page.getTotal(), page.getCurrent(), page.getSize(), records);
