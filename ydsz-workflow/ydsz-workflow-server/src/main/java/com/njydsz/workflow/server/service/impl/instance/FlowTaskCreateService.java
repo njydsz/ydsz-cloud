@@ -51,6 +51,7 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowSlaService;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 import com.njydsz.workflow.server.service.instance.AssigneeResolutionService;
+import com.njydsz.workflow.server.service.instance.DelegateRedirectService;
 
 /**
  * 任务创建服务（拆分自 FlowTaskCompleteServiceImpl）
@@ -63,7 +64,7 @@ import com.njydsz.workflow.server.service.instance.AssigneeResolutionService;
  *
  * <ul>
  *   <li>[已完成] {@link AssigneeResolutionService} — 办理人解析（resolveAssignee / resolveInitiatorId）
- *   <li>[TODO] {@code DelegateRedirectService} — 长期授权委派改写（applyDelegateRedirect）
+ *   <li>[已完成] {@link DelegateRedirectService} — 长期授权委派改写（applyDelegateRedirect）
  *   <li>[TODO] {@code EmptyAssigneeStrategyService} — 审批人为空兜底策略（handleEmptyAssignee 四策略分发）
  *   <li>[TODO] {@code ServiceNodeExecuteService} — 服务节点 HTTP/SCRIPT/AUTO_PASS
  *       执行（executeServiceNode）
@@ -175,8 +176,6 @@ public class FlowTaskCreateService {
   /** 审批人解析器，从节点配置解析实际审批人/候选人列表 */
   private final FlowAssigneeResolver assigneeResolver;
 
-  /** 委派授权服务，查询长期授权委派改写审批人 */
-  private final FlowDelegateAuthService delegateAuthService;
 
   /** 跨子 Service 共享的任务校验/审计/事件辅助 */
   private final FlowTaskSupport support;
@@ -206,6 +205,9 @@ public class FlowTaskCreateService {
 
   /** P1-2: 办理人解析服务（从本类抽出，组合模式接入） */
   private final AssigneeResolutionService assigneeResolutionService;
+
+  /** P1-4: 委派改写服务（从本类抽出，组合模式接入） */
+  private final DelegateRedirectService delegateRedirectService;
 
   // ============================== 公共创建入口 ==============================
 
@@ -339,8 +341,8 @@ public class FlowTaskCreateService {
    */
   private String postCreateTask(
       FlowRunTaskDO task, FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
-    // P1-4: 应用长期授权委派
-    applyDelegateRedirect(task, instance, node);
+    // P1-4: 应用长期授权委派（委托给 DelegateRedirectService）
+    delegateRedirectService.applyDelegateRedirect(task, instance, node);
     // P0-1: 事件发布
     support.fireEvent(l -> l.onTaskCreated(task.getId()), task.getId());
     support.publishWorkflowEvent("TASK_CREATED", instance.getId(), task.getId());
@@ -974,62 +976,6 @@ public class FlowTaskCreateService {
     return task;
   }
 
-  /**
-   * P1-4/P1-7: 长期授权委派改写（支持链式解析）
-   *
-   * <p>P1-7 增强：使用 {@code resolveDelegateChain} 递归解析 A→B→C 链式委派， 最终将任务分配给链路末端的代理人。
-   */
-  private void applyDelegateRedirect(FlowRunTaskDO task, FlowInstanceVO instance, FlowNodeDO node) {
-    try {
-      if (delegateAuthService == null) {
-        return;
-      }
-      String currentAssigneeId = task.getAssigneeId();
-      if (!StringUtils.hasText(currentAssigneeId)) {
-        return;
-      }
-      String currentUserId = currentAssigneeId.trim();
-      // P1-7: 链式解析最终代理人
-      String finalDelegateId =
-          delegateAuthService.resolveDelegateChain(
-              instance.getTenantId(), currentUserId, instance.getFlowCode(), node.getNodeCode());
-      if (finalDelegateId == null || finalDelegateId.equals(currentUserId)) {
-        // 无委派规则，或最终代理人就是原办理人
-        return;
-      }
-      // 仍需匹配首条授权规则用于审计记录
-      FlowDelegateAuthDO matched =
-          delegateAuthService.matchAuth(
-              instance.getTenantId(), currentUserId, instance.getFlowCode(), node.getNodeCode());
-      task.setAssignorId(currentUserId);
-      task.setAssignorName(matched != null ? matched.getOwnerUserName() : null);
-      task.setAssigneeId(finalDelegateId);
-      // 最终代理人姓名：优先从链路末端匹配记录获取
-      task.setAssigneeName(matched != null ? matched.getDelegateUserName() : finalDelegateId);
-      taskRepository.update(converter.entityToVO(task));
-      String authId = matched != null ? matched.getId() : "CHAIN_RESOLVED";
-      String scopeType = matched != null ? matched.getScopeType() : "CHAIN";
-      support.audit(
-          task,
-          "DELEGATE_AUTH_APPLIED",
-          finalDelegateId,
-          currentUserId,
-          "长期授权委派生效(链式): " + authId + " (" + scopeType + ") → " + finalDelegateId);
-      log.info(
-          "[Flow] 长期授权委派改写(链式): taskId={} owner={} → finalDelegate={} authId={} scope={}",
-          task.getId(),
-          currentUserId,
-          finalDelegateId,
-          authId,
-          scopeType);
-    } catch (Exception e) {
-      log.error(
-          "[Flow] 长期授权委派改写异常: taskId={} err={}",
-          task == null ? "null" : task.getId(),
-          e.getMessage(),
-          e);
-    }
-  }
 
   /** AUTO_PASS 后推进到下一节点（含递归深度保护） */
   private void advanceAfterAutoPass(
