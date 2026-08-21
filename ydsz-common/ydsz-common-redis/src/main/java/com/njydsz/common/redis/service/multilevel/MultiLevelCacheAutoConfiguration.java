@@ -2,11 +2,9 @@ package com.njydsz.common.redis.service.multilevel;
 
 import java.util.Objects;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -22,7 +20,6 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p>当满足以下条件时自动装配 {@link MultiLevelCacheProvider}：
  *
  * <ul>
- *   <li>Caffeine 位于 classpath（{@code @ConditionalOnClass Caffeine}）
  *   <li>{@code ydsz.redis.multilevel.enabled=true}（默认 false）
  *   <li>容器中不存在其他 {@link CacheProvider} 实现
  * </ul>
@@ -44,7 +41,6 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 @Slf4j
 @AutoConfiguration
 @AutoConfigureAfter(name = {"com.njydsz.common.redis.config.RedisConfiguration"})
-@ConditionalOnClass(Caffeine.class)
 @ConditionalOnProperty(prefix = "ydsz.redis.multilevel", name = "enabled", havingValue = "true")
 @EnableConfigurationProperties(RedisProperties.class)
 public class MultiLevelCacheAutoConfiguration {

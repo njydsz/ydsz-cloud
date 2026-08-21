@@ -280,7 +280,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
   /**
    * 两级缓存加载启用规则列表。
    *
-   * <p>查询顺序：L1 本地缓存（Caffeine）→ L2 Redis → DB，每一层回填上层。 L1 仅 30 秒 TTL， 一致性由 CUD 操作主动失效 L1 + L2 保证。
+   * <p>查询顺序：L1 本地缓存（YdszCache）→ L2 Redis → DB，每一层回填上层。 L1 仅 30 秒 TTL， 一致性由 CUD 操作主动失效 L1 + L2 保证。
    *
    * @return 启用规则列表（按优先级升序）
    */

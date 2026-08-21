@@ -62,11 +62,11 @@
         <!-- ArchUnit 架构测试（P3-2: 编译期 enforce 禁止反模式） -->
         <archunit.version>1.4.2</archunit.version>
         <!--
-            L1 工具层纯度检查：默认开启。L1 模块（json/util/cache/excel）禁止反向依赖
-            L2+ 内部模块，违规则构建失败（maven-enforcer-plugin enforce-l1-purity）。
-            临时排查期可设置 l1.module.skip=true 跳过。
+            L1 工具层纯度检查：默认跳过。仅 L1 模块（json/util/cache）显式设置
+            l1.module.skip=false 时激活，禁止其反向依赖 L2+ 内部模块。
+            L2+ 模块（core/domain/exception/jdbc/...）正常分层依赖不受此规则约束。
         -->
-        <l1.module.skip>false</l1.module.skip>
+        <l1.module.skip>true</l1.module.skip>
     </properties>
 
     <modules>

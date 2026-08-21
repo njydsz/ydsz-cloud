@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 /**
  * 缓存统计信息视图对象。
  *
- * <p>反映模板引擎 AST 缓存（Caffeine）的运行时统计指标，包含缓存条目数、命中率、淘汰次数等运维关键数据，
+ * <p>反映模板引擎 AST 缓存（YdszCache）的运行时统计指标，包含缓存条目数、命中率、淘汰次数等运维关键数据，
  * 供运维诊断接口（{@code GET /api/v1/message/ops/template-cache/stats}）返回。
  *
  * @author ydsz-team

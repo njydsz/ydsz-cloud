@@ -43,7 +43,7 @@ import com.njydsz.message.server.template.cache.CachedTemplateEngine;
 @RequiredArgsConstructor
 public class MessageRenderService {
 
-  /** 带 AST 缓存的模板引擎（Caffeine 实现，变量占位符渲染） */
+  /** 带 AST 缓存的模板引擎（YdszCache 实现，变量占位符渲染） */
   private final CachedTemplateEngine cachedTemplateEngine;
 
   /** 模板管理服务（加载/校验模板） */

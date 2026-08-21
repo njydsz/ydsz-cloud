@@ -93,13 +93,6 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
-        <!-- Caffeine 本地缓存（二级缓存 L1，可选） -->
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
         <!-- Micrometer 可观测性（可选） -->
         <dependency>
             <groupId>io.micrometer</groupId>

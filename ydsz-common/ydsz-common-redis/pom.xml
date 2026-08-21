@@ -107,11 +107,10 @@
             <artifactId>redisson-spring-boot-starter</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- Caffeine 本地缓存 L1（可选，用于多级缓存） -->
+        <!-- ydzz-common-cache（L1 本地缓存，零第三方依赖） -->
         <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-            <optional>true</optional>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-cache</artifactId>
         </dependency>
         <!-- Guava（布隆过滤器使用 MurmurHash3 标准实现） -->
         <dependency>

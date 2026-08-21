@@ -68,12 +68,6 @@
             <artifactId>micrometer-core</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- caffeine (for status count cache) -->
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-            <optional>true</optional>
-        </dependency>
         <!-- spring-data-commons (for Page / Pageable) -->
         <dependency>
             <groupId>org.springframework.data</groupId>

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.message.domain.vo.BloomFilterStatsVO;
 import com.njydsz.message.domain.vo.CacheStatsVO;
@@ -27,7 +28,7 @@ import com.njydsz.message.server.template.cache.CachedTemplateEngine;
  * <p><b>核心能力：</b>
  *
  * <ul>
- *   <li><b>模板缓存统计</b>：{@code GET /ops/template-cache/stats} — 返回 Caffeine 缓存条目数、命中率、淘汰次数等指标
+ * <li><b>模板缓存统计</b>：{@code GET /ops/template-cache/stats} — 返回 YdszCache 缓存条目数、命中率、淘汰次数等指标
  *   <li><b>模板缓存清除</b>：{@code DELETE /ops/template-cache?template=xxx} — 失效指定模板的编译缓存
  *   <li><b>模板缓存全清</b>：{@code DELETE /ops/template-cache/all} — 清空所有模板编译缓存
  *   <li><b>BloomFilter 统计</b>：{@code GET /ops/bloomfilter/stats} — 返回 BloomFilter 容量、误判率、窗口年龄等指标
@@ -56,7 +57,7 @@ public class OpsController {
   /**
    * 获取模板缓存统计信息。
    *
-   * <p>返回 Caffeine 缓存的运行时指标，包含当前缓存条目数、命中次数、未命中次数、命中率和淘汰次数。
+   * <p>返回 YdszCache 缓存（ydsz-common-cache）的运行时指标，包含当前缓存条目数、命中次数、未命中次数、命中率和淘汰次数。
    *
    * @return 统一响应结果，包含缓存统计信息
    */
@@ -64,7 +65,7 @@ public class OpsController {
   @AuthApiPermission("MESSAGE_LOG_VIEW")
   @GetMapping("/template-cache/stats")
   public YdszResponse<CacheStatsVO> getTemplateCacheStats() {
-    com.github.benmanes.caffeine.cache.stats.CacheStats stats = cachedTemplateEngine.caffeineCacheStats();
+    com.njydsz.common.cache.stats.CacheStats stats = cachedTemplateEngine.getCacheStats();
     CacheStatsVO vo = CacheStatsVO.builder()
         .size(cachedTemplateEngine.cacheSize())
         .hitCount(stats.hitCount())

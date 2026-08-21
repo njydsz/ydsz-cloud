@@ -5,11 +5,11 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.Expiry;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.service.CacheProvider;
@@ -17,12 +17,12 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
- * 多级缓存提供者（L1 Caffeine 本地缓存 + L2 Redis 远程缓存）
+ * 多级缓存提供者（L1 YdszCache 本地缓存 + L2 Redis 远程缓存）
  *
  * <p>实现 {@link CacheProvider} 接口，提供两级缓存架构：
  *
  * <ul>
- *   <li><b>L1</b>：Caffeine 本地缓存，命中率极高、零网络开销，适合热点数据
+ *   <li><b>L1</b>：YdszCache 本地缓存（TINYLFU 算法），命中率极高、零网络开销，适合热点数据
  *   <li><b>L2</b>：Redis 远程缓存，跨实例共享，适合全局数据
  * </ul>
  *
@@ -53,7 +53,7 @@ import com.njydsz.common.util.string.StringUtils;
  *
  * <ul>
  *   <li>L1 TTL 应显著小于 L2 TTL，保证数据新鲜度
- *   <li>本组件仅在 Caffeine 位于 classpath 时自动装配
+ *   <li>本组件使用 ydzs-common-cache 统一本地缓存框架
  *   <li>不适用于写多读少或数据实时性要求极高的场景
  * </ul>
  *
@@ -70,7 +70,7 @@ public class MultiLevelCacheProvider implements CacheProvider {
   /** 空值占位符（与 RedisStringOps 中的保持一致） */
   private static final String NULL_PLACEHOLDER = "__NULL__";
 
-  /** L1 Caffeine 本地缓存实例 */
+  /** L1 YdszCache 本地缓存实例 */
   private final Cache<String, Object> l1Cache;
 
   /** L2 Redis 操作组件 */
@@ -95,9 +95,10 @@ public class MultiLevelCacheProvider implements CacheProvider {
     this.redisStringOps = Objects.requireNonNull(redisStringOps, "RedisStringOps 必须不为 null");
     this.redisProperties = Objects.requireNonNull(redisProperties, "RedisProperties 必须不为 null");
     this.l1Cache =
-        Caffeine.newBuilder()
+        YdszCache.newBuilder()
+            .name(CACHE_NAME)
             .maximumSize(Math.max(1, l1MaxSize))
-            .expireAfter(new CustomExpiry(l1TtlSeconds))
+            .expireAfterWrite(l1TtlSeconds, TimeUnit.SECONDS)
             .removalListener(
                 (key, value, cause) ->
                     log.trace("[{}] L1 缓存移除 - key={}, cause={}", CACHE_NAME, key, cause))
@@ -262,50 +263,14 @@ public class MultiLevelCacheProvider implements CacheProvider {
   /**
    * 获取 L1 缓存统计信息
    *
-   * @return Caffeine 缓存统计
+   * @return YdszCache 缓存统计
    */
-  public com.github.benmanes.caffeine.cache.stats.CacheStats l1Stats() {
-    return l1Cache.stats();
+  public CacheStats l1Stats() {
+    return l1Cache.getStats();
   }
 
   /** 手动清空 L1 缓存 */
   public void invalidateAll() {
     l1Cache.invalidateAll();
-  }
-
-  /**
-   * 自定义过期策略（支持 key 级别差异化 TTL）
-   *
-   * <p>当前实现使用固定 TTL，未来可扩展为基于 key 前缀的差异化过期。
-   */
-  private static class CustomExpiry implements Expiry<String, Object> {
-
-    /** 默认过期时间（纳秒） */
-    private final long defaultTtlNanos;
-
-    /**
-     * 构造过期策略
-     *
-     * @param ttlSeconds 默认过期时间（秒）
-     */
-    CustomExpiry(long ttlSeconds) {
-      this.defaultTtlNanos = TimeUnit.SECONDS.toNanos(Math.max(1, ttlSeconds));
-    }
-
-    @Override
-    public long expireAfterCreate(String key, Object value, long currentTime) {
-      return defaultTtlNanos;
-    }
-
-    @Override
-    public long expireAfterUpdate(
-        String key, Object value, long currentTime, long currentDuration) {
-      return defaultTtlNanos;
-    }
-
-    @Override
-    public long expireAfterRead(String key, Object value, long currentTime, long currentDuration) {
-      return currentDuration;
-    }
   }
 }

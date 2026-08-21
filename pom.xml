@@ -83,7 +83,6 @@
         <commons-collections4.version>4.5.0</commons-collections4.version>
         <commons-compress.version>1.28.0</commons-compress.version>
         <checker-qual.version>3.42.0</checker-qual.version>
-        <caffeine.version>3.2.4</caffeine.version>
         <errorprone.version>2.49.0</errorprone.version>
         <openpdf.version>1.3.30</openpdf.version>
         <rocketmq.spring.version>2.3.1</rocketmq.spring.version>
@@ -865,14 +864,7 @@
                 <version>${druid.version}</version>
             </dependency>
 
-            <!-- Caffeine（SpELConditionEvaluator 表达式缓存等；checker-qual 版本见上） -->
-            <dependency>
-                <groupId>com.github.ben-manes.caffeine</groupId>
-                <artifactId>caffeine</artifactId>
-                <version>${caffeine.version}</version>
-            </dependency>
-
-            <!-- Checker Framework（postgresql 42.7.4 要求 3.42.0，caffeine 3.2.4 要求 3.37.0，取高版本） -->
+            <!-- Checker Framework（postgresql 42.7.4 要求 3.42.0） -->
             <dependency>
                 <groupId>org.checkerframework</groupId>
                 <artifactId>checker-qual</artifactId>

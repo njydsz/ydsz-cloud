@@ -64,12 +64,6 @@
     <suppress files="ydsz-common-redis[\\/]src[\\/]main[\\/]"
               checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows"/>
 
-    <!-- common-redis：多级缓存 L1 本地层（Caffeine）——技术债：应下沉至 common-cache
-         统一封装（P1-2 收敛缓存职责，重构后移除本豁免） -->
-    <suppress files="ydsz-common-redis[\\/]src[\\/]main[\\/]"
-              checks="IllegalImport"
-              message=".*com\.github\.benmanes\.caffeine.*"/>
-
     <!-- common-thread：线程池能力提供者（Executors 为封装层内部实现） -->
     <suppress files="ydsz-common-thread[\\/]src[\\/]main[\\/]"
               checks="IllegalImport"
