@@ -92,7 +92,7 @@ public class MessageFeedbackController {
    * @return 统一响应结果，包含反馈记录 ID
    */
   @Operation(summary = "提交消息反馈")
-  @Idempotent(key = "ydsz:message:MessageFeedbackController:submitFeedback:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:message:feedback:submit", ttlSeconds = 5)
   @Audit(
       module = "消息反馈",
       type = AuditType.OPERATION,

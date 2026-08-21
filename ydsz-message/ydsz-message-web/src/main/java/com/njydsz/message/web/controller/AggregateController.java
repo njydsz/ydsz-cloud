@@ -107,7 +107,7 @@ public class AggregateController {
    */
   @Operation(summary = "按聚合组+接收人强制刷新")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
-  @Idempotent(key = "ydsz:message:AggregateController:flushByGroup:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:message:aggregate:flushByGroup", ttlSeconds = 5)
   @Audit(
       module = "聚合批次",
       type = AuditType.OPERATION,
@@ -127,7 +127,7 @@ public class AggregateController {
    */
   @Operation(summary = "刷新到期批次")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
-  @Idempotent(key = "ydsz:message:AggregateController:flushDue:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:message:aggregate:flushDue", ttlSeconds = 5)
   @Audit(
       module = "聚合批次",
       type = AuditType.OPERATION,

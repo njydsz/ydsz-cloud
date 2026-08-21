@@ -116,7 +116,7 @@ public class NotificationController {
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-  @Idempotent(key = "ydsz:message:NotificationController:send:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:message:notification:send", ttlSeconds = 5)
   @Audit(
       module = "通知管理",
       type = AuditType.OPERATION,
@@ -165,7 +165,7 @@ public class NotificationController {
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
-  @Idempotent(key = "ydsz:message:NotificationController:markRead:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:message:notification:markRead", ttlSeconds = 5)
   @Audit(
       module = "通知管理",
       type = AuditType.OPERATION,
@@ -187,7 +187,7 @@ public class NotificationController {
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
-  @Idempotent(key = "ydsz:message:NotificationController:markAllRead:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:message:notification:markAllRead", ttlSeconds = 5)
   @Audit(
       module = "通知管理",
       type = AuditType.OPERATION,

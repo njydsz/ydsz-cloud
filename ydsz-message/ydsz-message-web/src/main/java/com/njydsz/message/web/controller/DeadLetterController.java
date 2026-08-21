@@ -118,7 +118,7 @@ public class DeadLetterController {
    */
   @Operation(summary = "手动重发死信")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_RESEND)
-  @Idempotent(key = "ydsz:message:DeadLetterController:resend:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:message:deadLetter:resend", ttlSeconds = 5)
   @Audit(
       module = "死信管理",
       type = AuditType.OPERATION,

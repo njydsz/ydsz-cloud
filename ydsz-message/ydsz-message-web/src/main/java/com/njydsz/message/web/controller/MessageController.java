@@ -114,7 +114,7 @@ public class MessageController {
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-  @Idempotent(key = "ydsz:message:MessageController:send:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:message:message:send", ttlSeconds = 5)
   @Audit(
       module = "消息管理",
       type = AuditType.OPERATION,
@@ -173,7 +173,7 @@ public class MessageController {
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-  @Idempotent(key = "ydsz:message:MessageController:sendDirect:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:message:message:sendDirect", ttlSeconds = 5)
   @Audit(
       module = "消息管理",
       type = AuditType.OPERATION,
@@ -202,7 +202,7 @@ public class MessageController {
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-  @Idempotent(key = "ydsz:message:MessageController:sendAsync:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:message:message:sendAsync", ttlSeconds = 5)
   @Audit(
       module = "消息管理",
       type = AuditType.OPERATION,
@@ -268,7 +268,7 @@ public class MessageController {
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-  @Idempotent(key = "ydsz:message:MessageController:sendTransactionally:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:message:message:sendTransactionally", ttlSeconds = 5)
   @Audit(
       module = "消息管理",
       type = AuditType.OPERATION,
@@ -302,7 +302,7 @@ public class MessageController {
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-  @Idempotent(key = "ydsz:message:MessageController:batchSend:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:message:message:batchSend", ttlSeconds = 5)
   @Audit(
       module = "消息管理",
       type = AuditType.OPERATION,

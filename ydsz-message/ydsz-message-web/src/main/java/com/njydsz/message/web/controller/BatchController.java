@@ -109,7 +109,7 @@ public class BatchController {
    */
   @Operation(summary = "异步批量发送消息")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-  @Idempotent(key = "ydsz:message:BatchController:submitBatch:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:message:batch:submit", ttlSeconds = 5)
   @Audit(
       module = "批量发送",
       type = AuditType.OPERATION,
