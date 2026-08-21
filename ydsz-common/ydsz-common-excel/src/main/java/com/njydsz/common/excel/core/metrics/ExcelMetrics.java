@@ -142,7 +142,7 @@ public class ExcelMetrics {
     if (registry == null) {
       return;
     }
-    gaugeMap.put(name, value);
+    GAUGE_MAP.put(name, value);
     registry.gauge("excel." + name, value);
   }
 }

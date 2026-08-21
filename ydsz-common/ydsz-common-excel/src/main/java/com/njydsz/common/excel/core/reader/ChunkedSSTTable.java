@@ -88,7 +88,7 @@ public class ChunkedSSTTable {
    * @return 缓存或新建的 ChunkedSSTTable 实例
    */
   public static ChunkedSSTTable getInstance(String filePath) {
-    return instances.computeIfAbsent(filePath, k -> new ChunkedSSTTable());
+    return INSTANCES.computeIfAbsent(filePath, k -> new ChunkedSSTTable());
   }
 
   /**
@@ -97,12 +97,12 @@ public class ChunkedSSTTable {
    * @param filePath SST 文件路径
    */
   public static void clearCache(String filePath) {
-    instances.remove(filePath);
+    INSTANCES.remove(filePath);
   }
 
   /** 清除所有 SST 实例缓存。 */
   public static void clearAllCache() {
-    instances.clear();
+    INSTANCES.clear();
   }
 
   private ChunkedSSTTable() {

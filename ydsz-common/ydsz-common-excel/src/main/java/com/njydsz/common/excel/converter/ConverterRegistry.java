@@ -63,10 +63,10 @@ public class ConverterRegistry {
    * @return 默认转换器链
    */
   public static ConverterChain getDefaultChain() {
-    ConverterChain chain = defaultChain.get();
+    ConverterChain chain = DEFAULT_CHAIN.get();
     if (chain == null) {
       ConverterChain created = createDefaultChain();
-      return defaultChain.compareAndSet(null, created) ? created : defaultChain.get();
+      return DEFAULT_CHAIN.compareAndSet(null, created) ? created : DEFAULT_CHAIN.get();
     }
     return chain;
   }
@@ -88,7 +88,7 @@ public class ConverterRegistry {
    * <p>主要用于测试场景，恢复默认的内置转换器链。
    */
   public static void reset() {
-    defaultChain.set(null);
+    DEFAULT_CHAIN.set(null);
   }
 
   private static ConverterChain createDefaultChain() {

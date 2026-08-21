@@ -115,7 +115,7 @@ public interface ReadListener<T> {
    */
   default void onError(AnalysisContext context, Exception e) {
     throw new ExcelReadException(
-        "Excel读取异常: sheet=" + (context != null ? context.getSheetName() : "unknown"),
+        "Excel读取异常: sheet=" + (context != null ? context.getCurrentSheetName() : "unknown"),
         e);
   }
 
