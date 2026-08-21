@@ -27,6 +27,7 @@ import com.alibaba.ttl.TtlRunnable;
 import com.alibaba.ttl.threadpool.TtlExecutors;
 import lombok.extern.slf4j.Slf4j;
 
+  // CHECKSTYLE.OFF: LineLength — Javadoc HTML 表格行，不可拆行
 /**
  * 线程池编程式工厂工具类。
  *
@@ -56,6 +57,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ydsz-team
  * @since 1.0.0
  */
+  // CHECKSTYLE.ON: LineLength
 @Slf4j
 public final class ExecutorUtils {
 
