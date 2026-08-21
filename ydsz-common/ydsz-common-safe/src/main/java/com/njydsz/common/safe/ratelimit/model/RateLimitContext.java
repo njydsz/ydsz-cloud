@@ -50,6 +50,34 @@ public class RateLimitContext implements Serializable {
   /** 方法签名（用于 AOP） */
   private String methodSignature;
 
+   * @param key key 参数
+   * @param value value 参数
+   * @param key key 参数
+   * @param value value 参数
+   * @param key key 参数
+   * @param value value 参数
+   * @param key key 参数
+   * @param value value 参数
+   * @param key key 参数
+   * @param value value 参数
+   * @param key key 参数
+   * @param value value 参数
+   * @param key key 参数
+   * @param value value 参数
+   * @param key key 参数
+   * @param value value 参数
+   * @param key key 参数
+   * @param value value 参数
+   * @param key key 参数
+   * @param value value 参数
+   * @param key key 参数
+   * @param value value 参数
+   * @param key key 参数
+   * @param value value 参数
+   * @param key key 参数
+   * @param value value 参数
+   * @param key key 参数
+   * @param value value 参数
   /** 添加上下文属性 */
   public RateLimitContext put(String key, Object value) {
     if (this.attributes == null) {

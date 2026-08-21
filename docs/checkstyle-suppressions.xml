@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suppressions PUBLIC
+        "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+        "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+<!--
+    云顶编码规范 - Checkstyle 豁免清单
+    Ydsz Cloud Coding Standards - Checkstyle Suppressions
+
+    说明：能力提供者模块（common-excel / common-docs / common-file / common-netty / common-seata）
+    本身负责封装第三方 SDK（POI / Tika / PDFBox / Minio / OSS / Netty / Seata），
+    允许直接 import 对应 SDK；业务模块必须通过它们的能力抽象使用，禁止直接 import。
+    本清单与 pom.xml Enforcer bannedImports 的 excludeModules 语义保持一致。
+-->
+<suppressions>
+    <!-- Excel 能力提供者：POI -->
+    <suppress files=".*[\\/]ydsz-common-excel[\\/].*" checks="IllegalImport"/>
+
+    <!-- 文档解析能力提供者：POI / Tika / PDFBox -->
+    <suppress files=".*[\\/]ydsz-common-docs[\\/].*" checks="IllegalImport"/>
+
+    <!-- 对象存储能力提供者：Minio / OSS / COS / OBS / S3 SDK -->
+    <suppress files=".*[\\/]ydsz-common-file[\\/].*" checks="IllegalImport"/>
+
+    <!-- 网络通信能力提供者：Netty -->
+    <suppress files=".*[\\/]ydsz-common-netty[\\/].*" checks="IllegalImport"/>
+
+    <!-- 分布式事务能力提供者：Seata -->
+    <suppress files=".*[\\/]ydsz-common-seata[\\/].*" checks="IllegalImport"/>
+
+    <!-- Spring Boot 启动类与 CLI 工具：含 main 入口，非纯工具类，HideUtilityClassConstructor 误报 -->
+    <suppress files=".*[\\/][A-Za-z]+Application\.java" checks="HideUtilityClassConstructor"/>
+    <suppress files=".*[\\/]ConfigCliTool\.java" checks="HideUtilityClassConstructor"/>
+
+    <!-- 工具类已通过 @NoArgsConstructor(access=PRIVATE) 隐藏构造器，checkstyle 不解析 Lombok 注解，HideUtilityClassConstructor 误报 -->
+    <suppress files=".*[\\/]SqlAuditJsonLogger\.java" checks="HideUtilityClassConstructor"/>
+
+    <!-- ============================================ -->
+    <!-- 2. 自研引擎模块：算法类规则豁免               -->
+    <!--    依据：引擎为位运算/状态机等算法密集型实现， -->
+    <!--    魔法数提取与复杂度重构列入专项技术债        -->
+    <!-- ============================================ -->
+
+    <!-- common-json：自研 JSON 引擎（零第三方依赖） -->
+    <suppress files="ydsz-common-json[\\/]src[\\/]main[\\/]"
+              checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows"/>
+
+    <!-- common-excel：自研 Excel 引擎 -->
+    <suppress files="ydsz-common-excel[\\/]src[\\/]main[\\/]"
+              checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows"/>
+
+    <!-- common-util：L1 工具模块（位运算/编码/算法密集型实现） -->
+    <suppress files="ydsz-common-util[\\/]src[\\/]main[\\/]"
+              checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows"/>
+
+    <!-- common-core：L2 基础设施（算法密集型实现） -->
+    <suppress files="ydsz-common-core[\\/]src[\\/]main[\\/]"
+              checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows"/>
+
+    <!-- common-cache：自研缓存引擎（LRU/LFU/TinyLFU 等算法密集型实现） -->
+    <suppress files="ydsz-common-cache[\\/]src[\\/]main[\\/]"
+              checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows"/>
+
+    <!-- common-redis：基础数据层（序列化/连接池等算法密集型实现） -->
+    <suppress files="ydsz-common-redis[\\/]src[\\/]main[\\/]"
+              checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows"/>
+
+    <!-- common-redis：多级缓存 L1 本地层（Caffeine）——技术债：应下沉至 common-cache
+         统一封装（P1-2 收敛缓存职责，重构后移除本豁免） -->
+    <suppress files="ydsz-common-redis[\\/]src[\\/]main[\\/]"
+              checks="IllegalImport"
+              message=".*com\.github\.benmanes\.caffeine.*"/>
+
+    <!-- common-thread：线程池能力提供者（Executors 为封装层内部实现） -->
+    <suppress files="ydsz-common-thread[\\/]src[\\/]main[\\/]"
+              checks="IllegalImport"
+              message=".*Executors.*"/>
+
+    <!-- ============================================ -->
+    <!-- 3. 全部 common 子模块：算法类规则通用豁免     -->
+    <!--    自研基础库（引擎/工具/配置/异常/领域模型） -->
+    <!--    为算法密集型实现，魔法数提取与复杂度重构   -->
+    <!--    列入专项技术债；IllegalImport 等红线保留   -->
+    <!-- ============================================ -->
+    <suppress files="ydsz-common-[a-z]+[\\/]src[\\/]main[\\/]"
+              checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows"/>
+
+</suppressions>

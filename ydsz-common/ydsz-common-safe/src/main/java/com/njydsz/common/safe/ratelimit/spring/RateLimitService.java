@@ -22,6 +22,33 @@ public class RateLimitService {
 
   private final RateLimitManager rateLimitManager;
 
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
+   * @param resource resource 参数
   /** 检查限流（不带上下文） */
   public RateLimitDecision check(String resource) {
     return check(RateLimitContext.builder().resource(resource).build());

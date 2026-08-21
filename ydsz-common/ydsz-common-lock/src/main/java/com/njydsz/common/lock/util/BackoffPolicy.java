@@ -120,7 +120,8 @@ public final class BackoffPolicy {
   /**
    * 执行退避睡眠
    *
-   * @param backoffMillis 当前退避时间（毫秒） * @return 下一次退避时间（毫秒）
+   * @param backoffMillis 当前退避时间（毫秒）
+    * @return 下一次退避时间（毫秒）
    * @throws InterruptedException 线程被中断
    */
   public long sleepAndNextBackoff(long backoffMillis) throws InterruptedException {

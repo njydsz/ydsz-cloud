@@ -32,6 +32,67 @@ public class ConfigRuleProvider implements RateLimitRuleProvider {
     reload(properties);
   }
 
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
+   * @param properties properties 参数
   /** 从配置重新加载 */
   public void reload(RateLimitProperties properties) {
     ruleMap.clear();

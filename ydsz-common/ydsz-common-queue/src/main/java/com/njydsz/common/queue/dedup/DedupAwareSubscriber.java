@@ -56,6 +56,39 @@ public class DedupAwareSubscriber implements IMessageSubscriber {
     return delegate.subscribeAsync(wrapHandler(handler));
   }
 
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
+   * @param handler handler 参数
   /** 包装 handler，在处理前检查去重 */
   private IMessageHandler wrapHandler(IMessageHandler handler) {
     if (handler == null) {
