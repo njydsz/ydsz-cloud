@@ -2,6 +2,7 @@ package com.njydsz.workflow.server.service.impl.definition;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -389,7 +390,7 @@ public class FlowDefinitionDeployManager {
   }
 
   /** 读取 ZipInputStream 当前 entry 的全部字节（不关闭流） */
-  private byte[] readAllBytes(ZipInputStream zis) throws Exception {
+  private byte[] readAllBytes(ZipInputStream zis) throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     byte[] buffer = new byte[4096];
     int len;
