@@ -195,14 +195,14 @@ public class InMemoryTraceRecorder implements TraceRecorder {
    * {@inheritDoc}
    */
   @Override
-  public List<com.njydsz.agent.domain.trace.TraceMeta> listRecentTraceMetas(int limit) {
+  public List<com.njydsz.agent.domain.trace.TraceMeta> listRecentTraceMetas(int limit) { // FQN-OK: name conflict with inner TraceMeta
     int safeLimit = limit > 0 ? limit : 10;
     return traceMetas.values().stream()
         .sorted(Comparator.comparing(TraceMeta::getStartedAt).reversed())
         .limit(safeLimit)
         .map(
             meta ->
-                new com.njydsz.agent.domain.trace.TraceMeta(
+                new com.njydsz.agent.domain.trace.TraceMeta( // FQN-OK: name conflict with inner TraceMeta
                     meta.getTraceId(),
                     meta.getConversationId(),
                     meta.getAgentId(),
@@ -217,12 +217,12 @@ public class InMemoryTraceRecorder implements TraceRecorder {
    * {@inheritDoc}
    */
   @Override
-  public com.njydsz.agent.domain.trace.TraceMeta getTraceMeta(String traceId) {
+  public com.njydsz.agent.domain.trace.TraceMeta getTraceMeta(String traceId) { // FQN-OK: name conflict with inner TraceMeta
     TraceMeta meta = traceMetas.get(traceId);
     if (meta == null) {
       return null;
     }
-    return new com.njydsz.agent.domain.trace.TraceMeta(
+    return new com.njydsz.agent.domain.trace.TraceMeta( // FQN-OK: name conflict with inner TraceMeta
         meta.getTraceId(),
         meta.getConversationId(),
         meta.getAgentId(),

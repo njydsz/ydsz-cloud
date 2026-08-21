@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -72,7 +73,7 @@ public class SocialClientConfigService {
     List<SocialClientVO> dbClients = socialClientRepository.findEnabled();
 
     // 2. 合并 YAML 中配置但 DB 中不存在的平台
-    List<SocialClientVO> merged = new java.util.ArrayList<>(dbClients);
+    List<SocialClientVO> merged = new ArrayList<>(dbClients);
     Map<String, SocialAuthProperties.ProviderConfig> yamlProviders = socialAuthProperties.getProviders();
     if (yamlProviders != null) {
       for (Map.Entry<String, SocialAuthProperties.ProviderConfig> entry : yamlProviders.entrySet()) {
