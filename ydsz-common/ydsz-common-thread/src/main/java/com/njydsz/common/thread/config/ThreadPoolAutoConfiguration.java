@@ -1,5 +1,6 @@
 package com.njydsz.common.thread.config;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -20,7 +21,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Role;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import java.util.Collections;
 
 import com.njydsz.common.thread.metrics.MeteredRejectedHandler;
 import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
