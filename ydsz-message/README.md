@@ -50,7 +50,7 @@
 | 异步 | RocketMQ 生产/消费/死信 + Redis SET NX EX 幂等 |
 | 回执 | 送达 / 已读 / 点击 / 失败 / 超时（5min 主动拉取 + 30min 超时补偿） |
 | 智能定时 | 用户活跃度画像 + DND 免打扰 + 时区感知 |
-| 批量发送 | MQ 异步批量（批次任务 + 进度推送） |
+| 批量发送 | MQ 异步批量（批次任务 + 进度推送 / SSE 实时推送） |
 | 跨渠道抑制 | bizType + bizId + receiver + channel 维度 |
 | 退信处理 | 邮件退信黑名单 + 自动拦截 |
 | 配额管理 | Sender 维度配额 / 通道级计数 |
@@ -61,31 +61,31 @@
 
 | 路径前缀 | Controller | 作用 |
 |---|---|---|
-| `/api/v1/message` | `MessageController` | 发送消息（同步 / 异步 / 事务消息 / 撤回 / 追踪） |
-| `/api/v1/message/batch` | `BatchController` | 批量发送 |
-| `/api/v1/message/template` | `TemplateController` | 模板管理 |
-| `/api/v1/message/template/preview` | `TemplatePreviewController` | 模板预览 / 测试发送 |
-| `/api/v1/message/template/version` | `TemplateVersionController` | 模板版本管理 |
-| `/api/v1/message/preference` | `PreferenceController` | 用户偏好 |
-| `/api/v1/message/subscription` | `SubscriptionController` | 订阅管理 |
-| `/api/v1/message/unsubscribe` | `UnsubscribeController` | 退订中心 |
-| `/api/v1/message/notifications` | `NotificationController` | 站内通知收件箱（前端通知中心） |
-| `/api/v1/message/stats` | `MessageStatsController` | 发送统计 |
-| `/api/v1/message/dead-letter` | `DeadLetterController` | 死信队列 |
-| `/api/v1/message/route-rule` | `RouteRuleController` | 条件路由规则 |
-| `/api/v1/message/user-channels` | `UserChannelBindingController` | 用户渠道绑定 |
-| `/api/v1/message/feedback` | `MessageFeedbackController` | 用户反馈 |
-| `/api/v1/message/trace` | `MessageTraceController` | 消息全链路追踪 |
-| `/api/v1/message/read-status` | `ReadStatusController` | 已读状态同步 |
-| `/api/v1/message/read-receipt` | `ReadReceiptController` | 已读回执 |
-| `/api/v1/message/archive/search` | `MessageArchiveController` | 归档检索 |
-| `/api/v1/message/aggregate` | `AggregateController` | 站内通知聚合 |
-| `/api/v1/message/recall` | `RecallController` | 消息撤回 |
-| `/api/v1/message/receipt` | `ReceiptController` | 送达回执 |
-| `/api/v1/message/retry` | `RetryPreviewController` | 重试预览 |
-| `/api/v1/message/canary` | `CanaryController` | 模板灰度发布 |
-| `/api/v1/message/health` | `SystemHealthController` | 健康检查 |
-| `/api/v1/message/ops` | `OpsController` | 运维操作 |
+| `/api/v1/message` | `MessageController` | 发送消息（同步 / 异步 / 事务消息 / 批量 / 取消定时 / 发送日志分页 / 批次进度查询） |
+| `/api/v1/message/batch` | `BatchController` | 批量发送（提交批次 / 进度轮询 / SSE 实时推送） |
+| `/api/v1/message/template` | `TemplateController` | 模板管理（CRUD / 审核） |
+| `/api/v1/message/template/preview` | `TemplatePreviewController` | 模板预览渲染（按模板编码预览 / 自定义内容预览） |
+| `/api/v1/message/template/version` | `TemplateVersionController` | 模板版本管理（版本历史 / 回滚 / 预览 / 试发） |
+| `/api/v1/message/preference` | `PreferenceController` | 用户偏好（增删改查） |
+| `/api/v1/message/subscription` | `SubscriptionController` | 订阅管理（订阅 / 退订 / 按主题+通道查询） |
+| `/api/v1/message/unsubscribe` | `UnsubscribeController` | 退订中心（token 一键退订 / 预览 / 恢复订阅 / 退订记录查询） |
+| `/api/v1/message/notifications` | `NotificationController` | 站内通知（发送 / 收件箱 / 已读 / 撤回 / 删除 / WebSocket 单推 / 广播 / Feign 单播） |
+| `/api/v1/message/stats` | `MessageStatsController` | 发送统计（总览 / 通道 / 回执 / 转化漏斗 / 成本看板） |
+| `/api/v1/message/dead-letter` | `DeadLetterController` | 死信队列（分页查询 / 手动重发） |
+| `/api/v1/message/route-rule` | `RouteRuleController` | 条件路由规则（CRUD / 启用查询） |
+| `/api/v1/message/user-channels` | `UserChannelBindingController` | 用户渠道绑定（增删改查 / 我的绑定） |
+| `/api/v1/message/feedback` | `MessageFeedbackController` | 用户反馈（评分提交 / 平均评分 / 降频判定） |
+| `/api/v1/message/trace` | `MessageTraceController` | 消息全链路追踪（按 msgId / traceId / 业务单据查询） |
+| `/api/v1/message/read-status` | `ReadStatusController` | 已读状态同步（单条已读 / 批量已读 / 通知已读 / 全部已读 / 未读计数） |
+| `/api/v1/message/read-receipt` | `ReadReceiptController` | 已读回执（短信短链跳转回调） |
+| `/api/v1/message/archive/search` | `MessageArchiveController` | 归档检索（PostgreSQL 全文搜索） |
+| `/api/v1/message/aggregate` | `AggregateController` | 站内通知聚合（分页查询 / 强制刷新 / 到期刷新） |
+| `/api/v1/message/recall` | `RecallController` | 消息撤回（站内通知 / 按日志ID / 按消息ID / 批量撤回） |
+| `/api/v1/message/receipt` | `ReceiptController` | 送达回执（服务商回调 / 按日志ID查询） |
+| `/api/v1/message/retry` | `RetryPreviewController` | 重试策略预览（预设档位时间线 / 全部预设对比 / 可用预设列表） |
+| `/api/v1/message/canary` | `CanaryController` | 模板灰度发布（创建实验 / 分配实验桶） |
+| `/api/v1/message/health` | `SystemHealthController` | 健康检查（整体状态 / 各通道详细状态） |
+| `/api/v1/message/ops` | `OpsController` | 运维操作（模板缓存统计 / 缓存清除 / BloomFilter 统计） |
 
 ## 数据库表设计
 
@@ -116,84 +116,100 @@
 
 ```
 ydsz-message/
-├── pom.xml
-├── ydsz-message-api/          # 对外 API（Feign Client + DTO + Fallback）
+├── pom.xml                          # 父 POM（6 模块）
+├── ydsz-message-api/                # 对外 API（Feign Client + DTO + Fallback）
 │   └── src/main/java/com/njydsz/message/api/
-├── ydsz-message-domain/       # 领域层（Entity + DTO + Enum + Constant）
+│       ├── client/
+│       └── fallback/
+├── ydsz-message-app/                # 应用配置层（自动配置 + 健康检查 + OpenAPI）
+│   └── src/main/java/com/njydsz/message/app/
+│       ├── config/                  # MessageAppAutoConfiguration
+│       ├── health/                  # MessageAppHealthIndicator
+│       └── openapi/                 # MessageAppOpenApiConfiguration
+├── ydsz-message-domain/             # 领域层（DTO + VO + Enum + Constant + Event + Query + Repository 接口）
 │   └── src/main/java/com/njydsz/message/domain/
-│       ├── constant/
-│       ├── dto/               # batch / canary / config / core / receipt / template
-│       ├── entity/            # batch / canary / config / core / receipt / template
-│       └── enums/            # batch / config / core / receipt / template
-├── ydsz-message-infra/        # 基础设施层（Mapper + 仓储）
-│   └── src/main/java/com/njydsz/message/infra/mapper/
-│       ├── batch/
-│       ├── canary/
-│       ├── config/
-│       ├── core/
-│       ├── receipt/
-│       └── template/
-├── ydsz-message-server/       # 服务层（Service + Consumer + Producer + Config + Health）
+│       ├── constant/                # MessageConstants
+│       ├── dto/                     # 34 个 DTO
+│       ├── enums/                   # batch / config / core / receipt / template
+│       ├── event/                   # 领域事件（MessageSentEvent / OutboxEvent 等 10 个）
+│       ├── query/                   # 13 个查询对象
+│       ├── repository/              # 18 个 Repository 接口
+│       └── vo/                      # 23 个 VO
+├── ydsz-message-infra/              # 基础设施层（Entity + Mapper + 仓储实现）
+│   └── src/main/java/com/njydsz/message/infra/
+│       ├── converter/               # MessageConverter
+│       ├── entity/                  # 18 个 DO（@TableName）
+│       ├── mapper/                  # batch / canary / config / core / receipt / template
+│       └── repository/              # 18 个 RepositoryImpl
+│   └── resources/
+│       └── mapper/                  # MyBatis XML 映射文件
+├── ydzs-message-server/             # 服务层（Service + Channel + Consumer + Producer + Config + Health）
 │   └── src/main/
 │       ├── java/com/njydsz/message/server/
-│       │   ├── channel/      # 13 个渠道实现（含 TcpPushChannel）+ ChannelRouter
-│       │   ├── config/        # AutoConfiguration + Properties + WebSocketConfig
-│       │   ├── consumer/      # RocketMQ 消费者（MessageConsumer + BatchMessageConsumer + MessageDlqConsumer）
-│       │   ├── filter/        # DFA 敏感词过滤器
-│       │   ├── health/        # MessageHealthIndicator
-│       │   ├── metric/        # MessageMetrics (Prometheus)
-│       │   ├── producer/      # RocketMQ 生产者
-│       │   ├── realtime/      # 实时推送服务（委托 common-socket）
-│       │   ├── service/       # 76 个 Service 文件（含 23 个 *ServiceImpl）
-│       │   │   ├── batch/     # 批量 + 聚合
-│       │   │   ├── config/    # 偏好 + 订阅 + 路由 + 变量
-│       │   │   ├── core/      # 发送 + 去重 + 限流 + 追踪 + 定时
-│       │   │   ├── impl/      # 实现 + 跨渠道抑制 + 退信 + 配额 + DND
-│       │   │   ├── receipt/   # 回执 + 撤回
-│       │   │   └── template/  # 模板引擎 + 渲染
-│       │   ├── template/      # DefaultTemplateEngine + RichMediaRenderer
+│       │   ├── channel/             # 13 个渠道实现 + ChannelRouter + RecallChannel
+│       │   ├── config/              # MessageProperties + ChannelProperties + 自动配置
+│       │   ├── consumer/            # RocketMQ 消费者 + 去重 + 死信消费者
+│       │   ├── event/               # 领域事件发布者 + Outbox 调度器 + 死信告警
+│       │   ├── filter/              # DFA 敏感词过滤器
+│       │   ├── health/              # MessageHealthIndicator + RedisHealthStatus
+│       │   ├── listener/            # 跨模块事件监听 + 事务性领域事件监听
+│       │   ├── metric/              # MessageMetrics (Prometheus)
+│       │   ├── producer/            # RocketMQ 生产者 + 事务监听器
+│       │   ├── realtime/            # 实时推送 + 离线消息服务
+│       │   ├── search/              # 模板搜索 Provider
+│       │   ├── service/             # 87 个 Service 文件（含 24 个 *ServiceImpl / Impl）
+│       │   │   ├── chain/           # 发送管道（SendPipeline + 7 个 Handler）
+│       │   │   ├── config/          # 偏好 + 订阅 + 路由 + 变量 + 灰度 + 租户配置
+│       │   │   ├── core/            # 发送 + 渲染 + 查询 + 统计 + 追踪 + 健康
+│       │   │   ├── impl/            # 实现 + 跨渠道抑制 + 退信 + 配额 + DND + 调度器
+│       │   │   ├── retry/           # 重试预设 + 重试预览
+│       │   │   └── batch/           # 批量 + 聚合
+│       │   ├── template/            # 模板引擎 + AST 缓存 + 富文本渲染
+│       │   ├── token/               # 退订 token
+│       │   └── tracing/             # 链路追踪
 │       └── resources/
-│           ├── META-INF/
-│           │   ├── spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
-│           │   └── additional-spring-configuration-metadata.json
-│           ├── mapper/        # MyBatis XML 映射文件
-│           └── bootstrap.yml
-├── ydsz-message-web/          # Web 层（Controller + 启动类）
-│   └── src/main/java/com/njydsz/message/web/
-│       ├── MessageApplication.java   # Spring Boot 启动类
-│       └── controller/
-│           ├── batch/
-│           ├── canary/
+│           └── META-INF/
+│               ├── spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+│               └── additional-spring-configuration-metadata.json
+├── ydzs-message-web/                # Web 层（Controller + 启动类 + 异常处理）
+│   └── src/main/
+│       ├── java/com/njydsz/message/web/
+│       │   ├── MessageApplication.java      # Spring Boot 启动类
+│       │   ├── controller/                 # 25 个 Controller（扁平化，按 Java 包组织）
+│       │   └── handler/                    # MessageExceptionHandler（全局异常处理）
+│       └── resources/
+│           ├── bootstrap.yml               # 引导配置（Nacos 连接）
 │           ├── config/
-│           ├── core/
-│           ├── notification/
-│           ├── receipt/
-│           └── template/
+│           │   ├── ydsz-message-common.yaml # 公共配置（端口/Mail/通道/JSON/RocketMQ 等）
+│           │   ├── ydsz-message-dev.yaml    # DEV 环境配置（线程池/日志级别）
+│           │   ├── ydsz-message-sit.yaml    # SIT 环境配置
+│           │   └── ydsz-message-uat.yaml    # UAT 环境配置
+│           └── docs/
+│               └── 配置说明.md
 └── README.md
 ```
 
 ## 配置文件
 
-### 核心配置（prefix = `ydsz.message`）
+### 核心配置（prefix = `ydsz.message`，绑定 `MessageProperties`）
 
 | 配置项 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
-| `ydsz.message.health-enabled` | Boolean | true | 是否启用健康检查 |
-| `ydsz.message.retry-enabled` | Boolean | true | 是否启用重试扫描器 |
+| `ydsz.message.enabled` | Boolean | true | 消息中心总开关（`MessageAppAutoConfiguration` 条件注入） |
 | `ydsz.message.channel-enabled` | Map<String, Boolean> | — | 通道全局开关（key=通道大写名） |
 | `ydsz.message.default-priority` | String | NORMAL | 默认发送优先级 |
-| `ydsz.message.default-async` | Boolean | false | 默认异步发送开关 |
-| `ydsz.message.max-content-length` | Integer | 1048576 | 消息内容最大长度（字符），0=不限 |
+| `ydsz.message.default-async` | Boolean | false | 默认异步发送开关（高并发场景建议开启） |
+| `ydsz.message.default-delivery-guarantee` | String | AT_LEAST_ONCE | 投递保证级别（AT_LEAST_ONCE/AT_MOST_ONCE/EXACTLY_ONCE） |
+| `ydsz.message.aggregate-scan-interval-ms` | Long | 60000 | 聚合扫描间隔（毫秒，≥1000） |
+| `ydsz.message.retry-scan-interval-ms` | Long | 30000 | 重试扫描间隔（毫秒，≥5000） |
 | `ydsz.message.message-ttl-seconds` | Long | 3600 | 消息 TTL（秒），0=不检查 |
-| `ydsz.message.aggregate-scan-interval-ms` | Long | 60000 | 聚合扫描间隔 |
-| `ydsz.message.retry-scan-interval-ms` | Long | 30000 | 重试扫描间隔 |
-| `ydsz.message.global-daily-limit` | Integer | 0 | 全局每日上限（0=不限） |
-| `ydsz.message.global-hourly-limit` | Integer | 0 | 全局每小时上限（0=不限） |
+| `ydsz.message.max-content-length` | Integer | 1048576 | 消息内容最大长度（字符），0=不限 |
 | `ydsz.message.mark-all-read-batch-size` | Integer | 500 | markAllRead 分批大小 |
 | `ydsz.message.suppress-window-seconds` | Long | 300 | 通道抑制窗口（秒） |
 | `ydsz.message.sender-daily-limit` | Long | 10000 | 单发送人每日上限（0=不限） |
 | `ydsz.message.sender-hourly-limit` | Long | 1000 | 单发送人每小时上限（0=不限） |
-| `ydsz.message.default-delivery-guarantee` | String | AT_LEAST_ONCE | 投递保证级别（AT_LEAST_ONCE/AT_MOST_ONCE/EXACTLY_ONCE） |
+| `ydsz.message.global-daily-limit` | Integer | 0 | 全局每日上限（0=不限） |
+| `ydsz.message.global-hourly-limit` | Integer | 0 | 全局每小时上限（0=不限） |
 
 ### 限流配置（prefix = `ydsz.message.rate-limit`）
 
@@ -219,6 +235,7 @@ ydsz-message/
 |---|---|---|---|
 | `ydsz.message.smart-timing.enabled` | Boolean | true | 是否启用智能定时 |
 | `ydsz.message.smart-timing.urgent-bypass-dnd` | Boolean | true | URGENT 绕过 DND |
+| `ydsz.message.smart-timing.disruptive-channels` | List<String> | [SMS,PUSH,DINGTALK,WECOM,FEISHU,WX_MINI,ALIPAY_MINI] | DND 生效的打扰型通道列表 |
 | `ydsz.message.smart-timing.dnd-buffer-seconds` | Long | 60 | DND 缓冲秒数 |
 | `ydsz.message.smart-timing.max-defer-hours` | Long | 72 | 最大延迟小时数 |
 
@@ -226,11 +243,13 @@ ydsz-message/
 
 | 配置项 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
-| `ydsz.message.circuit-breaker.failure-rate-threshold` | Integer | 50 | 失败率阈值（%） |
-| `ydsz.message.circuit-breaker.slow-call-rate-threshold` | Integer | 80 | 慢调用率阈值（%） |
-| `ydsz.message.circuit-breaker.slow-call-duration-seconds` | Long | 5 | 慢调用阈值（秒） |
-| `ydsz.message.circuit-breaker.wait-duration-in-open-state-seconds` | Long | 30 | 熔断开启持续时间 |
-| `ydsz.message.circuit-breaker.sliding-window-size` | Integer | 20 | 滑动窗口大小 |
+| `ydsz.message.circuit-breaker.failure-rate-threshold` | Integer | 50 | 失败率阈值（%，1-100） |
+| `ydsz.message.circuit-breaker.slow-call-rate-threshold` | Integer | 80 | 慢调用率阈值（%，1-100） |
+| `ydsz.message.circuit-breaker.slow-call-duration-seconds` | Long | 5 | 慢调用阈值（秒，≥1） |
+| `ydsz.message.circuit-breaker.wait-duration-in-open-state-seconds` | Long | 30 | 熔断开启持续时间（≥5） |
+| `ydsz.message.circuit-breaker.permitted-number-of-calls-in-half-open-state` | Integer | 3 | 半开状态允许探测数（≥1） |
+| `ydsz.message.circuit-breaker.sliding-window-size` | Integer | 20 | 滑动窗口大小（≥10） |
+| `ydsz.message.circuit-breaker.minimum-number-of-calls` | Integer | 10 | 最小调用数（≥5） |
 
 ### 重试策略配置（prefix = `ydsz.message.default-retry-policy`）
 
@@ -241,14 +260,16 @@ ydsz-message/
 | `ydsz.message.default-retry-policy.backoff-multiplier` | Double | 2.0 | 退避倍率 |
 | `ydsz.message.default-retry-policy.max-backoff-ms` | Long | 60000 | 退避上限 |
 
-### 敏感词配置
+> 按通道覆盖：`ydsz.message.channel-retry-policies`（Map<String, RetryPolicy>），key 为通道大写名，未命中通道回退到上述默认策略。
+
+### 敏感词配置（prefix = `ydsz.message.sensitive-filter`）
 
 | 配置项 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
-| `ydsz.message.sensitive-filter-enabled` | Boolean | true | 是否启用敏感词过滤 |
-| `ydsz.message.sensitive-words` | String | （空） | 敏感词列表（逗号分隔） |
+| `ydsz.message.sensitive-filter.enabled` | Boolean | true | 是否启用敏感词过滤 |
+| `ydsz.message.sensitive-filter.words` | String | （空） | 敏感词列表（逗号分隔） |
 
-### 回执配置
+### 回执配置（prefix = `ydsz.message`，回执相关项）
 
 | 配置项 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
@@ -275,29 +296,56 @@ ydsz-message/
 | `ydsz.message.unsubscribe.ttl-days` | Integer | 30 | token 有效期（天） |
 | `ydsz.message.unsubscribe.base-url` | String | — | 退订链接 base URL |
 
+### 成本配置（prefix = `ydsz.message.cost`）
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `ydsz.message.cost.enabled` | Boolean | true | 是否启用成本追踪 |
+| `ydsz.message.cost.unit-prices` | Map<String, BigDecimal> | SMS=0.045, EMAIL=0.001, PUSH=0.0001, 其余=0 | 通道单条成本（元） |
+
 ### 服务商配置
 
 | 配置项 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
 | `ydsz.message.sms.provider` | String | mock | 短信服务商（aliyun/mock） |
 | `ydsz.message.sms.strategy` | String | ROUND_ROBIN | 多服务商策略（ROUND_ROBIN/WEIGHTED/COST_FIRST/AVAILABILITY_FIRST） |
+| `ydsz.message.sms.weights` | String | aliyun:5,tencent:3 | 多服务商权重（WEIGHTED 策略时生效） |
+| `ydsz.message.sms.aliyun.access-key-id` | String | — | 阿里云 AccessKey ID |
+| `ydsz.message.sms.aliyun.access-key-secret` | String | — | 阿里云 AccessKey Secret |
+| `ydsz.message.sms.aliyun.sign-name` | String | — | 阿里云短信签名 |
+| `ydsz.message.sms.aliyun.endpoint` | String | dysmsapi.aliyuncs.com | 阿里云 SMS 端点 |
 | `ydsz.message.push.provider` | String | mock | 推送服务商（getui/mock） |
+| `ydsz.message.push.getui.app-id` | String | — | 个推 AppID |
+| `ydsz.message.push.getui.app-key` | String | — | 个推 AppKey |
+| `ydsz.message.push.getui.master-secret` | String | — | 个推 MasterSecret |
 | `ydsz.message.wx-mini.provider` | String | mock | 微信小程序服务商（wechat/mock） |
 | `ydsz.message.alipay-mini.provider` | String | mock | 支付宝小程序服务商（alipay/mock） |
-| `ydsz.message.cost.enabled` | Boolean | true | 是否启用成本追踪 |
 
-### 消息归档配置
+### 消息归档配置（prefix = `ydsz.message.archive`）
 
 | 配置项 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
 | `ydsz.message.archive.es-enabled` | Boolean | false | 是否启用 Elasticsearch 归档 |
 
-### 熔断器补充配置（prefix = `ydsz.message.circuit-breaker`）
+### 群机器人 / Webhook 通道配置（prefix = `ydsz`，绑定 `ChannelProperties`）
 
 | 配置项 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
-| `ydsz.message.circuit-breaker.permitted-number-of-calls-in-half-open-state` | Integer | 3 | 半开状态允许探测数 |
-| `ydsz.message.circuit-breaker.minimum-number-of-calls` | Integer | 10 | 最小调用数 |
+| `ydsz.webhook.default-url` | String | （空） | 默认 Webhook URL |
+| `ydsz.webhook.secret` | String | （空） | Webhook HMAC 签名密钥 |
+| `ydsz.channel.dingtalk.default-token` | String | （空） | 钉钉群机器人 Token |
+| `ydsz.channel.dingtalk.secret` | String | （空） | 钉钉群机器人加签密钥 |
+| `ydsz.channel.dingtalk-work.enabled` | Boolean | false | 钉钉工作通知开关 |
+| `ydsz.channel.dingtalk-work.app-key` | String | — | 钉钉工作通知 AppKey |
+| `ydsz.channel.dingtalk-work.app-secret` | String | — | 钉钉工作通知 AppSecret |
+| `ydsz.channel.dingtalk-work.agent-id` | Long | — | 钉钉工作通知 AgentId |
+| `ydsz.channel.wechat-work.default-key` | String | （空） | 企业微信群机器人 Key |
+| `ydsz.channel.wecom-app.enabled` | Boolean | false | 企业微信应用消息开关 |
+| `ydsz.channel.wecom-app.corp-id` | String | — | 企业微信 CorpID |
+| `ydsz.channel.wecom-app.corp-secret` | String | — | 企业微信应用 Secret |
+| `ydsz.channel.wecom-app.agent-id` | Integer | — | 企业微信应用 AgentId |
+| `ydsz.channel.feishu.default-hook` | String | （空） | 飞书群机器人 Hook |
+| `ydsz.channel.feishu.secret` | String | （空） | 飞书群机器人加签密钥 |
 
 ## 启动顺序
 

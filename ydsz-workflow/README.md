@@ -27,37 +27,45 @@
 | **分支规则** | 条件分支 / 默认分支 / 跳过规则 |
 | **定时器** | 节点超时 / 流程超时（cron 表达式） |
 | **事件订阅** | 流程开始 / 结束 / 节点进入 / 离开事件 |
-| **SLA 提醒** | P1-P4 SLA 倒计时 + 飞书/钉钉告警 |
+| **SLA 提醒** | REMIND / NOTIFY / ESCALATE / AUTO_PASS / AUTO_REJECT 五种 SLA 动作 |
 | **审批人去重** | 同一审批人在多级审批中自动合并 |
-| **流程模板** | 模板库 + 版本管理 + 复制/导入/导出 |
+| **流程模板** | 模板库 + 版本管理 + 复制/导入/导出 + 智能推荐 |
 | **流程监控** | 实例状态 / 节点耗时 / 拥堵分析 / 分析报表 |
 | **实例迁移** | 流程实例版本迁移 + 预览（dry run） |
 | **设计器** | bpmn-js 拖拽设计 + 表单设计 + 表达式编辑 |
 | **审批扩展** | 评论/常用意见、嵌入式审批面板、合并审批/加签投票/离线转交（advanced 端点） |
+| **办理人类型** | 11 种：USER / ROLE / DEPT / SPEL / INITIATOR / LEADER / POSITION / DEPT_LEADER / SELF_SELECT / MULTI_LEADER |
+| **会签模式** | 或签（OR）/ 并行会签（PARALLEL）|
+| **跳转类型** | PASS / REJECT / FORWARD / BACK / JUMP |
+| **加签类型** | ORIGINAL / BEFORE / AFTER / PARALLEL / ADD |
+| **AI 辅助** | 定义生成 / 实例分析 / 通知优化 / 委派推荐 / 国际化等 AI 能力 |
+| **多租户** | 集团 + 公司 + 部门三级隔离（MULTI 模式） |
+| **历史归档** | 定时归档 + 清理（可配置 cron / 阈值天数） |
+| **附件预览** | 外部预览服务集成（kkFileView / Office Online） |
 
 ### 2. 关键 Controller（基路径 `/api/v1/workflow`）
 
 | Controller | 路径前缀 | 作用 |
 |---|---|---|
 | `FlowDefinitionController` | `/api/v1/workflow/engine` | 流程定义 CRUD / 部署 / SLA 扫描 |
-| `FlowInstanceController` | `/api/v1/workflow/engine` | 流程实例（发起 / 审批 / 驳回 / 审计轨迹） |
-| `FlowTaskController` | `/api/v1/workflow/engine` | 审批任务（待办 / 已办 / 委派授权） |
-| `FlowDesignerController` | `/api/v1/workflow/engine` | 设计器（表单 / 表达式 / SLA 配置） |
-| `FlowMonitorDashboardController` | `/api/v1/workflow/engine` | 流程监控看板 |
+| `FlowInstanceController` | `/api/v1/workflow/engine` | 流程实例（发起 / 审批 / 驳回 / 审计轨迹 / 自动触发器） |
+| `FlowTaskController` | `/api/v1/workflow/engine` | 审批任务（待办 / 已办 / 委派授权 / 批量催办 / 附件） |
+| `FlowDesignerController` | `/api/v1/workflow/engine` | 设计器（表单 / 表达式 / SLA 配置 / 模板 / 版本对比） |
+| `FlowMonitorDashboardController` | `/api/v1/workflow/engine` | 流程监控看板（概览 / 趋势 / 异常检测 / 健康度评分） |
 | `FlowEmbeddedApprovalController` | `/api/v1/workflow/embedded` | 嵌入式审批面板 |
-| `FlowAdvancedController` | `/api/v1/workflow/advanced` | 合并审批 / 加签投票 / 去重 / 离线转交等 |
-| `FlowAnalyticsController` | `/api/v1/workflow/analytics` | 流程分析报表 |
-| `FlowCommentController` | `/api/v1/workflow/comment` | 评论 / 常用意见 |
-| `FlowCategoryController` | `/api/v1/workflow/categories` | 流程分类 |
-| `FlowTemplateController` | `/api/v1/workflow/template` | 流程模板 |
+| `FlowAdvancedController` | `/api/v1/workflow/advanced` | 合并审批 / 加签投票 / 去重 / 周报月报 / 催办限流等 |
+| `FlowAnalyticsController` | `/api/v1/workflow/analytics` | 审批分析仪表盘（总览 / 效率排行 / 节点耗时 / 趋势） |
+| `FlowCommentController` | `/api/v1/workflow/comment` | 评论（树形回复）/ 常用意见 |
+| `FlowCategoryController` | `/api/v1/workflow/categories` | 流程分类（树形） |
+| `FlowTemplateController` | `/api/v1/workflow/template` | 流程模板市场（查询 / 导入 / 导出 / 版本 / 智能推荐） |
 
 > **路径说明**：除 `embedded`、`advanced`、`analytics`、`comment`、`categories`、`template` 外，
 > 其余 Controller 统一挂载在 `/api/v1/workflow/engine` 前缀下，通过方法级路径区分功能。
 
 ## 数据库表设计
 
-实体共映射 **21 张表**，数据库实体位于 `ydsz-workflow-infra` 模块的
-`com.njydsz.workflow.infra.entity` 包下，命名使用 `DO` 后缀（如 `FlowDefinitionDO`）。
+实体共映射 **21 张主表** + 1 张已废弃的 `ydsz_flow_dmn_rule` 表（仅有 Mapper XML，无 Java 实体/Mapper 接口），
+数据库实体位于 `ydsz-workflow-infra` 模块的 `com.njydsz.workflow.infra.entity` 包下，命名使用 `DO` 后缀（如 `FlowDefinitionDO`）。
 DDL 由各部署环境统一维护，不在模块内。
 
 | 业务域 | 表名 | 说明 |
@@ -68,6 +76,7 @@ DDL 由各部署环境统一维护，不在模块内。
 | | `ydsz_flow_node` | 流程节点 |
 | | `ydsz_flow_skip` | 跳过规则 |
 | | `ydsz_flow_timer` | 节点/流程超时定时器（cron） |
+| | `ydsz_flow_dmn_rule` | DMN 规则表（⚠️ 已废弃：仅有 FlowDmnRuleMapper.xml，无对应 Java 实体与 Mapper 接口） |
 | **实例** | `ydsz_flow_instance` | 流程实例（运行中） |
 | | `ydsz_flow_his_instance` | 历史实例（已结束） |
 | **任务** | `ydsz_flow_run_task` | 待办/运行任务 |
@@ -81,7 +90,7 @@ DDL 由各部署环境统一维护，不在模块内。
 | **审计日志** | `ydsz_flow_audit_log` | 流程审计（按月分区） |
 | **事件/触发** | `ydsz_flow_event_subscription` | 事件订阅（开始/结束/节点进出） |
 | | `ydsz_flow_auto_trigger` | 自动触发器（业务事件发起流程） |
-| **用户** | `ydsz_flow_user` | 流程用户（含离职/兼职） |
+| **用户** | `ydsz_flow_user` | 流程用户（含离职/兼职/加签类型） |
 | **管理角色** | `ydsz_flow_admin_role` | 流程管理角色 |
 
 > **索引关键点**：
@@ -131,27 +140,38 @@ ydsz-workflow/
 ├── README.md
 ├── ydsz-workflow-api/                   # API 层 — Feign 客户端 + Fallback
 │   └── src/main/java/.../api/
-│       ├── client/                      # Feign 客户端接口
+│       ├── client/                      # Feign 客户端接口（WorkflowServiceClient）
 │       └── fallback/                    # Feign 降级实现
-├── ydsz-workflow-app/                   # App 端基座模块（移动端接口能力）
+├── ydsz-workflow-app/                   # App 端基座模块 — 自动配置 + 健康检查
 │   └── src/main/java/.../app/
-│       ├── config/                      # 自动配置
-│       ├── health/                      # 健康检查
-│       └── openapi/                     # OpenAPI 配置
+│       ├── config/                      # 自动配置（WorkflowAppAutoConfiguration）
+│       └── health/                      # 健康检查（WorkflowAppHealthIndicator）
 ├── ydsz-workflow-domain/                # 领域层 — 枚举 + DTO + VO + Repository 接口
 │   └── src/main/java/.../domain/
-│       ├── dto/                         # 数据传输对象
+│       ├── dto/                         # 数据传输对象（26 个）
 │       ├── enums/                       # 枚举（9 个）
-│       ├── query/                       # 查询对象
-│       ├── repository/                  # Repository 接口（18 个）
-│       └── vo/                          # 视图对象
+│       │   ├── FlowNodeType.java        # 节点类型（11 种）
+│       │   ├── FlowInstanceStatus.java  # 实例状态（RUNNING/SUSPENDED/COMPLETED/TERMINATED/REJECTED/ERROR/ROLLED_BACK）
+│       │   ├── FlowTaskStatus.java      # 任务状态（PENDING/COMPLETED/REJECTED 等 11 种）
+│       │   ├── FlowAssigneeType.java    # 办理人类型（11 种）
+│       │   ├── FlowPerformType.java     # 会签类型（OR/PARALLEL）
+│       │   ├── FlowSignType.java        # 加签类型（ORIGINAL/BEFORE/AFTER/PARALLEL/ADD）
+│       │   ├── FlowSkipType.java        # 跳转类型（PASS/REJECT/FORWARD/BACK/JUMP）
+│       │   ├── FlowSlaAction.java       # SLA 动作（REMIND/NOTIFY/ESCALATE/AUTO_PASS/AUTO_REJECT）
+│       │   └── WorkflowExceptionCode.java # 异常码（B70001-B75099 区间）
+│       ├── event/                       # 领域事件（6 个）
+│       ├── gateway/                     # 网关接口（NameServiceClient / NotificationClient）
+│       ├── query/                       # 查询对象（3 个）
+│       ├── repository/                  # Repository 接口（20 个）
+│       └── vo/                          # 视图对象（52 个）
 ├── ydsz-workflow-infra/                 # 基础设施层 — Entity + Mapper + XML + Repository 实现
 │   └── src/main/
 │       ├── java/.../infra/
+│       │   ├── converter/               # 对象转换器（WorkflowConverter / WorkflowRepositoryConverter）
 │       │   ├── entity/                  # 数据库实体（21 个，DO 后缀）
 │       │   ├── mapper/                  # MyBatis-Plus Mapper 接口（20 个）
 │       │   └── repository/              # Repository 实现
-│       └── resources/mapper/            # MyBatis XML 映射文件（18 个）
+│       └── resources/mapper/            # MyBatis XML 映射文件（17 个）
 ├── ydsz-workflow-server/                # 服务层 — 核心业务逻辑
 │   └── src/main/
 │       ├── java/.../workflow/
@@ -160,25 +180,34 @@ ydsz-workflow/
 │       │       ├── config/              # 自动配置 + 属性（FlowAutoConfiguration / FlowProperties，prefix `ydsz.flow`）
 │       │       ├── engine/              # 流程引擎核心
 │       │       │   ├── BpmnXmlParser.java      # BPMN 2.0 XML 解析器
-│       │       │   ├── FlowAdvancer.java       # 流程推进器接口
+│       │       │   ├── BpmnModel.java          # BPMN 模型
+│       │       │   ├── BpmnNodeParser.java     # 节点解析器
+│       │       │   ├── BpmnDiagramParser.java  # 图形解析器
+│       │       │   ├── BpmnSkipParser.java     # 跳过规则解析器
+│       │       │   ├── FlowAssigneeResolver.java # 办理人解析器
 │       │       │   ├── FlowDefinitionCacheService.java  # 定义缓存服务
 │       │       │   ├── FlowGraphValidator.java # 流程图校验器
 │       │       │   ├── FlowSensitiveMasker.java # 敏感字段脱敏器
-│       │       │   ├── expr/                   # 表达式引擎
+│       │       │   ├── FlowServiceNodeExecutor.java # 服务节点执行器
+│       │       │   ├── FlowClusterLockHelper.java # 集群锁助手
+│       │       │   ├── FlowDefinitionCacheBroadcaster.java # 定义缓存广播
+│       │       │   ├── FlowSkipUtils.java      # 跳过工具
+│       │       │   ├── FlowUrgeLimiter.java    # 催办限流器
+│       │       │   ├── expr/                   # 表达式引擎（Aviator + SpEL）
 │       │       │   └── impl/                   # 引擎实现（DefaultFlowAdvancer 等）
-│       │       ├── facade/              # 门面封装
-│       │       ├── form/                # 表单引擎（FlowFormValidator + 字段类型）
+│       │       ├── facade/              # 门面封装（YdszWorkflowFacade）
+│       │       ├── form/                # 表单引擎（FlowFormEngineService + 字段类型 + 校验器）
 │       │       ├── health/              # 健康检查（FlowHealthIndicator）
-│       │       ├── listener/            # 事件监听器
+│       │       ├── listener/            # 事件监听器（ProjectInitiationFlowListener）
 │       │       ├── metrics/             # Prometheus 指标（FlowMetrics）
-│       │       ├── queue/               # 消息队列（FlowQueuePublisher + 频道定义）
+│       │       ├── queue/               # 消息队列（FlowQueuePublisher + FlowQueueChannels）
 │       │       ├── scheduler/           # 调度器（FlowAutoUrgeScheduler）
-│       │       ├── search/              # 搜索 Provider SPI
+│       │       ├── search/              # 搜索 Provider SPI（WorkflowSearchProvider）
 │       │       ├── service/             # 业务服务接口 + 实现
 │       │       │   ├── impl/            # 业务服务实现
-│       │       │   ├── ai/              # AI 辅助能力（定义生成 / 实例分析 / 通知优化等）
-│       │       │   └── instance/        # 实例域服务
-│       │       └── template/            # 模板库（预设流程模板）
+│       │       │   ├── ai/              # AI 辅助能力（定义生成 / 实例分析 / 通知优化 / 委派推荐 / 国际化 / 策略 / 集成）
+│       │       │   └── instance/        # 实例域服务（AssigneeResolutionService / DelegateRedirectService / EmptyAssigneeStrategyService / ServiceNodeExecuteService）
+│       │       └── template/            # 模板库（FlowPresetTemplateLibrary + FlowTemplateDefinition）
 │       └── resources/META-INF/          # Spring Boot 自动配置
 │           ├── additional-spring-configuration-metadata.json
 │           └── spring/AutoConfiguration.imports
@@ -187,6 +216,17 @@ ydsz-workflow/
         ├── java/.../web/
         │   ├── WorkflowApplication.java  # Spring Boot 启动类
         │   └── controller/                # REST Controller（11 个）
+        │       ├── FlowDefinitionController.java      # 流程定义（definition 子包）
+        │       ├── FlowCategoryController.java        # 流程分类（definition 子包）
+        │       ├── FlowDesignerController.java        # 设计器（definition 子包）
+        │       ├── FlowTemplateController.java        # 流程模板（definition 子包）
+        │       ├── FlowInstanceController.java        # 流程实例（instance 子包）
+        │       ├── FlowTaskController.java            # 审批任务（instance 子包）
+        │       ├── FlowAdvancedController.java        # 高级功能（instance 子包）
+        │       ├── FlowMonitorDashboardController.java # 监控看板（根 controller 包）
+        │       ├── FlowEmbeddedApprovalController.java # 嵌入式审批（integration 子包）
+        │       ├── FlowAnalyticsController.java       # 分析报表（analytics 子包）
+        │       └── FlowCommentController.java          # 评论/常用语（notification 子包）
         └── resources/
             ├── application.yml            # 模块配置
             ├── bootstrap.yml              # Nacos 注册配置
@@ -222,7 +262,7 @@ ydsz-workflow/
 ```bash
 cd ydsz-cloud
 mvn -pl ydsz-common -am install -DskipTests
-mvn -pl ydsz-workflow spring-boot:run
+mvn -pl ydsz-workflow -am spring-boot:run
 ```
 
 ## 测试
@@ -236,6 +276,29 @@ mvn -pl ydsz-workflow spring-boot:run
 
 - 业务服务（userinfo 等）→ 通过 `WorkflowServiceClient`（Feign）启动流程
 - 立项审批触发已由 `InitiationFeignClient` 同步调用**迁移至消息队列异步路径**（`FlowQueuePublisher` 订阅事件）
+
+### Feign Client 列表
+
+| Client | 模块 | 说明 |
+|---|---|---|
+| `WorkflowServiceClient` | `ydsz-workflow-api` | 工作流服务 Feign 客户端 |
+| `WorkflowServiceClientFallback` | `ydsz-workflow-api` | Feign 降级实现 |
+| `NameServiceClient` | `ydsz-workflow-domain` | 用户/姓名查询网关 |
+| `NotificationClient` | `ydsz-workflow-domain` | 通知推送网关 |
+
+## 核心依赖
+
+| 依赖 | 说明 |
+|---|---|
+| `ydsz-common-*` | YDSZ 公共组件（jdbc / auth / web / cache / queue / search / socket / notify / audit / config / tenant / sentry / thread / lock / feign / core / domain / util） |
+| `spring-cloud-starter-alibaba-nacos-discovery` | Nacos 服务注册 |
+| `spring-cloud-starter-alibaba-nacos-config` | Nacos 配置中心 |
+| `springdoc-openapi-starter-webmvc-ui` | OpenAPI / Swagger UI |
+| `mybatis-plus` | ORM 框架 |
+| `dynamic-datasource-spring-boot3-starter` | 多数据源 |
+| `aviator` | Aviator 表达式引擎 |
+| `micrometer-registry-prometheus` | Prometheus 指标注册 |
+| `mapstruct` | 编译期对象映射 |
 
 ## 常见问题
 
@@ -255,6 +318,12 @@ mvn -pl ydsz-workflow spring-boot:run
 
 - 流程引擎只负责标记 `dueDate`，超时扫描由 cronjob 模块承担
 - 确认 cronjob 模块中对应的 SLA 扫描 JobHandler 已注册并启用
+
+### Q4：流程实例状态与任务状态的关系
+
+- 实例状态（`FlowInstanceStatus`）：RUNNING / SUSPENDED / COMPLETED / TERMINATED / REJECTED / ERROR / ROLLED_BACK
+- 任务状态（`FlowTaskStatus`）：PENDING / CLAIMED / COMPLETED / REJECTED / SKIPPED / CANCELLED / TIMEOUT / DELEGATED / FROZEN / SUSPENDED / DRAFT
+- 两者独立流转，实例挂起（SUSPENDED）会连带冻结任务（FROZEN），但任务级挂起（SUSPENDED）不影响实例
 
 ---
 
