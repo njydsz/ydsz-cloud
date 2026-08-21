@@ -8,6 +8,7 @@ import java.util.Optional;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
