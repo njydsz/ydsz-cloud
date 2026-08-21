@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.naming.directory.Attributes;
 
+import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
