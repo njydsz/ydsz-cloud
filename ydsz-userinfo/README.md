@@ -51,7 +51,7 @@ ydsz-userinfo/
 │       ├── dto/                       # 数据传输对象（33 个，含 LoginDTO / UserAccountDTO / ChangePasswordDTO 等）
 │       ├── query/                     # 分页查询对象（10 个）
 │       ├── vo/                        # 视图对象（40 个，含 TreeVO / SecurityDashboardVO / UserSessionStatistics 等）
-│       ├── enums/                     # 领域枚举（EnableStatusEnum / BanType / DeviceType / IdentityProviderType / UserLifecycleStatusEnum 等）
+│       ├── enums/                     # 领域枚举（6 个：EnableStatusEnum / BanType / DeviceType / IdentityProviderType / UserInfoExceptionCode / UserLifecycleStatusEnum）
 │       ├── event/                     # 领域事件
 │       │   ├── UserDomainEvent / UserDomainEventType / UserAuthEventListener
 │       │   └── auth/                  # 认证事件（12 个：LoginSuccessEvent / LoginFailedEvent / AccountLockedEvent / MfaTriggeredEvent 等）
@@ -64,144 +64,27 @@ ydsz-userinfo/
 ├── ydsz-userinfo-infra/               # 基础设施层：Mapper + Repository 实现 + 实体 DO + Converter + Social
 │   └── src/main/java/com/njydsz/userinfo/infra/
 │       ├── entity/                    # 持久化实体 DO（21 个，DO 后缀，对应 ydsz_* 表）
-│       │   ├── UserAccountDO.java          # 用户账号（含 AES-256-GCM 字段加密 realName）
-│       │   ├── RoleDO.java                 # 角色
-│       │   ├── RolePermissionDO.java       # 角色-权限关联
-│       │   ├── UserRoleDO.java             # 用户-角色关联
-│       │   ├── MenuDO.java                 # 菜单/按钮/API 权限定义
-│       │   ├── DepartmentDO.java           # 部门（树形）
-│       │   ├── CompanyDO.java              # 公司
-│       │   ├── CompanyDeptDO.java          # 公司-部门关联
-│       │   ├── PostDO.java                 # 岗位
-│       │   ├── UserDeptDO.java             # 用户-部门关联
-│       │   ├── UserPostDO.java             # 用户-岗位关联
-│       │   ├── UserLoginHistoryDO.java     # 登录历史
-│       │   ├── UserPasswordHistoryDO.java  # 密码变更历史
-│       │   ├── LanguageDO.java             # 语言
-│       │   ├── AuthPolicyDO.java           # 认证策略
-│       │   ├── OAuth2ApplicationDO.java    # OAuth2 应用注册
-│       │   ├── SamlIdpConfigDO.java        # SAML IdP 配置
-│       │   ├── SecurityAlertDO.java        # 安全告警
-│       │   ├── SocialAccountDO.java        # 社交账号关联
-│       │   ├── SocialClientDO.java         # 社交登录客户端配置
-│       │   └── WebAuthnCredentialDO.java   # WebAuthn 凭证
 │       ├── mapper/                    # MyBatis-Plus Mapper（21 个）
 │       ├── repository/                # Repository 实现（Converter DO↔VO 转换）
-│       ├── converter/                 # UserInfoConverter / AuthPolicyConverter / ScimConverter 等（MapStruct）
+│       ├── converter/                 # MapStruct 转换器（9 个）
 │       ├── config/                    # AesMfaSecretEncryptor / PlainMfaSecretEncryptor
-│       └── social/                    # 社交登录提供者
-│           ├── AbstractSocialAuthProvider.java
-│           ├── DingTalkAuthProvider.java
-│           ├── EnterpriseWechatAuthProvider.java
-│           ├── FeishuAuthProvider.java
-│           └── JustAuthHttpClient.java
+│       └── social/                    # 社交登录提供者（Abstract + DingTalk + EnterpriseWechat + Feishu + JustAuthHttpClient）
 ├── ydsz-userinfo-server/              # 应用层：Service + Auth + Config + Aspect + Metrics + Trace + Alert + Device + SSE + OAuth2
 │   └── src/main/java/com/njydsz/userinfo/server/
 │       ├── auth/                      # 认证/风控（30+ 个类）
-│       │   ├── AuthService / AuthServiceImpl    # 登录认证核心
-│       │   ├── AccountStatusGuard               # 账号状态守卫
-│       │   ├── ApiSignatureUtil                 # API 签名工具
-│       │   ├── CaptchaService                   # 图形验证码
-│       │   ├── CasService                       # CAS 协议服务
-│       │   ├── CredentialVerifier               # 凭证校验
-│       │   ├── CrossDomainTokenService          # 跨域 Token 服务
-│       │   ├── DbRolePermissionLoader           # 角色权限 DB 加载器
-│       │   ├── GeoIpService                     # GeoIP 定位
-│       │   ├── LdapAuthenticationProvider      # LDAP 认证提供者
-│       │   ├── LdapOrgSyncService               # LDAP 组织架构同步
-│       │   ├── LdapSyncTask                    # LDAP 同步定时任务
-│       │   ├── LocalUserIdentityProvider        # 本地用户身份提供者
-│       │   ├── LoginAttemptCounterService       # 登录尝试计数器
-│       │   ├── MfaService                       # MFA 双因素认证
-│       │   ├── PasswordPolicyValidator          # 密码策略校验
-│       │   ├── PathExcludeService               # 路径排除服务
-│       │   ├── RememberMeService                # 记住我服务
-│       │   ├── RiskScoringService               # 风险评分
-│       │   ├── RoleCacheService                 # 角色缓存服务
-│       │   ├── SamlService                      # SAML 服务
-│       │   ├── ScimPatchHandler                 # SCIM PATCH 处理
-│       │   ├── SecondaryAuthService             # 二次认证服务
-│       │   ├── SecurityDashboardService         # 安全仪表盘服务
-│       │   ├── SensitiveVerifyService           # 敏感操作验证
-│       │   ├── SessionActivityService           # 会话活跃度服务
-│       │   ├── SessionManager                   # 会话管理器
-│       │   ├── SocialAuthService                # 社交登录服务
-│       │   ├── UserBanService                   # 账号封禁服务
-│       │   ├── UserIdentityProviderFactory      # 用户身份提供者工厂
-│       │   ├── UserInfoRbacService              # RBAC 服务
-│       │   ├── UserLifecycleTask                # 用户生命周期任务
-│       │   ├── UserPasswordHistoryService       # 密码历史服务
-│       │   ├── UserSessionAdminService          # 用户会话管理服务
-│       │   ├── VerifyCodeService                # 验证码服务
-│       │   ├── WeakPasswordDictionary           # 弱口令字典
-│       │   └── WebAuthnService                  # WebAuthn 服务
 │       ├── config/                    # 配置类（20+ 个）
-│       │   ├── UserInfoProperties / UserInfoConfiguration
-│       │   ├── CasProperties / CasConfiguration
-│       │   ├── CrossDomainSsoProperties
-│       │   ├── GeoIpProperties
-│       │   ├── InternalCallProperties
-│       │   ├── LdapProperties / LdapSyncProperties
-│       │   ├── OidcProperties / OidcConfiguration
-│       │   ├── RememberMeProperties
-│       │   ├── SamlProperties / SamlConfiguration
-│       │   ├── ScimProperties
-│       │   ├── WebAuthnProperties / WebAuthnConfiguration
-│       │   ├── UserInfoMessageSourceConfiguration
-│       │   ├── ApiSignatureProperties
-│       │   ├── UserLoginRiskProperties
-│       │   ├── UserSecurityProperties
-│       │   └── UserTokenProperties
 │       ├── service/                   # 19 个 Service 接口 + impl（14 个实现类）
-│       │   ├── AuthPolicyService
-│       │   ├── CompanyDeptService
-│       │   ├── CompanyService
-│       │   ├── DepartmentService
-│       │   ├── LanguageService
-│       │   ├── LoginAttemptContext
-│       │   ├── LoginHistoryService
-│       │   ├── MenuService
-│       │   ├── PostService
-│       │   ├── RoleService
-│       │   ├── SamlIdpConfigService
-│       │   ├── SelfServiceService
-│       │   ├── SocialClientConfigService
-│       │   ├── UserAccountService
-│       │   ├── UserDeptService
-│       │   ├── UserExcelService
-│       │   ├── UserLifecycleService
-│       │   ├── UserPostService
-│       │   ├── WorkflowApproverCacheService
-│       │   └── impl/
-│       ├── alert/                     # 安全告警
-│       │   ├── SecurityAlertService
-│       │   ├── SecurityAlertAggregationTask
-│       │   ├── AlertNotificationChannel
-│       │   └── LogAlertNotificationChannel
-│       ├── aspect/                    # 切面
-│       │   ├── SecondaryAuthAspect            # 二次认证切面
-│       │   └── SensitiveOperationAspect       # 敏感操作切面
-│       ├── device/                    # 设备会话
-│       │   ├── DeviceSessionService
-│       │   └── DeviceSessionVO
-│       ├── dto/                       # 导入 DTO
-│       │   └── UserImportDTO
-│       ├── event/                     # 事件分发
-│       │   ├── UserAuthEventDispatcher
-│       │   ├── UserDomainEventPublisher
-│       │   └── listener/
+│       ├── alert/                     # 安全告警（SecurityAlertService + AggregationTask + NotificationChannel）
+│       ├── aspect/                    # 切面（SecondaryAuthAspect / SensitiveOperationAspect）
+│       ├── device/                    # 设备会话（DeviceSessionService + DeviceSessionVO）
+│       ├── dto/                       # UserImportDTO
+│       ├── event/                     # 事件分发（Dispatcher + Publisher + listener/）
 │       ├── health/                   # UserInfoHealthIndicator
 │       ├── metrics/                  # UserInfoMetrics（SentryMetricsAdapter）
-│       ├── oauth2/                   # OAuth2 应用服务
-│       │   ├── OAuth2ApplicationService
-│       │   └── OAuthCodeContext
+│       ├── oauth2/                   # OAuth2 应用服务（OAuth2ApplicationService + OAuthCodeContext）
 │       ├── search/                   # UserinfoSearchProvider
-│       ├── social/                   # 社交登录提供者注册表
-│       │   ├── SocialAuthProviderAutoConfiguration
-│       │   └── SocialAuthProviderRegistry
-│       ├── sse/                      # SSE 实时推送
-│       │   ├── SseAuthEventListener
-│       │   └── SseEmitterRegistry
+│       ├── social/                   # 社交登录提供者注册表（AutoConfiguration + Registry）
+│       ├── sse/                      # SSE 实时推送（SseAuthEventListener + SseEmitterRegistry）
 │       └── trace/                    # TraceContext（轻量链路追踪）
 ├── ydsz-userinfo-web/                 # Web 层：Controller + Filter + Bootstrap（端口 9002）
 │   └── src/main/java/com/njydsz/userinfo/web/
@@ -211,62 +94,13 @@ ydsz-userinfo/
 │       ├── dto/                       # RefreshRequest / SecondaryAuthRequest
 │       ├── vo/                        # JwksEndpoint / OidcDiscoveryEndpoint
 │       ├── filter/                    # 7 个过滤器
-│       │   ├── ApiSignatureFilter          # API 签名校验
-│       │   ├── CrossDomainSsoFilter        # 跨域 SSO 过滤
-│       │   ├── RememberMeFilter            # 记住我过滤
-│       │   ├── ScimAuthFilter              # SCIM 认证过滤
-│       │   ├── TokenAutoRenewalFilter      # Token 自动续签过滤
-│       │   ├── TraceIdFilter               # 链路追踪 ID 过滤
-│       │   └── UserInfoMetricsFilter       # 指标采集过滤
 │       └── controller/                # 32 个 Controller
-│           ├── AuthController.java              # /api/v1/auth
-│           ├── AuthPolicyController.java        # /api/v1/auth-policy
-│           ├── CaptchaController.java           # /api/v1/captcha
-│           ├── CasController.java               # /cas
-│           ├── CompanyController.java           # /api/v1/CompanyDO
-│           ├── DepartmentController.java        # /api/v1/dept
-│           ├── InternalApiController.java       # /api/internal（Feign 内部调用，@RequireInternal）
-│           ├── LanguageController.java          # /api/v1/LanguageDO
-│           ├── LdapSyncController.java          # /api/v1/admin/ldap/sync
-│           ├── MenuController.java              # /api/v1/MenuDO
-│           ├── OAuth2ApplicationController.java # /api/v1/admin/oauth2/applications
-│           ├── OAuth2Controller.java            # /api/v1/oauth2
-│           ├── OidcController.java              # /.well-known（OIDC 发现 + JWKS）
-│           ├── PostController.java              # /api/v1/PostDO
-│           ├── RoleController.java              # /api/v1/RoleDO
-│           ├── SamlController.java              # /saml
-│           ├── SamlIdpConfigController.java     # /api/v1/saml-idp-config
-│           ├── ScimController.java              # /scim/v2（SCIM 2.0 用户供给）
-│           ├── SecurityAlertController.java     # /api/v1/admin/security/alerts
-│           ├── SecurityDashboardController.java # /api/v1/admin/security
-│           ├── SocialAccountController.java     # /api/v1/profile/social
-│           ├── SocialClientConfigController.java # /api/v1/social-client-config
-│           ├── SsoMetricsController.java        # /api/v1/sso/metrics
-│           ├── TokenExchangeController.java     # /api/v1/sso
-│           ├── UserAccountController.java       # /api/v1/user
-│           ├── UserinfoSearchController.java    # /api/v1/userinfo/search
-│           ├── UserProfileController.java       # /api/v1/profile
-│           ├── WebAuthnController.java          # /api/v1/webauthn
-│           ├── AdminSessionController.java      # /api/v1/admin（会话管理 + 账号封禁）
-│           ├── device/
-│           │   └── DeviceSessionController.java # /api/v1/devices（设备会话管理）
-│           ├── selfservice/
-│           │   └── SelfServiceController.java   # /api/v1/self-service
-│           └── sse/
-│               └── AuthEventSseController.java  # /api/v1/auth/events（SSE 认证事件推送）
 └── ydsz-userinfo-app/                 # App 层：移动端/应用端 API（端口 9003）
     └── src/main/java/com/njydsz/userinfo/app/
         ├── UserInfoAppApplication.java
-        ├── config/
-        │   ├── AppAutoConfiguration.java
-        │   ├── ConditionalOnPlatform.java
-        │   ├── PlatformCondition.java
-        │   └── UserInfoAppAutoConfiguration.java
-        ├── health/
-        │   └── AppHealthIndicator.java
-        └── openapi/
-            ├── AppOpenApiConfiguration.java
-            └── UserInfoAppOpenApiConfiguration.java
+        ├── config/                    # AppAutoConfiguration / ConditionalOnPlatform / PlatformCondition / UserInfoAppAutoConfiguration
+        ├── health/                   # AppHealthIndicator
+        └── openapi/                  # AppOpenApiConfiguration / UserInfoAppOpenApiConfiguration
 ```
 
 ## 关键 Controller
@@ -489,4 +323,79 @@ ydsz:
 | `ydsz.userinfo.oauth2-clients` | `{}` | OAuth2 客户端注册（Map，clientId → 客户端配置） |
 | `ydsz.userinfo.max-sessions-per-user` | `5` | 单用户最大并发会话数（0=不限制） |
 | `ydsz.userinfo.max-sessions-per-device-type` | `{}` | 分端会话限制（web/app/api） |
-| `ydsz.userinfo.mfa-encryption-key` | — | MFA TOTP 密钥加密密钥（AES-2</longcat_think>
+| `ydsz.userinfo.mfa-encryption-key` | — | MFA TOTP 密钥加密密钥（AES-256-GCM，Base64 编码） |
+| `ydsz.userinfo.token-auto-renewal-enabled` | `true` | Token 自动续签开关 |
+| `ydsz.userinfo.token-auto-renewal-threshold-percent` | `10` | Token 续签阈值百分比 |
+| `ydsz.userinfo.batch-size-limit` | `500` | 批量查询上限 |
+| `ydsz.userinfo.permission-cache-ttl-seconds` | `600` | 角色权限缓存 TTL（秒） |
+| `ydsz.userinfo.risk-window-seconds` | `300` | 登录风险因子采集窗口（秒） |
+| `ydsz.userinfo.mfa-risk-threshold` | `60` | 风险等级触发 MFA 的评分阈值 |
+| `ydsz.userinfo.risk-ip-weight` | `30` | 风控：IP 风险权重 |
+| `ydsz.userinfo.risk-time-weight` | `20` | 风控：时间异常权重 |
+| `ydsz.userinfo.risk-device-weight` | `25` | 风控：设备异常权重 |
+| `ydsz.userinfo.risk-frequency-weight` | `25` | 风控：频率异常权重 |
+| `ydsz.userinfo.risk-anomaly-start-hour` | `0` | 风控：异常时段起始小时 |
+| `ydsz.userinfo.risk-anomaly-end-hour` | `6` | 风控：异常时段结束小时 |
+| `ydsz.userinfo.risk-frequency-window-minutes` | `5` | 风控：频率窗口（分钟） |
+| `ydsz.userinfo.risk-frequency-threshold` | `3` | 风控：频率阈值 |
+| `ydsz.userinfo.trusted-proxies` | `[]` | 可信代理 IP 列表（为空时不信任转发头） |
+| `ydsz.userinfo.auth-exclude-paths` | `["/actuator/**", ...]` | 不需要鉴权的路径列表（Ant 风格） |
+| `ydsz.userinfo.internal-call.enabled` | `false` | 内部接口服务端二次校验开关 |
+| `ydsz.userinfo.scim.base-path` | `/scim/v2` | SCIM 端点基础路径 |
+| `ydsz.tenant.enabled` | `false` | 多租户隔离开关（开启后 SQL 自动追加 tenant_id） |
+| `ydsz.safe.field-encryption.keys.1` | `${YDSZ_FIELD_ENC_KEY_V1}` | 字段加密密钥（环境变量注入） |
+| `ydsz.auth.token.secret-key` | （必填） | JWT 签名密钥（至少 32 字符） |
+| `ydsz.auth.token.access-token-expire-seconds` | `7200` | Access Token 有效期（秒） |
+| `ydsz.auth.token.refresh-token-expire-seconds` | `604800` | Refresh Token 有效期（秒） |
+| `ydsz.auth.ldap.enabled` | `false` | 是否启用 LDAP/ADFS 域认证 |
+| `ydsz.auth.ldap.host` | — | LDAP 服务器地址 |
+| `ydsz.auth.ldap.port` | `389` | LDAP 端口 |
+| `ydsz.auth.ldap.domain` | — | LDAP 域后缀（如 `@ydszsoft`） |
+| `ydsz.security.alert.dedup-ttl-seconds` | `300` | 安全告警去重时间窗口（秒） |
+| `ydsz.security.alert.ip-dedup-ttl-seconds` | `180` | 安全告警 IP 维度去重窗口（秒） |
+| `ydsz.security.alert.brute-force-threshold` | `10` | 暴力破解检测阈值 |
+| `ydsz.security.alert.password-spray-threshold` | `5` | 密码喷洒检测阈值 |
+
+## 常见问题
+
+### Q1：登录失败 "账号或密码错误" 但密码正确
+
+1. 检查 `ydsz_user_account` 中 `status = 'ENABLED'` 且 `deleted = 0`
+2. 检查 `lock_time` 是否在未来（账号被锁定）
+3. 检查 `password` 字段是否为 BCrypt 哈希值
+
+### Q2：JWT Token 刷新失败
+
+1. Refresh Token 已过期（默认 7 天）
+2. Token 已加入黑名单（用户已登出）
+3. `ydsz.auth.token.secret-key` 被修改过
+
+### Q3：LDAP 认证失败
+
+1. 检查 `ydsz.auth.ldap.enabled=true`
+2. 检查 LDAP 服务器连通性
+3. 用户名需去掉域后缀（系统自动拼接 `domain`）
+
+### Q4：菜单树不显示
+
+1. 检查 `ydsz_menu` 表是否有数据且 `status = 'ENABLED'`
+2. 检查用户角色是否关联了对应菜单权限
+3. 菜单树按 `parent_id` 递归构建，根节点 `parent_id = 0`
+
+### Q5：MFA 密钥安全存储
+
+生产环境必须配置 `ydsz.userinfo.mfa-encryption-key`（Base64 编码的 32 字节密钥），否则 MFA TOTP 密钥将以明文存储在 Redis 中。
+生成方式：`openssl rand -base64 32`
+
+### Q6：社交登录配置
+
+社交登录通过 `SocialAuthProviderRegistry` 自动注册，支持钉钉/企微/飞书。需在 `SocialAuthProperties` 中配置各平台的 clientId/clientSecret。
+
+### Q7：SCIM 端点认证
+
+SCIM 端点使用 Bearer Token 认证（`ScimAuthFilter`），需在请求头携带 `Authorization: Bearer <token>`。
+
+---
+
+> 本模块是 YDSZ 的**身份认证与组织架构中心**，所有业务模块通过 Feign 调用获取用户/部门信息。
+> 严禁在业务模块中重复实现用户/权限查询逻辑。
