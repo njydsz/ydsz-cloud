@@ -107,7 +107,7 @@ public class OtelTraceInfoExtractor {
       // OTel 运行时异常（如 ClassLoader 变化等），降级为不可用
       log.debug("[OtelTraceInfoExtractor] 提取 OTel TraceInfo 失败: {}", e.getMessage());
       // 清除缓存，下次调用重新初始化
-      methodCacheInitialized.set(false);
+      METHOD_CACHE_INITIALIZED.set(false);
       clearMethodCache();
       return OtelTraceInfo.EMPTY;
     }
@@ -139,10 +139,10 @@ public class OtelTraceInfoExtractor {
    * <p>仅在首次调用或缓存失效后执行，避免不必要的反射查找。
    */
   private static void ensureMethodCacheInitialized() {
-    if (methodCacheInitialized.get()) {
+    if (METHOD_CACHE_INITIALIZED.get()) {
       return;
     }
-    if (methodCacheInitialized.compareAndSet(false, true)) {
+    if (METHOD_CACHE_INITIALIZED.compareAndSet(false, true)) {
       try {
         Class<?> spanClass = Class.forName(OTEL_SPAN_CLASS);
         Class<?> spanContextClass = Class.forName(OTEL_SPAN_CONTEXT_CLASS);
@@ -156,7 +156,7 @@ public class OtelTraceInfoExtractor {
         isSampledMethod = spanContextClass.getMethod("isSampled");
       } catch (Exception e) {
         // 初始化失败，清除标志让下次重试
-        methodCacheInitialized.set(false);
+        METHOD_CACHE_INITIALIZED.set(false);
         log.debug("[OtelTraceInfoExtractor] Method 缓存初始化失败: {}", e.getMessage());
       }
     }

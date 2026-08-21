@@ -25,8 +25,8 @@
         <module>ydsz-userinfo</module>
         <module>ydsz-cronjob</module>
         <module>ydsz-message</module>
-        <module>ydsz-literule</module>
         <module>ydsz-workflow</module>
+        <module>ydsz-literule</module>
         <module>ydsz-nextwiki</module>
         <module>ydsz-agent</module>
     </modules>
