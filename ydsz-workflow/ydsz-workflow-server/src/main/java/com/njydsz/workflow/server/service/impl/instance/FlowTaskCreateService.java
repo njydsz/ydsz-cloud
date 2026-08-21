@@ -976,7 +976,6 @@ public class FlowTaskCreateService {
     return task;
   }
 
-
   /** AUTO_PASS 后推进到下一节点（含递归深度保护） */
   private void advanceAfterAutoPass(
       FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
