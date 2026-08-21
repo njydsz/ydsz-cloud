@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
@@ -52,6 +53,7 @@ import com.njydsz.workflow.server.service.FlowSlaService;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 import com.njydsz.workflow.server.service.instance.AssigneeResolutionService;
 import com.njydsz.workflow.server.service.instance.DelegateRedirectService;
+import com.njydsz.workflow.server.service.instance.EmptyAssigneeStrategyService;
 
 /**
  * 任务创建服务（拆分自 FlowTaskCompleteServiceImpl）
@@ -208,6 +210,9 @@ public class FlowTaskCreateService {
 
   /** P1-4: 委派改写服务（从本类抽出，组合模式接入） */
   private final DelegateRedirectService delegateRedirectService;
+
+  /** P0-1: 审批人为空兜底策略服务（从本类抽出，组合模式接入） */
+  private EmptyAssigneeStrategyService emptyAssigneeStrategyService;
 
   // ============================== 公共创建入口 ==============================
 
