@@ -12,22 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.aliyun.oss.ClientBuilderConfiguration;
-import com.aliyun.oss.GetObjectRequest;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
-import com.aliyun.oss.OSSObject;
-import com.aliyun.oss.model.AbortMultipartUploadRequest;
-import com.aliyun.oss.model.CompleteMultipartUploadRequest;
-import com.aliyun.oss.model.InitiateMultipartUploadRequest;
-import com.aliyun.oss.model.InitiateMultipartUploadResult;
-import com.aliyun.oss.model.ListObjectsRequest;
-import com.aliyun.oss.model.ListPartsRequest;
-import com.aliyun.oss.model.ObjectListing;
-import com.aliyun.oss.model.OSSObjectSummary;
-import com.aliyun.oss.model.PartETag;
-import com.aliyun.oss.model.PartListing;
-import com.aliyun.oss.model.PartSummary;
-import com.aliyun.oss.model.UploadPartRequest;
+import com.aliyun.oss.model.*;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
