@@ -2,6 +2,7 @@ package com.njydsz.common.util.internal.proxy;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.RecordComponent;
+import java.security.SecureRandom;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -164,7 +165,7 @@ public final class TraceIdGeneratorProxy {
    */
   private static String fallbackGenerateHex(int length) {
     StringBuilder sb = new StringBuilder(length);
-    java.security.SecureRandom random = new java.security.SecureRandom();
+    SecureRandom random = new SecureRandom();
     for (int i = 0; i < length; i++) {
       sb.append(Integer.toHexString(random.nextInt(16)));
     }

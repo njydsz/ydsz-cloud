@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -68,8 +69,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
 
   @Override
   public PageResponse<List<RuleVersionVO>> pageVersions(String ruleCode, int pageNum, int pageSize) {
-    com.baomidou.mybatisplus.extension.plugins.pagination.Page<RuleVersionHistoryDO> page =
-        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize);
+    Page<RuleVersionHistoryDO> page = new Page<>(pageNum, pageSize);
     LambdaQueryWrapper<RuleVersionHistoryDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(RuleVersionHistoryDO::getRuleCode, ruleCode)
            .orderByDesc(RuleVersionHistoryDO::getVersion);

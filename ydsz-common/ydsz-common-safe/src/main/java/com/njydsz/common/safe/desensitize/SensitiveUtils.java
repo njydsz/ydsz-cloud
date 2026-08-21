@@ -125,45 +125,6 @@ public final class SensitiveUtils {
     return maskFixed(value, prefixKeep, suffixKeep);
   }
 
-   * @param value value 参数
-   * @param prefixKeep prefixKeep 参数
-   * @param suffixKeep suffixKeep 参数
-   * @param value value 参数
-   * @param prefixKeep prefixKeep 参数
-   * @param suffixKeep suffixKeep 参数
-   * @param value value 参数
-   * @param prefixKeep prefixKeep 参数
-   * @param suffixKeep suffixKeep 参数
-   * @param value value 参数
-   * @param prefixKeep prefixKeep 参数
-   * @param suffixKeep suffixKeep 参数
-   * @param value value 参数
-   * @param prefixKeep prefixKeep 参数
-   * @param suffixKeep suffixKeep 参数
-   * @param value value 参数
-   * @param prefixKeep prefixKeep 参数
-   * @param suffixKeep suffixKeep 参数
-   * @param value value 参数
-   * @param prefixKeep prefixKeep 参数
-   * @param suffixKeep suffixKeep 参数
-   * @param value value 参数
-   * @param prefixKeep prefixKeep 参数
-   * @param suffixKeep suffixKeep 参数
-   * @param value value 参数
-   * @param prefixKeep prefixKeep 参数
-   * @param suffixKeep suffixKeep 参数
-   * @param value value 参数
-   * @param prefixKeep prefixKeep 参数
-   * @param suffixKeep suffixKeep 参数
-   * @param value value 参数
-   * @param prefixKeep prefixKeep 参数
-   * @param suffixKeep suffixKeep 参数
-   * @param value value 参数
-   * @param prefixKeep prefixKeep 参数
-   * @param suffixKeep suffixKeep 参数
-   * @param value value 参数
-   * @param prefixKeep prefixKeep 参数
-   * @param suffixKeep suffixKeep 参数
   /** 固定前后保留位数脱敏。 */
   private static String maskFixed(String value, int prefixKeep, int suffixKeep) {
     int length = value.length();
