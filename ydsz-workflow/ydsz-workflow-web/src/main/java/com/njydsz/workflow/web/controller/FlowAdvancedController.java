@@ -139,7 +139,7 @@ public class FlowAdvancedController {
    *
    * @return 是否推送成功
    */
-  @Idempotent(key = "ydsz:workflow:FlowAdvancedController:sendWeekly:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:advanced:sendWeekly", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowadvanced.sendWeekly", threshold = 50)
   @PostMapping("/report/weekly/send")
   @Audit(
@@ -165,7 +165,7 @@ public class FlowAdvancedController {
    *
    * @return 是否推送成功
    */
-  @Idempotent(key = "ydsz:workflow:FlowAdvancedController:sendMonthly:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:advanced:sendMonthly", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowadvanced.sendMonthly", threshold = 50)
   @PostMapping("/report/monthly/send")
   @Audit(

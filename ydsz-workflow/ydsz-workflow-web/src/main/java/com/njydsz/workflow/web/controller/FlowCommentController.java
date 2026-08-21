@@ -89,7 +89,7 @@ public class FlowCommentController {
    * @param dto 评论参数
    * @return 统一响应结果，包含新评论 ID
    */
-  @Idempotent(key = "ydsz:workflow:FlowCommentController:addComment:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:comment:add", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowCommentDO.addComment", threshold = 50)
   @PostMapping
   @Audit(
@@ -150,7 +150,7 @@ public class FlowCommentController {
    * @param commentId 评论 ID
    * @return 统一响应结果，包含是否删除成功
    */
-  @Idempotent(key = "ydsz:workflow:FlowCommentController:deleteComment:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:comment:delete", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowCommentDO.deleteComment", threshold = 50)
   @DeleteMapping("/{commentId}")
   @Audit(
@@ -186,7 +186,7 @@ public class FlowCommentController {
    * @param dto 常用语信息
    * @return 新建常用语 ID
    */
-  @Idempotent(key = "ydsz:workflow:FlowCommentController:createQuickComment:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:quickComment:create", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowQuickCommentDO.create", threshold = 50)
   @PostMapping("/quick")
   @Audit(
@@ -207,7 +207,7 @@ public class FlowCommentController {
    * @param dto 常用语信息
    * @return 空响应
    */
-  @Idempotent(key = "ydsz:workflow:FlowCommentController:updateQuickComment:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:quickComment:update", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowQuickCommentDO.update", threshold = 50)
   @PutMapping("/quick")
   @Audit(
@@ -228,7 +228,7 @@ public class FlowCommentController {
    * @param id 常用语 ID
    * @return 空响应
    */
-  @Idempotent(key = "ydsz:workflow:FlowCommentController:deleteQuickComment:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:quickComment:delete", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowQuickCommentDO.delete", threshold = 50)
   @DeleteMapping("/quick/{id}")
   @Audit(

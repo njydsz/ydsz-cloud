@@ -115,7 +115,7 @@ public class FlowCategoryController {
    * @param dto 分类 DTO（categoryCode / categoryName / parentId / icon / sortNum）
    * @return 新建分类 ID
    */
-  @Idempotent(key = "ydsz:workflow:FlowCategoryController:create:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:category:create", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowCategoryDO.create", threshold = 50)
   @PostMapping
   @Audit(
@@ -140,7 +140,7 @@ public class FlowCategoryController {
    * @param dto 分类 DTO（必须包含 ID）
    * @return 空响应
    */
-  @Idempotent(key = "ydsz:workflow:FlowCategoryController:update:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:category:update", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowCategoryDO.update", threshold = 50)
   @PutMapping
   @Audit(
@@ -171,7 +171,7 @@ public class FlowCategoryController {
    * @param id 分类 ID
    * @return 空响应
    */
-  @Idempotent(key = "ydsz:workflow:FlowCategoryController:delete:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:category:delete", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowCategoryDO.delete", threshold = 50)
   @DeleteMapping("/{id}")
   @Audit(

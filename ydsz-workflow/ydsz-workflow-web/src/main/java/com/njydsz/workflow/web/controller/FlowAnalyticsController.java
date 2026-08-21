@@ -208,7 +208,7 @@ public class FlowAnalyticsController {
       action = AuditAction.BACKUP,
       content = "'archive'")
   @Operation(summary = "手动触发归档")
-  @Idempotent(key = "ydsz:workflow:FlowAnalyticsController:archive:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:analytics:archive", ttlSeconds = 5)
   @PostMapping("/history/archive")
   public YdszResponse<Map<String, Object>> archive(
       @RequestParam(required = false) @Min(1) Integer retentionDays,
@@ -236,7 +236,7 @@ public class FlowAnalyticsController {
       action = AuditAction.CLEAN,
       content = "'purge'")
   @Operation(summary = "手动触发清理（purge）")
-  @Idempotent(key = "ydsz:workflow:FlowAnalyticsController:purge:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:analytics:purge", ttlSeconds = 5)
   @PostMapping("/history/purge")
   public YdszResponse<Map<String, Object>> purge(
       @RequestParam(required = false) Integer purgeDays) {

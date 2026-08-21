@@ -127,7 +127,7 @@ public class FlowEmbeddedApprovalController {
    * @param dto 嵌入式快捷操作参数
    */
   @Operation(summary = "嵌入式快捷操作")
-  @Idempotent(key = "ydsz:workflow:FlowEmbeddedApprovalController:quickAction:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:embeddedApproval:quickAction", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowembeddedapproval.quickAction", threshold = 50)
   @PostMapping("/action")
   @Audit(
