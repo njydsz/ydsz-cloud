@@ -1,5 +1,6 @@
 package com.njydsz.message.web.controller;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -80,9 +81,9 @@ public class RetryPreviewController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/presets")
   public YdszResponse<Map<String, Object>> listPresets() {
-    Map<String, Object> result = new java.util.LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>();
     for (RetryPreset preset : RetryPreset.values()) {
-      Map<String, Object> info = new java.util.LinkedHashMap<>();
+      Map<String, Object> info = new LinkedHashMap<>();
       info.put("code", preset.getCode());
       info.put("displayName", preset.getDisplayName());
       info.put("maxRetryCount", preset.getMaxRetryCount());

@@ -95,7 +95,7 @@ public class MultiLevelCacheProvider implements CacheProvider {
     this.redisStringOps = Objects.requireNonNull(redisStringOps, "RedisStringOps 必须不为 null");
     this.redisProperties = Objects.requireNonNull(redisProperties, "RedisProperties 必须不为 null");
     this.l1Cache =
-        YdszCache.newBuilder()
+        YdszCache.<String, Object>newBuilder()
             .name(CACHE_NAME)
             .maximumSize(Math.max(1, l1MaxSize))
             .expireAfterWrite(l1TtlSeconds, TimeUnit.SECONDS)
