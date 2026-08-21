@@ -111,7 +111,7 @@ public class FlowInstanceController {
    * @param dto 流程启动参数
    * @return 统一响应结果，包含流程实例 ID
    */
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:startProcess:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:instance:start", ttlSeconds = 5)
   @Audit(
       module = "流程实例",
       type = AuditType.OPERATION,
@@ -167,7 +167,7 @@ public class FlowInstanceController {
    * @param reason 终止原因（可选）
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:terminate:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:instance:terminate", ttlSeconds = 5)
   @PostMapping("/instance/{id}/terminate")
   @Audit(
       module = "流程实例",
@@ -188,7 +188,7 @@ public class FlowInstanceController {
    * @param id 流程实例 ID
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:suspend:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:instance:suspend", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowInstanceDO.suspend", threshold = 50)
   @PostMapping("/instance/{id}/suspend")
   @Audit(
@@ -209,7 +209,7 @@ public class FlowInstanceController {
    * @param id 流程实例 ID
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:activate:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:instance:activate", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowInstanceDO.activate", threshold = 50)
   @PostMapping("/instance/{id}/activate")
   @Audit(
@@ -231,7 +231,7 @@ public class FlowInstanceController {
    * @param targetNodeCode 目标节点编码（可选，为空时撤回到开始节点下游第一节点）
    * @return 统一响应结果，包含是否撤回成功
    */
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:recall:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:instance:recall", ttlSeconds = 5)
   @PostMapping("/instance/{id}/recall")
   @Audit(
       module = "流程实例",
@@ -268,7 +268,7 @@ public class FlowInstanceController {
    * @param maxRollbackDays 允许回滚的最大天数（可选，默认 7）
    * @return 统一响应结果，包含是否回滚成功
    */
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:rollback:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:instance:rollback", ttlSeconds = 5)
   @PostMapping("/instance/{id}/rollback")
   @Audit(
       module = "流程实例",
@@ -298,7 +298,7 @@ public class FlowInstanceController {
    *       flowCode/businessType/businessId/initiator，合并变量。
    * </ul>
    */
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:resubmit:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:instance:resubmit", ttlSeconds = 5)
   @PostMapping("/instance/{id}/resubmit")
   @Audit(
       module = "流程实例",
@@ -481,7 +481,7 @@ public class FlowInstanceController {
    * @param dto 变量 DTO
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:setVariables:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:instance:setVariables", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowInstanceDO.setVariables", threshold = 50)
   @PostMapping("/instance/{id}/variables")
   @Audit(
@@ -504,7 +504,7 @@ public class FlowInstanceController {
    * @param comment 催办备注（可选）
    * @return 统一响应结果，包含被催办人列表
    */
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:urge:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:instance:urge", ttlSeconds = 5)
   @PostMapping("/instance/{id}/urge")
   @Audit(
       module = "流程变量",
@@ -523,7 +523,7 @@ public class FlowInstanceController {
    *
    * <p>nodeCode 不传时退化为实例级催办。
    */
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:urgeByNode:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:instance:urgeByNode", ttlSeconds = 5)
   @PostMapping("/instance/{id}/urge/node")
   @Audit(
       module = "流程变量",
@@ -564,7 +564,7 @@ public class FlowInstanceController {
    */
   @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
   @RateLimit(resource = "workflow.flowmigration.migrateInstances", threshold = 50)
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:migrateInstances:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:instance:migrate", ttlSeconds = 5)
   @PostMapping("/instance/migrate")
   @Audit(
       module = "流程迁移",
@@ -586,7 +586,7 @@ public class FlowInstanceController {
    */
   @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
   @RateLimit(resource = "workflow.flowmigration.previewMigration", threshold = 50)
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:previewMigration:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:instance:previewMigration", ttlSeconds = 5)
   @PostMapping("/instance/migrate/preview")
   @Audit(
       module = "流程迁移",
@@ -642,7 +642,7 @@ public class FlowInstanceController {
    * @return 空响应
    */
   @Operation(summary = "创建触发规则")
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:createTrigger:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:trigger:create", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowAutoTriggerDO.create", threshold = 50)
   @PostMapping("/instance/trigger")
   @Audit(
@@ -669,7 +669,7 @@ public class FlowInstanceController {
    * @return 空响应
    */
   @Operation(summary = "删除触发规则")
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:deleteTrigger:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:trigger:delete", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowAutoTriggerDO.delete", threshold = 50)
   @DeleteMapping("/instance/trigger/{id}")
   @Audit(
@@ -693,7 +693,7 @@ public class FlowInstanceController {
    * @return 切换后的状态（id / enabled）
    */
   @Operation(summary = "启用/禁用触发规则")
-  @Idempotent(key = "ydsz:workflow:FlowInstanceController:toggleTrigger:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:trigger:toggle", ttlSeconds = 5)
   @PutMapping("/instance/trigger/{id}/toggle")
   public YdszResponse<Map<String, Object>> toggleTrigger(@PathVariable String id) {
     boolean enabled = autoTriggerService.toggleEnabled(id);

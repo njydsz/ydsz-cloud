@@ -155,7 +155,7 @@ public class UserAccountController {
       action = AuditAction.CREATE,
       content = "'创建用户: ' + #dto.username",
       excludeParams = {"password"})
-  @Idempotent(key = "ydsz:userinfo:UserAccountController:create:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:userinfo:user:create", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.UserAccountDO.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建用户")
@@ -180,7 +180,7 @@ public class UserAccountController {
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
       content = "'更新用户: ' + #dto.id")
-  @Idempotent(key = "ydsz:userinfo:UserAccountController:update:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:userinfo:user:update", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.UserAccountDO.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新用户信息")
@@ -204,7 +204,7 @@ public class UserAccountController {
       action = AuditAction.DELETE,
       content = "'删除用户: ' + #id")
   @RateLimit(resource = "userinfo.UserAccountDO.remove", threshold = 50)
-  @Idempotent(key = "ydsz:userinfo:UserAccountController:remove:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:userinfo:user:remove", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除用户")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
@@ -227,7 +227,7 @@ public class UserAccountController {
       action = AuditAction.UPDATE,
       content = "'修改密码'",
       excludeParams = {"oldPassword", "newPassword"})
-  @Idempotent(key = "ydsz:userinfo:UserAccountController:changePassword:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:userinfo:user:changePassword", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.UserAccountDO.changePassword", threshold = 50)
   @PostMapping("/change-password")
   @Operation(summary = "修改密码")
@@ -249,7 +249,7 @@ public class UserAccountController {
    */
   @SensitiveOperation("重置密码")
   @RateLimit(resource = "userinfo.UserAccountDO.resetPassword", threshold = 50)
-  @Idempotent(key = "ydsz:userinfo:UserAccountController:resetPassword:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:userinfo:user:resetPassword", ttlSeconds = 5)
   @PostMapping("/reset-password")
   @Operation(summary = "重置密码（管理员）")
   public YdszResponse<Boolean> resetPassword(@Valid @RequestBody ResetPasswordDTO dto) {
@@ -269,7 +269,7 @@ public class UserAccountController {
    * @return 是否成功
    */
   @RateLimit(resource = "userinfo.UserAccountDO.assignRoles", threshold = 50)
-  @Idempotent(key = "ydsz:userinfo:UserAccountController:assignRoles:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:userinfo:user:assignRoles", ttlSeconds = 5)
   @PostMapping("/{userId}/roles")
   @Operation(summary = "分配用户角色")
   public YdszResponse<Boolean> assignRoles(
@@ -418,7 +418,7 @@ public class UserAccountController {
       type = AuditType.OPERATION,
       action = AuditAction.DELETE,
       content = "'批量删除用户: ' + #dto.ids.size() + ' 个'")
-  @Idempotent(key = "ydsz:userinfo:UserAccountController:batchRemove:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:userinfo:user:batchRemove", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.UserAccountDO.batchRemove", threshold = 30)
   @PostMapping("/batch-remove")
   @Operation(summary = "批量删除用户")
@@ -439,7 +439,7 @@ public class UserAccountController {
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
       content = "'批量启用用户: ' + #dto.ids.size() + ' 个'")
-  @Idempotent(key = "ydsz:userinfo:UserAccountController:batchEnable:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:userinfo:user:batchEnable", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.UserAccountDO.batchEnable", threshold = 30)
   @PostMapping("/batch-enable")
   @Operation(summary = "批量启用用户")
@@ -461,7 +461,7 @@ public class UserAccountController {
       action = AuditAction.UPDATE,
       content = "'批量禁用用户: ' + #dto.ids.size() + ' 个'")
   @SensitiveOperation("批量禁用用户")
-  @Idempotent(key = "ydsz:userinfo:UserAccountController:batchDisable:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:userinfo:user:batchDisable", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.UserAccountDO.batchDisable", threshold = 30)
   @PostMapping("/batch-disable")
   @Operation(summary = "批量禁用用户")
@@ -487,7 +487,7 @@ public class UserAccountController {
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
       content = "'暂停用户: ' + #userId")
-  @Idempotent(key = "ydsz:userinfo:UserAccountController:suspend:lock:#userId", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:userinfo:user:suspend", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.UserAccountDO.suspend", threshold = 10)
   @PutMapping("/{userId}/lifecycle/suspend")
   @Operation(summary = "暂停用户账号", description = "将用户从 ENABLED 状态临时停用，可后续恢复")
@@ -508,7 +508,7 @@ public class UserAccountController {
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
       content = "'恢复用户: ' + #userId")
-  @Idempotent(key = "ydsz:userinfo:UserAccountController:resume:lock:#userId", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:userinfo:user:resume", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.UserAccountDO.resume", threshold = 10)
   @PutMapping("/{userId}/lifecycle/resume")
   @Operation(summary = "恢复暂停用户", description = "将暂停状态的用户恢复到 ENABLED")
@@ -530,7 +530,7 @@ public class UserAccountController {
       action = AuditAction.UPDATE,
       content = "'禁用用户: ' + #userId")
   @SensitiveOperation("禁用用户")
-  @Idempotent(key = "ydsz:userinfo:UserAccountController:lifecycleDisable:lock:#userId", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:userinfo:user:lifecycleDisable", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.UserAccountDO.disable", threshold = 10)
   @PutMapping("/{userId}/lifecycle/disable")
   @Operation(summary = "禁用用户账号", description = "长期禁用，后续可重新启用")
@@ -552,7 +552,7 @@ public class UserAccountController {
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
       content = "'启用用户: ' + #userId")
-  @Idempotent(key = "ydsz:userinfo:UserAccountController:lifecycleEnable:lock:#userId", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:userinfo:user:lifecycleEnable", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.UserAccountDO.enable", threshold = 10)
   @PutMapping("/{userId}/lifecycle/enable")
   @Operation(summary = "启用用户账号", description = "从 DISABLED 恢复到 ENABLED")
@@ -574,7 +574,7 @@ public class UserAccountController {
       action = AuditAction.UPDATE,
       content = "'用户离职: ' + #userId")
   @SensitiveOperation("用户离职")
-  @Idempotent(key = "ydsz:userinfo:UserAccountController:resign:lock:#userId", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:userinfo:user:resign", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.UserAccountDO.resign", threshold = 5)
   @PutMapping("/{userId}/lifecycle/resign")
   @Operation(summary = "账号离职处理", description = "终态操作，永久不可再激活")

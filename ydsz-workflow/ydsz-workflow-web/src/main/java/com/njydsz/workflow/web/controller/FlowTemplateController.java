@@ -119,7 +119,7 @@ public class FlowTemplateController {
    * @return 新创建的流程定义 ID
    */
   @Operation(summary = "导入模板")
-  @Idempotent(key = "ydsz:workflow:FlowTemplateController:importTemplate:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:template:import", ttlSeconds = 5)
   @Audit(
       module = "流程模板",
       type = AuditType.OPERATION,
@@ -197,7 +197,7 @@ public class FlowTemplateController {
    * @return 新版本号
    */
   @Operation(summary = "P2-9: 创建模板新版本")
-  @Idempotent(key = "ydsz:workflow:FlowTemplateController:createNewVersion:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:template:createNewVersion", ttlSeconds = 5)
   @Audit(
       module = "流程模板",
       type = AuditType.OPERATION,
@@ -221,7 +221,7 @@ public class FlowTemplateController {
    * @return 新模板编码
    */
   @Operation(summary = "P2-9: 克隆模板为独立新模板")
-  @Idempotent(key = "ydsz:workflow:FlowTemplateController:cloneTemplate:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:template:clone", ttlSeconds = 5)
   @Audit(
       module = "流程模板",
       type = AuditType.OPERATION,
@@ -249,7 +249,7 @@ public class FlowTemplateController {
    * @return 新模板编码
    */
   @Operation(summary = "P2-9: 从父模板继承创建子模板")
-  @Idempotent(key = "ydsz:workflow:FlowTemplateController:inheritFromParent:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:template:inherit", ttlSeconds = 5)
   @PostMapping("/{parentTemplateCode}/inherit")
   @Audit(
       module = "流程模板",
@@ -288,7 +288,7 @@ public class FlowTemplateController {
    * @return 同步后的新版本号
    */
   @Operation(summary = "P2-9: 子模板同步父模板最新版本")
-  @Idempotent(key = "ydsz:workflow:FlowTemplateController:syncFromParent:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:template:syncFromParent", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowTemplateDO.syncFromParent", threshold = 50)
   @PostMapping("/{childTemplateCode}/sync")
   @Audit(

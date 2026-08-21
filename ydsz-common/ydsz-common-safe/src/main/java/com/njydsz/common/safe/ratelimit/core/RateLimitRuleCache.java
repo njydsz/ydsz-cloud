@@ -108,17 +108,17 @@ public class RateLimitRuleCache {
     if (a == null || b == null) {
       return false;
     }
-    if (a.getThreshold() {
-      != b.getThreshold()) return false;
+    if (a.getThreshold() != b.getThreshold()) {
+      return false;
     }
-    if (a.getBurstCapacity() {
-      != b.getBurstCapacity()) return false;
+    if (a.getBurstCapacity() != b.getBurstCapacity()) {
+      return false;
     }
-    if (a.getAlgorithm() {
-      != b.getAlgorithm()) return false;
+    if (a.getAlgorithm() != b.getAlgorithm()) {
+      return false;
     }
-    if (a.getMode() {
-      != b.getMode()) return false;
+    if (a.getMode() != b.getMode()) {
+      return false;
     }
     if (a.getWindow() == null ? b.getWindow() != null : !a.getWindow().equals(b.getWindow())) {
       return false;

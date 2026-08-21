@@ -157,7 +157,7 @@ public class FlowTaskController {
    * @param taskId 任务 ID
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:claim:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:claim", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.claim", threshold = 50)
   @PostMapping("/task/claim")
   @Audit(
@@ -178,7 +178,7 @@ public class FlowTaskController {
    * @param dto 任务操作参数
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:pass:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:pass", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.pass", threshold = 50)
   @PostMapping("/task/pass")
   @Audit(
@@ -215,7 +215,7 @@ public class FlowTaskController {
    * @param dto 任务操作参数（可含 targetNodeCode 指定驳回目标；不填则按流程默认）
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:reject:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:reject", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.reject", threshold = 50)
   @PostMapping("/task/reject")
   @Audit(
@@ -255,7 +255,7 @@ public class FlowTaskController {
    * @param dto 任务操作参数
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:transfer:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:transfer", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.transfer", threshold = 50)
   @PostMapping("/task/transfer")
   @Audit(
@@ -278,7 +278,7 @@ public class FlowTaskController {
    * @param dto 任务操作参数
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:delegate:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:delegate", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.delegate", threshold = 50)
   @PostMapping("/task/delegate")
   @Audit(
@@ -301,7 +301,7 @@ public class FlowTaskController {
    * @param dto 任务操作参数
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:countersignBefore:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:countersignBefore", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.countersignBefore", threshold = 50)
   @PostMapping("/task/countersignBefore")
   @Audit(
@@ -324,7 +324,7 @@ public class FlowTaskController {
    * @param dto 任务操作参数
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:countersignAfter:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:countersignAfter", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.countersignAfter", threshold = 50)
   @PostMapping("/task/countersignAfter")
   @Audit(
@@ -347,7 +347,7 @@ public class FlowTaskController {
    * @param dto 任务操作参数
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:countersignParallel:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:countersignParallel", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.countersignParallel", threshold = 50)
   @PostMapping("/task/countersignParallel")
   @Audit(
@@ -370,7 +370,7 @@ public class FlowTaskController {
    * @param dto 任务操作参数（需含 taskId + targetNodeCode）
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:jump:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:jump", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.jump", threshold = 50)
   @PostMapping("/task/jump")
   @Audit(
@@ -393,7 +393,7 @@ public class FlowTaskController {
    * @param dto 任务操作参数（需含 taskId + targetNodeCode + action=JUMP，可选 targetAssignees）
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:freeJump:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:freeJump", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.freeJump", threshold = 50)
   @PostMapping("/task/freeJump")
   @Audit(
@@ -419,7 +419,7 @@ public class FlowTaskController {
    * @param taskIds 任务 ID 列表
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:batchPass:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:batchPass", ttlSeconds = 5)
   @PostMapping("/task/batchPass")
   @Audit(
       module = "流程任务",
@@ -439,7 +439,7 @@ public class FlowTaskController {
    * @param dtos 任务操作参数列表
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:batchReject:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:batchReject", ttlSeconds = 5)
   @PostMapping("/task/batchReject")
   @Audit(
       module = "流程任务",
@@ -463,7 +463,7 @@ public class FlowTaskController {
    * @param dtos 任务操作参数列表
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:batchTransfer:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:batchTransfer", ttlSeconds = 5)
   @PostMapping("/task/batchTransfer")
   @Audit(
       module = "流程任务",
@@ -488,7 +488,7 @@ public class FlowTaskController {
    * @param comment 催办备注（可选）
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:batchUrge:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:batchUrge", ttlSeconds = 5)
   @PostMapping("/instance/batchUrge")
   @Audit(
       module = "流程任务",
@@ -508,7 +508,7 @@ public class FlowTaskController {
    *
    * @return 统一响应结果，包含通过数量
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:passAll:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:passAll", ttlSeconds = 5)
   @PostMapping("/task/passAll")
   @Audit(
       module = "流程任务",
@@ -662,7 +662,7 @@ public class FlowTaskController {
    * @param dto 任务操作参数（需含 taskId + targetUserId）
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:countersignRemove:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:countersignRemove", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.countersignRemove", threshold = 50)
   @PostMapping("/task/countersignRemove")
   @Audit(
@@ -685,7 +685,7 @@ public class FlowTaskController {
    * @param taskId 任务 ID
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:markRead:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:markRead", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.markRead", threshold = 50)
   @PostMapping("/task/{taskId}/read")
   @Audit(
@@ -706,7 +706,7 @@ public class FlowTaskController {
    * @param dto 任务操作参数（需含 taskId + userId + comment）
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:communicate:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:communicate", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.communicate", threshold = 50)
   @PostMapping("/task/communicate")
   @Audit(
@@ -729,7 +729,7 @@ public class FlowTaskController {
    * @param dto 任务操作参数（需含 taskId + userId + comment）
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:saveDraft:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:saveDraft", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.saveDraft", threshold = 50)
   @PostMapping("/task/saveDraft")
   @Audit(
@@ -752,7 +752,7 @@ public class FlowTaskController {
    * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:addApprover:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:addApprover", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.addApprover", threshold = 50)
   @PostMapping("/task/addApprover")
   @Audit(
@@ -776,7 +776,7 @@ public class FlowTaskController {
    * @param comment 取回说明（可选）
    * @return 统一响应结果，包含新创建的待办任务 ID
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:retract:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:retract", ttlSeconds = 5)
   @PostMapping("/task/{taskId}/retract")
   @Audit(
       module = "流程任务",
@@ -798,7 +798,7 @@ public class FlowTaskController {
    * @param reason 挂起原因（可选）
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:suspendTask:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:suspendTask", ttlSeconds = 5)
   @PostMapping("/task/{taskId}/suspend")
   @Audit(
       module = "流程任务",
@@ -819,7 +819,7 @@ public class FlowTaskController {
    * @param taskId 任务 ID
    * @return 统一响应结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:activateTask:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:activateTask", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.activateTask", threshold = 50)
   @PostMapping("/task/{taskId}/activate")
   @Audit(
@@ -863,7 +863,7 @@ public class FlowTaskController {
    *
    * @return 是否成功
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:pushMyTodoCount:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:task:pushMyTodoCount", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowtask.pushMyTodoCount", threshold = 50)
   @PostMapping("/todo/pushMine")
   @Audit(
@@ -940,7 +940,7 @@ public class FlowTaskController {
    * @param dto 授权参数
    * @return 授权记录 ID
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:createDelegateAuth:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:delegate:create", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowdelegate.createDelegateAuth", threshold = 50)
   @PostMapping("/delegateAuth/create")
   @Audit(
@@ -965,7 +965,7 @@ public class FlowTaskController {
    * @param id 授权记录 ID
    * @return 空响应
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:revokeDelegateAuth:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:delegate:revoke", ttlSeconds = 5)
   @RateLimit(resource = "workflow.flowdelegate.revokeDelegateAuth", threshold = 50)
   @PostMapping("/delegateAuth/{id}/revoke")
   @Audit(
@@ -1051,7 +1051,7 @@ public class FlowTaskController {
    */
   @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
   @RateLimit(resource = "workflow.FlowCcDO.pageCc", threshold = 50)
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:pageCc:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:cc:page", ttlSeconds = 5)
   @PostMapping("/cc/page")
   @Audit(
       module = "流程抄送",
@@ -1088,7 +1088,7 @@ public class FlowTaskController {
    * @param id 抄送记录 ID
    * @return 操作结果
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:ccMarkRead:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:cc:markRead", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowCcDO.ccMarkRead", threshold = 50)
   @PostMapping("/cc/{id}/read")
   @Audit(
@@ -1109,7 +1109,7 @@ public class FlowTaskController {
    *
    * @return 已标记已读的记录数
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:ccMarkAllRead:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:cc:markAllRead", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowCcDO.ccMarkAllRead", threshold = 50)
   @PostMapping("/cc/readAll")
   @Audit(
@@ -1160,7 +1160,7 @@ public class FlowTaskController {
    * @param operatorId 操作人 ID（用于审计日志）
    * @return 空响应
    */
-  @Idempotent(key = "ydsz:workflow:FlowTaskController:delete:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:workflow:attachment:delete", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowAttachmentDO.delete", threshold = 50)
   @DeleteMapping("/attachment/{attachmentId}")
   @Audit(
