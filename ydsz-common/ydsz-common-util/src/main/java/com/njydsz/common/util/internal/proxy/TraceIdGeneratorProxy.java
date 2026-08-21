@@ -134,7 +134,6 @@ public final class TraceIdGeneratorProxy {
   /**
    * 从 core 模块的 Record 实例转换为本地 ParsedTraceparent。
    *
-   * @param record core 模块的 ParsedTraceparent Record 实例
    * @return 本地 ParsedTraceparent；转换失败返回 null
    */
   private static ParsedTraceparent convertToParsedTraceparent(Object record) {

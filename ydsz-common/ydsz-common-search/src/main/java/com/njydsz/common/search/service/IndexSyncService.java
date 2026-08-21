@@ -320,7 +320,6 @@ public class IndexSyncService {
   /**
    * 将 DB 死信记录重建为 IndexOperation。
    *
-   * @param record DB 死信记录
    * @return 索引操作，null 表示无法重建（记录被丢弃）
    */
   private IndexOperation rebuildOperationFromDlq(PersistentDeadLetterQueue.DlqRecord record) {

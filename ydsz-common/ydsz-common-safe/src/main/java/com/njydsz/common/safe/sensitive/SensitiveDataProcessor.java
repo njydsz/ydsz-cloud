@@ -178,7 +178,6 @@ public final class SensitiveDataProcessor {
    * <p>Record 类型是不可变的，需要通过构造器反射创建新实例。 对每个 RecordComponent 对应的字段进行敏感数据处理后，通过 compact constructor
    * 创建新实例。
    *
-   * @param record 原始 Record 实例
    * @param maxDepth 剩余递归深度
    * @param visited 已处理对象集合
    * @param <T> Record 类型
