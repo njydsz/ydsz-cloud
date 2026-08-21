@@ -142,7 +142,9 @@ public class ConfigCliTool {
         String newPassword = null;
         for (int i = 2; i < args.length; i++) {
           if ("--format".equalsIgnoreCase(args[i])) {
+            // CHECKSTYLE.OFF: ModifiedControlVariable — 命令行参数解析需跳过 format 值，语义必要
             i++; // skip format value
+            // CHECKSTYLE.ON: ModifiedControlVariable
             continue;
           }
           if (oldPassword == null) {
