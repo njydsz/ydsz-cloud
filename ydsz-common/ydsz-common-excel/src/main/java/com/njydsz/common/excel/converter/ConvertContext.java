@@ -6,7 +6,7 @@ package com.njydsz.common.excel.converter;
  * <p>在转换器链中传递的上下文信息，包含当前行列信息、 日期格式、自动修剪、严格数字转换、1904日期窗口等配置。
  *
  * @author ydsz-team
- * @email ydsz-dev@ydszsoft.com
+
  * @version 1.0.0
  * @since 1.0.0
  */

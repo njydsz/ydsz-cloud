@@ -36,7 +36,9 @@ public class OrderItem implements Serializable {
 
   /** 排序方向 */
   public enum Direction {
+/** asc */
     ASC,
+/** desc */
     DESC;
 
     /**

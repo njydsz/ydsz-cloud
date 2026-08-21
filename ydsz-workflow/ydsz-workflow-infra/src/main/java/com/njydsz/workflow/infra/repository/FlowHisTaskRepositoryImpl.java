@@ -1,5 +1,6 @@
 package com.njydsz.workflow.infra.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -160,5 +161,31 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
   public long countDone(String assigneeId, String businessType, String flowCode,
       java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, String tenantId) {
     return hisTaskMapper.countDone(assigneeId, businessType, flowCode, startTime, endTime, tenantId);
+  }
+
+  @Override
+  public List<FlowHisTaskVO> selectByTimeRange(
+      String tenantId, String flowCode, LocalDateTime startTime, LocalDateTime endTime, int limit) {
+    return converter.flowHisTaskListToVO(
+        hisTaskMapper.selectList(
+            new LambdaQueryWrapper<FlowHisTaskDO>()
+                .eq(tenantId != null, FlowHisTaskDO::getTenantId, tenantId)
+                .eq(flowCode != null, FlowHisTaskDO::getFlowCode, flowCode)
+                .ge(startTime != null, FlowHisTaskDO::getFinishAt, startTime)
+                .le(endTime != null, FlowHisTaskDO::getFinishAt, endTime)
+                .eq(FlowHisTaskDO::getDeleted, 0)
+                .orderByDesc(FlowHisTaskDO::getFinishAt)
+                .last("LIMIT " + limit)));
+  }
+
+  @Override
+  public List<FlowHisTaskVO> selectRecentByTenant(String tenantId, int limit) {
+    return converter.flowHisTaskListToVO(
+        hisTaskMapper.selectList(
+            new LambdaQueryWrapper<FlowHisTaskDO>()
+                .eq(tenantId != null, FlowHisTaskDO::getTenantId, tenantId)
+                .eq(FlowHisTaskDO::getDeleted, 0)
+                .orderByDesc(FlowHisTaskDO::getFinishAt)
+                .last("LIMIT " + limit)));
   }
 }

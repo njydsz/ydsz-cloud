@@ -11,7 +11,7 @@ import com.njydsz.common.excel.converter.ConvertContext;
  * <p>处理目标类型为String的转换。支持从String、Double、Boolean、Date等原始值转换。 当automaticTrim为true时，自动去除字符串首尾空格。
  *
  * @author ydsz-team
- * @email ydsz-dev@ydszsoft.com
+
  * @version 1.0.0
  * @since 1.0.0
  */

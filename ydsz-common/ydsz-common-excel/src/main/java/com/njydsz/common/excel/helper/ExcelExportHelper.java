@@ -34,11 +34,12 @@ public class ExcelExportHelper {
 
   /**
    * 导出数据为 Excel 字节数组。
-   *
    * @param sheetName Sheet 名称
    * @param dataClass 数据类型（需有 @ExcelProperty 注解）
    * @param dataList 数据列表
    * @return Excel 文件字节数组
+   *
+   * @param <T> 泛型类型
    */
   public <T> byte[] export(String sheetName, Class<T> dataClass, List<T> dataList) {
     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -55,10 +56,11 @@ public class ExcelExportHelper {
 
   /**
    * 导出数据为 Excel 字节数组（默认 Sheet 名）。
-   *
    * @param dataClass 数据类型
    * @param dataList 数据列表
    * @return Excel 文件字节数组
+   *
+   * @param <T> 泛型类型
    */
   public <T> byte[] export(Class<T> dataClass, List<T> dataList) {
     return export("Sheet1", dataClass, dataList);

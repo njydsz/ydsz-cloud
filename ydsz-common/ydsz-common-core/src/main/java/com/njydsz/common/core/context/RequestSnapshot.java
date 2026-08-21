@@ -72,7 +72,11 @@ public final class RequestSnapshot {
     return traceId;
   }
 
-  /** 返回不可变请求头视图（仅包含构造时拷贝的键）。 */
+  /**
+   * 返回不可变请求头视图（仅包含构造时拷贝的键）。
+   *
+   * @return 返回值说明
+   */
   public Map<String, String> getHeaders() {
     return headers;
   }

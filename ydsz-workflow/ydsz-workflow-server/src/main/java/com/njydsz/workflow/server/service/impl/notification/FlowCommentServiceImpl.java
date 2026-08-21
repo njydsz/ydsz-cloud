@@ -16,18 +16,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.dto.FlowCommentCreateDTO;
 import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
 import com.njydsz.workflow.domain.repository.FlowCommentRepository;
+import com.njydsz.workflow.domain.repository.FlowQuickCommentRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowCommentDO;
 import com.njydsz.workflow.infra.entity.FlowQuickCommentDO;
-import com.njydsz.workflow.infra.mapper.FlowCommentMapper;
-import com.njydsz.workflow.infra.mapper.FlowQuickCommentMapper;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.service.FlowCommentService;
 import com.njydsz.workflow.server.service.FlowNotificationService;
@@ -102,9 +100,6 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
 @RequiredArgsConstructor
 public class FlowCommentServiceImpl implements FlowCommentService {
 
-  /** 评论记录 Mapper，负责 ydsz_flow_comment 表的复杂查询（无 Repository 等价方法时保留） */
-  private final FlowCommentMapper commentMapper;
-
   /** 审批意见仓储（domain 层契约），管理 ydsz_flow_comment 表 CRUD */
   private final FlowCommentRepository commentRepository;
 
@@ -117,9 +112,8 @@ public class FlowCommentServiceImpl implements FlowCommentService {
   /** P2-1: 通知服务（@Lazy 避免循环依赖） */
   @Lazy private final FlowNotificationService notificationService;
 
-  /** P2-1: 常用语 Mapper，负责 ydsz_flow_quick_comment 表的增删改查（含用户自定义 + 系统预设） */
-  // 注意：FlowQuickComment 无对应 Repository，mapper 暂时保留
-  private final FlowQuickCommentMapper quickCommentMapper;
+  /** P2-1: 常用语仓储（domain 层契约），管理 ydsz_flow_quick_comment 表 CRUD */
+  private final FlowQuickCommentRepository quickCommentRepository;
 
   /** P2-1: @提及正则，匹配 @{userId} 或 @userId 格式 */
   private static final Pattern MENTION_PATTERN =
@@ -230,14 +224,14 @@ public class FlowCommentServiceImpl implements FlowCommentService {
 
   @Override
   public List<FlowCommentDO> listByInstance(String tenantId, String instanceId) {
-    // Repository 中暂无 listByInstance 方法（带 tenantId 参数），需补齐
-    return commentMapper.listByInstance(tenantId, instanceId);
+    return commentRepository.findByInstanceAndTenant(tenantId, instanceId).stream()
+        .map(converter::entityToDO).toList();
   }
 
   @Override
   public List<FlowCommentDO> listRootComments(String tenantId, String instanceId) {
-    // Repository 中暂无带 tenantId 参数的 findRootComments 方法，签名不同，需补齐
-    return commentMapper.listRootComments(tenantId, instanceId);
+    return commentRepository.findRootCommentsByTenant(tenantId, instanceId).stream()
+        .map(converter::entityToDO).toList();
   }
 
   @Override
@@ -315,19 +309,11 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     }
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
     // 查询：用户自定义 + 系统预设（isSystem=1）
-    List<FlowQuickCommentDO> list =
-        quickCommentMapper.selectList(
-            new LambdaQueryWrapper<FlowQuickCommentDO>()
-                .eq(FlowQuickCommentDO::getUserId, userId)
-                .eq(FlowQuickCommentDO::getTenantId, tid)
-                .eq(FlowQuickCommentDO::getDeleted, 0));
+    List<FlowQuickCommentDO> list = quickCommentRepository.findActiveByUser(userId, tid).stream()
+        .map(converter::entityToDO).toList();
     // 系统预设（全局）
-    List<FlowQuickCommentDO> systemList =
-        quickCommentMapper.selectList(
-            new LambdaQueryWrapper<FlowQuickCommentDO>()
-                .eq(FlowQuickCommentDO::getIsSystem, 1)
-                .eq(FlowQuickCommentDO::getTenantId, tid)
-                .eq(FlowQuickCommentDO::getDeleted, 0));
+    List<FlowQuickCommentDO> systemList = quickCommentRepository.findActiveSystemByTenant(tid).stream()
+        .map(converter::entityToDO).toList();
     list.addAll(systemList);
     // 排序：sortNum 升序, useCount 降序
     list.sort(
@@ -365,7 +351,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     comment.setUseCount(0);
     comment.setIsSystem(0);
     comment.setTenantId(tenantId != null ? tenantId : TenantContextHolder.getTenantId());
-    quickCommentMapper.insert(comment);
+    quickCommentRepository.save(converter.entityToVO(comment));
     log.info("[FlowQuickCommentDO] 新增常用语: userId={} id={}", userId, comment.getId());
     return comment.getId();
   }
@@ -388,7 +374,8 @@ public class FlowCommentServiceImpl implements FlowCommentService {
           .message("error.workflow.msg_id_required")
           .build();
     }
-    FlowQuickCommentDO existing = quickCommentMapper.selectById(dto.getId());
+    FlowQuickCommentDO existing = quickCommentRepository.findById(dto.getId())
+        .map(converter::entityToDO).orElse(null);
     if (existing == null || existing.getDeleted() == 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -409,7 +396,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     if (dto.getSortNum() != null) {
       existing.setSortNum(dto.getSortNum());
     }
-    quickCommentMapper.updateById(existing);
+    quickCommentRepository.update(converter.entityToVO(existing));
   }
 
   /**
@@ -429,7 +416,8 @@ public class FlowCommentServiceImpl implements FlowCommentService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void deleteQuickComment(String id, String userId) {
-    FlowQuickCommentDO existing = quickCommentMapper.selectById(id);
+    FlowQuickCommentDO existing = quickCommentRepository.findById(id)
+        .map(converter::entityToDO).orElse(null);
     if (existing == null || existing.getDeleted() == 1) {
       return;
     }
@@ -447,7 +435,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
           .build();
     }
     existing.setDeleted(1);
-    quickCommentMapper.updateById(existing);
+    quickCommentRepository.update(converter.entityToVO(existing));
   }
 
   /**
@@ -466,10 +454,11 @@ public class FlowCommentServiceImpl implements FlowCommentService {
       return;
     }
     try {
-      FlowQuickCommentDO existing = quickCommentMapper.selectById(id);
+      FlowQuickCommentDO existing = quickCommentRepository.findById(id)
+          .map(converter::entityToDO).orElse(null);
       if (existing != null && existing.getDeleted() == 0) {
         existing.setUseCount((existing.getUseCount() == null ? 0 : existing.getUseCount()) + 1);
-        quickCommentMapper.updateById(existing);
+        quickCommentRepository.update(converter.entityToVO(existing));
       }
     } catch (Exception e) {
       log.warn("[FlowQuickCommentDO] 增加使用次数失败: id={} err={}", id, e.getMessage());

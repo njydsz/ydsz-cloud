@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.exception.ExcelWriteException;
@@ -56,6 +57,7 @@ import com.njydsz.literule.domain.service.DecisionTableExcelService;
  * @since 1.0.0
  */
 @Slf4j
+@Component
 public class DecisionTableExcelExporter implements DecisionTableExcelService {
 
   /** 元数据行数（HitPolicy/TableCode 等占 2 行） */

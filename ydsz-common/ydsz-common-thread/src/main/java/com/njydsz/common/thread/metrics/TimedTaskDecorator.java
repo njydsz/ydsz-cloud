@@ -1,9 +1,8 @@
 package com.njydsz.common.thread.metrics;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.lang.NonNull;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 任务执行耗时追踪装饰器。

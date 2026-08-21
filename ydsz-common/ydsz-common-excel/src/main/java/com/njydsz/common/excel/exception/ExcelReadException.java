@@ -91,7 +91,12 @@ public class ExcelReadException extends ExcelException {
     this.rawCellValue = rawCellValue;
   }
 
-  /** 创建文件不存在的异常 */
+  /**
+   * 创建文件不存在的异常
+   *
+   * @param filePath 文件路径
+   * @return 返回值说明
+   */
   public static ExcelReadException fileNotFound(String filePath) {
     ExcelReadException ex =
         new ExcelReadException(ExcelExceptionCode.READ_FILE_NOT_FOUND, "Excel文件不存在");
@@ -99,7 +104,13 @@ public class ExcelReadException extends ExcelException {
     return ex;
   }
 
-  /** 创建文件格式错误的异常 */
+  /**
+   * 创建文件格式错误的异常
+   *
+   * @param filePath 文件路径
+   * @param reason 原因
+   * @return 返回值说明
+   */
   public static ExcelReadException invalidFormat(String filePath, String reason) {
     ExcelReadException ex =
         new ExcelReadException(ExcelExceptionCode.READ_INVALID_FORMAT, "Excel文件格式无效: " + reason);
@@ -107,7 +118,16 @@ public class ExcelReadException extends ExcelException {
     return ex;
   }
 
-  /** 创建数据类型转换异常 */
+  /**
+   * 创建数据类型转换异常
+   *
+   * @param row 行对象
+   * @param col 列号
+   * @param rawValue 原始值
+   * @param targetType 目标类型
+   * @param cause 原因
+   * @return 返回值说明
+   */
   public static ExcelReadException conversionFailed(
       int row, int col, Object rawValue, Class<?> targetType, Throwable cause) {
     ExcelReadException ex =
@@ -123,7 +143,15 @@ public class ExcelReadException extends ExcelException {
     return ex;
   }
 
-  /** 创建数据验证失败的异常 */
+  /**
+   * 创建数据验证失败的异常
+   *
+   * @param row 行对象
+   * @param fieldName 字段名
+   * @param value 值
+   * @param reason 原因
+   * @return 返回值说明
+   */
   public static ExcelReadException validationFailed(
       int row, String fieldName, Object value, String reason) {
     ExcelReadException ex =

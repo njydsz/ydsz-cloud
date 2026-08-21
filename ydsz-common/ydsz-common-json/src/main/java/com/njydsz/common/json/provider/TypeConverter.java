@@ -143,7 +143,8 @@ final class TypeConverter {
     }
 
     StringBuilder sb = new StringBuilder(len);
-    for (int i = 0; i < len; i++) {
+    int i = 0;
+    while (i < len) {
       char c = str.charAt(i);
       if (c == '\\' && i + 1 < len) {
         i++;
@@ -186,8 +187,10 @@ final class TypeConverter {
             sb.append(escaped);
             break;
         }
+        i++;
       } else {
         sb.append(c);
+        i++;
       }
     }
     return sb.toString();

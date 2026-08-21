@@ -3,6 +3,7 @@ package com.njydsz.workflow.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.vo.FlowCategoryVO;
 
 /**
@@ -27,9 +28,20 @@ public interface FlowCategoryRepository {
   /**
    * 保存流程分类（新增）。
    *
-   * @param vo 流程分类 VO
+   * <p><b>合规说明（v2.23 DDD 分层规范）：</b>CUD 入参使用 {@link FlowCategoryDTO}（dto/ 包），
+   * 符合 §34.2.1（dto/ 命令请求参数 以 DTO 结尾）。
+   *
+   * @param dto 流程分类命令 DTO
    * @return 保存后的流程分类 VO（含生成的 id 与审计字段）
    */
+  FlowCategoryVO save(FlowCategoryDTO dto);
+
+  /**
+   * 保存流程分类（已废弃）。
+   *
+   * @deprecated 使用 {@link #save(FlowCategoryDTO)} 替代，CUD 入参应使用 DTO
+   */
+  @Deprecated
   FlowCategoryVO save(FlowCategoryVO vo);
 
   /**
@@ -74,9 +86,19 @@ public interface FlowCategoryRepository {
   /**
    * 更新流程分类。
    *
-   * @param vo 流程分类 VO（含 id）
+   * <p><b>合规说明（v2.23 DDD 分层规范）：</b>CUD 入参使用 {@link FlowCategoryDTO}（dto/ 包）。
+   *
+   * @param dto 流程分类命令 DTO（含 id）
    * @return 更新后的流程分类 VO
    */
+  FlowCategoryVO update(FlowCategoryDTO dto);
+
+  /**
+   * 更新流程分类（已废弃）。
+   *
+   * @deprecated 使用 {@link #update(FlowCategoryDTO)} 替代，CUD 入参应使用 DTO
+   */
+  @Deprecated
   FlowCategoryVO update(FlowCategoryVO vo);
 
   /**

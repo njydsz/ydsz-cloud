@@ -13,7 +13,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.ReceiptResult;
 import com.njydsz.message.domain.vo.MsgLogVO;
-import com.njydsz.message.domain.model.core.MsgTemplate;
+import com.njydsz.message.infra.entity.MsgTemplate;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.channel.sms.SmsProvider;

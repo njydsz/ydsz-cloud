@@ -182,11 +182,12 @@ public class ExcelFacade {
 
   /**
    * 创建 Excel 写入器并指定映射类型
-   *
    * @param fileName 目标 Excel 文件的完整路径
    * @param clazz 映射的源类类型
    * @param <T> 泛型参数
    * @return ExcelWriter 写入器实例
+   *
+   * @param dataSize 数据大小
    */
   public static <T> ExcelWriter write(String fileName, Class<T> clazz, int dataSize) {
     WriteMetadata metadata = new WriteMetadata();

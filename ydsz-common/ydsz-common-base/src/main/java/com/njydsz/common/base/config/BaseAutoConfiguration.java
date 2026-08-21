@@ -159,7 +159,9 @@ public class BaseAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   public BaseHealthIndicator baseHealthIndicator(
       BaseSecurityHeadersProperties securityHeadersProperties,
       DocProperties docProperties,
@@ -175,7 +177,9 @@ public class BaseAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(name = "coreHealthIndicator")
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   public CoreHealthIndicator coreHealthIndicator() {
     return new CoreHealthIndicator();
   }

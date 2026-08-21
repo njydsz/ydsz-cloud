@@ -78,7 +78,7 @@ public class ChunkedSSTTable {
   private byte[] simpleStrings;
 
   /** 按文件路径缓存的实例表 */
-  private static final ConcurrentHashMap<String, ChunkedSSTTable> instances =
+  private static final ConcurrentHashMap<String, ChunkedSSTTable> INSTANCES =
       new ConcurrentHashMap<>();
 
   /**

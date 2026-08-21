@@ -64,7 +64,7 @@ public final class IdGenerator {
   private static volatile boolean fallbackToUuid = false;
 
   /** 缓存 Bean 引用以跳过多次 SpringContextHolder 查找（仅成功结果被永久缓存） */
-  private static final AtomicReference<SnowflakeIdGenerator> cached = new AtomicReference<>();
+  private static final AtomicReference<SnowflakeIdGenerator> CACHED = new AtomicReference<>();
 
   /**
    * 上次获取失败的时间戳（毫秒）。

@@ -410,9 +410,15 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
 
   /** 获取指定头节点对应的 tail 指针 */
   private Node<K, V> getTail(Node<K, V> head) {
-    if (head == windowHead) return windowTail;
-    if (head == probationHead) return probationTail;
-    if (head == protectedHead) return protectedTail;
+    if (head == windowHead) {
+      return windowTail;
+    }
+    if (head == probationHead) {
+      return probationTail;
+    }
+    if (head == protectedHead) {
+      return protectedTail;
+    }
     return null;
   }
 

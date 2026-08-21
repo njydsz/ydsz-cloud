@@ -1,5 +1,8 @@
 package com.njydsz.common.json.provider;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Writer;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.Temporal;
@@ -91,6 +94,7 @@ public final class SerializationProvider {
   public static final class SerializationContext {
 
     /** 线程级 Context 持有者（自动初始化默认实例） */
+    // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
     public static final ThreadLocal<SerializationContext> CONTEXT =
         ThreadLocal.withInitial(
             () -> {
@@ -100,6 +104,7 @@ public final class SerializationProvider {
               ctx.fastWriterPool = new JSONWriter();
               return ctx;
             });
+    // CHECKSTYLE.ON: RegexpSinglelineJava
 
     /** 是否输出 null 值字段 */
     public boolean writeNulls;
@@ -381,7 +386,9 @@ public final class SerializationProvider {
    * @return true=抛异常，false=记录日志返回 null
    * @since 1.0.0
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   public static boolean isFailOnError() {
+  // CHECKSTYLE.ON: RegexpSinglelineJava
     return SerializationContext.CONTEXT.get().failOnError;
   }
 
@@ -390,10 +397,14 @@ public final class SerializationProvider {
    *
    * <p>在线程池环境中，应在任务完成后或线程归还前调用此方法
    *
+    // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
    * <p>注：11 个原 ThreadLocal 已合并到 {@link SerializationContext#CONTEXT}， 调用 {@link
+    // CHECKSTYLE.ON: RegexpSinglelineJava
    * SerializationContext#clear()} 一次即可全部清理。 {@code FieldMetadataLoader.NAMING_STRATEGY}、{@code
    * JsonParserUtil#useBigDecimal}、 {@code JSONReader.READER_POOL}、{@code
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
    * DeserializationProvider.DESERIALIZE_DEPTH} 属于独立 ThreadLocal，需一并清理。
+  // CHECKSTYLE.ON: RegexpSinglelineJava
    */
   public static void clearThreadLocals() {
     SerializationContext.clear();
@@ -590,7 +601,12 @@ public final class SerializationProvider {
     return sb;
   }
 
-  /** 序列化对象 */
+  /**
+   * 序列化对象
+   *
+   * @param obj 对象
+   * @return 返回值说明
+   */
   public static String serialize(Object obj) {
     if (obj == null) {
       return "null";
@@ -765,7 +781,12 @@ public final class SerializationProvider {
     return sb.toString();
   }
 
-  /** 格式化序列化（带缩进） */
+  /**
+   * 格式化序列化（带缩进）
+   *
+   * @param obj 对象
+   * @return 返回值说明
+   */
   public static String format(Object obj) {
     if (obj == null) {
       return "null";
@@ -908,11 +929,11 @@ public final class SerializationProvider {
    * @param out 输出流
    * @since 1.0.0
    */
-  public static void serializeToStream(Object obj, java.io.OutputStream out) {
+  public static void serializeToStream(Object obj, OutputStream out) {
     if (obj == null) {
       try {
         out.write(new byte[] {'n', 'u', 'l', 'l'});
-      } catch (java.io.IOException e) {
+      } catch (IOException e) {
         throw new JsonSerializationException(
                 JsonSerializationException.SERIALIZATION_ERROR,
                 "Failed to write null to OutputStream",
@@ -926,7 +947,7 @@ public final class SerializationProvider {
     byte[] bytes = serializeToBytes(obj);
     try {
       out.write(bytes);
-    } catch (java.io.IOException e) {
+    } catch (IOException e) {
       throw new JsonSerializationException(
               JsonSerializationException.SERIALIZATION_ERROR, "Failed to write to OutputStream", e)
           .setFieldPath(getCurrentFieldPath());
@@ -942,11 +963,11 @@ public final class SerializationProvider {
    * @param writer 字符输出流
    * @since 1.0.0
    */
-  public static void serializeToWriter(Object obj, java.io.Writer writer) {
+  public static void serializeToWriter(Object obj, Writer writer) {
     if (obj == null) {
       try {
         writer.write("null");
-      } catch (java.io.IOException e) {
+      } catch (IOException e) {
         throw new JsonSerializationException(
                 JsonSerializationException.SERIALIZATION_ERROR, "Failed to write null to Writer", e)
             .setFieldPath(getCurrentFieldPath());
@@ -957,7 +978,7 @@ public final class SerializationProvider {
     String json = serialize(obj);
     try {
       writer.write(json);
-    } catch (java.io.IOException e) {
+    } catch (IOException e) {
       throw new JsonSerializationException(
               JsonSerializationException.SERIALIZATION_ERROR, "Failed to write to Writer", e)
           .setFieldPath(getCurrentFieldPath());
@@ -1095,7 +1116,9 @@ public final class SerializationProvider {
       return false;
     }
 
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
     // 使用 JSONWriter 进行快速序列化（复用 ThreadLocal 池）
+  // CHECKSTYLE.ON: RegexpSinglelineJava
     JSONWriter writer = SerializationContext.CONTEXT.get().fastWriterPool;
     writer.reset();
 

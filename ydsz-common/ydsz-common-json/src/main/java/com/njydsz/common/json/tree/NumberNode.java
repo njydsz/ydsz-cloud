@@ -1,5 +1,8 @@
 package com.njydsz.common.json.tree;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * JSON 数值节点
  *
@@ -137,8 +140,8 @@ public final class NumberNode extends JsonNode {
         || n instanceof Short
         || n instanceof Byte
         || n instanceof java.math.BigInteger
-        || n instanceof java.util.concurrent.atomic.AtomicInteger
-        || n instanceof java.util.concurrent.atomic.AtomicLong;
+        || n instanceof AtomicInteger
+        || n instanceof AtomicLong;
   }
 
   @Override

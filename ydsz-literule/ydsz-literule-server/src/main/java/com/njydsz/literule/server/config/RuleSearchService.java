@@ -3,9 +3,9 @@ package com.njydsz.literule.server.config;
 import java.util.Collections;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
@@ -87,17 +87,14 @@ public class RuleSearchService {
    * @return 分页结果
    * @since 1.0.0
    */
-  public IPage<RuleDefinition> searchPage(
+  public PageResponse<List<RuleDefinition>> searchPage(
       String query, String status, String category, Boolean enabled, PageQuery pageQuery) {
-    IPage<RuleDefinitionVO> voPage =
+    PageResponse<List<RuleDefinitionVO>> voPage =
         ruleDefinitionRepository.searchPage(query, status, category, enabled, pageQuery);
     List<RuleDefinition> records =
-        voPage.getRecords().stream().map(this::voToRuleDefinition).toList();
-    IPage<RuleDefinition> result =
-        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
-            voPage.getCurrent(), voPage.getSize(), voPage.getTotal());
-    result.setRecords(records);
-    return result;
+        voPage.getData().stream().map(this::voToRuleDefinition).toList();
+    return PageResponse.success(
+        voPage.getTotal(), voPage.getPageNum(), voPage.getPageSize(), records);
   }
 
   /**

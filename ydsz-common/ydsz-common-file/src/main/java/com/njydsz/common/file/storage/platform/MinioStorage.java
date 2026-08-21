@@ -19,6 +19,7 @@ import io.minio.*;
 import io.minio.http.Method;
 import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.config.FileProperties;
@@ -33,8 +34,6 @@ import com.njydsz.common.file.storage.AbstractFileStorage;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.util.string.StringUtils;
-
-import okhttp3.OkHttpClient;
 
 /**
  * MinIO 对象存储实现。

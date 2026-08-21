@@ -47,8 +47,10 @@ public class RedisOperationExceptionHandler {
 
   /**
    * 拦截所有 Redis Ops 子组件的方法
-   *
    * <p>通过 AOP 切面统一捕获异常并转换为内部异常体系。 各组件内部如已有更精细的异常处理（如 FailOpenPolicy），可正常执行， 此拦截器仅兜底未被内部处理的异常。
+   *
+   * @param joinPoint joinPoint 参数
+   * @return 返回值说明
    */
   @Around("execution(* com.njydsz.common.redis.service.ops.*.*(..))")
   public Object handleOperationException(ProceedingJoinPoint joinPoint) throws Throwable {

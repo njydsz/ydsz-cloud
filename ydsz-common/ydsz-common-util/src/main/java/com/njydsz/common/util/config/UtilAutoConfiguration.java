@@ -109,7 +109,9 @@ public class UtilAutoConfiguration {
    * 字节码分析评估条件，避免在条件不满足时触发相关类的加载。
    */
   @Configuration(proxyBeanMethods = false)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   static class HealthIndicatorConfiguration {
 
     /**

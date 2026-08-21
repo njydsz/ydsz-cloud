@@ -35,35 +35,59 @@ package com.njydsz.common.excel.exception;
 public enum ExcelExceptionCode {
 
   // ==================== 读取异常 H01xxx ====================
+/** read file not found */
   READ_FILE_NOT_FOUND("H01001", "excel.read.fileNotFound"),
+/** read invalid format */
   READ_INVALID_FORMAT("H01002", "excel.read.invalidFormat"),
+/** read sheet not found */
   READ_SHEET_NOT_FOUND("H01003", "excel.read.sheetNotFound"),
+/** read conversion failed */
   READ_CONVERSION_FAILED("H01004", "excel.read.conversionFailed"),
+/** read annotation error */
   READ_ANNOTATION_ERROR("H01005", "excel.read.annotationError"),
+/** read out of memory */
   READ_OUT_OF_MEMORY("H01006", "excel.read.outOfMemory"),
+/** read validation failed */
   READ_VALIDATION_FAILED("H01007", "excel.read.validationFailed"),
+/** read file too large */
   READ_FILE_TOO_LARGE("H01008", "excel.read.fileTooLarge"),
+/** read io error */
   READ_IO_ERROR("H01009", "excel.read.ioError"),
 
   // ==================== 写入异常 H02xxx ====================
+/** write file access failed */
   WRITE_FILE_ACCESS_FAILED("H02001", "excel.write.fileAccessFailed"),
+/** write insufficient space */
   WRITE_INSUFFICIENT_SPACE("H02002", "excel.write.insufficientSpace"),
+/** write file locked */
   WRITE_FILE_LOCKED("H02003", "excel.write.fileLocked"),
+/** write annotation error */
   WRITE_ANNOTATION_ERROR("H02004", "excel.write.annotationError"),
+/** write format error */
   WRITE_FORMAT_ERROR("H02005", "excel.write.formatError"),
+/** write workbook create failed */
   WRITE_WORKBOOK_CREATE_FAILED("H02006", "excel.write.workbookCreateFailed"),
+/** write data failed */
   WRITE_DATA_FAILED("H02007", "excel.write.dataFailed"),
+/** write file too large */
   WRITE_FILE_TOO_LARGE("H02008", "excel.write.fileTooLarge"),
+/** write io error */
   WRITE_IO_ERROR("H02009", "excel.write.ioError"),
 
   // ==================== 转换异常 H03xxx ====================
+/** convert type mismatch */
   CONVERT_TYPE_MISMATCH("H03001", "excel.convert.typeMismatch"),
+/** convert date format */
   CONVERT_DATE_FORMAT("H03002", "excel.convert.dateFormat"),
+/** convert number format */
   CONVERT_NUMBER_FORMAT("H03003", "excel.convert.numberFormat"),
+/** convert enum invalid */
   CONVERT_ENUM_INVALID("H03004", "excel.convert.enumInvalid"),
 
   // ==================== 配置异常 H04xxx ====================
+/** config invalid parameter */
   CONFIG_INVALID_PARAMETER("H04001", "excel.config.invalidParameter"),
+/** config bean mapping */
   CONFIG_BEAN_MAPPING("H04002", "excel.config.beanMapping");
 
   /** 错误码 */

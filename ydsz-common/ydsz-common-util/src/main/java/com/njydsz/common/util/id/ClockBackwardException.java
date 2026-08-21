@@ -22,7 +22,6 @@ public class ClockBackwardException extends RuntimeException {
    * @param backwardMillis 回拨毫秒数
    * @param lastTimestamp 上次生成 ID 的时间戳
    * @param currentTime 当前时间戳
-   * @return 处理结果
    */
   public ClockBackwardException(long backwardMillis, long lastTimestamp, long currentTime) {
     super(

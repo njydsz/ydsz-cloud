@@ -166,7 +166,12 @@ public final class JSONReader {
     }
   }
 
-  /** 计算特性值 */
+  /**
+   * 计算特性值
+   *
+   * @param features 特性
+   * @return 返回值说明
+   */
   public static long of(Feature... features) {
     if (features == null) {
       return 0;
@@ -180,7 +185,12 @@ public final class JSONReader {
     return value;
   }
 
-  /** 从集合计算特性值 */
+  /**
+   * 从集合计算特性值
+   *
+   * @param features 特性
+   * @return 返回值说明
+   */
   public static long of(Set<Feature> features) {
     if (features == null) {
       return 0;
@@ -233,17 +243,23 @@ public final class JSONReader {
    *
    * @since 1.2.3
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<Integer> CALL_MAX_DEPTH = new ThreadLocal<>();
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /**
    * 线程级泛型递归深度覆盖（语义同 {@link #CALL_MAX_DEPTH}）。
    *
    * @since 1.2.3
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<Integer> CALL_MAX_GENERIC_DEPTH = new ThreadLocal<>();
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /** ThreadLocal 读取器池（复用 JSONReader 实例和 char[] 缓冲区，避免 GC 开销） */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<JSONReader> READER_POOL = new ThreadLocal<>();
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /**
    * 清理当前线程的 ThreadLocal 读取器池与深度覆盖。
@@ -261,10 +277,11 @@ public final class JSONReader {
 
   /**
    * 构造函数
-   *
    * <p><b>性能提示：</b>此构造函数会调用 {@code String.toCharArray()} 创建防御性拷贝。 高频场景应优先使用 {@link
    * #getPooledReader(String)} + {@link #reset(String)} 复用 char[] 缓冲区， 避免每次反序列化都分配新的
    * char[]。ThreadLocal 池已在 {@link #getPooledReader} 中实现。
+   *
+   * @param json JSON 字符串
    */
   public JSONReader(String json) {
     this.buf = json.toCharArray();
@@ -274,7 +291,13 @@ public final class JSONReader {
     this.instanceMaxGenericDepth = null;
   }
 
-  /** 构造函数（char[] 模式） */
+  /**
+   * 构造函数（char[] 模式）
+   *
+   * @param buf 字符缓冲区
+   * @param offset 偏移量
+   * @param length 长度
+   */
   public JSONReader(char[] buf, int offset, int length) {
     this.buf = buf;
     this.pos = offset;
@@ -547,8 +570,9 @@ public final class JSONReader {
 
   /**
    * 查看当前字符（不跳过空白，不移动位置）
-   *
    * <p>在已调用 skipWhitespace() 后使用，避免 peek() 的双重空白扫描开销
+   *
+   * @return 返回值说明
    */
   public char peekChar() {
     return (pos < len) ? buf[pos] : '\0';
@@ -610,8 +634,10 @@ public final class JSONReader {
    */
   public char nextChar() {
     skipWhitespace();
-    if (pos >= len) throw new JsonDeserializationException(
-        JsonDeserializationException.PARSE_ERROR, "Unexpected end of JSON at position " + pos);
+    if (pos >= len) {
+      throw new JsonDeserializationException(
+          JsonDeserializationException.PARSE_ERROR, "Unexpected end of JSON at position " + pos);
+    }
     return buf[pos++];
   }
 
@@ -638,7 +664,9 @@ public final class JSONReader {
       if (buf[pos + i] != fieldName.charAt(i)) {
         // 字段名不匹配：先跳过剩余字段名（到下一个 \"），再跳过 : 和值\n                while (pos < len && buf[pos] != '"')
         // pos++;
-        if (pos < len && buf[pos] == '"') pos++; // 跳过结束引号
+        if (pos < len && buf[pos] == '"') {
+          pos++; // 跳过结束引号
+        }
         skipWhitespace();
         if (pos < len && buf[pos] == ':') {
           pos++;
@@ -672,8 +700,9 @@ public final class JSONReader {
 
   /**
    * 读取浮点数（快速路径：直接从 char[] 解析，避免 String 分配）
-   *
    * <p>对于有效数字不超过7位且无指数的常见浮点数，直接从 char[] 计算， 消除 new String() + Float.parseFloat() 的分配和解析开销
+   *
+   * @return 返回值说明
    */
   public float readFloat() {
     skipWhitespace();
@@ -779,9 +808,11 @@ public final class JSONReader {
       int depth = 1;
       while (depth > 0 && pos < len) {
         char ch2 = buf[pos];
-        if (ch2 == '{') depth++;
-        else if (ch2 == '}') depth--;
-        else if (ch2 == '"') {
+        if (ch2 == '{') {
+          depth++;
+        } else if (ch2 == '}') {
+          depth--;
+        } else if (ch2 == '"') {
           skipStringValue();
           continue;
         }
@@ -794,9 +825,9 @@ public final class JSONReader {
         char ch2 = buf[pos];
         if (ch2 == '[') {
           depth++;
-        }
-        else if (ch2 == ']') depth--;
-        else if (ch2 == '"') {
+        } else if (ch2 == ']') {
+          depth--;
+        } else if (ch2 == '"') {
           skipStringValue();
           continue;
         }
@@ -807,7 +838,9 @@ public final class JSONReader {
     } else {
       while (pos < len) {
         char ch2 = buf[pos];
-        if (ch2 == ',' || ch2 == '}' || ch2 == ']' || ch2 <= ' ') break;
+        if (ch2 == ',' || ch2 == '}' || ch2 == ']' || ch2 <= ' ') {
+          break;
+        }
         pos++;
       }
     }
@@ -825,15 +858,17 @@ public final class JSONReader {
    */
   public String readString() {
     char quote = nextChar();
-    if (quote != '"' && quote != '\'')
+    if (quote != '"' && quote != '\'') {
       throw new IllegalStateException("Expected string, got: " + quote);
+      }
     return readStringContent(quote);
   }
 
   /**
    * 直接读取字符串值（跳过 skipWhitespace，在已定位到引号位置时使用）
-   *
    * <p>解析器中 readFieldNameHash() 已跳过空白和冒号， 使用此方法避免重复的 skipWhitespace() 调用
+   *
+   * @return 返回值说明
    */
   public String readStringDirect() {
     if (pos >= len || buf[pos] != '"') {
@@ -930,7 +965,9 @@ public final class JSONReader {
             sb.append(escaped);
             break;
         }
-      } else sb.append(ch);
+      } else {
+        sb.append(ch);
+      }
     }
     return sb.toString();
   }
@@ -957,7 +994,9 @@ public final class JSONReader {
       if (ch >= '0' && ch <= '9') {
         value = value * 10 + (ch - '0');
         pos++;
-      } else break;
+      } else {
+        break;
+      }
     }
     return negative ? -value : value;
   }
@@ -984,17 +1023,19 @@ public final class JSONReader {
       if (ch >= '0' && ch <= '9') {
         value = value * 10 + (ch - '0');
         pos++;
-      } else break;
+      } else {
+        break;
+      }
     }
     return negative ? -value : value;
   }
 
   /**
    * 读取双精度浮点数（快速路径：直接从 char[] 解析，避免 String 分配）
-   *
    * <p>对于有效数字不超过15位且无指数的常见浮点数，直接从 char[] 计算， 消除 new String() + Double.parseDouble() 的分配和解析开销
-   *
    * <p>参考 FastJSON2 底层实现：significand / POW10[scale] 直接计算， 避免 String 中间对象创建和 JDK 解析器开销
+   *
+   * @return 返回值说明
    */
   public double readDouble() {
     skipWhitespace();
@@ -1121,8 +1162,11 @@ public final class JSONReader {
         && buf[pos] == 'n'
         && buf[pos + 1] == 'u'
         && buf[pos + 2] == 'l'
-        && buf[pos + 3] == 'l') pos += 4;
-    else throw new IllegalStateException("Expected null, got: " + buf[pos]);
+        && buf[pos + 3] == 'l') {
+      pos += 4;
+    } else {
+      throw new IllegalStateException("Expected null, got: " + buf[pos]);
+    }
   }
 
   /**
@@ -1147,7 +1191,9 @@ public final class JSONReader {
    * @throws IllegalStateException 当当前字符非 {@code '{'}
    */
   public void readObjectStart() {
-    if (nextChar() != '{') throw new IllegalStateException("Expected '{'");
+    if (nextChar() != '{') {
+      throw new IllegalStateException("Expected '{'");
+    }
   }
 
   /**
@@ -1156,7 +1202,9 @@ public final class JSONReader {
    * @throws IllegalStateException 当当前字符非 {@code '}'}
    */
   public void readObjectEnd() {
-    if (nextChar() != '}') throw new IllegalStateException("Expected '}'");
+    if (nextChar() != '}') {
+      throw new IllegalStateException("Expected '}'");
+    }
   }
 
   /**
@@ -1231,7 +1279,11 @@ public final class JSONReader {
     return name;
   }
 
-  /** 读取字段名哈希码（FNV-1a，避免创建 String 对象） */
+  /**
+   * 读取字段名哈希码（FNV-1a，避免创建 String 对象）
+   *
+   * @return 返回值说明
+   */
   public long readFieldNameHash() {
     if (pos >= len) {
       return -1;
@@ -1327,9 +1379,11 @@ public final class JSONReader {
       int depth = 1;
       while (depth > 0 && pos < len) {
         char ch2 = buf[pos];
-        if (ch2 == '{') depth++;
-        else if (ch2 == '}') depth--;
-        else if (ch2 == '"') {
+        if (ch2 == '{') {
+          depth++;
+        } else if (ch2 == '}') {
+          depth--;
+        } else if (ch2 == '"') {
           skipStringValue();
           continue;
         }
@@ -1342,9 +1396,9 @@ public final class JSONReader {
         char ch2 = buf[pos];
         if (ch2 == '[') {
           depth++;
-        }
-        else if (ch2 == ']') depth--;
-        else if (ch2 == '"') {
+        } else if (ch2 == ']') {
+          depth--;
+        } else if (ch2 == '"') {
           skipStringValue();
           continue;
         }
@@ -1352,13 +1406,18 @@ public final class JSONReader {
       }
     } else if (ch == '"') {
       readString();
-    } else if (ch == 't') pos += 4;
-    else if (ch == 'f') pos += 5;
-    else if (ch == 'n') pos += 4;
-    else {
+    } else if (ch == 't') {
+      pos += 4;
+    } else if (ch == 'f') {
+      pos += 5;
+    } else if (ch == 'n') {
+      pos += 4;
+    } else {
       while (pos < len) {
         char ch2 = buf[pos];
-        if (ch2 == ',' || ch2 == '}' || ch2 == ']' || ch2 <= ' ') break;
+        if (ch2 == ',' || ch2 == '}' || ch2 == ']' || ch2 <= ' ') {
+          break;
+        }
         pos++;
       }
     }
@@ -1408,8 +1467,10 @@ public final class JSONReader {
       throw new JsonDeserializationException("JSON nesting depth exceeds limit: " + depth, pos);
     }
     skipWhitespace();
-    if (pos >= len || buf[pos] != '[') throw new JsonDeserializationException(
-        JsonDeserializationException.PARSE_ERROR, "Expected [ at position " + pos);
+    if (pos >= len || buf[pos] != '[') {
+      throw new JsonDeserializationException(
+          JsonDeserializationException.PARSE_ERROR, "Unexpected end of JSON at position " + pos);
+    }
     pos++;
     List<Object> result = new ArrayList<>();
     while (pos < len) {
@@ -1448,13 +1509,15 @@ public final class JSONReader {
     if (elementType == long.class || elementType == Long.class) {
       return Long.valueOf(readLong());
     }
-    if (elementType == double.class || elementType == Double.class)
+    if (elementType == double.class || elementType == Double.class) {
       return Double.valueOf(readDouble());
+      }
     if (elementType == float.class || elementType == Float.class) {
       return Float.valueOf(readFloat());
     }
-    if (elementType == boolean.class || elementType == Boolean.class)
+    if (elementType == boolean.class || elementType == Boolean.class) {
       return Boolean.valueOf(readBoolean());
+      }
     return readAnyValue(depth);
   }
 
@@ -1471,7 +1534,9 @@ public final class JSONReader {
     if (ch == '"') {
       return readString();
     }
-    if (ch == '{') return readObjectMap(depth + 1);
+    if (ch == '{') {
+      return readObjectMap(depth + 1);
+    }
     if (ch == '[') {
       return readArray(Object.class, depth + 1);
     }
@@ -1509,8 +1574,10 @@ public final class JSONReader {
       throw new JsonDeserializationException("JSON nesting depth exceeds limit: " + depth, pos);
     }
     skipWhitespace();
-    if (pos >= len || buf[pos] != '{') throw new JsonDeserializationException(
-        JsonDeserializationException.PARSE_ERROR, "Expected { at position " + pos);
+    if (pos >= len || buf[pos] != '{') {
+      throw new JsonDeserializationException(
+          JsonDeserializationException.PARSE_ERROR, "Unexpected end of JSON at position " + pos);
+    }
     pos++;
     Map<String, Object> result = new HashMap<>();
     while (pos < len) {

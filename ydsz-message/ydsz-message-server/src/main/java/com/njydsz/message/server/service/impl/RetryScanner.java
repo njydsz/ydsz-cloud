@@ -16,7 +16,7 @@ import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.common.util.id.RandomUtils;
 import com.njydsz.message.domain.constant.MessageConstants;
-import com.njydsz.message.domain.model.core.MsgLog;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;

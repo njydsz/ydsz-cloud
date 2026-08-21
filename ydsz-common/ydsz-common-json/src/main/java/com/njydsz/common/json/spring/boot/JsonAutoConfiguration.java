@@ -47,7 +47,9 @@ import com.njydsz.common.json.spring.JsonProperties;
 @EnableConfigurationProperties(JsonProperties.class)
 @ConditionalOnClass(JsonConfig.class)
 @AutoConfigureBefore(
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
     name = {"org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration"})
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 @ConditionalOnProperty(
     prefix = "ydsz.json",
     name = "enabled",
@@ -76,7 +78,9 @@ public class JsonAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(JsonHttpMessageConverter.class)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.http.converter.HttpMessageConverter")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   public JsonHttpMessageConverter ydszJsonHttpMessageConverter(JsonProperties properties) {
     JsonHttpMessageConverter converter = new JsonHttpMessageConverter();
     converter.setMaxRequestBodySize(properties.getMaxRequestBodySize());

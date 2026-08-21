@@ -94,55 +94,98 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
   /** per-cache 配置映射 */
   private Map<String, YdszCacheProperties.CacheConfig> perCacheConfigs = Collections.emptyMap();
 
-  /** 设置缓存类型 */
+  /**
+   * 设置缓存类型
+   *
+   * @param cacheType cacheType 参数
+   */
   public void setCacheType(CacheType cacheType) {
     this.cacheType = cacheType;
   }
 
-  /** 设置最大容量 */
+  /**
+   * 设置最大容量
+   *
+   * @param maximumSize maximumSize 参数
+   */
   public void setMaximumSize(long maximumSize) {
     this.maximumSize = maximumSize;
   }
 
-  /** 设置写入后过期时间 */
+  /**
+   * 设置写入后过期时间
+   *
+   * @param duration 时长
+   * @param timeUnit timeUnit 参数
+   */
   public void setExpireAfterWrite(long duration, TimeUnit timeUnit) {
     this.expireAfterWrite = duration;
     this.expireAfterWriteTimeUnit = timeUnit;
   }
 
-  /** 设置初始容量 */
+  /**
+   * 设置初始容量
+   *
+   * @param initialCapacity 初始容量
+   */
   public void setInitialCapacity(int initialCapacity) {
     this.initialCapacity = initialCapacity;
   }
 
-  /** 设置是否允许 null 值 */
+  /**
+   * 设置是否允许 null 值
+   *
+   * @param allowNullValues allowNullValues 参数
+   */
   public void setAllowNullValues(boolean allowNullValues) {
     this.allowNullValues = allowNullValues;
   }
 
-  /** 设置是否启用统计 */
+  /**
+   * 设置是否启用统计
+   *
+   * @param recordStats recordStats 参数
+   */
   public void setRecordStats(boolean recordStats) {
     this.recordStats = recordStats;
   }
 
-  /** 设置访问后过期时间 */
+  /**
+   * 设置访问后过期时间
+   *
+   * @param duration 时长
+   * @param timeUnit timeUnit 参数
+   */
   public void setExpireAfterAccess(long duration, TimeUnit timeUnit) {
     this.expireAfterAccess = duration;
     this.expireAfterAccessTimeUnit = timeUnit;
   }
 
-  /** 设置刷新间隔 */
+  /**
+   * 设置刷新间隔
+   *
+   * @param duration 时长
+   * @param timeUnit timeUnit 参数
+   */
   public void setRefreshAfterWrite(long duration, TimeUnit timeUnit) {
     this.refreshAfterWrite = duration;
     this.refreshAfterWriteTimeUnit = timeUnit;
   }
 
-  /** 设置预定义的缓存名称 */
+  /**
+   * 设置预定义的缓存名称
+   *
+   * @param cacheNames cacheNames 参数
+   */
   public void setCacheNames(Collection<String> cacheNames) {
     this.cacheNames = cacheNames;
   }
 
-  /** 设置自定义缓存构建器 */
+  /**
+   * 设置自定义缓存构建器
+   *
+   * @param cacheBuilder cacheBuilder 参数
+   */
   public void setCacheBuilder(Function<String, Cache<Object, Object>> cacheBuilder) {
     this.cacheBuilder = cacheBuilder;
   }

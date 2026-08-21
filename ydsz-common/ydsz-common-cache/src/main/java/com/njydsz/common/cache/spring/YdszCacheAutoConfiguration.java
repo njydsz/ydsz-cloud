@@ -88,7 +88,9 @@ public class YdszCacheAutoConfiguration {
       name = "ydsz.cache.health-check.enabled",
       havingValue = "true",
       matchIfMissing = true)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   public SpringCacheHealthIndicator springCacheHealthIndicator(YdszCacheManager cacheManager) {
     return new SpringCacheHealthIndicator(cacheManager);
   }
@@ -109,7 +111,9 @@ public class YdszCacheAutoConfiguration {
       havingValue = "true",
       matchIfMissing = true)
   public CacheHealthIndicator cacheHealthIndicator() {
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
     return new CacheHealthIndicator();
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   }
 
   /**

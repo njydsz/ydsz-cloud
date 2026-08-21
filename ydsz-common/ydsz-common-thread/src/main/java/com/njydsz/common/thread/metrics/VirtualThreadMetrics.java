@@ -22,6 +22,7 @@ import org.springframework.lang.NonNull;
  * @since 1.3.0
  */
 public class VirtualThreadMetrics implements MeterBinder {
+/** default metric prefix */
 
   public static final String DEFAULT_METRIC_PREFIX = "ydsz.virtual.executor";
 

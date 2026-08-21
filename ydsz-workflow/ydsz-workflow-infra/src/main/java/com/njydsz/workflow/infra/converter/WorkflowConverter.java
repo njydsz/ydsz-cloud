@@ -8,6 +8,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.dto.FlowDefinitionDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
@@ -169,6 +170,8 @@ public interface WorkflowConverter {
   // ===== FlowQuickCommentDO =====
   FlowQuickCommentVO entityToVO(FlowQuickCommentDO entity);
 
+  FlowQuickCommentDO entityToDO(FlowQuickCommentVO vo);
+
   List<FlowQuickCommentVO> flowQuickCommentListToVO(List<FlowQuickCommentDO> entities);
 
   // ===== FlowRunTaskDO =====
@@ -232,6 +235,9 @@ FlowRunTaskDO dtoToDO(FlowRunTaskDTO dto);
 
 /** 流程定义 DTO → 流程定义 DO。 */
 FlowDefinitionDO dtoToDO(FlowDefinitionDTO dto);
+
+/** 流程分类 DTO → 流程分类 DO。 */
+FlowCategoryDO dtoToDO(FlowCategoryDTO dto);
 
   /** 流程节点 VO → 流程节点 DO。 */
   FlowNodeDO entityToDO(FlowNodeVO vo);

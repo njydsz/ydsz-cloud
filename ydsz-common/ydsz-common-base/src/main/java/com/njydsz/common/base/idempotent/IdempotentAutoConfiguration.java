@@ -20,7 +20,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.web.servlet.HandlerInterceptor")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 @ConditionalOnProperty(
     prefix = "ydsz.base.idempotent",
     name = "enabled",

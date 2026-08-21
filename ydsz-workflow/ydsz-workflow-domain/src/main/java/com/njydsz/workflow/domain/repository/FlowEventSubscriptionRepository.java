@@ -160,4 +160,15 @@ public interface FlowEventSubscriptionRepository {
    * @return 受影响行数
    */
   int cancelByInstance(String instanceId, String reason);
+
+  /**
+   * 按实例 ID 查询事件订阅列表（按创建时间倒序）。
+   *
+   * <p>与 {@link #findByInstanceId(String)} 类似，但按 created_at 倒序排列，
+   * 用于前端展示。
+   *
+   * @param instanceId 实例 ID
+   * @return 事件订阅 VO 列表
+   */
+  List<FlowEventSubscriptionVO> findByInstanceOrderByCreatedAtDesc(String instanceId);
 }

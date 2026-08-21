@@ -15,7 +15,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.message.domain.model.core.MsgTemplate;
+import com.njydsz.message.infra.entity.MsgTemplate;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.service.template.TemplateService;
 

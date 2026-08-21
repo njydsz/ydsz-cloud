@@ -103,7 +103,9 @@ public class SeataAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(TccTransactionLogStore.class)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.data.redis.core.RedisTemplate")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnProperty(prefix = "ydsz.seata", name = "tcc-log-store", havingValue = "redis")
   public TccTransactionLogStore redisTccTransactionLogStore(
       ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
@@ -129,7 +131,9 @@ public class SeataAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(TccTransactionLogStore.class)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.jdbc.core.JdbcTemplate")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnProperty(prefix = "ydsz.seata", name = "tcc-log-store", havingValue = "db")
   public TccTransactionLogStore dbTccTransactionLogStore(
       JdbcTemplate jdbcTemplate, SeataProperties properties) {
@@ -262,7 +266,9 @@ public class SeataAutoConfiguration {
 
   /** XID Servlet 过滤器（当 Spring Web 在类路径时注册） */
   @Bean
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.web.filter.OncePerRequestFilter")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnMissingBean(XidServletFilter.class)
   public XidServletFilter xidServletFilter(XidPropagator xidPropagator) {
     return new XidServletFilter(xidPropagator);
@@ -293,7 +299,9 @@ public class SeataAutoConfiguration {
    * <p>当 Spring Boot Health 在类路径时注册
    */
   @Bean
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnMissingBean(SeataHealthIndicator.class)
   public SeataHealthIndicator seataHealthIndicator(
       SeataProperties properties,
@@ -351,7 +359,9 @@ public class SeataAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(MqXidPropagator.class)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.apache.rocketmq.client.producer.DefaultMQProducer")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   public RocketMqXidPropagator mqXidPropagator(
       ObjectProvider<org.apache.rocketmq.client.producer.DefaultMQProducer> producerProvider,
       ObjectProvider<XidPropagator> xidPropagatorProvider) {
@@ -370,7 +380,9 @@ public class SeataAutoConfiguration {
    * <p>当 Seata 在类路径且 {@code seata-at-enabled=true} 时注册 {@link SeataTransactionManager}，不再使用反射调用。
    */
   @Configuration
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.apache.seata.tm.api.GlobalTransactionContext")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnProperty(
       prefix = "ydsz.seata",
       name = "seata-at-enabled",

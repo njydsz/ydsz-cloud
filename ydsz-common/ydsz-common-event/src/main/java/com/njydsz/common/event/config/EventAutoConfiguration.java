@@ -159,7 +159,9 @@ public class EventAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   public OutboxHealthIndicator outboxHealthIndicator(OutboxRepository outboxRepository) {
     return new OutboxHealthIndicator(outboxRepository);
   }
@@ -216,7 +218,9 @@ public class EventAutoConfiguration {
    * @since 1.6.0 由独立顶层配置类改为嵌套配置类
    */
   @Configuration
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.apache.rocketmq.spring.core.RocketMQTemplate")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnBean(type = "org.apache.rocketmq.spring.core.RocketMQTemplate")
   public static class RocketMqGatewayConfiguration {
 

@@ -1,5 +1,6 @@
 package com.njydsz.common.excel.core.security;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -45,7 +46,7 @@ public final class FormulaInjectionGuard {
     if (prop != null && !prop.trim().isEmpty()) {
       try {
         String[] parts = prop.split(",");
-        List<String> prefixes = new java.util.ArrayList<>(parts.length);
+        List<String> prefixes = new ArrayList<>(parts.length);
         for (String part : parts) {
           String trimmed = part.trim();
           if (!trimmed.isEmpty()) {

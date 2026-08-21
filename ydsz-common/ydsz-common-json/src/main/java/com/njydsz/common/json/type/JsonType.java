@@ -37,7 +37,8 @@ import java.lang.reflect.Type;
  * Map&lt;String, User&gt; map = YdszJson.fromJson(json, new JsonType&lt;Map&lt;String, User&gt;&gt;() {});
  *
  * // 嵌套泛型
- * List&lt;Map&lt;String, List&lt;User&gt;&gt;&gt; complex = YdszJson.fromJson(json, new JsonType&lt;List&lt;Map&lt;String, List&lt;User&gt;&gt;&gt;&gt;() {});
+ * List&lt;Map&lt;String, List&lt;User&gt;&gt;&gt; complex =
+ *     YdszJson.fromJson(json, new JsonType&lt;List&lt;Map&lt;String, List&lt;User&gt;&gt;&gt;&gt;() {});
  * </pre>
  *
  * <p><b>实现原理：</b>
@@ -58,6 +59,8 @@ import java.lang.reflect.Type;
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @param <T> 泛型类型
  */
 public abstract class JsonType<T> implements Comparable<JsonType<T>> {
 

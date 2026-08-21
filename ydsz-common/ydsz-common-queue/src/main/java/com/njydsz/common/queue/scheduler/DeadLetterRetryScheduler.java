@@ -1,8 +1,8 @@
 package com.njydsz.common.queue.scheduler;
 
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;

@@ -29,8 +29,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.metrics.LockMetrics;
-import com.njydsz.common.lock.scheduler.LockWatchDog;
 import com.njydsz.common.lock.scheduler.LockWatchDog.WatchTask;
+import com.njydsz.common.lock.scheduler.LockWatchDog;
 
 /**
  * 分布式锁运维管理控制器
@@ -54,7 +54,9 @@ import com.njydsz.common.lock.scheduler.LockWatchDog.WatchTask;
 @RestController
 @RequestMapping("/admin/lock")
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 @ConditionalOnBean(StringRedisTemplate.class)
 @Tag(name = "锁运维管理", description = "分布式锁运行时管理与死锁恢复")
 public class LockAdminController {

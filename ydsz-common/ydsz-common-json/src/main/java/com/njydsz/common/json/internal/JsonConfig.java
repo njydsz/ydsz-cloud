@@ -48,7 +48,7 @@ public final class JsonConfig implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  private static final AtomicReference<JsonConfig> instance = new AtomicReference<>();
+  private static final AtomicReference<JsonConfig> INSTANCE = new AtomicReference<>();
 
   /**
    * 全局配置版本号，每次 install() 自增。

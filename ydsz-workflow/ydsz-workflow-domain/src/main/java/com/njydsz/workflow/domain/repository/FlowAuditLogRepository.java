@@ -1,5 +1,6 @@
 package com.njydsz.workflow.domain.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -101,4 +102,24 @@ public interface FlowAuditLogRepository {
    */
   List<FlowAuditLogVO> findByBusinessTypeAndTarget(
       String businessType, String targetId, int offset, int limit);
+
+  /**
+   * 按业务类型 + 操作动作列表统计审计日志数量（带租户与时间范围过滤）。
+   *
+   * <p>用于代批率统计：统计 {@code businessType + action IN (...)} 且租户匹配、
+   * 时间在 {@code [startTime, endTime]} 区间内的记录数。
+   *
+   * @param businessType 业务类型
+   * @param actions 操作动作列表（如 PASS / REJECT）
+   * @param tenantId 租户 ID（可为 null，表示不过滤）
+   * @param startTime 开始时间（可为 null）
+   * @param endTime 结束时间（可为 null）
+   * @return 符合条件的记录数
+   */
+  long countByBusinessTypeAndActions(
+      String businessType,
+      List<String> actions,
+      String tenantId,
+      LocalDateTime startTime,
+      LocalDateTime endTime);
 }

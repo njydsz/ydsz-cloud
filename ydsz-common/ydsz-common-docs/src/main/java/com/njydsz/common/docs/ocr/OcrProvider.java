@@ -36,7 +36,9 @@ import com.njydsz.common.util.io.TempFileManager;
  */
 @Slf4j
 @Component
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.apache.pdfbox.rendering.PDFRenderer")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 public class OcrProvider {
 
   /** 默认渲染 DPI */

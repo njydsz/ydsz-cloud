@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,10 +32,6 @@ import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
-import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowEfficiencyService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
 
@@ -126,45 +121,16 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
 @Transactional(readOnly = true)
 public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
-  /**
-   * 历史任务 Mapper，查询审批效率统计的基础数据源。
-   *
-   * <p>保留 Mapper 调用，因为本 Service 所有查询均为复杂聚合（selectList 带复杂条件、
-   * nodeDurationStats 等），在 Repository 中暂无等价方法。
-   */
-  private final FlowHisTaskMapper hisTaskMapper;
-
-  /** 历史任务仓储（domain 层契约），提供基础 CRUD 方法 */
+  /** 历史任务仓储（domain 层契约），提供基础 CRUD 与聚合统计方法 */
   private final FlowHisTaskRepository hisTaskRepository;
 
-  /**
-   * 审计日志 Mapper（用于统计真实代批率，数据来源 ydsz_flow_audit_log）。
-   *
-   * <p>保留 Mapper 调用，因为 selectCount 走复杂 LambdaQueryWrapper，在 Repository 中暂无等价方法。
-   */
-  private final FlowAuditLogMapper auditLogMapper;
-
-  /** 审计日志仓储（domain 层契约），提供基础 CRUD 方法 */
+  /** 审计日志仓储（domain 层契约），提供基础 CRUD 与统计方法 */
   private final FlowAuditLogRepository auditLogRepository;
 
-  /**
-   * 待办任务 Mapper（用于卡单检测）。
-   *
-   * <p>保留 Mapper 调用，因为 selectList 走复杂 LambdaQueryWrapper，在 Repository 中暂无等价方法。
-   */
-  private final FlowRunTaskMapper taskMapper;
-
-  /** 运行时任务仓储（domain 层契约），提供基础 CRUD 方法 */
+  /** 运行时任务仓储（domain 层契约），提供基础 CRUD 与查询方法 */
   private final FlowRunTaskRepository taskRepository;
 
-  /**
-   * 流程实例 Mapper（用于长期运行实例检测）。
-   *
-   * <p>保留 Mapper 调用，因为 selectList 走复杂 LambdaQueryWrapper，在 Repository 中暂无等价方法。
-   */
-  private final FlowInstanceMapper instanceMapper;
-
-  /** 流程实例仓储（domain 层契约），提供基础 CRUD 方法 */
+  /** 流程实例仓储（domain 层契约），提供基础 CRUD 与查询方法 */
   private final FlowInstanceRepository instanceRepository;
 
   /** 实体转换器，用于 VO ↔ DO 转换 */
@@ -254,7 +220,12 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
       if (StringUtils.hasText(endTime)) {
         wrapper.le(FlowAuditLogDO::getCreatedAt, LocalDateTime.parse(endTime, DT_FMT));
       }
-      return auditLogMapper.selectCount(wrapper);
+      return auditLogRepository.countByBusinessTypeAndActions(
+          FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY,
+          List.of("PASS", "REJECT"),
+          tenantId,
+          StringUtils.hasText(startTime) ? LocalDateTime.parse(startTime, DT_FMT) : null,
+          StringUtils.hasText(endTime) ? LocalDateTime.parse(endTime, DT_FMT) : null);
     } catch (Exception e) {
       log.warn("[FlowEfficiency] 代批操作统计异常: {}", e.getMessage());
       return 0;
@@ -264,8 +235,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   @Override
   public List<FlowBottleneckVO> bottleneckRanking(String tenantId, String flowCode, int limit) {
     try {
-      // 直接使用 Mapper 已有的 nodeDurationStats（SQL GROUP BY 聚合）
-      List<Map<String, Object>> stats = hisTaskMapper.nodeDurationStats(flowCode, tenantId);
+      List<Map<String, Object>> stats = hisTaskRepository.selectNodeDurationStats(flowCode, tenantId);
       if (stats == null || stats.isEmpty()) {
         return List.of();
       }
@@ -399,15 +369,14 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   /** 查询历史任务（带时间范围过滤） */
   private List<FlowHisTaskDO> queryHisTasks(
       String tenantId, String startTime, String endTime, String flowCode) {
-    LambdaQueryWrapper<FlowHisTaskDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper
-        .eq(tenantId != null, FlowHisTaskDO::getTenantId, tenantId)
-        .eq(StringUtils.hasText(flowCode), FlowHisTaskDO::getFlowCode, flowCode)
-        .ge(StringUtils.hasText(startTime), FlowHisTaskDO::getFinishAt, parseDateTime(startTime))
-        .le(StringUtils.hasText(endTime), FlowHisTaskDO::getFinishAt, parseDateTime(endTime))
-        .orderByDesc(FlowHisTaskDO::getFinishAt)
-        .last("LIMIT " + MAX_QUERY_LIMIT);
-    return hisTaskMapper.selectList(wrapper);
+    return hisTaskRepository.selectByTimeRange(
+            tenantId,
+            flowCode,
+            StringUtils.hasText(startTime) ? parseDateTime(startTime) : null,
+            StringUtils.hasText(endTime) ? parseDateTime(endTime) : null,
+            MAX_QUERY_LIMIT).stream()
+        .map(converter::entityToDO)
+        .toList();
   }
 
   /** 从 nodeDurationStats 返回的 Map 中提取 avgDurationMs */
@@ -520,7 +489,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
         .orderByAsc(FlowRunTaskDO::getCreatedAt)
         .last("LIMIT " + effectiveLimit);
 
-    List<FlowRunTaskDO> stuckTasks = taskMapper.selectList(wrapper);
+    List<FlowRunTaskDO> stuckTasks = taskRepository.findStuckTasks(tenantId, threshold, effectiveLimit).stream()
+        .map(converter::entityToDO).toList();
     if (stuckTasks == null || stuckTasks.isEmpty()) {
       return List.of();
     }
@@ -565,7 +535,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
         .orderByDesc(FlowHisTaskDO::getFinishAt)
         .last("LIMIT " + HIGH_REJECTION_SAMPLE_SIZE);
 
-    List<FlowHisTaskDO> recentTasks = hisTaskMapper.selectList(wrapper);
+    List<FlowHisTaskDO> recentTasks = hisTaskRepository.selectRecentByTenant(tenantId, HIGH_REJECTION_SAMPLE_SIZE).stream()
+        .map(converter::entityToDO).toList();
     if (recentTasks == null || recentTasks.isEmpty()) {
       return List.of();
     }
@@ -650,7 +621,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
         .orderByAsc(FlowInstanceDO::getStartAt)
         .last("LIMIT " + effectiveLimit);
 
-    List<FlowInstanceDO> longRunningInstances = instanceMapper.selectList(wrapper);
+    List<FlowInstanceDO> longRunningInstances = instanceRepository.findLongRunning(tenantId, threshold, effectiveLimit).stream()
+        .map(converter::entityToDO).toList();
     if (longRunningInstances == null || longRunningInstances.isEmpty()) {
       return List.of();
     }
@@ -821,13 +793,13 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   @Override
   public List<Map<String, Object>> selectApproverEfficiency(
       String tenantId, LocalDateTime start, LocalDateTime end, int limit) {
-    return hisTaskMapper.selectApproverEfficiency(tenantId, start, end, limit);
+    return hisTaskRepository.selectApproverEfficiency(tenantId, start, end, limit);
   }
 
   @Override
   public List<Map<String, Object>> selectFlowEfficiencyComparison(
       String tenantId, LocalDateTime start, LocalDateTime end) {
-    return hisTaskMapper.selectFlowEfficiencyComparison(tenantId, start, end);
+    return hisTaskRepository.selectFlowEfficiencyComparison(tenantId, start, end);
   }
 
   /** 安全类型转换：Object → double */

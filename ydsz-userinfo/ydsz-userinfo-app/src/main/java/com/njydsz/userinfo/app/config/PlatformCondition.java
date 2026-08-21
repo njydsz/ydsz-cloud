@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.app.config;
 
+import java.util.Map;
+
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
@@ -16,9 +18,11 @@ public class PlatformCondition implements Condition {
 
   private static final String PLATFORM_PROPERTY = "ydsz.userinfo.platform";
 
+  @SuppressWarnings("unchecked")
   @Override
   public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-    Object platformValue = metadata.getAnnotationAttributes(ConditionalOnPlatform.class.getName());
+    Map<String, Object> platformValue = metadata.getAnnotationAttributes(
+        ConditionalOnPlatform.class.getName());
     if (platformValue == null) {
       return false;
     }

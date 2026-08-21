@@ -29,6 +29,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-message-domain</artifactId>
         </dependency>
+        <!-- 临时添加：server层引用了infra实体（完整DDD重构需将领域实体移到domain层） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-message-infra</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- P2-3: 显式声明 common-util（多渠道发送使用 FileTypeUtils/DateUtils 等工具类） -->
         <dependency>
             <groupId>com.njydsz</groupId>

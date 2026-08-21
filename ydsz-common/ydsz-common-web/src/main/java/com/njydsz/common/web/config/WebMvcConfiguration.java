@@ -1,6 +1,7 @@
 package com.njydsz.common.web.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -33,8 +34,6 @@ import com.njydsz.common.web.filter.WebAuthFilter;
 import com.njydsz.common.web.health.WebHealthIndicator;
 import com.njydsz.common.web.interceptor.RequestLogInterceptor;
 import com.njydsz.common.web.metrics.WebMetrics;
-
-import nl.basjes.parse.useragent.UserAgentAnalyzer;
 
 /**
  * Web 端 MVC 核心配置。
@@ -243,7 +242,9 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(name = "webHealthIndicator")
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnProperty(
       prefix = "ydsz.web.health-indicator",
       name = "enabled",

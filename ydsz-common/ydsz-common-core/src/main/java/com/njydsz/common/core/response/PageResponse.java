@@ -4,8 +4,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.code.ResultCode;
+import com.njydsz.common.core.code.YdszResultCode;
 
 /**
  * 分页响应信封（{@link YdszResponse} 的子类型）。

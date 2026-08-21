@@ -271,8 +271,9 @@ final class BeanDeserializerEngine {
       if (targetType == float.class || targetType == Float.class) {
         return Float.parseFloat(str);
       }
-      if (targetType == boolean.class || targetType == Boolean.class)
+      if (targetType == boolean.class || targetType == Boolean.class) {
         return Boolean.parseBoolean(str);
+        }
     }
     return value;
   }

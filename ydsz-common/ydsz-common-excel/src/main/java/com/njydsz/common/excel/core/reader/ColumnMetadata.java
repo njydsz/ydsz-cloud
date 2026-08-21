@@ -129,7 +129,7 @@ public final class ColumnMetadata {
    * 解析目标类型的typeId
    *
    * @author ydsz-team
-   * @email ydsz-dev@ydszsoft.com
+
    * @version 1.0.0
    */
   private static int resolveTypeId(Class<?> targetType) {

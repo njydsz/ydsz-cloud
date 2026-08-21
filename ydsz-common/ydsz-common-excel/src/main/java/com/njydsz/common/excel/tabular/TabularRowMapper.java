@@ -24,7 +24,11 @@ import java.util.Optional;
  */
 public interface TabularRowMapper<T> {
 
-  /** 获取表头列名列表（顺序与原始数据列一致）。 */
+  /**
+   * 获取表头列名列表（顺序与原始数据列一致）。
+   *
+   * @return 返回值说明
+   */
   List<String> headers();
 
   /**
@@ -43,7 +47,11 @@ public interface TabularRowMapper<T> {
    */
   String[] fromRow(T object);
 
-  /** 返回列名 → 列索引 映射（便于按列名快速取值）。 */
+  /**
+   * 返回列名 → 列索引 映射（便于按列名快速取值）。
+   *
+   * @return 列名到列索引的映射
+   */
   default Map<String, Integer> headerIndexMap() {
     List<String> hs = headers();
     Map<String, Integer> map = new HashMap<>(hs.size() * 2);
@@ -57,6 +65,10 @@ public interface TabularRowMapper<T> {
    * 按列名取单值（默认从 {@link #toRow(String[])} 的结果中取值）。
    *
    * <p>本方法提供默认实现：返回 {@link Optional#empty()}。子类如有需要可覆盖。
+   *
+   * @param object 行对象
+   * @param columnName 列名
+   * @return 该列的值；无值时返回 {@link Optional#empty()}
    */
   default Optional<String> getValue(T object, String columnName) {
     return Optional.empty();

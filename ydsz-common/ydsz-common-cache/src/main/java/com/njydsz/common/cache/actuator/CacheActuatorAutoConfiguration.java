@@ -45,7 +45,9 @@ import com.njydsz.common.cache.api.Cache;
  * @since 1.0.0
  */
 @AutoConfiguration
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.boot.actuate.endpoint.annotation.Endpoint")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 @ConditionalOnBean(Cache.class)
 @ConditionalOnProperty(
     prefix = "management.endpoint.cache-metrics",
@@ -66,9 +68,13 @@ public class CacheActuatorAutoConfiguration {
   @ConditionalOnMissingBean
   @ConditionalOnAvailableEndpoint(endpoint = CacheMetricsEndpoint.class)
   public CacheMetricsEndpoint cacheMetricsEndpoint(Map<String, Cache<?, ?>> caches) {
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
     CacheMetricsEndpoint endpoint = new CacheMetricsEndpoint();
+  // CHECKSTYLE.ON: RegexpSinglelineJava
     caches.forEach((name, cache) -> endpoint.registerCache(name, cache));
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
     LOG.info("CacheMetricsEndpoint 已注册，监控 {} 个缓存实例", caches.size());
+  // CHECKSTYLE.ON: RegexpSinglelineJava
     return endpoint;
   }
 }

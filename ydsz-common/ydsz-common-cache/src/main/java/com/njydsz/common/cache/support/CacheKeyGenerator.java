@@ -77,7 +77,11 @@ public final class CacheKeyGenerator {
     return sb.toString();
   }
 
-  /** 批量生成缓存 key 前缀（用于 SCAN 匹配） */
+  /**
+   * 批量生成缓存 key 前缀（用于 SCAN 匹配）
+   *
+   * @return 返回值说明
+   */
   public String generatePrefixPattern() {
     StringBuilder sb = new StringBuilder();
     if (!prefix.isEmpty()) {
@@ -102,17 +106,29 @@ public final class CacheKeyGenerator {
     }
   }
 
-  /** 获取前缀 */
+  /**
+   * 获取前缀
+   *
+   * @return 返回值说明
+   */
   public String getPrefix() {
     return prefix;
   }
 
-  /** 获取命名空间 */
+  /**
+   * 获取命名空间
+   *
+   * @return 返回值说明
+   */
   public String getNamespace() {
     return namespace;
   }
 
-  /** 创建 Builder */
+  /**
+   * 创建 Builder
+   *
+   * @return 返回值说明
+   */
   public static Builder builder() {
     return new Builder();
   }

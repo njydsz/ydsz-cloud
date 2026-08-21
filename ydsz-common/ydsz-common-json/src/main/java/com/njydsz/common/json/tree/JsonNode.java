@@ -36,32 +36,56 @@ import java.util.Map;
  */
 public abstract class JsonNode {
 
-  /** 判断是否为对象 */
+  /**
+   * 判断是否为对象
+   *
+   * @return 返回值说明
+   */
   public boolean isObject() {
     return false;
   }
 
-  /** 判断是否为数组 */
+  /**
+   * 判断是否为数组
+   *
+   * @return 返回值说明
+   */
   public boolean isArray() {
     return false;
   }
 
-  /** 判断是否为字符串 */
+  /**
+   * 判断是否为字符串
+   *
+   * @return 返回值说明
+   */
   public boolean isTextual() {
     return false;
   }
 
-  /** 判断是否为数值 */
+  /**
+   * 判断是否为数值
+   *
+   * @return 返回值说明
+   */
   public boolean isNumber() {
     return false;
   }
 
-  /** 判断是否为布尔值 */
+  /**
+   * 判断是否为布尔值
+   *
+   * @return 返回值说明
+   */
   public boolean isBoolean() {
     return false;
   }
 
-  /** 判断是否为 null */
+  /**
+   * 判断是否为 null
+   *
+   * @return 返回值说明
+   */
   public boolean isNull() {
     return false;
   }
@@ -117,78 +141,112 @@ public abstract class JsonNode {
     return current;
   }
 
-  /** 转换为字符串 */
+  /**
+   * 转换为字符串
+   *
+   * @return 返回值说明
+   */
   public String asText() {
     return "";
   }
 
   /**
    * 转换为字符串（带默认值）
-   *
    * <p>对齐 Jackson 语义：若 {@link #asText()} 返回 null，则返回默认值。 容器节点（ObjectNode / ArrayNode）应覆盖此方法直接返回默认值。
+   *
+   * @param defaultValue 默认值
+   * @return 返回值说明
    */
   public String asText(String defaultValue) {
     String str = asText();
     return (str == null) ? defaultValue : str;
   }
 
-  /** 转换为整数 */
+  /**
+   * 转换为整数
+   *
+   * @return 返回值说明
+   */
   public int asInt() {
     return 0;
   }
 
   /**
    * 转换为整数（带默认值）
-   *
    * <p>对齐 Jackson 语义：非数值节点返回默认值。数值节点（NumberNode）应覆盖此方法。
+   *
+   * @param defaultValue 默认值
+   * @return 返回值说明
    */
   public int asInt(int defaultValue) {
     return defaultValue;
   }
 
-  /** 转换为长整数 */
+  /**
+   * 转换为长整数
+   *
+   * @return 返回值说明
+   */
   public long asLong() {
     return 0L;
   }
 
   /**
    * 转换为长整数（带默认值）
-   *
    * <p>对齐 Jackson 语义：非数值节点返回默认值。数值节点（NumberNode）应覆盖此方法。
+   *
+   * @param defaultValue 默认值
+   * @return 返回值说明
    */
   public long asLong(long defaultValue) {
     return defaultValue;
   }
 
-  /** 转换为双精度数 */
+  /**
+   * 转换为双精度数
+   *
+   * @return 返回值说明
+   */
   public double asDouble() {
     return 0.0;
   }
 
   /**
    * 转换为双精度数（带默认值）
-   *
    * <p>对齐 Jackson 语义：非数值节点返回默认值。数值节点（NumberNode）应覆盖此方法。
+   *
+   * @param defaultValue 默认值
+   * @return 返回值说明
    */
   public double asDouble(double defaultValue) {
     return defaultValue;
   }
 
-  /** 转换为布尔值 */
+  /**
+   * 转换为布尔值
+   *
+   * @return 返回值说明
+   */
   public boolean asBoolean() {
     return false;
   }
 
   /**
    * 转换为布尔值（带默认值）
-   *
    * <p>对齐 Jackson 语义：非布尔节点返回默认值。布尔节点（BooleanNode）应覆盖此方法。
+   *
+   * @param defaultValue 默认值
+   * @return 返回值说明
    */
   public boolean asBoolean(boolean defaultValue) {
     return defaultValue;
   }
 
-  /** 判断是否为缺失节点 */
+  /**
+   * 判断是否为缺失节点
+   *
+   * @return 返回值说明
+   */
   public boolean isMissing() {
     return false;
   }
@@ -219,42 +277,76 @@ public abstract class JsonNode {
     return this;
   }
 
-  /** 获取子节点数量 */
+  /**
+   * 获取子节点数量
+   *
+   * @return 返回值说明
+   */
   public int size() {
     return 0;
   }
 
-  /** 是否有指定字段 */
+  /**
+   * 是否有指定字段
+   *
+   * @param fieldName 字段名
+   * @return 返回值说明
+   */
   public boolean has(String fieldName) {
     return false;
   }
 
-  /** 是否有指定索引 */
+  /**
+   * 是否有指定索引
+   *
+   * @param index 索引
+   * @return 返回值说明
+   */
   public boolean has(int index) {
     return false;
   }
 
-  /** 字段名迭代器（仅对象） */
+  /**
+   * 字段名迭代器（仅对象）
+   *
+   * @return 返回值说明
+   */
   public Iterator<String> fieldNames() {
     return Collections.emptyIterator();
   }
 
-  /** 元素迭代器（仅数组） */
+  /**
+   * 元素迭代器（仅数组）
+   *
+   * @return 返回值说明
+   */
   public Iterator<JsonNode> elements() {
     return Collections.emptyIterator();
   }
 
-  /** 转换为 Map */
+  /**
+   * 转换为 Map
+   *
+   * @return 返回值说明
+   */
   public Map<String, JsonNode> asMap() {
     return Collections.emptyMap();
   }
 
-  /** 转换为 List */
+  /**
+   * 转换为 List
+   *
+   * @return 返回值说明
+   */
   public List<JsonNode> asList() {
     return Collections.emptyList();
   }
 
-  /** 转换为原始值 */
+  /**
+   * 转换为原始值
+   *
+   * @return 返回值说明
+   */
   public Object asValue() {
     return null;
   }

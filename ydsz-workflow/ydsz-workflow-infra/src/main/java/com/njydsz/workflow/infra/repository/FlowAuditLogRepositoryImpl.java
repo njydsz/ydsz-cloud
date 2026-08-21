@@ -110,4 +110,20 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
                 .orderByDesc(FlowAuditLogDO::getCreatedAt)
                 .last("LIMIT " + limit + " OFFSET " + offset)));
   }
+
+  @Override
+  public long countByBusinessTypeAndActions(
+      String businessType,
+      List<String> actions,
+      String tenantId,
+      LocalDateTime startTime,
+      LocalDateTime endTime) {
+    return auditLogMapper.selectCount(
+        new LambdaQueryWrapper<FlowAuditLogDO>()
+            .eq(FlowAuditLogDO::getBusinessType, businessType)
+            .eq(tenantId != null, FlowAuditLogDO::getTenantId, tenantId)
+            .in(FlowAuditLogDO::getAction, actions)
+            .ge(startTime != null, FlowAuditLogDO::getCreatedAt, startTime)
+            .le(endTime != null, FlowAuditLogDO::getCreatedAt, endTime));
+  }
 }

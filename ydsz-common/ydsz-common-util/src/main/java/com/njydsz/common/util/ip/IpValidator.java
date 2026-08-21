@@ -218,7 +218,9 @@ public final class IpValidator {
         bestStart = i;
         bestLen = len;
       }
+      // CHECKSTYLE.OFF: ModifiedControlVariable — 跳过多余匹配段，语义必要
       i = j - 1;
+      // CHECKSTYLE.ON: ModifiedControlVariable
     }
     if (bestStart < 0) {
       return canonical;
@@ -291,12 +293,19 @@ public final class IpValidator {
 
   /** IP 地址类型枚举。 */
   public enum IpType {
+/** localhost */
     LOCALHOST,
+/** private ipv4 */
     PRIVATE_IPV4,
+/** private ipv6 */
     PRIVATE_IPV6,
+/** public ipv4 */
     PUBLIC_IPV4,
+/** public ipv6 */
     PUBLIC_IPV6,
+/** unknown */
     UNKNOWN,
+/** invalid */
     INVALID
   }
 }

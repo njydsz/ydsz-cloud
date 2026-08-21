@@ -72,7 +72,7 @@ public final class TracerUtils {
   /** SkyWalking TraceContext.traceId() 反射缓存 */
   private static volatile Method skywalkingTraceIdMethod;
 
-  private static final AtomicBoolean skywalkingChecked = new AtomicBoolean(false);
+  private static final AtomicBoolean SKYWALKING_CHECKED = new AtomicBoolean(false);
   private static volatile boolean skywalkingAvailable = false;
 
   private TracerUtils() {

@@ -57,7 +57,8 @@ public class SamlIdpConfigController {
   @Operation(summary = "分页查询 SAML IdP 配置")
   public YdszResponse<PageResponse<List<SamlIdpConfigVO>>> page(SamlIdpPageQuery query) {
     List<SamlIdpConfigVO> list = configService.findByPage(query);
-    return YdszResponse.success(PageResponse.of(list, list.size()));
+    return YdszResponse.success(PageResponse.success((long) list.size(),
+        query.getPageNum().longValue(), query.getPageSize().longValue(), list));
   }
 
   /**

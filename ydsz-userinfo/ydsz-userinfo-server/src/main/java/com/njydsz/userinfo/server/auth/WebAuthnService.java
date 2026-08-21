@@ -20,6 +20,8 @@ import com.njydsz.userinfo.domain.vo.WebAuthnChallengeVO;
 import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
 import com.njydsz.userinfo.server.config.WebAuthnProperties;
 
+import java.util.Collections;
+
 import com.webauthn4j.WebAuthnManager;
 import com.webauthn4j.authenticator.Authenticator;
 import com.webauthn4j.authenticator.CoreAuthenticatorImpl;
@@ -29,9 +31,12 @@ import com.webauthn4j.data.AuthenticationParameters;
 import com.webauthn4j.data.AuthenticationRequest;
 import com.webauthn4j.data.attestation.authenticator.AAGUID;
 import com.webauthn4j.data.attestation.authenticator.AttestedCredentialData;
+import com.webauthn4j.data.attestation.statement.AttestationStatement;
 import com.webauthn4j.data.client.Origin;
 import com.webauthn4j.data.client.challenge.Challenge;
 import com.webauthn4j.data.attestation.authenticator.COSEKey;
+import com.webauthn4j.data.extension.authenticator.AuthenticationExtensionsAuthenticatorOutputs;
+import com.webauthn4j.data.extension.authenticator.RegistrationExtensionAuthenticatorOutput;
 import com.webauthn4j.server.ServerProperty;
 
 import lombok.RequiredArgsConstructor;
@@ -472,7 +477,7 @@ public class WebAuthnService {
       byte[] signatureBytes = Base64.getUrlDecoder().decode(signature);
       byte[] credentialIdBytes = Base64.getUrlDecoder().decode(credential.getCredentialId());
 
-      // 构建 ServerProperty（来源、RP ID、挑战码）- webauthn4j 0.28.0 使用 Challenge
+      // 构建 ServerProperty（来源、RP ID、挑战码）- 使用当前 webauthn4j API
       Origin origin = Origin.create(webAuthnProperties.getOrigin());
       Challenge challenge = new Challenge() {
         @Override
@@ -481,21 +486,50 @@ public class WebAuthnService {
         }
       };
       ServerProperty serverProperty = new ServerProperty(
-          origin, webAuthnProperties.getRelyingPartyId(), challenge);
+          origin, webAuthnProperties.getRelyingPartyId(), challenge, null);
 
-      // 从存储的 COSE 公钥重建 Authenticator - webauthn4j 0.28.0 使用 AttestedCredentialData
+      // 从存储的 COSE 公钥重建 Authenticator - 使用 AttestedCredentialData
       byte[] coseKeyBytes = Base64.getUrlDecoder().decode(credential.getPublicKey());
       COSEKey coseKey = OBJECT_CONVERTER.getCborConverter().readValue(
           coseKeyBytes, COSEKey.class);
       AAGUID aaguid = AAGUID.NULL;
       AttestedCredentialData attestedCredentialData = new AttestedCredentialData(
           aaguid, credentialIdBytes, coseKey);
-      Authenticator authenticator = new CoreAuthenticatorImpl(
+      CoreAuthenticatorImpl coreAuthenticator = new CoreAuthenticatorImpl(
           attestedCredentialData, null, credential.getSignCount(), null);
 
-      // 构建认证参数（webauthn4j 0.28.0：添加 userVerificationRequired 和 userPresenceRequired）
+      // 将 CoreAuthenticatorImpl 适配为 Authenticator 接口（webauthn4j 0.21.0 兼容）
+      Authenticator authenticator = new Authenticator() {
+        @Override
+        public AttestedCredentialData getAttestedCredentialData() {
+          return coreAuthenticator.getAttestedCredentialData();
+        }
+
+        @Override
+        public AttestationStatement getAttestationStatement() {
+          return coreAuthenticator.getAttestationStatement();
+        }
+
+        @Override
+        public long getCounter() {
+          return coreAuthenticator.getCounter();
+        }
+
+        @Override
+        public void setCounter(long counter) {
+          coreAuthenticator.setCounter(counter);
+        }
+
+        @Override
+        public AuthenticationExtensionsAuthenticatorOutputs<RegistrationExtensionAuthenticatorOutput>
+            getAuthenticatorExtensions() {
+          return coreAuthenticator.getAuthenticatorExtensions();
+        }
+      };
+
+      // 构建认证参数
       AuthenticationParameters authenticationParameters = new AuthenticationParameters(
-          serverProperty, authenticator, true, true);
+          serverProperty, authenticator, Collections.singletonList(credentialIdBytes), true, true);
 
       // 创建认证请求对象（webauthn4j 0.28.0 API：直接构造 AuthenticationRequest）
       AuthenticationRequest authenticationRequest = new AuthenticationRequest(

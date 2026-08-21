@@ -22,7 +22,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.sentry.resilience.CircuitBreaker;
-import com.njydsz.message.domain.model.core.MsgLog;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.server.channel.ChannelScoreCalculator.ChannelScore;
 import com.njydsz.message.server.channel.ChannelScoreCalculator.ScoreConfig;
 import com.njydsz.message.server.config.MessageProperties;

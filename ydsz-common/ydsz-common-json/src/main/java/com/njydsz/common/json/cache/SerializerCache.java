@@ -1,5 +1,6 @@
 package com.njydsz.common.json.cache;
 
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -59,7 +60,7 @@ public final class SerializerCache {
     // 仅当影响字段元数据的配置发生变更时才清理
     if (oldConfig != null
         && oldConfig.getNamingStrategy() == newConfig.getNamingStrategy()
-        && java.util.Objects.equals(oldConfig.getDateFormat(), newConfig.getDateFormat())) {
+        && Objects.equals(oldConfig.getDateFormat(), newConfig.getDateFormat())) {
       // 配置未变更关键字段，跳过清理
       LAST_CONFIG_VERSION.set(newVersion);
       return;

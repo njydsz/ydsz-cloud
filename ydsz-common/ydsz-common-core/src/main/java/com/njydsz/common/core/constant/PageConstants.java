@@ -213,12 +213,20 @@ public final class PageConstants {
       this.adjusted = adjusted;
     }
 
-    /** 获取归一化后的值。 */
+    /**
+     * 获取归一化后的值。
+     *
+     * @return 返回值说明
+     */
     public int getValue() {
       return value;
     }
 
-    /** 判断是否发生了归一化调整（原始值被截断或替换）。 */
+    /**
+     * 判断是否发生了归一化调整（原始值被截断或替换）。
+     *
+     * @return 返回值说明
+     */
     public boolean isAdjusted() {
       return adjusted;
     }

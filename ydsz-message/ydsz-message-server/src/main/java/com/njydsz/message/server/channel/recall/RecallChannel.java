@@ -1,6 +1,6 @@
 package com.njydsz.message.server.channel.recall;
 
-import com.njydsz.message.domain.model.core.MsgLog;
+import com.njydsz.message.infra.entity.MsgLog;
 
 /**
  * 通道消息撤回策略接口（P2-F2: 跨通道消息撤回能力扩展）。

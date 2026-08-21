@@ -40,7 +40,7 @@ ydsz:
     safe-mode: true
     warmup-classes:
       - com.njydsz.common.feign.MessageRequest
-      - com.njydsz.message.domain.model.core.MsgLog
+      - com.njydsz.message.infra.entity.MsgLog
       - com.njydsz.message.domain.entity.config.MsgRouteRule
       - com.njydsz.message.domain.entity.config.MsgTemplate
       - com.njydsz.message.domain.entity.config.MsgCanary

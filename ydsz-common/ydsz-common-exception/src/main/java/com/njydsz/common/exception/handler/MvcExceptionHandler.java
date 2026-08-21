@@ -59,7 +59,9 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
  * @see YdszExceptionHandlerAutoConfiguration
  */
 @Slf4j
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.web.bind.annotation.RestControllerAdvice")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice
 public class MvcExceptionHandler extends BaseExceptionHandler {
@@ -70,13 +72,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
   private final MessageSource messageSource;
 
   /**
-   * 构造 MVC 全局异常处理器
+   * 构造 MVC 全局异常处理器。
    *
    * @param environment Spring 环境对象
    * @param messageSource 国际化消息源
    * @param exceptionMetrics 异常指标统计器
    * @param properties 异常模块配置属性（可为 null）
-   * @param eventPublisher 事件发布器（可为 null）
    * @param eventPublisherProvider 事件发布器提供者
    */
   public MvcExceptionHandler(

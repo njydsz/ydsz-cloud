@@ -126,7 +126,7 @@ public class TypeFactory {
     private final Type rawType;
     private final Type[] actualTypeArguments;
 
-    public ParameterizedTypeImpl(Type ownerType, Type rawType, Type... actualTypeArguments) {
+    ParameterizedTypeImpl(Type ownerType, Type rawType, Type... actualTypeArguments) {
       this.ownerType = ownerType != null ? new Type[] {ownerType} : null;
       this.rawType = rawType;
       this.actualTypeArguments = actualTypeArguments;

@@ -386,4 +386,19 @@ public class JwtTokenService implements TokenService {
     claimsCache.put(cacheKey, claims);
     return claims;
   }
+
+  @Override
+  public long getAccessTokenRemainingTtl(String token) {
+    try {
+      Claims claims = parseClaims(token);
+      if (claims == null || claims.getExpiration() == null) {
+        return 0;
+      }
+      long remainingMillis = claims.getExpiration().getTime() - System.currentTimeMillis();
+      return Math.max(0, remainingMillis / 1000);
+    } catch (Exception e) {
+      LOG.debug("获取 Token 剩余有效期失败: {}", e.getMessage());
+      return 0;
+    }
+  }
 }

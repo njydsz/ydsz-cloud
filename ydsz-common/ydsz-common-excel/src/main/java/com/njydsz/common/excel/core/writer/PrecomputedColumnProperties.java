@@ -4,7 +4,7 @@ package com.njydsz.common.excel.core.writer;
  * PrecomputedColumnProperties 类
  *
  * @author ydsz-team
- * @email ydsz-dev@ydszsoft.com
+
  * @version 1.0.0
  */
 import java.util.List;

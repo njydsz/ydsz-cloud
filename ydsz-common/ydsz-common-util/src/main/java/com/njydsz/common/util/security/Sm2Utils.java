@@ -88,12 +88,18 @@ public final class Sm2Utils {
   private static final String ENCRYPT_ALGORITHM = "SM2";
 
   /**
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
    * SM2 加密 Cipher 的 ThreadLocal 池。
+  // CHECKSTYLE.ON: RegexpSinglelineJava
    *
    * <p>Cipher 实例非线程安全，按线程独享并复用，避免每次调用都执行 {@code Cipher.getInstance("SM2", "BC")} 的 Provider 查找开销。
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<Cipher> ENCRYPT_CIPHER =
+  // CHECKSTYLE.ON: RegexpSinglelineJava
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
       ThreadLocal.withInitial(
+  // CHECKSTYLE.ON: RegexpSinglelineJava
           () -> {
             try {
               BcProvider.ensure();
@@ -104,9 +110,15 @@ public final class Sm2Utils {
             }
           });
 
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   /** SM3withSM2 签名 Signature 的 ThreadLocal 池。 */
+  // CHECKSTYLE.ON: RegexpSinglelineJava
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<Signature> SIGNATURE =
+  // CHECKSTYLE.ON: RegexpSinglelineJava
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
       ThreadLocal.withInitial(
+  // CHECKSTYLE.ON: RegexpSinglelineJava
           () -> {
             try {
               BcProvider.ensure();
@@ -149,7 +161,9 @@ public final class Sm2Utils {
   /**
    * 清理当前线程的 SM2 Cipher 和 Signature 缓存。
    *
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
    * <p>在线程池复用场景下，建议在请求处理完成后调用此方法，避免 ThreadLocal 内存泄漏。
+  // CHECKSTYLE.ON: RegexpSinglelineJava
    * 通常在 {@code finally} 块中调用：
    *
    * <pre>{@code
@@ -527,7 +541,9 @@ public final class Sm2Utils {
 
   /** 简易密钥对信息 DTO */
   public static class KeyPairHex {
+/** publicKey */
     public final String publicKey;
+/** privateKey */
     public final String privateKey;
 
     public KeyPairHex(String publicKey, String privateKey) {

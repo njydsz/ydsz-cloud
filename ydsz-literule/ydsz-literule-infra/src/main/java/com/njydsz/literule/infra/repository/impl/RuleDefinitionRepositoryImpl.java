@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
@@ -54,7 +55,7 @@ public class RuleDefinitionRepositoryImpl implements RuleDefinitionRepository {
   }
 
   @Override
-  public IPage<RuleDefinitionVO> pageRuleDefinitions(PageQuery pageQuery) {
+  public PageResponse<List<RuleDefinitionVO>> pageRuleDefinitions(PageQuery pageQuery) {
     com.baomidou.mybatisplus.extension.plugins.pagination.Page<RuleDefinitionDO> page =
         new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
             pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize());
@@ -62,12 +63,10 @@ public class RuleDefinitionRepositoryImpl implements RuleDefinitionRepository {
     wrapper.orderByAsc(RuleDefinitionDO::getPriority).orderByDesc(RuleDefinitionDO::getCreatedAt);
     IPage<RuleDefinitionDO> doPage = ruleDefinitionMapper.selectPage(page, wrapper);
 
-    // DO → VO 转换
-    IPage<RuleDefinitionVO> voPage =
-        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
-            doPage.getCurrent(), doPage.getSize(), doPage.getTotal());
-    voPage.setRecords(converter.ruleDefinitionListToVO(doPage.getRecords()));
-    return voPage;
+    // DO → VO 转换，封装为框架无关的 PageResponse
+    List<RuleDefinitionVO> records = converter.ruleDefinitionListToVO(doPage.getRecords());
+    return PageResponse.success(
+        doPage.getTotal(), doPage.getCurrent(), doPage.getSize(), records);
   }
 
   @Override
@@ -90,7 +89,7 @@ public class RuleDefinitionRepositoryImpl implements RuleDefinitionRepository {
   }
 
   @Override
-  public IPage<RuleDefinitionVO> searchPage(
+  public PageResponse<List<RuleDefinitionVO>> searchPage(
       String query, String status, String category, Boolean enabled, PageQuery pageQuery) {
     IPage<RuleDefinitionDO> page =
         ruleDefinitionMapper.searchRules(
@@ -101,11 +100,8 @@ public class RuleDefinitionRepositoryImpl implements RuleDefinitionRepository {
             new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
                 pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize()));
     List<RuleDefinitionVO> records = converter.ruleDefinitionListToVO(page.getRecords());
-    IPage<RuleDefinitionVO> result =
-        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
-            page.getCurrent(), page.getSize(), page.getTotal());
-    result.setRecords(records);
-    return result;
+    return PageResponse.success(
+        page.getTotal(), page.getCurrent(), page.getSize(), records);
   }
 
   /**

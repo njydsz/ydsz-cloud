@@ -146,4 +146,15 @@ public interface FlowTimerRepository {
    * @param nextTime 下次触发时间
    */
   void markSnoozed(String id, LocalDateTime nextTime);
+
+  /**
+   * 按实例 ID 查询定时器列表（按创建时间倒序）。
+   *
+   * <p>与 {@link #findByInstanceId(String)} 类似，但按 created_at 倒序排列，
+   * 用于前端展示。
+   *
+   * @param instanceId 实例 ID
+   * @return 定时器 VO 列表
+   */
+  List<FlowTimerVO> findByInstanceOrderByCreatedAtDesc(String instanceId);
 }

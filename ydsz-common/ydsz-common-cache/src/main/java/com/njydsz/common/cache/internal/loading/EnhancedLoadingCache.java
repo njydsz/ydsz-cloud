@@ -61,10 +61,10 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
    *
    * <p>使用 CacheThreadPoolManager 统一管理线程池，避免 ForkJoinPool.commonPool() 污染。
    */
-  private static final AtomicReference<ExecutorService> sharedExecutor = new AtomicReference<>();
+  private static final AtomicReference<ExecutorService> SHARED_EXECUTOR = new AtomicReference<>();
 
   /** 全局共享刷新调度器（守护线程，不阻止 JVM 退出） */
-  private static final AtomicReference<ScheduledExecutorService> sharedRefreshScheduler =
+  private static final AtomicReference<ScheduledExecutorService> SHARED_REFRESH_SCHEDULER =
       new AtomicReference<>();
 
   /** 共享资源是否已关闭 */

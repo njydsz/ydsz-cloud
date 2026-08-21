@@ -25,5 +25,21 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-excel</artifactId>
         </dependency>
+        <!-- 自动配置支持（@AutoConfiguration / @ConditionalOnClass） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+        <!-- Spring Context（@Component / @Autowired 注解） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+        <!-- MyBatis-Plus 启动器（提供 MybatisConfiguration 与 Mapper 自动装配） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

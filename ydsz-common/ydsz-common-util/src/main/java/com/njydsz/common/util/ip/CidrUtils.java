@@ -154,7 +154,9 @@ public final class CidrUtils {
 
       for (int i = 0; i < ipBytes.length; i++) {
         int bitsToCheck = Math.min(8, prefix - (i * 8));
-        if (bitsToCheck <= 0) break;
+        if (bitsToCheck <= 0) {
+          break;
+        }
 
         int mask = 0xFF << (8 - bitsToCheck);
         if ((ipBytes[i] & mask) != (networkBytes[i] & mask)) {

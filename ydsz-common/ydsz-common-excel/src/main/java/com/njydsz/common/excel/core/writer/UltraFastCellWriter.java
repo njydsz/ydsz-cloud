@@ -87,7 +87,7 @@ public final class UltraFastCellWriter {
    * 格式化Date - 使用全局缓存
    *
    * @author ydsz-team
-   * @email ydsz-dev@ydszsoft.com
+
    * @version 1.0.0
    */
   private String formatDate(Date date, String pattern) {

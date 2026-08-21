@@ -1,6 +1,7 @@
 package com.njydsz.common.util.password;
 
 import java.util.Locale;
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 

@@ -33,7 +33,9 @@ import com.njydsz.common.util.io.TempFileManager;
  */
 @Slf4j
 @Component
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.apache.pdfbox.Loader")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 public class PdfJsDetector implements DocumentSecurityScanner {
 
   /** 默认最大安全扫描页数 */

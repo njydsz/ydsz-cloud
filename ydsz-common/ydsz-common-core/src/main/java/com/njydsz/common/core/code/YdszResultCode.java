@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 public enum YdszResultCode implements ResultCode {
 
   // ============================== 成功 ==============================
+/** success */
   SUCCESS("A00000", "ok"),
 
   // ============================== 客户端错误 (4xx) ==============================

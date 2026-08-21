@@ -40,7 +40,9 @@ public final class JacksonAnnotationBridge {
   private static final Logger LOGGER = LoggerFactory.getLogger(JacksonAnnotationBridge.class);
 
   /** Jackson annotations 包前缀（仅用于类名拼接，不构成依赖） */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   private static final String JACKSON_ANNOTATION_PACKAGE = "com.fasterxml.jackson.annotation.";
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /** 桥生效提示只打印一次 */
   private static final AtomicBoolean AVAILABILITY_LOGGED = new AtomicBoolean(false);

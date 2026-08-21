@@ -27,7 +27,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
  * <p>此类仅用于 SAX 模式解析，不依赖 POI 的内部实现。 只实现了类型转换相关的方法，其他方法返回 null 或默认值。
  *
  * @author ydsz-team
- * @email ydsz-dev@ydszsoft.com
+
  * @version 1.0.0
  * @since 1.0.0
  */

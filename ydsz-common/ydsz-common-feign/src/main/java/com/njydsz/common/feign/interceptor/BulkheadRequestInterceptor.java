@@ -14,9 +14,8 @@ import feign.RequestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.feign.exception.OpenFeignException;
-
 import com.njydsz.common.feign.config.FeignProperties;
+import com.njydsz.common.feign.exception.OpenFeignException;
 
 /**
  * Feign 请求并发隔离（Bulkhead）拦截器。

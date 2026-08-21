@@ -288,7 +288,9 @@ public class QueueConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(QueueHealthIndicator.class)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   public QueueHealthIndicator queueHealthIndicator() {
     log.info("[Queue] 创建消息队列健康检查器");
     return new QueueHealthIndicator(queueProperties, redisStringOpsProvider);
@@ -306,7 +308,9 @@ public class QueueConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(QueueEndpoint.class)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.actuate.endpoint.annotation.Endpoint")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   public QueueEndpoint queueEndpoint(QueueManager queueManager) {
     log.info("[Queue] 注册消息队列 Actuator 端点");
     return new QueueEndpoint(queueProperties, queueManager);

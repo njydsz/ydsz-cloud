@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.njydsz.common.core.response.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -218,24 +217,22 @@ public class RuleAdminService {
   /**
    * 分页查询规则定义（P1-2 分页标准化）
    *
-   * <p>使用 MyBatis-Plus 分页拦截器，支持物理分页与排序委托。 分页参数通过 {@link com.njydsz.common.domain.query.PageQuery}
+   * <p>通过 Repository 分页查询，返回框架无关的 {@link
+   * com.njydsz.common.core.response.PageResponse}。 分页参数通过 {@link com.njydsz.common.domain.query.PageQuery}
    * 传入， 支持 pageNum/pageSize/orderItems/cursor 等分页能力。
    *
    * @param pageQuery 分页查询参数
-   * @return 分页结果（MyBatis-Plus IPage）
+   * @return 分页结果（PageResponse 封装的 RuleDefinition 列表）
    * @since 2.1.0
    */
-  public com.baomidou.mybatisplus.core.metadata.IPage<RuleDefinition> pageRuleDefinitions(
+  public com.njydsz.common.core.response.PageResponse<List<RuleDefinition>> pageRuleDefinitions(
       com.njydsz.common.domain.query.PageQuery pageQuery) {
-    IPage<RuleDefinitionVO> voPage = ruleDefinitionRepository.pageRuleDefinitions(pageQuery);
+    PageResponse<List<RuleDefinitionVO>> voPage = ruleDefinitionRepository.pageRuleDefinitions(pageQuery);
     // VO → RuleDefinition 转换
     List<RuleDefinition> records =
-        voPage.getRecords().stream().map(this::voToRuleDefinition).toList();
-    com.baomidou.mybatisplus.core.metadata.IPage<RuleDefinition> result =
-        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
-            voPage.getCurrent(), voPage.getSize(), voPage.getTotal());
-    result.setRecords(records);
-    return result;
+        voPage.getData().stream().map(this::voToRuleDefinition).toList();
+    return com.njydsz.common.core.response.PageResponse.success(
+        voPage.getTotal(), voPage.getPageNum(), voPage.getPageSize(), records);
   }
 
   /**
@@ -494,7 +491,9 @@ public class RuleAdminService {
    */
   public PageResponse<List<RuleVersionVO>> pageVersions(String ruleCode, PageQuery pageQuery) {
     if (versionRepository == null) {
-      return PageResponse.success(List.of(), 0);
+      return PageResponse.empty(
+          (long) pageQuery.getEffectivePageNum(),
+          (long) pageQuery.getEffectivePageSize());
     }
     return versionRepository.pageVersions(
         ruleCode, pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize());

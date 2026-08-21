@@ -34,7 +34,9 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
  * @since 1.0.0
  */
 @Slf4j
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 public class RedisHealthIndicator implements HealthIndicator {
 
   /** 健康检查信息缓存时长（毫秒），避免高频轮询反复触发 INFO */

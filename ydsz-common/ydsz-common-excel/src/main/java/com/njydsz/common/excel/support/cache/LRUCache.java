@@ -125,7 +125,7 @@ public class LRUCache<K, V> {
    * 清空缓存
    *
    * @author ydsz-team
-   * @email ydsz-dev@ydszsoft.com
+
    * @version 1.0.0
    */
   public synchronized void clear() {

@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,8 +25,6 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.infra.entity.FlowTimerDO;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
-import com.njydsz.workflow.infra.mapper.FlowTimerMapper;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowNotificationService;
@@ -99,17 +96,11 @@ import com.njydsz.workflow.server.service.impl.instance.FlowInstanceServiceImpl;
 @RequiredArgsConstructor
 public class FlowTimerServiceImpl implements FlowTimerService {
 
-  /** 定时器 Mapper，管理 ydsz_flow_timer 表（复杂查询保留） */
-  private final FlowTimerMapper timerMapper;
-
   /** 定时器仓储（domain 层契约），管理 ydsz_flow_timer 表 CRUD */
   private final FlowTimerRepository timerRepository;
 
   /** 流程实例仓储（domain 层契约），查询定时器关联的实例 */
   private final FlowInstanceRepository instanceRepository;
-
-  /** 运行时任务 Mapper，定时器触发后创建/更新任务（复杂操作保留） */
-  private final FlowRunTaskMapper taskMapper;
 
   /** 运行时任务仓储（domain 层契约），查询按钮执行关联的待办任务 */
   private final FlowRunTaskRepository taskRepository;
@@ -301,7 +292,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     }
     // 1. 取消 userTask
     LocalDateTime now = LocalDateTime.now();
-    taskMapper.completeTask(
+    taskRepository.completeTaskWithComment(
         task.getId(),
         "TIMEOUT",
         "边界定时器触发超时",
@@ -382,25 +373,20 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     if (instanceId == null) {
       return 0;
     }
-    // TODO: Repository 中暂无 cancelByInstance 方法，需补齐
-    return timerMapper.cancelByInstance(instanceId, reason == null ? "实例结束" : reason);
+    return timerRepository.cancelByInstance(instanceId, reason == null ? "实例结束" : reason);
   }
 
   @Override
   @Transactional(readOnly = true)
   public List<FlowTimerDO> listByInstance(String instanceId) {
-    return timerMapper.selectList(
-        new QueryWrapper<FlowTimerDO>()
-            .eq("instance_id", instanceId)
-            .eq("deleted", 0)
-            .orderByDesc("created_at"));
+    return timerRepository.findByInstanceOrderByCreatedAtDesc(instanceId).stream()
+        .map(converter::entityToDO).toList();
   }
 
   @Override
   @Transactional(readOnly = true)
   public long countPending(String instanceId) {
-    // TODO: Repository 中暂无 countPendingByInstance 方法，需补齐
-    return timerMapper.countPendingByInstance(instanceId);
+    return timerRepository.countPendingByInstance(instanceId);
   }
 
   /**

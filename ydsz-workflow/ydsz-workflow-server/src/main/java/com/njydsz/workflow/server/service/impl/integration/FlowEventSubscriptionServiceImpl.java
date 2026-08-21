@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,10 +24,8 @@ import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.infra.mapper.FlowEventSubscriptionMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
@@ -101,9 +98,6 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
 @RequiredArgsConstructor
 public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionService {
 
-  /** 事件订阅 Mapper，管理 BPMN 事件捕获节点订阅记录（复杂查询保留） */
-  private final FlowEventSubscriptionMapper subscriptionMapper;
-
   /** 事件订阅仓储（domain 层契约），管理事件订阅表 CRUD */
   private final FlowEventSubscriptionRepository subscriptionRepository;
 
@@ -115,9 +109,6 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
   /** 流程节点仓储（domain 层契约），查询事件捕获节点配置 */
   private final FlowNodeRepository nodeRepository;
-
-  /** 运行时任务 Mapper（cancelTask 无 Repository 等价方法，保留） */
-  private final FlowRunTaskMapper taskMapper;
 
   /** 运行时任务仓储（domain 层契约），查询待办任务 */
   private final FlowRunTaskRepository taskRepository;
@@ -193,8 +184,8 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
 
     List<FlowEventSubscriptionDO> subscriptions =
-        // Repository 中 findWaitingByEvent 无 tenantId 参数，签名不同，保留 Mapper 调用
-        subscriptionMapper.selectWaitingByEvent(tid, "MESSAGE", messageName);
+        subscriptionRepository.findWaitingByEvent(tid, "MESSAGE", messageName).stream()
+            .map(converter::entityToDO).toList();
 
     if (StringUtils.hasText(correlationKey)) {
       subscriptions =
@@ -235,8 +226,8 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
 
     List<FlowEventSubscriptionDO> subscriptions =
-        // Repository 中 findWaitingByEvent 无 tenantId 参数，签名不同，保留 Mapper 调用
-        subscriptionMapper.selectWaitingByEvent(tid, "ERROR", errorCode);
+        subscriptionRepository.findWaitingByEvent(tid, "ERROR", errorCode).stream()
+            .map(converter::entityToDO).toList();
 
     if (instanceId != null) {
       subscriptions =
@@ -267,8 +258,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     if (boundaryTaskId == null) {
       return 0;
     }
-    // Repository 中暂无 cancelByTask 方法，需补齐
-    return subscriptionMapper.cancelByTask(boundaryTaskId, reason);
+    return subscriptionRepository.cancelByTask(boundaryTaskId, reason);
   }
 
   @Override
@@ -276,8 +266,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     if (instanceId == null) {
       return 0;
     }
-    // Repository 中暂无 cancelByInstance 方法，需补齐
-    return subscriptionMapper.cancelByInstance(instanceId, reason);
+    return subscriptionRepository.cancelByInstance(instanceId, reason);
   }
 
   @Override
@@ -286,11 +275,8 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     if (instanceId == null) {
       return Collections.emptyList();
     }
-    return subscriptionMapper.selectList(
-        new QueryWrapper<FlowEventSubscriptionDO>()
-            .eq("instance_id", instanceId)
-            .eq("deleted", 0)
-            .orderByDesc("created_at"));
+    return subscriptionRepository.findByInstanceOrderByCreatedAtDesc(instanceId).stream()
+        .map(converter::entityToDO).toList();
   }
 
   @Override
@@ -313,8 +299,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
   private void triggerSubscription(
       FlowEventSubscriptionDO sub, String payload, String triggerSource) {
     // 1. 标记订阅已触发
-    // Repository 中 markTriggered 签名不同（无 payload/triggerSource/now 参数），保留 Mapper 调用
-    subscriptionMapper.markTriggered(sub.getId(), payload, triggerSource, LocalDateTime.now());
+    subscriptionRepository.markTriggered(sub.getId(), payload, triggerSource, LocalDateTime.now());
 
     // 2. 边界事件：取消关联的 userTask
     if (sub.getBoundaryTaskId() != null) {
@@ -340,7 +325,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         Map<String, Object> payloadMap = YdszJson.parseMap(payload);
         if (payloadMap != null) {
           variables.putAll(payloadMap);
-          instanceMapper.updateVariable(instance.getId(), YdszJson.toJson(variables));
+          instanceRepository.updateVariable(instance.getId(), YdszJson.toJson(variables));
         }
       } catch (Exception e) {
         log.warn("[Flow] payload 解析失败，忽略: subId={} err={}", sub.getId(), e.getMessage());
@@ -367,7 +352,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
     // 7. 更新实例当前节点
     if (nextNodes.get(0).getNodeType() != 6) { // 非 END
-      instanceMapper.updateStatus(
+      instanceRepository.updateStatus(
           sub.getInstanceId(),
           instance.getFlowStatus(),
           nextNodes.get(0).getNodeCode(),
@@ -392,7 +377,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     if (!"PENDING".equals(task.getTaskStatus()) && !"CLAIMED".equals(task.getTaskStatus())) {
       return;
     }
-    taskMapper.cancelTask(taskId, FlowTaskStatus.CANCELLED.name(), "边界错误事件触发: " + errorCode);
+    taskRepository.cancelTask(taskId, FlowTaskStatus.CANCELLED.name(), "边界错误事件触发: " + errorCode);
     log.info("[Flow] 边界事件取消任务: taskId={} errorCode={}", taskId, errorCode);
   }
 

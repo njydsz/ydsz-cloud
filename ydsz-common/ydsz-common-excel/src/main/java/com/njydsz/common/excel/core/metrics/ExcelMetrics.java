@@ -39,7 +39,7 @@ public class ExcelMetrics {
 
   private static volatile MeterRegistry registry;
 
-  private static final ConcurrentHashMap<String, AtomicLong> gaugeMap = new ConcurrentHashMap<>();
+  private static final ConcurrentHashMap<String, AtomicLong> GAUGE_MAP = new ConcurrentHashMap<>();
 
   private ExcelMetrics() {}
 
@@ -108,7 +108,11 @@ public class ExcelMetrics {
     }
   }
 
-  /** 记录缓存命中 */
+  /**
+   * 记录缓存命中
+   *
+   * @param cacheName 缓存名称
+   */
   public static void recordCacheHit(String cacheName) {
     if (registry == null) {
       return;
@@ -116,7 +120,11 @@ public class ExcelMetrics {
     registry.counter("excel.cache.hits", Tags.of(Tag.of("cache", cacheName))).increment();
   }
 
-  /** 记录缓存未命中 */
+  /**
+   * 记录缓存未命中
+   *
+   * @param cacheName 缓存名称
+   */
   public static void recordCacheMiss(String cacheName) {
     if (registry == null) {
       return;

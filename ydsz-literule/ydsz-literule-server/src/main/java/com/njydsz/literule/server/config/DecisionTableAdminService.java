@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +38,8 @@ public class DecisionTableAdminService {
   private RuleConfigBroadcaster broadcaster;
   private String nodeId;
 
-  /** Excel 导入导出服务（懒加载，避免 POI 不在 classpath 时初始化失败） */
+  /** Excel 导入导出服务（由 infra 模块自动装配，可选注入避免无 POI 时启动失败） */
+  @Autowired(required = false)
   private DecisionTableExcelService excelService;
 
   public DecisionTableAdminService(
@@ -168,11 +170,8 @@ public class DecisionTableAdminService {
     return bytes;
   }
 
-  /** 获取 Excel 导入导出服务（懒加载） */
+  /** 获取 Excel 导入导出服务 */
   private DecisionTableExcelService getExcelService() {
-    if (excelService == null) {
-      excelService = new com.njydsz.literule.infra.excel.DecisionTableExcelExporter();
-    }
     return excelService;
   }
 

@@ -172,9 +172,13 @@ public final class ExecutorUtils {
 
   /** 阻塞队列类型枚举。 */
   public enum BlockingQueueType {
+/** linked */
     LINKED,
+/** array */
     ARRAY,
+/** synchronous */
     SYNCHRONOUS,
+/** priority */
     PRIORITY
   }
 

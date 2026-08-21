@@ -178,7 +178,9 @@ public final class DeserializationProvider {
    * StackOverflowError。 默认最大深度 64（对标 FastJSON2 maxTypeRecursionDepth=100），可通过 {@link
    * JSONReader#setMaxGenericDepth(int)} 调整。
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<Integer> DESERIALIZE_DEPTH = ThreadLocal.withInitial(() -> 0);
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /**
    * @JsonDeserialize 自定义反序列化器缓存（Class -> JsonDeserializer 实例）。 有界 LRU（容量 1024），防止无界增长。
@@ -232,7 +234,14 @@ public final class DeserializationProvider {
     return ((JsonDeserializer<Object>) deserializer).deserialize(reader);
   }
 
-  /** 反序列化 JSON 字符串（零拷贝优化版） */
+  /**
+   * 反序列化 JSON 字符串（零拷贝优化版）
+   *
+   * @param <T> 泛型类型
+   * @param json JSON 字符串
+   * @param clazz 目标类型
+   * @return 返回值说明
+   */
   public static <T> T deserialize(String json, Class<T> clazz) {
     if (json == null || json.isEmpty()) {
       return null;
@@ -336,8 +345,9 @@ public final class DeserializationProvider {
     if (type == Float.class || type == float.class) {
       return TypeConverter.parseFloatValue(json);
     }
-    if (type == Boolean.class || type == boolean.class)
+    if (type == Boolean.class || type == boolean.class) {
       return TypeConverter.parseBooleanValue(json);
+      }
     if (type == BigDecimal.class) {
       return parseBigDecimal(json);
     }
@@ -350,8 +360,9 @@ public final class DeserializationProvider {
     if (type == Map.class) {
       return JsonParserUtil.parseObject(json);
     }
-    if (type == List.class)
+    if (type == List.class) {
       return BeanDeserializerEngine.deserializeArrayZeroCopy(json, Object.class);
+      }
 
     // Bean 类型：直接走 BeanDeserializerEngine 多级降级路径
     // （BeanReader -> Creator -> Builder -> ZeroCopy -> Map 降级）
@@ -670,7 +681,9 @@ public final class DeserializationProvider {
   }
 
   /** 根据 rawType 创建对应的 Map 实例。 */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static Map<String, Object> createMap(Type rawType) {
+  // CHECKSTYLE.ON: RegexpSinglelineJava
     if (rawType == TreeMap.class) {
       return new TreeMap<>();
     } else if (rawType == LinkedHashMap.class) {
@@ -682,7 +695,9 @@ public final class DeserializationProvider {
   /**
    * 清理当前线程的 ThreadLocal 对象。
    *
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
    * <p>在线程池环境中，应在任务完成后或线程归还前调用此方法， 防止 {@link #DESERIALIZE_DEPTH} 等 ThreadLocal 值在线程池中残留。
+  // CHECKSTYLE.ON: RegexpSinglelineJava
    *
    * @since 1.2.1
    */

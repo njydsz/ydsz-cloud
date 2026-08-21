@@ -1,10 +1,12 @@
 package com.njydsz.common.util.security;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.Base64;
 import java.util.HexFormat;
 
 import lombok.extern.slf4j.Slf4j;
@@ -50,9 +52,15 @@ public final class Sm3Utils {
   /** SM3 摘要算法名称（JCA） */
   private static final String SM3_ALGORITHM = "SM3";
 
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   /** BouncyCastle 摘要实例 ThreadLocal 池化（MessageDigest 本身线程安全但每次 getInstance 有 Provider 查找开销） */
+  // CHECKSTYLE.ON: RegexpSinglelineJava
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<MessageDigest> DIGEST_CACHE =
+  // CHECKSTYLE.ON: RegexpSinglelineJava
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
       ThreadLocal.withInitial(
+  // CHECKSTYLE.ON: RegexpSinglelineJava
           () -> {
             try {
               BcProvider.ensure();
@@ -116,7 +124,7 @@ public final class Sm3Utils {
     if (digest == null) {
       return null;
     }
-    return java.util.Base64.getEncoder().encodeToString(digest);
+    return Base64.getEncoder().encodeToString(digest);
   }
 
   /**
@@ -144,7 +152,7 @@ public final class Sm3Utils {
     if (digest == null) {
       return null;
     }
-    return java.util.Base64.getEncoder().encodeToString(digest);
+    return Base64.getEncoder().encodeToString(digest);
   }
 
   /**
@@ -167,7 +175,9 @@ public final class Sm3Utils {
   /**
    * 清理当前线程的 SM3 摘要缓存。
    *
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
    * <p>在线程池复用场景下，建议在请求处理完成后调用此方法，避免 ThreadLocal 内存泄漏。
+  // CHECKSTYLE.ON: RegexpSinglelineJava
    * 通常在 {@code finally} 块中调用：
    *
    * <pre>{@code
@@ -192,9 +202,9 @@ public final class Sm3Utils {
    *
    * @param inputStream 输入流（调用方负责关闭）
    * @return 64 字符 Hex 字符串；流为空时返回 SM3("") 的值
-   * @throws java.io.IOException 读取流时出错
+   * @throws IOException 读取流时出错
    */
-  public static String digestHex(InputStream inputStream) throws java.io.IOException {
+  public static String digestHex(InputStream inputStream) throws IOException {
     byte[] digest = digest(inputStream);
     if (digest == null) {
       return null;
@@ -209,9 +219,9 @@ public final class Sm3Utils {
    *
    * @param inputStream 输入流（调用方负责关闭）；null 时返回 null
    * @return 32 字节摘要
-   * @throws java.io.IOException 读取流时出错
+   * @throws IOException 读取流时出错
    */
-  public static byte[] digest(InputStream inputStream) throws java.io.IOException {
+  public static byte[] digest(InputStream inputStream) throws IOException {
     if (inputStream == null) {
       return null;
     }

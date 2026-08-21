@@ -27,7 +27,6 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.expression.ExpressionFunctionDef;
-import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
 import com.njydsz.literule.domain.vo.ExpressionPreviewResultVO;
 import com.njydsz.literule.domain.vo.RuleChainGraphVO;
@@ -205,7 +204,7 @@ public class RuleGraphController {
     try {
       List<RuleResult> results = graphExecutionProvider.dryRunGraph(ruleCode, facts);
       return YdszResponse.success(
-          results.stream().map(LiteruleConverter.INSTANCE::entityToVO).toList());
+          results.stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList());
     } catch (IllegalArgumentException e) {
       log.warn("[RuleAdmin] 画布 dry-run 失败: ruleCode={}, err={}", ruleCode, e.getMessage());
       return YdszResponse.error(e.getMessage());
@@ -249,6 +248,6 @@ public class RuleGraphController {
                         || engine.equalsIgnoreCase(f.getSupportedEngines()))
             .toList();
     return YdszResponse.success(
-        filtered.stream().map(LiteruleConverter.INSTANCE::entityToVO).toList());
+        filtered.stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList());
   }
 }

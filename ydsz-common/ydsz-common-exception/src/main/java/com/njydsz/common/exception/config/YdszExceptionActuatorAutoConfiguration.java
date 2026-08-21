@@ -32,7 +32,9 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
  * @since 1.0.0
  */
 @AutoConfiguration(after = YdszExceptionCoreAutoConfiguration.class)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.boot.actuate.endpoint.annotation.Endpoint")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 @EnableConfigurationProperties(ExceptionProperties.class)
 public class YdszExceptionActuatorAutoConfiguration {
 

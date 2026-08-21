@@ -51,7 +51,9 @@ public final class FieldMetadataLoader {
   private static final Logger LOGGER = LoggerFactory.getLogger(FieldMetadataLoader.class);
 
   /** 当前使用的命名策略（JsonMapper.applyRuntimeConfig 会写入，故需 public） */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   public static final ThreadLocal<PropertyNamingStrategy> NAMING_STRATEGY =
+  // CHECKSTYLE.ON: RegexpSinglelineJava
       ThreadLocal.withInitial(() -> PropertyNamingStrategy.LOWER_CAMEL_CASE);
 
   /**
@@ -536,13 +538,14 @@ public final class FieldMetadataLoader {
 
   /**
    * 检查字段是否有影响序列化的注解（用于快速路径判定）。
-   *
    * <p>检测以下需要特殊处理的注解/状态：
-   *
    * <ul>
    *   <li>{@code @JsonFormat} 日期格式（{@link FieldMeta#isDateType()}）
    *   <li>{@code @JsonInclude} 非 ALWAYS 策略（{@link FieldMeta#includeStrategy}）
    * </ul>
+   *
+   * @param fields 字段列表
+   * @return 返回值说明
    */
   public static boolean hasFieldAnnotations(FieldMeta[] fields) {
     if (fields == null) {

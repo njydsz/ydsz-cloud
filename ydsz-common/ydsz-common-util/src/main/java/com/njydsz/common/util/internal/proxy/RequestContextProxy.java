@@ -38,7 +38,7 @@ public final class RequestContextProxy {
   private static final ConcurrentMap<String, Method> METHOD_CACHE = new ConcurrentHashMap<>();
 
   /** RequestContext 是否可用的标记（null=未检查，TRUE=可用，FALSE=不可用） */
-  private static final AtomicReference<Boolean> available = new AtomicReference<>();
+  private static final AtomicReference<Boolean> AVAILABLE = new AtomicReference<>();
 
   private RequestContextProxy() {
     throw new UnsupportedOperationException("Utility class should not be instantiated");

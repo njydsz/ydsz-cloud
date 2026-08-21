@@ -2,11 +2,10 @@ package com.njydsz.common.jdbc.health;
 
 import javax.sql.DataSource;
 
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-
-import com.zaxxer.hikari.HikariDataSource;
 
 /**
  * 数据源健康检查指示器

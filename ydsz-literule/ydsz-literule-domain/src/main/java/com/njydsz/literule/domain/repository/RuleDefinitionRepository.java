@@ -3,7 +3,7 @@ package com.njydsz.literule.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 
@@ -48,7 +48,7 @@ public interface RuleDefinitionRepository {
    * @param pageQuery 分页查询参数
    * @return 分页结果（包含规则定义 VO 列表）
    */
-  IPage<RuleDefinitionVO> pageRuleDefinitions(PageQuery pageQuery);
+  PageResponse<List<RuleDefinitionVO>> pageRuleDefinitions(PageQuery pageQuery);
 
   /**
    * 全文搜索规则（数据库级 LIKE 查询）
@@ -87,6 +87,6 @@ public interface RuleDefinitionRepository {
    * @param pageQuery 分页查询参数
    * @return 分页结果
    */
-  IPage<RuleDefinitionVO> searchPage(
+  PageResponse<List<RuleDefinitionVO>> searchPage(
       String query, String status, String category, Boolean enabled, PageQuery pageQuery);
 }

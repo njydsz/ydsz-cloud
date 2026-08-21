@@ -268,8 +268,12 @@ public class CacheStats {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof CacheStats)) return false;
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof CacheStats)) {
+      return false;
+    }
     CacheStats that = (CacheStats) o;
     return hitCount == that.hitCount
         && missCount == that.missCount

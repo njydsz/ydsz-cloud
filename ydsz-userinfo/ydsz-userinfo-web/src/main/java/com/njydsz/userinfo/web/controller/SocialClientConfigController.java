@@ -59,7 +59,8 @@ public class SocialClientConfigController {
   @Operation(summary = "分页查询配置列表")
   public YdszResponse<PageResponse<List<SocialClientVO>>> page(SocialClientPageQuery query) {
     List<SocialClientVO> list = configService.findByPage(query);
-    return YdszResponse.success(PageResponse.of(list, list.size()));
+    return YdszResponse.success(PageResponse.success((long) list.size(),
+        query.getPageNum().longValue(), query.getPageSize().longValue(), list));
   }
 
   /**

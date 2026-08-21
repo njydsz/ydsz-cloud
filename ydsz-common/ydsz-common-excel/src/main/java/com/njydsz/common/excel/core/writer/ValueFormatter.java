@@ -197,19 +197,10 @@ public class ValueFormatter {
   }
 
   /**
-   * 格式化 SQL Date
- *
- * @param sqlDateObj SQL 日期对象
- * @param pattern 模式
+   * 格式化 SQL Date。
    *
- *
- * @param sqlDateObj SQL 日期对象
- * @param pattern 模式
- *
- * @param sqlDateObj SQL 日期对象
- * @param pattern 模式
-   * @param sqlDate SQL Date 对象
-   * @param pattern 日期格式 pattern
+   * @param sqlDateObj SQL 日期对象
+   * @param pattern 模式
    * @return 格式化后的字符串
    */
   public String formatSqlDate(Object sqlDateObj, String pattern) {

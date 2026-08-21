@@ -279,4 +279,16 @@ public interface FlowInstanceRepository {
    * @return 流程实例 VO 列表
    */
   List<FlowInstanceVO> findArchiveCandidates(List<String> statuses, LocalDateTime threshold, int limit);
+
+  /**
+   * 查询长期运行实例（RUNNING 状态且启动时间早于阈值）。
+   *
+   * <p>用于异常检测：识别运行时间过长的流程实例。
+   *
+   * @param tenantId 租户 ID（可为 null，表示不过滤）
+   * @param threshold 启动时间阈值（查询 startAt 早于此值的实例）
+   * @param limit 返回数量上限
+   * @return 流程实例 VO 列表
+   */
+  List<FlowInstanceVO> findLongRunning(String tenantId, LocalDateTime threshold, int limit);
 }

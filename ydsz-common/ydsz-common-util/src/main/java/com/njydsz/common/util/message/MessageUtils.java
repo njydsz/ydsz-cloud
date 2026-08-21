@@ -1,5 +1,6 @@
 package com.njydsz.common.util.message;
 
+import java.lang.reflect.Method;
 import java.util.Locale;
 
 import org.slf4j.Logger;
@@ -232,7 +233,7 @@ public final class MessageUtils {
       return null;
     }
     try {
-      java.lang.reflect.Method method = authObj.getClass().getMethod("getUserLanguage");
+      Method method = authObj.getClass().getMethod("getUserLanguage");
       Object result = method.invoke(authObj);
       return result instanceof String str ? str : null;
     } catch (Exception e) {

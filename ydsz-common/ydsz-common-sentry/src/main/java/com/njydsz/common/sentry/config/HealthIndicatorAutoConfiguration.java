@@ -45,7 +45,9 @@ public class HealthIndicatorAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(SentryHealthIndicator.class)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   public SentryHealthIndicator sentryHealthIndicator(
       MetricsCollector metricsCollector, LogPublisher logPublisher, TraceContext traceContext) {
     return new SentryHealthIndicator(metricsCollector, logPublisher, traceContext);
@@ -59,7 +61,9 @@ public class HealthIndicatorAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(SystemResourceHealthIndicator.class)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnProperty(
       prefix = "ydsz.sentry.metrics",
       name = "enable-system-metrics",
@@ -80,7 +84,9 @@ public class HealthIndicatorAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(SentryInfoContributor.class)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.actuate.info.InfoContributor")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   public SentryInfoContributor sentryInfoContributor(
       MetricsCollector metricsCollector, LogPublisher logPublisher, TraceContext traceContext) {
     return new SentryInfoContributor(metricsCollector, logPublisher, traceContext);

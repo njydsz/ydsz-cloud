@@ -141,4 +141,14 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
   public int cancelByInstance(String instanceId, String reason) {
     return eventSubscriptionMapper.cancelByInstance(instanceId, reason);
   }
+
+  @Override
+  public List<FlowEventSubscriptionVO> findByInstanceOrderByCreatedAtDesc(String instanceId) {
+    return converter.flowEventSubscriptionListToVO(
+        eventSubscriptionMapper.selectList(
+            new LambdaQueryWrapper<FlowEventSubscriptionDO>()
+                .eq(FlowEventSubscriptionDO::getInstanceId, instanceId)
+                .eq(FlowEventSubscriptionDO::getDeleted, 0)
+                .orderByDesc(FlowEventSubscriptionDO::getCreatedAt)));
+  }
 }

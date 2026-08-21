@@ -30,7 +30,9 @@ import com.njydsz.common.util.string.StringUtils;
  * @since 1.0.0
  */
 @Slf4j
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 public class FileHealthIndicator implements HealthIndicator {
 
   private final IFileStorageProvider fileStorageProvider;

@@ -178,37 +178,65 @@ public class SuperFastExcelReader {
     return baos.toByteArray();
   }
 
-  /** 设置列元数据数组 */
+  /**
+   * 设置列元数据数组
+   *
+   * @param columnMetadataArray 列元数据数组
+   */
   public void setColumnMetadataArray(ColumnMetadata[] columnMetadataArray) {
     this.columnMetadataArray = columnMetadataArray;
   }
 
-  /** 设置对象实例化器 */
+  /**
+   * 设置对象实例化器
+   *
+   * @param instantiator 实例化器
+   */
   public void setInstantiator(ObjectInstantiator instantiator) {
     this.instantiator = instantiator;
   }
 
-  /** 设置分析上下文 */
+  /**
+   * 设置分析上下文
+   *
+   * @param context 上下文
+   */
   public void setContext(AnalysisContext context) {
     this.context = context;
   }
 
-  /** 设置监听器列表 */
+  /**
+   * 设置监听器列表
+   *
+   * @param listeners 监听器
+   */
   public void setListeners(List<ReadListener<?>> listeners) {
     this.listeners = listeners;
   }
 
-  /** 设置表头行号 */
+  /**
+   * 设置表头行号
+   *
+   * @param headRowNumber 表头行号
+   */
   public void setHeadRowNumber(int headRowNumber) {
     this.headRowNumber = headRowNumber;
   }
 
-  /** 设置最大读取行数限制 */
+  /**
+   * 设置最大读取行数限制
+   *
+   * @param maxRows 最大行数
+   */
   public void setMaxRows(int maxRows) {
     this.maxRows = maxRows;
   }
 
-  /** 设置是否跳过空行 */
+  /**
+   * 设置是否跳过空行
+   *
+   * @param skipEmptyRows 是否跳过空行
+   */
   public void setSkipEmptyRows(boolean skipEmptyRows) {
     this.skipEmptyRows = skipEmptyRows;
   }

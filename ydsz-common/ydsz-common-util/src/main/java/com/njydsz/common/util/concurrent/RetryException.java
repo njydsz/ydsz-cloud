@@ -18,7 +18,6 @@ public class RetryException extends RuntimeException {
    *
    * @param message 异常描述信息
    * @param cause 最后一次失败的异常（可为 null）
-   * @return 处理结果
    */
   public RetryException(String message, Throwable cause) {
     super(message, cause);

@@ -77,12 +77,24 @@ public class CacheThreadPoolManager implements DisposableBean {
   private static final int DEFAULT_POOL_SIZE =
       Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
 
-  /** 创建或获取指定名称的线程池 */
+  /**
+   * 创建或获取指定名称的线程池
+   *
+   * @param name 名称
+   * @return 返回值说明
+   */
   public ExecutorService getOrCreatePool(String name) {
     return getOrCreatePool(name, DEFAULT_POOL_SIZE, DEFAULT_POOL_SIZE * 2);
   }
 
-  /** 创建或获取指定名称和配置的线程池 */
+  /**
+   * 创建或获取指定名称和配置的线程池
+   *
+   * @param name 名称
+   * @param coreSize coreSize 参数
+   * @param maxSize maxSize 参数
+   * @return 返回值说明
+   */
   public ExecutorService getOrCreatePool(String name, int coreSize, int maxSize) {
     return pools.computeIfAbsent(name, n -> createPool(n, coreSize, maxSize));
   }
@@ -152,7 +164,11 @@ public class CacheThreadPoolManager implements DisposableBean {
     return executor;
   }
 
-  /** 关闭指定线程池 */
+  /**
+   * 关闭指定线程池
+   *
+   * @param name 名称
+   */
   public void shutdownPool(String name) {
     ExecutorService pool = pools.remove(name);
     if (pool != null) {
@@ -173,7 +189,11 @@ public class CacheThreadPoolManager implements DisposableBean {
     scheduledPools.clear();
   }
 
-  /** 获取所有线程池的状态信息 */
+  /**
+   * 获取所有线程池的状态信息
+   *
+   * @return 返回值说明
+   */
   public String getPoolStatus() {
     StringBuilder sb = new StringBuilder();
     pools.forEach(

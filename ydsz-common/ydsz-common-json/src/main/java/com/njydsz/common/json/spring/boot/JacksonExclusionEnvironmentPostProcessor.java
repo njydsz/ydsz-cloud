@@ -19,7 +19,9 @@ import org.springframework.util.StringUtils;
  * Bean 的组件可正常工作；MVC 层通过 {@code JsonHttpMessageConverter} 的注册顺序已足以让业务接口走 YdszJson。
  *
  * <p>当显式设置 {@code ydsz.json.disable-jackson-auto-configuration=true} 时， 将 {@code
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
  * org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration} 追加到 {@code
+  // CHECKSTYLE.ON: RegexpSinglelineJava
  * spring.autoconfigure.exclude}，Spring 容器不再注册 {@code ObjectMapper} Bean。
  *
  * <p>EnvironmentPostProcessor 在 Spring Boot 启动早期执行， 此时 {@code @ConfigurationProperties} 尚未绑定，因此直接从
@@ -37,7 +39,9 @@ public class JacksonExclusionEnvironmentPostProcessor implements EnvironmentPost
   private static final String PROPERTY_NAME = "ydsz.json.disable-jackson-auto-configuration";
   private static final String EXCLUDE_PROPERTY = "spring.autoconfigure.exclude";
   private static final String JACKSON_AUTO_CONFIGURATION =
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
       "org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration";
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   private static final String PROPERTY_SOURCE_NAME = "ydszJsonJacksonExclusion";
 
   @Override

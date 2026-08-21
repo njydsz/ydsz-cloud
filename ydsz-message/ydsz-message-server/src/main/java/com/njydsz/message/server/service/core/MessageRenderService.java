@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.RichMediaContent;
-import com.njydsz.message.domain.model.core.MsgTemplate;
+import com.njydsz.message.infra.entity.MsgTemplate;
 import com.njydsz.message.server.config.VariableSourceResolver;
 import com.njydsz.message.server.filter.SensitiveWordFilter;
 import com.njydsz.message.server.service.TemplateService;

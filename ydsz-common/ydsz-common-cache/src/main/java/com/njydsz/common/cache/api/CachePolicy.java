@@ -44,35 +44,71 @@ public interface CachePolicy {
   /** 淘汰策略接口 */
   interface EvictionPolicy {
 
-    /** 获取最大容量 */
+    /**
+     * 获取最大容量
+     *
+     * @return 返回值说明
+     */
     OptionalLong getMaximum();
 
-    /** 设置最大容量 */
+    /**
+     * 设置最大容量
+     *
+     * @param maximumSize maximumSize 参数
+     */
     void setMaximum(long maximumSize);
 
-    /** 获取当前加权大小（如果使用权重） */
+    /**
+     * 获取当前加权大小（如果使用权重）
+     *
+     * @return 返回值说明
+     */
     OptionalLong weightedSize();
 
-    /** 是否使用权重 */
+    /**
+     * 是否使用权重
+     *
+     * @return 返回值说明
+     */
     boolean isWeighted();
   }
 
   /** 过期策略接口 */
   interface ExpirationPolicy {
 
-    /** 获取写入后过期时间（纳秒），0 表示不过期 */
+    /**
+     * 获取写入后过期时间（纳秒），0 表示不过期
+     *
+     * @return 返回值说明
+     */
     long getExpiresAfterWriteNanos();
 
-    /** 设置写入后过期时间 */
+    /**
+     * 设置写入后过期时间
+     *
+     * @param expireAfterWriteNanos expireAfterWriteNanos 参数
+     */
     void setExpiresAfterWriteNanos(long expireAfterWriteNanos);
 
-    /** 获取访问后过期时间（纳秒），0 表示不过期 */
+    /**
+     * 获取访问后过期时间（纳秒），0 表示不过期
+     *
+     * @return 返回值说明
+     */
     long getExpiresAfterAccessNanos();
 
-    /** 设置访问后过期时间 */
+    /**
+     * 设置访问后过期时间
+     *
+     * @param expireAfterAccessNanos expireAfterAccessNanos 参数
+     */
     void setExpiresAfterAccessNanos(long expireAfterAccessNanos);
 
-    /** 是否使用自定义过期策略 */
+    /**
+     * 是否使用自定义过期策略
+     *
+     * @return 返回值说明
+     */
     boolean isCustomExpiry();
   }
 }

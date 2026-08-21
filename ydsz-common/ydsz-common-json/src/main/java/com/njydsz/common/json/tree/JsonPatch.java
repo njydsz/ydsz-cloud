@@ -3,6 +3,7 @@ package com.njydsz.common.json.tree;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.exception.JsonException;
@@ -55,11 +56,17 @@ public final class JsonPatch {
 
   /** JSON Patch 操作类型 */
   public enum Operation {
+/** add */
     ADD,
+/** remove */
     REMOVE,
+/** replace */
     REPLACE,
+/** move */
     MOVE,
+/** copy */
     COPY,
+/** test */
     TEST
   }
 
@@ -216,6 +223,7 @@ public final class JsonPatch {
       case TEST -> applyTest(resolution, segments[segments.length - 1], op.value);
       case MOVE -> applyMove(tree, op);
       case COPY -> applyCopy(tree, op);
+      default -> throw new JsonException("Unsupported patch op: " + op.op);
     }
   }
 
@@ -286,7 +294,7 @@ public final class JsonPatch {
   /** Test 操作：验证指定路径的值是否匹配。 */
   private static void applyTest(PathResolution resolution, String lastSegment, Object expected) {
     Object actual = getValueAt(resolution, lastSegment);
-    if (!java.util.Objects.equals(actual, expected)) {
+    if (!Objects.equals(actual, expected)) {
       throw new JsonException(
           "TEST failed at '" + lastSegment + "': expected " + expected + " but got " + actual);
     }

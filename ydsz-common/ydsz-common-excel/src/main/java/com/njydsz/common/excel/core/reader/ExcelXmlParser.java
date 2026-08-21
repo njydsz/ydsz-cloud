@@ -17,14 +17,14 @@ import org.slf4j.LoggerFactory;
  * <p>Excel .xlsx 文件中的 sheet XML 结构为：
  *
  * <pre>{@code
- * <row r="1">
- *   <c r="A1" t="s" s="0">
- *     <v>0</v>
- *   </c>
- * </row>
+ * &lt;row r="1"&gt;
+ *   &lt;c r="A1" t="s" s="0"&gt;
+ *     &lt;v&gt;0&lt;/v&gt;
+ *   &lt;/c&gt;
+ * &lt;/row&gt;
  * }</pre>
  *
- * 本解析器通过逐字节扫描 XML 标签前缀（如 {@code <row}, {@code <c}, {@code <v>}）， 定位行、单元格、值的位置，然后提取属性和文本内容。
+ * 本解析器通过逐字节扫描 XML 标签前缀（如 {@code row}、{@code c}、{@code v}）， 定位行、单元格、值的位置，然后提取属性和文本内容。
  *
  * <h3>回调接口</h3>
  *
@@ -128,20 +128,28 @@ public class ExcelXmlParser {
   /**
    * 行回调接口。
    *
-   * <p>在解析到 {@code <row>} 开始和 {@code </row>} 结束时触发。
+   * <p>在解析到 {@code &lt;row&gt;} 开始和 {@code &lt;/row&gt;} 结束时触发。
    */
   public interface RowHandler {
-    /** 行开始时回调 */
+    /**
+     * 行开始时回调
+     *
+     * @param rowNum 行号
+     */
     void onRowStart(int rowNum);
 
-    /** 行结束时回调 */
+    /**
+     * 行结束时回调。
+     *
+     * @param rowNum 行号
+     */
     void onRowEnd(int rowNum);
   }
 
   /**
    * 单元格回调接口。
    *
-   * <p>在解析到 {@code <c>} 标签、{@code <v>} 值标签和 {@code </c>} 结束标签时触发。
+   * <p>在解析到 {@code &lt;c&gt;} 标签、{@code &lt;v&gt;} 值标签和 {@code &lt;/c&gt;} 结束标签时触发。
    */
   public interface CellHandler {
     /**
@@ -164,7 +172,12 @@ public class ExcelXmlParser {
      */
     void onCellValue(int row, int col, String value);
 
-    /** 单元格结束时回调 */
+    /**
+     * 单元格结束时回调。
+     *
+     * @param row 行号
+     * @param col 列号
+     */
     void onCellEnd(int row, int col);
   }
 

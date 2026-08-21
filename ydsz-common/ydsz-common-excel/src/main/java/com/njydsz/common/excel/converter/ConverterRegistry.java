@@ -45,13 +45,13 @@ import com.njydsz.common.excel.converter.impl.YearMonthConverter;
  * </ul>
  *
  * @author ydsz-team
- * @email ydsz-dev@ydszsoft.com
+
  * @version 1.0.0
  * @since 1.0.0
  */
 public class ConverterRegistry {
 
-  private static final AtomicReference<ConverterChain> defaultChain = new AtomicReference<>();
+  private static final AtomicReference<ConverterChain> DEFAULT_CHAIN = new AtomicReference<>();
 
   private ConverterRegistry() {}
 

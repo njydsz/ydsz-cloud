@@ -263,6 +263,20 @@ public interface FlowRunTaskRepository {
   void completeTask(String taskId, String taskStatus, LocalDateTime finishAt, Long durationMs);
 
   /**
+   * 完成任务（含备注注释）。
+   *
+   * <p>更新 {@code taskStatus, comment, finishAt, durationMs}。
+   *
+   * @param taskId 任务 ID
+   * @param taskStatus 目标状态
+   * @param comment 完成备注
+   * @param finishAt 完成时间
+   * @param durationMs 耗时（毫秒）
+   */
+  void completeTaskWithComment(
+      String taskId, String taskStatus, String comment, LocalDateTime finishAt, Long durationMs);
+
+  /**
    * 取消任务（更新状态为 CANCELLED）。
    *
    * <p>更新 {@code taskStatus = 'CANCELLED', comment, finishAt = now()}。
@@ -413,4 +427,22 @@ public interface FlowRunTaskRepository {
    * @return 运行时任务 VO 列表
    */
   List<FlowRunTaskVO> selectPendingByAssignee(String assigneeId, String flowCode, String tenantId);
+
+  /**
+   * 查询卡单任务（超过指定时间未处理的 PENDING/CLAIMED 任务）。
+   *
+   * @param tenantId 租户 ID（可为 null，表示不过滤）
+   * @param threshold 创建时间阈值（查询创建时间早于此值的任务）
+   * @param limit 返回数量上限
+   * @return 卡单任务 VO 列表
+   */
+  List<FlowRunTaskVO> findStuckTasks(String tenantId, LocalDateTime threshold, int limit);
+
+  /**
+   * 统计指定租户下超期任务数量（PENDING/CLAIMED 且 dueAt &lt; now）。
+   *
+   * @param tenantId 租户 ID
+   * @return 超期任务数量
+   */
+  long countOverdueByTenantId(String tenantId);
 }

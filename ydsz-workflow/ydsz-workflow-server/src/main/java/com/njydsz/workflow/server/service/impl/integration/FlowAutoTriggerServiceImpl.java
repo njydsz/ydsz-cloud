@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,10 +15,9 @@ import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowAutoTriggerRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowAutoTriggerDO;
-import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.mapper.FlowAutoTriggerMapper;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.impl.instance.DefaultFlowRoutingService;
@@ -83,9 +81,6 @@ import com.njydsz.workflow.server.service.impl.instance.DefaultFlowRoutingServic
 @RequiredArgsConstructor
 public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
-  /** 自动触发 Mapper，管理 ydsz_flow_auto_trigger 表（复杂查询暂无 Repository 替代） */
-  private final FlowAutoTriggerMapper autoTriggerMapper;
-
   /** 自动触发仓储，管理 ydsz_flow_auto_trigger 表 CRUD */
   private final FlowAutoTriggerRepository autoTriggerRepository;
 
@@ -126,9 +121,9 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     }
 
     // 2. 查询 sourceFlowCode 对应的所有 enabled 触发规则
-    // Repository 中暂无 selectEnabledBySourceFlowCode 等价方法，保留 Mapper 调用
     List<FlowAutoTriggerDO> triggers =
-        autoTriggerMapper.selectEnabledBySourceFlowCode(sourceFlowCode);
+        autoTriggerRepository.findEnabledBySourceFlowCode(sourceFlowCode).stream()
+            .map(converter::entityToDO).toList();
     if (triggers == null || triggers.isEmpty()) {
       log.debug(
           "[FlowAutoTriggerDO] 无触发规则: sourceFlowCode={} instanceId={}", sourceFlowCode, instanceId);
@@ -303,20 +298,15 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void removeTrigger(String sourceFlowCode) {
-    // Repository 中暂无按 sourceFlowCode 批量删除等价方法，保留 Mapper 调用
-    LambdaQueryWrapper<FlowAutoTriggerDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(FlowAutoTriggerDO::getSourceFlowCode, sourceFlowCode);
-    autoTriggerMapper.delete(wrapper);
+    autoTriggerRepository.deleteBySourceFlowCode(sourceFlowCode);
     log.info("[FlowAutoTriggerDO] 移除触发规则: sourceFlowCode={}", sourceFlowCode);
   }
 
   @Override
   @Transactional(readOnly = true)
   public List<FlowAutoTriggerDO> listAll() {
-    // Repository 中暂无按 sortOrder + id 排序全量查询等价方法，保留 Mapper 调用
-    LambdaQueryWrapper<FlowAutoTriggerDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.orderByAsc(FlowAutoTriggerDO::getSortOrder).orderByAsc(FlowAutoTriggerDO::getId);
-    return autoTriggerMapper.selectList(wrapper);
+    return autoTriggerRepository.findAllOrderBySort().stream()
+        .map(converter::entityToDO).toList();
   }
 
   @Override

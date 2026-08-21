@@ -36,7 +36,9 @@ import com.njydsz.common.docs.parser.DocumentParser;
  */
 @Slf4j
 @Component
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.apache.commons.csv.CSVParser")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 public class CsvDocumentParser implements DocumentParser {
 
   /**

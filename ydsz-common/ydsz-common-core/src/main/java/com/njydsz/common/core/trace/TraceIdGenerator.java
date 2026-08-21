@@ -62,7 +62,9 @@ public final class TraceIdGenerator {
    *
    * <p>每个线程独立维护最后使用的时间戳和同毫秒内的递增序号。 多线程之间不存在锁竞争，整体生成吞吐量更高。
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<SortableState> SORTABLE_STATE =
+  // CHECKSTYLE.ON: RegexpSinglelineJava
       ThreadLocal.withInitial(SortableState::new);
 
   private TraceIdGenerator() {

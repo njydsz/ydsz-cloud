@@ -88,7 +88,9 @@ public interface ExceptionCode extends ResultCode {
    */
   default ExceptionCategory getCategory() {
     String key = getKey();
-    if (key == null || key.isEmpty()) return ExceptionCategory.BUSINESS;
+    if (key == null || key.isEmpty()) {
+      return ExceptionCategory.BUSINESS;
+    }
     String lower = key.toLowerCase();
     if (lower.startsWith("sys.") || lower.startsWith("system.")) {
       return ExceptionCategory.SYSTEM;

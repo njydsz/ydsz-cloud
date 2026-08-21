@@ -221,4 +221,35 @@ public interface FlowHisTaskRepository {
    */
   long countDone(String assigneeId, String businessType, String flowCode,
       java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, String tenantId);
+
+  /**
+   * 按租户 + 时间范围查询历史任务列表（带流程编码过滤）。
+   *
+   * <p>用于效率分析：查询指定租户下、时间范围内（finishAt 字段）的历史任务，
+   * 按 finishAt 倒序排列，限制返回数量。
+   *
+   * @param tenantId 租户 ID（可为 null，表示不过滤）
+   * @param flowCode 流程编码（可为 null，表示不过滤）
+   * @param startTime 开始时间（finishAt >= startTime，可为 null）
+   * @param endTime 结束时间（finishAt <= endTime，可为 null）
+   * @param limit 返回数量上限
+   * @return 历史任务 VO 列表
+   */
+  List<FlowHisTaskVO> selectByTimeRange(
+      String tenantId,
+      String flowCode,
+      java.time.LocalDateTime startTime,
+      java.time.LocalDateTime endTime,
+      int limit);
+
+  /**
+   * 按租户查询最近的历史任务（按 finishAt 倒序）。
+   *
+   * <p>用于高驳回率检测：获取最近 N 个历史任务样本。
+   *
+   * @param tenantId 租户 ID（可为 null，表示不过滤）
+   * @param limit 返回数量上限
+   * @return 历史任务 VO 列表
+   */
+  List<FlowHisTaskVO> selectRecentByTenant(String tenantId, int limit);
 }

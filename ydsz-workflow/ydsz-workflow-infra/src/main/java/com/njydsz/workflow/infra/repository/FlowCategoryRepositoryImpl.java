@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.repository.FlowCategoryRepository;
 import com.njydsz.workflow.domain.vo.FlowCategoryVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
@@ -43,6 +44,14 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
   private final WorkflowConverter converter;
 
   @Override
+  public FlowCategoryVO save(FlowCategoryDTO dto) {
+    FlowCategoryDO entity = converter.dtoToDO(dto);
+    categoryMapper.insert(entity);
+    return converter.entityToVO(entity);
+  }
+
+  @Override
+  @Deprecated
   public FlowCategoryVO save(FlowCategoryVO vo) {
     FlowCategoryDO entity = converter.entityToDO(vo);
     categoryMapper.insert(entity);
@@ -94,6 +103,14 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
   }
 
   @Override
+  public FlowCategoryVO update(FlowCategoryDTO dto) {
+    FlowCategoryDO entity = converter.dtoToDO(dto);
+    categoryMapper.updateById(entity);
+    return converter.entityToVO(entity);
+  }
+
+  @Override
+  @Deprecated
   public FlowCategoryVO update(FlowCategoryVO vo) {
     FlowCategoryDO entity = converter.entityToDO(vo);
     categoryMapper.updateById(entity);

@@ -79,7 +79,9 @@ import com.njydsz.common.thread.util.ExecutorUtils;
 @AutoConfiguration
 @EnableConfigurationProperties(NotifyProperties.class)
 @EnableScheduling
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.apache.hc.client5.http.classic.HttpClient")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 @ConditionalOnProperty(
     prefix = "ydsz.notify",
     name = "enabled",
@@ -448,7 +450,9 @@ public class NotifyConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(NotifyHealthIndicator.class)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   public NotifyHealthIndicator notifyHealthIndicator(
       NotifyProperties notifyProperties,
       ObjectProvider<List<NotifyChannelStrategy>> strategiesProvider,

@@ -2,6 +2,7 @@ package com.njydsz.common.cache.builder;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.api.LoadingCache;
@@ -334,7 +335,7 @@ public final class CacheBuilder<K, V> {
    * @param loader 缓存加载器函数
    * @return this
    */
-  public CacheBuilder<K, V> loaderFrom(java.util.function.Function<? super K, ? extends V> loader) {
+  public CacheBuilder<K, V> loaderFrom(Function<? super K, ? extends V> loader) {
     this.loader = CacheLoader.from(loader::apply);
     return this;
   }

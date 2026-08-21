@@ -93,7 +93,9 @@ public final class JsonParserUtil {
    *
    * <p>线程池环境下应调用 {@link #clearThreadLocals()} 清理，防止内存泄漏。
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<char[]> CHAR_BUFFER =
+  // CHECKSTYLE.ON: RegexpSinglelineJava
       ThreadLocal.withInitial(() -> new char[CHAR_BUFFER_SIZE]);
 
   /**
@@ -104,11 +106,15 @@ public final class JsonParserUtil {
    *
    * <p>线程池环境下应调用 {@link #clearThreadLocals()} 清理，防止内存泄漏。
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<StringBuilder> SB_POOL =
+  // CHECKSTYLE.ON: RegexpSinglelineJava
       ThreadLocal.withInitial(() -> new StringBuilder(SB_POOL_INIT_CAPACITY));
 
   /** 是否使用 BigDecimal 解析浮点数（避免精度丢失），默认 false（按线程隔离，避免跨线程泄漏） */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<Boolean> USE_BIG_DECIMAL = ThreadLocal.withInitial(() -> false);
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /** 递归解析最大嵌套深度（防止栈溢出攻击），与 JSONReader.DEFAULT_MAX_DEPTH 对齐，默认 256 */
   private static volatile int maxParseDepth = DEFAULT_MAX_PARSE_DEPTH;
@@ -121,7 +127,9 @@ public final class JsonParserUtil {
    *
    * @since 1.2.3
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<Integer> CALL_PARSE_DEPTH = new ThreadLocal<>();
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /**
    * 设置全局递归解析最大嵌套深度（默认 256，与 JSONReader 对齐）。
@@ -288,7 +296,7 @@ public final class JsonParserUtil {
    * @param depth 当前解析深度
    * @return 解析后的值
    */
-  private static final Object parseValueWithPos(char[] chars, int pos, int[] endPos, int depth) {
+  private static Object parseValueWithPos(char[] chars, int pos, int[] endPos, int depth) {
     // 快速路径：跳过空白（内联）
     pos = skipWhitespace(chars, pos);
 
@@ -386,7 +394,7 @@ public final class JsonParserUtil {
   }
 
   /** 兼容旧调用方（委托给 withPos 版本） */
-  private static final Object parseValue(char[] chars, int pos) {
+  private static Object parseValue(char[] chars, int pos) {
     int[] endPos = new int[1];
     return parseValueWithPos(chars, pos, endPos, 1);
   }
@@ -501,7 +509,11 @@ public final class JsonParserUtil {
     USE_BIG_DECIMAL.set(enabled);
   }
 
-  /** 查询当前线程是否使用 BigDecimal 解析浮点数。 */
+  /**
+   * 查询当前线程是否使用 BigDecimal 解析浮点数。
+   *
+   * @return 返回值说明
+   */
   public static boolean isUseBigDecimal() {
     return USE_BIG_DECIMAL.get();
   }
@@ -1046,7 +1058,7 @@ public final class JsonParserUtil {
   }
 
   /** 获取字符数组缓冲区（JIT 优化：final 方法） */
-  private static final char[] getCharBuffer(String json) {
+  private static char[] getCharBuffer(String json) {
     char[] buffer = CHAR_BUFFER.get();
     if (buffer.length < json.length()) {
       buffer = new char[json.length()];
@@ -1057,7 +1069,7 @@ public final class JsonParserUtil {
   }
 
   /** 快速跳过空白字符（向量化优化） */
-  private static final int skipWhitespace(char[] chars, int pos) {
+  private static int skipWhitespace(char[] chars, int pos) {
     int len = chars.length;
 
     // 向量化处理：一次检查 8 个字符
@@ -1104,7 +1116,9 @@ public final class JsonParserUtil {
     while (i < len && json.charAt(i) <= ' ') {
       i++;
     }
-    if (i >= len || json.charAt(i) != '{') return fieldPositions;
+    if (i >= len || json.charAt(i) != '{') {
+      return fieldPositions;
+    }
     i++; // 跳过 '{'
 
     while (i < len) {
@@ -1115,7 +1129,9 @@ public final class JsonParserUtil {
       if (i >= len) {
         break;
       }
-      if (json.charAt(i) == '}') break;
+      if (json.charAt(i) == '}') {
+        break;
+      }
       if (json.charAt(i) == ',') {
         i++;
         continue;
@@ -1209,7 +1225,9 @@ public final class JsonParserUtil {
       int i = start;
       while (i < len) {
         char ch = json.charAt(i);
-        if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ') return i;
+        if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ') {
+          return i;
+        }
         i++;
       }
       return i;
@@ -1253,7 +1271,13 @@ public final class JsonParserUtil {
     return -1;
   }
 
-  /** 解析 int 字段（解析器直接调用） */
+  /**
+   * 解析 int 字段（解析器直接调用）
+   *
+   * @param json JSON 字符串
+   * @param fieldName 字段名
+   * @return 返回值说明
+   */
   public static int parseIntField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
@@ -1279,7 +1303,13 @@ public final class JsonParserUtil {
     }
   }
 
-  /** 解析 long 字段（解析器直接调用） */
+  /**
+   * 解析 long 字段（解析器直接调用）
+   *
+   * @param json JSON 字符串
+   * @param fieldName 字段名
+   * @return 返回值说明
+   */
   public static long parseLongField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
@@ -1305,7 +1335,13 @@ public final class JsonParserUtil {
     }
   }
 
-  /** 解析 double 字段（解析器直接调用） */
+  /**
+   * 解析 double 字段（解析器直接调用）
+   *
+   * @param json JSON 字符串
+   * @param fieldName 字段名
+   * @return 返回值说明
+   */
   public static double parseDoubleField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
@@ -1333,7 +1369,13 @@ public final class JsonParserUtil {
     }
   }
 
-  /** 解析 String 字段（解析器直接调用） */
+  /**
+   * 解析 String 字段（解析器直接调用）
+   *
+   * @param json JSON 字符串
+   * @param fieldName 字段名
+   * @return 返回值说明
+   */
   public static String parseStringField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
@@ -1369,7 +1411,13 @@ public final class JsonParserUtil {
     return json.substring(valueStart, valueEnd);
   }
 
-  /** 解析 boolean 字段（解析器直接调用） */
+  /**
+   * 解析 boolean 字段（解析器直接调用）
+   *
+   * @param json JSON 字符串
+   * @param fieldName 字段名
+   * @return 返回值说明
+   */
   public static boolean parseBooleanField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
@@ -1452,7 +1500,14 @@ public final class JsonParserUtil {
     }
   }
 
-  /** 解析 JSON 数组（带类型参数，用于降级） */
+  /**
+   * 解析 JSON 数组（带类型参数，用于降级）
+   *
+   * @param <T> 泛型类型
+   * @param json JSON 字符串
+   * @param clazz 目标类型
+   * @return 返回值说明
+   */
   public static <T> List<T> parseArray(String json, Class<T> clazz) {
     List<Object> list = parseArray(json);
     if (list == null) {
@@ -1465,7 +1520,14 @@ public final class JsonParserUtil {
     return typedList;
   }
 
-  /** 解析 JSON 对象（带类型参数，用于降级） */
+  /**
+   * 解析 JSON 对象（带类型参数，用于降级）
+   *
+   * @param <T> 泛型类型
+   * @param json JSON 字符串
+   * @param clazz 目标类型
+   * @return 返回值说明
+   */
   public static <T> T parseObject(String json, Class<T> clazz) {
     // Map 及其子类直接 cast 返回
     if (Map.class.isAssignableFrom(clazz)) {

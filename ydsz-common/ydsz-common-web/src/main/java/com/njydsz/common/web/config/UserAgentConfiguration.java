@@ -1,12 +1,11 @@
 package com.njydsz.common.web.config;
 
+import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
-
-import nl.basjes.parse.useragent.UserAgentAnalyzer;
 
 /**
  * User-Agent 解析器配置。

@@ -19,7 +19,7 @@ import com.njydsz.common.excel.core.metadata.ReadMetadata;
  * </ul>
  *
  * @author ydsz-team
- * @email ydsz-dev@ydszsoft.com
+
  * @version 1.0.0
  * @see ExcelReader
  * @since 1.0.0

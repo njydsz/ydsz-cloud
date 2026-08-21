@@ -31,7 +31,7 @@ import com.njydsz.common.util.bean.BeanMapper;
  *       Object)}
  *   <li>Map 转换/过滤 → {@link java.util.Map#replaceAll(java.util.function.BiFunction)} / stream
  *   <li>Map 合并 → {@link Map#merge(Object, Object, java.util.function.BiFunction)} / {@code new
- *       HashMap<>(m1) {{ putAll(m2); }}</code>}
+ *       HashMap<>(m1) {{ putAll(m2); }} }
  *   <li>Map 排序 → {@link java.util.TreeMap} / stream + {@link java.util.LinkedHashMap}
  *   <li>Map 反转/扁平化/深拷贝 → stream 自行实现
  * </ul>

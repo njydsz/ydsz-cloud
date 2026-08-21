@@ -1,5 +1,7 @@
 package com.njydsz.common.json.tree;
 
+import java.util.Iterator;
+
 /**
  * JSON Merge Patch（RFC 7396）实现。
  *
@@ -69,7 +71,7 @@ public final class JsonMergePatch {
    * @return 修改后的 target
    */
   private static ObjectNode mergeInto(ObjectNode target, ObjectNode patch) {
-    java.util.Iterator<String> fieldNameIterator = patch.fieldNames();
+    Iterator<String> fieldNameIterator = patch.fieldNames();
     while (fieldNameIterator.hasNext()) {
       String fieldName = fieldNameIterator.next();
       JsonNode patchValue = patch.get(fieldName);

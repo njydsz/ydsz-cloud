@@ -109,7 +109,7 @@
         <dependency>
             <groupId>com.webauthn4j</groupId>
             <artifactId>webauthn4j-core</artifactId>
-            <version>0.28.0.RELEASE</version>
+            <version>0.21.0.RELEASE</version>
         </dependency>
         <!-- Jackson Core (webauthn4j 0.28.0 需要 TypeReference) -->
         <dependency>

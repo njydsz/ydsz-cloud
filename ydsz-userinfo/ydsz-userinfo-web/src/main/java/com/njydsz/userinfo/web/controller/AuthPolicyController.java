@@ -57,7 +57,8 @@ public class AuthPolicyController {
   @Operation(summary = "分页查询认证策略")
   public YdszResponse<PageResponse<List<AuthPolicyVO>>> page(AuthPolicyPageQuery query) {
     List<AuthPolicyVO> list = authPolicyService.findByPage(query);
-    return YdszResponse.success(PageResponse.of(list, list.size()));
+    return YdszResponse.success(PageResponse.success((long) list.size(),
+        query.getPageNum().longValue(), query.getPageSize().longValue(), list));
   }
 
   /**

@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -59,7 +61,7 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
    */
   private static final Set<String> COMMON_WEAK_PASSWORDS =
       new HashSet<>(
-          java.util.Arrays.asList(
+          Arrays.asList(
               // --- Top 50 全球最常见 ---
               "123456",
               "password",
@@ -204,7 +206,7 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
         passwords.addAll(external);
       }
     }
-    this.weakPasswords = java.util.Collections.unmodifiableSet(passwords);
+    this.weakPasswords = Collections.unmodifiableSet(passwords);
   }
 
   /**
@@ -283,9 +285,15 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
     int length = password.length();
 
     // 长度得分
-    if (length >= 8) score++;
-    if (length >= 12) score++;
-    if (length >= 16) score += 2;
+    if (length >= 8) {
+      score++;
+    }
+    if (length >= 12) {
+      score++;
+    }
+    if (length >= 16) {
+      score += 2;
+    }
 
     // 字符多样性
     boolean hasLower = false;
@@ -293,15 +301,28 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
     boolean hasDigit = false;
     boolean hasSpecial = false;
     for (char c : password.toCharArray()) {
-      if (Character.isLowerCase(c)) hasLower = true;
-      else if (Character.isUpperCase(c)) hasUpper = true;
-      else if (Character.isDigit(c)) hasDigit = true;
-      else hasSpecial = true;
+      if (Character.isLowerCase(c)) {
+        hasLower = true;
+      } else if (Character.isUpperCase(c)) {
+        hasUpper = true;
+      } else if (Character.isDigit(c)) {
+        hasDigit = true;
+      } else {
+        hasSpecial = true;
+      }
     }
-    if (hasLower) score++;
-    if (hasUpper) score++;
-    if (hasDigit) score++;
-    if (hasSpecial) score++;
+    if (hasLower) {
+      score++;
+    }
+    if (hasUpper) {
+      score++;
+    }
+    if (hasDigit) {
+      score++;
+    }
+    if (hasSpecial) {
+      score++;
+    }
 
     // 常见弱密码惩罚
     if (weakPasswords.contains(password.toLowerCase(Locale.ROOT))) {
@@ -380,12 +401,20 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
     if (password.length() < 8) {
       suggestion.append(getMessage("password.suggest.length", locale)).append(" ");
     }
-    boolean hasLower = false, hasUpper = false, hasDigit = false, hasSpecial = false;
+    boolean hasLower = false;
+    boolean hasUpper = false;
+    boolean hasDigit = false;
+    boolean hasSpecial = false;
     for (char c : password.toCharArray()) {
-      if (Character.isLowerCase(c)) hasLower = true;
-      else if (Character.isUpperCase(c)) hasUpper = true;
-      else if (Character.isDigit(c)) hasDigit = true;
-      else hasSpecial = true;
+      if (Character.isLowerCase(c)) {
+        hasLower = true;
+      } else if (Character.isUpperCase(c)) {
+        hasUpper = true;
+      } else if (Character.isDigit(c)) {
+        hasDigit = true;
+      } else {
+        hasSpecial = true;
+      }
     }
     if (!hasLower || !hasUpper) {
       suggestion.append(getMessage("password.suggest.case", locale)).append(" ");

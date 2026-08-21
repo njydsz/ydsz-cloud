@@ -309,6 +309,12 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   @Override
+  public void completeTaskWithComment(
+      String taskId, String taskStatus, String comment, LocalDateTime finishAt, Long durationMs) {
+    taskMapper.completeTask(taskId, taskStatus, comment, finishAt, durationMs);
+  }
+
+  @Override
   public void cancelTask(String taskId, String taskStatus, String comment) {
     taskMapper.cancelTask(taskId, taskStatus, comment);
   }
@@ -410,5 +416,28 @@ public List<FlowRunTaskVO> findPendingTasksByAssignee(String assigneeId) {
                 .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
                 .eq(org.springframework.util.StringUtils.hasText(flowCode), FlowRunTaskDO::getFlowCode, flowCode)
                 .eq(org.springframework.util.StringUtils.hasText(tenantId), FlowRunTaskDO::getTenantId, tenantId)));
+  }
+
+  @Override
+  public List<FlowRunTaskVO> findStuckTasks(String tenantId, LocalDateTime threshold, int limit) {
+    return converter.flowRunTaskListToVO(
+        taskMapper.selectList(
+            new LambdaQueryWrapper<FlowRunTaskDO>()
+                .eq(tenantId != null, FlowRunTaskDO::getTenantId, tenantId)
+                .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
+                .lt(FlowRunTaskDO::getCreatedAt, threshold)
+                .eq(FlowRunTaskDO::getDeleted, 0)
+                .orderByAsc(FlowRunTaskDO::getCreatedAt)
+                .last("LIMIT " + limit)));
+  }
+
+  @Override
+  public long countOverdueByTenantId(String tenantId) {
+    return taskMapper.selectCount(
+        new LambdaQueryWrapper<FlowRunTaskDO>()
+            .eq(FlowRunTaskDO::getTenantId, tenantId)
+            .eq(FlowRunTaskDO::getDeleted, 0)
+            .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
+            .lt(FlowRunTaskDO::getDueAt, java.time.LocalDateTime.now()));
   }
 }

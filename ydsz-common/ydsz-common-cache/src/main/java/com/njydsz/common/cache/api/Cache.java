@@ -69,20 +69,42 @@ public interface Cache<K, V> {
     return value;
   }
 
-  /** 异步获取缓存值 */
+  /**
+   * 异步获取缓存值
+   *
+   * @param key 键
+   * @param loader loader 参数
+   * @return 返回值说明
+   */
   CompletableFuture<V> getAsync(K key, AsyncFunction<K, V> loader);
 
-  /** 检查是否包含指定键 */
+  /**
+   * 检查是否包含指定键
+   *
+   * @param key 键
+   * @return 返回值说明
+   */
   boolean containsKey(K key);
 
   // ============================================================================
   // 写入操作
   // ============================================================================
 
-  /** 放入缓存 */
+  /**
+   * 放入缓存
+   *
+   * @param key 键
+   * @param value 值
+   */
   void put(K key, V value);
 
-  /** 如果键不存在则放入缓存 */
+  /**
+   * 如果键不存在则放入缓存
+   *
+   * @param key 键
+   * @param value 值
+   * @return 返回值说明
+   */
   default V putIfAbsent(K key, V value) {
     V existing = getIfPresent(key);
     if (existing == null) {
@@ -92,7 +114,13 @@ public interface Cache<K, V> {
     return existing;
   }
 
-  /** 如果键不存在则计算并放入缓存 */
+  /**
+   * 如果键不存在则计算并放入缓存
+   *
+   * @param key 键
+   * @param mappingFunction mappingFunction 参数
+   * @return 返回值说明
+   */
   default V computeIfAbsent(K key, Function<K, V> mappingFunction) {
     V value = getIfPresent(key);
     if (value == null) {
@@ -104,7 +132,13 @@ public interface Cache<K, V> {
     return value;
   }
 
-  /** 重新计算映射值 */
+  /**
+   * 重新计算映射值
+   *
+   * @param key 键
+   * @param remappingFunction remappingFunction 参数
+   * @return 返回值说明
+   */
   default V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
     V oldValue = getIfPresent(key);
     V newValue = remappingFunction.apply(key, oldValue);
@@ -118,7 +152,14 @@ public interface Cache<K, V> {
     return newValue;
   }
 
-  /** 合并值 */
+  /**
+   * 合并值
+   *
+   * @param key 键
+   * @param value 值
+   * @param remappingFunction remappingFunction 参数
+   * @return 返回值说明
+   */
   default V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
     V oldValue = getIfPresent(key);
     V newValue = (oldValue == null) ? value : remappingFunction.apply(oldValue, value);
@@ -134,15 +175,28 @@ public interface Cache<K, V> {
   // 删除操作
   // ============================================================================
 
-  /** 从缓存中移除指定键 */
+  /**
+   * 从缓存中移除指定键
+   *
+   * @param key 键
+   * @return 返回值说明
+   */
   V remove(K key);
 
-  /** 使键失效（等同于 remove） */
+  /**
+   * 使键失效（等同于 remove）
+   *
+   * @param key 键
+   */
   default void invalidate(K key) {
     remove(key);
   }
 
-  /** 使多个键失效 */
+  /**
+   * 使多个键失效
+   *
+   * @param keys keys 参数
+   */
   default void invalidateAll(Collection<K> keys) {
     removeAll(keys);
   }
@@ -159,7 +213,11 @@ public interface Cache<K, V> {
   // 批量操作
   // ============================================================================
 
-  /** 批量放入 */
+  /**
+   * 批量放入
+   *
+   * @param map 映射
+   */
   default void putAll(Map<K, V> map) {
     if (map == null || map.isEmpty()) {
       return;
@@ -167,7 +225,12 @@ public interface Cache<K, V> {
     map.forEach(this::put);
   }
 
-  /** 批量获取 */
+  /**
+   * 批量获取
+   *
+   * @param keys keys 参数
+   * @return 返回值说明
+   */
   default Map<K, V> getAll(Collection<K> keys) {
     if (keys == null || keys.isEmpty()) {
       return Collections.emptyMap();
@@ -183,7 +246,11 @@ public interface Cache<K, V> {
     return result;
   }
 
-  /** 批量删除 */
+  /**
+   * 批量删除
+   *
+   * @param keys keys 参数
+   */
   default void removeAll(Collection<K> keys) {
     if (keys == null || keys.isEmpty()) {
       return;
@@ -197,18 +264,34 @@ public interface Cache<K, V> {
   // 元信息 / 统计
   // ============================================================================
 
-  /** 获取缓存大小（估计值） */
+  /**
+   * 获取缓存大小（估计值）
+   *
+   * @return 返回值说明
+   */
   long estimatedSize();
 
-  /** 缓存是否为空 */
+  /**
+   * 缓存是否为空
+   *
+   * @return 返回值说明
+   */
   default boolean isEmpty() {
     return estimatedSize() == 0;
   }
 
-  /** 获取命中率 */
+  /**
+   * 获取命中率
+   *
+   * @return 返回值说明
+   */
   double getHitRate();
 
-  /** 获取统计信息 */
+  /**
+   * 获取统计信息
+   *
+   * @return 返回值说明
+   */
   CacheStats getStats();
 
   /** 重置统计计数器（命中/未命中归零） */
@@ -256,13 +339,25 @@ public interface Cache<K, V> {
   // 视图操作
   // ============================================================================
 
-  /** 获取所有键 */
+  /**
+   * 获取所有键
+   *
+   * @return 返回值说明
+   */
   Set<K> keySet();
 
-  /** 获取所有值 */
+  /**
+   * 获取所有值
+   *
+   * @return 返回值说明
+   */
   Collection<V> values();
 
-  /** 获取缓存的 Map 视图 */
+  /**
+   * 获取缓存的 Map 视图
+   *
+   * @return 返回值说明
+   */
   default Map<K, V> asMap() {
     return new CacheAsMapView<>(this);
   }
@@ -278,14 +373,22 @@ public interface Cache<K, V> {
   // 监听器
   // ============================================================================
 
-  /** 添加删除监听器 */
+  /**
+   * 添加删除监听器
+   *
+   * @param listener listener 参数
+   */
   default void addListener(RemovalListener<? super K, ? super V> listener) {}
 
   // ============================================================================
   // 遍历
   // ============================================================================
 
-  /** 遍历缓存 */
+  /**
+   * 遍历缓存
+   *
+   * @param action action 参数
+   */
   default void forEach(BiConsumer<? super K, ? super V> action) {
     for (K key : keySet()) {
       V value = getIfPresent(key);
@@ -317,8 +420,10 @@ public interface Cache<K, V> {
 
   /**
    * 创建空值占位符
-   *
    * @see NullValueGuard#registerNullKey
+   *
+   * @param key 键
+   * @return 返回值说明
    */
   default V createNullPlaceholder(K key) {
     return CacheProtectionGuard.createNullPlaceholder(this, key);
@@ -326,8 +431,10 @@ public interface Cache<K, V> {
 
   /**
    * 检查指定键是否已标记为空值占位键
-   *
    * @see NullValueGuard#isNullKeyRegistered
+   *
+   * @param key 键
+   * @return 返回值说明
    */
   default boolean isNullPlaceholderKey(K key) {
     return CacheProtectionGuard.isNullPlaceholderKey(this, key);

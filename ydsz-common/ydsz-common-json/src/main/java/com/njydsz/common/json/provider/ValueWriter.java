@@ -162,8 +162,10 @@ public final class ValueWriter {
 
   /**
    * 写入值（类型代码优化版）
-   *
    * <p>使用类型代码替代 instanceof 链，提高分支预测准确率。
+   *
+   * @param obj 对象
+   * @param sb 字符串缓冲区
    */
   public static void writeValue(Object obj, StringBuilder sb) {
     if (obj == null) {
@@ -238,7 +240,12 @@ public final class ValueWriter {
     }
   }
 
-  /** 写入字符串 */
+  /**
+   * 写入字符串
+   *
+   * @param str 字符串
+   * @param sb 字符串缓冲区
+   */
   public static void writeString(String str, StringBuilder sb) {
     int len = str.length();
     if (len == 0) {
@@ -308,7 +315,9 @@ public final class ValueWriter {
             if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {
               sb.append(c);
               sb.append(str.charAt(i + 1));
+              // CHECKSTYLE.OFF: ModifiedControlVariable — 跳过代理对低位，语义安全
               i++;
+              // CHECKSTYLE.ON: ModifiedControlVariable
             } else {
               // 孤立高位代理：替换为 U+FFFD
               sb.append('\uFFFD');
@@ -324,7 +333,12 @@ public final class ValueWriter {
     sb.append('"');
   }
 
-  /** 写入字符串（FastJSON2 架构优化 - 两次遍历快速路径） */
+  /**
+   * 写入字符串（FastJSON2 架构优化 - 两次遍历快速路径）
+   *
+   * @param str 字符串
+   * @param sb 字符串缓冲区
+   */
   public static void writeStringInline(String str, StringBuilder sb) {
     int len = str.length();
 
@@ -394,7 +408,9 @@ public final class ValueWriter {
             if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {
               sb.append(c);
               sb.append(str.charAt(i + 1));
+              // CHECKSTYLE.OFF: ModifiedControlVariable — 跳过代理对低位，语义安全
               i++;
+              // CHECKSTYLE.ON: ModifiedControlVariable
             } else {
               // 孤立高位代理：替换为 U+FFFD
               sb.append('\uFFFD');
@@ -411,7 +427,12 @@ public final class ValueWriter {
     sb.append('"');
   }
 
-  /** 写入整数（FastJSON2 快速路径 - 直接写入字符数组） */
+  /**
+   * 写入整数（FastJSON2 快速路径 - 直接写入字符数组）
+   *
+   * @param value 值
+   * @param sb 字符串缓冲区
+   */
   public static void writeInt(int value, StringBuilder sb) {
     if (value >= 0 && value < 10000) {
       sb.append(SMALL_INTS[value]);
@@ -421,7 +442,12 @@ public final class ValueWriter {
     sb.append(value);
   }
 
-  /** 写入长整数（优化版） */
+  /**
+   * 写入长整数（优化版）
+   *
+   * @param value 值
+   * @param sb 字符串缓冲区
+   */
   public static void writeLong(long value, StringBuilder sb) {
     if (value >= 0 && value < 10000) {
       sb.append(SMALL_INTS[(int) value]);
@@ -431,7 +457,12 @@ public final class ValueWriter {
     sb.append(value);
   }
 
-  /** 写入双精度数（FastJSON2 架构优化） */
+  /**
+   * 写入双精度数（FastJSON2 架构优化）
+   *
+   * @param value 值
+   * @param sb 字符串缓冲区
+   */
   public static void writeDouble(double value, StringBuilder sb) {
     if (Double.isNaN(value) || Double.isInfinite(value)) {
       sb.append("null");
@@ -445,7 +476,12 @@ public final class ValueWriter {
     }
   }
 
-  /** 直接写入 double（避免方法调用开销） */
+  /**
+   * 直接写入 double（避免方法调用开销）
+   *
+   * @param value 值
+   * @param sb 字符串缓冲区
+   */
   public static void writeDoubleDirect(double value, StringBuilder sb) {
     if (value == Double.POSITIVE_INFINITY) {
       sb.append("1.7976931348623157E308");
@@ -458,7 +494,12 @@ public final class ValueWriter {
     }
   }
 
-  /** 写入浮点数（FastJSON2 架构优化） */
+  /**
+   * 写入浮点数（FastJSON2 架构优化）
+   *
+   * @param value 值
+   * @param sb 字符串缓冲区
+   */
   public static void writeFloat(float value, StringBuilder sb) {
     // 快速路径：整数值直接输出
     if (value == (int) value && Math.abs(value) < 1e7) {
@@ -468,17 +509,32 @@ public final class ValueWriter {
     }
   }
 
-  /** 写入布尔值 */
+  /**
+   * 写入布尔值
+   *
+   * @param value 值
+   * @param sb 字符串缓冲区
+   */
   public static void writeBoolean(boolean value, StringBuilder sb) {
     sb.append(value ? "true" : "false");
   }
 
-  /** 写入字符 */
+  /**
+   * 写入字符
+   *
+   * @param value 值
+   * @param sb 字符串缓冲区
+   */
   public static void writeChar(char value, StringBuilder sb) {
     sb.append('"').append(value).append('"');
   }
 
-  /** 写入数组 */
+  /**
+   * 写入数组
+   *
+   * @param array 数组
+   * @param sb 字符串缓冲区
+   */
   public static void writeArray(Object array, StringBuilder sb) {
     sb.append('[');
     int len = Array.getLength(array);
@@ -491,7 +547,12 @@ public final class ValueWriter {
     sb.append(']');
   }
 
-  /** 写入 List（FastJSON2 架构优化 - 类型代码替代 instanceof 链） */
+  /**
+   * 写入 List（FastJSON2 架构优化 - 类型代码替代 instanceof 链）
+   *
+   * @param list 列表
+   * @param sb 字符串缓冲区
+   */
   public static void writeList(List<?> list, StringBuilder sb) {
     int size = list.size();
     sb.append('[');
@@ -509,7 +570,12 @@ public final class ValueWriter {
     sb.append(']');
   }
 
-  /** 优化列表序列化（使用 JSONWriter 直接写入，避免创建中间 String） */
+  /**
+   * 优化列表序列化（使用 JSONWriter 直接写入，避免创建中间 String）
+   *
+   * @param list 列表
+   * @param sb 字符串缓冲区
+   */
   public static void writeListOptimized(List<?> list, StringBuilder sb) {
     JSONWriter writer = SerializationProvider.getFastWriterPool();
     writer.reset();
@@ -517,7 +583,12 @@ public final class ValueWriter {
     sb.append(writer.toString());
   }
 
-  /** 写入 Map（FastJSON2 架构优化 - 类型代码替代 instanceof 链） */
+  /**
+   * 写入 Map（FastJSON2 架构优化 - 类型代码替代 instanceof 链）
+   *
+   * @param map 映射
+   * @param sb 字符串缓冲区
+   */
   public static void writeMapOptimized(Map<?, ?> map, StringBuilder sb) {
     sb.append('{');
     boolean first = true;
@@ -546,7 +617,12 @@ public final class ValueWriter {
     sb.append('}');
   }
 
-  /** 写入 Bean 对象（优化版本 - FastJSON2 核心架构） */
+  /**
+   * 写入 Bean 对象（优化版本 - FastJSON2 核心架构）
+   *
+   * @param obj 对象
+   * @param sb 字符串缓冲区
+   */
   public static void writeBean(Object obj, StringBuilder sb) {
     Class<?> clazz = obj.getClass();
     JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
@@ -684,9 +760,7 @@ public final class ValueWriter {
 
   /**
    * Bean 无注解快速路径（FastJSON2 架构极致优化）
-   *
    * <p>FastJSON2 核心优化技术：
-   *
    * <ul>
    *   <li>预计算有效字段数组 - 避免运行时 shouldSkip 判断
    *   <li>类型代码直接索引 - 消除 switch 分支开销
@@ -694,6 +768,11 @@ public final class ValueWriter {
    *   <li>方法调用最小化 - 减少间接方法调用
    *   <li>字节码生成 - 彻底消除反射开销
    * </ul>
+   *
+   * @param obj 对象
+   * @param sb 字符串缓冲区
+   * @param clazz 目标类型
+   * @param fields 字段列表
    */
   public static void writeBeanNoAnnotationOptimized(
       Object obj, StringBuilder sb, Class<?> clazz, FieldMeta[] fields) {
@@ -912,7 +991,13 @@ public final class ValueWriter {
     }
   }
 
-  /** 格式化日期（带模式） */
+  /**
+   * 格式化日期（带模式）
+   *
+   * @param value 值
+   * @param pattern 模式
+   * @return 返回值说明
+   */
   public static String formatDateWithPattern(Object value, String pattern) {
     if (value == null) {
       return null;
@@ -1036,7 +1121,13 @@ public final class ValueWriter {
     }
   }
 
-  /** 写入格式化数字 */
+  /**
+   * 写入格式化数字
+   *
+   * @param value 值
+   * @param format 格式
+   * @param sb 字符串缓冲区
+   */
   public static void writeFormattedNumber(Number value, String format, StringBuilder sb) {
     if (value instanceof Double || value instanceof Float) {
       double d = value.doubleValue();
@@ -1057,7 +1148,12 @@ public final class ValueWriter {
     }
   }
 
-  /** 写入 HTML 安全字符串 */
+  /**
+   * 写入 HTML 安全字符串
+   *
+   * @param value 值
+   * @param sb 字符串缓冲区
+   */
   public static void writeHtmlSafeString(String value, StringBuilder sb) {
     sb.append('"');
     for (int i = 0; i < value.length(); i++) {
@@ -1086,7 +1182,12 @@ public final class ValueWriter {
     sb.append('"');
   }
 
-  /** 写入 Bean 对象（带循环引用检测） */
+  /**
+   * 写入 Bean 对象（带循环引用检测）
+   *
+   * @param obj 对象
+   * @param sb 字符串缓冲区
+   */
   public static void writeBeanWithCycleDetection(Object obj, StringBuilder sb) {
     Set<Object> current = SerializationProvider.getSerializingObjects();
 
@@ -1103,7 +1204,12 @@ public final class ValueWriter {
     }
   }
 
-  /** 直接写入值（优化版，避免重复类型检查） */
+  /**
+   * 直接写入值（优化版，避免重复类型检查）
+   *
+   * @param obj 对象
+   * @param sb 字符串缓冲区
+   */
   public static void writeValueDirect(Object obj, StringBuilder sb) {
     if (obj == null) {
       sb.append("null");

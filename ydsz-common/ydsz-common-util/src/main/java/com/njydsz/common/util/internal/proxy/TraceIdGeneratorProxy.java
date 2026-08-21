@@ -1,6 +1,7 @@
 package com.njydsz.common.util.internal.proxy;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.RecordComponent;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -33,7 +34,7 @@ public final class TraceIdGeneratorProxy {
   private static final ConcurrentMap<String, Method> METHOD_CACHE = new ConcurrentHashMap<>();
 
   /** 是否可用的标记（null=未检查，TRUE=可用，FALSE=不可用） */
-  private static final AtomicReference<Boolean> available = new AtomicReference<>();
+  private static final AtomicReference<Boolean> AVAILABLE = new AtomicReference<>();
 
   /** Trace ID 长度（32 位十六进制 = 128 bit） */
   private static final int TRACE_ID_LENGTH = 32;
@@ -141,7 +142,7 @@ public final class TraceIdGeneratorProxy {
       Class<?> clazz = record.getClass();
       if (clazz.isRecord()) {
         // 尝试获取 record 的 component values
-        java.lang.reflect.RecordComponent[] components = clazz.getRecordComponents();
+        RecordComponent[] components = clazz.getRecordComponents();
         if (components.length >= 2) {
           Object traceId = components[0].getAccessor().invoke(record);
           Object spanId = components[1].getAccessor().invoke(record);

@@ -821,7 +821,11 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     }
   }
 
-  /** 获取底层缓存实例 */
+  /**
+   * 获取底层缓存实例
+   *
+   * @return 返回值说明
+   */
   public Cache<K, V> getDelegate() {
     return delegate;
   }

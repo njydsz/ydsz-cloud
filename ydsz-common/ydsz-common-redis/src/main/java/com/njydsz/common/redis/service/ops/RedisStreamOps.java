@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Range;
-import org.springframework.data.redis.connection.RedisStreamCommands;
 import org.springframework.data.redis.connection.RedisStreamCommands.TrimOptions;
+import org.springframework.data.redis.connection.RedisStreamCommands;
 import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
@@ -774,7 +774,11 @@ public class RedisStreamOps {
   public record BackpressureResult(
       List<StreamMessage> messages, int actualBatch, long pendingCount) {
 
-    /** 判断是否处于高积压状态（需要限流） */
+    /**
+     * 判断是否处于高积压状态（需要限流）
+     *
+     * @return 返回值说明
+     */
     public boolean isBackpressured() {
       return messages.size() < actualBatch;
     }

@@ -19,9 +19,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -371,9 +373,9 @@ public final class BeanMapper {
       if (paramType == Instant.class) {
         return Instant.parse(str);
       }
-      if (paramType == java.util.Date.class) {
+      if (paramType == Date.class) {
         LocalDateTime ldt = LocalDateTime.parse(str, dateFormatter);
-        return java.util.Date.from(ldt.atZone(java.time.ZoneId.systemDefault()).toInstant());
+        return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
       }
       // String
       if (paramType == String.class) {
@@ -550,7 +552,8 @@ public final class BeanMapper {
    *
    * <pre>{@code
    * List<User> users = BeanMapper.toBean(map.getList("users"), new BeanMapper.TypeReference<List<User>>() {});
-   * Map<String, Order> orders = BeanMapper.toBean(map.getMap("orders"), new BeanMapper.TypeReference<Map<String, Order>>() {});
+   * Map<String, Order> orders = BeanMapper.toBean(map.getMap("orders"),
+ *     new BeanMapper.TypeReference<Map<String, Order>>() {});
    * }</pre>
    *
    * <p>实现原理：通过匿名子类的 {@code getGenericSuperclass()} 捕获 {@code ParameterizedType}， 从而在运行时获取完整的泛型参数信息。
@@ -586,8 +589,12 @@ public final class BeanMapper {
      */
     @SuppressWarnings("unchecked")
     public Class<T> getRawType() {
-      if (type instanceof Class<?> c) return (Class<T>) c;
-      if (type instanceof ParameterizedType pt) return (Class<T>) pt.getRawType();
+      if (type instanceof Class<?> c) {
+        return (Class<T>) c;
+      }
+      if (type instanceof ParameterizedType pt) {
+        return (Class<T>) pt.getRawType();
+      }
       return (Class<T>) Object.class;
     }
   }
@@ -612,7 +619,7 @@ public final class BeanMapper {
    *   <li>{@code String} → {@code Integer / Long / Double / Float / Boolean}：调用 parseXxx 或 valueOf
    *   <li>{@code String} → {@code LocalDateTime}：调用 {@code LocalDateTime.parse(text)}
    *   <li>{@code String} → {@code LocalDate}：调用 {@code LocalDate.parse(text)}
-   *   <li>{@code String} → {@code java.util.Date}：按 ISO 格式解析后转 Date
+   *   <li>{@code String} → {@code Date}：按 ISO 格式解析后转 Date
    *   <li>{@code Map} → 嵌套 Bean：递归调用 toBean
    *   <li>类型不兼容且无法转换：跳过该字段（不抛异常）
    * </ul>
@@ -780,9 +787,13 @@ public final class BeanMapper {
    * @since 4.0.0
    */
   public static Object convertSingleItem(Object item, Type targetType) {
-    if (item == null) return null;
+    if (item == null) {
+      return null;
+    }
     if (targetType instanceof Class<?> clazz) {
-      if (clazz.isInstance(item)) return item;
+      if (clazz.isInstance(item)) {
+        return item;
+      }
       if (item instanceof Map<?, ?> itemMap) {
         return toBeanOrRecord(toStringObjectMap(itemMap), clazz);
       }
@@ -866,7 +877,9 @@ public final class BeanMapper {
    */
   public static Object convertComponentValue(Object value, Class<?> paramType, Type genericType) {
     // 类型完全匹配
-    if (paramType.isInstance(value)) return value;
+    if (paramType.isInstance(value)) {
+      return value;
+    }
 
     // Optional 解包
     if (paramType == Optional.class) {

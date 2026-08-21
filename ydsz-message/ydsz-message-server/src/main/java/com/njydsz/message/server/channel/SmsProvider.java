@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.message.domain.model.core.MsgTemplate;
+import com.njydsz.message.infra.entity.MsgTemplate;
 
 /**
  * 短信服务商 SPI 接口。

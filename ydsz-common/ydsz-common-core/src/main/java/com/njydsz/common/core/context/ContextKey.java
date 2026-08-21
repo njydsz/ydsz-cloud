@@ -93,12 +93,20 @@ public final class ContextKey<T> {
     return new ContextKey<>(key, type);
   }
 
-  /** 获取键名。 */
+  /**
+   * 获取键名。
+   *
+   * @return 返回值说明
+   */
   public String key() {
     return key;
   }
 
-  /** 获取值类型。 */
+  /**
+   * 获取值类型。
+   *
+   * @return 返回值说明
+   */
   public Class<T> type() {
     return type;
   }
@@ -128,8 +136,12 @@ public final class ContextKey<T> {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof ContextKey)) return false;
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof ContextKey)) {
+      return false;
+    }
     ContextKey<?> that = (ContextKey<?>) o;
     return key.equals(that.key) && type.equals(that.type);
   }

@@ -2,8 +2,8 @@ package com.njydsz.common.cache.health;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Map;
 import java.util.OptionalLong;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -36,8 +36,11 @@ public class CacheHealthIndicator {
 
   /** 健康状态枚举 */
   public enum Status {
+/** up */
     UP,
+/** warn */
     WARN,
+/** down */
     DOWN
   }
 
@@ -63,7 +66,11 @@ public class CacheHealthIndicator {
     LOG.info("缓存健康监控已注册: {}", name);
   }
 
-  /** 注销缓存实例 */
+  /**
+   * 注销缓存实例
+   *
+   * @param name 名称
+   */
   public void unregisterCache(String name) {
     monitoredCaches.remove(name);
   }
@@ -103,7 +110,7 @@ public class CacheHealthIndicator {
   /**
    * 设置命中率检查的最小访问样本数
    *
-   * <p><p访问量低于此数量时不判断命中率，避免冷启动阶段的误报。
+   * <p>访问量低于此数量时不判断命中率，避免冷启动阶段的误报。
    *
    * @param minSampleSize 最小样本数，必须 ≥ 0，默认 100
    * @throws IllegalArgumentException 当样本数 < 0 时抛出

@@ -50,6 +50,8 @@ public final class BeanSerializer {
   public final int estimatedSize;
 
   /**
+   * 字段说明（方法（null 表示无））。
+   *
    * @JsonAnyGetter 方法（null 表示无）
    */
   public final Method anyGetterMethod;

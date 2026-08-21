@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.message.domain.dto.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
-import com.njydsz.message.domain.model.core.MsgTemplate;
+import com.njydsz.message.infra.entity.MsgTemplate;
 
 /**
  * 消息模板 Service 接口

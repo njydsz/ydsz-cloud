@@ -144,7 +144,9 @@ public class YdszExceptionHandlerAutoConfiguration {
    * @return 处理结果
    */
   @Bean
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.dao.DataAccessException")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnMissingBean(JdbcExceptionHandler.class)
   public JdbcExceptionHandler jdbcExceptionHandler(
       Environment environment,

@@ -224,7 +224,9 @@ public class TenantAutoConfiguration {
    * @return 任务装饰器
    */
   @Bean
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.core.task.TaskDecorator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnMissingBean
   public TenantContextTaskDecorator tenantContextTaskDecorator(TenantProperties properties) {
     log.info("多租户异步上下文传播已启用");
@@ -239,7 +241,9 @@ public class TenantAutoConfiguration {
    * @return Redis Key 前缀器
    */
   @Bean
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.data.redis.serializer.RedisSerializer")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnMissingBean
   public TenantRedisKeyPrefixer tenantRedisKeyPrefixer() {
     log.info("多租户 Redis Key 隔离已启用");
@@ -298,7 +302,9 @@ public class TenantAutoConfiguration {
    * @return 健康检查
    */
   @Bean
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnMissingBean
   public TenantHealthIndicator tenantHealthIndicator(
       TenantProperties properties,
@@ -316,7 +322,9 @@ public class TenantAutoConfiguration {
    * @return BeanPostProcessor
    */
   @Bean
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnMissingBean(name = "tenantTaskDecoratorPostProcessor")
   public BeanPostProcessor tenantTaskDecoratorPostProcessor(
       ObjectProvider<TenantContextTaskDecorator> taskDecoratorProvider) {

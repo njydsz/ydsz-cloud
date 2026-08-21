@@ -43,6 +43,7 @@ import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.LoginVO;
+import com.njydsz.userinfo.web.dto.SecondaryAuthRequest;
 import com.njydsz.common.safe.annotation.SecondaryAuth;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.userinfo.server.aspect.SecondaryAuthAspect;

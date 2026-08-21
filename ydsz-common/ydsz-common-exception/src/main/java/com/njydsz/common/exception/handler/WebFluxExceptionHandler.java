@@ -45,7 +45,9 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.web.server.ServerWebExchange")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 @ConditionalOnProperty(
     prefix = "ydsz.exception",
     name = "global-handler-enabled",

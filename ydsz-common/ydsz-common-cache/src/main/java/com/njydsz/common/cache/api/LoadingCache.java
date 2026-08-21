@@ -16,28 +16,60 @@ import java.util.function.Function;
 public interface LoadingCache<K, V> extends Cache<K, V> {
 
   /**
-   * 获取缓存值（自动加载）
+   * 获取缓存值（自动加载）。
    *
-   * <p>如果缓存中不存在，则通过配置的 Loader 自动加载
+   * <p>如果缓存中不存在，则通过配置的 Loader 自动加载。
+   *
+   * @param key 键
+   * @return 返回值说明
    */
   V get(K key);
 
-  /** 获取缓存值（不触发加载，仅查询） */
+  /**
+   * 获取缓存值（不触发加载，仅查询）
+   *
+   * @param key 键
+   * @return 返回值说明
+   */
   V getIfPresent(K key);
 
-  /** 获取缓存值（不检查异常） */
+  /**
+   * 获取缓存值（不检查异常）
+   *
+   * @param key 键
+   * @return 返回值说明
+   */
   V getUnchecked(K key);
 
-  /** 异步获取缓存值 */
+  /**
+   * 异步获取缓存值
+   *
+   * @param key 键
+   * @return 返回值说明
+   */
   CompletableFuture<V> getAsync(K key);
 
-  /** 批量获取 */
+  /**
+   * 批量获取
+   *
+   * @param keys keys 参数
+   * @return 返回值说明
+   */
   Map<K, V> getAll(Collection<K> keys);
 
-  /** 批量异步获取 */
+  /**
+   * 批量异步获取
+   *
+   * @param keys keys 参数
+   * @return 返回值说明
+   */
   CompletableFuture<Map<K, V>> getAllAsync(Collection<K> keys);
 
-  /** 刷新指定键 */
+  /**
+   * 刷新指定键
+   *
+   * @param key 键
+   */
   void refresh(K key);
 
   @Override

@@ -162,7 +162,7 @@ public class JsonMapper {
     // 1. 预计算配置快速填充当前线程的 SerializationContext
     applyRuntimeConfig();
     // 2. 全局组件（JSONReader maxDepth 等）由 JsonConfig.install() 在配置变更时统一传播；
-    //    实例级深度隔离通过 applyRuntimeConfig 中的线程级覆盖实现（P0-3）。
+    // 实例级深度隔离通过 applyRuntimeConfig 中的线程级覆盖实现（P0-3）。
     return snapshot;
   }
 

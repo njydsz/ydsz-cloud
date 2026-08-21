@@ -55,7 +55,7 @@ public final class JsonModuleRegistry {
 
   private static final Logger LOG = LoggerFactory.getLogger(JsonModuleRegistry.class);
 
-  private static final AtomicReference<JsonModuleRegistry> instance = new AtomicReference<>();
+  private static final AtomicReference<JsonModuleRegistry> INSTANCE = new AtomicReference<>();
 
   /**
    * 模块来源的序列化器类型集合（P1-6：单一事实源改造）。

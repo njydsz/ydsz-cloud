@@ -28,7 +28,13 @@ public final class ValueFormatter {
     throw new UnsupportedOperationException();
   }
 
-  /** 格式化写入值（带缩进） */
+  /**
+   * 格式化写入值（带缩进）
+   *
+   * @param obj 对象
+   * @param sb 字符串缓冲区
+   * @param indent 缩进
+   */
   public static void formatValue(Object obj, StringBuilder sb, int indent) {
     if (obj == null) {
       sb.append("null");
@@ -67,7 +73,13 @@ public final class ValueFormatter {
     }
   }
 
-  /** 格式化 List */
+  /**
+   * 格式化 List
+   *
+   * @param list 列表
+   * @param sb 字符串缓冲区
+   * @param indent 缩进
+   */
   public static void formatList(List<?> list, StringBuilder sb, int indent) {
     if (list.isEmpty()) {
       sb.append("[]");
@@ -86,7 +98,13 @@ public final class ValueFormatter {
     sb.append("]");
   }
 
-  /** 格式化数组 */
+  /**
+   * 格式化数组
+   *
+   * @param array 数组
+   * @param sb 字符串缓冲区
+   * @param indent 缩进
+   */
   public static void formatArray(Object array, StringBuilder sb, int indent) {
     int len = Array.getLength(array);
     if (len == 0) {
@@ -106,7 +124,13 @@ public final class ValueFormatter {
     sb.append("]");
   }
 
-  /** 格式化 Map */
+  /**
+   * 格式化 Map
+   *
+   * @param map 映射
+   * @param sb 字符串缓冲区
+   * @param indent 缩进
+   */
   public static void formatMap(Map<?, ?> map, StringBuilder sb, int indent) {
     if (map.isEmpty()) {
       sb.append("{}");
@@ -129,7 +153,13 @@ public final class ValueFormatter {
     sb.append("}");
   }
 
-  /** 格式化 Bean */
+  /**
+   * 格式化 Bean
+   *
+   * @param obj 对象
+   * @param sb 字符串缓冲区
+   * @param indent 缩进
+   */
   public static void formatBean(Object obj, StringBuilder sb, int indent) {
     Class<?> clazz = obj.getClass();
     PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();
@@ -191,7 +221,12 @@ public final class ValueFormatter {
     sb.append("}");
   }
 
-  /** 追加缩进 */
+  /**
+   * 追加缩进
+   *
+   * @param sb 字符串缓冲区
+   * @param indent 缩进
+   */
   public static void appendIndent(StringBuilder sb, int indent) {
     for (int i = 0; i < indent * 2; i++) {
       sb.append(' ');

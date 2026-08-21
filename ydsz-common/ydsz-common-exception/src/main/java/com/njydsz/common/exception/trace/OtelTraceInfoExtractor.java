@@ -43,7 +43,7 @@ public class OtelTraceInfoExtractor {
   @Nullable private static volatile Boolean otelAvailable;
 
   /** Method 缓存初始化标志（CAS 保证只初始化一次） */
-  private static final AtomicBoolean methodCacheInitialized = new AtomicBoolean(false);
+  private static final AtomicBoolean METHOD_CACHE_INITIALIZED = new AtomicBoolean(false);
 
   /** 缓存的 Span.current() 静态方法 */
   @Nullable private static volatile Method currentMethod;

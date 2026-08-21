@@ -36,7 +36,9 @@ public final class Sm4GcmCryptoProvider implements CryptoProvider {
   private static final int KEY_LENGTH = 16;
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<Cipher> CIPHER_POOL =
+  // CHECKSTYLE.ON: RegexpSinglelineJava
       ThreadLocal.withInitial(
           () -> {
             ensureBcProvider();

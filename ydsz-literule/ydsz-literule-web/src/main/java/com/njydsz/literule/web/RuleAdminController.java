@@ -115,12 +115,12 @@ public class RuleAdminController {
   @GetMapping
   public com.njydsz.common.core.response.PageResponse<List<RuleDefinitionVO>> list(
       PageQuery pageQuery) {
-    com.baomidou.mybatisplus.core.metadata.IPage<RuleDefinition> page =
+    com.njydsz.common.core.response.PageResponse<List<RuleDefinition>> page =
         ruleAdminService.pageRuleDefinitions(pageQuery);
     List<RuleDefinitionVO> records =
-        page.getRecords().stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList();
+        page.getData().stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList();
     return com.njydsz.common.core.response.PageResponse.success(
-        page.getTotal(), page.getCurrent(), page.getSize(), records);
+        page.getTotal(), page.getPageNum(), page.getPageSize(), records);
   }
 
   /**

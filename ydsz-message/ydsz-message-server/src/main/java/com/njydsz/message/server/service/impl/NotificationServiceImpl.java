@@ -22,7 +22,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.NotificationSendDTO;
-import com.njydsz.message.domain.model.core.MsgNotification;
+import com.njydsz.message.infra.entity.MsgNotification;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.vo.NotificationGroupVO;
 import com.njydsz.message.infra.repository.MsgNotificationRepository;

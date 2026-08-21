@@ -34,7 +34,7 @@ import com.njydsz.common.json.deserializer.JsonDeserializer;
  */
 public final class SerializerRegistry {
 
-  private static final AtomicReference<SerializerRegistry> instance = new AtomicReference<>();
+  private static final AtomicReference<SerializerRegistry> INSTANCE = new AtomicReference<>();
 
   private final Map<Class<?>, JsonSerializer<?>> serializers = new ConcurrentHashMap<>();
 
@@ -133,9 +133,10 @@ public final class SerializerRegistry {
 
   /**
    * 获取序列化器
-   *
    * @param type 目标类型
    * @return 序列化器，如果未注册返回 null
+   *
+   * @param <T> 泛型类型
    */
   public <T> JsonSerializer<T> get(Class<T> type) {
     return castSerializer(serializers.get(type));
@@ -143,9 +144,10 @@ public final class SerializerRegistry {
 
   /**
    * 获取反序列化器。
-   *
    * @param type 目标类型
    * @return 反序列化器，如果未注册返回null
+   *
+   * @param <T> 泛型类型
    */
   public <T> JsonDeserializer<T> getDeserializer(Class<T> type) {
     return castDeserializer(deserializers.get(type));

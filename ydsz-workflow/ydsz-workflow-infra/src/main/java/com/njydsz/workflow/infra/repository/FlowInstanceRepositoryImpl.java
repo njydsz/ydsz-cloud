@@ -238,4 +238,17 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
                 .orderByAsc(FlowInstanceDO::getEndAt)
                 .last("LIMIT " + limit)));
   }
+
+  @Override
+  public List<FlowInstanceVO> findLongRunning(String tenantId, LocalDateTime threshold, int limit) {
+    return converter.flowInstanceListToVO(
+        instanceMapper.selectList(
+            new LambdaQueryWrapper<FlowInstanceDO>()
+                .eq(tenantId != null, FlowInstanceDO::getTenantId, tenantId)
+                .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
+                .lt(FlowInstanceDO::getStartAt, threshold)
+                .eq(FlowInstanceDO::getDeleted, 0)
+                .orderByAsc(FlowInstanceDO::getStartAt)
+                .last("LIMIT " + limit)));
+  }
 }

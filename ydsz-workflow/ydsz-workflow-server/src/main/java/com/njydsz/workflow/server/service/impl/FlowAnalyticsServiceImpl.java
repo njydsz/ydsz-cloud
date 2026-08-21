@@ -5,13 +5,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowAnalyticsOverviewVO;
@@ -20,9 +18,6 @@ import com.njydsz.workflow.domain.vo.FlowEfficiencyComparisonVO;
 import com.njydsz.workflow.domain.vo.FlowNodeDurationVO;
 import com.njydsz.workflow.domain.vo.FlowTrendVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
 
 /**
@@ -106,30 +101,10 @@ import com.njydsz.workflow.server.service.FlowAnalyticsService;
 @RequiredArgsConstructor
 public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
 
-  /**
-   * 历史任务 Mapper，查询已归档的审批任务统计数据。
-   *
-   * <p>保留 Mapper 调用，因为本 Service 所有查询均为复杂聚合统计（selectOverviewStats、
-   * selectApproverEfficiency、selectFlowEfficiencyComparison、nodeDurationStats、
-   * selectApprovalTrend），在 Repository 中暂无等价方法。后续应在 FlowHisTaskRepository 中补齐。
-   */
-  private final FlowHisTaskMapper hisTaskMapper;
-
-  /**
-   * 历史任务仓储（domain 层契约），提供基础 CRUD 方法。
-   *
-   * <p>当前 Service 全部数据访问走 Mapper（复杂查询），后续应在 Repository 中补齐聚合统计方法。
-   */
+  /** 历史任务仓储（domain 层契约），提供基础 CRUD 与聚合统计方法 */
   private final FlowHisTaskRepository hisTaskRepository;
 
-  /**
-   * 运行时任务 Mapper，查询当前待办及超期任务数。
-   *
-   * <p>保留 Mapper 调用，因为 selectCount 走 LambdaQueryWrapper 复杂条件过滤，在 Repository 中暂无等价方法。
-   */
-  private final FlowRunTaskMapper runTaskMapper;
-
-  /** 运行时任务仓储（domain 层契约），提供基础 CRUD 方法 */
+  /** 运行时任务仓储（domain 层契约），提供基础 CRUD 与统计方法 */
   private final FlowRunTaskRepository runTaskRepository;
 
   /** 实体转换器，用于 VO ↔ DO 转换 */
@@ -141,7 +116,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
 
     // P1-5: 使用单 SQL 聚合查询替代多次 COUNT（5 次 → 1 次）
-    Map<String, Object> hisStats = hisTaskMapper.selectOverviewStats(tid, startTime, endTime);
+    Map<String, Object> hisStats = hisTaskRepository.selectOverviewStats(tid, startTime, endTime);
     if (hisStats == null) {
       hisStats = new LinkedHashMap<>();
     }
@@ -153,25 +128,8 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     double avgDurationMs = toDouble(hisStats.get("avgDurationMs"));
 
     // 待办数 + 超期数（run_task 表，无法与 his_task 合并查询）
-    long pendingCount =
-        runTaskMapper.selectCount(
-            new LambdaQueryWrapper<FlowRunTaskDO>()
-                .eq(FlowRunTaskDO::getTenantId, tid)
-                .eq(FlowRunTaskDO::getDeleted, 0)
-                .in(
-                    FlowRunTaskDO::getTaskStatus,
-                    FlowTaskStatus.PENDING.name(),
-                    FlowTaskStatus.CLAIMED.name()));
-    long overdueCount =
-        runTaskMapper.selectCount(
-            new LambdaQueryWrapper<FlowRunTaskDO>()
-                .eq(FlowRunTaskDO::getTenantId, tid)
-                .eq(FlowRunTaskDO::getDeleted, 0)
-                .in(
-                    FlowRunTaskDO::getTaskStatus,
-                    FlowTaskStatus.PENDING.name(),
-                    FlowTaskStatus.CLAIMED.name())
-                .lt(FlowRunTaskDO::getDueAt, LocalDateTime.now()));
+    long pendingCount = runTaskRepository.countPendingByTenantId(tid);
+    long overdueCount = runTaskRepository.countOverdueByTenantId(tid);
 
     FlowAnalyticsOverviewVO result = new FlowAnalyticsOverviewVO();
     result.setTotalTasks(totalHis);
@@ -189,7 +147,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
       LocalDateTime startTime, LocalDateTime endTime, String tenantId, int limit) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
     int l = Math.max(1, Math.min(limit, 100));
-    List<Map<String, Object>> rows = hisTaskMapper.selectApproverEfficiency(tid, startTime, endTime, l);
+    List<Map<String, Object>> rows = hisTaskRepository.selectApproverEfficiency(tid, startTime, endTime, l);
     if (rows == null) {
       return List.of();
     }
@@ -208,7 +166,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
   public List<FlowEfficiencyComparisonVO> flowEfficiencyComparison(
       LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
-    List<Map<String, Object>> rows = hisTaskMapper.selectFlowEfficiencyComparison(tid, startTime, endTime);
+    List<Map<String, Object>> rows = hisTaskRepository.selectFlowEfficiencyComparison(tid, startTime, endTime);
     if (rows == null) {
       return List.of();
     }
@@ -228,7 +186,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
   @Override
   public List<FlowNodeDurationVO> nodeDurationStats(String flowCode, String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
-    List<Map<String, Object>> rows = hisTaskMapper.nodeDurationStats(flowCode, tid);
+    List<Map<String, Object>> rows = hisTaskRepository.selectNodeDurationStats(flowCode, tid);
     if (rows == null) {
       return List.of();
     }
@@ -261,7 +219,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
       gran = "day";
     }
     List<Map<String, Object>> rows =
-        hisTaskMapper.selectApprovalTrend(tid, startTime, endTime, gran);
+        hisTaskRepository.selectApprovalTrend(tid, startTime, endTime, gran);
     if (rows == null) {
       return List.of();
     }

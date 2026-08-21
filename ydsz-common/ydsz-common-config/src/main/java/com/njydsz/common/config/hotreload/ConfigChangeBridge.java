@@ -55,10 +55,14 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
 
   /** Spring Cloud 事件类名（用于运行时匹配，避免编译期硬依赖） */
   private static final String REFRESH_EVENT_CLASS =
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
       "org.springframework.cloud.context.refresh.RefreshEvent";
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   private static final String ENV_CHANGE_EVENT_CLASS =
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
       "org.springframework.cloud.context.environment.EnvironmentChangeEvent";
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   private static final String UNKNOWN_HOST = "unknown";
 

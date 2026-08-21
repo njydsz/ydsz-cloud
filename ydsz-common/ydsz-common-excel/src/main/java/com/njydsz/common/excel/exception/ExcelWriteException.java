@@ -75,7 +75,13 @@ public class ExcelWriteException extends ExcelException {
     this.fieldName = fieldName;
   }
 
-  /** 创建文件访问异常 */
+  /**
+   * 创建文件访问异常
+   *
+   * @param filePath 文件路径
+   * @param reason 原因
+   * @return 返回值说明
+   */
   public static ExcelWriteException fileAccessFailed(String filePath, String reason) {
     ExcelWriteException ex =
         new ExcelWriteException(ExcelExceptionCode.WRITE_FILE_ACCESS_FAILED, "文件访问失败: " + reason);
@@ -83,7 +89,14 @@ public class ExcelWriteException extends ExcelException {
     return ex;
   }
 
-  /** 创建磁盘空间不足异常 */
+  /**
+   * 创建磁盘空间不足异常
+   *
+   * @param filePath 文件路径
+   * @param requiredSpace 所需空间
+   * @param availableSpace 可用空间
+   * @return 返回值说明
+   */
   public static ExcelWriteException insufficientSpace(
       String filePath, long requiredSpace, long availableSpace) {
     ExcelWriteException ex =
@@ -94,7 +107,14 @@ public class ExcelWriteException extends ExcelException {
     return ex;
   }
 
-  /** 创建注解配置错误异常 */
+  /**
+   * 创建注解配置错误异常
+   *
+   * @param clazz 目标类型
+   * @param fieldName 字段名
+   * @param reason 原因
+   * @return 返回值说明
+   */
   public static ExcelWriteException invalidAnnotation(
       Class<?> clazz, String fieldName, String reason) {
     ExcelWriteException ex =
@@ -106,7 +126,15 @@ public class ExcelWriteException extends ExcelException {
     return ex;
   }
 
-  /** 创建数据写入异常 */
+  /**
+   * 创建数据写入异常
+   *
+   * @param index 索引
+   * @param fieldName 字段名
+   * @param value 值
+   * @param cause 原因
+   * @return 返回值说明
+   */
   public static ExcelWriteException dataWriteFailed(
       int index, String fieldName, Object value, Throwable cause) {
     ExcelWriteException ex =

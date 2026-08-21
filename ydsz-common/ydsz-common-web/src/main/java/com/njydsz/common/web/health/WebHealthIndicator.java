@@ -6,6 +6,7 @@ import java.lang.management.MemoryUsage;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,8 +15,6 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.web.config.WebCorsProperties;
 import com.njydsz.common.web.config.WebTraceProperties;
-
-import nl.basjes.parse.useragent.UserAgentAnalyzer;
 
 /**
  * Web 模块健康指标
@@ -38,7 +37,9 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
  * @see HealthIndicator
  * @since 1.0.0
  */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 @ConditionalOnProperty(
     prefix = "ydsz.web.health-indicator",
     name = "enabled",

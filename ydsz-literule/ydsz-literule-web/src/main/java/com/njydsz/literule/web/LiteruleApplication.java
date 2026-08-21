@@ -1,6 +1,5 @@
 package com.njydsz.literule.web;
 
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -44,7 +43,6 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAudit
 @EnableYdszFeign
 @EnableScheduling
-@MapperScan("com.njydsz.literule.infra.mapper")
 public class LiteruleApplication {
 
   /**

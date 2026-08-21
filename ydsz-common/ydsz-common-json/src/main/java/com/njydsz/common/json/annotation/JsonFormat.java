@@ -71,8 +71,11 @@ public @interface JsonFormat {
 
   /** 格式化形状枚举 */
   enum Shape {
+/** any */
     ANY,
+/** string */
     STRING,
+/** number */
     NUMBER
   }
 }

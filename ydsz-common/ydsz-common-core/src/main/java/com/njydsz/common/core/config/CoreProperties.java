@@ -111,6 +111,8 @@ public class CoreProperties {
    * 校验分页范围合法性：defaultPageSize 不应大于 maxPageSize。
    *
    * <p>该校验在应用启动时执行（@Validated + @AssertTrue）， 配置不合法时快速失败阻止启动。
+   *
+   * @return 分页范围是否合法
    */
   @AssertTrue(message = "ydsz.core.default-page-size must be <= ydsz.core.max-page-size")
   public boolean isPaginationRangeValid() {

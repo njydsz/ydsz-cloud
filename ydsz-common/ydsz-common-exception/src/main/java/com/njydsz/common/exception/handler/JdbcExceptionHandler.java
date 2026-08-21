@@ -41,7 +41,9 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
  */
 @Slf4j
 @RestControllerAdvice
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.dao.DataAccessException")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class JdbcExceptionHandler extends BaseExceptionHandler {
 

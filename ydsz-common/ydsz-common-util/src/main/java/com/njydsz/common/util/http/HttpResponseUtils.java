@@ -2,6 +2,7 @@ package com.njydsz.common.util.http;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -109,7 +110,7 @@ public final class HttpResponseUtils {
   public static void renderError(
       HttpServletResponse response, HttpStatus httpStatus, String message) {
     // 使用统一 JSON 序列化器，避免手工拼接导致的特殊字符（引号/反斜杠/换行）破坏 JSON 结构或注入额外字段
-    String body = YdszJson.toJson(java.util.Map.of("error", message == null ? "" : message));
+    String body = YdszJson.toJson(Map.of("error", message == null ? "" : message));
     render(response, body, httpStatus.value(), DEFAULT_CONTENT_TYPE, DEFAULT_CHARSET);
   }
 

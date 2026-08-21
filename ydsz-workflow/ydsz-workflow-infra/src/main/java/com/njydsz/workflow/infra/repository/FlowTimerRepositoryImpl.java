@@ -165,4 +165,14 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
     update.setId(id);
     timerMapper.updateById(update);
   }
+
+  @Override
+  public List<FlowTimerVO> findByInstanceOrderByCreatedAtDesc(String instanceId) {
+    return converter.flowTimerListToVO(
+        timerMapper.selectList(
+            new LambdaQueryWrapper<FlowTimerDO>()
+                .eq(FlowTimerDO::getInstanceId, instanceId)
+                .eq(FlowTimerDO::getDeleted, 0)
+                .orderByDesc(FlowTimerDO::getCreatedAt)));
+  }
 }

@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.message.domain.model.core.MsgLog;
+import com.njydsz.message.infra.entity.MsgLog;
 
 /**
  * 撤回通道路由器（P2-F2: 跨通道消息撤回能力扩展）。

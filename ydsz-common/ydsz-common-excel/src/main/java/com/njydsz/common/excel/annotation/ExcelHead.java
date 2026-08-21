@@ -4,7 +4,7 @@ package com.njydsz.common.excel.annotation;
  * ExcelHead 类
  *
  * @author ydsz-team
- * @email ydsz-dev@ydszsoft.com
+
  * @version 1.0.0
  */
 import java.lang.annotation.Documented;

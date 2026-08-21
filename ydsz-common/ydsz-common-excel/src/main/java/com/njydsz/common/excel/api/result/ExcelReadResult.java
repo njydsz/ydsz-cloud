@@ -58,7 +58,7 @@ import com.njydsz.common.excel.core.ExcelFacade;
  * @param <T> 泛型参数,表示读取的数据类型
  * @see ExcelFacade#asyncRead
  * @author ydsz-team
- * @email ydsz-dev@ydszsoft.com
+
  * @version 1.0.0
  * @since 1.0.0
  */

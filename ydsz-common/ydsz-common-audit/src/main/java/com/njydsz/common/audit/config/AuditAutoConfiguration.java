@@ -294,7 +294,9 @@ public class AuditAutoConfiguration {
    * @return 审计健康检查指示器
    */
   @Bean
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnBean(AuditRecorder.class)
   @ConditionalOnProperty(
       prefix = "ydsz.audit",

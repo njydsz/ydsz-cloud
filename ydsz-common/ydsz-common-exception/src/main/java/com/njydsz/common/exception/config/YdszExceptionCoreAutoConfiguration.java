@@ -54,7 +54,9 @@ import com.njydsz.common.exception.registry.ExceptionCodeScanner;
 @Slf4j
 @AutoConfiguration
 @EnableConfigurationProperties({I18nProperties.class, ExceptionProperties.class})
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.context.MessageSource")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 public class YdszExceptionCoreAutoConfiguration {
 
   /** MessageSource Bean 名称常量 */

@@ -250,7 +250,7 @@ public final class FieldMeta {
       String tz = jacksonFormat.timezone();
       this.timezone = (tz != null && !tz.isEmpty()) ? java.time.ZoneId.of(tz) : null;
       String loc = jacksonFormat.locale();
-      this.locale = (loc != null && !loc.isEmpty()) ? java.util.Locale.forLanguageTag(loc) : null;
+      this.locale = (loc != null && !loc.isEmpty()) ? Locale.forLanguageTag(loc) : null;
     } else {
       this.timezone = null;
       this.locale = null;

@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -44,6 +45,7 @@ import com.njydsz.common.json.util.BoundedLruCache;
  *   <li>集合/Map 完整支持，自动类型推断
  * </ul>
  *
+ * @param <T> Bean 类型
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -65,23 +67,31 @@ public final class BeanReader<T> {
   public Constructor<T> defaultConstructor;
 
   /**
+   * 字段说明（方法（null 表示无））。
+   *
    * @JsonAnySetter 方法（null 表示无）
    */
   public final Method anySetterMethod;
 
   /**
+   * 字段说明（标注的构造函数（null 表示使用默认构造函数））。
+   *
    * @JsonCreator 标注的构造函数（null 表示使用默认构造函数）
    */
   private final Constructor<?> creatorConstructor;
 
   /**
+   * 字段说明（构造函数参数名映射（对应 JSON 字段名，null 表示未解析））。
+   *
    * @JsonCreator 构造函数参数名映射（对应 JSON 字段名，null 表示未解析）
    */
   private final String[] creatorParameterNames;
 
- *
- * @param beanType Bean 类型
-  /** 构造函数 */
+  /**
+   * 构造函数。
+   *
+   * @param beanType Bean 类型
+   */
   public BeanReader(Class<T> beanType) {
     this.beanType = beanType;
 
@@ -106,7 +116,7 @@ public final class BeanReader<T> {
           if (ann.parameterNames().length == ctor.getParameterCount()) {
             paramNames = ann.parameterNames();
           } else {
-            java.lang.reflect.Parameter[] params = ctor.getParameters();
+            Parameter[] params = ctor.getParameters();
             paramNames = new String[params.length];
             for (int i = 0; i < params.length; i++) {
               JsonProperty jp = params[i].getAnnotation(JsonProperty.class);
@@ -415,23 +425,31 @@ public final class BeanReader<T> {
     public final int jsonNameHash;
 
     /**
+     * 字段说明（备用名称（不含主名称；空数组表示无别名））。
+     *
      * @JsonAlias 备用名称（不含主名称；空数组表示无别名）
      */
     public final String[] aliasNames;
 
     /**
+     * 字段说明（备用名称哈希（与 aliasNames 一一对应））。
+     *
      * @JsonAlias 备用名称哈希（与 aliasNames 一一对应）
      */
     public final int[] aliasHashes;
 
+    /** 字段类型 */
     public final Class<?> fieldType;
-/** field */
-/** field */
+
+    /** 字段对象 */
     public final Field field;
-/** typeCode */
+
+    /** 类型码 */
     public final int typeCode;
 
     /**
+     * 字段说明（(pattern=...) 指定的日期格式（null 表示使用默认格式列表））。
+     *
      * @JsonFormat(pattern=...) 指定的日期格式（null 表示使用默认格式列表）
      */
     public final String datePattern;

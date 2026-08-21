@@ -9,7 +9,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
 import com.njydsz.common.util.api.Experimental;
 import com.njydsz.common.util.security.DigestUtils;
@@ -119,7 +121,9 @@ public final class PwdUtils {
    */
   public static boolean isBcryptAvailable() {
     try {
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
       Class.forName("org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder");
+  // CHECKSTYLE.ON: RegexpSinglelineJava
       return true;
     } catch (ClassNotFoundException e) {
       return false;
@@ -141,7 +145,9 @@ public final class PwdUtils {
       throw new IllegalStateException(
           "BCrypt 需要 spring-security-crypto 依赖。请在 pom.xml 中添加：\n"
               + "<dependency>\n"
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
               + "  <groupId>org.springframework.security</groupId>\n"
+  // CHECKSTYLE.ON: RegexpSinglelineJava
               + "  <artifactId>spring-security-crypto</artifactId>\n"
               + "</dependency>");
     }
@@ -163,7 +169,9 @@ public final class PwdUtils {
       throw new IllegalStateException(
           "BCrypt 需要 spring-security-crypto 依赖。请在 pom.xml 中添加：\n"
               + "<dependency>\n"
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
               + "  <groupId>org.springframework.security</groupId>\n"
+  // CHECKSTYLE.ON: RegexpSinglelineJava
               + "  <artifactId>spring-security-crypto</artifactId>\n"
               + "</dependency>");
     }
@@ -307,7 +315,7 @@ public final class PwdUtils {
    * <p>通过 {@code META-INF/services/com.njydsz.common.util.password.PasswordStrengthChecker}
    * 注册的自定义实现，可被第三方覆盖以适配企业密码策略。
    */
-  private static final AtomicReference<PasswordStrengthChecker> strengthChecker =
+  private static final AtomicReference<PasswordStrengthChecker> STRENGTH_CHECKER =
       new AtomicReference<>();
 
   /**

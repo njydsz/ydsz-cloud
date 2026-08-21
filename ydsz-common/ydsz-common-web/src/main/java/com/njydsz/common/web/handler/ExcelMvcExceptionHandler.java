@@ -33,7 +33,9 @@ import com.njydsz.common.excel.exception.ExcelWriteException;
  * @since 1.0.0
  */
 @Slf4j
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.web.bind.annotation.RestControllerAdvice")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 @RestControllerAdvice
 public class ExcelMvcExceptionHandler {

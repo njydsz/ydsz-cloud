@@ -1,5 +1,8 @@
 package com.njydsz.common.json.writer;
 
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -7,7 +10,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.RandomAccess;
 import java.util.Set;
+import java.util.concurrent.atomic.DoubleAdder;
+import java.util.concurrent.atomic.LongAdder;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.number.NumberUtils;
@@ -83,7 +89,12 @@ public final class JSONWriter {
     }
   }
 
-  /** 计算特性值 */
+  /**
+   * 计算特性值
+   *
+   * @param features 特性
+   * @return 返回值说明
+   */
   public static long of(Feature... features) {
     if (features == null) {
       return 0;
@@ -97,7 +108,12 @@ public final class JSONWriter {
     return value;
   }
 
-  /** 从集合计算特性值 */
+  /**
+   * 从集合计算特性值
+   *
+   * @param features 特性
+   * @return 返回值说明
+   */
   public static long of(Set<Feature> features) {
     if (features == null) {
       return 0;
@@ -195,7 +211,11 @@ public final class JSONWriter {
     this.features = features;
   }
 
-  /** 写入字符 */
+  /**
+   * 写入字符
+   *
+   * @param c 字符
+   */
   public void write(char c) {
     if (externalSb != null) {
       externalSb.append(c);
@@ -205,7 +225,11 @@ public final class JSONWriter {
     }
   }
 
-  /** 写入字符串 */
+  /**
+   * 写入字符串
+   *
+   * @param str 字符串
+   */
   public void write(String str) {
     if (externalSb != null) {
       externalSb.append(str);
@@ -217,14 +241,24 @@ public final class JSONWriter {
     }
   }
 
-  /** 写入字符数组 */
+  /**
+   * 写入字符数组
+   *
+   * @param chars 字符数组
+   * @param off 偏移量
+   * @param len 长度
+   */
   public void write(char[] chars, int off, int len) {
     ensureCapacity(len);
     System.arraycopy(chars, off, buf, pos, len);
     pos += len;
   }
 
-  /** 写入整数（使用 FastJSON2 快速算法） */
+  /**
+   * 写入整数（使用 FastJSON2 快速算法）
+   *
+   * @param value 值
+   */
   public void writeInt(int value) {
     if (externalSb != null) {
       externalSb.append(value);
@@ -234,7 +268,11 @@ public final class JSONWriter {
     }
   }
 
-  /** 写入长整数（使用 FastJSON2 快速算法） */
+  /**
+   * 写入长整数（使用 FastJSON2 快速算法）
+   *
+   * @param value 值
+   */
   public void writeLong(long value) {
     if (externalSb != null) {
       externalSb.append(value);
@@ -244,7 +282,11 @@ public final class JSONWriter {
     }
   }
 
-  /** 写入浮点数（快速路径：整数部分直接写入，避免 Float.toString() 分配） */
+  /**
+   * 写入浮点数（快速路径：整数部分直接写入，避免 Float.toString() 分配）
+   *
+   * @param value 值
+   */
   public void writeFloat(float value) {
     if (externalSb != null) {
       externalSb.append(value);
@@ -277,15 +319,15 @@ public final class JSONWriter {
 
   /**
    * 写入双精度浮点数（快速路径：避免 Double.toString() 的 String 分配）
-   *
    * <p>优化策略：
-   *
    * <ul>
    *   <li>精确整数：直接写入整数 + ".0"
    *   <li>2位小数（价格/金额）：significand / 100 直接写入，避免 Double.toString()
    *   <li>1位小数：significand / 10 直接写入
    *   <li>其他：回退到 Double.toString()
    * </ul>
+   *
+   * @param value 值
    */
   public void writeDouble(double value) {
     if (externalSb != null) {
@@ -473,8 +515,9 @@ public final class JSONWriter {
 
   /**
    * 写入字符串（带引号，快速路径）
-   *
    * <p>优化策略：先扫描检查是否需要转义，无需转义时使用 str.getChars() 批量拷贝， 比逐字符写入更高效（System.arraycopy 底层优化）
+   *
+   * @param str 字符串
    */
   public void writeString(String str) {
     if (externalSb != null) {
@@ -507,14 +550,14 @@ public final class JSONWriter {
 
   /**
    * 直接写入字符串到缓冲区（无 externalSb 检查，用于 JSONWriter 直接模式）
-   *
    * <p>优化策略：
-   *
    * <ul>
    *   <li>ASCII 快速路径：纯 ASCII 且无特殊字符时，使用 str.getChars() 批量拷贝
    *   <li>字级检查：一次检查 8 个字符是否为 ASCII + 无特殊字符，减少逐字符判断
    *   <li>无需转义时直接批量写入，比逐字符写入快
    * </ul>
+   *
+   * @param str 字符串
    */
   public void writeStringDirect(String str) {
     int len = str.length();
@@ -585,10 +628,10 @@ public final class JSONWriter {
 
   /**
    * 直接写入字符串到缓冲区（无容量检查，用于外层已预分配容量的场景）
-   *
    * <p>跳过 ensureCapacity 检查，减少方法调用开销。 调用者必须确保缓冲区有足够容量（至少 len + 2 个字符）
-   *
    * <p>优化：字级检查，纯 ASCII 安全字符串直接批量拷贝
+   *
+   * @param str 字符串
    */
   public void writeStringDirectNoCheck(String str) {
     int len = str.length();
@@ -640,7 +683,11 @@ public final class JSONWriter {
             if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {
               externalSb.append(c);
               externalSb.append(str.charAt(i + 1));
+              // CHECKSTYLE.OFF: ModifiedControlVariable — 跳过代理对低位，语义安全
+
               i++;
+
+              // CHECKSTYLE.ON: ModifiedControlVariable
             } else {
               // 孤立高位代理：替换为 U+FFFD，避免产出非法 JSON
               externalSb.append('\uFFFD');
@@ -701,7 +748,11 @@ public final class JSONWriter {
             if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {
               buf[pos++] = c;
               buf[pos++] = str.charAt(i + 1);
+              // CHECKSTYLE.OFF: ModifiedControlVariable — 跳过代理对低位，语义安全
+
               i++;
+
+              // CHECKSTYLE.ON: ModifiedControlVariable
             } else {
               // 孤立高位代理：替换为 U+FFFD，避免产出非法 JSON
               buf[pos++] = '\uFFFD';
@@ -870,9 +921,9 @@ public final class JSONWriter {
    * <p>对于纯 ASCII 内容，直接 1:1 char→byte 写入流；非 ASCII 内容回退 到 {@link #toUtf8Bytes()} 一次性写入。
    *
    * @param out 目标输出流
-   * @throws java.io.IOException IO 异常
+   * @throws IOException IO 异常
    */
-  public void writeTo(java.io.OutputStream out) throws java.io.IOException {
+  public void writeTo(OutputStream out) throws IOException {
     if (externalSb != null) {
       out.write(externalSb.toString().getBytes(StandardCharsets.UTF_8));
       return;
@@ -899,8 +950,9 @@ public final class JSONWriter {
 
   /**
    * 直接获取内部 char[] 缓冲区和长度（避免 String 拷贝）
-   *
    * <p>调用者必须在使用完毕后调用 reset()，否则数据会被覆盖
+   *
+   * @return 返回值说明
    */
   public char[] getBuffer() {
     return buf;
@@ -923,21 +975,30 @@ public final class JSONWriter {
     }
   }
 
-  /** 获取当前容量 */
+  /**
+   * 获取当前容量
+   *
+   * @return 返回值说明
+   */
   public int capacity() {
     return buf.length;
   }
 
-  /** 获取已写入字符数 */
+  /**
+   * 获取已写入字符数
+   *
+   * @return 返回值说明
+   */
   public int size() {
     return pos;
   }
 
   /**
    * 获取当前写入位置（供 序列化器直接操作缓冲区）
-   *
    * <p>生成的序列化器通过 getBuffer() + getPosition() 获取直接缓冲区访问， 消除 write() 方法调用的 externalSb 检查和
    * ensureCapacity 检查开销
+   *
+   * @return 返回值说明
    */
   public int getPosition() {
     return pos;
@@ -1089,8 +1150,9 @@ public final class JSONWriter {
 
   /**
    * 直接写入集合
-   *
    * <p>对 List 类型使用索引循环避免 Iterator 对象创建开销。
+   *
+   * @param collection 集合
    */
   public void writeCollection(Collection<?> collection) {
     if (collection == null) {
@@ -1108,7 +1170,7 @@ public final class JSONWriter {
     // 优化：对支持随机访问的 List 使用索引循环，避免 Iterator 对象创建开销
     // LinkedList 等非 RandomAccess 走 Iterator 路径，避免 O(N²) 退化
     if (collection instanceof List
-        && (collection instanceof java.util.RandomAccess || size < 100)) {
+        && (collection instanceof RandomAccess || size < 100)) {
       List<?> list = (List<?>) collection;
       for (int i = 0; i < size; i++) {
         if (i > 0) {
@@ -1129,7 +1191,11 @@ public final class JSONWriter {
     buf[pos++] = ']';
   }
 
-  /** 直接写入 Map（优化版本） */
+  /**
+   * 直接写入 Map（优化版本）
+   *
+   * @param map 映射
+   */
   public void writeMap(Map<?, ?> map) {
     if (map == null) {
       write("null");
@@ -1259,10 +1325,10 @@ public final class JSONWriter {
       } else {
         writeDouble(d);
       }
-    } else if (value instanceof java.util.concurrent.atomic.LongAdder) {
-      writeLong(((java.util.concurrent.atomic.LongAdder) value).sum());
-    } else if (value instanceof java.util.concurrent.atomic.DoubleAdder) {
-      double d = ((java.util.concurrent.atomic.DoubleAdder) value).sum();
+    } else if (value instanceof LongAdder) {
+      writeLong(((LongAdder) value).sum());
+    } else if (value instanceof DoubleAdder) {
+      double d = ((DoubleAdder) value).sum();
       if (Double.isNaN(d) || Double.isInfinite(d)) {
         write("null");
       } else {

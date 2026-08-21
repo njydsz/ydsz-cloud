@@ -3,7 +3,6 @@ package com.njydsz.workflow.server.service.impl.instance;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,11 +12,9 @@ import org.springframework.util.StringUtils;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.infra.mapper.FlowDelegateAuthMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowAssigneeLeaveHandler;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -97,31 +94,14 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
 
   // ============================== 依赖注入 ==============================
 
-  /** 运行时任务 Mapper，负责 {@code ydsz_flow_run_task} 表的查询（待办任务来源） */
-  private final FlowRunTaskMapper taskMapper;
-
-  /**
-   * 运行时任务仓储（domain 层契约）。
-   *
-   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #taskMapper} 访问数据，
-   * 因为 {@code selectList(LambdaQueryWrapper)} 复杂查询在仓储中暂无等价方法，
-   * 且仓储返回 {@code FlowRunTaskVO} 与 Service 使用的 {@code FlowRunTaskDO} 类型不同。
-   * 后续应在仓储中补齐对应方法并迁移。
-   */
+  /** 运行时任务仓储（domain 层契约），查询待办任务 */
   private final FlowRunTaskRepository taskRepository;
 
-  /** 委派授权 Mapper，负责 {@code ydsz_flow_delegate_auth} 表的查询（长期授权委派来源） */
-  private final FlowDelegateAuthMapper delegateAuthMapper;
-
-  /**
-   * 委托授权仓储（domain 层契约）。
-   *
-   * <p>提供领域语义化的数据访问方法。当前 Service 仍通过 {@link #delegateAuthMapper} 访问数据，
-   * 因为 {@code selectOne(LambdaQueryWrapper)} 复杂查询在仓储中暂无等价方法，
-   * 且仓储返回 {@code FlowDelegateAuthVO} 与 Service 使用的 {@code FlowDelegateAuthDO} 类型不同。
-   * 后续应在仓储中补齐对应方法并迁移。
-   */
+  /** 委托授权仓储（domain 层契约），查询长期授权委派 */
   private final FlowDelegateAuthRepository delegateAuthRepository;
+
+  /** 实体转换器，用于 VO ↔ DO 转换 */
+  private final WorkflowConverter converter;
 
   /** 流程任务服务，调用 {@code transfer} 接口执行任务转交（注入 {@code FlowTaskService} 门面） */
   private final FlowTaskService taskService;
@@ -189,16 +169,9 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
     }
 
     // 2. 查询待办任务
-    LambdaQueryWrapper<FlowRunTaskDO> wrapper =
-        new LambdaQueryWrapper<FlowRunTaskDO>()
-            .eq(FlowRunTaskDO::getAssigneeId, userId)
-            .eq(FlowRunTaskDO::getDeleted, 0)
-            .in(
-                FlowRunTaskDO::getTaskStatus,
-                FlowTaskStatus.PENDING.name(),
-                FlowTaskStatus.CLAIMED.name());
-    // 保留 Mapper：复杂 LambdaQueryWrapper 查询，Repository 暂无等价方法
-    List<FlowRunTaskDO> tasks = taskMapper.selectList(wrapper);
+    List<FlowRunTaskDO> tasks = taskRepository.findPendingTasksByAssignee(userId).stream()
+        .map(converter::entityToDO)
+        .toList();
 
     if (tasks.isEmpty()) {
       log.info("[LeaveHandler] 无待办需要转交: userId={}", userId);
@@ -289,19 +262,10 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
    */
   private String findActiveDelegate(String userId) {
     LocalDateTime now = LocalDateTime.now();
-    LambdaQueryWrapper<FlowDelegateAuthDO> wrapper =
-        new LambdaQueryWrapper<FlowDelegateAuthDO>()
-            .eq(FlowDelegateAuthDO::getOwnerUserId, userId)
-            .eq(FlowDelegateAuthDO::getAuthStatus, "ACTIVE")
-            .le(FlowDelegateAuthDO::getStartTime, now)
-            .and(
-                w ->
-                    w.isNull(FlowDelegateAuthDO::getEndTime)
-                        .or()
-                        .ge(FlowDelegateAuthDO::getEndTime, now))
-            .last("LIMIT 1");
-    // 保留 Mapper：复杂 LambdaQueryWrapper 查询，Repository 暂无等价方法
-    FlowDelegateAuthDO auth = delegateAuthMapper.selectOne(wrapper);
+    FlowDelegateAuthDO auth = delegateAuthRepository.findActiveByOwner(userId, now).stream()
+        .findFirst()
+        .map(converter::entityToDO)
+        .orElse(null);
     return auth != null ? auth.getDelegateUserId() : null;
   }
 }

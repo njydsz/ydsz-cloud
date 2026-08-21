@@ -311,7 +311,9 @@ public class DistributedLockAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnBean(StringRedisTemplate.class)
   public LockHealthIndicator lockHealthIndicator(
       RedisConnectionFactory redisConnectionFactory,

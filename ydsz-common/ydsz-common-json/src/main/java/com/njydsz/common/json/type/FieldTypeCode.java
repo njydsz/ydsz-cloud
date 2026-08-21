@@ -18,23 +18,41 @@ package com.njydsz.common.json.type;
  * @since 1.0.0
  */
 public enum FieldTypeCode {
+/** string */
   STRING(1),
+/** int */
   INT(2),
+/** long */
   LONG(3),
+/** double */
   DOUBLE(4),
+/** float */
   FLOAT(5),
+/** boolean */
   BOOLEAN(6),
+/** char */
   CHAR(7),
+/** short */
   SHORT(8),
+/** byte */
   BYTE(9),
+/** local date time */
   LOCAL_DATE_TIME(10),
+/** local date */
   LOCAL_DATE(11),
+/** date */
   DATE(12),
+/** collection */
   COLLECTION(13),
+/** map */
   MAP(14),
+/** nested object */
   NESTED_OBJECT(15),
+/** big decimal */
   BIG_DECIMAL(16),
+/** big integer */
   BIG_INTEGER(17),
+/** uuid */
   UUID(18);
 
   private final int code;
@@ -55,7 +73,12 @@ public enum FieldTypeCode {
     return code;
   }
 
-  /** 按当前编码方案获取枚举（直接匹配）。 */
+  /**
+   * 按当前编码方案获取枚举（直接匹配）。
+   *
+   * @param code 错误码
+   * @return 返回值说明
+   */
   public static FieldTypeCode of(int code) {
     for (FieldTypeCode tc : values()) {
       if (tc.code == code) {
@@ -67,9 +90,10 @@ public enum FieldTypeCode {
 
   /**
    * 从各旧系统的 int 类型码按来源转换。
-   *
    * @param code 旧系统的 int 类型码
    * @param source 来源标识（"FieldMeta"）
+   *
+   * @return 返回值说明
    */
   public static FieldTypeCode fromLegacy(int code, String source) {
     return of(code);

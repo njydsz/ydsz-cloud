@@ -5,7 +5,9 @@ import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.health.contributor.Health;
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 import org.springframework.boot.health.contributor.HealthIndicator;
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
 /**
  * Excel 模块健康检查指示器
@@ -17,7 +19,9 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  * @author ydsz-team
  * @since 1.0.0
  */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 public class ExcelHealthIndicator implements HealthIndicator {
 
   private final ExcelProperties properties;

@@ -73,7 +73,9 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    *
    * <p>使用字段注入而非构造器注入，避免测试时缺少默认构造器的问题。
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @Autowired private org.springframework.context.ApplicationContext applicationContext;
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   @Override
   public void afterSingletonsInstantiated() {

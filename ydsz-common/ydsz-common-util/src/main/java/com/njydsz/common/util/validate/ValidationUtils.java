@@ -1,6 +1,7 @@
 package com.njydsz.common.util.validate;
 
 import java.util.regex.Pattern;
+
 import jakarta.annotation.Nullable;
 
 import com.njydsz.common.util.api.Experimental;

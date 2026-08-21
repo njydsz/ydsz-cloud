@@ -32,7 +32,9 @@ public final class AesGcmCryptoProvider implements CryptoProvider {
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
   /** ThreadLocal Cipher 池——避免每次 encrypt/decrypt 重复查找 Provider */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<Cipher> CIPHER_POOL =
+  // CHECKSTYLE.ON: RegexpSinglelineJava
       ThreadLocal.withInitial(
           () -> {
             try {

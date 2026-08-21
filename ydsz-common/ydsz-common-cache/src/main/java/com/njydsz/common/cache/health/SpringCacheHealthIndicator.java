@@ -81,7 +81,11 @@ public class SpringCacheHealthIndicator implements HealthIndicator {
     return healthBuilder.build();
   }
 
-  /** 获取底层 CacheHealthIndicator（用于手动注册额外缓存） */
+  /**
+   * 获取底层 CacheHealthIndicator（用于手动注册额外缓存）
+   *
+   * @return 返回值说明
+   */
   public CacheHealthIndicator getDelegate() {
     return delegate;
   }
