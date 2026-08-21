@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.gateway.Text2SQLService;
+import com.njydsz.agent.domain.model.ToolDefinition;
 import com.njydsz.agent.domain.tool.ToolExecutionException;
 import com.njydsz.agent.domain.tool.ToolExecutor;
 import com.njydsz.common.json.YdszJson;
@@ -90,7 +91,7 @@ public class Text2SQLTool implements ToolExecutor {
                         "description", "自然语言查询（如：查询最近 7 天创建的项目数量、列出所有状态为进行中的任务）")),
             "required", List.of("query"));
     return List.of(
-        new com.njydsz.agent.domain.model.ToolDefinition(
+        new ToolDefinition(
             "query_database",
             "通过自然语言查询数据库，自动转换为 SQL 执行并返回结果。支持聚合查询、条件过滤、排序等常见查询操作。",
             parametersSchema));
