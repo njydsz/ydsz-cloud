@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.vo.FileStatVO;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
 import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
@@ -80,20 +81,20 @@ public class StorageAnalysisApplicationService {
    * @note 只读，无事务边界
    */
   public Map<String, TypeStats> statsByType(String userId) {
-    List<FileNodeRepository.FileTypeStat> stats = fileNodeRepository.statsBySuffixAndUser(userId);
+    List<FileStatVO> stats = fileNodeRepository.statsBySuffixAndUser(userId);
     Map<String, TypeStats> result = new HashMap<>();
 
-    long grandTotal = stats.stream().mapToLong(FileNodeRepository.FileTypeStat::totalSize).sum();
+    long grandTotal = stats.stream().mapToLong(FileStatVO::getTotalSize).sum();
 
-    for (FileNodeRepository.FileTypeStat stat : stats) {
-      double percentage = grandTotal > 0 ? (double) stat.totalSize() / grandTotal * 100 : 0.0;
-      String key = stat.suffix() != null ? stat.suffix() : "unknown";
+    for (FileStatVO stat : stats) {
+      double percentage = grandTotal > 0 ? (double) stat.getTotalSize() / grandTotal * 100 : 0.0;
+      String key = stat.getSuffix() != null ? stat.getSuffix() : "unknown";
       result.put(
           key,
           TypeStats.builder()
               .suffix(key)
-              .fileCount(stat.fileCount())
-              .totalSize(stat.totalSize())
+              .fileCount(stat.getFileCount())
+              .totalSize(stat.getTotalSize())
               .percentage(Math.round(percentage * 100.0) / 100.0)
               .build());
     }
