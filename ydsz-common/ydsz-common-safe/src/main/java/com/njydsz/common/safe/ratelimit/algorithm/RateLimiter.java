@@ -58,10 +58,6 @@ public interface RateLimiter {
   /** 重置限流器状态 */
   void reset();
 
-   * @param context context 参数
-   * @param context context 参数
-   * @param context context 参数
-   * @param context context 参数
   /** 释放一个令牌/许可（用于并发数限流的 finally 块） */
   default void release(RateLimitContext context) {
     // 默认无操作，仅并发数限流器需要实现
