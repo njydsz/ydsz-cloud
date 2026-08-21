@@ -120,8 +120,8 @@ public class WatermarkService {
       return fileBytes;
     }
 
-    try (InputStream is = new java.io.ByteArrayInputStream(fileBytes)) {
-      java.awt.image.BufferedImage originalImage = javax.imageio.ImageIO.read(is);
+    try (InputStream is = new ByteArrayInputStream(fileBytes)) {
+      BufferedImage originalImage = ImageIO.read(is);
       if (originalImage == null) {
         log.warn("[WatermarkService] 读取图片失败，返回原始文件");
         return fileBytes;
@@ -131,25 +131,25 @@ public class WatermarkService {
       int height = originalImage.getHeight();
 
       // 创建绘图上下文
-      java.awt.Graphics2D g2d = originalImage.createGraphics();
+      Graphics2D g2d = originalImage.createGraphics();
       try {
         // 设置抗锯齿
         g2d.setRenderingHint(
-            java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+            RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         // 设置字体（根据图片大小调整）
         int fontSize = Math.max(16, Math.min(width, height) / 25);
-        java.awt.Font font = new java.awt.Font("SansSerif", java.awt.Font.BOLD, fontSize);
+        Font font = new Font("SansSerif", Font.BOLD, fontSize);
         g2d.setFont(font);
 
         // 计算文字尺寸
-        java.awt.FontMetrics fontMetrics = g2d.getFontMetrics();
+        FontMetrics fontMetrics = g2d.getFontMetrics();
         int textWidth = fontMetrics.stringWidth(watermarkText);
         int textHeight = fontMetrics.getHeight();
 
         // 设置颜色和透明度
-        g2d.setColor(new java.awt.Color(128, 128, 128, WATERMARK_OPACITY));
-        g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.2f));
+        g2d.setColor(new Color(128, 128, 128, WATERMARK_OPACITY));
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.2f));
 
         // 对角线平铺水印
         int stepX = textWidth + 100;
@@ -169,7 +169,7 @@ public class WatermarkService {
       // 输出为字节数组
       try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
         String formatName = MIME_IMAGE_PNG.equals(mimeType) ? "png" : "jpg";
-        javax.imageio.ImageIO.write(originalImage, formatName, bos);
+        ImageIO.write(originalImage, formatName, bos);
         return bos.toByteArray();
       }
     } catch (Exception e) {
@@ -205,12 +205,11 @@ public class WatermarkService {
       return fileBytes;
     }
 
-    try (org.apache.pdfbox.pdmodel.PDDocument document =
-            org.apache.pdfbox.pdmodel.PDDocument.load(new java.io.ByteArrayInputStream(fileBytes));
+    try (PDDocument document = PDDocument.load(new ByteArrayInputStream(fileBytes));
         ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
 
       // 为每一页添加水印
-      for (org.apache.pdfbox.pdmodel.PDPage page : document.getPages()) {
+      for (PDPage page : document.getPages()) {
         addPdfWatermarkPage(document, page, watermarkText);
       }
 
@@ -231,16 +230,13 @@ public class WatermarkService {
    * @throws IOException PDF 处理异常
    */
   private void addPdfWatermarkPage(
-      org.apache.pdfbox.pdmodel.PDDocument document,
-      org.apache.pdfbox.pdmodel.PDPage page,
-      String watermarkText)
+      PDDocument document, PDPage page, String watermarkText)
       throws IOException {
-    org.apache.pdfbox.pdmodel.PDPageContentStream contentStream =
-        new org.apache.pdfbox.pdmodel.PDPageContentStream(
-            document, page, org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode.APPEND, true);
+    PDPageContentStream contentStream =
+        new PDPageContentStream(
+            document, page, PDPageContentStream.AppendMode.APPEND, true);
 
-    contentStream.setFont(
-        org.apache.pdfbox.pdmodel.font.PDType1Font.OBLIQUE, 20);
+    contentStream.setFont(PDType1Font.OBLIQUE, 20);
 
     float pageSize = page.getMediaBox().getHeight();
     contentStream.setNonStrokingColor(200, 200, 200);
