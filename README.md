@@ -36,6 +36,413 @@
 
 ## 系统架构
 
+### 系统拓扑
+
+下图展示 Ydsz Cloud 的整体系统架构，包含接入层、网关层、业务服务层、中间件层与基础设施层：
+
+```mermaid
+graph TB
+    subgraph 接入层["📱 接入层 (Client Layer)"]
+        Web["浏览器 / PC Web"]
+        Mobile["移动端 App"]
+        Open["开放 API (OpenAPI)")
+        Admin["运维管理后台"]
+    end
+
+    subgraph CDN安全层["🛡️ CDN / WAF / 安全层"]
+        CDN["CDN 静态资源"]
+        WAF["WAF 防护"]
+    end
+
+    subgraph APIGateway["🚪 API 网关层"]
+        Gateway["ydsz-gateway :9000<br/>WebFlux 反应式<br/>JWT 鉴权 · 限流 · 灰度路由"]
+    end
+
+    subgraph 服务层["⚙️ 微服务层 (Spring Boot 4 + JDK 21)"]
+        User["ydsz-userinfo :9002<br/>用户认证中心<br/>RBAC · OAuth2 · OIDC"]
+        Sys["ydsz-system :9001<br/>系统配置中心<br/>参数 · 字典 · 租户"]
+        Wiki["ydsz-nextwiki :9003<br/>网盘知识库<br/>文件 · 搜索 · 预览"]
+        Msg["ydsz-message :9004<br/>消息通知引擎<br/>12 渠道 · DAG"]
+        Flow["ydsz-workflow :9005<br/>工作流引擎<br/>BPMN 2.0 · DMN"]
+        Job["ydsz-cronjob :9006<br/>分布式调度<br/>Leader · 分片"]
+        Rule["ydsz-literule :9007<br/>规则引擎<br/>LiteExpr · CEP"]
+        Agent["ydsz-agent :9008<br/>AI 智能体<br/>ReAct · RAG"]
+    end
+
+    subgraph 中间件层["🧩 中间件层 (Middleware)"]
+        Nacos["Nacos<br/>注册 / 配置中心"]
+        RocketMQ["RocketMQ<br/>异步消息"]
+        Sentinel["Sentinel<br/>限流熔断"]
+        Seata["Seata<br/>分布式事务"]
+    end
+
+    subgraph 数据层["💾 数据层 (Data)"]
+        PG[("PostgreSQL<br/>主数据库")]
+        RedisDB[("Redis<br/>缓存 / 锁")]
+        MinIO[("MinIO / OSS<br/>对象存储")]
+        ES[("Elasticsearch<br/>全文搜索")]
+    end
+
+    subgraph 可观测层["📊 可观测层"]
+        Prometheus["Prometheus"]
+        Grafana["Grafana"]
+        Sentry["Sentry"]
+        ELK["ELK / Loki"]
+        Tracing["Micrometer Tracing<br/>W3C TraceContext"]
+    end
+
+    Web --> CDN
+    Mobile --> CDN
+    Open --> WAF
+    Admin --> WAF
+    CDN --> Gateway
+    WAF --> Gateway
+    Gateway --> User
+    Gateway --> Sys
+    Gateway --> Wiki
+    Gateway --> Msg
+    Gateway --> Flow
+    Gateway --> Job
+    Gateway --> Rule
+    Gateway --> Agent
+
+    User --> Nacos
+    Sys --> Nacos
+    Wiki --> Nacos
+    Msg --> Nacos
+    Flow --> Nacos
+    Job --> Nacos
+    Rule --> Nacos
+    Agent --> Nacos
+
+    User --> PG
+    Sys --> PG
+    Wiki --> PG
+    Msg --> PG
+    Flow --> PG
+    Job --> PG
+    Rule --> PG
+    Agent --> PG
+
+    User --> RedisDB
+    Sys --> RedisDB
+    Wiki --> RedisDB
+    Msg --> RocketMQ
+    Flow --> RedisDB
+    Job --> RedisDB
+    Rule --> RedisDB
+    Agent --> RedisDB
+
+    Wiki --> MinIO
+    Wiki --> ES
+    Msg --> PG
+    Job --> PG
+    Rule --> PG
+    Agent --> PG
+
+    Gateway --> Sentinel
+    Agent --> Seata
+
+    Gateway -. metrics .-> Prometheus
+    User -. metrics .-> Prometheus
+    Sys -. metrics .-> Prometheus
+    Job -. metrics .-> Prometheus
+    Rule -. metrics .-> Prometheus
+    Agent -. metrics .-> Prometheus
+
+    Prometheus --> Grafana
+    Gateway -. exception .-> Sentry
+    User -. exception .-> Sentry
+    Sys -. exception .-> Sentry
+    Wiki -. exception .-> Sentry
+    Msg -. exception .-> Sentry
+    Flow -. exception .-> Sentry
+    Job -. exception .-> Sentry
+    Rule -. exception .-> Sentry
+    Agent -. exception .-> Sentry
+
+    Gateway -. trace .-> Tracing
+    User -. trace .-> Tracing
+    Sys -. trace .-> Tracing
+    Wiki -. trace .-> Tracing
+    Msg -. trace .-> Tracing
+    Flow -. trace .-> Tracing
+    Job -. trace .-> Tracing
+    Rule -. trace .-> Tracing
+    Agent -. trace .-> Tracing
+
+    Gateway -. log .-> ELK
+    User -. log .-> ELK
+    Sys -. log .-> ELK
+    Wiki -. log .-> ELK
+    Msg -. log .-> ELK
+    Flow -. log .-> ELK
+    Job -. log .-> ELK
+    Rule -. log .-> ELK
+    Agent -. log .-> ELK
+```
+
+### 模块调用关系
+
+下图展示核心模块间的 **Feign RPC 调用** 与 **MQ 事件驱动** 两种交互方式：
+
+```mermaid
+graph LR
+    subgraph 核心业务流
+        A[ydsz-gateway] -->|Feign| B[ydsz-userinfo<br/>鉴权 / Token 校验]
+        A -->|Feign| C[ydsz-system<br/>配置 / 字典 / 租户]
+        A -->|Feign| D[ydsz-nextwiki<br/>文件管理 / 搜索]
+        A -->|Feign| E[ydsz-workflow<br/>流程定义 / 审批]
+        A -->|Feign| F[ydsz-literule<br/>规则评估]
+    end
+
+    subgraph 事件驱动流
+        E -->|MQ 事件| G[ydsz-message<br/>通知 / 提醒]
+        E -->|MQ 事件| H[ydsz-cronjob<br/>定时 SLA 检查]
+        F -->|MQ 事件| G
+        F -->|MQ 动作分发| H
+        F -->|MQ 动作分发| E
+    end
+
+    subgraph AI 增强流
+        I[ydsz-agent] -->|Feign| E<br/>人工审批 / RAG 检索]
+        I -->|Feign| F<br/>规则评估]
+        I -->|SSE 流式| A<br/>对话 / 执行结果]
+    end
+
+    subgraph 公共能力依赖
+        B --> Auth[common-auth<br/>RBAC / JWT]
+        C --> Tenant[common-tenant<br/>多租户隔离]
+        D --> File[common-file<br/>7 种存储平台]
+        E --> BPMN[BPMN 2.0<br/>工作流引擎]
+        F --> LiteExpr[LiteExpr<br/>规则引擎]
+        G --> Queue[common-queue<br/>6 种 MQ]
+        H --> Lock[common-lock<br/>分布式锁]
+        I --> LLM[LLM Provider<br/>OpenAI 兼容]
+    end
+```
+
+### 请求处理流程
+
+典型的浏览器请求从发起到响应的完整路径：
+
+```mermaid
+sequenceDiagram
+    participant Client as 浏览器 / App
+    participant Gateway as ydsz-gateway :9000
+    participant Auth as common-auth (JWT + RBAC)
+    participant Service as 业务微服务
+    participant DB as 数据库
+    participant Cache as Redis
+    participant MQ as RocketMQ
+
+    Client->>Gateway: HTTP Request (with JWT Token)
+    Gateway->>Gateway: IP 黑白名单检查
+    Gateway->>Gateway: 限流检查 (Redis+Lua 令牌桶)
+    Gateway->>Auth: JWT Token 校验
+    Auth-->>Gateway: 认证通过 / 用户信息
+    Gateway->>Gateway: RBAC 权限校验
+    Gateway->>Service: 路由转发 (携带租户上下文)
+    Service->>Cache: 查询缓存
+    alt 缓存命中
+        Cache-->>Service: 返回缓存数据
+    else 缓存未命中
+        Service->>DB: 数据库查询
+        DB-->>Service: 查询结果
+        Service->>Cache: 回填缓存
+    end
+    Service-->>Gateway: GatewayResponse
+    Gateway-->Client: HTTP Response
+
+    Note over Service,MQ: 异步事件通知
+    Service->>MQ: 发布业务事件
+    MQ->>Service: 消息消费 (通知 / 审计)
+```
+
+### 数据流架构
+
+下图展示多租户场景下的数据隔离与流转机制：
+
+```mermaid
+flowchart LR
+    subgraph 接入与上下文提取
+        Request[HTTP Request] --> WebFilter[TenantContextWebFilter]
+        WebFilter --> Parse[JWT + Header 解析租户]
+        WebFilter --> MDC[MDC 注入 traceId / tenantId]
+    end
+
+    subgraph SQL拦截与改写
+        App[业务 Mapper] --> Interceptor[TenantIsolationInterceptor]
+        Interceptor --> Rewrite[JSqlParser SQL 改写]
+        Interceptor --> FailClosed[Fail-Closed 保护]
+    end
+
+    subgraph 缓存隔离
+        CacheRead[缓存查询] --> KeyPrefix[TenantRedisKeyPrefixer]
+        KeyPrefix --> KeyFormat["{tenantId}:key"]
+    end
+
+    subgraph 数据持久层
+        Rewrite --> DataSource[(PostgreSQL<br/>共享主库 / 独立库)]
+        DataSource --> SharedTable[共享表 + tenant_id 列]
+        DataSource --> IsolateDB[(独立数据库)]
+    end
+```
+
+### 生产部署架构
+
+下图展示推荐的生产环境部署拓扑，采用多可用区高可用部署：
+
+```mermaid
+graph TB
+    subgraph 用户接入["🌍 用户接入层"]
+        DNS["DNS 智能解析"]
+        SLB["SLB / Nginx<br/>负载均衡 (多 AZ)"]
+    end
+
+    subgraph K8s集群["☸️ Kubernetes 集群 (多可用区)"]
+        subgraph Ingress层["Ingress 层"]
+            Ingress["Nginx Ingress /<br/>APISIX Gateway"]
+        end
+
+        subgraph 网关实例["网关实例 (3 副本)"]
+            GW1["gateway-pod-1"]
+            GW2["gateway-pod-2"]
+            GW3["gateway-pod-3"]
+        end
+
+        subgraph 业务服务实例["业务服务实例 (2+ 副本)"]
+            SVC1["userinfo × 2"]
+            SVC2["system × 2"]
+            SVC3["nextwiki × 2"]
+            SVC4["message × 2"]
+            SVC5["workflow × 2"]
+            SVC6["cronjob × 2"]
+            SVC7["literule × 2"]
+            SVC8["agent × 2"]
+        end
+    end
+
+    subgraph 中间件集群["🧩 中间件集群"]
+        NacosCluster["Nacos Cluster<br/>3 节点 Raft"]
+        RocketMQCluster["RocketMQ Cluster<br/>2 NameServer + 2 Broker"]
+        SentinelDashboard["Sentinel Dashboard"]
+    end
+
+    subgraph 数据集群["💾 数据集群"]
+        PGCluster[("PostgreSQL<br/>主从 + 读写分离<br/>Patroni + etcd")]
+        RedisCluster[("Redis Cluster<br/>6 节点 (3主3从)")]
+        MinIOCluster[("MinIO Cluster<br/>4 节点 EC:2")]
+        ESCluster[("Elasticsearch<br/>3 节点")]
+    end
+
+    subgraph 可观测集群["📊 可观测集群"]
+        PromCluster["Prometheus × 2<br/>+ Thanos 长期存储"]
+        GrafanaDash["Grafana Dashboard"]
+        LokiStack["Loki + Promtail"]
+        Tempo["Tempo 分布式追踪"]
+    end
+
+    DNS --> SLB
+    SLB --> Ingress
+    Ingress --> GW1
+    Ingress --> GW2
+    Ingress --> GW3
+    GW1 --> SVC1
+    GW1 --> SVC2
+    GW1 --> SVC3
+    GW1 --> SVC4
+    GW1 --> SVC5
+    GW1 --> SVC6
+    GW1 --> SVC7
+    GW1 --> SVC8
+
+    SVC1 --> NacosCluster
+    SVC2 --> NacosCluster
+    SVC3 --> NacosCluster
+    SVC4 --> NacosCluster
+    SVC5 --> NacosCluster
+    SVC6 --> NacosCluster
+    SVC7 --> NacosCluster
+    SVC8 --> NacosCluster
+
+    SVC1 --> PGCluster
+    SVC2 --> PGCluster
+    SVC3 --> PGCluster
+    SVC4 --> PGCluster
+    SVC5 --> PGCluster
+    SVC6 --> PGCluster
+    SVC7 --> PGCluster
+    SVC8 --> PGCluster
+
+    SVC1 --> RedisCluster
+    SVC2 --> RedisCluster
+    SVC3 --> RedisCluster
+    SVC4 --> RedisCluster
+    SVC5 --> RedisCluster
+    SVC6 --> RedisCluster
+    SVC7 --> RedisCluster
+    SVC8 --> RedisCluster
+
+    SVC3 --> MinIOCluster
+    SVC3 --> ESCluster
+    SVC4 --> RocketMQCluster
+    SVC5 --> RocketMQCluster
+    SVC6 --> RocketMQCluster
+    SVC7 --> RocketMQCluster
+
+    GW1 -. metrics .-> PromCluster
+    SVC1 -. metrics .-> PromCluster
+    SVC2 -. metrics .-> PromCluster
+    SVC3 -. metrics .-> PromCluster
+    SVC4 -. metrics .-> PromCluster
+    SVC5 -. metrics .-> PromCluster
+    SVC6 -. metrics .-> PromCluster
+    SVC7 -. metrics .-> PromCluster
+    SVC8 -. metrics .-> PromCluster
+
+    PromCluster --> GrafanaDash
+    GW1 -. logs .-> LokiStack
+    SVC1 -. logs .-> LokiStack
+    SVC2 -. logs .-> LokiStack
+    SVC3 -. logs .-> LokiStack
+    SVC4 -. logs .-> LokiStack
+    SVC5 -. logs .-> LokiStack
+    SVC6 -. logs .-> LokiStack
+    SVC7 -. logs .-> LokiStack
+    SVC8 -. logs .-> LokiStack
+
+    GW1 -. trace .-> Tempo
+    SVC1 -. trace .-> Tempo
+    SVC2 -. trace .-> Tempo
+    SVC3 -. trace .-> Tempo
+    SVC4 -. trace .-> Tempo
+    SVC5 -. trace .-> Tempo
+    SVC6 -. trace .-> Tempo
+    SVC7 -. trace .-> Tempo
+    SVC8 -. trace .-> Tempo
+```
+
+### 部署规格建议
+
+| 组件 | 最小规格 | 推荐规格 | 副本数 | 说明 |
+|------|----------|----------|--------|------|
+| **ydsz-gateway** | 1C2G | 2C4G | 3 | 无状态，水平扩展 |
+| **ydsz-userinfo** | 1C2G | 2C4G | 2 | 认证中心，建议多副本 |
+| **ydsz-system** | 1C2G | 2C4G | 2 | 配置中心，读多写少 |
+| **ydsz-nextwiki** | 2C4G | 4C8G | 2 | 文件处理，CPU 密集 |
+| **ydsz-message** | 1C2G | 2C4G | 2 | 消息发送，IO 密集 |
+| **ydsz-workflow** | 2C4G | 4C8G | 2 | 流程引擎，计算密集 |
+| **ydsz-cronjob** | 1C2G | 2C4G | 2 | 调度服务，Leader 选举 |
+| **ydsz-literule** | 2C4G | 4C8G | 2 | 规则引擎，计算密集 |
+| **ydsz-agent** | 2C4G | 4C8G+GPU | 2 | AI 推理，建议 GPU |
+| **PostgreSQL** | 4C8G | 8C16G | 1主1从 | 建议 SSD 云盘 |
+| **Redis** | 2C4G | 4C8G | 6 (3主3从) | Cluster 模式 |
+| **Nacos** | 2C4G | 4C8G | 3 | Raft 集群 |
+| **RocketMQ** | 2C4G | 4C8G | 2+2 | NameServer + Broker |
+| **MinIO** | 2C4G | 4C8G | 4 | EC:2 纠删码 |
+| **Elasticsearch** | 4C8G | 8C16G | 3 | 存储根据数据量调整 |
+
 ---
 
 ## 技术选型
