@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.njydsz</groupId>
@@ -9,34 +9,30 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>ydsz-literule-app</artifactId>
-    <packaging>jar</packaging>
     <name>ydsz-literule-app</name>
-    <description>App 端接口层（移动端 API 入口，条件激活）</description>
+    <description>规则引擎模块移动端 App 基座，封装预留移动端接口能力</description>
+
     <dependencies>
-        <!-- 平台基座（ConditionalOnPlatform / PlatformMode） -->
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-base</artifactId>
+            <artifactId>ydsz-common-app</artifactId>
         </dependency>
-        <!-- Web 健康检查基类 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-web</artifactId>
-        </dependency>
-        <!-- 本模块 API 契约 -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-literule-api</artifactId>
         </dependency>
-        <!-- 本模块领域层 -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-literule-domain</artifactId>
         </dependency>
-        <!-- 本模块 Server 层（复用业务服务） -->
         <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-literule-server</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

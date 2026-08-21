@@ -203,59 +203,6 @@ public class RebalanceMonitor implements DisposableBean {
     return consumers;
   }
 
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
-   * @param currentConsumers currentConsumers 参数
   /** 检测消费者变化并触发事件 */
   private void detectChanges(Set<String> currentConsumers) {
     if (lastConsumerSnapshot.isEmpty() && !currentConsumers.isEmpty()) {

@@ -161,26 +161,6 @@ public class TimerBasedDelayedMessageSender implements DelayedMessageSender, Dis
     return pendingTasks.size();
   }
 
-   * @param message message 参数
-   * @param messageId messageId 参数
-   * @param message message 参数
-   * @param messageId messageId 参数
-   * @param message message 参数
-   * @param messageId messageId 参数
-   * @param message message 参数
-   * @param messageId messageId 参数
-   * @param message message 参数
-   * @param messageId messageId 参数
-   * @param message message 参数
-   * @param messageId messageId 参数
-   * @param message message 参数
-   * @param messageId messageId 参数
-   * @param message message 参数
-   * @param messageId messageId 参数
-   * @param message message 参数
-   * @param messageId messageId 参数
-   * @param message message 参数
-   * @param messageId messageId 参数
   /** 投递消息到底层 MQ */
   private void deliverMessage(QueueMessage message, String messageId) {
     pendingTasks.remove(messageId);

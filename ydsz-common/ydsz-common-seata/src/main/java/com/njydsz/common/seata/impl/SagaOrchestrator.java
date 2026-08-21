@@ -273,7 +273,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
                 return step.getForwardAction().call();
               } catch (Exception e) {
                 throw new TransactionException(
-                    "SAGA step execution failed: " + step.getStepName(),
+                    "SAGA step execution failed: " + step.getName(),
                     null,
                     null,
                     e);

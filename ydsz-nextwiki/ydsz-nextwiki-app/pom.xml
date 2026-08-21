@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.njydsz</groupId>
@@ -10,74 +10,30 @@
     </parent>
     <artifactId>ydsz-nextwiki-app</artifactId>
     <name>ydsz-nextwiki-app</name>
-    <description>App Layer - 移动端 API 入口（双入口架构：web 服务于 PC，app 服务于移动端）</description>
+    <description>知识库模块移动端 App 基座，封装预留移动端接口能力</description>
+
     <dependencies>
-        <!-- server 层：复用全部应用服务 -->
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-nextwiki-server</artifactId>
+            <artifactId>ydsz-common-app</artifactId>
         </dependency>
-        <!-- common-web：Spring MVC 基础 -->
+        <!-- HealthIndicator 依赖（Spring Boot 4 将 health 拆分至 spring-boot-health，构建修复） -->
         <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-web</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
         </dependency>
-        <!-- common-core：工具类 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-core</artifactId>
-        </dependency>
-        <!-- common-util：工具类 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-util</artifactId>
-        </dependency>
-        <!-- api 层：Feign Client 接口定义 -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-nextwiki-api</artifactId>
         </dependency>
-        <!-- Spring Cloud Bootstrap -->
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-bootstrap</artifactId>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-nextwiki-domain</artifactId>
         </dependency>
-        <!-- Nacos 服务注册 -->
-        <dependency>
-            <groupId>com.alibaba.cloud</groupId>
-            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
-        </dependency>
-        <!-- Nacos 配置中心 -->
-        <dependency>
-            <groupId>com.alibaba.cloud</groupId>
-            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
-        </dependency>
-        <!-- API 文档 -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-        </dependency>
-        <!-- Actuator 健康检查 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
-    <build>
-        <finalName>${project.artifactId}</finalName>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>repackage</id>
-                        <configuration>
-                            <classifier>exec</classifier>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>
