@@ -1,6 +1,8 @@
 package com.njydsz.common.search.metrics;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
@@ -272,12 +274,12 @@ public class SearchMetrics {
   public static class SearchPhaseTimer {
     private final long baseTime;
     private long lastLapTime;
-    private final java.util.List<Long> laps;
+    private final List<Long> laps;
 
     private SearchPhaseTimer() {
       this.baseTime = System.nanoTime();
       this.lastLapTime = baseTime;
-      this.laps = new java.util.ArrayList<>(4);
+      this.laps = new ArrayList<>(4);
     }
 
     public static SearchPhaseTimer start() {

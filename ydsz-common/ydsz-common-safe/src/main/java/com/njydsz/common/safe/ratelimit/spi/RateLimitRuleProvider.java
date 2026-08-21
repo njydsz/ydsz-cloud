@@ -34,8 +34,6 @@ public interface RateLimitRuleProvider {
   /** 删除规则 */
   void removeRule(String resource);
 
-   * @param listener listener 参数
-   * @param listener listener 参数
   /** 监听规则变更 */
   default void addListener(RateLimitRuleListener listener) {}
 }

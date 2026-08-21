@@ -1,7 +1,9 @@
 package com.njydsz.common.feign.config;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import feign.Logger;
@@ -195,7 +197,7 @@ public class FeignProperties {
     private long acquireTimeoutMs = 100;
 
     /** 按服务维度配置最大并发请求数 */
-    private java.util.Map<String, Integer> serviceMaxConcurrent = new java.util.HashMap<>();
+    private Map<String, Integer> serviceMaxConcurrent = new HashMap<>();
   }
 
   /** GZIP 请求压缩配置 */

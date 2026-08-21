@@ -1,5 +1,7 @@
 package com.njydsz.common.safe.sensitive;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -601,7 +603,7 @@ public final class SensitiveUtil {
     if (text == null || text.isEmpty()) {
       return List.of();
     }
-    List<PiiMatch> matches = new java.util.ArrayList<>();
+    List<PiiMatch> matches = new ArrayList<>();
     for (Map.Entry<Pattern, SensitiveType> entry : PII_SCAN_PATTERNS.entrySet()) {
       Pattern pattern = entry.getKey();
       SensitiveType type = entry.getValue();
@@ -613,7 +615,7 @@ public final class SensitiveUtil {
       }
     }
     // 按下标升序排列，便于下游按序处理
-    matches.sort(java.util.Comparator.comparingInt(PiiMatch::startIndex));
+    matches.sort(Comparator.comparingInt(PiiMatch::startIndex));
     return matches;
   }
 

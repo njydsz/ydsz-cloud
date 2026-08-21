@@ -3,6 +3,7 @@ package com.njydsz.common.safe.filter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import javax.crypto.Mac;
@@ -217,7 +218,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
     if (!StringUtils.hasText(queryString)) {
       return "";
     }
-    List<String> pairs = new java.util.ArrayList<>();
+    List<String> pairs = new ArrayList<>();
     for (String pair : queryString.split(QUERY_SEPARATOR)) {
       if (!StringUtils.hasText(pair)) {
         continue;

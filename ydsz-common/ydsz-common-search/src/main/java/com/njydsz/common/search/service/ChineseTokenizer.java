@@ -2,6 +2,7 @@ package com.njydsz.common.search.service;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -102,7 +103,7 @@ public interface ChineseTokenizer {
         // boundary.next()
         Method next = breakIteratorClass.getMethod("next");
 
-        List<String> tokens = new java.util.ArrayList<>();
+        List<String> tokens = new ArrayList<>();
         int end;
         while ((end = (int) next.invoke(boundary)) != DONE) {
           String word = text.substring(start, end).trim().toLowerCase();
@@ -143,7 +144,7 @@ public interface ChineseTokenizer {
       if (text == null || text.isBlank()) {
         return Collections.emptyList();
       }
-      List<String> tokens = new java.util.ArrayList<>();
+      List<String> tokens = new ArrayList<>();
       for (String token : text.toLowerCase().split("\\s+")) {
         if (!token.isBlank() && !stopWords.contains(token)) {
           tokens.add(token);
@@ -222,7 +223,7 @@ public interface ChineseTokenizer {
         Class<?> segTokenClass = Class.forName(SEG_TOKEN_CLASS);
         Method getWordMethod = segTokenClass.getMethod("getWord");
 
-        List<String> result = new java.util.ArrayList<>();
+        List<String> result = new ArrayList<>();
         for (Object token : segTokens) {
           String word = ((String) getWordMethod.invoke(token)).trim().toLowerCase();
           if (!word.isBlank() && !stopWords.contains(word) && word.length() > 1) {

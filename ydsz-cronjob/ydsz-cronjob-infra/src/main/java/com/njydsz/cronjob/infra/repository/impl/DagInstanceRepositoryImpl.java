@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -64,8 +65,7 @@ public class DagInstanceRepositoryImpl implements DagInstanceRepository {
 
   @Override
   public List<JobDagInstanceVO> findPendingInstances(LocalDateTime now, int limit) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobDagInstance> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<JobDagInstance> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(JobDagInstance::getStatus, "PENDING")
         .le(JobDagInstance::getNextFireTime, now)
         .orderByAsc(JobDagInstance::getNextFireTime)

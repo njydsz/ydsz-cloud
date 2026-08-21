@@ -1,6 +1,8 @@
 package com.njydsz.common.sentry.adapter;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -338,9 +340,9 @@ public abstract class SentryMetricsAdapter {
    */
   protected static Map<String, String> toMap(String... tags) {
     if (tags == null || tags.length == 0) {
-      return java.util.Collections.emptyMap();
+      return Collections.emptyMap();
     }
-    Map<String, String> map = new java.util.HashMap<>();
+    Map<String, String> map = new HashMap<>();
     for (int i = 0; i < tags.length - 1; i += 2) {
       map.put(tags[i], tags[i + 1]);
     }

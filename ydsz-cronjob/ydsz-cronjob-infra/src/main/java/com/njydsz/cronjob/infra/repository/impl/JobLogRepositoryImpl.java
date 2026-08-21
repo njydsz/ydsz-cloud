@@ -188,8 +188,7 @@ public class JobLogRepositoryImpl implements JobLogRepository {
 
   @Override
   public long countByJobIdAndStatus(String jobId, String status) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
     if (jobId != null && !jobId.isBlank()) {
       wrapper.eq(JobLog::getJobId, jobId);
     }
@@ -201,8 +200,7 @@ public class JobLogRepositoryImpl implements JobLogRepository {
 
   @Override
   public List<JobLogVO> findByJobIdSince(String jobId, LocalDateTime since) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(JobLog::getJobId, jobId)
         .ge(JobLog::getCreatedAt, since)
         .orderByDesc(JobLog::getCreatedAt);
@@ -211,8 +209,7 @@ public class JobLogRepositoryImpl implements JobLogRepository {
 
   @Override
   public Optional<JobLogVO> findLatestByJobKeyAndRunning(String jobKey) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(JobLog::getJobKey, jobKey)
         .eq(JobLog::getStatus, "RUNNING")
         .eq(JobLog::getDeleted, 0)
