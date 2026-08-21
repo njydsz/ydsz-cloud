@@ -20,6 +20,7 @@ import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.classreading.SimpleMetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import java.lang.reflect.Modifier;
 
 import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.enums.ExceptionCategory;
@@ -310,7 +311,7 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
    */
   private void registerClass(Class<?> clazz) {
     if (!clazz.isEnum()
-        || !java.lang.reflect.Modifier.isPublic(clazz.getModifiers())
+        || !Modifier.isPublic(clazz.getModifiers())
         || !ExceptionCode.class.isAssignableFrom(clazz)) {
       return;
     }
@@ -350,7 +351,7 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
     try {
       Class<?> clazz = Class.forName(className);
       if (!clazz.isEnum()
-          || !java.lang.reflect.Modifier.isPublic(clazz.getModifiers())
+          || !Modifier.isPublic(clazz.getModifiers())
           || !ExceptionCode.class.isAssignableFrom(clazz)) {
         return;
       }

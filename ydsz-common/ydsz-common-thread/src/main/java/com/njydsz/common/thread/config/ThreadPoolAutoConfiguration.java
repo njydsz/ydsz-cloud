@@ -20,6 +20,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Role;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import java.util.Collections;
 
 import com.njydsz.common.thread.metrics.MeteredRejectedHandler;
 import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
@@ -115,7 +116,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    */
   public Map<String, ThreadPoolTaskExecutor> getExecutors() {
     if (applicationContext == null) {
-      return java.util.Collections.emptyMap();
+      return Collections.emptyMap();
     }
     return applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class);
   }

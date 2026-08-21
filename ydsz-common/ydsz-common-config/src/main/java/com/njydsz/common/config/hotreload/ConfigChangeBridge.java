@@ -76,6 +76,8 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
   private final Map<String, String> snapshot = new ConcurrentHashMap<>();
 
   /**
+   * 处理配置变更事件。
+   *
    * @param environment 环境配置
    * @param publisher 事件发布器
    * @param changeMonitorProps 变更监控配置

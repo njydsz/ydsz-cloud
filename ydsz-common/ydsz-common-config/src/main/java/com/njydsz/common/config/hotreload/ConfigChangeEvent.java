@@ -29,6 +29,8 @@ public class ConfigChangeEvent extends ApplicationEvent {
   private final List<ConfigChange> changes;
 
   /**
+   * 配置变更事件。
+   *
    * @param source 事件源（通常是 {@link ConfigChangeBridge} 实例）
    * @param changes 变更的属性列表
    */

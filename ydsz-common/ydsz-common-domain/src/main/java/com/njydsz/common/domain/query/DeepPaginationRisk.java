@@ -66,7 +66,7 @@ public enum DeepPaginationRisk {
    * @param warnThreshold 警告阈值（非负）
    * @param rejectThreshold 拒绝阈值（非负，且不小于 warnThreshold）
    * @return 风险等级
-   * @throws IllegalArgumentException 当 warnThreshold / rejectThreshold 为负数， 或 rejectThreshold <
+   * @throws IllegalArgumentException 当 warnThreshold / rejectThreshold 为负数， 或 rejectThreshold &lt;
    *     warnThreshold 时
    */
   public static DeepPaginationRisk assess(long offset, long warnThreshold, long rejectThreshold) {

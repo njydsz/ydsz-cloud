@@ -28,7 +28,8 @@ import com.njydsz.common.json.YdszJson;
  * # 输出: ENC(G8NkR6qVw2J3FpY0bXxC7A==)
  *
  * # 解密
- * java -cp ydsz-common-config.jar com.njydsz.common.config.cli.ConfigCliTool decrypt "G8NkR6qVw2J3FpY0bXxC7A==" "master-password"
+ * java -cp ydsz-common-config.jar com.njydsz.common.config.cli.ConfigCliTool
+ *     decrypt "G8NkR6qVw2J3FpY0bXxC7A==" "master-password"
  *
  * # 输出: my-db-password
  *
@@ -81,7 +82,9 @@ public class ConfigCliTool {
     // 解析可选参数
     for (int i = 2; i < args.length; i++) {
       if ("--format".equalsIgnoreCase(args[i]) && i + 1 < args.length) {
+        // CHECKSTYLE.OFF: ModifiedControlVariable — 命令行参数解析需跳过 format 值，语义必要
         format = OutputFormat.fromValue(args[++i]);
+        // CHECKSTYLE.ON: ModifiedControlVariable
       } else if (masterPassword == null) {
         masterPassword = args[i];
       }

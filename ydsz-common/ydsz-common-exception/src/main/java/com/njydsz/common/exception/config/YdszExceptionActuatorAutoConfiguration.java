@@ -40,10 +40,14 @@ public class YdszExceptionActuatorAutoConfiguration {
 
   /** Actuator Endpoint 核心类名条件 */
   private static final String ACTUATOR_ENDPOINT_CLASS =
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
       "org.springframework.boot.actuate.endpoint.annotation.Endpoint";
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   private static final String ACTUATOR_HEALTH_CLASS =
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
       "org.springframework.boot.actuate.health.HealthIndicator";
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   // ==================== 错误码文档端点 ====================
 

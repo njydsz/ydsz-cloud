@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Range;
-import org.springframework.data.redis.connection.RedisStreamCommands.TrimOptions;
 import org.springframework.data.redis.connection.RedisStreamCommands;
+import org.springframework.data.redis.connection.RedisStreamCommands.TrimOptions;
 import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;

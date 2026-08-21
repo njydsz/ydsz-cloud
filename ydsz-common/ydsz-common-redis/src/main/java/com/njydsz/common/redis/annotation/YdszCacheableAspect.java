@@ -13,6 +13,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
@@ -50,7 +51,7 @@ public class YdszCacheableAspect {
    */
   public YdszCacheableAspect(
       RedisStringOps redisStringOps,
-      org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate,
+      RedisTemplate<String, Object> redisTemplate,
       com.njydsz.common.redis.config.RedisProperties redisProperties) {
     this.redisStringOps = redisStringOps;
   }

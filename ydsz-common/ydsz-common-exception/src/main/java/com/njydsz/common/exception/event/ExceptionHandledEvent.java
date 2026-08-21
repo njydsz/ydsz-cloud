@@ -82,7 +82,6 @@ public class ExceptionHandledEvent extends ApplicationEvent {
    * @param category 异常类别
    * @param levelName 异常级别名称
    * @param exceptionType 异常类名
-   * @return 处理结果
    */
   public ExceptionHandledEvent(
       Object source,
@@ -159,7 +158,8 @@ public class ExceptionHandledEvent extends ApplicationEvent {
   @Override
   public String toString() {
     return String.format(
-        "ExceptionHandledEvent{code='%s', key='%s', httpStatus=%d, path='%s', traceId='%s', category=%s, level='%s', type='%s'}",
+        "ExceptionHandledEvent{code='%s', key='%s', httpStatus=%d, path='%s', "
+          + "traceId='%s', category=%s, level='%s', type='%s'}",
         code, key, httpStatus, path, traceId, category, levelName, exceptionType);
   }
 }

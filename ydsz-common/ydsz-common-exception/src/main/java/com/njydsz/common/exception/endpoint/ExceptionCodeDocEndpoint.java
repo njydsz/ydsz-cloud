@@ -210,7 +210,6 @@ public class ExceptionCodeDocEndpoint {
      *
      * @param totalCodes 错误码总数
      * @param codes 错误码文档列表
-     * @return 处理结果
      */
     public ExceptionCodeDocResponse(int totalCodes, List<ExceptionCodeDoc> codes) {
       this.totalCodes = totalCodes;
@@ -245,7 +244,6 @@ public class ExceptionCodeDocEndpoint {
      * @param httpStatus HTTP 状态码
      * @param message 已解析的消息
      * @param source 来源类名
-     * @return 处理结果
      */
     public ExceptionCodeDoc(
         String code, String key, int httpStatus, String message, String source) {

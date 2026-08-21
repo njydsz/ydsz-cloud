@@ -37,7 +37,11 @@ public @interface YdszExceptionCode {
    */
   String module();
 
-  /** 模块描述（中文显示名） */
+  /**
+   * 模块描述（中文显示名）。
+   *
+   * @return 模块描述
+   */
   String description() default "";
 
   /**

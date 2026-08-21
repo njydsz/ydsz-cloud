@@ -49,8 +49,12 @@ import lombok.extern.slf4j.Slf4j;
  *   <tr><td>定时任务</td><td>{@link #newScheduledThreadPool(int)}</td><td>ScheduledExecutorService</td></tr>
  *   <tr><td>TTL 上下文透传</td><td>{@link #newTtlFixedThreadPool(int)}</td><td>包装 TransmittableThreadLocal</td></tr>
  *   <tr><td>完全自定义</td><td>{@link #builder()}</td><td>Builder 模式，灵活配置</td></tr>
+  // CHECKSTYLE.OFF: LineLength — Javadoc HTML 表格行，不可拆行
  *   <tr><td>优雅关闭</td><td>{@link #shutdownGracefully(ExecutorService, long, TimeUnit)}</td><td>先 shutdown，超时强制 shutdownNow</td></tr>
+  // CHECKSTYLE.ON: LineLength
+  // CHECKSTYLE.OFF: LineLength — Javadoc HTML 表格行，不可拆行
  *   <tr><td>带超时任务</td><td>{@link #submitWithTimeout(ExecutorService, Callable, long, TimeUnit)}</td><td>超时自动取消</td></tr>
+  // CHECKSTYLE.ON: LineLength
  * </table>
  *
  * @author ydsz-team

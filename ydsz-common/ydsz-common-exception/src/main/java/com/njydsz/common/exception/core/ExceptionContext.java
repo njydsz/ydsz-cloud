@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Collections;
 
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionLevel;
@@ -110,7 +111,7 @@ public class ExceptionContext implements Serializable {
    * @return 不可变快照 Map；未设置时返回 null
    */
   public Map<String, String> getSnapshot() {
-    return snapshot == null ? null : java.util.Collections.unmodifiableMap(snapshot);
+    return snapshot == null ? null : Collections.unmodifiableMap(snapshot);
   }
 
   /**

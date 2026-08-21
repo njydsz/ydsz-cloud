@@ -81,7 +81,7 @@ public class TenantRedisKeyPrefixer {
     private final TenantRedisKeyPrefixer prefixer;
     private final StringRedisSerializer delegate = new StringRedisSerializer();
 
-    public TenantAwareKeySerializer(TenantRedisKeyPrefixer prefixer) {
+    TenantAwareKeySerializer(TenantRedisKeyPrefixer prefixer) {
       this.prefixer = prefixer;
     }
 
