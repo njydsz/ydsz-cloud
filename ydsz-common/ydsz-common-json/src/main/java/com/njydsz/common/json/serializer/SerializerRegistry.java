@@ -48,10 +48,10 @@ public final class SerializerRegistry {
    * @return 注册中心实例
    */
   public static SerializerRegistry getInstance() {
-    SerializerRegistry registry = instance.get();
+    SerializerRegistry registry = INSTANCE.get();
     if (registry == null) {
       SerializerRegistry created = new SerializerRegistry();
-      return instance.compareAndSet(null, created) ? created : instance.get();
+      return INSTANCE.compareAndSet(null, created) ? created : INSTANCE.get();
     }
     return registry;
   }

@@ -27,6 +27,8 @@ public class JsonDeserializationException extends JsonException {
   public static final int PARSE_ERROR = 3005;
 /** validation error */
   public static final int VALIDATION_ERROR = 3006;
+/** field access error */
+  public static final int FIELD_ACCESS_ERROR = 3007;
 
   /** 长上下文片段半径：错误位置前后各取的字符数 */
   private static final int LONG_CONTEXT_RADIUS = 40;
@@ -103,6 +105,17 @@ public class JsonDeserializationException extends JsonException {
    */
   public JsonDeserializationException(String message, Throwable cause) {
     super(TYPE_MISMATCH, message, cause);
+  }
+
+  /**
+   * 构造函数（错误码、消息和原因）
+   *
+   * @param errorCode 错误码
+   * @param message 错误消息
+   * @param cause 原始异常
+   */
+  public JsonDeserializationException(int errorCode, String message, Throwable cause) {
+    super(errorCode, message, cause);
   }
 
   /**

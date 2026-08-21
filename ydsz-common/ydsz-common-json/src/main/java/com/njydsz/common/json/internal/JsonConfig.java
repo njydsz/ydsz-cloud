@@ -166,7 +166,7 @@ public final class JsonConfig implements Serializable {
     if (newConfig == null) {
       throw new IllegalArgumentException("JsonConfig.install: config must not be null");
     }
-    JsonConfig oldConfig = instance.getAndSet(newConfig);
+    JsonConfig oldConfig = INSTANCE.getAndSet(newConfig);
     newConfig.apply();
     // 触发 YdszJson 静态方法委托的默认 Mapper 重建，使配置变更立即生效
     com.njydsz.common.json.YdszJson.reloadDefaultMapper();
@@ -247,10 +247,10 @@ public final class JsonConfig implements Serializable {
    * @return JsonConfig 实例（默认配置）
    */
   public static JsonConfig getInstance() {
-    JsonConfig config = instance.get();
+    JsonConfig config = INSTANCE.get();
     if (config == null) {
       JsonConfig created = builder().build();
-      return instance.compareAndSet(null, created) ? created : instance.get();
+      return INSTANCE.compareAndSet(null, created) ? created : INSTANCE.get();
     }
     return config;
   }

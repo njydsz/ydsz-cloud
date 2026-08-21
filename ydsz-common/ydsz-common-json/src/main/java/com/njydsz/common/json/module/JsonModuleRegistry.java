@@ -84,11 +84,11 @@ public final class JsonModuleRegistry {
    * @return 注册中心实例
    */
   public static JsonModuleRegistry getInstance() {
-    JsonModuleRegistry registry = instance.get();
+    JsonModuleRegistry registry = INSTANCE.get();
     if (registry == null) {
       JsonModuleRegistry created = new JsonModuleRegistry();
       created.loadSpiModules();
-      return instance.compareAndSet(null, created) ? created : instance.get();
+      return INSTANCE.compareAndSet(null, created) ? created : INSTANCE.get();
     }
     return registry;
   }
