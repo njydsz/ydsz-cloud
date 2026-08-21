@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.njydsz.nextwiki.infra.entity.FileNodeDO;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.vo.FileStatVO;
 
 /**
  * 文件节点 Mapper
@@ -212,7 +212,7 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
       "SELECT suffix, COUNT(*) AS file_count, COALESCE(SUM(size), 0) AS total_size "
           + "FROM nw_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file' "
           + "GROUP BY suffix ORDER BY total_size DESC")
-  List<FileNodeRepository.FileTypeStat> statsBySuffixAndUser(@Param("userId") String userId);
+  List<FileStatVO> statsBySuffixAndUser(@Param("userId") String userId);
 
   /** 按文件哈希查询（用于秒传去重） */
   @Select(

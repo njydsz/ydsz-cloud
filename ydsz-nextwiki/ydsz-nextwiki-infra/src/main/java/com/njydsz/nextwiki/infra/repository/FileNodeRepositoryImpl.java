@@ -20,6 +20,7 @@ import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.query.FileNodeQuery;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.vo.FileStatVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
 import com.njydsz.nextwiki.infra.entity.FileNodeDO;
 import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
@@ -218,7 +219,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public List<FileTypeStat> statsBySuffixAndUser(String userId) {
+  public List<FileStatVO> statsBySuffixAndUser(String userId) {
     return fileNodeMapper.statsBySuffixAndUser(userId);
   }
 

@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.query.FileNodeQuery;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.vo.FileStatVO;
 
 /**
  * 文件节点仓储接口
@@ -201,9 +202,9 @@ public interface FileNodeRepository {
    * 按后缀统计文件数量和大小
    *
    * @param userId 用户ID
-   * @return 文件类型统计结果列表
+   @return 文件类型统计结果列表
    */
-  List<FileTypeStat> statsBySuffixAndUser(String userId);
+  List<FileStatVO> statsBySuffixAndUser(String userId);
 
   /**
    * 查询用户根目录（不存在则创建）
@@ -286,6 +287,4 @@ public interface FileNodeRepository {
    */
   PageResponse<List<FileNodeVO>> findAllWithPage(int offset, int limit);
 
-  /** 文件类型统计结果 */
-  record FileTypeStat(String suffix, int fileCount, long totalSize) {}
 }
