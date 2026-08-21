@@ -35,6 +35,8 @@ public class CachedBodyHttpServletRequestWrapper extends HttpServletRequestWrapp
   private final byte[] cachedBody;
 
   /**
+   * 方法说明。
+   *
    * @param request 原始 HTTP 请求
    * @param cachedBody 已读取的请求体字节数组
    */

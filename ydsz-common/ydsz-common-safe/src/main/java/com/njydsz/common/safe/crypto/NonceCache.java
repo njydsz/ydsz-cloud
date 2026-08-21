@@ -169,6 +169,7 @@ public class NonceCache {
    *
    * @param nonce nonce 值
    * @param expireSeconds 独立过期时间（秒）（预留参数，当前使用全局配置）
+    * @param timestamp timestamp 参数
    * @return 存入成功返回 true，nonce 已存在返回 false
    */
   public boolean put(String nonce, long timestamp, long expireSeconds) {

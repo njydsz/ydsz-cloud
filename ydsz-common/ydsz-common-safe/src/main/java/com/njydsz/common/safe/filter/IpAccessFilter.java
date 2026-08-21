@@ -45,6 +45,8 @@ public class IpAccessFilter extends OncePerRequestFilter {
   private final List<String> excludes;
 
   /**
+   * 方法说明。
+   *
    * @param ipAccessService IP 访问控制服务
    * @param eventPublisher 安全事件发布器
    * @param excludes 排除路径列表

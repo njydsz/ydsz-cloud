@@ -200,20 +200,28 @@ public class RateLimitAspect {
   }
 
   private String extractUserId(Object[] args) {
-    if (args == null) return null;
+    if (args == null) {
+      return null;
+    }
     for (Object arg : args) {
-      if (arg == null) continue;
+      if (arg == null) {
+        continue;
+      }
       try {
         Method m = arg.getClass().getMethod("getUserId");
         Object val = m.invoke(arg);
-        if (val != null) return val.toString();
+        if (val != null) {
+          return val.toString();
+        }
       } catch (Exception ignored) {
         log.debug("Caught exception (ignored): {}", ignored.getMessage());
       }
       try {
         Method m = arg.getClass().getMethod("getCurrentUserId");
         Object val = m.invoke(arg);
-        if (val != null) return val.toString();
+        if (val != null) {
+          return val.toString();
+        }
       } catch (Exception ignored) {
         log.debug("Caught exception (ignored): {}", ignored.getMessage());
       }
@@ -224,7 +232,9 @@ public class RateLimitAspect {
   private String extractIp() {
     try {
       HttpServletRequest request = currentRequest();
-      if (request == null) return null;
+      if (request == null) {
+        return null;
+      }
       return ClientIpResolver.getClientIp(request);
     } catch (Exception ex) {
       return null;

@@ -48,6 +48,8 @@ public class IpAccessService {
   private final List<CidrBlock> staticWhitelistCidrs = new ArrayList<>();
 
   /**
+   * 方法说明。
+   *
    * @param properties IP 访问控制配置
    * @param redisStringOps Redis String 操作
    */

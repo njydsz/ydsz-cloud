@@ -393,14 +393,30 @@ public final class SensitiveDataProcessor {
       return value;
     }
     // 处理基本类型与其包装类之间的转换
-    if (targetType == int.class && value instanceof Integer) return value;
-    if (targetType == long.class && value instanceof Long) return value;
-    if (targetType == boolean.class && value instanceof Boolean) return value;
-    if (targetType == double.class && value instanceof Double) return value;
-    if (targetType == float.class && value instanceof Float) return value;
-    if (targetType == short.class && value instanceof Short) return value;
-    if (targetType == byte.class && value instanceof Byte) return value;
-    if (targetType == char.class && value instanceof Character) return value;
+    if (targetType == int.class && value instanceof Integer) {
+      return value;
+    }
+    if (targetType == long.class && value instanceof Long) {
+      return value;
+    }
+    if (targetType == boolean.class && value instanceof Boolean) {
+      return value;
+    }
+    if (targetType == double.class && value instanceof Double) {
+      return value;
+    }
+    if (targetType == float.class && value instanceof Float) {
+      return value;
+    }
+    if (targetType == short.class && value instanceof Short) {
+      return value;
+    }
+    if (targetType == byte.class && value instanceof Byte) {
+      return value;
+    }
+    if (targetType == char.class && value instanceof Character) {
+      return value;
+    }
     return value;
   }
 

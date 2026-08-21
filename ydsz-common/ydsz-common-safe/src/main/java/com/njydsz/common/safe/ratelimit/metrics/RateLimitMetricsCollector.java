@@ -39,7 +39,9 @@ public class RateLimitMetricsCollector {
   }
 
   private void registerGauges() {
-    if (meterRegistry == null) return;
+    if (meterRegistry == null) {
+      return;
+    }
     meterRegistry.gauge("ydsz_ratelimit_decisions_total", totalDecisions);
     meterRegistry.gauge("ydsz_ratelimit_block_total", totalBlocked);
     meterRegistry.gauge("ydsz_ratelimit_pass_total", totalPassed);
@@ -47,7 +49,9 @@ public class RateLimitMetricsCollector {
 
   /** 记录一次决策 */
   public void record(RateLimitDecision decision) {
-    if (decision == null || meterRegistry == null) return;
+    if (decision == null || meterRegistry == null) {
+      return;
+    }
     totalDecisions.incrementAndGet();
     Tags tags =
         Tags.of(

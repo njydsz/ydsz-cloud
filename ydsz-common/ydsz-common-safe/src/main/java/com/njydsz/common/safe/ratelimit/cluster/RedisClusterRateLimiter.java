@@ -223,8 +223,12 @@ public class RedisClusterRateLimiter implements ClusterRateLimiter {
   }
 
   private static long toLong(Object o) {
-    if (o == null) return 0L;
-    if (o instanceof Number n) return n.longValue();
+    if (o == null) {
+      return 0L;
+    }
+    if (o instanceof Number n) {
+      return n.longValue();
+    }
     try {
       return Long.parseLong(o.toString());
     } catch (NumberFormatException e) {
@@ -233,8 +237,12 @@ public class RedisClusterRateLimiter implements ClusterRateLimiter {
   }
 
   private static double toDouble(Object o) {
-    if (o == null) return 0.0;
-    if (o instanceof Number n) return n.doubleValue();
+    if (o == null) {
+      return 0.0;
+    }
+    if (o instanceof Number n) {
+      return n.doubleValue();
+    }
     try {
       return Double.parseDouble(o.toString());
     } catch (NumberFormatException e) {

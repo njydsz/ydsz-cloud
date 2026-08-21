@@ -79,6 +79,8 @@ public class SecurityEventAggregator {
   private record BlockCommand(String ip, long blockSeconds) {}
 
   /**
+   * 方法说明。
+   *
    * @param ipAccessService IP 访问控制服务（可为 null，未启用 IP 访问控制时降级为仅日志）
    * @param enabled 是否启用自动封禁
    * @param threshold 触发自动封禁的事件数量阈值

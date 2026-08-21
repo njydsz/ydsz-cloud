@@ -39,6 +39,8 @@ public class SecurityEventListener {
   private final SecurityAuditLogger auditLogger;
 
   /**
+   * 方法说明。
+   *
    * @param safeMetrics Micrometer 指标采集器（可为 null，降级跳过指标采集）
    * @param auditLogger 安全审计日志记录器（可为 null，降级跳过审计日志）
    */

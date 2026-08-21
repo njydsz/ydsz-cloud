@@ -52,6 +52,8 @@ public class SafeMetrics {
   private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
 
   /**
+   * 方法说明。
+   *
    * @param meterRegistry Micrometer MeterRegistry（可为 null，降级为内存计数）
    */
   public SafeMetrics(MeterRegistry meterRegistry) {

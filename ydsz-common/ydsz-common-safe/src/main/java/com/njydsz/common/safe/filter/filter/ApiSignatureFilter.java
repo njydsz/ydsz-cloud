@@ -99,6 +99,8 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
   private final SecurityEventPublisher eventPublisher;
 
   /**
+   * 方法说明。
+   *
    * @param properties 签名配置属性
    * @param nonceCache 防重放 Nonce 缓存
    * @param eventPublisher 安全事件发布器
