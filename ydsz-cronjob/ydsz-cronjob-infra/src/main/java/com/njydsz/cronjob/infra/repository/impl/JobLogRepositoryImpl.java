@@ -8,6 +8,8 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
@@ -99,8 +101,7 @@ public class JobLogRepositoryImpl implements JobLogRepository {
 
   @Override
   public long countByStatusAfter(String status, LocalDateTime startAfter) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
     if (status != null) {
       wrapper.eq(JobLog::getStatus, status);
     }
@@ -112,8 +113,7 @@ public class JobLogRepositoryImpl implements JobLogRepository {
 
   @Override
   public List<JobLogVO> findRecentFailures(int limit) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(JobLog::getStatus, JobLog.STATUS_FAILED)
         .orderByDesc(JobLog::getStartTime)
         .last("LIMIT " + Math.min(limit, 100));
@@ -122,8 +122,7 @@ public class JobLogRepositoryImpl implements JobLogRepository {
 
   @Override
   public List<JobLogVO> findByJobKey(String jobKey, int limit) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(JobLog::getJobKey, jobKey)
         .orderByDesc(JobLog::getCreatedAt)
         .last("LIMIT " + Math.min(limit, 100));
@@ -132,8 +131,7 @@ public class JobLogRepositoryImpl implements JobLogRepository {
 
   @Override
   public Optional<JobLogVO> findLatestByJobKey(String jobKey) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(JobLog::getJobKey, jobKey)
         .orderByDesc(JobLog::getCreatedAt)
         .last("LIMIT 1");
@@ -143,8 +141,7 @@ public class JobLogRepositoryImpl implements JobLogRepository {
 
   @Override
   public long countByTimeRange(LocalDateTime start, LocalDateTime end) {
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
     wrapper.ge(JobLog::getStartTime, start)
         .le(JobLog::getStartTime, end);
     return jobLogMapper.selectCount(wrapper);
@@ -152,10 +149,8 @@ public class JobLogRepositoryImpl implements JobLogRepository {
 
   @Override
   public JobRepository.PageResult<JobLogVO> pageByJobKeyAndStatus(String jobKey, String status, int page, int size) {
-    com.baomidou.mybatisplus.extension.plugins.pagination.Page<JobLog> pageObj =
-        new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size);
-    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLog> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+    Page<JobLog> pageObj = new Page<>(page, size);
+    LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
     if (jobKey != null && !jobKey.isBlank()) {
       wrapper.eq(JobLog::getJobKey, jobKey);
     }
@@ -163,8 +158,7 @@ public class JobLogRepositoryImpl implements JobLogRepository {
       wrapper.eq(JobLog::getStatus, status);
     }
     wrapper.orderByDesc(JobLog::getStartTime);
-    com.baomidou.mybatisplus.extension.plugins.pagination.Page<JobLog> result =
-        jobLogMapper.selectPage(pageObj, wrapper);
+    Page<JobLog> result = jobLogMapper.selectPage(pageObj, wrapper);
     return new JobRepository.PageResult<>(converter.jobLogListToVO(result.getRecords()), result.getTotal());
   }
 

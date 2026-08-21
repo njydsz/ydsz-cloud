@@ -1,5 +1,6 @@
 package com.njydsz.common.seata.mq;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -99,7 +100,7 @@ public interface MqXidPropagator {
    * @return 属性 Map，无事务上下文时返回空 Map
    */
   default Map<String, String> buildXidProperties() {
-    Map<String, String> props = new java.util.HashMap<>(4);
+    Map<String, String> props = new HashMap<>(4);
     String xid = getCurrentXid();
     if (xid != null) {
       props.put(HEADER_XID, xid);

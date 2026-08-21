@@ -20,6 +20,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.thread.config.ThreadPoolProperties.PoolConfig;
 import com.njydsz.common.thread.config.ThreadPoolProperties.RejectPolicy;
+import com.njydsz.common.thread.metrics.ThreadPoolTimerMetrics;
+import com.njydsz.common.thread.metrics.TimedTaskDecorator;
 
 /**
  * 线程池执行器工厂。
@@ -185,12 +187,10 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
         LOG.debug("ydsz-thread: Micrometer MeterRegistry 不可用，耗时指标将不会被上报 (pool={})", name);
       }
       timerMetrics =
-          com.njydsz.common.thread.metrics.ThreadPoolTimerMetrics.createIfMeterRegistryPresent(
-              name, meterRegistry);
+          ThreadPoolTimerMetrics.createIfMeterRegistryPresent(name, meterRegistry);
     }
 
-    return new com.njydsz.common.thread.metrics.TimedTaskDecorator(
-        name, config.getSlowTaskThresholdMs(), timerMetrics);
+    return new TimedTaskDecorator(name, config.getSlowTaskThresholdMs(), timerMetrics);
   }
 
   /**

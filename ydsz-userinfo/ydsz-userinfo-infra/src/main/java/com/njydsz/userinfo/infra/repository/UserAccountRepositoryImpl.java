@@ -1,15 +1,18 @@
 package com.njydsz.userinfo.infra.repository;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
@@ -78,8 +81,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
       // P1-6: 检查乐观锁冲突（entity.revision 非 null 时 MP 自动带 WHERE revision = ?）
       int affected = userAccountMapper.updateById(entity);
       if (affected == 0) {
-        throw new com.njydsz.common.exception.custom.BusinessException(
-            com.njydsz.userinfo.domain.enums.UserInfoExceptionCode.USER_UPDATE_CONFLICT);
+        throw new BusinessException(UserInfoExceptionCode.USER_UPDATE_CONFLICT);
       }
       return converter.entityToVO(entity);
     }
@@ -156,7 +158,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
     if (ids == null || ids.isEmpty()) {
       return 0;
     }
-    List<String> idList = new java.util.ArrayList<>(ids);
+    List<String> idList = new ArrayList<>(ids);
     if (status == EnableStatusEnum.ENABLED) {
       return userAccountMapper.batchEnableByIds(idList);
     }
@@ -168,7 +170,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
     if (ids == null || ids.isEmpty()) {
       return 0;
     }
-    return userAccountMapper.batchDeleteByIds(new java.util.ArrayList<>(ids));
+    return userAccountMapper.batchDeleteByIds(new ArrayList<>(ids));
   }
 
   @Override
@@ -176,8 +178,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
     if (id == null || id.isBlank() || status == null) {
       return 0;
     }
-    com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<UserAccountDO> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
+    UpdateWrapper<UserAccountDO> wrapper = new UpdateWrapper<>();
     wrapper.eq("id", id).set("status", convertLifecycleStatusToString(status));
     return userAccountMapper.update(null, wrapper);
   }

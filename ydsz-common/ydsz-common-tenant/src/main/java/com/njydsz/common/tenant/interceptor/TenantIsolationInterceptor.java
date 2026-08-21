@@ -2,6 +2,7 @@ package com.njydsz.common.tenant.interceptor;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -615,7 +616,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
    * @return 合并后的 List（非空）
    */
   private List<String> expandWithSharedTenants(Object originalValue, List<String> sharedTenantIds) {
-    Set<String> merged = new java.util.LinkedHashSet<>();
+    Set<String> merged = new LinkedHashSet<>();
     if (originalValue instanceof String s) {
       merged.add(s);
     } else if (originalValue instanceof List<?> list) {

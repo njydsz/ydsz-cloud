@@ -1,6 +1,7 @@
 package com.njydsz.userinfo.infra.social;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
@@ -118,7 +119,7 @@ public class JustAuthHttpClient {
   @SuppressWarnings("unchecked")
   private Map<String, Object> parseResponse(String body) {
     if (body == null || body.isBlank()) {
-      return new java.util.HashMap<>();
+      return new HashMap<>();
     }
     return YdszJson.fromJson(body, Map.class);
   }
