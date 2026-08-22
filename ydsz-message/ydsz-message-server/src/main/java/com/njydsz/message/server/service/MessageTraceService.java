@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.message.infra.entity.MsgTraceDO;
-import com.njydsz.message.infra.entity.MsgTraceDO.Node;
 
 /**
  * 消息端到端追踪 Service
@@ -40,7 +39,7 @@ public interface MessageTraceService {
    * 记录一个轨迹节点。
    *
    * @param msgId 消息 ID
-   * @param node 轨迹节点类型
+   * @param node 轨迹节点类型（如 "DISPATCH_START"、"DISPATCH_SUCCESS" 等）
    * @param status 节点状态: SUCCESS / FAILED / SKIPPED / PENDING
    * @param channel 通道（可为 null）
    * @param message 节点描述 / 错误信息
@@ -48,7 +47,7 @@ public interface MessageTraceService {
    */
   void recordTrace(
       String msgId,
-      Node node,
+      String node,
       String status,
       String channel,
       String message,
@@ -63,7 +62,7 @@ public interface MessageTraceService {
    * @param channel 通道
    * @param message 节点描述
    */
-  void recordTrace(String msgId, Node node, String status, String channel, String message);
+  void recordTrace(String msgId, String node, String status, String channel, String message);
 
   /**
    * 按 msgId 查询完整轨迹（按时间正序）。

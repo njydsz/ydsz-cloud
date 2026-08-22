@@ -41,12 +41,28 @@ public interface MsgLogRepository {
   boolean save(MsgLogDTO dto);
 
   /**
+   * 保存消息发送日志（VO 重载，供 server 层直接使用 domain VO 插入）。
+   *
+   * @param vo 消息发送日志 VO
+   * @return 保存成功返回 {@code true}
+   */
+  boolean save(MsgLogVO vo);
+
+  /**
    * 全量更新消息发送日志。
    *
    * @param dto 消息发送日志 DTO（必须包含主键 ID）
    * @return 更新成功返回 {@code true}
    */
   boolean update(MsgLogDTO dto);
+
+  /**
+   * 全量更新消息发送日志（VO 重载，供 server 层直接使用 domain VO 更新）。
+   *
+   * @param vo 消息发送日志 VO（必须包含主键 ID）
+   * @return 更新成功返回 {@code true}
+   */
+  boolean update(MsgLogVO vo);
 
   /**
    * 批量删除消息发送日志。

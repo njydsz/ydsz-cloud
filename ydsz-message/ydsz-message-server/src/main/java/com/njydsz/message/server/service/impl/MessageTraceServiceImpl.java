@@ -15,7 +15,6 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.message.infra.entity.MsgTraceDO;
-import com.njydsz.message.infra.entity.MsgTraceDO.Node;
 import com.njydsz.message.infra.repository.MsgTraceRepository;
 import com.njydsz.message.server.service.core.MessageTraceService;
 
@@ -41,19 +40,19 @@ public class MessageTraceServiceImpl implements MessageTraceService {
   @Async
   public void recordTrace(
       String msgId,
-      Node node,
+      String node,
       String status,
       String channel,
       String message,
       Map<String, Object> extra) {
-    if (!StringUtils.hasText(msgId) || node == null) {
+    if (!StringUtils.hasText(msgId) || !StringUtils.hasText(node)) {
       return;
     }
     try {
       MsgTraceDO trace = new MsgTraceDO();
       trace.setMsgId(msgId);
       trace.setTraceId(TracerUtils.getOrCreateTraceId());
-      trace.setNode(node.name());
+      trace.setNode(node);
       trace.setStatus(status == null ? "SUCCESS" : status);
       trace.setChannel(channel);
       trace.setMessage(message);
@@ -71,7 +70,7 @@ public class MessageTraceServiceImpl implements MessageTraceService {
 
   @Override
   @Async
-  public void recordTrace(String msgId, Node node, String status, String channel, String message) {
+  public void recordTrace(String msgId, String node, String status, String channel, String message) {
     recordTrace(msgId, node, status, channel, message, null);
   }
 

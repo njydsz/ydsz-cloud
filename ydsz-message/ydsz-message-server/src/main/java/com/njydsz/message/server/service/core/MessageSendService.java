@@ -12,13 +12,10 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
-import com.njydsz.message.domain.entity.config.MsgRouteRule;
-import com.njydsz.message.infra.entity.MsgTraceDO;
-import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
-import com.njydsz.message.infra.converter.MessageConverter;
+import com.njydsz.message.domain.vo.MsgRouteRuleVO;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.config.RetryStrategyResolver;
@@ -53,7 +50,6 @@ public class MessageSendService {
   private final MessageMetrics messageMetrics;
   private final MessageTraceService messageTraceService;
   private final MessageProperties messageProperties;
-  private final MessageConverter converter;
 
   /**
    * 执行通道分发，包含通道降级与重试逻辑。
@@ -61,48 +57,48 @@ public class MessageSendService {
    * <p>性能优化：移除 PENDING→SENDING 的冗余 DB 写入，仅在最终状态确定时执行一次 UPDATE，将单次发送的 DB 写入次数从 2~N
    * 次降低到 1 次。
    *
-   * @param logDO 消息日志（状态会被修改并落库）
+   * @param logVO 消息日志 VO（状态会被修改并落库）
    * @param matchedRule 命中的路由规则（用于解析降级通道）
    * @param receiver 收方标识（仅用于频率记录与日志，会脱敏打印）
    * @return 发送结果
    */
-  public MessageResult dispatch(MsgLog logDO, MsgRouteRule matchedRule, String receiver) {
-    String channel = logDO.getChannel();
+  public MessageResult dispatch(MsgLogVO logVO, MsgRouteRuleVO matchedRule, String receiver) {
+    String channel = logVO.getChannel();
     long start = System.currentTimeMillis();
     try {
       messageTraceService.recordTrace(
-          logDO.getMsgId(), MsgTraceDO.Node.DISPATCH_START, "SUCCESS", channel, "通道分发开始");
-      String providerTraceId = channelRouter.dispatch(logDO);
+          logVO.getMsgId(), "DISPATCH_START", "SUCCESS", channel, "通道分发开始");
+      String providerTraceId = channelRouter.dispatch(logVO);
       long cost = System.currentTimeMillis() - start;
-      logDO.setStatus(MessageStatusEnum.SUCCESS.name());
-      logDO.setProviderTraceId(providerTraceId);
-      logDO.setCostMs(cost);
-      logDO.setCost(calculateCost(channel));
-      msgLogRepository.update(converter.entityToVO(logDO));
+      logVO.setStatus(MessageStatusEnum.SUCCESS.name());
+      logVO.setProviderTraceId(providerTraceId);
+      logVO.setCostMs(cost);
+      logVO.setCost(calculateCost(channel));
+      msgLogRepository.update(logVO);
       if (StringUtils.hasText(receiver)) {
-        guardService.recordFrequency(receiver, channel, logDO.getBizType());
+        guardService.recordFrequency(receiver, channel, logVO.getBizType());
       }
       messageMetrics.recordSend(channel, "SUCCESS", cost);
-      messageMetrics.recordSendSuccess(channel, logDO.getTemplateCode(), logDO.getTenantId());
+      messageMetrics.recordSendSuccess(channel, logVO.getTemplateCode(), logVO.getTenantId());
       messageTraceService.recordTrace(
-          logDO.getMsgId(),
-          MsgTraceDO.Node.DISPATCH_SUCCESS,
+          logVO.getMsgId(),
+          "DISPATCH_SUCCESS",
           "SUCCESS",
           channel,
           "发送成功: cost=" + cost + "ms");
       log.info(
           "[Message] 发送成功: msgId={} channel={} receiver={} cost={}ms",
-          logDO.getMsgId(),
+          logVO.getMsgId(),
           channel,
           SensitiveUtil.scanAndMask(receiver),
           cost);
       return MessageResult.ok(channel, providerTraceId);
     } catch (Exception e) {
       long cost = System.currentTimeMillis() - start;
-      logDO.setCostMs(cost);
-      logDO.setErrorMessage(e.getMessage());
+      logVO.setCostMs(cost);
+      logVO.setErrorMessage(e.getMessage());
       messageMetrics.recordSendFailure(
-          channel, logDO.getTemplateCode(), logDO.getTenantId(), e.getClass().getSimpleName());
+          channel, logVO.getTemplateCode(), logVO.getTenantId(), e.getClass().getSimpleName());
       messageMetrics.recordException(channel, e.getClass().getSimpleName());
       List<String> fallbackChannels = resolveFallbackChannels(matchedRule, channel);
       if (!fallbackChannels.isEmpty()) {
@@ -111,12 +107,12 @@ public class MessageSendService {
           return fallback;
         }
       }
-      return handleFailure(logDO, e, cost);
+      return handleFailure(logVO, e, cost);
     }
   }
 
   /** 解析降级通道列表。 */
-  public List<String> resolveFallbackChannels(MsgRouteRule matchedRule, String currentChannel) {
+  public List<String> resolveFallbackChannels(MsgRouteRuleVO matchedRule, String currentChannel) {
     if (matchedRule == null) {
       return Collections.emptyList();
     }
@@ -130,26 +126,26 @@ public class MessageSendService {
 
   /** 按降级链顺序逐个尝试，任一成功即返回。 */
   public MessageResult tryFallbackChain(
-      MsgLog logDO, List<String> fallbackChannels, long prevCost) {
-    String origChannel = logDO.getChannel();
+      MsgLogVO logVO, List<String> fallbackChannels, long prevCost) {
+    String origChannel = logVO.getChannel();
     long accumulatedCost = prevCost;
     List<String> tried = new ArrayList<>(fallbackChannels.size() + 1);
     tried.add(origChannel);
     for (String fallbackChannel : fallbackChannels) {
       long start = System.currentTimeMillis();
       try {
-        logDO.setChannel(fallbackChannel);
-        String providerTraceId = channelRouter.dispatch(logDO);
+        logVO.setChannel(fallbackChannel);
+        String providerTraceId = channelRouter.dispatch(logVO);
         long cost = System.currentTimeMillis() - start;
-        logDO.setStatus(MessageStatusEnum.SUCCESS.name());
-        logDO.setProviderTraceId(providerTraceId);
-        logDO.setCostMs(accumulatedCost + cost);
-        logDO.setCost(calculateCost(fallbackChannel));
-        msgLogRepository.update(converter.entityToVO(logDO));
+        logVO.setStatus(MessageStatusEnum.SUCCESS.name());
+        logVO.setProviderTraceId(providerTraceId);
+        logVO.setCostMs(accumulatedCost + cost);
+        logVO.setCost(calculateCost(fallbackChannel));
+        msgLogRepository.update(logVO);
         messageMetrics.recordSend(fallbackChannel, "SUCCESS", cost);
         log.info(
             "[Message] 降级发送成功: msgId={} chain={} final={} cost={}ms",
-            logDO.getMsgId(),
+            logVO.getMsgId(),
             tried,
             fallbackChannel,
             cost);
@@ -160,46 +156,46 @@ public class MessageSendService {
         tried.add(fallbackChannel);
         log.warn(
             "[Message] 降级发送失败: msgId={} fallback={} err={} 继续尝试下一通道",
-            logDO.getMsgId(),
+            logVO.getMsgId(),
             fallbackChannel,
             fe.getMessage());
       }
     }
-    logDO.setChannel(origChannel);
-    logDO.setErrorMessage(String.join("→", tried) + " 均失败");
+    logVO.setChannel(origChannel);
+    logVO.setErrorMessage(String.join("→", tried) + " 均失败");
     return null;
   }
 
   /** 失败处理：retryCount < MAX → RETRY + nextRetryAt（指数退避），否则 FAILED。 */
-  public MessageResult handleFailure(MsgLog logDO, Exception e, long cost) {
-    int retryCount = logDO.getRetryCount() == null ? 0 : logDO.getRetryCount();
-    String maskedReceiver = SensitiveUtil.scanAndMask(logDO.getReceiver());
-    if (!retryStrategyResolver.isMaxRetriesReached(retryCount, logDO.getChannel())) {
-      logDO.setStatus(MessageStatusEnum.RETRY.name());
-      logDO.setNextRetryAt(retryStrategyResolver.calcNextRetryAt(retryCount, logDO.getChannel()));
-      msgLogRepository.update(converter.entityToVO(logDO));
-      messageMetrics.recordRetry(logDO.getChannel());
+  public MessageResult handleFailure(MsgLogVO logVO, Exception e, long cost) {
+    int retryCount = logVO.getRetryCount() == null ? 0 : logVO.getRetryCount();
+    String maskedReceiver = SensitiveUtil.scanAndMask(logVO.getReceiver());
+    if (!retryStrategyResolver.isMaxRetriesReached(retryCount, logVO.getChannel())) {
+      logVO.setStatus(MessageStatusEnum.RETRY.name());
+      logVO.setNextRetryAt(retryStrategyResolver.calcNextRetryAt(retryCount, logVO.getChannel()));
+      msgLogRepository.update(logVO);
+      messageMetrics.recordRetry(logVO.getChannel());
       log.warn(
           "[Message] 发送失败转重试: msgId={} channel={} receiver={} retryCount={} nextRetryAt={} err={}",
-          logDO.getMsgId(),
-          logDO.getChannel(),
+          logVO.getMsgId(),
+          logVO.getChannel(),
           maskedReceiver,
           retryCount,
-          logDO.getNextRetryAt(),
+          logVO.getNextRetryAt(),
           e.getMessage());
-      return MessageResult.fail(logDO.getChannel(), "发送失败,已加入重试队列: " + e.getMessage());
+      return MessageResult.fail(logVO.getChannel(), "发送失败,已加入重试队列: " + e.getMessage());
     }
-    logDO.setStatus(MessageStatusEnum.FAILED.name());
-    msgLogRepository.update(converter.entityToVO(logDO));
-    messageMetrics.recordSend(logDO.getChannel(), "FAILED", cost);
+    logVO.setStatus(MessageStatusEnum.FAILED.name());
+    msgLogRepository.update(logVO);
+    messageMetrics.recordSend(logVO.getChannel(), "FAILED", cost);
     log.error(
         "[Message] 发送失败(重试耗尽): msgId={} channel={} receiver={} retryCount={} err={}",
-        logDO.getMsgId(),
-        logDO.getChannel(),
+        logVO.getMsgId(),
+        logVO.getChannel(),
         maskedReceiver,
         retryCount,
         e.getMessage());
-    return MessageResult.fail(logDO.getChannel(), e.getMessage());
+    return MessageResult.fail(logVO.getChannel(), e.getMessage());
   }
 
   /** 按通道计算单条消息成本。 */

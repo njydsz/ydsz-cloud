@@ -34,14 +34,11 @@ import com.njydsz.message.domain.dto.BatchSendResult;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.domain.entity.batch.MsgBatch;
-import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.event.OutboxEvent;
-import com.njydsz.message.domain.repository.OutboxEventRepository;
-import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgTraceDO;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.repository.OutboxEventRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
@@ -126,9 +123,6 @@ public class MessageServiceImpl implements MessageService {
   /** P2-A6: 消息发送事务包装（解决同类 self-invocation 事务不生效问题） */
   private final MessageSendTxService messageSendTxService;
 
-  /** 消息转换器 */
-  private final MessageConverter converter;
-
   /** P2-C5: 级联消息发送线程池（固定大小，避免级联消息耗尽主线程池） */
   // CHECKSTYLE.OFF: RegexpSinglelineJava - 级联消息专用池，线程数固定为4，避免耗尽主线程池
   private final Executor cascadeExecutor = ExecutorUtils.newFixedThreadPool(4, "message-cascade");
@@ -194,7 +188,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     // ③ 构造落库对象
-    MsgLog logDO = buildLogDO(request, ctx, rendered);
+    MsgLogVO logDO = buildLogDO(request, ctx, rendered);
 
     // ④ 定时/聚合早期 return 路径
     MessageResult earlyResult = handleEarlyReturns(request, ctx, logDO, rendered);
@@ -228,7 +222,7 @@ public class MessageServiceImpl implements MessageService {
    * @param ctx 管线上下文
    * @return 发送结果（含 msgId 供追踪）
    */
-  private MessageResult dispatchAsync(MsgLog logDO, SendContext ctx) {
+  private MessageResult dispatchAsync(MsgLogVO logDO, SendContext ctx) {
     // P2-A6: 构造 OutboxEvent, 与 msgLog 落库在同一事务中(原子性保证)
     OutboxEvent outboxEvent =
         new OutboxEvent(
@@ -254,7 +248,7 @@ public class MessageServiceImpl implements MessageService {
    * @param ctx 管线上下文
    * @return MessageRequest
    */
-  private MessageRequest buildMessageRequestFromLog(MsgLog logDO, SendContext ctx) {
+  private MessageRequest buildMessageRequestFromLog(MsgLogVO logDO, SendContext ctx) {
     MessageRequest request = new MessageRequest();
     request.setChannel(ctx.getChannel());
     request.setReceiver(logDO.getReceiver());
@@ -263,13 +257,13 @@ public class MessageServiceImpl implements MessageService {
     request.setBizId(logDO.getBizId());
     request.setTemplateCode(logDO.getTemplateCode());
     request.setMessageId(logDO.getMsgId());
-    request.setPriority(logDO.getPriority() != null ? logDO.getPriority().name() : null);
+    request.setPriority(logDO.getPriority() != null ? logDO.getPriority() : null);
     return request;
   }
 
-  /** P1-3: 构造落库 MsgLog。 */
-  private MsgLog buildLogDO(MessageRequest request, SendContext ctx, RenderedContent rendered) {
-    MsgLog logDO = new MsgLog();
+  /** P1-3: 构造落库 MsgLogVO。 */
+  private MsgLogVO buildLogDO(MessageRequest request, SendContext ctx, RenderedContent rendered) {
+    MsgLogVO logDO = new MsgLogVO();
     logDO.setChannel(ctx.getChannel());
     logDO.setBizType(ctx.getBizType());
     logDO.setBizId(request.getBizId());
@@ -321,7 +315,7 @@ public class MessageServiceImpl implements MessageService {
     // ⑧-2 P0-3: 定时消息 —— scheduledAt 非空且在未来时,落库 SCHEDULED 不立即发送
     if (request.getScheduledAt() != null && request.getScheduledAt().isAfter(LocalDateTime.now())) {
       logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
-      msgLogRepository.save(converter.entityToVO(logDO));
+      msgLogRepository.save(logDO);
       log.info(
           "[Message] 定时消息已入库: msgId={} scheduledAt={} channel={}",
           logDO.getMsgId(),
@@ -341,10 +335,10 @@ public class MessageServiceImpl implements MessageService {
           request.setScheduledAt(optimalTime);
           logDO.setScheduledAt(optimalTime);
           logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
-          msgLogRepository.save(converter.entityToVO(logDO));
+          msgLogRepository.save(logDO);
           messageTraceService.recordTrace(
               logDO.getMsgId(),
-              MsgTraceDO.Node.SCHEDULED,
+              "SCHEDULED",
               "SUCCESS",
               ctx.getChannel(),
               "智能定时: optimalAt=" + optimalTime);
@@ -385,7 +379,7 @@ public class MessageServiceImpl implements MessageService {
    * @param parentLog 父消息落库记录(提供 msgId 作为子消息的 parentMsgId)
    * @param depth 父消息的级联深度
    */
-  private void triggerCascade(MessageRequest request, MsgLog parentLog, int depth) {
+  private void triggerCascade(MessageRequest request, MsgLogVO parentLog, int depth) {
     List<MessageRequest> cascadeTo = request.getCascadeTo();
     if (cascadeTo == null || cascadeTo.isEmpty()) {
       return;
@@ -622,7 +616,7 @@ public class MessageServiceImpl implements MessageService {
       return MessageResult.ok(existingLog.getChannel(), existingLog.getMsgId());
     }
     // ① 先落库 PENDING（DB 是 Source of Truth）
-    MsgLog logDO = new MsgLog();
+    MsgLogVO logDO = new MsgLogVO();
     logDO.setMsgId(request.getMessageId());
     logDO.setChannel(request.getChannel());
     logDO.setBizType(request.getBizType());
@@ -640,7 +634,7 @@ public class MessageServiceImpl implements MessageService {
     logDO.setTenantId(TenantContextHolder.getTenantId());
     logDO.setTopic(YdszMessageTopics.TOPIC_MESSAGE);
     try {
-      msgLogRepository.save(converter.entityToVO(logDO));
+      msgLogRepository.save(logDO);
       log.info(
           "[Message] 异步消息已落库 PENDING: msgId={} channel={}", logDO.getMsgId(), request.getChannel());
     } catch (Exception e) {

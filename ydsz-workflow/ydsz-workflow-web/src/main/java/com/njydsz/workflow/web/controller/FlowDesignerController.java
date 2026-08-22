@@ -28,6 +28,9 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.workflow.domain.dto.FlowDesignerDataDTO;
+import com.njydsz.workflow.domain.enums.FlowAssigneeType;
+import com.njydsz.workflow.server.engine.listener.FlowListenerEventType;
+import com.njydsz.workflow.server.engine.listener.FlowListenerPluginExecutor;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowTemplateService;
 
@@ -76,6 +79,11 @@ public class FlowDesignerController {
 
   /** GAP-P2: 流程模板服务 */
   private final FlowTemplateService templateService;
+
+  /**
+   * P2-38: 监听器插件执行器，暴露可用插件列表供设计器下拉选择。
+   */
+  private final FlowListenerPluginExecutor listenerPluginExecutor;
 
   // ============== GAP-V2-01: 可视化流程设计器 API ==============
 
@@ -282,6 +290,58 @@ public class FlowDesignerController {
     String json = slaConfig == null ? null : YdszJson.toJson(slaConfig);
     definitionService.saveSlaConfig(id, nodeCode, json);
     return YdszResponse.success();
+  }
+
+  /**
+   * P2-38: 获取办理人类型列表（设计器下拉选择）
+   *
+   * <p>返回所有 {@link FlowAssigneeType} 的枚举名称和中文显示名称，
+   * 前端设计器用于办理人规则配置的下拉选项。
+   *
+   * @return 办理人类型列表（code = 枚举名，desc = 中文名称）
+   */
+  @GetMapping("/assignee/types")
+  @Operation(summary = "获取办理人类型列表（设计器下拉选择）")
+  @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+  public YdszResponse<List<Map<String, String>>> listAssigneeTypes() {
+    List<Map<String, String>> result = new java.util.ArrayList<>();
+    for (FlowAssigneeType t : FlowAssigneeType.values()) {
+      result.add(Map.of("code", t.name(), "desc", t.getDesc()));
+    }
+    return YdszResponse.success(result);
+  }
+
+  // ============== P2-38: 监听器插件配置 API ==============
+
+  /**
+   * P2-38: 获取可用的监听器插件列表（设计器下拉选择）
+   *
+   * <p>返回所有已注册的 {@link com.njydsz.workflow.server.engine.listener.FlowListenerPlugin}
+   * Bean 名称，前端设计器可在"节点属性 → 监听器"面板中为此插件绑定事件类型。
+   *
+   * @return 插件名称列表
+   */
+  @GetMapping("/listener/plugins")
+  @Operation(summary = "获取可用的监听器插件列表（设计器下拉选择）")
+  @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+  public YdszResponse<List<String>> listListenerPlugins() {
+    return YdszResponse.success(listenerPluginExecutor.getAvailablePluginNames());
+  }
+
+  /**
+   * P2-38: 获取所有支持的事件类型（设计器下拉选择）
+   *
+   * @return 事件类型列表
+   */
+  @GetMapping("/listener/eventTypes")
+  @Operation(summary = "获取所有监听器事件类型")
+  @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+  public YdszResponse<List<Map<String, String>>> listListenerEventTypes() {
+    List<Map<String, String>> result = new java.util.ArrayList<>();
+    for (FlowListenerEventType t : FlowListenerEventType.values()) {
+      result.add(Map.of("code", t.getCode(), "desc", t.getDesc()));
+    }
+    return YdszResponse.success(result);
   }
 
   // ============== GAP-P2: 流程模板库 ==============

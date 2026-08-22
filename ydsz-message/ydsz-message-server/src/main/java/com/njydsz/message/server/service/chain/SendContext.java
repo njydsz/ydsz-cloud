@@ -5,8 +5,8 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.message.domain.entity.config.MsgPreference;
-import com.njydsz.message.domain.entity.config.MsgRouteRule;
+import com.njydsz.message.domain.vo.MsgPreferenceVO;
+import com.njydsz.message.domain.vo.MsgRouteRuleVO;
 
 /**
  * 消息发送管线上下文（贯穿整个发送链路）。
@@ -36,10 +36,10 @@ public class SendContext {
   private String priority;
 
   /** 路由规则匹配结果 */
-  private MsgRouteRule matchedRule;
+  private MsgRouteRuleVO matchedRule;
 
   /** 用户偏好（DND/locale/digest） */
-  private MsgPreference preference;
+  private MsgPreferenceVO preference;
 
   /** 灰度命中标志 */
   private int canaryFlag;

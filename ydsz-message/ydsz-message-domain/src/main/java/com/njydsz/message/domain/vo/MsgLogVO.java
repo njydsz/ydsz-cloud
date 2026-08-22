@@ -104,6 +104,9 @@ public class MsgLogVO implements Serializable {
   /** 链路追踪 ID */
   private String traceId;
 
+  /** 租户 ID */
+  private String tenantId;
+
   /** 消息 ID */
   private String msgId;
 

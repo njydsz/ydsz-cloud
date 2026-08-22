@@ -52,8 +52,20 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
   }
 
   @Override
+  public boolean save(MsgLogVO vo) {
+    MsgLogDO entity = converter.voToDO(vo);
+    return msgLogMapper.insert(entity) > 0;
+  }
+
+  @Override
   public boolean update(MsgLogDTO dto) {
     MsgLogDO entity = converter.dtoToDO(dto);
+    return msgLogMapper.updateById(entity) > 0;
+  }
+
+  @Override
+  public boolean update(MsgLogVO vo) {
+    MsgLogDO entity = converter.voToDO(vo);
     return msgLogMapper.updateById(entity) > 0;
   }
 

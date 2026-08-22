@@ -13,23 +13,52 @@ package com.njydsz.workflow.domain.enums;
 public enum FlowAssigneeType {
 
   /** 指定用户：assignee_id = userId */
-  USER,
+  USER("指定用户"),
   /** 角色：assignee_id = roleCode */
-  ROLE,
+  ROLE("指定角色"),
   /** 部门：assignee_id = deptId */
-  DEPT,
+  DEPT("指定部门"),
   /** SpEL 表达式：assignee_id = ${expression}，由 VariableStrategy 解析 */
-  SPEL,
+  SPEL("SpEL 表达式"),
   /** 发起人本人 */
-  INITIATOR,
+  INITIATOR("发起人本人"),
   /** 直属上级：assignee_id = 发起人的 leader userId */
-  LEADER,
+  LEADER("直属上级"),
   /** 岗位：assignee_id = positionCode */
-  POSITION,
+  POSITION("指定岗位"),
   /** P1-5: 部门负责人：assignee_id = deptId，解析为该部门的负责人 userId */
-  DEPT_LEADER,
+  DEPT_LEADER("部门负责人"),
   /** P2-38: 发起人自选审批人：assignee_id = 流程变量名（如 self_select:approvers） */
-  SELF_SELECT,
+  SELF_SELECT("发起人自选"),
   /** P2-39: 多级上级：assignee_id = 级数（如 multi_leader:3 表示连续 3 级上级） */
-  MULTI_LEADER
+  MULTI_LEADER("多级上级");
+
+  /** 设计器显示名称 */
+  private final String desc;
+
+  FlowAssigneeType(String desc) {
+    this.desc = desc;
+  }
+
+  public String getDesc() {
+    return desc;
+  }
+
+  /**
+   * 根据枚举名称解析（忽略大小写），未匹配时返回 {@code null}
+   *
+   * @param name 枚举名称
+   * @return 对应枚举，无匹配时返回 {@code null}
+   */
+  public static FlowAssigneeType fromName(String name) {
+    if (name == null) {
+      return null;
+    }
+    for (FlowAssigneeType t : values()) {
+      if (t.name().equalsIgnoreCase(name)) {
+        return t;
+      }
+    }
+    return null;
+  }
 }
