@@ -24,9 +24,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
-import com.njydsz.workflow.infra.entity.FlowCategoryDO;
 import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
 import com.njydsz.workflow.domain.vo.FlowCategoryVO;
 import com.njydsz.workflow.server.service.FlowCategoryService;
@@ -83,9 +81,7 @@ public class FlowCategoryController {
   @GetMapping
   @Operation(summary = "查询全部分类")
   public YdszResponse<List<FlowCategoryVO>> list() {
-    return YdszResponse.success(
-        WorkflowConverter.INSTANT.flowCategoryListToVO(
-            categoryService.listAll(TenantContextHolder.getTenantId())));
+    return YdszResponse.success(categoryService.listAllVO(TenantContextHolder.getTenantId()));
   }
 
   /**
