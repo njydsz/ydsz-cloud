@@ -50,7 +50,7 @@
 | **DAG 编排** | YAML DSL 解析 + DAG 执行器（拓扑排序 + 节点派发 + 检查点续跑） | `DagDslParser` / `DagOrchestrationExecutor` |
 | **Tool Calling** | `@Tool` 注解 + 工具注册中心 + 注解扫描器 | `ToolRegistry` / `ToolExecutor` / `ToolAnnotationScanner` |
 | **MCP 工具发现** | MCP Server 自动发现并注册工具到 ToolRegistry | `McpClientProvider` / `McpToolAdapter` / `SseMcpClientProvider` |
-| **RAG 知识增强** | 文档摄入 Pipeline + 向量存储 + 检索 + Reranker 精排 | `RagService` / `DocumentIngestionService` / `VectorStore` / `Reranker` |
+| **RAG 知识增强** | 文档摄入 Pipeline + 混合检索（向量 + 全文 RRF 融合）+ Reranker 精排 | `RagService` / `DocumentIngestionService` / `HybridRetriever` / `VectorStore` / `Reranker` |
 | **记忆管理** | Redis 滑动窗口 + TTL 过期 + 摘要压缩记忆 | `ConversationMemory` / `SummaryConversationMemory` |
 | **人工审批** | Agent 执行中暂停等待人工审批 | `HumanApprovalService` |
 | **调试器** | 链路查询 / 链路详情 / 链路重放 | `AgentDebuggerService` |
