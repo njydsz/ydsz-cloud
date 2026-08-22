@@ -35,9 +35,6 @@ boolean valid = PwdUtils.verifyPasswordBCrypt("userPassword123", hashed);
 // IP 校验
 boolean ok = IpValidator.validIpv4("192.168.1.1");
 boolean internal = IpValidator.isInternalIp("10.0.0.1");
-
-// 线程池创建（由 ydsz-common-thread 提供，见该模块文档）
-ExecutorUtils.newCpuBoundThreadPool(); // 需引入 ydsz-common-thread
 ```
 
 ### 3. 启用 Snowflake 自动配置
@@ -75,6 +72,7 @@ byte[] ciphertext = sm4.encrypt(plaintextBytes, keyBytes, null);
 | 加密解密（统一入口） | `CryptoUtils` | AES-256-GCM / SM4-GCM 算法路由，支持 AEAD/AAD |
 | 国密算法（SM2/SM3） | `Sm2Utils` / `Sm3Utils` | 依赖 bcprov-jdk18on，GM/T 标准；SM4 由 `CryptoProvider` 提供（SM4-GCM） |
 | 摘要/签名/HMAC | `DigestUtils` | SHA-256/SHA-512/HMAC-SHA256/PBKDF2 + constantTimeEquals |
+| Hex 编解码 | `HexUtils` | 字节数组 ↔ Hex 字符串安全转换（JDK `HexFormat`），替代各自实现的 `bytesToHex` / `hexToBytes` |
 | 密码哈希与强度校验 | `PwdUtils` | BCrypt + PBKDF2 + 密码强度评分 |
 | HTTP 请求解析 | `ServletRequestUtils` | Servlet 请求封装 |
 | 响应渲染 | `HttpResponseUtils` | 基于 YdszJson 序列化的响应写入 |
@@ -83,46 +81,52 @@ byte[] ciphertext = sm4.encrypt(plaintextBytes, keyBytes, null);
 | URL 白名单匹配（轻量） | `UrlPathUtils` | 单次线性匹配，Ant 风格 |
 | URL 白名单匹配（高性能） | `UrlPathMatcher` | 构建一次复用多次，精确 O(1) + 通配符 |
 | 可信代理判定 | `TrustedProxyConfiguration` | 防止 X-Forwarded-For 伪造，内网地址始终可信 |
-| 线程池监控 | `ThreadPoolMonitor` | Micrometer 指标自动注册（由 ydsz-common-thread 提供能力） |
 | 限流 | `RateLimiter` | 单机令牌桶算法（阻塞/非阻塞/超时模式） |
-| 重试 | `RetryUtils` | 固定间隔 + 指数退避（含抖动），可自定义重试条件 |
+| 重试 | `RetryUtils` | 固定间隔 + 指数退避（含抖动），可自定义重试条件，重试耗尽抛出 `RetryException` |
 | 字符串判空/转换/截断 | `StringUtils` | null-safe 判空、驼峰/下划线互转、truncate/abbreviate/normalizeSpace |
 | 日期时间 | `DateUtils` | java.time API 封装：日起始/结束、工作日计算、格式化解析 |
 | 文件操作 | `FileUtils` | 封装 commons-io：读写、复制、目录操作、扩展名解析 |
+| 临时文件管理 | `TempFileManager` | 临时文件跟踪 / 清理 / ShutdownHook 兜底 |
 | 数据脱敏 | `MaskUtils` | 手机号/身份证/银行卡/邮箱/姓名掩码 |
 | 业务校验 | `ValidationUtils` | 手机号/邮箱/身份证/统一社会信用代码等正则+校验码验证 |
 | Bean 映射 | `BeanMapper` | Map → Bean / Record 转换（从 MapUtils 独立） |
+| Bean PATCH 更新 | `BeanUpdateUtil` | 仅复制非 null 属性 |
 | 集合判空/转换 | `CollectionUtils` / `MapUtils` | null-safe 判空、类型安全取值 |
 | JDK 21 SequencedCollection | `SequencedCollections` | reverse/first/last 兼容 JDK 17/21 |
-| Bean PATCH 更新 | `BeanUpdateUtil` | 仅复制非 null 属性 |
 | IP 校验/CIDR | `IpValidator` / `CidrUtils` | IPv4/IPv6 校验、内网判断、CIDR 网段计算 |
 | 本机网络接口 | `NetworkInterfaceUtils` | 获取本机 IP、主机名、枚举所有非回环 IP |
-| 认证信息读取 | `AuthInfoUtils`（位于 `ydsz-common-auth`） | 用户 ID、租户 ID、数据权限维度 |
+| 字段 diff 对比 | `DiffCalculator` | Bean 字段变更对比，生成 `DiffReport`（含 `FieldDiff` 列表） |
 | 国际化消息 | `MessageUtils` | MessageSource 便捷读取 |
 
 ### 按包结构查找工具
 
 ```
 com.njydsz.common.util
+├── api/            标记注解：@Experimental（实验性 API 标识）
 ├── bean/           Bean 映射：BeanMapper（Map→Bean/Record）、BeanUpdateUtil（PATCH 语义）
 ├── collection/     集合工具：CollectionUtils、MapUtils（聚焦 Map 操作）、SequencedCollections
+├── concurrent/     并发工具：RateLimiter（令牌桶限流）、RetryUtils（重试）、RetryException
+├── config/         自动配置：UtilAutoConfiguration、MessageSourceConfiguration、
+│                   CryptoAutoConfiguration、StaticBridge（静态工具→Spring Bean 桥接器）
 ├── date/           日期时间：DateUtils（java.time API 封装）
-├── diff/           字段 diff 工具：DiffCalculator、DiffReport、DiffField、FieldDiff
-├── config/         自动配置：UtilAutoConfiguration、MessageSourceConfiguration、CryptoAutoConfiguration
+├── diff/           字段 diff 工具：DiffCalculator、DiffReport、DiffField、FieldDiff、DiffValueFormatter
 ├── http/           HTTP 工具：ServletRequestUtils、HttpResponseUtils、HttpTokenUtils、
 │                   RequestContextUtils、UrlPathUtils、UrlPathMatcher、TrustedProxyConfiguration
-├── io/             文件操作：FileUtils（封装 commons-io）、TempFileManager
 ├── id/             ID 生成：SnowflakeIdGenerator、IdGenerator、RandomUtils、TracerUtils、
-│                   WorkerIdAllocator（SPI）、WorkerIdAllocatorChain、SnowflakeProperties、
-│                   SnowflakeHealthIndicator
+│                   WorkerIdAllocator（SPI）、WorkerIdAllocatorChain、
+│                   PodOrdinalWorkerIdAllocator、IpHashWorkerIdAllocator、
+│                   SnowflakeProperties、SnowflakeIdBean、SnowflakeHealthIndicator、
+│                   ClockBackwardException、WorkerIdExhaustedException、NotApplicableException
+├── internal/       内部 API：proxy/（CoreConstants、RequestContextProxy、TraceIdGeneratorProxy、ParsedTraceparent）
+├── io/             文件操作：FileUtils（封装 commons-io）、TempFileManager
 ├── ip/             IP 工具：IpValidator、CidrUtils（含缓存）、NetworkInterfaceUtils
 ├── mask/           数据脱敏：MaskUtils
 ├── message/        国际化：MessageUtils
-├── password/       密码工具：PwdUtils、PasswordStrengthChecker（SPI）
-├── security/       加密工具：CryptoUtils（统一入口）、CryptoProviderRegistry、DigestUtils、
+├── password/       密码工具：PwdUtils、PasswordStrengthChecker（SPI）、DefaultPasswordStrengthChecker
+├── security/       加密工具：CryptoUtils（统一入口）、CryptoProviderRegistry、DigestUtils、HexUtils、
 │                   Sm2Utils/Sm3Utils、BcProvider
 ├── security/crypto/ 加密提供者：CryptoProvider（SPI）、CryptoProviderRegistry、
-│                   AesGcmCryptoProvider、Sm4GcmCryptoProvider
+│                   AesGcmCryptoProvider、Sm4GcmCryptoProvider、CryptoAutoConfiguration│                   CryptoProperties、CryptoException
 ├── string/         字符串：StringUtils
 ├── validate/       业务校验：ValidationUtils
 ```
@@ -135,13 +139,15 @@ com.njydsz.common.util
 
 | 依赖类型 | 依赖 | 说明 |
 |---------|------|------|
-| **核心依赖**（强制） | JDK 21、ydsz-common-core、ydsz-common-domain、ydsz-common-json、snakeyaml、slf4j、commons-io、jsr305 | 编译和运行时必需 |
-| **可选依赖**（按需） | spring-security-crypto | BCrypt 密码哈希（未引入时 PwdUtils 使用 PBKDF2 降级） |
+| **核心依赖**（强制） | JDK 21、snakeyaml、slf4j-api、commons-io、jsr305、jakarta.servlet-api（provided） | 编译和运行时必需 |
+| **可选依赖**（按需） | ydsz-common-json | JSON 工具（`Optional` 引入，未引入时 JSON 相关方法不可用） |
+| | spring-security-crypto | BCrypt 密码哈希（未引入时 PwdUtils 使用 PBKDF2 降级） |
 | | bcprov-jdk18on | 国密算法（SM2/SM3/SM4） |
 | | spring-web | Servlet 请求/响应工具、URL 路径匹配 |
 | | transmittable-thread-local | TTL 上下文透传线程池 |
 | | spring-boot-health | Snowflake 健康检查 |
-| | micrometer-core | MeteredThreadPoolExecutor 指标注册 |
+| | spring-boot-autoconfigure | 自动装配类条件注册（`@ConditionalOnClass`） |
+| | micrometer-core | 历史兼容（指标注册已迁移至 `ydsz-common-thread`） |
 
 > **可选依赖处理**：未引入时，调用对应方法会抛出包含引入指引的 `IllegalStateException`（而非 `NoClassDefFoundError`）。
 
@@ -151,11 +157,13 @@ com.njydsz.common.util
 
 | SPI 接口 | 用途 | 默认实现 |
 |---------|------|---------|
-| `WorkerIdAllocator` | 分布式 WorkerId 分配策略（0-1023） | PodOrdinal → IpHash 链 |
+| `WorkerIdAllocator` | 分布式 WorkerId 分配策略（0-1023） | `WorkerIdAllocatorChain` → `PodOrdinalWorkerIdAllocator` → `IpHashWorkerIdAllocator` 链 |
 | `PasswordStrengthChecker` | 密码强度评分规则 | `DefaultPasswordStrengthChecker`（长度/多样性/连续重复扣分） |
 | `CryptoProvider` | 加密算法提供者 | `AesGcmCryptoProvider`（默认）、`Sm4GcmCryptoProvider` |
 
-> **自定义 SPI 实现**：在 `META-INF/services/` 接口全限定名文件中填写实现类全限定名。
+> **自定义 SPI 实现**：
+> - `WorkerIdAllocator` / `PasswordStrengthChecker`：在 `META-INF/services/` 接口全限定名文件中填写实现类全限定名
+> - `CryptoProvider`：通过 `CryptoProviderRegistry` 编程注册
 
 ---
 
@@ -167,8 +175,8 @@ com.njydsz.common.util
 | `ydsz.util.snowflake.worker-id` | - | WorkerId（0-1023，显式配置最高优先级） |
 | `ydsz.util.snowflake.datacenter-id` | - | 数据中心 ID（0-31，未配置时基于主机名哈希） |
 | `ydsz.util.snowflake.node-id` | - | 节点标识（用于 PodOrdinal 策略） |
-| `ydsz.util.snowflake.epoch` | `1577836800000` | 起始纪元时间戳（2020-01-01 UTC），@since 4.0.0 |
-| `ydsz.util.snowflake.sequence-bits` | `7` | 序列号位数（7-13，决定每毫秒并发能力），@since 4.0.0 |
+| `ydsz.util.snowflake.epoch` | `1577836800000` | 起始纪元时间戳（2020-01-01 UTC） |
+| `ydsz.util.snowflake.sequence-bits` | `7` | 序列号位数（7-13，决定每毫秒并发能力） |
 | `crypto.algorithm`（系统属性） | `AES-256-GCM` | 加密算法标识，可选 `SM4-GCM`/`SM4-CBC`/`AES-256-GCM` |
 
 **WorkerId 解析优先级**：显式配置 → PodOrdinal → IpHash
@@ -230,6 +238,8 @@ String data = RetryUtils.executeWithBackoff(() -> externalApi.fetch(),
         .build());
 ```
 
+> 重试耗尽后抛出 `RetryException`（包装最后一次异常），调用方无需强制捕获。
+
 ### UrlPathMatcher — 高性能 URL 路径匹配
 
 ```java
@@ -243,6 +253,31 @@ boolean allowed = matcher.matches(requestPath);
 boolean isExact = matcher.matchesExact(requestPath);
 ```
 
+### DiffCalculator — 字段变更对比
+
+```java
+// 对比两个 Bean 的字段变更
+DiffReport report = DiffCalculator.calculate(oldUser, newUser);
+for (FieldDiff diff : report.getDiffs()) {
+    log.info("字段 {}: {} → {}", diff.getFieldName(), diff.getOldValue(), diff.getNewValue());
+}
+```
+
+### StaticBridge — 静态工具→Spring Bean 桥接器
+
+```java
+// 在静态工具类中声明桥接器
+private static final StaticBridge<MessageSource> MESSAGE_SOURCE_BRIDGE = new StaticBridge<>();
+
+// 由 AutoConfiguration 注入 Supplier
+MESSAGE_SOURCE_BRIDGE.registerSupplier(() -> applicationContext.getBean(MessageSource.class));
+
+// 在静态方法中安全获取 Bean
+MessageSource ms = MESSAGE_SOURCE_BRIDGE.get();
+```
+
+> 采用 DCL + `AtomicReference` 缓存成功结果，Supplier 返回 null 或异常时不缓存自动重试。
+
 ---
 
 ## 安全注意事项
@@ -253,30 +288,17 @@ boolean isExact = matcher.matchesExact(requestPath);
 4. **密码存储**：BCrypt 推荐强度 12（OWASP 最低 10）；PBKDF2 迭代次数默认 600,000（OWASP 2023 推荐）
 5. **时序攻击防护**：所有密码/签名验证使用 `constantTimeEquals`（`MessageDigest.isEqual`）
 6. **Snowflake 时钟回拨**：≤ 5ms 循环等待恢复；> 5ms 抛出 `ClockBackwardException`
-7. **可信代理**：生产环境必须配置 `TrustedProxyConfiguration`，防止客户端伪造 `X-Forwarded-For` 绕过 IP 控制
+7. **Snowflake WorkerId 耗尽**：当 WorkerId 分配超出 0-1023 范围时抛出 `WorkerIdExhaustedException`
+8. **可信代理**：生产环境必须配置 `TrustedProxyConfiguration`，防止客户端伪造 `X-Forwarded-For` 绕过 IP 控制
+9. **HexUtils 线程安全**：基于 JDK `HexFormat` 实例（线程安全），所有方法均为无状态纯函数
 
 ---
 
----
+## 变更记录
 
-## v4.0.0 变更亮点
-
-### 架构优化
-- **BeanMapper 独立**：将 MapUtils 中 700+ 行 Bean 映射逻辑抽取为独立的 `BeanMapper` 类，MapUtils 回归纯 Map 操作职责（单一职责原则）
-- **SnowflakeIdGenerator 拆分**：核心算法（`SnowflakeIdGenerator`）与 Spring Bean 包装（`SnowflakeIdBean`）分离，序列号位数可配置（7-13 位）
-- **循环导入消除**：`CidrUtils` 与 `IpValidator` 不再相互 import
-
-### 功能增强
-- **DateUtils**：16 个 java.time API 方法 — 日起始/结束、工作日计算、格式化解析
-- **FileUtils**：10 个文件操作方法 — 读写、复制、目录操作、扩展名安全处理
-- **MaskUtils**：6 个脱敏方法 — 手机号/身份证/银行卡/邮箱/姓名掩码
-- **ValidationUtils**：8 个校验方法 — 手机号/邮箱/身份证/统一社会信用代码（含校验码）
-- **StringUtils 增强**：`truncate`、`abbreviate`、`normalizeSpace`
-
-### 体验改善
-- **SpringContextHolder @Deprecated**：标记为过时并文档说明替代方案
-- **AuthInfoUtils 日志增强**：`getClaim` 未识别 claim 名输出 debug 日志
-- **CidrUtils 缓存**：IP 范围判断结果缓存（ConcurrentHashMap，上限 1024）
-- **DigestUtils 缓冲区**：ThreadLocal 缓冲区带复用计数自动重置
-
-> **文档与代码一致性**：本文档严格对齐模块内真实源码。
+- **v4.2.0**（2026-08-17）：
+  - README 对齐源码：补全 `HexUtils`、`DiffCalculator`/`DiffReport`/`FieldDiff`/`DiffValueFormatter`、`StaticBridge`、`RetryException`、`WorkerIdExhaustedException`、`NotApplicableException`、`@Experimental`、`TempFileManager`、`PodOrdinalWorkerIdAllocator`、`IpHashWorkerIdAllocator`、`WorkerIdAllocatorChain` 文档
+  - 修正依赖说明：移除不存在的 `ydsz-common-core`、`ydsz-common-domain` 核心依赖声明，修正 `ydsz-common-json` 为可选依赖
+  - 新增 "字段 diff 对比"、"→Spring Bean 桥接器" 使用示例
+- **v4.1.0**（2026-08-02）：线程池创建与监控能力迁移至 `ydsz-common-thread`
+- **v4.0.0**：架构优化（BeanMapper 独立、SnowflakeIdGenerator 拆分、循环导入消除）、功能增强（DateUtils/FileUtils/MaskUtils/ValidationUtils/StringUtils 增强）

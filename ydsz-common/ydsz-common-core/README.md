@@ -191,9 +191,9 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | `config` | `CoreAutoConfiguration` | Spring Boot 自动配置入口，注册 springMessageResolver、pageConstantsInitializer |
 | `config` | `CoreProperties` | 配置属性绑定（`@ConfigurationProperties("ydsz.core")`），含 `feature-flags` 映射支持 |
 | `config` | `SpringMessageResolver` | Spring MessageSource 适配器，将 i18n 解析绑定到 YdszResponse |
-| `context` | `BizContextKeys` | 业务级上下文键名常量（认证/租户/列权限/审计/缓存），@since 1.9.0 |
-| `context` | `RequestSnapshot` | HTTP 请求不可变快照（method/URI/headers/traceId），取代直接持有 `HttpServletRequest`，@since 1.9.1 |
-| `model` | `CurrentUser` | 当前用户极简身份契约接口（uniqueId/identityType/dataScope/tenantId/permissionIds），@since 2.0.0 |
+| `context` | `BizContextKeys` | 业务级上下文键名常量（认证/租户/列权限/审计/缓存），@since 1.0.0 |
+| `context` | `RequestSnapshot` | HTTP 请求不可变快照（method/URI/headers/traceId），取代直接持有 `HttpServletRequest`，@since 1.0.0 |
+| `model` | `CurrentUser` | 当前用户极简身份契约接口（uniqueId/identityType/dataScope/tenantId/permissionIds），@since 1.0.0 |
 | `feature` | `FeatureFlagService` | 特性开关服务接口（`isEnabled` / `isEnabled(name, default)`），@since 1.0.0 |
 | `feature` | `FeatureFlagContext` | 特性开关静态门面，供非 Spring 注入场景便捷访问，@since 1.0.0 |
 | `feature` | `ConfigDrivenFeatureFlagService` | 基于配置的特性开关实现（`ydsz.core.feature-flags.*`），支持运行期动态刷新，@since 1.0.0 |
@@ -568,7 +568,11 @@ com.njydsz.common.core.config.CoreAutoConfiguration
 | `ydsz.core.max-page-size` | `Integer` | `1000` | 运行时最大每页记录数（1-5000） |
 | `ydsz.core.default-page-size` | `Integer` | `20` | 运行时默认每页记录数（1-5000） |
 | `ydsz.core.tenant-mdc-filter-order` | `Integer` | `HIGHEST_PRECEDENCE + 100` | 租户 MDC 过滤器优先级 |
-| `ydsz.core.feature-flags.<name>` | `Boolean` | `true` | 特性开关配置（如 `ydsz.core.feature-flags.user-register-sms`），未配置默认开启 |
+| `ydsz.core.default-locale` | `String` | `zh-CN` | 默认语言环境，用于 i18n 消息解析与 RequestContext 兜底（@since 1.11.0） |
+| `ydsz.core.api-version.default` | `String` | `v1` | 默认 API 版本号（@since 1.10.0） |
+| `ydsz.core.api-version.header` | `String` | `X-Api-Version` | 客户端声明版本的 HTTP 请求头名称（@since 1.10.0） |
+| `ydsz.core.api-version.routes.<version>` | `List<String>` | `[]` | 版本号到 URL 路径模式的路由规则（@since 1.10.0） |
+| `ydsz.core.feature-flags.<name>` | `Boolean` | `true` | 特性开关配置（如 `ydsz.core.feature-flags.user-register-sms`），未配置默认开启（@since 1.14.0） |
 
 ### 配置示例
 
@@ -676,9 +680,9 @@ ydsz:
 ## 变更记录
 
 - **v2.3.0**（2026-08-17）：
-  - 新增 `CurrentUser` 接口（`model` 包），定义当前用户极简身份契约（uniqueId/identityType/dataScope/tenantId/permissionIds），@since 2.0.0
+  - 新增 `CurrentUser` 接口（`model` 包），定义当前用户极简身份契约（uniqueId/identityType/dataScope/tenantId/permissionIds），@since 1.0.0
   - 新增特性开关：`FeatureFlagService` 接口 + `FeatureFlagContext` 静态门面 + `ConfigDrivenFeatureFlagService` 配置驱动实现，配置前缀 `ydsz.core.feature-flags.*`
-  - 新增 `RequestSnapshot`（HTTP 请求不可变快照）与 `BizContextKeys`（业务上下文键名常量），@since 1.9.x
+  - 新增 `RequestSnapshot`（HTTP 请求不可变快照）与 `BizContextKeys`（业务上下文键名常量），@since 1.0.0
   - `CoreProperties` 新增 `feature-flags` 映射支持
 - **v2.2.0**（2026-08-10）：
   - `ResultCode` 接口新增 `getModule()` default（返回 "core"），`getKey()` default 改为 `getModule() + "." + getCode()`，业务枚举可覆盖 `getModule()` 获得模块感知的 i18n key 前缀

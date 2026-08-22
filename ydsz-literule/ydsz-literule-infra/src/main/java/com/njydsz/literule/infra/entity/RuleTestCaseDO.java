@@ -17,7 +17,7 @@ import com.njydsz.common.jdbc.handler.JsonTypeHandler;
  * 规则测试用例实体
  *
  * @author ydsz
- * @since 2026-07-02
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

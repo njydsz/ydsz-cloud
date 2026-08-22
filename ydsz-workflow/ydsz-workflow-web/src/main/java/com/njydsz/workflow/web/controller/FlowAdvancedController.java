@@ -209,8 +209,7 @@ public class FlowAdvancedController {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     return YdszResponse.success(
-        WorkflowConverter.INSTANT.entityToVO(
-            mergeService.mergeInstances(instanceIds, userId, tenantId)));
+        mergeService.mergeInstancesVO(instanceIds, userId, tenantId));
   }
 
   /**
@@ -395,9 +394,7 @@ public class FlowAdvancedController {
   @GetMapping("/dedup/{instanceId}/approvedUsers")
   @Operation(summary = "P2-7: 获取实例已审批人列表")
   public YdszResponse<List<StringVO>> approvedUsers(@PathVariable String instanceId) {
-    return YdszResponse.success(
-        WorkflowConverter.INSTANT.stringListToVO(
-            dedupService.getApprovedUserIds(instanceId).stream().toList()));
+    return YdszResponse.success(dedupService.getApprovedUserIdsVO(instanceId));
   }
 
   // ==================== P2-8: 催办限流可视化 ====================

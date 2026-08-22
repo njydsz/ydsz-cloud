@@ -150,7 +150,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `MultiLevelCacheProvider` | 多级缓存提供者（L1 Caffeine 本地缓存 + L2 Redis 远程缓存），@since 1.4.0 |
+| `MultiLevelCacheProvider` | 多级缓存提供者（L1 Caffeine 本地缓存 + L2 Redis 远程缓存），@since 1.0.0 |
 | `MultiLevelCacheAutoConfiguration` | 多级缓存自动配置，条件：Caffeine 在 classpath + `ydsz.redis.multilevel.enabled=true` |
 
 读取流程：L1（Caffeine）→ L2（Redis）→ Supplier（回源）；写入流程：写 L2 → 失效 L1；删除流程：删 L2 → 失效 L1。L1 TTL 应显著小于 L2 TTL 以保证数据新鲜度。

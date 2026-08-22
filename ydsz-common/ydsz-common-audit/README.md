@@ -168,8 +168,8 @@ public class Application {
 | `sensitive-params` | password,token,secret,apiKey 等 11 个 | 敏感参数名称列表（命中名称的参数不序列化） |
 | `ip-location-enabled` | false | 是否启用 IP 归属地解析 |
 | `user-agent-enabled` | false | 是否启用 User-Agent 解析 |
-| `async.batch-interval-millis` | 3000 | 批量刷新间隔（毫秒） |
-| `async.reject-policy` | DISCARD_OLDEST | 队列满拒绝策略：`DISCARD_OLDEST` / `DISCARD_NEWEST` / `CALLER_RUNS` |
+| `async.batch-interval-millis` | 5000 | 批量写入间隔（毫秒，超过此间隔即使未满也会写入） |
+| `async.reject-policy` | CALLER_RUNS | 队列满拒绝策略：`DISCARD_OLDEST` / `DISCARD_NEWEST` / `CALLER_RUNS` |
 | `async.shutdown-timeout` | 30 | 优雅停机超时（秒） |
 | `mask-enabled` | true | 是否启用敏感字段脱敏 |
 | `retention-days` | 90 | 审计日志保留天数 |
@@ -180,7 +180,7 @@ public class Application {
 |---|---|---|
 | `async.thread-core-size` | 2 | 异步记录线程池核心线程数 |
 | `async.thread-max-size` | 4 | 异步记录线程池最大线程数 |
-| `async.queue-capacity` | 200 | 异步记录线程池等待队列容量 |
+| `async.queue-capacity` | 10000 | 异步队列最大容量（满后按 `reject-policy` 处理） |
 
 ### 分表（`ydsz.audit.sharding`）
 

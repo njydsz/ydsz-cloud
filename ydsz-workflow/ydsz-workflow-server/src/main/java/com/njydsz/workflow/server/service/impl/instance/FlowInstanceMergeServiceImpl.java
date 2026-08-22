@@ -25,6 +25,7 @@ import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.StringVO;
 import com.njydsz.workflow.server.service.FlowInstanceMergeService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -191,6 +192,16 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         flowCodes.iterator().next(),
         operatorId);
     return mergeGroupId;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>符合 DDD 分层规范：Service 层内部完成 String→StringVO 转换。
+   */
+  @Override
+  public StringVO mergeInstancesVO(List<String> instanceIds, String operatorId, String tenantId) {
+    return new StringVO(mergeInstances(instanceIds, operatorId, tenantId));
   }
 
   /**

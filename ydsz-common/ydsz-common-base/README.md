@@ -10,9 +10,9 @@
 |---|---|
 | **层级** | L6 应用层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **作用** | 提供 Web/App 共享的 HTTP 基座：CORS、时区、I18n、安全头、TraceId、请求日志、上下文清理、全局响应包装、OpenAPI/Knife4j 文档、文档导出、健康检查、模块指标基类 |
-| **依赖** | common-core、common-util、common-exception、common-json；可选依赖 spring-boot-actuator、spring-boot-health、springdoc-openapi、knife4j、spring-boot-starter-webflux、micrometer-core |
-| **版本** | 1.0.0 |
+| **作用** | 提供 Web/App 共享的 HTTP 基座：CORS、时区、I18n、安全头、请求体大小限制、TraceId、请求日志、上下文清理、全局响应包装、OpenAPI/Knife4j 文档、文档导出、健康检查、模块指标基类 |
+| **依赖** | 直接依赖 common-core、common-util、common-exception、common-json、common-auth、common-safe；可选依赖 spring-boot-actuator、spring-boot-health、springdoc-openapi、knife4j、micrometer-core |
+| **版本** | 1.0.2 |
 
 ## 核心能力
 
@@ -23,6 +23,10 @@
 | `BaseMvcConfiguration` | MVC 配置抽象基类（实现 `WebMvcConfigurer`），子类提供具体的 `BaseCorsProperties` 和 `BaseTraceProperties` 实现并注册自己的拦截器和过滤器 Bean；统一注册 `CorsFilter` 并在启动时执行 CORS 安全校验 |
 | `BaseCorsProperties` | CORS 配置属性抽象基类（`@ConfigurationProperties`），子类通过 `prefix` 指定具体前缀；含 `validateSecurity()` 方法检测不安全组合（`allowCredentials=true` 且 `*`、来源为空、过度开放等） |
 | `BaseTraceProperties` | 请求追踪/日志配置属性抽象基类，提供链路追踪、请求日志、采样率、慢请求阈值、响应头等通用配置项；`getSamplingRate()` 自动修正到 `[0.0, 1.0]` 范围 |
+| `BaseSecurityHeadersProperties` | 安全响应头配置属性（`ydsz.base.security-headers`），控制 X-Content-Type-Options / X-Frame-Options / X-XSS-Protection / HSTS / CSP / Referrer-Policy 等头部；当 safe/web/app 模块存在时由 `ydsz.safe.security-headers` 统一接管 |
+| `BaseRequestProperties` | 请求体大小限制配置属性（`ydsz.base.request`），控制最大请求体大小（默认 10MB），超限时返回 413；可配置是否自动设置嵌入式容器 maxPostSize |
+| `ConditionalOnPlatform` | 平台条件注解，支持 X86/ARM 架构与 PLATFORM/VIRTUAL 线程模式的条件装配 |
+| `PlatformCondition` / `PlatformMode` | 平台条件判断实现与模式枚举，支撑 `ConditionalOnPlatform` |
 
 ### 2. 时区与国际化
 

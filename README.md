@@ -95,34 +95,6 @@ ydsz-cloud/
 
 ---
 
-## 技术选型
-
-| 分层 | 技术 | 版本 | 说明 |
-|------|------|------|------|
-| **基础框架** | Spring Boot | 4.1.0 | 新一代企业级应用框架 |
-| | Spring Cloud | 2025.1.2 | 微服务治理套件 |
-| | Spring Cloud Alibaba | 2025.1.0.0 | Nacos / Sentinel / Seata |
-| **语言 & 构建** | Java | 21 (LTS) | 虚拟线程 + 模式匹配 |
-| | Maven | 3.9+ | 聚合多模块构建 |
-| **数据持久化** | MyBatis-Plus | 3.5.16 | 增强 ORM（Spring Boot 4 Starter） |
-| | PostgreSQL | 42.7.4 | 主数据库（共享主库） |
-| | Druid | 1.2.28 | 连接池 |
-| | Dynamic-Datasource | 4.3.1 | 读写分离 |
-| **缓存 & 锁** | Redis / Redisson | 4.6.1 | 分布式缓存 / 分布式锁 |
-| **消息队列** | RocketMQ Spring | 2.3.1 | 异步消息 / 事务消息 |
-| **分布式事务** | Seata | 2.5.0 | AT / TCC / SAGA |
-| **流量控制** | Sentinel | 1.8.9 | 限流 / 熔断 / 降级 |
-| | Resilience4j | 2.4.0 | 重试 / 舱壁 / 速率限制 |
-| **对象存储** | MinIO / 阿里云 OSS / 腾讯云 COS / 华为云 OBS / 七牛 / AWS S3 | — | 7 种存储平台统一抽象 |
-| **认证鉴权** | jjwt | 0.12.6 | JWT Token |
-| **文档 & API** | SpringDoc + Knife4j | 3.0.3 / 4.5.0 | OpenAPI 3.0 文档 |
-| **对象映射** | MapStruct | 1.6.3 | 编译期代码生成 |
-| **JSON** | ydsz-common-json<br/>（YdszJson） | 自研 | 零外部依赖 · ASM 字节码 · SIMD 向量化 |
-| **监控** | Micrometer + Prometheus + Sentry | — | 指标采集 / 异常追踪 |
-| **日志** | Logback + Logstash Encoder | 7.4 | JSON 格式日志输出 |
-
----
-
 ## 快速开始
 
 ### 环境要求
@@ -218,27 +190,6 @@ ydsz-{module}/
 
 ---
 
-## 质量与安全
-
-### 构建与测试
-
-| 项目 | 说明 |
-|------|------|
-| **单元测试** | JUnit 5 + Mockito + AssertJ，`mvn verify` 自动执行 |
-| **集成测试** | Testcontainers 容器化（PG / Redis），继承 `AbstractIntegrationTest` 基类运行 |
-
-### 安全措施
-
-- **认证鉴权**：JWT + RBAC + 数据权限 + TOTP 2FA
-- **传输安全**：HTTPS + CORS 严格策略 + CSRF Token
-- **存储安全**：BCrypt 密码哈希 + 敏感配置 AES-256-GCM 加密
-- **输入安全**：XSS 过滤 + SQL 注入防护（PreparedStatement） + 参数校验
-- **数据安全**：PII 脱敏（手机号/身份证/邮箱） + 行/列级权限
-- **运维安全**：IP 白名单/黑名单 + 登录失败锁定 + 验证码 + API 签名验证
-- **供应链安全**：依赖版本统一收敛管理（Dependency Management）
-
----
-
 ## 文档
 
 | 文档 | 位置 | 说明 |
@@ -249,29 +200,6 @@ ydsz-{module}/
 | 模块 README | `ydsz-*/README.md` | 各模块详细说明文档 |
 | 编码规范 | *(内部 Wiki)* | 团队开发规范 |
 | API 文档 | Knife4j 聚合 | 启动后访问 `:9000/doc.html` |
-
----
-
-## 贡献指南
-
-我们欢迎任何形式的贡献！
-
-### 贡献流程
-
-1. **Fork** 本项目
-2. 从 `develop` 分支创建你的特性分支：`git checkout -b feature/amazing-feature`
-3. 编写代码，确保通过 `mvn verify` 构建与单元测试
-4. 提交变更：`git commit -m 'feat: 新增某某功能'`
-5. 推送分支：`git push origin feature/amazing-feature`
-6. 提交 **Pull Request** 到 `develop` 分支
-
-### 贡献要求
-
-- 新增代码需通过单元测试验证
-- 核心逻辑需补充单元测试
-- 新增模块的 README.md 需同步更新
-- 数据库变更需提供 SQL 初始化脚本
-- PR 需至少一位 Maintainer 审核通过
 
 ---
 
@@ -287,8 +215,6 @@ ydsz-{module}/
 
 - [Spring Boot](https://spring.io/projects/spring-boot) &amp; [Spring Cloud](https://spring.io/projects/spring-cloud) —— Java 微服务生态基石
 - [Spring Cloud Alibaba](https://github.com/alibaba/spring-cloud-alibaba) —— 微服务一站式解决方案
-- [若依（RuoYi-Cloud）](https://gitee.com/y_project/RuoYi-Cloud) —— 优秀的国产微服务快速开发框架
-- [Pig](https://gitee.com/log4j/pig) —— 基于 Spring Cloud 的微服务 RBAC 权限管理系统
 - [XXL-Job](https://github.com/xuxueli/xxl-job) &amp; [PowerJob](https://github.com/PowerJob/PowerJob) —— 分布式任务调度标杆
 - [Drools](https://www.drools.org/) &amp; [LiteFlow](https://liteflow.cc/) —— 规则引擎领域先驱
 - [Flowable](https://www.flowable.com/) &amp; [Camunda](https://camunda.com/) —— BPMN 工作流引擎参考

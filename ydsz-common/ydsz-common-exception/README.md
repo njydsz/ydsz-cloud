@@ -185,8 +185,12 @@ throw new BusinessException(CoreExceptionCode.NOT_FOUND)
 | `ydsz.exception.response-format` | `base-response` | 响应格式（`base-response` / `problem-detail`） |
 | `ydsz.exception.include-stack-trace` | false | 是否在响应中包含堆栈信息（dev/test profile 自动开启） |
 | `ydsz.exception.doc-endpoint-enabled` | true | 是否启用错误码文档端点 |
+| `ydsz.exception.doc-endpoint.filter-modules` | `[]` | 端点模块白名单（仅允许查看指定模块的错误码），空列表表示允许所有模块 |
+| `ydsz.exception.doc-endpoint.auth-required` | false | 错误码文档端点是否需要鉴权（开启后需结合 Spring Security） |
 | `ydsz.exception.problem-detail-type-base-url` | `about:blank` | ProblemDetail type URI 基础 URL（RFC 7807） |
 | `ydsz.exception.metrics-include-code-tag` | false | 是否在指标中包含高基数 code tag（默认关闭防止 Prometheus 指标爆炸） |
+| `ydsz.exception.metrics-percentiles` | `[0.99]` | 异常处理耗时分位数预计算配置（如 P99），设为空列表可关闭预计算 |
+| `ydsz.exception.openapi-enabled` | true | 是否启用 SpringDoc OpenAPI 错误码文档自动增强（需 springdoc-openapi 在 classpath） |
 
 ### I18nProperties（`ydsz.i18n.*`）
 
