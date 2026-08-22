@@ -61,8 +61,9 @@
 | **LLM 语义缓存** | 双层缓存（L1 YdszCache + L2 Redis），精确哈希匹配，节省成本与延迟 | `CachedLlmClient` / `SemanticLlmCache` |
 | **Text2SQL** | 自然语言转 SQL 查询，多重安全护栏（仅 SELECT、SQL 注入检测、结果行数限制） | `Text2SQLService` / `JdbcText2SQLService` / `Text2SQLTool` |
 | **租户配额** | 单租户每日 Token 限额 + 月度预算 + 告警阈值 | `TenantQuotaService` |
-| **健康检查** | LLM Provider + Memory + RAG 状态 | `AgentHealthIndicator` |
-| **指标埋点** | 对话次数 / Token 用量 / 延迟 / 运行时指标 | `AgentMetrics` / `AgentRuntimeMetrics` |
+| **健康检查** | LLM Provider + Memory + RAG + Trace + Cost 多维健康检查 | `AgentHealthIndicator` / `AgentAppHealthIndicator` |
+| **指标埋点** | 对话次数 / Token 用量 / 延迟 / 运行时指标 | `AgentMetrics` / `AgentRuntimeMetrics`（Prometheus） |
+| **API 文档** | Swagger UI + OpenAPI 3.0 自动生成 | `springdoc-openapi-starter-webmvc-ui` |
 | **队列集成** | 异步任务 + 跨服务事件 | `AgentQueueChannels` |
 | **跨模块监听** | 接收其他模块事件 | `CrossModuleEventListener` |
 | **应用事件** | Agent 生命周期事件发布 | `AgentEventPublisher` |
