@@ -95,6 +95,9 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   /** 流程分类仓储（domain 层契约），管理 ydsz_flow_category 表 CRUD */
   private final FlowCategoryRepository categoryRepository;
 
+  /** DO → VO 转换器（infra 层能力，Service 层允许使用） */
+  private final WorkflowConverter converter;
+
   /**
    * 查询当前租户全部分类
    *
@@ -105,13 +108,13 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
    * @return 分类列表（按 sortNum 升序），无数据返回空列表
    */
   @Override
-  public List<FlowCategoryDO> listAll(String tenantId) {
+  public List<FlowCategoryVO> listAllVO(String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
-    List<FlowCategoryDO> list = categoryRepository.findAll(tid).stream()
+    List<FlowCategoryDO> doList = categoryRepository.findAll(tid).stream()
         .map(converter::entityToDO)
         .toList();
-    list.sort(Comparator.comparingInt(c -> c.getSortNum() == null ? 0 : c.getSortNum()));
-    return list;
+    doList.sort(Comparator.comparingInt(c -> c.getSortNum() == null ? 0 : c.getSortNum()));
+    return converter.flowCategoryListToVO(doList);
   }
 
   /**
@@ -124,11 +127,15 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
    */
   @Override
   public List<FlowCategoryTreeVO> tree(String tenantId) {
-    List<FlowCategoryDO> all = listAll(tenantId);
+    String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
+    List<FlowCategoryDO> all = categoryRepository.findAll(tid).stream()
+        .map(converter::entityToDO)
+        .toList();
+    all.sort(Comparator.comparingInt(c -> c.getSortNum() == null ? 0 : c.getSortNum()));
     if (all.isEmpty()) {
       return List.of();
     }
-    List<FlowCategoryTreeVO> flatList = WorkflowConverter.INSTANT.flowCategoryListToTreeVO(all);
+    List<FlowCategoryTreeVO> flatList = converter.flowCategoryListToTreeVO(all);
     return TreeBuilder.buildSimple(
         flatList,
         FlowCategoryTreeVO::getId,
