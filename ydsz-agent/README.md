@@ -26,8 +26,10 @@
 | **ReAct Agent** | `ReActAgentExecutor` | 推理-行动循环，支持 Tool Calling |
 | **Supervisor Agent** | `SupervisorAgentExecutor` | 主管-子 Agent 协同（路由/委派） |
 | **Plan-Execute Agent** | `PlanExecuteAgentExecutor` | 先规划后执行，复杂任务分解 |
-| **RAG Agent** | `RagAgentExecutor` | 检索增强生成，结合知识库回答 |
+| **RAG Agent** | `ReActAgentExecutor`（注入 ragService） | 检索增强生成，结合知识库回答（工厂将 RAG 类型路由到 ReAct 执行器并注入 `ragService`） |
 | **DAG Agent** | `DagOrchestrationExecutor` | DAG 编排执行（Node + Edge + State 图引擎） |
+
+> **说明**：P2-1 重构后 `RouterAgentExecutor` 已删除，多节点编排统一由 `DagOrchestrationExecutor` 承担。未知类型默认回退到 `ReActAgentExecutor`。
 
 ### 2. 核心能力清单
 
@@ -37,8 +39,9 @@
 | **Agent 应用门面** | 解耦 Controller 与内部服务（ChatService / AgentFactory / AgentDefinitionService） | `AgentFacade` / `AgentFacadeImpl` |
 | **同步对话** | 完整请求/响应 | `ChatService` |
 | **流式对话（SSE）** | 逐 token 推送，心跳保活 + 断连检测 | `ChatService` + `SseExecutor` |
+| **多模态对话** | 支持文本+图片多模态输入（Vision 模型），同步/流式均支持 | `AgentFacade.chat(MessageContent)` / `AgentFacade.stream(MessageContent)` |
 | **同步执行 Agent** | 等待完整响应后返回（ReAct / RAG / Plan-Execute / Supervisor / DAG） | `AgentFacade.execute` |
-| **流式执行 Agent（SSE）** | 逐 chunk 推送 LLM 响应，支持 DAG 节点级进度事件 | `AgentFacade.executeStream` |
+| **流式执行 Agent（SSE）** | 逐 chunk 推送 LLM 响应，支持 DAG 节点级进度事件回调 | `AgentFacade.executeStream(request, chunkConsumer, progressConsumer)` |
 | **批量对话** | JDK 21 结构化并发并行处理多条对话，单条失败不影响其他条目 | `AgentFacade.batchChat` |
 | **对话管理** | `Conversation` 聚合 + `ChatMessage` 值对象 + Redis 滑动窗口记忆 | `Conversation` / `ConversationMemory` |
 | **Prompt 模板** | `PromptTemplate` + `#{var}` 变量替换 + 数据库管理 + 评估对比 | `PromptManagementService` / `PromptTemplate` / `PromptEvaluationService` |
