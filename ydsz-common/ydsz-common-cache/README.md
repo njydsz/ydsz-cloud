@@ -90,7 +90,9 @@
 | `CacheKeyGenerator` | 缓存 Key 生成器 |
 | `AsyncFunction` | 异步函数接口 |
 | `CacheThreadPoolManager` | 缓存线程池管理器，实现 `DisposableBean` 在 Spring 容器关闭时自动清理 |
-| `RemovalListener` | 删除监听器接口（`@FunctionalInterface`），配合 `RemovalCause` 区分删除原因 |
+| `RemovalListener` | 删除监听器接口（`@FunctionalInterface`） |
+| `RemovalCause` | 删除原因枚举（EXPIRED / EXPLICIT / REPLACED / SIZE） |
+| `CacheLoadException` | 缓存加载异常（loader 执行失败时包装） |
 
 ### 8. Spring Cache 适配
 
@@ -250,7 +252,8 @@ management:
 | 端点 | 说明 | 触发条件 |
 |---|---|---|
 | `/actuator/health/cache` | Spring Cache 健康检查（包装 `YdszCacheManager` 中所有缓存） | `spring-boot-health` 在 classpath 且 `ydsz.cache.health-check.enabled=true` |
-| `CacheHealthIndicator.health()` | 编程式健康检查（直接调用） | 任何场景 |
+| `CacheHealthIndicator.health()` | 编程式健康检查（直接调用，不依赖 Spring Boot Health 抽象） | 任何场景 |
+| `SpringCacheHealthIndicator` | Spring Boot Actuator `HealthIndicator` 适配器，对接 `YdszCacheManager` 中所有缓存 | `spring-boot-health` 在 classpath 且 `ydsz.cache.health-check.enabled=true` |
 
 健康检查暴露信息（每个缓存）：
 

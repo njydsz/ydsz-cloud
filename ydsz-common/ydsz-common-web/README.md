@@ -25,6 +25,7 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 | `WebCorsProperties` | CORS 配置（`@Validated`） |
 | `WebTraceProperties` | Trace 配置（`@Validated`） |
 | `WebContentCacheProperties` | 请求体缓存配置 |
+| `FilterIgnoreProperties` | 过滤器忽略路径配置（`@Validated`） |
 | `WebCoreAutoConfiguration` | Web 核心自动配置（注册 Web 端核心组件，如拦截器、过滤器、健康检查等） |
 | `UserAgentConfiguration` | UserAgent 解析配置（`@ConditionalOnProperty` 门控） |
 
@@ -132,17 +133,17 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 
 > **使用前提**：本配置仅提供停机可观测性日志。真正的「优雅停机」需要应用层显式启用 `server.shutdown=graceful` 并配置 `spring.lifecycle.timeout-per-shutdown-phase`，Spring Boot 的 Web 服务器（Tomcat / Jetty / Undertow）会拒绝新请求并等待在飞请求完成。设置 `ydsz.web.shutdown.log-enabled=false` 可关闭停机日志。
 
-### 10. 过滤器链
+### 9. 过滤器链
 
 | 类 | 说明 |
 |---|---|
+| `ContentCachingFilter` | 请求体缓存过滤器（基于 `WebContentCacheProperties` 配置） |
 | `TraceIdResponseFilter` | TraceId 响应过滤器 |
 | `SecurityHeaderFilter` | 安全头过滤器（`@ConditionalOnBean` 守卫） |
-| `ContentCachingFilter` | 内容缓存过滤器（基于 `WebContentCacheProperties` 配置） |
 | `WebAuthFilter` | Web 认证过滤器 |
 | `TenantMdcFilter` | 租户 MDC 上下文过滤器 |
 
-### 11. 配置族
+### 10. 配置族
 
 | 类 | 说明 |
 |---|---|
@@ -152,6 +153,7 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 | `WebTraceProperties` | Trace 配置 |
 | `WebOpenApiConfiguration` | OpenAPI 配置 |
 | `WebContentCacheProperties` | 请求体缓存配置 |
+| `FilterIgnoreProperties` | 过滤器忽略路径配置（`ydsz.web.filter-ignore`），控制哪些路径跳过安全过滤器链 |
 
 ### 健康检查与指标
 
@@ -263,13 +265,15 @@ spring:
 | `ydsz.web.trace.log-request-body` | `false` | 记录请求体 |
 | `ydsz.web.trace.log-response-body` | `false` | 记录响应体 |
 
-### 内容缓存 / UserAgent / 健康检查
+### 内容缓存 / UserAgent / 健康检查 / 过滤器忽略
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.web.content-cache.max-size` | `2097152`（2MB） | 请求体缓存最大字节，超过不缓存（防 OOM） |
 | `ydsz.web.user-agent.enabled` | `true` | UserAgent 解析器开关 |
 | `ydsz.web.health-indicator.enabled` | `true` | 健康检查开关 |
+| `ydsz.web.filter-ignore.common-ignore-urls` | `[]` | 过滤器忽略路径列表（合并到内置默认值） |
+| `ydsz.web.filter-ignore.replace-builtin` | `false` | 是否整体替换内置默认忽略规则（false=合并，true=替换） |
 
 ### API 版本控制
 
@@ -304,9 +308,12 @@ spring:
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
+| `ydsz.webhook.enabled` | `true` | Webhook 调度器开关 |
+| `ydsz.webhook.connect-timeout-ms` | `5000` | HTTP 连接超时（毫秒） |
+| `ydsz.webhook.read-timeout-ms` | `10000` | HTTP 读超时（毫秒） |
+| `ydsz.webhook.max-connections` | `50` | HTTP 连接池最大连接数 |
+| `ydsz.webhook.max-connections-per-route` | `20` | 每个路由的最大连接数 |
 | `ydsz.web.shutdown.log-enabled` | `true` | 优雅停机日志开关 |
-
-> Webhook 调度器（`DefaultWebhookDispatcher`）基于内存订阅表与 `RestTemplate`，无独立配置属性；订阅通过 `WebhookDispatcher.register(...)` 编程式注册。
 
 ## 使用示例
 
@@ -511,5 +518,10 @@ ydsz:
 
 ## 变更记录
 
+- **v1.0.2**（2026-08-17）：
+  - 补全 `FilterIgnoreProperties`（`ydsz.web.filter-ignore.*`）配置文档
+  - 补全 `WebhookProperties`（`ydsz.webhook.*`）配置文档（原错误表述"无独立配置属性"已修正）
+  - 修正 Webhook 默认超时时间（connect=5000ms / read=10000ms）和连接池参数（max=50 / per-route=20）
+  - 补全 `WebFilterOrder` 常量类说明
 - **v1.0.1**（2026-08-17）：补全 `AbstractModuleHealthIndicator`（模块健康检查抽象基类）、`WebCoreAutoConfiguration`（Web 核心自动配置）文档
 - **v1.0.0**（2026-08-02）：补全 API 版本控制、Multipart 文件上传、Webhook 调度、优雅停机章节；新增接入方式、使用示例、注意事项章节；扩充配置项与自动配置表。响应压缩章节已删除（未实现）。

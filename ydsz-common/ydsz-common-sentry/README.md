@@ -11,8 +11,8 @@
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供统一指标采集、双方案日志发布、链路追踪、SLA 框架、告警收敛、熔断降级能力 |
-| **依赖** | common-core、common-util、common-exception、common-json；可选依赖 common-notify、spring-context、spring-aop、aspectjweaver、spring-web、spring-boot-autoconfigure、spring-boot-actuator、spring-boot-health、micrometer-core、logback-classic、apm-toolkit-trace、opentelemetry-api/sdk/sdk-trace/semconv |
-| **版本** | 1.0.0 |
+| **依赖** | 直接依赖 common-core、common-util、common-exception、common-json、resilience4j-core、resilience4j-circuitbreaker；可选依赖 spring-context、spring-aop、aspectjweaver、spring-web、spring-boot-autoconfigure、spring-boot-actuator、spring-boot-health、micrometer-core、logback-classic、apm-toolkit-trace、opentelemetry-api/sdk/sdk-trace/semconv、common-notify（provided） |
+| **版本** | 2.0.1 |
 
 ## 核心能力
 
@@ -34,6 +34,7 @@
 | `LokiLogPublisher` | Loki HTTP 推送实现 |
 | `DualLogPublisher` | 双发模式（ELK + Loki 同时推送），`failOnAllError` 控制所有失败才算失败 |
 | `AsyncLogPublisher` | 异步发布包装器，有界队列 + 批量发送 + 令牌桶限流 + 优雅关闭；队列满时丢弃最旧日志（背压降级） |
+| `NoOpLogPublisher` | 空操作发布器（降级），当未配置任何日志方案时使用，`isAvailable()` 返回 false |
 | `LogEventSerializer` | 日志事件序列化器（JSON） |
 | `SentryLogbackLayout` | Logback 自定义 Layout，输出结构化 JSON 日志（含 appName / profile / traceId） |
 
@@ -114,8 +115,17 @@
 | 类 | 说明 |
 |---|---|
 | `SentryAutoConfiguration` | Spring Boot 自动配置，`ydsz.sentry.enabled=true`（默认）时装配；`@EnableScheduling` 启用定时任务；内嵌 `MicrometerMetricsConfiguration` 等子配置 |
-| `OtelAutoConfiguration` | OpenTelemetry 自动配置 |
+| `MetricsAutoConfiguration` | 指标采集自动配置，注册 `MicrometerMetricsCollector` / `InMemoryMetricsCollector` / `SystemMetricsCollector` |
+| `LoggingAutoConfiguration` | 日志发布自动配置，按 `primary` 选择 ELK / Loki / Dual / Async 方案 |
+| `TracingAutoConfiguration` | 链路追踪自动配置，按 `primary` 选择 SkyWalking / OpenTelemetry / Default MDC |
+| `OtelAutoConfiguration` | OpenTelemetry SDK 自动配置（`ydsz.sentry.tracing.otel.enabled=true` 时激活） |
+| `AlertingAutoConfiguration` | 告警自动配置，注册 `AlertConverger` + `DefaultAlertPublisher` |
+| `SlaAutoConfiguration` | SLA 框架自动配置，注册 `DefaultSlaCollector` + `SlaMetricAspect` |
+| `SelfMonitorAutoConfiguration` | 自监控自动配置，周期性上报 Sentry 各组件可用性指标到 MetricsCollector |
+| `HealthIndicatorAutoConfiguration` | 健康检查自动配置，注册 `SentryHealthIndicator` + `SystemResourceHealthIndicator` |
+| `SentryMetricsAdapter` | Micrometer ↔ Sentry 指标适配器，将 Sentry 内部指标桥接到 Micrometer 体系 |
 | `SentryProperties` | 配置属性（`ydsz.sentry.*`） |
+| `SentryInfoContributor` | Actuator Info 贡献器，在 `/actuator/info` 暴露 Sentry 模块信息 |
 
 ## 接入方式
 
@@ -435,6 +445,11 @@ ydsz:
 
 ## 变更记录
 
+- **v2.0.1**（2026-08-17）：
+  - 更新依赖说明：标注 `resilience4j-core` / `resilience4j-circuitbreaker` 为直接依赖（scope=compile）
+  - 补全 `NoOpLogPublisher`（空操作发布器降级）文档
+  - 补全自动配置子类：`MetricsAutoConfiguration` / `LoggingAutoConfiguration` / `TracingAutoConfiguration` / `AlertingAutoConfiguration` / `SlaAutoConfiguration` / `SelfMonitorAutoConfiguration` / `HealthIndicatorAutoConfiguration`
+  - 补全 `SentryMetricsAdapter`（Micrometer ↔ Sentry 指标适配器）、`SentryInfoContributor` 文档
 - **v2.0.0**（2026-08-16）：
   - 配置验证：SentryProperties 添加 JSR-303 约束注解（@Min/@Max/@NotBlank），启动时自动校验
   - OTel SDK 不再注册为 GlobalOpenTelemetry，改为 Spring Bean 依赖注入传播

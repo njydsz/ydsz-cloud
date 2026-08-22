@@ -16,6 +16,14 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-cronjob-domain</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
+        </dependency>
         <!-- MapStruct（CronjobConverter 使用 @Mapper 注解） -->
         <dependency>
             <groupId>org.mapstruct</groupId>

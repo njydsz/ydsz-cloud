@@ -42,6 +42,7 @@
 | `ChunkedSSTTable` | 分块 SST 表，控制内存占用 |
 | `HeaderAnalyzer` | 表头识别与列元数据构建 |
 | `RowParser` | 行解析器（结合列元数据生成对象） |
+| `InputSourceDetector` | 输入源检测器（XLSX/XLS 格式自动识别、输入流优先级处理） |
 | `ExcelXmlParser` | XML 底层解析工具 |
 
 性能对比（100K 行）：
@@ -129,7 +130,8 @@
 |---|---|---|
 | `TabularRowMapper<T>` | 统一行映射器 | ✅ 已完成 |
 | `TabularReadListener<T>` | 读取监听器 | ✅ 已完成 |
-| CSV / TSV Reader/Writer | 文本分隔格式 | 🚧 规划中 |
+| `DefaultAnnotationRowMapper` | 基于 `@ExcelProperty` 注解的默认行映射器（csv 包） | ✅ 已完成 |
+| CSV / TSV Reader/Writer | 文本分隔格式完整流水线 | 🚧 规划中（`DefaultAnnotationRowMapper` 已实现行映射，完整 Reader/Writer 待建设） |
 | Parquet / ORC 列式存储读写 | 列式存储 | 🚧 规划中（当前未实现） |
 
 > 说明：`TabularFormat` / `TabularReader` / `TabularWriter` / `TabularReadContext` / `TabularWriteContext` 等接口与列式存储（`Columnar*` / `ParquetConfig` / `OrcConfig`）当前**未实现**；对象池（`ObjectPool` / `StylePool` / `GlobalObjectPool`）已移除，单元格样式通过 `StyleManager`（LRU）管理。
@@ -141,6 +143,7 @@
 | `ReadListener<T>` | 读取监听器（onStart / onData / onEnd / onError / onProgress / onBatchData） |
 | `ReadHandler` | 读取处理器（行级钩子） |
 | `WriteHandler` | 写入处理器（表头 / 行 / 单元格级钩子） |
+| `WriteLifecycleHandler` | 写入生命周期处理器（preWrite / postWrite / onRowComplete 钩子） |
 | `AnalysisContext` | 读取分析上下文（当前行号、总行数、Sheet 信息） |
 | `WriteContext` | 写入上下文（已写行数、Sheet 信息） |
 
@@ -163,6 +166,15 @@
 | `ExcelWebSupport` | Web 下载支持（Content-Type / Content-Disposition / UTF-8 文件名编码） |
 | `DownloadContext` | 下载 ThreadLocal 上下文（文件名 / Sheet 名，请求结束自动清理） |
 | `ExcelExportHelper` | 导出辅助工具 |
+
+### 12. 异常体系
+
+| 类 | 说明 |
+|---|---|
+| `ExcelException` | Excel 模块基础异常（非受检） |
+| `ExcelReadException` | 读取异常（解析失败、格式错误等） |
+| `ExcelWriteException` | 写入异常（生成失败、样式错误等） |
+| `ExcelExceptionCode` | Excel 模块错误码枚举 |
 
 ### 13. 健康检查与指标
 

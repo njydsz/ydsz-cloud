@@ -69,7 +69,7 @@ public class TagApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void batchBindTags(String fileNodeId, List<String> tagIds, String userId) {
-    // TODO: 实现查询节点、标签、已有绑定，然后调用 domainService
+    // TODO: 2026-09-01 实现查询节点、标签、已有绑定，然后调用 domainService。（@ydsz-team）
   }
 
   /**

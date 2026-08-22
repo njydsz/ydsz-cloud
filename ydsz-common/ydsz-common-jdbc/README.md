@@ -11,7 +11,7 @@
 | **层级** | L4 基础数据层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供 MyBatis-Plus 增强、动态数据源、数据权限、SQL 防火墙、SQL 追踪等能力 |
-| **依赖** | common-core、common-domain、common-exception、common-util、common-json；可选依赖 dynamic-datasource、spring-boot-actuator、spring-boot-health |
+| **依赖** | common-core、common-domain、common-exception、common-util、common-json、common-cache；可选依赖 dynamic-datasource、mysql-connector-j、postgresql、spring-boot-actuator、spring-boot-health |
 | **版本** | 1.0.0 |
 
 ## 核心能力
@@ -81,7 +81,7 @@ public class UserService {
 | `DataPermissionConfiguration` | 数据权限配置（`ydsz.jdbc.data-permission.*`） |
 | `DataPermissionContext` / `DataPermissionContextResolver` | 数据权限上下文与解析器 |
 | `DataScopeContextHolder` | ThreadLocal 持有器，供 `@AuthRowPermission` 切面直接注入结构化上下文 |
-| `DataScopeIdExpander` | 数据范围 ID 展开 SPI（部门/角色/自定义） |
+| `DataScopeIdExpander` / `NoopDataScopeIdExpander` | 数据范围 ID 展开 SPI（部门/角色/自定义）；未引入 common-tenant 时使用 Noop 实现 |
 | `DataPermissionIgnore` | 数据权限忽略标记 |
 | `DataPermissionHelper` / `JSqlParserHelper` | JSqlParser 辅助工具 |
 | `RowPermissionInnerInterceptor` | 行级数据权限（基于 SQL 解析注入 WHERE 条件） |
@@ -115,7 +115,7 @@ public class UserService {
 **生命周期**：`DataScopeContextHolder` 使用 ThreadLocal 存储，在 `AuthRowPermissionAspect` 的
 `try-finally` 块中确保清除，防止线程池复用场景下上下文泄漏。
 
-### 8. SQL 防火墙
+### 5. SQL 防火墙
 
 | 类 | 说明 |
 |---|---|
@@ -134,7 +134,7 @@ public class UserService {
 
 触发拦截时抛出 `SysException`，并打印 ERROR 日志记录原始 SQL（截断 200 字符）。
 
-### 9. SQL 追踪
+### 6. SQL 追踪
 
 | 类 | 说明 |
 |---|---|
@@ -163,18 +163,31 @@ SQL 指纹归一化规则：
 - 多空格折叠为单空格
 - 超长指纹截断到 200 字符
 
-### 10. 连接池
+### 7. 连接池
 
 | 类 | 说明 |
 |---|---|
 | `HikariCPPoolConfigurer` | HikariCP 连接池定制（挂载到 Spring Boot 默认 HikariCP 配置之上） |
 | `DataSourceHealthIndicator` | 数据源健康检查（见健康检查章节） |
 
-### 11. 租户隔离
+### 8. 配置属性类概览
+
+| 属性类 | 前缀 | 说明 |
+|---|---|---|
+| `JdbcProperties` | `ydsz.jdbc` | 主配置，含 enabled / mapperScanPackages / slowSql / sqlAudit / safeQuery |
+| `SlowSqlProperties` | `ydsz.jdbc.slow-sql` | 慢 SQL 配置：enabled / thresholdMillis / alertThresholdMillis |
+| `SqlAuditProperties` | `ydsz.jdbc.sql-audit` | SQL 审计配置：enabled / auditSelect / auditInsert / auditUpdate / auditDelete / logParameters / maxParameterLength / excludeTables / excludeMethods |
+| `SafeQueryProperties` | `ydsz.jdbc.safe-query` | 安全查询配置：enabled / strictMode / orderByWhitelist |
+| `PaginationProperties` | `ydsz.jdbc.pagination` | 分页配置：dbType / maxLimit / overflow |
+| `SqlFirewallProperties` | `ydsz.jdbc.sql-firewall` | SQL 防火墙配置：enabled / blockDropTable / blockTruncate / blockDeleteWithoutWhere / blockUpdateWithoutWhere / blockMultiStatement / blockPermissionOps / allowTables |
+| `DataPermissionConfiguration` | `ydsz.jdbc.data-permission` | 数据权限配置（独立 `@Configuration` 类） |
+| `FieldFillConfiguration` | `ydsz.jdbc.field-fill` | 字段填充配置（独立 `@Configuration` 类） |
+
+### 9. 租户隔离
 
 > 租户隔离拦截器（`TenantIsolationInterceptor`）、`TenantDataSourceRouter`、`TenantProperties` 均由 `common-tenant` 模块提供，并通过 `InnerInterceptorProvider` SPI 注入本模块拦截器链。本模块仅承载拦截器装配位置，无独立租户配置类。
 
-### 12. SPI 扩展点
+### 10. SPI 扩展点
 
 | 接口 | 说明 |
 |---|---|
@@ -195,7 +208,7 @@ SQL 指纹归一化规则：
 | 600 | Pagination | 分页 |
 | 700 | SqlFirewall | SQL 防火墙（链末端安全校验） |
 
-### 14. 类型处理器
+### 11. 类型处理器
 
 | 类 | 说明 |
 |---|---|
@@ -204,7 +217,7 @@ SQL 指纹归一化规则：
 | `MapTypeHandler` | `Map` ↔ JSON 字符串 |
 | `IntegerStringTypeHandler` | `Integer` ↔ `String` 转换处理 |
 
-### 15. 健康检查
+### 12. 健康检查
 
 | 类 | 说明 |
 |---|---|
@@ -218,7 +231,7 @@ SQL 指纹归一化规则：
 - 等待线程数 > max/2 → 标记为 DEGRADED（`reason=High connection wait queue`）
 - 连接池利用率 > 90% → 标记为 DEGRADED（`reason=Connection pool near exhaustion`）
 
-### 16. 实体基类
+### 13. 实体基类
 
 | 类 | 说明 |
 |---|---|
@@ -228,7 +241,7 @@ SQL 指纹归一化规则：
 
 业务模块应直接继承 `MpBaseEntity` 等类，而非 `common-domain` 的 `BaseEntity`。`MpBaseEntity` 使用 `@Version` 与 `@TableLogic` 注解（MP 原生机制）。
 
-### 17. 监控
+### 14. 监控
 
 | 指标 | 说明 |
 |---|---|
@@ -274,26 +287,26 @@ public class User extends MpBaseEntity<Long> {
 
 ## 配置项
 
+### 顶部摘要
+
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.jdbc.enabled` | true | 是否启用 JDBC 模块 |
-| `ydsz.jdbc.sql-firewall.enabled` | true | SQL 防火墙开关 |
-| `ydsz.jdbc.sql-audit.enabled` | false | SQL 审计开关 |
-| `ydsz.jdbc.slow-sql.enabled` | true | 慢 SQL 追踪开关 |
-| `ydsz.jdbc.safe-query.enabled` | true | 安全查询拦截开关 |
-| `ydsz.jdbc.data-permission.enabled` | true | 数据权限开关 |
-| `ydsz.jdbc.pagination.max-limit` | - | 最大分页大小（安全加固） |
-| `ydsz.jdbc.pagination.db-type` | - | 显式指定数据库类型 |
-| `ydsz.jdbc.dynamic-datasource.enabled` | true | 动态数据源开关 |
-| `ydsz.jdbc.read-write-splitting.enabled` | false | 读写分离开关 |
-| `ydsz.jdbc.read-write-splitting.master-ds` | master | 主库数据源名称 |
-| `ydsz.jdbc.read-write-splitting.slave-ds-list` | `[slave]` | 从库数据源名称列表 |
-| `ydsz.jdbc.read-write-splitting.load-balance-strategy` | round-robin | 负载均衡策略（round-robin/random/weighted） |
-| `ydsz.jdbc.read-write-splitting.weights` | - | 从库权重映射（weighted 策略生效） |
-| `ydsz.jdbc.slow-sql.enabled` | false | 慢 SQL 检测开关 |
+| `ydsz.jdbc.mapper-scan-packages` | `["com.njydsz.**.mapper"]` | MyBatis Mapper 扫描包 |
+
+### 慢 SQL 追踪（SlowSqlProperties）
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.jdbc.slow-sql.enabled` | false | 慢 SQL 检测开关（默认关闭，需显式开启） |
 | `ydsz.jdbc.slow-sql.threshold-millis` | 1000 | 慢 SQL 阈值（ms） |
 | `ydsz.jdbc.slow-sql.alert-threshold-millis` | 3000 | 慢 SQL 告警阈值（ms） |
-| `ydsz.jdbc.sql-audit.enabled` | false | SQL 审计开关 |
+
+### SQL 审计（SqlAuditProperties）
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.jdbc.sql-audit.enabled` | false | SQL 审计开关（默认关闭） |
 | `ydsz.jdbc.sql-audit.audit-select` | false | 是否审计 SELECT |
 | `ydsz.jdbc.sql-audit.audit-insert` | true | 是否审计 INSERT |
 | `ydsz.jdbc.sql-audit.audit-update` | true | 是否审计 UPDATE |
@@ -302,7 +315,28 @@ public class User extends MpBaseEntity<Long> {
 | `ydsz.jdbc.sql-audit.max-parameter-length` | 500 | 参数最大长度 |
 | `ydsz.jdbc.sql-audit.exclude-tables` | - | 排除审计的表名列表 |
 | `ydsz.jdbc.sql-audit.exclude-methods` | - | 排除审计的 Mapper 方法名列表 |
-| `ydsz.jdbc.sql-firewall.enabled` | false | SQL 防火墙开关 |
+
+### 安全查询（SafeQueryProperties）
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.jdbc.safe-query.enabled` | true | 安全查询拦截开关 |
+| `ydsz.jdbc.safe-query.strict-mode` | false | 严格模式（true: 抛异常；false: 仅日志警告） |
+| `ydsz.jdbc.safe-query.order-by-whitelist` | - | 排序字段白名单（配置后仅允许白名单字段参与排序，为空时仅用正则校验） |
+
+### 分页（PaginationProperties）
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.jdbc.pagination.db-type` | - | 数据库类型（mysql/oracle/postgresql/sqlserver/h2 等，不配则自动检测） |
+| `ydsz.jdbc.pagination.max-limit` | 500 | 单页最大记录数（安全加固，防止全表扫描） |
+| `ydsz.jdbc.pagination.overflow` | false | 页码溢出是否继续查询 |
+
+### SQL 防火墙（SqlFirewallProperties）
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.jdbc.sql-firewall.enabled` | false | SQL 防火墙开关（默认关闭，需显式开启） |
 | `ydsz.jdbc.sql-firewall.block-drop-table` | true | 拦截 DROP 操作 |
 | `ydsz.jdbc.sql-firewall.block-truncate` | true | 拦截 TRUNCATE 操作 |
 | `ydsz.jdbc.sql-firewall.block-delete-without-where` | true | 拦截无 WHERE 的 DELETE |
@@ -311,7 +345,18 @@ public class User extends MpBaseEntity<Long> {
 | `ydsz.jdbc.sql-firewall.block-permission-ops` | true | 拦截 GRANT/REVOKE |
 | `ydsz.jdbc.sql-firewall.allow-tables` | - | DROP/TRUNCATE 表白名单 |
 
-> 说明：`ydsz.jdbc.hikari.*`、`ydsz.jdbc.tenant-isolation.*`、`ydsz.jdbc.read-write-splitting.*`、`ydsz.jdbc.circuit-breaker.*`、`ydsz.jdbc.logical-delete.*`、`ydsz.jdbc.optimistic-lock.*` 等配置组**不存在**——连接池沿用 Spring Boot 默认 HikariCP 配置，租户隔离由 common-tenant 提供，读写分离由 Dynamic-Datasource 数据源层面实现，熔断/自研逻辑删除/自研乐观锁已移除。
+### 动态数据源
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.jdbc.dynamic-datasource.enabled` | true | 动态数据源开关 |
+| `ydsz.jdbc.read-write-splitting.enabled` | false | 读写分离开关 |
+| `ydsz.jdbc.read-write-splitting.master-ds` | master | 主库数据源名称 |
+| `ydsz.jdbc.read-write-splitting.slave-ds-list` | `[slave]` | 从库数据源名称列表 |
+| `ydsz.jdbc.read-write-splitting.load-balance-strategy` | round-robin | 负载均衡策略（round-robin/random/weighted） |
+| `ydsz.jdbc.read-write-splitting.weights` | - | 从库权重映射（weighted 策略生效） |
+
+> 说明：`ydsz.jdbc.hikari.*`、`ydsz.jdbc.tenant-isolation.*`、`ydsz.jdbc.circuit-breaker.*`、`ydsz.jdbc.logical-delete.*`、`ydsz.jdbc.optimistic-lock.*` 等配置组**不存在**——连接池沿用 Spring Boot 默认 HikariCP 配置，租户隔离由 common-tenant 提供，读写分离由 Dynamic-Datasource 数据源层面实现，熔断/自研逻辑删除/自研乐观锁已移除。
 
 ## 使用示例
 
@@ -417,7 +462,11 @@ ydsz:
 2. **逻辑删除**：使用 MP `@TableLogic` 注解，`MpBaseEntity` 已内置 `deleted` 字段。
 3. **SQL 防火墙位置**：`SqlFirewallInnerInterceptor` 置于拦截器链末端，在所有 SQL 改写完成后做安全校验，避免改写后的 SQL 被误判。
 4. **慢 SQL 指纹**：使用 `SqlFingerprint` 归一化 SQL 作为 Micrometer tag，避免原始 SQL 高基数导致 Prometheus 内存爆炸。
-5. **租户隔离**：拦截器由 `common-tenant` 模块通过 SPI 注入，本模块仅承载装配；未引入 `common-tenant` 时 `tenant_id` 字段被忽略（DDL 默认值 '1'）。
+5. **租户隔离**：拦截器由 `common-tenant` 模块通过 SPI 注入，本模块仅承载装配；未引入 `common-tenant` 时 `DataScopeIdExpander` 使用 `NoopDataScopeIdExpander`，`tenant_id` 字段被忽略（DDL 默认值 '1'）。
+6. **SQL 防火墙默认关闭**：`ydsz.jdbc.sql-firewall.enabled` 默认 `false`，需显式开启。
+7. **安全查询默认开启**：`ydsz.jdbc.safe-query.enabled` 默认 `true`，所有查询方法自动拦截注入 ORDER BY 子句 SQL。
+8. **慢 SQL 默认关闭**：`ydsz.jdbc.slow-sql.enabled` 默认 `false`，需显式开启。
+9. **配置拆分为 7 个属性类**：每组配置由独立的 `@ConfigurationProperties` 类承载，`MybatisPlusConfiguration` 统一通过 `@EnableConfigurationProperties` 注册。
 
 ## 变更记录
 

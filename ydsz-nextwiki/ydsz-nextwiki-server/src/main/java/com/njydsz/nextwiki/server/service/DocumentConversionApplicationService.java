@@ -97,7 +97,7 @@ public class DocumentConversionApplicationService {
     log.info(
         "[DocumentConversionApplicationService] HTML→PDF 转换（TODO: 待集成 OpenPDF/Flying Saucer, HTML 长度: {}）",
         html.length());
-    // TODO: 使用 OpenPDF 或 Flying Saucer 库将 HTML 转为 PDF
+    // TODO: 2026-09-01 使用 OpenPDF 或 Flying Saucer 库将 HTML 转为 PDF。（@ydsz-team）
     outputStream.write(html.getBytes(StandardCharsets.UTF_8));
   }
 

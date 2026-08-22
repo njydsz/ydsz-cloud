@@ -11,8 +11,8 @@
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供 WebSocket STOMP 端点、集群广播、离线消息、限流、熔断、重试、心跳保活、健康检查等能力 |
-| **依赖** | common-core、common-exception、common-json、common-auth（可选）；可选依赖 spring-boot-actuator、micrometer-core、spring-data-redis、common-redis |
-| **版本** | 1.0.0 |
+| **依赖** | 直接依赖 common-core、common-util、common-exception、common-json、common-redis、spring-boot-starter-websocket（optional）、spring-boot-autoconfigure（provided）；可选依赖 spring-boot-actuator、micrometer-core、common-auth |
+| **版本** | 1.1.1 |
 
 ## 核心能力
 
@@ -21,7 +21,7 @@
 | 类 | 说明 |
 |---|---|
 | `WebSocketAutoConfiguration` | 主自动配置类，`@EnableScheduling` 开启心跳与重试刷新定时任务，按依赖顺序注册全部 Bean |
-| `WebSocketClusterAutoConfiguration` | 集群自动配置类，注册 `WebSocketClusterPublisher` / `WebSocketClusterSubscriber` / `RedisMessageListenerContainer` |
+| `WebSocketClusterAutoConfiguration` | 集群自动配置类（`ydsz.websocket.cluster.enabled=true` 时激活），注册 `WebSocketClusterPublisher` / `WebSocketClusterSubscriber` / `RedisMessageListenerContainer` |
 | `WebSocketConfigurer` | 实现 `WebSocketMessageBrokerConfigurer`，注册 STOMP 端点、SimpleBroker（`/topic` / `/queue`）、应用前缀 `/app`、消息大小限制、发送超时、入站通道拦截器 |
 | `WebSocketProperties` | 配置属性（`ydsz.websocket.*`），含端点、心跳、消息大小、集群、离线、限流、熔断、重试、连接限制 9 个子配置 |
 | `WebSocketConstants` | 常量定义（Redis key 前缀、推送类型等） |
@@ -97,18 +97,26 @@
 | `JsonMessageSerializer` | 默认 JSON 序列化器实现 |
 | `MessageFilter` | 消息过滤器接口（SPI 扩展点），任一 Filter 返回 false 则跳过推送 |
 | `MessagePriority` | 消息优先级枚举（URGENT=1 / HIGH=2 / NORMAL=3 / LOW=4） |
-| `StompMessageInterceptor` | STOMP 入站通道拦截器，CONNECT 注入 traceId + SEND 限流 + 审计 |
+| `StompMessageInterceptor` | STOMP 入站通道拦截器（`ChannelInterceptor`），CONNECT 注入 traceId + SEND 限流 + 审计日志 |
+
+### 11. 在线用户管理（补充）
+
+| 类 | 说明 |
+|---|---|
+| `LocalSessionRegistry` | 本地 Session 注册表，管理当前节点所有活跃 WebSocket Session，支持按 userId 查询 |
+| `SessionWebSocketHandlerDecoratorFactory` | Session WebSocket Handler 装饰器工厂，用于扩展默认 Session 行为（如添加自定义握手拦截） |
 
 > **消息压缩建议**：推荐使用 WebSocket 协议层 permessage-deflate（RFC 7692）压缩，无需应用层 GZIP+Base64 编码。可在 `WebSocketConfigurer` 中通过 `setAllowedNativeHeaders` 或在反向代理层启用。
 
-### 11. 可观测性
+### 12. 可观测性
 
 | 类 | 说明 |
 |---|---|
 | `WebSocketMetrics` | Micrometer 指标采集（推送次数/耗时，按 type 与 result 分组）；MeterRegistry 不存在时降级为 no-op |
+| `NetworkMetrics` | 网络层指标采集（连接数/消息吞吐量/字节流量），基于 Micrometer |
 | `WebSocketHealthIndicator` | Actuator 健康检查（详见健康检查章节） |
 | `WebSocketAuditService` | 审计日志服务，专用 Logger `WS_AUDIT`，同步输出结构化审计日志 |
-| `WebSocketTraceContext` | 链路追踪辅助工具，MDC traceId 跨节点传播 |
+| `WebSocketTraceContext` | 链路追踪辅助工具，MDC traceId 跨节点传播（集群广播时恢复 traceId） |
 
 ## 接入方式
 
@@ -397,5 +405,10 @@ public class ProtobufMessageSerializer implements MessageSerializer {
 
 ## 变更记录
 
+- **v1.1.1**（2026-08-17）：
+  - 更新依赖说明：标注 common-redis / common-util / common-json / spring-boot-autoconfigure 为直接依赖，移除不存在的 common-auth 直接依赖（改为 optional）
+  - 补全 `LocalSessionRegistry`、`SessionWebSocketHandlerDecoratorFactory`（Session 包）文档
+  - 补全 `NetworkMetrics`（网络层指标）文档
+  - 补全 `WebSocketClusterAutoConfiguration` 激活条件说明
 - **v1.1.0**（2026-08-16）：精简过度设计 — 移除 MessageCompressor（推荐使用 permessage-deflate）、SlowConnectionDetector（职责错位）、MessageAckService（半成品）；移除 LocalSessionRegistry Serializable 标记；修复 RateLimiter 原子性（Lua 脚本）；精简心跳机制（统一 Redis 存储，消除双重 TTL）；精简审计服务（移除自研异步框架）；精简熔断器（移除事件消费者）；移除未使用配置项（Compression、SlowConnection、Ack、dbPersistThreshold）
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节

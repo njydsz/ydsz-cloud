@@ -11,7 +11,7 @@
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供多存储后端统一抽象、分片上传、断点续传、秒传、病毒扫描、生命周期管理、健康检查等能力 |
-| **依赖** | common-core、common-exception、common-util；可选依赖 spring-boot-actuator、micrometer-core、spring-data-redis、common-redis |
+| **依赖** | common-core、common-util、common-exception、common-redis、common-json、tika-core；可选依赖 spring-boot-actuator、micrometer-core、spring-boot-health、common-lock、common-thread、spring-boot-starter-data-redis、aliyun-sdk-oss、minio、awssdk-s3、awssdk-auth、qiniu-java-sdk、cos_api、esdk-obs-java、spring-boot-configuration-processor |
 | **版本** | 1.1.0 |
 
 ## 核心能力
@@ -56,6 +56,7 @@
 | `ListObjectsResult` | 列举结果（对象列表 + nextCursor） |
 | `DirectoryTree` | 目录树结构 |
 | `FileStorage` | 文件存储实体（含 fileName / suffix / size / mimeType / 类型标记） |
+| `FileOps` | 文件操作门面工具类，提供文件名清洗、后缀提取、存储键生成、Path → MultipartFile 适配等通用能力 |
 
 ### 5. 分片上传与断点续传
 
@@ -83,7 +84,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `FileTypeDetector` | 文件类型检测器（MIME Type 推断） |
+| `FileTypeDetector` | 文件类型检测器（MIME Type 推断，基于 Apache Tika） |
 | `FileTypeValidator` | 文件类型校验器，支持后缀白名单 + Magic Number 双重校验，可由 `ydsz.file.check-magic-number` 关闭 |
 | `MagicNumberRegistry` | Magic Number 注册表 |
 | `FileValidationException` | 校验异常 |
@@ -117,7 +118,8 @@
 
 | 类 | 说明 |
 |---|---|
-| `FileConfiguration` | Spring Boot 自动配置入口，注册全部 Bean，`@EnableScheduling` 开启定时任务，每小时清理过期分片上下文 |
+| `FileConfiguration` | Spring Boot 自动配置入口（`@ConditionalOnProperty(prefix="ydsz.file", name="enabled", havingValue="true", matchIfMissing=true)`），注册全部 Bean（`MultipartContextStore`、`CheckpointStore`、`CheckpointService`、`FileMetrics`、`VirusScanner`、`StorageRetryHelper`、`FileDedupService`、`FileLifecycleManager`、`FileTypeValidator`、`IFileStorageProvider`、`FileHealthIndicator`） |
+| `FileScheduler` | 定时任务调度器，独立于 `FileConfiguration`（`@EnableScheduling` + `@ConditionalOnBean(MultipartContextStore.class)`），按 `ydsz.file.multipart-cleanup-interval-ms` 定时清理过期分片上下文 |
 | `FileProperties` | 文件存储主配置属性（`ydsz.file.*`） |
 | `FileUploadProperties` | 分片上传配置属性（`ydsz.file.upload.*`） |
 | `FileLifecycleProperties` | 生命周期配置属性（`ydsz.file.lifecycle.*`） |
@@ -209,9 +211,11 @@ ydsz:
 | `ydsz.file.retry-count` | `3` | 存储操作失败重试次数（0-10） |
 | `ydsz.file.temporary-signature-expiry` | `3600`（1h） | 私有 URL 过期时间（秒） |
 | `ydsz.file.part-size` | `5242880`（5MB） | 分片大小（字节，与 S3 协议对齐） |
+| `ydsz.file.memory-buffer-threshold` | `16777216`（16MB） | 上传时内存缓冲阈值（字节），小于此值时字节缓冲，大于时使用磁盘临时文件避免 OOM |
 | `ydsz.file.checkpoint-dir` | 系统临时目录 | 断点续传检查点目录 |
 | `ydsz.file.check-magic-number` | true | 是否启用 Magic Number 文件头校验 |
 | `ydsz.file.concurrency-control.enabled` | true | 是否启用上传并发保护 |
+| `ydsz.file.health-check-interval-seconds` | `30` | 健康检查间隔（秒） |
 
 ### `ydsz.file.upload.*`（FileUploadProperties）
 
@@ -418,7 +422,7 @@ public Result<String> complete(
 
 < 100MB：走普通 `upload()` 即可，无需断点续传
 100MB ~ 2GB：推荐使用本节的断点续传模式
-\> 2GB：建议改用对象存储的分片上传 SDK（如 MinIO 的 `putObject` 流式封装）或对接 tus 协议
+> 2GB：建议改用对象存储的分片上传 SDK（如 MinIO 的 `putObject` 流式封装）或对接 tus 协议
 
 ---
 
@@ -470,7 +474,7 @@ public class CephStorageRegisterConfig {
 
 | 端点 | 说明 | 触发条件 |
 |---|---|---|
-| `/actuator/health/file` | 存储后端健康检查，由 `FileHealthIndicator` 注册 | `spring-boot-actuator` 在 classpath 且 `ydsz.file.enabled=true` |
+| `/actuator/health/file` | 存储后端健康检查，由 `FileHealthIndicator` 注册 | `spring-boot-health` 在 classpath 且 `ydsz.file.enabled=true` |
 
 `FileHealthIndicator` 暴露的详情字段：
 
@@ -499,7 +503,7 @@ public class CephStorageRegisterConfig {
 1. **生产环境必须替换 NoOpVirusScanner**：默认装配的 `NoOpVirusScanner` 仅返回 CLEAN 占位，不真正扫描病毒。生产环境必须实现 `VirusScanner` 接口注册为 Spring Bean，否则存在安全风险。
 2. **启用秒传必须配套 Bucket Lifecycle 策略**：`FileDedupService` 基于 SHA-256 的文件内容去重（30 天 TTL）实现秒传。秒传命中后返回的 URL 可能指向已物理删除的对象（如果存储端已配置了 Bucket Lifecycle 自动清理）。生产环境在启用秒传的同时必须在存储桶上配置 Lifecycle 策略：例如"30 天内未访问的对象自动转冷 / 删除"，避免"幽灵秒传"。
 3. **并发守卫 REJECT 策略需前端配合**：`UploadConcurrencyGuard` 在同一 objectKey 被并发上传时采用快速失败策略（抛 BusinessException，错误码 `FILE_CONCURRENT_UPLOAD`）。前端需要在 Controller 层捕获该异常并展示"文件正在上传中"的友好提示，避免直接暴露技术异常。
-4. **Redis 不是必须依赖**：`MultipartContextStore` 与 `CheckpointStore` 优先使用 Redis，Redis 不可用时自动降级到内存 / 本地文件实现。多实例部署时必须引入 Redis，否则分片上传上下文无法跨实例共享。
+4. **Redis 是必需依赖**：`MultipartContextStore` 与 `CheckpointStore` 默认使用 Redis。Redis 不可用时自动降级到内存 / 本地文件实现，但多实例部署时分片上传上下文无法跨实例共享。`ydsz-common-redis` 已作为必需依赖引入。
 5. **分片大小默认 5MB**：与 S3 协议对齐，过小会增加请求数，过大降低并发度与失败恢复效率。可通过 `ydsz.file.part-size` 调整。
 6. **路径穿越防护**：`AbstractFileStorage.resolveObjectKey` 会拒绝空字节、`..` 路径穿越符（含 URL 编码 `%2e%2e`），并通过 `Paths.normalize()` 二次校验，业务层无需重复实现。
 7. **批量删除不保证原子性**：`batchDelete` 基于 `parallelStream` 并行执行，部分失败时已成功的对象不可恢复，业务方需根据 `BatchDeleteResult.getFailedMap()` 进行业务补偿。
@@ -507,7 +511,8 @@ public class CephStorageRegisterConfig {
 9. **生命周期清理 dry-run**：生产环境首次启用建议 `dry-run=true` 试运行，确认清理范围后再切换为 `false`。
 10. **`generateUploadPolicy` 与 `generatePresignedUploadUrl` 不是所有存储后端都支持**：默认抛 `UnsupportedOperationException`，各云存储实现类按需覆盖。
 11. **分片 MD5 校验默认关闭**：启用 `ydsz.file.upload.chunk-md5-check=true` 会增加内存与 CPU 开销，建议仅在高一致性场景启用。启用后流式累积 MD5 仅缓存 `MessageDigest` 状态（约 128 字节），不缓存原始分片数据，避免 OOM。
-12. **`FileConfiguration` 启用 `@EnableScheduling`**：引入本模块后会自动开启 Spring 调度，每小时清理过期分片上下文。若业务模块已有 `@EnableScheduling`，Spring 会自动去重，无副作用。
+12. **`@EnableScheduling` 独立于 `FileSchedule`**：`FileScheduler` 持有 `@EnableScheduling`，与 `FileConfiguration` 分离。引入本模块后 `FileScheduler` 自动开启 Spring 调度，按 `ydsz.file.multipart-cleanup-interval-ms`（默认 3600000ms）清理过期分片上下文。若业务模块已有 `@EnableScheduling`，Spring 会自动去重，无副作用。
+13. **`memoryBufferThreshold` 控制上传缓冲行为**：小于阈值时使用字节缓冲（全部在内存），大于时切换到磁盘临时文件上传，避免大文件 OOM。可通过 `ydsz.file.memory-buffer-threshold` 调整（默认 16MB）。
 
 ## 指标监控与 Grafana 看板
 
@@ -537,10 +542,11 @@ public class CephStorageRegisterConfig {
 ## 变更记录
 
 - **v1.1.0**（2026-08-16）：
-  - 新增 `FileOps` 门面工具类，提供文件名清洗、后缀提取、存储键生成、Path → MultipartFile 适配等通用能力
-  - 清理业务模块重复依赖：ydsz-system / ydsz-agent / ydsz-message / ydsz-userinfo / ydsz-literule 移除未使用的 ydsz-common-file pom 声明
-  - ydsz-nextwiki 移除直接 minio SDK 依赖、ydsz-cronjob 移除幽灵 minio 配置
-  - ydsz-workflow 误导性 Javadoc `FileStorageService` 更正为 `IFileStorageProvider`
+  - `ydsz-common-redis` 和 `ydsz-common-json` 升级为必需依赖；新增 `tika-core` 必需依赖
+  - 新增 `ydsz-common-lock`、`ydsz-common-thread` 可选依赖
+  - `FileScheduler` 从 `FileConfiguration` 中分离为独立类，持有 `@EnableScheduling`
+  - 新增 `FileProperties.memoryBufferThreshold` 配置项（默认 16MB 上传内存缓冲阈值）
+  - 新增 `FileOps` 门面工具类
   - 默认启用生命周期清理（`FileLifecycleProperties.enabled` 默认值由 false 改为 true）
   - 并发守卫快速失败语义补充前端配合说明
   - 补充 Nacos 共享配置基线、秒传 Bucket Lifecycle 配套说明

@@ -9,6 +9,7 @@ import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
+import com.njydsz.cronjob.domain.dto.dag.JobDagSaveDTO;
 import com.njydsz.cronjob.domain.dto.post.JobDagPostDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;

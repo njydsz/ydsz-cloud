@@ -193,8 +193,7 @@ public class SpaceTemplateApplicationService {
         "[SpaceTemplateApplicationService] 使用模板创建空间: templateId={}, spaceId={}, spaceName={}",
         templateId, space.getId(), spaceName);
 
-    // TODO: 根据 template.getStructureJson() 创建初始目录树
-    // 这部分逻辑未来由具体的结构解析服务处理
+    // TODO: 2026-09-01 根据 template.getStructureJson() 创建初始目录树，具体逻辑由结构解析服务处理。（@ydsz-team）
 
     return space;
   }

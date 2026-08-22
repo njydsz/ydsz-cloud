@@ -216,6 +216,9 @@ public class CustomTraceProperties extends BaseTraceProperties {
 | `ydsz.base.security-headers.csp` | `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'` | 内容安全策略头部 |
 | `ydsz.base.security-headers.referrer-policy` | `strict-origin-when-cross-origin` | 引用策略头部 |
 | `ydsz.base.security-headers.excludes` | `[]` | 排除路径列表（Ant 风格） |
+| `ydsz.base.request.enabled` | true | 是否启用请求体大小限制 |
+| `ydsz.base.request.max-body-size` | `10485760`（10MB） | 最大请求体大小（字节），超限返回 413 |
+| `ydsz.base.request.configure-container` | true | 是否自动配置嵌入式容器的 maxPostSize |
 | `ydsz.base.trace.enabled` | true | 是否启用链路追踪（子模块前缀为 `ydsz.web.trace` / `ydsz.app.trace`） |
 | `ydsz.base.trace.response-header-enabled` | true | 是否在响应头输出请求 ID |
 | `ydsz.base.trace.request-id-header-name` | `X-Request-Id` | 请求 ID 响应头名称 |
@@ -402,5 +405,10 @@ AbstractMetricsHolder.recordDuration(registry, "ydsz_flow_", "eval_duration_ms",
 
 ## 变更记录
 
-- **v1.0.1**（2026-08-17）：补全限流（`RateLimiter` / `InMemoryRateLimiter` / `RateLimitInterceptor` / `RateLimit` / `RateLimitAutoConfiguration`）、幂等（`IdempotentStore` / `InMemoryIdempotentStore` / `IdempotentInterceptor` / `Idempotent` / `IdempotentException` / `IdempotentAutoConfiguration`）、i18n（`SpringMessageResolver` / `MessageResolverRegistry` / `MessageResolverHolder`）、`CoreHealthIndicator` 文档
+- **v1.0.2**（2026-08-17）：
+  - 补全 `BaseSecurityHeadersProperties`（`ydsz.base.security-headers`）、`BaseRequestProperties`（`ydsz.base.request`）/ `RequestBodySizeLimitFilter` 文档
+  - 补全 `api` 包（`ApiVersion` / `ApiVersionOpenApiCustomizer` / `ApiVersionResolver`）文档
+  - 补全 `HttpHeaderConstants`、`ConditionalOnPlatform` / `PlatformCondition` / `PlatformMode` 文档
+  - 更新依赖说明：标注 common-auth / common-safe 为直接依赖（非传递）
+- **v1.0.1**（2026-08-17）：补全限流、幂等、i18n（`SpringMessageResolver` / `MessageResolverRegistry` / `MessageResolverHolder`）、`CoreHealthIndicator` 文档
 - **v1.0.0**（2026-08-02）：按 ydsz-common-jdbc 9 章节标准重构 README；补全横切点执行顺序表、SPI 扩展点（含抽象基类扩展点）、健康检查端点、注意事项；统一版本号为 1.0.0

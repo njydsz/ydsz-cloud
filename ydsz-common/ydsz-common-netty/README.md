@@ -2,7 +2,7 @@
 
 > Netty 网络通信框架（L5 业务服务层）
 
-提供 TCP Server/Client 抽象、断线重连、心跳空闲检测、SSL/TLS、LengthField 编解码、EventLoop 池管理、Channel 组管理、Epoll/KQueue 原生传输、流量整形、Micrometer 指标监控、健康检查能力，是 YDSZ 项目网络通信的统一基座。
+提供 TCP Server/Client 抽象、断线重连、心跳空闲检测、SSL/TLS、LengthField 编解码、EventLoop 池管理、Channel 组管理、Epoll/KQueue 原生传输、连接控制、流量整形、Micrometer 指标监控、Actuator 端点、健康检查能力，是 YDSZ 项目网络通信的统一基座。
 
 ## 模块定位
 
@@ -10,9 +10,9 @@
 |---|---|
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **作用** | 提供 TCP Server/Client 抽象、编解码、SSL/TLS、断线重连、流量整形、指标监控等能力 |
-| **依赖** | common-core、common-util、common-exception、common-json、netty-all；可选依赖 spring-boot-actuator、spring-boot-health、micrometer-core |
-| **版本** | 1.0.0 |
+| **作用** | 提供 TCP Server/Client 抽象、编解码、SSL/TLS、断线重连、连接控制、流量整形、指标监控等能力 |
+| **依赖** | common-core、common-util、common-exception、common-json、netty-all；provided 依赖 spring-boot-autoconfigure、micrometer-core；可选依赖 spring-boot-actuator、spring-boot-health、spring-boot-configuration-processor |
+| **版本** | 2.0.0 |
 
 ## 核心能力
 
@@ -29,8 +29,8 @@
 
 | 类 | 说明 |
 |---|---|
-| `LengthFieldFrameDecoder` | Length Field 拆包器，解决 TCP 粘包/半包问题（默认最大帧 1MB） |
-| `LengthFieldCodec` | Length Field 编解码组合（Decoder + LengthFieldPrepender 一站式），协议格式：4 字节长度 + Payload |
+| `LengthFieldFrameDecoder` | LengthField 拆包器，解决 TCP 粘包/半包问题（默认最大帧 1MB） |
+| `LengthFieldCodec` | LengthField 编解码组合（Decoder + LengthFieldPrepender 一站式），协议格式：4 字节长度 + Payload |
 | `JsonMessageCodec<T>` | JSON 消息编解码器，基于 `YdszJson` |
 
 协议格式：
@@ -57,6 +57,7 @@
 |---|---|
 | `ChannelEventDispatcher` | Channel 事件分发器（连接 / 断开 / 异常等事件分发到监听器） |
 | `ChannelEventListener` | Channel 事件监听器 SPI 接口，业务侧实现订阅 Channel 生命周期事件 |
+| `NettyPipelineDiagnostics` | Pipeline 诊断工具，运行时打印 Handler 链结构与事件传播路径，辅助排查 Handler 顺序问题 |
 
 > 说明：`@MessageHandler` 注解 / `MessageDispatcher` 分发器已在 v2.0.0 **移除**（v1.1.0 起标注 Deprecated，无活跃消费者）。消息处理统一使用 `SimpleChannelInboundHandler` 推荐模式。
 
@@ -72,21 +73,29 @@
 |---|---|
 | `NettyException` | Netty 模块统一异常，封装 Server/Client/SSL/Transport 各层错误，错误码 B01055 |
 
-### 6. 线程池与传输
+### 6. 连接控制
+
+| 类 | 说明 |
+|---|---|
+| `ConnectionLimitHandler` | 连接限制 Handler，超过 `ydsz.netty.connection-control.max-connections` 时拒绝新连接（0 表示不限制） |
+| `ConnectionMetrics` | 连接级指标采集，与 `NettyChannelMetrics` 协作提供更细粒度的连接维度监控 |
+
+### 7. 线程池与传输
 
 | 类 | 说明 |
 |---|---|
 | `NettyEventLoopPool` | EventLoop 线程池管理，支持共享/隔离模式、引用计数、优雅关闭 await |
 | `NativeTransportDetector` | 原生传输检测器，自动检测 Epoll（Linux）/ KQueue（macOS），不匹配时降级到 NIO |
 
-### 7. 可观测性
+### 8. 可观测性
 
 | 类 | 说明 |
 |---|---|
 | `NettyChannelMetrics` | Channel 指标采集（9 项 Micrometer 指标） |
 | `NettyHealthIndicator` | Spring Boot Actuator 健康检查 |
+| `NettyActuatorEndpoint` | Actuator 端点 `/netty`，运行时查询 Server 状态、EventLoop 引用计数、Channel 列表 |
 
-### 8. 配置
+### 9. 配置
 
 | 类 | 说明 |
 |---|---|
@@ -118,6 +127,12 @@ ydsz:
     shared-event-loop: true
     fail-fast: true
     native-transport: AUTO           # AUTO / ENABLED / DISABLED
+    allocator:
+      pooled: true                   # 是否使用 PooledByteBufAllocator
+      prefer-direct: true           # 是否优先直接内存
+      num-direct-arenas: 0           # 直接内存竞技场数（0 = CPU 核数 × 2）
+    connection-control:
+      max-connections: 0             # 最大连接数（0 = 不限制）
     idle:
       reader-idle-seconds: 60
       writer-idle-seconds: 30
@@ -207,6 +222,10 @@ public class MyTcpClient extends AbstractNettyClient {
 | `ydsz.netty.shutdown-timeout-seconds` | 15 | 优雅关闭超时（秒） |
 | `ydsz.netty.fail-fast` | true | Server 启动失败时是否终止应用 |
 | `ydsz.netty.native-transport` | AUTO | 原生传输模式（AUTO / ENABLED / DISABLED） |
+| `ydsz.netty.allocator.pooled` | true | 是否使用 PooledByteBufAllocator |
+| `ydsz.netty.allocator.prefer-direct` | true | 是否优先分配直接内存（堆外） |
+| `ydsz.netty.allocator.num-direct-arenas` | 0 | 直接内存竞技场数（0 = CPU 核数 × 2） |
+| `ydsz.netty.connection-control.max-connections` | 0 | 最大连接数限制（0 = 不限制） |
 | `ydsz.netty.idle.reader-idle-seconds` | 60 | 读空闲超时（秒，0=不检测） |
 | `ydsz.netty.idle.writer-idle-seconds` | 30 | 写空闲超时（秒，0=不检测） |
 | `ydsz.netty.idle.all-idle-seconds` | 0 | 全双工空闲超时（秒，0=不检测） |
@@ -344,11 +363,13 @@ ydsz:
 | 端点 | 说明 | 触发条件 |
 |---|---|---|
 | `/actuator/health/netty` | Netty 健康检查 | `spring-boot-health` 在类路径，`ydsz.netty.enabled=true` |
+| `/actuator/netty` | Netty Actuator 端点（JSON 状态查询） | `spring-boot-actuator` 在类路径 |
 
-暴露信息：
+健康检查暴露信息：
 
 - **Server 列表**：每个 Server 的 `running` / `port` / `activeChannels` / `ssl` / `businessGroups`
 - **EventLoop 池**：`bossRefCount` / `workerRefCount` / `bossGroupActive` / `workerGroupActive`
+- **连接控制**：`maxConnections` / `currentConnections`（超限时连接被拒绝）
 - **指标摘要**：`activeChannels` / `totalBytesRead` / `totalBytesWritten`
 
 健康判定：所有 Server 都 `running=true` 时为 UP，任一 Server 未运行时为 DOWN。
@@ -375,12 +396,14 @@ ydsz:
 4. **SSL 证书缓存**：`SslContext` 在 Server/Client 启动时一次性创建并缓存，证书热更新需重启应用。
 5. **断线重连退避**：`ReconnectHandler` 采用指数退避算法，`delay = min(initialDelayMs × 2^n, maxDelayMs)`，避免重连风暴。
 6. **流量整形**：`global=true` 使用 `GlobalTrafficShapingHandler` 限制 Server 总带宽；`false` 使用 `ChannelTrafficShapingHandler` 限制单连接带宽。
-7. **粘包处理**：默认使用 4 字节 Length Field 协议；自定义协议需在 `initChannelPipeline` 中替换为合适的 FrameDecoder。
+7. **粘包处理**：默认使用 4 字节 LengthField 协议；自定义协议需在 `initChannelPipeline` 中替换为合适的 FrameDecoder。
 8. **Netty 日志**：`AbstractNettyServer` 静态初始化块强制 Netty 使用 SLF4J 日志门面，与项目日志体系统一。
 9. **优雅关闭**：`shutdown-quiet-period-seconds` + `shutdown-timeout-seconds` 控制 EventLoopGroup 优雅关闭，确保已接受连接处理完成。
+10. **PooledByteBufAllocator**：默认启用池化分配器（`allocator.pooled=true`）减少 GC；`prefer-direct=true` 优先堆外内存适合大流量场景；如果观察到堆外内存泄漏可设为 `false` 回退到堆内存分配。
+11. **连接限制**：`connection-control.max-connections` 超过上限时 `ConnectionLimitHandler` 直接拒绝新连接，防止服务过载。
 
 ## 变更记录
 
-- **v2.0.0**（2026-08-16）：移除 `MessageDispatcher` / `@MessageHandler`（原 v1.1.0 标记 @Deprecated，无活跃消费者），推荐使用 `SimpleChannelInboundHandler` + switch 策略模式
-- **v1.1.0**（2026-08-16）：`MessageDispatcher` / `@MessageHandler` 标记 @Deprecated（计划 v2.0.0 移除），推荐使用 `SimpleChannelInboundHandler` + switch 策略模式
-- **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节；完善配置项表、SPI 扩展点、健康检查、注意事项
+- **v2.0.0**（2026-08-16）：移除 `MessageDispatcher` / `@MessageHandler`（原 v1.1.0 标记 @Deprecated，无活跃消费者），推荐使用 `SimpleChannelInboundHandler` + switch 策略模式；新增 `allocator`（ByteBuf 分配器）、`connection-control`（连接数限制）配置段；新增 `ConnectionLimitHandler`、`ConnectionMetrics`、`NettyPipelineDiagnostics`、`NettyActuatorEndpoint`；provided 依赖 `micrometer-core` 改为通过 `@ConditionalOnClass` 可选装配
+- **v1.1.0**（2026-08-16）：`MessageDispatcher` / `@MessageHandler` 标记 @Deprecated（计划 v2.0.0 移除）
+- **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README

@@ -69,7 +69,7 @@ public class ShareExpiryReminderTask {
             share.getId(),
             share.getShareCode(),
             share.getExpireTime());
-        // TODO: 发布领域事件，由通知服务订阅后投递站内信/邮件
+        // TODO: 2026-09-01 发布领域事件，由通知服务订阅后投递站内信/邮件。（@ydsz-team）
       }
     } catch (Exception e) {
       log.error("[ShareExpiryReminder] 扫描到期分享失败", e);

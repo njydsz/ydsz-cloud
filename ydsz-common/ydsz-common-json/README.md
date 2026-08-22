@@ -6,6 +6,8 @@
 
 **YdszJson 的架构设计兼具 Jackson 的"配置不可变"哲学和 Fastjson2 的"静态入口便利"。** `YdszJson` 作为静态入口提供 `toJson` / `toObject` 等零配置开箱即用体验，与 FastJSON 的静态工具风格一脉相承；而底层 `JsonConfig` 采用 `final` 字段构建不可变配置，配合 `JsonMapper.copyOf()` 以"副本 + 不可变替换"方式替代运行期可变状态，实现与 Jackson 相同的线程安全语义。两层 API 共享同一委托链（`YdszJson` → `JsonMapper` → `Engine` → `Provider` → `Parser`），行为完全一致，用户可根据场景自由选择而无需担心序列化行为分歧。
 
+**与 Spring Boot Jackson 的关系（默认共存策略）**：`JsonAutoConfiguration` 通过 `@AutoConfigureBefore` 在 `JacksonAutoConfiguration` 之前加载，并通过 `@ConditionalOnMissingBean` 占位 HTTP 消息转换器使业务 REST 接口走 YdszJson。默认不排除 `JacksonAutoConfiguration`——Spring 容器仍注册 `ObjectMapper` Bean，供 Actuator / springdoc-openapi 等内部组件使用。如需强隔离（全仓库唯一 JSON 底座，容器不注册 `ObjectMapper` Bean），可在配置文件中显式设置 `ydsz.json.disable-jackson-auto-configuration=true`。
+
 ## 模块定位
 
 | 属性 | 值                                                                                                    |
@@ -13,7 +15,7 @@
 | **层级** | L1 工具模块层                                                                                             |
 | **类型** | 公共依赖库（不独立部署）                                                                                         |
 | **作用** | 提供高性能 JSON 序列化/反序列化、树模型、Jackson 兼容注解、Spring MVC 集成等能力                                                |
-| **依赖** | Lombok；可选依赖 SLF4J、Spring Boot AutoConfigure、Spring Web、Jackson Annotations（编译期可见）、Jakarta Validation |
+| **依赖** | Lombok、SLF4J；可选依赖 Spring Web、Jakarta Validation、Spring Boot Configuration Processor；provided 依赖 Spring Boot AutoConfigure、Jakarta Annotation、Jackson Annotations（编译期可见） |
 | **版本** | 1.0.0                                                                                                |
 
 ## 功能成熟度总览
@@ -174,7 +176,7 @@
 
 | 配置类 | 激活条件 | 注册的 Bean |
 |---|---|---|
-| `JsonAutoConfiguration` | `ydsz.json.enabled=true`（默认启用），`JsonConfig` 在类路径 | `JsonConfigBean`（全局配置初始化 + 模块注册）、`JsonHttpMessageConverter`、`namingStrategyConverter` |
+| `JsonAutoConfiguration` | `ydsz.json.enabled=true`（默认启用），`JsonConfig` 在类路径，通过 `@AutoConfigureBefore(JacksonAutoConfiguration.class)` 在 Jackson 自动配置之前加载 | `JsonConfigBean`（`@PostConstruct` 初始化：安装全局不可变配置 + 注册 Spring Modules + 注册 ConfigChangeListener 热更新 + 注册 JMX MBean）、`JsonHttpMessageConverter`、`namingStrategyConverter`、`JsonWarmupRunner`（仅 `warmup-enabled=true` 时注册） |
 
 | 属性类 | 前缀 | 说明 |
 |---|---|---|
@@ -209,6 +211,10 @@ ydsz:
     fail-on-error: false                       # 反序列化失败时是否抛出异常
     serialize-enum-using-ordinal: false        # 枚举是否使用序号序列化
     circular-reference-strategy: REF           # 循环引用处理策略：REF / IGNORE / ERROR
+    wrap-root-value: false                     # 是否包裹根值（Jackson @JsonRootName 兼容）
+    disable-jackson-auto-configuration: false  # 是否排除 JacksonAutoConfiguration（=false 时与 Jackson 共存，=true 时完全禁用）
+    warmup-enabled: false                      # 是否启用启动预热（扫描 Controller 提取 @RequestBody/@ResponseBody 类型并预热缓存）
+    monitoring-enabled: true                   # 是否启用 Micrometer 监控指标采集
 ```
 
 ### 3. 基础使用
