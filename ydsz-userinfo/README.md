@@ -14,6 +14,8 @@
 | **依赖** | Nacos、PostgreSQL、Redis、Gateway |
 | **公共依赖** | common-core / common-web / common-auth / common-redis / common-safe / common-jdbc / common-audit / common-exception / common-domain / common-event / common-json / common-util / common-lock / common-search / common-cache / common-excel / common-sentry / common-thread / common-feign / common-app |
 
+> **端口提示**：本模块移动端入口 `ydsz-userinfo-app` 默认 `9003`，与 `ydsz-nextwiki-web`（网盘 Web 控制台，同为 `9003`）默认端口相同。两者通常不会同机部署（移动端入口 vs Web 控制台），若需同机运行，须通过 Nacos `ydsz-userinfo-{env}.yaml` / `ydsz-nextwiki-{env}.yaml` 将其中一个改为其他端口。
+
 ## 核心职责
 
 | 业务域 | 说明 |

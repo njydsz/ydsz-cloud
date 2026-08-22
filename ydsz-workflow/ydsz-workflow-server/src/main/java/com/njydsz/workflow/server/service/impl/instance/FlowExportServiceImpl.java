@@ -101,20 +101,35 @@ public class FlowExportServiceImpl implements FlowExportService {
     FlowInstanceVO instance = loadInstance(instanceId);
     List<FlowHisTaskDO> history = loadHistory(instanceId);
     Map<String, Object> formData = parseVariables(instance.getVariable());
-    String watermark = buildWatermark(userName != null ? userName : userId);
+    String watermark = buildWatermark(userName != null ? userName : userId, instanceId);
 
     StringBuilder html = new StringBuilder(4096);
+    appendHtmlHeader(html, instance.getTitle());
+    appendWatermarkDiv(html, watermark);
+    appendTitleSection(html, instance);
+    appendFormDataTable(html, formData);
+    appendTimeline(html, history);
+    html.append("</body></html>");
+
+    return html.toString();
+  }
+
+  /** 构建水印文本（含 userId + instanceId），用于溯源。 */
+  private String buildWatermark(String userIdentifier, String instanceId) {
+    return userIdentifier + (instanceId != null ? "/" + instanceId : "");
+  }
+
+  /** 输出 HTML head + 内嵌 CSS 样式。 */
+  private void appendHtmlHeader(StringBuilder html, String title) {
     html.append("<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"UTF-8\">");
     html.append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
-    html.append("<title>").append(escapeHtml(instance.getTitle())).append("</title>");
+    html.append("<title>").append(escapeHtml(title)).append("</title>");
     html.append("<style>");
-    // 水印样式
     html.append(".watermark{position:fixed;top:0;left:0;width:100%;height:100%;");
     html.append("pointer-events:none;z-index:9999;opacity:0.08;");
     html.append("display:flex;flex-wrap:wrap;gap:80px;}");
     html.append(".watermark span{transform:rotate(-30deg);font-size:14px;color:#333;");
     html.append("white-space:nowrap;font-weight:bold;}");
-    // 审批单样式
     html.append("body{font-family:'Microsoft YaHei',sans-serif;margin:20px;color:#333;}");
     html.append(".header{text-align:center;margin-bottom:20px;}");
     html.append(".header h1{font-size:20px;margin:5px 0;}");
@@ -130,15 +145,19 @@ public class FlowExportServiceImpl implements FlowExportService {
     html.append(".status-PASS{color:#52c41a;}.status-REJECT{color:#ff4d4f;}");
     html.append(".status-PENDING{color:#faad14;}");
     html.append("</style></head><body>");
+  }
 
-    // 水印
+  /** 输出水印 div（50 个 span）。 */
+  private void appendWatermarkDiv(StringBuilder html, String watermark) {
     html.append("<div class=\"watermark\">");
     for (int i = 0; i < 50; i++) {
       html.append("<span>").append(escapeHtml(watermark)).append("</span>");
     }
     html.append("</div>");
+  }
 
-    // 标题
+  /** 输出标题区域（含流程编码/实例ID/发起时间）。 */
+  private void appendTitleSection(StringBuilder html, FlowInstanceVO instance) {
     html.append("<div class=\"header\">");
     html.append("<h1>").append(escapeHtml(instance.getTitle())).append("</h1>");
     html.append("<div class=\"meta\">流程编码：").append(instance.getFlowCode());
@@ -146,60 +165,57 @@ public class FlowExportServiceImpl implements FlowExportService {
     html.append(" ｜ 发起时间：")
         .append(instance.getCreatedAt() != null ? instance.getCreatedAt().format(FMT) : "-");
     html.append("</div></div>");
+  }
 
-    // 表单数据
+  /** 输出表单数据表格。 */
+  private void appendFormDataTable(StringBuilder html, Map<String, Object> formData) {
     html.append("<h2>表单数据</h2><table>");
     if (formData.isEmpty()) {
       html.append("<tr><td colspan=\"2\" style=\"text-align:center;color:#999;\">无表单数据</td></tr>");
     } else {
       for (Map.Entry<String, Object> entry : formData.entrySet()) {
-        html.append("<tr><th>")
-            .append(escapeHtml(entry.getKey()))
-            .append("</th><td>")
+        html.append("<tr><th>").append(escapeHtml(entry.getKey())).append("</th><td>")
             .append(entry.getValue() != null ? escapeHtml(String.valueOf(entry.getValue())) : "")
             .append("</td></tr>");
       }
     }
     html.append("</table>");
+  }
 
-    // 审批轨迹
+  /** 输出审批轨迹时间线。 */
+  private void appendTimeline(StringBuilder html, List<FlowHisTaskDO> history) {
     html.append("<h2>审批轨迹</h2><div class=\"timeline\">");
     if (history.isEmpty()) {
       html.append("<div class=\"timeline-item\" style=\"color:#999;\">暂无审批记录</div>");
     } else {
       for (FlowHisTaskDO task : history) {
-        html.append("<div class=\"timeline-item\">");
-        html.append("<span class=\"timeline-node\">")
-            .append(escapeHtml(task.getNodeName() != null ? task.getNodeName() : "-"))
-            .append("</span>");
-        String status = task.getTaskStatus() != null ? task.getTaskStatus() : "PENDING";
-        html.append(" <span class=\"status-")
-            .append(status)
-            .append("\">[")
-            .append(status)
-            .append("]</span>");
-        html.append("<div class=\"timeline-meta\">");
-        html.append("办理人：")
-            .append(task.getAssigneeName() != null ? escapeHtml(task.getAssigneeName()) : "-");
-        if (task.getFinishAt() != null) {
-          html.append(" ｜ 时间：").append(task.getFinishAt().format(FMT));
-          if (task.getDurationMs() != null && task.getDurationMs() > 0) {
-            html.append(" ｜ 耗时：").append(formatDuration(task.getDurationMs()));
-          }
-        }
-        html.append("</div>");
-        if (StringUtils.hasText(task.getComment())) {
-          html.append("<div class=\"timeline-comment\">意见：")
-              .append(escapeHtml(task.getComment()))
-              .append("</div>");
-        }
-        html.append("</div>");
+        appendTimelineItem(html, task);
       }
     }
     html.append("</div>");
+  }
 
-    html.append("</body></html>");
-    return html.toString();
+  /** 输出单个审批轨迹节点。 */
+  private void appendTimelineItem(StringBuilder html, FlowHisTaskDO task) {
+    html.append("<div class=\"timeline-item\">");
+    html.append("<span class=\"timeline-node\">")
+        .append(escapeHtml(task.getNodeName() != null ? task.getNodeName() : "-"))
+        .append("</span>");
+    String status = task.getTaskStatus() != null ? task.getTaskStatus() : "PENDING";
+    html.append(" <span class=\"status-").append(status).append("\">[").append(status).append("]</span>");
+    html.append("<div class=\"timeline-meta\">");
+    html.append("办理人：").append(task.getAssigneeName() != null ? escapeHtml(task.getAssigneeName()) : "-");
+    if (task.getFinishAt() != null) {
+      html.append(" ｜ 时间：").append(task.getFinishAt().format(FMT));
+      if (task.getDurationMs() != null && task.getDurationMs() > 0) {
+        html.append(" ｜ 耗时：").append(formatDuration(task.getDurationMs()));
+      }
+    }
+    html.append("</div>");
+    if (StringUtils.hasText(task.getComment())) {
+      html.append("<div class=\"timeline-comment\">意见：").append(escapeHtml(task.getComment())).append("</div>");
+    }
+    html.append("</div>");
   }
 
   @Override

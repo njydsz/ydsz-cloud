@@ -198,15 +198,9 @@ public class FlowTaskCoreService {
   @Transactional(rollbackFor = Exception.class)
   public void pass(FlowTaskOperateDTO dto) {
     FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
-    if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_7f4098fb")
-          .params(task.getTaskStatus())
-          .build();
-    }
-    Map<String, Object> variables =
-        dto.getVariables() == null ? Collections.emptyMap() : dto.getVariables();
+    validateTaskNotFinished(task);
+
+    Map<String, Object> variables = dto.getVariables() == null ? Collections.emptyMap() : dto.getVariables();
     FlowInstanceVO instance = instanceRepository.findById(task.getInstanceId()).orElse(null);
     Map<String, Object> mergedVars = mergeVariables(instance, variables);
 
@@ -214,182 +208,205 @@ public class FlowTaskCoreService {
     validateFormFieldPerms(task, dto.getVariables(), instance);
 
     // P1-10: 委派回归 — 被委派人通过后任务回到原办理人
-    if (FlowTaskStatus.DELEGATED.name().equals(task.getTaskStatus())
-        && task.getAssignorId() != null) {
+    if (isDelegatedWithAssignor(task)) {
       handleDelegateReturn(task, dto);
       return;
     }
 
-    FlowPerformType performType =
-        FlowPerformType.valueOf(
-            task.getPerformType() == null ? FlowPerformType.OR.name() : task.getPerformType());
+    FlowPerformType performType = resolvePerformType(task);
 
     // 标记当前用户已处理（ydsz_flow_user）
-    if (dto.getUserId() != null) {
-      taskRepository.markProcessed(
-          task.getId(), String.valueOf(dto.getUserId()), dto.getComment(), LocalDateTime.now());
-    }
+    markUserProcessed(task, dto);
 
     // P1-6: 保存审批附件
-    attachmentService.saveBatch(
-        task.getInstanceId(),
-        task.getId(),
-        task.getNodeCode(),
-        "TASK",
-        dto.getUserId(),
-        dto.getUserName(),
-        dto.getAttachments(),
-        task.getTenantId(),
-        task.getProviderTraceId());
+    savePassAttachments(task, dto);
 
     // 策略模式处理会签
-    CountersignStrategy strategy = strategyFactory.getStrategy(performType);
-    strategy.preCheck(task, dto);
-    strategy.onUserPassed(task, dto);
+    applyCountersignStrategy(task, dto, performType);
 
-    boolean shouldAdvance = strategy.shouldAdvance(task);
-    if (shouldAdvance) {
-      strategy.onAdvance(task, dto);
+    if (shouldAdvance(task, dto, performType)) {
       advanceProcess(instance, task, mergedVars, performType, dto);
     } else {
-      support.audit(
-          task,
-          performType.name() + "_PASS",
-          dto.getUserId(),
-          null,
-          dto.getComment(),
-          dto.getCommentType());
-      log.info(
-          "[Flow] {} 部分通过: taskId={} finished={}/{}",
-          performType,
-          task.getId(),
-          task.getApproveFinished(),
-          task.getApproveCount());
+      logPartialPass(performType, task);
     }
 
-    // P1-7: WebSocket 推送任务完成
-    if (todoCountPushService != null) {
-      todoCountPushService.pushTaskCompleted(task, dto.getUserId());
-    }
-    // P2-3: Prometheus 指标
-    if (flowMetrics != null) {
-      flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "passed");
-      flowMetrics.recordTaskDuration(converter.entityToVO(task), "PASSED");
-    }
+    // P1-7/P2-3: 推送 + 指标
+    pushTaskCompleted(task, flowMetrics, dto);
   }
 
-  // ============================== 驳回 ==============================
-
-  /**
-   * 驳回任务。
-   *
-   * <p>P1-11: 支持退回任意历史节点。 GAP-P0-2: 当 {@code dto.targetNodeCodes} 非空且 size > 1 时，在所有指定节点
-   * 同时创建待办任务；否则降级到单节点退回（{@code dto.targetNodeCode}）。
-   */
   @Transactional(rollbackFor = Exception.class)
   public void reject(FlowTaskOperateDTO dto) {
     FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+    validateTaskNotFinishedReject(task);
+
+    LocalDateTime now = LocalDateTime.now();
+    Long durationMs = task.getCreatedAt() == null ? null : Duration.between(task.getCreatedAt(), now).toMillis();
+    markTaskRejected(task, dto, now, durationMs);
+
+    archiveService.archiveToHistory(task, FlowTaskStatus.REJECTED);
+    saveRejectAttachments(task, dto);
+
+    FlowInstanceVO instance = instanceRepository.findById(task.getInstanceId()).orElse(null);
+    Map<String, Object> mergedVars = mergeVariables(instance, dto.getVariables());
+
+    // P1-2: 退回到发起人
+    resolveRejectToInitiator(dto, instance);
+
+    // GAP-P0-2: 优先使用多节点同退；为空时降级到单节点
+    List<FlowNodeVO> rejectTargets = resolveRejectTargets(task, dto, instance, mergedVars);
+    if (rejectTargets.isEmpty()) {
+      handleRejectToEnd(task, instance, dto, now);
+      return;
+    }
+
+    instanceService.generateTasksForNodes(instance.getId(), rejectTargets, mergedVars);
+    instanceRepository.updateStatus(instance.getId(), instance.getFlowStatus(),
+        rejectTargets.get(0).getNodeCode(), rejectTargets.get(0).getNodeName(), null, null);
+    support.audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
+    log.info("[Flow] 退回任务: taskId={} targets={} multi={}", task.getId(),
+        rejectTargets.stream().map(FlowNodeVO::getNodeCode).toList(),
+        dto.getTargetNodeCodes() != null && dto.getTargetNodeCodes().size() > 1);
+
+    // P1-7: WebSocket 推送
+    if (todoCountPushService != null) {
+      todoCountPushService.pushTaskRejected(task, dto.getUserId(), dto.getComment());
+    }
+  }
+
+  /** 校验任务未处于终态。 */
+  private void validateTaskNotFinished(FlowRunTaskDO task) {
+    if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .key("error.workflow.msg_7f4098fb")
+          .params(task.getTaskStatus())
+          .build();
+    }
+  }
+
+  /** 校验任务未处于终态（驳回专用）。 */
+  private void validateTaskNotFinishedReject(FlowRunTaskDO task) {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_b35e6ea3")
           .build();
     }
-    LocalDateTime now = LocalDateTime.now();
-    Long durationMs =
-        task.getCreatedAt() == null ? null : Duration.between(task.getCreatedAt(), now).toMillis();
+  }
+
+  /** 判断任务是否为委派状态且有指派人。 */
+  private boolean isDelegatedWithAssignor(FlowRunTaskDO task) {
+    return FlowTaskStatus.DELEGATED.name().equals(task.getTaskStatus()) && task.getAssignorId() != null;
+  }
+
+  /** 解析任务执行策略，默认 OR。 */
+  private FlowPerformType resolvePerformType(FlowRunTaskDO task) {
+    return FlowPerformType.valueOf(
+        task.getPerformType() == null ? FlowPerformType.OR.name() : task.getPerformType());
+  }
+
+  /** 标记当前用户已处理。 */
+  private void markUserProcessed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+    if (dto.getUserId() != null) {
+      taskRepository.markProcessed(task.getId(), String.valueOf(dto.getUserId()), dto.getComment(), LocalDateTime.now());
+    }
+  }
+
+  /** 保存通过附件。 */
+  private void savePassAttachments(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+    attachmentService.saveBatch(task.getInstanceId(), task.getId(), task.getNodeCode(),
+        "TASK", dto.getUserId(), dto.getUserName(), dto.getAttachments(),
+        task.getTenantId(), task.getProviderTraceId());
+  }
+
+  /** 保存驳回附件。 */
+  private void saveRejectAttachments(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+    attachmentService.saveBatch(task.getInstanceId(), task.getId(), task.getNodeCode(),
+        "TASK", dto.getUserId(), dto.getUserName(), dto.getAttachments(),
+        task.getTenantId(), task.getProviderTraceId());
+  }
+
+  /** 应用会签策略：preCheck + onUserPassed。 */
+  private void applyCountersignStrategy(FlowRunTaskDO task, FlowTaskOperateDTO dto, FlowPerformType performType) {
+    CountersignStrategy strategy = strategyFactory.getStrategy(performType);
+    strategy.preCheck(task, dto);
+    strategy.onUserPassed(task, dto);
+  }
+
+  /** 判断是否应推进流程。 */
+  private boolean shouldAdvance(FlowRunTaskDO task, FlowTaskOperateDTO dto, FlowPerformType performType) {
+    CountersignStrategy strategy = strategyFactory.getStrategy(performType);
+    boolean advance = strategy.shouldAdvance(task);
+    if (advance) {
+      strategy.onAdvance(task, dto);
+    }
+    return advance;
+  }
+
+  /** 记录部分通过日志。 */
+  private void logPartialPass(FlowPerformType performType, FlowRunTaskDO task) {
+    support.audit(task, performType.name() + "_PASS", null, null, null, null);
+    log.info("[Flow] {} 部分通过: taskId={} finished={}/{}",
+        performType, task.getId(), task.getApproveFinished(), task.getApproveCount());
+  }
+
+  /** WebSocket 推送 + Prometheus 指标。 */
+  private void pushTaskCompleted(FlowRunTaskDO task, FlowMetrics metrics, FlowTaskOperateDTO dto) {
+    if (todoCountPushService != null) {
+      todoCountPushService.pushTaskCompleted(task, dto.getUserId());
+    }
+    if (metrics != null) {
+      metrics.incTask(task.getFlowCode(), task.getNodeCode(), "passed");
+      metrics.recordTaskDuration(converter.entityToVO(task), "PASSED");
+    }
+  }
+
+  /** 标记任务为驳回状态并更新。 */
+  private void markTaskRejected(FlowRunTaskDO task, FlowTaskOperateDTO dto, LocalDateTime now, Long durationMs) {
     task.setTaskStatus(FlowTaskStatus.REJECTED.name());
     task.setComment(dto.getComment());
     task.setCompletedAt(now);
     task.setDurationMs(durationMs);
     taskRepository.update(converter.entityToVO(task));
-    archiveService.archiveToHistory(task, FlowTaskStatus.REJECTED);
+  }
 
-    // P1-6: 保存驳回附件
-    attachmentService.saveBatch(
-        task.getInstanceId(),
-        task.getId(),
-        task.getNodeCode(),
-        "TASK",
-        dto.getUserId(),
-        dto.getUserName(),
-        dto.getAttachments(),
-        task.getTenantId(),
-        task.getProviderTraceId());
-
-    FlowInstanceVO instance = instanceRepository.findById(task.getInstanceId()).orElse(null);
-    Map<String, Object> mergedVars = mergeVariables(instance, dto.getVariables());
-
-    // P1-2: 退回到发起人 — 解析 startNode 下游第一个节点作为退回目标
+  /** 处理驳回目标为发起人的场景。 */
+  private void resolveRejectToInitiator(FlowTaskOperateDTO dto, FlowInstanceVO instance) {
     if (Boolean.TRUE.equals(dto.getRejectToInitiator())) {
       String initiatorNodeCode = resolveInitiatorNodeCode(instance.getDefinitionId());
       if (initiatorNodeCode != null) {
         dto.setTargetNodeCode(initiatorNodeCode);
-        dto.setTargetNodeCodes(null); // 覆盖多节点同退
+        dto.setTargetNodeCodes(null);
       } else {
-        log.warn("[Flow] 退回发起人失败：无法解析开始节点下游第一节点，降级到默认退回: instanceId={}", instance.getId());
+        log.warn("[Flow] 退回发起人失败：无法解析开始节点下游第一节点: instanceId={}", instance.getId());
       }
     }
+  }
 
-    // GAP-P0-2: 优先使用多节点同退；为空时降级到单节点（向后兼容）
-    List<FlowNodeVO> rejectTargets;
+  /** 解析驳回目标节点列表（多节点同退或单节点）。 */
+  private List<FlowNodeVO> resolveRejectTargets(FlowRunTaskDO task, FlowTaskOperateDTO dto,
+      FlowInstanceVO instance, Map<String, Object> mergedVars) {
     boolean multiReject = dto.getTargetNodeCodes() != null && dto.getTargetNodeCodes().size() > 1;
     if (multiReject) {
-      rejectTargets =
-          advancer.advanceMulti(
-              instance, task.getNodeCode(), "REJECT", dto.getTargetNodeCodes(), mergedVars);
-    } else {
-      // 单节点退回（保持原有逻辑）
-      String singleTarget =
-          dto.getTargetNodeCodes() != null && !dto.getTargetNodeCodes().isEmpty()
-              ? dto.getTargetNodeCodes().get(0)
-              : dto.getTargetNodeCode();
-      rejectTargets =
-          advancer.advance(instance, task.getNodeCode(), "REJECT", singleTarget, mergedVars);
+      return advancer.advanceMulti(instance, task.getNodeCode(), "REJECT", dto.getTargetNodeCodes(), mergedVars);
     }
-    if (rejectTargets.isEmpty()) {
-      // 流程被驳回到终止状态
-      instanceRepository.updateStatus(
-          instance.getId(),
-          FlowInstanceStatus.REJECTED.name(),
-          null,
-          null,
-          now,
-          instance.getStartAt() == null
-              ? null
-              : Duration.between(instance.getStartAt(), now).toMillis());
-      taskRepository.updateStatusByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
-      notificationService.fireInstanceRejected(instance.getId(), dto.getComment());
-      support.audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
-      if (flowMetrics != null) {
-        flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "rejected");
-        flowMetrics.recordTaskDuration(converter.entityToVO(task), "REJECTED");
-        flowMetrics.incInstance(instance.getFlowCode(), "rejected");
-        flowMetrics.recordInstanceDuration(instance, "REJECTED");
-      }
-      return;
-    }
-    instanceService.generateTasksForNodes(instance.getId(), rejectTargets, mergedVars);
-    instanceRepository.updateStatus(
-        instance.getId(),
-        instance.getFlowStatus(),
-        rejectTargets.get(0).getNodeCode(),
-        rejectTargets.get(0).getNodeName(),
-        null,
-        null);
+    String singleTarget = dto.getTargetNodeCodes() != null && !dto.getTargetNodeCodes().isEmpty()
+        ? dto.getTargetNodeCodes().get(0) : dto.getTargetNodeCode();
+    return advancer.advance(instance, task.getNodeCode(), "REJECT", singleTarget, mergedVars);
+  }
+
+  /** 驳回到终止状态处理。 */
+  private void handleRejectToEnd(FlowRunTaskDO task, FlowInstanceVO instance, FlowTaskOperateDTO dto, LocalDateTime now) {
+    instanceRepository.updateStatus(instance.getId(), FlowInstanceStatus.REJECTED.name(),
+        null, null, now, instance.getStartAt() == null ? null : Duration.between(instance.getStartAt(), now).toMillis());
+    taskRepository.updateStatusByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
+    notificationService.fireInstanceRejected(instance.getId(), dto.getComment());
     support.audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
-    log.info(
-        "[Flow] 退回任务: taskId={} targets={} multi={}",
-        task.getId(),
-        rejectTargets.stream().map(FlowNodeVO::getNodeCode).toList(),
-        multiReject);
-    // P1-7: WebSocket 推送任务驳回
-    if (todoCountPushService != null) {
-      todoCountPushService.pushTaskRejected(task, dto.getUserId(), dto.getComment());
-    }
     if (flowMetrics != null) {
       flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "rejected");
       flowMetrics.recordTaskDuration(converter.entityToVO(task), "REJECTED");
+      flowMetrics.incInstance(instance.getFlowCode(), "rejected");
+      flowMetrics.recordInstanceDuration(instance, "REJECTED");
     }
   }
 

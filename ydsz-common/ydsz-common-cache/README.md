@@ -11,7 +11,7 @@
 | **层级** | L1 工具模块层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供高性能本地缓存、三防（穿透/击穿/雪崩）、写穿透、注解驱动、可观测性能力 |
-| **依赖** | common-util、common-exception；可选依赖 spring-context、spring-boot-autoconfigure、spring-boot-health、micrometer-core、spring-boot-actuator |
+| **依赖** | common-util；可选依赖 spring-context、spring-boot-autoconfigure、spring-boot-health、micrometer-core、spring-boot-actuator、jackson-annotations（compileOnly） |
 | **版本** | 2.0.0 |
 
 ## 核心能力

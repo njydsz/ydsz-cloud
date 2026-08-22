@@ -273,7 +273,7 @@ ydsz:
 
 ## 配置
 
-所有配置通过 `LiteRuleProperties` 定义，前缀 `ydsz.literule`。配置文件位于 `ydsz-literule-web/src/main/resources/`（`application.yml` + `bootstrap.yml`，待补齐）。
+所有配置通过 `LiteRuleProperties` 定义，前缀 `ydsz.literule`。配置文件位于 `ydsz-literule-web/src/main/resources/`（`application.yml` + `bootstrap.yml`，配置已就绪）。
 
 ### 核心开关
 

@@ -14,6 +14,8 @@
 | **依赖** | Nacos、PostgreSQL、Redis、MinIO |
 | **公共依赖** | common-web / common-file / common-search / common-jdbc / common-lock / common-redis / common-auth / common-cache / common-thread / common-audit / common-tenant / common-event / common-notify / common-docs / common-sentry / common-safe / common-domain / common-json / common-util |
 
+> **端口提示**：本模块 Web 控制台默认 `9003`，与 `ydsz-userinfo-app`（移动端入口，同为 `9003`）默认端口相同。两者通常不会同机部署（Web 控制台 vs 移动端入口），若需同机运行，须通过 Nacos `ydsz-nextwiki-{env}.yaml` / `ydsz-userinfo-{env}.yaml` 将其中一个改为其他端口。
+
 ## 核心职责
 
 本模块是 YDSZ 的**一体化网盘知识库平台**，融合文件存储、文档解析、全文搜索、在线预览、版本控制、分享协作。
@@ -245,7 +247,7 @@ ydsz-nextwiki/
 
 ## 数据库
 
-实体 `@TableName` 共映射 **17 张表**，DDL 由 Flyway 迁移脚本维护（`ydsz-nextwiki-infra/src/main/resources/db/`），包含 V1 初始建表 + V2~V6 增量迁移。
+实体 `@TableName` 共映射 **17 张表**。DDL 以 SQL 脚本形式维护在 `ydsz-nextwiki-infra/src/main/resources/db/`（含 V1 初始建表 + V2~V6 增量脚本），**需手动执行初始化**——项目规范禁止 Flyway / Liquibase 等迁移框架，不存在自动迁移。
 
 | 表名 | 实体类 | 用途 |
 |---|---|---|

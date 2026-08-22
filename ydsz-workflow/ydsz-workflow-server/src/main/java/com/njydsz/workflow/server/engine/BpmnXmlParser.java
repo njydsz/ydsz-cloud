@@ -94,6 +94,29 @@ public class BpmnXmlParser {
           .build();
     }
     Document doc = parseDocument(bpmnXml);
+    Element root = validateRootElement(doc);
+    Element process = findProcessOrThrow(root);
+
+    BpmnModel model = buildBpmnModel(process);
+    // 解析所有 BPMN 节点和跳转元素
+    NodeList children = process.getChildNodes();
+    parseProcessChildren(children, model);
+
+    // 补全校验
+    validateParseResult(model);
+
+    // P3-1: 解析 BPMN 2.0 BPMNDI 段，提取节点/边的可视化坐标
+    parseDiagramCoordinates(root, model);
+
+    log.info("[BpmnParser] 解析完成: processId={} nodes={} skips={} withCoords={} edgeCoords={}",
+        model.getProcessId(), model.getNodes().size(), model.getSkips().size(),
+        model.getNodeCoordinates() != null ? model.getNodeCoordinates().size() : 0,
+        model.getSkipCoordinates() != null ? model.getSkipCoordinates().size() : 0);
+    return model;
+  }
+
+  /** 校验根元素为 definitions。 */
+  private Element validateRootElement(Document doc) {
     Element root = doc.getDocumentElement();
     if (!"definitions".equalsIgnoreCase(root.getLocalName())) {
       throw SysException.builder()
@@ -102,8 +125,11 @@ public class BpmnXmlParser {
           .params(root.getLocalName())
           .build();
     }
+    return root;
+  }
 
-    // 找 <process> 节点
+  /** 查找 process 元素，不存在则抛出异常。 */
+  private Element findProcessOrThrow(Element root) {
     Element process = bpmnElementHelper.findChild(root, "process");
     if (process == null) {
       throw SysException.builder()
@@ -111,18 +137,27 @@ public class BpmnXmlParser {
           .message("error.workflow.msg_d7f0848f")
           .build();
     }
+    return process;
+  }
 
+  /** 根据 process 元素构建 BpmnModel（processId / processName）。 */
+  private BpmnModel buildBpmnModel(Element process) {
     BpmnModel model = new BpmnModel();
     model.setProcessId(process.getAttribute("id"));
     model.setProcessName(process.getAttribute("name"));
     if (model.getProcessName() == null || model.getProcessName().isBlank()) {
       model.setProcessName(model.getProcessId());
     }
+    return model;
+  }
 
-    // 解析所有 BPMN 节点元素
+  /** 解析 process 的子元素，填充 nodes 和 skips。 */
+  private void parseProcessChildren(NodeList children, BpmnModel model) {
     List<FlowNodeDO> nodes = new ArrayList<>(children.getLength());
     List<FlowSkipDO> skips = new ArrayList<>(children.getLength());
-    NodeList children = process.getChildNodes();
+    model.setNodes(nodes);
+    model.setSkips(skips);
+
     for (int i = 0; i < children.getLength(); i++) {
       Node node = children.item(i);
       if (!(node instanceof Element elem)) {
@@ -144,8 +179,11 @@ public class BpmnXmlParser {
         }
       }
     }
+    fillSkipNextNodeType(nodes, skips);
+  }
 
-    // 补全 skip.nextNodeType
+  /** 补全 skip.nextNodeType 字段。 */
+  private void fillSkipNextNodeType(List<FlowNodeDO> nodes, List<FlowSkipDO> skips) {
     Map<String, FlowNodeDO> nodeByCode = new HashMap<>(nodes.size());
     for (FlowNodeDO n : nodes) {
       nodeByCode.put(n.getNodeCode(), n);
@@ -156,43 +194,34 @@ public class BpmnXmlParser {
         s.setNextNodeType(target.getNodeType());
       }
     }
+  }
 
-    // 校验：节点编码唯一
-    if (nodeByCode.size() != nodes.size()) {
+  /** 校验解析结果：节点编码唯一且必须含开始节点。 */
+  private void validateParseResult(BpmnModel model) {
+    List<FlowNodeDO> nodes = model.getNodes();
+    Set<String> uniqueCodes = nodes.stream().map(FlowNodeDO::getNodeCode).collect(Collectors.toSet());
+    if (uniqueCodes.size() != nodes.size()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_d60cd229")
           .build();
     }
-    // 校验：必须含开始节点
-    boolean hasStart =
-        nodes.stream().anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
+    boolean hasStart = nodes.stream().anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
     if (!hasStart) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_a2f0efff")
           .build();
     }
+  }
 
-    model.setNodes(nodes);
-    model.setSkips(skips);
-
-    // P3-1: 解析 BPMN 2.0 BPMNDI 段，提取节点/边的可视化坐标
-    // （用于驱动流程图回放与 SVG 可视化高亮）
-    Map<String, BpmnModel.NodeCoordinate> nodeCoords = new HashMap<>(nodes.size());
-    Map<String, List<BpmnModel.NodeCoordinate>> skipCoords = new HashMap<>(skips.size());
+  /** 解析 BPMNDI 段，提取节点坐标信息（用于流程图可视化高亮）。 */
+  private void parseDiagramCoordinates(Element root, BpmnModel model) {
+    Map<String, BpmnModel.NodeCoordinate> nodeCoords = new HashMap<>(model.getNodes().size());
+    Map<String, List<BpmnModel.NodeCoordinate>> skipCoords = new HashMap<>(model.getSkips().size());
     bpmnDiagramParser.parseBpmnDiagram(root, nodeCoords, skipCoords);
     model.setNodeCoordinates(nodeCoords);
     model.setSkipCoordinates(skipCoords);
-
-    log.info(
-        "[BpmnParser] 解析完成: processId={} nodes={} skips={} withCoords={} edgeCoords={}",
-        model.getProcessId(),
-        nodes.size(),
-        skips.size(),
-        nodeCoords.size(),
-        skipCoords.size());
-    return model;
   }
 
   /**

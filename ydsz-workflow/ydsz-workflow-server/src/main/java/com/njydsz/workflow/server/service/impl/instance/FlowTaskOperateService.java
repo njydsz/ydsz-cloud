@@ -245,7 +245,45 @@ public class FlowTaskOperateService {
    */
   @Transactional(rollbackFor = Exception.class)
   public String retract(String hisTaskId, String operatorId, String comment) {
-    // 1. 查历史任务
+    // 1. 查询并校验历史任务
+    FlowHisTaskDO hisTask = findHisTaskOrThrow(hisTaskId);
+    validateRetractPermission(hisTask, operatorId);
+
+    // 2. 校验实例存在且为 RUNNING
+    FlowInstanceVO instance = findInstanceOrThrow(hisTask.getInstanceId());
+    validateInstanceRunning(instance);
+
+    // 3. 校验：下一节点待办必须全部为 PENDING（未被 CLAIMED/COMPLETED）
+    validateNextTasksAllPending(instance.getId());
+
+    // 4. 取消下一节点待办
+    taskRepository.updateStatusByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
+
+    // 5. 重新生成本节点的 PENDING 任务
+    FlowRunTaskDO newTask = recreateRetractTask(hisTask, instance, comment);
+
+    // 6. 更新实例 currentNodeCode 回退到本节点
+    instanceRepository.updateStatus(instance.getId(), null, hisTask.getNodeCode(), hisTask.getNodeName(), null, null);
+
+    // 7. 审计日志
+    support.audit(newTask, "RETRACT", operatorId, null,
+        "取回审批" + (StringUtils.hasText(comment) ? "：" + comment : ""));
+
+    // 8. 标记历史任务为 RETRACTED
+    markHisTaskRetracted(hisTask.getId(), comment);
+
+    // 9. Prometheus 指标
+    if (flowMetrics != null) {
+      flowMetrics.incInstance(instance.getFlowCode(), "recalled");
+    }
+
+    log.info("[Flow] 取回审批: instanceId={} hisTaskId={} operatorId={} nodeCode={} newTaskId={}",
+        instance.getId(), hisTaskId, operatorId, hisTask.getNodeCode(), newTask.getId());
+    return newTask.getId();
+  }
+
+  /** 根据 ID 查询历史任务，不存在则抛出 NOT_FOUND。 */
+  private FlowHisTaskDO findHisTaskOrThrow(String hisTaskId) {
     FlowHisTaskDO hisTask = hisTaskRepository.findById(hisTaskId).map(converter::entityToDO).orElse(null);
     if (hisTask == null) {
       throw SysException.builder()
@@ -254,7 +292,11 @@ public class FlowTaskOperateService {
           .params(hisTaskId)
           .build();
     }
-    // 2. 校验：历史任务状态为 COMPLETED
+    return hisTask;
+  }
+
+  /** 校验取回权限：历史任务状态为 COMPLETED 且操作人为办理人。 */
+  private void validateRetractPermission(FlowHisTaskDO hisTask, String operatorId) {
     if (!FlowTaskStatus.COMPLETED.name().equals(hisTask.getTaskStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -262,22 +304,26 @@ public class FlowTaskOperateService {
           .params(hisTask.getTaskStatus())
           .build();
     }
-    // 3. 校验：操作人必须是历史任务的办理人
     if (!hisTask.getAssigneeId().equals(operatorId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
           .message("error.workflow.msg_b3c4d5e6")
           .build();
     }
-    // 4. 校验：实例存在且为 RUNNING
-    FlowInstanceVO instance = instanceRepository.findById(hisTask.getInstanceId()).orElse(null);
-    if (instance == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_fc4b1c16")
-          .params(hisTask.getInstanceId())
-          .build();
-    }
+  }
+
+  /** 根据 ID 查询流程实例，不存在则抛出 NOT_FOUND。 */
+  private FlowInstanceVO findInstanceOrThrow(String instanceId) {
+    return instanceRepository.findById(instanceId)
+        .orElseThrow(() -> SysException.builder()
+            .resultCode(YdszResultCode.NOT_FOUND)
+            .key("error.workflow.msg_fc4b1c16")
+            .params(instanceId)
+            .build());
+  }
+
+  /** 校验流程实例为 RUNNING 状态。 */
+  private void validateInstanceRunning(FlowInstanceVO instance) {
     if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -285,26 +331,26 @@ public class FlowTaskOperateService {
           .params(instance.getFlowStatus())
           .build();
     }
-    // 5. 校验：下一节点待办必须全部为 PENDING
-    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instance.getId()).stream()
+  }
+
+  /** 校验下一节点待办全部为 PENDING（未被 CLAIMED/COMPLETED）。 */
+  private void validateNextTasksAllPending(String instanceId) {
+    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
         .map(converter::entityToDO)
         .collect(Collectors.toList());
-    boolean anyProcessed =
-        pendingTasks.stream()
-            .anyMatch(
-                t ->
-                    FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
-                        || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
+    boolean anyProcessed = pendingTasks.stream()
+        .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
+            || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
     if (anyProcessed) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_d5e6f7a8")
           .build();
     }
-    // 6. 取消下一节点待办
-    taskRepository.updateStatusByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
+  }
 
-    // 7. 重新生成本节点的 PENDING 任务（复用历史任务的元数据）
+  /** 重新生成取回后的 PENDING 任务（复用历史任务的元数据）。 */
+  private FlowRunTaskDO recreateRetractTask(FlowHisTaskDO hisTask, FlowInstanceVO instance, String comment) {
     FlowRunTaskDO newTask = new FlowRunTaskDO();
     newTask.setInstanceId(instance.getId());
     newTask.setFlowCode(instance.getFlowCode());
@@ -329,39 +375,16 @@ public class FlowTaskOperateService {
     newTask.setProviderTraceId(instance.getProviderTraceId());
     newTask.setComment(comment);
     taskRepository.save(converter.entityToVO(newTask));
+    return newTask;
+  }
 
-    // 8. 更新实例 currentNodeCode 回退到本节点
-    instanceRepository.updateStatus(
-        instance.getId(), null, hisTask.getNodeCode(), hisTask.getNodeName(), null, null);
-
-    // 9. 审计日志
-    support.audit(
-        newTask,
-        "RETRACT",
-        operatorId,
-        null,
-        "取回审批" + (StringUtils.hasText(comment) ? "：" + comment : ""));
-
-    // 10. 标记历史任务为 RETRACTED
+  /** 标记历史任务为 RETRACTED 状态。 */
+  private void markHisTaskRetracted(String hisTaskId, String comment) {
     FlowHisTaskDO update = new FlowHisTaskDO();
-    update.setId(hisTask.getId());
+    update.setId(hisTaskId);
     update.setTaskStatus("RETRACTED");
     update.setComment("已取回" + (StringUtils.hasText(comment) ? "：" + comment : ""));
     hisTaskRepository.update(converter.entityToVO(update));
-
-    // 11. Prometheus 指标
-    if (flowMetrics != null) {
-      flowMetrics.incInstance(instance.getFlowCode(), "recalled");
-    }
-
-    log.info(
-        "[Flow] 取回审批: instanceId={} hisTaskId={} operatorId={} nodeCode={} newTaskId={}",
-        instance.getId(),
-        hisTaskId,
-        operatorId,
-        hisTask.getNodeCode(),
-        newTask.getId());
-    return newTask.getId();
   }
 
   // ============================== 私有辅助 ==============================

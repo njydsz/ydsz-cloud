@@ -388,7 +388,7 @@ mvn -pl ydsz-common -am install -DskipTests
 mvn -pl ydsz-agent spring-boot:run
 ```
 
-> **首次启动前**请确保 PostgreSQL 数据库已创建，脚本 `V1__prompt_template.sql`（Prompt 模板表）由 Flyway 或手动执行初始化。DDL 表结构（`ydsz_agent_*`）由 common-jdbc 的 MyBatis Plus 自动建表 + 手动 SQL 脚本补齐。
+> **首次启动前**请确保 PostgreSQL 数据库已创建。脚本 `V1__prompt_template.sql`（Prompt 模板表）及 `V2__*.sql` 等 **需手动执行初始化**——项目规范禁止 Flyway / Liquibase，不存在自动迁移。DDL 表结构（`ydsz_agent_*`）由手动 SQL 脚本（`src/main/resources/db/`）补齐，未启用 MyBatis Plus 自动建表。
 
 ## 数据库表
 

@@ -31,6 +31,10 @@ L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
 ```
 
 > 层级划分以 `ydsz-common/pom.xml` 的 `<modules>` 注释为准（L1 工具模块层 = json/util/cache/excel 四个工具模块）。
+>
+> **已知口径差异**：编码规范 §22.2 将 `common-core` 标注为 L1、`common-util` / `common-json` 标注为 L2，与 pom 注释相反。以 **pom 构建机制为生效口径**（L1 纯度检查 `enforce-l1-purity` 将 `common-core` 列为 L2 禁止反向依赖模块），规范 §22.2 的层级标注待校准。
+>
+> **`ydsz-common-metrics` 为占位条目**：该坐标仅出现在 `ydsz-common/pom.xml` 的 `dependencyManagement` 中，无对应子模块目录、也无任何消费者，并非真实子模块。common 实际为 **30 个真实子模块**。
 
 ### 子模块职责速查
 

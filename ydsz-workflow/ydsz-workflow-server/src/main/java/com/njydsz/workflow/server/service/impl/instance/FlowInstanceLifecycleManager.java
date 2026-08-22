@@ -189,38 +189,70 @@ public class FlowInstanceLifecycleManager {
    */
   @Transactional(rollbackFor = Exception.class)
   public String start(FlowStartProcessDTO dto) {
-    if (dto == null
-        || !StringUtils.hasText(dto.getFlowCode())
-        || !StringUtils.hasText(dto.getBusinessType())
-        || !StringUtils.hasText(dto.getBusinessId())) {
+    validateStartParams(dto);
+    String tenantId = dto.getTenantId() != null ? dto.getTenantId() : AuthContextUtils.getTenantIdOrDefault();
+
+    // 幂等：同 business 已有活跃实例则直接返回
+    FlowInstanceVO existing = findExistingActiveInstance(tenantId, dto.getBusinessType(), dto.getBusinessId());
+    if (existing != null) {
+      return existing.getId();
+    }
+
+    // 查定义并构建实例
+    FlowDefinitionDO def = findPublishedDefinition(dto, tenantId);
+    FlowInstanceDTO instanceDto = buildInstanceDto(dto, def);
+    FlowInstanceVO savedInstance = instanceRepository.save(instanceDto);
+    String instanceId = savedInstance.getId();
+
+    // 记录发起人自选审批人变量
+    logSelfSelectVariables(instanceId, dto.getVariables());
+
+    // 触发事件 + 指标
+    fireEvent(l -> l.onInstanceStart(instanceId, dto.getVariables()));
+    if (flowMetrics != null) {
+      flowMetrics.incInstance(def.getFlowCode(), "created");
+    }
+
+    // 引擎推进
+    try {
+      advancer.start(instanceId);
+    } catch (Exception e) {
+      fireEvent(l -> l.onError(instanceId, e));
+      if (flowMetrics != null) {
+        flowMetrics.incError(def.getFlowCode(), "start_error");
+      }
+      throw e;
+    }
+
+    log.info("[Flow] 启动流程: code={} bizId={} instanceId={}", dto.getFlowCode(), dto.getBusinessId(), instanceId);
+    return instanceId;
+  }
+
+  /** 校验发起流程参数。 */
+  private void validateStartParams(FlowStartProcessDTO dto) {
+    if (dto == null || !StringUtils.hasText(dto.getFlowCode())
+        || !StringUtils.hasText(dto.getBusinessType()) || !StringUtils.hasText(dto.getBusinessId())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_208e3c66")
           .build();
     }
+  }
 
-    // 0. 幂等：同 business 已有活跃实例（RUNNING/SUSPENDED）则直接返回
-    String tenantId =
-        dto.getTenantId() != null ? dto.getTenantId() : AuthContextUtils.getTenantIdOrDefault();
-    FlowInstanceVO existing =
-        instanceRepository.findByBusiness(tenantId, dto.getBusinessType(), dto.getBusinessId())
-            .orElse(null);
+  /** 查找已存在的活跃实例（RUNNING/SUSPENDED），不存在返回 null。 */
+  private FlowInstanceVO findExistingActiveInstance(String tenantId, String businessType, String businessId) {
+    FlowInstanceVO existing = instanceRepository.findByBusiness(tenantId, businessType, businessId).orElse(null);
     if (existing != null) {
-      log.info(
-          "[Flow] 实例已存在: businessType={} businessId={} id={} status={}",
-          dto.getBusinessType(),
-          dto.getBusinessId(),
-          existing.getId(),
-          existing.getFlowStatus());
-      return existing.getId();
+      log.info("[Flow] 实例已存在: businessType={} businessId={} id={} status={}",
+          businessType, businessId, existing.getId(), existing.getFlowStatus());
     }
+    return existing;
+  }
 
-    // 1. 查定义 - 直接查询最新已发布流程定义
-    FlowDefinitionDO def =
-        definitionService.getPublished(
-            dto.getFlowCode(),
-            StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : null,
-            tenantId);
+  /** 查找最新已发布流程定义，不存在则抛出 NOT_FOUND。 */
+  private FlowDefinitionDO findPublishedDefinition(FlowStartProcessDTO dto, String tenantId) {
+    FlowDefinitionDO def = definitionService.getPublished(dto.getFlowCode(),
+        StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : null, tenantId);
     if (def == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -228,8 +260,11 @@ public class FlowInstanceLifecycleManager {
           .params(dto.getFlowCode())
           .build();
     }
+    return def;
+  }
 
-    // 2. 构建流程实例 DTO
+  /** 构建流程实例 DTO。 */
+  private FlowInstanceDTO buildInstanceDto(FlowStartProcessDTO dto, FlowDefinitionDO def) {
     FlowInstanceDTO instanceDto = new FlowInstanceDTO();
     instanceDto.setFlowCode(def.getFlowCode());
     instanceDto.setFlowName(def.getFlowName());
@@ -238,66 +273,39 @@ public class FlowInstanceLifecycleManager {
     instanceDto.setBusinessType(dto.getBusinessType());
     instanceDto.setBusinessId(dto.getBusinessId());
     instanceDto.setBusinessNo(dto.getBusinessNo());
-    instanceDto.setTitle(
-        dto.getTitle() == null ? def.getFlowName() + "-" + dto.getBusinessId() : dto.getTitle());
+    instanceDto.setTitle(dto.getTitle() == null ? def.getFlowName() + "-" + dto.getBusinessId() : dto.getTitle());
     instanceDto.setInitiatorId(dto.getInitiatorId());
     instanceDto.setInitiatorName(dto.getInitiatorName());
     instanceDto.setFlowStatus(FlowInstanceStatus.RUNNING.name());
     instanceDto.setActivityStatus(1);
     instanceDto.setStartAt(LocalDateTime.now());
-    // GAP-P2: 发起人自选审批人 — 将 nodeAssignees 合并到 variables 中
-    Map<String, Object> mergedVars =
-        dto.getVariables() == null ? new HashMap<>() : new HashMap<>(dto.getVariables());
+    instanceDto.setVariable(buildInstanceVariables(dto));
+    instanceDto.setProviderTraceId(dto.getProviderTraceId());
+    instanceDto.setParentInstanceId(dto.getParentInstanceId());
+    instanceDto.setParentNodeCode(dto.getParentNodeCode());
+    return instanceDto;
+  }
+
+  /** 构建流程实例变量（含发起人自选审批人）。 */
+  private String buildInstanceVariables(FlowStartProcessDTO dto) {
+    Map<String, Object> mergedVars = dto.getVariables() == null ? new HashMap<>() : new HashMap<>(dto.getVariables());
     if (dto.getNodeAssignees() != null && !dto.getNodeAssignees().isEmpty()) {
       for (Map.Entry<String, List<Long>> entry : dto.getNodeAssignees().entrySet()) {
         mergedVars.put("_selfSelect_" + entry.getKey(), entry.getValue());
       }
     }
-    instanceDto.setVariable(mergedVars.isEmpty() ? null : YdszJson.toJson(mergedVars));
-    instanceDto.setProviderTraceId(dto.getProviderTraceId());
-    // P1-3: 子流程场景：填充父实例信息
-    instanceDto.setParentInstanceId(dto.getParentInstanceId());
-    instanceDto.setParentNodeCode(dto.getParentNodeCode());
-    FlowInstanceVO savedInstance = instanceRepository.save(instanceDto);
-    String instanceId = savedInstance.getId();
+    return mergedVars.isEmpty() ? null : YdszJson.toJson(mergedVars);
+  }
 
-    // P2-38: 发起人自选审批人 — _selfSelect_<nodeCode> 变量已合并到 mergedVars
-    for (String key : mergedVars.keySet()) {
-      if (key != null && key.startsWith("_selfSelect_")) {
-        log.info(
-            "[Flow] 发起人自选审批人变量: instanceId={} key={} value={}",
-            instanceId,
-            key,
-            mergedVars.get(key));
+  /** 记录发起人自选审批人变量日志。 */
+  private void logSelfSelectVariables(String instanceId, Map<String, Object> variables) {
+    if (variables == null) return;
+    for (Map.Entry<String, Object> entry : variables.entrySet()) {
+      if (entry.getKey() != null && entry.getKey().startsWith("_selfSelect_")) {
+        log.info("[Flow] 发起人自选审批人变量: instanceId={} key={} value={}",
+            instanceId, entry.getKey(), entry.getValue());
       }
     }
-
-    // P2-3: 触发 onInstanceStart 事件（统一事件机制）
-    fireEvent(l -> l.onInstanceStart(instanceId, mergedVars));
-
-    // P2-3: Prometheus 指标 — 实例创建
-    if (flowMetrics != null) {
-      flowMetrics.incInstance(def.getFlowCode(), "created");
-    }
-
-    // 3. 引擎推进：开始节点 → 下一节点
-    try {
-      advancer.start(instanceId);
-    } catch (Exception e) {
-      // P2-3: 触发 onError 事件（统一事件机制）
-      fireEvent(l -> l.onError(instanceId, e));
-      if (flowMetrics != null) {
-        flowMetrics.incError(def.getFlowCode(), "start_error");
-      }
-      throw e;
-    }
-    log.info(
-        "[Flow] 启动流程: code={} bizId={} instanceId={}",
-        dto.getFlowCode(),
-        dto.getBusinessId(),
-        instanceId);
-
-    return instanceId;
   }
 
   /**

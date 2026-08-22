@@ -143,86 +143,73 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String create(FlowDelegateAuthDO auth) {
+    validateDelegateAuth(auth);
+    fillDefaultValues(auth);
+
+    authRepository.save(converter.entityToVO(auth));
+    log.info("[FlowDelegate] 创建授权: owner={} delegate={} scope={} flow={} node={} role={} time=[{},{}]",
+        auth.getOwnerUserId(), auth.getDelegateUserId(), auth.getScopeType(),
+        auth.getFlowCode(), auth.getNodeCode(), auth.getRoleCode(),
+        auth.getStartTime(), auth.getEndTime());
+
+    // P2-5: 代理授权创建后，自动转发已有的在途待办
+    tryOfflineAutoForward(auth.getId());
+
+    return auth.getId();
+  }
+
+  /** 校验委托授权参数。 */
+  private void validateDelegateAuth(FlowDelegateAuthDO auth) {
     if (auth == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_fdf18ac3")
-          .build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_fdf18ac3").build();
     }
     if (auth.getOwnerUserId() == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_d65b2814")
-          .build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_d65b2814").build();
     }
     if (auth.getDelegateUserId() == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_9999d306")
-          .build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_9999d306").build();
     }
     if (auth.getOwnerUserId().equals(auth.getDelegateUserId())) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_5b0149dc")
-          .build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_5b0149dc").build();
     }
     if (auth.getStartTime() == null || auth.getEndTime() == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_8a268764")
-          .build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_8a268764").build();
     }
     if (!auth.getEndTime().isAfter(auth.getStartTime())) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_0e756b4f")
-          .build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_0e756b4f").build();
     }
     if (!StringUtils.hasText(auth.getScopeType())) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_4cfd103d")
-          .build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_4cfd103d").build();
     }
-    // scope 必填字段校验
+    validateScopeFields(auth);
+  }
+
+  /** 校验 scope 必填字段。 */
+  private void validateScopeFields(FlowDelegateAuthDO auth) {
     switch (auth.getScopeType()) {
       case "FLOW" -> {
         if (!StringUtils.hasText(auth.getFlowCode())) {
-          throw SysException.builder()
-              .resultCode(YdszResultCode.BAD_REQUEST)
-              .message("error.workflow.msg_2c8e3391")
-              .build();
+          throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_2c8e3391").build();
         }
       }
       case "FLOW_NODE" -> {
         if (!StringUtils.hasText(auth.getFlowCode()) || !StringUtils.hasText(auth.getNodeCode())) {
-          throw SysException.builder()
-              .resultCode(YdszResultCode.BAD_REQUEST)
-              .message("error.workflow.msg_8722656e")
-              .build();
+          throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_8722656e").build();
         }
       }
       case "ROLE" -> {
         if (!StringUtils.hasText(auth.getRoleCode())) {
-          throw SysException.builder()
-              .resultCode(YdszResultCode.BAD_REQUEST)
-              .message("error.workflow.msg_19801c0e")
-              .build();
+          throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_19801c0e").build();
         }
       }
-      case "ALL" -> {
-        /* no-op */
-      }
-      default ->
-          throw SysException.builder()
-              .resultCode(YdszResultCode.BAD_REQUEST)
-              .key("error.workflow.msg_b0022eba")
-              .params(auth.getScopeType())
-              .build();
+      case "ALL" -> { /* no-op */ }
+      default -> throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST)
+          .key("error.workflow.msg_b0022eba").params(auth.getScopeType()).build();
     }
+  }
 
-    // 默认值
+  /** 填充默认值。 */
+  private void fillDefaultValues(FlowDelegateAuthDO auth) {
     if (auth.getTenantId() == null) {
       auth.setTenantId(AuthContextUtils.getTenantIdOrDefault());
     }
@@ -230,31 +217,18 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
       auth.setAuthStatus("ENABLED");
     }
     auth.setProviderTraceId(TracerUtils.getOrCreateTraceId());
+  }
 
-    authRepository.save(converter.entityToVO(auth));
-    log.info(
-        "[FlowDelegate] 创建授权: owner={} delegate={} scope={} flow={} node={} role={} time=[{},{}]",
-        auth.getOwnerUserId(),
-        auth.getDelegateUserId(),
-        auth.getScopeType(),
-        auth.getFlowCode(),
-        auth.getNodeCode(),
-        auth.getRoleCode(),
-        auth.getStartTime(),
-        auth.getEndTime());
-
-    // P2-5: 代理授权创建后，自动转发已有的在途待办
+  /** 尝试离线自动转发（失败不影响授权创建）。 */
+  private void tryOfflineAutoForward(String authId) {
     try {
-      int forwarded = offlineAutoForwardService.autoForwardByAuth(auth.getId());
+      int forwarded = offlineAutoForwardService.autoForwardByAuth(authId);
       if (forwarded > 0) {
-        log.info("[FlowDelegate] P2-5 离线自动转发: authId={} forwarded={}", auth.getId(), forwarded);
+        log.info("[FlowDelegate] P2-5 离线自动转发: authId={} forwarded={}", authId, forwarded);
       }
     } catch (Exception e) {
-      // 自动转发失败不影响授权创建
-      log.warn("[FlowDelegate] P2-5 离线自动转发失败: authId={} err={}", auth.getId(), e.getMessage());
+      log.warn("[FlowDelegate] P2-5 离线自动转发失败: authId={} err={}", authId, e.getMessage());
     }
-
-    return auth.getId();
   }
 
   /**

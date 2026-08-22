@@ -669,43 +669,87 @@ public class FlowInstanceLifecycleService {
   @Transactional(rollbackFor = Exception.class)
   @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
   public boolean recall(String instanceId, String initiatorId, String targetNodeCode) {
-    // 向后兼容：targetNodeCode 为空时降级到原有 recall
     if (!StringUtils.hasText(targetNodeCode)) {
       return recall(instanceId, initiatorId);
     }
 
     FlowInstanceVO instance = getByIdOrThrow(instanceId);
-    // 校验：仅发起人可撤回
+    validateRecallPermission(instance, initiatorId);
+    List<FlowRunTaskDO> pendingTasks = validateNextTasksAllPending(instanceId);
+
+    // 校验：targetNodeCode 必须在可撤回节点列表中
+    validateTargetNodeRecallable(instanceId, targetNodeCode);
+
+    // 取消当前待办并退回到目标节点
+    String currentNodeCode = pendingTasks.isEmpty() ? instance.getCurrentNodeCode() : pendingTasks.get(0).getNodeCode();
+    taskService.cancelByInstance(instanceId, FlowTaskStatus.CANCELLED.name());
+    advanceToTargetNode(instance, currentNodeCode, targetNodeCode);
+
+    log.info("[Flow] 撤回流程到指定节点: instanceId={} initiatorId={} targetNodeCode={}",
+        instanceId, initiatorId, targetNodeCode);
+    fireRecallEvents(instance);
+    return true;
+  }
+
+  @Transactional(rollbackFor = Exception.class)
+  @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
+  public boolean recall(String instanceId, String initiatorId) {
+    FlowInstanceVO instance = getByIdOrThrow(instanceId);
+    validateRecallPermission(instance, initiatorId);
+    validateNextTasksAllPending(instanceId);
+
+    // 取消当前待办并回退到开始节点的下一节点
+    taskService.cancelByInstance(instanceId, FlowTaskStatus.CANCELLED.name());
+    try {
+      advancer.start(instanceId);
+    } catch (Exception e) {
+      log.error("[Flow] 撤回后重新推进失败: instanceId={}", instanceId, e);
+      throw SysException.builder()
+          .resultCode(YdszResultCode.INTERNAL_ERROR)
+          .key("error.workflow.msg_3d726320")
+          .params(e.getMessage())
+          .build();
+    }
+    log.info("[Flow] 撤回流程: instanceId={} initiatorId={}", instanceId, initiatorId);
+    fireRecallEvents(instance);
+    return true;
+  }
+
+  /** 校验撤回权限：仅发起人可撤回且实例为运行中。 */
+  private void validateRecallPermission(FlowInstanceVO instance, String initiatorId) {
     if (!instance.getInitiatorId().equals(initiatorId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
           .message("error.workflow.msg_cc712a3a")
           .build();
     }
-    // 校验：仅运行中可撤回
     if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_3095a676")
           .build();
     }
-    // 校验：下一节点未被处理（PENDING 状态的任务可以撤回）
+  }
+
+  /** 校验下一节点待办全部为 PENDING（未被 CLAIMED/COMPLETED），返回待办列表。 */
+  private List<FlowRunTaskDO> validateNextTasksAllPending(String instanceId) {
     List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
         .map(converter::entityToDO)
         .collect(Collectors.toList());
-    boolean anyProcessed =
-        pendingTasks.stream()
-            .anyMatch(
-                t ->
-                    FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
-                        || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
+    boolean anyProcessed = pendingTasks.stream()
+        .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
+            || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
     if (anyProcessed) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.workflow.msg_c55fe642")
           .build();
     }
-    // 校验：targetNodeCode 必须在可撤回节点列表中
+    return pendingTasks;
+  }
+
+  /** 校验目标节点在可撤回节点列表中。 */
+  private void validateTargetNodeRecallable(String instanceId, String targetNodeCode) {
     List<Map<String, Object>> recallable = hisTaskRepository.listPassedNodes(instanceId);
     Set<String> recallableCodes = new HashSet<>();
     if (recallable != null) {
@@ -723,105 +767,30 @@ public class FlowInstanceLifecycleService {
           .params(targetNodeCode)
           .build();
     }
+  }
 
-    // 取消当前待办（审计：CANCELLED，原因 RECALL）
-    String currentNodeCode =
-        pendingTasks.isEmpty() ? instance.getCurrentNodeCode() : pendingTasks.get(0).getNodeCode();
-    taskService.cancelByInstance(instanceId, FlowTaskStatus.CANCELLED.name());
-
-    // 退回到目标节点（复用 advancer.advance 的 REJECT 通道，保持审计轨迹一致）
+  /** 退回到指定目标节点（复用 advancer.advance 的 REJECT 通道）。 */
+  private void advanceToTargetNode(FlowInstanceVO instance, String currentNodeCode, String targetNodeCode) {
     Map<String, Object> variables = parseVariables(instance.getVariable());
     try {
       advancer.advance(instance, currentNodeCode, "REJECT", targetNodeCode, variables);
     } catch (Exception e) {
-      log.error("[Flow] 撤回到指定节点失败: instanceId={} targetNodeCode={}", instanceId, targetNodeCode, e);
+      log.error("[Flow] 撤回到指定节点失败: instanceId={} targetNodeCode={}", instance.getId(), targetNodeCode, e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
           .key("error.workflow.msg_3d726320")
           .params(e.getMessage())
           .build();
     }
-
-    log.info(
-        "[Flow] 撤回流程到指定节点: instanceId={} initiatorId={} targetNodeCode={}",
-        instanceId,
-        initiatorId,
-        targetNodeCode);
-    // P2-3: Prometheus 指标 — 撤回
-    if (flowMetrics != null) {
-      flowMetrics.incInstance(instance.getFlowCode(), "recalled");
-    }
-    // P2-34: 触发 onInstanceRecalled 事件
-    fireEvent(l -> l.onInstanceRecalled(instanceId, initiatorId));
-    // P2-35: 发布 Spring 异步事件
-    publishWorkflowEvent("INSTANCE_RECALLED", instanceId, null);
-    return true;
   }
 
-  /**
-   * P1-8: 撤回流程（仅发起人可撤回，仅运行中可撤回，下一节点未被处理才可撤回）
-   *
-   * @param instanceId 实例 ID
-   * @param initiatorId 发起人 ID
-   * @return 是否撤回成功
-   */
-  @Transactional(rollbackFor = Exception.class)
-  @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
-  public boolean recall(String instanceId, String initiatorId) {
-    FlowInstanceVO instance = getByIdOrThrow(instanceId);
-    // 校验：仅发起人可撤回
-    if (!instance.getInitiatorId().equals(initiatorId)) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.FORBIDDEN)
-          .message("error.workflow.msg_cc712a3a")
-          .build();
-    }
-    // 校验：仅运行中可撤回
-    if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_3095a676")
-          .build();
-    }
-    // 校验：下一节点未被处理（PENDING 状态的任务可以撤回）
-    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
-        .map(converter::entityToDO)
-        .collect(Collectors.toList());
-    boolean anyProcessed =
-        pendingTasks.stream()
-            .anyMatch(
-                t ->
-                    FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
-                        || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
-    if (anyProcessed) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_c55fe642")
-          .build();
-    }
-    // 取消当前待办
-    taskService.cancelByInstance(instanceId, FlowTaskStatus.CANCELLED.name());
-    // 回退到开始节点的下一节点（重新生成第一批待办）
-    try {
-      advancer.start(instanceId);
-    } catch (Exception e) {
-      log.error("[Flow] 撤回后重新推进失败: instanceId={}", instanceId, e);
-      throw SysException.builder()
-          .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .key("error.workflow.msg_3d726320")
-          .params(e.getMessage())
-          .build();
-    }
-    log.info("[Flow] 撤回流程: instanceId={} initiatorId={}", instanceId, initiatorId);
-    // P2-3: Prometheus 指标 — 撤回
+  /** 触发撤回相关事件（Prometheus + 业务事件 + Spring 事件）。 */
+  private void fireRecallEvents(FlowInstanceVO instance) {
     if (flowMetrics != null) {
       flowMetrics.incInstance(instance.getFlowCode(), "recalled");
     }
-    // P2-34: 触发 onInstanceRecalled 事件
-    fireEvent(l -> l.onInstanceRecalled(instanceId, initiatorId));
-    // P2-35: 发布 Spring 异步事件
-    publishWorkflowEvent("INSTANCE_RECALLED", instanceId, null);
-    return true;
+    fireEvent(l -> l.onInstanceRecalled(instance.getId(), instance.getInitiatorId()));
+    publishWorkflowEvent("INSTANCE_RECALLED", instance.getId(), null);
   }
 
   /**

@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 580" width="100%" role="img">
+  <title>Ydsz Cloud 系统架构图</title>
+  <desc>展示客户端经网关路由至 8 个微服务，共享 ydsz-common 公共底座与中间件的分层架构</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <style>
+    .t { font-family: -apple-system, "Segoe UI", sans-serif; font-size: 13px; fill: #2C2C2A; }
+    .ts { font-family: -apple-system, "Segoe UI", sans-serif; font-size: 11px; fill: #5F5E5A; }
+    .th { font-family: -apple-system, "Segoe UI", sans-serif; font-size: 13px; font-weight: 500; fill: #2C2C2A; }
+  </style>
+
+  <!-- Client -->
+  <g>
+    <rect x="40" y="40" width="120" height="48" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+    <text class="th" x="100" y="60" text-anchor="middle" dominant-baseline="central">Web / App 客户端</text>
+    <text class="ts" x="100" y="78" text-anchor="middle" dominant-baseline="central">PC Web + 移动端</text>
+  </g>
+
+  <!-- arrow client -> gateway -->
+  <line x1="160" y1="64" x2="218" y2="64" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Gateway -->
+  <g>
+    <rect x="220" y="40" width="160" height="48" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.5"/>
+    <text class="th" x="300" y="58" text-anchor="middle" dominant-baseline="central">ydsz-gateway :9000</text>
+    <text class="ts" x="300" y="76" text-anchor="middle" dominant-baseline="central">WebFlux 反应式 · JWT 鉴权 · 限流</text>
+  </g>
+
+  <!-- arrow gateway -> services bus -->
+  <line x1="380" y1="64" x2="438" y2="64" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- common base container -->
+  <rect x="40" y="110" width="380" height="290" rx="16" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"/>
+  <text class="ts" x="56" y="132" dominant-baseline="central">ydsz-common 公共底座（L1-L6，不独立部署）</text>
+
+  <g>
+    <rect x="56" y="146" width="348" height="26" rx="6" fill="#ffffff" stroke="#888780" stroke-width="0.5"/>
+    <text class="ts" x="64" y="159" dominant-baseline="central">L1 工具层：json · util · cache · excel</text>
+  </g>
+  <g>
+    <rect x="56" y="184" width="348" height="26" rx="6" fill="#ffffff" stroke="#888780" stroke-width="0.5"/>
+    <text class="ts" x="64" y="197" dominant-baseline="central">L2 基础设施层：core</text>
+  </g>
+  <g>
+    <rect x="56" y="222" width="348" height="26" rx="6" fill="#ffffff" stroke="#888780" stroke-width="0.5"/>
+    <text class="ts" x="64" y="235" dominant-baseline="central">L3 基础服务层：domain · exception</text>
+  </g>
+  <g>
+    <rect x="56" y="260" width="348" height="26" rx="6" fill="#ffffff" stroke="#888780" stroke-width="0.5"/>
+    <text class="ts" x="64" y="273" dominant-baseline="central">L4 基础数据层：jdbc · redis · lock · thread · tenant</text>
+  </g>
+  <g>
+    <rect x="56" y="298" width="348" height="26" rx="6" fill="#ffffff" stroke="#888780" stroke-width="0.5"/>
+    <text class="ts" x="64" y="311" dominant-baseline="central">L5 业务服务层：auth · safe · feign · audit · notify · queue · ...</text>
+  </g>
+  <g>
+    <rect x="56" y="336" width="348" height="26" rx="6" fill="#ffffff" stroke="#888780" stroke-width="0.5"/>
+    <text class="ts" x="64" y="349" dominant-baseline="central">L6 应用层：base · web · app</text>
+  </g>
+
+  <!-- services container -->
+  <rect x="440" y="40" width="200" height="360" rx="16" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+  <text class="ts" x="456" y="62" dominant-baseline="central">业务微服务（:9001-9008）</text>
+
+  <g>
+    <rect x="456" y="76" width="168" height="30" rx="6" fill="#ffffff" stroke="#888780" stroke-width="0.5"/>
+    <text class="t" x="540" y="91" text-anchor="middle" dominant-baseline="central">ydsz-system :9001</text>
+  </g>
+  <g>
+    <rect x="456" y="112" width="168" height="30" rx="6" fill="#ffffff" stroke="#888780" stroke-width="0.5"/>
+    <text class="t" x="540" y="127" text-anchor="middle" dominant-baseline="central">ydsz-userinfo :9002</text>
+  </g>
+  <g>
+    <rect x="456" y="148" width="168" height="30" rx="6" fill="#ffffff" stroke="#888780" stroke-width="0.5"/>
+    <text class="t" x="540" y="163" text-anchor="middle" dominant-baseline="central">ydsz-nextwiki :9003</text>
+  </g>
+  <g>
+    <rect x="456" y="184" width="168" height="30" rx="6" fill="#ffffff" stroke="#888780" stroke-width="0.5"/>
+    <text class="t" x="540" y="199" text-anchor="middle" dominant-baseline="central">ydsz-message :9004</text>
+  </g>
+  <g>
+    <rect x="456" y="220" width="168" height="30" rx="6" fill="#ffffff" stroke="#888780" stroke-width="0.5"/>
+    <text class="t" x="540" y="235" text-anchor="middle" dominant-baseline="central">ydsz-workflow :9005</text>
+  </g>
+  <g>
+    <rect x="456" y="256" width="168" height="30" rx="6" fill="#ffffff" stroke="#888780" stroke-width="0.5"/>
+    <text class="t" x="540" y="271" text-anchor="middle" dominant-baseline="central">ydsz-cronjob :9006</text>
+  </g>
+  <g>
+    <rect x="456" y="292" width="168" height="30" rx="6" fill="#ffffff" stroke="#888780" stroke-width="0.5"/>
+    <text class="t" x="540" y="307" text-anchor="middle" dominant-baseline="central">ydsz-literule :9007</text>
+  </g>
+  <g>
+    <rect x="456" y="328" width="168" height="30" rx="6" fill="#ffffff" stroke="#888780" stroke-width="0.5"/>
+    <text class="t" x="540" y="343" text-anchor="middle" dominant-baseline="central">ydsz-agent :9008</text>
+  </g>
+
+  <!-- arrows services -> common -->
+  <line x1="440" y1="190" x2="422" y2="190" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Middleware container -->
+  <rect x="40" y="420" width="600" height="120" rx="20" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+  <text class="ts" x="56" y="444" dominant-baseline="central">中间件层（共享）</text>
+  <g>
+    <rect x="60" y="456" width="100" height="40" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"/>
+    <text class="t" x="110" y="476" text-anchor="middle" dominant-baseline="central">PostgreSQL</text>
+  </g>
+  <g>
+    <rect x="176" y="456" width="100" height="40" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+    <text class="t" x="226" y="476" text-anchor="middle" dominant-baseline="central">Redis</text>
+  </g>
+  <g>
+    <rect x="292" y="456" width="100" height="40" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+    <text class="t" x="342" y="476" text-anchor="middle" dominant-baseline="central">Nacos</text>
+  </g>
+  <g>
+    <rect x="408" y="456" width="100" height="40" rx="8" fill="#FBEAF0" stroke="#993556" stroke-width="0.5"/>
+    <text class="t" x="458" y="476" text-anchor="middle" dominant-baseline="central">RocketMQ</text>
+  </g>
+  <g>
+    <rect x="524" y="456" width="100" height="40" rx="8" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+    <text class="t" x="574" y="476" text-anchor="middle" dominant-baseline="central">MinIO</text>
+  </g>
+
+  <!-- arrows common -> middleware -->
+  <line x1="240" y1="400" x2="240" y2="418" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- arrows services -> middleware -->
+  <line x1="540" y1="400" x2="540" y2="418" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+</svg>

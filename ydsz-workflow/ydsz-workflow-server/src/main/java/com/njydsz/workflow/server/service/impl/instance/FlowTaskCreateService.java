@@ -1225,49 +1225,71 @@ public class FlowTaskCreateService {
     Map<String, Object> nodeExt = parseExtConfig(node.getExt());
 
     // P0-2: 节点 ext 配置 selfSelect=true 时，优先读取自选审批人
-    Object selfSelectFlag = nodeExt.get("selfSelect");
-    if (selfSelectFlag != null && isBooleanTrue(selfSelectFlag) && variables != null) {
-      Object selfSelectVal = variables.get("_selfSelect_" + node.getNodeCode());
-      List<String> selfSelectExpanded = expandCollectionValue(selfSelectVal);
-      if (!selfSelectExpanded.isEmpty()) {
-        log.info(
-            "[Flow] P0-2 自选审批人展开: nodeCode={} count={}",
-            node.getNodeCode(),
-            selfSelectExpanded.size());
-        return selfSelectExpanded;
-      }
-      // 自选变量为空 → 检查是否允许回退到 permissionFlag
-      Object allowFallback = nodeExt.get("selfSelectAllowFallback");
-      if (!isBooleanTrue(allowFallback)) {
-        log.warn("[Flow] P0-2 自选审批人为空且未配置 fallback: nodeCode={}", node.getNodeCode());
-        return Collections.emptyList();
-      }
-      log.info("[Flow] P0-2 自选审批人为空，回退到 permissionFlag: nodeCode={}", node.getNodeCode());
+    List<String> selfSelectResult = tryExpandSelfSelectAssignees(node, variables, nodeExt);
+    if (selfSelectResult != null) {
+      return selfSelectResult;
     }
 
-    Object collectionVar = nodeExt.get("collection");
-    if (collectionVar != null && variables != null && !variables.isEmpty()) {
-      String varName = String.valueOf(collectionVar).trim();
-      if (varName.startsWith("${") && varName.endsWith("}")) {
-        varName = varName.substring(2, varName.length() - 1).trim();
-      }
-      Object collectionValue = variables.get(varName);
-      if (collectionValue == null) {
-        collectionValue = variables.get("_selfSelect_" + node.getNodeCode());
-      }
-      List<String> expanded = expandCollectionValue(collectionValue);
-      if (!expanded.isEmpty()) {
-        log.info(
-            "[Flow] collection 变量展开: nodeCode={} var={} count={}",
-            node.getNodeCode(),
-            varName,
-            expanded.size());
-        return expanded;
-      }
-      log.warn("[Flow] collection 变量为空: nodeCode={} var={}", node.getNodeCode(), varName);
+    // 尝试从 collection 变量展开
+    List<String> collectionResult = tryExpandCollectionAssignees(node, variables, nodeExt);
+    if (collectionResult != null) {
+      return collectionResult;
+    }
+
+    // 回退到 permissionFlag 解析
+    return expandPermissionFlagAssignees(node, variables);
+  }
+
+  /** 尝试从 selfSelect 配置展开审批人，不需要时返回 null。 */
+  private List<String> tryExpandSelfSelectAssignees(FlowNodeDO node, Map<String, Object> variables,
+      Map<String, Object> nodeExt) {
+    Object selfSelectFlag = nodeExt.get("selfSelect");
+    if (selfSelectFlag == null || !isBooleanTrue(selfSelectFlag) || variables == null) {
+      return null;
+    }
+    Object selfSelectVal = variables.get("_selfSelect_" + node.getNodeCode());
+    List<String> expanded = expandCollectionValue(selfSelectVal);
+    if (!expanded.isEmpty()) {
+      log.info("[Flow] P0-2 自选审批人展开: nodeCode={} count={}", node.getNodeCode(), expanded.size());
+      return expanded;
+    }
+    // 自选变量为空 → 检查是否允许回退
+    Object allowFallback = nodeExt.get("selfSelectAllowFallback");
+    if (!isBooleanTrue(allowFallback)) {
+      log.warn("[Flow] P0-2 自选审批人为空且未配置 fallback: nodeCode={}", node.getNodeCode());
       return Collections.emptyList();
     }
+    log.info("[Flow] P0-2 自选审批人为空，回退到 permissionFlag: nodeCode={}", node.getNodeCode());
+    return null;
+  }
 
+  /** 尝试从 collection 变量展开审批人，不需要时返回 null。 */
+  private List<String> tryExpandCollectionAssignees(FlowNodeDO node, Map<String, Object> variables,
+      Map<String, Object> nodeExt) {
+    Object collectionVar = nodeExt.get("collection");
+    if (collectionVar == null || variables == null || variables.isEmpty()) {
+      return null;
+    }
+    String varName = String.valueOf(collectionVar).trim();
+    if (varName.startsWith("${") && varName.endsWith("}")) {
+      varName = varName.substring(2, varName.length() - 1).trim();
+    }
+    Object collectionValue = variables.get(varName);
+    if (collectionValue == null) {
+      collectionValue = variables.get("_selfSelect_" + node.getNodeCode());
+    }
+    List<String> expanded = expandCollectionValue(collectionValue);
+    if (!expanded.isEmpty()) {
+      log.info("[Flow] collection 变量展开: nodeCode={} var={} count={}",
+          node.getNodeCode(), varName, expanded.size());
+      return expanded;
+    }
+    log.warn("[Flow] collection 变量为空: nodeCode={} var={}", node.getNodeCode(), varName);
+    return Collections.emptyList();
+  }
+
+  /** 从 permissionFlag 解析并展开审批人列表。 */
+  private List<String> expandPermissionFlagAssignees(FlowNodeDO node, Map<String, Object> variables) {
     String perm = node.getPermissionFlag();
     if (!StringUtils.hasText(perm)) {
       return Collections.emptyList();
@@ -1279,66 +1301,77 @@ public class FlowTaskCreateService {
     List<String> result = new ArrayList<>();
     Set<String> seen = new HashSet<>();
     for (String token : resolved.split(",")) {
-      String t = token.trim();
-      if (t.isEmpty()) continue;
-      if (t.startsWith("self_select:")) {
-        String varName = t.substring("self_select:".length()).trim();
-        Object selfSelectVal =
-            variables != null ? variables.get("_selfSelect_" + node.getNodeCode()) : null;
-        if (selfSelectVal == null && variables != null && !varName.isEmpty()) {
-          selfSelectVal = variables.get(varName);
-        }
-        List<String> expanded = expandCollectionValue(selfSelectVal);
-        for (String uid : expanded) {
-          if (seen.add(uid)) {
-            result.add(uid);
-          }
-        }
-        continue;
+      expandTokenToAssignees(token.trim(), node, variables, result, seen);
+    }
+    return result;
+  }
+
+  /** 展开单个 token 到审批人列表（self_select / user / multi_leader / dept_leader / role）。 */
+  private void expandTokenToAssignees(String token, FlowNodeDO node, Map<String, Object> variables,
+      List<String> result, Set<String> seen) {
+    if (token.isEmpty()) {
+      return;
+    }
+    if (token.startsWith("self_select:")) {
+      expandSelfSelectToken(token, node, variables, result, seen);
+      return;
+    }
+    if (token.startsWith("user:")) {
+      String uid = token.substring(5).trim();
+      if (!uid.isEmpty() && seen.add(uid)) {
+        result.add(uid);
       }
-      if (t.startsWith("user:")) {
-        String uid = t.substring(5).trim();
-        if (!uid.isEmpty() && seen.add(uid)) {
-          result.add(uid);
+      return;
+    }
+    if (token.startsWith("multi_leader:")) {
+      expandMultiLeaderToken(token, node, variables, result, seen);
+      return;
+    }
+    if (token.startsWith("dept_leader:")) {
+      expandDeptLeaderToken(token, variables, result, seen);
+      return;
+    }
+    // role / dept 等普通占位符
+    List<Long> expanded = assigneeResolver.expandUsers(token, variables);
+    if (expanded != null) {
+      for (Long uid : expanded) {
+        String s = String.valueOf(uid);
+        if (seen.add(s)) {
+          result.add(s);
         }
-        continue;
       }
-      if (t.startsWith("multi_leader:")) {
-        String levelStr = t.substring("multi_leader:".length()).trim();
-        int levels = 1;
-        try {
-          levels = Integer.parseInt(levelStr);
-        } catch (NumberFormatException ignored) {
-          // use default
-        }
-        String startUserId = resolveInitiatorId(variables);
-        if (startUserId != null) {
-          List<Long> expanded = assigneeResolver.expandMultiLeader(startUserId, levels, variables);
-          if (expanded != null) {
-            for (Long uid : expanded) {
-              String s = String.valueOf(uid);
-              if (seen.add(s)) {
-                result.add(s);
-              }
-            }
-          }
-        }
-        continue;
+    }
+  }
+
+  /** 展开 self_select token：从流程变量读取自选审批人。 */
+  private void expandSelfSelectToken(String token, FlowNodeDO node, Map<String, Object> variables,
+      List<String> result, Set<String> seen) {
+    String varName = token.substring("self_select:".length()).trim();
+    Object selfSelectVal = variables != null ? variables.get("_selfSelect_" + node.getNodeCode()) : null;
+    if (selfSelectVal == null && variables != null && !varName.isEmpty()) {
+      selfSelectVal = variables.get(varName);
+    }
+    List<String> expanded = expandCollectionValue(selfSelectVal);
+    for (String uid : expanded) {
+      if (seen.add(uid)) {
+        result.add(uid);
       }
-      if (t.startsWith("dept_leader:")) {
-        String deptId = t.substring("dept_leader:".length()).trim();
-        if (!deptId.isEmpty()) {
-          Long leaderId = assigneeResolver.expandDeptLeader(deptId, variables);
-          if (leaderId != null) {
-            String s = String.valueOf(leaderId);
-            if (seen.add(s)) {
-              result.add(s);
-            }
-          }
-        }
-        continue;
-      }
-      List<Long> expanded = assigneeResolver.expandUsers(t, variables);
+    }
+  }
+
+  /** 展开 multi_leader token：向上追溯多级领导。 */
+  private void expandMultiLeaderToken(String token, FlowNodeDO node, Map<String, Object> variables,
+      List<String> result, Set<String> seen) {
+    String levelStr = token.substring("multi_leader:".length()).trim();
+    int levels = 1;
+    try {
+      levels = Integer.parseInt(levelStr);
+    } catch (NumberFormatException ignored) {
+      // use default
+    }
+    String startUserId = resolveInitiatorId(variables);
+    if (startUserId != null) {
+      List<Long> expanded = assigneeResolver.expandMultiLeader(startUserId, levels, variables);
       if (expanded != null) {
         for (Long uid : expanded) {
           String s = String.valueOf(uid);
@@ -1348,7 +1381,21 @@ public class FlowTaskCreateService {
         }
       }
     }
-    return result;
+  }
+
+  /** 展开 dept_leader token：查询部门领导。 */
+  private void expandDeptLeaderToken(String token, Map<String, Object> variables,
+      List<String> result, Set<String> seen) {
+    String deptId = token.substring("dept_leader:".length()).trim();
+    if (!deptId.isEmpty()) {
+      Long leaderId = assigneeResolver.expandDeptLeader(deptId, variables);
+      if (leaderId != null) {
+        String s = String.valueOf(leaderId);
+        if (seen.add(s)) {
+          result.add(s);
+        }
+      }
+    }
   }
 
   /** P1-4: 将 collection / self_select 变量值展开为用户 ID 字符串列表 */
