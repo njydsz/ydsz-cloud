@@ -72,9 +72,9 @@
 
 | Controller | 路径前缀 | 主要端点 |
 |---|---|---|
-| `AgentController` | `/api/v1/agent` | 同步执行 `/execute`、流式执行（SSE）`/execute/stream`、同步对话 `/chat`、流式对话（SSE）`/chat/stream`、批量对话 `/chat/batch`、对话历史 `/history`（GET/DELETE） |
+| `AgentController` | `/api/v1/agent` | 同步执行 `/execute`、流式执行（SSE）`/execute/stream`、同步对话 `/chat`、流式对话（SSE）`/chat/stream`、批量对话 `/chat/batch`、对话历史 `/history`（GET/DELETE）。支持多模态（Vision）输入 |
 | `AgentDefinitionController` | `/api/v1/agent/definitions` | Agent 定义 CRUD（列表 / 详情 / 按 code 查询 / 创建 / 更新 / 删除） |
-| `AgentMetadataController` | `/api/v1/agent` | Agent 元数据（可用模型 `/models`、已注册工具 `/tools`） |
+| `AgentMetadataController` | `/api/v1/agent` | Agent 元数据（可用模型 `/models`、已注册工具 `/tools`）。与 `AgentController` 共享基路径 |
 | `DagController` | `/api/v1/agent/dag` | DAG 编排执行 `/execute`、DSL 验证 `/validate`、检查点查询 `/checkpoint/{executionId}` |
 | `DebugController` | `/api/v1/agent/debug` | 调试器链路列表 `/traces`、链路详情 `/trace/{traceId}`、链路重放 `/trace/{traceId}/replay` |
 | `HumanApprovalController` | `/api/v1/agent/approvals` | 人工审批待审批列表 `/pending`、审批详情 `/{id}`、审批通过 `/{id}/approve`、审批拒绝 `/{id}/reject` |
