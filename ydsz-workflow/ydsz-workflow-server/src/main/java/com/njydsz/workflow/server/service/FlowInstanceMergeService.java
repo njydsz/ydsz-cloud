@@ -3,6 +3,8 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.workflow.domain.vo.StringVO;
+
 /**
  * 流程实例合并服务。
  *
@@ -52,6 +54,19 @@ public interface FlowInstanceMergeService {
    * @return 合并组详情（含子实例列表）
    */
   Map<String, Object> getMergeGroup(String mergeGroupId);
+
+  /**
+   * 合并多个流程实例，返回 VO。
+   *
+   * <p>符合 DDD 分层规范：Service 层内部完成 String→StringVO 转换。
+   *
+   * @param instanceIds 待合并的实例 ID 列表（至少 2 个）
+   * @param operatorId 操作人 ID
+   * @param tenantId 租户 ID
+   * @return 合并组 ID VO
+   * @since 1.0.0
+   */
+  StringVO mergeInstancesVO(List<String> instanceIds, String operatorId, String tenantId);
 
   /**
    * 查询用户可合并的实例列表（同类型、同节点）。
