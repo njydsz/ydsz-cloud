@@ -20,7 +20,7 @@ import com.njydsz.userinfo.infra.entity.SamlIdpConfigDO;
  * </ul>
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Mapper
 public interface SamlIdpConfigMapper extends BaseMapper<SamlIdpConfigDO> {

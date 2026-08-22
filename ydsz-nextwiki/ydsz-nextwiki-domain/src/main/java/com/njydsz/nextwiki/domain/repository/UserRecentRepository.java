@@ -10,7 +10,7 @@ import com.njydsz.nextwiki.domain.dto.UserRecentDTO;
  * <p>定义最近访问数据访问操作，实现类位于 infra 层。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface UserRecentRepository {
 

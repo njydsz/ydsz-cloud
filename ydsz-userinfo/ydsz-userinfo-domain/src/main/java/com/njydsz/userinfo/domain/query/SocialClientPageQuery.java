@@ -10,7 +10,7 @@ import com.njydsz.common.domain.query.PageQuery;
  * 社交平台客户端配置分页查询参数（P1-1）。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Data
 @NoArgsConstructor

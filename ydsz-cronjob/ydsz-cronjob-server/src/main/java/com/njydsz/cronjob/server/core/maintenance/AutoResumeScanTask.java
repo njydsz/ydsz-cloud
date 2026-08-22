@@ -13,7 +13,7 @@ import com.njydsz.cronjob.server.core.dispatch.AutoResumeScanner;
  * 扫描间隔由配置 {@code ydsz.cronjob.auto-resume.interval-ms} 控制（默认 60s）。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

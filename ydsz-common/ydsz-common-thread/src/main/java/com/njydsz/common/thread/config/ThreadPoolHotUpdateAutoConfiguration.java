@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Role;
  * <p>v1.4.0 新增：从半自动（需业务模块手动创建 Bean）改为全自动配置， 符合 Spring Boot 自动配置惯例。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  * @see ThreadPoolHotUpdateListener
  */
 @AutoConfiguration(after = ThreadPoolAutoConfiguration.class)

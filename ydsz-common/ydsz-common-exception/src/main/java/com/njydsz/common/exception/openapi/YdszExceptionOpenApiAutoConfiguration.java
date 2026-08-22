@@ -23,7 +23,7 @@ import com.njydsz.common.exception.code.ErrorCodeTable;
  * }</pre>
  *
  * @author ydsz-team
- * @since 2.4.0
+ * @since 1.0.0
  */
 @AutoConfiguration(
     after = com.njydsz.common.exception.config.YdszExceptionCoreAutoConfiguration.class)

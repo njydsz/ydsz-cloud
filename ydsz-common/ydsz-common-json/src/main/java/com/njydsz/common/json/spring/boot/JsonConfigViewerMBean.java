@@ -8,7 +8,7 @@ package com.njydsz.common.json.spring.boot;
  * <p><b>ObjectName：</b>{@code com.njydsz.common.json:type=JsonConfigViewer}
  *
  * @author ydsz-team
- * @since 1.2.1
+ * @since 1.0.0
  */
 public interface JsonConfigViewerMBean {
 

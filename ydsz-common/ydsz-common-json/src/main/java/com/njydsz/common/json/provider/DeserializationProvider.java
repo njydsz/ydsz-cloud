@@ -699,7 +699,7 @@ public final class DeserializationProvider {
    * <p>在线程池环境中，应在任务完成后或线程归还前调用此方法， 防止 {@link #DESERIALIZE_DEPTH} 等 ThreadLocal 值在线程池中残留。
   // CHECKSTYLE.ON: RegexpSinglelineJava
    *
-   * @since 1.2.1
+   * @since 1.0.0
    */
   public static void clearThreadLocals() {
     DESERIALIZE_DEPTH.remove();

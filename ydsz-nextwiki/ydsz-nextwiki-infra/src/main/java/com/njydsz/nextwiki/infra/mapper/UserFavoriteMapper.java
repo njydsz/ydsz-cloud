@@ -25,7 +25,7 @@ import com.njydsz.nextwiki.infra.entity.UserFavoriteDO;
  * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Mapper
 public interface UserFavoriteMapper extends BaseMapper<UserFavoriteDO> {

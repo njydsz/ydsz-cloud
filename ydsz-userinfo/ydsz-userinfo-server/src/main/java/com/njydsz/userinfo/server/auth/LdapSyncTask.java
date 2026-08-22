@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
  * <p><b>cron 表达式：</b>通过 {@code ydsz.userinfo.ldap.sync.cron} 配置，默认每天凌晨 2 点。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

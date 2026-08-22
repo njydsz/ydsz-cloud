@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * @param timestamp 事件发生时间
  * @param unbannedBy 解封操作者（"AUTO" 表示封禁期满自动解封）
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 public record AccountUnbannedEvent(
     String userId, String username, LocalDateTime timestamp, String unbannedBy) {}

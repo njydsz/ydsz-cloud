@@ -18,7 +18,7 @@ import com.njydsz.userinfo.domain.enums.IdentityProviderType;
  * {@link IdentityProviderType} 查找匹配的实现。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Component
 public class UserIdentityProviderFactory {

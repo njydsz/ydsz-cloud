@@ -21,7 +21,7 @@ import com.njydsz.common.seata.context.XidContextHolder;
  * 恢复事务上下文。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public class RocketMqXidPropagator implements MqXidPropagator {
 

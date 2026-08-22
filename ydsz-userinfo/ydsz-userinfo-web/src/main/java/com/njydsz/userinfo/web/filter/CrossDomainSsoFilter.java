@@ -38,7 +38,7 @@ import com.njydsz.userinfo.server.config.CrossDomainSsoProperties;
  * <p><b>兼容性：</b>同域请求（无 Origin 头或 Origin 与当前域一致）不受影响，直接放行。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  * @see CrossDomainTokenService 跨域 Token 服务
  * @see CrossDomainSsoProperties 跨域 SSO 配置
  */

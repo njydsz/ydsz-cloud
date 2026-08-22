@@ -61,7 +61,7 @@ import com.njydsz.common.json.annotation.JsonIgnore;
  * @param <ID> ID类型
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.4.0 精简：移除 traverseDFS/traverseBFS/copy/cloneSubTree/moveTo/getAncestorIds/
+ * @since 1.0.0 精简：移除 traverseDFS/traverseBFS/copy/cloneSubTree/moveTo/getAncestorIds/
  *     getRoot/getDescendantCount 等鲜有使用的 API，降低心智负担
  * @see TreeBuilder
  */

@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
  *
  * @param <T> 资源元素类型
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Data
 @Builder

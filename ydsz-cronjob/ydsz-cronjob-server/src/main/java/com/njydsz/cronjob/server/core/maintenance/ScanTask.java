@@ -18,7 +18,7 @@ package com.njydsz.cronjob.server.core.maintenance;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public interface ScanTask {
 

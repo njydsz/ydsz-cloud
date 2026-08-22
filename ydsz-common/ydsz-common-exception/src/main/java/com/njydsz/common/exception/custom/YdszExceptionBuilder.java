@@ -213,7 +213,7 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException> {
    *
    * @param entries 待追加的键值对，可为 {@code null}
    * @return 当前构建器，便于链式调用
-   * @since 1.8.0
+   * @since 1.0.0
    */
   public YdszExceptionBuilder<T> snapshots(Map<String, ?> entries) {
     if (entries == null || entries.isEmpty()) {

@@ -16,7 +16,7 @@ import com.njydsz.common.core.model.CurrentUser;
  * 模块），避免上层对 auth 模块的直接依赖。
  *
  * @author ydsz-team
- * @since 2.0.0
+ * @since 1.0.0
  * @see CurrentUser
  * @see YdszAuthInfo
  */
@@ -95,7 +95,7 @@ public interface AuthInfo extends CurrentUser {
    *
    * @param claim 维度标识
    * @return 权限 ID 集合；不支持或不存在返回 null
-   * @since 2.1.0
+   * @since 1.0.0
    */
   @Override
   @Nullable

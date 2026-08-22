@@ -21,7 +21,7 @@ import com.njydsz.common.core.code.YdszResultCode;
  *
  * @param <T> 数据元素的类型
  * @author ydsz-team
- * @since 1.9.1
+ * @since 1.0.0
  */
 @EqualsAndHashCode(callSuper = true)
 public class PageResponse<T> extends YdszResponse<T> {

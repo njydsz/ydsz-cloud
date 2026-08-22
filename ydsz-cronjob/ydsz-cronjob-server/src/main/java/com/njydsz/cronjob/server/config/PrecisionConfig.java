@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>默认关闭（保守启用）：现有 5s 扫描对分钟级任务已足够，秒级精度场景（倒计时、准点报表等）开启。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Data
 public class PrecisionConfig {

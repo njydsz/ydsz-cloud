@@ -22,7 +22,7 @@ import lombok.Data;
  * 避免 domain 层对 swagger-annotations 的编译期依赖（符合 DDD 分层纯净性约束）。
  *
  * @author ydsz-team
- * @since 1.7.0
+ * @since 1.0.0
  * @see CompanyVO 扁平结构 VO
  * @see com.njydsz.common.domain.tree.TreeBuilder 通用树构建器
  */

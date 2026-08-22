@@ -32,7 +32,7 @@ import com.njydsz.common.event.model.OutboxMessage;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.6.0 publishBatch 使用 RocketMQ 原生批量 API，支持自动分包
+ * @since 1.0.0 publishBatch 使用 RocketMQ 原生批量 API，支持自动分包
  */
 public class RocketMqEventPublishGateway implements EventPublishGateway {
 

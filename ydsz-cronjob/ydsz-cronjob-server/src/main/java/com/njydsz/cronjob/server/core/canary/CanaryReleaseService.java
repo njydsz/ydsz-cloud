@@ -25,7 +25,7 @@ import com.njydsz.cronjob.domain.vo.JobVO;
  * <p>P2-修正：使用 JobRepository 替换 JobMapper，使用 JobVO 替换 Job 实体，符合 DDD 分层规范。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

@@ -46,7 +46,7 @@ import com.njydsz.common.seata.api.TransactionType;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

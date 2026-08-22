@@ -31,7 +31,7 @@ public final class HeaderConstants {
    * <p>值 {@code Authorization}，用于承载 OAuth2 Bearer Token、Basic 等标准授权凭证。 统一项目中 Authorization 头的引用，消除
    * {@code TokenConstants} 与 {@code HeaderConstants} 双源重复定义。
    *
-   * @since 1.11.0
+   * @since 1.0.0
    */
   public static final String AUTHORIZATION = "Authorization";
 
@@ -42,7 +42,7 @@ public final class HeaderConstants {
    *
    * <p>客户端通过此 Header 传递幂等键，服务端据此保证操作幂等性。 参考 Stripe API 的 Idempotency-Key 设计。
    *
-   * @since 1.5.0
+   * @since 1.0.0
    */
   public static final String IDEMPOTENCY_KEY = "X-Idempotency-Key";
 
@@ -55,7 +55,7 @@ public final class HeaderConstants {
    * <p>值为 {@code "X-Request-Id"}，由网关在请求入口自动生成并写入， 用于请求在全生命周期中的唯一标识与故障排查。 与 {@link #TRACE_ID_HEADER}
    * 的区别：X-Request-Id 由本系统产生， X-Trace-Id 兼容 SkyWalking / Jaeger 等外部链路追踪系统。
    *
-   * @since 1.2.0
+   * @since 1.0.0
    */
   public static final String X_REQUEST_ID = "X-Request-Id";
 
@@ -78,7 +78,7 @@ public final class HeaderConstants {
    *
    * <p>格式：{@code 00-{traceId}-{spanId}-01}，用于对接 SkyWalking/Jaeger/Zipkin 等主流分布式链路追踪系统。
    *
-   * @since 1.5.0
+   * @since 1.0.0
    * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
    */
   public static final String W3C_TRACEPARENT = "traceparent";
@@ -88,7 +88,7 @@ public final class HeaderConstants {
    *
    * <p>用于传递供应商特定的追踪上下文信息。
    *
-   * @since 1.5.0
+   * @since 1.0.0
    * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
    */
   public static final String W3C_TRACESTATE = "tracestate";

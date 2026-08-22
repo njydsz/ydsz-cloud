@@ -22,7 +22,7 @@ import com.njydsz.common.event.api.DomainEvent;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 2.1.0 继承 DomainEvent，统一事件元数据
+ * @since 1.0.0 继承 DomainEvent，统一事件元数据
  */
 public class RuleConfigRefreshEvent extends DomainEvent {
 

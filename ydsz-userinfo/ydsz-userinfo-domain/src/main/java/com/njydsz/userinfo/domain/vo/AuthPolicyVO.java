@@ -8,7 +8,7 @@ import lombok.Data;
  * 认证策略视图出参（P3-1 查询返回值）。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Data
 public class AuthPolicyVO {

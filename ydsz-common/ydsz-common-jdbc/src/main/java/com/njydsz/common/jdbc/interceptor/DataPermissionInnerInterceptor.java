@@ -39,7 +39,7 @@ import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
  * #isSupportedSqlType} 抽象方法承载。
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Slf4j
 public abstract class DataPermissionInnerInterceptor extends CachingJsqlParserSupport

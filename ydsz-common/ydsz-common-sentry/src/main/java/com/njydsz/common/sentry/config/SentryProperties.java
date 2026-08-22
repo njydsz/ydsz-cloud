@@ -21,7 +21,7 @@ import org.springframework.validation.annotation.Validated;
  * <p>各子配置通过 JSR-303 注解约束合法范围，启动时自动校验。
  *
  * @author ydsz-team
- * @since 2.0.0
+ * @since 1.0.0
  */
 @Data
 @Validated

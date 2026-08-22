@@ -28,7 +28,7 @@ package com.njydsz.common.core.context;
  *
  * @param <T> 存储值的类型
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  * @see RequestContext
  */
 public final class ContextKey<T> {

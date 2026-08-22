@@ -53,7 +53,7 @@ public interface FlowCategoryService {
    *
    * @param tenantId 租户 ID
    * @return 分类树形结构根节点列表，无数据返回空列表
-   * @since 1.7.0
+   * @since 1.0.0
    */
   List<FlowCategoryTreeVO> tree(String tenantId);
 

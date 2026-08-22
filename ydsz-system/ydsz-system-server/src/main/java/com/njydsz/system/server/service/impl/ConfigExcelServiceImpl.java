@@ -41,7 +41,7 @@ import com.njydsz.system.server.service.ConfigExcelService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.10.0
+ * @since 1.0.0
  * @see ConfigExcelService 接口
  */
 @Slf4j

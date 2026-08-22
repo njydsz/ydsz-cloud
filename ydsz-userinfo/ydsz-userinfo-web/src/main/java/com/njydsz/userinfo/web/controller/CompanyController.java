@@ -96,7 +96,7 @@ public class CompanyController {
    * 并填充 {@code level}/{@code path} 元数据。典型场景：集团-子公司组织架构选择器。
    *
    * @return 公司树形结构根节点列表
-   * @since 1.7.0
+   * @since 1.0.0
    */
   @GetMapping("/tree")
   @Operation(summary = "查询公司树形结构")

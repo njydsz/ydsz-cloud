@@ -61,7 +61,7 @@ import com.njydsz.userinfo.server.auth.UserSessionAdminService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  * @see UserBanService 账号封禁服务
  * @see UserSessionAdminService 会话治理服务
  */

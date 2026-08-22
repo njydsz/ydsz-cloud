@@ -18,7 +18,7 @@ import java.util.List;
  *
  * @param <E> 具体状态枚举类型
  * @author ydsz-team
- * @since 1.10.0
+ * @since 1.0.0
  */
 public interface BaseStatusEnum<E extends Enum<E>> {
 
@@ -61,7 +61,7 @@ public interface BaseStatusEnum<E extends Enum<E>> {
    *
    * @return 所有状态枚举值列表（非 null）
    * @throws UnsupportedOperationException 默认实现，需子类覆写
-   * @since 1.6.0
+   * @since 1.0.0
    */
   default List<E> allStates() {
     throw new UnsupportedOperationException(

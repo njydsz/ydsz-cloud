@@ -18,7 +18,7 @@ package com.njydsz.common.lock.core;
  * <p><b>注意：</b>回调方法必须轻量快速，避免阻塞锁操作主流程。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface LockDegradationCallback {
 

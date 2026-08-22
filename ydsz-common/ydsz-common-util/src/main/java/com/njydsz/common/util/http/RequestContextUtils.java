@@ -13,7 +13,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  * <p>仅在 Spring Web MVC 环境（存在 RequestContextHolder 绑定时）可用， 其他环境返回 {@code null}。
  *
  * @author ydsz-team
- * @since 2.0.0
+ * @since 1.0.0
  */
 public final class RequestContextUtils {
 

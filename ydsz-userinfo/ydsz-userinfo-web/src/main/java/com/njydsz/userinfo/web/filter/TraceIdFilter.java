@@ -25,7 +25,7 @@ import com.njydsz.userinfo.server.trace.TraceContext;
  * 确保日志/指标/审计均可引用 traceId。
  *
  * @author ydsz-team
- * @since 2.21.0
+ * @since 1.0.0
  * @see TraceContext 链路上下文
  */
 @Slf4j

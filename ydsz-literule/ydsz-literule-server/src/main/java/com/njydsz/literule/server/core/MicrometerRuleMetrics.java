@@ -32,7 +32,7 @@ import com.njydsz.literule.api.RuleSeverity;
  *   <li>{@code ydsz_literule_slow_rule_total{rule_code}} — 慢规则计数
  * </ul>
  *
- * @since 1.1.0
+ * @since 1.0.0
  * @author ydsz-team
  */
 @ConditionalOnClass(MeterRegistry.class)

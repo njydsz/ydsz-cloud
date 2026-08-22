@@ -26,7 +26,7 @@ import com.njydsz.userinfo.infra.entity.SocialAccountDO;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有自定义 SQL 均显式追加 {@code deleted = 0} 条件。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  * @see com.njydsz.userinfo.infra.entity.SocialAccountDO 社交账号绑定实体
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

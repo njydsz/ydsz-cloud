@@ -34,7 +34,7 @@ import com.njydsz.common.event.model.OutboxStatus;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.7.0 精简字段：移除 headers/schemaVersion/contentType/priority 四个未验证字段的读写
+ * @since 1.0.0 精简字段：移除 headers/schemaVersion/contentType/priority 四个未验证字段的读写
  */
 public class OutboxRepository {
 

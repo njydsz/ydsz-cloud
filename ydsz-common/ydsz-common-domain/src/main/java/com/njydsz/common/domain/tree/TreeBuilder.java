@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
  * @param <ID> ID类型
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.4.0 大幅精简：移除缓存（DCL/ReentrantLock/dirty）、链式配置
+ * @since 1.0.0 大幅精简：移除缓存（DCL/ReentrantLock/dirty）、链式配置
  *     （autoCalcLevel/autoBuildPath/multiRoot/idExtractor）、统计 API
  *     （countNodes/getTreeDepth/countLeafNodes 等）与复制/移动 API。 业务侧仅需 build() 与 buildSimple()，复杂度与 ROI
  *     严重不匹配。
@@ -89,7 +89,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
    * @param rootId 虚拟根节点 ID；为 null 时以 {@code parentId == null} 判定根节点
    * @param nodeList 扁平节点列表，非空
    * @param sortComparator 排序比较器（可为 null，则使用默认 sort 字段升序 + nullsLast）
-   * @since 1.6.0
+   * @since 1.0.0
    */
   public TreeBuilder(ID rootId, List<T> nodeList, Comparator<T> sortComparator) {
     this.rootId = rootId;
@@ -111,7 +111,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
    *
    * @param nodeList 扁平节点列表，非空
    * @param sortComparator 排序比较器（可为 null，则使用默认 sort 字段升序 + nullsLast）
-   * @since 1.6.0
+   * @since 1.0.0
    */
   public TreeBuilder(List<T> nodeList, Comparator<T> sortComparator) {
     this(null, nodeList, sortComparator);
@@ -424,7 +424,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
    * @param pathSetter 路径设置函数（可为 null，null 表示不设置 path）
    * @param <T> 节点类型
    * @return 树形结构根节点列表
-   * @since 1.7.0
+   * @since 1.0.0
    */
   public static <T> List<T> buildSimple(
       List<T> flatList,

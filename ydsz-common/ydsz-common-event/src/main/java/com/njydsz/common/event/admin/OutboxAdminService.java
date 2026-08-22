@@ -36,7 +36,7 @@ import com.njydsz.common.event.repository.OutboxRepository;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Service
 public class OutboxAdminService {

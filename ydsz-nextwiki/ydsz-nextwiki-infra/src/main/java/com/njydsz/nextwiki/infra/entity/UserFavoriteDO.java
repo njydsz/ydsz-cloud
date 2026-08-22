@@ -20,7 +20,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应用户收藏夹表 {@code nw_user_favorite}，记录用户收藏的文件/目录节点， 支持排序与软删除。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

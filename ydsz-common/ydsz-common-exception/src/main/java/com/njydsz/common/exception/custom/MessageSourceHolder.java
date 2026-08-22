@@ -25,7 +25,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
  * </ul>
  *
  * @author ydsz-team
- * @since 2.3.0
+ * @since 1.0.0
  */
 public final class MessageSourceHolder {
 

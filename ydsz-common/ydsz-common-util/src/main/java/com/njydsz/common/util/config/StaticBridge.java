@@ -38,7 +38,7 @@ import java.util.function.Supplier;
  *
  * @param <T> Bean 类型
  * @author ydsz-team
- * @since 4.2.0
+ * @since 1.0.0
  */
 public final class StaticBridge<T> {
 

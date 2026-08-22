@@ -127,7 +127,7 @@ public final class SerializerCache {
    * 获取因配置变更自动清理的次数。
    *
    * @return 自动清理次数（监控指标）
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public static long getAutoInvalidateCount() {
     return AUTO_INVALIDATE_COUNT.get();
@@ -137,7 +137,7 @@ public final class SerializerCache {
    * 获取上次清理时的配置版本号。
    *
    * @return 版本号
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public static long getLastConfigVersion() {
     return LAST_CONFIG_VERSION.get();

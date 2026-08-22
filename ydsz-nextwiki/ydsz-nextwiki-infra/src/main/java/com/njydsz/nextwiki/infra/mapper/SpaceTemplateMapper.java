@@ -12,7 +12,7 @@ import com.njydsz.nextwiki.infra.entity.SpaceTemplateDO;
  * 空间模板 Mapper
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Mapper
 public interface SpaceTemplateMapper extends BaseMapper<SpaceTemplateDO> {

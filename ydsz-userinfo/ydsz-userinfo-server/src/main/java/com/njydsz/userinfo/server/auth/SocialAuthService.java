@@ -31,7 +31,7 @@ import com.njydsz.userinfo.domain.config.SocialAuthProperties;
  * <p><b>核心流程（bind）：</b>校验平台开关 → 检查是否已绑定 → 保存绑定记录。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

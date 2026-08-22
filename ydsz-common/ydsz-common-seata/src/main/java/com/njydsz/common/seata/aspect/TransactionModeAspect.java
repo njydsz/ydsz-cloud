@@ -30,7 +30,7 @@ import com.njydsz.common.seata.context.XidContextHolder;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Aspect
 public class TransactionModeAspect implements Ordered {

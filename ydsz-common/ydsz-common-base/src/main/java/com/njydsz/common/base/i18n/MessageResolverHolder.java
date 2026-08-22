@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  * 应用层，迁移至本模块维护。
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 public final class MessageResolverHolder {
 

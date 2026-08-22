@@ -241,7 +241,7 @@ public final class JSONReader {
    *
    * <p>此机制为 ThreadLocal 配置模型（P0-5/P0-6 显式传参改造）的过渡方案， 随配置显式传递落地后将随调用参数传递，不再依赖 ThreadLocal。
    *
-   * @since 1.2.3
+   * @since 1.0.0
    */
   // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<Integer> CALL_MAX_DEPTH = new ThreadLocal<>();
@@ -250,7 +250,7 @@ public final class JSONReader {
   /**
    * 线程级泛型递归深度覆盖（语义同 {@link #CALL_MAX_DEPTH}）。
    *
-   * @since 1.2.3
+   * @since 1.0.0
    */
   // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<Integer> CALL_MAX_GENERIC_DEPTH = new ThreadLocal<>();
@@ -267,7 +267,7 @@ public final class JSONReader {
    * <p>在线程池环境中，应在任务完成后或线程归还前调用此方法， 释放池化的 JSONReader 实例及其 char[] 缓冲区，防止内存泄漏
    * （P1-7：同时清理线程级深度覆盖，避免池化线程残留上一任务的覆盖配置）。
    *
-   * @since 1.2.1
+   * @since 1.0.0
    */
   public static void clearThreadLocals() {
     READER_POOL.remove();
@@ -317,7 +317,7 @@ public final class JSONReader {
    * @param length 有效长度
    * @param maxDepth 最大嵌套深度（null 使用全局默认值）
    * @param maxGenericDepth 泛型递归深度上限（null 使用全局默认值）
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public JSONReader(char[] buf, int offset, int length, Integer maxDepth, Integer maxGenericDepth) {
     this.buf = buf;
@@ -333,7 +333,7 @@ public final class JSONReader {
    * <p>优先级（P0-3）：线程级调用覆盖 &gt; 实例级显式传参 &gt; 静态全局值。
    *
    * @return 最大嵌套深度
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public int resolveMaxDepth() {
     Integer callDepth = CALL_MAX_DEPTH.get();
@@ -349,7 +349,7 @@ public final class JSONReader {
    * <p>优先级（P0-3）：线程级调用覆盖 &gt; 实例级显式传参 &gt; 静态全局值。
    *
    * @return 泛型递归深度上限
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public int resolveMaxGenericDepth() {
     Integer callDepth = CALL_MAX_GENERIC_DEPTH.get();
@@ -366,7 +366,7 @@ public final class JSONReader {
    *
    * @param maxDepth 最大嵌套深度覆盖（null 清除）
    * @param maxGenericDepth 泛型递归深度上限覆盖（null 清除）
-   * @since 1.2.3
+   * @since 1.0.0
    */
   public static void setCallDepthOverride(Integer maxDepth, Integer maxGenericDepth) {
     if (maxDepth != null && maxDepth <= 0) {
@@ -391,7 +391,7 @@ public final class JSONReader {
    * 获取当前线程的最大嵌套深度覆盖值（未设置返回 null，框架内部使用）。
    *
    * @return 覆盖值，未设置返回 null
-   * @since 1.2.3
+   * @since 1.0.0
    */
   public static Integer getCallMaxDepthOverride() {
     return CALL_MAX_DEPTH.get();
@@ -401,7 +401,7 @@ public final class JSONReader {
    * 获取当前线程的泛型递归深度上限覆盖值（未设置返回 null，框架内部使用）。
    *
    * @return 覆盖值，未设置返回 null
-   * @since 1.2.3
+   * @since 1.0.0
    */
   public static Integer getCallMaxGenericDepthOverride() {
     return CALL_MAX_GENERIC_DEPTH.get();
@@ -413,7 +413,7 @@ public final class JSONReader {
    * <p>优先返回线程级调用覆盖（P0-3），未设置时返回静态全局值。
    *
    * @return 泛型递归深度上限
-   * @since 1.2.3
+   * @since 1.0.0
    */
   public static int resolveCallMaxGenericDepth() {
     Integer callDepth = CALL_MAX_GENERIC_DEPTH.get();

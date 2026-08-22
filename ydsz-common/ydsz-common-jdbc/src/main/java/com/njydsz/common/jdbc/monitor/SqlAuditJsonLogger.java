@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * <p>日志 logger name: {@code sql.audit.json} — 可独立配置 appender 输出到专用文件。
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SqlAuditJsonLogger {

@@ -75,7 +75,7 @@ public @interface YdszExceptionCode {
    * </ul>
    *
    * @return 引入版本号；空字符串表示未指定
-   * @since 2.5.0
+   * @since 1.0.0
    */
   String since() default "";
 

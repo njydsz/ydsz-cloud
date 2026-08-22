@@ -44,7 +44,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  * <p>对标 XXL-Job 的调度器设计、PowerJob 的 Worker 健康检查框架、Quartz 的 JobScheduler。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

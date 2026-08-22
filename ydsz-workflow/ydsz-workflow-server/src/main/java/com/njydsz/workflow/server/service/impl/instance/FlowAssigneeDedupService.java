@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
+import com.njydsz.workflow.domain.vo.StringVO;
 
 /**
  * P2-7: 跨节点办理人去重策略
@@ -138,6 +139,26 @@ public class FlowAssigneeDedupService {
       log.warn("[FlowDedup] P2-7 获取已审批人列表失败: instanceId={} err={}", instanceId, e.getMessage());
       return new HashSet<>();
     }
+  }
+
+  /**
+   * 获取实例中已审批过的全部用户 ID 列表 VO
+   *
+   * <p>符合 DDD 分层规范：Service 层内部完成 String→StringVO 转换。
+   *
+   * @param instanceId 流程实例 ID
+   * @return 已审批用户 ID VO 列表
+   * @since 1.0.0
+   */
+  @Transactional(readOnly = true)
+  public List<StringVO> getApprovedUserIdsVO(String instanceId) {
+    Set<String> userIds = getApprovedUserIds(instanceId);
+    if (userIds.isEmpty()) {
+      return List.of();
+    }
+    return userIds.stream()
+        .map(StringVO::new)
+        .toList();
   }
 
   /**

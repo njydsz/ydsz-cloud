@@ -218,7 +218,7 @@ public class TenantContextWebFilter implements Filter {
    *
    * @param claim JWT claim 名
    * @return claim 值，不存在返回 null
-   * @since 1.10.0
+   * @since 1.0.0
    */
   protected String resolveClaimValue(String claim) {
     if (claim == null || claim.isEmpty()) {

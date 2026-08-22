@@ -12,7 +12,7 @@ package com.njydsz.userinfo.domain.vo;
  * @param lowRisk 低风险用户数
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 public record RiskLevelDistributionVO(
     int highRisk,

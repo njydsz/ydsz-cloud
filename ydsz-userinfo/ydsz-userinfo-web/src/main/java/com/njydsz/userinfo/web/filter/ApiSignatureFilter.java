@@ -50,7 +50,7 @@ import com.njydsz.userinfo.server.config.ApiSignatureProperties;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  * @see ApiSignatureProperties 签名配置
  * @see ApiSignatureUtil 签名工具类
  */

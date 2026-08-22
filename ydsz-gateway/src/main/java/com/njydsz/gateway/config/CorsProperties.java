@@ -31,7 +31,7 @@ import com.njydsz.common.core.constant.HeaderConstants;
  * 必须在 {@link GatewayFilterConfig#corsWebFilter(CorsProperties)} 中校验。
  *
  * @author ydsz-team
- * @since 2.0.0
+ * @since 1.0.0
  */
 @ConfigurationProperties(prefix = "ydsz.gateway.cors")
 public class CorsProperties {

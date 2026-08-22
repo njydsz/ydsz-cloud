@@ -39,7 +39,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  * <p><b>认证事件（v1.6.0+）：</b>新增的认证事件发布方法通过 {@link UserAuthEventDispatcher} 分发，替代旧的 {@code publishUserLogin} 等字符串事件。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

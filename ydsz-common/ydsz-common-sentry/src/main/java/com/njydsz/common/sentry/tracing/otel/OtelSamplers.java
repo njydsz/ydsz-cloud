@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>对于错误 / 慢请求的标记与通知，可配合 {@link SpanEvaluationProcessor} 使用。
  *
  * @author ydsz-team
- * @since 2.0.0
+ * @since 1.0.0
  */
 @Slf4j
 public final class OtelSamplers {

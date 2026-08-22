@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>线程安全：</b>使用 {@link CopyOnWriteArrayList} 保证并发读写安全。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

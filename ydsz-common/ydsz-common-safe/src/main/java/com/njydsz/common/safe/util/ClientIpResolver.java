@@ -102,7 +102,7 @@ public final class ClientIpResolver {
    * @param xForwardedFor X-Forwarded-For 头值（可为 null）
    * @param xRealIp X-Real-IP 头值（可为 null）
    * @return 客户端真实 IP
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public static String resolveFromHeaders(String directIp, String xForwardedFor, String xRealIp) {
     if (directIp != null && isTrustedProxy(directIp)) {

@@ -29,7 +29,7 @@ import com.njydsz.message.server.service.impl.SenderQuotaService;
  * <p>限流触发时通过 {@link SendContext#setErrorResult} 设置带错误码的失败结果， 由管线统一短路。错误码使用 {@link MessageExceptionCode} 的 B915xx 段。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

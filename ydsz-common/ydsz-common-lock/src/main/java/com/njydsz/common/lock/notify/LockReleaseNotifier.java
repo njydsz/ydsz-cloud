@@ -33,7 +33,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
  * <p><b>线程安全：</b>等待者集合使用 {@link ConcurrentHashMap} + 写时复制列表，多线程安全。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class LockReleaseNotifier {

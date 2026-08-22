@@ -187,7 +187,7 @@ public final class JsonConfig implements Serializable {
    * </ul>
    *
    * @param listener 监听器实例，null 忽略
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public static void addChangeListener(ConfigChangeListener listener) {
     if (listener != null) {
@@ -199,7 +199,7 @@ public final class JsonConfig implements Serializable {
    * 移除配置变更监听器。
    *
    * @param listener 待移除的监听器
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public static void removeChangeListener(ConfigChangeListener listener) {
     CHANGE_LISTENERS.remove(listener);
@@ -211,7 +211,7 @@ public final class JsonConfig implements Serializable {
    * <p>每次 install() 自增。缓存组件可存储创建时的版本号， 用于检测配置是否已变更并触发自动失效。
    *
    * @return 当前配置版本号
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public static long getConfigVersion() {
     return CONFIG_VERSION.get();
@@ -713,7 +713,7 @@ public final class JsonConfig implements Serializable {
    *
    * <p><b>线程安全：</b>监听器可能被并发回调，实现需保证线程安全。 <b>执行约束：</b>监听器不应执行耗时操作，避免阻塞配置安装流程。
    *
-   * @since 1.1.0
+   * @since 1.0.0
    */
   @FunctionalInterface
   public interface ConfigChangeListener {

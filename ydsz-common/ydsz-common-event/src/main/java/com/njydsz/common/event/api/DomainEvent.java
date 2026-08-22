@@ -43,10 +43,10 @@ import com.njydsz.common.util.id.IdGenerator;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.4.0 精简：移除 version / tenantId / userId / traceId 四个字段。 事件版本号无业务使用（非事件溯源）；上下文字段与
+ * @since 1.0.0 精简：移除 version / tenantId / userId / traceId 四个字段。 事件版本号无业务使用（非事件溯源）；上下文字段与
  *     RequestContext 重复， 改由消费/落库方在需要时自行解析。
- * @since 1.5.0 由 common-domain 迁入 common-event，事件抽象与 Outbox 实现统一归属事件模块
- * @since 1.7.0 移除 Serializable 接口和 Builder 中的 clock 参数，回归简洁
+ * @since 1.0.0 由 common-domain 迁入 common-event，事件抽象与 Outbox 实现统一归属事件模块
+ * @since 1.0.0 移除 Serializable 接口和 Builder 中的 clock 参数，回归简洁
  */
 public class DomainEvent extends ApplicationEvent {
 

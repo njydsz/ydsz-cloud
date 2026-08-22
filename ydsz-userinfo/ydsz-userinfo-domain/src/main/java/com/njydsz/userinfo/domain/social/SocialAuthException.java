@@ -9,7 +9,7 @@ package com.njydsz.userinfo.domain.social;
  * <p>该异常为 domain 层异常，不依赖 Spring 或任何框架。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 public class SocialAuthException extends RuntimeException {
 

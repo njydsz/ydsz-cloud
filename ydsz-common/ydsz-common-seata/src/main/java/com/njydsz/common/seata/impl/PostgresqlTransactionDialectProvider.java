@@ -11,7 +11,7 @@ import com.njydsz.common.seata.api.TccTransactionDialectProvider;
  * <p><b>注意</b>：此实现为项目 PostgreSQL 16+ 环境优化，需配合唯一约束 {@code UNIQUE (xid, branch_id)} 使用。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class PostgresqlTransactionDialectProvider implements TccTransactionDialectProvider {
 

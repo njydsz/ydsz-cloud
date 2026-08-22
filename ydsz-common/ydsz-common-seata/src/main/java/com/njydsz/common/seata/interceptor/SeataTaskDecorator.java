@@ -33,7 +33,7 @@ import com.njydsz.common.seata.context.XidContextHolder;
  * <p>或通过 {@link SeataExecutors} 工厂方法快速创建已装饰的线程池。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class SeataTaskDecorator implements TaskDecorator {
 

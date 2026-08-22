@@ -25,7 +25,7 @@ import com.njydsz.common.tenant.config.TenantProperties.TenantField;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.10.0
+ * @since 1.0.0
  */
 public final class TenantHeaderContract {
 

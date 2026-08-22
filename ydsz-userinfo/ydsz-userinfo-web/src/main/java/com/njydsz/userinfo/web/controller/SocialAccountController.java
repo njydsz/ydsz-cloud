@@ -36,7 +36,7 @@ import com.njydsz.userinfo.server.auth.SocialAuthService;
  * <p><b>接口路径：</b>{@code /api/v1/profile/social}
  *
  * @author ydsz-team
- * @since 2.18.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController
@@ -145,7 +145,7 @@ public class SocialAccountController {
    * @param boundAt 绑定时间
    * @param nickname 社交平台昵称
    * @author ydsz-team
-   * @since 2.18.0
+   * @since 1.0.0
    */
   public record PlatformBindingStatusVO(
       String platform,

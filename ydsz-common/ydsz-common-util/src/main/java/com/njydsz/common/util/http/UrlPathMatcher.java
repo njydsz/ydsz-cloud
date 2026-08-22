@@ -36,7 +36,7 @@ import org.springframework.util.AntPathMatcher;
  * boolean exactExact = matcher.matchesExact(requestPath);
  * }</pre>
  *
- * @since 2.2.0
+ * @since 1.0.0
  * @author ydsz-team
  */
 public final class UrlPathMatcher {

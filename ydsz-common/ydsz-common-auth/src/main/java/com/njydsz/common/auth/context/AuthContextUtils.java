@@ -32,7 +32,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.9.0
+ * @since 1.0.0
  * @see RequestContext
  */
 public final class AuthContextUtils {

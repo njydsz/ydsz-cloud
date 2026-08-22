@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>v1.3.0 新增：由 {@code ThreadPoolExecutorFactory} 自动装配，业务方无需手动包装。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  * @see ThreadPoolMetrics
  */
 @Slf4j

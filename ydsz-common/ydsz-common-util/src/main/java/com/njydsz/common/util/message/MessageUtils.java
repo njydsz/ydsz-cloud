@@ -45,7 +45,7 @@ public final class MessageUtils {
    * ObjectProvider<MessageSource>} 传入本类。
    *
    * @param provider MessageSource 提供者；允许 null（此时使用降级路径）
-   * @since 2.2.0
+   * @since 1.0.0
    */
   public static void setMessageSourceProvider(ObjectProvider<MessageSource> provider) {
     MESSAGE_SOURCE_BRIDGE.registerSupplier(provider::getIfAvailable);

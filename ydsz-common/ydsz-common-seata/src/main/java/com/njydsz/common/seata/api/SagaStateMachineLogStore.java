@@ -11,7 +11,7 @@ import java.util.List;
  * <p><b>P1-4 修复</b>：原 SAGA 编排器无持久化能力，服务崩溃后状态丢失。 本接口定义 SAGA 状态机的持久化操作。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface SagaStateMachineLogStore {
 

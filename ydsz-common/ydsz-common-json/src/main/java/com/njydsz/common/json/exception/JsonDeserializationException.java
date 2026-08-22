@@ -200,7 +200,7 @@ public class JsonDeserializationException extends JsonException {
    *
    * @param fieldName 字段名
    * @return this（链式调用）
-   * @since 1.2.0
+   * @since 1.0.0
    */
   public JsonDeserializationException withFieldName(String fieldName) {
     this.fieldName = fieldName;
@@ -330,7 +330,7 @@ public class JsonDeserializationException extends JsonException {
    * <p>此方法便于统一获取位置引用格式，无需关心内部是预先计算的行列号还是原始偏移量。
    *
    * @return 格式为 {@code (line:X, column:Y)} 的位置引用字符串，无法确定时返回 {@code (unknown)}
-   * @since 1.2.0
+   * @since 1.0.0
    * @see #getLine()
    * @see #getColumn()
    */

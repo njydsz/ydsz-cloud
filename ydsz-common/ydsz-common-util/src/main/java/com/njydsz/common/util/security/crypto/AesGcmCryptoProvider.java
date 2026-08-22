@@ -20,7 +20,7 @@ import com.njydsz.common.util.api.Experimental;
  * <p><b>线程安全：</b>Cipher 实例 ThreadLocal 隔离，generateKey/generateIv 使用共享 SecureRandom（内部同步），多线程安全。
  *
  * @author ydsz-team
- * @since 3.0.0
+ * @since 1.0.0
  */
 @Experimental("SPI 仍在试用期；AAD 与密钥长度的默认行为可能调整")
 public final class AesGcmCryptoProvider implements CryptoProvider {

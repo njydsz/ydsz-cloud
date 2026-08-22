@@ -28,7 +28,7 @@ import com.njydsz.cronjob.domain.vo.JobVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

@@ -21,7 +21,7 @@ package com.njydsz.common.safe.desensitize;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  * @see Sensitive
  * @see SensitiveType
  */

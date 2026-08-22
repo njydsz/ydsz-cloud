@@ -48,7 +48,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  * @see RememberMeProperties Remember-Me 配置
  * @see com.njydsz.userinfo.web.filter.RememberMeFilter Remember-Me 过滤器
  */

@@ -33,7 +33,7 @@ import org.springframework.util.StringUtils;
  * <p><b>优先级：</b>注解扫描结果作为默认值，YAML 的 {@code table-column-mapping} 可覆盖注解声明。
  *
  * @author ydsz-team
- * @since 1.10.0
+ * @since 1.0.0
  */
 public class TenantColumnScanner {
 

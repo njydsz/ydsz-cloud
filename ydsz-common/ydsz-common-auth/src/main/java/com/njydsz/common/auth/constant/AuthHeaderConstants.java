@@ -6,7 +6,7 @@ package com.njydsz.common.auth.constant;
  * <p>定义与身份认证、令牌、用户身份相关的 HTTP Header 名称常量。
  *
  * @author ydsz-team
- * @since 1.11.0
+ * @since 1.0.0
  */
 public final class AuthHeaderConstants {
 

@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * <p>用于收藏夹数据的传输，作为 Repository 接口 CUD 方法的入参。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

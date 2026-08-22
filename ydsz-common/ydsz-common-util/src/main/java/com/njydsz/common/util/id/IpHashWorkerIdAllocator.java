@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * WorkerIdAllocatorChain#prepend} 前置。
  *
  * @author ydsz-team
- * @since 3.0.0
+ * @since 1.0.0
  */
 public final class IpHashWorkerIdAllocator implements WorkerIdAllocator {
 

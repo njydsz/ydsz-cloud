@@ -42,7 +42,7 @@ import com.njydsz.userinfo.server.service.SelfServiceService;
  * <p><b>DDD 合规：</b>通过 {@link UserAccountRepository} 访问数据，不直接依赖 Mapper。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  * @see VerifyCodeService 验证码服务
  * @see PasswordPolicyValidator 密码策略校验
  */

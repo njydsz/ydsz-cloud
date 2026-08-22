@@ -108,7 +108,7 @@ public class RuleAdminController {
    *
    * @param pageQuery 分页查询参数（pageNum / pageSize / orderItems）
    * @return 分页规则定义列表
-   * @since 2.1.0
+   * @since 1.0.0
    */
   @Operation(summary = "分页查询规则定义", description = "分页查询规则引擎中所有规则定义，支持按页码、页大小、排序字段进行分页")
   @ApiResponse(responseCode = "200", description = "分页规则定义列表")

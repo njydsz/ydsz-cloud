@@ -29,7 +29,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  * @see SecurityHeaderProperties
  */
 public final class SecurityHeaderConfigurer {

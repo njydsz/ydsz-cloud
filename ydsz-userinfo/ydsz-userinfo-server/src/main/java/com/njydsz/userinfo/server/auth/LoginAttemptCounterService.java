@@ -25,7 +25,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  * @see RedisStringOps Redis 字符串操作
  */
 @Slf4j

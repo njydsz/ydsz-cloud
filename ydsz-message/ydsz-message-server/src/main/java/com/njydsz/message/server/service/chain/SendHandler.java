@@ -10,7 +10,7 @@ import com.njydsz.common.feign.MessageRequest;
  * <p>对标 Spring Security Filter Chain / Netty Pipeline 模式， 支持运行时动态编排（通过配置调整 Handler 顺序或开关）。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface SendHandler {
 

@@ -32,7 +32,7 @@ package com.njydsz.common.jdbc.permission;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.18.0
+ * @since 1.0.0
  * @see DataPermissionContextResolver
  * @see DataPermissionContext
  */

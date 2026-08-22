@@ -14,7 +14,7 @@ package com.njydsz.userinfo.domain.vo;
  * @param riskLevel 风险等级（HIGH/MEDIUM/LOW）
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 public record AnomalySessionVO(
     String userId,

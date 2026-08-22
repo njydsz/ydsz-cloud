@@ -170,7 +170,7 @@ public final class JSONWriter {
    *
    * @param capacity 初始容量
    * @param features 预计算的 Feature 位掩码（由调用方从 JsonRuntimeConfig 转换）
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public JSONWriter(int capacity, long features) {
     this.buf = new char[capacity];
@@ -182,7 +182,7 @@ public final class JSONWriter {
    * 构造函数（使用默认缓冲区大小和预计算特性位）
    *
    * @param features 预计算的 Feature 位掩码
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public JSONWriter(long features) {
     this(DEFAULT_BUF_SIZE, features);
@@ -202,7 +202,7 @@ public final class JSONWriter {
    *
    * @param sb 外部 StringBuilder
    * @param features 预计算的 Feature 位掩码
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public JSONWriter(StringBuilder sb, long features) {
     this.externalSb = sb;

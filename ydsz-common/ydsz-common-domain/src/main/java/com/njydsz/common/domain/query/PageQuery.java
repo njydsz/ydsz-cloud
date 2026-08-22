@@ -26,7 +26,7 @@ import static lombok.AccessLevel.PROTECTED;
  * @author ydsz-team
  * @see PageQueryRiskAssessor
  * @see DeepPaginationRisk
- * @since 1.10.0
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder
@@ -81,7 +81,7 @@ public class PageQuery extends BaseQuery {
    * @param column 字段名
    * @param isAsc 是否升序
    * @return 当前对象，支持链式调用
-   * @since 1.7.0 移除内联校验逻辑
+   * @since 1.0.0 移除内联校验逻辑
    */
   public PageQuery addOrder(String column, boolean isAsc) {
     if (column != null && !column.isBlank()) {

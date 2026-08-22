@@ -24,7 +24,7 @@ import com.njydsz.common.json.YdszJson;
  * </ul>
  *
  * @author ydsz-team
- * @since 2.0.0
+ * @since 1.0.0
  */
 @Slf4j
 public final class HttpResponseUtils {

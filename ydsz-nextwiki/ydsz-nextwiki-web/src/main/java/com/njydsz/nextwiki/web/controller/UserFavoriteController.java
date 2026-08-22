@@ -34,7 +34,7 @@ import com.njydsz.nextwiki.server.service.UserFavoriteApplicationService;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

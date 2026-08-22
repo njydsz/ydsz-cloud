@@ -16,7 +16,7 @@ import com.njydsz.message.server.service.receipt.ReadReceiptService;
  * <p>基于 Redis 存储已读状态，支持邮件和短信通道的已读回执。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

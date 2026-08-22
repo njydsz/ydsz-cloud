@@ -21,7 +21,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
  * </ul>
  *
  * @author ydsz-team
- * @since 2.1.0
+ * @since 1.0.0
  */
 @AutoConfiguration
 @MapperScan("com.njydsz.literule.infra.mapper")

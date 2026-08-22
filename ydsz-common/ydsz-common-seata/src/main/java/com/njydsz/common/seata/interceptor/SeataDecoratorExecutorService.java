@@ -23,7 +23,7 @@ import com.njydsz.common.seata.context.XidContextHolder;
  * <p><b>P2-3 修复</b>：改为依赖 {@link XidContextHolder}， 不再使用 {@code AbstractTransactionManager} 的包级私有方法。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 class SeataDecoratorExecutorService implements ExecutorService {
 

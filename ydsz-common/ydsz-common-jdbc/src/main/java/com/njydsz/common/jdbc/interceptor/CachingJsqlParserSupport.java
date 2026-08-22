@@ -32,7 +32,7 @@ import com.njydsz.common.jdbc.monitor.SqlAstCache;
  * <p>性能收益：假设 SQL 模板重复率 80%，拦截器链长度为 3， 则总解析次数从 3N 降至 N + 2×0（缓存命中），理论提升 67%。
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  * @see SqlAstCache
  * @see JsqlParserSupport
  */

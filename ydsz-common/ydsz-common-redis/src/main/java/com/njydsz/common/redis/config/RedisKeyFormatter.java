@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Component
 @RequiredArgsConstructor

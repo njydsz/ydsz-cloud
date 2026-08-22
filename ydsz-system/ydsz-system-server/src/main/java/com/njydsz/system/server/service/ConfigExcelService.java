@@ -20,7 +20,7 @@ import com.njydsz.system.domain.vo.ImportResult;
  * 由全局异常处理器统一返回错误响应。
  *
  * @author ydsz-team
- * @since 1.10.0
+ * @since 1.0.0
  * @see ConfigService 配置主服务
  */
 public interface ConfigExcelService {

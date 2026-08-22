@@ -28,7 +28,7 @@ import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
  * <p><b>Redis Key 设计：</b>{@code userinfo:roles:{userId}} → Hash{roles: List&lt;RoleDO&gt;}
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  * @see UserRoleDO 用户-角色关联实体
  * @see RoleDO 角色实体
  */

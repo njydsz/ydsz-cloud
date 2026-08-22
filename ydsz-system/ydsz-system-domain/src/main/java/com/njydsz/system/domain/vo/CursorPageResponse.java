@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
  *
  * @param <T> 数据类型
  * @author ydsz-team
- * @since 1.9.0
+ * @since 1.0.0
  */
 @Data
 @Builder

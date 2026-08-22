@@ -50,7 +50,7 @@ import com.njydsz.common.json.reader.JSONReader;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public class JsonParser implements Closeable {
 

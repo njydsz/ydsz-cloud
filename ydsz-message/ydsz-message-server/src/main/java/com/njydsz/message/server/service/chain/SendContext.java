@@ -15,7 +15,7 @@ import com.njydsz.message.domain.entity.config.MsgRouteRule;
  * #errorResult}， 管线短路退出。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 public class SendContext {

@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * （概率极低），如需全局强唯一，可接入分布式 ID（雪花算法）作为版本号来源。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public final class SystemVersionUtils {
 

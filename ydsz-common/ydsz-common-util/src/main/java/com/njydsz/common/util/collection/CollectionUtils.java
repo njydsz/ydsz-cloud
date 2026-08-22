@@ -276,7 +276,7 @@ public final class CollectionUtils {
    * @param collections 待合并的集合数组（可包含 null 元素）
    * @param <T> 元素类型
    * @return 合并后的可变 ArrayList；所有输入为 null 时返回空 List
-   * @since 2.2.0
+   * @since 1.0.0
    */
   @SafeVarargs
   public static <T> List<T> concat(Collection<? extends T>... collections) {
@@ -304,7 +304,7 @@ public final class CollectionUtils {
    * @param iterables 待合并的 Iterable 数组（可包含 null 元素）
    * @param <T> 元素类型
    * @return 合并后的可变 ArrayList；所有输入为 null 时返回空 List
-   * @since 2.2.0
+   * @since 1.0.0
    */
   @SafeVarargs
   public static <T> List<T> concatIterables(Iterable<? extends T>... iterables) {
@@ -335,7 +335,7 @@ public final class CollectionUtils {
    * @param nested 嵌套集合（可包含 null 子集合）
    * @param <T> 元素类型
    * @return 展平后的可变 ArrayList；输入为 null 时返回空 List
-   * @since 2.2.0
+   * @since 1.0.0
    */
   public static <T> List<T> flatten(Collection<? extends Collection<T>> nested) {
     if (isEmpty(nested)) {
@@ -356,7 +356,7 @@ public final class CollectionUtils {
    * @param nested 嵌套 Iterable（可包含 null 子 Iterable）
    * @param <T> 元素类型
    * @return 展平后的可变 ArrayList；输入为 null 时返回空 List
-   * @since 2.2.0
+   * @since 1.0.0
    */
   public static <T> List<T> flattenIterables(Iterable<? extends Iterable<T>> nested) {
     if (nested == null) {
@@ -392,7 +392,7 @@ public final class CollectionUtils {
    * @param <T> 元素类型
    * @return 分片结果 List，每个元素是一个子 List；输入为空时返回空 List
    * @throws IllegalArgumentException batchSize < 1 时抛出
-   * @since 2.2.0
+   * @since 1.0.0
    */
   public static <T> List<List<T>> partition(Collection<T> source, int batchSize) {
     if (batchSize < 1) {
@@ -433,7 +433,7 @@ public final class CollectionUtils {
    * @param source 待去重的 List
    * @param <T> 元素类型（需正确实现 equals/hashCode）
    * @return 去重后的可变 ArrayList；输入为 null 时返回空 List
-   * @since 2.2.0
+   * @since 1.0.0
    */
   public static <T> List<T> distinct(Collection<T> source) {
     if (isEmpty(source)) {
@@ -457,7 +457,7 @@ public final class CollectionUtils {
    * @param <T> 元素类型
    * @param <K> 键类型（需正确实现 equals/hashCode）
    * @return 去重后的可变 ArrayList；输入为 null 时返回空 List
-   * @since 2.2.0
+   * @since 1.0.0
    */
   public static <T, K> List<T> distinctBy(
       Collection<T> source, Function<? super T, ? extends K> keyMapper) {

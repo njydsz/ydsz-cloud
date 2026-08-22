@@ -10,7 +10,7 @@ import com.njydsz.userinfo.domain.alert.SecurityAlert;
  * <p>各渠道实现应具备幂等性：同一告警重复发送不应导致重复通知（通过告警 ID 去重）。
  *
  * @author ydsz-team
- * @since 2.18.0
+ * @since 1.0.0
  */
 public interface AlertNotificationChannel {
 

@@ -39,7 +39,7 @@ import lombok.Data;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.7.0 由继承 {@code ydsz-common-domain} 的 {@code TreeNode} 基类改为纯 POJO，使用 {@code TreeBuilder.buildSimple()}
+ * @since 1.0.0 由继承 {@code ydsz-common-domain} 的 {@code TreeNode} 基类改为纯 POJO，使用 {@code TreeBuilder.buildSimple()}
  *               构建树形结构，消除业务 VO 与框架基类的耦合
  * @see com.njydsz.system.infra.entity.DictItem 字典项实体
  * @see DictTypeVO 字典类型 VO

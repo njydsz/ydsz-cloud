@@ -44,7 +44,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * {@link #incrementRejected()}， 无需业务方手动调用。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  * @see MeteredRejectedHandler
  */
 @Slf4j
@@ -168,7 +168,7 @@ public class ThreadPoolMetrics implements MeterBinder {
    * 获取是否启用了详细指标。
    *
    * @return true 如果启用了详细指标
-   * @since 1.4.0
+   * @since 1.0.0
    */
   public boolean isEnableDetailedMetrics() {
     return enableDetailedMetrics;

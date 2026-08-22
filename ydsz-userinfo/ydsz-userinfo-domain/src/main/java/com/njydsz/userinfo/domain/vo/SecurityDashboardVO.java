@@ -32,7 +32,7 @@ import java.io.Serializable;
  * @param todayLoginSuccessRate 今日登录成功率（0.0-1.0）
  * @param riskScoreAverage 全平台用户平均风险评分
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 public record SecurityDashboardVO(
     long totalUsers,

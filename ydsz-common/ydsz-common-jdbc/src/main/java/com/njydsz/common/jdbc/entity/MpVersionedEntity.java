@@ -44,7 +44,7 @@ import lombok.experimental.SuperBuilder;
  *
  * @param <T> 主键ID类型
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  * @see MpSimpleEntity
  * @see MpBaseEntity
  * @see MpBaseAuditEntity

@@ -19,7 +19,7 @@ import com.njydsz.userinfo.infra.entity.AuthPolicyDO;
  * </ul>
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Mapper
 public interface AuthPolicyMapper extends BaseMapper<AuthPolicyDO> {

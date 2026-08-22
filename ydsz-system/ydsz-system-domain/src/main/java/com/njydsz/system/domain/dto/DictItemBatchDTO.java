@@ -14,7 +14,7 @@ import com.njydsz.system.domain.vo.DictItemVO;
  * <p>用于批量新增字典项（运营初始化场景），单次最多 500 条。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 public class DictItemBatchDTO {

@@ -25,7 +25,7 @@ import com.njydsz.common.sentry.spi.LogPublisher;
  * </ul>
  *
  * @author ydsz-team
- * @since 2.0.0
+ * @since 1.0.0
  */
 public class NoOpLogPublisher implements LogPublisher {
 

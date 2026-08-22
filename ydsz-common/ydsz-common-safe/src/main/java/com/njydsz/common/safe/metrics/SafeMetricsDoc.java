@@ -78,7 +78,7 @@ package com.njydsz.common.safe.metrics;
  * 安全过滤器链的顺序调整需要重启应用生效。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  * @see SafeMetrics
  */
 public final class SafeMetricsDoc {

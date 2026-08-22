@@ -54,7 +54,7 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 2.1.0 重构为门面模式，委托给子转换器
+ * @since 1.0.0 重构为门面模式，委托给子转换器
  */
 public class LiteruleConverter {
 

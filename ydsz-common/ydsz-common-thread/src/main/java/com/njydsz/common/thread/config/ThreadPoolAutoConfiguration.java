@@ -97,7 +97,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    *
    * @param properties 线程池配置属性
    * @return 线程池注册器
-   * @since 1.3.1
+   * @since 1.0.0
    */
   @Bean
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
@@ -112,7 +112,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    * <p>供下游模块（如消息通道 Bulkhead 隔离）按名称查找线程池并组装为业务 Map。 虚拟线程池（{@link ExecutorService}）不在此返回范围内。
    *
    * @return Bean 名称 → ThreadPoolTaskExecutor 的映射；无线程池时返回空 Map
-   * @since 1.2.1
+   * @since 1.0.0
    */
   public Map<String, ThreadPoolTaskExecutor> getExecutors() {
     if (applicationContext == null) {
@@ -130,7 +130,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    * <p>v1.3.0 重构：{@link ThreadPoolRegistrar} 已提取为独立组件类。
    *
    * @return 装配后处理器
-   * @since 1.3.0
+   * @since 1.0.0
    */
   @Bean
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
@@ -148,7 +148,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    *
    * <p>冲突防护：仅处理名称以 "Executor" 结尾、存在配套 Metrics Bean 的平台线程池， 避免误处理业务自定义的 ThreadPoolTaskExecutor Bean。
    *
-   * @since 1.3.0
+   * @since 1.0.0
    */
   public static class ThreadPoolMetricsPostProcessor
       implements BeanPostProcessor, BeanFactoryAware {

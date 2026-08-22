@@ -21,7 +21,7 @@ import com.njydsz.userinfo.infra.mapper.SocialAccountMapper;
  * 所有返回值通过 {@link UserInfoUserConverter} 从 DO 转换为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Repository
 @RequiredArgsConstructor

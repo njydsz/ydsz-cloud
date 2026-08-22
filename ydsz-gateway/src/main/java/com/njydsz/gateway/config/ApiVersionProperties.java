@@ -45,7 +45,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *         param-name: api-version
  * </pre>
  *
- * @since 3.7.0
+ * @since 1.0.0
  * @author ydsz-team
  */
 @Data

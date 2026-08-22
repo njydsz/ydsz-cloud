@@ -19,7 +19,7 @@ import com.njydsz.nextwiki.infra.mapper.SpaceTemplateMapper;
  * 空间模板仓储实现
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Repository

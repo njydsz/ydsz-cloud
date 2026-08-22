@@ -32,7 +32,7 @@ import com.njydsz.userinfo.domain.repository.UserAccountRepository;
  * 直接执行批量更新，避免逐条查询再更新的 N+1 问题。
  *
  * @author ydsz-team
- * @since 2.0.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

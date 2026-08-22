@@ -21,7 +21,7 @@ import com.njydsz.message.server.service.impl.ChannelSuppressionEngine;
  * <p>同一业务对象（bizType + bizId）在短时间内已通过其他渠道发送给用户时， 抑制当前通道的发送，避免多渠道重复打扰。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

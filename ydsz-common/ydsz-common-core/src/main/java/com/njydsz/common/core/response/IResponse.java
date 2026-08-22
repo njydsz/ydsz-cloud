@@ -68,7 +68,7 @@ public interface IResponse<T> {
    * <p>贯穿网关、服务间调用、日志记录等场景，便于问题排查。 可能为 null（如 MDC 中未设置 traceId 时）。
    *
    * @return 链路追踪 ID
-   * @since 1.2.0
+   * @since 1.0.0
    */
   default String getTraceId() {
     return null;
@@ -80,7 +80,7 @@ public interface IResponse<T> {
    * <p>响应生成时刻的 Unix 时间戳（毫秒）。 可能为 null（由实现类决定是否填充）。
    *
    * @return 响应时间戳
-   * @since 1.2.0
+   * @since 1.0.0
    */
   default Long getTimestamp() {
     return null;

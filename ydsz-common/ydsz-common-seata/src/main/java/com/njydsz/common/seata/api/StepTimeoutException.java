@@ -9,7 +9,7 @@ package com.njydsz.common.seata.api;
  * <p><b>P2-6 新增</b>：支持步骤级超时控制。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class StepTimeoutException extends Exception {
 

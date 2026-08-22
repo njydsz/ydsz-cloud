@@ -44,7 +44,7 @@ public class ApiVersionProperties {
    *
    * <p>校验项包括 since/deprecatedAt 版本格式、sunsetAt 日期格式、版本逻辑一致性。 默认 true。设置为 false 可关闭校验（不推荐）。
    *
-   * @since 1.2.0
+   * @since 1.0.0
    */
   private boolean validate = true;
 

@@ -464,7 +464,7 @@ public final class ObjectNode extends JsonNode {
    *
    * @param name 字段名
    * @return ObjectNode 实例
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public ObjectNode getObjectNode(String name) {
     JsonNode node = fields.get(name);
@@ -479,7 +479,7 @@ public final class ObjectNode extends JsonNode {
    *
    * @param name 字段名
    * @return ArrayNode 实例
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public ArrayNode getArrayNode(String name) {
     JsonNode node = fields.get(name);

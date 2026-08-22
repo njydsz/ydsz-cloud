@@ -13,7 +13,7 @@ import com.njydsz.userinfo.infra.entity.OAuth2ApplicationDO;
  * <p>提供 OAuth2ApplicationDO ↔ OAuth2Application 的转换方法。
  *
  * @author ydsz-team
- * @since 2.18.0
+ * @since 1.0.0
  */
 @Mapper(componentModel = "spring")
 @Component

@@ -10,7 +10,7 @@ import com.njydsz.system.domain.vo.FrontendInitVO;
  * <p>提供前端初始化所需数据的聚合查询能力，减少前端启动时的请求次数。
  *
  * @author ydsz-team
- * @since 1.9.0
+ * @since 1.0.0
  */
 public interface FrontendInitService {
 

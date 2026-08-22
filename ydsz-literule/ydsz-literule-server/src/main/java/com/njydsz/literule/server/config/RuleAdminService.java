@@ -223,7 +223,7 @@ public class RuleAdminService {
    *
    * @param pageQuery 分页查询参数
    * @return 分页结果（PageResponse 封装的 RuleDefinition 列表）
-   * @since 2.1.0
+   * @since 1.0.0
    */
   public com.njydsz.common.core.response.PageResponse<List<RuleDefinition>> pageRuleDefinitions(
       com.njydsz.common.domain.query.PageQuery pageQuery) {

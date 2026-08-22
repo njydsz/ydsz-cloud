@@ -12,7 +12,7 @@ package com.njydsz.common.safe.annotation;
  * </ul>
  *
  * @author ydsz-team
- * @since 2.21.0
+ * @since 1.0.0
  */
 public enum SensitiveLevel {
 

@@ -192,7 +192,7 @@ public class TenantProperties {
    *       expire-minutes: 10
    * </pre>
    *
-   * @since 1.10.0
+   * @since 1.0.0
    */
   private SqlCacheConfig sqlCache = new SqlCacheConfig();
 

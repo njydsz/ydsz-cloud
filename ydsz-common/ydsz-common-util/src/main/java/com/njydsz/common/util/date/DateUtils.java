@@ -21,7 +21,7 @@ import com.njydsz.common.util.api.Experimental;
  * java.text.SimpleDateFormat} 不同）。
  *
  * @author ydsz-team
- * @since 4.0.0
+ * @since 1.0.0
  */
 @Experimental("零采用；节假日日历与国际化场景待验证")
 public final class DateUtils {

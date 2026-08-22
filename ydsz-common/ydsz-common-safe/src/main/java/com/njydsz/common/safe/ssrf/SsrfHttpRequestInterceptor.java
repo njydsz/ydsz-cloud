@@ -32,7 +32,7 @@ import com.njydsz.common.safe.ssrf.HttpConnectionValidator.SsrfBlockedException;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  * @see HttpConnectionValidator
  */
 public class SsrfHttpRequestInterceptor implements ClientHttpRequestInterceptor {

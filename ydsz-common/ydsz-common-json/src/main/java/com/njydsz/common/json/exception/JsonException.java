@@ -34,7 +34,7 @@ public class JsonException extends RuntimeException {
    *
    * <p>例如 {@code "user.addresses[0].zipCode"}，用于快速定位错误字段。 为 {@code null} 表示未设置。
    *
-   * @since 1.2.0
+   * @since 1.0.0
    */
   private volatile String fieldPath;
 
@@ -128,7 +128,7 @@ public class JsonException extends RuntimeException {
    * @param cause 原始异常
    * @param position JSON 字符串中的位置
    * @param causeType 异常分类
-   * @since 1.2.0
+   * @since 1.0.0
    */
   public JsonException(
       int errorCode, String message, Throwable cause, int position, CauseType causeType) {
@@ -160,7 +160,7 @@ public class JsonException extends RuntimeException {
    * 获取异常分类。
    *
    * @return 异常分类枚举，不会为 null
-   * @since 1.2.0
+   * @since 1.0.0
    */
   public CauseType getCauseType() {
     return causeType;
@@ -170,7 +170,7 @@ public class JsonException extends RuntimeException {
    * 获取错误发生时的字段路径。
    *
    * @return 字段路径（如 {@code "user.address.street"}），未设置时返回 null
-   * @since 1.2.0
+   * @since 1.0.0
    */
   public String getFieldPath() {
     return fieldPath;
@@ -187,7 +187,7 @@ public class JsonException extends RuntimeException {
    *
    * @param fieldPath 字段路径（如 {@code "user.addresses[0]"}）
    * @return this
-   * @since 1.2.0
+   * @since 1.0.0
    */
   public JsonException setFieldPath(String fieldPath) {
     this.fieldPath = fieldPath;
@@ -206,7 +206,7 @@ public class JsonException extends RuntimeException {
    * </ul>
    *
    * @return 位置描述字符串，永不为 null
-   * @since 1.2.0
+   * @since 1.0.0
    */
   public String getLocationDescription() {
     if (position < 0) {

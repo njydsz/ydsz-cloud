@@ -24,7 +24,7 @@ import com.njydsz.common.event.repository.OutboxRepository;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.7.0 移除对 EventProperties 的依赖，使用内置常量阈值
+ * @since 1.0.0 移除对 EventProperties 的依赖，使用内置常量阈值
  */
 public class OutboxHealthIndicator implements HealthIndicator {
 

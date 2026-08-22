@@ -17,7 +17,7 @@ import jakarta.validation.Payload;
  * <p><b>P2-2 新增</b>：解决 XID 签名配置不完整导致运行时签名失败的问题。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Documented
 @Constraint(validatedBy = {XidSignConfigValidator.class})

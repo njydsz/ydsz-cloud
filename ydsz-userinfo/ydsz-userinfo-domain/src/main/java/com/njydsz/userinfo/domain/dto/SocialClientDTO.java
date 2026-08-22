@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
  * <p>同时用于创建和更新场景：创建时 {@code platform} 必填，更新时 {@code id} 必填。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Data
 public class SocialClientDTO {

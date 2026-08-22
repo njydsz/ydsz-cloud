@@ -20,7 +20,7 @@ import lombok.Getter;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.9.0
+ * @since 1.0.0
  */
 @Getter
 public enum QuotaType {

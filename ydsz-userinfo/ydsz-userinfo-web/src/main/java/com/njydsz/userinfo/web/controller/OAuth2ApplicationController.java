@@ -44,7 +44,7 @@ import com.njydsz.userinfo.server.oauth2.OAuth2ApplicationService;
  * <p><b>权限要求：</b>所有接口需 {@code admin:oauth2:application} 权限。
  *
  * @author ydsz-team
- * @since 2.18.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

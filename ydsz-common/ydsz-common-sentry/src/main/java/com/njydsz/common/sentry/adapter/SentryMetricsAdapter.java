@@ -52,7 +52,7 @@ import com.njydsz.common.sentry.spi.MetricsCollector;
  * }</pre>
  *
  * @author ydsz-team
- * @since 2.8.0
+ * @since 1.0.0
  * @see com.njydsz.common.sentry.SentryService
  * @see MetricsCollector
  */

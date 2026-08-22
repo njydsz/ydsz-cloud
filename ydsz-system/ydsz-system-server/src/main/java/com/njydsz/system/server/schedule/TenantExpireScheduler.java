@@ -26,7 +26,7 @@ import com.njydsz.system.domain.repository.TenantRepository;
  * 保证全量扫描。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  * @see TenantRepository 租户仓储
  */
 @Slf4j

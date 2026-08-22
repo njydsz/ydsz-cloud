@@ -20,7 +20,7 @@ import com.njydsz.nextwiki.infra.mapper.UserFavoriteMapper;
  * <p>基于 MyBatis-Plus 实现收藏夹的数据访问。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Repository

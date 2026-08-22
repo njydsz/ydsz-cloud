@@ -13,7 +13,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  * <p>消费 Outbox 事件中 topic={@code metrics} 的事件，记录 Prometheus 指标。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

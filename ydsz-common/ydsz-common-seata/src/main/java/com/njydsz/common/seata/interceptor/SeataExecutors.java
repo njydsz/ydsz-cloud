@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
  * 以透传 XID 上下文。 所有工厂方法均返回 Seata 感知的执行器，语义一致。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public final class SeataExecutors {
 

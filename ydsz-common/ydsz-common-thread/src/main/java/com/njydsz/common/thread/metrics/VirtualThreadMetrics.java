@@ -19,7 +19,7 @@ import org.springframework.lang.NonNull;
  * <p>v1.3.1 变更：移除无意义的 {@code active} Gauge（固定返回 1.0）， 计数器改用 {@link LongAdder} 优化高并发写入性能。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class VirtualThreadMetrics implements MeterBinder {
 /** default metric prefix */

@@ -19,7 +19,7 @@ import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
  * <p>降级策略：Redis 不可用时 fail-open（放行），避免阻断业务。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public interface GuardService {
 

@@ -15,7 +15,7 @@ import com.njydsz.userinfo.domain.config.MfaSecretEncryptor;
  * （即未配置 {@code ydsz.userinfo.mfa.encryption-key}）。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Component
 @ConditionalOnMissingBean(MfaSecretEncryptor.class)

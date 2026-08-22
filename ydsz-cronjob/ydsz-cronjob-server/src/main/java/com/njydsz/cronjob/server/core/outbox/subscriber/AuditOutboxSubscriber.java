@@ -14,7 +14,7 @@ import com.njydsz.cronjob.domain.vo.OutboxEventVO;
  * <p>对标 XXL-Job 的操作审计、PowerJob 的任务变更日志。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

@@ -19,7 +19,7 @@ import com.njydsz.common.feign.MessageResult;
  * <p>扩展方式：实现 {@link SendHandler} 接口并注册为 Spring Bean， Spring 容器启动时自动注入。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

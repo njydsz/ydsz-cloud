@@ -14,7 +14,7 @@ import java.time.LocalDate;
  * @param activeSessions 活跃会话数
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 public record SessionTrendVO(
     LocalDate date,

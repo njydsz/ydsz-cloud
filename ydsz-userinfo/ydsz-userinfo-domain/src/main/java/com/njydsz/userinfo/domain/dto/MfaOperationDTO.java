@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 MFA 绑定激活/解除场景，携带用户输入的一次性动态码（Authenticator 应用生成）。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 public class MfaOperationDTO implements Serializable {

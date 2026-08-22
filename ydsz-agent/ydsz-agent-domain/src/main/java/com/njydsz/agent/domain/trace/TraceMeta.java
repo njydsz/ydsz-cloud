@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  * @param totalDurationMs 总耗时（毫秒）
  * @param stepCount 步骤数（链路列表展示用；由实现类在查询时填充，避免调用方 N+1 查询）
  * @author ydsz-team
- * @since 2.18.0
+ * @since 1.0.0
  */
 public record TraceMeta(
     String traceId,

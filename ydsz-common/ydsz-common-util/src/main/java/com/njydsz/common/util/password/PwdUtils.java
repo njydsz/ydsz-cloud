@@ -57,7 +57,7 @@ public final class PwdUtils {
    *
    * <p>迭代次数存储在编码密码中（salt:iterations:hash）， 验证旧密码时使用存储的迭代次数，不受默认值变化影响。
    *
-   * @since 2.2.0
+   * @since 1.0.0
    */
   private static final String ITERATIONS_CONFIG_KEY = "ydsz.util.password.pbkdf2.iterations";
 
@@ -101,7 +101,7 @@ public final class PwdUtils {
    * 获取当前生效的 PBKDF2 默认迭代次数。
    *
    * @return 当前默认迭代次数（≥ 1000）
-   * @since 2.2.0
+   * @since 1.0.0
    */
   public static int getDefaultIterations() {
     return DEFAULT_ITERATIONS;
@@ -117,7 +117,7 @@ public final class PwdUtils {
    * {@link #verifyPasswordBCrypt(String, String)} 前可先检查，避免 {@link NoClassDefFoundError}。
    *
    * @return BCrypt 可用返回 true
-   * @since 3.1.0
+   * @since 1.0.0
    */
   public static boolean isBcryptAvailable() {
     try {
@@ -350,7 +350,7 @@ public final class PwdUtils {
    *
    * @param password 密码（可为 null）
    * @return 密码强度级别；null 或空串返回 VERY_WEAK
-   * @since 1.3.0
+   * @since 1.0.0
    */
   public static PasswordStrengthChecker.PasswordStrengthLevel checkPasswordStrengthLevel(
       String password) {
@@ -363,7 +363,7 @@ public final class PwdUtils {
    * @param password 密码
    * @param locale 语言区域（{@link Locale#CHINESE} / {@link Locale#ENGLISH} 等）
    * @return 本地化描述字符串（弱/中等/强 等）
-   * @since 1.3.0
+   * @since 1.0.0
    */
   public static String describePasswordStrength(String password, Locale locale) {
     PasswordStrengthChecker.PasswordStrengthLevel level =
@@ -377,7 +377,7 @@ public final class PwdUtils {
    * @param password 当前密码（可为 null）
    * @param locale 语言区域
    * @return 建议文本（可能为空；不会返回 null）
-   * @since 1.3.0
+   * @since 1.0.0
    */
   public static String suggestPasswordImprovement(String password, Locale locale) {
     return getPasswordStrengthChecker().suggest(password, locale);

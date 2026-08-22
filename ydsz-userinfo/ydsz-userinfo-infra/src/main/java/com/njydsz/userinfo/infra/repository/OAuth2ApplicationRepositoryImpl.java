@@ -21,7 +21,7 @@ import com.njydsz.userinfo.infra.mapper.OAuth2ApplicationMapper;
  * <p>基于 MyBatis-Plus 实现 domain 层 {@link OAuth2ApplicationRepository} 接口。
  *
  * @author ydsz-team
- * @since 2.18.0
+ * @since 1.0.0
  */
 @Repository
 @RequiredArgsConstructor

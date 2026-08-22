@@ -45,7 +45,7 @@ import com.njydsz.common.exception.custom.SysException;
  *
  * @author ydsz-team
  * @see com.njydsz.common.domain.query.PageQuery 原职责来源
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Slf4j
 public class SafeQueryInnerInterceptor implements InnerInterceptor {

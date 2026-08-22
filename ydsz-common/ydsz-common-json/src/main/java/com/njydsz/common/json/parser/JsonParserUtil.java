@@ -125,7 +125,7 @@ public final class JsonParserUtil {
    * <p>{@code JsonMapper} 调用期间将自身 maxDepth 写入本覆盖， {@link #resolveMaxParseDepth()}
    * 优先读取，避免静态全局值被多实例互相覆盖。 与 {@code JSONReader#setCallDepthOverride} 保持同一套语义。
    *
-   * @since 1.2.3
+   * @since 1.0.0
    */
   // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<Integer> CALL_PARSE_DEPTH = new ThreadLocal<>();
@@ -156,7 +156,7 @@ public final class JsonParserUtil {
    * 设置线程级解析深度覆盖（框架内部使用，供 JsonMapper 调用期间隔离实例配置）。
    *
    * @param depth 覆盖值（null 清除覆盖，回退静态全局值）
-   * @since 1.2.3
+   * @since 1.0.0
    */
   public static void setCallParseDepthOverride(Integer depth) {
     if (depth != null) {
@@ -173,7 +173,7 @@ public final class JsonParserUtil {
    * 获取当前线程的解析深度覆盖值（未设置返回 null，框架内部使用）。
    *
    * @return 覆盖值，未设置返回 null
-   * @since 1.2.3
+   * @since 1.0.0
    */
   public static Integer getCallParseDepthOverride() {
     return CALL_PARSE_DEPTH.get();
@@ -183,7 +183,7 @@ public final class JsonParserUtil {
    * 解析当前生效的递归解析深度（优先线程级覆盖，P0-3）。
    *
    * @return 生效的最大解析深度
-   * @since 1.2.3
+   * @since 1.0.0
    */
   static int resolveMaxParseDepth() {
     Integer callDepth = CALL_PARSE_DEPTH.get();

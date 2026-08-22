@@ -26,7 +26,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  * @see JdbcException
  * @see com.njydsz.common.exception.code.CoreExceptionCode
  */

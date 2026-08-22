@@ -27,7 +27,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
  * FilterRegistrationBean} 的集中式注册。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public class SafeFilterChainBuilder {
 

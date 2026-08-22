@@ -43,7 +43,7 @@ import com.njydsz.common.web.version.ApiVersion;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @RequestMapping("/api/v1/admin/audit")

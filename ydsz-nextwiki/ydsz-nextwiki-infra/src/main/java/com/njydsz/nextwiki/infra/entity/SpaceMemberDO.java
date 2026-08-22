@@ -20,7 +20,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应空间成员表 {@code nw_space_member}，记录用户与空间的归属关系及角色。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

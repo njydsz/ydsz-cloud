@@ -29,7 +29,7 @@ import com.njydsz.common.json.internal.JsonConfig;
  * MBeanServer，无需业务代码介入。
  *
  * @author ydsz-team
- * @since 1.2.1
+ * @since 1.0.0
  */
 public class JsonConfigViewer implements JsonConfigViewerMBean {
 

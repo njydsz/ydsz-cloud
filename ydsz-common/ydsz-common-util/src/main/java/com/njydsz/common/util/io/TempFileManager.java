@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
  * <p><b>适用范围：</b>全系统通用能力，不限于文档处理场景。任何需要创建临时文件 并确保最终清理的业务模块均可注入使用。
  *
  * @author ydsz-team
- * @since 2.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

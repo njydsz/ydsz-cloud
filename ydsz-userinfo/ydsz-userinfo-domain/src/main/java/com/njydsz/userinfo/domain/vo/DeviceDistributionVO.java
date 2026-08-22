@@ -12,7 +12,7 @@ package com.njydsz.userinfo.domain.vo;
  * @param count 会话数量
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 public record DeviceDistributionVO(
     String deviceType,

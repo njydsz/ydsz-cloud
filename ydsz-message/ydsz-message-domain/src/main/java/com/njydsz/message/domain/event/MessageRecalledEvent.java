@@ -8,7 +8,7 @@ import java.io.Serial;
  * <p>在消息撤回操作完成后发布，携带通道与撤回结果。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public class MessageRecalledEvent extends MessageDomainEvent {
 

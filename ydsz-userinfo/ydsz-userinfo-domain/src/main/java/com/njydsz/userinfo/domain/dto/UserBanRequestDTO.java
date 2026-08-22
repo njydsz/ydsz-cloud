@@ -14,7 +14,7 @@ import lombok.Data;
  * <p>用于管理员封禁用户账号，支持临时封禁（指定到期时间）和永久封禁。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Data
 public class UserBanRequestDTO implements Serializable {

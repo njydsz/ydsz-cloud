@@ -36,7 +36,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @AutoConfiguration

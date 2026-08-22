@@ -23,7 +23,7 @@ import com.njydsz.common.util.api.Experimental;
  * <p>所有正则表达式已预编译为 {@link Pattern} 静态字段，避免重复编译。
  *
  * @author ydsz-team
- * @since 4.0.0
+ * @since 1.0.0
  */
 @Experimental("零采用；覆盖面待扩充（护照、港澳台手机号等）")
 public final class ValidationUtils {

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * @param timestamp 事件发生时间
  * @param unlockedBy 解锁操作者（"AUTO" 表示自动解锁）
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 public record AccountUnlockedEvent(
     String userId, String username, LocalDateTime timestamp, String unlockedBy) {}

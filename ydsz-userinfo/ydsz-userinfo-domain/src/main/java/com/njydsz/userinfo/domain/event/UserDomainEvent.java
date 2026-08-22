@@ -29,7 +29,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Getter
 public class UserDomainEvent extends DomainEvent {

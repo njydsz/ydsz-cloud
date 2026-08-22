@@ -38,7 +38,7 @@ import static lombok.AccessLevel.PROTECTED;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.8.0 移除 ascending 字段，统一使用 OrderItem
+ * @since 1.0.0 移除 ascending 字段，统一使用 OrderItem
  */
 @Data
 @SuperBuilder
@@ -98,7 +98,7 @@ public abstract class BaseQuery implements Serializable {
    * <p>当 startDateTime 和 endDateTime 均不为 null 时， 检查 startDateTime 不晚于 endDateTime。任一为 null 时视为合法。
    *
    * @return 时间范围合法返回 true
-   * @since 1.2.0
+   * @since 1.0.0
    */
   public boolean isValidTimeRange() {
     return startDateTime == null || endDateTime == null || !startDateTime.isAfter(endDateTime);
@@ -108,7 +108,7 @@ public abstract class BaseQuery implements Serializable {
    * 校验时间范围，非法时抛出异常
    *
    * @throws IllegalArgumentException 当 startDateTime 晚于 endDateTime 时
-   * @since 1.2.0
+   * @since 1.0.0
    */
   public void validateTimeRange() {
     if (!isValidTimeRange()) {
@@ -144,7 +144,7 @@ public abstract class BaseQuery implements Serializable {
    * <p>将枚举名称设置为 status 字段值。
    *
    * @param statusEnum 状态枚举
-   * @since 1.2.0
+   * @since 1.0.0
    */
   public void statusEnum(Enum<?> statusEnum) {
     this.status = statusEnum != null ? statusEnum.name() : null;

@@ -9,7 +9,7 @@ import com.njydsz.message.infra.entity.MsgLog;
  * 实现时，路由器会回退到此默认实现。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public class DefaultRecallChannel implements RecallChannel {
 

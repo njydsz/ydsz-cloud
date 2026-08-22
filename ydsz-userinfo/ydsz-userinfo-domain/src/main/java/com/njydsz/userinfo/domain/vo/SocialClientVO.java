@@ -8,7 +8,7 @@ import lombok.Data;
  * 社交平台客户端配置视图出参（P1-1 查询返回值）。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Data
 public class SocialClientVO {

@@ -9,6 +9,6 @@
  *   <li>{@link com.njydsz.common.thread.metrics.MeteredRejectedHandler} — 带指标的拒绝策略装饰器
  * </ul>
  *
- * @since 1.2.0
+ * @since 1.0.0
  */
 package com.njydsz.common.thread.metrics;

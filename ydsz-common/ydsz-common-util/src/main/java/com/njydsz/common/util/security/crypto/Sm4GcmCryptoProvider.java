@@ -24,7 +24,7 @@ import com.njydsz.common.util.api.Experimental;
  * <p><b>密文格式：</b>IV(12 bytes) || ciphertext + GCM tag(16 bytes)
  *
  * @author ydsz-team
- * @since 3.0.0
+ * @since 1.0.0
  */
 @Experimental("SPI 仍在试用期；AAD 与密钥长度的默认行为可能调整")
 public final class Sm4GcmCryptoProvider implements CryptoProvider {

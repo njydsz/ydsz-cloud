@@ -11,7 +11,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  * <p>限流、熔断、降级、流控相关异常码（A04 系列中的频率控制 + D01xxx）。 覆盖请求限流、操作频率限制、流量控制拒绝等场景。
  *
  * @author ydsz-team
- * @since 2.0.0
+ * @since 1.0.0
  * @see CoreExceptionCode
  * @see SecurityExceptionCode
  */

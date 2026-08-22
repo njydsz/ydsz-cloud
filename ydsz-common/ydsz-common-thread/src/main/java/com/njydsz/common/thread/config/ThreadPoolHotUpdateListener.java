@@ -37,7 +37,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
 
@@ -46,7 +46,7 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
   /**
    * Bean 名称常量，供其他模块引用。
    *
-   * @since 1.4.0
+   * @since 1.0.0
    */
   public static final String BEAN_NAME = "threadPoolHotUpdateListener";
 

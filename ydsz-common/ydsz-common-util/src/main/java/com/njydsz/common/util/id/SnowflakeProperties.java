@@ -82,7 +82,7 @@ public class SnowflakeProperties {
    *
    * <p>注意：修改 EPOCH 后，新生成的 ID 与旧 EPOCH 生成的 ID 不保证连续， 且反解时间戳时需使用与生成时相同的 EPOCH 才能得到正确结果。
    *
-   * @since 4.0.0
+   * @since 1.0.0
    */
   private Long epoch;
 
@@ -95,7 +95,7 @@ public class SnowflakeProperties {
    *
    * <p>增大此值可提升并发吞吐，但会压缩时间戳字段，缩短 ID 可用年限。
    *
-   * @since 4.0.0
+   * @since 1.0.0
    */
   @Min(1)
   @Max(13)

@@ -22,7 +22,7 @@ import com.njydsz.common.tenant.annotation.TenantColumnScanner;
  * TenantColumnScanner} 实例， 且必须在 {@code TenantIsolationInterceptor} 创建前生效。
  *
  * @author ydsz-team
- * @since 1.10.0
+ * @since 1.0.0
  */
 public class TenantPropertiesAnnotationPopulator implements BeanPostProcessor {
 

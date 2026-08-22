@@ -248,7 +248,7 @@ public abstract class AbstractYdszException extends RuntimeException
    * 兜底逻辑。
    *
    * @return 桥接后的 ResultCode 视图；未初始化时返回 null
-   * @since 1.7.0
+   * @since 1.0.0
    */
   @Override
   public ResultCode resultCode() {

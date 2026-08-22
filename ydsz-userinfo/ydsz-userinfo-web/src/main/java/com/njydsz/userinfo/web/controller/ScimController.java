@@ -48,7 +48,7 @@ import com.njydsz.userinfo.server.service.UserAccountService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

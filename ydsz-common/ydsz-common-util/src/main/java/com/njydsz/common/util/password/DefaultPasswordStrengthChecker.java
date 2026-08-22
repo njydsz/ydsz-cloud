@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  * @see PasswordStrengthChecker
  */
 public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
@@ -216,7 +216,7 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
    *
    * @param classpathResource classpath 资源路径（如 {@code "/weak-passwords.txt"}）
    * @return 加载的密码集合；文件不存在时返回空 Set
-   * @since 2.2.0
+   * @since 1.0.0
    */
   public static Set<String> loadWeakPasswordsFromClasspath(String classpathResource) {
     Set<String> result = new HashSet<>();
@@ -247,7 +247,7 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
    * 获取当前生效的弱密码集合（不可变视图）。
    *
    * @return 弱密码集合
-   * @since 2.2.0
+   * @since 1.0.0
    */
   public Set<String> getWeakPasswords() {
     return weakPasswords;

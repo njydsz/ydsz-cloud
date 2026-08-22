@@ -18,7 +18,7 @@ import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
  * </ul>
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 public interface UserLifecycleService {
 

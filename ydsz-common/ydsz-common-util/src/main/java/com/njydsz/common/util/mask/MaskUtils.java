@@ -12,7 +12,7 @@ import com.njydsz.common.util.api.Experimental;
  * <p>脱敏规则遵循等保 2.0 要求：保留必要信息以便识别，隐藏关键位数。
  *
  * @author ydsz-team
- * @since 4.0.0
+ * @since 1.0.0
  */
 @Experimental("零采用；@Mask 注解化与脱敏位可配置化待实现")
 public final class MaskUtils {

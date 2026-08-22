@@ -11,8 +11,8 @@ import com.njydsz.common.exception.custom.AbstractYdszException;
  * com.njydsz.common.domain.exception.DomainException} 已废弃移除， 本类改继承 {@link AbstractYdszException}。
  *
  * @author ydsz-team
- * @since 1.4.0
- * @since 1.5.0 由 common-domain 迁入 common-event，与 DomainEvent 同包
+ * @since 1.0.0
+ * @since 1.0.0 由 common-domain 迁入 common-event，与 DomainEvent 同包
  */
 public class EventBuildException extends AbstractYdszException {
 

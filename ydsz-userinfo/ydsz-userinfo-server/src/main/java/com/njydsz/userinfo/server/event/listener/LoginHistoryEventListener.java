@@ -16,7 +16,7 @@ import com.njydsz.userinfo.domain.event.auth.LoginSuccessEvent;
  * <p>优先级 10（高优先级，确保登录记录先于其他监听器写入）。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Slf4j
 @Order(10)

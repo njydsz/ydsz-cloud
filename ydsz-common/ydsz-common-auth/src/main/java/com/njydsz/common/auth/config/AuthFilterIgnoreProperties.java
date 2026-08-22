@@ -30,7 +30,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  * @see AuthFilterConfiguration
  */
 @ConfigurationProperties(prefix = "ydsz.auth.filter-ignore")

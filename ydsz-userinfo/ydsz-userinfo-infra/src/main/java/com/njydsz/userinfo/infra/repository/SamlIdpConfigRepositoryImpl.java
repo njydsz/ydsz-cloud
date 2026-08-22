@@ -23,7 +23,7 @@ import com.njydsz.userinfo.infra.mapper.SamlIdpConfigMapper;
  * P1-2: 升级为 Spring 注入模式，替代静态单例 INSTANT 访问，提升可测试性。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Slf4j
 @Repository

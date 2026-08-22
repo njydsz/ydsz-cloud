@@ -19,7 +19,7 @@ import java.util.List;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.2.1
+ * @since 1.0.0
  */
 public final class ValidationResult {
 

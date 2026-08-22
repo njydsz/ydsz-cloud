@@ -39,7 +39,7 @@ import com.njydsz.common.util.password.PwdUtils;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  * @see PwdUtils
  * @see PasswordStrengthChecker
  */

@@ -19,7 +19,7 @@ import com.njydsz.literule.api.RuleSeverity;
  *
  * <p>E3 增强：维护 per-rule 统计（评估/触发/错误/耗时）， 支持慢规则 Top N 与热点规则 Top N 看板查询。
  *
- * @since 1.1.0
+ * @since 1.0.0
  * @author ydsz-team
  */
 @Slf4j

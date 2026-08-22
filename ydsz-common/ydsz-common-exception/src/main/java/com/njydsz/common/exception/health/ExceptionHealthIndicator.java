@@ -25,7 +25,7 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 public class ExceptionHealthIndicator implements HealthIndicator {

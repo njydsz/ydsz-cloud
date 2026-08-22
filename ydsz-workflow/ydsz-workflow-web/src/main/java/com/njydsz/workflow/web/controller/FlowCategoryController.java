@@ -90,7 +90,7 @@ public class FlowCategoryController {
    * 并填充 {@code level}/{@code path} 元数据。典型场景：设计器左侧分类树加载、发起审批页分类筛选。
    *
    * @return 分类树形结构根节点列表
-   * @since 1.7.0
+   * @since 1.0.0
    */
   @GetMapping("/tree")
   @Operation(summary = "查询全部分类（树形结构）")

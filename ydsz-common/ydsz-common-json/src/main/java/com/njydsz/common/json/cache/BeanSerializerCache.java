@@ -84,7 +84,7 @@ public final class BeanSerializerCache {
    * @param clazz Bean 类
    * @param strategy 命名策略
    * @return 已缓存的 BeanSerializer，或 null 如果尚未缓存
-   * @since 1.2.0
+   * @since 1.0.0
    */
   public static BeanSerializer get(Class<?> clazz, PropertyNamingStrategy strategy) {
     ConcurrentMap<PropertyNamingStrategy, BeanSerializer> strategyMap = CACHE.get(clazz);

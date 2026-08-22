@@ -7,7 +7,7 @@ package com.njydsz.common.util.id;
  * 不同，此异常不表示最终失败， 仅表示当前策略无法适用。
  *
  * @author ydsz-team
- * @since 3.0.0
+ * @since 1.0.0
  */
 public class NotApplicableException extends RuntimeException {
 

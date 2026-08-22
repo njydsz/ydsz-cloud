@@ -20,7 +20,7 @@ import com.njydsz.userinfo.domain.vo.AuthPolicyVO;
  * <p><b>策略继承：</b>租户级策略未配置的字段继承全局默认策略值。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

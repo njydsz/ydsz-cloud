@@ -10,7 +10,7 @@ import java.io.Serial;
  * <p>在消息状态发生变更时发布，携带旧状态、新状态与通道信息。 订阅者可据此更新统计表、触发状态流转审计、写入事件溯源日志等。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public class MessageStatusChangedEvent extends MessageDomainEvent {
 

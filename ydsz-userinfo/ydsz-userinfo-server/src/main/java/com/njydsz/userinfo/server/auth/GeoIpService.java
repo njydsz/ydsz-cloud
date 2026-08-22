@@ -35,7 +35,7 @@ import com.njydsz.userinfo.server.config.GeoIpProperties;
  * <p><b>降级策略：</b>MMDB 文件不可用时，所有 IP 解析返回空地理位置，不影响登录流程。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

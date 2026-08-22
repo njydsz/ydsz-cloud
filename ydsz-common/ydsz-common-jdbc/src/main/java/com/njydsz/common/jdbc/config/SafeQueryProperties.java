@@ -21,7 +21,7 @@ import org.springframework.validation.annotation.Validated;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Data
 @Validated

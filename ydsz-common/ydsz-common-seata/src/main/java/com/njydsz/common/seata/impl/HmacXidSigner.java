@@ -24,7 +24,7 @@ import com.njydsz.common.seata.api.XidSigner;
  * <p><b>安全配置</b>：生产环境应通过 {@code ydsz.seata.xid.sign-key} 配置强密钥， 建议使用 32 字节以上的随机字符串。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class HmacXidSigner implements XidSigner {
 

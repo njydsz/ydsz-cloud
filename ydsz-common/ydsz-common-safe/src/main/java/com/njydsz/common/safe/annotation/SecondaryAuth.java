@@ -42,7 +42,7 @@ import java.lang.annotation.Target;
  * </ol>
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  * @see SensitiveOperation 全局敏感操作验证（无场景隔离）
  * @see com.njydsz.common.safe.annotation.SensitiveLevel 敏感操作等级
  */

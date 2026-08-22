@@ -50,7 +50,7 @@ public interface CompanyService {
    * <p>一次性查询全表后在内存中构建树，集团-子公司层级关系清晰。 公司数据量小（百级别），全量加载可接受。
    *
    * @return 公司树形结构根节点列表，无数据返回空列表
-   * @since 1.7.0
+   * @since 1.0.0
    */
   List<CompanyTreeVO> tree();
 

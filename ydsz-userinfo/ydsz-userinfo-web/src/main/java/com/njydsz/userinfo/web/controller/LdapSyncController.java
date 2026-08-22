@@ -30,7 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * <p><b>启用条件：</b>{@code ydsz.userinfo.ldap.sync.enabled=true}。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

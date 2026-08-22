@@ -21,7 +21,7 @@ import java.util.UUID;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public abstract class MessageDomainEvent implements Serializable {
 

@@ -53,7 +53,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
  * <p>通过 {@code ydsz.cronjob.preload.enabled=true} 启用（默认关闭，保守策略）。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

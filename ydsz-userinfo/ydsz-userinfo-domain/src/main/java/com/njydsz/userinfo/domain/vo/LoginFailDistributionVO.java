@@ -12,7 +12,7 @@ package com.njydsz.userinfo.domain.vo;
  * @param percentage 占比（0.0-1.0）
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 public record LoginFailDistributionVO(
     String reason,

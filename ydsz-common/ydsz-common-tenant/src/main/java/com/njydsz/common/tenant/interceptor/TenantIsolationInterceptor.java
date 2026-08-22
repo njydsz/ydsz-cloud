@@ -91,7 +91,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
    *
    * <p><b>注意：</b>默认关闭，需通过 {@code ydsz.tenant.sql-cache.enabled=true} 开启。
    *
-   * @since 1.1.0 由 ConcurrentHashMap 迁移至 ydsz-common-cache（修复 P0-1 缓存 Key 不完整缺陷）
+   * @since 1.0.0 由 ConcurrentHashMap 迁移至 ydsz-common-cache（修复 P0-1 缓存 Key 不完整缺陷）
    */
   private final Cache<String, String> sqlCache;
 

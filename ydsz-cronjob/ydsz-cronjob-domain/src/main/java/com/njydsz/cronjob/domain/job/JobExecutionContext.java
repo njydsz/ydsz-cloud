@@ -16,7 +16,7 @@ import com.alibaba.ttl.TransmittableThreadLocal;
  * ExecutionContextScope#of(JobLogger, ShardingContext)} 结构化生命周期管理。
  *
  * @author ydsz-team
- * @since 1.4.0 合并 JobContextHolder 与 JobLoggerHolder；1.5.x 起使用 TransmittableThreadLocal
+ * @since 1.0.0 合并 JobContextHolder 与 JobLoggerHolder；1.5.x 起使用 TransmittableThreadLocal
  */
 public final class JobExecutionContext {
 

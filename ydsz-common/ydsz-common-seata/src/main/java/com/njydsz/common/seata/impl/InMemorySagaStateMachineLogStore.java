@@ -17,7 +17,7 @@ import com.njydsz.common.seata.api.SagaStateMachineLogStore;
  * <p>生产环境应使用数据库实现（如 {@code DbSagaStateMachineLogStore}） 以支持跨实例恢复。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class InMemorySagaStateMachineLogStore implements SagaStateMachineLogStore {
 

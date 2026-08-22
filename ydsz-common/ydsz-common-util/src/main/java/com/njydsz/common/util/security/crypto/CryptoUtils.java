@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * <p>支持 AAD（Additional Authenticated Data）的 AEAD 加密， 用于带上下文的加密场景（如用户 ID 绑定密文防串用）。
  *
  * @author ydsz-team
- * @since 3.0.0
+ * @since 1.0.0
  * @see CryptoProvider
  * @see CryptoProviderRegistry
  * @see CryptoAutoConfiguration
@@ -259,7 +259,7 @@ public final class CryptoUtils {
    * }</pre>
    *
    * @param key 待擦除的密钥字节数组；为 null 时无操作
-   * @since 4.1.0
+   * @since 1.0.0
    */
   public static void destroyKey(byte[] key) {
     if (key != null) {

@@ -11,7 +11,7 @@ import com.njydsz.system.domain.vo.ConfigVO;
  * <p>提供批量创建、批量更新等能力。
  *
  * @author ydsz-team
- * @since 1.9.0
+ * @since 1.0.0
  */
 public interface ConfigBatchService {
 

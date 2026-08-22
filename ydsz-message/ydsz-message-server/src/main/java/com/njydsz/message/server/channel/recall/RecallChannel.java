@@ -16,7 +16,7 @@ import com.njydsz.message.infra.entity.MsgLog;
  * <p>实现类通过 {@link #channelType()} 声明支持的通道类型，由 {@link RecallChannelRouter} 按需路由。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public interface RecallChannel {
 

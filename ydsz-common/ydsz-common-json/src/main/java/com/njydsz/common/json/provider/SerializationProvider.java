@@ -89,7 +89,7 @@ public final class SerializationProvider {
    * 持有），因其需通过 {@link BeanSerializerCache} 的二级缓存 Key（Class + NamingStrategy）直接访问， 与序列化流程解耦。快照 {@link
    * ThreadLocalSnapshot} 单独保存/恢复它。
    *
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public static final class SerializationContext {
 
@@ -666,7 +666,7 @@ public final class SerializationProvider {
     // 快速路径：如果 BeanSerializer 已缓存且标记为 primitiveOnly（无嵌套对象字段），
     // 则不可能产生循环引用，跳过 serializingObjects 的 add/remove 和 contains 检查。
     // 纯原始类型 Bean 在大对象图中数量最多，此举可显著降低 IdentityHashMap 压力。
-    // @since 1.2.0
+    // @since 1.0.0
     BeanSerializer primitiveSerializer = null;
     if (isBeanType) {
       PropertyNamingStrategy strategyForLookup = FieldMetadataLoader.NAMING_STRATEGY.get();
@@ -1289,7 +1289,7 @@ public final class SerializationProvider {
    * @param message 错误消息（不含字段路径，方法自动附加）
    * @param cause 原始异常（可为 null）
    * @return 包含字段路径诊断信息的序列化异常
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public static JsonSerializationException newSerializationException(
       int errorCode, String message, Throwable cause) {

@@ -27,7 +27,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  * <p><b>线程安全：</b>内部使用 {@link ConcurrentHashMap}，启动期扫描注册完毕后 后续只有读操作（{@link #lookup}），无需额外同步。
  *
  * @author ydsz-team
- * @since 2.0.0
+ * @since 1.0.0
  */
 public class ErrorCodeTable {
 

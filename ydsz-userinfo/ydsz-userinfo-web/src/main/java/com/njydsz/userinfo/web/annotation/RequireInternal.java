@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
  * 默认关闭以兼容存量 Feign 客户端，各业务模块统一注入请求头后可开启。
  *
  * @author ydsz-team
- * @since 2.21.0
+ * @since 1.0.0
  * @see com.njydsz.userinfo.web.aspect.RequireInternalAspect 内部调用校验切面
  */
 @Target({ElementType.TYPE, ElementType.METHOD})

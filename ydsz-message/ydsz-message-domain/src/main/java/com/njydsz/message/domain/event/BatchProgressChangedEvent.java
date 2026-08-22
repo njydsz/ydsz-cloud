@@ -8,7 +8,7 @@ import java.io.Serial;
  * <p>在批次处理进度更新时发布，携带批次总量、成功数、失败数、跳过数与进度百分比。 订阅者可据此更新批次监控面板、触发进度回调等。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public class BatchProgressChangedEvent extends MessageDomainEvent {
 

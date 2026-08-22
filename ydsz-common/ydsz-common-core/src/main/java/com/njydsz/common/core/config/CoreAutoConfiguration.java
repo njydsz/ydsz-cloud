@@ -70,7 +70,7 @@ public class CoreAutoConfiguration {
    * i18n/core/messages*} 资源束， 提供最低限度的国际化能力。此 Bean 仅在 SpringMessageResolver 未注册时生效。
    *
    * @return ResourceBundleMessageResolver 实例
-   * @since 1.11.0
+   * @since 1.0.0
    */
   @Bean
   @ConditionalOnMissingBean(YdszResponse.MessageResolver.class)

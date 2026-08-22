@@ -347,7 +347,7 @@ public final class TracerUtils {
    * @param traceparent W3C traceparent 字符串（如 {@code
    *     00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01}）
    * @return {@code true} 表示注入成功；格式非法返回 {@code false}
-   * @since 4.2.0
+   * @since 1.0.0
    */
   public static boolean injectTraceparent(String traceparent) {
     ParsedTraceparent parsed = TraceIdGeneratorProxy.parseTraceparent(traceparent);
@@ -366,7 +366,7 @@ public final class TracerUtils {
    *
    * @param traceparent W3C traceparent 字符串
    * @return 解析结果；格式非法返回 null
-   * @since 4.2.0
+   * @since 1.0.0
    */
   public static ParsedTraceparent parseTraceparent(String traceparent) {
     return TraceIdGeneratorProxy.parseTraceparent(traceparent);
@@ -380,7 +380,7 @@ public final class TracerUtils {
    * <p>格式：{@code 00-{32hex}-{16hex}-{flags}}。
    *
    * @return W3C traceparent 字符串；如果没有有效的 Trace ID 则返回空字符串
-   * @since 4.2.0
+   * @since 1.0.0
    */
   public static String getCurrentTraceParent() {
     String traceId = getTraceId();

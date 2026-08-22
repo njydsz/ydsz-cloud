@@ -35,7 +35,7 @@ import com.njydsz.userinfo.server.auth.SecondaryAuthService;
  * <p><b>切点表达式：</b>匹配所有标注 {@code @SecondaryAuth} 的方法。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Slf4j
 @Aspect

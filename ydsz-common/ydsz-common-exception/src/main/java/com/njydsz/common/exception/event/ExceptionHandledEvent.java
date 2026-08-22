@@ -33,7 +33,7 @@ import com.njydsz.common.exception.enums.ExceptionCategory;
  * }</pre>
  *
  * @author ydsz-team
- * @since 2.3.0
+ * @since 1.0.0
  */
 public class ExceptionHandledEvent extends ApplicationEvent {
 

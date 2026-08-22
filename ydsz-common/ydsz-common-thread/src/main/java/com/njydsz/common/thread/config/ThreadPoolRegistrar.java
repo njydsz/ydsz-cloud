@@ -51,7 +51,7 @@ import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @ConditionalOnMissingBean(name = "threadPoolRegistrar")
@@ -239,7 +239,7 @@ public class ThreadPoolRegistrar
    * <p>供下游模块使用，避免通过 Bean 名称字符串拼接或类型扫描的方式查找。
    *
    * @return 配置 key → Bean 名称的映射，key 对应 {@link ThreadPoolProperties#getPools()} 的 key
-   * @since 1.3.1
+   * @since 1.0.0
    */
   public Map<String, String> getManagedBeanNames() {
     Map<String, String> result = new LinkedHashMap<>();

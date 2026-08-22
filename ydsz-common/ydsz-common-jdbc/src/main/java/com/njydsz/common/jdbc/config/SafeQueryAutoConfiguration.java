@@ -42,7 +42,7 @@ import com.njydsz.common.jdbc.interceptor.SafeQueryInnerInterceptor;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.7.0
+ * @since 1.0.0
  * @see SafeQueryInnerInterceptor
  * @see MybatisPlusConfiguration
  */

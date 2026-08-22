@@ -16,7 +16,7 @@ import com.njydsz.common.seata.api.XidSigner;
  * <p><b>注意</b>：生产环境建议使用 {@link HmacXidSigner} 提供签名保护。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class NoopXidSigner implements XidSigner {
 

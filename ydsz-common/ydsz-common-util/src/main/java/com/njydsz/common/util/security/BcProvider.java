@@ -13,7 +13,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
  * <p>注册逻辑幂等：仅当 Provider 未注册时才添加，重复调用安全无害。
  *
  * @author ydsz-team
- * @since 2.1.0
+ * @since 1.0.0
  */
 final class BcProvider {
 

@@ -27,7 +27,7 @@ import com.njydsz.userinfo.domain.repository.UserAccountRepository;
  * 从 {@link AuthServiceImpl} 拆分（P0-5），聚焦「凭据校验」单一职责。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  * @see PasswordEncoder BCrypt 密码编码器
  * @see LdapAuthenticationProvider LDAP 域认证提供者
  */

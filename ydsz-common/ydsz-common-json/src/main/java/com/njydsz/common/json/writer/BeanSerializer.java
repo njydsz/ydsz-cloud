@@ -65,7 +65,7 @@ public final class BeanSerializer {
    * SerializationProvider#serialize(Object)}，因此上层调用方可以安全地跳过 {@code serializingObjects} 的 add/remove
    * 操作，避免 IdentityHashMap 的查询开销。
    *
-   * @since 1.2.0
+   * @since 1.0.0
    */
   public final boolean primitiveOnly;
 

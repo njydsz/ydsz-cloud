@@ -8,7 +8,7 @@ import java.io.Serial;
  * <p>在消息被去重、限流、DND 等规则拦截时发布，携带拦截原因与处理阶段。 用于审计与风控分析。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public class MessageSkippedEvent extends MessageDomainEvent {
 

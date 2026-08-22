@@ -122,7 +122,7 @@ public class JsonMapper {
    * ThreadLocal 配置字段。
    *
    * @return 运行时配置（只读）
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public JsonRuntimeConfig getRuntimeConfig() {
     return runtimeConfig;
@@ -174,7 +174,7 @@ public class JsonMapper {
    * JsonParserUtil 独立管理，仅在显式配置差异时变化， 一致性判定纳入其值比较）。
    *
    * @return true 表示当前线程已持有本 Mapper 的全部配置
-   * @since 1.2.3
+   * @since 1.0.0
    */
   private boolean isRuntimeConfigActive() {
     SerializationContext ctx = SerializationContext.CONTEXT.get();
@@ -202,7 +202,7 @@ public class JsonMapper {
    * </ul>
    *
    * @return true 表示当前线程深度状态已与目标一致
-   * @since 1.2.3
+   * @since 1.0.0
    */
   private boolean depthOverridesMatch() {
     if (isCustomDepth()) {
@@ -223,7 +223,7 @@ public class JsonMapper {
    * 静态值——后者可被运行期临时调整， 临时调整不应使继承型 Mapper 被误判为自定义型。
    *
    * @return true 表示本 Mapper 深度配置与全局已安装配置不同
-   * @since 1.2.3
+   * @since 1.0.0
    */
   private boolean isCustomDepth() {
     JsonConfig installed = JsonConfig.copyOf(null);
@@ -236,7 +236,7 @@ public class JsonMapper {
    *
    * <p>目标是最终消除 ThreadLocal 依赖（P0-5/P0-6），当前作为过渡方案， 利用已预计算的 runtimeConfig 避免重复从 JsonConfig 读取。
    *
-   * @since 1.1.0
+   * @since 1.0.0
    */
   private void applyRuntimeConfig() {
     SerializationContext ctx = SerializationContext.CONTEXT.get();
@@ -272,7 +272,7 @@ public class JsonMapper {
    * 避免逐个字段赋值。调用方需负责清理（使用现有清理机制）。
    *
    * @param runtimeConfig 预计算运行时配置
-   * @since 1.1.0
+   * @since 1.0.0
    */
   static void installSerializationContext(JsonRuntimeConfig runtimeConfig) {
     SerializationContext ctx = SerializationContext.from(runtimeConfig);
@@ -486,7 +486,7 @@ public class JsonMapper {
    * @param clazz 目标类型
    * @param <T> 类型参数
    * @return 反序列化后的对象
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public <T> T toObject(byte[] bytes, Class<T> clazz) {
     if (bytes == null || bytes.length == 0) {
@@ -510,7 +510,7 @@ public class JsonMapper {
    * @param type 目标类型
    * @param <T> 类型参数
    * @return 反序列化后的对象
-   * @since 1.1.0
+   * @since 1.0.0
    */
   @SuppressWarnings("unchecked")
   public <T> T toObject(byte[] bytes, Type type) {
@@ -808,7 +808,7 @@ public class JsonMapper {
    * @param typeRef 目标类型引用（可为泛型）
    * @param <T> 目标类型参数
    * @return 转换后的对象
-   * @since 1.2.2
+   * @since 1.0.0
    */
   public <T> T treeToValue(JsonNode node, JsonType<T> typeRef) {
     if (node == null) {
@@ -1003,7 +1003,7 @@ public class JsonMapper {
      *
      * @param mapper 源 JsonMapper 实例（不可为 null）
      * @return 预填充源 Mapper 配置的 Builder 实例
-     * @since 1.1.0
+     * @since 1.0.0
      */
     public Builder from(JsonMapper mapper) {
       if (mapper == null) {

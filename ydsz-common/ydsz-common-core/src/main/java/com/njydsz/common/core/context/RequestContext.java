@@ -97,7 +97,7 @@ public final class RequestContext {
    *
    * <p>业务 Filter（认证模块）写入当前认证信息，业务代码通过此常量引用 key， 并强制转型为业务模块定义的 AuthInfo 类型。
    *
-   * @since 1.10.0
+   * @since 1.0.0
    */
   public static final String KEY_AUTH_INFO = BizContextKeys.KEY_AUTH_INFO;
 
@@ -106,7 +106,7 @@ public final class RequestContext {
    *
    * <p>业务 Filter（租户模块）写入租户上下文信息，业务代码通过此常量引用 key， 并强制转型为业务模块定义的 TenantContext 类型。
    *
-   * @since 1.10.0
+   * @since 1.0.0
    */
   public static final String KEY_TENANT_CONTEXT = BizContextKeys.KEY_TENANT_CONTEXT;
 
@@ -271,7 +271,7 @@ public final class RequestContext {
    * 设置客户端 IP
    *
    * @param clientIp 客户端 IP 地址
-   * @since 1.8.0
+   * @since 1.0.0
    */
   public static void setClientIp(String clientIp) {
     put(KEY_CLIENT_IP, clientIp);
@@ -281,7 +281,7 @@ public final class RequestContext {
    * 获取客户端 IP
    *
    * @return 客户端 IP，不存在时返回 null
-   * @since 1.8.0
+   * @since 1.0.0
    */
   public static String getClientIp() {
     return (String) get(KEY_CLIENT_IP);
@@ -293,7 +293,7 @@ public final class RequestContext {
    * <p>典型取值：{@code INTERNAL}（内部服务调用）、{@code OPEN_API}（开放接口）、 {@code WEB_HOOK}（第三方回调）等。
    *
    * @param requestSource 请求来源标识
-   * @since 1.8.0
+   * @since 1.0.0
    */
   public static void setRequestSource(String requestSource) {
     put(KEY_REQUEST_SOURCE, requestSource);
@@ -303,7 +303,7 @@ public final class RequestContext {
    * 获取请求来源
    *
    * @return 请求来源，不存在时返回 null
-   * @since 1.8.0
+   * @since 1.0.0
    */
   public static String getRequestSource() {
     return (String) get(KEY_REQUEST_SOURCE);
@@ -315,7 +315,7 @@ public final class RequestContext {
    * <p>用于 API 生命周期管理 (v1/v2/...) 与灰度分流场景。
    *
    * @param apiVersion API 版本号
-   * @since 1.8.0
+   * @since 1.0.0
    */
   public static void setApiVersion(String apiVersion) {
     put(KEY_API_VERSION, apiVersion);
@@ -325,7 +325,7 @@ public final class RequestContext {
    * 获取 API 版本号
    *
    * @return API 版本号，不存在时返回 null
-   * @since 1.8.0
+   * @since 1.0.0
    */
   public static String getApiVersion() {
     return (String) get(KEY_API_VERSION);
@@ -384,7 +384,7 @@ public final class RequestContext {
    *
    * @param key 属性键
    * @return 存在返回 true，不存在或上下文未初始化返回 false
-   * @since 1.10.0
+   * @since 1.0.0
    */
   public static boolean has(String key) {
     Map<String, Object> holder = CONTEXT_HOLDER.get();
@@ -396,7 +396,7 @@ public final class RequestContext {
    *
    * @param key 类型安全上下文键
    * @return 存在返回 true
-   * @since 1.10.0
+   * @since 1.0.0
    */
   public static boolean has(ContextKey<?> key) {
     return has(key.key());
@@ -430,7 +430,7 @@ public final class RequestContext {
    * <p>快照在入口处一次性拷贝所需元数据，与 Servlet API 解耦， 可在异步 / 线程池 / 序列化边界安全传递。
    *
    * @param snapshot 请求快照（可为 null，等同于移除）
-   * @since 1.9.1
+   * @since 1.0.0
    * @see RequestSnapshot
    */
   public static void setRequestSnapshot(RequestSnapshot snapshot) {
@@ -445,7 +445,7 @@ public final class RequestContext {
    * 获取 HTTP 请求不可变快照（类型安全）。
    *
    * @return 请求快照；不存在或存入的是原生 {@code HttpServletRequest} 时返回 null
-   * @since 1.9.1
+   * @since 1.0.0
    */
   public static RequestSnapshot getRequestSnapshot() {
     Object obj = get(BizContextKeys.KEY_HTTP_REQUEST);
@@ -458,7 +458,7 @@ public final class RequestContext {
    * <p>替代已废弃的直接持有原生 {@code HttpServletRequest} 的方式， 现在返回 {@link RequestSnapshot} 不可变快照。
    *
    * @return 请求快照；不存在时返回 null
-   * @since 1.10.0
+   * @since 1.0.0
    * @see #getRequestSnapshot()
    */
   public static RequestSnapshot getHttpRequest() {
@@ -472,7 +472,7 @@ public final class RequestContext {
    *
    * @param key header 名（如 X-Data-Scope）
    * @param value header 值
-   * @since 1.9.0
+   * @since 1.0.0
    */
   public static void putExtraHeader(String key, String value) {
     Map<String, String> headers = (Map<String, String>) get(BizContextKeys.KEY_EXTRA_HEADERS);
@@ -488,7 +488,7 @@ public final class RequestContext {
    *
    * @param key header 名
    * @return header 值，不存在返回 null
-   * @since 1.9.0
+   * @since 1.0.0
    */
   public static String getExtraHeader(String key) {
     Object obj = get(BizContextKeys.KEY_EXTRA_HEADERS);
@@ -502,7 +502,7 @@ public final class RequestContext {
    * 获取全部虚拟请求头（用于 Feign 透传、SQL 拦截器）。
    *
    * @return 虚拟请求头 Map（不可变），不存在返回空 Map
-   * @since 1.9.0
+   * @since 1.0.0
    */
   @SuppressWarnings("unchecked")
   public static Map<String, String> getExtraHeaders() {
@@ -519,7 +519,7 @@ public final class RequestContext {
    * <p>由 RbacPermissionEvaluator 在启动时调用一次写入， 供同一请求内多次权限校验复用，避免反复 Redis 调用。
    *
    * @return 可变的缓存 Map
-   * @since 1.9.0
+   * @since 1.0.0
    */
   @SuppressWarnings("unchecked")
   public static Map<String, Object> createCachedUserInfoMap() {
@@ -534,7 +534,7 @@ public final class RequestContext {
    * <p>该缓存存储于与通用上下文分离的 {@code CACHE_HOLDER}，不随 TTL 跨线程传播。
    *
    * @return 缓存 Map（可变），未创建返回 null
-   * @since 1.9.0
+   * @since 1.0.0
    */
   @SuppressWarnings("unchecked")
   public static Map<String, Object> getCachedUserInfoMap() {
@@ -548,7 +548,7 @@ public final class RequestContext {
    * 实现在子线程中恢复上下文（如异步任务、事件发布）。
    *
    * @return 上下文的不可变快照；上下文为空时返回空 Map
-   * @since 1.8.0
+   * @since 1.0.0
    */
   public static Map<String, Object> snapshot() {
     Map<String, Object> holder = CONTEXT_HOLDER.get();
@@ -565,7 +565,7 @@ public final class RequestContext {
    * #clear()}。
    *
    * @param snapshot 通过 {@link #snapshot()} 获取的快照，可为 null（空操作）
-   * @since 1.8.0
+   * @since 1.0.0
    */
   public static void restore(Map<String, Object> snapshot) {
     if (snapshot == null || snapshot.isEmpty()) {
@@ -589,7 +589,7 @@ public final class RequestContext {
    * <p><b>清理：</b>桥接写入的 MDC 条目由调用方在请求结束时通过 {@link #clearMdc()} 清理。 推荐使用 {@link
    * #runWithCleanup(Runnable)} 工具方法，它会连同 {@link #clear()} 与 {@link #clearMdc()} 一并处理。
    *
-   * @since 1.8.0
+   * @since 1.0.0
    * @see #clearMdc()
    */
   public static void bridgeToMdc() {
@@ -614,7 +614,7 @@ public final class RequestContext {
   /**
    * 清理由 {@link #bridgeToMdc()} 写入的 MDC 条目。
    *
-   * @since 1.8.0
+   * @since 1.0.0
    * @see #bridgeToMdc()
    */
   public static void clearMdc() {
@@ -666,7 +666,7 @@ public final class RequestContext {
    * #bridgeToMdc()} 写入的 MDC 条目残留在复用线程上。
    *
    * @param task 待执行逻辑
-   * @since 1.8.0
+   * @since 1.0.0
    */
   public static void runWithCleanup(Runnable task) {
     try (CleanupGuard guard = newCleanupGuard()) {
@@ -699,7 +699,7 @@ public final class RequestContext {
    *
    * @param task 待执行的任务
    * @return 包装后的 Runnable，可提交给任意 Executor
-   * @since 1.10.0
+   * @since 1.0.0
    */
   public static Runnable async(Runnable task) {
     if (task == null) {
@@ -732,7 +732,7 @@ public final class RequestContext {
    * @param <T> 返回值类型
    * @param supplier 待执行的有返回值任务
    * @return 包装后的 Supplier
-   * @since 1.10.0
+   * @since 1.0.0
    */
   public static <T> Supplier<T> async(Supplier<T> supplier) {
     if (supplier == null) {
@@ -764,7 +764,7 @@ public final class RequestContext {
    *
    * @param delegate 被包装的 Executor 实例
    * @return 包装后的 Executor，所有 submit/execute 调用自动传播上下文
-   * @since 1.10.0
+   * @since 1.0.0
    */
   public static Executor executor(Executor delegate) {
     if (delegate == null) {
@@ -779,7 +779,7 @@ public final class RequestContext {
    * @param <T> 返回值类型
    * @param supplier 待执行逻辑
    * @return 逻辑返回值
-   * @since 1.8.0
+   * @since 1.0.0
    */
   public static <T> T supplyWithCleanup(Supplier<T> supplier) {
     try (CleanupGuard guard = newCleanupGuard()) {

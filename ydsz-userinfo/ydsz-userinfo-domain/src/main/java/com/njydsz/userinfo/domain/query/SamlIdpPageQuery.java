@@ -10,7 +10,7 @@ import com.njydsz.common.domain.query.PageQuery;
  * SAML 身份提供者配置分页查询参数（P2-1）。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Data
 @NoArgsConstructor

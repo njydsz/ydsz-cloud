@@ -13,7 +13,7 @@ import com.njydsz.cronjob.server.core.alert.AlertScanner;
  * 扫描间隔由配置 {@code ydsz.cronjob.alert.scan-interval-ms} 控制（默认 5min）。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

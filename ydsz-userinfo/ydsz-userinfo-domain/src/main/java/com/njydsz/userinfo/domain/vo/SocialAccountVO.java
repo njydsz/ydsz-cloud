@@ -11,7 +11,7 @@ import lombok.Data;
  * 由 {@code SocialAccountRepository} 从 DO 转换后返回。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Data
 public class SocialAccountVO {

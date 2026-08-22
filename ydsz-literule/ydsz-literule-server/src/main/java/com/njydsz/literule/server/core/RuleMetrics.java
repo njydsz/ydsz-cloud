@@ -17,7 +17,7 @@ import com.njydsz.literule.api.RuleSeverity;
  *   <li>{@link InMemoryRuleMetrics} — 内存计数器实现，测试/降级场景使用
  * </ul>
  *
- * @since 1.1.0
+ * @since 1.0.0
  * @author ydsz-team
  */
 public interface RuleMetrics {

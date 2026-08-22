@@ -171,7 +171,7 @@ public final class ArrayNode extends JsonNode {
    * @param node 要插入的节点，null 会被转换为 NullNode
    * @return 当前数组节点（支持链式调用）
    * @throws IndexOutOfBoundsException 如果 index &lt; 0 或 index &gt; size()
-   * @since 1.2.0
+   * @since 1.0.0
    */
   public ArrayNode insert(int index, JsonNode node) {
     if (index < 0 || index > elements.size()) {
@@ -209,7 +209,7 @@ public final class ArrayNode extends JsonNode {
    * @param index 要移除的元素索引（从 0 开始）
    * @return 被移除的节点
    * @throws IndexOutOfBoundsException 如果索引超出范围
-   * @since 1.2.0
+   * @since 1.0.0
    */
   public JsonNode removeAt(int index) {
     return elements.remove(index);
@@ -471,7 +471,7 @@ public final class ArrayNode extends JsonNode {
    *
    * @param index 索引
    * @return ObjectNode 实例
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public ObjectNode getObjectNode(int index) {
     JsonNode node = get(index);
@@ -486,7 +486,7 @@ public final class ArrayNode extends JsonNode {
    *
    * @param index 索引
    * @return ArrayNode 实例
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public ArrayNode getArrayNode(int index) {
     JsonNode node = get(index);

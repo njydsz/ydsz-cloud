@@ -24,7 +24,7 @@ import lombok.Data;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Data
 public class BanInfoVO implements Serializable {

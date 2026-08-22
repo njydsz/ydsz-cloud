@@ -22,7 +22,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p>与 {@link GlobalConcurrencyController} 的区别：后者是配额限制（有上限），本组件是纯计数（无上限，仅用于监控）。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @RequiredArgsConstructor

@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
  * <p><b>F-3 恢复说明：</b>v1.2.x 曾将该注解标记废弃并移除了实现，因外部 API 多命名兼容为刚需，v1.2.2 恢复支持（见 BeanReader 别名字段匹配）。
  *
  * @author ydsz-team
- * @since 1.2.2
+ * @since 1.0.0
  */
 @Target({ElementType.ANNOTATION_TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)

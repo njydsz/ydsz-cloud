@@ -48,7 +48,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * <p>本类为纯算法实现，不包含 Spring 注解。Spring Bean 装配请参见 {@code UtilAutoConfiguration}。
  *
  * @author ydsz-team
- * @since 4.0.0
+ * @since 1.0.0
  */
 @Slf4j
 public class SnowflakeIdGenerator {
@@ -200,7 +200,7 @@ public class SnowflakeIdGenerator {
    * <p>使用默认序列号位数（{@value #DEFAULT_SEQUENCE_BITS} 位）。
    *
    * @param epoch 起始纪元时间戳（毫秒）
-   * @since 4.0.0
+   * @since 1.0.0
    */
   public SnowflakeIdGenerator(long epoch) {
     this(createPropertiesWithEpoch(epoch), WorkerIdAllocatorChain.defaults());
@@ -211,7 +211,7 @@ public class SnowflakeIdGenerator {
    *
    * @param epoch 起始纪元时间戳（毫秒）
    * @param sequenceBits 序列号位数（1-${@link #MAX_SEQUENCE_BITS}）
-   * @since 4.0.0
+   * @since 1.0.0
    */
   public SnowflakeIdGenerator(long epoch, int sequenceBits) {
     this(createPropertiesWithEpoch(epoch), WorkerIdAllocatorChain.defaults(), sequenceBits);
@@ -444,7 +444,7 @@ public class SnowflakeIdGenerator {
    * 获取配置的序列号位数。
    *
    * @return 序列号位数
-   * @since 4.0.0
+   * @since 1.0.0
    */
   public int getSequenceBits() {
     return (int) sequenceBits;
@@ -454,7 +454,7 @@ public class SnowflakeIdGenerator {
    * 获取当前实例的序列号最大值（2^sequenceBits - 1）。
    *
    * @return 序列号上限值
-   * @since 4.0.0
+   * @since 1.0.0
    */
   public long getMaxSequence() {
     return sequenceMask;
@@ -492,7 +492,7 @@ public class SnowflakeIdGenerator {
    *
    * @param id Snowflake ID
    * @return 绝对时间戳（毫秒）
-   * @since 4.0.0
+   * @since 1.0.0
    */
   public long parseTimestamp(long id) {
     return (id >> timestampLeftShift) + epoch;
@@ -504,7 +504,7 @@ public class SnowflakeIdGenerator {
    * @param id Snowflake ID
    * @param epoch 生成该 ID 时使用的 EPOCH
    * @return 绝对时间戳（毫秒）
-   * @since 4.0.0
+   * @since 1.0.0
    */
   public long parseTimestamp(long id, long epoch) {
     return (id >> timestampLeftShift) + epoch;
@@ -515,7 +515,7 @@ public class SnowflakeIdGenerator {
    *
    * @param id Snowflake ID
    * @return 数据中心 ID
-   * @since 4.0.0
+   * @since 1.0.0
    */
   public long parseDatacenterId(long id) {
     return (id >> datacenterIdShift) & MAX_DATACENTER_ID;
@@ -526,7 +526,7 @@ public class SnowflakeIdGenerator {
    *
    * @param id Snowflake ID
    * @return 工作节点 ID
-   * @since 4.0.0
+   * @since 1.0.0
    */
   public long parseWorkerId(long id) {
     return (id >> workerIdShift) & MAX_WORKER_ID;
@@ -537,7 +537,7 @@ public class SnowflakeIdGenerator {
    *
    * @param id Snowflake ID
    * @return 序列号
-   * @since 4.0.0
+   * @since 1.0.0
    */
   public long parseSequence(long id) {
     return id & sequenceMask;
@@ -558,7 +558,7 @@ public class SnowflakeIdGenerator {
    * 获取当前实例使用的 EPOCH。
    *
    * @return 实例级 EPOCH（毫秒）
-   * @since 4.0.0
+   * @since 1.0.0
    */
   public long getInstanceEpoch() {
     return epoch;

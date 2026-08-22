@@ -35,7 +35,7 @@ import java.util.Set;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  * @see JsonType
  */
 public final class TypeRef {

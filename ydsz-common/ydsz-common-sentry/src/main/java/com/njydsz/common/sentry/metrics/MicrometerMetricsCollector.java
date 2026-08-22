@@ -258,7 +258,7 @@ public class MicrometerMetricsCollector implements MetricsCollector {
    * <p>仅供 SentryMetricsAdapter 等内部组件在需要注册 Gauge 回调时使用， 业务代码不应直接操作此 MeterRegistry。
    *
    * @return Micrometer MeterRegistry 实例
-   * @since 2.1.0
+   * @since 1.0.0
    */
   public MeterRegistry getMeterRegistry() {
     return meterRegistry;

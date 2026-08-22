@@ -25,7 +25,7 @@ import com.njydsz.message.server.service.core.GuardService;
  * <p>使用 Redis SET NX EX 原子去重，窗口内重复消息跳过发送。 去重 key 由 bizId + receiver + templateCode 拼接而成， 含 channel 时追加 channel 维度（P2-D3 去重精化）。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

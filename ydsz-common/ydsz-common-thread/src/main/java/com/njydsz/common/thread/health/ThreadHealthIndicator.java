@@ -166,7 +166,7 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
    *
    * @param beanName Bean 名称
    * @return {@code true} 如果由 ydsz-common-thread 模块管理
-   * @since 1.4.0
+   * @since 1.0.0
    */
   private boolean isManagedByYdsz(String beanName) {
     return beanName != null && beanName.endsWith("Executor");

@@ -11,7 +11,7 @@ import com.njydsz.common.core.response.PageResponse;
  * <p>定义 OAuth2 应用的数据访问能力，实现类位于 {@code ydsz-userinfo-infra} 模块。
  *
  * @author ydsz-team
- * @since 2.18.0
+ * @since 1.0.0
  */
 public interface OAuth2ApplicationRepository {
 

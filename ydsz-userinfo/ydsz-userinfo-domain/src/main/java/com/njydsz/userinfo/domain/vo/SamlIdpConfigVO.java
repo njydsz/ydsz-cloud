@@ -8,7 +8,7 @@ import lombok.Data;
  * SAML 身份提供者配置视图出参（P2-1 查询返回值）。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Data
 public class SamlIdpConfigVO {

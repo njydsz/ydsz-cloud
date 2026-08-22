@@ -16,7 +16,7 @@ import com.njydsz.cronjob.domain.vo.OutboxEventVO;
  * <p>所有方法返回领域 VO（{@link OutboxEventVO}），禁止泄露 infra 实体。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public interface OutboxEventRepository {
 

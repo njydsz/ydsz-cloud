@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  * false），所有方法返回空值，零开销降级。
  *
  * @author ydsz-team
- * @since 1.2.3
+ * @since 1.0.0
  */
 public final class JacksonAnnotationBridge {
 

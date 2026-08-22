@@ -37,7 +37,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.userinfo.social")
@@ -56,7 +56,7 @@ public class SocialAuthProperties {
    * <p>每个平台独立的 OAuth2 端点与凭据配置。
    *
    * @author ydsz-team
-   * @since 1.6.0
+   * @since 1.0.0
    */
   @Data
   public static class ProviderConfig {

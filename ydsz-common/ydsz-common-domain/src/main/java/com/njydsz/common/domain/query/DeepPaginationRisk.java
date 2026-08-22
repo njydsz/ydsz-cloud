@@ -11,7 +11,7 @@ package com.njydsz.common.domain.query;
  * 上下文的场景（如单元测试、纯计算）下直接使用。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  * @see PageQuery#assessPaginationRisk()
  * @see DeepPaginationException
  */

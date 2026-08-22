@@ -14,7 +14,7 @@ import com.njydsz.common.seata.api.TransactionType;
  * <p><b>使用注意</b>：必须在请求结束时调用 {@link #remove()} 清理， 建议在 ServletFilter 或 AOP 切面的 finally 块中统一清理。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public final class XidContextHolder {
 

@@ -7,7 +7,7 @@ import lombok.Data;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.5.0 由 common-domain 迁入 cronjob-domain
+ * @since 1.0.0 由 common-domain 迁入 cronjob-domain
  */
 @Data
 public class ShardingContext {

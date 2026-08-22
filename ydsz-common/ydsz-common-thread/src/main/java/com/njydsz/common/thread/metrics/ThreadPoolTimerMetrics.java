@@ -18,7 +18,7 @@ import org.springframework.lang.Nullable;
  * 懒加载注册表避免重复注册。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  * @see TimedTaskDecorator
  */
 public class ThreadPoolTimerMetrics {

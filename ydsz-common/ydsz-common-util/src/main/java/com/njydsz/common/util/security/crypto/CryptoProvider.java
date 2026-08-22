@@ -17,7 +17,7 @@ import jakarta.annotation.Nullable;
  * CryptoUtils#destroyKey(byte[])} 清零密钥，防止密钥在内存中被 swap 或 dump 泄露。
  *
  * @author ydsz-team
- * @since 3.0.0
+ * @since 1.0.0
  * @see CryptoProviderRegistry
  * @see CryptoUtils
  */

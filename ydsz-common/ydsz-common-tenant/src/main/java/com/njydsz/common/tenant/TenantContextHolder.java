@@ -25,7 +25,7 @@ import com.njydsz.common.core.context.RequestContext;
  * <p><b>生命周期：</b>请求结束时必须调用 {@link #clear()}，推荐 try-with-resources 或 Filter/Interceptor 的 finally 块。
  *
  * @author ydsz-team
- * @since 1.10.0
+ * @since 1.0.0
  */
 public final class TenantContextHolder {
 

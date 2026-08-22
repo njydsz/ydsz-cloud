@@ -24,7 +24,7 @@ import org.springframework.validation.annotation.Validated;
  * AES-256-GCM}（JDK 自带，无需额外依赖）。
  *
  * @author ydsz-team
- * @since 4.2.0
+ * @since 1.0.0
  * @see CryptoProviderRegistry
  * @see CryptoUtils
  */

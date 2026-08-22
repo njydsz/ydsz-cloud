@@ -13,7 +13,7 @@ import com.njydsz.cronjob.server.core.maintenance.ScanTask;
  * 扫描间隔固定 1s（高频），保证事件投递的实时性。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

@@ -19,7 +19,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * }</pre>
  *
  * @author ydsz-team
- * @since 4.2.0
+ * @since 1.0.0
  * @see CryptoProperties
  * @see CryptoUtils
  */

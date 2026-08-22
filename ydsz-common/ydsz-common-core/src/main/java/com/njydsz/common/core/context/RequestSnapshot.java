@@ -23,7 +23,7 @@ import java.util.Map;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.9.1
+ * @since 1.0.0
  */
 public final class RequestSnapshot {
 

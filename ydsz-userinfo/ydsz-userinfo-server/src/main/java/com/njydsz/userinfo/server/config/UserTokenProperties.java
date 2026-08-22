@@ -30,7 +30,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * </pre>
  *
  * @author ydsz-team
- * @since 2.18.0
+ * @since 1.0.0
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.userinfo.token")

@@ -13,7 +13,7 @@ import lombok.Getter;
  * <p>对齐阿里巴巴 Java 开发手册（嵩山版）的深度分页治理建议：超过 10w 条记录的表，禁止 offset > 10000。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Getter
 public class DeepPaginationException extends RuntimeException implements Serializable {

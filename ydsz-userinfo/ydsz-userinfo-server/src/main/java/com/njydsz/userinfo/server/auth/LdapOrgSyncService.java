@@ -60,7 +60,7 @@ import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
  * <p><b>容错策略：</b>单个用户/部门同步失败不影响整体流程，失败详情记录在 {@link SyncResult#errors()} 中。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

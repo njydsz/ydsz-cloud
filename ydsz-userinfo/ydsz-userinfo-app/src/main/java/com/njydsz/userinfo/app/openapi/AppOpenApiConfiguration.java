@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>仅在 {@code ydsz.userinfo.platform=app} 时激活，为移动端/应用端 API 提供 Swagger 文档。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnPlatform("app")

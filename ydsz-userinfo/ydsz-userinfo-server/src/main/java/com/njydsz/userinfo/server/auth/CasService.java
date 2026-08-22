@@ -35,7 +35,7 @@ import com.njydsz.userinfo.server.config.CasProperties;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service
@@ -229,7 +229,7 @@ public class CasService {
    * CAS Ticket Granting Ticket 信息。
    *
    * @author ydsz-team
-   * @since 1.6.0
+   * @since 1.0.0
    */
   @lombok.Data
   public static class CasTicketGrantingTicket {
@@ -248,7 +248,7 @@ public class CasService {
    * CAS Service Ticket 信息。
    *
    * @author ydsz-team
-   * @since 1.6.0
+   * @since 1.0.0
    */
   @lombok.Data
   public static class CasServiceTicket {
@@ -273,7 +273,7 @@ public class CasService {
    * CAS Service Ticket 校验结果。
    *
    * @author ydsz-team
-   * @since 1.6.0
+   * @since 1.0.0
    */
   @lombok.Builder
   @lombok.Data

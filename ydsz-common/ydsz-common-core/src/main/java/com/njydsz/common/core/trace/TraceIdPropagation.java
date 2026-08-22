@@ -43,7 +43,7 @@ import com.njydsz.common.core.context.RequestContext;
  * {@code MDC.clear()} 统一清理）。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  * @see HeaderConstants
  * @see TraceIdGenerator
  * @see RequestContext
@@ -60,7 +60,7 @@ public final class TraceIdPropagation {
    * <p>同时注入两种 header，兼容老版 {@code X-Trace-Id} 透传和 新版 W3C Trace Context 标准（如 SkyWalking / Jaeger）。
    *
    * @return 请求头 Map（不可变，包含 X-Trace-Id 和 traceparent）
-   * @since 1.5.0
+   * @since 1.0.0
    */
   public static Map<String, String> traceHeaders() {
     String traceId = currentTraceId();
@@ -79,7 +79,7 @@ public final class TraceIdPropagation {
    * 生成包含 {@code X-Trace-Id} 和 W3C {@code traceparent} 的完整传播请求头（缺失时自动生成）。
    *
    * @return 请求头 Map（不可变，包含 X-Trace-Id 和 traceparent）
-   * @since 1.5.0
+   * @since 1.0.0
    */
   public static Map<String, String> traceHeadersOrCreate() {
     String traceId = currentTraceId();

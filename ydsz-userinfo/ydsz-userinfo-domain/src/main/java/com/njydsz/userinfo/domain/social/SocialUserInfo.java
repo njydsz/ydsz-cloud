@@ -9,7 +9,7 @@ import java.io.Serializable;
  * 用于社交登录时的用户匹配与账号创建。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  * @param openId 平台用户唯一标识
  * @param unionId 平台统一应用标识（可为 null）
  * @param nickname 用户昵称（平台侧显示名，可为 null）

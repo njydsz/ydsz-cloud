@@ -22,7 +22,7 @@ import com.njydsz.cronjob.domain.vo.JobVO;
  * <p>P2-修正：使用 JobRepository/JobLogRepository 替换 Mapper，使用 VO 替换 Entity，符合 DDD 分层规范。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

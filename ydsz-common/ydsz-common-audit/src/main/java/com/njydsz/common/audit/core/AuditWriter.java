@@ -51,7 +51,7 @@ public interface AuditWriter {
    * 获取存储策略类型
    *
    * @return 存储类型标识（如 "DEFAULT"、"JDBC"）
-   * @since 1.1.0 原 AuditStorage.getType()
+   * @since 1.0.0 原 AuditStorage.getType()
    */
   default String getType() {
     return "UNKNOWN";
@@ -61,7 +61,7 @@ public interface AuditWriter {
    * 检查写入器是否可用
    *
    * @return 可用返回 true
-   * @since 1.1.0 原 AuditStorage.isAvailable()
+   * @since 1.0.0 原 AuditStorage.isAvailable()
    */
   default boolean isAvailable() {
     return true;

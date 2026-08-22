@@ -30,7 +30,7 @@ import java.io.Serializable;
  *
  * @param <T> Phantom Type，用于编译区分的标记类型（无需实际实例）
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 public final class TypedId<T> implements Comparable<TypedId<T>>, Serializable {
 
@@ -55,7 +55,7 @@ public final class TypedId<T> implements Comparable<TypedId<T>>, Serializable {
    * @param value ID 值（必须为正数，非 null）
    * @return TypedId 实例
    * @throws IllegalArgumentException 值为 null、0 或负数时抛出
-   * @since 1.8.0
+   * @since 1.0.0
    */
   public static <T> TypedId<T> of(Long value) {
     if (value == null) {
@@ -75,7 +75,7 @@ public final class TypedId<T> implements Comparable<TypedId<T>>, Serializable {
    * @return TypedId 实例
    * @throws NumberFormatException 字符串无法解析为数字时抛出
    * @throws IllegalArgumentException 解析值为 0 或负数时抛出
-   * @since 1.8.0
+   * @since 1.0.0
    */
   public static <T> TypedId<T> parse(String text) {
     return of(Long.parseLong(text));
@@ -85,7 +85,7 @@ public final class TypedId<T> implements Comparable<TypedId<T>>, Serializable {
    * 获取底层 ID 值。
    *
    * @return 底层 ID 值
-   * @since 1.8.0
+   * @since 1.0.0
    */
   public long value() {
     return value;

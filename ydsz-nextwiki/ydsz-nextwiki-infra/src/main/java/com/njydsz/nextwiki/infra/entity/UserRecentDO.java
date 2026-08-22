@@ -20,7 +20,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应用户最近访问表 {@code nw_user_recent}，记录用户的文件访问历史， 自动保留最新访问记录（同一节点只保留一条），支持按访问时间倒序查询。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

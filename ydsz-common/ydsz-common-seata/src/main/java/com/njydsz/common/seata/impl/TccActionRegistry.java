@@ -20,7 +20,7 @@ import com.njydsz.common.seata.api.TccAction;
  * 名称持久化 在事务日志中，恢复时从注册表查找对应 Bean。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public class TccActionRegistry implements ApplicationContextAware, InitializingBean {
 

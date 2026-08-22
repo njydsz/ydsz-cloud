@@ -34,7 +34,7 @@ import org.springframework.context.annotation.Primary;
  * }</pre>
  *
  * @author ydsz-team
- * @since 4.0.0
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnProperty(prefix = "ydsz.util.snowflake", name = "enabled", matchIfMissing = true)

@@ -16,7 +16,7 @@ import com.njydsz.nextwiki.infra.entity.SpaceDO;
  * <p>对应数据表 {@code nw_space}。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Mapper
 public interface SpaceMapper extends BaseMapper<SpaceDO> {

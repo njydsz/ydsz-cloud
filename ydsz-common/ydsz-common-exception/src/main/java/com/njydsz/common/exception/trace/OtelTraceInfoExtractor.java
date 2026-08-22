@@ -22,7 +22,7 @@ import org.springframework.lang.Nullable;
  * 使用 {@link AtomicBoolean} 保证缓存初始化的线程安全。
  *
  * @author ydsz-team
- * @since 2.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class OtelTraceInfoExtractor {

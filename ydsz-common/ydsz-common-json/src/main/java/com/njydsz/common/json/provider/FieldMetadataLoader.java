@@ -89,7 +89,7 @@ public final class FieldMetadataLoader {
    *
    * @param clazz 目标类
    * @return 合并后的字段列表（子类在前）
-   * @since 1.1.0
+   * @since 1.0.0
    */
   public static List<Field> collectDeclaredAndInheritedFields(Class<?> clazz) {
     List<Field> fields = new ArrayList<>();

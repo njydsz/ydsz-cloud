@@ -6,7 +6,7 @@ package com.njydsz.common.audit.core;
  * <p>当 {@link AuditWriter} 写入失败时抛出此异常，上层 Recorder 可捕获并执行降级策略 （如磁盘兜底写入、重试等）。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public class AuditWriteException extends RuntimeException {
 

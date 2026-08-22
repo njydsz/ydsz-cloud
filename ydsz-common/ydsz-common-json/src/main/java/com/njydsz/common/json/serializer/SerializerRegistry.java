@@ -82,7 +82,7 @@ public final class SerializerRegistry {
    * @param type 目标类型
    * @param serializer 序列化器
    * @return 已存在（未被覆盖）的旧序列化器，若此前未注册返回 null
-   * @since 1.2.3
+   * @since 1.0.0
    */
   public JsonSerializer<?> registerIfAbsent(Class<?> type, JsonSerializer<?> serializer) {
     if (type == null) {
@@ -119,7 +119,7 @@ public final class SerializerRegistry {
    * @param type 目标类型
    * @param deserializer 反序列化器
    * @return 已存在（未被覆盖）的旧反序列化器，若此前未注册返回 null
-   * @since 1.2.3
+   * @since 1.0.0
    */
   public JsonDeserializer<?> registerIfAbsent(Class<?> type, JsonDeserializer<?> deserializer) {
     if (type == null) {
@@ -207,7 +207,7 @@ public final class SerializerRegistry {
    * <p>仅移除 {@code types} 中列出的类型，不影响其他类型与用户直接注册的序列化器。 空集合或 null 为安全空操作。
    *
    * @param types 要移除的类型集合
-   * @since 1.2.3
+   * @since 1.0.0
    */
   public void unregisterAll(Set<Class<?>> types) {
     if (types == null || types.isEmpty()) {
@@ -224,7 +224,7 @@ public final class SerializerRegistry {
    * <p>仅移除 {@code types} 中列出的类型，不影响其他类型与用户直接注册的反序列化器。 空集合或 null 为安全空操作。
    *
    * @param types 要移除的类型集合
-   * @since 1.2.3
+   * @since 1.0.0
    */
   public void unregisterAllDeserializers(Set<Class<?>> types) {
     if (types == null || types.isEmpty()) {

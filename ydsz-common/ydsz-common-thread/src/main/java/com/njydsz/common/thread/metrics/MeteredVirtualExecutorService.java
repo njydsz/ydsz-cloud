@@ -25,7 +25,7 @@ import org.springframework.lang.NonNull;
  * <p>v1.3.1 新增：修复虚拟线程池指标计数器空转问题。
  *
  * @author ydsz-team
- * @since 1.3.1
+ * @since 1.0.0
  * @see VirtualThreadMetrics
  */
 public class MeteredVirtualExecutorService implements ExecutorService {

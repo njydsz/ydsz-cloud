@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>自定义 Provider 可在 Spring 容器初始化后通过 {@link SocialAuthProviderRegistry#register(SocialAuthProvider)} 动态注册。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

@@ -25,7 +25,7 @@ import com.njydsz.message.infra.mapper.OutboxEventMapper;
  * <p>实现 {@link OutboxEventRepository} 接口，封装 OutboxEventMapper 数据访问细节。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Repository

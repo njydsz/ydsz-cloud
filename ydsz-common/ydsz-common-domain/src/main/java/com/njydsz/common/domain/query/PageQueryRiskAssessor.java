@@ -9,7 +9,7 @@ package com.njydsz.common.domain.query;
  * @author ydsz-team
  * @see PageQuery
  * @see DeepPaginationRisk
- * @since 1.10.0
+ * @since 1.0.0
  */
 public final class PageQueryRiskAssessor {
 

@@ -29,7 +29,7 @@ import com.njydsz.common.sentry.spi.TraceContext;
  * <p>v2.0.0 新增：替代原静态门面模式，解决 ServiceLocator 反模式问题。
  *
  * @author ydsz-team
- * @since 2.0.0
+ * @since 1.0.0
  * @see SentryObservation
  */
 @Slf4j
@@ -169,7 +169,7 @@ public class SentryService {
    * <p>供 SentryMetricsAdapter 等内部组件使用，使业务模块无需直接注入 MeterRegistry。
    *
    * @return MetricsCollector 实例，可能为 null
-   * @since 2.1.0
+   * @since 1.0.0
    */
   public MetricsCollector getMetricsCollector() {
     return metricsCollector;

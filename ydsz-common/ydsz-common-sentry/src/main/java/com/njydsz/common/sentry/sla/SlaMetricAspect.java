@@ -24,7 +24,7 @@ import com.njydsz.common.sentry.spi.SlaCollector;
  * </ul>
  *
  * @author ydsz-team
- * @since 2.0.0
+ * @since 1.0.0
  */
 @Slf4j
 @Aspect

@@ -13,7 +13,7 @@ import com.njydsz.userinfo.infra.entity.SamlIdpConfigDO;
  * 使用 Spring 注入模式，替代静态单例 INSTANT，提升可测试性。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Component
 @Mapper(componentModel = "spring")

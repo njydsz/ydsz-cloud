@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
  * 更新时 {@code tenantId} 必填。
  *
  * @author ydsz-team
- * @since 2.24.0
+ * @since 1.0.0
  */
 @Data
 public class AuthPolicyDTO {

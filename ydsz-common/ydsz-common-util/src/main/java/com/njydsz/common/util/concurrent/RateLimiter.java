@@ -56,7 +56,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * <p><b>注意：</b>本限流器为单机版，分布式场景请使用 Redis + Lua 或 Sentinel。
  *
  * @author ydsz-team
- * @since 4.0.0
+ * @since 1.0.0
  */
 public final class RateLimiter {
 

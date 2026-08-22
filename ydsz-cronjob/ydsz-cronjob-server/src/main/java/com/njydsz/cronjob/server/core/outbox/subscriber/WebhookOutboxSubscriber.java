@@ -19,7 +19,7 @@ import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
  * <p>幂等保证：基于 {@code eventKey} 去重（WebHook 接收方也应做幂等处理）。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

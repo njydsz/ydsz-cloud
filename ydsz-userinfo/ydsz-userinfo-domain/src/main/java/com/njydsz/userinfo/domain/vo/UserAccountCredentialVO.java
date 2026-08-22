@@ -13,7 +13,7 @@ import lombok.Data;
  * <p><b>安全注意：</b>本 VO 包含密码哈希，仅在认证服务内部使用，禁止返回给前端或跨服务传输。
  *
  * @author ydsz-team
- * @since 2.18.0
+ * @since 1.0.0
  */
 @Data
 public class UserAccountCredentialVO {

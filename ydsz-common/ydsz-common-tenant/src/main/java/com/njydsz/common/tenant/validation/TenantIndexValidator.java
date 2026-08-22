@@ -43,7 +43,7 @@ import com.njydsz.common.tenant.config.TenantProperties;
  * <p><b>异步化：</b>校验逻辑在独立单线程池中执行，不阻塞主线程的 {@code ApplicationReadyEvent} 处理和应用就绪。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 public class TenantIndexValidator {

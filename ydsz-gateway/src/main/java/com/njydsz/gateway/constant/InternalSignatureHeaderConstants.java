@@ -6,7 +6,7 @@ package com.njydsz.gateway.constant;
  * <p>定义下游服务与网关之间内部签名校验相关的 HTTP Header 名称常量。
  *
  * @author ydsz-team
- * @since 1.11.0
+ * @since 1.0.0
  */
 public final class InternalSignatureHeaderConstants {
 

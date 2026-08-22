@@ -26,7 +26,7 @@ import com.njydsz.nextwiki.infra.entity.UserRecentDO;
  * <p><b>容量限制：</b>每个用户最多保留 100 条最近访问记录，超限时自动清理最早的记录。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Mapper
 public interface UserRecentMapper extends BaseMapper<UserRecentDO> {

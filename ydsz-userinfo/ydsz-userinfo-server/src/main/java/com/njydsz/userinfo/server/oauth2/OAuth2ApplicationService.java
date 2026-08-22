@@ -32,7 +32,7 @@ import com.njydsz.userinfo.domain.oauth2.OAuth2ApplicationRepository;
  * </ul>
  *
  * @author ydsz-team
- * @since 2.18.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service
