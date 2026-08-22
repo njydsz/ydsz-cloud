@@ -39,4 +39,10 @@ public class FlowEventContext {
 
   /** 操作时间 */
   private LocalDateTime operatedAt;
+
+  /** 当前会签已通过人数（含本次），仅 TASK_PERSONAL_FINISHED 事件填充 */
+  private Integer approveFinished;
+
+  /** 会签总人数（需要多少人通过才算完成），仅 TASK_PERSONAL_FINISHED 事件填充 */
+  private Integer approveCount;
 }

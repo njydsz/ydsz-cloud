@@ -3,6 +3,8 @@ package com.njydsz.workflow.server.service.impl.instance;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -54,6 +56,67 @@ public class FlowTaskNotificationService {
     support.fireEvent(l -> l.onTaskCompleted(taskId, ctx), taskId);
     // P2-35: 发布 Spring 异步事件
     support.publishWorkflowEvent("TASK_COMPLETED", null, taskId);
+  }
+
+  /**
+   * 会签个人完成事件（全局 SPI + 节点配置监听器）
+   *
+   * <p>会签场景下，某个办理人通过审批但会签尚未全部完成时触发。 业务方通过此事件可实时跟踪会签进度（如"3/5 人已通过"）。
+   *
+   * <p>同时触发两套监听器：全局 {@link com.njydsz.workflow.server.engine.FlowEventListener} SPI 和 节点
+   * ext JSON 中配置的 {@link com.njydsz.workflow.server.engine.listener.FlowListenerPlugin} 插件。
+   *
+   * @param task             运行时任务实体（用于获取 instanceId / nodeCode / tenantId 等）
+   * @param personalUserId   当前办理人用户 ID
+   * @param action           操作类型（PASS / REJECT）
+   * @param approveFinished  当前已通过人数（含本次）
+   * @param approveCount      会签总人数
+   * @param nodeExt          节点 ext JSON 字符串（用于触发节点配置的监听器插件）
+   * @param variables        流程变量
+   */
+  public void fireTaskPersonalCompleted(
+      FlowRunTaskDO task,
+      String personalUserId,
+      String action,
+      int approveFinished,
+      int approveCount,
+      String nodeExt,
+      Map<String, Object> variables) {
+    // 构建事件上下文
+    FlowEventContext ctx = new FlowEventContext();
+    ctx.setInstanceId(task.getInstanceId());
+    ctx.setTaskId(task.getId());
+    ctx.setNodeCode(task.getNodeCode());
+    ctx.setOperatorId(personalUserId);
+    ctx.setAction(action);
+    ctx.setTenantId(task.getTenantId());
+    ctx.setOperatedAt(LocalDateTime.now());
+    ctx.setApproveFinished(approveFinished);
+    ctx.setApproveCount(approveCount);
+
+    // P1-5: 从 RequestContext / MDC 获取 traceId
+    String traceId = RequestContext.getTraceId();
+    if (traceId == null || traceId.isBlank()) {
+      traceId = MDC.get("traceId");
+      if (traceId == null) traceId = MDC.get("tid");
+    }
+    ctx.setTraceId(traceId);
+
+    // 1. 全局 SPI 监听器
+    support.fireEvent(l -> l.onTaskPersonalCompleted(task.getId(), ctx), task.getId());
+
+    // 2. 节点配置的监听器插件（对标 warm-flow 可配置监听器机制）
+    support.firePluginEvent(
+        nodeExt,
+        com.njydsz.workflow.server.engine.listener.FlowListenerEventType.TASK_PERSONAL_FINISHED,
+        task.getInstanceId(),
+        task.getId(),
+        task.getNodeCode(),
+        variables,
+        ctx);
+
+    // 3. Spring 异步事件
+    support.publishWorkflowEvent("TASK_PERSONAL_COMPLETED", task.getInstanceId(), task.getId());
   }
 
   /** 流程被驳回事件 */

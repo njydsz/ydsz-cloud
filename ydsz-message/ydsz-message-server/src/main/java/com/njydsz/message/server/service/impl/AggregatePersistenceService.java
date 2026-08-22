@@ -5,11 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.server.service.batch.AggregateService;
 
 /**
@@ -30,14 +28,13 @@ public class AggregatePersistenceService {
 
   private final MsgLogRepository msgLogRepository;
   private final AggregateService aggregateService;
-  private final MessageConverter converter;
 
   /**
    * 原子性地执行聚合路径：insert PENDING + appendOrStart + updateById 标记 AGGREGATED。
    *
    * <p>三步操作在同一个事务中，任一步失败回滚，不产生不一致的 PENDING 记录。
    *
-   * @param logDO 待落库的消息日志
+   * @param logVO 待落库的消息日志 VO
    * @param bizType 聚合组
    * @param receiver 接收人
    * @param channel 通道
@@ -45,15 +42,15 @@ public class AggregatePersistenceService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void persistAggregated(
-      MsgLog logDO, String bizType, String receiver, String channel, String tenantId) {
-    msgLogRepository.save(converter.entityToVO(logDO));
+      MsgLogVO logVO, String bizType, String receiver, String channel, String tenantId) {
+    msgLogRepository.save(logVO);
     aggregateService.appendOrStart(bizType, receiver, channel, tenantId);
-    logDO.setStatus(MessageStatusEnum.PENDING.name());
-    logDO.setErrorMessage("AGGREGATED");
-    msgLogRepository.update(converter.entityToVO(logDO));
+    logVO.setStatus(MessageStatusEnum.PENDING.name());
+    logVO.setErrorMessage("AGGREGATED");
+    msgLogRepository.update(logVO);
     log.info(
         "[Aggregate] 已加入聚合批次(事务): msgId={} group={} receiver={}",
-        logDO.getMsgId(),
+        logVO.getMsgId(),
         bizType,
         receiver);
   }

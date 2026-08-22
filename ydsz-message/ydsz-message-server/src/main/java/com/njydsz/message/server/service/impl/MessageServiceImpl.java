@@ -242,7 +242,7 @@ public class MessageServiceImpl implements MessageService {
   }
 
   /**
-   * P1-A4: 从 MsgLog 和 SendContext 重建 MessageRequest（用于 Outbox 序列化）。
+   * P1-A4: 从 MsgLogVO 和 SendContext 重建 MessageRequest（用于 Outbox 序列化）。
    *
    * @param logDO 消息日志实体
    * @param ctx 管线上下文
@@ -307,7 +307,7 @@ public class MessageServiceImpl implements MessageService {
    * @return 非 null 表示已处理(调用方直接返回),null 表示继续走常规分发
    */
   private MessageResult handleEarlyReturns(
-      MessageRequest request, SendContext ctx, MsgLog logDO, RenderedContent rendered) {
+      MessageRequest request, SendContext ctx, MsgLogVO logDO, RenderedContent rendered) {
     // 模板缺失: renderContent 标记 templateMissing=true 时直接返回失败
     if (rendered.templateMissing()) {
       return MessageResult.fail(ctx.getChannel(), "模板不存在: " + ctx.getTemplateCode());

@@ -224,6 +224,9 @@ public class FlowTaskCoreService {
     // 策略模式处理会签
     applyCountersignStrategy(task, dto, performType);
 
+    // P2-38: 触发个人完成事件（会签中单个办理人完成审批，无论会签是否全部完成）
+    firePersonalCompletedEvent(task, dto, mergedVars);
+
     if (shouldAdvance(task, dto, performType)) {
       advanceProcess(instance, task, mergedVars, performType, dto);
     } else {
@@ -550,6 +553,31 @@ public class FlowTaskCoreService {
           nextNodes.get(0).getNodeName(),
           null,
           null);
+    }
+  }
+
+  /**
+   * 触发个人完成事件
+   *
+   * <p>会签中某个办理人完成审批后，无论会签是否全部完成，均触发此事件。 业务方可实时跟踪会签进度（如"3/5 人已通过"）。
+   *
+   * @param task       运行时任务（已更新的 approveFinished 计数）
+   * @param dto        操作参数（userId 作为个人审批人）
+   * @param variables  合并后的流程变量
+   */
+  private void firePersonalCompletedEvent(
+      FlowRunTaskDO task, FlowTaskOperateDTO dto, Map<String, Object> variables) {
+    try {
+      String nodeExt = nodeRepository
+          .findByCode(task.getDefinitionId(), task.getNodeCode())
+          .map(n -> n.getExt())
+          .orElse(null);
+      int finished = task.getApproveFinished() == null ? 1 : task.getApproveFinished();
+      int count = task.getApproveCount() == null ? 1 : task.getApproveCount();
+      notificationService.fireTaskPersonalCompleted(task, dto.getUserId(), "PASS", finished, count,
+          nodeExt, variables);
+    } catch (Exception e) {
+      log.warn("[Flow] 触发个人完成事件失败: taskId={} err={}", task.getId(), e.getMessage());
     }
   }
 

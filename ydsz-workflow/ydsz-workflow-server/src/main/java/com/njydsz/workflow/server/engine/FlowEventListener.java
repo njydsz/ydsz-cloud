@@ -88,4 +88,18 @@ public interface FlowEventListener {
 
   /** 实例终止时（携带上下文元数据） */
   default void onInstanceTerminated(String instanceId, String reason, FlowEventContext ctx) {}
+
+  // ============================== P2-38: 会签个人完成事件 ==============================
+
+  /**
+   * 会签中单个办理人完成审批时触发（携带上下文元数据）
+   *
+   * <p>仅在会签场景（PARALLEL / 多人审批）下，某个办理人完成审批时触发， 早于 {@link #onTaskCompleted} 触发（后者需等全部会签人完成才触发）。
+   * 业务方可通过此事件实时跟踪会签进度。
+   *
+   * @param taskId    当前办理人的任务 ID
+   * @param ctx       事件上下文，其中 {@code operatorId} 为当前办理人，{@code action} 为操作类型，
+   *                  {@code approveFinished} 和 {@code approveCount} 为会签进度
+   */
+  default void onTaskPersonalCompleted(String taskId, FlowEventContext ctx) {}
 }
