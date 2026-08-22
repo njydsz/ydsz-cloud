@@ -19,7 +19,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.feign.assembler.NameType;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.common.security.DataScopeHelper;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
@@ -291,7 +291,7 @@ public class FlowInstanceQueryService {
         // P1-4: 从 ext JSON 解析字段权限和审批意见配置
         if (node.getExt() != null && !node.getExt().isBlank()) {
           try {
-            Map<String, Object> ext = YdszJson.parseMap(node.getExt());
+            Map<String, Object> ext = FlowNodeExt.parseSafe(node.getExt());
             if (ext != null) {
               Object fp = ext.get("formFieldPermissions");
               if (fp instanceof Map<?, ?> m) {

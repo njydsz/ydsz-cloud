@@ -21,8 +21,6 @@ import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
-import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.server.metric.MessageMetrics;
 
 /**
@@ -61,7 +59,6 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
   private final MsgLogRepository msgLogRepository;
   private final MessageMetrics messageMetrics;
   private final IdempotentStrategy idempotentStrategy;
-  private final MessageConverter converter;
 
   @Override
   public void onMessage(MessageExt messageExt) {
@@ -113,27 +110,27 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
         }
 
         // 未匹配到已有记录,insert 新的 DEAD 记录
-        MsgLog logDO = new MsgLog();
+        MsgLogVO logVO = new MsgLogVO();
         if (request != null) {
-          logDO.setChannel(request.getChannel());
-          logDO.setBizType(request.getBizType());
-          logDO.setBizId(request.getBizId());
-          logDO.setReceiver(request.getReceiver());
-          logDO.setTemplateCode(request.getTemplateCode());
-          logDO.setContent(request.getContent());
-          logDO.setMsgId(bizMsgId);
+          logVO.setChannel(request.getChannel());
+          logVO.setBizType(request.getBizType());
+          logVO.setBizId(request.getBizId());
+          logVO.setReceiver(request.getReceiver());
+          logVO.setTemplateCode(request.getTemplateCode());
+          logVO.setContent(request.getContent());
+          logVO.setMsgId(bizMsgId);
         } else {
-          logDO.setChannel("UNKNOWN");
-          logDO.setReceiver("UNKNOWN");
-          logDO.setContent(body.length() > 500 ? body.substring(0, 500) + "..." : body);
+          logVO.setChannel("UNKNOWN");
+          logVO.setReceiver("UNKNOWN");
+          logVO.setContent(body.length() > 500 ? body.substring(0, 500) + "..." : body);
         }
-        logDO.setStatus(MessageStatusEnum.DEAD.name());
-        logDO.setErrorMessage(errorMessage);
-        logDO.setTopic(originTopic);
-        logDO.setReconsumeTimes(reconsumeTimes);
-        logDO.setTenantId(TenantContextHolder.getTenantId());
-        msgLogRepository.save(converter.entityToVO(logDO));
-        messageMetrics.recordDead(logDO.getChannel());
+        logVO.setStatus(MessageStatusEnum.DEAD.name());
+        logVO.setErrorMessage(errorMessage);
+        logVO.setTopic(originTopic);
+        logVO.setReconsumeTimes(reconsumeTimes);
+        logVO.setTenantId(TenantContextHolder.getTenantId());
+        msgLogRepository.save(logVO);
+        messageMetrics.recordDead(logVO.getChannel());
       } catch (Exception e) {
         log.error("[MessageDlqConsumer] 死信落库失败: msgId={} err={}", msgId, e.getMessage(), e);
       }

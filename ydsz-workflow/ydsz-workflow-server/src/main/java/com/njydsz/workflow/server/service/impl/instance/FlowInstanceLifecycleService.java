@@ -27,7 +27,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.assembler.NameAssembler;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.common.security.LoginUser;
 import com.njydsz.common.auth.context.AuthContextUtils;
@@ -1324,7 +1324,7 @@ public class FlowInstanceLifecycleService {
       return Collections.emptyMap();
     }
     try {
-      return YdszJson.parseMap(node.getExt());
+      return FlowNodeExt.parseSafe(node.getExt());
     } catch (Exception e) {
       log.warn("[Flow] 节点 ext 解析失败: nodeCode={} err={}", node.getNodeCode(), e.getMessage());
       return Collections.emptyMap();
@@ -1342,7 +1342,7 @@ public class FlowInstanceLifecycleService {
       return null;
     }
     try {
-      Map<String, Object> ext = YdszJson.parseMap(node.getExt());
+      Map<String, Object> ext = FlowNodeExt.parseSafe(node.getExt());
       if (ext == null) return null;
       String attachedToRef = (String) ext.get("attachedToRef");
       if (!StringUtils.hasText(attachedToRef)) {
@@ -1370,7 +1370,7 @@ public class FlowInstanceLifecycleService {
       return false;
     }
     try {
-      Map<String, Object> ext = YdszJson.parseMap(node.getExt());
+      Map<String, Object> ext = FlowNodeExt.parseSafe(node.getExt());
       if (ext == null) return false;
       return ext.containsKey("callActivityFlowCode") || ext.containsKey("subProcessFlowCode");
     } catch (Exception e) {

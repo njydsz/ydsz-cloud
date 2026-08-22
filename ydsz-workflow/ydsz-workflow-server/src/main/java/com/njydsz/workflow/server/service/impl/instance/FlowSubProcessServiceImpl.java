@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
@@ -420,7 +420,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
       return null;
     }
     try {
-      Map<String, Object> ext = YdszJson.parseMap(node.getExt());
+      Map<String, Object> ext = FlowNodeExt.parseSafe(node.getExt());
       if (ext == null) return null;
       Object v = ext.get("callActivityFlowCode");
       if (v == null) {
@@ -439,7 +439,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
       return null;
     }
     try {
-      Map<String, Object> ext = YdszJson.parseMap(node.getExt());
+      Map<String, Object> ext = FlowNodeExt.parseSafe(node.getExt());
       if (ext == null) return null;
       Object v = ext.get("subProcessTimeout");
       if (v == null) {

@@ -15,7 +15,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.domain.repository.FlowEventSubscriptionRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
@@ -296,7 +296,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
       return false;
     }
     try {
-      Map<String, Object> ext = YdszJson.parseMap(node.getExt());
+      Map<String, Object> ext = FlowNodeExt.parseSafe(node.getExt());
       return ext != null && Boolean.TRUE.equals(ext.get("eventCatch"));
     } catch (Exception e) {
       log.warn("[FlowEventSubscriptionServiceImpl] 节点 ext 解析失败，视为未配置事件捕获: {}", e.getMessage());
@@ -393,14 +393,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
   }
 
   private Map<String, Object> parseExt(FlowNodeDO node) {
-    if (!StringUtils.hasText(node.getExt())) {
-      return Collections.emptyMap();
-    }
-    try {
-      return YdszJson.parseMap(node.getExt());
-    } catch (Exception e) {
-      return Collections.emptyMap();
-    }
+    return FlowNodeExt.parseSafe(node.getExt());
   }
 
   private String extractCorrelationKey(Map<String, Object> ext, Map<String, Object> variables) {

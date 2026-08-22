@@ -30,8 +30,6 @@ import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
-import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.health.RedisHealthStatus;
 import com.njydsz.message.server.metric.MessageMetrics;
@@ -71,7 +69,6 @@ public class MessageConsumer implements RocketMQListener<String> {
   private final MessageMetrics messageMetrics;
   private final MessageProperties messageProperties;
   private final RedisHealthStatus redisHealthStatus;
-  private final MessageConverter converter;
 
   /** 当前实例标识(hostname:pid),用于锁值与安全释放 */
   private static final String INSTANCE_ID = initInstanceId();
@@ -221,20 +218,20 @@ public class MessageConsumer implements RocketMQListener<String> {
         }
       }
       // 未匹配到已有记录,insert 新的 FAILED 记录
-      MsgLog logDO = new MsgLog();
-      logDO.setChannel(request.getChannel());
-      logDO.setBizType(request.getBizType());
-      logDO.setBizId(request.getBizId());
-      logDO.setReceiver(request.getReceiver());
-      logDO.setTemplateCode(request.getTemplateCode());
-      logDO.setContent(request.getContent());
-      logDO.setStatus(MessageStatusEnum.FAILED.name());
-      logDO.setErrorMessage(errorMessage);
-      logDO.setMsgId(msgId);
-      logDO.setTopic(YdszMessageTopics.TOPIC_MESSAGE);
-      logDO.setReconsumeTimes(0);
-      logDO.setTenantId(TenantContextHolder.getTenantId());
-      msgLogRepository.save(converter.entityToVO(logDO));
+      MsgLogVO logVO = new MsgLogVO();
+      logVO.setChannel(request.getChannel());
+      logVO.setBizType(request.getBizType());
+      logVO.setBizId(request.getBizId());
+      logVO.setReceiver(request.getReceiver());
+      logVO.setTemplateCode(request.getTemplateCode());
+      logVO.setContent(request.getContent());
+      logVO.setStatus(MessageStatusEnum.FAILED.name());
+      logVO.setErrorMessage(errorMessage);
+      logVO.setMsgId(msgId);
+      logVO.setTopic(YdszMessageTopics.TOPIC_MESSAGE);
+      logVO.setReconsumeTimes(0);
+      logVO.setTenantId(TenantContextHolder.getTenantId());
+      msgLogRepository.save(logVO);
     } catch (Exception logEx) {
       log.warn(
           "[MessageConsumer] 记录失败日志异常: messageId={} err={}",

@@ -17,8 +17,12 @@ import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.engine.FlowEventListener;
+import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
+import com.njydsz.workflow.server.engine.listener.FlowListenerConfigReader;
+import com.njydsz.workflow.server.engine.listener.FlowListenerEventType;
+import com.njydsz.workflow.server.engine.listener.FlowListenerPluginExecutor;
 
 /**
  * FlowTask 跨子 Service 共享的辅助组件（任务校验、审计、事件）
@@ -116,6 +120,14 @@ public class FlowTaskSupport {
    * 撤回等）。
    */
   private final List<FlowEventListener> eventListeners;
+
+  /**
+   * P2-38: 监听器插件执行器（设计器配置的节点级监听器）
+   *
+   * <p>对标 warm-flow 的监听器机制：在 SPI 事件监听器之外，设计上，每个节点可通过
+   * ext JSON 配置自己的监听器，引擎按事件类型自动回调。
+   */
+  private final FlowListenerPluginExecutor listenerPluginExecutor;
 
   /**
    * P2-35: Spring 事件发布器
@@ -262,6 +274,38 @@ public class FlowTaskSupport {
             listener.getClass().getSimpleName(),
             e.getMessage());
       }
+    }
+  }
+
+  /**
+   * P2-38: 触发节点配置的监听器插件（对标 warm-flow 的可配置监听器机制）
+   *
+   * <p>从节点 ext JSON 的 {@code listeners} 配置中，筛选匹配当前事件类型的插件，按优先级依次执行。
+   *
+   * @param nodeExt  节点 ext JSON 字符串
+   * @param eventType 事件类型
+   * @param instanceId 流程实例 ID
+   * @param taskId    任务 ID（可空）
+   * @param nodeCode  节点编码（可空）
+   * @param variables 流程变量（可空）
+   * @param ctx       事件上下文（可空）
+   */
+  public void firePluginEvent(
+      String nodeExt,
+      FlowListenerEventType eventType,
+      String instanceId,
+      String taskId,
+      String nodeCode,
+      Map<String, Object> variables,
+      FlowEventContext ctx) {
+    if (listenerPluginExecutor == null) return;
+    try {
+      listenerPluginExecutor.execute(
+          FlowListenerConfigReader.readListeners(nodeExt),
+          eventType, instanceId, taskId, nodeCode, variables, ctx);
+    } catch (Exception e) {
+      log.warn("[Flow] 监听器插件执行失败: node={} event={} err={}",
+          nodeCode, eventType, e.getMessage());
     }
   }
 

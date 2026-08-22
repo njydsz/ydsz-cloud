@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
@@ -141,7 +141,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     // 读取现有 ext JSON
     Map<String, Object> extJson =
         StringUtils.hasText(node.getExt())
-            ? YdszJson.parseMap(node.getExt())
+            ? FlowNodeExt.parseSafe(node.getExt())
             : new LinkedHashMap<>();
     // 写入 customButtons
     if (buttons == null || buttons.isEmpty()) {
@@ -298,7 +298,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
       return List.of();
     }
     try {
-      Map<String, Object> ext = YdszJson.parseMap(extJson);
+      Map<String, Object> ext = FlowNodeExt.parseSafe(extJson);
       Object buttons = ext.get("customButtons");
       if (buttons == null) {
         return List.of();

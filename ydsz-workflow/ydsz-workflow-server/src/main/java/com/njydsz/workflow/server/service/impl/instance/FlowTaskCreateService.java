@@ -539,7 +539,7 @@ public class FlowTaskCreateService {
     }
     Map<String, Object> extConfig;
     try {
-      extConfig = YdszJson.parseMap(node.getExt());
+      extConfig = FlowNodeExt.parseSafe(node.getExt());
     } catch (Exception e) {
       return Collections.emptyMap();
     }
@@ -1202,7 +1202,7 @@ public class FlowTaskCreateService {
   private FlowPerformType resolvePerformType(FlowNodeDO node) {
     if (node.getExt() != null) {
       try {
-        Map<?, ?> ext = YdszJson.parseMap(node.getExt());
+        Map<?, ?> ext = FlowNodeExt.parseSafe(node.getExt());
         Object ptObj = ext.get("performType");
         if (ptObj instanceof String pt) {
           return FlowPerformType.valueOf(pt);

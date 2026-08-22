@@ -22,7 +22,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.sentry.resilience.CircuitBreaker;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.channel.ChannelScoreCalculator.ChannelScore;
 import com.njydsz.message.server.channel.ChannelScoreCalculator.ScoreConfig;
 import com.njydsz.message.server.config.MessageProperties;
@@ -326,35 +326,37 @@ public class ChannelRouter {
   }
 
   /**
-   * 基于 {@link MsgLog} 的分发重载：将日志实体转换为 {@link MessageRequest} 后委托 {@link #dispatch(MessageRequest)}
-   * 执行，便于上层 service 直接传入日志实体。
+   * 基于 {@link MsgLogVO} 的分发重载：将日志 VO 转换为 {@link MessageRequest} 后委托 {@link #dispatch(MessageRequest)}
+   * 执行，便于上层 service 直接传入日志 VO。
    *
    * <p>返回供应商侧追踪 ID（{@code providerTraceId}）；发送失败时抛 {@link SysException}， 由调用方 catch 处理。
    *
-   * @param logDO 消息日志实体
+   * <p>符合云顶编码规范第 34 节：server 层使用领域 VO，不直接依赖 infra 层实体。
+   *
+   * @param logVO 消息日志 VO
    * @return 供应商侧追踪 ID
    * @throws SysException 发送失败
    */
-  public String dispatch(MsgLog logDO) {
-    if (logDO == null) {
+  public String dispatch(MsgLogVO logVO) {
+    if (logVO == null) {
       throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("消息日志为空").build();
     }
     MessageRequest request = new MessageRequest();
-    request.setChannel(logDO.getChannel());
-    request.setReceiver(logDO.getReceiver());
-    request.setContent(logDO.getContent());
-    request.setBizType(logDO.getBizType());
-    request.setBizId(logDO.getBizId());
-    request.setTemplateCode(logDO.getTemplateCode());
-    request.setMessageId(logDO.getMsgId());
-    String templateParams = logDO.getTemplateParams();
+    request.setChannel(logVO.getChannel());
+    request.setReceiver(logVO.getReceiver());
+    request.setContent(logVO.getContent());
+    request.setBizType(logVO.getBizType());
+    request.setBizId(logVO.getBizId());
+    request.setTemplateCode(logVO.getTemplateCode());
+    request.setMessageId(logVO.getMsgId());
+    String templateParams = logVO.getTemplateParams();
     if (templateParams != null && !templateParams.isBlank()) {
       try {
         request.setParams(YdszJson.fromJsonToMap(templateParams, String.class, Object.class));
       } catch (Exception e) {
         log.warn(
             "[ChannelRouter] templateParams 解析失败,忽略: msgId={}, err={}",
-            logDO.getMsgId(),
+            logVO.getMsgId(),
             e.getMessage());
       }
     }

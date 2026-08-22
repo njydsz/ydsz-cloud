@@ -18,7 +18,6 @@ import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.config.RetryStrategyResolver;
@@ -43,9 +42,6 @@ public class MessageLogServiceImpl implements MessageLogService {
 
   /** 消息日志 Repository */
   private final MsgLogRepository msgLogRepository;
-
-  /** 消息转换器 */
-  private final MessageConverter converter;
 
   /** 通道路由器（重发时分发） */
   private final ChannelRouter channelRouter;
@@ -176,9 +172,8 @@ public class MessageLogServiceImpl implements MessageLogService {
 
       long start = System.currentTimeMillis();
       try {
-        // 将 VO 转换为实体用于通道分发（dispatch 需要 MsgLog 实体）
-        com.njydsz.message.infra.entity.MsgLog logDO = converter.voToLog(entity);
-        String providerTraceId = channelRouter.dispatch(logDO);
+        // 直接使用 VO 进行通道分发（符合 DDD 分层：server 层不依赖 infra 实体）
+        String providerTraceId = channelRouter.dispatch(entity);
         long cost = System.currentTimeMillis() - start;
         entity.setStatus(MessageStatusEnum.SUCCESS.name());
         entity.setProviderTraceId(providerTraceId);

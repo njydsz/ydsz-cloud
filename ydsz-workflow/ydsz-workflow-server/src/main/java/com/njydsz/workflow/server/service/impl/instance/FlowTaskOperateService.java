@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
@@ -426,16 +426,8 @@ public class FlowTaskOperateService {
     }
   }
 
-  /** 解析节点 ext JSON 配置。 */
+  /** 解析节点 ext JSON 配置（委托给 FlowNodeExt 统一实现）。 */
   private Map<String, Object> parseExtConfig(String ext) {
-    if (!StringUtils.hasText(ext)) {
-      return Collections.emptyMap();
-    }
-    try {
-      return YdszJson.parseMap(ext);
-    } catch (Exception e) {
-      log.warn("[Flow] 解析节点 ext 配置失败: err={}", e.getMessage());
-      return Collections.emptyMap();
-    }
+    return FlowNodeExt.parseSafe(ext);
   }
 }
