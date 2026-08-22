@@ -9,8 +9,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
-import com.njydsz.message.infra.entity.MsgNotification;
-import com.njydsz.message.infra.repository.MsgNotificationRepository;
+import com.njydsz.message.domain.vo.MsgNotificationVO;
+import com.njydsz.message.domain.repository.MsgNotificationRepository;
 
 /**
  * 消息过期清理器。
@@ -35,7 +35,7 @@ public class MessageExpiryCleaner {
     try {
       int rows =
           msgNotificationRepository.update(
-              new LambdaUpdateWrapper<MsgNotification>()
+              new LambdaUpdateWrapper<MsgNotificationVO>()
                   .lt(MsgNotification::getExpiredAt, now)
                   .eq(MsgNotification::getDeleted, 0)
                   .set(MsgNotification::getDeleted, 1));

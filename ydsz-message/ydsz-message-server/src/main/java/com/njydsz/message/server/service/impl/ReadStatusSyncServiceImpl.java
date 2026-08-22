@@ -18,8 +18,8 @@ import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
-import com.njydsz.message.infra.entity.MsgNotification;
-import com.njydsz.message.infra.repository.MsgNotificationRepository;
+import com.njydsz.message.domain.vo.MsgNotificationVO;
+import com.njydsz.message.domain.repository.MsgNotificationRepository;
 import com.njydsz.message.server.realtime.RealtimePushService;
 import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
 
@@ -153,7 +153,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     int updated =
         msgNotificationRepository.update(
             null,
-            new LambdaUpdateWrapper<MsgNotification>()
+            new LambdaUpdateWrapper<MsgNotificationVO>()
                 .eq(MsgNotification::getId, notificationId)
                 .eq(MsgNotification::getReceiverId, userId)
                 .eq(MsgNotification::getReadStatus, 0)
@@ -184,8 +184,8 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     if (!StringUtils.hasText(userId)) {
       return 0;
     }
-    LambdaUpdateWrapper<MsgNotification> wrapper =
-        new LambdaUpdateWrapper<MsgNotification>()
+    LambdaUpdateWrapper<MsgNotificationVO> wrapper =
+        new LambdaUpdateWrapper<MsgNotificationVO>()
             .eq(MsgNotification::getReceiverId, userId)
             .eq(MsgNotification::getReadStatus, 0)
             .eq(MsgNotification::getRecallStatus, "NONE")
@@ -221,7 +221,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     // 站内通知未读数
     Long notifCount =
         msgNotificationRepository.selectCount(
-            new LambdaQueryWrapper<MsgNotification>()
+            new LambdaQueryWrapper<MsgNotificationVO>()
                 .eq(MsgNotification::getReceiverId, userId)
                 .eq(MsgNotification::getReadStatus, 0)
                 .eq(MsgNotification::getRecallStatus, "NONE"));

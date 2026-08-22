@@ -14,7 +14,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.PreferenceUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgPreference;
-import com.njydsz.message.infra.repository.MsgPreferenceRepository;
+import com.njydsz.message.domain.repository.MsgPreferenceRepository;
 import com.njydsz.message.server.service.config.PreferenceService;
 
 /**

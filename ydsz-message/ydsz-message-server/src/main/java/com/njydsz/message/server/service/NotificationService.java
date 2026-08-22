@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.NotificationSendDTO;
-import com.njydsz.message.infra.entity.MsgNotification;
+import com.njydsz.message.domain.vo.MsgNotificationVO;
 import com.njydsz.message.domain.vo.NotificationGroupVO;
 
 /**
@@ -31,7 +31,7 @@ import com.njydsz.message.domain.vo.NotificationGroupVO;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.message.server.service.MessageService 全渠道消息（含短信/邮件/推送）
- * @see MsgNotification 站内通知实体
+ * @see MsgNotificationVO 站内通知实体
  */
 public interface NotificationService {
 
@@ -56,7 +56,7 @@ public interface NotificationService {
    * @param query 查询条件（pageNum / pageSize / read / businessType / messageGroup）
    * @return 分页结果（含 total / records）
    */
-  Page<MsgNotification> inbox(String userId, NotificationQueryDTO query);
+  Page<MsgNotificationVO> inbox(String userId, NotificationQueryDTO query);
 
   /**
    * 统计用户未读通知数
@@ -131,5 +131,5 @@ public interface NotificationService {
    * @param messageGroup 分组键（通常为业务单号）
    * @return 该分组下的全部通知（按创建时间倒序）
    */
-  List<MsgNotification> listByGroup(String userId, String messageGroup);
+  List<MsgNotificationVO> listByGroup(String userId, String messageGroup);
 }

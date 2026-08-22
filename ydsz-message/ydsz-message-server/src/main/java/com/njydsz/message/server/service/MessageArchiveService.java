@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.vo.MsgLogVO;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
  * 消息归档服务接口。
@@ -22,14 +22,14 @@ public interface MessageArchiveService {
    *
    * @param logDO 消息日志
    */
-  void index(MsgLog logDO);
+  void index(MsgLogVO logDO);
 
   /**
    * 批量索引消息日志到 ES。
    *
    * @param logList 日志列表
    */
-  void batchIndex(List<MsgLog> logList);
+  void batchIndex(List<MsgLogVO> logList);
 
   /**
    * 全文搜索消息日志。

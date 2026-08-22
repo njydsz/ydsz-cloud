@@ -19,7 +19,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.entity.config.MsgVariableSource;
-import com.njydsz.message.infra.repository.MsgVariableSourceRepository;
+import com.njydsz.message.domain.repository.MsgVariableSourceRepository;
 
 /**
  * 变量数据源解析器。

@@ -12,8 +12,8 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.UserChannelBindingDTO;
-import com.njydsz.message.domain.entity.config.MsgUserChannel;
-import com.njydsz.message.infra.repository.MsgUserChannelRepository;
+import com.njydsz.message.infra.entity.MsgUserChannel;
+import com.njydsz.message.domain.repository.MsgUserChannelRepository;
 import com.njydsz.message.server.service.config.UserChannelBindingService;
 
 /**

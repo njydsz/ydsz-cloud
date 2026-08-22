@@ -20,9 +20,9 @@ import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.domain.enums.template.TemplateAuditStatusEnum;
-import com.njydsz.message.infra.repository.MsgTemplateRepository;
+import com.njydsz.message.domain.repository.MsgTemplateRepository;
 import com.njydsz.message.server.service.template.TemplateService;
 import com.njydsz.message.server.template.TemplateEngine;
 
@@ -65,7 +65,7 @@ public class TemplateServiceImpl implements TemplateService {
    * @throws com.njydsz.common.exception.custom.SysException 参数为空 / 编码或通道为空 / 模板已存在时
    */
   @Override
-  public MsgTemplate create(TemplateCreateDTO dto) {
+  public MsgTemplateVO create(TemplateCreateDTO dto) {
     if (dto == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -82,9 +82,9 @@ public class TemplateServiceImpl implements TemplateService {
     String locale =
         StringUtils.hasText(dto.getLocale()) ? dto.getLocale() : MessageConstants.DEFAULT_LOCALE;
     // 唯一性校验 (templateCode, channel, locale, tenantId)
-    MsgTemplate existing =
+    MsgTemplateVO existing =
         msgTemplateRepository.selectOne(
-            new LambdaQueryWrapper<MsgTemplate>()
+            new LambdaQueryWrapper<MsgTemplateVO>()
                 .eq(MsgTemplate::getTemplateCode, dto.getTemplateCode())
                 .eq(MsgTemplate::getChannel, dto.getChannel())
                 .eq(MsgTemplate::getLocale, locale)
@@ -96,7 +96,7 @@ public class TemplateServiceImpl implements TemplateService {
           .message("模板已存在: " + dto.getTemplateCode() + "/" + locale)
           .build();
     }
-    MsgTemplate entity = new MsgTemplate();
+    MsgTemplateVO entity = new MsgTemplateVO();
     entity.setTemplateCode(dto.getTemplateCode());
     entity.setChannel(dto.getChannel());
     entity.setLocale(locale);
@@ -133,14 +133,14 @@ public class TemplateServiceImpl implements TemplateService {
    * @throws com.njydsz.common.exception.custom.SysException id 为空 / dto 为空 / 模板不存在时
    */
   @Override
-  public MsgTemplate update(String id, TemplateCreateDTO dto) {
+  public MsgTemplateVO update(String id, TemplateCreateDTO dto) {
     if (!StringUtils.hasText(id)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("模板 ID 不能为空")
           .build();
     }
-    MsgTemplate entity = getById(id);
+    MsgTemplateVO entity = getById(id);
     if (dto == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -208,14 +208,14 @@ public class TemplateServiceImpl implements TemplateService {
    * @throws com.njydsz.common.exception.custom.SysException id 为空 / 模板不存在时
    */
   @Override
-  public MsgTemplate getById(String id) {
+  public MsgTemplateVO getById(String id) {
     if (!StringUtils.hasText(id)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("模板 ID 不能为空")
           .build();
     }
-    MsgTemplate entity = msgTemplateRepository.selectById(id);
+    MsgTemplateVO entity = msgTemplateRepository.selectById(id);
     if (entity == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -234,12 +234,12 @@ public class TemplateServiceImpl implements TemplateService {
    * @return 模板分页结果
    */
   @Override
-  public Page<MsgTemplate> page(TemplateQueryDTO query) {
-    Page<MsgTemplate> page =
+  public Page<MsgTemplateVO> page(TemplateQueryDTO query) {
+    Page<MsgTemplateVO> page =
         new Page<>(
             query == null ? 1 : query.getPageNum(),
             Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-    LambdaQueryWrapper<MsgTemplate> w = new LambdaQueryWrapper<>();
+    LambdaQueryWrapper<MsgTemplateVO> w = new LambdaQueryWrapper<>();
     if (query != null) {
       w.eq(
           StringUtils.hasText(query.getTemplateCode()),
@@ -275,7 +275,7 @@ public class TemplateServiceImpl implements TemplateService {
    * @throws com.njydsz.common.exception.custom.SysException templateCode 或 channel 为空时
    */
   @Override
-  public MsgTemplate loadByCodeAndChannel(
+  public MsgTemplateVO loadByCodeAndChannel(
       String templateCode, String channel, String locale, String tenantId) {
     if (!StringUtils.hasText(templateCode) || !StringUtils.hasText(channel)) {
       throw SysException.builder()
@@ -286,9 +286,9 @@ public class TemplateServiceImpl implements TemplateService {
     String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContextHolder.getTenantId();
     String loc = StringUtils.hasText(locale) ? locale : MessageConstants.DEFAULT_LOCALE;
     // 精确 locale
-    MsgTemplate entity =
+    MsgTemplateVO entity =
         msgTemplateRepository.selectOne(
-            new LambdaQueryWrapper<MsgTemplate>()
+            new LambdaQueryWrapper<MsgTemplateVO>()
                 .eq(MsgTemplate::getTemplateCode, templateCode)
                 .eq(MsgTemplate::getChannel, channel)
                 .eq(MsgTemplate::getLocale, loc)
@@ -302,7 +302,7 @@ public class TemplateServiceImpl implements TemplateService {
     if (!MessageConstants.DEFAULT_LOCALE.equals(loc)) {
       entity =
           msgTemplateRepository.selectOne(
-              new LambdaQueryWrapper<MsgTemplate>()
+              new LambdaQueryWrapper<MsgTemplateVO>()
                   .eq(MsgTemplate::getTemplateCode, templateCode)
                   .eq(MsgTemplate::getChannel, channel)
                   .eq(MsgTemplate::getLocale, MessageConstants.DEFAULT_LOCALE)
@@ -330,7 +330,7 @@ public class TemplateServiceImpl implements TemplateService {
           .message("审核状态不能为空")
           .build();
     }
-    MsgTemplate entity = getById(id);
+    MsgTemplateVO entity = getById(id);
     TemplateAuditStatusEnum current = parseAuditStatus(entity.getAuditStatus());
     TemplateAuditStatusEnum target = parseAuditStatus(dto.getAuditStatus());
     if (!canTransitAudit(current, target)) {
@@ -378,7 +378,7 @@ public class TemplateServiceImpl implements TemplateService {
           .message("模板编码与通道不能为空")
           .build();
     }
-    MsgTemplate template = loadByCodeAndChannel(templateCode, channel, locale, tenantId);
+    MsgTemplateVO template = loadByCodeAndChannel(templateCode, channel, locale, tenantId);
     if (template == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -428,7 +428,7 @@ public class TemplateServiceImpl implements TemplateService {
    *
    * @param template 消息模板实体
    */
-  private void syncSearchIndex(MsgTemplate template) {
+  private void syncSearchIndex(MsgTemplateVO template) {
     SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
     if (bridge != null) {
       bridge.indexUpsert("message_template", template);

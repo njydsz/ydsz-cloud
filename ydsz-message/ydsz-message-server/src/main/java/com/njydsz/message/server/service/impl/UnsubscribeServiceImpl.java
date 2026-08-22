@@ -17,7 +17,7 @@ import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.message.domain.dto.UnsubscribeQueryDTO;
 import com.njydsz.message.domain.entity.config.MsgSubscription;
 import com.njydsz.message.domain.enums.config.SubscriptionStatusEnum;
-import com.njydsz.message.infra.repository.MsgSubscriptionRepository;
+import com.njydsz.message.domain.repository.MsgSubscriptionRepository;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.config.SubscriptionService;
 import com.njydsz.message.server.service.config.UnsubscribeService;

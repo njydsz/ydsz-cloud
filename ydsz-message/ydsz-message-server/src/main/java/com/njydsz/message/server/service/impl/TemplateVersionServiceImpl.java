@@ -16,10 +16,10 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.TemplateTestSendDTO;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.domain.entity.template.MsgTemplateVersion;
-import com.njydsz.message.infra.repository.MsgTemplateRepository;
-import com.njydsz.message.infra.repository.MsgTemplateVersionRepository;
+import com.njydsz.message.domain.repository.MsgTemplateRepository;
+import com.njydsz.message.domain.repository.MsgTemplateVersionRepository;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.template.TemplateVersionService;
 import com.njydsz.message.server.template.TemplateEngine;
@@ -147,9 +147,9 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
           .message("版本不存在: " + version)
           .build();
     }
-    MsgTemplate template =
+    MsgTemplateVO template =
         templateRepository.selectOne(
-            new LambdaQueryWrapper<MsgTemplate>()
+            new LambdaQueryWrapper<MsgTemplateVO>()
                 .eq(MsgTemplate::getTemplateCode, templateCode)
                 .last("LIMIT 1"));
     if (template == null) {
@@ -190,9 +190,9 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
             .message("templateCode 和 content 不能同时为空")
             .build();
       }
-      MsgTemplate template =
+      MsgTemplateVO template =
           templateRepository.selectOne(
-              new LambdaQueryWrapper<MsgTemplate>()
+              new LambdaQueryWrapper<MsgTemplateVO>()
                   .eq(MsgTemplate::getTemplateCode, dto.getTemplateCode())
                   .last("LIMIT 1"));
       if (template == null) {
@@ -235,9 +235,9 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     if (StringUtils.hasText(dto.getTestChannel())) {
       request.setChannel(dto.getTestChannel());
     } else {
-      MsgTemplate template =
+      MsgTemplateVO template =
           templateRepository.selectOne(
-              new LambdaQueryWrapper<MsgTemplate>()
+              new LambdaQueryWrapper<MsgTemplateVO>()
                   .eq(MsgTemplate::getTemplateCode, dto.getTemplateCode())
                   .last("LIMIT 1"));
       if (template != null) {

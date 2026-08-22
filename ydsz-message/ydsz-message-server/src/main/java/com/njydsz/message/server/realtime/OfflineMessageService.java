@@ -21,7 +21,7 @@ import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.offline.OfflineMessageStore;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.entity.config.MsgOffline;
-import com.njydsz.message.infra.repository.MsgOfflineRepository;
+import com.njydsz.message.domain.repository.MsgOfflineRepository;
 
 /**
  * 离线消息补偿服务（Redis + DB 双层存储）。

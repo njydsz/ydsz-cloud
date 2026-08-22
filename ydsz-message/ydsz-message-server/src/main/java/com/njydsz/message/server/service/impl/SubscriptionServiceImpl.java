@@ -15,7 +15,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.SubscriptionUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgSubscription;
 import com.njydsz.message.domain.enums.config.SubscriptionStatusEnum;
-import com.njydsz.message.infra.repository.MsgSubscriptionRepository;
+import com.njydsz.message.domain.repository.MsgSubscriptionRepository;
 import com.njydsz.message.server.service.config.SubscriptionService;
 
 /**

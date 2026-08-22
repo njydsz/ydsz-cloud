@@ -24,9 +24,9 @@ import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.entity.batch.MsgAggregate;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
-import com.njydsz.message.infra.repository.MsgAggregateRepository;
+import com.njydsz.message.domain.repository.MsgAggregateRepository;
 import com.njydsz.message.server.service.batch.AggregateService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.template.TemplateService;
@@ -285,7 +285,7 @@ public class AggregateServiceImpl implements AggregateService {
       return DEFAULT_DIGEST_TEMPLATE;
     }
     try {
-      MsgTemplate tpl =
+      MsgTemplateVO tpl =
           templateService.loadByCodeAndChannel(
               DIGEST_TEMPLATE_PREFIX + group, batch.getChannel(), null, batch.getTenantId());
       if (tpl != null && StringUtils.hasText(tpl.getContent())) {

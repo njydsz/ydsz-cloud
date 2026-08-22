@@ -15,7 +15,7 @@ import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.ReceiptCallbackDTO;
 import com.njydsz.message.domain.entity.receipt.MsgReceipt;
-import com.njydsz.message.infra.repository.MsgReceiptRepository;
+import com.njydsz.message.domain.repository.MsgReceiptRepository;
 import com.njydsz.message.server.service.core.MessageLogService;
 import com.njydsz.message.server.service.receipt.ReceiptService;
 

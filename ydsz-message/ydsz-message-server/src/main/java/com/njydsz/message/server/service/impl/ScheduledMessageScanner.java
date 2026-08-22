@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.queue.trace.MessageTracer;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
@@ -71,9 +71,9 @@ public class ScheduledMessageScanner {
   /** 执行定时消息扫描。 */
   private void doScan() {
     LocalDateTime now = LocalDateTime.now();
-    List<MsgLog> due =
+    List<MsgLogVO> due =
         msgLogRepository.selectList(
-            new LambdaQueryWrapper<MsgLog>()
+            new LambdaQueryWrapper<MsgLogVO>()
                 .eq(MsgLog::getStatus, MessageStatusEnum.SCHEDULED.name())
                 .le(MsgLog::getScheduledAt, now)
                 .last("LIMIT " + BATCH_SIZE));
@@ -83,7 +83,7 @@ public class ScheduledMessageScanner {
     log.info("[ScheduledScanner] 到期定时消息 {} 条", due.size());
     int success = 0;
     int failed = 0;
-    for (MsgLog logDO : due) {
+    for (MsgLogVO logDO : due) {
       try {
         sendScheduledMessage(logDO);
         success++;
@@ -100,7 +100,7 @@ public class ScheduledMessageScanner {
    *
    * @param logDO 消息日志实体
    */
-  private void sendScheduledMessage(MsgLog logDO) {
+  private void sendScheduledMessage(MsgLogVO logDO) {
     try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(logDO.getTraceId())) {
       long start = System.currentTimeMillis();
       try {

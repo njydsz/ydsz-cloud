@@ -16,7 +16,7 @@ import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.common.util.id.RandomUtils;
 import com.njydsz.message.domain.constant.MessageConstants;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
@@ -75,14 +75,14 @@ public class RetryScanner {
   private void doScan() {
     LocalDateTime now = LocalDateTime.now();
     // P2-3: 使用 MyBatis-Plus 分页替代 .last("LIMIT ...")
-    Page<MsgLog> page = new Page<>(1, MessageConstants.RETRY_SCAN_BATCH_SIZE);
-    Page<MsgLog> duePage =
+    Page<MsgLogVO> page = new Page<>(1, MessageConstants.RETRY_SCAN_BATCH_SIZE);
+    Page<MsgLogVO> duePage =
         msgLogRepository.selectPage(
             page,
-            new LambdaQueryWrapper<MsgLog>()
+            new LambdaQueryWrapper<MsgLogVO>()
                 .eq(MsgLog::getStatus, MessageStatusEnum.RETRY.name())
                 .le(MsgLog::getNextRetryAt, now));
-    List<MsgLog> due = duePage.getRecords();
+    List<MsgLogVO> due = duePage.getRecords();
     if (due.isEmpty()) {
       return;
     }
@@ -90,7 +90,7 @@ public class RetryScanner {
     int success = 0;
     int dead = 0;
     int retryAgain = 0;
-    for (MsgLog logDO : due) {
+    for (MsgLogVO logDO : due) {
       try {
         MessageStatusEnum result = retryOnce(logDO);
         if (result == MessageStatusEnum.SUCCESS) {
@@ -119,7 +119,7 @@ public class RetryScanner {
    * @param logDO 日志实体
    * @return 重试后的状态
    */
-  private MessageStatusEnum retryOnce(MsgLog logDO) {
+  private MessageStatusEnum retryOnce(MsgLogVO logDO) {
     // P1-3: 进入追踪上下文，将 logDO.traceId 写入 MDC，确保重试日志可追溯
     try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(logDO.getTraceId())) {
       long start = System.currentTimeMillis();

@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.archive.MessageArchiveService;
 
@@ -43,7 +43,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
    * @param logDO 消息日志实体
    */
   @Override
-  public void index(MsgLog logDO) {
+  public void index(MsgLogVO logDO) {
     if (!messageProperties.getArchive().isEsEnabled() || logDO == null) {
       return;
     }
@@ -64,12 +64,12 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
    * @param logList 消息日志列表
    */
   @Override
-  public void batchIndex(List<MsgLog> logList) {
+  public void batchIndex(List<MsgLogVO> logList) {
     if (!messageProperties.getArchive().isEsEnabled() || logList == null || logList.isEmpty()) {
       return;
     }
     log.debug("[Archive] 批量索引: count={}", logList.size());
-    for (MsgLog logDO : logList) {
+    for (MsgLogVO logDO : logList) {
       index(logDO);
     }
   }

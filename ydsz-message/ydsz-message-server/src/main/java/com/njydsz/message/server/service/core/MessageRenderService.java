@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.RichMediaContent;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.config.VariableSourceResolver;
 import com.njydsz.message.server.filter.SensitiveWordFilter;
 import com.njydsz.message.server.service.TemplateService;
@@ -74,7 +74,7 @@ public class MessageRenderService {
     String prefLocale = ctx.getPreference() != null ? ctx.getPreference().getLocale() : null;
 
     if (StringUtils.hasText(ctx.getTemplateCode())) {
-      MsgTemplate template =
+      MsgTemplateVO template =
           templateService.loadByCodeAndChannel(
               ctx.getTemplateCode(), ctx.getChannel(), prefLocale, TenantContextHolder.getTenantId());
       if (template == null) {

@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.domain.entity.batch.MsgAggregate;
 import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
-import com.njydsz.message.infra.repository.MsgAggregateRepository;
+import com.njydsz.message.domain.repository.MsgAggregateRepository;
 import com.njydsz.message.server.service.batch.AggregateService;
 
 /**

@@ -15,7 +15,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.service.template.TemplateService;
 
@@ -168,7 +168,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
     if (!channelRouter.isChannelEnabled(req.getChannel())) {
       return "通道未启用: " + req.getChannel();
     }
-    MsgTemplate tpl =
+    MsgTemplateVO tpl =
         templateService.loadByCodeAndChannel(
             req.getTemplateCode(), req.getChannel(), null, TenantContextHolder.getTenantId());
     if (tpl == null) {

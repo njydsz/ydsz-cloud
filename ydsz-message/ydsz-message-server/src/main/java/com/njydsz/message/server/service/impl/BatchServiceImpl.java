@@ -25,7 +25,7 @@ import com.njydsz.message.domain.dto.BatchSendRequestDTO;
 import com.njydsz.message.domain.dto.BatchSendResult;
 import com.njydsz.message.domain.entity.batch.MsgBatch;
 import com.njydsz.message.domain.event.BatchCompletedEvent;
-import com.njydsz.message.infra.repository.MsgBatchRepository;
+import com.njydsz.message.domain.repository.MsgBatchRepository;
 import com.njydsz.message.server.event.DomainEventPublisher;
 import com.njydsz.message.server.service.SseEmitterService;
 import com.njydsz.message.server.service.batch.BatchService;

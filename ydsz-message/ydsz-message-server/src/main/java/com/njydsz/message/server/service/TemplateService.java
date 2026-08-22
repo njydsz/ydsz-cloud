@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.message.domain.dto.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 
 /**
  * 消息模板 Service 接口
@@ -32,7 +32,7 @@ import com.njydsz.message.infra.entity.MsgTemplate;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see MsgTemplate 模板实体
+ * @see MsgTemplateVO 模板实体
  * @see com.njydsz.message.server.service.TemplateVersionService 模板版本 Service
  */
 public interface TemplateService {
@@ -45,7 +45,7 @@ public interface TemplateService {
    * @param dto 模板创建参数（templateCode / channel / locale / subject / content / vars）
    * @return 已创建的模板实体
    */
-  MsgTemplate create(TemplateCreateDTO dto);
+  MsgTemplateVO create(TemplateCreateDTO dto);
 
   /**
    * 更新模板（仅更新 DRAFT 状态的模板）
@@ -56,7 +56,7 @@ public interface TemplateService {
    * @param dto 模板更新参数
    * @return 更新后的模板实体
    */
-  MsgTemplate update(String id, TemplateCreateDTO dto);
+  MsgTemplateVO update(String id, TemplateCreateDTO dto);
 
   /**
    * 删除模板（逻辑删除）
@@ -73,7 +73,7 @@ public interface TemplateService {
    * @param id 模板 ID
    * @return 模板实体；不存在时返回 null
    */
-  MsgTemplate getById(String id);
+  MsgTemplateVO getById(String id);
 
   /**
    * 分页查询模板列表
@@ -83,7 +83,7 @@ public interface TemplateService {
    * @param query 查询参数
    * @return 分页结果（total / records）
    */
-  Page<MsgTemplate> page(TemplateQueryDTO query);
+  Page<MsgTemplateVO> page(TemplateQueryDTO query);
 
   /**
    * 按编码 + 通道 + 语言加载模板（locale 为空时回退默认 zh-CN）
@@ -97,7 +97,7 @@ public interface TemplateService {
    * @param tenantId 租户 ID
    * @return 模板实体；未匹配到时返回 null（不会抛异常）
    */
-  MsgTemplate loadByCodeAndChannel(
+  MsgTemplateVO loadByCodeAndChannel(
       String templateCode, String channel, String locale, String tenantId);
 
   /**

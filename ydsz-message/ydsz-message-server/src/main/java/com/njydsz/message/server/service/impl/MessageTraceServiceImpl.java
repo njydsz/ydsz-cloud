@@ -14,8 +14,9 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.message.infra.entity.MsgTraceDO;
-import com.njydsz.message.infra.repository.MsgTraceRepository;
+import com.njydsz.message.domain.query.MsgTraceQuery;
+import com.njydsz.message.domain.repository.MsgTraceRepository;
+import com.njydsz.message.domain.vo.MsgTraceVO;
 import com.njydsz.message.server.service.core.MessageTraceService;
 
 /**
@@ -49,7 +50,7 @@ public class MessageTraceServiceImpl implements MessageTraceService {
       return;
     }
     try {
-      MsgTraceDO trace = new MsgTraceDO();
+      MsgTraceVO trace = new MsgTraceVO();
       trace.setMsgId(msgId);
       trace.setTraceId(TracerUtils.getOrCreateTraceId());
       trace.setNode(node);
@@ -61,7 +62,7 @@ public class MessageTraceServiceImpl implements MessageTraceService {
       if (extra != null && !extra.isEmpty()) {
         trace.setExtra(YdszJson.toJson(extra));
       }
-      msgTraceRepository.insert(trace);
+      msgTraceRepository.save(trace);
       log.debug("[Trace] 记录轨迹: msgId={} node={} status={}", msgId, node, status);
     } catch (Exception e) {
       log.warn("[Trace] 记录轨迹失败,不影响主流程: msgId={} node={} err={}", msgId, node, e.getMessage());
@@ -75,35 +76,33 @@ public class MessageTraceServiceImpl implements MessageTraceService {
   }
 
   @Override
-  public List<MsgTraceDO> getTraceByMsgId(String msgId) {
+  public List<MsgTraceVO> getTraceByMsgId(String msgId) {
     if (!StringUtils.hasText(msgId)) {
       return List.of();
     }
-    LambdaQueryWrapper<MsgTraceDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(MsgTraceDO::getMsgId, msgId).orderByAsc(MsgTraceDO::getEventAt);
-    return msgTraceRepository.selectList(wrapper);
+    MsgTraceQuery query = new MsgTraceQuery();
+    query.setMsgId(msgId);
+    return msgTraceRepository.findList(query);
   }
 
   @Override
-  public List<MsgTraceDO> getTraceByTraceId(String traceId) {
+  public List<MsgTraceVO> getTraceByTraceId(String traceId) {
     if (!StringUtils.hasText(traceId)) {
       return List.of();
     }
-    LambdaQueryWrapper<MsgTraceDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(MsgTraceDO::getTraceId, traceId).orderByAsc(MsgTraceDO::getEventAt);
-    return msgTraceRepository.selectList(wrapper);
+    MsgTraceQuery query = new MsgTraceQuery();
+    query.setTraceId(traceId);
+    return msgTraceRepository.findList(query);
   }
 
   @Override
-  public List<MsgTraceDO> getTraceByBiz(String bizType, String bizId) {
+  public List<MsgTraceVO> getTraceByBiz(String bizType, String bizId) {
     if (!StringUtils.hasText(bizType) || !StringUtils.hasText(bizId)) {
       return List.of();
     }
-    LambdaQueryWrapper<MsgTraceDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper
-        .eq(MsgTraceDO::getBizType, bizType)
-        .eq(MsgTraceDO::getBizId, bizId)
-        .orderByAsc(MsgTraceDO::getEventAt);
-    return msgTraceRepository.selectList(wrapper);
+    MsgTraceQuery query = new MsgTraceQuery();
+    query.setBizType(bizType);
+    query.setBizId(bizId);
+    return msgTraceRepository.findList(query);
   }
 }

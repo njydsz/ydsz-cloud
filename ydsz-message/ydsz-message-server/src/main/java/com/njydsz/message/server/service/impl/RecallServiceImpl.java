@@ -13,14 +13,14 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.message.infra.entity.MsgTraceDO;
-import com.njydsz.message.infra.entity.MsgLog;
-import com.njydsz.message.infra.entity.MsgNotification;
+import com.njydsz.message.domain.vo.MsgTraceVO;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.domain.vo.MsgNotificationVO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.event.MessageRecalledEvent;
 import com.njydsz.message.domain.repository.MsgLogRepository;
-import com.njydsz.message.infra.repository.MsgNotificationRepository;
+import com.njydsz.message.domain.repository.MsgNotificationRepository;
 import com.njydsz.message.server.channel.recall.RecallChannel;
 import com.njydsz.message.server.channel.recall.RecallChannelRouter;
 import com.njydsz.message.server.event.DomainEventPublisher;
@@ -89,7 +89,7 @@ public class RecallServiceImpl implements RecallService {
           .message("用户 ID 与通知 ID 不能为空")
           .build();
     }
-    MsgNotification n = msgNotificationRepository.selectById(notificationId);
+    MsgNotificationVO n = msgNotificationRepository.selectById(notificationId);
     if (n == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -130,7 +130,7 @@ public class RecallServiceImpl implements RecallService {
     }
     messageLogService.markRecalled(logId);
     // P0-4: 查找消息并通过 WebSocket 推送撤回事件
-    MsgLog logDO = msgLogRepository.selectById(logId);
+    MsgLogVO logDO = msgLogRepository.selectById(logId);
     if (logDO != null && StringUtils.hasText(logDO.getReceiver())) {
       // P2-19: 推送撤回事件（携带消息 ID/撤回原因/时间戳）
       messageRecallPushService.pushRecall(logDO.getReceiver(), logDO.getMsgId(), "消息撤回");
@@ -161,9 +161,9 @@ public class RecallServiceImpl implements RecallService {
           .build();
     }
     // 按 msgId 查询消息日志
-    MsgLog logDO =
+    MsgLogVO logDO =
         msgLogRepository.selectOne(
-            new LambdaQueryWrapper<MsgLog>().eq(MsgLog::getMsgId, msgId).last("LIMIT 1"));
+            new LambdaQueryWrapper<MsgLogVO>().eq(MsgLog::getMsgId, msgId).last("LIMIT 1"));
     if (logDO == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -246,7 +246,7 @@ public class RecallServiceImpl implements RecallService {
     int notifCount =
         msgNotificationRepository.update(
             null,
-            new LambdaUpdateWrapper<MsgNotification>()
+            new LambdaUpdateWrapper<MsgNotificationVO>()
                 .eq(MsgNotification::getBizType, bizType)
                 .eq(MsgNotification::getBizId, bizId)
                 .eq(MsgNotification::getRecallStatus, RecallStatusEnum.NONE.name())
@@ -256,7 +256,7 @@ public class RecallServiceImpl implements RecallService {
     int logCount =
         msgLogRepository.update(
             null,
-            new LambdaUpdateWrapper<MsgLog>()
+            new LambdaUpdateWrapper<MsgLogVO>()
                 .eq(MsgLog::getBizType, bizType)
                 .eq(MsgLog::getBizId, bizId)
                 .eq(MsgLog::getRecallStatus, RecallStatusEnum.NONE.name())
