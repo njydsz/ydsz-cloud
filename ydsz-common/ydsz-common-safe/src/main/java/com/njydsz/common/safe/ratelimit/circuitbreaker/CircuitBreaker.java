@@ -80,7 +80,8 @@ public class CircuitBreaker {
                 } catch (RuntimeException e) {
                   throw e;
                 } catch (Exception e) {
-                  throw new RuntimeException(e);
+                  // 受检异常包装为业务运行时异常以适配 Supplier 契约（云顶规范 11 章：禁止裸抛 RuntimeException/Exception）
+                  throw new CircuitBreakerExecutionException(e);
                 }
               });
       return RateLimitDecision.builder()

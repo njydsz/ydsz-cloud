@@ -293,10 +293,10 @@ public class SagaOrchestrator extends AbstractTransactionManager {
       if (cause instanceof Exception e) {
         throw e;
       }
-      throw new Exception(cause);
+      throw new TransactionException("SAGA step execution failed: " + step.getName(), cause);
     } catch (InterruptedException ie) {
       Thread.currentThread().interrupt();
-      throw new Exception("SAGA step interrupted: " + step.getName(), ie);
+      throw new TransactionException("SAGA step interrupted: " + step.getName(), ie);
     }
   }
 

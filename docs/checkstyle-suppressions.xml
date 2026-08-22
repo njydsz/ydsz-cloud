@@ -74,8 +74,13 @@
     <!--    自研基础库（引擎/工具/配置/异常/领域模型） -->
     <!--    为算法密集型实现，魔法数提取与复杂度重构   -->
     <!--    列入专项技术债；IllegalImport 等红线保留   -->
+    <!--    IllegalThrows 已移出通用豁免：自 v3.4 起    -->
+    <!--    各 common 模块须使用业务异常（如            -->
+    <!--    TransactionException/CircuitBreakerExecutionException）， -->
+    <!--    仅 json/excel/util/core/cache/redis/thread  -->
+    <!--    算法模块保留上方点豁免                     -->
     <!-- ============================================ -->
     <suppress files="ydsz-common-[a-z]+[\\/]src[\\/]main[\\/]"
-              checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows"/>
+              checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber"/>
 
 </suppressions>
