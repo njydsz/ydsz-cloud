@@ -20,6 +20,31 @@ public class ProcessResult {
   /** 错误信息 */
   private String errorMessage;
 
+  // 显式编写 getter/setter 以避免 Lombok 处理差异
+  public boolean isSuccess() {
+    return success;
+  }
+
+  public void setSuccess(boolean success) {
+    this.success = success;
+  }
+
+  public String getResult() {
+    return result;
+  }
+
+  public void setResult(String result) {
+    this.result = result;
+  }
+
+  public String getErrorMessage() {
+    return errorMessage;
+  }
+
+  public void setErrorMessage(String errorMessage) {
+    this.errorMessage = errorMessage;
+  }
+
   /**
    * 创建成功结果
    *

@@ -12,6 +12,7 @@
 | **类型** | 公共依赖库（可选引入） |
 | **作用** | 提供多租户运行时隔离能力（识别租户 → 注入隔离条件 → 传播上下文） |
 | **数据库无关** | 通过 JSqlParser SQL 改写实现，不绑定具体数据库 |
+| **源文件数** | 24 |
 | **强依赖** | `ydsz-common-core`（TTL ThreadLocal）、`ydsz-common-jdbc`（InnerInterceptor SPI + MpBaseEntity + JSqlParser）、`ydsz-common-util`（AuthInfoUtils）、`ydsz-common-domain` |
 | **可选依赖** | `ydsz-common-redis`、`ydsz-common-feign`、`ydsz-common-thread`、`spring-boot-starter-web`、`spring-boot-health` |
 | **启用条件** | `ydsz.tenant.enabled=true`（默认 false，不启用时无任何租户逻辑） |
@@ -414,6 +415,7 @@ com.njydsz.common.tenant/
 
 ## 变更记录
 
+- **v1.10.1**（2026-08-18）：完善模块定位（新增源文件数 24）；补充 `TenantHeaderContract`（Feign/WebFilter header 契约统一）和 `TenantPropertiesAnnotationPopulator`（BeanPostProcessor：注解扫描回填）文档；补全 `validation/` 包（`TenantIndexValidator` 启动时租户列索引校验）说明。
 - **v1.10.0**（2026-08-15）：架构瘦身与职责剥离。
   - **删除**：生命周期管理（5 类）、字段加密（2 类）、审计日志门面（1 类）、Provisioning 钩子（1 类）、PostgresRLSAdvisor（1 类）
   - **简化**：数据源解析器 NamingConventionResolver + ConfigurationResolver 合并为单一接口（内置实现）

@@ -1,6 +1,5 @@
 package com.njydsz.cronjob.domain.job;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,7 +11,6 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class MapTask {
 
   /** 子任务名称 */
@@ -20,4 +18,27 @@ public class MapTask {
 
   /** 子任务参数 JSON */
   private String taskParams;
+
+  // 显式构造器（避免 Lombok 处理差异）
+  public MapTask(String taskName, String taskParams) {
+    this.taskName = taskName;
+    this.taskParams = taskParams;
+  }
+
+  // 显式 getter/setter
+  public String getTaskName() {
+    return taskName;
+  }
+
+  public void setTaskName(String taskName) {
+    this.taskName = taskName;
+  }
+
+  public String getTaskParams() {
+    return taskParams;
+  }
+
+  public void setTaskParams(String taskParams) {
+    this.taskParams = taskParams;
+  }
 }

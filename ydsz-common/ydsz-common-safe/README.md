@@ -2,7 +2,7 @@
 
 > YDSZ 统一安全防护基座（L5 业务服务层）
 
-提供 XSS 防护、CSRF 双模式防护、敏感数据脱敏、限流（令牌桶 + 熔断器）、AES-256-GCM 加密、API 签名验证、IP 黑白名单、安全事件自动响应、Micrometer 指标、安全审计日志等全栈 Web 安全能力，是 YDSZ 项目所有业务服务的统一安全基座。
+提供 XSS 防护、CSRF 双模式防护、敏感数据脱敏、限流（令牌桶 + 熔断器）、AES-256-GCM 加密、API 签名验证、IP 黑白名单、安全事件自动响应、Micrometer 指标、安全审计日志、SSRF 防护、二级认证、幂等性等全栈 Web 安全能力，是 YDSZ 项目所有业务服务的统一安全基座。
 
 ## 模块定位
 
@@ -11,8 +11,9 @@
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 为所有 Web 服务提供端到端的安全防护能力（过滤器链 + AOP + 注解） |
+| **源文件数** | 117 |
 | **依赖** | common-core、common-json、common-redis、common-util、common-exception、common-cache；可选依赖 micrometer-core、mybatis-plus-core、spring-boot-actuator、spring-boot-health |
-| **版本** | 1.0.0 |
+| **版本** | 1.2.1 |
 
 ## 核心能力
 
@@ -30,6 +31,10 @@
 | `EscapeUtils` | HTML / JS / CSS / URL / XML 转义工具 |
 | `XssValidator` / `@Xss` | 参数校验器与注解 |
 | `SafeJsonModule` | YdszJson 模块注册 |
+| `JsonBodyXssCleaner` | JSON Body XSS 清洗器（内部核心） |
+| `XssAutoConfiguration` | XSS 自动配置 |
+| `SafeXssProperties` | XSS 配置属性（`ydsz.safe.xss.*`） |
+| `XssFilterModeCondition` / `XssConverterModeCondition` | XSS 模式条件判断（filter / converter 互斥） |
 
 ### 2. CSRF 防护
 
@@ -52,8 +57,13 @@
 | `SensitiveDataAdvice` | 返回值脱敏切面（支持基于角色的动态脱敏） |
 | `SensitiveDataProcessor` | 脱敏处理器（带缓存快速跳过无注解类） |
 | `SensitiveDataSerializer` | Jackson 序列化器 |
-| `SensitiveUtil` | 脱敏工具 |
+| `SensitiveUtil` / `SensitiveUtils` | 脱敏工具类 |
 | `ColumnDesensitizationExecutor` | 列级脱敏执行器 |
+| `ColumnDesensitizationRule` | 列脱敏规则 |
+| `ColumnDesensitizationContext` | 列脱敏上下文 |
+| `@Sensitive` | 敏感数据标注注解（字段级） |
+| `SensitiveDataProperties` | 敏感数据配置属性 |
+| `SensitiveDataProcessingException` | 敏感数据处理异常 |
 
 ### 4. 限流（多维度 + 多算法）
 
@@ -64,12 +74,20 @@
 | `RateLimitManager` | 限流管理器（核心调度） |
 | `RateLimiter` | 限流器接口 |
 | `RateLimiterFactory` | 限流器工厂 |
+| `TokenBucketLimiter` | 令牌桶限流器实现 |
 | `ClusterRateLimiter` / `RedisClusterRateLimiter` | 集群限流（Redis） |
 | `CircuitBreaker` | 限流熔断器 |
+| `AbstractCircuitBreaker` | 熔断器抽象基类 |
 | `RateLimitRuleCache` | 规则缓存 |
 | `RateLimitMetricsCollector` | Micrometer 指标采集 |
 | `RateLimitService` | 限流服务封装 |
 | `RateLimitResponseDecorator` | 限流响应装饰器（标准化限流拒绝响应体） |
+| `RateLimitDecision` | 限流决策结果 |
+| `RateLimitContext` | 限流上下文 |
+| `RateLimitAutoConfiguration` | 限流自动配置 |
+| `RateLimitProperties` | 限流配置属性 |
+| `CircuitBreakerProperties` | 熔断器配置属性 |
+| `HotParamRule` | 热点参数规则 |
 
 **支持的限流算法**（`RateLimitAlgorithm` 枚举）：`TOKEN_BUCKET`（令牌桶）。
 
@@ -89,6 +107,7 @@
 | `NonceCache` | Nonce 缓存（防重放攻击） |
 | `ApiSignatureFilter` | API 签名验证过滤器（timestamp + nonce + HMAC-SHA256） |
 | `ApiSignatureProperties` | API 签名配置 |
+| `ApiSignatureAutoConfiguration` | API 签名自动配置 |
 
 ### 7. 字段级加密（MyBatis 集成）
 
@@ -99,6 +118,7 @@
 | `EncryptTypeHandler` | MyBatis TypeHandler（自动加解密） |
 | `DecryptFailureStrategy` | 解密失败策略（THROW / RETURN_MASKED / RETURN_ORIGINAL） |
 | `FieldEncryptionAutoConfiguration` | 字段加密自动配置 |
+| `EncryptFieldProperties` | 字段加密配置属性 |
 
 ### 8. IP 访问控制
 
@@ -119,6 +139,7 @@
 | `SecurityAlertListener` | 安全告警监听器接口 |
 | `DefaultSecurityAlertLogger` | 默认告警日志实现 |
 | `AutoBlockProperties` | 自动封禁配置（阈值 + 窗口） |
+| `SafeAlertProperties` | 安全告警配置属性 |
 
 ### 10. 密码强度校验
 
@@ -126,29 +147,52 @@
 |---|---|
 | `PasswordStrengthValidator` | 密码强度校验器（长度 + 字符种类 + 弱密码字典 + 序列检测） |
 
-### 12. 安全响应头
+### 11. 安全响应头
 
 | 类 | 说明 |
 |---|---|
 | `SecurityHeaderFilter` | 安全响应头过滤器（7 种安全头） |
 | `BaseSecurityHeaderFilter` | 安全响应头基类过滤器 |
 | `SecurityHeaderProperties` | 安全头配置 |
+| `SecurityHeaderConfigurer` | 安全头配置器 |
 
-### 13. 可观测性
+### 12. 可观测性
 
 | 类 | 说明 |
 |---|---|
 | `SafeMetrics` | Micrometer 指标采集（XSS / SQL / CSRF / 限流 / IP 封禁 Counter + Filter Timer） |
+| `SafeMetricsDoc` | 指标文档（指标名/类型/描述） |
 | `SecurityAuditLogger` | 安全审计日志（结构化 JSON + traceId 关联） |
 
-### 14. SSRF 防护
+### 13. SSRF 防护
 
 | 类 | 说明 |
 |---|---|
 | `SsrfHttpRequestInterceptor` | HTTP 请求拦截器（RestTemplate / WebClient 调用前校验目标地址，阻断内网 IP / 非法协议） |
 | `HttpConnectionValidator` | 连接验证器（目标地址私有 IP 段 / 回环地址 / 链路本地地址检测，抛出 `SsrfBlockedException`） |
 
-### 15. 工具类与开关注解
+### 14. 二级认证
+
+| 类 / 注解 | 说明 |
+|---|---|
+| `@SecondaryAuth` | 场景化二级认证注解（标记操作需通过二级认证后才能执行，支持场景隔离） |
+| `@SensitiveOperation` | 敏感操作标注注解 |
+| `@SensitiveLevel` | 敏感级别枚举 |
+
+**典型场景：** `password_change`（修改密码前验证）、`role_assign`（分配角色前验证）、`data_export`（数据导出前验证）、`tenant_config`（租户配置变更前验证）。
+
+### 15. 幂等性
+
+| 类 / 注解 | 说明 |
+|---|---|
+| `@Idempotent` | 幂等性注解（基于 Redis SETNX 或本地 ConcurrentHashMap 实现分布式/本地幂等校验） |
+| `IdempotentInterceptor` | 幂等性拦截器（HandlerInterceptor，拦截标注 `@Idempotent` 的方法） |
+| `IdempotentStore` | 幂等存储接口 |
+| `InMemoryIdempotentStore` | 内存幂等存储实现 |
+| `IdempotentAutoConfiguration` | 幂等性自动配置 |
+| `IdempotentException` | 幂等异常 |
+
+### 16. 工具类与开关注解
 
 | 类 / 注解 | 说明 |
 |---|---|
@@ -156,6 +200,7 @@
 | `CachedBodyHttpServletRequestWrapper` | 请求体缓存包装器（多次读取） |
 | `SafeFilterChainBuilder` | 安全过滤器链编程式构建器（动态注册过滤器 + 排序） |
 | `@EnableYdszSafe` | 启用 ydsz 安全模块自动装配（显式开启所有过滤器和 AOP 切面） |
+| `SafeConfiguration` | 安全模块核心自动配置（`@AutoConfiguration`，`@EnableScheduling`） |
 
 ## 接入方式
 
@@ -292,8 +337,8 @@ public class Application {
 | `mode` | BLACKLIST | 访问控制模式：`BLACKLIST` / `WHITELIST` |
 | `redis-key-prefix` | safe:ip: | Redis Key 前缀 |
 | `default-block-seconds` | 3600 | 默认封禁时长（秒） |
-| `local-cache-size` | 10000 | 本地缓存大小 |
-| `local-cache-ttl-seconds` | 10 | 本地缓存 TTL（秒） |
+| `local-cache-size` | `10000` | 本地缓存大小 |
+| `local-cache-ttl-seconds` | `10` | 本地缓存 TTL（秒） |
 | `static-blacklist` | 空 | 静态黑名单（启动时加载，支持 IP 和 CIDR） |
 | `static-whitelist` | 空 | 静态白名单 |
 | `excludes` | 空 | 排除路径列表 |
@@ -473,6 +518,32 @@ ydsz:
         - /actuator/**
 ```
 
+### 7. 二级认证
+
+```java
+import com.njydsz.common.safe.annotation.SecondaryAuth;
+import com.njydsz.common.safe.annotation.SensitiveLevel;
+
+@SecondaryAuth(scene = "password_change", level = SensitiveLevel.HIGH)
+@PutMapping("/api/v1/user/password")
+public YdszResponse<Void> changePassword(@RequestBody ChangePasswordDTO dto) {
+    // 需通过二级认证（密码确认）后才能执行
+}
+```
+
+### 8. 幂等性
+
+```java
+import com.njydsz.common.safe.idempotent.Idempotent;
+import java.util.concurrent.TimeUnit;
+
+@PostMapping("/orders")
+@Idempotent(key = "#request.orderNo", expire = 300, timeUnit = TimeUnit.SECONDS)
+public YdszResponse<OrderVO> createOrder(@RequestBody CreateOrderRequest request) {
+    // 同一 orderNo 在 300 秒内只执行一次
+}
+```
+
 ## SPI 扩展点
 
 | SPI 接口 | 用途 | 实现方 |
@@ -485,6 +556,7 @@ ydsz:
 | `ClusterRateLimiter` | 集群限流器接口 | `RedisClusterRateLimiter`（基于 StringRedisTemplate） |
 | `RateLimiter` | 限流算法接口 | `TokenBucketLimiter`（令牌桶） |
 | `SecurityAlertListener` | 安全告警监听器接口 | `DefaultSecurityAlertLogger` |
+| `IdempotentStore` | 幂等存储接口 | `InMemoryIdempotentStore` |
 
 ## 健康检查
 
@@ -523,9 +595,12 @@ ydsz:
 8. **宿主需开启 @EnableScheduling**：`NonceCache` 防重放清理任务依赖 `@EnableScheduling`（本模块 `SafeConfiguration` 已标注 `@EnableScheduling`）。
 9. **MyBatis 字段加密**：使用 `@EncryptField` 时实体类必须 `@TableName(autoResultMap = true)`，字段必须 `@TableField(typeHandler = EncryptTypeHandler.class)`。
 10. **可选依赖**：`micrometer-core`、`mybatis-plus-core`、`spring-boot-actuator`、`spring-boot-health` 均为 optional，未引入时对应能力自动降级或不可用。
+11. **二级认证场景隔离**：`@SecondaryAuth` 支持不同业务场景独立验证（如 `password_change` / `role_assign`），与 `@SensitiveOperation`（全局单一验证）形成互补。
+12. **幂等性实现**：`@Idempotent` 基于 Redis SETNX 或本地 ConcurrentHashMap 实现，返回 429 Too Many Requests 表示重复请求。
 
 ## 变更记录
 
+- **v1.3.0**（2026-08-18）：新增二级认证（`@SecondaryAuth` / `@SensitiveOperation` / `@SensitiveLevel`）、幂等性（`@Idempotent` / `IdempotentInterceptor` / `IdempotentStore` / `IdempotentAutoConfiguration`）；新增限流决策结果（`RateLimitDecision`）、限流上下文（`RateLimitContext`）、限流自动配置（`RateLimitAutoConfiguration`）；新增熔断器抽象基类（`AbstractCircuitBreaker`）、熔断器配置（`CircuitBreakerProperties`）、热点参数规则（`HotParamRule`）；新增字段加密配置（`EncryptFieldProperties`）、API 签名自动配置（`ApiSignatureAutoConfiguration`）；新增敏感数据配置（`SensitiveDataProperties`）、敏感数据处理异常（`SensitiveDataProcessingException`）；新增安全告警配置（`SafeAlertProperties`）；新增限流结果枚举（`RateLimitResult`）；新增列脱敏规则/上下文（`ColumnDesensitizationRule` / `ColumnDesensitizationContext`）；新增 `ConfigRuleProvider` 限流规则提供者。
 - **v1.2.1**（2026-08-17）：补全 SSRF 防护（`SsrfHttpRequestInterceptor` / `HttpConnectionValidator`）、`SafeFilterChainBuilder`（过滤器链构建器）、`RateLimitResponseDecorator`（限流响应装饰器）文档
 - **v1.2.0**（2026-08-16）：删除低价值模块（BotDetection、Captcha）；SecurityEventRingBuffer 标记 @Deprecated；限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；配置前缀收敛（`ydsz.ratelimit` → `ydsz.safe.ratelimit`）；引入 Sentinel 限流扩展；建立度量标准（SLO/指标/热更新）；补全 FieldEncryptionService 测试。
 - **v1.1.0**（2026-08-16）：限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；配置前缀收敛（`ydsz.ratelimit` → `ydsz.safe.ratelimit`）；补全 FieldEncryptionService 测试。

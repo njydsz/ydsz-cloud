@@ -21,6 +21,7 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
 import com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
@@ -277,6 +278,16 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     }
     return subscriptionRepository.findByInstanceOrderByCreatedAtDesc(instanceId).stream()
         .map(converter::entityToDO).toList();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
+   */
+  @Override
+  public List<FlowEventSubscriptionVO> listByInstanceVO(String instanceId) {
+    return converter.flowEventSubscriptionListToVO(listByInstance(instanceId));
   }
 
   @Override

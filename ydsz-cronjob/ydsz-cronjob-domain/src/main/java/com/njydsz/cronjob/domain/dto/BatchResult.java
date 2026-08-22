@@ -48,10 +48,17 @@ public class BatchResult<T> {
   /** 明细列表 */
   private List<ItemResult<T>> details;
 
+  // 显式 getter/setter（避免 Lombok @Data 差异）
+  public int getTotal() { return total; }
+  public void setTotal(int total) { this.total = total; }
+  public int getSuccessCount() { return successCount; }
+  public void setSuccessCount(int successCount) { this.successCount = successCount; }
+  public int getFailureCount() { return failureCount; }
+  public void setFailureCount(int failureCount) { this.failureCount = failureCount; }
+  public List<ItemResult<T>> getDetails() { return details; }
+  public void setDetails(List<ItemResult<T>> details) { this.details = details; }
+
   /** 单个批量操作结果。 */
-  @Data
-  @NoArgsConstructor
-  @AllArgsConstructor
   public static class ItemResult<T> {
     /** 操作项标识 */
     private T item;
@@ -62,22 +69,48 @@ public class BatchResult<T> {
     /** 失败原因（成功时为 null） */
     private String error;
 
+    // 显式 getter/setter
+    public T getItem() { return item; }
+    public void setItem(T item) { this.item = item; }
+    public boolean isSuccess() { return success; }
+    public void setSuccess(boolean success) { this.success = success; }
+    public String getError() { return error; }
+    public void setError(String error) { this.error = error; }
+
     public static <T> ItemResult<T> success(T item) {
-      return new ItemResult<>(item, true, null);
+      ItemResult<T> r = new ItemResult<>();
+      r.setItem(item);
+      r.setSuccess(true);
+      r.setError(null);
+      return r;
     }
 
     public static <T> ItemResult<T> failure(T item, String error) {
-      return new ItemResult<>(item, false, error);
+      ItemResult<T> r = new ItemResult<>();
+      r.setItem(item);
+      r.setSuccess(false);
+      r.setError(error);
+      return r;
     }
   }
 
   /** 构造成功的批量结果（全部成功）。 */
   public static <T> BatchResult<T> allSuccess(int total) {
-    return new BatchResult<>(total, total, 0, Collections.emptyList());
+    BatchResult<T> r = new BatchResult<>();
+    r.setTotal(total);
+    r.setSuccessCount(total);
+    r.setFailureCount(0);
+    r.setDetails(Collections.emptyList());
+    return r;
   }
 
   /** 构造批量结果（含成功数，无明细）。 */
   public static <T> BatchResult<T> of(int total, int successCount) {
-    return new BatchResult<>(total, successCount, total - successCount, Collections.emptyList());
+    BatchResult<T> r = new BatchResult<>();
+    r.setTotal(total);
+    r.setSuccessCount(successCount);
+    r.setFailureCount(total - successCount);
+    r.setDetails(Collections.emptyList());
+    return r;
   }
 }

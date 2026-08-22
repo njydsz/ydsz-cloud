@@ -25,6 +25,8 @@ import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
+import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
+import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
@@ -110,6 +112,16 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
   /** P2-5: 离线代理自动转发（@Lazy 避免循环依赖） */
   @Lazy private final FlowOfflineAutoForwardService offlineAutoForwardService;
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>符合 DDD 分层规范：DTO→DO 转换逻辑封装在 Service 层。
+   */
+  @Override
+  public FlowDelegateAuthDO postDtoToEntity(FlowDelegateAuthPostDTO dto) {
+    return converter.postDtoToEntity(dto);
+  }
 
   /**
    * 创建委派授权
@@ -373,6 +385,27 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     return authRepository.selectByDelegate(tid, delegateUserId, status).stream()
         .map(converter::entityToDO)
         .toList();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
+   */
+  @Override
+  public List<FlowDelegateAuthVO> listMineVO(String ownerUserId, String tenantId, String status) {
+    return converter.flowDelegateAuthListToVO(listMine(ownerUserId, tenantId, status));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
+   */
+  @Override
+  public List<FlowDelegateAuthVO> listAsDelegateVO(
+      String delegateUserId, String tenantId, String status) {
+    return converter.flowDelegateAuthListToVO(listAsDelegate(delegateUserId, tenantId, status));
   }
 
   /**

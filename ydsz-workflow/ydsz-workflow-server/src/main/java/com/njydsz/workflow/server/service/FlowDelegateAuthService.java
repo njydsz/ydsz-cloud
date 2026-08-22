@@ -3,6 +3,7 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
 
@@ -15,6 +16,17 @@ import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
  * @since 1.0.0
  */
 public interface FlowDelegateAuthService {
+
+  /**
+   * 将授权 Post DTO 转换为 DO 实体
+   *
+   * <p>符合 DDD 分层规范：DTO→DO 转换逻辑封装在 Service 层。
+   *
+   * @param dto 授权 Post DTO
+   * @return 授权 DO 实体
+   * @since 1.0.0
+   */
+  FlowDelegateAuthDO postDtoToEntity(FlowDelegateAuthPostDTO dto);
 
   /**
    * 创建授权

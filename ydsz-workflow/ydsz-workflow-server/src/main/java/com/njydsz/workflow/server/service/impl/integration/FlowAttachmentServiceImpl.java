@@ -17,6 +17,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowAttachmentDTO;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
+import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.domain.repository.FlowAttachmentRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAttachmentDO;
@@ -187,6 +188,26 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
     return attachmentRepository.findByInstanceId(instanceId).stream()
         .map(converter::entityToDO)
         .collect(Collectors.toList());
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
+   */
+  @Override
+  public List<FlowAttachmentVO> listByTaskVO(String taskId) {
+    return converter.flowAttachmentListToVO(listByTask(taskId));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
+   */
+  @Override
+  public List<FlowAttachmentVO> listByInstanceVO(String instanceId) {
+    return converter.flowAttachmentListToVO(listByInstance(instanceId));
   }
 
   @Override

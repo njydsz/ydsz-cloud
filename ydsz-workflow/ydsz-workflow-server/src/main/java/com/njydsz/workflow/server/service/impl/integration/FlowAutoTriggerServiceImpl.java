@@ -17,6 +17,7 @@ import com.njydsz.workflow.domain.repository.FlowAutoTriggerRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
+import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
 import com.njydsz.workflow.infra.entity.FlowAutoTriggerDO;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
@@ -307,6 +308,16 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
   public List<FlowAutoTriggerDO> listAll() {
     return autoTriggerRepository.findAllOrderBySort().stream()
         .map(converter::entityToDO).toList();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
+   */
+  @Override
+  public List<FlowAutoTriggerVO> listAllVO() {
+    return converter.flowAutoTriggerListToVO(listAll());
   }
 
   @Override

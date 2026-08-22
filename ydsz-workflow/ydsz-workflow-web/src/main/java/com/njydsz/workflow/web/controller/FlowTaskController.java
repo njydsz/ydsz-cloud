@@ -35,7 +35,6 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.workflow.WorkflowFacade;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
 import com.njydsz.workflow.domain.query.FlowCcQuery;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
@@ -951,7 +950,7 @@ public class FlowTaskController {
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
   @Operation(summary = "创建长期授权委派")
   public YdszResponse<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthPostDTO dto) {
-    var auth = WorkflowConverter.INSTANT.postDtoToEntity(dto);
+    var auth = delegateAuthService.postDtoToEntity(dto);
     if (auth.getOwnerUserId() == null) {
       auth.setOwnerUserId(AuthContextUtils.getUserId());
     }
@@ -1020,8 +1019,7 @@ public class FlowTaskController {
     String ownerId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     return YdszResponse.success(
-        WorkflowConverter.INSTANT.flowDelegateAuthListToVO(
-            delegateAuthService.listMine(ownerId, tenantId, status)));
+        delegateAuthService.listMineVO(ownerId, tenantId, status));
   }
 
   /**
@@ -1037,8 +1035,7 @@ public class FlowTaskController {
     String delegateUserId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     return YdszResponse.success(
-        WorkflowConverter.INSTANT.flowDelegateAuthListToVO(
-            delegateAuthService.listAsDelegate(delegateUserId, tenantId, status)));
+        delegateAuthService.listAsDelegateVO(delegateUserId, tenantId, status));
   }
 
   // ============== P0-3: 抄送中心 ==============

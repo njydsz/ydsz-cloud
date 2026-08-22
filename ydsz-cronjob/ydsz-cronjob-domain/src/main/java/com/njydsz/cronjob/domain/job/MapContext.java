@@ -40,6 +40,71 @@ public class MapContext {
   /** 结果存储（初始容量 64，减少大量分片结果下的 rehash 开销） */
   private Map<String, Object> results = new HashMap<>(64);
 
+  // 显式 getter/setter（避免 Lombok 处理差异）
+  public String getJobId() {
+    return jobId;
+  }
+
+  public void setJobId(String jobId) {
+    this.jobId = jobId;
+  }
+
+  public String getLogId() {
+    return logId;
+  }
+
+  public void setLogId(String logId) {
+    this.logId = logId;
+  }
+
+  public String getJobKey() {
+    return jobKey;
+  }
+
+  public void setJobKey(String jobKey) {
+    this.jobKey = jobKey;
+  }
+
+  public String getTaskName() {
+    return taskName;
+  }
+
+  public void setTaskName(String taskName) {
+    this.taskName = taskName;
+  }
+
+  public String getTaskParams() {
+    return taskParams;
+  }
+
+  public void setTaskParams(String taskParams) {
+    this.taskParams = taskParams;
+  }
+
+  public boolean isRoot() {
+    return root;
+  }
+
+  public void setRoot(boolean root) {
+    this.root = root;
+  }
+
+  public List<MapTask> getSubTasks() {
+    return subTasks;
+  }
+
+  public void setSubTasks(List<MapTask> subTasks) {
+    this.subTasks = subTasks;
+  }
+
+  public Map<String, Object> getResults() {
+    return results;
+  }
+
+  public void setResults(Map<String, Object> results) {
+    this.results = results;
+  }
+
   /**
    * 添加子任务
    *
