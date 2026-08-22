@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -32,7 +33,7 @@ import com.njydsz.common.docs.exception.DocumentExceptionCode;
 @Slf4j
 @Component
   // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
-@ConditionalOnClass(name = "org.apache.pdfbox.pdmodel.PDDocument")
+@ConditionalOnClass(name = "org.apache.pdfbox.Loader")
   // CHECKSTYLE.ON: RegexpSinglelineJava
 public class PdfBoxWatermarkApplier implements PdfWatermarkApplier {
 
@@ -68,7 +69,7 @@ public class PdfBoxWatermarkApplier implements PdfWatermarkApplier {
       return pdfBytes;
     }
     try (InputStream is = new ByteArrayInputStream(pdfBytes);
-        PDDocument document = PDDocument.load(is);
+        PDDocument document = Loader.loadPDF(is);
         ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
       for (PDPage page : document.getPages()) {
         addPdfWatermarkPage(document, page, watermarkText);
@@ -94,7 +95,7 @@ public class PdfBoxWatermarkApplier implements PdfWatermarkApplier {
     PDPageContentStream contentStream =
         new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true);
     try {
-      contentStream.setFont(PDType1Font.OBLIQUE, WATERMARK_FONT_SIZE);
+      contentStream.setFont(PDType1Font.HELVETICA, WATERMARK_FONT_SIZE);
       float pageSize = page.getMediaBox().getHeight();
       contentStream.setNonStrokingColor(WATERMARK_COLOR_RGB, WATERMARK_COLOR_RGB, WATERMARK_COLOR_RGB);
       contentStream.beginText();

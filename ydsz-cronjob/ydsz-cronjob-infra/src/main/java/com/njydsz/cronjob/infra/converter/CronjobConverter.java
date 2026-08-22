@@ -306,6 +306,11 @@ public interface CronjobConverter {
 
   List<JobLogVO> jobLogListToVO(List<JobLog> entities);
 
+  /** 单个 JobLog → JobLogVO（供 Repository 使用） */
+  default JobLogVO jobLogToVO(JobLog entity) {
+    return entityToVO(entity);
+  }
+
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
