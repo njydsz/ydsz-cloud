@@ -93,4 +93,24 @@ public interface FlowListenerPlugin {
    * @param ctx        事件上下文
    */
   default void onInstanceTerminated(String instanceId, String reason, FlowEventContext ctx) {}
+
+  /**
+   * 会签中单个办理人完成审批时回调
+   *
+   * <p>仅在会签场景（PARALLEL / 多人审批）下，某个办理人点击「通过」但 会签尚未全部完成时触发。业务方可通过此事件实时跟踪
+   * 会签进度（如展示"3/5 人已通过"），无需等全部会签完成再感知。
+   *
+   * @param instanceId    流程实例 ID
+   * @param taskId        当前办理人的任务 ID（运行时任务，非归档任务）
+   * @param nodeCode      节点编码
+   * @param personalUserId 当前办理人用户 ID
+   * @param action        操作类型（PASS / REJECT）
+   * @param approveFinished 当前已通过人数（含本次）
+   * @param approveCount  会签总人数
+   * @param variables     流程变量
+   * @param ctx           事件上下文
+   */
+  default void onTaskPersonalFinished(String instanceId, String taskId, String nodeCode,
+      String personalUserId, String action, int approveFinished, int approveCount,
+      Map<String, Object> variables, FlowEventContext ctx) {}
 }

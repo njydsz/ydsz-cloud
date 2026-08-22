@@ -104,6 +104,13 @@ public class FlowListenerPluginExecutor {
         plugin.onTaskStarted(instanceId, taskId, nodeCode, null, variables, ctx);
       case TASK_FINISHED ->
         plugin.onTaskFinished(instanceId, taskId, nodeCode, null, variables, ctx);
+      case TASK_PERSONAL_FINISHED ->
+        plugin.onTaskPersonalFinished(instanceId, taskId, nodeCode,
+            ctx != null ? ctx.getOperatorId() : null,
+            ctx != null ? ctx.getAction() : null,
+            ctx != null ? ctx.getApproveFinished() : 0,
+            ctx != null ? ctx.getApproveCount() : 0,
+            variables, ctx);
       case INSTANCE_STARTED ->
         plugin.onInstanceStarted(instanceId, variables, ctx);
       case INSTANCE_FINISHED ->

@@ -6,12 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.domain.event.OutboxEvent;
-import com.njydsz.message.domain.repository.OutboxEventRepository;
-import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgTraceDO;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.repository.OutboxEventRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
@@ -38,7 +35,6 @@ public class MessageSendTxService {
   private final MsgLogRepository msgLogRepository;
   private final OutboxEventRepository outboxEventRepository;
   private final MessageTraceService messageTraceService;
-  private final MessageConverter converter;
 
   /**
    * 同步发送的事务包装：落库 PENDING + 写 Outbox 在同一事务中。
@@ -47,23 +43,22 @@ public class MessageSendTxService {
    * {@link org.springframework.transaction.support.TransactionSynchronization#afterCommit()} 注册 Outbox 写入,
    * 而非回退到同步发布。
    *
-   * <p>同时记录轨迹节点 {@link MsgTraceDO.Node#PERSISTED}, 与 {@code MessageServiceImpl} 中其他 trace 节点保持一致。
+   * <p>同时记录轨迹节点 {@code "PERSISTED"}, 与 {@code MessageServiceImpl} 中其他 trace 节点保持一致。
    *
-   * @param logDO 消息日志领域实体(已构造, 未落库)
-   * @param outboxEvent Outbox 事件(可为 null, 为 null 时仅落库 msgLog)
+   * @param logVO 消息日志 VO（已构造，未落库）
+   * @param outboxEvent Outbox 事件（可为 null，为 null 时仅落库 msgLog）
    */
   @Transactional(propagation = Propagation.REQUIRED)
-  public void insertLogAndOutbox(MsgLog logDO, OutboxEvent outboxEvent) {
-    MsgLogVO vo = converter.entityToVO(logDO);
-    msgLogRepository.save(vo);
+  public void insertLogAndOutbox(MsgLogVO logVO, OutboxEvent outboxEvent) {
+    msgLogRepository.save(logVO);
     if (outboxEvent != null) {
       outboxEventRepository.save(outboxEvent);
     }
     messageTraceService.recordTrace(
-        logDO.getMsgId(),
-        MsgTraceDO.Node.PERSISTED,
+        logVO.getMsgId(),
+        "PERSISTED",
         "SUCCESS",
-        logDO.getChannel() != null ? logDO.getChannel().name() : null,
+        logVO.getChannel(),
         "PENDING_CREATED");
   }
 }

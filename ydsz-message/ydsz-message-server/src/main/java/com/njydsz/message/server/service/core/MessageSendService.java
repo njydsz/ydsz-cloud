@@ -102,7 +102,7 @@ public class MessageSendService {
       messageMetrics.recordException(channel, e.getClass().getSimpleName());
       List<String> fallbackChannels = resolveFallbackChannels(matchedRule, channel);
       if (!fallbackChannels.isEmpty()) {
-        MessageResult fallback = tryFallbackChain(logDO, fallbackChannels, cost);
+        MessageResult fallback = tryFallbackChain(logVO, fallbackChannels, cost);
         if (fallback != null) {
           return fallback;
         }

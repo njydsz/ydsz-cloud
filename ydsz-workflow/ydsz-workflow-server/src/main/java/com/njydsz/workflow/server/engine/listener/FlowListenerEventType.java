@@ -32,7 +32,10 @@ public enum FlowListenerEventType {
   INSTANCE_REJECTED("instanceRejected", "实例拒绝"),
 
   /** 流程实例被终止时 */
-  INSTANCE_TERMINATED("instanceTerminated", "实例终止");
+  INSTANCE_TERMINATED("instanceTerminated", "实例终止"),
+
+  /** 会签中单个办理人完成审批时（全部会签完成前，每通过一人触发一次） */
+  TASK_PERSONAL_FINISHED("taskPersonalFinished", "个人审批完成");
 
   private final String code;
   private final String desc;
