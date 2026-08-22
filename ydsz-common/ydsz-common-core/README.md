@@ -568,11 +568,11 @@ com.njydsz.common.core.config.CoreAutoConfiguration
 | `ydsz.core.max-page-size` | `Integer` | `1000` | 运行时最大每页记录数（1-5000） |
 | `ydsz.core.default-page-size` | `Integer` | `20` | 运行时默认每页记录数（1-5000） |
 | `ydsz.core.tenant-mdc-filter-order` | `Integer` | `HIGHEST_PRECEDENCE + 100` | 租户 MDC 过滤器优先级 |
-| `ydsz.core.default-locale` | `String` | `zh-CN` | 默认语言环境，用于 i18n 消息解析与 RequestContext 兜底（@since 1.11.0） |
-| `ydsz.core.api-version.default` | `String` | `v1` | 默认 API 版本号（@since 1.10.0） |
-| `ydsz.core.api-version.header` | `String` | `X-Api-Version` | 客户端声明版本的 HTTP 请求头名称（@since 1.10.0） |
-| `ydsz.core.api-version.routes.<version>` | `List<String>` | `[]` | 版本号到 URL 路径模式的路由规则（@since 1.10.0） |
-| `ydsz.core.feature-flags.<name>` | `Boolean` | `true` | 特性开关配置（如 `ydsz.core.feature-flags.user-register-sms`），未配置默认开启（@since 1.14.0） |
+| `ydsz.core.default-locale` | `String` | `zh-CN` | 默认语言环境，用于 i18n 消息解析与 RequestContext 兜底（@since 1.0.0） |
+| `ydsz.core.api-version.default` | `String` | `v1` | 默认 API 版本号（@since 1.0.0） |
+| `ydsz.core.api-version.header` | `String` | `X-Api-Version` | 客户端声明版本的 HTTP 请求头名称（@since 1.0.0） |
+| `ydsz.core.api-version.routes.<version>` | `List<String>` | `[]` | 版本号到 URL 路径模式的路由规则（@since 1.0.0） |
+| `ydsz.core.feature-flags.<name>` | `Boolean` | `true` | 特性开关配置（如 `ydsz.core.feature-flags.user-register-sms`），未配置默认开启（@since 1.0.0） |
 
 ### 配置示例
 

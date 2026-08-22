@@ -44,6 +44,7 @@
 |---|---|
 | `TraceFilter` | 链路追踪过滤器，生成或提取 traceId 注入 MDC 和 `RequestContext`，并在响应头返回；对传入的 traceId 进行长度（≤64）和字符集（`[a-zA-Z0-9_-]`）校验，防止日志注入；不在 finally 清理 MDC，统一由 `RequestContextCleanupFilter` 清理 |
 | `SecurityHeadersFilter` | 安全响应头过滤器（base 模块兜底实现），添加 `X-Content-Type-Options`、`X-Frame-Options`、`X-XSS-Protection`、`Strict-Transport-Security`、`Content-Security-Policy`、`Referrer-Policy` 等头部；通过 `@ConditionalOnMissingBean(name="securityHeaderFilter")` 保证与 web/app/safe 模块的同名过滤器互斥 |
+| `RequestBodySizeLimitFilter` | 请求体大小限制过滤器（基于 `BaseRequestProperties`），在请求到达 Controller 之前检查 Content-Length，超过阈值（默认 10MB）直接返回 413；仅对 POST/PUT/PATCH 请求生效；对于 chunked 编码请求由 ContentCachingFilter 二次校验 |
 | `RequestContextCleanupFilter` | 请求上下文清理过滤器，在 `finally` 块中清理 `RequestContext` 和 `MDC`，防止 ThreadLocal 内存泄漏；以 `LOWEST_PRECEDENCE` 注册，保证在所有 Filter 之后执行 |
 | `AbstractContentCachingFilter` | 请求体缓存过滤器抽象基类，包装请求为 `ContentCachingRequestWrapper` 支持多次读取；跳过 multipart 请求避免大文件上传 OOM；默认缓存容量 512KB，可由子类构造器自定义 |
 | `BaseRequestIdResponseFilter` | 请求 ID 响应头过滤器抽象基类，子类覆盖 `resolveRequestId(HttpServletRequest)` 提供不同 ID 来源；通过 `BaseTraceProperties.isResponseHeaderEnabled()` 控制是否生效 |
@@ -125,7 +126,16 @@
 | `InterceptorOrder` | Spring MVC Interceptor 执行顺序常量，定义各 Interceptor 的 `order` 值（自然数体系） |
 | `AdviceOrder` | ControllerAdvice 执行顺序常量，定义各 Advice 的 `order` 值（自然数体系） |
 | `DocConstants` | OpenAPI 文档常量，集中维护 `OPENAPI_VERSION`（3.0.3）、`DEFAULT_API_DOCS_PATH`、`DEFAULT_KNIFE4J_PATH`、`DEFAULT_GROUP_NAME`、`DEFAULT_API_VERSION`（1.0.0）、格式标识、配置属性前缀等 |
+| `HttpHeaderConstants` | HTTP 头部常量，集中定义框架使用的标准/自定义请求头名称（`X-Request-Id`、`X-User-Id`、`X-Tenant-Id`、`X-Access-Token` 等） |
 | `BaseAuthInfo` | 认证上下文信息抽象基类（继承 `YdszAuthInfo`），子类覆盖 `getServiceTypeCode()` 返回具体服务类型编码（"WEB"/"APP"/"API"），用于业务层区分请求来源 |
+
+### 13. API 版本控制基类
+
+| 类 | 说明 |
+|---|---|
+| `ApiVersion` | API 版本注解基类（可标注在 Controller 类或方法上），通过策略模式委托具体实现；由 `common-web` 模块的 `ApiVersion` 注解覆盖实现 URL 路径版本提取 |
+| `ApiVersionOpenApiCustomizer` | API 版本 OpenAPI 定制器，自动将版本信息注入到 OpenAPI 文档 |
+| `ApiVersionResolver` | API 版本解析器基类，定义从请求中提取版本号的统一接口 |
 
 ### 横切点执行顺序
 

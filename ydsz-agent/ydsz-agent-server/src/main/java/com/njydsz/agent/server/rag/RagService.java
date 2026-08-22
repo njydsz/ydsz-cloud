@@ -216,9 +216,9 @@ public class RagService {
    */
   public void ingestByFileId(String fileId) {
     log.info("[RagService] 接收文件索引请求: fileId={}", fileId);
-    // TODO: 通过 FileContentFeignClient 调用 nextwiki 获取文件内容后，
+    // TODO: 2026-09-01 通过 FileContentFeignClient 调用 nextwiki 获取文件内容后，
     //  调用 ingestFromStream(stream, fileName, fileId) 完成摄入。
-    //  当前 Feign 客户端未实现，待 nextwiki 模块暴露文件内容 API 后补充。
+    //  当前 Feign 客户端未实现，待 nextwiki 模块暴露文件内容 API 后补充。（@ydsz-team）
   }
 
   /**
