@@ -31,7 +31,6 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.workflow.WorkflowFacade;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowAutoTriggerCreateDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceVariablesDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
@@ -627,8 +626,7 @@ public class FlowInstanceController {
   @Operation(summary = "列出所有触发规则")
   @GetMapping("/instance/trigger/list")
   public YdszResponse<List<FlowAutoTriggerVO>> listTriggers() {
-    return YdszResponse.success(
-        WorkflowConverter.INSTANT.flowAutoTriggerListToVO(autoTriggerService.listAll()));
+    return YdszResponse.success(autoTriggerService.listAllVO());
   }
 
   /**

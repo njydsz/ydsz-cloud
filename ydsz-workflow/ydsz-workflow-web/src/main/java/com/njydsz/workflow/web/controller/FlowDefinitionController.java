@@ -41,7 +41,6 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
@@ -574,8 +573,7 @@ public class FlowDefinitionController {
   public YdszResponse<List<FlowEventSubscriptionVO>> listEventSubscriptions(
       @PathVariable String instanceId) {
     return YdszResponse.success(
-        WorkflowConverter.INSTANT.flowEventSubscriptionListToVO(
-            eventSubscriptionService.listByInstance(instanceId)));
+        eventSubscriptionService.listByInstanceVO(instanceId));
   }
 
   // ============== P1-6: SLA 超时自动策略 ==============

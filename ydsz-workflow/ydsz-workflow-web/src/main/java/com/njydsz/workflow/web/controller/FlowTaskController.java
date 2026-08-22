@@ -1132,8 +1132,7 @@ public class FlowTaskController {
   @GetMapping("/attachment/task/{taskId}")
   @Operation(summary = "查询任务附件")
   public YdszResponse<List<FlowAttachmentVO>> listByTask(@PathVariable String taskId) {
-    return YdszResponse.success(
-        WorkflowConverter.INSTANT.flowAttachmentListToVO(attachmentService.listByTask(taskId)));
+    return YdszResponse.success(attachmentService.listByTaskVO(taskId));
   }
 
   /**
@@ -1145,9 +1144,7 @@ public class FlowTaskController {
   @GetMapping("/attachment/instance/{instanceId}")
   @Operation(summary = "查询实例附件")
   public YdszResponse<List<FlowAttachmentVO>> listByInstance(@PathVariable String instanceId) {
-    return YdszResponse.success(
-        WorkflowConverter.INSTANT.flowAttachmentListToVO(
-            attachmentService.listByInstance(instanceId)));
+    return YdszResponse.success(attachmentService.listByInstanceVO(instanceId));
   }
 
   /**
