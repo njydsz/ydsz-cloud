@@ -23,40 +23,12 @@
 ### 核心特性
 
 - **前沿技术栈**：Java 21 虚拟线程 + Spring Boot 4 + Spring Cloud 2025.1.2 + Jakarta EE 10
-- **DDD 分层架构**：严格 `api` / `domain` / `infra` / `server` / `web` 五层分离，依赖方向单向收敛
+- **DDD 分层架构**：严格 `api` / `domain` / `infra` / `server` / `app` / `web` 六层分离，依赖方向单向收敛
 - **自研引擎矩阵**：「规则引擎（对标 Drools + LiteFlow）+ 任务调度（对标 XXL-Job + PowerJob）+ 工作流（BPMN 2.0）+ AI Agent 框架」——四大引擎全部自研，开箱即用
 - **多租户隔离**：支持 SINGLE（共享表）、MULTI（字段隔离）、ISOLATE_DB（独立数据库）三种策略
-- **全渠道消息**：12 种通知渠道（短信/邮件/Push/企微/钉钉/飞书/微信小程序/支付宝小程序等），支持 DAG 编排与跨渠道抑制
+- **全渠道消息**：6 种通知渠道（短信/邮件/Push/企微/钉钉/飞书等），支持 DAG 编排与跨渠道抑制
 - **安全纵深防御**：JWT + RBAC + 数据权限 + PII 脱敏 + XSS/SQL 注入/CSRF 防护 + 敏感配置加密（AES-256-GCM）
 - **生产可观测**：Prometheus + Grafana + Sentry + ELK/Loki + Micrometer Tracing（W3C TraceContext）
-
----
-
-## 技术选型
-
-| 分层 | 技术 | 版本 | 说明 |
-|------|------|------|------|
-| **基础框架** | Spring Boot | 4.1.0 | 新一代企业级应用框架 |
-| | Spring Cloud | 2025.1.2 | 微服务治理套件 |
-| | Spring Cloud Alibaba | 2025.1.0.0 | Nacos / Sentinel / Seata |
-| **语言 & 构建** | Java | 21 (LTS) | 虚拟线程 + 模式匹配 |
-| | Maven | 3.9+ | 聚合多模块构建 |
-| **数据持久化** | MyBatis-Plus | 3.5.16 | 增强 ORM（Spring Boot 4 Starter） |
-| | PostgreSQL | 42.7.4 | 主数据库（共享主库） |
-| | Druid | 1.2.28 | 连接池 |
-| | Dynamic-Datasource | 4.3.1 | 读写分离 |
-| **缓存 & 锁** | Redis / Redisson | 4.6.1 | 分布式缓存 / 分布式锁 |
-| **消息队列** | RocketMQ Spring | 2.3.1 | 异步消息 / 事务消息 |
-| **分布式事务** | Seata | 2.5.0 | AT / TCC / SAGA |
-| **流量控制** | Sentinel | 1.8.9 | 限流 / 熔断 / 降级 |
-| | Resilience4j | 2.4.0 | 重试 / 舱壁 / 速率限制 |
-| **对象存储** | MinIO / 阿里云 OSS / 腾讯云 COS / 华为云 OBS / 七牛 / AWS S3 | — | 7 种存储平台统一抽象 |
-| **认证鉴权** | jjwt | 0.12.6 | JWT Token |
-| **文档 & API** | SpringDoc + Knife4j | 3.0.3 / 4.5.0 | OpenAPI 3.0 文档 |
-| **对象映射** | MapStruct | 1.6.3 | 编译期代码生成 |
-| **JSON** | ydsz-common-json<br/>（YdszJson） | 自研 | 零外部依赖 · ASM 字节码 · SIMD 向量化 |
-| **监控** | Micrometer + Prometheus + Sentry | — | 指标采集 / 异常追踪 |
-| **日志** | Logback + Logstash Encoder | 7.4 | JSON 格式日志输出 |
 
 ---
 
@@ -93,12 +65,12 @@ ydsz-cloud/
 │   ├── ydsz-common-search    # L5：统一搜索（PG 全文检索 / 内存）
 │   ├── ydsz-common-sentry    # L5：统一监控告警
 │   ├── ydsz-common-base      # L6：HTTP 公共基座
-│   ├── ydsz-common-web       # L6：PC Web 基座（Spring Security）
-│   └── ydsz-common-app       # L6：移动端 App 基座（API 签名）
+│   ├── ydsz-common-app       # L6：移动端 App 基座（API 签名）
+│   └── ydsz-common-web       # L6：PC Web 基座（Spring Security）
 │
 ├── ydsz-gateway/             # 🚪 API 网关 :9000（WebFlux 反应式）
-├── ydsz-userinfo/            # 👤 用户信息中心 :9002（登录 / RBAC / 组织架构 / OAuth2）
 ├── ydsz-system/              # ⚙️ 系统基础服务 :9001（参数 / 字典 / 多租户）
+├── ydsz-userinfo/            # 👤 用户信息中心 :9002（登录 / RBAC / 组织架构 / OAuth2）
 ├── ydsz-nextwiki/            # 📁 网盘知识库 :9003（文件管理 / Office 预览 / WOPI）
 ├── ydsz-message/             # 📨 消息通知引擎 :9004（12 渠道 / DAG 编排 / 灰度）
 ├── ydsz-workflow/            # 🔀 工作流引擎 :9005（BPMN 2.0 / DMN 决策表）
@@ -112,8 +84,8 @@ ydsz-cloud/
 | 模块 | 核心能力 |
 |------|----------|
 | **ydsz-gateway** | 路由分发 · JWT 鉴权 · CORS · IP 黑白名单（统一 IpAccessControl） · 灰度路由（权重加权 + 比例分流） · Redis+Lua 令牌桶限流 · WebSocket 握手认证 · API 版本协商 · 网关层 RBAC · W3C 链路追踪 |
-| **ydsz-userinfo** | 登录认证（密码 + 验证码 + LDAP/ADFS） · JWT Token · RBAC 6 要素 · 部门树 · OAuth2 授权码 · 登录锁定（5 次/30 min） · 国际化 |
 | **ydsz-system** | 系统参数（Redis 缓存 + 穿透防护） · 数据字典（树形 + 版本快照） · OAuth2 应用注册 · 多租户（租户 + 套餐 + 权限） · 全局搜索 |
+| **ydsz-userinfo** | 登录认证（密码 + 验证码 + LDAP/ADFS） · JWT Token · RBAC 6 要素 · 部门树 · OAuth2 授权码 · 登录锁定（5 次/30 min） · 国际化 |
 | **ydsz-nextwiki** | 文件秒传（SHA-256） · 版本控制（20 版本） · 分享 + ACL · 全文搜索 · Office 预览（LibreOffice → PDF） · WOPI（OnlyOffice/Collabora） · ClamAV 病毒扫描 · OCR · AI 摘要 |
 | **ydsz-message** | 12 种通知渠道（枚举） · 模板（i18n + 版本） · 用户偏好 · 条件路由 + 通道降级链 · 模板灰度标记 · 敏感词过滤（DFA） · RocketMQ 死信 |
 | **ydsz-workflow** | YDSZ-Flow + BPMN 2.0 · 11 种节点类型 · 定时器 · SLA · 设计器 · DMN 决策表 · 审批/委派/评论/嵌入式审批面板 |
@@ -123,26 +95,31 @@ ydsz-cloud/
 
 ---
 
-## 对标竞品
+## 技术选型
 
-为明确 **Ydsz Cloud** 在开源快速开发平台生态中的定位与差异化优势，确立以下 5 个主流项目作为长期对标竞品，用于持续跟踪其架构演进、功能特性与社区活跃度：
-
-| 竞品 | 一句话定位 | 架构形态 | 核心技术栈 | 开源协议 | 仓库地址 |
-|------|-----------|----------|------------|----------|----------|
-| **若依 RuoYi** | 轻量级权限管理系统，易读易懂、界面简洁美观 | 单体 / 前后端分离（另有独立微服务版 RuoYi-Cloud） | Spring Boot + MyBatis + Shiro（无重度依赖） | MIT | https://gitee.com/y_project/RuoYi |
-| **Pig** | 微服务 RBAC 权限管理（企业级快速开发平台） | 微服务（亦支持 `boot` 单体 profile） | Spring Boot 4.0 + Spring Cloud 2025 & Alibaba + Spring Authorization Server（OAuth2） | Apache 2.0 | https://gitee.com/log4j/pig |
-| **maku-boot** | 企业级低代码平台，符合信创需求 | 单体（组件化按需引入） | Spring Boot 4.0 + Spring Security 7.0 + MyBatis-Plus + Vue3 + Element-Plus | Apache 2.0 | https://gitee.com/makunet/maku-boot |
-| **SpringBlade** | 商业级微服务架构，面向 SaaS 多租户 | 微服务 | Spring Boot 4.1 + Spring Cloud 2025 + Java 21 + Nacos + Sentinel（遵循阿里编码规范） | Apache 2.0 | https://gitee.com/smallc/SpringBlade |
-| **JeecgBoot** | 企业级 AI 低代码平台（低代码 + 零代码 + BPM + AI） | 单体 / 微服务 | Spring Boot 4.1 + MyBatis-Plus + Shiro/JWT + Vue3 + Flowable + AI 应用平台 | Apache 2.0 | https://gitee.com/jeecg/JeecgBoot |
-
-**Ydsz Cloud 的差异化优势**：
-
-- **DDD 五层分层架构**：严格的 `api / domain / infra / server / web` 依赖方向单向收敛，竞品多为传统三层或 MVC 结构。
-- **四大自研引擎**：规则引擎（对标 Drools + LiteFlow）、分布式调度（对标 XXL-Job + PowerJob）、BPMN 2.0 工作流、AI Agent 框架，全部自研、开箱即用。
-- **前沿技术栈**：Java 21 虚拟线程 + Spring Boot 4 + Spring Cloud 2025.1.2 + Jakarta EE 10。
-- **全渠道消息与多租户**：12 种通知渠道 DAG 编排、三种多租户隔离策略（SINGLE / MULTI / ISOLATE_DB）。
-
-> 说明：对标竞品用于产品定位与功能演进参考，不代表技术依赖或代码引用。
+| 分层 | 技术 | 版本 | 说明 |
+|------|------|------|------|
+| **基础框架** | Spring Boot | 4.1.0 | 新一代企业级应用框架 |
+| | Spring Cloud | 2025.1.2 | 微服务治理套件 |
+| | Spring Cloud Alibaba | 2025.1.0.0 | Nacos / Sentinel / Seata |
+| **语言 & 构建** | Java | 21 (LTS) | 虚拟线程 + 模式匹配 |
+| | Maven | 3.9+ | 聚合多模块构建 |
+| **数据持久化** | MyBatis-Plus | 3.5.16 | 增强 ORM（Spring Boot 4 Starter） |
+| | PostgreSQL | 42.7.4 | 主数据库（共享主库） |
+| | Druid | 1.2.28 | 连接池 |
+| | Dynamic-Datasource | 4.3.1 | 读写分离 |
+| **缓存 & 锁** | Redis / Redisson | 4.6.1 | 分布式缓存 / 分布式锁 |
+| **消息队列** | RocketMQ Spring | 2.3.1 | 异步消息 / 事务消息 |
+| **分布式事务** | Seata | 2.5.0 | AT / TCC / SAGA |
+| **流量控制** | Sentinel | 1.8.9 | 限流 / 熔断 / 降级 |
+| | Resilience4j | 2.4.0 | 重试 / 舱壁 / 速率限制 |
+| **对象存储** | MinIO / 阿里云 OSS / 腾讯云 COS / 华为云 OBS / 七牛 / AWS S3 | — | 7 种存储平台统一抽象 |
+| **认证鉴权** | jjwt | 0.12.6 | JWT Token |
+| **文档 & API** | SpringDoc + Knife4j | 3.0.3 / 4.5.0 | OpenAPI 3.0 文档 |
+| **对象映射** | MapStruct | 1.6.3 | 编译期代码生成 |
+| **JSON** | ydsz-common-json<br/>（YdszJson） | 自研 | 零外部依赖 · ASM 字节码 · SIMD 向量化 |
+| **监控** | Micrometer + Prometheus + Sentry | — | 指标采集 / 异常追踪 |
+| **日志** | Logback + Logstash Encoder | 7.4 | JSON 格式日志输出 |
 
 ---
 
@@ -227,38 +204,17 @@ ydsz-{module}/
 ├── ydsz-{module}-domain/            # 领域层：Entity + VO + Repository 接口
 ├── ydsz-{module}-infra/             # 基础设施层：Repository 实现 + 外部集成
 ├── ydsz-{module}-server/            # 应用服务层：Service + 事务编排
+├── ydsz-{module}-app/               # App 层：Controller + 启动类 + 配置
 └── ydsz-{module}-web/               # Web 层：Controller + 启动类 + 配置
 ```
 
-**依赖方向**：`web → server → domain ← infra`，`api` 层独立对外。
+**依赖方向**：`web/app → server → domain ← infra`，`api` 层独立对外。
 
 ### 代码规范
 
 项目遵循以下编码标准：
 
-- **阿里巴巴 Java 开发手册（泰山版）** —— Java 代码规范基线
-- **Google Java Style Guide** —— 补充格式化规则
-
-### 提交规范
-
-提交信息采用 **Conventional Commits** 规范（中文描述）：
-
-```bash
-feat: 新增用户批量导入功能
-fix: 修复部门树查询死循环问题
-refactor: 重构 RBAC 权限校验逻辑
-test: 补充消息模块单元测试
-docs: 更新 API 接口文档
-```
-
-### 分支策略
-
-| 分支 | 用途 |
-|------|------|
-| `main` | 生产就绪代码，仅通过 PR 合入 |
-| `develop` | 开发主线，功能分支的合入目标 |
-| `feature/*` | 特性开发分支 |
-| `hotfix/*` | 紧急修复分支 |
+- **云顶数字编码规范** —— Java 代码规范基线
 
 ---
 
@@ -340,5 +296,5 @@ docs: 更新 API 接口文档
 ---
 
 <p align="center">
-  <sub>Made with ❤️ by YdszSoft Team</sub>
+  <sub>Made with ❤️ by Ydsz Team</sub>
 </p>

@@ -97,7 +97,8 @@ com.njydsz.literule.server
 ├── cache/           # 多级缓存（Caffeine L1 + Redis L2）
 ├── cep/             # 复杂事件处理（CEPEngine / CEPPattern）
 ├── config/          # 自动配置 + 注解注册 + ABTest + 热加载 + 冲突检测
-├── core/            # 引擎核心（DefaultRuleEngine / InferenceEngine / 熔断 / 超时 / 灰度 / 索引 / 生命周期 / 效果评估 / 文档生成 / 异步 Trace / Micrometer 指标 / 并行评估 / 结果缓存）
+├── core/            # 引擎核心（DefaultRuleEngine / 熔断 / 超时 / 灰度 / 索引 / 生命周期 / 异步 Trace / Micrometer 指标 / 并行评估 / 结果缓存 / 统计 / Trace 构建）
+├── engine/          # 引擎子包（内含 liteexpr/ 子目录）
 ├── debug/           # 断点调试（RuleDebugger / DebugSession / Breakpoint / 单步执行）
 ├── distributed/     # 分布式（一致性哈希分片 + Redis 节点注册 + Pub/Sub 广播）
 ├── dsl/             # DSL 解析（规则 DSL + 规则链 DSL）
@@ -151,8 +152,8 @@ com.njydsz.literule.server
 本模块是独立微服务，构建产物为 `ydsz-literule-web` 可执行 jar：
 
 ```bash
-# 全量构建
-mvn -pl ydsz-cloud/ydsz-literule -am clean package
+# 全量构建（从 ydsz-cloud 根目录执行）
+mvn -pl ydsz-literule -am clean package
 
 # 启动服务
 java -jar ydsz-literule-web/target/ydsz-literule-web-1.0.0-SNAPSHOT.jar
@@ -293,6 +294,7 @@ ydsz:
 | `ydsz.literule.conflict-detection-block-on-error` | `true` | ERROR 级冲突阻塞保存 |
 | `ydsz.literule.environment` | `default` | 多环境隔离（default/dev/staging/prod） |
 | `ydsz.literule.annotation-scan-base-packages` | 空 | `@LiteRule` / `@RuleDefinitionMeta` 扫描基包 |
+| `ydsz.literule.health-enabled` | `true` | 启用健康检查（`LiteRuleHealthIndicator`） |
 
 ### 熔断器
 
@@ -370,6 +372,14 @@ ydsz:
 | `ydsz.literule.performance.cache-max-size` | `10000` | 缓存最大条目 |
 | `ydsz.literule.performance.parallel-enabled` | `false` | 规则分组并行评估 |
 | `ydsz.literule.performance.parallel-pool-size` | CPU 核数 | 并行池大小 |
+| `ydsz.literule.performance.parallel-threshold` | `50` | 触发并行的规则数阈值 |
+| `ydsz.literule.performance.slow-rule-threshold-ms` | `0` | 慢规则检测阈值（0=关闭） |
+
+### CEP 引擎
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.literule.cep.enabled` | `true` | 启用 CEP 复杂事件处理引擎 |
 
 ### 生命周期管理
 
@@ -394,26 +404,36 @@ ydsz:
 
 | SPI 接口 | 作用 | 实现 |
 |---|---|---|
-| `RuleConfigProvider` | 规则配置源 | `DbRuleSource` + `CachingRuleConfigProvider` 装饰 |
+| `RuleConfigProvider` | 规则配置源 | `DbRuleSource`（默认）+ `CachingRuleConfigProvider` 装饰 |
+| `RuleSource` | 多源规则加载 | `DbRuleSource` / `NacosRuleSource` / `ApolloRuleSource` / `ZookeeperRuleSource` / `FileRuleSource` |
+| `RuleSourceManager` | 规则源管理器 | 聚合多源、热加载调度 |
 | `RuleVersionRepository` | 版本仓库 | infra 层接口，server 层 DB 实现 |
 | `RuleTemplateProvider` | 模板市场 | server 层 DB 实现 |
 | `RuleConflictDetectorProvider` | 冲突检测 | server 层实现 |
-| `DecisionTableEvalProvider` | 决策表评估 | server 层实现 |
+| `DecisionTableEvalProvider` | 决策表评估 | API 层接口 |
+| `DecisionTableConfigProvider` | 决策表配置 | server 层 DB 实现 |
+| `DecisionTreeConfigProvider` | 决策树配置 | server 层 DB 实现 |
+| `ScorecardConfigProvider` | 评分卡配置 | server 层 DB 实现 |
+| `ScriptConfigProvider` | 脚本配置 | server 层 DB 实现 |
 | `RuleChainGraphProvider` | 规则链画布 | server 层 DB 实现 |
 | `GraphExecutionProvider` | 画布执行 | server 层实现 |
 | `RuleDependencyProvider` | 规则依赖 | server 层 DB 实现 |
 | `RuleCategoryProvider` | 目录树 | server 层实现 |
+| `RuleSearchProvider` | 规则搜索 | server 层实现 |
 | `ABTestAutoRollbackProvider` | A/B 自动回滚 | server 层实现 |
 | `RulePackProvider` | 规则包 | server 层 DB 实现 |
+| `RuleConfigBroadcaster` | 配置变更广播 | `RedisRuleConfigBroadcaster`（Pub/Sub） |
 | `FactProvider` | 动态事实采集 | 业务方实现（可跨服务 Feign 调用 userinfo 等） |
 | `ModelInputProvider` | 模型输入 | 业务方实现（可对接外部模型服务） |
 | `RuleActionHandler` | 动作处理器 | `DefaultAlertActionHandler` / `CronjobTriggerActionHandler`（optional）/ `WorkflowTriggerActionHandler`（optional） |
+| `RuleActionDispatcher` | 动作分发器 | server 层路由分发 |
 | `TraceRecorder` | Trace 持久化 | `AsyncTraceRecorder`（委托模式，DB 持久化） |
 | `DashboardDataProvider` | 大盘数据 | server 层实现 |
 | `ThresholdProvider` | 自适应阈值 | server 层实现 |
 | `ReconcileDataProvider` | 对账 | 业务方实现 |
 | `BudgetSnapshotProvider` | 预算快照 | 业务方实现（可跨服务 Feign 调用外部系统） |
 | `ApprovalRecordRepository` | 审批记录 | infra 层接口，server 层 DB 实现 |
+| `LiteRuleClient` | Feign 声明式客户端 | API 层 `@FeignClient` + `LiteRuleClientFallback` |
 
 ## 可选联动
 
@@ -430,7 +450,7 @@ server 模块通过 optional 依赖实现跨服务按需联动（规则触发后
 当前测试覆盖情况：
 
 ```bash
-mvn -pl ydsz-cloud/ydsz-literule -am test
+mvn -pl ydsz-literule -am test
 ```
 
 > 本服务构建产物为 `ydsz-literule-web` 可执行 jar。
@@ -438,6 +458,7 @@ mvn -pl ydsz-cloud/ydsz-literule -am test
 | 子模块 | 测试类数 | 覆盖范围 |
 |---|---|---|
 | `ydsz-literule-api` | 0 | — |
+| `ydsz-literule-app` | 0 | — |
 | `ydsz-literule-domain` | 0 | — |
 | `ydsz-literule-infra` | 0 | — |
 | `ydsz-literule-server` | 2 | 核心引擎（`DefaultRuleEngineCoreTest`）+ 并行评估（`DefaultRuleEngineParallelTest`） |
@@ -455,4 +476,4 @@ mvn -pl ydsz-cloud/ydsz-literule -am test
 ---
 
 > 本模块是**独立规则引擎微服务**，独立部署、独立 JVM 进程、注册到 Nacos。
-> 自动装配入口：`META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 注册 `LiteRuleAutoConfiguration`。
+> 自动装配入口：server 模块 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 注册 `LiteRuleAutoConfiguration`；app 模块同路径文件注册 `LiteRuleAppAutoConfiguration`。

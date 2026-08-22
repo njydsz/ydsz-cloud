@@ -65,36 +65,6 @@ public interface JobLogRepository {
   List<JobLogVO> findStuckTasks(LocalDateTime threshold, int limit);
 
   /**
-   * 查询已超时的日志（RUNNING 状态且 start_time + timeout_ms < now）。
-   *
-   * <p>单条 SQL JOIN ydsz_job 获取 timeout_ms，一次查询完成判断。因为 timeout_ms 是任务级属性（不同任务超时不同），
-   * 所以必须 JOIN ydsz_job_log 和 ydsz_job。
-   *
-   * @param now 当前时间
-   * @param limit 最大返回条数
-   * @return 已超时的日志 VO 列表
-   */
-  List<JobLogVO> findTimedOutLogs(LocalDateTime now, int limit);
-
-  /**
-   * 查询达到 SLA 80% 预警线的日志（RUNNING 状态且 elapsed >= 0.8 * timeout_ms）。
-   *
-   * @param now 当前时间
-   * @param limit 最大返回条数
-   * @return 达到 SLA 预警线的日志 VO 列表
-   */
-  List<JobLogVO> findApproachingSlaLogs(LocalDateTime now, int limit);
-
-  /**
-   * 查询慢任务日志（已结束且 duration_ms > slow_threshold_ms）。
-   *
-   * @param since 起始时间
-   * @param limit 最大返回条数
-   * @return 慢任务日志 VO 列表（is_slow=0）
-   */
-  List<JobLogVO> findSlowLogs(LocalDateTime since, int limit);
-
-  /**
    * P3-2: 统计指定任务在时间窗口内的执行次数和失败次数。
    */
   Map<String, Object> countByJobIdSince(String jobId, LocalDateTime since);

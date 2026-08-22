@@ -6,13 +6,14 @@
 
 | 属性 | 值 |
 |---|---|
-| **类型** | 部署单元（独立启动） |
+| **类型** | 部署单元（独立启动），父 POM 聚合 6 个子模块 |
 | **端口** | **9008**（按构建顺序 9/10） |
 | **服务名** | `ydsz-agent` |
 | **构建顺序** | 9/10（Maven 构建最后一个部署单元） |
-| **数据库** | PostgreSQL（`ydsz_agent_*` 表） |
+| **数据库** | PostgreSQL（`ydsz_agent_*` 表 + `ydsz_prompt_*` 表） |
 | **依赖** | Nacos、PostgreSQL、Redis、LLM API、MCP Server（可选） |
-| **公共依赖** | common-web / common-auth / common-redis / common-jdbc / common-queue / common-safe |
+| **公共依赖** | common-web / common-auth / common-redis / common-jdbc / common-queue / common-safe / common-thread / common-event / common-docs / common-sentry / common-search / common-tenant |
+| **子模块** | `ydsz-agent-api` / `ydsz-agent-domain` / `ydsz-agent-infra` / `ydsz-agent-server` / `ydsz-agent-app` / `ydsz-agent-web` |
 
 ## 核心职责
 
@@ -159,6 +160,8 @@ ydsz-agent/
 
 ## 使用方式
 
+> 启动后访问 Swagger UI：`http://localhost:9008/swagger-ui.html`（OpenAPI JSON：`/v3/api-docs`）
+
 ### 1. 配置
 
 ```yaml
@@ -262,7 +265,33 @@ ydsz:
         thread-name-prefix: agent-heartbeat-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 10
+  # JDBC 安全加固（ydsz-common-jdbc）
+  jdbc:
+    sql-firewall:
+      enabled: true
+      block-drop-table: true
+      block-truncate: true
+      block-delete-without-where: true
+      block-update-without-where: true
+      block-multi-statement: true
+      block-permission-ops: true
+    pagination:
+      max-limit: 500
+    slow-sql:
+      enabled: true
+      threshold-millis: 500
+      alert-threshold-millis: 2000
+    sql-audit:
+      enabled: true
+      audit-select: false
+      audit-insert: true
+      audit-update: true
+      audit-delete: true
+      log-parameters: true
+      max-parameter-length: 500
 ```
+
+> **注意**：以上配置为 `bootstrap.yml` 默认值 + `AgentProperties.java` 完整属性定义。生产环境建议通过 Nacos 配置中心覆盖敏感配置（如 `llm.api-key`）。
 
 ### 2. 同步执行 Agent
 
@@ -294,6 +323,15 @@ curl -X POST http://localhost:9008/api/v1/agent/chat \
 curl -N -X POST http://localhost:9008/api/v1/agent/chat/stream \
   -H "Content-Type: application/json" \
   -d '{"message": "帮我分析项目进度"}'
+```
+
+### 5.1 多模态对话（Vision 模型）
+
+```bash
+# 同步多模态对话
+curl -X POST http://localhost:9008/api/v1/agent/chat \
+  -H "Content-Type: application/json" \
+  -d '{"multimodalContent": [{"type": "text", "text": "这张图片是什么？"}, {"type": "image_url", "imageUrl": "https://example.com/image.jpg"}]}'
 ```
 
 ### 6. 批量对话
@@ -350,20 +388,42 @@ mvn -pl ydsz-common -am install -DskipTests
 mvn -pl ydsz-agent spring-boot:run
 ```
 
+> **首次启动前**请确保 PostgreSQL 数据库已创建，脚本 `V1__prompt_template.sql`（Prompt 模板表）由 Flyway 或手动执行初始化。DDL 表结构（`ydsz_agent_*`）由 common-jdbc 的 MyBatis Plus 自动建表 + 手动 SQL 脚本补齐。
+
+## 数据库表
+
+| 表名 | 说明 |
+|---|---|
+| `ydsz_agent_definition` | Agent 定义主表（类型、配置、工具列表） |
+| `ydsz_agent_trace` | Agent 执行链路主表 |
+| `ydsz_agent_trace_step` | 链路步骤表（含 cost 字段 — V2 迁移添加） |
+| `ydsz_agent_approval` | 人工审批请求表 |
+| `ydsz_prompt_template` | Prompt 模板主表（支持 #{var} 变量替换） |
+| `ydsz_prompt_version` | Prompt 模板版本历史表 |
+| `ydsz_token_usage_record` | Token 用量记录表 |
+
 ## 技术选型
 
 | 决策 | 方案 | 理由 |
 |---|---|---|
 | LLM API | OpenAI 兼容 API | 事实标准，覆盖 90% 国产模型 |
 | 流式输出 | SseEmitter + WebClient | 非 WebSocket，轻量级 |
+| 多模态输入 | Vision 模型（文本+图片段落） | `MessageContent` / `ContentPart` 封装 |
 | 记忆存储 | Redis List | 滑动窗口 + TTL 自动过期 |
 | 向量存储 | 内存（默认）/ PostgreSQL pgvector | 复用现有 PG 基础设施 |
+| 检索策略 | 混合检索（向量 + 全文 RRF 融合） | `HybridRetriever` 双路召回 + Reranker 精排 |
 | 工具调用 | 自研 @Tool 注解 | 轻量级，无额外依赖 |
-| MCP 集成 | MCP Java SDK | 标准协议，自动发现外部工具 |
+| MCP 集成 | MCP Java SDK（SseMcpClientProvider） | 标准协议，自动发现外部工具 |
 | DAG 编排 | 自研 DagDslParser | DSL 解析 + DAG 执行 + 检查点续跑 |
 | Agent 模式 | ReAct / Supervisor / Plan-Execute / RAG / Simple / DAG | 覆盖主流 Agent 范式 |
 | LLM 缓存 | 双层缓存（L1 YdszCache + L2 Redis） | 精确哈希匹配，节省成本与延迟 |
 | Text2SQL | LLM 生成 + 安全护栏 | 自然语言查询，多重安全防护 |
+| API 文档 | Springdoc OpenAPI 3.0 | Swagger UI 自动生成 |
+| 对象映射 | MapStruct | 编译期生成类型安全转换器 |
+| 服务注册 | Nacos Discovery | 服务发现 + 配置中心 |
+| JDBC 安全 | SQL 防火墙 + 慢 SQL + 审计 | 防注入、防全表扫描、操作留痕 |
+| 可观测性 | Prometheus + Micrometer | 指标采集 + Grafana 看板 |
+| 多租户 | TenantContextHolder | RAG / 记忆按租户隔离 |
 
 ## 常见问题
 
@@ -405,6 +465,32 @@ mvn -pl ydsz-agent spring-boot:run
 1. 缓存仅对 `temperature=0` 的确定性请求生效
 2. 缓存采用精确哈希匹配（非语义相似），相同输入才可命中
 3. 可通过 `ydsz.agent.cache.ttl-minutes` 调整缓存有效期
+
+### Q7：多模态（图片）对话不生效
+
+1. 确认请求体中 `multimodalContent` 字段非空（非空时优先于 `message` 字段）
+2. 确认 `ContentPartDTO.type` 为 `text` 或 `image_url`
+3. 确认使用的 LLM 模型支持 Vision 能力（如 `gpt-4o`、`gpt-4o-mini`）
+
+### Q8：Agent 类型路由规则
+
+| Agent 类型 | 路由目标 |
+|---|---|
+| `REACT` / `REACT_AGENT` | `ReActAgentExecutor` |
+| `RAG` | `ReActAgentExecutor`（注入 ragService） |
+| `CHAT` | `SimpleAgentExecutor` |
+| `PLAN_EXECUTE` / `WORKFLOW` | `PlanExecuteAgentExecutor` |
+| `SUPERVISOR` | `SupervisorAgentExecutor` |
+| `DAG` | `DagOrchestrationExecutor` |
+| 未知类型 | `ReActAgentExecutor`（兜底） |
+
+### Q9：DAG 执行进度事件推送
+
+流式执行 DAG 类型 Agent 时，`AgentFacade.executeStream` 的 `progressConsumer` 回调会收到节点级进度事件（`eventType` / `nodeId` / `completedCount` / `totalCount`），前端通过 SSE `progress` 事件名接收。
+
+### Q10：Prompt 模板变量替换
+
+Prompt 模板使用 `#{var}` 语法声明变量，运行时由 `PromptTemplate` 进行替换。模板存储在 `ydsz_prompt_template` 表，支持版本管理（`ydsz_prompt_version`）。
 
 ---
 

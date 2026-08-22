@@ -295,30 +295,6 @@ public interface JobRepository {
   List<JobVO> findByStatus(String status);
 
   /**
-   * 重置连续失败计数。
-   *
-   * @param jobId 任务 ID
-   * @return 受影响行数
-   */
-  int resetConsecutiveFail(String jobId);
-
-  /**
-   * 递增连续失败计数。
-   *
-   * @param jobId 任务 ID
-   * @return 受影响行数
-   */
-  int incrementConsecutiveFail(String jobId);
-
-  /**
-   * 查询连续失败计数。
-   *
-   * @param jobId 任务 ID
-   * @return 当前连续失败计数
-   */
-  Integer findConsecutiveFailCount(String jobId);
-
-  /**
    * 分页查询内部结果对象。
    *
    * @param <T> 记录类型
@@ -343,10 +319,18 @@ public interface JobRepository {
     /**
      * 转换为 PageResponse（供 Service 层直接返回给 Controller）。
      *
+     * <p>注意：此方法丢失了 pageNum/pageSize 信息，仅做简易封装。
+     * 建议调用方自行构造 {@code PageResponse} 保留分页完整信息。
+     *
      * @return PageResponse 对象
      */
     public PageResponse<List<T>> toPageResponse() {
-      return PageResponse.success(records, total);
+      PageResponse<List<T>> response = new PageResponse<>();
+      response.setCode("A00000");
+      response.setMsg("操作成功");
+      response.setData(records);
+      response.setTotal(total);
+      return response;
     }
   }
 }

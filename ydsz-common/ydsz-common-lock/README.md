@@ -2,7 +2,7 @@
 
 > 分布式锁与防重提交公共模块（L4 基础数据层）
 
-YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量、WatchDog 自动续期、锁泄漏检测、`@Idempotent` 幂等、`@RepeatSubmit` 防重提交、`@DistributedScheduled` 分布式调度、`@YdszDistributedLock` 声明式锁、降级策略。
+YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量 / 多 Key 联锁、WatchDog 自动续期、锁泄漏检测、`@Idempotent` 幂等、`@RepeatSubmit` 防重提交、`@DistributedScheduled` 分布式调度、`@YdszDistributedLock` 声明式锁、降级策略、锁释放通知、锁事件监听、锁管理端点。
 
 ## 模块定位
 
@@ -27,6 +27,7 @@ YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量�
 | `RedisMultiLock` | 多锁（多个 Key 同时加锁，全部成功或全部失败） |
 | `FallbackDistributedLock` | 降级锁（Redis 不可用时退化为 JVM `ReentrantLock`） |
 | `DistributedLockException` | 分布式锁异常（获取锁超时 / 释放锁失败 / 续期失败，错误码 `LOCK_ERROR`） |
+| `LockExceptionCode` | 锁异常码枚举 |
 
 ### 2. 读写锁与信号量
 
@@ -47,8 +48,9 @@ YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量�
 | `IdempotentStrategy` | 幂等策略接口（acquire / release / exists） |
 | `RedisIdempotentStrategy` | Redis 实现（`SET NX EX` + token 校验释放） |
 | `IdempotentException` | 幂等异常 |
+| `IdempotentUnavailableException` | 幂等不可用异常（Redis 降级时按 `fail-open` 策略决定是否放行） |
 
-### 4. 防重提交（新增）
+### 4. 防重提交
 
 基于前端 Token 令牌模式防止表单重复提交，与 `@Idempotent`（服务端去重）形成互补。
 
@@ -76,7 +78,7 @@ YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量�
 | 适用场景 | 接口幂等性（重复请求结果一致） | 表单提交防护（防止用户快速双击） |
 | 前端配合 | 无需 | 需先获取 Token |
 
-### 5. 分布式调度（新增）
+### 5. 分布式调度
 
 | 类 / 注解 | 说明 |
 |---|---|
@@ -94,6 +96,7 @@ YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量�
 | 类 | 说明 |
 |---|---|
 | `LockWatchDog` | 看门狗（定时续期锁，防止业务未完成锁过期） |
+| `LockRenewalService` | 分布式锁续期 SPI 服务（统一收口续期 Lua 脚本，消除"双锁冗余"） |
 
 **WatchDog 机制：**
 
@@ -105,9 +108,29 @@ YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量�
 - 使用 `ReentrantLock` 替代 `synchronized`，避免 JDK 21 虚拟线程固定（pinning）
 - `@PreDestroy` 优雅停机，清理所有续期任务
 
+**LockRenewalService** 统一提供两类续期脚本：
+- `RENEW_SCRIPT_HASH`：适用于可重入锁（clientId 作为 Hash field）
+- `RENEW_SCRIPT_OWNER`：适用于公平锁（clientId 作为 owner 字段的值）
+
+业务方可实现 `LockRenewalStrategy` 接口自定义续期逻辑，通过 `setStrategy()` 注入。
+
 > 说明：`LockLeakDetector`（锁泄漏检测器）未实现，异常锁持有依赖 `LockWatchDog` 超时自动释放兜底。
 
-### 7. 锁键校验（新增）
+### 7. 锁释放通知
+
+| 类 | 说明 |
+|---|---|
+| `LockReleaseNotifier` | 锁释放通知器（对标 Redisson 发布订阅唤醒机制） |
+
+**工作机制：**
+
+- 启动时按 `ydsz:lock:release:*` 模式订阅一次，收到消息后唤醒对应锁键的本地等待者
+- `awaitRelease` 注册等待者并以 `CompletableFuture` 阻塞等待，被唤醒或超时后返回
+- `notifyRelease` 发布 Redis 消息并同时唤醒本地等待者（双保险，兼容订阅延迟）
+- 等待上限（默认 50ms），即使错过通知也能在限定时间内重新探测锁状态
+- 使用 `CompletableFuture` 实现异步等待，避免线程阻塞
+
+### 8. 锁键校验
 
 | 类 | 说明 |
 |---|---|
@@ -124,21 +147,53 @@ YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量�
 - `validate(String)` — 严格校验，违规抛 `IllegalArgumentException`
 - `sanitize(String)` — 清理模式，超长截断，控制字符替换为下划线
 
-### 8. 锁策略
+### 9. 锁策略
 
 | 类 / 接口 | 说明 |
 |---|---|
 | `LockStrategy` | 锁策略工厂接口（按 `LockType` 创建锁实例，含读写锁 / 信号量 / 看门狗） |
 | `DefaultLockStrategy` | 默认实现（加锁 → 执行 → 释放 + 看门狗管理） |
 
-### 9. 注解驱动
+### 10. 注解驱动
 
 | 注解 / 枚举 | 说明 |
 |---|---|
 | `@YdszDistributedLock` | 分布式锁注解（key / lockType / waitTime / leaseTime / autoRenew / retryCount） |
 | `LockType` | 锁类型枚举（REENTRANT / FAIR / READ_WRITE / SEMAPHORE） |
 
-### 10. 指标与健康检查
+### 11. 编程式锁操作模板
+
+| 类 | 说明 |
+|---|---|
+| `LockTemplate` | 编程式锁操作模板（提供 try-with-resources 风格 API，自动管理锁的获取与释放） |
+
+**使用示例：**
+
+```java
+lockTemplate.execute("order:lock:" + orderId, 30, TimeUnit.SECONDS, () -> {
+    // 业务逻辑
+    return null;
+});
+```
+
+### 12. 锁生命周期事件与降级回调
+
+| 类 | 说明 |
+|---|---|
+| `LockEventListener` | 分布式锁事件监听器 SPI（onLockAcquired / onLockReleased / onLockAcquireTimeout / onLockRenewalFailed） |
+| `LockDegradationCallback` | 锁降级回调接口（Redis 不可用时触发，可发送告警/切换只读模式/触发业务熔断） |
+| `CurrentUserIdResolver` | 当前用户 ID 解析器 SPI |
+
+### 13. 锁等待策略
+
+| 类 | 说明 |
+|---|---|
+| `LockWaitTimePolicy` | 锁等待时间策略（基于历史统计数据动态调整等待时间） |
+| `LockWaitStats` | 锁等待统计数据（总等待次数/耗时/超时次数，LongAdder 原子操作） |
+| `BackoffPolicy` | 指数退避策略工具类（全抖动 Full Jitter 算法，避免惊群效应） |
+| `LockExpressionUtils` | SpEL 表达式解析工具 |
+
+### 14. 指标与健康检查
 
 | 类 | 说明 |
 |---|---|
@@ -146,6 +201,12 @@ YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量�
 | `LockMetricsConfiguration` | Micrometer 指标自动配置 |
 | `LockMicrometerCollector` | Micrometer 指标采集（锁等待时间 / 持有时间 / 成功率） |
 | `LockHealthIndicator` | 健康检查（Redis PING + 看门狗配置 + 指标汇总，端点 `/actuator/health/lock`） |
+
+### 15. 锁管理端点
+
+| 类 | 说明 |
+|---|---|
+| `LockAdminController` | 锁管理端点（查询/释放分布式锁，Web 环境且 `StringRedisTemplate` 可用时装配） |
 
 ## 接入方式
 
@@ -179,6 +240,7 @@ ydsz:
     idempotent:
       default-ttl-seconds: 5
       key-prefix: "ydsz:idem:"
+      fail-open: true                   # Redis 不可用时幂等降级策略
     multi-lock:
       max-renew-count: 30
       renew-interval-seconds: 10
@@ -199,7 +261,10 @@ ydsz:
 | `RepeatSubmitTokenService` | 模块启用 |
 | `RepeatSubmitAspect` | 模块启用 |
 | `DistributedScheduledAspect` | 模块启用（LockStrategy 不存在时降级） |
+| `LockRenewalService` | 模块启用（统一续期脚本） |
+| `LockReleaseNotifier` | 模块启用（锁释放通知） |
 | `LockHealthIndicator` | `spring-boot-health` 可用 |
+| `LockAdminController` | Web 环境 + `StringRedisTemplate` 可用 |
 | `lockAcquireExecutor` | 模块启用（锁获取线程池） |
 | `lockWatchDogScheduler` | 模块启用（续期调度线程池） |
 
@@ -221,6 +286,7 @@ ydsz:
 | `ydsz.lock.acquire-pool.queue-capacity` | `256` | 锁获取线程池队列容量 |
 | `ydsz.lock.idempotent.default-ttl-seconds` | `5` | 幂等锁默认过期时间（秒） |
 | `ydsz.lock.idempotent.key-prefix` | `ydsz:idem:` | 幂等键 Redis 前缀 |
+| `ydsz.lock.idempotent.fail-open` | `true` | Redis 不可用时幂等降级策略（true=放行，false=拒绝） |
 | `ydsz.lock.multi-lock.max-renew-count` | `30` | 多 Key 联锁最大续期次数 |
 | `ydsz.lock.multi-lock.renew-interval-seconds` | `10` | 多 Key 联锁续期间隔（秒） |
 
@@ -269,7 +335,31 @@ public class OrderService {
 }
 ```
 
-### 3. 幂等性控制
+### 3. 编程式锁模板
+
+```java
+import java.util.concurrent.TimeUnit;
+import com.njydsz.common.lock.core.LockTemplate;
+
+@Service
+public class OrderService {
+
+    private final LockTemplate lockTemplate;
+
+    public OrderService(LockTemplate lockTemplate) {
+        this.lockTemplate = lockTemplate;
+    }
+
+    public void processOrder(String orderId) {
+        lockTemplate.execute("order:lock:" + orderId, 30, TimeUnit.SECONDS, () -> {
+            // 业务逻辑
+            return null;
+        });
+    }
+}
+```
+
+### 4. 幂等性控制
 
 ```java
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -281,7 +371,7 @@ public Result<PayResponse> pay(@RequestBody PayRequest request) {
 }
 ```
 
-### 4. 防重提交
+### 5. 防重提交
 
 ```java
 import com.njydsz.common.lock.annotation.RepeatSubmit;
@@ -300,7 +390,7 @@ public Result<Order> createOrder(@RequestBody OrderDTO dto) {
 2. POST /orders  Header: X-Repeat-Token: {token}
 ```
 
-### 5. 分布式调度
+### 6. 分布式调度
 
 ```java
 import org.springframework.scheduling.annotation.Scheduled;
@@ -313,7 +403,7 @@ public void cleanExpiredMessages() {
 }
 ```
 
-### 6. 读写锁
+### 7. 读写锁
 
 ```java
 import java.util.concurrent.TimeUnit;
@@ -331,7 +421,7 @@ try {
 // 读锁共享：rwLock.readLock().tryLock(...)
 ```
 
-### 7. 信号量
+### 8. 信号量
 
 ```java
 import java.util.concurrent.TimeUnit;
@@ -355,6 +445,9 @@ try {
 | `LockStrategy` | 锁策略工厂（按类型创建锁实例） | `DefaultLockStrategy` |
 | `IdempotentStrategy` | 幂等键策略（acquire / release / exists） | `RedisIdempotentStrategy` |
 | `DistributedLocker` | 分布式锁核心契约 | `RedisReentrantLock` / `RedisFairLock` 等 |
+| `LockEventListener` | 锁生命周期事件监听（获取/释放/超时/续期失败） | — |
+| `LockDegradationCallback` | 锁降级回调（Redis 不可用时触发） | — |
+| `CurrentUserIdResolver` | 当前用户 ID 解析器 | — |
 
 所有默认实现均通过 `@ConditionalOnMissingBean` 注册，业务方在自定义 `@Configuration` 中声明同名 Bean 即可覆盖。
 
@@ -380,6 +473,8 @@ Redis 不可用时健康检查返回 DOWN，触发降级策略（若 `fallback-e
 6. **锁键校验**：用户通过 SpEL 传入的 lockKey 应通过 `LockKeyValidator.validate` 校验，防止超长或包含控制字符的键影响 Redis 性能与日志可读性。
 7. **最大续期限制**：WatchDog 默认续期 100 次后停止，锁自动过期。若业务执行时间可能超长，需调大 `max-renew-times` 或拆分任务。
 8. **版本兼容**：配置前缀统一为 `ydsz.lock`，历史版本曾使用 `ydsz.distributed-lock` 前缀已废弃，不再支持。
+9. **幂等降级策略**：`idempotent.fail-open` 默认 `true`（Redis 不可用时放行），资金类等强幂等场景建议设为 `false`。
+10. **锁释放通知**：`LockReleaseNotifier` 通过 Redis 发布订阅 + 本地唤醒双机制，替代高竞争场景下指数退避轮询，降低无效 Redis QPS。
 
 ## 命名规范
 
@@ -433,5 +528,7 @@ Redis 不可用时健康检查返回 DOWN，触发降级策略（若 `fallback-e
 
 ## 变更记录
 
+- **v1.3.0**（2026-08-18）：新增锁生命周期事件监听（`LockEventListener`）、锁降级回调（`LockDegradationCallback`）、锁释放通知器（`LockReleaseNotifier`）、编程式锁模板（`LockTemplate`）、锁等待策略（`LockWaitTimePolicy` / `LockWaitStats` / `BackoffPolicy`）、用户 ID 解析器 SPI（`CurrentUserIdResolver`）、锁管理端点（`LockAdminController`）；新增幂等不可用异常（`IdempotentUnavailableException`）、异常码枚举（`LockExceptionCode`）。
+- **v1.2.0**（2026-08-17）：新增分布式锁续期 SPI 服务（`LockRenewalService`），统一收口续期 Lua 脚本；新增幂等降级策略配置项 `idempotent.fail-open`。
 - **v1.1.0**（2026-08-15）：新增「命名规范」章节，统一幂等键命名约定（`{namespace}:{domain}:{resource}:{action}`）；在 `docs/checkstyle.xml` 中新增 `@Idempotent` 键名正则校验规则。
 - **v1.0.0**（2026-08-02）：补全 `@RepeatSubmit` 防重提交、`@DistributedScheduled` 分布式调度、`LockKeyValidator` 键校验章节；完善配置项表与自动装配说明，新增编程式锁、读写锁、信号量使用示例。
