@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 
 /**
  * 表单引擎服务（P0-3 表单引擎 MVP）
@@ -42,26 +42,11 @@ public class FlowFormEngineService {
    * @return 表单 Schema，无配置返回 null
    */
   public FlowFormSchema getFormSchema(String nodeExt) {
-    if (!StringUtils.hasText(nodeExt)) {
+    String schemaJson = FlowNodeExt.getFormSchemaJson(nodeExt);
+    if (!StringUtils.hasText(schemaJson)) {
       return null;
     }
-    try {
-      Map<String, Object> extJson = YdszJson.parseMap(nodeExt);
-      if (extJson == null) {
-        return null;
-      }
-      Object raw = extJson.get("formSchema");
-      String schemaJson = raw == null ? null : String.valueOf(raw);
-      if (!StringUtils.hasText(schemaJson)) {
-        return null;
-      }
-      return formValidator.parseSchema(schemaJson);
-    } catch (SysException e) {
-      throw e;
-    } catch (Exception e) {
-      log.warn("[FormEngine] 提取 formSchema 失败: {}", e.getMessage(), e);
-      return null;
-    }
+    return formValidator.parseSchema(schemaJson);
   }
 
   /**

@@ -3,16 +3,24 @@ package com.njydsz.workflow.domain.vo;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Map;
 
+import com.njydsz.common.json.YdszJson;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * FlowNodeDO 视图对象。
+ *
+ * <p>提供 ext JSON 的懒解析 getter 方法，避免调用方重复编写解析逻辑。
+ * 解析结果缓存在 {@code parsedExt} 中，同一 VO 多次调用只解析一次。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
+@Slf4j
 public class FlowNodeVO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
@@ -35,4 +43,306 @@ public class FlowNodeVO implements Serializable {
   private LocalDateTime createdAt;
   private String updatedBy;
   private LocalDateTime updatedAt;
+
+  /** ext JSON 懒解析缓存（不参与序列化）。 */
+  private transient volatile Map<String, Object> parsedExt;
+
+  // ==================== ext 懒解析基础设施 ====================
+
+  /**
+   * 获取 ext JSON 的解析结果 Map（懒解析、线程安全的 double-check 缓存）。
+   *
+   * @return ext 对应的 Map，无配置时返回空 Map（非 null）
+   */
+  public Map<String, Object> getExtMap() {
+    if (parsedExt != null) {
+      return parsedExt;
+    }
+    synchronized (this) {
+      if (parsedExt != null) {
+        return parsedExt;
+      }
+      if (ext == null || ext.isBlank()) {
+        parsedExt = Collections.emptyMap();
+        return parsedExt;
+      }
+      try {
+        Map<String, Object> map = YdszJson.parseMap(ext);
+        parsedExt = map != null ? map : Collections.emptyMap();
+        return parsedExt;
+      } catch (Exception e) {
+        log.warn("[FlowNodeVO] 解析 ext JSON 失败: nodeCode={} err={}", nodeCode, e.getMessage());
+        parsedExt = Collections.emptyMap();
+        return parsedExt;
+      }
+    }
+  }
+
+  // ==================== 网关相关 ====================
+
+  /**
+   * 获取网关默认出边 sequenceFlowId（BPMN 2.0 default 属性）。
+   *
+   * @return 默认出边 ID，未配置时返回 null
+   */
+  public String getDefaultFlowId() {
+    Object val = getExtMap().get("defaultFlowId");
+    return val == null ? null : String.valueOf(val);
+  }
+
+  // ==================== 服务节点相关 ====================
+
+  /**
+   * 获取服务节点类型（HTTP / SCRIPT / AUTO_PASS）。
+   *
+   * @return 服务类型，默认 AUTO_PASS
+   */
+  public String getServiceType() {
+    Object val = getExtMap().get("serviceType");
+    return val == null ? "AUTO_PASS" : String.valueOf(val).toUpperCase();
+  }
+
+  /**
+   * 获取服务节点 HTTP 调用地址。
+   *
+   * @return URL，未配置时返回空字符串
+   */
+  public String getServiceUrl() {
+    Object val = getExtMap().get("url");
+    return val == null ? "" : String.valueOf(val);
+  }
+
+  /**
+   * 获取服务节点 HTTP 方法。
+   *
+   * @return HTTP 方法，默认 GET
+   */
+  public String getServiceMethod() {
+    Object val = getExtMap().get("method");
+    return val == null ? "GET" : String.valueOf(val).toUpperCase();
+  }
+
+  /**
+   * 获取服务节点脚本内容（SCRIPT 类型使用）。
+   *
+   * @return 脚本内容，未配置时返回空字符串
+   */
+  public String getServiceScript() {
+    Object val = getExtMap().get("script");
+    return val == null ? "" : String.valueOf(val);
+  }
+
+  // ==================== 审批人为空兜底策略 ====================
+
+  /**
+   * 获取审批人为空时的兜底策略（AUTO_PASS / TRANSFER_ADMIN / ASSIGN_SPECIFIED）。
+   *
+   * @return 兜底策略，默认 AUTO_PASS
+   */
+  public String getEmptyStrategy() {
+    Object val = getExtMap().get("emptyStrategy");
+    return val == null ? "AUTO_PASS" : String.valueOf(val).toUpperCase();
+  }
+
+  /**
+   * 获取兜底策略中的管理员用户 ID。
+   *
+   * @return 管理员用户 ID，默认 "1"
+   */
+  public String getAdminUserId() {
+    Object val = getExtMap().get("adminUserId");
+    return val == null ? "1" : String.valueOf(val);
+  }
+
+  /**
+   * 获取兜底策略中的指定用户 ID。
+   *
+   * @return 指定用户 ID，默认 "1"
+   */
+  public String getSpecifiedUserId() {
+    Object val = getExtMap().get("specifiedUserId");
+    return val == null ? "1" : String.valueOf(val);
+  }
+
+  // ==================== 自动去重 ====================
+
+  /**
+   * 判断是否启用跨节点办理人去重。
+   *
+   * @return true 表示启用去重
+   */
+  public boolean getAutoDedup() {
+    Object val = getExtMap().get("autoDedup");
+    if (val == null) {
+      return false;
+    }
+    if (val instanceof Boolean b) {
+      return b;
+    }
+    return Boolean.parseBoolean(String.valueOf(val));
+  }
+
+  // ==================== 并行网关 join 聚合阈值 ====================
+
+  /**
+   * 解析并行/包容网关的 join 聚合阈值。
+   *
+   * <p>支持格式：
+   *
+   * <ul>
+   *   <li>{@code "joinRequired": 3} — 固定数量
+   *   <li>{@code "joinRequired": "3/5"} — 分数（5 个分支中需 3 个）
+   *   <li>{@code "joinRequired": "majority"} — 过半数
+   *   <li>未配置 — 返回 incomingCount（全部到达才聚合）
+   * </ul>
+   *
+   * @param incomingCount 网关的入边总数
+   * @return 需要到达的分支数量（1 ~ incomingCount）
+   */
+  public int getJoinRequired(int incomingCount) {
+    Object val = getExtMap().get("joinRequired");
+    if (val == null) {
+      return incomingCount;
+    }
+    if (val instanceof Number n) {
+      return clamp(n.intValue(), incomingCount);
+    }
+    String s = String.valueOf(val).trim();
+    if ("majority".equalsIgnoreCase(s)) {
+      return incomingCount / 2 + 1;
+    }
+    if (s.contains("/")) {
+      String[] parts = s.split("/");
+      return clamp(Integer.parseInt(parts[0].trim()), incomingCount);
+    }
+    return clamp(Integer.parseInt(s), incomingCount);
+  }
+
+  // ==================== 表单 Schema ====================
+
+  /**
+   * 获取表单 Schema JSON 字符串。
+   *
+   * @return 表单 Schema JSON，未配置时返回 null
+   */
+  public String getFormSchemaJson() {
+    Object val = getExtMap().get("formSchema");
+    return val == null ? null : String.valueOf(val);
+  }
+
+  // ==================== 优先级 ====================
+
+  /**
+   * 获取节点优先级（1~100）。
+   *
+   * @return 优先级数值，默认 50
+   */
+  public int getPriority() {
+    Object val = getExtMap().get("priority");
+    if (val == null) {
+      return DEFAULT_PRIORITY;
+    }
+    if (val instanceof Number n) {
+      return clamp(n.intValue(), 1, 100);
+    }
+    try {
+      return clamp(Integer.parseInt(String.valueOf(val).trim()), 1, 100);
+    } catch (NumberFormatException e) {
+      return DEFAULT_PRIORITY;
+    }
+  }
+
+  // ==================== 超时升级 ====================
+
+  /**
+   * 获取超时升级用户 ID。
+   *
+   * @return 升级用户 ID，未配置时返回空字符串
+   */
+  public String getEscalateUser() {
+    Object val = getExtMap().get("escalateUser");
+    return val == null ? "" : String.valueOf(val);
+  }
+
+  /**
+   * 获取超时策略（REMIND / ESCALATE / AUTO_PASS / AUTO_REJECT）。
+   *
+   * @return 超时策略，默认 REMIND
+   */
+  public String getTimeoutStrategy() {
+    Object val = getExtMap().get("timeoutStrategy");
+    return val == null ? "REMIND" : String.valueOf(val).toUpperCase();
+  }
+
+  /**
+   * 获取超时时间（分钟）。
+   *
+   * @return 超时分钟数，默认 120
+   */
+  public int getTimeoutMinutes() {
+    Object val = getExtMap().get("timeout");
+    if (val == null) {
+      return DEFAULT_TIMEOUT_MINUTES;
+    }
+    if (val instanceof Number n) {
+      return Math.max(1, n.intValue());
+    }
+    try {
+      return Math.max(1, Integer.parseInt(String.valueOf(val).trim()));
+    } catch (NumberFormatException e) {
+      return DEFAULT_TIMEOUT_MINUTES;
+    }
+  }
+
+  // ==================== 事件订阅 ====================
+
+  /**
+   * 获取事件类型（ERROR / TIMER / SIGNAL / MESSAGE）。
+   *
+   * @return 事件类型，未配置时返回空字符串
+   */
+  public String getEventType() {
+    Object val = getExtMap().get("eventType");
+    return val == null ? "" : String.valueOf(val).toUpperCase();
+  }
+
+  /**
+   * 获取 boundaryEvent 的attachedToRef（关联的节点编码）。
+   *
+   * @return 关联节点编码，未配置时返回空字符串
+   */
+  public String getAttachedToRef() {
+    Object val = getExtMap().get("attachedToRef");
+    return val == null ? "" : String.valueOf(val);
+  }
+
+  /**
+   * 获取错误边界事件引用标识。
+   *
+   * @return 错误引用标识，默认 "SERVICE_ERROR"
+   */
+  public String getErrorRef() {
+    Object val = getExtMap().get("errorRef");
+    return val == null ? "SERVICE_ERROR" : String.valueOf(val);
+  }
+
+  // ==================== 常量 ====================
+
+  /** 节点默认优先级。 */
+  public static final int DEFAULT_PRIORITY = 50;
+
+  /** 默认超时分钟数。 */
+  public static final int DEFAULT_TIMEOUT_MINUTES = 120;
+
+  // ==================== 内部工具 ====================
+
+  /** 将值 clamp 到 [1, max] 范围。 */
+  private static int clamp(int value, int max) {
+    return Math.min(Math.max(1, value), max);
+  }
+
+  /** 将值 clamp 到 [min, max] 范围。 */
+  private static int clamp(int value, int min, int max) {
+    return Math.min(Math.max(min, value), max);
+  }
 }

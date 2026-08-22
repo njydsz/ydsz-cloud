@@ -23,7 +23,6 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
-import com.njydsz.workflow.server.engine.FlowSkipUtils;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowJoinTokenService;
 import com.njydsz.workflow.server.service.FlowTaskService;
@@ -319,8 +318,8 @@ public class DefaultFlowAdvancer {
     int incomingCount =
         flowDefinitionCacheService.getSkipsByNextNode(definitionId, joinCode).size();
     try {
-      // P0-3: 解析节点 ext 中的 joinRequired 配置
-      int requiredCount = parseJoinRequired(joinNode, incomingCount);
+      // P0-3: 从节点 VO ext 中解析 joinRequired 配置（N/M 聚合）
+      int requiredCount = joinNode.getJoinRequired(incomingCount);
       // 懒初始化：首次到达时初始化令牌
       if (!joinTokenService.isInitialized(instId, joinCode)) {
         if (requiredCount < incomingCount) {
@@ -494,7 +493,7 @@ public class DefaultFlowAdvancer {
             "[Flow] {}无匹配条件，取 BPMN default 出边: node={} defaultFlowId={}",
             isExclusive ? "排他网关" : "包容网关",
             currentNode.getNodeCode(),
-            extractSequenceFlowId(defaultSkip));
+            defaultSkip.getSequenceFlowId());
         matched.add(defaultSkip);
       } else {
         // 未配置 default 属性时，取无条件的出边（BPMN 规范：default 边本身不能有 conditionExpression）
@@ -561,7 +560,7 @@ public class DefaultFlowAdvancer {
       // P0-1 修复：使用 extractSourceNodeCode 获取入边 sourceRef（前驱节点编码），
       // 跳过脆弱的 lookupNodeCodeByName 名称匹配路径。
       // 设计器常将 sequenceFlow 的 name 属性留空，按名称查找极易失败或错配。
-      String sourceNodeCode = extractSourceNodeCode(incoming.get(0));
+      String sourceNodeCode = incoming.get(0).getSourceRef();
       if (sourceNodeCode != null && !sourceNodeCode.isBlank()) {
         return sourceNodeCode;
       }
@@ -591,65 +590,18 @@ public class DefaultFlowAdvancer {
    * @return 默认出边，未配置或未找到时返回 null
    */
   private FlowSkipVO resolveDefaultSkip(FlowNodeVO gatewayNode, List<FlowSkipVO> allSkips) {
-    if (gatewayNode.getExt() == null || gatewayNode.getExt().isBlank()) {
+    String defaultId = gatewayNode.getDefaultFlowId();
+    if (defaultId == null) {
       return null;
     }
-    try {
-      Map<String, Object> nodeExt = YdszJson.parseMap(gatewayNode.getExt());
-      if (nodeExt == null) {
-        return null;
+    for (FlowSkipVO skip : allSkips) {
+      if (defaultId.equals(skip.getSequenceFlowId())) {
+        return skip;
       }
-      Object defaultFlowId = nodeExt.get("defaultFlowId");
-      if (defaultFlowId == null) {
-        return null;
-      }
-      String defaultId = String.valueOf(defaultFlowId);
-      for (FlowSkipVO skip : allSkips) {
-        String seqFlowId = extractSequenceFlowId(skip);
-        if (defaultId.equals(seqFlowId)) {
-          return skip;
-        }
-      }
-    } catch (Exception e) {
-      log.warn("[Flow] P0-2 解析默认出边失败: node={} err={}", gatewayNode.getNodeCode(), e.getMessage());
     }
     return null;
   }
 
-  /**
-   * P0-2: 从 FlowSkipVO.ext JSON 中提取 sequenceFlowId
-   *
-   * @param skip 跳转边
-   * @return sequenceFlowId，不存在时返回 null
-   */
-  private String extractSequenceFlowId(FlowSkipVO skip) {
-    if (skip.getExt() == null || skip.getExt().isBlank()) {
-      return null;
-    }
-    try {
-      Map<String, Object> ext = YdszJson.parseMap(skip.getExt());
-      if (ext == null) {
-        return null;
-      }
-      Object val = ext.get("sequenceFlowId");
-      return val == null ? null : String.valueOf(val);
-    } catch (Exception e) {
-      log.warn("[Flow] 提取 sequenceFlowId 失败, skipId={}, err={}", skip.getId(), e.getMessage());
-      return null;
-    }
-  }
-
-  /**
-   * P0-2: 从 FlowSkipVO.ext JSON 中提取 sourceRef（入边源节点编码）
-   *
-   * <p>委托 {@link FlowSkipUtils#extractSourceNodeCode} 统一实现，避免三处重复。
-   *
-   * @param skip 跳转边
-   * @return 源节点编码，不存在时返回 null
-   */
-  private String extractSourceNodeCode(FlowSkipVO skip) {
-    return FlowSkipUtils.extractSourceNodeCode(skip);
-  }
 
   /**
    * P0-2: 统计 join 节点的入边源节点中仍有活跃任务的数量（降级路径使用）
@@ -671,7 +623,7 @@ public class DefaultFlowAdvancer {
     }
     int active = 0;
     for (FlowSkipVO skip : incoming) {
-      String sourceNodeCode = extractSourceNodeCode(skip);
+      String sourceNodeCode = skip.getSourceRef();
       if (sourceNodeCode == null || sourceNodeCode.isBlank()) {
         continue;
       }
@@ -685,55 +637,6 @@ public class DefaultFlowAdvancer {
   private boolean hasMultipleIncoming(String definitionId, String nodeCode) {
     List<FlowSkipVO> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, nodeCode);
     return incoming != null && incoming.size() > 1;
-  }
-
-  /**
-   * P0-3: 解析节点 ext 中的 joinRequired 配置
-   *
-   * <p>支持格式：
-   *
-   * <ul>
-   *   <li>{@code "joinRequired": 3} — 数值，表示需要 3 个分支到达
-   *   <li>{@code "joinRequired": "3/5"} — 分数，表示 5 个分支中 3 个到达
-   *   <li>{@code "joinRequired": "majority"} — 过半数
-   *   <li>未配置 — 返回 incomingCount（默认全部到达）
-   * </ul>
-   */
-  private int parseJoinRequired(FlowNodeVO node, int incomingCount) {
-    if (node.getExt() == null || node.getExt().isBlank()) {
-      return incomingCount;
-    }
-    try {
-      Map<String, Object> ext = YdszJson.parseMap(node.getExt());
-      if (ext == null) {
-        return incomingCount;
-      }
-      Object val = ext.get("joinRequired");
-      if (val == null) {
-        return incomingCount;
-      }
-      if (val instanceof Number n) {
-        int required = n.intValue();
-        return Math.min(Math.max(1, required), incomingCount);
-      }
-      String s = String.valueOf(val).trim();
-      if ("majority".equalsIgnoreCase(s)) {
-        return incomingCount / 2 + 1;
-      }
-      if (s.contains("/")) {
-        String[] parts = s.split("/");
-        int required = Integer.parseInt(parts[0].trim());
-        return Math.min(Math.max(1, required), incomingCount);
-      }
-      return Math.min(Math.max(1, Integer.parseInt(s)), incomingCount);
-    } catch (Exception e) {
-      log.warn(
-          "[Flow] P0-3 解析 joinRequired 失败: node={} ext={} err={}",
-          node.getNodeCode(),
-          node.getExt(),
-          e.getMessage());
-      return incomingCount;
-    }
   }
 
   private Map<String, Object> parseVariable(String json) {

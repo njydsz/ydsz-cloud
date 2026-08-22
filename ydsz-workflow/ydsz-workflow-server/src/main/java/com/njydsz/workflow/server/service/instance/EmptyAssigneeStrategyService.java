@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
@@ -115,8 +115,7 @@ public class EmptyAssigneeStrategyService {
    */
   public String handleEmptyAssignee(
       FlowRunTaskDO task, FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
-    Map<String, Object> extConfig = parseExtConfig(node.getExt());
-    String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", DEFAULT_EMPTY_STRATEGY);
+    String emptyStrategy = FlowNodeExt.getEmptyStrategy(node.getExt());
 
     return switch (emptyStrategy) {
       case "AUTO_PASS" -> handleAutoPass(task, instance, node, variables);
@@ -125,7 +124,7 @@ public class EmptyAssigneeStrategyService {
               task,
               instance,
               node,
-              parseLongConfig(extConfig, "adminUserId", "1"),
+              FlowNodeExt.getAdminUserId(node.getExt()),
               "ADMIN_FALLBACK",
               "[Flow] 审批人为空转管理员: instanceId={} node={} adminId={}");
       case "ASSIGN_SPECIFIED" ->
@@ -133,7 +132,7 @@ public class EmptyAssigneeStrategyService {
               task,
               instance,
               node,
-              parseLongConfig(extConfig, "specifiedUserId", "1"),
+              FlowNodeExt.getSpecifiedUserId(node.getExt()),
               "SPECIFIED_FALLBACK",
               "[Flow] 审批人为空指定人员: instanceId={} node={} userId={}");
       default -> fallbackToResolveAssignee(task, instance, node, variables);
@@ -207,32 +206,6 @@ public class EmptyAssigneeStrategyService {
     if (advanceCallback != null) {
       advanceCallback.apply(new AdvanceContext(instance, node, variables));
     }
-  }
-
-  /** 解析 node.ext JSON 为 Map */
-  private Map<String, Object> parseExtConfig(String ext) {
-    if (!StringUtils.hasText(ext)) {
-      return java.util.Collections.emptyMap();
-    }
-    try {
-      Map<String, Object> map = YdszJson.parseMap(ext);
-      return map == null ? java.util.Collections.emptyMap() : map;
-    } catch (Exception e) {
-      log.warn("[Flow] 解析 node.ext JSON 失败: err={}", e.getMessage());
-      return java.util.Collections.emptyMap();
-    }
-  }
-
-  /** 从 extConfig 中读取字符串配置值 */
-  private String parseLongConfig(Map<String, Object> config, String key, String defaultValue) {
-    Object val = config.get(key);
-    if (val == null) {
-      return defaultValue;
-    }
-    if (val instanceof Number n) {
-      return String.valueOf(n.longValue());
-    }
-    return String.valueOf(val);
   }
 
   /**

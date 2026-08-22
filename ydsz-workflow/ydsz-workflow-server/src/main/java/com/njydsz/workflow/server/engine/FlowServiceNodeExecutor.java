@@ -25,7 +25,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 
 /**
@@ -112,15 +111,13 @@ public class FlowServiceNodeExecutor {
    * @return 执行结果（成功/失败 + 消息）
    */
   public ServiceExecutionResult execute(FlowNodeDO node, Map<String, Object> variables) {
-    Map<String, Object> config = parseExtConfig(node.getExt());
-    String serviceType =
-        String.valueOf(config.getOrDefault("serviceType", "AUTO_PASS")).toUpperCase();
+    String serviceType = FlowNodeExt.getServiceType(node.getExt());
 
     log.info("[Flow-Service] 执行服务节点: node={} serviceType={}", node.getNodeCode(), serviceType);
 
     return switch (serviceType) {
-      case "HTTP" -> executeHttp(node, config, variables);
-      case "SCRIPT" -> executeScript(node, config, variables);
+      case "HTTP" -> executeHttp(node, variables);
+      case "SCRIPT" -> executeScript(node, variables);
       case "AUTO_PASS" -> new ServiceExecutionResult(true, "自动通过");
       default -> {
         log.warn("[Flow-Service] 未知服务类型 {}，默认自动通过: node={}", serviceType, node.getNodeCode());
@@ -158,13 +155,13 @@ public class FlowServiceNodeExecutor {
 
   /** HTTP 类型：通过 RestTemplate 调用外部接口 */
   private ServiceExecutionResult executeHttp(
-      FlowNodeDO node, Map<String, Object> config, Map<String, Object> variables) {
-    String url = String.valueOf(config.getOrDefault("url", ""));
+      FlowNodeDO node, Map<String, Object> variables) {
+    String url = FlowNodeExt.getServiceUrl(node.getExt());
     if (!StringUtils.hasText(url) || "null".equals(url)) {
       log.warn("[Flow-Service] HTTP 服务节点未配置 url，标记为失败: node={}", node.getNodeCode());
       return new ServiceExecutionResult(false, "HTTP 服务节点未配置 url");
     }
-    String method = String.valueOf(config.getOrDefault("method", "GET")).toUpperCase();
+    String method = FlowNodeExt.getServiceMethod(node.getExt());
 
     try {
       HttpHeaders headers = new HttpHeaders();
@@ -247,8 +244,8 @@ public class FlowServiceNodeExecutor {
    * @param variables 流程变量（作为脚本执行环境）
    */
   private ServiceExecutionResult executeScript(
-      FlowNodeDO node, Map<String, Object> config, Map<String, Object> variables) {
-    String script = String.valueOf(config.getOrDefault("script", ""));
+      FlowNodeDO node, Map<String, Object> variables) {
+    String script = FlowNodeExt.getServiceScript(node.getExt());
     if (!StringUtils.hasText(script) || "null".equals(script)) {
       log.warn("[Flow-Service] SCRIPT 节点未配置 script，标记为失败: node={}", node.getNodeCode());
       return new ServiceExecutionResult(false, "SCRIPT 节点未配置 script");
@@ -297,19 +294,6 @@ public class FlowServiceNodeExecutor {
     }
   }
 
-  /** 解析 ext JSON 为 Map */
-  private Map<String, Object> parseExtConfig(String ext) {
-    if (!StringUtils.hasText(ext)) {
-      return Collections.emptyMap();
-    }
-    try {
-      Map<String, Object> map = YdszJson.parseMap(ext);
-      return map == null ? Collections.emptyMap() : map;
-    } catch (Exception e) {
-      log.warn("[Flow-Service] 解析 ext JSON 失败: {} err={}", ext, e.getMessage());
-      return Collections.emptyMap();
-    }
-  }
 
   /**
    * 服务节点执行结果

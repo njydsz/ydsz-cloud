@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
@@ -256,9 +256,8 @@ public class ServiceNodeExecuteService {
                     if (!eventSubscriptionService.isEventCatchNode(n)) {
                       return false;
                     }
-                    Map<String, Object> ext = parseExtConfig(n.getExt());
-                    String attachedTo = (String) ext.get("attachedToRef");
-                    String eventType = (String) ext.get("eventType");
+                    String attachedTo = FlowNodeExt.getAttachedToRef(n.getExt());
+                    String eventType = FlowNodeExt.getEventType(n.getExt());
                     return serviceNode.getNodeCode().equals(attachedTo)
                         && "ERROR".equalsIgnoreCase(eventType);
                   })
@@ -267,8 +266,7 @@ public class ServiceNodeExecuteService {
         return false;
       }
       for (FlowNodeDO boundary : errorBoundaries) {
-        Map<String, Object> ext = parseExtConfig(boundary.getExt());
-        String errorRef = (String) ext.getOrDefault("errorRef", "SERVICE_ERROR");
+        String errorRef = FlowNodeExt.getErrorRef(boundary.getExt());
         eventSubscriptionService.throwError(
             instance.getTenantId(), instance.getId(), errorRef, errorMsg);
         log.info(
@@ -294,20 +292,6 @@ public class ServiceNodeExecuteService {
       FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
     if (advanceCallback != null) {
       advanceCallback.apply(new AdvanceContext(instance, node, variables));
-    }
-  }
-
-  /** 解析 node.ext JSON 为 Map */
-  private Map<String, Object> parseExtConfig(String ext) {
-    if (!StringUtils.hasText(ext)) {
-      return Collections.emptyMap();
-    }
-    try {
-      Map<String, Object> map = YdszJson.parseMap(ext);
-      return map == null ? Collections.emptyMap() : map;
-    } catch (Exception e) {
-      log.warn("[Flow] 解析 node.ext JSON 失败: err={}", e.getMessage());
-      return Collections.emptyMap();
     }
   }
 
