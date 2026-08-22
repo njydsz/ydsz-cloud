@@ -26,7 +26,7 @@ import com.njydsz.common.sentry.spi.TraceContext;
  *   <li>继续使用 {@link SentryObservation} 静态方法：向后兼容，内部委托本 Bean
  * </ul>
  *
- * <p>v2.0.0 新增：替代原静态门面模式，解决 ServiceLocator 反模式问题。
+ * <p>1.0.0 新增：替代原静态门面模式，解决 ServiceLocator 反模式问题。
  *
  * @author ydsz-team
  * @since 1.0.0

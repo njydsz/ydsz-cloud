@@ -14,7 +14,7 @@ import org.springframework.lang.Nullable;
  *
  * <p><b>注意</b>：{@link #record} 方法由 {@link TimedTaskDecorator} 调用， 慢任务阈值通过参数传入，各池可使用不同阈值。
  *
- * <p>v1.4.0 变更：修复指标 tag 名称（"pool" → "pool.name"）保持与 {@link ThreadPoolMetrics} 一致；Timer
+ * <p>1.0.0 变更：修复指标 tag 名称（"pool" → "pool.name"）保持与 {@link ThreadPoolMetrics} 一致；Timer
  * 懒加载注册表避免重复注册。
  *
  * @author ydsz-team

@@ -94,7 +94,7 @@ public class LoggingAutoConfiguration {
     }
 
     if (publishers.isEmpty()) {
-      // v2.0.0 变更：不再隐式降级到 Loki，改为使用 NoOpLogPublisher
+      // 1.0.0 变更：不再隐式降级到 Loki，改为使用 NoOpLogPublisher
       // 避免日志被意外发送到未配置的 Loki 实例
       log.warn(
           "[Sentry] 未启用任何日志发布器（elk.enabled=false, loki.enabled=false），"

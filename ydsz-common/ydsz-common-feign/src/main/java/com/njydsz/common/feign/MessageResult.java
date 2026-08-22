@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 /**
  * 消息发送结果 DTO（兼容旧 com.njydsz.common.feign.MessageResult）。
  *
- * <p>v2.0 新增错误消息分层：
+ * <p>1.0.0 新增错误消息分层：
  *
  * <ul>
  *   <li>{@link #userMessage} — 用户友好消息，走 i18n 解析，前端直接展示

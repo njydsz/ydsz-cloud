@@ -17,7 +17,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * 文件操作统一门面（ydsz-common-file 模块内置工具类）。
  *
  * <p>提供文件名清洗、后缀提取、存储键生成、Path → MultipartFile 适配等通用方法。 各业务模块的文件工具逻辑应优先使用本类， 原 {@code
- * com.njydsz.nextwiki.server.util.NextwikiFileUtils} 已于 v2.0.0 移除。
+ * com.njydsz.nextwiki.server.util.NextwikiFileUtils} 已于 1.0.0 移除。
  *
  * <p><b>使用示例：</b>
  *

@@ -36,7 +36,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  *
  * <p><b>DDD 合规：</b>仅使用 {@link UserAccountVO}（domain 层）发布事件，不依赖 infra 层实体。
  *
- * <p><b>认证事件（v1.6.0+）：</b>新增的认证事件发布方法通过 {@link UserAuthEventDispatcher} 分发，替代旧的 {@code publishUserLogin} 等字符串事件。
+ * <p><b>认证事件（1.0.0+）：</b>新增的认证事件发布方法通过 {@link UserAuthEventDispatcher} 分发，替代旧的 {@code publishUserLogin} 等字符串事件。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -107,7 +107,7 @@ public class UserDomainEventPublisher {
         UserDomainEvent.of(UserDomainEventType.USER_DELETED, userId, Map.of("username", username)));
   }
 
-  // ==================== 认证事件（v1.6.0+，通过 UserAuthEventDispatcher 分发） ====================
+  // ==================== 认证事件（1.0.0+，通过 UserAuthEventDispatcher 分发） ====================
 
   /**
    * 发布登录成功事件。

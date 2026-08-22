@@ -3,7 +3,7 @@ package com.njydsz.common.cache.builder;
 /**
  * 缓存类型枚举
  *
- * <p>当前支持的缓存类型（精简版 v2.0）：
+ * <p>当前支持的缓存类型（精简版 1.0.0）：
  *
  * <ul>
  *   <li>TINYLFU：Window-TinyLFU 算法（参考 Caffeine），命中率最优，通用场景默认

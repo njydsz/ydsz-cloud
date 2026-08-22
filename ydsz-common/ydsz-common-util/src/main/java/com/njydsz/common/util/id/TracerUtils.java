@@ -26,10 +26,10 @@ import com.njydsz.common.util.string.StringUtils;
  *   <li>支持 {@link TraceIdGeneratorProxy#generateSortableTraceId()} 生成时间有序 TraceId
  *   <li>支持 Span ID 父子关系管理
  *   <li>支持线程间链路追踪上下文传递
- *   <li>支持 W3C TraceContext {@code traceparent} 头的解析与注入（v4.2.0+）
+ *   <li>支持 W3C TraceContext {@code traceparent} 头的解析与注入（1.0.0+）
  * </ul>
  *
- * <p><b>统一上下文：</b>自 v2.0.0 起，traceId 读写统一收口至 {@link RequestContextProxy} （底层桥接 ydsz-common-core 的
+ * <p><b>统一上下文：</b>自 1.0.0 起，traceId 读写统一收口至 {@link RequestContextProxy} （底层桥接 ydsz-common-core 的
  * RequestContext），MDC 仅作为日志桥接双写， 保证业务代码读取 {@link RequestContextProxy#getTraceId()} 与日志输出保持一致。
  *
  * <p><b>线程安全性：</b>所有方法均为静态无状态，线程安全。 实际状态存储于 SLF4J {@link MDC} 与 {@link

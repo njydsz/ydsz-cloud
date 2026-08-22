@@ -33,7 +33,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>仅需主键 → 继承 {@link MpBaseIdEntity}
  * </ul>
  *
- * <p><b>v1.8.0</b>：{@code @Version} 从 {@link MpSimpleEntity} 拆出到 {@link MpVersionedEntity}，
+ * <p><b>1.0.0</b>：{@code @Version} 从 {@link MpSimpleEntity} 拆出到 {@link MpVersionedEntity}，
  * 实体可按需选择是否携带乐观锁能力。本类保持向后兼容，行为与之前版本完全一致。
  *
  * <p><b>使用示例：</b>

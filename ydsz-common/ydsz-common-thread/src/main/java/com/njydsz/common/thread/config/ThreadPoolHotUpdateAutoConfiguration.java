@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Role;
  *
  * <p>启用后，应用启动时会自动打印线程池注册摘要，并可通过 {@link ThreadPoolHotUpdateListener#resizePool} 等方法运行时调整线程池参数。
  *
- * <p>v1.4.0 新增：从半自动（需业务模块手动创建 Bean）改为全自动配置， 符合 Spring Boot 自动配置惯例。
+ * <p>1.0.0 新增：从半自动（需业务模块手动创建 Bean）改为全自动配置， 符合 Spring Boot 自动配置惯例。
  *
  * @author ydsz-team
  * @since 1.0.0

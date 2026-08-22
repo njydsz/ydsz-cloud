@@ -30,7 +30,7 @@ import lombok.experimental.SuperBuilder;
  *                  └─ MpBaseEntity (全功能别名)
  * </pre>
  *
- * <p><b>v1.8.0</b>：从 {@link MpBaseEntity} 中拆出乐观锁能力， 使乐观锁成为可选项而非强制项。
+ * <p><b>1.0.0</b>：从 {@link MpBaseEntity} 中拆出乐观锁能力， 使乐观锁成为可选项而非强制项。
  *
  * <p><b>使用示例：</b>
  *

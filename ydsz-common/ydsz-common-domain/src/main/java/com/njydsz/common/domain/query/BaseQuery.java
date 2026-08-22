@@ -33,7 +33,7 @@ import static lombok.AccessLevel.PROTECTED;
  *   <tr><td>tenantId</td><td>String</td><td>租户ID</td></tr>
  * </table>
  *
- * <p><b>v1.8.0 变更：</b>移除 {@code ascending} 字段，排序方向统一使用 {@link OrderItem} 结构化表达（{@link
+ * <p><b>1.0.0 变更：</b>移除 {@code ascending} 字段，排序方向统一使用 {@link OrderItem} 结构化表达（{@link
  * PageQuery#addOrder(String, boolean)}）。
  *
  * @author ydsz-team

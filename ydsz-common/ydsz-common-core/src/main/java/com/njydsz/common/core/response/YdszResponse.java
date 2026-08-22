@@ -142,7 +142,7 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
    */
   private Map<String, Object> extensions;
 
-  // 分页字段已迁移至 {@link PageResponse}（v1.9.3）。分页接口请直接返回 {@code PageResponse<T>}。
+  // 分页字段已迁移至 {@link PageResponse}（1.0.0）。分页接口请直接返回 {@code PageResponse<T>}。
 
   /**
    * 默认构造函数。

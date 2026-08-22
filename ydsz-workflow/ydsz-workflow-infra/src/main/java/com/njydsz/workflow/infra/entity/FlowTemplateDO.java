@@ -91,7 +91,7 @@ public class FlowTemplateDO extends MpBaseEntity<String> {
   /** 模板版本号（从 {@code 1} 开始单调递增，同一 {@code templateCode} 下唯一） */
   private Integer version;
 
-  /** 版本标签（如 {@code v1.0} / {@code v2.0-rc1}，可选可读标识） */
+  /** 版本标签（如 {@code 1.0.0} / {@code 1.0.0-rc1}，可选可读标识） */
   private String versionLabel;
 
   /** 继承类型：{@code STANDALONE}=独立 / {@code CLONE}=克隆 / {@code INHERIT}=继承 */

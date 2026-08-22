@@ -49,9 +49,9 @@ import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
  * <p>注入方式：<br>
  * {@code @Resource(name = "ioExecutor") private ThreadPoolTaskExecutor ioExecutor;}
  *
- * <p>v1.3.0 变更：新增 {@code metric-prefix} 和 {@code task-decorator-bean-names} 配置项。
+ * <p>1.0.0 变更：新增 {@code metric-prefix} 和 {@code task-decorator-bean-names} 配置项。
  *
- * <p>v1.4.0 变更：
+ * <p>1.0.0 变更：
  *
  * <ul>
  *   <li>新增 {@code slow-task-threshold-ms} 配置项，支持自定义慢任务阈值

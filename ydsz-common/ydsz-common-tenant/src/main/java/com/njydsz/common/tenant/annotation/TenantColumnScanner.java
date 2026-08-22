@@ -25,7 +25,7 @@ import org.springframework.util.StringUtils;
  * public class FileNodeDO extends MpBaseEntity&lt;String&gt; { ... }
  * </pre>
  *
- * <p><b>扫描范围：</b>默认扫描 {@code com.njydsz} 基包。 可通过 {@code ydsz.tenant.scan-packages} 配置扩展（预留，v1.10
+ * <p><b>扫描范围：</b>默认扫描 {@code com.njydsz} 基包。 可通过 {@code ydsz.tenant.scan-packages} 配置扩展（预留，1.0.0
  * 暂未开放）。
  *
  * <p><b>命名回退：</b>未标注 {@code @TableName} 时，使用类名驼峰 → 下划线命名策略推导表名。

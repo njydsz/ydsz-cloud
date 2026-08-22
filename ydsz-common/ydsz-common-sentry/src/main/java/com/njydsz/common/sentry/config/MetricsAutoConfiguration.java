@@ -35,7 +35,7 @@ import com.njydsz.common.sentry.spi.MetricsCollector;
  *   <li>{@link CircuitBreaker}：ELK/Loki 通道独立熔断器（基于 Resilience4j）
  * </ul>
  *
- * <h3>v2.0.0 变更</h3>
+ * <h3>1.0.0 变更</h3>
  *
  * <ul>
  *   <li>CircuitBreaker 底层替换为 Resilience4j，移除自实现滑动窗口

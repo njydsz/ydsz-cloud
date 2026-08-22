@@ -49,7 +49,7 @@ import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
  * private ThreadPoolTaskExecutor ioExecutor;
  * }</pre>
  *
- * <p><b>v1.3.0 变更：</b>
+ * <p><b>1.0.0 变更：</b>
  *
  * <ul>
  *   <li>新增 {@link ThreadPoolMetrics} / {@link VirtualThreadMetrics} 自动注册
@@ -93,7 +93,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    * <p>该 Bean 负责在 Spring 容器初始化阶段动态注册线程池和指标绑定器 BeanDefinition。 通过 {@link
    * BeanDefinitionRegistryPostProcessor} 在所有常规 BeanDefinition 加载完成后、 Bean 实例化之前执行注册逻辑。
    *
-   * <p>v1.3.1 修复：显式声明为 {@code @Bean}， 修复 {@link ThreadPoolRegistrar} 因缺少组件原型注解导致装配链路断裂的问题。
+   * <p>1.0.0 修复：显式声明为 {@code @Bean}， 修复 {@link ThreadPoolRegistrar} 因缺少组件原型注解导致装配链路断裂的问题。
    *
    * @param properties 线程池配置属性
    * @return 线程池注册器
@@ -127,7 +127,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    * <p>通过 BeanPostProcessor 而非构造器注入避免循环依赖： ThreadPoolTaskExecutor → 拒绝策略 → MeteredRejectedHandler →
    * ThreadPoolMetrics → ThreadPoolTaskExecutor。
    *
-   * <p>v1.3.0 重构：{@link ThreadPoolRegistrar} 已提取为独立组件类。
+   * <p>1.0.0 重构：{@link ThreadPoolRegistrar} 已提取为独立组件类。
    *
    * @return 装配后处理器
    * @since 1.0.0

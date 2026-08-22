@@ -38,9 +38,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  *
  * <p>默认指标前缀使用 {@code ydsz.executor} 而非 {@code executor}， 避免与 Spring Boot Actuator 内置的线程池指标命名空间冲突。
  *
- * <p>v1.4.0 变更：指标分核心/可选两类，通过 {@link #enableDetailedMetrics} 控制。
+ * <p>1.0.0 变更：指标分核心/可选两类，通过 {@link #enableDetailedMetrics} 控制。
  *
- * <p>v1.3.0 变更：构造器改为接受 {@link ThreadPoolTaskExecutor}， 拒绝计数由 {@link MeteredRejectedHandler} 自动回调
+ * <p>1.0.0 变更：构造器改为接受 {@link ThreadPoolTaskExecutor}， 拒绝计数由 {@link MeteredRejectedHandler} 自动回调
  * {@link #incrementRejected()}， 无需业务方手动调用。
  *
  * @author ydsz-team

@@ -18,7 +18,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  *
  * <p><b>稳定性：</b>错误码是业务契约，修改/废弃必须保留向前兼容的 alias， 避免错误码硬编码在客户端代码中后无法平滑升级。
  *
- * <p><b>v2.0 变更：</b>收敛冗余错误码（28 → 13），合并语义相近的错误码， 降低客户端处理复杂度。
+ * <p><b>1.0.0 变更：</b>收敛冗余错误码（28 → 13），合并语义相近的错误码， 降低客户端处理复杂度。
  *
  * @author ydsz-team
  * @since 1.0.0

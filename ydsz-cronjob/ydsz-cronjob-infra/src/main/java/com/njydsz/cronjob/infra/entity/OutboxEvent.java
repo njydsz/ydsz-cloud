@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Outbox 事件实体（事务性 Outbox 事件模式）。
@@ -21,7 +22,8 @@ import lombok.Data;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Data
+@Getter
+@Setter
 @TableName("ydsz_job_outbox")
 public class OutboxEvent implements Serializable {
 

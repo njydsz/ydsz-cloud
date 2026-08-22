@@ -11,14 +11,14 @@
  *   <li>common-util：仅保留限流、重试等通用并发工具（{@code RateLimiter}、{@code RetryUtils}）， 不再包含线程池创建与监控能力
  * </ul>
  *
- * <p><b>v1.5.0 变更：</b>
+ * <p><b>1.0.0 变更：</b>
  *
  * <ul>
  *   <li>从 ydsz-common-util 迁入 {@code ExecutorUtils} 编程式线程池工厂
  *   <li>线程池管理能力统一收归本模块，ydsz-common-util 不再提供线程池相关能力
  * </ul>
  *
- * <p><b>v1.4.0 变更：</b>
+ * <p><b>1.0.0 变更：</b>
  *
  * <ul>
  *   <li>TimedTaskDecorator 改用不可变包装对象传递时间戳，修复潜在的 threadId 串扰风险

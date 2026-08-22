@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  *   <li>兼容不可变对象（返回新实例而非修改原对象）
  * </ul>
  *
- * <p><b>安全策略（fail-closed）：</b>自 v1.0.0 起，本处理器遵循「宁可拒绝响应， 不可泄露明文」原则：
+ * <p><b>安全策略（fail-closed）：</b>自 1.0.0 起，本处理器遵循「宁可拒绝响应， 不可泄露明文」原则：
  *
  * <ul>
  *   <li>递归深度超限：抛出 {@link SensitiveDataProcessingException}，不再返回原始对象

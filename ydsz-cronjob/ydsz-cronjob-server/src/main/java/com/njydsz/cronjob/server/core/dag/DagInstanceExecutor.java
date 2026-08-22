@@ -43,7 +43,7 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
  * </ol>
  *
  * <p>支持 TASK / SUB_WORKFLOW / APPROVAL 三种节点类型。CONDITION / LOOP / PARALLEL_GATEWAY 控制节点
- * 已于 v1.2.0 移除，建议使用工作流引擎（Flowable/Camunda）替代复杂编排场景。
+ * 已于 1.0.0 移除，建议使用工作流引擎（Flowable/Camunda）替代复杂编排场景。
  *
  * <h3>跨节点上下文传递（P2-5）</h3>
  *

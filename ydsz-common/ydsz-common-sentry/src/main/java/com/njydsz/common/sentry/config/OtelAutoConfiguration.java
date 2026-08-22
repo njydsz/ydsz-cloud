@@ -122,7 +122,7 @@ public class OtelAutoConfiguration {
    * <p>由 {@link OtelSdkInitializer} 在 {@code initMethod} 阶段构建完成。 业务模块可通过 {@code @Resource(name =
    * "ydszOpenTelemetrySdk")} 注入使用。
    *
-   * <p>v2.0.0 变更：不再注册为 GlobalOpenTelemetry，改为 Spring Bean 依赖注入传播， 避免与
+   * <p>1.0.0 变更：不再注册为 GlobalOpenTelemetry，改为 Spring Bean 依赖注入传播， 避免与
    * opentelemetry-spring-boot-starter 等第三方配置冲突。
    *
    * @return OpenTelemetrySdk 实例

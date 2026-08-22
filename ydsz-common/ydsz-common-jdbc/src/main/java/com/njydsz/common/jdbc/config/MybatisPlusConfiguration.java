@@ -51,7 +51,7 @@ import com.njydsz.common.jdbc.spi.InnerInterceptorProvider;
  *   <li>分页拦截器：支持多数据库类型的分页查询
  * </ul>
  *
- * <p><b>逻辑删除说明：</b>自 v1.9.0 起，统一采用 MP 原生 {@code @TableLogic} 注解实现逻辑删除， 替代自研的 {@code
+ * <p><b>逻辑删除说明：</b>自 1.0.0 起，统一采用 MP 原生 {@code @TableLogic} 注解实现逻辑删除， 替代自研的 {@code
  * LogicalDeleteInterceptor}。业务实体只需在 deleted 字段上标注 {@code @TableLogic} 即可。
  *
  * <p>拦截器执行顺序（按添加顺序）：

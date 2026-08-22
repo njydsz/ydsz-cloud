@@ -4,8 +4,9 @@ import java.io.Serial;
 import java.time.LocalDate;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -20,7 +21,8 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Data
+@Getter
+@Setter
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

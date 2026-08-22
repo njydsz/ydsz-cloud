@@ -193,7 +193,7 @@ public class FlowTemplateController {
    * <p>复制当前最新版本的内容为新版本，旧版本自动降级为 is_latest=0。
    *
    * @param templateCode 模板编码
-   * @param versionLabel 版本标签（可空，如 v2.0-rc1）
+   * @param versionLabel 版本标签（可空，如 1.0.0-rc1）
    * @return 新版本号
    */
   @Operation(summary = "P2-9: 创建模板新版本")

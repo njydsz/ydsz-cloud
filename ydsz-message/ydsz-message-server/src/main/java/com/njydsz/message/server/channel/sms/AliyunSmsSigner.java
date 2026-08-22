@@ -9,7 +9,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * 阿里云 SMS Common RPC V1.0 签名工具。
+ * 阿里云 SMS Common RPC 1.0.0 签名工具。
  *
  * <p>实现阿里云 {@code HMAC-SHA1} 签名算法，纯静态方法，可独立单元测试。 签名步骤：
  *

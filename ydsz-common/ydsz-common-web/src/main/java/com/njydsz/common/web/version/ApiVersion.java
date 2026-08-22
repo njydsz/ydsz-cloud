@@ -21,13 +21,13 @@ import java.lang.annotation.Target;
  *     @GetMapping
  *     @ApiVersion("1.0")
  *     public Result<UserVO> getUserV1() {
- *         // v1.0 实现
+ *         // 1.0.0 实现
  *     }
  *
  *     @GetMapping
  *     @ApiVersion("2.0")
  *     public Result<UserVO> getUserV2() {
- *         // v2.0 实现
+ *         // 1.0.0 实现
  *     }
  * }
  * }</pre>

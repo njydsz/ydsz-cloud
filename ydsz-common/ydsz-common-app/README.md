@@ -11,8 +11,8 @@
 | **层级** | L6 应用层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 继承 `common-base` 提供 App 端特有能力：App 认证、请求体缓存、请求追踪、健康检查、Micrometer 指标采集、`@AppApi` 作用域隔离 |
-| **依赖** | `common-base`（传递 common-core、common-util、common-exception、common-json）、common-exception、common-auth、common-safe、common-redis、common-json；可选依赖 spring-boot-actuator、spring-boot-health、micrometer-core、jakarta.validation-api |
-| **版本** | 1.0.0 |
+| **依赖** | 直接依赖 common-domain、common-base（传递 common-core、common-util、common-exception、common-json、common-auth、common-safe）、common-exception、common-auth、common-safe、common-redis；可选依赖 spring-boot-actuator、spring-boot-health、micrometer-core、jakarta.validation-api |
+| **版本** | 1.0.1 |
 
 ## 核心能力
 
@@ -26,6 +26,8 @@
 | `AppCorsProperties` | CORS 配置（继承 `BaseCorsProperties`），前缀 `ydsz.app.cors` |
 | `AppTraceProperties` | Trace 配置（继承 `BaseTraceProperties`），前缀 `ydsz.app.trace` |
 | `AppContentCacheProperties` | 请求体缓存配置（`ydsz.app.content-cache`），`@Validated` + `@Min(0)` 校验 `maxSize`，默认 2MB |
+| `AppFilterOrder` | App 端 Filter 执行顺序常量，定义 `AppContentCachingFilter` / `AppRequestIdResponseFilter` / `AppAuthFilter` 的 Order 值 |
+| `RequestIdGeneratorAutoConfiguration` | RequestId 生成器自动配置，注册 `RequestIdGenerator` Bean（委托 `SnowflakeUtils`） |
 
 ### 2. App 认证
 
@@ -359,4 +361,7 @@ public class CustomAuthConfiguration {
 
 ## 变更记录
 
+- **v1.0.1**（2026-08-17）：
+  - 更新依赖说明：添加 `common-domain` 为直接依赖
+  - 补全 `AppFilterOrder`（Filter 顺序常量）、`RequestIdGeneratorAutoConfiguration`（RequestId 自动配置）文档
 - **v1.0.0**（2026-08-02）：按 ydsz-common-jdbc 9 章节标准重构 README；补全 Filter 链顺序表、SPI 扩展点（含继承扩展点）、Micrometer 指标列表、注意事项；统一版本号为 1.0.0

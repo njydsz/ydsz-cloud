@@ -34,7 +34,7 @@ import com.njydsz.common.sentry.domain.SlaDefinition;
  * String traceId = SentryObservation.traceId();
  * }</pre>
  *
- * <p>v2.0.0 变更：内部委托从自实现 Holder 改为 Spring 容器中的 {@link SentryService} Bean，解决静态门面测试困难、生命周期模糊问题。
+ * <p>1.0.0 变更：内部委托从自实现 Holder 改为 Spring 容器中的 {@link SentryService} Bean，解决静态门面测试困难、生命周期模糊问题。
  *
  * <p>业务方可选择：
  *

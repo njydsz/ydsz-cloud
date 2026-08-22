@@ -37,7 +37,7 @@ import com.njydsz.common.exception.custom.AbstractYdszException;
  * <p><b>高基数标签治理：</b>{@code code} tag 默认不包含， 通过 {@code ydsz.exception.metrics-include-code-tag=true}
  * 显式开启。
  *
- * <p><b>性能优化（v2.0）：</b>预缓存常用 Tags 对象，减少高频调用场景下的 Counter.Builder 对象创建与 Tags 数组分配开销。
+ * <p><b>性能优化（1.0.0）：</b>预缓存常用 Tags 对象，减少高频调用场景下的 Counter.Builder 对象创建与 Tags 数组分配开销。
  *
  * @author ydsz-team
  * @since 1.0.0

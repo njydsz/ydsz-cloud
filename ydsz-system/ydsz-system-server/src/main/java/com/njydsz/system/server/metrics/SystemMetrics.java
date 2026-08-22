@@ -13,7 +13,7 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  * <p>{@code ydsz-system} 微服务的 Prometheus 指标出口，继承 {@link SentryMetricsAdapter} 实现指标统一管理。 通过 Spring
  * Boot Actuator 在 {@code /actuator/prometheus} 端点暴露，供 Grafana / Prometheus 抓取。
  *
- * <p><b>架构合规说明（v2.23 过度设计评估）：</b>
+ * <p><b>架构合规说明（1.0.0 过度设计评估）：</b>
  * <ul>
  *   <li>当前继承 {@link SentryMetricsAdapter} 符合《云顶编码规范》规则 35.6.2（强制要求业务 Metrics 类继承本基类）</li>
  *   <li>本模块仅保留 3 个 Counter 指标（安全校验 + 数据质量），无 Timer/Gauge，已属精简设计</li>

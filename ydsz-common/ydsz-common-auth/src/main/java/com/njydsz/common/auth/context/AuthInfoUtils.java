@@ -39,7 +39,7 @@ import com.njydsz.common.core.context.RequestContext;
  *   <li>业务代码：判断当前用户权限范围
  * </ul>
  *
- * <p><b>设计说明：</b>自 v2.0.0 起，本工具类下沉至 common-auth 服务层， 直接依赖 core 的 RequestContext。util 层不再承载认证业务逻辑。
+ * <p><b>设计说明：</b>自 1.0.0 起，本工具类下沉至 common-auth 服务层， 直接依赖 core 的 RequestContext。util 层不再承载认证业务逻辑。
  *
  * @author ydsz-team
  * @since 1.0.0

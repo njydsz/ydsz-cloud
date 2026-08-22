@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于 FlowRunTaskRepository.findByCondition 方法的参数化查询，
  * 支持多条件组合过滤运行时任务列表。所有字段均为可选，为空时忽略该条件。
  *
- * <p><b>命名合规说明（v2.23 DDD 分层规范）：</b>查询请求参数置于 {@code query/} 包下、以 {@code Query} 结尾
+ * <p><b>命名合规说明（1.0.0 DDD 分层规范）：</b>查询请求参数置于 {@code query/} 包下、以 {@code Query} 结尾
  * （符合 §34.2.1 表格：query/ 查询请求参数 以 Query 结尾）。
  *
  * @author ydsz-team

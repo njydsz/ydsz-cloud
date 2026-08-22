@@ -18,7 +18,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  *
  * <p>用于封装基础设施故障类异常，如数据库连接失败、缓存服务异常、消息队列故障等。 默认 HTTP 状态码为 500，异常分类为 SYSTEM。
  *
- * <p><b>推荐使用方式（v2.3.0）：</b>
+ * <p><b>推荐使用方式（1.0.0）：</b>
  *
  * <pre>{@code
  * // 1. 预定义异常码（推荐）
@@ -35,7 +35,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  *     .build();
  * }</pre>
  *
- * <p><b>精简设计（v2.0）：</b>仅保留 3 个核心构造函数， 其他参数化构造通过 {@link #builder()} 链式 Builder 完成，消除 20+ 构造函数爆炸问题。
+ * <p><b>精简设计（1.0.0）：</b>仅保留 3 个核心构造函数， 其他参数化构造通过 {@link #builder()} 链式 Builder 完成，消除 20+ 构造函数爆炸问题。
  *
  * <p><b>使用示例：</b>
  *

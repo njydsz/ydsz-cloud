@@ -14,9 +14,9 @@ import org.springframework.lang.NonNull;
  * <p>JDK 21 的虚拟线程执行器不支持 {@link java.util.concurrent.ThreadPoolExecutor} 的计数 API， 因此本绑定器通过应用层计数器暴露
  * submitted / completed 两个指标， 由 {@link MeteredVirtualExecutorService} 在任务提交/完成时回调计数。
  *
- * <p>v1.4.0 变更：移除 rejected 指标（JDK 21 的虚拟线程执行器从不拒绝任务， 该计数器始终为 0，无实际意义）。
+ * <p>1.0.0 变更：移除 rejected 指标（JDK 21 的虚拟线程执行器从不拒绝任务， 该计数器始终为 0，无实际意义）。
  *
- * <p>v1.3.1 变更：移除无意义的 {@code active} Gauge（固定返回 1.0）， 计数器改用 {@link LongAdder} 优化高并发写入性能。
+ * <p>1.0.0 变更：移除无意义的 {@code active} Gauge（固定返回 1.0）， 计数器改用 {@link LongAdder} 优化高并发写入性能。
  *
  * @author ydsz-team
  * @since 1.0.0

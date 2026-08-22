@@ -28,10 +28,10 @@ import com.njydsz.common.thread.metrics.TimedTaskDecorator;
  *
  * <p>供 {@link ThreadPoolRegistrar} 的工厂方法调用，负责创建具体的线程池实例。
  *
- * <p>v1.3.0 重构：从 {@link ThreadPoolAutoConfiguration} 内部类提取为独立组件， 确保 {@code
+ * <p>1.0.0 重构：从 {@link ThreadPoolAutoConfiguration} 内部类提取为独立组件， 确保 {@code
  * BeanDefinitionRegistryPostProcessor} 可在测试环境中正确运行。
  *
- * <p>v1.4.0 变更：
+ * <p>1.0.0 变更：
  *
  * <ul>
  *   <li>TimedTaskDecorator 自动注入，支持慢任务阈值传递
@@ -84,7 +84,7 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
   /**
    * 创建平台线程池。
    *
-   * <p>v1.4.0 变更：自动装配 {@link com.njydsz.common.thread.metrics.TimedTaskDecorator}， 使用配置中指定的慢任务阈值。
+   * <p>1.0.0 变更：自动装配 {@link com.njydsz.common.thread.metrics.TimedTaskDecorator}， 使用配置中指定的慢任务阈值。
    *
    * @param name 线程池名称
    * @param config 线程池配置

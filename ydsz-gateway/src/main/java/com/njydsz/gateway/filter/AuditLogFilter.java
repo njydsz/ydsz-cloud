@@ -46,9 +46,9 @@ import com.njydsz.gateway.config.GatewayIpUtils;
  *   <li>用户设备（User-Agent / 客户端指纹）
  * </ul>
  *
- * <h3>审计链路（v1.2.0 双轨制）</h3>
+ * <h3>审计链路（1.0.0 双轨制）</h3>
  *
- * <p>自 v1.2.0 起，网关审计采用双轨输出：
+ * <p>自 1.0.0 起，网关审计采用双轨输出：
  *
  * <ol>
  *   <li><b>SLF4J 结构化日志</b>（保留）：输出到 ELK/Loki，用于日志检索与告警
@@ -140,7 +140,7 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
                   // 轨道 1：SLF4J 结构化日志（保留）
                   writeStructuredLog(exchange, method, path, statusCode, duration);
 
-                  // 轨道 2：审计事件桥接（v1.2.0 新增，可选）
+                  // 轨道 2：审计事件桥接（1.0.0 新增，可选）
                   publishAuditEvent(exchange, method, path, statusCode, duration);
                 }));
   }

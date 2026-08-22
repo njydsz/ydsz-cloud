@@ -423,7 +423,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         template.setSortOrder(999);
         // P2-9: 版本化字段
         template.setVersion(1);
-        template.setVersionLabel("v1.0");
+        template.setVersionLabel("1.0.0");
         template.setInheritType("STANDALONE");
         template.setIsLatest(1);
         templateRepository.save(converter.entityToVO(template));
@@ -748,7 +748,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       // P2-9: 继承关系字段
       newTemplate.setParentTemplateId(source.getId());
       newTemplate.setVersion(1);
-      newTemplate.setVersionLabel("v1.0");
+      newTemplate.setVersionLabel("1.0.0");
       newTemplate.setInheritType(inheritType);
       newTemplate.setIsLatest(1);
       templateRepository.save(converter.entityToVO(newTemplate));

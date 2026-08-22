@@ -30,7 +30,7 @@ public class RulePackDO extends MpBaseEntity<String> {
   /** 规则集编码（全局唯一，用于版本间关联） */
   private String packCode;
 
-  /** 规则集版本号（如 v1.0.0、v2.1.3） */
+  /** 规则集版本号（如 1.0.0、1.0.0） */
   private String packVersion;
 
   /** 规则集名称 */

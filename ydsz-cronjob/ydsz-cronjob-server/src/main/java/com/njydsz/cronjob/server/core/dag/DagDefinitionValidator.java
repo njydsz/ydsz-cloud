@@ -33,7 +33,7 @@ import com.njydsz.common.exception.custom.SysException;
  *   <li><b>规模限制</b>：节点数 ≤ 200，边数 ≤ 500（防止过大 DAG 拖慢调度）
  * </ol>
  *
- * <p><b>注意</b>：CONDITION / LOOP / PARALLEL_GATEWAY 控制节点已于 v1.2.0 移除，不再校验其约束。
+ * <p><b>注意</b>：CONDITION / LOOP / PARALLEL_GATEWAY 控制节点已于 1.0.0 移除，不再校验其约束。
  * 旧数据中的控制节点类型在反序列化时会自动降级为 TASK。
  *
  * @author ydsz-team
@@ -209,7 +209,7 @@ public class DagDefinitionValidator {
   /**
    * 校验节点类型特定约束。
    *
-   * <p>CONDITION / LOOP / PARALLEL_GATEWAY 控制节点已于 v1.2.0 移除，不再校验其约束。
+   * <p>CONDITION / LOOP / PARALLEL_GATEWAY 控制节点已于 1.0.0 移除，不再校验其约束。
    * 旧数据中的控制节点类型在反序列化时通过 {@link DagNode#resolveNodeType()} 自动降级为 TASK。
    */
   private void validateNodeTypes(DagDefinition definition) {

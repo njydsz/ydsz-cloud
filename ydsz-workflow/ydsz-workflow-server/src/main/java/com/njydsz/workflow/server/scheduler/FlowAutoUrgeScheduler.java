@@ -38,7 +38,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskUrgeService;
  * <p>催办通知通过 {@link FlowNotificationService} 推送，覆盖站内信 + IM（钉钉/企微）双通道。 分布式锁通过 {@link
  * DistributedScheduled} 保证集群只有一个节点执行。
  *
- * <p><b>架构合规说明（v2.23 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
+ * <p><b>架构合规说明（1.0.0 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
  * 禁止 server 层直接注入 infra Mapper（符合 §34.2.3）。
  *
  * @since 1.0.0

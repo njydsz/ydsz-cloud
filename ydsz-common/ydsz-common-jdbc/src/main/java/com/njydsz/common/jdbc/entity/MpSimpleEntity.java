@@ -34,7 +34,7 @@ import com.njydsz.common.json.annotation.JsonIgnore;
  * <p><b>逻辑删除：</b>deleted 字段使用 MP 原生 {@code @TableLogic} 注解， 由 MyBatis-Plus 自动处理 SELECT 条件追加和 DELETE
  * 转 UPDATE。
  *
- * <p><b>v1.9.0</b>：逻辑删除从自研 {@code LogicalDeleteInterceptor} 迁移至 {@code @TableLogic} 注解。
+ * <p><b>1.0.0</b>：逻辑删除从自研 {@code LogicalDeleteInterceptor} 迁移至 {@code @TableLogic} 注解。
  *
  * <p><b>使用示例：</b>
  *

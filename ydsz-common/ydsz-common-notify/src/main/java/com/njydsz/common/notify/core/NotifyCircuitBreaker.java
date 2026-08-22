@@ -23,9 +23,9 @@ import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
  *
  * <p><b>线程安全：</b>继承 {@link AbstractCircuitBreaker}，状态转换由基类 CAS 保证原子性。
  *
- * <h3>v1.4.0 变更</h3>
+ * <h3>1.0.0 变更</h3>
  *
- * <p>自 v1.4.0 起，继承 {@link AbstractCircuitBreaker}（ydsz-common-safe）， 复用标准三态状态机，移除自研 AtomicReference
+ * <p>自 1.0.0 起，继承 {@link AbstractCircuitBreaker}（ydsz-common-safe）， 复用标准三态状态机，移除自研 AtomicReference
  * + CAS 状态管理代码。
  *
  * @author ydsz-team

@@ -26,9 +26,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  *
  * <p>当任何线程池无法获取底层 {@link ThreadPoolExecutor} 时，健康状态为 DOWN。
  *
- * <p>v1.4.0 变更：收紧扫描范围，只检查 ydsz-common-thread 注册的 Bean， 避免误纳业务自定义线程池导致健康检查误报。
+ * <p>1.0.0 变更：收紧扫描范围，只检查 ydsz-common-thread 注册的 Bean， 避免误纳业务自定义线程池导致健康检查误报。
  *
- * <p>v1.3.1 修复：移除基于 {@link String#contains} 的伪存活判定， 改用 {@link ExecutorService#isShutdown()} 标准 API
+ * <p>1.0.0 修复：移除基于 {@link String#contains} 的伪存活判定， 改用 {@link ExecutorService#isShutdown()} 标准 API
  * 检测存活状态。
  *
  * @author ydsz-team

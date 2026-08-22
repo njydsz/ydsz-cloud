@@ -32,7 +32,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
  *   <li>ydsz_job_alert_log：告警日志
  *   <li>ydsz_job_task：MapReduce 子任务记录
  *   <li>ydsz_job_history：任务配置历史版本
- *   <li>sys_audit_log：审计日志（v1.2.0 新增，由 ydsz-common-audit 模块提供清理能力）
+ *   <li>sys_audit_log：审计日志（1.0.0 新增，由 ydsz-common-audit 模块提供清理能力）
  * </ul>
  *
  * <h3>设计要点</h3>

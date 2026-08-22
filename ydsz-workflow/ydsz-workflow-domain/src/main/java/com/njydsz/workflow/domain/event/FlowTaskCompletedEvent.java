@@ -10,7 +10,7 @@ import lombok.ToString;
  *
  * <p>当运行时任务被办理（通过/驳回/转办等）后变为历史任务时发布。
  *
- * <p><b>架构合规说明（v2.23 DDD 分层规范）：</b>领域事件置于 {@code domain/event/} 包下、
+ * <p><b>架构合规说明（1.0.0 DDD 分层规范）：</b>领域事件置于 {@code domain/event/} 包下、
  * 以 {@code Event} 结尾（符合 §34.2.1）。
  *
  * @author ydsz-team

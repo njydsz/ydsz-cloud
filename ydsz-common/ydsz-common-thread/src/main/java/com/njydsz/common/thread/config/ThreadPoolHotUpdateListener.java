@@ -29,7 +29,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * <p>启用方式：在 application.yml 中设置 {@code ydsz.thread.hot-update.enabled=true}， 或通过 {@link
  * ThreadPoolHotUpdateAutoConfiguration} 注册。
  *
- * <p>v1.4.0 变更：
+ * <p>1.0.0 变更：
  *
  * <ul>
  *   <li>从依赖 {@link ThreadPoolAutoConfiguration} 改为直接注入 {@link ApplicationContext}， 降低耦合并纳入自动配置体系

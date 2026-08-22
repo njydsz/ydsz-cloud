@@ -32,7 +32,7 @@ public interface FlowRunTaskRepository {
   /**
    * 保存运行时任务（新增）。
    *
-   * <p><b>合规说明（v2.23 DDD 分层规范）：</b>CUD 入参使用 {@link FlowRunTaskDTO}（dto/ 包），
+   * <p><b>合规说明（1.0.0 DDD 分层规范）：</b>CUD 入参使用 {@link FlowRunTaskDTO}（dto/ 包），
    * 符合 §34.2.1（dto/ 命令请求参数 以 DTO 结尾）。
    *
    * @param dto 运行时任务命令 DTO
@@ -158,7 +158,7 @@ public interface FlowRunTaskRepository {
    * <p>支持多条件组合过滤：流程编码、实例 ID、节点编码、办理人、任务状态、业务类型、
    * 优先级、创建时间范围、截止时间范围等。所有条件均为可选，为空时忽略。
    *
-   * <p><b>命名合规说明（v2.23 DDD 分层规范）：</b>查询参数使用 {@link FlowTaskQuery}（query/ 包），
+   * <p><b>命名合规说明（1.0.0 DDD 分层规范）：</b>查询参数使用 {@link FlowTaskQuery}（query/ 包），
    * 符合 §34.2.1 表格规定（query/ 查询请求参数 以 Query 结尾）。
    *
    * @param query 查询条件

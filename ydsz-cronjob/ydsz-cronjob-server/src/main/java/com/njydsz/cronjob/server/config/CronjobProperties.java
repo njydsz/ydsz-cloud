@@ -101,7 +101,7 @@ public class CronjobProperties {
   /** P1-P3: 秒级预读调度配置（时间轮式精准触发，提升 CRON 任务调度精度） */
   private PrecisionConfig preload = new PrecisionConfig();
 
-  /** SpEL 表达式缓存配置（已废弃，v1.2.0 移除） */
+  /** SpEL 表达式缓存配置（已废弃，1.0.0 移除） */
   @Deprecated
   private SpelConfig spel = new SpelConfig();
 

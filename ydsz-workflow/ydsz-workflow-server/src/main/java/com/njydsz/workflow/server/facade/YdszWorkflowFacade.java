@@ -38,7 +38,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  *
  * <p>1.0.0 新增能力：加签 / 撤回 / 催办 / 审计轨迹查询。
  *
- * <p><b>架构合规说明（v2.23 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
+ * <p><b>架构合规说明（1.0.0 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
  * 禁止 server 层直接注入 infra Mapper 或直接引用 infra.entity（符合 §34.2.3 / §34.2.1）。
  *
  * @since 1.0.0
@@ -508,170 +508,203 @@ public class YdszWorkflowFacade implements WorkflowFacade {
       return Collections.emptyList();
     }
 
-    // P3-1: 预加载节点坐标映射（key = nodeCode），用于步骤中携带 coordinate 字段
-    // 这样前端 FlowDiagramViewer 可以根据坐标自动滚屏到高亮节点
+    // 预加载节点坐标映射（key = nodeCode），用于步骤中携带 coordinate 字段
     Map<String, Map<String, Object>> nodeCoordMap = loadNodeCoordinates(instance.getDefinitionId());
+    List<Map<String, Object>> steps = new ArrayList<>(32);
 
     // 1. 起始步骤
-    List<Map<String, Object>> steps = new ArrayList<>(32);
-    Map<String, Object> startStep = new HashMap<>(8);
-    startStep.put("stepIndex", 0);
-    startStep.put("type", "START");
-    startStep.put("timestamp", instance.getStartAt());
-    startStep.put("nodeCode", null);
-    startStep.put("nodeName", null);
-    startStep.put("actor", instance.getInitiatorId());
-    startStep.put("actorName", instance.getInitiatorName());
-    startStep.put("action", "START");
-    startStep.put("comment", null);
-    startStep.put("nodeState", "ENTERED");
-    startStep.put("durationMs", null);
-    startStep.put("coordinate", null);
-    steps.add(startStep);
+    steps.add(buildStartStep(instance));
 
-    // 2. 历史任务步骤（通过 Repository，符合 §34.2.3）
+    // 2. 历史任务步骤
     List<FlowHisTaskVO> hisTasks = hisTaskRepository.findByInstanceId(id);
     for (FlowHisTaskVO his : hisTasks) {
-      Map<String, Object> step = new HashMap<>(8);
-      step.put("type", "HIS_TASK");
-      step.put("timestamp", his.getFinishAt());
-      step.put("nodeCode", his.getNodeCode());
-      step.put("nodeName", his.getNodeName());
-      step.put("actor", his.getAssigneeId());
-      step.put("actorName", his.getAssigneeName());
-      step.put("action", his.getTaskStatus());
-      step.put("comment", his.getComment());
-      step.put("nodeState", mapNodeState(his.getTaskStatus()));
-      step.put("durationMs", his.getDurationMs());
-      // P3-1: 携带节点坐标（BPMNDI 解析结果或设计器保存值）
-      step.put("coordinate", nodeCoordMap.get(his.getNodeCode()));
-      steps.add(step);
+      steps.add(buildHisTaskStep(his, nodeCoordMap));
     }
 
     // 3. 审计日志步骤（URGE/TRANSFER/DELEGATE/JUMP/RECALL 等任务外操作）
     List<FlowAuditLogVO> logs = auditLogRepository.findByInstanceId(id);
     for (FlowAuditLogVO log : logs) {
-      String action = log.getAction();
-      if (action == null) continue;
-      // 只回放任务外操作（任务自身操作已在 HIS_TASK 中体现）
-      if (action.startsWith("TASK_")
-          || action.equals("PASS")
-          || action.equals("REJECT")
-          || action.equals("CLAIM")
-          || action.equals("COMPLETED")) {
-        continue;
-      }
-      Map<String, Object> step = new HashMap<>(8);
-      step.put("type", "AUDIT_LOG");
-      step.put("timestamp", log.getOperatedAt());
-      step.put("nodeCode", log.getNodeCode());
-      step.put("nodeName", log.getNodeName());
-      step.put("actor", log.getOperatorId());
-      step.put("actorName", log.getOperatorName());
-      step.put("action", action);
-      step.put("comment", log.getComment());
-      step.put("nodeState", "OBSERVED");
-      step.put("durationMs", null);
-      step.put(
-          "coordinate", log.getNodeCode() != null ? nodeCoordMap.get(log.getNodeCode()) : null);
-      steps.add(step);
-    }
-
-    // 4. 当前待办（RUNNING 实例的最后状态）
-    if ("RUNNING".equals(instance.getFlowStatus())
-        || "SUSPENDED".equals(instance.getFlowStatus())) {
-      List<FlowRunTaskVO> currentTasks = taskService.listPendingByInstance(id);
-      for (FlowRunTaskVO task : currentTasks) {
-        Map<String, Object> step = new HashMap<>(8);
-        step.put("type", "CURRENT_TASK");
-        step.put("timestamp", task.getCreatedAt());
-        step.put("nodeCode", task.getNodeCode());
-        step.put("nodeName", task.getNodeName());
-        step.put("actor", task.getAssigneeId());
-        step.put("actorName", task.getAssigneeName());
-        step.put("action", task.getTaskStatus());
-        step.put("comment", task.getComment());
-        step.put("nodeState", "ACTIVE");
-        step.put("durationMs", task.getDurationMs());
-        step.put("coordinate", nodeCoordMap.get(task.getNodeCode()));
+      Map<String, Object> step = buildAuditLogStep(log, nodeCoordMap);
+      if (step != null) {
         steps.add(step);
       }
     }
 
-    // 5. 终止步骤（COMPLETED/TERMINATED/REJECTED）
+    // 4. 当前待办（RUNNING 实例的最后状态）
+    if ("RUNNING".equals(instance.getFlowStatus()) || "SUSPENDED".equals(instance.getFlowStatus())) {
+      List<FlowRunTaskVO> currentTasks = taskService.listPendingByInstance(id);
+      for (FlowRunTaskVO task : currentTasks) {
+        steps.add(buildCurrentTaskStep(task, nodeCoordMap));
+      }
+    }
+
+    // 5. 终止步骤
     if (instance.getEndAt() != null) {
-      Map<String, Object> endStep = new HashMap<>(8);
-      endStep.put("type", "END");
-      endStep.put("timestamp", instance.getEndAt());
-      endStep.put("nodeCode", instance.getCurrentNodeCode());
-      endStep.put("nodeName", instance.getCurrentNodeName());
-      endStep.put("actor", null);
-      endStep.put("actorName", null);
-      endStep.put("action", instance.getFlowStatus());
-      endStep.put("comment", null);
-      endStep.put("nodeState", "FINISHED");
-      endStep.put("durationMs", instance.getDurationMs());
-      endStep.put(
-          "coordinate",
-          instance.getCurrentNodeCode() != null
-              ? nodeCoordMap.get(instance.getCurrentNodeCode())
-              : null);
-      steps.add(endStep);
+      steps.add(buildEndStep(instance, nodeCoordMap));
     }
 
-    // 6. 按 timestamp 升序排序，null 排最后
-    steps.sort(
-        (a, b) -> {
-          LocalDateTime ta = (LocalDateTime) a.get("timestamp");
-          LocalDateTime tb = (LocalDateTime) b.get("timestamp");
-          if (ta == null && tb == null) return 0;
-          if (ta == null) return 1;
-          if (tb == null) return -1;
-          return ta.compareTo(tb);
-        });
+    // 6. 按 timestamp 升序排序，重新分配 stepIndex
+    sortStepsByIndex(steps);
 
-    // 7. 重新分配 stepIndex
-    for (int i = 0; i < steps.size(); i++) {
-      steps.get(i).put("stepIndex", i);
-    }
-
-    // P1-4: 增强回放 — 在第一步中嵌入进度摘要
+    // 7. 在第一步中嵌入进度摘要
     if (!steps.isEmpty()) {
-      Map<String, Object> progressSummary = new HashMap<>(16);
-      int totalSteps = steps.size();
-      int completedSteps =
-          (int)
-              steps.stream()
-                  .filter(
-                      s -> {
-                        String type = (String) s.get("type");
-                        return "HIS_TASK".equals(type)
-                            || "START".equals(type)
-                            || "END".equals(type);
-                      })
-                  .count();
-      int activeSteps =
-          (int) steps.stream().filter(s -> "CURRENT_TASK".equals(s.get("type"))).count();
-      progressSummary.put("totalSteps", totalSteps);
-      progressSummary.put("completedSteps", completedSteps);
-      progressSummary.put("activeSteps", activeSteps);
-      progressSummary.put(
-          "progressPercent",
-          totalSteps > 0 ? Math.round((float) completedSteps / totalSteps * 100) : 0);
-      progressSummary.put("instanceStatus", instance.getFlowStatus());
-      progressSummary.put("instanceId", instance.getId());
-      progressSummary.put("flowName", instance.getFlowName());
-      progressSummary.put("title", instance.getTitle());
-      progressSummary.put("initiatorId", instance.getInitiatorId());
-      progressSummary.put("initiatorName", instance.getInitiatorName());
-      progressSummary.put("startAt", instance.getStartAt());
-      progressSummary.put("endAt", instance.getEndAt());
-      progressSummary.put("durationMs", instance.getDurationMs());
-      // 嵌入到返回结果的第一步中（前端可从 steps[0]._progress 提取）
-      steps.get(0).put("_progress", progressSummary);
+      steps.get(0).put("_progress", buildProgressSummary(steps, instance));
     }
 
     return steps;
+  }
+
+  /** 构建起始步骤 Map。 */
+  private Map<String, Object> buildStartStep(FlowInstanceVO instance) {
+    Map<String, Object> step = new HashMap<>(8);
+    step.put("stepIndex", 0);
+    step.put("type", "START");
+    step.put("timestamp", instance.getStartAt());
+    step.put("nodeCode", null);
+    step.put("nodeName", null);
+    step.put("actor", instance.getInitiatorId());
+    step.put("actorName", instance.getInitiatorName());
+    step.put("action", "START");
+    step.put("comment", null);
+    step.put("nodeState", "ENTERED");
+    step.put("durationMs", null);
+    step.put("coordinate", null);
+    return step;
+  }
+
+  /** 构建历史任务步骤 Map。 */
+  private Map<String, Object> buildHisTaskStep(FlowHisTaskVO his,
+      Map<String, Map<String, Object>> nodeCoordMap) {
+    Map<String, Object> step = new HashMap<>(8);
+    step.put("type", "HIS_TASK");
+    step.put("timestamp", his.getFinishAt());
+    step.put("nodeCode", his.getNodeCode());
+    step.put("nodeName", his.getNodeName());
+    step.put("actor", his.getAssigneeId());
+    step.put("actorName", his.getAssigneeName());
+    step.put("action", his.getTaskStatus());
+    step.put("comment", his.getComment());
+    step.put("nodeState", mapNodeState(his.getTaskStatus()));
+    step.put("durationMs", his.getDurationMs());
+    step.put("coordinate", nodeCoordMap.get(his.getNodeCode()));
+    return step;
+  }
+
+  /** 构建审计日志步骤 Map。任务自身操作（PASS/REJECT 等）返回 null 以跳过。 */
+  private Map<String, Object> buildAuditLogStep(FlowAuditLogVO log,
+      Map<String, Map<String, Object>> nodeCoordMap) {
+    String action = log.getAction();
+    if (action == null || isTaskAction(action)) {
+      return null;
+    }
+    Map<String, Object> step = new HashMap<>(8);
+    step.put("type", "AUDIT_LOG");
+    step.put("timestamp", log.getOperatedAt());
+    step.put("nodeCode", log.getNodeCode());
+    step.put("nodeName", log.getNodeName());
+    step.put("actor", log.getOperatorId());
+    step.put("actorName", log.getOperatorName());
+    step.put("action", action);
+    step.put("comment", log.getComment());
+    step.put("nodeState", "OBSERVED");
+    step.put("durationMs", null);
+    step.put("coordinate", log.getNodeCode() != null ? nodeCoordMap.get(log.getNodeCode()) : null);
+    return step;
+  }
+
+  /** 判断 action 是否为任务自身操作（已在 HIS_TASK 中体现，回放时跳过）。 */
+  private boolean isTaskAction(String action) {
+    return action.startsWith("TASK_")
+        || "PASS".equals(action)
+        || "REJECT".equals(action)
+        || "CLAIM".equals(action)
+        || "COMPLETED".equals(action);
+  }
+
+  /** 构建当前待办步骤 Map。 */
+  private Map<String, Object> buildCurrentTaskStep(FlowRunTaskVO task,
+      Map<String, Map<String, Object>> nodeCoordMap) {
+    Map<String, Object> step = new HashMap<>(8);
+    step.put("type", "CURRENT_TASK");
+    step.put("timestamp", task.getCreatedAt());
+    step.put("nodeCode", task.getNodeCode());
+    step.put("nodeName", task.getNodeName());
+    step.put("actor", task.getAssigneeId());
+    step.put("actorName", task.getAssigneeName());
+    step.put("action", task.getTaskStatus());
+    step.put("comment", task.getComment());
+    step.put("nodeState", "ACTIVE");
+    step.put("durationMs", task.getDurationMs());
+    step.put("coordinate", nodeCoordMap.get(task.getNodeCode()));
+    return step;
+  }
+
+  /** 构建终止步骤 Map。 */
+  private Map<String, Object> buildEndStep(FlowInstanceVO instance,
+      Map<String, Map<String, Object>> nodeCoordMap) {
+    Map<String, Object> step = new HashMap<>(8);
+    step.put("type", "END");
+    step.put("timestamp", instance.getEndAt());
+    step.put("nodeCode", instance.getCurrentNodeCode());
+    step.put("nodeName", instance.getCurrentNodeName());
+    step.put("actor", null);
+    step.put("actorName", null);
+    step.put("action", instance.getFlowStatus());
+    step.put("comment", null);
+    step.put("nodeState", "FINISHED");
+    step.put("durationMs", instance.getDurationMs());
+    step.put("coordinate",
+        instance.getCurrentNodeCode() != null
+            ? nodeCoordMap.get(instance.getCurrentNodeCode())
+            : null);
+    return step;
+  }
+
+  /** 按 timestamp 升序排序（null 排最后），并重新分配 stepIndex。 */
+  private void sortStepsByIndex(List<Map<String, Object>> steps) {
+    steps.sort((a, b) -> {
+      LocalDateTime ta = (LocalDateTime) a.get("timestamp");
+      LocalDateTime tb = (LocalDateTime) b.get("timestamp");
+      if (ta == null && tb == null) return 0;
+      if (ta == null) return 1;
+      if (tb == null) return -1;
+      return ta.compareTo(tb);
+    });
+    for (int i = 0; i < steps.size(); i++) {
+      steps.get(i).put("stepIndex", i);
+    }
+  }
+
+  /** 构建进度摘要 Map（嵌入到第一步的 _progress 字段）。 */
+  private Map<String, Object> buildProgressSummary(List<Map<String, Object>> steps,
+      FlowInstanceVO instance) {
+    int totalSteps = steps.size();
+    int completedSteps = (int) steps.stream()
+        .filter(s -> {
+          String type = (String) s.get("type");
+          return "HIS_TASK".equals(type) || "START".equals(type) || "END".equals(type);
+        })
+        .count();
+    int activeSteps = (int) steps.stream()
+        .filter(s -> "CURRENT_TASK".equals(s.get("type")))
+        .count();
+
+    Map<String, Object> progress = new HashMap<>(16);
+    progress.put("totalSteps", totalSteps);
+    progress.put("completedSteps", completedSteps);
+    progress.put("activeSteps", activeSteps);
+    progress.put("progressPercent",
+        totalSteps > 0 ? Math.round((float) completedSteps / totalSteps * 100) : 0);
+    progress.put("instanceStatus", instance.getFlowStatus());
+    progress.put("instanceId", instance.getId());
+    progress.put("flowName", instance.getFlowName());
+    progress.put("title", instance.getTitle());
+    progress.put("initiatorId", instance.getInitiatorId());
+    progress.put("initiatorName", instance.getInitiatorName());
+    progress.put("startAt", instance.getStartAt());
+    progress.put("endAt", instance.getEndAt());
+    progress.put("durationMs", instance.getDurationMs());
+    return progress;
   }
 
   /**

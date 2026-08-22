@@ -18,7 +18,7 @@ import org.springframework.lang.Nullable;
  *
  * <p>使用反射而非直接依赖 OpenTelemetry API，避免对未引入 OTel 的项目增加 不必要的依赖（遵循"optional dependency"原则）。
  *
- * <p><b>性能优化（v2.5）：</b>首次成功后缓存 {@link Method} 对象， 后续调用直接使用缓存的 Method.invoke，消除重复的 getMethod 查找开销。
+ * <p><b>性能优化（1.0.0）：</b>首次成功后缓存 {@link Method} 对象， 后续调用直接使用缓存的 Method.invoke，消除重复的 getMethod 查找开销。
  * 使用 {@link AtomicBoolean} 保证缓存初始化的线程安全。
  *
  * @author ydsz-team

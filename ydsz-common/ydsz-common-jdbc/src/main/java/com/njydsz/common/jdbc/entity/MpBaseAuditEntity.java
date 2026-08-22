@@ -20,7 +20,7 @@ import com.njydsz.common.json.annotation.JsonFormat;
  *
  * <p>注意：审计字段不标注 {@code @TableField(fill)}，以避免与 SQL 层拦截器的双重填充冲突。
  *
- * <p><b>v1.4.0</b>：不再继承 common-domain 的 BaseAuditEntity，字段内联自洽， 业务模块实体仅依赖 ydsz-common-jdbc 一个模块。
+ * <p><b>1.0.0</b>：不再继承 common-domain 的 BaseAuditEntity，字段内联自洽， 业务模块实体仅依赖 ydsz-common-jdbc 一个模块。
  *
  * @param <T> 主键ID类型
  * @author ydsz-team

@@ -46,7 +46,7 @@ import com.njydsz.workflow.server.service.FlowSubProcessService;
  *   <li>通知触达（对标用友 BPM / 钉钉审批的实时通知能力）
  * </ol>
  *
- * <p><b>架构合规说明（v2.23 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
+ * <p><b>架构合规说明（1.0.0 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
  * 禁止 server 层直接注入 infra Mapper 或直接引用 infra.entity（符合 §34.2.3 / §34.2.1）。
  *
  * @since 1.0.0

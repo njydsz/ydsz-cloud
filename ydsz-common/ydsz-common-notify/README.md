@@ -11,7 +11,7 @@
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供多渠道消息发送、模板渲染、限流熔断、重试死信、降级聚合、安全签名、偏好国际化等能力 |
-| **依赖** | common-core、common-util、common-json、common-exception、common-domain；可选依赖 common-redis、spring-boot-starter-mail、micrometer-core、jasypt、httpclient5、spring-boot-health |
+| **依赖** | common-core、common-util、common-thread、common-exception、common-domain、common-event、common-safe、common-config、common-redis、common-json；可选依赖 spring-boot-starter-mail、owasp-java-html-sanitizer、micrometer-core、jasypt-spring-boot-starter、spring-boot-starter-data-redis、httpclient5、spring-boot-actuator、spring-boot-health、spring-boot-configuration-processor |
 | **版本** | 1.0.0 |
 
 ## 核心能力
@@ -42,14 +42,16 @@
 | 类 | 说明 |
 |---|---|
 | `NotifyService` | 通知服务接口，提供 `send`/`send(NotifyRequest)`/`sendTemplate`/`batchSend`/`parallelBatchSend` 五种发送模式 |
-| `NotifyServiceImpl` | 通知服务实现，整合限流、熔断、降级、去重、指标、审计、偏好、聚合等全部横切关注点 |
-| `AsyncNotifyService` | 异步通知服务（基于虚拟线程池并行投递） |
+| `NotifyServiceImpl` | 通知服务实现，通过 `NotifyServiceImplBuilder` 构建器模式创建，整合限流、熔断、降级、去重、指标、审计、偏好、聚合等全部横切关注点 |
+| `AsyncNotifyService` | 异步通知服务（基于 `notifyVirtualThreadExecutor` 共享虚拟线程池并行投递） |
 | `TransactionalNotifyPublisher` | 事务性发布器（事务提交后才投递，避免脏发） |
 | `NotifyRequest` | 通知请求载体（Builder 模式，封装渠道、接收者、模板、优先级、用户ID、traceId） |
 | `NotifySendResult` / `DefaultNotifyResult` | 通知结果模型（成功标志、消息 ID、错误信息、渠道、时间戳） |
 | `NotifyHelper` | 通知助手工具类（封装 `sendInApp`/`sendEmail`/`sendTemplate`/`sendSystemAlert` 等便捷方法，自动识别邮箱地址路由至邮件渠道） |
 | `NotifyType` / `NotifyPriority` | 通知类型 / 优先级枚举 |
 | `NotifyException` | 通知模块异常 |
+| `NotifyReceipt` | 通知回执跟踪实体（跟踪消息发送、送达、已读等全生命周期状态） |
+| `TemplateHotLoader` | 模板热加载器，基于 Spring Boot DevTools 或文件监听实现模板热更新（配置文件路径下 `.html` / `.txt` 文件变更时自动重新加载） |
 
 ### 4. 熔断与死信
 

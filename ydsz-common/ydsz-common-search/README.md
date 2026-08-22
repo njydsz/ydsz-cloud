@@ -81,6 +81,11 @@
 |---|---|
 | `SearchAnalyticsService` | 搜索分析服务 — 热门词 / 零结果词（Redis Sorted Set）、每日搜索量（Redis Hash），Redis 不可用时降级到内存（上限 1000，LRU 淘汰） |
 | `SearchQualityTracker` | 搜索质量追踪器 — MRR（平均倒数排名）、CTR（点击率）、零结果率、平均延迟，Redis + 内存双写降级，`QualityReport`（record） |
+| `SearchPipeline` | 文本处理管道（Filter 链模式：Normalizer → StopWord → Synonym → ChineseToken → Pinyin），每步可配置启用/禁用 |
+| `ZeroResultHandler` | 零结果引导处理器，返回“您是不是要找”、“热门搜索”、“去掉筛选条件”建议 |
+| `PersistentDeadLetterQueue` | 基于 PostgreSQL 的持久化死信队列（`ydsz_search_dead_letter` 表），数据源不可用时回退到纯内存模式 |
+| `AdvancedQueryParser` | 高级查询解析器，支持 AND/OR/NOT 逻辑组合、引号短语、字段限定等复杂检索表达式 |
+| `ChineseTokenizer` | 中文分词器（jieba/ICU/简单空格策略可选） |
 
 ### 8. 可观测性
 
@@ -393,5 +398,6 @@ public void repairIfNeeded(String tenantId) {
 
 ## 变更记录
 
+- **v1.0.2**（2026-08-16）：补充 `SearchPipeline` / `ZeroResultHandler` / `PersistentDeadLetterQueue` / `AdvancedQueryParser` / `ChineseTokenizer` 等组件文档；对齐 `SearchAutoConfiguration` 实际 Bean 清单（22+ 个 Bean）
 - **v1.0.1**（2026-08-16）：精简架构 — 移除 ES/Solr/OpenSearch/RediSearch 空壳引擎实现，合并三重内存索引，统一搜索缓存为共享 Bean，合并 SuggestionService 与 EnhancedSuggestionService，清理 Pipeline 占位符 Filter，简化 SearchProvider SPI（合并 getAllDocumentIds + loadById 为 loadAll），重写 README 与代码对齐
 - **v1.0.0**（2026-08-02）：初始版本

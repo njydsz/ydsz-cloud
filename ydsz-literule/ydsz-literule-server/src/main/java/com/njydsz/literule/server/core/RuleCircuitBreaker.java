@@ -16,9 +16,9 @@ import com.njydsz.common.sentry.resilience.CircuitBreaker;
  * <p>每个规则编码独立维护一个熔断器，底层委托 sentry {@link CircuitBreaker}（Resilience4j），
  * 提供滑动窗口失败率统计、状态自动流转、半开探测等标准熔断能力。
  *
- * <h3>v2.8 变更</h3>
+ * <h3>1.0.0 变更</h3>
  *
- * <p>自 v2.8 起，底层实现从自研滑动窗口改为委托 {@code ydsz-common-sentry} 的 {@link CircuitBreaker} 封装（基于
+ * <p>自 1.0.0 起，底层实现从自研滑动窗口改为委托 {@code ydsz-common-sentry} 的 {@link CircuitBreaker} 封装（基于
  * Resilience4j），获得以下收益：
  *
  * <ul>

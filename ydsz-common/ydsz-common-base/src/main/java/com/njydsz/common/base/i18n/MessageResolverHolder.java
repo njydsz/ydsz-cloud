@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
  * <p>提供框架统一的国际化消息解析入口，由应用侧通过 {@link #setResolverIfAbsent(MessageResolver)} 注入具体实现 （如 Spring {@code
  * MessageSource} 适配器），避免核心模块硬依赖 Spring。
  *
- * <p><b>迁移说明：</b>本类原定义于 {@code ydsz-common-core}（v2.1.0 精简核心时移除）， 因国际化能力属于 ydsz-common-base
+ * <p><b>迁移说明：</b>本类原定义于 {@code ydsz-common-core}（1.0.0 精简核心时移除）， 因国际化能力属于 ydsz-common-base
  * 应用层，迁移至本模块维护。
  *
  * @author ydsz-team

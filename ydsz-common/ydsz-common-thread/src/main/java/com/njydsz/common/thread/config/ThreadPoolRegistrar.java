@@ -36,14 +36,14 @@ import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
  *
  * <p>作为独立类而非内部类，确保 {@code ApplicationContextRunner} 测试 和 Spring Boot 自动装配均能正确识别并调用本注册器。
  *
- * <p>v1.4.0 变更：
+ * <p>1.0.0 变更：
  *
  * <ul>
  *   <li>移除虚拟线程池 rejected 相关注册（JDK 21 虚拟线程从不拒绝）
  *   <li>平台线程池指标支持慢任务阈值传递
  * </ul>
  *
- * <p>v1.3.1 修复：
+ * <p>1.0.0 修复：
  *
  * <ul>
  *   <li>支持 {@code @Bean} 方式由 {@link ThreadPoolAutoConfiguration} 显式注册
@@ -126,7 +126,7 @@ public class ThreadPoolRegistrar
   /**
    * 注册虚拟线程池及其指标绑定器。
    *
-   * <p>v1.4.0 简化：移除对 rejected 指标的追踪（JDK 21 的虚拟线程执行器从不拒绝）。
+   * <p>1.0.0 简化：移除对 rejected 指标的追踪（JDK 21 的虚拟线程执行器从不拒绝）。
    */
   private void registerVirtualThreadPool(
       BeanDefinitionRegistry registry, String name, PoolConfig config, String beanName) {
@@ -174,7 +174,7 @@ public class ThreadPoolRegistrar
   /**
    * 注册平台线程池及其指标绑定器。
    *
-   * <p>v1.4.0 变更：
+   * <p>1.0.0 变更：
    *
    * <ul>
    *   <li>ThreadPoolTimerMetrics 注册时传递慢任务阈值
@@ -207,7 +207,7 @@ public class ThreadPoolRegistrar
     }
 
     // 注册平台线程池耗时指标 Bean
-    // 注意：v1.4.0 中 ThreadPoolTimerMetrics 的构造器不再需要 MeterRegistry，
+    // 注意：1.0.0 中 ThreadPoolTimerMetrics 的构造器不再需要 MeterRegistry，
     // 改为在 record 方法接收 slowTaskThresholdMs 参数
     String timerMetricsBeanName = beanName + "TimerMetrics";
     if (!registry.containsBeanDefinition(timerMetricsBeanName)) {

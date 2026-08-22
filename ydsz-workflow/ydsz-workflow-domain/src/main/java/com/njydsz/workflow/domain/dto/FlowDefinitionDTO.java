@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于 FlowDefinitionRepository 的 save/update 方法入参，
  * 符合 §34.2.1（dto/ 命令请求参数 以 DTO 结尾）。
  *
- * <p><b>架构合规说明（v2.23 DDD 分层规范）：</b>CUD 入参必须是 dto/ 下的 DTO 对象，
+ * <p><b>架构合规说明（1.0.0 DDD 分层规范）：</b>CUD 入参必须是 dto/ 下的 DTO 对象，
  * 禁止使用 VO（符合 §34.2.1）。
  *
  * @author ydsz-team

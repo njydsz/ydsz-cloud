@@ -26,7 +26,7 @@ import com.njydsz.common.sentry.spi.MetricsCollector;
  * <p>为已从 {@code AbstractModuleMetrics} 迁移但仍依赖前缀拼接语义的模块提供过渡方案。 本类将传统 Counter/Timer/Gauge 调用桥接到
  * {@link MetricsCollector} 统一入口， 底层由 {@code MicrometerMetricsCollector} 执行实际的 Micrometer 注册。
  *
- * <p><b>v2.1.0 变更</b>：移除 {@link MeterRegistry} 构造参数，改为内部通过 {@link SentryService} 获取 {@link
+ * <p><b>1.0.0 变更</b>：移除 {@link MeterRegistry} 构造参数，改为内部通过 {@link SentryService} 获取 {@link
  * MetricsCollector}，业务模块不再直接依赖 Micrometer API。 符合《云顶编码规范》第 27.2.1 节「禁止直接操作 MeterRegistry」的强制要求。
  *
  * <h3>迁移路径</h3>

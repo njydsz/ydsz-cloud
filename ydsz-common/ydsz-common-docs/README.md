@@ -11,8 +11,8 @@
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供多格式文档解析、安全扫描、PII 检测等基础能力 |
-| **依赖** | common-core、common-util、common-exception、common-json、tika-core；可选依赖 pdfbox、poi-ooxml、jsoup、commons-csv、spring-boot-actuator、spring-boot-health、micrometer-core |
-| **版本** | 2.0.0 |
+| **依赖** | 直接依赖 common-core、common-util、common-exception、common-json、tika-core、ydsz-common-excel、ydsz-common-safe；可选依赖 pdfbox、pdfbox-io、poi-ooxml、jsoup、commons-csv、spring-boot-actuator、spring-boot-health、micrometer-core、jakarta.validation-api |
+| **版本** | 2.0.1 |
 
 ## v2.0.0 变更摘要
 
@@ -36,9 +36,9 @@
 
 | 类 | 格式 | 说明 |
 |---|---|---|
-| `PdfDocumentParser` | PDF | 基于 Apache PDFBox，提取文本 / 表格 / 图片 / 元数据；支持流式逐页解析 |
+| `PdfDocumentParser` | PDF | 基于 Apache PDFBox，提取文本 / 表格 / 图片 / 元数据；支持流式逐页解析（`pdfbox-io` 可选） |
 | `WordDocumentParser` | DOCX | 基于 Apache POI，.docx 解析（.doc 旧格式拒绝并提示转换） |
-| `ExcelDocumentParser` | XLSX | 基于 Apache POI，.xlsx 解析（含表格结构） |
+| `ExcelDocumentParser` | XLSX | 基于 `ydsz-common-excel`（统一 Excel 引擎），.xlsx 解析（含表格结构） |
 | `PptDocumentParser` | PPTX | 基于 Apache POI，.pptx 解析 |
 | `HtmlDocumentParser` | HTML | 基于 Jsoup，HTML 解析与标签清洗 |
 | `MarkdownDocumentParser` | MARKDOWN | Markdown 解析（保留标题层级与代码块） |
@@ -127,7 +127,14 @@
 | `DocumentMetadata` | 元数据（标题 / 作者 / 页数 / 创建时间 / 修改时间） |
 | `ParseOptions` | 解析选项（页码范围 / 输出轮廓 / 是否提取图片 / 最大文件大小） |
 
-### 8. 监控与健康检查
+### 8. 异常处理
+
+| 类 | 说明 |
+|---|---|
+| `DocumentException` | 文档处理统一异常（继承 `AbstractYdszException`），携带 `DocumentExceptionCode` 错误码 |
+| `DocumentExceptionCode` | 文档异常错误码枚举（PARSE_ERROR / UNSUPPORTED_FORMAT / FILE_TOO_LARGE / SECURITY_HIGH_RISK / OCR_ERROR 等） |
+
+### 9. 监控与健康检查
 
 | 类 | 说明 |
 |---|---|
@@ -354,5 +361,9 @@ pdfDocumentParser.parseStreaming(inputStream, "large.pdf", pageContent -> {
 
 ## 变更记录
 
+- **v2.0.1**（2026-08-17）：
+  - 更新依赖说明：标注 `ydsz-common-excel` / `ydsz-common-safe` 为直接依赖，添加 `pdfbox-io`（optional）、`jakarta.validation-api`（optional）
+  - 补全 `DocumentationException` / `DocumentationExceptionCode` 异常处理文档
+  - 修正 `ExcelDocumentParser` 依赖为 `ydsz-common-excel`（统一 Excel 引擎），`PdfDocumentParser` 标注 `pdfbox-io` 可选
 - **v2.0.0**（2026-08-16）：基于过度设计评估全面重构，详见 [v2.0.0 变更摘要](#v200-变更摘要)
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
