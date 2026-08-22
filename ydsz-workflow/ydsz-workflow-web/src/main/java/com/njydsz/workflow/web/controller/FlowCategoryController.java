@@ -53,7 +53,6 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowCategoryService 分类服务
- * @see FlowCategoryDO 分类实体
  * @see FlowCategoryDTO 分类 DTO
  */
 @Slf4j

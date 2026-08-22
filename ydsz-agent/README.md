@@ -86,65 +86,75 @@
 
 ```
 ydsz-agent/
-├── pom.xml
+├── pom.xml                            # 父 POM（6 个子模块）
+├── README.md
 ├── ydsz-agent-api/                    # API 层：Feign Client + DTO
 │   └── src/main/java/com/njydsz/agent/api/
 │       ├── dto/                       # 数据传输对象（ChatRequestDTO / ChatResponseDTO / BatchChatRequestDTO / BatchChatResponseDTO / AgentExecutionRequestDTO / DagExecutionDTO / DocumentIngestDTO / RagQueryDTO / PromptTemplateDTO / AgentTraceDetailDTO / AgentTraceListDTO）
 │       ├── fallback/                  # Feign 降级
 │       └── feign/                     # Feign Client 接口
-├── ydsz-agent-domain/                 # 领域层：Entity + 领域模型 + Gateway + Repository
+├── ydsz-agent-domain/                 # 领域层：Entity + 领域模型 + Gateway + Repository + 枚举 + 值对象
 │   └── src/main/java/com/njydsz/agent/domain/
 │       ├── agent/                     # Agent 聚合（AgentDefinition / AgentDag / AgentExecutionContext / AgentExecutionRequest / AgentExecutor / DagCheckpoint / DagProgressEvent / ExecutionPlan）
 │       ├── conversation/              # 对话聚合（Conversation / ConversationMemory）
-│       ├── dto/                       # 领域 DTO（AgentApprovalDTO / AgentTraceDTO / AgentTraceStepDTO / PromptTemplateDTO / PromptVersionDTO / TokenUsageRecordDTO / post/ / put/）
+│       ├── dto/                       # 领域 DTO（AgentApprovalDTO / AgentDefinitionDTO / AgentTraceDTO / AgentTraceStepDTO / PromptTemplateDTO / PromptVersionDTO / TokenUsageRecordDTO）
 │       ├── enums/                     # 枚举（AgentExceptionCode / AgentStatusEnum）
 │       ├── event/                     # 领域事件（AgentDomainEvent）
 │       ├── gateway/                   # 网关接口（LlmClient / LlmException / CacheMetricsRecorder / DagCheckpointStore / PromptTemplateProvider / Text2SQLService）
-│       ├── guardrail/                 # 安全护栏（InputGuardrail / OutputGuardrail / GuardrailResult）
-│       ├── json/                      # JSON 序列化（AgentJsonModule / ChatMessageSerializer / ChatRequestSerializer / TokenUsageDeserializer / TokenUsageSerializer / ToolCallDeserializer / ToolCallSerializer / ToolDefinitionSerializer）
-│       ├── model/                     # 模型对象（ChatMessage / ChatRequest / ChatResponse / TokenUsage / ToolCall / ToolDefinition / LlmModelConfig / MessageRole / ChatChunk / BatchChatResult / CostEstimate / MessageContent / SseEvent / TenantQuota）
-│       ├── prompt/                    # Prompt 模板（PromptTemplate）
-│       ├── rag/                       # RAG（EmbeddingClient / VectorStore / TextChunker / TextChunk / Reranker / Retriever）
+│       ├── guardrail/                 # 安全护栏抽象（InputGuardrail / OutputGuardrail / GuardrailResult）
+│       ├── json/                      # JSON 序列化模块（AgentJsonModule / ChatMessageSerializer / ChatRequestSerializer / TokenUsageDeserializer/Serializer / ToolCallDeserializer/Serializer / ToolDefinitionSerializer）
+│       ├── model/                     # 模型值对象（ChatMessage / ChatRequest / ChatResponse / TokenUsage / ToolCall / ToolDefinition / LlmModelConfig / MessageRole / ChatChunk / MessageContent / BatchChatResult / CostEstimate / SseEvent / TenantQuota）
+│       ├── prompt/                    # Prompt 模板（PromptTemplate — #{var} 变量替换）
+│       ├── rag/                       # RAG 抽象（EmbeddingClient / VectorStore / TextChunker / TextChunk / Reranker / Retriever）
 │       ├── repository/                # 仓储接口（AgentApprovalRepository / AgentDefinitionRepository / AgentTraceRepository / AgentTraceStepRepository / PromptTemplateRepository / PromptVersionRepository / TokenUsageRecordRepository）
-│       ├── tool/                      # 工具调用（Tool / ToolExecutor / ToolParam / ToolRegistration / ToolRegistry）
-│       ├── trace/                     # 轨迹（TraceMeta / TraceRecorder）
+│       ├── tool/                      # 工具调用抽象（Tool / ToolExecutor / ToolParam / ToolRegistration / ToolRegistry）
+│       ├── trace/                     # 轨迹抽象（TraceMeta / TraceRecorder）
 │       └── vo/                        # 值对象（AgentApprovalVO / AgentDefinitionVO / AgentTraceStepVO / AgentTraceVO / PromptTemplateVO / PromptVersionVO / TokenUsageRecordVO）
-├── ydsz-agent-infra/                  # 基础设施层：LLM Provider + Redis 记忆 + 向量存储 + MCP + Text2SQL
+├── ydsz-agent-infra/                  # 基础设施层：LLM Provider + Redis 记忆 + 向量存储 + MCP + Text2SQL + 护栏实现
 │   └── src/main/java/com/njydsz/agent/infra/
 │       ├── checkpoint/                # 检查点存储（RedisDagCheckpointStore）
-│       ├── converter/                 # 对象转换器（AgentConverter）
+│       ├── converter/                 # 对象转换器（AgentConverter — MapStruct）
 │       ├── entity/                    # 数据库实体（AgentApprovalDO / AgentDefinitionDO / AgentTraceDO / AgentTraceStepDO / PromptTemplateDO / PromptVersionDO / TokenUsageRecordDO）
 │       ├── guardrail/                 # 护栏实现（PiiMaskingGuardrail / PromptInjectionGuardrail）
 │       ├── llm/                       # LLM 客户端（CachedLlmClient / LlmClientRouter / OpenAiCompatibleClient / SemanticCacheConfig / SemanticLlmCache）
-│       ├── mapper/                    # MyBatis Mapper（AgentApprovalMapper / AgentDefinitionMapper / AgentTraceMapper / AgentTraceStepMapper / PromptTemplateMapper / PromptVersionMapper / TokenUsageRecordMapper）
+│       ├── mapper/                    # MyBatis Mapper（7 个 Mapper 接口）
 │       ├── memory/                    # 记忆实现（RedisConversationMemory / SummaryConversationMemory）
 │       ├── rag/                       # RAG 实现（HybridRetriever / IdentityReranker / InMemoryVectorStore / OpenAiEmbeddingClient / PgVectorStore / SimpleTextChunker）
-│       ├── repository/impl/           # 仓储实现
+│       ├── repository/                # 仓储实现（7 个 Repository 实现类）
 │       ├── text2sql/                  # Text2SQL 实现（JdbcText2SQLService）
-│       ├── tool/                      # 工具实现（DefaultToolRegistry / Text2SQLTool / ToolAnnotationScanner）
+│       ├── tool/                      # 工具实现（DefaultToolRegistry / McpClientProvider / McpToolAdapter / SseMcpClientProvider / Text2SQLTool / ToolAnnotationScanner）
 │       └── trace/                     # 轨迹实现（InMemoryTraceRecorder / PgTraceRecorder）
+│   └── src/main/resources/db/         # SQL 迁移脚本
+│       ├── V1__prompt_template.sql    # Prompt 模板主表 + 版本历史表
+│       └── V2__trace_step_cost.sql    # 链路步骤 cost 字段
 ├── ydsz-agent-server/                 # 应用层：Service + Config + Health + Metrics + Event
 │   └── src/main/java/com/njydsz/agent/server/
 │       ├── agent/                     # Agent 服务（6 种执行器 + DAG 编排 + 人工审批 + 工厂 + 门面 + DSL 解析器 + 条件评估器）
-│       ├── analytics/                 # 成本分析 / 可观测性看板
+│       ├── analytics/                 # 成本分析（CostAnalysisService）
 │       ├── chat/                      # 对话服务 + 请求防护 + 护栏 + SSE 执行器 + 流式 PII 脱敏 + Token 成本计算
-│       ├── config/                    # AgentProperties（prefix ydsz.agent）
-│       ├── debug/                     # 调试器
+│       ├── config/                    # AgentProperties（prefix: ydsz.agent）
+│       ├── debug/                     # 调试器（AgentDebuggerService）
 │       ├── event/                     # 应用事件发布（AgentEventPublisher）
-│       ├── health/                    # AgentHealthIndicator
-│       ├── listener/                  # 跨模块事件监听
-│       ├── metrics/                   # AgentMetrics + AgentRuntimeMetrics（Prometheus）
-│       ├── observability/             # 可观测性面板服务（ObservabilityDashboardService）
+│       ├── health/                    # 健康检查（AgentHealthIndicator）
+│       ├── listener/                  # 跨模块事件监听（CrossModuleEventListener）
+│       ├── metrics/                   # 指标埋点（AgentMetrics + AgentRuntimeMetrics — Prometheus）
+│       ├── observability/             # 可观测性面板（ObservabilityDashboardService）
 │       ├── prompt/                    # Prompt 管理 + 评估（DatabasePromptTemplateProvider / PromptEvaluationService / PromptManagementService）
-│       ├── queue/                     # 队列通道定义
+│       ├── queue/                     # 队列通道定义（AgentQueueChannels）
 │       ├── quota/                     # 租户配额（TenantQuotaService）
-│       └── rag/                       # RAG 服务 + 文档摄入 + Token 估算 + Agent 定义搜索 Provider
-├── ydsz-agent-web/                    # Web 层：Controller + 启动类
+│       └── rag/                       # RAG 服务（RagService / DocumentIngestionService / TokenEstimator / AgentDefinitionSearchProvider）
+├── ydsz-agent-app/                    # App 端基座：仅在 ydsz.platform.mode=app 时激活
+│   └── src/main/java/com/njydsz/agent/app/
+│       ├── config/                    # AgentAppAutoConfiguration
+│       ├── health/                    # AgentAppHealthIndicator
+│       └── openapi/                   # AgentAppOpenApiConfiguration
+├── ydsz-agent-web/                    # Web 层：Controller + 启动类 + 自动配置
 │   └── src/main/java/com/njydsz/agent/web/
-│       ├── AgentApplication.java      # 启动类（@EnableYdszAuth / @EnableYdszSafe / @EnableYdszAudit / @EnableYdszFeign / @MapperScan）
-│       ├── config/                    # AgentAutoConfiguration
+│       ├── AgentApplication.java      # 启动类（@SpringBootApplication / @EnableDiscoveryClient / @EnableYdszAuth / @EnableYdszSafe / @EnableYdszAudit / @EnableYdszFeign / @MapperScan）
+│       ├── config/                    # AgentAutoConfiguration（Bean 依赖注入编排）
 │       └── controller/                # 9 个 Controller
-└── ydsz-agent-server/src/main/java/com/njydsz/agent/infra/tool/  # MCP 工具适配（McpClientProvider / McpToolAdapter / SseMcpClientProvider）
+│   └── src/main/resources/            # 配置文件
+│       └── bootstrap.yml              # 端口 9008 / Nacos / Agent 默认配置
 ```
 
 ## 使用方式

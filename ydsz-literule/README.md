@@ -16,18 +16,21 @@
 | **当前版本** | `1.0.0-SNAPSHOT`（项目版本号统一为 1.0.0） |
 | **脚手架状态** | ✅ 已包含 `@SpringBootApplication` 启动类、`application.yml` / `bootstrap.yml`，可独立部署 |
 
-## 分层结构（DDD 五层）
+## 分层结构（DDD 六层）
 
 ```
 ydsz-literule/
-├── ydsz-literule-api        # 对外 SPI/DTO：Rule / RuleEngine / RuleContext 等
-├── ydsz-literule-domain     # 领域层：实体 DO、领域事件、注解、ModelInputProvider
-├── ydsz-literule-infra      # 基础设施：MyBatis Mapper、决策表 Excel 导入导出
-├── ydsz-literule-server     # 应用服务 + 引擎核心：DefaultRuleEngine、LiteExpr、热加载、CEP、回放、审批
-└── ydsz-literule-web        # Web 层：22 个 REST Controller
+├── ydsz-literule-api        # 对外 SPI/DTO：Rule / RuleEngine / RuleContext / 表达式引擎 SPI、Feign Client
+├── ydsz-literule-domain     # 领域层：VO、枚举、领域事件、@LiteRule 注解、ModelInputProvider、Repository 接口
+├── ydsz-literule-infra      # 基础设施：MyBatis Mapper + XML、Entity DO、Repository 实现、决策表 Excel 导入导出
+├── ydsz-literule-server     # 应用服务 + 引擎核心：DefaultRuleEngine、LiteExpr、热加载、CEP、回放、审批、SPI Provider 实现
+├── ydsz-literule-web        # Web 层：22 个 REST Controller + Spring Boot 启动类 LiteruleApplication
+└── ydsz-literule-app        # App 基座：自动配置（LiteRuleAppAutoConfiguration）、健康检查、OpenAPI 预留
 ```
 
-依赖方向（严格单向）：`web → server → infra → domain → api`
+依赖方向（严格单向）：`web → server → domain → api`，`web → infra`（通过 Spring 自动装配注入 Repository 实现），`app → domain → api`
+
+> **说明**：server 层不直接依赖 infra 层（移除 server → infra 的直接依赖以符合 DDD 分层），infra 层由 web 层引入并通过 Spring 自动装配注入 Repository 实现。
 
 ## 核心职责
 
@@ -112,30 +115,34 @@ com.njydsz.literule.server
 
 > 其余目录：`health/`（健康检查）、`json/`、`listener/`、`metrics/`、`search/`（规则搜索）等。
 
-### 4. Web 层 Controller（22 个，路径前缀均以 `/v1/rule-engine` 开头）
+### 4. Web 层 Controller（22 个）
 
-| Controller | 路径前缀 | 主要端点 |
+> 所有 Controller 的 `@RequestMapping` 均以 `/v1/rule-engine` 为根前缀。大部分管理类接口挂载在 `/v1/rule-engine/rules` 下，通过子路径区分功能；CEP / Dashboard / Debug / DSL / Audit / Variables 各自使用独立子前缀。
+
+| Controller | `@RequestMapping` | 主要端点 |
 |---|---|---|
-| `RuleAdminController` | `/v1/rule-engine/rules` | 规则 CRUD / 启停 / 版本 / 回滚 / Dry-run / 表达式校验 / 决策表 / 批量操作（13 个端点） |
-| `RuleTraceController` | `/v1/rule-engine/rules/trace` | 执行回放 / 影响预览 |
-| `RuleTestCaseController` | `/v1/rule-engine/test-cases` | 业务测试用例 |
-| `RuleTemplateController` | `/v1/rule-engine/templates` | 规则模板市场 |
-| `RulePackController` | `/v1/rule-engine/packs` | 规则包市场 |
-| `RuleLifecycleController` | `/v1/rule-engine/lifecycle` | 生命周期 + 多级审批 |
-| `RuleImportExportController` / `RuleDslImportExportController` | `/v1/rule-engine/import-export` | 导入导出 |
-| `RuleGraphController` | `/v1/rule-engine/graph` | 规则链画布 / 表达式预览 |
-| `RuleDependencyController` | `/v1/rule-engine/dependencies` | 规则依赖 |
-| `RuleDecisionTableController` | `/v1/rule-engine/decision-tables` | 决策表 |
-| `RuleConflictController` | `/v1/rule-engine/conflicts` | 冲突检测 |
-| `RuleCategoryController` | `/v1/rule-engine/categories` | 目录树 |
-| `RuleBatchController` | `/v1/rule-engine/batch` | 批量操作 |
-| `RuleABPolicyController` | `/v1/rule-engine/ab-test` | A/B 测试策略 |
-| `RuleDslController` | `/v1/rule-engine/dsl` | DSL 校验 / 解析 / 导入导出 / 预览 |
+| `RuleAdminController` | `/v1/rule-engine/rules` | 规则 CRUD / 启停 / 版本 / 回滚 / Dry-run / 表达式校验 / 版本 Diff |
+| `RuleABPolicyController` | `/v1/rule-engine/rules` | A/B 测试策略 CRUD / 回滚 |
+| `RuleBatchController` | `/v1/rule-engine/rules` | 批量启停 / 批量修改优先级 / 批量修改分类 |
+| `RuleCategoryController` | `/v1/rule-engine/rules` | 目录树 CRUD |
+| `RuleConflictController` | `/v1/rule-engine/rules` | 冲突检测 / 冲突分析 |
+| `RuleDecisionTableController` | `/v1/rule-engine/rules` | 决策表 CRUD / 行级增删改 |
+| `RuleDependencyController` | `/v1/rule-engine/rules` | 规则依赖 CRUD / 级联禁用预览 |
+| `RuleGraphController` | `/v1/rule-engine/rules` | 规则链画布查询保存 / 表达式函数市场 / 画布 Dry-run |
+| `RuleImportExportController` | `/v1/rule-engine/rules` | 规则导入导出（Excel/JSON） |
+| `RuleLifecycleController` | `/v1/rule-engine/rules` | 规则状态变更 / 多级审批流（提交/审批/驳回/撤回） |
+| `RulePackController` | `/v1/rule-engine/rules` | 规则包市场（发布/安装/搜索/压测） |
+| `RuleTemplateController` | `/v1/rule-engine/rules` | 规则模板市场 CRUD / 一键导入 |
+| `RuleTraceController` | `/v1/rule-engine/rules` | 执行回放 / 影响预览 |
+| `RuleTestCaseController` | `/v1/rule-engine/rules` | 业务测试用例 CRUD / 批量运行 |
+| `RuleDslController` | `/v1/rule-engine/dsl` | DSL 校验 / 解析 / 预览 |
+| `RuleDslImportExportController` | `/v1/rule-engine/dsl` | DSL 导入导出 |
 | `RuleVariableAdminController` | `/v1/rule-engine/variables` | 变量 CRUD / 刷新 |
-| `CEPController` / `CEPTestController` | `/v1/rule-engine/cep` | 模式管理 / 事件推送 / 命中查询 / 测试 |
-| `RuleAuditLogController` | `/v1/rule-engine/audit` | 审计日志查询 |
-| `RuleDashboardController` | `/v1/rule-engine/dashboard` | 概览 / 趋势 / 分布 / Top 规则 |
-| `RuleDebugController` | `/v1/rule-engine/debug` | 规则断点管理 / 调试会话 / 单步执行（RESUME/STEP_OVER/STEP_INTO/STEP_OUT/TERMINATE） |
+| `CEPController` | `/v1/rule-engine/cep` | CEP 模式管理 / 事件投递 / 命中查询 / 引擎状态 |
+| `CEPTestController` | `/v1/rule-engine/cep` | CEP 模式测试 / 模拟事件流 |
+| `RuleAuditLogController` | `/v1/rule-engine/audit` | 审计日志查询（按规则/按时间/最近 N 条） |
+| `RuleDashboardController` | `/v1/rule-engine/dashboard` | 概览 / 趋势 / 分布 / Top 规则 / 实时指标 |
+| `RuleDebugController` | `/v1/rule-engine/debug` | 断点管理 / 调试会话 / 单步执行（RESUME/STEP_OVER/STEP_INTO/STEP_OUT/TERMINATE） |
 
 ## 使用方式
 

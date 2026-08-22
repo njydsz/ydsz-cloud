@@ -2,7 +2,7 @@
 
 > Redis 服务增强与基础数据层公共模块（L4 基础数据层）
 
-提供按数据类型拆分的 Ops 子组件（String / Hash / Collection / Geo / Pipeline / Pub-Sub / Stream / 事务）、分布式限流器（固定窗口 / 滑动窗口 / 令牌桶）、注解驱动缓存、租户级 Key 前缀器、可观测性指标等开箱即用能力，是所有业务模块缓存与分布式协调的统一基座。
+提供按数据类型拆分的 Ops 子组件（String / Hash / Collection / Geo / Pipeline / Pub-Sub / Stream / 事务）、分布式限流器（固定窗口 / 滑动窗口 / 令牌桶）、注解驱动缓存、租户级 Key 前缀器、Key 过期事件监听、统一异常处理、可观测性指标等开箱即用能力，是所有业务模块缓存与分布式协调的统一基座。
 
 ## 模块定位
 
@@ -10,9 +10,9 @@
 |---|---|
 | **层级** | L4 基础数据层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **作用** | 提供 Redis 操作封装、分布式限流、注解缓存等能力 |
+| **作用** | 提供 Redis 操作封装、分布式限流、注解缓存、Key 过期监听等能力 |
 | **依赖** | common-core、common-json、common-util；spring-boot-starter-data-redis、commons-pool2、lettuce-core；可选依赖 jedis、micrometer-core、redisson-spring-boot-starter、spring-boot-health |
-| **版本** | 1.0.0 |
+| **版本** | 1.4.1 |
 
 ## 核心能力
 
@@ -77,6 +77,7 @@
 | `@YdszCacheEvict` | 缓存清除注解 |
 | `YdszCacheableAspect` | 缓存切面实现（SpEL 解析 + 分布式锁防击穿 + 空值缓存防穿透 + 随机 TTL 防雪崩） |
 | `RedisRetryInterceptor` | Redis 操作重试拦截器（指数退避，默认仅读操作重试） |
+| `RedisOperation` | Redis 操作类型声明注解（READ / WRITE / UNKNOWN，供异常处理拦截器决策） |
 
 `@YdszCacheable` 增强项：自定义 TTL、空值缓存防穿透（默认 60s）、分布式互斥锁防击穿、随机过期防雪崩。
 
@@ -86,10 +87,19 @@
 |---|---|
 | `YdszJsonRedisSerializer` | 基于 YdszJson 的高性能 Redis 序列化器（支持 Java 8 时间类型） |
 | `RedisKeyPrefixProvider` | Key 前缀提供者接口（业务模块实现，统一 Key 命名规范） |
+| `RedisKeyFormatter` | Redis Key 前缀格式化器（统一拼接规范，支持分类前缀） |
+| `RedisKeyNamingConvention` | Key 命名约定策略 |
 | `TenantRedisKeyPrefixer` | 租户级 Redis Key 前缀器（格式 `{tenantId}:{originalKey}`，超级管理员不添加前缀） |
 | `RedisKeysEnum` | Redis Key 模板枚举管理（统一 `ydsz:` 前缀，模板化 `{}` 占位符，分组管理 + 默认 TTL） |
 
-### 9. 集群与连接配置
+### 9. Key 过期事件监听
+
+| 类 / 注解 | 说明 |
+|---|---|
+| `@RedisKeyExpireListener` | Redis Key 过期事件监听注解（基于 Redis Keyspace Notifications，需开启 `notify-keyspace-events Ex`） |
+| `RedisKeyExpirationEvent` | Redis Key 过期事件封装（含 expiredKey / businessKey / occurredAt） |
+
+### 10. 集群与连接配置
 
 | 类 | 说明 |
 |---|---|
@@ -98,18 +108,29 @@
 | `RedisClientType` | 客户端类型枚举（JEDIS / LETTUCE） |
 | `ClusterSlotUtil` | Redis Cluster Slot 工具 |
 
-### 10. 故障处理策略
+### 11. 统一异常处理
+
+| 类 | 说明 |
+|---|---|
+| `RedisOperationExceptionHandler` | Redis 操作统一异常处理拦截器（Spring AOP，将 Spring Data Redis 常见异常统一转换为内部异常体系） |
+| `RedisOperationException` | Redis 操作异常（枚举） |
+| `RedisConnectionException` | Redis 连接异常（枚举，可恢复异常） |
+| `RedisBusinessException` | Redis 业务异常（枚举，不可恢复异常） |
+| `RedisScriptConstants` | Redis Lua 脚本常量 |
+
+异常转换规则：连接失败/超时 → 可恢复异常（可用于重试判断）；序列化/参数错误 → 不可恢复异常。
+
+### 12. 故障处理策略
 
 | 类 | 说明 |
 |---|---|
 | `FailOpenPolicy` | 故障处理策略枚举（FAIL_OPEN / FAIL_CLOSED / FAIL_THROW） |
-| `RedisOperationException` | Redis 操作异常 |
 
 各子组件可单独配置故障策略，未单独配置时使用全局 `failurePolicy`（默认 FAIL_OPEN）：
 
 - 限流器默认 `FAIL_CLOSED`（安全场景推荐）
 
-### 11. 可观测性
+### 13. 可观测性
 
 | 类 | 说明 |
 |---|---|
@@ -117,7 +138,7 @@
 | `RedisMetricsConfiguration` | 指标采集自动配置（`MeterRegistry` 存在时激活） |
 | `RedisHealthIndicator` | Redis 健康检查 |
 
-### 12. 租户隔离
+### 14. 租户隔离
 
 | 类 | 说明 |
 |---|---|
@@ -125,7 +146,7 @@
 
 特性：超级管理员（tenantId = null 或 "0"）不添加前缀，仅对 key 序列化生效，value 不受影响。
 
-### 13. 多级缓存
+### 15. 多级缓存
 
 | 类 | 说明 |
 |---|---|
@@ -251,6 +272,30 @@ public User getUserById(Long userId) {
 }
 ```
 
+### 3. Key 过期事件监听
+
+```java
+import com.njydsz.common.redis.annotation.RedisKeyExpireListener;
+
+// 需先开启 ydsz.redis.key-expiration.enabled=true 及 Redis 服务端 notify-keyspace-events Ex
+@RedisKeyExpireListener(keyPattern = "order:lock:*")
+public void onOrderLockExpired(String expiredKey) {
+    log.info("订单锁已过期：{}", expiredKey);
+}
+```
+
+### 4. 操作类型声明注解
+
+```java
+import com.njydsz.common.redis.annotation.RedisOperation;
+
+@RedisOperation(type = OperationType.READ)
+public User getUser(String key) { ... }
+
+@RedisOperation(type = OperationType.WRITE, retryOnWrite = true)
+public boolean updateUser(String key, User user) { ... }
+```
+
 > 布隆过滤器、延迟队列、Redis 版雪花 ID 等能力已移除，不再提供使用示例。
 
 ## SPI 扩展点
@@ -291,8 +336,11 @@ public User getUserById(Long userId) {
 6. **限流器故障策略**：默认 `FAIL_CLOSED`（拒绝所有请求，安全场景推荐），与全局默认 `FAIL_OPEN` 不同。
 7. **雪花 ID**：WorkerId 分配由 `ydsz-common-util` 的 `WorkerIdAllocator` 承担（PodOrdinal → IpHash 链），Redis 模块不再提供 ID 生成能力。
 8. **Key 模板管理**：`RedisKeysEnum` 中 Key 定义不可扩展，业务模块如需自定义 Key 前缀和过期时间，可通过 `RedisStringOps` 直接操作或自定义 Key 常量类。
+9. **Key 过期监听**：使用 `@RedisKeyExpireListener` 前需开启 `ydsz.redis.key-expiration.enabled=true` 并确保 Redis 服务端配置 `notify-keyspace-events Ex`。
+10. **统一异常处理**：`RedisOperationExceptionHandler` 将 Spring Data Redis 常见异常统一转换为内部异常体系，连接失败/超时归类为可恢复异常，序列化/参数错误归类为不可恢复异常。
 
 ## 变更记录
 
+- **v1.5.0**（2026-08-18）：新增 Key 过期事件监听（`@RedisKeyExpireListener` / `RedisKeyExpirationEvent`）、统一异常处理拦截器（`RedisOperationExceptionHandler`）、操作类型声明注解（`RedisOperation`）、Key 前缀格式化器（`RedisKeyFormatter`）；新增内部异常体系（`RedisConnectionException` / `RedisBusinessException` / `RedisOperationException`）、Lua 脚本常量（`RedisScriptConstants`）、Key 命名约定策略（`RedisKeyNamingConvention`）。
 - **v1.4.1**（2026-08-17）：补全多级缓存（`MultiLevelCacheProvider` / `MultiLevelCacheAutoConfiguration`）章节与配置项文档
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节

@@ -3,6 +3,7 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
 import com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 
@@ -56,8 +57,17 @@ public interface FlowEventSubscriptionService {
   /** 取消某实例所有 WAITING 订阅（实例终止/驳回时调用） */
   int cancelByInstance(String instanceId, String reason);
 
-  /** 查询实例的事件订阅列表 */
+  /** 查询实例的事件订阅列表（返回 DO，供 Service 层内部使用） */
   List<FlowEventSubscriptionDO> listByInstance(String instanceId);
+
+  /**
+   * 查询实例的事件订阅列表（返回 VO，符合 DDD 分层规范）
+   *
+   * @param instanceId 实例 ID
+   * @return 事件订阅 VO 列表
+   * @since 1.0.0
+   */
+  List<FlowEventSubscriptionVO> listByInstanceVO(String instanceId);
 
   /** 判断节点是否为事件捕获节点（ext JSON 中包含 eventCatch: true） */
   boolean isEventCatchNode(FlowNodeDO node);

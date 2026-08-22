@@ -3,6 +3,7 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
 
 /**
@@ -42,11 +43,33 @@ public interface FlowDelegateAuthService {
   /** 启用/停用 */
   void updateStatus(String authId, String status, String operatorId);
 
-  /** 查"我设置的"授权列表 */
+  /** 查"我设置的"授权列表（返回 DO，供 Service 层内部使用） */
   List<FlowDelegateAuthDO> listMine(String ownerUserId, String tenantId, String status);
 
-  /** 查"代理给我的"授权列表 */
+  /** 查"代理给我的"授权列表（返回 DO，供 Service 层内部使用） */
   List<FlowDelegateAuthDO> listAsDelegate(String delegateUserId, String tenantId, String status);
+
+  /**
+   * 查"我设置的"授权列表（返回 VO，符合 DDD 分层规范）
+   *
+   * @param ownerUserId 授权人 ID
+   * @param tenantId 租户 ID
+   * @param status 状态筛选（可选）
+   * @return 授权 VO 列表
+   * @since 1.0.0
+   */
+  List<FlowDelegateAuthVO> listMineVO(String ownerUserId, String tenantId, String status);
+
+  /**
+   * 查"代理给我的"授权列表（返回 VO，符合 DDD 分层规范）
+   *
+   * @param delegateUserId 代理人 ID
+   * @param tenantId 租户 ID
+   * @param status 状态筛选（可选）
+   * @return 授权 VO 列表
+   * @since 1.0.0
+   */
+  List<FlowDelegateAuthVO> listAsDelegateVO(String delegateUserId, String tenantId, String status);
 
   /**
    * 匹配代理规则 — 创建任务前调用
