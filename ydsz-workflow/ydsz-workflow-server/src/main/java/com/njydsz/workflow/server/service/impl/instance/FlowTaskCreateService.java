@@ -20,7 +20,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowAssigneeDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
@@ -1448,18 +1448,9 @@ public class FlowTaskCreateService {
     assigneeResolutionService.resolveAssignee(task, node, variables, explicit, instance);
   }
 
-  /** 解析 node.ext JSON 为 Map */
+  /** 解析 node.ext JSON 为 Map（委托给 FlowNodeExt 统一实现） */
   private Map<String, Object> parseExtConfig(String ext) {
-    if (!StringUtils.hasText(ext)) {
-      return Collections.emptyMap();
-    }
-    try {
-      Map<String, Object> map = YdszJson.parseMap(ext);
-      return map == null ? Collections.emptyMap() : map;
-    } catch (Exception e) {
-      log.warn("[Flow] 解析 node.ext JSON 失败: err={}", e.getMessage());
-      return Collections.emptyMap();
-    }
+    return FlowNodeExt.parseSafe(ext);
   }
 
   /**
