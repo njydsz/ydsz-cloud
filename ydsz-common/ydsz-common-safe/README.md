@@ -97,7 +97,7 @@
 
 ### 5. 验证码
 
-> **说明**：v1.2.0 起验证码能力已精简收敛，仅保留核心生成器（`CaptchaGenerator` + `CaptchaProperties`）。图形/算术/滑块生成器、存储、校验器、限流器等均已移除，验证码存储/校验由业务方结合 Redis 自行实现。
+> **说明**：1.0.0 起验证码能力已精简收敛，仅保留核心生成器（`CaptchaGenerator` + `CaptchaProperties`）。图形/算术/滑块生成器、存储、校验器、限流器等均已移除，验证码存储/校验由业务方结合 Redis 自行实现。
 
 ### 6. 加密与签名
 
@@ -600,8 +600,8 @@ public YdszResponse<OrderVO> createOrder(@RequestBody CreateOrderRequest request
 
 ## 变更记录
 
-- **v1.3.0**（2026-08-18）：新增二级认证（`@SecondaryAuth` / `@SensitiveOperation` / `@SensitiveLevel`）、幂等性（`@Idempotent` / `IdempotentInterceptor` / `IdempotentStore` / `IdempotentAutoConfiguration`）；新增限流决策结果（`RateLimitDecision`）、限流上下文（`RateLimitContext`）、限流自动配置（`RateLimitAutoConfiguration`）；新增熔断器抽象基类（`AbstractCircuitBreaker`）、熔断器配置（`CircuitBreakerProperties`）、热点参数规则（`HotParamRule`）；新增字段加密配置（`EncryptFieldProperties`）、API 签名自动配置（`ApiSignatureAutoConfiguration`）；新增敏感数据配置（`SensitiveDataProperties`）、敏感数据处理异常（`SensitiveDataProcessingException`）；新增安全告警配置（`SafeAlertProperties`）；新增限流结果枚举（`RateLimitResult`）；新增列脱敏规则/上下文（`ColumnDesensitizationRule` / `ColumnDesensitizationContext`）；新增 `ConfigRuleProvider` 限流规则提供者。
-- **v1.2.1**（2026-08-17）：补全 SSRF 防护（`SsrfHttpRequestInterceptor` / `HttpConnectionValidator`）、`SafeFilterChainBuilder`（过滤器链构建器）、`RateLimitResponseDecorator`（限流响应装饰器）文档
-- **v1.2.0**（2026-08-16）：删除低价值模块（BotDetection、Captcha）；SecurityEventRingBuffer 标记 @Deprecated；限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；配置前缀收敛（`ydsz.ratelimit` → `ydsz.safe.ratelimit`）；引入 Sentinel 限流扩展；建立度量标准（SLO/指标/热更新）；补全 FieldEncryptionService 测试。
-- **v1.1.0**（2026-08-16）：限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；配置前缀收敛（`ydsz.ratelimit` → `ydsz.safe.ratelimit`）；补全 FieldEncryptionService 测试。
-- **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节，覆盖 14 项核心能力、10 个 Properties 配置类、9 个 SPI 接口、1 个 HealthIndicator。
+- **1.0.0**（2026-08-18）：新增二级认证（`@SecondaryAuth` / `@SensitiveOperation` / `@SensitiveLevel`）、幂等性（`@Idempotent` / `IdempotentInterceptor` / `IdempotentStore` / `IdempotentAutoConfiguration`）；新增限流决策结果（`RateLimitDecision`）、限流上下文（`RateLimitContext`）、限流自动配置（`RateLimitAutoConfiguration`）；新增熔断器抽象基类（`AbstractCircuitBreaker`）、熔断器配置（`CircuitBreakerProperties`）、热点参数规则（`HotParamRule`）；新增字段加密配置（`EncryptFieldProperties`）、API 签名自动配置（`ApiSignatureAutoConfiguration`）；新增敏感数据配置（`SensitiveDataProperties`）、敏感数据处理异常（`SensitiveDataProcessingException`）；新增安全告警配置（`SafeAlertProperties`）；新增限流结果枚举（`RateLimitResult`）；新增列脱敏规则/上下文（`ColumnDesensitizationRule` / `ColumnDesensitizationContext`）；新增 `ConfigRuleProvider` 限流规则提供者。
+- **1.0.0**（2026-08-17）：补全 SSRF 防护（`SsrfHttpRequestInterceptor` / `HttpConnectionValidator`）、`SafeFilterChainBuilder`（过滤器链构建器）、`RateLimitResponseDecorator`（限流响应装饰器）文档
+- **1.0.0**（2026-08-16）：删除低价值模块（BotDetection、Captcha）；SecurityEventRingBuffer 标记 @Deprecated；限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；配置前缀收敛（`ydsz.ratelimit` → `ydsz.safe.ratelimit`）；引入 Sentinel 限流扩展；建立度量标准（SLO/指标/热更新）；补全 FieldEncryptionService 测试。
+- **1.0.0**（2026-08-16）：限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；配置前缀收敛（`ydsz.ratelimit` → `ydsz.safe.ratelimit`）；补全 FieldEncryptionService 测试。
+- **1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节，覆盖 14 项核心能力、10 个 Properties 配置类、9 个 SPI 接口、1 个 HealthIndicator。

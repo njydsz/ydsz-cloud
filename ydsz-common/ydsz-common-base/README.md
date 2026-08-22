@@ -405,10 +405,10 @@ AbstractMetricsHolder.recordDuration(registry, "ydsz_flow_", "eval_duration_ms",
 
 ## 变更记录
 
-- **v1.0.2**（2026-08-17）：
+- **1.0.0**（2026-08-17）：
   - 补全 `BaseSecurityHeadersProperties`（`ydsz.base.security-headers`）、`BaseRequestProperties`（`ydsz.base.request`）/ `RequestBodySizeLimitFilter` 文档
   - 补全 `api` 包（`ApiVersion` / `ApiVersionOpenApiCustomizer` / `ApiVersionResolver`）文档
   - 补全 `HttpHeaderConstants`、`ConditionalOnPlatform` / `PlatformCondition` / `PlatformMode` 文档
   - 更新依赖说明：标注 common-auth / common-safe 为直接依赖（非传递）
-- **v1.0.1**（2026-08-17）：补全限流、幂等、i18n（`SpringMessageResolver` / `MessageResolverRegistry` / `MessageResolverHolder`）、`CoreHealthIndicator` 文档
-- **v1.0.0**（2026-08-02）：按 ydsz-common-jdbc 9 章节标准重构 README；补全横切点执行顺序表、SPI 扩展点（含抽象基类扩展点）、健康检查端点、注意事项；统一版本号为 1.0.0
+- **1.0.0**（2026-08-17）：补全限流、幂等、i18n（`SpringMessageResolver` / `MessageResolverRegistry` / `MessageResolverHolder`）、`CoreHealthIndicator` 文档
+- **1.0.0**（2026-08-02）：按 ydsz-common-jdbc 9 章节标准重构 README；补全横切点执行顺序表、SPI 扩展点（含抽象基类扩展点）、健康检查端点、注意事项；统一版本号为 1.0.0

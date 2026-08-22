@@ -285,5 +285,5 @@ management:
 
 ## 变更记录
 
-- **v2.0.0**（2026-08-15）：架构精简重构，移除 LRU/Weighted/Concurrent/弱引用缓存实现、多级缓存（L1+L2 Redis）、热点 Key 追踪、Resilience4j 熔断降级、内存感知淘汰、SWR、WriteBehind 等未落地能力；统一使用 Spring Cache 标准注解（@Cacheable/@CacheEvict）；下线 AsyncCache/AsyncLoadingCacheImpl；精简 pom 依赖（移除 resilience4j、aspectjweaver、spring-aop、skywalking、lombok、common-redis、common-json）；保留核心能力（TINYLFU/STRIPED + 三防 + ExpirableCache + WriteThroughCache + Spring Cache 适配 + Micrometer 指标 + Actuator 端点 + 健康检查）。
-- **v1.0.0**（2026-08-02）：初始版本，对标 common-jdbc 标准格式重构 README。
+- **1.0.0**（2026-08-15）：架构精简重构，移除 LRU/Weighted/Concurrent/弱引用缓存实现、多级缓存（L1+L2 Redis）、热点 Key 追踪、Resilience4j 熔断降级、内存感知淘汰、SWR、WriteBehind 等未落地能力；统一使用 Spring Cache 标准注解（@Cacheable/@CacheEvict）；下线 AsyncCache/AsyncLoadingCacheImpl；精简 pom 依赖（移除 resilience4j、aspectjweaver、spring-aop、skywalking、lombok、common-redis、common-json）；保留核心能力（TINYLFU/STRIPED + 三防 + ExpirableCache + WriteThroughCache + Spring Cache 适配 + Micrometer 指标 + Actuator 端点 + 健康检查）。
+- **1.0.0**（2026-08-02）：初始版本，对标 common-jdbc 标准格式重构 README。

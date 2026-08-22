@@ -361,7 +361,7 @@ public class CustomAuthConfiguration {
 
 ## 变更记录
 
-- **v1.0.1**（2026-08-17）：
+- **1.0.0**（2026-08-17）：
   - 更新依赖说明：添加 `common-domain` 为直接依赖
   - 补全 `AppFilterOrder`（Filter 顺序常量）、`RequestIdGeneratorAutoConfiguration`（RequestId 自动配置）文档
-- **v1.0.0**（2026-08-02）：按 ydsz-common-jdbc 9 章节标准重构 README；补全 Filter 链顺序表、SPI 扩展点（含继承扩展点）、Micrometer 指标列表、注意事项；统一版本号为 1.0.0
+- **1.0.0**（2026-08-02）：按 ydsz-common-jdbc 9 章节标准重构 README；补全 Filter 链顺序表、SPI 扩展点（含继承扩展点）、Micrometer 指标列表、注意事项；统一版本号为 1.0.0

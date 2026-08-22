@@ -149,29 +149,10 @@ public class FlowDefinitionDeployManager {
       value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
   public String deploy(FlowDeployProcessDTO dto) {
-    if (dto == null
-        || !StringUtils.hasText(dto.getFlowCode())
-        || !StringUtils.hasText(dto.getFlowName())) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("flowCode/flowName 不能为空")
-          .build();
-    }
-
+    validateDeployParams(dto);
     String version = StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : "1.0";
-    String tenantId =
-        dto.getTenantId() != null ? dto.getTenantId() : AuthContextUtils.getTenantIdOrDefault();
-
-    FlowDefinitionDO existing =
-        definitionRepository.findPublished(dto.getFlowCode(), version, tenantId)
-            .map(converter::entityToDO)
-            .orElse(null);
-    if (existing != null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("流程定义已存在: code=" + dto.getFlowCode() + " version=" + version)
-          .build();
-    }
+    String tenantId = dto.getTenantId() != null ? dto.getTenantId() : AuthContextUtils.getTenantIdOrDefault();
+    checkVersionConflict(dto.getFlowCode(), version, tenantId);
 
     boolean hasBpmn = StringUtils.hasText(dto.getBpmnXml());
     boolean hasJson = dto.getNodes() != null && !dto.getNodes().isEmpty();
@@ -182,85 +163,147 @@ public class FlowDefinitionDeployManager {
           .build();
     }
 
-    List<FlowNodeDO> nodes = new ArrayList<>();
-    List<FlowSkipDO> skips = new ArrayList<>();
-
+    List<FlowNodeDO> nodes;
+    List<FlowSkipDO> skips;
     if (hasBpmn) {
-      BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
-      if (StringUtils.hasText(bpmnModel.getProcessId())
-          && !bpmnModel.getProcessId().equals(dto.getFlowCode())) {
-        throw SysException.builder()
-            .resultCode(YdszResultCode.BAD_REQUEST)
-            .message(
-                "BPMN process id 与 flowCode 不一致: bpmn="
-                    + bpmnModel.getProcessId()
-                    + " dto="
-                    + dto.getFlowCode())
-            .build();
-      }
-      if (!StringUtils.hasText(dto.getFlowName()) || dto.getFlowName().equals(dto.getFlowCode())) {
-        dto.setFlowName(bpmnModel.getProcessName());
-      }
-      nodes.addAll(bpmnModel.getNodes());
-      skips.addAll(bpmnModel.getSkips());
-      Map<String, BpmnModel.NodeCoordinate> nodeCoords = bpmnModel.getNodeCoordinates();
-      if (nodeCoords != null && !nodeCoords.isEmpty()) {
-        for (FlowNodeDO n : nodes) {
-          BpmnModel.NodeCoordinate coord = nodeCoords.get(n.getNodeCode());
-          if (coord != null) {
-            n.setCoordinate(
-                YdszJson.toJson(
-                    Map.of(
-                        "x", coord.getX(),
-                        "y", coord.getY(),
-                        "width", coord.getWidth(),
-                        "height", coord.getHeight())));
-          }
-        }
-        log.info("[Flow] 从 BPMNDI 注入节点坐标: defId-pending count={}", nodeCoords.size());
-      }
+      nodes = parseBpmnNodes(dto, version);
+      skips = parseBpmnSkips(dto);
     } else {
-      for (FlowDeployProcessDTO.FlowNodeDTO n : dto.getNodes()) {
-        FlowNodeDO node = new FlowNodeDO();
-        node.setNodeCode(n.getNodeCode());
-        node.setNodeName(n.getNodeName() == null ? n.getNodeCode() : n.getNodeName());
-        node.setNodeType(
-            n.getNodeType() == null ? FlowNodeType.APPROVAL.getCode() : n.getNodeType());
-        node.setPermissionFlag(n.getPermissionFlag());
-        node.setSkipAnyNode(n.getSkipAnyNode());
-        nodes.add(node);
-      }
-      boolean hasStart =
-          nodes.stream().anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
-      if (!hasStart) {
-        throw SysException.builder()
-            .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("流程定义必须包含开始节点（nodeType=0）")
-            .build();
-      }
-      long uniqueCount = nodes.stream().map(FlowNodeDO::getNodeCode).distinct().count();
-      if (uniqueCount != nodes.size()) {
-        throw SysException.builder()
-            .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("节点编码 nodeCode 必须唯一")
-            .build();
-      }
-      if (dto.getSkips() != null) {
-        for (FlowDeployProcessDTO.FlowSkipDTO s : dto.getSkips()) {
-          FlowSkipDO skip = new FlowSkipDO();
-          skip.setSkipName(s.getSkipName());
-          skip.setSkipType(
-              StringUtils.hasText(s.getSkipType()) ? s.getSkipType() : FlowSkipType.PASS.name());
-          skip.setSkipCondition(s.getSkipCondition());
-          skip.setNextNodeCode(s.getToNodeCode());
-          skip.setExt(YdszJson.toJson(Map.of("sourceRef", s.getFromNodeCode())));
-          skips.add(skip);
-        }
-      }
+      nodes = parseJsonNodes(dto);
+      skips = parseJsonSkips(dto);
     }
 
     graphValidator.validate(nodes, skips);
 
+    FlowDefinitionVO savedDef = saveDefinition(dto, version, tenantId);
+    String definitionId = savedDef.getId();
+    saveNodes(nodes, definitionId, dto.getFlowCode(), tenantId, dto.getProviderTraceId());
+    saveSkips(skips, definitionId, dto.getFlowCode(), tenantId, dto.getProviderTraceId());
+
+    log.info("[Flow] 部署流程成功: code={} version={} defId={} mode={} nodes={} skips={}",
+        dto.getFlowCode(), version, definitionId, hasBpmn ? "BPMN" : "JSON",
+        nodes.size(), skips.size());
+    flowDefinitionCacheService.evict(definitionId);
+    return definitionId;
+  }
+
+  /** 校验部署参数：flowCode/flowName 不能为空。 */
+  private void validateDeployParams(FlowDeployProcessDTO dto) {
+    if (dto == null || !StringUtils.hasText(dto.getFlowCode()) || !StringUtils.hasText(dto.getFlowName())) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("flowCode/flowName 不能为空")
+          .build();
+    }
+  }
+
+  /** 校验版本冲突：flowCode + version + tenantId 组合唯一。 */
+  private void checkVersionConflict(String flowCode, String version, String tenantId) {
+    FlowDefinitionDO existing = definitionRepository.findPublished(flowCode, version, tenantId)
+        .map(converter::entityToDO)
+        .orElse(null);
+    if (existing != null) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("流程定义已存在: code=" + flowCode + " version=" + version)
+          .build();
+    }
+  }
+
+  /** BPMN 模式下解析节点列表，注入节点坐标。 */
+  private List<FlowNodeDO> parseBpmnNodes(FlowDeployProcessDTO dto, String version) {
+    BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
+    if (StringUtils.hasText(bpmnModel.getProcessId())
+        && !bpmnModel.getProcessId().equals(dto.getFlowCode())) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("BPMN process id 与 flowCode 不一致: bpmn=" + bpmnModel.getProcessId()
+              + " dto=" + dto.getFlowCode())
+          .build();
+    }
+    if (!StringUtils.hasText(dto.getFlowName()) || dto.getFlowName().equals(dto.getFlowCode())) {
+      dto.setFlowName(bpmnModel.getProcessName());
+    }
+    List<FlowNodeDO> nodes = new ArrayList<>(bpmnModel.getNodes());
+    injectNodeCoordinates(nodes, bpmnModel);
+    return nodes;
+  }
+
+  /** 向节点列表注入 BPMNDI 坐标信息。 */
+  private void injectNodeCoordinates(List<FlowNodeDO> nodes, BpmnModel bpmnModel) {
+    Map<String, BpmnModel.NodeCoordinate> nodeCoords = bpmnModel.getNodeCoordinates();
+    if (nodeCoords == null || nodeCoords.isEmpty()) {
+      return;
+    }
+    for (FlowNodeDO n : nodes) {
+      BpmnModel.NodeCoordinate coord = nodeCoords.get(n.getNodeCode());
+      if (coord != null) {
+        n.setCoordinate(YdszJson.toJson(Map.of("x", coord.getX(), "y", coord.getY(),
+            "width", coord.getWidth(), "height", coord.getHeight())));
+      }
+    }
+    log.info("[Flow] 从 BPMNDI 注入节点坐标: defId-pending count={}", nodeCoords.size());
+  }
+
+  /** BPMN 模式下解析跳转列表。 */
+  private List<FlowSkipDO> parseBpmnSkips(FlowDeployProcessDTO dto) {
+    BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
+    return new ArrayList<>(bpmnModel.getSkips());
+  }
+
+  /** JSON 模式下解析节点列表，校验开始节点和编码唯一性。 */
+  private List<FlowNodeDO> parseJsonNodes(FlowDeployProcessDTO dto) {
+    List<FlowNodeDO> nodes = new ArrayList<>();
+    for (FlowDeployProcessDTO.FlowNodeDTO n : dto.getNodes()) {
+      FlowNodeDO node = new FlowNodeDO();
+      node.setNodeCode(n.getNodeCode());
+      node.setNodeName(n.getNodeName() == null ? n.getNodeCode() : n.getNodeName());
+      node.setNodeType(n.getNodeType() == null ? FlowNodeType.APPROVAL.getCode() : n.getNodeType());
+      node.setPermissionFlag(n.getPermissionFlag());
+      node.setSkipAnyNode(n.getSkipAnyNode());
+      nodes.add(node);
+    }
+    validateJsonNodes(nodes);
+    return nodes;
+  }
+
+  /** JSON 模式下校验节点列表。 */
+  private void validateJsonNodes(List<FlowNodeDO> nodes) {
+    boolean hasStart = nodes.stream().anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
+    if (!hasStart) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("流程定义必须包含开始节点（nodeType=0）")
+          .build();
+    }
+    long uniqueCount = nodes.stream().map(FlowNodeDO::getNodeCode).distinct().count();
+    if (uniqueCount != nodes.size()) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("节点编码 nodeCode 必须唯一")
+          .build();
+    }
+  }
+
+  /** JSON 模式下解析跳转列表。 */
+  private List<FlowSkipDO> parseJsonSkips(FlowDeployProcessDTO dto) {
+    List<FlowSkipDO> skips = new ArrayList<>();
+    if (dto.getSkips() != null) {
+      for (FlowDeployProcessDTO.FlowSkipDTO s : dto.getSkips()) {
+        FlowSkipDO skip = new FlowSkipDO();
+        skip.setSkipName(s.getSkipName());
+        skip.setSkipType(StringUtils.hasText(s.getSkipType()) ? s.getSkipType() : FlowSkipType.PASS.name());
+        skip.setSkipCondition(s.getSkipCondition());
+        skip.setNextNodeCode(s.getToNodeCode());
+        skip.setExt(YdszJson.toJson(Map.of("sourceRef", s.getFromNodeCode())));
+        skips.add(skip);
+      }
+    }
+    return skips;
+  }
+
+  /** 保存流程定义。 */
+  private FlowDefinitionVO saveDefinition(FlowDeployProcessDTO dto, String version, String tenantId) {
     FlowDefinitionDO def = new FlowDefinitionDO();
     def.setFlowCode(dto.getFlowCode());
     def.setFlowName(dto.getFlowName());
@@ -274,35 +317,31 @@ public class FlowDefinitionDeployManager {
     def.setDescription(dto.getDescription());
     def.setTenantId(tenantId);
     def.setProviderTraceId(dto.getProviderTraceId());
-    FlowDefinitionVO savedDef = definitionRepository.save(converter.entityToVO(def));
-    String definitionId = savedDef.getId();
+    return definitionRepository.save(converter.entityToVO(def));
+  }
 
+  /** 批量保存节点。 */
+  private void saveNodes(List<FlowNodeDO> nodes, String definitionId, String flowCode,
+      String tenantId, String providerTraceId) {
     for (FlowNodeDO node : nodes) {
       node.setDefinitionId(definitionId);
-      node.setFlowCode(dto.getFlowCode());
+      node.setFlowCode(flowCode);
       node.setTenantId(tenantId);
-      node.setProviderTraceId(dto.getProviderTraceId());
+      node.setProviderTraceId(providerTraceId);
       nodeRepository.save(converter.entityToVO(node));
     }
+  }
 
+  /** 批量保存跳转。 */
+  private void saveSkips(List<FlowSkipDO> skips, String definitionId, String flowCode,
+      String tenantId, String providerTraceId) {
     for (FlowSkipDO skip : skips) {
       skip.setDefinitionId(definitionId);
-      skip.setFlowCode(dto.getFlowCode());
+      skip.setFlowCode(flowCode);
       skip.setTenantId(tenantId);
-      skip.setProviderTraceId(dto.getProviderTraceId());
+      skip.setProviderTraceId(providerTraceId);
       skipRepository.save(converter.entityToVO(skip));
     }
-
-    log.info(
-        "[Flow] 部署流程成功: code={} version={} defId={} mode={} nodes={} skips={}",
-        dto.getFlowCode(),
-        version,
-        definitionId,
-        hasBpmn ? "BPMN" : "JSON",
-        nodes.size(),
-        skips.size());
-    flowDefinitionCacheService.evict(definitionId);
-    return definitionId;
   }
 
   /**

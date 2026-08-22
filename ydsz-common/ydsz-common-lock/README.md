@@ -36,7 +36,7 @@ YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量 
 | `RedisReadWriteLock` | 读写锁（读共享 / 写独占，Lua 原子操作，指数退避等待） |
 | `RedisSemaphore` | 分布式信号量（并发数控制，超时自动释放，指数退避） |
 
-> 读写锁与信号量自 v1.0.0 起实现 `DistributedLocker` 接口，可纳入 `LockStrategy` 统一管理。两者均使用 `ydsz-common-cache` 替代 `ThreadLocal` 存储线程持有状态，通过 TTL 与最大容量自动清理，避免线程池复用场景下的内存泄漏。
+> 读写锁与信号量自 1.0.0 起实现 `DistributedLocker` 接口，可纳入 `LockStrategy` 统一管理。两者均使用 `ydsz-common-cache` 替代 `ThreadLocal` 存储线程持有状态，通过 TTL 与最大容量自动清理，避免线程池复用场景下的内存泄漏。
 
 ### 3. 幂等性
 
@@ -528,7 +528,7 @@ Redis 不可用时健康检查返回 DOWN，触发降级策略（若 `fallback-e
 
 ## 变更记录
 
-- **v1.3.0**（2026-08-18）：新增锁生命周期事件监听（`LockEventListener`）、锁降级回调（`LockDegradationCallback`）、锁释放通知器（`LockReleaseNotifier`）、编程式锁模板（`LockTemplate`）、锁等待策略（`LockWaitTimePolicy` / `LockWaitStats` / `BackoffPolicy`）、用户 ID 解析器 SPI（`CurrentUserIdResolver`）、锁管理端点（`LockAdminController`）；新增幂等不可用异常（`IdempotentUnavailableException`）、异常码枚举（`LockExceptionCode`）。
-- **v1.2.0**（2026-08-17）：新增分布式锁续期 SPI 服务（`LockRenewalService`），统一收口续期 Lua 脚本；新增幂等降级策略配置项 `idempotent.fail-open`。
-- **v1.1.0**（2026-08-15）：新增「命名规范」章节，统一幂等键命名约定（`{namespace}:{domain}:{resource}:{action}`）；在 `docs/checkstyle.xml` 中新增 `@Idempotent` 键名正则校验规则。
-- **v1.0.0**（2026-08-02）：补全 `@RepeatSubmit` 防重提交、`@DistributedScheduled` 分布式调度、`LockKeyValidator` 键校验章节；完善配置项表与自动装配说明，新增编程式锁、读写锁、信号量使用示例。
+- **1.0.0**（2026-08-18）：新增锁生命周期事件监听（`LockEventListener`）、锁降级回调（`LockDegradationCallback`）、锁释放通知器（`LockReleaseNotifier`）、编程式锁模板（`LockTemplate`）、锁等待策略（`LockWaitTimePolicy` / `LockWaitStats` / `BackoffPolicy`）、用户 ID 解析器 SPI（`CurrentUserIdResolver`）、锁管理端点（`LockAdminController`）；新增幂等不可用异常（`IdempotentUnavailableException`）、异常码枚举（`LockExceptionCode`）。
+- **1.0.0**（2026-08-17）：新增分布式锁续期 SPI 服务（`LockRenewalService`），统一收口续期 Lua 脚本；新增幂等降级策略配置项 `idempotent.fail-open`。
+- **1.0.0**（2026-08-15）：新增「命名规范」章节，统一幂等键命名约定（`{namespace}:{domain}:{resource}:{action}`）；在 `docs/checkstyle.xml` 中新增 `@Idempotent` 键名正则校验规则。
+- **1.0.0**（2026-08-02）：补全 `@RepeatSubmit` 防重提交、`@DistributedScheduled` 分布式调度、`LockKeyValidator` 键校验章节；完善配置项表与自动装配说明，新增编程式锁、读写锁、信号量使用示例。

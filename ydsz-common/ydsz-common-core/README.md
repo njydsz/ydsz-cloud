@@ -537,7 +537,7 @@ core 模块仅保留两个通用响应消息 key：
 | `core.success` | 操作成功通用消息（`YdszResponse.success()` 默认使用） |
 | `core.error` | 操作失败通用消息（`YdszResponse.error()` 兜底使用） |
 
-> **设计原则**：`error.{ENUM_NAME}`（与 `YdszResultCode` 枚举一一对应）等具体错误码文案已于 v2.2.0 移除。各业务模块应在自己的 `i18n/messages.properties` 中维护错误码 key（格式：`{module}.{code}` 或业务自定义 key），不在 core 模块维护。`YdszResultCode` 仅提供协议级码段常量（code + msg），i18n 解析委托给各模块的消息资源。
+> **设计原则**：`error.{ENUM_NAME}`（与 `YdszResultCode` 枚举一一对应）等具体错误码文案已于 1.0.0 移除。各业务模块应在自己的 `i18n/messages.properties` 中维护错误码 key（格式：`{module}.{code}` 或业务自定义 key），不在 core 模块维护。`YdszResultCode` 仅提供协议级码段常量（code + msg），i18n 解析委托给各模块的消息资源。
 
 ---
 
@@ -679,12 +679,12 @@ ydsz:
 
 ## 变更记录
 
-- **v2.3.0**（2026-08-17）：
+- **1.0.0**（2026-08-17）：
   - 新增 `CurrentUser` 接口（`model` 包），定义当前用户极简身份契约（uniqueId/identityType/dataScope/tenantId/permissionIds），@since 1.0.0
   - 新增特性开关：`FeatureFlagService` 接口 + `FeatureFlagContext` 静态门面 + `ConfigDrivenFeatureFlagService` 配置驱动实现，配置前缀 `ydsz.core.feature-flags.*`
   - 新增 `RequestSnapshot`（HTTP 请求不可变快照）与 `BizContextKeys`（业务上下文键名常量），@since 1.0.0
   - `CoreProperties` 新增 `feature-flags` 映射支持
-- **v2.2.0**（2026-08-10）：
+- **1.0.0**（2026-08-10）：
   - `ResultCode` 接口新增 `getModule()` default（返回 "core"），`getKey()` default 改为 `getModule() + "." + getCode()`，业务枚举可覆盖 `getModule()` 获得模块感知的 i18n key 前缀
   - `YdszResultCode` 移除 `httpStatus` 字段及 getter，构造函数退化为 `(code, msg)` 二元组
   - core i18n messages 精简为 `core.success` / `core.error` 两个通用协议级 key，移除全部 `error.{ENUM_NAME}` 错误码消息

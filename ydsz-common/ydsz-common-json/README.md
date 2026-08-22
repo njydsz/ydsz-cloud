@@ -37,14 +37,14 @@
 | Spring Boot 集成（JsonAutoConfiguration/JsonHttpMessageConverter） | **Stable** | |
 | Module 系统（JsonModule SPI） | **Beta** | |
 | @JsonCreator 构造器模式 | **Beta** | |
-| JSON Patch (RFC 6902) / Merge Patch (RFC 7396) | **Beta** | v1.2.0 新增 |
-| TypeRef 泛型工厂 | **Beta** | v1.2.0 新增 |
+| JSON Patch (RFC 6902) / Merge Patch (RFC 7396) | **Beta** | 1.0.0 新增 |
+| TypeRef 泛型工厂 | **Beta** | 1.0.0 新增 |
 | JSON Schema 校验（JsonSchemaValidator，Draft-07 子集） | **未提供** | 完整规范支持请使用 networknt/json-schema-validator |
 | @JsonBuilder 构造器模式 | **未提供** | 推荐使用 @JsonCreator + 静态工厂方法 |
 | @JsonView 视图过滤 | **Stable** | 序列化层（ValueWriter/Formatter）与 MVC 层完整支持；字段裁剪统一用 @JsonView + toJson(obj, viewClass)（见 JsonView 注解文档） |
 | @JsonUnwrapped | **未提供** | 推荐将嵌套对象序列化为子对象结构 |
 | @JsonRawValue | **未提供** | 推荐手动构建后序列化 |
-| @JsonAlias | **Stable** | v1.2.2 恢复支持：反序列化多命名兼容（如 user_id/userId），序列化仍输出主名称 |
+| @JsonAlias | **Stable** | 1.0.0 恢复支持：反序列化多命名兼容（如 user_id/userId），序列化仍输出主名称 |
 | @JsonAnyGetter/@JsonAnySetter | **未提供** | 推荐显式定义字段提升可维护性 |
 | @JsonEnumDefaultValue | **未提供** | 推荐 Controller 层手动处理 |
 | @JsonVisibility | **未提供** | 推荐使用 @JsonIgnore |
@@ -154,7 +154,7 @@
 | 类 | 说明 |
 |---|---|
 | `JsonModule` | 模块接口（参考 Jackson Module，可插拔的序列化/反序列化扩展机制） |
-| `JsonModuleRegistry` / `ModuleSerializerRegistry` / `ModuleDeserializerRegistry` | 模块注册表（v1.2.3 起 `JsonModuleRegistry` 支持 JDK ServiceLoader SPI 自动发现非 Spring 环境模块） |
+| `JsonModuleRegistry` / `ModuleSerializerRegistry` / `ModuleDeserializerRegistry` | 模块注册表（1.0.0 起 `JsonModuleRegistry` 支持 JDK ServiceLoader SPI 自动发现非 Spring 环境模块） |
 | `JsonModuleRegistrar` | Spring 环境模块注册器 |
 
 ### 8. Spring 集成（spring 包）
@@ -277,10 +277,10 @@ import com.njydsz.common.json.YdszJson;
 // 方式1：使用 JsonType 匿名内部类
 List<User> users = YdszJson.fromJson(json, new JsonType<List<User>>() {});
 
-// 方式2：使用便捷方法（v1.2.0 新增）
+// 方式2：使用便捷方法（1.0.0 新增）
 List<User> users2 = YdszJson.fromJson(json, List.class, User.class);
 
-// 方式3：使用 TypeRef 工厂方法（v1.2.0 新增）
+// 方式3：使用 TypeRef 工厂方法（1.0.0 新增）
 Map<String, User> userMap = YdszJson.fromJson(json, new JsonType<Map<String, User>>() {});
 ```
 
@@ -391,7 +391,7 @@ String formatted = YdszJson.format(compactJson);
 | `JsonSerializer<T>` | 自定义序列化器（通过 `@JsonSerialize(using = ...)` 注解指定） | 业务模块实现 |
 | `JsonDeserializer<T>` | 自定义反序列化器（通过 `@JsonDeserialize(using = ...)` 注解指定） | 业务模块实现 |
 
-> **注意**：`JsonModule` SPI 在 Spring 环境中通过 `@Component` 注解标注实现类即可被自动发现（同类型重复注册会自动去重）。在非 Spring 环境中，v1.2.3 起支持 JDK ServiceLoader 标准发现机制——在 jar 内提供
+> **注意**：`JsonModule` SPI 在 Spring 环境中通过 `@Component` 注解标注实现类即可被自动发现（同类型重复注册会自动去重）。在非 Spring 环境中，1.0.0 起支持 JDK ServiceLoader 标准发现机制——在 jar 内提供
 > `META-INF/services/com.njydsz.common.json.module.JsonModule` 文件（每行一个实现类全限定名）即可自动注册；也可使用 `SerializerRegistry.getInstance().register()` 手动注册。
 
 ## 使用注意事项
@@ -406,7 +406,7 @@ String formatted = YdszJson.format(compactJson);
 
 3. **ThreadLocal 池优化**：`SerializationContext` 合并多 ThreadLocal 为单一实例，降低内存碎片。
 
-4. **长生命周期线程的 ThreadLocal 清理**（v1.2.3 新增 `YdszJson.cleanupThread()`）：MQ 消费者、定时任务、RPC 工作线程等复用线程，建议在每轮任务处理结束时调用 `YdszJson.cleanupThread()`，一次性释放序列化上下文、深度覆盖等全部 ThreadLocal 状态，防止跨任务配置残留：
+4. **长生命周期线程的 ThreadLocal 清理**（1.0.0 新增 `YdszJson.cleanupThread()`）：MQ 消费者、定时任务、RPC 工作线程等复用线程，建议在每轮任务处理结束时调用 `YdszJson.cleanupThread()`，一次性释放序列化上下文、深度覆盖等全部 ThreadLocal 状态，防止跨任务配置残留：
 
    ```java
    @RabbitListener(queues = "order-queue")
@@ -420,11 +420,11 @@ String formatted = YdszJson.format(compactJson);
    }
    ```
 
-5. **多 Mapper 深度配置隔离**（v1.2.3 修复）：`JsonMapper.builder().maxDepth(n)` 的深度配置此前会经全局静态字段传播、导致不同 Mapper 实例互相覆盖；现改为线程级调用覆盖实现实例隔离。兼容说明：`JSONReader.setMaxDepth()` 运行期临时调参语义保留——仅当 Mapper 自定义了与全局不同的深度时才生效覆盖，未自定义深度的 Mapper 继续读取全局静态值。
+5. **多 Mapper 深度配置隔离**（1.0.0 修复）：`JsonMapper.builder().maxDepth(n)` 的深度配置此前会经全局静态字段传播、导致不同 Mapper 实例互相覆盖；现改为线程级调用覆盖实现实例隔离。兼容说明：`JSONReader.setMaxDepth()` 运行期临时调参语义保留——仅当 Mapper 自定义了与全局不同的深度时才生效覆盖，未自定义深度的 Mapper 继续读取全局静态值。
 
 6. **循环引用处理**：默认 `REF` 策略（自动检测并处理循环引用），可配置为 `IGNORE`（忽略）或 `ERROR`（抛出异常）。
 
-7. **配置不可变推荐**：自 v1.0.0 起 `JsonConfig.install(newConfig)` 替代旧 `setInstance` 模式。业务侧仍可通过 `JsonMapper.builder()` 创建独立配置副本（不影响全局单例）。`install()` 内部同步做 `instance = newConfig; instance.apply()`，确保可见性与一致性。
+7. **配置不可变推荐**：自 1.0.0 起 `JsonConfig.install(newConfig)` 替代旧 `setInstance` 模式。业务侧仍可通过 `JsonMapper.builder()` 创建独立配置副本（不影响全局单例）。`install()` 内部同步做 `instance = newConfig; instance.apply()`，确保可见性与一致性。
 
 8. **序列化异常路径追踪**：`JsonSerializationException.getMessage()` 自动在消息末尾附加 `[fieldPath: user.address.street]`，可直接定位嵌套序列化失败根因。`getFieldPath()` 返回原始路径字符串，供日志框架归类。
 
@@ -446,7 +446,7 @@ String formatted = YdszJson.format(compactJson);
 
 ## 最新变更
 
-### v1.2.3（性能与正确性修复）
+### 1.0.0（性能与正确性修复）
 
 > 本轮变更对标 Jackson / FastJSON2 实践与互联网大厂研发规范，经 239 项单元测试全量回归。
 
@@ -466,10 +466,10 @@ String formatted = YdszJson.format(compactJson);
 
 | 版本 | 兼容性说明 |
 |------|-----------|
-| v1.0.0 → v1.1.0 | ⚠️ `JsonConfig.getInstance()` 已移除，请使用 `JsonConfig.copyOf()` 或 `JsonConfig.builder().build()` / `install()` |
-| v1.1.0 → v1.2.0 | ✅ 向后兼容，无破坏性变更 |
-| v1.2.2 → v1.2.3 | ✅ 向后兼容：新增 `YdszJson.cleanupThread()`、`SerializerRegistry.registerIfAbsent()/unregisterAll()` 等 API；多 Mapper 深度隔离为缺陷修复（原先多实例深度互相覆盖属未定义行为）；双注册表合并为单一事实源（`JsonModuleRegistry.getSerializer()` 现委托全局注册中心，语义等价于原先的"模块 + 直接注册"双查） |
-| v1.2.0 → 未来版本 | 标注 `@Beta` 的 API 可能破坏性变更；标注 `@Deprecated` 的 API 将在下个主版本移除 |
+| 1.0.0 → 1.0.0 | ⚠️ `JsonConfig.getInstance()` 已移除，请使用 `JsonConfig.copyOf()` 或 `JsonConfig.builder().build()` / `install()` |
+| 1.0.0 → 1.0.0 | ✅ 向后兼容，无破坏性变更 |
+| 1.0.0 → 1.0.0 | ✅ 向后兼容：新增 `YdszJson.cleanupThread()`、`SerializerRegistry.registerIfAbsent()/unregisterAll()` 等 API；多 Mapper 深度隔离为缺陷修复（原先多实例深度互相覆盖属未定义行为）；双注册表合并为单一事实源（`JsonModuleRegistry.getSerializer()` 现委托全局注册中心，语义等价于原先的"模块 + 直接注册"双查） |
+| 1.0.0 → 未来版本 | 标注 `@Beta` 的 API 可能破坏性变更；标注 `@Deprecated` 的 API 将在下个主版本移除 |
 
 ### 与父 POM 版本对照（E-3）
 
@@ -477,10 +477,10 @@ String formatted = YdszJson.format(compactJson);
 
 | 本文档版本 | 父 POM 版本 | 说明 |
 |------|-----------|------|
-| v1.0.0 ~ v1.2.0 | `1.0.0-SNAPSHOT` | 功能版本在 README「最新变更」维护，制品版本统一由父 POM 控制 |
+| 1.0.0 ~ 1.0.0 | `1.0.0-SNAPSHOT` | 功能版本在 README「最新变更」维护，制品版本统一由父 POM 控制 |
 
 > 若需独立发布模块版本，可启用 Maven flatten 插件在父 POM 统一管理。
 
 ---
 
-*文档更新日期：2026-08-15 | 功能版本：v1.2.3 | 审计方法：全量源码静态走读 + 实际代码证据交叉验证 + 239 项单元测试回归*
+*文档更新日期：2026-08-15 | 功能版本：1.0.0 | 审计方法：全量源码静态走读 + 实际代码证据交叉验证 + 239 项单元测试回归*

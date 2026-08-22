@@ -1,4 +1,4 @@
-﻿# ydsz-literule
+# ydsz-literule
 
 > 独立规则引擎微服务 — 基于 DDD 分层的自研规则引擎，对标 Drools + LiteFlow + 滴滴 Newton
 
@@ -468,7 +468,7 @@ mvn -pl ydsz-literule -am test
 
 ## 版本与变更
 
-- **首发版本**：v1.0.0（2026-06-30）
+- **首发版本**：1.0.0（2026-06-30）
 - **当前版本**：`1.0.0-SNAPSHOT`（项目版本号统一为 1.0.0，详见 `.trae/rules/version-policy.md`）
 - **变更需走 PR + Code Review**
 - **跨服务回归**：任何修改需回归依赖规则引擎的 project / userinfo / agent 等服务（通过 REST API 或 Feign 调用）

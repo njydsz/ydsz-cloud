@@ -336,7 +336,7 @@ ydsz:
 
 ## 变更记录
 
-- **v2.2.0**（2026-08-10）：错误码体系架构重构：
+- **1.0.0**（2026-08-10）：错误码体系架构重构：
   - 移除不存在的 `UnifiedExceptionCode` / `ExceptionCodeRegistry` / `ResultCodeRegistry` 引用
   - `YdszResultCode` → `YdszExceptionCode`，`ResultCodeScanner` → `ExceptionCodeScanner`
   - `ResultCode`（core）精简为协议层三要素：`getCode()` / `getModule()`（default: "core"） / `getKey()`（default: `module.code`） / `getMsg()`

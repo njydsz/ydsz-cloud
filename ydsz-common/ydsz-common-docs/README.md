@@ -14,7 +14,7 @@
 | **依赖** | 直接依赖 common-core、common-util、common-exception、common-json、tika-core、ydsz-common-excel、ydsz-common-safe；可选依赖 pdfbox、pdfbox-io、poi-ooxml、jsoup、commons-csv、spring-boot-actuator、spring-boot-health、micrometer-core、jakarta.validation-api |
 | **版本** | 2.0.1 |
 
-## v2.0.0 变更摘要
+## 1.0.0 变更摘要
 
 本次重构对标过度设计评估结论，核心变更：
 
@@ -326,9 +326,9 @@ pdfDocumentParser.parseStreaming(inputStream, "large.pdf", pageContent -> {
 
 | 模块 | 接入能力 | 接入方式 | 依赖声明 | 接入时间 |
 |------|---------|---------|---------|---------|
-| ydsz-nextwiki | 文档解析（PDF/Office/HTML → 纯文本提取） | 注入 `DocumentService#parseAndPreprocess` | 显式声明 | v2.1.0 |
-| ydsz-agent | 文档解析 + RAG 知识库摄入 | 注入 `DocumentService` + `DocumentIngestionService` | 显式声明 | v2.1.0 |
-| ydsz-message | PII 脱敏（日志打印场景） | `SensitiveUtil#scanAndMask`（common-safe 传递） | 传递引入 | v2.1.0 |
+| ydsz-nextwiki | 文档解析（PDF/Office/HTML → 纯文本提取） | 注入 `DocumentService#parseAndPreprocess` | 显式声明 | 1.0.0 |
+| ydsz-agent | 文档解析 + RAG 知识库摄入 | 注入 `DocumentService` + `DocumentIngestionService` | 显式声明 | 1.0.0 |
+| ydsz-message | PII 脱敏（日志打印场景） | `SensitiveUtil#scanAndMask`（common-safe 传递） | 传递引入 | 1.0.0 |
 
 > **幽灵依赖检查**：本表用于 Pre-PR 审查时核对。`pom.xml` 中声明了 `ydsz-common-docs` 但无任何 Java 代码引用该模块的，视为幽灵依赖，需移除声明。
 
@@ -354,16 +354,16 @@ pdfDocumentParser.parseStreaming(inputStream, "large.pdf", pageContent -> {
 2. **旧格式拒绝**：`.doc` / `.ppt` / `.xls` 旧格式直接抛 `UNSUPPORTED_FORMAT`，建议业务层提示用户转换为新格式。
 3. **宏文档警告**：`.docm` / `.xlsm` / `.pptm` 含宏文档会被 `MacroDetector` 标记为 `HIGH` 风险，配合 `block-on-high-risk=true` 可阻止解析。
 4. **大文件控制**：`max-file-size-mb=50` 默认上限，超出应在上游网关拦截；解析器内部不重复校验。
-5. **异步线程池**：v2.0.0 起线程池由 Spring 托管，使用方需声明 `docsAsyncExecutor` Bean。
+5. **异步线程池**：1.0.0 起线程池由 Spring 托管，使用方需声明 `docsAsyncExecutor` Bean。
 6. **临时文件清理**：所有临时文件由 `ydsz-common-util` 的 `TempFileManager` 统一跟踪管理，JVM 退出时有 ShutdownHook 兜底清理。
 7. **PII 检测精度**：基于正则表达式，存在误报与漏报可能；身份证号、银行卡号有校验位验证，准确率较高。
 8. **输出轮廓选择**：通过 `ParseOptions.profile` 控制输出结构化程度，`TEXT_ONLY` 模式性能最优，`FULL` 模式最耗资源。
 
 ## 变更记录
 
-- **v2.0.1**（2026-08-17）：
+- **1.0.0**（2026-08-17）：
   - 更新依赖说明：标注 `ydsz-common-excel` / `ydsz-common-safe` 为直接依赖，添加 `pdfbox-io`（optional）、`jakarta.validation-api`（optional）
   - 补全 `DocumentationException` / `DocumentationExceptionCode` 异常处理文档
   - 修正 `ExcelDocumentParser` 依赖为 `ydsz-common-excel`（统一 Excel 引擎），`PdfDocumentParser` 标注 `pdfbox-io` 可选
-- **v2.0.0**（2026-08-16）：基于过度设计评估全面重构，详见 [v2.0.0 变更摘要](#v200-变更摘要)
-- **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
+- **1.0.0**（2026-08-16）：基于过度设计评估全面重构，详见 [1.0.0 变更摘要](#v200-变更摘要)
+- **1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节

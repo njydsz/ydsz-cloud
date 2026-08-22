@@ -493,9 +493,9 @@ ExecutorUtils.shutdownGracefully(cpuPool, 30, TimeUnit.SECONDS);
 
 ## 变更记录
 
-- **v1.5.0**（2026-08-16）：
+- **1.0.0**（2026-08-16）：
   - **架构调整**：线程池管理能力统一归属 `ydsz-common-thread`，从 `ydsz-common-util` 迁入 `ExecutorUtils` 编程式工厂与 `MeteredThreadPoolExecutor` 可观测执行器
-  - `ydsz-common-util` 自 v4.1.0 起不再提供线程池创建与监控能力
+  - `ydsz-common-util` 自 1.0.0 起不再提供线程池创建与监控能力
   - 新增 `com.njydsz.common.thread.util` 包（编程式工具）与 `com.njydsz.common.thread.executor` 包（执行器实现）
   - `ydsz-common-audit`、`ydsz-common-notify` 模块同步更新 import 并新增 `ydsz-common-thread` 依赖
   - **修复 P0-2**：`TimedTaskDecorator` 移除全局静态 `ConcurrentMap`，改为不可变包装对象传递时间戳，消除 threadId 复用导致的串扰风险与内存泄漏
@@ -505,7 +505,7 @@ ExecutorUtils.shutdownGracefully(cpuPool, 30, TimeUnit.SECONDS);
   - **功能增强**：新增 `slow-task-threshold-ms` 配置，支持池级别自定义慢任务阈值（默认 5000，范围 100-∞）
   - **功能增强**：新增 `enable-detailed-metrics` 配置，指标分核心 5 项（始终注册）和可选 3 项（按需启用），降低默认内存开销约 40-60%
   - **增强**：`ARM` 架构检测与 ARM64 兼容性改进
-- **v1.3.1**（2026-08-13）：
+- **1.0.0**（2026-08-13）：
   - **修复 P0-1**：`ThreadPoolRegistrar` 由 `ThreadPoolAutoConfiguration` 通过 `@Bean` 显式注册，修复装配链路断裂导致线程池不生效问题
   - **修复 P0-2**：`ThreadPoolExecutorFactory` 实现 `ApplicationContextAware`，修复 `task-decorator-bean-names` 配置无效问题
   - **修复 P0-4**：虚拟线程池自动包装 `MeteredVirtualExecutorService`，`VirtualThreadMetrics` 计数器（submitted/completed）真正生效
@@ -517,10 +517,10 @@ ExecutorUtils.shutdownGracefully(cpuPool, 30, TimeUnit.SECONDS);
   - **增强 P2-2**：新增任务执行耗时 `Timer` 指标（`execution` / `queue.wait`）和慢任务 `Counter`
   - **增强 P2-3**：`ThreadPoolProperties` 启用 `@Validated` 校验，`maxSize >= coreSize` 违规时启动失败
   - **增强 P2-4**：`ThreadPoolRegistrar` 提供 `getManagedBeanNames()` 方法，便于下游按配置 key 查找 Bean 名称
-- **v1.5.2**（2026-08-17）：
+- **1.0.0**（2026-08-17）：
   - 更新依赖说明：移除不存在的 `transmittable-thread-local` 依赖，添加 `jackson-annotations`（optional）
   - 补全内部核心类：`ThreadPoolRegistrar`、`ThreadPoolExecutorFactory`、`TimedTaskDecorator`、`ThreadPoolHotUpdateAutoConfiguration` 文档
-- **v1.5.1**（2026-08-17）：修正 README — 移除不存在的 `MeteredThreadPoolExecutor` 类，替换为实际指标组件（`ThreadPoolMetrics` / `ThreadPoolTimerMetrics` / `MeteredRejectedHandler` / `MeteredVirtualExecutorService` / `VirtualThreadMetrics`）
-- **v1.3.0**（2026-08-10）：新增 Micrometer 指标绑定、拒绝策略自动包装、TaskDecorator 配置化上下文传播、热更新监听器提取
-- **v1.2.0**（2026-08-05）：`ThreadHealthIndicator` 支持虚拟线程池感知；`ThreadPoolRegistrar` 提取为独立组件
-- **v1.0.0**（2026-08-02）：初始版本。提供配置驱动的多线程池自动装配、平台/虚拟线程双模式配置、健康检查、Micrometer 指标、优雅关闭
+- **1.0.0**（2026-08-17）：修正 README — 移除不存在的 `MeteredThreadPoolExecutor` 类，替换为实际指标组件（`ThreadPoolMetrics` / `ThreadPoolTimerMetrics` / `MeteredRejectedHandler` / `MeteredVirtualExecutorService` / `VirtualThreadMetrics`）
+- **1.0.0**（2026-08-10）：新增 Micrometer 指标绑定、拒绝策略自动包装、TaskDecorator 配置化上下文传播、热更新监听器提取
+- **1.0.0**（2026-08-05）：`ThreadHealthIndicator` 支持虚拟线程池感知；`ThreadPoolRegistrar` 提取为独立组件
+- **1.0.0**（2026-08-02）：初始版本。提供配置驱动的多线程池自动装配、平台/虚拟线程双模式配置、健康检查、Micrometer 指标、优雅关闭

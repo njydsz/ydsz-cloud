@@ -206,7 +206,45 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
    * @return 迁移结果报告
    */
   private InstanceMigrationResultDTO doMigrate(InstanceMigrationDTO dto, boolean forceDry) {
-    // 1. 参数校验
+    validateMigrationParams(dto);
+    boolean dryRun = Boolean.TRUE.equals(dto.getDryRun()) || forceDry;
+    String sourceDefId = dto.getSourceDefinitionId();
+    String targetDefId = dto.getTargetDefinitionId();
+    String tenantId = dto.getTenantId() != null ? dto.getTenantId() : AuthContextUtils.getTenantIdOrDefault();
+    Map<String, String> nodeMapping = dto.getNodeMapping() != null ? dto.getNodeMapping() : Collections.emptyMap();
+
+    // 校验源/目标定义存在且 flowCode 一致
+    FlowDefinitionVO sourceDef = findDefinitionOrThrow(sourceDefId, "源流程定义不存在");
+    FlowDefinitionVO targetDef = findDefinitionOrThrow(targetDefId, "目标流程定义不存在");
+    validateFlowCodeConsistency(sourceDef, targetDef);
+
+    // 预加载目标定义的节点编码集合
+    List<FlowNodeDO> targetNodes = nodeRepository.findByDefinitionId(targetDefId).stream()
+        .map(converter::entityToDO).toList();
+    Map<String, FlowNodeDO> targetNodeMap = targetNodes.isEmpty()
+        ? Collections.emptyMap()
+        : targetNodes.stream().collect(Collectors.toMap(FlowNodeDO::getNodeCode, n -> n, (a, b) -> a));
+
+    // 查询源定义下所有运行中实例并逐实例迁移
+    List<FlowInstanceVO> instances = instanceRepository.findRunningByDefinition(sourceDefId, tenantId);
+    List<MigrationDetail> details = new ArrayList<>();
+    MigrationCounters counters = new MigrationCounters();
+
+    for (FlowInstanceVO instance : instances) {
+      migrateSingleInstance(instance, details, counters, dryRun,
+          targetDefId, targetDef, nodeMapping, targetNodeMap);
+    }
+
+    log.info("[Flow-Migrate] 迁移完成: sourceDefId={} targetDefId={} dryRun={} "
+        + "total={} migrated={} skipped={} failed={}",
+        sourceDefId, targetDefId, dryRun, instances.size(),
+        counters.migratedCount, counters.skippedCount, counters.failedCount);
+
+    return buildMigrationResult(instances, details, counters, nodeMapping);
+  }
+
+  /** 校验迁移参数：sourceDefinitionId / targetDefinitionId 不能为空且不能相同。 */
+  private void validateMigrationParams(InstanceMigrationDTO dto) {
     if (dto == null || dto.getSourceDefinitionId() == null || dto.getTargetDefinitionId() == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -219,138 +257,109 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
           .message("源定义与目标定义不能相同")
           .build();
     }
+  }
 
-    boolean dryRun = Boolean.TRUE.equals(dto.getDryRun()) || forceDry;
-    String sourceDefId = dto.getSourceDefinitionId();
-    String targetDefId = dto.getTargetDefinitionId();
-    String tenantId =
-        dto.getTenantId() != null ? dto.getTenantId() : AuthContextUtils.getTenantIdOrDefault();
-    Map<String, String> nodeMapping =
-        dto.getNodeMapping() != null ? dto.getNodeMapping() : Collections.emptyMap();
-
-    // 2. 校验源/目标定义存在且 flowCode 一致
-    FlowDefinitionVO sourceDef = definitionRepository.findById(sourceDefId)
+  /** 根据 ID 查找流程定义，不存在时抛出 NOT_FOUND 异常。 */
+  private FlowDefinitionVO findDefinitionOrThrow(String defId, String errMsg) {
+    return definitionRepository.findById(defId)
         .orElseThrow(() -> SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .message("源流程定义不存在: " + sourceDefId)
+            .message(errMsg + ": " + defId)
             .build());
-    FlowDefinitionVO targetDef = definitionRepository.findById(targetDefId)
-        .orElseThrow(() -> SysException.builder()
-            .resultCode(YdszResultCode.NOT_FOUND)
-            .message("目标流程定义不存在: " + targetDefId)
-            .build());
+  }
+
+  /** 校验两个流程定义的 flowCode 是否一致，不一致时抛出 BAD_REQUEST。 */
+  private void validateFlowCodeConsistency(FlowDefinitionVO sourceDef, FlowDefinitionVO targetDef) {
     if (!Objects.equals(sourceDef.getFlowCode(), targetDef.getFlowCode())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message(
-              "源定义与目标定义 flowCode 不一致: source="
-                  + sourceDef.getFlowCode()
-                  + " target="
-                  + targetDef.getFlowCode())
+          .message("源定义与目标定义 flowCode 不一致: source="
+              + sourceDef.getFlowCode() + " target=" + targetDef.getFlowCode())
           .build();
     }
+  }
 
-    // 3. 预加载目标定义的节点编码集合（用于判断当前节点是否存在于新版本）
-    List<FlowNodeDO> targetNodes = nodeRepository.findByDefinitionId(targetDefId).stream().map(converter::entityToDO).toList();
-    Map<String, FlowNodeDO> targetNodeMap =
-        targetNodes == null
-            ? Collections.emptyMap()
-            : targetNodes.stream()
-                .collect(Collectors.toMap(FlowNodeDO::getNodeCode, n -> n, (a, b) -> a));
+  /** 迁移单个实例（防御式：每个实例独立 try-catch，单个失败不影响其他）。 */
+  private void migrateSingleInstance(FlowInstanceVO instance, List<MigrationDetail> details,
+      MigrationCounters counters, boolean dryRun, String targetDefId,
+      FlowDefinitionVO targetDef, Map<String, String> nodeMapping,
+      Map<String, FlowNodeDO> targetNodeMap) {
+    MigrationDetail detail = new MigrationDetail();
+    detail.setInstanceId(String.valueOf(instance.getId()));
+    detail.setInstanceTitle(instance.getTitle());
+    detail.setOldNodeCode(instance.getCurrentNodeCode());
 
-    // 4. 查询源定义下所有运行中实例
-    List<FlowInstanceVO> instances = instanceRepository.findRunningByDefinition(sourceDefId, tenantId);
+    try {
+      String oldNodeCode = instance.getCurrentNodeCode();
+      String newNodeCode = resolveNewNodeCode(oldNodeCode, nodeMapping, targetNodeMap);
 
-    // 5. 逐实例迁移（防御式：每个实例独立 try-catch，单个失败不影响其他）
-    List<MigrationDetail> details = new ArrayList<>();
-    int migratedCount = 0;
-    int skippedCount = 0;
-    int failedCount = 0;
-
-    for (FlowInstanceVO instance : instances) {
-      MigrationDetail detail = new MigrationDetail();
-      detail.setInstanceId(String.valueOf(instance.getId()));
-      detail.setInstanceTitle(instance.getTitle());
-      detail.setOldNodeCode(instance.getCurrentNodeCode());
-
-      try {
-        String oldNodeCode = instance.getCurrentNodeCode();
-        String newNodeCode = resolveNewNodeCode(oldNodeCode, nodeMapping, targetNodeMap);
-
-        // 节点在新定义中不存在且无映射 -> 跳过
-        if (newNodeCode == null) {
-          detail.setStatus("SKIPPED");
-          detail.setNewNodeCode(oldNodeCode);
-          detail.setReason("当前节点 [" + oldNodeCode + "] 在目标定义中不存在且无映射，已跳过");
-          skippedCount++;
-          details.add(detail);
-          continue;
-        }
-
-        detail.setNewNodeCode(newNodeCode);
-
-        if (!dryRun) {
-          // 实际更新：definitionId / flowVersion / currentNodeCode / currentNodeName
-          instance.setDefinitionId(targetDefId);
-          instance.setFlowVersion(targetDef.getFlowVersion());
-          instance.setCurrentNodeCode(newNodeCode);
-          // 同步更新节点名称
-          FlowNodeDO targetNode = targetNodeMap.get(newNodeCode);
-          if (targetNode != null) {
-            instance.setCurrentNodeName(targetNode.getNodeName());
-          }
-          instanceRepository.update(instance);
-
-          // P3-3: 同步迁移该实例下未完成的待办任务（ydsz_flow_run_task）
-          // 仅迁移 PENDING/CLAIMED 状态的任务，已完成的历史任务保持不变
-          int taskMigrated =
-              migrateInstanceTasks(
-                  instance.getId(),
-                  targetDefId,
-                  oldNodeCode,
-                  newNodeCode,
-                  nodeMapping,
-                  targetNodeMap);
-          log.info(
-              "[Flow-Migrate] 实例任务级迁移: instanceId={} taskMigrated={}",
-              instance.getId(),
-              taskMigrated);
-        }
-
-        detail.setStatus("MIGRATED");
-        detail.setReason(dryRun ? "试运行：可迁移" : "迁移成功");
-        migratedCount++;
-      } catch (Exception e) {
-        detail.setStatus("FAILED");
-        detail.setNewNodeCode(instance.getCurrentNodeCode());
-        detail.setReason("迁移异常: " + e.getMessage());
-        failedCount++;
-        log.error(
-            "[Flow-Migrate] 实例迁移失败: instanceId={} err={}", instance.getId(), e.getMessage(), e);
+      if (newNodeCode == null) {
+        detail.setStatus("SKIPPED");
+        detail.setNewNodeCode(oldNodeCode);
+        detail.setReason("当前节点 [" + oldNodeCode + "] 在目标定义中不存在且无映射，已跳过");
+        counters.skippedCount++;
+        details.add(detail);
+        return;
       }
-      details.add(detail);
-    }
 
-    // 6. 组装结果
+      detail.setNewNodeCode(newNodeCode);
+      if (!dryRun) {
+        performMigration(instance, targetDefId, targetDef, oldNodeCode, newNodeCode,
+            nodeMapping, targetNodeMap);
+      }
+
+      detail.setStatus("MIGRATED");
+      detail.setReason(dryRun ? "试运行：可迁移" : "迁移成功");
+      counters.migratedCount++;
+    } catch (Exception e) {
+      detail.setStatus("FAILED");
+      detail.setNewNodeCode(instance.getCurrentNodeCode());
+      detail.setReason("迁移异常: " + e.getMessage());
+      counters.failedCount++;
+      log.error("[Flow-Migrate] 实例迁移失败: instanceId={} err={}", instance.getId(), e.getMessage(), e);
+    }
+    details.add(detail);
+  }
+
+  /** 执行实际迁移操作：更新实例的 definitionId / flowVersion / currentNodeCode。 */
+  private void performMigration(FlowInstanceVO instance, String targetDefId,
+      FlowDefinitionVO targetDef, String oldNodeCode, String newNodeCode,
+      Map<String, String> nodeMapping, Map<String, FlowNodeDO> targetNodeMap) {
+    instance.setDefinitionId(targetDefId);
+    instance.setFlowVersion(targetDef.getFlowVersion());
+    instance.setCurrentNodeCode(newNodeCode);
+    FlowNodeDO targetNode = targetNodeMap.get(newNodeCode);
+    if (targetNode != null) {
+      instance.setCurrentNodeName(targetNode.getNodeName());
+    }
+    instanceRepository.update(instance);
+
+    // 同步迁移该实例下未完成的待办任务
+    int taskMigrated = migrateInstanceTasks(instance.getId(), targetDefId,
+        oldNodeCode, newNodeCode, nodeMapping, targetNodeMap);
+    log.info("[Flow-Migrate] 实例任务级迁移: instanceId={} taskMigrated={}",
+        instance.getId(), taskMigrated);
+  }
+
+  /** 构建迁移结果 DTO。 */
+  private InstanceMigrationResultDTO buildMigrationResult(List<FlowInstanceVO> instances,
+      List<MigrationDetail> details, MigrationCounters counters,
+      Map<String, String> nodeMapping) {
     InstanceMigrationResultDTO result = new InstanceMigrationResultDTO();
     result.setTotalInstances(instances == null ? 0 : instances.size());
-    result.setMigratedCount(migratedCount);
-    result.setSkippedCount(skippedCount);
-    result.setFailedCount(failedCount);
+    result.setMigratedCount(counters.migratedCount);
+    result.setSkippedCount(counters.skippedCount);
+    result.setFailedCount(counters.failedCount);
     result.setDetails(details);
     result.setNodeMappingApplied(nodeMapping);
-
-    log.info(
-        "[Flow-Migrate] 迁移完成: sourceDefId={} targetDefId={} dryRun={} "
-            + "total={} migrated={} skipped={} failed={}",
-        sourceDefId,
-        targetDefId,
-        dryRun,
-        result.getTotalInstances(),
-        migratedCount,
-        skippedCount,
-        failedCount);
     return result;
+  }
+
+  /** 迁移计数器（用于统计迁移结果）。 */
+  private static class MigrationCounters {
+    int migratedCount;
+    int skippedCount;
+    int failedCount;
   }
 
   /**

@@ -439,6 +439,6 @@ boolean ok = permissionHierarchyService.hasPermission(granted, "sys:user:list");
 
 ## 变更记录
 
-- **v1.6.0**（2026-08-18）：新增 OIDC 协议支持（`OidcDiscoveryEndpoint` / `JwksEndpoint`）、统一认证上下文基类（`YdszAuthInfo`）、权限快照（`PermissionSnapshot`）、列权限字段过滤工具（`ColumnPermissionFilter`）、过滤器忽略路径配置（`AuthFilterIgnoreProperties`）；新增用户信息模型（`UserInfo`）、`AuthCurrentUserIdResolver` 用户 ID 解析器。
-- **v1.0.1**（2026-08-17）：补全 `BloomFilter`（布隆过滤器工具）、`TotpAuthenticator`（TOTP 双因子认证器）、`DataScopeHelper`（数据范围辅助工具）、`AuthCurrentUserIdResolver`（用户 ID 解析器）、`LoginUser`（登录用户模型）文档；移除不存在的 `DataPermissionCustomSqlProvider` 引用；修正黑名单描述为「SHA-256 + 分布式锁 + 布隆过滤器前置」
-- **v1.0.0**（2026-08-02）：补全 `@PermissionMode`/`@EnableYdszAuth`、响应式 Token 黑名单（`ReactiveTokenBlacklistService`）、权限层级（`PermissionHierarchyService`）、权限预检（`PermissionPreCheck`/`PermissionCheckResult`）、指标（`AuthMetrics`/`AuthMetricsCollector`/`PermissionMetrics`）、工具（`AccessTokenUtils`/`PermissionMerger`/`PermissionUtils`）等章节。
+- **1.0.0**（2026-08-18）：新增 OIDC 协议支持（`OidcDiscoveryEndpoint` / `JwksEndpoint`）、统一认证上下文基类（`YdszAuthInfo`）、权限快照（`PermissionSnapshot`）、列权限字段过滤工具（`ColumnPermissionFilter`）、过滤器忽略路径配置（`AuthFilterIgnoreProperties`）；新增用户信息模型（`UserInfo`）、`AuthCurrentUserIdResolver` 用户 ID 解析器。
+- **1.0.0**（2026-08-17）：补全 `BloomFilter`（布隆过滤器工具）、`TotpAuthenticator`（TOTP 双因子认证器）、`DataScopeHelper`（数据范围辅助工具）、`AuthCurrentUserIdResolver`（用户 ID 解析器）、`LoginUser`（登录用户模型）文档；移除不存在的 `DataPermissionCustomSqlProvider` 引用；修正黑名单描述为「SHA-256 + 分布式锁 + 布隆过滤器前置」
+- **1.0.0**（2026-08-02）：补全 `@PermissionMode`/`@EnableYdszAuth`、响应式 Token 黑名单（`ReactiveTokenBlacklistService`）、权限层级（`PermissionHierarchyService`）、权限预检（`PermissionPreCheck`/`PermissionCheckResult`）、指标（`AuthMetrics`/`AuthMetricsCollector`/`PermissionMetrics`）、工具（`AccessTokenUtils`/`PermissionMerger`/`PermissionUtils`）等章节。

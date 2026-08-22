@@ -399,7 +399,7 @@ public class UserNameAssembler implements NameAssembler {
 
 ## 注意事项
 
-1. **注解启用**：v1.6.0 起新增 `@EnableYdszFeign` 注解，显式开启所有 Feign 增强能力，推荐替代手动配置 `FeignConfiguration` 导入方式。
+1. **注解启用**：1.0.0 起新增 `@EnableYdszFeign` 注解，显式开启所有 Feign 增强能力，推荐替代手动配置 `FeignConfiguration` 导入方式。
 2. **请求头透传**：默认透传 13 个核心请求头，覆盖链路追踪、身份鉴权、权限校验、租户隔离等全部业务场景。
 3. **重试策略**：仅 GET 方法默认重试，可通过 `retry.retryOnMethods` 自定义。指数退避策略（初始 100ms，最大 500ms）。
 4. **熔断器依赖**：开启 `circuit-breaker.enabled=true` 后需引入 `resilience4j-spring-boot3` 依赖，否则启动报错。
@@ -410,5 +410,5 @@ public class UserNameAssembler implements NameAssembler {
 
 ## 变更记录
 
-- **v1.6.0**（2026-08-18）：新增 `@EnableYdszFeign` 启用注解；新增信号量隔离（`BulkheadRequestInterceptor`）、GZIP 压缩（`GzipRequestCompressInterceptor`）、响应拦截器（`FeignResponseInterceptor`）；新增 ID→名称富化 SPI（`NameAssembler` / `NameAssemblerAutoConfiguration` / `NameType` / `NoOpNameAssembler`）；新增通知中心客户端（`NotificationClient` + 降级工厂 + DTO）；新增 HttpClient 连接池配置（maxConnections / maxPerRoute / keepAlive 等）；新增错误解码增强（`ResponseUnwrapDecoder` / `JsonEncoder` / `JsonDecoder`）；新增链路追踪 SPI（`FeignTraceHandler` / `SkyWalkingTraceHandler`）；新增 Feign 日志增强（`YdszFeignLogger`）；新增方法级重试器（`MethodAwareRetryer`）；新增 Feign 调用常量（`FeignClientConstants`）；新增熔断器指标导出器（`FeignCircuitBreakerMetricsExporter`）和熔断状态持久化（`CircuitBreakerStatePersistence`）；新增异常类型（`OpenFeignException` / `NotFoundException` / `BadRequestException`）。
-- **v1.0.0**（2026-08-02）：初始版本。提供统一请求头透传、错误解码映射、YdszJson 编解码、链路追踪注入、监控指标采集、请求重试、熔断器等核心能力。
+- **1.0.0**（2026-08-18）：新增 `@EnableYdszFeign` 启用注解；新增信号量隔离（`BulkheadRequestInterceptor`）、GZIP 压缩（`GzipRequestCompressInterceptor`）、响应拦截器（`FeignResponseInterceptor`）；新增 ID→名称富化 SPI（`NameAssembler` / `NameAssemblerAutoConfiguration` / `NameType` / `NoOpNameAssembler`）；新增通知中心客户端（`NotificationClient` + 降级工厂 + DTO）；新增 HttpClient 连接池配置（maxConnections / maxPerRoute / keepAlive 等）；新增错误解码增强（`ResponseUnwrapDecoder` / `JsonEncoder` / `JsonDecoder`）；新增链路追踪 SPI（`FeignTraceHandler` / `SkyWalkingTraceHandler`）；新增 Feign 日志增强（`YdszFeignLogger`）；新增方法级重试器（`MethodAwareRetryer`）；新增 Feign 调用常量（`FeignClientConstants`）；新增熔断器指标导出器（`FeignCircuitBreakerMetricsExporter`）和熔断状态持久化（`CircuitBreakerStatePersistence`）；新增异常类型（`OpenFeignException` / `NotFoundException` / `BadRequestException`）。
+- **1.0.0**（2026-08-02）：初始版本。提供统一请求头透传、错误解码映射、YdszJson 编解码、链路追踪注入、监控指标采集、请求重试、熔断器等核心能力。

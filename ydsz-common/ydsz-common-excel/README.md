@@ -2,12 +2,12 @@
 
 > 高性能 Excel 读写引擎（L1 工具模块层）— 双引擎架构（零 POI 快速路径 + POI 兼容路径）、SAX 流式读、流式写、模板填充、ASM 字节码加速、公式注入防护。
 
-**当前版本**：v1.0.0，**已实现核心能力**：XLS/XLSX 读写（双引擎）、Sheet 流式解析（大文件不 OOM）、并发写入（多线程分片预序列化）、模板填充、公式注入防护、Micrometer 指标采集、Spring Boot 自动装配 + Actuator 健康检查。
+**当前版本**：1.0.0，**已实现核心能力**：XLS/XLSX 读写（双引擎）、Sheet 流式解析（大文件不 OOM）、并发写入（多线程分片预序列化）、模板填充、公式注入防护、Micrometer 指标采集、Spring Boot 自动装配 + Actuator 健康检查。
 
 **后续版本路线图**：
-- **v1.1.0**：Tabular 统一 API 落地（CSV/TSV Reader/Writer 实现）、JMH 性能回归基线
-- **v1.2.0**：xls 格式流式读取优化、DataValidator 注解全覆盖、模板严格模式（strictMode）
-- **v2.0.0**：动态合并单元格回调、性能优化
+- **1.0.0**：Tabular 统一 API 落地（CSV/TSV Reader/Writer 实现）、JMH 性能回归基线
+- **1.0.0**：xls 格式流式读取优化、DataValidator 注解全覆盖、模板严格模式（strictMode）
+- **1.0.0**：动态合并单元格回调、性能优化
 
 ## 模块定位
 
@@ -407,4 +407,4 @@ ASM 加速启用条件：
 
 ## 变更记录
 
-- **v1.0.0**（2026-08-02）：中文化 README + 补全 ASM 字节码加速、注解（`@ExcelHead` / `@ContentStyle` / `@ContentFont`）等章节。v2.x 移除对象池 / 列式存储（Parquet/ORC）/ 并发写入器（未落地实现）。
+- **1.0.0**（2026-08-02）：中文化 README + 补全 ASM 字节码加速、注解（`@ExcelHead` / `@ContentStyle` / `@ContentFont`）等章节。v2.x 移除对象池 / 列式存储（Parquet/ORC）/ 并发写入器（未落地实现）。

@@ -2,7 +2,7 @@
 
 > YDSZ 通用工具类库（L1 工具层）— 覆盖 ID 生成、加密/国密、HTTP、字符串、集合/Map、IP、并发、认证上下文、YAML、国际化消息等领域。
 
-> **注意**: 自 v4.1.0 起，线程池创建与监控能力（`ExecutorUtils`、`MeteredThreadPoolExecutor`）已迁移至 `ydsz-common-thread` 模块。
+> **注意**: 自 1.0.0 起，线程池创建与监控能力（`ExecutorUtils`、`MeteredThreadPoolExecutor`）已迁移至 `ydsz-common-thread` 模块。
 > 本模块仅保留 `RateLimiter`（限流）、`RetryUtils`（重试）等通用并发工具。
 
 ---
@@ -296,9 +296,9 @@ MessageSource ms = MESSAGE_SOURCE_BRIDGE.get();
 
 ## 变更记录
 
-- **v4.2.0**（2026-08-17）：
+- **1.0.0**（2026-08-17）：
   - README 对齐源码：补全 `HexUtils`、`DiffCalculator`/`DiffReport`/`FieldDiff`/`DiffValueFormatter`、`StaticBridge`、`RetryException`、`WorkerIdExhaustedException`、`NotApplicableException`、`@Experimental`、`TempFileManager`、`PodOrdinalWorkerIdAllocator`、`IpHashWorkerIdAllocator`、`WorkerIdAllocatorChain` 文档
   - 修正依赖说明：移除不存在的 `ydsz-common-core`、`ydsz-common-domain` 核心依赖声明，修正 `ydsz-common-json` 为可选依赖
   - 新增 "字段 diff 对比"、"→Spring Bean 桥接器" 使用示例
-- **v4.1.0**（2026-08-02）：线程池创建与监控能力迁移至 `ydsz-common-thread`
-- **v4.0.0**：架构优化（BeanMapper 独立、SnowflakeIdGenerator 拆分、循环导入消除）、功能增强（DateUtils/FileUtils/MaskUtils/ValidationUtils/StringUtils 增强）
+- **1.0.0**（2026-08-02）：线程池创建与监控能力迁移至 `ydsz-common-thread`
+- **1.0.0**：架构优化（BeanMapper 独立、SnowflakeIdGenerator 拆分、循环导入消除）、功能增强（DateUtils/FileUtils/MaskUtils/ValidationUtils/StringUtils 增强）

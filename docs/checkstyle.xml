@@ -6,7 +6,7 @@
     云顶编码规范 - Checkstyle 检查配置
     Ydsz Cloud Coding Standards - Checkstyle Configuration
 
-    规范版本：v3.2（对齐《云顶编码规范》v2.16）
+    规范版本：1.0.0（对齐《云顶编码规范》1.0.0）
     基线规范：阿里巴巴 Java 开发手册（泰山版） + Google Java Style Guide + Effective Java + 美团编码规约
 
     检查维度：

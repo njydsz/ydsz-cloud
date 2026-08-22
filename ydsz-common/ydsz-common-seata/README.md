@@ -282,7 +282,7 @@ ydsz:
     seata-tx-service-group: ydsz-tx-group
 ```
 
-Seata 在 classpath 时自动注册 `SeataTransactionManager`；业务代码也可直接使用 Seata 原生 `@GlobalTransactional` 注解。需配套 `undo_log` 表（见 `deploy/sql/modules/V1.0.0_system.sql`）。
+Seata 在 classpath 时自动注册 `SeataTransactionManager`；业务代码也可直接使用 Seata 原生 `@GlobalTransactional` 注解。需配套 `undo_log` 表（见 `deploy/sql/modules/1.0.0_system.sql`）。
 
 ### 4. Local 降级模式
 
@@ -372,7 +372,7 @@ try {
 5. **恢复扫描器超时阈值**：`recovery-timeout-threshold-ms` 应大于正常 Confirm/Cancel 耗时，避免误回收正在执行的分支；实例宕机后该阈值决定恢复延迟。
 6. **XID 传播需 Feign + Web**：`FeignXidRequestInterceptor` 需 Feign 在 classpath，`XidServletFilter` 需 Spring Web 在 classpath；两者缺失时 XID 无法跨服务传递。
 7. **XID 签名密钥长度**：`xid-sign-key` 长度至少 16 字符，建议 32 字节以上随机字符串，通过环境变量或配置中心注入。
-8. **Seata AT 需 undo_log 表**：Seata AT 模式依赖 `undo_log` 表自动回滚，需提前执行 `deploy/sql/modules/V1.0.0_system.sql`。
+8. **Seata AT 需 undo_log 表**：Seata AT 模式依赖 `undo_log` 表自动回滚，需提前执行 `deploy/sql/modules/1.0.0_system.sql`。
 9. **SAGA 补偿必须可逆**：`SagaStep.of(...)` 的 `compensation` 必须能撤销 `forwardAction` 的副作用；`SagaStep.terminal(...)` 用于不可逆的最后一步，失败时不补偿。
 10. **Local 模式需 PlatformTransactionManager**：`default-type=LOCAL` 时容器中必须存在 `PlatformTransactionManager`（如 `DataSourceTransactionManager`），否则启动抛 `IllegalStateException`。
 11. **恢复扫描分页模式**：`recovery-paged-mode=true`（默认）时每次扫描仅处理 `recovery-batch-size` 条记录，避免一次性加载全部超时事务到内存；`recovery-batch-size` 范围 1-1000。
@@ -383,4 +383,4 @@ try {
 
 ## 变更记录
 
-- **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
+- **1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
