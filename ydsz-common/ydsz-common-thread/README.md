@@ -9,9 +9,10 @@
 | **层级** | L4 基础数据层（`ydsz-common` 公共依赖） |
 | **类型** | 公共依赖库（不独立部署，随业务模块打包） |
 | **作用** | 为业务模块提供共享线程池的自动配置、运行时监控、健康检查与优雅关闭，以及编程式线程池工厂与可观测执行器 |
-| **依赖** | `ydsz-common-core`（基础常量/上下文）；`spring-context`、`spring-boot`、`micrometer-core`（可选）、`spring-boot-actuator`/`spring-boot-health`（可选）、`transmittable-thread-local`（可选，TTL 上下文透传） |
+| **依赖** | 直接依赖 ydsz-common-core、spring-context、spring-boot、jackson-annotations（optional）；可选依赖 micrometer-core、spring-boot-actuator、spring-boot-health、lombok（provided） |
 | **提供能力** | ① 配置驱动线程池（`ydsz.thread.pools.<name>`） ② 编程式工厂（`ExecutorUtils`） ③ 可观测执行器（`MeteredThreadPoolExecutor`） |
 | **激活方式** | Spring Boot 自动装配（`AutoConfiguration.imports`），默认启用 |
+| **版本** | 1.0.0 |
 
 ## 快速开始（TL;DR）
 
@@ -62,6 +63,15 @@ private ThreadPoolTaskExecutor ioExecutor;
 - **优雅关闭**：平台线程池 `shutdown` 时自动等待任务完成
 - **Micrometer 指标自动绑定**：`MeterRegistry` 可用时为每个平台线程池注册核心 5 项指标，可选开启详细 3 项指标（见「可观测性」）
 - **健康检查**：`ThreadHealthIndicator` 类已提供，但当前**未注册为自动装配 Bean**（`AutoConfiguration.imports` 仅装配 `ThreadPoolAutoConfiguration`），如需使用请业务侧显式声明
+
+**内部核心类**：
+
+| 类 | 说明 |
+|---|---|
+| `ThreadPoolRegistrar` | `BeanDefinitionRegistryPostProcessor`，扫描 `ydsz.thread.pools` 配置动态注册线程池 Bean 定义 |
+| `ThreadPoolExecutorFactory` | 线程池工厂，实现 `ApplicationContextAware`，根据 `PoolType` 创建 `ThreadPoolTaskExecutor` 或虚拟线程执行器；解析 `task-decorator-bean-names` 配置注入 `TaskDecorator` |
+| `TimedTaskDecorator` | 任务装饰器，记录任务提交时间戳到 `TimedTask` 上下文，供 `ThreadPoolTimerMetrics` 计算耗时（静态 `AtomicReference` 已移除，改为不可变对象传递） |
+| `ThreadPoolHotUpdateAutoConfiguration` | 热更新自动配置（`ydsz.thread.hot-update.enabled=true` 时激活），注册 `ThreadPoolHotUpdateListener` 支持运行时动态调参 |
 
 ### 2. 线程池配置属性
 
@@ -507,6 +517,9 @@ ExecutorUtils.shutdownGracefully(cpuPool, 30, TimeUnit.SECONDS);
   - **增强 P2-2**：新增任务执行耗时 `Timer` 指标（`execution` / `queue.wait`）和慢任务 `Counter`
   - **增强 P2-3**：`ThreadPoolProperties` 启用 `@Validated` 校验，`maxSize >= coreSize` 违规时启动失败
   - **增强 P2-4**：`ThreadPoolRegistrar` 提供 `getManagedBeanNames()` 方法，便于下游按配置 key 查找 Bean 名称
+- **v1.5.2**（2026-08-17）：
+  - 更新依赖说明：移除不存在的 `transmittable-thread-local` 依赖，添加 `jackson-annotations`（optional）
+  - 补全内部核心类：`ThreadPoolRegistrar`、`ThreadPoolExecutorFactory`、`TimedTaskDecorator`、`ThreadPoolHotUpdateAutoConfiguration` 文档
 - **v1.5.1**（2026-08-17）：修正 README — 移除不存在的 `MeteredThreadPoolExecutor` 类，替换为实际指标组件（`ThreadPoolMetrics` / `ThreadPoolTimerMetrics` / `MeteredRejectedHandler` / `MeteredVirtualExecutorService` / `VirtualThreadMetrics`）
 - **v1.3.0**（2026-08-10）：新增 Micrometer 指标绑定、拒绝策略自动包装、TaskDecorator 配置化上下文传播、热更新监听器提取
 - **v1.2.0**（2026-08-05）：`ThreadHealthIndicator` 支持虚拟线程池感知；`ThreadPoolRegistrar` 提取为独立组件
