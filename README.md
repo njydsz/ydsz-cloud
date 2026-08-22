@@ -18,17 +18,44 @@
 
 ## 项目简介
 
-**Ydsz Cloud** 是一套面向企业级应用的微服务快速开发平台，基于 **Spring Boot 4.1.0**、**Spring Cloud 2025.1.2** 和 **Spring Cloud Alibaba 2025.1.0.0** 构建。平台采用 **DDD（领域驱动设计）** 五层分层架构，内置 **10 大核心模块**（1 网关 + 8 微服务 + 1 公共依赖库），覆盖用户认证、系统管理、流程引擎、消息引擎、任务引擎、规则引擎、网盘引擎、智能引擎等企业级全业务场景。
+**Ydsz Cloud** 是一套面向企业级应用的微服务快速开发平台，基于 **Spring Boot 4.1.0**、**Spring Cloud 2025.1.2** 和 **Spring Cloud Alibaba 2025.1.0.0** 构建。平台采用 **DDD（领域驱动设计）** 六层分层架构（`api` / `domain` / `infra` / `server` / `app` / `web`），内置 **10 大核心模块**（1 网关 + 8 微服务 + 1 公共依赖库），覆盖用户认证、系统管理、流程引擎、消息引擎、任务引擎、规则引擎、网盘引擎、智能引擎等企业级全业务场景。
 
 ### 核心特性
 
 - **前沿技术栈**：Java 21 虚拟线程 + Spring Boot 4 + Spring Cloud 2025.1.2 + Jakarta EE 10
-- **DDD 分层架构**：严格 `api` / `domain` / `infra` / `server` / `app` / `web` 六层分离，依赖方向单向收敛
+- **DDD 分层架构**：严格 `api` / `domain` / `infra` / `server` / `app` / `web` 六层分离，依赖方向单向收敛（gateway 为单模块 reactive 栈，不拆分 DDD 层）
 - **自研引擎矩阵**：「规则引擎（对标 Drools + LiteFlow）+ 任务调度（对标 XXL-Job + PowerJob）+ 工作流（BPMN 2.0）+ AI Agent 框架」——四大引擎全部自研，开箱即用
 - **多租户隔离**：支持 SINGLE（共享表）、MULTI（字段隔离）、ISOLATE_DB（独立数据库）三种策略
 - **全渠道消息**：6 种通知渠道（短信/邮件/Push/企微/钉钉/飞书等），支持 DAG 编排与跨渠道抑制
 - **安全纵深防御**：JWT + RBAC + 数据权限 + PII 脱敏 + XSS/SQL 注入/CSRF 防护 + 敏感配置加密（AES-256-GCM）
 - **生产可观测**：Prometheus + Grafana + Sentry + ELK/Loki + Micrometer Tracing（W3C TraceContext）
+
+---
+
+## 系统架构
+
+请求统一经 `ydsz-gateway`（:9000，WebFlux 反应式）进入，按 Nacos 动态路由分发至各业务微服务；所有服务共享 `ydsz-common` 公共底座（L1-L6 分层），统一对接 PostgreSQL / Redis / Nacos / RocketMQ / MinIO 等中间件。
+
+![Ydsz Cloud 架构图](docs/architecture.svg)
+
+### 服务端口规划
+
+| 端口 | 服务 | 部署单元 | 说明 |
+|------|------|----------|------|
+| 8848 | Nacos | 中间件 | 注册中心 & 配置中心（独立部署） |
+| 9000 | ydsz-gateway | ydsz-gateway | API 网关（WebFlux 反应式，单模块） |
+| 9001 | ydsz-system | ydsz-system-web | 系统基础服务 |
+| 9002 | ydsz-userinfo | ydsz-userinfo-web | 用户/认证/组织架构中心 |
+| 9003 | ydsz-nextwiki | ydsz-nextwiki-web | 网盘知识库（Web 控制台） |
+| 9003 | ydsz-userinfo | ydsz-userinfo-app | 移动端入口（与 nextwiki-web 同端口，**不可同机部署**，详见下方「已知事项」） |
+| 9004 | ydsz-message | ydsz-message-web | 统一消息通知引擎 |
+| 9005 | ydsz-workflow | ydsz-workflow-web | 自研工作流引擎 |
+| 9006 | ydsz-cronjob | ydsz-cronjob-web | 分布式任务调度引擎 |
+| 9007 | ydsz-literule | ydsz-literule-web | 规则引擎微服务 |
+| 9008 | ydsz-agent | ydsz-agent-web | AI 智能体服务 |
+| 8081 | ydsz-nextwiki | ydsz-nextwiki-app | 网盘移动端入口 |
+
+> 端口号取自各模块 `bootstrap.yml` / `application.yml`，为默认开发配置，生产环境应通过 Nacos `ydsz-{service}-{env}.yaml` 覆盖。
 
 ---
 
@@ -167,7 +194,7 @@ cd ../../ydsz-agent/ydsz-agent-web && mvn spring-boot:run
 
 ### 工程结构约定
 
-每个可部署的业务模块遵循标准 DDD 五层结构：
+每个可部署的业务模块遵循标准 DDD 六层结构（网关模块除外，为单模块 reactive 栈）：
 
 ```
 ydsz-{module}/
@@ -196,10 +223,33 @@ ydsz-{module}/
 |------|------|------|
 | 项目 README | `./README.md` | 本文档 |
 | MIT 开源协议 | `./LICENSE` | 开源许可协议 |
-| Effective POM | `./effective-pom.xml` | 解析后的完整 POM |
+| 编码规范 | `./docs/云顶编码规范.md` | 云顶数字编码规范（Java 代码规范基线，含 common 分层约束） |
 | 模块 README | `ydsz-*/README.md` | 各模块详细说明文档 |
-| 编码规范 | *(内部 Wiki)* | 团队开发规范 |
+| 本地开发环境 | `./docs/本地开发环境.md` | 本地中间件与 Nacos 配置说明 |
 | API 文档 | Knife4j 聚合 | 启动后访问 `:9000/doc.html` |
+
+---
+
+## 已知事项
+
+> 本节记录与代码事实相关的、需要读者注意的已知差异与约束，避免被文档误导。
+
+1. **端口冲突（部署约束）**：`ydsz-nextwiki-web`（:9003）与 `ydsz-userinfo-app`（:9003）默认端口相同。两者通常不会同机部署（Web 控制台与移动端入口），但若需同机运行，须通过 Nacos 配置将其中一个改为其他端口。
+2. **禁止 Flyway / Liquibase**：全仓统一禁止 schema-migration 框架。各模块数据库 DDL 以 SQL 脚本形式管理在 `deploy/sql/` 或模块 `src/main/resources/sql/` 下，**需手动执行**初始化，不存在自动迁移。早期个别模块 README 曾出现"由 Flyway 维护"的措辞，已校准为手动执行（见 `ydsz-nextwiki`、`ydsz-agent` README 对应说明）。
+3. **common 分层口径**：`ydsz-common` 的分层（L1-L6）以 `ydsz-common/pom.xml` 的 `<modules>` 注释为生效口径（json/util/cache/excel 为 L1，core 为 L2）。编码规范 §22.2 中 core/ util/json 的层级标注与 pom 不一致，以 pom 构建机制为准。
+4. **`ydsz-common-metrics` 为占位条目**：该坐标仅出现在 `ydsz-common/pom.xml` 的 `dependencyManagement` 中，无对应模块目录，也无任何消费者，并非真实子模块（common 实际为 30 个子模块）。
+5. **gateway 不依赖 `common-web`**：网关为 WebFlux 反应式栈，按需挑选 11 个细粒度 common 子模块，不引入 servlet 栈的 `common-web`。
+
+---
+
+## 贡献指南
+
+欢迎参与 Ydsz Cloud 的建设。提交代码前请阅读并遵守以下约定：
+
+- **编码规范**：所有 Java 代码须通过 `docs/云顶编码规范.md` 的 Checkstyle 校验（见 `docs/checkstyle.xml`）与 common 层 L1 纯度（`enforce-l1-purity`）构建检查。
+- **文档同步**：代码变更若影响模块能力、端口、配置项，须同步更新对应 `README.md`，确保文档与代码事实一致（杜绝虚构条目）。
+- **提交流程**：Fork → 分支开发 → 本地 `mvn clean verify` 通过 → 发起 Pull Request → Code Review 通过后方可合入。
+- **依赖约束**：业务模块禁止直引第三方 JSON / Caffeine / POI 等（须使用 `ydsz-common-*` 自研封装）；公共依赖变更影响全部 9 个部署单元，须充分联调。
 
 ---
 
