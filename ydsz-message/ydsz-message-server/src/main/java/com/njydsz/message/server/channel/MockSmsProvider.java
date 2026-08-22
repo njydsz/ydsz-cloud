@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 
 /**
  * Mock 短信服务商（降级实现）。
@@ -30,7 +30,7 @@ public class MockSmsProvider implements SmsProvider {
   }
 
   @Override
-  public MessageResult send(MessageRequest request, MsgTemplate template) {
+  public MessageResult send(MessageRequest request, MsgTemplateVO template) {
     String traceId = "MOCK-SMS-" + String.valueOf(snowflakeIdGenerator.nextId());
     log.info(
         "[SMS-MOCK] 发送短信 receiver={} template={} content={}",

@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.domain.enums.core.MessageChannelEnum;
 
 /**
@@ -43,7 +43,7 @@ public class DingTalkRecallChannel implements RecallChannel {
   }
 
   @Override
-  public RecallResult recall(MsgLog log) {
+  public RecallResult recall(MsgLogVO log) {
     log.debug(
         "[RecallChannel] DINGTALK 撤回尝试: msgId={} traceId={}",
         log.getMsgId(),
@@ -90,7 +90,7 @@ public class DingTalkRecallChannel implements RecallChannel {
    * @param log 消息日志
    * @return true 表示已超出窗口
    */
-  private boolean isBeyondRecallWindow(MsgLog log) {
+  private boolean isBeyondRecallWindow(MsgLogVO log) {
     LocalDateTime createdAt = log.getCreatedAt();
     if (createdAt == null) {
       return true;
@@ -106,7 +106,7 @@ public class DingTalkRecallChannel implements RecallChannel {
    * @param log 消息日志
    * @return 钉钉消息 ID，无法获取时返回 null
    */
-  private String resolveDingTalkMsgId(MsgLog log) {
+  private String resolveDingTalkMsgId(MsgLogVO log) {
     if (log.getProviderTraceId() != null && !log.getProviderTraceId().isBlank()) {
       return log.getProviderTraceId();
     }

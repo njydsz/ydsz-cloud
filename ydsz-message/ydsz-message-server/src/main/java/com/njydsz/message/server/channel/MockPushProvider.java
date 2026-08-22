@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 
 /**
  * Mock 推送服务商（降级实现）。
@@ -30,7 +30,7 @@ public class MockPushProvider implements PushProvider {
   }
 
   @Override
-  public MessageResult send(MessageRequest request, MsgTemplate template) {
+  public MessageResult send(MessageRequest request, MsgTemplateVO template) {
     String traceId = "MOCK-PUSH-" + String.valueOf(snowflakeIdGenerator.nextId());
     log.info("[PUSH-MOCK] 推送 receiver={} content={}", request.getReceiver(), request.getContent());
     return MessageResult.ok("PUSH", traceId);

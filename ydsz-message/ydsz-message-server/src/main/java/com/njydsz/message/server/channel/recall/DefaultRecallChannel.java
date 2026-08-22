@@ -1,6 +1,6 @@
 package com.njydsz.message.server.channel.recall;
 
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
  * 默认撤回通道实现（数据库标记模式）。
@@ -20,7 +20,7 @@ public class DefaultRecallChannel implements RecallChannel {
   }
 
   @Override
-  public RecallResult recall(MsgLog log) {
+  public RecallResult recall(MsgLogVO log) {
     // 默认实现：仅数据库标记（调用方负责更新 DB 状态）
     return RecallResult.localOnly();
   }

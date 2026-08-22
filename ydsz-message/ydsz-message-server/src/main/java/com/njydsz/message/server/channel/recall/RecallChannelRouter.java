@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
  * 撤回通道路由器（P2-F2: 跨通道消息撤回能力扩展）。
@@ -55,7 +55,7 @@ public class RecallChannelRouter implements InitializingBean {
    * @param log 消息日志
    * @return 撤回结果
    */
-  public RecallChannel.RecallResult routeAndRecall(MsgLog log) {
+  public RecallChannel.RecallResult routeAndRecall(MsgLogVO log) {
     if (log == null) {
       return RecallChannel.RecallResult.failed("消息日志为空");
     }

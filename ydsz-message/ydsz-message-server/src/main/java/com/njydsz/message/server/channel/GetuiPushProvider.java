@@ -19,7 +19,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.config.MessageProperties;
 
 /**
@@ -87,7 +87,7 @@ public class GetuiPushProvider implements PushProvider {
   }
 
   @Override
-  public MessageResult send(MessageRequest request, MsgTemplate template) {
+  public MessageResult send(MessageRequest request, MsgTemplateVO template) {
     String cid = extractClientId(request);
     if (!StringUtils.hasText(cid)) {
       return MessageResult.fail("PUSH", "推送目标 clientId/deviceToken 不能为空");

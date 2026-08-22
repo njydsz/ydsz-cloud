@@ -1,6 +1,6 @@
 package com.njydsz.message.server.channel.recall;
 
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
  * 通道消息撤回策略接口（P2-F2: 跨通道消息撤回能力扩展）。
@@ -36,7 +36,7 @@ public interface RecallChannel {
    * @param log 消息日志（含 channel / msgId / traceId 等关键信息）
    * @return 撤回结果（平台是否真正撤回 + 失败原因）
    */
-  RecallResult recall(MsgLog log);
+  RecallResult recall(MsgLogVO log);
 
   /**
    * 撤回结果记录。

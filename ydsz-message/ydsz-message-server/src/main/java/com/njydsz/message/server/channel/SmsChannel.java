@@ -13,7 +13,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.ReceiptResult;
 import com.njydsz.message.domain.vo.MsgLogVO;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.channel.sms.SmsProvider;
@@ -66,7 +66,7 @@ public class SmsChannel implements MessageChannel {
       return MessageResult.fail(CHANNEL_TYPE, "接收人手机号不能为空");
     }
     SmsProvider provider = selectProvider();
-    MsgTemplate template = resolveTemplate(request);
+    MsgTemplateVO template = resolveTemplate(request);
     MessageResult result = provider.send(request, template);
     log.info(
         "[SmsChannel] provider={} status={} phone={}",
@@ -87,7 +87,7 @@ public class SmsChannel implements MessageChannel {
       return List.of();
     }
     SmsProvider provider = selectProvider();
-    MsgTemplate template = resolveTemplate(requests.get(0));
+    MsgTemplateVO template = resolveTemplate(requests.get(0));
     List<MessageResult> results = provider.batchSend(requests, template);
     log.info(
         "[SmsChannel] 批量发送: provider={} count={} success={}",
@@ -149,12 +149,12 @@ public class SmsChannel implements MessageChannel {
    * @param request 消息请求
    * @return 模板实体（含 signName / providerKey），均无时返回 null
    */
-  private MsgTemplate resolveTemplate(MessageRequest request) {
+  private MsgTemplateVO resolveTemplate(MessageRequest request) {
     Map<String, String> meta = request.getChannelMeta();
     if (meta != null
         && (StringUtils.hasText(meta.get("signName"))
             || StringUtils.hasText(meta.get("providerKey")))) {
-      MsgTemplate t = new MsgTemplate();
+      MsgTemplateVO t = new MsgTemplateVO();
       if (StringUtils.hasText(meta.get("signName"))) {
         t.setSignName(meta.get("signName"));
       }
@@ -165,13 +165,35 @@ public class SmsChannel implements MessageChannel {
     }
     if (templateService != null && StringUtils.hasText(request.getTemplateCode())) {
       try {
-        return templateService.loadByCodeAndChannel(
-            request.getTemplateCode(), CHANNEL_TYPE, null, TenantContextHolder.getTenantId());
+        com.njydsz.message.infra.entity.MsgTemplate entity =
+            templateService.loadByCodeAndChannel(
+                request.getTemplateCode(),
+                CHANNEL_TYPE,
+                null,
+                TenantContextHolder.getTenantId());
+        return toTemplateVO(entity);
       } catch (Exception e) {
         log.debug(
             "[SmsChannel] 模板查询失败,忽略: code={} err={}", request.getTemplateCode(), e.getMessage());
       }
     }
     return null;
+  }
+
+  /**
+   * 将 infra 层模板实体转换为 domain VO（仅提取 signName / providerKey）。
+   *
+   * @param entity infra 层 MsgTemplate 实体
+   * @return MsgTemplateVO，entity 为 null 时返回 null
+   */
+  private MsgTemplateVO toTemplateVO(
+      com.njydsz.message.infra.entity.MsgTemplate entity) {
+    if (entity == null) {
+      return null;
+    }
+    MsgTemplateVO vo = new MsgTemplateVO();
+    vo.setSignName(entity.getSignName());
+    vo.setProviderKey(entity.getProviderKey());
+    return vo;
   }
 }

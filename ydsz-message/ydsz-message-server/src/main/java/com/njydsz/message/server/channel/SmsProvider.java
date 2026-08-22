@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 
 /**
  * 短信服务商 SPI 接口。
@@ -36,7 +36,7 @@ public interface SmsProvider {
    * @param template 模板实体（含 providerKey=服务商模板ID, signName=签名），可为 null
    * @return 发送结果（含 providerTraceId）
    */
-  MessageResult send(MessageRequest request, MsgTemplate template);
+  MessageResult send(MessageRequest request, MsgTemplateVO template);
 
   /**
    * P0-4: 批量发送短信（同一模板 + 多个手机号）。
@@ -47,7 +47,7 @@ public interface SmsProvider {
    * @param template 模板实体
    * @return 发送结果列表（与 requests 一一对应）
    */
-  default List<MessageResult> batchSend(List<MessageRequest> requests, MsgTemplate template) {
+  default List<MessageResult> batchSend(List<MessageRequest> requests, MsgTemplateVO template) {
     // 默认实现：逐条发送，provider 可覆盖为原生批量接口
     return requests.stream().map(req -> send(req, template)).toList();
   }

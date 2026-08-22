@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.message.infra.entity.MsgTemplate;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 
 /**
  * APP 推送服务商 SPI 接口。
@@ -36,7 +36,7 @@ public interface PushProvider {
    * @param template 模板实体，可为 null
    * @return 发送结果（含 providerTraceId）
    */
-  MessageResult send(MessageRequest request, MsgTemplate template);
+  MessageResult send(MessageRequest request, MsgTemplateVO template);
 
   /**
    * P1-10: 批量推送到多个设备。
@@ -47,7 +47,7 @@ public interface PushProvider {
    * @param template 模板实体
    * @return 发送结果列表
    */
-  default List<MessageResult> batchSend(List<MessageRequest> requests, MsgTemplate template) {
+  default List<MessageResult> batchSend(List<MessageRequest> requests, MsgTemplateVO template) {
     return requests.stream().map(req -> send(req, template)).toList();
   }
 }
