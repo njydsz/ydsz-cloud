@@ -117,11 +117,6 @@
                 <artifactId>ydsz-common-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-metrics</artifactId>
-                <version>${project.version}</version>
-            </dependency>
             <!-- L2 -->
             <dependency>
                 <groupId>com.njydsz</groupId>

@@ -157,4 +157,20 @@ public interface JobMapper extends BaseMapper<Job> {
           + "       consecutive_fail_count = 0, updated_at = CURRENT_TIMESTAMP "
           + "WHERE id = #{id} AND status = 'AUTO_PAUSED' AND deleted = 0")
   int resumeAutoPaused(@Param("id") String id);
+
+  /**
+   * 按 ID 和旧状态原子更新任务状态（CAS）。
+   *
+   * @param id 任务 ID
+   * @param oldStatus 旧状态
+   * @param newStatus 新状态
+   * @return 受影响行数
+   */
+  @Update(
+      "UPDATE ydsz_job SET status = #{newStatus}, updated_at = CURRENT_TIMESTAMP "
+          + "WHERE id = #{id} AND status = #{oldStatus} AND deleted = 0")
+  int casUpdateStatus(
+      @Param("id") String id,
+      @Param("oldStatus") String oldStatus,
+      @Param("newStatus") String newStatus);
 }

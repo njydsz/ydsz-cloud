@@ -111,30 +111,6 @@ public class JobRepositoryImpl implements JobRepository {
     return jobMapper.resumeAutoPaused(id);
   }
 
-  @Override
-  public Page<Job> selectPage(
-      String keyword, String status, String group, int page, int size) {
-    Page<Job> pageObj = new Page<>(page, size);
-    LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
-    if (keyword != null && !keyword.isBlank()) {
-      wrapper.and(
-          qw ->
-              qw.like(Job::getJobName, keyword)
-                  .or()
-                  .like(Job::getJobKey, keyword)
-                  .or()
-                  .like(Job::getHandler, keyword));
-    }
-    if (status != null && !status.isBlank()) {
-      wrapper.eq(Job::getStatus, status);
-    }
-    if (group != null && !group.isBlank()) {
-      wrapper.eq(Job::getJobGroup, group);
-    }
-    wrapper.eq(Job::getDeleted, 0).orderByDesc(Job::getCreatedAt);
-    return jobMapper.selectPage(pageObj, wrapper);
-  }
-
   // ===== Web 层查询方法实现 =====
 
   @Override
@@ -273,21 +249,6 @@ public class JobRepositoryImpl implements JobRepository {
     }
     wrapper.orderByDesc(Job::getCreatedAt);
     return converter.jobListToVO(jobMapper.selectList(wrapper));
-  }
-
-  @Override
-  public int resetConsecutiveFail(String jobId) {
-    return jobMapper.resetConsecutiveFail(jobId);
-  }
-
-  @Override
-  public int incrementConsecutiveFail(String jobId) {
-    return jobMapper.incrementConsecutiveFail(jobId);
-  }
-
-  @Override
-  public Integer findConsecutiveFailCount(String jobId) {
-    return jobMapper.selectConsecutiveFailCount(jobId);
   }
 
   @Override

@@ -177,4 +177,20 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
       @Param("instanceId") String instanceId,
       @Param("finishedAt") LocalDateTime finishedAt,
       @Param("durationMs") long durationMs);
+
+  /**
+   * 更新 DAG 定义的结果统计（成功/失败次数）。
+   *
+   * @param dagId DAG 定义 ID
+   * @param success 是否成功
+   * @return 受影响行数
+   */
+  @Update(
+      "UPDATE ydsz_job_dag SET "
+          + "fire_count = fire_count + 1, "
+          + "success_count = success_count + CASE WHEN #{success} = true THEN 1 ELSE 0 END, "
+          + "fail_count = fail_count + CASE WHEN #{success} = true THEN 0 ELSE 1 END, "
+          + "updated_at = CURRENT_TIMESTAMP "
+          + "WHERE id = #{dagId}")
+  int updateResultStats(@Param("dagId") String dagId, @Param("success") boolean success);
 }
