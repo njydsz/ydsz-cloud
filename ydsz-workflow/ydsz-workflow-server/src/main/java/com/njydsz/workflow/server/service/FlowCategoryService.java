@@ -3,8 +3,8 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
-import com.njydsz.workflow.infra.entity.FlowCategoryDO;
 import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
+import com.njydsz.workflow.domain.vo.FlowCategoryVO;
 
 /**
  * 流程分类服务接口
@@ -14,7 +14,7 @@ import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
  * <p><b>核心职责：</b>
  *
  * <ul>
- *   <li><b>查询能力</b>：全部分类（{@link #listAll}，按 {@code sortNum} 升序）/ 树形结构（{@link #tree}，使用 {@link
+ *   <li><b>查询能力</b>：全部分类（{@link #listAllVO}，按 {@code sortNum} 升序）/ 树形结构（{@link #tree}，使用 {@link
  *       com.njydsz.common.domain.tree.TreeBuilder#buildSimple} 构建）
  *   <li><b>CRUD</b>：新增（{@link #create}）/ 编辑（{@link #update}）/ 删除（{@link #delete}）
  *   <li><b>引用校验</b>：删除前校验是否有子分类或关联的流程定义，有则阻断
@@ -26,6 +26,8 @@ import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
  * <p><b>性能优化：</b>「查询全部分类」使用 {@code ydsz_flow_category} 索引（{@code idx_parent} + {@code idx_sort}），
  * 全表一次性返回（分类数据量小，无分页必要）。
  *
+ * <p><b>DDD 分层规范：</b>Service 层返回 VO 而非 DO，避免 web 层直接依赖 infra 层实体。
+ *
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.workflow.server.service.impl.FlowCategoryServiceImpl 实现类
@@ -34,12 +36,15 @@ import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
 public interface FlowCategoryService {
 
   /**
-   * 查询全部分类（扁平结构，按 sortNum 排序）
+   * 查询全部分类（扁平结构，按 sortNum 排序），返回 VO 列表
+   *
+   * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换，web 层不直接依赖 infra 层实体。
    *
    * @param tenantId 租户 ID
-   * @return 分类列表（扁平结构）
+   * @return 分类 VO 列表（扁平结构）
+   * @since 1.0.0
    */
-  List<FlowCategoryDO> listAll(String tenantId);
+  List<FlowCategoryVO> listAllVO(String tenantId);
 
   /**
    * 查询全部分类（树形结构，使用 TreeBuilder 构建）
