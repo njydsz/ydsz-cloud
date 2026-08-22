@@ -83,4 +83,7 @@ public class JobDagInstance extends MpBaseEntity<String> {
 
   /** 跳过节点数 */
   private Integer skippedNodes;
+
+  /** 下次触发时间（用于 DAG 的 CRON 调度） */
+  private LocalDateTime nextFireTime;
 }

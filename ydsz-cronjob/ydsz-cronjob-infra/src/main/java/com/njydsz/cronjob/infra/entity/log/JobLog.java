@@ -3,6 +3,8 @@ package com.njydsz.cronjob.infra.entity.log;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,6 +34,9 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 public class JobLog extends MpBaseIdEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
+
+  /** 执行状态常量：失败 */
+  public static final String STATUS_FAILED = "FAILED";
 
   /** 任务 ID */
   private String jobId;
@@ -118,6 +123,22 @@ public class JobLog extends MpBaseIdEntity<String> {
   /** Handler 初始化时间（JobHandler 实例化/资源准备完成的时刻） */
   private LocalDateTime handlerInitTime;
 
-  /** Handler 执行结束时间（JobHandler.execute() 返回的时刻，与 endTime 可能不同：endTime 含后续清理） */
+<longcat_arg_value>  /** Handler 执行结束时间（JobHandler.execute() 返回的时刻，与 endTime 可能不同：endTime 含后续清理） */
   private LocalDateTime handlerEndTime;
+
+  /** 执行状态: RUNNING/SUCCESS/FAILED/TIMEOUT */
+  private String status;
+
+  /** 逻辑删除标识：0=未删除，1=已删除 */
+  @TableLogic
+  @TableField("deleted")
+  private Integer deleted;
+
+  /** 创建时间 */
+  @TableField("created_at")
+  private LocalDateTime createdAt;
+
+  /** 更新时间 */
+  @TableField("updated_at")
+  private LocalDateTime updatedAt;
 }
