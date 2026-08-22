@@ -16,13 +16,11 @@ import java.time.format.DateTimeFormatter;
 
 import javax.imageio.ImageIO;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.common.docs.watermark.PdfWatermarkApplier;
 
 /**
  * 文件水印服务
@@ -52,8 +50,19 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class WatermarkService {
+
+  /** PDF 水印能力提供者（common-docs 封装 PDFBox），运行时无 PDFBox 依赖时为 null */
+  private final ObjectProvider<PdfWatermarkApplier> pdfWatermarkApplierProvider;
+
+  /**
+   * 构造水印服务。
+   *
+   * @param pdfWatermarkApplierProvider PDF 水印能力提供者（可选，无实现时跳过 PDF 水印）
+   */
+  public WatermarkService(ObjectProvider<PdfWatermarkApplier> pdfWatermarkApplierProvider) {
+    this.pdfWatermarkApplierProvider = pdfWatermarkApplierProvider;
+  }
 
   /** 图片格式：PNG */
   private static final String MIME_IMAGE_PNG = "image/png";
@@ -181,73 +190,26 @@ public class WatermarkService {
   /**
    * 为 PDF 文件叠加水印。
    *
-   * <p>注意：需要 Apache PDFBox 依赖。如果 PDFBox 不可用，返回原始文件。
-   *
-   * <p><b>依赖要求：</b>需要在 server/pom.xml 引入：
-   *
-   * <pre>
-   * &lt;dependency&gt;
-   *   &lt;groupId&gt;org.apache.pdfbox&lt;/groupId&gt;
-   *   &lt;artifactId&gt;pdfbox&lt;/artifactId&gt;
-   * &lt;/dependency&gt;
-   * </pre>
+   * <p>委托 ydsz-common-docs 的 {@link PdfWatermarkApplier} 能力实现，业务层不直接依赖
+   * PDFBox 等第三方 SDK。若 common-docs 未装配 PDF 水印能力（运行时无 PDFBox 依赖），
+   * 或叠加失败，返回原始文件。
    *
    * @param fileBytes 原始 PDF 字节
    * @param watermarkText 水印文本
-   * @return 叠加水印后的 PDF 字节，若 PDFBox 不可用则返回原始文件
+   * @return 叠加水印后的 PDF 字节，能力不可用或叠加失败时返回原始文件
    */
   public byte[] watermarkPdf(byte[] fileBytes, String watermarkText) {
-    // PDFBox 依赖检查（运行时检测，避免硬依赖）
-    try {
-      Class.forName("org.apache.pdfbox.pdmodel.PDDocument");
-    } catch (ClassNotFoundException e) {
-      log.warn("[WatermarkService] PDFBox 不可用，跳过 PDF 水印叠加");
+    PdfWatermarkApplier applier = pdfWatermarkApplierProvider.getIfAvailable();
+    if (applier == null) {
+      log.warn("[WatermarkService] PDF 水印能力不可用（common-docs 未装配 PdfWatermarkApplier），跳过 PDF 水印叠加");
       return fileBytes;
     }
-
-    try (PDDocument document = PDDocument.load(new ByteArrayInputStream(fileBytes));
-        ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-
-      // 为每一页添加水印
-      for (PDPage page : document.getPages()) {
-        addPdfWatermarkPage(document, page, watermarkText);
-      }
-
-      document.save(bos);
-      return bos.toByteArray();
+    try {
+      return applier.applyWatermark(fileBytes, watermarkText);
     } catch (Exception e) {
       log.error("[WatermarkService] PDF 水印叠加失败，返回原始文件: err={}", e.getMessage(), e);
       return fileBytes;
     }
-  }
-
-  /**
-   * 为 PDF 单页添加文字水印。
-   *
-   * @param document PDF 文档
-   * @param page PDF 页面
-   * @param watermarkText 水印文本
-   * @throws IOException PDF 处理异常
-   */
-  private void addPdfWatermarkPage(
-      PDDocument document, PDPage page, String watermarkText)
-      throws IOException {
-    PDPageContentStream contentStream =
-        new PDPageContentStream(
-            document, page, PDPageContentStream.AppendMode.APPEND, true);
-
-    contentStream.setFont(PDType1Font.OBLIQUE, 20);
-
-    float pageSize = page.getMediaBox().getHeight();
-    contentStream.setNonStrokingColor(200, 200, 200);
-
-    // 旋转 45 度绘制水印
-    contentStream.beginText();
-    contentStream.newLineAtOffset(100, pageSize / 3);
-    contentStream.showText(watermarkText);
-    contentStream.endText();
-
-    contentStream.close();
   }
 
   /**
