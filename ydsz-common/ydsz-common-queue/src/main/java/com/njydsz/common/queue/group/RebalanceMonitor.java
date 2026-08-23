@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +16,7 @@ import org.springframework.data.redis.connection.stream.PendingMessagesSummary;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import com.njydsz.common.queue.group.ConsumerGroupEvent.EventType;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
  * 消费组 Rebalance 监控器
@@ -131,12 +131,9 @@ public class RebalanceMonitor implements DisposableBean {
       log.warn("[RebalanceMonitor] 监控器已在运行中, channel={}, group={}", channel, groupName);
       return;
     }
-    // CHECKSTYLE.OFF: ThreadPoolCreate
-    // 单线程调度器：仅用于周期性扫描消费组状态，轻量级后台任务。
-    scheduler =
-        Executors.newSingleThreadScheduledExecutor(
-            r -> new Thread(r, "ydsz-queue-rebalance-monitor-" + groupName));
-    // CHECKSTYLE.ON: ThreadPoolCreate
+    // 单线程调度器：仅用于周期性扫描消费组状态，轻量级后台任务，统一使用 InternalExecutorFactory
+    scheduler = InternalExecutorFactory.newSingleThreadScheduledPool(
+        "queue-rebalance-monitor-" + groupName);
     scheduledTask =
         scheduler.scheduleWithFixedDelay(
             this::scanAndDetectChanges, 0, scanIntervalSeconds, TimeUnit.SECONDS);
