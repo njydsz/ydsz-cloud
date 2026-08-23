@@ -100,6 +100,11 @@
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-circuitbreaker</artifactId>
         </dependency>
+        <!-- ydzs-common-thread（InternalExecutorFactory 统一线程池治理） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
         <!-- MyBatis（EncryptTypeHandler 需要 BaseTypeHandler） -->
         <dependency>
             <groupId>org.mybatis</groupId>

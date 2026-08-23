@@ -4,7 +4,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -16,6 +15,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.safe.ip.IpAccessService;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
  * 安全事件自动响应聚合器
@@ -93,16 +93,9 @@ public class SecurityEventAggregator {
     this.threshold = threshold;
     this.windowSeconds = windowSeconds;
 
-    // CHECKSTYLE.OFF: RegexpSinglelineJava|IllegalImport
-    // 单线程守护线程，专用于消费自动封禁命令队列，生命周期随 Bean 销毁
+    // 单线程守护线程，专用于消费自动封禁命令队列，生命周期随 Bean 销毁，统一使用 InternalExecutorFactory
     this.blockConsumerExecutor =
-        Executors.newSingleThreadExecutor(
-            r -> {
-              Thread t = new Thread(r, "safe-auto-block-consumer");
-              t.setDaemon(true);
-              return t;
-            });
-    // CHECKSTYLE.ON: RegexpSinglelineJava|IllegalImport
+        InternalExecutorFactory.newFixedThreadPool("safe-auto-block-consumer", 1);
     this.blockConsumerExecutor.submit(this::consumeBlockCommands);
 
     LOG.info(

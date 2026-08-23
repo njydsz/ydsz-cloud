@@ -2,7 +2,6 @@ package com.njydsz.common.queue.delayed;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -12,6 +11,7 @@ import org.springframework.beans.factory.DisposableBean;
 
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.service.IMessagePublisher;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
  * 基于定时器的延时消息发送器
@@ -174,11 +174,7 @@ public class TimerBasedDelayedMessageSender implements DelayedMessageSender, Dis
 
   /** 创建默认的单线程调度器 */
   private static ScheduledExecutorService createDefaultScheduler() {
-    // CHECKSTYLE.OFF: RegexpSinglelineJava|IllegalImport
-    // 默认单线程调度器：仅在外部未提供 scheduler 时使用。
-    // 生产环境建议通过参数注入以获得统一管理。
-    return Executors.newSingleThreadScheduledExecutor(
-        r -> new Thread(r, "ydsz-queue-delayed-sender"));
-    // CHECKSTYLE.ON: RegexpSinglelineJava|IllegalImport
+    // 默认单线程调度器：仅在外部未提供 scheduler 时使用，统一使用 InternalExecutorFactory
+    return InternalExecutorFactory.newSingleThreadScheduledPool("queue-delayed-sender");
   }
 }
