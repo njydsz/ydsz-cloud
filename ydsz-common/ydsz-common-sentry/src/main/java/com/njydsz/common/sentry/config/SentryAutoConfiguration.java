@@ -67,6 +67,9 @@ public class SentryAutoConfiguration {
 
   /** 注册 SentryService 的 Supplier，替代 ApplicationContextAware 静态查找。 */
   @PostConstruct
+  /**
+   * register sentry service。
+   */
   public void registerSentryServiceSupplier() {
     SentryObservation.setSentryServiceProvider(sentryServiceProvider::getIfAvailable);
     SentryMetricsAdapter.setSentryServiceProvider(sentryServiceProvider::getIfAvailable);

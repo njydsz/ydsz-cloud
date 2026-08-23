@@ -1,5 +1,4 @@
 package com.njydsz.system.infra.mapper;
-
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -7,6 +6,9 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.njydsz.system.infra.entity.TenantPlanMenuDO;
+
+
+
 
 /**
  * 租户套餐-菜单关联 Mapper

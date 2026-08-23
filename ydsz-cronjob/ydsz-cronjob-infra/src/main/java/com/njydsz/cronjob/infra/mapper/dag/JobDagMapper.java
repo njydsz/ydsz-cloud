@@ -38,7 +38,12 @@ import com.njydsz.cronjob.infra.entity.dag.JobDag;
 @Mapper
 public interface JobDagMapper extends BaseMapper<JobDag> {
 
-  /** 根据 dag_key 查询 DAG 定义。 */
+  /**
+   * 根据 dag_key 查询 DAG 定义。
+   *
+   * @param dagKey 参数说明
+   * @return 返回值说明
+   */
   @Select(
       "SELECT id, dag_key, dag_name, dag_definition, status, trigger_type, cron_expression, "
           + "       max_concurrent_instances, fail_strategy, description, next_fire_time, last_fire_time, "
@@ -47,7 +52,11 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
           + "FROM ydsz_job_dag WHERE dag_key = #{dagKey} AND deleted = 0")
   JobDag selectByDagKey(@Param("dagKey") String dagKey);
 
-  /** 查询所有启用状态（ENABLED）且触发类型为 CRON 的 DAG（调度器扫描用）。 */
+  /**
+   * 查询所有启用状态（ENABLED）且触发类型为 CRON 的 DAG（调度器扫描用）。
+   *
+   * @return 返回值说明
+   */
   @Select(
       "SELECT id, dag_key, dag_name, dag_definition, status, trigger_type, cron_expression, "
           + "       max_concurrent_instances, fail_strategy, description, next_fire_time, last_fire_time, "
@@ -57,7 +66,11 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
           + "WHERE status = 'ENABLED' AND trigger_type = 'CRON' AND deleted = 0")
   List<JobDag> selectCronEnabledDags();
 
-  /** 查询所有 ENABLED 状态的 DAG。 */
+  /**
+   * 查询所有 ENABLED 状态的 DAG。
+   *
+   * @return 返回值说明
+   */
   @Select(
       "SELECT id, dag_key, dag_name, dag_definition, status, trigger_type, cron_expression, "
           + "       max_concurrent_instances, fail_strategy, description, next_fire_time, last_fire_time, "
@@ -66,7 +79,14 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
           + "FROM ydsz_job_dag WHERE status = 'ENABLED' AND deleted = 0")
   List<JobDag> selectEnabledDags();
 
-  /** 更新 DAG 触发统计（fire_count +1，last_fire_time 更新）。 */
+  /**
+   * 更新 DAG 触发统计（fire_count +1，last_fire_time 更新）。
+   *
+   * @param dagId 参数说明
+   * @param fireTime 参数说明
+   * @param nextFireTime 参数说明
+   * @return 返回值说明
+   */
   @Update(
       "UPDATE ydsz_job_dag SET fire_count = fire_count + 1, last_fire_time = #{fireTime}, "
           + "       next_fire_time = #{nextFireTime}, version = version + 1, updated_at = CURRENT_TIMESTAMP "
@@ -81,6 +101,7 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
    *
    * @param dagId DAG 定义 ID
    * @param success true=成功 +1, false=失败 +1
+   * @return 受影响行数
    */
   @Update(
       "UPDATE ydsz_job_dag SET "

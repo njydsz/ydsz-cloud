@@ -2,6 +2,7 @@ package com.njydsz.workflow.domain.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import com.njydsz.workflow.domain.vo.FlowHisInstanceVO;
 
@@ -38,7 +39,7 @@ public interface FlowHisInstanceRepository {
    * @param id 历史实例 ID
    * @return 历史实例 VO；不存在返回 {@code Optional.empty()}
    */
-  java.util.Optional<FlowHisInstanceVO> findById(String id);
+  Optional<FlowHisInstanceVO> findById(String id);
 
   /**
    * 查询指定时间之前归档的实例列表（清理用）。

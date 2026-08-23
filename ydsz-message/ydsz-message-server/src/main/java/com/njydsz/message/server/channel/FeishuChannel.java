@@ -51,6 +51,15 @@ import com.njydsz.message.server.config.ChannelProperties;
 @Component
 @RequiredArgsConstructor
 public class FeishuChannel implements MessageChannel {
+  /** Map 初始容量：8 */
+  private static final int MAP_CAPACITY_8 = 8;
+
+  /** Map 初始容量：4 */
+  private static final int MAP_CAPACITY_4 = 4;
+
+  /** List 初始容量：4 */
+  private static final int LIST_CAPACITY_4 = 4;
+
 
   /** 通道类型 */
   private static final String CHANNEL_TYPE = "FEISHU";
@@ -155,19 +164,19 @@ public class FeishuChannel implements MessageChannel {
       }
     }
 
-    Map<String, Object> payload = new HashMap<>(8);
+    Map<String, Object> payload = new HashMap<>(MAP_CAPACITY_8);
     if ("post".equals(msgType)) {
       payload.put("msg_type", "post");
-      Map<String, Object> contentWrapper = new HashMap<>(4);
-      Map<String, Object> post = new HashMap<>(4);
-      Map<String, Object> zhCn = new HashMap<>(4);
+      Map<String, Object> contentWrapper = new HashMap<>(MAP_CAPACITY_4);
+      Map<String, Object> post = new HashMap<>(MAP_CAPACITY_4);
+      Map<String, Object> zhCn = new HashMap<>(MAP_CAPACITY_4);
       zhCn.put("title", subject);
-      List<Map<String, Object>> line = new ArrayList<>(4);
-      Map<String, Object> textNode = new HashMap<>(4);
+      List<Map<String, Object>> line = new ArrayList<>(LIST_CAPACITY_4);
+      Map<String, Object> textNode = new HashMap<>(MAP_CAPACITY_4);
       textNode.put("tag", "text");
       textNode.put("text", content);
       line.add(textNode);
-      List<List<Map<String, Object>>> contentList = new ArrayList<>(4);
+      List<List<Map<String, Object>>> contentList = new ArrayList<>(LIST_CAPACITY_4);
       contentList.add(line);
       zhCn.put("content", contentList);
       post.put("zh_cn", zhCn);
@@ -175,7 +184,7 @@ public class FeishuChannel implements MessageChannel {
       payload.put("content", contentWrapper);
     } else {
       payload.put("msg_type", "text");
-      Map<String, Object> textContent = new HashMap<>(4);
+      Map<String, Object> textContent = new HashMap<>(MAP_CAPACITY_4);
       textContent.put("text", content);
       payload.put("content", textContent);
     }
@@ -251,7 +260,7 @@ public class FeishuChannel implements MessageChannel {
               stringToSign.getBytes(StandardCharsets.UTF_8),
               secret.getBytes(StandardCharsets.UTF_8));
       String sign = Base64.getEncoder().encodeToString(signData);
-      Map<String, String> result = new HashMap<>(4);
+      Map<String, String> result = new HashMap<>(MAP_CAPACITY_4);
       result.put("timestamp", String.valueOf(timestamp));
       result.put("sign", sign);
       return result;

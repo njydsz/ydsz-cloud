@@ -97,7 +97,15 @@ public class SafeConfiguration {
   private final IpAccessProperties ipAccessProperties;
   private final ApiSignatureProperties apiSignatureProperties;
 
-  /** 构造方法，注入各子模块配置属性用于启动日志输出 */
+  /**
+   * 构造方法，注入各子模块配置属性用于启动日志输出。
+   *
+   * @param safeXssProperties XSS 防护配置
+   * @param csrfProperties CSRF 防护配置
+   * @param securityHeaderProperties 安全响应头配置
+   * @param ipAccessProperties IP 访问控制配置
+   * @param apiSignatureProperties API 签名配置
+   */
   public SafeConfiguration(
       SafeXssProperties safeXssProperties,
       CsrfProperties csrfProperties,

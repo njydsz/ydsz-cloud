@@ -36,6 +36,9 @@ import com.njydsz.cronjob.server.config.SandboxConfig;
 @Component
 @RequiredArgsConstructor
 public class SandboxScriptExecutor {
+  /** 等待超时（秒） */
+  private static final long WAIT_TIMEOUT_SECONDS = 5;
+
 
   /** P3-3.3: 沙箱配置统一从 CronjobProperties 读取 */
   private final CronjobProperties cronjobProperties;
@@ -256,7 +259,7 @@ public class SandboxScriptExecutor {
     try {
       Process process =
           new ProcessBuilder("docker", "info").redirectErrorStream(true).start();
-      boolean finished = process.waitFor(5, TimeUnit.SECONDS);
+      boolean finished = process.waitFor(WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
       if (!finished) {
         process.destroyForcibly();
         return false;
@@ -287,6 +290,13 @@ public class SandboxScriptExecutor {
     return output.toString();
   }
 
-  /** 沙箱执行结果。 */
+  /**
+   * 沙箱执行结果。
+   *
+   * @param success 是否成功
+   * @param output 标准输出/错误输出
+   * @param errorMessage 错误消息（成功时为 null）
+   * @param exitCode 进程退出码
+   */
   public record SandboxResult(boolean success, String output, String errorMessage, int exitCode) {}
 }

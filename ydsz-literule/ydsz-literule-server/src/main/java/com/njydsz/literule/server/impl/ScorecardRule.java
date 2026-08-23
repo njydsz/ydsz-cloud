@@ -56,6 +56,9 @@ import com.njydsz.literule.api.expression.ExpressionEngine;
 @Builder
 public class ScorecardRule implements Rule {
 
+    /** 纳秒到毫秒的换算系数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
   private final String code;
   private final String name;
   private final String category;
@@ -223,7 +226,7 @@ public class ScorecardRule implements Rule {
           .description(desc.toString())
           .currentValue(String.valueOf(totalScore))
           .triggeredAt(LocalDateTime.now())
-          .elapsedMs((System.nanoTime() - start) / 1_000_000)
+          .elapsedMs((System.nanoTime() - start) / NANOS_PER_MILLI)
           .build();
     } catch (Exception e) {
       log.warn("[LiteRule-Scorecard] 评分卡 {} 评估异常: {}", code, e.getMessage());
@@ -231,7 +234,7 @@ public class ScorecardRule implements Rule {
           .ruleCode(code)
           .triggered(false)
           .triggeredAt(LocalDateTime.now())
-          .elapsedMs((System.nanoTime() - start) / 1_000_000)
+          .elapsedMs((System.nanoTime() - start) / NANOS_PER_MILLI)
           .build();
     }
   }
@@ -267,19 +270,29 @@ public class ScorecardRule implements Rule {
    */
   private RuleSeverity resolveSeverityByThreshold(double totalScore) {
     if (scoreDirection == ScorecardDefinition.ScoreDirection.ASCENDING) {
-      if (totalScore >= redThreshold) return RuleSeverity.RED;
-      if (totalScore >= yellowThreshold) return RuleSeverity.YELLOW;
+      if (totalScore >= redThreshold) {
+        return RuleSeverity.RED;
+      }
+      if (totalScore >= yellowThreshold) {
+        return RuleSeverity.YELLOW;
+      }
       return RuleSeverity.INFO;
     }
     // DESCENDING（默认）
-    if (totalScore < redThreshold) return RuleSeverity.RED;
-    if (totalScore < yellowThreshold) return RuleSeverity.YELLOW;
+    if (totalScore < redThreshold) {
+      return RuleSeverity.RED;
+    }
+    if (totalScore < yellowThreshold) {
+      return RuleSeverity.YELLOW;
+    }
     return RuleSeverity.INFO;
   }
 
   /** 安全解析严重度编码 */
   private RuleSeverity parseSeverity(String code, RuleSeverity fallback) {
-    if (code == null || code.isBlank()) return fallback;
+    if (code == null || code.isBlank()) {
+      return fallback;
+    }
     try {
       return RuleSeverity.valueOf(code.toUpperCase());
     } catch (IllegalArgumentException e) {

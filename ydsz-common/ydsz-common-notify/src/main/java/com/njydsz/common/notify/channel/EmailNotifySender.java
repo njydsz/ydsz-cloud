@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
@@ -104,7 +105,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
    *
    * @param mailSender Spring JavaMail 发送器
    * @param notifyProperties 通知配置属性
-   * @param templateEngine 模板引擎（可为 null）
+   * @param templateEngineProvider 模板引擎提供者（可选）
    * @param virtualThreadExecutor 虚拟线程池
    * @param metricsProvider 指标埋点服务（可选）
    * @param healthCheckerProvider SMTP 健康检查器（可选）
@@ -456,7 +457,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
     if (snowflakeIdGenerator != null) {
       return String.valueOf(snowflakeIdGenerator.nextId());
     }
-    return java.util.UUID.randomUUID().toString().replace("-", "");
+    return UUID.randomUUID().toString().replace("-", "");
   }
 
   // ==================== 内部方法 ====================

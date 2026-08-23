@@ -12,8 +12,8 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.engine.FlowUrgeLimiter;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
@@ -44,10 +44,15 @@ public class FlowTaskUrgeService {
 
   /**
    * P1-9: 实例级催办 — 通知当前节点所有待办处理人。
-   *
+   * 
    * <p>P0-2: 同一催办人对同一实例 30 分钟内只允许一次。
+   * 
+   * 
    *
-   * @return 被催办人 ID 列表
+   * @param instanceId 参数说明
+   * @param operatorId 参数说明
+   * @param comment 参数说明
+   * @return 返回值说明
    */
   public List<String> urge(String instanceId, String operatorId, String comment) {
     if (operatorId != null
@@ -73,8 +78,14 @@ public class FlowTaskUrgeService {
 
   /**
    * 节点级催办 — 仅通知指定节点的待办处理人。
-   *
+   * 
    * <p>nodeCode 为空时退化为实例级催办。 P0-2: 节点级限流（同一催办人对该节点 30 分钟内只允许一次）。
+   *
+   * @param instanceId 参数说明
+   * @param nodeCode 参数说明
+   * @param operatorId 参数说明
+   * @param comment 参数说明
+   * @return 返回值说明
    */
   public List<String> urgeByNode(
       String instanceId, String nodeCode, String operatorId, String comment) {
@@ -106,7 +117,11 @@ public class FlowTaskUrgeService {
     return urged;
   }
 
-  /** 记录催办指标（按 flowCode 维度） */
+  /**
+   * 记录催办指标（按 flowCode 维度）
+   *
+   * @param instanceId 参数说明
+   */
   private void recordUrgeMetrics(String instanceId) {
     if (flowMetrics == null) {
       return;

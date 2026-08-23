@@ -36,10 +36,20 @@ import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 @Mapper
 public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLogDO> {
 
-  /** 查某实例的全部审计日志（按时间正序） */
+  /**
+   * 查某实例的全部审计日志（按时间正序）
+   *
+   * @param instanceId 参数说明
+   * @return 返回值说明
+   */
   List<FlowAuditLogDO> selectByInstanceId(@Param("instanceId") String instanceId);
 
-  /** 查某任务的操作记录 */
+  /**
+   * 查某任务的操作记录
+   *
+   * @param taskId 参数说明
+   * @return 返回值说明
+   */
   List<FlowAuditLogDO> selectByTaskId(@Param("taskId") String taskId);
 
   /**

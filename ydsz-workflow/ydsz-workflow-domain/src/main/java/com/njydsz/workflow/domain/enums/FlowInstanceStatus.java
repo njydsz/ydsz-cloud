@@ -81,8 +81,10 @@ public enum FlowInstanceStatus implements BaseStatusEnum<FlowInstanceStatus> {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>与 {@link #isFinished()} 语义对齐：终态包含已回滚（ROLLED_BACK）。
+   *
+   * @return 返回值说明
    */
   @Override
   public boolean isTerminal() {

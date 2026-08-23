@@ -87,7 +87,12 @@ public class SearchMetrics {
             .register(meterRegistry);
   }
 
-  /** P2-6: 注册 Gauge 指标 — 缓存大小、熔断器状态、零结果率、索引失败率 */
+  /**
+   * P2-6: 注册 Gauge 指标 — 缓存大小、熔断器状态、零结果率、索引失败率。
+   *
+   * @param cacheSizeSupplier 缓存大小供应器
+   * @param circuitOpenSupplier 熔断器状态供应器
+   */
   public void bindGauges(
       Supplier<Integer> cacheSizeSupplier, Supplier<Boolean> circuitOpenSupplier) {
     if (meterRegistry == null) {
@@ -157,7 +162,11 @@ public class SearchMetrics {
     }
   }
 
-  /** 获取零结果率 */
+  /**
+   * 获取零结果率。
+   *
+   * @return 零结果率（0-1）
+   */
   public double getZeroResultRate() {
     long total = totalSearches.get();
     if (total == 0) {
@@ -166,7 +175,11 @@ public class SearchMetrics {
     return (double) zeroResultSearches.get() / total;
   }
 
-  /** 获取索引失败率 */
+  /**
+   * 获取索引失败率。
+   *
+   * @return 索引失败率（0-1）
+   */
   public double getIndexFailureRate() {
     long total = totalIndexOps.get();
     if (total == 0) {
@@ -282,11 +295,20 @@ public class SearchMetrics {
       this.laps = new ArrayList<>(4);
     }
 
+    /**
+     * 创建分段计时器。
+     *
+     * @return 新的计时器实例
+     */
     public static SearchPhaseTimer start() {
       return new SearchPhaseTimer();
     }
 
-    /** 记录一次分段计时，返回距上次 lap 的毫秒数。 */
+    /**
+     * 记录一次分段计时，返回距上次 lap 的毫秒数。
+     *
+     * @return 距上次 lap 的毫秒数
+     */
     public long lap() {
       long now = System.nanoTime();
       long elapsed = (now - lastLapTime) / 1_000_000;
@@ -295,12 +317,20 @@ public class SearchMetrics {
       return elapsed;
     }
 
-    /** 获取全部 lap 耗时（毫秒）。 */
-    public java.util.List<Long> getLaps() {
-      return java.util.List.copyOf(laps);
+    /**
+     * 获取全部 lap 耗时（毫秒）。
+     *
+     * @return lap 耗时列表（不可变）
+     */
+    public List<Long> getLaps() {
+      return List.copyOf(laps);
     }
 
-    /** 获取总耗时（毫秒）。 */
+    /**
+     * 获取总耗时（毫秒）。
+     *
+     * @return 总耗时（毫秒）
+     */
     public long getTotalMs() {
       return (System.nanoTime() - baseTime) / 1_000_000;
     }

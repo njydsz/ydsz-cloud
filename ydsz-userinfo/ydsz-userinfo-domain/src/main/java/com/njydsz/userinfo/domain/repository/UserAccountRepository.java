@@ -6,9 +6,9 @@ import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
-import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
@@ -287,6 +287,7 @@ public interface UserAccountRepository {
    * <p>扫描条件：ban_type = 'TEMPORARY' 且 ban_expire_at &lt;= 当前时间。
    * 用于定时任务自动解封场景。
    *
+   * @param banType 封禁类型（如 TEMPORARY）
    * @param expireAt 到期时间阈值（一般传当前时间）
    * @return 到期用户 ID 列表
    */

@@ -258,20 +258,34 @@ public class FileConfiguration {
     UploadConcurrencyGuard guard =
         buildConcurrencyGuardIfEnabled(
             fileProperties, redisProvider.getIfAvailable(), lockerProvider);
-    if (guard != null) factory.setConcurrencyGuard(guard);
+    if (guard != null) {
+      factory.setConcurrencyGuard(guard);
+    }
     FileDedupService dedup = dedupProvider.getIfAvailable();
-    if (dedup != null) factory.setFileDedupService(dedup);
+    if (dedup != null) {
+      factory.setFileDedupService(dedup);
+    }
     VirusScanner scanner = virusScannerProvider.getIfAvailable();
-    if (scanner != null) factory.setVirusScanner(scanner);
+    if (scanner != null) {
+      factory.setVirusScanner(scanner);
+    }
     FileMetrics metrics = metricsProvider.getIfAvailable();
-    if (metrics != null) factory.setFileMetrics(metrics);
+    if (metrics != null) {
+      factory.setFileMetrics(metrics);
+    }
     StorageRetryHelper retryHelper = retryHelperProvider.getIfAvailable();
-    if (retryHelper != null) factory.setRetryHelper(retryHelper);
+    if (retryHelper != null) {
+      factory.setRetryHelper(retryHelper);
+    }
     // 注入 ydsz-common-thread 管理的线程池（Bean 名称：fileDeleteExecutor / fileUploadExecutor）
     ExecutorService deleteExecutor = deleteExecutorProvider.getIfAvailable();
-    if (deleteExecutor != null) factory.setDeleteExecutor(deleteExecutor);
+    if (deleteExecutor != null) {
+      factory.setDeleteExecutor(deleteExecutor);
+    }
     ExecutorService asyncUploadExecutor = asyncUploadExecutorProvider.getIfAvailable();
-    if (asyncUploadExecutor != null) factory.setAsyncUploadExecutor(asyncUploadExecutor);
+    if (asyncUploadExecutor != null) {
+      factory.setAsyncUploadExecutor(asyncUploadExecutor);
+    }
     return factory;
   }
 
@@ -290,9 +304,13 @@ public class FileConfiguration {
       FileProperties props,
       StringRedisTemplate redis,
       ObjectProvider<DistributedLocker> lockerProvider) {
-    if (redis == null) return null;
+    if (redis == null) {
+      return null;
+    }
     var config = props.getConcurrencyControl();
-    if (config == null || !config.isEnabled()) return null;
+    if (config == null || !config.isEnabled()) {
+      return null;
+    }
     DistributedLocker locker = lockerProvider.getIfAvailable();
     if (locker == null) {
       log.info("[FileConfiguration] DistributedLocker 不可用，UploadConcurrencyGuard 降级为原生 Redis 操作");

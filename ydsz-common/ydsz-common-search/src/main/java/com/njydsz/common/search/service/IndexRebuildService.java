@@ -72,7 +72,8 @@ public class IndexRebuildService {
    * @return 默认重建线程池
    */
   public static ThreadPoolTaskExecutor createDefaultRebuildExecutor() {
-    // CHECKSTYLE.OFF: RegexpSinglelineJava
+        // CHECKSTYLE.OFF: RegexpSinglelineJava
+    // 兜底线程池：仅在外部未注入线程池时使用，生产环境由 ydsz.thread.pools.* 统一管理
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     // CHECKSTYLE.ON: RegexpSinglelineJava
     executor.setCorePoolSize(1);
@@ -169,7 +170,9 @@ public class IndexRebuildService {
    * @return 索引文档数，失败返回 -1
    */
   public int rebuildWithBlueGreen(String type, String tenantId) {
-    if (rebuilding) return -1;
+    if (rebuilding) {
+      return -1;
+    }
     rebuilding = true;
     progress = 0;
     total = 0;
@@ -232,7 +235,9 @@ public class IndexRebuildService {
    * @return 进度百分比；{@code -1} 表示不在重建状态
    */
   public int getProgressPercent() {
-    if (!rebuilding || total == 0) return rebuilding ? 0 : -1;
+    if (!rebuilding || total == 0) {
+      return rebuilding ? 0 : -1;
+    }
     return Math.min(100, (progress * 100) / total);
   }
 

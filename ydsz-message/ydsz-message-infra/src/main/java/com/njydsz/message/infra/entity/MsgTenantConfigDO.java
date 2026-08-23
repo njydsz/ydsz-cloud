@@ -1,13 +1,12 @@
 package com.njydsz.message.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
  * 多租户消息配置持久化实体 — 提供租户级发送配额与通道覆盖能力。

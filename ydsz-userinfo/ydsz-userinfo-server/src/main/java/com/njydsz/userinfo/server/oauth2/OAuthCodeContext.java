@@ -1,7 +1,9 @@
 package com.njydsz.userinfo.server.oauth2;
 
-import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.Builder;
+
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
  * OAuth2 授权码上下文（P1-5：Map→Record 结构化重构）。
@@ -26,6 +28,16 @@ import lombok.Builder;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @param clientId OAuth2 客户端 ID
+ * @param userId 授权用户 ID
+ * @param username 授权用户名
+ * @param tenantId 租户 ID
+ * @param redirectUri 回调地址（已在 authorize 端点校验白名单）
+ * @param scope 授权 scope
+ * @param nonce OIDC nonce（可为 null，用于防重放）
+ * @param codeChallenge PKCE code_challenge（可为 null）
+ * @param codeChallengeMethod PKCE code_challenge_method（可为 null）
+ * @param state OAuth2 CSRF 防护 state 参数（可为 null）
  */
 @Builder
 public record OAuthCodeContext(
@@ -42,11 +54,11 @@ public record OAuthCodeContext(
 
   /** 序列化为 JSON 字符串（存储到 Redis）。 */
   public String toJson() {
-    return com.njydsz.common.json.YdszJson.toJson(this);
+    return YdszJson.toJson(this);
   }
 
   /** 从 JSON 字符串反序列化。 */
   public static OAuthCodeContext fromJson(String json) {
-    return com.njydsz.common.json.YdszJson.fromJson(json, OAuthCodeContext.class);
+    return YdszJson.fromJson(json, OAuthCodeContext.class);
   }
 }

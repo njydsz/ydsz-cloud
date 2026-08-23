@@ -35,7 +35,18 @@ public interface ReconcileDataProvider {
   List<CostAllocationRecord> listCostAllocations(
       String projectId, LocalDate startDate, LocalDate endDate);
 
-  /** 工时记录 DTO */
+  /**
+   * 工时记录 DTO。
+   *
+   * @param id 记录 ID
+   * @param projectId 项目 ID
+   * @param userId 用户 ID
+   * @param entryDate 工时日期
+   * @param hours 工时数
+   * @param billableRate 计费费率
+   * @param status 状态
+   * @param approvedBy 审批人
+   */
   record TimeEntryRecord(
       String id,
       String projectId,
@@ -46,7 +57,17 @@ public interface ReconcileDataProvider {
       String status,
       String approvedBy) {}
 
-  /** 成本分摊记录 DTO */
+  /**
+   * 成本分摊记录 DTO。
+   *
+   * @param id 记录 ID
+   * @param projectId 项目 ID
+   * @param allocationDate 分摊日期
+   * @param amount 分摊金额
+   * @param costType 成本类型
+   * @param sourceType 来源类型
+   * @param approvedBy 审批人
+   */
   record CostAllocationRecord(
       String id,
       String projectId,

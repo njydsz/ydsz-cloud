@@ -106,7 +106,11 @@ public class SearchCacheService {
     log.info("[SearchCache] 缓存已清空");
   }
 
-  /** 获取缓存大小 */
+  /**
+   * 获取缓存大小。
+   *
+   * @return 缓存条目数
+   */
   public int size() {
     return cache.size();
   }

@@ -4,13 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.workflow.domain.vo.FlowBatchDeployResultVO;
-import com.njydsz.workflow.domain.vo.FlowDefinitionDetailVO;
-import com.njydsz.workflow.domain.vo.FlowDefinitionDiffVO;
-import com.njydsz.workflow.domain.vo.FlowDefinitionVersionVO;
-import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
-import com.njydsz.workflow.domain.vo.FlowRollbackResultVO;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -41,13 +34,19 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
+import com.njydsz.workflow.domain.vo.FlowBatchDeployResultVO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionDetailVO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionDiffVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVersionVO;
 import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
+import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
+import com.njydsz.workflow.domain.vo.FlowRollbackResultVO;
+import com.njydsz.workflow.server.service.FlowConditionExprService;
+import com.njydsz.workflow.server.service.FlowCustomButtonService;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 import com.njydsz.workflow.server.service.FlowSlaService;
-import com.njydsz.workflow.server.service.FlowConditionExprService;
-import com.njydsz.workflow.server.service.FlowCustomButtonService;
 
 /**
  * 流程定义统一 Controller
@@ -263,6 +262,9 @@ public class FlowDefinitionController {
    *
    * <p>前端用 bpmn-js 以只读模式渲染（禁用编辑 palette），展示流程全貌。 数据与 {@link #getDefinitionDetail} 一致，额外携带 {@code
    * readOnly=true} 标志。
+   *
+   * @param id 流程定义 ID
+   * @return 只读模式的流程定义详情
    */
   @GetMapping("/definition/{id}/preview")
   @Operation(summary = "流程定义预览（只读）")

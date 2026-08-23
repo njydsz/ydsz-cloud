@@ -1,9 +1,6 @@
 package com.njydsz.cronjob.server.core.executor;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -51,6 +48,12 @@ import com.njydsz.cronjob.server.config.ExecutorConfig;
 @Component
 @RequiredArgsConstructor
 public class TenantAwareExecutorPool {
+  /** 线程池空闲保活时间（秒） */
+  private static final long KEEPALIVE_SECONDS = 60;
+
+  /** 终止等待（秒） */
+  private static final long TERMINATION_WAIT_SECONDS = 5;
+
 
   private final CronjobProperties cronjobProperties;
 
@@ -145,7 +148,7 @@ public class TenantAwareExecutorPool {
         ExecutorUtils.builder()
             .corePoolSize(corePoolSize)
             .maxPoolSize(maxPoolSize)
-            .keepAliveTime(60L, TimeUnit.SECONDS)
+            .keepAliveTime(KEEPALIVE_SECONDS, TimeUnit.SECONDS)
             .queueCapacity(queueCapacity)
             .threadNamePrefix("job-tenant-bucket-" + bucketIndex + "-")
             .daemon(true)
@@ -196,7 +199,7 @@ public class TenantAwareExecutorPool {
       if (pool != null) {
         try {
           pool.shutdown();
-          if (!pool.awaitTermination(5, TimeUnit.SECONDS)) {
+          if (!pool.awaitTermination(TERMINATION_WAIT_SECONDS, TimeUnit.SECONDS)) {
             pool.shutdownNow();
           }
         } catch (InterruptedException e) {

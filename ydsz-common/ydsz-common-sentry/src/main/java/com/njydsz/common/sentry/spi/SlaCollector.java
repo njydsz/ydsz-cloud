@@ -38,6 +38,9 @@ public interface SlaCollector {
    */
   void recordTotal(String name, long tookMillis, boolean success);
 
-  /** 判断采集器是否可用 */
+  /**
+   * 判断采集器是否可用。
+   * @return 判断采集器是否可用
+   */
   boolean isAvailable();
 }

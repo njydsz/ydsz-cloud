@@ -85,8 +85,12 @@ public interface FlowCcService {
 
   /**
    * 查"抄送我的"分页（已废弃）。
+   * 
    *
-   * @deprecated 使用 {@link #pageMyCc(String, String, FlowCcQuery)} 替代
+   * @param tenantId 参数说明
+   * @param userId 参数说明
+   * @param query 参数说明
+   * @return 返回值说明
    */
   @Deprecated
   List<FlowCcVO> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query);
@@ -103,8 +107,12 @@ public interface FlowCcService {
 
   /**
    * 查"抄送我的"总数（已废弃）。
+   * 
    *
-   * @deprecated 使用 {@link #countMyCc(String, String, FlowCcQuery)} 替代
+   * @param tenantId 参数说明
+   * @param userId 参数说明
+   * @param query 参数说明
+   * @return 返回值说明
    */
   @Deprecated
   long countMyCc(String tenantId, String userId, FlowCcQueryDTO query);

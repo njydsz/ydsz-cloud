@@ -177,7 +177,12 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
           + "WHERE id = #{logId} AND is_slow = 0 AND deleted = 0")
   int markSlow(@Param("logId") String logId, @Param("slowThresholdMs") long slowThresholdMs);
 
-  /** P1-3: 查询指定节点上 RUNNING 状态的日志（故障转移用）。 */
+  /**
+   * P1-3: 查询指定节点上 RUNNING 状态的日志（故障转移用）。
+   *
+   * @param nodeId 参数说明
+   * @return 返回值说明
+   */
   @Select(
       "SELECT id, job_id, job_key, start_time, end_time, duration_ms, "
           + "       status, error_message, params_json, result_json, trace_id, "
@@ -188,7 +193,13 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
           + "WHERE status = 'RUNNING' AND deleted = 0 AND exec_node_id = #{nodeId}")
   List<JobLog> selectRunningByNode(@Param("nodeId") String nodeId);
 
-  /** P1-3: 标记指定节点上 RUNNING 日志为 FAILED（节点掉线故障转移）。 */
+  /**
+   * P1-3: 标记指定节点上 RUNNING 日志为 FAILED（节点掉线故障转移）。
+   *
+   * @param nodeId 参数说明
+   * @param now 参数说明
+   * @return 返回值说明
+   */
   @Update(
       "UPDATE ydsz_job_log "
           + "SET status = 'FAILED', end_time = #{now}, "
@@ -308,9 +319,13 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
    */
   /**
    * 批量删除过期日志（基于 ctid 物理地址，避免回表）。
-   *
+   * 
    * <p>PostgreSQL 特有优化：使用 ctid = ANY(ARRAY(...)) 替代 id IN (SELECT id ...)，
    * 直接通过物理行地址定位数据页，避免二次索引扫描，大表删除性能提升 3-5 倍。
+   *
+   * @param before 参数说明
+   * @param limit 参数说明
+   * @return 返回值说明
    */
   @Delete(
       "DELETE FROM ydsz_job_log "

@@ -80,36 +80,58 @@ public class RabbitMQProperties extends QueueProperties {
   /** 最大并发消费者数 */
   private int maxConcurrentConsumers = 10;
 
-  /** 解析获取 host */
+  /**
+   * 解析获取 host。
+   *
+   * @return 主机地址（未配置时默认 {@code "localhost"}）
+   */
   public String resolvedHost() {
     return isNotBlank(host) ? host : "localhost";
   }
 
-  /** 解析获取 port */
+  /**
+   * 解析获取 port。
+   *
+   * @return 端口（未配置时默认 {@code 5672}）
+   */
   public int resolvedPort() {
     return rabbitPort > 0 ? rabbitPort : 5672;
   }
 
-  /** 解析获取 username */
+  /**
+   * 解析获取 username。
+   *
+   * @return 用户名（未配置时默认 {@code "guest"}）
+   */
   public String resolvedUsername() {
     return isNotBlank(username) ? username : "guest";
   }
 
   /**
-   * 解析获取 password
+   * 解析获取 password。
    *
    * <p>若显式配置为空则直接返回空，由连接层报错，不再回退到默认弱密码。
+   *
+   * @return 密码（可为空）
    */
   public String resolvedPassword() {
     return password;
   }
 
-  /** 解析获取 virtualHost */
+  /**
+   * 解析获取 virtualHost。
+   *
+   * @return 虚拟主机（未配置时默认 {@code "/"}）
+   */
   public String resolvedVirtualHost() {
     return isNotBlank(virtualHost) ? virtualHost : "/";
   }
 
-  /** 解析获取 queueName */
+  /**
+   * 解析获取 queueName。
+   *
+   * @return 队列名（未配置时默认 {@code "ydsz-rabbitmq-queue"}）
+   */
   public String resolvedQueueName() {
     return isNotBlank(queueName) ? queueName : "ydsz-rabbitmq-queue";
   }

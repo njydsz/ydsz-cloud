@@ -191,14 +191,18 @@ public class RulePermissionChecker {
     String exactGlobal = namespace + SEGMENT_SEPARATOR + action;
     String prefix = exactGlobal + SEGMENT_SEPARATOR;
     for (String perm : permissions) {
-      if (perm == null || perm.isBlank()) continue;
+      if (perm == null || perm.isBlank()) {
+        continue;
+      }
       // 精确匹配 namespace:action（无路径段，全目录权限）
       if (perm.equals(exactGlobal)) {
         patterns.add("");
         continue;
       }
       // 前缀匹配 namespace:action:categoryPath
-      if (!perm.startsWith(prefix)) continue;
+      if (!perm.startsWith(prefix)) {
+        continue;
+      }
       String rest = perm.substring(prefix.length());
       if (rest.isBlank()) {
         // namespace:action: 格式（第 4 段为空），全目录权限

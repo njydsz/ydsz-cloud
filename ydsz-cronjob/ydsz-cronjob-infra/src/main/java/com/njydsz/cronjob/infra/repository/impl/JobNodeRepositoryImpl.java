@@ -5,10 +5,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.cronjob.domain.repository.JobNodeRepository;
 import com.njydsz.cronjob.domain.vo.JobNodeVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
@@ -26,6 +26,10 @@ import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
 @Repository
 @RequiredArgsConstructor
 public class JobNodeRepositoryImpl implements JobNodeRepository {
+
+  /** 默认心跳阈值（秒）：60 秒 */
+  private static final long DEFAULT_HEARTBEAT_THRESHOLD_SECONDS = 60L;
+
 
   private final JobNodeMapper jobNodeMapper;
   private final CronjobConverter converter;
@@ -48,7 +52,7 @@ public class JobNodeRepositoryImpl implements JobNodeRepository {
   @Override
   public List<JobNodeVO> findOnlineNodes() {
     // 默认心跳阈值：60 秒（与 DbNodeDiscoveryStrategy 离线阈值默认值保持一致）
-    long thresholdSeconds = 60L;
+    long thresholdSeconds = DEFAULT_HEARTBEAT_THRESHOLD_SECONDS;
     LocalDateTime cutoff = LocalDateTime.now().minusSeconds(thresholdSeconds);
     LambdaQueryWrapper<JobNode> wrapper = new LambdaQueryWrapper<>();
     wrapper

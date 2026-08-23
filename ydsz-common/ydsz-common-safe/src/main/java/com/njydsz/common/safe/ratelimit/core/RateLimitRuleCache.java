@@ -35,7 +35,12 @@ public class RateLimitRuleCache {
     reload();
   }
 
-  /** 获取资源对应的限流器 */
+  /**
+   * 获取资源对应的限流器（不存在时按规则懒加载）。
+   *
+   * @param resource 资源标识
+   * @return 限流器实例（无匹配规则时为 {@code Optional.empty()}
+   */
   public Optional<RateLimiter> getLimiter(String resource) {
     RateLimiter limiter = limiters.get(resource);
     if (limiter != null) {
@@ -51,7 +56,12 @@ public class RateLimitRuleCache {
     return Optional.empty();
   }
 
-  /** 获取或创建限流器 */
+  /**
+   * 获取或创建限流器。
+   *
+   * @param rule 限流规则
+   * @return 与规则关联的限流器实例
+   */
   public RateLimiter getOrCreate(RateLimitRule rule) {
     return limiters.computeIfAbsent(rule.getResource(), k -> RateLimiterFactory.create(rule));
   }
@@ -96,7 +106,11 @@ public class RateLimitRuleCache {
     limiters.clear();
   }
 
-  /** 规则数量 */
+  /**
+   * 规则数量。
+   *
+   * @return 缓存中的限流器数量
+   */
   public int size() {
     return limiters.size();
   }

@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.vo.MsgLogVO;
-import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
  * 消息归档服务接口。

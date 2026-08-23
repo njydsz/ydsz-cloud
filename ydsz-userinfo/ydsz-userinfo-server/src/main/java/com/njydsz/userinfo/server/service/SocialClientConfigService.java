@@ -1,7 +1,6 @@
 package com.njydsz.userinfo.server.service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +48,9 @@ import com.njydsz.userinfo.domain.vo.SocialClientVO;
 @Service
 @RequiredArgsConstructor
 public class SocialClientConfigService {
+  /** YAML 配置默认排序值（排在 DB 配置之后） */
+  private static final int YAML_CONFIG_SORT_ORDER = 999;
+
 
   private final SocialClientRepository socialClientRepository;
   private final SocialAuthProperties socialAuthProperties;
@@ -89,7 +91,7 @@ public class SocialClientConfigService {
           vo.setScope(entry.getValue().getScope());
           vo.setRedirectUri(entry.getValue().getRedirectUri());
           vo.setStatus("ENABLED");
-          vo.setSortOrder(999); // YAML 配置排在 DB 配置后面
+          vo.setSortOrder(YAML_CONFIG_SORT_ORDER); // YAML 配置排在 DB 配置后面
           vo.setRemark("YAML 静态配置");
           merged.add(vo);
         }

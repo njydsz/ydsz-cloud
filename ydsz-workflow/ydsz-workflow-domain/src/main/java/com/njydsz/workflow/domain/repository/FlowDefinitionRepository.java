@@ -38,8 +38,10 @@ public interface FlowDefinitionRepository {
 
   /**
    * 保存流程定义（已废弃）。
+   * 
    *
-   * @deprecated 使用 {@link #save(FlowDefinitionDTO)} 替代，CUD 入参应使用 DTO
+   * @param vo 参数说明
+   * @return 返回值说明
    */
   @Deprecated
   FlowDefinitionVO save(FlowDefinitionVO vo);
@@ -98,8 +100,10 @@ public interface FlowDefinitionRepository {
 
   /**
    * 更新流程定义（已废弃）。
+   * 
    *
-   * @deprecated 使用 {@link #update(FlowDefinitionDTO)} 替代，CUD 入参应使用 DTO
+   * @param vo 参数说明
+   * @return 返回值说明
    */
   @Deprecated
   FlowDefinitionVO update(FlowDefinitionVO vo);

@@ -16,8 +16,8 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowEventContext;
+import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
 import com.njydsz.workflow.server.engine.listener.FlowListenerConfigReader;
@@ -264,7 +264,9 @@ public class FlowTaskSupport {
    * @param taskId 任务 ID（仅用于日志，可空）
    */
   public void fireEvent(Consumer<FlowEventListener> action, String taskId) {
-    if (eventListeners == null) return;
+    if (eventListeners == null) {
+      return;
+    }
     for (FlowEventListener listener : eventListeners) {
       try {
         action.accept(listener);
@@ -298,7 +300,9 @@ public class FlowTaskSupport {
       String nodeCode,
       Map<String, Object> variables,
       FlowEventContext ctx) {
-    if (listenerPluginExecutor == null) return;
+    if (listenerPluginExecutor == null) {
+      return;
+    }
     try {
       listenerPluginExecutor.execute(
           FlowListenerConfigReader.readListeners(nodeExt),
@@ -324,7 +328,9 @@ public class FlowTaskSupport {
    * @param taskId 任务 ID（可空）
    */
   public void publishWorkflowEvent(String eventType, String instanceId, String taskId) {
-    if (eventPublisher == null) return;
+    if (eventPublisher == null) {
+      return;
+    }
     try {
       eventPublisher.publishEvent(new FlowWorkflowEvent(this, eventType, instanceId, taskId, null));
     } catch (Exception e) {

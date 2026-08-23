@@ -33,8 +33,10 @@ public abstract class SimpleRepositoryImpl<VO, DO, MAPPER extends BaseMapper<DO>
 
   /**
    * 构造通用仓储基类。
+   * 
    *
-   * @param mapper MyBatis Mapper 实例
+   * @param mapper 参数说明
+   * @return 返回值说明
    */
   protected SimpleRepositoryImpl(MAPPER mapper) {
     this.mapper = mapper;

@@ -60,7 +60,11 @@ public class FeignProperties {
   /** 响应拦截器配置 */
   private final ResponseInterceptor responseInterceptor = new ResponseInterceptor();
 
-  /** 解析日志级别为Feign枚举值 */
+  /**
+   * 解析日志级别为 Feign 枚举值。
+   *
+   * @return Feign 日志级别（未配置时默认 {@link Logger.Level#BASIC}）
+   */
   public Logger.Level resolvedLoggerLevel() {
     if (loggerLevel == null || loggerLevel.isBlank()) {
       return Logger.Level.BASIC;

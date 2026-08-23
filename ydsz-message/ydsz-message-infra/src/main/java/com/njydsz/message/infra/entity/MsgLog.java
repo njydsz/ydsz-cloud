@@ -5,15 +5,15 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.njydsz.message.domain.enums.core.MessageChannelEnum;
-import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
-import com.njydsz.message.domain.enums.core.MessageStatusEnum;
-import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
-import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.message.domain.enums.core.MessageChannelEnum;
+import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
+import com.njydsz.message.domain.enums.core.MessageStatusEnum;
+import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
+import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 
 /**
  * 消息发送日志领域实体 — 全通道发送全量记录的事实表。

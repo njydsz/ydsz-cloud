@@ -62,17 +62,29 @@ public class RocketMQProperties extends QueueProperties {
   /** 最大重试次数 */
   private int maxRetryCount = 3;
 
-  /** 解析获取 namesrvAddr */
+  /**
+   * 解析获取 namesrvAddr。
+   *
+   * @return NameServer 地址（未配置时默认 {@code "localhost:9876"}）
+   */
   public String resolvedNamesrvAddr() {
     return isNotBlank(namesrvAddr) ? namesrvAddr : "localhost:9876";
   }
 
-  /** 解析获取 groupId */
+  /**
+   * 解析获取 groupId。
+   *
+   * @return 消费者组 ID（未配置时默认 {@code "ydsz-consumer-group"}）
+   */
   public String resolvedGroupId() {
     return isNotBlank(groupId) ? groupId : "ydsz-consumer-group";
   }
 
-  /** 解析获取 topic */
+  /**
+   * 解析获取 topic。
+   *
+   * @return topic 名称（未配置时默认 {@code "ydsz-rocketmq-topic"}）
+   */
   public String resolvedTopic() {
     return isNotBlank(topic) ? topic : "ydsz-rocketmq-topic";
   }

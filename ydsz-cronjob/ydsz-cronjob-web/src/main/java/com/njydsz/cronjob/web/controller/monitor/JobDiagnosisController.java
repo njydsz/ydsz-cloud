@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.web.controller.monitor;
 
+import java.net.InetAddress;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -18,11 +19,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.cronjob.server.core.LockKeyUtil;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.core.LockKeyUtil;
 import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
@@ -49,6 +50,18 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @RequestMapping("/api/v1/cronjob/monitor/diagnosis")
 @RequiredArgsConstructor
 public class JobDiagnosisController {
+  /** Map 初始容量：16 */
+  private static final int MAP_CAPACITY_16 = 16;
+
+  /** Map 初始容量：8 */
+  private static final int MAP_CAPACITY_8 = 8;
+
+  /** 最近日志条数 */
+  private static final int RECENT_LOG_LIMIT = 5;
+
+  /** Map 初始容量：4 */
+  private static final int MAP_CAPACITY_4 = 4;
+
 
   /** 日志 Repository（DDD 分层：Controller 通过 Repository 接口查询日志） */
   private final JobLogRepository jobLogRepository;
@@ -76,7 +89,7 @@ public class JobDiagnosisController {
   @GetMapping("/{jobKey}")
   public YdszResponse<Map<String, Object>> diagnose(
       @Parameter(description = "任务 KEY", required = true) @PathVariable String jobKey) {
-    Map<String, Object> diagnosis = new HashMap<>(16);
+    Map<String, Object> diagnosis = new HashMap<>(MAP_CAPACITY_16);
 
     // 1. 基本信息
     diagnosis.put("jobKey", jobKey);
@@ -87,7 +100,7 @@ public class JobDiagnosisController {
     Optional<JobLogVO> lastLogOpt = jobLogRepository.findLatestByJobKey(jobKey);
     if (lastLogOpt.isPresent()) {
       JobLogVO lastLog = lastLogOpt.get();
-      Map<String, Object> lastLogInfo = new HashMap<>(8);
+      Map<String, Object> lastLogInfo = new HashMap<>(MAP_CAPACITY_8);
       lastLogInfo.put("logId", lastLog.getId());
       lastLogInfo.put("triggerType", lastLog.getTriggerType());
       lastLogInfo.put("startTime", String.valueOf(lastLog.getStartTime()));
@@ -102,7 +115,7 @@ public class JobDiagnosisController {
     }
 
     // 3. 最近 5 次执行记录数
-    List<JobLogVO> recentLogs = jobLogRepository.findByJobKey(jobKey, 5);
+    List<JobLogVO> recentLogs = jobLogRepository.findByJobKey(jobKey, RECENT_LOG_LIMIT);
     diagnosis.put("recentExecutions", recentLogs.size());
 
     // 4. 当前 Redis 锁状态
@@ -119,12 +132,12 @@ public class JobDiagnosisController {
     }
 
     // 6. 系统负载评分（通过 CronjobMetrics 暴露的 Gauge 获取）
-    Map<String, Object> loadInfo = new HashMap<>(4);
+    Map<String, Object> loadInfo = new HashMap<>(MAP_CAPACITY_4);
     loadInfo.put("systemLoadScore", CronjobMetrics.getSystemLoadScore());
     diagnosis.put("systemLoad", loadInfo);
 
     // 7. 配置摘要
-    Map<String, Object> configInfo = new HashMap<>(4);
+    Map<String, Object> configInfo = new HashMap<>(MAP_CAPACITY_4);
     configInfo.put("maxConcurrent", cronjobProperties.getExecutor().getMaxConcurrent());
     configInfo.put("leaderEnabled", cronjobProperties.getLeader().isEnabled());
     diagnosis.put("config", configInfo);
@@ -135,7 +148,7 @@ public class JobDiagnosisController {
   /** 获取当前节点标识 */
   private String getNodeId() {
     try {
-      return java.net.InetAddress.getLocalHost().getHostName();
+      return InetAddress.getLocalHost().getHostName();
     } catch (Exception e) {
       return "unknown";
     }

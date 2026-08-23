@@ -92,7 +92,13 @@ public class ExpressionTraceNode {
     GROUP
   }
 
-  /** 快速构建变量节点 */
+  /**
+   * 快速构建变量节点。
+   *
+   * @param name 变量名
+   * @param value 变量值
+   * @return 变量节点
+   */
   public static ExpressionTraceNode variable(String name, Object value) {
     return ExpressionTraceNode.builder()
         .nodeType(NodeType.VARIABLE)
@@ -103,7 +109,12 @@ public class ExpressionTraceNode {
         .build();
   }
 
-  /** 快速构建字面值节点 */
+  /**
+   * 快速构建字面值节点。
+   *
+   * @param value 字面值
+   * @return 字面值节点
+   */
   public static ExpressionTraceNode literal(Object value) {
     return ExpressionTraceNode.builder()
         .nodeType(NodeType.LITERAL)
@@ -113,7 +124,14 @@ public class ExpressionTraceNode {
         .build();
   }
 
-  /** 快速构建逻辑运算节点 */
+  /**
+   * 快速构建逻辑运算节点。
+   *
+   * @param operator 逻辑操作符
+   * @param result 运算结果
+   * @param children 子节点（操作数）
+   * @return 逻辑运算节点
+   */
   public static ExpressionTraceNode logical(
       String operator, Object result, ExpressionTraceNode... children) {
     List<ExpressionTraceNode> childList = new ArrayList<>(List.of(children));
@@ -131,7 +149,17 @@ public class ExpressionTraceNode {
         .build();
   }
 
-  /** 快速构建比较运算节点 */
+  /**
+   * 快速构建比较运算节点。
+   *
+   * @param operator 比较操作符
+   * @param leftExpr 左操作数表达式
+   * @param leftVal 左操作数值
+   * @param rightExpr 右操作数表达式
+   * @param rightVal 右操作数值
+   * @param result 比较结果
+   * @return 比较运算节点
+   */
   public static ExpressionTraceNode comparison(
       String operator,
       String leftExpr,

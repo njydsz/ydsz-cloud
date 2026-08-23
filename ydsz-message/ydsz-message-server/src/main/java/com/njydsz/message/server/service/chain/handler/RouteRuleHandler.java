@@ -25,6 +25,9 @@ import com.njydsz.message.server.service.config.RouteRuleService;
 @Order(200)
 @RequiredArgsConstructor
 public class RouteRuleHandler implements SendHandler {
+  /** 路由规则处理器优先级 */
+  private static final int ROUTE_RULE_PRIORITY = 200;
+
 
   private final RouteRuleService routeRuleService;
 
@@ -47,6 +50,6 @@ public class RouteRuleHandler implements SendHandler {
 
   @Override
   public int order() {
-    return 200;
+    return ROUTE_RULE_PRIORITY;
   }
 }

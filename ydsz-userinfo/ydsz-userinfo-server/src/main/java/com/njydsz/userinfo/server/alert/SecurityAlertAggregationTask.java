@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -47,6 +46,9 @@ public class SecurityAlertAggregationTask {
 
   /** 检测分析时间窗口（分钟） */
   private static final int ANALYSIS_WINDOW_MINUTES = 5;
+
+  /** 单次聚合提取的被攻击用户名上限 */
+  private static final int MAX_TARGETED_USERNAMES = 20;
 
   private final UserLoginHistoryRepository loginHistoryRepository;
   private final SecurityAlertService securityAlertService;
@@ -93,7 +95,7 @@ public class SecurityAlertAggregationTask {
           List<String> targetedUsernames = fails.stream()
               .map(UserLoginHistoryVO::getUsername)
               .distinct()
-              .limit(20)
+              .limit(MAX_TARGETED_USERNAMES)
               .toList();
 
           log.warn(

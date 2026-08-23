@@ -19,12 +19,12 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.enums.FlowSlaAction;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.enums.FlowSlaAction;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.FlowSlaService;
@@ -257,7 +257,13 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     return processOverdue(task, LocalDateTime.now());
   }
 
-  /** 内部方法：传入 now 以便测试和复用 */
+  /**
+   * 内部方法：传入 now 以便测试和复用
+   *
+   * @param task 参数说明
+   * @param now 参数说明
+   * @return 返回值说明
+   */
   @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
   public boolean processOverdue(FlowRunTaskDO task, LocalDateTime now) {
     if (task == null || task.getId() == null) {
@@ -318,8 +324,15 @@ public class FlowSlaServiceImpl implements FlowSlaService {
 
   /**
    * 发送 SLA 提醒
+   * 
+   * 
    *
-   * @return true=已发送，false=跳过（无 assignee 等）
+   * @param task 参数说明
+   * @param action 参数说明
+   * @param newUrgeCount 参数说明
+   * @param maxUrges 参数说明
+   * @param now 参数说明
+   * @return 返回值说明
    */
   private boolean sendUrge(
       FlowRunTaskDO task, FlowSlaAction action, int newUrgeCount, int maxUrges, LocalDateTime now) {
@@ -358,16 +371,23 @@ public class FlowSlaServiceImpl implements FlowSlaService {
 
   /**
    * 执行最终动作（NOTIFY / AUTO_PASS / AUTO_REJECT / ESCALATE）
-   *
+   * 
    * <p>P1-3 闭环语义：每个 action 必须有明确终态，禁止"标记 TIMEOUT 但流程卡死"。
-   *
+   * 
    * <ul>
-   *   <li>NOTIFY — 通知管理员介入，任务保持 PENDING（人工处理）
-   *   <li>ESCALATE — 转办给 escalateUserId，任务保持 PENDING（新办理人处理）
-   *   <li>AUTO_PASS — 系统自动通过，流程推进到下一节点
-   *   <li>AUTO_REJECT — 系统自动驳回，流程终止
-   *   <li>REMIND — 兼容旧配置，等同于 NOTIFY（不再标记 TIMEOUT）
+   * <li>NOTIFY — 通知管理员介入，任务保持 PENDING（人工处理）
+   * <li>ESCALATE — 转办给 escalateUserId，任务保持 PENDING（新办理人处理）
+   * <li>AUTO_PASS — 系统自动通过，流程推进到下一节点
+   * <li>AUTO_REJECT — 系统自动驳回，流程终止
+   * <li>REMIND — 兼容旧配置，等同于 NOTIFY（不再标记 TIMEOUT）
    * </ul>
+   *
+   * @param task 参数说明
+   * @param node 参数说明
+   * @param action 参数说明
+   * @param config 参数说明
+   * @param now 参数说明
+   * @return 返回值说明
    */
   private boolean executeFinalAction(
       FlowRunTaskDO task,
@@ -395,7 +415,14 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     }
   }
 
-  /** 自动通过：以系统身份调用 pass() */
+  /**
+   * 自动通过：以系统身份调用 pass()
+   *
+   * @param task 参数说明
+   * @param config 参数说明
+   * @param now 参数说明
+   * @return 返回值说明
+   */
   private boolean doAutoPass(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
     try {
       String comment = (String) config.getOrDefault("autoComment", "系统自动通过：超过 SLA 时限未处理");
@@ -419,7 +446,14 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     }
   }
 
-  /** 自动驳回：以系统身份调用 reject() */
+  /**
+   * 自动驳回：以系统身份调用 reject()
+   *
+   * @param task 参数说明
+   * @param config 参数说明
+   * @param now 参数说明
+   * @return 返回值说明
+   */
   private boolean doAutoReject(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
     try {
       String comment = (String) config.getOrDefault("autoComment", "系统自动驳回：超过 SLA 时限未处理");
@@ -443,7 +477,14 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     }
   }
 
-  /** 升级：转办给 escalateUserId（默认管理员） */
+  /**
+   * 升级：转办给 escalateUserId（默认管理员）
+   *
+   * @param task 参数说明
+   * @param config 参数说明
+   * @param now 参数说明
+   * @return 返回值说明
+   */
   private boolean doEscalate(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
     try {
       if (task.getSlaEscalated() != null && task.getSlaEscalated() == 1) {
@@ -550,8 +591,11 @@ public class FlowSlaServiceImpl implements FlowSlaService {
 
   /**
    * 解析 NOTIFY 通知目标列表
-   *
+   * 
    * <p>优先级：notifyUserIds（逗号分隔）→ escalateUserId → 默认管理员
+   *
+   * @param config 参数说明
+   * @return 返回值说明
    */
   private List<String> resolveNotifyTargets(Map<String, Object> config) {
     String notifyUserIds = readString(config, "notifyUserIds", null);
@@ -591,8 +635,12 @@ public class FlowSlaServiceImpl implements FlowSlaService {
 
   private Integer readInt(Map<String, Object> config, String key, Integer defaultValue) {
     Object val = config.get(key);
-    if (val == null) return defaultValue;
-    if (val instanceof Number n) return n.intValue();
+    if (val == null) {
+      return defaultValue;
+    }
+    if (val instanceof Number n) {
+      return n.intValue();
+    }
     try {
       return Integer.parseInt(String.valueOf(val));
     } catch (NumberFormatException e) {
@@ -602,7 +650,9 @@ public class FlowSlaServiceImpl implements FlowSlaService {
 
   private String readString(Map<String, Object> config, String key, String defaultValue) {
     Object val = config.get(key);
-    if (val == null) return defaultValue;
+    if (val == null) {
+      return defaultValue;
+    }
     return String.valueOf(val);
   }
 

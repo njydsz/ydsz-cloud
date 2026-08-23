@@ -16,13 +16,19 @@ import lombok.Data;
 @Data
 public class AlertScanConfig {
 
+  /** 默认scanIntervalMs值（可被配置文件覆盖） */
+  private static final long DEFAULT_SCAN_INTERVAL_MS = 300000L;
+
+  /** 默认ruleCacheTtlSeconds值（可被配置文件覆盖） */
+  private static final int DEFAULT_RULE_CACHE_TTL_SECONDS = 60;
+
   /** 告警扫描间隔（毫秒，默认 5 分钟） */
-  private long scanIntervalMs = 300000L;
+  private long scanIntervalMs = DEFAULT_SCAN_INTERVAL_MS;
 
   /**
    * P1-P5: 告警规则本地缓存 TTL（秒，默认 60s）。
    *
    * <p>规则变更频率极低，本地缓存可大幅减少每次告警触发的 DB 查询。 缓存失效策略：TTL 自动过期 + 规则增删改操作手动失效。
    */
-  private int ruleCacheTtlSeconds = 60;
+  private int ruleCacheTtlSeconds = DEFAULT_RULE_CACHE_TTL_SECONDS;
 }

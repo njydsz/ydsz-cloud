@@ -71,7 +71,13 @@ public class SearchResponse implements Serializable {
   @Schema(description = "各阶段耗时详情（毫秒）：textProcess/cacheQuery/engineQuery/ranking")
   private Map<String, Long> timing;
 
-  /** 创建空响应 */
+  /**
+   * 创建空响应。
+   *
+   * @param page 页码
+   * @param pageSize 每页条数
+   * @return 空搜索结果响应
+   */
   public static SearchResponse empty(int page, int pageSize) {
     return SearchResponse.builder()
         .hits(Collections.emptyList())

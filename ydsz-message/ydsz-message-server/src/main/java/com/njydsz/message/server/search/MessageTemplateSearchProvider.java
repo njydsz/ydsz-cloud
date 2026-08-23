@@ -11,8 +11,8 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 
 /**
  * 消息模板搜索提供者 — 将消息模板数据注册到统一搜索体系。
@@ -24,6 +24,12 @@ import com.njydsz.message.domain.repository.MsgTemplateRepository;
 @Component
 @RequiredArgsConstructor
 public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplateVO> {
+  /** 名称搜索权重 */
+  private static final float NAME_WEIGHT = 3.0f;
+
+  /** 内容搜索权重 */
+  private static final float CONTENT_WEIGHT = 0.5f;
+
 
   private final MsgTemplateRepository msgTemplateRepository;
 
@@ -72,7 +78,7 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
             .name("title")
             .label("模板主题")
             .type(FieldType.TEXT)
-            .weight(3.0f)
+            .weight(NAME_WEIGHT)
             .searchable(true)
             .highlightable(true)
             .sortable(true)
@@ -96,7 +102,7 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
             .name("status")
             .label("状态")
             .type(FieldType.KEYWORD)
-            .weight(0.5f)
+            .weight(CONTENT_WEIGHT)
             .searchable(false)
             .aggregatable(true)
             .build());

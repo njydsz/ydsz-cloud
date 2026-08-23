@@ -59,7 +59,9 @@ public class UserInfoRbacService implements RbacUserInfoService {
     if (schemaVersion != null && !String.valueOf(schemaVersion).equals("1")) {
       log.warn(
           "Session schema version mismatch: token={}, version={}, supported=1",
-          accessToken != null ? accessToken.substring(0, Math.min(8, accessToken.length())) : "null",
+          accessToken != null
+              ? accessToken.substring(0, Math.min(TOKEN_LOG_PREFIX_LENGTH, accessToken.length()))
+              : "null",
           schemaVersion);
     }
     UserInfo userInfo = new UserInfo();

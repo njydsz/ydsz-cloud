@@ -42,6 +42,12 @@ import com.njydsz.userinfo.server.auth.SecondaryAuthService;
 @Component
 @RequiredArgsConstructor
 public class SecondaryAuthAspect {
+  /** 关键操作 TTL 占配置值的比例（40%） */
+  private static final double CRITICAL_TTL_RATIO = 0.4;
+
+  /** 关键操作 TTL 下限（秒）：60 秒 */
+  private static final long CRITICAL_TTL_MIN_SECONDS = 60;
+
 
   private final SecondaryAuthService secondaryAuthService;
 
@@ -86,8 +92,8 @@ public class SecondaryAuthAspect {
   public static Duration resolveEffectiveTtl(SecondaryAuth annotation) {
     int configuredTtl = annotation.ttlSeconds();
     if (annotation.level() == SensitiveLevel.CRITICAL) {
-      long criticalTtl = Math.round(configuredTtl * 0.4);
-      return Duration.ofSeconds(Math.max(criticalTtl, 60));
+      long criticalTtl = Math.round(configuredTtl * CRITICAL_TTL_RATIO);
+      return Duration.ofSeconds(Math.max(criticalTtl, CRITICAL_TTL_MIN_SECONDS));
     }
     return Duration.ofSeconds(configuredTtl);
   }

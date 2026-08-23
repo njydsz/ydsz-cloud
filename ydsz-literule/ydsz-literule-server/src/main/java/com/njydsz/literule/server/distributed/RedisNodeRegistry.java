@@ -74,7 +74,9 @@ public class RedisNodeRegistry implements NodeRegistry {
 
   @Override
   public void unregister(String nodeId) {
-    if (nodeId == null) return;
+    if (nodeId == null) {
+      return;
+    }
     try {
       RMap<String, String> map = redissonClient.getMap(NODES_KEY);
       map.remove(nodeId);
@@ -86,7 +88,9 @@ public class RedisNodeRegistry implements NodeRegistry {
 
   @Override
   public void heartbeat(String nodeId) {
-    if (nodeId == null) return;
+    if (nodeId == null) {
+      return;
+    }
     try {
       RMap<String, String> map = redissonClient.getMap(NODES_KEY);
       String json = map.get(nodeId);
@@ -138,8 +142,12 @@ public class RedisNodeRegistry implements NodeRegistry {
       return alive.stream()
           .sorted(
               (a, b) -> {
-                if (a.getNodeId() == null) return -1;
-                if (b.getNodeId() == null) return 1;
+                if (a.getNodeId() == null) {
+                  return -1;
+                }
+                if (b.getNodeId() == null) {
+                  return 1;
+                }
                 return a.getNodeId().compareTo(b.getNodeId());
               })
           .collect(Collectors.toList());

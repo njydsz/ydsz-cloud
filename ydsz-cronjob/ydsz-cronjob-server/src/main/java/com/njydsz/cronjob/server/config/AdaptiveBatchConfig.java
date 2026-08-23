@@ -23,24 +23,42 @@ import lombok.Data;
 @Data
 public class AdaptiveBatchConfig {
 
+  /** 默认minBatchSize值（可被配置文件覆盖） */
+  private static final int DEFAULT_MIN_BATCH_SIZE = 50;
+
+  /** 默认maxBatchSize值（可被配置文件覆盖） */
+  private static final int DEFAULT_MAX_BATCH_SIZE = 1000;
+
+  /** 默认cpuThreshold值（可被配置文件覆盖） */
+  private static final double DEFAULT_CPU_THRESHOLD = 70.0;
+
+  /** 默认memThreshold值（可被配置文件覆盖） */
+  private static final double DEFAULT_MEM_THRESHOLD = 80.0;
+
+  /** 默认poolActiveThreshold值（可被配置文件覆盖） */
+  private static final double DEFAULT_POOL_ACTIVE_THRESHOLD = 80.0;
+
+  /** 默认evalIntervalSeconds值（可被配置文件覆盖） */
+  private static final int DEFAULT_EVAL_INTERVAL_SECONDS = 10;
+
   /** 是否启用自适应批量调度（false=使用固定 batchSize，向后兼容） */
   private boolean enabled = false;
 
   /** 最小批量大小（高负载时不低于此值，防止饥饿） */
-  private int minBatchSize = 50;
+  private int minBatchSize = DEFAULT_MIN_BATCH_SIZE;
 
   /** 最大批量大小（低负载时不超过此值，防止 DB 连接耗尽） */
-  private int maxBatchSize = 1000;
+  private int maxBatchSize = DEFAULT_MAX_BATCH_SIZE;
 
   /** CPU 使用率阈值（百分比），超过此值开始缩减批量 */
-  private double cpuThreshold = 70.0;
+  private double cpuThreshold = DEFAULT_CPU_THRESHOLD;
 
   /** 内存使用率阈值（百分比），超过此值开始缩减批量 */
-  private double memThreshold = 80.0;
+  private double memThreshold = DEFAULT_MEM_THRESHOLD;
 
   /** 线程池活跃度阈值（百分比，activeThreads/maxThreads），超过此值开始缩减批量 */
-  private double poolActiveThreshold = 80.0;
+  private double poolActiveThreshold = DEFAULT_POOL_ACTIVE_THRESHOLD;
 
   /** 负载评估间隔（秒，默认 10s） */
-  private int evalIntervalSeconds = 10;
+  private int evalIntervalSeconds = DEFAULT_EVAL_INTERVAL_SECONDS;
 }

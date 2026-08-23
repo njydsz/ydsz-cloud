@@ -1,5 +1,4 @@
 package com.njydsz.system.server.service.impl;
-
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -19,9 +18,12 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.DictPageQuery;
-import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.domain.repository.DictRepository;
+import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.server.service.DictService;
+
+
+
 
 /**
  * 字典类型 Service 实现
@@ -134,7 +136,6 @@ public class DictServiceImpl implements DictService {
    *
    * <p><b>注意：</b>本方法仅创建类型，<b>不挂载字典项</b>，字典项需通过 {@link DictItemServiceImpl#save} 单独添加。
    *
-   * @param vo 字典类型数据
    * @return 新创建的字典类型 ID
    * @throws IllegalArgumentException {@code typeCode} 已存在时抛出
    */
@@ -163,7 +164,6 @@ public class DictServiceImpl implements DictService {
    *
    * <p><b>注意：</b>更新 {@code typeCode} 会导致所有依赖该编码的下游缓存失效， 调用方需主动清理 {@code ydsz:dict:*} 相关 Redis key。
    *
-   * @param vo 字典类型数据（需包含 {@code id}）
    * @return true=更新成功，false=记录不存在
    * @throws IllegalArgumentException {@code typeCode} 已被其他类型占用时抛出
    */
@@ -268,7 +268,6 @@ public class DictServiceImpl implements DictService {
    *
    * <p>校验 {@code typeCode} 是否已被其他字典类型占用。 更新场景下排除自身 ID（{@code ne("id", dto.getId())}）。
    *
-   * @param dto 待校验的字典类型 DTO
    * @throws IllegalArgumentException {@code typeCode} 已存在时抛出
    */
   private void checkDuplicateTypeCode(DictTypeDTO dto) {

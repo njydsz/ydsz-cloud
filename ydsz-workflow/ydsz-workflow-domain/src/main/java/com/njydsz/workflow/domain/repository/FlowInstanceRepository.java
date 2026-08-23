@@ -178,7 +178,7 @@ public interface FlowInstanceRepository {
    * @param definitionId 流程定义 ID
    * @return 节点 → 实例数映射
    */
-  java.util.Map<String, Long> countRunningGroupByNode(String definitionId);
+  Map<String, Long> countRunningGroupByNode(String definitionId);
 
   /**
    * 查询某流程定义下运行中的实例，按当前节点分组（含节点名称）。

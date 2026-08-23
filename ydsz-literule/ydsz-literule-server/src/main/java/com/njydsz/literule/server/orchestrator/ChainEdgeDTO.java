@@ -69,15 +69,21 @@ public class ChainEdgeDTO implements Serializable {
    * <p>仅作为字符串常量供外部使用，不强制约束（保持向后兼容）。
    */
   public static final class EdgeType {
+    /** 常量说明 */
     public static final String THEN = "THEN";
 
     /** 并行流：WHEN 链中节点间的连线类型（与 THEN 顺序流区分） */
     public static final String WHEN = "WHEN";
 
+    /** 常量说明 */
     public static final String IF_BRANCH = "IF_BRANCH";
+    /** 常量说明 */
     public static final String ELIF_BRANCH = "ELIF_BRANCH";
+    /** 常量说明 */
     public static final String SWITCH_BRANCH = "SWITCH_BRANCH";
+    /** 常量说明 */
     public static final String DEFAULT_BRANCH = "DEFAULT_BRANCH";
+    /** 常量说明 */
     public static final String GROUP_MEMBER = "GROUP_MEMBER";
 
     private EdgeType() {}

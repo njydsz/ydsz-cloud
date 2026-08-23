@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,6 +41,12 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
  */
 @Slf4j
 public class RuleApprovalService {
+
+    /** 三级审批对应的审查等级（3） */
+  private static final int LEVEL_3_REVIEW = 3;
+
+  /** 节点 ID 取前缀长度 */
+  private static final int NODE_ID_PREFIX_LENGTH = 8;
 
   /** 默认审批流编码（2 级审批） */
   public static final String DEFAULT_FLOW_CODE = "default-2level";
@@ -739,7 +744,7 @@ public class RuleApprovalService {
             logDTO.setTimestamp(log.getTimestamp());
             return logDTO;
           })
-          .collect(java.util.stream.Collectors.toList());
+          .collect(Collectors.toList());
       dto.setLogs(logDTOs);
     }
     if (record.getCurrentLevelApprovedApprovers() != null) {
@@ -868,7 +873,7 @@ public class RuleApprovalService {
     return switch (level) {
       case 1 -> RuleStatus.REVIEW_L1;
       case 2 -> RuleStatus.REVIEW_L2;
-      case 3 -> RuleStatus.REVIEW_FINAL;
+      case LEVEL_3_REVIEW -> RuleStatus.REVIEW_FINAL;
       default -> throw new IllegalArgumentException("不支持的审批级别: " + level + "（当前最多支持 3 级）");
     };
   }
@@ -884,7 +889,7 @@ public class RuleApprovalService {
 
   /** 生成审批记录 ID */
   private String generateRecordId() {
-    return "AR-" + IdGenerator.nextIdStr().substring(0, 8).toUpperCase();
+    return "AR-" + IdGenerator.nextIdStr().substring(0, NODE_ID_PREFIX_LENGTH).toUpperCase();
   }
 
   /** 校验字符串非空 */

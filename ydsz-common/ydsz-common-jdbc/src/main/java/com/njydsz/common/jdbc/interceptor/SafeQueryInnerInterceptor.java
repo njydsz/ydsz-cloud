@@ -155,8 +155,8 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
 
     // 按多排序字段分割
     String[] columns = orderByClause.split(",");
-    for (String columnExpr : columns) {
-      columnExpr = columnExpr.trim();
+    for (String rawColumn : columns) {
+      String columnExpr = rawColumn.trim();
       if (columnExpr.isEmpty()) {
         continue;
       }

@@ -14,7 +14,6 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
@@ -22,12 +21,13 @@ import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
-import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 
 /**
@@ -82,8 +82,10 @@ public class FlowTaskOperateService {
 
   /**
    * 转办：将任务办理人换为他人。
-   *
+   * 
    * <p>原办理人变为 assignorId，新办理人变为 assigneeId，状态保持 CLAIMED。
+   *
+   * @param dto 参数说明
    */
   @Transactional(rollbackFor = Exception.class)
   public void transfer(FlowTaskOperateDTO dto) {
@@ -119,9 +121,11 @@ public class FlowTaskOperateService {
 
   /**
    * 委派：被委派人处理后任务回到原办理人。
-   *
+   * 
    * <p>原办理人变为 assignorId，新办理人变为 assigneeId，任务状态置为 DELEGATED。 被委派人通过时（FlowTaskPassService）会检测
    * DELEGATED 状态，自动回归原办理人。
+   *
+   * @param dto 参数说明
    */
   @Transactional(rollbackFor = Exception.class)
   public void delegate(FlowTaskOperateDTO dto) {
@@ -161,9 +165,11 @@ public class FlowTaskOperateService {
 
   /**
    * 自由跳转：完成当前任务，强制跳转到任意节点。
-   *
+   * 
    * <p>GAP-P2-9: 节点级 freeJump 白名单校验（仅自由流操作 action=JUMP 时启用）。 历史管理员强制跳转（无 action 字段或 action !=
    * JUMP）保持原有放行语义。
+   *
+   * @param dto 参数说明
    */
   @Transactional(rollbackFor = Exception.class)
   public void jump(FlowTaskOperateDTO dto) {
@@ -240,8 +246,13 @@ public class FlowTaskOperateService {
 
   /**
    * P1-3: 取回 — 审批人已审批后，在下一节点未处理前，把自己的审批撤回。
-   *
+   * 
    * <p>对标钉钉/飞书"取回"。审批人 PASS 后下一节点待办尚未处理时， 可取回自己的审批：取消下一节点待办，在本节点重新生成 PENDING 任务。
+   *
+   * @param hisTaskId 参数说明
+   * @param operatorId 参数说明
+   * @param comment 参数说明
+   * @return 返回值说明
    */
   @Transactional(rollbackFor = Exception.class)
   public String retract(String hisTaskId, String operatorId, String comment) {
@@ -282,7 +293,12 @@ public class FlowTaskOperateService {
     return newTask.getId();
   }
 
-  /** 根据 ID 查询历史任务，不存在则抛出 NOT_FOUND。 */
+  /**
+   * 根据 ID 查询历史任务，不存在则抛出 NOT_FOUND。
+   *
+   * @param hisTaskId 参数说明
+   * @return 返回值说明
+   */
   private FlowHisTaskDO findHisTaskOrThrow(String hisTaskId) {
     FlowHisTaskDO hisTask = hisTaskRepository.findById(hisTaskId).map(converter::entityToDO).orElse(null);
     if (hisTask == null) {
@@ -295,7 +311,12 @@ public class FlowTaskOperateService {
     return hisTask;
   }
 
-  /** 校验取回权限：历史任务状态为 COMPLETED 且操作人为办理人。 */
+  /**
+   * 校验取回权限：历史任务状态为 COMPLETED 且操作人为办理人。
+   *
+   * @param hisTask 参数说明
+   * @param operatorId 参数说明
+   */
   private void validateRetractPermission(FlowHisTaskDO hisTask, String operatorId) {
     if (!FlowTaskStatus.COMPLETED.name().equals(hisTask.getTaskStatus())) {
       throw SysException.builder()
@@ -312,7 +333,12 @@ public class FlowTaskOperateService {
     }
   }
 
-  /** 根据 ID 查询流程实例，不存在则抛出 NOT_FOUND。 */
+  /**
+   * 根据 ID 查询流程实例，不存在则抛出 NOT_FOUND。
+   *
+   * @param instanceId 参数说明
+   * @return 返回值说明
+   */
   private FlowInstanceVO findInstanceOrThrow(String instanceId) {
     return instanceRepository.findById(instanceId)
         .orElseThrow(() -> SysException.builder()
@@ -322,7 +348,11 @@ public class FlowTaskOperateService {
             .build());
   }
 
-  /** 校验流程实例为 RUNNING 状态。 */
+  /**
+   * 校验流程实例为 RUNNING 状态。
+   *
+   * @param instance 参数说明
+   */
   private void validateInstanceRunning(FlowInstanceVO instance) {
     if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
@@ -333,7 +363,11 @@ public class FlowTaskOperateService {
     }
   }
 
-  /** 校验下一节点待办全部为 PENDING（未被 CLAIMED/COMPLETED）。 */
+  /**
+   * 校验下一节点待办全部为 PENDING（未被 CLAIMED/COMPLETED）。
+   *
+   * @param instanceId 参数说明
+   */
   private void validateNextTasksAllPending(String instanceId) {
     List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
         .map(converter::entityToDO)
@@ -349,7 +383,14 @@ public class FlowTaskOperateService {
     }
   }
 
-  /** 重新生成取回后的 PENDING 任务（复用历史任务的元数据）。 */
+  /**
+   * 重新生成取回后的 PENDING 任务（复用历史任务的元数据）。
+   *
+   * @param hisTask 参数说明
+   * @param instance 参数说明
+   * @param comment 参数说明
+   * @return 返回值说明
+   */
   private FlowRunTaskDO recreateRetractTask(FlowHisTaskDO hisTask, FlowInstanceVO instance, String comment) {
     FlowRunTaskDO newTask = new FlowRunTaskDO();
     newTask.setInstanceId(instance.getId());
@@ -378,7 +419,12 @@ public class FlowTaskOperateService {
     return newTask;
   }
 
-  /** 标记历史任务为 RETRACTED 状态。 */
+  /**
+   * 标记历史任务为 RETRACTED 状态。
+   *
+   * @param hisTaskId 参数说明
+   * @param comment 参数说明
+   */
   private void markHisTaskRetracted(String hisTaskId, String comment) {
     FlowHisTaskDO update = new FlowHisTaskDO();
     update.setId(hisTaskId);
@@ -389,7 +435,12 @@ public class FlowTaskOperateService {
 
   // ============================== 私有辅助 ==============================
 
-  /** 解析 assigneeId 中的真实用户 ID。 */
+  /**
+   * 解析 assigneeId 中的真实用户 ID。
+   *
+   * @param assigneeId 参数说明
+   * @return 返回值说明
+   */
   private String parseAssignorId(String assigneeId) {
     if (assigneeId == null || !assigneeId.matches("\\d+")) {
       return null;
@@ -397,7 +448,12 @@ public class FlowTaskOperateService {
     return assigneeId;
   }
 
-  /** GAP-P2-9: 判断目标节点是否开启自由跳转白名单。 */
+  /**
+   * GAP-P2-9: 判断目标节点是否开启自由跳转白名单。
+   *
+   * @param node 参数说明
+   * @return 返回值说明
+   */
   private boolean isFreeJumpEnabled(FlowNodeDO node) {
     Map<String, Object> ext = parseExtConfig(node.getExt());
     Object val = ext.get("freeJump");

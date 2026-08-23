@@ -7,7 +7,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
-import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
@@ -26,6 +24,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.message.domain.constant.MessageConstants;
@@ -44,6 +43,7 @@ import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.producer.MessageQueueOperations;
+import com.njydsz.message.server.service.batch.BatchService;
 import com.njydsz.message.server.service.chain.PipelineTemplate;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendPipelineFacade;
@@ -55,7 +55,6 @@ import com.njydsz.message.server.service.core.MessageSendService;
 import com.njydsz.message.server.service.core.MessageSendTxService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.core.MessageTraceService;
-import com.njydsz.message.server.service.batch.BatchService;
 
 /**
  * 消息服务实现（核心）。
@@ -73,6 +72,12 @@ import com.njydsz.message.server.service.batch.BatchService;
 @Service
 @RequiredArgsConstructor
 public class MessageServiceImpl implements MessageService {
+  /** 提前发送窗口（分钟） */
+  private static final int SEND_AHEAD_MINUTES = 5;
+
+  /** 异步等待超时（秒） */
+  private static final int ASYNC_TIMEOUT_SECONDS = 30;
+
 
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -135,19 +140,21 @@ public class MessageServiceImpl implements MessageService {
 
   /**
    * P2-6: 内部发送方法,携带级联深度。
-   *
+   * 
    * <p>顶层消息 depth=0,级联子消息 depth 递增,超过 {@link MessageConstants#MAX_CASCADE_DEPTH} 跳过。 级联触发时机：父消息
    * {@code doDispatch} 成功后,遍历 {@link MessageRequest#getCascadeTo()}, 为每个子消息设置 {@code parentMsgId =
    * 父 msgId} 后递归调用本方法。 单条级联消息失败不影响其他级联消息(try-catch 吞异常记 WARN)。
-   *
+   * 
    * <p>P1-3: 拆分为 preprocess → renderContent → persistAndDispatch 三个阶段, 聚合路径(insert + appendOrStart
    * + updateById)用 {@code @Transactional} 保证原子性。
-   *
+   * 
    * <p>P1-A4: 支持异步发送模式。当 {@code ydsz.message.defaultAsync=true} 且请求未显式要求同步时, 落库 PENDING + 写入
    * OutboxEvent 后立即返回, 由 OutboxEventScheduler 异步投递 MQ。
+   * 
    *
-   * @param request 消息请求
-   * @param depth 级联深度(0=顶层消息)
+   * @param request 参数说明
+   * @param depth 参数说明
+   * @return 返回值说明
    */
   private MessageResult sendInternal(MessageRequest request, int depth) {
     if (request == null) {
@@ -261,7 +268,14 @@ public class MessageServiceImpl implements MessageService {
     return request;
   }
 
-  /** P1-3: 构造落库 MsgLogVO。 */
+  /**
+   * P1-3: 构造落库 MsgLogVO。
+   *
+   * @param request 参数说明
+   * @param ctx 参数说明
+   * @param rendered 参数说明
+   * @return 返回值说明
+   */
   private MsgLogVO buildLogDO(MessageRequest request, SendContext ctx, RenderedContent rendered) {
     MsgLogVO logDO = new MsgLogVO();
     logDO.setChannel(ctx.getChannel());
@@ -331,7 +345,7 @@ public class MessageServiceImpl implements MessageService {
       try {
         LocalDateTime optimalTime =
             deliveryTimeOptimizer.getOptimalDeliveryTime(ctx.getReceiver(), ctx.getChannel());
-        if (optimalTime != null && optimalTime.isAfter(LocalDateTime.now().plusMinutes(5))) {
+        if (optimalTime != null && optimalTime.isAfter(LocalDateTime.now().plusMinutes(SEND_AHEAD_MINUTES))) {
           request.setScheduledAt(optimalTime);
           logDO.setScheduledAt(optimalTime);
           logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
@@ -413,7 +427,7 @@ public class MessageServiceImpl implements MessageService {
     // 等待所有级联消息发送完成（带超时）
     try {
       CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-          .get(30, TimeUnit.SECONDS);
+          .get(ASYNC_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     } catch (TimeoutException e) {
       log.warn("[Message] 级联消息发送超时,部分消息可能未完成: parentMsgId={}", parentLog.getMsgId());
     } catch (Exception e) {
@@ -506,7 +520,12 @@ public class MessageServiceImpl implements MessageService {
     }
   }
 
-  /** P0-3: 解析发送优先级,优先使用请求中的 priority,回退全局配置。 */
+  /**
+   * P0-3: 解析发送优先级,优先使用请求中的 priority,回退全局配置。
+   *
+   * @param request 参数说明
+   * @return 返回值说明
+   */
   private String resolvePriority(MessageRequest request) {
     if (request != null && StringUtils.hasText(request.getPriority())) {
       return request.getPriority().trim().toUpperCase();
@@ -598,7 +617,7 @@ public class MessageServiceImpl implements MessageService {
     idempotentQuery.setMsgId(request.getMessageId());
     idempotentQuery.setPageNum(1);
     idempotentQuery.setPageSize(10);
-    java.util.List<MsgLogVO> existingLogs = msgLogRepository.findList(idempotentQuery);
+    List<MsgLogVO> existingLogs = msgLogRepository.findList(idempotentQuery);
     MsgLogVO existingLog = existingLogs.stream()
         .filter(vo -> {
           String s = vo.getStatus();
@@ -665,7 +684,14 @@ public class MessageServiceImpl implements MessageService {
     return MessageResult.ok(request.getChannel(), request.getMessageId());
   }
 
-  /** 发布领域事件到 Outbox（DomainEventPublisher 不可用时静默跳过）。 */
+  /**
+   * 发布领域事件到 Outbox（DomainEventPublisher 不可用时静默跳过）。
+   *
+   * @param aggregateType 参数说明
+   * @param aggregateId 参数说明
+   * @param eventType 参数说明
+   * @param payload 参数说明
+   */
   private void publishEvent(
       String aggregateType, String aggregateId, String eventType, String payload) {
     DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();

@@ -1,5 +1,4 @@
 package com.njydsz.system.server.config;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -12,6 +11,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.njydsz.common.jdbc.health.DataSourceHealthIndicator;
 import com.njydsz.common.redis.health.RedisHealthIndicator;
 import com.njydsz.system.server.health.SystemHealthIndicator;
+
+
 
 /**
  * 系统模块 Spring 配置

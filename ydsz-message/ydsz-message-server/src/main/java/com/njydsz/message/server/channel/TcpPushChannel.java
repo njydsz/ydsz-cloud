@@ -3,7 +3,6 @@ package com.njydsz.message.server.channel.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-// CHECKSTYLE.OFF: RegexpSinglelineJava - Netty Handler 实现需要原生 API（继承 AbstractNettyServer 后的 pipeline 回调）
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -12,7 +11,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.CharsetUtil;
-// CHECKSTYLE.ON: RegexpSinglelineJava
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -54,6 +52,12 @@ import com.njydsz.message.server.channel.MessageChannel;
 @ConditionalOnClass(AbstractNettyServer.class)
 @ConditionalOnProperty(prefix = "ydsz.message.tcp-push", name = "enabled", havingValue = "true")
 public class TcpPushChannel extends AbstractNettyServer implements MessageChannel {
+  /** Map 初始容量 */
+  private static final int MAP_CAPACITY_8 = 8;
+
+  /** TCP 推送端口 */
+  private static final int PUSH_PORT = 9123;
+
 
   /** 通道类型 */
   private static final String CHANNEL_TYPE = "PUSH";
@@ -69,13 +73,13 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
 
   /**
    * 构造 TCP 推送通道。
+   * 
    *
-   * @param properties Netty 配置
-   * @param snowflakeIdGenerator 分布式 ID 生成器
-   */
+   * @param properties 参数说明
+   * @param snowflakeIdGenerator 参数说明   */
   public TcpPushChannel(NettyProperties properties, SnowflakeIdGenerator snowflakeIdGenerator) {
-    super(9123, properties);
-    this.pushPort = 9123;
+    super(PUSH_PORT, properties);
+    this.pushPort = PUSH_PORT;
     this.snowflakeIdGenerator = snowflakeIdGenerator;
   }
 
@@ -108,7 +112,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
     }
     try {
       // 构建推送消息 JSON
-      Map<String, Object> pushData = new HashMap<>(8);
+      Map<String, Object> pushData = new HashMap<>(MAP_CAPACITY_8);
       pushData.put("type", "PUSH");
       pushData.put("messageId", request.getMessageId());
       pushData.put("subject", request.getSubject());

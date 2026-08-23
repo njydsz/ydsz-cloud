@@ -40,6 +40,15 @@ import com.njydsz.common.util.security.DigestUtils;
  */
 public class ConsistentHashSharder {
 
+    /** MD5 摘要取前缀字节数（用于哈希） */
+  private static final int MD5_PREFIX_BYTES = 8;
+
+  /** 每字节位数 */
+  private static final int BITS_PER_BYTE = 8;
+
+  /** 字节无符号化掩码（0xFF） */
+  private static final int BYTE_UNSIGNED_MASK = 0xFF;
+
   private static final Logger LOG = LoggerFactory.getLogger(ConsistentHashSharder.class);
 
   /** 默认虚拟节点数 */
@@ -129,6 +138,10 @@ public class ConsistentHashSharder {
    * 判断 key 是否属于当前节点（直接传节点列表，避免重建环）
    *
    * <p>适用于不想维护环状态的场景（如无状态调用）。
+      * @param key 参数说明
+   * @param nodeId 参数说明
+   * @param nodes 参数说明
+   * @return 返回值说明
    */
   public static boolean isMine(String key, String nodeId, List<ClusterNode> nodes) {
     if (nodes == null || nodes.isEmpty() || nodeId == null || key == null) {
@@ -139,14 +152,18 @@ public class ConsistentHashSharder {
     return nodeId.equals(nodes.get(idx).getNodeId());
   }
 
-  /** 获取当前环上的节点数量 */
+  /** 获取当前环上的节点数量
+   * @return 返回值说明
+   */
   public int getNodeCount() {
     TreeMap<Long, ClusterNode> r = this.ring;
     long count = r == null ? 0 : r.values().stream().map(ClusterNode::getNodeId).distinct().count();
     return (int) count;
   }
 
-  /** 获取当前节点签名 */
+  /** 获取当前节点签名
+   * @return 返回值说明
+   */
   public String getNodeSignature() {
     return nodeSignature;
   }
@@ -165,9 +182,9 @@ public class ConsistentHashSharder {
       throw new IllegalStateException("MD5 摘要计算失败: " + key, e);
     }
     long h = 0;
-    for (int i = 0; i < 8; i++) {
-      h <<= 8;
-      h |= (digest[i] & 0xFF);
+    for (int i = 0; i < MD5_PREFIX_BYTES; i++) {
+      h <<= BITS_PER_BYTE;
+      h |= (digest[i] & BYTE_UNSIGNED_MASK);
     }
     return h & Long.MAX_VALUE;
   }

@@ -88,10 +88,15 @@ public class PermissionDeniedException extends BusinessException {
    * <p>每种类型携带中文描述、i18n 消息键与 {@link SecurityExceptionCode} 映射。
    */
   public enum PermissionType {
+    /** 菜单权限 */
     MENU("菜单权限", "menu.permission", SecurityExceptionCode.PERMISSION_DENIED_MENU),
+    /** 按钮权限 */
     BUTTON("按钮权限", "button.permission", SecurityExceptionCode.PERMISSION_DENIED_BUTTON),
+    /** 接口权限 */
     API("接口权限", "api.permission", SecurityExceptionCode.PERMISSION_DENIED_API),
+    /** 数据权限 */
     DATA("数据权限", "data.permission", SecurityExceptionCode.PERMISSION_DENIED_DATA),
+    /** 列权限 */
     COLUMN("列权限", "column.permission", SecurityExceptionCode.PERMISSION_DENIED_COLUMN);
 
     @Getter private final String description;

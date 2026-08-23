@@ -174,11 +174,11 @@ public class TimerBasedDelayedMessageSender implements DelayedMessageSender, Dis
 
   /** 创建默认的单线程调度器 */
   private static ScheduledExecutorService createDefaultScheduler() {
-    // CHECKSTYLE.OFF: ThreadPoolCreate
+    // CHECKSTYLE.OFF: RegexpSinglelineJava|IllegalImport
     // 默认单线程调度器：仅在外部未提供 scheduler 时使用。
     // 生产环境建议通过参数注入以获得统一管理。
     return Executors.newSingleThreadScheduledExecutor(
         r -> new Thread(r, "ydsz-queue-delayed-sender"));
-    // CHECKSTYLE.ON: ThreadPoolCreate
+    // CHECKSTYLE.ON: RegexpSinglelineJava|IllegalImport
   }
 }

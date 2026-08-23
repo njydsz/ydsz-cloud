@@ -3,14 +3,15 @@ package com.njydsz.cronjob.server.core.alert;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.domain.repository.JobAlertRuleRepository;
+import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
@@ -182,7 +183,7 @@ public class AlertTrigger {
    * @return 规则列表
    */
   private List<JobAlertRuleVO> getCachedOrLoad(
-      String key, java.util.function.Supplier<List<JobAlertRuleVO>> loader) {
+      String key, Supplier<List<JobAlertRuleVO>> loader) {
     CacheEntry<List<JobAlertRuleVO>> entry = ruleCache.get(key);
     if (entry != null && !entry.isExpired()) {
       return entry.value;

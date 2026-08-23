@@ -38,6 +38,12 @@ import com.njydsz.literule.api.expression.ExpressionValidationResult;
 @Slf4j
 public class LiteExprEngine implements ExpressionEngine {
 
+    /** 表达式函数缓存容量（日志展示） */
+  private static final int CACHE_CAPACITY = 512;
+
+  /** 纳秒到毫秒的换算系数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
   private final LiteExprCompiler compiler;
   private final FunctionRegistry functionRegistry;
   private final TreeInterpreter interpreter;
@@ -59,7 +65,7 @@ public class LiteExprEngine implements ExpressionEngine {
         "[LiteExpr] 自研表达式引擎已初始化（sandbox={}, functions={}, cacheCapacity={})",
         sandboxEnabled,
         functionRegistry.getFunctionNames().size(),
-        512);
+        CACHE_CAPACITY);
   }
 
   @Override
@@ -74,9 +80,15 @@ public class LiteExprEngine implements ExpressionEngine {
       }
       Map<String, Object> facts = context != null ? context.getFacts() : Map.of();
       Object result = interpreter.eval(ast, facts);
-      if (result instanceof Boolean b) return b;
-      if (result instanceof Number n) return n.doubleValue() != 0;
-      if (result == null) return false;
+      if (result instanceof Boolean b) {
+        return b;
+      }
+      if (result instanceof Number n) {
+        return n.doubleValue() != 0;
+      }
+      if (result == null) {
+        return false;
+      }
       return Boolean.parseBoolean(String.valueOf(result));
     } catch (SecurityException e) {
       log.warn("[LiteExpr] 安全拦截: {}", e.getMessage());
@@ -131,7 +143,7 @@ public class LiteExprEngine implements ExpressionEngine {
 
     // 1. 空表达式
     if (expression == null || expression.isBlank()) {
-      long elapsed = (System.nanoTime() - start) / 1_000_000L;
+      long elapsed = (System.nanoTime() - start) / NANOS_PER_MILLI;
       return ExpressionValidationResult.fail(
           expression, ExpressionValidationResult.ErrorType.EMPTY, "表达式为空", elapsed);
     }
@@ -141,7 +153,7 @@ public class LiteExprEngine implements ExpressionEngine {
     try {
       ast = compiler.compile(expression);
     } catch (LiteExprException e) {
-      long elapsed = (System.nanoTime() - start) / 1_000_000L;
+      long elapsed = (System.nanoTime() - start) / NANOS_PER_MILLI;
       return ExpressionValidationResult.builder()
           .valid(false)
           .errorType(ExpressionValidationResult.ErrorType.SYNTAX_ERROR)
@@ -153,7 +165,7 @@ public class LiteExprEngine implements ExpressionEngine {
           .referencedVariables(new ArrayList<>())
           .build();
     } catch (Exception e) {
-      long elapsed = (System.nanoTime() - start) / 1_000_000L;
+      long elapsed = (System.nanoTime() - start) / NANOS_PER_MILLI;
       return ExpressionValidationResult.fail(
           expression, ExpressionValidationResult.ErrorType.SYNTAX_ERROR, e.getMessage(), elapsed);
     }
@@ -162,7 +174,7 @@ public class LiteExprEngine implements ExpressionEngine {
     if (sandboxEnabled) {
       LiteExprSandbox.SandboxResult sandboxResult = sandbox.check(ast);
       if (!sandboxResult.passed()) {
-        long elapsed = (System.nanoTime() - start) / 1_000_000L;
+        long elapsed = (System.nanoTime() - start) / NANOS_PER_MILLI;
         return ExpressionValidationResult.fail(
             expression,
             ExpressionValidationResult.ErrorType.SANDBOX_VIOLATION,
@@ -172,7 +184,7 @@ public class LiteExprEngine implements ExpressionEngine {
     }
 
     // 4. 编译通过，提取引用变量
-    long elapsed = (System.nanoTime() - start) / 1_000_000L;
+    long elapsed = (System.nanoTime() - start) / NANOS_PER_MILLI;
     List<String> vars = compiler.extractVariables(ast);
     return ExpressionValidationResult.ok(expression, elapsed, vars);
   }
@@ -201,9 +213,13 @@ public class LiteExprEngine implements ExpressionEngine {
 
       boolean boolResult;
       Object val = traceResult.value();
-      if (val instanceof Boolean b) boolResult = b;
-      else if (val instanceof Number n) boolResult = n.doubleValue() != 0;
-      else boolResult = Boolean.parseBoolean(String.valueOf(val));
+      if (val instanceof Boolean b) {
+        boolResult = b;
+      } else if (val instanceof Number n) {
+        boolResult = n.doubleValue() != 0;
+      } else {
+        boolResult = Boolean.parseBoolean(String.valueOf(val));
+      }
 
       ExpressionTraceNode root =
           convertTraceTree(traceResult.traceTree(), expression, boolResult, elapsed);
@@ -248,12 +264,16 @@ public class LiteExprEngine implements ExpressionEngine {
     return defs;
   }
 
-  /** 获取函数注册表（用于业务侧注册自定义函数） */
+  /** 获取函数注册表（用于业务侧注册自定义函数）
+   * @return 返回值说明
+   */
   public FunctionRegistry getFunctionRegistry() {
     return functionRegistry;
   }
 
-  /** 获取编译器（用于缓存管理等） */
+  /** 获取编译器（用于缓存管理等）
+   * @return 返回值说明
+   */
   public LiteExprCompiler getCompiler() {
     return compiler;
   }
@@ -281,7 +301,9 @@ public class LiteExprEngine implements ExpressionEngine {
     sandbox.applyPolicy(forbiddenMethods, forbiddenRoots, allowedFunctions);
   }
 
-  /** 缓存大小 */
+  /** 缓存大小
+   * @return 返回值说明
+   */
   public long cacheSize() {
     return compiler.cacheSize();
   }

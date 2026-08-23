@@ -54,6 +54,12 @@ import com.njydsz.cronjob.server.config.RemoteConfig;
 @Configuration
 @ConditionalOnMissingBean(RemoteTaskClient.class)
 public class RemoteTaskClient {
+  /** HTTP 成功状态码 */
+  private static final int HTTP_OK = 200;
+
+  /** 响应体日志截断长度 */
+  private static final int BODY_LOG_MAX_LENGTH = 200;
+
 
   /** 内部执行接口路径 */
   private static final String INTERNAL_EXECUTE_PATH = "/cronjob/internal/execute";
@@ -111,14 +117,14 @@ public class RemoteTaskClient {
       int status = response.statusCode();
       String body = response.body();
 
-      if (status == 200) {
+      if (status == HTTP_OK) {
         return parseLogIdFromBody(body);
       }
       log.warn(
           "[RemoteClient] 远程派发 HTTP {}: url={} body={}",
           status,
           url,
-          body == null ? "" : (body.length() > 200 ? body.substring(0, 200) : body));
+          body == null ? "" : (body.length() > BODY_LOG_MAX_LENGTH ? body.substring(0, BODY_LOG_MAX_LENGTH) : body));
       return null;
     } catch (ConnectException e) {
       log.warn("[RemoteClient] 连接拒绝(节点可能已下线): url={} reason={}", url, e.getMessage());
@@ -166,14 +172,14 @@ public class RemoteTaskClient {
       int status = response.statusCode();
       String body = response.body();
 
-      if (status == 200) {
+      if (status == HTTP_OK) {
         return parseSubTaskResultFromBody(body);
       }
       log.warn(
           "[RemoteClient] 子任务远程派发 HTTP {}: url={} body={}",
           status,
           url,
-          body == null ? "" : (body.length() > 200 ? body.substring(0, 200) : body));
+          body == null ? "" : (body.length() > BODY_LOG_MAX_LENGTH ? body.substring(0, BODY_LOG_MAX_LENGTH) : body));
       return null;
     } catch (ConnectException e) {
       log.warn("[RemoteClient] 子任务连接拒绝(节点可能已下线): url={} reason={}", url, e.getMessage());
@@ -221,7 +227,7 @@ public class RemoteTaskClient {
     } catch (Exception e) {
       log.warn(
           "[RemoteClient] 子任务响应解析失败: body={} reason={}",
-          body.length() > 200 ? body.substring(0, 200) : body,
+          body.length() > BODY_LOG_MAX_LENGTH ? body.substring(0, BODY_LOG_MAX_LENGTH) : body,
           e.getMessage());
       return null;
     }
@@ -257,7 +263,7 @@ public class RemoteTaskClient {
     } catch (Exception e) {
       log.warn(
           "[RemoteClient] 响应解析失败: body={} reason={}",
-          body.length() > 200 ? body.substring(0, 200) : body,
+          body.length() > BODY_LOG_MAX_LENGTH ? body.substring(0, BODY_LOG_MAX_LENGTH) : body,
           e.getMessage());
       return null;
     }

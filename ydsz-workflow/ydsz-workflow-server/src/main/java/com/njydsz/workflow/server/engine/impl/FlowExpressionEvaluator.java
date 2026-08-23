@@ -32,13 +32,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class FlowExpressionEvaluator {
 
+  /** 比较表达式正则捕获组：右侧操作数 */
+  private static final int CMP_GROUP_RIGHT = 3;
+
   private final FlowVariableReplacer variableReplacer;
 
   /**
    * 构造注入变量替换器
+   * 
    *
-   * @param variableReplacer 变量替换器
-   */
+   * @param variableReplacer 参数说明   */
   public FlowExpressionEvaluator(FlowVariableReplacer variableReplacer) {
     this.variableReplacer = variableReplacer;
   }
@@ -62,7 +65,13 @@ public class FlowExpressionEvaluator {
     }
   }
 
-  /** 顶层 || 逻辑或：任一子表达式为 true 即为 true。例如：${a > 100} || ${b < 50} */
+  /**
+   * 顶层 || 逻辑或：任一子表达式为 true 即为 true。例如：${a > 100} || ${b < 50}
+   *
+   * @param expr 参数说明
+   * @param variables 参数说明
+   * @return 返回值说明
+   */
   boolean evaluateOr(String expr, Map<String, Object> variables) {
     String[] parts = FlowExpressionUtils.splitTopLevel(expr, "||");
     for (String part : parts) {
@@ -73,7 +82,13 @@ public class FlowExpressionEvaluator {
     return false;
   }
 
-  /** 顶层 && 逻辑与：所有子表达式为 true 才为 true。例如：${a > 100} && ${b < 50} */
+  /**
+   * 顶层 && 逻辑与：所有子表达式为 true 才为 true。例如：${a > 100} && ${b < 50}
+   *
+   * @param expr 参数说明
+   * @param variables 参数说明
+   * @return 返回值说明
+   */
   boolean evaluateAnd(String expr, Map<String, Object> variables) {
     String[] parts = FlowExpressionUtils.splitTopLevel(expr, "&&");
     for (String part : parts) {
@@ -84,7 +99,13 @@ public class FlowExpressionEvaluator {
     return true;
   }
 
-  /** 逻辑非：!expr 形式，支持嵌套（如 !!flag）。 */
+  /**
+   * 逻辑非：!expr 形式，支持嵌套（如 !!flag）。
+   *
+   * @param expr 参数说明
+   * @param variables 参数说明
+   * @return 返回值说明
+   */
   boolean evaluateNot(String expr, Map<String, Object> variables) {
     String trimmed = expr.trim();
     if (trimmed.startsWith("!")) {
@@ -119,7 +140,7 @@ public class FlowExpressionEvaluator {
       if (innerCmp.matches()) {
         String varName = innerCmp.group(1).trim();
         String op = innerCmp.group(2);
-        String rawValue = innerCmp.group(3).trim();
+        String rawValue = innerCmp.group(CMP_GROUP_RIGHT).trim();
         Object actual = variableReplacer.lookupValue(varName, variables);
         Object expected = parseLiteral(rawValue);
         return compare(actual, op, expected);
@@ -143,7 +164,7 @@ public class FlowExpressionEvaluator {
     if (bareCmp.matches()) {
       String varName = bareCmp.group(1).trim();
       String op = bareCmp.group(2);
-      String rawValue = bareCmp.group(3).trim();
+      String rawValue = bareCmp.group(CMP_GROUP_RIGHT).trim();
       Object actual = variableReplacer.lookupValue(varName, variables);
       Object expected = parseLiteral(rawValue);
       return compare(actual, op, expected);
@@ -155,7 +176,7 @@ public class FlowExpressionEvaluator {
     if (m.matches() && isComparisonOperator(m.group(2))) {
       String rawLhs = m.group(1).trim();
       String op = m.group(2);
-      String rawValue = m.group(3).trim();
+      String rawValue = m.group(CMP_GROUP_RIGHT).trim();
       Object actual = parseLiteral(rawLhs);
       Object expected = parseLiteral(rawValue);
       return compare(actual, op, expected);

@@ -35,9 +35,13 @@ public class CardMessage {
 
   /** 消息类型枚举 */
   public enum MessageType {
+    /** 纯文本消息 */
     TEXT,
+    /** Markdown 消息 */
     MARKDOWN,
+    /** 卡片消息 */
     CARD,
+    /** 交互式消息 */
     INTERACTIVE
   }
 

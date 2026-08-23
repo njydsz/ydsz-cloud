@@ -19,15 +19,15 @@ import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
-import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserImportResultDTO;
-import com.njydsz.userinfo.server.dto.UserImportDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.DepartmentRepository;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
+import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
+import com.njydsz.userinfo.server.dto.UserImportDTO;
 import com.njydsz.userinfo.server.service.UserAccountService;
 import com.njydsz.userinfo.server.service.UserExcelService;
 
@@ -80,7 +80,46 @@ public class UserExcelServiceImpl implements UserExcelService {
           .build();
     }
 
-    // 3. 预加载批量查询数据，避免 N+1（一次性查询所有用户名、部门编码、上级用户名）
+    // 3. 预加载批量查询数据，避免 N+1
+    ImportLookupData lookup = preloadLookupData(importList);
+
+    // 4. 逐行处理
+    int successCount = 0;
+    int failCount = 0;
+    List<String> failDetails = new ArrayList<>(importList.size());
+
+    for (int i = 0; i < importList.size(); i++) {
+      int rowNum = i + 2; // Excel 行号（第1行是表头）
+      UserImportDTO importDTO = importList.get(i);
+
+      try {
+        importSingleUser(
+            importDTO, lookup.existingUsernames(), lookup.deptCodeToIdMap(),
+            lookup.leaderUsernameToIdMap());
+        successCount++;
+      } catch (Exception e) {
+        failCount++;
+        String errorMsg = e instanceof BusinessException be ? be.getMessage() : e.getMessage();
+        failDetails.add("第" + rowNum + "行[" + importDTO.getUsername() + "]: " + errorMsg);
+        log.warn(
+            "导入用户失败: row={}, username={}, error={}",
+            rowNum,
+            importDTO.getUsername(),
+            errorMsg);
+      }
+    }
+
+    String failDetailStr = failDetails.isEmpty() ? "" : String.join("; ", failDetails);
+    return UserImportResultDTO.of(importList.size(), successCount, failCount, failDetailStr);
+  }
+
+  /**
+   * 预加载导入所需的批量查询数据（用户名/部门/上级映射）。
+   *
+   * @param importList 导入用户列表
+   * @return 预加载的查询数据
+   */
+  private ImportLookupData preloadLookupData(List<UserImportDTO> importList) {
     Set<String> importUsernames =
         importList.stream()
             .map(UserImportDTO::getUsername)
@@ -97,39 +136,23 @@ public class UserExcelServiceImpl implements UserExcelService {
             .filter(s -> s != null && !s.isBlank())
             .collect(Collectors.toSet());
 
-    // 批量查询已有用户名
-    Set<String> existingUsernames = queryExistingUsernames(importUsernames);
-    // 批量查询部门编码 → ID 映射
-    Map<String, String> deptCodeToIdMap = queryDeptCodeToIdMap(deptCodes);
-    // 批量查询上级用户名 → ID 映射
-    Map<String, String> leaderUsernameToIdMap = queryUsernameToIdMap(leaderUsernames);
+    return new ImportLookupData(
+        queryExistingUsernames(importUsernames),
+        queryDeptCodeToIdMap(deptCodes),
+        queryUsernameToIdMap(leaderUsernames));
+  }
 
-    // 4. 逐行处理
-    int successCount = 0;
-    int failCount = 0;
-    List<String> failDetails = new ArrayList<>(importList.size());
-
-    for (int i = 0; i < importList.size(); i++) {
-      int rowNum = i + 2; // Excel 行号（第1行是表头）
-      UserImportDTO importDTO = importList.get(i);
-
-      try {
-        importSingleUser(importDTO, existingUsernames, deptCodeToIdMap, leaderUsernameToIdMap);
-        successCount++;
-      } catch (Exception e) {
-        failCount++;
-        String errorMsg = e instanceof BusinessException be ? be.getMessage() : e.getMessage();
-        failDetails.add("第" + rowNum + "行[" + importDTO.getUsername() + "]: " + errorMsg);
-        log.warn(
-            "导入用户失败: row={}, username={}, error={}",
-            rowNum,
-            importDTO.getUsername(),
-            errorMsg);
-      }
-    }
-
-    String failDetailStr = failDetails.isEmpty() ? "" : String.join("; ", failDetails);
-    return UserImportResultDTO.of(importList.size(), successCount, failCount, failDetailStr);
+  /**
+   * 导入预加载数据（用户名/部门/上级映射）。
+   *
+   * @param existingUsernames 已存在的用户名集合
+   * @param deptCodeToIdMap 部门编码 → ID 映射
+   * @param leaderUsernameToIdMap 上级用户名 → ID 映射
+   */
+  private record ImportLookupData(
+      Set<String> existingUsernames,
+      Map<String, String> deptCodeToIdMap,
+      Map<String, String> leaderUsernameToIdMap) {
   }
 
   @Override
@@ -170,7 +193,7 @@ public class UserExcelServiceImpl implements UserExcelService {
    */
   private List<UserImportDTO> readExcel(InputStream inputStream, String originalFilename) {
     try {
-      List<UserImportDTO> result = new ArrayList<>(16);
+      List<UserImportDTO> result = new ArrayList<>(INITIAL_CAPACITY);
       // 使用 common-excel 的 ExcelFacade 读取
       ExcelFacade.read(inputStream, UserImportDTO.class)
           .sheet()

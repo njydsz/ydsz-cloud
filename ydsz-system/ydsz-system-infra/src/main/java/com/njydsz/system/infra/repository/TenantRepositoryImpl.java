@@ -1,5 +1,4 @@
 package com.njydsz.system.infra.repository;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -9,13 +8,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.dto.TenantDTO;
+import com.njydsz.system.domain.query.TenantPageQuery;
+import com.njydsz.system.domain.repository.TenantRepository;
+import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.TenantDO;
 import com.njydsz.system.infra.mapper.TenantMapper;
-import com.njydsz.system.domain.repository.TenantRepository;
-import com.njydsz.system.domain.dto.TenantDTO;
-import com.njydsz.system.domain.query.TenantPageQuery;
-import com.njydsz.system.domain.vo.TenantVO;
+
+
+
 
 /**
  * 租户仓储实现（Infra 层）。
@@ -59,7 +61,7 @@ public class TenantRepositoryImpl implements TenantRepository {
     wrapper.orderByDesc(TenantDO::getCreatedAt);
     com.baomidou.mybatisplus.core.metadata.IPage<TenantDO> result = tenantMapper.selectPage(page, wrapper);
     List<TenantVO> vos = converter.tenantListToVO(result.getRecords());
-    return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
+    return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   @Override

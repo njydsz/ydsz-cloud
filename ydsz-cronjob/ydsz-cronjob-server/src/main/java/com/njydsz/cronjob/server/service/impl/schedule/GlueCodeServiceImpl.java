@@ -9,7 +9,7 @@ import java.util.Map;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import groovy.lang.GroovyClassLoader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -23,8 +23,6 @@ import com.njydsz.cronjob.domain.repository.GlueCodeRepository;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
-
-import groovy.lang.GroovyClassLoader;
 
 /**
  * GLUE 脚本服务实现。
@@ -352,16 +350,21 @@ public class GlueCodeServiceImpl implements GlueCodeService {
 
   /**
    * 根据语言执行代码（内存编译，不持久化）。
-   *
+   * 
    * <p>P0-F4 修复：原实现对 PYTHON/SHELL/JAVASCRIPT 返回"not supported in memory"，与
    * {@code GlueJobHandler} 的实际执行能力（进程沙箱 / ScriptEngine）矛盾。现对齐执行路径：
-   *
+   * 
    * <ul>
-   *   <li>GROOVY/JAVA：GroovyClassLoader 内存编译执行（保留原有逻辑）
-   *   <li>PYTHON/SHELL：通过 {@link SandboxScriptExecutor} 进程沙箱执行（与 GlueJobHandler 一致，
-   *       参数经环境变量 JOB_PARAMS 传入）
-   *   <li>JAVASCRIPT：通过临时 ScriptEngine 执行（Nashorn/GraalJS，与 GlueJobHandler 一致）
+   * <li>GROOVY/JAVA：GroovyClassLoader 内存编译执行（保留原有逻辑）
+   * <li>PYTHON/SHELL：通过 {@link SandboxScriptExecutor} 进程沙箱执行（与 GlueJobHandler 一致，
+   * 参数经环境变量 JOB_PARAMS 传入）
+   * <li>JAVASCRIPT：通过临时 ScriptEngine 执行（Nashorn/GraalJS，与 GlueJobHandler 一致）
    * </ul>
+   *
+   * @param sourceCode 参数说明
+   * @param language 参数说明
+   * @param paramsJson 参数说明
+   * @return 返回值说明
    */
   private Object executeByLanguage(String sourceCode, String language, String paramsJson)
       throws JobExecutionException {

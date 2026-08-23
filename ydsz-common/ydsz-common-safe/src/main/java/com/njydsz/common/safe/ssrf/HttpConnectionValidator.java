@@ -73,7 +73,7 @@ public final class HttpConnectionValidator {
           Pattern.compile("^::ffff:192\\.168\\."),
           Pattern.compile("^::ffff:127\\."));
 
-  private static final AtomicReference<HttpConnectionValidator> defaultInstance =
+  private static final AtomicReference<HttpConnectionValidator> DEFAULT_INSTANCE =
       new AtomicReference<>();
 
   private volatile SsrfProperties properties;
@@ -88,10 +88,10 @@ public final class HttpConnectionValidator {
    * @return 默认 SSRF 校验器
    */
   public static HttpConnectionValidator getDefault() {
-    HttpConnectionValidator validator = defaultInstance.get();
+    HttpConnectionValidator validator = DEFAULT_INSTANCE.get();
     if (validator == null) {
       HttpConnectionValidator created = new HttpConnectionValidator(null);
-      return defaultInstance.compareAndSet(null, created) ? created : defaultInstance.get();
+      return DEFAULT_INSTANCE.compareAndSet(null, created) ? created : DEFAULT_INSTANCE.get();
     }
     return validator;
   }
@@ -113,7 +113,7 @@ public final class HttpConnectionValidator {
    */
   public static void updateProperties(SsrfProperties newProperties) {
     if (newProperties != null) {
-      HttpConnectionValidator validator = defaultInstance.get();
+      HttpConnectionValidator validator = DEFAULT_INSTANCE.get();
       if (validator != null) {
         validator.properties = newProperties;
       }

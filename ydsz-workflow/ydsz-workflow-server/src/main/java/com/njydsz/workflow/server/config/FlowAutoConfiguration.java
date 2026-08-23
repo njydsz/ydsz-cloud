@@ -56,7 +56,13 @@ public class FlowAutoConfiguration {
     return new FlowHealthIndicator(instanceMapper, runTaskMapper, redisServiceProvider);
   }
 
-  /** 工作流 Prometheus 指标收集器 Bean */
+  /**
+   * 工作流 Prometheus 指标收集器 Bean
+   *
+   * @param instanceMapperProvider 参数说明
+   * @param taskMapperProvider 参数说明
+   * @return 返回值说明
+   */
   @Bean
   @ConditionalOnMissingBean(FlowMetrics.class)
   public FlowMetrics flowMetrics(

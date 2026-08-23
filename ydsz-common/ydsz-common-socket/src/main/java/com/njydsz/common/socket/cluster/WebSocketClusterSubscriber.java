@@ -1,5 +1,7 @@
 package com.njydsz.common.socket.cluster;
 
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
@@ -101,7 +103,7 @@ public class WebSocketClusterSubscriber implements MessageListener {
    */
   private void handleKickLocally(WebSocketClusterMessage msg) {
     String userId = msg.getUserId();
-    java.util.List<String> sessionIds = sessionRegistry.getSessionIds(userId);
+    List<String> sessionIds = sessionRegistry.getSessionIds(userId);
     if (sessionIds.isEmpty()) {
       return;
     }

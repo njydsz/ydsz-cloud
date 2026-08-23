@@ -11,6 +11,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -88,23 +89,23 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
   private final GatewayMetrics gatewayMetrics;
 
   /** 失败率阈值（百分比），默认 50 */
-  @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.circuit-breaker.failure-rate-threshold:50}")
+  @Value("${ydsz.gateway.circuit-breaker.failure-rate-threshold:50}")
   private int failureRateThreshold;
 
   /** OPEN 状态持续时间（毫秒），默认 10s */
-  @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.circuit-breaker.wait-duration-in-open-state-ms:10000}")
+  @Value("${ydsz.gateway.circuit-breaker.wait-duration-in-open-state-ms:10000}")
   private long waitDurationInOpenStateMs;
 
   /** 滑动窗口大小（次数），默认 10 */
-  @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.circuit-breaker.sliding-window-size:10}")
+  @Value("${ydsz.gateway.circuit-breaker.sliding-window-size:10}")
   private int slidingWindowSize;
 
   /** 最少调用次数（低于此不参与判定），默认 5 */
-  @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.circuit-breaker.minimum-number-of-calls:5}")
+  @Value("${ydsz.gateway.circuit-breaker.minimum-number-of-calls:5}")
   private int minimumNumberOfCalls;
 
   /** HALF_OPEN 状态下允许的探测调用数，默认 2 */
-  @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.circuit-breaker.permitted-number-of-calls-in-half-open-state:2}")
+  @Value("${ydsz.gateway.circuit-breaker.permitted-number-of-calls-in-half-open-state:2}")
   private int permittedNumberOfCallsInHalfOpenState;
 
   /** 已注册状态指标监听的路由集合（避免重复注册事件监听器） */

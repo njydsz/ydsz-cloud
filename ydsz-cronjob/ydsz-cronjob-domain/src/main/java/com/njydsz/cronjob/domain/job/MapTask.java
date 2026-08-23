@@ -1,5 +1,7 @@
 package com.njydsz.cronjob.domain.job;
 
+import java.util.Objects;
+
 /**
  * MapReduce 子任务定义
  *
@@ -17,7 +19,12 @@ public class MapTask {
   /** 无参构造器 */
   public MapTask() {}
 
-  /** 全参构造器 */
+  /**
+   * 全参构造器。
+   *
+   * @param taskName 子任务名称
+   * @param taskParams 子任务参数 JSON
+   */
   public MapTask(String taskName, String taskParams) {
     this.taskName = taskName;
     this.taskParams = taskParams;
@@ -41,16 +48,20 @@ public class MapTask {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     MapTask that = (MapTask) o;
-    return java.util.Objects.equals(taskName, that.taskName)
-        && java.util.Objects.equals(taskParams, that.taskParams);
+    return Objects.equals(taskName, that.taskName)
+        && Objects.equals(taskParams, that.taskParams);
   }
 
   @Override
   public int hashCode() {
-    return java.util.Objects.hash(taskName, taskParams);
+    return Objects.hash(taskName, taskParams);
   }
 
   @Override

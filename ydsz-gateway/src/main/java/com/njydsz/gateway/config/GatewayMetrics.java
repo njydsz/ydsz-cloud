@@ -2,12 +2,12 @@ package com.njydsz.gateway.config;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.HashMap;
-import java.util.Map;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +16,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.sentry.SentryService;
-import com.njydsz.common.sentry.spi.MetricsCollector;
 import com.njydsz.common.sentry.metrics.MicrometerMetricsCollector;
+import com.njydsz.common.sentry.spi.MetricsCollector;
 
 /**
  * 网关自定义 Prometheus 指标。
@@ -91,7 +91,14 @@ public class GatewayMetrics {
     return null;
   }
 
-  /** 记录请求延迟。 */
+  /**
+   * 记录请求延迟。
+   *
+   * @param routeId 路由 ID
+   * @param method 请求方法
+   * @param status 响应状态码
+   * @param durationMs 请求耗时（毫秒）
+   */
   public void recordRequestDuration(String routeId, String method, int status, long durationMs) {
     MetricsCollector collector = getMetricsCollector();
     if (collector != null) {
@@ -101,7 +108,13 @@ public class GatewayMetrics {
     }
   }
 
-  /** 增加请求计数。 */
+  /**
+   * 增加请求计数。
+   *
+   * @param routeId 路由 ID
+   * @param method 请求方法
+   * @param status 响应状态码
+   */
   public void incrementRequestTotal(String routeId, String method, int status) {
     MetricsCollector collector = getMetricsCollector();
     if (collector != null) {
@@ -110,7 +123,10 @@ public class GatewayMetrics {
     }
   }
 
-  /** 增加灰度路由命中计数。 */
+  /**
+   * 增加灰度路由命中计数。。
+   * @param hitGray 增加灰度路由命中计数。
+   */
   public void incrementGrayHit(boolean hitGray) {
     MetricsCollector collector = getMetricsCollector();
     if (collector != null) {
@@ -119,7 +135,12 @@ public class GatewayMetrics {
     }
   }
 
-  /** 增加限流触发计数。 */
+  /**
+   * 增加限流触发计数。
+   *
+   * @param dimension 限流维度
+   * @param routeId 路由 ID
+   */
   public void incrementRatelimitTriggered(String dimension, String routeId) {
     MetricsCollector collector = getMetricsCollector();
     if (collector != null) {
@@ -128,7 +149,9 @@ public class GatewayMetrics {
     }
   }
 
-  /** 增加限流本地兜底计数。 */
+  /**
+   * 增加限流本地兜底计数。。
+   */
   public void incrementRatelimitFallback() {
     MetricsCollector collector = getMetricsCollector();
     if (collector != null) {
@@ -136,7 +159,10 @@ public class GatewayMetrics {
     }
   }
 
-  /** 上报本地兜底令牌桶的自适应配额。 */
+  /**
+   * 上报本地兜底令牌桶的自适应配额。。
+   * @param quota 上报本地兜底令牌桶的自适应配额。
+   */
   public void setRatelimitFallbackQuota(int quota) {
     if (fallbackQuotaRef.getAndSet(quota) == 0) {
       MeterRegistry registry = getMicrometerRegistry();
@@ -146,7 +172,12 @@ public class GatewayMetrics {
     }
   }
 
-  /** 记录 JWT 校验耗时。 */
+  /**
+   * 记录 JWT 校验耗时。
+   *
+   * @param durationMs 校验耗时（毫秒）
+   * @param cached 是否命中缓存
+   */
   public void recordJwtValidationDuration(long durationMs, boolean cached) {
     MetricsCollector collector = getMetricsCollector();
     if (collector != null) {
@@ -155,7 +186,12 @@ public class GatewayMetrics {
     }
   }
 
-  /** 设置熔断器状态。 */
+  /**
+   * 设置熔断器状态。
+   *
+   * @param routeId 路由 ID
+   * @param state 熔断状态值
+   */
   public void setCircuitBreakerState(String routeId, int state) {
     AtomicInteger ref = breakerStates.computeIfAbsent(routeId, k -> {
       AtomicInteger holder = new AtomicInteger(state);

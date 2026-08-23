@@ -28,6 +28,42 @@ import com.njydsz.cronjob.domain.vo.JobVO;
 @Configuration
 @RequiredArgsConstructor
 public class TaskDiagnosisService {
+  /** 成功率得分权重 */
+  private static final double SUCCESS_SCORE_WEIGHT = 0.5;
+
+  /** 稳定性得分上限 */
+  private static final double STABILITY_MAX_SCORE = 20;
+
+  /** 稳定性得分权重（CV 系数） */
+  private static final double STABILITY_WEIGHT = 20;
+
+  /** 超时得分上限 */
+  private static final double TIMEOUT_MAX_SCORE = 15;
+
+  /** 超时得分权重 */
+  private static final double TIMEOUT_WEIGHT = 0.3;
+
+  /** 连续失败扣分上限 */
+  private static final double CONSECUTIVE_PENALTY_MAX = 15;
+
+  /** 每次连续失败扣分 */
+  private static final double CONSECUTIVE_PENALTY_PER_FAIL = 3;
+
+  /** 健康评分上限 */
+  private static final double SCORE_MAX = 100;
+
+  /** 成功率警告阈值（%） */
+  private static final double SUCCESS_RATE_WARN_THRESHOLD = 80;
+
+  /** 连续失败警告阈值 */
+  private static final int CONSECUTIVE_FAIL_WARN_THRESHOLD = 3;
+
+  /** 耗时变异系数警告阈值 */
+  private static final double CV_DURATION_WARN_THRESHOLD = 0.5;
+
+  /** 平均耗时警告阈值（毫秒）：60 秒 */
+  private static final long AVG_DURATION_WARN_MILLIS = 60000;
+
 
   private final JobRepository jobRepository;
   private final JobLogRepository jobLogRepository;
@@ -121,7 +157,9 @@ public class TaskDiagnosisService {
     }
 
     // 生成建议
-    List<String> suggestions = generateSuggestions(successRate, cvDuration, timeoutCount, total, consecutiveFailures, avgDuration);
+    List<String> suggestions =
+        generateSuggestions(
+            successRate, cvDuration, timeoutCount, total, consecutiveFailures, avgDuration);
 
     return new TaskDiagnosis(
         jobKey,
@@ -162,25 +200,32 @@ public class TaskDiagnosisService {
     return maxConsecutive;
   }
 
-  private double calculateHealthScore(double successRate, double cvDuration, long timeoutCount, long total, int consecutiveFailures) {
-    double successScore = successRate * 0.5;
-    double stabilityScore = Math.max(0, 20 - cvDuration * 20);
+  private double calculateHealthScore(
+      double successRate, double cvDuration, long timeoutCount, long total,
+      int consecutiveFailures) {
+    double successScore = successRate * SUCCESS_SCORE_WEIGHT;
+    double stabilityScore = Math.max(0, STABILITY_MAX_SCORE - cvDuration * STABILITY_WEIGHT);
     double timeoutRate = total > 0 ? (timeoutCount * 100.0) / total : 0;
-    double timeoutScore = Math.max(0, 15 - timeoutRate * 0.3);
-    double consecutivePenalty = Math.min(15, consecutiveFailures * 3);
-    return Math.max(0, Math.min(100, successScore + stabilityScore + timeoutScore + (15 - consecutivePenalty)));
+    double timeoutScore = Math.max(0, TIMEOUT_MAX_SCORE - timeoutRate * TIMEOUT_WEIGHT);
+    double consecutivePenalty =
+        Math.min(CONSECUTIVE_PENALTY_MAX, consecutiveFailures * CONSECUTIVE_PENALTY_PER_FAIL);
+    double finalScore =
+        successScore + stabilityScore + timeoutScore + (TIMEOUT_MAX_SCORE - consecutivePenalty);
+    return Math.max(0, Math.min(SCORE_MAX, finalScore));
   }
 
-  private List<String> generateSuggestions(double successRate, double cvDuration, long timeoutCount, long total, int consecutiveFailures, double avgDuration) {
+  private List<String> generateSuggestions(
+      double successRate, double cvDuration, long timeoutCount, long total,
+      int consecutiveFailures, double avgDuration) {
     List<String> suggestions = new ArrayList<>();
 
-    if (successRate < 80) {
+    if (successRate < SUCCESS_RATE_WARN_THRESHOLD) {
       suggestions.add(String.format("成功率 %.1f%% 偏低，建议检查 handler 逻辑或外部依赖健康状态", successRate));
     }
-    if (consecutiveFailures >= 3) {
+    if (consecutiveFailures >= CONSECUTIVE_FAIL_WARN_THRESHOLD) {
       suggestions.add(String.format("连续失败 %d 次，建议暂停任务并排查配置错误", consecutiveFailures));
     }
-    if (cvDuration > 0.5) {
+    if (cvDuration > CV_DURATION_WARN_THRESHOLD) {
       suggestions.add(String.format("执行耗时变异系数 %.2f 过高，建议优化 handler 逻辑或增加超时时间", cvDuration));
     }
     if (timeoutCount > 0) {
@@ -189,7 +234,7 @@ public class TaskDiagnosisService {
         suggestions.add(String.format("超时率 %.1f%% 过高，建议增大任务超时时间或优化执行逻辑", timeoutRate));
       }
     }
-    if (avgDuration > 60000) {
+    if (avgDuration > AVG_DURATION_WARN_MILLIS) {
       suggestions.add(String.format("平均执行耗时 %.1fs 较长，建议优化 handler 逻辑或拆分任务", avgDuration / 1000));
     }
     return suggestions;
@@ -217,6 +262,17 @@ public class TaskDiagnosisService {
 
   /**
    * 任务诊断结果。
+   *
+   * @param jobKey 任务 KEY
+   * @param level 健康级别
+   * @param healthScore 健康评分（0-100）
+   * @param successRate 成功率（0-1）
+   * @param avgDurationMs 平均耗时（毫秒）
+   * @param cvDuration 耗时变异系数
+   * @param consecutiveFailures 连续失败次数
+   * @param sampleSize 样本数量
+   * @param diagnosisTime 诊断时间
+   * @param suggestions 诊断建议列表
    */
   public record TaskDiagnosis(
       String jobKey,

@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -130,7 +131,7 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
       JdbcTemplate jdbcTemplate, String tableName) {
     try {
       return jdbcTemplate.execute(
-          (org.springframework.jdbc.core.ConnectionCallback<TccTransactionDialectProvider>)
+          (ConnectionCallback<TccTransactionDialectProvider>)
               conn -> {
                 String databaseProductName = conn.getMetaData().getDatabaseProductName();
                 LOG.info(
@@ -149,7 +150,11 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
     }
   }
 
-  /** 获取 MySQL DDL（供初始化脚本参考） */
+  /**
+   * 获取 MySQL DDL（供初始化脚本参考）。
+   *
+   * @return MySQL 建表 SQL
+   */
   public static String getMysqlDdl() {
     return """
                 CREATE TABLE tcc_transaction_log (
@@ -172,7 +177,11 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
                 """;
   }
 
-  /** 获取 PostgreSQL DDL（供初始化脚本参考） */
+  /**
+   * 获取 PostgreSQL DDL（供初始化脚本参考）。
+   *
+   * @return PostgreSQL 建表 SQL
+   */
   public static String getPostgresqlDdl() {
     return """
                 CREATE TABLE tcc_transaction_log (
@@ -361,7 +370,9 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
   }
 
   private static String truncate(String s, int maxLength) {
-    if (s == null) return null;
+    if (s == null) {
+      return null;
+    }
     return s.length() > maxLength ? s.substring(0, maxLength) : s;
   }
 }

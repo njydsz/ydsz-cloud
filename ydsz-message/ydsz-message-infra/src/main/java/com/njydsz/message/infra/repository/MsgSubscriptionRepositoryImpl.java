@@ -71,7 +71,7 @@ public class MsgSubscriptionRepositoryImpl implements MsgSubscriptionRepository 
     wrapper.orderByDesc("created_at");
     IPage<MsgSubscriptionDO> entityPage = msgSubscriptionMapper.selectPage(page, wrapper);
     List<MsgSubscriptionVO> vos = converter.subscriptionDoListToVO(entityPage.getRecords());
-    return PageResponse.success(entityPage.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
+    return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   private QueryWrapper<MsgSubscriptionDO> buildWrapper(MsgSubscriptionQuery query) {

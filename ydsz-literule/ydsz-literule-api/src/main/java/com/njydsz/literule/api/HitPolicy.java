@@ -16,11 +16,21 @@ package com.njydsz.literule.api;
  * @since 1.0.0
  */
 public enum HitPolicy {
+  /** 唯一命中：多行匹配时报错 */
   UNIQUE,
+
+  /** 首次命中（默认）：返回首条匹配行 */
   FIRST,
+
+  /** 优先级命中：返回所有匹配行中 priority 最小者 */
   PRIORITY,
+
+  /** 收集命中：返回全部匹配行（按优先级排序） */
   COLLECT,
+
+  /** 任意命中：返回首条匹配行（与 FIRST 行为一致，仅语义不同） */
   ANY,
+
   /** 规则顺序命中：返回全部匹配行，按行在表中的出现顺序排列（DMN 1.4 RULE ORDER） */
   RULE_ORDER;
 

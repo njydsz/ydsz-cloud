@@ -33,21 +33,36 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "ydsz.cronjob")
 public class CronjobProperties {
+  /** 任务锁默认 TTL：5 分钟 */
+  private static final Duration DEFAULT_JOB_LOCK_TTL = Duration.ofMinutes(5);
+
+  /** 任务锁 TTL 下限：30 秒 */
+  private static final Duration DEFAULT_JOB_LOCK_TTL_MIN = Duration.ofSeconds(30);
+
+  /** 任务锁 TTL 上限：24 小时 */
+  private static final Duration DEFAULT_JOB_LOCK_TTL_MAX = Duration.ofHours(24);
+
+
+  /** 默认schedulerPoolSize值（可被配置文件覆盖） */
+  private static final int DEFAULT_SCHEDULER_POOL_SIZE = 8;
+
+  /** 默认schedulerAwaitTerminationSeconds值（可被配置文件覆盖） */
+  private static final int DEFAULT_SCHEDULER_AWAIT_TERMINATION_SECONDS = 30;
 
   /** 分布式锁默认 TTL（兜底值，任务级未配置时使用） */
-  private Duration jobLockTtl = Duration.ofMinutes(5);
+  private Duration jobLockTtl = DEFAULT_JOB_LOCK_TTL;
 
   /** 任务级 TTL 下限：防止误配置为过短（&lt; 30s）导致长任务执行中被并发抢占 */
-  private Duration jobLockTtlMin = Duration.ofSeconds(30);
+  private Duration jobLockTtlMin = DEFAULT_JOB_LOCK_TTL_MIN;
 
   /** 任务级 TTL 上限：防止误配置为过长（&gt; 24h）导致锁不释放 */
-  private Duration jobLockTtlMax = Duration.ofHours(24);
+  private Duration jobLockTtlMax = DEFAULT_JOB_LOCK_TTL_MAX;
 
   /** 调度器线程池大小 */
-  private int schedulerPoolSize = 8;
+  private int schedulerPoolSize = DEFAULT_SCHEDULER_POOL_SIZE;
 
   /** 调度器优雅关闭等待时间（秒） */
-  private int schedulerAwaitTerminationSeconds = 30;
+  private int schedulerAwaitTerminationSeconds = DEFAULT_SCHEDULER_AWAIT_TERMINATION_SECONDS;
 
   /** Leader 选举配置 */
   private LeaderConfig leader = new LeaderConfig();

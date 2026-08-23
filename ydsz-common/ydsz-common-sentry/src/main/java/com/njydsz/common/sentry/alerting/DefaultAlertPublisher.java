@@ -25,12 +25,21 @@ public class DefaultAlertPublisher implements AlertPublisher {
   private final Map<AlertSeverity, List<AlertHandler>> handlers = new ConcurrentHashMap<>();
   private final boolean logAlerts;
 
+  /**
+   * default alert publisher。
+   * @param logAlerts 参数
+ */
   public DefaultAlertPublisher(boolean logAlerts) {
     this.logAlerts = logAlerts;
     log.info("[Sentry] DefaultAlertPublisher 初始化: logAlerts={}", logAlerts);
   }
 
   /** 注册告警处理器 */
+  /**
+   * register handler。
+   * @param severity 参数
+   * @param handler 参数
+   */
   public void registerHandler(AlertSeverity severity, AlertHandler handler) {
     handlers.computeIfAbsent(severity, s -> new CopyOnWriteArrayList<>()).add(handler);
     log.info(
@@ -38,6 +47,11 @@ public class DefaultAlertPublisher implements AlertPublisher {
   }
 
   @Override
+  /**
+   * publish。
+   * @param event 参数
+   * @return 结果
+   */
   public boolean publish(AlertEvent event) {
     if (logAlerts) {
       log.warn(
@@ -66,11 +80,19 @@ public class DefaultAlertPublisher implements AlertPublisher {
   }
 
   @Override
+  /**
+   * is available。
+   * @return 结果
+   */
   public boolean isAvailable() {
     return true;
   }
 
   @Override
+  /**
+   * get name。
+   * @return 结果
+   */
   public String getName() {
     return "default-alert-publisher";
   }

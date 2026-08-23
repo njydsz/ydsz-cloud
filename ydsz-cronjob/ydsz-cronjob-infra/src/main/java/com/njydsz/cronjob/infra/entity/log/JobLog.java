@@ -8,8 +8,8 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
@@ -123,7 +123,7 @@ public class JobLog extends MpBaseIdEntity<String> {
   /** Handler 初始化时间（JobHandler 实例化/资源准备完成的时刻） */
   private LocalDateTime handlerInitTime;
 
-<longcat_arg_value>  /** Handler 执行结束时间（JobHandler.execute() 返回的时刻，与 endTime 可能不同：endTime 含后续清理） */
+  /** Handler 执行结束时间（JobHandler.execute() 返回的时刻，与 endTime 可能不同：endTime 含后续清理） */
   private LocalDateTime handlerEndTime;
 
   /** 执行状态: RUNNING/SUCCESS/FAILED/TIMEOUT */

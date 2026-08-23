@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.njydsz.workflow.domain.query.FlowTaskQuery;
-import com.njydsz.workflow.domain.dto.FlowTaskQueryDTO;
 import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
+import com.njydsz.workflow.domain.dto.FlowTaskQueryDTO;
+import com.njydsz.workflow.domain.query.FlowTaskQuery;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 
 /**
@@ -42,8 +42,10 @@ public interface FlowRunTaskRepository {
 
   /**
    * 保存运行时任务（新增，已废弃）。
+   * 
    *
-   * @deprecated 使用 {@link #save(FlowRunTaskDTO)} 替代，CUD 入参应使用 DTO
+   * @param vo 参数说明
+   * @return 返回值说明
    */
   @Deprecated
   FlowRunTaskVO save(FlowRunTaskVO vo);
@@ -168,8 +170,10 @@ public interface FlowRunTaskRepository {
 
   /**
    * 根据复杂条件查询运行时任务列表（已废弃）。
+   * 
    *
-   * @deprecated 使用 {@link #findByCondition(FlowTaskQuery)} 替代，查询参数应置于 query/ 包并以 Query 结尾
+   * @param condition 参数说明
+   * @return 返回值说明
    */
   @Deprecated
   List<FlowRunTaskVO> findByCondition(FlowTaskQueryDTO condition);

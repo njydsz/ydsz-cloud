@@ -1,7 +1,6 @@
 package com.njydsz.userinfo.web.dto;
 
 import jakarta.validation.constraints.NotBlank;
-
 import lombok.Data;
 
 import com.njydsz.common.safe.annotation.SensitiveLevel;

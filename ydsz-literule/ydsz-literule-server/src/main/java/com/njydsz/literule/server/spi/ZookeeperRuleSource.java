@@ -32,6 +32,12 @@ import com.njydsz.literule.api.RuleDefinition;
 @Slf4j
 public class ZookeeperRuleSource implements RuleSource {
 
+    /** 重试策略：基础休眠时间（毫秒） */
+  private static final int RETRY_SLEEP_MS = 1000;
+
+  /** 重试策略：最大重试次数 */
+  private static final int RETRY_MAX_TIMES = 3;
+
   private final String connectString;
   private final String path;
   private final List<Consumer<List<RuleDefinition>>> listeners = new ArrayList<>();
@@ -104,7 +110,7 @@ public class ZookeeperRuleSource implements RuleSource {
       // .retryPolicy(new ExponentialBackoffRetry(1000, 3))
       Class<?> retryPolicyClass = Class.forName("org.apache.curator.retry.ExponentialBackoffRetry");
       Object retryPolicy =
-          retryPolicyClass.getConstructor(int.class, int.class).newInstance(1000, 3);
+          retryPolicyClass.getConstructor(int.class, int.class).newInstance(RETRY_SLEEP_MS, RETRY_MAX_TIMES);
       builder =
           builder
               .getClass()

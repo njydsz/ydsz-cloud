@@ -181,6 +181,8 @@ public class ResponseUnwrapDecoder implements Decoder {
     private final String url;
 
     /**
+     * 构造 Feign 业务异常。
+     *
      * @param code 业务错误码
      * @param msg 错误消息
      * @param url 请求 URL

@@ -3,6 +3,7 @@ package com.njydsz.common.search.service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
@@ -144,17 +145,20 @@ public class UnifiedSearchService {
    * @return 默认搜索线程池
    */
   public static ThreadPoolTaskExecutor createDefaultSearchExecutor(SearchProperties properties) {
-    // CHECKSTYLE.OFF: RegexpSinglelineJava
-    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    int coreSize = Math.max(2, properties.getIndex().getThreadPoolSize());
+    int maxSize = Math.max(4, properties.getIndex().getThreadPoolSize() * 2);
+        // CHECKSTYLE.OFF: RegexpSinglelineJava
+    // 兜底线程池：仅在外部未注入线程池时使用，生产环境由 ydsz.thread.pools.* 统一管理
+    ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
     // CHECKSTYLE.ON: RegexpSinglelineJava
-    executor.setCorePoolSize(Math.max(2, properties.getIndex().getThreadPoolSize()));
-    executor.setMaxPoolSize(Math.max(4, properties.getIndex().getThreadPoolSize() * 2));
-    executor.setQueueCapacity(256);
-    executor.setThreadNamePrefix("ydsz-search-");
-    executor.setWaitForTasksToCompleteOnShutdown(true);
-    executor.setAwaitTerminationSeconds(5);
-    executor.initialize();
-    return executor;
+    taskExecutor.setCorePoolSize(coreSize);
+    taskExecutor.setMaxPoolSize(maxSize);
+    taskExecutor.setQueueCapacity(256);
+    taskExecutor.setThreadNamePrefix("ydsz-search-");
+    taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
+    taskExecutor.setAwaitTerminationSeconds(5);
+    taskExecutor.initialize();
+    return taskExecutor;
   }
 
   /**
@@ -234,7 +238,7 @@ public class UnifiedSearchService {
       if (cached != null) {
         // 回填阶段耗时信息
         cached.setTiming(
-            java.util.Map.of(
+            Map.of(
                 "textProcess",
                 textProcessMs,
                 "cacheQuery",
@@ -280,7 +284,7 @@ public class UnifiedSearchService {
 
         // P5-13: 回填阶段耗时到响应（供前端/调试使用）
         response.setTiming(
-            java.util.Map.of(
+            Map.of(
                 "textProcess", textProcessMs,
                 "cacheQuery", cacheQueryMs,
                 "engineQuery", engineQueryMs,
@@ -373,16 +377,24 @@ public class UnifiedSearchService {
   // ==================== 私有方法 ====================
 
   private void applyDefaults(SearchRequest request) {
-    if (request.getPage() <= 0) request.setPage(1);
-    if (request.getPageSize() <= 0) request.setPageSize(properties.getPageSize());
-    if (request.getPageSize() > properties.getMaxPageSize())
+    if (request.getPage() <= 0) {
+      request.setPage(1);
+    }
+    if (request.getPageSize() <= 0) {
+      request.setPageSize(properties.getPageSize());
+    }
+    if (request.getPageSize() > properties.getMaxPageSize()) {
       request.setPageSize(properties.getMaxPageSize());
-    if (request.getHighlightPreTag() == null)
+    }
+    if (request.getHighlightPreTag() == null) {
       request.setHighlightPreTag(properties.getHighlightPreTag());
-    if (request.getHighlightPostTag() == null)
+    }
+    if (request.getHighlightPostTag() == null) {
       request.setHighlightPostTag(properties.getHighlightPostTag());
-    if (request.getHighlightFragmentSize() <= 0)
+    }
+    if (request.getHighlightFragmentSize() <= 0) {
       request.setHighlightFragmentSize(properties.getHighlightFragmentSize());
+    }
   }
 
   private void validateRequest(SearchRequest request) {
@@ -394,7 +406,9 @@ public class UnifiedSearchService {
 
   private void applyProviderFilters(SearchRequest request) {
     List<SearchProvider<?>> providers = providerRegistry.getProviders(request.getTypes());
-    if (providers.isEmpty()) return;
+    if (providers.isEmpty()) {
+      return;
+    }
 
     SearchProviderContext context =
         SearchProviderContext.builder()

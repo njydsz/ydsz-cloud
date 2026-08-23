@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -209,15 +208,7 @@ public class SelfServiceServiceImpl implements SelfServiceService {
     UserAccountVO userVO = userOpt.get();
 
     // 4. 验证目标匹配校验（手机或邮箱）
-    boolean targetMatched = false;
-    if ("PHONE".equalsIgnoreCase(dto.getTargetType())) {
-      targetMatched = userVO.getPhone() != null && userVO.getPhone().equals(dto.getTarget());
-    } else if ("EMAIL".equalsIgnoreCase(dto.getTargetType())) {
-      targetMatched = userVO.getEmail() != null && userVO.getEmail().equals(dto.getTarget());
-    }
-    if (!targetMatched) {
-      throw new BusinessException(UserInfoExceptionCode.FORGOT_PASSWORD_PHONE_MISMATCH);
-    }
+    validateUnlockTarget(userVO, dto);
 
     // 5. 校验验证码（一次性）
     if (!verifyCodeService.verifyCode(CODE_TYPE_UNLOCK, dto.getTarget(), dto.getVerifyCode())) {
@@ -232,6 +223,24 @@ public class SelfServiceServiceImpl implements SelfServiceService {
       eventPublisher.publishUserUpdated(userVO);
     }
     return affected > 0;
+  }
+
+  /**
+   * 校验解锁目标与用户绑定信息匹配。
+   *
+   * @param userVO 用户信息
+   * @param dto 解锁请求 DTO
+   */
+  private void validateUnlockTarget(UserAccountVO userVO, AccountUnlockDTO dto) {
+    boolean targetMatched = false;
+    if ("PHONE".equalsIgnoreCase(dto.getTargetType())) {
+      targetMatched = userVO.getPhone() != null && userVO.getPhone().equals(dto.getTarget());
+    } else if ("EMAIL".equalsIgnoreCase(dto.getTargetType())) {
+      targetMatched = userVO.getEmail() != null && userVO.getEmail().equals(dto.getTarget());
+    }
+    if (!targetMatched) {
+      throw new BusinessException(UserInfoExceptionCode.FORGOT_PASSWORD_PHONE_MISMATCH);
+    }
   }
 
   /**

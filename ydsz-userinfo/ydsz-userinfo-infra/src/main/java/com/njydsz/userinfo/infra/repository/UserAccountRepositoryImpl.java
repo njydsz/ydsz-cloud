@@ -1,23 +1,25 @@
 package com.njydsz.userinfo.infra.repository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
-import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
@@ -140,7 +142,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   }
 
   @Override
-  public int increaseLoginFailCount(String id, int threshold, java.time.LocalDateTime lockUntil) {
+  public int increaseLoginFailCount(String id, int threshold, LocalDateTime lockUntil) {
     return userAccountMapper.increaseLoginFailCount(id, threshold, lockUntil);
   }
 
@@ -202,7 +204,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
       String id,
       String banType,
       String banReason,
-      java.time.LocalDateTime banExpireAt,
+      LocalDateTime banExpireAt,
       String bannedBy) {
     return userAccountMapper.updateBanFields(id, banType, banReason, banExpireAt, bannedBy);
   }
@@ -238,7 +240,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   public long countLockedUsers() {
     LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.isNotNull(UserAccountDO::getLockedUntil);
-    wrapper.gt(UserAccountDO::getLockedUntil, java.time.LocalDateTime.now());
+    wrapper.gt(UserAccountDO::getLockedUntil, LocalDateTime.now());
     return userAccountMapper.selectCount(wrapper);
   }
 
@@ -250,30 +252,30 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
     wrapper.and(w -> w.eq(UserAccountDO::getBanType, "PERMANENT")
         .or()
         .eq(UserAccountDO::getBanType, "TEMPORARY")
-        .gt(UserAccountDO::getBanExpireAt, java.time.LocalDateTime.now()));
+        .gt(UserAccountDO::getBanExpireAt, LocalDateTime.now()));
     return userAccountMapper.selectCount(wrapper);
   }
 
   @Override
-  public List<String> findIdsByBanTypeAndExpireAtBefore(String banType, java.time.LocalDateTime expireAt) {
+  public List<String> findIdsByBanTypeAndExpireAtBefore(String banType, LocalDateTime expireAt) {
     LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserAccountDO::getBanType, banType);
     wrapper.le(UserAccountDO::getBanExpireAt, expireAt);
     wrapper.select(UserAccountDO::getId);
     return userAccountMapper.selectList(wrapper).stream()
         .map(UserAccountDO::getId)
-        .collect(java.util.stream.Collectors.toList());
+        .collect(Collectors.toList());
   }
 
   @Override
-  public List<String> findIdsByLockedUntilBefore(java.time.LocalDateTime now) {
+  public List<String> findIdsByLockedUntilBefore(LocalDateTime now) {
     LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
     wrapper.isNotNull(UserAccountDO::getLockedUntil);
     wrapper.le(UserAccountDO::getLockedUntil, now);
     wrapper.select(UserAccountDO::getId);
     return userAccountMapper.selectList(wrapper).stream()
         .map(UserAccountDO::getId)
-        .collect(java.util.stream.Collectors.toList());
+        .collect(Collectors.toList());
   }
 
   /**
@@ -284,6 +286,20 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
    */
   private LambdaQueryWrapper<UserAccountDO> buildWrapper(UserAccountPageQuery query) {
     LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+    applyLikeFilters(wrapper, query);
+    applyEqFilters(wrapper, query);
+    wrapper.orderByAsc(UserAccountDO::getCreatedAt);
+    return wrapper;
+  }
+
+  /**
+   * 应用模糊匹配条件（用户名/姓名/手机号/邮箱）。
+   *
+   * @param wrapper 查询条件构造器
+   * @param query 分页查询参数
+   */
+  private void applyLikeFilters(LambdaQueryWrapper<UserAccountDO> wrapper,
+      UserAccountPageQuery query) {
     if (query.getUsername() != null && !query.getUsername().isBlank()) {
       wrapper.like(UserAccountDO::getUsername, query.getUsername());
     }
@@ -296,25 +312,43 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
     if (query.getEmail() != null && !query.getEmail().isBlank()) {
       wrapper.like(UserAccountDO::getEmail, query.getEmail());
     }
-    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+  }
+
+  /**
+   * 应用精确匹配条件（状态/用户类型/公司/部门/上级/岗位）。
+   *
+   * @param wrapper 查询条件构造器
+   * @param query 分页查询参数
+   */
+  private void applyEqFilters(LambdaQueryWrapper<UserAccountDO> wrapper,
+      UserAccountPageQuery query) {
+    if (hasText(query.getStatus())) {
       wrapper.eq(UserAccountDO::getStatus, query.getStatus());
     }
-    if (query.getUserType() != null && !query.getUserType().isBlank()) {
+    if (hasText(query.getUserType())) {
       wrapper.eq(UserAccountDO::getUserType, query.getUserType());
     }
-    if (query.getCompanyId() != null && !query.getCompanyId().isBlank()) {
+    if (hasText(query.getCompanyId())) {
       wrapper.eq(UserAccountDO::getCompanyId, query.getCompanyId());
     }
-    if (query.getDeptId() != null && !query.getDeptId().isBlank()) {
+    if (hasText(query.getDeptId())) {
       wrapper.eq(UserAccountDO::getDeptId, query.getDeptId());
     }
-    if (query.getLeaderId() != null && !query.getLeaderId().isBlank()) {
+    if (hasText(query.getLeaderId())) {
       wrapper.eq(UserAccountDO::getLeaderId, query.getLeaderId());
     }
-    if (query.getPositionCode() != null && !query.getPositionCode().isBlank()) {
+    if (hasText(query.getPositionCode())) {
       wrapper.eq(UserAccountDO::getPositionCode, query.getPositionCode());
     }
-    wrapper.orderByAsc(UserAccountDO::getCreatedAt);
-    return wrapper;
+  }
+
+  /**
+   * 判断字符串是否非空且非空白。
+   *
+   * @param value 待判断字符串
+   * @return true 表示非空且非空白
+   */
+  private static boolean hasText(String value) {
+    return value != null && !value.isBlank();
   }
 }

@@ -19,7 +19,6 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.feign.assembler.NameType;
-import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.common.security.DataScopeHelper;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
@@ -31,8 +30,7 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 
 /**
  * 流程实例查询服务

@@ -1,8 +1,5 @@
 package com.njydsz.workflow.server.service.impl.instance;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -11,15 +8,15 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.enums.FlowAssigneeType;
+import com.njydsz.workflow.domain.enums.FlowPerformType;
+import com.njydsz.workflow.domain.enums.FlowSignType;
+import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowUserRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.infra.entity.FlowUserDO;
-import com.njydsz.workflow.domain.enums.FlowAssigneeType;
-import com.njydsz.workflow.domain.enums.FlowPerformType;
-import com.njydsz.workflow.domain.enums.FlowSignType;
-import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 
 /**
  * 待办任务 — 加签减签 / 已阅 / 沟通 / 追加处理人 / 暂存待审 子服务实现
@@ -213,16 +210,18 @@ public class FlowTaskSignServiceImpl {
 
   /**
    * GAP-P0-3: 并加签 — 动态追加审批人与原审批人并行审批，所有人审完后才推进。
-   *
+   * 
    * <p>对标钉钉/飞书"并加签"。实现方式：
-   *
+   * 
    * <ol>
-   *   <li>向 ydsz_flow_user 插入新审批人（signType=PARALLEL，processed=0）
-   *   <li>approveCount +1
-   *   <li>强制切换 performType 为 PARALLEL —— 确保所有人全部通过才推进
+   * <li>向 ydsz_flow_user 插入新审批人（signType=PARALLEL，processed=0）
+   * <li>approveCount +1
+   * <li>强制切换 performType 为 PARALLEL —— 确保所有人全部通过才推进
    * </ol>
-   *
+   * 
    * 与后加签（PARALLEL 并行）不同，并加签的加签人与原审批人<b>同时</b>收到待办， 互不阻塞，全部审完后才推进到下一节点。
+   *
+   * @param dto 参数说明
    */
   @Transactional(rollbackFor = Exception.class)
   public void countersignParallel(FlowTaskOperateDTO dto) {

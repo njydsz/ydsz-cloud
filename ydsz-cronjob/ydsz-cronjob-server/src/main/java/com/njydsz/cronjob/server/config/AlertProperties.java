@@ -29,12 +29,15 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "ydsz.cronjob.alert")
 public class AlertProperties {
+  /** 默认 HTTP 超时：5 秒 */
+  private static final Duration DEFAULT_HTTP_TIMEOUT = Duration.ofSeconds(5);
+
 
   /** 默认是否启用告警通道（false 时所有 Notifier 直接返回成功，用于本地开发） */
   private boolean enabled = true;
 
   /** HTTP 请求超时时间（连接 + 读取） */
-  private Duration httpTimeout = Duration.ofSeconds(5);
+  private Duration httpTimeout = DEFAULT_HTTP_TIMEOUT;
 
   /** 邮件通道配置 */
   private Email email = new Email();

@@ -96,9 +96,9 @@ public class MessageExceptionHandler {
         MessageResult.fail(
             messageCode.getCode(), userMessage, developerMessage, retryAfter);
 
-    YdszResponse<MessageResult> YdszResponse = YdszResponse.success(result);
-    YdszResponse.setMsg(userMessage);
-    return YdszResponse;
+    YdszResponse<MessageResult> response = YdszResponse.success(result);
+    response.setMsg(userMessage);
+    return response;
   }
 
   /**

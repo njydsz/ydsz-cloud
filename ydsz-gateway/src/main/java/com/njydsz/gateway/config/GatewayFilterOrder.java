@@ -33,30 +33,43 @@ import org.springframework.core.Ordered;
 public enum GatewayFilterOrder {
 
   /** W3C 链路追踪过滤器 */
+  /** W3C_TRACE */
   W3C_TRACE(0),
   /** 访问日志过滤器 */
+  /** ACCESS_LOG */
   ACCESS_LOG(1),
   /** IP 访问控制过滤器（黑名单 + 白名单） */
+  /** IP_ACCESS_CONTROL */
   IP_ACCESS_CONTROL(3),
   /** 请求体安全校验过滤器 */
+  /** PAYLOAD_VALIDATION */
   PAYLOAD_VALIDATION(4),
   /** WebSocket 认证过滤器 */
+  /** WEBSOCKET_AUTH */
   WEBSOCKET_AUTH(8),
   /** 主鉴权过滤器 */
+  /** AUTH */
   AUTH(10),
   /** API Key 认证过滤器 */
+  /** API_KEY_AUTH */
   API_KEY_AUTH(15),
   /** 灰度路由标识注入过滤器 */
+  /** GRAY_LOADBALANCER */
   GRAY_LOADBALANCER(20),
   /** 灰度路由响应头过滤器（可观测性） */
+  /** GRAY_RESPONSE_HEADER */
   GRAY_RESPONSE_HEADER(150),
   /** 限流过滤器 */
+  /** RATE_LIMIT */
   RATE_LIMIT(30),
   /** 审计日志过滤器 */
+  /** AUDIT_LOG */
   AUDIT_LOG(35),
   /** 熔断过滤器 */
+  /** CIRCUIT_BREAKER */
   CIRCUIT_BREAKER(45),
   /** API 版本响应头过滤器 */
+  /** API_VERSION_HEADER */
   API_VERSION_HEADER(200);
 
   /** 相对 {@link Ordered#HIGHEST_PRECEDENCE} 的偏移量 */

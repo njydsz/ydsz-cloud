@@ -16,9 +16,12 @@ import lombok.Data;
 @Deprecated
 public class SpelConfig {
 
+  /** 默认maxSize值（可被配置文件覆盖） */
+  private static final int DEFAULT_MAX_SIZE = 1024;
+
   /** 是否启用 SpEL 表达式缓存（默认 true）。 */
   private boolean enabled = true;
 
   /** 缓存最大容量（默认 1024，0 表示无限制）。 */
-  private int maxSize = 1024;
+  private int maxSize = DEFAULT_MAX_SIZE;
 }

@@ -26,6 +26,8 @@ public class CircuitBreakerStatePersistence {
   private static final String KEY_PREFIX = "ydsz:feign:cb:";
 
   /**
+   * 构造熔断状态持久化器。
+   *
    * @param redisStringOpsProvider Redis 服务提供者（可选）
    * @param ttl 状态 TTL
    */

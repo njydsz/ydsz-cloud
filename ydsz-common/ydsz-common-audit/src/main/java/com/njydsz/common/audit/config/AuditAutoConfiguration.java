@@ -266,7 +266,7 @@ public class AuditAutoConfiguration {
    * <p>当存在 AuditRecorder 和 MeterRegistry 时自动注册， 将审计队列大小、使用率、成功/失败计数、写入延迟等指标暴露到 Prometheus。
    *
    * @param auditRecorder 审计记录器
-   * @param meterRegistry Micrometer 指标注册中心
+   * @param meterRegistryProvider Micrometer 指标注册中心提供者（可选）
    * @return 审计指标绑定器实例
    */
   @Bean

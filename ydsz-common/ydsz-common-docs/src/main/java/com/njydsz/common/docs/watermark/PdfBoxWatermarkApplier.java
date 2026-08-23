@@ -1,9 +1,7 @@
 package com.njydsz.common.docs.watermark;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
@@ -11,6 +9,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
@@ -68,8 +67,7 @@ public class PdfBoxWatermarkApplier implements PdfWatermarkApplier {
     if (watermarkText == null || watermarkText.isEmpty()) {
       return pdfBytes;
     }
-    try (InputStream is = new ByteArrayInputStream(pdfBytes);
-        PDDocument document = Loader.loadPDF(is);
+    try (PDDocument document = Loader.loadPDF(pdfBytes);
         ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
       for (PDPage page : document.getPages()) {
         addPdfWatermarkPage(document, page, watermarkText);
@@ -95,7 +93,8 @@ public class PdfBoxWatermarkApplier implements PdfWatermarkApplier {
     PDPageContentStream contentStream =
         new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true);
     try {
-      contentStream.setFont(PDType1Font.HELVETICA, WATERMARK_FONT_SIZE);
+      contentStream.setFont(
+          new PDType1Font(Standard14Fonts.FontName.HELVETICA), WATERMARK_FONT_SIZE);
       float pageSize = page.getMediaBox().getHeight();
       contentStream.setNonStrokingColor(WATERMARK_COLOR_RGB, WATERMARK_COLOR_RGB, WATERMARK_COLOR_RGB);
       contentStream.beginText();

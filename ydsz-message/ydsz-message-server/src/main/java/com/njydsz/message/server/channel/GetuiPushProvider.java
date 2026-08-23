@@ -40,6 +40,12 @@ import com.njydsz.message.server.config.MessageProperties;
 @Component
 @ConditionalOnProperty(prefix = "ydsz.message.push", name = "provider", havingValue = "getui")
 public class GetuiPushProvider implements PushProvider {
+  /** Token 有效小时数 */
+  private static final long TOKEN_VALID_HOURS = 23;
+
+  /** 每小时毫秒数 */
+  private static final long MILLIS_PER_HOUR = 3600 * 1000;
+
 
   private final MessageProperties.GetuiPushConfig config;
   private final RestTemplate restTemplate;
@@ -54,9 +60,10 @@ public class GetuiPushProvider implements PushProvider {
 
   /**
    * 生产构造：从 {@link MessageProperties} 读取个推配置并构建 RestTemplate。
+   * 
    *
-   * @param messageProperties 消息配置
-   */
+   * @param messageProperties 参数说明
+   * @param snowflakeIdGenerator 参数说明   */
   public GetuiPushProvider(
       MessageProperties messageProperties, SnowflakeIdGenerator snowflakeIdGenerator) {
     this.config = messageProperties.getPush().getGetui();
@@ -173,7 +180,7 @@ public class GetuiPushProvider implements PushProvider {
       if ("10000".equals(MapUtils.getString(json, "code"))) {
         Map<String, Object> data = MapUtils.safeCastMap(json.get("data"));
         cachedToken = MapUtils.getString(data, "token");
-        tokenExpireAt = System.currentTimeMillis() + 23L * 3600 * 1000;
+        tokenExpireAt = System.currentTimeMillis() + TOKEN_VALID_HOURS * MILLIS_PER_HOUR;
         return cachedToken;
       }
       throw new IllegalStateException("个推鉴权失败: " + MapUtils.getString(json, "msg"));

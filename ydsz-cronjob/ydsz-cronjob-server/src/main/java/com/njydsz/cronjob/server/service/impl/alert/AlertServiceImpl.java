@@ -35,6 +35,9 @@ import com.njydsz.cronjob.server.service.alert.AlertService;
 @Service
 @RequiredArgsConstructor
 public class AlertServiceImpl implements AlertService {
+  /** 默认回看天数 */
+  private static final int DEFAULT_LOOKBACK_DAYS = 7;
+
 
   /** 告警规则 Repository（CRUD） */
   private final JobAlertRuleRepository jobAlertRuleRepository;
@@ -158,7 +161,7 @@ public class AlertServiceImpl implements AlertService {
     if (jobId == null || jobId.isBlank()) {
       return List.of();
     }
-    LocalDateTime cutoff = since != null ? since : LocalDateTime.now().minusDays(7);
+    LocalDateTime cutoff = since != null ? since : LocalDateTime.now().minusDays(DEFAULT_LOOKBACK_DAYS);
     return jobAlertLogRepository.findByJobIdSince(jobId, cutoff);
   }
 

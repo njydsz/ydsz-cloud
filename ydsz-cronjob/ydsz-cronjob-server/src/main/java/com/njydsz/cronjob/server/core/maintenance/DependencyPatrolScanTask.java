@@ -35,7 +35,7 @@ public class DependencyPatrolScanTask implements ScanTask {
   @Override
   public long intervalMs() {
     // 使用 DependencyPatrolScanner 的固定间隔（10min）
-    return 600000L;
+    return DEFAULT_SCAN_INTERVAL_MS;
   }
 
   @Override

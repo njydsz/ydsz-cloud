@@ -48,13 +48,27 @@ public class SlaDefinition {
     /** 是否关键步骤（失败则整体 SLA 违反） */
     private boolean critical = true;
 
+    /**
+     * sla step。
+ */
     public SlaStep() {}
 
+    /**
+     * sla step。
+     * @param name 参数
+     * @param timeoutMillis 参数
+ */
     public SlaStep(String name, long timeoutMillis) {
       this.name = name;
       this.timeoutMillis = timeoutMillis;
     }
 
+    /**
+     * sla step。
+     * @param name 参数
+     * @param timeoutMillis 参数
+     * @param critical 参数
+ */
     public SlaStep(String name, long timeoutMillis, boolean critical) {
       this.name = name;
       this.timeoutMillis = timeoutMillis;
@@ -63,18 +77,35 @@ public class SlaDefinition {
   }
 
   /** 添加步骤 */
+  /**
+   * add step。
+   * @param name 参数
+   * @param timeoutMillis 参数
+   * @return 结果
+   */
   public SlaDefinition addStep(String name, long timeoutMillis) {
     steps.add(new SlaStep(name, timeoutMillis));
     return this;
   }
 
   /** 添加步骤 */
+  /**
+   * add step。
+   * @param name 参数
+   * @param timeoutMillis 参数
+   * @param critical 参数
+   * @return 结果
+   */
   public SlaDefinition addStep(String name, long timeoutMillis, boolean critical) {
     steps.add(new SlaStep(name, timeoutMillis, critical));
     return this;
   }
 
   /** 获取总超时 */
+  /**
+   * get total timeout。
+   * @return 结果
+   */
   public Duration getTotalTimeout() {
     return Duration.ofMillis(steps.stream().mapToLong(SlaStep::getTimeoutMillis).sum());
   }

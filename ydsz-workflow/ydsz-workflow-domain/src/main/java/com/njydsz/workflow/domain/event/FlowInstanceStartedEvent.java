@@ -1,6 +1,7 @@
 package com.njydsz.workflow.domain.event;
 
 import java.io.Serial;
+import java.util.Map;
 
 import lombok.Getter;
 import lombok.ToString;
@@ -42,7 +43,7 @@ public class FlowInstanceStartedEvent extends FlowDomainEvent {
   private final String initiatorId;
 
   /** 流程变量 */
-  private final java.util.Map<String, Object> variables;
+  private final Map<String, Object> variables;
 
   public FlowInstanceStartedEvent(
       Object source,
@@ -52,7 +53,7 @@ public class FlowInstanceStartedEvent extends FlowDomainEvent {
       String businessType,
       String businessId,
       String initiatorId,
-      java.util.Map<String, Object> variables) {
+      Map<String, Object> variables) {
     super(source);
     this.instanceId = instanceId;
     this.flowCode = flowCode;
@@ -60,6 +61,6 @@ public class FlowInstanceStartedEvent extends FlowDomainEvent {
     this.businessType = businessType;
     this.businessId = businessId;
     this.initiatorId = initiatorId;
-    this.variables = variables != null ? variables : java.util.Collections.emptyMap();
+    this.variables = variables != null ? variables : emptyMap();
   }
 }

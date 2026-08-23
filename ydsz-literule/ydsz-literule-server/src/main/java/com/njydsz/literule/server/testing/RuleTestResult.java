@@ -60,7 +60,13 @@ public class RuleTestResult implements Serializable {
   /** 失败原因（passed=false 时填充） */
   private String failureReason;
 
-  /** 快速构建失败结果 */
+  /** 快速构建失败结果
+   * @param testCaseId 参数说明
+   * @param testCaseName 参数说明
+   * @param reason 参数说明
+   * @param elapsedMs 参数说明
+   * @return 失败结果对象
+   */
   public static RuleTestResult failed(
       String testCaseId, String testCaseName, String reason, long elapsedMs) {
     return RuleTestResult.builder()
@@ -72,7 +78,13 @@ public class RuleTestResult implements Serializable {
         .build();
   }
 
-  /** 快速构建通过结果 */
+  /** 快速构建通过结果
+   * @param testCaseId 参数说明
+   * @param testCaseName 参数说明
+   * @param triggered 参数说明
+   * @param elapsedMs 参数说明
+   * @return 通过结果对象
+   */
   public static RuleTestResult passed(
       String testCaseId, String testCaseName, Set<String> triggered, long elapsedMs) {
     return RuleTestResult.builder()

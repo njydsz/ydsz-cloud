@@ -169,13 +169,11 @@ public class OpenApiAutoConfiguration {
     // 优先使用 packages 列表
     if (group.getPackages() != null && !group.getPackages().isEmpty()) {
       builder.packagesToScan(group.getPackages().toArray(new String[0]));
-    }
-    // 使用 paths 列表
-    else if (group.getPaths() != null && !group.getPaths().isEmpty()) {
+    } else if (group.getPaths() != null && !group.getPaths().isEmpty()) {
+      // 使用 paths 列表
       builder.pathsToMatch(group.getPaths().toArray(new String[0]));
-    }
-    // 兼容旧版 basePath
-    else {
+    } else {
+      // 兼容旧版 basePath
       builder.pathsToMatch(group.getBasePath());
     }
 

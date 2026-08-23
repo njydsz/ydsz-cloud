@@ -32,6 +32,8 @@ public interface AuthPolicyMapper extends BaseMapper<AuthPolicyDO> {
    * @param tenantId 租户 ID；null 表示查询全局默认
    * @return 认证策略 DO；不存在返回 null
    */
-  @Select("SELECT * FROM ydsz_auth_policy WHERE (tenant_id = #{tenantId} OR (#{tenantId} IS NULL AND tenant_id IS NULL)) AND deleted = 0 LIMIT 1")
+  @Select("SELECT * FROM ydsz_auth_policy "
+      + "WHERE (tenant_id = #{tenantId} OR (#{tenantId} IS NULL AND tenant_id IS NULL)) "
+      + "AND deleted = 0 LIMIT 1")
   AuthPolicyDO selectByTenantId(@Param("tenantId") String tenantId);
 }

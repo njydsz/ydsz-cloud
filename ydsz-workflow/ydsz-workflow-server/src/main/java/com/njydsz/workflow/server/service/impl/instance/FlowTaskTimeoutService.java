@@ -40,8 +40,11 @@ public class FlowTaskTimeoutService {
 
   /**
    * 标记任务为 TIMEOUT 状态。
-   *
+   * 
    * <p>任务状态必须为 PENDING/CLAIMED，否则抛 BAD_REQUEST。完成后写审计日志、 触发 onTaskTimeout 事件、累计指标。
+   *
+   * @param taskId 参数说明
+   * @param reason 参数说明
    */
   @Transactional(rollbackFor = Exception.class)
   public void timeoutTask(String taskId, String reason) {
@@ -76,8 +79,12 @@ public class FlowTaskTimeoutService {
 
   /**
    * P2-1: 任务级挂起 — 将 PENDING/CLAIMED 任务临时挂起为 SUSPENDED。
-   *
+   * 
    * <p>仅修改任务状态，不推进流程、不取消其它任务。挂起期间不计超时 （JobScanner 应跳过 SUSPENDED）。激活后回到 PENDING，需重新签收。
+   *
+   * @param taskId 参数说明
+   * @param operatorId 参数说明
+   * @param reason 参数说明
    */
   @Transactional(rollbackFor = Exception.class)
   public void suspendTask(String taskId, String operatorId, String reason) {
@@ -100,8 +107,11 @@ public class FlowTaskTimeoutService {
 
   /**
    * P2-1: 任务级激活 — 将 SUSPENDED 任务恢复为 PENDING。
-   *
+   * 
    * <p>激活后清空签收人（assigneeId/assigneeName），需重新签收。
+   *
+   * @param taskId 参数说明
+   * @param operatorId 参数说明
    */
   @Transactional(rollbackFor = Exception.class)
   public void activateTask(String taskId, String operatorId) {
@@ -123,7 +133,12 @@ public class FlowTaskTimeoutService {
     log.info("[Flow] 任务激活: taskId={} operator={}", taskId, operatorId);
   }
 
-  /** 取消某实例的全部 PENDING 任务（终止/驳回终态时使用） */
+  /**
+   * 取消某实例的全部 PENDING 任务（终止/驳回终态时使用）
+   *
+   * @param instanceId 参数说明
+   * @param taskStatus 参数说明
+   */
   public void cancelByInstance(String instanceId, String taskStatus) {
     taskRepository.updateStatusByInstance(instanceId, taskStatus);
   }

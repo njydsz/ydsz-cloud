@@ -38,9 +38,15 @@ public interface AlertPublisher {
     return count;
   }
 
-  /** 判断发布器是否可用 */
+  /**
+   * 判断发布器是否可用。
+   * @return 判断发布器是否可用
+   */
   boolean isAvailable();
 
-  /** 获取发布器名称 */
+  /**
+   * 获取发布器名称。
+   * @return 获取发布器名称
+   */
   String getName();
 }

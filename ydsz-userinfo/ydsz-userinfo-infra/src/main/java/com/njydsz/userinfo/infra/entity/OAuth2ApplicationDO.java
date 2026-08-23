@@ -1,6 +1,6 @@
 package com.njydsz.userinfo.infra.entity;
 
-import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -49,7 +49,7 @@ public class OAuth2ApplicationDO extends MpBaseEntity<String> {
 
   /** 授权回调地址白名单（JSON 数组） */
   @TableField(typeHandler = JacksonTypeHandler.class)
-  private java.util.List<String> redirectUris;
+  private List<String> redirectUris;
 
   /** 允许申请的权限范围（JSON 数组） */
   @TableField(typeHandler = JacksonTypeHandler.class)

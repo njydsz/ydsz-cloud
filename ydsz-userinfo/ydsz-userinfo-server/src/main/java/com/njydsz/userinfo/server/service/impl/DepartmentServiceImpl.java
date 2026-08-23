@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.PostConstruct;
@@ -24,10 +25,10 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.dto.DepartmentDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
-import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
-import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.repository.DepartmentRepository;
 import com.njydsz.userinfo.domain.repository.UserDeptRepository;
+import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
+import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.DepartmentService;
 import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
@@ -97,7 +98,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     l1Cache =
         CacheBuilder.<String, String>newBuilder()
             .maximumSize(L1_CACHE_MAX_SIZE)
-            .expireAfterWrite(L1_CACHE_TTL_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS)
+            .expireAfterWrite(L1_CACHE_TTL_MILLIS, TimeUnit.MILLISECONDS)
             .build();
   }
 

@@ -38,6 +38,11 @@ public class FlowTodoSmartSortService {
   private static final int REMINDER_SCORE = 100;
 
   private static final int REMINDER_MAX_BONUS = 500;
+  /** 任务默认优先级（未设置时） */
+  private static final int DEFAULT_PRIORITY = 50;
+
+  /** SLA 紧急窗口（小时）：24h 内即将超期开始加分 */
+  private static final int SLA_WINDOW_HOURS = 24;
 
   /**
    * 对待办列表进行智能排序
@@ -57,12 +62,18 @@ public class FlowTodoSmartSortService {
         .collect(Collectors.toList());
   }
 
-  /** 计算单个任务的智能排序分 */
+  /**
+   * 计算单个任务的智能排序分
+   *
+   * @param task 参数说明
+   * @param now 参数说明
+   * @return 返回值说明
+   */
   public int calculateScore(FlowRunTaskDO task, LocalDateTime now) {
     int score = 0;
 
     // 1. 基础优先级
-    int priority = task.getPriority() != null ? task.getPriority() : 50;
+    int priority = task.getPriority() != null ? task.getPriority() : DEFAULT_PRIORITY;
     score += priority * 100;
 
     // 2. SLA 紧急度
@@ -72,9 +83,9 @@ public class FlowTodoSmartSortService {
         score += SLA_OVERDUE_BONUS;
       } else {
         long hoursLeft = Duration.between(now, task.getDueAt()).toHours();
-        if (hoursLeft <= 24) {
+        if (hoursLeft <= SLA_WINDOW_HOURS) {
           // 24h 内即将超期：按剩余时间反比加分
-          int bonus = (int) ((24 - hoursLeft) * (SLA_URGENT_BONUS / 24.0));
+          int bonus = (int) ((SLA_WINDOW_HOURS - hoursLeft) * (SLA_URGENT_BONUS / (double) SLA_WINDOW_HOURS));
           score += Math.min(bonus, SLA_URGENT_BONUS);
         }
       }

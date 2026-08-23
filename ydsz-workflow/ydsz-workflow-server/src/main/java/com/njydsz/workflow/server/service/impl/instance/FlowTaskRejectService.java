@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,13 +26,13 @@ import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
-import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
@@ -92,9 +91,11 @@ public class FlowTaskRejectService {
 
   /**
    * 驳回任务。
-   *
+   * 
    * <p>P1-11: 支持退回任意历史节点。 GAP-P0-2: 当 {@code dto.targetNodeCodes} 非空且 size > 1 时，在所有指定节点
    * 同时创建待办任务；否则降级到单节点退回（{@code dto.targetNodeCode}）。
+   *
+   * @param dto 参数说明
    */
   @Transactional(rollbackFor = Exception.class)
   public void reject(FlowTaskOperateDTO dto) {
@@ -207,9 +208,12 @@ public class FlowTaskRejectService {
 
   /**
    * P0-1 修复: 退回到发起人 — 解析 startNode 下游第一个审批节点作为退回目标。
-   *
+   * 
    * <p>原实现直接返回 startNode.getNodeCode()（开始节点本身）， 导致退回后不会生成有意义的待办任务。修正为沿 PASS 出边找到 第一个 APPROVAL
    * 类型节点，找不到时回退到开始节点。
+   *
+   * @param definitionId 参数说明
+   * @return 返回值说明
    */
   private String resolveInitiatorNodeCode(String definitionId) {
     if (definitionCacheService == null || definitionId == null) {

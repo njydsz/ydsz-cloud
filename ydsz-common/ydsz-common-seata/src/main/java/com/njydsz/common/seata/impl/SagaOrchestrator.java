@@ -124,10 +124,10 @@ public class SagaOrchestrator extends AbstractTransactionManager {
    * @param transactionName 事务名称
    * @param steps SAGA 步骤链
    * @return 最后一步的返回值
-   * @throws Exception 事务异常
+   * @throws Throwable 事务异常
    */
   public Object execute(String transactionName, List<? extends SagaStep<?>> steps)
-      throws Exception {
+      throws Throwable {
     String xid = beginXid(transactionName);
     LOG.info(
         "SAGA transaction started: name={}, xid={}, steps={}", transactionName, xid, steps.size());
@@ -208,11 +208,11 @@ public class SagaOrchestrator extends AbstractTransactionManager {
    * @param resultType 最后一步返回值的预期类型
    * @param <T> 最后一步的返回值类型
    * @return 最后一步的返回值
-   * @throws Exception 事务异常或类型不匹配
+   * @throws Throwable 事务异常或类型不匹配
    */
   public <T> T execute(
       String transactionName, List<? extends SagaStep<?>> steps, Class<T> resultType)
-      throws Exception {
+      throws Throwable {
     Object result = execute(transactionName, steps);
     return resultType.cast(result);
   }
@@ -258,9 +258,9 @@ public class SagaOrchestrator extends AbstractTransactionManager {
    * @param step SAGA 步骤
    * @param xid 全局事务 ID
    * @return 步骤执行结果
-   * @throws Exception 执行异常或超时异常
+   * @throws Throwable 执行异常或超时异常
    */
-  private Object executeStepWithTimeout(SagaStep<?> step, String xid) throws Exception {
+  private Object executeStepWithTimeout(SagaStep<?> step, String xid) throws Throwable {
     if (!step.hasTimeout()) {
       return step.getForwardAction().call();
     }
@@ -388,7 +388,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
 
   @Override
   public <T> T execute(String transactionName, TransactionType type, Callable<T> action)
-      throws Exception {
+      throws Throwable {
     String xid = beginXid(transactionName);
     try {
       T result = action.call();
@@ -402,7 +402,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
 
   @Override
   public <T> T executeWithCompensation(
-      String transactionName, Callable<T> action, Runnable compensation) throws Exception {
+      String transactionName, Callable<T> action, Runnable compensation) throws Throwable {
     String xid = beginXid(transactionName);
     try {
       T result = action.call();

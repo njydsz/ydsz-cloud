@@ -61,7 +61,11 @@ public class DataPermissionContext {
     return new DataPermissionContext();
   }
 
-  /** 是否缺少全部行级约束信息。 */
+  /**
+   * 是否缺少全部行级约束信息。
+   *
+   * @return {@code true} 表示数据范围、用户、部门、项目等约束均未设置
+   */
   public boolean isEmptyRowScope() {
     return dataScope == null
         && userId == null

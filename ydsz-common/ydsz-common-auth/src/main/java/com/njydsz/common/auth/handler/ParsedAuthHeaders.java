@@ -158,9 +158,18 @@ public class ParsedAuthHeaders {
    * <p>由 {@link #parse} 内部使用，承载各请求头的原始解析值，构造完成后组装为不可变结果对象。
    */
   private static class Builder {
-    String language, distinctId, authToken, userId, tenantId, requestSource;
+    String language;
+    String distinctId;
+    String authToken;
+    String userId;
+    String tenantId;
+    String requestSource;
     String dataScope;
-    Set<String> companyIds, deptIds, projectIds, regionIds;
-    Map<String, Set<String>> visibleColumns, editableColumns;
+    Set<String> companyIds;
+    Set<String> deptIds;
+    Set<String> projectIds;
+    Set<String> regionIds;
+    Map<String, Set<String>> visibleColumns;
+    Map<String, Set<String>> editableColumns;
   }
 }

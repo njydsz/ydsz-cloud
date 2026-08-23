@@ -10,7 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.njydsz.common.base.config.BaseSecurityHeadersProperties;
+import com.njydsz.common.base.config.YdszSecurityHeadersProperties;
 import com.njydsz.common.util.http.UrlPathUtils;
 
 /**
@@ -27,7 +27,7 @@ import com.njydsz.common.util.http.UrlPathUtils;
  *   <li>Referrer-Policy - 控制 Referer 头
  * </ul>
  *
- * <p>所有头部值均通过 {@link BaseSecurityHeadersProperties} 配置，支持排除特定路径。
+ * <p>所有头部值均通过 {@link YdszSecurityHeadersProperties} 配置，支持排除特定路径。
  *
  * <p>执行顺序：{@code Ordered.HIGHEST_PRECEDENCE + 20}，确保在业务逻辑之前执行。
  *
@@ -46,14 +46,14 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
   private static final String HEADER_CONTENT_SECURITY_POLICY = "Content-Security-Policy";
   private static final String HEADER_REFERRER_POLICY = "Referrer-Policy";
 
-  private final BaseSecurityHeadersProperties properties;
+  private final YdszSecurityHeadersProperties properties;
 
   /**
    * 构造安全响应头过滤器
    *
    * @param properties 安全头部配置属性
    */
-  public SecurityHeadersFilter(BaseSecurityHeadersProperties properties) {
+  public SecurityHeadersFilter(YdszSecurityHeadersProperties properties) {
     this.properties = properties;
   }
 

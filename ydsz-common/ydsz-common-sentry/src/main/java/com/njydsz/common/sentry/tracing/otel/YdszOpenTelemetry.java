@@ -50,11 +50,17 @@ public final class YdszOpenTelemetry {
   /** 标准 HTTP 头名称 */
   public static final String HEADER_TRACEPARENT = "traceparent";
 
+  /** W3C tracestate 请求头 */
   public static final String HEADER_TRACESTATE = "tracestate";
+  /** B3 TraceId 请求头 */
   public static final String HEADER_B3_TRACEID = "X-B3-TraceId";
+  /** B3 SpanId 请求头 */
   public static final String HEADER_B3_SPANID = "X-B3-SpanId";
+  /** B3 Sampled 请求头 */
   public static final String HEADER_B3_SAMPLED = "X-B3-Sampled";
+  /** B3 ParentSpanId 请求头 */
   public static final String HEADER_B3_PARENTSPANID = "X-B3-ParentSpanId";
+  /** Baggage 请求头 */
   public static final String HEADER_TRACEPARENT_BAGGAGE = "baggage";
 
   private static final Map<String, Tracer> TRACER_CACHE = new ConcurrentHashMap<>();
@@ -68,6 +74,10 @@ public final class YdszOpenTelemetry {
   // ============================================================================
 
   /** 获取全局 OpenTelemetry 实例 */
+  /**
+   * open telemetry。
+   * @return 结果
+   */
   public static OpenTelemetry openTelemetry() {
     OpenTelemetry otel = GlobalOpenTelemetry.get();
     if (otel == null) {
@@ -78,9 +88,10 @@ public final class YdszOpenTelemetry {
   }
 
   /**
-   * 获取指定命名空间的 Tracer（自动缓存）
+   * 获取指定命名空间的 Tracer（自动缓存）。
    *
    * @param instrumentationName 名称（一般填服务/模块名）
+   * @return Tracer 实例
    */
   public static Tracer tracer(String instrumentationName) {
     if (instrumentationName == null || instrumentationName.isEmpty()) {
@@ -91,11 +102,19 @@ public final class YdszOpenTelemetry {
   }
 
   /** 获取默认 Tracer */
+  /**
+   * tracer。
+   * @return 结果
+   */
   public static Tracer tracer() {
     return tracer(DEFAULT_INSTRUMENTATION_NAME);
   }
 
   /** 检测 OpenTelemetry SDK 是否可用 */
+  /**
+   * is available。
+   * @return 结果
+   */
   public static boolean isAvailable() {
     return GlobalOpenTelemetry.get() != null;
   }
@@ -139,7 +158,14 @@ public final class YdszOpenTelemetry {
     }
   }
 
-  /** 在指定 Context 中执行操作 */
+  /**
+   * 在指定 Context 中执行操作。
+   *
+   * @param context OTel Context
+   * @param action 要执行的操作
+   * @param <T> 操作结果类型
+   * @return 操作结果
+   */
   public static <T> T withContext(Context context, Supplier<T> action) {
     try (Scope ignored = context.makeCurrent()) {
       return action.get();
@@ -147,6 +173,11 @@ public final class YdszOpenTelemetry {
   }
 
   /** 在指定 Context 中执行无返回值操作 */
+  /**
+   * with context void。
+   * @param context 参数
+   * @param action 参数
+   */
   public static void withContextVoid(Context context, Runnable action) {
     withContext(
         context,
@@ -172,11 +203,22 @@ public final class YdszOpenTelemetry {
   public static final TextMapGetter<Map<String, String>> MAP_GETTER =
       new TextMapGetter<>() {
         @Override
+        /**
+         * keys。
+         * @param carrier 参数
+         * @return 结果
+         */
         public Iterable<String> keys(Map<String, String> carrier) {
           return carrier == null ? Collections.emptyList() : carrier.keySet();
         }
 
         @Override
+        /**
+         * get。
+         * @param carrier 参数
+         * @param key 参数
+         * @return 结果
+         */
         public String get(Map<String, String> carrier, String key) {
           return carrier == null ? null : carrier.get(key);
         }

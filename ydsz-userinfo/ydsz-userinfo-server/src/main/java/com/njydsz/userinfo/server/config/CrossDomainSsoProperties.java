@@ -57,6 +57,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @SuppressWarnings("checkstyle:MagicNumber")
 public class CrossDomainSsoProperties {
 
+  /** 默认cookieMaxAge值（可被配置文件覆盖） */
+  private static final int DEFAULT_COOKIE_MAX_AGE = -1;
+
   /** 是否启用跨域 SSO，默认 true。 */
   private boolean enabled = true;
 
@@ -88,7 +91,7 @@ public class CrossDomainSsoProperties {
    * <p>设为正数时覆盖 access_token TTL，控制跨域 Cookie 的过期时间。
    * 建议与 access_token 有效期一致，避免子域 Cookie 早于 Token 失效。
    */
-  private int cookieMaxAge = -1;
+  private int cookieMaxAge = DEFAULT_COOKIE_MAX_AGE;
 
   /**
    * 允许跨域携带 Token 的来源域白名单。

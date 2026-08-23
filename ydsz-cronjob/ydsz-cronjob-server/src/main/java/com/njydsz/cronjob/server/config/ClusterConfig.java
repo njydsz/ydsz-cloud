@@ -20,11 +20,14 @@ import lombok.Data;
 @Data
 public class ClusterConfig {
 
+  /** 默认maxNodes值（可被配置文件覆盖） */
+  private static final int DEFAULT_MAX_NODES = 3;
+
   /**
    * 集群最大节点数估算值（默认 3）。
    *
    * <p>当节点发现策略不可用时，用于计算全局并发上限： maxGlobal = maxConcurrent × maxNodes。
    * 节点发现策略可用时自动使用实际在线节点数。
    */
-  private int maxNodes = 3;
+  private int maxNodes = DEFAULT_MAX_NODES;
 }

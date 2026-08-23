@@ -74,6 +74,9 @@ import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 @RequestMapping("/api/v1/cronjob/topology")
 @RequiredArgsConstructor
 public class TaskTopologyController {
+  /** 最近日志条数 */
+  private static final int RECENT_LOG_LIMIT = 20;
+
 
   /** DAG 实例 Repository（DDD 分层：Controller 通过 Repository 接口访问） */
   private final JobDagInstanceRepository dagInstanceRepository;
@@ -215,6 +218,6 @@ public class TaskTopologyController {
   @GetMapping("/jobHistory/{jobKey}")
   public YdszResponse<List<JobLogVO>> getJobExecutionHistory(@PathVariable String jobKey) {
     // 通过 Repository 查询最近 20 条执行日志（LIMIT 20 在 Repository 层控制）
-    return YdszResponse.success(jobLogRepository.findByJobKey(jobKey, 20));
+    return YdszResponse.success(jobLogRepository.findByJobKey(jobKey, RECENT_LOG_LIMIT));
   }
 }

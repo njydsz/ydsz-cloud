@@ -64,17 +64,32 @@ public class IndexSyncListener {
       this.operation = operation;
     }
 
-    /** 创建 UPSERT 事件 */
+    /**
+     * 创建 UPSERT 事件。
+     *
+     * @param document 待索引文档
+     * @return UPSERT 事件实例
+     */
     public static IndexOperationEvent upsert(IndexDocument document) {
       return new IndexOperationEvent(IndexOperation.upsert(document));
     }
 
-    /** 创建 DELETE 事件 */
+    /**
+     * 创建 DELETE 事件。
+     *
+     * @param type 文档类型
+     * @param documentId 文档 ID
+     * @return DELETE 事件实例
+     */
     public static IndexOperationEvent delete(String type, String documentId) {
       return new IndexOperationEvent(IndexOperation.delete(type, documentId));
     }
 
-    /** 转换为索引操作 */
+    /**
+     * 转换为索引操作。
+     *
+     * @return 索引操作实例
+     */
     public IndexOperation toOperation() {
       return operation;
     }

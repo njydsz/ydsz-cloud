@@ -106,7 +106,7 @@ public class EmailTrackingService {
   /**
    * 为邮件内容注入追踪像素
    *
-   * <p>仅在 HTML 邮件且追踪功能启用时注入。 像素插入在 {@code </body>} 标签前，若无 body 标签则追加到内容末尾。
+   * <p>仅在 HTML 邮件且追踪功能启用时注入。 像素插入在 {@code < /body>} 标签前，若无 body 标签则追加到内容末尾。
    *
    * @param content 原始 HTML 邮件内容
    * @param messageId 邮件唯一标识（用于追踪关联）
@@ -200,12 +200,19 @@ public class EmailTrackingService {
 
   /** 邮件追踪事件类型（P3-1） */
   public enum TrackingEvent {
+    /** 已发送 */
     SENT,
+    /** 已投递 */
     DELIVERED,
+    /** 已打开 */
     OPENED,
+    /** 已点击 */
     CLICKED,
+    /** 已退信 */
     BOUNCED,
+    /** 已投诉 */
     COMPLAINED,
+    /** 已退订 */
     UNSUBSCRIBED
   }
 
@@ -232,6 +239,7 @@ public class EmailTrackingService {
       case BOUNCED, COMPLAINED, UNSUBSCRIBED -> recordDeliveryStatus(trackingId, event.name());
       case DELIVERED -> recordDeliveryStatus(trackingId, "DELIVERED");
       case SENT -> recordDeliveryStatus(trackingId, "SENT");
+      default -> LOG.debug("[EmailTrackingService] 忽略未知追踪事件: {}", event);
     }
 
     // 存储完整事件记录

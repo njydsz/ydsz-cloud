@@ -29,6 +29,7 @@ import com.njydsz.common.tenant.config.TenantProperties.TenantField;
  */
 public final class TenantHeaderContract {
 
+  /** 租户请求头前缀 */
   public static final String HEADER_PREFIX = "X-Tenant-";
 
   private TenantHeaderContract() {

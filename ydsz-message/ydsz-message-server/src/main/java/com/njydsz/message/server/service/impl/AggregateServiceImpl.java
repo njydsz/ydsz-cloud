@@ -24,9 +24,9 @@ import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.entity.batch.MsgAggregate;
-import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
 import com.njydsz.message.domain.repository.MsgAggregateRepository;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.service.batch.AggregateService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.template.TemplateService;
@@ -48,6 +48,12 @@ import com.njydsz.message.server.template.TemplateEngine;
 @Service
 @RequiredArgsConstructor
 public class AggregateServiceImpl implements AggregateService {
+  /** 锁等待时间（秒） */
+  private static final int LOCK_WAIT_SECONDS = 3;
+
+  /** 锁 TTL（秒） */
+  private static final int LOCK_TTL_SECONDS = 10;
+
 
   /** 默认聚合频率窗口(分钟) */
   private static final long DEFAULT_FREQUENCY_MINUTES = 30L;
@@ -86,7 +92,7 @@ public class AggregateServiceImpl implements AggregateService {
     String lockKey = MessageConstants.AGGREGATE_LOCK_PREFIX + group + ":" + receiver;
     String lockValue = null;
     try {
-      lockValue = distributedLocker.tryLock(lockKey, 3, 10, TimeUnit.SECONDS);
+      lockValue = distributedLocker.tryLock(lockKey, LOCK_WAIT_SECONDS, LOCK_TTL_SECONDS, TimeUnit.SECONDS);
       if (lockValue == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
@@ -278,7 +284,12 @@ public class AggregateServiceImpl implements AggregateService {
     }
   }
 
-  /** 加载摘要模板：按约定编码 DIGEST_{aggregateGroup} 查找, 找到则用模板 content,否则回退默认摘要文案。 */
+  /**
+   * 加载摘要模板：按约定编码 DIGEST_{aggregateGroup} 查找, 找到则用模板 content,否则回退默认摘要文案。
+   *
+   * @param batch 参数说明
+   * @return 返回值说明
+   */
   private String loadDigestTemplate(MsgAggregate batch) {
     String group = batch.getAggregateGroup();
     if (!StringUtils.hasText(group)) {

@@ -12,9 +12,9 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.ReceiptResult;
+import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
-import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.channel.sms.SmsProvider;
 import com.njydsz.message.server.config.MessageProperties;
@@ -97,7 +97,12 @@ public class SmsChannel implements MessageChannel {
     return results;
   }
 
-  /** P0-4: 查询短信回执（委托给 provider）。 */
+  /**
+   * P0-4: 查询短信回执（委托给 provider）。
+   *
+   * @param logVO 参数说明
+   * @return 返回值说明
+   */
   @Override
   public Optional<ReceiptResult> queryReceipt(MsgLogVO logVO) {
     SmsProvider provider = selectProvider();

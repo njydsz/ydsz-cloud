@@ -2,11 +2,12 @@ package com.njydsz.userinfo.domain.scim;
 
 import java.util.List;
 
-import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
  * SCIM 2.0 User 资源表示。

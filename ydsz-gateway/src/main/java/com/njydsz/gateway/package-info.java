@@ -20,7 +20,8 @@
  *
  * <ul>
  *   <li>{@code GatewayFilterConfig} / {@code GatewayFilterOrder} -- 过滤器注册与顺序定义</li>
- *   <li>{@code RateLimitProperties} / {@code CorsProperties} / {@code IpAccessControlProperties} -- 限流、CORS、IP 管控配置</li>
+ *   <li>{@code RateLimitProperties} / {@code CorsProperties} -- 限流与 CORS 配置</li>
+ *   <li>{@code IpAccessControlProperties} -- IP 管控配置</li>
  *   <li>{@code NacosRouteDefinitionRepository} -- 基于 Nacos 的动态路由配置源</li>
  *   <li>{@code WebSocketConnectionLimiter} -- WebSocket 连接数限制器</li>
  *   <li>{@code GatewayMetrics} / {@code GatewayHealthIndicator} -- 网关指标与健康检查</li>

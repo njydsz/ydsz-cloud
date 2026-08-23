@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.domain.alert.SecurityAlertRepository;
+import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
 import com.njydsz.userinfo.infra.converter.SecurityAlertConverter;
 import com.njydsz.userinfo.infra.entity.SecurityAlertDO;
 import com.njydsz.userinfo.infra.mapper.SecurityAlertMapper;
@@ -49,26 +50,22 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
   }
 
   @Override
-  public PageResponse<List<SecurityAlert>> page(
-      SecurityAlert.AlertStatus status,
-      SecurityAlert.RiskLevel riskLevel,
-      LocalDateTime startTime,
-      LocalDateTime endTime,
-      int pageNum,
-      int pageSize) {
+  public PageResponse<List<SecurityAlert>> page(SecurityAlertPageQuery query) {
+    int pageNum = query.getPageNum();
+    int pageSize = query.getPageSize();
     Page<SecurityAlertDO> page = new Page<>(pageNum, pageSize);
     LambdaQueryWrapper<SecurityAlertDO> wrapper = new LambdaQueryWrapper<>();
-    if (status != null) {
-      wrapper.eq(SecurityAlertDO::getStatus, status.name());
+    if (query.getStatus() != null) {
+      wrapper.eq(SecurityAlertDO::getStatus, query.getStatus().name());
     }
-    if (riskLevel != null) {
-      wrapper.eq(SecurityAlertDO::getRiskLevel, riskLevel.name());
+    if (query.getRiskLevel() != null) {
+      wrapper.eq(SecurityAlertDO::getRiskLevel, query.getRiskLevel().name());
     }
-    if (startTime != null) {
-      wrapper.ge(SecurityAlertDO::getCreatedAt, startTime);
+    if (query.effectiveStartTime() != null) {
+      wrapper.ge(SecurityAlertDO::getCreatedAt, query.effectiveStartTime());
     }
-    if (endTime != null) {
-      wrapper.le(SecurityAlertDO::getCreatedAt, endTime);
+    if (query.effectiveEndTime() != null) {
+      wrapper.le(SecurityAlertDO::getCreatedAt, query.effectiveEndTime());
     }
     wrapper.orderByDesc(SecurityAlertDO::getCreatedAt);
     Page<SecurityAlertDO> result = securityAlertMapper.selectPage(page, wrapper);

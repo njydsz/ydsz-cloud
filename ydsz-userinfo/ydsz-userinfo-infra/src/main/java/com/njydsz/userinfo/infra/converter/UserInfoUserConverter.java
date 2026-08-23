@@ -13,13 +13,6 @@ import com.njydsz.userinfo.domain.dto.UserLoginHistoryDTO;
 import com.njydsz.userinfo.domain.dto.UserPasswordHistoryDTO;
 import com.njydsz.userinfo.domain.dto.UserPostDTO;
 import com.njydsz.userinfo.domain.dto.UserRoleDTO;
-import com.njydsz.userinfo.infra.entity.SocialAccountDO;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
-import com.njydsz.userinfo.infra.entity.UserDeptDO;
-import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
-import com.njydsz.userinfo.infra.entity.UserPasswordHistoryDO;
-import com.njydsz.userinfo.infra.entity.UserPostDO;
-import com.njydsz.userinfo.infra.entity.UserRoleDO;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.domain.vo.SocialAccountVO;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
@@ -29,6 +22,13 @@ import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 import com.njydsz.userinfo.domain.vo.UserPasswordHistoryVO;
 import com.njydsz.userinfo.domain.vo.UserPostVO;
 import com.njydsz.userinfo.domain.vo.UserRoleVO;
+import com.njydsz.userinfo.infra.entity.SocialAccountDO;
+import com.njydsz.userinfo.infra.entity.UserAccountDO;
+import com.njydsz.userinfo.infra.entity.UserDeptDO;
+import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
+import com.njydsz.userinfo.infra.entity.UserPasswordHistoryDO;
+import com.njydsz.userinfo.infra.entity.UserPostDO;
+import com.njydsz.userinfo.infra.entity.UserRoleDO;
 
 /**
  * 用户领域 MapStruct 转换器。

@@ -30,6 +30,7 @@ import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 @Mapper
 public interface WorkflowRepositoryConverter {
 
+  /** MapStruct 单例实例 */
   WorkflowRepositoryConverter INSTANT = Mappers.getMapper(WorkflowRepositoryConverter.class);
 
   // ===== DO ↔ VO =====

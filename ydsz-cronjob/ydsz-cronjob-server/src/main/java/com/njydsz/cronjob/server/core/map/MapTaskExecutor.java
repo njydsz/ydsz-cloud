@@ -5,10 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.annotation.PostConstruct;
@@ -22,10 +19,6 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.cronjob.domain.vo.JobVO;
-import com.njydsz.cronjob.domain.vo.JobNodeVO;
-import com.njydsz.cronjob.domain.vo.JobTaskVO;
-import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobLogger;
 import com.njydsz.cronjob.domain.job.MapContext;
@@ -34,6 +27,10 @@ import com.njydsz.cronjob.domain.job.MapReduceProcessor;
 import com.njydsz.cronjob.domain.job.MapTask;
 import com.njydsz.cronjob.domain.job.ProcessResult;
 import com.njydsz.cronjob.domain.repository.JobTaskRepository;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
+import com.njydsz.cronjob.domain.vo.JobNodeVO;
+import com.njydsz.cronjob.domain.vo.JobTaskVO;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.MapReduceConfig;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
@@ -82,6 +79,12 @@ import com.njydsz.cronjob.server.core.dispatch.RemoteTaskClient;
 @Component
 @RequiredArgsConstructor
 public class MapTaskExecutor {
+  /** Map 任务队列容量 */
+  private static final int MAP_TASK_QUEUE_CAPACITY = 256;
+
+  /** 默认最大重试次数 */
+  private static final int DEFAULT_MAX_RETRIES = 3;
+
 
   /** root task 名称常量 */
   private static final String ROOT_TASK_NAME = "root";
@@ -127,7 +130,7 @@ public class MapTaskExecutor {
           ExecutorUtils.builder()
               .corePoolSize(maxParallel)
               .maxPoolSize(maxParallel)
-              .queueCapacity(256)
+              .queueCapacity(MAP_TASK_QUEUE_CAPACITY)
               .threadNamePrefix("job-map-reduce-fallback-")
               .daemon(true)
               .build();
@@ -785,7 +788,7 @@ public class MapTaskExecutor {
       return false;
     }
     int currentRetryCount = taskDO.getRetryCount() != null ? taskDO.getRetryCount() : 0;
-    int maxRetries = 3;
+    int maxRetries = DEFAULT_MAX_RETRIES;
     if (currentRetryCount >= maxRetries) {
       log.warn(
           "[MapTaskRetry] 子任务超过最大重试次数, 拒绝重试: taskId={} retries={}/{}",

@@ -24,11 +24,11 @@ import javax.script.ScriptEngineManager;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
-import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.api.ScriptDefinition;
 import com.njydsz.literule.server.core.RuleEvaluationException;
 
@@ -91,6 +91,9 @@ import com.njydsz.literule.server.core.RuleEvaluationException;
  */
 @Slf4j
 public class ScriptRule implements Rule {
+
+    /** 纳秒到毫秒的换算系数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
 
   private final String code;
   private final String name;
@@ -682,16 +685,20 @@ public class ScriptRule implements Rule {
 
   /** 计算耗时（毫秒） */
   private long elapsedMs(long startNano) {
-    return (System.nanoTime() - startNano) / 1_000_000;
+    return (System.nanoTime() - startNano) / NANOS_PER_MILLI;
   }
 
   /** 首字母大写 */
   private static String capitalize(String s) {
-    if (s == null || s.isEmpty()) return s;
+    if (s == null || s.isEmpty()) {
+      return s;
+    }
     return Character.toUpperCase(s.charAt(0)) + s.substring(1);
   }
 
-  /** 获取脚本内容 */
+  /** 获取脚本内容
+   * @return 返回值说明
+   */
   public String getScript() {
     return script;
   }
@@ -706,7 +713,9 @@ public class ScriptRule implements Rule {
     return language;
   }
 
-  /** 是否启用沙箱 */
+  /** 是否启用沙箱
+   * @return 返回值说明
+   */
   public boolean isSandboxEnabled() {
     return sandboxEnabled;
   }

@@ -5,16 +5,16 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
-import com.njydsz.literule.infra.entity.DecisionTableDO;
-import com.njydsz.literule.infra.entity.RuleABPolicyDO;
-import com.njydsz.literule.infra.entity.RuleABRollbackDO;
-import com.njydsz.literule.infra.entity.RuleChainGraphDO;
-import com.njydsz.literule.infra.entity.RuleTemplateDO;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.domain.vo.RuleABPolicyVO;
 import com.njydsz.literule.domain.vo.RuleABRollbackVO;
 import com.njydsz.literule.domain.vo.RuleChainGraphVO;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
+import com.njydsz.literule.infra.entity.DecisionTableDO;
+import com.njydsz.literule.infra.entity.RuleABPolicyDO;
+import com.njydsz.literule.infra.entity.RuleABRollbackDO;
+import com.njydsz.literule.infra.entity.RuleChainGraphDO;
+import com.njydsz.literule.infra.entity.RuleTemplateDO;
 
 /**
  * 规则组件转换器（P2-2 拆分）
@@ -27,6 +27,7 @@ import com.njydsz.literule.domain.vo.RuleTemplateVO;
 @Mapper
 public interface RuleComponentConverter {
 
+  /** MapStruct 单例实例 */
   RuleComponentConverter INSTANCE = Mappers.getMapper(RuleComponentConverter.class);
 
   // ===== DecisionTableDO =====

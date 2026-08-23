@@ -1,7 +1,8 @@
 package com.njydsz.system.domain.vo;
 
-import com.njydsz.common.json.annotation.JsonIgnore;
 import lombok.Data;
+
+import com.njydsz.common.json.annotation.JsonIgnore;
 
 /**
  * 应用注册 VO

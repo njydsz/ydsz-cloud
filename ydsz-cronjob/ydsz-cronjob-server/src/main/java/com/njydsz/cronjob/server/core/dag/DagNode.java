@@ -195,7 +195,12 @@ public record DagNode(
     /** P1-6: 审批节点：等待人工审批后继续执行 */
     APPROVAL;
 
-    /** 安全解析节点类型字符串，无效值返回 {@link #TASK}。 */
+    /**
+     * 安全解析节点类型字符串，无效值返回 {@link #TASK}。
+     *
+     * @param value 节点类型字符串
+     * @return 解析后的节点类型；无效值返回 TASK
+     */
     public static NodeType parse(String value) {
       if (value == null || value.isBlank()) {
         return TASK;

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,12 +21,11 @@ import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
-import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
-import java.util.stream.Collectors;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -311,7 +311,14 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
 
   // ============ 私有方法 ============
 
-  /** 计算当前用户在流程中的角色 */
+  /**
+   * 计算当前用户在流程中的角色
+   *
+   * @param instance 参数说明
+   * @param pending 参数说明
+   * @param userId 参数说明
+   * @return 返回值说明
+   */
   private String computeMyRole(FlowInstanceVO instance, List<FlowRunTaskDO> pending, String userId) {
     if (userId == null) {
       return ROLE_OBSERVER;
@@ -329,7 +336,14 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     return ROLE_OBSERVER;
   }
 
-  /** 计算当前用户可执行的操作 */
+  /**
+   * 计算当前用户可执行的操作
+   *
+   * @param instance 参数说明
+   * @param pending 参数说明
+   * @param userId 参数说明
+   * @return 返回值说明
+   */
   private List<String> computeActions(
       FlowInstanceVO instance, List<FlowRunTaskDO> pending, String userId) {
     List<String> actions = new ArrayList<>();
@@ -375,15 +389,20 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
 
   /**
    * 当前用户是否可撤回（P0-4 修复：补全下游已处理判断）
-   *
+   * 
    * <p>撤回条件：
-   *
+   * 
    * <ol>
-   *   <li>操作人是发起人
-   *   <li>实例未结束（RUNNING）
-   *   <li>所有 PENDING 任务均未签收（CLAIMED）
-   *   <li>【P0-4 新增】无已完成的历史任务 — 如果有审批人已处理过任务，说明流程已推进到下游，不可撤回
+   * <li>操作人是发起人
+   * <li>实例未结束（RUNNING）
+   * <li>所有 PENDING 任务均未签收（CLAIMED）
+   * <li>【P0-4 新增】无已完成的历史任务 — 如果有审批人已处理过任务，说明流程已推进到下游，不可撤回
    * </ol>
+   *
+   * @param instance 参数说明
+   * @param pending 参数说明
+   * @param userId 参数说明
+   * @return 返回值说明
    */
   private boolean canRecall(FlowInstanceVO instance, List<FlowRunTaskDO> pending, String userId) {
     if (userId == null) {
@@ -419,7 +438,13 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     return true;
   }
 
-  /** 判定 task 是否属于指定 userId（USER/ROLE/DEPT 等多种 assigneeType 均纳入判断） */
+  /**
+   * 判定 task 是否属于指定 userId（USER/ROLE/DEPT 等多种 assigneeType 均纳入判断）
+   *
+   * @param t 参数说明
+   * @param userId 参数说明
+   * @return 返回值说明
+   */
   private boolean isMine(FlowRunTaskDO t, String userId) {
     if (t == null || userId == null) {
       return false;
@@ -441,7 +466,13 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     return false;
   }
 
-  /** 找到当前用户 mine 的第一个未完成任务 */
+  /**
+   * 找到当前用户 mine 的第一个未完成任务
+   *
+   * @param instanceId 参数说明
+   * @param userId 参数说明
+   * @return 返回值说明
+   */
   private FlowRunTaskDO findMyTask(String instanceId, String userId) {
     if (userId == null) {
       return null;
@@ -455,7 +486,13 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     return null;
   }
 
-  /** 构造当前待办视图 */
+  /**
+   * 构造当前待办视图
+   *
+   * @param pending 参数说明
+   * @param userId 参数说明
+   * @return 返回值说明
+   */
   private List<EmbeddedApprovalViewDTO.CurrentTaskView> buildCurrentTaskViews(
       List<FlowRunTaskDO> pending, String userId) {
     if (pending == null || pending.isEmpty()) {

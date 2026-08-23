@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -24,19 +23,19 @@ import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
-import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserProfileUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserRoleDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.domain.vo.RoleVO;
-import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
-import com.njydsz.userinfo.domain.vo.UserAccountVO;
-import com.njydsz.userinfo.domain.vo.UserRoleVO;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.repository.UserDeptRepository;
 import com.njydsz.userinfo.domain.repository.UserRoleRepository;
+import com.njydsz.userinfo.domain.vo.RoleVO;
+import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
+import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.userinfo.domain.vo.UserRoleVO;
 import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.auth.UserPasswordHistoryService;
@@ -136,57 +135,74 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Transactional(rollbackFor = Exception.class)
   public String save(UserAccountDTO dto) {
     if (dto.getId() == null || dto.getId().isBlank()) {
-      // ========== 创建场景 ==========
-      if (userAccountRepository.existsByUsername(dto.getUsername())) {
-        throw new BusinessException(UserInfoExceptionCode.USERNAME_DUPLICATE);
-      }
-
-      // 密码策略校验
-      passwordPolicyValidator.validate(dto.getPassword(), dto.getUsername());
-
-      // BCrypt 加密密码（DTO 中的 plaintext 密码替换为哈希后写入 DB）
-      String passwordHash = passwordEncoder.encode(dto.getPassword());
-
-      // 设置默认值
-      if (dto.getStatus() == null) {
-        dto.setStatus(EnableStatusEnum.ENABLED);
-      }
-      if (dto.getTenantId() == null || dto.getTenantId().isBlank()) {
-        dto.setTenantId("1");
-      }
-
-      UserAccountVO vo = userAccountRepository.save(dto);
-      log.info("User created: username={}, id={}", dto.getUsername(), vo.getId());
-
-      // 记录初始密码到密码历史
-      passwordHistoryService.recordPasswordHistory(
-          vo.getId(), passwordHash, properties.getPasswordHistoryCount());
-
-      indexUpsert(vo);
-      eventPublisher.publishUserCreated(vo);
-      return vo.getId();
-    } else {
-      // ========== 更新场景 ==========
-      UserAccountVO existing = userAccountRepository.findById(dto.getId())
-          .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND));
-
-      // P1-6: 乐观锁版本回填 —— DTO 未携带版本号时使用当前版本（兼容旧调用方）
-      if (dto.getRevision() == null) {
-        dto.setRevision(existing.getRevision());
-      }
-
-      UserAccountVO vo = userAccountRepository.save(dto);
-      if (vo != null) {
-        indexUpsert(vo);
-        eventPublisher.publishUserUpdated(vo);
-        // 用户被禁用时驱逐全部会话
-        if (vo.getStatus() != null && vo.getStatus() == 0) {
-          authService.evictAllSessions(dto.getId());
-          log.info("User {} disabled, all sessions evicted", dto.getId());
-        }
-      }
-      return dto.getId();
+      return createUser(dto);
     }
+    return updateUser(dto);
+  }
+
+  /**
+   * 创建用户。
+   *
+   * @param dto 用户 DTO（不含 ID）
+   * @return 新用户 ID
+   */
+  private String createUser(UserAccountDTO dto) {
+    if (userAccountRepository.existsByUsername(dto.getUsername())) {
+      throw new BusinessException(UserInfoExceptionCode.USERNAME_DUPLICATE);
+    }
+
+    // 密码策略校验
+    passwordPolicyValidator.validate(dto.getPassword(), dto.getUsername());
+
+    // BCrypt 加密密码（DTO 中的 plaintext 密码替换为哈希后写入 DB）
+    String passwordHash = passwordEncoder.encode(dto.getPassword());
+
+    // 设置默认值
+    if (dto.getStatus() == null) {
+      dto.setStatus(EnableStatusEnum.ENABLED);
+    }
+    if (dto.getTenantId() == null || dto.getTenantId().isBlank()) {
+      dto.setTenantId("1");
+    }
+
+    UserAccountVO vo = userAccountRepository.save(dto);
+    log.info("User created: username={}, id={}", dto.getUsername(), vo.getId());
+
+    // 记录初始密码到密码历史
+    passwordHistoryService.recordPasswordHistory(
+        vo.getId(), passwordHash, properties.getPasswordHistoryCount());
+
+    indexUpsert(vo);
+    eventPublisher.publishUserCreated(vo);
+    return vo.getId();
+  }
+
+  /**
+   * 更新用户。
+   *
+   * @param dto 用户 DTO（含 ID）
+   * @return 用户 ID
+   */
+  private String updateUser(UserAccountDTO dto) {
+    UserAccountVO existing = userAccountRepository.findById(dto.getId())
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND));
+
+    // P1-6: 乐观锁版本回填 —— DTO 未携带版本号时使用当前版本（兼容旧调用方）
+    if (dto.getRevision() == null) {
+      dto.setRevision(existing.getRevision());
+    }
+
+    UserAccountVO vo = userAccountRepository.save(dto);
+    if (vo != null) {
+      indexUpsert(vo);
+      eventPublisher.publishUserUpdated(vo);
+      // 用户被禁用时驱逐全部会话
+      if (vo.getStatus() != null && vo.getStatus() == 0) {
+        authService.evictAllSessions(dto.getId());
+        log.info("User {} disabled, all sessions evicted", dto.getId());
+      }
+    }
+    return dto.getId();
   }
 
   /**

@@ -52,13 +52,33 @@ public interface FlowDelegateAuthService {
    */
   void revoke(String authId, String ownerUserId);
 
-  /** 启用/停用 */
+  /**
+   * 启用/停用
+   *
+   * @param authId 参数说明
+   * @param status 参数说明
+   * @param operatorId 参数说明
+   */
   void updateStatus(String authId, String status, String operatorId);
 
-  /** 查"我设置的"授权列表（返回 DO，供 Service 层内部使用） */
+  /**
+   * 查"我设置的"授权列表（返回 DO，供 Service 层内部使用）
+   *
+   * @param ownerUserId 参数说明
+   * @param tenantId 参数说明
+   * @param status 参数说明
+   * @return 返回值说明
+   */
   List<FlowDelegateAuthDO> listMine(String ownerUserId, String tenantId, String status);
 
-  /** 查"代理给我的"授权列表（返回 DO，供 Service 层内部使用） */
+  /**
+   * 查"代理给我的"授权列表（返回 DO，供 Service 层内部使用）
+   *
+   * @param delegateUserId 参数说明
+   * @param tenantId 参数说明
+   * @param status 参数说明
+   * @return 返回值说明
+   */
   List<FlowDelegateAuthDO> listAsDelegate(String delegateUserId, String tenantId, String status);
 
   /**
@@ -103,10 +123,24 @@ public interface FlowDelegateAuthService {
    */
   int scanAndMarkExpired();
 
-  /** 分页查询"我代理处理的日志" */
+  /**
+   * 分页查询"我代理处理的日志"
+   *
+   * @param delegateUserId 参数说明
+   * @param page 参数说明
+   * @param size 参数说明
+   * @return 返回值说明
+   */
   YdszResponse<?> listDelegateLog(String delegateUserId, int page, int size);
 
-  /** 分页查询"我的被代理日志" */
+  /**
+   * 分页查询"我的被代理日志"
+   *
+   * @param ownerUserId 参数说明
+   * @param page 参数说明
+   * @param size 参数说明
+   * @return 返回值说明
+   */
   YdszResponse<?> listOwnerLog(String ownerUserId, int page, int size);
 
   /**

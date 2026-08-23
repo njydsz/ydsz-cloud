@@ -43,9 +43,10 @@ public class TccActionRegistry implements ApplicationContextAware, InitializingB
   }
 
   /**
-   * 通过 Bean 名称查找 TCC Action
+   * 通过 Bean 名称查找 TCC Action。
    *
    * @param beanName Spring Bean 名称
+   * @param <T> TCC Action 业务类型
    * @return TccAction 实例，未找到时返回 null
    */
   @SuppressWarnings("unchecked")

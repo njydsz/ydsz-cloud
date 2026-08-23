@@ -41,6 +41,11 @@ public final class OtelResources {
   }
 
   /** 创建 YDSZ 标准 Resource */
+  /**
+   * create。
+   * @param config 参数
+   * @return 结果
+   */
   public static Resource create(YdszResourceConfig config) {
     try {
       AttributesBuilder attrs = Attributes.builder();
@@ -111,6 +116,11 @@ public final class OtelResources {
   }
 
   /** 使用默认配置创建 */
+  /**
+   * create default。
+   * @param serviceName 参数
+   * @return 结果
+   */
   public static Resource createDefault(String serviceName) {
     return create(YdszResourceConfig.builder().serviceName(serviceName).build());
   }

@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -44,6 +43,24 @@ public class SecurityAlertService {
   /** 告警去重标记 Redis Key 前缀 */
   private static final String ALERT_DEDUP_KEY_PREFIX = "userinfo:alert:dedup:";
 
+  /** 锁定时长超过该值（分钟）视为高风险；-1 表示永久锁定 */
+  private static final long LOCK_DURATION_HIGH_RISK_MINUTES = 60;
+
+  /** MFA 失败告警时间窗口（分钟）：5 分钟 */
+  private static final int MFA_FAIL_WINDOW_MINUTES = 5;
+
+  /** MFA 失败告警 IP 维度时间窗口（分钟）：3 分钟 */
+  private static final int MFA_FAIL_IP_WINDOW_MINUTES = 3;
+
+  /** MFA 失败用户维度触发阈值 */
+  private static final int MFA_FAIL_USER_THRESHOLD = 2;
+
+  /** MFA 失败 IP 维度触发阈值 */
+  private static final int MFA_FAIL_IP_THRESHOLD = 4;
+
+  /** 密码喷洒失败次数触发阈值 */
+  private static final int PASSWORD_SPRAY_FAIL_THRESHOLD = 20;
+
   private final SecurityAlertRepository alertRepository;
   private final List<AlertNotificationChannel> notificationChannels;
   private final RedisStringOps redisStringOps;
@@ -59,7 +76,7 @@ public class SecurityAlertService {
    */
   public void triggerAccountLockedAlert(
       String userId, String username, long lockDuration, String reason) {
-    SecurityAlert.RiskLevel riskLevel = lockDuration > 60 || lockDuration == -1
+    SecurityAlert.RiskLevel riskLevel = lockDuration > LOCK_DURATION_HIGH_RISK_MINUTES || lockDuration == -1
         ? SecurityAlert.RiskLevel.HIGH
         : SecurityAlert.RiskLevel.MEDIUM;
 
@@ -68,14 +85,14 @@ public class SecurityAlertService {
         "用户 %s（ID: %s）因 %s 被锁定，锁定时长 %d 分钟",
         username, userId, reason, lockDuration);
 
-    createAndSendAlert(
+    createAndSendAlert(new SecurityAlertCommand(
         SecurityAlert.AlertType.ACCOUNT_LOCKED,
         riskLevel,
         userId,
         username,
         null,
         title,
-        content);
+        content));
   }
 
   /**
@@ -100,14 +117,14 @@ public class SecurityAlertService {
         "用户 %s（ID: %s）因 %s 被 %s %s封禁",
         username, userId, reason, bannedBy, isPermanent ? "永久" : "临时");
 
-    createAndSendAlert(
+    createAndSendAlert(new SecurityAlertCommand(
         SecurityAlert.AlertType.ACCOUNT_BANNED,
         riskLevel,
         userId,
         username,
         null,
         title,
-        content);
+        content));
   }
 
   /**
@@ -133,14 +150,14 @@ public class SecurityAlertService {
         "用户 %s（ID: %s）使用 %s 进行 MFA 验证失败，原因：%s，来源 IP：%s",
         username, userId, mfaType, reason, sourceIp);
 
-    createAndSendAlert(
+    createAndSendAlert(new SecurityAlertCommand(
         SecurityAlert.AlertType.MFA_FAILED,
         riskLevel,
         userId,
         username,
         sourceIp,
         title,
-        content);
+        content));
   }
 
   /**
@@ -151,7 +168,7 @@ public class SecurityAlertService {
    * @param targetedUsernames 被攻击的用户名列表
    */
   public void triggerBruteForceAlert(String sourceIp, int failCount, List<String> targetedUsernames) {
-    SecurityAlert.RiskLevel riskLevel = failCount >= 20
+    SecurityAlert.RiskLevel riskLevel = failCount >= PASSWORD_SPRAY_FAIL_THRESHOLD
         ? SecurityAlert.RiskLevel.CRITICAL
         : SecurityAlert.RiskLevel.HIGH;
 
@@ -160,14 +177,14 @@ public class SecurityAlertService {
         "来源 IP %s 短时间内登录失败 %d 次，涉及用户：%s",
         sourceIp, failCount, String.join(", ", targetedUsernames));
 
-    createAndSendAlert(
+    createAndSendAlert(new SecurityAlertCommand(
         SecurityAlert.AlertType.BRUTE_FORCE,
         riskLevel,
         null,
         null,
         sourceIp,
         title,
-        content);
+        content));
   }
 
   /**
@@ -184,14 +201,14 @@ public class SecurityAlertService {
         "来源 IP %s 短时间内尝试登录 %d 个不同账号：%s",
         sourceIp, targetedUsernames.size(), String.join(", ", targetedUsernames));
 
-    createAndSendAlert(
+    createAndSendAlert(new SecurityAlertCommand(
         SecurityAlert.AlertType.PASSWORD_SPRAY,
         riskLevel,
         null,
         null,
         sourceIp,
         title,
-        content);
+        content));
   }
 
   /**
@@ -209,14 +226,14 @@ public class SecurityAlertService {
         "用户 %s（ID: %s）从来源 IP %s 使用新设备或异常时段登录，User-Agent：%s",
         username, userId, sourceIp, userAgent);
 
-    createAndSendAlert(
+    createAndSendAlert(new SecurityAlertCommand(
         SecurityAlert.AlertType.ANOMALOUS_LOGIN,
         SecurityAlert.RiskLevel.MEDIUM,
         userId,
         username,
         sourceIp,
         title,
-        content);
+        content));
   }
 
   // ==================== 内部方法 ====================
@@ -232,18 +249,18 @@ public class SecurityAlertService {
    * @param title 标题
    * @param content 内容
    */
-  private void createAndSendAlert(
-      SecurityAlert.AlertType alertType,
-      SecurityAlert.RiskLevel riskLevel,
-      String userId,
-      String username,
-      String sourceIp,
-      String title,
-      String content) {
+  /**
+   * 创建并发送安全告警（高风险/严重告警不受去重限制）。
+   *
+   * @param command 告警创建参数
+   */
+  private void createAndSendAlert(SecurityAlertCommand command) {
     // 高风险和严重告警不受去重限制
-    if (riskLevel != SecurityAlert.RiskLevel.CRITICAL && riskLevel != SecurityAlert.RiskLevel.HIGH) {
-      if (isDuplicate(alertType, userId, sourceIp)) {
-        log.debug("告警去重跳过: type={}, userId={}, sourceIp={}", alertType, userId, sourceIp);
+    if (command.riskLevel() != SecurityAlert.RiskLevel.CRITICAL
+        && command.riskLevel() != SecurityAlert.RiskLevel.HIGH) {
+      if (isDuplicate(command.alertType(), command.userId(), command.sourceIp())) {
+        log.debug("告警去重跳过: type={}, userId={}, sourceIp={}",
+            command.alertType(), command.userId(), command.sourceIp());
         return;
       }
     }
@@ -251,13 +268,13 @@ public class SecurityAlertService {
     // 保存告警到数据库
     SecurityAlert alert = new SecurityAlert(
         UUID.randomUUID().toString(),
-        alertType,
-        riskLevel,
-        userId,
-        username,
-        sourceIp,
-        title,
-        content,
+        command.alertType(),
+        command.riskLevel(),
+        command.userId(),
+        command.username(),
+        command.sourceIp(),
+        command.title(),
+        command.content(),
         SecurityAlert.AlertStatus.PENDING,
         LocalDateTime.now(),
         null,
@@ -267,12 +284,13 @@ public class SecurityAlertService {
     try {
       savedAlert = alertRepository.save(alert);
     } catch (Exception e) {
-      log.error("保存告警失败: type={}, userId={}, error={}", alertType, userId, e.getMessage(), e);
+      log.error("保存告警失败: type={}, userId={}, error={}",
+          command.alertType(), command.userId(), e.getMessage(), e);
       return;
     }
 
     // 设置去重标记
-    setDedupMarker(alertType, userId, sourceIp);
+    setDedupMarker(command.alertType(), command.userId(), command.sourceIp());
 
     // 发送通知到各渠道
     sendNotification(savedAlert);
@@ -341,22 +359,22 @@ public class SecurityAlertService {
    */
   private boolean shouldAlertMfaFailed(String userId, String sourceIp) {
     try {
-      LocalDateTime fiveMinAgo = LocalDateTime.now().minusMinutes(5);
+      LocalDateTime fiveMinAgo = LocalDateTime.now().minusMinutes(MFA_FAIL_WINDOW_MINUTES);
       // 用户维度统计
       if (userId != null) {
         long userFailCount = alertRepository.countRecentAlerts(
             SecurityAlert.AlertType.MFA_FAILED, userId, null, fiveMinAgo);
-        if (userFailCount >= 2) {
+        if (userFailCount >= MFA_FAIL_USER_THRESHOLD) {
           // 已有 2 条（含本次将第 3 条），触发告警
           return true;
         }
       }
       // IP 维度统计
       if (sourceIp != null) {
-        LocalDateTime threeMinAgo = LocalDateTime.now().minusMinutes(3);
+        LocalDateTime threeMinAgo = LocalDateTime.now().minusMinutes(MFA_FAIL_IP_WINDOW_MINUTES);
         long ipFailCount = alertRepository.countRecentAlerts(
             SecurityAlert.AlertType.MFA_FAILED, null, sourceIp, threeMinAgo);
-        if (ipFailCount >= 4) {
+        if (ipFailCount >= MFA_FAIL_IP_THRESHOLD) {
           return true;
         }
       }

@@ -47,12 +47,23 @@ public class IndexOperation implements Serializable {
     BULK
   }
 
-  /** 创建 UPSERT 操作 */
+  /**
+   * 创建 UPSERT 操作。
+   *
+   * @param document 待索引文档
+   * @return UPSERT 操作实例
+   */
   public static IndexOperation upsert(IndexDocument document) {
     return IndexOperation.builder().operation(OperationType.UPSERT).document(document).build();
   }
 
-  /** 创建 DELETE 操作 */
+  /**
+   * 创建 DELETE 操作。
+   *
+   * @param type 文档类型
+   * @param documentId 文档 ID
+   * @return DELETE 操作实例
+   */
   public static IndexOperation delete(String type, String documentId) {
     return IndexOperation.builder()
         .operation(OperationType.DELETE)
@@ -61,7 +72,12 @@ public class IndexOperation implements Serializable {
         .build();
   }
 
-  /** 创建批量 UPSERT 操作 */
+  /**
+   * 创建批量 UPSERT 操作。
+   *
+   * @param documents 待索引文档列表
+   * @return 批量 UPSERT 操作实例
+   */
   public static IndexOperation bulkUpsert(List<IndexDocument> documents) {
     return IndexOperation.builder().operation(OperationType.BULK).documents(documents).build();
   }

@@ -26,10 +26,11 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.vo.LoginVO;
+import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
 import com.njydsz.userinfo.server.auth.RoleCacheService;
+import com.njydsz.userinfo.server.auth.WebAuthnRegisterCommand;
 import com.njydsz.userinfo.server.auth.WebAuthnService;
-import com.njydsz.userinfo.domain.vo.RoleVO;
 
 /**
  * WebAuthn/Passkey 无密码认证 Controller（P3-2 通行 Key 增强）。
@@ -213,8 +214,8 @@ public class WebAuthnController {
     String aaguid = (String) credential.get("aaguid");
     String clientDataJSON = (String) credential.get("clientDataJSON");
 
-    webAuthnService.verifyAndStoreCredential(userId, challenge, credentialId,
-        publicKey, aaguid, clientDataJSON);
+    webAuthnService.verifyAndStoreCredential(new WebAuthnRegisterCommand(
+        userId, challenge, credentialId, publicKey, aaguid, clientDataJSON));
     return YdszResponse.success();
   }
 

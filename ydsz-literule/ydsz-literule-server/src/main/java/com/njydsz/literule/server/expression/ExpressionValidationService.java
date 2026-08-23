@@ -37,6 +37,9 @@ import com.njydsz.literule.api.expression.ExpressionValidationResult;
 @Slf4j
 public class ExpressionValidationService {
 
+    /** 纳秒到毫秒的换算系数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
   /** 表达式求值器，执行底层 LiteExpr 表达式编译与求值 */
   private final ExpressionEngine evaluator;
 
@@ -125,14 +128,14 @@ public class ExpressionValidationService {
     long elapsed;
 
     if (template == null || template.isBlank()) {
-      elapsed = (System.nanoTime() - start) / 1_000_000L;
+      elapsed = (System.nanoTime() - start) / NANOS_PER_MILLI;
       // 模板可选，为空视为合法
       return ExpressionValidationResult.ok(template, elapsed, List.of());
     }
 
     // 检测未闭合的占位符
     if (UNCLOSED_PLACEHOLDER_PATTERN.matcher(template).find()) {
-      elapsed = (System.nanoTime() - start) / 1_000_000L;
+      elapsed = (System.nanoTime() - start) / NANOS_PER_MILLI;
       return ExpressionValidationResult.fail(
           template,
           ExpressionValidationResult.ErrorType.TEMPLATE_FORMAT_ERROR,
@@ -150,7 +153,7 @@ public class ExpressionValidationService {
       }
     }
 
-    elapsed = (System.nanoTime() - start) / 1_000_000L;
+    elapsed = (System.nanoTime() - start) / NANOS_PER_MILLI;
     ExpressionValidationResult result =
         ExpressionValidationResult.ok(template, elapsed, referencedVars);
 
@@ -300,7 +303,7 @@ public class ExpressionValidationService {
     } catch (Exception e) {
       result.setError("求值失败: " + e.getMessage());
     }
-    result.setElapsedMs((System.nanoTime() - start) / 1_000_000L);
+    result.setElapsedMs((System.nanoTime() - start) / NANOS_PER_MILLI);
     return result;
   }
 }

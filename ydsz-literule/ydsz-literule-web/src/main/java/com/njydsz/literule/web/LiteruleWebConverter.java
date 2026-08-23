@@ -62,6 +62,7 @@ import com.njydsz.literule.server.version.RuleVersionDiff;
 @Mapper
 public interface LiteruleWebConverter {
 
+  /** MapStruct 单例实例 */
   LiteruleWebConverter INSTANCE = Mappers.getMapper(LiteruleWebConverter.class);
 
   // ===== RulePackProvider.InstallResult → InstallResultVO =====

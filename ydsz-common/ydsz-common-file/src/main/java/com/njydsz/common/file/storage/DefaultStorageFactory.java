@@ -108,8 +108,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
         .values()
         .forEach(
             s -> {
-              if (s instanceof AbstractFileStorage afs && store != null)
+              if (s instanceof AbstractFileStorage afs && store != null) {
                 afs.setMultipartContextStore(store);
+              }
             });
   }
 
@@ -124,7 +125,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
         .values()
         .forEach(
             s -> {
-              if (s instanceof AbstractFileStorage afs) afs.setConcurrencyGuard(guard);
+              if (s instanceof AbstractFileStorage afs) {
+                afs.setConcurrencyGuard(guard);
+              }
             });
   }
 
@@ -139,7 +142,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
         .values()
         .forEach(
             s -> {
-              if (s instanceof AbstractFileStorage afs) afs.setCheckpointService(service);
+              if (s instanceof AbstractFileStorage afs) {
+                afs.setCheckpointService(service);
+              }
             });
   }
 
@@ -154,7 +159,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
         .values()
         .forEach(
             s -> {
-              if (s instanceof AbstractFileStorage afs) afs.setFileDedupService(service);
+              if (s instanceof AbstractFileStorage afs) {
+                afs.setFileDedupService(service);
+              }
             });
   }
 
@@ -169,7 +176,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
         .values()
         .forEach(
             s -> {
-              if (s instanceof AbstractFileStorage afs) afs.setVirusScanner(scanner);
+              if (s instanceof AbstractFileStorage afs) {
+                afs.setVirusScanner(scanner);
+              }
             });
   }
 
@@ -184,7 +193,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
         .values()
         .forEach(
             s -> {
-              if (s instanceof AbstractFileStorage afs) afs.setFileMetrics(metrics);
+              if (s instanceof AbstractFileStorage afs) {
+                afs.setFileMetrics(metrics);
+              }
             });
   }
 
@@ -199,7 +210,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
         .values()
         .forEach(
             s -> {
-              if (s instanceof AbstractFileStorage afs) afs.setRetryHelper(helper);
+              if (s instanceof AbstractFileStorage afs) {
+                afs.setRetryHelper(helper);
+              }
             });
   }
 
@@ -214,7 +227,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
         .values()
         .forEach(
             s -> {
-              if (s instanceof AbstractFileStorage afs) afs.setFileTypeValidator(validator);
+              if (s instanceof AbstractFileStorage afs) {
+                afs.setFileTypeValidator(validator);
+              }
             });
   }
 
@@ -229,7 +244,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
         .values()
         .forEach(
             s -> {
-              if (s instanceof AbstractFileStorage afs) afs.setDeleteExecutor(executor);
+              if (s instanceof AbstractFileStorage afs) {
+                afs.setDeleteExecutor(executor);
+              }
             });
   }
 
@@ -244,7 +261,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
         .values()
         .forEach(
             s -> {
-              if (s instanceof AbstractFileStorage afs) afs.setAsyncUploadExecutor(executor);
+              if (s instanceof AbstractFileStorage afs) {
+                afs.setAsyncUploadExecutor(executor);
+              }
             });
   }
 
@@ -257,8 +276,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
   @Override
   public IFileStorage getStorage() {
     String storageType = serverProperties.getType();
-    if (storageType == null || storageType.isBlank())
+    if (storageType == null || storageType.isBlank()) {
       throw new BusinessException(FileExceptionCode.CONFIG_INVALID);
+    }
     return storageCache.computeIfAbsent(storageType, this::createStorage);
   }
 
@@ -270,9 +290,12 @@ public class DefaultStorageFactory implements IFileStorageProvider {
    * @throws IllegalArgumentException type 或 provider 为 null 时抛出
    */
   public void register(String type, Function<DefaultStorageFactory, IFileStorage> provider) {
-    if (type == null || type.isBlank())
+    if (type == null || type.isBlank()) {
       throw new IllegalArgumentException("Storage type cannot be null or empty");
-    if (provider == null) throw new IllegalArgumentException("Storage provider cannot be null");
+    }
+    if (provider == null) {
+      throw new IllegalArgumentException("Storage provider cannot be null");
+    }
     customProviders.put(type, provider);
   }
 
@@ -330,16 +353,36 @@ public class DefaultStorageFactory implements IFileStorageProvider {
    */
   private IFileStorage inject(IFileStorage storage) {
     if (storage instanceof AbstractFileStorage afs) {
-      if (multipartContextStore != null) afs.setMultipartContextStore(multipartContextStore);
-      if (checkpointService != null) afs.setCheckpointService(checkpointService);
-      if (concurrencyGuard != null) afs.setConcurrencyGuard(concurrencyGuard);
-      if (fileDedupService != null) afs.setFileDedupService(fileDedupService);
-      if (virusScanner != null) afs.setVirusScanner(virusScanner);
-      if (fileMetrics != null) afs.setFileMetrics(fileMetrics);
-      if (retryHelper != null) afs.setRetryHelper(retryHelper);
-      if (fileTypeValidator != null) afs.setFileTypeValidator(fileTypeValidator);
-      if (deleteExecutor != null) afs.setDeleteExecutor(deleteExecutor);
-      if (asyncUploadExecutor != null) afs.setAsyncUploadExecutor(asyncUploadExecutor);
+      if (multipartContextStore != null) {
+        afs.setMultipartContextStore(multipartContextStore);
+      }
+      if (checkpointService != null) {
+        afs.setCheckpointService(checkpointService);
+      }
+      if (concurrencyGuard != null) {
+        afs.setConcurrencyGuard(concurrencyGuard);
+      }
+      if (fileDedupService != null) {
+        afs.setFileDedupService(fileDedupService);
+      }
+      if (virusScanner != null) {
+        afs.setVirusScanner(virusScanner);
+      }
+      if (fileMetrics != null) {
+        afs.setFileMetrics(fileMetrics);
+      }
+      if (retryHelper != null) {
+        afs.setRetryHelper(retryHelper);
+      }
+      if (fileTypeValidator != null) {
+        afs.setFileTypeValidator(fileTypeValidator);
+      }
+      if (deleteExecutor != null) {
+        afs.setDeleteExecutor(deleteExecutor);
+      }
+      if (asyncUploadExecutor != null) {
+        afs.setAsyncUploadExecutor(asyncUploadExecutor);
+      }
     }
     return storage;
   }

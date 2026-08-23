@@ -28,6 +28,9 @@ import com.njydsz.message.server.service.impl.ChannelSuppressionEngine;
 @Order(700)
 @RequiredArgsConstructor
 public class SuppressionHandler implements SendHandler {
+  /** 抑制处理器优先级 */
+  private static final int SUPPRESSION_PRIORITY = 700;
+
 
   private final ChannelSuppressionEngine channelSuppressionEngine;
   private final MessageMetrics messageMetrics;
@@ -62,6 +65,6 @@ public class SuppressionHandler implements SendHandler {
 
   @Override
   public int order() {
-    return 700;
+    return SUPPRESSION_PRIORITY;
   }
 }

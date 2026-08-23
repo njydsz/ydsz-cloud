@@ -1,22 +1,19 @@
 package com.njydsz.userinfo.web.controller;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.njydsz.common.exception.custom.BusinessException;
-
-import java.time.Duration;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -35,23 +31,24 @@ import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.safe.annotation.SecondaryAuth;
+import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.LoginVO;
-import com.njydsz.userinfo.web.dto.SecondaryAuthRequest;
-import com.njydsz.common.safe.annotation.SecondaryAuth;
-import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.userinfo.server.aspect.SecondaryAuthAspect;
 import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.MfaService;
 import com.njydsz.userinfo.server.auth.SecondaryAuthService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.web.dto.RefreshRequest;
+import com.njydsz.userinfo.web.dto.SecondaryAuthRequest;
 
 /**
  * 认证 Controller
@@ -87,6 +84,15 @@ import com.njydsz.userinfo.web.dto.RefreshRequest;
 @Tag(name = "认证管理", description = "登录/登出/Token 刷新")
 @ApiVersion("1")
 public class AuthController {
+  /** "Bearer " 前缀长度 */
+  private static final int BEARER_PREFIX_LENGTH = 7;
+
+  /** 二次认证标记默认 TTL（秒）：5 分钟 */
+  private static final int DEFAULT_SECONDARY_AUTH_TTL = 300;
+
+  /** 客户端真实 IP 代理头列表（按优先级排序） */
+  private static final List<String> PROXY_IP_HEADERS = List.of(
+      HeaderConstants.X_FORWARDED_FOR, "X-Real-IP", "Proxy-Client-IP", "WL-Proxy-Client-IP");
 
   private final AuthService authService;
 
@@ -163,6 +169,8 @@ public class AuthController {
    * <p>成功登录会重置失败计数；失败累加计数到 {@code ydsz.auth.login-fail-threshold}（默认 5 次）触发锁定。
    *
    * @param request 登录请求（含 username / password / captchaKey / captchaCode / tenantId）
+   * @param servletRequest 原始 Servlet 请求（用于提取客户端 IP 与 User-Agent）
+   * @param servletResponse 原始 Servlet 响应（用于 Remember-Me Cookie 写入）
    * @return 登录结果（accessToken / refreshToken / expiresIn / userInfo）
    */
   @Audit(
@@ -203,7 +211,7 @@ public class AuthController {
   @PostMapping("/logout")
   @Operation(summary = "用户登出", description = "将 access_token 加入黑名单")
   public YdszResponse<Void> logout(@RequestHeader(HeaderConstants.AUTHORIZATION) String token) {
-    String accessToken = token != null && token.startsWith("Bearer ") ? token.substring(7) : token;
+    String accessToken = token != null && token.startsWith("Bearer ") ? token.substring(BEARER_PREFIX_LENGTH) : token;
     authService.logout(accessToken);
     return YdszResponse.success();
   }
@@ -273,7 +281,7 @@ public class AuthController {
     if (authorization == null || !authorization.startsWith("Bearer ")) {
       throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
     }
-    String accessToken = authorization.substring(7);
+    String accessToken = authorization.substring(BEARER_PREFIX_LENGTH);
     UserInfo userInfo = tokenService.parseAccessToken(accessToken);
     if (userInfo == null || !tokenService.validateAccessToken(accessToken)) {
       throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
@@ -389,25 +397,25 @@ public class AuthController {
     if (!isTrustedProxy(request)) {
       return request.getRemoteAddr();
     }
-    String ip = request.getHeader(HeaderConstants.X_FORWARDED_FOR);
-    if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-      // 多级代理场景：取第一个非 unknown 的 IP
-      int idx = ip.indexOf(',');
-      return (idx > 0) ? ip.substring(0, idx).trim() : ip.trim();
-    }
-    ip = request.getHeader("X-Real-IP");
-    if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-      return ip.trim();
-    }
-    ip = request.getHeader("Proxy-Client-IP");
-    if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-      return ip.trim();
-    }
-    ip = request.getHeader("WL-Proxy-Client-IP");
-    if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-      return ip.trim();
+    // 多级代理场景：依次检查代理头，取第一个非 unknown 的 IP
+    for (String header : PROXY_IP_HEADERS) {
+      String ip = request.getHeader(header);
+      if (isValidProxyIp(ip)) {
+        int idx = ip.indexOf(',');
+        return (idx > 0) ? ip.substring(0, idx).trim() : ip.trim();
+      }
     }
     return request.getRemoteAddr();
+  }
+
+  /**
+   * 判断代理 IP 头值是否有效（非空且非 unknown）。
+   *
+   * @param ip IP 头值
+   * @return true 表示有效
+   */
+  private static boolean isValidProxyIp(String ip) {
+    return ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip);
   }
 
   /**
@@ -420,7 +428,7 @@ public class AuthController {
    * @return true 表示来自可信代理
    */
   private boolean isTrustedProxy(HttpServletRequest request) {
-    java.util.List<String> trustedProxies = properties.getTrustedProxies();
+    List<String> trustedProxies = properties.getTrustedProxies();
     if (trustedProxies == null || trustedProxies.isEmpty()) {
       return false;
     }
@@ -493,7 +501,7 @@ public class AuthController {
       description = "校验密码后写入场景化安全标记，用于 @SecondaryAuth 注解鉴权")
   public YdszResponse<Map<String, Object>> secondaryAuth(@RequestBody @Valid SecondaryAuthRequest request) {
     // 计算实际生效 TTL（CRITICAL 级别自动缩短）
-    int ttlSeconds = request.getTtlSeconds() != null ? request.getTtlSeconds() : 300;
+    int ttlSeconds = request.getTtlSeconds() != null ? request.getTtlSeconds() : DEFAULT_SECONDARY_AUTH_TTL;
     SensitiveLevel level = request.getLevel() != null ? request.getLevel() : SensitiveLevel.HIGH;
 
     // 构造 SecondaryAuth 注解实例以复用 TTL 计算逻辑
@@ -533,7 +541,7 @@ public class AuthController {
     }
     String currentAccessToken =
         currentToken != null && currentToken.startsWith("Bearer ")
-            ? currentToken.substring(7)
+            ? currentToken.substring(BEARER_PREFIX_LENGTH)
             : currentToken;
 
     // 获取全部活跃会话，除当前 token 外全部下线

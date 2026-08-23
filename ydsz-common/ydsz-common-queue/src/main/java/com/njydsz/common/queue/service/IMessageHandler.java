@@ -58,7 +58,7 @@ public interface IMessageHandler {
    * </ul>
    *
    * @param message 接收到的消息对象，包含消息体、头部信息、追踪ID等
-   * @throws Exception 如果处理消息时发生错误
+   * @throws Throwable 如果处理消息时发生错误
    */
-  void onMessage(QueueMessage message) throws Exception;
+  void onMessage(QueueMessage message) throws Throwable;
 }

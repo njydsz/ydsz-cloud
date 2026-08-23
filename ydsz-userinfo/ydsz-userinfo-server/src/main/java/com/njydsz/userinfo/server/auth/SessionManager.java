@@ -10,7 +10,6 @@ import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.model.UserInfo;
@@ -19,7 +18,6 @@ import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.DeviceType;
-import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
@@ -80,6 +78,9 @@ public class SessionManager {
   /** User-Agent 最大存储长度（防止 Redis 大 Key） */
   private static final int USER_AGENT_MAX_LENGTH = 200;
 
+  /** 会话令牌日志脱敏前缀长度 */
+  private static final int TOKEN_LOG_PREFIX_LENGTH = 8;
+
   private final RedisHashOps redisHashOps;
   private final RedisStringOps redisStringOps;
   private final RedisCollectionOps redisCollectionOps;
@@ -92,56 +93,22 @@ public class SessionManager {
    * <p>会话 Hash 同时保存 refreshToken 和 deviceType，供登出时同步吊销（P0-3）和分端会话管理。
    * 写入后触发分端驱逐 + 全局驱逐，确保同时满足两类限制。
    *
-   * @param accessToken 访问令牌
-   * @param refreshToken 刷新令牌
-   * @param user 用户账号
-   * @param roleCodes 角色编码（逗号分隔）
-   * @param roleNames 角色名称（逗号分隔）
-   * @param deviceType 设备类型（用于分端会话限制）
+   * @param command 会话创建参数（令牌/用户/角色/设备/登录信息）
    */
-  public void createSession(
-      String accessToken,
-      String refreshToken,
-      UserAccountCredentialVO user,
-      String roleCodes,
-      String roleNames,
-      DeviceType deviceType) {
-    createSession(accessToken, refreshToken, user, roleCodes, roleNames, deviceType, null, null);
-  }
-
-  /**
-   * 写入 Redis 会话，携带设备详情（P3-2：登录 IP + User-Agent + 登录时间）。
-   *
-   * @param accessToken 访问令牌
-   * @param refreshToken 刷新令牌
-   * @param user 用户账号
-   * @param roleCodes 角色编码（逗号分隔）
-   * @param roleNames 角色名称（逗号分隔）
-   * @param deviceType 设备类型
-   * @param loginIp 登录 IP（可为 null）
-   * @param userAgent User-Agent 头（可为 null，超长自动截断）
-   */
-  public void createSession(
-      String accessToken,
-      String refreshToken,
-      UserAccountCredentialVO user,
-      String roleCodes,
-      String roleNames,
-      DeviceType deviceType,
-      String loginIp,
-      String userAgent) {
+  public void createSession(SessionCreateCommand command) {
     Map<String, Object> sessionInfo =
         buildSessionInfo(
-            user.getId(),
-            user.getUsername(),
-            roleCodes,
-            roleNames,
-            user.getTenantId(),
-            refreshToken,
-            deviceType,
-            loginIp,
-            userAgent);
-    storeSession(accessToken, sessionInfo, user.getId(), deviceType);
+            new SessionInfoContext(
+                command.user().getId(),
+                command.user().getUsername(),
+                command.roleCodes(),
+                command.roleNames(),
+                command.user().getTenantId(),
+                command.refreshToken(),
+                command.deviceType(),
+                command.loginIp(),
+                command.userAgent()));
+    storeSession(command.accessToken(), sessionInfo, command.user().getId(), command.deviceType());
   }
 
   /**
@@ -155,13 +122,16 @@ public class SessionManager {
    */
   public void refreshSession(String newAccessToken, String newRefreshToken, UserInfo userInfo) {
     Map<String, Object> sessionInfo = buildSessionInfo(
-        userInfo.getUserId(),
-        userInfo.getUsername(),
-        userInfo.getRoleCode(),
-        userInfo.getRoleName(),
-        userInfo.getTenantId(),
-        newRefreshToken,
-        DeviceType.UNKNOWN);
+        new SessionInfoContext(
+            userInfo.getUserId(),
+            userInfo.getUsername(),
+            userInfo.getRoleCode(),
+            userInfo.getRoleName(),
+            userInfo.getTenantId(),
+            newRefreshToken,
+            DeviceType.UNKNOWN,
+            null,
+            null));
     storeSession(newAccessToken, sessionInfo, userInfo.getUserId(), DeviceType.UNKNOWN);
 
     // 如果原会话标记为 rememberMe，继承标记并执行滑动续期
@@ -332,7 +302,7 @@ public class SessionManager {
       Map<String, String> details = getSessionDeviceDetails(token);
       if (!details.isEmpty()) {
         // 用掩码替代完整 token（安全考虑）
-        details.put("sessionId", token.substring(0, Math.min(8, token.length())) + "****");
+        details.put("sessionId", token.substring(0, Math.min(TOKEN_LOG_PREFIX_LENGTH, token.length())) + "****");
         result.add(details);
       }
     }
@@ -476,7 +446,7 @@ public class SessionManager {
       return;
     }
     redisHashOps.hSet(accessToken, SESSION_REMEMBER_ME_FIELD, "true");
-    log.debug("Session marked as rememberMe: {}", accessToken.substring(0, 8) + "...");
+    log.debug("Session marked as rememberMe: {}", accessToken.substring(0, TOKEN_LOG_PREFIX_LENGTH) + "...");
   }
 
   /**
@@ -510,70 +480,37 @@ public class SessionManager {
       }
     }
     log.debug("Session TTL extended: {} seconds for token={}", ttlSeconds,
-        accessToken.substring(0, 8) + "...");
-  }
-
-  /**
-   * 构建会话 Hash 数据。
-   *
-   * <p>包含 schema 版本号、用户信息、角色信息、refreshToken 和 deviceType。
-   *
-   * @param userId 用户 ID
-   * @param username 用户名
-   * @param roleCodes 角色编码（逗号分隔）
-   * @param roleNames 角色名称（逗号分隔）
-   * @param tenantId 租户 ID
-   * @param refreshToken 刷新令牌
-   * @param deviceType 设备类型
-   * @return 会话 Hash 数据 Map
-   */
-  private Map<String, Object> buildSessionInfo(
-      String userId,
-      String username,
-      String roleCodes,
-      String roleNames,
-      String tenantId,
-      String refreshToken,
-      DeviceType deviceType) {
-    return buildSessionInfo(userId, username, roleCodes, roleNames, tenantId, refreshToken,
-        deviceType, null, null);
+        accessToken.substring(0, TOKEN_LOG_PREFIX_LENGTH) + "...");
   }
 
   /**
    * 构建会话 Hash 数据（含设备详情）。
    *
-   * @param loginIp 登录 IP（可为 null）
-   * @param userAgent User-Agent（可为 null，超长自动截断）
+   * <p>包含 schema 版本号、用户信息、角色信息、refreshToken、deviceType 与设备详情（P3-2）。
+   *
+   * @param context 会话 Hash 构建参数
+   * @return 会话 Hash 数据 Map
    */
-  private Map<String, Object> buildSessionInfo(
-      String userId,
-      String username,
-      String roleCodes,
-      String roleNames,
-      String tenantId,
-      String refreshToken,
-      DeviceType deviceType,
-      String loginIp,
-      String userAgent) {
+  private Map<String, Object> buildSessionInfo(SessionInfoContext context) {
     Map<String, Object> sessionInfo = new HashMap<>();
     // P2-5: 会话 Hash schema 版本号，便于未来字段变更的平滑迁移与兼容性判断
     sessionInfo.put("schemaVersion", SESSION_SCHEMA_VERSION);
-    sessionInfo.put("userId", userId);
-    sessionInfo.put("username", username);
-    sessionInfo.put("roleCode", roleCodes);
-    sessionInfo.put("roleName", roleNames);
-    sessionInfo.put("tenantId", tenantId);
-    sessionInfo.put("refreshToken", refreshToken);
-    sessionInfo.put(SESSION_DEVICE_TYPE_FIELD, deviceType.getCode());
+    sessionInfo.put("userId", context.userId());
+    sessionInfo.put("username", context.username());
+    sessionInfo.put("roleCode", context.roleCodes());
+    sessionInfo.put("roleName", context.roleNames());
+    sessionInfo.put("tenantId", context.tenantId());
+    sessionInfo.put("refreshToken", context.refreshToken());
+    sessionInfo.put(SESSION_DEVICE_TYPE_FIELD, context.deviceType().getCode());
     // P3-2: 设备详情
-    if (loginIp != null && !loginIp.isBlank()) {
-      sessionInfo.put(SESSION_LOGIN_IP_FIELD, loginIp);
+    if (context.loginIp() != null && !context.loginIp().isBlank()) {
+      sessionInfo.put(SESSION_LOGIN_IP_FIELD, context.loginIp());
     }
-    if (userAgent != null && !userAgent.isBlank()) {
+    if (context.userAgent() != null && !context.userAgent().isBlank()) {
       sessionInfo.put(SESSION_USER_AGENT_FIELD,
-          userAgent.length() > USER_AGENT_MAX_LENGTH
-              ? userAgent.substring(0, USER_AGENT_MAX_LENGTH)
-              : userAgent);
+          context.userAgent().length() > USER_AGENT_MAX_LENGTH
+              ? context.userAgent().substring(0, USER_AGENT_MAX_LENGTH)
+              : context.userAgent());
     }
     sessionInfo.put(SESSION_LOGIN_TIME_FIELD, java.time.LocalDateTime.now().toString());
     return sessionInfo;
@@ -587,7 +524,7 @@ public class SessionManager {
    */
   public Map<String, String> getSessionDeviceDetails(String accessToken) {
     if (accessToken == null || accessToken.isBlank()) {
-      return java.util.Map.of();
+      return Map.of();
     }
     Map<String, String> details = new HashMap<>();
     String loginIp = redisHashOps.hGet(accessToken, SESSION_LOGIN_IP_FIELD, String.class);

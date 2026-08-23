@@ -42,9 +42,13 @@ public final class MessageConstants {
   public static final String RATE_LIMIT_KEY_PREFIX = "ydsz:msg:ratelimit:";
 
   /** P2-5: 多维度限流 key 前缀 */
+  /** 接收者维度限流 Key 前缀 */
   public static final String RATE_LIMIT_RECEIVER_PREFIX = "ydsz:msg:ratelimit:receiver:";
 
+  /** 模板维度限流 Key 前缀 */
   public static final String RATE_LIMIT_TEMPLATE_PREFIX = "ydsz:msg:ratelimit:template:";
+
+  /** 租户维度限流 Key 前缀 */
   public static final String RATE_LIMIT_TENANT_PREFIX = "ydsz:msg:ratelimit:tenant:";
 
   /** P2-1: 智能去重 key 前缀（SET NX EX 原子去重） */
@@ -68,6 +72,7 @@ public final class MessageConstants {
   /** 频率统计 key 前缀（每日 / 每小时） */
   public static final String FREQUENCY_DAILY_PREFIX = "ydsz:msg:freq:daily:";
 
+  /** 小时级频率限制 Key 前缀 */
   public static final String FREQUENCY_HOURLY_PREFIX = "ydsz:msg:freq:hourly:";
 
   /** 消息发送超时（毫秒） */

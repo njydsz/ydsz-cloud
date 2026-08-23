@@ -57,6 +57,45 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @SuppressWarnings("checkstyle:MagicNumber")
 public class UserInfoProperties {
 
+  /** 默认riskIpWeight值（可被配置文件覆盖） */
+  private static final int DEFAULT_RISK_IP_WEIGHT = 30;
+
+  /** 默认riskTimeWeight值（可被配置文件覆盖） */
+  private static final int DEFAULT_RISK_TIME_WEIGHT = 20;
+
+  /** 默认riskDeviceWeight值（可被配置文件覆盖） */
+  private static final int DEFAULT_RISK_DEVICE_WEIGHT = 25;
+
+  /** 默认riskFrequencyWeight值（可被配置文件覆盖） */
+  private static final int DEFAULT_RISK_FREQUENCY_WEIGHT = 25;
+
+  /** 默认riskAnomalyStartHour值（可被配置文件覆盖） */
+  private static final int DEFAULT_RISK_ANOMALY_START_HOUR = 0;
+
+  /** 默认riskAnomalyEndHour值（可被配置文件覆盖） */
+  private static final int DEFAULT_RISK_ANOMALY_END_HOUR = 6;
+
+  /** 默认riskFrequencyWindowMinutes值（可被配置文件覆盖） */
+  private static final int DEFAULT_RISK_FREQUENCY_WINDOW_MINUTES = 5;
+
+  /** 默认riskFrequencyThreshold值（可被配置文件覆盖） */
+  private static final int DEFAULT_RISK_FREQUENCY_THRESHOLD = 3;
+
+  /** 默认tokenAutoRenewalThresholdPercent值（可被配置文件覆盖） */
+  private static final int DEFAULT_TOKEN_AUTO_RENEWAL_THRESHOLD_PERCENT = 10;
+
+  /** 默认alertDedupTtlSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_ALERT_DEDUP_TTL_SECONDS = 300;
+
+  /** 默认alertIpDedupTtlSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_ALERT_IP_DEDUP_TTL_SECONDS = 180;
+
+  /** 默认alertBruteForceThreshold值（可被配置文件覆盖） */
+  private static final int DEFAULT_ALERT_BRUTE_FORCE_THRESHOLD = 10;
+
+  /** 默认alertPasswordSprayThreshold值（可被配置文件覆盖） */
+  private static final int DEFAULT_ALERT_PASSWORD_SPRAY_THRESHOLD = 5;
+
   /** 默认 access_token 有效期：2 小时（7200 秒）。 */
   private static final long DEFAULT_TOKEN_TTL_SECONDS = 7200;
 
@@ -214,28 +253,28 @@ public class UserInfoProperties {
   // ==================== P1-1 登录风控配置 ====================
 
   /** 风险评分：IP 风险权重（默认 30）。 */
-  private int riskIpWeight = 30;
+  private int riskIpWeight = DEFAULT_RISK_IP_WEIGHT;
 
   /** 风险评分：时间异常权重（默认 20）。 */
-  private int riskTimeWeight = 20;
+  private int riskTimeWeight = DEFAULT_RISK_TIME_WEIGHT;
 
   /** 风险评分：设备异常权重（默认 25）。 */
-  private int riskDeviceWeight = 25;
+  private int riskDeviceWeight = DEFAULT_RISK_DEVICE_WEIGHT;
 
   /** 风险评分：频率异常权重（默认 25）。 */
-  private int riskFrequencyWeight = 25;
+  private int riskFrequencyWeight = DEFAULT_RISK_FREQUENCY_WEIGHT;
 
   /** 风险评分：异常时段起始小时（默认 0，即凌晨 0 点）。 */
-  private int riskAnomalyStartHour = 0;
+  private int riskAnomalyStartHour = DEFAULT_RISK_ANOMALY_START_HOUR;
 
   /** 风险评分：异常时段结束小时（默认 6，即凌晨 6 点）。 */
-  private int riskAnomalyEndHour = 6;
+  private int riskAnomalyEndHour = DEFAULT_RISK_ANOMALY_END_HOUR;
 
   /** 风险评分：频率异常窗口（分钟，默认 5 分钟）。 */
-  private int riskFrequencyWindowMinutes = 5;
+  private int riskFrequencyWindowMinutes = DEFAULT_RISK_FREQUENCY_WINDOW_MINUTES;
 
   /** 风险评分：频率异常阈值（窗口内尝试次数，默认 3 次）。 */
-  private int riskFrequencyThreshold = 3;
+  private int riskFrequencyThreshold = DEFAULT_RISK_FREQUENCY_THRESHOLD;
 
   /**
    * P2-6: 可信代理 IP 列表。
@@ -261,7 +300,7 @@ public class UserInfoProperties {
    * <p>当 access_token 剩余有效期 ＜ TTL × thresholdPercent / 100 时触发续签。
    * 默认 10%（即 TTL 7200 秒时，剩余 720 秒触发续签）。
    */
-  private int tokenAutoRenewalThresholdPercent = 10;
+  private int tokenAutoRenewalThresholdPercent = DEFAULT_TOKEN_AUTO_RENEWAL_THRESHOLD_PERCENT;
 
   // ==================== P1-3 路径排除配置 ====================
 
@@ -280,16 +319,16 @@ public class UserInfoProperties {
   // ==================== 安全告警配置 ====================
 
   /** 安全告警：告警去重时间窗口（秒），默认 300 秒（5 分钟） */
-  private long alertDedupTtlSeconds = 300;
+  private long alertDedupTtlSeconds = DEFAULT_ALERT_DEDUP_TTL_SECONDS;
 
   /** 安全告警：IP 维度告警去重时间窗口（秒），默认 180 秒（3 分钟） */
-  private long alertIpDedupTtlSeconds = 180;
+  private long alertIpDedupTtlSeconds = DEFAULT_ALERT_IP_DEDUP_TTL_SECONDS;
 
   /** 安全告警：暴力破解检测阈值（同一 IP 5 分钟内失败次数），默认 10 次 */
-  private int alertBruteForceThreshold = 10;
+  private int alertBruteForceThreshold = DEFAULT_ALERT_BRUTE_FORCE_THRESHOLD;
 
   /** 安全告警：密码喷洒检测阈值（同一 IP 尝试不同用户数），默认 5 个 */
-  private int alertPasswordSprayThreshold = 5;
+  private int alertPasswordSprayThreshold = DEFAULT_ALERT_PASSWORD_SPRAY_THRESHOLD;
 
   /**
    * OAuth2 客户端配置

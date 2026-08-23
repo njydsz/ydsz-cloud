@@ -43,6 +43,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.userinfo.remember-me")
 public class RememberMeProperties {
 
+  /** 默认cookieMaxAge值（可被配置文件覆盖） */
+  private static final int DEFAULT_COOKIE_MAX_AGE = 15552000;
+
+  /** 默认slidingWindowSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_SLIDING_WINDOW_SECONDS = 86400;
+
+  /** 默认maxExtendDays值（可被配置文件覆盖） */
+  private static final int DEFAULT_MAX_EXTEND_DAYS = 180;
+
   /** 是否启用 Remember-Me 功能，默认 true。 */
   private boolean enabled = true;
 
@@ -55,7 +64,7 @@ public class RememberMeProperties {
    * <p>关闭浏览器后 Cookie 在 maxAge 秒后失效。设为 -1 表示会话 Cookie（浏览器关闭即失效），
    * 此时 Remember-Me 功能等价于不开启。
    */
-  private int cookieMaxAge = 15552000;
+  private int cookieMaxAge = DEFAULT_COOKIE_MAX_AGE;
 
   /** Cookie 是否仅通过 HTTPS 传输，默认 true。 */
   private boolean cookieSecure = true;
@@ -72,7 +81,7 @@ public class RememberMeProperties {
    * <p>用户每次访问时，如果距上次续期超过此窗口，则自动延长 Token TTL。
    * 较小的值提高安全性（更频繁地检查），较大的值减少 Redis 写入。
    */
-  private long slidingWindowSeconds = 86400;
+  private long slidingWindowSeconds = DEFAULT_SLIDING_WINDOW_SECONDS;
 
   /**
    * 最大续期天数，默认 180 天。
@@ -80,5 +89,5 @@ public class RememberMeProperties {
    * <p>从首次登录开始计算，超过此天数后不再执行滑动续期，用户需要重新登录。
    * 防止 Remember-Me 无限期延长导致的安全风险。
    */
-  private int maxExtendDays = 180;
+  private int maxExtendDays = DEFAULT_MAX_EXTEND_DAYS;
 }

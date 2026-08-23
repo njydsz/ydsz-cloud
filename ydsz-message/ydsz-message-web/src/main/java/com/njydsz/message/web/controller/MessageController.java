@@ -21,8 +21,8 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.code.YdszResultCode;
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -109,7 +109,8 @@ public class MessageController {
    */
   @Operation(
       summary = "统一消息发送",
-      description = "通过 strategy 字段区分五种发送模式：SYNC（同步）/ DIRECT（直接）/ ASYNC（异步）/ TRANSACTIONAL（事务）/ BATCH（批量）。支持短信/邮件/站内信/钉钉/飞书/企业微信/WebSocket 共 12 种通道。")
+      description = "通过 strategy 字段区分五种发送模式：SYNC（同步）/ DIRECT（直接）/ ASYNC（异步）/ TRANSACTIONAL（事务）/ BATCH（批量）。"
+          + "支持短信/邮件/站内信/钉钉/飞书/企业微信/WebSocket 共 12 种通道。")
   @ApiResponse(responseCode = "200", description = "操作成功")
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")
@@ -168,7 +169,8 @@ public class MessageController {
    * @param dto 消息发送请求体
    * @return 发送结果
    */
-  @Operation(summary = "直接发送消息(本模块 DTO)", description = "已废弃，请统一使用 POST /send + strategy=DIRECT。原功能：同步发送单条消息，使用本模块 MessageSendDTO。")
+  @Operation(summary = "直接发送消息(本模块 DTO)", description = "已废弃，请统一使用 POST /send + strategy=DIRECT。"
+            + "原功能：同步发送单条消息，使用本模块 MessageSendDTO。")
   @ApiResponse(responseCode = "200", description = "操作成功")
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")
@@ -197,7 +199,8 @@ public class MessageController {
    * @param request 消息请求
    * @return 含 messageId 的发送结果
    */
-  @Operation(summary = "异步发送消息(先落库再投递 MQ)", description = "已废弃，请统一使用 POST /send + strategy=ASYNC。原功能：异步发送单条消息，先将消息以 PENDING 状态落库保证不丢失，再投递到 RocketMQ。")
+  @Operation(summary = "异步发送消息(先落库再投递 MQ)", description = "已废弃，请统一使用 POST /send + strategy=ASYNC。"
+            + "原功能：异步发送单条消息，先将消息以 PENDING 状态落库保证不丢失，再投递到 RocketMQ。")
   @ApiResponse(responseCode = "200", description = "操作成功")
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")
@@ -224,7 +227,8 @@ public class MessageController {
    * @param query 日志查询参数
    * @return 日志分页结果
    */
-  @Operation(summary = "发送日志分页", description = "分页查询消息发送日志。支持按 bizId、channelCode、status、时间范围等条件过滤。返回分页结果含 MsgLogVO（消息 ID、通道、接收人、状态、回执 ID、发送时间）。")
+  @Operation(summary = "发送日志分页", description = "分页查询消息发送日志。支持按 bizId、channelCode、status、时间范围等条件过滤。"
+            + "返回分页结果含 MsgLogVO（消息 ID、通道、接收人、状态、回执 ID、发送时间）。")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/log/page")
   public YdszResponse<PageResponse<List<MsgLogVO>>> pageLog(MessageLogQueryDTO query) {
@@ -237,7 +241,9 @@ public class MessageController {
    * @param msgId 定时消息 ID（发送定时消息时返回的 messageId）
    * @return 取消结果
    */
-  @Operation(summary = "取消定时消息", description = "取消已调度但尚未发送的定时消息。仅允许取消状态为 SCHEDULED 的消息，通过 msgId（发送定时消息时返回的 messageId）定位。取消成功后消息状态变为 CANCELLED。")
+  @Operation(summary = "取消定时消息", description = "取消已调度但尚未发送的定时消息。"
+            + "仅允许取消状态为 SCHEDULED 的消息，通过 msgId（发送定时消息时返回的 messageId）定位。"
+            + "取消成功后消息状态变为 CANCELLED。")
   @ApiResponse(responseCode = "200", description = "操作成功")
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")
@@ -263,7 +269,8 @@ public class MessageController {
    * @param request 消息请求
    * @return 发送结果
    */
-  @Operation(summary = "事务消息发送(RocketMQ 半消息)", description = "已废弃，请统一使用 POST /send + strategy=TRANSACTIONAL。原功能：基于 RocketMQ 事务消息机制（半消息）发送通知。")
+  @Operation(summary = "事务消息发送(RocketMQ 半消息)", description = "已废弃，请统一使用 POST /send + strategy=TRANSACTIONAL。"
+            + "原功能：基于 RocketMQ 事务消息机制（半消息）发送通知。")
   @ApiResponse(responseCode = "200", description = "操作成功")
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")
@@ -297,7 +304,8 @@ public class MessageController {
    * @param batchId 批次 ID（业务侧生成,用于进度查询）
    * @return 批量发送结果
    */
-  @Operation(summary = "批量发送消息(限制 100 条/批)", description = "已废弃，请统一使用 POST /send + strategy=BATCH。原功能：同步批量发送消息，逐条循环发送。单次请求最多 100 条。")
+  @Operation(summary = "批量发送消息(限制 100 条/批)", description = "已废弃，请统一使用 POST /send + strategy=BATCH。原功能：同步批量发送消息，逐条循环发送。"
+            + "单次请求最多 100 条。")
   @ApiResponse(responseCode = "200", description = "操作成功")
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")
@@ -328,7 +336,8 @@ public class MessageController {
    * @param size 每页大小
    * @return 分页日志
    */
-  @Operation(summary = "查询批次发送进度", description = "按批次 ID 分页查询发送日志，用于追踪批量发送任务的执行进度。返回分页结果含各消息当前状态（PENDING/SENT/FAILED）、通道、接收人、回执 ID。")
+  @Operation(summary = "查询批次发送进度", description = "按批次 ID 分页查询发送日志，用于追踪批量发送任务的执行进度。"
+            + "返回分页结果含各消息当前状态（PENDING/SENT/FAILED）、通道、接收人、回执 ID。")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/batch/{batchId}/progress")
   public YdszResponse<PageResponse<List<MsgLogVO>>> batchProgress(

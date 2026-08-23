@@ -81,6 +81,9 @@ public enum RuleStatus {
    *
    * <p>设计说明：REVIEW_L1/REVIEW_L2 均允许直通 PUBLISHED，以支持 1 级、2 级、3 级 审批流灵活发布。例如 2 级审批流序列为 REVIEW_L1 →
    * REVIEW_L2 → PUBLISHED； 3 级审批流序列为 REVIEW_L1 → REVIEW_L2 → REVIEW_FINAL → PUBLISHED。
+   *
+   * @param target 目标状态
+   * @return 是否允许从当前状态迁移到目标状态
    */
   public boolean canTransitionTo(RuleStatus target) {
     return switch (this) {

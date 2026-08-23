@@ -53,10 +53,21 @@ public interface FlowHisInstanceMapper extends BaseMapper<FlowHisInstanceDO> {
    */
   int deleteByOriginalIds(@Param("ids") List<Long> ids);
 
-  /** 按租户聚合归档统计 */
+  /**
+   * 按租户聚合归档统计。
+   *
+   * @param tenantId 租户 ID
+   * @return 归档统计结果列表
+   */
   List<Map<String, Object>> aggregateByTenant(@Param("tenantId") String tenantId);
 
-  /** 查询指定时间范围前的归档记录 */
+  /**
+   * 查询指定时间范围前的归档记录
+   *
+   * @param threshold 参数说明
+   * @param limit 参数说明
+   * @return 返回值说明
+   */
   List<FlowHisInstanceDO> selectByArchivedAtBefore(
       @Param("threshold") LocalDateTime threshold, @Param("limit") int limit);
 }

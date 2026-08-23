@@ -16,6 +16,10 @@ import lombok.Data;
 @Data
 public class MapContext {
 
+  /** 集合初始容量 */
+  private static final int INITIAL_CAPACITY = 64;
+
+
   /** 任务 ID */
   private String jobId;
 
@@ -35,10 +39,10 @@ public class MapContext {
   private boolean root;
 
   /** 子任务列表（初始容量 64，减少 MapReduce 大量子任务场景下的扩容开销） */
-  private List<MapTask> subTasks = new ArrayList<>(64);
+  private List<MapTask> subTasks = new ArrayList<>(INITIAL_CAPACITY);
 
   /** 结果存储（初始容量 64，减少大量分片结果下的 rehash 开销） */
-  private Map<String, Object> results = new HashMap<>(64);
+  private Map<String, Object> results = new HashMap<>(INITIAL_CAPACITY);
 
   // 显式 getter/setter（避免 Lombok 处理差异）
   public String getJobId() {

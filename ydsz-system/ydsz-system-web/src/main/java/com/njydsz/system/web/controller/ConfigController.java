@@ -8,9 +8,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,15 +18,14 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.excel.spring.ExcelWebSupport;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -143,7 +141,9 @@ public class ConfigController {
       content = "'创建配置: ' + #dto.configKey")
   @Operation(summary = "创建配置")
   @RateLimit(resource = "system.config.save", threshold = 50)
-  @Idempotent(key = "'ydsz:system:config:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @Idempotent(
+      key = "'ydsz:system:config:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
+      ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:config:add")
   @PostMapping
   public YdszResponse<String> save(@Valid @RequestBody ConfigDTO dto) {
@@ -167,7 +167,9 @@ public class ConfigController {
       content = "'更新配置: ' + #dto.configKey")
   @Operation(summary = "更新配置")
   @RateLimit(resource = "system.config.update", threshold = 50)
-  @Idempotent(key = "'ydsz:system:config:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()", ttlSeconds = 5)
+  @Idempotent(
+      key = "'ydsz:system:config:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
+      ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:config:edit")
   @PutMapping
   public YdszResponse<Boolean> update(@Valid @RequestBody ConfigDTO dto) {
@@ -192,7 +194,9 @@ public class ConfigController {
       content = "'删除配置: ' + #id")
   @Operation(summary = "删除配置")
   @RateLimit(resource = "system.config.remove", threshold = 50)
-  @Idempotent(key = "'ydsz:system:config:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id", ttlSeconds = 5)
+  @Idempotent(
+      key = "'ydsz:system:config:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id",
+      ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:config:delete")
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
@@ -229,7 +233,8 @@ public class ConfigController {
   @Operation(summary = "批量创建配置", description = "运营初始化场景，单次最多 500 条")
   @RateLimit(resource = "system.config.batch", threshold = 10)
   @Idempotent(
-      key = "'ydsz:system:config:batch:' + #batchDTO.items.hashCode() + ':' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
+      key = "'ydsz:system:config:batch:' + #batchDTO.items.hashCode() + ':' + T(com.njydsz.common.auth.context."
+          + "AuthContextUtils).getUserId()",
       ttlSeconds = 30)
   @AuthApiPermission(apiCodes = "sys:config:add")
   @PostMapping("/batch")

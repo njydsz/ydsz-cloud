@@ -1,19 +1,19 @@
 package com.njydsz.literule.server.config;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.njydsz.common.core.response.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.api.RuleContext;
@@ -24,16 +24,15 @@ import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.RuleStatus;
 import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.api.expression.ExpressionTraceNode;
+import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
-import com.njydsz.literule.server.impl.ExpressionRule;
-import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
-import com.njydsz.literule.server.spi.RuleConfigProvider;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
+import com.njydsz.literule.server.impl.ExpressionRule;
+import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
+import com.njydsz.literule.server.spi.RuleConfigProvider;
 
 /**
  * 规则管理服务
@@ -47,6 +46,15 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
  */
 @Slf4j
 public class RuleAdminService {
+
+    /** 节点 ID 取前缀长度 */
+  private static final int NODE_ID_PREFIX_LENGTH = 8;
+
+  /** 规则路径最大长度 */
+  private static final int MAX_PATH_LENGTH = 512;
+
+  /** 规则路径最大段数 */
+  private static final int MAX_PATH_SEGMENTS = 5;
 
   /** 规则引擎实例，用于规则注册/注销和 dry-run 仿真 */
   private final RuleEngine ruleEngine;
@@ -101,6 +109,7 @@ public class RuleAdminService {
    * @param configProvider 规则配置提供者
    * @param versionRepository 版本仓库（可为 null）
    * @param eventPublisher 事件发布器
+      * @param ruleDefinitionRepository 参数说明
    */
   public RuleAdminService(
       RuleEngine ruleEngine,
@@ -116,7 +125,7 @@ public class RuleAdminService {
     this.eventPublisher = eventPublisher;
     this.ruleDefinitionRepository = ruleDefinitionRepository;
     this.searchService = new RuleSearchService(ruleDefinitionRepository);
-    this.nodeId = IdGenerator.nextIdStr().substring(0, 8);
+    this.nodeId = IdGenerator.nextIdStr().substring(0, NODE_ID_PREFIX_LENGTH);
   }
 
   /**
@@ -462,7 +471,7 @@ public class RuleAdminService {
     if (path == null || path.isBlank()) {
       throw new IllegalArgumentException("分类路径不能为空");
     }
-    if (path.length() > 512) {
+    if (path.length() > MAX_PATH_LENGTH) {
       throw new IllegalArgumentException("分类路径长度不能超过 512");
     }
     if (path.startsWith("/") || path.endsWith("/")) {
@@ -472,7 +481,7 @@ public class RuleAdminService {
       throw new IllegalArgumentException("分类路径不能包含连续 / : " + path);
     }
     String[] segs = path.split("/");
-    if (segs.length > 5) {
+    if (segs.length > MAX_PATH_SEGMENTS) {
       throw new IllegalArgumentException("分类路径深度不能超过 5 级: " + path);
     }
     for (String s : segs) {

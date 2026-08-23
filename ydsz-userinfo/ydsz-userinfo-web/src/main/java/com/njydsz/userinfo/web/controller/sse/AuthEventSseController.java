@@ -55,6 +55,8 @@ import com.njydsz.userinfo.server.sse.SseEmitterRegistry;
 @RequiredArgsConstructor
 @Tag(name = "认证事件 SSE", description = "认证事件 Server-Sent Events 实时推送")
 public class AuthEventSseController {
+  /** SSE 连接超时（毫秒）：30 分钟 */
+  private static final long SSE_TIMEOUT_MILLIS = 30 * 60 * 1000L;
 
   private final SseEmitterRegistry emitterRegistry;
 
@@ -77,7 +79,7 @@ public class AuthEventSseController {
     }
 
     // 创建 SSE Emitter，超时 30 分钟
-    SseEmitter emitter = new SseEmitter(30 * 60 * 1000L);
+    SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MILLIS);
 
     // 注册连接
     emitterRegistry.register(userId, emitter);

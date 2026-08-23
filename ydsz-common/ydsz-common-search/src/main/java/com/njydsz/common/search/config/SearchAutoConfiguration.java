@@ -20,7 +20,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.ImportSelector;
 import org.springframework.core.Ordered;
+import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -148,16 +150,16 @@ public class SearchAutoConfiguration {
    * {@link EngineStarterConfigurer} 的模块， 并将其 {@code ImportSelector} 导入 Spring 容器。
    */
   public static class EngineStarterRegistry
-      implements org.springframework.context.annotation.ImportSelector {
+      implements ImportSelector {
 
     @Override
-    public String[] selectImports(org.springframework.core.type.AnnotationMetadata metadata) {
+    public String[] selectImports(AnnotationMetadata metadata) {
       // ServiceLoader 方式加载各引擎 Starter 的 EngineStarterConfigurer 实现
       List<String> configClasses = new ArrayList<>();
       ServiceLoader<EngineStarterConfigurer> loader =
           ServiceLoader.load(EngineStarterConfigurer.class);
       for (EngineStarterConfigurer configurer : loader) {
-        for (org.springframework.context.annotation.ImportSelector selector :
+        for (ImportSelector selector :
             configurer.getImportSelectors()) {
           for (String className : selector.selectImports(metadata)) {
             configClasses.add(className);
@@ -480,7 +482,8 @@ public class SearchAutoConfiguration {
    * </ul>
    *
    * @param suggestionService 建议服务，用于生成纠错候选
-   * @param redisProvider Redis 的惰性提供者，缺失时热门词降级为空列表
+   * @param searchAnalyticsService 搜索分析服务
+   * @param properties 搜索配置属性
    * @return 零结果引导处理器实例，永不为 {@code null}
    */
   @Bean

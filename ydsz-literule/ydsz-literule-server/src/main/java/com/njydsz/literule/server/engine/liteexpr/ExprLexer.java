@@ -36,6 +36,18 @@ import java.util.List;
  */
 public class ExprLexer {
 
+    /** Token 列表初始容量（大） */
+  private static final int TOKENS_CAPACITY_64 = 64;
+
+  /** Token 列表初始容量（小） */
+  private static final int TOKENS_CAPACITY_4 = 4;
+
+  /** Token 列表初始容量（中） */
+  private static final int TOKENS_CAPACITY_8 = 8;
+
+  /** 十六进制进制基数 */
+  private static final int RADIX_HEX = 16;
+
   private final String source;
   private final int length;
 
@@ -57,7 +69,7 @@ public class ExprLexer {
    * @return Token 列表（末尾含 EOF）
    */
   public List<Token> tokenize() {
-    List<Token> tokens = new ArrayList<>(64);
+    List<Token> tokens = new ArrayList<>(TOKENS_CAPACITY_64);
     while (pos < length) {
       if (inTemplate) {
         tokens.addAll(scanTemplatePart());
@@ -79,7 +91,9 @@ public class ExprLexer {
    */
   private Token nextToken() {
     skipWhitespaceAndComments();
-    if (pos >= length) return null;
+    if (pos >= length) {
+      return null;
+    }
 
     char c = peek();
     int startLine = line;
@@ -117,7 +131,7 @@ public class ExprLexer {
    * 中处理）。
    */
   private List<Token> scanTemplatePart() {
-    List<Token> tokens = new ArrayList<>(4);
+    List<Token> tokens = new ArrayList<>(TOKENS_CAPACITY_4);
     int startLine = line;
     int startCol = column;
     int startPos = pos;
@@ -185,19 +199,24 @@ public class ExprLexer {
 
   /** 扫描到 } 为止的内部 Token（模板变量内部） */
   private List<Token> scanUntilBrace() {
-    List<Token> tokens = new ArrayList<>(8);
+    List<Token> tokens = new ArrayList<>(TOKENS_CAPACITY_8);
     int braceDepth = 0;
     while (pos < length) {
       skipWhitespaceAndComments();
-      if (pos >= length) break;
+      if (pos >= length) {
+        break;
+      }
       char c = peek();
       if (c == '}' && braceDepth == 0) {
         tokens.add(Token.of(TokenType.TEMPLATE_VAR_END, "}", line, column, pos));
         advance();
         return tokens;
       }
-      if (c == '{') braceDepth++;
-      else if (c == '}') braceDepth--;
+      if (c == '{') {
+        braceDepth++;
+      } else if (c == '}') {
+        braceDepth--;
+      }
       Token token = nextToken();
       if (token != null) {
         tokens.add(token);
@@ -308,8 +327,8 @@ public class ExprLexer {
     } else if (isHex) {
       literal =
           isLong
-              ? Long.parseLong(lexeme.substring(2), 16)
-              : Integer.parseInt(lexeme.substring(2), 16);
+              ? Long.parseLong(lexeme.substring(2), RADIX_HEX)
+              : Integer.parseInt(lexeme.substring(2), RADIX_HEX);
     } else if (isDecimal) {
       literal = new BigDecimal(lexeme);
     } else if (isLong) {
@@ -434,7 +453,9 @@ public class ExprLexer {
         advance();
       } else if (c == '/' && pos + 1 < length && source.charAt(pos + 1) == '/') {
         // 行注释
-        while (pos < length && peek() != '\n') advance();
+        while (pos < length && peek() != '\n') {
+          advance();
+        }
       } else if (c == '/' && pos + 1 < length && source.charAt(pos + 1) == '*') {
         // 块注释
         advance();

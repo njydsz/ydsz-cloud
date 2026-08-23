@@ -61,6 +61,7 @@ public interface WorkflowServiceClient {
    *
    * @param processInstanceId 流程实例 ID
    * @param reason 终止原因（可空）
+   * @return 终止结果
    */
   @PostMapping(FeignClientConstants.WORKFLOW_PATH_TERMINATE)
   YdszResponse<Void> terminate(

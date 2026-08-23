@@ -63,30 +63,43 @@ public final class ScimConverter {
             .lastModified(vo.getUpdatedAt() != null ? vo.getUpdatedAt().format(ISO_FORMATTER) : null)
             .build());
 
-    // 姓名映射：realName → name.formatted
-    if (vo.getRealName() != null && !vo.getRealName().isEmpty()) {
-      builder.name(ScimName.builder().formatted(vo.getRealName()).build());
-      builder.displayName(vo.getRealName());
-    }
-
-    // 状态映射：1 → true, 0 → false
-    if (vo.getStatus() != null) {
-      builder.active(vo.getStatus() == 1);
-    }
-
-    // 邮箱映射
-    if (vo.getEmail() != null && !vo.getEmail().isEmpty()) {
-      builder.emails(Collections.singletonList(
-          ScimEmail.builder().value(vo.getEmail()).primary(true).build()));
-    }
-
-    // 手机号映射
-    if (vo.getPhone() != null && !vo.getPhone().isEmpty()) {
-      builder.phoneNumbers(Collections.singletonList(
-          ScimPhone.builder().value(vo.getPhone()).primary(true).build()));
-    }
+    applyRealName(builder, vo.getRealName());
+    applyStatus(builder, vo.getStatus());
+    applyEmail(builder, vo.getEmail());
+    applyPhone(builder, vo.getPhone());
 
     return builder.build();
+  }
+
+  /** 应用姓名映射：realName → name.formatted。 */
+  private static void applyRealName(ScimUser.ScimUserBuilder builder, String realName) {
+    if (realName != null && !realName.isEmpty()) {
+      builder.name(ScimName.builder().formatted(realName).build());
+      builder.displayName(realName);
+    }
+  }
+
+  /** 应用状态映射：1 → true, 0 → false。 */
+  private static void applyStatus(ScimUser.ScimUserBuilder builder, Integer status) {
+    if (status != null) {
+      builder.active(status == 1);
+    }
+  }
+
+  /** 应用邮箱映射：非空时映射为 primary 邮箱。 */
+  private static void applyEmail(ScimUser.ScimUserBuilder builder, String email) {
+    if (email != null && !email.isEmpty()) {
+      builder.emails(Collections.singletonList(
+          ScimEmail.builder().value(email).primary(true).build()));
+    }
+  }
+
+  /** 应用手机号映射：非空时映射为 primary 手机号。 */
+  private static void applyPhone(ScimUser.ScimUserBuilder builder, String phone) {
+    if (phone != null && !phone.isEmpty()) {
+      builder.phoneNumbers(Collections.singletonList(
+          ScimPhone.builder().value(phone).primary(true).build()));
+    }
   }
 
   /**
@@ -107,49 +120,83 @@ public final class ScimConverter {
     dto.setUsername(scimUser.getUserName());
     dto.setExternalId(scimUser.getExternalId());
 
-    // 姓名映射
-    if (scimUser.getName() != null) {
-      String formatted = scimUser.getName().getFormatted();
-      if (formatted != null && !formatted.isEmpty()) {
-        dto.setRealName(formatted);
-      } else if (scimUser.getName().getGivenName() != null) {
-        // 如果没有 formatted，拼接 givenName + familyName
-        String familyName = scimUser.getName().getFamilyName();
-        String givenName = scimUser.getName().getGivenName();
-        StringBuilder sb = new StringBuilder();
-        if (familyName != null) {
-          sb.append(familyName);
-        }
-        if (givenName != null) {
-          sb.append(givenName);
-        }
-        dto.setRealName(sb.toString());
-      }
-    }
+    dto.setRealName(resolveRealName(scimUser));
+    dto.setEmail(resolvePrimaryEmail(scimUser));
+    dto.setPhone(resolveFirstPhone(scimUser));
+    applyActiveStatus(dto, scimUser.getActive());
 
-    // 邮箱映射：优先取 primary 邮箱，否则取第一个
-    if (scimUser.getEmails() != null && !scimUser.getEmails().isEmpty()) {
-      String email = scimUser.getEmails().stream()
-          .filter(e -> Boolean.TRUE.equals(e.getPrimary()))
-          .findFirst()
-          .map(ScimEmail::getValue)
-          .orElse(scimUser.getEmails().get(0).getValue());
-      dto.setEmail(email);
-    }
+    return dto;
+  }
 
-    // 手机号映射
-    if (scimUser.getPhoneNumbers() != null && !scimUser.getPhoneNumbers().isEmpty()) {
-      dto.setPhone(scimUser.getPhoneNumbers().get(0).getValue());
+  /**
+   * 解析 SCIM 用户姓名：优先 formatted，否则拼接 familyName + givenName。
+   *
+   * @param scimUser SCIM User 资源
+   * @return 解析后的姓名；无姓名信息返回 null
+   */
+  private static String resolveRealName(ScimUser scimUser) {
+    if (scimUser.getName() == null) {
+      return null;
     }
+    String formatted = scimUser.getName().getFormatted();
+    if (formatted != null && !formatted.isEmpty()) {
+      return formatted;
+    }
+    String givenName = scimUser.getName().getGivenName();
+    if (givenName == null) {
+      return null;
+    }
+    String familyName = scimUser.getName().getFamilyName();
+    StringBuilder sb = new StringBuilder();
+    if (familyName != null) {
+      sb.append(familyName);
+    }
+    sb.append(givenName);
+    return sb.toString();
+  }
 
-    // 状态映射
-    if (Boolean.FALSE.equals(scimUser.getActive())) {
+  /**
+   * 解析 SCIM 用户邮箱：优先 primary 邮箱，否则取第一个。
+   *
+   * @param scimUser SCIM User 资源
+   * @return 解析后的邮箱；无邮箱返回 null
+   */
+  private static String resolvePrimaryEmail(ScimUser scimUser) {
+    if (scimUser.getEmails() == null || scimUser.getEmails().isEmpty()) {
+      return null;
+    }
+    return scimUser.getEmails().stream()
+        .filter(e -> Boolean.TRUE.equals(e.getPrimary()))
+        .findFirst()
+        .map(ScimEmail::getValue)
+        .orElse(scimUser.getEmails().get(0).getValue());
+  }
+
+  /**
+   * 解析 SCIM 用户手机号：取第一个手机号。
+   *
+   * @param scimUser SCIM User 资源
+   * @return 解析后的手机号；无手机号返回 null
+   */
+  private static String resolveFirstPhone(ScimUser scimUser) {
+    if (scimUser.getPhoneNumbers() == null || scimUser.getPhoneNumbers().isEmpty()) {
+      return null;
+    }
+    return scimUser.getPhoneNumbers().get(0).getValue();
+  }
+
+  /**
+   * 应用 SCIM active 状态到 DTO。
+   *
+   * @param dto 目标 DTO
+   * @param active SCIM active 状态（true=启用 / false=禁用）
+   */
+  private static void applyActiveStatus(UserAccountDTO dto, Boolean active) {
+    if (Boolean.FALSE.equals(active)) {
       dto.setStatus(EnableStatusEnum.DISABLED);
     } else {
       dto.setStatus(EnableStatusEnum.ENABLED);
     }
-
-    return dto;
   }
 
   /**
@@ -168,36 +215,9 @@ public final class ScimConverter {
     UserAccountDTO dto = new UserAccountDTO();
     dto.setId(scimUser.getId());
 
-    // 姓名映射
-    if (scimUser.getName() != null) {
-      String formatted = scimUser.getName().getFormatted();
-      if (formatted != null && !formatted.isEmpty()) {
-        dto.setRealName(formatted);
-      } else if (scimUser.getName().getGivenName() != null) {
-        String familyName = scimUser.getName().getFamilyName();
-        String givenName = scimUser.getName().getGivenName();
-        StringBuilder sb = new StringBuilder();
-        if (familyName != null) {
-          sb.append(familyName);
-        }
-        if (givenName != null) {
-          sb.append(givenName);
-        }
-        dto.setRealName(sb.toString());
-      }
-    }
-
-    // 邮箱映射
-    if (scimUser.getEmails() != null && !scimUser.getEmails().isEmpty()) {
-      dto.setEmail(scimUser.getEmails().get(0).getValue());
-    }
-
-    // 手机号映射
-    if (scimUser.getPhoneNumbers() != null && !scimUser.getPhoneNumbers().isEmpty()) {
-      dto.setPhone(scimUser.getPhoneNumbers().get(0).getValue());
-    }
-
-    // 状态映射
+    dto.setRealName(resolveRealName(scimUser));
+    dto.setEmail(resolveFirstEmail(scimUser));
+    dto.setPhone(resolveFirstPhone(scimUser));
     if (Boolean.FALSE.equals(scimUser.getActive())) {
       dto.setStatus(EnableStatusEnum.DISABLED);
     } else if (Boolean.TRUE.equals(scimUser.getActive())) {
@@ -205,5 +225,18 @@ public final class ScimConverter {
     }
 
     return dto;
+  }
+
+  /**
+   * 解析 SCIM 用户邮箱：取第一个邮箱（更新场景语义）。
+   *
+   * @param scimUser SCIM User 资源
+   * @return 解析后的邮箱；无邮箱返回 null
+   */
+  private static String resolveFirstEmail(ScimUser scimUser) {
+    if (scimUser.getEmails() == null || scimUser.getEmails().isEmpty()) {
+      return null;
+    }
+    return scimUser.getEmails().get(0).getValue();
   }
 }

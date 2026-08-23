@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.exception.custom.BusinessException;
@@ -70,55 +69,8 @@ public class AccountStatusGuard {
     }
 
     UserAccountCredentialVO credential = credentialOpt.get();
-
-    UserLifecycleStatusEnum lifecycleStatus = resolveLifecycleStatus(credential);
-    if (lifecycleStatus != null && !lifecycleStatus.canLogin()) {
-      switch (lifecycleStatus) {
-        case PENDING -> {
-          recordLoginFailure(credential, username, loginIp, userAgent, "USER_NOT_ACTIVATED");
-          throw new BusinessException(UserInfoExceptionCode.USER_NOT_ACTIVATED);
-        }
-        case SUSPENDED -> {
-          recordLoginFailure(credential, username, loginIp, userAgent, "USER_SUSPENDED");
-          throw new BusinessException(UserInfoExceptionCode.USER_SUSPENDED);
-        }
-        case RESIGNED -> {
-          recordLoginFailure(credential, username, loginIp, userAgent, "USER_RESIGNED");
-          throw new BusinessException(UserInfoExceptionCode.USER_RESIGNED);
-        }
-        case DISABLED -> {
-          recordLoginFailure(credential, username, loginIp, userAgent, "USER_DISABLED");
-          throw new BusinessException(UserInfoExceptionCode.USER_DISABLED);
-        }
-        default -> {
-          // ENABLED falls through to lock check below
-        }
-      }
-    }
-
-    // 封禁状态检查：在生命周期状态校验之后、密码校验之前
-    String banType = credential.getBanType();
-    if (banType != null && !banType.isBlank()) {
-      try {
-        BanType type = BanType.valueOf(banType.trim().toUpperCase());
-        if (type == BanType.PERMANENT) {
-          recordLoginFailure(credential, username, loginIp, userAgent, "USER_BANNED_PERMANENT");
-          throw new BusinessException(UserInfoExceptionCode.USER_BANNED_PERMANENT);
-        }
-        // TEMPORARY: 懒检查是否过期
-        LocalDateTime banExpireAt = credential.getBanExpireAt();
-        if (banExpireAt == null || !banExpireAt.isAfter(LocalDateTime.now())) {
-          // 临时封禁已过期或时间异常，自动解除（不写回 DB，仅内存判断）
-          log.debug("Temporary ban expired for user: {}, allowing login", username);
-        } else {
-          recordLoginFailure(credential, username, loginIp, userAgent, "USER_BANNED");
-          throw new BusinessException(UserInfoExceptionCode.USER_BANNED);
-        }
-      } catch (IllegalArgumentException e) {
-        // 无法解析的 banType 值，不阻止登录（防御性处理）
-        log.warn("Unknown banType for user {}: {}", username, banType);
-      }
-    }
+    checkLifecycleStatus(credential, username, loginIp, userAgent);
+    checkBanStatus(credential, username, loginIp, userAgent);
 
     if (credential.isLocked()) {
       recordLoginFailure(credential, username, loginIp, userAgent, "ACCOUNT_LOCKED");
@@ -126,6 +78,83 @@ public class AccountStatusGuard {
     }
 
     return credential;
+  }
+
+  /**
+   * 校验用户生命周期状态，不允许登录的状态抛出对应异常。
+   *
+   * @param credential 用户认证凭据 VO
+   * @param username 登录用户名
+   * @param loginIp 登录来源 IP
+   * @param userAgent 用户代理
+   */
+  private void checkLifecycleStatus(
+      UserAccountCredentialVO credential,
+      String username,
+      String loginIp,
+      String userAgent) {
+    UserLifecycleStatusEnum lifecycleStatus = resolveLifecycleStatus(credential);
+    if (lifecycleStatus == null || lifecycleStatus.canLogin()) {
+      return;
+    }
+    switch (lifecycleStatus) {
+      case PENDING -> {
+        recordLoginFailure(credential, username, loginIp, userAgent, "USER_NOT_ACTIVATED");
+        throw new BusinessException(UserInfoExceptionCode.USER_NOT_ACTIVATED);
+      }
+      case SUSPENDED -> {
+        recordLoginFailure(credential, username, loginIp, userAgent, "USER_SUSPENDED");
+        throw new BusinessException(UserInfoExceptionCode.USER_SUSPENDED);
+      }
+      case RESIGNED -> {
+        recordLoginFailure(credential, username, loginIp, userAgent, "USER_RESIGNED");
+        throw new BusinessException(UserInfoExceptionCode.USER_RESIGNED);
+      }
+      case DISABLED -> {
+        recordLoginFailure(credential, username, loginIp, userAgent, "USER_DISABLED");
+        throw new BusinessException(UserInfoExceptionCode.USER_DISABLED);
+      }
+      default -> {
+        // ENABLED falls through to lock check below
+      }
+    }
+  }
+
+  /**
+   * 校验用户封禁状态：永久封禁直接拒绝；临时封禁未过期则拒绝，已过期自动放行。
+   *
+   * @param credential 用户认证凭据 VO
+   * @param username 登录用户名
+   * @param loginIp 登录来源 IP
+   * @param userAgent 用户代理
+   */
+  private void checkBanStatus(
+      UserAccountCredentialVO credential,
+      String username,
+      String loginIp,
+      String userAgent) {
+    String banType = credential.getBanType();
+    if (banType == null || banType.isBlank()) {
+      return;
+    }
+    try {
+      BanType type = BanType.valueOf(banType.trim().toUpperCase());
+      if (type == BanType.PERMANENT) {
+        recordLoginFailure(credential, username, loginIp, userAgent, "USER_BANNED_PERMANENT");
+        throw new BusinessException(UserInfoExceptionCode.USER_BANNED_PERMANENT);
+      }
+      // TEMPORARY: 懒检查是否过期
+      LocalDateTime banExpireAt = credential.getBanExpireAt();
+      if (banExpireAt != null && banExpireAt.isAfter(LocalDateTime.now())) {
+        recordLoginFailure(credential, username, loginIp, userAgent, "USER_BANNED");
+        throw new BusinessException(UserInfoExceptionCode.USER_BANNED);
+      }
+      // 临时封禁已过期或时间异常，自动解除（不写回 DB，仅内存判断）
+      log.debug("Temporary ban expired for user: {}, allowing login", username);
+    } catch (IllegalArgumentException e) {
+      // 无法解析的 banType 值，不阻止登录（防御性处理）
+      log.warn("Unknown banType for user {}: {}", username, banType);
+    }
   }
 
   /**

@@ -25,13 +25,21 @@ public class TemplateVariableValidator {
 
   /** 变量类型枚举 */
   public enum VariableType {
+    /** 字符串 */
     STRING,
+    /** 整数 */
     INTEGER,
+    /** 小数 */
     DECIMAL,
+    /** 布尔 */
     BOOLEAN,
+    /** 邮箱 */
     EMAIL,
+    /** 手机号 */
     PHONE,
+    /** URL */
     URL,
+    /** 日期时间 */
     DATETIME
   }
 

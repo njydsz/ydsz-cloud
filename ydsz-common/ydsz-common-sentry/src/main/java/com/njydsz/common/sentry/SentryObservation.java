@@ -62,6 +62,10 @@ public class SentryObservation {
   /** SentryService 提供者（由 SentryAutoConfiguration 注册） */
   private static volatile Supplier<SentryService> sentryServiceProvider;
 
+  private SentryObservation() {
+    // 静态工具门面，禁止实例化
+  }
+
   /**
    * 注册 SentryService 的 Supplier。
    *
@@ -157,7 +161,7 @@ public class SentryObservation {
       String description,
       Map<String, String> tags,
       SentryService.CheckedSupplier<T> operation)
-      throws Exception {
+      throws Throwable {
     SentryService service = getService();
     if (service != null) {
       return service.time(name, description, tags, operation);

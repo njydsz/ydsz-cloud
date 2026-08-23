@@ -44,8 +44,8 @@ import java.util.regex.Pattern;
  *
  * <pre>{@code
  * HTMLFilter filter = new HTMLFilter();
- * String clean = filter.filter("<script>alert(1)</script><b>text</b>");
- * // 结果：<b>text</b>
+ * String clean = filter.filter("&lt;script&gt;alert(1)&lt;/script&gt;&lt;b&gt;text&lt;/b&gt;");
+ * // 结果：&lt;b&gt;text&lt;/b&gt;
  * }</pre>
  *
  * @author ydsz-team
@@ -439,8 +439,8 @@ public final class HTMLFilter {
   }
 
   private static String regexReplace(
-      final Pattern regex_pattern, final String replacement, final String s) {
-    Matcher m = regex_pattern.matcher(s);
+      final Pattern regexPattern, final String replacement, final String s) {
+    Matcher m = regexPattern.matcher(s);
     return m.replaceAll(replacement);
   }
 
@@ -480,7 +480,8 @@ public final class HTMLFilter {
           paramValues.add(m3.group(3));
         }
 
-        String paramName, paramValue;
+        String paramName;
+        String paramValue;
         for (int ii = 0; ii < paramNames.size(); ii++) {
           paramName = paramNames.get(ii).toLowerCase();
           paramValue = paramValues.get(ii);

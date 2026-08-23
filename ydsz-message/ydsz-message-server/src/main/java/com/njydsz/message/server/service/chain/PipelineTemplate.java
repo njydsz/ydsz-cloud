@@ -49,7 +49,8 @@ public enum PipelineTemplate {
   /**
    * 全量处理模板（默认兜底）。
    *
-   * <p>包含所有 Handler，适用于无法明确分类的请求或需要完整校验的场景。 执行顺序：ChannelResolve → RouteRule → UserPreference → Dedup → Suppression → Throttling。
+   * <p>包含所有 Handler，适用于无法明确分类的请求或需要完整校验的场景。
+   * 执行顺序：ChannelResolve → RouteRule → UserPreference → Dedup → Suppression → Throttling。
    *
    * @see ChannelResolveHandler
    * @see RouteRuleHandler

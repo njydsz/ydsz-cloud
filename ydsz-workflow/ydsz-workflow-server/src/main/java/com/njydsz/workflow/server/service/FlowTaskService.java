@@ -191,11 +191,13 @@ public interface FlowTaskService {
 
   /**
    * 查用户的待办（多维度匹配：直接分配 + ROLE/DEPT 展开 + ydsz_flow_user 关联）
+   * 
    *
-   * @param userId 用户 ID
-   * @param roleCodes 用户拥有的角色编码（可空）
-   * @param deptIds 用户所属部门 ID（字符串形式，可空）
-   * @param tenantId 租户 ID（可空，默认 1L）
+   * @param userId 参数说明
+   * @param roleCodes 参数说明
+   * @param deptIds 参数说明
+   * @param tenantId 参数说明
+   * @return 返回值说明
    */
   List<FlowRunTaskVO> listTodoByUser(
       String userId, List<String> roleCodes, List<String> deptIds, String tenantId);
@@ -261,8 +263,13 @@ public interface FlowTaskService {
 
   /**
    * P1-9: 催办 — 通知当前节点所有待办处理人
+   * 
+   * 
    *
-   * @return 被催办人 ID 列表
+   * @param instanceId 参数说明
+   * @param operatorId 参数说明
+   * @param comment 参数说明
+   * @return 返回值说明
    */
   List<String> urge(String instanceId, String operatorId, String comment);
 

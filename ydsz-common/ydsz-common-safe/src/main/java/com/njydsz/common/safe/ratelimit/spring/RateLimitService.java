@@ -49,17 +49,33 @@ public class RateLimitService {
 
 
 
-  /** 检查限流（不带上下文） */
+  /**
+   * 检查限流（不带上下文）。
+   *
+   * @param resource 资源标识
+   * @return 限流决策
+   */
   public RateLimitDecision check(String resource) {
     return check(RateLimitContext.builder().resource(resource).build());
   }
 
-  /** 检查限流（带上下文） */
+  /**
+   * 检查限流（带上下文）。
+   *
+   * @param context 限流上下文
+   * @return 限流决策
+   */
   public RateLimitDecision check(RateLimitContext context) {
     return rateLimitManager.decide(context);
   }
 
-  /** 检查限流（带注解 + 参数） */
+  /**
+   * 检查限流（带注解 + 参数）。
+   *
+   * @param annotation 限流注解
+   * @param args 方法参数（用于 keyParam 提取）
+   * @return 限流决策
+   */
   public RateLimitDecision check(RateLimit annotation, Object... args) {
     StringBuilder keyBuilder = new StringBuilder(annotation.resource());
     if (annotation.keyParam() >= 0
@@ -72,7 +88,12 @@ public class RateLimitService {
     return check(context);
   }
 
-  /** 快捷方法：判断是否通过 */
+  /**
+   * 快捷方法：判断是否通过。
+   *
+   * @param resource 资源标识
+   * @return {@code true} 表示未触发限流
+   */
   public boolean isPass(String resource) {
     return check(resource).isPass();
   }

@@ -23,6 +23,63 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "ydsz.literule")
 public class LiteRuleProperties {
 
+  /** 默认追踪队列容量 */
+  private static final int DEFAULT_TRACE_QUEUE_CAPACITY = 5000;
+
+  /** 默认追踪刷盘间隔（毫秒） */
+  private static final long DEFAULT_TRACE_FLUSH_INTERVAL_MS = 2000;
+
+  /** 默认熔断器错误率阈值 */
+  private static final double DEFAULT_CIRCUIT_BREAKER_ERROR_RATE = 0.5;
+
+  /** 默认熔断器打开持续时间（毫秒） */
+  private static final long DEFAULT_CIRCUIT_BREAKER_OPEN_STATE_MS = 30_000L;
+
+  /** 默认一致性哈希虚拟节点数 */
+  private static final int DEFAULT_VIRTUAL_NODES = 150;
+
+  /** 默认节点心跳超时（毫秒） */
+  private static final long DEFAULT_HEARTBEAT_TIMEOUT_MS = 30_000L;
+
+  /** 默认节点心跳间隔（毫秒） */
+  private static final long DEFAULT_HEARTBEAT_INTERVAL_MS = 5_000L;
+
+  /** 默认 L1 缓存 TTL（秒） */
+  private static final int DEFAULT_L1_TTL_SECONDS = 60;
+
+  /** 默认 L2 缓存 TTL（秒） */
+  private static final int DEFAULT_L2_TTL_SECONDS = 300;
+
+  /** 默认模型调用超时（毫秒） */
+  private static final long DEFAULT_TIMEOUT_MS = 200;
+
+  /** 默认事实缓存 TTL（秒） */
+  private static final int DEFAULT_CACHE_TTL_SECONDS = 300;
+
+  /** 默认并行执行阈值 */
+  private static final int DEFAULT_PARALLEL_THRESHOLD = 50;
+
+  /** 默认高错误率阈值 */
+  private static final double DEFAULT_HIGH_ERROR_RATE_THRESHOLD = 0.30;
+
+  /** 默认失活停用天数 */
+  private static final int DEFAULT_STALE_DISABLED_DAYS = 90;
+
+  /** 默认低影响触发率 */
+  private static final double DEFAULT_LOW_IMPACT_TRIGGER_RATE = 0.001;
+
+  /** 默认最小样本量 */
+  private static final long DEFAULT_MIN_SAMPLE_SIZE = 500;
+
+  /** 默认线程池最小线程数 */
+  private static final int DEFAULT_MIN_POOL_SIZE = 4;
+
+  /** 默认线程池大小乘数（可用处理器数 × 2） */
+  private static final int DEFAULT_POOL_MULTIPLIER = 2;
+
+  /** 默认线程池空闲保活时间（秒） */
+  private static final long DEFAULT_KEEP_ALIVE_SECONDS = 60L;
+
   /** 是否启用自动注册内置规则 */
   private boolean autoRegisterBuiltinRules = true;
 
@@ -82,7 +139,7 @@ public class LiteRuleProperties {
 
   /** 异步 Trace 队列容量 */
   @Min(1)
-  private int traceQueueCapacity = 5000;
+  private int traceQueueCapacity = DEFAULT_TRACE_QUEUE_CAPACITY;
 
   /** 异步 Trace 批量写入大小 */
   @Min(1)
@@ -90,7 +147,7 @@ public class LiteRuleProperties {
 
   /** 异步 Trace 刷新间隔（毫秒） */
   @Min(1)
-  private long traceFlushIntervalMs = 2000;
+  private long traceFlushIntervalMs = DEFAULT_TRACE_FLUSH_INTERVAL_MS;
 
   /** 单规则执行超时（毫秒，0 表示不限制，1.4.0） */
   @Min(0)
@@ -99,7 +156,7 @@ public class LiteRuleProperties {
   /** 规则熔断错误率阈值（0~1.0，达到阈值时熔断该规则，1.4.0） */
   @DecimalMin("0.0")
   @DecimalMax("1.0")
-  private double circuitBreakerErrorRate = 0.5;
+  private double circuitBreakerErrorRate = DEFAULT_CIRCUIT_BREAKER_ERROR_RATE;
 
   /** 规则熔断最小评估次数（达到该次数后才计算错误率，1.4.0） */
   @Min(0)
@@ -111,7 +168,7 @@ public class LiteRuleProperties {
    * <p>熔断器进入 OPEN 状态后，持续该时长后转为 HALF_OPEN，允许试探性评估。 默认 30000ms（30 秒），与 Resilience4j 默认
    * waitDurationInOpenState 对齐。
    */
-  private long circuitBreakerOpenStateMs = 30_000L;
+  private long circuitBreakerOpenStateMs = DEFAULT_CIRCUIT_BREAKER_OPEN_STATE_MS;
 
   /**
    * 是否启用规则灰度路由（1.4.0）
@@ -332,16 +389,16 @@ public class LiteRuleProperties {
     private boolean enabled = false;
 
     /** 虚拟节点数（默认 150，越大越均匀） */
-    private int virtualNodes = 150;
+    private int virtualNodes = DEFAULT_VIRTUAL_NODES;
 
     /** 节点列表刷新间隔（毫秒） */
     private long refreshIntervalMs = 10_000L;
 
     /** 心跳超时时间（毫秒，超过此时间未心跳的节点视为下线） */
-    private long heartbeatTimeoutMs = 30_000L;
+    private long heartbeatTimeoutMs = DEFAULT_HEARTBEAT_TIMEOUT_MS;
 
     /** 心跳发送间隔（毫秒） */
-    private long heartbeatIntervalMs = 5_000L;
+    private long heartbeatIntervalMs = DEFAULT_HEARTBEAT_INTERVAL_MS;
   }
 
   /**
@@ -433,7 +490,7 @@ public class LiteRuleProperties {
 
     /** L1（Caffeine 本地）TTL，单位秒 */
     @Min(1)
-    private int l1TtlSeconds = 60;
+    private int l1TtlSeconds = DEFAULT_L1_TTL_SECONDS;
 
     /** L1 最大条数 */
     @Min(1)
@@ -441,7 +498,7 @@ public class LiteRuleProperties {
 
     /** L2（Redis 分布式）TTL，单位秒 */
     @Min(1)
-    private int l2TtlSeconds = 300;
+    private int l2TtlSeconds = DEFAULT_L2_TTL_SECONDS;
 
     /**
      * 是否启用 L2（需 Redisson 在 classpath）
@@ -572,7 +629,7 @@ public class LiteRuleProperties {
      * <p>每个 {@link com.njydsz.literule.server.spi.FactProvider} 调用最多等待该时长， 超时则取消并返回空 Map（或抛异常，取决于
      * {@link #fallbackOnError}）。 默认 200ms，适用于大多数 DB/Redis 查询场景。
      */
-    private long timeoutMs = 200;
+    private long timeoutMs = DEFAULT_TIMEOUT_MS;
 
     /**
      * provider 异常时是否降级
@@ -602,7 +659,7 @@ public class LiteRuleProperties {
     private boolean cacheEnabled = false;
 
     /** 缓存 TTL（秒），默认 300（5 分钟） */
-    private int cacheTtlSeconds = 300;
+    private int cacheTtlSeconds = DEFAULT_CACHE_TTL_SECONDS;
 
     /** 缓存最大条目数，默认 10000 */
     private int cacheMaxSize = 10_000;
@@ -624,7 +681,7 @@ public class LiteRuleProperties {
      * <p>候选规则数 ≥ 此值时自动切换为并行评估。 默认 50，适用于规则数较大的场景。
      */
     @Min(1)
-    private int parallelThreshold = 50;
+    private int parallelThreshold = DEFAULT_PARALLEL_THRESHOLD;
 
     /**
      * 慢规则告警阈值（毫秒，P2-4）
@@ -684,14 +741,14 @@ public class LiteRuleProperties {
      */
     @DecimalMin("0.0")
     @DecimalMax("1.0")
-    private double highErrorRateThreshold = 0.30;
+    private double highErrorRateThreshold = DEFAULT_HIGH_ERROR_RATE_THRESHOLD;
 
     /**
      * 长期停用天数
      *
      * <p>规则处于 DISABLED 状态超过此天数时，判定为长期停用规则。 默认 90 天。
      */
-    private int staleDisabledDays = 90;
+    private int staleDisabledDays = DEFAULT_STALE_DISABLED_DAYS;
 
     /**
      * 低影响触发率阈值（0~1.0）
@@ -700,7 +757,7 @@ public class LiteRuleProperties {
      */
     @DecimalMin("0.0")
     @DecimalMax("1.0")
-    private double lowImpactTriggerRate = 0.001;
+    private double lowImpactTriggerRate = DEFAULT_LOW_IMPACT_TRIGGER_RATE;
 
     /**
      * 最小样本量
@@ -708,7 +765,7 @@ public class LiteRuleProperties {
      * <p>评估次数低于此值的规则不参与退役判定（数据不足）。 长期停用检测不受此限制。 默认 500 次。
      */
     @Min(0)
-    private long minSampleSize = 500;
+    private long minSampleSize = DEFAULT_MIN_SAMPLE_SIZE;
   }
 
   /**
@@ -787,7 +844,8 @@ public class LiteRuleProperties {
      * 如果注册了大量 provider（>5），建议适当增加池大小以避免注入成为瓶颈。
      */
     @Min(1)
-    private int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors() * 2);
+    private int poolSize =
+        Math.max(DEFAULT_MIN_POOL_SIZE, Runtime.getRuntime().availableProcessors() * DEFAULT_POOL_MULTIPLIER);
 
     /**
      * 注入线程保持活跃时间（秒）
@@ -796,6 +854,6 @@ public class LiteRuleProperties {
      * 默认 60 秒。
      */
     @Min(0)
-    private long keepAliveSeconds = 60L;
+    private long keepAliveSeconds = DEFAULT_KEEP_ALIVE_SECONDS;
   }
 }

@@ -71,6 +71,11 @@ public class ElkLogPublisher implements LogPublisher, AutoCloseable {
   }
 
   @Override
+  /**
+   * publish。
+   * @param event 参数
+   * @return 结果
+   */
   public boolean publish(LogEvent event) {
     if (!isAvailable()) {
       return false;
@@ -170,26 +175,45 @@ public class ElkLogPublisher implements LogPublisher, AutoCloseable {
   }
 
   @Override
+  /**
+   * is available。
+   * @return 结果
+   */
   public boolean isAvailable() {
     return circuitBreaker == null || circuitBreaker.getState() != CircuitBreaker.State.OPEN;
   }
 
   @Override
+  /**
+   * get name。
+   * @return 结果
+   */
   public String getName() {
     return "elk-logstash";
   }
 
   @Override
+  /**
+   * get scheme。
+   * @return 结果
+   */
   public String getScheme() {
     return "elk";
   }
 
   /** 获取熔断器状态 */
+  /**
+   * get circuit breaker。
+   * @return 结果
+   */
   public CircuitBreaker.State getCircuitBreakerState() {
     return circuitBreaker != null ? circuitBreaker.getState() : CircuitBreaker.State.CLOSED;
   }
 
   @Override
+  /**
+   * close。
+   */
   public void close() {
     closeTcpSocketQuietly();
     if (udpSocket != null) {

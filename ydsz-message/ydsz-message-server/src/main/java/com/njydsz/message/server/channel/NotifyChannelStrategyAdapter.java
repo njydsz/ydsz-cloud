@@ -35,10 +35,10 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
 
   /**
    * 构造适配器。
+   * 
    *
-   * @param delegate 被适配的消息通道
-   * @param notifyChannel common-notify 渠道枚举
-   */
+   * @param delegate 参数说明
+   * @param notifyChannel 参数说明   */
   public NotifyChannelStrategyAdapter(MessageChannel delegate, NotifyChannel notifyChannel) {
     this.delegate = delegate;
     this.notifyChannel = notifyChannel;

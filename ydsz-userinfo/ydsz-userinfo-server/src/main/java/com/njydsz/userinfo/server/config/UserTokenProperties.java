@@ -36,17 +36,26 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.userinfo.token")
 public class UserTokenProperties {
 
+  /** 默认ttlSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_TTL_SECONDS = 7200;
+
+  /** 默认maxSessionsPerUser值（可被配置文件覆盖） */
+  private static final int DEFAULT_MAX_SESSIONS_PER_USER = 5;
+
+  /** 默认autoRenewalThresholdPercent值（可被配置文件覆盖） */
+  private static final int DEFAULT_AUTO_RENEWAL_THRESHOLD_PERCENT = 10;
+
   /** access_token 有效期（秒），默认 2 小时。 */
-  private long ttlSeconds = 7200;
+  private long ttlSeconds = DEFAULT_TTL_SECONDS;
 
   /** 单用户最大并发会话数（0 表示不限制），默认 5。 */
-  private int maxSessionsPerUser = 5;
+  private int maxSessionsPerUser = DEFAULT_MAX_SESSIONS_PER_USER;
 
   /** 是否启用 Token 自动续签，默认 true。 */
   private boolean autoRenewalEnabled = true;
 
   /** Token 自动续签阈值百分比（0-100），默认 10%。 */
-  private int autoRenewalThresholdPercent = 10;
+  private int autoRenewalThresholdPercent = DEFAULT_AUTO_RENEWAL_THRESHOLD_PERCENT;
 
   /** 分端会话限制配置（deviceType → 最大会话数，-1 表示不限制）。 */
   private Map<String, Integer> maxSessionsPerDeviceType = new HashMap<>();

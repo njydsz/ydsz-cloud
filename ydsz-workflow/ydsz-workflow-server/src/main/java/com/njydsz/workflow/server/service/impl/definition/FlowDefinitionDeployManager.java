@@ -11,12 +11,18 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowSkipType;
@@ -24,8 +30,6 @@ import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowSkipRepository;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
-import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
@@ -35,13 +39,6 @@ import com.njydsz.workflow.server.engine.BpmnModel;
 import com.njydsz.workflow.server.engine.BpmnXmlParser;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.engine.FlowGraphValidator;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 /**
  * 流程定义部署管理器
@@ -73,6 +70,9 @@ import org.springframework.util.StringUtils;
 @Slf4j
 @Component
 public class FlowDefinitionDeployManager {
+
+    /** 文件读取缓冲区大小 */
+  private static final int BUFFER_SIZE = 4096;
 
   /** 流程定义仓储 */
   private final FlowDefinitionRepository definitionRepository;
@@ -187,7 +187,11 @@ public class FlowDefinitionDeployManager {
     return definitionId;
   }
 
-  /** 校验部署参数：flowCode/flowName 不能为空。 */
+  /**
+   * 校验部署参数：flowCode/flowName 不能为空。
+   *
+   * @param dto 参数说明
+   */
   private void validateDeployParams(FlowDeployProcessDTO dto) {
     if (dto == null || !StringUtils.hasText(dto.getFlowCode()) || !StringUtils.hasText(dto.getFlowName())) {
       throw SysException.builder()
@@ -197,7 +201,13 @@ public class FlowDefinitionDeployManager {
     }
   }
 
-  /** 校验版本冲突：flowCode + version + tenantId 组合唯一。 */
+  /**
+   * 校验版本冲突：flowCode + version + tenantId 组合唯一。
+   *
+   * @param flowCode 参数说明
+   * @param version 参数说明
+   * @param tenantId 参数说明
+   */
   private void checkVersionConflict(String flowCode, String version, String tenantId) {
     FlowDefinitionDO existing = definitionRepository.findPublished(flowCode, version, tenantId)
         .map(converter::entityToDO)
@@ -210,7 +220,13 @@ public class FlowDefinitionDeployManager {
     }
   }
 
-  /** BPMN 模式下解析节点列表，注入节点坐标。 */
+  /**
+   * BPMN 模式下解析节点列表，注入节点坐标。
+   *
+   * @param dto 参数说明
+   * @param version 参数说明
+   * @return 返回值说明
+   */
   private List<FlowNodeDO> parseBpmnNodes(FlowDeployProcessDTO dto, String version) {
     BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
     if (StringUtils.hasText(bpmnModel.getProcessId())
@@ -229,7 +245,12 @@ public class FlowDefinitionDeployManager {
     return nodes;
   }
 
-  /** 向节点列表注入 BPMNDI 坐标信息。 */
+  /**
+   * 向节点列表注入 BPMNDI 坐标信息。
+   *
+   * @param nodes 参数说明
+   * @param bpmnModel 参数说明
+   */
   private void injectNodeCoordinates(List<FlowNodeDO> nodes, BpmnModel bpmnModel) {
     Map<String, BpmnModel.NodeCoordinate> nodeCoords = bpmnModel.getNodeCoordinates();
     if (nodeCoords == null || nodeCoords.isEmpty()) {
@@ -245,13 +266,23 @@ public class FlowDefinitionDeployManager {
     log.info("[Flow] 从 BPMNDI 注入节点坐标: defId-pending count={}", nodeCoords.size());
   }
 
-  /** BPMN 模式下解析跳转列表。 */
+  /**
+   * BPMN 模式下解析跳转列表。
+   *
+   * @param dto 参数说明
+   * @return 返回值说明
+   */
   private List<FlowSkipDO> parseBpmnSkips(FlowDeployProcessDTO dto) {
     BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
     return new ArrayList<>(bpmnModel.getSkips());
   }
 
-  /** JSON 模式下解析节点列表，校验开始节点和编码唯一性。 */
+  /**
+   * JSON 模式下解析节点列表，校验开始节点和编码唯一性。
+   *
+   * @param dto 参数说明
+   * @return 返回值说明
+   */
   private List<FlowNodeDO> parseJsonNodes(FlowDeployProcessDTO dto) {
     List<FlowNodeDO> nodes = new ArrayList<>();
     for (FlowDeployProcessDTO.FlowNodeDTO n : dto.getNodes()) {
@@ -267,7 +298,11 @@ public class FlowDefinitionDeployManager {
     return nodes;
   }
 
-  /** JSON 模式下校验节点列表。 */
+  /**
+   * JSON 模式下校验节点列表。
+   *
+   * @param nodes 参数说明
+   */
   private void validateJsonNodes(List<FlowNodeDO> nodes) {
     boolean hasStart = nodes.stream().anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
     if (!hasStart) {
@@ -285,7 +320,12 @@ public class FlowDefinitionDeployManager {
     }
   }
 
-  /** JSON 模式下解析跳转列表。 */
+  /**
+   * JSON 模式下解析跳转列表。
+   *
+   * @param dto 参数说明
+   * @return 返回值说明
+   */
   private List<FlowSkipDO> parseJsonSkips(FlowDeployProcessDTO dto) {
     List<FlowSkipDO> skips = new ArrayList<>();
     if (dto.getSkips() != null) {
@@ -302,7 +342,14 @@ public class FlowDefinitionDeployManager {
     return skips;
   }
 
-  /** 保存流程定义。 */
+  /**
+   * 保存流程定义。
+   *
+   * @param dto 参数说明
+   * @param version 参数说明
+   * @param tenantId 参数说明
+   * @return 返回值说明
+   */
   private FlowDefinitionVO saveDefinition(FlowDeployProcessDTO dto, String version, String tenantId) {
     FlowDefinitionDO def = new FlowDefinitionDO();
     def.setFlowCode(dto.getFlowCode());
@@ -320,7 +367,15 @@ public class FlowDefinitionDeployManager {
     return definitionRepository.save(converter.entityToVO(def));
   }
 
-  /** 批量保存节点。 */
+  /**
+   * 批量保存节点。
+   *
+   * @param nodes 参数说明
+   * @param definitionId 参数说明
+   * @param flowCode 参数说明
+   * @param tenantId 参数说明
+   * @param providerTraceId 参数说明
+   */
   private void saveNodes(List<FlowNodeDO> nodes, String definitionId, String flowCode,
       String tenantId, String providerTraceId) {
     for (FlowNodeDO node : nodes) {
@@ -332,7 +387,15 @@ public class FlowDefinitionDeployManager {
     }
   }
 
-  /** 批量保存跳转。 */
+  /**
+   * 批量保存跳转。
+   *
+   * @param skips 参数说明
+   * @param definitionId 参数说明
+   * @param flowCode 参数说明
+   * @param tenantId 参数说明
+   * @param providerTraceId 参数说明
+   */
   private void saveSkips(List<FlowSkipDO> skips, String definitionId, String flowCode,
       String tenantId, String providerTraceId) {
     for (FlowSkipDO skip : skips) {
@@ -428,10 +491,15 @@ public class FlowDefinitionDeployManager {
     return result;
   }
 
-  /** 读取 ZipInputStream 当前 entry 的全部字节（不关闭流） */
+  /**
+   * 读取 ZipInputStream 当前 entry 的全部字节（不关闭流）
+   *
+   * @param zis 参数说明
+   * @return 返回值说明
+   */
   private byte[] readAllBytes(ZipInputStream zis) throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    byte[] buffer = new byte[4096];
+    byte[] buffer = new byte[BUFFER_SIZE];
     int len;
     while ((len = zis.read(buffer)) > 0) {
       baos.write(buffer, 0, len);
@@ -439,7 +507,12 @@ public class FlowDefinitionDeployManager {
     return baos.toByteArray();
   }
 
-  /** 从 zip entry 路径中提取文件名（去掉目录和扩展名） */
+  /**
+   * 从 zip entry 路径中提取文件名（去掉目录和扩展名）
+   *
+   * @param fileName 参数说明
+   * @return 返回值说明
+   */
   private String extractBaseName(String fileName) {
     String name = fileName;
     int slashIdx = name.lastIndexOf('/');

@@ -1,5 +1,4 @@
 package com.njydsz.system.server.service.impl;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,12 +20,15 @@ import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.event.VersionSnapshotEvent;
-import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.repository.DictRepository;
+import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.service.DictItemBatchService;
 import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.util.SystemVersionUtils;
+
+
+
 
 /**
  * 字典项批量操作 Service 实现
@@ -115,7 +117,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
     // 6. 精准失效缓存：按涉及 typeCode 逐一失效列表缓存（替代全量清空，避免缓存击穿）
     typeCodes.forEach(this::evictDictList);
 
-    Map<String, Object> result = new HashMap<>(4);
+    Map<String, Object> result = new HashMap<>(RESULT_MAP_CAPACITY);
     result.put("successCount", items.size());
     result.put("totalCount", items.size());
     result.put("message", String.format("成功批量新增 %d 条字典项", items.size()));

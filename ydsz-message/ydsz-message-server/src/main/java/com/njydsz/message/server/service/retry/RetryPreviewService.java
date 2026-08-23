@@ -29,6 +29,9 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class RetryPreviewService {
+  /** 每毫秒纳秒数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
 
   private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
@@ -74,7 +77,7 @@ public class RetryPreviewService {
     for (int retry = 0; retry < preset.getMaxRetryCount(); retry++) {
       long backoffMs = calcBackoffMs(retry, preset);
       cumulativeMs += backoffMs;
-      LocalDateTime triggerAt = baseTime.plusNanos(backoffMs * 1_000_000L);
+      LocalDateTime triggerAt = baseTime.plusNanos(backoffMs * NANOS_PER_MILLI);
 
       Map<String, Object> entry = new HashMap<>();
       entry.put("retryIndex", retry + 1); // 第 N 次重试（从 1 开始）
@@ -96,8 +99,12 @@ public class RetryPreviewService {
 
   /**
    * 计算第 N 次重试的退避时间（毫秒）。
-   *
+   * 
    * <p>公式：{@code min(baseBackoffMs * backoffMultiplier^retryIndex, maxBackoffMs)}
+   *
+   * @param retryIndex 参数说明
+   * @param preset 参数说明
+   * @return 返回值说明
    */
   private long calcBackoffMs(int retryIndex, RetryPreset preset) {
     if (preset.getMaxRetryCount() == 0) {

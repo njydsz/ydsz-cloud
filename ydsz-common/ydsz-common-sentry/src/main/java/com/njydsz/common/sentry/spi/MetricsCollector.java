@@ -23,7 +23,13 @@ public interface MetricsCollector {
    */
   void incrementCounter(String name, String description, Map<String, String> tags, double amount);
 
-  /** 注册/获取 Counter 指标并递增 1 */
+  /**
+   * 注册/获取 Counter 指标并递增 1。
+   *
+   * @param name 指标名称
+   * @param description 指标描述
+   * @param tags 标签
+   */
   default void incrementCounter(String name, String description, Map<String, String> tags) {
     incrementCounter(name, description, tags, 1);
   }
@@ -58,9 +64,15 @@ public interface MetricsCollector {
    */
   void recordHistogram(String name, String description, Map<String, String> tags, double value);
 
-  /** 判断采集器是否可用 */
+  /**
+   * 判断采集器是否可用。
+   * @return 判断采集器是否可用
+   */
   boolean isAvailable();
 
-  /** 获取采集器名称 */
+  /**
+   * 获取采集器名称。
+   * @return 获取采集器名称
+   */
   String getName();
 }

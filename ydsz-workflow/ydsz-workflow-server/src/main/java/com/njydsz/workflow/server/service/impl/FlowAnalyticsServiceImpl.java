@@ -235,10 +235,19 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
 
   // ============================== 工具方法 ==============================
 
-  /** 安全类型转换：Object → long，解析失败返回 0 */
+  /**
+   * 安全类型转换：Object → long，解析失败返回 0
+   *
+   * @param obj 参数说明
+   * @return 返回值说明
+   */
   private long toLong(Object obj) {
-    if (obj == null) return 0;
-    if (obj instanceof Number n) return n.longValue();
+    if (obj == null) {
+      return 0;
+    }
+    if (obj instanceof Number n) {
+      return n.longValue();
+    }
     try {
       return Long.parseLong(String.valueOf(obj));
     } catch (NumberFormatException e) {
@@ -246,10 +255,19 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     }
   }
 
-  /** 安全类型转换：Object → double，解析失败返回 0.0 */
+  /**
+   * 安全类型转换：Object → double，解析失败返回 0.0
+   *
+   * @param obj 参数说明
+   * @return 返回值说明
+   */
   private double toDouble(Object obj) {
-    if (obj == null) return 0.0;
-    if (obj instanceof Number n) return n.doubleValue();
+    if (obj == null) {
+      return 0.0;
+    }
+    if (obj instanceof Number n) {
+      return n.doubleValue();
+    }
     try {
       return Double.parseDouble(String.valueOf(obj));
     } catch (NumberFormatException e) {

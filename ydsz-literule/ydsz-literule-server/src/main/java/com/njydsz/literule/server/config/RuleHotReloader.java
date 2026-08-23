@@ -204,7 +204,9 @@ public class RuleHotReloader {
     int count = 0;
     List<RuleDefinition> definitions = configProvider.loadEnabledRules();
     for (RuleDefinition def : definitions) {
-      if (!def.isEnabled()) continue;
+      if (!def.isEnabled()) {
+        continue;
+      }
       try {
         ruleEngine.register(new ExpressionRule(def, evaluator));
         count++;
@@ -216,10 +218,14 @@ public class RuleHotReloader {
   }
 
   private int loadDecisionTables() {
-    if (decisionTableConfigProvider == null) return 0;
+    if (decisionTableConfigProvider == null) {
+      return 0;
+    }
     int count = 0;
     for (DecisionTableDefinition dt : decisionTableConfigProvider.loadEnabledTables()) {
-      if (!dt.isEnabled()) continue;
+      if (!dt.isEnabled()) {
+        continue;
+      }
       try {
         ruleEngine.register(new DecisionTableRule(dt, evaluator));
         count++;
@@ -231,10 +237,14 @@ public class RuleHotReloader {
   }
 
   private int loadScorecards() {
-    if (scorecardConfigProvider == null) return 0;
+    if (scorecardConfigProvider == null) {
+      return 0;
+    }
     int count = 0;
     for (ScorecardDefinition def : scorecardConfigProvider.loadEnabledScorecards()) {
-      if (!def.isEnabled()) continue;
+      if (!def.isEnabled()) {
+        continue;
+      }
       try {
         ruleEngine.register(ScorecardRule.from(def, evaluator));
         count++;
@@ -246,10 +256,14 @@ public class RuleHotReloader {
   }
 
   private int loadDecisionTrees() {
-    if (decisionTreeConfigProvider == null) return 0;
+    if (decisionTreeConfigProvider == null) {
+      return 0;
+    }
     int count = 0;
     for (DecisionTreeDefinition def : decisionTreeConfigProvider.loadEnabledTrees()) {
-      if (!def.isEnabled()) continue;
+      if (!def.isEnabled()) {
+        continue;
+      }
       try {
         ruleEngine.register(DecisionTreeRule.from(def, evaluator));
         count++;
@@ -261,10 +275,14 @@ public class RuleHotReloader {
   }
 
   private int loadScripts() {
-    if (scriptConfigProvider == null) return 0;
+    if (scriptConfigProvider == null) {
+      return 0;
+    }
     int count = 0;
     for (ScriptDefinition def : scriptConfigProvider.loadEnabledScripts()) {
-      if (!def.isEnabled()) continue;
+      if (!def.isEnabled()) {
+        continue;
+      }
       try {
         ruleEngine.register(ScriptRule.from(def));
         count++;
@@ -286,7 +304,9 @@ public class RuleHotReloader {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
   @Order(100)
   public void onConfigRefresh(RuleConfigRefreshEvent event) {
-    if (!properties.isHotReloadEnabled()) return;
+    if (!properties.isHotReloadEnabled()) {
+      return;
+    }
     log.info(
         "[LiteRule] 收到规则变更事件: type={}, ruleCode={}, operator={}",
         event.getChangeType(),
@@ -362,11 +382,21 @@ public class RuleHotReloader {
    */
   private void reloadSingle(String ruleCode, String operator) {
     try {
-      if (tryReloadExpression(ruleCode, operator)) return;
-      if (tryReloadDecisionTable(ruleCode, operator)) return;
-      if (tryReloadScorecard(ruleCode, operator)) return;
-      if (tryReloadDecisionTree(ruleCode, operator)) return;
-      if (tryReloadScript(ruleCode, operator)) return;
+      if (tryReloadExpression(ruleCode, operator)) {
+        return;
+      }
+      if (tryReloadDecisionTable(ruleCode, operator)) {
+        return;
+      }
+      if (tryReloadScorecard(ruleCode, operator)) {
+        return;
+      }
+      if (tryReloadDecisionTree(ruleCode, operator)) {
+        return;
+      }
+      if (tryReloadScript(ruleCode, operator)) {
+        return;
+      }
 
       // 既非表达式规则也非其他类型：注销
       ruleEngine.unregister(ruleCode);
@@ -378,7 +408,9 @@ public class RuleHotReloader {
 
   private boolean tryReloadExpression(String ruleCode, String operator) {
     RuleDefinition def = configProvider.findByCode(ruleCode);
-    if (def == null) return false;
+    if (def == null) {
+      return false;
+    }
     // P0-F4 版本号去重：版本相同（重复事件/广播）跳过重载
     Integer lastVersion = lastLoadedVersions.get(ruleCode);
     if (lastVersion != null && lastVersion.equals(def.getVersion())) {
@@ -398,9 +430,13 @@ public class RuleHotReloader {
   }
 
   private boolean tryReloadDecisionTable(String ruleCode, String operator) {
-    if (decisionTableConfigProvider == null) return false;
+    if (decisionTableConfigProvider == null) {
+      return false;
+    }
     DecisionTableDefinition dt = decisionTableConfigProvider.findByCode(ruleCode);
-    if (dt == null) return false;
+    if (dt == null) {
+      return false;
+    }
     if (!dt.isEnabled()) {
       ruleEngine.unregister(ruleCode);
       log.info("[LiteRule-DecisionTable] 决策表 {} 已注销（已禁用）, operator={}", ruleCode, operator);
@@ -412,9 +448,13 @@ public class RuleHotReloader {
   }
 
   private boolean tryReloadScorecard(String ruleCode, String operator) {
-    if (scorecardConfigProvider == null) return false;
+    if (scorecardConfigProvider == null) {
+      return false;
+    }
     ScorecardDefinition def = scorecardConfigProvider.findByCode(ruleCode);
-    if (def == null) return false;
+    if (def == null) {
+      return false;
+    }
     if (!def.isEnabled()) {
       ruleEngine.unregister(ruleCode);
       log.info("[LiteRule-Scorecard] 评分卡 {} 已注销（已禁用）, operator={}", ruleCode, operator);
@@ -426,9 +466,13 @@ public class RuleHotReloader {
   }
 
   private boolean tryReloadDecisionTree(String ruleCode, String operator) {
-    if (decisionTreeConfigProvider == null) return false;
+    if (decisionTreeConfigProvider == null) {
+      return false;
+    }
     DecisionTreeDefinition def = decisionTreeConfigProvider.findByCode(ruleCode);
-    if (def == null) return false;
+    if (def == null) {
+      return false;
+    }
     if (!def.isEnabled()) {
       ruleEngine.unregister(ruleCode);
       log.info("[LiteRule-DecisionTree] 决策树 {} 已注销（已禁用）, operator={}", ruleCode, operator);
@@ -440,9 +484,13 @@ public class RuleHotReloader {
   }
 
   private boolean tryReloadScript(String ruleCode, String operator) {
-    if (scriptConfigProvider == null) return false;
+    if (scriptConfigProvider == null) {
+      return false;
+    }
     ScriptDefinition def = scriptConfigProvider.findByCode(ruleCode);
-    if (def == null) return false;
+    if (def == null) {
+      return false;
+    }
     if (!def.isEnabled()) {
       ruleEngine.unregister(ruleCode);
       log.info("[LiteRule-Script] 脚本规则 {} 已注销（已禁用）, operator={}", ruleCode, operator);

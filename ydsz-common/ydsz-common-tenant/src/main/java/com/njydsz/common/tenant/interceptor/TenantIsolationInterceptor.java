@@ -45,8 +45,8 @@ import com.njydsz.common.jdbc.exception.TenantIsolationException;
 import com.njydsz.common.jdbc.interceptor.JSqlParserHelper;
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import com.njydsz.common.tenant.config.TenantProperties;
+import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
 
 /**
@@ -583,7 +583,9 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
       if (value == null
           || (value instanceof String s && s.isEmpty())
           || (value instanceof List<?> l && l.isEmpty())) {
-        if (metrics != null) metrics.recordFailClosed();
+        if (metrics != null) {
+          metrics.recordFailClosed();
+        }
         throw new TenantIsolationException(
             "无法获取租户字段 [" + field.getColumn() + "] 的值（claim=" + claimName + "），已拒绝执行 SQL。");
       }
@@ -593,7 +595,9 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
       }
       result.add(new TenantFieldValue(field.getColumn(), value));
     }
-    if (metrics != null) metrics.recordInterceptPass();
+    if (metrics != null) {
+      metrics.recordInterceptPass();
+    }
     return result;
   }
 

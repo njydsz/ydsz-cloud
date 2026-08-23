@@ -89,22 +89,33 @@ public class FunctionRegistry {
     return functions.get(name);
   }
 
-  /** 是否包含指定函数 */
+  /** 是否包含指定函数
+   * @param name 参数说明
+   * @return 返回值说明
+   */
   public boolean contains(String name) {
     return functions.containsKey(name);
   }
 
-  /** 获取所有已注册函数名 */
+  /** 获取所有已注册函数名
+   * @return 返回值说明
+   */
   public Set<String> getFunctionNames() {
     return functions.keySet();
   }
 
-  /** 获取函数签名 */
+  /** 获取函数签名
+   * @param name 参数说明
+   * @return 返回值说明
+   */
   public String getSignature(String name) {
     return functionSignatures.get(name);
   }
 
-  /** 获取函数描述 */
+  /** 获取函数描述
+   * @param name 参数说明
+   * @return 返回值说明
+   */
   public String getDescription(String name) {
     return functionDescriptions.get(name);
   }
@@ -119,7 +130,9 @@ public class FunctionRegistry {
     return functionCategories.get(name);
   }
 
-  /** 获取所有已注册函数名列表 */
+  /** 获取所有已注册函数名列表
+   * @return 返回值说明
+   */
   public List<String> listFunctionNames() {
     return List.copyOf(functions.keySet());
   }

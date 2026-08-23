@@ -130,7 +130,10 @@ public class ShardAwareRuleEngine implements RuleEngine {
     return delegate.getStats();
   }
 
-  /** 判断指定规则编码是否属于当前节点 */
+  /** 判断指定规则编码是否属于当前节点
+   * @param ruleCode 参数说明
+   * @return 返回值说明
+   */
   public boolean isMine(String ruleCode) {
     if (!shardingEnabled) {
       return true;
@@ -138,18 +141,24 @@ public class ShardAwareRuleEngine implements RuleEngine {
     return sharder.isMine(ruleCode, nodeRegistry.getSelfNodeId());
   }
 
-  /** 获取当前集群规模 */
+  /** 获取当前集群规模
+   * @return 返回值说明
+   */
   public int getClusterSize() {
     return sharder.getNodeCount();
   }
 
-  /** 是否启用分片 */
+  /** 是否启用分片
+   * @return 返回值说明
+   */
   public boolean isShardingEnabled() {
     return shardingEnabled;
   }
 
   private String buildSignature(List<ClusterNode> nodes) {
-    if (nodes == null || nodes.isEmpty()) return "";
+    if (nodes == null || nodes.isEmpty()) {
+      return "";
+    }
     StringBuilder sb = new StringBuilder();
     for (ClusterNode n : nodes) {
       sb.append(n.getNodeId()).append(',');

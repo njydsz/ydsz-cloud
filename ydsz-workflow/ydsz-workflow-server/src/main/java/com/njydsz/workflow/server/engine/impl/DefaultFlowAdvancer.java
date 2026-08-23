@@ -231,9 +231,14 @@ public class DefaultFlowAdvancer {
 
   /**
    * REJECT 回退：解析目标节点、校验存在性，返回单元素列表。
-   *
+   * 
    * <p>显式传入 {@code targetNodeCode} 时优先按其回退；未指定时由 {@link #resolveRejectTarget} 推导。
    * 推导不出目标或目标节点不存在时抛异常，不会静默把流程留在原地。
+   *
+   * @param currentInstance 参数说明
+   * @param currentNodeCode 参数说明
+   * @param targetNodeCode 参数说明
+   * @return 返回值说明
    */
   private List<FlowNodeVO> executeRejectRollback(
       FlowInstanceVO currentInstance, String currentNodeCode, String targetNodeCode) {
@@ -261,8 +266,13 @@ public class DefaultFlowAdvancer {
 
   /**
    * PASS 推进：解析出边 + 遍历目标节点并执行 join 聚合。
-   *
+   * 
    * <p>无下游节点时返回空列表（流程结束）；有下游时交由 {@link #aggregateJoinResults} 执行网关 join 聚合逻辑。
+   *
+   * @param currentInstance 参数说明
+   * @param currentNode 参数说明
+   * @param variables 参数说明
+   * @return 返回值说明
    */
   private List<FlowNodeVO> executePassUpdate(
       FlowInstanceVO currentInstance, FlowNodeVO currentNode, Map<String, Object> variables) {
@@ -279,8 +289,12 @@ public class DefaultFlowAdvancer {
 
   /**
    * PASS 推进：遍历出边 skip，解析节点并执行并行网关 join 聚合。
-   *
+   * 
    * <p>跳过不存在的目标节点并告警；对于 join 节点委托 {@link #tryAggregateJoin} 执行令牌聚合逻辑，未满足聚合条件的分支不进入返回列表（静默等待）。
+   *
+   * @param currentInstance 参数说明
+   * @param skips 参数说明
+   * @return 返回值说明
    */
   private List<FlowNodeVO> aggregateJoinResults(FlowInstanceVO currentInstance, List<FlowSkipVO> skips) {
     List<FlowNodeVO> nextNodes = new ArrayList<>(skips.size());
@@ -306,10 +320,14 @@ public class DefaultFlowAdvancer {
 
   /**
    * P0-5 / GAP-P2 / P0-3: 尝试通过 join 聚合检查。
-   *
+   * 
    * <p>通过令牌服务标记本次分支到达，判断是否满足 N/M 聚合条件。 令牌服务（Redis）异常时降级为扫描活跃任务数，避免 join 永久挂起。
+   * 
+   * 
    *
-   * @return true = 已通过聚合（节点应加入结果），false = 仍在等待（跳过该节点）
+   * @param currentInstance 参数说明
+   * @param joinNode 参数说明
+   * @return 返回值说明
    */
   private boolean tryAggregateJoin(FlowInstanceVO currentInstance, FlowNodeVO joinNode) {
     String definitionId = currentInstance.getDefinitionId();
@@ -389,6 +407,13 @@ public class DefaultFlowAdvancer {
    *
    * <p>对标飞书"退回多节点同退"。当 skipType=REJECT 且 targetNodeCodes 非空时， 在所有指定节点同时创建待办任务，让多个前序节点重新审批。
    * 单节点退回（targetNodeCodes 为空或单元素）降级到原 advance 逻辑。
+   *
+   * @param currentInstance 当前流程实例
+   * @param currentNodeCode 当前节点编码
+   * @param skipType 跳转类型（REJECT 等）
+   * @param targetNodeCodes 目标节点编码列表
+   * @param variables 流程变量
+   * @return 推进后的节点列表
    */
   @YdszDistributedLock(
       key = "'flow:instance:op:' + #{#currentInstance.id}",
@@ -572,7 +597,12 @@ public class DefaultFlowAdvancer {
 
   // ============================== 私有 ==============================
 
-  /** 判断是否为 join 节点（并行/包容网关） */
+  /**
+   * 判断是否为 join 节点（并行/包容网关）
+   *
+   * @param node 参数说明
+   * @return 返回值说明
+   */
   private boolean isJoinNode(FlowNodeVO node) {
     return node.getNodeType() != null
         && (node.getNodeType() == FlowNodeType.PARALLEL.getCode()
@@ -633,7 +663,13 @@ public class DefaultFlowAdvancer {
     return active;
   }
 
-  /** 判断节点是否有多个入边 */
+  /**
+   * 判断节点是否有多个入边
+   *
+   * @param definitionId 参数说明
+   * @param nodeCode 参数说明
+   * @return 返回值说明
+   */
   private boolean hasMultipleIncoming(String definitionId, String nodeCode) {
     List<FlowSkipVO> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, nodeCode);
     return incoming != null && incoming.size() > 1;

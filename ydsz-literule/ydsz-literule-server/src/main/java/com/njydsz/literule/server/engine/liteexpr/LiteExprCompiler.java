@@ -89,7 +89,9 @@ public class LiteExprCompiler {
     cache.invalidateAll();
   }
 
-  /** 当前缓存数量（估计值，本地缓存异步维护，非精确） */
+  /** 当前缓存数量（估计值，本地缓存异步维护，非精确）
+   * @return 返回值说明
+   */
   public long cacheSize() {
     return cache.estimatedSize();
   }
@@ -110,9 +112,13 @@ public class LiteExprCompiler {
    * </ul>
    *
    * <p>仅折叠全字面量子表达式，包含变量的子表达式不折叠。
+      * @param node 参数说明
+   * @return 返回值说明
    */
   public ExprNode constantFold(ExprNode node) {
-    if (node == null) return null;
+    if (node == null) {
+      return null;
+    }
 
     return switch (node) {
       case LiteralNode ln -> ln;
@@ -165,7 +171,9 @@ public class LiteExprCompiler {
       }
       case ListNode ln -> {
         List<ExprNode> folded = new ArrayList<>(ln.elements().size());
-        for (ExprNode e : ln.elements()) folded.add(constantFold(e));
+        for (ExprNode e : ln.elements()) {
+          folded.add(constantFold(e));
+        }
         yield new ListNode(folded, ln.line(), ln.column());
       }
       case MapNode mn -> {
@@ -181,7 +189,9 @@ public class LiteExprCompiler {
       }
       case TemplateStringNode tsn -> {
         List<ExprNode> folded = new ArrayList<>(tsn.parts().size());
-        for (ExprNode p : tsn.parts()) folded.add(constantFold(p));
+        for (ExprNode p : tsn.parts()) {
+          folded.add(constantFold(p));
+        }
         yield new TemplateStringNode(folded, tsn.line(), tsn.column());
       }
       case null -> null;
@@ -206,7 +216,9 @@ public class LiteExprCompiler {
         case "*" -> BuiltinFunctions.smartMultiply(left, right);
         case "/" -> {
           var divisor = BuiltinFunctions.toDecimal(right);
-          if (divisor.signum() == 0) yield null;
+          if (divisor.signum() == 0) {
+            yield null;
+          }
           yield BuiltinFunctions.toDecimal(left).divide(divisor, 10, RoundingMode.HALF_UP);
         }
         case "%" -> BuiltinFunctions.smartRemainder(left, right);
@@ -262,7 +274,9 @@ public class LiteExprCompiler {
   }
 
   private void collectVariables(ExprNode node, Set<String> variables) {
-    if (node == null) return;
+    if (node == null) {
+      return;
+    }
     switch (node) {
       case VariableNode vn -> variables.add(vn.name());
       case BinaryOpNode bon -> {
@@ -297,11 +311,14 @@ public class LiteExprCompiler {
         variables.addAll(inner);
       }
       case TemplateStringNode tsn -> tsn.parts().forEach(p -> collectVariables(p, variables));
-      default -> {}
+      default -> { }
     }
   }
 
-  /** 从 AST 中提取所有函数调用名 */
+  /** 从 AST 中提取所有函数调用名
+   * @param ast 参数说明
+   * @return 返回值说明
+   */
   public List<String> extractFunctions(ExprNode ast) {
     Set<String> functions = new LinkedHashSet<>();
     collectFunctions(ast, functions);
@@ -309,7 +326,9 @@ public class LiteExprCompiler {
   }
 
   private void collectFunctions(ExprNode node, Set<String> functions) {
-    if (node == null) return;
+    if (node == null) {
+      return;
+    }
     switch (node) {
       case FunctionCallNode fcn -> {
         functions.add(fcn.functionName());
@@ -340,7 +359,7 @@ public class LiteExprCompiler {
                   });
       case LambdaNode lan -> collectFunctions(lan.body(), functions);
       case TemplateStringNode tsn -> tsn.parts().forEach(p -> collectFunctions(p, functions));
-      default -> {}
+      default -> { }
     }
   }
 }

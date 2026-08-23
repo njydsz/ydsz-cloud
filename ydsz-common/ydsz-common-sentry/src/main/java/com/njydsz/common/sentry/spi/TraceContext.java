@@ -10,18 +10,31 @@ package com.njydsz.common.sentry.spi;
  */
 public interface TraceContext {
 
-  /** 获取当前 TraceId */
+  /**
+   * 获取当前 TraceId。
+   * @return 获取当前 TraceId
+   */
   String getTraceId();
 
-  /** 获取当前 SpanId */
+  /**
+   * 获取当前 SpanId。
+   * @return 获取当前 SpanId
+   */
   String getSpanId();
 
-  /** 获取当前 SegmentId（SkyWalking 专用） */
+  /**
+   * 获取当前 SegmentId（SkyWalking 专用）。
+   *
+   * @return SegmentId，非 SkyWalking 场景返回 null
+   */
   default String getSegmentId() {
     return null;
   }
 
-  /** 判断是否在追踪链路中 */
+  /**
+   * 判断是否在追踪链路中。
+   * @return 判断是否在追踪链路中
+   */
   boolean isTracing();
 
   /**
@@ -32,6 +45,9 @@ public interface TraceContext {
    */
   void tag(String key, String value);
 
-  /** 获取追踪系统名称 */
+  /**
+   * 获取追踪系统名称。
+   * @return 获取追踪系统名称
+   */
   String getTracerName();
 }

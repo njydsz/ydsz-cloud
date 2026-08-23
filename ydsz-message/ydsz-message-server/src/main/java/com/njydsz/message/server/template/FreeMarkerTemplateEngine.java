@@ -109,6 +109,9 @@ public class FreeMarkerTemplateEngine implements TemplateEngine {
    * @return true 表示使用旧语法
    */
   private boolean isLegacyTemplate(String template) {
-    return template.contains("{{#if") || template.contains("{{#each") || template.contains("${this") || template.contains("${@index");
+    return template.contains("{{#if")
+        || template.contains("{{#each")
+        || template.contains("${this")
+        || template.contains("${@index");
   }
 }

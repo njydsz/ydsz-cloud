@@ -1,20 +1,16 @@
 package com.njydsz.cronjob.server.core;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.server.config.CronjobProperties;
-import com.njydsz.cronjob.server.core.dispatch.JobScanner;
 import com.njydsz.cronjob.server.core.executor.TenantAwareExecutorPool;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.cronjob.server.core.logger.DisruptorLogPublisher;
@@ -54,6 +50,9 @@ import com.njydsz.cronjob.server.core.logger.DisruptorLogPublisher;
 @Component
 @RequiredArgsConstructor
 public class GracefulShutdownCoordinator implements SmartLifecycle {
+  /** 停机轮询间隔（毫秒） */
+  private static final long SHUTDOWN_POLL_INTERVAL_MILLIS = 500;
+
 
     private final CronjobProperties cronjobProperties;
     private final LeaderElector leaderElector;
@@ -172,7 +171,7 @@ public class GracefulShutdownCoordinator implements SmartLifecycle {
         long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(drainTimeout);
         try {
             while (runningTaskCount.get() > 0 && System.currentTimeMillis() < deadline) {
-                Thread.sleep(500);
+                Thread.sleep(SHUTDOWN_POLL_INTERVAL_MILLIS);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

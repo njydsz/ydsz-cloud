@@ -57,6 +57,9 @@ import com.njydsz.workflow.server.service.FlowSubProcessService;
 @RequiredArgsConstructor
 public class ProjectInitiationFlowListener implements FlowEventListener {
 
+    /** Map 初始容量：小集合（8） */
+  private static final int MAP_INIT_CAPACITY_8 = 8;
+
   /** 立项业务键前缀（见 InitiationServiceImpl#startProcess: REMI_INIT_ + id） */
   private static final String INIT_BIZ_KEY_PREFIX = "REMI_INIT_";
 
@@ -445,7 +448,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
       return;
     }
     try {
-      Map<String, Object> data = new HashMap<>(8);
+      Map<String, Object> data = new HashMap<>(MAP_INIT_CAPACITY_8);
       data.put("initiationId", initiationId);
       data.put("action", action);
       data.put("instanceId", instanceId);
@@ -458,7 +461,9 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
           traceId = RequestContext.getTraceId();
           if (traceId == null || traceId.isBlank()) {
             traceId = MDC.get("traceId");
-            if (traceId == null) traceId = MDC.get("tid");
+            if (traceId == null) {
+              traceId = MDC.get("tid");
+            }
           }
         }
         if (traceId != null) {

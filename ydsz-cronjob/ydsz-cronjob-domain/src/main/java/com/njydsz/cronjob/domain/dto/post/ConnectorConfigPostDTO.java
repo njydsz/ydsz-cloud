@@ -42,5 +42,5 @@ public class ConnectorConfigPostDTO implements Serializable {
   private int connectTimeoutSeconds = 10;
 
   /** 读取超时（秒） */
-  private int readTimeoutSeconds = 30;
+  private int readTimeoutSeconds = DEFAULT_READ_TIMEOUT_SECONDS;
 }

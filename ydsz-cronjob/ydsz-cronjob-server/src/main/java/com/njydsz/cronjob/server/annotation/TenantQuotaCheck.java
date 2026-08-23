@@ -33,13 +33,19 @@ import java.lang.annotation.Target;
 @Documented
 public @interface TenantQuotaCheck {
 
-  /** 配额检查类型。 */
+  /**
+   * 配额检查类型。
+   *
+   * @return 返回值说明
+   */
   QuotaType type();
 
   /**
    * 租户 ID 参数名（从方法参数中提取）。
    *
    * <p>默认从 {@link com.njydsz.common.security.TenantContext} 获取， 如果方法参数中有 tenantId，可指定参数名以优先使用。
+   *
+   * @return 租户 ID 参数名；默认空字符串表示自动从上下文获取
    */
   String tenantIdParam() default "";
 

@@ -33,7 +33,14 @@ public class SlaMetricAspect {
 
   private final SlaCollector slaCollector;
 
-  /** 拦截 @SlaMetric 注解 */
+  /**
+   * 拦截 {@code @SlaMetric} 注解，记录 SLA 评估数据。
+   *
+   * @param joinPoint 连接点
+   * @param slaMetric SLA 指标注解
+   * @return 目标方法执行结果
+   * @throws Throwable 目标方法异常透传
+   */
   @Around("@annotation(slaMetric)")
   public Object aroundSlaMetric(ProceedingJoinPoint joinPoint, SlaMetric slaMetric)
       throws Throwable {
@@ -56,7 +63,14 @@ public class SlaMetricAspect {
     }
   }
 
-  /** 拦截 @SlaStep 注解 */
+  /**
+   * 拦截 {@code @SlaStep} 注解，记录步骤级 SLA 评估数据。
+   *
+   * @param joinPoint 连接点
+   * @param slaStep SLA 步骤注解
+   * @return 目标方法执行结果
+   * @throws Throwable 目标方法异常透传
+   */
   @Around("@annotation(slaStep)")
   public Object aroundSlaStep(ProceedingJoinPoint joinPoint, SlaStep slaStep) throws Throwable {
     long startMillis = System.currentTimeMillis();

@@ -81,6 +81,7 @@ public final class SensitiveDataProcessor {
    * 处理对象中的敏感数据。
    *
    * @param obj 待处理的对象
+   * @param <T> 对象类型
    * @return 脱敏后的对象副本
    */
   public static <T> T process(T obj) {
@@ -92,6 +93,7 @@ public final class SensitiveDataProcessor {
    *
    * @param obj 待处理的对象
    * @param maxDepth 最大递归深度
+   * @param <T> 对象类型
    * @return 脱敏后的对象副本
    */
   public static <T> T process(T obj, int maxDepth) {

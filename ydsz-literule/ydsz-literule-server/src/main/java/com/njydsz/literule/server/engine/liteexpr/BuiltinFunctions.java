@@ -19,7 +19,8 @@ import com.njydsz.common.util.id.IdGenerator;
  *
  * <p>替代 LiteExpr 标准库，提供表达式引擎所需的基础函数。 按 6 大类组织：数学、字符串、集合、类型转换、时间、工具。
  *
- * <p>所有函数在 {@link FunctionRegistry} 构造时自动注册，附带分类信息用于前端函数市场分组展示。 业务侧可通过 {@code registry.register(name, fn, sig, desc, category)} 追加自定义函数。
+ * <p>所有函数在 {@link FunctionRegistry} 构造时自动注册，附带分类信息用于前端函数市场分组展示。
+  * 业务侧可通过 {@code registry.register(name, fn, sig, desc, category)} 追加自定义函数。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -68,7 +69,9 @@ public final class BuiltinFunctions {
           BigDecimal result = toDecimal(args[0]);
           for (int i = 1; i < args.length; i++) {
             BigDecimal v = toDecimal(args[i]);
-            if (v.compareTo(result) > 0) result = v;
+            if (v.compareTo(result) > 0) {
+              result = v;
+            }
           }
           return result;
         },
@@ -81,7 +84,9 @@ public final class BuiltinFunctions {
           BigDecimal result = toDecimal(args[0]);
           for (int i = 1; i < args.length; i++) {
             BigDecimal v = toDecimal(args[i]);
-            if (v.compareTo(result) < 0) result = v;
+            if (v.compareTo(result) < 0) {
+              result = v;
+            }
           }
           return result;
         },
@@ -158,11 +163,21 @@ public final class BuiltinFunctions {
         "length",
         args -> {
           Object v = args[0];
-          if (v == null) return 0;
-          if (v instanceof CharSequence cs) return cs.length();
-          if (v instanceof Collection<?> c) return c.size();
-          if (v instanceof Map<?, ?> m) return m.size();
-          if (v.getClass().isArray()) return Array.getLength(v);
+          if (v == null) {
+            return 0;
+          }
+          if (v instanceof CharSequence cs) {
+            return cs.length();
+          }
+          if (v instanceof Collection<?> c) {
+            return c.size();
+          }
+          if (v instanceof Map<?, ?> m) {
+            return m.size();
+          }
+          if (v.getClass().isArray()) {
+            return Array.getLength(v);
+          }
           return String.valueOf(v).length();
         },
         "length(str)",
@@ -172,11 +187,21 @@ public final class BuiltinFunctions {
         "size",
         args -> {
           Object v = args[0];
-          if (v == null) return 0;
-          if (v instanceof Collection<?> c) return c.size();
-          if (v instanceof Map<?, ?> m) return m.size();
-          if (v instanceof CharSequence cs) return cs.length();
-          if (v.getClass().isArray()) return Array.getLength(v);
+          if (v == null) {
+            return 0;
+          }
+          if (v instanceof Collection<?> c) {
+            return c.size();
+          }
+          if (v instanceof Map<?, ?> m) {
+            return m.size();
+          }
+          if (v instanceof CharSequence cs) {
+            return cs.length();
+          }
+          if (v.getClass().isArray()) {
+            return Array.getLength(v);
+          }
           return 1;
         },
         "size(coll)",
@@ -246,7 +271,9 @@ public final class BuiltinFunctions {
           String sep = str(args[args.length - 1]);
           StringBuilder sb = new StringBuilder();
           for (int i = 0; i < args.length - 1; i++) {
-            if (i > 0) sb.append(sep);
+            if (i > 0) {
+              sb.append(sep);
+            }
             sb.append(str(args[i]));
           }
           return sb.toString();
@@ -258,7 +285,9 @@ public final class BuiltinFunctions {
         "concat",
         args -> {
           StringBuilder sb = new StringBuilder();
-          for (Object arg : args) sb.append(str(arg));
+          for (Object arg : args) {
+            sb.append(str(arg));
+          }
           return sb.toString();
         },
         "concat(str, ...)",
@@ -280,7 +309,9 @@ public final class BuiltinFunctions {
         "isEmpty",
         args -> {
           Object v = args[0];
-          if (v == null) return true;
+          if (v == null) {
+            return true;
+          }
           return str(v).isEmpty();
         },
         "isEmpty(v)",
@@ -290,7 +321,9 @@ public final class BuiltinFunctions {
         "isBlank",
         args -> {
           Object v = args[0];
-          if (v == null) return true;
+          if (v == null) {
+            return true;
+          }
           return str(v).isBlank();
         },
         "isBlank(v)",
@@ -300,7 +333,9 @@ public final class BuiltinFunctions {
         "isNotBlank",
         args -> {
           Object v = args[0];
-          if (v == null) return false;
+          if (v == null) {
+            return false;
+          }
           return !str(v).isBlank();
         },
         "isNotBlank(v)",
@@ -322,9 +357,15 @@ public final class BuiltinFunctions {
         "count",
         args -> {
           Object v = args[0];
-          if (v instanceof Collection<?> c) return c.size();
-          if (v instanceof Map<?, ?> m) return m.size();
-          if (v == null) return 0;
+          if (v instanceof Collection<?> c) {
+            return c.size();
+          }
+          if (v instanceof Map<?, ?> m) {
+            return m.size();
+          }
+          if (v == null) {
+            return 0;
+          }
           return 1;
         },
         "count(coll)",
@@ -336,7 +377,9 @@ public final class BuiltinFunctions {
           Object v = args[0];
           if (v instanceof Collection<?> c) {
             BigDecimal total = BigDecimal.ZERO;
-            for (Object e : c) total = total.add(toDecimal(e));
+            for (Object e : c) {
+              total = total.add(toDecimal(e));
+            }
             return total;
           }
           return toDecimal(v);
@@ -349,9 +392,13 @@ public final class BuiltinFunctions {
         args -> {
           Object v = args[0];
           if (v instanceof Collection<?> c) {
-            if (c.isEmpty()) return BigDecimal.ZERO;
+            if (c.isEmpty()) {
+              return BigDecimal.ZERO;
+            }
             BigDecimal total = BigDecimal.ZERO;
-            for (Object e : c) total = total.add(toDecimal(e));
+            for (Object e : c) {
+              total = total.add(toDecimal(e));
+            }
             return total.divide(BigDecimal.valueOf(c.size()), 10, RoundingMode.HALF_UP);
           }
           return toDecimal(v);
@@ -363,8 +410,12 @@ public final class BuiltinFunctions {
         "first",
         args -> {
           Object v = args[0];
-          if (v instanceof List<?> l && !l.isEmpty()) return l.get(0);
-          if (v instanceof Collection<?> c && !c.isEmpty()) return c.iterator().next();
+          if (v instanceof List<?> l && !l.isEmpty()) {
+            return l.get(0);
+          }
+          if (v instanceof Collection<?> c && !c.isEmpty()) {
+            return c.iterator().next();
+          }
           return null;
         },
         "first(coll)",
@@ -374,7 +425,9 @@ public final class BuiltinFunctions {
         "last",
         args -> {
           Object v = args[0];
-          if (v instanceof List<?> l && !l.isEmpty()) return l.get(l.size() - 1);
+          if (v instanceof List<?> l && !l.isEmpty()) {
+            return l.get(l.size() - 1);
+          }
           return null;
         },
         "last(coll)",
@@ -398,9 +451,15 @@ public final class BuiltinFunctions {
             (args) -> {
               Object coll = args[0];
               Object item = args[1];
-              if (coll instanceof Collection<?> c) return c.contains(item);
-              if (coll instanceof Map<?, ?> m) return m.containsKey(item);
-              if (coll instanceof CharSequence cs) return cs.toString().contains(str(item));
+              if (coll instanceof Collection<?> c) {
+                return c.contains(item);
+              }
+              if (coll instanceof Map<?, ?> m) {
+                return m.containsKey(item);
+              }
+              if (coll instanceof CharSequence cs) {
+                return cs.toString().contains(str(item));
+              }
               return false;
             },
         "contains(coll, item)",
@@ -415,7 +474,9 @@ public final class BuiltinFunctions {
               if (coll instanceof Collection<?> c) {
                 List<Object> result = new ArrayList<>();
                 for (Object e : c) {
-                  if (Boolean.TRUE.equals(predicate.call(e))) result.add(e);
+                  if (Boolean.TRUE.equals(predicate.call(e))) {
+                    result.add(e);
+                  }
                 }
                 return result;
               }
@@ -432,7 +493,9 @@ public final class BuiltinFunctions {
               LiteExprFunction mapper = (LiteExprFunction) args[1];
               if (coll instanceof Collection<?> c) {
                 List<Object> result = new ArrayList<>();
-                for (Object e : c) result.add(mapper.call(e));
+                for (Object e : c) {
+                  result.add(mapper.call(e));
+                }
                 return result;
               }
               return coll;
@@ -449,7 +512,9 @@ public final class BuiltinFunctions {
               LiteExprFunction reducer = (LiteExprFunction) args[2];
               if (coll instanceof Collection<?> c) {
                 Object acc = initial;
-                for (Object e : c) acc = reducer.call(acc, e);
+                for (Object e : c) {
+                  acc = reducer.call(acc, e);
+                }
                 return acc;
               }
               return initial;
@@ -520,8 +585,12 @@ public final class BuiltinFunctions {
           Object date = args[0];
           String pattern = str(args[1]);
           DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
-          if (date instanceof LocalDateTime ldt) return ldt.format(formatter);
-          if (date instanceof LocalDate ld) return ld.format(formatter);
+          if (date instanceof LocalDateTime ldt) {
+            return ldt.format(formatter);
+          }
+          if (date instanceof LocalDate ld) {
+            return ld.format(formatter);
+          }
           return str(date);
         },
         "dateFormat(date, pattern)",
@@ -541,8 +610,12 @@ public final class BuiltinFunctions {
         "year",
         args -> {
           Object d = args[0];
-          if (d instanceof LocalDateTime ldt) return ldt.getYear();
-          if (d instanceof LocalDate ld) return ld.getYear();
+          if (d instanceof LocalDateTime ldt) {
+            return ldt.getYear();
+          }
+          if (d instanceof LocalDate ld) {
+            return ld.getYear();
+          }
           return null;
         },
         "year(date)",
@@ -552,8 +625,12 @@ public final class BuiltinFunctions {
         "month",
         args -> {
           Object d = args[0];
-          if (d instanceof LocalDateTime ldt) return ldt.getMonthValue();
-          if (d instanceof LocalDate ld) return ld.getMonthValue();
+          if (d instanceof LocalDateTime ldt) {
+            return ldt.getMonthValue();
+          }
+          if (d instanceof LocalDate ld) {
+            return ld.getMonthValue();
+          }
           return null;
         },
         "month(date)",
@@ -563,8 +640,12 @@ public final class BuiltinFunctions {
         "day",
         args -> {
           Object d = args[0];
-          if (d instanceof LocalDateTime ldt) return ldt.getDayOfMonth();
-          if (d instanceof LocalDate ld) return ld.getDayOfMonth();
+          if (d instanceof LocalDateTime ldt) {
+            return ldt.getDayOfMonth();
+          }
+          if (d instanceof LocalDate ld) {
+            return ld.getDayOfMonth();
+          }
           return null;
         },
         "day(date)",
@@ -603,8 +684,12 @@ public final class BuiltinFunctions {
    * @return true 表示为整数类型
    */
   static boolean isIntegerLike(Object v) {
-    if (v instanceof Integer || v instanceof Long) return true;
-    if (v instanceof BigDecimal bd) return bd.scale() <= 0;
+    if (v instanceof Integer || v instanceof Long) {
+      return true;
+    }
+    if (v instanceof BigDecimal bd) {
+      return bd.scale() <= 0;
+    }
     return false;
   }
 
@@ -647,7 +732,9 @@ public final class BuiltinFunctions {
    * @return 字符串表示，null 返回 ""
    */
   static String str(Object v) {
-    if (v == null) return "";
+    if (v == null) {
+      return "";
+    }
     return String.valueOf(v);
   }
 
@@ -660,10 +747,18 @@ public final class BuiltinFunctions {
    * @return BigDecimal 表示
    */
   static BigDecimal toDecimal(Object v) {
-    if (v == null) return BigDecimal.ZERO;
-    if (v instanceof BigDecimal bd) return bd;
-    if (v instanceof Number n) return BigDecimal.valueOf(n.doubleValue());
-    if (v instanceof Boolean b) return b ? BigDecimal.ONE : BigDecimal.ZERO;
+    if (v == null) {
+      return BigDecimal.ZERO;
+    }
+    if (v instanceof BigDecimal bd) {
+      return bd;
+    }
+    if (v instanceof Number n) {
+      return BigDecimal.valueOf(n.doubleValue());
+    }
+    if (v instanceof Boolean b) {
+      return b ? BigDecimal.ONE : BigDecimal.ZERO;
+    }
     try {
       return new BigDecimal(v.toString());
     } catch (NumberFormatException e) {
@@ -680,9 +775,15 @@ public final class BuiltinFunctions {
    * @return int 表示
    */
   static int toInt(Object v) {
-    if (v == null) return 0;
-    if (v instanceof Number n) return n.intValue();
-    if (v instanceof Boolean b) return b ? 1 : 0;
+    if (v == null) {
+      return 0;
+    }
+    if (v instanceof Number n) {
+      return n.intValue();
+    }
+    if (v instanceof Boolean b) {
+      return b ? 1 : 0;
+    }
     try {
       return Integer.parseInt(v.toString());
     } catch (NumberFormatException e) {
@@ -703,9 +804,15 @@ public final class BuiltinFunctions {
    * @return long 表示
    */
   static long toLong(Object v) {
-    if (v == null) return 0L;
-    if (v instanceof Number n) return n.longValue();
-    if (v instanceof Boolean b) return b ? 1L : 0L;
+    if (v == null) {
+      return 0L;
+    }
+    if (v instanceof Number n) {
+      return n.longValue();
+    }
+    if (v instanceof Boolean b) {
+      return b ? 1L : 0L;
+    }
     try {
       return Long.parseLong(v.toString());
     } catch (NumberFormatException e) {
@@ -722,13 +829,20 @@ public final class BuiltinFunctions {
    * @return boolean 表示
    */
   static boolean toBool(Object v) {
-    if (v == null) return false;
-    if (v instanceof Boolean b) return b;
-    if (v instanceof Number n) return n.doubleValue() != 0;
-    if (v instanceof CharSequence cs)
+    if (v == null) {
+      return false;
+    }
+    if (v instanceof Boolean b) {
+      return b;
+    }
+    if (v instanceof Number n) {
+      return n.doubleValue() != 0;
+    }
+    if (v instanceof CharSequence cs) {
       return !cs.isEmpty()
           && !"false".equalsIgnoreCase(cs.toString())
           && !"0".equals(cs.toString());
+    }
     return true;
   }
 }

@@ -53,7 +53,7 @@ import com.njydsz.common.seata.api.TransactionType;
 public @interface TransactionalMode {
 
   /**
-   * 声明的事务类型
+   * 声明的事务类型。
    *
    * <ul>
    *   <li>{@link TransactionType#LOCAL} - 本地事务（默认）
@@ -61,13 +61,17 @@ public @interface TransactionalMode {
    *   <li>{@link TransactionType#SEATA_AT} - Seata AT 自动补偿事务
    *   <li>{@link TransactionType#SAGA} - SAGA 长事务
    * </ul>
+   *
+   * @return 事务类型，默认 {@link TransactionType#LOCAL}
    */
   TransactionType value() default TransactionType.LOCAL;
 
   /**
-   * 事务名称（可选，默认使用方法全名）
+   * 事务名称（可选，默认使用方法全名）。
    *
    * <p>用于日志、监控和审计的事务标识，便于追踪和排查问题。
+   *
+   * @return 事务名称，默认空串
    */
   String name() default "";
 }

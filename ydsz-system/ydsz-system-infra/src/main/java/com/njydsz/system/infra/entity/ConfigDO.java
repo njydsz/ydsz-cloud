@@ -1,5 +1,4 @@
 package com.njydsz.system.infra.entity;
-
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,6 +9,8 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+
+
 
 /**
  * 系统配置实体

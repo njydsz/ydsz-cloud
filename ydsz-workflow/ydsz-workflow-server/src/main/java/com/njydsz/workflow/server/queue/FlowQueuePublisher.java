@@ -55,6 +55,9 @@ import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
 @RequiredArgsConstructor
 public class FlowQueuePublisher {
 
+    /** Map 初始容量：小集合（8） */
+  private static final int MAP_INIT_CAPACITY_8 = 8;
+
   private final IMessageQueueProvider messageQueueProvider;
   private IMessageQueue flowEventQueue;
   private IMessagePublisher flowEventPublisher;
@@ -91,7 +94,7 @@ public class FlowQueuePublisher {
       return;
     }
     try {
-      Map<String, Object> payload = new HashMap<>(8);
+      Map<String, Object> payload = new HashMap<>(MAP_INIT_CAPACITY_8);
       payload.put("eventType", event.getEventType());
       payload.put("instanceId", event.getInstanceId());
       payload.put("taskId", event.getTaskId());
@@ -126,7 +129,7 @@ public class FlowQueuePublisher {
       return;
     }
     try {
-      Map<String, Object> payload = new HashMap<>(8);
+      Map<String, Object> payload = new HashMap<>(MAP_INIT_CAPACITY_8);
       payload.put("eventType", eventType);
       payload.put("instanceId", ctx.getInstanceId());
       payload.put("taskId", ctx.getTaskId());

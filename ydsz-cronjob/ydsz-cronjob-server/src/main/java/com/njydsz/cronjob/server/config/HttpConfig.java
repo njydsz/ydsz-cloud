@@ -13,11 +13,17 @@ import lombok.Data;
 @Data
 public class HttpConfig {
 
+  /** 默认connectTimeoutSeconds值（可被配置文件覆盖） */
+  private static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 10;
+
+  /** 默认requestTimeoutSeconds值（可被配置文件覆盖） */
+  private static final int DEFAULT_REQUEST_TIMEOUT_SECONDS = 30;
+
   /** 默认连接超时（秒） */
-  private int connectTimeoutSeconds = 10;
+  private int connectTimeoutSeconds = DEFAULT_CONNECT_TIMEOUT_SECONDS;
 
   /** 默认请求超时（秒），任务级可通过 paramsJson.timeoutMs 覆盖 */
-  private int requestTimeoutSeconds = 30;
+  private int requestTimeoutSeconds = DEFAULT_REQUEST_TIMEOUT_SECONDS;
 
   /** 默认成功状态码范围（inclusive），如 "200-299" */
   private String successStatusRange = "200-299";

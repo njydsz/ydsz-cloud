@@ -9,8 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
  * 调度日历服务实现。
@@ -96,6 +96,12 @@ public class ScheduleCalendarService {
     return result;
   }
 
-  /** 调度日历项。 */
+  /**
+   * 调度日历项。
+   *
+   * @param jobKey 任务 KEY
+   * @param jobName 任务名称
+   * @param fireTime 计划触发时间
+   */
   public record ScheduleItem(String jobKey, String jobName, LocalDateTime fireTime) {}
 }

@@ -1,11 +1,12 @@
 package com.njydsz.system.infra.mapper;
-
 import com.baomidou.mybatisplus.annotation.InterceptorIgnore;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Update;
 
 import com.njydsz.system.infra.entity.TenantDO;
+
+
 
 /**
  * 租户 Mapper

@@ -28,6 +28,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class JobRetryHandler {
+  /** 指数退避最大位移 */
+  private static final int MAX_BACKOFF_SHIFT = 6;
+
+  /** 退避封顶（毫秒）：30 秒 */
+  private static final long MAX_BACKOFF_MILLIS = 30_000L;
+
 
   /** 默认最大重试次数 */
   private static final int DEFAULT_MAX_RETRIES = 0;
@@ -66,7 +72,7 @@ public class JobRetryHandler {
 
     if ("EXPONENTIAL".equalsIgnoreCase(backoffStrategy)) {
       // 指数退避：base * 2^retryCount，上限 60s
-      long delay = baseInterval * (1L << Math.min(retryCount, 6));
+      long delay = baseInterval * (1L << Math.min(retryCount, MAX_BACKOFF_SHIFT));
       return Math.min(delay, EXPONENTIAL_MAX_MS);
     }
     // 默认固定间隔
@@ -87,7 +93,7 @@ public class JobRetryHandler {
     }
     // 阻塞等待：限制最大阻塞时间，避免线程被占用过久
     try {
-      long cappedDelay = Math.min(delayMs, 30_000L);
+      long cappedDelay = Math.min(delayMs, MAX_BACKOFF_MILLIS);
       log.info(
           "[JobRetry] 等待重试: retryCount={} delay={}ms strategy={}",
           retryCount,

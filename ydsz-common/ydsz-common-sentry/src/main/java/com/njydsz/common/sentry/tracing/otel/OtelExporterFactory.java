@@ -52,6 +52,7 @@ public final class OtelExporterFactory {
    *
    * @param exporter 底层 Exporter
    * @param config 批处理配置
+   * @return 批处理 SpanProcessor 实例
    */
   public static SpanProcessor batchProcessor(SpanExporter exporter, BatchConfig config) {
     if (exporter == null) {
@@ -82,6 +83,11 @@ public final class OtelExporterFactory {
   }
 
   /** 创建 Simple SpanProcessor（开发/调试用） */
+  /**
+   * simple processor。
+   * @param exporter 参数
+   * @return 结果
+   */
   public static SpanProcessor simpleProcessor(SpanExporter exporter) {
     if (exporter == null) {
       throw new IllegalArgumentException("exporter 不能为 null");
@@ -162,12 +168,20 @@ public final class OtelExporterFactory {
    */
   @FunctionalInterface
   public interface SpanExporterProvider {
-    /** 返回 Exporter 类型标识（用于配置选择） */
+    /**
+     * 返回 Exporter 类型标识（用于配置选择）。
+     *
+     * @return Exporter 类型标识
+     */
     default String type() {
       return "custom";
     }
 
-    /** 创建 Exporter */
+    /**
+     * 创建 Exporter。
+     * @param config 创建 Exporter
+     * @return 创建 Exporter
+     */
     SpanExporter create(ExporterEndpointConfig config);
   }
 

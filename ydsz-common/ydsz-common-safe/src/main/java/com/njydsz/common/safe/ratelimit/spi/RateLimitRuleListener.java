@@ -11,7 +11,12 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 @FunctionalInterface
 public interface RateLimitRuleListener {
 
-  /** 规则变更回调 */
+  /**
+   * 规则变更回调。
+   *
+   * @param rule 变更的规则
+   * @param type 变更类型（新增/更新/删除）
+   */
   void onRuleChanged(RateLimitRule rule, ChangeType type);
 
   /**

@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -11,11 +13,8 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.auth.UserIdentityProvider;
 import com.njydsz.userinfo.domain.enums.IdentityProviderType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 
 /**
  * 本地用户身份提供者实现。

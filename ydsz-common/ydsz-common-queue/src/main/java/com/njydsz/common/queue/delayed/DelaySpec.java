@@ -77,22 +77,38 @@ public class DelaySpec {
     return Math.max(0, remaining);
   }
 
-  /** 获取原始延迟数值 */
+  /**
+   * 获取原始延迟数值。
+   *
+   * @return 延迟数值（配合时间单位使用）
+   */
   public long getDelay() {
     return delay;
   }
 
-  /** 获取时间单位 */
+  /**
+   * 获取时间单位。
+   *
+   * @return 时间单位
+   */
   public TimeUnit getTimeUnit() {
     return timeUnit;
   }
 
-  /** 获取指定投递时间戳（毫秒） */
+  /**
+   * 获取指定投递时间戳（毫秒）。
+   *
+   * @return 投递时间戳（毫秒）
+   */
   public long getDeliverAtMillis() {
     return deliverAtMillis;
   }
 
-  /** 是否为指定时间投递模式 */
+  /**
+   * 是否为指定时间投递模式。
+   *
+   * @return {@code true} 表示按指定时间投递
+   */
   public boolean isAtSpecifiedTime() {
     return deliverAtMillis > 0;
   }

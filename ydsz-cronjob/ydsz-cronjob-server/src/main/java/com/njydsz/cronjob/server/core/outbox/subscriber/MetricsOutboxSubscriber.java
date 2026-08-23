@@ -1,5 +1,7 @@
 package com.njydsz.cronjob.server.core.outbox.subscriber;
 
+import java.util.function.Consumer;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -18,7 +20,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MetricsOutboxSubscriber implements java.util.function.Consumer<OutboxEventVO> {
+public class MetricsOutboxSubscriber implements Consumer<OutboxEventVO> {
 
   private static final String TOPIC = "metrics";
 

@@ -49,6 +49,9 @@ import com.njydsz.literule.api.expression.ExpressionEngine;
 @Slf4j
 public class DecisionTreeRule implements Rule {
 
+    /** 纳秒到毫秒的换算系数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
   private final String code;
   private final String name;
   private final String category;
@@ -100,7 +103,9 @@ public class DecisionTreeRule implements Rule {
    * @return 内部节点
    */
   private static DecisionNode convertNode(DecisionTreeDefinition.DecisionNode src) {
-    if (src == null) return null;
+    if (src == null) {
+      return null;
+    }
     return DecisionNode.builder()
         .conditionExpression(src.getConditionExpression())
         .severity(parseSeverity(src.getSeverity()))
@@ -114,7 +119,9 @@ public class DecisionTreeRule implements Rule {
 
   /** 解析严重度字符串（容错处理） */
   private static RuleSeverity parseSeverity(String code) {
-    if (code == null || code.isBlank()) return null;
+    if (code == null || code.isBlank()) {
+      return null;
+    }
     return RuleSeverity.fromCode(code);
   }
 
@@ -153,7 +160,7 @@ public class DecisionTreeRule implements Rule {
             .ruleCode(code)
             .triggered(false)
             .triggeredAt(LocalDateTime.now())
-            .elapsedMs((System.nanoTime() - start) / 1_000_000)
+            .elapsedMs((System.nanoTime() - start) / NANOS_PER_MILLI)
             .build();
       }
       return RuleResult.builder()
@@ -165,7 +172,7 @@ public class DecisionTreeRule implements Rule {
           .title(result.title)
           .description(result.description)
           .triggeredAt(LocalDateTime.now())
-          .elapsedMs((System.nanoTime() - start) / 1_000_000)
+          .elapsedMs((System.nanoTime() - start) / NANOS_PER_MILLI)
           .build();
     } catch (Exception e) {
       log.warn("[LiteRule-DecisionTree] 决策树 {} 评估异常: {}", code, e.getMessage());
@@ -173,14 +180,16 @@ public class DecisionTreeRule implements Rule {
           .ruleCode(code)
           .triggered(false)
           .triggeredAt(LocalDateTime.now())
-          .elapsedMs((System.nanoTime() - start) / 1_000_000)
+          .elapsedMs((System.nanoTime() - start) / NANOS_PER_MILLI)
           .build();
     }
   }
 
   /** 递归遍历决策树 */
   private DecisionResult traverse(DecisionNode node, RuleContext context, StringBuilder path) {
-    if (node == null) return null;
+    if (node == null) {
+      return null;
+    }
 
     if (node.isLeaf()) {
       return new DecisionResult(node.severity, node.title, node.description);
@@ -229,7 +238,12 @@ public class DecisionTreeRule implements Rule {
     /** 是否为叶子节点 */
     private boolean leaf;
 
-    /** 创建条件节点 */
+    /** 创建条件节点
+     * @param conditionExpression 参数说明
+     * @param trueBranch 参数说明
+     * @param falseBranch 参数说明
+     * @return 条件决策节点
+     */
     public static DecisionNode condition(
         String conditionExpression, DecisionNode trueBranch, DecisionNode falseBranch) {
       return DecisionNode.builder()
@@ -240,7 +254,12 @@ public class DecisionTreeRule implements Rule {
           .build();
     }
 
-    /** 创建叶子节点 */
+    /** 创建叶子节点
+     * @param severity 参数说明
+     * @param title 参数说明
+     * @param description 参数说明
+     * @return 返回值说明
+     */
     public static DecisionNode leaf(RuleSeverity severity, String title, String description) {
       return DecisionNode.builder()
           .severity(severity)

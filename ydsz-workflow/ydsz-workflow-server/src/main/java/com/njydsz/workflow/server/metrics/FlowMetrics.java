@@ -24,8 +24,10 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
  * <ul>
  *   <li><b>Counter（3 个）</b>：
  *       <ul>
- *         <li>{@code ydsz_flow_instance_total{status}} — 流程实例计数（created/completed/rejected/terminated/suspended/activated）
- *         <li>{@code ydsz_flow_task_total{action}} — 任务操作计数（created/passed/rejected/transferred/delegated/claimed/skipped/auto_handled/urged）
+  * <li>{@code ydsz_flow_instance_total{status}} — 流程实例计数（created/completed/rejected/terminated/suspende
+  * d/activated）
+  * <li>{@code ydsz_flow_task_total{action}} — 任务操作计数（created/passed/rejected/transferred/delegated/clai
+  * med/skipped/auto_handled/urged）
  *         <li>{@code ydsz_flow_error_total{type}} — 错误计数（start_error/sla_timeout/form_validation/...）
  *       </ul>
  *   <li><b>Timer（2 个）</b>：
@@ -238,17 +240,23 @@ public class FlowMetrics extends SentryMetricsAdapter {
   }
 
   private Long queryRunningInstanceCount() {
-    if (instanceRepository == null) return 0L;
+    if (instanceRepository == null) {
+      return 0L;
+    }
     return instanceRepository.countByStatus("RUNNING");
   }
 
   private Long queryPendingTaskCount() {
-    if (taskRepository == null) return 0L;
+    if (taskRepository == null) {
+      return 0L;
+    }
     return taskRepository.countByStatusIn(List.of("PENDING", "CLAIMED"));
   }
 
   private Long queryOverdueTaskCount() {
-    if (taskRepository == null) return 0L;
+    if (taskRepository == null) {
+      return 0L;
+    }
     return taskRepository.countOverdue();
   }
 }

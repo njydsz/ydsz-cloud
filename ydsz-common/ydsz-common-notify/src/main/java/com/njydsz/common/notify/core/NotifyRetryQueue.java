@@ -48,21 +48,45 @@ public interface NotifyRetryQueue {
    */
   int retryBatch(NotifyService notifyService);
 
-  /** 当前队列中待处理消息数量 */
+  /**
+   * 当前队列中待处理消息数量。
+   *
+   * @return 待处理消息数量
+   */
   int getQueueSize();
 
-  /** 历史入队总计数 */
+  /**
+   * 历史入队总计数。
+   *
+   * @return 入队总数
+   */
   int getQueuedCount();
 
-  /** 永久失败消息计数 */
+  /**
+   * 永久失败消息计数。
+   *
+   * @return 永久失败数
+   */
   int getPermanentFailCount();
 
-  /** 丢弃消息计数 */
+  /**
+   * 丢弃消息计数。
+   *
+   * @return 丢弃数
+   */
   int getDroppedCount();
 
-  /** 队列容量 */
+  /**
+   * 队列容量。
+   *
+   * @return 容量上限
+   */
   int getCapacity();
 
-  /** 默认批量大小 */
+  /**
+   * 默认批量大小。
+   *
+   * @return 批量大小
+   */
   int getBatchSize();
 }

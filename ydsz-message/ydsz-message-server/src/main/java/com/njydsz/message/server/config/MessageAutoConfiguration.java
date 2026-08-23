@@ -39,7 +39,6 @@ public class MessageAutoConfiguration {
    *
    * <p>从 @Component 改为 @Bean 注册，与项目其他模块的 Metrics 注册模式一致。 当 classpath 中不存在 MeterRegistry 时不注册。
    *
-   * @param meterRegistryProvider Micrometer 指标注册中心（可选注入）
    * @return MessageMetrics 实例
    */
   @Bean
@@ -49,7 +48,14 @@ public class MessageAutoConfiguration {
     return new MessageMetrics();
   }
 
-  /** P1-1: 健康检查 Bean 注册（统一模式，不使用 @Component） */
+  /**
+   * P1-1: 健康检查 Bean 注册（统一模式，不使用 @Component）
+   *
+   * @param redisStringOps 参数说明
+   * @param msgLogRepository 参数说明
+   * @param channelRouter 参数说明
+   * @return 返回值说明
+   */
   @Bean
   @ConditionalOnClass(HealthIndicator.class)
   @ConditionalOnMissingBean(MessageHealthIndicator.class)

@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.server.metrics;
 
+import java.util.Collections;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
@@ -116,7 +118,7 @@ public class UserInfoMetrics extends SentryMetricsAdapter {
       redisStringOps.executeScriptWithShaCache(
           DECR_IF_POSITIVE_LUA,
           Long.class,
-          java.util.Collections.singletonList(SESSION_TOTAL_KEY));
+          Collections.singletonList(SESSION_TOTAL_KEY));
     } catch (Exception e) {
       log.warn("Failed to decrement online session counter, error={}", e.getMessage());
     }

@@ -61,7 +61,7 @@ public class GatewayAuditEventBridge {
   /**
    * 构造网关审计事件桥接器
    *
-   * @param eventSpring 事件发布器
+   * @param eventPublisher 事件发布器
    */
   public GatewayAuditEventBridge(ApplicationEventPublisher eventPublisher) {
     this.eventPublisher = eventPublisher;

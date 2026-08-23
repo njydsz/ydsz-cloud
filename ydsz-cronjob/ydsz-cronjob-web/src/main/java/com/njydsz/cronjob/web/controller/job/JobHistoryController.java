@@ -5,14 +5,12 @@ import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -119,8 +117,8 @@ public class JobHistoryController {
    * <p>深度比较两个版本的字段差异，返回新增/修改/删除的字段列表， 供前端"版本对比"对话框使用。版本顺序不影响结果。
    *
    * @param jobId 任务 ID
-   * @param v1 旧版本号
-   * @param v2 新版本号
+   * @param version1 旧版本号
+   * @param version2 新版本号
    * @return 差异字段列表（含 field/oldValue/newValue/changeType）
    */
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)

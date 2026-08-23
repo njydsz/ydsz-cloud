@@ -49,6 +49,9 @@ import com.njydsz.message.server.metric.MessageMetrics;
     selectorExpression = "*",
     maxReconsumeTimes = 1)
 public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
+  /** 内容日志截断长度 */
+  private static final int BODY_LOG_MAX_LENGTH = 500;
+
 
   /** DLQ 幂等锁前缀 */
   private static final String DLQ_IDEMPOTENT_PREFIX = "ydsz:msg:dlq:idempotent:";
@@ -122,7 +125,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
         } else {
           logVO.setChannel("UNKNOWN");
           logVO.setReceiver("UNKNOWN");
-          logVO.setContent(body.length() > 500 ? body.substring(0, 500) + "..." : body);
+          logVO.setContent(body.length() > BODY_LOG_MAX_LENGTH ? body.substring(0, BODY_LOG_MAX_LENGTH) + "..." : body);
         }
         logVO.setStatus(MessageStatusEnum.DEAD.name());
         logVO.setErrorMessage(errorMessage);
@@ -146,7 +149,12 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
     }
   }
 
-  /** 按 msgId 精确查找消息日志 VO。 */
+  /**
+   * 按 msgId 精确查找消息日志 VO。
+   *
+   * @param msgId 参数说明
+   * @return 返回值说明
+   */
   private MsgLogVO findByMsgId(String msgId) {
     MessageLogQueryDTO query = new MessageLogQueryDTO();
     query.setMsgId(msgId);

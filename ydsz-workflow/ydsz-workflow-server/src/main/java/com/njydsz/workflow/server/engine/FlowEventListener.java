@@ -18,39 +18,91 @@ import java.util.Map;
  */
 public interface FlowEventListener {
 
-  /** 实例启动前 */
+  /**
+   * 实例启动前。
+   *
+   * @param instanceId 实例 ID
+   * @param variables 流程变量
+   */
   default void onInstanceStart(String instanceId, Map<String, Object> variables) {}
 
-  /** 任务创建后 */
+  /**
+   * 任务创建后。
+   *
+   * @param taskId 任务 ID
+   */
   default void onTaskCreated(String taskId) {}
 
-  /** 任务完成后（业务侧可在此做状态联动） */
+  /**
+   * 任务完成后（业务侧可在此做状态联动）。
+   *
+   * @param taskId 任务 ID
+   * @param action 完成动作
+   * @param variables 流程变量
+   */
   default void onTaskCompleted(String taskId, String action, Map<String, Object> variables) {}
 
-  /** 实例完成时 */
+  /**
+   * 实例完成时。
+   *
+   * @param instanceId 实例 ID
+   */
   default void onInstanceCompleted(String instanceId) {}
 
-  /** 实例被驳回到终止时 */
+  /**
+   * 实例被驳回到终止时。
+   *
+   * @param instanceId 实例 ID
+   * @param reason 驳回原因
+   */
   default void onInstanceRejected(String instanceId, String reason) {}
 
-  /** 流程异常时 */
+  /**
+   * 流程异常时。
+   *
+   * @param instanceId 实例 ID
+   * @param t 异常
+   */
   default void onError(String instanceId, Throwable t) {}
 
   // ============================== P2-34: 关键操作事件 ==============================
 
-  /** 催办时触发（实例级催办，taskId 可传 null） */
+  /**
+   * 催办时触发（实例级催办，taskId 可传 null）。
+   *
+   * @param instanceId 实例 ID
+   * @param taskId 任务 ID（可为 null）
+   */
   default void onTaskUrged(String instanceId, String taskId) {}
 
-  /** 实例终止时触发 */
+  /**
+   * 实例终止时触发。
+   *
+   * @param instanceId 实例 ID
+   * @param reason 终止原因
+   */
   default void onInstanceTerminated(String instanceId, String reason) {}
 
-  /** 实例挂起时触发 */
+  /**
+   * 实例挂起时触发。
+   *
+   * @param instanceId 实例 ID
+   */
   default void onInstanceSuspended(String instanceId) {}
 
-  /** 实例激活时触发 */
+  /**
+   * 实例激活时触发。
+   *
+   * @param instanceId 实例 ID
+   */
   default void onInstanceActivated(String instanceId) {}
 
-  /** 实例撤回时触发 */
+  /**
+   * 实例撤回时触发。
+   *
+   * @param instanceId 实例 ID
+   * @param initiatorId 发起人 ID
+   */
   default void onInstanceRecalled(String instanceId, String initiatorId) {}
 
   /**
@@ -64,29 +116,69 @@ public interface FlowEventListener {
    */
   default void onInstanceRolledBack(String instanceId, String operatorId, String reason) {}
 
-  /** 任务转办时触发 */
+  /**
+   * 任务转办时触发
+   *
+   * @param taskId 参数说明
+   * @param fromUserId 参数说明
+   * @param toUserId 参数说明
+   */
   default void onTaskTransferred(String taskId, String fromUserId, String toUserId) {}
 
-  /** 任务委派时触发 */
+  /**
+   * 任务委派时触发
+   *
+   * @param taskId 参数说明
+   * @param fromUserId 参数说明
+   * @param toUserId 参数说明
+   */
   default void onTaskDelegated(String taskId, String fromUserId, String toUserId) {}
 
-  /** 任务加签时触发（action=BEFORE/AFTER） */
+  /**
+   * 任务加签时触发（action=BEFORE/AFTER）
+   *
+   * @param taskId 参数说明
+   * @param targetUserId 参数说明
+   * @param action 参数说明
+   */
   default void onTaskCountersigned(String taskId, String targetUserId, String action) {}
 
-  /** 任务自由跳转时触发 */
+  /**
+   * 任务自由跳转时触发
+   *
+   * @param taskId 参数说明
+   * @param fromNodeCode 参数说明
+   * @param toNodeCode 参数说明
+   */
   default void onTaskJumped(String taskId, String fromNodeCode, String toNodeCode) {}
 
   // ============================== P2-36: 超时事件 ==============================
 
-  /** 任务超时时触发 */
+  /**
+   * 任务超时时触发
+   *
+   * @param taskId 参数说明
+   * @param instanceId 参数说明
+   */
   default void onTaskTimeout(String taskId, String instanceId) {}
 
   // ============================== P2-37: 携带上下文的重载方法 ==============================
 
-  /** 任务完成后（携带上下文元数据） */
+  /**
+   * 任务完成后（携带上下文元数据）
+   *
+   * @param taskId 参数说明
+   * @param ctx 参数说明
+   */
   default void onTaskCompleted(String taskId, FlowEventContext ctx) {}
 
-  /** 实例终止时（携带上下文元数据） */
+  /**
+   * 实例终止时（携带上下文元数据）
+   *
+   * @param instanceId 参数说明
+   * @param reason 参数说明
+   * @param ctx 参数说明
+   */
   default void onInstanceTerminated(String instanceId, String reason, FlowEventContext ctx) {}
 
   // ============================== P2-38: 会签个人完成事件 ==============================

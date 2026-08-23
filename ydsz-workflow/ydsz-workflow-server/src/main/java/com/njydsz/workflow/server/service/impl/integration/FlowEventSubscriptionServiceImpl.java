@@ -15,18 +15,18 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.server.engine.FlowNodeExt;
+import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowEventSubscriptionRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
-import com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
@@ -98,6 +98,9 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
 @Service
 @RequiredArgsConstructor
 public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionService {
+
+    /** BPMN 节点类型码：结束事件 */
+  private static final int NODE_TYPE_END = 6;
 
   /** 事件订阅仓储（domain 层契约），管理事件订阅表 CRUD */
   private final FlowEventSubscriptionRepository subscriptionRepository;
@@ -282,8 +285,11 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
+   *
+   * @param instanceId 参数说明
+   * @return 返回值说明
    */
   @Override
   public List<FlowEventSubscriptionVO> listByInstanceVO(String instanceId) {
@@ -306,7 +312,13 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
   // ============================== 私有方法 ==============================
 
-  /** 触发订阅 — 标记 COMPLETED，取消边界任务（如有），推进流程 */
+  /**
+   * 触发订阅 — 标记 COMPLETED，取消边界任务（如有），推进流程
+   *
+   * @param sub 参数说明
+   * @param payload 参数说明
+   * @param triggerSource 参数说明
+   */
   private void triggerSubscription(
       FlowEventSubscriptionDO sub, String payload, String triggerSource) {
     // 1. 标记订阅已触发
@@ -362,7 +374,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     instanceService.generateTasksForNodes(sub.getInstanceId(), nextNodes, variables);
 
     // 7. 更新实例当前节点
-    if (nextNodes.get(0).getNodeType() != 6) { // 非 END
+    if (nextNodes.get(0).getNodeType() != NODE_TYPE_END) { // 非 END
       instanceRepository.updateStatus(
           sub.getInstanceId(),
           instance.getFlowStatus(),
@@ -379,7 +391,12 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         nextNodes.get(0).getNodeCode());
   }
 
-  /** 取消边界事件关联的 userTask */
+  /**
+   * 取消边界事件关联的 userTask
+   *
+   * @param taskId 参数说明
+   * @param errorCode 参数说明
+   */
   private void cancelBoundaryTask(String taskId, String errorCode) {
     FlowRunTaskDO task = taskRepository.findById(taskId).map(converter::entityToDO).orElse(null);
     if (task == null) {

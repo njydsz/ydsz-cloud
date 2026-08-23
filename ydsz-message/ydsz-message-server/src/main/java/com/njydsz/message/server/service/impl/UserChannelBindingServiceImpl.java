@@ -12,8 +12,8 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.UserChannelBindingDTO;
-import com.njydsz.message.infra.entity.MsgUserChannel;
 import com.njydsz.message.domain.repository.MsgUserChannelRepository;
+import com.njydsz.message.infra.entity.MsgUserChannel;
 import com.njydsz.message.server.service.config.UserChannelBindingService;
 
 /**
@@ -38,11 +38,13 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>按 userId + channelType 查找已有绑定：存在则更新 channelUserId/verified/isPrimary/extra，
    * 不存在则新建。channelType 统一转大写存储，tenantId 从 {@link TenantContext} 获取。
+   * 
    *
-   * @throws SysException 当 userId 或 channelType 为空时抛出
+   * @param dto 参数说明
+   * @return 返回值说明
    */
   @Override
   public MsgUserChannel upsert(UserChannelBindingDTO dto) {
@@ -98,8 +100,10 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>按 ID 逻辑删除绑定记录，id 为空时直接返回。
+   *
+   * @param id 参数说明
    */
   @Override
   public void delete(String id) {

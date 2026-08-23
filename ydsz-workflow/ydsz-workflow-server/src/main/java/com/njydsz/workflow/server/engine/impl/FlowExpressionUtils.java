@@ -19,6 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class FlowExpressionUtils {
 
+    /** 列表初始容量（16） */
+  private static final int LIST_INIT_CAPACITY_16 = 16;
+
   /** 匹配 ${varName} 占位符，捕获组 1 为变量名（含点路径） */
   public static final Pattern PLACEHOLDER =
       Pattern.compile("\\$\\{([a-zA-Z_][a-zA-Z0-9_\\.]*)}");
@@ -35,7 +38,11 @@ public final class FlowExpressionUtils {
   public static final Pattern TERNARY_INNER =
       Pattern.compile("^\\s*(.+?)\\s*\\?\\s*(.+?)\\s*:\\s*(.+?)\\s*$");
 
-  /** 私有构造禁止实例化 */
+  /**
+   * 私有构造禁止实例化
+   *
+   * @return 返回值说明
+   */
   private FlowExpressionUtils() {
     throw new UnsupportedOperationException("Utility class");
   }
@@ -123,7 +130,7 @@ public final class FlowExpressionUtils {
    * @return 分割后的子表达式数组
    */
   public static String[] splitTopLevel(String expr, String delimiter) {
-    List<String> result = new ArrayList<>(16);
+    List<String> result = new ArrayList<>(LIST_INIT_CAPACITY_16);
     StringBuilder current = new StringBuilder();
     int depth = 0;
     boolean inSingle = false;

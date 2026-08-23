@@ -56,9 +56,15 @@ public class FlowAssigneeAvailabilityService {
 
   private static final int OVERLOADED_THRESHOLD = 20;
 
-  /** 增加审批人待办计数 */
+  /**
+   * 增加审批人待办计数
+   *
+   * @param userId 参数说明
+   */
   public void incTodoCount(String userId) {
-    if (!StringUtils.hasText(userId)) return;
+    if (!StringUtils.hasText(userId)) {
+      return;
+    }
     try {
       String key = TODO_COUNT_PREFIX + userId;
       Long count = redisStringOps.incr(key, 1);
@@ -71,9 +77,15 @@ public class FlowAssigneeAvailabilityService {
     }
   }
 
-  /** 减少审批人待办计数 */
+  /**
+   * 减少审批人待办计数
+   *
+   * @param userId 参数说明
+   */
   public void decTodoCount(String userId) {
-    if (!StringUtils.hasText(userId)) return;
+    if (!StringUtils.hasText(userId)) {
+      return;
+    }
     try {
       String key = TODO_COUNT_PREFIX + userId;
       long count = redisStringOps.decr(key, 1);
@@ -162,7 +174,9 @@ public class FlowAssigneeAvailabilityService {
   private int getTodoCount(String userId) {
     try {
       String val = redisStringOps.get(TODO_COUNT_PREFIX + userId, String.class);
-      if (val == null) return 0;
+      if (val == null) {
+        return 0;
+      }
       return Integer.parseInt(val);
     } catch (Exception e) {
       log.warn("[Availability] 查询待办计数失败 userId={}, err={}", userId, e.getMessage());

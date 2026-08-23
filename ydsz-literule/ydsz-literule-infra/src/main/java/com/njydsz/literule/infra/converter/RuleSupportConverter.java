@@ -10,6 +10,11 @@ import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
 import com.njydsz.literule.domain.dto.post.RuleTestCasePostDTO;
 import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
 import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
+import com.njydsz.literule.domain.vo.RuleDependencyVO;
+import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
+import com.njydsz.literule.domain.vo.RulePackVO;
+import com.njydsz.literule.domain.vo.RuleTestCaseVO;
+import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.entity.DecisionTableDO;
 import com.njydsz.literule.infra.entity.RuleABPolicyDO;
 import com.njydsz.literule.infra.entity.RuleDependencyDO;
@@ -17,11 +22,6 @@ import com.njydsz.literule.infra.entity.RuleExecutionTraceDO;
 import com.njydsz.literule.infra.entity.RulePackDO;
 import com.njydsz.literule.infra.entity.RuleTestCaseDO;
 import com.njydsz.literule.infra.entity.RuleVersionHistoryDO;
-import com.njydsz.literule.domain.vo.RuleDependencyVO;
-import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
-import com.njydsz.literule.domain.vo.RulePackVO;
-import com.njydsz.literule.domain.vo.RuleTestCaseVO;
-import com.njydsz.literule.domain.vo.RuleVersionVO;
 
 /**
  * 规则支撑转换器（P2-2 拆分）
@@ -34,6 +34,7 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
 @Mapper
 public interface RuleSupportConverter {
 
+  /** MapStruct 单例实例 */
   RuleSupportConverter INSTANCE = Mappers.getMapper(RuleSupportConverter.class);
 
   // ===== RuleDependencyDO =====

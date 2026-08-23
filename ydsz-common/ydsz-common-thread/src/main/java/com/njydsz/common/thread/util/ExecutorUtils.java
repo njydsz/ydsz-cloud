@@ -50,8 +50,8 @@ import lombok.extern.slf4j.Slf4j;
  *   <tr><td>定时任务</td><td>{@link #newScheduledThreadPool(int)}</td><td>ScheduledExecutorService</td></tr>
  *   <tr><td>TTL 上下文透传</td><td>{@link #newTtlFixedThreadPool(int)}</td><td>包装 TransmittableThreadLocal</td></tr>
  *   <tr><td>完全自定义</td><td>{@link #builder()}</td><td>Builder 模式，灵活配置</td></tr>
- *   <tr><td>优雅关闭</td><td>{@link #shutdownGracefully(ExecutorService, long, TimeUnit)}</td><td>先 shutdown，超时强制 shutdownNow</td></tr>
- *   <tr><td>带超时任务</td><td>{@link #submitWithTimeout(ExecutorService, Callable, long, TimeUnit)}</td><td>超时自动取消</td></tr>
+ *   <tr><td>优雅关闭</td><td>{@link #shutdownGracefully}</td><td>先 shutdown，超时强制 shutdownNow</td></tr>
+ *   <tr><td>带超时任务</td><td>{@link #submitWithTimeout}</td><td>超时自动取消</td></tr>
  * </table>
  *
  * @author ydsz-team

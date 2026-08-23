@@ -165,7 +165,11 @@ public final class MagicNumberRegistry {
     return false;
   }
 
-  /** 获取已注册的类型数量 */
+  /**
+   * 获取已注册的类型数量。
+   *
+   * @return 已注册 Magic Number 类型数量
+   */
   public static int size() {
     return REGISTRY.size();
   }

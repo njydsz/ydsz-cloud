@@ -121,7 +121,12 @@ public class RateLimitManager {
     return new CircuitBreaker(config);
   }
 
-  /** 核心限流决策入口 */
+  /**
+   * 核心限流决策入口。
+   *
+   * @param context 限流上下文
+   * @return 限流决策
+   */
   public RateLimitDecision decide(RateLimitContext context) {
     if (!properties.isEnabled()) {
       return passThrough(context, "ratelimit disabled");
@@ -216,7 +221,11 @@ public class RateLimitManager {
     return passThrough(context, "error fallback: " + ex.getMessage());
   }
 
-  /** 添加决策监听器 */
+  /**
+   * 添加决策监听器。
+   *
+   * @param listener 决策监听器
+   */
   public void addListener(DecisionListener listener) {
     listeners.add(listener);
   }
@@ -231,22 +240,38 @@ public class RateLimitManager {
     }
   }
 
-  /** 重新加载规则 */
+  /**
+   * 重新加载规则。
+   *
+   * <p>清空规则缓存并重新加载最新配置，用于规则变更热更新。
+   */
   public void reload() {
     ruleCache.reload();
   }
 
-  /** 获取规则提供器 */
+  /**
+   * 获取规则提供器。
+   *
+   * @return 规则提供器实例
+   */
   public RateLimitRuleProvider getRuleProvider() {
     return ruleProvider;
   }
 
-  /** 获取规则缓存 */
+  /**
+   * 获取规则缓存。
+   *
+   * @return 规则缓存实例
+   */
   public RateLimitRuleCache getRuleCache() {
     return ruleCache;
   }
 
-  /** 获取熔断器（用于监控/管理） */
+  /**
+   * 获取熔断器（用于监控/管理）。
+   *
+   * @return 熔断器实例（未配置时为 {@code Optional.empty()}
+   */
   public Optional<CircuitBreaker> getCircuitBreaker() {
     return Optional.ofNullable(circuitBreaker);
   }

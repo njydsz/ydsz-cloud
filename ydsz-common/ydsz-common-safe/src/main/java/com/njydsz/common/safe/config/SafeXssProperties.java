@@ -27,7 +27,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *         - /actuator/**
  *       # 自定义 XSS 检测模式（正则表达式）
  *       custom-patterns:
- *         - "<script[^>]*>.*?</script>"
+ *         - "&lt;script[^&gt;]*&gt;.*?&lt;/script&gt;"
  *         - "javascript:[^\"']*"
  *       # 白名单标签（允许通过的 HTML 标签）
  *       allowed-tags:

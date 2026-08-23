@@ -6,9 +6,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,18 +20,18 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.domain.dto.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
-import com.njydsz.message.infra.entity.MsgTemplate;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
+import com.njydsz.message.infra.converter.MessageConverter;
+import com.njydsz.message.infra.entity.MsgTemplate;
 import com.njydsz.message.server.service.template.TemplateService;
 
 /**

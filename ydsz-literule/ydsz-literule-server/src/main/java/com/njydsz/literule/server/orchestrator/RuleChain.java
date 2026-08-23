@@ -14,11 +14,11 @@ import java.util.concurrent.TimeoutException;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.StatsRecorder;
-import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.api.expression.ExpressionEngine;
 
 /**
@@ -51,6 +51,12 @@ import com.njydsz.literule.api.expression.ExpressionEngine;
 @Slf4j
 public class RuleChain {
 
+    /** 线程池任务队列容量 */
+  private static final int QUEUE_CAPACITY = 1024;
+
+  /** 纳秒到毫秒的换算系数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
   /**
    * WHEN 链专用守护线程池（P1-4）
    *
@@ -68,7 +74,7 @@ public class RuleChain {
           .corePoolSize(Math.max(2, Runtime.getRuntime().availableProcessors()))
           .maxPoolSize(Math.max(2, Runtime.getRuntime().availableProcessors()))
           .keepAliveTime(0L, TimeUnit.MILLISECONDS)
-          .queueCapacity(1024)
+          .queueCapacity(QUEUE_CAPACITY)
           .threadNamePrefix("literule-when-fallback")
           .daemon(true)
           .build();
@@ -548,7 +554,7 @@ public class RuleChain {
                 node.getRule().getCode(),
                 e.getMessage());
           }
-          long elapsed = (System.nanoTime() - start) / 1_000_000;
+          long elapsed = (System.nanoTime() - start) / NANOS_PER_MILLI;
           // 记录统计到引擎
           if (statsRecorder != null) {
             String ruleCode = node.getRule() != null ? node.getRule().getCode() : "unknown";
@@ -571,6 +577,8 @@ public class RuleChain {
             }
           }
         }
+        default -> log.warn("[RuleChain] 未知节点类型，跳过: {}", node.getNodeType());
+
       }
     } catch (Exception e) {
       log.warn("[LiteRule-Chain] 节点评估异常: type={}, error={}", node.getNodeType(), e.getMessage());

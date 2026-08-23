@@ -440,6 +440,9 @@ public class EscapeUtils {
               }
             }
             break;
+          default:
+            // 未知转义序列：保留反斜杠原样输出，由后续 sb.append(c) 处理
+            break;
         }
       }
       sb.append(c);

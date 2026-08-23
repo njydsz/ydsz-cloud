@@ -43,7 +43,11 @@ public class NotifyDedupService {
     this.redisStringOps = redisStringOps;
   }
 
-  /** 判断是否启用去重 */
+  /**
+   * 判断是否启用去重。
+   *
+   * @return {@code true} 表示启用去重
+   */
   public boolean isDedupEnabled() {
     return properties.getDedup() != null && properties.getDedup().isEnabled();
   }
@@ -91,7 +95,13 @@ public class NotifyDedupService {
     return false;
   }
 
-  /** 手动清除去重记录 */
+  /**
+   * 手动清除去重记录。
+   *
+   * @param receiver 接收者
+   * @param title 标题
+   * @param content 内容
+   */
   public void clearDedup(String receiver, String title, String content) {
     String fingerprint = computeFingerprint(receiver, title, content);
     String redisKey = properties.getDedup().getRedisKeyPrefix() + fingerprint;

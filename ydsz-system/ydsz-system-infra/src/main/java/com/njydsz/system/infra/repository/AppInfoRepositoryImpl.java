@@ -1,5 +1,4 @@
 package com.njydsz.system.infra.repository;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -9,13 +8,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.dto.AppInfoDTO;
+import com.njydsz.system.domain.query.AppInfoPageQuery;
+import com.njydsz.system.domain.repository.AppInfoRepository;
+import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.AppInfoDO;
 import com.njydsz.system.infra.mapper.AppInfoMapper;
-import com.njydsz.system.domain.repository.AppInfoRepository;
-import com.njydsz.system.domain.dto.AppInfoDTO;
-import com.njydsz.system.domain.query.AppInfoPageQuery;
-import com.njydsz.system.domain.vo.AppInfoVO;
+
+
+
 
 /**
  * 应用信息仓储实现（Infra 层）。
@@ -72,7 +74,7 @@ public class AppInfoRepositoryImpl implements AppInfoRepository {
     wrapper.orderByDesc(AppInfoDO::getCreatedAt);
     com.baomidou.mybatisplus.core.metadata.IPage<AppInfoDO> result = appInfoMapper.selectPage(page, wrapper);
     List<AppInfoVO> vos = converter.appInfoListToVO(result.getRecords());
-    return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
+    return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   @Override

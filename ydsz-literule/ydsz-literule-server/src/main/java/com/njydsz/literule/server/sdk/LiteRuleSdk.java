@@ -73,7 +73,9 @@ public class LiteRuleSdk {
     this.environment = environment != null ? environment : "default";
   }
 
-  /** 创建 Builder */
+  /** 创建 Builder
+   * @return 返回值说明
+   */
   public static LiteRuleSdkBuilder builder() {
     return new LiteRuleSdkBuilder();
   }
@@ -120,7 +122,9 @@ public class LiteRuleSdk {
     return evaluate(facts, null);
   }
 
-  /** 获取已注册的规则数量 */
+  /** 获取已注册的规则数量
+   * @return 返回值说明
+   */
   public int ruleCount() {
     return ruleDefinitions.size();
   }
@@ -160,7 +164,9 @@ public class LiteRuleSdk {
     return ruleEngine.topResult(context);
   }
 
-  /** 获取已注册的规则定义列表 */
+  /** 获取已注册的规则定义列表
+   * @return 返回值说明
+   */
   public List<RuleDefinition> getRuleDefinitions() {
     return new ArrayList<>(ruleDefinitions.values());
   }
@@ -175,7 +181,9 @@ public class LiteRuleSdk {
     return new RuleBuilder(this, code);
   }
 
-  /** 获取底层 RuleEngine（高级用法） */
+  /** 获取底层 RuleEngine（高级用法）
+   * @return 返回值说明
+   */
   public RuleEngine getEngine() {
     return ruleEngine;
   }

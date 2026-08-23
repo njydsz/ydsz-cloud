@@ -93,7 +93,7 @@ public class SecurityEventAggregator {
     this.threshold = threshold;
     this.windowSeconds = windowSeconds;
 
-    // CHECKSTYLE.OFF: ThreadPoolCreate|IllegalImport
+    // CHECKSTYLE.OFF: RegexpSinglelineJava|IllegalImport
     // 单线程守护线程，专用于消费自动封禁命令队列，生命周期随 Bean 销毁
     this.blockConsumerExecutor =
         Executors.newSingleThreadExecutor(
@@ -102,7 +102,7 @@ public class SecurityEventAggregator {
               t.setDaemon(true);
               return t;
             });
-    // CHECKSTYLE.ON: ThreadPoolCreate|IllegalImport
+    // CHECKSTYLE.ON: RegexpSinglelineJava|IllegalImport
     this.blockConsumerExecutor.submit(this::consumeBlockCommands);
 
     LOG.info(

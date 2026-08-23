@@ -6,10 +6,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.literule.infra.entity.RuleExecutionTraceDO;
 import com.njydsz.literule.domain.repository.RuleExecutionTraceRepository;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
+import com.njydsz.literule.infra.entity.RuleExecutionTraceDO;
 import com.njydsz.literule.infra.mapper.RuleExecutionTraceMapper;
 
 /**

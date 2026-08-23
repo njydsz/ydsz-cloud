@@ -228,7 +228,12 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
     log.info("[FlowAdmin] 撤销角色: userId={} role={}", userId, roleCode);
   }
 
-  /** 检查角色是否有效（启用 + 未过期）。 */
+  /**
+   * 检查角色是否有效（启用 + 未过期）。
+   *
+   * @param role 参数说明
+   * @return 返回值说明
+   */
   private boolean isRoleValid(FlowAdminRoleDO role) {
     if (role == null) {
       return false;

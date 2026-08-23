@@ -16,27 +16,7 @@ import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobDagPutDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
-import com.njydsz.cronjob.infra.entity.log.JobDailyStats;
-import com.njydsz.cronjob.infra.entity.log.JobLog;
-import com.njydsz.cronjob.infra.entity.log.JobLogContent;
-import com.njydsz.cronjob.infra.entity.dag.JobDag;
-import com.njydsz.cronjob.infra.entity.dag.JobDagInstance;
-import com.njydsz.cronjob.infra.entity.dag.JobDagNodeInstance;
-import com.njydsz.cronjob.infra.entity.dag.JobDagVersion;
-import com.njydsz.cronjob.infra.entity.job.Job;
-import com.njydsz.cronjob.infra.entity.job.JobAlertLog;
-import com.njydsz.cronjob.infra.entity.job.JobAlertRule;
-import com.njydsz.cronjob.infra.entity.job.JobArtifact;
-import com.njydsz.cronjob.infra.entity.job.JobHistory;
-import com.njydsz.cronjob.infra.entity.job.JobNode;
-import com.njydsz.cronjob.infra.entity.job.JobTask;
-import com.njydsz.cronjob.infra.entity.job.JobWebhook;
-import com.njydsz.cronjob.infra.entity.job.TenantQuota;
-import com.njydsz.cronjob.infra.entity.schedule.GlueCode;
-import com.njydsz.cronjob.infra.entity.OutboxEvent;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
-import com.njydsz.cronjob.domain.vo.OutboxEventVO;
-import com.njydsz.cronjob.domain.vo.TenantQuotaVO;
 import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
 import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.domain.vo.JobArtifactVO;
@@ -52,6 +32,26 @@ import com.njydsz.cronjob.domain.vo.JobNodeVO;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
+import com.njydsz.cronjob.domain.vo.OutboxEventVO;
+import com.njydsz.cronjob.domain.vo.TenantQuotaVO;
+import com.njydsz.cronjob.infra.entity.OutboxEvent;
+import com.njydsz.cronjob.infra.entity.dag.JobDag;
+import com.njydsz.cronjob.infra.entity.dag.JobDagInstance;
+import com.njydsz.cronjob.infra.entity.dag.JobDagNodeInstance;
+import com.njydsz.cronjob.infra.entity.dag.JobDagVersion;
+import com.njydsz.cronjob.infra.entity.job.Job;
+import com.njydsz.cronjob.infra.entity.job.JobAlertLog;
+import com.njydsz.cronjob.infra.entity.job.JobAlertRule;
+import com.njydsz.cronjob.infra.entity.job.JobArtifact;
+import com.njydsz.cronjob.infra.entity.job.JobHistory;
+import com.njydsz.cronjob.infra.entity.job.JobNode;
+import com.njydsz.cronjob.infra.entity.job.JobTask;
+import com.njydsz.cronjob.infra.entity.job.JobWebhook;
+import com.njydsz.cronjob.infra.entity.job.TenantQuota;
+import com.njydsz.cronjob.infra.entity.log.JobDailyStats;
+import com.njydsz.cronjob.infra.entity.log.JobLog;
+import com.njydsz.cronjob.infra.entity.log.JobLogContent;
+import com.njydsz.cronjob.infra.entity.schedule.GlueCode;
 
 /**
  * cronjob 模块统一 MapStruct 转换器。
@@ -73,6 +73,7 @@ import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 @Mapper
 public interface CronjobConverter {
 
+  /** MapStruct 单例实例 */
   CronjobConverter INSTANT = Mappers.getMapper(CronjobConverter.class);
 
   // ===== TenantQuota =====
@@ -126,12 +127,6 @@ public interface CronjobConverter {
   List<JobAlertLogVO> jobAlertLogListToVO(List<JobAlertLog> entities);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
   JobAlertLog voToEntity(JobAlertLogVO vo);
 
   // ===== JobAlertRule =====
@@ -193,8 +188,11 @@ public interface CronjobConverter {
 
   /**
    * 将 JobDagVO 转换为 infra 实体（内部服务新增/更新场景）。
-   *
+   * 
    * <p>VO 与实体字段名基本一致（除审计字段、级联字段外），MapStruct 可自动映射。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
    */
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -293,12 +291,6 @@ public interface CronjobConverter {
   List<JobHistoryVO> jobHistoryListToVO(List<JobHistory> entities);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
   JobHistory voToEntity(JobHistoryVO vo);
 
   // ===== JobLog =====
@@ -306,17 +298,9 @@ public interface CronjobConverter {
 
   List<JobLogVO> jobLogListToVO(List<JobLog> entities);
 
-  /** 单个 JobLog → JobLogVO（供 Repository 使用） */
-  default JobLogVO jobLogToVO(JobLog entity) {
-    return entityToVO(entity);
-  }
-
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   JobLog voToEntity(JobLogVO vo);
 
@@ -326,12 +310,6 @@ public interface CronjobConverter {
   List<JobLogContentVO> jobLogContentListToVO(List<JobLogContent> entities);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
   JobLogContent voToEntity(JobLogContentVO vo);
 
   // ===== JobNode =====
@@ -368,7 +346,12 @@ public interface CronjobConverter {
 
   List<JobWebhookVO> jobWebhookListToVO(List<JobWebhook> entities);
 
-  /** P0-F3: VO → Entity（testWebhook 需要以实体形式发送测试事件） */
+  /**
+   * P0-F3: VO → Entity（testWebhook 需要以实体形式发送测试事件）
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   JobWebhook voToEntity(JobWebhookVO vo);
 
   // ===== JobWebhook PostDTO → Entity =====

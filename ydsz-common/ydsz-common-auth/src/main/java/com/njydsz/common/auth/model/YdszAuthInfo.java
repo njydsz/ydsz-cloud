@@ -3,8 +3,8 @@ package com.njydsz.common.auth.model;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import jakarta.annotation.Nonnull;
 
+import jakarta.annotation.Nonnull;
 import lombok.Data;
 
 /**

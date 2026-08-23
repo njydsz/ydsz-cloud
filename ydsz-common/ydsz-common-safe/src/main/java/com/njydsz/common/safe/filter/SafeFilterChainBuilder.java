@@ -103,7 +103,17 @@ public class SafeFilterChainBuilder {
       Supplier<Boolean> enabled,
       Supplier<FilterRegistrationBean<T>> supplier) {
 
-    /** 创建描述符的便捷构造器 */
+    /**
+     * 创建描述符的便捷构造器。
+     *
+     * @param name 过滤器名称（唯一标识）
+     * @param order 顺序（数值越小优先级越高）
+     * @param urlPatterns URL 模式列表
+     * @param enabled 启用条件供应器
+     * @param supplier FilterRegistrationBean 供应器
+     * @param <T> 过滤器类型
+     * @return 新的描述符实例
+     */
     public static <T extends jakarta.servlet.Filter> FilterRegistrationDescriptor<T> of(
         String name,
         int order,

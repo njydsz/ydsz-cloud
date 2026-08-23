@@ -7,10 +7,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.docs.config.DocsProperties;
@@ -77,8 +80,8 @@ public class AsyncDocumentParser {
     }
     // Spring 的 ThreadPoolTaskExecutor 内部包装
     try {
-      org.springframework.core.task.TaskExecutor taskExecutor =
-          (org.springframework.core.task.TaskExecutor) executor;
+      TaskExecutor taskExecutor =
+          (TaskExecutor) executor;
       // 无法直接获取队列大小，返回 -1
       return -1;
     } catch (ClassCastException e) {
@@ -98,8 +101,8 @@ public class AsyncDocumentParser {
       return tpe.getActiveCount();
     }
     try {
-      org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor taskExecutor =
-          (org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor) executor;
+      ThreadPoolTaskExecutor taskExecutor =
+          (ThreadPoolTaskExecutor) executor;
       return taskExecutor.getActiveCount();
     } catch (ClassCastException e) {
       return -1;
@@ -139,7 +142,7 @@ public class AsyncDocumentParser {
                 }
               },
               executor)
-          .orTimeout(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)
+          .orTimeout(timeoutMs, TimeUnit.MILLISECONDS)
           .exceptionally(
               e -> {
                 log.error("[AsyncDocumentParser] async error: {}", fileName, e);

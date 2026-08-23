@@ -31,6 +31,9 @@ import com.njydsz.cronjob.server.core.config.CronjobThreadPoolRegistry;
 @Slf4j
 @Component
 public class RetryScheduler {
+  /** 重试延迟封顶（毫秒）：5 分钟 */
+  private static final long MAX_DELAY_MILLIS = 300_000L;
+
 
   /** 线程池注册表（可选注入，standalone 模式下可能不可用） */
   private final ObjectProvider<CronjobThreadPoolRegistry> registryProvider;
@@ -43,7 +46,11 @@ public class RetryScheduler {
   private final ScheduledExecutorService retryScheduler =
       ExecutorUtils.newScheduledThreadPool(2, "job-retry-");
 
-  /** 构造函数：注入线程池注册表 */
+  /**
+   * 构造函数：注入线程池注册表。
+   *
+   * @param registryProvider 线程池注册表提供者（延迟加载）
+   */
   public RetryScheduler(ObjectProvider<CronjobThreadPoolRegistry> registryProvider) {
     this.registryProvider = registryProvider;
   }
@@ -126,7 +133,7 @@ public class RetryScheduler {
     }
     if ("EXPONENTIAL".equals(job.getRetryBackoff())) {
       long delay = interval * (1L << Math.min(retryCount, 10));
-      return Math.min(delay, 300_000L);
+      return Math.min(delay, MAX_DELAY_MILLIS);
     }
     return interval;
   }

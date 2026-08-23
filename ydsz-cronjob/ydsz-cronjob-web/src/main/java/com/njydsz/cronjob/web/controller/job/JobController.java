@@ -11,9 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,14 +23,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
@@ -388,7 +386,7 @@ public class JobController {
    *
    * <p>支持按关键字（任务名/JOB_KEY/Handler 模糊匹配）和状态/分组过滤。 数据按 ID 倒序，最新创建的任务排在前面。返回的 VO 经过姓名装配。
    *
-   * @param page 页码（默认 1，最小 1）
+   * @param pageNum 页码（默认 1，最小 1）
    * @param size 每页条数（默认 20，最大 100）
    * @param keyword 关键字（任务名/JOB_KEY/Handler，可选）
    * @param status 状态过滤（<code>NORMAL</code>/<code>PAUSED</code>/<code>STOPPED</code>，可选）
@@ -416,7 +414,7 @@ public class JobController {
    *
    * <p>展示所有执行记录（成功/失败/超时/阻塞），按 trigger_time 倒序。 单条日志的详细堆栈/输出见 {@code /log/{id}} 接口。
    *
-   * @param page 页码（默认 1，最小 1）
+   * @param pageNum 页码（默认 1，最小 1）
    * @param size 每页条数（默认 20，最大 100）
    * @param jobKey 任务 JOB_KEY 过滤（可选）
    * @param status 状态过滤（SUCCESS/FAILED/TIMEOUT，可选）

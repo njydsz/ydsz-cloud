@@ -23,9 +23,9 @@ import org.springframework.stereotype.Component;
  *
  * <ul>
  *   <li>每行一个密码
- *   <li}以 {@code #} 开头的行为注释
- *   <li}空行自动忽略
- *   <li}校验时忽略大小写
+ *   <li>以 {@code #} 开头的行为注释
+ *   <li>空行自动忽略
+ *   <li>校验时忽略大小写
  * </ul>
  *
  * <p>对标互联网大厂安全标准（美团/阿里/字节均要求弱密码字典校验）。

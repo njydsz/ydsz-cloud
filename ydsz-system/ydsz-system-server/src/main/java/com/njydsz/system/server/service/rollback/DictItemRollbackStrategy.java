@@ -1,5 +1,4 @@
 package com.njydsz.system.server.service.rollback;
-
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -16,6 +15,9 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.repository.DictRepository;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
+
+
+
 
 /**
  * 字典项回滚策略 — 从快照 JSON 反序列化并重建字典项资源。

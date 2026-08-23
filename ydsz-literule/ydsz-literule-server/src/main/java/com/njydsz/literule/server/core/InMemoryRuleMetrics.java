@@ -1,6 +1,7 @@
 package com.njydsz.literule.server.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,12 @@ import com.njydsz.literule.api.RuleSeverity;
 @Slf4j
 public class InMemoryRuleMetrics implements RuleMetrics {
 
+    /** 耗时样本环形桶容量 */
+  private static final int SAMPLE_CAPACITY = 128;
+
+  /** P99 分位量化 */
+  private static final double P99_QUANTILE = 0.99;
+
   private final AtomicLong totalEvaluations = new AtomicLong(0);
   private final AtomicLong totalTriggered = new AtomicLong(0);
   private final AtomicLong totalErrors = new AtomicLong(0);
@@ -40,7 +47,7 @@ public class InMemoryRuleMetrics implements RuleMetrics {
     final LongAdder elapsedMs = new LongAdder();
     volatile long maxMs = 0;
     /** 耗时样本（固定容量环形桶，用于 P99 估算） */
-    final long[] samples = new long[128];
+    final long[] samples = new long[SAMPLE_CAPACITY];
     volatile int sampleIndex = 0;
   }
 
@@ -57,16 +64,24 @@ public class InMemoryRuleMetrics implements RuleMetrics {
       long elapsedMs) {
     totalEvaluations.incrementAndGet();
     totalElapsedMs.addAndGet(elapsedMs);
-    if (triggered) totalTriggered.incrementAndGet();
-    if (error) totalErrors.incrementAndGet();
+    if (triggered) {
+      totalTriggered.incrementAndGet();
+    }
+    if (error) {
+      totalErrors.incrementAndGet();
+    }
     if (ruleCode == null) {
       return;
     }
     // E3 per-rule 统计
     PerRuleStat stat = perRuleStats.computeIfAbsent(ruleCode, k -> new PerRuleStat());
     stat.evaluations.increment();
-    if (triggered) stat.triggered.increment();
-    if (error) stat.errors.increment();
+    if (triggered) {
+      stat.triggered.increment();
+    }
+    if (error) {
+      stat.errors.increment();
+    }
     stat.elapsedMs.add(elapsedMs);
     if (elapsedMs > stat.maxMs) {
       stat.maxMs = elapsedMs;
@@ -196,8 +211,8 @@ public class InMemoryRuleMetrics implements RuleMetrics {
     }
     long[] copy = new long[count];
     System.arraycopy(stat.samples, 0, copy, 0, count);
-    java.util.Arrays.sort(copy);
-    int p99Index = (int) Math.ceil(count * 0.99) - 1;
+    Arrays.sort(copy);
+    int p99Index = (int) Math.ceil(count * P99_QUANTILE) - 1;
     return copy[Math.max(0, p99Index)];
   }
 }

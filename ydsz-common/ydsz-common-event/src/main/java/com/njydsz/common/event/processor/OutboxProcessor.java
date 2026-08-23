@@ -3,10 +3,8 @@ package com.njydsz.common.event.processor;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import io.micrometer.core.instrument.Counter;
@@ -21,6 +19,7 @@ import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.model.OutboxStatus;
 import com.njydsz.common.event.repository.OutboxRepository;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
  * Outbox 后台轮询处理器
@@ -65,7 +64,7 @@ public class OutboxProcessor {
   private final ScheduledExecutorService scheduler;
 
   /** 投递线程池（可配置线程数，负责实际 MQ 发送） */
-  private final ThreadPoolExecutor publishExecutor;
+  private final ExecutorService publishExecutor;
 
   /** 投递成功计数器 */
   private final Counter publishSuccessCounter;
@@ -129,8 +128,8 @@ public class OutboxProcessor {
       EventPublishGateway publishGateway,
       EventProperties properties,
       MeterRegistry meterRegistry,
-      ScheduledThreadPoolExecutor scheduler,
-      ThreadPoolExecutor publishExecutor) {
+      ScheduledExecutorService scheduler,
+      ExecutorService publishExecutor) {
     this.outboxRepository = outboxRepository;
     this.publishGateway = publishGateway;
     this.properties = properties;
@@ -463,20 +462,8 @@ public class OutboxProcessor {
    *
    * @return 默认调度线程池
    */
-  static ScheduledThreadPoolExecutor createDefaultScheduler() {
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - Outbox 调度器，单线程固定，守护线程
-    ScheduledThreadPoolExecutor scheduler =
-        new ScheduledThreadPoolExecutor(
-            1,
-            r -> {
-              Thread t = new Thread(r, "ydsz-outbox-scheduler");
-              t.setDaemon(true);
-              return t;
-            },
-            new ThreadPoolExecutor.CallerRunsPolicy());
-    // CHECKSTYLE.ON: RegexpSinglelineJava
-    scheduler.setRemoveOnCancelPolicy(true);
-    return scheduler;
+  static ScheduledExecutorService createDefaultScheduler() {
+    return InternalExecutorFactory.newSingleThreadScheduledPool("outbox-scheduler");
   }
 
   /**
@@ -487,21 +474,8 @@ public class OutboxProcessor {
    * @param properties 事件配置属性
    * @return 默认投递线程池
    */
-  static ThreadPoolExecutor createDefaultPublishExecutor(EventProperties properties) {
+  static ExecutorService createDefaultPublishExecutor(EventProperties properties) {
     int workerThreads = Math.max(1, properties.getWorkerThreads());
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - Outbox 投递线程池，线程数由配置控制，守护线程
-    return new ThreadPoolExecutor(
-        workerThreads,
-        workerThreads,
-        60L,
-        TimeUnit.SECONDS,
-        new SynchronousQueue<>(),
-        r -> {
-          Thread t = new Thread(r, "ydsz-outbox-worker");
-          t.setDaemon(true);
-          return t;
-        },
-        new ThreadPoolExecutor.CallerRunsPolicy());
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+    return InternalExecutorFactory.newFixedThreadPool("outbox-worker", workerThreads);
   }
 }

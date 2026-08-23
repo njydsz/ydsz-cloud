@@ -27,6 +27,12 @@ import lombok.Data;
 @Data
 public class SchedulerExecutorSeparationConfig {
 
+  /** 默认maxConcurrentPerWorker值（可被配置文件覆盖） */
+  private static final int DEFAULT_MAX_CONCURRENT_PER_WORKER = 16;
+
+  /** 默认maxDispatchAttempts值（可被配置文件覆盖） */
+  private static final int DEFAULT_MAX_DISPATCH_ATTEMPTS = 2;
+
   /**
    * 是否启用调度器-执行器分离（P1-5: 默认 true，对标 XXL-Job/PowerJob 的调度器-执行器分离架构）。
    *
@@ -39,8 +45,8 @@ public class SchedulerExecutorSeparationConfig {
   private String workerSelectionStrategy = "round_robin";
 
   /** 单节点最大并行任务数（用于 least_load 策略的负载评估） */
-  private int maxConcurrentPerWorker = 16;
+  private int maxConcurrentPerWorker = DEFAULT_MAX_CONCURRENT_PER_WORKER;
 
   /** P2-1: 远程派发最大尝试节点数（第一个 Worker 失败时尝试下一个，达到上限后降级本地执行） */
-  private int maxDispatchAttempts = 2;
+  private int maxDispatchAttempts = DEFAULT_MAX_DISPATCH_ATTEMPTS;
 }

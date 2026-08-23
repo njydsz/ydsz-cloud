@@ -54,6 +54,13 @@ public class InMemoryMetricsCollector implements MetricsCollector {
    * @param value 指标值
    */
   @Override
+  /**
+   * set gauge。
+   * @param name 参数
+   * @param description 参数
+   * @param tags 参数
+   * @param value 参数
+   */
   public void setGauge(String name, String description, Map<String, String> tags, double value) {
     String key = buildKey(name, tags);
     AtomicReference<Double> ref = gauges.computeIfAbsent(key, k -> new AtomicReference<>());
@@ -98,6 +105,10 @@ public class InMemoryMetricsCollector implements MetricsCollector {
    * @return 固定返回 true
    */
   @Override
+  /**
+   * is available。
+   * @return 结果
+   */
   public boolean isAvailable() {
     return true;
   }
@@ -108,23 +119,45 @@ public class InMemoryMetricsCollector implements MetricsCollector {
    * @return 固定返回 "in-memory"
    */
   @Override
+  /**
+   * get name。
+   * @return 结果
+   */
   public String getName() {
     return "in-memory";
   }
 
   /** 获取 Counter 值 */
+  /**
+   * get counter value。
+   * @param name 参数
+   * @param tags 参数
+   * @return 结果
+   */
   public double getCounterValue(String name, Map<String, String> tags) {
     DoubleAdder adder = counters.get(buildKey(name, tags));
     return adder != null ? adder.sum() : 0;
   }
 
   /** 获取 Gauge 值 */
+  /**
+   * get gauge value。
+   * @param name 参数
+   * @param tags 参数
+   * @return 结果
+   */
   public double getGaugeValue(String name, Map<String, String> tags) {
     AtomicReference<Double> ref = gauges.get(buildKey(name, tags));
     return ref != null && ref.get() != null ? ref.get() : 0;
   }
 
   /** 获取 Timer 平均耗时（毫秒） */
+  /**
+   * get timer avg。
+   * @param name 参数
+   * @param tags 参数
+   * @return 结果
+   */
   public double getTimerAvgMillis(String name, Map<String, String> tags) {
     String key = buildKey(name, tags);
     LongAdder count = timerCounts.get(key);
@@ -136,6 +169,10 @@ public class InMemoryMetricsCollector implements MetricsCollector {
   }
 
   /** 获取所有 Counter 快照 */
+  /**
+   * snapshot counters。
+   * @return 结果
+   */
   public Map<String, Double> snapshotCounters() {
     Map<String, Double> snapshot = new ConcurrentHashMap<>();
     counters.forEach((k, v) -> snapshot.put(k, v.sum()));

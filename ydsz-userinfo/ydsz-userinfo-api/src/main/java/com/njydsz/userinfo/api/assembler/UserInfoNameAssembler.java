@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -76,7 +77,7 @@ public class UserInfoNameAssembler implements NameAssembler {
         CacheBuilder.<String, String>newBuilder()
             .maximumSize(properties.getCacheMaxSize())
             .expireAfterWrite(
-                properties.getCacheTtl().toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
+                properties.getCacheTtl().toMillis(), TimeUnit.MILLISECONDS)
             .build();
     this.redisStringOps = properties.isRedisCacheEnabled() ? redisProvider.getIfAvailable() : null;
     if (properties.isRedisCacheEnabled() && this.redisStringOps == null) {
@@ -91,40 +92,68 @@ public class UserInfoNameAssembler implements NameAssembler {
     if (ids == null || ids.isEmpty()) {
       return Collections.emptyMap();
     }
-    List<String> distinctIds =
-        ids.stream()
-            .filter(id -> id != null && !id.isBlank())
-            .distinct()
-            .collect(Collectors.toList());
+    List<String> distinctIds = distinctNonBlankIds(ids);
     if (distinctIds.isEmpty()) {
       return Collections.emptyMap();
     }
 
-    Map<String, String> result;
+    Map<String, String> result = doBatchResolve(type, distinctIds);
+    if (result == null) {
+      return Collections.emptyMap();
+    }
+    backfillCache(type, result);
+    return result;
+  }
+
+  /**
+   * 过滤并去重非空白 ID。
+   *
+   * @param ids 原始 ID 集合
+   * @return 去重后的非空白 ID 列表
+   */
+  private List<String> distinctNonBlankIds(Collection<String> ids) {
+    return ids.stream()
+        .filter(id -> id != null && !id.isBlank())
+        .distinct()
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * 执行批量名称解析（Feign 调用，失败降级返回 null）。
+   *
+   * @param type 实体类型
+   * @param ids 非空白 ID 列表
+   * @return 解析结果；调用失败返回 null
+   */
+  private Map<String, String> doBatchResolve(NameType type, List<String> ids) {
     try {
-      YdszResponse<Map<String, String>> response = doBatchCall(type, distinctIds);
+      YdszResponse<Map<String, String>> response = doBatchCall(type, ids);
       if (response == null || !response.isSuccess()) {
         log.warn(
             "UserInfoNameAssembler batch call failed: type={}, size={}, resp={}",
             type,
-            distinctIds.size(),
+            ids.size(),
             response == null ? "null" : response.getCode());
-        return Collections.emptyMap();
+        return null;
       }
-      result = response.getData();
-      if (result == null) {
-        return Collections.emptyMap();
-      }
+      return response.getData();
     } catch (Exception e) {
       log.warn(
           "UserInfoNameAssembler batch call exception: type={}, size={}, msg={}",
           type,
-          distinctIds.size(),
+          ids.size(),
           e.getMessage());
-      return Collections.emptyMap();
+      return null;
     }
+  }
 
-    // 回填 L1 + L2 缓存
+  /**
+   * 将批量解析结果回填 L1 + L2 缓存。
+   *
+   * @param type 实体类型
+   * @param result 解析结果（ID → 名称）
+   */
+  private void backfillCache(NameType type, Map<String, String> result) {
     for (Map.Entry<String, String> entry : result.entrySet()) {
       if (entry.getValue() != null && !entry.getValue().isBlank()) {
         String l1Key = cacheKey(type, entry.getKey());
@@ -132,7 +161,6 @@ public class UserInfoNameAssembler implements NameAssembler {
         putL2Cache(type, entry.getKey(), entry.getValue());
       }
     }
-    return result;
   }
 
   @Override
@@ -182,19 +210,9 @@ public class UserInfoNameAssembler implements NameAssembler {
       return;
     }
 
-    // 收集所有非空 ID（保留对象引用以便回写）
     List<T> validObjects = new ArrayList<>(objects.size());
     List<String> ids = new ArrayList<>(objects.size());
-    for (T obj : objects) {
-      if (obj == null) {
-        continue;
-      }
-      String id = idGetter.apply(obj);
-      if (id != null && !id.isBlank()) {
-        validObjects.add(obj);
-        ids.add(id);
-      }
-    }
+    collectValidObjects(objects, idGetter, validObjects, ids);
     if (validObjects.isEmpty()) {
       return;
     }
@@ -213,6 +231,32 @@ public class UserInfoNameAssembler implements NameAssembler {
         }
       } else {
         nameSetter.accept(obj, name);
+      }
+    }
+  }
+
+  /**
+   * 收集所有非空对象与其 ID。
+   *
+   * @param objects 原始对象集合
+   * @param idGetter ID 提取函数
+   * @param validObjects 输出：非空且 ID 非空的对象列表
+   * @param ids 输出：对应的 ID 列表
+   * @param <T> 对象类型
+   */
+  private <T> void collectValidObjects(
+      Collection<T> objects,
+      Function<T, String> idGetter,
+      List<T> validObjects,
+      List<String> ids) {
+    for (T obj : objects) {
+      if (obj == null) {
+        continue;
+      }
+      String id = idGetter.apply(obj);
+      if (id != null && !id.isBlank()) {
+        validObjects.add(obj);
+        ids.add(id);
       }
     }
   }

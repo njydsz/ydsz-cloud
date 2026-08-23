@@ -36,6 +36,9 @@ import com.njydsz.message.server.config.MessageProperties;
 @Service
 @RequiredArgsConstructor
 public class MessageHealthService {
+  /** 计算精度 */
+  private static final int SCALE = 4;
+
 
   /** 通道路由器（获取通道和熔断器状态） */
   private final ChannelRouter channelRouter;
@@ -94,7 +97,7 @@ public class MessageHealthService {
       int totalCount = breaker.getTotalCount();
       double failureRate = totalCount > 0
           ? BigDecimal.valueOf((double) failureCount / totalCount)
-              .setScale(4, RoundingMode.HALF_UP)
+              .setScale(SCALE, RoundingMode.HALF_UP)
               .doubleValue()
           : 0.0;
 

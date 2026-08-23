@@ -296,6 +296,11 @@ public class PdfDocumentParser implements DocumentParser {
     return builder.build();
   }
 
-  /** 流式解析单页内容。 */
+  /**
+   * 流式解析单页内容。
+   *
+   * @param pageNumber 页码（从 1 开始）
+   * @param text 该页提取的文本
+   */
   public record PageContent(int pageNumber, String text) {}
 }

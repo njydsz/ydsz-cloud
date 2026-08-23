@@ -39,6 +39,9 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 @Component
 @RequiredArgsConstructor
 public class PasswordPolicyValidator {
+  /** 连续字符检测窗口大小 */
+  private static final int SEQUENCE_WINDOW = 3;
+
 
   private final UserInfoProperties properties;
   private final PasswordStrengthValidator passwordStrengthValidator;
@@ -154,8 +157,8 @@ public class PasswordPolicyValidator {
     }
     String lower = password.toLowerCase();
     for (String row : KEYBOARD_ROWS) {
-      for (int i = 0; i + 3 <= row.length(); i++) {
-        String seq = row.substring(i, i + 3);
+      for (int i = 0; i + SEQUENCE_WINDOW <= row.length(); i++) {
+        String seq = row.substring(i, i + SEQUENCE_WINDOW);
         if (lower.contains(seq)) {
           throw new BusinessException(UserInfoExceptionCode.PASSWORD_TOO_WEAK);
         }
@@ -172,7 +175,7 @@ public class PasswordPolicyValidator {
    * @throws BusinessException 含连续字母序列时抛出
    */
   private void validateNoSequentialAlphabet(String password) {
-    if (password == null || password.length() < 3) {
+    if (password == null || password.length() < SEQUENCE_WINDOW) {
       return;
     }
     String lower = password.toLowerCase();

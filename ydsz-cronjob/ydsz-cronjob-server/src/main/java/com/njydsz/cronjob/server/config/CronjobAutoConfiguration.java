@@ -79,7 +79,9 @@ public class CronjobAutoConfiguration {
    * @return ThreadPoolMetricsEndpoint 实例
    */
   @Bean
+  // CHECKSTYLE.OFF: RegexpSinglelineJava - @ConditionalOnClass name 属性为 Spring 条件类全名（字符串字面量）
   @ConditionalOnClass(name = "org.springframework.boot.actuate.endpoint.annotation.Endpoint")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
   @ConditionalOnAvailableEndpoint(endpoint = ThreadPoolMetricsEndpoint.class)
   @ConditionalOnMissingBean
   public ThreadPoolMetricsEndpoint threadPoolMetricsEndpoint(CronjobThreadPoolRegistry registry) {

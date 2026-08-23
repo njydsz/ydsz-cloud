@@ -9,7 +9,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.njydsz.common.thread.util.ExecutorUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +17,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
@@ -51,6 +51,9 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @RequiredArgsConstructor
 @ConditionalOnBean(LeaderElector.class)
 public class MaintenanceScheduler {
+  /** 维护任务线程数 */
+  private static final int MAINTENANCE_THREAD_COUNT = 4;
+
 
   private final List<ScanTask> scanTasks;
   private final LeaderElector leaderElector;
@@ -92,7 +95,7 @@ public class MaintenanceScheduler {
       return;
     }
     this.scheduler = ExecutorUtils.newScheduledThreadPool(
-        Math.min(scanTasks.size(), 4), "job-maintenance-");
+        Math.min(scanTasks.size(), MAINTENANCE_THREAD_COUNT), "job-maintenance-");
     for (ScanTask task : scanTasks) {
       registerTask(task);
     }

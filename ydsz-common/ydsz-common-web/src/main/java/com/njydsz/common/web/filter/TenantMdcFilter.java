@@ -22,7 +22,7 @@ import com.njydsz.common.core.context.RequestContext;
  * <p><b>日志配置示例（logback-spring.xml）：</b>
  *
  * <pre>{@code
- * <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{tenantId}] %-5level %logger{36} - %msg%n</pattern>
+ * &lt;pattern&gt;%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{tenantId}] %-5level %logger{36} - %msg%n&lt;/pattern&gt;
  * }</pre>
  *
  * @author ydsz-team

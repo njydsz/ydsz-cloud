@@ -3,7 +3,6 @@ package com.njydsz.cronjob.server.core.dag;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -151,6 +150,8 @@ public class DagInstanceExecutor {
    *   <li>匹配 PENDING/RUNNING 状态的节点实例 → 是 DAG 节点，处理
    *   <li>无匹配 → 非 DAG 节点，跳过
    * </ul>
+   *
+   * @param event 任务完成事件
    */
   @Async
   @EventListener
@@ -614,10 +615,16 @@ public class DagInstanceExecutor {
       return;
     }
     int total = nodes.size();
-    int success = 0, failed = 0, skipped = 0, pending = 0, running = 0;
+    int success = 0;
+    int failed = 0;
+    int skipped = 0;
+    int pending = 0;
+    int running = 0;
     for (JobDagNodeInstanceVO node : nodes) {
       DagNodeStatus st = DagNodeStatus.parse(node.getNodeStatus());
-      if (st == null) continue;
+      if (st == null) {
+        continue;
+      }
       switch (st) {
         case SUCCESS -> success++;
         case FAILED, APPROVAL_REJECTED -> failed++;
@@ -625,6 +632,9 @@ public class DagInstanceExecutor {
         case PENDING, WAITING_FOR_APPROVAL -> pending++;
         case RUNNING -> running++;
         case RETRYING -> pending++;
+        default -> {
+          // 未知状态忽略
+        }
       }
     }
     if (pending > 0 || running > 0) {
@@ -679,7 +689,9 @@ public class DagInstanceExecutor {
   private void markInstanceFailed(String dagInstanceId, String errorMessage) {
     try {
       JobDagInstanceVO instance = dagInstanceRepository.findById(dagInstanceId).orElse(null);
-      if (instance == null) return;
+      if (instance == null) {
+        return;
+      }
       LocalDateTime now = LocalDateTime.now();
       long durationMs =
           instance.getStartedAt() != null
@@ -703,7 +715,9 @@ public class DagInstanceExecutor {
   private void markNodeFailed(String dagInstanceId, String jobKey, String errorMessage) {
     JobDagNodeInstanceVO node =
         dagNodeInstanceRepository.findByDagInstanceAndJobKey(dagInstanceId, jobKey);
-    if (node == null) return;
+    if (node == null) {
+      return;
+    }
     LocalDateTime now = LocalDateTime.now();
     long durationMs =
         node.getStartedAt() != null ? ChronoUnit.MILLIS.between(node.getStartedAt(), now) : 0;
@@ -714,7 +728,9 @@ public class DagInstanceExecutor {
   private void markNodeSkipped(String dagInstanceId, String jobKey) {
     JobDagNodeInstanceVO node =
         dagNodeInstanceRepository.findByDagInstanceAndJobKey(dagInstanceId, jobKey);
-    if (node == null) return;
+    if (node == null) {
+      return;
+    }
     dagNodeInstanceRepository.markSkipped(node.getId());
   }
 

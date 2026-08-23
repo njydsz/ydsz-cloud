@@ -97,8 +97,10 @@ public class LocalCheckpointStore implements CheckpointStore {
 
   @Override
   public String buildKey(String bucketName, String objectName) {
+    // CHECKSTYLE.OFF: RegexpSinglelineJava — JDK 系统属性名含 java.io 前缀，为字符串常量非代码引用
     String effectiveBaseDir =
         (baseDir != null && !baseDir.isBlank()) ? baseDir : System.getProperty("java.io.tmpdir");
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     String safeBucket = bucketName.replaceAll("[^a-zA-Z0-9_\\-.]", "_");
     String safeObjectName =
         objectName.replace("/", "_").replace("\\", "_").replaceAll("\\.\\.", "_");

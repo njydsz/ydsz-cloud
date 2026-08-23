@@ -2,6 +2,7 @@ package com.njydsz.common.auth.service;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -173,7 +174,7 @@ public class TokenBlacklistService {
     if (distributedLocker != null) {
       String lockValue =
           distributedLocker.tryLock(
-              lockKey, REFRESH_LOCK_TTL_SECONDS, java.util.concurrent.TimeUnit.SECONDS);
+              lockKey, REFRESH_LOCK_TTL_SECONDS, TimeUnit.SECONDS);
       boolean acquired = lockValue != null;
       if (acquired) {
         refreshLockValues.putIfAbsent(lockKey, lockValue);

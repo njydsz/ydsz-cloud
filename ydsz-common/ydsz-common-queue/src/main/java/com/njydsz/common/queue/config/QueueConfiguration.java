@@ -325,7 +325,7 @@ public class QueueConfiguration {
    * Prometheus 指标。
    *
    * @param queueManager 队列管理器
-   * @param meterRegistry MeterRegistry 实例（可选依赖）
+   * @param meterRegistryProvider MeterRegistry 提供者（可选依赖）
    * @return 指标桥接器实例，当 MeterRegistry 不可用时返回 null
    */
   @Bean

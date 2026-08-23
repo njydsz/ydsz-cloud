@@ -2,7 +2,6 @@ package com.njydsz.userinfo.server.event.listener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +26,10 @@ import com.njydsz.userinfo.server.alert.SecurityAlertService;
 @Component
 @RequiredArgsConstructor
 public class SecurityAlertEventListener implements UserAuthEventListener {
+
+  /** 监听器优先级（越小越先执行） */
+  private static final int LISTENER_ORDER = 20;
+
 
   private final SecurityAlertService securityAlertService;
 
@@ -72,6 +75,6 @@ public class SecurityAlertEventListener implements UserAuthEventListener {
 
   @Override
   public int getOrder() {
-    return 20;
+    return LISTENER_ORDER;
   }
 }

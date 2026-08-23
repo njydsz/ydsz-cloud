@@ -68,6 +68,17 @@ public interface JobDagInstanceRepository {
 
   /**
    * 标记实例为终态。
+   *
+   * @param instanceId 参数说明
+   * @param status 参数说明
+   * @param finishedAt 参数说明
+   * @param durationMs 参数说明
+   * @param errorMessage 参数说明
+   * @param totalNodes 参数说明
+   * @param successNodes 参数说明
+   * @param failedNodes 参数说明
+   * @param skippedNodes 参数说明
+   * @return 返回值说明
    */
   int markFinished(
       String instanceId,
@@ -82,31 +93,53 @@ public interface JobDagInstanceRepository {
 
   /**
    * 更新实例上下文（contextJson）。
+   *
+   * @param instanceId 参数说明
+   * @param contextJson 参数说明
+   * @return 返回值说明
    */
   int updateContext(String instanceId, String contextJson);
 
   /**
    * 原子合并实例上下文（PostgreSQL jsonb || 操作符）。
+   *
+   * @param instanceId 参数说明
+   * @param mergeJson 参数说明
+   * @return 返回值说明
    */
   int mergeContextAtomic(String instanceId, String mergeJson);
 
   /**
    * 统计指定 DAG 的活跃（RUNNING/PAUSED）实例数量。
+   *
+   * @param dagId 参数说明
+   * @return 返回值说明
    */
   int countActiveInstances(String dagId);
 
   /**
    * 标记实例为 PAUSED。
+   *
+   * @param instanceId 参数说明
+   * @return 返回值说明
    */
   int markPaused(String instanceId);
 
   /**
    * 标记实例为 RESUMED。
+   *
+   * @param instanceId 参数说明
+   * @return 返回值说明
    */
   int markResumed(String instanceId);
 
   /**
    * 标记实例为 CANCELED。
+   *
+   * @param instanceId 参数说明
+   * @param canceledAt 参数说明
+   * @param durationMs 参数说明
+   * @return 返回值说明
    */
   int markCanceled(String instanceId, LocalDateTime canceledAt, long durationMs);
 

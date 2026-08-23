@@ -83,20 +83,30 @@ public class BusinessRanker {
     double boost = 0.0;
     if (updatedAt != null) {
       long days = ChronoUnit.DAYS.between(updatedAt, now);
-      if (days <= 1) boost += 3.0;
-      else if (days <= 7) boost += 1.5;
-      else if (days <= 30) boost += 0.5;
+      if (days <= 1) {
+        boost += 3.0;
+      } else if (days <= 7) {
+        boost += 1.5;
+      } else if (days <= 30) {
+        boost += 0.5;
+      }
     } else if (createdAt != null) {
       long days = ChronoUnit.DAYS.between(createdAt, now);
-      if (days <= 1) boost += 2.0;
-      else if (days <= 7) boost += 1.0;
-      else if (days <= 30) boost += 0.3;
+      if (days <= 1) {
+        boost += 2.0;
+      } else if (days <= 7) {
+        boost += 1.0;
+      } else if (days <= 30) {
+        boost += 0.3;
+      }
     }
     return boost;
   }
 
   private double getTypeBoost(String type) {
-    if (type == null) return 0.0;
+    if (type == null) {
+      return 0.0;
+    }
     return switch (type) {
       case "project" -> 2.0;
       case "wiki" -> 1.0;
@@ -107,7 +117,9 @@ public class BusinessRanker {
   }
 
   private LocalDateTime parseDateTime(String dateStr) {
-    if (dateStr == null || dateStr.isBlank()) return null;
+    if (dateStr == null || dateStr.isBlank()) {
+      return null;
+    }
     try {
       return LocalDateTime.parse(dateStr);
     } catch (Exception e) {

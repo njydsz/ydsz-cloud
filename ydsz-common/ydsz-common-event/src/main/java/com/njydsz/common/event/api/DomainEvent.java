@@ -97,37 +97,75 @@ public class DomainEvent extends ApplicationEvent {
             : Collections.emptyMap();
   }
 
-  /** 获取 Builder 实例 */
+  /**
+   * 获取 Builder 实例。
+   *
+   * @return 新的 Builder
+   */
   public static Builder builder() {
     return new Builder();
   }
 
+  /**
+   * 获取事件唯一标识。
+   *
+   * @return 事件 ID
+   */
   public String getEventId() {
     return eventId;
   }
 
+  /**
+   * 获取事件发生时间。
+   *
+   * @return 事件发生时间
+   */
   public LocalDateTime getOccurredAt() {
     return occurredAt;
   }
 
+  /**
+   * 获取事件类型。
+   *
+   * @return 事件类型
+   */
   public String getEventType() {
     return eventType;
   }
 
+  /**
+   * 获取聚合根 ID。
+   *
+   * @return 聚合根 ID
+   */
   public String getAggregateId() {
     return aggregateId;
   }
 
+  /**
+   * 获取聚合根类型。
+   *
+   * @return 聚合根类型
+   */
   public String getAggregateType() {
     return aggregateType;
   }
 
-  /** 获取扩展元数据（不可变） */
+  /**
+   * 获取扩展元数据（不可变）。
+   *
+   * @return 元数据 Map（不可变）
+   */
   public Map<String, Object> getMetadata() {
     return metadata;
   }
 
-  /** 获取指定元数据项，不存在返回 null */
+  /**
+   * 获取指定元数据项，不存在返回 null。
+   *
+   * @param key 元数据键
+   * @return 元数据值；不存在时为 {@code null}
+   */
   public Object getMetadata(String key) {
     return metadata.get(key);
   }
@@ -198,19 +236,34 @@ public class DomainEvent extends ApplicationEvent {
       return this;
     }
 
-    /** 设置事件类型 */
+    /**
+     * 设置事件类型。
+     *
+     * @param eventType 事件类型
+     * @return 当前 Builder，便于链式调用
+     */
     public Builder eventType(String eventType) {
       this.eventType = eventType;
       return this;
     }
 
-    /** 设置聚合根ID */
+    /**
+     * 设置聚合根 ID。
+     *
+     * @param aggregateId 聚合根 ID
+     * @return 当前 Builder，便于链式调用
+     */
     public Builder aggregateId(String aggregateId) {
       this.aggregateId = aggregateId;
       return this;
     }
 
-    /** 设置聚合根类型 */
+    /**
+     * 设置聚合根类型。
+     *
+     * @param aggregateType 聚合根类型
+     * @return 当前 Builder，便于链式调用
+     */
     public Builder aggregateType(String aggregateType) {
       this.aggregateType = aggregateType;
       return this;

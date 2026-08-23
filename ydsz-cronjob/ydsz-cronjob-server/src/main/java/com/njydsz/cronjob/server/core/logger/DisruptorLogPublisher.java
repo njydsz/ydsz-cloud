@@ -1,15 +1,15 @@
 package com.njydsz.cronjob.server.core.logger;
 
+import com.lmax.disruptor.BlockingWaitStrategy;
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.util.DaemonThreadFactory;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
-import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.RingBuffer;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.util.DaemonThreadFactory;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
 /**
@@ -37,6 +37,15 @@ import com.njydsz.cronjob.server.service.log.JobLogContentService;
 @Slf4j
 @Component
 public class DisruptorLogPublisher {
+  /** Vararg 参数：行号索引 */
+  private static final int ARG_LINE_NO_INDEX = 2;
+
+  /** Vararg 参数：内容索引 */
+  private static final int ARG_CONTENT_INDEX = 3;
+
+  /** Vararg 参数：追加标记索引 */
+  private static final int ARG_APPEND_INDEX = 4;
+
 
   /** Ring Buffer 大小（2 的幂） */
   private static final int BUFFER_SIZE = 1024;
@@ -92,8 +101,8 @@ public class DisruptorLogPublisher {
                   (String) args[0],
                   (String) args[1],
                   (Integer) args[2],
-                  (String) args[3],
-                  (String) args[4]),
+                  (String) args[ARG_CONTENT_INDEX],
+                  (String) args[ARG_APPEND_INDEX]),
           logId,
           jobKey,
           lineNo,

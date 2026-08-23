@@ -103,6 +103,9 @@ import com.njydsz.workflow.server.service.FlowReportService;
 @RequiredArgsConstructor
 public class FlowReportServiceImpl implements FlowReportService {
 
+    /** 报表 TOP 审批人数量 */
+  private static final int TOP_APPROVERS = 5;
+
   private final FlowAnalyticsService analyticsService;
   @Lazy private final FlowNotificationService notificationService;
 
@@ -172,7 +175,7 @@ public class FlowReportServiceImpl implements FlowReportService {
     report.put("trend", trend);
 
     // 审批人效率 Top 5
-    Object topApprovers = analyticsService.approverEfficiency(startTime, endTime, tid, 5);
+    Object topApprovers = analyticsService.approverEfficiency(startTime, endTime, tid, TOP_APPROVERS);
     report.put("topApprovers", topApprovers);
 
     // 流程效率对比

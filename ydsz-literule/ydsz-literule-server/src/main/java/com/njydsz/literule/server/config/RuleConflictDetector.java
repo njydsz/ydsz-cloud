@@ -53,6 +53,9 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
 @RequiredArgsConstructor
 public class RuleConflictDetector {
 
+    /** 比较表达式正则捕获组：右侧操作数 */
+  private static final int CMP_GROUP_RIGHT = 3;
+
   /** 规则配置提供者（SPI），用于加载同租户同分类下的现有规则以检测冲突 */
   private final RuleConfigProvider configProvider;
 
@@ -99,8 +102,12 @@ public class RuleConflictDetector {
     detectUnreachableSubcondition(conflicts, newDefinition);
 
     for (RuleDefinition other : existingRules) {
-      if (Objects.equals(other.getCode(), newCode)) continue;
-      if (!Objects.equals(other.getTenantId(), newTenantId)) continue;
+      if (Objects.equals(other.getCode(), newCode)) {
+        continue;
+      }
+      if (!Objects.equals(other.getTenantId(), newTenantId)) {
+        continue;
+      }
 
       String otherCondition = normalize(other.getConditionExpression());
       String otherSeverity = severityKey(other);
@@ -224,10 +231,14 @@ public class RuleConflictDetector {
    */
   private void detectDeadRule(List<RuleConflict> conflicts, RuleDefinition newDefinition) {
     String expr = newDefinition.getConditionExpression();
-    if (expr == null || expr.isBlank()) return;
+    if (expr == null || expr.isBlank()) {
+      return;
+    }
     // 拆分 AND 子句（支持 && 和 and）
     List<String> clauses = splitAndClauses(expr);
-    if (clauses.size() < 2) return;
+    if (clauses.size() < 2) {
+      return;
+    }
     // 按变量分组收集比较条件
     Map<String, List<ComparisonCondition>> byVar = new LinkedHashMap<>();
     for (String clause : clauses) {
@@ -239,14 +250,20 @@ public class RuleConflictDetector {
     // 检查同变量的条件范围是否无交集
     for (Map.Entry<String, List<ComparisonCondition>> entry : byVar.entrySet()) {
       List<ComparisonCondition> conds = entry.getValue();
-      if (conds.size() < 2) continue;
+      if (conds.size() < 2) {
+        continue;
+      }
       // 取所有条件的范围交集
       double lower = -Double.MAX_VALUE;
       double upper = Double.MAX_VALUE;
       for (ComparisonCondition cc : conds) {
         double[] range = toRange(cc.operator, cc.value);
-        if (range[0] > lower) lower = range[0];
-        if (range[1] < upper) upper = range[1];
+        if (range[0] > lower) {
+          lower = range[0];
+        }
+        if (range[1] < upper) {
+          upper = range[1];
+        }
       }
       if (lower > upper) {
         conflicts.add(
@@ -281,9 +298,13 @@ public class RuleConflictDetector {
   private void detectUnreachableSubcondition(
       List<RuleConflict> conflicts, RuleDefinition newDefinition) {
     String expr = newDefinition.getConditionExpression();
-    if (expr == null || expr.isBlank()) return;
+    if (expr == null || expr.isBlank()) {
+      return;
+    }
     List<String> clauses = splitAndClauses(expr);
-    if (clauses.size() < 2) return;
+    if (clauses.size() < 2) {
+      return;
+    }
     // 按变量分组
     Map<String, List<ComparisonCondition>> byVar = new LinkedHashMap<>();
     for (String clause : clauses) {
@@ -294,11 +315,15 @@ public class RuleConflictDetector {
     }
     for (Map.Entry<String, List<ComparisonCondition>> entry : byVar.entrySet()) {
       List<ComparisonCondition> conds = entry.getValue();
-      if (conds.size() < 2) continue;
+      if (conds.size() < 2) {
+        continue;
+      }
       // 两两检查包含关系
       for (int i = 0; i < conds.size(); i++) {
         for (int j = 0; j < conds.size(); j++) {
-          if (i == j) continue;
+          if (i == j) {
+            continue;
+          }
           if (isSubset(conds.get(i), conds.get(j))) {
             // conds[i] 的范围被 conds[j] 包含 → conds[j] 冗余
             conflicts.add(
@@ -328,7 +353,9 @@ public class RuleConflictDetector {
    */
   private List<String> splitAndClauses(String expr) {
     List<String> result = new ArrayList<>();
-    if (expr == null || expr.isBlank()) return result;
+    if (expr == null || expr.isBlank()) {
+      return result;
+    }
     // 先按 && 拆分
     String[] parts = expr.split("&&|(?i)\\band\\b");
     for (String p : parts) {
@@ -348,8 +375,12 @@ public class RuleConflictDetector {
    * @return true 表示 b 被 a 包含，b 冗余
    */
   private boolean isSubset(ComparisonCondition a, ComparisonCondition b) {
-    if (!a.variable.equals(b.variable)) return false;
-    if (a.operator.equals(b.operator) && a.value == b.value) return false;
+    if (!a.variable.equals(b.variable)) {
+      return false;
+    }
+    if (a.operator.equals(b.operator) && a.value == b.value) {
+      return false;
+    }
     double[] ra = toRange(a.operator, a.value);
     double[] rb = toRange(b.operator, b.value);
     // a 包含 b：a 的范围 ⊇ b 的范围 → ra.lower ≤ rb.lower 且 ra.upper ≥ rb.upper
@@ -387,7 +418,7 @@ public class RuleConflictDetector {
     if (rm.matches()) {
       String number = rm.group(1);
       String op = rm.group(2);
-      String var = rm.group(3);
+      String var = rm.group(CMP_GROUP_RIGHT);
       s = var + flipOperator(op) + number;
     }
     return s.toLowerCase();
@@ -418,7 +449,9 @@ public class RuleConflictDetector {
    * @return ComparisonCondition；无法解析返回 null
    */
   private ComparisonCondition parseComparison(String expression) {
-    if (expression == null || expression.isBlank()) return null;
+    if (expression == null || expression.isBlank()) {
+      return null;
+    }
     String trimmed = expression.trim();
     // 不支持复合条件
     if (trimmed.contains("&&")
@@ -431,14 +464,14 @@ public class RuleConflictDetector {
     Matcher m = COMPARISON_PATTERN.matcher(trimmed);
     if (m.matches()) {
       return new ComparisonCondition(
-          m.group(1), m.group(2), Double.parseDouble(m.group(3)), trimmed);
+          m.group(1), m.group(2), Double.parseDouble(m.group(CMP_GROUP_RIGHT)), trimmed);
     }
     // 反向：number OP var → 翻转为 var FLIP_OP number
     Matcher rm = REVERSE_COMPARISON_PATTERN.matcher(trimmed);
     if (rm.matches()) {
       String number = rm.group(1);
       String op = rm.group(2);
-      String var = rm.group(3);
+      String var = rm.group(CMP_GROUP_RIGHT);
       return new ComparisonCondition(var, flipOperator(op), Double.parseDouble(number), trimmed);
     }
     return null;
@@ -528,11 +561,17 @@ public class RuleConflictDetector {
   private boolean isOverlap(
       ComparisonCondition a, ComparisonCondition b, String mutexA, String mutexB) {
     // 变量不同不重叠
-    if (!a.variable.equals(b.variable)) return false;
+    if (!a.variable.equals(b.variable)) {
+      return false;
+    }
     // 同互斥组不报重叠
-    if (mutexA != null && !mutexA.isBlank() && mutexA.equals(mutexB)) return false;
+    if (mutexA != null && !mutexA.isBlank() && mutexA.equals(mutexB)) {
+      return false;
+    }
     // 相同操作符+相同阈值视为等价（由 IDENTICAL_CONDITION 覆盖）
-    if (a.operator.equals(b.operator) && a.value == b.value) return false;
+    if (a.operator.equals(b.operator) && a.value == b.value) {
+      return false;
+    }
     // 计算两个条件的命中范围是否有交集
     // 范围用 [lower, upper] 表示，-∞/∞ 用 null 表示
     double[] rangeA = toRange(a.operator, a.value);

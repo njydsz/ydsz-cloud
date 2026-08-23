@@ -93,6 +93,8 @@ import com.njydsz.userinfo.server.oauth2.OAuthCodeContext;
 @RequiredArgsConstructor
 @Tag(name = "OAuth2", description = "OAuth2 授权码模式")
 public class OAuth2Controller {
+  /** "Bearer " 前缀长度 */
+  private static final int BEARER_PREFIX_LENGTH = 7;
 
   private final RedisStringOps redisStringOps;
   private final TokenService tokenService;
@@ -193,18 +195,11 @@ public class OAuth2Controller {
    *   <li>解析并验证 token 有效性
    *   <li>校验 clientId 已在系统中注册
    *   <li>校验 redirectUri 在 clientId 的白名单中（防开放重定向）
-   *   <li}生成 UUID 授权码，将 userId/username/tenantId/clientId/redirectUri/codeChallenge/nonce 序列化后写入 Redis
+   *   <li>生成 UUID 授权码，将 userId/username/tenantId/clientId/redirectUri/codeChallenge/nonce 序列化后写入 Redis
    *   <li>返回授权码（业务方需将 code 拼到 redirectUri 的 query 上）
    * </ol>
    *
-   * @param authorization Authorization 请求头（Bearer access_token）
-   * @param clientId 客户端 ID（必须已注册）
-   * @param redirectUri 回调地址（必须在 clientId 的白名单中）
-   * @param state 客户端防 CSRF 随机串（服务端存储并校验）
-   * @param scope 授权范围（可选，OIDC 流程需包含 {@code openid}）
-   * @param nonce OIDC nonce（可选，用于防重放攻击，scope 含 openid 时建议携带）
-   * @param codeChallenge PKCE 码挑战值（可选，用于公共客户端）
-   * @param codeChallengeMethod PKCE 码挑战方法（可选，仅支持 S256）
+   * @param request 授权请求参数（含 Authorization 头、clientId、redirectUri、state、scope、nonce、PKCE 参数）
    * @return OAuth2 授权码
    * @throws BusinessException {@code TOKEN_INVALID} / {@code OAUTH2_CLIENT_INVALID} / {@code
    *     OAUTH2_REDIRECT_URI_MISMATCH}
@@ -213,38 +208,80 @@ public class OAuth2Controller {
       module = "OAuth2",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'OAuth2 授权码签发: clientId=' + #clientId + ', redirectUri=' + #redirectUri")
+      content = "'OAuth2 授权码签发: clientId=' + #request.clientId() + ', redirectUri=' + #request.redirectUri()")
   @RateLimit(resource = "userinfo.oauth2.authorize", threshold = 20)
   @GetMapping("/authorize")
   @Operation(summary = "获取授权码", description = "需携带已登录的 access_token，生成 OAuth2 授权码，5 分钟有效")
-  public YdszResponse<String> authorize(
-      @RequestHeader(HeaderConstants.AUTHORIZATION) String authorization,
-      @RequestParam String clientId,
-      @RequestParam String redirectUri,
-      @RequestParam(required = false) String state,
-      @RequestParam(required = false) String scope,
-      @RequestParam(required = false) String nonce,
-      @RequestParam(required = false) String codeChallenge,
-      @RequestParam(required = false) String codeChallengeMethod) {
-
+  public YdszResponse<String> authorize(OAuth2AuthorizeRequest request) {
     // 1. 认证检查：必须携带有效的 access_token
-    if (authorization == null || !authorization.startsWith("Bearer ")) {
+    if (!request.hasBearerToken()) {
       throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
     }
-    String accessToken = authorization.substring(7);
+    String accessToken = request.extractAccessToken();
     UserInfo userInfo = tokenService.parseAccessToken(accessToken);
     if (userInfo == null || !tokenService.validateAccessToken(accessToken)) {
       throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
     }
 
     // 2. 验证 clientId 是否已注册
-    UserInfoProperties.OAuth2Client clientConfig = properties.getOauth2Clients().get(clientId);
+    UserInfoProperties.OAuth2Client clientConfig =
+        properties.getOauth2Clients().get(request.clientId());
     if (clientConfig == null) {
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
     }
 
     // 3. P0-2: 校验 redirect_uri 必须命中客户端注册白名单（RFC 6749 §3.1.2.3）
-    // 白名单未配置或为空时直接拒绝（防开放重定向），不允许跳过校验
+    validateRedirectUri(clientConfig, request.redirectUri(), request.clientId());
+
+    // 4. P1-3: scope 细粒度授权校验（客户端配置了 allowedScopes 时强制）
+    validateScopes(clientConfig, request.scope(), request.clientId());
+
+    // 5. 构建类型安全的授权码上下文（P1-5：Map→Record 重构，消除字符串键硬编码）
+    String code = generateAuthorizationCode();
+    String effectiveTenantId = userInfo.getTenantId() != null ? userInfo.getTenantId() : "1";
+    String effectiveScope = request.scope() != null ? request.scope() : "";
+    String codeChallengeMethodResolved = resolveCodeChallengeMethod(request);
+
+    OAuthCodeContext context = OAuthCodeContext.builder()
+        .clientId(request.clientId())
+        .userId(userInfo.getUserId())
+        .username(userInfo.getUsername())
+        .tenantId(effectiveTenantId)
+        .redirectUri(request.redirectUri())
+        .scope(effectiveScope)
+        .nonce(request.nonce())
+        .codeChallenge(request.codeChallenge())
+        .codeChallengeMethod(codeChallengeMethodResolved)
+        .state(request.state())
+        .build();
+
+    redisStringOps.set(CODE_KEY_PREFIX + code, context.toJson(), CODE_TTL_SECONDS);
+
+    // 存储 state → code 映射（CSRF 防护，TTL 与授权码一致）
+    if (request.state() != null && !request.state().isBlank()) {
+      redisStringOps.set(STATE_KEY_PREFIX + request.state(), code, CODE_TTL_SECONDS);
+      log.debug("OAuth2 state stored: state={}", request.state());
+    }
+
+    log.info(
+        "OAuth2 authorize: clientId={}, userId={}, code={}, pkce={}, state={}",
+        request.clientId(),
+        userInfo.getUserId(),
+        code,
+        request.codeChallenge() != null,
+        request.state() != null);
+    return YdszResponse.success(code);
+  }
+
+  /**
+   * 校验回调地址是否命中客户端注册白名单（防开放重定向）。
+   *
+   * @param clientConfig 客户端配置
+   * @param redirectUri 回调地址
+   * @param clientId 客户端 ID
+   */
+  private void validateRedirectUri(
+      UserInfoProperties.OAuth2Client clientConfig, String redirectUri, String clientId) {
     List<String> redirectUris = clientConfig.getRedirectUris();
     if (redirectUris == null || redirectUris.isEmpty() || !redirectUris.contains(redirectUri)) {
       log.warn(
@@ -253,8 +290,17 @@ public class OAuth2Controller {
           redirectUri);
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_REDIRECT_URI_MISMATCH);
     }
+  }
 
-    // 4. P1-3: scope 细粒度授权校验（客户端配置了 allowedScopes 时强制）
+  /**
+   * 校验请求的 scope 是否在客户端允许范围内。
+   *
+   * @param clientConfig 客户端配置
+   * @param scope 请求的 scope（可为 null）
+   * @param clientId 客户端 ID
+   */
+  private void validateScopes(
+      UserInfoProperties.OAuth2Client clientConfig, String scope, String clientId) {
     Set<String> requestedScopes = parseScopes(scope);
     Set<String> allowedScopes = clientConfig.getAllowedScopes();
     if (!requestedScopes.isEmpty()
@@ -268,45 +314,19 @@ public class OAuth2Controller {
           allowedScopes);
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_SCOPE_INVALID);
     }
+  }
 
-    // 5. 构建类型安全的授权码上下文（P1-5：Map→Record 重构，消除字符串键硬编码）
-    String code = generateAuthorizationCode();
-    String effectiveTenantId = userInfo.getTenantId() != null ? userInfo.getTenantId() : "1";
-    String effectiveScope = scope != null ? scope : "";
-    String codeChallengeMethodResolved =
-        (codeChallenge != null && !codeChallenge.isBlank())
-            ? (codeChallengeMethod != null ? codeChallengeMethod : PKCE_METHOD_S256)
-            : null;
-
-    OAuthCodeContext context = OAuthCodeContext.builder()
-        .clientId(clientId)
-        .userId(userInfo.getUserId())
-        .username(userInfo.getUsername())
-        .tenantId(effectiveTenantId)
-        .redirectUri(redirectUri)
-        .scope(effectiveScope)
-        .nonce(nonce)
-        .codeChallenge(codeChallenge)
-        .codeChallengeMethod(codeChallengeMethodResolved)
-        .state(state)
-        .build();
-
-    redisStringOps.set(CODE_KEY_PREFIX + code, context.toJson(), CODE_TTL_SECONDS);
-
-    // 存储 state → code 映射（CSRF 防护，TTL 与授权码一致）
-    if (state != null && !state.isBlank()) {
-      redisStringOps.set(STATE_KEY_PREFIX + state, code, CODE_TTL_SECONDS);
-      log.debug("OAuth2 state stored: state={}", state);
+  /**
+   * 解析 PKCE code_challenge_method：未指定且携带挑战值时默认 S256。
+   *
+   * @param request 授权请求参数
+   * @return 解析后的方法；无挑战值时返回 null
+   */
+  private String resolveCodeChallengeMethod(OAuth2AuthorizeRequest request) {
+    if (request.codeChallenge() == null || request.codeChallenge().isBlank()) {
+      return null;
     }
-
-    log.info(
-        "OAuth2 authorize: clientId={}, userId={}, code={}, pkce={}, state={}",
-        clientId,
-        userInfo.getUserId(),
-        code,
-        codeChallenge != null,
-        state != null);
-    return YdszResponse.success(code);
+    return request.codeChallengeMethod() != null ? request.codeChallengeMethod() : PKCE_METHOD_S256;
   }
 
   /**
@@ -328,39 +348,18 @@ public class OAuth2Controller {
       @RequestParam String redirectUri,
       @RequestParam(required = false) String scope) {
 
-    // 1. 认证检查
-    if (authorization == null || !authorization.startsWith("Bearer ")) {
-      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
-    }
-    String accessToken = authorization.substring(7);
-    UserInfo userInfo = tokenService.parseAccessToken(accessToken);
-    if (userInfo == null || !tokenService.validateAccessToken(accessToken)) {
-      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
-    }
+    // 1. 认证 + 客户端校验
+    UserInfo userInfo = authenticateRequest(authorization);
+    UserInfoProperties.OAuth2Client clientConfig = validateClientAndRedirect(clientId, redirectUri);
 
-    // 2. 校验 clientId 和 redirectUri
-    UserInfoProperties.OAuth2Client clientConfig = properties.getOauth2Clients().get(clientId);
-    if (clientConfig == null) {
-      throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
-    }
-    List<String> redirectUris = clientConfig.getRedirectUris();
-    if (redirectUris == null || redirectUris.isEmpty() || !redirectUris.contains(redirectUri)) {
-      throw new BusinessException(UserInfoExceptionCode.OAUTH2_REDIRECT_URI_MISMATCH);
-    }
-
-    // 3. 解析 scope 并构建显示信息
+    // 2. 解析 scope 并构建显示信息
     Set<String> requestedScopes = parseScopes(scope);
     List<Map<String, String>> scopeDetails = requestedScopes.stream()
         .sorted()
-        .map(s -> {
-          Map<String, String> detail = new HashMap<>();
-          detail.put("scope", s);
-          detail.put("displayName", SCOPE_DISPLAY_NAMES.getOrDefault(s, s));
-          return detail;
-        })
+        .map(s -> Map.of("scope", s, "displayName", SCOPE_DISPLAY_NAMES.getOrDefault(s, s)))
         .toList();
 
-    // 4. 构建响应
+    // 3. 构建响应
     Map<String, Object> consentInfo = new HashMap<>();
     consentInfo.put("user", Map.of(
         "userId", userInfo.getUserId(),
@@ -376,41 +375,60 @@ public class OAuth2Controller {
   }
 
   /**
+   * 校验 Authorization 头并解析用户信息。
+   *
+   * @param authorization Authorization 请求头
+   * @return 解析后的用户信息
+   */
+  private UserInfo authenticateRequest(String authorization) {
+    if (authorization == null || !authorization.startsWith("Bearer ")) {
+      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
+    }
+    String accessToken = authorization.substring(BEARER_PREFIX_LENGTH);
+    UserInfo userInfo = tokenService.parseAccessToken(accessToken);
+    if (userInfo == null || !tokenService.validateAccessToken(accessToken)) {
+      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
+    }
+    return userInfo;
+  }
+
+  /**
+   * 校验客户端注册状态与回调地址白名单。
+   *
+   * @param clientId 客户端 ID
+   * @param redirectUri 回调地址
+   * @return 客户端配置
+   */
+  private UserInfoProperties.OAuth2Client validateClientAndRedirect(
+      String clientId, String redirectUri) {
+    UserInfoProperties.OAuth2Client clientConfig = properties.getOauth2Clients().get(clientId);
+    if (clientConfig == null) {
+      throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
+    }
+    validateRedirectUri(clientConfig, redirectUri, clientId);
+    return clientConfig;
+  }
+
+  /**
    * 提交 OAuth2 授权同意（用户确认授权）。
    *
    * <p>用户确认授权后，生成授权码并返回（与 authorize() 逻辑一致，但作为独立的 consent 流程）。
    *
-   * @param authorization Authorization 请求头（Bearer access_token）
-   * @param clientId 客户端 ID
-   * @param redirectUri 回调地址
-   * @param state 防 CSRF 随机串（可选）
-   * @param scope 授权范围（可选）
-   * @param nonce OIDC nonce（可选）
-   * @param codeChallenge PKCE code_challenge（可选）
-   * @param codeChallengeMethod PKCE code_challenge_method（可选）
+   * @param request 授权请求参数（含 Authorization 头、clientId、redirectUri、state、scope、nonce、PKCE 参数）
    * @return OAuth2 授权码
    */
   @Audit(
       module = "OAuth2",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'OAuth2 用户授权同意: clientId=' + #clientId")
+      content = "'OAuth2 用户授权同意: clientId=' + #request.clientId()")
   @PostMapping("/consent")
   @Operation(summary = "提交授权同意", description = "用户确认授权后生成授权码")
   @RateLimit(resource = "userinfo.oauth2.consent", threshold = 10)
-  public YdszResponse<String> submitConsent(
-      @RequestHeader(HeaderConstants.AUTHORIZATION) String authorization,
-      @RequestParam String clientId,
-      @RequestParam String redirectUri,
-      @RequestParam(required = false) String state,
-      @RequestParam(required = false) String scope,
-      @RequestParam(required = false) String nonce,
-      @RequestParam(required = false) String codeChallenge,
-      @RequestParam(required = false) String codeChallengeMethod) {
+  public YdszResponse<String> submitConsent(OAuth2AuthorizeRequest request) {
 
     // 直接调用 authorize() 生成授权码
-    return authorize(authorization, clientId, redirectUri, state, scope, nonce,
-        codeChallenge, codeChallengeMethod);
+    return authorize(request);
   }
 
   /**
@@ -423,39 +441,28 @@ public class OAuth2Controller {
    *   <li>{@code refresh_token} — token 轮换：refreshToken + clientSecret，旧 refresh_token 立即失效
    * </ul>
    *
-   * @param grantType 授权类型（authorization_code / refresh_token）
-   * @param code 授权码（authorization_code 必填）
-   * @param refreshToken 刷新令牌（refresh_token 必填）
-   * @param clientId 客户端 ID
-   * @param clientSecret 客户端密钥（confidential 客户端必填）
-   * @param codeVerifier PKCE 码验证器（public 客户端 authorization_code 必填）
-   * @param state OAuth2 CSRF 防护 state 参数（可选，若 authorize 时传了 state 则必须携带）
+   * @param request OAuth2 token 请求参数（grantType / code / refreshToken / clientId / clientSecret / codeVerifier / state）
    * @return 标准 OAuth2 token 响应
    */
   @Audit(
       module = "OAuth2",
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
-      content = "'OAuth2 token 签发: grantType=' + #grantType + ', clientId=' + #clientId")
+      content = "'OAuth2 token 签发: grantType=' + #request.grantType() + ', clientId=' + #request.clientId()")
   @RateLimit(resource = "userinfo.oauth2.token", threshold = 20)
   @PostMapping("/token")
   @Operation(
       summary = "用授权码或 refresh_token 换取 Token",
       description = "支持 authorization_code（含 PKCE）与 refresh_token 两种授权类型")
-  public YdszResponse<Map<String, Object>> token(
-      @RequestParam String grantType,
-      @RequestParam(required = false) String code,
-      @RequestParam(required = false) String refreshToken,
-      @RequestParam String clientId,
-      @RequestParam(required = false) String clientSecret,
-      @RequestParam(required = false) String codeVerifier,
-      @RequestParam(required = false) String state) {
+  public YdszResponse<Map<String, Object>> token(OAuth2TokenRequest request) {
 
-    if (OAUTH2_GRANT_REFRESH_TOKEN.equals(grantType)) {
-      return refreshTokenGrant(clientId, clientSecret, refreshToken);
+    if (OAUTH2_GRANT_REFRESH_TOKEN.equals(request.grantType())) {
+      return refreshTokenGrant(request.clientId(), request.clientSecret(), request.refreshToken());
     }
-    if (OAUTH2_GRANT_AUTHORIZATION_CODE.equals(grantType)) {
-      return authorizationCodeGrant(code, clientId, clientSecret, codeVerifier, state);
+    if (OAUTH2_GRANT_AUTHORIZATION_CODE.equals(request.grantType())) {
+      return authorizationCodeGrant(
+          request.code(), request.clientId(), request.clientSecret(),
+          request.codeVerifier(), request.state());
     }
     throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
   }
@@ -476,42 +483,78 @@ public class OAuth2Controller {
       String code, String clientId, String clientSecret, String codeVerifier, String state) {
 
     // 1. P0-3: 原子读取并删除授权码（GETDEL 语义，防并发重放）
-    // 并发携带同一授权码时，仅首个请求能读到上下文，后续请求返回 null 被拒绝
     String storedContext = getAndDeleteCode(code);
     if (storedContext == null) {
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_CODE_INVALID);
     }
 
-    // P1-5：使用类型安全的 OAuthCodeContext 反序列化（替代 YdszJson.parseMap + 手动 getString）
-    OAuthCodeContext context;
-    try {
-      context = OAuthCodeContext.fromJson(storedContext);
-    } catch (Exception e) {
-      log.error("Failed to parse OAuth2 code context", e);
-      throw new BusinessException(UserInfoExceptionCode.OAUTH2_CODE_INVALID);
-    }
-
-    String storedClientId = context.clientId();
-    String userId = context.userId();
-    String username = context.username();
-    String tenantId = context.tenantId();
-    String storedCodeChallenge = context.codeChallenge();
-    String storedCodeChallengeMethod = context.codeChallengeMethod();
-    String nonce = context.nonce();
+    // P1-5：使用类型安全的 OAuthCodeContext 反序列化
+    OAuthCodeContext context = parseCodeContext(storedContext);
 
     // 2. 校验 clientId 一致性（防跨客户端重放）
-    if (!clientId.equals(storedClientId)) {
+    if (!clientId.equals(context.clientId())) {
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
     }
 
     // 3. 认证方式校验：clientSecret 或 PKCE 二选一
+    authenticateClient(context, codeVerifier, clientId, clientSecret);
+
+    // 4. State 校验（CSRF 防护，可选——仅当客户端传入 state 时执行）
+    validateState(state, code);
+
+    // 5. 授权码已在上方由 GETDEL 原子删除（一次性使用），此处无需再次 DEL
+
+    // 6. 重建 UserInfo 并签发新 token
+    UserInfo userInfo = buildTokenUserInfo(context);
+    String newAccessToken = tokenService.issueAccessToken(userInfo);
+    String refreshToken = tokenService.issueRefreshToken(userInfo);
+
+    log.info("OAuth2 token issued: clientId={}, userId={}", clientId, context.userId());
+
+    // 7. P1-3: 返回实际授权的 scope
+    String grantedScope = resolveGrantedScope(context, clientId);
+
+    // 8. P1-2: OIDC — scope 含 openid 时签发 id_token
+    Map<String, Object> tokenResponse = buildTokenResponse(
+        newAccessToken, refreshToken, grantedScope, context, userInfo);
+
+    // 9. 返回标准 OAuth2/OIDC 响应（RFC 6749 §5.1 + OIDC Core 1.0 §3.1.3.3）
+    return YdszResponse.success(tokenResponse);
+  }
+
+  /**
+   * 反序列化授权码上下文。
+   *
+   * @param storedContext Redis 中存储的 JSON 上下文
+   * @return 类型安全的授权码上下文
+   */
+  private OAuthCodeContext parseCodeContext(String storedContext) {
+    try {
+      return OAuthCodeContext.fromJson(storedContext);
+    } catch (Exception e) {
+      log.error("Failed to parse OAuth2 code context", e);
+      throw new BusinessException(UserInfoExceptionCode.OAUTH2_CODE_INVALID);
+    }
+  }
+
+  /**
+   * 客户端认证：PKCE 验证 code_verifier，传统流程校验 clientSecret。
+   *
+   * @param context 授权码上下文
+   * @param codeVerifier PKCE 码验证器
+   * @param clientId 客户端 ID
+   * @param clientSecret 客户端密钥
+   */
+  private void authenticateClient(
+      OAuthCodeContext context, String codeVerifier, String clientId, String clientSecret) {
+    String storedCodeChallenge = context.codeChallenge();
     if (storedCodeChallenge != null && !storedCodeChallenge.isBlank()) {
       // PKCE 流程：验证 code_verifier
       if (codeVerifier == null || codeVerifier.isBlank()) {
         throw new BusinessException(UserInfoExceptionCode.OAUTH2_PKCE_VERIFIER_INVALID);
       }
       if (!verifyPkceCodeVerifier(
-          codeVerifier, storedCodeChallenge, storedCodeChallengeMethod)) {
+          codeVerifier, storedCodeChallenge, context.codeChallengeMethod())) {
         throw new BusinessException(UserInfoExceptionCode.OAUTH2_PKCE_VERIFIER_INVALID);
       }
     } else {
@@ -520,58 +563,91 @@ public class OAuth2Controller {
         throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
       }
     }
+  }
 
-    // 4. State 校验（CSRF 防护，可选——仅当客户端传入 state 时执行）
-    if (state != null && !state.isBlank()) {
-      String storedCode = redisStringOps.get(STATE_KEY_PREFIX + state, String.class);
-      if (storedCode == null || !storedCode.equals(code)) {
-        log.warn("OAuth2 state validation failed: state={}, code={}", state, code);
-        throw new BusinessException(UserInfoExceptionCode.OAUTH2_STATE_INVALID);
-      }
-      // 校验通过后删除 state 标记（一次性使用）
-      redisStringOps.del(STATE_KEY_PREFIX + state);
-      log.debug("OAuth2 state validated and consumed: state={}", state);
+  /**
+   * 校验并消费 state（一次性使用）。
+   *
+   * @param state CSRF state 参数（可为 null）
+   * @param code 授权码
+   */
+  private void validateState(String state, String code) {
+    if (state == null || state.isBlank()) {
+      return;
     }
+    String storedCode = redisStringOps.get(STATE_KEY_PREFIX + state, String.class);
+    if (storedCode == null || !storedCode.equals(code)) {
+      log.warn("OAuth2 state validation failed: state={}, code={}", state, code);
+      throw new BusinessException(UserInfoExceptionCode.OAUTH2_STATE_INVALID);
+    }
+    // 校验通过后删除 state 标记（一次性使用）
+    redisStringOps.del(STATE_KEY_PREFIX + state);
+    log.debug("OAuth2 state validated and consumed: state={}", state);
+  }
 
-    // 5. 授权码已在上方由 GETDEL 原子删除（一次性使用），此处无需再次 DEL
-
-    // 6. 重建 UserInfo 并签发新 token
+  /**
+   * 从授权码上下文重建 UserInfo。
+   *
+   * @param context 授权码上下文
+   * @return 用户信息
+   */
+  private UserInfo buildTokenUserInfo(OAuthCodeContext context) {
     UserInfo userInfo = new UserInfo();
-    userInfo.setUserId(userId);
-    userInfo.setUsername(username);
-    userInfo.setTenantId(tenantId != null ? tenantId : "1");
+    userInfo.setUserId(context.userId());
+    userInfo.setUsername(context.username());
+    userInfo.setTenantId(context.tenantId() != null ? context.tenantId() : "1");
+    return userInfo;
+  }
 
-    String newAccessToken = tokenService.issueAccessToken(userInfo);
-    String refreshToken = tokenService.issueRefreshToken(userInfo);
-
-    log.info("OAuth2 token issued: clientId={}, userId={}", clientId, userId);
-
-    // 7. P1-3: 返回实际授权的 scope（授权码上下文中声明的 scope；未声明时回落客户端注册范围）
+  /**
+   * 解析实际授予的 scope：授权码上下文优先，未声明时回落客户端注册范围。
+   *
+   * @param context 授权码上下文
+   * @param clientId 客户端 ID
+   * @return 授予的 scope
+   */
+  private String resolveGrantedScope(OAuthCodeContext context, String clientId) {
     String grantedScope = context.scope();
     if (grantedScope == null || grantedScope.isBlank()) {
       grantedScope = resolveGrantedScope(clientId);
     }
+    return grantedScope;
+  }
 
-    // 8. P1-2: OIDC — scope 含 openid 时签发 id_token（OpenID Connect Core 1.0）
+  /**
+   * 构建标准 OAuth2 token 响应（scope 含 openid 时附加 id_token）。
+   *
+   * @param accessToken 访问令牌
+   * @param refreshToken 刷新令牌
+   * @param grantedScope 授予的 scope
+   * @param context 授权码上下文（含 nonce）
+   * @param userInfo 用户信息
+   * @param clientId 客户端 ID
+   * @return token 响应 Map
+   */
+  private Map<String, Object> buildTokenResponse(
+      String accessToken,
+      String refreshToken,
+      String grantedScope,
+      OAuthCodeContext context,
+      UserInfo userInfo) {
     Map<String, Object> tokenResponse = new HashMap<>();
-    tokenResponse.put("access_token", newAccessToken);
+    tokenResponse.put("access_token", accessToken);
     tokenResponse.put("refresh_token", refreshToken);
     tokenResponse.put("token_type", "Bearer");
     tokenResponse.put("expires_in", properties.getTokenTtlSeconds());
     tokenResponse.put("scope", grantedScope);
 
     if (grantedScope.contains(SCOPE_OPENID)) {
-      String idToken = tokenService.issueIdToken(userInfo, nonce, clientId);
+      String idToken = tokenService.issueIdToken(userInfo, context.nonce(), context.clientId());
       if (idToken != null) {
         tokenResponse.put("id_token", idToken);
-        log.info("OIDC id_token issued: clientId={}, userId={}", clientId, userId);
+        log.info("OIDC id_token issued: clientId={}, userId={}", context.clientId(), context.userId());
       } else {
-        log.warn("OIDC id_token issuance failed: clientId={}, userId={}", clientId, userId);
+        log.warn("OIDC id_token issuance failed: clientId={}, userId={}", context.clientId(), context.userId());
       }
     }
-
-    // 9. 返回标准 OAuth2/OIDC 响应（RFC 6749 §5.1 + OIDC Core 1.0 §3.1.3.3）
-    return YdszResponse.success(tokenResponse);
+    return tokenResponse;
   }
 
   /**
@@ -743,7 +819,7 @@ public class OAuth2Controller {
     if (authorization == null || !authorization.startsWith("Bearer ")) {
       throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
     }
-    String accessToken = authorization.substring(7);
+    String accessToken = authorization.substring(BEARER_PREFIX_LENGTH);
     UserInfo userInfo = tokenService.parseAccessToken(accessToken);
     if (userInfo == null || !tokenService.validateAccessToken(accessToken)) {
       throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);

@@ -1,7 +1,6 @@
 package com.njydsz.workflow.server.engine;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -123,8 +122,12 @@ public class BpmnNodeParser {
       StringBuilder perm = new StringBuilder();
       for (int i = 0; i < users.length; i++) {
         String u = users[i].trim();
-        if (u.isEmpty()) continue;
-        if (perm.length() > 0) perm.append(",");
+        if (u.isEmpty()) {
+          continue;
+        }
+        if (perm.length() > 0) {
+          perm.append(",");
+        }
         // 已带前缀则原样保留，否则补 user:
         if (u.startsWith("user:")
             || u.startsWith("role:")
@@ -148,8 +151,12 @@ public class BpmnNodeParser {
       StringBuilder perm = new StringBuilder();
       for (int i = 0; i < groups.length; i++) {
         String g = groups[i].trim();
-        if (g.isEmpty()) continue;
-        if (perm.length() > 0) perm.append(",");
+        if (g.isEmpty()) {
+          continue;
+        }
+        if (perm.length() > 0) {
+          perm.append(",");
+        }
         if (g.startsWith("role:") || g.startsWith("dept:") || g.startsWith("${")) {
           perm.append(g);
         } else {
@@ -177,23 +184,42 @@ public class BpmnNodeParser {
 
     // 把所有扩展属性塞入 ext JSON（统一持久化）
     Map<String, Object> ext = bpmnElementHelper.readOrInitExt(node);
-    if (formKey != null && !formKey.isBlank()) ext.put("formKey", formKey);
-    if (dueDate != null && !dueDate.isBlank()) ext.put("dueDate", dueDate);
-    if (async != null && !async.isBlank()) ext.put("async", Boolean.parseBoolean(async.trim()));
-    if (assigneeType != null && !assigneeType.isBlank())
-      ext.put("assigneeType", assigneeType.trim());
-    if (performType != null && !performType.isBlank()) ext.put("performType", performType.trim());
-    if (approveCountStr != null && !approveCountStr.isBlank())
-      ext.put("approveCount", approveCountStr.trim());
-    if (approveRateStr != null && !approveRateStr.isBlank())
-      ext.put("approveRate", approveRateStr.trim());
-    if (weightStr != null && !weightStr.isBlank()) ext.put("weight", weightStr.trim());
-    if (timeoutStrategy != null && !timeoutStrategy.isBlank())
-      ext.put("timeoutStrategy", timeoutStrategy.trim());
-    if (timeout != null && !timeout.isBlank()) ext.put("timeout", timeout.trim());
-    if (escalateUser != null && !escalateUser.isBlank())
-      ext.put("escalateUser", escalateUser.trim());
-    if (skipAnyNode != null && !skipAnyNode.isBlank()) ext.put("skipAnyNode", skipAnyNode.trim());
+    if (formKey != null && !formKey.isBlank()) {
+      ext.put("formKey", formKey);
+    }
+    if (dueDate != null && !dueDate.isBlank()) {
+      ext.put("dueDate", dueDate);
+    }
+    if (async != null && !async.isBlank()) {
+      ext.put("async", Boolean.parseBoolean(async.trim()));
+    }
+    if (assigneeType != null && !assigneeType.isBlank()) {
+        ext.put("assigneeType", assigneeType.trim());
+    }
+    if (performType != null && !performType.isBlank()) {
+      ext.put("performType", performType.trim());
+    }
+    if (approveCountStr != null && !approveCountStr.isBlank()) {
+        ext.put("approveCount", approveCountStr.trim());
+    }
+    if (approveRateStr != null && !approveRateStr.isBlank()) {
+        ext.put("approveRate", approveRateStr.trim());
+    }
+    if (weightStr != null && !weightStr.isBlank()) {
+      ext.put("weight", weightStr.trim());
+    }
+    if (timeoutStrategy != null && !timeoutStrategy.isBlank()) {
+        ext.put("timeoutStrategy", timeoutStrategy.trim());
+    }
+    if (timeout != null && !timeout.isBlank()) {
+      ext.put("timeout", timeout.trim());
+    }
+    if (escalateUser != null && !escalateUser.isBlank()) {
+        ext.put("escalateUser", escalateUser.trim());
+    }
+    if (skipAnyNode != null && !skipAnyNode.isBlank()) {
+      ext.put("skipAnyNode", skipAnyNode.trim());
+    }
 
     // P0-2: 网关默认出边 — 存入 node.ext.defaultFlowId 供推进器使用
     if (defaultFlowId != null && !defaultFlowId.isBlank()) {
@@ -204,8 +230,12 @@ public class BpmnNodeParser {
     if (priorityStr != null && !priorityStr.isBlank()) {
       try {
         int p = Integer.parseInt(priorityStr.trim());
-        if (p < 1) p = 1;
-        if (p > 100) p = 100;
+        if (p < 1) {
+          p = 1;
+        }
+        if (p > 100) {
+          p = 100;
+        }
         ext.put("priority", p);
       } catch (NumberFormatException ignore) {
         // ignore invalid priority
@@ -258,7 +288,9 @@ public class BpmnNodeParser {
         continue;
       }
       String local = e.getLocalName();
-      if (local == null) local = e.getNodeName();
+      if (local == null) {
+        local = e.getNodeName();
+      }
       switch (local.toLowerCase()) {
         case "timereventdefinition" -> {
           hasTimer = true;
@@ -334,7 +366,9 @@ public class BpmnNodeParser {
         continue;
       }
       String local = e.getLocalName();
-      if (local == null) local = e.getNodeName();
+      if (local == null) {
+        local = e.getNodeName();
+      }
       // 收集所有自定义属性为键值对
       Map<String, String> attrs = new HashMap<>();
       if (e.hasAttributes()) {

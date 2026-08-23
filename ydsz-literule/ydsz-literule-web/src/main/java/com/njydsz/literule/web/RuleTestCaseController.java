@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -84,8 +83,9 @@ public class RuleTestCaseController {
   /**
    * 保存测试用例
    *
-   * @param testCase 测试用例
+
    * @return 保存后的测试用例
+      * @param dto 参数说明
    */
   @Idempotent(key = "ruleAdmin:saveTestCase", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -126,6 +126,7 @@ public class RuleTestCaseController {
    *
    * @param request 请求体，包含 ids（测试用例 ID 列表，为空则执行全部）
    * @return 回归测试报告（含每个用例的 pass/fail + 通过率统计）
+      * @param dto 参数说明
    */
   @Idempotent(key = "ruleAdmin:batchRunTestCases", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(

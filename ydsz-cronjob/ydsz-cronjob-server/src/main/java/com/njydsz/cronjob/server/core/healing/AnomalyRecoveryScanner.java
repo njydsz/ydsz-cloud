@@ -21,17 +21,17 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
-import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.domain.vo.JobNodeVO;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.config.AnomalyRecoveryConfig;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.LockKeyUtil;
 import com.njydsz.cronjob.server.core.alert.AlertContext;
 import com.njydsz.cronjob.server.core.alert.AlertTrigger;
 import com.njydsz.cronjob.server.core.alert.AlertType;
+import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
-import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
@@ -107,7 +107,8 @@ public class AnomalyRecoveryScanner {
     AnomalyRecoveryConfig config = cronjobProperties.getAnomalyRecovery();
     if (cronjobProperties.getLeader().isEnabled()) {
       log.info(
-          "[AnomalyRecovery] 初始化完成, role={} scanInterval={}s stuckThreshold={}s failoverEnabled={} selfHealingEnabled={}",
+          "[AnomalyRecovery] 初始化完成, role={} scanInterval={}s stuckThreshold={}s "
+              + "failoverEnabled={} selfHealingEnabled={}",
           leaderRole,
           config.getScanIntervalSeconds(),
           config.getStuckThresholdSeconds(),

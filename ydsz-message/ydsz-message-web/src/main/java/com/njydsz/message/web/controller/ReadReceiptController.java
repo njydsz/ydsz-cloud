@@ -70,7 +70,7 @@ public class ReadReceiptController {
         log.warn("[ReadReceipt] 重定向失败: {}", e.getMessage());
       }
     } else {
-      response.setStatus(404);
+      response.setStatus(HttpStatus.NOT_FOUND.value());
     }
   }
 }

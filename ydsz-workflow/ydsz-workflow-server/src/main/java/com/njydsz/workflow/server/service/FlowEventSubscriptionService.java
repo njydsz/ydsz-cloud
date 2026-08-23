@@ -51,13 +51,30 @@ public interface FlowEventSubscriptionService {
    */
   int throwError(String tenantId, String instanceId, String errorCode, String payload);
 
-  /** 取消某 userTask 关联的所有边界事件订阅（userTask 完成时调用） */
+  /**
+   * 取消某 userTask 关联的所有边界事件订阅（userTask 完成时调用）
+   *
+   * @param boundaryTaskId 参数说明
+   * @param reason 参数说明
+   * @return 返回值说明
+   */
   int cancelByTask(String boundaryTaskId, String reason);
 
-  /** 取消某实例所有 WAITING 订阅（实例终止/驳回时调用） */
+  /**
+   * 取消某实例所有 WAITING 订阅（实例终止/驳回时调用）
+   *
+   * @param instanceId 参数说明
+   * @param reason 参数说明
+   * @return 返回值说明
+   */
   int cancelByInstance(String instanceId, String reason);
 
-  /** 查询实例的事件订阅列表（返回 DO，供 Service 层内部使用） */
+  /**
+   * 查询实例的事件订阅列表（返回 DO，供 Service 层内部使用）
+   *
+   * @param instanceId 参数说明
+   * @return 返回值说明
+   */
   List<FlowEventSubscriptionDO> listByInstance(String instanceId);
 
   /**
@@ -69,6 +86,11 @@ public interface FlowEventSubscriptionService {
    */
   List<FlowEventSubscriptionVO> listByInstanceVO(String instanceId);
 
-  /** 判断节点是否为事件捕获节点（ext JSON 中包含 eventCatch: true） */
+  /**
+   * 判断节点是否为事件捕获节点（ext JSON 中包含 eventCatch: true）
+   *
+   * @param node 参数说明
+   * @return 返回值说明
+   */
   boolean isEventCatchNode(FlowNodeDO node);
 }

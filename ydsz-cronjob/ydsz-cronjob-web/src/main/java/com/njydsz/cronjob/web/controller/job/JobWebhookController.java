@@ -5,9 +5,8 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,14 +15,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -153,7 +151,7 @@ public class JobWebhookController {
    *
    * <p>按 created_at 倒序排列。eventType/jobKey 为可选过滤条件，二者可组合（AND 关系）。
    *
-   * @param page 页码（默认 1）
+   * @param pageNum 页码（默认 1）
    * @param size 每页条数（默认 20）
    * @param eventType 事件类型过滤（可选）
    * @param jobKey 任务 KEY 过滤（可选）
@@ -168,7 +166,8 @@ public class JobWebhookController {
       @RequestParam(required = false) String jobKey) {
     // 通过 Repository 分页查询（封装了 MyBatis-Plus Page 和 Entity→VO 转换）
     JobRepository.PageResult<JobWebhookVO> result = webhookRepository.pageBy(pageNum, size, eventType, jobKey);
-    return YdszResponse.success(PageResponse.success((long) pageNum, (long) size, result.getTotal(), result.getRecords()));
+    return YdszResponse.success(
+        PageResponse.success((long) pageNum, (long) size, result.getTotal(), result.getRecords()));
   }
 
   /**

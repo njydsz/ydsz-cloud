@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.nextwiki.domain.dto.TagDTO;
+import com.njydsz.nextwiki.domain.repository.TagRepository;
 import com.njydsz.nextwiki.domain.service.TagDomainService;
 import com.njydsz.nextwiki.domain.vo.TagVO;
 
@@ -27,6 +28,9 @@ public class TagApplicationService {
   /** 标签领域服务 */
   private final TagDomainService tagDomainService;
 
+  /** 标签仓储 */
+  private final TagRepository tagRepository;
+
   /**
    * 创建标签（名称 + 颜色）。
    *
@@ -41,7 +45,17 @@ public class TagApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public TagDTO createTag(String name, String color, String userId) {
-    return tagDomainService.createTag(name, color, userId, null);
+    // 领域服务校验并构建标签（含名称非空校验、ID 生成）
+    TagVO tag = tagDomainService.buildTag(name, color, userId);
+    // 组装 DTO 并持久化（仓储只接受领域 DTO）
+    TagDTO dto = new TagDTO();
+    dto.setId(tag.getId());
+    dto.setName(tag.getName());
+    dto.setColor(tag.getColor());
+    dto.setCreatedBy(tag.getCreatedBy());
+    tagRepository.save(dto);
+    log.info("[TagApplicationService] 创建标签: id={}, name={}, userId={}", tag.getId(), tag.getName(), userId);
+    return dto;
   }
 
   /**

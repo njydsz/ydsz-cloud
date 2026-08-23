@@ -3,6 +3,7 @@ package com.njydsz.common.auth.config;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -130,8 +131,8 @@ public class AuthFilterIgnoreProperties {
    *
    * @return 服务名称集合（不可变）
    */
-  public java.util.Set<String> getResolvedAuthFilterIgnoreServiceNames() {
-    return java.util.Set.copyOf(authFilterIgnoreServiceNames);
+  public Set<String> getResolvedAuthFilterIgnoreServiceNames() {
+    return Set.copyOf(authFilterIgnoreServiceNames);
   }
 
   /**
@@ -139,8 +140,8 @@ public class AuthFilterIgnoreProperties {
    *
    * @return URL 集合（不可变）
    */
-  public java.util.Set<String> getResolvedCommonIgnoreUrls() {
-    return java.util.Set.copyOf(commonIgnoreUrls);
+  public Set<String> getResolvedCommonIgnoreUrls() {
+    return Set.copyOf(commonIgnoreUrls);
   }
 
   /**
@@ -148,7 +149,7 @@ public class AuthFilterIgnoreProperties {
    *
    * @return URL 集合（不可变）
    */
-  public java.util.Set<String> getResolvedSecurityExcludeUrls() {
-    return java.util.Set.copyOf(securityExcludeUrls);
+  public Set<String> getResolvedSecurityExcludeUrls() {
+    return Set.copyOf(securityExcludeUrls);
   }
 }

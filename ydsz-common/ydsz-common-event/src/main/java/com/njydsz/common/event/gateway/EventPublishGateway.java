@@ -22,27 +22,18 @@ public interface EventPublishGateway {
    *
    * @param message Outbox 消息
    * @return true 投递成功，false 投递失败（将触发重试）
-   * @throws Exception 投递异常
+   * @throws Throwable 投递异常
    */
-  boolean publish(OutboxMessage message) throws Exception;
+  boolean publish(OutboxMessage message) throws Throwable;
 
-  /**
-   * 批量投递消息到消息队列
-   *
-   * <p>实现类可利用 MQ 的批量发送能力提升吞吐量。 默认实现逐条调用 {@link #publish}，支持批量发送的实现类应覆盖此方法。
-   *
-   * @param messages Outbox 消息列表
-   * @return 每条消息的投递结果（true=成功，false=失败），顺序与输入一致
-   * @throws Exception 投递异常
-   */
   /**
    * 批量投递消息到消息队列（默认逐条调用 publish）
    *
    * @param messages Outbox 消息列表
    * @return 每条消息的投递结果（true=成功，false=失败），顺序与输入一致
-   * @throws Exception 投递异常
+   * @throws Throwable 投递异常
    */
-  default List<Boolean> publishBatch(List<OutboxMessage> messages) throws Exception {
+  default List<Boolean> publishBatch(List<OutboxMessage> messages) throws Throwable {
     return messages.stream()
         .map(
             msg -> {

@@ -25,8 +25,8 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -61,7 +61,8 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
  *       /activate}（激活） / {@code /recall}（撤回） / {@code /rollback}（回滚） / {@code /resubmit}（驳回后快速重审）
  *   <li><b>审计与时间线</b>：{@code GET /instance/{id}/auditTrail} / {@code /timeline} / {@code /diagram} / {@code
  *       /replay}
- *   <li><b>加签历史</b>：{@code GET /countersign/instance/{instanceId}} / {@code /countersign/task/{taskId}} / {@code /myInitiated}
+ *   <li><b>加签历史</b>：{@code GET /countersign/instance/{instanceId}} / {@code /countersign/task/{taskId}} / {@code
+ *       /myInitiated}
  *   <li><b>分页查询</b>：{@code GET /instance/page} / {@code /my} / {@code /all}
  *   <li><b>变量读写</b>：{@code GET /instance/{id}/variables} / {@code POST /instance/{id}/variables}
  *   <li><b>催办</b>：{@code POST /instance/{id}/urge} / {@code POST /instance/{id}/urge/node}
@@ -296,6 +297,12 @@ public class FlowInstanceController {
    *   <li>NEW_INSTANCE：任意终态（COMPLETED/REJECTED/TERMINATED/ROLLED_BACK）均可重做， 创建全新实例，复用原实例的
    *       flowCode/businessType/businessId/initiator，合并变量。
    * </ul>
+   *
+   * @param id 流程实例 ID
+   * @param comment 重审意见（可选）
+   * @param redoMode 重做模式（RESTART / NEW_INSTANCE，默认 RESTART）
+   * @param variables 合并变量（可选）
+   * @return 新实例 ID
    */
   @Idempotent(key = "ydsz:workflow:instance:resubmit", ttlSeconds = 5)
   @PostMapping("/instance/{id}/resubmit")
@@ -521,6 +528,11 @@ public class FlowInstanceController {
    * P2-3 (GAP-13): 节点级催办 — 仅催办指定节点（nodeCode）的待办任务
    *
    * <p>nodeCode 不传时退化为实例级催办。
+   *
+   * @param id 流程实例 ID
+   * @param nodeCode 目标节点编码（可选，不传退化为实例级催办）
+   * @param comment 催办留言（可选）
+   * @return 被催办的用户 ID 列表
    */
   @Idempotent(key = "ydsz:workflow:instance:urgeByNode", ttlSeconds = 5)
   @PostMapping("/instance/{id}/urge/node")

@@ -5,9 +5,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.googlecode.aviator.AviatorEvaluator;
 import com.googlecode.aviator.AviatorEvaluatorInstance;
+import com.googlecode.aviator.Expression;
 import com.googlecode.aviator.Feature;
 import com.googlecode.aviator.Options;
-import com.googlecode.aviator.Expression;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -61,9 +61,9 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
 
   /**
    * 构造安全加固的 Aviator 求值器实例。
-   *
+   * 
    * <p>禁用反射特性（NewInstance/Module），确保表达式无法访问任意 Java 类。
-   */
+   *   */
   public AviatorExpressionEvaluator() {
     this.instance = AviatorEvaluator.newInstance();
     // 安全加固：禁用反射特性，防止表达式注入调用任意 Java 方法

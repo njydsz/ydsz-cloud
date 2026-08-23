@@ -1,11 +1,12 @@
 package com.njydsz.system.server.schedule;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.system.domain.repository.TenantRepository;
+
+
 
 /**
  * 租户到期自动锁定调度任务（P1-3 多租户能力补课）。

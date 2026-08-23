@@ -50,7 +50,7 @@ import com.njydsz.common.json.parser.JsonParserUtil;
  * {@code <resultMap id="BaseResultMap" type="Product">}
  *     {@code <result column="skus" property="skus" javaType="java.util.List"}
  *                  typeHandler="com.njydsz.common.jdbc.handler.ListTypeHandler"/>
- * {@code </resultMap>}
+ * {@code < /resultMap>}
  *
  * // 业务代码手动注册有参构造处理器（推荐用于 List&lt;&gt; 复杂对象场景）
  * {@code

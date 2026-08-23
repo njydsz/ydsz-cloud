@@ -25,13 +25,30 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
  */
 public interface ClusterRateLimiter {
 
-  /** 集群限流决策 */
+  /**
+   * 集群限流决策。
+   *
+   * @param rule 限流规则
+   * @param context 限流上下文
+   * @return 限流决策
+   */
   RateLimitDecision tryAcquire(RateLimitRule rule, RateLimitContext context);
 
-  /** 获取支持的模式 */
+  /**
+   * 获取支持的模式。
+   *
+   * @return 集群限流模式
+   */
   RateLimitMode getMode();
 
-  /** 批量尝试（批量接口可一次判定多个请求） */
+  /**
+   * 批量尝试（批量接口可一次判定多个请求）。
+   *
+   * @param rule 限流规则
+   * @param context 限流上下文
+   * @param count 批量请求数
+   * @return 每个请求对应的限流决策列表
+   */
   default List<RateLimitDecision> tryAcquireBatch(
       RateLimitRule rule, RateLimitContext context, int count) {
     throw new UnsupportedOperationException("batch acquire not supported");

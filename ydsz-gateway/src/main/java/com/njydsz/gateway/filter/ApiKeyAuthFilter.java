@@ -1,17 +1,15 @@
 package com.njydsz.gateway.filter;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 import jakarta.annotation.PostConstruct;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

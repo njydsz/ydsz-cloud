@@ -19,6 +19,11 @@ public final class LogEventSerializer {
   private LogEventSerializer() {}
 
   /** 序列化为 JSON */
+  /**
+   * to json。
+   * @param event 参数
+   * @return 结果
+   */
   public static String toJson(LogEvent event) {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("@timestamp", event.getTimestamp() != null ? event.getTimestamp().toString() : null);

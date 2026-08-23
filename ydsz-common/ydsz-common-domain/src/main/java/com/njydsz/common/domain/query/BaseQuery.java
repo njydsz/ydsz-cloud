@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import static lombok.AccessLevel.PROTECTED;
 
 import static lombok.AccessLevel.PROTECTED;
 

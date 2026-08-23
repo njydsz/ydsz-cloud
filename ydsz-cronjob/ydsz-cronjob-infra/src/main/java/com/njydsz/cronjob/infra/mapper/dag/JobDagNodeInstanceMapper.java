@@ -38,7 +38,12 @@ import com.njydsz.cronjob.infra.entity.dag.JobDagNodeInstance;
 @Mapper
 public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance> {
 
-  /** 根据 DAG 实例 ID 查询所有节点实例。 */
+  /**
+   * 根据 DAG 实例 ID 查询所有节点实例。
+   *
+   * @param dagInstanceId 参数说明
+   * @return 返回值说明
+   */
   @Select(
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
           + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
@@ -51,9 +56,13 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
 
   /**
    * 根据 DAG 实例 ID 和任务 ID 查询节点实例（唯一）。
-   *
+   * 
    * <p>注意：LOOP 场景下同一 (dagInstanceId, jobId) 可能存在多个实例 （原始 body 节点 + N 个 iter 实例），本方法仅返回其中一条（不确定）。
    * LOOP 相关的批量查询请使用 {@link #selectAllByDagInstanceAndJob}。
+   *
+   * @param dagInstanceId 参数说明
+   * @param jobId 参数说明
+   * @return 返回值说明
    */
   @Select(
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
@@ -67,15 +76,19 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
 
   /**
    * P0-4: 根据 DAG 实例 ID 和任务 ID 查询全部节点实例（含 LOOP iter 实例）。
-   *
+   * 
    * <p>LOOP 场景下同一 (dagInstanceId, jobId) 会存在多个实例：
-   *
+   * 
    * <ul>
-   *   <li>原始 body 节点实例（jobKey 无后缀，由 doExecute 创建）
-   *   <li>N 个 iter 实例（jobKey 带 {@code #loop<i>} 后缀，LOOP 节点已废弃，保留注释仅兼容旧数据）
+   * <li>原始 body 节点实例（jobKey 无后缀，由 doExecute 创建）
+   * <li>N 个 iter 实例（jobKey 带 {@code #loop} 后缀，LOOP 节点已废弃，保留注释仅兼容旧数据）
    * </ul>
-   *
+   * 
    * 本方法返回全部实例，供 LOOP iter 完成处理逻辑聚合判断使用。
+   *
+   * @param dagInstanceId 参数说明
+   * @param jobId 参数说明
+   * @return 返回值说明
    */
   @Select(
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
@@ -112,14 +125,31 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
           + "ORDER BY created_at ASC")
   List<JobDagNodeInstance> selectActiveByJobId(@Param("jobId") String jobId);
 
-  /** 标记节点开始执行（PENDING → RUNNING）。 */
+  /**
+   * 标记节点开始执行（PENDING → RUNNING）。
+   *
+   * @param id 参数说明
+   * @param startedAt 参数说明
+   * @return 返回值说明
+   */
   @Update(
       "UPDATE ydsz_job_dag_node_instance SET node_status = 'RUNNING', started_at = #{startedAt}, "
           + "       updated_at = CURRENT_TIMESTAMP "
           + "WHERE id = #{id} AND node_status = 'PENDING' AND deleted = 0")
   int markRunning(@Param("id") String id, @Param("startedAt") LocalDateTime startedAt);
 
-  /** 标记节点执行结束（SUCCESS / FAILED / SKIPPED）。 */
+  /**
+   * 标记节点执行结束（SUCCESS / FAILED / SKIPPED）。
+   *
+   * @param id 参数说明
+   * @param finalStatus 参数说明
+   * @param finishedAt 参数说明
+   * @param durationMs 参数说明
+   * @param resultJson 参数说明
+   * @param errorMessage 参数说明
+   * @param logId 参数说明
+   * @return 返回值说明
+   */
   @Update(
       "UPDATE ydsz_job_dag_node_instance SET node_status = #{finalStatus}, "
           + "       finished_at = #{finishedAt}, duration_ms = #{durationMs}, "
@@ -135,14 +165,24 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
       @Param("errorMessage") String errorMessage,
       @Param("logId") String logId);
 
-  /** 标记节点为 SKIPPED（前置失败且 FAIL_FAST 时跳过）。 */
+  /**
+   * 标记节点为 SKIPPED（前置失败且 FAIL_FAST 时跳过）。
+   *
+   * @param id 参数说明
+   * @return 返回值说明
+   */
   @Update(
       "UPDATE ydsz_job_dag_node_instance SET node_status = 'SKIPPED', "
           + "       updated_at = CURRENT_TIMESTAMP "
           + "WHERE id = #{id} AND node_status = 'PENDING' AND deleted = 0")
   int markSkipped(@Param("id") String id);
 
-  /** 标记节点重试（FAILED → RETRYING → PENDING，由 DAG 执行器重新触发）。 */
+  /**
+   * 标记节点重试（FAILED → RETRYING → PENDING，由 DAG 执行器重新触发）。
+   *
+   * @param id 参数说明
+   * @return 返回值说明
+   */
   @Update(
       "UPDATE ydsz_job_dag_node_instance SET node_status = 'PENDING', "
           + "       retry_count = retry_count + 1, "
@@ -153,8 +193,12 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
 
   /**
    * 根据 DAG 实例 ID 和任务 KEY 查询节点实例（唯一，按 KEY 精确查找）。
-   *
+   * 
    * <p>与 {@link #selectByDagInstanceAndJob} 区别：本方法按 jobKey 而非 jobId 查找。
+   *
+   * @param dagInstanceId 参数说明
+   * @param jobKey 参数说明
+   * @return 返回值说明
    */
   @Select(
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
@@ -167,7 +211,13 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
   JobDagNodeInstance selectByDagInstanceAndJobKey(
       @Param("dagInstanceId") String dagInstanceId, @Param("jobKey") String jobKey);
 
-  /** 根据 DAG 实例 ID 和节点状态查询节点实例列表。 */
+  /**
+   * 根据 DAG 实例 ID 和节点状态查询节点实例列表。
+   *
+   * @param dagInstanceId 参数说明
+   * @param status 参数说明
+   * @return 返回值说明
+   */
   @Select(
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
           + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
@@ -179,7 +229,11 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
   List<JobDagNodeInstance> selectByDagInstanceIdAndStatus(
       @Param("dagInstanceId") String dagInstanceId, @Param("status") String status);
 
-  /** 批量插入节点实例。 */
+  /**
+   * 批量插入节点实例。
+   *
+   * @param nodes 节点实例列表
+   */
   default void insertBatch(List<JobDagNodeInstance> nodes) {
     if (nodes == null || nodes.isEmpty()) {
       return;

@@ -43,8 +43,8 @@
         <maven.compiler.target>21</maven.compiler.target>
         <!--mvn-->
         <maven.version>3.6.3</maven.version>
-        <!-- Checkstyle 全局开关：true = 打包/构建时跳过 checkstyle 校验；需要恢复检查时改回 false -->
-        <checkstyle.skip>true</checkstyle.skip>
+        <!-- Checkstyle 全局开关：false = 构建时强制执行 checkstyle 校验（云顶规范红线）；临时跳过需显式 -Dcheckstyle.skip=true -->
+        <checkstyle.skip>false</checkstyle.skip>
         <!--Spring-->
         <spring-boot.version>4.1.0</spring-boot.version>
         <spring-cloud.version>2025.1.2</spring-cloud.version>

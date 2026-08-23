@@ -25,20 +25,38 @@ public class ShareAccessLogDomainService {
   /**
    * 构建访问日志条目（纯领域逻辑，不执行持久化）。
    *
-   * @param shareLinkId 分享链接 ID
+   * @param shareId 分享链接 ID
+   * @param shareCode 分享码
+   * @param fileNodeId 文件节点 ID
+   * @param visitorId 访问者 ID（可为 null，匿名访问为 null）
    * @param visitorIp 访问者 IP
    * @param visitorAgent 访问者 User-Agent
    * @param accessType 访问类型（VIEW / DOWNLOAD）
+   * @param accessStatus 访问状态（SUCCESS / FAILED）
+   * @param failReason 失败原因（访问成功时为 null）
    * @return 构建完成的 {@link ShareAccessLogDTO} 实例（未持久化）
    */
   public ShareAccessLogDTO buildAccessLog(
-      String shareId, String visitorIp, String userAgent, String accessType) {
+      String shareId,
+      String shareCode,
+      String fileNodeId,
+      String visitorId,
+      String visitorIp,
+      String visitorAgent,
+      String accessType,
+      String accessStatus,
+      String failReason) {
     ShareAccessLogDTO logEntry = new ShareAccessLogDTO();
     logEntry.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     logEntry.setShareId(shareId);
+    logEntry.setShareCode(shareCode);
+    logEntry.setFileNodeId(fileNodeId);
+    logEntry.setVisitorId(visitorId);
     logEntry.setVisitorIp(visitorIp);
-    logEntry.setUserAgent(userAgent);
+    logEntry.setUserAgent(visitorAgent);
     logEntry.setAccessType(accessType);
+    logEntry.setAccessStatus(accessStatus);
+    logEntry.setFailReason(failReason);
     return logEntry;
   }
 

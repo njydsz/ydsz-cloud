@@ -73,50 +73,77 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
   public void save(SocialClientDTO dto) {
     SocialClientDO existing = mapper.selectByPlatform(dto.getPlatform().toUpperCase());
     if (existing != null) {
-      // 更新场景：仅在字段非空时更新
-      if (dto.getPlatformName() != null) {
-        existing.setPlatformName(dto.getPlatformName());
-      }
-      if (dto.getAppId() != null) {
-        existing.setAppId(dto.getAppId());
-      }
-      if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {
-        existing.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
-      }
-      if (dto.getScope() != null) {
-        existing.setScope(dto.getScope());
-      }
-      if (dto.getRedirectUri() != null) {
-        existing.setRedirectUri(dto.getRedirectUri());
-      }
-      if (dto.getStatus() != null) {
-        existing.setStatus(dto.getStatus());
-      }
-      if (dto.getSortOrder() != null) {
-        existing.setSortOrder(dto.getSortOrder());
-      }
-      if (dto.getRemark() != null) {
-        existing.setRemark(dto.getRemark());
-      }
-      mapper.updateById(existing);
-      log.info("社交平台客户端配置已更新: platform={}", dto.getPlatform());
+      updateExisting(existing, dto);
     } else {
-      // 创建场景：全部字段写入
-      SocialClientDO entity = new SocialClientDO();
-      entity.setPlatform(dto.getPlatform().toUpperCase());
-      entity.setPlatformName(dto.getPlatformName());
-      entity.setAppId(dto.getAppId());
-      if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {
-        entity.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
-      }
-      entity.setScope(dto.getScope());
-      entity.setRedirectUri(dto.getRedirectUri());
-      entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
-      entity.setSortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 100);
-      entity.setRemark(dto.getRemark());
-      mapper.insert(entity);
-      log.info("社交平台客户端配置已创建: platform={}", dto.getPlatform());
+      createNew(dto);
     }
+  }
+
+  /**
+   * 更新已有配置：仅在字段非空时更新。
+   *
+   * @param existing 已有实体
+   * @param dto 待更新数据
+   */
+  private void updateExisting(SocialClientDO existing, SocialClientDTO dto) {
+    if (dto.getPlatformName() != null) {
+      existing.setPlatformName(dto.getPlatformName());
+    }
+    if (dto.getAppId() != null) {
+      existing.setAppId(dto.getAppId());
+    }
+    if (hasText(dto.getAppSecret())) {
+      existing.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
+    }
+    if (dto.getScope() != null) {
+      existing.setScope(dto.getScope());
+    }
+    if (dto.getRedirectUri() != null) {
+      existing.setRedirectUri(dto.getRedirectUri());
+    }
+    if (dto.getStatus() != null) {
+      existing.setStatus(dto.getStatus());
+    }
+    if (dto.getSortOrder() != null) {
+      existing.setSortOrder(dto.getSortOrder());
+    }
+    if (dto.getRemark() != null) {
+      existing.setRemark(dto.getRemark());
+    }
+    mapper.updateById(existing);
+    log.info("社交平台客户端配置已更新: platform={}", dto.getPlatform());
+  }
+
+  /**
+   * 创建新配置：全部字段写入。
+   *
+   * @param dto 待创建数据
+   */
+  private void createNew(SocialClientDTO dto) {
+    SocialClientDO entity = new SocialClientDO();
+    entity.setPlatform(dto.getPlatform().toUpperCase());
+    entity.setPlatformName(dto.getPlatformName());
+    entity.setAppId(dto.getAppId());
+    if (hasText(dto.getAppSecret())) {
+      entity.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
+    }
+    entity.setScope(dto.getScope());
+    entity.setRedirectUri(dto.getRedirectUri());
+    entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
+    entity.setSortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 100);
+    entity.setRemark(dto.getRemark());
+    mapper.insert(entity);
+    log.info("社交平台客户端配置已创建: platform={}", dto.getPlatform());
+  }
+
+  /**
+   * 判断字符串是否非空且非空白。
+   *
+   * @param value 待判断字符串
+   * @return true 表示非空且非空白
+   */
+  private static boolean hasText(String value) {
+    return value != null && !value.isBlank();
   }
 
   @Override

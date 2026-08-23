@@ -1,8 +1,7 @@
 package com.njydsz.userinfo.server.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * OIDC（OpenID Connect）配置属性
@@ -15,6 +14,9 @@ import lombok.Data;
 @Data
 @ConfigurationProperties(prefix = "ydsz.userinfo.oidc")
 public class OidcProperties {
+
+  /** 默认idTokenExpireSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_ID_TOKEN_EXPIRE_SECONDS = 600;
 
   /** 是否启用 OIDC 协议支持 */
   private boolean enabled = true;
@@ -35,7 +37,7 @@ public class OidcProperties {
    *
    * <p>默认 600 秒（10 分钟），符合 OIDC Core 1.0 对 ID Token 短效期的建议。
    */
-  private long idTokenExpireSeconds = 600;
+  private long idTokenExpireSeconds = DEFAULT_ID_TOKEN_EXPIRE_SECONDS;
 
   /** 是否在授权响应中自动返回 ID Token（scope 含 openid 时） */
   private boolean autoIssueIdToken = true;

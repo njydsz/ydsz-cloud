@@ -98,7 +98,13 @@ public class VariableSourceResolver {
     }
   }
 
-  /** 解析单个变量。 */
+  /**
+   * 解析单个变量。
+   *
+   * @param source 参数说明
+   * @param context 参数说明
+   * @return 返回值说明
+   */
   private Object resolveOne(MsgVariableSource source, Map<String, Object> context) {
     String type = source.getSourceType();
     String expr = source.getSourceExpr();
@@ -139,7 +145,13 @@ public class VariableSourceResolver {
     return value;
   }
 
-  /** SQL 数据源：执行查询并返回第一行第一列的值。 */
+  /**
+   * SQL 数据源：执行查询并返回第一行第一列的值。
+   *
+   * @param sql 参数说明
+   * @param context 参数说明
+   * @return 返回值说明
+   */
   private Object resolveSql(String sql, Map<String, Object> context) {
     try {
       // 简化实现：将 :param 替换为 context 中的值
@@ -151,7 +163,13 @@ public class VariableSourceResolver {
     }
   }
 
-  /** BEAN 数据源：调用 Spring Bean 方法。 表达式格式: beanName.methodName(#bizId) */
+  /**
+   * BEAN 数据源：调用 Spring Bean 方法。 表达式格式: beanName.methodName(#bizId)
+   *
+   * @param expr 参数说明
+   * @param context 参数说明
+   * @return 返回值说明
+   */
   private Object resolveBean(String expr, Map<String, Object> context) {
     try {
       int dot = expr.indexOf('.');
@@ -189,7 +207,13 @@ public class VariableSourceResolver {
     }
   }
 
-  /** HTTP 数据源（简化实现，GET 请求）。 */
+  /**
+   * HTTP 数据源（简化实现，GET 请求）。
+   *
+   * @param url 参数说明
+   * @param context 参数说明
+   * @return 返回值说明
+   */
   private Object resolveHttp(String url, Map<String, Object> context) {
     try {
       String resolvedUrl = resolvePlaceholders(url, context);

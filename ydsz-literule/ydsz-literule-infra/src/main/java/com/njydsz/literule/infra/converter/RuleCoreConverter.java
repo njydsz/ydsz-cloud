@@ -13,7 +13,6 @@ import com.njydsz.literule.api.RulePack;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.expression.ExpressionFunctionDef;
 import com.njydsz.literule.api.expression.ExpressionValidationResult;
-import com.njydsz.literule.infra.entity.RuleDefinitionDO;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
 import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
 import com.njydsz.literule.domain.vo.ExpressionValidationResultVO;
@@ -21,6 +20,7 @@ import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
+import com.njydsz.literule.infra.entity.RuleDefinitionDO;
 
 /**
  * 规则核心转换器（P2-2 拆分）
@@ -33,6 +33,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
 @Mapper
 public interface RuleCoreConverter {
 
+  /** MapStruct 单例实例 */
   RuleCoreConverter INSTANCE = Mappers.getMapper(RuleCoreConverter.class);
 
   // ===== RuleDefinitionDO ↔ VO =====

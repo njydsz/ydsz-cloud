@@ -24,7 +24,7 @@ import com.njydsz.common.json.YdszJson;
  * @param jwksUri                                 JWKS 公钥端点 URL
  * @param revocationEndpoint                      Token 撤销端点 URL（RFC 7009）
  * @param introspectionEndpoint                    Token 自省端点 URL（RFC 7662）
- * @param scopes_supported                        支持的 scope 列表（必须包含 "openid"）
+ * @param scopesSupported                         支持的 scope 列表（必须包含 "openid"）
  * @param responseTypesSupported                  支持的 response_type 列表
  * @param responseModesSupported                  支持的 response_mode 列表
  * @param grantTypesSupported                     支持的 grant_type 列表

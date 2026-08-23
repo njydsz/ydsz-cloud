@@ -1,5 +1,4 @@
 package com.njydsz.system.server.service.impl;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,23 +18,25 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.njydsz.common.cache.constant.CacheConstants;
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
-import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.service.ConfigBatchService;
 import com.njydsz.system.server.service.EntityVersionService;
-import com.njydsz.common.util.id.IdGenerator;
+
+
+
 
 /**
  * 系统配置批量操作 Service 实现
@@ -142,7 +143,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
     TransactionSynchronizationManager.registerSynchronization(
         new ConfigBatchTransactionSynchronization(configGroups, dtos));
 
-    Map<String, Object> result = new HashMap<>(4);
+    Map<String, Object> result = new HashMap<>(RESULT_MAP_CAPACITY);
     result.put("successCount", items.size());
     result.put("totalCount", items.size());
     result.put("message", String.format("成功批量创建 %d 条配置", items.size()));

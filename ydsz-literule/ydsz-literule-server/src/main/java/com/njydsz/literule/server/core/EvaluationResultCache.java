@@ -8,11 +8,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheBuilder;
-import lombok.extern.slf4j.Slf4j;
-
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
 
@@ -71,6 +71,9 @@ import com.njydsz.literule.api.RuleResult;
  */
 @Slf4j
 public class EvaluationResultCache {
+
+    /** 纳秒到毫秒的换算系数 */
+  private static final double NANOS_PER_MILLI = 1_000_000.0;
 
   /** 默认 TTL（5 分钟） */
   public static final long DEFAULT_TTL_MS = 300_000L;
@@ -257,7 +260,7 @@ public class EvaluationResultCache {
         stats.getMissCount(),
         stats.getHitRate(),
         stats.getEvictionCount(),
-        stats.getAverageLoadPenalty() / 1_000_000.0);
+        stats.getAverageLoadPenalty() / NANOS_PER_MILLI);
   }
 
   // ==================== 内部实现 ====================

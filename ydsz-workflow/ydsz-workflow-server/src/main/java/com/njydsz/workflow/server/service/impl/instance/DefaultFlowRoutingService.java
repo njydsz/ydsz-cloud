@@ -18,12 +18,11 @@ import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
-import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.engine.expr.ExpressionEvaluator;
-import java.util.stream.Collectors;
 
 /**
  * 默认流程路由服务实现（引擎自包含）
@@ -48,6 +47,12 @@ import java.util.stream.Collectors;
 @Service
 @ConditionalOnMissingBean(DefaultFlowRoutingService.class)
 public class DefaultFlowRoutingService {
+
+    /** 卡单判定阈值（小时） */
+  private static final int STUCK_HOURS_THRESHOLD = 24;
+
+  /** 同节点最大驳回次数（超过判定为循环驳回） */
+  private static final int MAX_REJECT_COUNT = 3;
 
   /** 表达式求值器，评估路由条件表达式 */
   private final ExpressionEvaluator expressionEvaluator;
@@ -193,7 +198,7 @@ public class DefaultFlowRoutingService {
         continue;
       }
       long hours = Duration.between(createdAt, now).toHours();
-      if (hours >= 24) {
+      if (hours >= STUCK_HOURS_THRESHOLD) {
         Map<String, Object> anomaly = new LinkedHashMap<>();
         anomaly.put("type", "STUCK");
         anomaly.put("taskId", task.getId());
@@ -223,7 +228,7 @@ public class DefaultFlowRoutingService {
                 Collectors.groupingBy(
                     FlowAuditLogDO::getNodeCode, LinkedHashMap::new, Collectors.counting()));
     for (Map.Entry<String, Long> entry : rejectCountByNode.entrySet()) {
-      if (entry.getValue() > 3) {
+      if (entry.getValue() > MAX_REJECT_COUNT) {
         String nodeName =
             logs.stream()
                 .filter(log -> entry.getKey().equals(log.getNodeCode()))

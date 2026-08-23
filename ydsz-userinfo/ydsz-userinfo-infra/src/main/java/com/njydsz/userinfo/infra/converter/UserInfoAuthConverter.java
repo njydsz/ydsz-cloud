@@ -10,15 +10,15 @@ import com.njydsz.userinfo.domain.dto.LanguageDTO;
 import com.njydsz.userinfo.domain.dto.MenuDTO;
 import com.njydsz.userinfo.domain.dto.RoleDTO;
 import com.njydsz.userinfo.domain.dto.RolePermissionDTO;
-import com.njydsz.userinfo.infra.entity.LanguageDO;
-import com.njydsz.userinfo.infra.entity.MenuDO;
-import com.njydsz.userinfo.infra.entity.RoleDO;
-import com.njydsz.userinfo.infra.entity.RolePermissionDO;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 import com.njydsz.userinfo.domain.vo.RolePermissionVO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
+import com.njydsz.userinfo.infra.entity.LanguageDO;
+import com.njydsz.userinfo.infra.entity.MenuDO;
+import com.njydsz.userinfo.infra.entity.RoleDO;
+import com.njydsz.userinfo.infra.entity.RolePermissionDO;
 
 /**
  * 认证权限领域 MapStruct 转换器。

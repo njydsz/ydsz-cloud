@@ -24,8 +24,10 @@ import org.springframework.core.Ordered;
  *
  * <pre>{@code
  * MybatisPlusInterceptor mp = new MybatisPlusInterceptor();
- * mp.addInnerInterceptor(new OrderedInnerInterceptor(new SqlTraceInnerInterceptor(), Ordered.HIGHEST_PRECEDENCE + 100));
- * mp.addInnerInterceptor(new OrderedInnerInterceptor(new PaginationInnerInterceptor(), Ordered.LOWEST_PRECEDENCE - 100));
+ * mp.addInnerInterceptor(new OrderedInnerInterceptor(new SqlTraceInnerInterceptor(),
+ *     Ordered.HIGHEST_PRECEDENCE + 100));
+ * mp.addInnerInterceptor(new OrderedInnerInterceptor(new PaginationInnerInterceptor(),
+ *     Ordered.LOWEST_PRECEDENCE - 100));
  * }</pre>
  *
  * @author ydsz-team

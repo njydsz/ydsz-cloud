@@ -3,6 +3,7 @@ package com.njydsz.userinfo.server.auth;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 import com.njydsz.userinfo.domain.dto.SocialAccountDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.SocialAccountRepository;
@@ -17,7 +19,6 @@ import com.njydsz.userinfo.domain.social.SocialAuthException;
 import com.njydsz.userinfo.domain.social.SocialAuthProvider;
 import com.njydsz.userinfo.domain.social.SocialUserInfo;
 import com.njydsz.userinfo.domain.vo.SocialAccountVO;
-import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 
 /**
  * 社交认证服务编排实现。
@@ -246,7 +247,7 @@ public class SocialAuthService {
    * @return 随机状态码
    */
   private String generateState() {
-    String state = java.util.UUID.randomUUID().toString().replace("-", "");
+    String state = UUID.randomUUID().toString().replace("-", "");
     try {
       redisStringOps.set(
           STATE_KEY_PREFIX + state,

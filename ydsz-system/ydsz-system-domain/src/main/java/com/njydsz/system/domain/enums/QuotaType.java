@@ -26,21 +26,27 @@ import lombok.Getter;
 public enum QuotaType {
 
   /** 最大用户数 */
+  /** MAX_USERS */
   MAX_USERS("maxUsers", "最大用户数", Integer.class),
 
   /** 最大项目数 */
+  /** MAX_PROJECTS */
   MAX_PROJECTS("maxProjects", "最大项目数", Integer.class),
 
   /** 最大配置项数 */
+  /** MAX_CONFIGS */
   MAX_CONFIGS("maxConfigs", "最大配置项数", Integer.class),
 
   /** 最大字典类型数 */
+  /** MAX_DICT_TYPES */
   MAX_DICT_TYPES("maxDictTypes", "最大字典类型数", Integer.class),
 
   /** 最大变量数 */
+  /** MAX_VARIABLES */
   MAX_VARIABLES("maxVariables", "最大变量数", Integer.class),
 
   /** 存储空间（GB） */
+  /** STORAGE_GB */
   STORAGE_GB("storageGb", "存储空间(GB)", Double.class);
 
   /** JSON 键名 */

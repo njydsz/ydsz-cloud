@@ -48,6 +48,18 @@ import com.njydsz.literule.api.RuleContext;
 @Slf4j
 public class FactProviderRegistry {
 
+    /** 线程池最大线程数 */
+  private static final int MAX_POOL_SIZE = 60;
+
+  /** 线程池空闲保活时间（秒） */
+  private static final long KEEP_ALIVE_SECONDS = 60L;
+
+  /** 线程池任务队列容量 */
+  private static final int QUEUE_CAPACITY = 1024;
+
+  /** 销毁时等待线程池终止的秒数 */
+  private static final int AWAIT_TERMINATION_SECONDS = 5;
+
   /** 默认单个 provider 调用超时（毫秒） */
   public static final long DEFAULT_TIMEOUT_MS = 200L;
 
@@ -87,9 +99,9 @@ public class FactProviderRegistry {
     this.executor =
         ExecutorUtils.builder()
             .corePoolSize(0)
-            .maxPoolSize(60)
-            .keepAliveTime(60L, TimeUnit.SECONDS)
-            .queueCapacity(1024)
+            .maxPoolSize(MAX_POOL_SIZE)
+            .keepAliveTime(KEEP_ALIVE_SECONDS, TimeUnit.SECONDS)
+            .queueCapacity(QUEUE_CAPACITY)
             .threadNamePrefix("literule-fact-provider")
             .daemon(true)
             .build();
@@ -256,7 +268,7 @@ public class FactProviderRegistry {
     if (ownsExecutor && !executor.isShutdown()) {
       executor.shutdown();
       try {
-        if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+        if (!executor.awaitTermination(AWAIT_TERMINATION_SECONDS, TimeUnit.SECONDS)) {
           executor.shutdownNow();
         }
       } catch (InterruptedException e) {

@@ -36,6 +36,9 @@ import com.njydsz.message.server.service.core.SmsProviderStrategyService;
 @Service
 @RequiredArgsConstructor
 public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyService {
+  /** 默认分页大小 */
+  private static final int DEFAULT_PAGE_SIZE = 50;
+
 
   /** Redis 模板（服务商日发送量 / 失败量统计） */
   private final RedisStringOps redisStringOps;
@@ -140,13 +143,23 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
 
   // ==================== 策略实现 ====================
 
-  /** 轮询选择。 */
+  /**
+   * 轮询选择。
+   *
+   * @param providers 参数说明
+   * @return 返回值说明
+   */
   private SmsProvider selectRoundRobin(List<SmsProvider> providers) {
     int idx = Math.abs(roundRobinIndex.getAndIncrement()) % providers.size();
     return providers.get(idx);
   }
 
-  /** 权重选择。 */
+  /**
+   * 权重选择。
+   *
+   * @param providers 参数说明
+   * @return 返回值说明
+   */
   private SmsProvider selectWeighted(List<SmsProvider> providers) {
     Map<String, Integer> weights = parseWeights();
     int totalWeight =
@@ -162,7 +175,12 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
     return providers.get(0);
   }
 
-  /** 成本优先（aliyun < tencent < mock）。 */
+  /**
+   * 成本优先（aliyun < tencent < mock）。
+   *
+   * @param providers 参数说明
+   * @return 返回值说明
+   */
   private SmsProvider selectCostFirst(List<SmsProvider> providers) {
     return providers.stream()
         .min(
@@ -174,7 +192,12 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
         .orElse(providers.get(0));
   }
 
-  /** 可用性优先（跳过连续失败超过阈值的 provider）。 */
+  /**
+   * 可用性优先（跳过连续失败超过阈值的 provider）。
+   *
+   * @param providers 参数说明
+   * @return 返回值说明
+   */
   private SmsProvider selectAvailabilityFirst(List<SmsProvider> providers) {
     for (SmsProvider p : providers) {
       AtomicInteger count = failureCount.get(p.providerType());
@@ -206,13 +229,18 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
     return weights;
   }
 
-  /** OD-4: 从 MessageProperties.CostConfig 读取成本，消除硬编码 switch。 */
+  /**
+   * OD-4: 从 MessageProperties.CostConfig 读取成本，消除硬编码 switch。
+   *
+   * @param providerType 参数说明
+   * @return 返回值说明
+   */
   private int getProviderCost(String providerType) {
     // OD-4: 从配置读取成本，无配置时默认 50
     BigDecimal cost = messageProperties.getCost().getUnitPrices().get(providerType.toUpperCase());
     if (cost != null) {
       return cost.multiply(BigDecimal.valueOf(1000)).intValue();
     }
-    return 50;
+    return DEFAULT_PAGE_SIZE;
   }
 }

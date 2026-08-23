@@ -6,8 +6,8 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;

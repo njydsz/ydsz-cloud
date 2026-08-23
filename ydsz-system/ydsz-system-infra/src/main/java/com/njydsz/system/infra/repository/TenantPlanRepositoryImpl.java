@@ -1,5 +1,4 @@
 package com.njydsz.system.infra.repository;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -9,14 +8,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.TenantPlanDO;
-import com.njydsz.system.infra.mapper.TenantPlanMapper;
-import com.njydsz.system.domain.repository.TenantPlanRepository;
 import com.njydsz.system.domain.dto.TenantPlanDTO;
 import com.njydsz.system.domain.query.TenantPlanPageQuery;
 import com.njydsz.system.domain.query.TenantPlanQuery;
+import com.njydsz.system.domain.repository.TenantPlanRepository;
 import com.njydsz.system.domain.vo.TenantPlanVO;
+import com.njydsz.system.infra.converter.SystemConverter;
+import com.njydsz.system.infra.entity.TenantPlanDO;
+import com.njydsz.system.infra.mapper.TenantPlanMapper;
+
+
+
 
 /**
  * 租户方案仓储实现（Infra 层）。
@@ -60,7 +62,7 @@ public class TenantPlanRepositoryImpl implements TenantPlanRepository {
     wrapper.orderByAsc(TenantPlanDO::getSortOrder);
     com.baomidou.mybatisplus.core.metadata.IPage<TenantPlanDO> result = tenantPlanMapper.selectPage(page, wrapper);
     List<TenantPlanVO> vos = converter.planListToVO(result.getRecords());
-    return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
+    return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   @Override

@@ -19,14 +19,20 @@ import lombok.Data;
 @Data
 public class MapReduceConfig {
 
+  /** 默认maxParallelSubTasks值（可被配置文件覆盖） */
+  private static final int DEFAULT_MAX_PARALLEL_SUB_TASKS = 8;
+
+  /** 默认subTaskTimeoutSeconds值（可被配置文件覆盖） */
+  private static final int DEFAULT_SUB_TASK_TIMEOUT_SECONDS = 120;
+
   /** 是否启用分布式并行执行（false=单节点顺序执行，向后兼容） */
   private boolean enabled = true;
 
   /** 最大并行子任务数（默认 8，控制并行度） */
-  private int maxParallelSubTasks = 8;
+  private int maxParallelSubTasks = DEFAULT_MAX_PARALLEL_SUB_TASKS;
 
   /** 单个子任务远程执行超时时间（秒，默认 120s） */
-  private int subTaskTimeoutSeconds = 120;
+  private int subTaskTimeoutSeconds = DEFAULT_SUB_TASK_TIMEOUT_SECONDS;
 
   /** 远程子任务派发失败时是否降级本地执行 */
   private boolean fallbackToLocal = true;

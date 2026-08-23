@@ -17,12 +17,12 @@ import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.RuleEngineStats;
 import com.njydsz.literule.api.RuleStatus;
-import com.njydsz.literule.server.config.LiteRuleProperties;
-import com.njydsz.literule.server.config.RuleAdminService;
-import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
+import com.njydsz.literule.server.config.LiteRuleProperties;
+import com.njydsz.literule.server.config.RuleAdminService;
+import com.njydsz.literule.server.spi.RuleConfigProvider;
 
 /**
  * 规则生命周期管理服务（P3-1）
@@ -400,6 +400,7 @@ public class RuleLifecycleService {
         actions.add("考虑调整阈值或合并到其他规则");
         actions.add("如确认无价值，建议归档");
       }
+      default -> actions.add("建议人工检查规则配置");
     }
     return actions;
   }
@@ -689,8 +690,12 @@ public class RuleLifecycleService {
   }
 
   private boolean equals(String a, String b) {
-    if (a == null && b == null) return true;
-    if (a == null || b == null) return false;
+    if (a == null && b == null) {
+      return true;
+    }
+    if (a == null || b == null) {
+      return false;
+    }
     return a.equals(b);
   }
 

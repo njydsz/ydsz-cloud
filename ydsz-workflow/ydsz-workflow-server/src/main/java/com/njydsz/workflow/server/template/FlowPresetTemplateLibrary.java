@@ -32,6 +32,31 @@ import org.springframework.stereotype.Component;
 @Component
 public class FlowPresetTemplateLibrary {
 
+  /** 节点画布 Y 坐标（横向流程图中所有节点位于同一纵行） */
+  private static final int NODE_Y_TOP = 100;
+  /** 节点画布 X 坐标：第 1 列（起始节点） */
+  private static final int NODE_X_COL_1 = 100;
+  /** 节点画布 X 坐标：第 2 列（一级审批节点） */
+  private static final int NODE_X_COL_2 = 300;
+  /** 节点画布 X 坐标：第 3 列（二级审批节点） */
+  private static final int NODE_X_COL_3 = 500;
+  /** 节点画布 X 坐标：第 4 列（三级审批节点） */
+  private static final int NODE_X_COL_4 = 700;
+  /** 节点画布 X 坐标：第 5 列（结束节点） */
+  private static final int NODE_X_COL_5 = 900;
+  /** 模板排序号：请假审批 */
+  private static final int SORT_ORDER_LEAVE = 1;
+  /** 模板排序号：费用报销 */
+  private static final int SORT_ORDER_EXPENSE = 2;
+  /** 模板排序号：采购申请 */
+  private static final int SORT_ORDER_PURCHASE = 3;
+  /** 模板排序号：出差申请 */
+  private static final int SORT_ORDER_TRIP = 4;
+  /** 模板排序号：用印申请 */
+  private static final int SORT_ORDER_SEAL = 5;
+  /** 模板排序号：项目立项 */
+  private static final int SORT_ORDER_PROJECT = 6;
+
   private final List<FlowTemplateDefinition> templates = new ArrayList<>(10);
 
   public FlowPresetTemplateLibrary() {
@@ -44,12 +69,21 @@ public class FlowPresetTemplateLibrary {
     log.info("[TemplateLibrary] 预置模板加载完成: count={}", templates.size());
   }
 
-  /** 获取所有预置模板。 */
+  /**
+   * 获取所有预置模板。
+   *
+   * @return 返回值说明
+   */
   public List<FlowTemplateDefinition> listAll() {
     return new ArrayList<>(templates);
   }
 
-  /** 按分类筛选模板。 */
+  /**
+   * 按分类筛选模板。
+   *
+   * @param category 参数说明
+   * @return 返回值说明
+   */
   public List<FlowTemplateDefinition> listByCategory(String category) {
     if (category == null || category.isEmpty()) {
       return listAll();
@@ -59,7 +93,12 @@ public class FlowPresetTemplateLibrary {
         .collect(Collectors.toList());
   }
 
-  /** 按编码获取模板。 */
+  /**
+   * 按编码获取模板。
+   *
+   * @param templateCode 参数说明
+   * @return 返回值说明
+   */
   public FlowTemplateDefinition getByCode(String templateCode) {
     return templates.stream()
         .filter(t -> templateCode.equals(t.getTemplateCode()))
@@ -69,23 +108,27 @@ public class FlowPresetTemplateLibrary {
 
   // ============================== 模板构建方法 ==============================
 
-  /** 请假审批模板 */
+  /**
+   * 请假审批模板
+   *
+   * @return 返回值说明
+   */
   private FlowTemplateDefinition buildLeaveTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
     tpl.setTemplateCode("preset_leave");
     tpl.setTemplateName("请假审批");
     tpl.setCategory("HR");
     tpl.setDescription("员工请假审批流程：发起人提交 → 直属上级审批 → HR备案");
-    tpl.setSortOrder(1);
+    tpl.setSortOrder(SORT_ORDER_LEAVE);
     tpl.setUseCase("适用于事假、病假、年假、调休等各类请假申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("人事", "请假", "考勤"));
 
     List<Map<String, Object>> nodes = new ArrayList<>(10);
-    nodes.add(buildNode("start", "开始", "START", null, 100, 100));
-    nodes.add(buildNode("approval_1", "直属上级审批", "APPROVAL", "LEADER", 300, 100));
-    nodes.add(buildNode("approval_2", "HR审批", "APPROVAL", "ROLE:HR", 500, 100));
-    nodes.add(buildNode("end", "结束", "END", null, 700, 100));
+    nodes.add(buildNode("start", "开始", "START", null, NODE_X_COL_1, NODE_Y_TOP));
+    nodes.add(buildNode("approval_1", "直属上级审批", "APPROVAL", "LEADER", NODE_X_COL_2, NODE_Y_TOP));
+    nodes.add(buildNode("approval_2", "HR审批", "APPROVAL", "ROLE:HR", NODE_X_COL_3, NODE_Y_TOP));
+    nodes.add(buildNode("end", "结束", "END", null, NODE_X_COL_4, NODE_Y_TOP));
     tpl.setNodes(nodes);
 
     List<Map<String, Object>> skips = new ArrayList<>(10);
@@ -99,24 +142,28 @@ public class FlowPresetTemplateLibrary {
     return tpl;
   }
 
-  /** 费用报销模板 */
+  /**
+   * 费用报销模板
+   *
+   * @return 返回值说明
+   */
   private FlowTemplateDefinition buildExpenseReimbursementTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
     tpl.setTemplateCode("preset_expense_reimbursement");
     tpl.setTemplateName("费用报销");
     tpl.setCategory("FINANCE");
     tpl.setDescription("费用报销审批流程：发起人 → 直属上级 → 财务审批 → 出纳付款");
-    tpl.setSortOrder(2);
+    tpl.setSortOrder(SORT_ORDER_EXPENSE);
     tpl.setUseCase("适用于差旅费、招待费、办公费等各类费用报销");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("财务", "报销", "费用"));
 
     List<Map<String, Object>> nodes = new ArrayList<>(10);
-    nodes.add(buildNode("start", "开始", "START", null, 100, 100));
-    nodes.add(buildNode("approval_1", "直属上级审批", "APPROVAL", "LEADER", 300, 100));
-    nodes.add(buildNode("approval_2", "财务审批", "APPROVAL", "ROLE:FINANCE", 500, 100));
-    nodes.add(buildNode("approval_3", "出纳付款", "APPROVAL", "ROLE:CASHIER", 700, 100));
-    nodes.add(buildNode("end", "结束", "END", null, 900, 100));
+    nodes.add(buildNode("start", "开始", "START", null, NODE_X_COL_1, NODE_Y_TOP));
+    nodes.add(buildNode("approval_1", "直属上级审批", "APPROVAL", "LEADER", NODE_X_COL_2, NODE_Y_TOP));
+    nodes.add(buildNode("approval_2", "财务审批", "APPROVAL", "ROLE:FINANCE", NODE_X_COL_3, NODE_Y_TOP));
+    nodes.add(buildNode("approval_3", "出纳付款", "APPROVAL", "ROLE:CASHIER", NODE_X_COL_4, NODE_Y_TOP));
+    nodes.add(buildNode("end", "结束", "END", null, NODE_X_COL_5, NODE_Y_TOP));
     tpl.setNodes(nodes);
 
     List<Map<String, Object>> skips = new ArrayList<>(10);
@@ -131,24 +178,28 @@ public class FlowPresetTemplateLibrary {
     return tpl;
   }
 
-  /** 采购申请模板 */
+  /**
+   * 采购申请模板
+   *
+   * @return 返回值说明
+   */
   private FlowTemplateDefinition buildPurchaseRequestTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
     tpl.setTemplateCode("preset_purchase_request");
     tpl.setTemplateName("采购申请");
     tpl.setCategory("FINANCE");
     tpl.setDescription("采购申请审批流程：发起人 → 部门负责人 → 采购审批 → 财务审批");
-    tpl.setSortOrder(3);
+    tpl.setSortOrder(SORT_ORDER_PURCHASE);
     tpl.setUseCase("适用于物资采购、服务采购等各类采购申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("财务", "采购", "物资"));
 
     List<Map<String, Object>> nodes = new ArrayList<>(10);
-    nodes.add(buildNode("start", "开始", "START", null, 100, 100));
-    nodes.add(buildNode("approval_1", "部门负责人审批", "APPROVAL", "DEPT_LEADER", 300, 100));
-    nodes.add(buildNode("approval_2", "采购审批", "APPROVAL", "ROLE:PROCUREMENT", 500, 100));
-    nodes.add(buildNode("approval_3", "财务审批", "APPROVAL", "ROLE:FINANCE", 700, 100));
-    nodes.add(buildNode("end", "结束", "END", null, 900, 100));
+    nodes.add(buildNode("start", "开始", "START", null, NODE_X_COL_1, NODE_Y_TOP));
+    nodes.add(buildNode("approval_1", "部门负责人审批", "APPROVAL", "DEPT_LEADER", NODE_X_COL_2, NODE_Y_TOP));
+    nodes.add(buildNode("approval_2", "采购审批", "APPROVAL", "ROLE:PROCUREMENT", NODE_X_COL_3, NODE_Y_TOP));
+    nodes.add(buildNode("approval_3", "财务审批", "APPROVAL", "ROLE:FINANCE", NODE_X_COL_4, NODE_Y_TOP));
+    nodes.add(buildNode("end", "结束", "END", null, NODE_X_COL_5, NODE_Y_TOP));
     tpl.setNodes(nodes);
 
     List<Map<String, Object>> skips = new ArrayList<>(10);
@@ -164,23 +215,27 @@ public class FlowPresetTemplateLibrary {
     return tpl;
   }
 
-  /** 出差申请模板 */
+  /**
+   * 出差申请模板
+   *
+   * @return 返回值说明
+   */
   private FlowTemplateDefinition buildBusinessTripTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
     tpl.setTemplateCode("preset_business_trip");
     tpl.setTemplateName("出差申请");
     tpl.setCategory("HR");
     tpl.setDescription("出差申请审批流程：发起人 → 直属上级 → HR审批");
-    tpl.setSortOrder(4);
+    tpl.setSortOrder(SORT_ORDER_TRIP);
     tpl.setUseCase("适用于国内/国际出差申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("人事", "出差", "差旅"));
 
     List<Map<String, Object>> nodes = new ArrayList<>(10);
-    nodes.add(buildNode("start", "开始", "START", null, 100, 100));
-    nodes.add(buildNode("approval_1", "直属上级审批", "APPROVAL", "LEADER", 300, 100));
-    nodes.add(buildNode("approval_2", "HR审批", "APPROVAL", "ROLE:HR", 500, 100));
-    nodes.add(buildNode("end", "结束", "END", null, 700, 100));
+    nodes.add(buildNode("start", "开始", "START", null, NODE_X_COL_1, NODE_Y_TOP));
+    nodes.add(buildNode("approval_1", "直属上级审批", "APPROVAL", "LEADER", NODE_X_COL_2, NODE_Y_TOP));
+    nodes.add(buildNode("approval_2", "HR审批", "APPROVAL", "ROLE:HR", NODE_X_COL_3, NODE_Y_TOP));
+    nodes.add(buildNode("end", "结束", "END", null, NODE_X_COL_4, NODE_Y_TOP));
     tpl.setNodes(nodes);
 
     List<Map<String, Object>> skips = new ArrayList<>(10);
@@ -194,23 +249,27 @@ public class FlowPresetTemplateLibrary {
     return tpl;
   }
 
-  /** 用印申请模板 */
+  /**
+   * 用印申请模板
+   *
+   * @return 返回值说明
+   */
   private FlowTemplateDefinition buildSealApplicationTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
     tpl.setTemplateCode("preset_seal_application");
     tpl.setTemplateName("用印申请");
     tpl.setCategory("ADMIN");
     tpl.setDescription("用印申请审批流程：发起人 → 直属上级 → 行政审批");
-    tpl.setSortOrder(5);
+    tpl.setSortOrder(SORT_ORDER_SEAL);
     tpl.setUseCase("适用于公章、合同章、财务章等各类印章使用申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("行政", "用印", "印章"));
 
     List<Map<String, Object>> nodes = new ArrayList<>(10);
-    nodes.add(buildNode("start", "开始", "START", null, 100, 100));
-    nodes.add(buildNode("approval_1", "直属上级审批", "APPROVAL", "LEADER", 300, 100));
-    nodes.add(buildNode("approval_2", "行政审批", "APPROVAL", "ROLE:ADMIN", 500, 100));
-    nodes.add(buildNode("end", "结束", "END", null, 700, 100));
+    nodes.add(buildNode("start", "开始", "START", null, NODE_X_COL_1, NODE_Y_TOP));
+    nodes.add(buildNode("approval_1", "直属上级审批", "APPROVAL", "LEADER", NODE_X_COL_2, NODE_Y_TOP));
+    nodes.add(buildNode("approval_2", "行政审批", "APPROVAL", "ROLE:ADMIN", NODE_X_COL_3, NODE_Y_TOP));
+    nodes.add(buildNode("end", "结束", "END", null, NODE_X_COL_4, NODE_Y_TOP));
     tpl.setNodes(nodes);
 
     List<Map<String, Object>> skips = new ArrayList<>(10);
@@ -224,24 +283,28 @@ public class FlowPresetTemplateLibrary {
     return tpl;
   }
 
-  /** 项目立项模板 */
+  /**
+   * 项目立项模板
+   *
+   * @return 返回值说明
+   */
   private FlowTemplateDefinition buildProjectInitiationTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
     tpl.setTemplateCode("preset_project_initiation");
     tpl.setTemplateName("项目立项");
     tpl.setCategory("PROJECT");
     tpl.setDescription("项目立项审批流程：发起人 → 部门负责人 → 项目总监 → 总经理审批");
-    tpl.setSortOrder(6);
+    tpl.setSortOrder(SORT_ORDER_PROJECT);
     tpl.setUseCase("适用于各类项目立项申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("项目", "立项", "审批"));
 
     List<Map<String, Object>> nodes = new ArrayList<>(10);
-    nodes.add(buildNode("start", "开始", "START", null, 100, 100));
-    nodes.add(buildNode("approval_1", "部门负责人审批", "APPROVAL", "DEPT_LEADER", 300, 100));
-    nodes.add(buildNode("approval_2", "项目总监审批", "APPROVAL", "ROLE:PROJECT_DIRECTOR", 500, 100));
-    nodes.add(buildNode("approval_3", "总经理审批", "APPROVAL", "ROLE:GM", 700, 100));
-    nodes.add(buildNode("end", "结束", "END", null, 900, 100));
+    nodes.add(buildNode("start", "开始", "START", null, NODE_X_COL_1, NODE_Y_TOP));
+    nodes.add(buildNode("approval_1", "部门负责人审批", "APPROVAL", "DEPT_LEADER", NODE_X_COL_2, NODE_Y_TOP));
+    nodes.add(buildNode("approval_2", "项目总监审批", "APPROVAL", "ROLE:PROJECT_DIRECTOR", NODE_X_COL_3, NODE_Y_TOP));
+    nodes.add(buildNode("approval_3", "总经理审批", "APPROVAL", "ROLE:GM", NODE_X_COL_4, NODE_Y_TOP));
+    nodes.add(buildNode("end", "结束", "END", null, NODE_X_COL_5, NODE_Y_TOP));
     tpl.setNodes(nodes);
 
     List<Map<String, Object>> skips = new ArrayList<>(10);

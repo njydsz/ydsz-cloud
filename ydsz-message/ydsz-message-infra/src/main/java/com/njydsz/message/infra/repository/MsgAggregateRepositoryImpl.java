@@ -63,7 +63,7 @@ public class MsgAggregateRepositoryImpl implements MsgAggregateRepository {
     wrapper.orderByDesc("created_at");
     IPage<MsgAggregateDO> entityPage = msgAggregateMapper.selectPage(page, wrapper);
     List<MsgAggregateVO> vos = converter.aggregateDoListToVO(entityPage.getRecords());
-    return PageResponse.success(entityPage.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
+    return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   private QueryWrapper<MsgAggregateDO> buildWrapper(MsgAggregateQuery query) {

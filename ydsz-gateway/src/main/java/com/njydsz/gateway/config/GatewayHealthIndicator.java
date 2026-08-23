@@ -46,7 +46,7 @@ public class GatewayHealthIndicator implements HealthIndicator {
    * <p>使用 {@link ObjectProvider} 实现可选依赖，当某个 Bean 不存在时不影响健康检查。
    *
    * @param redisTemplateProvider Reactive Redis 客户端（可选）
-   * @param securityHeadersProvider 安全响应头配置（可选）
+   * @param securityHeaderProvider 安全响应头配置（可选）
    * @param rateLimitPropertiesProvider 限流配置（可选）
    * @param ipAccessControlProvider IP 访问控制配置（可选）
    * @param authFilterProvider 认证过滤器（可选）

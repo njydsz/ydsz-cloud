@@ -1,8 +1,9 @@
 package com.njydsz.message.domain.event;
 
+import java.io.Serial;
+
 import com.njydsz.message.domain.enums.core.MessageChannelEnum;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
-import java.io.Serial;
 
 /**
  * 消息状态变更领域事件。

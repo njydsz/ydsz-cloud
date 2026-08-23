@@ -24,11 +24,11 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.ObjectNode;
-import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobExecutionException;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.domain.job.JobLogger;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
 
@@ -100,6 +100,9 @@ public class ScriptJobHandler implements JobHandler {
    * P3-11: 通过构造器注入沙箱执行器和配置。
    *
    * <p>使用 {@link ObjectProvider} 延迟加载，避免循环依赖。
+   *
+   * @param sandboxExecutorProvider 沙箱执行器提供者（延迟加载）
+   * @param cronjobProperties 定时任务配置
    */
   public ScriptJobHandler(
       ObjectProvider<SandboxScriptExecutor> sandboxExecutorProvider,
@@ -243,7 +246,9 @@ public class ScriptJobHandler implements JobHandler {
 
       ProcessBuilder pb = new ProcessBuilder(command);
       pb.redirectErrorStream(false);
+      // CHECKSTYLE.OFF: RegexpSinglelineJava - 系统属性名为字符串字面量
       pb.directory(new File(System.getProperty("java.io.tmpdir")));
+      // CHECKSTYLE.ON: RegexpSinglelineJava
       Process process = pb.start();
       // 关闭 stdin，避免脚本因等待输入而阻塞
       try {

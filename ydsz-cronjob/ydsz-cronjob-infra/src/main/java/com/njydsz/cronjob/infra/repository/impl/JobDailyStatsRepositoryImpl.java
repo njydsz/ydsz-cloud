@@ -26,6 +26,16 @@ import com.njydsz.cronjob.infra.mapper.log.JobDailyStatsMapper;
 @RequiredArgsConstructor
 public class JobDailyStatsRepositoryImpl implements JobDailyStatsRepository {
 
+  /** 结束时间：小时（23 点） */
+  private static final int END_HOUR = 23;
+
+  /** 结束时间：分钟（59 分） */
+  private static final int END_MINUTE = 59;
+
+  /** 结束时间：秒（59 秒） */
+  private static final int END_SECOND = 59;
+
+
   private final JobDailyStatsMapper jobDailyStatsMapper;
 
   private final CronjobConverter converter;
@@ -59,7 +69,7 @@ public class JobDailyStatsRepositoryImpl implements JobDailyStatsRepository {
   public List<JobDailyStatsVO> findByJobIdAndDateRange(
       String jobId, java.time.LocalDate startDate, java.time.LocalDate endDate) {
     LocalDateTime start = startDate.atStartOfDay();
-    LocalDateTime end = endDate.atTime(23, 59, 59);
+    LocalDateTime end = endDate.atTime(END_HOUR, END_MINUTE, END_SECOND);
     return findByJobIdAndDateRange(jobId, start, end);
   }
 }

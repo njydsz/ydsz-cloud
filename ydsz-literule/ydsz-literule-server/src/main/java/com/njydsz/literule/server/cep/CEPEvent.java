@@ -54,16 +54,26 @@ public class CEPEvent implements Serializable {
   /** 事件属性 */
   @Builder.Default private Map<String, Object> attributes = new HashMap<>();
 
-  /** 获取属性值（缺失时返回 null） */
+  /** 获取属性值（缺失时返回 null）
+   * @param key 参数说明
+   * @return 返回值说明
+   */
   public Object attr(String key) {
     return attributes == null ? null : attributes.get(key);
   }
 
-  /** 获取数值属性（缺失或类型不匹配时返回 0.0） */
+  /** 获取数值属性（缺失或类型不匹配时返回 0.0）
+   * @param key 参数说明
+   * @return 返回值说明
+   */
   public double attrDouble(String key) {
     Object v = attr(key);
-    if (v == null) return 0.0;
-    if (v instanceof Number n) return n.doubleValue();
+    if (v == null) {
+      return 0.0;
+    }
+    if (v instanceof Number n) {
+      return n.doubleValue();
+    }
     try {
       return Double.parseDouble(v.toString());
     } catch (NumberFormatException e) {
@@ -72,9 +82,15 @@ public class CEPEvent implements Serializable {
     }
   }
 
-  /** 链式添加属性 */
+  /** 链式添加属性
+   * @param key 参数说明
+   * @param value 参数说明
+   * @return 返回值说明
+   */
   public CEPEvent withAttr(String key, Object value) {
-    if (attributes == null) attributes = new HashMap<>();
+    if (attributes == null) {
+      attributes = new HashMap<>();
+    }
     attributes.put(key, value);
     return this;
   }

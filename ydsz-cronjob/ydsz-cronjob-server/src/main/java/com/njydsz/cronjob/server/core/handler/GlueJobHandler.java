@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
+import groovy.lang.GroovyClassLoader;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.SecureASTCustomizer;
@@ -25,14 +26,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobExecutionException;
 import com.njydsz.cronjob.domain.job.JobHandler;
+import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
-
-import groovy.lang.GroovyClassLoader;
 
 /**
  * GLUE 在线编码任务处理器（P1-2 GLUE 在线编码，P1-7 多语言支持扩展）。
@@ -78,6 +77,9 @@ import groovy.lang.GroovyClassLoader;
 @Configuration
 @ConditionalOnMissingBean(GlueJobHandler.class)
 public class GlueJobHandler implements JobHandler {
+  /** 脚本执行超时（秒） */
+  private static final long SCRIPT_TIMEOUT_SECONDS = 300;
+
 
   /** Bean 名称，dispatcher 在 jobType=GLUE 时路由到此 handler */
   public static final String BEAN_NAME = "glueJobHandler";
@@ -179,6 +181,7 @@ public class GlueJobHandler implements JobHandler {
     SecureASTCustomizer customizer = new SecureASTCustomizer();
     customizer.setIndirectImportCheckEnabled(true);
 
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 白名单为 Groovy 脚本可导入类的字符串字面量，非代码引用
     // 导入白名单：仅允许安全类
     List<String> importsWhitelist =
         List.of(
@@ -220,10 +223,13 @@ public class GlueJobHandler implements JobHandler {
 
     // Star 导入白名单：仅允许安全包
     customizer.setStarImportsWhitelist(List.of("java.util", "java.time", "java.math"));
+    // CHECKSTYLE.ON: RegexpSinglelineJava
 
     // 静态导入白名单
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 静态导入白名单为字符串字面量
     customizer.setStaticImportsWhitelist(
         List.of("java.lang.Math", "java.util.Collections", "java.util.Arrays"));
+    // CHECKSTYLE.ON: RegexpSinglelineJava
 
     // 接收者黑名单：禁止在危险类型上调用方法
     customizer.setReceiversBlackList(
@@ -289,7 +295,14 @@ public class GlueJobHandler implements JobHandler {
     };
   }
 
-  /** P1-7: 执行 Groovy 脚本（原有逻辑）。 */
+  /**
+   * P1-7: 执行 Groovy 脚本（原有逻辑）。
+   *
+   * @param jobId 参数说明
+   * @param sourceCode 参数说明
+   * @param paramsJson 参数说明
+   * @return 返回值说明
+   */
   private Object executeGroovy(String jobId, String sourceCode, String paramsJson)
       throws JobExecutionException {
     Class<?> clazz = compileWithCache(jobId, sourceCode);
@@ -315,7 +328,7 @@ public class GlueJobHandler implements JobHandler {
     Map<String, String> envVars = new HashMap<>();
     envVars.put("JOB_PARAMS", paramsJson != null ? paramsJson : "{}");
     SandboxScriptExecutor.SandboxResult result =
-        executor.execute(sourceCode, "PYTHON", 300, envVars);
+        executor.execute(sourceCode, "PYTHON", SCRIPT_TIMEOUT_SECONDS, envVars);
     if (!result.success()) {
       throw new IllegalStateException("Python 脚本执行失败: " + result.errorMessage());
     }
@@ -335,7 +348,7 @@ public class GlueJobHandler implements JobHandler {
     Map<String, String> envVars = new HashMap<>();
     envVars.put("JOB_PARAMS", paramsJson != null ? paramsJson : "{}");
     SandboxScriptExecutor.SandboxResult result =
-        executor.execute(sourceCode, "SHELL", 300, envVars);
+        executor.execute(sourceCode, "SHELL", SCRIPT_TIMEOUT_SECONDS, envVars);
     if (!result.success()) {
       throw new IllegalStateException("Shell 脚本执行失败: " + result.errorMessage());
     }

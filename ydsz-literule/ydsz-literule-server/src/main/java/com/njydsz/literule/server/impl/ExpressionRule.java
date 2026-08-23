@@ -30,6 +30,9 @@ import com.njydsz.literule.server.debug.RuleDebugger;
 @Slf4j
 public class ExpressionRule implements Rule {
 
+    /** 纳秒到毫秒的换算系数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
   private final RuleDefinition definition;
   private final ExpressionEngine evaluator;
 
@@ -238,7 +241,9 @@ public class ExpressionRule implements Rule {
     if (StringUtils.isNotBlank(expr)) {
       Object code = evalCached(expr, context);
       RuleSeverity dynamic = RuleSeverity.fromCode(code == null ? null : String.valueOf(code));
-      if (dynamic != null) return dynamic;
+      if (dynamic != null) {
+        return dynamic;
+      }
     }
     return definition.getDefaultSeverity() != null
         ? definition.getDefaultSeverity()
@@ -337,7 +342,7 @@ public class ExpressionRule implements Rule {
    * @return 耗时毫秒
    */
   private long elapsedMs(long startNano) {
-    return (System.nanoTime() - startNano) / 1_000_000;
+    return (System.nanoTime() - startNano) / NANOS_PER_MILLI;
   }
 
   /**

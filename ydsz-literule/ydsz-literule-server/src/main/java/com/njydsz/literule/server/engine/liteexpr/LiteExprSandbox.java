@@ -110,7 +110,9 @@ public class LiteExprSandbox {
 
   public LiteExprSandbox() {}
 
-  /** 从函数注册表初始化白名单 */
+  /** 从函数注册表初始化白名单
+   * @param registry 参数说明
+   */
   public void syncFunctions(FunctionRegistry registry) {
     allowedFunctions.clear();
     allowedFunctions.addAll(registry.getFunctionNames());
@@ -133,24 +135,32 @@ public class LiteExprSandbox {
       Iterable<String> allowedFunctions) {
     if (forbiddenMethods != null) {
       for (String m : forbiddenMethods) {
-        if (m != null && !m.isBlank()) extraForbiddenMethods.add(m.trim());
+        if (m != null && !m.isBlank()) {
+          extraForbiddenMethods.add(m.trim());
+        }
       }
     }
     if (forbiddenRoots != null) {
       for (String r : forbiddenRoots) {
-        if (r != null && !r.isBlank()) extraForbiddenRoots.add(r.trim());
+        if (r != null && !r.isBlank()) {
+          extraForbiddenRoots.add(r.trim());
+        }
       }
     }
     if (allowedFunctions != null) {
       for (String f : allowedFunctions) {
-        if (f != null && !f.isBlank()) this.allowedFunctions.add(f.trim());
+        if (f != null && !f.isBlank()) {
+          this.allowedFunctions.add(f.trim());
+        }
       }
     }
     // 规则集合变化，清空校验缓存
     clearCache();
   }
 
-  /** 追加危险方法名 */
+  /** 追加危险方法名
+   * @param method 参数说明
+   */
   public void addForbiddenMethod(String method) {
     if (method != null && !method.isBlank()) {
       extraForbiddenMethods.add(method.trim());
@@ -158,7 +168,9 @@ public class LiteExprSandbox {
     }
   }
 
-  /** 追加危险类/属性链根 */
+  /** 追加危险类/属性链根
+   * @param root 参数说明
+   */
   public void addForbiddenRoot(String root) {
     if (root != null && !root.isBlank()) {
       extraForbiddenRoots.add(root.trim());
@@ -173,17 +185,25 @@ public class LiteExprSandbox {
     clearCache();
   }
 
-  /** 添加变量到白名单 */
+  /** 添加变量到白名单
+   * @param name 参数说明
+   */
   public void addAllowedVariable(String name) {
     if (name != null && !name.isBlank()) {
       allowedVariables.add(name);
     }
   }
 
-  /** 批量添加变量 */
+  /** 批量添加变量
+   * @param names 参数说明
+   */
   public void addAllowedVariables(Iterable<String> names) {
-    if (names == null) return;
-    for (String n : names) addAllowedVariable(n);
+    if (names == null) {
+      return;
+    }
+    for (String n : names) {
+      addAllowedVariable(n);
+    }
   }
 
   /**
@@ -191,6 +211,7 @@ public class LiteExprSandbox {
    *
    * <p>每次评估前调用此方法，将当前 facts 的 key 替换为白名单内容。 避免不同请求的 facts key（如 traceId、时间戳等高基数 key）在 Set
    * 中累积导致内存泄漏。
+      * @param facts 参数说明
    */
   public void syncFacts(Map<String, Object> facts) {
     allowedVariables.clear();
@@ -229,7 +250,9 @@ public class LiteExprSandbox {
 
   /** 递归检查 AST 节点 */
   private void checkNode(ExprNode node, List<String> violations) {
-    if (node == null) return;
+    if (node == null) {
+      return;
+    }
 
     switch (node) {
       case MemberAccessNode man -> {
@@ -318,8 +341,8 @@ public class LiteExprSandbox {
           violations.add("禁止引用危险类: " + vn.name());
         }
       }
-      case LiteralNode ignored -> {}
-      case null -> {}
+      case LiteralNode ignored -> { }
+      case null -> { }
     }
   }
 

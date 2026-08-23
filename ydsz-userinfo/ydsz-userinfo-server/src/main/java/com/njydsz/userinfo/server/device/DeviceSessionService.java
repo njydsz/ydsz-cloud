@@ -6,15 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.auth.SessionManager;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 设备会话管理服务（P3-2）。
@@ -34,6 +33,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class DeviceSessionService {
+  /** User-Agent 截断长度 */
+  private static final int USER_AGENT_MAX_LENGTH = 30;
+
 
   /** 信任设备 Redis Key 前缀 */
   private static final String TRUSTED_DEVICE_KEY_PREFIX = "userinfo:device:trusted:";
@@ -152,9 +154,9 @@ public class DeviceSessionService {
     if (userAgent == null || userAgent.isBlank()) {
       return "未知设备";
     }
-    if (userAgent.length() <= 30) {
+    if (userAgent.length() <= USER_AGENT_MAX_LENGTH) {
       return userAgent;
     }
-    return userAgent.substring(0, 30) + "...";
+    return userAgent.substring(0, USER_AGENT_MAX_LENGTH) + "...";
   }
 }

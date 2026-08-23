@@ -68,7 +68,13 @@ public interface RuleExecutionTraceMapper extends BaseMapper<RuleExecutionTraceD
   Map<String, Object> selectStatsByTimeRange(
       @Param("since") LocalDateTime since, @Param("until") LocalDateTime until);
 
-  /** 时间窗口内的活跃规则数（去重 rule_code） */
+  /**
+   * 时间窗口内的活跃规则数（去重 rule_code）。
+   *
+   * @param since 起始时间（含）
+   * @param until 结束时间（不含）
+   * @return 活跃规则数
+   */
   @Select(
       """
             SELECT COUNT(DISTINCT rule_code) AS activeRules
@@ -137,7 +143,13 @@ public interface RuleExecutionTraceMapper extends BaseMapper<RuleExecutionTraceD
       @Param("until") LocalDateTime until,
       @Param("format") String format);
 
-  /** 按严重度分组计数（用于分布饼图） */
+  /**
+   * 按严重度分组计数（用于分布饼图）。
+   *
+   * @param since 起始时间（含）
+   * @param until 结束时间（不含）
+   * @return 分组计数结果（name=严重度，value=数量）
+   */
   @Select(
       """
             SELECT severity AS name, COUNT(*) AS value
@@ -150,7 +162,13 @@ public interface RuleExecutionTraceMapper extends BaseMapper<RuleExecutionTraceD
   List<Map<String, Object>> selectSeverityCount(
       @Param("since") LocalDateTime since, @Param("until") LocalDateTime until);
 
-  /** 按场景分组计数（用于分布饼图） */
+  /**
+   * 按场景分组计数（用于分布饼图）。
+   *
+   * @param since 起始时间（含）
+   * @param until 结束时间（不含）
+   * @return 分组计数结果（name=场景，value=数量）
+   */
   @Select(
       """
             SELECT scenario AS name, COUNT(*) AS value

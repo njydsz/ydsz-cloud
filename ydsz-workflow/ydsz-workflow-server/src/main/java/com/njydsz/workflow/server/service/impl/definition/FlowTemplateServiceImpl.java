@@ -107,6 +107,29 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
 @Service
 public class FlowTemplateServiceImpl implements FlowTemplateService {
 
+    /** 默认排序号：未设置排序的模板置底（999） */
+  private static final int DEFAULT_SORT_ORDER = 999;
+
+  /** 流程名称后缀最大长度（30 字符，防止超长后缀导致名称超限） */
+  private static final int MAX_NAME_SUFFIX_LENGTH = 30;
+
+  /** BPMN 节点类型码：开始事件 */
+  private static final int NODE_TYPE_START_EVENT = 0;
+  /** BPMN 节点类型码：用户任务 */
+  private static final int NODE_TYPE_USER_TASK = 1;
+  /** BPMN 节点类型码：抄送任务（映射为 userTask） */
+  private static final int NODE_TYPE_CC_TASK = 2;
+  /** BPMN 节点类型码：排他网关 */
+  private static final int NODE_TYPE_EXCLUSIVE_GATEWAY = 3;
+  /** BPMN 节点类型码：并行网关 */
+  private static final int NODE_TYPE_PARALLEL_GATEWAY = 4;
+  /** BPMN 节点类型码：包容网关 */
+  private static final int NODE_TYPE_INCLUSIVE_GATEWAY = 5;
+  /** BPMN 节点类型码：结束事件 */
+  private static final int NODE_TYPE_END_EVENT = 6;
+  /** BPMN 节点类型码：子流程调用 */
+  private static final int NODE_TYPE_CALL_ACTIVITY = 7;
+
   /** 流程模板仓储（domain 层契约），管理 ydsz_flow_template 表 CRUD */
   private final FlowTemplateRepository templateRepository;
 
@@ -128,10 +151,11 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
   /**
    * 构造模板服务，初始化二级缓存。
    *
-   * @param templateMapper 模板 Mapper
+   * @param templateRepository 模板仓储
+   * @param converter 转换器
    * @param definitionService 流程定义服务
-   * @param searchIndexEventBridgeProvider 搜索索引事件桥接器
-   * @param flowProperties 流程模块配置
+   * @param searchIndexEventBridgeProvider 搜索索引事件桥接提供者
+   * @param flowProperties 流程配置
    */
   public FlowTemplateServiceImpl(
       FlowTemplateRepository templateRepository,
@@ -395,7 +419,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         template.setBpmnXml(bpmnXml);
         template.setFormPath(definition.getFormPath());
         template.setUseCount(0);
-        template.setSortOrder(existing.getSortOrder() != null ? existing.getSortOrder() : 999);
+        template.setSortOrder(existing.getSortOrder() != null ? existing.getSortOrder() : DEFAULT_SORT_ORDER);
         // P2-9: 版本化字段 — 沿用 inherit_type 与 parent_template_id 保持继承关系连续
         template.setVersion(newVersion);
         template.setVersionLabel("v" + newVersion + ".0");
@@ -420,7 +444,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         template.setBpmnXml(bpmnXml);
         template.setFormPath(definition.getFormPath());
         template.setUseCount(0);
-        template.setSortOrder(999);
+        template.setSortOrder(DEFAULT_SORT_ORDER);
         // P2-9: 版本化字段
         template.setVersion(1);
         template.setVersionLabel("1.0.0");
@@ -744,7 +768,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       newTemplate.setBpmnXml(source.getBpmnXml());
       newTemplate.setFormPath(source.getFormPath());
       newTemplate.setUseCount(0);
-      newTemplate.setSortOrder(source.getSortOrder() != null ? source.getSortOrder() : 999);
+      newTemplate.setSortOrder(source.getSortOrder() != null ? source.getSortOrder() : DEFAULT_SORT_ORDER);
       // P2-9: 继承关系字段
       newTemplate.setParentTemplateId(source.getId());
       newTemplate.setVersion(1);
@@ -981,7 +1005,13 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     return map;
   }
 
-  /** 生成模板编码 */
+  /**
+   * 生成模板编码
+   *
+   * @param category 参数说明
+   * @param templateName 参数说明
+   * @return 返回值说明
+   */
   private String generateTemplateCode(String category, String templateName) {
     String prefix =
         StringUtils.hasText(category) ? category.toLowerCase().replace(" ", "_") : "general";
@@ -991,13 +1021,18 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .replaceAll("[\\s\\p{Punct}]+", "_")
             .replaceAll("_+", "_")
             .replaceAll("^_|_$", "");
-    if (suffix.length() > 30) {
-      suffix = suffix.substring(0, 30);
+    if (suffix.length() > MAX_NAME_SUFFIX_LENGTH) {
+      suffix = suffix.substring(0, MAX_NAME_SUFFIX_LENGTH);
     }
     return prefix + "_" + suffix;
   }
 
-  /** 根据流程定义详情生成 BPMN 2.0 XML */
+  /**
+   * 根据流程定义详情生成 BPMN 2.0 XML
+   *
+   * @param detail 参数说明
+   * @return 返回值说明
+   */
   private String generateBpmnXml(Map<String, Object> detail) {
     Object defObj = detail.get("definition");
     if (!(defObj instanceof FlowDefinitionDO definition)) {
@@ -1121,14 +1156,14 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       return "userTask";
     }
     return switch (nodeType) {
-      case 0 -> "startEvent";
-      case 1 -> "userTask";
-      case 2 -> "userTask"; // 抄送节点也映射为 userTask
-      case 3 -> "exclusiveGateway";
-      case 4 -> "parallelGateway";
-      case 5 -> "inclusiveGateway";
-      case 6 -> "endEvent";
-      case 7 -> "callActivity"; // 子流程
+      case NODE_TYPE_START_EVENT -> "startEvent";
+      case NODE_TYPE_USER_TASK -> "userTask";
+      case NODE_TYPE_CC_TASK -> "userTask"; // 抄送节点也映射为 userTask
+      case NODE_TYPE_EXCLUSIVE_GATEWAY -> "exclusiveGateway";
+      case NODE_TYPE_PARALLEL_GATEWAY -> "parallelGateway";
+      case NODE_TYPE_INCLUSIVE_GATEWAY -> "inclusiveGateway";
+      case NODE_TYPE_END_EVENT -> "endEvent";
+      case NODE_TYPE_CALL_ACTIVITY -> "callActivity"; // 子流程
       default -> "userTask";
     };
   }
@@ -1161,7 +1196,12 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     return null;
   }
 
-  /** XML 转义 */
+  /**
+   * XML 转义
+   *
+   * @param s 参数说明
+   * @return 返回值说明
+   */
   private String escapeXml(String s) {
     if (s == null) {
       return "";

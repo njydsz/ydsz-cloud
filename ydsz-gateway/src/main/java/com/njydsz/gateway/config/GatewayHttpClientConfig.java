@@ -117,7 +117,8 @@ public class GatewayHttpClientConfig {
             .evictInBackground(Duration.ofSeconds(evictionIntervalSeconds));
 
     log.info(
-        "[HttpClient] 连接池配置 maxConnections={} pendingAcquireTimeout={}ms maxIdle={}s maxLife={}s evictInterval={}s metrics=true",
+        "[HttpClient] 连接池配置 maxConnections={} pendingAcquireTimeout={}ms maxIdle={}s "
+            + "maxLife={}s evictInterval={}s metrics=true",
         maxConnections,
         pendingAcquireTimeoutMs,
         maxIdleTimeSeconds,

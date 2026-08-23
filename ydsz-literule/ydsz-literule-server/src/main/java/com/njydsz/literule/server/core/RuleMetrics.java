@@ -22,7 +22,14 @@ import com.njydsz.literule.api.RuleSeverity;
  */
 public interface RuleMetrics {
 
-  /** 记录单次评估 */
+  /** 记录单次评估
+   * @param error 参数说明
+      * @param severity 参数说明
+      * @param triggered 参数说明
+      * @param scenario 参数说明
+      * @param ruleCode 参数说明
+      * @param elapsedMs 耗时（毫秒）
+*/
   void recordEvaluation(
       String ruleCode,
       String scenario,
@@ -31,19 +38,32 @@ public interface RuleMetrics {
       boolean error,
       long elapsedMs);
 
-  /** 记录熔断状态 */
+  /** 记录熔断状态
+   * @param ruleCode 参数说明
+   * @param state 参数说明
+   */
   void recordBreakerState(String ruleCode, String state);
 
-  /** 记录 Trace 队列积压 */
+  /** 记录 Trace 队列积压
+   * @param queueSize 参数说明
+   */
   void recordTraceQueueSize(int queueSize);
 
-  /** 记录当前注册规则数 */
+  /** 记录当前注册规则数
+   * @param count 参数说明
+   */
   void recordRegisteredRules(int count);
 
-  /** 记录单次评估遍历的规则数 */
+  /** 记录单次评估遍历的规则数
+   * @param count 参数说明
+   */
   void recordEvaluatedRules(int count);
 
-  /** 记录慢规则告警 */
+  /** 记录慢规则告警
+   * @param ruleCode 参数说明
+   * @param elapsedMs 参数说明
+   * @param thresholdMs 参数说明
+   */
   void recordSlowRule(String ruleCode, long elapsedMs, long thresholdMs);
 
   /**

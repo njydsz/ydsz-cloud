@@ -17,8 +17,8 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowAttachmentDTO;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
-import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.domain.repository.FlowAttachmentRepository;
+import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAttachmentDO;
 import com.njydsz.workflow.server.config.FlowProperties;
@@ -192,8 +192,11 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
+   *
+   * @param taskId 参数说明
+   * @return 返回值说明
    */
   @Override
   public List<FlowAttachmentVO> listByTaskVO(String taskId) {
@@ -202,8 +205,11 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
+   *
+   * @param instanceId 参数说明
+   * @return 返回值说明
    */
   @Override
   public List<FlowAttachmentVO> listByInstanceVO(String instanceId) {
@@ -282,14 +288,19 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
 
   /**
    * 根据预览类型构建预览 URL。
-   *
+   * 
    * <p>OFFICE 类型需要配置 {@code workflow.attachment.preview-server-url}：
-   *
+   * 
    * <ul>
-   *   <li>配置中含 {@code {url}} 占位符 → 替换为 downloadUrl 的 URL 编码
-   *   <li>配置中不含占位符 → 直接拼接 downloadUrl
-   *   <li>未配置 → 返回 null（previewable=false，前端降级下载）
+   * <li>配置中含 {@code {url}} 占位符 → 替换为 downloadUrl 的 URL 编码
+   * <li>配置中不含占位符 → 直接拼接 downloadUrl
+   * <li>未配置 → 返回 null（previewable=false，前端降级下载）
    * </ul>
+   *
+   * @param previewType 参数说明
+   * @param downloadUrl 参数说明
+   * @param ext 参数说明
+   * @return 返回值说明
    */
   private String buildPreviewUrl(String previewType, String downloadUrl, String ext) {
     if (!StringUtils.hasText(downloadUrl)) {

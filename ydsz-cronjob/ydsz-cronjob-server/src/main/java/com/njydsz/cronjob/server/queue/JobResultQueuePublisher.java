@@ -51,6 +51,9 @@ import com.njydsz.cronjob.server.core.TaskCompletedEvent;
 @Component
 @RequiredArgsConstructor
 public class JobResultQueuePublisher {
+  /** Map 初始容量 */
+  private static final int MAP_INITIAL_CAPACITY = 4;
+
 
   private final IMessageQueueProvider messageQueueProvider;
   private IMessageQueue resultQueue;
@@ -86,7 +89,7 @@ public class JobResultQueuePublisher {
       return;
     }
     try {
-      Map<String, Object> payload = new HashMap<>(4);
+      Map<String, Object> payload = new HashMap<>(MAP_INITIAL_CAPACITY);
       payload.put("jobId", event.jobId());
       payload.put("jobKey", event.jobKey());
       payload.put("success", event.success());

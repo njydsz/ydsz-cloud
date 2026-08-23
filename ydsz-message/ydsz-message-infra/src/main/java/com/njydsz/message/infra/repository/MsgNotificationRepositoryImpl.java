@@ -61,7 +61,7 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
     wrapper.orderByDesc("created_at");
     IPage<MsgNotificationDO> entityPage = msgNotificationMapper.selectPage(page, wrapper);
     List<MsgNotificationVO> vos = converter.notificationDoListToVO(entityPage.getRecords());
-    return PageResponse.success(entityPage.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
+    return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   @Override

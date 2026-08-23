@@ -57,9 +57,6 @@ public class MetricsAutoConfiguration {
    * 装配基于 Micrometer 的指标采集器，作为默认（首选）实现。
    *
    * <p>仅在 classpath 存在 {@link MeterRegistry} 且未显式配置其他 primary 时生效。
-   *
-   * @param meterRegistry Micrometer 注册中心，由 Spring Boot Actuator 提供
-   * @return 指标采集器实现
    */
   @Configuration(proxyBeanMethods = false)
   @ConditionalOnClass(MeterRegistry.class)
@@ -72,6 +69,11 @@ public class MetricsAutoConfiguration {
         name = "primary",
         havingValue = "micrometer",
         matchIfMissing = true)
+    /**
+     * micrometer metrics collector。
+     * @param meterRegistry 参数
+     * @return 结果
+     */
     public MicrometerMetricsCollector micrometerMetricsCollector(MeterRegistry meterRegistry) {
       return new MicrometerMetricsCollector(meterRegistry);
     }
@@ -85,6 +87,10 @@ public class MetricsAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(MetricsCollector.class)
   @ConditionalOnProperty(prefix = "ydsz.sentry.metrics", name = "primary", havingValue = "memory")
+  /**
+   * in memory metrics。
+   * @return 结果
+   */
   public InMemoryMetricsCollector inMemoryMetricsCollector() {
     return new InMemoryMetricsCollector();
   }
@@ -137,6 +143,11 @@ public class MetricsAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(CircuitBreakerRegistry.class)
   @ConditionalOnClass(CircuitBreakerRegistry.class)
+  /**
+   * circuit breaker registry。
+   * @param properties 参数
+   * @return 结果
+   */
   public CircuitBreakerRegistry circuitBreakerRegistry(SentryProperties properties) {
     SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
     CircuitBreakerConfig config =
@@ -162,6 +173,11 @@ public class MetricsAutoConfiguration {
   @Bean("elkCircuitBreaker")
   @ConditionalOnMissingBean(name = "elkCircuitBreaker")
   @ConditionalOnProperty(prefix = "ydsz.sentry.logging.elk", name = "enabled", havingValue = "true")
+  /**
+   * elk circuit breaker。
+   * @param properties 参数
+   * @return 结果
+   */
   public CircuitBreaker elkCircuitBreaker(SentryProperties properties) {
     SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
     return new CircuitBreaker(
@@ -184,6 +200,11 @@ public class MetricsAutoConfiguration {
       name = "enabled",
       havingValue = "true",
       matchIfMissing = true)
+  /**
+   * loki circuit breaker。
+   * @param properties 参数
+   * @return 结果
+   */
   public CircuitBreaker lokiCircuitBreaker(SentryProperties properties) {
     SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
     return new CircuitBreaker(
@@ -195,6 +216,9 @@ public class MetricsAutoConfiguration {
 
   /** 容器关闭时停止系统指标采集线程。 */
   @PreDestroy
+  /**
+   * destroy。
+   */
   public void destroy() {
     if (systemMetricsScheduler != null) {
       systemMetricsScheduler.shutdown();

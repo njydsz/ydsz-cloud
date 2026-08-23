@@ -44,7 +44,7 @@ import com.njydsz.literule.api.expression.ExpressionEngine;
 public class RuleDebugger {
 
   /** 全局单例（供热路径零侵入访问；Spring 容器销毁时置空） */
-  private static volatile RuleDebugger INSTANCE;
+  private static volatile RuleDebugger instance;
 
   /** 断点索引：ruleCode -> 断点列表 */
   private final Map<String, List<Breakpoint>> breakpoints = new ConcurrentHashMap<>();
@@ -76,15 +76,15 @@ public class RuleDebugger {
   /** 注册全局单例（Spring Bean 初始化后调用） */
   @PostConstruct
   public void init() {
-    INSTANCE = this;
+    instance = this;
     log.info("[LiteRule-Debug] 规则断点调试器已启用");
   }
 
   /** 注销全局单例（Spring 容器销毁时调用） */
   @PreDestroy
   public void destroy() {
-    if (INSTANCE == this) {
-      INSTANCE = null;
+    if (instance == this) {
+      instance = null;
     }
   }
 
@@ -99,7 +99,9 @@ public class RuleDebugger {
 
   // ==================== 当前评估规则上下文 ====================
 
-  /** 进入规则评估（设置 ThreadLocal 当前规则编码） */
+  /** 进入规则评估（设置 ThreadLocal 当前规则编码）
+   * @param ruleCode 参数说明
+   */
   public static void enterRule(String ruleCode) {
     CURRENT_RULE_CODE.set(ruleCode);
   }
@@ -183,7 +185,9 @@ public class RuleDebugger {
     log.info("[LiteRule-Debug] 删除断点: id={}", breakpointId);
   }
 
-  /** 删除指定规则的全部断点 */
+  /** 删除指定规则的全部断点
+   * @param ruleCode 参数说明
+   */
   public void removeBreakpointsByRule(String ruleCode) {
     breakpoints.remove(ruleCode);
   }

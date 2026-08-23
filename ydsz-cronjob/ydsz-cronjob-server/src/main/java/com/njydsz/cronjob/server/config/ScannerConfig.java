@@ -13,21 +13,36 @@ import lombok.Data;
 @Data
 public class ScannerConfig {
 
+  /** 默认intervalMs值（可被配置文件覆盖） */
+  private static final long DEFAULT_INTERVAL_MS = 5000;
+
+  /** 默认batchSize值（可被配置文件覆盖） */
+  private static final int DEFAULT_BATCH_SIZE = 500;
+
+  /** 默认lockTtlSeconds值（可被配置文件覆盖） */
+  private static final int DEFAULT_LOCK_TTL_SECONDS = 30;
+
+  /** 默认misfireGraceMinutes值（可被配置文件覆盖） */
+  private static final int DEFAULT_MISFIRE_GRACE_MINUTES = 30;
+
+  /** 默认parallelDispatchPoolSize值（可被配置文件覆盖） */
+  private static final int DEFAULT_PARALLEL_DISPATCH_POOL_SIZE = 8;
+
   /** 扫描间隔（毫秒，默认 5s） */
-  private long intervalMs = 5000;
+  private long intervalMs = DEFAULT_INTERVAL_MS;
 
   /**
    * 单批最多触发任务数（P0-2 吞吐提升：默认从 100 提升至 500）。
    *
    * <p>5s 扫描间隔 × 500 batch = 100 tasks/s 基线吞吐量。 万级任务场景可通过增大此值或缩短扫描间隔进一步提升。
    */
-  private int batchSize = 500;
+  private int batchSize = DEFAULT_BATCH_SIZE;
 
   /** 扫描锁 TTL（秒，默认 30s） */
-  private int lockTtlSeconds = 30;
+  private int lockTtlSeconds = DEFAULT_LOCK_TTL_SECONDS;
 
   /** Misfire 宽容窗口（分钟，超过此窗口的任务按 misfire_policy 处理） */
-  private int misfireGraceMinutes = 30;
+  private int misfireGraceMinutes = DEFAULT_MISFIRE_GRACE_MINUTES;
 
   /**
    * P0-2: 是否启用并行派发（默认 true）。
@@ -42,5 +57,5 @@ public class ScannerConfig {
    *
    * <p>控制单次扫描中并行派发的并发度。过大可能压垮 DB 连接池（CAS 操作）， 过小则并行效果不明显。
    */
-  private int parallelDispatchPoolSize = 8;
+  private int parallelDispatchPoolSize = DEFAULT_PARALLEL_DISPATCH_POOL_SIZE;
 }

@@ -14,8 +14,10 @@ import org.springframework.core.type.AnnotationMetadata;
  */
 class RedisHttpSessionImportSelector implements ImportSelector {
 
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 反射类名字符串常量，非代码引用
   private static final String REDIS_HTTP_SESSION_CONFIG =
       "org.springframework.session.data.redis.config.annotation.web.http.RedisHttpSessionConfiguration";
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   @Override
   @NonNull

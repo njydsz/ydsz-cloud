@@ -87,25 +87,48 @@ public class TemplateAst {
       this.body = body;
     }
 
-    /** 静态文本指令 */
+    /**
+     * 静态文本指令
+     *
+     * @param text 参数说明
+     * @return 返回值说明
+     */
     static AstInstruction text(String text) {
       return new AstInstruction(InstructionType.TEXT, text, null, null, null, null, null, null);
     }
 
-    /** 变量指令 */
+    /**
+     * 变量指令
+     *
+     * @param expression 参数说明
+     * @return 返回值说明
+     */
     static AstInstruction var(String expression) {
       return new AstInstruction(
           InstructionType.VAR, null, expression, null, null, null, null, null);
     }
 
-    /** if 条件指令 */
+    /**
+     * if 条件指令
+     *
+     * @param conditionKey 参数说明
+     * @param trueBranch 参数说明
+     * @param falseBranch 参数说明
+     * @return 返回值说明
+     */
     static AstInstruction ifBlock(
         String conditionKey, TemplateAst trueBranch, TemplateAst falseBranch) {
       return new AstInstruction(
           InstructionType.IF, null, null, conditionKey, trueBranch, falseBranch, null, null);
     }
 
-    /** each 循环指令 */
+    /**
+     * each 循环指令
+     *
+     * @param iterationKey 参数说明
+     * @param body 参数说明
+     * @return 返回值说明
+     */
     static AstInstruction eachBlock(String iterationKey, TemplateAst body) {
       return new AstInstruction(
           InstructionType.EACH, null, null, null, null, null, iterationKey, body);

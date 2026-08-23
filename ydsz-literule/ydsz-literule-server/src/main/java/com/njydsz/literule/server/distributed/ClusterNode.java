@@ -45,15 +45,23 @@ public class ClusterNode {
     this.weight = weight;
   }
 
-  /** 判断节点是否存活（心跳在 30 秒内） */
+  /** 判断节点是否存活（心跳在 30 秒内）
+   * @param now 参数说明
+   * @param heartbeatTimeoutMs 参数说明
+   * @return 返回值说明
+   */
   public boolean isAlive(long now, long heartbeatTimeoutMs) {
     return (now - lastHeartbeatAt) < heartbeatTimeoutMs;
   }
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     ClusterNode that = (ClusterNode) o;
     return Objects.equals(nodeId, that.nodeId);
   }
@@ -68,7 +76,11 @@ public class ClusterNode {
     return "ClusterNode{" + nodeId + " @ " + address + ", weight=" + weight + '}';
   }
 
-  /** 构建单节点列表（开发/测试用） */
+  /** 构建单节点列表（开发/测试用）
+   * @param nodeId 参数说明
+   * @param address 参数说明
+   * @return 返回值说明
+   */
   public static List<ClusterNode> singleNode(String nodeId, String address) {
     return new ArrayList<>(Collections.singletonList(new ClusterNode(nodeId, address)));
   }

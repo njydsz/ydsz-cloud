@@ -46,6 +46,10 @@ public class AlertEvent {
   private String runbookUrl;
 
   /** 生成去重 Key（用于告警收敛） */
+  /**
+   * dedup key。
+   * @return 结果
+   */
   public String dedupKey() {
     return name
         + "|"

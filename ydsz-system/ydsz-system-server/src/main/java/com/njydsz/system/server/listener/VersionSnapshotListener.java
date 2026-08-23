@@ -1,5 +1,4 @@
 package com.njydsz.system.server.listener;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -8,6 +7,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.server.service.EntityVersionService;
+
+
 
 /**
  * 版本快照事件监听器 — 在主写事务提交后异步创建版本快照。

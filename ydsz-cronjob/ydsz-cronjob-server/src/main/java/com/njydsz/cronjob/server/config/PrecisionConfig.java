@@ -18,15 +18,24 @@ import lombok.Data;
 @Data
 public class PrecisionConfig {
 
+  /** 默认scanIntervalMs值（可被配置文件覆盖） */
+  private static final int DEFAULT_SCAN_INTERVAL_MS = 3000;
+
+  /** 默认windowSeconds值（可被配置文件覆盖） */
+  private static final int DEFAULT_WINDOW_SECONDS = 30;
+
+  /** 默认batchSize值（可被配置文件覆盖） */
+  private static final int DEFAULT_BATCH_SIZE = 200;
+
   /** 是否启用秒级预读调度（默认关闭，开启后 CRON 任务获得毫秒级触发精度） */
   private boolean enabled = false;
 
   /** 预读扫描周期（毫秒），默认 3s 一次将窗口内任务注册到内存调度器 */
-  private int scanIntervalMs = 3000;
+  private int scanIntervalMs = DEFAULT_SCAN_INTERVAL_MS;
 
   /** 预读窗口（秒）：仅预读 next_fire_time 在 [now, now+window] 内的 CRON 任务 */
-  private int windowSeconds = 30;
+  private int windowSeconds = DEFAULT_WINDOW_SECONDS;
 
   /** 单批预读最大任务数 */
-  private int batchSize = 200;
+  private int batchSize = DEFAULT_BATCH_SIZE;
 }

@@ -56,15 +56,10 @@ public class SpaceApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public SpaceVO createSpace(String name, String description, String visibility, String userId) {
-    String tenantId = TenantContext.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
 
-    // 校验参数
-    SpaceDTO spaceDTO = SpaceDTO.builder()
-        .name(name)
-        .description(description)
-        .visibility(visibility)
-        .build();
-    spaceDomainService.validateCreate(spaceDTO);
+    // 校验参数（名称非空由领域服务校验）
+    spaceDomainService.validateSpaceName(name);
 
     // 校验名称唯一性
     spaceRepository.findByTenantIdAndName(tenantId, name).ifPresent(existing -> {
@@ -104,7 +99,6 @@ public class SpaceApplicationService {
         .joinedAt(now)
         .createdBy(userId)
         .updatedBy(userId)
-        .createdAt(now)
         .updatedAt(now)
         .build();
     spaceMemberRepository.save(ownerMember);
@@ -133,17 +127,15 @@ public class SpaceApplicationService {
 
     // 更新字段
     if (name != null) {
-      spaceDomainService.validateName(name);
+      spaceDomainService.validateSpaceName(name);
       space.setName(name);
     }
     if (description != null) {
-      spaceDomainService.validateDescription(description);
       space.setDescription(description);
     }
     if (visibility != null) {
       space.setVisibility(visibility);
     }
-    space.setUpdatedBy(userId);
     space.setUpdatedAt(LocalDateTime.now());
 
     // 转换为 DTO 进行更新
@@ -161,7 +153,7 @@ public class SpaceApplicationService {
         .quotaUsed(space.getQuotaUsed())
         .createdAt(space.getCreatedAt())
         .updatedAt(space.getUpdatedAt())
-        .updatedBy(space.getUpdatedBy())
+        .updatedBy(userId)
         .build();
     spaceRepository.update(updateDTO);
 
@@ -181,8 +173,7 @@ public class SpaceApplicationService {
     SpaceVO space = spaceRepository.findById(spaceId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SPACE_NOT_FOUND).data("spaceId", spaceId));
 
-    spaceDomainService.transitionStatus(space, "archived");
-    space.setUpdatedBy(userId);
+    space.setStatus("archived");
     space.setUpdatedAt(LocalDateTime.now());
 
     // 转换为 DTO 进行更新
@@ -200,7 +191,7 @@ public class SpaceApplicationService {
         .quotaUsed(space.getQuotaUsed())
         .createdAt(space.getCreatedAt())
         .updatedAt(space.getUpdatedAt())
-        .updatedBy(space.getUpdatedBy())
+        .updatedBy(userId)
         .build();
     spaceRepository.update(updateDTO);
 
@@ -231,7 +222,7 @@ public class SpaceApplicationService {
    * @return 空间视图列表
    */
   public List<SpaceVO> listSpaces(String userId) {
-    String tenantId = TenantContext.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
     List<SpaceVO> spaces = spaceRepository.findByTenantId(tenantId);
     return spaces.stream()
         .filter(s -> hasSpaceReadPermission(s.getId(), userId))
@@ -271,7 +262,7 @@ public class SpaceApplicationService {
       throw BusinessException.of(NextwikiExceptionCode.SPACE_MEMBER_ROLE_INVALID).data("role", role);
     }
 
-    String tenantId = TenantContext.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
     LocalDateTime now = LocalDateTime.now();
 
     // 检查是否已是成员
@@ -290,7 +281,6 @@ public class SpaceApplicationService {
           .joinedAt(now)
           .createdBy(operatorId)
           .updatedBy(operatorId)
-          .createdAt(now)
           .updatedAt(now)
           .build();
       spaceMemberRepository.save(member);
@@ -314,7 +304,7 @@ public class SpaceApplicationService {
           .quotaUsed(space.getQuotaUsed())
           .createdAt(space.getCreatedAt())
           .updatedAt(space.getUpdatedAt())
-          .updatedBy(space.getUpdatedBy())
+          .updatedBy(operatorId)
           .build();
       spaceRepository.update(updateDTO);
     }
@@ -362,7 +352,7 @@ public class SpaceApplicationService {
         .quotaUsed(space.getQuotaUsed())
         .createdAt(space.getCreatedAt())
         .updatedAt(space.getUpdatedAt())
-        .updatedBy(space.getUpdatedBy())
+        .updatedBy(operatorId)
         .build();
     spaceRepository.update(updateDTO);
 

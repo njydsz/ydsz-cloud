@@ -9,15 +9,13 @@ import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
@@ -54,6 +52,15 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @RequestMapping("/api/v1/cronjob/stats")
 @RequiredArgsConstructor
 public class JobStatsController {
+  /** 一天小时数 */
+  private static final int HOURS_PER_DAY = 24;
+
+  /** 结束分钟 */
+  private static final int MINUTE_END = 59;
+
+  /** 结束秒 */
+  private static final int SECOND_END = 59;
+
 
   /** 每日统计 Repository（DDD 分层：Controller 通过 Repository 接口访问） */
   private final JobDailyStatsRepository jobDailyStatsRepository;
@@ -244,9 +251,9 @@ public class JobStatsController {
           LocalDate date) {
     LocalDate queryDate = date != null ? date : LocalDate.now();
     List<Map<String, Object>> heatmap = new ArrayList<>();
-    for (int hour = 0; hour < 24; hour++) {
+    for (int hour = 0; hour < HOURS_PER_DAY; hour++) {
       LocalDateTime hourStart = queryDate.atTime(hour, 0);
-      LocalDateTime hourEnd = queryDate.atTime(hour, 59, 59);
+      LocalDateTime hourEnd = queryDate.atTime(hour, MINUTE_END, SECOND_END);
       // 通过 Repository 统计每小时的执行数量
       long count = jobLogRepository.countByTimeRange(hourStart, hourEnd);
       Map<String, Object> entry = new HashMap<>();

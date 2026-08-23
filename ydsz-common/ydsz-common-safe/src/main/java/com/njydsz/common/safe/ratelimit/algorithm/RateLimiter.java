@@ -49,16 +49,32 @@ public interface RateLimiter {
     return tryAcquire(context);
   }
 
-  /** 获取支持的算法 */
+  /**
+   * 获取支持的算法。
+   *
+   * @return 限流算法类型
+   */
   RateLimitAlgorithm getAlgorithm();
 
-  /** 获取当前规则 */
+  /**
+   * 获取当前规则。
+   *
+   * @return 限流规则
+   */
   RateLimitRule getRule();
 
-  /** 重置限流器状态 */
+  /**
+   * 重置限流器状态。
+   *
+   * <p>清空窗口/计数/令牌等内部状态，用于规则变更或运维重置。
+   */
   void reset();
 
-  /** 释放一个令牌/许可（用于并发数限流的 finally 块） */
+  /**
+   * 释放一个令牌/许可（用于并发数限流的 finally 块）。
+   *
+   * @param context 限流上下文
+   */
   default void release(RateLimitContext context) {
     // 默认无操作，仅并发数限流器需要实现
   }

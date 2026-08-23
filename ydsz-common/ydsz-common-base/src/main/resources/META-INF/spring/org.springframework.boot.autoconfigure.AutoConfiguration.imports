@@ -1,4 +1,4 @@
-com.njydsz.common.base.config.BaseAutoConfiguration
+com.njydsz.common.base.config.YdszAutoConfiguration
 com.njydsz.common.base.config.DocAutoConfiguration
 com.njydsz.common.base.config.DocSecurityConfiguration
 com.njydsz.common.base.config.OpenApiAutoConfiguration

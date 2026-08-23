@@ -3,14 +3,13 @@ package com.njydsz.workflow.server.service.impl.instance;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 
 /**
@@ -30,15 +29,24 @@ public class FlowTaskNotificationService {
 
   private final FlowTaskSupport support;
 
-  /** 任务完成事件（无 vars） */
+  /**
+   * 任务完成事件（无 vars）
+   *
+   * @param taskId 参数说明
+   * @param action 参数说明
+   */
   public void fireTaskCompleted(String taskId, String action) {
     fireTaskCompleted(taskId, action, null);
   }
 
   /**
    * 任务完成事件（含流程变量）
-   *
+   * 
    * <p>同时调用两版监听器：老版（taskId/action/vars）和 P2-37 引入的 携带 {@link FlowEventContext} 的新版本，保证向后兼容。
+   *
+   * @param taskId 参数说明
+   * @param action 参数说明
+   * @param vars 参数说明
    */
   public void fireTaskCompleted(String taskId, String action, Map<String, Object> vars) {
     support.fireEvent(l -> l.onTaskCompleted(taskId, action, vars), taskId);
@@ -50,7 +58,9 @@ public class FlowTaskNotificationService {
     String mdcTraceId = RequestContext.getTraceId();
     if (mdcTraceId == null || mdcTraceId.isBlank()) {
       mdcTraceId = MDC.get("traceId");
-      if (mdcTraceId == null) mdcTraceId = MDC.get("tid");
+      if (mdcTraceId == null) {
+        mdcTraceId = MDC.get("tid");
+      }
     }
     ctx.setTraceId(mdcTraceId);
     support.fireEvent(l -> l.onTaskCompleted(taskId, ctx), taskId);
@@ -98,7 +108,9 @@ public class FlowTaskNotificationService {
     String traceId = RequestContext.getTraceId();
     if (traceId == null || traceId.isBlank()) {
       traceId = MDC.get("traceId");
-      if (traceId == null) traceId = MDC.get("tid");
+      if (traceId == null) {
+        traceId = MDC.get("tid");
+      }
     }
     ctx.setTraceId(traceId);
 
@@ -119,7 +131,12 @@ public class FlowTaskNotificationService {
     support.publishWorkflowEvent("TASK_PERSONAL_COMPLETED", task.getInstanceId(), task.getId());
   }
 
-  /** 流程被驳回事件 */
+  /**
+   * 流程被驳回事件
+   *
+   * @param instanceId 参数说明
+   * @param reason 参数说明
+   */
   public void fireInstanceRejected(String instanceId, String reason) {
     support.fireEvent(l -> l.onInstanceRejected(instanceId, reason), null);
   }

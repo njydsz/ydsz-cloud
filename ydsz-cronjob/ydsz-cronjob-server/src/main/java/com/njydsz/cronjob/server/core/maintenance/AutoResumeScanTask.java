@@ -35,7 +35,7 @@ public class AutoResumeScanTask implements ScanTask {
   @Override
   public long intervalMs() {
     // 使用 AutoResumeScanner 的固定间隔（60s）
-    return 60000L;
+    return DEFAULT_SCAN_INTERVAL_MS;
   }
 
   @Override

@@ -87,62 +87,112 @@ public class NotifyServiceImplBuilder {
     return new NotifyServiceImplBuilder(strategyList);
   }
 
-  /** 设置限流管理器 */
+  /**
+   * 设置限流管理器。
+   *
+   * @param rateLimiterManager 限流管理器
+   * @return 当前 Builder
+   */
   public NotifyServiceImplBuilder rateLimiterManager(NotifyRateLimiterManager rateLimiterManager) {
     this.rateLimiterManager = rateLimiterManager;
     return this;
   }
 
-  /** 设置并行线程池 */
+  /**
+   * 设置并行线程池。
+   *
+   * @param parallelExecutor 并行线程池
+   * @return 当前 Builder
+   */
   public NotifyServiceImplBuilder parallelExecutor(ExecutorService parallelExecutor) {
     this.parallelExecutor = parallelExecutor;
     return this;
   }
 
-  /** 设置熔断器注册中心 */
+  /**
+   * 设置熔断器注册中心。
+   *
+   * @param circuitBreakerRegistry 熔断器注册中心
+   * @return 当前 Builder
+   */
   public NotifyServiceImplBuilder circuitBreakerRegistry(
       NotifyCircuitBreakerRegistry circuitBreakerRegistry) {
     this.circuitBreakerRegistry = circuitBreakerRegistry;
     return this;
   }
 
-  /** 设置降级管理器 */
+  /**
+   * 设置降级管理器。
+   *
+   * @param fallbackManager 降级管理器
+   * @return 当前 Builder
+   */
   public NotifyServiceImplBuilder fallbackManager(NotifyFallbackManager fallbackManager) {
     this.fallbackManager = fallbackManager;
     return this;
   }
 
-  /** 设置审计服务 */
+  /**
+   * 设置审计服务。
+   *
+   * @param auditService 审计服务
+   * @return 当前 Builder
+   */
   public NotifyServiceImplBuilder auditService(NotifyAuditService auditService) {
     this.auditService = auditService;
     return this;
   }
 
-  /** 设置指标服务 */
+  /**
+   * 设置指标服务。
+   *
+   * @param metrics 指标服务
+   * @return 当前 Builder
+   */
   public NotifyServiceImplBuilder metrics(NotifyMetrics metrics) {
     this.metrics = metrics;
     return this;
   }
 
-  /** 设置偏好管理器 */
+  /**
+   * 设置偏好管理器。
+   *
+   * @param preferenceManager 偏好管理器
+   * @return 当前 Builder
+   */
   public NotifyServiceImplBuilder preferenceManager(NotifyPreferenceManager preferenceManager) {
     this.preferenceManager = preferenceManager;
     return this;
   }
 
-  /** 设置去重服务 */
+  /**
+   * 设置去重服务。
+   *
+   * @param dedupService 去重服务
+   * @return 当前 Builder
+   */
   public NotifyServiceImplBuilder dedupService(NotifyDedupService dedupService) {
     this.dedupService = dedupService;
     return this;
   }
 
-  /** 设置消息聚合器 */
+  /**
+   * 设置消息聚合器。
+   *
+   * @param aggregator 消息聚合器
+   * @return 当前 Builder
+   */
   public NotifyServiceImplBuilder aggregator(NotificationAggregator aggregator) {
     this.aggregator = aggregator;
     return this;
   }
 
-  /** 设置回执追踪器 */
+  /**
+   * 设置回执追踪器。
+   *
+   * @param receiptTracker 回执追踪器
+   * @return 当前 Builder
+   */
   public NotifyServiceImplBuilder receiptTracker(NotifyReceiptTracker receiptTracker) {
     this.receiptTracker = receiptTracker;
     return this;

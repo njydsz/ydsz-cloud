@@ -32,18 +32,38 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SlaMetric {
 
-  /** SLA 名称 */
+  /**
+   * SLA 名称。
+   *
+   * @return SLA 名称
+   */
   String name();
 
-  /** SLA 描述 */
+  /**
+   * SLA 描述。
+   *
+   * @return SLA 描述
+   */
   String description() default "";
 
-  /** P99 阈值（毫秒），超过则记录 SLA 违反 */
+  /**
+   * P99 阈值（毫秒），超过则记录 SLA 违反。
+   *
+   * @return P99 阈值（毫秒），默认 500
+   */
   long thresholdMillis() default 500;
 
-  /** SLA 目标（0.0~1.0） */
+  /**
+   * SLA 目标（0.0~1.0）。
+   *
+   * @return SLA 目标，默认 0.99
+   */
   double slaTarget() default 0.99;
 
-  /** 评估窗口（秒） */
+  /**
+   * 评估窗口（秒）。
+   *
+   * @return 评估窗口（秒），默认 300
+   */
   long evaluationWindowSeconds() default 300;
 }

@@ -113,7 +113,7 @@ public class ScimController {
         .totalResults(total)
         .itemsPerPage(scimUsers.size())
         .startIndex(startIndex)
-        .Resources(scimUsers)
+        .resources(scimUsers)
         .build();
 
     return ResponseEntity.ok(YdszJson.toJson(response));
@@ -299,7 +299,7 @@ public class ScimController {
         .totalResults(0)
         .itemsPerPage(0)
         .startIndex(startIndex)
-        .Resources(List.of())
+        .resources(List.of())
         .build();
 
     return ResponseEntity.ok(YdszJson.toJson(response));

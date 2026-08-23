@@ -1,6 +1,7 @@
 package com.njydsz.cronjob.server.core.executor;
 
 import java.math.BigDecimal;
+import java.net.InetAddress;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
@@ -50,6 +51,9 @@ import com.njydsz.cronjob.server.core.metrics.SystemMetricsCollector;
 @RequiredArgsConstructor
 @ConditionalOnBean(JobNodeRepository.class)
 public class JobNodeHeartbeat {
+  /** 心跳线程池终止等待（秒） */
+  private static final long TERMINATION_WAIT_SECONDS = 3;
+
 
   private final JobNodeRepository jobNodeRepository;
   private final CronjobProperties cronjobProperties;
@@ -165,7 +169,7 @@ public class JobNodeHeartbeat {
     if (heartbeatExecutor != null) {
       heartbeatExecutor.shutdown();
       try {
-        if (!heartbeatExecutor.awaitTermination(3, TimeUnit.SECONDS)) {
+        if (!heartbeatExecutor.awaitTermination(TERMINATION_WAIT_SECONDS, TimeUnit.SECONDS)) {
           heartbeatExecutor.shutdownNow();
         }
       } catch (InterruptedException e) {
@@ -230,7 +234,7 @@ public class JobNodeHeartbeat {
   /** 尝试解析本机 hostname；解析失败时回退到 "unknown"。 */
   private String resolveHost() {
     try {
-      return java.net.InetAddress.getLocalHost().getHostName();
+      return InetAddress.getLocalHost().getHostName();
     } catch (Exception e) {
       return "unknown";
     }

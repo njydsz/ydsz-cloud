@@ -62,6 +62,9 @@ import com.njydsz.message.server.service.core.MessageService;
     maxReconsumeTimes = 3,
     consumeMode = ConsumeMode.ORDERLY)
 public class MessageConsumer implements RocketMQListener<String> {
+  /** 等待日志间隔（秒） */
+  private static final int WAIT_LOG_INTERVAL = 5;
+
 
   private final MessageService messageService;
   private final IdempotentStrategy idempotentStrategy;
@@ -240,7 +243,12 @@ public class MessageConsumer implements RocketMQListener<String> {
     }
   }
 
-  /** 按 msgId 精确查找消息日志 VO。 */
+  /**
+   * 按 msgId 精确查找消息日志 VO。
+   *
+   * @param msgId 参数说明
+   * @return 返回值说明
+   */
   private MsgLogVO findByMsgId(String msgId) {
     MessageLogQueryDTO query = new MessageLogQueryDTO();
     query.setMsgId(msgId);
@@ -344,7 +352,7 @@ public class MessageConsumer implements RocketMQListener<String> {
       try {
         Thread.sleep(1000);
         waitSeconds++;
-        if (inFlight.get() > 0 && waitSeconds % 5 == 0) {
+        if (inFlight.get() > 0 && waitSeconds % WAIT_LOG_INTERVAL == 0) {
           log.info(
               "[MessageConsumer] 等待在飞消息完成: inFlight={} waited={}s", inFlight.get(), waitSeconds);
         }

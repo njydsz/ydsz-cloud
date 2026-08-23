@@ -26,9 +26,9 @@ import com.njydsz.cronjob.domain.dto.dag.JobDagSaveDTO;
 import com.njydsz.cronjob.domain.repository.JobDagInstanceRepository;
 import com.njydsz.cronjob.domain.repository.JobDagRepository;
 import com.njydsz.cronjob.domain.repository.JobDagVersionRepository;
-import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
 import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagVO;
+import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 import com.njydsz.cronjob.server.core.dag.DagEdge;
@@ -59,6 +59,9 @@ import com.njydsz.cronjob.server.service.dag.JobDagService;
 @Service
 @RequiredArgsConstructor
 public class JobDagServiceImpl implements JobDagService {
+  /** 默认查询条数上限 */
+  private static final int DEFAULT_LIMIT = 50;
+
 
   /** DAG 定义 Repository */
   private final JobDagRepository jobDagRepository;
@@ -383,7 +386,7 @@ public class JobDagServiceImpl implements JobDagService {
   @Override
   @Transactional(readOnly = true)
   public List<JobDagVersionVO> listDagVersions(String dagId, int limit) {
-    int effectiveLimit = limit > 0 ? limit : 50;
+    int effectiveLimit = limit > 0 ? limit : DEFAULT_LIMIT;
     return jobDagVersionRepository.findByVersionDesc(dagId, effectiveLimit);
   }
 

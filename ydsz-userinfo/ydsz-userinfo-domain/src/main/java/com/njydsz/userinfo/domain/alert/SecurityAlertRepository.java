@@ -1,10 +1,10 @@
 package com.njydsz.userinfo.domain.alert;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
 
 /**
  * 安全告警仓储接口（领域契约层）。
@@ -35,21 +35,10 @@ public interface SecurityAlertRepository {
   /**
    * 分页查询安全告警。
    *
-   * @param status 告警状态（可为 null 表示不过滤）
-   * @param riskLevel 风险等级（可为 null 表示不过滤）
-   * @param startTime 起始时间（可为 null）
-   * @param endTime 结束时间（可为 null）
-   * @param pageNum 页码
-   * @param pageSize 每页大小
+   * @param query 分页查询条件（状态/风险等级/时间范围/分页参数）
    * @return 分页结果
    */
-  PageResponse<List<SecurityAlert>> page(
-      SecurityAlert.AlertStatus status,
-      SecurityAlert.RiskLevel riskLevel,
-      LocalDateTime startTime,
-      LocalDateTime endTime,
-      int pageNum,
-      int pageSize);
+  PageResponse<List<SecurityAlert>> page(SecurityAlertPageQuery query);
 
   /**
    * 统计指定时间范围内指定类型的告警数量（用于告警去重和频率控制）。

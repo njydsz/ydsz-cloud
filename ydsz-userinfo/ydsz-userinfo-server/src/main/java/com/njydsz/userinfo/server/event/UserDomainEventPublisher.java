@@ -30,7 +30,8 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
 /**
  * 用户模块领域事件发布器。
  *
- * <p>统一封装 {@link UserDomainEvent} 的创建与发布，通过 common-event 的 {@link DomainEventPublisher} 门面投递事件。 业务服务在涉及用户/角色/部门变更时调用此组件。
+ * <p>统一封装 {@link UserDomainEvent} 的创建与发布，通过 common-event 的 {@link DomainEventPublisher} 门面投递事件。
+ * 业务服务在涉及用户/角色/部门变更时调用此组件。
  *
  * <p><b>事件类型枚举：</b>使用 {@link UserDomainEventType} 替代硬编码字符串，提供类型安全。
  *

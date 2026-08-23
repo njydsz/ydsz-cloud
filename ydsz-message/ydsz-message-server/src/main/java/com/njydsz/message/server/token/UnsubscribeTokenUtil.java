@@ -40,6 +40,12 @@ import com.njydsz.message.server.config.MessageProperties;
 @Component
 @RequiredArgsConstructor
 public class UnsubscribeTokenUtil {
+  /** Token 分段数 */
+  private static final int TOKEN_PART_COUNT = 4;
+
+  /** 过期时间分段索引 */
+  private static final int EXPIRES_AT_INDEX = 3;
+
 
   /** payload 字段分隔符 */
   private static final String SEP = "|";
@@ -158,7 +164,7 @@ public class UnsubscribeTokenUtil {
 
   private UnsubscribeTokenPayload parsePayload(String payload) {
     String[] parts = payload.split("\\" + SEP, -1);
-    if (parts.length != 4) {
+    if (parts.length != TOKEN_PART_COUNT) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("退订 token 载荷格式非法")
@@ -166,7 +172,7 @@ public class UnsubscribeTokenUtil {
     }
     long expiresAt;
     try {
-      expiresAt = Long.parseLong(parts[3]);
+      expiresAt = Long.parseLong(parts[EXPIRES_AT_INDEX]);
     } catch (NumberFormatException e) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)

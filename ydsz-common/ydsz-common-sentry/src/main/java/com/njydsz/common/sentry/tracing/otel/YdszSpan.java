@@ -68,26 +68,44 @@ public final class YdszSpan {
   }
 
   /**
-   * 创建 Builder
+   * 创建 Builder。
    *
    * @param tracer OTel Tracer（可通过 {@code Sentry.getTracer()} 获取）
    * @param spanName Span 名称
+   * @return Builder 实例
    */
   public static Builder builder(Tracer tracer, String spanName) {
     return new Builder(tracer, spanName);
   }
 
-  /** 创建带命名空间的 Builder */
+  /**
+   * 创建带命名空间的 Builder。
+   *
+   * @param tracer OTel Tracer
+   * @param namespace 命名空间
+   * @param operation 操作名
+   * @return Builder 实例
+   */
   public static Builder builder(Tracer tracer, String namespace, String operation) {
     return new Builder(tracer, OtelSemConv.spanName(namespace, operation));
   }
 
-  /** 获取底层 OTel Span */
+  /**
+   * 获取底层 OTel Span。
+   *
+   * @return 底层 OTel Span
+   */
   public Span span() {
     return span;
   }
 
   /** 设置属性 */
+  /**
+   * set attribute。
+   * @param key 参数
+   * @param value 参数
+   * @return 结果
+   */
   public YdszSpan setAttribute(String key, String value) {
     if (value != null) {
       span.setAttribute(key, value);
@@ -148,6 +166,11 @@ public final class YdszSpan {
   }
 
   /** 批量设置属性 */
+  /**
+   * set attributes。
+   * @param attrs 参数
+   * @return 结果
+   */
   public YdszSpan setAttributes(Map<String, Object> attrs) {
     if (attrs != null && !attrs.isEmpty()) {
       Attributes otelAttrs = OtelSemConv.toAttributes(attrs);
@@ -157,6 +180,11 @@ public final class YdszSpan {
   }
 
   /** 记录异常 */
+  /**
+   * record exception。
+   * @param t 参数
+   * @return 结果
+   */
   public YdszSpan recordException(Throwable t) {
     if (t != null) {
       span.recordException(t);
@@ -166,6 +194,12 @@ public final class YdszSpan {
   }
 
   /** 标记为错误并设置状态 */
+  /**
+   * error。
+   * @param errorCode 参数
+   * @param message 参数
+   * @return 结果
+   */
   public YdszSpan error(String errorCode, String message) {
     if (errorCode != null) {
       span.setAttribute(OtelSemConv.REMI_ERROR_CODE, errorCode);
@@ -179,22 +213,37 @@ public final class YdszSpan {
   }
 
   /** 标记为 OK */
+  /**
+   * ok。
+   * @return 结果
+   */
   public YdszSpan ok() {
     span.setStatus(StatusCode.OK);
     return this;
   }
 
   /** 激活 Span 上下文（必须配合 try-with-resources 关闭） */
+  /**
+   * scope。
+   * @return 结果
+   */
   public Scope scope() {
     return span.makeCurrent();
   }
 
   /** 获取当前激活 Span */
+  /**
+   * current。
+   * @return 结果
+   */
   public static Span current() {
     return Span.current();
   }
 
   /** 结束 Span（必须调用，否则内存泄漏） */
+  /**
+   * end。
+   */
   public void end() {
     try {
       span.end();
@@ -204,11 +253,19 @@ public final class YdszSpan {
   }
 
   /** 获取自构造以来的纳秒数 */
+  /**
+   * elapsed nanos。
+   * @return 结果
+   */
   public long elapsedNanos() {
     return System.nanoTime() - startNanos;
   }
 
   /** 获取自构造以来的毫秒数 */
+  /**
+   * elapsed millis。
+   * @return 结果
+   */
   public long elapsedMillis() {
     return TimeUnit.NANOSECONDS.toMillis(elapsedNanos());
   }
@@ -221,6 +278,12 @@ public final class YdszSpan {
   public static class Builder {
     private final SpanBuilder builder;
 
+    /**
+     * 构造 Builder。
+     *
+     * @param tracer OTel Tracer
+     * @param spanName Span 名称
+     */
     public Builder(Tracer tracer, String spanName) {
       this.builder = tracer.spanBuilder(spanName);
     }
@@ -385,6 +448,10 @@ public final class YdszSpan {
     }
 
     /** 启动 Span */
+    /**
+     * start。
+     * @return 结果
+     */
     public YdszSpan start() {
       return new YdszSpan(builder.startSpan());
     }
@@ -419,6 +486,12 @@ public final class YdszSpan {
   }
 
   /** 无返回值的便捷方法 */
+  /**
+   * run void。
+   * @param tracer 参数
+   * @param name 参数
+   * @param action 参数
+   */
   public static void runVoid(Tracer tracer, String name, Runnable action) {
     run(
         tracer,
@@ -430,6 +503,10 @@ public final class YdszSpan {
   }
 
   /** 批量导出快捷方法：把 Map 转为属性集合 */
+  /**
+   * attrs。
+   * @return 结果
+   */
   public static Map<String, Object> attrs() {
     return new HashMap<>();
   }

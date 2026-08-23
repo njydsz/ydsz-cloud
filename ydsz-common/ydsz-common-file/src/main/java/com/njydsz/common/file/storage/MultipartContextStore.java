@@ -51,7 +51,16 @@ public interface MultipartContextStore {
    */
   void cleanExpired(int timeoutMinutes);
 
-  /** 分片上下文数据（可序列化） */
+  /**
+   * 分片上下文数据（可序列化）。
+   *
+   * @param uploadId 分片上传 ID
+   * @param bucketName 存储桶名
+   * @param objectName 对象名
+   * @param partChunkNames 分片序号 → 分片块名映射
+   * @param createTime 创建时间戳（毫秒）
+   * @param lastAccessTime 最后访问时间戳（毫秒）
+   */
   record MultipartContextData(
       String uploadId,
       String bucketName,

@@ -175,9 +175,15 @@ public class InMemorySearchStrategy implements SearchStrategy, IndexStrategy, Su
 
   private String buildSearchableText(IndexDocument doc) {
     StringBuilder sb = new StringBuilder();
-    if (doc.getTitle() != null) sb.append(doc.getTitle());
-    if (doc.getSubtitle() != null) sb.append(' ').append(doc.getSubtitle());
-    if (doc.getContent() != null) sb.append(' ').append(doc.getContent());
+    if (doc.getTitle() != null) {
+      sb.append(doc.getTitle());
+    }
+    if (doc.getSubtitle() != null) {
+      sb.append(' ').append(doc.getSubtitle());
+    }
+    if (doc.getContent() != null) {
+      sb.append(' ').append(doc.getContent());
+    }
     if (doc.getTags() != null) {
       for (String tag : doc.getTags()) {
         sb.append(' ').append(tag);
@@ -188,7 +194,9 @@ public class InMemorySearchStrategy implements SearchStrategy, IndexStrategy, Su
 
   private String simpleHighlight(String text, String keyword, String preTag, String postTag) {
     int idx = text.toLowerCase().indexOf(keyword.toLowerCase());
-    if (idx < 0) return text;
+    if (idx < 0) {
+      return text;
+    }
     return text.substring(0, idx)
         + preTag
         + text.substring(idx, idx + keyword.length())

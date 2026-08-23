@@ -4,8 +4,12 @@ import java.util.List;
 
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
+import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
+import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
+import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
+import com.njydsz.nextwiki.domain.vo.TrashItemVO;
 
 /**
  * NextWiki 实体 ↔ VO 转换器。
@@ -185,5 +189,82 @@ public final class NextwikiConverter {
       return List.of();
     }
     return dtos.stream().map(this::versionToVO).collect(java.util.stream.Collectors.toList());
+  }
+
+  /**
+   * 将 {@link ShareLinkVO} 列表批量转换为 {@link ShareLinkDTO} 列表。
+   *
+   * <p>用于分享链接到期提醒等场景：Repository 返回 VO 列表，领域服务需要 DTO 入参。
+   *
+   * @param vos 分享链接 VO 列表
+   * @return 分享链接 DTO 列表；入参为 {@code null} 或空时返回空列表
+   */
+  public List<ShareLinkDTO> shareLinkListToDTO(List<ShareLinkVO> vos) {
+    if (vos == null || vos.isEmpty()) {
+      return List.of();
+    }
+    return vos.stream().map(this::shareLinkToDTO).collect(java.util.stream.Collectors.toList());
+  }
+
+  /**
+   * 将单个 {@link ShareLinkVO} 转换为 {@link ShareLinkDTO}。
+   *
+   * @param vo 分享链接 VO，为 {@code null} 时返回 {@code null}
+   * @return 分享链接 DTO，或 {@code null}
+   */
+  public ShareLinkDTO shareLinkToDTO(ShareLinkVO vo) {
+    if (vo == null) {
+      return null;
+    }
+    ShareLinkDTO dto = new ShareLinkDTO();
+    dto.setId(vo.getId());
+    dto.setFileNodeId(vo.getFileNodeId());
+    dto.setShareCode(vo.getShareCode());
+    dto.setExtractCode(vo.getExtractCode());
+    dto.setShareType(vo.getShareType());
+    dto.setExpireTime(vo.getExpireTime());
+    dto.setMaxAccessCount(vo.getMaxAccessCount());
+    dto.setAccessCount(vo.getAccessCount());
+    return dto;
+  }
+
+  /**
+   * 将 {@link TrashItemVO} 列表批量转换为 {@link TrashItemDTO} 列表。
+   *
+   * <p>用于回收站清理定时任务：Repository 返回 VO 列表，领域服务需要 DTO 入参。
+   *
+   * @param vos 回收站条目 VO 列表
+   * @return 回收站条目 DTO 列表；入参为 {@code null} 或空时返回空列表
+   */
+  public List<TrashItemDTO> trashItemListToDTO(List<TrashItemVO> vos) {
+    if (vos == null || vos.isEmpty()) {
+      return List.of();
+    }
+    return vos.stream().map(this::trashItemToDTO).collect(java.util.stream.Collectors.toList());
+  }
+
+  /**
+   * 将单个 {@link TrashItemVO} 转换为 {@link TrashItemDTO}。
+   *
+   * @param vo 回收站条目 VO，为 {@code null} 时返回 {@code null}
+   * @return 回收站条目 DTO，或 {@code null}
+   */
+  public TrashItemDTO trashItemToDTO(TrashItemVO vo) {
+    if (vo == null) {
+      return null;
+    }
+    TrashItemDTO dto = new TrashItemDTO();
+    dto.setId(vo.getId());
+    dto.setFileNodeId(vo.getFileNodeId());
+    dto.setOriginalName(vo.getOriginalName());
+    dto.setOriginalPath(vo.getOriginalPath());
+    dto.setOriginalParentId(vo.getOriginalParentId());
+    dto.setNodeType(vo.getNodeType());
+    dto.setSize(vo.getSize());
+    dto.setDeletedTime(vo.getDeletedTime());
+    dto.setPurgeTime(vo.getPurgeTime());
+    dto.setStatus(vo.getStatus());
+    dto.setCreatedBy(vo.getCreatedBy());
+    return dto;
   }
 }

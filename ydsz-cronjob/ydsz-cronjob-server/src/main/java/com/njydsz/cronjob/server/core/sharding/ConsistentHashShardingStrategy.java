@@ -42,6 +42,18 @@ import org.springframework.context.annotation.Configuration;
     name = "ydsz.cronjob.sharding.strategy",
     havingValue = "consistent_hash")
 public class ConsistentHashShardingStrategy implements ShardingStrategy {
+  /** FNV-1a 哈希偏移基数 */
+  private static final int FNV_OFFSET_BASIS = FNV_OFFSET_BASIS;
+
+  /** FNV-1a 哈希质数 */
+  private static final int FNV_PRIME = FNV_PRIME;
+
+  /** FNV 字节掩码 */
+  private static final int FNV_BYTE_MASK = 0xff;
+
+  /** 哈希取正掩码 */
+  private static final int HASH_POSITIVE_MASK = 0x7fffffff;
+
 
   /** 每真实节点的虚拟节点数（与主流实现一致的默认值，平衡分布均匀性与内存开销） */
   private static final int VIRTUAL_NODE_COUNT = 160;
@@ -84,11 +96,11 @@ public class ConsistentHashShardingStrategy implements ShardingStrategy {
    * @return 非负 32 位哈希值
    */
   private int hash(String key) {
-    int hash = 0x811c9dc5; // FNV offset basis
+    int hash = FNV_OFFSET_BASIS; // FNV offset basis
     for (byte b : key.getBytes(StandardCharsets.UTF_8)) {
-      hash ^= (b & 0xff);
-      hash *= 0x01000193; // FNV prime
+      hash ^= (b & FNV_BYTE_MASK);
+      hash *= FNV_PRIME; // FNV prime
     }
-    return hash & 0x7fffffff;
+    return hash & HASH_POSITIVE_MASK;
   }
 }

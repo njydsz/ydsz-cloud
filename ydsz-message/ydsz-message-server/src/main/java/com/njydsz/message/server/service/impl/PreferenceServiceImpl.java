@@ -37,11 +37,13 @@ public class PreferenceServiceImpl implements PreferenceService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>按 (userId, channel, bizType) 查找已有偏好：存在则更新，不存在则新建。 bizType 为空时默认 {@link
    * MessageConstants#DEFAULT_BIZ_TYPE}。
+   * 
    *
-   * @throws SysException 当 userId 或 channel 为空时抛出
+   * @param dto 参数说明
+   * @return 返回值说明
    */
   @Override
   public MsgPreference upsert(PreferenceUpsertDTO dto) {
@@ -163,8 +165,9 @@ public class PreferenceServiceImpl implements PreferenceService {
 
   /**
    * {@inheritDoc}
+   * 
    *
-   * @throws SysException 当 id 为空时抛出
+   * @param id 参数说明
    */
   @Override
   public void delete(String id) {

@@ -39,12 +39,11 @@ import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.dto.BatchResult;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
-import com.njydsz.cronjob.domain.vo.JobLogVO;
-import com.njydsz.cronjob.domain.vo.JobVO;
-// infra entity imports removed — using domain JobVO / JobLogVO instead
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.JobLockManager;
 import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
@@ -367,7 +366,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    *   <li>API: 不计算 nextFireTime（仅手动触发）
    * </ul>
    *
-   * @param job 任务定义
+   * @param dto 任务创建请求
    * @return 新增任务 ID
    * @throws SysException 当 jobKey 已存在或参数非法时抛出
    */
@@ -381,7 +380,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     validate(dto);
     if (jobRepository.findByJobKey(dto.getJobKey()).isPresent()) {
       throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_7e5ef640")
           .params(dto.getJobKey())
           .build();
@@ -408,7 +407,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     String id = jobRepository.insert(dto);
     // 读取完整 VO 用于后续调度器注册
     JobVO vo = jobRepository.findById(id).orElseThrow(() -> SysException.builder()
-        .resultCode(YdszResultCode.INTERNAL_ERROR)
+          .resultCode(YdszResultCode.INTERNAL_ERROR)
         .message("error.cronjob.msg_create_readback")
         .build());
     // P1-2: CRON / FIXED_RATE / FIXED_DELAY 计算 next_fire_time
@@ -440,7 +439,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    *
    * <p>P0-3: 同步 scheduleType/fixedRateMs/fixedDelayMs 字段，并按新调度类型重新注册。
    *
-   * @param job 任务定义
+   * @param dto 任务更新请求
    * @throws SysException 当任务不存在或 cron 表达式非法时抛出
    */
   @Override
@@ -448,7 +447,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   public void update(JobPutDTO dto) {
     if (dto.getId() == null) {
       throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_ce91ca69")
           .build();
     }
@@ -483,7 +482,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     } else if (type == ScheduleType.FIXED_RATE) {
       if (exists.getFixedRateMs() == null || exists.getFixedRateMs() <= 0) {
         throw SysException.builder()
-            .resultCode(YdszResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_5d0044ca")
             .params("fixedRateMs 必须为正数")
             .build();
@@ -492,28 +491,47 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     } else if (type == ScheduleType.FIXED_DELAY) {
       if (exists.getFixedDelayMs() == null || exists.getFixedDelayMs() <= 0) {
         throw SysException.builder()
-            .resultCode(YdszResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_5d0044ca")
             .params("fixedDelayMs 必须为正数")
             .build();
       }
       exists.setNextFireTime(nextFireTime(exists));
     }
-    if (StringUtils.hasText(dto.getCronExpression()))
+    if (StringUtils.hasText(dto.getCronExpression())) {
       exists.setCronExpression(dto.getCronExpression());
-    if (StringUtils.hasText(dto.getHandler())) exists.setHandler(dto.getHandler());
-    if (StringUtils.hasText(dto.getJobName())) exists.setJobName(dto.getJobName());
-    if (StringUtils.hasText(dto.getJobGroup())) exists.setJobGroup(dto.getJobGroup());
-    if (dto.getParamsJson() != null) exists.setParamsJson(dto.getParamsJson());
-    if (StringUtils.hasText(dto.getStatus())) exists.setStatus(dto.getStatus());
-    if (dto.getJobRemark() != null) exists.setJobRemark(dto.getJobRemark());
+    }
+    if (StringUtils.hasText(dto.getHandler())) {
+      exists.setHandler(dto.getHandler());
+    }
+    if (StringUtils.hasText(dto.getJobName())) {
+      exists.setJobName(dto.getJobName());
+    }
+    if (StringUtils.hasText(dto.getJobGroup())) {
+      exists.setJobGroup(dto.getJobGroup());
+    }
+    if (dto.getParamsJson() != null) {
+      exists.setParamsJson(dto.getParamsJson());
+    }
+    if (StringUtils.hasText(dto.getStatus())) {
+      exists.setStatus(dto.getStatus());
+    }
+    if (dto.getJobRemark() != null) {
+      exists.setJobRemark(dto.getJobRemark());
+    }
     // P0/P2/P3 收尾: 同步 lockTtlMs/timeoutMs/misfirePolicy/shardTotal
-    if (dto.getLockTtlMs() != null) exists.setLockTtlMs(dto.getLockTtlMs());
-    if (dto.getTimeoutMs() != null) exists.setTimeoutMs(dto.getTimeoutMs());
-    if (StringUtils.hasText(dto.getMisfirePolicy()))
+    if (dto.getLockTtlMs() != null) {
+      exists.setLockTtlMs(dto.getLockTtlMs());
+    }
+    if (dto.getTimeoutMs() != null) {
+      exists.setTimeoutMs(dto.getTimeoutMs());
+    }
+    if (StringUtils.hasText(dto.getMisfirePolicy())) {
       exists.setMisfirePolicy(dto.getMisfirePolicy());
-    if (dto.getShardTotal() != null && dto.getShardTotal() >= 1)
+    }
+    if (dto.getShardTotal() != null && dto.getShardTotal() >= 1) {
       exists.setShardTotal(dto.getShardTotal());
+    }
     // P6-3: 同步慢任务阈值（null 表示不检测，允许清空）
     exists.setSlowThresholdMs(dto.getSlowThresholdMs());
     // P3-12: 同步目标集群（允许清空为 null，使用本地集群）
@@ -546,7 +564,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   @Override
   public void delete(String id) {
     JobVO vo = jobRepository.findById(id).orElseThrow(() -> SysException.builder()
-        .resultCode(YdszResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
         .message("error.cronjob.msg_c0d8369f")
         .build());
     JobVO j = voToJob(vo);
@@ -571,13 +589,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   @Override
   public void pause(String id) {
     JobVO vo = jobRepository.findById(id).orElseThrow(() -> SysException.builder()
-        .resultCode(YdszResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
         .message("error.cronjob.msg_c0d8369f")
         .build());
     JobVO j = voToJob(vo);
     if (!"NORMAL".equals(j.getStatus())) {
       throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_job_status_invalid")
           .params(j.getStatus())
           .build();
@@ -611,7 +629,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       register(j);
     } else {
       throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_job_status_invalid")
           .params(j.getStatus())
           .build();
@@ -779,7 +797,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    *   <li>API: 不注册任何调度（仅手动触发）
    * </ul>
    *
-   * @param job 任务定义
+   * @param dto 任务注册请求
    * @return 注册成功返回 true，否则返回 false
    */
   @Override
@@ -907,7 +925,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   /**
    * 重新注册（用于更新 Cron）
    *
-   * @param job 任务定义
+   * @param dto 任务更新请求
    * @return 重新注册成功返回 true，否则返回 false
    */
   @Override
@@ -928,7 +946,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   @Transactional(readOnly = true)
   public JobVO getById(String id) {
     return jobRepository.findById(id).orElseThrow(() -> SysException.builder()
-        .resultCode(YdszResultCode.NOT_FOUND)
+          .resultCode(YdszResultCode.NOT_FOUND)
         .message("error.cronjob.msg_c0d8369f")
         .build());
   }
@@ -1095,13 +1113,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   private void validate(JobPostDTO dto) {
     if (!StringUtils.hasText(dto.getJobKey())) {
       throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_884214e7")
           .build();
     }
     if (!StringUtils.hasText(dto.getHandler())) {
       throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_04ebee77")
           .build();
     }
@@ -1110,7 +1128,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         ZoneId.of(dto.getTimezone());
       } catch (Exception e) {
         throw SysException.builder()
-            .resultCode(YdszResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_5d0044ca")
             .params("无效的时区 ID: " + dto.getTimezone())
             .build();
@@ -1124,7 +1142,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       case FIXED_RATE:
         if (dto.getFixedRateMs() == null || dto.getFixedRateMs() <= 0) {
           throw SysException.builder()
-              .resultCode(YdszResultCode.BAD_REQUEST)
+                .resultCode(YdszResultCode.BAD_REQUEST)
               .key("error.cronjob.msg_5d0044ca")
               .params("fixedRateMs 必须为正数")
               .build();
@@ -1133,7 +1151,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       case FIXED_DELAY:
         if (dto.getFixedDelayMs() == null || dto.getFixedDelayMs() <= 0) {
           throw SysException.builder()
-              .resultCode(YdszResultCode.BAD_REQUEST)
+                .resultCode(YdszResultCode.BAD_REQUEST)
               .key("error.cronjob.msg_5d0044ca")
               .params("fixedDelayMs 必须为正数")
               .build();
@@ -1149,13 +1167,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   private void validate(JobVO jobVo) {
     if (!StringUtils.hasText(jobVo.getJobKey())) {
       throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_884214e7")
           .build();
     }
     if (!StringUtils.hasText(jobVo.getHandler())) {
       throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_04ebee77")
           .build();
     }
@@ -1165,7 +1183,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         ZoneId.of(jobVo.getTimezone());
       } catch (Exception e) {
         throw SysException.builder()
-            .resultCode(YdszResultCode.BAD_REQUEST)
+              .resultCode(YdszResultCode.BAD_REQUEST)
             .key("error.cronjob.msg_5d0044ca")
             .params("无效的时区 ID: " + jobVo.getTimezone())
             .build();
@@ -1179,7 +1197,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       case FIXED_RATE:
         if (jobVo.getFixedRateMs() == null || jobVo.getFixedRateMs() <= 0) {
           throw SysException.builder()
-              .resultCode(YdszResultCode.BAD_REQUEST)
+                .resultCode(YdszResultCode.BAD_REQUEST)
               .key("error.cronjob.msg_5d0044ca")
               .params("fixedRateMs 必须为正数")
               .build();
@@ -1188,7 +1206,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       case FIXED_DELAY:
         if (jobVo.getFixedDelayMs() == null || jobVo.getFixedDelayMs() <= 0) {
           throw SysException.builder()
-              .resultCode(YdszResultCode.BAD_REQUEST)
+                .resultCode(YdszResultCode.BAD_REQUEST)
               .key("error.cronjob.msg_5d0044ca")
               .params("fixedDelayMs 必须为正数")
               .build();
@@ -1212,7 +1230,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   private void validateCron(String cron) {
     if (!StringUtils.hasText(cron)) {
       throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
+            .resultCode(YdszResultCode.BAD_REQUEST)
           .message("error.cronjob.msg_35ac148f")
           .build();
     }
@@ -1261,7 +1279,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     if (publisher != null) {
       publisher.publish(
           DomainEvent.builder()
-              .aggregateType(aggregateType)
+                .aggregateType(aggregateType)
               .aggregateId(aggregateId)
               .eventType(eventType)
               .metadata("payload", payload)

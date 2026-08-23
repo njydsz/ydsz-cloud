@@ -91,8 +91,10 @@ public enum FlowTaskStatus implements BaseStatusEnum<FlowTaskStatus> {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>与 {@link #isFinished()} 语义对齐。
+   *
+   * @return 返回值说明
    */
   @Override
   public boolean isTerminal() {

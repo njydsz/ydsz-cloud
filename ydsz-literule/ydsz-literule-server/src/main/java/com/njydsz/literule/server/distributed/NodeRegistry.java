@@ -41,10 +41,14 @@ public interface NodeRegistry {
    */
   List<ClusterNode> getAliveNodes();
 
-  /** 获取当前节点 ID */
+  /** 获取当前节点 ID
+   * @return 返回值说明
+   */
   String getSelfNodeId();
 
-  /** 获取集群节点总数 */
+  /** 获取集群节点总数
+   * @return 返回值说明
+   */
   default int getClusterSize() {
     return getAliveNodes().size();
   }

@@ -17,7 +17,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
  *
  * <ul>
  *   <li>{@code @ConditionalOnClass}：仅当 MyBatis-Plus 与数据源驱动均在 classpath 上时才激活，避免纯内存模式（如单元测试）加载时因缺少驱动而报错
- *   <li>{@code @ConditionalOnProperty}：通过 {@code ydsz.literule.mybatis.enabled} 开关控制，默认开启；需要禁用时可配置 {@code ydsz.literule.mybatis.enabled=false}
+ *   <li>{@code @ConditionalOnProperty}：通过 {@code ydsz.literule.mybatis.enabled} 开关控制，默认开启；
+ *       需要禁用时可配置 {@code ydsz.literule.mybatis.enabled=false}
  * </ul>
  *
  * @author ydsz-team

@@ -61,6 +61,15 @@ import com.njydsz.cronjob.server.config.HttpConfig;
 @Configuration
 @ConditionalOnMissingBean(HttpJobHandler.class)
 public class HttpJobHandler implements JobHandler {
+  /** HTTP 成功状态码下限 */
+  private static final int HTTP_OK_MIN = 200;
+
+  /** HTTP 成功状态码上限（不含） */
+  private static final int HTTP_OK_MAX_EXCLUSIVE = 300;
+
+  /** 响应体日志截断长度 */
+  private static final int BODY_LOG_MAX_LENGTH = 500;
+
 
   /** Bean 名称，dispatcher 在 jobType=HTTP 时路由到此 handler */
   public static final String BEAN_NAME = "httpJobHandler";
@@ -187,7 +196,7 @@ public class HttpJobHandler implements JobHandler {
    */
   private boolean isSuccessStatus(int status, String successStatus) {
     if (successStatus == null || successStatus.isBlank()) {
-      return status >= 200 && status < 300;
+      return status >= HTTP_OK_MIN && status < HTTP_OK_MAX_EXCLUSIVE;
     }
     String trimmed = successStatus.trim();
     if (trimmed.contains("-")) {
@@ -199,7 +208,7 @@ public class HttpJobHandler implements JobHandler {
           return status >= min && status <= max;
         } catch (NumberFormatException e) {
           log.warn("[HttpJobHandler] 无效的成功状态码范围: {}", successStatus);
-          return status >= 200 && status < 300;
+          return status >= HTTP_OK_MIN && status < HTTP_OK_MAX_EXCLUSIVE;
         }
       }
     }
@@ -219,7 +228,7 @@ public class HttpJobHandler implements JobHandler {
     try {
       return status == Integer.parseInt(trimmed);
     } catch (NumberFormatException e) {
-      return status >= 200 && status < 300;
+      return status >= HTTP_OK_MIN && status < HTTP_OK_MAX_EXCLUSIVE;
     }
   }
 
@@ -228,6 +237,6 @@ public class HttpJobHandler implements JobHandler {
     if (s == null) {
       return "";
     }
-    return s.length() > 500 ? s.substring(0, 500) + "..." : s;
+    return s.length() > BODY_LOG_MAX_LENGTH ? s.substring(0, BODY_LOG_MAX_LENGTH) + "..." : s;
   }
 }

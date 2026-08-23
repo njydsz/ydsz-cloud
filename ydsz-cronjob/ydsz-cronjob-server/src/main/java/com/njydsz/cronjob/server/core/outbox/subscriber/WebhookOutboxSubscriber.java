@@ -2,6 +2,7 @@ package com.njydsz.cronjob.server.core.outbox.subscriber;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,7 @@ import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class WebhookOutboxSubscriber implements java.util.function.Consumer<OutboxEventVO> {
+public class WebhookOutboxSubscriber implements Consumer<OutboxEventVO> {
 
   private static final String TOPIC = "webhook";
 

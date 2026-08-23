@@ -4,12 +4,10 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.ops.RedisHashOps;
@@ -52,6 +50,18 @@ public class UserSessionAdminService {
 
   /** 会话 Hash 中 username 字段名 */
   private static final String SESSION_USERNAME_FIELD = "username";
+
+  /** 集合初始容量：4 */
+  private static final int INITIAL_CAPACITY = 4;
+
+  /** 会话令牌最小长度阈值 */
+  private static final int MIN_TOKEN_LENGTH = 16;
+
+  /** 会话令牌日志脱敏前缀长度 */
+  private static final int TOKEN_LOG_PREFIX_LENGTH = 8;
+
+  /** 会话令牌日志脱敏后缀长度 */
+  private static final int TOKEN_LOG_SUFFIX_LENGTH = 4;
 
   private final RedisHashOps redisHashOps;
   private final RedisStringOps redisStringOps;
@@ -130,7 +140,7 @@ public class UserSessionAdminService {
     // 完整实现需要遍历所有用户或通过全局会话索引获取
     // 当前返回零值，避免 N+1 查询
     log.debug("getSessionStatistics called - requires global session index for accurate data");
-    return new UserSessionStatistics(0, 0, new HashMap<>(4));
+    return new UserSessionStatistics(0, 0, new HashMap<>(INITIAL_CAPACITY));
   }
 
   /**
@@ -194,10 +204,10 @@ public class UserSessionAdminService {
    * @return 脱敏后的 Key
    */
   private static String maskKey(String key) {
-    if (key == null || key.length() <= 8) {
+    if (key == null || key.length() <= TOKEN_LOG_PREFIX_LENGTH) {
       return "***";
     }
-    return key.substring(0, 8) + "***";
+    return key.substring(0, TOKEN_LOG_PREFIX_LENGTH) + "***";
   }
 
   /**
@@ -229,9 +239,10 @@ public class UserSessionAdminService {
    * @return 脱敏后的 Token
    */
   private String maskToken(String token) {
-    if (token == null || token.length() < 16) {
+    if (token == null || token.length() < MIN_TOKEN_LENGTH) {
       return "***";
     }
-    return token.substring(0, 8) + "..." + token.substring(token.length() - 4);
+    return token.substring(0, TOKEN_LOG_PREFIX_LENGTH) + "..."
+        + token.substring(token.length() - TOKEN_LOG_SUFFIX_LENGTH);
   }
 }

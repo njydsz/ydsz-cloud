@@ -42,36 +42,79 @@ public interface WorkflowFacade {
 
   /**
    * 启动流程
+   * 
+   * 
    *
-   * @return 流程实例 ID（ydsz_flow_instance.id，字符串形式）
+   * @param dto 参数说明
+   * @return 返回值说明
    */
   String startProcess(FlowStartProcessDTO dto);
 
-  /** 通过业务类型 + 业务 ID 查实例 */
+  /**
+   * 通过业务类型 + 业务 ID 查实例
+   *
+   * @param businessType 参数说明
+   * @param businessId 参数说明
+   * @return 返回值说明
+   */
   FlowInstanceViewDTO getByBusiness(String businessType, String businessId);
 
-  /** 完成任务（通过/拒绝） */
+  /**
+   * 完成任务（通过/拒绝）
+   *
+   * @param dto 参数说明
+   */
   void completeTask(FlowTaskOperateDTO dto);
 
-  /** 签收任务 */
+  /**
+   * 签收任务
+   *
+   * @param taskId 参数说明
+   * @param userId 参数说明
+   */
   void claimTask(String taskId, String userId);
 
-  /** 转办任务 */
+  /**
+   * 转办任务
+   *
+   * @param dto 参数说明
+   */
   void transferTask(FlowTaskOperateDTO dto);
 
-  /** 委派任务（任务保留原办理人，被委派人处理后回到原办理人） */
+  /**
+   * 委派任务（任务保留原办理人，被委派人处理后回到原办理人）
+   *
+   * @param dto 参数说明
+   */
   void delegateTask(FlowTaskOperateDTO dto);
 
-  /** 退回任务 */
+  /**
+   * 退回任务
+   *
+   * @param dto 参数说明
+   */
   void rejectTask(FlowTaskOperateDTO dto);
 
-  /** 终止流程 */
+  /**
+   * 终止流程
+   *
+   * @param processInstanceId 参数说明
+   * @param reason 参数说明
+   */
   void terminateProcess(String processInstanceId, String reason);
 
-  /** 挂起流程 */
+  /**
+   * 挂起流程
+   *
+   * @param processInstanceId 参数说明
+   */
   void suspendProcess(String processInstanceId);
 
-  /** 激活流程 */
+  /**
+   * 激活流程
+   *
+   * @param processInstanceId 参数说明
+   */
   void activateProcess(String processInstanceId);
 
   /**
@@ -142,7 +185,11 @@ public interface WorkflowFacade {
    */
   void countersignAfterTask(FlowTaskOperateDTO dto);
 
-  /** GAP-P0-3: 并加签 — 与原审批人并行审批，所有人审完才推进 */
+  /**
+   * GAP-P0-3: 并加签 — 与原审批人并行审批，所有人审完才推进
+   *
+   * @param dto 参数说明
+   */
   void countersignParallelTask(FlowTaskOperateDTO dto);
 
   /**

@@ -81,7 +81,10 @@ public final class OtelSamplers {
 
   /**
    * 基于父 Span 决策的采样器。 父 Span 采样 → 子 Span 全部采样（保证分布式链路完整） 父 Span 不采样 → 子 Span 全部不采样 无父 Span → 走 ratio
-   * 采样
+   * 采样。
+   *
+   * @param ratio 无父 Span 时的采样率（0-1）
+   * @return 父级采样器实例
    */
   public static Sampler parentBased(double ratio) {
     return Sampler.parentBased(Sampler.traceIdRatioBased(ratio));
@@ -204,6 +207,10 @@ public final class OtelSamplers {
     }
 
     @Override
+    /**
+     * get description。
+     * @return 结果
+     */
     public String getDescription() {
       return "YdszCompositeSampler{defaultRatio=" + config.getDefaultRatio() + "}";
     }

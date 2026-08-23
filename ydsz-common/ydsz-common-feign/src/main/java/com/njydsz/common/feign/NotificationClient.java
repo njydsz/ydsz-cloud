@@ -75,9 +75,7 @@ public interface NotificationClient {
    *
    * <p>将消息推送到指定用户的 WebSocket 连接，不经过消息中心持久化。 适用于工作流待办数推送、任务分配通知等场景。
    *
-   * @param userId 目标用户 ID
-   * @param type 推送消息类型（如 "TODO_COUNT"、"TASK_ASSIGNED"）
-   * @param payload 推送数据
+   * @param request 推送请求（含目标用户 ID、消息类型与推送数据）
    * @return 推送结果（成功时 traceId 可用于追踪）
    */
   @PostMapping(FeignClientConstants.MESSAGE_PATH_PUSH_REALTIME)

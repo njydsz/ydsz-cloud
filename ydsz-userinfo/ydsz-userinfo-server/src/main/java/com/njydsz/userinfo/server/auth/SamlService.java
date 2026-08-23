@@ -1,6 +1,7 @@
 package com.njydsz.userinfo.server.auth;
 
 import java.io.StringReader;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.Signature;
@@ -23,7 +24,6 @@ import org.xml.sax.InputSource;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
-import com.njydsz.userinfo.server.auth.SamlException;
 import com.njydsz.userinfo.server.config.SamlProperties;
 import com.njydsz.userinfo.server.service.SamlIdpConfigService;
 
@@ -94,7 +94,8 @@ public class SamlService {
     metadata.append("<md:EntityDescriptor xmlns:md=\"urn:oasis:names:tc:SAML:2.0:metadata\"\n");
     metadata.append("                     entityID=\"").append(escapeXml(entityId)).append("\">\n");
     metadata.append("  <md:SPSSODescriptor AuthnRequestsSigned=\"true\"\n");
-    metadata.append("                      WantAssertionsSigned=\"").append(samlProperties.isWantAssertionsSigned()).append("\"\n");
+    metadata.append("                      WantAssertionsSigned=\"")
+        .append(samlProperties.isWantAssertionsSigned()).append("\"\n");
     metadata.append("                      protocolSupportEnumeration=\"").append(SAML2_PROTOCOL_NS).append("\">\n");
     metadata.append("    <md:KeyDescriptor use=\"signing\">\n");
     metadata.append("      <ds:KeyInfo xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\">\n");
@@ -147,7 +148,7 @@ public class SamlService {
     String base64Request = Base64.getEncoder()
         .encodeToString(authnRequest.toString().getBytes(StandardCharsets.UTF_8));
 
-    String redirectUrl = idpSsoUrl + "?SAMLRequest=" + java.net.URLEncoder.encode(
+    String redirectUrl = idpSsoUrl + "?SAMLRequest=" + URLEncoder.encode(
         base64Request, StandardCharsets.UTF_8);
 
     log.info("SAML AuthnRequest 已生成: id={}, idp={}", requestId, samlProperties.getIdpEntityId());
@@ -199,7 +200,7 @@ public class SamlService {
     String base64Request = Base64.getEncoder()
         .encodeToString(authnRequest.toString().getBytes(StandardCharsets.UTF_8));
 
-    String redirectUrl = idpSsoUrl + "?SAMLRequest=" + java.net.URLEncoder.encode(
+    String redirectUrl = idpSsoUrl + "?SAMLRequest=" + URLEncoder.encode(
         base64Request, StandardCharsets.UTF_8);
 
     log.info("SAML AuthnRequest 已生成（多租户路由）: id={}, idpEntityId={}", requestId, idpEntityId);

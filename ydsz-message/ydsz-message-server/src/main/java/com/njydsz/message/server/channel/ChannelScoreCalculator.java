@@ -37,6 +37,18 @@ import com.njydsz.message.server.metric.MessageMetrics;
 @Slf4j
 @Component
 public class ChannelScoreCalculator {
+  /** 成功率权重 */
+  private static final double SUCCESS_WEIGHT = 0.5;
+
+  /** 成本权重 */
+  private static final double COST_WEIGHT = 0.3;
+
+  /** 打开率权重 */
+  private static final double OPEN_WEIGHT = 0.2;
+
+  /** 计算精度 */
+  private static final int SCALE = 4;
+
 
   /** 成功率默认值（无可用指标时兜底） */
   private static final double DEFAULT_SUCCESS_RATE = 0.95;
@@ -50,10 +62,10 @@ public class ChannelScoreCalculator {
 
   /**
    * 构造器注入。
+   * 
    *
-   * @param messageMetrics 消息指标（用于获取通道实时成功率）
-   * @param messageProperties 消息配置（用于获取成本配置）
-   */
+   * @param messageMetrics 参数说明
+   * @param messageProperties 参数说明   */
   public ChannelScoreCalculator(MessageMetrics messageMetrics, MessageProperties messageProperties) {
     this.messageMetrics = messageMetrics;
     this.messageProperties = messageProperties;
@@ -161,7 +173,7 @@ public class ChannelScoreCalculator {
     }
 
     double normalizedCost =
-        unitPrice.divide(maxUnitPrice, 4, RoundingMode.HALF_UP).doubleValue();
+        unitPrice.divide(maxUnitPrice, SCALE, RoundingMode.HALF_UP).doubleValue();
     double costScore = (1.0 - normalizedCost) * 100;
 
     return BigDecimal.valueOf(costScore)
@@ -209,12 +221,12 @@ public class ChannelScoreCalculator {
   @Builder
   public static class ScoreConfig {
     /** 成功率权重（默认 0.5） */
-    private double successWeight = 0.5;
+    private double successWeight = SUCCESS_WEIGHT;
 
     /** 成本权重（默认 0.3） */
-    private double costWeight = 0.3;
+    private double costWeight = COST_WEIGHT;
 
     /** 用户打开率权重（默认 0.2） */
-    private double openWeight = 0.2;
+    private double openWeight = OPEN_WEIGHT;
   }
 }

@@ -99,6 +99,7 @@ public final class ChainGraphConverter {
       case IF -> extractIf(chain, parentId, nodeSeq, nodes, edges);
       case ELIF -> extractElif(chain, parentId, nodeSeq, nodes, edges);
       case SWITCH -> extractSwitch(chain, parentId, nodeSeq, nodes, edges);
+      default -> log.warn("[ChainGraph] 未知链类型，跳过: {}", chain.getChainType());
     }
   }
 
@@ -110,7 +111,9 @@ public final class ChainGraphConverter {
       List<ChainNodeDTO> nodes,
       List<ChainEdgeDTO> edges) {
     List<RuleNode> ruleNodes = chain.getNodes();
-    if (ruleNodes == null) return;
+    if (ruleNodes == null) {
+      return;
+    }
     String prevId = null;
     for (RuleNode rn : ruleNodes) {
       String nodeId = "node-" + nodeSeq.incrementAndGet();
@@ -140,7 +143,9 @@ public final class ChainGraphConverter {
       List<ChainNodeDTO> nodes,
       List<ChainEdgeDTO> edges) {
     List<RuleNode> ruleNodes = chain.getNodes();
-    if (ruleNodes == null || ruleNodes.isEmpty()) return;
+    if (ruleNodes == null || ruleNodes.isEmpty()) {
+      return;
+    }
     String condition = chain.getConditionExpression();
     // 在根节点的 metadata 中携带条件表达式，便于反向解析
     ChainNodeDTO rootNode =
@@ -387,11 +392,17 @@ public final class ChainGraphConverter {
           Map<String, Rule> branchMap = new LinkedHashMap<>();
           Rule elseRule = null;
           for (ChainEdgeDTO edge : graph.getEdges()) {
-            if (!root.getNodeId().equals(edge.getSourceNodeId())) continue;
+            if (!root.getNodeId().equals(edge.getSourceNodeId())) {
+              continue;
+            }
             ChainNodeDTO target = findNode(graph, edge.getTargetNodeId());
-            if (target == null) continue;
+            if (target == null) {
+              continue;
+            }
             Rule r = resolveNode(target, resolver);
-            if (r == null) continue;
+            if (r == null) {
+              continue;
+            }
             if (ChainEdgeDTO.EdgeType.DEFAULT_BRANCH.equals(edge.getEdgeType())) {
               elseRule = r;
             } else if (edge.getCondition() != null) {
@@ -412,11 +423,17 @@ public final class ChainGraphConverter {
           Map<String, Rule> branchMap = new LinkedHashMap<>();
           Rule defaultRule = null;
           for (ChainEdgeDTO edge : graph.getEdges()) {
-            if (!root.getNodeId().equals(edge.getSourceNodeId())) continue;
+            if (!root.getNodeId().equals(edge.getSourceNodeId())) {
+              continue;
+            }
             ChainNodeDTO target = findNode(graph, edge.getTargetNodeId());
-            if (target == null) continue;
+            if (target == null) {
+              continue;
+            }
             Rule r = resolveNode(target, resolver);
-            if (r == null) continue;
+            if (r == null) {
+              continue;
+            }
             if (ChainEdgeDTO.EdgeType.DEFAULT_BRANCH.equals(edge.getEdgeType())) {
               defaultRule = r;
             } else if (edge.getBranchValue() != null) {
@@ -460,7 +477,9 @@ public final class ChainGraphConverter {
    * </ul>
    */
   private static Rule resolveNode(ChainNodeDTO node, RuleResolver resolver) {
-    if (node == null) return null;
+    if (node == null) {
+      return null;
+    }
     if ("SINGLE".equals(node.getNodeType()) && node.getRuleCode() != null) {
       return resolver.resolve(node.getRuleCode());
     }
@@ -482,7 +501,9 @@ public final class ChainGraphConverter {
    */
   private static Rule resolveNodeWithContext(
       ChainNodeDTO node, RuleChainGraph graph, RuleResolver resolver) {
-    if (node == null) return null;
+    if (node == null) {
+      return null;
+    }
     if ("SINGLE".equals(node.getNodeType()) && node.getRuleCode() != null) {
       return resolver.resolve(node.getRuleCode());
     }
@@ -498,11 +519,15 @@ public final class ChainGraphConverter {
     if ("GROUP".equals(node.getNodeType())) {
       // GROUP 节点：将子节点解析为规则列表，构建 THEN 链
       List<ChainNodeDTO> children = findChildren(graph, node.getNodeId());
-      if (children == null || children.isEmpty()) return null;
+      if (children == null || children.isEmpty()) {
+        return null;
+      }
       List<Rule> rules = new ArrayList<>();
       for (ChainNodeDTO child : children) {
         Rule r = resolveNodeWithContext(child, graph, resolver);
-        if (r != null) rules.add(r);
+        if (r != null) {
+          rules.add(r);
+        }
       }
       if (!rules.isEmpty()) {
         return new ChainAsRule(RuleChain.then(rules.toArray(new Rule[0])));
@@ -522,7 +547,9 @@ public final class ChainGraphConverter {
       RuleChainGraph graph,
       RuleResolver resolver,
       ChainNodeDTO parentNode) {
-    if (children == null || children.isEmpty()) return null;
+    if (children == null || children.isEmpty()) {
+      return null;
+    }
 
     switch (chainType) {
       case "THEN":
@@ -531,9 +558,13 @@ public final class ChainGraphConverter {
           List<Rule> rules = new ArrayList<>();
           for (ChainNodeDTO child : children) {
             Rule r = resolveNodeWithContext(child, graph, resolver);
-            if (r != null) rules.add(r);
+            if (r != null) {
+              rules.add(r);
+            }
           }
-          if (rules.isEmpty()) return null;
+          if (rules.isEmpty()) {
+            return null;
+          }
           return "WHEN".equals(chainType)
               ? RuleChain.when(rules.toArray(new Rule[0]))
               : RuleChain.then(rules.toArray(new Rule[0]));
@@ -557,7 +588,9 @@ public final class ChainGraphConverter {
         List<Rule> rules = new ArrayList<>();
         for (ChainNodeDTO child : children) {
           Rule r = resolveNodeWithContext(child, graph, resolver);
-          if (r != null) rules.add(r);
+          if (r != null) {
+            rules.add(r);
+          }
         }
         return rules.isEmpty() ? null : RuleChain.then(rules.toArray(new Rule[0]));
     }
@@ -566,7 +599,9 @@ public final class ChainGraphConverter {
   /** 查找节点的所有直接子节点 */
   private static List<ChainNodeDTO> findChildren(RuleChainGraph graph, String parentId) {
     List<ChainNodeDTO> result = new ArrayList<>();
-    if (graph.getNodes() == null) return result;
+    if (graph.getNodes() == null) {
+      return result;
+    }
     for (ChainNodeDTO n : graph.getNodes()) {
       if (parentId != null && parentId.equals(n.getParentNodeId())) {
         result.add(n);
@@ -577,7 +612,9 @@ public final class ChainGraphConverter {
 
   /** 按 nodeId 查找节点 */
   private static ChainNodeDTO findNode(RuleChainGraph graph, String nodeId) {
-    if (graph.getNodes() == null || nodeId == null) return null;
+    if (graph.getNodes() == null || nodeId == null) {
+      return null;
+    }
     for (ChainNodeDTO n : graph.getNodes()) {
       if (nodeId.equals(n.getNodeId())) {
         return n;
@@ -588,7 +625,9 @@ public final class ChainGraphConverter {
 
   /** 查找指定源节点的第一条出边 */
   private static ChainEdgeDTO findFirstEdge(RuleChainGraph graph, String sourceId) {
-    if (graph.getEdges() == null) return null;
+    if (graph.getEdges() == null) {
+      return null;
+    }
     for (ChainEdgeDTO e : graph.getEdges()) {
       if (sourceId != null && sourceId.equals(e.getSourceNodeId())) {
         return e;
@@ -600,7 +639,9 @@ public final class ChainGraphConverter {
   /** 取第一个子节点解析为 Rule */
   private static Rule firstChildRule(
       List<ChainNodeDTO> children, RuleChainGraph graph, RuleResolver resolver) {
-    if (children == null || children.isEmpty()) return null;
+    if (children == null || children.isEmpty()) {
+      return null;
+    }
     return resolveNode(children.get(0), resolver);
   }
 }

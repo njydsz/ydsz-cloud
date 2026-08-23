@@ -81,8 +81,10 @@ public class BulkheadRequestInterceptor implements RequestInterceptor {
    * TransmittableThreadLocal} 而非裸 {@link ThreadLocal}， 在业务方使用 {@code
    * TtlExecutors.getTtlExecutorService} 包装线程池的场景下， 服务名上下文能跨线程池传递，避免异步调用时许可泄漏。
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已通过 releaseCurrentPermit() 调用 remove() 清理（云顶规范 15.1）
   private final TransmittableThreadLocal<String> currentServiceName =
       new TransmittableThreadLocal<>();
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /** 使用默认最大并发数（50）和默认获取超时（100ms）构造。 */
   public BulkheadRequestInterceptor() {

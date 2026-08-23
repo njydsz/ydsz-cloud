@@ -1,13 +1,12 @@
 package com.njydsz.userinfo.server.auth;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 import jakarta.servlet.http.HttpServletResponse;
+
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.vo.LoginVO;
-import com.njydsz.userinfo.domain.vo.UserSessionVO;
 
 /**
  * 认证服务接口。

@@ -189,7 +189,9 @@ public class SearchPipeline {
       StringBuilder sb = new StringBuilder();
       for (String token : tokens) {
         if (!stopWords.contains(token.toLowerCase())) {
-          if (sb.length() > 0) sb.append(' ');
+          if (sb.length() > 0) {
+            sb.append(' ');
+          }
           sb.append(token);
         }
       }

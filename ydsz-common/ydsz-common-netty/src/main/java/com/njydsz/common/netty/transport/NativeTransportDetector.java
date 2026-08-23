@@ -45,8 +45,11 @@ public final class NativeTransportDetector {
 
   /** 原生传输类型 */
   public enum TransportType {
+    /** Linux epoll */
     EPOLL,
+    /** macOS kqueue */
     KQUEUE,
+    /** 纯 Java NIO */
     NIO
   }
 

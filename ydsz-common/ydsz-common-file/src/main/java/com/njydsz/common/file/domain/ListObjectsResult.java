@@ -31,7 +31,11 @@ public class ListObjectsResult {
   /** 本次返回的对象数量 */
   private int objectCount;
 
-  /** 构造空结果 */
+  /**
+   * 构造空结果。
+   *
+   * @return 空列表结果（无对象、无后续游标）
+   */
   public static ListObjectsResult empty() {
     ListObjectsResult result = new ListObjectsResult();
     result.setObjects(List.of());

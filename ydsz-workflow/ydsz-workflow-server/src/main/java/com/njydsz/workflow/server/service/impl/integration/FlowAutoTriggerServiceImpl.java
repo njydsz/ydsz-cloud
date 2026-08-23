@@ -14,10 +14,10 @@ import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowAutoTriggerRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowAutoTriggerDO;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
@@ -159,8 +159,12 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
   /**
    * 处理单条触发规则
-   *
+   * 
    * <p>通过卫语句（Guard Clause）提前返回不满足条件的触发， 成功路径保持线性流程 → 评估条件 → 启动目标流程 → 写审计日志。
+   *
+   * @param trigger 参数说明
+   * @param instance 参数说明
+   * @param variables 参数说明
    */
   private void processTrigger(
       FlowAutoTriggerDO trigger, FlowInstanceVO instance, Map<String, Object> variables) {
@@ -193,8 +197,12 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
   /**
    * 评估触发规则的条件表达式。
+   * 
+   * 
    *
-   * @return true 表示条件满足或表达式为空（无条件触发）；false 表示条件不满足或评估异常
+   * @param trigger 参数说明
+   * @param variables 参数说明
+   * @return 返回值说明
    */
   private boolean evaluateCondition(FlowAutoTriggerDO trigger, Map<String, Object> variables) {
     String expr = trigger.getConditionExpression();
@@ -213,7 +221,14 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     }
   }
 
-  /** 构建目标流程的启动 DTO。 */
+  /**
+   * 构建目标流程的启动 DTO。
+   *
+   * @param trigger 参数说明
+   * @param instance 参数说明
+   * @param variables 参数说明
+   * @return 返回值说明
+   */
   private FlowStartProcessDTO buildStartProcessDTO(
       FlowAutoTriggerDO trigger, FlowInstanceVO instance, Map<String, Object> variables) {
     FlowStartProcessDTO startDto = new FlowStartProcessDTO();
@@ -230,7 +245,13 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     return startDto;
   }
 
-  /** 构建自动触发流程的标题 */
+  /**
+   * 构建自动触发流程的标题
+   *
+   * @param trigger 参数说明
+   * @param instance 参数说明
+   * @return 返回值说明
+   */
   private String buildTriggerTitle(FlowAutoTriggerDO trigger, FlowInstanceVO instance) {
     String base =
         StringUtils.hasText(trigger.getDescription())
@@ -239,7 +260,14 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     return "[" + base + "] 由 " + instance.getFlowCode() + "(" + instance.getId() + ") 自动触发";
   }
 
-  /** 写入审计日志 */
+  /**
+   * 写入审计日志
+   *
+   * @param instance 参数说明
+   * @param trigger 参数说明
+   * @param success 参数说明
+   * @param comment 参数说明
+   */
   private void writeAuditLog(
       FlowInstanceVO instance, FlowAutoTriggerDO trigger, boolean success, String comment) {
     try {
@@ -253,7 +281,15 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     }
   }
 
-  /** 构造审计日志实体（供 {@link #writeAuditLog} 调用）。 */
+  /**
+   * 构造审计日志实体（供 {@link #writeAuditLog} 调用）。
+   *
+   * @param instance 参数说明
+   * @param trigger 参数说明
+   * @param success 参数说明
+   * @param comment 参数说明
+   * @return 返回值说明
+   */
   private FlowAuditLogDO buildAuditLogEntry(
       FlowInstanceVO instance, FlowAutoTriggerDO trigger, boolean success, String comment) {
     FlowAuditLogDO logEntry = new FlowAuditLogDO();
@@ -312,8 +348,10 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
+   *
+   * @return 返回值说明
    */
   @Override
   public List<FlowAutoTriggerVO> listAllVO() {

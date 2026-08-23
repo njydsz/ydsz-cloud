@@ -18,9 +18,11 @@ import org.springframework.context.annotation.Import;
  */
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 注解/反射类名字符串常量，非代码引用
 @ConditionalOnClass(
     name =
         "org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 @ConditionalOnProperty(prefix = "ydsz.web.session", name = "enabled", havingValue = "true")
 @Import(RedisHttpSessionImportSelector.class)
 public class WebSessionAutoConfiguration {}

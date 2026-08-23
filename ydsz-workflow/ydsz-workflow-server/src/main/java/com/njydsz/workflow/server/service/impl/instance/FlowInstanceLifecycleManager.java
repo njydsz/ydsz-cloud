@@ -3,7 +3,6 @@ package com.njydsz.workflow.server.service.impl.instance;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,7 +13,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -23,14 +21,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.assembler.NameAssembler;
-import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.common.security.LoginUser;
-import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
@@ -41,18 +38,17 @@ import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowCcService;
@@ -228,7 +224,11 @@ public class FlowInstanceLifecycleManager {
     return instanceId;
   }
 
-  /** 校验发起流程参数。 */
+  /**
+   * 校验发起流程参数。
+   *
+   * @param dto 参数说明
+   */
   private void validateStartParams(FlowStartProcessDTO dto) {
     if (dto == null || !StringUtils.hasText(dto.getFlowCode())
         || !StringUtils.hasText(dto.getBusinessType()) || !StringUtils.hasText(dto.getBusinessId())) {
@@ -239,7 +239,14 @@ public class FlowInstanceLifecycleManager {
     }
   }
 
-  /** 查找已存在的活跃实例（RUNNING/SUSPENDED），不存在返回 null。 */
+  /**
+   * 查找已存在的活跃实例（RUNNING/SUSPENDED），不存在返回 null。
+   *
+   * @param tenantId 参数说明
+   * @param businessType 参数说明
+   * @param businessId 参数说明
+   * @return 返回值说明
+   */
   private FlowInstanceVO findExistingActiveInstance(String tenantId, String businessType, String businessId) {
     FlowInstanceVO existing = instanceRepository.findByBusiness(tenantId, businessType, businessId).orElse(null);
     if (existing != null) {
@@ -249,7 +256,13 @@ public class FlowInstanceLifecycleManager {
     return existing;
   }
 
-  /** 查找最新已发布流程定义，不存在则抛出 NOT_FOUND。 */
+  /**
+   * 查找最新已发布流程定义，不存在则抛出 NOT_FOUND。
+   *
+   * @param dto 参数说明
+   * @param tenantId 参数说明
+   * @return 返回值说明
+   */
   private FlowDefinitionDO findPublishedDefinition(FlowStartProcessDTO dto, String tenantId) {
     FlowDefinitionDO def = definitionService.getPublished(dto.getFlowCode(),
         StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : null, tenantId);
@@ -263,7 +276,13 @@ public class FlowInstanceLifecycleManager {
     return def;
   }
 
-  /** 构建流程实例 DTO。 */
+  /**
+   * 构建流程实例 DTO。
+   *
+   * @param dto 参数说明
+   * @param def 参数说明
+   * @return 返回值说明
+   */
   private FlowInstanceDTO buildInstanceDto(FlowStartProcessDTO dto, FlowDefinitionDO def) {
     FlowInstanceDTO instanceDto = new FlowInstanceDTO();
     instanceDto.setFlowCode(def.getFlowCode());
@@ -286,7 +305,12 @@ public class FlowInstanceLifecycleManager {
     return instanceDto;
   }
 
-  /** 构建流程实例变量（含发起人自选审批人）。 */
+  /**
+   * 构建流程实例变量（含发起人自选审批人）。
+   *
+   * @param dto 参数说明
+   * @return 返回值说明
+   */
   private String buildInstanceVariables(FlowStartProcessDTO dto) {
     Map<String, Object> mergedVars = dto.getVariables() == null ? new HashMap<>() : new HashMap<>(dto.getVariables());
     if (dto.getNodeAssignees() != null && !dto.getNodeAssignees().isEmpty()) {
@@ -297,9 +321,16 @@ public class FlowInstanceLifecycleManager {
     return mergedVars.isEmpty() ? null : YdszJson.toJson(mergedVars);
   }
 
-  /** 记录发起人自选审批人变量日志。 */
+  /**
+   * 记录发起人自选审批人变量日志。
+   *
+   * @param instanceId 参数说明
+   * @param variables 参数说明
+   */
   private void logSelfSelectVariables(String instanceId, Map<String, Object> variables) {
-    if (variables == null) return;
+    if (variables == null) {
+      return;
+    }
     for (Map.Entry<String, Object> entry : variables.entrySet()) {
       if (entry.getKey() != null && entry.getKey().startsWith("_selfSelect_")) {
         log.info("[Flow] 发起人自选审批人变量: instanceId={} key={} value={}",
@@ -865,7 +896,14 @@ public class FlowInstanceLifecycleManager {
 
   // ============================== 内部方法 ==============================
 
-  /** 内部方法：创建第一个待办任务（供 DefaultFlowAdvancer 调用） */
+  /**
+   * 内部方法：创建第一个待办任务（供 DefaultFlowAdvancer 调用）
+   *
+   * @param instanceId 参数说明
+   * @param startNode 参数说明
+   * @param variables 参数说明
+   * @return 返回值说明
+   */
   public String createFirstTask(
       String instanceId, FlowNodeVO startNode, Map<String, Object> variables) {
     FlowInstanceVO instance = getByIdOrThrow(instanceId);
@@ -889,7 +927,13 @@ public class FlowInstanceLifecycleManager {
     return instanceId;
   }
 
-  /** 内部方法：推进后批量生成任务（供 DefaultFlowAdvancer 调用） */
+  /**
+   * 内部方法：推进后批量生成任务（供 DefaultFlowAdvancer 调用）
+   *
+   * @param instanceId 参数说明
+   * @param nextNodes 参数说明
+   * @param variables 参数说明
+   */
   public void generateTasksForNodes(
       String instanceId, List<FlowNodeVO> nextNodes, Map<String, Object> variables) {
     if (nextNodes == null || nextNodes.isEmpty()) {
@@ -991,6 +1035,12 @@ public class FlowInstanceLifecycleManager {
   /**
    * NEW_INSTANCE 模式：创建全新实例，复用原实例的 flowCode / businessType / businessId / initiator，
    * 合并原变量与传入变量。原实例保持不变，仅追加一条 REDO_NEW_INSTANCE 审计日志。
+   *
+   * @param instanceId 参数说明
+   * @param initiatorId 参数说明
+   * @param variables 参数说明
+   * @param comment 参数说明
+   * @return 返回值说明
    */
   private String resubmitAsNewInstance(
       String instanceId, String initiatorId, Map<String, Object> variables, String comment) {
@@ -1060,16 +1110,20 @@ public class FlowInstanceLifecycleManager {
 
   /**
    * P0-2: 解析 boundaryEvent 的 timer 配置并注册边界定时器
-   *
+   * 
    * <p>BPMN timer event definition 支持三种形式：
-   *
+   * 
    * <ul>
-   *   <li>{@code timeDuration} — ISO 8601 持续时间（如 "PT1H30M"），到点触发一次
-   *   <li>{@code timeDate} — ISO 8601 绝对时间（如 "2026-07-07T10:00:00"），到点触发一次
-   *   <li>{@code timeCycle} — ISO 8601 循环（如 "R3/PT10M"），目前仅支持首次触发，循环触发待后续实现
+   * <li>{@code timeDuration} — ISO 8601 持续时间（如 "PT1H30M"），到点触发一次
+   * <li>{@code timeDate} — ISO 8601 绝对时间（如 "2026-07-07T10:00:00"），到点触发一次
+   * <li>{@code timeCycle} — ISO 8601 循环（如 "R3/PT10M"），目前仅支持首次触发，循环触发待后续实现
    * </ul>
-   *
+   * 
    * <p>解析失败时不抛异常，仅记录 warn 日志，避免阻塞流程实例创建。
+   *
+   * @param node 参数说明
+   * @param instanceId 参数说明
+   * @param boundaryTaskId 参数说明
    */
   private void scheduleBoundaryTimerIfPresent(
       FlowNodeDO node, String instanceId, String boundaryTaskId) {
@@ -1077,7 +1131,9 @@ public class FlowInstanceLifecycleManager {
       return;
     }
     Map<String, Object> ext = parseExtMap(node);
-    if (ext == null) return;
+    if (ext == null) {
+      return;
+    }
     Object timerObj = ext.get("timer");
     if (!(timerObj instanceof Map<?, ?> timerRaw)) {
       return;
@@ -1106,8 +1162,11 @@ public class FlowInstanceLifecycleManager {
 
   /**
    * P0-2: 解析 BPMN timer 配置为 Duration
-   *
+   * 
    * <p>优先级：duration > date > cycle（cycle 仅取首次）
+   *
+   * @param timer 参数说明
+   * @return 返回值说明
    */
   private Duration parseTimerDelay(Map<?, ?> timer) {
     Object duration = timer.get("duration");
@@ -1161,9 +1220,13 @@ public class FlowInstanceLifecycleManager {
 
   /**
    * P0-1: 解析边界事件关联的 userTask ID
-   *
+   * 
    * <p>boundaryEvent 节点 ext 中 attachedToRef 指向被附着的节点编码， 查找该节点的当前 PENDING 任务作为 boundaryTaskId。
    * intermediateCatchEvent 无 attachedToRef，返回 null。
+   *
+   * @param node 参数说明
+   * @param instanceId 参数说明
+   * @return 返回值说明
    */
   private String resolveBoundaryTaskId(FlowNodeDO node, String instanceId) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
@@ -1171,7 +1234,9 @@ public class FlowInstanceLifecycleManager {
     }
     try {
       Map<String, Object> ext = FlowNodeExt.parseSafe(node.getExt());
-      if (ext == null) return null;
+      if (ext == null) {
+        return null;
+      }
       String attachedToRef = (String) ext.get("attachedToRef");
       if (!StringUtils.hasText(attachedToRef)) {
         return null;
@@ -1190,8 +1255,11 @@ public class FlowInstanceLifecycleManager {
 
   /**
    * P1-3: 判断节点是否为 callActivity（子流程）
-   *
+   * 
    * <p>识别条件：节点 ext JSON 中包含 callActivityFlowCode 字段
+   *
+   * @param node 参数说明
+   * @return 返回值说明
    */
   private boolean isCallActivity(FlowNodeDO node) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
@@ -1199,7 +1267,9 @@ public class FlowInstanceLifecycleManager {
     }
     try {
       Map<String, Object> ext = FlowNodeExt.parseSafe(node.getExt());
-      if (ext == null) return false;
+      if (ext == null) {
+        return false;
+      }
       return ext.containsKey("callActivityFlowCode") || ext.containsKey("subProcessFlowCode");
     } catch (Exception e) {
       log.warn("[FlowInstanceLifecycleManager] 节点 ext 解析失败，视为非子流程调用: {}", e.getMessage());
@@ -1211,6 +1281,8 @@ public class FlowInstanceLifecycleManager {
 
   /**
    * P2-3: 触发事件监听器（委托给 FlowTaskSupport 统一处理）
+   *
+   * @param action 参数说明
    */
   private void fireEvent(Consumer<FlowEventListener> action) {
     flowTaskSupport.fireEvent(action, null);
@@ -1218,6 +1290,10 @@ public class FlowInstanceLifecycleManager {
 
   /**
    * P2-3: 发布 Spring 异步事件（委托给 FlowTaskSupport 统一处理）
+   *
+   * @param eventType 参数说明
+   * @param instanceId 参数说明
+   * @param taskId 参数说明
    */
   private void publishWorkflowEvent(String eventType, String instanceId, String taskId) {
     flowTaskSupport.publishWorkflowEvent(eventType, instanceId, taskId);
@@ -1250,7 +1326,9 @@ public class FlowInstanceLifecycleManager {
         traceId = RequestContext.getTraceId();
         if (traceId == null || traceId.isBlank()) {
           traceId = MDC.get("traceId");
-          if (traceId == null) traceId = MDC.get("tid");
+          if (traceId == null) {
+            traceId = MDC.get("tid");
+          }
         }
       }
       ctx.setTraceId(traceId);

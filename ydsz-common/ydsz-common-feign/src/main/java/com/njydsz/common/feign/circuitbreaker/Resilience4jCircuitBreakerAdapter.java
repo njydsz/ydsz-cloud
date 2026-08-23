@@ -1,5 +1,7 @@
 package com.njydsz.common.feign.circuitbreaker;
 
+import java.util.concurrent.TimeUnit;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -25,6 +27,8 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
   private final CircuitBreakerRegistry registry;
 
   /**
+   * 构造 Resilience4j 熔断适配器。
+   *
    * @param properties Feign 配置属性
    * @param statePersistence 状态持久化（可为 null）
    * @param metricsExporter 指标导出器（可为 null）
@@ -48,7 +52,7 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
   @Override
   public void recordSuccess(String serviceName, long durationMs) {
     CircuitBreaker cb = getOrCreate(serviceName);
-    cb.onSuccess(durationMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+    cb.onSuccess(durationMs, TimeUnit.MILLISECONDS);
     if (metricsExporter != null) {
       metricsExporter.registerServiceMetrics(serviceName);
     }
@@ -57,7 +61,7 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
   @Override
   public void recordFailure(String serviceName, long durationMs, Throwable throwable) {
     CircuitBreaker cb = getOrCreate(serviceName);
-    cb.onError(durationMs, java.util.concurrent.TimeUnit.MILLISECONDS, throwable);
+    cb.onError(durationMs, TimeUnit.MILLISECONDS, throwable);
   }
 
   @Override

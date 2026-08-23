@@ -42,6 +42,15 @@ import com.njydsz.literule.api.expression.ExpressionEngine;
 @Slf4j
 public class DecisionTableRule implements Rule {
 
+    /** 比较表达式正则捕获组：右侧操作数 */
+  private static final int CMP_GROUP_RIGHT = 3;
+
+  /** 比较表达式正则捕获组：右括号 */
+  private static final int CMP_GROUP_BRACKET = 4;
+
+  /** 纳秒到毫秒的换算系数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
   private static final Pattern COMPARISON_PATTERN = Pattern.compile("^(>=|<=|>|<|!=|==)\\s*(.+)$");
   private static final Pattern INTERVAL_PATTERN =
       Pattern.compile("^(\\[|\\()([^,]+),([^\\]\\)]+)(\\]|\\))$");
@@ -205,7 +214,9 @@ public class DecisionTableRule implements Rule {
     String severityCode =
         actions.get("severity") == null ? "INFO" : String.valueOf(actions.get("severity"));
     RuleSeverity severity = RuleSeverity.fromCode(severityCode);
-    if (severity == null) severity = RuleSeverity.INFO;
+    if (severity == null) {
+      severity = RuleSeverity.INFO;
+    }
 
     String title = actions.get("title") == null ? getName() : String.valueOf(actions.get("title"));
     String description =
@@ -232,9 +243,13 @@ public class DecisionTableRule implements Rule {
   /** 条件匹配（支持字面值 / 比较表达式 / 区间 / 枚举 / LiteExpr 表达式） */
   private boolean matchCondition(
       String column, String condExpr, Object factValue, RuleContext context) {
-    if (condExpr == null) return true;
+    if (condExpr == null) {
+      return true;
+    }
     condExpr = condExpr.trim();
-    if (condExpr.isEmpty() || "*".equals(condExpr)) return true;
+    if (condExpr.isEmpty() || "*".equals(condExpr)) {
+      return true;
+    }
 
     // LiteExpr 表达式：expr:>amount*0.1
     if (condExpr.startsWith(EXPR_PREFIX)) {
@@ -292,11 +307,13 @@ public class DecisionTableRule implements Rule {
   private boolean matchInterval(Matcher m, Object factValue) {
     try {
       BigDecimal fact = toBigDecimal(factValue);
-      if (fact == null) return false;
+      if (fact == null) {
+        return false;
+      }
       String leftBracket = m.group(1);
       BigDecimal left = new BigDecimal(m.group(2).trim());
-      String rightStr = m.group(3).trim();
-      String rightBracket = m.group(4);
+      String rightStr = m.group(CMP_GROUP_RIGHT).trim();
+      String rightBracket = m.group(CMP_GROUP_BRACKET);
       BigDecimal right = new BigDecimal(rightStr);
 
       boolean leftOk =
@@ -324,7 +341,9 @@ public class DecisionTableRule implements Rule {
       // 数值比较
       BigDecimal fact = toBigDecimal(factValue);
       BigDecimal operand = new BigDecimal(operandStr);
-      if (fact == null) return false;
+      if (fact == null) {
+        return false;
+      }
       int cmp = fact.compareTo(operand);
       return switch (op) {
         case ">" -> cmp > 0;
@@ -347,7 +366,9 @@ public class DecisionTableRule implements Rule {
   private boolean equalsNumeric(Object factValue, String operandStr) {
     try {
       BigDecimal fact = toBigDecimal(factValue);
-      if (fact == null) return false;
+      if (fact == null) {
+        return false;
+      }
       BigDecimal operand = new BigDecimal(operandStr.trim());
       return fact.compareTo(operand) == 0;
     } catch (Exception e) {
@@ -361,9 +382,15 @@ public class DecisionTableRule implements Rule {
   }
 
   private BigDecimal toBigDecimal(Object value) {
-    if (value == null) return null;
-    if (value instanceof BigDecimal bd) return bd;
-    if (value instanceof Number n) return new BigDecimal(n.toString());
+    if (value == null) {
+      return null;
+    }
+    if (value instanceof BigDecimal bd) {
+      return bd;
+    }
+    if (value instanceof Number n) {
+      return new BigDecimal(n.toString());
+    }
     try {
       return new BigDecimal(value.toString().trim());
     } catch (Exception e) {
@@ -373,13 +400,17 @@ public class DecisionTableRule implements Rule {
   }
 
   private String toString(Object value) {
-    if (value == null) return null;
-    if (value instanceof BigDecimal bd) return bd.toPlainString();
+    if (value == null) {
+      return null;
+    }
+    if (value instanceof BigDecimal bd) {
+      return bd.toPlainString();
+    }
     return String.valueOf(value);
   }
 
   private long elapsedMs(long startNano) {
-    return (System.nanoTime() - startNano) / 1_000_000;
+    return (System.nanoTime() - startNano) / NANOS_PER_MILLI;
   }
 
   /**

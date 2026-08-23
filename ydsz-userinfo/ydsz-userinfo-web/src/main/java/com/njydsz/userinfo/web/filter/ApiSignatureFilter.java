@@ -21,6 +21,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.server.auth.ApiSignRequest;
 import com.njydsz.userinfo.server.auth.ApiSignatureUtil;
 import com.njydsz.userinfo.server.config.ApiSignatureProperties;
 
@@ -99,71 +100,103 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
     }
 
     // 包装请求以支持多次读取 body
-    ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request, 1024);
+    ContentCachingRequestWrapper wrappedRequest =
+        new ContentCachingRequestWrapper(request, REQUEST_BODY_CACHE_SIZE);
 
     try {
-      // 1. 读取签名相关请求头
-      String timestampStr = wrappedRequest.getHeader(properties.getHeaderTimestamp());
-      String nonce = wrappedRequest.getHeader(properties.getHeaderNonce());
-      String signature = wrappedRequest.getHeader(properties.getHeaderSignature());
-
-      // 2. 校验必要参数是否存在
-      if (!StringUtils.hasText(timestampStr) || !StringUtils.hasText(nonce)
-          || !StringUtils.hasText(signature)) {
-        writeUnauthorized(response, UserInfoExceptionCode.SIGNATURE_REQUIRED);
-        return;
+      if (verifySignature(wrappedRequest, response)) {
+        // 校验通过，设置属性通知 RequireInternalAspect 放行 IP 标记头校验，再放行请求
+        wrappedRequest.setAttribute(SIGNATURE_VERIFIED_ATTR, Boolean.TRUE);
+        filterChain.doFilter(wrappedRequest, response);
       }
-
-      // 3. 解析时间戳并校验有效期
-      long timestamp;
-      try {
-        timestamp = Long.parseLong(timestampStr);
-      } catch (NumberFormatException e) {
-        log.warn("API signature: invalid timestamp format, uri={}, timestamp={}",
-            wrappedRequest.getRequestURI(), timestampStr);
-        writeUnauthorized(response, UserInfoExceptionCode.SIGNATURE_INVALID);
-        return;
-      }
-
-      if (ApiSignatureUtil.isExpired(timestamp, properties.getTtlMillis())) {
-        log.warn("API signature: expired signature, uri={}, timestamp={}, ttl={}",
-            wrappedRequest.getRequestURI(), timestamp, properties.getTtlMillis());
-        writeUnauthorized(response, UserInfoExceptionCode.SIGNATURE_EXPIRED);
-        return;
-      }
-
-      // 4. nonce 防重放校验（SETNX）
-      if (!tryAcquireNonce(nonce, timestamp)) {
-        log.warn("API signature: nonce reused (possible replay attack), uri={}, nonce={}",
-            wrappedRequest.getRequestURI(), nonce);
-        writeUnauthorized(response, UserInfoExceptionCode.NONCE_REUSED);
-        return;
-      }
-
-      // 5. 计算并比对签名
-      String method = wrappedRequest.getMethod();
-      String path = wrappedRequest.getRequestURI();
-      String query = wrappedRequest.getQueryString();
-      String body = getRequestBody(wrappedRequest);
-
-      boolean valid =
-          ApiSignatureUtil.verify(
-              signature, method, path, query, body, timestamp, nonce, properties.getSecret());
-
-      if (!valid) {
-        log.warn("API signature: invalid signature, uri={}, method={}, nonce={}",
-            wrappedRequest.getRequestURI(), method, nonce);
-        writeUnauthorized(response, UserInfoExceptionCode.SIGNATURE_INVALID);
-        return;
-      }
-
-      // 校验通过，设置属性通知 RequireInternalAspect 放行 IP 标记头校验，再放行请求
-      wrappedRequest.setAttribute(SIGNATURE_VERIFIED_ATTR, Boolean.TRUE);
-      filterChain.doFilter(wrappedRequest, response);
     } catch (Exception e) {
       log.error("API signature: unexpected error during verification, uri={}",
           wrappedRequest.getRequestURI(), e);
       writeUnauthorized(response, UserInfoExceptionCode.SIGNATURE_INVALID);
+    }
+  }
+
+  /**
+   * 执行签名校验（参数检查 / 时间戳 / nonce / 签名比对）。
+   *
+   * @param wrappedRequest 已包装的请求（可重复读 body）
+   * @param response 响应
+   * @return true 表示校验通过
+   */
+  private boolean verifySignature(
+      ContentCachingRequestWrapper wrappedRequest, HttpServletResponse response) {
+    // 1. 读取签名相关请求头
+    String timestampStr = wrappedRequest.getHeader(properties.getHeaderTimestamp());
+    String nonce = wrappedRequest.getHeader(properties.getHeaderNonce());
+    String signature = wrappedRequest.getHeader(properties.getHeaderSignature());
+
+    // 2. 校验必要参数是否存在
+    if (!StringUtils.hasText(timestampStr) || !StringUtils.hasText(nonce)
+        || !StringUtils.hasText(signature)) {
+      writeUnauthorized(response, UserInfoExceptionCode.SIGNATURE_REQUIRED);
+      return false;
+    }
+
+    // 3. 解析时间戳并校验有效期
+    long timestamp = parseTimestamp(timestampStr, wrappedRequest, response);
+    if (timestamp < 0) {
+      return false;
+    }
+    if (ApiSignatureUtil.isExpired(timestamp, properties.getTtlMillis())) {
+      log.warn("API signature: expired signature, uri={}, timestamp={}, ttl={}",
+          wrappedRequest.getRequestURI(), timestamp, properties.getTtlMillis());
+      writeUnauthorized(response, UserInfoExceptionCode.SIGNATURE_EXPIRED);
+      return false;
+    }
+
+    // 4. nonce 防重放校验（SETNX）
+    if (!tryAcquireNonce(nonce, timestamp)) {
+      log.warn("API signature: nonce reused (possible replay attack), uri={}, nonce={}",
+          wrappedRequest.getRequestURI(), nonce);
+      writeUnauthorized(response, UserInfoExceptionCode.NONCE_REUSED);
+      return false;
+    }
+
+    // 5. 计算并比对签名
+    String method = wrappedRequest.getMethod();
+    String path = wrappedRequest.getRequestURI();
+    String query = wrappedRequest.getQueryString();
+    String body = getRequestBody(wrappedRequest);
+
+    boolean valid =
+        ApiSignatureUtil.verify(
+            signature,
+            new ApiSignRequest(method, path, query, body, timestamp, nonce),
+            properties.getSecret());
+
+    if (!valid) {
+      log.warn("API signature: invalid signature, uri={}, method={}, nonce={}",
+          wrappedRequest.getRequestURI(), method, nonce);
+      writeUnauthorized(response, UserInfoExceptionCode.SIGNATURE_INVALID);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * 解析时间戳字符串，非法格式直接拒绝。
+   *
+   * @param timestampStr 时间戳字符串
+   * @param wrappedRequest 请求（日志用）
+   * @param response 响应
+   * @return 解析后的时间戳；非法格式返回 -1
+   */
+  private long parseTimestamp(
+      String timestampStr,
+      ContentCachingRequestWrapper wrappedRequest,
+      HttpServletResponse response) {
+    try {
+      return Long.parseLong(timestampStr);
+    } catch (NumberFormatException e) {
+      log.warn("API signature: invalid timestamp format, uri={}, timestamp={}",
+          wrappedRequest.getRequestURI(), timestampStr);
+      writeUnauthorized(response, UserInfoExceptionCode.SIGNATURE_INVALID);
+      return -1;
     }
   }
 

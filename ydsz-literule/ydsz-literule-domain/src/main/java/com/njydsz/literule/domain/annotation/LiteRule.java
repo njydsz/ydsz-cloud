@@ -33,6 +33,10 @@ import com.njydsz.literule.api.Rule;
 @Documented
 public @interface LiteRule {
 
-  /** 是否启用自动注册（默认 true；设为 false 可临时停用某规则） */
+  /**
+   * 是否启用自动注册（默认 true；设为 false 可临时停用某规则）。
+   *
+   * @return 是否启用自动注册
+   */
   boolean enabled() default true;
 }

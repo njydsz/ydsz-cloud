@@ -1,6 +1,7 @@
 package com.njydsz.cronjob.domain.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 
@@ -70,7 +71,7 @@ public interface JobWebhookRepository {
    * @param id Webhook ID
    * @return Webhook VO；不存在返回 {@code Optional.empty()}
    */
-  java.util.Optional<JobWebhookVO> findById(String id);
+  Optional<JobWebhookVO> findById(String id);
 
   /**
    * 分页查询 WebHook 订阅列表。

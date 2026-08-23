@@ -77,14 +77,20 @@ public class RuleVersionDiff implements Serializable {
     UNCHANGED
   }
 
-  /** 是否有变更 */
+  /** 是否有变更
+   * @return 返回值说明
+   */
   public boolean hasChanges() {
     return entries != null && entries.stream().anyMatch(e -> e.getType() != DiffType.UNCHANGED);
   }
 
-  /** 变更字段数 */
+  /** 变更字段数
+   * @return 返回值说明
+   */
   public int changeCount() {
-    if (entries == null) return 0;
+    if (entries == null) {
+      return 0;
+    }
     return (int) entries.stream().filter(e -> e.getType() != DiffType.UNCHANGED).count();
   }
 }

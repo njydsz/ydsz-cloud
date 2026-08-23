@@ -323,7 +323,9 @@ public final class RuleDslConverter {
         }
         Object prioObj = rm.get("priority");
         int prio = 100;
-        if (prioObj instanceof Number n) prio = n.intValue();
+        if (prioObj instanceof Number n) {
+          prio = n.intValue();
+        }
         rows.add(
             DecisionTableDefinition.Row.builder()
                 .conditions(conditions)
@@ -420,7 +422,9 @@ public final class RuleDslConverter {
   // ============ 枚举解析 ============
 
   private static RuleSeverity parseSeverity(String code, RuleSeverity fallback) {
-    if (code == null || code.isBlank()) return fallback;
+    if (code == null || code.isBlank()) {
+      return fallback;
+    }
     try {
       return RuleSeverity.valueOf(code.trim().toUpperCase());
     } catch (IllegalArgumentException e) {

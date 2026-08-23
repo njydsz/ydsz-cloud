@@ -15,5 +15,6 @@ public final class InternalSignatureHeaderConstants {
   }
 
   /** 网关内部签名 HTTP 头。HMAC-SHA256 签名值。 */
+  /** X_INTERNAL_SIG 常量 */
   public static final String X_INTERNAL_SIG = "X-Internal-Sig";
 }

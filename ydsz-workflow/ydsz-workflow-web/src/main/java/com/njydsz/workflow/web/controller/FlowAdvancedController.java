@@ -75,6 +75,9 @@ import com.njydsz.workflow.server.service.impl.instance.FlowCountersignDynamicSe
 @RequiredArgsConstructor
 public class FlowAdvancedController {
 
+    /** 每分钟的秒数 */
+  private static final int SECONDS_PER_MINUTE = 60;
+
   /** 周报 / 月报服务 */
   private final FlowReportService reportService;
 
@@ -421,7 +424,7 @@ public class FlowAdvancedController {
             "canUrge", canUrge,
             "remainingSeconds", remaining,
             "cooldownSeconds", cooldownSeconds,
-            "remainingMinutes", remaining / 60));
+            "remainingMinutes", remaining / SECONDS_PER_MINUTE));
   }
 
   /**

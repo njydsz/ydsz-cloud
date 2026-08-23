@@ -41,6 +41,7 @@ public enum ConfigValueType {
   BOOLEAN,
 
   /** JSON 对象 / 数组类型 */
+  /** JSON */
   JSON;
 
   /** 字符串类型最大长度 */

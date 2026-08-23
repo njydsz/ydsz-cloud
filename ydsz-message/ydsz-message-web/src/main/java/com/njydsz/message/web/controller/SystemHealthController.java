@@ -1,13 +1,13 @@
 package com.njydsz.message.web.controller;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
@@ -74,7 +74,7 @@ public class SystemHealthController {
   @Operation(summary = "各通道详细健康状态")
   @AuthApiPermission("MESSAGE_LOG_VIEW")
   @GetMapping("/channels")
-  public YdszResponse<java.util.List<ChannelHealthVO>> getChannelHealths() {
+  public YdszResponse<List<ChannelHealthVO>> getChannelHealths() {
     return YdszResponse.success(messageHealthService.getChannelHealths());
   }
 }

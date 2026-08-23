@@ -15,7 +15,8 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
  * 用户信息中心服务 App 端启动类（P1-2 双入口架构）。
  *
  * <p>当 {@code ydsz.userinfo.platform=app} 时以此入口启动，提供移动端/应用端 API。
- * 与 {@code ydsz-userinfo-web} 互斥，共享 server/domain 层，通过 {@link com.njydsz.userinfo.app.config.ConditionalOnPlatform} 控制组件激活。
+ * 与 {@code ydsz-userinfo-web} 互斥，共享 server/domain 层，通过
+ * {@link com.njydsz.userinfo.app.config.ConditionalOnPlatform} 控制组件激活。
  *
  * <p><b>启动方式：</b>
  * <pre>{@code

@@ -5,12 +5,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
+import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.infra.entity.log.JobLog;
@@ -216,6 +217,6 @@ public class JobLogRepositoryImpl implements JobLogRepository {
         .orderByDesc(JobLog::getCreatedAt)
         .last("LIMIT 1");
     return Optional.ofNullable(jobLogMapper.selectOne(wrapper))
-        .map(converter::jobLogToVO);
+        .map(converter::entityToVO);
   }
 }

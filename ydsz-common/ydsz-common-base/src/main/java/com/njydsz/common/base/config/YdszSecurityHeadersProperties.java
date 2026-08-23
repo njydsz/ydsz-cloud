@@ -37,7 +37,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.base.security-headers")
-public class BaseSecurityHeadersProperties {
+public class YdszSecurityHeadersProperties {
 
   /**
    * 是否启用安全响应头

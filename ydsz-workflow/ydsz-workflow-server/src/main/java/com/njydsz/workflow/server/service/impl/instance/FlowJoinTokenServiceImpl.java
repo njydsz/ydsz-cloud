@@ -235,7 +235,14 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     }
   }
 
-  /** P0-3: 初始化 N/M join 令牌 */
+  /**
+   * P0-3: 初始化 N/M join 令牌
+   *
+   * @param instanceId 参数说明
+   * @param joinNodeCode 参数说明
+   * @param branchCount 参数说明
+   * @param requiredCount 参数说明
+   */
   @Override
   public void initTokensWithRequired(
       String instanceId, String joinNodeCode, int branchCount, int requiredCount) {
@@ -269,7 +276,13 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     }
   }
 
-  /** P0-3: 标记分支到达并检查 N/M 聚合条件 */
+  /**
+   * P0-3: 标记分支到达并检查 N/M 聚合条件
+   *
+   * @param instanceId 参数说明
+   * @param joinNodeCode 参数说明
+   * @return 返回值说明
+   */
   @Override
   public boolean arriveTokenWithRequired(String instanceId, String joinNodeCode) {
     if (!isValidParam(instanceId, joinNodeCode)) {
@@ -305,7 +318,13 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     }
   }
 
-  /** P0-3: 检查是否满足 N/M 聚合条件 */
+  /**
+   * P0-3: 检查是否满足 N/M 聚合条件
+   *
+   * @param instanceId 参数说明
+   * @param joinNodeCode 参数说明
+   * @return 返回值说明
+   */
   @Override
   public boolean requirementMet(String instanceId, String joinNodeCode) {
     if (!isValidParam(instanceId, joinNodeCode)) {
@@ -360,7 +379,13 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     }
   }
 
-  /** 检查 join 令牌是否已初始化（total key 是否存在） */
+  /**
+   * 检查 join 令牌是否已初始化（total key 是否存在）
+   *
+   * @param instanceId 参数说明
+   * @param joinNodeCode 参数说明
+   * @return 返回值说明
+   */
   @Override
   public boolean isInitialized(String instanceId, String joinNodeCode) {
     if (!isValidParam(instanceId, joinNodeCode)) {
@@ -381,7 +406,13 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
 
   // ============================== 私有辅助 ==============================
 
-  /** 读取分支总数，未初始化时返回 Integer.MAX_VALUE（避免误判为已全部到达） */
+  /**
+   * 读取分支总数，未初始化时返回 Integer.MAX_VALUE（避免误判为已全部到达）
+   *
+   * @param instanceId 参数说明
+   * @param joinNodeCode 参数说明
+   * @return 返回值说明
+   */
   private int readTotal(String instanceId, String joinNodeCode) {
     try {
       String totalStr = redisStringOps.get(buildTotalKey(instanceId, joinNodeCode), String.class);
@@ -408,7 +439,13 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     }
   }
 
-  /** 参数合法性校验 */
+  /**
+   * 参数合法性校验
+   *
+   * @param instanceId 参数说明
+   * @param joinNodeCode 参数说明
+   * @return 返回值说明
+   */
   private boolean isValidParam(String instanceId, String joinNodeCode) {
     if (instanceId == null) {
       log.warn("[FlowJoinToken] instanceId 为空，跳过");
@@ -421,17 +458,35 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     return true;
   }
 
-  /** 构建到达计数 key：flow:join:{instanceId}:{joinNodeCode} */
+  /**
+   * 构建到达计数 key：flow:join:{instanceId}:{joinNodeCode}
+   *
+   * @param instanceId 参数说明
+   * @param joinNodeCode 参数说明
+   * @return 返回值说明
+   */
   private String buildArrivedKey(String instanceId, String joinNodeCode) {
     return KEY_PREFIX + instanceId + ":" + joinNodeCode;
   }
 
-  /** 构建分支总数 key：flow:join:{instanceId}:{joinNodeCode}:total */
+  /**
+   * 构建分支总数 key：flow:join:{instanceId}:{joinNodeCode}:total
+   *
+   * @param instanceId 参数说明
+   * @param joinNodeCode 参数说明
+   * @return 返回值说明
+   */
   private String buildTotalKey(String instanceId, String joinNodeCode) {
     return buildArrivedKey(instanceId, joinNodeCode) + TOTAL_SUFFIX;
   }
 
-  /** P0-3: 构建 N/M join required key：flow:join:{instanceId}:{joinNodeCode}:required */
+  /**
+   * P0-3: 构建 N/M join required key：flow:join:{instanceId}:{joinNodeCode}:required
+   *
+   * @param instanceId 参数说明
+   * @param joinNodeCode 参数说明
+   * @return 返回值说明
+   */
   private String buildRequiredKey(String instanceId, String joinNodeCode) {
     return buildArrivedKey(instanceId, joinNodeCode) + REQUIRED_SUFFIX;
   }

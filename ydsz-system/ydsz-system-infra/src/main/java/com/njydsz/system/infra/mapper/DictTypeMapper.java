@@ -1,9 +1,10 @@
 package com.njydsz.system.infra.mapper;
-
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
 import com.njydsz.system.infra.entity.DictTypeDO;
+
+
 
 /**
  * 字典类型 Mapper

@@ -20,8 +20,8 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowTimerRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.infra.entity.FlowTimerDO;
@@ -268,7 +268,11 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     }
   }
 
-  /** 边界定时器触发：取消 userTask，触发"超时分支"（节点 ext 中标记的 boundarySkip） */
+  /**
+   * 边界定时器触发：取消 userTask，触发"超时分支"（节点 ext 中标记的 boundarySkip）
+   *
+   * @param timer 参数说明
+   */
   private void fireBoundary(FlowTimerDO timer) {
     FlowRunTaskDO task = taskRepository.findById(timer.getBoundaryTaskId()).orElse(null);
     if (task == null) {
@@ -402,7 +406,11 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
   // ============== 内部辅助 ==============
 
-  /** 复用 FlowInstanceServiceImpl.generateTasksForNodes（包内访问） */
+  /**
+   * 复用 FlowInstanceServiceImpl.generateTasksForNodes（包内访问）
+   *
+   * @return 返回值说明
+   */
   private FlowInstanceService instanceService() {
     return advancer.getInstanceService();
   }

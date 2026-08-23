@@ -45,6 +45,9 @@ public class DingTalkAuthProvider extends AbstractSocialAuthProvider {
   /** 钉钉用户信息端点（可通过 ydsz.userinfo.social.providers.dingtalk.user-info-url 覆盖） */
   private static final String DEFAULT_USER_INFO_URL = "https://api.dingtalk.com/1.0.0/contact/users";
 
+  /** 默认令牌过期时间（秒） */
+  private static final long DEFAULT_EXPIRE_IN = 7200L;
+
   /**
    * 构造钉钉认证提供者。
    *
@@ -107,7 +110,7 @@ public class DingTalkAuthProvider extends AbstractSocialAuthProvider {
       throw new SocialAuthException("钉钉获取 access_token 失败");
     }
 
-    Long expireIn = getLong(tokenResponse, "expireIn", 7200L);
+    Long expireIn = getLong(tokenResponse, "expireIn", DEFAULT_EXPIRE_IN);
     String unionId = getStr(tokenResponse, "unionId");
 
     return new SocialAccessToken(accessToken, null, expireIn, unionId, unionId);

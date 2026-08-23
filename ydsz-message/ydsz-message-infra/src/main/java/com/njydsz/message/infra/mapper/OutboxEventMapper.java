@@ -1,12 +1,12 @@
 package com.njydsz.message.infra.mapper;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.message.infra.entity.OutboxEventDO;
 
 /**
@@ -25,7 +25,7 @@ public interface OutboxEventMapper extends BaseMapper<OutboxEventDO> {
    *
    * @return 状态列表及其数量
    */
-  List<java.util.Map<String, Object>> countGroupByStatus();
+  List<Map<String, Object>> countGroupByStatus();
 
   /**
    * CAS 更新：PENDING → PUBLISHING（乐观锁防并发）。

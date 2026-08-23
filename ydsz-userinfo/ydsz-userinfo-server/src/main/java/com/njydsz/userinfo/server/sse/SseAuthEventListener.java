@@ -2,6 +2,8 @@ package com.njydsz.userinfo.server.sse;
 
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -18,9 +20,6 @@ import com.njydsz.userinfo.domain.event.auth.MfaTriggeredEvent;
 import com.njydsz.userinfo.domain.event.auth.MfaVerifiedEvent;
 import com.njydsz.userinfo.domain.event.auth.PasswordChangedEvent;
 import com.njydsz.userinfo.domain.event.auth.SessionEvictedEvent;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 认证事件 SSE 推送监听器（P3-1）。
@@ -195,6 +194,6 @@ public class SseAuthEventListener implements UserAuthEventListener {
 
   @Override
   public int getOrder() {
-    return 50;
+    return LISTENER_ORDER;
   }
 }

@@ -47,6 +47,9 @@ import com.njydsz.message.domain.repository.MsgOfflineRepository;
 @Service
 @RequiredArgsConstructor
 public class OfflineMessageService implements OfflineMessageStore {
+  /** 离线消息保留天数 */
+  private static final int OFFLINE_TTL_DAYS = 30;
+
 
   /** P3-6: 批量 insert 单批最大条数（ydsz_msg_offline 14 列，500 条 ≈ 7000 参数，远低于 PG 65535 上限） */
   private static final int INSERT_BATCH_SIZE = 500;
@@ -100,7 +103,7 @@ public class OfflineMessageService implements OfflineMessageStore {
               new LambdaQueryWrapper<MsgOffline>()
                   .eq(MsgOffline::getUserId, userId)
                   .eq(MsgOffline::getStatus, "PENDING")
-                  .le(MsgOffline::getExpiredAt, LocalDateTime.now().plusDays(30))
+                  .le(MsgOffline::getExpiredAt, LocalDateTime.now().plusDays(OFFLINE_TTL_DAYS))
                   .ge(MsgOffline::getExpiredAt, LocalDateTime.now())
                   .orderByAsc(MsgOffline::getMsgTimestamp));
       for (MsgOffline msg : dbMessages) {
@@ -191,7 +194,7 @@ public class OfflineMessageService implements OfflineMessageStore {
         offline.setPayload(json);
         offline.setMsgTimestamp(System.currentTimeMillis());
         offline.setStatus("PENDING");
-        offline.setExpiredAt(now.plusDays(30));
+        offline.setExpiredAt(now.plusDays(OFFLINE_TTL_DAYS));
         offline.setTenantId(tenantId);
         entities.add(offline);
       }

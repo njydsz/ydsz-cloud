@@ -17,12 +17,23 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SlaStep {
 
-  /** 步骤名 */
+  /**
+   * 步骤名。
+   * @return 步骤名
+   */
   String name();
 
-  /** 超时阈值（毫秒） */
+  /**
+   * 超时阈值（毫秒）。
+   *
+   * @return 超时阈值（毫秒），默认 200
+   */
   long timeoutMillis() default 200;
 
-  /** 是否关键步骤（失败则整体 SLA 违反） */
+  /**
+   * 是否关键步骤（失败则整体 SLA 违反）。
+   *
+   * @return {@code true} 表示关键步骤，默认 true
+   */
   boolean critical() default true;
 }

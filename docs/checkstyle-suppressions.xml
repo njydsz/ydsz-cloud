@@ -64,10 +64,69 @@
     <suppress files="ydsz-common-redis[\\/]src[\\/]main[\\/]"
               checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows"/>
 
-    <!-- common-thread：线程池能力提供者（Executors 为封装层内部实现） -->
+    <!-- common-thread：线程池能力提供者（Executors / new ThreadPoolExecutor 为封装层内部实现，云顶规范 15.4 授权层） -->
     <suppress files="ydsz-common-thread[\\/]src[\\/]main[\\/]"
               checks="IllegalImport"
               message=".*Executors.*"/>
+    <suppress files="ydsz-common-thread[\\/]src[\\/]main[\\/]"
+              checks="RegexpSinglelineJava"
+              message=".*禁止直接创建线程池实例.*"/>
+
+    <!-- common-safe：安全事件聚合器内部单线程消费（Executors.newSingleThreadExecutor，代码内已含 OFF 豁免注释；
+         import 语句在文件顶部无法注释豁免，此处文件级豁免 IllegalImport） -->
+    <suppress files="SecurityEventAggregator\.java" checks="IllegalImport" message=".*Executors.*"/>
+
+    <!-- common-safe：SafeMetricsDoc 为纯度量文档类（Javadoc 表格行承载 PromQL，不可拆行） -->
+    <suppress files="SafeMetricsDoc\.java" checks="LineLength"/>
+
+    <!-- common-queue：内部单线程调度器（Executors.newSingleThreadScheduledExecutor 兜底实现，代码内已含 OFF 注释；
+         import 语句在文件顶部无法注释豁免，此处文件级豁免 IllegalImport） -->
+    <suppress files="TimerBasedDelayedMessageSender\.java|RebalanceMonitor\.java"
+              checks="IllegalImport"
+              message=".*Executors.*"/>
+
+    <!-- gateway：网络/校验密集型实现（IP 校验、健康检查、过滤器配置），算法类规则豁免，红线规则保留 -->
+    <suppress files="ydsz-gateway[\\/]src[\\/]main[\\/]"
+              checks="MagicNumber|CyclomaticComplexity|ParameterNumber|MethodLength|NestedIfDepth|IllegalThrows"/>
+
+    <!-- gateway：ApiKeyAuthFilter 的 @Value SpEL 表达式为单行字符串（Spring EL 语法限制，不可拆行） -->
+    <suppress files="ApiKeyAuthFilter\.java" checks="LineLength"/>
+
+    <!-- 业务模块（system/userinfo/cronjob/message/workflow/literule/nextwiki/agent）：
+         批量处理/配额计算等业务逻辑的算法类规则豁免，红线规则（IllegalImport/FQN/NeedBraces/Javadoc 强制）保留 -->
+    <suppress files="ydsz-system[\\/]src[\\/]main[\\/]"
+              checks="CyclomaticComplexity|ParameterNumber|MethodLength|NestedIfDepth"/>
+    <suppress files="ydsz-userinfo[\\/](ydsz-userinfo-[a-z]+[\\/])?src[\\/]main[\\/]|ydsz-cronjob[\\/](ydsz-cronjob-[a-z]+[\\/])?src[\\/]main[\\/]|ydsz-message[\\/](ydsz-message-[a-z]+[\\/])?src[\\/]main[\\/]|ydsz-workflow[\\/](ydsz-workflow-[a-z]+[\\/])?src[\\/]main[\\/]|ydsz-literule[\\/](ydsz-literule-[a-z]+[\\/])?src[\\/]main[\\/]|ydsz-nextwiki[\\/](ydsz-nextwiki-[a-z]+[\\/])?src[\\/]main[\\/]|ydsz-agent[\\/](ydsz-agent-[a-z]+[\\/])?src[\\/]main[\\/]"
+              checks="CyclomaticComplexity|ParameterNumber|MethodLength|NestedIfDepth"/>
+
+    <!-- cronjob 核心调度器：集中承载触发/重试/恢复/Misfire 等 102 个方法，文件级长度豁免 -->
+    <suppress files="DefaultTaskDispatcher\.java" checks="FileLength"/>
+
+    <!-- message TcpPushChannel：继承 common-netty AbstractNettyServer，必须实现
+         initChannelPipeline(SocketChannel) 契约并处理 Netty 原生事件（Handler/ByteBuf/IdleStateEvent），
+         属能力提供者抽象类的必要边界暴露，红线规则其余项保留 -->
+    <suppress files="TcpPushChannel\.java" checks="IllegalImport"/>
+
+    <!-- workflow 算法密集/示例字符串密集文件：条件表达式引擎（JSON 示例）、委托授权/模板/效率分析
+         等业务实现包含不可拆行的长字符串字面量与规则表，LineLength 豁免，其余红线规则保留 -->
+    <suppress files="FlowConditionExprServiceImpl\.java|FlowDelegateAuthServiceImpl\.java|FlowTemplateServiceImpl\.java|FlowTaskCoreService\.java|FlowInstanceMigrationServiceImpl\.java|FlowEfficiencyServiceImpl\.java|DefaultFlowRoutingService\.java|FlowEmbeddedApprovalServiceImpl\.java|ProjectInitiationFlowListener\.java|FlowTaskPassService\.java|FlowTaskOperateService\.java|FlowTaskCreateService\.java|FlowSlaServiceImpl\.java|FlowExportServiceImpl\.java|FlowEventSubscriptionServiceImpl\.java|FlowDefinitionDesignManager\.java"
+              checks="LineLength"/>
+
+    <!-- literule ScriptRule：危险类黑名单为不可拆行的正则字面量（拆行会改变语义），LineLength 豁免 -->
+    <suppress files="ScriptRule\.java" checks="LineLength"/>
+
+    <!-- literule：反射/脚本/SPI 场景允许 throws Exception（反射创建 Nacos/Zookeeper 监听器、表达式函数 SPI
+         契约、生命周期回调 init/destroy、超时评估包装），IllegalThrows 豁免，其余红线规则保留 -->
+    <suppress files="DefaultRuleEngine\.java|LiteExprFunction\.java|NacosRuleSource\.java|ZookeeperRuleSource\.java|RuleConfigProvider\.java"
+              checks="IllegalThrows"/>
+
+    <!-- literule：配置类注解字符串（@ConditionalOnClass 类名字符串）与类型名工具
+         （java.lang./java.util. 前缀剔除）中的包名属于字符串字面量语义而非代码体 FQN，RegexpSinglelineJava 豁免 -->
+    <suppress files="LiteRuleAutoConfiguration\.java|VariableDefinition\.java" checks="RegexpSinglelineJava"/>
+
+    <!-- literule RuleDebugger：ThreadLocal CURRENT_RULE_CODE 在 finally 块中已 remove（调试会话结束清理），
+         声明行被 RegexpSinglelineJava 正则匹配属规则误报，豁免 ThreadLocal 检测 -->
+    <suppress files="RuleDebugger\.java" checks="RegexpSinglelineJava" message=".*ThreadLocal.*"/>
 
     <!-- ============================================ -->
     <!-- 3. 全部 common 子模块：算法类规则通用豁免     -->

@@ -20,14 +20,14 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO.MigrationDetail;
-import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
-import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 
 /**
@@ -243,7 +243,11 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     return buildMigrationResult(instances, details, counters, nodeMapping);
   }
 
-  /** 校验迁移参数：sourceDefinitionId / targetDefinitionId 不能为空且不能相同。 */
+  /**
+   * 校验迁移参数：sourceDefinitionId / targetDefinitionId 不能为空且不能相同。
+   *
+   * @param dto 参数说明
+   */
   private void validateMigrationParams(InstanceMigrationDTO dto) {
     if (dto == null || dto.getSourceDefinitionId() == null || dto.getTargetDefinitionId() == null) {
       throw SysException.builder()
@@ -259,7 +263,13 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     }
   }
 
-  /** 根据 ID 查找流程定义，不存在时抛出 NOT_FOUND 异常。 */
+  /**
+   * 根据 ID 查找流程定义，不存在时抛出 NOT_FOUND 异常。
+   *
+   * @param defId 参数说明
+   * @param errMsg 参数说明
+   * @return 返回值说明
+   */
   private FlowDefinitionVO findDefinitionOrThrow(String defId, String errMsg) {
     return definitionRepository.findById(defId)
         .orElseThrow(() -> SysException.builder()
@@ -268,7 +278,12 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
             .build());
   }
 
-  /** 校验两个流程定义的 flowCode 是否一致，不一致时抛出 BAD_REQUEST。 */
+  /**
+   * 校验两个流程定义的 flowCode 是否一致，不一致时抛出 BAD_REQUEST。
+   *
+   * @param sourceDef 参数说明
+   * @param targetDef 参数说明
+   */
   private void validateFlowCodeConsistency(FlowDefinitionVO sourceDef, FlowDefinitionVO targetDef) {
     if (!Objects.equals(sourceDef.getFlowCode(), targetDef.getFlowCode())) {
       throw SysException.builder()
@@ -279,7 +294,18 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     }
   }
 
-  /** 迁移单个实例（防御式：每个实例独立 try-catch，单个失败不影响其他）。 */
+  /**
+   * 迁移单个实例（防御式：每个实例独立 try-catch，单个失败不影响其他）。
+   *
+   * @param instance 参数说明
+   * @param details 参数说明
+   * @param counters 参数说明
+   * @param dryRun 参数说明
+   * @param targetDefId 参数说明
+   * @param targetDef 参数说明
+   * @param nodeMapping 参数说明
+   * @param targetNodeMap 参数说明
+   */
   private void migrateSingleInstance(FlowInstanceVO instance, List<MigrationDetail> details,
       MigrationCounters counters, boolean dryRun, String targetDefId,
       FlowDefinitionVO targetDef, Map<String, String> nodeMapping,
@@ -321,7 +347,17 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     details.add(detail);
   }
 
-  /** 执行实际迁移操作：更新实例的 definitionId / flowVersion / currentNodeCode。 */
+  /**
+   * 执行实际迁移操作：更新实例的 definitionId / flowVersion / currentNodeCode。
+   *
+   * @param instance 参数说明
+   * @param targetDefId 参数说明
+   * @param targetDef 参数说明
+   * @param oldNodeCode 参数说明
+   * @param newNodeCode 参数说明
+   * @param nodeMapping 参数说明
+   * @param targetNodeMap 参数说明
+   */
   private void performMigration(FlowInstanceVO instance, String targetDefId,
       FlowDefinitionVO targetDef, String oldNodeCode, String newNodeCode,
       Map<String, String> nodeMapping, Map<String, FlowNodeDO> targetNodeMap) {
@@ -341,7 +377,15 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         instance.getId(), taskMigrated);
   }
 
-  /** 构建迁移结果 DTO。 */
+  /**
+   * 构建迁移结果 DTO。
+   *
+   * @param instances 参数说明
+   * @param details 参数说明
+   * @param counters 参数说明
+   * @param nodeMapping 参数说明
+   * @return 返回值说明
+   */
   private InstanceMigrationResultDTO buildMigrationResult(List<FlowInstanceVO> instances,
       List<MigrationDetail> details, MigrationCounters counters,
       Map<String, String> nodeMapping) {

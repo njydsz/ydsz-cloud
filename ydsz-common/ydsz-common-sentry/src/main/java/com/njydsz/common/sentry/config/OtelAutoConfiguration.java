@@ -112,6 +112,11 @@ public class OtelAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean
+  /**
+   * ydsz default tracer。
+   * @param openTelemetry 参数
+   * @return 结果
+   */
   public Tracer ydszDefaultTracer(OpenTelemetry openTelemetry) {
     return openTelemetry.getTracer("ydsz");
   }
@@ -148,6 +153,10 @@ public class OtelAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(name = "ydszOtelOpenTelemetry")
+  /**
+   * ydsz otel open。
+   * @return 结果
+   */
   public OpenTelemetry ydszOtelOpenTelemetry() {
     return YdszOpenTelemetry.openTelemetry();
   }
@@ -257,6 +266,10 @@ public class OtelAutoConfiguration {
       }
     }
 
+    /**
+     * get sdk。
+     * @return 结果
+     */
     public OpenTelemetrySdk getSdk() {
       return sdk;
     }

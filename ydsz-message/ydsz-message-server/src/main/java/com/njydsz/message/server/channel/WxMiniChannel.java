@@ -48,6 +48,12 @@ import com.njydsz.message.server.config.MessageProperties;
     havingValue = "wechat",
     matchIfMissing = false)
 public class WxMiniChannel implements MessageChannel {
+  /** 默认 Token 有效期（秒） */
+  private static final int DEFAULT_EXPIRES_IN = 7200;
+
+  /** Token 安全余量（秒） */
+  private static final int TOKEN_SAFETY_MARGIN_SECONDS = 300;
+
 
   private static final String CHANNEL_TYPE = "WX_MINI";
 
@@ -146,7 +152,12 @@ public class WxMiniChannel implements MessageChannel {
     }
   }
 
-  /** 获取微信 access_token（Redis 缓存，7200s 有效期）。 */
+  /**
+   * 获取微信 access_token（Redis 缓存，7200s 有效期）。
+   *
+   * @param config 参数说明
+   * @return 返回值说明
+   */
   private String getAccessToken(MessageProperties.WxMiniConfig config) {
     try {
       String cached = redisStringOps.get(ACCESS_TOKEN_CACHE_KEY, String.class);
@@ -166,8 +177,8 @@ public class WxMiniChannel implements MessageChannel {
       Map<?, ?> body = resp.getBody();
       if (body != null && body.containsKey("access_token")) {
         String token = (String) body.get("access_token");
-        int expiresIn = body.containsKey("expires_in") ? (Integer) body.get("expires_in") : 7200;
-        redisStringOps.set(ACCESS_TOKEN_CACHE_KEY, token, Duration.ofSeconds(expiresIn - 300));
+        int expiresIn = body.containsKey("expires_in") ? (Integer) body.get("expires_in") : DEFAULT_EXPIRES_IN;
+        redisStringOps.set(ACCESS_TOKEN_CACHE_KEY, token, Duration.ofSeconds(expiresIn - TOKEN_SAFETY_MARGIN_SECONDS));
         return token;
       }
       log.error(
@@ -194,7 +205,12 @@ public class WxMiniChannel implements MessageChannel {
     return result;
   }
 
-  /** Mock 发送（开发环境降级）。 */
+  /**
+   * Mock 发送（开发环境降级）。
+   *
+   * @param request 参数说明
+   * @return 返回值说明
+   */
   private MessageResult mockSend(MessageRequest request) {
     String traceId = "WX_MINI-MOCK-" + String.valueOf(snowflakeIdGenerator.nextId());
     log.info(

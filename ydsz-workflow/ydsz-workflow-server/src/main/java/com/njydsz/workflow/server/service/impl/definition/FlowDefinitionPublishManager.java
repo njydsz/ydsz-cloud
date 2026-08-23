@@ -7,7 +7,15 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.cache.constant.CacheConstants;
@@ -23,13 +31,6 @@ import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 /**
  * 流程定义发布管理器
@@ -55,6 +56,9 @@ import org.springframework.util.StringUtils;
 @Slf4j
 @Component
 public class FlowDefinitionPublishManager {
+
+    /** 停用流程时发布的版本号（9 表示停用态） */
+  private static final int DEPRECATE_PUBLISH_VERSION = 9;
 
   /** 流程定义仓储 */
   private final FlowDefinitionRepository definitionRepository;
@@ -154,7 +158,7 @@ public class FlowDefinitionPublishManager {
       value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
   public void deprecate(String definitionId) {
-    definitionRepository.publish(definitionId, 9);
+    definitionRepository.publish(definitionId, DEPRECATE_PUBLISH_VERSION);
     flowDefinitionCacheService.evict(definitionId);
     log.info("[Flow] 停用流程: defId={}", definitionId);
   }
@@ -300,7 +304,7 @@ public class FlowDefinitionPublishManager {
       List<FlowNodeDO> newNodes = nodeRepository.findByDefinitionId(previousDef.getId()).stream()
           .map(converter::entityToDO)
           .toList();
-      java.util.Set<String> newNodeCodes =
+      Set<String> newNodeCodes =
           newNodes.stream().map(FlowNodeDO::getNodeCode).collect(Collectors.toSet());
       for (FlowNodeDO oldNode : oldNodes) {
         if (newNodeCodes.contains(oldNode.getNodeCode())) {
@@ -342,7 +346,12 @@ public class FlowDefinitionPublishManager {
     return result;
   }
 
-  /** 发布前版本兼容性校验 */
+  /**
+   * 发布前版本兼容性校验
+   *
+   * @param def 参数说明
+   * @param force 参数说明
+   */
   private void checkPublishCompatibility(FlowDefinitionDO def, boolean force) {
     String flowCode = def.getFlowCode();
     String tenantId = def.getTenantId() != null ? def.getTenantId() : "1";
@@ -430,7 +439,13 @@ public class FlowDefinitionPublishManager {
     }
   }
 
-  /** 从影响分析结果中提取 long 值（兼容嵌套 Map 结构） */
+  /**
+   * 从影响分析结果中提取 long 值（兼容嵌套 Map 结构）
+   *
+   * @param root 参数说明
+   * @param keys 参数说明
+   * @return 返回值说明
+   */
   private long extractLong(Map<String, Object> root, String... keys) {
     Object current = root;
     for (String key : keys) {
@@ -446,7 +461,13 @@ public class FlowDefinitionPublishManager {
     return 0L;
   }
 
-  /** 从影响分析结果中提取 String 列表 */
+  /**
+   * 从影响分析结果中提取 String 列表
+   *
+   * @param root 参数说明
+   * @param key 参数说明
+   * @return 返回值说明
+   */
   private List<String> extractStringList(Map<String, Object> root, String key) {
     Object value = root.get(key);
     if (value instanceof List) {

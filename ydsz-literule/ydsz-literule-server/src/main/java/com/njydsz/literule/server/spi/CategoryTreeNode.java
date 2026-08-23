@@ -14,9 +14,11 @@ import com.njydsz.common.domain.tree.TreeNode;
 /**
  * 规则分类目录树节点。
  *
- * <p>继承 {@link TreeNode} 获得通用树形结构能力（id/parentId/children/level/path/leaf）， 同时扩展业务字段（name/ruleCount/owners）。 由 {@link RuleCategoryProvider#buildTree()} 返回，供前端展示规则分类目录树。
+ * <p>继承 {@link TreeNode} 获得通用树形结构能力（id/parentId/children/level/path/leaf），
+ *     同时扩展业务字段（name/ruleCount/owners）。 由 {@link RuleCategoryProvider#buildTree()} 返回，供前端展示规则分类目录树。
  *
- * <p>构建时使用 {@code TreeBuilder<CategoryTreeNode, String>} 的 {@link com.njydsz.common.domain.tree.TreeBuilder#build()} 方法。
+ * <p>构建时使用 {@code TreeBuilder<CategoryTreeNode, String>} 的 
+  * {@link com.njydsz.common.domain.tree.TreeBuilder#build()} 方法。
  *
  * @since 1.0.0
  * @author ydsz-team

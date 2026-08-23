@@ -1,16 +1,6 @@
 package com.njydsz.system.infra.converter;
-
 import java.util.List;
 
-import com.njydsz.system.infra.entity.AppInfoDO;
-import com.njydsz.system.infra.entity.ConfigDO;
-import com.njydsz.system.infra.entity.DictItemDO;
-import com.njydsz.system.infra.entity.DictTypeDO;
-import com.njydsz.system.infra.entity.EntityVersionDO;
-import com.njydsz.system.infra.entity.TenantDO;
-import com.njydsz.system.infra.entity.TenantPlanDO;
-import com.njydsz.system.infra.entity.TenantPlanMenuDO;
-import com.njydsz.system.infra.entity.VariableDO;
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -34,6 +24,18 @@ import com.njydsz.system.domain.vo.TenantPlanMenuVO;
 import com.njydsz.system.domain.vo.TenantPlanVO;
 import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.domain.vo.VariableVO;
+import com.njydsz.system.infra.entity.AppInfoDO;
+import com.njydsz.system.infra.entity.ConfigDO;
+import com.njydsz.system.infra.entity.DictItemDO;
+import com.njydsz.system.infra.entity.DictTypeDO;
+import com.njydsz.system.infra.entity.EntityVersionDO;
+import com.njydsz.system.infra.entity.TenantDO;
+import com.njydsz.system.infra.entity.TenantPlanDO;
+import com.njydsz.system.infra.entity.TenantPlanMenuDO;
+import com.njydsz.system.infra.entity.VariableDO;
+
+
+
 
 /**
  * 系统配置模块统一 MapStruct 转换器
@@ -85,6 +87,7 @@ import com.njydsz.system.domain.vo.VariableVO;
 @Mapper
 public interface SystemConverter {
 
+  /** 单例实例 */
   SystemConverter INSTANT = Mappers.getMapper(SystemConverter.class);
 
   // ===== AppInfo =====

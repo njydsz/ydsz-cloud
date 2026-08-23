@@ -59,13 +59,21 @@ public class RuleABPolicyController {
   /** A/B 测试自动回滚服务（SPI，由 project 模块提供实现） */
   private final ABTestAutoRollbackProvider abTestAutoRollbackProvider;
 
-  /** 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略） */
+  /** 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略）
+   * @param ruleCode 参数说明
+      * @return 返回值说明
+   */
   @GetMapping("/{ruleCode}/ab-policy")
   public YdszResponse<RuleABPolicyVO> getABPolicy(@PathVariable String ruleCode) {
     return YdszResponse.success(abTestAutoRollbackProvider.getPolicy(ruleCode));
   }
 
-  /** 更新规则的 AB Test 自动回滚策略 */
+  /** 更新规则的 AB Test 自动回滚策略
+   * @param operator 参数说明
+      * @return 返回值说明
+      * @param dto 参数说明
+      * @param ruleCode 参数说明
+   */
   @Idempotent(key = "ruleAdmin:updateAbpolicy", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
       module = "规则管理",
@@ -84,14 +92,20 @@ public class RuleABPolicyController {
     return YdszResponse.success();
   }
 
-  /** 查询规则的回滚历史 */
+  /** 查询规则的回滚历史
+   * @param ruleCode 参数说明
+      * @return 返回值说明
+   */
   @GetMapping("/{ruleCode}/ab-rollbacks")
   public YdszResponse<List<RuleABRollbackVO>> listRollbackHistory(@PathVariable String ruleCode) {
     return YdszResponse.success(
         abTestAutoRollbackProvider.listRollbackHistory(ruleCode));
   }
 
-  /** 主动触发 AB Test 评估（人工立即检查） */
+  /** 主动触发 AB Test 评估（人工立即检查）
+   * @param ruleCode 参数说明
+      * @return 返回值说明
+   */
   @Idempotent(key = "ruleAdmin:evaluateAb", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
       module = "规则管理",
@@ -108,6 +122,9 @@ public class RuleABPolicyController {
    * 人工回滚（Owner 主动请求 / 紧急操作）
    *
    * @param reason MANUAL / OWNER_REQUEST
+      * @return 返回值说明
+      * @param ruleCode 参数说明
+      * @param operator 参数说明
    */
   @Idempotent(key = "ruleAdmin:manualRollback", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(

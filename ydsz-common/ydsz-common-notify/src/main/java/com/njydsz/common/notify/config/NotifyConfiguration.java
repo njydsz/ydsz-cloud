@@ -497,7 +497,8 @@ public class NotifyConfiguration {
     NotifyProperties.RateLimit rateLimitConfig = properties.getRateLimit();
     RedisRateLimiter redisRateLimiter = redisRateLimiterProvider.getIfAvailable();
     LOG.info(
-        "[NotifyConfiguration] NotifyRateLimiterManager bean registered, redisRateLimiter={}, enabled={}, defaultMaxRequests={}, defaultWindowSeconds={}",
+        "[NotifyConfiguration] NotifyRateLimiterManager bean registered, redisRateLimiter={}, "
+            + "enabled={}, defaultMaxRequests={}, defaultWindowSeconds={}",
         redisRateLimiter != null,
         rateLimitConfig.isEnabled(),
         rateLimitConfig.getDefaultMaxRequests(),
@@ -582,7 +583,8 @@ public class NotifyConfiguration {
               retryConfig.getRedisKeyPrefix(),
               dlqHandler);
       LOG.info(
-          "[NotifyConfiguration] PersistentNotifyRetryQueue bean registered, persistent=true, maxRetries={}, batchSize={}, redisKeyPrefix={}, dlq={}",
+          "[NotifyConfiguration] PersistentNotifyRetryQueue bean registered, persistent=true, "
+              + "maxRetries={}, batchSize={}, redisKeyPrefix={}, dlq={}",
           retryConfig.getMaxRetries(),
           retryConfig.getBatchSize(),
           retryConfig.getRedisKeyPrefix(),
@@ -597,7 +599,8 @@ public class NotifyConfiguration {
               null,
               dlqHandler);
       LOG.info(
-          "[NotifyConfiguration] In-memory NotifyRetryQueue bean registered, persistent=false, maxRetries={}, batchSize={}, dlq={}",
+          "[NotifyConfiguration] In-memory NotifyRetryQueue bean registered, persistent=false, "
+              + "maxRetries={}, batchSize={}, dlq={}",
           retryConfig.getMaxRetries(),
           retryConfig.getBatchSize(),
           dlqHandler != null);

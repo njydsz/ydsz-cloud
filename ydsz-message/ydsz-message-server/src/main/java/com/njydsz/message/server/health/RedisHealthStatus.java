@@ -2,14 +2,14 @@ package com.njydsz.message.server.health;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * Redis 健康状态持有者。
@@ -24,8 +24,13 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+// CHECKSTYLE.OFF: RegexpSinglelineJava - @ConditionalOnClass name 属性为 Spring 条件类全名（字符串字面量）
 @ConditionalOnClass(name = "org.springframework.data.redis.core.RedisTemplate")
+// CHECKSTYLE.ON: RegexpSinglelineJava
 public class RedisHealthStatus {
+  /** 探针 TTL（秒） */
+  private static final int PROBE_TTL_SECONDS = 30;
+
 
   private final RedisStringOps redisStringOps;
 
@@ -48,7 +53,7 @@ public class RedisHealthStatus {
   @Scheduled(fixedDelayString = "${ydsz.message.redis-health-check-interval-ms:10000}")
   public void checkRedisHealth() {
     try {
-      redisStringOps.set(PROBE_KEY, "ok", 30);
+      redisStringOps.set(PROBE_KEY, "ok", PROBE_TTL_SECONDS);
       String value = redisStringOps.get(PROBE_KEY);
       boolean healthy = "ok".equals(value);
       boolean wasHealthy = redisHealthy.getAndSet(healthy);

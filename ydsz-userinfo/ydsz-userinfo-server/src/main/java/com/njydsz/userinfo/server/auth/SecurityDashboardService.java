@@ -9,7 +9,6 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.json.YdszJson;
@@ -71,6 +70,30 @@ public class SecurityDashboardService {
   /** 今日登录失败次数 Redis Key 前缀 */
   private static final String TODAY_LOGIN_FAIL_KEY = "userinfo:login:fail:today";
 
+  /** 集合初始容量：16 */
+  private static final int INITIAL_CAPACITY = 16;
+
+  /** 集合初始容量：8 */
+  private static final int MEDIUM_INITIAL_CAPACITY = 8;
+
+  /** 统计时间范围（小时）：24 小时 */
+  private static final int STATS_WINDOW_HOURS = 24;
+
+  /** 安全事件列表查询上限 */
+  private static final int EVENT_LIST_LIMIT = 20;
+
+  /** Redis 统计缓存 TTL（秒）：5 分钟 */
+  private static final long STATS_CACHE_TTL = 300;
+
+  /** Redis 统计缓存 TTL（秒）：10 分钟 */
+  private static final long STATS_CACHE_TTL_LONG = 600;
+
+  /** 安全评分权重：封禁用户 */
+  private static final double BANNED_USER_WEIGHT = 80.0;
+
+  /** 安全评分权重：锁定用户 */
+  private static final double LOCKED_USER_WEIGHT = 40.0;
+
   private final UserAccountRepository userAccountRepository;
   private final UserLoginHistoryRepository userLoginHistoryRepository;
   private final RedisStringOps redisStringOps;
@@ -124,7 +147,7 @@ public class SecurityDashboardService {
       return List.of();
     }
 
-    List<LoginSuccessRateVO> result = new ArrayList<>(16);
+    List<LoginSuccessRateVO> result = new ArrayList<>(INITIAL_CAPACITY);
     LocalDate current = start;
 
     while (!current.isAfter(end)) {
@@ -161,7 +184,7 @@ public class SecurityDashboardService {
     LocalDateTime dayEnd = date.plusDays(1).atStartOfDay();
 
     // 查询当日所有失败记录
-    Map<String, Integer> reasonCountMap = new HashMap<>(8);
+    Map<String, Integer> reasonCountMap = new HashMap<>(MEDIUM_INITIAL_CAPACITY);
     int totalFails = (int) countLoginsByResult(dayStart, dayEnd, "FAILED");
 
     if (totalFails == 0) {
@@ -175,7 +198,7 @@ public class SecurityDashboardService {
     reasonCountMap.put("IP封禁", countLoginsByFailReason(dayStart, dayEnd, "IP_BLOCKED"));
     reasonCountMap.put("Token无效", countLoginsByFailReason(dayStart, dayEnd, "TOKEN_INVALID"));
 
-    List<LoginFailDistributionVO> result = new ArrayList<>(8);
+    List<LoginFailDistributionVO> result = new ArrayList<>(MEDIUM_INITIAL_CAPACITY);
     int accountedFails = 0;
     for (Map.Entry<String, Integer> entry : reasonCountMap.entrySet()) {
       if (entry.getValue() > 0) {
@@ -238,7 +261,7 @@ public class SecurityDashboardService {
     long highRisk = lockedUsers + bannedUsers;
 
     // 中风险：近 24 小时内有登录失败记录的去重用户数
-    LocalDateTime dayStart = LocalDateTime.now().minusHours(24);
+    LocalDateTime dayStart = LocalDateTime.now().minusHours(STATS_WINDOW_HOURS);
     LocalDateTime dayEnd = LocalDateTime.now();
     long mediumRisk = 0;
     try {
@@ -264,15 +287,15 @@ public class SecurityDashboardService {
    */
   public List<SecurityEventVO> getRecentSecurityEvents(int limit) {
     if (limit <= 0) {
-      limit = 20;
+      limit = EVENT_LIST_LIMIT;
     }
     limit = Math.min(limit, 100);
 
-    List<SecurityEventVO> events = new ArrayList<>(16);
+    List<SecurityEventVO> events = new ArrayList<>(INITIAL_CAPACITY);
 
     try {
       // 查询最近的登录失败记录
-      LocalDateTime since = LocalDateTime.now().minusHours(24);
+      LocalDateTime since = LocalDateTime.now().minusHours(STATS_WINDOW_HOURS);
       List<UserLoginHistoryVO> recentFails = findRecentFailedLogins(since, limit);
 
       for (UserLoginHistoryVO record : recentFails) {
@@ -388,7 +411,7 @@ public class SecurityDashboardService {
       long count = userAccountRepository.countLockedUsers();
       // 回填缓存（TTL 5 分钟）
       try {
-        redisStringOps.set("userinfo:security:locked:count", String.valueOf(count), 300);
+        redisStringOps.set("userinfo:security:locked:count", String.valueOf(count), STATS_CACHE_TTL);
       } catch (Exception ex) {
         log.warn("Failed to cache locked user count, error={}", ex.getMessage());
       }
@@ -422,7 +445,7 @@ public class SecurityDashboardService {
       long count = userAccountRepository.countBannedUsers();
       // 回填缓存（TTL 5 分钟）
       try {
-        redisStringOps.set("userinfo:security:banned:count", String.valueOf(count), 300);
+        redisStringOps.set("userinfo:security:banned:count", String.valueOf(count), STATS_CACHE_TTL);
       } catch (Exception ex) {
         log.warn("Failed to cache banned user count, error={}", ex.getMessage());
       }
@@ -460,7 +483,7 @@ public class SecurityDashboardService {
       // 回填缓存（TTL 5 分钟）
       try {
         String today = LocalDate.now().toString();
-        redisStringOps.set(TODAY_LOGIN_SUCCESS_KEY + ":" + today, String.valueOf(count), 300);
+        redisStringOps.set(TODAY_LOGIN_SUCCESS_KEY + ":" + today, String.valueOf(count), STATS_CACHE_TTL);
       } catch (Exception ex) {
         log.warn("Failed to cache today login success count, error={}", ex.getMessage());
       }
@@ -498,7 +521,7 @@ public class SecurityDashboardService {
       // 回填缓存（TTL 5 分钟）
       try {
         String today = LocalDate.now().toString();
-        redisStringOps.set(TODAY_LOGIN_FAIL_KEY + ":" + today, String.valueOf(count), 300);
+        redisStringOps.set(TODAY_LOGIN_FAIL_KEY + ":" + today, String.valueOf(count), STATS_CACHE_TTL);
       } catch (Exception ex) {
         log.warn("Failed to cache today login fail count, error={}", ex.getMessage());
       }
@@ -524,7 +547,7 @@ public class SecurityDashboardService {
       return 0.0;
     }
     // 高风险用户权重 80，中风险用户权重 40，低风险用户权重 10
-    double weightedScore = (bannedUsers * 80.0 + lockedUsers * 40.0
+    double weightedScore = (bannedUsers * BANNED_USER_WEIGHT + lockedUsers * LOCKED_USER_WEIGHT
         + (totalUsers - bannedUsers - lockedUsers) * 10.0);
     return Math.min(weightedScore / totalUsers, 100.0);
   }
@@ -559,7 +582,7 @@ public class SecurityDashboardService {
       try {
         String dateKey = start.toLocalDate().toString();
         String redisKey = "userinfo:login:count:" + result.toLowerCase() + ":" + dateKey;
-        redisStringOps.set(redisKey, String.valueOf(count), 600);
+        redisStringOps.set(redisKey, String.valueOf(count), STATS_CACHE_TTL_LONG);
       } catch (Exception ex) {
         log.warn("Failed to cache login count, error={}", ex.getMessage());
       }
@@ -600,7 +623,7 @@ public class SecurityDashboardService {
       try {
         String dateKey = start.toLocalDate().toString();
         String redisKey = "userinfo:login:fail:reason:" + failReason + ":" + dateKey;
-        redisStringOps.set(redisKey, String.valueOf(count), 600);
+        redisStringOps.set(redisKey, String.valueOf(count), STATS_CACHE_TTL_LONG);
       } catch (Exception ex) {
         log.warn("Failed to cache fail reason count, error={}", ex.getMessage());
       }

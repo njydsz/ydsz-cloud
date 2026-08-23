@@ -40,7 +40,7 @@ import com.njydsz.workflow.infra.entity.FlowSkipDO;
  *   <li>{@code <userTask>}、{@code <serviceTask>} - 任务节点
  *   <li>{@code <exclusiveGateway>}、{@code <parallelGateway>}、{@code <inclusiveGateway>} - 网关
  *   <li>{@code <sequenceFlow id sourceRef targetRef>} - 跳转边
- *   <li>{@code <conditionExpression xsi:type="tFormalExpression">${...}</conditionExpression>} - 条件
+ *   <li>{@code conditionExpression xsi:type="tFormalExpression"} - 条件
  *   <li>{@code flowable:assignee}、{@code flowable:candidateUsers}、{@code flowable:candidateGroups}
  *       - 办理人（兼容 BPMN 扩展命名空间）
  * </ul>
@@ -115,7 +115,12 @@ public class BpmnXmlParser {
     return model;
   }
 
-  /** 校验根元素为 definitions。 */
+  /**
+   * 校验根元素为 definitions。
+   *
+   * @param doc 参数说明
+   * @return 返回值说明
+   */
   private Element validateRootElement(Document doc) {
     Element root = doc.getDocumentElement();
     if (!"definitions".equalsIgnoreCase(root.getLocalName())) {
@@ -128,7 +133,12 @@ public class BpmnXmlParser {
     return root;
   }
 
-  /** 查找 process 元素，不存在则抛出异常。 */
+  /**
+   * 查找 process 元素，不存在则抛出异常。
+   *
+   * @param root 参数说明
+   * @return 返回值说明
+   */
   private Element findProcessOrThrow(Element root) {
     Element process = bpmnElementHelper.findChild(root, "process");
     if (process == null) {
@@ -140,7 +150,12 @@ public class BpmnXmlParser {
     return process;
   }
 
-  /** 根据 process 元素构建 BpmnModel（processId / processName）。 */
+  /**
+   * 根据 process 元素构建 BpmnModel（processId / processName）。
+   *
+   * @param process 参数说明
+   * @return 返回值说明
+   */
   private BpmnModel buildBpmnModel(Element process) {
     BpmnModel model = new BpmnModel();
     model.setProcessId(process.getAttribute("id"));
@@ -151,7 +166,12 @@ public class BpmnXmlParser {
     return model;
   }
 
-  /** 解析 process 的子元素，填充 nodes 和 skips。 */
+  /**
+   * 解析 process 的子元素，填充 nodes 和 skips。
+   *
+   * @param children 参数说明
+   * @param model 参数说明
+   */
   private void parseProcessChildren(NodeList children, BpmnModel model) {
     List<FlowNodeDO> nodes = new ArrayList<>(children.getLength());
     List<FlowSkipDO> skips = new ArrayList<>(children.getLength());
@@ -182,7 +202,12 @@ public class BpmnXmlParser {
     fillSkipNextNodeType(nodes, skips);
   }
 
-  /** 补全 skip.nextNodeType 字段。 */
+  /**
+   * 补全 skip.nextNodeType 字段。
+   *
+   * @param nodes 参数说明
+   * @param skips 参数说明
+   */
   private void fillSkipNextNodeType(List<FlowNodeDO> nodes, List<FlowSkipDO> skips) {
     Map<String, FlowNodeDO> nodeByCode = new HashMap<>(nodes.size());
     for (FlowNodeDO n : nodes) {
@@ -196,7 +221,11 @@ public class BpmnXmlParser {
     }
   }
 
-  /** 校验解析结果：节点编码唯一且必须含开始节点。 */
+  /**
+   * 校验解析结果：节点编码唯一且必须含开始节点。
+   *
+   * @param model 参数说明
+   */
   private void validateParseResult(BpmnModel model) {
     List<FlowNodeDO> nodes = model.getNodes();
     Set<String> uniqueCodes = nodes.stream().map(FlowNodeDO::getNodeCode).collect(Collectors.toSet());
@@ -215,7 +244,12 @@ public class BpmnXmlParser {
     }
   }
 
-  /** 解析 BPMNDI 段，提取节点坐标信息（用于流程图可视化高亮）。 */
+  /**
+   * 解析 BPMNDI 段，提取节点坐标信息（用于流程图可视化高亮）。
+   *
+   * @param root 参数说明
+   * @param model 参数说明
+   */
   private void parseDiagramCoordinates(Element root, BpmnModel model) {
     Map<String, BpmnModel.NodeCoordinate> nodeCoords = new HashMap<>(model.getNodes().size());
     Map<String, List<BpmnModel.NodeCoordinate>> skipCoords = new HashMap<>(model.getSkips().size());

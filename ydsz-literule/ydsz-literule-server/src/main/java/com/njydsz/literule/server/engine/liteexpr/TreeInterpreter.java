@@ -30,6 +30,9 @@ import com.njydsz.literule.server.debug.RuleDebugger;
  */
 public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
+    /** 最小递归深度限制 */
+  private static final int MIN_RECURSION_DEPTH = 16;
+
   /**
    * 默认 AST 递归深度上限（P1-5：防御恶意嵌套表达式导致的 StackOverflow）
    *
@@ -60,7 +63,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
    */
   public TreeInterpreter(FunctionRegistry functionRegistry, int maxRecursionDepth) {
     this.functionRegistry = functionRegistry;
-    this.maxRecursionDepth = Math.max(16, maxRecursionDepth);
+    this.maxRecursionDepth = Math.max(MIN_RECURSION_DEPTH, maxRecursionDepth);
   }
 
   /**
@@ -265,7 +268,9 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
     currentDepth++;
     try {
       Object target = node.target().accept(this);
-      if (target == null) return null;
+      if (target == null) {
+        return null;
+      }
 
       String member = node.member();
       Object result;
@@ -299,7 +304,9 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
     currentDepth++;
     try {
       Object target = node.target().accept(this);
-      if (target == null) return null;
+      if (target == null) {
+        return null;
+      }
 
       Object index = node.index().accept(this);
       Object result;
@@ -431,7 +438,9 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
       case "==" -> left == right;
       case "!=" -> left != right;
       case "+" -> {
-        if (left == null && right == null) yield null;
+        if (left == null && right == null) {
+          yield null;
+        }
         yield BuiltinFunctions.str(left) + BuiltinFunctions.str(right);
       }
       default -> null;
@@ -439,8 +448,12 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
   }
 
   private boolean equals(Object a, Object b) {
-    if (a == b) return true;
-    if (a == null || b == null) return false;
+    if (a == b) {
+      return true;
+    }
+    if (a == null || b == null) {
+      return false;
+    }
     // 数值比较
     if (a instanceof Number && b instanceof Number) {
       return BuiltinFunctions.toDecimal(a).compareTo(BuiltinFunctions.toDecimal(b)) == 0;
@@ -475,7 +488,12 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   // ===== 追踪结果 =====
 
-  /** 带追踪的求值结果 */
+  /**
+   * 带追踪的求值结果。
+   *
+   * @param value 求值结果值
+   * @param traceTree 追踪树根节点
+   */
   public record TraceEvalResult(Object value, ExprTraceBuilder.TraceNode traceTree) {}
 
   // ===== 断点调试集成（F1，零侵入：未配置调试器时为 no-op） =====

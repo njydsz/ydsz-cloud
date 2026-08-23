@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -23,14 +22,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.assembler.NameAssembler;
-import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.common.security.LoginUser;
-import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
@@ -42,19 +40,17 @@ import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowCcService;
@@ -715,7 +711,12 @@ public class FlowInstanceLifecycleService {
     return true;
   }
 
-  /** 校验撤回权限：仅发起人可撤回且实例为运行中。 */
+  /**
+   * 校验撤回权限：仅发起人可撤回且实例为运行中。
+   *
+   * @param instance 参数说明
+   * @param initiatorId 参数说明
+   */
   private void validateRecallPermission(FlowInstanceVO instance, String initiatorId) {
     if (!instance.getInitiatorId().equals(initiatorId)) {
       throw SysException.builder()
@@ -731,7 +732,12 @@ public class FlowInstanceLifecycleService {
     }
   }
 
-  /** 校验下一节点待办全部为 PENDING（未被 CLAIMED/COMPLETED），返回待办列表。 */
+  /**
+   * 校验下一节点待办全部为 PENDING（未被 CLAIMED/COMPLETED），返回待办列表。
+   *
+   * @param instanceId 参数说明
+   * @return 返回值说明
+   */
   private List<FlowRunTaskDO> validateNextTasksAllPending(String instanceId) {
     List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
         .map(converter::entityToDO)
@@ -748,7 +754,12 @@ public class FlowInstanceLifecycleService {
     return pendingTasks;
   }
 
-  /** 校验目标节点在可撤回节点列表中。 */
+  /**
+   * 校验目标节点在可撤回节点列表中。
+   *
+   * @param instanceId 参数说明
+   * @param targetNodeCode 参数说明
+   */
   private void validateTargetNodeRecallable(String instanceId, String targetNodeCode) {
     List<Map<String, Object>> recallable = hisTaskRepository.listPassedNodes(instanceId);
     Set<String> recallableCodes = new HashSet<>();
@@ -769,7 +780,13 @@ public class FlowInstanceLifecycleService {
     }
   }
 
-  /** 退回到指定目标节点（复用 advancer.advance 的 REJECT 通道）。 */
+  /**
+   * 退回到指定目标节点（复用 advancer.advance 的 REJECT 通道）。
+   *
+   * @param instance 参数说明
+   * @param currentNodeCode 参数说明
+   * @param targetNodeCode 参数说明
+   */
   private void advanceToTargetNode(FlowInstanceVO instance, String currentNodeCode, String targetNodeCode) {
     Map<String, Object> variables = parseVariables(instance.getVariable());
     try {
@@ -784,7 +801,11 @@ public class FlowInstanceLifecycleService {
     }
   }
 
-  /** 触发撤回相关事件（Prometheus + 业务事件 + Spring 事件）。 */
+  /**
+   * 触发撤回相关事件（Prometheus + 业务事件 + Spring 事件）。
+   *
+   * @param instance 参数说明
+   */
   private void fireRecallEvents(FlowInstanceVO instance) {
     if (flowMetrics != null) {
       flowMetrics.incInstance(instance.getFlowCode(), "recalled");
@@ -1018,7 +1039,14 @@ public class FlowInstanceLifecycleService {
 
   // ============================== 内部方法 ==============================
 
-  /** 内部方法：创建第一个待办任务（供 DefaultFlowAdvancer 调用） */
+  /**
+   * 内部方法：创建第一个待办任务（供 DefaultFlowAdvancer 调用）
+   *
+   * @param instanceId 参数说明
+   * @param startNode 参数说明
+   * @param variables 参数说明
+   * @return 返回值说明
+   */
   public String createFirstTask(
       String instanceId, FlowNodeVO startNode, Map<String, Object> variables) {
     FlowInstanceVO instance = getByIdOrThrow(instanceId);
@@ -1042,7 +1070,13 @@ public class FlowInstanceLifecycleService {
     return instanceId;
   }
 
-  /** 内部方法：推进后批量生成任务（供 DefaultFlowAdvancer 调用） */
+  /**
+   * 内部方法：推进后批量生成任务（供 DefaultFlowAdvancer 调用）
+   *
+   * @param instanceId 参数说明
+   * @param nextNodes 参数说明
+   * @param variables 参数说明
+   */
   public void generateTasksForNodes(
       String instanceId, List<FlowNodeVO> nextNodes, Map<String, Object> variables) {
     if (nextNodes == null || nextNodes.isEmpty()) {
@@ -1163,6 +1197,12 @@ public class FlowInstanceLifecycleService {
   /**
    * NEW_INSTANCE 模式：创建全新实例，复用原实例的 flowCode / businessType / businessId / initiator，
    * 合并原变量与传入变量。原实例保持不变，仅追加一条 REDO_NEW_INSTANCE 审计日志。
+   *
+   * @param instanceId 参数说明
+   * @param initiatorId 参数说明
+   * @param variables 参数说明
+   * @param comment 参数说明
+   * @return 返回值说明
    */
   private String resubmitAsNewInstance(
       String instanceId, String initiatorId, Map<String, Object> variables, String comment) {
@@ -1232,16 +1272,20 @@ public class FlowInstanceLifecycleService {
 
   /**
    * P0-2: 解析 boundaryEvent 的 timer 配置并注册边界定时器
-   *
+   * 
    * <p>BPMN timer event definition 支持三种形式：
-   *
+   * 
    * <ul>
-   *   <li>{@code timeDuration} — ISO 8601 持续时间（如 "PT1H30M"），到点触发一次
-   *   <li>{@code timeDate} — ISO 8601 绝对时间（如 "2026-07-07T10:00:00"），到点触发一次
-   *   <li>{@code timeCycle} — ISO 8601 循环（如 "R3/PT10M"），目前仅支持首次触发，循环触发待后续实现
+   * <li>{@code timeDuration} — ISO 8601 持续时间（如 "PT1H30M"），到点触发一次
+   * <li>{@code timeDate} — ISO 8601 绝对时间（如 "2026-07-07T10:00:00"），到点触发一次
+   * <li>{@code timeCycle} — ISO 8601 循环（如 "R3/PT10M"），目前仅支持首次触发，循环触发待后续实现
    * </ul>
-   *
+   * 
    * <p>解析失败时不抛异常，仅记录 warn 日志，避免阻塞流程实例创建。
+   *
+   * @param node 参数说明
+   * @param instanceId 参数说明
+   * @param boundaryTaskId 参数说明
    */
   private void scheduleBoundaryTimerIfPresent(
       FlowNodeDO node, String instanceId, String boundaryTaskId) {
@@ -1249,7 +1293,9 @@ public class FlowInstanceLifecycleService {
       return;
     }
     Map<String, Object> ext = parseExtMap(node);
-    if (ext == null) return;
+    if (ext == null) {
+      return;
+    }
     Object timerObj = ext.get("timer");
     if (!(timerObj instanceof Map<?, ?> timerRaw)) {
       return;
@@ -1278,8 +1324,11 @@ public class FlowInstanceLifecycleService {
 
   /**
    * P0-2: 解析 BPMN timer 配置为 Duration
-   *
+   * 
    * <p>优先级：duration > date > cycle（cycle 仅取首次）
+   *
+   * @param timer 参数说明
+   * @return 返回值说明
    */
   private Duration parseTimerDelay(Map<?, ?> timer) {
     Object duration = timer.get("duration");
@@ -1333,9 +1382,13 @@ public class FlowInstanceLifecycleService {
 
   /**
    * P0-1: 解析边界事件关联的 userTask ID
-   *
+   * 
    * <p>boundaryEvent 节点 ext 中 attachedToRef 指向被附着的节点编码，查找该节点的当前 PENDING 任务作为 boundaryTaskId。
    * intermediateCatchEvent 无 attachedToRef，返回 null。
+   *
+   * @param node 参数说明
+   * @param instanceId 参数说明
+   * @return 返回值说明
    */
   private String resolveBoundaryTaskId(FlowNodeDO node, String instanceId) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
@@ -1343,7 +1396,9 @@ public class FlowInstanceLifecycleService {
     }
     try {
       Map<String, Object> ext = FlowNodeExt.parseSafe(node.getExt());
-      if (ext == null) return null;
+      if (ext == null) {
+        return null;
+      }
       String attachedToRef = (String) ext.get("attachedToRef");
       if (!StringUtils.hasText(attachedToRef)) {
         return null;
@@ -1362,8 +1417,11 @@ public class FlowInstanceLifecycleService {
 
   /**
    * P1-3: 判断节点是否为 callActivity（子流程）
-   *
+   * 
    * <p>识别条件：节点 ext JSON 中包含 callActivityFlowCode 字段
+   *
+   * @param node 参数说明
+   * @return 返回值说明
    */
   private boolean isCallActivity(FlowNodeDO node) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
@@ -1371,7 +1429,9 @@ public class FlowInstanceLifecycleService {
     }
     try {
       Map<String, Object> ext = FlowNodeExt.parseSafe(node.getExt());
-      if (ext == null) return false;
+      if (ext == null) {
+        return false;
+      }
       return ext.containsKey("callActivityFlowCode") || ext.containsKey("subProcessFlowCode");
     } catch (Exception e) {
       log.warn("[FlowInstanceLifecycleService] 节点 ext 解析失败，视为非子流程调用: {}", e.getMessage());
@@ -1397,6 +1457,8 @@ public class FlowInstanceLifecycleService {
 
   /**
    * P2-3: 触发事件监听器（委托给 FlowTaskSupport 统一处理）
+   *
+   * @param action 参数说明
    */
   private void fireEvent(Consumer<FlowEventListener> action) {
     flowTaskSupport.fireEvent(action, null);
@@ -1404,6 +1466,10 @@ public class FlowInstanceLifecycleService {
 
   /**
    * P2-3: 发布 Spring 异步事件（委托给 FlowTaskSupport 统一处理）
+   *
+   * @param eventType 参数说明
+   * @param instanceId 参数说明
+   * @param taskId 参数说明
    */
   private void publishWorkflowEvent(String eventType, String instanceId, String taskId) {
     flowTaskSupport.publishWorkflowEvent(eventType, instanceId, taskId);
@@ -1436,7 +1502,9 @@ public class FlowInstanceLifecycleService {
         traceId = RequestContext.getTraceId();
         if (traceId == null || traceId.isBlank()) {
           traceId = MDC.get("traceId");
-          if (traceId == null) traceId = MDC.get("tid");
+          if (traceId == null) {
+            traceId = MDC.get("tid");
+          }
         }
       }
       ctx.setTraceId(traceId);

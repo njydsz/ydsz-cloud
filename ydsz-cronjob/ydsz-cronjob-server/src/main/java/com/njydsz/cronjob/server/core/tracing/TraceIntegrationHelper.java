@@ -49,6 +49,9 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class TraceIntegrationHelper {
+  /** 错误日志截断长度 */
+  private static final int ERROR_LOG_MAX_LENGTH = 500;
+
 
   /**
    * 创建任务执行 Span 的业务标签。
@@ -92,7 +95,9 @@ public class TraceIntegrationHelper {
       if (!success && errorMessage != null) {
         tags.put(
             "job.error",
-            errorMessage.length() > 500 ? errorMessage.substring(0, 500) : errorMessage);
+            errorMessage.length() > ERROR_LOG_MAX_LENGTH
+                ? errorMessage.substring(0, ERROR_LOG_MAX_LENGTH)
+                : errorMessage);
       }
 
       // 写入 MDC（兼容无 agent 场景）

@@ -16,16 +16,27 @@ public interface JobHistoryRepository {
 
   /**
    * 根据任务 ID 查询历史版本列表（按版本号降序）。
+   *
+   * @param jobId 参数说明
+   * @return 返回值说明
    */
   List<JobHistoryVO> findByJobIdOrderByVersionDesc(String jobId);
 
   /**
    * 根据任务 ID 和版本号查询历史记录。
+   *
+   * @param jobId 参数说明
+   * @param version 参数说明
+   * @return 返回值说明
    */
   Optional<JobHistoryVO> findByVersion(String jobId, Integer version);
 
   /**
    * 清理过期历史记录。
+   *
+   * @param before 参数说明
+   * @param limit 参数说明
+   * @return 返回值说明
    */
   int cleanExpiredLogs(LocalDateTime before, int limit);
 

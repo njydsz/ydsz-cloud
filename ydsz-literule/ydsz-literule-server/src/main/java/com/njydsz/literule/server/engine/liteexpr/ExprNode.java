@@ -103,7 +103,7 @@ interface ExprNodeVisitor<R> {
 
 /** 字面值节点 */
 record LiteralNode(Object value, int line, int column, String exprText) implements ExprNode {
-  public LiteralNode(Object value, int line, int column) {
+  LiteralNode(Object value, int line, int column) {
     this(value, line, column, String.valueOf(value));
   }
 

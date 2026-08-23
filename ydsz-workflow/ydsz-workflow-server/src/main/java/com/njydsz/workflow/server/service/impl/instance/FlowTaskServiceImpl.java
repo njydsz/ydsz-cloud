@@ -98,7 +98,12 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
   // ============================== 签收 ==============================
 
-  /** P0-1: 任务签收加分布式锁，防止多人同时签收同一任务 */
+  /**
+   * P0-1: 任务签收加分布式锁，防止多人同时签收同一任务
+   *
+   * @param taskId 参数说明
+   * @param userId 参数说明
+   */
   @Override
   @YdszDistributedLock(key = "'flow:task:claim:' + #taskId", waitTime = 3, leaseTime = 30)
   public void claim(String taskId, String userId) {
@@ -107,28 +112,44 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
   // ============================== 通过 / 驳回 / 转办 / 委派 ==============================
 
-  /** P0-1: 任务通过加分布式锁，防止并发审批导致状态不一致 */
+  /**
+   * P0-1: 任务通过加分布式锁，防止并发审批导致状态不一致
+   *
+   * @param dto 参数说明
+   */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
   public void pass(FlowTaskOperateDTO dto) {
     completeService.pass(dto);
   }
 
-  /** P0-1: 任务驳回加分布式锁 */
+  /**
+   * P0-1: 任务驳回加分布式锁
+   *
+   * @param dto 参数说明
+   */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
   public void reject(FlowTaskOperateDTO dto) {
     completeService.reject(dto);
   }
 
-  /** P0-1: 任务转办加分布式锁 */
+  /**
+   * P0-1: 任务转办加分布式锁
+   *
+   * @param dto 参数说明
+   */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
   public void transfer(FlowTaskOperateDTO dto) {
     completeService.transfer(dto);
   }
 
-  /** P0-1: 任务委派加分布式锁 */
+  /**
+   * P0-1: 任务委派加分布式锁
+   *
+   * @param dto 参数说明
+   */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
   public void delegate(FlowTaskOperateDTO dto) {
@@ -147,14 +168,26 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     return completeService.urge(instanceId, operatorId, comment);
   }
 
-  /** P2-3 (GAP-13): 节点级催办 */
+  /**
+   * P2-3 (GAP-13): 节点级催办
+   *
+   * @param instanceId 参数说明
+   * @param nodeCode 参数说明
+   * @param operatorId 参数说明
+   * @param comment 参数说明
+   * @return 返回值说明
+   */
   @Override
   public List<String> urgeByNode(
       String instanceId, String nodeCode, String operatorId, String comment) {
     return completeService.urgeByNode(instanceId, nodeCode, operatorId, comment);
   }
 
-  /** P0-1: 自由跳转加分布式锁 */
+  /**
+   * P0-1: 自由跳转加分布式锁
+   *
+   * @param dto 参数说明
+   */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
   public void jump(FlowTaskOperateDTO dto) {
@@ -203,56 +236,94 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
   // ============================== 加签 / 减签 / 追加处理人 ==============================
 
-  /** P0-1: 前加签加分布式锁 */
+  /**
+   * P0-1: 前加签加分布式锁
+   *
+   * @param dto 参数说明
+   */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
   public void countersignBefore(FlowTaskOperateDTO dto) {
     signService.countersignBefore(dto);
   }
 
-  /** P0-1: 后加签加分布式锁 */
+  /**
+   * P0-1: 后加签加分布式锁
+   *
+   * @param dto 参数说明
+   */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
   public void countersignAfter(FlowTaskOperateDTO dto) {
     signService.countersignAfter(dto);
   }
 
-  /** GAP-P0-3: 并加签 — 委托给 signService */
+  /**
+   * GAP-P0-3: 并加签 — 委托给 signService
+   *
+   * @param dto 参数说明
+   */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
   public void countersignParallel(FlowTaskOperateDTO dto) {
     signService.countersignParallel(dto);
   }
 
-  /** P0-1: 减签加分布式锁 */
+  /**
+   * P0-1: 减签加分布式锁
+   *
+   * @param dto 参数说明
+   */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
   public void countersignRemove(FlowTaskOperateDTO dto) {
     signService.countersignRemove(dto);
   }
 
-  /** P0-1: 追加处理人加分布式锁 */
+  /**
+   * P0-1: 追加处理人加分布式锁
+   *
+   * @param dto 参数说明
+   */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
   public void addApprover(FlowTaskOperateDTO dto) {
     signService.addApprover(dto);
   }
 
-  /** P1-3: 取回审批 — 加分布式锁防止并发 */
+  /**
+   * P1-3: 取回审批 — 加分布式锁防止并发
+   *
+   * @param hisTaskId 参数说明
+   * @param operatorId 参数说明
+   * @param comment 参数说明
+   * @return 返回值说明
+   */
   @Override
   @YdszDistributedLock(key = "'flow:task:retract:' + #hisTaskId", waitTime = 3, leaseTime = 30)
   public String retract(String hisTaskId, String operatorId, String comment) {
     return completeService.retract(hisTaskId, operatorId, comment);
   }
 
-  /** P2-1: 任务级挂起 — 加分布式锁防止并发 */
+  /**
+   * P2-1: 任务级挂起 — 加分布式锁防止并发
+   *
+   * @param taskId 参数说明
+   * @param operatorId 参数说明
+   * @param reason 参数说明
+   */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #taskId", waitTime = 3, leaseTime = 30)
   public void suspendTask(String taskId, String operatorId, String reason) {
     completeService.suspendTask(taskId, operatorId, reason);
   }
 
-  /** P2-1: 任务级激活 — 加分布式锁防止并发 */
+  /**
+   * P2-1: 任务级激活 — 加分布式锁防止并发
+   *
+   * @param taskId 参数说明
+   * @param operatorId 参数说明
+   */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #taskId", waitTime = 3, leaseTime = 30)
   public void activateTask(String taskId, String operatorId) {
@@ -283,14 +354,29 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     batchService.batchPass(taskIds, userId, comment);
   }
 
-  /** P1-4: 批量驳回 */
+  /**
+   * P1-4: 批量驳回
+   *
+   * @param taskIds 参数说明
+   * @param userId 参数说明
+   * @param comment 参数说明
+   * @param targetNodeCode 参数说明
+   */
   @Override
   public void batchReject(
       List<String> taskIds, String userId, String comment, String targetNodeCode) {
     batchService.batchReject(taskIds, userId, comment, targetNodeCode);
   }
 
-  /** P1-4: 批量转办 */
+  /**
+   * P1-4: 批量转办
+   *
+   * @param taskIds 参数说明
+   * @param userId 参数说明
+   * @param comment 参数说明
+   * @param targetUserId 参数说明
+   * @param targetUserName 参数说明
+   */
   @Override
   public void batchTransfer(
       List<String> taskIds,
@@ -301,7 +387,14 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     batchService.batchTransfer(taskIds, userId, comment, targetUserId, targetUserName);
   }
 
-  /** P1-4: 批量催办 */
+  /**
+   * P1-4: 批量催办
+   *
+   * @param instanceIds 参数说明
+   * @param operatorId 参数说明
+   * @param comment 参数说明
+   * @return 返回值说明
+   */
   @Override
   public int batchUrge(List<String> instanceIds, String operatorId, String comment) {
     return batchService.batchUrge(instanceIds, operatorId, comment);

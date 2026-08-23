@@ -53,12 +53,20 @@ public class RateLimitDecision implements Serializable {
   /** 决策原因（用于日志/排查） */
   private String reason;
 
-  /** 是否通过限流 */
+  /**
+   * 是否通过限流。
+   *
+   * @return {@code true} 表示放行
+   */
   public boolean isPass() {
     return result == RateLimitResult.PASS;
   }
 
-  /** 是否被限流 */
+  /**
+   * 是否被限流。
+   *
+   * @return {@code true} 表示被拦截
+   */
   public boolean isBlocked() {
     return result == RateLimitResult.BLOCKED;
   }

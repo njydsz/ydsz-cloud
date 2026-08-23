@@ -1,11 +1,12 @@
 package com.njydsz.system.server.service;
-
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.query.AppInfoPageQuery;
 import com.njydsz.system.domain.vo.AppInfoVO;
+
+
 
 /**
  * 应用注册 Service 接口

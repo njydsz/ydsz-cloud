@@ -111,7 +111,13 @@ public class MessageSendService {
     }
   }
 
-  /** 解析降级通道列表。 */
+  /**
+   * 解析降级通道列表。
+   *
+   * @param matchedRule 参数说明
+   * @param currentChannel 参数说明
+   * @return 返回值说明
+   */
   public List<String> resolveFallbackChannels(MsgRouteRuleVO matchedRule, String currentChannel) {
     if (matchedRule == null) {
       return Collections.emptyList();
@@ -124,7 +130,14 @@ public class MessageSendService {
     return result;
   }
 
-  /** 按降级链顺序逐个尝试，任一成功即返回。 */
+  /**
+   * 按降级链顺序逐个尝试，任一成功即返回。
+   *
+   * @param logVO 参数说明
+   * @param fallbackChannels 参数说明
+   * @param prevCost 参数说明
+   * @return 返回值说明
+   */
   public MessageResult tryFallbackChain(
       MsgLogVO logVO, List<String> fallbackChannels, long prevCost) {
     String origChannel = logVO.getChannel();
@@ -166,7 +179,14 @@ public class MessageSendService {
     return null;
   }
 
-  /** 失败处理：retryCount < MAX → RETRY + nextRetryAt（指数退避），否则 FAILED。 */
+  /**
+   * 失败处理：retryCount < MAX → RETRY + nextRetryAt（指数退避），否则 FAILED。
+   *
+   * @param logVO 参数说明
+   * @param e 参数说明
+   * @param cost 参数说明
+   * @return 返回值说明
+   */
   public MessageResult handleFailure(MsgLogVO logVO, Exception e, long cost) {
     int retryCount = logVO.getRetryCount() == null ? 0 : logVO.getRetryCount();
     String maskedReceiver = SensitiveUtil.scanAndMask(logVO.getReceiver());
@@ -198,7 +218,12 @@ public class MessageSendService {
     return MessageResult.fail(logVO.getChannel(), e.getMessage());
   }
 
-  /** 按通道计算单条消息成本。 */
+  /**
+   * 按通道计算单条消息成本。
+   *
+   * @param channel 参数说明
+   * @return 返回值说明
+   */
   public BigDecimal calculateCost(String channel) {
     MessageProperties.CostConfig cfg = messageProperties.getCost();
     if (cfg == null || !cfg.isEnabled() || cfg.getUnitPrices() == null) {

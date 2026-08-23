@@ -10,6 +10,7 @@ import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.messaging.support.MessageBuilder;
 
 import com.njydsz.common.event.model.OutboxMessage;
 
@@ -72,8 +73,8 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
   public boolean publish(OutboxMessage message) {
     String destination = buildDestination(message);
     try {
-      org.springframework.messaging.support.MessageBuilder<String> builder =
-          org.springframework.messaging.support.MessageBuilder.withPayload(message.getPayload());
+      MessageBuilder<String> builder =
+          MessageBuilder.withPayload(message.getPayload());
       if (message.getTenantId() != null) {
         builder.setHeader("tenantId", message.getTenantId());
       }
@@ -149,8 +150,9 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
    *
    * @param batch 单批消息列表
    * @return 投递结果列表
+   * @throws Throwable 发送异常
    */
-  private List<Boolean> publishBatchInternal(List<OutboxMessage> batch) throws Exception {
+  private List<Boolean> publishBatchInternal(List<OutboxMessage> batch) throws Throwable {
     List<Message> mqMessages = new ArrayList<>(batch.size());
     for (OutboxMessage msg : batch) {
       String destination = buildDestination(msg);

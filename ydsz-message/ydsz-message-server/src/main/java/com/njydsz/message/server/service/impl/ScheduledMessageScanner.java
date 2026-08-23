@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.queue.trace.MessageTracer;
-import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.metric.MessageMetrics;
 
@@ -45,6 +45,9 @@ import com.njydsz.message.server.metric.MessageMetrics;
     havingValue = "true",
     matchIfMissing = true)
 public class ScheduledMessageScanner {
+  /** 下次重试偏移（秒） */
+  private static final int NEXT_RETRY_OFFSET_SECONDS = 30;
+
 
   private final MsgLogRepository msgLogRepository;
   private final ChannelRouter channelRouter;
@@ -122,7 +125,7 @@ public class ScheduledMessageScanner {
         logDO.setErrorMessage(e.getMessage());
         logDO.setStatus(MessageStatusEnum.RETRY.name());
         logDO.setRetryCount(1);
-        logDO.setNextRetryAt(LocalDateTime.now().plusSeconds(30));
+        logDO.setNextRetryAt(LocalDateTime.now().plusSeconds(NEXT_RETRY_OFFSET_SECONDS));
         msgLogRepository.updateById(logDO);
         messageMetrics.recordRetry(logDO.getChannel());
         log.warn(

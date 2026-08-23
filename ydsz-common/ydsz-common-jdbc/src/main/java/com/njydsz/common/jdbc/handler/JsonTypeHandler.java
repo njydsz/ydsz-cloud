@@ -43,7 +43,7 @@ import com.njydsz.common.json.YdszJson;
  * // MyBatis XML 映射配置
  * {@code <resultMap id="BaseResultMap" type="User">}
  *     {@code <result column="extra_info" property="extraInfo" jdbcType="VARCHAR" typeHandler="JsonTypeHandler"/>}
- * {@code </resultMap>}
+ * {@code < /resultMap>}
  *
  * // MyBatis 注解配置
  * {@code @Results({

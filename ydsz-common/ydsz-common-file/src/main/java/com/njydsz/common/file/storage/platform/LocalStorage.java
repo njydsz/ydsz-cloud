@@ -167,18 +167,26 @@ public class LocalStorage extends AbstractFileStorage {
 
           @Override
           public int read() throws IOException {
-            if (remaining <= 0) return -1;
+            if (remaining <= 0) {
+              return -1;
+            }
             int b = delegate.read();
-            if (b != -1) remaining--;
+            if (b != -1) {
+              remaining--;
+            }
             return b;
           }
 
           @Override
           public int read(byte[] b, int off, int len) throws IOException {
-            if (remaining <= 0) return -1;
+            if (remaining <= 0) {
+              return -1;
+            }
             int toRead = (int) Math.min(len, remaining);
             int read = delegate.read(b, off, toRead);
-            if (read > 0) remaining -= read;
+            if (read > 0) {
+              remaining -= read;
+            }
             return read;
           }
 

@@ -6,9 +6,10 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
 
-import com.njydsz.common.json.YdszJson;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.json.YdszJson;
 
 /**
  * FlowSkipDO 视图对象。
@@ -63,15 +64,14 @@ public class FlowSkipVO implements Serializable {
         parsedExt = Collections.emptyMap();
         return parsedExt;
       }
-        try {
-          Map<String, Object> map = YdszJson.parseMap(ext);
-          parsedExt = map != null ? map : Collections.emptyMap();
-          return parsedExt;
-        } catch (Exception e) {
-          log.warn("[FlowSkipVO] 解析 ext JSON 失败: skipId={} err={}", id, e.getMessage());
-          parsedExt = Collections.emptyMap();
-          return parsedExt;
-        }
+      try {
+        Map<String, Object> map = YdszJson.parseMap(ext);
+        parsedExt = map != null ? map : Collections.emptyMap();
+        return parsedExt;
+      } catch (Exception e) {
+        log.warn("[FlowSkipVO] 解析 ext JSON 失败: skipId={} err={}", id, e.getMessage());
+        parsedExt = Collections.emptyMap();
+        return parsedExt;
       }
     }
   }

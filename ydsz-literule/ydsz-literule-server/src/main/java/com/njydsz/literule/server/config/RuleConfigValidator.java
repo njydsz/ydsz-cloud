@@ -3,15 +3,13 @@ package com.njydsz.literule.server.config;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * 规则引擎配置启动校验器（P2-2：配置分组 + 启动校验）
@@ -35,6 +33,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Configuration
 @EnableConfigurationProperties(LiteRuleProperties.class)
 public class RuleConfigValidator {
+
+    /** 事实加载超时上限（毫秒） */
+  private static final long MAX_TIMEOUT_MS = 2000;
 
   @Autowired private LiteRuleProperties properties;
 
@@ -192,7 +193,7 @@ public class RuleConfigValidator {
     if (fact == null || !fact.isEnabled()) {
       return;
     }
-    if (fact.getTimeoutMs() > 2000) {
+    if (fact.getTimeoutMs() > MAX_TIMEOUT_MS) {
       addWarn(String.format(
           "事实配置: timeoutMs(%dms) 过大，可能拖慢整体评估耗时，建议 <= 1000ms",
           fact.getTimeoutMs()));

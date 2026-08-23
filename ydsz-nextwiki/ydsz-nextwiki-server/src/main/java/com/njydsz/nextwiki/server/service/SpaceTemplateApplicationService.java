@@ -46,7 +46,7 @@ public class SpaceTemplateApplicationService {
    * @return 模板DTO列表
    */
   public List<SpaceTemplateDTO> listTemplates(String category) {
-    String tenantId = TenantContext.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
     return spaceTemplateRepository.findAvailableTemplates(tenantId, category);
   }
 
@@ -75,7 +75,7 @@ public class SpaceTemplateApplicationService {
   @Transactional(rollbackFor = Exception.class)
   public SpaceTemplateDTO createTemplate(
       String name, String description, String category, String structureJson, String userId) {
-    String tenantId = TenantContext.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
     LocalDateTime now = LocalDateTime.now();
 
     SpaceTemplateDTO dto = SpaceTemplateDTO.builder()

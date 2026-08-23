@@ -16,8 +16,8 @@ import com.njydsz.common.base.filter.RequestBodySizeLimitFilter;
 import com.njydsz.common.base.filter.RequestContextCleanupFilter;
 import com.njydsz.common.base.filter.SecurityHeadersFilter;
 import com.njydsz.common.base.filter.TraceFilter;
-import com.njydsz.common.base.health.BaseHealthIndicator;
 import com.njydsz.common.base.health.CoreHealthIndicator;
+import com.njydsz.common.base.health.YdszHealthIndicator;
 
 /**
  * Base 模块自动配置
@@ -29,7 +29,7 @@ import com.njydsz.common.base.health.CoreHealthIndicator;
  *   <li>链路追踪过滤器（TraceFilter）
  *   <li>安全响应头过滤器（SecurityHeadersFilter）
  *   <li>安全响应头配置属性绑定
- *   <li>健康指标（BaseHealthIndicator，需 actuator 依赖）
+ *   <li>健康指标（YdszHealthIndicator，需 actuator 依赖）
  * </ul>
  *
  * <p>注意：BaseCorsProperties 和 BaseTraceProperties 为抽象基类， 实际配置由 Web/App 子模块通过
@@ -49,8 +49,8 @@ import com.njydsz.common.base.health.CoreHealthIndicator;
     name = "enabled",
     havingValue = "true",
     matchIfMissing = true)
-@EnableConfigurationProperties({BaseSecurityHeadersProperties.class, BaseRequestProperties.class})
-public class BaseAutoConfiguration {
+@EnableConfigurationProperties({YdszSecurityHeadersProperties.class, YdszRequestProperties.class})
+public class YdszAutoConfiguration {
 
   /**
    * 请求体大小限制过滤器
@@ -67,7 +67,7 @@ public class BaseAutoConfiguration {
       havingValue = "true",
       matchIfMissing = true)
   public FilterRegistrationBean<RequestBodySizeLimitFilter> requestBodySizeLimitFilter(
-      BaseRequestProperties properties) {
+      YdszRequestProperties properties) {
     FilterRegistrationBean<RequestBodySizeLimitFilter> registration =
         new FilterRegistrationBean<>();
     registration.setFilter(new RequestBodySizeLimitFilter(properties.getMaxBodySize()));
@@ -119,7 +119,7 @@ public class BaseAutoConfiguration {
       havingValue = "true",
       matchIfMissing = true)
   public FilterRegistrationBean<SecurityHeadersFilter> securityHeaderFilter(
-      BaseSecurityHeadersProperties properties) {
+      YdszSecurityHeadersProperties properties) {
     FilterRegistrationBean<SecurityHeadersFilter> registration = new FilterRegistrationBean<>();
     registration.setFilter(new SecurityHeadersFilter(properties));
     registration.setOrder(FilterOrder.SECURITY_HEADER_FILTER);
@@ -155,19 +155,19 @@ public class BaseAutoConfiguration {
    *
    * @param securityHeadersProperties 安全响应头配置
    * @param docProperties 文档配置
-   * @return BaseHealthIndicator 实例
+   * @return YdszHealthIndicator 实例
    */
   @Bean
   @ConditionalOnMissingBean
   // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
   // CHECKSTYLE.ON: RegexpSinglelineJava
-  public BaseHealthIndicator baseHealthIndicator(
-      BaseSecurityHeadersProperties securityHeadersProperties,
+  public YdszHealthIndicator baseHealthIndicator(
+      YdszSecurityHeadersProperties securityHeadersProperties,
       DocProperties docProperties,
       Environment environment) {
     String timezone = environment.getProperty("ydsz.base.timezone", "Asia/Shanghai");
-    return new BaseHealthIndicator(securityHeadersProperties, docProperties, timezone);
+    return new YdszHealthIndicator(securityHeadersProperties, docProperties, timezone);
   }
 
   /**

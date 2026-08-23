@@ -2,7 +2,6 @@ package com.njydsz.message.server.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -83,7 +82,8 @@ public class SseEmitterService {
   /**
    * 为指定批次创建新的 SSE 订阅（含 Last-Event-ID 断线重连）。
    *
-   * <p>当客户端携带 {@code Last-Event-ID} Header 重连时，服务端子程序将重放该 ID 之后所有缺失的事件 （initial 快照 + 增量 progress）。 旧事件 ID 对应的事件已被环形缓冲区覆盖时，退化为发送当前快照等同首次订阅。
+   * <p>当客户端携带 {@code Last-Event-ID} Header 重连时，服务端子程序将重放该 ID 之后所有缺失的事件
+   * （initial 快照 + 增量 progress）。 旧事件 ID 对应的事件已被环形缓冲区覆盖时，退化为发送当前快照等同首次订阅。
    *
    * @param batchId 批次 ID
    * @param initialSnapshot 初始进度快照（可为 null）
@@ -250,7 +250,12 @@ public class SseEmitterService {
     return new ArrayList<>(log.subList(lastIndex + 1, log.size()));
   }
 
-  /** 为订阅注册清理处理程序（超时/完成/异常）。 */
+  /**
+   * 为订阅注册清理处理程序（超时/完成/异常）。
+   *
+   * @param batchId 参数说明
+   * @param subscription 参数说明
+   */
   private void registerCleanupHandlers(String batchId, SseEmitterSubscription subscription) {
     SseEmitter emitter = subscription.emitter();
     emitter.onTimeout(
@@ -270,7 +275,11 @@ public class SseEmitterService {
         });
   }
 
-  /** 清理无效订阅。 */
+  /**
+   * 清理无效订阅。
+   *
+   * @param sub 参数说明
+   */
   private void removeSubscription(SseEmitterSubscription sub) {
     List<SseEmitterSubscription> subs = subscriptions.get(sub.batchId());
     if (subs != null) {

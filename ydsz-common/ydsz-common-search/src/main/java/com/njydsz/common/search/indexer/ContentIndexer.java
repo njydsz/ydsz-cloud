@@ -70,7 +70,11 @@ public class ContentIndexer {
     return document;
   }
 
-  /** 检查内容索引器是否可用 */
+  /**
+   * 检查内容索引器是否可用。
+   *
+   * @return {@code true} 表示可用
+   */
   public boolean isAvailable() {
     return contentExtractor != null && contentExtractor.isAvailable();
   }

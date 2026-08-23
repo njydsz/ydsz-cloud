@@ -12,12 +12,11 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.cronjob.domain.dag.DagInstanceStatus;
-import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
-import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
 import com.njydsz.cronjob.domain.repository.JobDagInstanceRepository;
 import com.njydsz.cronjob.domain.repository.JobDagNodeInstanceRepository;
 import com.njydsz.cronjob.domain.repository.JobDagRepository;
+import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
+import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
@@ -42,6 +41,12 @@ import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
 @Service
 @RequiredArgsConstructor
 public class JobDagInstanceServiceImpl implements JobDagInstanceService {
+  /** 默认查询条数上限 */
+  private static final int DEFAULT_LIMIT = 20;
+
+  /** StringBuilder 初始容量 */
+  private static final int STRING_BUILDER_INITIAL_CAPACITY = 256;
+
 
   /** DAG 实例 Repository */
   private final JobDagInstanceRepository jobDagInstanceRepository;
@@ -69,7 +74,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
   @Override
   @Transactional(readOnly = true)
   public List<JobDagInstanceVO> listByDagId(String dagId, int limit) {
-    int safeLimit = limit > 0 ? limit : 20;
+    int safeLimit = limit > 0 ? limit : DEFAULT_LIMIT;
     return jobDagInstanceRepository.findByDagId(dagId, safeLimit);
   }
 
@@ -193,7 +198,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     }
 
     // 3. 生成 Mermaid graph TD 文本
-    StringBuilder sb = new StringBuilder(256);
+    StringBuilder sb = new StringBuilder(STRING_BUILDER_INITIAL_CAPACITY);
     sb.append("```mermaid\ngraph TD\n");
 
     // 3a. 节点定义（含样式）

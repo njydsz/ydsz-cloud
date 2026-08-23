@@ -233,7 +233,9 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
    * <p>使用 1 秒间隔的限流，避免每次 L1 命中都打 Redis。 Redis 不可用时跳过检查（降级为仅 L1 TTL 失效）。
    */
   private void checkVersionAndInvalidate() {
-    if (redissonClient == null) return;
+    if (redissonClient == null) {
+      return;
+    }
     long now = System.nanoTime();
     if (now - lastVersionCheckNanos < VERSION_CHECK_INTERVAL_NANOS) {
       return;
@@ -338,7 +340,9 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
    * @param value 值；String 直接写入（用于 NULL 标记），其他对象 JSON 序列化
    */
   private void fillL2(String key, Object value) {
-    if (redissonClient == null) return;
+    if (redissonClient == null) {
+      return;
+    }
     try {
       String json;
       if (value instanceof String) {

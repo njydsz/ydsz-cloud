@@ -28,22 +28,46 @@ public interface FeignCircuitBreakerStrategy {
 
   /** 熔断器指标数据。 */
   interface CircuitBreakerMetrics {
-    /** 获取失败率（百分比） */
+    /**
+     * 获取失败率（百分比）。
+     *
+     * @return 失败率（0-100）
+     */
     float getFailureRate();
 
-    /** 获取总调用次数 */
+    /**
+     * 获取总调用次数。
+     *
+     * @return 总调用次数
+     */
     int getTotalCalls();
 
-    /** 获取成功调用次数 */
+    /**
+     * 获取成功调用次数。
+     *
+     * @return 成功调用次数
+     */
     int getSuccessfulCalls();
 
-    /** 获取失败调用次数 */
+    /**
+     * 获取失败调用次数。
+     *
+     * @return 失败调用次数
+     */
     int getFailedCalls();
 
-    /** 获取慢调用次数 */
+    /**
+     * 获取慢调用次数。
+     *
+     * @return 慢调用次数
+     */
     int getSlowCalls();
 
-    /** 获取平均耗时（毫秒） */
+    /**
+     * 获取平均耗时（毫秒）。
+     *
+     * @return 平均耗时（毫秒）
+     */
     long getAverageDuration();
   }
 

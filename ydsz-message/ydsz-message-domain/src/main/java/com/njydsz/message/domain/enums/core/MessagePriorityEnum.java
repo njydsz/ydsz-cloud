@@ -28,6 +28,15 @@ public enum MessagePriorityEnum {
   /** 紧急（告警、安全验证码） */
   URGENT(10);
 
+  /** 高优先级权重 */
+  private static final double HIGH_WEIGHT = 2.0;
+
+  /** 普通优先级权重 */
+  private static final double NORMAL_WEIGHT = 1.0;
+
+  /** 低优先级权重 */
+  private static final double LOW_WEIGHT = 0.5;
+
   /** 优先级数值（越大越高） */
   private final int value;
 
@@ -61,9 +70,9 @@ public enum MessagePriorityEnum {
   public double rateLimitMultiplier() {
     return switch (this) {
       case URGENT -> 10.0;
-      case HIGH -> 2.0;
-      case NORMAL -> 1.0;
-      case LOW -> 0.5;
+      case HIGH -> HIGH_WEIGHT;
+      case NORMAL -> NORMAL_WEIGHT;
+      case LOW -> LOW_WEIGHT;
     };
   }
 

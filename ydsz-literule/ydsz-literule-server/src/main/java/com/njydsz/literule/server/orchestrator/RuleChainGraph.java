@@ -109,13 +109,7 @@ public class RuleChainGraph implements Serializable {
   /** 最后更新人 */
   private String updatedBy;
 
-  /**
-   * 画布视口（前端画布的缩放和平移状态）
-   *
-   * @param x 视口左上角横坐标
-   * @param y 视口左上角纵坐标
-   * @param zoom 缩放比例（1.0 = 100%）
-   */
+  /** 画布视口（前端画布的缩放和平移状态） */
   @Data
   @NoArgsConstructor
   @AllArgsConstructor

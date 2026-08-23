@@ -12,6 +12,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
@@ -19,7 +21,6 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.core.RateLimitManager;
 import com.njydsz.common.safe.ratelimit.decorator.RateLimitResponseDecorator;
-import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.common.safe.ratelimit.model.RateLimitContext;
 import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
@@ -48,7 +49,13 @@ public class RateLimitAspect {
   /** 方法签名缓存：避免重复解析 */
   private final ConcurrentHashMap<Method, RateLimitRule> ruleCache = new ConcurrentHashMap<>();
 
-  /** 拦截 {@link RateLimit} 注解 */
+  /**
+   * 拦截 {@link RateLimit} 注解执行限流。
+   *
+   * @param pjp 连接点
+   * @return 目标方法执行结果
+   * @throws Throwable 目标方法异常透传
+   */
   @Around("@annotation(com.njydsz.common.safe.ratelimit.annotation.RateLimit)")
   public Object aroundSentinel(ProceedingJoinPoint pjp) throws Throwable {
     MethodSignature signature = (MethodSignature) pjp.getSignature();
@@ -123,12 +130,11 @@ public class RateLimitAspect {
       return null;
     }
     try {
-      org.springframework.web.context.request.RequestAttributes attrs =
-          org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes();
+      RequestAttributes attrs = RequestContextHolder.currentRequestAttributes();
       Object response =
           attrs.getAttribute(
               "jakarta.servlet.http.HttpServletResponse",
-              org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
+              RequestAttributes.SCOPE_REQUEST);
       return response instanceof HttpServletResponse httpResponse ? httpResponse : null;
     } catch (Exception e) {
       return null;

@@ -57,6 +57,10 @@ public class DefaultSlaCollector implements SlaCollector {
    * @param definition SLA 定义
    */
   @Override
+  /**
+   * register。
+   * @param definition 参数
+   */
   public void register(SlaDefinition definition) {
     definitions.put(definition.getName(), definition);
     log.info(
@@ -75,6 +79,13 @@ public class DefaultSlaCollector implements SlaCollector {
    * @param success 是否成功
    */
   @Override
+  /**
+   * record。
+   * @param name 参数
+   * @param stepName 参数
+   * @param tookMillis 参数
+   * @param success 参数
+   */
   public void record(String name, String stepName, long tookMillis, boolean success) {
     if (metricsCollector == null || name == null) {
       return;
@@ -108,6 +119,12 @@ public class DefaultSlaCollector implements SlaCollector {
   }
 
   @Override
+  /**
+   * record total。
+   * @param name 参数
+   * @param tookMillis 参数
+   * @param success 参数
+   */
   public void recordTotal(String name, long tookMillis, boolean success) {
     if (metricsCollector == null || name == null) {
       return;
@@ -140,6 +157,10 @@ public class DefaultSlaCollector implements SlaCollector {
   }
 
   @Override
+  /**
+   * is available。
+   * @return 结果
+   */
   public boolean isAvailable() {
     return metricsCollector != null && metricsCollector.isAvailable();
   }

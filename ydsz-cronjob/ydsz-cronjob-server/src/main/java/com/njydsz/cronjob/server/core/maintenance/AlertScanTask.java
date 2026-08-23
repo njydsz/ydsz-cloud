@@ -35,7 +35,7 @@ public class AlertScanTask implements ScanTask {
   @Override
   public long intervalMs() {
     // 使用 AlertScanner 的固定间隔（5min）
-    return 300000L;
+    return DEFAULT_SCAN_INTERVAL_MS;
   }
 
   @Override

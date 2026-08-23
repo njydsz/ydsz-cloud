@@ -81,7 +81,9 @@ public interface VariableRegistry {
    * @param definitions 变量定义集合
    */
   default void registerAll(Collection<VariableDefinition> definitions) {
-    if (definitions == null) return;
+    if (definitions == null) {
+      return;
+    }
     definitions.forEach(this::register);
   }
 

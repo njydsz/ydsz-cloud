@@ -34,6 +34,18 @@ import com.njydsz.literule.api.RuleContext;
  */
 public final class CacheKeyBuilder {
 
+    /** 每个事实的估算 Key 长度（用于预分配 StringBuilder） */
+  private static final int KEY_INIT_CAPACITY_MULTIPLIER = 16;
+
+  /** 字节无符号化掩码（0xFF） */
+  private static final int BYTE_UNSIGNED_MASK = 0xFF;
+
+  /** 十六进制半字节位数（4 bit） */
+  private static final int HEX_NIBBLE_BITS = 4;
+
+  /** 低 4 位掩码（0x0F） */
+  private static final int NIBBLE_MASK = 0x0F;
+
   private CacheKeyBuilder() {
     // 工具类不可实例化
   }
@@ -78,7 +90,7 @@ public final class CacheKeyBuilder {
    * @return UTF-8 字节数组
    */
   private static byte[] serializeFacts(SortedMap<String, Object> sortedFacts) {
-    StringBuilder sb = new StringBuilder(sortedFacts.size() * 16);
+    StringBuilder sb = new StringBuilder(sortedFacts.size() * KEY_INIT_CAPACITY_MULTIPLIER);
     sortedFacts.forEach(
         (key, value) -> {
           sb.append(key).append('=');
@@ -115,9 +127,9 @@ public final class CacheKeyBuilder {
   private static String bytesToHex(byte[] bytes) {
     char[] hex = new char[bytes.length * 2];
     for (int i = 0; i < bytes.length; i++) {
-      int v = bytes[i] & 0xFF;
-      hex[i * 2] = HEX_CHARS[v >>> 4];
-      hex[i * 2 + 1] = HEX_CHARS[v & 0x0F];
+      int v = bytes[i] & BYTE_UNSIGNED_MASK;
+      hex[i * 2] = HEX_CHARS[v >>> HEX_NIBBLE_BITS];
+      hex[i * 2 + 1] = HEX_CHARS[v & NIBBLE_MASK];
     }
     return new String(hex);
   }

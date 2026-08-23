@@ -40,7 +40,11 @@ public class CountingRejectedExecutionHandler implements RejectedExecutionHandle
     delegate.rejectedExecution(r, executor);
   }
 
-  /** 当前累计拒绝次数。 */
+  /**
+   * 获取当前累计拒绝次数。
+   *
+   * @return 累计拒绝次数
+   */
   public long getRejectedCount() {
     return rejectedCount.get();
   }

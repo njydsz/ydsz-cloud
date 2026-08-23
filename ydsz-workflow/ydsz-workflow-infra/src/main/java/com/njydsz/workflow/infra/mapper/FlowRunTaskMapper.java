@@ -38,27 +38,51 @@ import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 @Mapper
 public interface FlowRunTaskMapper extends BaseMapper<FlowRunTaskDO> {
 
-  /** 根据实例 ID 查所有任务 */
+  /**
+   * 根据实例 ID 查所有任务
+   *
+   * @param instanceId 参数说明
+   * @return 返回值说明
+   */
   List<FlowRunTaskDO> selectByInstanceId(@Param("instanceId") String instanceId);
 
-  /** 查某实例的当前 PENDING 任务 */
+  /**
+   * 查某实例的当前 PENDING 任务
+   *
+   * @param instanceId 参数说明
+   * @return 返回值说明
+   */
   List<FlowRunTaskDO> selectPendingByInstance(@Param("instanceId") String instanceId);
 
-  /** 查某节点 PENDING 任务 */
+  /**
+   * 查某节点 PENDING 任务
+   *
+   * @param instanceId 参数说明
+   * @param nodeCode 参数说明
+   * @return 返回值说明
+   */
   List<FlowRunTaskDO> selectPendingByNode(
       @Param("instanceId") String instanceId, @Param("nodeCode") String nodeCode);
 
-  /** 查用户的待办 */
+  /**
+   * 查用户的待办
+   *
+   * @param assigneeId 参数说明
+   * @param tenantId 参数说明
+   * @return 返回值说明
+   */
   List<FlowRunTaskDO> selectTodoByAssignee(
       @Param("assigneeId") String assigneeId, @Param("tenantId") String tenantId);
 
   /**
    * 查用户的待办（真分页：LIMIT/OFFSET）
+   * 
    *
-   * @param assigneeId 办理人 ID
-   * @param tenantId 租户 ID
-   * @param offset 偏移量（从 0 开始）
-   * @param limit 每页大小
+   * @param assigneeId 参数说明
+   * @param tenantId 参数说明
+   * @param offset 参数说明
+   * @param limit 参数说明
+   * @return 返回值说明
    */
   List<FlowRunTaskDO> selectTodoByAssigneePage(
       @Param("assigneeId") String assigneeId,
@@ -66,7 +90,13 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTaskDO> {
       @Param("offset") int offset,
       @Param("limit") int limit);
 
-  /** 统计用户待办总数（用于分页计算总页数） */
+  /**
+   * 统计用户待办总数（用于分页计算总页数）
+   *
+   * @param assigneeId 参数说明
+   * @param tenantId 参数说明
+   * @return 返回值说明
+   */
   long countTodoByAssignee(
       @Param("assigneeId") String assigneeId, @Param("tenantId") String tenantId);
 
@@ -94,11 +124,26 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTaskDO> {
       @Param("lastId") String lastId,
       @Param("limit") int limit);
 
-  /** 查用户已办 */
+  /**
+   * 查用户已办
+   *
+   * @param assigneeId 参数说明
+   * @param tenantId 参数说明
+   * @return 返回值说明
+   */
   List<FlowRunTaskDO> selectDoneByAssignee(
       @Param("assigneeId") String assigneeId, @Param("tenantId") String tenantId);
 
-  /** 标记任务完成 */
+  /**
+   * 标记任务完成
+   *
+   * @param id 参数说明
+   * @param taskStatus 参数说明
+   * @param comment 参数说明
+   * @param finishAt 参数说明
+   * @param durationMs 参数说明
+   * @return 返回值说明
+   */
   int completeTask(
       @Param("id") String id,
       @Param("taskStatus") String taskStatus,
@@ -106,26 +151,46 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTaskDO> {
       @Param("finishAt") LocalDateTime finishAt,
       @Param("durationMs") Long durationMs);
 
-  /** 会签计数器 +1 */
+  /**
+   * 会签计数器 +1
+   *
+   * @param id 参数说明
+   * @return 返回值说明
+   */
   int incrementFinished(@Param("id") String id);
 
-  /** 取消某实例下所有 PENDING 任务 */
+  /**
+   * 取消某实例下所有 PENDING 任务
+   *
+   * @param instanceId 参数说明
+   * @param taskStatus 参数说明
+   * @return 返回值说明
+   */
   int cancelByInstance(
       @Param("instanceId") String instanceId, @Param("taskStatus") String taskStatus);
 
   /**
    * P0-1: 取消单个任务（边界事件触发时使用）
+   * 
    *
-   * @param id 任务 ID
-   * @param taskStatus 目标状态
-   * @param comment 取消原因
+   * @param id 参数说明
+   * @param taskStatus 参数说明
+   * @param comment 参数说明
+   * @return 返回值说明
    */
   int cancelTask(
       @Param("id") String id,
       @Param("taskStatus") String taskStatus,
       @Param("comment") String comment);
 
-  /** 跳过某节点剩余 PENDING（同会签场景） */
+  /**
+   * 跳过某节点剩余 PENDING（同会签场景）
+   *
+   * @param instanceId 参数说明
+   * @param nodeCode 参数说明
+   * @param taskStatus 参数说明
+   * @return 返回值说明
+   */
   int skipByNode(
       @Param("instanceId") String instanceId,
       @Param("nodeCode") String nodeCode,
@@ -133,27 +198,51 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTaskDO> {
 
   /**
    * P2-18: 冻结某实例下所有 PENDING/CLAIMED 任务（流程挂起时调用）
+   * 
    *
-   * @param instanceId 实例 ID
+   * @param instanceId 参数说明
+   * @return 返回值说明
    */
   int freezeByInstance(@Param("instanceId") String instanceId);
 
   /**
    * P2-18: 解冻某实例下所有 FROZEN 任务（流程激活时调用，回到 PENDING）
+   * 
    *
-   * @param instanceId 实例 ID
+   * @param instanceId 参数说明
+   * @return 返回值说明
    */
   int unfreezeByInstance(@Param("instanceId") String instanceId);
 
-  /** 统计某实例某节点的未完成任务数（用于并行网关 join 判断） */
+  /**
+   * 统计某实例某节点的未完成任务数（用于并行网关 join 判断）
+   *
+   * @param instanceId 参数说明
+   * @param nodeCode 参数说明
+   * @return 返回值说明
+   */
   int countPendingByNode(
       @Param("instanceId") String instanceId, @Param("nodeCode") String nodeCode);
 
-  /** 更新会签计数（设置 approveFinished） */
+  /**
+   * 更新会签计数（设置 approveFinished）
+   *
+   * @param id 参数说明
+   * @param approveFinished 参数说明
+   * @return 返回值说明
+   */
   int updateApproveFinished(
       @Param("id") String id, @Param("approveFinished") Integer approveFinished);
 
-  /** 更新任务办理人信息（用于会签场景下多人共用一个任务时切换办理人） */
+  /**
+   * 更新任务办理人信息（用于会签场景下多人共用一个任务时切换办理人）
+   *
+   * @param id 参数说明
+   * @param assigneeId 参数说明
+   * @param assigneeName 参数说明
+   * @param assigneeType 参数说明
+   * @return 返回值说明
+   */
   int updateAssignee(
       @Param("id") String id,
       @Param("assigneeId") String assigneeId,
@@ -162,10 +251,12 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTaskDO> {
 
   /**
    * P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED）
+   * 查询逾期任务。
    *
-   * @param assigneeId 办理人 ID（可空，为空时查全部）
-   * @param tenantId 租户 ID（可空）
-   * @return 超期任务列表
+   * @param assigneeId 处理人 ID
+   * @param tenantId 租户 ID
+   * @param limit 每页大小
+   * @return 逾期任务列表
    */
   List<FlowRunTaskDO> selectOverdue(
       @Param("assigneeId") String assigneeId,
@@ -250,7 +341,14 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTaskDO> {
       @Param("urgeCount") int urgeCount,
       @Param("lastUrgedAt") LocalDateTime lastUrgedAt);
 
-  /** P1-6: 标记 SLA 动作（用于审计：AUTO_PASS / AUTO_REJECT / ESCALATE 等） */
+  /**
+   * P1-6: 标记 SLA 动作（用于审计：AUTO_PASS / AUTO_REJECT / ESCALATE 等）
+   *
+   * @param id 参数说明
+   * @param slaAction 参数说明
+   * @param slaEscalated 参数说明
+   * @return 返回值说明
+   */
   int markSlaAction(
       @Param("id") String id,
       @Param("slaAction") String slaAction,

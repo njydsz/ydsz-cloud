@@ -37,7 +37,10 @@ public class EntityVersionPageQuery {
   @Builder.Default
   private Integer pageNum = 1;
 
+  /** 默认每页条数 */
+  private static final int DEFAULT_PAGE_SIZE = 20;
+
   /** 每页条数（默认 20，最大 500） */
   @Builder.Default
-  private Integer pageSize = 20;
+  private Integer pageSize = DEFAULT_PAGE_SIZE;
 }

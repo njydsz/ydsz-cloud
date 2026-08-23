@@ -53,6 +53,8 @@ import com.njydsz.userinfo.server.auth.SessionActivityService;
 @RequiredArgsConstructor
 @Tag(name = "安全仪表盘", description = "安全指标和会话活跃度统计")
 public class SecurityDashboardController {
+  /** 默认统计时间范围（天）：7 天 */
+  private static final int DEFAULT_STATS_DAYS = 7;
 
   private final SecurityDashboardService securityDashboardService;
   private final SessionActivityService sessionActivityService;
@@ -83,7 +85,7 @@ public class SecurityDashboardController {
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
     if (start == null) {
-      start = LocalDate.now().minusDays(7);
+      start = LocalDate.now().minusDays(DEFAULT_STATS_DAYS);
     }
     if (end == null) {
       end = LocalDate.now();
@@ -183,7 +185,7 @@ public class SecurityDashboardController {
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
     if (start == null) {
-      start = LocalDate.now().minusDays(7);
+      start = LocalDate.now().minusDays(DEFAULT_STATS_DAYS);
     }
     if (end == null) {
       end = LocalDate.now();

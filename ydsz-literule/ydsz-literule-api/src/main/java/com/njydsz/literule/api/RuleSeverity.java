@@ -10,8 +10,13 @@ package com.njydsz.literule.api;
  * @since 1.0.0
  */
 public enum RuleSeverity {
+  /** 提示级别 */
   INFO("INFO", 1, "提示"),
+
+  /** 黄色预警 */
   YELLOW("YELLOW", 2, "黄色预警"),
+
+  /** 红色严重 */
   RED("RED", 3, "红色严重");
 
   private final String code;
@@ -43,9 +48,13 @@ public enum RuleSeverity {
    * @return 枚举值；未匹配返回 null
    */
   public static RuleSeverity fromCode(String code) {
-    if (code == null) return null;
+    if (code == null) {
+      return null;
+    }
     for (RuleSeverity v : values()) {
-      if (v.code.equalsIgnoreCase(code)) return v;
+      if (v.code.equalsIgnoreCase(code)) {
+        return v;
+      }
     }
     return null;
   }

@@ -45,6 +45,9 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 @Service
 @RequiredArgsConstructor
 public class CrossDomainTokenService {
+  /** URL scheme 分隔符长度（"://"） */
+  private static final int URL_SCHEME_SEPARATOR_LENGTH = 3;
+
 
   /** postMessage 回调中 Token 参数的请求参数名 */
   private static final String POST_MESSAGE_TOKEN_PARAM = "sso_token";
@@ -265,7 +268,7 @@ public class CrossDomainTokenService {
     }
     // 去除 scheme
     int schemeIdx = url.indexOf("://");
-    String hostPart = schemeIdx >= 0 ? url.substring(schemeIdx + 3) : url;
+    String hostPart = schemeIdx >= 0 ? url.substring(schemeIdx + URL_SCHEME_SEPARATOR_LENGTH) : url;
     // 去除 path
     int pathIdx = hostPart.indexOf('/');
     if (pathIdx >= 0) {

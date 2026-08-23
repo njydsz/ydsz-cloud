@@ -309,10 +309,14 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
 
   /** P2-7: 检查所有实例是否权重相同（等权重场景无需构建 Alias 表） */
   private boolean allSameWeight(List<ServiceInstance> instances) {
-    if (instances.size() <= 1) return true;
+    if (instances.size() <= 1) {
+      return true;
+    }
     int first = getInstanceWeight(instances.get(0));
     for (int i = 1; i < instances.size(); i++) {
-      if (getInstanceWeight(instances.get(i)) != first) return false;
+      if (getInstanceWeight(instances.get(i)) != first) {
+        return false;
+      }
     }
     return true;
   }
@@ -387,7 +391,8 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
     // 使用小堆/大堆配对
     int[] small = new int[n];
     int[] large = new int[n];
-    int ns = 0, nl = 0;
+    int ns = 0;
+    int nl = 0;
 
     for (int i = 0; i < n; i++) {
       if (scaled[i] < 1.0) {

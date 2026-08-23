@@ -6,15 +6,13 @@ import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
-import com.njydsz.workflow.server.engine.FlowNodeExt;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.server.service.instance.AssigneeResolutionService;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 
 /**
  * 审批人为空兜底策略服务
@@ -72,14 +70,14 @@ public class EmptyAssigneeStrategyService {
 
   /**
    * 创建 EmptyAssigneeStrategyService 实例
+   * 
    *
-   * @param taskRepository 运行时任务仓储
-   * @param converter MapStruct 转换器
-   * @param archiveService 任务归档服务
-   * @param support 跨子 Service 共享的任务校验/审计/事件辅助
-   * @param assigneeResolutionService 办理人解析服务
-   * @param advanceCallback 自动通过后推进到下一节点的回调
-   */
+   * @param taskRepository 参数说明
+   * @param converter 参数说明
+   * @param archiveService 参数说明
+   * @param support 参数说明
+   * @param assigneeResolutionService 参数说明
+   * @param advanceCallback 参数说明   */
   public EmptyAssigneeStrategyService(
       FlowRunTaskRepository taskRepository,
       WorkflowConverter converter,
@@ -141,6 +139,12 @@ public class EmptyAssigneeStrategyService {
 
   /**
    * AUTO_PASS 策略：标记任务为已完成（自动通过），归档并推进到下一节点
+   *
+   * @param task 参数说明
+   * @param instance 参数说明
+   * @param node 参数说明
+   * @param variables 参数说明
+   * @return 返回值说明
    */
   private String handleAutoPass(
       FlowRunTaskDO task, FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
@@ -161,8 +165,15 @@ public class EmptyAssigneeStrategyService {
 
   /**
    * 将任务分配给指定的回退用户（管理员或指定人员）
+   * 
    *
-   * @param logMsg 日志模板（包含 3 个 {} 占位符：instanceId, nodeCode, userId）
+   * @param logMsg 参数说明
+   * @param task 参数说明
+   * @param instance 参数说明
+   * @param node 参数说明
+   * @param userId 参数说明
+   * @param fallbackName 参数说明
+   * @return 返回值说明
    */
   private String assignToFallbackUser(
       FlowRunTaskDO task,
@@ -181,6 +192,12 @@ public class EmptyAssigneeStrategyService {
 
   /**
    * FALLBACK 策略：回退到原有 resolveAssignee 逻辑
+   *
+   * @param task 参数说明
+   * @param instance 参数说明
+   * @param node 参数说明
+   * @param variables 参数说明
+   * @return 返回值说明
    */
   private String fallbackToResolveAssignee(
       FlowRunTaskDO task, FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
@@ -190,7 +207,15 @@ public class EmptyAssigneeStrategyService {
     return task.getId();
   }
 
-  /** 写入 ydsz_flow_user 记录 */
+  /**
+   * 写入 ydsz_flow_user 记录
+   *
+   * @param task 参数说明
+   * @param node 参数说明
+   * @param variables 参数说明
+   * @param explicit 参数说明
+   * @param instance 参数说明
+   */
   private void resolveAssignee(
       FlowRunTaskDO task,
       FlowNodeDO node,
@@ -200,7 +225,13 @@ public class EmptyAssigneeStrategyService {
     assigneeResolutionService.resolveAssignee(task, node, variables, explicit, instance);
   }
 
-  /** AUTO_PASS 后推进到下一节点（含递归深度保护） */
+  /**
+   * AUTO_PASS 后推进到下一节点（含递归深度保护）
+   *
+   * @param instance 参数说明
+   * @param node 参数说明
+   * @param variables 参数说明
+   */
   private void advanceAfterAutoPass(
       FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
     if (advanceCallback != null) {

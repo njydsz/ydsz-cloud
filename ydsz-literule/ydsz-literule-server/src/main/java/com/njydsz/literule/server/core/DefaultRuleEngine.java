@@ -2,7 +2,6 @@ package com.njydsz.literule.server.core;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,7 +10,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import jakarta.annotation.PreDestroy;
@@ -20,6 +21,7 @@ import org.slf4j.MDC;
 
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
@@ -33,11 +35,9 @@ import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.StatsRecorder;
 import com.njydsz.literule.domain.model.ModelInputRegistry;
 import com.njydsz.literule.domain.model.ModelInvocationException;
-import com.njydsz.literule.server.core.RuleEvaluationException;
 import com.njydsz.literule.server.spi.FactCollectionException;
 import com.njydsz.literule.server.spi.FactProviderRegistry;
 import com.njydsz.literule.server.spi.RuleActionDispatcher;
-import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.server.spi.TraceRecorder;
 
 /**
@@ -61,6 +61,27 @@ import com.njydsz.literule.server.spi.TraceRecorder;
  */
 @Slf4j
 public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
+
+    /** 默认并行执行阈值 */
+  private static final int DEFAULT_PARALLEL_THRESHOLD = 50;
+
+  /** 默认线程池最小线程数 */
+  private static final int DEFAULT_MIN_POOL_SIZE = 4;
+
+  /** 默认线程池大小乘数 */
+  private static final int DEFAULT_POOL_MULTIPLIER = 2;
+
+  /** 索引未启用时的规则量阈值（超过则绕过索引） */
+  private static final int INDEX_BYPASS_THRESHOLD = 200;
+
+  /** 纳秒到毫秒的换算系数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
+  /** 异步记录器终止等待秒数 */
+  private static final int AWAIT_RECORDER_SECONDS = 5;
+
+  /** 注入线程池终止等待秒数 */
+  private static final int AWAIT_INJECTION_SECONDS = 3;
 
   /** 已注册规则列表（按优先级排序） */
   private final CopyOnWriteArrayList<Rule> rules = new CopyOnWriteArrayList<>();
@@ -124,7 +145,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
   private volatile ParallelRuleEvaluator parallelEvaluator;
 
   /** 并行评估触发阈值（候选规则数 ≥ 此值时启用并行），默认 50 */
-  private volatile int parallelThreshold = 50;
+  private volatile int parallelThreshold = DEFAULT_PARALLEL_THRESHOLD;
 
   /** 统计记录器（封装统计计数器、慢规则检测和告警） */
   private final RuleStatistics statistics = new RuleStatistics();
@@ -151,7 +172,8 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    * @return 默认注入线程池
    */
   private static ExecutorService createDefaultInjectionExecutor() {
-    int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors() * 2);
+    int poolSize =
+        Math.max(DEFAULT_MIN_POOL_SIZE, Runtime.getRuntime().availableProcessors() * DEFAULT_POOL_MULTIPLIER);
     // CHECKSTYLE.OFF: RegexpSinglelineJava - 规则注入默认线程池，线程数由 CPU 核数动态计算，守护线程
     ExecutorService executor = ExecutorUtils.newFixedThreadPool(poolSize, "literule-injection");
     // CHECKSTYLE.ON: RegexpSinglelineJava
@@ -206,7 +228,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     // 增量更新索引
     ruleIndexer.addToIndex(rule);
     // 当规则数首次超过阈值时，重建索引启用索引模式
-    if (!ruleIndexer.isIndexEnabled() && rules.size() >= 200) {
+    if (!ruleIndexer.isIndexEnabled() && rules.size() >= INDEX_BYPASS_THRESHOLD) {
       ruleIndexer.rebuildIndex(rules);
     }
     // P1-7：规则变更时精准失效该规则的评估结果缓存（对比全量 clear 减少缓存抖动）
@@ -256,7 +278,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    */
   @Override
   public void unregister(String ruleCode) {
-    if (ruleCode == null) return;
+    if (ruleCode == null) {
+      return;
+    }
     rules.removeIf(r -> ruleCode.equals(r.getCode()));
     ruleIndexer.removeFromIndex(ruleCode);
     // P1-6: 注销规则时同步清理该规则的统计数据，避免统计数据 Map 无限增长
@@ -428,7 +452,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
       Thread.currentThread().interrupt();
       log.warn("[LiteRule] 并行注入被中断，降级为串行");
       return injectFactsThenModel(context);
-    } catch (java.util.concurrent.ExecutionException e) {
+    } catch (ExecutionException e) {
       log.warn("[LiteRule] 并行注入异常，降级为串行: {}", e.getMessage());
       return injectFactsThenModel(context);
     }
@@ -1452,7 +1476,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
       }
     }
 
-    long elapsed = (System.nanoTime() - start) / 1_000_000;
+    long elapsed = (System.nanoTime() - start) / NANOS_PER_MILLI;
     RuleEvaluationOutcome outcome = new RuleEvaluationOutcome(result, caughtException, elapsed);
 
     // 统计记录（含慢规则检测与告警）
@@ -1596,7 +1620,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
   @PreDestroy
   public void destroy() {
     if (traceRecorder instanceof AsyncTraceRecorder asyncRecorder) {
-      asyncRecorder.shutdown(5);
+      asyncRecorder.shutdown(AWAIT_RECORDER_SECONDS);
       log.info("[LiteRule] 异步 Trace 记录器已关闭");
     }
     if (timeoutExecutor != null) {
@@ -1609,7 +1633,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     if (!injectionExecutor.isShutdown()) {
       injectionExecutor.shutdown();
       try {
-        if (!injectionExecutor.awaitTermination(3, java.util.concurrent.TimeUnit.SECONDS)) {
+        if (!injectionExecutor.awaitTermination(AWAIT_INJECTION_SECONDS, TimeUnit.SECONDS)) {
           injectionExecutor.shutdownNow();
         }
       } catch (InterruptedException e) {

@@ -1,5 +1,6 @@
 package com.njydsz.workflow.web.controller.definition;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -304,7 +305,7 @@ public class FlowDesignerController {
   @Operation(summary = "获取办理人类型列表（设计器下拉选择）")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
   public YdszResponse<List<Map<String, String>>> listAssigneeTypes() {
-    List<Map<String, String>> result = new java.util.ArrayList<>();
+    List<Map<String, String>> result = new ArrayList<>();
     for (FlowAssigneeType t : FlowAssigneeType.values()) {
       result.add(Map.of("code", t.name(), "desc", t.getDesc()));
     }
@@ -337,7 +338,7 @@ public class FlowDesignerController {
   @Operation(summary = "获取所有监听器事件类型")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
   public YdszResponse<List<Map<String, String>>> listListenerEventTypes() {
-    List<Map<String, String>> result = new java.util.ArrayList<>();
+    List<Map<String, String>> result = new ArrayList<>();
     for (FlowListenerEventType t : FlowListenerEventType.values()) {
       result.add(Map.of("code", t.getCode(), "desc", t.getDesc()));
     }

@@ -55,22 +55,38 @@ public enum TccBranchStatus {
   /** Cancel 执行完成（终态） */
   CANCELLED;
 
-  /** 是否为终态 */
+  /**
+   * 是否为终态。
+   *
+   * @return {@code true} 表示 {@link #CONFIRMED} 或 {@link #CANCELLED}
+   */
   public boolean isFinal() {
     return this == CONFIRMED || this == CANCELLED;
   }
 
-  /** 是否允许执行 Confirm（幂等检查） */
+  /**
+   * 是否允许执行 Confirm（幂等检查）。
+   *
+   * @return {@code true} 表示可执行 Confirm
+   */
   public boolean canConfirm() {
     return this == TRIED || this == CONFIRMING;
   }
 
-  /** 是否允许执行 Cancel（幂等检查） */
+  /**
+   * 是否允许执行 Cancel（幂等检查）。
+   *
+   * @return {@code true} 表示可执行 Cancel
+   */
   public boolean canCancel() {
     return this == TRIED || this == CANCELLING;
   }
 
-  /** 是否允许执行 Try（悬挂检查：已 Cancel 的分支不允许再 Try） */
+  /**
+   * 是否允许执行 Try（悬挂检查：已 Cancel 的分支不允许再 Try）。
+   *
+   * @return {@code true} 表示可执行 Try
+   */
   public boolean canTry() {
     return this == INIT || this == TRYING;
   }

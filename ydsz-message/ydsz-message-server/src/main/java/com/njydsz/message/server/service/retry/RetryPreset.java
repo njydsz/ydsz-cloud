@@ -1,7 +1,5 @@
 package com.njydsz.message.server.service.retry;
 
-import java.util.List;
-
 import com.njydsz.message.server.config.MessageProperties;
 
 /**

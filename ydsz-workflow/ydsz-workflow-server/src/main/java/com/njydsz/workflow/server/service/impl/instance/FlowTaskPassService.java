@@ -16,16 +16,16 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.form.FlowFormEngineService;
 import com.njydsz.workflow.server.form.FlowFormSchema;
@@ -188,7 +188,12 @@ public class FlowTaskPassService {
     }
   }
 
-  /** 委派回归处理：被委派人通过后任务回到原办理人 */
+  /**
+   * 委派回归处理：被委派人通过后任务回到原办理人
+   *
+   * @param task 参数说明
+   * @param dto 参数说明
+   */
   private void handleDelegateReturn(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
     auditService.logDelegateOperation(task, "DELEGATE_RETURN");
     task.setAssigneeId(String.valueOf(task.getAssignorId()));
@@ -202,7 +207,13 @@ public class FlowTaskPassService {
     log.info("[Flow] 委派回归: taskId={} → 原办理人={}", task.getId(), task.getAssigneeId());
   }
 
-  /** 表单字段权限校验 + P0-3 表单 Schema 校验 */
+  /**
+   * 表单字段权限校验 + P0-3 表单 Schema 校验
+   *
+   * @param task 参数说明
+   * @param variables 参数说明
+   * @param instance 参数说明
+   */
   private void validateFormFieldPerms(
       FlowRunTaskDO task, Map<String, Object> variables, FlowInstanceVO instance) {
     FlowNodeDO formNode = nodeRepository.findByCode(task.getDefinitionId(), task.getNodeCode()).map(converter::entityToDO).orElse(null);
@@ -225,7 +236,15 @@ public class FlowTaskPassService {
     }
   }
 
-  /** 流程推进 */
+  /**
+   * 流程推进
+   *
+   * @param instance 参数说明
+   * @param task 参数说明
+   * @param vars 参数说明
+   * @param performType 参数说明
+   * @param dto 参数说明
+   */
   private void advanceProcess(
       FlowInstanceVO instance,
       FlowRunTaskDO task,
@@ -246,7 +265,12 @@ public class FlowTaskPassService {
     log.info("[Flow] {} 全部通过: taskId={} next={}", performType, task.getId(), nextNodes.size());
   }
 
-  /** 更新实例当前节点 */
+  /**
+   * 更新实例当前节点
+   *
+   * @param instance 参数说明
+   * @param nextNodes 参数说明
+   */
   private void updateInstanceNode(FlowInstanceVO instance, List<FlowNodeDO> nextNodes) {
     if (!nextNodes.isEmpty() && nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {
       instanceRepository.updateStatus(

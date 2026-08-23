@@ -2,7 +2,6 @@ package com.njydsz.userinfo.server.auth;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -12,13 +11,13 @@ import com.njydsz.common.safe.alert.SecurityEvent;
 import com.njydsz.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.common.safe.alert.SecurityEventType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 import com.njydsz.userinfo.server.service.LoginAttemptContext;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
-import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 
 /**
  * 凭据校验器。

@@ -125,6 +125,7 @@ public class FlowEmbeddedApprovalController {
    * </ul>
    *
    * @param dto 嵌入式快捷操作参数
+   * @return 统一响应结果
    */
   @Operation(summary = "嵌入式快捷操作")
   @Idempotent(key = "ydsz:workflow:embeddedApproval:quickAction", ttlSeconds = 5)

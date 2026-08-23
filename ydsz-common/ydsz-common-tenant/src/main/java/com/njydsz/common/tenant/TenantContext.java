@@ -209,22 +209,38 @@ public final class TenantContext {
     return fields;
   }
 
-  /** 是否为系统租户。 */
+  /**
+   * 是否为系统租户。
+   *
+   * @return {@code true} 表示系统租户
+   */
   public boolean isSystemTenant() {
     return systemTenant;
   }
 
-  /** 是否为超级管理员。 */
+  /**
+   * 是否为超级管理员。
+   *
+   * @return {@code true} 表示超级管理员
+   */
   public boolean isSuperAdmin() {
     return superAdmin;
   }
 
-  /** 是否跳过租户隔离。 */
+  /**
+   * 是否跳过租户隔离。
+   *
+   * @return {@code true} 表示跳过隔离
+   */
   public boolean isSkipIsolation() {
     return skipIsolation;
   }
 
-  /** 是否为空上下文。 */
+  /**
+   * 是否为空上下文。
+   *
+   * @return {@code true} 表示无租户且未跳过隔离
+   */
   public boolean isEmpty() {
     return tenantId == null && !skipIsolation;
   }
@@ -324,19 +340,34 @@ public final class TenantContext {
       return this;
     }
 
-    /** 设置是否系统租户。 */
+    /**
+     * 设置是否系统租户。
+     *
+     * @param systemTenant 系统租户标志
+     * @return this
+     */
     public Builder systemTenant(boolean systemTenant) {
       this.systemTenant = systemTenant;
       return this;
     }
 
-    /** 设置是否超级管理员。 */
+    /**
+     * 设置是否超级管理员。
+     *
+     * @param superAdmin 超级管理员标志
+     * @return this
+     */
     public Builder superAdmin(boolean superAdmin) {
       this.superAdmin = superAdmin;
       return this;
     }
 
-    /** 设置是否跳过隔离。 */
+    /**
+     * 设置是否跳过隔离。
+     *
+     * @param skipIsolation 跳过隔离标志
+     * @return this
+     */
     public Builder skipIsolation(boolean skipIsolation) {
       this.skipIsolation = skipIsolation;
       return this;
@@ -364,7 +395,11 @@ public final class TenantContext {
       return this;
     }
 
-    /** 构建不可变上下文。 */
+    /**
+     * 构建不可变上下文。
+     *
+     * @return 构建完成的租户上下文
+     */
     public TenantContext build() {
       if (!fields.containsKey("tenantId") && tenantId != null) {
         fields.put("tenantId", tenantId);

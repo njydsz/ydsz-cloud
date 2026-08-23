@@ -36,6 +36,9 @@ import com.njydsz.message.server.service.impl.SenderQuotaService;
 @Order(800)
 @RequiredArgsConstructor
 public class ThrottlingHandler implements SendHandler {
+  /** 限流处理器优先级 */
+  private static final int THROTTLING_PRIORITY = 800;
+
 
   private final GuardService guardService;
   private final SenderQuotaService senderQuotaService;
@@ -94,10 +97,16 @@ public class ThrottlingHandler implements SendHandler {
 
   @Override
   public int order() {
-    return 800;
+    return THROTTLING_PRIORITY;
   }
 
-  /** 构建通道级限流 key：通道 + 业务类型。 */
+  /**
+   * 构建通道级限流 key：通道 + 业务类型。
+   *
+   * @param channel 参数说明
+   * @param bizType 参数说明
+   * @return 返回值说明
+   */
   private String buildChannelLimitKey(String channel, String bizType) {
     return "channel:"
         + (channel != null ? channel : "UNKNOWN")

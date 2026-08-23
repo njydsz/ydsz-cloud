@@ -327,7 +327,9 @@ public final class RuleDslParser {
     if (canaryCondsObj instanceof List<?> cl) {
       List<String> conds = new ArrayList<>();
       for (Object c : cl) {
-        if (c != null) conds.add(String.valueOf(c));
+        if (c != null) {
+          conds.add(String.valueOf(c));
+        }
       }
       b.canaryConditions(conds);
     }
@@ -337,7 +339,9 @@ public final class RuleDslParser {
   private static List<RuleDslEntry.FactorDsl> parseFactors(List<?> factorsList) {
     List<RuleDslEntry.FactorDsl> result = new ArrayList<>(factorsList.size());
     for (Object item : factorsList) {
-      if (!(item instanceof Map<?, ?> map)) continue;
+      if (!(item instanceof Map<?, ?> map)) {
+        continue;
+      }
       Map<String, Object> fm = asStringMap(map);
       result.add(
           RuleDslEntry.FactorDsl.builder()
@@ -354,7 +358,9 @@ public final class RuleDslParser {
   private static List<RuleDslEntry.GradeDsl> parseGrades(List<?> gradesList) {
     List<RuleDslEntry.GradeDsl> result = new ArrayList<>(gradesList.size());
     for (Object item : gradesList) {
-      if (!(item instanceof Map<?, ?> map)) continue;
+      if (!(item instanceof Map<?, ?> map)) {
+        continue;
+      }
       Map<String, Object> gm = asStringMap(map);
       List<Double> range = null;
       Object rangeObj = gm.get("range");
@@ -387,7 +393,9 @@ public final class RuleDslParser {
     if (stepsObj instanceof List<?> sl) {
       List<String> steps = new ArrayList<>(sl.size());
       for (Object s : sl) {
-        if (s != null) steps.add(String.valueOf(s));
+        if (s != null) {
+          steps.add(String.valueOf(s));
+        }
       }
       b.steps(steps);
     }
@@ -527,7 +535,9 @@ public final class RuleDslParser {
   }
 
   private static List<Map<String, Object>> asListOfMaps(Object obj) {
-    if (!(obj instanceof List<?> list)) return null;
+    if (!(obj instanceof List<?> list)) {
+      return null;
+    }
     List<Map<String, Object>> result = new ArrayList<>(list.size());
     for (Object item : list) {
       if (item instanceof Map<?, ?> m) {
@@ -547,8 +557,12 @@ public final class RuleDslParser {
   }
 
   private static int intOrDefault(Object obj, int def) {
-    if (obj == null) return def;
-    if (obj instanceof Number n) return n.intValue();
+    if (obj == null) {
+      return def;
+    }
+    if (obj instanceof Number n) {
+      return n.intValue();
+    }
     try {
       return Integer.parseInt(String.valueOf(obj));
     } catch (NumberFormatException e) {
@@ -557,14 +571,22 @@ public final class RuleDslParser {
   }
 
   private static boolean boolOrDefault(Object obj, boolean def) {
-    if (obj == null) return def;
-    if (obj instanceof Boolean b) return b;
+    if (obj == null) {
+      return def;
+    }
+    if (obj instanceof Boolean b) {
+      return b;
+    }
     return Boolean.parseBoolean(String.valueOf(obj));
   }
 
   private static Double asDouble(Object obj) {
-    if (obj == null) return null;
-    if (obj instanceof Number n) return n.doubleValue();
+    if (obj == null) {
+      return null;
+    }
+    if (obj instanceof Number n) {
+      return n.doubleValue();
+    }
     try {
       return Double.parseDouble(String.valueOf(obj));
     } catch (NumberFormatException e) {

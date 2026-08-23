@@ -84,6 +84,7 @@ public class RuleLifecycleController {
    * @param request 请求体，包含 targetStatus/comment
    * @param operator 操作人
    * @return 操作结果
+      * @param dto 参数说明
    */
   @Idempotent(key = "ruleAdmin:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -144,6 +145,7 @@ public class RuleLifecycleController {
    * @param request 请求体，包含 comment（审批意见）
    * @param operator 审批人
    * @return 审批后的规则定义
+      * @param dto 参数说明
    */
   @Idempotent(key = "ruleAdmin:approve", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -201,6 +203,7 @@ public class RuleLifecycleController {
    * @param request 请求体，包含 reason（驳回理由，必填）
    * @param operator 审批人
    * @return 驳回后的规则定义
+      * @param dto 参数说明
    */
   @Idempotent(key = "ruleAdmin:reject", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(

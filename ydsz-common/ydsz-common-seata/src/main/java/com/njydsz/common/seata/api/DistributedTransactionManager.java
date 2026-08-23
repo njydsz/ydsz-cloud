@@ -47,9 +47,9 @@ public interface DistributedTransactionManager {
    * @param action 业务操作
    * @param <T> 返回值类型
    * @return 业务操作返回值
-   * @throws Exception 事务执行异常
+   * @throws Throwable 事务执行异常
    */
-  <T> T execute(String transactionName, TransactionType type, Callable<T> action) throws Exception;
+  <T> T execute(String transactionName, TransactionType type, Callable<T> action) throws Throwable;
 
   /**
    * 执行分布式事务（带补偿动作）
@@ -59,10 +59,10 @@ public interface DistributedTransactionManager {
    * @param compensation 补偿操作
    * @param <T> 返回值类型
    * @return 业务操作返回值
-   * @throws Exception 事务执行异常
+   * @throws Throwable 事务执行异常
    */
   <T> T executeWithCompensation(String transactionName, Callable<T> action, Runnable compensation)
-      throws Exception;
+      throws Throwable;
 
   /**
    * 获取当前事务类型

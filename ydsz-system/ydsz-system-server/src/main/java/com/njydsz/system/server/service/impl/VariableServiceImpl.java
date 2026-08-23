@@ -1,5 +1,4 @@
 package com.njydsz.system.server.service.impl;
-
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,26 +20,29 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
-import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
-import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.query.VariablePageQuery;
-import com.njydsz.system.domain.vo.ImportResult;
-import com.njydsz.system.server.vo.VariableExcelVO;
-import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.domain.repository.VariableRepository;
+import com.njydsz.system.domain.vo.ImportResult;
+import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.service.VariableService;
 import com.njydsz.system.server.service.rollback.VariableRollbackStrategy;
 import com.njydsz.system.server.util.SystemVersionUtils;
+import com.njydsz.system.server.vo.VariableExcelVO;
+
+
+
 
 /**
  * 系统变量 Service 实现
@@ -225,7 +227,6 @@ public class VariableServiceImpl implements VariableService {
    *   <li>精准失效该 {@code variableKey} 对应的缓存
    * </ol>
    *
-   * @param vo 变量数据
    * @return 新创建的变量 ID
    */
   @Override
@@ -256,7 +257,6 @@ public class VariableServiceImpl implements VariableService {
    *
    * <p><b>注意：</b>更新 {@code variableKey} 会导致所有依赖该键的下游缓存失效， 调用方需主动清理相关业务缓存。
    *
-   * @param dto 变量数据（命令入参，需包含 {@code id}）
    * @return true=更新成功，false=记录不存在
    */
   @Override
@@ -525,7 +525,6 @@ public class VariableServiceImpl implements VariableService {
   /**
    * 变量 VO 转 Excel VO（私有）。
    *
-   * @param vo 变量 VO
    * @return Excel VO
    */
   private VariableExcelVO toExcelVO(VariableVO vo) {
@@ -568,7 +567,6 @@ public class VariableServiceImpl implements VariableService {
   /**
    * 将 VariableVO 转换为 VariableDTO（避免 server 层依赖 infra 的 SystemConverter）。
    *
-   * @param vo 变量 VO
    * @return 变量 DTO
    */
   private VariableDTO toDto(VariableVO vo) {

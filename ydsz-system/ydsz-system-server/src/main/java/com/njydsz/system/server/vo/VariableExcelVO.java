@@ -1,9 +1,10 @@
 package com.njydsz.system.server.vo;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import com.njydsz.common.excel.annotation.ExcelProperty;
+
+
 
 /**
  * 系统变量 Excel 导入导出 VO

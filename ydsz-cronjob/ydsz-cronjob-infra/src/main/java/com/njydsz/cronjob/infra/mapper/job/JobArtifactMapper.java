@@ -38,7 +38,12 @@ import com.njydsz.cronjob.infra.entity.job.JobArtifact;
 @Mapper
 public interface JobArtifactMapper extends BaseMapper<JobArtifact> {
 
-  /** 按日志 ID 查询产物列表。 */
+  /**
+   * 按日志 ID 查询产物列表。
+   *
+   * @param logId 参数说明
+   * @return 返回值说明
+   */
   @Select(
       "SELECT id, job_id, log_id, job_key, artifact_name, artifact_type, storage_path, "
           + "       size_bytes, content_type, metadata, expire_at, created_at, deleted "
@@ -47,7 +52,13 @@ public interface JobArtifactMapper extends BaseMapper<JobArtifact> {
           + "ORDER BY created_at DESC")
   List<JobArtifact> selectByLogId(@Param("logId") String logId);
 
-  /** 清理过期产物（硬删除）。 */
+  /**
+   * 清理过期产物（硬删除）。
+   *
+   * @param before 参数说明
+   * @param limit 参数说明
+   * @return 返回值说明
+   */
   @Delete(
       "DELETE FROM ydsz_job_artifact WHERE expire_at IS NOT NULL AND expire_at < #{before} LIMIT #{limit}")
   int cleanExpired(@Param("before") LocalDateTime before, @Param("limit") int limit);

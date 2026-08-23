@@ -71,17 +71,29 @@ public class KafkaQueueProperties extends QueueProperties {
   /** 消息值反序列化器 */
   private String valueDeserializer = "org.apache.kafka.common.serialization.StringDeserializer";
 
-  /** 解析获取 bootstrap-servers */
+  /**
+   * 解析获取 bootstrap-servers。
+   *
+   * @return bootstrap 服务器地址（未配置时默认 {@code "localhost:9092"}）
+   */
   public String resolvedBootstrapServers() {
     return isNotBlank(bootstrapServers) ? bootstrapServers : "localhost:9092";
   }
 
-  /** 解析获取 group-id */
+  /**
+   * 解析获取 group-id。
+   *
+   * @return 消费者组 ID（未配置时默认 {@code "ydsz-consumer-group"}）
+   */
   public String resolvedGroupId() {
     return isNotBlank(groupId) ? groupId : "ydsz-consumer-group";
   }
 
-  /** 解析获取 topic */
+  /**
+   * 解析获取 topic。
+   *
+   * @return topic 名称（未配置时默认 {@code "ydsz-kafka-topic"}）
+   */
   public String resolvedTopic() {
     return isNotBlank(topic) ? topic : "ydsz-kafka-topic";
   }

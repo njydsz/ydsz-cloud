@@ -37,17 +37,36 @@ import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 @Mapper
 public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
 
-  /** 根据 flowCode + version 查最新已发布版本 */
+  /**
+   * 根据 flowCode + version 查最新已发布版本
+   *
+   * @param flowCode 参数说明
+   * @param version 参数说明
+   * @param tenantId 参数说明
+   * @return 返回值说明
+   */
   FlowDefinitionDO selectPublished(
       @Param("flowCode") String flowCode,
       @Param("version") String version,
       @Param("tenantId") String tenantId);
 
-  /** 根据 flowCode 查最新版本（不区分发布状态） */
+  /**
+   * 根据 flowCode 查最新版本（不区分发布状态）
+   *
+   * @param flowCode 参数说明
+   * @param tenantId 参数说明
+   * @return 返回值说明
+   */
   FlowDefinitionDO selectLatestByCode(
       @Param("flowCode") String flowCode, @Param("tenantId") String tenantId);
 
-  /** 发布（更新 is_publish） */
+  /**
+   * 发布（更新 is_publish）
+   *
+   * @param id 参数说明
+   * @param isPublish 参数说明
+   * @return 返回值说明
+   */
   int publish(@Param("id") String id, @Param("isPublish") Integer isPublish);
 
   /**

@@ -1,5 +1,4 @@
 package com.njydsz.system.server.service.impl;
-
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -12,9 +11,12 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.dto.TenantDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.TenantPageQuery;
-import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.domain.repository.TenantRepository;
+import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.server.service.TenantService;
+
+
+
 
 /**
  * 租户 Service 实现

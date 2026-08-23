@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.server.core.dispatch;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -58,10 +59,22 @@ import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 @Component
 @RequiredArgsConstructor
 public class WebhookEventDispatcher {
+  /** HTTP 成功状态码下限 */
+  private static final int HTTP_OK_MIN = 200;
+
+  /** HTTP 成功状态码上限（不含） */
+  private static final int HTTP_OK_MAX_EXCLUSIVE = 300;
+
+  /** 响应体日志截断长度 */
+  private static final int BODY_LOG_MAX_LENGTH = 200;
+
+  /** 连接超时：5 秒 */
+  private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
+
 
   private final JobWebhookRepository jobWebhookRepository;
   private final HttpClient httpClient =
-      HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
+      HttpClient.newBuilder().connectTimeout(CONNECT_TIMEOUT).build();
 
   /**
    * 推送 WebHook 事件。
@@ -173,7 +186,7 @@ public class WebhookEventDispatcher {
   }
 
   /** 单次 HTTP 推送（IOException/InterruptedException 由调用方 sendWebhookWithRetry 捕获）。 */
-  private boolean doSend(JobWebhookVO webhook, ObjectNode body) throws java.io.IOException, InterruptedException {
+  private boolean doSend(JobWebhookVO webhook, ObjectNode body) throws IOException, InterruptedException {
     String method = webhook.getHttpMethod() != null ? webhook.getHttpMethod() : "POST";
     HttpRequest.Builder builder =
         HttpRequest.newBuilder()
@@ -202,7 +215,7 @@ public class WebhookEventDispatcher {
     HttpResponse<String> response =
         httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-    if (response.statusCode() >= 200 && response.statusCode() < 300) {
+    if (response.statusCode() >= HTTP_OK_MIN && response.statusCode() < HTTP_OK_MAX_EXCLUSIVE) {
       return true;
     }
     log.warn(
@@ -212,7 +225,7 @@ public class WebhookEventDispatcher {
         response.statusCode(),
         response.body() == null
             ? ""
-            : response.body().substring(0, Math.min(200, response.body().length())));
+            : response.body().substring(0, Math.min(BODY_LOG_MAX_LENGTH, response.body().length())));
     return false;
   }
 

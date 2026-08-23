@@ -35,10 +35,10 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  * <p><b>风险等级：</b>
  *
  * <ul>
- *   <li}SAFE（0-30）：正常登录，无需额外验证
- *   <li}MEDIUM（31-60）：可疑登录，建议触发验证码
- *   <li}HIGH（61-80）：高风险登录，强制触发 MFA
- *   <li}CRITICAL（81-100）：极高风险，拒绝登录
+ *   <li>SAFE（0-30）：正常登录，无需额外验证
+ *   <li>MEDIUM（31-60）：可疑登录，建议触发验证码
+ *   <li>HIGH（61-80）：高风险登录，强制触发 MFA
+ *   <li>CRITICAL（81-100）：极高风险，拒绝登录
  * </ul>
  *
  * @author ydsz-team
@@ -48,6 +48,9 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 @Service
 @RequiredArgsConstructor
 public class RiskScoringService {
+  /** 风险因子集合初始容量 */
+  private static final int FACTORS_INITIAL_CAPACITY = 4;
+
 
   /** 风险等级：安全阈值 */
   private static final int SAFE_THRESHOLD = 30;
@@ -79,7 +82,7 @@ public class RiskScoringService {
       String userAgent,
       int recentFailCount,
       boolean isNewDevice) {
-    List<String> factors = new ArrayList<>(4);
+    List<String> factors = new ArrayList<>(FACTORS_INITIAL_CAPACITY);
 
     // P1-1: 权重与阈值全部从配置读取（默认值与历史一致，保证行为不变）
     int ipWeight = properties.getRiskIpWeight();
@@ -123,31 +126,24 @@ public class RiskScoringService {
    * <p>在基础风险评分上增加地理围栏维度：当本次登录地与上次登录地距离超过阈值时，
    * 增加 {@code geoIpProperties.riskScoreAnomaly} 分的风险评分。
    *
-   * @param username        用户名
-   * @param loginIp         登录 IP
-   * @param userAgent       用户代理
-   * @param recentFailCount 最近失败次数
-   * @param isNewDevice     是否新设备
-   * @param lastLoginIp     上次登录 IP（可为 null）
+   * @param command 风险评估参数
    * @return 风险评分结果
    */
-  public RiskScore evaluateRiskWithGeo(
-      String username,
-      String loginIp,
-      String userAgent,
-      int recentFailCount,
-      boolean isNewDevice,
-      String lastLoginIp) {
+  public RiskScore evaluateRiskWithGeo(RiskEvaluateCommand command) {
 
     // 先执行基础评分
-    RiskScore baseScore = evaluateRisk(username, loginIp, userAgent, recentFailCount, isNewDevice);
+    RiskScore baseScore = evaluateRisk(
+        command.username(), command.loginIp(), command.userAgent(),
+        command.recentFailCount(), command.isNewDevice());
 
     // P3-3: 地理围栏检测
-    if (!geoIpProperties.isEnabled() || lastLoginIp == null || lastLoginIp.isBlank()) {
+    if (!geoIpProperties.isEnabled()
+        || command.lastLoginIp() == null || command.lastLoginIp().isBlank()) {
       return baseScore;
     }
 
-    GeoIpService.GeoFenceResult geoResult = geoIpService.detectAnomaly(loginIp, lastLoginIp);
+    GeoIpService.GeoFenceResult geoResult =
+        geoIpService.detectAnomaly(command.loginIp(), command.lastLoginIp());
     if (geoResult.isAnomaly()) {
       int geoAddition = geoResult.getRiskScoreAddition(geoIpProperties.getRiskScoreAnomaly());
       int newScore = Math.min(baseScore.score() + geoAddition, 100);
@@ -157,7 +153,7 @@ public class RiskScoringService {
       newFactors.add("地理异常(" + geoAddition + "): " + geoResult.getDescription());
 
       log.warn("地理围栏告警: username={}, currentIp={}, lastIp={}, reason={}",
-          username, loginIp, lastLoginIp, geoResult.getDescription());
+          command.username(), command.loginIp(), command.lastLoginIp(), geoResult.getDescription());
 
       return new RiskScore(newScore, newLevel, newFactors);
     }

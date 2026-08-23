@@ -102,6 +102,9 @@ public class SelfMonitorAutoConfiguration {
      * <p>整个方法用 try-catch 兜底并只打 debug 日志：自监控失败绝不能影响业务， 也不能因为反复打印 error 日志形成新的噪音源。
      */
     @Scheduled(fixedRate = 15000)
+    /**
+     * report self metrics。
+     */
     public void reportSelfMetrics() {
       try {
         reportMetricsAvailability();

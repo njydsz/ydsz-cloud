@@ -29,13 +29,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class FlowAssigneeExpressionResolver {
 
+    /** 三元表达式正则捕获组：false 分支值 */
+  private static final int TERNARY_GROUP_FALSE = 3;
+
   private final FlowVariableReplacer variableReplacer;
 
   /**
    * 构造注入变量替换器
+   * 
    *
-   * @param variableReplacer 变量替换器
-   */
+   * @param variableReplacer 参数说明   */
   public FlowAssigneeExpressionResolver(FlowVariableReplacer variableReplacer) {
     this.variableReplacer = variableReplacer;
   }
@@ -64,7 +67,7 @@ public class FlowAssigneeExpressionResolver {
     if (ternary.matches()) {
       String cond = ternary.group(1).trim();
       String trueVal = ternary.group(2).trim();
-      String falseVal = ternary.group(3).trim();
+      String falseVal = ternary.group(TERNARY_GROUP_FALSE).trim();
       boolean condResult = evaluator.apply(cond, variables);
       String chosen = condResult ? trueVal : falseVal;
       return resolveLiteral(chosen, variables);

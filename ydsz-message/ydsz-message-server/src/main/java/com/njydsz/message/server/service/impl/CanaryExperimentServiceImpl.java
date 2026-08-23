@@ -3,14 +3,12 @@ package com.njydsz.message.server.service.impl;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.dto.MsgCanaryDTO;
-import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgCanaryRepository;
 import com.njydsz.message.domain.vo.MsgCanaryVO;
 import com.njydsz.message.server.service.config.CanaryExperimentService;
@@ -45,6 +43,9 @@ import com.njydsz.message.server.service.config.CanaryExperimentService;
 @Service
 @RequiredArgsConstructor
 public class CanaryExperimentServiceImpl implements CanaryExperimentService {
+  /** 哈希乘子 */
+  private static final int HASH_MULTIPLIER = 31;
+
 
   /** 灰度实验 Repository */
   private final MsgCanaryRepository msgCanaryRepository;
@@ -69,7 +70,8 @@ public class CanaryExperimentServiceImpl implements CanaryExperimentService {
    *
    * <p>根据模板编码、灰度配置和实验参数创建一个新的灰度实验。实验创建后状态为 ACTIVE， 可立即接收流量分桶。
    *
-   * <p>canaryKey 格式：{@code canary_{templateCode}_{timestamp}}，保证全局唯一。 bucketSelected 按百分比自动计算（canaryPercent% * bucketTotal / 100）， 最大不超过 bucketTotal。
+   * <p>canaryKey 格式：{@code canary_{templateCode}_{timestamp}}，保证全局唯一。
+   * bucketSelected 按百分比自动计算（canaryPercent% * bucketTotal / 100）， 最大不超过 bucketTotal。
    *
    * @param templateCode 模板编码（不可为空）
    * @param experimentName 实验名称（不可为空）
@@ -182,7 +184,7 @@ public class CanaryExperimentServiceImpl implements CanaryExperimentService {
     byte[] bytes = requestKey.getBytes(StandardCharsets.UTF_8);
     int hash = 1;
     for (byte b : bytes) {
-      hash = 31 * hash + b;
+      hash = HASH_MULTIPLIER * hash + b;
     }
     return Math.abs(hash);
   }

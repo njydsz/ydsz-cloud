@@ -1,15 +1,13 @@
 package com.njydsz.userinfo.server.auth;
 
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.HexFormat;
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -56,6 +54,12 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 @Service
 @RequiredArgsConstructor
 public class RememberMeService {
+  /** 每天的秒数（1 天 = 86400 秒） */
+  private static final int SECONDS_PER_DAY = 86400;
+
+  /** AES 密钥字节长度（256 位） */
+  private static final int AES_KEY_LENGTH = 32;
+
 
   /** Remember-Me 审计信息 Redis Key 前缀 */
   private static final String REMEMBER_ME_KEY_PREFIX = "userinfo:remember-me:";
@@ -207,32 +211,61 @@ public class RememberMeService {
     String firstLoginTimeStr = redisHashOps.hGet(auditKey, FIELD_FIRST_LOGIN_TIME, String.class);
 
     long now = Instant.now().getEpochSecond();
-    // 检查滑动窗口
-    if (lastExtendTimeStr != null && !lastExtendTimeStr.isBlank()) {
-      try {
-        long lastExtendTime = Long.parseLong(lastExtendTimeStr);
-        if (now - lastExtendTime < rememberMeProperties.getSlidingWindowSeconds()) {
-          return false;
-        }
-      } catch (NumberFormatException e) {
-        log.warn("Invalid lastExtendTime format for userId={}", userId);
-      }
+    if (isWithinSlidingWindow(now, lastExtendTimeStr, userId)) {
+      return false;
     }
-    // 检查最大续期天数
-    if (firstLoginTimeStr != null && !firstLoginTimeStr.isBlank()) {
-      try {
-        long firstLoginTime = Long.parseLong(firstLoginTimeStr);
-        long maxExtendSeconds = (long) rememberMeProperties.getMaxExtendDays() * 86400;
-        if (now - firstLoginTime >= maxExtendSeconds) {
-          log.info("Remember-Me max extend days reached for userId={}, firstLoginTime={}",
-              userId, firstLoginTime);
-          return false;
-        }
-      } catch (NumberFormatException e) {
-        log.warn("Invalid firstLoginTime format for userId={}", userId);
-      }
+    if (isMaxExtendReached(now, firstLoginTimeStr, userId)) {
+      return false;
     }
     return true;
+  }
+
+  /**
+   * 检查是否仍处于滑动续期窗口内。
+   *
+   * @param now 当前时间（秒）
+   * @param lastExtendTimeStr 上次续期时间字符串（可为 null）
+   * @param userId 用户 ID（日志用）
+   * @return true 表示仍在窗口内，无需续期
+   */
+  private boolean isWithinSlidingWindow(long now, String lastExtendTimeStr, String userId) {
+    if (lastExtendTimeStr == null || lastExtendTimeStr.isBlank()) {
+      return false;
+    }
+    try {
+      long lastExtendTime = Long.parseLong(lastExtendTimeStr);
+      return now - lastExtendTime < rememberMeProperties.getSlidingWindowSeconds();
+    } catch (NumberFormatException e) {
+      log.warn("Invalid lastExtendTime format for userId={}", userId);
+      return false;
+    }
+  }
+
+  /**
+   * 检查是否已达到最大续期天数。
+   *
+   * @param now 当前时间（秒）
+   * @param firstLoginTimeStr 首次登录时间字符串（可为 null）
+   * @param userId 用户 ID（日志用）
+   * @return true 表示已超过最大续期期限
+   */
+  private boolean isMaxExtendReached(long now, String firstLoginTimeStr, String userId) {
+    if (firstLoginTimeStr == null || firstLoginTimeStr.isBlank()) {
+      return false;
+    }
+    try {
+      long firstLoginTime = Long.parseLong(firstLoginTimeStr);
+      long maxExtendSeconds = (long) rememberMeProperties.getMaxExtendDays() * SECONDS_PER_DAY;
+      if (now - firstLoginTime >= maxExtendSeconds) {
+        log.info("Remember-Me max extend days reached for userId={}, firstLoginTime={}",
+            userId, firstLoginTime);
+        return true;
+      }
+      return false;
+    } catch (NumberFormatException e) {
+      log.warn("Invalid firstLoginTime format for userId={}", userId);
+      return false;
+    }
   }
 
   /**
@@ -387,8 +420,8 @@ public class RememberMeService {
       String seed = rememberMeProperties.getCookieName() + ":ydsz-remember-me-aes-key";
       byte[] hash = digest.digest(seed.getBytes(StandardCharsets.UTF_8));
       // 取前 32 字节（256 位）作为 AES 密钥
-      byte[] key = new byte[32];
-      System.arraycopy(hash, 0, key, 0, 32);
+      byte[] key = new byte[AES_KEY_LENGTH];
+      System.arraycopy(hash, 0, key, 0, AES_KEY_LENGTH);
       return key;
     } catch (NoSuchAlgorithmException e) {
       throw new IllegalStateException("SHA-256 algorithm not available", e);

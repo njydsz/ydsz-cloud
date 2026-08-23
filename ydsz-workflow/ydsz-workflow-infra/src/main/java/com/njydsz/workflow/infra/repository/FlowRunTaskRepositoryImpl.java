@@ -8,10 +8,11 @@ import java.util.Optional;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
-import com.njydsz.workflow.domain.query.FlowTaskQuery;
-import com.njydsz.workflow.domain.dto.FlowTaskQueryDTO;
 import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
+import com.njydsz.workflow.domain.dto.FlowTaskQueryDTO;
+import com.njydsz.workflow.domain.query.FlowTaskQuery;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
@@ -214,7 +215,12 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
     return findByCondition(convertToQuery(condition));
   }
 
-  /** 将旧的 FlowTaskQueryDTO 转换为新的 FlowTaskQuery */
+  /**
+   * 将旧的 FlowTaskQueryDTO 转换为新的 FlowTaskQuery
+   *
+   * @param dto 参数说明
+   * @return 返回值说明
+   */
   private FlowTaskQuery convertToQuery(FlowTaskQueryDTO dto) {
     FlowTaskQuery query = new FlowTaskQuery();
     query.setTenantId(dto.getTenantId());
@@ -414,8 +420,8 @@ public List<FlowRunTaskVO> findPendingTasksByAssignee(String assigneeId) {
                 .eq(FlowRunTaskDO::getAssigneeId, assigneeId)
                 .eq(FlowRunTaskDO::getDeleted, 0)
                 .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
-                .eq(org.springframework.util.StringUtils.hasText(flowCode), FlowRunTaskDO::getFlowCode, flowCode)
-                .eq(org.springframework.util.StringUtils.hasText(tenantId), FlowRunTaskDO::getTenantId, tenantId)));
+                .eq(StringUtils.hasText(flowCode), FlowRunTaskDO::getFlowCode, flowCode)
+                .eq(StringUtils.hasText(tenantId), FlowRunTaskDO::getTenantId, tenantId)));
   }
 
   @Override
@@ -438,6 +444,6 @@ public List<FlowRunTaskVO> findPendingTasksByAssignee(String assigneeId) {
             .eq(FlowRunTaskDO::getTenantId, tenantId)
             .eq(FlowRunTaskDO::getDeleted, 0)
             .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
-            .lt(FlowRunTaskDO::getDueAt, java.time.LocalDateTime.now()));
+            .lt(FlowRunTaskDO::getDueAt, LocalDateTime.now()));
   }
 }

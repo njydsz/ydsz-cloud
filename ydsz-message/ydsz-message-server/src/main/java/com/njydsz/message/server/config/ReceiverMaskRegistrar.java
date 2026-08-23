@@ -31,6 +31,9 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
 @Slf4j
 @Component
 public class ReceiverMaskRegistrar {
+  /** 掩码最小长度 */
+  private static final int MASK_MIN_LENGTH = 4;
+
 
   /** 11 位手机号正则 */
   private static final Pattern PHONE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");
@@ -62,7 +65,7 @@ public class ReceiverMaskRegistrar {
       return SensitiveUtil.maskEmail(value);
     }
     // 其它形态（用户 ID / openId）：保留前 2 后 2，中间 ***
-    if (value.length() <= 4) {
+    if (value.length() <= MASK_MIN_LENGTH) {
       return "****";
     }
     return value.substring(0, 2) + "***" + value.substring(value.length() - 2);

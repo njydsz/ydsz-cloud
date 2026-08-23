@@ -80,20 +80,28 @@ public class RuleDecisionTableController {
   /** Excel Web 导出支持（统一 HTTP 下载入口） */
   private final ExcelWebSupport excelWebSupport;
 
-  /** 查询全部决策表 */
+  /** 查询全部决策表
+   * @return 返回值说明
+   */
   @GetMapping("/decision-tables")
   public YdszResponse<List<DecisionTableVO>> listDecisionTables() {
     return YdszResponse.success(decisionTableRepository.findAll());
   }
 
-  /** 查询单条决策表 */
+  /** 查询单条决策表
+   * @param tableCode 参数说明
+      * @return 返回值说明
+   */
   @GetMapping("/decision-tables/{tableCode}")
   public YdszResponse<DecisionTableVO> getDecisionTable(@PathVariable String tableCode) {
     Optional<DecisionTableVO> result = decisionTableRepository.findByTableCode(tableCode);
     return YdszResponse.success(result.orElse(null));
   }
 
-  /** 保存决策表 */
+  /** 保存决策表
+   * @param dto 参数说明
+      * @return 返回值说明
+   */
   @Idempotent(key = "ruleAdmin:saveDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
       module = "规则管理",
@@ -107,7 +115,10 @@ public class RuleDecisionTableController {
     return YdszResponse.success(decisionTableRepository.save(dto));
   }
 
-  /** 删除决策表 */
+  /** 删除决策表
+   * @param id 参数说明
+      * @return 返回值说明
+   */
   @Idempotent(key = "ruleAdmin:deleteDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
       module = "规则管理",
@@ -156,6 +167,7 @@ public class RuleDecisionTableController {
    * @param tableCode 决策表编码
    * @return xlsx 文件流（Content-Type:
    *     application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）
+      * @param response 参数说明
    */
   @GetMapping("/decision-tables/{tableCode}/export-excel")
   @AuthApiPermission(apiCodes = "execution:rule:view")
@@ -221,6 +233,7 @@ public class RuleDecisionTableController {
    * <p>返回预填充列结构的 .xlsx 模板，用户填写后通过 /import-excel 上传。
    *
    * @return xlsx 模板文件流
+      * @param response 参数说明
    */
   @GetMapping("/decision-tables/excel-template")
   @AuthApiPermission(apiCodes = "execution:rule:view")

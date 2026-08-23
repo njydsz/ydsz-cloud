@@ -20,6 +20,10 @@ public class SystemResourceHealthIndicator implements HealthIndicator {
   private final SystemMetricsCollector systemMetricsCollector;
 
   @Override
+  /**
+   * health。
+   * @return 结果
+   */
   public Health health() {
     try {
       Runtime runtime = Runtime.getRuntime();

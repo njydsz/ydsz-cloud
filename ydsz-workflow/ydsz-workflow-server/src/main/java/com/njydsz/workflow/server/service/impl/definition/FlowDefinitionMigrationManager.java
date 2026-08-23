@@ -8,6 +8,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
@@ -23,11 +28,6 @@ import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowSkipDO;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 /**
  * 流程定义迁移管理器
@@ -395,7 +395,12 @@ public class FlowDefinitionMigrationManager {
     return result;
   }
 
-  /** 根据 definitionId 查询流程定义，不存在则抛出 NOT_FOUND。 */
+  /**
+   * 根据 definitionId 查询流程定义，不存在则抛出 NOT_FOUND。
+   *
+   * @param definitionId 参数说明
+   * @return 返回值说明
+   */
   private FlowDefinitionDO findDefinitionOrThrow(String definitionId) {
     FlowDefinitionDO def = definitionRepository.findById(definitionId)
         .map(converter::entityToDO)
@@ -409,7 +414,13 @@ public class FlowDefinitionMigrationManager {
     return def;
   }
 
-  /** 根据 flowCode + 版本号查找定义版本，不存在则抛出 NOT_FOUND。 */
+  /**
+   * 根据 flowCode + 版本号查找定义版本，不存在则抛出 NOT_FOUND。
+   *
+   * @param flowCode 参数说明
+   * @param version 参数说明
+   * @return 返回值说明
+   */
   private FlowDefinitionDO findVersionOrThrow(String flowCode, Integer version) {
     String versionStr = String.valueOf(version);
     FlowDefinitionDO def = definitionRepository.findByFlowCode(flowCode).stream()
@@ -442,7 +453,13 @@ public class FlowDefinitionMigrationManager {
     }
   }
 
-  /** 加载两个版本的节点和连线数据，返回差异上下文。 */
+  /**
+   * 加载两个版本的节点和连线数据，返回差异上下文。
+   *
+   * @param defV1 参数说明
+   * @param defV2 参数说明
+   * @return 返回值说明
+   */
   private VersionDiffContext loadVersionContext(FlowDefinitionDO defV1, FlowDefinitionDO defV2) {
     List<FlowNodeDO> nodesV1 = nodeRepository.findByDefinitionId(defV1.getId()).stream()
         .map(converter::entityToDO).toList();
@@ -521,7 +538,14 @@ public class FlowDefinitionMigrationManager {
     return changes;
   }
 
-  /** 比较单字段，different 时放入 changes Map。 */
+  /**
+   * 比较单字段，different 时放入 changes Map。
+   *
+   * @param changes 参数说明
+   * @param fieldName 参数说明
+   * @param oldVal 参数说明
+   * @param newVal 参数说明
+   */
   private void compareField(Map<String, Map<String, Object>> changes,
       String fieldName, String oldVal, String newVal) {
     if (!Objects.equals(oldVal, newVal)) {
@@ -581,7 +605,15 @@ public class FlowDefinitionMigrationManager {
     return result;
   }
 
-  /** 输出版本差异对比日志。 */
+  /**
+   * 输出版本差异对比日志。
+   *
+   * @param flowCode 参数说明
+   * @param version1 参数说明
+   * @param version2 参数说明
+   * @param nodeDiff 参数说明
+   * @param skipDiff 参数说明
+   */
   @SuppressWarnings("unchecked")
   private void logDiffResult(String flowCode, Integer version1, Integer version2,
       Map<String, Object> nodeDiff, Map<String, Object> skipDiff) {
@@ -612,7 +644,12 @@ public class FlowDefinitionMigrationManager {
     return map;
   }
 
-  /** 从 ext JSON 中提取 sourceRef，拼接 key */
+  /**
+   * 从 ext JSON 中提取 sourceRef，拼接 key
+   *
+   * @param skip 参数说明
+   * @return 返回值说明
+   */
   private String buildSkipKey(FlowSkipDO skip) {
     String sourceRef = null;
     if (StringUtils.hasText(skip.getExt())) {
@@ -649,7 +686,12 @@ public class FlowDefinitionMigrationManager {
     return map;
   }
 
-  /** 解析版本号字符串为整数 */
+  /**
+   * 解析版本号字符串为整数
+   *
+   * @param versionStr 参数说明
+   * @return 返回值说明
+   */
   private Integer parseVersionInt(String versionStr) {
     if (!StringUtils.hasText(versionStr)) {
       return 0;
@@ -663,7 +705,17 @@ public class FlowDefinitionMigrationManager {
     }
   }
 
-  /** 根据风险等级和影响范围生成迁移建议 */
+  /**
+   * 根据风险等级和影响范围生成迁移建议
+   *
+   * @param riskLevel 参数说明
+   * @param runningTotal 参数说明
+   * @param stuckInstances 参数说明
+   * @param affectedInstances 参数说明
+   * @param removedNodes 参数说明
+   * @param modifiedNodes 参数说明
+   * @return 返回值说明
+   */
   private List<String> buildRecommendations(
       String riskLevel,
       long runningTotal,

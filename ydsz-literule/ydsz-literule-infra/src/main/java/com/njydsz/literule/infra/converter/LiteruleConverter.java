@@ -13,17 +13,6 @@ import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
 import com.njydsz.literule.domain.dto.post.RuleTestCasePostDTO;
 import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
 import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
-import com.njydsz.literule.infra.entity.DecisionTableDO;
-import com.njydsz.literule.infra.entity.RuleABPolicyDO;
-import com.njydsz.literule.infra.entity.RuleABRollbackDO;
-import com.njydsz.literule.infra.entity.RuleChainGraphDO;
-import com.njydsz.literule.infra.entity.RuleDefinitionDO;
-import com.njydsz.literule.infra.entity.RuleDependencyDO;
-import com.njydsz.literule.infra.entity.RuleExecutionTraceDO;
-import com.njydsz.literule.infra.entity.RulePackDO;
-import com.njydsz.literule.infra.entity.RuleTemplateDO;
-import com.njydsz.literule.infra.entity.RuleTestCaseDO;
-import com.njydsz.literule.infra.entity.RuleVersionHistoryDO;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
@@ -40,6 +29,17 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.domain.vo.RuleTestCaseVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
+import com.njydsz.literule.infra.entity.DecisionTableDO;
+import com.njydsz.literule.infra.entity.RuleABPolicyDO;
+import com.njydsz.literule.infra.entity.RuleABRollbackDO;
+import com.njydsz.literule.infra.entity.RuleChainGraphDO;
+import com.njydsz.literule.infra.entity.RuleDefinitionDO;
+import com.njydsz.literule.infra.entity.RuleDependencyDO;
+import com.njydsz.literule.infra.entity.RuleExecutionTraceDO;
+import com.njydsz.literule.infra.entity.RulePackDO;
+import com.njydsz.literule.infra.entity.RuleTemplateDO;
+import com.njydsz.literule.infra.entity.RuleTestCaseDO;
+import com.njydsz.literule.infra.entity.RuleVersionHistoryDO;
 
 /**
  * literule 模块统一转换器门面。
@@ -58,6 +58,7 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
  */
 public class LiteruleConverter {
 
+  /** 单例实例（门面转换器） */
   public static final LiteruleConverter INSTANCE = new LiteruleConverter();
 
   private final RuleCoreConverter core = RuleCoreConverter.INSTANCE;

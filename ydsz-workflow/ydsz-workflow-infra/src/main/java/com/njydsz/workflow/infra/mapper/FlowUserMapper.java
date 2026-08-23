@@ -36,24 +36,54 @@ import com.njydsz.workflow.infra.entity.FlowUserDO;
 @Mapper
 public interface FlowUserMapper extends BaseMapper<FlowUserDO> {
 
-  /** 查某 task 的所有用户 */
+  /**
+   * 查某 task 的所有用户
+   *
+   * @param taskId 参数说明
+   * @return 返回值说明
+   */
   List<FlowUserDO> selectByTaskId(@Param("taskId") String taskId);
 
-  /** 标记用户已处理 */
+  /**
+   * 标记用户已处理
+   *
+   * @param taskId 参数说明
+   * @param userId 参数说明
+   * @param comment 参数说明
+   * @param processAt 参数说明
+   * @return 返回值说明
+   */
   int markProcessed(
       @Param("taskId") String taskId,
       @Param("userId") String userId,
       @Param("comment") String comment,
       @Param("processAt") LocalDateTime processAt);
 
-  /** 查某实例某节点未处理的用户（会签场景） */
+  /**
+   * 查某实例某节点未处理的用户（会签场景）
+   *
+   * @param instanceId 参数说明
+   * @param nodeCode 参数说明
+   * @return 返回值说明
+   */
   List<FlowUserDO> selectUnprocessedByInstanceAndNode(
       @Param("instanceId") String instanceId, @Param("nodeCode") String nodeCode);
 
-  /** 查某用户待办关联的任务 ID（通过 ydsz_flow_user 表） */
+  /**
+   * 查某用户待办关联的任务 ID（通过 ydsz_flow_user 表）
+   *
+   * @param userId 参数说明
+   * @param tenantId 参数说明
+   * @return 返回值说明
+   */
   List<Long> selectTaskIdsByUser(
       @Param("userId") String userId, @Param("tenantId") String tenantId);
 
-  /** 批量插入 */
+  /**
+   * 批量插入
+   *
+   * @param list 参数说明
+   * @return 返回值说明
+   */
   int batchInsert(@Param("list") List<FlowUserDO> list);
 }

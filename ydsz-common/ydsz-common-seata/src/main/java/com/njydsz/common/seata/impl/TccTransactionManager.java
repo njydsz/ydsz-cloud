@@ -73,6 +73,8 @@ public class TccTransactionManager extends AbstractTransactionManager
    *
    * @param logStore 事务日志存储
    * @param properties 配置
+   * @param metricsProvider 指标采集提供者（可选）
+   * @param auditProvider 审计日志提供者（可选）
    */
   public TccTransactionManager(
       TccTransactionLogStore logStore,
@@ -127,11 +129,11 @@ public class TccTransactionManager extends AbstractTransactionManager
    * @param action 业务操作
    * @param <T> 返回值类型
    * @return 业务操作返回值
-   * @throws Exception 事务执行异常
+   * @throws Throwable 事务执行异常
    */
   @Override
   public <T> T execute(String transactionName, TransactionType type, Callable<T> action)
-      throws Exception {
+      throws Throwable {
     if (type == TransactionType.TCC && action instanceof TccAction) {
       return executeTcc(transactionName, null, (TccAction<T>) action);
     }
@@ -157,11 +159,11 @@ public class TccTransactionManager extends AbstractTransactionManager
    * @param compensation 补偿操作
    * @param <T> 返回值类型
    * @return 业务操作返回值
-   * @throws Exception 事务执行异常
+   * @throws Throwable 事务执行异常
    */
   @Override
   public <T> T executeWithCompensation(
-      String transactionName, Callable<T> action, Runnable compensation) throws Exception {
+      String transactionName, Callable<T> action, Runnable compensation) throws Throwable {
     String xid = beginXid(transactionName);
     LOG.debug("TCC+SAGA transaction started: name={}, xid={}", transactionName, xid);
     try {
@@ -191,10 +193,10 @@ public class TccTransactionManager extends AbstractTransactionManager
    * @param tccAction TCC 动作
    * @param <T> 返回值类型
    * @return Try 阶段的返回值
-   * @throws Exception 事务异常
+   * @throws Throwable 事务异常
    */
   public <T> T executeTcc(String transactionName, String actionBeanName, TccAction<T> tccAction)
-      throws Exception {
+      throws Throwable {
     String xid = beginXid(transactionName);
     String branchId = generateBranchId();
     TccContext context = new TccContext(xid, branchId);
@@ -251,9 +253,9 @@ public class TccTransactionManager extends AbstractTransactionManager
    * @param tccAction TCC 动作
    * @param <T> 返回值类型
    * @return Try 阶段的返回值
-   * @throws Exception 事务异常
+   * @throws Throwable 事务异常
    */
-  public <T> T executeTcc(String transactionName, TccAction<T> tccAction) throws Exception {
+  public <T> T executeTcc(String transactionName, TccAction<T> tccAction) throws Throwable {
     return executeTcc(transactionName, null, tccAction);
   }
 
@@ -338,7 +340,15 @@ public class TccTransactionManager extends AbstractTransactionManager
     return future.whenComplete((r, ex) -> notifyCallback(callback, context, ex));
   }
 
-  /** 异步执行 TCC 事务（向后兼容，无 Bean 名称版本） */
+  /**
+   * 异步执行 TCC 事务（向后兼容，无 Bean 名称版本）。
+   *
+   * @param transactionName 事务名称
+   * @param tccAction TCC Action
+   * @param callback 完成回调
+   * @param <T> 业务类型
+   * @return 异步结果 Future
+   */
   public <T> CompletableFuture<T> executeTccAsync(
       String transactionName, TccAction<T> tccAction, BiConsumer<TccContext, Throwable> callback) {
     return executeTccAsync(transactionName, null, tccAction, callback);
@@ -444,7 +454,7 @@ public class TccTransactionManager extends AbstractTransactionManager
       TccTransactionLog txLog,
       TccAction<T> tccAction,
       TccContext context)
-      throws Exception {
+      throws Throwable {
     if (logStore != null) {
       Optional<TccTransactionLog> existing = logStore.findByXidAndBranchId(xid, branchId);
       if (existing.isPresent() && existing.get().getStatus() == TccBranchStatus.CONFIRMED) {
@@ -493,7 +503,7 @@ public class TccTransactionManager extends AbstractTransactionManager
       TccTransactionLog txLog,
       TccAction<T> tccAction,
       TccContext context)
-      throws Exception {
+      throws Throwable {
     if (logStore != null) {
       Optional<TccTransactionLog> existing = logStore.findByXidAndBranchId(xid, branchId);
       if (existing.isPresent()) {
@@ -549,10 +559,10 @@ public class TccTransactionManager extends AbstractTransactionManager
    * <p>优先从本地缓存查找 Action，未命中时通过注册表查找。 注册表查找支持跨实例恢复。
    *
    * @param txLog 超时事务日志
-   * @throws Exception Cancel 执行异常
+   * @throws Throwable Cancel 执行异常
    */
   @Override
-  public void recoverCancel(TccTransactionLog txLog) throws Exception {
+  public void recoverCancel(TccTransactionLog txLog) throws Throwable {
     LOG.info("TCC recovery Cancel: xid={}, branch={}", txLog.getXid(), txLog.getBranchId());
 
     TccAction<?> action = resolveAction(txLog);

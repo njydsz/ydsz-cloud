@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.server.config.OidcProperties;
 import com.njydsz.userinfo.web.vo.JwksEndpoint;
 import com.njydsz.userinfo.web.vo.OidcDiscoveryEndpoint;

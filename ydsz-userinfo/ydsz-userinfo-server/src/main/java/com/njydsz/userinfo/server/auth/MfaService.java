@@ -4,7 +4,6 @@ import java.time.Duration;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.auth.util.TotpAuthenticator;
@@ -201,30 +200,45 @@ public class MfaService {
     // readSecret 已自动解密，可直接用于 TOTP 校验
     String secret = readSecret(SECRET_KEY_PREFIX + userId);
     if (secret != null && isMfaEnabled(userId)) {
-      if (mfaCode == null || mfaCode.isBlank()
-          || !TotpAuthenticator.verify(secret, mfaCode)) {
-        throw new BusinessException(UserInfoExceptionCode.MFA_INVALID);
-      }
+      validateTotp(secret, mfaCode);
       return;
     }
     // 未绑定 TOTP：降级短信验证码
     if (user.getPhone() != null && !user.getPhone().isBlank()) {
-      if (mfaCode == null || mfaCode.isBlank()
-          || !verifyCodeService.verifyCode(SMS_TYPE_MFA_LOGIN, user.getPhone(), mfaCode)) {
-        throw new BusinessException(UserInfoExceptionCode.MFA_INVALID);
-      }
+      validateSmsCode(user.getPhone(), mfaCode);
       return;
     }
     // 无手机号：降级邮件验证码
     if (user.getEmail() != null && !user.getEmail().isBlank()) {
-      if (mfaCode == null || mfaCode.isBlank()
-          || !verifyCodeService.verifyCode(EMAIL_TYPE_MFA_LOGIN, user.getEmail(), mfaCode)) {
-        throw new BusinessException(UserInfoExceptionCode.MFA_INVALID);
-      }
+      validateEmailCode(user.getEmail(), mfaCode);
       return;
     }
     log.warn("MFA required but user has no TOTP bound, no phone, no email: userId={}", userId);
     throw new BusinessException(UserInfoExceptionCode.MFA_REQUIRED);
+  }
+
+  /** 校验 TOTP 动态码。 */
+  private void validateTotp(String secret, String mfaCode) {
+    if (mfaCode == null || mfaCode.isBlank()
+        || !TotpAuthenticator.verify(secret, mfaCode)) {
+      throw new BusinessException(UserInfoExceptionCode.MFA_INVALID);
+    }
+  }
+
+  /** 校验短信验证码。 */
+  private void validateSmsCode(String phone, String mfaCode) {
+    if (mfaCode == null || mfaCode.isBlank()
+        || !verifyCodeService.verifyCode(SMS_TYPE_MFA_LOGIN, phone, mfaCode)) {
+      throw new BusinessException(UserInfoExceptionCode.MFA_INVALID);
+    }
+  }
+
+  /** 校验邮件验证码。 */
+  private void validateEmailCode(String email, String mfaCode) {
+    if (mfaCode == null || mfaCode.isBlank()
+        || !verifyCodeService.verifyCode(EMAIL_TYPE_MFA_LOGIN, email, mfaCode)) {
+      throw new BusinessException(UserInfoExceptionCode.MFA_INVALID);
+    }
   }
 
   /**

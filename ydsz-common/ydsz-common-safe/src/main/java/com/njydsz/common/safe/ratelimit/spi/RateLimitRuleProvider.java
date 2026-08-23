@@ -22,18 +22,39 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
  */
 public interface RateLimitRuleProvider {
 
-  /** 根据资源名获取规则 */
+  /**
+   * 根据资源名获取规则。
+   *
+   * @param resource 资源标识
+   * @return 限流规则（无匹配时为 {@code Optional.empty()}）
+   */
   Optional<RateLimitRule> getRule(String resource);
 
-  /** 获取所有规则 */
+  /**
+   * 获取所有规则。
+   *
+   * @return 全量规则列表
+   */
   List<RateLimitRule> getAllRules();
 
-  /** 动态注册/更新规则 */
+  /**
+   * 动态注册/更新规则。
+   *
+   * @param rule 限流规则
+   */
   void saveRule(RateLimitRule rule);
 
-  /** 删除规则 */
+  /**
+   * 删除规则。
+   *
+   * @param resource 资源标识
+   */
   void removeRule(String resource);
 
-  /** 监听规则变更 */
+  /**
+   * 监听规则变更。
+   *
+   * @param listener 规则变更监听器
+   */
   default void addListener(RateLimitRuleListener listener) {}
 }

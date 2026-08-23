@@ -1,5 +1,4 @@
 package com.njydsz.system.infra.entity;
-
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -9,6 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+
+
+
 
 /**
  * 租户主表实体

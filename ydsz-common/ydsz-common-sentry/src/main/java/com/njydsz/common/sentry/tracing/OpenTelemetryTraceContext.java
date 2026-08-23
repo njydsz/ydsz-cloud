@@ -20,6 +20,9 @@ import com.njydsz.common.sentry.spi.TraceContext;
 public class OpenTelemetryTraceContext implements TraceContext {
 
   /** 构造函数，初始化 OpenTelemetry 追踪上下文 */
+  /**
+   * open telemetry trace。
+ */
   public OpenTelemetryTraceContext() {
     log.info("[Sentry] OpenTelemetryTraceContext 初始化完成");
   }
@@ -30,6 +33,10 @@ public class OpenTelemetryTraceContext implements TraceContext {
    * @return TraceId，若 OpenTelemetry SDK 不可用则返回 null
    */
   @Override
+  /**
+   * get trace id。
+   * @return 结果
+   */
   public String getTraceId() {
     try {
       Span currentSpan = Span.fromContext(Context.current());
@@ -49,6 +56,10 @@ public class OpenTelemetryTraceContext implements TraceContext {
    * @return SpanId，若 OpenTelemetry SDK 不可用则返回 null
    */
   @Override
+  /**
+   * get span id。
+   * @return 结果
+   */
   public String getSpanId() {
     try {
       Span currentSpan = Span.fromContext(Context.current());
@@ -68,6 +79,10 @@ public class OpenTelemetryTraceContext implements TraceContext {
    * @return 是否在追踪链路中
    */
   @Override
+  /**
+   * is tracing。
+   * @return 结果
+   */
   public boolean isTracing() {
     try {
       Span currentSpan = Span.fromContext(Context.current());
@@ -84,6 +99,11 @@ public class OpenTelemetryTraceContext implements TraceContext {
    * @param value 标签值
    */
   @Override
+  /**
+   * tag。
+   * @param key 参数
+   * @param value 参数
+   */
   public void tag(String key, String value) {
     try {
       Span currentSpan = Span.fromContext(Context.current());
@@ -99,11 +119,19 @@ public class OpenTelemetryTraceContext implements TraceContext {
    * @return 固定返回 "opentelemetry"
    */
   @Override
+  /**
+   * get tracer name。
+   * @return 结果
+   */
   public String getTracerName() {
     return "opentelemetry";
   }
 
   /** 检测 OpenTelemetry SDK 是否可用 */
+  /**
+   * is available。
+   * @return 结果
+   */
   public static boolean isAvailable() {
     try {
       return GlobalOpenTelemetry.get() != null;

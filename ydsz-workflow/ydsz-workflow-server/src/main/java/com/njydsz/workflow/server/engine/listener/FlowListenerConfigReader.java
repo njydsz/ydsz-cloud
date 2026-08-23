@@ -1,13 +1,15 @@
 package com.njydsz.workflow.server.engine.listener;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.json.YdszJson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 从节点 ext JSON 中读取监听器配置列表
@@ -56,7 +58,7 @@ public final class FlowListenerConfigReader {
       }
       Object raw = extMap.get("listeners");
       if (raw instanceof List<?> list) {
-        List<FlowListenerConfig> result = new java.util.ArrayList<>(list.size());
+        List<FlowListenerConfig> result = new ArrayList<>(list.size());
         for (Object item : list) {
           if (item instanceof Map<?, ?> map) {
             result.add(toConfig(map));
@@ -72,6 +74,9 @@ public final class FlowListenerConfigReader {
 
   /**
    * 将 Map 转换为 {@link FlowListenerConfig}
+   *
+   * @param map 参数说明
+   * @return 返回值说明
    */
   private static FlowListenerConfig toConfig(Map<?, ?> map) {
     FlowListenerConfig config = new FlowListenerConfig();

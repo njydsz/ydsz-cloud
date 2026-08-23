@@ -38,8 +38,10 @@ public interface FlowCategoryRepository {
 
   /**
    * 保存流程分类（已废弃）。
+   * 
    *
-   * @deprecated 使用 {@link #save(FlowCategoryDTO)} 替代，CUD 入参应使用 DTO
+   * @param vo 参数说明
+   * @return 返回值说明
    */
   @Deprecated
   FlowCategoryVO save(FlowCategoryVO vo);
@@ -95,8 +97,10 @@ public interface FlowCategoryRepository {
 
   /**
    * 更新流程分类（已废弃）。
+   * 
    *
-   * @deprecated 使用 {@link #update(FlowCategoryDTO)} 替代，CUD 入参应使用 DTO
+   * @param vo 参数说明
+   * @return 返回值说明
    */
   @Deprecated
   FlowCategoryVO update(FlowCategoryVO vo);

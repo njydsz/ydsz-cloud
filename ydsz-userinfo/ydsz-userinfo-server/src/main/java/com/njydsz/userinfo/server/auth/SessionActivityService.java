@@ -1,6 +1,5 @@
 package com.njydsz.userinfo.server.auth;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -12,7 +11,6 @@ import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
@@ -24,7 +22,6 @@ import com.njydsz.userinfo.domain.vo.AnomalySessionVO;
 import com.njydsz.userinfo.domain.vo.DeviceDistributionVO;
 import com.njydsz.userinfo.domain.vo.SessionActivityVO;
 import com.njydsz.userinfo.domain.vo.SessionTrendVO;
-import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 
 /**
  * 会话活跃度服务。
@@ -92,6 +89,27 @@ public class SessionActivityService {
 
   /** 一次 SCAN 最大扫描 Key 数量（防止 OOM） */
   private static final int MAX_SCAN_KEYS = 5000;
+
+  /** 集合初始容量：16 */
+  private static final int INITIAL_CAPACITY = 16;
+
+  /** 集合初始容量：4 */
+  private static final int SMALL_INITIAL_CAPACITY = 4;
+
+  /** 每秒对应的分钟换算值（1 分钟 = 60 秒） */
+  private static final int SECONDS_PER_MINUTE = 60;
+
+  /** 每秒对应的小时换算值（1 小时 = 3600 秒） */
+  private static final int SECONDS_PER_HOUR = 3600;
+
+  /** 会话令牌最小长度阈值 */
+  private static final int MIN_TOKEN_LENGTH = 16;
+
+  /** 会话令牌日志脱敏前缀长度 */
+  private static final int TOKEN_LOG_PREFIX_LENGTH = 8;
+
+  /** 会话令牌日志脱敏后缀长度 */
+  private static final int TOKEN_LOG_SUFFIX_LENGTH = 4;
 
   private final RedisStringOps redisStringOps;
   private final RedisHashOps redisHashOps;
@@ -187,7 +205,7 @@ public class SessionActivityService {
       return List.of();
     }
 
-    List<SessionTrendVO> result = new ArrayList<>(16);
+    List<SessionTrendVO> result = new ArrayList<>(INITIAL_CAPACITY);
     LocalDate current = start;
 
     while (!current.isAfter(end)) {
@@ -208,7 +226,7 @@ public class SessionActivityService {
    * @return 设备分布列表
    */
   public List<DeviceDistributionVO> getDeviceDistribution() {
-    Map<String, Integer> deviceCount = new HashMap<>(4);
+    Map<String, Integer> deviceCount = new HashMap<>(SMALL_INITIAL_CAPACITY);
     deviceCount.put("web", 0);
     deviceCount.put("app", 0);
     deviceCount.put("api", 0);
@@ -239,7 +257,7 @@ public class SessionActivityService {
 
     // 计算总数和百分比
     int total = deviceCount.values().stream().mapToInt(Integer::intValue).sum();
-    List<DeviceDistributionVO> result = new ArrayList<>(16);
+    List<DeviceDistributionVO> result = new ArrayList<>(INITIAL_CAPACITY);
 
     for (Map.Entry<String, Integer> entry : deviceCount.entrySet()) {
       double percentage = total > 0 ? (double) entry.getValue() / total : 0.0;
@@ -265,7 +283,7 @@ public class SessionActivityService {
    * @return 异常会话列表
    */
   public List<AnomalySessionVO> detectAnomalySessions() {
-    List<AnomalySessionVO> anomalies = new ArrayList<>(16);
+    List<AnomalySessionVO> anomalies = new ArrayList<>(INITIAL_CAPACITY);
 
     try {
       // 1. 多地登录检测
@@ -302,7 +320,7 @@ public class SessionActivityService {
       Set<String> sessionKeys = redisStringOps.scan(SESSION_KEY_PREFIX + "*", MAX_SCAN_KEYS);
 
       int totalSessions = 0;
-      Set<String> activeUserIds = new HashSet<>(16);
+      Set<String> activeUserIds = new HashSet<>(INITIAL_CAPACITY);
       long totalTtl = 0;
       int sessionCount = 0;
 
@@ -331,7 +349,7 @@ public class SessionActivityService {
         }
       }
 
-      double avgDurationMinutes = sessionCount > 0 ? (double) totalTtl / sessionCount / 60 : 0.0;
+      double avgDurationMinutes = sessionCount > 0 ? (double) totalTtl / sessionCount / SECONDS_PER_MINUTE : 0.0;
 
       return new SessionActivityVO(totalSessions, activeUserIds.size(), avgDurationMinutes);
     } catch (Exception e) {
@@ -405,7 +423,7 @@ public class SessionActivityService {
    * @return 多地登录异常列表
    */
   private List<AnomalySessionVO> detectMultiIpLogins() {
-    List<AnomalySessionVO> anomalies = new ArrayList<>(16);
+    List<AnomalySessionVO> anomalies = new ArrayList<>(INITIAL_CAPACITY);
 
     try {
       // 扫描所有用户会话索引
@@ -415,55 +433,72 @@ public class SessionActivityService {
         if (sessionKey.contains(":device:")) {
           continue;
         }
-
-        String userId = sessionKey.substring(SESSION_KEY_PREFIX.length());
-        Set<String> tokens = redisCollectionOps.sMembers(sessionKey, String.class);
-
-        if (tokens.size() < MULTI_IP_THRESHOLD + 1) {
-          continue;
-        }
-
-        // 收集该用户所有会话的 IP 和登录时间
-        Set<String> distinctIps = new HashSet<>(16);
-        String username = null;
-        LocalDateTime earliestLogin = null;
-
-        for (String token : tokens) {
-          String ip = redisHashOps.hGet(token, "loginIp", String.class);
-          if (ip == null || ip.isBlank()) {
-            ip = redisHashOps.hGet(token, "lastLoginIp", String.class);
-          }
-          if (ip != null && !ip.isBlank()) {
-            distinctIps.add(ip);
-          }
-
-          if (username == null) {
-            username = redisHashOps.hGet(token, "username", String.class);
-          }
-        }
-
-        // 检查是否从多个不同 IP 登录
-        if (distinctIps.size() > MULTI_IP_THRESHOLD) {
-          String ipList = String.join(", ", distinctIps);
-          AnomalySessionVO anomaly = new AnomalySessionVO(
-              userId,
-              username != null ? username : userId,
-              "MULTI_IP",
-              "用户从 " + distinctIps.size() + " 个不同 IP 登录: " + ipList,
-              "HIGH");
-          anomalies.add(anomaly);
-          log.warn(
-              "Multi-IP login detected: user={}, userId={}, ips={}",
-              username,
-              userId,
-              ipList);
-        }
+        collectMultiIpAnomaly(sessionKey, anomalies);
       }
     } catch (Exception e) {
       log.warn("Failed to detect multi-IP logins, error={}", e.getMessage());
     }
 
     return anomalies;
+  }
+
+  /**
+   * 检测单个用户的会话是否来自多个不同 IP。
+   *
+   * @param sessionKey 用户会话索引 Key
+   * @param anomalies 异常列表（有异常时追加）
+   */
+  private void collectMultiIpAnomaly(String sessionKey, List<AnomalySessionVO> anomalies) {
+    String userId = sessionKey.substring(SESSION_KEY_PREFIX.length());
+    Set<String> tokens = redisCollectionOps.sMembers(sessionKey, String.class);
+
+    if (tokens.size() < MULTI_IP_THRESHOLD + 1) {
+      return;
+    }
+
+    // 收集该用户所有会话的 IP
+    Set<String> distinctIps = new HashSet<>(INITIAL_CAPACITY);
+    String username = null;
+    for (String token : tokens) {
+      String ip = resolveLoginIp(token);
+      if (ip != null && !ip.isBlank()) {
+        distinctIps.add(ip);
+      }
+      if (username == null) {
+        username = redisHashOps.hGet(token, "username", String.class);
+      }
+    }
+
+    // 检查是否从多个不同 IP 登录
+    if (distinctIps.size() > MULTI_IP_THRESHOLD) {
+      String ipList = String.join(", ", distinctIps);
+      AnomalySessionVO anomaly = new AnomalySessionVO(
+          userId,
+          username != null ? username : userId,
+          "MULTI_IP",
+          "用户从 " + distinctIps.size() + " 个不同 IP 登录: " + ipList,
+          "HIGH");
+      anomalies.add(anomaly);
+      log.warn(
+          "Multi-IP login detected: user={}, userId={}, ips={}",
+          username,
+          userId,
+          ipList);
+    }
+  }
+
+  /**
+   * 解析会话令牌的登录 IP（优先 loginIp，降级 lastLoginIp）。
+   *
+   * @param token 会话令牌
+   * @return 登录 IP；无记录返回 null
+   */
+  private String resolveLoginIp(String token) {
+    String ip = redisHashOps.hGet(token, "loginIp", String.class);
+    if (ip == null || ip.isBlank()) {
+      ip = redisHashOps.hGet(token, "lastLoginIp", String.class);
+    }
+    return ip;
   }
 
   /**
@@ -474,27 +509,16 @@ public class SessionActivityService {
    * @return 异常活跃列表
    */
   private List<AnomalySessionVO> detectAbnormallyActiveUsers() {
-    List<AnomalySessionVO> anomalies = new ArrayList<>(16);
+    List<AnomalySessionVO> anomalies = new ArrayList<>(INITIAL_CAPACITY);
 
     try {
       // 扫描所有用户会话索引
       Set<String> sessionKeys = redisStringOps.scan(SESSION_KEY_PREFIX + "*", MAX_SCAN_KEYS);
 
       // 第一遍：计算平台平均会话数
-      List<Integer> sessionCounts = new ArrayList<>(16);
-      Map<String, String> keyToUserId = new HashMap<>(16);
-
-      for (String sessionKey : sessionKeys) {
-        if (sessionKey.contains(":device:")) {
-          continue;
-        }
-
-        Set<String> tokens = redisCollectionOps.sMembers(sessionKey, String.class);
-        sessionCounts.add(tokens.size());
-
-        String userId = sessionKey.substring(SESSION_KEY_PREFIX.length());
-        keyToUserId.put(sessionKey, userId);
-      }
+      List<Integer> sessionCounts = new ArrayList<>(INITIAL_CAPACITY);
+      Map<String, String> keyToUserId = new HashMap<>(INITIAL_CAPACITY);
+      collectSessionStats(sessionKeys, sessionCounts, keyToUserId);
 
       if (sessionCounts.isEmpty()) {
         return anomalies;
@@ -504,44 +528,91 @@ public class SessionActivityService {
       double threshold = avgSessions * ANOMALY_ACTIVITY_MULTIPLIER;
 
       // 第二遍：检测超过阈值的用户
-      for (String sessionKey : sessionKeys) {
-        if (sessionKey.contains(":device:")) {
-          continue;
-        }
-
-        Set<String> tokens = redisCollectionOps.sMembers(sessionKey, String.class);
-        if (tokens.size() > threshold && threshold > 0) {
-          String userId = keyToUserId.get(sessionKey);
-          String username = null;
-
-          // 从会话中读取用户名
-          for (String token : tokens) {
-            username = redisHashOps.hGet(token, "username", String.class);
-            if (username != null) {
-              break;
-            }
-          }
-
-          AnomalySessionVO anomaly = new AnomalySessionVO(
-              userId,
-              username != null ? username : userId,
-              "HIGH_ACTIVITY",
-              "用户会话数(" + tokens.size() + ")超过平台平均值(" + String.format("%.1f", avgSessions) + ")的 "
-                  + (int) ANOMALY_ACTIVITY_MULTIPLIER + " 倍",
-              "MEDIUM");
-          anomalies.add(anomaly);
-          log.warn(
-              "Abnormally active user detected: user={}, sessionCount={}, avg={}",
-              username,
-              tokens.size(),
-              String.format("%.1f", avgSessions));
-        }
-      }
+      detectHighActivityUsers(sessionKeys, keyToUserId, avgSessions, threshold, anomalies);
     } catch (Exception e) {
       log.warn("Failed to detect abnormally active users, error={}", e.getMessage());
     }
 
     return anomalies;
+  }
+
+  /**
+   * 收集各用户的会话数统计。
+   *
+   * @param sessionKeys 用户会话索引 Key 集合
+   * @param sessionCounts 输出：各用户会话数
+   * @param keyToUserId 输出：会话 Key → 用户 ID
+   */
+  private void collectSessionStats(
+      Set<String> sessionKeys,
+      List<Integer> sessionCounts,
+      Map<String, String> keyToUserId) {
+    for (String sessionKey : sessionKeys) {
+      if (sessionKey.contains(":device:")) {
+        continue;
+      }
+      Set<String> tokens = redisCollectionOps.sMembers(sessionKey, String.class);
+      sessionCounts.add(tokens.size());
+      String userId = sessionKey.substring(SESSION_KEY_PREFIX.length());
+      keyToUserId.put(sessionKey, userId);
+    }
+  }
+
+  /**
+   * 检测会话数超过阈值的用户并追加到异常列表。
+   *
+   * @param sessionKeys 用户会话索引 Key 集合
+   * @param keyToUserId 会话 Key → 用户 ID 映射
+   * @param avgSessions 平台平均会话数
+   * @param threshold 异常阈值
+   * @param anomalies 异常列表（有异常时追加）
+   */
+  private void detectHighActivityUsers(
+      Set<String> sessionKeys,
+      Map<String, String> keyToUserId,
+      double avgSessions,
+      double threshold,
+      List<AnomalySessionVO> anomalies) {
+    for (String sessionKey : sessionKeys) {
+      if (sessionKey.contains(":device:")) {
+        continue;
+      }
+      Set<String> tokens = redisCollectionOps.sMembers(sessionKey, String.class);
+      if (tokens.size() > threshold && threshold > 0) {
+        String userId = keyToUserId.get(sessionKey);
+        String username = resolveSessionUsername(tokens);
+
+        AnomalySessionVO anomaly = new AnomalySessionVO(
+            userId,
+            username != null ? username : userId,
+            "HIGH_ACTIVITY",
+            "用户会话数(" + tokens.size() + ")超过平台平均值(" + String.format("%.1f", avgSessions) + ")的 "
+                + (int) ANOMALY_ACTIVITY_MULTIPLIER + " 倍",
+            "MEDIUM");
+        anomalies.add(anomaly);
+        log.warn(
+            "Abnormally active user detected: user={}, sessionCount={}, avg={}",
+            username,
+            tokens.size(),
+            String.format("%.1f", avgSessions));
+      }
+    }
+  }
+
+  /**
+   * 从会话令牌集合中解析用户名（取第一个非空值）。
+   *
+   * @param tokens 会话令牌集合
+   * @return 用户名；无记录返回 null
+   */
+  private String resolveSessionUsername(Set<String> tokens) {
+    for (String token : tokens) {
+      String username = redisHashOps.hGet(token, "username", String.class);
+      if (username != null) {
+        return username;
+      }
+    }
+    return null;
   }
 
   /**
@@ -552,13 +623,13 @@ public class SessionActivityService {
    * @return 长时间未活动异常列表
    */
   private List<AnomalySessionVO> detectStaleSessions() {
-    List<AnomalySessionVO> anomalies = new ArrayList<>(16);
+    List<AnomalySessionVO> anomalies = new ArrayList<>(INITIAL_CAPACITY);
 
     try {
       // 扫描所有用户会话索引
       Set<String> sessionKeys = redisStringOps.scan(SESSION_KEY_PREFIX + "*", MAX_SCAN_KEYS);
 
-      long staleThresholdSeconds = STALE_THRESHOLD_HOURS * 3600;
+      long staleThresholdSeconds = STALE_THRESHOLD_HOURS * SECONDS_PER_HOUR;
 
       for (String sessionKey : sessionKeys) {
         if (sessionKey.contains(":device:")) {
@@ -576,7 +647,7 @@ public class SessionActivityService {
           // 获取会话中的创建时间信息
           // 由于当前会话 Hash 不存储创建时间，使用 TTL 间接判断
           // 如果 TTL 小于某个阈值（如 1 小时），说明会话即将过期，可能长时间未活动
-          if (ttl > 0 && ttl < 3600) {
+          if (ttl > 0 && ttl < SECONDS_PER_HOUR) {
             String username = redisHashOps.hGet(token, "username", String.class);
             AnomalySessionVO anomaly = new AnomalySessionVO(
                 userId,
@@ -606,10 +677,11 @@ public class SessionActivityService {
    * @return 脱敏后的 Token
    */
   private String maskToken(String token) {
-    if (token == null || token.length() < 16) {
+    if (token == null || token.length() < MIN_TOKEN_LENGTH) {
       return "***";
     }
-    return token.substring(0, 8) + "..." + token.substring(token.length() - 4);
+    return token.substring(0, TOKEN_LOG_PREFIX_LENGTH) + "..."
+        + token.substring(token.length() - TOKEN_LOG_SUFFIX_LENGTH);
   }
 
   /**

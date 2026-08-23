@@ -48,7 +48,7 @@ public class StompMessageInterceptor implements ChannelInterceptor {
       case CONNECT -> handleConnect(accessor);
       case SEND -> handleSend(accessor);
       case SUBSCRIBE -> handleSubscribe(accessor);
-      default -> {}
+      default -> { /* 其他命令不处理 */ }
     }
 
     return message;

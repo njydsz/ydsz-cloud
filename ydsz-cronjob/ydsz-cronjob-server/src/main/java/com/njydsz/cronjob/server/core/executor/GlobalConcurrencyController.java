@@ -46,6 +46,9 @@ import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 @Component
 @RequiredArgsConstructor
 public class GlobalConcurrencyController {
+  /** 校准锁 TTL（秒） */
+  private static final int CALIBRATION_LOCK_TTL = 30;
+
 
   private final RedisStringOps redisStringOps;
   private final CronjobProperties cronjobProperties;
@@ -165,10 +168,12 @@ public class GlobalConcurrencyController {
    * 强制校准全局并发计数器。
    *
    * <p>由定时任务定期调用，通过查询 RUNNING 状态的日志数校准计数器。 防止进程崩溃导致的计数器漂移。
+   *
+   * @param actualRunningCount 实际运行中的任务数
    */
   public void calibrate(long actualRunningCount) {
     try {
-      boolean acquired = redisStringOps.setIfAbsent(CALIBRATION_LOCK_KEY, "1", 30);
+      boolean acquired = redisStringOps.setIfAbsent(CALIBRATION_LOCK_KEY, "1", CALIBRATION_LOCK_TTL);
       if (!acquired) {
         return; // 其他节点正在校准
       }

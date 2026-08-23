@@ -40,13 +40,30 @@ import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 @Mapper
 public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
 
-  /** 根据业务关联查实例（P1-2: 含 tenant_id 过滤 + 仅活跃状态） */
+  /**
+   * 根据业务关联查实例（P1-2: 含 tenant_id 过滤 + 仅活跃状态）
+   *
+   * @param tenantId 参数说明
+   * @param businessType 参数说明
+   * @param businessId 参数说明
+   * @return 返回值说明
+   */
   FlowInstanceDO selectByBusiness(
       @Param("tenantId") String tenantId,
       @Param("businessType") String businessType,
       @Param("businessId") String businessId);
 
-  /** 状态更新 */
+  /**
+   * 状态更新
+   *
+   * @param id 参数说明
+   * @param flowStatus 参数说明
+   * @param currentNodeCode 参数说明
+   * @param currentNodeName 参数说明
+   * @param endAt 参数说明
+   * @param durationMs 参数说明
+   * @return 返回值说明
+   */
   int updateStatus(
       @Param("id") String id,
       @Param("flowStatus") String flowStatus,
@@ -57,13 +74,21 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
 
   /**
    * P2-18: 更新流程变量 JSON（用于持久化 terminate reason 等元信息）
+   * 
    *
-   * @param id 实例 ID
-   * @param variable 流程变量 JSON
+   * @param id 参数说明
+   * @param variable 参数说明
+   * @return 返回值说明
    */
   int updateVariable(@Param("id") String id, @Param("variable") String variable);
 
-  /** 发起人维度查询 */
+  /**
+   * 发起人维度查询
+   *
+   * @param initiatorId 参数说明
+   * @param flowStatus 参数说明
+   * @return 返回值说明
+   */
   List<FlowInstanceDO> selectByInitiator(
       @Param("initiatorId") String initiatorId, @Param("flowStatus") String flowStatus);
 
@@ -87,9 +112,11 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
 
   /**
    * 更新实例的 dueAt 字段（子流程超时用）
+   * 
    *
-   * @param id 实例 ID
-   * @param dueAt 超时时间
+   * @param id 参数说明
+   * @param dueAt 参数说明
+   * @return 返回值说明
    */
   int updateDueAt(@Param("id") String id, @Param("dueAt") LocalDateTime dueAt);
 

@@ -59,6 +59,12 @@ public class LogEvent {
   private String stackTrace;
 
   /** 添加附加字段 */
+  /**
+   * add extra。
+   * @param key 参数
+   * @param value 参数
+   * @return 结果
+   */
   public LogEvent addExtra(String key, Object value) {
     if (extra == null) {
       extra = new LinkedHashMap<>();

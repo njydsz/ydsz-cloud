@@ -22,6 +22,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *       key-prefix: auth:captcha:
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @Data

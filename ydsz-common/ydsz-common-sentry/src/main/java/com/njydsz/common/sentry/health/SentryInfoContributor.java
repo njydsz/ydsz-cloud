@@ -37,6 +37,10 @@ public class SentryInfoContributor implements InfoContributor {
   private final TraceContext traceContext;
 
   @Override
+  /**
+   * contribute。
+   * @param builder 参数
+   */
   public void contribute(Info.Builder builder) {
     Map<String, Object> sentryInfo = new HashMap<>();
 

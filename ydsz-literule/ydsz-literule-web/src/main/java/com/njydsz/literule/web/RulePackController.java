@@ -73,14 +73,19 @@ public class RulePackController {
   /** 规则压测服务（P2-9）：可选注入，RuleAdminService 未装配时为空 */
   private final ObjectProvider<RuleStressTestService> ruleStressTestServiceProvider;
 
-  /** 列出全部规则集（市场首页） */
+  /** 列出全部规则集（市场首页）
+   * @return 返回值说明
+   */
   @GetMapping("/packs")
   public YdszResponse<List<RulePackVO>> listPacks() {
     return YdszResponse.success(
         rulePackProvider.listAll().stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList());
   }
 
-  /** 搜索规则集 */
+  /** 搜索规则集
+   * @param keyword 参数说明
+      * @return 返回值说明
+   */
   @GetMapping("/packs/search")
   public YdszResponse<List<RulePackVO>> searchPacks(
       @RequestParam(value = "keyword", required = false) String keyword) {
@@ -90,14 +95,20 @@ public class RulePackController {
             .toList());
   }
 
-  /** 查询规则集最新版本 */
+  /** 查询规则集最新版本
+   * @param packCode 参数说明
+      * @return 返回值说明
+   */
   @GetMapping("/packs/{packCode}/latest")
   public YdszResponse<RulePackVO> getLatestPack(@PathVariable String packCode) {
     return YdszResponse.success(
         LiteruleWebConverter.INSTANCE.entityToVO(rulePackProvider.getLatest(packCode)));
   }
 
-  /** 查询规则集的所有版本 */
+  /** 查询规则集的所有版本
+   * @param packCode 参数说明
+      * @return 返回值说明
+   */
   @GetMapping("/packs/{packCode}/versions")
   public YdszResponse<List<RulePackVO>> listPackVersions(@PathVariable String packCode) {
     return YdszResponse.success(
@@ -106,7 +117,11 @@ public class RulePackController {
             .toList());
   }
 
-  /** 查询规则集指定版本（含规则定义快照，P2-8） */
+  /** 查询规则集指定版本（含规则定义快照，P2-8）
+   * @param packCode 参数说明
+   * @param version 参数说明
+      * @return 返回值说明
+   */
   @GetMapping("/packs/{packCode}/versions/{version}")
   public YdszResponse<RulePackVO> getPackVersion(
       @PathVariable String packCode, @PathVariable String version) {
@@ -114,7 +129,12 @@ public class RulePackController {
         LiteruleWebConverter.INSTANCE.entityToVO(rulePackProvider.getVersion(packCode, version)));
   }
 
-  /** 知识包版本回滚（P2-8）：将该版本固化的规则定义整体恢复到在线规则表 */
+  /** 知识包版本回滚（P2-8）：将该版本固化的规则定义整体恢复到在线规则表
+   * @param operator 参数说明
+      * @return 返回值说明
+      * @param packCode 参数说明
+      * @param version 参数说明
+   */
   @Audit(
       module = "规则管理",
       type = AuditType.OPERATION,
@@ -131,7 +151,12 @@ public class RulePackController {
             rulePackProvider.rollback(packCode, version, operator)));
   }
 
-  /** 知识包版本差异对比（P2-8）：对比两个版本规则编码与内容差异 */
+  /** 知识包版本差异对比（P2-8）：对比两个版本规则编码与内容差异
+   * @param toVersion 参数说明
+      * @return 返回值说明
+      * @param packCode 参数说明
+      * @param fromVersion 参数说明
+   */
   @GetMapping("/packs/{packCode}/diff")
   public YdszResponse<PackDiffVO> diffPack(
       @PathVariable String packCode,
@@ -142,7 +167,11 @@ public class RulePackController {
             rulePackProvider.diff(packCode, fromVersion, toVersion)));
   }
 
-  /** 发布规则集到市场 */
+  /** 发布规则集到市场
+   * @param operator 参数说明
+      * @return 返回值说明
+      * @param pack 参数说明
+   */
   @Idempotent(key = "ruleAdmin:publishPack", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
       module = "规则管理",
@@ -158,7 +187,15 @@ public class RulePackController {
         LiteruleWebConverter.INSTANCE.entityToVO(rulePackProvider.publish(pack, operator)));
   }
 
-  /** 安装规则集（一键导入） */
+  /** 安装规则集（一键导入）
+
+      * @return 返回值说明
+
+
+      * @param packCode 参数说明
+   * @param version 参数说明
+   * @param operator 参数说明
+   */
   @Audit(
       module = "规则管理",
       type = AuditType.OPERATION,
@@ -175,7 +212,10 @@ public class RulePackController {
             rulePackProvider.install(packCode, version, operator)));
   }
 
-  /** 删除规则集 */
+  /** 删除规则集
+   * @param id 参数说明
+      * @return 返回值说明
+   */
   @Idempotent(key = "ruleAdmin:deletePack", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
       module = "规则管理",
@@ -189,7 +229,11 @@ public class RulePackController {
     return YdszResponse.success();
   }
 
-  /** 标记为官方 */
+  /** 标记为官方
+   * @param official 参数说明
+      * @return 返回值说明
+      * @param id 参数说明
+   */
   @Idempotent(key = "ruleAdmin:markOfficialPack", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
       module = "规则管理",
@@ -205,7 +249,11 @@ public class RulePackController {
     return YdszResponse.success();
   }
 
-  /** 评分（0-5） */
+  /** 评分（0-5）
+   * @param id 参数说明
+   * @param rating 参数说明
+      * @return 返回值说明
+   */
   @Idempotent(key = "ruleAdmin:ratePack", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
       module = "规则管理",
@@ -256,7 +304,9 @@ public class RulePackController {
       return YdszResponse.error(YdszResultCode.FORBIDDEN, "规则压测服务未启用");
     }
     String ruleCode = (String) request.get("ruleCode");
-    if (ruleCode != null && ruleCode.isBlank()) ruleCode = null;
+    if (ruleCode != null && ruleCode.isBlank()) {
+      ruleCode = null;
+    }
     List<Map<String, Object>> factsList = new ArrayList<>();
     Object rawList = request.get("factsList");
     if (rawList instanceof List<?> list) {
@@ -280,8 +330,12 @@ public class RulePackController {
 
   /** 安全转换为 int */
   private int toInt(Object v, int defaultValue) {
-    if (v == null) return defaultValue;
-    if (v instanceof Number n) return n.intValue();
+    if (v == null) {
+      return defaultValue;
+    }
+    if (v instanceof Number n) {
+      return n.intValue();
+    }
     try {
       return Integer.parseInt(v.toString());
     } catch (NumberFormatException e) {
@@ -310,6 +364,7 @@ public class RulePackController {
    *
    * @param operator 操作人
    * @return 每个包的更新结果
+      * @param packCodes 参数说明
    */
   @Audit(
       module = "规则管理",

@@ -52,10 +52,10 @@ public abstract class AbstractMetricsHolder {
   private static volatile MeterRegistry registry;
 
   /** Counter 实例缓存，避免重复构建 */
-  private static final Map<String, Counter> counterCache = new ConcurrentHashMap<>();
+  private static final Map<String, Counter> COUNTER_CACHE = new ConcurrentHashMap<>();
 
   /** Timer 实例缓存，避免重复构建 */
-  private static final Map<String, Timer> timerCache = new ConcurrentHashMap<>();
+  private static final Map<String, Timer> TIMER_CACHE = new ConcurrentHashMap<>();
 
   /**
    * 工具构造器（禁止外部实例化）。
@@ -96,7 +96,7 @@ public abstract class AbstractMetricsHolder {
    */
   protected static Counter registerCounter(String prefix, String name, String... tags) {
     String key = cacheKey(prefix + name, tags);
-    return counterCache.computeIfAbsent(
+    return COUNTER_CACHE.computeIfAbsent(
         key, k -> Counter.builder(prefix + name).tags(Tags.of(tags)).register(registry));
   }
 
@@ -110,7 +110,7 @@ public abstract class AbstractMetricsHolder {
    */
   protected static Timer registerTimer(String prefix, String name, String... tags) {
     String key = cacheKey(prefix + name, tags);
-    return timerCache.computeIfAbsent(
+    return TIMER_CACHE.computeIfAbsent(
         key, k -> Timer.builder(prefix + name).tags(Tags.of(tags)).register(registry));
   }
 

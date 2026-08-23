@@ -34,7 +34,13 @@ import com.njydsz.literule.api.RuleContext;
  */
 public class MockModelInputProvider implements ModelInputProvider {
 
-  private static final Logger log = LoggerFactory.getLogger(MockModelInputProvider.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MockModelInputProvider.class);
+
+  /** 默认模型评分（模型字段 modelScore 的模拟输出值） */
+  private static final double DEFAULT_MODEL_SCORE = 0.75;
+
+  /** 默认预测概率（模型字段 predictProbability 的模拟输出值） */
+  private static final double DEFAULT_PREDICT_PROBABILITY = 0.05;
 
   /** 默认模型 ID */
   public static final String DEFAULT_MODEL_ID = "mock-model-v1";
@@ -44,8 +50,8 @@ public class MockModelInputProvider implements ModelInputProvider {
 
   static {
     Map<String, Object> defaults = new LinkedHashMap<>();
-    defaults.put("modelScore", 0.75);
-    defaults.put("predictProbability", 0.05);
+    defaults.put("modelScore", DEFAULT_MODEL_SCORE);
+    defaults.put("predictProbability", DEFAULT_PREDICT_PROBABILITY);
     DEFAULT_OUTPUTS = Collections.unmodifiableMap(defaults);
   }
 
@@ -69,7 +75,7 @@ public class MockModelInputProvider implements ModelInputProvider {
         outputs != null && !outputs.isEmpty()
             ? Collections.unmodifiableMap(new LinkedHashMap<>(outputs))
             : DEFAULT_OUTPUTS;
-    log.info(
+    LOGGER.info(
         "[LiteRule-Model] MockModelInputProvider 已初始化: modelId={}, outputs={}",
         this.modelId,
         this.outputs);

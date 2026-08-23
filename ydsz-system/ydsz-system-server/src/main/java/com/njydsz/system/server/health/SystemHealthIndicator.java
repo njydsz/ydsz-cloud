@@ -1,5 +1,4 @@
 package com.njydsz.system.server.health;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -12,6 +11,8 @@ import org.springframework.boot.health.contributor.Status;
 import com.njydsz.common.jdbc.health.DataSourceHealthIndicator;
 import com.njydsz.common.redis.health.RedisHealthIndicator;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
+
+
 
 /**
  * 系统模块健康检查 Indicator

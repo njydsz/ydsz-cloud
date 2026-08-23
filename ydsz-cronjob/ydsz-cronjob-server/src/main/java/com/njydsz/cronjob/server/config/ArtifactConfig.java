@@ -13,9 +13,12 @@ import lombok.Data;
 @Data
 public class ArtifactConfig {
 
+  /** 默认retentionDays值（可被配置文件覆盖） */
+  private static final int DEFAULT_RETENTION_DAYS = 30;
+
   /** 制品存储目录（默认 ./data/artifacts） */
   private String storageDir = "./data/artifacts";
 
   /** 制品保留天数（超过此天数的制品自动清理，默认 30 天） */
-  private int retentionDays = 30;
+  private int retentionDays = DEFAULT_RETENTION_DAYS;
 }

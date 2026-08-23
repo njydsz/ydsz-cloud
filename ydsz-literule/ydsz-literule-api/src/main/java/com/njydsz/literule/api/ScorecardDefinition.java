@@ -45,7 +45,9 @@ import lombok.NoArgsConstructor;
  *   "maxScore": 100,
  *   "factors": [
  *     {"conditionExpression": "metricA > 3", "score": -30, "weight": 1.0, "description": "示例因子A 命中扣分"},
- *     {"conditionExpression": "metricB > 1000000", "scoreExpression": "metricB * 0.001", "weight": 0.5, "description": "示例因子B 动态扣分"}
+ *     {"conditionExpression": "metricB > 1000000",
+ *      "scoreExpression": "metricB * 0.001", "weight": 0.5,
+ *      "description": "示例因子B 动态扣分"}
  *   ],
  *   "grades": [
  *     {"label": "A", "minScore": 90, "maxScore": 200, "severity": "INFO"},

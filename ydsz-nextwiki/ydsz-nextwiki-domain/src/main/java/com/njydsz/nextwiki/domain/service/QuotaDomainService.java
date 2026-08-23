@@ -18,6 +18,32 @@ import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 @Slf4j
 public class QuotaDomainService {
 
+  /** 默认配额上限：5 GB（字节） */
+  private static final long DEFAULT_QUOTA_LIMIT = 5L * 1024 * 1024 * 1024;
+
+  /** 默认文件数上限：10000 */
+  private static final int DEFAULT_FILE_COUNT_LIMIT = 10000;
+
+  /**
+   * 构建默认配额（纯领域逻辑，不执行持久化）。
+   *
+   * <p>当用户 / 空间 / 租户首次访问配额能力时，由应用层调用本方法生成默认配额记录。
+   *
+   * @param scopeType 配额维度（user / space / tenant）
+   * @param scopeId 维度 ID（用户 ID / 空间 ID / 租户 ID）
+   * @return 默认配额 DTO（未持久化）
+   */
+  public StorageQuotaDTO buildDefaultQuota(String scopeType, String scopeId) {
+    StorageQuotaDTO dto = new StorageQuotaDTO();
+    dto.setScopeType(scopeType);
+    dto.setScopeId(scopeId);
+    dto.setQuotaLimit(DEFAULT_QUOTA_LIMIT);
+    dto.setQuotaUsed(0L);
+    dto.setFileCountLimit(DEFAULT_FILE_COUNT_LIMIT);
+    dto.setFileCountUsed(0);
+    return dto;
+  }
+
   /**
    * 校验是否超出存储配额（纯领域逻辑）。
    *

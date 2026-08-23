@@ -22,8 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.server.service.FlowEfficiencyService;
@@ -56,6 +56,45 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @RequiredArgsConstructor
 @Validated
 public class FlowMonitorDashboardController {
+
+    /** 卡单检测阈值（小时） */
+  private static final int STUCK_HOURS_THRESHOLD = 24;
+
+  /** 长运行检测阈值（天） */
+  private static final int LONG_RUNNING_DAYS = 7;
+
+  /** 列表初始容量（32） */
+  private static final int LIST_INIT_CAPACITY_32 = 32;
+
+  /** 趋势统计默认天数 */
+  private static final int TREND_DAYS = 7;
+
+  /** 超期任务 TOP N */
+  private static final int OVERDUE_TOP_N = 5;
+
+  /** 异常检测样本 TOP N */
+  private static final int ANOMALY_TOP_N = 5;
+
+  /** 每天的小时数 */
+  private static final int HOURS_PER_DAY = 24;
+
+  /** 严重异常天数阈值（RED） */
+  private static final int ANOMALY_DAYS_SEVERE = 7;
+
+  /** 一般异常天数阈值（YELLOW） */
+  private static final int ANOMALY_DAYS_NORMAL = 3;
+
+  /** 月度统计天数 */
+  private static final int MONTH_STAT_DAYS = 30;
+
+  /** 默认统计天数（近 7 天） */
+  private static final int DEFAULT_STAT_DAYS = 7;
+
+  /** 当日结束时间：时（23） */
+  private static final int END_OF_DAY_HOUR = 23;
+
+  /** 当日结束时间：分/秒（59） */
+  private static final int END_OF_DAY_MIN_SEC = 59;
 
   /** GAP-P2: 审批效率分析服务（异常检测 / 效率统计 / 健康度评分） */
   private final FlowEfficiencyService efficiencyService;
@@ -102,7 +141,9 @@ public class FlowMonitorDashboardController {
 
     List<Map<String, Object>> all = new ArrayList<>(100);
     try {
-      List<Map<String, Object>> detected = efficiencyService.detectAnomalies(tenantId, 100, 24, 7);
+      List<Map<String, Object>> detected =
+          efficiencyService.detectAnomalies(
+              tenantId, 100, STUCK_HOURS_THRESHOLD, LONG_RUNNING_DAYS);
       if (detected != null) {
         for (Map<String, Object> a : detected) {
           Map<String, Object> item = mapAnomaly(a);
@@ -215,7 +256,7 @@ public class FlowMonitorDashboardController {
       }
     }
 
-    List<Map<String, Object>> result = new ArrayList<>(32);
+    List<Map<String, Object>> result = new ArrayList<>(LIST_INIT_CAPACITY_32);
     if (rows != null) {
       for (Map<String, Object> row : rows) {
         Map<String, Object> item = new LinkedHashMap<>();
@@ -253,14 +294,14 @@ public class FlowMonitorDashboardController {
     }
 
     try {
-      dashboard.put("instanceTrend", buildInstanceTrend(tenantId, 7));
+      dashboard.put("instanceTrend", buildInstanceTrend(tenantId, TREND_DAYS));
     } catch (Exception e) {
       log.warn("[Dashboard] instanceTrend 聚合失败: {}", e.getMessage());
       dashboard.put("instanceTrend", new ArrayList<>());
     }
 
     try {
-      List<Map<String, Object>> overdueTop = taskService.selectOverdueTopN(tenantId, 5);
+      List<Map<String, Object>> overdueTop = taskService.selectOverdueTopN(tenantId, OVERDUE_TOP_N);
       dashboard.put("overdueTop5", overdueTop != null ? overdueTop : new ArrayList<>());
     } catch (Exception e) {
       log.warn("[Dashboard] overdueTop5 查询失败: {}", e.getMessage());
@@ -268,7 +309,9 @@ public class FlowMonitorDashboardController {
     }
 
     try {
-      List<Map<String, Object>> anomalies = efficiencyService.detectAnomalies(tenantId, 5, 24, 7);
+      List<Map<String, Object>> anomalies =
+          efficiencyService.detectAnomalies(
+              tenantId, ANOMALY_TOP_N, STUCK_HOURS_THRESHOLD, LONG_RUNNING_DAYS);
       dashboard.put("anomalyTop5", anomalies != null ? anomalies : new ArrayList<>());
     } catch (Exception e) {
       log.warn("[Dashboard] anomalyTop5 查询失败: {}", e.getMessage());
@@ -487,15 +530,15 @@ public class FlowMonitorDashboardController {
     if (runningDays instanceof Number d) {
       item.put("overdueDays", d.longValue());
     } else if (stuckHours instanceof Number h) {
-      item.put("overdueDays", h.longValue() / 24);
+      item.put("overdueDays", h.longValue() / HOURS_PER_DAY);
     }
 
     long days = item.get("overdueDays") instanceof Number d ? d.longValue() : 0;
     String warnLevel;
     if (anomalyType.equals("TIMEOUT")) {
-      if (days >= 7) {
+      if (days >= ANOMALY_DAYS_SEVERE) {
         warnLevel = "RED";
-      } else if (days >= 3) {
+      } else if (days >= ANOMALY_DAYS_NORMAL) {
         warnLevel = "YELLOW";
       } else {
         warnLevel = "ORANGE";
@@ -573,11 +616,11 @@ public class FlowMonitorDashboardController {
    * @return 趋势列表
    */
   private List<Map<String, Object>> buildInstanceTrend(String tenantId, int days) {
-    int effectiveDays = (days == 30) ? 30 : 7;
+    int effectiveDays = (days == MONTH_STAT_DAYS) ? MONTH_STAT_DAYS : DEFAULT_STAT_DAYS;
     LocalDate today = LocalDate.now();
     LocalDate start = today.minusDays(effectiveDays - 1L);
     LocalDateTime startDt = start.atStartOfDay();
-    LocalDateTime endDt = today.atTime(23, 59, 59);
+    LocalDateTime endDt = today.atTime(END_OF_DAY_HOUR, END_OF_DAY_MIN_SEC, END_OF_DAY_MIN_SEC);
 
     List<Map<String, Object>> newCounts =
         instanceService.selectDailyNewCount(tenantId, startDt, endDt);

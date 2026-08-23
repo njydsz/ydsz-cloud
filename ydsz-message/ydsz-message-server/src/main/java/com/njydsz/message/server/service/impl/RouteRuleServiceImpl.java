@@ -7,6 +7,15 @@ import java.util.concurrent.TimeUnit;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.core.code.YdszResultCode;
@@ -22,14 +31,6 @@ import com.njydsz.message.domain.dto.RouteRuleUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgRouteRule;
 import com.njydsz.message.domain.repository.MsgRouteRuleRepository;
 import com.njydsz.message.server.service.config.RouteRuleService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 /**
  * 消息路由规则服务实现。
@@ -78,10 +79,12 @@ public class RouteRuleServiceImpl implements RouteRuleService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>执行 ruleCode 唯一性校验后插入，并清除路由规则缓存。
+   * 
    *
-   * @throws SysException 当 ruleCode 为空或已存在时抛出
+   * @param dto 参数说明
+   * @return 返回值说明
    */
   @Override
   public MsgRouteRule create(RouteRuleUpsertDTO dto) {
@@ -112,10 +115,13 @@ public class RouteRuleServiceImpl implements RouteRuleService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>仅更新非 null 字段（动态更新），更新后清除路由规则缓存。
+   * 
    *
-   * @throws SysException 当 id 或 dto 为空时抛出
+   * @param id 参数说明
+   * @param dto 参数说明
+   * @return 返回值说明
    */
   @Override
   public MsgRouteRule update(String id, RouteRuleUpsertDTO dto) {
@@ -163,10 +169,11 @@ public class RouteRuleServiceImpl implements RouteRuleService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>删除后清除路由规则缓存。
+   * 
    *
-   * @throws SysException 当 id 为空时抛出
+   * @param id 参数说明
    */
   @Override
   public void delete(String id) {
@@ -182,8 +189,10 @@ public class RouteRuleServiceImpl implements RouteRuleService {
 
   /**
    * {@inheritDoc}
+   * 
    *
-   * @throws SysException 当 id 为空时抛出
+   * @param id 参数说明
+   * @return 返回值说明
    */
   @Override
   public MsgRouteRule getById(String id) {

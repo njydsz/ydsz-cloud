@@ -33,6 +33,9 @@ import com.njydsz.literule.api.RuleDefinition;
 @Slf4j
 public class NacosRuleSource implements RuleSource {
 
+    /** 配置拉取超时（毫秒） */
+  private static final long CONFIG_TIMEOUT_MS = 5000L;
+
   private final String serverAddr;
   private final String dataId;
   private final String group;
@@ -94,7 +97,7 @@ public class NacosRuleSource implements RuleSource {
           configService
               .getClass()
               .getMethod("getConfig", String.class, String.class, long.class)
-              .invoke(configService, dataId, group, 5000L);
+              .invoke(configService, dataId, group, CONFIG_TIMEOUT_MS);
       if (config == null) {
         return List.of();
       }

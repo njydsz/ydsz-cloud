@@ -18,8 +18,8 @@ import com.njydsz.common.auth.annotation.AuthMenuPermission;
 import com.njydsz.common.auth.annotation.PermissionMode;
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.constant.AuthErrorCode;
-import com.njydsz.common.auth.exception.PermissionDeniedException.PermissionType;
 import com.njydsz.common.auth.exception.PermissionDeniedException;
+import com.njydsz.common.auth.exception.PermissionDeniedException.PermissionType;
 import com.njydsz.common.auth.hierarchy.PermissionHierarchyService;
 import com.njydsz.common.auth.metrics.AuthMetricsCollector;
 import com.njydsz.common.auth.model.RolePermissions;
@@ -134,7 +134,9 @@ public class RbacPermissionEvaluator {
    * @param required 目标方法/类上的 {@link AuthMenuPermission} 注解
    */
   public void validateMenu(Map<String, Object> userInfo, AuthMenuPermission required) {
-    if (required == null) return;
+    if (required == null) {
+      return;
+    }
     validateMenu0(
         userInfo,
         required.permissionCodes(),
@@ -149,13 +151,19 @@ public class RbacPermissionEvaluator {
       String[] roleCodes,
       AuthMenuPermission.PermissionType type,
       PermissionMode mode) {
-    if (!properties.isEnabled()) return;
+    if (!properties.isEnabled()) {
+      return;
+    }
     Set<String> requiredRoles = arrayToSet(roleCodes);
     Set<String> requiredPerms = arrayToSet(permissionCodes);
-    if (requiredRoles.isEmpty() && requiredPerms.isEmpty()) return;
+    if (requiredRoles.isEmpty() && requiredPerms.isEmpty()) {
+      return;
+    }
 
     Set<String> userRoles = userInfo != null ? parseUserRoles(userInfo) : new HashSet<>();
-    if (isSuperAdmin(userRoles)) return;
+    if (isSuperAdmin(userRoles)) {
+      return;
+    }
 
     PermissionType permType = mapToPermissionType(type);
     boolean orMode = mode == PermissionMode.OR;
@@ -204,19 +212,27 @@ public class RbacPermissionEvaluator {
    * @param required 接口权限注解
    */
   public void validateApi(Map<String, Object> userInfo, AuthApiPermission required) {
-    if (required == null) return;
+    if (required == null) {
+      return;
+    }
     validateApi0(userInfo, required.apiCodes(), required.roleCodes(), required.mode());
   }
 
   private void validateApi0(
       Map<String, Object> userInfo, String[] apiCodes, String[] roleCodes, PermissionMode mode) {
-    if (!properties.isEnabled()) return;
+    if (!properties.isEnabled()) {
+      return;
+    }
     Set<String> requiredRoles = arrayToSet(roleCodes);
     Set<String> requiredApis = arrayToSet(apiCodes);
-    if (requiredRoles.isEmpty() && requiredApis.isEmpty()) return;
+    if (requiredRoles.isEmpty() && requiredApis.isEmpty()) {
+      return;
+    }
 
     Set<String> userRoles = userInfo != null ? parseUserRoles(userInfo) : new HashSet<>();
-    if (isSuperAdmin(userRoles)) return;
+    if (isSuperAdmin(userRoles)) {
+      return;
+    }
 
     boolean orMode = mode == PermissionMode.OR;
 
@@ -351,9 +367,15 @@ public class RbacPermissionEvaluator {
       }
       RolePermissions rp = getPermissionsByRoleCodes(userRoles);
       Set<String> allPerms = new HashSet<>();
-      if (rp.getMenuPermissions() != null) allPerms.addAll(rp.getMenuPermissions());
-      if (rp.getButtonPermissions() != null) allPerms.addAll(rp.getButtonPermissions());
-      if (rp.getApiPermissions() != null) allPerms.addAll(rp.getApiPermissions());
+      if (rp.getMenuPermissions() != null) {
+        allPerms.addAll(rp.getMenuPermissions());
+      }
+      if (rp.getButtonPermissions() != null) {
+        allPerms.addAll(rp.getButtonPermissions());
+      }
+      if (rp.getApiPermissions() != null) {
+        allPerms.addAll(rp.getApiPermissions());
+      }
       return hasPermission(allPerms, permission);
     } catch (Exception e) {
       log.error(
@@ -448,6 +470,8 @@ public class RbacPermissionEvaluator {
    * 按角色清理缓存。
    *
    * <p>由于缓存 Key 使用 SHA-256 Hash，无法从 Key 反解角色， 通过维护的 roleCode → cacheKey 反向索引进行精确清理。
+   *
+   * @param csvRoleCodes 逗号分隔的角色编码列表
    */
   public void clearCachesByRoleCodes(String csvRoleCodes) {
     PermissionUtils.clearPatternCache();

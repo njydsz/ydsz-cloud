@@ -1,5 +1,4 @@
 package com.njydsz.system.infra.repository;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -10,18 +9,21 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.dto.DictItemDTO;
+import com.njydsz.system.domain.dto.DictTypeDTO;
+import com.njydsz.system.domain.query.DictItemPageQuery;
+import com.njydsz.system.domain.query.DictPageQuery;
+import com.njydsz.system.domain.repository.DictRepository;
+import com.njydsz.system.domain.vo.DictItemVO;
+import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.DictItemDO;
 import com.njydsz.system.infra.entity.DictTypeDO;
 import com.njydsz.system.infra.mapper.DictItemMapper;
 import com.njydsz.system.infra.mapper.DictTypeMapper;
-import com.njydsz.system.domain.repository.DictRepository;
-import com.njydsz.system.domain.dto.DictItemDTO;
-import com.njydsz.system.domain.dto.DictTypeDTO;
-import com.njydsz.system.domain.query.DictItemPageQuery;
-import com.njydsz.system.domain.query.DictPageQuery;
-import com.njydsz.system.domain.vo.DictItemVO;
-import com.njydsz.system.domain.vo.DictTypeVO;
+
+
+
 
 /**
  * 字典仓储实现（Infra 层）。
@@ -67,7 +69,7 @@ public class DictRepositoryImpl implements DictRepository {
     wrapper.orderByDesc(DictTypeDO::getCreatedAt);
     com.baomidou.mybatisplus.core.metadata.IPage<DictTypeDO> result = dictTypeMapper.selectPage(page, wrapper);
     List<DictTypeVO> vos = converter.dictTypeListToVO(result.getRecords());
-    return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
+    return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   @Override
@@ -162,7 +164,7 @@ public class DictRepositoryImpl implements DictRepository {
     wrapper.orderByDesc(DictItemDO::getCreatedAt);
     com.baomidou.mybatisplus.core.metadata.IPage<DictItemDO> result = dictItemMapper.selectPage(page, wrapper);
     List<DictItemVO> vos = converter.dictItemListToVO(result.getRecords());
-    return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
+    return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   @Override

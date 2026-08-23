@@ -164,7 +164,8 @@ public abstract class AbstractCircuitBreaker {
    *
    * @param operation 受保护操作
    * @param fallback 降级操作
-   * @return 结果
+   * @param <T> 操作结果类型
+   * @return 操作结果或降级结果
    */
   public <T> T execute(Supplier<T> operation, Supplier<T> fallback) {
     if (!tryAcquire()) {

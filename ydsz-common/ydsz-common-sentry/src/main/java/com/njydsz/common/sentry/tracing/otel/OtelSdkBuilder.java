@@ -128,6 +128,10 @@ public final class OtelSdkBuilder {
   }
 
   /** 设置 W3C TraceContext + Baggage 传播器（默认） */
+  /**
+   * with w3 c。
+   * @return 结果
+   */
   public OtelSdkBuilder withW3CPropagator() {
     this.propagators =
         new TextMapPropagator[] {
@@ -136,7 +140,12 @@ public final class OtelSdkBuilder {
     return this;
   }
 
-  /** 设置自定义传播器 */
+  /**
+   * 设置自定义传播器。
+   *
+   * @param propagators 文本传播器列表
+   * @return 当前 Builder
+   */
   public OtelSdkBuilder propagators(TextMapPropagator... propagators) {
     this.propagators = propagators;
     return this;

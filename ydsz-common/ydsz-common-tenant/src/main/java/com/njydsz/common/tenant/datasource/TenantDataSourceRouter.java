@@ -90,7 +90,9 @@ public class TenantDataSourceRouter {
     }
 
     DynamicDataSourceContextHolder.push(datasourceKey);
-    if (metrics != null) metrics.recordDatasourceSwitch();
+    if (metrics != null) {
+      metrics.recordDatasourceSwitch();
+    }
     log.debug("租户 {} 切换到数据源 {}", tenantId, datasourceKey);
   }
 

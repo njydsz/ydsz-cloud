@@ -246,8 +246,8 @@ public class ColumnDesensitizationService {
   private void parseColumnString(
       String tableName, String columns, ColumnDesensitizationContext context) {
     String[] columnArray = columns.split(",");
-    for (String column : columnArray) {
-      column = column.trim();
+    for (String rawColumn : columnArray) {
+      String column = rawColumn.trim();
       if (StringUtils.isNotBlank(column)) {
         context.addRule(tableName, column, (ColumnDesensitizationRule) null);
       }

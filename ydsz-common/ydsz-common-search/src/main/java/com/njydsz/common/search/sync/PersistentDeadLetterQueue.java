@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import javax.sql.DataSource;
 
 import lombok.extern.slf4j.Slf4j;
@@ -129,7 +130,7 @@ public class PersistentDeadLetterQueue {
    * @param replayFn 重放函数（实际执行索引操作）
    * @return 成功处理的记录数
    */
-  public int replayPending(int batchSize, java.util.function.Consumer<DlqRecord> replayFn) {
+  public int replayPending(int batchSize, Consumer<DlqRecord> replayFn) {
     if (!dbAvailable) {
       return 0;
     }

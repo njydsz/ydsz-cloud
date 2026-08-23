@@ -42,6 +42,9 @@ import com.njydsz.literule.server.impl.ExpressionRule;
 @Slf4j
 public class RuleCanaryRouter {
 
+    /** 哈希取正掩码（0x7FFFFFFF） */
+  private static final int HASH_POSITIVE_MASK = 0x7FFFFFFF;
+
   private final ExpressionEngine evaluator;
 
   /** 灰度桶计数器：ruleCode -> {PRIMARY: count, CANARY: count} */
@@ -67,7 +70,9 @@ public class RuleCanaryRouter {
     List<String> conditions = definition.getCanaryConditions();
     if (conditions != null && !conditions.isEmpty()) {
       for (String cond : conditions) {
-        if (cond == null || cond.isBlank()) continue;
+        if (cond == null || cond.isBlank()) {
+          continue;
+        }
         try {
           if (!evaluator.evalBoolean(cond, context)) {
             return false;
@@ -83,7 +88,7 @@ public class RuleCanaryRouter {
     double ratio = Math.min(1.0, Math.max(0.0, definition.getCanaryRatio()));
     String traceId = context.getTraceId();
     int hash = traceId == null ? (int) RandomUtils.randomLong() : traceId.hashCode();
-    double bucket = ((hash & 0x7FFFFFFF) % 10000) / 10000.0;
+    double bucket = ((hash & HASH_POSITIVE_MASK) % 10000) / 10000.0;
     return bucket < ratio;
   }
 

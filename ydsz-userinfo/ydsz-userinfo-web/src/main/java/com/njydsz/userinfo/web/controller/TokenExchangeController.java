@@ -1,7 +1,5 @@
 package com.njydsz.userinfo.web.controller;
 
-import java.util.Map;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -61,6 +59,8 @@ import com.njydsz.userinfo.server.config.CrossDomainSsoProperties;
 @Tag(name = "跨域 SSO", description = "令牌交换/验证/登出通知")
 @ApiVersion("1")
 public class TokenExchangeController {
+  /** "Bearer " 前缀长度 */
+  private static final int BEARER_PREFIX_LENGTH = 7;
 
   private final CrossDomainSsoProperties ssoProperties;
   private final CrossDomainTokenService crossDomainTokenService;
@@ -148,7 +148,7 @@ public class TokenExchangeController {
     // 优先使用查询参数中的 token，其次从 Authorization 头提取
     String accessToken = token;
     if (accessToken == null && authorization != null && authorization.startsWith("Bearer ")) {
-      accessToken = authorization.substring(7);
+      accessToken = authorization.substring(BEARER_PREFIX_LENGTH);
     }
 
     TokenValidateVO vo = new TokenValidateVO();

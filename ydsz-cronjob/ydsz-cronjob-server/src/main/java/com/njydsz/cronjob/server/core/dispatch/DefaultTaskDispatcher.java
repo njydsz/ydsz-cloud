@@ -11,15 +11,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.alibaba.ttl.TtlRunnable;
@@ -38,26 +35,25 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.util.id.RandomUtils;
 import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.common.util.id.RandomUtils;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.cronjob.domain.vo.JobLogVO;
-import com.njydsz.cronjob.domain.vo.JobNodeVO;
-import com.njydsz.cronjob.domain.vo.JobVO;
+import com.njydsz.cronjob.domain.job.ExecutionContextScope;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobHandler;
-import com.njydsz.cronjob.domain.job.ExecutionContextScope;
 import com.njydsz.cronjob.domain.job.ProcessResult;
 import com.njydsz.cronjob.domain.job.ShardingContext;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.repository.JobNodeRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
+import com.njydsz.cronjob.domain.vo.JobNodeVO;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.ExecutorConfig;
 import com.njydsz.cronjob.server.config.RemoteConfig;
@@ -111,6 +107,15 @@ import com.njydsz.cronjob.server.service.log.JobLogContentService;
 @RequiredArgsConstructor
 @ConditionalOnMissingBean(TaskDispatcher.class)
 public class DefaultTaskDispatcher implements TaskDispatcher {
+  /** 任务最大重试次数 */
+  private static final int MAX_RETRY_ATTEMPTS = 5;
+
+  /** 短暂等待时间（毫秒） */
+  private static final long BRIEF_SLEEP_MILLIS = 50;
+
+  /** 线程池空闲保活时间（秒） */
+  private static final long KEEPALIVE_SECONDS = 60;
+
 
   private final JobRepository jobRepository;
   private final JobLogRepository jobLogRepository;
@@ -239,9 +244,11 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    */
   private ThreadPoolExecutor taskExecutorPool;
 
+  // CHECKSTYLE.OFF: RegexpSinglelineJava - ThreadLocal 使用后必须 remove，见 dispatchWithLock 的 finally 块
   /** P2-6: COVER 策略防递归标记（ThreadLocal），避免重新派发时锁仍被持有导致无限递归 */
   private static final ThreadLocal<Boolean> COVER_REDISPATCHING =
       ThreadLocal.withInitial(() -> false);
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /**
    * P1-A4: 正在执行任务（含分片）的线程注册表（threadId → Thread）。
@@ -256,8 +263,13 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /** 触发类型常量 */
   public static final String TRIGGER_CRON = "CRON";
 
+  /** 手动触发标识 */
   public static final String TRIGGER_MANUAL = "MANUAL";
+
+  /** 重试触发标识 */
   public static final String TRIGGER_RETRY = "RETRY";
+
+  /** 依赖触发标识 */
   public static final String TRIGGER_DEPENDENT = "DEPENDENT";
 
   /** P2-2: Misfire 触发（合并执行时使用，日志可识别） */
@@ -887,7 +899,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
     int maxAttempts =
         cronjobProperties.getSchedulerExecutorSeparation().getMaxDispatchAttempts();
-    maxAttempts = Math.max(1, Math.min(maxAttempts, 5));
+    maxAttempts = Math.max(1, Math.min(maxAttempts, MAX_RETRY_ATTEMPTS));
 
     Set<String> excludedNodeIds = new HashSet<>(maxAttempts);
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -1432,7 +1444,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       log.warn("[Dispatcher] COVER 策略未找到 RUNNING 日志, 尝试释放残留锁: key={}", job.getJobKey());
       safeReleaseLock(lockKey, INSTANCE_ID);
       // 短暂 sleep 后重新派发（让锁释放生效）
-      sleepBriefly(50);
+      sleepBriefly(BRIEF_SLEEP_MILLIS);
       COVER_REDISPATCHING.set(true);
       try {
         return executeJob(job, true, triggerType, retryCount);
@@ -1466,7 +1478,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     String releaseHolder = (lockHolder != null) ? lockHolder : INSTANCE_ID;
     safeReleaseLock(lockKey, releaseHolder);
     // 5. 短暂 sleep 避免竞态（让被中断的线程有机会释放资源），然后重新派发新任务
-    sleepBriefly(50);
+    sleepBriefly(BRIEF_SLEEP_MILLIS);
     log.info("[Dispatcher] COVER 策略: 已中断旧任务, 重新派发新任务: key={}", job.getJobKey());
     // 锁已释放，executeJob 会重新走 setIfAbsent 流程获取锁
     COVER_REDISPATCHING.set(true);
@@ -1960,7 +1972,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         ExecutorUtils.builder()
             .corePoolSize(corePoolSize)
             .maxPoolSize(maxPoolSize)
-            .keepAliveTime(60L, TimeUnit.SECONDS)
+            .keepAliveTime(KEEPALIVE_SECONDS, TimeUnit.SECONDS)
             .queueCapacity(queueCapacity)
             .queueType(
                 queueCapacity == 0

@@ -387,7 +387,7 @@ public class AuthConfiguration {
   /**
    * 创建权限模块 Micrometer 指标采集器 Bean
    *
-   * @param meterRegistry Micrometer 指标注册中心
+   * @param meterRegistryProvider Micrometer 指标注册中心提供者（可选）
    * @return AuthMetricsCollector 实例
    */
   @Bean

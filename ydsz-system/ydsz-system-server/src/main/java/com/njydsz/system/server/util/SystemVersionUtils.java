@@ -1,8 +1,8 @@
 package com.njydsz.system.server.util;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicLong;
+
 
 /**
  * 版本号生成工具（P2：版本号可读化 + 唯一化）。

@@ -8,8 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.cronjob.domain.vo.OutboxEventVO;
 import com.njydsz.cronjob.domain.repository.outbox.OutboxEventRepository;
+import com.njydsz.cronjob.domain.vo.OutboxEventVO;
 
 /**
  * Outbox 事件发布器（P0-2：事务性 Outbox 事件模式）。
@@ -36,6 +36,9 @@ import com.njydsz.cronjob.domain.repository.outbox.OutboxEventRepository;
 @Configuration
 @RequiredArgsConstructor
 public class OutboxPublisher {
+  /** 退避基数 */
+  private static final int BACKOFF_BASE = 5;
+
 
   private final OutboxEventRepository outboxEventRepository;
 
@@ -73,6 +76,9 @@ public class OutboxPublisher {
         case SUCCESS -> published++;
         case RETRYABLE_FAILURE -> failed++;
         case EXHAUSTED -> dead++;
+        default -> {
+          // 未知发布结果忽略
+        }
       }
     }
     if (published + failed + dead > 0) {
@@ -142,7 +148,7 @@ public class OutboxPublisher {
       return PublishResult.EXHAUSTED;
     }
     // 指数退避：1s, 5s, 25s
-    long backoffSeconds = (long) Math.pow(5, currentRetry);
+    long backoffSeconds = (long) Math.pow(BACKOFF_BASE, currentRetry);
     LocalDateTime nextRetry = LocalDateTime.now().plusSeconds(backoffSeconds);
     outboxEventRepository.incrementRetry(event.getId(), nextRetry);
     return PublishResult.RETRYABLE_FAILURE;

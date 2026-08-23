@@ -59,7 +59,9 @@ public class RuleImportExportController {
   /** 规则管理服务 */
   private final RuleAdminService ruleAdminService;
 
-  /** 导出全部规则为 JSON */
+  /** 导出全部规则为 JSON
+   * @return 返回值说明
+   */
   @GetMapping("/export")
   public YdszResponse<Map<String, Object>> exportRules() {
     List<RuleDefinition> rules = ruleAdminService.listAll();
@@ -152,7 +154,9 @@ public class RuleImportExportController {
 
   /** YAML 字符串转义（处理特殊字符与换行） */
   private String escapeYaml(String s) {
-    if (s == null) return "null";
+    if (s == null) {
+      return "null";
+    }
     // 含特殊字符时用双引号包裹并转义
     if (s.contains(":") || s.contains("#") || s.contains("\n") || s.contains("\"")) {
       return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n") + "\"";
@@ -160,7 +164,11 @@ public class RuleImportExportController {
     return s;
   }
 
-  /** 导入规则（JSON 格式） */
+  /** 导入规则（JSON 格式）
+   * @param operator 参数说明
+      * @return 返回值说明
+      * @param dto 参数说明
+   */
   @Idempotent(key = "ruleAdmin:importRules", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
       module = "规则管理",

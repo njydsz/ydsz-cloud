@@ -10,6 +10,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.listener.RemovalCause;
@@ -18,12 +25,6 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.server.template.TemplateEngine;
 import com.njydsz.message.server.template.util.TemplateFilterUtil;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * 带 AST 缓存的模板引擎（基于 ydsz-common-cache 实现）。
@@ -51,6 +52,15 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class CachedTemplateEngine implements TemplateEngine {
+  /** if/else 正则 false 分支组 */
+  private static final int IF_ELSE_GROUP_FALSE = 3;
+
+  /** 模板日志截断长度 */
+  private static final int TEMPLATE_LOG_MAX_LENGTH = 30;
+
+  /** 缓存最小容量 */
+  private static final int MIN_CACHE_SIZE = 64;
+
 
   /** 变量占位符正则：匹配 ${var} / ${a.b.c} / ${this} / ${@index} / ${var|filter:arg} */
   private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
@@ -102,7 +112,7 @@ public class CachedTemplateEngine implements TemplateEngine {
     this.astCache =
         YdszCache.newBuilder()
             .name(CACHE_NAME)
-            .maximumSize(Math.max(64, maxCacheSize))
+            .maximumSize(Math.max(MIN_CACHE_SIZE, maxCacheSize))
             .expireAfterWrite(expireAfterWriteMinutes, TimeUnit.MINUTES)
             .recordStats()
             .removalListener(
@@ -122,7 +132,11 @@ public class CachedTemplateEngine implements TemplateEngine {
         expireAfterWriteMinutes);
   }
 
-  /** 注册 Micrometer 监控指标。 */
+  /**
+   * 注册 Micrometer 监控指标。
+   *
+   * @param meterRegistry 参数说明
+   */
   @PostConstruct
   public void registerMetrics(@Autowired(required = false) MeterRegistry meterRegistry) {
     if (meterRegistry != null) {
@@ -166,7 +180,12 @@ public class CachedTemplateEngine implements TemplateEngine {
     return renderAst(ast, safeParams);
   }
 
-  /** 获取或编译模板 AST。 */
+  /**
+   * 获取或编译模板 AST。
+   *
+   * @param template 参数说明
+   * @return 返回值说明
+   */
   private TemplateAst getOrCompile(String template) {
     return astCache.get(
         template,
@@ -176,7 +195,12 @@ public class CachedTemplateEngine implements TemplateEngine {
         });
   }
 
-  /** 将模板编译为 AST。 */
+  /**
+   * 将模板编译为 AST。
+   *
+   * @param template 参数说明
+   * @return 返回值说明
+   */
   private TemplateAst compile(String template) {
     List<TemplateAst.AstInstruction> instructions = new ArrayList<>();
     int pos = 0;
@@ -196,7 +220,7 @@ public class CachedTemplateEngine implements TemplateEngine {
       if (ifElseMatcher.find(pos) && ifElseMatcher.start() == pos) {
         String key = ifElseMatcher.group(1);
         String truePart = ifElseMatcher.group(2);
-        String falsePart = ifElseMatcher.group(3);
+        String falsePart = ifElseMatcher.group(IF_ELSE_GROUP_FALSE);
         TemplateAst falseBranch = compile(falsePart);
         instructions.add(TemplateAst.AstInstruction.ifBlock(key, compile(truePart), falseBranch));
         pos = ifElseMatcher.end();
@@ -233,7 +257,13 @@ public class CachedTemplateEngine implements TemplateEngine {
     return new TemplateAst(template, instructions);
   }
 
-  /** 查找下一个特殊标记的位置（$、{ 等模板语法起始字符）。 */
+  /**
+   * 查找下一个特殊标记的位置（$、{ 等模板语法起始字符）。
+   *
+   * @param template 参数说明
+   * @param fromIndex 参数说明
+   * @return 返回值说明
+   */
   private int findNextSpecial(String template, int fromIndex) {
     int len = template.length();
     for (int i = fromIndex; i < len; i++) {
@@ -248,7 +278,13 @@ public class CachedTemplateEngine implements TemplateEngine {
     return len;
   }
 
-  /** 使用 AST 渲染模板。 */
+  /**
+   * 使用 AST 渲染模板。
+   *
+   * @param ast 参数说明
+   * @param params 参数说明
+   * @return 返回值说明
+   */
   private String renderAst(TemplateAst ast, Map<String, Object> params) {
     StringBuilder result = new StringBuilder();
     for (TemplateAst.AstInstruction instruction : ast.getInstructions()) {
@@ -276,12 +312,21 @@ public class CachedTemplateEngine implements TemplateEngine {
             }
           }
         }
-      }
+                default -> {
+            // 未知指令忽略
+          }
+        }
     }
     return result.toString();
   }
 
-  /** 渲染单个变量（含管道过滤器）。 */
+  /**
+   * 渲染单个变量（含管道过滤器）。
+   *
+   * @param expression 参数说明
+   * @param params 参数说明
+   * @return 返回值说明
+   */
   private String renderVar(String expression, Map<String, Object> params) {
     String[] parts = expression.split("\\|");
     String key = parts[0].trim();
@@ -292,22 +337,44 @@ public class CachedTemplateEngine implements TemplateEngine {
     return value == null ? "" : String.valueOf(value);
   }
 
-  /** 应用管道过滤器（委托至 {@link TemplateFilterUtil}）。 */
+  /**
+   * 应用管道过滤器（委托至 {@link TemplateFilterUtil}）。
+   *
+   * @param value 参数说明
+   * @param filterExpr 参数说明
+   * @return 返回值说明
+   */
   private Object applyFilter(Object value, String filterExpr) {
     return TemplateFilterUtil.applyFilter(value, filterExpr);
   }
 
-  /** 解析占位符 key 对应的值（委托至 {@link TemplateFilterUtil}）。 */
+  /**
+   * 解析占位符 key 对应的值（委托至 {@link TemplateFilterUtil}）。
+   *
+   * @param params 参数说明
+   * @param key 参数说明
+   * @return 返回值说明
+   */
   private Object resolve(Map<String, Object> params, String key) {
     return TemplateFilterUtil.resolve(params, key);
   }
 
-  /** truthy 判定（委托至 {@link TemplateFilterUtil}）。 */
+  /**
+   * truthy 判定（委托至 {@link TemplateFilterUtil}）。
+   *
+   * @param value 参数说明
+   * @return 返回值说明
+   */
   private boolean isTruthy(Object value) {
     return TemplateFilterUtil.isTruthy(value);
   }
 
-  /** 校验必填参数。 */
+  /**
+   * 校验必填参数。
+   *
+   * @param params 参数说明
+   * @param requiredKeys 参数说明
+   */
   private void validateRequired(Map<String, Object> params, Set<String> requiredKeys) {
     for (String key : requiredKeys) {
       Object value = resolve(params, key);
@@ -330,7 +397,9 @@ public class CachedTemplateEngine implements TemplateEngine {
       astCache.invalidate(template);
       log.debug(
           "[TemplateAst] 缓存已失效: {}",
-          template.length() > 30 ? template.substring(0, 30) + "..." : template);
+          template.length() > TEMPLATE_LOG_MAX_LENGTH
+              ? template.substring(0, TEMPLATE_LOG_MAX_LENGTH) + "..."
+              : template);
     }
   }
 
@@ -342,7 +411,11 @@ public class CachedTemplateEngine implements TemplateEngine {
     log.info("[TemplateAst] 缓存已全部清空");
   }
 
-  /** 当前缓存大小。 */
+  /**
+   * 当前缓存大小。
+   *
+   * @return 返回值说明
+   */
   public long cacheSize() {
     return astCache.estimatedSize();
   }
@@ -390,7 +463,11 @@ public class CachedTemplateEngine implements TemplateEngine {
     return total > 0 ? (double) hits / total : -1.0;
   }
 
-  /** 缓存详细统计信息。 */
+  /**
+   * 缓存详细统计信息。
+   *
+   * @return 返回值说明
+   */
   public String cacheStats() {
     return String.format(
         "size=%d, hitRate=%.2f%%, evictions=%d",

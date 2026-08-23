@@ -1,10 +1,12 @@
 package com.njydsz.common.search.engine.pg;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -184,7 +186,8 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
       if (request.isHighlight()) {
         selectSql.append(", ts_headline(?, searchable_text, plainto_tsquery(?, ?), ");
         selectSql.append(
-            "'MaxWords=60, MinWords=20, ShortWord=3, HighlightAll=FALSE, StartSel=' || ? || ', StopSel=' || ?) AS highlight");
+            "'MaxWords=60, MinWords=20, ShortWord=3, HighlightAll=FALSE, StartSel=' || ? || "
+                + "', StopSel=' || ?) AS highlight");
         queryParams.add(searchConfig);
         queryParams.add(searchConfig);
         queryParams.add(keyword);
@@ -215,7 +218,8 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
             .append(direction);
       } else if (pgConfig.getTimeDecayDays() > 0) {
         selectSql.append(
-            " ORDER BY (rank * EXP(-EXTRACT(EPOCH FROM (NOW() - updated_at_ts)) / 86400.0 / ? * LN(2))) DESC, updated_at DESC");
+            " ORDER BY (rank * EXP(-EXTRACT(EPOCH FROM (NOW() - updated_at_ts)) / 86400.0 / ? "
+                + "* LN(2))) DESC, updated_at DESC");
         queryParams.add(pgConfig.getTimeDecayDays());
       } else {
         selectSql.append(" ORDER BY rank DESC, updated_at DESC");
@@ -544,7 +548,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
    */
   private CursorParseResult parseCursor(String cursor) {
     try {
-      String decoded = new String(java.util.Base64.getUrlDecoder().decode(cursor));
+      String decoded = new String(Base64.getUrlDecoder().decode(cursor));
       String[] parts = decoded.split(":", 3);
       if (parts.length >= 2) {
         double score = Double.parseDouble(parts[0]);
@@ -575,9 +579,9 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     if (sortField != null && !sortField.isBlank()) {
       cursorValue += ":" + sortField;
     }
-    return java.util.Base64.getUrlEncoder()
+    return Base64.getUrlEncoder()
         .withoutPadding()
-        .encodeToString(cursorValue.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        .encodeToString(cursorValue.getBytes(StandardCharsets.UTF_8));
   }
 
   /**
@@ -768,6 +772,9 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
           params.add(filter.getValues().get(0));
           params.add(filter.getValues().get(1));
         }
+      }
+      default -> {
+        // 未知操作符：忽略该过滤条件
       }
     }
   }

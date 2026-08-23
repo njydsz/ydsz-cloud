@@ -14,7 +14,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.context.RequestContext;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.domain.dto.SpaceMemberDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -66,7 +66,7 @@ public class SpacePermissionAspect {
     // 提取空间 ID
     String spaceId = extractSpaceId(joinPoint);
     if (spaceId == null || spaceId.isBlank()) {
-      throw BusinessException.of(NextwikiExceptionCode.PARAM_INVALID)
+      throw BusinessException.of(NextwikiExceptionCode.PARAM_ERROR)
           .data("reason", "未找到空间 ID 参数");
     }
 
@@ -145,7 +145,7 @@ public class SpacePermissionAspect {
       return userId;
     }
     // 从请求头获取
-    return RequestContext.getHeader(AuthHeaderConstants.X_USER_ID);
+    return RequestContext.getExtraHeader(AuthHeaderConstants.X_USER_ID);
   }
 
   /**

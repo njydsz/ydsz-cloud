@@ -1,16 +1,13 @@
 package com.njydsz.workflow.server.service.instance;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
-import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
@@ -21,6 +18,7 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 
@@ -84,17 +82,17 @@ public class ServiceNodeExecuteService {
 
   /**
    * 创建 ServiceNodeExecuteService 实例
+   * 
    *
-   * @param serviceNodeExecutor 服务节点执行器
-   * @param taskRepository 运行时任务仓储
-   * @param converter MapStruct 转换器
-   * @param archiveService 任务归档服务
-   * @param support 跨子 Service 共享的任务校验/审计/事件辅助
-   * @param eventSubscriptionService 事件订阅服务
-   * @param nodeRepository 流程节点仓储
-   * @param instanceRepository 流程实例仓储
-   * @param advanceCallback 执行成功后推进到下一节点的回调
-   */
+   * @param serviceNodeExecutor 参数说明
+   * @param taskRepository 参数说明
+   * @param converter 参数说明
+   * @param archiveService 参数说明
+   * @param support 参数说明
+   * @param eventSubscriptionService 参数说明
+   * @param nodeRepository 参数说明
+   * @param instanceRepository 参数说明
+   * @param advanceCallback 参数说明   */
   public ServiceNodeExecuteService(
       FlowServiceNodeExecutor serviceNodeExecutor,
       FlowRunTaskRepository taskRepository,
@@ -287,7 +285,13 @@ public class ServiceNodeExecuteService {
     }
   }
 
-  /** 执行成功后推进到下一节点（含递归深度保护） */
+  /**
+   * 执行成功后推进到下一节点（含递归深度保护）
+   *
+   * @param instance 参数说明
+   * @param node 参数说明
+   * @param variables 参数说明
+   */
   private void advanceAfterSuccess(
       FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
     if (advanceCallback != null) {

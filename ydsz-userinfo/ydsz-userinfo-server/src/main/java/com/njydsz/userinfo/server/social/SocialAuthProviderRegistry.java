@@ -5,11 +5,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.userinfo.domain.social.SocialAuthProvider;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 社交认证提供者注册表（P3-4：运行时动态注册预留）。

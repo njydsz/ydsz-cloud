@@ -3,7 +3,6 @@ package com.njydsz.message.server.service.impl;
 import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.common.core.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -11,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
@@ -39,6 +39,9 @@ import com.njydsz.message.server.service.core.MessageLogService;
 @Service
 @RequiredArgsConstructor
 public class MessageLogServiceImpl implements MessageLogService {
+  /** 每分钟毫秒数 */
+  private static final long MILLIS_PER_MINUTE = 60_000L;
+
 
   /** 消息日志 Repository */
   private final MsgLogRepository msgLogRepository;
@@ -147,9 +150,11 @@ public class MessageLogServiceImpl implements MessageLogService {
 
   /**
    * P1-4: 手动重发死信。
-   *
+   * 
    * <p>仅 DEAD 状态可重发。重置 retryCount / errorMessage / nextRetryAt， 流转为 SENDING 后立即通过 {@link
    * ChannelRouter#dispatch(MsgLogVO)} 重新投递。 投递失败则进入 RETRY 状态（retryCount=1）走正常重试调度，而非立即再次死信。
+   *
+   * @param logId 参数说明
    */
   @Override
   public void resendDead(String logId) {
@@ -221,7 +226,7 @@ public class MessageLogServiceImpl implements MessageLogService {
       // 冷却期去重:同一通道冷却期内不重复告警
       long now = System.currentTimeMillis();
       Long last = lastAlertTimeMap.get(channel);
-      long cooldownMs = cfg.getCooldownMinutes() * 60_000L;
+      long cooldownMs = cfg.getCooldownMinutes() * MILLIS_PER_MINUTE;
       if (last != null && (now - last) < cooldownMs) {
         return;
       }

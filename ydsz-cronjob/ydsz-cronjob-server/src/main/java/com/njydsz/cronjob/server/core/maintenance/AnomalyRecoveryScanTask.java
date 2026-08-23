@@ -35,7 +35,7 @@ public class AnomalyRecoveryScanTask implements ScanTask {
   @Override
   public long intervalMs() {
     // 使用 AnomalyRecoveryScanner 的固定间隔（30s）
-    return 30000L;
+    return DEFAULT_SCAN_INTERVAL_MS;
   }
 
   @Override

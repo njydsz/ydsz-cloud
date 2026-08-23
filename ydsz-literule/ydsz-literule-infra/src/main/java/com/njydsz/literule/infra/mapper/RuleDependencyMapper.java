@@ -34,16 +34,36 @@ import com.njydsz.literule.infra.entity.RuleDependencyDO;
 @Mapper
 public interface RuleDependencyMapper extends BaseMapper<RuleDependencyDO> {
 
-  /** 查询某条规则依赖了哪些规则（正向） */
+  /**
+   * 查询某条规则依赖了哪些规则（正向）。
+   *
+   * @param ruleCode 规则编码
+   * @return 依赖关系列表
+   */
   List<RuleDependencyDO> selectByRuleCode(@Param("ruleCode") String ruleCode);
 
-  /** 查询哪些规则依赖了指定规则（反向） */
+  /**
+   * 查询哪些规则依赖了指定规则（反向）。
+   *
+   * @param dependsOnRuleCode 被依赖的规则编码
+   * @return 依赖关系列表
+   */
   List<RuleDependencyDO> selectByDependsOn(@Param("dependsOnRuleCode") String dependsOnRuleCode);
 
-  /** 查询指定被依赖规则中配置了级联禁用的依赖方 */
+  /**
+   * 查询指定被依赖规则中配置了级联禁用的依赖方。
+   *
+   * @param dependsOnRuleCode 被依赖的规则编码
+   * @return 级联禁用依赖方列表
+   */
   List<RuleDependencyDO> selectCascadingByDependsOn(
       @Param("dependsOnRuleCode") String dependsOnRuleCode);
 
-  /** 删除某条规则的所有依赖 */
+  /**
+   * 删除某条规则的所有依赖。
+   *
+   * @param ruleCode 规则编码
+   * @return 受影响行数
+   */
   int deleteByRuleCode(@Param("ruleCode") String ruleCode);
 }

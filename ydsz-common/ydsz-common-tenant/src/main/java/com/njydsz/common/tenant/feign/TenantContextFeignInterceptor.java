@@ -36,6 +36,8 @@ public class TenantContextFeignInterceptor implements RequestInterceptor {
   private final Map<String, TenantField> fieldByKey;
 
   /**
+   * 构造租户上下文 Feign 拦截器。
+   *
    * @param fields 激活的租户字段列表（来自 TenantProperties）
    */
   public TenantContextFeignInterceptor(List<TenantField> fields) {

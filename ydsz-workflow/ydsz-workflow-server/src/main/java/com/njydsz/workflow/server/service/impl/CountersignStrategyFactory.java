@@ -69,7 +69,12 @@ public class CountersignStrategyFactory {
     }
   }
 
-  /** 按 performType 获取策略；未注册时回退到 OR。 */
+  /**
+   * 按 performType 获取策略；未注册时回退到 OR。
+   *
+   * @param performType 参数说明
+   * @return 返回值说明
+   */
   public CountersignStrategy getStrategy(FlowPerformType performType) {
     if (performType == null) {
       return registry.get(FlowPerformType.OR);

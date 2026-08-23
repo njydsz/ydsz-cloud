@@ -108,7 +108,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
     wrapper.orderByAsc("sort_order");
     IPage<MsgRouteRuleDO> entityPage = msgRouteRuleMapper.selectPage(page, wrapper);
     List<MsgRouteRuleVO> vos = converter.routeRuleDoListToVO(entityPage.getRecords());
-    return PageResponse.success(entityPage.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
+    return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   private MsgRouteRuleDO voToDO(MsgRouteRuleVO vo) {

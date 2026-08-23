@@ -115,6 +115,9 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
 @RequiredArgsConstructor
 public class FlowNotificationServiceImpl implements FlowNotificationService {
 
+    /** Map 初始容量：小集合（4） */
+  private static final int MAP_INIT_CAPACITY_4 = 4;
+
   /** 通知通道常量 */
   private static final String CHANNEL_INAPP = "INAPP";
 
@@ -320,7 +323,14 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
   }
 
-  /** INAPP 通道：通过 NotificationClient Feign 调用 notification 服务写入站内信。 */
+  /**
+   * INAPP 通道：通过 NotificationClient Feign 调用 notification 服务写入站内信。
+   *
+   * @param userId 参数说明
+   * @param title 参数说明
+   * @param content 参数说明
+   * @param extra 参数说明
+   */
   private void sendInApp(String userId, String title, String content, Map<String, Object> extra) {
     Map<String, Object> payload = new HashMap<>();
     if (extra != null) {
@@ -342,7 +352,14 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     log.debug("[FlowNotify][INAPP] userId={} title={}", userId, title);
   }
 
-  /** EMAIL 通道：同样通过 NotificationClient 投递（channel=EMAIL）， 由 notification 服务负责实际邮件发送。 */
+  /**
+   * EMAIL 通道：同样通过 NotificationClient 投递（channel=EMAIL）， 由 notification 服务负责实际邮件发送。
+   *
+   * @param userId 参数说明
+   * @param title 参数说明
+   * @param content 参数说明
+   * @param extra 参数说明
+   */
   private void sendEmail(String userId, String title, String content, Map<String, Object> extra) {
     Map<String, Object> payload = new HashMap<>();
     if (extra != null) {
@@ -371,6 +388,11 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
   /**
    * WEBHOOK 通道：通过 {@link NotificationClient#sendMessage} 委托消息中心发送到 extra.webhookUrl 指定的机器人地址。
    * webhookUrl 未配置时直接跳过（不算异常）。
+   *
+   * @param userId 参数说明
+   * @param title 参数说明
+   * @param content 参数说明
+   * @param extra 参数说明
    */
   private void sendWebhook(String userId, String title, String content, Map<String, Object> extra) {
     String webhookUrl = extra == null ? null : (String) extra.get("webhookUrl");
@@ -420,7 +442,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       return;
     }
     try {
-      Map<String, Object> extra = new HashMap<>(4);
+      Map<String, Object> extra = new HashMap<>(MAP_INIT_CAPACITY_4);
       extra.put("category", "WORKFLOW");
       extra.put("bizType", bizType);
       extra.put("level", level);
@@ -450,7 +472,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     String maskedContent = sensitiveMasker.mask(content);
     for (String receiverId : receiverIds) {
       try {
-        Map<String, Object> extra = new HashMap<>(4);
+        Map<String, Object> extra = new HashMap<>(MAP_INIT_CAPACITY_4);
         extra.put("category", "WORKFLOW");
         extra.put("bizType", bizType);
         extra.put("level", level);
@@ -465,7 +487,12 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
   }
 
-  /** 将 Map 形式的 payload 转换为强类型 NotificationFeignDTO */
+  /**
+   * 将 Map 形式的 payload 转换为强类型 NotificationFeignDTO
+   *
+   * @param payload 参数说明
+   * @return 返回值说明
+   */
   private NotificationFeignDTO toFeignDTO(Map<String, Object> payload) {
     NotificationFeignDTO dto = new NotificationFeignDTO();
     if (payload == null) {

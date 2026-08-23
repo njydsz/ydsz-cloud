@@ -40,23 +40,38 @@ public interface RecallChannel {
 
   /**
    * 撤回结果记录。
+   * 
    *
-   * @param platformRecallSucceeded true 表示平台 API 撤回成功；false 表示仅本地标记
-   * @param failureReason 失败原因（成功时为 null）
+   * @param platformRecallSucceeded 参数说明
+   * @param failureReason 参数说明
+   * @return 返回值说明
    */
   record RecallResult(boolean platformRecallSucceeded, String failureReason) {
 
-    /** 平台撤回成功。 */
+    /**
+     * 平台撤回成功。
+     *
+     * @return 返回值说明
+     */
     public static RecallResult platformSuccess() {
       return new RecallResult(true, null);
     }
 
-    /** 仅本地标记（通道不支持 API 撤回）。 */
+    /**
+     * 仅本地标记（通道不支持 API 撤回）。
+     *
+     * @return 返回值说明
+     */
     public static RecallResult localOnly() {
       return new RecallResult(false, null);
     }
 
-    /** 撤回失败。 */
+    /**
+     * 撤回失败。
+     *
+     * @param reason 参数说明
+     * @return 返回值说明
+     */
     public static RecallResult failed(String reason) {
       return new RecallResult(false, reason);
     }

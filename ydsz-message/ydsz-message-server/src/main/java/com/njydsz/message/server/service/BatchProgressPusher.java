@@ -22,6 +22,9 @@ import com.njydsz.message.server.realtime.RealtimePushService;
 @Component
 @RequiredArgsConstructor
 public class BatchProgressPusher {
+  /** Map 初始容量 */
+  private static final int MAP_CAPACITY_16 = 16;
+
 
   private final RealtimePushService realtimePushService;
 
@@ -38,7 +41,7 @@ public class BatchProgressPusher {
     if (batch == null || senderId == null) {
       return;
     }
-    Map<String, Object> payload = new HashMap<>(16);
+    Map<String, Object> payload = new HashMap<>(MAP_CAPACITY_16);
     payload.put("type", "BATCH_PROGRESS");
     payload.put("batchId", batch.getBatchId());
     payload.put("batchName", batch.getBatchName());

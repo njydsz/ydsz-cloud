@@ -3,9 +3,7 @@ package com.njydsz.literule.server.config;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PreDestroy;
@@ -38,9 +36,10 @@ import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.domain.model.MockModelInputProvider;
 import com.njydsz.literule.domain.model.ModelInputProvider;
 import com.njydsz.literule.domain.model.ModelInputRegistry;
-import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
-import com.njydsz.literule.server.approval.ApprovalPermissionChecker;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
+import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
+import com.njydsz.literule.domain.repository.RuleVersionRepository;
+import com.njydsz.literule.server.approval.ApprovalPermissionChecker;
 import com.njydsz.literule.server.approval.RuleApprovalService;
 import com.njydsz.literule.server.approval.RuleApprovalWorkflowBridge;
 import com.njydsz.literule.server.audit.RuleAuditLogService;
@@ -66,13 +65,13 @@ import com.njydsz.literule.server.expression.EmptyVariableRegistry;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
 import com.njydsz.literule.server.expression.VariableRegistry;
 import com.njydsz.literule.server.health.LiteRuleHealthIndicator;
-import com.njydsz.literule.server.orchestrator.RuleChain;
 import com.njydsz.literule.server.orchestrator.DefaultGraphExecutionProvider;
+import com.njydsz.literule.server.orchestrator.RuleChain;
 import com.njydsz.literule.server.replay.ExecutionReplayService;
 import com.njydsz.literule.server.sdk.LiteRuleSdk;
 import com.njydsz.literule.server.security.RulePermissionChecker;
-import com.njydsz.literule.server.spi.DbRuleSource;
 import com.njydsz.literule.server.spi.ApolloRuleSource;
+import com.njydsz.literule.server.spi.DbRuleSource;
 import com.njydsz.literule.server.spi.DecisionTableConfigProvider;
 import com.njydsz.literule.server.spi.DecisionTreeConfigProvider;
 import com.njydsz.literule.server.spi.DefaultAlertActionHandler;
@@ -82,17 +81,16 @@ import com.njydsz.literule.server.spi.FileRuleSource;
 import com.njydsz.literule.server.spi.NacosRuleSource;
 import com.njydsz.literule.server.spi.RuleActionDispatcher;
 import com.njydsz.literule.server.spi.RuleActionHandler;
+import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.spi.RulePackProvider;
-import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 import com.njydsz.literule.server.spi.RuleSource;
 import com.njydsz.literule.server.spi.RuleSourceManager;
-import com.njydsz.literule.server.spi.ZookeeperRuleSource;
-import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.server.spi.ScorecardConfigProvider;
 import com.njydsz.literule.server.spi.ScriptConfigProvider;
 import com.njydsz.literule.server.spi.TraceRecorder;
+import com.njydsz.literule.server.spi.ZookeeperRuleSource;
 
 /**
  * LiteFlow 规则引擎自动配置。
@@ -114,6 +112,15 @@ import com.njydsz.literule.server.spi.TraceRecorder;
     havingValue = "true",
     matchIfMissing = true)
 public class LiteRuleAutoConfiguration {
+
+    /** 默认线程池最小线程数 */
+  private static final int DEFAULT_MIN_POOL_SIZE = 4;
+
+  /** 任务队列容量（大） */
+  private static final int QUEUE_CAPACITY_1024 = 1024;
+
+  /** 任务队列容量（小） */
+  private static final int QUEUE_CAPACITY_512 = 512;
 
   /**
    * 优雅关闭 RuleChain 静态线程池（P1-T4）
@@ -223,7 +230,8 @@ public class LiteRuleAutoConfiguration {
     }
 
     log.info(
-        "[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}, canary={}, model={}, slowRuleThreshold={}ms）",
+        "[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, "
+            + "metrics={}, canary={}, model={}, slowRuleThreshold={}ms）",
         properties.isStatsEnabled(),
         properties.isTraceEnabled(),
         properties.getRuleTimeoutMs(),
@@ -275,7 +283,9 @@ public class LiteRuleAutoConfiguration {
       DefaultRuleEngine engine,
       LiteRuleProperties properties,
       ObjectProvider<TraceRecorder> traceDelegateProvider) {
-    if (!properties.isTraceEnabled()) return;
+    if (!properties.isTraceEnabled()) {
+      return;
+    }
     AsyncTraceRecorder asyncRecorder =
         new AsyncTraceRecorder(
             properties.getTraceQueueCapacity(),
@@ -300,7 +310,9 @@ public class LiteRuleAutoConfiguration {
       DefaultRuleEngine engine,
       LiteRuleProperties properties,
       ApplicationContext applicationContext) {
-    if (properties.getRuleTimeoutMs() <= 0) return;
+    if (properties.getRuleTimeoutMs() <= 0) {
+      return;
+    }
     // P1-2: 使用 common-thread 统一管理的线程池（ydsz.thread.pools.ruleTimeout）
     ThreadPoolTaskExecutor threadPool = lookupExecutor(applicationContext, "ruleTimeoutExecutor");
     RuleTimeoutExecutor timeoutExecutor;
@@ -311,12 +323,13 @@ public class LiteRuleAutoConfiguration {
           properties.getRuleTimeoutMs());
     } else {
       // common-thread 未配置时降级（使用可用处理器数）
-      int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors());
+      int poolSize = Math.max(DEFAULT_MIN_POOL_SIZE, Runtime.getRuntime().availableProcessors());
       timeoutExecutor =
           new RuleTimeoutExecutor(
               properties.getRuleTimeoutMs(), createFallbackTimeoutExecutor(poolSize));
       log.warn(
-          "[LiteRule] 单规则超时控制已启用 (timeoutMs={}, poolSize={}, executor=fallback: common-thread bean 'ruleTimeoutExecutor' 未配置)",
+          "[LiteRule] 单规则超时控制已启用 (timeoutMs={}, poolSize={}, "
+              + "executor=fallback: common-thread bean 'ruleTimeoutExecutor' 未配置)",
           properties.getRuleTimeoutMs(),
           poolSize);
     }
@@ -341,7 +354,7 @@ public class LiteRuleAutoConfiguration {
     return ExecutorUtils.builder()
         .corePoolSize(poolSize)
         .maxPoolSize(poolSize)
-        .queueCapacity(1024)
+        .queueCapacity(QUEUE_CAPACITY_1024)
         .threadNamePrefix("literule-timeout-")
         .daemon(true)
         .build();
@@ -365,7 +378,9 @@ public class LiteRuleAutoConfiguration {
 
   /** 配置熔断器（P3-3 提取） */
   private void configureCircuitBreaker(DefaultRuleEngine engine, LiteRuleProperties properties) {
-    if (properties.getCircuitBreakerMinEvaluations() <= 0) return;
+    if (properties.getCircuitBreakerMinEvaluations() <= 0) {
+      return;
+    }
     RuleCircuitBreaker breaker =
         new RuleCircuitBreaker(
             properties.getCircuitBreakerErrorRate(),
@@ -384,7 +399,9 @@ public class LiteRuleAutoConfiguration {
       DefaultRuleEngine engine,
       LiteRuleProperties properties,
       ObjectProvider<ExpressionEngine> evaluatorProvider) {
-    if (!properties.isCanaryEnabled()) return;
+    if (!properties.isCanaryEnabled()) {
+      return;
+    }
     ExpressionEngine evaluator = evaluatorProvider.getIfAvailable();
     if (evaluator == null) {
       evaluator = expressionEvaluator(properties);
@@ -415,7 +432,7 @@ public class LiteRuleAutoConfiguration {
             .corePoolSize(poolSize)
             .maxPoolSize(poolSize)
             .keepAliveTime(keepAliveSeconds, TimeUnit.SECONDS)
-            .queueCapacity(512)
+            .queueCapacity(QUEUE_CAPACITY_512)
             .threadNamePrefix("literule-injection-")
             .daemon(true)
             .build();
@@ -651,8 +668,9 @@ public class LiteRuleAutoConfiguration {
    * <p>事务提交后捕获 OutboxMessage 中的规则刷新事件，执行低延迟广播（毫秒级）， 成功即标记 SENT；失败保持
    * PENDING 交由 OutboxProcessor 兜底重试。 当广播器与 Outbox 仓储均存在时自动装配。
    *
-   * @param broadcasterProvider 规则配置广播器（可选）
+   * @param broadcaster 规则配置广播器（可选）
    * @param outboxRepositoryProvider Outbox 仓储（可选）
+   * @param nodeIdProvider 节点 ID 提供者（可选）
    * @return RuleConfigOutboxRelay 实例
    * @since 1.0.0
    */
@@ -936,8 +954,7 @@ public class LiteRuleAutoConfiguration {
    *
    * <p>从 @Component 改为 @Bean 注册，与项目其他模块规范一致。
    *
-   * @param ruleEngine 规则引擎
-   * @param cepEngine CEP 引擎
+   * @param ruleEngine 规则引擎   * @param cepEngineProvider 表达式引擎提供者（可选）
    * @return LiteRuleHealthIndicator 实例
    * @since 1.0.0
    */
@@ -1392,7 +1409,8 @@ public class LiteRuleAutoConfiguration {
       evaluator = new ParallelRuleEvaluator(cfg.getParallelPoolSize());
       // CHECKSTYLE.ON: RegexpSinglelineJava
       log.warn(
-          "[LiteRule-Performance] 规则并行评估器已初始化（poolSize={}, executor=fallback: common-thread bean 'ruleParallelExecutor' 未配置）",
+          "[LiteRule-Performance] 规则并行评估器已初始化（poolSize={}, "
+              + "executor=fallback: common-thread bean 'ruleParallelExecutor' 未配置）",
           cfg.getParallelPoolSize());
     }
     return evaluator;

@@ -81,6 +81,11 @@ public class AsyncLogPublisher implements LogPublisher, AutoCloseable {
   }
 
   @Override
+  /**
+   * publish。
+   * @param event 参数
+   * @return 结果
+   */
   public boolean publish(LogEvent event) {
     if (!running) {
       return false;
@@ -192,16 +197,28 @@ public class AsyncLogPublisher implements LogPublisher, AutoCloseable {
   }
 
   @Override
+  /**
+   * is available。
+   * @return 结果
+   */
   public boolean isAvailable() {
     return running && delegate.isAvailable();
   }
 
   @Override
+  /**
+   * get name。
+   * @return 结果
+   */
   public String getName() {
     return "async-" + delegate.getName();
   }
 
   @Override
+  /**
+   * get scheme。
+   * @return 结果
+   */
   public String getScheme() {
     return delegate.getScheme();
   }
@@ -248,6 +265,9 @@ public class AsyncLogPublisher implements LogPublisher, AutoCloseable {
    * <p>先标记停止标志，中断消费线程，然后由当前线程（通常为容器 shutdown hook） 将队列剩余日志全部 drain 并发送，确保缓冲中的日志不丢失。
    */
   @Override
+  /**
+   * close。
+   */
   public void close() {
     running = false;
     consumerThread.interrupt();

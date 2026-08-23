@@ -30,14 +30,20 @@ import lombok.Data;
 @Data
 public class RemoteConfig {
 
+  /** 默认connectTimeoutSeconds值（可被配置文件覆盖） */
+  private static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 5;
+
+  /** 默认requestTimeoutSeconds值（可被配置文件覆盖） */
+  private static final int DEFAULT_REQUEST_TIMEOUT_SECONDS = 60;
+
   /** 是否启用远程派发（false=所有分片在 Leader 本地执行，兼容旧行为） */
   private boolean enabled = true;
 
   /** HTTP 连接超时（秒） */
-  private int connectTimeoutSeconds = 5;
+  private int connectTimeoutSeconds = DEFAULT_CONNECT_TIMEOUT_SECONDS;
 
   /** HTTP 请求超时（秒，包含连接+读取+执行） */
-  private int requestTimeoutSeconds = 60;
+  private int requestTimeoutSeconds = DEFAULT_REQUEST_TIMEOUT_SECONDS;
 
   /** 远程派发失败时是否降级到 Leader 本地执行（true=保证分片不丢失） */
   private boolean fallbackToLocal = true;

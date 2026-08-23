@@ -26,6 +26,10 @@ public class SentryHealthIndicator implements HealthIndicator {
   private final TraceContext traceContext;
 
   @Override
+  /**
+   * health。
+   * @return 结果
+   */
   public Health health() {
     Health.Builder builder = Health.up();
 

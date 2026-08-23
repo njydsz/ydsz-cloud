@@ -56,6 +56,7 @@ public final class DataPermissionBypass {
    *
    * <p>{@code true} 表示当前线程已禁用数据权限检查，拦截器应跳过条件追加。
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已通过 close()/remove() 在使用后清理（云顶规范 15.1）
   private static final ThreadLocal<Boolean> BYPASS_FLAG =
       new NamedThreadLocal<>("DataPermission Bypass") {
         @Override
@@ -63,6 +64,7 @@ public final class DataPermissionBypass {
           return Boolean.FALSE;
         }
       };
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /**
    * 禁用当前线程的数据权限检查。

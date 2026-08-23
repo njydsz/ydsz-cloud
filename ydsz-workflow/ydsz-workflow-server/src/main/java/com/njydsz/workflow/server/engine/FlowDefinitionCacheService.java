@@ -17,12 +17,12 @@ import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowSkipDO;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.infra.entity.FlowSkipDO;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
 import com.njydsz.workflow.server.config.FlowProperties;
@@ -38,7 +38,8 @@ import com.njydsz.workflow.server.config.FlowProperties;
  * <p>设计说明：节点和 skip 的全量列表各自仅查库一次（{@code selectByDefinitionId}）， 其余按 nodeCode / nextNodeCode / 起始节点
  * 等维度的查询均从缓存列表中派生， 将原本每次推进 5+ 次查库降为首次 2 次、后续 0 次。
  *
- * <p><b>分层规范：</b>engine 层对外返回 domain 层 VO（{@link FlowNodeVO} / {@link FlowSkipVO}）， 不暴露 infra 层 DO。DO → VO 转换在加载时一次性完成（{@link
+ * <p><b>分层规范：</b>engine 层对外返回 domain 层 VO（{@link FlowNodeVO} / {@link FlowSkipVO}），
+ * 不暴露 infra 层 DO。DO → VO 转换在加载时一次性完成（{@link
  * FlowDefinitionCacheService#convertNodes} / {@link FlowDefinitionCacheService#convertSkips}）。
  *
  * @since 1.0.0
@@ -60,11 +61,15 @@ public class FlowDefinitionCacheService {
 
   /**
    * Spring 注入构造器，使用系统时钟。
-   *
+   * 
    * <p>缓存 TTL 与容量从 {@link FlowProperties} 读取（P1-2: 硬编码值迁移至 YAML）。
+   * 
    *
-   * @param properties 工作流配置属性
-   */
+   * @param properties 参数说明
+   * @param flowNodeMapper 参数说明
+   * @param flowSkipMapper 参数说明
+   * @param workflowConverter 参数说明
+   * @param broadcaster 参数说明   */
   public FlowDefinitionCacheService(
       FlowNodeMapper flowNodeMapper,
       FlowSkipMapper flowSkipMapper,
@@ -126,7 +131,12 @@ public class FlowDefinitionCacheService {
 
   // ============================== 节点查询 ==============================
 
-  /** 获取流程定义下全部节点（缓存）。 */
+  /**
+   * 获取流程定义下全部节点（缓存）。
+   *
+   * @param definitionId 参数说明
+   * @return 返回值说明
+   */
   public List<FlowNodeVO> getAllNodes(String definitionId) {
     if (definitionId == null) {
       return Collections.emptyList();
@@ -136,7 +146,13 @@ public class FlowDefinitionCacheService {
     return metadata != null ? metadata.getNodes() : Collections.emptyList();
   }
 
-  /** 按 nodeCode 查单节点（P1: O(1) Map 查找）。 */
+  /**
+   * 按 nodeCode 查单节点（P1: O(1) Map 查找）。
+   *
+   * @param definitionId 参数说明
+   * @param nodeCode 参数说明
+   * @return 返回值说明
+   */
   public FlowNodeVO getNodeByCode(String definitionId, String nodeCode) {
     if (nodeCode == null) {
       return null;
@@ -146,7 +162,12 @@ public class FlowDefinitionCacheService {
     return metadata != null ? metadata.getNodeByCode().get(nodeCode) : null;
   }
 
-  /** 查开始节点（nodeType = START，P1: 使用 nodeByCode 索引缓存）。 */
+  /**
+   * 查开始节点（nodeType = START，P1: 使用 nodeByCode 索引缓存）。
+   *
+   * @param definitionId 参数说明
+   * @return 返回值说明
+   */
   public FlowNodeVO getStartNode(String definitionId) {
     return metadataCache.get(buildCacheKey(definitionId), this::loadMetadata).getNodes().stream()
         .filter(n -> n.getNodeType() != null && n.getNodeType() == FlowNodeType.START.getCode())
@@ -156,7 +177,12 @@ public class FlowDefinitionCacheService {
 
   // ============================== skip 查询 ==============================
 
-  /** 获取流程定义下全部跳转（缓存）。 */
+  /**
+   * 获取流程定义下全部跳转（缓存）。
+   *
+   * @param definitionId 参数说明
+   * @return 返回值说明
+   */
   public List<FlowSkipVO> getAllSkips(String definitionId) {
     if (definitionId == null) {
       return Collections.emptyList();
@@ -168,8 +194,12 @@ public class FlowDefinitionCacheService {
 
   /**
    * 查某节点的出发跳转（P2-4: 预解析 sourceRef 索引，O(1) 查找替代 O(n) 流过滤）
-   *
+   * 
    * <p>返回该节点所有 skipType 的出边，调用方按需过滤 skipType。
+   *
+   * @param definitionId 参数说明
+   * @param nodeCode 参数说明
+   * @return 返回值说明
    */
   public List<FlowSkipVO> getSkipsByNodeCode(String definitionId, String nodeCode) {
     if (nodeCode == null) {
@@ -184,7 +214,13 @@ public class FlowDefinitionCacheService {
     return result == null ? Collections.emptyList() : result;
   }
 
-  /** 查指向某节点的跳转（按 nextNodeCode 过滤，用于退回时找前驱，P1: O(1) Map 查找）。 */
+  /**
+   * 查指向某节点的跳转（按 nextNodeCode 过滤，用于退回时找前驱，P1: O(1) Map 查找）。
+   *
+   * @param definitionId 参数说明
+   * @param nextNodeCode 参数说明
+   * @return 返回值说明
+   */
   public List<FlowSkipVO> getSkipsByNextNode(String definitionId, String nextNodeCode) {
     if (nextNodeCode == null) {
       return Collections.emptyList();
@@ -226,9 +262,12 @@ public class FlowDefinitionCacheService {
 
   /**
    * 一次性加载完整元数据并构建索引。
-   *
+   * 
    * <p>替代原有的多个独立缓存加载方法（loadNodes/loadSkips/loadSkipSourceRefIndex/
    * loadNodeByCodeIndex/loadSkipsByNextNodeIndex）， 单次缓存调用完成全部数据加载和索引构建，减少缓存操作次数。
+   *
+   * @param cacheKey 参数说明
+   * @return 返回值说明
    */
   private FlowDefinitionMetadata loadMetadata(String cacheKey) {
     List<FlowNodeVO> nodes = loadNodes(cacheKey);
@@ -292,7 +331,12 @@ public class FlowDefinitionCacheService {
 
   // ============================== DO → VO 转换 ==============================
 
-  /** 将 FlowNodeDO 列表转换为 FlowNodeVO 列表（engine 层对外不暴露 DO）。 */
+  /**
+   * 将 FlowNodeDO 列表转换为 FlowNodeVO 列表（engine 层对外不暴露 DO）。
+   *
+   * @param nodes 参数说明
+   * @return 返回值说明
+   */
   private List<FlowNodeVO> convertNodes(List<FlowNodeDO> nodes) {
     if (nodes == null || nodes.isEmpty()) {
       return Collections.emptyList();
@@ -300,7 +344,12 @@ public class FlowDefinitionCacheService {
     return workflowConverter.flowNodeListToVO(nodes);
   }
 
-  /** 将 FlowSkipDO 列表转换为 FlowSkipVO 列表（engine 层对外不暴露 DO）。 */
+  /**
+   * 将 FlowSkipDO 列表转换为 FlowSkipVO 列表（engine 层对外不暴露 DO）。
+   *
+   * @param skips 参数说明
+   * @return 返回值说明
+   */
   private List<FlowSkipVO> convertSkips(List<FlowSkipDO> skips) {
     if (skips == null || skips.isEmpty()) {
       return Collections.emptyList();

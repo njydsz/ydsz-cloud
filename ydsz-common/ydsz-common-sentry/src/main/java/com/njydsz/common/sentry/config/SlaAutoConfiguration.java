@@ -38,6 +38,11 @@ public class SlaAutoConfiguration {
       name = "enabled",
       havingValue = "true",
       matchIfMissing = true)
+  /**
+   * sla collector。
+   * @param metricsCollector 参数
+   * @return 结果
+   */
   public SlaCollector slaCollector(MetricsCollector metricsCollector) {
     return new DefaultSlaCollector(metricsCollector);
   }
@@ -57,6 +62,11 @@ public class SlaAutoConfiguration {
       name = "enabled",
       havingValue = "true",
       matchIfMissing = true)
+  /**
+   * sla metric aspect。
+   * @param slaCollector 参数
+   * @return 结果
+   */
   public SlaMetricAspect slaMetricAspect(SlaCollector slaCollector) {
     return new SlaMetricAspect(slaCollector);
   }

@@ -11,8 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import com.njydsz.common.base.config.BaseSecurityHeadersProperties;
 import com.njydsz.common.base.config.DocProperties;
+import com.njydsz.common.base.config.YdszSecurityHeadersProperties;
 
 /**
  * Base 模块健康指标
@@ -31,7 +31,7 @@ import com.njydsz.common.base.config.DocProperties;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class BaseHealthIndicator implements HealthIndicator {
+public class YdszHealthIndicator implements HealthIndicator {
 
   /** 字节到 MB 的换算因子 */
   private static final int BYTES_PER_MB = 1024 * 1024;
@@ -48,7 +48,7 @@ public class BaseHealthIndicator implements HealthIndicator {
   /** 期望的时区 ID，从配置 {@code ydsz.base.timezone} 读取，默认 {@code Asia/Shanghai} */
   private final String expectedTimezone;
 
-  private final BaseSecurityHeadersProperties securityHeadersProperties;
+  private final YdszSecurityHeadersProperties securityHeadersProperties;
   private final DocProperties docProperties;
 
   /**
@@ -58,8 +58,8 @@ public class BaseHealthIndicator implements HealthIndicator {
    * @param docProperties 文档配置
    * @param expectedTimezone 期望的时区 ID（从 {@code ydsz.base.timezone} 配置读取）
    */
-  public BaseHealthIndicator(
-      BaseSecurityHeadersProperties securityHeadersProperties,
+  public YdszHealthIndicator(
+      YdszSecurityHeadersProperties securityHeadersProperties,
       DocProperties docProperties,
       @Value("${ydsz.base.timezone:Asia/Shanghai}") String expectedTimezone) {
     this.securityHeadersProperties = securityHeadersProperties;

@@ -1,16 +1,11 @@
 package com.njydsz.userinfo.web.controller;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -23,6 +18,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.domain.alert.SecurityAlertRepository;
+import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
 
 /**
  * 安全告警管理 Controller。
@@ -49,56 +45,27 @@ import com.njydsz.userinfo.domain.alert.SecurityAlertRepository;
 @Tag(name = "安全告警管理", description = "安全告警查询与处理")
 public class SecurityAlertController {
 
+  /** 分页查询每页大小上限 */
+  private static final int MAX_PAGE_SIZE = 100;
+
   private final SecurityAlertRepository alertRepository;
 
   /**
    * 分页查询安全告警列表。
    *
-   * @param status 告警状态（PENDING/ACKNOWLEDGED/RESOLVED/IGNORED），可为空
-   * @param riskLevel 风险等级（LOW/MEDIUM/HIGH/CRITICAL），可为空
-   * @param start 起始日期，可为空（默认 7 天前）
-   * @param end 结束日期，可为空（默认今天）
-   * @param pageNum 页码（默认 1）
-   * @param pageSize 每页大小（默认 20，最大 100）
+   * @param query 分页查询参数（status / riskLevel / start / end / pageNum / pageSize）
    * @return 分页告警列表
    */
   @GetMapping
   @AuthApiPermission(apiCodes = "admin:security:alert")
   @Operation(summary = "分页查询安全告警")
   public YdszResponse<PageResponse<List<SecurityAlert>>> pageAlerts(
-      @RequestParam(required = false) String status,
-      @RequestParam(required = false) String riskLevel,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end,
-      @RequestParam(defaultValue = "1") int pageNum,
-      @RequestParam(defaultValue = "20") int pageSize) {
+      SecurityAlertPageQuery query) {
     // 限制每页大小上限
-    if (pageSize > 100) {
-      pageSize = 100;
+    if (query.getPageSize() > MAX_PAGE_SIZE) {
+      query.setPageSize(MAX_PAGE_SIZE);
     }
-    // 转换参数
-    SecurityAlert.AlertStatus alertStatus = null;
-    if (status != null && !status.isBlank()) {
-      try {
-        alertStatus = SecurityAlert.AlertStatus.valueOf(status.toUpperCase());
-      } catch (IllegalArgumentException e) {
-        // 忽略无效的状态值
-        log.debug("[SecurityAlert] 忽略无效的告警状态值: status={}", status);
-      }
-    }
-    SecurityAlert.RiskLevel riskLevelEnum = null;
-    if (riskLevel != null && !riskLevel.isBlank()) {
-      try {
-        riskLevelEnum = SecurityAlert.RiskLevel.valueOf(riskLevel.toUpperCase());
-      } catch (IllegalArgumentException e) {
-        // 忽略无效的风险等级值
-        log.debug("[SecurityAlert] 忽略无效的风险等级值: riskLevel={}", riskLevel);
-      }
-    }
-    LocalDateTime startTime = start != null ? start.atStartOfDay() : null;
-    LocalDateTime endTime = end != null ? end.atTime(LocalTime.MAX) : null;
-    return YdszResponse.success(
-        alertRepository.page(alertStatus, riskLevelEnum, startTime, endTime, pageNum, pageSize));
+    return YdszResponse.success(alertRepository.page(query));
   }
 
   /**

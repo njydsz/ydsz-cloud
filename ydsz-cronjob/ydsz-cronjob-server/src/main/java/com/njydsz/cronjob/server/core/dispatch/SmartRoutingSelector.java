@@ -42,6 +42,18 @@ import com.njydsz.cronjob.server.core.executor.JobNodeHeartbeat;
 @Slf4j
 @Component
 public class SmartRoutingSelector {
+  /** CPU 得分权重 */
+  private static final double CPU_SCORE_WEIGHT = 0.4;
+
+  /** 任务负载得分权重 */
+  private static final double TASK_SCORE_WEIGHT = 0.4;
+
+  /** 亲和性得分权重 */
+  private static final double AFFINITY_SCORE_WEIGHT = 0.2;
+
+  /** 默认负载系数 */
+  private static final double DEFAULT_LOAD_FACTOR = 0.5;
+
 
   private final ObjectProvider<NodeDiscoveryStrategy> nodeDiscoveryStrategyProvider;
   private final ObjectProvider<JobNodeHeartbeat> heartbeatProvider;
@@ -114,17 +126,17 @@ public class SmartRoutingSelector {
   private double calculateScore(JobNodeVO node, int maxConcurrentPerWorker, String localRack) {
     // 1. CPU 负载评分（0.4 权重）
     double cpuUsage = getCpuUsage();
-    double cpuScore = (1.0 - cpuUsage) * 0.4;
+    double cpuScore = (1.0 - cpuUsage) * CPU_SCORE_WEIGHT;
 
     // 2. 任务负载评分（0.4 权重）
     int runningCount = node.getRunningCount() != null ? node.getRunningCount() : 0;
     double taskLoadRatio =
         maxConcurrentPerWorker > 0 ? (double) runningCount / maxConcurrentPerWorker : 0;
     taskLoadRatio = Math.min(taskLoadRatio, 1.0);
-    double taskScore = (1.0 - taskLoadRatio) * 0.4;
+    double taskScore = (1.0 - taskLoadRatio) * TASK_SCORE_WEIGHT;
 
     // 3. 机房亲和性评分（0.2 权重）
-    double affinityScore = isSameRack(node, localRack) ? 0.2 : 0.0;
+    double affinityScore = isSameRack(node, localRack) ? AFFINITY_SCORE_WEIGHT : 0.0;
 
     return cpuScore + taskScore + affinityScore;
   }
@@ -142,9 +154,9 @@ public class SmartRoutingSelector {
                   // java.lang.management.OperatingSystemMXBean
                   ManagementFactory.getOperatingSystemMXBean();
       double load = osBean.getCpuLoad();
-      return load >= 0 ? load : 0.5;
+      return load >= 0 ? load : DEFAULT_LOAD_FACTOR;
     } catch (Exception e) {
-      return 0.5;
+      return DEFAULT_LOAD_FACTOR;
     }
   }
 

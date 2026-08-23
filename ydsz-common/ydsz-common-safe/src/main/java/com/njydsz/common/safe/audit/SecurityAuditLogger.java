@@ -30,7 +30,7 @@ import com.njydsz.common.safe.alert.SecurityEvent;
  *   "requestUri": "/api/users",
  *   "sourceIp": "192.168.1.1",
  *   "userAgent": "Mozilla/5.0...",
- *   "payload": "<script>alert(1)</script>",
+ *   "payload": "&lt;script&gt;alert(1)&lt;/script&gt;",
  *   "details": {}
  * }
  * }</pre>

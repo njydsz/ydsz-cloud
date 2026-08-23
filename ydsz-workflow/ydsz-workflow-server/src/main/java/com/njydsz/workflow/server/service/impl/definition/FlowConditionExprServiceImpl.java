@@ -260,8 +260,12 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
       // 简单语法校验：括号匹配
       int parenCount = 0;
       for (char c : expression.toCharArray()) {
-        if (c == '(') parenCount++;
-        if (c == ')') parenCount--;
+        if (c == '(') {
+          parenCount++;
+        }
+        if (c == ')') {
+          parenCount--;
+        }
         if (parenCount < 0) {
           result.put("valid", false);
           result.put("error", "括号不匹配");
@@ -421,7 +425,9 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
         List<Object> list = value instanceof List<?> l ? new ArrayList<>(l) : List.of();
         StringBuilder sb = new StringBuilder("seq.list(");
         for (int i = 0; i < list.size(); i++) {
-          if (i > 0) sb.append(", ");
+          if (i > 0) {
+            sb.append(", ");
+          }
           sb.append(formatValue(list.get(i), "STRING"));
         }
         sb.append(")");
@@ -471,7 +477,9 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
    * @return 去引号后的字符串，输入为 {@code null} 时返回 {@code null}
    */
   private String unquote(String s) {
-    if (s == null) return null;
+    if (s == null) {
+      return null;
+    }
     if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith("\"") && s.endsWith("\""))) {
       return s.substring(1, s.length() - 1);
     }
@@ -487,10 +495,18 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
    * @return 值类型字符串（{@code NULL/NUMBER/BOOLEAN/STRING}）
    */
   private String guessValueType(String value) {
-    if (value == null || value.isBlank()) return "NULL";
-    if (value.matches("-?\\d+(\\.\\d+)?")) return "NUMBER";
-    if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) return "BOOLEAN";
-    if (value.startsWith("'") || value.startsWith("\"")) return "STRING";
+    if (value == null || value.isBlank()) {
+      return "NULL";
+    }
+    if (value.matches("-?\\d+(\\.\\d+)?")) {
+      return "NUMBER";
+    }
+    if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
+      return "BOOLEAN";
+    }
+    if (value.startsWith("'") || value.startsWith("\"")) {
+      return "STRING";
+    }
     return "STRING";
   }
 

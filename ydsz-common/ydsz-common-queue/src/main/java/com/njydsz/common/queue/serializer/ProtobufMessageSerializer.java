@@ -41,7 +41,7 @@ public class ProtobufMessageSerializer implements MessageSerializer {
   private static final String PROTOBUF_MESSAGE_CLASS = "com.google.protobuf.Message";
 
   /** protobuf 是否可用的缓存标记（null=未检查，TRUE=可用，FALSE=不可用） */
-  private static final AtomicReference<Boolean> protobufAvailable = new AtomicReference<>();
+  private static final AtomicReference<Boolean> PROTOBUF_AVAILABLE = new AtomicReference<>();
 
   /**
    * 检测 protobuf 运行时是否可用
@@ -49,20 +49,20 @@ public class ProtobufMessageSerializer implements MessageSerializer {
    * @return true 如果 protobuf-java 在 classpath 中
    */
   public static boolean isProtobufAvailable() {
-    Boolean result = protobufAvailable.get();
+    Boolean result = PROTOBUF_AVAILABLE.get();
     if (result != null) {
       return result;
     }
     try {
       Class.forName(PROTOBUF_MESSAGE_CLASS);
-      if (protobufAvailable.compareAndSet(null, Boolean.TRUE)) {
+      if (PROTOBUF_AVAILABLE.compareAndSet(null, Boolean.TRUE)) {
         return true;
       }
     } catch (ClassNotFoundException e) {
-      protobufAvailable.compareAndSet(null, Boolean.FALSE);
+      PROTOBUF_AVAILABLE.compareAndSet(null, Boolean.FALSE);
       log.debug("protobuf-java 不可用，ProtobufMessageSerializer 将不可用");
     }
-    return protobufAvailable.get();
+    return PROTOBUF_AVAILABLE.get();
   }
 
   @Override

@@ -66,7 +66,10 @@ public class RuleTestRunner {
     this.client = Objects.requireNonNull(client, "LiteRuleSdk");
   }
 
-  /** 创建测试执行器 */
+  /** 创建测试执行器
+   * @param client 参数说明
+   * @return 返回值说明
+   */
   public static RuleTestRunner create(LiteRuleSdk client) {
     return new RuleTestRunner(client);
   }
@@ -119,7 +122,9 @@ public class RuleTestRunner {
           sb.append("误触发: ").append(falsePositives);
         }
         if (!falseNegatives.isEmpty()) {
-          if (sb.length() > 0) sb.append("; ");
+          if (sb.length() > 0) {
+            sb.append("; ");
+          }
           sb.append("漏触发: ").append(falseNegatives);
         }
         failureReason = sb.toString();
@@ -184,14 +189,20 @@ public class RuleTestRunner {
         .build();
   }
 
-  /** 批量执行测试套件（默认名称） */
+  /** 批量执行测试套件（默认名称）
+   * @param testCases 参数说明
+   * @return 返回值说明
+   */
   public RuleTestReport runSuite(List<RuleTestCase> testCases) {
     return runSuite("default", testCases);
   }
 
   // ==================== 链式 DSL ====================
 
-  /** 开始链式构建测试用例 */
+  /** 开始链式构建测试用例
+   * @param name 参数说明
+   * @return 返回值说明
+   */
   public TestSuiteBuilder suite(String name) {
     return new TestSuiteBuilder(this, name);
   }
@@ -208,7 +219,11 @@ public class RuleTestRunner {
       this.suiteName = suiteName;
     }
 
-    /** 定义一个测试用例 */
+    /** 定义一个测试用例
+     * @param id 参数说明
+     * @param name 参数说明
+     * @return 返回值说明
+     */
     public TestCaseBuilder testCase(String id, String name) {
       if (currentBuilder != null) {
         currentBuilder.end();
@@ -217,7 +232,9 @@ public class RuleTestRunner {
       return currentBuilder;
     }
 
-    /** 执行测试套件 */
+    /** 执行测试套件
+     * @return 返回值说明
+     */
     public RuleTestReport run() {
       if (currentBuilder != null) {
         currentBuilder.end();

@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -16,19 +15,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
+import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
-import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.server.config.FlowProperties;
-import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowEventListener;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowSubProcessService;
@@ -414,14 +413,21 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
 
   // ============== 私有方法 ==============
 
-  /** 从节点 ext JSON 提取子流程编码 */
+  /**
+   * 从节点 ext JSON 提取子流程编码
+   *
+   * @param node 参数说明
+   * @return 返回值说明
+   */
   private String extractSubFlowCode(FlowNodeDO node) {
     if (node.getExt() == null || node.getExt().isBlank()) {
       return null;
     }
     try {
       Map<String, Object> ext = FlowNodeExt.parseSafe(node.getExt());
-      if (ext == null) return null;
+      if (ext == null) {
+        return null;
+      }
       Object v = ext.get("callActivityFlowCode");
       if (v == null) {
         v = ext.get("subProcessFlowCode");
@@ -433,14 +439,21 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     }
   }
 
-  /** 从节点 ext JSON 提取子流程超时小时数 */
+  /**
+   * 从节点 ext JSON 提取子流程超时小时数
+   *
+   * @param node 参数说明
+   * @return 返回值说明
+   */
   private Double extractSubProcessTimeout(FlowNodeDO node) {
     if (node.getExt() == null || node.getExt().isBlank()) {
       return null;
     }
     try {
       Map<String, Object> ext = FlowNodeExt.parseSafe(node.getExt());
-      if (ext == null) return null;
+      if (ext == null) {
+        return null;
+      }
       Object v = ext.get("subProcessTimeout");
       if (v == null) {
         return null;
@@ -483,9 +496,16 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     return depth;
   }
 
-  /** 触发 onInstanceStart 事件 */
+  /**
+   * 触发 onInstanceStart 事件
+   *
+   * @param instanceId 参数说明
+   * @param variables 参数说明
+   */
   private void fireInstanceStart(String instanceId, Map<String, Object> variables) {
-    if (eventListeners == null) return;
+    if (eventListeners == null) {
+      return;
+    }
     for (FlowEventListener listener : eventListeners) {
       try {
         listener.onInstanceStart(instanceId, variables);
@@ -505,7 +525,9 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
    */
   private void publishWorkflowEvent(
       String eventType, String childInstanceId, String parentInstanceId) {
-    if (eventPublisher == null) return;
+    if (eventPublisher == null) {
+      return;
+    }
     try {
       Map<String, Object> data = new HashMap<>();
       data.put("childInstanceId", childInstanceId);

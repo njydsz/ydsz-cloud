@@ -1,12 +1,13 @@
 package com.njydsz.userinfo.infra.social;
 
-import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -98,12 +99,12 @@ public class JustAuthHttpClient {
 
     HttpHeaders headers = new HttpHeaders();
     headers.set("Authorization", "Bearer " + accessToken);
-    headers.setAccept(java.util.Collections.singletonList(MediaType.APPLICATION_JSON));
+    headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
     HttpEntity<Void> request = new HttpEntity<>(headers);
     ResponseEntity<String> response = restTemplate.exchange(
         builder.toUriString(),
-        org.springframework.http.HttpMethod.GET,
+        HttpMethod.GET,
         request,
         String.class);
 

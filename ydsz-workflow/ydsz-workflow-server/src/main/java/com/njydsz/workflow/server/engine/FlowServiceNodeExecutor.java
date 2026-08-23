@@ -1,7 +1,6 @@
 package com.njydsz.workflow.server.engine;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,13 +16,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 
@@ -81,9 +79,9 @@ public class FlowServiceNodeExecutor {
 
   /**
    * 构造器：通过 RestTemplateBuilder 构建带超时的 RestTemplate，并初始化 Aviator 沙箱实例。
+   * 
    *
-   * @param restTemplateBuilder RestTemplate 构建器
-   */
+   * @param restTemplateBuilder 参数说明   */
   public FlowServiceNodeExecutor(RestTemplateBuilder restTemplateBuilder) {
     this.restTemplate =
         restTemplateBuilder
@@ -153,7 +151,13 @@ public class FlowServiceNodeExecutor {
     }
   }
 
-  /** HTTP 类型：通过 RestTemplate 调用外部接口 */
+  /**
+   * HTTP 类型：通过 RestTemplate 调用外部接口
+   *
+   * @param node 参数说明
+   * @param variables 参数说明
+   * @return 返回值说明
+   */
   private ServiceExecutionResult executeHttp(
       FlowNodeDO node, Map<String, Object> variables) {
     String url = FlowNodeExt.getServiceUrl(node.getExt());
@@ -230,18 +234,20 @@ public class FlowServiceNodeExecutor {
 
   /**
    * SCRIPT 类型：使用 Aviator 表达式引擎执行脚本
-   *
+   * 
    * <p>脚本可引用流程变量（如 {@code amount > 5000}），返回值规则：
-   *
+   * 
    * <ul>
-   *   <li>返回 Boolean → true 视为成功，false 视为失败
-   *   <li>返回 null → 视为成功
-   *   <li>返回其他值 → 视为成功，返回值转为消息
+   * <li>返回 Boolean → true 视为成功，false 视为失败
+   * <li>返回 null → 视为成功
+   * <li>返回其他值 → 视为成功，返回值转为消息
    * </ul>
+   * 
    *
-   * @param node 服务节点
-   * @param config ext 配置（包含 script 字段）
-   * @param variables 流程变量（作为脚本执行环境）
+   * @param node 参数说明
+   * @param config 参数说明
+   * @param variables 参数说明
+   * @return 返回值说明
    */
   private ServiceExecutionResult executeScript(
       FlowNodeDO node, Map<String, Object> variables) {
@@ -293,7 +299,6 @@ public class FlowServiceNodeExecutor {
       return new ServiceExecutionResult(false, "脚本执行异常: " + e.getMessage());
     }
   }
-
 
   /**
    * 服务节点执行结果

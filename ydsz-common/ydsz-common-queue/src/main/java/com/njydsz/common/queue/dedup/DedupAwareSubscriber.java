@@ -80,12 +80,20 @@ public class DedupAwareSubscriber implements IMessageSubscriber {
     return delegate.isRunning();
   }
 
-  /** 获取被装饰的原始订阅者 */
+  /**
+   * 获取被装饰的原始订阅者。
+   *
+   * @return 原始订阅者实例
+   */
   public IMessageSubscriber getDelegate() {
     return delegate;
   }
 
-  /** 获取去重器实例 */
+  /**
+   * 获取去重器实例。
+   *
+   * @return 去重器实例
+   */
   public MessageDeduplicator getDeduplicator() {
     return deduplicator;
   }

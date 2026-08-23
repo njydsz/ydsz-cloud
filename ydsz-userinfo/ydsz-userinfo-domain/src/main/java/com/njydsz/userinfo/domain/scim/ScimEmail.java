@@ -1,10 +1,11 @@
 package com.njydsz.userinfo.domain.scim;
 
-import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
  * SCIM 电子邮箱子属性。

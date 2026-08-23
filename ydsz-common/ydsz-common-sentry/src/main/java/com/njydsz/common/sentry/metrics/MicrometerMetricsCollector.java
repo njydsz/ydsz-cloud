@@ -137,6 +137,13 @@ public class MicrometerMetricsCollector implements MetricsCollector {
    * @param value Gauge 当前值
    */
   @Override
+  /**
+   * set gauge。
+   * @param name 参数
+   * @param description 参数
+   * @param tags 参数
+   * @param value 参数
+   */
   public void setGauge(String name, String description, Map<String, String> tags, double value) {
     if (!isAvailable()) {
       fallback.setGauge(name, description, tags, value);
@@ -238,6 +245,10 @@ public class MicrometerMetricsCollector implements MetricsCollector {
    * @return 若 MeterRegistry 不为 null 则返回 true
    */
   @Override
+  /**
+   * is available。
+   * @return 结果
+   */
   public boolean isAvailable() {
     return meterRegistry != null;
   }
@@ -248,6 +259,10 @@ public class MicrometerMetricsCollector implements MetricsCollector {
    * @return 固定返回 {@code "micrometer"}
    */
   @Override
+  /**
+   * get name。
+   * @return 结果
+   */
   public String getName() {
     return "micrometer";
   }

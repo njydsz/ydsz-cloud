@@ -51,14 +51,22 @@ public class RuleTestReport implements Serializable {
   /** 失败用例的详细结果（便于快速定位） */
   private List<RuleTestResult> failedResults;
 
-  /** 是否全部通过 */
+  /** 是否全部通过
+   * @return 返回值说明
+   */
   public boolean allPassed() {
     return failed == 0 && skipped == 0;
   }
 
-  /** 计算通过率 */
+  /** 计算通过率
+   * @param passed 参数说明
+   * @param total 参数说明
+   * @return 返回值说明
+   */
   public static String calculatePassRate(int passed, int total) {
-    if (total == 0) return "100.0%";
+    if (total == 0) {
+      return "100.0%";
+    }
     double rate = (double) passed / total * 100;
     return String.format("%.1f%%", rate);
   }

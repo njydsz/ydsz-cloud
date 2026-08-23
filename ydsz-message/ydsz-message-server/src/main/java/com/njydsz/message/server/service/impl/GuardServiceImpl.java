@@ -38,6 +38,12 @@ import com.njydsz.message.server.service.core.GuardService;
 @Slf4j
 @Service
 public class GuardServiceImpl implements GuardService {
+  /** 默认 TTL（秒） */
+  private static final int DEFAULT_TTL_SECONDS = 60;
+
+  /** 锁延长（分钟） */
+  private static final int LOCK_EXTEND_MINUTES = 5;
+
 
   /** 小时频率计数器 key 时间格式 */
   private static final DateTimeFormatter HOUR_FMT = DateTimeFormatter.ofPattern("yyyyMMddHH");
@@ -94,8 +100,12 @@ public class GuardServiceImpl implements GuardService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>委托 {@link RedisRateLimiter#tryAcquireTokenBucket} 令牌桶限流， rateLimiter 不可用或异常时降级放行（返回 true）。
+   *
+   * @param key 参数说明
+   * @param permits 参数说明
+   * @return 返回值说明
    */
   @Override
   public boolean tryAcquire(String key, int permits) {
@@ -120,8 +130,13 @@ public class GuardServiceImpl implements GuardService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>从用户偏好读取 hourlyLimit/dailyLimit，使用 Redis INCR + EXPIRE 计数，任一维度超限即返回 false。
+   *
+   * @param userId 参数说明
+   * @param channel 参数说明
+   * @param bizType 参数说明
+   * @return 返回值说明
    */
   @Override
   public boolean checkFrequency(String userId, String channel, String bizType) {
@@ -177,8 +192,12 @@ public class GuardServiceImpl implements GuardService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>同时递增小时和日频率计数器（Redis INCR + EXPIRE）。
+   *
+   * @param userId 参数说明
+   * @param channel 参数说明
+   * @param bizType 参数说明
    */
   @Override
   public void recordFrequency(String userId, String channel, String bizType) {
@@ -192,7 +211,7 @@ public class GuardServiceImpl implements GuardService {
         channel,
         bizType,
         now.format(HOUR_FMT),
-        Duration.ofHours(1).plusMinutes(5).getSeconds());
+        Duration.ofHours(1).plusMinutes(LOCK_EXTEND_MINUTES).getSeconds());
     incrCounter(
         MessageConstants.FREQUENCY_DAILY_PREFIX,
         userId,
@@ -202,7 +221,15 @@ public class GuardServiceImpl implements GuardService {
         Duration.ofDays(1).plusHours(1).getSeconds());
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   *
+   * @param channel 参数说明
+   * @param receiver 参数说明
+   * @param templateCode 参数说明
+   * @param tenantId 参数说明
+   * @return 返回值说明
+   */
   @Override
   public boolean checkSendLimit(
       String channel, String receiver, String templateCode, String tenantId) {
@@ -244,7 +271,16 @@ public class GuardServiceImpl implements GuardService {
     return true;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   *
+   * @param channel 参数说明
+   * @param receiver 参数说明
+   * @param templateCode 参数说明
+   * @param tenantId 参数说明
+   * @param priority 参数说明
+   * @return 返回值说明
+   */
   @Override
   public boolean checkSendLimit(
       String channel, String receiver, String templateCode, String tenantId, String priority) {
@@ -259,7 +295,12 @@ public class GuardServiceImpl implements GuardService {
     return checkSendLimit(channel, receiver, templateCode, tenantId);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   *
+   * @param dedupKey 参数说明
+   * @return 返回值说明
+   */
   @Override
   public boolean tryDedup(String dedupKey) {
     if (dedupKey == null || dedupKey.isBlank()) {
@@ -269,7 +310,7 @@ public class GuardServiceImpl implements GuardService {
     if (cfg == null || !cfg.isEnabled()) {
       return true;
     }
-    int ttl = cfg.getTtlSeconds() <= 0 ? 60 : cfg.getTtlSeconds();
+    int ttl = cfg.getTtlSeconds() <= 0 ? DEFAULT_TTL_SECONDS : cfg.getTtlSeconds();
     String redisKey = MessageConstants.DEDUP_KEY_PREFIX + dedupKey;
     try {
       String token = idempotentStrategy.acquire(redisKey, ttl * 1000L);
@@ -285,14 +326,18 @@ public class GuardServiceImpl implements GuardService {
     }
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   *
+   * @return 返回值说明
+   */
   @Override
   public Duration getDedupTtl() {
     MessageProperties.DedupConfig cfg = messageProperties.getDedup();
     if (cfg == null) {
-      return Duration.ofSeconds(60);
+      return Duration.ofSeconds(DEFAULT_TTL_SECONDS);
     }
-    return Duration.ofSeconds(cfg.getTtlSeconds() <= 0 ? 60 : cfg.getTtlSeconds());
+    return Duration.ofSeconds(cfg.getTtlSeconds() <= 0 ? DEFAULT_TTL_SECONDS : cfg.getTtlSeconds());
   }
 
   private Long readCounter(

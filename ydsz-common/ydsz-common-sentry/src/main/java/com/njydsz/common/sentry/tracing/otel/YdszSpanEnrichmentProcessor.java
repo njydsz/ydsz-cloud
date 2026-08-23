@@ -35,12 +35,21 @@ public class YdszSpanEnrichmentProcessor implements SpanProcessor {
 
   private final EnrichmentConfig config;
 
+  /**
+   * ydsz span enrichment。
+   * @param config 参数
+ */
   public YdszSpanEnrichmentProcessor(EnrichmentConfig config) {
     this.config = config;
     log.info("[Sentry] YdszSpanEnrichmentProcessor 初始化，来源：{}", config.getSources());
   }
 
   @Override
+  /**
+   * on start。
+   * @param parentContext 参数
+   * @param span 参数
+   */
   public void onStart(Context parentContext, ReadWriteSpan span) {
     if (!config.isEnabled()) {
       return;
@@ -51,16 +60,28 @@ public class YdszSpanEnrichmentProcessor implements SpanProcessor {
   }
 
   @Override
+  /**
+   * is start required。
+   * @return 结果
+   */
   public boolean isStartRequired() {
     return config.isEnabled();
   }
 
   @Override
+  /**
+   * on end。
+   * @param span 参数
+   */
   public void onEnd(ReadableSpan span) {
     // no-op
   }
 
   @Override
+  /**
+   * is end required。
+   * @return 结果
+   */
   public boolean isEndRequired() {
     return false;
   }
@@ -135,6 +156,9 @@ public class YdszSpanEnrichmentProcessor implements SpanProcessor {
   }
 
   @Override
+  /**
+   * close。
+   */
   public void close() {
     // no-op
   }

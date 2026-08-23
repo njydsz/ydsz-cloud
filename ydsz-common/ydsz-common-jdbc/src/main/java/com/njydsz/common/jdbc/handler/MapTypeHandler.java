@@ -45,7 +45,7 @@ import com.njydsz.common.json.parser.JsonParserUtil;
  * {@code <resultMap id="BaseResultMap" type="SystemConfig">}
  *     {@code <result column="extra_params" property="extraParams"}
  *                  typeHandler="com.njydsz.common.jdbc.handler.MapTypeHandler"/>
- * {@code </resultMap>}
+ * {@code < /resultMap>}
  *
  * // 业务代码手动注册有参构造处理器（推荐用于 Map&lt;String, ?&gt; 复杂值场景）
  * {@code

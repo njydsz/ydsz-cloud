@@ -36,6 +36,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  *
  * <p>userinfo 模块的 {@code CaptchaService} 现为此类的薄封装， * 业务特有配置通过 {@link CaptchaProperties} 传递。
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see CaptchaProperties
  */

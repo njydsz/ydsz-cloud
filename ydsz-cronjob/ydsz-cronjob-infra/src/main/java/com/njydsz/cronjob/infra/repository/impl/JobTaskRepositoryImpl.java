@@ -3,11 +3,11 @@ package com.njydsz.cronjob.infra.repository.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.JobTaskRepository;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
@@ -76,7 +76,7 @@ public class JobTaskRepositoryImpl implements JobTaskRepository {
   public int countByLogId(String logId) {
     LambdaQueryWrapper<JobTask> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(JobTask::getLogId, logId).eq(JobTask::getDeleted, 0);
-    return jobTaskMapper.selectCount(wrapper);
+    return jobTaskMapper.selectCount(wrapper).intValue();
   }
 
   @Override

@@ -117,8 +117,11 @@ public class TemplateVariableValidator {
 
   /**
    * 校验单个变量类型。
+   * 
    *
-   * @return null 表示通过；非 null 表示错误描述
+   * @param name 参数说明
+   * @param value 参数说明
+   * @param def 参数说明
    */
   private String checkType(String name, Object value, TemplateVariableDef def) {
     try {
@@ -164,7 +167,10 @@ public class TemplateVariableValidator {
             YdszJson.parseArray(value.toString());
           }
         }
-      }
+                default -> {
+            // 未知类型忽略
+          }
+        }
       return null;
     } catch (Exception e) {
       return name + ": 类型校验异常(" + def.getType() + "), 实际=" + value;

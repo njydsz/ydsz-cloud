@@ -25,6 +25,9 @@ import com.njydsz.workflow.infra.mapper.FlowTemplateMapper;
 @RequiredArgsConstructor
 public class WorkflowSearchProvider implements SearchProvider<FlowTemplateDO> {
 
+    /** 模板名称匹配权重 */
+  private static final float FIELD_WEIGHT = 3.0f;
+
   private final FlowTemplateMapper flowTemplateMapper;
 
   @Override
@@ -72,7 +75,7 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplateDO> {
             .name("title")
             .label("模板名称")
             .type(FieldType.TEXT)
-            .weight(3.0f)
+            .weight(FIELD_WEIGHT)
             .searchable(true)
             .highlightable(true)
             .sortable(true)

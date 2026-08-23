@@ -22,10 +22,10 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.NotificationSendDTO;
-import com.njydsz.message.domain.vo.MsgNotificationVO;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
-import com.njydsz.message.domain.vo.NotificationGroupVO;
 import com.njydsz.message.domain.repository.MsgNotificationRepository;
+import com.njydsz.message.domain.vo.MsgNotificationVO;
+import com.njydsz.message.domain.vo.NotificationGroupVO;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.realtime.RealtimePushService;
 import com.njydsz.message.server.service.core.NotificationService;
@@ -45,6 +45,9 @@ import com.njydsz.message.server.service.receipt.RecallService;
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
+  /** 最大轮询次数（安全护栏） */
+  private static final int MAX_ROUNDS = 200;
+
 
   /** P3-6: 批量 insert 单批最大条数（ydsz_msg_notification 28 列，500 条 ≈ 1.4 万参数，远低于 PG 65535 上限） */
   private static final int INSERT_BATCH_SIZE = 500;
@@ -160,7 +163,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
     int total = 0;
     int rounds = 0;
-    int maxRounds = 200; // 安全护栏：防止极端情况下死循环（200 * 500 = 10 万条）
+    int maxRounds = MAX_ROUNDS; // 安全护栏：防止极端情况下死循环（200 * 500 = 10 万条）
     while (rounds++ < maxRounds) {
       int affected = msgNotificationRepository.markAllRead(userId, batchSize);
       total += affected;

@@ -69,7 +69,7 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
     wrapper.orderByDesc("created_at");
     IPage<MsgTemplateDO> entityPage = msgTemplateMapper.selectPage(page, wrapper);
     List<MsgTemplateVO> vos = converter.templateDoListToVO(entityPage.getRecords());
-    return PageResponse.success(entityPage.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
+    return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   private QueryWrapper<MsgTemplateDO> buildWrapper(TemplateQueryDTO query) {

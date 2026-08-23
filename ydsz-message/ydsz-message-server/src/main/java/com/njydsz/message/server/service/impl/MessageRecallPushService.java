@@ -33,6 +33,9 @@ import com.njydsz.message.server.realtime.RealtimePushService;
 @Service
 @RequiredArgsConstructor
 public class MessageRecallPushService {
+  /** Map 初始容量 */
+  private static final int MAP_CAPACITY_4 = 4;
+
 
   private final RealtimePushService realtimePushService;
 
@@ -45,7 +48,7 @@ public class MessageRecallPushService {
    */
   public void pushRecall(String userId, String messageId, String recallReason) {
     try {
-      Map<String, Object> recallData = new HashMap<>(4);
+      Map<String, Object> recallData = new HashMap<>(MAP_CAPACITY_4);
       recallData.put("type", "RECALL");
       recallData.put("messageId", messageId);
       recallData.put("recallReason", recallReason);

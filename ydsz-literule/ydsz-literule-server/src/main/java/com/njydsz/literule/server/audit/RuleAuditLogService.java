@@ -71,7 +71,11 @@ public class RuleAuditLogService {
 
   // ==================== 记录操作 ====================
 
-  /** 记录规则创建 */
+  /** 记录规则创建
+   * @param def 参数说明
+   * @param operator 参数说明
+   * @param source 参数说明
+   */
   public void logCreate(RuleDefinition def, String operator, String source) {
     AuditLogEntry entry =
         AuditLogEntry.builder()
@@ -87,7 +91,13 @@ public class RuleAuditLogService {
     record(entry);
   }
 
-  /** 记录规则更新 */
+  /** 记录规则更新
+   * @param changeDesc 参数说明
+      * @param source 参数说明
+      * @param operator 参数说明
+      * @param newDef 参数说明
+      * @param oldDef 参数说明
+   */
   public void logUpdate(
       RuleDefinition oldDef,
       RuleDefinition newDef,
@@ -112,7 +122,13 @@ public class RuleAuditLogService {
     record(entry);
   }
 
-  /** 记录规则启停切换 */
+  /** 记录规则启停切换
+   * @param ruleCode 参数说明
+   * @param oldEnabled 参数说明
+   * @param newEnabled 参数说明
+   * @param operator 参数说明
+   * @param source 参数说明
+   */
   public void logToggle(
       String ruleCode, boolean oldEnabled, boolean newEnabled, String operator, String source) {
     AuditLogEntry entry =
@@ -128,7 +144,13 @@ public class RuleAuditLogService {
     record(entry);
   }
 
-  /** 记录规则状态变更 */
+  /** 记录规则状态变更
+   * @param ruleCode 参数说明
+   * @param oldStatus 参数说明
+   * @param newStatus 参数说明
+   * @param operator 参数说明
+   * @param source 参数说明
+   */
   public void logStatusChange(
       String ruleCode, String oldStatus, String newStatus, String operator, String source) {
     AuditLogEntry entry =
@@ -144,7 +166,13 @@ public class RuleAuditLogService {
     record(entry);
   }
 
-  /** 记录规则回滚 */
+  /** 记录规则回滚
+   * @param ruleCode 参数说明
+   * @param fromVersion 参数说明
+   * @param toVersion 参数说明
+   * @param operator 参数说明
+   * @param source 参数说明
+   */
   public void logRollback(
       String ruleCode, int fromVersion, int toVersion, String operator, String source) {
     AuditLogEntry entry =
@@ -160,7 +188,13 @@ public class RuleAuditLogService {
     record(entry);
   }
 
-  /** 记录规则审批通过 */
+  /** 记录规则审批通过
+   * @param ruleCode 参数说明
+   * @param approver 参数说明
+   * @param level 参数说明
+   * @param comment 参数说明
+   * @param source 参数说明
+   */
   public void logApprove(
       String ruleCode, String approver, String level, String comment, String source) {
     AuditLogEntry entry =
@@ -176,7 +210,13 @@ public class RuleAuditLogService {
     record(entry);
   }
 
-  /** 记录规则审批驳回 */
+  /** 记录规则审批驳回
+   * @param ruleCode 参数说明
+   * @param rejecter 参数说明
+   * @param level 参数说明
+   * @param reason 参数说明
+   * @param source 参数说明
+   */
   public void logReject(
       String ruleCode, String rejecter, String level, String reason, String source) {
     AuditLogEntry entry =
@@ -192,7 +232,13 @@ public class RuleAuditLogService {
     record(entry);
   }
 
-  /** 记录规则导入 */
+  /** 记录规则导入
+   * @param ruleCode 参数说明
+   * @param ruleName 参数说明
+   * @param operator 参数说明
+   * @param source 参数说明
+   * @param importedCount 参数说明
+   */
   public void logImport(
       String ruleCode, String ruleName, String operator, String source, int importedCount) {
     AuditLogEntry entry =
@@ -209,7 +255,12 @@ public class RuleAuditLogService {
     record(entry);
   }
 
-  /** 记录规则导出 */
+  /** 记录规则导出
+   * @param ruleCode 参数说明
+   * @param operator 参数说明
+   * @param source 参数说明
+   * @param format 参数说明
+   */
   public void logExport(String ruleCode, String operator, String source, String format) {
     AuditLogEntry entry =
         AuditLogEntry.builder()
@@ -224,7 +275,11 @@ public class RuleAuditLogService {
     record(entry);
   }
 
-  /** 记录规则删除 */
+  /** 记录规则删除
+   * @param ruleCode 参数说明
+   * @param operator 参数说明
+   * @param source 参数说明
+   */
   public void logDelete(String ruleCode, String operator, String source) {
     AuditLogEntry entry =
         AuditLogEntry.builder()
@@ -238,7 +293,13 @@ public class RuleAuditLogService {
     record(entry);
   }
 
-  /** 记录操作失败 */
+  /** 记录操作失败
+   * @param ruleCode 参数说明
+   * @param action 参数说明
+   * @param operator 参数说明
+   * @param source 参数说明
+   * @param errorMessage 参数说明
+   */
   public void logFailure(
       String ruleCode, AuditAction action, String operator, String source, String errorMessage) {
     AuditLogEntry entry =
@@ -256,27 +317,47 @@ public class RuleAuditLogService {
 
   // ==================== 查询操作 ====================
 
-  /** 按规则编码查询审计日志 */
+  /** 按规则编码查询审计日志
+   * @param ruleCode 参数说明
+   * @param limit 参数说明
+   * @return 返回值说明
+   */
   public List<AuditLogEntry> queryByRuleCode(String ruleCode, int limit) {
     return store.queryByRuleCode(ruleCode, limit);
   }
 
-  /** 按操作人查询审计日志 */
+  /** 按操作人查询审计日志
+   * @param operator 参数说明
+   * @param limit 参数说明
+   * @return 返回值说明
+   */
   public List<AuditLogEntry> queryByOperator(String operator, int limit) {
     return store.queryByOperator(operator, limit);
   }
 
-  /** 按操作类型查询审计日志 */
+  /** 按操作类型查询审计日志
+   * @param action 参数说明
+   * @param limit 参数说明
+   * @return 返回值说明
+   */
   public List<AuditLogEntry> queryByAction(AuditAction action, int limit) {
     return store.queryByAction(action, limit);
   }
 
-  /** 按时间范围查询审计日志 */
+  /** 按时间范围查询审计日志
+   * @param start 参数说明
+   * @param end 参数说明
+   * @param limit 参数说明
+   * @return 返回值说明
+   */
   public List<AuditLogEntry> queryByTimeRange(LocalDateTime start, LocalDateTime end, int limit) {
     return store.queryByTimeRange(start, end, limit);
   }
 
-  /** 查询最近的审计日志 */
+  /** 查询最近的审计日志
+   * @param limit 参数说明
+   * @return 返回值说明
+   */
   public List<AuditLogEntry> queryRecent(int limit) {
     return store.queryRecent(limit);
   }
@@ -298,7 +379,9 @@ public class RuleAuditLogService {
   }
 
   private Map<String, Object> toSnapshot(RuleDefinition def) {
-    if (def == null) return Collections.emptyMap();
+    if (def == null) {
+      return Collections.emptyMap();
+    }
     Map<String, Object> snapshot = new LinkedHashMap<>();
     snapshot.put("code", def.getCode());
     snapshot.put("name", def.getName());
@@ -321,7 +404,9 @@ public class RuleAuditLogService {
 
   private Map<String, FieldDiff> computeFieldDiff(RuleDefinition oldDef, RuleDefinition newDef) {
     Map<String, FieldDiff> diffs = new LinkedHashMap<>();
-    if (oldDef == null || newDef == null) return diffs;
+    if (oldDef == null || newDef == null) {
+      return diffs;
+    }
 
     compareField(
         diffs,
@@ -373,24 +458,39 @@ public class RuleAuditLogService {
 
   /** 审计操作类型 */
   public enum AuditAction {
+    /** 常量说明 */
     CREATE,
+    /** 常量说明 */
     UPDATE,
+    /** 常量说明 */
     TOGGLE,
+    /** 常量说明 */
     STATUS_CHANGE,
+    /** 常量说明 */
     ROLLBACK,
+    /** 常量说明 */
     APPROVE,
+    /** 常量说明 */
     REJECT,
+    /** 常量说明 */
     IMPORT,
+    /** 常量说明 */
     EXPORT,
+    /** 常量说明 */
     DELETE,
+    /** 常量说明 */
     DRY_RUN,
+    /** 常量说明 */
     STRESS_TEST,
+    /** 常量说明 */
     REPLAY
   }
 
   /** 审计结果 */
   public enum AuditResult {
+    /** 常量说明 */
     SUCCESS,
+    /** 常量说明 */
     FAILURE
   }
 

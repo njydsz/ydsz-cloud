@@ -184,7 +184,11 @@ public abstract class AbstractFileStorage implements IFileStorage {
     listerHolder[0] = this::listParts;
   }
 
-  /** 设置分片上传配置 */
+  /**
+   * 设置分片上传配置。
+   *
+   * @param properties 分片上传配置
+   */
   public void setFileUploadProperties(FileUploadProperties properties) {
     this.fileUploadProperties = properties;
   }
@@ -194,21 +198,33 @@ public abstract class AbstractFileStorage implements IFileStorage {
     return fileUploadProperties != null && fileUploadProperties.isChunkMd5Check();
   }
 
-  /** 设置分片上传上下文存储 */
+  /**
+   * 设置分片上传上下文存储。
+   *
+   * @param store 分片上传上下文存储
+   */
   public void setMultipartContextStore(MultipartContextStore store) {
     if (store != null) {
       this.multipartContextStore = store;
     }
   }
 
-  /** 设置检查点服务 */
+  /**
+   * 设置检查点服务。
+   *
+   * @param service 检查点服务
+   */
   public void setCheckpointService(CheckpointService service) {
     if (service != null) {
       this.checkpointService = service;
     }
   }
 
-  /** 设置并发上传保护器 */
+  /**
+   * 设置并发上传保护器。
+   *
+   * @param guard 并发上传保护器
+   */
   public void setConcurrencyGuard(UploadConcurrencyGuard guard) {
     this.concurrencyGuard = guard;
   }
@@ -463,13 +479,17 @@ public abstract class AbstractFileStorage implements IFileStorage {
           dedupHash = fileDedupService.calculateHash(dedupStream);
           String existingUrl = fileDedupService.checkExisting(file.getSize(), dedupHash);
           if (existingUrl != null) {
-            if (fileMetrics != null) fileMetrics.recordDedupHit();
+            if (fileMetrics != null) {
+              fileMetrics.recordDedupHit();
+            }
             FileStorage dedupResult = buildFileStorage(file);
             dedupResult.setUuidName(resolvedObjectName);
             dedupResult.setUrl(existingUrl);
             return dedupResult;
           }
-          if (fileMetrics != null) fileMetrics.recordDedupMiss();
+          if (fileMetrics != null) {
+            fileMetrics.recordDedupMiss();
+          }
         } catch (BusinessException e) {
           throw e;
         } catch (Exception e) {
@@ -486,7 +506,9 @@ public abstract class AbstractFileStorage implements IFileStorage {
           VirusScanner.ScanResult scanResult =
               virusScanner.scan(virusStream, file.getOriginalFilename());
           if (scanResult == VirusScanner.ScanResult.INFECTED) {
-            if (fileMetrics != null) fileMetrics.recordVirusDetected();
+            if (fileMetrics != null) {
+              fileMetrics.recordVirusDetected();
+            }
             throw new BusinessException(FileExceptionCode.FILE_VIRUS_DETECTED);
           }
         } catch (BusinessException e) {
@@ -548,7 +570,9 @@ public abstract class AbstractFileStorage implements IFileStorage {
                 e.getMessage());
           }
         }
-        if (fileMetrics != null) fileMetrics.recordUpload(System.nanoTime() - startTime);
+        if (fileMetrics != null) {
+          fileMetrics.recordUpload(System.nanoTime() - startTime);
+        }
         return fileStorage;
       } catch (BusinessException e) {
         if (listener != null) {
@@ -679,7 +703,9 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
     try {
       doRemoveObject(resolvedBucket, resolvedObjectName);
-      if (fileMetrics != null) fileMetrics.recordDelete();
+      if (fileMetrics != null) {
+        fileMetrics.recordDelete();
+      }
     } catch (Exception e) {
       log.error(
           "file delete failed, bucket={}, object={}, message={}",
@@ -779,7 +805,9 @@ public abstract class AbstractFileStorage implements IFileStorage {
         os.write(buffer, 0, read);
       }
       os.flush();
-      if (fileMetrics != null) fileMetrics.recordDownload(System.nanoTime() - dlStart);
+      if (fileMetrics != null) {
+        fileMetrics.recordDownload(System.nanoTime() - dlStart);
+      }
     } catch (BusinessException e) {
       if (response.isCommitted()) {
         log.error(

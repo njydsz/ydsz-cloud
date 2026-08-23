@@ -1,11 +1,12 @@
 package com.njydsz.system.server.service;
-
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.TenantDTO;
 import com.njydsz.system.domain.query.TenantPageQuery;
 import com.njydsz.system.domain.vo.TenantVO;
+
+
 
 /**
  * 租户 Service 接口

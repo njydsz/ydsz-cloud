@@ -19,10 +19,10 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
-import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.server.config.CrossDomainSsoProperties;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
@@ -301,7 +301,8 @@ public class AuthServiceImpl implements AuthService {
     String accessToken = tokenService.issueAccessToken(userInfo);
     String refreshToken = tokenService.issueRefreshToken(userInfo);
     sessionManager.createSession(
-        accessToken, refreshToken, user, roleCodes, roleNames, deviceType);
+        new SessionCreateCommand(
+            accessToken, refreshToken, user, roleCodes, roleNames, deviceType, null, null));
 
     // Remember-Me：如果用户勾选，在会话中标记并签发 Cookie
     if (loginDTO.isRememberMe()) {

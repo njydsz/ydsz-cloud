@@ -5,7 +5,8 @@ import lombok.Getter;
 /**
  * 用户中心模块领域事件类型枚举。
  *
- * <p>替代 {@code DomainEventTypes} 中的硬编码字符串常量，提供类型安全的事件类型引用。 每个枚举值携带 {@code code} 字符串（与 common-event 的 {@code DomainEvent.eventType} 兼容）。
+ * <p>替代 {@code DomainEventTypes} 中的硬编码字符串常量，提供类型安全的事件类型引用。
+ * 每个枚举值携带 {@code code} 字符串（与 common-event 的 {@code DomainEvent.eventType} 兼容）。
  *
  * <h3>事件类型清单</h3>
  *

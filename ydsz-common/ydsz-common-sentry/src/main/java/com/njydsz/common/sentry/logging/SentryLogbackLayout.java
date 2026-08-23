@@ -42,6 +42,9 @@ public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
   private String mdcFields = "traceId,userId,username";
 
   @Override
+  /**
+   * start。
+   */
   public void start() {
     if (appName == null || appName.isBlank()) {
       appName = "ydsz";
@@ -53,6 +56,11 @@ public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
   }
 
   @Override
+  /**
+   * do layout。
+   * @param event 参数
+   * @return 结果
+   */
   public String doLayout(ILoggingEvent event) {
     LogEvent logEvent = convertEvent(event);
     return LogEventSerializer.toJson(logEvent) + "\n";
@@ -147,18 +155,34 @@ public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
     }
   }
 
+  /**
+   * set app name。
+   * @param appName 参数
+   */
   public void setAppName(String appName) {
     this.appName = appName;
   }
 
+  /**
+   * set hostname。
+   * @param hostname 参数
+   */
   public void setHostname(String hostname) {
     this.hostname = hostname;
   }
 
+  /**
+   * set profile。
+   * @param profile 参数
+   */
   public void setProfile(String profile) {
     this.profile = profile;
   }
 
+  /**
+   * set mdc fields。
+   * @param mdcFields 参数
+   */
   public void setMdcFields(String mdcFields) {
     this.mdcFields = mdcFields;
   }

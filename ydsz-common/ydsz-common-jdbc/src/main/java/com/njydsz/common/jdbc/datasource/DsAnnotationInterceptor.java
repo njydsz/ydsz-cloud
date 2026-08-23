@@ -15,7 +15,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import com.njydsz.common.jdbc.annotation.DS;
 
 /**
- * @DS 注解拦截器
+ * DS 注解拦截器。
  *
  * <p>AOP 拦截器，拦截标注了 {@link DS} 的方法或类，动态切换数据源。
  *

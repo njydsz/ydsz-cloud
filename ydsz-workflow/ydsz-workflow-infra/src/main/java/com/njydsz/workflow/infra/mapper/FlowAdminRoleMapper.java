@@ -35,11 +35,24 @@ import com.njydsz.workflow.infra.entity.FlowAdminRoleDO;
 @Mapper
 public interface FlowAdminRoleMapper extends BaseMapper<FlowAdminRoleDO> {
 
-  /** 查询用户在指定租户下的所有有效角色。 */
+  /**
+   * 查询用户在指定租户下的所有有效角色。
+   *
+   * @param userId 参数说明
+   * @param tenantId 参数说明
+   * @return 返回值说明
+   */
   List<FlowAdminRoleDO> selectByUserId(
       @Param("userId") String userId, @Param("tenantId") String tenantId);
 
-  /** 查询用户是否拥有指定角色。 */
+  /**
+   * 查询用户是否拥有指定角色。
+   *
+   * @param userId 参数说明
+   * @param roleCode 参数说明
+   * @param tenantId 参数说明
+   * @return 返回值说明
+   */
   FlowAdminRoleDO selectByUserAndRole(
       @Param("userId") String userId,
       @Param("roleCode") String roleCode,

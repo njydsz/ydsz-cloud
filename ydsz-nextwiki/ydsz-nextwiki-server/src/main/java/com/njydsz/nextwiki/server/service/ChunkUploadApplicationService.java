@@ -159,7 +159,7 @@ public class ChunkUploadApplicationService {
     }
 
     // 配额校验（QuotaDomainService 为纯领域逻辑，先加载配额实体再校验）
-    quotaDomainService.checkQuota(loadQuota("user", userId), fileSize, null);
+    quotaDomainService.checkQuota(loadQuota("user", userId), fileSize);
 
     String uploadId = String.valueOf(snowflakeIdGenerator.nextId());
 

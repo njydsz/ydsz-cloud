@@ -29,6 +29,11 @@ public class DualLogPublisher implements LogPublisher {
   private final List<LogPublisher> publishers;
   private final boolean failOnAllError;
 
+  /**
+   * dual log publisher。
+   * @param publishers 参数
+   * @param failOnAllError 参数
+ */
   public DualLogPublisher(List<LogPublisher> publishers, boolean failOnAllError) {
     this.publishers = publishers;
     this.failOnAllError = failOnAllError;
@@ -39,6 +44,11 @@ public class DualLogPublisher implements LogPublisher {
   }
 
   @Override
+  /**
+   * publish。
+   * @param event 参数
+   * @return 结果
+   */
   public boolean publish(LogEvent event) {
     if (publishers == null || publishers.isEmpty()) {
       return false;
@@ -67,6 +77,10 @@ public class DualLogPublisher implements LogPublisher {
   }
 
   @Override
+  /**
+   * is available。
+   * @return 结果
+   */
   public boolean isAvailable() {
     if (publishers == null || publishers.isEmpty()) {
       return false;
@@ -75,21 +89,37 @@ public class DualLogPublisher implements LogPublisher {
   }
 
   @Override
+  /**
+   * get name。
+   * @return 结果
+   */
   public String getName() {
     return "dual";
   }
 
   @Override
+  /**
+   * get scheme。
+   * @return 结果
+   */
   public String getScheme() {
     return "dual";
   }
 
   /** 获取所有发布器 */
+  /**
+   * get publishers。
+   * @return 结果
+   */
   public List<LogPublisher> getPublishers() {
     return publishers;
   }
 
   /** 获取各子发布器的健康状态摘要 */
+  /**
+   * get health summary。
+   * @return 结果
+   */
   public String getHealthSummary() {
     if (publishers == null || publishers.isEmpty()) {
       return "none";

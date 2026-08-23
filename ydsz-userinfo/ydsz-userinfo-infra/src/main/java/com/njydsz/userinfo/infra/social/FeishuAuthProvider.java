@@ -45,6 +45,9 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
   /** 飞书用户信息端点（可通过 ydsz.userinfo.social.providers.feishu.user-info-url 覆盖） */
   private static final String DEFAULT_USER_INFO_URL = "https://open.feishu.cn/open-apis/authen/v1/user_info";
 
+  /** 默认令牌过期时间（秒） */
+  private static final long DEFAULT_EXPIRE_IN = 7200L;
+
   /**
    * 构造飞书认证提供者。
    *
@@ -116,7 +119,7 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
       throw new SocialAuthException("飞书获取 access_token 失败：响应中未包含 access_token");
     }
 
-    Long expire = getLong(dataMap, "expire_in", 7200L);
+    Long expire = getLong(dataMap, "expire_in", DEFAULT_EXPIRE_IN);
     String openId = getStr(dataMap, "open_id");
 
     return new SocialAccessToken(accessToken, getStr(dataMap, "refresh_token"), expire, openId, openId);

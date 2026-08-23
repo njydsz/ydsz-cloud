@@ -125,17 +125,33 @@ public class SearchRequest implements Serializable {
   @Schema(description = "游标分页cursor")
   private String cursor;
 
-  /** 快速构建搜索请求 */
+  /**
+   * 快速构建搜索请求。
+   *
+   * @param keyword 搜索关键词
+   * @return 搜索请求实例
+   */
   public static SearchRequest of(String keyword) {
     return SearchRequest.builder().keyword(keyword).build();
   }
 
-  /** 快速构建分页搜索请求 */
+  /**
+   * 快速构建分页搜索请求。
+   *
+   * @param keyword 搜索关键词
+   * @param page 页码（从 1 开始）
+   * @param pageSize 每页条数
+   * @return 搜索请求实例
+   */
   public static SearchRequest of(String keyword, int page, int pageSize) {
     return SearchRequest.builder().keyword(keyword).page(page).pageSize(pageSize).build();
   }
 
-  /** 计算偏移量 */
+  /**
+   * 计算偏移量。
+   *
+   * @return 分页偏移量
+   */
   public int getOffset() {
     return (Math.max(page, 1) - 1) * Math.max(pageSize, 1);
   }

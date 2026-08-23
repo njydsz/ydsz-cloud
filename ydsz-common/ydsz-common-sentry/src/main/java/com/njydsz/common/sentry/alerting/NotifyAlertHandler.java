@@ -34,6 +34,10 @@ public class NotifyAlertHandler implements DefaultAlertPublisher.AlertHandler {
   private final String emailReceiver;
 
   @Override
+  /**
+   * handle。
+   * @param event 参数
+   */
   public void handle(AlertEvent event) {
     if (event.getSeverity() == AlertSeverity.P3) {
       return;

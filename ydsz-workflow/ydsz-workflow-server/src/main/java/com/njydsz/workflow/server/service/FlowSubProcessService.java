@@ -52,7 +52,14 @@ public interface FlowSubProcessService {
    */
   List<FlowInstanceVO> listChildren(String parentInstanceId);
 
-  /** DTO 构造工具：把子流程启动所需参数封装 */
+  /**
+   * DTO 构造工具：把子流程启动所需参数封装
+   *
+   * @param parentInstance 参数说明
+   * @param subFlowCode 参数说明
+   * @param variables 参数说明
+   * @return 返回值说明
+   */
   FlowStartProcessDTO buildSubProcessStartDTO(
       FlowInstanceVO parentInstance, String subFlowCode, Map<String, Object> variables);
 

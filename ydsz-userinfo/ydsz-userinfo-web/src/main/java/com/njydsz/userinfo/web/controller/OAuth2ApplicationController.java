@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +22,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application;
+import com.njydsz.userinfo.server.oauth2.OAuth2ApplicationCommand;
 import com.njydsz.userinfo.server.oauth2.OAuth2ApplicationService;
 
 /**
@@ -67,13 +67,16 @@ public class OAuth2ApplicationController {
   public YdszResponse<OAuth2Application> register(
       @Valid @RequestBody RegisterApplicationDTO dto) {
     return YdszResponse.success(applicationService.registerApplication(
-        dto.clientName(),
-        dto.clientType(),
-        dto.redirectUris(),
-        dto.allowedScopes(),
-        dto.allowedAudiences(),
-        dto.description(),
-        dto.iconUrl()));
+        new OAuth2ApplicationCommand(
+            null,
+            dto.clientName(),
+            dto.clientType(),
+            dto.redirectUris(),
+            dto.allowedScopes(),
+            dto.allowedAudiences(),
+            dto.description(),
+            dto.iconUrl(),
+            null)));
   }
 
   /**
@@ -141,14 +144,16 @@ public class OAuth2ApplicationController {
       }
     }
     return YdszResponse.success(applicationService.updateApplication(
-        id,
-        dto.clientName(),
-        dto.redirectUris(),
-        dto.allowedScopes(),
-        dto.allowedAudiences(),
-        dto.description(),
-        dto.iconUrl(),
-        statusEnum));
+        new OAuth2ApplicationCommand(
+            id,
+            dto.clientName(),
+            null,
+            dto.redirectUris(),
+            dto.allowedScopes(),
+            dto.allowedAudiences(),
+            dto.description(),
+            dto.iconUrl(),
+            statusEnum)));
   }
 
   /**

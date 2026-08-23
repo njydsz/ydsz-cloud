@@ -319,6 +319,9 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   /** WebAuthn 凭证数已达上限 */
   WEBAUTHN_CREDENTIAL_LIMIT_REACHED("B39010", "userinfo.webauthn.credential.limit.reached");
 
+  /** 默认 HTTP 状态码：参数错误 */
+  private static final int DEFAULT_HTTP_STATUS = 400;
+
   /** 错误码（业务契约，不应轻易变更） */
   private final String code;
 
@@ -329,7 +332,7 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   private final int httpStatus;
 
   UserInfoExceptionCode(String code, String key) {
-    this(code, key, 400);
+    this(code, key, DEFAULT_HTTP_STATUS);
   }
 
   UserInfoExceptionCode(String code, String key, int httpStatus) {

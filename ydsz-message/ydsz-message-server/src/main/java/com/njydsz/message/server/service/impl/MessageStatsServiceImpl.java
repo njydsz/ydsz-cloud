@@ -39,6 +39,9 @@ import com.njydsz.message.server.service.core.MessageStatsService;
 @Service
 @RequiredArgsConstructor
 public class MessageStatsServiceImpl implements MessageStatsService {
+  /** 统计时间窗口（小时） */
+  private static final int STATS_WINDOW_HOURS = 24;
+
 
   /** 消息日志 Repository（聚合统计查询） */
   private final MsgLogRepository msgLogRepository;
@@ -138,7 +141,14 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     return vo;
   }
 
-  /** 按状态统计数量（带时间范围）。 */
+  /**
+   * 按状态统计数量（带时间范围）。
+   *
+   * @param status 参数说明
+   * @param start 参数说明
+   * @param end 参数说明
+   * @return 返回值说明
+   */
   private long countByStatus(MessageStatusEnum status, LocalDateTime start, LocalDateTime end) {
     MessageLogQueryDTO query = new MessageLogQueryDTO();
     query.setStatus(status.name());
@@ -147,7 +157,15 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     return msgLogRepository.count(query);
   }
 
-  /** 按状态 + 通道统计数量（带时间范围）。 */
+  /**
+   * 按状态 + 通道统计数量（带时间范围）。
+   *
+   * @param status 参数说明
+   * @param channel 参数说明
+   * @param start 参数说明
+   * @param end 参数说明
+   * @return 返回值说明
+   */
   private long countByStatusAndChannel(
       MessageStatusEnum status, String channel, LocalDateTime start, LocalDateTime end) {
     MessageLogQueryDTO query = new MessageLogQueryDTO();
@@ -158,7 +176,14 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     return msgLogRepository.count(query);
   }
 
-  /** 按回执状态统计数量（带时间范围）。 */
+  /**
+   * 按回执状态统计数量（带时间范围）。
+   *
+   * @param status 参数说明
+   * @param start 参数说明
+   * @param end 参数说明
+   * @return 返回值说明
+   */
   private long countByReceiptStatus(
       ReceiptStatusEnum status, LocalDateTime start, LocalDateTime end) {
     MessageLogQueryDTO query = new MessageLogQueryDTO();
@@ -330,14 +355,25 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     return 0;
   }
 
-  /** 规范化时间范围：start 为 null 时取 24h 前，end 为 null 时取当前时间。 */
+  /**
+   * 规范化时间范围：start 为 null 时取 24h 前，end 为 null 时取当前时间。
+   *
+   * @param start 参数说明
+   * @param end 参数说明
+   * @return 返回值说明
+   */
   private LocalDateTime[] normalizeRange(LocalDateTime start, LocalDateTime end) {
     LocalDateTime actualEnd = end != null ? end : LocalDateTime.now();
-    LocalDateTime actualStart = start != null ? start : actualEnd.minusHours(24);
+    LocalDateTime actualStart = start != null ? start : actualEnd.minusHours(STATS_WINDOW_HOURS);
     return new LocalDateTime[] {actualStart, actualEnd};
   }
 
-  /** 保留两位小数。 */
+  /**
+   * 保留两位小数。
+   *
+   * @param value 参数说明
+   * @return 返回值说明
+   */
   private double round2(double value) {
     return Math.round(value * 100.0) / 100.0;
   }

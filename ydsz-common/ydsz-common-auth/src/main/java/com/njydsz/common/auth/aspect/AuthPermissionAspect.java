@@ -63,7 +63,8 @@ public class AuthPermissionAspect {
    * <p>作为 {@link #doMenuAround} 的引用锚点；命中后由该通知完成菜单/按钮权限校验。
    */
   @Pointcut(
-      "@annotation(com.njydsz.common.auth.annotation.AuthMenuPermission) || @within(com.njydsz.common.auth.annotation.AuthMenuPermission)")
+      "@annotation(com.njydsz.common.auth.annotation.AuthMenuPermission)"
+          + " || @within(com.njydsz.common.auth.annotation.AuthMenuPermission)")
   public void menuPointCut() {}
 
   /**
@@ -72,7 +73,8 @@ public class AuthPermissionAspect {
    * <p>作为 {@link #doApiAround} 的引用锚点；命中后由该通知完成接口权限校验。
    */
   @Pointcut(
-      "@annotation(com.njydsz.common.auth.annotation.AuthApiPermission) || @within(com.njydsz.common.auth.annotation.AuthApiPermission)")
+      "@annotation(com.njydsz.common.auth.annotation.AuthApiPermission)"
+          + " || @within(com.njydsz.common.auth.annotation.AuthApiPermission)")
   public void apiPointCut() {}
 
   /**

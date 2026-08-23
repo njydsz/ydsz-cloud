@@ -49,6 +49,15 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @RequiredArgsConstructor
 public class YdszWorkflowFacade implements WorkflowFacade {
 
+  /** 列表初始容量：时间线 / 步骤明细等场景（32） */
+  private static final int LIST_INIT_CAPACITY_32 = 32;
+
+  /** Map 初始容量：小集合（8） */
+  private static final int MAP_INIT_CAPACITY_8 = 8;
+
+  /** Map 初始容量：中集合（16） */
+  private static final int MAP_INIT_CAPACITY_16 = 16;
+
   private final FlowInstanceService instanceService;
   private final FlowTaskService taskService;
   private final FlowAuditLogRepository auditLogRepository;
@@ -180,7 +189,11 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     taskService.countersignAfter(dto);
   }
 
-  /** GAP-P0-3: 并加签 */
+  /**
+   * GAP-P0-3: 并加签
+   *
+   * @param dto 参数说明
+   */
   @Override
   public void countersignParallelTask(FlowTaskOperateDTO dto) {
     taskService.countersignParallel(dto);
@@ -240,7 +253,13 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     taskService.batchPass(taskIds, userId, comment);
   }
 
-  /** GAP-P0-4: 一键通过所有待办 */
+  /**
+   * GAP-P0-4: 一键通过所有待办
+   *
+   * @param userId 参数说明
+   * @param comment 参数说明
+   * @return 返回值说明
+   */
   @Override
   public int passAllTodoTasks(String userId, String comment) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
@@ -320,12 +339,12 @@ public class YdszWorkflowFacade implements WorkflowFacade {
       return Collections.emptyList();
     }
 
-    List<Map<String, Object>> timeline = new ArrayList<>(32);
+    List<Map<String, Object>> timeline = new ArrayList<>(LIST_INIT_CAPACITY_32);
 
     // 2. 获取历史任务列表（通过 Repository，符合 §34.2.3）
     List<FlowHisTaskVO> hisTasks = hisTaskRepository.findByInstanceId(id);
     for (FlowHisTaskVO his : hisTasks) {
-      Map<String, Object> entry = new HashMap<>(8);
+      Map<String, Object> entry = new HashMap<>(MAP_INIT_CAPACITY_8);
       entry.put("type", "HIS_TASK");
       entry.put("timestamp", his.getFinishAt());
       entry.put("nodeCode", his.getNodeCode());
@@ -341,7 +360,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     // 3. 获取审计日志列表（通过 Repository，符合 §34.2.3）
     List<FlowAuditLogVO> logs = auditLogRepository.findByInstanceId(id);
     for (FlowAuditLogVO log : logs) {
-      Map<String, Object> entry = new HashMap<>(8);
+      Map<String, Object> entry = new HashMap<>(MAP_INIT_CAPACITY_8);
       entry.put("type", "AUDIT_LOG");
       entry.put("timestamp", log.getOperatedAt());
       entry.put("nodeCode", log.getNodeCode());
@@ -358,7 +377,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     // 4. 获取当前待办任务
     List<FlowRunTaskVO> currentTasks = taskService.listPendingByInstance(id);
     for (FlowRunTaskVO task : currentTasks) {
-      Map<String, Object> entry = new HashMap<>(8);
+      Map<String, Object> entry = new HashMap<>(MAP_INIT_CAPACITY_8);
       entry.put("type", "CURRENT_TASK");
       entry.put("timestamp", task.getCreatedAt());
       entry.put("nodeCode", task.getNodeCode());
@@ -395,7 +414,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
   /** 将 FlowTaskViewDTO 转换为 Map */
   private Map<String, Object> taskViewToMap(FlowInstanceViewDTO.FlowTaskViewDTO v) {
-    Map<String, Object> m = new HashMap<>(16);
+    Map<String, Object> m = new HashMap<>(MAP_INIT_CAPACITY_16);
     m.put("id", v.getId());
     m.put("nodeCode", v.getNodeCode());
     m.put("nodeName", v.getNodeName());
@@ -415,7 +434,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   }
 
   private Map<String, Object> toMap(FlowRunTaskVO t) {
-    Map<String, Object> m = new HashMap<>(16);
+    Map<String, Object> m = new HashMap<>(MAP_INIT_CAPACITY_16);
     m.put("id", t.getId());
     m.put("instanceId", t.getInstanceId());
     m.put("flowCode", t.getFlowCode());
@@ -436,7 +455,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
   /** GAP-P0-1: 将 FlowInstanceVO 转换为 Map（管理员"全部"视图） */
   private Map<String, Object> instanceToMap(FlowInstanceVO i) {
-    Map<String, Object> m = new HashMap<>(16);
+    Map<String, Object> m = new HashMap<>(MAP_INIT_CAPACITY_16);
     m.put("id", i.getId());
     m.put("flowCode", i.getFlowCode());
     m.put("flowName", i.getFlowName());
@@ -460,7 +479,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   }
 
   private Map<String, Object> auditToMap(FlowAuditLogVO log) {
-    Map<String, Object> m = new HashMap<>(16);
+    Map<String, Object> m = new HashMap<>(MAP_INIT_CAPACITY_16);
     m.put("id", log.getId());
     m.put("instanceId", log.getInstanceId());
     m.put("taskId", log.getTaskId());
@@ -510,7 +529,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
     // 预加载节点坐标映射（key = nodeCode），用于步骤中携带 coordinate 字段
     Map<String, Map<String, Object>> nodeCoordMap = loadNodeCoordinates(instance.getDefinitionId());
-    List<Map<String, Object>> steps = new ArrayList<>(32);
+    List<Map<String, Object>> steps = new ArrayList<>(LIST_INIT_CAPACITY_32);
 
     // 1. 起始步骤
     steps.add(buildStartStep(instance));
@@ -556,7 +575,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
   /** 构建起始步骤 Map。 */
   private Map<String, Object> buildStartStep(FlowInstanceVO instance) {
-    Map<String, Object> step = new HashMap<>(8);
+    Map<String, Object> step = new HashMap<>(MAP_INIT_CAPACITY_8);
     step.put("stepIndex", 0);
     step.put("type", "START");
     step.put("timestamp", instance.getStartAt());
@@ -575,7 +594,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   /** 构建历史任务步骤 Map。 */
   private Map<String, Object> buildHisTaskStep(FlowHisTaskVO his,
       Map<String, Map<String, Object>> nodeCoordMap) {
-    Map<String, Object> step = new HashMap<>(8);
+    Map<String, Object> step = new HashMap<>(MAP_INIT_CAPACITY_8);
     step.put("type", "HIS_TASK");
     step.put("timestamp", his.getFinishAt());
     step.put("nodeCode", his.getNodeCode());
@@ -597,7 +616,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     if (action == null || isTaskAction(action)) {
       return null;
     }
-    Map<String, Object> step = new HashMap<>(8);
+    Map<String, Object> step = new HashMap<>(MAP_INIT_CAPACITY_8);
     step.put("type", "AUDIT_LOG");
     step.put("timestamp", log.getOperatedAt());
     step.put("nodeCode", log.getNodeCode());
@@ -612,7 +631,12 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     return step;
   }
 
-  /** 判断 action 是否为任务自身操作（已在 HIS_TASK 中体现，回放时跳过）。 */
+  /**
+   * 判断 action 是否为任务自身操作（已在 HIS_TASK 中体现，回放时跳过）。
+   *
+   * @param action 参数说明
+   * @return 返回值说明
+   */
   private boolean isTaskAction(String action) {
     return action.startsWith("TASK_")
         || "PASS".equals(action)
@@ -624,7 +648,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   /** 构建当前待办步骤 Map。 */
   private Map<String, Object> buildCurrentTaskStep(FlowRunTaskVO task,
       Map<String, Map<String, Object>> nodeCoordMap) {
-    Map<String, Object> step = new HashMap<>(8);
+    Map<String, Object> step = new HashMap<>(MAP_INIT_CAPACITY_8);
     step.put("type", "CURRENT_TASK");
     step.put("timestamp", task.getCreatedAt());
     step.put("nodeCode", task.getNodeCode());
@@ -642,7 +666,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   /** 构建终止步骤 Map。 */
   private Map<String, Object> buildEndStep(FlowInstanceVO instance,
       Map<String, Map<String, Object>> nodeCoordMap) {
-    Map<String, Object> step = new HashMap<>(8);
+    Map<String, Object> step = new HashMap<>(MAP_INIT_CAPACITY_8);
     step.put("type", "END");
     step.put("timestamp", instance.getEndAt());
     step.put("nodeCode", instance.getCurrentNodeCode());
@@ -660,14 +684,24 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     return step;
   }
 
-  /** 按 timestamp 升序排序（null 排最后），并重新分配 stepIndex。 */
+  /**
+   * 按 timestamp 升序排序（null 排最后），并重新分配 stepIndex。
+   *
+   * @param steps 参数说明
+   */
   private void sortStepsByIndex(List<Map<String, Object>> steps) {
     steps.sort((a, b) -> {
       LocalDateTime ta = (LocalDateTime) a.get("timestamp");
       LocalDateTime tb = (LocalDateTime) b.get("timestamp");
-      if (ta == null && tb == null) return 0;
-      if (ta == null) return 1;
-      if (tb == null) return -1;
+      if (ta == null && tb == null) {
+        return 0;
+      }
+      if (ta == null) {
+        return 1;
+      }
+      if (tb == null) {
+        return -1;
+      }
       return ta.compareTo(tb);
     });
     for (int i = 0; i < steps.size(); i++) {
@@ -689,7 +723,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         .filter(s -> "CURRENT_TASK".equals(s.get("type")))
         .count();
 
-    Map<String, Object> progress = new HashMap<>(16);
+    Map<String, Object> progress = new HashMap<>(MAP_INIT_CAPACITY_16);
     progress.put("totalSteps", totalSteps);
     progress.put("completedSteps", completedSteps);
     progress.put("activeSteps", activeSteps);
@@ -750,9 +784,16 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     return result;
   }
 
-  /** 根据任务状态映射到回放节点状态 */
+  /**
+   * 根据任务状态映射到回放节点状态
+   *
+   * @param taskStatus 参数说明
+   * @return 返回值说明
+   */
   private String mapNodeState(String taskStatus) {
-    if (taskStatus == null) return "ENTERED";
+    if (taskStatus == null) {
+      return "ENTERED";
+    }
     return switch (taskStatus) {
       case "PASSED", "COMPLETED" -> "PASSED";
       case "REJECTED" -> "REJECTED";

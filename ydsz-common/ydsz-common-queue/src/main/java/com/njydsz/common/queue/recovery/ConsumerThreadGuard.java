@@ -91,12 +91,20 @@ public class ConsumerThreadGuard {
     log.info("[ConsumerGuard] 消费者已停止，name={}, totalRestarts={}", name, restartCount.get());
   }
 
-  /** 获取当前运行状态 */
+  /**
+   * 获取当前运行状态。
+   *
+   * @return {@code true} 表示守护线程运行中
+   */
   public boolean isRunning() {
     return running.get();
   }
 
-  /** 获取已重启次数 */
+  /**
+   * 获取已重启次数。
+   *
+   * @return 重启次数
+   */
   public int getRestartCount() {
     return restartCount.get();
   }

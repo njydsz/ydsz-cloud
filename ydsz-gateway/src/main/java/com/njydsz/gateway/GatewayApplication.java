@@ -83,7 +83,7 @@ public class GatewayApplication {
    * 而不能因 Bean 找不到导致网关启动失败。
    *
    * @param redisTemplateProvider Reactive Redis 客户端，用于探测限流/黑名单所依赖的 Redis 连通性；缺失时该检查项跳过
-   * @param securityHeadersProvider 安全响应头配置，用于校验安全头策略是否已生效
+   * @param securityHeaderProvider 安全响应头配置，用于校验安全头策略是否已生效
    * @param rateLimitPropertiesProvider 限流配置，用于上报当前令牌桶阈值
    * @param ipAccessControlProvider IP 访问控制配置，用于上报黑白名单启用状态
    * @param authFilterProvider 主鉴权过滤器，用于探测 JWT 密钥等鉴权前置条件

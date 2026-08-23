@@ -23,15 +23,15 @@ import com.njydsz.message.domain.vo.MsgRouteRuleVO;
 import com.njydsz.message.domain.vo.MsgSubscriptionVO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.domain.vo.MsgTemplateVersionVO;
+import com.njydsz.message.domain.vo.MsgTenantConfigVO;
 import com.njydsz.message.domain.vo.MsgTraceVO;
 import com.njydsz.message.domain.vo.MsgUserChannelVO;
 import com.njydsz.message.domain.vo.MsgVariableSourceVO;
-import com.njydsz.message.domain.vo.MsgTenantConfigVO;
-import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.infra.entity.MsgAggregateDO;
 import com.njydsz.message.infra.entity.MsgBatchDO;
 import com.njydsz.message.infra.entity.MsgCanaryDO;
 import com.njydsz.message.infra.entity.MsgFeedbackDO;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.infra.entity.MsgLogDO;
 import com.njydsz.message.infra.entity.MsgNotificationDO;
 import com.njydsz.message.infra.entity.MsgOfflineDO;
@@ -41,10 +41,10 @@ import com.njydsz.message.infra.entity.MsgRouteRuleDO;
 import com.njydsz.message.infra.entity.MsgSubscriptionDO;
 import com.njydsz.message.infra.entity.MsgTemplateDO;
 import com.njydsz.message.infra.entity.MsgTemplateVersionDO;
+import com.njydsz.message.infra.entity.MsgTenantConfigDO;
 import com.njydsz.message.infra.entity.MsgTraceDO;
 import com.njydsz.message.infra.entity.MsgUserChannelDO;
 import com.njydsz.message.infra.entity.MsgVariableSourceDO;
-import com.njydsz.message.infra.entity.MsgTenantConfigDO;
 
 /**
  * 消息模块统一 MapStruct 转换器（Infra 层）。
@@ -67,6 +67,7 @@ import com.njydsz.message.infra.entity.MsgTenantConfigDO;
 @Mapper
 public interface MessageConverter {
 
+  /** MapStruct 单例实例 */
   MessageConverter INSTANCE = Mappers.getMapper(MessageConverter.class);
 
   // ===== MsgLog =====

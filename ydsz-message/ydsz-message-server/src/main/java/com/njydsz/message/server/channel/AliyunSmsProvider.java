@@ -49,6 +49,12 @@ import com.njydsz.message.server.config.MessageProperties;
 @Component
 @ConditionalOnProperty(prefix = "ydsz.message.sms", name = "provider", havingValue = "aliyun")
 public class AliyunSmsProvider implements SmsProvider {
+  /** 业务 ID 前缀长度 */
+  private static final int BIZ_ID_PREFIX_LENGTH = 7;
+
+  /** Map 初始容量 */
+  private static final int MAP_CAPACITY_16 = 16;
+
 
   private static final DateTimeFormatter ISO_FMT =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
@@ -58,9 +64,9 @@ public class AliyunSmsProvider implements SmsProvider {
 
   /**
    * 生产构造：从 {@link MessageProperties} 读取阿里云配置并构建 RestTemplate。
+   * 
    *
-   * @param messageProperties 消息配置
-   */
+   * @param messageProperties 参数说明   */
   public AliyunSmsProvider(MessageProperties messageProperties) {
     this.config = messageProperties.getSms().getAliyun();
     SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
@@ -139,7 +145,7 @@ public class AliyunSmsProvider implements SmsProvider {
    * @return 公共参数 Map
    */
   private Map<String, String> buildCommonParams() {
-    Map<String, String> p = new HashMap<>(16);
+    Map<String, String> p = new HashMap<>(MAP_CAPACITY_16);
     p.put("AccessKeyId", config.getAccessKeyId());
     p.put("Action", "SendSms");
     p.put("Format", "JSON");
@@ -171,9 +177,13 @@ public class AliyunSmsProvider implements SmsProvider {
 
   /**
    * 调用阿里云 SendBatchSms 接口批量发送。
-   *
+   * 
    * <p>参数构造：PhoneNumberJson = ["phone1","phone2",...]， SignNameJson =
    * ["sign","sign",...]，TemplateParamJson = [{...},{...},...]。
+   *
+   * @param requests 参数说明
+   * @param template 参数说明
+   * @return 返回值说明
    */
   private List<MessageResult> doBatchSend(List<MessageRequest> requests, MsgTemplateVO template) {
     List<MessageResult> results = new ArrayList<>(requests.size());
@@ -251,7 +261,7 @@ public class AliyunSmsProvider implements SmsProvider {
     // 从 ALIYUN-{bizId}-{idx} 中提取 bizId
     String bizId = providerTraceId;
     if (bizId.startsWith("ALIYUN-")) {
-      bizId = bizId.substring(7);
+      bizId = bizId.substring(BIZ_ID_PREFIX_LENGTH);
       int dashIdx = bizId.lastIndexOf('-');
       if (dashIdx > 0) {
         bizId = bizId.substring(0, dashIdx);

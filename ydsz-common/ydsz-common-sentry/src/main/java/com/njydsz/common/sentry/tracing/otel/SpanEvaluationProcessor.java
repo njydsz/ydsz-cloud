@@ -68,6 +68,11 @@ public class SpanEvaluationProcessor implements SpanProcessor {
   /** 决策回调（用于测试 / 指标采集） */
   private final List<DecisionListener> listeners = new CopyOnWriteArrayList<>();
 
+  /**
+   * span evaluation processor。
+   * @param recordRatio 参数
+   * @param rules 参数
+ */
   public SpanEvaluationProcessor(double recordRatio, List<SamplingRule> rules) {
     if (recordRatio < 0.0 || recordRatio > 1.0) {
       throw new IllegalArgumentException("recordRatio must be in [0.0, 1.0], got: " + recordRatio);
@@ -81,17 +86,30 @@ public class SpanEvaluationProcessor implements SpanProcessor {
   }
 
   @Override
+  /**
+   * on start。
+   * @param parentContext 参数
+   * @param span 参数
+   */
   public void onStart(Context parentContext, ReadWriteSpan span) {
     // 启动阶段不决策，仅初始化上下文标记
     totalCount.incrementAndGet();
   }
 
   @Override
+  /**
+   * is start required。
+   * @return 结果
+   */
   public boolean isStartRequired() {
     return false;
   }
 
   @Override
+  /**
+   * on end。
+   * @param span 参数
+   */
   public void onEnd(ReadableSpan span) {
     Decision decision = evaluate(span);
     notifyListeners(span, decision);
@@ -105,6 +123,10 @@ public class SpanEvaluationProcessor implements SpanProcessor {
   }
 
   @Override
+  /**
+   * is end required。
+   * @return 结果
+   */
   public boolean isEndRequired() {
     return true;
   }
@@ -135,6 +157,10 @@ public class SpanEvaluationProcessor implements SpanProcessor {
   }
 
   /** 添加决策监听器 */
+  /**
+   * add listener。
+   * @param listener 参数
+   */
   public void addListener(DecisionListener listener) {
     if (listener != null) {
       listeners.add(listener);
@@ -153,22 +179,37 @@ public class SpanEvaluationProcessor implements SpanProcessor {
   }
 
   /** 获取当前记录数 */
+  /**
+   * get recorded count。
+   * @return 结果
+   */
   public long getRecordedCount() {
     return recordedCount.get();
   }
 
   /** 获取总评估数 */
+  /**
+   * get total count。
+   * @return 结果
+   */
   public long getTotalCount() {
     return totalCount.get();
   }
 
   /** 计算实际采样率 */
+  /**
+   * get actual ratio。
+   * @return 结果
+   */
   public double getActualRatio() {
     long t = totalCount.get();
     return t == 0 ? 0.0 : (double) recordedCount.get() / t;
   }
 
   @Override
+  /**
+   * close。
+   */
   public void close() {
     // no-op
   }
@@ -222,6 +263,10 @@ public class SpanEvaluationProcessor implements SpanProcessor {
     }
 
     /** 错误状态码规则（HTTP 5xx 或 Span 状态为 ERROR） */
+    /**
+     * error status。
+     * @return 结果
+     */
     public static SamplingRule errorStatus() {
       return SamplingRule.builder()
           .name("error-status")
@@ -242,6 +287,11 @@ public class SpanEvaluationProcessor implements SpanProcessor {
     }
 
     /** 慢请求规则（超过指定毫秒） */
+    /**
+     * slow request。
+     * @param thresholdMillis 参数
+     * @return 结果
+     */
     public static SamplingRule slowRequest(long thresholdMillis) {
       return SamplingRule.builder()
           .name("slow-request-" + thresholdMillis + "ms")
@@ -253,7 +303,12 @@ public class SpanEvaluationProcessor implements SpanProcessor {
           .build();
     }
 
-    /** 错误码规则（YDSZ 自定义错误码命中指定前缀） */
+    /**
+     * 错误码规则（YDSZ 自定义错误码命中指定前缀）。
+     *
+     * @param prefixes 错误码前缀列表
+     * @return 错误码采样规则
+     */
     public static SamplingRule errorCode(String... prefixes) {
       return SamplingRule.builder()
           .name("error-code")
@@ -274,6 +329,11 @@ public class SpanEvaluationProcessor implements SpanProcessor {
     }
 
     /** 灰度标签规则（命中指定 tag） */
+    /**
+     * gray tag。
+     * @param tagValue 参数
+     * @return 结果
+     */
     public static SamplingRule grayTag(String tagValue) {
       return SamplingRule.builder()
           .name("gray-tag-" + tagValue)
@@ -282,6 +342,10 @@ public class SpanEvaluationProcessor implements SpanProcessor {
     }
 
     /** 压测流量规则 */
+    /**
+     * pressure traffic。
+     * @return 结果
+     */
     public static SamplingRule pressureTraffic() {
       return SamplingRule.builder()
           .name("pressure-traffic")

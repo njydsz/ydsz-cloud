@@ -20,6 +20,9 @@ import com.njydsz.common.notify.enums.NotifyType;
  * @param sendResult 发送结果（由链路填充）
  * @param durationNanos 发送耗时纳秒（由链路填充）
  * @param startTime 开始时间戳纳秒（由链路填充）
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public record SendContext(
     NotifyChannel channel,

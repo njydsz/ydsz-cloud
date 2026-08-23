@@ -3,6 +3,7 @@ package com.njydsz.common.file.storage;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -133,7 +134,7 @@ public class UploadConcurrencyGuard {
     if (distributedLocker != null) {
       String lockValue =
           distributedLocker.tryLock(
-              lockKey, LOCK_EXPIRE_SECONDS, java.util.concurrent.TimeUnit.SECONDS);
+              lockKey, LOCK_EXPIRE_SECONDS, TimeUnit.SECONDS);
       if (lockValue != null) {
         log.debug("[UploadGuard] lock acquired (common-lock), key={}", lockKey);
       }

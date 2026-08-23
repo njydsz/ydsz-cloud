@@ -7,10 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.workflow.domain.dto.FlowAssigneeDTO;
+import com.njydsz.workflow.domain.enums.FlowAssigneeType;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.enums.FlowAssigneeType;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowVariableStrategy;
 
 /**

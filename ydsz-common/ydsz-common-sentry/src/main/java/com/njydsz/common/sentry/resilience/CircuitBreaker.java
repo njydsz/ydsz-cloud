@@ -104,6 +104,7 @@ public class CircuitBreaker {
    *
    * @param operation 业务操作
    * @param fallback 降级操作
+   * @param <T> 操作结果类型
    * @return 操作结果（业务成功时返回业务结果，失败或熔断时返回降级结果）
    */
   public <T> T execute(Supplier<T> operation, Supplier<T> fallback) {

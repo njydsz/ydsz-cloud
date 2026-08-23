@@ -24,10 +24,10 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.domain.dto.BatchProgressVO;
 import com.njydsz.message.domain.dto.BatchSendRequestDTO;
 import com.njydsz.message.domain.vo.MsgBatchVO;
+import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.server.service.SseEmitterService;
 import com.njydsz.message.server.service.batch.BatchService;
 

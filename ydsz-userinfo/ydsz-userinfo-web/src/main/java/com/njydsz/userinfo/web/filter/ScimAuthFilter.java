@@ -17,7 +17,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.scim.ScimError;
 import com.njydsz.userinfo.server.config.ScimProperties;
 

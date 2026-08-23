@@ -7,6 +7,7 @@ import java.util.Optional;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import com.njydsz.workflow.domain.dto.FlowDefinitionDTO;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
@@ -180,9 +181,9 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
     return converter.flowDefinitionListToVO(
         definitionMapper.selectList(
             new LambdaQueryWrapper<FlowDefinitionDO>()
-                .eq(org.springframework.util.StringUtils.hasText(category),
+                .eq(StringUtils.hasText(category),
                     FlowDefinitionDO::getCategory, category)
-                .like(org.springframework.util.StringUtils.hasText(flowCode),
+                .like(StringUtils.hasText(flowCode),
                     FlowDefinitionDO::getFlowCode, flowCode)
                 .eq(FlowDefinitionDO::getActivityStatus, 1)
                 .eq(FlowDefinitionDO::getDeleted, 0)
@@ -243,7 +244,7 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
             new LambdaQueryWrapper<FlowDefinitionDO>()
                 .eq(FlowDefinitionDO::getFlowCode, flowCode)
                 .eq(tenantId != null, FlowDefinitionDO::getTenantId, tenantId)
-                .ne(org.springframework.util.StringUtils.hasText(excludeDefinitionId),
+                .ne(StringUtils.hasText(excludeDefinitionId),
                     FlowDefinitionDO::getId, excludeDefinitionId)
                 .eq(FlowDefinitionDO::getIsPublish, 1)
                 .eq(FlowDefinitionDO::getDeleted, 0)

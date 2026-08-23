@@ -2,11 +2,12 @@ package com.njydsz.userinfo.domain.scim;
 
 import java.util.List;
 
-import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
  * SCIM 2.0 列表响应格式。
@@ -55,5 +56,5 @@ public class ScimListResponse<T> {
 
   /** 资源列表。 */
   @JsonProperty("Resources")
-  private List<T> Resources;
+  private List<T> resources;
 }

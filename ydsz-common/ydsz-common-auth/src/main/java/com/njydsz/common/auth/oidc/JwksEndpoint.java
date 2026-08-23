@@ -1,8 +1,9 @@
 package com.njydsz.common.auth.oidc;
 
-import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -121,9 +122,11 @@ public class JwksEndpoint {
    *
    * @param pem RSA 公钥 PEM 格式字符串
    * @return JWK Map 结构（含 n/e RSA 参数）
-   * @throws Exception 当 PEM 解析失败时抛出
+   * @throws NoSuchAlgorithmException 当 RSA 算法不可用时抛出
+   * @throws InvalidKeySpecException 当 PEM 公钥解析失败时抛出
    */
-  private Map<String, Object> buildRsaKey(String pem) throws Exception {
+  private Map<String, Object> buildRsaKey(String pem)
+      throws NoSuchAlgorithmException, InvalidKeySpecException {
     String cleaned = pem.replace(PEM_RSA_HEADER, "")
         .replace(PEM_RSA_FOOTER, "")
         .replaceAll("\\s", "");
@@ -136,8 +139,16 @@ public class JwksEndpoint {
     key.put("use", USE_SIG);
     key.put("alg", ALG_RS256);
     // Base64URL 编码 RSA 模数 n 和指数 e（不含 padding）
-    key.put("n", Base64.getUrlEncoder().withoutPadding().encodeToString(rsaPublicKey.getModulus().toByteArray()));
-    key.put("e", Base64.getUrlEncoder().withoutPadding().encodeToString(rsaPublicKey.getPublicExponent().toByteArray()));
+    key.put(
+        "n",
+        Base64.getUrlEncoder()
+            .withoutPadding()
+            .encodeToString(rsaPublicKey.getModulus().toByteArray()));
+    key.put(
+        "e",
+        Base64.getUrlEncoder()
+            .withoutPadding()
+            .encodeToString(rsaPublicKey.getPublicExponent().toByteArray()));
     return key;
   }
 }

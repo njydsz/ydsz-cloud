@@ -22,6 +22,9 @@ import com.njydsz.message.server.service.receipt.ReadReceiptService;
 @Service
 @RequiredArgsConstructor
 public class ReadReceiptServiceImpl implements ReadReceiptService {
+  /** 已读状态保留天数 */
+  private static final int READ_STATUS_TTL_DAYS = 30;
+
 
   private final RedisStringOps redisStringOps;
 
@@ -47,7 +50,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
       return;
     }
     try {
-      redisStringOps.set(READ_STATUS_PREFIX + "email:" + msgId, "1", Duration.ofDays(30));
+      redisStringOps.set(READ_STATUS_PREFIX + "email:" + msgId, "1", Duration.ofDays(READ_STATUS_TTL_DAYS));
       log.info("[ReadReceipt] 邮件已读: msgId={}", msgId);
     } catch (Exception e) {
       log.warn("[ReadReceipt] 邮件已读标记失败: msgId={} err={}", msgId, e.getMessage(), e);
@@ -76,7 +79,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
       // 标记消息已读
       String msgId = redisStringOps.get(SHORTLINK_MSG_PREFIX + shortCode, String.class);
       if (StringUtils.hasText(msgId)) {
-        redisStringOps.set(READ_STATUS_PREFIX + "sms:" + msgId, "1", Duration.ofDays(30));
+        redisStringOps.set(READ_STATUS_PREFIX + "sms:" + msgId, "1", Duration.ofDays(READ_STATUS_TTL_DAYS));
         log.info("[ReadReceipt] 短信已读: msgId={} code={}", msgId, shortCode);
       }
       return originalUrl;

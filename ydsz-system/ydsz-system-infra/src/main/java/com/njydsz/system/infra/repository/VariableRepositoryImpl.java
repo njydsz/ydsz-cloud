@@ -1,5 +1,4 @@
 package com.njydsz.system.infra.repository;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -9,13 +8,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.dto.VariableDTO;
+import com.njydsz.system.domain.query.VariablePageQuery;
+import com.njydsz.system.domain.repository.VariableRepository;
+import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.VariableDO;
 import com.njydsz.system.infra.mapper.VariableMapper;
-import com.njydsz.system.domain.repository.VariableRepository;
-import com.njydsz.system.domain.dto.VariableDTO;
-import com.njydsz.system.domain.query.VariablePageQuery;
-import com.njydsz.system.domain.vo.VariableVO;
+
+
+
 
 /**
  * 系统变量仓储实现（Infra 层）。
@@ -81,7 +83,7 @@ public class VariableRepositoryImpl implements VariableRepository {
     wrapper.orderByDesc(VariableDO::getCreatedAt);
     com.baomidou.mybatisplus.core.metadata.IPage<VariableDO> result = variableMapper.selectPage(page, wrapper);
     List<VariableVO> vos = converter.variableListToVO(result.getRecords());
-    return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
+    return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   @Override

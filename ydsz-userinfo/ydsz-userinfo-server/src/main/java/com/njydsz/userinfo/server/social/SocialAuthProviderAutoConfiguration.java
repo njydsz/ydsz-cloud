@@ -2,13 +2,12 @@ package com.njydsz.userinfo.server.social;
 
 import java.util.List;
 
-import org.springframework.context.annotation.Configuration;
-
-import com.njydsz.userinfo.domain.social.SocialAuthProvider;
-
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.userinfo.domain.social.SocialAuthProvider;
 
 /**
  * 社交认证 Provider 自动配置（P3-4）。

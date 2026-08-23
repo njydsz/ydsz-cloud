@@ -17,6 +17,9 @@ import com.njydsz.common.sentry.spi.TraceContext;
 public class SkyWalkingTraceContext implements TraceContext {
 
   /** 构造函数，初始化 SkyWalking 追踪上下文 */
+  /**
+   * sky walking trace。
+ */
   public SkyWalkingTraceContext() {
     log.info("[Sentry] SkyWalkingTraceContext 初始化完成");
   }
@@ -27,6 +30,10 @@ public class SkyWalkingTraceContext implements TraceContext {
    * @return TraceId，若 SkyWalking 不可用则返回 null
    */
   @Override
+  /**
+   * get trace id。
+   * @return 结果
+   */
   public String getTraceId() {
     try {
       return org.apache.skywalking.apm.toolkit.trace.TraceContext
@@ -42,6 +49,10 @@ public class SkyWalkingTraceContext implements TraceContext {
    * @return SpanId，若 SkyWalking 不可用则返回 null
    */
   @Override
+  /**
+   * get span id。
+   * @return 结果
+   */
   public String getSpanId() {
     try {
       return String.valueOf(
@@ -58,6 +69,10 @@ public class SkyWalkingTraceContext implements TraceContext {
    * @return SegmentId，若 SkyWalking 不可用则返回 null
    */
   @Override
+  /**
+   * get segment id。
+   * @return 结果
+   */
   public String getSegmentId() {
     try {
       return org.apache.skywalking.apm.toolkit.trace.TraceContext
@@ -73,6 +88,10 @@ public class SkyWalkingTraceContext implements TraceContext {
    * @return 是否在追踪链路中
    */
   @Override
+  /**
+   * is tracing。
+   * @return 结果
+   */
   public boolean isTracing() {
     try {
       return org.apache.skywalking.apm.toolkit.trace.TraceContext.traceId()
@@ -89,6 +108,11 @@ public class SkyWalkingTraceContext implements TraceContext {
    * @param value 标签值
    */
   @Override
+  /**
+   * tag。
+   * @param key 参数
+   * @param value 参数
+   */
   public void tag(String key, String value) {
     try {
       ActiveSpan.tag(key, value);
@@ -103,6 +127,10 @@ public class SkyWalkingTraceContext implements TraceContext {
    * @return 固定返回 "skywalking"
    */
   @Override
+  /**
+   * get tracer name。
+   * @return 结果
+   */
   public String getTracerName() {
     return "skywalking";
   }

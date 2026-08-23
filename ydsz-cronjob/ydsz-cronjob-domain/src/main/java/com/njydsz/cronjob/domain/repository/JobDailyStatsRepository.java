@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.domain.repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -70,5 +71,5 @@ public interface JobDailyStatsRepository {
    * @param endDate 结束日期（含）
    * @return 统计记录 VO 列表
    */
-  List<JobDailyStatsVO> findByJobIdAndDateRange(String jobId, java.time.LocalDate startDate, java.time.LocalDate endDate);
+  List<JobDailyStatsVO> findByJobIdAndDateRange(String jobId, LocalDate startDate, LocalDate endDate);
 }

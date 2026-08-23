@@ -1,5 +1,4 @@
 package com.njydsz.system.infra.repository;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,12 +6,15 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
+import com.njydsz.system.domain.repository.TenantPlanMenuRepository;
+import com.njydsz.system.domain.vo.TenantPlanMenuVO;
 import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.TenantPlanMenuDO;
 import com.njydsz.system.infra.mapper.TenantPlanMenuMapper;
-import com.njydsz.system.domain.repository.TenantPlanMenuRepository;
-import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
-import com.njydsz.system.domain.vo.TenantPlanMenuVO;
+
+
+
 
 /**
  * 租户套餐-菜单关联仓储实现（Infra 层）。
@@ -34,6 +36,9 @@ import com.njydsz.system.domain.vo.TenantPlanMenuVO;
 @RequiredArgsConstructor
 public class TenantPlanMenuRepositoryImpl implements TenantPlanMenuRepository {
 
+  /** 默认初始容量 */
+  private static final int DEFAULT_INITIAL_CAPACITY = 16;
+
   private final TenantPlanMenuMapper tenantPlanMenuMapper;
 
   private final SystemConverter converter;
@@ -54,7 +59,8 @@ public class TenantPlanMenuRepositoryImpl implements TenantPlanMenuRepository {
 
   @Override
   public boolean insertBatch(TenantPlanMenuDTO dto) {
-    List<TenantPlanMenuDO> entities = new ArrayList<>(dto.getMenuIds() != null ? dto.getMenuIds().size() : 16);
+    List<TenantPlanMenuDO> entities =
+        new ArrayList<>(dto.getMenuIds() != null ? dto.getMenuIds().size() : DEFAULT_INITIAL_CAPACITY);
     if (dto.getMenuIds() != null) {
       for (String menuId : dto.getMenuIds()) {
         TenantPlanMenuDO entity = converter.dtoToEntity(dto.getPlanId(), menuId);

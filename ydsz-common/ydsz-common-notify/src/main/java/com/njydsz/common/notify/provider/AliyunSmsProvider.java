@@ -7,10 +7,11 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -23,7 +24,6 @@ import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.JsonNode;
-import com.njydsz.common.notify.channel.NotifyChannelStrategy;
 
 /**
  * 阿里云短信提供商实现（阿里云官方 RPC 协议）。
@@ -110,7 +110,7 @@ public class AliyunSmsProvider implements SmsProvider {
       params.put("AccessKeyId", accessKey);
       params.put("SignatureMethod", "HMAC-SHA1");
       params.put("SignatureVersion", "1.0");
-      params.put("SignatureNonce", java.util.UUID.randomUUID().toString());
+      params.put("SignatureNonce", UUID.randomUUID().toString());
       params.put("Timestamp", formatTimestamp());
       // 2. 业务参数
       params.put("PhoneNumbers", phoneNumber);
@@ -181,7 +181,7 @@ public class AliyunSmsProvider implements SmsProvider {
       Mac mac = Mac.getInstance(HMAC_SHA1);
       mac.init(new SecretKeySpec((secretKey + "&").getBytes(StandardCharsets.UTF_8), HMAC_SHA1));
       byte[] signData = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
-      return java.util.Base64.getEncoder().encodeToString(signData);
+      return Base64.getEncoder().encodeToString(signData);
     } catch (NoSuchAlgorithmException | InvalidKeyException e) {
       throw new IllegalStateException("阿里云短信 RPC 签名失败", e);
     }

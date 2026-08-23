@@ -5,6 +5,10 @@ package com.njydsz.common.socket.push;
  *
  * <p>封装推送操作的结果，供调用方感知推送状态（成功/失败/错误原因）。
  *
+ * @param success 是否推送成功
+ * @param messageId 消息 ID（成功时生成）
+ * @param errorCode 错误码（失败时）
+ * @param errorMessage 错误描述（失败时）
  * @author ydsz-team
  * @since 1.0.0
  */

@@ -68,53 +68,69 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
   @Override
   public void save(SamlIdpDTO dto) {
     SamlIdpConfigDO existing = mapper.selectByEntityId(dto.getEntityId());
-
     if (existing == null) {
-      // 创建场景
-      SamlIdpConfigDO entity = new SamlIdpConfigDO();
-      entity.setName(dto.getName());
-      entity.setEntityId(dto.getEntityId());
-      entity.setSsoUrl(dto.getSsoUrl());
-      entity.setCertificate(dto.getCertificate());
-      entity.setEmailAttribute(dto.getEmailAttribute() != null ? dto.getEmailAttribute() : "email");
-      entity.setDisplayNameAttribute(
-          dto.getDisplayNameAttribute() != null ? dto.getDisplayNameAttribute() : "displayName");
-      entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
-      entity.setSortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 100);
-      entity.setRemark(dto.getRemark());
-
-      mapper.insert(entity);
-      log.info("SAML IdP 配置已创建: entityId={}", dto.getEntityId());
+      createNew(dto);
     } else {
-      // 更新场景（仅修改非 null 字段）
-      if (dto.getName() != null) {
-        existing.setName(dto.getName());
-      }
-      if (dto.getSsoUrl() != null) {
-        existing.setSsoUrl(dto.getSsoUrl());
-      }
-      if (dto.getCertificate() != null) {
-        existing.setCertificate(dto.getCertificate());
-      }
-      if (dto.getEmailAttribute() != null) {
-        existing.setEmailAttribute(dto.getEmailAttribute());
-      }
-      if (dto.getDisplayNameAttribute() != null) {
-        existing.setDisplayNameAttribute(dto.getDisplayNameAttribute());
-      }
-      if (dto.getStatus() != null) {
-        existing.setStatus(dto.getStatus());
-      }
-      if (dto.getSortOrder() != null) {
-        existing.setSortOrder(dto.getSortOrder());
-      }
-      if (dto.getRemark() != null) {
-        existing.setRemark(dto.getRemark());
-      }
-
-      mapper.updateById(existing);
-      log.info("SAML IdP 配置已更新: entityId={}", dto.getEntityId());
+      updateExisting(existing, dto);
     }
+  }
+
+  /**
+   * 创建 SAML IdP 配置：全部字段写入（含默认值兜底）。
+   *
+   * @param dto 待创建数据
+   */
+  private void createNew(SamlIdpDTO dto) {
+    SamlIdpConfigDO entity = new SamlIdpConfigDO();
+    entity.setName(dto.getName());
+    entity.setEntityId(dto.getEntityId());
+    entity.setSsoUrl(dto.getSsoUrl());
+    entity.setCertificate(dto.getCertificate());
+    entity.setEmailAttribute(dto.getEmailAttribute() != null ? dto.getEmailAttribute() : "email");
+    entity.setDisplayNameAttribute(
+        dto.getDisplayNameAttribute() != null ? dto.getDisplayNameAttribute() : "displayName");
+    entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
+    entity.setSortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 100);
+    entity.setRemark(dto.getRemark());
+
+    mapper.insert(entity);
+    log.info("SAML IdP 配置已创建: entityId={}", dto.getEntityId());
+  }
+
+  /**
+   * 更新 SAML IdP 配置：仅修改非 null 字段。
+   *
+   * @param existing 已有实体
+   * @param dto 待更新数据
+   */
+  private void updateExisting(SamlIdpConfigDO existing, SamlIdpDTO dto) {
+    if (dto.getName() != null) {
+      existing.setName(dto.getName());
+    }
+    if (dto.getSsoUrl() != null) {
+      existing.setSsoUrl(dto.getSsoUrl());
+    }
+    if (dto.getCertificate() != null) {
+      existing.setCertificate(dto.getCertificate());
+    }
+    if (dto.getEmailAttribute() != null) {
+      existing.setEmailAttribute(dto.getEmailAttribute());
+    }
+    if (dto.getDisplayNameAttribute() != null) {
+      existing.setDisplayNameAttribute(dto.getDisplayNameAttribute());
+    }
+    if (dto.getStatus() != null) {
+      existing.setStatus(dto.getStatus());
+    }
+    if (dto.getSortOrder() != null) {
+      existing.setSortOrder(dto.getSortOrder());
+    }
+    if (dto.getRemark() != null) {
+      existing.setRemark(dto.getRemark());
+    }
+
+    mapper.updateById(existing);
+    log.info("SAML IdP 配置已更新: entityId={}", dto.getEntityId());
   }
 
   @Override

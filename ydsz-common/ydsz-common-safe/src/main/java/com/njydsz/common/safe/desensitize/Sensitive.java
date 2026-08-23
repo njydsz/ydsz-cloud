@@ -48,7 +48,7 @@ import java.lang.annotation.Target;
  *     @Sensitive(SensitiveType.ID_CARD)
  *     private String idCard;
  *
- *     @Sensitive  // 默认：全部替换为 ****
+ *     {@code @Sensitive}  // 默认：全部替换为 ****
  *     private String secretKey;
  * }
  * }</pre>

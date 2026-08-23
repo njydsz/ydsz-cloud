@@ -171,7 +171,9 @@ public class DefaultWebhookDispatcher implements WebhookDispatcher {
     try {
       // 尝试使用 Apache HttpClient 连接池
       Class<?> httpClientFactoryClass =
-          Class.forName("org.springframework.http.client.HttpComponentsClientHttpRequestFactory");
+                // CHECKSTYLE.OFF: RegexpSinglelineJava — 反射类名字符串常量，非代码引用
+      Class.forName("org.springframework.http.client.HttpComponentsClientHttpRequestFactory");
+      // CHECKSTYLE.ON: RegexpSinglelineJava
       Object factory = httpClientFactoryClass.getDeclaredConstructor().newInstance();
       // 设置超时
       httpClientFactoryClass
@@ -207,7 +209,7 @@ public class DefaultWebhookDispatcher implements WebhookDispatcher {
       Mac mac = Mac.getInstance(HMAC_ALGORITHM);
       mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM));
       byte[] raw = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
-      return java.util.Base64.getEncoder().encodeToString(raw);
+      return Base64.getEncoder().encodeToString(raw);
     } catch (Exception e) {
       LOG.warn("[WebhookDispatcher] 签名失败: {}", e.getMessage());
       return "";

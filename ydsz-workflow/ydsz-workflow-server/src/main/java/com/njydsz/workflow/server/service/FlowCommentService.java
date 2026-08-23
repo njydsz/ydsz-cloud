@@ -7,7 +7,6 @@ import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
 import com.njydsz.workflow.domain.vo.FlowCommentVO;
 import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
 import com.njydsz.workflow.infra.entity.FlowCommentDO;
-import com.njydsz.workflow.infra.entity.FlowQuickCommentDO;
 
 /**
  * P2-2: 流程评论 Service（含常用语能力）

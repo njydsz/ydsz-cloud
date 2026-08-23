@@ -2,7 +2,6 @@ package com.njydsz.workflow.server.service.impl.definition;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,12 +13,12 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.workflow.domain.repository.FlowCategoryRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
-import com.njydsz.workflow.infra.entity.FlowCategoryDO;
-import com.njydsz.workflow.domain.vo.FlowCategoryVO;
+import com.njydsz.workflow.domain.repository.FlowCategoryRepository;
 import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
+import com.njydsz.workflow.domain.vo.FlowCategoryVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.entity.FlowCategoryDO;
 import com.njydsz.workflow.server.service.FlowCategoryService;
 
 /**
@@ -119,11 +118,14 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>一次性查询全表后在内存中构建树，使用 {@link TreeBuilder#buildSimple} O(n) 算法， 自动填充 {@code level}/{@code path} 元数据。
    * 分类数据量小（百级别），全量加载可接受。
+   * 
+   * 
    *
-   * @return 分类树形结构根节点列表，无数据返回空列表
+   * @param tenantId 参数说明
+   * @return 返回值说明
    */
   @Override
   public List<FlowCategoryTreeVO> tree(String tenantId) {

@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -122,7 +123,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
   private final GatewayMetrics gatewayMetrics;
 
   /** P0-C2: 访问日志采样率（0-100，默认 100=全量；4xx/5xx 始终全量） */
-  @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.access-log.sample-rate:100}")
+  @Value("${ydsz.gateway.access-log.sample-rate:100}")
   private int sampleRate;
 
   /**

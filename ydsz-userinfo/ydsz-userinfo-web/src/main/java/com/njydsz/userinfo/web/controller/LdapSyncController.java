@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -16,9 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.server.auth.LdapOrgSyncService;
 import com.njydsz.userinfo.server.auth.LdapOrgSyncService.SyncResult;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * LDAP/AD 组织架构同步管理端 API。

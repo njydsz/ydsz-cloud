@@ -46,6 +46,9 @@ import com.njydsz.message.server.producer.MessageQueueOperations;
     havingValue = "true",
     matchIfMissing = true)
 public class OutboxEventScheduler {
+  /** 扫描时间偏移（秒） */
+  private static final int SCAN_OFFSET_SECONDS = 5;
+
 
   /** 异步消息投递事件类型常量 */
   private static final String EVENT_TYPE_ASYNC_DISPATCH = "MessageAsyncDispatch";
@@ -69,7 +72,7 @@ public class OutboxEventScheduler {
   @Scheduled(fixedDelayString = "${ydsz.message.outbox.scan-interval-ms:5000}")
   @DistributedScheduled(lockKey = "message:outbox-publish", leaseTime = 30)
   public void scanAndPublish() {
-    LocalDateTime cutoffTime = LocalDateTime.now().minusSeconds(5);
+    LocalDateTime cutoffTime = LocalDateTime.now().minusSeconds(SCAN_OFFSET_SECONDS);
     List<OutboxEvent> pendingEvents =
         outboxEventRepository.findPending(SCAN_BATCH_SIZE, cutoffTime);
 
@@ -123,13 +126,22 @@ public class OutboxEventScheduler {
    *
    * @param outboxEvent Outbox 事件
    */
-  private void dispatchOutboxEvent(OutboxEvent outboxEvent) throws Exception {
-    if (EVENT_TYPE_ASYNC_DISPATCH.equals(outboxEvent.getEventType())) {
-      // 异步消息投递：反序列化后发送到 MQ
-      dispatchAsyncMessage(outboxEvent);
-    } else {
-      // 领域事件：发布到 Spring 事件总线
-      publishDomainEvent(outboxEvent);
+  private void dispatchOutboxEvent(OutboxEvent outboxEvent) {
+    try {
+      if (EVENT_TYPE_ASYNC_DISPATCH.equals(outboxEvent.getEventType())) {
+        // 异步消息投递：反序列化后发送到 MQ
+        dispatchAsyncMessage(outboxEvent);
+      } else {
+        // 领域事件：发布到 Spring 事件总线
+        publishDomainEvent(outboxEvent);
+      }
+    } catch (Exception e) {
+      log.error(
+          "[OutboxScheduler] 事件分发异常: eventId={} type={} err={}",
+          outboxEvent.getId(),
+          outboxEvent.getEventType(),
+          e.getMessage(),
+          e);
     }
   }
 
@@ -171,26 +183,34 @@ public class OutboxEventScheduler {
    *
    * @param outboxEvent Outbox 事件
    */
-  private void publishDomainEvent(OutboxEvent outboxEvent) throws Exception {
+  private void publishDomainEvent(OutboxEvent outboxEvent) {
     String eventType = outboxEvent.getEventType();
     String payload = outboxEvent.getPayload();
+    try {
+      // 先尝试以 eventType 作为全限定类名解析
+      Object domainEvent = deserializeEvent(eventType, payload);
 
-    // 先尝试以 eventType 作为全限定类名解析
-    Object domainEvent = deserializeEvent(eventType, payload);
-
-    if (domainEvent != null) {
-      eventPublisher.publishEvent(domainEvent);
-      messageMetrics.recordSend("OUTBOX", "SUCCESS", 0);
-      log.debug(
-          "[OutboxScheduler] 事件已发布: eventId={} type={}",
+      if (domainEvent != null) {
+        eventPublisher.publishEvent(domainEvent);
+        messageMetrics.recordSend("OUTBOX", "SUCCESS", 0);
+        log.debug(
+            "[OutboxScheduler] 事件已发布: eventId={} type={}",
+            outboxEvent.getId(),
+            eventType);
+      } else {
+        // 无法解析的事件类型，记录 WARN 但不抛异常（避免阻塞其他事件）
+        log.warn(
+            "[OutboxScheduler] 未知事件类型，跳过: eventId={} type={}",
+            outboxEvent.getId(),
+            eventType);
+      }
+    } catch (Exception e) {
+      log.error(
+          "[OutboxScheduler] 领域事件发布异常: eventId={} type={} err={}",
           outboxEvent.getId(),
-          eventType);
-    } else {
-      // 无法解析的事件类型，记录 WARN 但不抛异常（避免阻塞其他事件）
-      log.warn(
-          "[OutboxScheduler] 未知事件类型，跳过: eventId={} type={}",
-          outboxEvent.getId(),
-          eventType);
+          eventType,
+          e.getMessage(),
+          e);
     }
   }
 

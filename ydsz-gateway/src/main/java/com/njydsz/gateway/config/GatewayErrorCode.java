@@ -49,52 +49,79 @@ import lombok.Getter;
 public enum GatewayErrorCode {
 
   // ===== 2xx 成功（占位，网关层无需单独定义） =====
+  /** SUCCESS */
   SUCCESS(20000, "error.SUCCESS"),
 
   // ===== 400xx 请求参数错误 =====
+  /** BAD_REQUEST */
   BAD_REQUEST(40000, "error.BAD_REQUEST"),
+  /** PATH_TRAVERSAL */
   PATH_TRAVERSAL(40001, "error.PATH_TRAVERSAL"),
+  /** PAYLOAD_TOO_LARGE */
   PAYLOAD_TOO_LARGE(40002, "error.PAYLOAD_TOO_LARGE"),
+  /** CONTENT_TYPE_MISSING */
   CONTENT_TYPE_MISSING(40003, "error.CONTENT_TYPE_MISSING"),
+  /** INVALID_PARAMETER */
   INVALID_PARAMETER(40004, "error.INVALID_PARAMETER"),
 
   // ===== 401xx 认证失败 =====
+  /** UNAUTHORIZED */
   UNAUTHORIZED(40100, "error.UNAUTHORIZED"),
+  /** TOKEN_INVALID */
   TOKEN_INVALID(40101, "error.TOKEN_INVALID"),
+  /** TOKEN_EXPIRED */
   TOKEN_EXPIRED(40102, "error.TOKEN_EXPIRED"),
+  /** TOKEN_BLACKLISTED */
   TOKEN_BLACKLISTED(40103, "error.TOKEN_BLACKLISTED"),
+  /** REPLAY_DETECTED */
   REPLAY_DETECTED(40104, "error.REPLAY_DETECTED"),
+  /** API_KEY_MISSING */
   API_KEY_MISSING(40105, "error.API_KEY_MISSING"),
+  /** API_KEY_INVALID */
   API_KEY_INVALID(40106, "error.API_KEY_INVALID"),
 
   // ===== 403xx 权限不足 =====
+  /** FORBIDDEN */
   FORBIDDEN(40300, "error.FORBIDDEN"),
+  /** IP_FORBIDDEN */
   IP_FORBIDDEN(40301, "error.IP_FORBIDDEN"),
+  /** IP_BLACKLISTED */
   IP_BLACKLISTED(40302, "error.IP_BLACKLISTED"),
+  /** ORIGIN_FORBIDDEN */
   ORIGIN_FORBIDDEN(40303, "error.ORIGIN_FORBIDDEN"),
 
   // ===== 404xx 资源/路由不存在 =====
+  /** ROUTE_NOT_FOUND */
   ROUTE_NOT_FOUND(40400, "error.ROUTE_NOT_FOUND"),
 
   // ===== 408xx 请求超时 =====
+  /** REQUEST_TIMEOUT */
   REQUEST_TIMEOUT(40800, "error.REQUEST_TIMEOUT"),
 
   // ===== 429xx 限流 =====
+  /** RATE_LIMITED */
   RATE_LIMITED(42900, "error.RATE_LIMITED"),
+  /** RATE_LIMITED_IP */
   RATE_LIMITED_IP(42901, "error.RATE_LIMITED_IP"),
+  /** RATE_LIMITED_USER */
   RATE_LIMITED_USER(42902, "error.RATE_LIMITED_USER"),
 
   // ===== 500xx 网关内部错误 =====
+  /** INTERNAL_ERROR */
   INTERNAL_ERROR(50000, "error.INTERNAL_ERROR"),
 
   // ===== 502xx 下游服务异常 =====
+  /** BAD_GATEWAY */
   BAD_GATEWAY(50200, "error.BAD_GATEWAY"),
 
   // ===== 503xx 熔断/服务不可用 =====
+  /** SERVICE_UNAVAILABLE */
   SERVICE_UNAVAILABLE(50300, "error.SERVICE_UNAVAILABLE"),
+  /** CIRCUIT_BREAKER_OPEN */
   CIRCUIT_BREAKER_OPEN(50301, "error.CIRCUIT_BREAKER_OPEN"),
 
   // ===== 504xx 下游响应超时 =====
+  /** GATEWAY_TIMEOUT */
   GATEWAY_TIMEOUT(50400, "error.GATEWAY_TIMEOUT");
 
   /** 5 位业务错误码 */

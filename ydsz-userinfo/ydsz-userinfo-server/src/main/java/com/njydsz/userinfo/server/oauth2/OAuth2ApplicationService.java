@@ -7,7 +7,6 @@ import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,29 +57,16 @@ public class OAuth2ApplicationService {
    * <p>自动生成 clientId 和 clientSecret，clientSecret 使用 BCrypt 加密存储。
    * 创建成功后返回的应用对象中包含明文 clientSecret（仅此一次，请妥善保存）。
    *
-   * @param clientName 应用名称
-   * @param clientType 客户端类型
-   * @param redirectUris 授权回调地址白名单
-   * @param allowedScopes 允许申请的权限范围
-   * @param allowedAudiences 允许的受众
-   * @param description 应用描述
-   * @param iconUrl 应用图标 URL
+   * @param command 应用注册参数
    * @return 注册成功的应用（含明文 clientSecret）
    */
   @Transactional(rollbackFor = Exception.class)
-  public OAuth2Application registerApplication(
-      String clientName,
-      OAuth2Application.ClientType clientType,
-      List<String> redirectUris,
-      java.util.Set<String> allowedScopes,
-      java.util.Set<String> allowedAudiences,
-      String description,
-      String iconUrl) {
+  public OAuth2Application registerApplication(OAuth2ApplicationCommand command) {
     // 参数校验
-    if (clientName == null || clientName.isBlank()) {
+    if (command.clientName() == null || command.clientName().isBlank()) {
       throw new BusinessException(UserInfoExceptionCode.PARAM_INVALID);
     }
-    if (redirectUris == null || redirectUris.isEmpty()) {
+    if (command.redirectUris() == null || command.redirectUris().isEmpty()) {
       throw new BusinessException(UserInfoExceptionCode.PARAM_INVALID);
     }
 
@@ -91,15 +77,15 @@ public class OAuth2ApplicationService {
     OAuth2Application application = new OAuth2Application(
         UUID.randomUUID().toString(),
         clientId,
-        clientName,
+        command.clientName(),
         encodedClientSecret,
-        clientType,
-        redirectUris,
-        allowedScopes,
-        allowedAudiences,
+        command.clientType(),
+        command.redirectUris(),
+        command.allowedScopes(),
+        command.allowedAudiences(),
         OAuth2Application.ApplicationStatus.ENABLED,
-        description,
-        iconUrl,
+        command.description(),
+        command.iconUrl(),
         java.time.LocalDateTime.now(),
         java.time.LocalDateTime.now(),
         getCurrentUserId());
@@ -151,41 +137,26 @@ public class OAuth2ApplicationService {
   /**
    * 更新应用信息。
    *
-   * @param id 应用 ID
-   * @param clientName 应用名称
-   * @param redirectUris 授权回调地址白名单
-   * @param allowedScopes 允许申请的权限范围
-   * @param allowedAudiences 允许的受众
-   * @param description 应用描述
-   * @param iconUrl 应用图标 URL
-   * @param status 应用状态
+   * @param command 应用更新参数（id 必填，其余字段为空时保留原值）
    * @return 更新后的应用
    */
   @Transactional(rollbackFor = Exception.class)
-  public OAuth2Application updateApplication(
-      String id,
-      String clientName,
-      List<String> redirectUris,
-      java.util.Set<String> allowedScopes,
-      java.util.Set<String> allowedAudiences,
-      String description,
-      String iconUrl,
-      OAuth2Application.ApplicationStatus status) {
-    OAuth2Application existing = applicationRepository.findById(id)
+  public OAuth2Application updateApplication(OAuth2ApplicationCommand command) {
+    OAuth2Application existing = applicationRepository.findById(command.id())
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID));
 
     OAuth2Application updated = new OAuth2Application(
         existing.id(),
         existing.clientId(),
-        clientName != null ? clientName : existing.clientName(),
+        command.clientName() != null ? command.clientName() : existing.clientName(),
         existing.clientSecret(),
         existing.clientType(),
-        redirectUris != null ? redirectUris : existing.redirectUris(),
-        allowedScopes != null ? allowedScopes : existing.allowedScopes(),
-        allowedAudiences != null ? allowedAudiences : existing.allowedAudiences(),
-        status != null ? status : existing.status(),
-        description != null ? description : existing.description(),
-        iconUrl != null ? iconUrl : existing.iconUrl(),
+        command.redirectUris() != null ? command.redirectUris() : existing.redirectUris(),
+        command.allowedScopes() != null ? command.allowedScopes() : existing.allowedScopes(),
+        command.allowedAudiences() != null ? command.allowedAudiences() : existing.allowedAudiences(),
+        command.status() != null ? command.status() : existing.status(),
+        command.description() != null ? command.description() : existing.description(),
+        command.iconUrl() != null ? command.iconUrl() : existing.iconUrl(),
         existing.createdAt(),
         java.time.LocalDateTime.now(),
         existing.createdBy());

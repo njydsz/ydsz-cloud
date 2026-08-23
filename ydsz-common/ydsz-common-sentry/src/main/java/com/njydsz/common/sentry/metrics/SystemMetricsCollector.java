@@ -52,6 +52,10 @@ public class SystemMetricsCollector {
   /** 上次 GC 时间，用于计算增量 */
   private final AtomicLong lastGcTime = new AtomicLong(0);
 
+  /**
+   * system metrics collector。
+   * @param metricsCollector 参数
+ */
   public SystemMetricsCollector(MetricsCollector metricsCollector) {
     this.metricsCollector = metricsCollector;
     this.osMxBean = ManagementFactory.getOperatingSystemMXBean();
@@ -64,6 +68,9 @@ public class SystemMetricsCollector {
   }
 
   /** 采集并上报系统资源指标 */
+  /**
+   * collect。
+   */
   public void collect() {
     if (metricsCollector == null) {
       return;

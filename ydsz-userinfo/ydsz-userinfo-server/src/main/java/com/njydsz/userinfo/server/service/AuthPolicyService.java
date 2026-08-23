@@ -26,6 +26,15 @@ import com.njydsz.userinfo.domain.vo.AuthPolicyVO;
 @Service
 @RequiredArgsConstructor
 public class AuthPolicyService {
+  /** 默认密码最小长度 */
+  private static final int DEFAULT_PASSWORD_MIN_LENGTH = 8;
+
+  /** 默认每用户最大会话数 */
+  private static final int DEFAULT_MAX_SESSIONS_PER_USER = 3;
+
+  /** 默认会话超时（秒）：2 小时 */
+  private static final long DEFAULT_SESSION_TIMEOUT_SECONDS = 7200;
+
 
   private final AuthPolicyRepository authPolicyRepository;
 
@@ -128,14 +137,14 @@ public class AuthPolicyService {
     AuthPolicyVO vo = new AuthPolicyVO();
     vo.setId("hardcoded-default");
     vo.setName("硬编码默认策略");
-    vo.setPasswordMinLength(8);
+    vo.setPasswordMinLength(DEFAULT_PASSWORD_MIN_LENGTH);
     vo.setPasswordRequireUppercase(true);
     vo.setPasswordRequireDigit(true);
     vo.setMfaEnabled(false);
     vo.setCaptchaEnabled(true);
     vo.setAllowedIdentityProviders("LOCAL");
-    vo.setMaxSessionsPerUser(3);
-    vo.setSessionTimeoutSeconds(7200);
+    vo.setMaxSessionsPerUser(DEFAULT_MAX_SESSIONS_PER_USER);
+    vo.setSessionTimeoutSeconds(DEFAULT_SESSION_TIMEOUT_SECONDS);
     vo.setRemark("硬编码兜底策略");
     return vo;
   }

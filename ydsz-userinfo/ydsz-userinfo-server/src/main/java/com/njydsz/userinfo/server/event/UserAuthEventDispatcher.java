@@ -1,6 +1,5 @@
 package com.njydsz.userinfo.server.event;
 
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -26,7 +25,8 @@ import com.njydsz.userinfo.domain.event.auth.SessionEvictedEvent;
 /**
  * 用户认证事件分发器。
  *
- * <p>收集所有 {@link UserAuthEventListener} 实现（Spring 自动注入 {@code List}），按 {@link UserAuthEventListener#getOrder()} 升序排列后同步分发事件。
+ * <p>收集所有 {@link UserAuthEventListener} 实现（Spring 自动注入 {@code List}），
+ * 按 {@link UserAuthEventListener#getOrder()} 升序排列后同步分发事件。
  *
  * <p><b>异常隔离：</b>单个监听器抛出异常不会影响其他监听器，异常会被捕获并记录 WARN 日志后继续执行。
  *
@@ -66,7 +66,7 @@ public class UserAuthEventDispatcher {
    * <p>使用 {@link CompletableFuture#runAsync()} 在公共 ForkJoinPool 中执行，适用于非关键路径事件（如指标统计）。
    *
    * @param event 认证事件对象
-   @param <T> 事件类型
+   * @param <T> 事件类型
    * @return CompletableFuture，可用于链式处理或异常回调
    */
   public <T> CompletableFuture<Void> publishAsync(T event) {
@@ -81,32 +81,20 @@ public class UserAuthEventDispatcher {
    */
   private void dispatchToListener(UserAuthEventListener listener, Object event) {
     try {
-      if (event instanceof LoginSuccessEvent e) {
-        listener.onLoginSuccess(e);
-      } else if (event instanceof LoginFailedEvent e) {
-        listener.onLoginFailed(e);
-      } else if (event instanceof LogoutEvent e) {
-        listener.onLogout(e);
-      } else if (event instanceof MfaTriggeredEvent e) {
-        listener.onMfaTriggered(e);
-      } else if (event instanceof MfaVerifiedEvent e) {
-        listener.onMfaVerified(e);
-      } else if (event instanceof MfaFailedEvent e) {
-        listener.onMfaFailed(e);
-      } else if (event instanceof AccountLockedEvent e) {
-        listener.onAccountLocked(e);
-      } else if (event instanceof AccountUnlockedEvent e) {
-        listener.onAccountUnlocked(e);
-      } else if (event instanceof SessionEvictedEvent e) {
-        listener.onSessionEvicted(e);
-      } else if (event instanceof PasswordChangedEvent e) {
-        listener.onPasswordChanged(e);
-      } else if (event instanceof AccountBannedEvent e) {
-        listener.onAccountBanned(e);
-      } else if (event instanceof AccountUnbannedEvent e) {
-        listener.onAccountUnbanned(e);
-      } else {
-        log.warn("未知事件类型，跳过分发: {}", event.getClass().getName());
+      switch (event) {
+        case LoginSuccessEvent e -> listener.onLoginSuccess(e);
+        case LoginFailedEvent e -> listener.onLoginFailed(e);
+        case LogoutEvent e -> listener.onLogout(e);
+        case MfaTriggeredEvent e -> listener.onMfaTriggered(e);
+        case MfaVerifiedEvent e -> listener.onMfaVerified(e);
+        case MfaFailedEvent e -> listener.onMfaFailed(e);
+        case AccountLockedEvent e -> listener.onAccountLocked(e);
+        case AccountUnlockedEvent e -> listener.onAccountUnlocked(e);
+        case SessionEvictedEvent e -> listener.onSessionEvicted(e);
+        case PasswordChangedEvent e -> listener.onPasswordChanged(e);
+        case AccountBannedEvent e -> listener.onAccountBanned(e);
+        case AccountUnbannedEvent e -> listener.onAccountUnbanned(e);
+        default -> log.warn("未知事件类型，跳过分发: {}", event.getClass().getName());
       }
     } catch (Exception e) {
       log.warn(

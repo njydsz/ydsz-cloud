@@ -40,6 +40,12 @@ import com.njydsz.message.server.service.impl.DndService;
 @Order(400)
 @RequiredArgsConstructor
 public class UserPreferenceHandler implements SendHandler {
+  /** 每小时秒数 */
+  private static final int SECONDS_PER_HOUR = 3600;
+
+  /** 偏好处理器优先级 */
+  private static final int PREFERENCE_PRIORITY = 400;
+
 
   private final SubscriptionService subscriptionService;
   private final PreferenceService preferenceService;
@@ -109,10 +115,20 @@ public class UserPreferenceHandler implements SendHandler {
 
   @Override
   public int order() {
-    return 400;
+    return PREFERENCE_PRIORITY;
   }
 
-  /** 智能定时处理：延迟到 DND 结束后发送。 */
+  /**
+   * 智能定时处理：延迟到 DND 结束后发送。
+   *
+   * @param request 参数说明
+   * @param ctx 参数说明
+   * @param pref 参数说明
+   * @param stc 参数说明
+   * @param channel 参数说明
+   * @param receiver 参数说明
+   * @return 返回值说明
+   */
   private boolean handleSmartTiming(
       MessageRequest request,
       SendContext ctx,
@@ -132,7 +148,7 @@ public class UserPreferenceHandler implements SendHandler {
     long buffer = stc.getDndBufferSeconds();
     LocalDateTime nextTime = windowEnd.plusSeconds(buffer);
     long deferSeconds = java.time.Duration.between(now, nextTime).getSeconds();
-    long maxDeferSeconds = stc.getMaxDeferHours() * 3600L;
+    long maxDeferSeconds = stc.getMaxDeferHours() * SECONDS_PER_HOUR;
     if (deferSeconds > maxDeferSeconds) {
       log.info(
           "[Message] DND 延迟超过阈值,丢弃: receiver={} defer={}s max={}s",
@@ -160,8 +176,11 @@ public class UserPreferenceHandler implements SendHandler {
 
   /**
    * 判断当前是否在 DND 免打扰时段。
-   *
+   * 
    * <p>复用 {@link DndService#isInWindow} 实现，消除重复的跨天窗口判断逻辑。
+   *
+   * @param pref 参数说明
+   * @return 返回值说明
    */
   private boolean isInDndPeriod(MsgPreference pref) {
     String start = pref.getDndStart();
@@ -179,7 +198,12 @@ public class UserPreferenceHandler implements SendHandler {
     }
   }
 
-  /** 安全解析时间字符串。 */
+  /**
+   * 安全解析时间字符串。
+   *
+   * @param value 参数说明
+   * @return 返回值说明
+   */
   private LocalTime parseTime(String value) {
     if (!StringUtils.hasText(value)) {
       return null;
@@ -191,7 +215,12 @@ public class UserPreferenceHandler implements SendHandler {
     }
   }
 
-  /** 解析消息优先级。 */
+  /**
+   * 解析消息优先级。
+   *
+   * @param request 参数说明
+   * @return 返回值说明
+   */
   private String resolvePriority(MessageRequest request) {
     return request.getPriority() != null ? request.getPriority() : "NORMAL";
   }

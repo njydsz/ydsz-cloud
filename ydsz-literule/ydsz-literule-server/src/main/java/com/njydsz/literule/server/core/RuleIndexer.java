@@ -197,7 +197,8 @@ public class RuleIndexer {
     }
 
     log.info(
-        "[LiteRule-Indexer] 索引重建完成: totalRules={}, tenants={}, envs={}, scopes={}, mutexGroups={}, fieldIndexSize={}, alphaNodes={}",
+        "[LiteRule-Indexer] 索引重建完成: totalRules={}, tenants={}, envs={}, scopes={}, "
+            + "mutexGroups={}, fieldIndexSize={}, alphaNodes={}",
         rules.size(),
         tenantIndex.size(),
         environmentIndex.size(),
@@ -213,7 +214,9 @@ public class RuleIndexer {
    * @param rule 新注册的规则
    */
   public synchronized void addToIndex(Rule rule) {
-    if (!indexEnabled) return;
+    if (!indexEnabled) {
+      return;
+    }
     addToIndexInternal(rule);
   }
 
@@ -223,7 +226,9 @@ public class RuleIndexer {
    * @param ruleCode 规则编码
    */
   public synchronized void removeFromIndex(String ruleCode) {
-    if (!indexEnabled) return;
+    if (!indexEnabled) {
+      return;
+    }
     // 由于索引按引用存储，需要遍历移除
     tenantIndex.values().forEach(list -> list.removeIf(r -> ruleCode.equals(r.getCode())));
     environmentIndex.values().forEach(list -> list.removeIf(r -> ruleCode.equals(r.getCode())));

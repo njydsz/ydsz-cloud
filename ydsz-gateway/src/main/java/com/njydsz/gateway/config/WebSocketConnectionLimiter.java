@@ -1,9 +1,9 @@
 package com.njydsz.gateway.config;
 
-import java.time.Duration;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -87,11 +87,11 @@ public class WebSocketConnectionLimiter {
    */
   public WebSocketConnectionLimiter(
       ReactiveStringRedisTemplate redisTemplate,
-      @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.websocket.max-connections-per-user:5}")
+      @Value("${ydsz.gateway.websocket.max-connections-per-user:5}")
           int maxConnectionsPerUser,
-      @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.websocket.max-connections-per-ip:20}")
+      @Value("${ydsz.gateway.websocket.max-connections-per-ip:20}")
           int maxConnectionsPerIp,
-      @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.websocket.counter-ttl-seconds:3600}")
+      @Value("${ydsz.gateway.websocket.counter-ttl-seconds:3600}")
           long counterTtlSeconds) {
     this.redisTemplate = redisTemplate;
     this.maxConnectionsPerUser = maxConnectionsPerUser;
@@ -130,6 +130,7 @@ public class WebSocketConnectionLimiter {
    *
    * @param userId 用户 ID
    * @param clientIp 客户端 IP
+   * @return 完成信号（连接数释放完成）
    */
   public Mono<Void> release(String userId, String clientIp) {
     String userKey = buildUserKey(userId, clientIp);

@@ -1,5 +1,7 @@
 package com.njydsz.cronjob.server.core.outbox.subscriber;
 
+import java.util.function.Consumer;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,7 +21,10 @@ import com.njydsz.cronjob.domain.vo.OutboxEventVO;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AuditOutboxSubscriber implements java.util.function.Consumer<OutboxEventVO> {
+public class AuditOutboxSubscriber implements Consumer<OutboxEventVO> {
+  /** 日志 payload 截断长度 */
+  private static final int MAX_PAYLOAD_LOG_LENGTH = 200;
+
 
   private static final String TOPIC = "audit";
 
@@ -34,8 +39,8 @@ public class AuditOutboxSubscriber implements java.util.function.Consumer<Outbox
           event.getEventKey(),
           event.getEventType(),
           event.getTopic(),
-          event.getPayload() != null && event.getPayload().length() > 200
-              ? event.getPayload().substring(0, 200) + "..."
+          event.getPayload() != null && event.getPayload().length() > MAX_PAYLOAD_LOG_LENGTH
+              ? event.getPayload().substring(0, MAX_PAYLOAD_LOG_LENGTH) + "..."
               : event.getPayload());
     } catch (Exception e) {
       log.error("[AuditSubscriber] 审计记录异常: eventKey={} reason={}", event.getEventKey(), e.getMessage(), e);

@@ -26,6 +26,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @SuppressWarnings("checkstyle:MagicNumber")
 public class LdapProperties {
 
+  /** 默认readTimeoutMs值（可被配置文件覆盖） */
+  private static final int DEFAULT_READ_TIMEOUT_MS = 10000;
+
   /** 默认 LDAP 端口（标准 LDAP）。 */
   private static final int DEFAULT_LDAP_PORT = 389;
 
@@ -51,5 +54,5 @@ public class LdapProperties {
   private int connectTimeoutMs = DEFAULT_CONNECT_TIMEOUT_MS;
 
   /** 读取超时（毫秒） */
-  private int readTimeoutMs = 10000;
+  private int readTimeoutMs = DEFAULT_READ_TIMEOUT_MS;
 }

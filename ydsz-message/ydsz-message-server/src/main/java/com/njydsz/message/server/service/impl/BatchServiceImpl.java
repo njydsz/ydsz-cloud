@@ -184,12 +184,22 @@ public class BatchServiceImpl implements BatchService {
     doExecuteBatch(batchId, requests, true);
   }
 
-  /** 同步执行批次发送（async=false 时使用）。 */
+  /**
+   * 同步执行批次发送（async=false 时使用）。
+   *
+   * @param batchId 参数说明
+   * @param requests 参数说明
+   */
   private void executeBatchSync(String batchId, List<MessageRequest> requests) {
     doExecuteBatch(batchId, requests, true);
   }
 
-  /** P1-A3: 反序列化 payload 为请求列表，异常时返回空列表。 */
+  /**
+   * P1-A3: 反序列化 payload 为请求列表，异常时返回空列表。
+   *
+   * @param payload 参数说明
+   * @return 返回值说明
+   */
   private List<MessageRequest> parsePayload(String payload) {
     if (!StringUtils.hasText(payload)) {
       return new ArrayList<>();

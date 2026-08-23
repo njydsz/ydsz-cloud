@@ -32,6 +32,9 @@ import com.njydsz.message.domain.constant.MessageConstants;
 @Component
 @RequiredArgsConstructor
 public class RetryStrategyResolver {
+  /** 每毫秒纳秒数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
 
   private final MessageProperties messageProperties;
 
@@ -76,7 +79,7 @@ public class RetryStrategyResolver {
    * @return 下次重试时间
    */
   public LocalDateTime calcNextRetryAt(int retryCount, String channel) {
-    return LocalDateTime.now().plusNanos(calcBackoffMs(retryCount, channel) * 1_000_000L);
+    return LocalDateTime.now().plusNanos(calcBackoffMs(retryCount, channel) * NANOS_PER_MILLI);
   }
 
   /**

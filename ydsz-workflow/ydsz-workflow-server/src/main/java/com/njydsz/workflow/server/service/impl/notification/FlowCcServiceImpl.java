@@ -14,8 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.constant.PageConstants;
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.workflow.domain.query.FlowCcQuery;
 import com.njydsz.workflow.domain.repository.FlowCcRepository;
@@ -68,6 +68,9 @@ import com.njydsz.workflow.server.service.FlowCcService;
 @Service
 @RequiredArgsConstructor
 public class FlowCcServiceImpl implements FlowCcService {
+
+    /** 手机号脱敏保留位数（前 4 位） */
+  private static final int MOBILE_MASK_KEEP_LENGTH = 4;
 
   /** 抄送仓储（domain 层契约），管理 ydsz_flow_cc 表 CRUD */
   private final FlowCcRepository ccRepository;
@@ -383,15 +386,19 @@ public class FlowCcServiceImpl implements FlowCcService {
 
   /**
    * 展开单个权限标识 token 为用户 ID 列表
-   *
+   * 
    * <p>支持的格式：
-   *
+   * 
    * <ul>
-   *   <li>user:1001 → 直接取 1001
-   *   <li>role:hr / dept:10 / position:PM / leader:1001 → 通过 assigneeResolver.expandUsers() 展开
-   *   <li>纯数字 → 尝试作为 user ID
-   *   <li>其他 → 尝试通过 assigneeResolver 展开
+   * <li>user:1001 → 直接取 1001
+   * <li>role:hr / dept:10 / position:PM / leader:1001 → 通过 assigneeResolver.expandUsers() 展开
+   * <li>纯数字 → 尝试作为 user ID
+   * <li>其他 → 尝试通过 assigneeResolver 展开
    * </ul>
+   *
+   * @param token 参数说明
+   * @param variables 参数说明
+   * @param userIds 参数说明
    */
   private void expandToken(String token, Map<String, Object> variables, Set<String> userIds) {
     try {
@@ -439,13 +446,22 @@ public class FlowCcServiceImpl implements FlowCcService {
    * @return 脱敏后的 token
    */
   private static String maskToken(String token) {
-    if (token == null || token.length() <= 4) {
+    if (token == null || token.length() <= MOBILE_MASK_KEEP_LENGTH) {
       return "***";
     }
-    return token.substring(0, 4) + "***";
+    return token.substring(0, MOBILE_MASK_KEEP_LENGTH) + "***";
   }
 
-  /** 构建 FlowCcVO 记录 */
+  /**
+   * 构建 FlowCcVO 记录
+   *
+   * @param instance 参数说明
+   * @param node 参数说明
+   * @param userId 参数说明
+   * @param now 参数说明
+   * @param traceId 参数说明
+   * @return 返回值说明
+   */
   private FlowCcVO buildCcVO(
       FlowInstanceVO instance, FlowNodeVO node, String userId, LocalDateTime now, String traceId) {
     FlowCcVO cc = new FlowCcVO();
@@ -466,7 +482,12 @@ public class FlowCcServiceImpl implements FlowCcService {
     return cc;
   }
 
-  /** 安全解析 Long */
+  /**
+   * 安全解析 Long
+   *
+   * @param str 参数说明
+   * @return 返回值说明
+   */
   private Long tryParseLong(String str) {
     try {
       return Long.parseLong(str.trim());

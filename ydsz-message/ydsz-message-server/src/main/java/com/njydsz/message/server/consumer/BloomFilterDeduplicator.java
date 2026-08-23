@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
-import com.njydsz.common.thread.util.ExecutorUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +18,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 基于 BloomFilter + Redis 的消息去重前置过滤器。
@@ -64,6 +65,9 @@ import org.springframework.stereotype.Component;
     havingValue = "true",
     matchIfMissing = true)
 public class BloomFilterDeduplicator {
+  /** 默认去重 TTL（秒） */
+  private static final int DEFAULT_DEDUP_TTL_SECONDS = 60;
+
 
   /** Redis 共享 Set 名称前缀（多实例部署时共享） */
   private static final String REDIS_DEDUP_SET_PREFIX = "msg:bloom:dedup:";
@@ -119,12 +123,12 @@ public class BloomFilterDeduplicator {
   /**
    * 构造 BloomFilter 去重器。
    *
-   * @param redisTemplate Redis 模板（多实例共享去重用）
+   * @param redisTemplate Redis 模板
    */
   @Autowired
   public BloomFilterDeduplicator(RedisTemplate<String, Object> redisTemplate) {
     this.redisTemplate = redisTemplate;
-    this.redisDedupTtlSeconds = 60;
+    this.redisDedupTtlSeconds = DEFAULT_DEDUP_TTL_SECONDS;
   }
 
   @PostConstruct
@@ -255,7 +259,11 @@ public class BloomFilterDeduplicator {
     }
   }
 
-  /** 创建新的 BloomFilter 实例。 */
+  /**
+   * 创建新的 BloomFilter 实例。
+   *
+   * @return 返回值说明
+   */
   private BloomFilter<String> createFilter() {
     return BloomFilter.create(
         Funnels.stringFunnel(StandardCharsets.UTF_8),

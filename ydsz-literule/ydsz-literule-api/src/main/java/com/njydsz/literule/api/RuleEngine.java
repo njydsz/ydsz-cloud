@@ -2,7 +2,6 @@ package com.njydsz.literule.api;
 
 import java.util.List;
 
-import com.njydsz.literule.api.RuleSeverity;
 
 /**
  * 规则引擎接口

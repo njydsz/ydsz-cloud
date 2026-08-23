@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.cronjob.domain.vo.JobDailyStatsVO;
 import com.njydsz.cronjob.domain.repository.JobDailyStatsRepository;
+import com.njydsz.cronjob.domain.vo.JobDailyStatsVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 

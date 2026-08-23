@@ -38,6 +38,132 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "ydsz.message")
 public class MessageProperties {
 
+  /** 默认aggregateScanIntervalMs值（可被配置文件覆盖） */
+  private static final long DEFAULT_AGGREGATE_SCAN_INTERVAL_MS = 60000L;
+
+  /** 默认retryScanIntervalMs值（可被配置文件覆盖） */
+  private static final long DEFAULT_RETRY_SCAN_INTERVAL_MS = 30000L;
+
+  /** 默认messageTtlSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_MESSAGE_TTL_SECONDS = 3600L;
+
+  /** 默认markAllReadBatchSize值（可被配置文件覆盖） */
+  private static final int DEFAULT_MARK_ALL_READ_BATCH_SIZE = 500;
+
+  /** 默认receiptPullScanIntervalMs值（可被配置文件覆盖） */
+  private static final long DEFAULT_RECEIPT_PULL_SCAN_INTERVAL_MS = 120000L;
+
+  /** 默认receiptPullDelayMinutes值（可被配置文件覆盖） */
+  private static final long DEFAULT_RECEIPT_PULL_DELAY_MINUTES = 5L;
+
+  /** 默认receiptTimeoutMinutes值（可被配置文件覆盖） */
+  private static final long DEFAULT_RECEIPT_TIMEOUT_MINUTES = 30L;
+
+  /** 默认globalDailyLimit值（可被配置文件覆盖） */
+  private static final int DEFAULT_GLOBAL_DAILY_LIMIT = 0;
+
+  /** 默认globalHourlyLimit值（可被配置文件覆盖） */
+  private static final int DEFAULT_GLOBAL_HOURLY_LIMIT = 0;
+
+  /** 默认maxContentLength值（可被配置文件覆盖） */
+  private static final int DEFAULT_MAX_CONTENT_LENGTH = 1048576;
+
+  /** 默认receiverPermits值（可被配置文件覆盖） */
+  private static final int DEFAULT_RECEIVER_PERMITS = 10;
+
+  /** 默认templatePermits值（可被配置文件覆盖） */
+  private static final int DEFAULT_TEMPLATE_PERMITS = 100;
+
+  /** 默认tenantPermits值（可被配置文件覆盖） */
+  private static final int DEFAULT_TENANT_PERMITS = 1000;
+
+  /** 默认ttlSeconds值（可被配置文件覆盖） */
+  private static final int DEFAULT_TTL_SECONDS = 60;
+
+  /** 默认connectTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
+
+  /** 默认readTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_READ_TIMEOUT = 10000;
+
+  /** 默认connectTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
+
+  /** 默认readTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_READ_TIMEOUT = 10000;
+
+  /** 默认maxRetryCount值（可被配置文件覆盖） */
+  private static final int DEFAULT_MAX_RETRY_COUNT = 3;
+
+  /** 默认baseBackoffMs值（可被配置文件覆盖） */
+  private static final long DEFAULT_BASE_BACKOFF_MS = 2000L;
+
+  /** 默认backoffMultiplier值（可被配置文件覆盖） */
+  private static final double DEFAULT_BACKOFF_MULTIPLIER = 2.0;
+
+  /** 默认maxBackoffMs值（可被配置文件覆盖） */
+  private static final long DEFAULT_MAX_BACKOFF_MS = 60000L;
+
+  /** 默认threshold值（可被配置文件覆盖） */
+  private static final int DEFAULT_THRESHOLD = 10;
+
+  /** 默认windowMinutes值（可被配置文件覆盖） */
+  private static final int DEFAULT_WINDOW_MINUTES = 60;
+
+  /** 默认cooldownMinutes值（可被配置文件覆盖） */
+  private static final int DEFAULT_COOLDOWN_MINUTES = 30;
+
+  /** 默认connectTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
+
+  /** 默认readTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_READ_TIMEOUT = 10000;
+
+  /** 默认connectTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
+
+  /** 默认readTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_READ_TIMEOUT = 10000;
+
+  /** 默认failureRateThreshold值（可被配置文件覆盖） */
+  private static final int DEFAULT_FAILURE_RATE_THRESHOLD = 50;
+
+  /** 默认slowCallRateThreshold值（可被配置文件覆盖） */
+  private static final int DEFAULT_SLOW_CALL_RATE_THRESHOLD = 80;
+
+  /** 默认slowCallDurationSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_SLOW_CALL_DURATION_SECONDS = 5L;
+
+  /** 默认waitDurationInOpenStateSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_WAIT_DURATION_IN_OPEN_STATE_SECONDS = 30L;
+
+  /** 默认permittedNumberOfCallsInHalfOpenState值（可被配置文件覆盖） */
+  private static final int DEFAULT_PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE = 3;
+
+  /** 默认slidingWindowSize值（可被配置文件覆盖） */
+  private static final int DEFAULT_SLIDING_WINDOW_SIZE = 20;
+
+  /** 默认minimumNumberOfCalls值（可被配置文件覆盖） */
+  private static final int DEFAULT_MINIMUM_NUMBER_OF_CALLS = 10;
+
+  /** 默认ttlDays值（可被配置文件覆盖） */
+  private static final int DEFAULT_TTL_DAYS = 30;
+
+  /** 默认dndBufferSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_DND_BUFFER_SECONDS = 60L;
+
+  /** 默认maxDeferHours值（可被配置文件覆盖） */
+  private static final long DEFAULT_MAX_DEFER_HOURS = 72L;
+
+  /** 默认suppressWindowSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_SUPPRESS_WINDOW_SECONDS = 300L;
+
+  /** 默认senderDailyLimit值（可被配置文件覆盖） */
+  private static final long DEFAULT_SENDER_DAILY_LIMIT = 10000L;
+
+  /** 默认senderHourlyLimit值（可被配置文件覆盖） */
+  private static final long DEFAULT_SENDER_HOURLY_LIMIT = 1000L;
+
   /** 通道全局开关：key 为通道大写名（SMS/EMAIL/...），value 为是否启用 */
   private Map<String, Boolean> channelEnabled;
 
@@ -57,11 +183,11 @@ public class MessageProperties {
 
   /** 聚合扫描间隔（毫秒） */
   @Min(1000)
-  private long aggregateScanIntervalMs = 60000L;
+  private long aggregateScanIntervalMs = DEFAULT_AGGREGATE_SCAN_INTERVAL_MS;
 
   /** 重试扫描间隔（毫秒） */
   @Min(5000)
-  private long retryScanIntervalMs = 30000L;
+  private long retryScanIntervalMs = DEFAULT_RETRY_SCAN_INTERVAL_MS;
 
   /**
    * P2-5: 消息 TTL（秒），超过此时间的消息自动丢弃。
@@ -69,7 +195,7 @@ public class MessageProperties {
    * <p>用于消费者侧判断定时消息是否错过发送窗口：若 {@code scheduledAt} 距今 超过此阈值，则视为过期消息直接跳过（如服务宕机恢复后积压的定时消息）。 默认 3600s（1
    * 小时），0 表示不检查 TTL。
    */
-  private long messageTtlSeconds = 3600L;
+  private long messageTtlSeconds = DEFAULT_MESSAGE_TTL_SECONDS;
 
   /**
    * P2-6: markAllRead 分批处理单批大小。
@@ -77,32 +203,32 @@ public class MessageProperties {
    * <p>用户「全部已读」操作时，若未读通知量巨大（如万级），单条 UPDATE 会导致 长事务与行锁堆积。改为按此批次大小循环 UPDATE，每批独立事务，避免长事务。 默认 500，范围建议
    * 200~1000。
    */
-  private int markAllReadBatchSize = 500;
+  private int markAllReadBatchSize = DEFAULT_MARK_ALL_READ_BATCH_SIZE;
 
   /** P2-9: 回执拉取开关（关闭后不再主动拉取回执，仅依赖服务商回调） */
   private boolean receiptPullEnabled = true;
 
   /** P2-9: 回执拉取扫描间隔（毫秒），默认 120s */
-  private long receiptPullScanIntervalMs = 120000L;
+  private long receiptPullScanIntervalMs = DEFAULT_RECEIPT_PULL_SCAN_INTERVAL_MS;
 
   /** P2-9: 回执拉取延迟阈值（分钟）：发送成功后多少分钟才开始主动拉取 */
-  private long receiptPullDelayMinutes = 5L;
+  private long receiptPullDelayMinutes = DEFAULT_RECEIPT_PULL_DELAY_MINUTES;
 
   /** P2-9: 回执超时阈值（分钟）：超过此时间仍未收到回执则标记为 TIMEOUT */
-  private long receiptTimeoutMinutes = 30L;
+  private long receiptTimeoutMinutes = DEFAULT_RECEIPT_TIMEOUT_MINUTES;
 
   /** 全局每日发送上限（单用户单通道，0 表示不限） */
-  private int globalDailyLimit = 0;
+  private int globalDailyLimit = DEFAULT_GLOBAL_DAILY_LIMIT;
 
   /** 全局每小时发送上限（单用户单通道，0 表示不限） */
-  private int globalHourlyLimit = 0;
+  private int globalHourlyLimit = DEFAULT_GLOBAL_HOURLY_LIMIT;
 
   /**
    * P1-7: 消息内容最大长度（字符），超过此长度拒绝发送。
    *
    * <p>防止超大消息体导致 DB 存储膨胀和内存压力。 默认 1MB（1,048,576 字符），0 表示不限制。
    */
-  private int maxContentLength = 1048576;
+  private int maxContentLength = DEFAULT_MAX_CONTENT_LENGTH;
 
   /** P2-5: 多维度限流配置 */
   private RateLimitConfig rateLimit = new RateLimitConfig();
@@ -128,19 +254,19 @@ public class MessageProperties {
     private boolean receiverEnabled = true;
 
     /** receiver 维度每秒令牌数（同一 receiver 每秒最多发送条数） */
-    private int receiverPermits = 10;
+    private int receiverPermits = DEFAULT_RECEIVER_PERMITS;
 
     /** templateCode 维度限流开关（避免单一模板占满配额） */
     private boolean templateEnabled = true;
 
     /** templateCode 维度每秒令牌数 */
-    private int templatePermits = 100;
+    private int templatePermits = DEFAULT_TEMPLATE_PERMITS;
 
     /** tenant 维度限流开关（多租户配额隔离） */
     private boolean tenantEnabled = true;
 
     /** tenant 维度每秒令牌数 */
-    private int tenantPermits = 1000;
+    private int tenantPermits = DEFAULT_TENANT_PERMITS;
   }
 
   /**
@@ -157,7 +283,7 @@ public class MessageProperties {
     private boolean enabled = true;
 
     /** 去重窗口（秒）：同一 dedupKey 在此时间内视为重复，默认 60s */
-    private int ttlSeconds = 60;
+    private int ttlSeconds = DEFAULT_TTL_SECONDS;
   }
 
   /**
@@ -240,10 +366,10 @@ public class MessageProperties {
     private String endpoint = "dysmsapi.aliyuncs.com";
 
     /** 连接超时（毫秒） */
-    private int connectTimeout = 5000;
+    private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
     /** 读取超时（毫秒） */
-    private int readTimeout = 10000;
+    private int readTimeout = DEFAULT_READ_TIMEOUT;
   }
 
   /** P0-2: APP 推送服务商配置 */
@@ -285,10 +411,10 @@ public class MessageProperties {
     private String baseUrl = "https://restapi.getui.com";
 
     /** 连接超时（毫秒） */
-    private int connectTimeout = 5000;
+    private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
     /** 读取超时（毫秒） */
-    private int readTimeout = 10000;
+    private int readTimeout = DEFAULT_READ_TIMEOUT;
   }
 
   /** P1-4: 死信告警配置 */
@@ -316,16 +442,16 @@ public class MessageProperties {
   @Data
   public static class RetryPolicy {
     /** 最大重试次数（达到后转死信/失败） */
-    private int maxRetryCount = 3;
+    private int maxRetryCount = DEFAULT_MAX_RETRY_COUNT;
 
     /** 基础退避（毫秒） */
-    private long baseBackoffMs = 2000L;
+    private long baseBackoffMs = DEFAULT_BASE_BACKOFF_MS;
 
     /** 退避倍率（指数退避底数，默认 2.0） */
-    private double backoffMultiplier = 2.0;
+    private double backoffMultiplier = DEFAULT_BACKOFF_MULTIPLIER;
 
     /** 退避上限（毫秒，防止单次退避过大） */
-    private long maxBackoffMs = 60000L;
+    private long maxBackoffMs = DEFAULT_MAX_BACKOFF_MS;
   }
 
   /**
@@ -340,13 +466,13 @@ public class MessageProperties {
     private boolean enabled = true;
 
     /** 告警阈值：窗口内死信数达到此值触发告警 */
-    private int threshold = 10;
+    private int threshold = DEFAULT_THRESHOLD;
 
     /** 统计窗口（分钟） */
-    private int windowMinutes = 60;
+    private int windowMinutes = DEFAULT_WINDOW_MINUTES;
 
     /** 告警冷却（分钟）：同一通道告警后多久内不重复告警 */
-    private int cooldownMinutes = 30;
+    private int cooldownMinutes = DEFAULT_COOLDOWN_MINUTES;
   }
 
   /** P1-5: 退订中心配置 */
@@ -373,10 +499,10 @@ public class MessageProperties {
     private String baseUrl = "https://api.weixin.qq.com";
 
     /** 连接超时（毫秒） */
-    private int connectTimeout = 5000;
+    private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
     /** 读取超时（毫秒） */
-    private int readTimeout = 10000;
+    private int readTimeout = DEFAULT_READ_TIMEOUT;
   }
 
   /**
@@ -402,10 +528,10 @@ public class MessageProperties {
     private String gateway = "https://openapi.alipay.com/gateway.do";
 
     /** 连接超时（毫秒） */
-    private int connectTimeout = 5000;
+    private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
     /** 读取超时（毫秒） */
-    private int readTimeout = 10000;
+    private int readTimeout = DEFAULT_READ_TIMEOUT;
   }
 
   /** P2-8: 通道熔断器配置 */
@@ -421,32 +547,32 @@ public class MessageProperties {
     /** 失败率阈值（0-100），默认 50% */
     @Min(1)
     @Max(100)
-    private int failureRateThreshold = 50;
+    private int failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD;
 
     /** 慢调用率阈值（0-100），默认 80% */
     @Min(1)
     @Max(100)
-    private int slowCallRateThreshold = 80;
+    private int slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
 
     /** 慢调用阈值（秒），默认 5s */
     @Min(1)
-    private long slowCallDurationSeconds = 5L;
+    private long slowCallDurationSeconds = DEFAULT_SLOW_CALL_DURATION_SECONDS;
 
     /** 熔断开启持续时间（秒），默认 30s */
     @Min(5)
-    private long waitDurationInOpenStateSeconds = 30L;
+    private long waitDurationInOpenStateSeconds = DEFAULT_WAIT_DURATION_IN_OPEN_STATE_SECONDS;
 
     /** 半开状态允许探测数，默认 3 */
     @Min(1)
-    private int permittedNumberOfCallsInHalfOpenState = 3;
+    private int permittedNumberOfCallsInHalfOpenState = DEFAULT_PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE;
 
     /** 滑动窗口大小，默认 20 */
     @Min(10)
-    private int slidingWindowSize = 20;
+    private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
 
     /** 最小调用数，默认 10 */
     @Min(5)
-    private int minimumNumberOfCalls = 10;
+    private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
   }
 
   /** P2-5: 智能定时配置 */
@@ -482,7 +608,7 @@ public class MessageProperties {
     private String secret;
 
     /** token 有效期（天），默认 30 天 */
-    private int ttlDays = 30;
+    private int ttlDays = DEFAULT_TTL_DAYS;
 
     /** 退订链接 base URL（如 https://ydsz.example.com/unsubscribe），用于拼接完整链接 */
     private String baseUrl;
@@ -512,10 +638,10 @@ public class MessageProperties {
         Arrays.asList("SMS", "PUSH", "DINGTALK", "WECOM", "FEISHU", "WX_MINI", "ALIPAY_MINI");
 
     /** DND 延迟发送时附加的缓冲秒数（默认 60s，避免卡在 DND 结束瞬间的高峰） */
-    private long dndBufferSeconds = 60L;
+    private long dndBufferSeconds = DEFAULT_DND_BUFFER_SECONDS;
 
     /** DND 延迟消息最大延迟小时数（超过则降级为丢弃，防止消息过期太久失去意义，默认 72h） */
-    private long maxDeferHours = 72L;
+    private long maxDeferHours = DEFAULT_MAX_DEFER_HOURS;
 
     /**
      * 判断指定通道是否为打扰型通道（受 DND 约束）。
@@ -547,13 +673,13 @@ public class MessageProperties {
   private ArchiveConfig archive = new ArchiveConfig();
 
   /** 通道抑制窗口（秒），默认 300s */
-  private long suppressWindowSeconds = 300L;
+  private long suppressWindowSeconds = DEFAULT_SUPPRESS_WINDOW_SECONDS;
 
   /** 单发送人每日发送上限（0 表示不限） */
-  private long senderDailyLimit = 10000L;
+  private long senderDailyLimit = DEFAULT_SENDER_DAILY_LIMIT;
 
   /** 单发送人每小时发送上限（0 表示不限） */
-  private long senderHourlyLimit = 1000L;
+  private long senderHourlyLimit = DEFAULT_SENDER_HOURLY_LIMIT;
 
   /**
    * 敏感词过滤配置。

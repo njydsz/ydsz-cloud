@@ -1,11 +1,12 @@
 package com.njydsz.userinfo.server.auth;
 
-import com.njydsz.userinfo.server.auth.LdapOrgSyncService.SyncResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.userinfo.server.auth.LdapOrgSyncService.SyncResult;
 
 /**
  * LDAP/AD 组织架构同步定时任务。

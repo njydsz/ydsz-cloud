@@ -9,8 +9,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
-import com.njydsz.message.domain.vo.MsgNotificationVO;
 import com.njydsz.message.domain.repository.MsgNotificationRepository;
+import com.njydsz.message.domain.vo.MsgNotificationVO;
 
 /**
  * 消息过期清理器。

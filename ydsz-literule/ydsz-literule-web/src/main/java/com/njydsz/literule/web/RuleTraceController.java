@@ -66,19 +66,29 @@ import com.njydsz.literule.server.config.RuleAdminService;
 @Tag(name = "规则执行追踪", description = "执行链路查询、历史回放与变更影响分析")
 public class RuleTraceController {
 
+    /** 追踪记录查询条数上限 */
+  private static final int MAX_TRACE_LIMIT = 5000;
+
   /** 规则执行轨迹 Repository */
   private final RuleExecutionTraceRepository ruleExecutionTraceRepository;
 
   /** 规则管理服务 */
   private final RuleAdminService ruleAdminService;
 
-  /** 按 traceId 查询执行链路 */
+  /** 按 traceId 查询执行链路
+   * @param traceId 参数说明
+      * @return 返回值说明
+   */
   @GetMapping("/traces/{traceId}")
   public YdszResponse<List<RuleExecutionTraceVO>> getTrace(@PathVariable String traceId) {
     return YdszResponse.success(ruleExecutionTraceRepository.findByTraceId(traceId));
   }
 
-  /** 按规则编码查询最近链路 */
+  /** 按规则编码查询最近链路
+   * @param limit 参数说明
+      * @return 返回值说明
+      * @param ruleCode 参数说明
+   */
   @GetMapping("/traces/rule/{ruleCode}")
   public YdszResponse<List<RuleExecutionTraceVO>> getTracesByRule(
       @PathVariable String ruleCode,
@@ -318,7 +328,7 @@ public class RuleTraceController {
     String severityExpression = (String) request.get("severityExpression");
     String defaultSeverityStr = (String) request.get("defaultSeverity");
     int limit = request.containsKey("limit") ? ((Number) request.get("limit")).intValue() : 1000;
-    if (limit <= 0 || limit > 5000) {
+    if (limit <= 0 || limit > MAX_TRACE_LIMIT) {
       limit = 1000;
     }
 
@@ -431,8 +441,12 @@ public class RuleTraceController {
    * @return true=一致
    */
   private boolean severityEquals(String s1, String s2) {
-    if (s1 == null && s2 == null) return true;
-    if (s1 == null || s2 == null) return false;
+    if (s1 == null && s2 == null) {
+      return true;
+    }
+    if (s1 == null || s2 == null) {
+      return false;
+    }
     return s1.equalsIgnoreCase(s2);
   }
 
@@ -446,9 +460,15 @@ public class RuleTraceController {
    */
   private String classifyDiff(
       boolean historicalTriggered, boolean currentTriggered, boolean severityConsistent) {
-    if (historicalTriggered && !currentTriggered) return "triggered_to_not";
-    if (!historicalTriggered && currentTriggered) return "not_to_triggered";
-    if (!severityConsistent) return "severity_changed";
+    if (historicalTriggered && !currentTriggered) {
+      return "triggered_to_not";
+    }
+    if (!historicalTriggered && currentTriggered) {
+      return "not_to_triggered";
+    }
+    if (!severityConsistent) {
+      return "severity_changed";
+    }
     return "consistent";
   }
 

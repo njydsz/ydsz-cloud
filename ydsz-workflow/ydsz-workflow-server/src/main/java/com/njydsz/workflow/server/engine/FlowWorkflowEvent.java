@@ -3,9 +3,8 @@ package com.njydsz.workflow.server.engine;
 import java.util.Collections;
 import java.util.Map;
 
-import org.springframework.context.ApplicationEvent;
-
 import lombok.Getter;
+import org.springframework.context.ApplicationEvent;
 
 /**
  * 工作流事件（Spring ApplicationEvent）。
@@ -43,13 +42,13 @@ public class FlowWorkflowEvent extends ApplicationEvent {
 
   /**
    * 构造工作流事件。
+   * 
    *
-   * @param source 事件源（通常为发布者对象）
-   * @param eventType 事件类型
-   * @param instanceId 流程实例 ID
-   * @param taskId 任务 ID
-   * @param data 附加数据
-   */
+   * @param source 参数说明
+   * @param eventType 参数说明
+   * @param instanceId 参数说明
+   * @param taskId 参数说明
+   * @param data 参数说明   */
   public FlowWorkflowEvent(
       Object source, String eventType, String instanceId, String taskId, Map<String, Object> data) {
     super(source);

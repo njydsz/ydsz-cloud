@@ -43,6 +43,9 @@ import com.njydsz.message.server.config.ChannelProperties;
 @Component
 @RequiredArgsConstructor
 public class WeComAppChannel implements MessageChannel {
+  /** Token 安全余量（秒） */
+  private static final long TOKEN_SAFETY_MARGIN_SECONDS = 300;
+
 
   private static final String CHANNEL_TYPE = "WECOM_APP";
   private static final String TOKEN_CACHE_KEY_PREFIX = "ydsz:msg:wecom:app:access_token:";
@@ -132,7 +135,12 @@ public class WeComAppChannel implements MessageChannel {
     }
   }
 
-  /** 获取企微 access_token（Redis 缓存，提前续期）。 */
+  /**
+   * 获取企微 access_token（Redis 缓存，提前续期）。
+   *
+   * @param cfg 参数说明
+   * @return 返回值说明
+   */
   private String getAccessToken(ChannelProperties.WeComAppConfig cfg) {
     try {
       String cacheKey = TOKEN_CACHE_KEY_PREFIX + cfg.getCorpId();
@@ -152,7 +160,7 @@ public class WeComAppChannel implements MessageChannel {
         int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
         if (errcode == 0) {
           String token = (String) body.get("access_token");
-          redisStringOps.set(cacheKey, token, TOKEN_TTL.minusSeconds(300));
+          redisStringOps.set(cacheKey, token, TOKEN_TTL.minusSeconds(TOKEN_SAFETY_MARGIN_SECONDS));
           log.info("[WECOM_APP] 刷新 access_token 成功: corpId={}", cfg.getCorpId());
           return token;
         }
@@ -205,7 +213,9 @@ public class WeComAppChannel implements MessageChannel {
   }
 
   private String truncate(String s, int max) {
-    if (s == null) return "";
+    if (s == null) {
+      return "";
+    }
     return s.length() > max ? s.substring(0, max) + "..." : s;
   }
 }

@@ -110,7 +110,11 @@ public class NotifyPreferenceManager {
     return pref.isAllowed(channel, type);
   }
 
-  /** 清除本地缓存 */
+  /**
+   * 清除本地缓存。
+   *
+   * @param userId 用户 ID
+   */
   public void evictCache(String userId) {
     localCache.remove(userId);
   }

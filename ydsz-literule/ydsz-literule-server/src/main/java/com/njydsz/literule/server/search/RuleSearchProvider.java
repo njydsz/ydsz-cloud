@@ -25,6 +25,15 @@ import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 @RequiredArgsConstructor
 public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
 
+    /** 搜索权重：规则名称完全匹配 */
+  private static final float WEIGHT_NAME_MATCH = 3.0f;
+
+  /** 搜索权重：规则编码匹配 */
+  private static final float WEIGHT_CODE_MATCH = 1.5f;
+
+  /** 搜索权重：规则描述匹配 */
+  private static final float WEIGHT_DESC_MATCH = 0.5f;
+
   private final RuleDefinitionRepository ruleDefinitionRepository;
 
   @Override
@@ -70,7 +79,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
             .name("title")
             .label("规则名称")
             .type(FieldType.TEXT)
-            .weight(3.0f)
+            .weight(WEIGHT_NAME_MATCH)
             .searchable(true)
             .highlightable(true)
             .sortable(true)
@@ -87,7 +96,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
             .name("content")
             .label("规则编码")
             .type(FieldType.KEYWORD)
-            .weight(1.5f)
+            .weight(WEIGHT_CODE_MATCH)
             .searchable(true)
             .highlightable(true)
             .build(),
@@ -95,7 +104,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
             .name("status")
             .label("状态")
             .type(FieldType.KEYWORD)
-            .weight(0.5f)
+            .weight(WEIGHT_DESC_MATCH)
             .searchable(false)
             .aggregatable(true)
             .build());

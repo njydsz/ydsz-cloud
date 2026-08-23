@@ -3,10 +3,11 @@ package com.njydsz.workflow.server.engine;
 import java.util.Collections;
 import java.util.Map;
 
-import com.njydsz.common.json.YdszJson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.common.json.YdszJson;
 
 /**
  * FlowNodeDO ext JSON 字段提取工具。
@@ -22,6 +23,12 @@ import org.springframework.util.StringUtils;
 @Slf4j
 @Component
 public final class FlowNodeExt {
+
+  /** 节点默认优先级（1~100 中位值） */
+  private static final int DEFAULT_PRIORITY = 50;
+
+  /** 节点默认超时时间（分钟） */
+  private static final int DEFAULT_TIMEOUT_MINUTES = 120;
 
   private FlowNodeExt() {
     throw new AssertionError("工具类禁止实例化");
@@ -186,7 +193,7 @@ public final class FlowNodeExt {
     Map<String, Object> map = parseSafe(ext);
     Object val = map.get("priority");
     if (val == null) {
-      return 50;
+      return DEFAULT_PRIORITY;
     }
     if (val instanceof Number n) {
       return clamp(n.intValue(), 1, 100);
@@ -194,7 +201,7 @@ public final class FlowNodeExt {
     try {
       return clamp(Integer.parseInt(String.valueOf(val).trim()), 1, 100);
     } catch (NumberFormatException e) {
-      return 50;
+      return DEFAULT_PRIORITY;
     }
   }
 
@@ -230,7 +237,7 @@ public final class FlowNodeExt {
     Map<String, Object> map = parseSafe(ext);
     Object val = map.get("timeout");
     if (val == null) {
-      return 120;
+      return DEFAULT_TIMEOUT_MINUTES;
     }
     if (val instanceof Number n) {
       return Math.max(1, n.intValue());
@@ -238,7 +245,7 @@ public final class FlowNodeExt {
     try {
       return Math.max(1, Integer.parseInt(String.valueOf(val).trim()));
     } catch (NumberFormatException e) {
-      return 120;
+      return DEFAULT_TIMEOUT_MINUTES;
     }
   }
 
@@ -311,6 +318,10 @@ public final class FlowNodeExt {
 
   /**
    * 将值 clamp 到 [1, max] 范围。
+   *
+   * @param value 参数说明
+   * @param max 参数说明
+   * @return 返回值说明
    */
   private static int clamp(int value, int max) {
     return Math.min(Math.max(1, value), max);
@@ -318,6 +329,11 @@ public final class FlowNodeExt {
 
   /**
    * 将值 clamp 到 [min, max] 范围。
+   *
+   * @param value 参数说明
+   * @param min 参数说明
+   * @param max 参数说明
+   * @return 返回值说明
    */
   private static int clamp(int value, int min, int max) {
     return Math.min(Math.max(min, value), max);

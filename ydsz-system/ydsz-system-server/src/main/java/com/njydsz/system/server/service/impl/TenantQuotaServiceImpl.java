@@ -1,5 +1,4 @@
 package com.njydsz.system.server.service.impl;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
@@ -17,6 +16,9 @@ import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.server.service.TenantPlanService;
 import com.njydsz.system.server.service.TenantQuotaService;
 import com.njydsz.system.server.service.TenantService;
+
+
+
 
 /**
  * 租户配额 Service 实现
@@ -119,24 +121,45 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     if (plan == null || plan.getQuotaJson() == null || plan.getQuotaJson().isBlank()) {
       return null;
     }
+    return parseQuotaLimit(plan.getQuotaJson(), quotaType);
+  }
+
+  /**
+   * 从配额 JSON 中解析指定配额类型的上限。
+   *
+   * @param quotaJson 套餐配额 JSON 串
+   * @param quotaType 配额类型
+   * @return 配额上限；无限制或解析失败返回 null
+   */
+  private Integer parseQuotaLimit(String quotaJson, QuotaType quotaType) {
     try {
-      Map<String, Object> quotaMap = YdszJson.fromJson(plan.getQuotaJson(), Map.class);
-      if (quotaMap == null || !quotaMap.containsKey(quotaType.getJsonKey())) {
+      Map<String, Object> quotaMap = YdszJson.fromJson(quotaJson, Map.class);
+      if (quotaMap == null) {
         return null;
       }
       Object value = quotaMap.get(quotaType.getJsonKey());
-      if (value == null) {
-        return null;
-      }
-      if (value instanceof Number number) {
-        return number.intValue();
-      }
-      return Integer.parseInt(value.toString());
+      return convertQuotaValue(value);
     } catch (Exception e) {
       log.warn("[TenantQuotaService] 解析套餐配额失败: planId={}, quotaType={}, error={}",
-          planId, quotaType, e.getMessage());
+          quotaJson, quotaType, e.getMessage());
       return null;
     }
+  }
+
+  /**
+   * 将配额 JSON 中的值转换为整型上限。
+   *
+   * @param value 配额原始值
+   * @return 整型上限；值为空时返回 null
+   */
+  private Integer convertQuotaValue(Object value) {
+    if (value == null) {
+      return null;
+    }
+    if (value instanceof Number number) {
+      return number.intValue();
+    }
+    return Integer.parseInt(value.toString());
   }
 
   /**

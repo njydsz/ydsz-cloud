@@ -90,7 +90,7 @@ public class WebSecurityConfiguration {
       HttpSecurity http,
       AccessDeniedHandler accessDeniedHandler,
       AuthenticationEntryPoint authenticationEntryPoint)
-      throws Exception {
+      throws Throwable {
     http.csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

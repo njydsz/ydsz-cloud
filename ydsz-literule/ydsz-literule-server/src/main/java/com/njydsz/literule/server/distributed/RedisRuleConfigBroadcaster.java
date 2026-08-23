@@ -63,7 +63,9 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
 
   @Override
   public void broadcast(RuleConfigRefreshEvent event, String sourceId) {
-    if (event == null) return;
+    if (event == null) {
+      return;
+    }
     try {
       BroadcastMessage message = new BroadcastMessage(sourceId, event);
       String json = YdszJson.toJson(message);
@@ -124,7 +126,9 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
 
   /** 处理接收到的广播消息 */
   private void handleReceivedMessage(String msg) {
-    if (msg == null || msg.isEmpty()) return;
+    if (msg == null || msg.isEmpty()) {
+      return;
+    }
     try {
       BroadcastMessage message = YdszJson.fromJson(msg, BroadcastMessage.class);
       if (message == null || message.getEvent() == null) {

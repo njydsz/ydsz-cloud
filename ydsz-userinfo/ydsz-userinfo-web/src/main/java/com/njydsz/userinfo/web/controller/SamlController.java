@@ -1,5 +1,8 @@
 package com.njydsz.userinfo.web.controller;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +27,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 import com.njydsz.userinfo.server.auth.SamlService;
 import com.njydsz.userinfo.server.service.SamlIdpConfigService;
 
@@ -165,7 +169,7 @@ public class SamlController {
       description = "根据 IdP Entity ID 动态路由到指定企业的 SAML IdP")
   public void initiateSsoByEntityId(@PathVariable String idpEntityId, HttpServletResponse response) {
     try {
-      String decodedEntityId = java.net.URLDecoder.decode(idpEntityId, java.nio.charset.StandardCharsets.UTF_8);
+      String decodedEntityId = URLDecoder.decode(idpEntityId, StandardCharsets.UTF_8);
       String redirectUrl = samlService.buildAuthnRequestUrlByEntityId(decodedEntityId);
       log.info("多租户 SAML SSO 发起: idpEntityId={}", decodedEntityId);
       response.sendRedirect(redirectUrl);
@@ -206,7 +210,7 @@ public class SamlController {
       throw new BusinessException(UserInfoExceptionCode.SAML_RESPONSE_INVALID);
     }
 
-    String decodedEntityId = java.net.URLDecoder.decode(idpEntityId, java.nio.charset.StandardCharsets.UTF_8);
+    String decodedEntityId = URLDecoder.decode(idpEntityId, StandardCharsets.UTF_8);
     Map<String, String> userAttributes = samlService.processSamlResponseWithEntityId(
         samlResponse, decodedEntityId);
 
@@ -227,7 +231,7 @@ public class SamlController {
   @Operation(
       summary = "查询可用 IdP 列表",
       description = "返回所有已启用的 SAML IdP 配置（供登录页展示选择）")
-  public YdszResponse<java.util.List<com.njydsz.userinfo.domain.vo.SamlIdpConfigVO>> listIdps() {
+  public YdszResponse<List<SamlIdpConfigVO>> listIdps() {
     return YdszResponse.success(samlIdpConfigService.findEnabled());
   }
 }

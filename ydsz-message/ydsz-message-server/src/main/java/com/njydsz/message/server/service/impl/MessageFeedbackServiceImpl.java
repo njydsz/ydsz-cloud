@@ -31,6 +31,15 @@ import com.njydsz.message.server.service.core.MessageFeedbackService;
 @Service
 @RequiredArgsConstructor
 public class MessageFeedbackServiceImpl implements MessageFeedbackService {
+  /** 评分下限 */
+  private static final int MIN_RATING = 1;
+
+  /** 评分上限 */
+  private static final int MAX_RATING = 5;
+
+  /** 默认评分 */
+  private static final double DEFAULT_RATING = 5.0;
+
 
   /** 消息反馈 Repository */
   private final MsgFeedbackRepository msgFeedbackRepository;
@@ -43,10 +52,12 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>校验 msgId/notificationId、userId、rating（1-5）后落库，tenantId 从 {@link TenantContext} 获取。
+   * 
    *
-   * @throws SysException 当 dto 为空、消息 ID 为空、用户 ID 为空或评分不在 1-5 范围时抛出
+   * @param dto 参数说明
+   * @return 返回值说明
    */
   @Override
   public String submitFeedback(MessageFeedbackDTO dto) {
@@ -68,7 +79,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
           .message("用户 ID 不能为空")
           .build();
     }
-    if (dto.getRating() == null || dto.getRating() < 1 || dto.getRating() > 5) {
+    if (dto.getRating() == null || dto.getRating() < MIN_RATING || dto.getRating() > MAX_RATING) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("评分必须在 1-5 之间")
@@ -156,8 +167,14 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>支持按 channel 和 userId 过滤，按创建时间降序排列。
+   *
+   * @param page 参数说明
+   * @param size 参数说明
+   * @param channel 参数说明
+   * @param userId 参数说明
+   * @return 返回值说明
    */
   @Override
   public Page<MsgFeedback> pageFeedback(int page, int size, String channel, String userId) {
@@ -201,7 +218,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
             .filter(f -> f.getRating() != null)
             .mapToInt(MsgFeedback::getRating)
             .average()
-            .orElse(5.0);
+            .orElse(DEFAULT_RATING);
     boolean shouldReduce = avgRating < FREQ_REDUCTION_THRESHOLD;
     if (shouldReduce) {
       log.info(

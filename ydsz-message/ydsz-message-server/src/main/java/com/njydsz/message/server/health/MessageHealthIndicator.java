@@ -3,8 +3,6 @@ package com.njydsz.message.server.health;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.message.domain.dto.MessageLogQueryDTO;
-import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -14,6 +12,8 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
 
@@ -84,7 +84,12 @@ public class MessageHealthIndicator extends AbstractModuleHealthIndicator {
     builder.withDetail("inFlightMessages", probeStatus(MessageStatusEnum.SENDING.name()));
   }
 
-  /** 轻量探针：仅查询指定状态是否存在记录（LIMIT 1），避免 COUNT 扫描大表。 */
+  /**
+   * 轻量探针：仅查询指定状态是否存在记录（LIMIT 1），避免 COUNT 扫描大表。
+   *
+   * @param status 参数说明
+   * @return 返回值说明
+   */
   private boolean probeStatus(String status) {
     MessageLogQueryDTO query = new MessageLogQueryDTO();
     query.setStatus(status);

@@ -9,10 +9,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
 import javax.naming.directory.Attributes;
 
-import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +29,7 @@ import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.dto.UserDeptDTO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.DepartmentRepository;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
@@ -67,6 +66,9 @@ import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 @ConditionalOnProperty(prefix = "ydsz.userinfo.ldap.sync", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class LdapOrgSyncService {
+  /** LDAP 外部标识长度（32 位 UUID 去横线） */
+  private static final int EXTERNAL_ID_LENGTH = 32;
+
 
   /** 分布式锁 key */
   private static final String LOCK_KEY = "ydsz:userinfo:ldap:sync:lock";
@@ -461,7 +463,7 @@ public class LdapOrgSyncService {
    * @return 随机密码字符串
    */
   private String generatePlaceholderPassword() {
-    return "LDAP_" + UUID.randomUUID().toString().replace("-", "").substring(0, 32);
+    return "LDAP_" + UUID.randomUUID().toString().replace("-", "").substring(0, EXTERNAL_ID_LENGTH);
   }
 
   /**

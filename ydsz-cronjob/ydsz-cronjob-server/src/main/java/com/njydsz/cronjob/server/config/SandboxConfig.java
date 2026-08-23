@@ -13,6 +13,15 @@ import lombok.Data;
 @Data
 public class SandboxConfig {
 
+  /** 默认timeoutSeconds值（可被配置文件覆盖） */
+  private static final int DEFAULT_TIMEOUT_SECONDS = 300;
+
+  /** 默认maxOutputSize值（可被配置文件覆盖） */
+  private static final int DEFAULT_MAX_OUTPUT_SIZE = 1048576;
+
+  /** 默认dockerPidsLimit值（可被配置文件覆盖） */
+  private static final int DEFAULT_DOCKER_PIDS_LIMIT = 100;
+
   /**
    * 是否启用沙箱模式（false=使用 ScriptJobHandler 原始执行逻辑）。
    *
@@ -21,10 +30,10 @@ public class SandboxConfig {
   private boolean enabled = true;
 
   /** 默认超时时间（秒） */
-  private int timeoutSeconds = 300;
+  private int timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
 
   /** 最大输出大小（字节，默认 1MB） */
-  private int maxOutputSize = 1048576;
+  private int maxOutputSize = DEFAULT_MAX_OUTPUT_SIZE;
 
   /** 沙箱工作目录 */
   private String workDir = "./data/sandbox";
@@ -52,7 +61,7 @@ public class SandboxConfig {
   private String dockerCpus = "1";
 
   /** P2-11: 容器最大进程数限制（防止 fork 炸弹） */
-  private int dockerPidsLimit = 100;
+  private int dockerPidsLimit = DEFAULT_DOCKER_PIDS_LIMIT;
 
   /** P2-11: 网络模式: none（禁网）/ bridge（默认桥接）/ host */
   private String dockerNetwork = "none";

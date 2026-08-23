@@ -4,14 +4,14 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
 import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
 import com.njydsz.message.domain.enums.core.NotificationCategoryEnum;
 import com.njydsz.message.domain.enums.core.NotificationLevelEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
-
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 /**
  * 站内通知领域实体 — 系统消息/待办/预警/公告统一入口。

@@ -180,7 +180,9 @@ public class CachedJwtValidator {
     // 缓存未命中，使用带防护的加载（防击穿 + 防穿透）
     cacheMissCount.incrementAndGet();
     startTime = System.currentTimeMillis();
-    JwtCacheEntry result = claimsCache.getWithProtection(jwt, this::parseTokenToEntry, NULL_CACHE_MIN_MS, NULL_CACHE_MAX_MS);
+    JwtCacheEntry result =
+        claimsCache.getWithProtection(
+            jwt, this::parseTokenToEntry, NULL_CACHE_MIN_MS, NULL_CACHE_MAX_MS);
     duration = System.currentTimeMillis() - startTime;
 
     recordMetrics(duration, false);
@@ -282,7 +284,9 @@ public class CachedJwtValidator {
     log.debug("[JwtCache] Token 已从本地缓存移除 jwt={}", maskToken(jwt));
   }
 
-  /** 手动清除缓存（供配置刷新时调用） */
+  /**
+   * 手动清除缓存（供配置刷新时调用）。
+   */
   public void invalidateAll() {
     claimsCache.invalidateAll();
     log.info("[JwtCache] 缓存已手动清除");

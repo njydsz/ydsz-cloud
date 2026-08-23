@@ -81,12 +81,20 @@ public enum SensitiveType {
     this.suffixKeep = suffixKeep;
   }
 
-  /** 头部保留字符数。 */
+  /**
+   * 头部保留字符数。
+   *
+   * @return 前缀保留字符数（非自定义类型时无意义）
+   */
   public int getPrefixKeep() {
     return prefixKeep;
   }
 
-  /** 尾部保留字符数。 */
+  /**
+   * 尾部保留字符数。
+   *
+   * @return 后缀保留字符数（非自定义类型时无意义）
+   */
   public int getSuffixKeep() {
     return suffixKeep;
   }
@@ -95,6 +103,8 @@ public enum SensitiveType {
    * 是否为自定义脱敏类型。
    *
    * <p>自定义类型的前缀/后缀保留数由 {@link Sensitive} 注解中的参数决定。
+   *
+   * @return {@code true} 表示 {@link #CUSTOM} 类型
    */
   public boolean isCustom() {
     return this == CUSTOM;

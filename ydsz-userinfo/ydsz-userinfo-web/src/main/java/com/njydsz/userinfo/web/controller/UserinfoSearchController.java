@@ -5,13 +5,13 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
@@ -24,6 +24,7 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.service.UnifiedSearchService;
+import com.njydsz.userinfo.web.dto.UserSearchQuery;
 
 /**
  * 用户搜索 Controller
@@ -70,6 +71,12 @@ import com.njydsz.common.search.service.UnifiedSearchService;
 @Tag(name = "用户搜索", description = "用户全文搜索")
 public class UserinfoSearchController {
 
+  /** 用户部门 ID 请求头 */
+  private static final String USER_DEPT_HEADER = "X-User-Dept";
+
+  /** 用户管理员标记请求头 */
+  private static final String USER_ADMIN_HEADER = "X-User-Admin";
+
   private final UnifiedSearchService unifiedSearchService;
 
   /**
@@ -84,14 +91,8 @@ public class UserinfoSearchController {
    *
    * <p>仅搜索 {@code types=["user"]} 类型；如需跨类型搜索请使用 {@code GlobalSearchController}。
    *
-   * @param keyword 搜索关键字（必填，按 username / realName / phone / email 全文匹配）
-   * @param page 页码（默认 1）
-   * @param pageSize 每页条数（默认 20）
-   * @param userId 当前用户 ID（来自请求头 {@code X-User-Id}）
-   * @param tenantId 当前租户 ID（来自请求头 {@code X-Tenant-Id}，用于多租户隔离）
-   * @param rolesHeader 用户角色列表（逗号分隔，来自请求头 {@code X-User-Roles}）
-   * @param deptId 用户部门 ID（来自请求头 {@code X-User-Dept}）
-   * @param adminHeader 是否管理员（{@code true} / {@code false}，来自请求头 {@code X-User-Admin}）
+   * @param query 搜索查询参数（keyword / page / pageSize）
+   * @param request HTTP 请求（从中读取用户上下文请求头：X-User-Id / X-Tenant-Id / X-User-Roles / X-User-Dept / X-User-Admin）
    * @return 搜索响应（含分页结果、高亮片段、聚合信息等）
    */
   @GetMapping
@@ -99,32 +100,37 @@ public class UserinfoSearchController {
   @Audit(action = AuditAction.QUERY, module = "USERINFO", content = "搜索用户")
   @AuthApiPermission(apiCodes = PermissionCodes.USERINFO_SEARCH)
   public YdszResponse<SearchResponse> search(
-      @RequestParam String keyword,
-      @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "20") int pageSize,
-      @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId,
-      @RequestHeader(value = DataPermissionHeaderConstants.X_TENANT_ID, required = false)
-          String tenantId,
-      @RequestHeader(value = AuthHeaderConstants.X_USER_ROLES, required = false) String rolesHeader,
-      @RequestHeader(value = "X-User-Dept", required = false) String deptId,
-      @RequestHeader(value = "X-User-Admin", required = false) String adminHeader) {
+      UserSearchQuery query, HttpServletRequest request) {
 
-    SearchRequest request =
+    SearchRequest requestBody =
         SearchRequest.builder()
-            .keyword(keyword)
+            .keyword(query.getKeyword())
             .types(List.of("user"))
-            .page(page)
-            .pageSize(pageSize)
-            .userId(userId)
-            .tenantId(tenantId)
-            .roles(rolesHeader != null ? Arrays.asList(rolesHeader.split(",")) : List.of())
-            .deptId(deptId)
-            .admin("true".equalsIgnoreCase(adminHeader))
+            .page(query.getPage())
+            .pageSize(query.getPageSize())
+            .userId(request.getHeader(AuthHeaderConstants.X_USER_ID))
+            .tenantId(request.getHeader(DataPermissionHeaderConstants.X_TENANT_ID))
+            .roles(parseRolesHeader(request.getHeader(AuthHeaderConstants.X_USER_ROLES)))
+            .deptId(request.getHeader(USER_DEPT_HEADER))
+            .admin("true".equalsIgnoreCase(request.getHeader(USER_ADMIN_HEADER)))
             .highlight(true)
             .fuzzy(true)
             .build();
 
-    return YdszResponse.success(unifiedSearchService.search(request));
+    return YdszResponse.success(unifiedSearchService.search(requestBody));
+  }
+
+  /**
+   * 解析角色列表请求头（逗号分隔）。
+   *
+   * @param rolesHeader 角色头值（可为 null）
+   * @return 角色列表；无角色时返回空列表
+   */
+  private static List<String> parseRolesHeader(String rolesHeader) {
+    if (rolesHeader == null || rolesHeader.isBlank()) {
+      return List.of();
+    }
+    return Arrays.asList(rolesHeader.split(","));
   }
 
   /**

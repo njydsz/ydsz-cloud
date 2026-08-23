@@ -48,6 +48,15 @@ import com.njydsz.literule.server.audit.RuleAuditLogService.AuditAction;
 @Tag(name = "规则审计日志", description = "P3-5 规则操作审计日志查询 API")
 public class RuleAuditLogController {
 
+    /** 审计日志查询默认条数 */
+  private static final int DEFAULT_LIMIT = 50;
+
+  /** 审计日志查询条数上限（常规接口） */
+  private static final int MAX_LIMIT_200 = 200;
+
+  /** 审计日志查询条数上限（明细接口） */
+  private static final int MAX_LIMIT_500 = 500;
+
   private final RuleAuditLogService auditLogService;
 
   /**
@@ -60,8 +69,8 @@ public class RuleAuditLogController {
   @Operation(summary = "查询最近审计日志", description = "返回最近 N 条审计日志，按时间倒序排列")
   public YdszResponse<List<AuditLogEntryVO>> recent(
       @RequestParam(value = "limit", defaultValue = "50") int limit) {
-    if (limit <= 0 || limit > 200) {
-      limit = 50;
+    if (limit <= 0 || limit > MAX_LIMIT_200) {
+      limit = DEFAULT_LIMIT;
     }
     return YdszResponse.success(
         auditLogService.queryRecent(limit).stream().map(this::toAuditLogVO).toList());
@@ -79,8 +88,8 @@ public class RuleAuditLogController {
   public YdszResponse<List<AuditLogEntryVO>> byRuleCode(
       @PathVariable String ruleCode,
       @RequestParam(value = "limit", defaultValue = "50") int limit) {
-    if (limit <= 0 || limit > 200) {
-      limit = 50;
+    if (limit <= 0 || limit > MAX_LIMIT_200) {
+      limit = DEFAULT_LIMIT;
     }
     return YdszResponse.success(
         auditLogService.queryByRuleCode(ruleCode, limit).stream().map(this::toAuditLogVO).toList());
@@ -98,8 +107,8 @@ public class RuleAuditLogController {
   public YdszResponse<List<AuditLogEntryVO>> byOperator(
       @RequestParam("operator") String operator,
       @RequestParam(value = "limit", defaultValue = "50") int limit) {
-    if (limit <= 0 || limit > 200) {
-      limit = 50;
+    if (limit <= 0 || limit > MAX_LIMIT_200) {
+      limit = DEFAULT_LIMIT;
     }
     return YdszResponse.success(
         auditLogService.queryByOperator(operator, limit).stream().map(this::toAuditLogVO).toList());
@@ -118,8 +127,8 @@ public class RuleAuditLogController {
   public YdszResponse<List<AuditLogEntryVO>> byAction(
       @RequestParam("action") String action,
       @RequestParam(value = "limit", defaultValue = "50") int limit) {
-    if (limit <= 0 || limit > 200) {
-      limit = 50;
+    if (limit <= 0 || limit > MAX_LIMIT_200) {
+      limit = DEFAULT_LIMIT;
     }
     try {
       AuditAction auditAction = AuditAction.valueOf(action.toUpperCase());
@@ -132,7 +141,8 @@ public class RuleAuditLogController {
           YdszResultCode.VALIDATION_FAILED,
           "非法的操作类型: "
               + action
-              + "，合法值: CREATE / UPDATE / TOGGLE / STATUS_CHANGE / ROLLBACK / APPROVE / REJECT / IMPORT / EXPORT / DELETE / DRY_RUN / STRESS_TEST / REPLAY");
+              + "，合法值: CREATE / UPDATE / TOGGLE / STATUS_CHANGE / ROLLBACK / APPROVE / REJECT / "
+              + "IMPORT / EXPORT / DELETE / DRY_RUN / STRESS_TEST / REPLAY");
     }
   }
 
@@ -150,8 +160,8 @@ public class RuleAuditLogController {
       @RequestParam("startTime") String startTime,
       @RequestParam("endTime") String endTime,
       @RequestParam(value = "limit", defaultValue = "50") int limit) {
-    if (limit <= 0 || limit > 500) {
-      limit = 50;
+    if (limit <= 0 || limit > MAX_LIMIT_500) {
+      limit = DEFAULT_LIMIT;
     }
     try {
       LocalDateTime start = LocalDateTime.parse(startTime);

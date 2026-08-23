@@ -19,6 +19,12 @@ import java.util.concurrent.atomic.AtomicLong;
  * @since 1.0.0
  */
 public class PriorityRunnable implements Runnable, Comparable<PriorityRunnable> {
+  /** 默认优先级 */
+  private static final int DEFAULT_PRIORITY = 5;
+
+  /** 优先级上限 */
+  private static final int MAX_PRIORITY = 10;
+
 
   /** 全局序列号生成器（保证同优先级 FIFO） */
   private static final AtomicLong SEQUENCE = new AtomicLong(0);
@@ -39,7 +45,7 @@ public class PriorityRunnable implements Runnable, Comparable<PriorityRunnable> 
    * @param delegate 被包装的 Runnable
    */
   public PriorityRunnable(Integer priority, Runnable delegate) {
-    this.priority = (priority == null || priority < 1) ? 5 : Math.min(priority, 10);
+    this.priority = (priority == null || priority < 1) ? DEFAULT_PRIORITY : Math.min(priority, MAX_PRIORITY);
     this.sequenceNumber = SEQUENCE.getAndIncrement();
     this.delegate = delegate;
   }
@@ -60,7 +66,11 @@ public class PriorityRunnable implements Runnable, Comparable<PriorityRunnable> 
     return Long.compare(this.sequenceNumber, other.sequenceNumber);
   }
 
-  /** 获取优先级（仅供日志/监控使用） */
+  /**
+   * 获取优先级（仅供日志/监控使用）。
+   *
+   * @return 优先级值
+   */
   public int getPriority() {
     return priority;
   }

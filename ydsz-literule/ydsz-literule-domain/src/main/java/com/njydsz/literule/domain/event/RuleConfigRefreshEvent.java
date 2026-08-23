@@ -40,11 +40,21 @@ public class RuleConfigRefreshEvent extends DomainEvent {
 
   /** 变更类型枚举 */
   public enum ChangeType {
+    /** 创建 */
     CREATE,
+
+    /** 更新 */
     UPDATE,
+
+    /** 删除 */
     DELETE,
+
+    /** 启停切换 */
     TOGGLE,
+
+    /** 全量重载 */
     FULL_RELOAD,
+
     /** 规则包（RulePack）批量重载（P0-F4） */
     PACK_RELOAD
   }

@@ -8,9 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -71,6 +68,9 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @RequiredArgsConstructor
 @ConditionalOnBean(LeaderElector.class)
 public class JobScanner {
+  /** 派发队列容量 */
+  private static final int DISPATCH_QUEUE_CAPACITY = 1024;
+
 
   private final JobTransactionService jobTransactionService;
   private final LeaderElector leaderElector;
@@ -130,7 +130,8 @@ public class JobScanner {
           this.dispatchPool = threadPool.getThreadPoolExecutor();
           this.useExternalDispatchPool = true;
           log.info(
-              "[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=true pool=common-thread(cronjobDispatchExecutor)",
+              "[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} "
+                  + "parallelDispatch=true pool=common-thread(cronjobDispatchExecutor)",
               leaderRole,
               cronjobProperties.getScanner().getIntervalMs(),
               cronjobProperties.getScanner().getBatchSize());
@@ -141,13 +142,14 @@ public class JobScanner {
               ExecutorUtils.builder()
                   .corePoolSize(poolSize)
                   .maxPoolSize(poolSize)
-                  .queueCapacity(1024)
+                  .queueCapacity(DISPATCH_QUEUE_CAPACITY)
                   .threadNamePrefix("job-scanner-dispatch-")
                   .daemon(true)
                   .build();
           this.useExternalDispatchPool = false;
           log.info(
-              "[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=true poolSize={} (manual fallback)",
+              "[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} "
+                  + "parallelDispatch=true poolSize={} (manual fallback)",
               leaderRole,
               cronjobProperties.getScanner().getIntervalMs(),
               cronjobProperties.getScanner().getBatchSize(),
@@ -307,7 +309,9 @@ public class JobScanner {
           "[JobScanner] 任务不属于本节点分区, 跳过: key={} partition={}",
           job.getJobKey(),
           partitionManager.computePartition(job));
-      if (skipCount != null) skipCount.incrementAndGet();
+      if (skipCount != null) {
+    skipCount.incrementAndGet();
+  }
       return;
     }
     // P6-1: 为每个任务派发生成独立 traceId，保证任务间链路隔离
@@ -331,7 +335,9 @@ public class JobScanner {
               job.getJobKey(),
               calendarType,
               advanced);
-          if (skipCount != null) skipCount.incrementAndGet();
+          if (skipCount != null) {
+    skipCount.incrementAndGet();
+  }
           return;
         }
       }
@@ -347,7 +353,9 @@ public class JobScanner {
           metrics.incMisfire("SKIP");
         }
         log.info("[JobScanner] Misfire SKIP 跳过派发: key={} advanced={}", job.getJobKey(), advanced);
-        if (skipCount != null) skipCount.incrementAndGet();
+        if (skipCount != null) {
+    skipCount.incrementAndGet();
+  }
         return;
       }
       // 计算新的 next_fire_time 并 CAS 推进
@@ -356,7 +364,9 @@ public class JobScanner {
       boolean advanced = jobTransactionService.advanceNextFireTime(job, oldNext, newNext, now);
       if (!advanced) {
         log.debug("[JobScanner] 任务 next_fire_time 已被其他节点推进, 跳过: key={}", job.getJobKey());
-        if (skipCount != null) skipCount.incrementAndGet();
+        if (skipCount != null) {
+    skipCount.incrementAndGet();
+  }
         return;
       }
       // P2-2: 选择 triggerType
@@ -384,10 +394,14 @@ public class JobScanner {
             triggerType,
             TracerUtils.getTraceId());
       }
-      if (successCount != null) successCount.incrementAndGet();
+      if (successCount != null) {
+    successCount.incrementAndGet();
+  }
     } catch (Exception e) {
       log.error("[JobScanner] 任务派发失败: key={} reason={}", job.getJobKey(), e.getMessage(), e);
-      if (failCount != null) failCount.incrementAndGet();
+      if (failCount != null) {
+    failCount.incrementAndGet();
+  }
     } finally {
       // P6-1: 清理 MDC，避免 traceId 串到下一个任务
       TracerUtils.clear();

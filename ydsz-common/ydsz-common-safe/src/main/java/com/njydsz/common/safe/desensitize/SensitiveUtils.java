@@ -1,5 +1,7 @@
 package com.njydsz.common.safe.desensitize;
 
+import java.util.regex.Pattern;
+
 /**
  * 敏感数据脱敏工具类（字段级）。
  *
@@ -30,8 +32,8 @@ public final class SensitiveUtils {
   private static final char MASK_CHAR = '*';
 
   /** 邮箱格式简单校验正则（脱敏用） */
-  private static final java.util.regex.Pattern EMAIL_PATTERN =
-      java.util.regex.Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
+  private static final Pattern EMAIL_PATTERN =
+      Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
 
   private SensitiveUtils() {
     throw new UnsupportedOperationException("Utility class");

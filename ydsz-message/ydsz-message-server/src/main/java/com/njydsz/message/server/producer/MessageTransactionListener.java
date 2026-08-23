@@ -121,8 +121,12 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
 
   /**
    * 从 RocketMQ Message + arg 中解析 MessageRequest。
-   *
+   * 
    * <p>优先从 arg（sendMessageInTransaction 的第三个参数）解析, arg 为 null 时从 message payload 解析。
+   *
+   * @param message 参数说明
+   * @param arg 参数说明
+   * @return 返回值说明
    */
   private MessageRequest resolveRequest(Message message, Object arg) {
     if (arg instanceof MessageRequest req) {
@@ -152,8 +156,9 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
 
   /**
    * 轻量校验：通道启用 + 模板存在且 ENABLED + 接收人非空。
+   * 
    *
-   * @return null 表示校验通过,非 null 表示失败原因
+   * @param req 参数说明
    */
   private String validateRequest(MessageRequest req) {
     if (!StringUtils.hasText(req.getChannel())) {

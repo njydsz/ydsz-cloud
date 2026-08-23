@@ -20,11 +20,13 @@ import com.alibaba.ttl.TransmittableThreadLocal;
  */
 public final class JobExecutionContext {
 
+  // CHECKSTYLE.OFF: RegexpSinglelineJava - ThreadLocal 持有者类，已提供 clear() 统一清理入口（编码规范 15.1 节）
   private static final TransmittableThreadLocal<ShardingContext> SHARDING_CONTEXT =
       new TransmittableThreadLocal<>();
 
   private static final TransmittableThreadLocal<JobLogger> LOGGER =
       new TransmittableThreadLocal<>();
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   private JobExecutionContext() {}
 

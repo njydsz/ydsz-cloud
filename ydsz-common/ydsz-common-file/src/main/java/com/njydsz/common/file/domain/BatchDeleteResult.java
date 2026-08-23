@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
  *
  * <p>包含成功删除的对象路径列表和失败的对象路径列表（含失败原因）。
  *
+ * @param successList 成功删除的对象路径列表
+ * @param failedList 失败的对象路径 → 失败原因映射
  * @author ydsz-team
  * @since 1.0.0
  */

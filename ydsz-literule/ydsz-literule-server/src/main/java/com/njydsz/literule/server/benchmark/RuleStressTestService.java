@@ -43,6 +43,33 @@ import com.njydsz.literule.server.config.RuleAdminService;
 @Slf4j
 public class RuleStressTestService {
 
+    /** 错误样本收集上限（防止错误列表无限增长） */
+  private static final int ERROR_SAMPLE_LIMIT = 50;
+
+  /** 压测线程池终止等待上限（分钟） */
+  private static final int AWAIT_TERMINATION_MINUTES = 60;
+
+  /** 纳秒到毫秒的换算系数 */
+  private static final double NANOS_PER_MILLI = 1_000_000.0;
+
+  /** 分位数：P50 */
+  private static final int PERCENTILE_P50 = 50;
+
+  /** 分位数：P95 */
+  private static final int PERCENTILE_P95 = 95;
+
+  /** 分位数：P99 */
+  private static final int PERCENTILE_P99 = 99;
+
+  /** 直方图最小范围（毫秒），低于此范围不分桶 */
+  private static final double MIN_BUCKET_RANGE_MS = 0.001;
+
+  /** 直方图分桶数量 */
+  private static final int HISTOGRAM_BUCKETS = 20;
+
+  /** 直方图最小桶宽（毫秒） */
+  private static final double MIN_BUCKET_SIZE_MS = 0.001;
+
   private final RuleAdminService ruleAdminService;
 
   public RuleStressTestService(RuleAdminService ruleAdminService) {
@@ -66,9 +93,15 @@ public class RuleStressTestService {
       int iterations,
       int warmupIterations) {
     // 参数校验
-    if (threads <= 0) threads = 1;
-    if (iterations < 0) iterations = 0;
-    if (warmupIterations < 0) warmupIterations = 0;
+    if (threads <= 0) {
+      threads = 1;
+    }
+    if (iterations < 0) {
+      iterations = 0;
+    }
+    if (warmupIterations < 0) {
+      warmupIterations = 0;
+    }
     if (factsList == null || factsList.isEmpty()) {
       factsList = Collections.singletonList(Collections.emptyMap());
     }
@@ -121,7 +154,7 @@ public class RuleStressTestService {
                     }
                   } catch (Exception e) {
                     errorCount.increment();
-                    if (errorSampleCount.getAndIncrement() < 50) {
+                    if (errorSampleCount.getAndIncrement() < ERROR_SAMPLE_LIMIT) {
                       errors.add(e.getClass().getSimpleName() + ": " + e.getMessage());
                     }
                   }
@@ -137,7 +170,7 @@ public class RuleStressTestService {
     } finally {
       executor.shutdown();
       try {
-        if (!executor.awaitTermination(60, TimeUnit.MINUTES)) {
+        if (!executor.awaitTermination(AWAIT_TERMINATION_MINUTES, TimeUnit.MINUTES)) {
           log.warn("[StressTest] 压测线程池未在 60 分钟内完成，强制关闭");
           executor.shutdownNow();
         }
@@ -152,11 +185,11 @@ public class RuleStressTestService {
     List<Long> sorted = new ArrayList<>(samples);
     Collections.sort(sorted);
     long totalExecutionsLong = totalExecutions.sum();
-    double totalTimeMs = totalNanos / 1_000_000.0;
+    double totalTimeMs = totalNanos / NANOS_PER_MILLI;
     double qps = totalTimeMs > 0 ? (totalExecutionsLong * 1000.0 / totalTimeMs) : 0;
-    double p50Ms = percentile(sorted, 50) / 1_000_000.0;
-    double p95Ms = percentile(sorted, 95) / 1_000_000.0;
-    double p99Ms = percentile(sorted, 99) / 1_000_000.0;
+    double p50Ms = percentile(sorted, PERCENTILE_P50) / NANOS_PER_MILLI;
+    double p95Ms = percentile(sorted, PERCENTILE_P95) / NANOS_PER_MILLI;
+    double p99Ms = percentile(sorted, PERCENTILE_P99) / NANOS_PER_MILLI;
     double errorRate =
         totalExecutionsLong > 0 ? (double) errorCount.sum() / totalExecutionsLong : 0.0;
 
@@ -193,14 +226,22 @@ public class RuleStressTestService {
    * @return 分位数值（纳秒）
    */
   private long percentile(List<Long> sorted, double p) {
-    if (sorted.isEmpty()) return 0;
-    if (p <= 0) return sorted.get(0);
-    if (p >= 100) return sorted.get(sorted.size() - 1);
+    if (sorted.isEmpty()) {
+      return 0;
+    }
+    if (p <= 0) {
+      return sorted.get(0);
+    }
+    if (p >= 100) {
+      return sorted.get(sorted.size() - 1);
+    }
     // 线性插值
     double index = (p / 100.0) * (sorted.size() - 1);
     int lower = (int) Math.floor(index);
     int upper = (int) Math.ceil(index);
-    if (lower == upper) return sorted.get(lower);
+    if (lower == upper) {
+      return sorted.get(lower);
+    }
     double fraction = index - lower;
     return (long) (sorted.get(lower) + fraction * (sorted.get(upper) - sorted.get(lower)));
   }
@@ -213,13 +254,15 @@ public class RuleStressTestService {
    */
   private List<HistogramBucket> buildHistogram(List<Long> sorted) {
     List<HistogramBucket> buckets = new ArrayList<>();
-    if (sorted.isEmpty()) return buckets;
+    if (sorted.isEmpty()) {
+      return buckets;
+    }
     long minNs = sorted.get(0);
     long maxNs = sorted.get(sorted.size() - 1);
-    double minMs = minNs / 1_000_000.0;
-    double maxMs = maxNs / 1_000_000.0;
+    double minMs = minNs / NANOS_PER_MILLI;
+    double maxMs = maxNs / NANOS_PER_MILLI;
     // 至少 1ms 范围，避免分桶为 0
-    if (maxMs - minMs < 0.001) {
+    if (maxMs - minMs < MIN_BUCKET_RANGE_MS) {
       HistogramBucket b = new HistogramBucket();
       b.setBucketLabel(String.format("%.3f", minMs));
       b.setCount(sorted.size());
@@ -227,15 +270,21 @@ public class RuleStressTestService {
       return buckets;
     }
     // 分 20 桶
-    int bucketCount = 20;
+    int bucketCount = HISTOGRAM_BUCKETS;
     double bucketSize = (maxMs - minMs) / bucketCount;
-    if (bucketSize <= 0) bucketSize = 0.001;
+    if (bucketSize <= 0) {
+      bucketSize = MIN_BUCKET_SIZE_MS;
+    }
     int[] counts = new int[bucketCount];
     for (long ns : sorted) {
-      double ms = ns / 1_000_000.0;
+      double ms = ns / NANOS_PER_MILLI;
       int idx = (int) ((ms - minMs) / bucketSize);
-      if (idx >= bucketCount) idx = bucketCount - 1;
-      if (idx < 0) idx = 0;
+      if (idx >= bucketCount) {
+        idx = bucketCount - 1;
+      }
+      if (idx < 0) {
+        idx = 0;
+      }
       counts[idx]++;
     }
     for (int i = 0; i < bucketCount; i++) {

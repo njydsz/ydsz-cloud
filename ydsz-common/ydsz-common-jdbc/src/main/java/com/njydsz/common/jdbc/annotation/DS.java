@@ -49,7 +49,7 @@ import java.lang.annotation.Target;
 public @interface DS {
 
   /**
-   * 数据源名称
+   * 数据源名称。
    *
    * <p>支持：
    *
@@ -57,6 +57,8 @@ public @interface DS {
    *   <li>固定名称：{@code "master"}、{@code "slave"}
    *   <li>SpEL 表达式：{@code "#tenant.dbSource"}、{@code "@dsResolver.resolve()"}
    * </ul>
+   *
+   * @return 数据源名称（固定名或 SpEL 表达式），默认 {@code "master"}
    */
   String value() default "master";
 }

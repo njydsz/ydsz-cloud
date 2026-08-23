@@ -63,10 +63,11 @@ public class CircuitBreaker {
   }
 
   /**
-   * 尝试执行（同步）
+   * 尝试执行（同步）。
    *
    * @param resource 资源标识
    * @param callback 受保护的调用回调
+   * @param <T> 调用结果类型
    * @return 限流决策（含执行结果或拒绝原因）
    */
   public <T> RateLimitDecision tryAcquire(String resource, CircuitBreakerCallback<T> callback) {
@@ -79,8 +80,8 @@ public class CircuitBreaker {
                   return callback.call();
                 } catch (RuntimeException e) {
                   throw e;
-                } catch (Exception e) {
-                  // 受检异常包装为业务运行时异常以适配 Supplier 契约（云顶规范 11 章：禁止裸抛 RuntimeException/Exception）
+                } catch (Throwable e) {
+                  // 受检异常/错误包装为业务运行时异常以适配 Supplier 契约（云顶规范 11 章：禁止裸抛 RuntimeException/Exception）
                   throw new CircuitBreakerExecutionException(e);
                 }
               });
@@ -190,9 +191,9 @@ public class CircuitBreaker {
      * 执行受熔断保护的实际调用。
      *
      * @return 调用结果
-     * @throws Exception 调用过程抛出的任意异常，都会被熔断器记录为一次失败
+     * @throws Throwable 调用过程抛出的任意异常，都会被熔断器记录为一次失败
      */
-    T call() throws Exception;
+    T call() throws Throwable;
   }
 
   /** 熔断器配置（与 Resilience4j CircuitBreakerConfig 映射）。 */

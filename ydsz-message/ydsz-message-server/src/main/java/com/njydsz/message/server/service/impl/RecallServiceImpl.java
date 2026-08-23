@@ -13,14 +13,13 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.message.domain.vo.MsgTraceVO;
-import com.njydsz.message.domain.vo.MsgLogVO;
-import com.njydsz.message.domain.vo.MsgNotificationVO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.event.MessageRecalledEvent;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.repository.MsgNotificationRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.domain.vo.MsgNotificationVO;
 import com.njydsz.message.server.channel.recall.RecallChannel;
 import com.njydsz.message.server.channel.recall.RecallChannelRouter;
 import com.njydsz.message.server.event.DomainEventPublisher;
@@ -148,8 +147,11 @@ public class RecallServiceImpl implements RecallService {
 
   /**
    * P0-4: 按 msgId 撤回已发送消息。
-   *
+   * 
    * <p>校验撤回时间窗口（默认 30 分钟），超时不可撤回。 撤回后更新状态为 RECALLED 并推送前端撤回事件。
+   *
+   * @param msgId 参数说明
+   * @return 返回值说明
    */
   @Override
   @Transactional(rollbackFor = Exception.class)

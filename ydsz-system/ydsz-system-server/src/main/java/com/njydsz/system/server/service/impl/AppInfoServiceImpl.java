@@ -1,5 +1,4 @@
 package com.njydsz.system.server.service.impl;
-
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -11,16 +10,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
-
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.AppInfoPageQuery;
-import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.domain.repository.AppInfoRepository;
+import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.AppInfoService;
+
+
+
+
 
 /**
  * 应用注册 Service 实现

@@ -49,23 +49,54 @@ public interface FlowEventSubscriptionMapper extends BaseMapper<FlowEventSubscri
       @Param("eventType") String eventType,
       @Param("eventRef") String eventRef);
 
-  /** 按关联键匹配 WAITING 消息订阅 */
+  /**
+   * 按关联键匹配 WAITING 消息订阅
+   *
+   * @param tenantId 参数说明
+   * @param correlationKey 参数说明
+   * @return 返回值说明
+   */
   List<FlowEventSubscriptionDO> selectWaitingByCorrelation(
       @Param("tenantId") String tenantId, @Param("correlationKey") String correlationKey);
 
-  /** 标记订阅已触发 */
+  /**
+   * 标记订阅已触发
+   *
+   * @param id 参数说明
+   * @param payload 参数说明
+   * @param triggerSource 参数说明
+   * @param triggeredAt 参数说明
+   * @return 返回值说明
+   */
   int markTriggered(
       @Param("id") String id,
       @Param("payload") String payload,
       @Param("triggerSource") String triggerSource,
       @Param("triggeredAt") LocalDateTime triggeredAt);
 
-  /** 取消某 userTask 关联的所有边界事件订阅 */
+  /**
+   * 取消某 userTask 关联的所有边界事件订阅
+   *
+   * @param boundaryTaskId 参数说明
+   * @param reason 参数说明
+   * @return 返回值说明
+   */
   int cancelByTask(@Param("boundaryTaskId") String boundaryTaskId, @Param("reason") String reason);
 
-  /** 取消某实例所有 WAITING 订阅（实例终止/驳回时使用） */
+  /**
+   * 取消某实例所有 WAITING 订阅（实例终止/驳回时使用）
+   *
+   * @param instanceId 参数说明
+   * @param reason 参数说明
+   * @return 返回值说明
+   */
   int cancelByInstance(@Param("instanceId") String instanceId, @Param("reason") String reason);
 
-  /** 查询实例的 WAITING 订阅数（检查流程是否被事件阻塞） */
+  /**
+   * 查询实例的 WAITING 订阅数（检查流程是否被事件阻塞）
+   *
+   * @param instanceId 参数说明
+   * @return 返回值说明
+   */
   long countWaitingByInstance(@Param("instanceId") String instanceId);
 }

@@ -39,6 +39,11 @@ public class TracingAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(TraceContext.class)
+  /**
+   * trace context。
+   * @param properties 参数
+   * @return 结果
+   */
   public TraceContext traceContext(SentryProperties properties) {
     String primary = properties.getTracing().getPrimary();
     if ("skywalking".equals(primary)) {

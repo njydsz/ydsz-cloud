@@ -45,7 +45,8 @@ import java.lang.annotation.Target;
  * public void saveUser(UserDTO dto) { ... }
  *
  * // 多按钮权限 OR 校验（拥有其一即可）
- * &#64;AuthMenuPermission(permissionCodes = {"sys:user:delete", "sys:user:manage"}, type = PermissionType.BUTTON, mode = PermissionMode.OR)
+ * &#64;AuthMenuPermission(permissionCodes = {"sys:user:delete", "sys:user:manage"},
+ *     type = PermissionType.BUTTON, mode = PermissionMode.OR)
  * public void deleteUser(Long id) { ... }
  *
  * // 限定特定角色才能访问

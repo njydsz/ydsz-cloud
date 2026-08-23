@@ -101,7 +101,9 @@ public class RuleResult implements Serializable {
    * @param result 单行匹配结果
    */
   public void addCollectedResult(RuleResult result) {
-    if (result == null) return;
+    if (result == null) {
+      return;
+    }
     if (collectedResults == null || collectedResults == Collections.<RuleResult>emptyList()) {
       collectedResults = new ArrayList<>();
     }

@@ -59,6 +59,24 @@ import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
 @Component("cronjobMetrics")
 @ConditionalOnClass(MeterRegistry.class)
 public class CronjobMetrics extends SentryMetricsAdapter {
+  /** CPU 高负载权重 */
+  private static final double CPU_WEIGHT_HIGH = 0.5;
+
+  /** CPU 正常权重 */
+  private static final double CPU_WEIGHT_LOW = 0.4;
+
+  /** 内存高负载权重 */
+  private static final double MEM_WEIGHT_HIGH = 0.4;
+
+  /** 内存正常权重 */
+  private static final double MEM_WEIGHT_LOW = 0.3;
+
+  /** 线程池高负载权重 */
+  private static final double POOL_WEIGHT_HIGH = 0.4;
+
+  /** 线程池正常权重 */
+  private static final double POOL_WEIGHT_LOW = 0.3;
+
 
   /** P1-2: 运行中任务数计数器（Redis 维护，替代 DB 查询） */
   private final ObjectProvider<RunningTaskCounter> runningTaskCounterProvider;
@@ -374,9 +392,9 @@ public class CronjobMetrics extends SentryMetricsAdapter {
     double cpuScore = Math.min(1.0, cpuUsage / 100.0);
     double memScore = Math.min(1.0, memUsage / 100.0);
     double poolScore = Math.min(1.0, poolActive / 100.0);
-    double cpuWeight = cpuUsage > config.getCpuThreshold() ? 0.5 : 0.4;
-    double memWeight = memUsage > config.getMemThreshold() ? 0.4 : 0.3;
-    double poolWeight = poolActive > config.getPoolActiveThreshold() ? 0.4 : 0.3;
+    double cpuWeight = cpuUsage > config.getCpuThreshold() ? CPU_WEIGHT_HIGH : CPU_WEIGHT_LOW;
+    double memWeight = memUsage > config.getMemThreshold() ? MEM_WEIGHT_HIGH : MEM_WEIGHT_LOW;
+    double poolWeight = poolActive > config.getPoolActiveThreshold() ? POOL_WEIGHT_HIGH : POOL_WEIGHT_LOW;
     double totalWeight = cpuWeight + memWeight + poolWeight;
     return (cpuScore * cpuWeight + memScore * memWeight + poolScore * poolWeight) / totalWeight;
   }

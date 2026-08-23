@@ -13,6 +13,12 @@ import lombok.Data;
 @Data
 public class LeaderConfig {
 
+  /** 默认leaseSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_LEASE_SECONDS = 30;
+
+  /** 默认renewIntervalSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_RENEW_INTERVAL_SECONDS = 10;
+
   /**
    * 是否启用 Leader 选举模式（false=回退旧的 Leaderless 模式）。
    *
@@ -24,10 +30,10 @@ public class LeaderConfig {
   private String role = "ydsz-job-scheduler";
 
   /** 租约时长（秒，到期后自动释放，需在到期前续期） */
-  private long leaseSeconds = 30;
+  private long leaseSeconds = DEFAULT_LEASE_SECONDS;
 
   /** 续期间隔（秒，默认 10s 续期一次） */
-  private long renewIntervalSeconds = 10;
+  private long renewIntervalSeconds = DEFAULT_RENEW_INTERVAL_SECONDS;
 
   /**
    * P2-9: 多 Active Leader 分区调度配置。

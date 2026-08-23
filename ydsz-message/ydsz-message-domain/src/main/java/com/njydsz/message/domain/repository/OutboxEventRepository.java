@@ -2,10 +2,10 @@ package com.njydsz.message.domain.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
-
 import com.njydsz.message.domain.event.OutboxEvent;
 
 /**
@@ -79,7 +79,7 @@ public interface OutboxEventRepository {
    *
    * @return 状态 → 数量映射
    */
-  java.util.Map<String, Long> countByStatus();
+  Map<String, Long> countByStatus();
 
   /**
    * 分页查询 Outbox 事件列表。

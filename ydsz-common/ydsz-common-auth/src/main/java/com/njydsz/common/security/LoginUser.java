@@ -86,8 +86,12 @@ public class LoginUser implements Serializable {
    * @return true 表示拥有该权限
    */
   public boolean hasPermission(String perm) {
-    if (permissions == null) return false;
-    if (isSuperAdmin()) return true;
+    if (permissions == null) {
+      return false;
+    }
+    if (isSuperAdmin()) {
+      return true;
+    }
     return permissions.contains(perm);
   }
 }

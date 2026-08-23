@@ -35,6 +35,10 @@ public class ErrorEventSpanProcessor implements SpanProcessor {
   private final ErrorEventConfig config;
   private final List<ErrorEventListener> listeners = new CopyOnWriteArrayList<>();
 
+  /**
+   * error event span。
+   * @param config 参数
+ */
   public ErrorEventSpanProcessor(ErrorEventConfig config) {
     this.config = config;
     log.info(
@@ -42,16 +46,29 @@ public class ErrorEventSpanProcessor implements SpanProcessor {
   }
 
   @Override
+  /**
+   * on start。
+   * @param parentContext 参数
+   * @param span 参数
+   */
   public void onStart(Context parentContext, ReadWriteSpan span) {
     // no-op
   }
 
   @Override
+  /**
+   * is start required。
+   * @return 结果
+   */
   public boolean isStartRequired() {
     return false;
   }
 
   @Override
+  /**
+   * on end。
+   * @param span 参数
+   */
   public void onEnd(ReadableSpan span) {
     try {
       ErrorEvent event = evaluate(span);
@@ -105,16 +122,27 @@ public class ErrorEventSpanProcessor implements SpanProcessor {
   }
 
   @Override
+  /**
+   * is end required。
+   * @return 结果
+   */
   public boolean isEndRequired() {
     return true;
   }
 
   @Override
+  /**
+   * close。
+   */
   public void close() {
     // no-op
   }
 
   /** 注册错误事件监听器 */
+  /**
+   * add listener。
+   * @param listener 参数
+   */
   public void addListener(ErrorEventListener listener) {
     if (listener != null) {
       listeners.add(listener);

@@ -2,6 +2,7 @@ package com.njydsz.common.jdbc.support;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 
@@ -69,7 +70,7 @@ public final class PageResponses {
    * @return 成功分页响应（records 为转换后的结果）
    */
   public static <S, T> PageResponse<List<T>> success(
-      IPage<S> page, java.util.function.Function<S, T> mapper) {
+      IPage<S> page, Function<S, T> mapper) {
     if (page == null) {
       return PageResponse.empty(1L, 0L);
     }

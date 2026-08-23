@@ -166,7 +166,7 @@ public class FileApplicationService {
     validateUpload(file);
 
     // 2. 配额校验
-    quotaDomainService.checkQuota(loadQuota("user", userId), file.getSize(), null);
+    quotaDomainService.checkQuota(loadQuota("user", userId), file.getSize());
 
     // 3. 解析父目录
     String originalFilename = file.getOriginalFilename();
@@ -743,7 +743,7 @@ public class FileApplicationService {
 
     // 配额校验（仅文件需要）
     if (source.isFile() && source.getSize() != null) {
-      quotaDomainService.checkQuota(loadQuota("user", userId), source.getSize(), null);
+      quotaDomainService.checkQuota(loadQuota("user", userId), source.getSize());
     }
 
     FileNodeDTO copyNode =
@@ -848,7 +848,7 @@ public class FileApplicationService {
             .mapToLong(FileNodeVO::getSize)
             .sum();
     long totalFileCount = allDescendants.stream().filter(FileNodeVO::isFile).count();
-    quotaDomainService.checkQuota(loadQuota("user", userId), totalFileBytes, null);
+    quotaDomainService.checkQuota(loadQuota("user", userId), totalFileBytes);
 
     // 4. 短事务：创建根文件夹节点
     String newFolderId =

@@ -44,6 +44,9 @@ import com.njydsz.common.util.collection.MapUtils;
 @Component
 public class FlowFormValidator {
 
+    /** 1MB 对应的字节数 */
+  private static final double BYTES_PER_MB = 1024.0 * 1024.0;
+
   /**
    * 校验表单数据是否符合 Schema 定义。
    *
@@ -149,7 +152,15 @@ public class FlowFormValidator {
 
   // ============================== 子表单校验 ==============================
 
-  /** 子表单校验：行数限制 + 递归校验每行字段。 */
+  /**
+   * 子表单校验：行数限制 + 递归校验每行字段。
+   *
+   * @param field 参数说明
+   * @param value 参数说明
+   * @param allData 参数说明
+   * @param errors 参数说明
+   * @param fieldKey 参数说明
+   */
   private void validateSubForm(
       FlowFormField field,
       Object value,
@@ -395,7 +406,7 @@ public class FlowFormValidator {
           Double sizeMb = toDouble(sizeObj);
           if (sizeMb != null) {
             // size 通常以字节存储，转为 MB
-            double sizeInMb = sizeMb / (1024.0 * 1024.0);
+            double sizeInMb = sizeMb / (BYTES_PER_MB);
             if (sizeInMb > validation.getMaxSizeMb()) {
               errors.add(
                   new FlowFormValidationError(
@@ -416,7 +427,13 @@ public class FlowFormValidator {
 
   // ============================== 联动规则求值 ==============================
 
-  /** 判断字段是否被联动规则隐藏。 */
+  /**
+   * 判断字段是否被联动规则隐藏。
+   *
+   * @param field 参数说明
+   * @param allData 参数说明
+   * @return 返回值说明
+   */
   private boolean isHiddenByLinkage(FlowFormField field, Map<String, Object> allData) {
     if (field.getLinkages() == null || field.getLinkages().isEmpty()) {
       return false;
@@ -440,7 +457,13 @@ public class FlowFormValidator {
     return Boolean.TRUE.equals(field.getHidden());
   }
 
-  /** 判断字段是否必填（考虑联动 SET_REQUIRED 规则）。 */
+  /**
+   * 判断字段是否必填（考虑联动 SET_REQUIRED 规则）。
+   *
+   * @param field 参数说明
+   * @param allData 参数说明
+   * @return 返回值说明
+   */
   private boolean isRequired(FlowFormField field, Map<String, Object> allData) {
     boolean baseRequired = Boolean.TRUE.equals(field.getRequired());
     if (field.getValidation() != null && Boolean.TRUE.equals(field.getValidation().getRequired())) {
@@ -462,7 +485,14 @@ public class FlowFormValidator {
     return baseRequired;
   }
 
-  /** 评估联动条件是否满足。 */
+  /**
+   * 评估联动条件是否满足。
+   *
+   * @param operator 参数说明
+   * @param actual 参数说明
+   * @param expected 参数说明
+   * @return 返回值说明
+   */
   private boolean evaluateCondition(String operator, Object actual, Object expected) {
     if (operator == null || operator.isEmpty()) {
       operator = "EQ";
@@ -546,7 +576,12 @@ public class FlowFormValidator {
     return String.valueOf(a).equals(String.valueOf(b));
   }
 
-  /** 从 JSON 字符串解析表单 Schema。 */
+  /**
+   * 从 JSON 字符串解析表单 Schema。
+   *
+   * @param json 参数说明
+   * @return 返回值说明
+   */
   public FlowFormSchema parseSchema(String json) {
     if (!StringUtils.hasText(json)) {
       return null;

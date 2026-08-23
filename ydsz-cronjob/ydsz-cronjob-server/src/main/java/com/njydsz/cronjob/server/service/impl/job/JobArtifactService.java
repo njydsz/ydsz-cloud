@@ -98,12 +98,22 @@ public class JobArtifactService {
     }
   }
 
-  /** 查询任务执行产物列表。 */
+  /**
+   * 查询任务执行产物列表。
+   *
+   * @param logId 日志 ID
+   * @return 产物列表
+   */
   public List<JobArtifactVO> getArtifactsByLogId(String logId) {
     return artifactRepository.findByLogId(logId);
   }
 
-  /** 读取产物内容。 */
+  /**
+   * 读取产物内容。
+   *
+   * @param artifactId 产物 ID
+   * @return 产物内容字节数组
+   */
   public byte[] readArtifact(String artifactId) {
     JobArtifactVO artifact = artifactRepository.findById(artifactId).orElse(null);
     if (artifact == null) {
@@ -119,7 +129,12 @@ public class JobArtifactService {
     }
   }
 
-  /** 清理过期产物。 */
+  /**
+   * 清理过期产物。
+   *
+   * @param batchSize 单批清理数量
+   * @return 清理数量
+   */
   public int cleanExpiredArtifacts(int batchSize) {
     LocalDateTime before = LocalDateTime.now();
     int cleaned = artifactRepository.cleanExpired(before, batchSize);

@@ -32,7 +32,11 @@ public class ConfigRuleProvider implements RateLimitRuleProvider {
     reload(properties);
   }
 
-  /** 从配置重新加载 */
+  /**
+   * 从配置重新加载规则。
+   *
+   * @param properties 限流配置属性
+   */
   public void reload(RateLimitProperties properties) {
     ruleMap.clear();
     if (properties.getRules() != null) {

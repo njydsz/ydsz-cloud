@@ -190,7 +190,9 @@ public class RuleVersionDiffService {
       RuleSeverity newVal) {
     String oldStr = oldVal == null ? null : oldVal.name();
     String newStr = newVal == null ? null : newVal.name();
-    if (Objects.equals(oldStr, newStr)) return;
+    if (Objects.equals(oldStr, newStr)) {
+      return;
+    }
     entries.add(
         RuleVersionDiff.DiffEntry.builder()
             .type(

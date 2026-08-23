@@ -1,5 +1,6 @@
 package com.njydsz.workflow.domain.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -95,7 +96,7 @@ public interface FlowHisTaskRepository {
    * @param endTime 结束时间（可为 null）
    * @return 统计指标 Map
    */
-  Map<String, Object> selectOverviewStats(String tenantId, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime);
+  Map<String, Object> selectOverviewStats(String tenantId, LocalDateTime startTime, LocalDateTime endTime);
 
   /**
    * 查询审批人效率排行。
@@ -109,7 +110,7 @@ public interface FlowHisTaskRepository {
    * @return 审批人效率统计列表
    */
   List<Map<String, Object>> selectApproverEfficiency(
-      String tenantId, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, int limit);
+      String tenantId, LocalDateTime startTime, LocalDateTime endTime, int limit);
 
   /**
    * 查询流程效率对比。
@@ -122,7 +123,7 @@ public interface FlowHisTaskRepository {
    * @return 流程效率对比列表
    */
   List<Map<String, Object>> selectFlowEfficiencyComparison(
-      String tenantId, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime);
+      String tenantId, LocalDateTime startTime, LocalDateTime endTime);
 
   /**
    * 查询节点耗时统计。
@@ -147,7 +148,7 @@ public interface FlowHisTaskRepository {
    * @return 趋势数据列表
    */
   List<Map<String, Object>> selectApprovalTrend(
-      String tenantId, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, String granularity);
+      String tenantId, LocalDateTime startTime, LocalDateTime endTime, String granularity);
 
   /**
    * 查询实例下已审批完成的去重审批人 ID 列表。
@@ -196,7 +197,7 @@ public interface FlowHisTaskRepository {
    * @return 历史任务 VO 列表
    */
   List<FlowHisTaskVO> selectDonePage(String assigneeId, String businessType, String flowCode,
-      java.time.LocalDateTime startTime, java.time.LocalDateTime endTime,
+      LocalDateTime startTime, LocalDateTime endTime,
       String tenantId, int offset, int limit);
 
   /**
@@ -220,7 +221,7 @@ public interface FlowHisTaskRepository {
    * @return 符合条件的已办总数
    */
   long countDone(String assigneeId, String businessType, String flowCode,
-      java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, String tenantId);
+      LocalDateTime startTime, LocalDateTime endTime, String tenantId);
 
   /**
    * 按租户 + 时间范围查询历史任务列表（带流程编码过滤）。
@@ -238,8 +239,8 @@ public interface FlowHisTaskRepository {
   List<FlowHisTaskVO> selectByTimeRange(
       String tenantId,
       String flowCode,
-      java.time.LocalDateTime startTime,
-      java.time.LocalDateTime endTime,
+      LocalDateTime startTime,
+      LocalDateTime endTime,
       int limit);
 
   /**

@@ -42,8 +42,10 @@ public class AuditFallbackWriter {
   private static final Logger LOG = LoggerFactory.getLogger(AuditFallbackWriter.class);
 
   /** 磁盘兜底文件目录默认路径 */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — JDK 系统属性名含 java.io 前缀，为字符串常量非代码引用
   private static final String DEFAULT_FALLBACK_DIR =
       System.getProperty("java.io.tmpdir") + "/audit-fallback";
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /** 单个兜底文件大小上限（默认 50MB） */
   private static final long MAX_FILE_SIZE_BYTES = 50L * 1024L * 1024L;

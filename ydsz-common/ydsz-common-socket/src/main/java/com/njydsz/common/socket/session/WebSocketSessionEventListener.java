@@ -10,6 +10,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.util.StringUtils;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
@@ -196,11 +198,11 @@ public class WebSocketSessionEventListener {
    * @param sessionId 待关闭的 Session ID
    */
   private void closeOldSession(String userId, String sessionId) {
-    org.springframework.web.socket.WebSocketSession oldSession =
+    WebSocketSession oldSession =
         sessionRegistry.getSession(sessionId);
     if (oldSession != null && oldSession.isOpen()) {
       try {
-        oldSession.close(org.springframework.web.socket.CloseStatus.POLICY_VIOLATION);
+        oldSession.close(CloseStatus.POLICY_VIOLATION);
         log.info("[WS-Session] 多端策略关闭旧 Session: userId={}, sessionId={}", userId, sessionId);
       } catch (Exception e) {
         log.warn(

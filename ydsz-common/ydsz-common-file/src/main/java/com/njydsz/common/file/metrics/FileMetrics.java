@@ -127,8 +127,12 @@ public class FileMetrics {
    * @param durationNanos 上传耗时（纳秒）
    */
   public void recordUpload(long durationNanos) {
-    if (uploadCounter != null) uploadCounter.increment();
-    if (uploadTimer != null) uploadTimer.record(durationNanos, TimeUnit.NANOSECONDS);
+    if (uploadCounter != null) {
+      uploadCounter.increment();
+    }
+    if (uploadTimer != null) {
+      uploadTimer.record(durationNanos, TimeUnit.NANOSECONDS);
+    }
   }
 
   /**
@@ -137,28 +141,40 @@ public class FileMetrics {
    * @param durationNanos 下载耗时（纳秒）
    */
   public void recordDownload(long durationNanos) {
-    if (downloadCounter != null) downloadCounter.increment();
-    if (downloadTimer != null) downloadTimer.record(durationNanos, TimeUnit.NANOSECONDS);
+    if (downloadCounter != null) {
+      downloadCounter.increment();
+    }
+    if (downloadTimer != null) {
+      downloadTimer.record(durationNanos, TimeUnit.NANOSECONDS);
+    }
   }
 
   /** 记录一次删除操作 */
   public void recordDelete() {
-    if (deleteCounter != null) deleteCounter.increment();
+    if (deleteCounter != null) {
+      deleteCounter.increment();
+    }
   }
 
   /** 记录秒传命中 */
   public void recordDedupHit() {
-    if (dedupHitCounter != null) dedupHitCounter.increment();
+    if (dedupHitCounter != null) {
+      dedupHitCounter.increment();
+    }
   }
 
   /** 记录秒传未命中 */
   public void recordDedupMiss() {
-    if (dedupMissCounter != null) dedupMissCounter.increment();
+    if (dedupMissCounter != null) {
+      dedupMissCounter.increment();
+    }
   }
 
   /** 记录病毒检测命中 */
   public void recordVirusDetected() {
-    if (virusDetectedCounter != null) virusDetectedCounter.increment();
+    if (virusDetectedCounter != null) {
+      virusDetectedCounter.increment();
+    }
   }
 
   /**

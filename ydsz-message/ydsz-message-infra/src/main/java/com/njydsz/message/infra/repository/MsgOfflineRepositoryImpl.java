@@ -64,7 +64,7 @@ public class MsgOfflineRepositoryImpl implements MsgOfflineRepository {
     wrapper.orderByDesc("created_at");
     IPage<MsgOfflineDO> entityPage = msgOfflineMapper.selectPage(page, wrapper);
     List<MsgOfflineVO> vos = converter.offlineDoListToVO(entityPage.getRecords());
-    return PageResponse.success(entityPage.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
+    return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   private QueryWrapper<MsgOfflineDO> buildWrapper(MsgOfflineQuery query) {

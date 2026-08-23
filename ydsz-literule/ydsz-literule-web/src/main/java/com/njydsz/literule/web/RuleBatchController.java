@@ -132,6 +132,7 @@ public class RuleBatchController {
    * @param request 请求体，包含 ruleCodes / enabled
    * @param operator 操作人
    * @return 成功与失败明细
+      * @param dto 参数说明
    */
   @Idempotent(key = "ruleAdmin:batchToggle", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -180,6 +181,7 @@ public class RuleBatchController {
    * @param request 请求体，包含 ruleCodes / delta（可为负）
    * @param operator 操作人
    * @return 成功与失败明细
+      * @param dto 参数说明
    */
   @Idempotent(key = "ruleAdmin:batchPriority", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -229,6 +231,7 @@ public class RuleBatchController {
    * @param request 请求体，包含 ruleCodes / category
    * @param operator 操作人
    * @return 成功与失败明细
+      * @param dto 参数说明
    */
   @Idempotent(key = "ruleAdmin:batchCategory", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(

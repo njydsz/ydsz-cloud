@@ -301,7 +301,8 @@ public class LockMetrics {
   @Override
   public String toString() {
     return String.format(
-        "LockMetrics{success=%d, fail=%d, release=%d, competition=%d, active=%d, timeout=%d, renew=%d, idempotent=%d, avgWait=%.1fms, avgHold=%.1fms}",
+        "LockMetrics{success=%d, fail=%d, release=%d, competition=%d, active=%d, "
+            + "timeout=%d, renew=%d, idempotent=%d, avgWait=%.1fms, avgHold=%.1fms}",
         getAcquireSuccessCount(),
         getAcquireFailCount(),
         getReleaseCount(),

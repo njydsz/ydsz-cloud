@@ -10,7 +10,8 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  *
  * <p><b>状态流转：</b>{@code ENABLED ⇄ DISABLED}（双向可切换，均非终态）。
  *
- * <p><b>已废弃：</b>用户生命周期管理请使用 {@link UserLifecycleStatusEnum}，本类仅保留作为向后兼容层。 所有 {@code parse()} / {@code canTransitTo()} 方法委托给 {@link UserLifecycleStatusEnum}。
+ * <p><b>已废弃：</b>用户生命周期管理请使用 {@link UserLifecycleStatusEnum}，本类仅保留作为向后兼容层。
+ * 所有 {@code parse()} / {@code canTransitTo()} 方法委托给 {@link UserLifecycleStatusEnum}。
  *
  * @author ydsz-team
  * @since 1.0.0

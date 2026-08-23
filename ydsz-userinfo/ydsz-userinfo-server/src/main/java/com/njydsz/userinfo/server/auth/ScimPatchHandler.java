@@ -1,25 +1,20 @@
 package com.njydsz.userinfo.server.auth;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.domain.scim.ScimEmail;
+import com.njydsz.userinfo.domain.scim.ScimConverter;
 import com.njydsz.userinfo.domain.scim.ScimPatchOp;
-import com.njydsz.userinfo.domain.scim.ScimPhone;
 import com.njydsz.userinfo.domain.scim.ScimUser;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
-import com.njydsz.userinfo.domain.scim.ScimConverter;
 import com.njydsz.userinfo.server.config.ScimProperties;
 import com.njydsz.userinfo.server.service.UserAccountService;
 
@@ -47,6 +42,9 @@ import com.njydsz.userinfo.server.service.UserAccountService;
 @Component
 @RequiredArgsConstructor
 public class ScimPatchHandler {
+  /** SCIM 路径正则捕获组：子属性 */
+  private static final int GROUP_SUB_ATTRIBUTE = 4;
+
 
   /** 带过滤器的属性路径正则（如 emails[value eq "xxx"].value）。 */
   private static final Pattern FILTERED_PATH_PATTERN =
@@ -213,7 +211,7 @@ public class ScimPatchHandler {
       UserAccountVO currentUser) {
     String attribute = matcher.group(1);
     String filter = matcher.group(2);
-    String subAttribute = matcher.group(4);
+    String subAttribute = matcher.group(GROUP_SUB_ATTRIBUTE);
 
     // 仅支持 emails 和 phoneNumbers 的过滤器路径
     if ("emails".equals(attribute)) {

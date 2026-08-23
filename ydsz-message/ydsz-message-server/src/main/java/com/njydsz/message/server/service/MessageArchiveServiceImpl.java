@@ -3,15 +3,14 @@ package com.njydsz.message.server.service.archive.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.njydsz.common.core.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.repository.MsgLogRepository;
-import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.archive.MessageArchiveService;
@@ -126,7 +125,20 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
     log.debug("[Archive] 删除索引: id={}", id);
   }
 
-  /** 数据库 LIKE 降级搜索。 */
+  /**
+   * 数据库 LIKE 降级搜索。
+   *
+   * @param keyword 参数说明
+   * @param channel 参数说明
+   * @param status 参数说明
+   * @param bizType 参数说明
+   * @param startTime 参数说明
+   * @param endTime 参数说明
+   * @param tenantId 参数说明
+   * @param pageNum 参数说明
+   * @param pageSize 参数说明
+   * @return 返回值说明
+   */
   private PageResponse<List<MsgLogVO>> searchByDatabase(
       String keyword,
       String channel,

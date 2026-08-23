@@ -35,6 +35,9 @@ import com.njydsz.message.server.template.util.TemplateFilterUtil;
  */
 @Component
 public class DefaultTemplateEngine implements TemplateEngine {
+  /** if/else 正则 false 分支组 */
+  private static final int IF_ELSE_GROUP_FALSE = 3;
+
 
   /** 变量占位符正则：匹配 ${var} / ${a.b.c} / ${this} / ${@index} / ${var|filter:arg} */
   private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
@@ -184,7 +187,7 @@ public class DefaultTemplateEngine implements TemplateEngine {
     while (elseMatcher.find()) {
       String key = elseMatcher.group(1);
       String truePart = elseMatcher.group(2);
-      String falsePart = elseMatcher.group(3);
+      String falsePart = elseMatcher.group(IF_ELSE_GROUP_FALSE);
       Object value = resolve(params, key);
       String replacement = isTruthy(value) ? truePart : falsePart;
       elseMatcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));

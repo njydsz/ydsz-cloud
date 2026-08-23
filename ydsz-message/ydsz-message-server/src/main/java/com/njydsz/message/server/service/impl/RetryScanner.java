@@ -16,9 +16,9 @@ import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.common.util.id.RandomUtils;
 import com.njydsz.message.domain.constant.MessageConstants;
-import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.RetryStrategyResolver;
 import com.njydsz.message.server.metric.MessageMetrics;
@@ -49,6 +49,9 @@ import com.njydsz.message.server.metric.MessageMetrics;
     havingValue = "true",
     matchIfMissing = true)
 public class RetryScanner {
+  /** 每毫秒纳秒数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
 
   private final MsgLogRepository msgLogRepository;
   private final ChannelRouter channelRouter;
@@ -155,7 +158,7 @@ public class RetryScanner {
             retryStrategyResolver.calcNextRetryAt(newRetryCount, logDO.getChannel());
         // GAP-7: 加入随机抖动因子（0~1s），避免多实例同时重试导致惊群效应
         long jitterMs = RandomUtils.randomLong(0, 1000);
-        nextRetry = nextRetry.plusNanos(jitterMs * 1_000_000L);
+        nextRetry = nextRetry.plusNanos(jitterMs * NANOS_PER_MILLI);
         logDO.setNextRetryAt(nextRetry);
         msgLogRepository.updateById(logDO);
         messageMetrics.recordRetry(logDO.getChannel());

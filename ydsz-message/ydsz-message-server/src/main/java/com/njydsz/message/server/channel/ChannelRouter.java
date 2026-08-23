@@ -45,6 +45,9 @@ import com.njydsz.message.server.metric.MessageMetrics;
 @Component
 @RequiredArgsConstructor
 public class ChannelRouter {
+  /** 异常链路最大深度 */
+  private static final int MAX_CAUSE_DEPTH = 5;
+
 
   /** Spring 上下文，用于收集通道 Bean */
   private final ApplicationContext applicationContext;
@@ -66,8 +69,10 @@ public class ChannelRouter {
 
   /**
    * D-5: 从 MessageProperties.CircuitBreakerConfig 构建熔断配置，消除硬编码。
-   *
+   * 
    * <p>在 {@link #initChannels()} 中构建，确保配置已注入完成。
+   *
+   * @return 返回值说明
    */
   private CircuitBreakerConfig buildCircuitBreakerConfig() {
     MessageProperties.CircuitBreakerConfig cb = messageProperties.getCircuitBreaker();
@@ -270,7 +275,9 @@ public class ChannelRouter {
     }
 
     // 4. 全部失败，返回最后一个失败结果
-    log.error("[ChannelRouter] dispatchWithScore: 所有通道均失败, lastError={}", lastResult != null ? lastResult.getErrorMessage() : "unknown");
+    log.error(
+        "[ChannelRouter] dispatchWithScore: 所有通道均失败, lastError={}",
+        lastResult != null ? lastResult.getErrorMessage() : "unknown");
     return lastResult;
   }
 
@@ -315,7 +322,7 @@ public class ChannelRouter {
     sb.append(e.getClass().getSimpleName()).append(": ").append(e.getMessage());
     Throwable cause = e.getCause();
     int depth = 0;
-    while (cause != null && depth++ < 5) {
+    while (cause != null && depth++ < MAX_CAUSE_DEPTH) {
       sb.append(" | caused by: ")
           .append(cause.getClass().getSimpleName())
           .append(": ")

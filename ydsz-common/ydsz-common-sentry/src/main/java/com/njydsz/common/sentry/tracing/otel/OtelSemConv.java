@@ -33,6 +33,10 @@ public final class OtelSemConv {
   // ============================================================================
 
   /** 服务名 */
+  /**
+   * string key。
+   * @return 结果
+   */
   public static final AttributeKey<String> SERVICE_NAME = AttributeKey.stringKey("service.name");
 
   /** 服务版本 */
@@ -60,6 +64,10 @@ public final class OtelSemConv {
       AttributeKey.stringKey("http.request.method");
 
   /** HTTP 路由模板 */
+  /**
+   * string key。
+   * @return 结果
+   */
   public static final AttributeKey<String> HTTP_ROUTE = AttributeKey.stringKey("http.route");
 
   /** HTTP 响应状态码 */
@@ -67,6 +75,10 @@ public final class OtelSemConv {
       AttributeKey.longKey("http.response.status_code");
 
   /** HTTP 请求 URL */
+  /**
+   * string key。
+   * @return 结果
+   */
   public static final AttributeKey<String> HTTP_URL = AttributeKey.stringKey("url.full");
 
   /** HTTP 用户代理 */
@@ -82,12 +94,24 @@ public final class OtelSemConv {
   // ============================================================================
 
   /** DB 系统 */
+  /**
+   * string key。
+   * @return 结果
+   */
   public static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
 
   /** SQL 语句 */
+  /**
+   * string key。
+   * @return 结果
+   */
   public static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
 
   /** 操作名 */
+  /**
+   * string key。
+   * @return 结果
+   */
   public static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
 
   /** 影响行数 */
@@ -119,6 +143,10 @@ public final class OtelSemConv {
       AttributeKey.stringKey("ydsz.business_no");
 
   /** 用户 ID */
+  /**
+   * string key。
+   * @return 结果
+   */
   public static final AttributeKey<String> REMI_USER_ID = AttributeKey.stringKey("ydsz.user.id");
 
   /** 客户端类型（web/app/inner） */
@@ -130,12 +158,24 @@ public final class OtelSemConv {
       AttributeKey.stringKey("ydsz.error.code");
 
   /** 业务模块 */
+  /**
+   * string key。
+   * @return 结果
+   */
   public static final AttributeKey<String> REMI_MODULE = AttributeKey.stringKey("ydsz.module");
 
   /** 业务动作 */
+  /**
+   * string key。
+   * @return 结果
+   */
   public static final AttributeKey<String> REMI_ACTION = AttributeKey.stringKey("ydsz.action");
 
   /** 灰度标签（用于按流量染色查询） */
+  /**
+   * string key。
+   * @return 结果
+   */
   public static final AttributeKey<String> REMI_GRAY_TAG = AttributeKey.stringKey("ydsz.gray.tag");
 
   /** 压测标记 */

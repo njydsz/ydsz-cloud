@@ -43,6 +43,9 @@ import com.njydsz.message.server.config.ChannelProperties;
 @Component
 @RequiredArgsConstructor
 public class DingTalkWorkNotificationChannel implements MessageChannel {
+  /** Token 安全余量（秒） */
+  private static final long TOKEN_SAFETY_MARGIN_SECONDS = 300;
+
 
   private static final String CHANNEL_TYPE = "DINGTALK_WORK";
   private static final String TOKEN_CACHE_KEY = "ydsz:msg:dingtalk:work:access_token";
@@ -135,7 +138,12 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
     }
   }
 
-  /** 获取钉钉 access_token（Redis 缓存，提前续期）。 */
+  /**
+   * 获取钉钉 access_token（Redis 缓存，提前续期）。
+   *
+   * @param cfg 参数说明
+   * @return 返回值说明
+   */
   private String getAccessToken(ChannelProperties.DingTalkWorkConfig cfg) {
     try {
       String cached = redisStringOps.get(TOKEN_CACHE_KEY, String.class);
@@ -154,7 +162,7 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
         int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
         if (errcode == 0) {
           String token = (String) body.get("access_token");
-          redisStringOps.set(TOKEN_CACHE_KEY, token, TOKEN_TTL.minusSeconds(300));
+          redisStringOps.set(TOKEN_CACHE_KEY, token, TOKEN_TTL.minusSeconds(TOKEN_SAFETY_MARGIN_SECONDS));
           log.info("[DINGTALK_WORK] 刷新 access_token 成功");
           return token;
         }
@@ -204,7 +212,9 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
   }
 
   private String truncate(String s, int max) {
-    if (s == null) return "";
+    if (s == null) {
+      return "";
+    }
     return s.length() > max ? s.substring(0, max) + "..." : s;
   }
 }

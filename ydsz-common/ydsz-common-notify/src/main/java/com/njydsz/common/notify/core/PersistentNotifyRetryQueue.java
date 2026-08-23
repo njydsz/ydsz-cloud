@@ -174,12 +174,20 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
     return delegate().getBatchSize();
   }
 
-  /** 当前是否使用 Redis 持久化队列 */
+  /**
+   * 当前是否使用 Redis 持久化队列。
+   *
+   * @return {@code true} 表示 Redis 可用
+   */
   public boolean isRedisAvailable() {
     return redisAvailable;
   }
 
-  /** 获取死信处理器（P0-2） */
+  /**
+   * 获取死信处理器（P0-2）。
+   *
+   * @return 死信处理器
+   */
   public DeadLetterHandler getDeadLetterHandler() {
     return deadLetterHandler;
   }

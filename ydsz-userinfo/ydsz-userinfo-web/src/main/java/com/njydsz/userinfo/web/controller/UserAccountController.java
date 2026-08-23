@@ -16,14 +16,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.annotation.SensitiveOperation;
@@ -35,10 +36,10 @@ import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.SensitiveVerifyDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
-import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.dto.UserImportResultDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 import com.njydsz.userinfo.server.auth.SensitiveVerifyService;
@@ -313,7 +314,7 @@ public class UserAccountController {
   @PostMapping("/import")
   @Operation(summary = "批量导入用户（Excel）")
   public YdszResponse<UserImportResultDTO> importUsers(
-      @org.springframework.web.bind.annotation.RequestParam("file") MultipartFile file) {
+      @RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
       throw new BusinessException(UserInfoExceptionCode.IMPORT_FILE_EMPTY);
     }
@@ -401,7 +402,7 @@ public class UserAccountController {
   @Operation(summary = "查询用户最近登录历史（安全审计）")
   public YdszResponse<List<UserLoginHistoryVO>> getLoginHistory(
       @PathVariable String userId,
-      @org.springframework.web.bind.annotation.RequestParam(defaultValue = "20") int limit) {
+      @RequestParam(defaultValue = "20") int limit) {
     return YdszResponse.success(loginHistoryService.getRecentLogins(userId, limit));
   }
 

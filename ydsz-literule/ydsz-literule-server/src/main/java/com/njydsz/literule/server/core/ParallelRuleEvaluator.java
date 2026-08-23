@@ -73,6 +73,15 @@ import com.njydsz.literule.api.RuleResult;
 @Slf4j
 public class ParallelRuleEvaluator {
 
+    /** 顺序执行阈值（规则数不超过该值时直接串行执行） */
+  private static final int SEQUENTIAL_THRESHOLD = 3;
+
+  /** 线程池终止等待秒数 */
+  private static final int AWAIT_TERMINATION_SECONDS = 5;
+
+  /** 线程池任务队列容量 */
+  private static final int QUEUE_CAPACITY = 1024;
+
   /** 默认线程池大小 */
   private static final int DEFAULT_POOL_SIZE =
       Math.max(2, Runtime.getRuntime().availableProcessors());
@@ -141,7 +150,7 @@ public class ParallelRuleEvaluator {
     }
 
     // 规则数较少时直接串行评估，避免线程切换开销
-    if (candidateRules.size() <= 3) {
+    if (candidateRules.size() <= SEQUENTIAL_THRESHOLD) {
       return evaluateSequential(candidateRules, context, evaluator);
     }
 
@@ -275,7 +284,7 @@ public class ParallelRuleEvaluator {
     if (internalExecutor && executor instanceof ExecutorService es) {
       es.shutdown();
       try {
-        if (!es.awaitTermination(5, TimeUnit.SECONDS)) {
+        if (!es.awaitTermination(AWAIT_TERMINATION_SECONDS, TimeUnit.SECONDS)) {
           es.shutdownNow();
         }
       } catch (InterruptedException e) {
@@ -321,7 +330,7 @@ public class ParallelRuleEvaluator {
         .corePoolSize(poolSize)
         .maxPoolSize(poolSize)
         .keepAliveTime(0L, TimeUnit.MILLISECONDS)
-        .queueCapacity(1024)
+        .queueCapacity(QUEUE_CAPACITY)
         .threadNamePrefix("literule-parallel")
         .daemon(true)
         .build();

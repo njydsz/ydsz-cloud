@@ -1,5 +1,4 @@
 package com.njydsz.system.server.service.impl;
-
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,25 +17,28 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.tree.TreeBuilder;
-import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.query.DictItemPageQuery;
-import com.njydsz.system.server.vo.DictItemExcelVO;
+import com.njydsz.system.domain.repository.DictRepository;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.vo.ImportResult;
-import com.njydsz.system.domain.repository.DictRepository;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.DictItemService;
 import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.service.rollback.DictItemRollbackStrategy;
 import com.njydsz.system.server.util.SystemVersionUtils;
+import com.njydsz.system.server.vo.DictItemExcelVO;
+
+
+
 
 /**
  * 字典项 Service 实现
@@ -287,7 +289,6 @@ public class DictItemServiceImpl implements DictItemService {
    *   <li>清除该 {@code typeCode} 下的所有缓存
    * </ol>
    *
-   * @param vo 字典项数据
    * @return 新创建的字典项 ID
    * @throws IllegalArgumentException {@code (typeCode, itemCode)} 组合已存在时抛出
    */
@@ -321,7 +322,6 @@ public class DictItemServiceImpl implements DictItemService {
    *   <li>更新成功后精准失效该 {@code typeCode} 下的缓存（含 itemCode 变更时的旧 key）
    * </ol>
    *
-   * @param vo 字典项数据（需包含 {@code id}）
    * @return true=更新成功，false=记录不存在
    */
   @Override
@@ -454,7 +454,6 @@ public class DictItemServiceImpl implements DictItemService {
    *
    * <p>缺省 {@code status="ENABLED"}，保证新建的字典项默认可用。
    *
-   * @param dto 数据传输对象
    * @return 数据库实体
    */
   // ============================== 导入导出 ==============================
@@ -643,7 +642,6 @@ public class DictItemServiceImpl implements DictItemService {
   /**
    * 将 DictItemVO 转换为 DictItemDTO（避免 server 层依赖 infra 的 SystemConverter）。
    *
-   * @param vo 字典项 VO
    * @return 字典项 DTO
    */
   private DictItemDTO toDto(DictItemVO vo) {

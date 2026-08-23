@@ -255,7 +255,7 @@ public class TenantAutoConfiguration {
    *
    * <p>按租户维度限流，自动在限流 Key 前添加租户前缀。
    *
-   * @param rateLimiter Redis 限流器
+   * @param rateLimiterProvider Redis 限流器提供者（可选）
    * @return 租户限流门面
    */
   @Bean
@@ -283,7 +283,7 @@ public class TenantAutoConfiguration {
   /**
    * 多租户 Micrometer 指标（可选，Micrometer 在 classpath 时）。
    *
-   * @param meterRegistry Micrometer 注册中心
+   * @param meterRegistryProvider Micrometer 注册中心提供者（可选）
    * @return 指标实例
    */
   @Bean
@@ -348,7 +348,8 @@ public class TenantAutoConfiguration {
    *
    * @param routingDataSource 动态数据源
    * @param properties 租户配置
-   * @param keyResolver 数据源 Key 解析器 SPI
+   * @param keyResolverProvider 数据源 Key 解析器 SPI 提供者（可选）
+   * @param metricsProvider 指标提供者（可选）
    * @return 数据源路由器
    */
   @Bean

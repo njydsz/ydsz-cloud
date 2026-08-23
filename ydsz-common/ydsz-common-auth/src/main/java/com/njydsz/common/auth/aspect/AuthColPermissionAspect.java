@@ -119,7 +119,8 @@ public class AuthColPermissionAspect {
    * <p>仅作为 {@code @Around} 通知 {@link #doAround} 的引用锚点，自身不含逻辑； 命中后由环绕通知统一完成列权限解析、参数注入与返回值过滤。
    */
   @Pointcut(
-      "@annotation(com.njydsz.common.auth.annotation.AuthColPermission) || @within(com.njydsz.common.auth.annotation.AuthColPermission)")
+      "@annotation(com.njydsz.common.auth.annotation.AuthColPermission)"
+          + " || @within(com.njydsz.common.auth.annotation.AuthColPermission)")
   public void colPermissionPointcut() {}
 
   /**
@@ -693,7 +694,7 @@ public class AuthColPermissionAspect {
     }
   }
 
-  private static final ConcurrentHashMap<Class<?>, List<Field>> fieldListCache =
+  private static final ConcurrentHashMap<Class<?>, List<Field>> FIELD_LIST_CACHE =
       new ConcurrentHashMap<>();
 
   /**
@@ -703,7 +704,7 @@ public class AuthColPermissionAspect {
    * @return 字段列表（不可变）
    */
   private List<Field> listAllFields(Class<?> clazz) {
-    return fieldListCache.computeIfAbsent(
+    return FIELD_LIST_CACHE.computeIfAbsent(
         clazz,
         k -> {
           List<Field> fields = new ArrayList<>();
@@ -821,13 +822,13 @@ public class AuthColPermissionAspect {
    *
    * @param source 源对象
    * @return 拷贝后的新实例
-   * @throws Exception 反射创建实例或字段访问失败时抛出
+   * @throws ReflectiveOperationException 反射创建实例或字段访问失败时抛出
    */
-  private static Object shallowCopyByReflection(Object source) throws Exception {
+  private static Object shallowCopyByReflection(Object source) throws ReflectiveOperationException {
     Class<?> clazz = source.getClass();
     Object copy = clazz.getDeclaredConstructor().newInstance();
     for (Field field :
-        fieldListCache.computeIfAbsent(
+        FIELD_LIST_CACHE.computeIfAbsent(
             clazz,
             k -> {
               List<Field> fields = new ArrayList<>();

@@ -6,9 +6,10 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
 
-import com.njydsz.common.json.YdszJson;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.json.YdszJson;
 
 /**
  * FlowNodeDO 视图对象。
@@ -336,12 +337,25 @@ public class FlowNodeVO implements Serializable {
 
   // ==================== 内部工具 ====================
 
-  /** 将值 clamp 到 [1, max] 范围。 */
+  /**
+   * 将值 clamp 到 [1, max] 范围。
+   *
+   * @param value 参数说明
+   * @param max 参数说明
+   * @return 返回值说明
+   */
   private static int clamp(int value, int max) {
     return Math.min(Math.max(1, value), max);
   }
 
-  /** 将值 clamp 到 [min, max] 范围。 */
+  /**
+   * 将值 clamp 到 [min, max] 范围。
+   *
+   * @param value 参数说明
+   * @param min 参数说明
+   * @param max 参数说明
+   * @return 返回值说明
+   */
   private static int clamp(int value, int min, int max) {
     return Math.min(Math.max(min, value), max);
   }

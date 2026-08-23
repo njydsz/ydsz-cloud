@@ -38,25 +38,37 @@ public class LiteRuleSdkBuilder {
   private String tenantId = "1";
   private String environment = "default";
 
-  /** 设置自定义规则引擎 */
+  /** 设置自定义规则引擎
+   * @param engine 参数说明
+   * @return 返回值说明
+   */
   public LiteRuleSdkBuilder ruleEngine(RuleEngine engine) {
     this.ruleEngine = engine;
     return this;
   }
 
-  /** 设置自定义表达式求值器 */
+  /** 设置自定义表达式求值器
+   * @param evaluator 参数说明
+   * @return 返回值说明
+   */
   public LiteRuleSdkBuilder evaluator(ExpressionEngine evaluator) {
     this.evaluator = evaluator;
     return this;
   }
 
-  /** 设置租户 ID */
+  /** 设置租户 ID
+   * @param tenantId 参数说明
+   * @return 返回值说明
+   */
   public LiteRuleSdkBuilder tenantId(String tenantId) {
     this.tenantId = tenantId;
     return this;
   }
 
-  /** 设置环境标识 */
+  /** 设置环境标识
+   * @param environment 参数说明
+   * @return 返回值说明
+   */
   public LiteRuleSdkBuilder environment(String environment) {
     this.environment = environment;
     return this;
@@ -67,6 +79,7 @@ public class LiteRuleSdkBuilder {
    *
    * <p>如果未提供 RuleEngine，则自动创建 {@link DefaultRuleEngine}； 如果未提供 ExpressionEngine，则自动创建 {@link
    * LiteExprEngine}。
+      * @return 返回值说明
    */
   public LiteRuleSdk build() {
     if (evaluator == null) {

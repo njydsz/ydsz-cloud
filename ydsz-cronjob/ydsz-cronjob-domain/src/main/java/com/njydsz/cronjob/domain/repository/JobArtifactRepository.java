@@ -16,16 +16,26 @@ public interface JobArtifactRepository {
 
   /**
    * 根据日志 ID 查询产物列表。
+   *
+   * @param logId 参数说明
+   * @return 返回值说明
    */
   List<JobArtifactVO> findByLogId(String logId);
 
   /**
    * 按 ID 查询产物。
+   *
+   * @param id 参数说明
+   * @return 返回值说明
    */
   Optional<JobArtifactVO> findById(String id);
 
   /**
    * 清理过期产物记录。
+   *
+   * @param before 参数说明
+   * @param limit 参数说明
+   * @return 返回值说明
    */
   int cleanExpired(LocalDateTime before, int limit);
 

@@ -11,7 +11,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import static lombok.AccessLevel.PROTECTED;
 
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.json.annotation.JsonIgnore;

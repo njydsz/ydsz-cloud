@@ -1,8 +1,9 @@
 package com.njydsz.system.server.service;
-
 import java.util.List;
 
 import com.njydsz.system.domain.vo.FrontendInitVO;
+
+
 
 /**
  * 前端初始化服务接口

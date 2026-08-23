@@ -5,9 +5,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -28,13 +26,13 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.dto.dag.JobDagSaveDTO;
 import com.njydsz.cronjob.domain.dto.dag.JobDagTriggerDTO;
 import com.njydsz.cronjob.domain.dto.post.JobDagPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobDagPutDTO;
 import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
+import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionValidator;
@@ -78,6 +76,9 @@ import com.njydsz.cronjob.server.service.dag.JobDagService;
 @RequestMapping("/api/v1/cronjob/dag")
 @RequiredArgsConstructor
 public class JobDagController {
+  /** 默认版本列表条数 */
+  private static final int DEFAULT_VERSION_LIST_LIMIT = 50;
+
 
   /** DAG 工作流服务 */
   private final JobDagService jobDagService;
@@ -317,7 +318,8 @@ public class JobDagController {
   @GetMapping("/{dagId}/versions")
   public YdszResponse<List<JobDagVersionVO>> listDagVersions(@PathVariable String dagId) {
     return YdszResponse.success(
-        CronjobConverter.INSTANT.jobDagVersionListToVO(jobDagService.listDagVersions(dagId, 50)));
+        CronjobConverter.INSTANT.jobDagVersionListToVO(
+            jobDagService.listDagVersions(dagId, DEFAULT_VERSION_LIST_LIMIT)));
   }
 
   /**

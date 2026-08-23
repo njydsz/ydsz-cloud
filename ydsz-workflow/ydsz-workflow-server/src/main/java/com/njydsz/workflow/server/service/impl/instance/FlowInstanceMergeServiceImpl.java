@@ -23,9 +23,9 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.StringVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.service.FlowInstanceMergeService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -125,10 +125,14 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>校验所有实例存在、状态为 RUNNING 且 flowCode 相同，生成合并组 ID 并存入 Redis。
+   * 
    *
-   * @throws SysException 当实例数 < 2、实例不存在、状态非 RUNNING 或 flowCode 不一致时抛出
+   * @param instanceIds 参数说明
+   * @param operatorId 参数说明
+   * @param tenantId 参数说明
+   * @return 返回值说明
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -196,8 +200,13 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>符合 DDD 分层规范：Service 层内部完成 String→StringVO 转换。
+   *
+   * @param instanceIds 参数说明
+   * @param operatorId 参数说明
+   * @param tenantId 参数说明
+   * @return 返回值说明
    */
   @Override
   public StringVO mergeInstancesVO(List<String> instanceIds, String operatorId, String tenantId) {

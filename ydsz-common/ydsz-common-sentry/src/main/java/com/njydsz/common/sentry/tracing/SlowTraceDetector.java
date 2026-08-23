@@ -44,6 +44,11 @@ public class SlowTraceDetector {
       Collections.synchronizedMap(
           new LinkedHashMap<>(256, 0.75f, true) {
             @Override
+            /**
+             * remove eldest entry。
+             * @param eldest 参数
+             * @return 结果
+             */
             protected boolean removeEldestEntry(Map.Entry<String, Long> eldest) {
               boolean shouldRemove = size() > MAX_ACTIVE_TRACES;
               if (shouldRemove) {

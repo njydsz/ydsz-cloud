@@ -14,13 +14,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.dto.CompanyDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.CompanyPageQuery;
+import com.njydsz.userinfo.domain.repository.CompanyRepository;
 import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
-import com.njydsz.userinfo.domain.repository.CompanyRepository;
 import com.njydsz.userinfo.server.service.CompanyService;
 
 /**

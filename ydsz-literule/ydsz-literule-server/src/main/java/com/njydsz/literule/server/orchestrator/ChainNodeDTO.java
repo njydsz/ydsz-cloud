@@ -74,12 +74,7 @@ public class ChainNodeDTO implements Serializable {
   /** 业务扩展字段（如分支条件、循环变量名等，按 chainType 解释） */
   private Map<String, Object> metadata;
 
-  /**
-   * 节点位置坐标
-   *
-   * @param x 横坐标（像素）
-   * @param y 纵坐标（像素）
-   */
+  /** 节点位置坐标 */
   @Data
   @NoArgsConstructor
   @AllArgsConstructor
@@ -89,12 +84,7 @@ public class ChainNodeDTO implements Serializable {
     private double y;
   }
 
-  /**
-   * 节点尺寸
-   *
-   * @param width 宽度（像素）
-   * @param height 高度（像素）
-   */
+  /** 节点尺寸 */
   @Data
   @NoArgsConstructor
   @AllArgsConstructor

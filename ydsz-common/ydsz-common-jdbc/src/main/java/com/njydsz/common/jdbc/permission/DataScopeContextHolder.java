@@ -38,7 +38,9 @@ package com.njydsz.common.jdbc.permission;
  */
 public final class DataScopeContextHolder {
 
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已通过 clear()/remove() 在使用后清理（云顶规范 15.1）
   private static final ThreadLocal<DataPermissionContext> CONTEXT_HOLDER = new ThreadLocal<>();
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   private DataScopeContextHolder() {
     throw new UnsupportedOperationException("Utility class");

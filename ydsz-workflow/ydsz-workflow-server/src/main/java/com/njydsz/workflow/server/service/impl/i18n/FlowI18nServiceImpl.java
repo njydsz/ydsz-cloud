@@ -132,7 +132,14 @@ public class FlowI18nServiceImpl implements FlowI18nService {
     register("FlowSlaAction", "NOTIFY_ADMIN", "通知管理员", "Notify Admin");
   }
 
-  /** 静态注册工具：在类加载时注册翻译项到 {@link #MESSAGE_RESOURCE} */
+  /**
+   * 静态注册工具：在类加载时注册翻译项到 {@link #MESSAGE_RESOURCE}
+   *
+   * @param enumType 参数说明
+   * @param enumName 参数说明
+   * @param zhCN 参数说明
+   * @param enUS 参数说明
+   */
   private static void register(String enumType, String enumName, String zhCN, String enUS) {
     MESSAGE_RESOURCE
         .computeIfAbsent(enumType, k -> new LinkedHashMap<>())

@@ -10,16 +10,16 @@ import com.njydsz.userinfo.domain.dto.CompanyDTO;
 import com.njydsz.userinfo.domain.dto.CompanyDeptDTO;
 import com.njydsz.userinfo.domain.dto.DepartmentDTO;
 import com.njydsz.userinfo.domain.dto.PostDTO;
-import com.njydsz.userinfo.infra.entity.CompanyDeptDO;
-import com.njydsz.userinfo.infra.entity.CompanyDO;
-import com.njydsz.userinfo.infra.entity.DepartmentDO;
-import com.njydsz.userinfo.infra.entity.PostDO;
 import com.njydsz.userinfo.domain.vo.CompanyDeptVO;
 import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.vo.PostVO;
+import com.njydsz.userinfo.infra.entity.CompanyDO;
+import com.njydsz.userinfo.infra.entity.CompanyDeptDO;
+import com.njydsz.userinfo.infra.entity.DepartmentDO;
+import com.njydsz.userinfo.infra.entity.PostDO;
 
 /**
  * 组织机构领域 MapStruct 转换器。

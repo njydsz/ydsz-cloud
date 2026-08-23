@@ -35,7 +35,13 @@ import com.njydsz.literule.infra.entity.RuleCanaryBucketDO;
 @Mapper
 public interface RuleCanaryBucketMapper extends BaseMapper<RuleCanaryBucketDO> {
 
-  /** 查询某条规则在指定时间窗口内的分桶统计 */
+  /**
+   * 查询某条规则在指定时间窗口内的分桶统计。
+   *
+   * @param ruleCode 规则编码
+   * @param since 起始时间（含）
+   * @return 分桶统计列表
+   */
   List<RuleCanaryBucketDO> selectByRuleCodeSince(
       @Param("ruleCode") String ruleCode, @Param("since") LocalDateTime since);
 }

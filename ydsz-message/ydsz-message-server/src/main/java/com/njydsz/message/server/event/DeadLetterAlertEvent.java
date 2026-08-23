@@ -35,13 +35,13 @@ public class DeadLetterAlertEvent extends ApplicationEvent {
 
   /**
    * 构造死信告警事件。
+   * 
    *
-   * @param source 事件源
-   * @param channel 触发告警的通道
-   * @param currentCount 窗口内当前死信数量
-   * @param threshold 告警阈值
-   * @param windowMinutes 统计窗口（分钟）
-   */
+   * @param source 参数说明
+   * @param channel 参数说明
+   * @param currentCount 参数说明
+   * @param threshold 参数说明
+   * @param windowMinutes 参数说明   */
   public DeadLetterAlertEvent(
       Object source, String channel, long currentCount, int threshold, int windowMinutes) {
     super(source);

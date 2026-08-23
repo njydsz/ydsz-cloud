@@ -30,6 +30,10 @@ import com.njydsz.common.sentry.spi.LogPublisher;
 public class NoOpLogPublisher implements LogPublisher {
 
   /** 单例实例 */
+  /**
+   * no op log。
+   * @return 结果
+   */
   public static final NoOpLogPublisher INSTANCE = new NoOpLogPublisher();
 
   private NoOpLogPublisher() {
@@ -37,29 +41,51 @@ public class NoOpLogPublisher implements LogPublisher {
   }
 
   @Override
+  /**
+   * publish。
+   * @param event 参数
+   * @return 结果
+   */
   public boolean publish(LogEvent event) {
     // 无操作
     return true;
   }
 
   @Override
+  /**
+   * publish batch。
+   * @param events 参数
+   * @return 结果
+   */
   public boolean publishBatch(List<LogEvent> events) {
     // 无操作
     return true;
   }
 
   @Override
+  /**
+   * is available。
+   * @return 结果
+   */
   public boolean isAvailable() {
     // 显式返回 false，表示日志发布器不可用
     return false;
   }
 
   @Override
+  /**
+   * get name。
+   * @return 结果
+   */
   public String getName() {
     return "no-op";
   }
 
   @Override
+  /**
+   * get scheme。
+   * @return 结果
+   */
   public String getScheme() {
     return "none";
   }

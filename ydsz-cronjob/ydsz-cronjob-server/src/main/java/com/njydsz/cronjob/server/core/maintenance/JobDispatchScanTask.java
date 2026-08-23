@@ -37,7 +37,7 @@ public class JobDispatchScanTask implements ScanTask {
   @Override
   public long intervalMs() {
     // 使用 JobScanner 的固定间隔（5s）
-    return 5000L;
+    return DEFAULT_SCAN_INTERVAL_MS;
   }
 
   @Override

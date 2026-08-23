@@ -22,10 +22,10 @@ import com.njydsz.literule.api.RuleExecutionTrace;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.expression.ExpressionEngine;
-import com.njydsz.literule.server.config.RuleAdminService;
-import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
+import com.njydsz.literule.server.config.RuleAdminService;
+import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.server.spi.TraceRecorder;
 
 /**
@@ -56,7 +56,8 @@ import com.njydsz.literule.server.spi.TraceRecorder;
  * <h3>使用示例</h3>
  *
  * <pre>{@code
- * ExecutionReplayService service = new ExecutionReplayService(ruleAdminService, traceRecorder, versionRepository, evaluator);
+ * ExecutionReplayService service = new ExecutionReplayService(ruleAdminService, 
+  * traceRecorder, versionRepository, evaluator);
  *
  * // 单条回放
  * ReplayResult result = service.replayByTraceId("trace-abc-123");
@@ -413,8 +414,12 @@ public class ExecutionReplayService {
   }
 
   private boolean severityEquals(String s1, String s2) {
-    if (s1 == null && s2 == null) return true;
-    if (s1 == null || s2 == null) return false;
+    if (s1 == null && s2 == null) {
+      return true;
+    }
+    if (s1 == null || s2 == null) {
+      return false;
+    }
     return s1.equalsIgnoreCase(s2);
   }
 
@@ -436,9 +441,13 @@ public class ExecutionReplayService {
 
   /** 差异类型 */
   public enum DiffType {
+    /** 常量说明 */
     ADDED,
+    /** 常量说明 */
     REMOVED,
+    /** 常量说明 */
     SEVERITY_CHANGED,
+    /** 常量说明 */
     UNCHANGED
   }
 

@@ -68,15 +68,25 @@ public class RuleStatistics {
     }
     totalEvaluations.incrementAndGet();
     totalElapsedMs.addAndGet(elapsedMs);
-    if (triggered) totalTriggered.incrementAndGet();
-    if (error) totalErrors.incrementAndGet();
+    if (triggered) {
+      totalTriggered.incrementAndGet();
+    }
+    if (error) {
+      totalErrors.incrementAndGet();
+    }
     perRuleStats.compute(
         ruleCode,
         (k, v) -> {
-          if (v == null) v = RuleEngineStats.RuleStat.builder().build();
+          if (v == null) {
+            v = RuleEngineStats.RuleStat.builder().build();
+          }
           v.setExecutions(v.getExecutions() + 1);
-          if (triggered) v.setTriggered(v.getTriggered() + 1);
-          if (error) v.setErrors(v.getErrors() + 1);
+          if (triggered) {
+            v.setTriggered(v.getTriggered() + 1);
+          }
+          if (error) {
+            v.setErrors(v.getErrors() + 1);
+          }
           v.setTotalElapsedMs(v.getTotalElapsedMs() + elapsedMs);
           return v;
         });

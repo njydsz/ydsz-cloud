@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.config;
 
 import java.time.Duration;
+import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -112,7 +113,7 @@ public class TenantConfigService {
       return globalDefault;
     }
     try {
-      java.util.Map<String, Boolean> overrides =
+      Map<String, Boolean> overrides =
           YdszJson.fromJsonToMap(config.getChannelOverrides(), String.class, Boolean.class);
       if (overrides != null && overrides.containsKey(channel)) {
         Boolean enabled = overrides.get(channel);
@@ -144,7 +145,7 @@ public class TenantConfigService {
       return globalProvider;
     }
     try {
-      java.util.Map<String, String> overrides =
+      Map<String, String> overrides =
           YdszJson.fromJsonToMap(config.getProviderOverrides(), String.class, String.class);
       if (overrides != null && overrides.containsKey(channel)) {
         String provider = overrides.get(channel);

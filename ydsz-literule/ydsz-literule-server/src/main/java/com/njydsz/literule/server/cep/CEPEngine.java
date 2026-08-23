@@ -2,7 +2,6 @@ package com.njydsz.literule.server.cep;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -101,7 +100,9 @@ public class CEPEngine implements Serializable {
     }
   }
 
-  /** 注册模式 */
+  /** 注册模式
+   * @param pattern 参数说明
+   */
   public void registerPattern(CEPPattern pattern) {
     if (pattern == null || pattern.getId() == null) {
       throw new IllegalArgumentException("pattern 和 pattern.id 不能为空");
@@ -111,25 +112,37 @@ public class CEPEngine implements Serializable {
     log.info("[CEP] 注册模式: id={}, ruleCode={}", pattern.getId(), pattern.getRuleCode());
   }
 
-  /** 注销模式 */
+  /** 注销模式
+   * @param patternId 参数说明
+   */
   public void unregisterPattern(String patternId) {
-    if (patternId == null) return;
+    if (patternId == null) {
+      return;
+    }
     patterns.remove(patternId);
     eventQueues.remove(patternId);
     log.info("[CEP] 注销模式: id={}", patternId);
   }
 
-  /** 添加命中监听器 */
+  /** 添加命中监听器
+   * @param listener 参数说明
+   */
   public void addListener(Consumer<CEPHit> listener) {
-    if (listener != null) listeners.add(listener);
+    if (listener != null) {
+      listeners.add(listener);
+    }
   }
 
-  /** 移除监听器 */
+  /** 移除监听器
+   * @param listener 参数说明
+   */
   public void removeListener(Consumer<CEPHit> listener) {
     listeners.remove(listener);
   }
 
-  /** 投递事件 */
+  /** 投递事件
+   * @param event 参数说明
+   */
   public void feed(CEPEvent event) {
     if (event == null) {
       return;
@@ -146,10 +159,14 @@ public class CEPEngine implements Serializable {
   /** 投递事件到指定模式 */
   private void feedToPattern(CEPPattern pattern, CEPEvent event) {
     // 类型过滤
-    if (!matchesType(pattern, event)) return;
+    if (!matchesType(pattern, event)) {
+      return;
+    }
     // 表达式过滤
     if (pattern.getFilter() != null && !pattern.getFilter().isBlank()) {
-      if (!evaluateFilter(pattern.getFilter(), event)) return;
+      if (!evaluateFilter(pattern.getFilter(), event)) {
+        return;
+      }
     }
 
     // 维护事件队列
@@ -241,21 +258,32 @@ public class CEPEngine implements Serializable {
     }
   }
 
-  /** 获取已注册模式数量 */
+  /** 获取已注册模式数量
+   * @return 返回值说明
+   */
   public int patternCount() {
     return patterns.size();
   }
 
-  /** 获取所有命中次数（自启动以来） */
+  /** 获取所有命中次数（自启动以来）
+   * @return 返回值说明
+   */
   public long totalHits() {
     return totalHits.get();
   }
 
-  /** 清理指定分区的状态 */
+  /** 清理指定分区的状态
+   * @param patternId 参数说明
+   * @param partitionKey 参数说明
+   */
   public void clearPartition(String patternId, String partitionKey) {
-    if (patternId == null || partitionKey == null) return;
+    if (patternId == null || partitionKey == null) {
+      return;
+    }
     Map<String, ConcurrentLinkedDeque<CEPEvent>> qMap = eventQueues.get(patternId);
-    if (qMap != null) qMap.remove(partitionKey);
+    if (qMap != null) {
+      qMap.remove(partitionKey);
+    }
   }
 
   /** 清理所有状态 */
@@ -278,7 +306,9 @@ public class CEPEngine implements Serializable {
         continue;
       }
       Map<String, ConcurrentLinkedDeque<CEPEvent>> qMap = eventQueues.get(entry.getKey());
-      if (qMap == null) continue;
+      if (qMap == null) {
+        continue;
+      }
       Instant windowStart = now.minus(pattern.getWindow());
       for (ConcurrentLinkedDeque<CEPEvent> queue : qMap.values()) {
         while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
@@ -313,11 +343,15 @@ public class CEPEngine implements Serializable {
   private void enforceQueueLimit(ConcurrentLinkedDeque<CEPEvent> queue) {
     while (queue.size() > MAX_EVENTS_PER_PARTITION) {
       CEPEvent dropped = queue.pollFirst();
-      if (dropped == null) break;
+      if (dropped == null) {
+        break;
+      }
     }
   }
 
-  /** 列出已注册模式 */
+  /** 列出已注册模式
+   * @return 返回值说明
+   */
   public List<CEPPattern> listPatterns() {
     return Collections.unmodifiableList(new ArrayList<>(patterns.values()));
   }

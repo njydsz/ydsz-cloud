@@ -20,11 +20,17 @@ import lombok.Data;
 @Data
 public class LogRetentionConfig {
 
+  /** 默认retentionDays值（可被配置文件覆盖） */
+  private static final int DEFAULT_RETENTION_DAYS = 30;
+
+  /** 默认batchSize值（可被配置文件覆盖） */
+  private static final int DEFAULT_BATCH_SIZE = 1000;
+
   /** 日志保留天数（超过此天数的日志将被硬删除，默认 30 天） */
-  private int retentionDays = 30;
+  private int retentionDays = DEFAULT_RETENTION_DAYS;
 
   /** 单批删除条数（避免大事务锁表，默认 1000 条/批） */
-  private int batchSize = 1000;
+  private int batchSize = DEFAULT_BATCH_SIZE;
 
   /** 定时清理 cron 表达式（默认每天凌晨 3 点：0 0 3 * * ?） */
   private String cron = "0 0 3 * * ?";

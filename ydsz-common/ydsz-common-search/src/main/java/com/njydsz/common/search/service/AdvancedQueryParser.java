@@ -204,6 +204,7 @@ public class AdvancedQueryParser {
       case AND -> must.add(term);
       case OR -> should.add(term);
       case NOT -> mustNot.add(term);
+      default -> { /* 未知操作符忽略 */ }
     }
   }
 

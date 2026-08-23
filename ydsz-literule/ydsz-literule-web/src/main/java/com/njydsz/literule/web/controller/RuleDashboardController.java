@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +23,6 @@ import com.njydsz.literule.api.dto.RuleDashboardTopRuleVO;
 import com.njydsz.literule.api.dto.RuleDashboardTrendVO;
 import com.njydsz.literule.server.core.RuleMetrics;
 import com.njydsz.literule.server.spi.DashboardDataProvider;
-import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * 规则引擎监控大盘 Controller

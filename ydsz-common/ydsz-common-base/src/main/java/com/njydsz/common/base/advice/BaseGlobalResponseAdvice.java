@@ -88,8 +88,10 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
     // SseEmitter 是泛型类，直接比较类名避免强依赖类型解析失败
     Class<?> current = paramType;
     while (current != null && current != Object.class) {
+      // CHECKSTYLE.OFF: RegexpSinglelineJava — 反射类名字符串常量，非代码引用
       if ("org.springframework.web.servlet.mvc.method.annotation.SseEmitter"
           .equals(current.getName())) {
+        // CHECKSTYLE.ON: RegexpSinglelineJava
         return true;
       }
       current = current.getSuperclass();

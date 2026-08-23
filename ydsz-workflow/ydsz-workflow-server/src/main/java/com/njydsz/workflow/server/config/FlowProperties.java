@@ -30,6 +30,27 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "ydsz.flow")
 public class FlowProperties {
 
+  /** 设计器协同编辑锁超时阈值默认值（分钟） */
+  private static final long DEFAULT_DESIGNER_LOCK_TIMEOUT_MINUTES = 30L;
+
+  /** 子流程最大嵌套深度默认值（3 层） */
+  private static final int DEFAULT_MAX_NESTING_DEPTH = 3;
+
+  /** 自动催办超时阈值默认值（小时） */
+  private static final long DEFAULT_THRESHOLD_HOURS = 24;
+
+  /** 归档保留天数默认值（30 天） */
+  private static final int DEFAULT_RETENTION_DAYS = 30;
+
+  /** 单次归档最大耗时默认值（毫秒，30 秒） */
+  private static final long DEFAULT_MAX_PROCESS_MS = 30_000L;
+
+  /** 归档数据清理阈值天数默认值（5 年） */
+  private static final int DEFAULT_PURGE_DAYS = 1825;
+
+  /** 流程定义缓存 TTL 默认值（分钟） */
+  private static final long DEFAULT_DEFINITION_CACHE_TTL_MINUTES = 60L;
+
   /** 是否启用工作流模块 */
   private boolean enabled = true;
 
@@ -41,7 +62,7 @@ public class FlowProperties {
 
   /** 设计器协同编辑锁定超时阈值（分钟） */
   @Min(1)
-  private long designerLockTimeoutMinutes = 30L;
+  private long designerLockTimeoutMinutes = DEFAULT_DESIGNER_LOCK_TIMEOUT_MINUTES;
 
   /** P3-3.4: 子流程嵌套配置 */
   private SubProcess subProcess = new SubProcess();
@@ -66,7 +87,7 @@ public class FlowProperties {
   @Data
   public static class SubProcess {
     /** 最大子流程嵌套深度（默认 3 层，建议不超过 10 层） */
-    private int maxNestingDepth = 3;
+    private int maxNestingDepth = DEFAULT_MAX_NESTING_DEPTH;
   }
 
   /**
@@ -88,7 +109,7 @@ public class FlowProperties {
   @Data
   public static class AutoUrge {
     /** 超时阈值（小时），任务创建后超过此时间未处理则触发自动催办 */
-    private long thresholdHours = 24;
+    private long thresholdHours = DEFAULT_THRESHOLD_HOURS;
 
     /** 单次扫描批量大小 */
     private int batchSize = 100;
@@ -106,7 +127,7 @@ public class FlowProperties {
 
     /** 归档阈值天数：已结束实例结束时间超过该天数后归档（默认 30 天） */
     @Min(1)
-    private int retentionDays = 30;
+    private int retentionDays = DEFAULT_RETENTION_DAYS;
 
     /** 单次归档批量大小：每次扫描最多处理的实例数（默认 100） */
     @Min(1)
@@ -115,7 +136,7 @@ public class FlowProperties {
 
     /** 单次归档最大耗时（毫秒）：达到上限后剩余实例留待下次执行（默认 30 秒） */
     @Min(1000)
-    private long maxProcessMs = 30_000L;
+    private long maxProcessMs = DEFAULT_MAX_PROCESS_MS;
 
     /** 归档任务 cron 表达式（用于 ydsz_job 表配置参考，默认每日 03:00） */
     private String cronExpression = "0 0 3 * * ?";
@@ -125,7 +146,7 @@ public class FlowProperties {
 
     /** 归档数据清理阈值天数：archived_at 超过该天数的归档记录将被物理删除（默认 5 年 = 1825 天） */
     @Min(30)
-    private int purgeDays = 1825;
+    private int purgeDays = DEFAULT_PURGE_DAYS;
   }
 
   /**
@@ -140,7 +161,7 @@ public class FlowProperties {
   public static class DefinitionCache {
     /** 缓存过期时间（分钟），所有流程定义缓存统一 TTL（默认 60 分钟） */
     @Min(1)
-    private long definitionCacheTtlMinutes = 60L;
+    private long definitionCacheTtlMinutes = DEFAULT_DEFINITION_CACHE_TTL_MINUTES;
 
     /** 缓存最大容量（条目数），所有流程定义缓存统一上限（默认 1000 条） */
     @Min(1)

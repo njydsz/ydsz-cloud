@@ -156,7 +156,12 @@ public class RedisClusterRateLimiter implements ClusterRateLimiter {
     return RateLimitMode.CLUSTER;
   }
 
-  /** 构造 Redis key */
+  /**
+   * 构造 Redis key。
+   *
+   * @param context 限流上下文
+   * @return Redis key（前缀 + 资源名）
+   */
   public String buildKey(RateLimitContext context) {
     return keyPrefix + context.getResource();
   }

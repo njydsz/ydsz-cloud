@@ -37,6 +37,10 @@ import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 @RequiredArgsConstructor
 public class MetricsEventListener implements UserAuthEventListener {
 
+  /** 监听器优先级（越小越先执行） */
+  private static final int LISTENER_ORDER = 200;
+
+
   private final UserInfoMetrics userInfoMetrics;
 
   @Override
@@ -104,6 +108,6 @@ public class MetricsEventListener implements UserAuthEventListener {
 
   @Override
   public int getOrder() {
-    return 200;
+    return LISTENER_ORDER;
   }
 }

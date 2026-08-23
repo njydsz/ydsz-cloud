@@ -28,7 +28,19 @@ import java.util.List;
  */
 public class ExprTraceBuilder {
 
-  /** 追踪节点（简化版，映射到 {@link com.njydsz.literule.server.engine.liteexpr.ExpressionTraceNode}） */
+  /**
+   * 追踪节点（简化版，映射到 {@link com.njydsz.literule.server.engine.liteexpr.ExpressionTraceNode}）。
+   *
+   * @param type 节点类型（如 VARIABLE / LITERAL / BINARY_OP）
+   * @param expression 原始表达式片段
+   * @param operator 运算符（二元运算时非空）
+   * @param value 求值前的操作数值
+   * @param result 求值结果
+   * @param shortCircuited 是否短路
+   * @param elapsedNanos 节点耗时（纳秒）
+   * @param children 子节点列表
+   * @param error 错误信息（出错时非空）
+   */
   public record TraceNode(
       String type,
       String expression,
@@ -212,7 +224,11 @@ public class ExprTraceBuilder {
     nodes.add(tn);
   }
 
-  /** 构建根追踪节点 */
+  /** 构建根追踪节点
+   * @param ast 参数说明
+   * @param result 参数说明
+   * @return 返回值说明
+   */
   public TraceNode buildRoot(ExprNode ast, Object result) {
     if (nodes.size() == 1) {
       return nodes.get(0);

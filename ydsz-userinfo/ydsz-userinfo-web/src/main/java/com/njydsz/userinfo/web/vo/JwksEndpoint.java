@@ -1,6 +1,5 @@
 package com.njydsz.userinfo.web.vo;
 
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPublicKey;
@@ -17,6 +16,9 @@ import lombok.extern.slf4j.Slf4j;
  * JWKS（JSON Web Key Set）公钥端点（本地实现，避免 common-auth 依赖编译问题）。
  *
  * <p>生成符合 RFC 7517 标准的 JWKS 格式公钥集合。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 @Slf4j
 public class JwksEndpoint {
@@ -78,8 +80,10 @@ public class JwksEndpoint {
     key.put("kty", KTY_RSA);
     key.put("use", USE_SIG);
     key.put("alg", ALG_RS256);
-    key.put("n", Base64.getUrlEncoder().withoutPadding().encodeToString(rsaPublicKey.getModulus().toByteArray()));
-    key.put("e", Base64.getUrlEncoder().withoutPadding().encodeToString(rsaPublicKey.getPublicExponent().toByteArray()));
+    key.put("n", Base64.getUrlEncoder().withoutPadding()
+        .encodeToString(rsaPublicKey.getModulus().toByteArray()));
+    key.put("e", Base64.getUrlEncoder().withoutPadding()
+        .encodeToString(rsaPublicKey.getPublicExponent().toByteArray()));
     return key;
   }
 }

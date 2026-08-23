@@ -14,6 +14,9 @@ import java.util.List;
  */
 public interface BudgetSnapshotProvider {
 
+    /** 百分比计算结果小数位精度 */
+  int SCALE_PERCENT = 4;
+
   /**
    * 获取项目预算总额
    *
@@ -48,10 +51,12 @@ public interface BudgetSnapshotProvider {
    */
   default double getUsageRatio(String projectId, BigDecimal pendingAmount) {
     BigDecimal budget = getTotalBudget(projectId);
-    if (budget == null || budget.compareTo(BigDecimal.ZERO) == 0) return 1.0;
+    if (budget == null || budget.compareTo(BigDecimal.ZERO) == 0) {
+      return 1.0;
+    }
     BigDecimal total =
         getIncurredCost(projectId).add(pendingAmount == null ? BigDecimal.ZERO : pendingAmount);
-    return total.divide(budget, 4, RoundingMode.HALF_UP).doubleValue();
+    return total.divide(budget, SCALE_PERCENT, RoundingMode.HALF_UP).doubleValue();
   }
 
   /**
@@ -61,7 +66,15 @@ public interface BudgetSnapshotProvider {
    */
   List<BudgetSnapshot> getBudgetSnapshots();
 
-  /** 预算快照 DTO */
+  /**
+   * 预算快照 DTO。
+   *
+   * @param projectId 项目 ID，关联预算主数据的唯一标识
+   * @param projectName 项目名称，用于大盘展示与人工核对
+   * @param totalBudget 预算总额（元），来自预算主数据
+   * @param incurredCost 已发生成本（元），含采购 + 费用 + 分摊
+   * @param usageRatio 预算使用率（0~1+），≥1 表示已超支
+   */
   record BudgetSnapshot(
       /** 项目 ID，关联预算主数据的唯一标识 */
       String projectId,

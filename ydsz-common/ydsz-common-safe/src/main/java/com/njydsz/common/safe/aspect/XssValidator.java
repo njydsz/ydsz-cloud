@@ -58,7 +58,10 @@ public class XssValidator implements ConstraintValidator<Xss, String> {
           Pattern.CASE_INSENSITIVE);
   private static final Pattern DANGEROUS_EVENT_PATTERN =
       Pattern.compile(
-          "on(load|error|click|focus|blur|change|submit|reset|select|submit|abort|drag|drop|key|keydown|keyup|keypress|mouse|mousedown|mouseenter|mouseleave|mousemove|mouseout|mouseover|mouseup|wheel|scroll|wheel|input|invalid|propertychange|readystatechange|resize|scroll|beforeunload|unload)\\s*=",
+          "on(load|error|click|focus|blur|change|submit|reset|select|abort|drag|drop|"
+              + "key|keydown|keyup|keypress|mouse|mousedown|mouseenter|mouseleave|"
+              + "mousemove|mouseout|mouseover|mouseup|wheel|scroll|input|invalid|"
+              + "propertychange|readystatechange|resize|beforeunload|unload)\\s*=",
           Pattern.CASE_INSENSITIVE);
   private static final Pattern DANGEROUS_FUNCTION_PATTERN =
       Pattern.compile(
@@ -68,7 +71,8 @@ public class XssValidator implements ConstraintValidator<Xss, String> {
       Pattern.compile("expression\\s*\\(|url\\s*\\(|behavior\\s*:", Pattern.CASE_INSENSITIVE);
   private static final Pattern DOM_OBJECT_PATTERN =
       Pattern.compile(
-          "\\b(document|window|navigator|history|location|localStorage|sessionStorage|cookie|crypto|subtle|indexedDB)\\b",
+          "\\b(document|window|navigator|history|location|localStorage|sessionStorage|"
+              + "cookie|crypto|subtle|indexedDB)\\b",
           Pattern.CASE_INSENSITIVE);
   private static final Pattern SVG_XML_PATTERN =
       Pattern.compile("<svg|<xml|<math|<xlink", Pattern.CASE_INSENSITIVE);

@@ -51,6 +51,11 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
   }
 
   @Override
+  /**
+   * publish。
+   * @param event 参数
+   * @return 结果
+   */
   public boolean publish(LogEvent event) {
     if (!isAvailable()) {
       return false;
@@ -140,6 +145,11 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
   }
 
   @Override
+  /**
+   * publish batch。
+   * @param events 参数
+   * @return 结果
+   */
   public boolean publishBatch(List<LogEvent> events) {
     if (events == null || events.isEmpty()) {
       return false;
@@ -200,26 +210,45 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
   }
 
   @Override
+  /**
+   * is available。
+   * @return 结果
+   */
   public boolean isAvailable() {
     return circuitBreaker == null || circuitBreaker.getState() != CircuitBreaker.State.OPEN;
   }
 
   @Override
+  /**
+   * get name。
+   * @return 结果
+   */
   public String getName() {
     return "loki";
   }
 
   @Override
+  /**
+   * get scheme。
+   * @return 结果
+   */
   public String getScheme() {
     return "loki";
   }
 
   /** 获取熔断器状态 */
+  /**
+   * get circuit breaker。
+   * @return 结果
+   */
   public CircuitBreaker.State getCircuitBreakerState() {
     return circuitBreaker != null ? circuitBreaker.getState() : CircuitBreaker.State.CLOSED;
   }
 
   @Override
+  /**
+   * close。
+   */
   public void close() {
     if (httpClient != null) {
       try {

@@ -60,14 +60,19 @@ public @interface PermissionPreCheck {
 
   /** 权限类型 */
   enum CheckType {
+    /** 菜单权限 */
     MENU,
+    /** 按钮权限 */
     BUTTON,
+    /** 接口权限 */
     API
   }
 
   /** 预检模式（AND/OR） */
   enum CheckMode {
+    /** 全部满足 */
     ALL,
+    /** 任一满足 */
     ANY
   }
 

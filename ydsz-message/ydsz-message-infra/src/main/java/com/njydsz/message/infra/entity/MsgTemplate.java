@@ -4,13 +4,13 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.njydsz.message.domain.enums.core.MessageChannelEnum;
-import com.njydsz.message.domain.enums.template.TemplateAuditStatusEnum;
-import com.njydsz.message.domain.enums.template.TemplateStatusEnum;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.message.domain.enums.core.MessageChannelEnum;
+import com.njydsz.message.domain.enums.template.TemplateAuditStatusEnum;
+import com.njydsz.message.domain.enums.template.TemplateStatusEnum;
 
 /**
  * 消息模板领域实体 — 支持 {@code ${var}} 嵌套占位符 / 多语言 i18n / 版本 / 审核 / 分类 / 场景。

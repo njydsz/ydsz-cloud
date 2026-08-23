@@ -107,6 +107,10 @@ public class YdszFeignLogger extends Logger {
           LOG.debug(msg, args);
         }
       }
+      default -> {
+        // 未知级别：按 DEBUG 输出兜底
+        LOG.debug(msg, args);
+      }
     }
   }
 

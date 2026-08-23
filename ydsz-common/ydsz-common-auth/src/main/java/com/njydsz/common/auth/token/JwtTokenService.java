@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import javax.crypto.SecretKey;
 
 import io.jsonwebtoken.Claims;
@@ -117,7 +118,7 @@ public class JwtTokenService implements TokenService {
         YdszCache.<String, Claims>newBuilder()
             .name("auth:jwt-claims")
             .maximumSize(100_000)
-            .expireAfterWrite(5, java.util.concurrent.TimeUnit.MINUTES)
+            .expireAfterWrite(5, TimeUnit.MINUTES)
             .build();
   }
 

@@ -65,6 +65,15 @@ import com.njydsz.cronjob.server.config.SandboxConfig;
 @Component
 @RequiredArgsConstructor
 public class DockerSandboxExecutor {
+  /** 输出读取超时（毫秒） */
+  private static final long OUTPUT_READ_TIMEOUT_MILLIS = 2000;
+
+  /** 输出读取宽限（毫秒） */
+  private static final long OUTPUT_READ_GRACE_MILLIS = 3000;
+
+  /** 等待超时（秒） */
+  private static final long WAIT_TIMEOUT_SECONDS = 5;
+
 
   private final CronjobProperties cronjobProperties;
 
@@ -154,13 +163,13 @@ public class DockerSandboxExecutor {
       if (!finished) {
         process.destroyForcibly();
         killContainer(containerName);
-        outputReader.join(2000);
+        outputReader.join(OUTPUT_READ_TIMEOUT_MILLIS);
         return new SandboxResult(
             false, "执行超时 (" + effectiveTimeout + "s)", -1, outputBuilder.toString());
       }
 
       // 等待输出读取完成
-      outputReader.join(3000);
+      outputReader.join(OUTPUT_READ_GRACE_MILLIS);
 
       int exitCode = process.exitValue();
       boolean success = exitCode == 0;
@@ -256,7 +265,7 @@ public class DockerSandboxExecutor {
     }
     try {
       Process check = new ProcessBuilder("docker", "info").start();
-      boolean finished = check.waitFor(5, TimeUnit.SECONDS);
+      boolean finished = check.waitFor(WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
       dockerAvailable = finished && check.exitValue() == 0;
       if (!dockerAvailable) {
         log.warn("[DockerSandbox] Docker 不可用，请检查安装和权限");
@@ -298,7 +307,7 @@ public class DockerSandboxExecutor {
   private void killContainer(String containerName) {
     try {
       Process kill = new ProcessBuilder("docker", "rm", "-f", containerName).start();
-      kill.waitFor(5, TimeUnit.SECONDS);
+      kill.waitFor(WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     } catch (Exception e) {
       log.debug("[DockerSandbox] 清理容器失败: name={} reason={}", containerName, e.getMessage());
     }

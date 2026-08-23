@@ -49,16 +49,36 @@ public class BatchResult<T> {
   private List<ItemResult<T>> details;
 
   // 显式 getter/setter（避免 Lombok @Data 差异）
-  public int getTotal() { return total; }
-  public void setTotal(int total) { this.total = total; }
-  public int getSuccessCount() { return successCount; }
-  public void setSuccessCount(int successCount) { this.successCount = successCount; }
-  public int getFailureCount() { return failureCount; }
-  public void setFailureCount(int failureCount) { this.failureCount = failureCount; }
-  public List<ItemResult<T>> getDetails() { return details; }
-  public void setDetails(List<ItemResult<T>> details) { this.details = details; }
+  public int getTotal() {
+    return total;
+  }
+  public void setTotal(int total) {
+    this.total = total;
+  }
+  public int getSuccessCount() {
+    return successCount;
+  }
+  public void setSuccessCount(int successCount) {
+    this.successCount = successCount;
+  }
+  public int getFailureCount() {
+    return failureCount;
+  }
+  public void setFailureCount(int failureCount) {
+    this.failureCount = failureCount;
+  }
+  public List<ItemResult<T>> getDetails() {
+    return details;
+  }
+  public void setDetails(List<ItemResult<T>> details) {
+    this.details = details;
+  }
 
-  /** 单个批量操作结果。 */
+  /**
+   * 单个批量操作结果。
+   *
+   * @param <T> 操作项类型
+   */
   public static class ItemResult<T> {
     /** 操作项标识 */
     private T item;
@@ -70,12 +90,24 @@ public class BatchResult<T> {
     private String error;
 
     // 显式 getter/setter
-    public T getItem() { return item; }
-    public void setItem(T item) { this.item = item; }
-    public boolean isSuccess() { return success; }
-    public void setSuccess(boolean success) { this.success = success; }
-    public String getError() { return error; }
-    public void setError(String error) { this.error = error; }
+    public T getItem() {
+    return item;
+  }
+    public void setItem(T item) {
+    this.item = item;
+  }
+    public boolean isSuccess() {
+    return success;
+  }
+    public void setSuccess(boolean success) {
+    this.success = success;
+  }
+    public String getError() {
+    return error;
+  }
+    public void setError(String error) {
+    this.error = error;
+  }
 
     public static <T> ItemResult<T> success(T item) {
       ItemResult<T> r = new ItemResult<>();
@@ -94,7 +126,13 @@ public class BatchResult<T> {
     }
   }
 
-  /** 构造成功的批量结果（全部成功）。 */
+  /**
+   * 构造成功的批量结果（全部成功）。
+   *
+   * @param <T> 批量操作项类型
+   * @param total 总处理条数
+   * @return 全部成功的批量结果
+   */
   public static <T> BatchResult<T> allSuccess(int total) {
     BatchResult<T> r = new BatchResult<>();
     r.setTotal(total);
@@ -104,7 +142,14 @@ public class BatchResult<T> {
     return r;
   }
 
-  /** 构造批量结果（含成功数，无明细）。 */
+  /**
+   * 构造批量结果（含成功数，无明细）。
+   *
+   * @param <T> 批量操作项类型
+   * @param total 总处理条数
+   * @param successCount 成功条数
+   * @return 批量结果（失败数 = total - successCount）
+   */
   public static <T> BatchResult<T> of(int total, int successCount) {
     BatchResult<T> r = new BatchResult<>();
     r.setTotal(total);

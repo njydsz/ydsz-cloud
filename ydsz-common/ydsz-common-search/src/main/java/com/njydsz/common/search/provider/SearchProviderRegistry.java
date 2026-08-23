@@ -84,6 +84,7 @@ public class SearchProviderRegistry {
    * <p>由于 Java 类型擦除，泛型类型参数 {@code <T>} 无法在运行时校验。 调用方需确保传入的类型与 Provider 实际泛型类型一致。
    *
    * @param type 实体类型
+   * @param <T> 实体类型（泛型）
    * @return 提供者，不存在返回 null
    */
   public <T> SearchProvider<T> getProvider(String type) {

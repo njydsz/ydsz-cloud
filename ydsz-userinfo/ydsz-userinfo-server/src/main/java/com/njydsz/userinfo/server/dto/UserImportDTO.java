@@ -1,7 +1,8 @@
 package com.njydsz.userinfo.server.dto;
 
-import com.njydsz.common.excel.annotation.ExcelProperty;
 import lombok.Data;
+
+import com.njydsz.common.excel.annotation.ExcelProperty;
 
 /**
  * 用户导入 DTO

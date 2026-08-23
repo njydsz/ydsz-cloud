@@ -53,6 +53,11 @@ public class AlertConverger implements AlertPublisher {
   /** 静默记录（key=dedupKey, value=上次通知时间） */
   private final ConcurrentHashMap<String, Instant> silenceMap = new ConcurrentHashMap<>();
 
+  /**
+   * alert converger。
+   * @param delegate 参数
+   * @param silencePeriodMillis 参数
+ */
   public AlertConverger(AlertPublisher delegate, long silencePeriodMillis) {
     this.delegate = delegate;
     this.silencePeriodMillis = silencePeriodMillis;
@@ -60,6 +65,11 @@ public class AlertConverger implements AlertPublisher {
   }
 
   @Override
+  /**
+   * publish。
+   * @param event 参数
+   * @return 结果
+   */
   public boolean publish(AlertEvent event) {
     totalAlerts.incrementAndGet();
     String dedupKey = event.dedupKey();
@@ -198,11 +208,19 @@ public class AlertConverger implements AlertPublisher {
   }
 
   @Override
+  /**
+   * is available。
+   * @return 结果
+   */
   public boolean isAvailable() {
     return delegate != null && delegate.isAvailable();
   }
 
   @Override
+  /**
+   * get name。
+   * @return 结果
+   */
   public String getName() {
     return "alert-converger";
   }

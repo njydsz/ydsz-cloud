@@ -3,11 +3,30 @@ package com.njydsz.userinfo.server.auth;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.webauthn4j.WebAuthnManager;
+import com.webauthn4j.authenticator.Authenticator;
+import com.webauthn4j.authenticator.CoreAuthenticatorImpl;
+import com.webauthn4j.converter.util.ObjectConverter;
+import com.webauthn4j.data.AuthenticationData;
+import com.webauthn4j.data.AuthenticationParameters;
+import com.webauthn4j.data.AuthenticationRequest;
+import com.webauthn4j.data.attestation.authenticator.AAGUID;
+import com.webauthn4j.data.attestation.authenticator.AttestedCredentialData;
+import com.webauthn4j.data.attestation.authenticator.COSEKey;
+import com.webauthn4j.data.attestation.statement.AttestationStatement;
+import com.webauthn4j.data.client.Origin;
+import com.webauthn4j.data.client.challenge.Challenge;
+import com.webauthn4j.data.extension.authenticator.AuthenticationExtensionsAuthenticatorOutputs;
+import com.webauthn4j.data.extension.authenticator.RegistrationExtensionAuthenticatorOutput;
+import com.webauthn4j.server.ServerProperty;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
@@ -19,28 +38,6 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.domain.vo.WebAuthnChallengeVO;
 import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
 import com.njydsz.userinfo.server.config.WebAuthnProperties;
-
-import java.util.Collections;
-
-import com.webauthn4j.WebAuthnManager;
-import com.webauthn4j.authenticator.Authenticator;
-import com.webauthn4j.authenticator.CoreAuthenticatorImpl;
-import com.webauthn4j.converter.util.ObjectConverter;
-import com.webauthn4j.data.AuthenticationData;
-import com.webauthn4j.data.AuthenticationParameters;
-import com.webauthn4j.data.AuthenticationRequest;
-import com.webauthn4j.data.attestation.authenticator.AAGUID;
-import com.webauthn4j.data.attestation.authenticator.AttestedCredentialData;
-import com.webauthn4j.data.attestation.statement.AttestationStatement;
-import com.webauthn4j.data.client.Origin;
-import com.webauthn4j.data.client.challenge.Challenge;
-import com.webauthn4j.data.attestation.authenticator.COSEKey;
-import com.webauthn4j.data.extension.authenticator.AuthenticationExtensionsAuthenticatorOutputs;
-import com.webauthn4j.data.extension.authenticator.RegistrationExtensionAuthenticatorOutput;
-import com.webauthn4j.server.ServerProperty;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * WebAuthn/Passkey 无密码认证服务（P3-2 通行 Key 增强）。
@@ -98,6 +95,21 @@ public class WebAuthnService {
   /** webauthn4j 对象转换器（线程安全，用于 CBOR/JSON 编解码） */
   private static final ObjectConverter OBJECT_CONVERTER = new ObjectConverter();
 
+  /** COSE 算法标识：ES256（P-256 ECDSA） */
+  private static final int COSE_ALG_ES256 = -7;
+
+  /** COSE 算法标识：RS256（RSA PKCS1） */
+  private static final int COSE_ALG_RS256 = -257;
+
+  /** WebAuthn 认证超时（毫秒）：60 秒 */
+  private static final long WEBAUTHN_TIMEOUT_MILLIS = 60000;
+
+  /** 凭证 ID 日志脱敏前缀长度 */
+  private static final int CREDENTIAL_LOG_PREFIX_LENGTH = 8;
+
+  /** 随机字节数组长度：32（256 位） */
+  private static final int RANDOM_BYTES_LENGTH = 32;
+
   private final WebAuthnProperties webAuthnProperties;
   private final WebAuthnCredentialRepository credentialRepository;
   private final RedisStringOps redisStringOps;
@@ -141,10 +153,10 @@ public class WebAuthnService {
         "name", username,
         "displayName", displayName));
     options.put("pubKeyCredParams", List.of(
-        Map.of("type", "public-key", "alg", -7),   // ES256
-        Map.of("type", "public-key", "alg", -257)  // RS256
+        Map.of("type", "public-key", "alg", COSE_ALG_ES256),   // ES256
+        Map.of("type", "public-key", "alg", COSE_ALG_RS256)  // RS256
     ));
-    options.put("timeout", 60000);
+    options.put("timeout", WEBAUTHN_TIMEOUT_MILLIS);
     options.put("authenticatorSelection", Map.of(
         "residentKey", "required",          // P3-2: Passkey 必须使用 discoverable credential
         "userVerification", "preferred"));
@@ -179,7 +191,7 @@ public class WebAuthnService {
     // 构建认证选项（Passkey 模式：allowCredentials 为空）
     Map<String, Object> options = new HashMap<>();
     options.put("challenge", challenge);
-    options.put("timeout", 60000);
+    options.put("timeout", WEBAUTHN_TIMEOUT_MILLIS);
     options.put("userVerification", "preferred");
     options.put("rpId", webAuthnProperties.getRelyingPartyId());
     options.put("allowCredentials", List.of()); // P3-2: 空列表，浏览器自动发现 Passkey
@@ -230,7 +242,8 @@ public class WebAuthnService {
     deleteChallenge(challenge);
 
     log.info("Passkey 认证成功（usernameless）: userId={}, credentialId={}",
-        credential.getUserId(), credentialId.substring(0, Math.min(8, credentialId.length())));
+        credential.getUserId(),
+        credentialId.substring(0, Math.min(CREDENTIAL_LOG_PREFIX_LENGTH, credentialId.length())));
     return credential.getUserId();
   }
 
@@ -265,10 +278,10 @@ public class WebAuthnService {
         "name", username,
         "displayName", displayName));
     options.put("pubKeyCredParams", List.of(
-        Map.of("type", "public-key", "alg", -7),   // ES256
-        Map.of("type", "public-key", "alg", -257)  // RS256
+        Map.of("type", "public-key", "alg", COSE_ALG_ES256),   // ES256
+        Map.of("type", "public-key", "alg", COSE_ALG_RS256)  // RS256
     ));
-    options.put("timeout", 60000);
+    options.put("timeout", WEBAUTHN_TIMEOUT_MILLIS);
     options.put("authenticatorSelection", Map.of(
         "residentKey", "preferred",
         "userVerification", "preferred"));
@@ -283,36 +296,30 @@ public class WebAuthnService {
    *
    * <p>验证客户端提交的注册响应（attestation），验证通过后存储公钥凭证。
    *
-   * @param userId 用户 ID
-   * @param challenge 挑战码
-   * @param credentialId 凭证 ID（Base64URL）
-   * @param publicKey 公钥（Base64URL COSE 格式）
-   * @param aaguid 认证器唯一标识
-   * @param clientDataJSON 客户端数据 JSON
+   * @param command 注册凭证参数
    */
-  public void verifyAndStoreCredential(String userId, String challenge, String credentialId,
-      String publicKey, String aaguid, String clientDataJSON) {
+  public void verifyAndStoreCredential(WebAuthnRegisterCommand command) {
     // 验证挑战码
-    validateChallenge(challenge, userId, "REGISTER");
+    validateChallenge(command.challenge(), command.userId(), "REGISTER");
 
     // 验证客户端数据（简化实现，完整实现需解析 clientDataJSON）
-    validateClientData(clientDataJSON, challenge, "webauthn.create");
+    validateClientData(command.clientDataJSON(), command.challenge(), "webauthn.create");
 
     // 检查凭证 ID 是否已存在
     Optional<WebAuthnCredentialVO> existing =
-        credentialRepository.findByCredentialId(credentialId);
+        credentialRepository.findByCredentialId(command.credentialId());
     if (existing.isPresent()) {
       throw new BusinessException(UserInfoExceptionCode.WEBAUTHN_CREDENTIAL_EXISTS);
     }
 
     // 存储凭证
     WebAuthnCredentialVO credential = new WebAuthnCredentialVO();
-    credential.setCredentialId(credentialId);
-    credential.setUserId(userId);
-    credential.setPublicKey(publicKey);
+    credential.setCredentialId(command.credentialId());
+    credential.setUserId(command.userId());
+    credential.setPublicKey(command.publicKey());
     credential.setSignCount(0);
     credential.setCredentialType("public-key");
-    credential.setAaguid(aaguid);
+    credential.setAaguid(command.aaguid());
     credential.setDisplayName("Passkey");
     credential.setRegisteredAt(LocalDateTime.now());
     credential.setLastUsedAt(LocalDateTime.now());
@@ -323,7 +330,7 @@ public class WebAuthnService {
     deleteChallenge(challenge);
 
     log.info("WebAuthn 凭证注册成功: userId={}, credentialId={}", userId,
-        credentialId.substring(0, Math.min(8, credentialId.length())));
+        credentialId.substring(0, Math.min(CREDENTIAL_LOG_PREFIX_LENGTH, credentialId.length())));
   }
 
   /**
@@ -344,7 +351,7 @@ public class WebAuthnService {
     // 构建认证选项
     Map<String, Object> options = new HashMap<>();
     options.put("challenge", challenge);
-    options.put("timeout", 60000);
+    options.put("timeout", WEBAUTHN_TIMEOUT_MILLIS);
     options.put("userVerification", "preferred");
     options.put("rpId", webAuthnProperties.getRelyingPartyId());
 
@@ -403,7 +410,8 @@ public class WebAuthnService {
     deleteChallenge(challenge);
 
     log.info("WebAuthn 认证成功: userId={}, credentialId={}",
-        credential.getUserId(), credentialId.substring(0, Math.min(8, credentialId.length())));
+        credential.getUserId(),
+        credentialId.substring(0, Math.min(CREDENTIAL_LOG_PREFIX_LENGTH, credentialId.length())));
     return credential.getUserId();
   }
 
@@ -433,7 +441,7 @@ public class WebAuthnService {
 
     credentialRepository.deleteByCredentialId(credentialId);
     log.info("WebAuthn 凭证已删除: userId={}, credentialId={}", userId,
-        credentialId.substring(0, Math.min(8, credentialId.length())));
+        credentialId.substring(0, Math.min(CREDENTIAL_LOG_PREFIX_LENGTH, credentialId.length())));
   }
 
   /**
@@ -475,59 +483,12 @@ public class WebAuthnService {
       byte[] clientDataJSONBytes = Base64.getUrlDecoder().decode(clientDataJSON);
       byte[] authenticatorDataBytes = Base64.getUrlDecoder().decode(authenticatorData);
       byte[] signatureBytes = Base64.getUrlDecoder().decode(signature);
-      byte[] credentialIdBytes = Base64.getUrlDecoder().decode(credential.getCredentialId());
 
-      // 构建 ServerProperty（来源、RP ID、挑战码）- 使用当前 webauthn4j API
-      Origin origin = Origin.create(webAuthnProperties.getOrigin());
-      Challenge challenge = new Challenge() {
-        @Override
-        public byte[] getValue() {
-          return new byte[0];
-        }
-      };
-      ServerProperty serverProperty = new ServerProperty(
-          origin, webAuthnProperties.getRelyingPartyId(), challenge, null);
-
-      // 从存储的 COSE 公钥重建 Authenticator - 使用 AttestedCredentialData
-      byte[] coseKeyBytes = Base64.getUrlDecoder().decode(credential.getPublicKey());
-      COSEKey coseKey = OBJECT_CONVERTER.getCborConverter().readValue(
-          coseKeyBytes, COSEKey.class);
-      AAGUID aaguid = AAGUID.NULL;
-      AttestedCredentialData attestedCredentialData = new AttestedCredentialData(
-          aaguid, credentialIdBytes, coseKey);
-      CoreAuthenticatorImpl coreAuthenticator = new CoreAuthenticatorImpl(
-          attestedCredentialData, null, credential.getSignCount(), null);
-
-      // 将 CoreAuthenticatorImpl 适配为 Authenticator 接口（webauthn4j 0.21.0 兼容）
-      Authenticator authenticator = new Authenticator() {
-        @Override
-        public AttestedCredentialData getAttestedCredentialData() {
-          return coreAuthenticator.getAttestedCredentialData();
-        }
-
-        @Override
-        public AttestationStatement getAttestationStatement() {
-          return coreAuthenticator.getAttestationStatement();
-        }
-
-        @Override
-        public long getCounter() {
-          return coreAuthenticator.getCounter();
-        }
-
-        @Override
-        public void setCounter(long counter) {
-          coreAuthenticator.setCounter(counter);
-        }
-
-        @Override
-        public AuthenticationExtensionsAuthenticatorOutputs<RegistrationExtensionAuthenticatorOutput>
-            getAuthenticatorExtensions() {
-          return coreAuthenticator.getAuthenticatorExtensions();
-        }
-      };
+      ServerProperty serverProperty = buildServerProperty();
+      Authenticator authenticator = buildAuthenticator(credential);
 
       // 构建认证参数
+      byte[] credentialIdBytes = Base64.getUrlDecoder().decode(credential.getCredentialId());
       AuthenticationParameters authenticationParameters = new AuthenticationParameters(
           serverProperty, authenticator, Collections.singletonList(credentialIdBytes), true, true);
 
@@ -548,14 +509,85 @@ public class WebAuthnService {
     } catch (BusinessException e) {
       throw e;
     } catch (Exception e) {
-      log.warn("WebAuthn 签名验证失败: credentialId={}, error={}",
-          credential.getCredentialId().substring(0, Math.min(8, credential.getCredentialId().length())),
-          e.getMessage());
-      log.error("WebAuthn 签名验证异常: credentialId={}, error={}",
-          credential.getCredentialId().substring(0, Math.min(8, credential.getCredentialId().length())),
-          e.getMessage(), e);
+      logWebAuthnFailure(credential, e);
       throw new BusinessException(UserInfoExceptionCode.WEBAUTHN_SIGNATURE_INVALID);
     }
+  }
+
+  /**
+   * 构建 WebAuthn ServerProperty（来源、RP ID、挑战码）。
+   *
+   * @return ServerProperty 实例
+   */
+  private ServerProperty buildServerProperty() {
+    Origin origin = Origin.create(webAuthnProperties.getOrigin());
+    Challenge challenge = new Challenge() {
+      @Override
+      public byte[] getValue() {
+        return new byte[0];
+      }
+    };
+    return new ServerProperty(origin, webAuthnProperties.getRelyingPartyId(), challenge, null);
+  }
+
+  /**
+   * 从存储的 COSE 公钥重建 Authenticator。
+   *
+   * @param credential WebAuthn 凭证（含公钥）
+   * @return Authenticator 适配实例
+   */
+  private Authenticator buildAuthenticator(WebAuthnCredentialVO credential) {
+    byte[] credentialIdBytes = Base64.getUrlDecoder().decode(credential.getCredentialId());
+    byte[] coseKeyBytes = Base64.getUrlDecoder().decode(credential.getPublicKey());
+    COSEKey coseKey = OBJECT_CONVERTER.getCborConverter().readValue(
+        coseKeyBytes, COSEKey.class);
+    AAGUID aaguid = AAGUID.NULL;
+    AttestedCredentialData attestedCredentialData = new AttestedCredentialData(
+        aaguid, credentialIdBytes, coseKey);
+    CoreAuthenticatorImpl coreAuthenticator = new CoreAuthenticatorImpl(
+        attestedCredentialData, null, credential.getSignCount(), null);
+
+    // 将 CoreAuthenticatorImpl 适配为 Authenticator 接口（webauthn4j 0.21.0 兼容）
+    return new Authenticator() {
+      @Override
+      public AttestedCredentialData getAttestedCredentialData() {
+        return coreAuthenticator.getAttestedCredentialData();
+      }
+
+      @Override
+      public AttestationStatement getAttestationStatement() {
+        return coreAuthenticator.getAttestationStatement();
+      }
+
+      @Override
+      public long getCounter() {
+        return coreAuthenticator.getCounter();
+      }
+
+      @Override
+      public void setCounter(long counter) {
+        coreAuthenticator.setCounter(counter);
+      }
+
+      @Override
+      public AuthenticationExtensionsAuthenticatorOutputs<RegistrationExtensionAuthenticatorOutput>
+          getAuthenticatorExtensions() {
+        return coreAuthenticator.getAuthenticatorExtensions();
+      }
+    };
+  }
+
+  /**
+   * 记录 WebAuthn 签名验证失败日志（凭证 ID 脱敏）。
+   *
+   * @param credential WebAuthn 凭证
+   * @param e 异常
+   */
+  private void logWebAuthnFailure(WebAuthnCredentialVO credential, Exception e) {
+    String credentialId = credential.getCredentialId()
+        .substring(0, Math.min(CREDENTIAL_LOG_PREFIX_LENGTH, credential.getCredentialId().length()));
+    log.warn("WebAuthn 签名验证失败: credentialId={}, error={}", credentialId, e.getMessage());
+    log.error("WebAuthn 签名验证异常: credentialId={}, error={}", credentialId, e.getMessage(), e);
   }
 
   /**
@@ -582,7 +614,8 @@ public class WebAuthnService {
     // 如果新 signCount 小于等于旧 signCount，可能存在克隆
     if (newSignCount <= previousSignCount) {
       log.warn("WebAuthn 克隆检测告警: credentialId={}, previousSignCount={}, newSignCount={}",
-          credential.getCredentialId().substring(0, Math.min(8, credential.getCredentialId().length())),
+          credential.getCredentialId()
+              .substring(0, Math.min(CREDENTIAL_LOG_PREFIX_LENGTH, credential.getCredentialId().length())),
           previousSignCount, newSignCount);
       throw new BusinessException(UserInfoExceptionCode.WEBAUTHN_SIGNATURE_INVALID);
     }
@@ -596,7 +629,7 @@ public class WebAuthnService {
    * @return Base64URL 编码的 32 字节随机挑战码
    */
   private String generateChallenge() {
-    byte[] bytes = new byte[32];
+    byte[] bytes = new byte[RANDOM_BYTES_LENGTH];
     SECURE_RANDOM.nextBytes(bytes);
     return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
   }

@@ -79,7 +79,7 @@ public final class MessageResolverHolder {
   }
 
   /** 测试专用：重置已注册的解析器。 */
-  public static void __testResetResolver() {
+  public static void testResetResolver() {
     RESOLVER.set(null);
   }
 }

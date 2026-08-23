@@ -6,7 +6,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
@@ -100,7 +99,7 @@ public class TokenAutoRenewalFilter extends OncePerRequestFilter {
         return;
       }
 
-      String accessToken = authorization.substring(7);
+      String accessToken = authorization.substring(BEARER_PREFIX_LENGTH);
       if (accessToken.isBlank()) {
         return;
       }

@@ -50,7 +50,7 @@ public interface ScanTask {
    * @return 扫描间隔（毫秒，必须 > 0）
    */
   default long intervalMs() {
-    return 5000L;
+    return DEFAULT_SCAN_INTERVAL_MS;
   }
 
   /**

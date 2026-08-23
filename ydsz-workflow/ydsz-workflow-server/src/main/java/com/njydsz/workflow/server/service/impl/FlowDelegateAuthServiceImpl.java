@@ -15,18 +15,18 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.code.YdszResultCode;
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.util.id.TracerUtils;
+import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
+import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
-import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
-import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
@@ -101,6 +101,9 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
 @RequiredArgsConstructor
 public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
+    /** 默认分页大小 */
+  private static final int DEFAULT_PAGE_SIZE = 20;
+
   /** 委托授权仓储（domain 层契约），管理 ydsz_flow_delegate_auth 表 CRUD */
   private final FlowDelegateAuthRepository authRepository;
 
@@ -115,8 +118,11 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>符合 DDD 分层规范：DTO→DO 转换逻辑封装在 Service 层。
+   *
+   * @param dto 参数说明
+   * @return 返回值说明
    */
   @Override
   public FlowDelegateAuthDO postDtoToEntity(FlowDelegateAuthPostDTO dto) {
@@ -158,7 +164,11 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     return auth.getId();
   }
 
-  /** 校验委托授权参数。 */
+  /**
+   * 校验委托授权参数。
+   *
+   * @param auth 参数说明
+   */
   private void validateDelegateAuth(FlowDelegateAuthDO auth) {
     if (auth == null) {
       throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_fdf18ac3").build();
@@ -184,7 +194,11 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     validateScopeFields(auth);
   }
 
-  /** 校验 scope 必填字段。 */
+  /**
+   * 校验 scope 必填字段。
+   *
+   * @param auth 参数说明
+   */
   private void validateScopeFields(FlowDelegateAuthDO auth) {
     switch (auth.getScopeType()) {
       case "FLOW" -> {
@@ -208,7 +222,11 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
   }
 
-  /** 填充默认值。 */
+  /**
+   * 填充默认值。
+   *
+   * @param auth 参数说明
+   */
   private void fillDefaultValues(FlowDelegateAuthDO auth) {
     if (auth.getTenantId() == null) {
       auth.setTenantId(AuthContextUtils.getTenantIdOrDefault());
@@ -219,7 +237,11 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     auth.setProviderTraceId(TracerUtils.getOrCreateTraceId());
   }
 
-  /** 尝试离线自动转发（失败不影响授权创建）。 */
+  /**
+   * 尝试离线自动转发（失败不影响授权创建）。
+   *
+   * @param authId 参数说明
+   */
   private void tryOfflineAutoForward(String authId) {
     try {
       int forwarded = offlineAutoForwardService.autoForwardByAuth(authId);
@@ -363,8 +385,13 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
+   *
+   * @param ownerUserId 参数说明
+   * @param tenantId 参数说明
+   * @param status 参数说明
+   * @return 返回值说明
    */
   @Override
   public List<FlowDelegateAuthVO> listMineVO(String ownerUserId, String tenantId, String status) {
@@ -373,8 +400,13 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
   /**
    * {@inheritDoc}
-   *
+   * 
    * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
+   *
+   * @param delegateUserId 参数说明
+   * @param tenantId 参数说明
+   * @param status 参数说明
+   * @return 返回值说明
    */
   @Override
   public List<FlowDelegateAuthVO> listAsDelegateVO(
@@ -472,7 +504,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
       return PageResponse.success(0L, 0L, 0L, null);
     }
     int safePage = Math.max(1, page);
-    int safeSize = size > 0 ? size : 20;
+    int safeSize = size > 0 ? size : DEFAULT_PAGE_SIZE;
     List<FlowAuditLogDO> list = auditLogRepository
         .findByBusinessTypeAndOperator(
             FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY, delegateUserId,
@@ -501,7 +533,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
       return PageResponse.success(0L, 0L, 0L, null);
     }
     int safePage = Math.max(1, page);
-    int safeSize = size > 0 ? size : 20;
+    int safeSize = size > 0 ? size : DEFAULT_PAGE_SIZE;
     List<FlowAuditLogDO> list = auditLogRepository
         .findByBusinessTypeAndTarget(
             FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY, ownerUserId,

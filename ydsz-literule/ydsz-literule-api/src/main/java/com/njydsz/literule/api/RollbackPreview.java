@@ -64,7 +64,11 @@ public class RollbackPreview implements Serializable {
   /** 字段差异列表 */
   @Builder.Default private List<FieldDiff> diffs = new ArrayList<>();
 
-  /** 差异数量 */
+  /**
+   * 获取差异数量。
+   *
+   * @return 字段差异数量
+   */
   public int getDiffCount() {
     return diffs != null ? diffs.size() : 0;
   }
@@ -92,7 +96,11 @@ public class RollbackPreview implements Serializable {
     /** 差异类型 */
     private DiffType diffType;
 
-    /** 生成差异描述 */
+    /**
+     * 生成差异描述。
+     *
+     * @return 差异描述文本
+     */
     public String describe() {
       return switch (diffType) {
         case MODIFIED -> fieldLabel + ": " + currentValue + " → " + targetValue;

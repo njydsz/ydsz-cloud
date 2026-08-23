@@ -249,7 +249,9 @@ public class ExprParser {
   /** 解析函数参数列表 */
   private List<ExprNode> parseArguments() {
     List<ExprNode> args = new ArrayList<>();
-    if (check(TokenType.RPAREN)) return args;
+    if (check(TokenType.RPAREN)) {
+      return args;
+    }
     do {
       args.add(parseExpression());
     } while (match(TokenType.COMMA));
@@ -361,14 +363,18 @@ public class ExprParser {
   }
 
   private Token consume(TokenType type, String message) {
-    if (check(type)) return advance();
+    if (check(type)) {
+      return advance();
+    }
     Token current = peek();
     throw new LiteExprException(
         message + "（得到 '" + current.lexeme() + "'）", current.line(), current.column());
   }
 
   private Token advance() {
-    if (!isAtEnd()) current++;
+    if (!isAtEnd()) {
+      current++;
+    }
     return previous();
   }
 

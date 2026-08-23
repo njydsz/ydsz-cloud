@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -167,7 +168,7 @@ public class FileRuleSource implements RuleSource {
     if (watchThread != null && !watchThread.isShutdown()) {
       watchThread.shutdownNow();
       try {
-        watchThread.awaitTermination(1, java.util.concurrent.TimeUnit.SECONDS);
+        watchThread.awaitTermination(1, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       }
@@ -200,7 +201,9 @@ public class FileRuleSource implements RuleSource {
     // 合并全部 DSL 的规则定义
     List<RuleDefinition> rules = new ArrayList<>();
     for (RuleDsl dsl : dsls) {
-      if (dsl == null || dsl.getRules() == null) continue;
+      if (dsl == null || dsl.getRules() == null) {
+        continue;
+      }
       for (RuleDslEntry entry : dsl.getRules()) {
         RuleDefinition def = toRuleDefinition(entry);
         if (def != null) {
@@ -227,7 +230,9 @@ public class FileRuleSource implements RuleSource {
       URL fileUrl = cl.getResource(path);
       if (fileUrl != null) {
         RuleDsl dsl = loadFromUrl(fileUrl);
-        if (dsl != null) dsls.add(dsl);
+        if (dsl != null) {
+          dsls.add(dsl);
+        }
       } else {
         log.warn("[FileRuleSource] classpath 路径不存在: {}", path);
       }
@@ -243,7 +248,9 @@ public class FileRuleSource implements RuleSource {
       while (resources.hasMoreElements()) {
         URL url = resources.nextElement();
         RuleDsl dsl = loadFromUrl(url);
-        if (dsl != null) dsls.add(dsl);
+        if (dsl != null) {
+          dsls.add(dsl);
+        }
       }
     }
     return dsls;
@@ -266,12 +273,16 @@ public class FileRuleSource implements RuleSource {
       try (DirectoryStream<Path> stream = Files.newDirectoryStream(fsPath, this::isRuleFile)) {
         for (Path file : stream) {
           RuleDsl dsl = loadFromPath(file);
-          if (dsl != null) dsls.add(dsl);
+          if (dsl != null) {
+            dsls.add(dsl);
+          }
         }
       }
     } else if (isRuleFile(fsPath)) {
       RuleDsl dsl = loadFromPath(fsPath);
-      if (dsl != null) dsls.add(dsl);
+      if (dsl != null) {
+        dsls.add(dsl);
+      }
     }
     return dsls;
   }
@@ -281,7 +292,9 @@ public class FileRuleSource implements RuleSource {
     try (InputStream is = url.openStream()) {
       String fileName = url.getPath();
       String format = detectFormat(fileName);
-      if (format == null) return null;
+      if (format == null) {
+        return null;
+      }
       return RuleDslParser.loadFromStream(is, format);
     } catch (Exception e) {
       log.warn("[FileRuleSource] 加载失败: url={}, err={}", url, e.getMessage());
@@ -301,17 +314,25 @@ public class FileRuleSource implements RuleSource {
 
   /** 判断文件是否为规则文件 */
   private boolean isRuleFile(Path path) {
-    if (!Files.isRegularFile(path)) return false;
+    if (!Files.isRegularFile(path)) {
+      return false;
+    }
     String name = path.getFileName().toString().toLowerCase();
     return name.endsWith(".yml") || name.endsWith(".yaml") || name.endsWith(".json");
   }
 
   /** 根据文件名检测格式 */
   private String detectFormat(String fileName) {
-    if (fileName == null) return null;
+    if (fileName == null) {
+      return null;
+    }
     String lower = fileName.toLowerCase();
-    if (lower.endsWith(".yml") || lower.endsWith(".yaml")) return "yaml";
-    if (lower.endsWith(".json")) return "json";
+    if (lower.endsWith(".yml") || lower.endsWith(".yaml")) {
+      return "yaml";
+    }
+    if (lower.endsWith(".json")) {
+      return "json";
+    }
     return null;
   }
 

@@ -34,6 +34,15 @@ import com.njydsz.workflow.server.service.FlowTemplateRecommendService;
 @RequiredArgsConstructor
 public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendService {
 
+    /** 推荐评分权重：用户历史使用频率 */
+  private static final double WEIGHT_USER_COUNT = 0.5;
+
+  /** 推荐评分权重：模板热度 */
+  private static final double WEIGHT_USE_COUNT = 0.3;
+
+  /** 推荐评分基础分：所有模板的基础加成 */
+  private static final double BASE_SCORE_BONUS = 0.2;
+
   private final FlowTemplateRepository templateRepository;
   private final FlowInstanceRepository instanceRepository;
   private final WorkflowConverter converter;
@@ -105,21 +114,21 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
       String flowCode = template.getTemplateCode();
       int userCount = userFlowCount.getOrDefault(flowCode, 0);
       if (userCount > 0) {
-        score += 0.5 * ((double) userCount / maxUserCount);
+        score += WEIGHT_USER_COUNT * ((double) userCount / maxUserCount);
         reason = "您近期发起过 " + userCount + " 次";
       }
 
       // 模板热度（权重 0.3）
       long useCount = template.getUseCount() != null ? template.getUseCount() : 0;
       if (useCount > 0) {
-        score += 0.3 * ((double) useCount / maxUseCount);
+        score += WEIGHT_USE_COUNT * ((double) useCount / maxUseCount);
         if (reason.isEmpty()) {
           reason = "热门模板（使用 " + useCount + " 次）";
         }
       }
 
       // 基础分（权重 0.2）：所有模板都有
-      score += 0.2;
+      score += BASE_SCORE_BONUS;
 
       Map<String, Object> item = new LinkedHashMap<>();
       item.put("templateCode", template.getTemplateCode());

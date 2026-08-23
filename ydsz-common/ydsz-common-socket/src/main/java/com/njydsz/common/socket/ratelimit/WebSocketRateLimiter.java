@@ -1,6 +1,7 @@
 package com.njydsz.common.socket.ratelimit;
 
 import java.time.Duration;
+import java.util.Collections;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -100,7 +101,7 @@ public class WebSocketRateLimiter {
     DefaultRedisScript<Long> script = new DefaultRedisScript<>(INCR_EXPIRE_SCRIPT, Long.class);
     Long count =
         redisTemplate.execute(
-            script, java.util.Collections.singletonList(key), String.valueOf(WINDOW.getSeconds()));
+            script, Collections.singletonList(key), String.valueOf(WINDOW.getSeconds()));
     return count == null || count <= limit;
   }
 }

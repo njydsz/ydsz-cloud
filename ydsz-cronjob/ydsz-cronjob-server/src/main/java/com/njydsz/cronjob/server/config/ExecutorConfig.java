@@ -13,26 +13,50 @@ import lombok.Data;
 @Data
 public class ExecutorConfig {
 
+  /** 默认heartbeatIntervalSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_HEARTBEAT_INTERVAL_SECONDS = 10;
+
+  /** 默认offlineThresholdSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_OFFLINE_THRESHOLD_SECONDS = 30;
+
+  /** 默认drainTimeoutSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_DRAIN_TIMEOUT_SECONDS = 60;
+
+  /** 默认maxConcurrent值（可被配置文件覆盖） */
+  private static final int DEFAULT_MAX_CONCURRENT = 16;
+
+  /** 默认queueCapacity值（可被配置文件覆盖） */
+  private static final int DEFAULT_QUEUE_CAPACITY = 32;
+
+  /** 默认tenantPoolSize值（可被配置文件覆盖） */
+  private static final int DEFAULT_TENANT_POOL_SIZE = 10;
+
+  /** 默认tenantPoolQueueCapacity值（可被配置文件覆盖） */
+  private static final int DEFAULT_TENANT_POOL_QUEUE_CAPACITY = 200;
+
+  /** 默认isolationBuckets值（可被配置文件覆盖） */
+  private static final int DEFAULT_ISOLATION_BUCKETS = 8;
+
   /** 启动时注册到 ydsz_job_node 表 */
   private boolean registerOnStartup = true;
 
   /** 心跳上报间隔（秒，默认 10s） */
-  private long heartbeatIntervalSeconds = 10;
+  private long heartbeatIntervalSeconds = DEFAULT_HEARTBEAT_INTERVAL_SECONDS;
 
   /** 节点离线判定阈值（秒，超过此时间无心跳视为离线） */
-  private long offlineThresholdSeconds = 30;
+  private long offlineThresholdSeconds = DEFAULT_OFFLINE_THRESHOLD_SECONDS;
 
   /** 优雅下线时排空在执行任务 */
   private boolean drainOnShutdown = true;
 
   /** 排空超时时间（秒） */
-  private long drainTimeoutSeconds = 60;
+  private long drainTimeoutSeconds = DEFAULT_DRAIN_TIMEOUT_SECONDS;
 
   /** 单节点最大并发任务数 */
-  private int maxConcurrent = 16;
+  private int maxConcurrent = DEFAULT_MAX_CONCURRENT;
 
   /** P1-7: 执行线程池队列容量（0=无队列，SynchronousQueue；>0=有界队列） */
-  private int queueCapacity = 32;
+  private int queueCapacity = DEFAULT_QUEUE_CAPACITY;
 
   /** P1-7: 线程名前缀 */
   private String threadNamePrefix = "job-exec-";
@@ -54,10 +78,10 @@ public class ExecutorConfig {
   private String isolationStrategy = "none";
 
   /** P2-5: 每个租户/分组独立线程池的核心线程数 */
-  private int tenantPoolSize = 10;
+  private int tenantPoolSize = DEFAULT_TENANT_POOL_SIZE;
 
   /** P2-5: 每个租户/分组独立线程池的队列容量 */
-  private int tenantPoolQueueCapacity = 200;
+  private int tenantPoolQueueCapacity = DEFAULT_TENANT_POOL_QUEUE_CAPACITY;
 
   /**
    * P2-5: 分桶隔离的桶数量（默认 8）。
@@ -65,7 +89,7 @@ public class ExecutorConfig {
    * <p>使用固定数量的分桶池，通过哈希将租户/分组映射到对应分桶，避免无限创建线程池导致的资源耗尽问题。 仅当 {@code isolationStrategy} 为 {@code
    * tenant} 或 {@code job_group} 时生效。
    */
-  private int isolationBuckets = 8;
+  private int isolationBuckets = DEFAULT_ISOLATION_BUCKETS;
 
   /**
    * 获取执行线程池队列容量（兼容旧方法名）。

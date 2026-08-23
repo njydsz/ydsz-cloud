@@ -13,9 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.entity.FlowSkipDO;
-import com.njydsz.workflow.domain.enums.FlowNodeType;
 
 /**
  * P2-1: 流程定义图校验器
@@ -92,7 +92,12 @@ public class FlowGraphValidator {
     return nodeMap;
   }
 
-  /** 校验 START / END 节点存在性，返回起始节点编码。 */
+  /**
+   * 校验 START / END 节点存在性，返回起始节点编码。
+   *
+   * @param nodes 参数说明
+   * @return 返回值说明
+   */
   private String validateStartAndEndNodes(List<FlowNodeDO> nodes) {
     List<FlowNodeDO> startNodes = nodes.stream()
         .filter(n -> FlowNodeType.START.getCode() == n.getNodeType()).toList();
@@ -122,7 +127,13 @@ public class FlowGraphValidator {
     }
   }
 
-  /** 构建邻接表（正向 + 反向），并校验跳转无悬空边。 */
+  /**
+   * 构建邻接表（正向 + 反向），并校验跳转无悬空边。
+   *
+   * @param nodeMap 参数说明
+   * @param skips 参数说明
+   * @return 返回值说明
+   */
   private GraphEdges buildAdjacencyLists(Map<String, FlowNodeDO> nodeMap, List<FlowSkipDO> skips) {
     Map<String, List<String>> outEdges = new HashMap<>(nodeMap.size());
     Map<String, List<String>> inEdges = new HashMap<>(nodeMap.size());
@@ -154,7 +165,13 @@ public class FlowGraphValidator {
     return new GraphEdges(outEdges, inEdges, validSkipCount);
   }
 
-  /** 校验所有节点从 START 可达。 */
+  /**
+   * 校验所有节点从 START 可达。
+   *
+   * @param startCode 参数说明
+   * @param edges 参数说明
+   * @param nodes 参数说明
+   */
   private void validateReachability(String startCode, GraphEdges edges, List<FlowNodeDO> nodes) {
     Set<String> reachable = bfs(startCode, edges.outEdges);
     List<String> unreachable = nodes.stream()
@@ -166,7 +183,12 @@ public class FlowGraphValidator {
     }
   }
 
-  /** 校验每个非 END 节点都能到达 END 节点。 */
+  /**
+   * 校验每个非 END 节点都能到达 END 节点。
+   *
+   * @param nodes 参数说明
+   * @param edges 参数说明
+   */
   private void validateCanReachEnd(List<FlowNodeDO> nodes, GraphEdges edges) {
     List<String> endNodes = nodes.stream()
         .filter(n -> FlowNodeType.END.getCode() == n.getNodeType())
@@ -186,7 +208,12 @@ public class FlowGraphValidator {
     }
   }
 
-  /** 校验无孤立节点：非 START 节点有入边，非 END 节点有出边。 */
+  /**
+   * 校验无孤立节点：非 START 节点有入边，非 END 节点有出边。
+   *
+   * @param nodes 参数说明
+   * @param edges 参数说明
+   */
   private void validateNoIsolatedNodes(List<FlowNodeDO> nodes, GraphEdges edges) {
     for (FlowNodeDO node : nodes) {
       String code = node.getNodeCode();
@@ -200,7 +227,13 @@ public class FlowGraphValidator {
     }
   }
 
-  /** 从指定起点 BFS 遍历，返回所有可达节点 */
+  /**
+   * 从指定起点 BFS 遍历，返回所有可达节点
+   *
+   * @param start 参数说明
+   * @param edges 参数说明
+   * @return 返回值说明
+   */
   private Set<String> bfs(String start, Map<String, List<String>> edges) {
     Set<String> visited = new HashSet<>(edges.size());
     Queue<String> queue = new LinkedList<>();
@@ -221,14 +254,22 @@ public class FlowGraphValidator {
 
   /**
    * 从 FlowSkipDO.ext 中提取 sourceRef
-   *
+   * 
    * <p>委托 {@link FlowSkipUtils#extractSourceNodeCode} 统一实现，避免三处重复。
+   *
+   * @param skip 参数说明
+   * @return 返回值说明
    */
   private String extractSourceRef(FlowSkipDO skip) {
     return FlowSkipUtils.extractSourceNodeCode(skip);
   }
 
-  /** 环路检测（DFS + 颜色标记法），仅记录日志不拒绝 */
+  /**
+   * 环路检测（DFS + 颜色标记法），仅记录日志不拒绝
+   *
+   * @param nodeCodes 参数说明
+   * @param edges 参数说明
+   */
   private void detectCycles(Set<String> nodeCodes, Map<String, List<String>> edges) {
     Set<String> visited = new HashSet<>(nodeCodes.size());
     Set<String> inStack = new HashSet<>(nodeCodes.size());

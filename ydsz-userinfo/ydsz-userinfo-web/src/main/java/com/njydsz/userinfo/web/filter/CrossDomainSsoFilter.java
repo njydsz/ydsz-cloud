@@ -136,7 +136,7 @@ public class CrossDomainSsoFilter extends OncePerRequestFilter {
     // 1. 优先从 Authorization Header 取 Token
     String authHeader = request.getHeader(HeaderConstants.AUTHORIZATION);
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
-      String token = authHeader.substring(7);
+      String token = authHeader.substring(BEARER_PREFIX_LENGTH);
       if (!token.isBlank()) {
         log.debug("Token extracted from Authorization header");
         return token;

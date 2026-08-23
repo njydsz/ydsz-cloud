@@ -11,9 +11,9 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
+import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
-import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendHandler;
 import com.njydsz.message.server.service.config.UserChannelBindingService;
@@ -71,7 +71,12 @@ public class ChannelResolveHandler implements SendHandler {
     return 100;
   }
 
-  /** 判断通道是否启用：优先 ChannelRouter，回退 MessageProperties.channelEnabled。 */
+  /**
+   * 判断通道是否启用：优先 ChannelRouter，回退 MessageProperties.channelEnabled。
+   *
+   * @param channel 参数说明
+   * @return 返回值说明
+   */
   private boolean isChannelEnabled(String channel) {
     try {
       if (!channelRouter.isChannelEnabled(channel)) {
@@ -91,7 +96,12 @@ public class ChannelResolveHandler implements SendHandler {
     return true;
   }
 
-  /** 解析 receiver 为通道原生联系方式。 */
+  /**
+   * 解析 receiver 为通道原生联系方式。
+   *
+   * @param request 参数说明
+   * @param ctx 参数说明
+   */
   private void resolveChannelUser(MessageRequest request, SendContext ctx) {
     String receiver = ctx.getReceiver();
     String channel = ctx.getChannel();

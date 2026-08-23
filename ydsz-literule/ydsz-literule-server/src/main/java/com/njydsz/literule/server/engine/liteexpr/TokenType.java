@@ -27,32 +27,57 @@ public enum TokenType {
   IDENTIFIER,
 
   // ===== 运算符 =====
+  /** + */
   PLUS, // +
+  /** - */
   MINUS, // -
+  /** 乘号 */
   STAR, // *
+  /** / */
   SLASH, // /
+  /** % */
   PERCENT, // %
+  /** == */
   EQ, // ==
+  /** != */
   NEQ, // !=
+  /** > */
   GT, // >
+  /** >= */
   GTE, // >=
+  /** < */
   LT, // <
+  /** <= */
   LTE, // <=
+  /** && 或 and */
   AND, // && 或 and
+  /** || 或 or */
   OR, // || 或 or
+  /** ! 或 not */
   NOT, // ! 或 not
 
   // ===== 分隔符 =====
+  /** ( */
   LPAREN, // (
+  /** ) */
   RPAREN, // )
+  /** [ */
   LBRACKET, // [
+  /** ] */
   RBRACKET, // ]
+  /** { */
   LBRACE, // {
+  /** } */
   RBRACE, // }
+  /** , */
   COMMA, // ,
+  /** . */
   DOT, // .
+  /** : */
   COLON, // :
+  /** ? */
   QUESTION, // ?
+  /** -> */
   ARROW, // ->
 
   // ===== 特殊 =====
@@ -64,6 +89,24 @@ public enum TokenType {
   TEMPLATE_VAR_END,
   /** 源代码结束 */
   EOF;
+
+  /** 运算符优先级：逻辑或 */
+  private static final int PREC_OR = 20;
+
+  /** 运算符优先级：逻辑与 */
+  private static final int PREC_AND = 30;
+
+  /** 运算符优先级：相等比较 */
+  private static final int PREC_EQUALITY = 40;
+
+  /** 运算符优先级：关系比较 */
+  private static final int PREC_RELATIONAL = 50;
+
+  /** 运算符优先级：加减 */
+  private static final int PREC_ADDITIVE = 60;
+
+  /** 运算符优先级：乘除取模 */
+  private static final int PREC_MULTIPLICATIVE = 70;
 
   /**
    * 判断当前 Token 是否为二元运算符
@@ -84,12 +127,12 @@ public enum TokenType {
    */
   public int precedence() {
     return switch (this) {
-      case OR -> 20;
-      case AND -> 30;
-      case EQ, NEQ -> 40;
-      case GT, GTE, LT, LTE -> 50;
-      case PLUS, MINUS -> 60;
-      case STAR, SLASH, PERCENT -> 70;
+      case OR -> PREC_OR;
+      case AND -> PREC_AND;
+      case EQ, NEQ -> PREC_EQUALITY;
+      case GT, GTE, LT, LTE -> PREC_RELATIONAL;
+      case PLUS, MINUS -> PREC_ADDITIVE;
+      case STAR, SLASH, PERCENT -> PREC_MULTIPLICATIVE;
       default -> 0;
     };
   }

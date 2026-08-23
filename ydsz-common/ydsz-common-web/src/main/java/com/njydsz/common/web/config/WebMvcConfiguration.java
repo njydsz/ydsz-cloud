@@ -265,7 +265,9 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
 
   private boolean isSessionRedisEnabled(ApplicationContext context) {
     try {
+            // CHECKSTYLE.OFF: RegexpSinglelineJava — 反射类名字符串常量，非代码引用
       Class<?> repoClass = Class.forName("org.springframework.session.SessionRepository");
+      // CHECKSTYLE.ON: RegexpSinglelineJava
       String[] names = context.getBeanNamesForType(repoClass, false, false);
       return names.length > 0;
     } catch (ClassNotFoundException e) {
@@ -275,7 +277,9 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
 
   private boolean isSecurityEnabled(ApplicationContext context) {
     try {
+            // CHECKSTYLE.OFF: RegexpSinglelineJava — 反射类名字符串常量，非代码引用
       Class<?> chainClass = Class.forName("org.springframework.security.web.SecurityFilterChain");
+      // CHECKSTYLE.ON: RegexpSinglelineJava
       String[] names = context.getBeanNamesForType(chainClass, false, false);
       return names.length > 0;
     } catch (ClassNotFoundException e) {

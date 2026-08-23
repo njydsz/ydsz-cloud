@@ -78,6 +78,15 @@ public class DecisionTableExcelExporter implements DecisionTableExcelService {
   /** 动作列前缀 */
   private static final String ACTION_PREFIX = "A:";
 
+  /** 决策表最小总列数（无任何列定义时的兜底） */
+  private static final int MIN_TOTAL_COLUMNS = 4;
+
+  /** 元数据行：Scope 列索引 */
+  private static final int SCOPE_COL_INDEX = 3;
+
+  /** 元数据解析最大行数（row4 对应的下标） */
+  private static final int MAX_STRING_ROWS = 3;
+
   /**
    * 导出决策表为 Excel 字节数组
    *
@@ -95,7 +104,7 @@ public byte[] exportToExcel(DecisionTableDefinition definition) {
           nullToEmpty(definition.getConditionColumns());
       List<DecisionTableDefinition.Column> actionColumns =
           nullToEmpty(definition.getActionColumns());
-      int totalCols = Math.max(conditionColumns.size() + actionColumns.size(), 4);
+      int totalCols = Math.max(conditionColumns.size() + actionColumns.size(), MIN_TOTAL_COLUMNS);
 
       List<List<Object>> allRows = new ArrayList<>();
 
@@ -112,7 +121,7 @@ public byte[] exportToExcel(DecisionTableDefinition definition) {
       metaRow2.set(1, "Description: " + nullToEmpty(definition.getDescription()));
       metaRow2.set(2, "Priority: " + definition.getPriority());
       if (definition.getScope() != null && !definition.getScope().isBlank()) {
-        metaRow2.set(3, "Scope: " + definition.getScope());
+        metaRow2.set(SCOPE_COL_INDEX, "Scope: " + definition.getScope());
       }
       allRows.add(metaRow2);
 
@@ -238,7 +247,7 @@ public DecisionTableDefinition importFromExcel(byte[] excelBytes) {
       List<String> row1 = stringRows.isEmpty() ? List.of() : stringRows.get(0);
       List<String> row2 = stringRows.size() > 1 ? stringRows.get(1) : List.of();
       List<String> row3 = stringRows.size() > 2 ? stringRows.get(2) : List.of();
-      List<String> row4 = stringRows.size() > 3 ? stringRows.get(3) : List.of();
+      List<String> row4 = stringRows.size() > MAX_STRING_ROWS ? stringRows.get(MAX_STRING_ROWS) : List.of();
 
       // 解析元数据
       Map<String, String> meta = new LinkedHashMap<>();

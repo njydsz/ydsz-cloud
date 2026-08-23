@@ -21,7 +21,6 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.literule.server.debug.Breakpoint;
 import com.njydsz.literule.server.debug.BreakpointHit;
 import com.njydsz.literule.server.debug.DebugCommand;
 import com.njydsz.literule.server.debug.DebugSession;
@@ -67,7 +66,9 @@ public class RuleDebugController {
 
   // ==================== 断点管理 ====================
 
-  /** 查询全部断点 */
+  /** 查询全部断点
+   * @return 返回值说明
+   */
   @GetMapping("/breakpoints")
   public YdszResponse<Object> listBreakpoints() {
     RuleDebugger debugger = debugger();
@@ -122,7 +123,10 @@ public class RuleDebugController {
     return YdszResponse.success(result);
   }
 
-  /** 删除断点 */
+  /** 删除断点
+   * @param breakpointId 参数说明
+      * @return 返回值说明
+   */
   @DeleteMapping("/breakpoints/{breakpointId}")
   public YdszResponse<Object> removeBreakpoint(@PathVariable String breakpointId) {
     RuleDebugger debugger = debugger();
@@ -165,7 +169,10 @@ public class RuleDebugController {
     return YdszResponse.success(result);
   }
 
-  /** 查询会话详情（含历史命中） */
+  /** 查询会话详情（含历史命中）
+   * @param sessionId 参数说明
+      * @return 返回值说明
+   */
   @GetMapping("/sessions/{sessionId}")
   public YdszResponse<Object> getSession(@PathVariable String sessionId) {
     RuleDebugger debugger = debugger();
@@ -224,7 +231,10 @@ public class RuleDebugController {
     return YdszResponse.success(true);
   }
 
-  /** 终止调试会话 */
+  /** 终止调试会话
+   * @param sessionId 参数说明
+      * @return 返回值说明
+   */
   @DeleteMapping("/sessions/{sessionId}")
   public YdszResponse<Object> terminateSession(@PathVariable String sessionId) {
     RuleDebugger debugger = debugger();
@@ -235,7 +245,9 @@ public class RuleDebugController {
     return YdszResponse.success(true);
   }
 
-  /** 查询全部活跃会话 */
+  /** 查询全部活跃会话
+   * @return 返回值说明
+   */
   @GetMapping("/sessions")
   public YdszResponse<Object> listSessions() {
     RuleDebugger debugger = debugger();

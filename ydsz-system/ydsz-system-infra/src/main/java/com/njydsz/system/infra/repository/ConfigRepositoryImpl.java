@@ -1,5 +1,4 @@
 package com.njydsz.system.infra.repository;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -9,13 +8,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.dto.ConfigDTO;
+import com.njydsz.system.domain.query.ConfigPageQuery;
+import com.njydsz.system.domain.repository.ConfigRepository;
+import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.infra.converter.SystemConverter;
 import com.njydsz.system.infra.entity.ConfigDO;
 import com.njydsz.system.infra.mapper.ConfigMapper;
-import com.njydsz.system.domain.repository.ConfigRepository;
-import com.njydsz.system.domain.dto.ConfigDTO;
-import com.njydsz.system.domain.query.ConfigPageQuery;
-import com.njydsz.system.domain.vo.ConfigVO;
+
+
+
 
 /**
  * 系统配置仓储实现（Infra 层）。
@@ -53,8 +55,11 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   @Override
   public Optional<ConfigVO> findByKeyIgnoreStatus(String configKey) {
     return Optional.ofNullable(
-        configMapper.selectOne(
-            new LambdaQueryWrapper<ConfigDO>().eq(ConfigDO::getConfigKey, configKey).eq(ConfigDO::getDeleted, 0).last("LIMIT 1")))
+            configMapper.selectOne(
+                new LambdaQueryWrapper<ConfigDO>()
+                    .eq(ConfigDO::getConfigKey, configKey)
+                    .eq(ConfigDO::getDeleted, 0)
+                    .last("LIMIT 1")))
         .map(converter::entityToVO);
   }
 
@@ -102,7 +107,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
     wrapper.orderByDesc(ConfigDO::getCreatedAt);
     com.baomidou.mybatisplus.core.metadata.IPage<ConfigDO> result = configMapper.selectPage(page, wrapper);
     List<ConfigVO> vos = converter.configListToVO(result.getRecords());
-    return PageResponse.success(result.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
+    return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   @Override

@@ -10,10 +10,33 @@ import org.mapstruct.factory.Mappers;
 
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.dto.FlowDefinitionDTO;
-import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
-import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.dto.FlowDelegateAuthPutDTO;
+import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
+import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
+import com.njydsz.workflow.domain.vo.FlowAdminRoleVO;
+import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
+import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
+import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
+import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
+import com.njydsz.workflow.domain.vo.FlowCategoryVO;
+import com.njydsz.workflow.domain.vo.FlowCcRuleVO;
+import com.njydsz.workflow.domain.vo.FlowCcVO;
+import com.njydsz.workflow.domain.vo.FlowCommentVO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
+import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
+import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
+import com.njydsz.workflow.domain.vo.FlowHisInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
+import com.njydsz.workflow.domain.vo.FlowSkipVO;
+import com.njydsz.workflow.domain.vo.FlowTemplateVO;
+import com.njydsz.workflow.domain.vo.FlowTimerVO;
+import com.njydsz.workflow.domain.vo.FlowUserVO;
+import com.njydsz.workflow.domain.vo.StringVO;
 import com.njydsz.workflow.infra.entity.FlowAdminRoleDO;
 import com.njydsz.workflow.infra.entity.FlowAttachmentDO;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
@@ -35,29 +58,6 @@ import com.njydsz.workflow.infra.entity.FlowSkipDO;
 import com.njydsz.workflow.infra.entity.FlowTemplateDO;
 import com.njydsz.workflow.infra.entity.FlowTimerDO;
 import com.njydsz.workflow.infra.entity.FlowUserDO;
-import com.njydsz.workflow.domain.vo.FlowAdminRoleVO;
-import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
-import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
-import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
-import com.njydsz.workflow.domain.vo.FlowCategoryVO;
-import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
-import com.njydsz.workflow.domain.vo.FlowCcRuleVO;
-import com.njydsz.workflow.domain.vo.FlowCcVO;
-import com.njydsz.workflow.domain.vo.FlowCommentVO;
-import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
-import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
-import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
-import com.njydsz.workflow.domain.vo.FlowHisInstanceVO;
-import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
-import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
-import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.domain.vo.FlowSkipVO;
-import com.njydsz.workflow.domain.vo.FlowTemplateVO;
-import com.njydsz.workflow.domain.vo.FlowTimerVO;
-import com.njydsz.workflow.domain.vo.FlowUserVO;
-import com.njydsz.workflow.domain.vo.StringVO;
 
 /**
  * workflow 模块统一 MapStruct 转换器（Infra 层）。
@@ -83,6 +83,7 @@ import com.njydsz.workflow.domain.vo.StringVO;
 @Mapper
 public interface WorkflowConverter {
 
+  /** MapStruct 单例实例 */
   WorkflowConverter INSTANT = Mappers.getMapper(WorkflowConverter.class);
 
   // ===== FlowAdminRoleDO =====
@@ -149,7 +150,12 @@ public interface WorkflowConverter {
 
   List<FlowHisInstanceVO> flowHisInstanceListToVO(List<FlowHisInstanceDO> entities);
 
-  /** 历史实例 VO → 历史实例 DO。 */
+  /**
+   * 历史实例 VO → 历史实例 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowHisInstanceDO entityToDO(FlowHisInstanceVO vo);
 
   // ===== FlowHisTaskDO =====
@@ -199,7 +205,12 @@ public interface WorkflowConverter {
 
   List<FlowUserVO> flowUserListToVO(List<FlowUserDO> entities);
 
-  /** 委派授权 PostDTO → Entity（创建场景）。 */
+  /**
+   * 委派授权 PostDTO → Entity（创建场景）。
+   *
+   * @param dto 参数说明
+   * @return 返回值说明
+   */
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -212,7 +223,12 @@ public interface WorkflowConverter {
   @Mapping(target = "providerTraceId", ignore = true)
   FlowDelegateAuthDO postDtoToEntity(FlowDelegateAuthPostDTO dto);
 
-  /** 委派授权 PutDTO → Entity（更新场景）。 */
+  /**
+   * 委派授权 PutDTO → Entity（更新场景）。
+   *
+   * @param dto 参数说明
+   * @return 返回值说明
+   */
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
@@ -224,84 +240,209 @@ public interface WorkflowConverter {
 
   // ===== VO → DO (Repository 写入场景) =====
 
-  /** 流程实例 VO → 流程实例 DO。 */
+  /**
+   * 流程实例 VO → 流程实例 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowInstanceDO entityToDO(FlowInstanceVO vo);
 
-/** 运行时任务 VO → 运行时任务 DO。 */
+/**
+ * 运行时任务 VO → 运行时任务 DO。
+ *
+ * @param vo 参数说明
+ * @return 返回值说明
+ */
 FlowRunTaskDO entityToDO(FlowRunTaskVO vo);
 
-/** 运行时任务 DTO → 运行时任务 DO。 */
+/**
+ * 运行时任务 DTO → 运行时任务 DO。
+ *
+ * @param dto 参数说明
+ * @return 返回值说明
+ */
 FlowRunTaskDO dtoToDO(FlowRunTaskDTO dto);
 
-/** 流程定义 DTO → 流程定义 DO。 */
+/**
+ * 流程定义 DTO → 流程定义 DO。
+ *
+ * @param dto 参数说明
+ * @return 返回值说明
+ */
 FlowDefinitionDO dtoToDO(FlowDefinitionDTO dto);
 
-/** 流程分类 DTO → 流程分类 DO。 */
+/**
+ * 流程分类 DTO → 流程分类 DO。
+ *
+ * @param dto 参数说明
+ * @return 返回值说明
+ */
 FlowCategoryDO dtoToDO(FlowCategoryDTO dto);
 
-  /** 流程节点 VO → 流程节点 DO。 */
+  /**
+   * 流程节点 VO → 流程节点 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowNodeDO entityToDO(FlowNodeVO vo);
 
-  /** 流程定义 VO → 流程定义 DO。 */
+  /**
+   * 流程定义 VO → 流程定义 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowDefinitionDO entityToDO(FlowDefinitionVO vo);
 
-  /** 审计日志 VO → 审计日志 DO。 */
+  /**
+   * 审计日志 VO → 审计日志 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowAuditLogDO entityToDO(FlowAuditLogVO vo);
 
-  /** 历史任务 VO → 历史任务 DO。 */
+  /**
+   * 历史任务 VO → 历史任务 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowHisTaskDO entityToDO(FlowHisTaskVO vo);
 
-  /** 定时器 VO → 定时器 DO。 */
+  /**
+   * 定时器 VO → 定时器 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowTimerDO entityToDO(FlowTimerVO vo);
 
-  /** 事件订阅 VO → 事件订阅 DO。 */
+  /**
+   * 事件订阅 VO → 事件订阅 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowEventSubscriptionDO entityToDO(FlowEventSubscriptionVO vo);
 
-  /** 自动触发 VO → 自动触发 DO。 */
+  /**
+   * 自动触发 VO → 自动触发 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowAutoTriggerDO entityToDO(FlowAutoTriggerVO vo);
 
-  /** 附件 VO → 附件 DO。 */
+  /**
+   * 附件 VO → 附件 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowAttachmentDO entityToDO(FlowAttachmentVO vo);
 
-  /** 抄送 VO → 抄送 DO。 */
+  /**
+   * 抄送 VO → 抄送 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowCcDO entityToDO(FlowCcVO vo);
 
-  /** 审批意见 VO → 审批意见 DO。 */
+  /**
+   * 审批意见 VO → 审批意见 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowCommentDO entityToDO(FlowCommentVO vo);
 
-  /** 流程分类 VO → 流程分类 DO。 */
+  /**
+   * 流程分类 VO → 流程分类 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowCategoryDO entityToDO(FlowCategoryVO vo);
 
-  /** 流程模板 VO → 流程模板 DO。 */
+  /**
+   * 流程模板 VO → 流程模板 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowTemplateDO entityToDO(FlowTemplateVO vo);
 
-  /** 委托授权 VO → 委托授权 DO。 */
+  /**
+   * 委托授权 VO → 委托授权 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowDelegateAuthDO entityToDO(FlowDelegateAuthVO vo);
 
-  /** 管理员角色 VO → 管理员角色 DO。 */
+  /**
+   * 管理员角色 VO → 管理员角色 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowAdminRoleDO entityToDO(FlowAdminRoleVO vo);
 
-  /** 节点跳转 VO → 节点跳转 DO。 */
+  /**
+   * 节点跳转 VO → 节点跳转 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowSkipDO entityToDO(FlowSkipVO vo);
 
-  /** 流程用户 VO → 流程用户 DO。 */
+  /**
+   * 流程用户 VO → 流程用户 DO。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
   FlowUserDO entityToDO(FlowUserVO vo);
 
   // ===== DO → DTO (updateById 场景) =====
 
-  /** 流程实例 DO → 流程实例 DTO（更新场景）。 */
+  /**
+   * 流程实例 DO → 流程实例 DTO（更新场景）。
+   *
+   * @param entity 参数说明
+   * @return 返回值说明
+   */
   FlowInstanceDTO doToDto(FlowInstanceDO entity);
 
-  /** 运行时任务 DO → 运行时任务 DTO（更新场景，如有需要）。 */
+  /**
+   * 运行时任务 DO → 运行时任务 DTO（更新场景，如有需要）。
+   *
+   * @param entity 参数说明
+   * @return 返回值说明
+   */
   com.njydsz.workflow.domain.dto.FlowTaskOperateDTO runTaskDoToDto(FlowRunTaskDO entity);
 
   // ===== String (通用字符串包装) =====
-  /** 字符串 → {@link StringVO}（如合并组 ID 包装）。 */
+  /**
+   * 字符串 → {@link StringVO}（如合并组 ID 包装）。
+   *
+   * @param value 参数说明
+   * @return 返回值说明
+   */
   default StringVO entityToVO(String value) {
     return value == null ? null : new StringVO(value);
   }
 
-  /** 字符串列表 → {@link StringVO} 列表（如已审批人 ID 列表包装）。 */
+  /**
+   * 字符串列表 → {@link StringVO} 列表（如已审批人 ID 列表包装）。
+   *
+   * @param values 参数说明
+   * @return 返回值说明
+   */
   default List<StringVO> stringListToVO(List<String> values) {
     if (values == null) {
       return Collections.emptyList();

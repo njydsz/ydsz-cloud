@@ -47,7 +47,11 @@ public class RateLimitMetricsCollector {
     meterRegistry.gauge("ydsz_ratelimit_pass_total", totalPassed);
   }
 
-  /** 记录一次决策 */
+  /**
+   * 记录一次决策。
+   *
+   * @param decision 限流决策
+   */
   public void record(RateLimitDecision decision) {
     if (decision == null || meterRegistry == null) {
       return;
@@ -86,7 +90,11 @@ public class RateLimitMetricsCollector {
     }
   }
 
-  /** 创建 Micrometer 监听器 */
+  /**
+   * 创建 Micrometer 监听器。
+   *
+   * @return 决策监听器（委托 {@link #record(RateLimitDecision)}）
+   */
   public RateLimitManager.DecisionListener asListener() {
     return this::record;
   }

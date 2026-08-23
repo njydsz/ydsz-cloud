@@ -38,6 +38,33 @@ import com.njydsz.message.server.service.core.ReachStrategyService;
 @Service
 @RequiredArgsConstructor
 public class ReachStrategyServiceImpl implements ReachStrategyService {
+  /** 默认活跃度得分 */
+  private static final double DEFAULT_ACTIVITY_SCORE = 0.5;
+
+  /** 默认打开率 */
+  private static final double DEFAULT_OPEN_RATE = 0.3;
+
+  /** 默认偏好得分 */
+  private static final double DEFAULT_PREF_SCORE = 0.5;
+
+  /** 默认成本得分 */
+  private static final double DEFAULT_COST_SCORE = 0.5;
+
+  /** 活跃度权重 */
+  private static final double ACTIVITY_WEIGHT = 0.4;
+
+  /** 打开率权重 */
+  private static final double OPEN_RATE_WEIGHT = 0.3;
+
+  /** 偏好权重 */
+  private static final double PREF_SCORE_WEIGHT = 0.2;
+
+  /** 成本权重 */
+  private static final double COST_SCORE_WEIGHT = 0.1;
+
+  /** 得分放大倍数 */
+  private static final double SCORE_SCALE = 100;
+
 
   /** Redis 画像缓存 key 前缀 */
   private static final String PROFILE_KEY_PREFIX = "ydsz:reach:profile:";
@@ -101,7 +128,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
       for (Map.Entry<Object, Object> e : raw.entrySet()) {
         String key = String.valueOf(e.getKey());
         if (key.startsWith("score:")) {
-          String channel = key.substring(6);
+          String channel = key.substring(CHANNEL_PREFIX_LENGTH);
           try {
             scores.put(channel, Integer.parseInt(String.valueOf(e.getValue())));
           } catch (NumberFormatException e) {
@@ -174,12 +201,16 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
 
   /**
    * 计算单个通道的综合评分。
-   *
+   * 
    * <p>评分 = 活跃度 * 0.4 + 打开率 * 0.3 + 偏好 * 0.2 + 成本 * 0.1
+   *
+   * @param channel 参数说明
+   * @param profile 参数说明
+   * @return 返回值说明
    */
   private double calculateChannelScore(String channel, UserReachProfileDTO profile) {
     // 活跃度评分（0-100 → 0-1）
-    double activityScore = 0.5; // 默认中等
+    double activityScore = DEFAULT_ACTIVITY_SCORE; // 默认中等
     if (profile.getChannelActivityScores() != null) {
       Integer score = profile.getChannelActivityScores().get(channel);
       if (score != null) {
@@ -187,27 +218,32 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
       }
     }
     // 打开率
-    double openRate = profile.getOpenRate() != null ? profile.getOpenRate() : 0.3;
+    double openRate = profile.getOpenRate() != null ? profile.getOpenRate() : DEFAULT_OPEN_RATE;
     // 偏好评分：在偏好列表中越靠前分越高
-    double prefScore = 0.5;
+    double prefScore = DEFAULT_PREF_SCORE;
     if (profile.getChannelPreferences() != null) {
       int idx = profile.getChannelPreferences().indexOf(channel);
       if (idx >= 0) {
         int total = profile.getChannelPreferences().size();
-        prefScore = total > 0 ? (total - idx) / (double) total : 0.5;
+        prefScore = total > 0 ? (total - idx) / (double) total : DEFAULT_COST_SCORE;
       }
     }
     // 成本评分（越低成本越高分）
-    double costScore = 1.0 - CHANNEL_COST.getOrDefault(channel, 0.5);
+    double costScore = 1.0 - CHANNEL_COST.getOrDefault(channel, DEFAULT_COST_SCORE);
     // 综合评分
-    return (activityScore * 0.4 + openRate * 0.3 + prefScore * 0.2 + costScore * 0.1) * 100;
+    return (activityScore * ACTIVITY_WEIGHT + openRate * OPEN_RATE_WEIGHT
+        + prefScore * PREF_SCORE_WEIGHT + costScore * COST_SCORE_WEIGHT) * SCORE_SCALE;
   }
 
-  /** 返回默认画像。 */
+  /**
+   * 返回默认画像。
+   *
+   * @return 返回值说明
+   */
   private UserReachProfileDTO defaultProfile() {
     UserReachProfileDTO profile = new UserReachProfileDTO();
     profile.setChannelActivityScores(Map.of());
-    profile.setOpenRate(0.3);
+    profile.setOpenRate(DEFAULT_OPEN_RATE);
     profile.setClickRate(0.1);
     profile.setTimezone(DEFAULT_TIMEZONE);
     return profile;

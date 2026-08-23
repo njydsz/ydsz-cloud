@@ -19,7 +19,6 @@ import reactor.core.publisher.Mono;
 
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayMetrics;
-import com.njydsz.gateway.loadbalancer.GrayLoadBalancer;
 
 /**
  * 灰度路由响应头过滤器（P2-E4 可观测性）。

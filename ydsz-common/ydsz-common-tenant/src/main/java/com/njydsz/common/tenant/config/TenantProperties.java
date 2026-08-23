@@ -244,7 +244,11 @@ public class TenantProperties {
     return tableColumnMapping.get(tableName.toLowerCase());
   }
 
-  /** 获取规范化后的忽略表集合（小写化）。 */
+  /**
+   * 获取规范化后的忽略表集合（小写化）。
+   *
+   * @return 忽略表小写集合（空时为空集合）
+   */
   public Set<String> getNormalizedIgnoreTables() {
     if (ignoreTables == null || ignoreTables.isEmpty()) {
       return Collections.emptySet();
@@ -258,7 +262,11 @@ public class TenantProperties {
     return normalized;
   }
 
-  /** 获取规范化后的白名单 URL 集合（去空白）。 */
+  /**
+   * 获取规范化后的白名单 URL 集合（去空白）。
+   *
+   * @return 白名单 URL 去空白集合（空时为空集合）
+   */
   public Set<String> getNormalizedAnonUrls() {
     if (anonUrls == null || anonUrls.isEmpty()) {
       return Collections.emptySet();

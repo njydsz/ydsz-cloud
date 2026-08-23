@@ -1,8 +1,7 @@
 package com.njydsz.userinfo.server.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * SAML 2.0 配置属性
@@ -23,6 +22,9 @@ import lombok.Data;
 @Data
 @ConfigurationProperties(prefix = "ydsz.userinfo.saml")
 public class SamlProperties {
+
+  /** 默认maxClockSkewSeconds值（可被配置文件覆盖） */
+  private static final long DEFAULT_MAX_CLOCK_SKEW_SECONDS = 300;
 
   /** 是否启用 SAML 2.0 SP 端点 */
   private boolean enabled = false;
@@ -58,7 +60,7 @@ public class SamlProperties {
   private String spCertificate;
 
   /** SAML Response 最大有效时间（秒），默认 300 秒防重放 */
-  private long maxClockSkewSeconds = 300;
+  private long maxClockSkewSeconds = DEFAULT_MAX_CLOCK_SKEW_SECONDS;
 
   /** 是否要求 IdP 对 Response 签名 */
   private boolean wantAssertionsSigned = true;

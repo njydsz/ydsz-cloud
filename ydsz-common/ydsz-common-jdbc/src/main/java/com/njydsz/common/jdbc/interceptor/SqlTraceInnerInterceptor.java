@@ -86,6 +86,7 @@ import com.njydsz.common.jdbc.monitor.SqlFingerprint;
 public class SqlTraceInnerInterceptor
     implements InnerInterceptor, Ordered, MeterBinder, Interceptor {
 
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在拦截器 finally 块调用 remove() 清理（云顶规范 15.1）
   /** ThreadLocal 存储当前查询/更新操作的开始时间与 SQL 标识 */
   private static final ThreadLocal<TimingContext> TIMING_CONTEXT = new ThreadLocal<>();
 
@@ -96,6 +97,7 @@ public class SqlTraceInnerInterceptor
    * 读取，替代硬编码 "N/A"。
    */
   private static final ThreadLocal<Integer> AFFECTED_ROWS = new ThreadLocal<>();
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /** SQL 审计专用日志，便于独立配置 appender */
   private static final Logger AUDIT_LOG = LoggerFactory.getLogger("sql.audit");

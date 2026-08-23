@@ -5,9 +5,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,9 +22,9 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.domain.dto.SubscriptionUpsertDTO;
 import com.njydsz.message.domain.vo.MsgSubscriptionVO;
+import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.server.service.config.SubscriptionService;
 
 /**

@@ -11,7 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 1.0.0
  */
 @ConfigurationProperties(prefix = "ydsz.base.request")
-public class BaseRequestProperties {
+public class YdszRequestProperties {
 
   /** 是否启用请求体大小限制。 */
   private boolean enabled = true;

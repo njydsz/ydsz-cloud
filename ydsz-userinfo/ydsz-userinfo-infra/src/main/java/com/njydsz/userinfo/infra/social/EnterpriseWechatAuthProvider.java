@@ -49,6 +49,9 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
   /** 企业微信用户详情端点（可通过 ydsz.userinfo.social.providers.enterprise_wechat.user-detail-url 覆盖） */
   private static final String DEFAULT_USER_DETAIL_URL = "https://qyapi.weixin.qq.com/cgi-bin/user/get";
 
+  /** 默认令牌过期时间（秒） */
+  private static final long DEFAULT_EXPIRE_IN = 7200L;
+
   /**
    * 构造企业微信认证提供者。
    *
@@ -123,7 +126,7 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
       throw new SocialAuthException("企业微信获取用户信息失败: 未返回 UserId");
     }
 
-    return new SocialAccessToken(accessToken, null, 7200, userId, null);
+    return new SocialAccessToken(accessToken, null, DEFAULT_EXPIRE_IN, userId, null);
   }
 
   @Override

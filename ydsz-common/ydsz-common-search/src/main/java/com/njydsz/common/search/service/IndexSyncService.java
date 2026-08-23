@@ -107,10 +107,12 @@ public class IndexSyncService {
    * @return 默认索引同步线程池
    */
   public static ThreadPoolTaskExecutor createDefaultIndexSyncExecutor(SearchProperties properties) {
-    // CHECKSTYLE.OFF: RegexpSinglelineJava
+    int coreSize = Math.max(2, properties.getIndex().getThreadPoolSize());
+        // CHECKSTYLE.OFF: RegexpSinglelineJava
+    // 兜底线程池：仅在外部未注入线程池时使用，生产环境由 ydsz.thread.pools.* 统一管理
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     // CHECKSTYLE.ON: RegexpSinglelineJava
-    executor.setCorePoolSize(Math.max(2, properties.getIndex().getThreadPoolSize()));
+    executor.setCorePoolSize(coreSize);
     executor.setMaxPoolSize(Math.max(4, properties.getIndex().getThreadPoolSize() * 2));
     executor.setQueueCapacity(512);
     executor.setThreadNamePrefix("ydsz-index-sync-");
@@ -136,7 +138,9 @@ public class IndexSyncService {
    * @param operation 索引变更操作；为 {@code null} 时直接返回
    */
   public void handleOperation(IndexOperation operation) {
-    if (operation == null) return;
+    if (operation == null) {
+      return;
+    }
     Optional<IndexStrategy> indexStrategy = engineRegistry.getIndexStrategy();
     if (indexStrategy.isEmpty()) {
       log.debug("[IndexSync] 主引擎不支持索引操作，跳过");
@@ -172,6 +176,7 @@ public class IndexSyncService {
               operation);
         }
       }
+      default -> { /* 未知操作类型忽略 */ }
     }
   }
 
@@ -349,6 +354,7 @@ public class IndexSyncService {
             opBuilder.documents(docs);
           }
         }
+        default -> { /* 未知操作类型忽略 */ }
       }
       return opBuilder.build();
     } catch (Exception e) {

@@ -13,6 +13,9 @@ import lombok.Data;
 @Data
 public class PartitionConfig {
 
+  /** 默认totalPartitions值（可被配置文件覆盖） */
+  private static final int DEFAULT_TOTAL_PARTITIONS = 4;
+
   /**
    * 是否启用分区调度（默认 false）。
    *
@@ -25,7 +28,7 @@ public class PartitionConfig {
    *
    * <p>建议设置为节点数的 2-4 倍，确保节点扩缩容时分区可均匀再分配。
    */
-  private int totalPartitions = 4;
+  private int totalPartitions = DEFAULT_TOTAL_PARTITIONS;
 
   /**
    * 分片分配策略: job_key（默认）/ job_group。

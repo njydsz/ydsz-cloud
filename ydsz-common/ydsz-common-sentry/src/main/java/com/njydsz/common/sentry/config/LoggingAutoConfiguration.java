@@ -127,6 +127,9 @@ public class LoggingAutoConfiguration {
 
   /** 容器关闭时释放日志发布器资源。 */
   @PreDestroy
+  /**
+   * destroy。
+   */
   public void destroy() {
     if (asyncLogPublisher != null) {
       asyncLogPublisher.close();

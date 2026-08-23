@@ -129,8 +129,12 @@ public final class RuleGraphValidator {
 
     // 5. 未连接节点校验：除根节点外，孤立节点告警
     for (ChainNodeDTO n : nodes) {
-      if (n.getNodeId() == null) continue;
-      if (n.getParentNodeId() == null) continue; // 根节点跳过
+      if (n.getNodeId() == null) {
+        continue;
+      }
+      if (n.getParentNodeId() == null) {
+        continue; // 根节点跳过
+      }
       if (!referencedNodes.contains(n.getNodeId())) {
         issues.add(GraphValidationIssue.warn("ORPHAN_NODE", "孤立节点 " + n.getNodeId() + " 未被任何边连接"));
       }
@@ -140,7 +144,9 @@ public final class RuleGraphValidator {
 
   /** 画布问题严重度 */
   public enum Level {
+    /** 常量说明 */
     ERROR,
+    /** 常量说明 */
     WARN
   }
 
@@ -205,7 +211,9 @@ public final class RuleGraphValidator {
    * @return true=通过
    */
   public static boolean isValid(List<GraphValidationIssue> issues) {
-    if (issues == null) return true;
+    if (issues == null) {
+      return true;
+    }
     for (GraphValidationIssue i : issues) {
       if (i.getLevel() == Level.ERROR) {
         return false;
@@ -219,11 +227,14 @@ public final class RuleGraphValidator {
    *
    * @param issues 问题列表
    * @return 不可修改的分类集合
+      * @param level 参数说明
    */
   public static Set<GraphValidationIssue> filterByLevel(
       List<GraphValidationIssue> issues, Level level) {
     Set<GraphValidationIssue> result = new LinkedHashSet<>();
-    if (issues == null) return result;
+    if (issues == null) {
+      return result;
+    }
     for (GraphValidationIssue i : issues) {
       if (i.getLevel() == level) {
         result.add(i);

@@ -12,12 +12,16 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum NotifyChannel {
+  /** 邮件渠道 */
   EMAIL(1, "邮件"),
 
   /** 短信渠道。当前版本暂未实现短信渠道，将在后续版本补充。 */
   SMS(2, "短信"),
+  /** 企业微信渠道 */
   WECOM(3, "企业微信"),
+  /** 钉钉渠道 */
   DINGTALK(4, "钉钉"),
+  /** 飞书渠道 */
   FEISHU(5, "飞书"),
   /** 站内信渠道。当前版本暂未实现，将在后续版本补充。 */
   INSITE(6, "站内信");

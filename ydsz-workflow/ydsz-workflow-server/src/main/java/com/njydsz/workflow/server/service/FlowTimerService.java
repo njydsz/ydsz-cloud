@@ -68,9 +68,19 @@ public interface FlowTimerService {
    */
   int cancelByInstance(String instanceId, String reason);
 
-  /** 查询实例的所有定时器 */
+  /**
+   * 查询实例的所有定时器
+   *
+   * @param instanceId 参数说明
+   * @return 返回值说明
+   */
   List<FlowTimerDO> listByInstance(String instanceId);
 
-  /** 统计实例的 PENDING 定时器数 */
+  /**
+   * 统计实例的 PENDING 定时器数
+   *
+   * @param instanceId 参数说明
+   * @return 返回值说明
+   */
   long countPending(String instanceId);
 }

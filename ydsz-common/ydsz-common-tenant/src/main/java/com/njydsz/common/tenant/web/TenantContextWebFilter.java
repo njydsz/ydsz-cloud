@@ -21,8 +21,8 @@ import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.model.CurrentUser;
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import com.njydsz.common.tenant.config.TenantProperties;
+import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import com.njydsz.common.tenant.feign.TenantHeaderContract;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
 
@@ -78,7 +78,9 @@ public class TenantContextWebFilter implements Filter {
       if (isAnonUrl(requestUri)) {
         setTenantContext(TenantContext.skip());
         contextSet = true;
-        if (metrics != null) metrics.incrementActiveContext();
+        if (metrics != null) {
+          metrics.incrementActiveContext();
+        }
         chain.doFilter(req, res);
         return;
       }
@@ -132,7 +134,9 @@ public class TenantContextWebFilter implements Filter {
         }
         setTenantContext(builder.build());
         contextSet = true;
-        if (metrics != null) metrics.incrementActiveContext();
+        if (metrics != null) {
+          metrics.incrementActiveContext();
+        }
 
         MDC.put(MDC_TENANT_ID, tenantId);
       }
@@ -228,7 +232,8 @@ public class TenantContextWebFilter implements Filter {
     if (!(authObj instanceof CurrentUser auth)) {
       return null;
     }
-    switch (claim) {      case "tenantId":
+    switch (claim) {
+      case "tenantId":
         return auth.getTenantId();
       case "uniqueId":
       case "userId":
@@ -256,7 +261,7 @@ public class TenantContextWebFilter implements Filter {
    */
   private String invokeGetPermissionIds(CurrentUser auth, String claim) {
     try {
-      java.util.Set<String> ids = auth.getPermissionIds(claim);
+      Set<String> ids = auth.getPermissionIds(claim);
       if (ids != null && !ids.isEmpty()) {
         return String.join(",", ids.stream().map(Object::toString).toList());
       }

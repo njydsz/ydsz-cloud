@@ -42,7 +42,7 @@ import com.njydsz.common.util.http.UrlPathUtils;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class BaseSecurityHeaderFilter extends OncePerRequestFilter {
+public abstract class BaseSecurityHeaderFilter extends OncePerRequestFilter {
 
   private final SecurityHeaderProperties properties;
 

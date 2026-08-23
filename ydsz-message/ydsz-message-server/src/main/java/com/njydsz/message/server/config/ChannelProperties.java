@@ -18,6 +18,42 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "ydsz")
 public class ChannelProperties {
 
+  /** 默认connectTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
+
+  /** 默认readTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_READ_TIMEOUT = 10000;
+
+  /** 默认connectTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
+
+  /** 默认readTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_READ_TIMEOUT = 10000;
+
+  /** 默认connectTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
+
+  /** 默认readTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_READ_TIMEOUT = 10000;
+
+  /** 默认connectTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
+
+  /** 默认readTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_READ_TIMEOUT = 10000;
+
+  /** 默认connectTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
+
+  /** 默认readTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_READ_TIMEOUT = 10000;
+
+  /** 默认connectTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
+
+  /** 默认readTimeout值（可被配置文件覆盖） */
+  private static final int DEFAULT_READ_TIMEOUT = 10000;
+
   /** Webhook 通道兜底配置 */
   private WebhookConfig webhook = new WebhookConfig();
 
@@ -31,10 +67,10 @@ public class ChannelProperties {
     private String defaultUrl = "";
 
     /** 连接超时（毫秒） */
-    private int connectTimeout = 5000;
+    private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
     /** 读取超时（毫秒） */
-    private int readTimeout = 10000;
+    private int readTimeout = DEFAULT_READ_TIMEOUT;
 
     /**
      * 签名密钥（可选，P1-F1 新增）。
@@ -80,10 +116,10 @@ public class ChannelProperties {
     private String secret = "";
 
     /** 连接超时（毫秒） */
-    private int connectTimeout = 5000;
+    private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
     /** 读取超时（毫秒） */
-    private int readTimeout = 10000;
+    private int readTimeout = DEFAULT_READ_TIMEOUT;
   }
 
   /**
@@ -117,10 +153,10 @@ public class ChannelProperties {
     private String baseUrl = "https://oapi.dingtalk.com";
 
     /** 连接超时(毫秒) */
-    private int connectTimeout = 5000;
+    private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
     /** 读取超时(毫秒) */
-    private int readTimeout = 10000;
+    private int readTimeout = DEFAULT_READ_TIMEOUT;
   }
 
   /** 企业微信群机器人配置。 */
@@ -130,10 +166,10 @@ public class ChannelProperties {
     private String defaultKey = "";
 
     /** 连接超时（毫秒） */
-    private int connectTimeout = 5000;
+    private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
     /** 读取超时（毫秒） */
-    private int readTimeout = 10000;
+    private int readTimeout = DEFAULT_READ_TIMEOUT;
   }
 
   /**
@@ -167,10 +203,10 @@ public class ChannelProperties {
     private String baseUrl = "https://qyapi.weixin.qq.com";
 
     /** 连接超时(毫秒) */
-    private int connectTimeout = 5000;
+    private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
     /** 读取超时(毫秒) */
-    private int readTimeout = 10000;
+    private int readTimeout = DEFAULT_READ_TIMEOUT;
   }
 
   /** 飞书群机器人配置。 */
@@ -183,9 +219,9 @@ public class ChannelProperties {
     private String secret = "";
 
     /** 连接超时（毫秒） */
-    private int connectTimeout = 5000;
+    private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
     /** 读取超时（毫秒） */
-    private int readTimeout = 10000;
+    private int readTimeout = DEFAULT_READ_TIMEOUT;
   }
 }

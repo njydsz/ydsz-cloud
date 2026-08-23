@@ -45,6 +45,7 @@ public final class HintManager {
 
   private HintManager() {}
 
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已通过 clear()/remove() 在使用后清理（云顶规范 15.1）
   private static final ThreadLocal<Hint> CURRENT_HINT =
       new NamedThreadLocal<>("Datasource Hint") {
         @Override
@@ -52,6 +53,7 @@ public final class HintManager {
           return null;
         }
       };
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /**
    * 强制后续数据库操作走主库。

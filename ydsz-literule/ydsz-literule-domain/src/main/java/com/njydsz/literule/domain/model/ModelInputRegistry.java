@@ -8,8 +8,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -17,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-
 import com.njydsz.literule.api.RuleContext;
 
 /**
@@ -46,13 +43,25 @@ import com.njydsz.literule.api.RuleContext;
  */
 public class ModelInputRegistry {
 
-  private static final Logger log = LoggerFactory.getLogger(ModelInputRegistry.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ModelInputRegistry.class);
 
   /** 模型字段 key 前缀 */
   public static final String MODEL_KEY_PREFIX = "model.";
 
   /** 默认单个模型调用超时（毫秒） */
   public static final long DEFAULT_TIMEOUT_MS = 100L;
+
+  /** 线程池最大线程数 */
+  private static final int MAX_POOL_SIZE = 60;
+
+  /** 线程池空闲保活时间（秒） */
+  private static final long KEEP_ALIVE_SECONDS = 60L;
+
+  /** 线程池任务队列容量 */
+  private static final int QUEUE_CAPACITY = 1024;
+
+  /** 销毁时等待线程池终止的秒数 */
+  private static final int AWAIT_TERMINATION_SECONDS = 5;
 
   /** 已注册的 provider 列表（线程安全，读多写少） */
   private final CopyOnWriteArrayList<ModelInputProvider> providers = new CopyOnWriteArrayList<>();
@@ -90,9 +99,9 @@ public class ModelInputRegistry {
     this.executor =
         ExecutorUtils.builder()
             .corePoolSize(0)
-            .maxPoolSize(60)
-            .keepAliveTime(60L, TimeUnit.SECONDS)
-            .queueCapacity(1024)
+            .maxPoolSize(MAX_POOL_SIZE)
+            .keepAliveTime(KEEP_ALIVE_SECONDS, TimeUnit.SECONDS)
+            .queueCapacity(QUEUE_CAPACITY)
             .threadNamePrefix("literule-model-input-")
             .daemon(true)
             .build();
@@ -125,7 +134,7 @@ public class ModelInputRegistry {
     // 同 modelId 旧 provider 移除（支持热更新覆盖）
     unregister(provider.getModelId());
     providers.add(provider);
-    log.info(
+    LOGGER.info(
         "[LiteRule-Model] 注册 ModelInputProvider: modelId={}, class={}",
         provider.getModelId(),
         provider.getClass().getSimpleName());
@@ -141,7 +150,7 @@ public class ModelInputRegistry {
       return;
     }
     if (providers.remove(provider)) {
-      log.info("[LiteRule-Model] 注销 ModelInputProvider: modelId={}", provider.getModelId());
+      LOGGER.info("[LiteRule-Model] 注销 ModelInputProvider: modelId={}", provider.getModelId());
     }
   }
 
@@ -223,8 +232,8 @@ public class ModelInputRegistry {
     Map<String, Object> aggregated = new LinkedHashMap<>();
     for (ModelInputProvider provider : providers) {
       if (!provider.isEnabled()) {
-        if (log.isDebugEnabled()) {
-          log.debug("[LiteRule-Model] Provider {} 已禁用，跳过", provider.getModelId());
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug("[LiteRule-Model] Provider {} 已禁用，跳过", provider.getModelId());
         }
         continue;
       }
@@ -245,14 +254,14 @@ public class ModelInputRegistry {
     if (ownsExecutor && !executor.isShutdown()) {
       executor.shutdown();
       try {
-        if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+        if (!executor.awaitTermination(AWAIT_TERMINATION_SECONDS, TimeUnit.SECONDS)) {
           executor.shutdownNow();
         }
       } catch (InterruptedException e) {
         executor.shutdownNow();
         Thread.currentThread().interrupt();
       }
-      log.info("[LiteRule-Model] 模型调用线程池已关闭");
+      LOGGER.info("[LiteRule-Model] 模型调用线程池已关闭");
     }
   }
 
@@ -276,7 +285,7 @@ public class ModelInputRegistry {
       return result == null ? Collections.emptyMap() : result;
     } catch (TimeoutException e) {
       future.cancel(true);
-      log.warn("[LiteRule-Model] Provider {} 调用超时（{}ms），已取消", provider.getModelId(), timeoutMs);
+      LOGGER.warn("[LiteRule-Model] Provider {} 调用超时（{}ms），已取消", provider.getModelId(), timeoutMs);
       if (!fallbackOnError) {
         throw new ModelInvocationException(
             "模型调用超时: " + provider.getModelId() + " (" + timeoutMs + "ms)", e);
@@ -284,14 +293,14 @@ public class ModelInputRegistry {
       return Collections.emptyMap();
     } catch (ExecutionException e) {
       Throwable cause = e.getCause() != null ? e.getCause() : e;
-      log.warn("[LiteRule-Model] Provider {} 调用异常: {}", provider.getModelId(), cause.getMessage());
+      LOGGER.warn("[LiteRule-Model] Provider {} 调用异常: {}", provider.getModelId(), cause.getMessage());
       if (!fallbackOnError) {
         throw new ModelInvocationException("模型调用异常: " + provider.getModelId(), cause);
       }
       return Collections.emptyMap();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      log.warn("[LiteRule-Model] Provider {} 调用被中断", provider.getModelId());
+      LOGGER.warn("[LiteRule-Model] Provider {} 调用被中断", provider.getModelId());
       if (!fallbackOnError) {
         throw new ModelInvocationException("模型调用中断: " + provider.getModelId(), e);
       }

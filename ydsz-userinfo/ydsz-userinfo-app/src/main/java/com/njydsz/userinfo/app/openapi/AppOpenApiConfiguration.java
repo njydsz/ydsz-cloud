@@ -4,11 +4,10 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
-
-import com.njydsz.userinfo.app.config.ConditionalOnPlatform;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.userinfo.app.config.ConditionalOnPlatform;
 
 /**
  * App 端 OpenAPI 配置（P1-2 双入口架构）。

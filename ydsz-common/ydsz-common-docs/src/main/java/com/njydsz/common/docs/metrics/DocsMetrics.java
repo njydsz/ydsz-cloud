@@ -79,7 +79,9 @@ public class DocsMetrics {
    */
   public void recordParse(DocumentFormat format, boolean success, long durationMs) {
     MeterRegistry r = registry();
-    if (r == null) return;
+    if (r == null) {
+      return;
+    }
     Counter.builder("docs.parse.total")
         .tags(
             Tags.of(
@@ -102,7 +104,9 @@ public class DocsMetrics {
    */
   public void recordPiiDetected(PiiType type, int count) {
     MeterRegistry r = registry();
-    if (r == null) return;
+    if (r == null) {
+      return;
+    }
     Counter.builder("docs.pii.detected")
         .tags(Tags.of(Tag.of("type", type.name())))
         .register(r)
@@ -118,7 +122,9 @@ public class DocsMetrics {
    */
   public void recordSecurityScan(SecurityLevel level) {
     MeterRegistry r = registry();
-    if (r == null) return;
+    if (r == null) {
+      return;
+    }
     Counter.builder("docs.security.scan")
         .tags(Tags.of(Tag.of("level", level.name())))
         .register(r)
@@ -136,7 +142,9 @@ public class DocsMetrics {
    */
   public void recordPreprocess(String processorName, long durationMs) {
     MeterRegistry r = registry();
-    if (r == null) return;
+    if (r == null) {
+      return;
+    }
     Timer.builder("docs.preprocess.duration")
         .tags(Tags.of(Tag.of("processor", processorName)))
         .register(r)

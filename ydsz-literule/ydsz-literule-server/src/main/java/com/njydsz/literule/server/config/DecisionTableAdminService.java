@@ -32,6 +32,9 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 @Slf4j
 public class DecisionTableAdminService {
 
+    /** 节点 ID 取前缀长度 */
+  private static final int NODE_ID_PREFIX_LENGTH = 8;
+
   private final RuleEngine ruleEngine;
   private final DecisionTableConfigProvider configProvider;
   private final ApplicationEventPublisher eventPublisher;
@@ -49,7 +52,7 @@ public class DecisionTableAdminService {
     this.ruleEngine = ruleEngine;
     this.configProvider = configProvider;
     this.eventPublisher = eventPublisher;
-    this.nodeId = IdGenerator.nextIdStr().substring(0, 8);
+    this.nodeId = IdGenerator.nextIdStr().substring(0, NODE_ID_PREFIX_LENGTH);
   }
 
   public void setBroadcaster(RuleConfigBroadcaster broadcaster) {
@@ -60,17 +63,27 @@ public class DecisionTableAdminService {
     this.nodeId = nodeId;
   }
 
-  /** 查询全部决策表 */
+  /** 查询全部决策表
+   * @return 返回值说明
+   */
   public List<DecisionTableDefinition> listAll() {
     return configProvider.loadAllTables();
   }
 
-  /** 根据编码查询 */
+  /** 根据编码查询
+   * @param tableCode 参数说明
+   * @return 返回值说明
+   */
   public DecisionTableDefinition getByCode(String tableCode) {
     return configProvider.findByCode(tableCode);
   }
 
-  /** 新增/更新决策表 */
+  /** 新增/更新决策表
+   * @param definition 参数说明
+   * @param operator 参数说明
+   * @param changeDesc 参数说明
+   * @return 保存后的决策表定义
+   */
   @Transactional(rollbackFor = Exception.class)
   public DecisionTableDefinition save(
       DecisionTableDefinition definition, String operator, String changeDesc) {
@@ -87,7 +100,11 @@ public class DecisionTableAdminService {
     return saved;
   }
 
-  /** 切换启停 */
+  /** 切换启停
+   * @param tableCode 参数说明
+   * @param enabled 参数说明
+   * @param operator 参数说明
+   */
   @Transactional(rollbackFor = Exception.class)
   public void toggle(String tableCode, boolean enabled, String operator) {
     configProvider.toggleEnabled(tableCode, enabled, operator);
@@ -100,7 +117,10 @@ public class DecisionTableAdminService {
         operator);
   }
 
-  /** 删除决策表 */
+  /** 删除决策表
+   * @param tableCode 参数说明
+   * @param operator 参数说明
+   */
   @Transactional(rollbackFor = Exception.class)
   public void delete(String tableCode, String operator) {
     configProvider.delete(tableCode, operator);
@@ -110,7 +130,11 @@ public class DecisionTableAdminService {
     log.info("[LiteRule-DecisionTable] 决策表已删除: code={}, operator={}", tableCode, operator);
   }
 
-  /** dry-run：构建临时 DecisionTableRule 评估（不注册到引擎） */
+  /** dry-run：构建临时 DecisionTableRule 评估（不注册到引擎）
+   * @param tableCode 参数说明
+   * @param facts 参数说明
+   * @return 返回值说明
+   */
   public RuleResult dryRun(String tableCode, Map<String, Object> facts) {
     DecisionTableDefinition def = configProvider.findByCode(tableCode);
     if (def == null) {

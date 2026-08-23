@@ -60,59 +60,94 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
   public void save(AuthPolicyDTO dto) {
     String tid = (dto.getTenantId() == null || dto.getTenantId().isBlank()) ? null : dto.getTenantId();
     AuthPolicyDO existing = mapper.selectByTenantId(tid);
-
     if (existing == null) {
-      // 创建场景
-      AuthPolicyDO entity = new AuthPolicyDO();
-      entity.setTenantId(dto.getTenantId());
-      entity.setName(dto.getName());
-      entity.setPasswordMinLength(dto.getPasswordMinLength());
-      entity.setPasswordRequireUppercase(dto.getPasswordRequireUppercase());
-      entity.setPasswordRequireDigit(dto.getPasswordRequireDigit());
-      entity.setMfaEnabled(dto.getMfaEnabled());
-      entity.setCaptchaEnabled(dto.getCaptchaEnabled());
-      entity.setAllowedIdentityProviders(dto.getAllowedIdentityProviders());
-      entity.setMaxSessionsPerUser(dto.getMaxSessionsPerUser());
-      entity.setSessionTimeoutSeconds(dto.getSessionTimeoutSeconds());
-      entity.setRemark(dto.getRemark());
-
-      mapper.insert(entity);
-      log.info("认证策略已创建: tenantId={}", dto.getTenantId());
+      createNew(dto);
     } else {
-      // 更新场景（仅修改非 null 字段）
-      if (dto.getName() != null) {
-        existing.setName(dto.getName());
-      }
-      if (dto.getPasswordMinLength() != null) {
-        existing.setPasswordMinLength(dto.getPasswordMinLength());
-      }
-      if (dto.getPasswordRequireUppercase() != null) {
-        existing.setPasswordRequireUppercase(dto.getPasswordRequireUppercase());
-      }
-      if (dto.getPasswordRequireDigit() != null) {
-        existing.setPasswordRequireDigit(dto.getPasswordRequireDigit());
-      }
-      if (dto.getMfaEnabled() != null) {
-        existing.setMfaEnabled(dto.getMfaEnabled());
-      }
-      if (dto.getCaptchaEnabled() != null) {
-        existing.setCaptchaEnabled(dto.getCaptchaEnabled());
-      }
-      if (dto.getAllowedIdentityProviders() != null) {
-        existing.setAllowedIdentityProviders(dto.getAllowedIdentityProviders());
-      }
-      if (dto.getMaxSessionsPerUser() != null) {
-        existing.setMaxSessionsPerUser(dto.getMaxSessionsPerUser());
-      }
-      if (dto.getSessionTimeoutSeconds() != null) {
-        existing.setSessionTimeoutSeconds(dto.getSessionTimeoutSeconds());
-      }
-      if (dto.getRemark() != null) {
-        existing.setRemark(dto.getRemark());
-      }
+      updateExisting(existing, dto);
+    }
+  }
 
-      mapper.updateById(existing);
-      log.info("认证策略已更新: tenantId={}", dto.getTenantId());
+  /**
+   * 创建认证策略：全部字段写入。
+   *
+   * @param dto 待创建数据
+   */
+  private void createNew(AuthPolicyDTO dto) {
+    AuthPolicyDO entity = new AuthPolicyDO();
+    entity.setTenantId(dto.getTenantId());
+    entity.setName(dto.getName());
+    entity.setPasswordMinLength(dto.getPasswordMinLength());
+    entity.setPasswordRequireUppercase(dto.getPasswordRequireUppercase());
+    entity.setPasswordRequireDigit(dto.getPasswordRequireDigit());
+    entity.setMfaEnabled(dto.getMfaEnabled());
+    entity.setCaptchaEnabled(dto.getCaptchaEnabled());
+    entity.setAllowedIdentityProviders(dto.getAllowedIdentityProviders());
+    entity.setMaxSessionsPerUser(dto.getMaxSessionsPerUser());
+    entity.setSessionTimeoutSeconds(dto.getSessionTimeoutSeconds());
+    entity.setRemark(dto.getRemark());
+
+    mapper.insert(entity);
+    log.info("认证策略已创建: tenantId={}", dto.getTenantId());
+  }
+
+  /**
+   * 更新认证策略：仅修改非 null 字段。
+   *
+   * @param existing 已有实体
+   * @param dto 待更新数据
+   */
+  private void updateExisting(AuthPolicyDO existing, AuthPolicyDTO dto) {
+    applyBasicFields(existing, dto);
+    applySecurityFields(existing, dto);
+    mapper.updateById(existing);
+    log.info("认证策略已更新: tenantId={}", dto.getTenantId());
+  }
+
+  /**
+   * 更新基础字段（名称/备注）。
+   *
+   * @param existing 已有实体
+   * @param dto 待更新数据
+   */
+  private void applyBasicFields(AuthPolicyDO existing, AuthPolicyDTO dto) {
+    if (dto.getName() != null) {
+      existing.setName(dto.getName());
+    }
+    if (dto.getRemark() != null) {
+      existing.setRemark(dto.getRemark());
+    }
+  }
+
+  /**
+   * 更新安全策略字段（密码策略/MFA/验证码/会话等）。
+   *
+   * @param existing 已有实体
+   * @param dto 待更新数据
+   */
+  private void applySecurityFields(AuthPolicyDO existing, AuthPolicyDTO dto) {
+    if (dto.getPasswordMinLength() != null) {
+      existing.setPasswordMinLength(dto.getPasswordMinLength());
+    }
+    if (dto.getPasswordRequireUppercase() != null) {
+      existing.setPasswordRequireUppercase(dto.getPasswordRequireUppercase());
+    }
+    if (dto.getPasswordRequireDigit() != null) {
+      existing.setPasswordRequireDigit(dto.getPasswordRequireDigit());
+    }
+    if (dto.getMfaEnabled() != null) {
+      existing.setMfaEnabled(dto.getMfaEnabled());
+    }
+    if (dto.getCaptchaEnabled() != null) {
+      existing.setCaptchaEnabled(dto.getCaptchaEnabled());
+    }
+    if (dto.getAllowedIdentityProviders() != null) {
+      existing.setAllowedIdentityProviders(dto.getAllowedIdentityProviders());
+    }
+    if (dto.getMaxSessionsPerUser() != null) {
+      existing.setMaxSessionsPerUser(dto.getMaxSessionsPerUser());
+    }
+    if (dto.getSessionTimeoutSeconds() != null) {
+      existing.setSessionTimeoutSeconds(dto.getSessionTimeoutSeconds());
     }
   }
 

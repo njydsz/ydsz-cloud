@@ -2,11 +2,9 @@ package com.njydsz.userinfo.server.auth;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -273,6 +271,9 @@ public class GeoIpService {
 
     /**
      * 获取异常时的风险评分附加值。
+     *
+     * @param configuredAddition 配置的基础风险分值
+     * @return 异常时返回配置分值，正常时返回 0
      */
     public int getRiskScoreAddition(int configuredAddition) {
       return anomaly ? configuredAddition : 0;

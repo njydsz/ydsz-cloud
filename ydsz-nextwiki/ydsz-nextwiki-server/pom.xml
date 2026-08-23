@@ -12,6 +12,11 @@
     <name>ydsz-nextwiki-server</name>
     <description>Application Layer - 应用服务编排、异步管线、事件监听</description>
     <dependencies>
+        <!-- api 层（Feign Client + DTO：NextwikiDTOs.SortItem/SummaryResult 等） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-nextwiki-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-nextwiki-domain</artifactId>
@@ -65,6 +70,11 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-search</artifactId>
+        </dependency>
+        <!-- P1-2: WebSocket 实时推送（RealtimePushTemplate 批量进度推送 / @提及通知） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-socket</artifactId>
         </dependency>
         <!-- dynamic-datasource（@DS 注解，common-jdbc 中标记为 optional） -->
         <dependency>

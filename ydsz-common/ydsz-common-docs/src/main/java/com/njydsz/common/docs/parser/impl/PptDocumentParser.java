@@ -90,9 +90,8 @@ public class PptDocumentParser implements DocumentParser {
                       .build());
               fullText.append(text).append('\n');
             }
-          }
-          // 表格形状
-          else if (shape instanceof XSLFTable tableShape) {
+          } else if (shape instanceof XSLFTable tableShape) {
+            // 表格形状
             List<List<String>> rows = new ArrayList<>();
             int numRows = tableShape.getNumberOfRows();
             int maxCols = 0;

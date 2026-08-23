@@ -124,8 +124,12 @@ public class ABTestService {
    * @return true=相等
    */
   private boolean safeEquals(String a, String b) {
-    if (a == null && b == null) return true;
-    if (a == null || b == null) return false;
+    if (a == null && b == null) {
+      return true;
+    }
+    if (a == null || b == null) {
+      return false;
+    }
     return a.equals(b);
   }
 

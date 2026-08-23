@@ -113,11 +113,11 @@ public class SentryService {
    * @param operation 要执行的操作
    * @param <T> 返回值类型
    * @return 操作的返回值
-   * @throws Exception 操作执行中的异常
+   * @throws Throwable 操作执行中的异常
    */
   public <T> T time(
       String name, String description, Map<String, String> tags, CheckedSupplier<T> operation)
-      throws Exception {
+      throws Throwable {
     long start = System.currentTimeMillis();
     try {
       return operation.get();
@@ -268,8 +268,8 @@ public class SentryService {
      * 获取结果。
      *
      * @return 结果
-     * @throws Exception 执行异常
+     * @throws Throwable 执行异常
      */
-    T get() throws Exception;
+    T get() throws Throwable;
   }
 }

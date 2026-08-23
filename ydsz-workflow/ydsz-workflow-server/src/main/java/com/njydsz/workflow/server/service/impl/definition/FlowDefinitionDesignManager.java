@@ -7,6 +7,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
@@ -19,9 +25,6 @@ import com.njydsz.workflow.domain.enums.FlowSkipType;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowSkipRepository;
-import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
-import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
 import com.njydsz.workflow.infra.entity.FlowNodeDO;
@@ -30,13 +33,6 @@ import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.BpmnModel;
 import com.njydsz.workflow.server.engine.BpmnXmlParser;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
-import com.njydsz.workflow.server.service.impl.definition.FlowDefinitionQueryService;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 /**
  * 流程定义设计器管理器
@@ -583,7 +579,12 @@ public class FlowDefinitionDesignManager {
     return true;
   }
 
-  /** 查询流程定义的锁定状态 */
+  /**
+   * 查询流程定义的锁定状态。
+   *
+   * @param definitionId 流程定义 ID
+   * @return 锁定状态 Map
+   */
   public Map<String, Object> getLockStatus(String definitionId) {
     if (!StringUtils.hasText(definitionId)) {
       throw SysException.builder()

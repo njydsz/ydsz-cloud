@@ -1,6 +1,7 @@
 package com.njydsz.workflow.server.engine.listener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,11 +29,11 @@ public class FlowListenerPluginExecutor {
 
   /**
    * 构造器注入所有 {@link FlowListenerPlugin} 实现
+   * 
    *
-   * @param plugins Spring 容器中所有监听器插件
-   */
+   * @param plugins 参数说明   */
   public FlowListenerPluginExecutor(List<FlowListenerPlugin> plugins) {
-    this.pluginMap = new java.util.HashMap<>();
+    this.pluginMap = new HashMap<>();
     for (FlowListenerPlugin plugin : plugins) {
       String name = plugin.getClass().getSimpleName();
       // 首字母小写作为默认 Bean 名称
@@ -93,6 +94,14 @@ public class FlowListenerPluginExecutor {
 
   /**
    * 分发事件到具体插件的对应回调
+   *
+   * @param plugin 参数说明
+   * @param eventType 参数说明
+   * @param instanceId 参数说明
+   * @param taskId 参数说明
+   * @param nodeCode 参数说明
+   * @param variables 参数说明
+   * @param ctx 参数说明
    */
   private void dispatch(FlowListenerPlugin plugin, FlowListenerEventType eventType,
       String instanceId, String taskId, String nodeCode,

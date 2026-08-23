@@ -50,7 +50,13 @@ public class RateLimitContext implements Serializable {
   /** 方法签名（用于 AOP） */
   private String methodSignature;
 
-  /** 添加上下文属性 */
+  /**
+   * 添加上下文属性。
+   *
+   * @param key 属性键
+   * @param value 属性值
+   * @return 当前上下文（链式调用）
+   */
   public RateLimitContext put(String key, Object value) {
     if (this.attributes == null) {
       this.attributes = new HashMap<>();
@@ -59,7 +65,13 @@ public class RateLimitContext implements Serializable {
     return this;
   }
 
-  /** 添加热点参数 */
+  /**
+   * 添加热点参数。
+   *
+   * @param index 参数索引
+   * @param value 参数值
+   * @return 当前上下文（链式调用）
+   */
   public RateLimitContext putHotParam(int index, Object value) {
     if (this.hotParams == null) {
       this.hotParams = new HashMap<>();
@@ -68,12 +80,23 @@ public class RateLimitContext implements Serializable {
     return this;
   }
 
-  /** 获取属性 */
+  /**
+   * 获取属性。
+   *
+   * @param key 属性键
+   * @return 属性值（不存在时为 {@code null}）
+   */
   public Object get(String key) {
     return attributes == null ? null : attributes.get(key);
   }
 
-  /** 获取属性（带默认值） */
+  /**
+   * 获取属性（带默认值）。
+   *
+   * @param key 属性键
+   * @param defaultValue 默认值
+   * @return 属性值（不存在时返回默认值）
+   */
   public Object getOrDefault(String key, Object defaultValue) {
     return attributes == null ? defaultValue : attributes.getOrDefault(key, defaultValue);
   }

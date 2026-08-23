@@ -32,7 +32,9 @@ import com.njydsz.userinfo.domain.vo.BanInfoVO;
  *   <li>{@code loginFailCount} / {@code lockedUntil}：登录失败保护，达到阈值自动锁定
  * </ul>
  *
- * <p><b>状态字段说明：</b>DB 列使用整数（0=禁用, 1=启用，历史遗留），通过 {@link IntegerStringTypeHandler} 自动转换为 String。 业务代码通过 {@link #getStatusEnum()} / {@link #setStatusEnum(EnableStatusEnum)} 使用枚举类型， {@link EnableStatusEnum#parse(String)} 兼容两种格式。
+ * <p><b>状态字段说明：</b>DB 列使用整数（0=禁用, 1=启用，历史遗留），通过 {@link IntegerStringTypeHandler} 自动转换为 String。
+ * 业务代码通过 {@link #getStatusEnum()} / {@link #setStatusEnum(EnableStatusEnum)} 使用枚举类型，
+ * {@link EnableStatusEnum#parse(String)} 兼容两种格式。
  *
  * <p><b>审批人展开支持：</b>
  *

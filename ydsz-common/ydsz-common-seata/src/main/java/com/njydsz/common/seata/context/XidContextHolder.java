@@ -18,8 +18,10 @@ import com.njydsz.common.seata.api.TransactionType;
  */
 public final class XidContextHolder {
 
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已通过 clear()/remove() 在使用后清理（云顶规范 15.1）
   private static final TransmittableThreadLocal<XidContext> HOLDER =
       new TransmittableThreadLocal<>();
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   private XidContextHolder() {
     // 工具类，禁止实例化

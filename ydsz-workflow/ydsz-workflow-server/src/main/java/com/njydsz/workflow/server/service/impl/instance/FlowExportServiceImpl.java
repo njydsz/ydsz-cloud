@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,11 +18,10 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
-import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.server.service.FlowExportService;
-import java.util.stream.Collectors;
 
 /**
  * 审批单导出 Service 实现
@@ -90,6 +90,18 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FlowExportServiceImpl implements FlowExportService {
 
+    /** HTML 导出缓冲区初始容量 */
+  private static final int HTML_BUFFER_CAPACITY = 4096;
+
+  /** 导出历史任务最大行数 */
+  private static final int MAX_EXPORT_ROWS = 50;
+
+  /** 一分钟的毫秒数 */
+  private static final long MILLIS_PER_MINUTE = 60_000L;
+
+  /** 一小时的毫秒数 */
+  private static final long MILLIS_PER_HOUR = 3_600_000L;
+
   private final FlowInstanceRepository instanceRepository;
   private final FlowHisTaskRepository hisTaskRepository;
   private final WorkflowConverter converter;
@@ -103,7 +115,7 @@ public class FlowExportServiceImpl implements FlowExportService {
     Map<String, Object> formData = parseVariables(instance.getVariable());
     String watermark = buildWatermark(userName != null ? userName : userId, instanceId);
 
-    StringBuilder html = new StringBuilder(4096);
+    StringBuilder html = new StringBuilder(HTML_BUFFER_CAPACITY);
     appendHtmlHeader(html, instance.getTitle());
     appendWatermarkDiv(html, watermark);
     appendTitleSection(html, instance);
@@ -114,12 +126,23 @@ public class FlowExportServiceImpl implements FlowExportService {
     return html.toString();
   }
 
-  /** 构建水印文本（含 userId + instanceId），用于溯源。 */
+  /**
+   * 构建水印文本（含 userId + instanceId），用于溯源。
+   *
+   * @param userIdentifier 参数说明
+   * @param instanceId 参数说明
+   * @return 返回值说明
+   */
   private String buildWatermark(String userIdentifier, String instanceId) {
     return userIdentifier + (instanceId != null ? "/" + instanceId : "");
   }
 
-  /** 输出 HTML head + 内嵌 CSS 样式。 */
+  /**
+   * 输出 HTML head + 内嵌 CSS 样式。
+   *
+   * @param html 参数说明
+   * @param title 参数说明
+   */
   private void appendHtmlHeader(StringBuilder html, String title) {
     html.append("<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"UTF-8\">");
     html.append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
@@ -147,16 +170,26 @@ public class FlowExportServiceImpl implements FlowExportService {
     html.append("</style></head><body>");
   }
 
-  /** 输出水印 div（50 个 span）。 */
+  /**
+   * 输出水印 div（50 个 span）。
+   *
+   * @param html 参数说明
+   * @param watermark 参数说明
+   */
   private void appendWatermarkDiv(StringBuilder html, String watermark) {
     html.append("<div class=\"watermark\">");
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < MAX_EXPORT_ROWS; i++) {
       html.append("<span>").append(escapeHtml(watermark)).append("</span>");
     }
     html.append("</div>");
   }
 
-  /** 输出标题区域（含流程编码/实例ID/发起时间）。 */
+  /**
+   * 输出标题区域（含流程编码/实例ID/发起时间）。
+   *
+   * @param html 参数说明
+   * @param instance 参数说明
+   */
   private void appendTitleSection(StringBuilder html, FlowInstanceVO instance) {
     html.append("<div class=\"header\">");
     html.append("<h1>").append(escapeHtml(instance.getTitle())).append("</h1>");
@@ -167,7 +200,12 @@ public class FlowExportServiceImpl implements FlowExportService {
     html.append("</div></div>");
   }
 
-  /** 输出表单数据表格。 */
+  /**
+   * 输出表单数据表格。
+   *
+   * @param html 参数说明
+   * @param formData 参数说明
+   */
   private void appendFormDataTable(StringBuilder html, Map<String, Object> formData) {
     html.append("<h2>表单数据</h2><table>");
     if (formData.isEmpty()) {
@@ -182,7 +220,12 @@ public class FlowExportServiceImpl implements FlowExportService {
     html.append("</table>");
   }
 
-  /** 输出审批轨迹时间线。 */
+  /**
+   * 输出审批轨迹时间线。
+   *
+   * @param html 参数说明
+   * @param history 参数说明
+   */
   private void appendTimeline(StringBuilder html, List<FlowHisTaskDO> history) {
     html.append("<h2>审批轨迹</h2><div class=\"timeline\">");
     if (history.isEmpty()) {
@@ -195,7 +238,12 @@ public class FlowExportServiceImpl implements FlowExportService {
     html.append("</div>");
   }
 
-  /** 输出单个审批轨迹节点。 */
+  /**
+   * 输出单个审批轨迹节点。
+   *
+   * @param html 参数说明
+   * @param task 参数说明
+   */
   private void appendTimelineItem(StringBuilder html, FlowHisTaskDO task) {
     html.append("<div class=\"timeline-item\">");
     html.append("<span class=\"timeline-node\">")
@@ -271,7 +319,9 @@ public class FlowExportServiceImpl implements FlowExportService {
   }
 
   private String escapeHtml(String text) {
-    if (text == null) return "";
+    if (text == null) {
+      return "";
+    }
     return text.replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")
@@ -280,8 +330,12 @@ public class FlowExportServiceImpl implements FlowExportService {
   }
 
   private String formatDuration(long ms) {
-    if (ms < 60000) return ms / 1000 + "秒";
-    if (ms < 3600000) return ms / 60000 + "分钟";
-    return ms / 3600000 + "小时" + (ms % 3600000) / 60000 + "分钟";
+    if (ms < MILLIS_PER_MINUTE) {
+      return ms / 1000 + "秒";
+    }
+    if (ms < MILLIS_PER_HOUR) {
+      return ms / MILLIS_PER_MINUTE + "分钟";
+    }
+    return ms / MILLIS_PER_HOUR + "小时" + (ms % MILLIS_PER_HOUR) / MILLIS_PER_MINUTE + "分钟";
   }
 }

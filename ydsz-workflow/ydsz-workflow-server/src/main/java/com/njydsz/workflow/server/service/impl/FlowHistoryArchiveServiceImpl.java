@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.repository.FlowHisInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
@@ -23,7 +24,6 @@ import com.njydsz.workflow.infra.entity.FlowHisInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
 import com.njydsz.workflow.infra.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 
@@ -110,6 +110,9 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 @Service
 @RequiredArgsConstructor
 public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService {
+
+    /** 归档扫描批量大小 */
+  private static final int ARCHIVE_BATCH_SIZE = 500;
 
   /** 流程实例仓储（domain 层契约），查询待归档的已完成实例 */
   private final FlowInstanceRepository instanceRepository;
@@ -254,7 +257,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     List<FlowHisInstanceDO> candidates;
     try {
       // 每批最多 500 条，避免单次事务过大
-      candidates = hisInstanceRepository.findArchivedBefore(threshold, 500).stream()
+      candidates = hisInstanceRepository.findArchivedBefore(threshold, ARCHIVE_BATCH_SIZE).stream()
           .map(converter::entityToDO)
           .toList();
     } catch (Exception e) {
@@ -308,8 +311,11 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
 
   /**
    * 归档单个实例
+   * 
+   * 
    *
-   * @return true=归档成功；false=任务未全部归档（不安全迁移）
+   * @param instance 参数说明
+   * @return 返回值说明
    */
   @Transactional(rollbackFor = Exception.class)
   public boolean archiveOne(FlowInstanceDO instance) {
@@ -357,7 +363,12 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     return true;
   }
 
-  /** 主表 DO → 归档表 DO */
+  /**
+   * 主表 DO → 归档表 DO
+   *
+   * @param ins 参数说明
+   * @return 返回值说明
+   */
   private FlowHisInstanceDO toHisInstance(FlowInstanceDO ins) {
     FlowHisInstanceDO his = new FlowHisInstanceDO();
     his.setId(ins.getId()); // 保留原 ID，方便按业务 ID 反查
@@ -389,9 +400,16 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     return his;
   }
 
-  /** 判定任务是否处于终态 */
+  /**
+   * 判定任务是否处于终态
+   *
+   * @param status 参数说明
+   * @return 返回值说明
+   */
   private boolean isTerminalTaskStatus(String status) {
-    if (status == null) return false;
+    if (status == null) {
+      return false;
+    }
     return "COMPLETED".equals(status)
         || "REJECTED".equals(status)
         || "SKIPPED".equals(status)
@@ -399,12 +417,24 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         || "TIMEOUT".equals(status);
   }
 
-  /** 解析整型参数：null 或非正数则回退到默认值 */
+  /**
+   * 解析整型参数：null 或非正数则回退到默认值
+   *
+   * @param input 参数说明
+   * @param defaultVal 参数说明
+   * @return 返回值说明
+   */
   private int resolveInt(Integer input, int defaultVal) {
     return input == null || input <= 0 ? defaultVal : input;
   }
 
-  /** 解析长整型参数：null 或非正数则回退到默认值 */
+  /**
+   * 解析长整型参数：null 或非正数则回退到默认值
+   *
+   * @param input 参数说明
+   * @param defaultVal 参数说明
+   * @return 返回值说明
+   */
   private long resolveLong(Long input, long defaultVal) {
     return input == null || input <= 0 ? defaultVal : input;
   }

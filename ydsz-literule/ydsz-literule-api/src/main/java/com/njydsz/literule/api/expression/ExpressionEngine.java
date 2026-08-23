@@ -71,6 +71,7 @@ public interface ExpressionEngine {
    *
    * <p>用于向前端暴露自动补全 + 文档悬浮。 默认返回 {@link ExpressionFunctionDef#defaults()}。
    *
+   * @return 已注册函数定义列表
    * @since 1.0.0
    */
   default List<ExpressionFunctionDef> registeredFunctionDefs() {
@@ -106,6 +107,8 @@ public interface ExpressionEngine {
   /**
    * 表达式追踪结果
    *
+   * @param result 求值结果
+   * @param traceTree 追踪树根节点
    * @since 1.0.0
    */
   record TraceResult(boolean result, ExpressionTraceNode traceTree) {}

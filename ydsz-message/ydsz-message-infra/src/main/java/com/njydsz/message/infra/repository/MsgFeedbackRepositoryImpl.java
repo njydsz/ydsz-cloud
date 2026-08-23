@@ -51,7 +51,7 @@ public class MsgFeedbackRepositoryImpl implements MsgFeedbackRepository {
     wrapper.orderByDesc("created_at");
     IPage<MsgFeedbackDO> entityPage = msgFeedbackMapper.selectPage(page, wrapper);
     List<MsgFeedbackVO> vos = converter.feedbackDoListToVO(entityPage.getRecords());
-    return PageResponse.success(entityPage.getTotal(), (long)query.getPageNum(), (long)query.getPageSize(), vos);
+    return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   private QueryWrapper<MsgFeedbackDO> buildWrapper(MsgFeedbackQuery query) {

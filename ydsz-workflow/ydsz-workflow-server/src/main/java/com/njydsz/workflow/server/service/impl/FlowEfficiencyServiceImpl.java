@@ -22,11 +22,11 @@ import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.domain.vo.FlowEfficiencyStatsVO;
-import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
-import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO;
-import com.njydsz.workflow.domain.vo.FlowTrendVO;
 import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
+import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO;
+import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
+import com.njydsz.workflow.domain.vo.FlowEfficiencyStatsVO;
+import com.njydsz.workflow.domain.vo.FlowTrendVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
 import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
@@ -154,6 +154,56 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
   /** 高驳回率检测：最少任务数（低于此数不报告，避免样本过小误报） */
   private static final int HIGH_REJECTION_MIN_SAMPLE = 5;
+  /** 异常检测默认数量上限 */
+  private static final int DEFAULT_ANOMALY_LIMIT = 20;
+
+  /** 卡单检测默认阈值（小时） */
+  private static final int DEFAULT_STUCK_HOURS = 24;
+
+  /** 长运行检测默认阈值（天） */
+  private static final int DEFAULT_LONG_RUNNING_DAYS = 7;
+
+  /** 健康评分：异常检测样本上限 */
+  private static final int HEALTH_SCORE_ANOMALY_SAMPLE = 50;
+
+  /** 健康评分：超期率扣分上限（30 分） */
+  private static final double MAX_OVERDUE_DEDUCTION = 30;
+
+  /** 健康评分：代批率扣分上限（20 分） */
+  private static final double PROXY_DEDUCTION_CAP = 20;
+
+  /** 健康评分：平均耗时超过 24 小时的扣分 */
+  private static final double DURATION_DEDUCTION_24H = 20;
+
+  /** 健康评分：平均耗时超过 6 小时的扣分 */
+  private static final double DURATION_DEDUCTION_6H = 15;
+
+  /** 健康评分：平均耗时超过 1 小时的扣分 */
+  private static final double DURATION_DEDUCTION_1H = 10;
+
+  /** 健康评分：24 小时对应的毫秒阈值 */
+  private static final long DURATION_THRESHOLD_24H_MS = 86_400_000L;
+
+  /** 健康评分：6 小时对应的毫秒阈值 */
+  private static final long DURATION_THRESHOLD_6H_MS = 21_600_000L;
+
+  /** 健康评分：1 小时对应的毫秒阈值 */
+  private static final long DURATION_THRESHOLD_1H_MS = 3_600_000L;
+
+  /** 健康评分：异常数单次扣分（每个 5 分） */
+  private static final double ANOMALY_DEDUCTION_PER_ITEM = 5.0;
+
+  /** 健康评分：异常数扣分上限（30 分） */
+  private static final double MAX_ANOMALY_DEDUCTION = 30;
+
+  /** 健康评分：评级 EXCELLENT 阈值 */
+  private static final int SCORE_LEVEL_EXCELLENT = 90;
+
+  /** 健康评分：评级 GOOD 阈值 */
+  private static final int SCORE_LEVEL_GOOD = 75;
+
+  /** 健康评分：评级 FAIR 阈值 */
+  private static final int SCORE_LEVEL_FAIR = 60;
 
   @Override
   public FlowEfficiencyStatsVO efficiencyStats(String tenantId, String startTime, String endTime) {
@@ -202,9 +252,14 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
   /**
    * P0-2: 统计指定时间段内的代批操作数（委派代理人完成 PASS/REJECT 的审批数）
-   *
+   * 
    * <p>数据来源为 {@code ydsz_flow_audit_log}，统计 businessType=DELEGATE_PROXY 且 action 为 PASS/REJECT 的记录，
    * 即代理人真正代替原办理人完成审批的操作数。
+   *
+   * @param tenantId 参数说明
+   * @param startTime 参数说明
+   * @param endTime 参数说明
+   * @return 返回值说明
    */
   private long countDelegateActions(String tenantId, String startTime, String endTime) {
     try {
@@ -366,7 +421,15 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
   // ============================== 私有方法 ==============================
 
-  /** 查询历史任务（带时间范围过滤） */
+  /**
+   * 查询历史任务（带时间范围过滤）
+   *
+   * @param tenantId 参数说明
+   * @param startTime 参数说明
+   * @param endTime 参数说明
+   * @param flowCode 参数说明
+   * @return 返回值说明
+   */
   private List<FlowHisTaskDO> queryHisTasks(
       String tenantId, String startTime, String endTime, String flowCode) {
     return hisTaskRepository.selectByTimeRange(
@@ -379,7 +442,12 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
         .toList();
   }
 
-  /** 从 nodeDurationStats 返回的 Map 中提取 avgDurationMs */
+  /**
+   * 从 nodeDurationStats 返回的 Map 中提取 avgDurationMs
+   *
+   * @param row 参数说明
+   * @return 返回值说明
+   */
   private double extractAvgDuration(Map<String, Object> row) {
     Object val = row.get("avgDurationMs");
     if (val == null) {
@@ -391,7 +459,13 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     return 0.0;
   }
 
-  /** 按粒度格式化时间标签 */
+  /**
+   * 按粒度格式化时间标签
+   *
+   * @param dt 参数说明
+   * @param gran 参数说明
+   * @return 返回值说明
+   */
   private String formatTimeLabel(LocalDateTime dt, String gran) {
     return switch (gran) {
       case "MONTH" -> dt.format(MONTH_FMT);
@@ -405,7 +479,12 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     };
   }
 
-  /** 安全解析日期时间字符串 */
+  /**
+   * 安全解析日期时间字符串
+   *
+   * @param str 参数说明
+   * @return 返回值说明
+   */
   private LocalDateTime parseDateTime(String str) {
     if (!StringUtils.hasText(str)) {
       return null;
@@ -428,9 +507,9 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   @Override
   public List<FlowAnomalyVO> detectAnomalies(
       String tenantId, int limit, int stuckHours, int longRunningDays) {
-    int effectiveLimit = limit > 0 ? limit : 20;
-    int effectiveStuckHours = stuckHours > 0 ? stuckHours : 24;
-    int effectiveLongRunningDays = longRunningDays > 0 ? longRunningDays : 7;
+    int effectiveLimit = limit > 0 ? limit : DEFAULT_ANOMALY_LIMIT;
+    int effectiveStuckHours = stuckHours > 0 ? stuckHours : DEFAULT_STUCK_HOURS;
+    int effectiveLongRunningDays = longRunningDays > 0 ? longRunningDays : DEFAULT_LONG_RUNNING_DAYS;
 
     List<FlowAnomalyVO> anomalies = new ArrayList<>();
 
@@ -475,8 +554,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
   @Override
   public List<FlowAnomalyVO> detectStuckTasks(String tenantId, int limit, int stuckHours) {
-    int effectiveLimit = limit > 0 ? limit : 20;
-    int effectiveStuckHours = stuckHours > 0 ? stuckHours : 24;
+    int effectiveLimit = limit > 0 ? limit : DEFAULT_ANOMALY_LIMIT;
+    int effectiveStuckHours = stuckHours > 0 ? stuckHours : DEFAULT_STUCK_HOURS;
 
     LocalDateTime threshold = LocalDateTime.now().minusHours(effectiveStuckHours);
 
@@ -607,8 +686,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   @Override
   public List<Map<String, Object>> detectLongRunningInstances(
       String tenantId, int limit, int longRunningDays) {
-    int effectiveLimit = limit > 0 ? limit : 20;
-    int effectiveLongRunningDays = longRunningDays > 0 ? longRunningDays : 7;
+    int effectiveLimit = limit > 0 ? limit : DEFAULT_ANOMALY_LIMIT;
+    int effectiveLongRunningDays = longRunningDays > 0 ? longRunningDays : DEFAULT_LONG_RUNNING_DAYS;
 
     LocalDateTime threshold = LocalDateTime.now().minusDays(effectiveLongRunningDays);
 
@@ -671,6 +750,9 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
   /**
    * 将 detectLongRunningInstances 返回的 Map 列表转换为 FlowAnomalyVO 列表
+   *
+   * @param rows 参数说明
+   * @return 返回值说明
    */
   private List<FlowAnomalyVO> convertLongRunningToAnomalyVO(List<Map<String, Object>> rows) {
     if (rows == null || rows.isEmpty()) {
@@ -714,35 +796,35 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
       long totalCount = stats.getTotalCount();
 
       // 复用异常检测
-      List<FlowAnomalyVO> anomalies = detectAnomalies(tenantId, 50, 24, 7);
+      List<FlowAnomalyVO> anomalies = detectAnomalies(tenantId, HEALTH_SCORE_ANOMALY_SAMPLE, DEFAULT_STUCK_HOURS, DEFAULT_LONG_RUNNING_DAYS);
       int anomalyCount = anomalies != null ? anomalies.size() : 0;
 
       // 计算扣分明细
       Map<String, Object> deductions = new LinkedHashMap<>();
 
       // 1. 超期率扣分（最高 30）
-      double overdueDeduction = Math.min(30, overdueRate * 30);
+      double overdueDeduction = Math.min(MAX_OVERDUE_DEDUCTION, overdueRate * MAX_OVERDUE_DEDUCTION);
       deductions.put("overdue", Math.round(overdueDeduction * 100) / 100.0);
 
       // 2. 代批率扣分（最高 20）
-      double proxyDeduction = Math.min(20, proxyRate * 20);
+      double proxyDeduction = Math.min(PROXY_DEDUCTION_CAP, proxyRate * PROXY_DEDUCTION_CAP);
       deductions.put("proxy", Math.round(proxyDeduction * 100) / 100.0);
 
       // 3. 平均耗时扣分（最高 20）
       double durationDeduction;
-      if (avgDurationMs > 86_400_000) { // > 24h
-        durationDeduction = 20;
-      } else if (avgDurationMs > 21_600_000) { // > 6h
-        durationDeduction = 15;
-      } else if (avgDurationMs > 3_600_000) { // > 1h
-        durationDeduction = 10;
+      if (avgDurationMs > DURATION_THRESHOLD_24H_MS) { // > 24h
+        durationDeduction = DURATION_DEDUCTION_24H;
+      } else if (avgDurationMs > DURATION_THRESHOLD_6H_MS) { // > 6h
+        durationDeduction = DURATION_DEDUCTION_6H;
+      } else if (avgDurationMs > DURATION_THRESHOLD_1H_MS) { // > 1h
+        durationDeduction = DURATION_DEDUCTION_1H;
       } else {
         durationDeduction = 0;
       }
       deductions.put("duration", durationDeduction);
 
       // 4. 异常数扣分（每个 5 分，最高 30）
-      double anomalyDeduction = Math.min(30, anomalyCount * 5.0);
+      double anomalyDeduction = Math.min(MAX_ANOMALY_DEDUCTION, anomalyCount * ANOMALY_DEDUCTION_PER_ITEM);
       deductions.put("anomaly", Math.round(anomalyDeduction * 100) / 100.0);
 
       // 综合评分
@@ -754,11 +836,11 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
       // 评级
       String level;
-      if (score >= 90) {
+      if (score >= SCORE_LEVEL_EXCELLENT) {
         level = "EXCELLENT";
-      } else if (score >= 75) {
+      } else if (score >= SCORE_LEVEL_GOOD) {
         level = "GOOD";
-      } else if (score >= 60) {
+      } else if (score >= SCORE_LEVEL_FAIR) {
         level = "FAIR";
       } else {
         level = "POOR";
@@ -802,10 +884,19 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     return hisTaskRepository.selectFlowEfficiencyComparison(tenantId, start, end);
   }
 
-  /** 安全类型转换：Object → double */
+  /**
+   * 安全类型转换：Object → double
+   *
+   * @param val 参数说明
+   * @return 返回值说明
+   */
   private double toDouble(Object val) {
-    if (val == null) return 0.0;
-    if (val instanceof Number n) return n.doubleValue();
+    if (val == null) {
+      return 0.0;
+    }
+    if (val instanceof Number n) {
+      return n.doubleValue();
+    }
     try {
       return Double.parseDouble(val.toString());
     } catch (NumberFormatException e) {
@@ -814,10 +905,19 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     }
   }
 
-  /** 安全类型转换：Object → long */
+  /**
+   * 安全类型转换：Object → long
+   *
+   * @param val 参数说明
+   * @return 返回值说明
+   */
   private long toLong(Object val) {
-    if (val == null) return 0L;
-    if (val instanceof Number n) return n.longValue();
+    if (val == null) {
+      return 0L;
+    }
+    if (val instanceof Number n) {
+      return n.longValue();
+    }
     try {
       return Long.parseLong(val.toString());
     } catch (NumberFormatException e) {
