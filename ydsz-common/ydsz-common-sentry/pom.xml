@@ -172,6 +172,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+        <!-- ydzs-common-thread（InternalExecutorFactory 统一线程池治理） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
 
         <!-- Test -->
         <dependency>

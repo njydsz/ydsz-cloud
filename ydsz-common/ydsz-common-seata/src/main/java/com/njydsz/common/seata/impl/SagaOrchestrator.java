@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +24,7 @@ import com.njydsz.common.seata.api.TransactionType;
 import com.njydsz.common.seata.audit.TransactionAuditLogger;
 import com.njydsz.common.seata.config.SeataProperties;
 import com.njydsz.common.seata.metrics.SeataMetrics;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
  * SAGA 事务编排器
@@ -56,17 +56,11 @@ public class SagaOrchestrator extends AbstractTransactionManager {
    *
    * <p>按可用核数上限（最多 8）创建有界线程池，避免单线程调度池下 长耗时步骤串行阻塞其他 SAGA 步骤的超时控制。
    */
-  // CHECKSTYLE.OFF: ThreadPoolCreate - SAGA 步骤超时控制专用短生命周期调度池，随 JVM 关闭
+  // SAGA 步骤超时控制专用短生命周期调度池，统一使用 InternalExecutorFactory 纳入线程池治理
   private static final ScheduledExecutorService TIMEOUT_SCHEDULER =
-      Executors.newScheduledThreadPool(
-          Math.max(2, Math.min(Runtime.getRuntime().availableProcessors(), 8)),
-          r -> {
-            Thread t = new Thread(r, "saga-step-timeout");
-            t.setDaemon(true);
-            return t;
-          });
-
-  // CHECKSTYLE.ON: ThreadPoolCreate
+      InternalExecutorFactory.newScheduledThreadPool(
+          "saga-step-timeout",
+          Math.max(2, Math.min(Runtime.getRuntime().availableProcessors(), 8)));
 
   // 静态初始化块：注册 JVM 关闭钩子，确保线程池在应用退出时被关闭
   static {

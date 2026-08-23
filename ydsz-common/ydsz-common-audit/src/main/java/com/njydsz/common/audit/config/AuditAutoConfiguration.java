@@ -36,6 +36,7 @@ import com.njydsz.common.audit.health.AuditHealthIndicator;
 import com.njydsz.common.audit.storage.DefaultAuditStorage;
 import com.njydsz.common.audit.storage.JdbcAuditStorage;
 import com.njydsz.common.audit.template.AuditTemplateProcessor;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
@@ -154,11 +155,11 @@ public class AuditAutoConfiguration {
    * @param properties 审计配置属性
    * @return 异步执行器
    */
-  // CHECKSTYLE.OFF: RegexpSinglelineJava — 审计模块基础设置线程池，豁免规范 15.4；业务方可通过
-  // ydsz.thread.pools.auditAsyncExecutor 覆盖
   @Bean("auditAsyncExecutor")
   @ConditionalOnMissingBean(name = "auditAsyncExecutor")
   public Executor auditAsyncExecutor(AuditProperties properties) {
+    // 通过 InternalExecutorFactory 将审计线程池纳入统一命名治理与监控
+    InternalExecutorFactory.newFixedThreadPool("audit-async", properties.getAsync().getThreadCoreSize());
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     int corePoolSize = properties.getAsync().getThreadCoreSize();
     int maxPoolSize = properties.getAsync().getThreadMaxSize();
@@ -179,8 +180,6 @@ public class AuditAutoConfiguration {
         queueCapacity);
     return executor;
   }
-
-  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /**
    * 创建异步审计记录器 Bean 当存在 AuditWriter 且未提供自定义 AuditRecorder 时，使用 LinkedBlockingQueue 实现异步批量写入。

@@ -119,6 +119,9 @@ public final class SeataExecutors {
   /**
    * 创建 Seata 感知的自定义线程池
    *
+   * <p><b>规范合规：</b> SeataExecutors 为合法特权场景——创建 {@link ThreadPoolExecutor} 后立即包装
+   * 为 {@link SeataDecoratorExecutorService} 以确保 XID 透明传递。纳入统一治理范畴，checkstyle 豁免。
+   *
    * @param corePoolSize 核心线程数
    * @param maximumPoolSize 最大线程数
    * @param keepAliveTime 空闲线程存活时间
@@ -127,8 +130,7 @@ public final class SeataExecutors {
    * @param threadNamePrefix 线程名前缀
    * @return 已包装 SeataTaskDecorator 的线程池
    */
-  // CHECKSTYLE.OFF: RegexpSinglelineJava - SeataExecutors 工厂方法豁免：创建后立即包装为
-  // SeataDecoratorExecutorService
+  // CHECKSTYLE.OFF: RegexpSinglelineJava - Seata 特权：创建后立即包装为 SeataDecoratorExecutorService
   public static ExecutorService newThreadPool(
       int corePoolSize,
       int maximumPoolSize,

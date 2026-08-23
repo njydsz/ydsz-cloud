@@ -22,6 +22,7 @@ import com.njydsz.common.sentry.metrics.MicrometerMetricsCollector;
 import com.njydsz.common.sentry.metrics.SystemMetricsCollector;
 import com.njydsz.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.common.sentry.spi.MetricsCollector;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
  * 指标采集与熔断器自动配置。
@@ -113,17 +114,9 @@ public class MetricsAutoConfiguration {
       MetricsCollector metricsCollector, SentryProperties properties) {
     SystemMetricsCollector collector = new SystemMetricsCollector(metricsCollector);
     int interval = properties.getMetrics().getSystemMetricsIntervalSeconds();
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - 系统指标采集调度器，单线程固定，守护线程
+    // 系统指标采集调度器：单线程固定，守护线程，统一使用 InternalExecutorFactory 纳入线程池治理
     systemMetricsScheduler =
-        new ScheduledThreadPoolExecutor(
-            1,
-            r -> {
-              Thread t = new Thread(r, "sentry-system-metrics");
-              t.setDaemon(true);
-              return t;
-            },
-            new ThreadPoolExecutor.CallerRunsPolicy());
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+        InternalExecutorFactory.newSingleThreadScheduledPool("sentry-system-metrics");
     systemMetricsScheduler.scheduleAtFixedRate(collector::collect, 5, interval, TimeUnit.SECONDS);
     log.info("[Sentry] 系统资源指标定时采集已启动, interval={}s", interval);
     return collector;

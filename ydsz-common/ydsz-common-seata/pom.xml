@@ -120,6 +120,11 @@
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
         <!-- TccTransactionLog JSON 序列化使用 ydzs-common-json 的 YdszJson，无需 jackson-databind -->
+        <!-- ydzs-common-thread（InternalExecutorFactory 统一线程池治理） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
         <!-- spring-web (optional, for XID servlet filter) -->
         <dependency>
             <groupId>org.springframework</groupId>
