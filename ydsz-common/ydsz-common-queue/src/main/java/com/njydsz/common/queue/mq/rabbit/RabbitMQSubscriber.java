@@ -161,7 +161,11 @@ public class RabbitMQSubscriber implements IMessageSubscriber {
       }
       MessageTracer.injectTraceId(message.getTraceId());
       if (handler != null) {
-        handler.onMessage(message);
+        try {
+          handler.onMessage(message);
+        } catch (Throwable t) {
+          throw new RuntimeException(t);
+        }
       }
       channel.basicAck(envelope.getDeliveryTag(), false);
       consumedCount.incrementAndGet();
