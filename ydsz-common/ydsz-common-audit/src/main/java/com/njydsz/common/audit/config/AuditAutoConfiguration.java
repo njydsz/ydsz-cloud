@@ -36,7 +36,6 @@ import com.njydsz.common.audit.health.AuditHealthIndicator;
 import com.njydsz.common.audit.storage.DefaultAuditStorage;
 import com.njydsz.common.audit.storage.JdbcAuditStorage;
 import com.njydsz.common.audit.template.AuditTemplateProcessor;
-import com.njydsz.common.thread.factory.InternalExecutorFactory;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
