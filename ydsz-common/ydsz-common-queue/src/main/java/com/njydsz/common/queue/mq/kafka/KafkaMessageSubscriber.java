@@ -229,7 +229,7 @@ public class KafkaMessageSubscriber implements IMessageSubscriber {
           record.partition(),
           record.offset(),
           message.getTraceId());
-    } catch (Exception e) {
+    } catch (Throwable e) {
       lastError.set(e);
       log.error(
           "[Kafka] 消息处理异常，topic={}, partition={}, offset={}",
