@@ -56,7 +56,7 @@ import com.njydsz.literule.server.config.RuleAdminService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/v1/rule-engine/rules")
+@RequestMapping("/api/v1/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则测试用例", description = "规则回归测试用例管理与批量执行")

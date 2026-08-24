@@ -42,7 +42,7 @@ import com.njydsz.literule.server.audit.RuleAuditLogService.AuditAction;
  */
 @Slf4j
 @RestController
-@RequestMapping("/v1/rule-engine/audit")
+@RequestMapping("/api/v1/literule/audit")
 @RequiredArgsConstructor
 @ConditionalOnBean(RuleAuditLogService.class)
 @Tag(name = "规则审计日志", description = "P3-5 规则操作审计日志查询 API")

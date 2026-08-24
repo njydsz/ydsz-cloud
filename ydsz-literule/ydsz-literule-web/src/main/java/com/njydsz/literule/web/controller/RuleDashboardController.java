@@ -37,7 +37,7 @@ import com.njydsz.literule.server.spi.DashboardDataProvider;
  */
 @Slf4j
 @RestController
-@RequestMapping("/v1/rule-engine/dashboard")
+@RequestMapping("/api/v1/literule/dashboard")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则引擎监控大盘", description = "P1-6 规则引擎指标聚合 API：概览 / 趋势 / 分布 / Top 规则 / 实时指标")

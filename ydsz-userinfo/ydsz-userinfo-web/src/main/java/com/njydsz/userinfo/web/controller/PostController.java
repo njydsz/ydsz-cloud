@@ -58,7 +58,7 @@ import com.njydsz.userinfo.server.service.PostService;
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（兼任岗位维护）
  */
 @Slf4j
-@RequestMapping("/api/v1/PostDO")
+@RequestMapping("/api/v1/post")
 @RequiredArgsConstructor
 @Tag(name = "岗位管理", description = "岗位 CRUD")
 public class PostController {

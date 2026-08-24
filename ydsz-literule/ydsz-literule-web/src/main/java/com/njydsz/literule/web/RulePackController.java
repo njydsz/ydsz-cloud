@@ -61,7 +61,7 @@ import com.njydsz.literule.server.spi.RulePackProvider.InstallResult;
  */
 @Slf4j
 @RestController
-@RequestMapping("/v1/rule-engine/rules")
+@RequestMapping("/api/v1/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则集市场", description = "规则集发布、安装、版本管理与压测")

@@ -65,7 +65,7 @@ import com.njydsz.userinfo.server.service.LanguageService;
  * @see com.njydsz.userinfo.domain.vo.LanguageVO 语言VO
  */
 @Slf4j
-@RequestMapping("/api/v1/LanguageDO")
+@RequestMapping("/api/v1/language")
 @Tag(name = "语言管理", description = "语言 CRUD")
 @RequiredArgsConstructor
 public class LanguageController {

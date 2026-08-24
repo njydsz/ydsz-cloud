@@ -50,7 +50,7 @@ import com.njydsz.literule.server.spi.ABTestAutoRollbackProvider;
  */
 @Slf4j
 @RestController
-@RequestMapping("/v1/rule-engine/rules")
+@RequestMapping("/api/v1/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "AB Test 回滚", description = "AB Test 自动回滚策略配置与人工回滚")

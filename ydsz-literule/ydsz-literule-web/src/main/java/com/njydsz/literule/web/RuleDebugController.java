@@ -45,7 +45,7 @@ import com.njydsz.literule.server.debug.RuleDebugger;
  */
 @Slf4j
 @RestController
-@RequestMapping("/v1/rule-engine/debug")
+@RequestMapping("/api/v1/literule/debug")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则断点调试", description = "规则级/表达式节点级断点、调试会话与单步执行")

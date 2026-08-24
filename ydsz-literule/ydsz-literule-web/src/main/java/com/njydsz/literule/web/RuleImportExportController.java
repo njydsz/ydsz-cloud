@@ -50,7 +50,7 @@ import com.njydsz.literule.server.config.RuleAdminService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/v1/rule-engine/rules")
+@RequestMapping("/api/v1/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则导入导出", description = "规则 JSON/YAML 导入导出与 GitOps 集成")

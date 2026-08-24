@@ -47,7 +47,7 @@ import com.njydsz.literule.server.spi.RuleDependencyProvider;
  */
 @Slf4j
 @RestController
-@RequestMapping("/v1/rule-engine/rules")
+@RequestMapping("/api/v1/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则依赖", description = "规则间依赖关系管理与级联禁用分析")

@@ -63,7 +63,7 @@ import com.njydsz.literule.server.config.RuleAdminService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/v1/rule-engine/rules")
+@RequestMapping("/api/v1/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则生命周期", description = "规则状态变更、审批与多级审批流")

@@ -71,7 +71,7 @@ import com.njydsz.userinfo.server.service.RoleService;
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（角色授予目标）
  */
 @Slf4j
-@RequestMapping("/api/v1/RoleDO")
+@RequestMapping("/api/v1/role")
 @RequiredArgsConstructor
 @Tag(name = "角色管理", description = "角色 CRUD、权限分配")
 public class RoleController {

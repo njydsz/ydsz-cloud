@@ -65,7 +65,7 @@ import com.njydsz.userinfo.server.service.CompanyService;
  * @see com.njydsz.userinfo.domain.vo.CompanyVO 公司VO
  */
 @Slf4j
-@RequestMapping("/api/v1/CompanyDO")
+@RequestMapping("/api/v1/company")
 @RequiredArgsConstructor
 @Tag(name = "公司管理", description = "公司 CRUD")
 public class CompanyController {

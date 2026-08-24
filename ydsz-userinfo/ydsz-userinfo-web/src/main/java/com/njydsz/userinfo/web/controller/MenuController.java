@@ -69,7 +69,7 @@ import com.njydsz.userinfo.server.service.MenuService;
  * @see com.njydsz.userinfo.web.controller.RoleController 角色 Controller（关联分配）
  */
 @Slf4j
-@RequestMapping("/api/v1/MenuDO")
+@RequestMapping("/api/v1/menu")
 @RequiredArgsConstructor
 @Tag(name = "菜单管理", description = "菜单/权限 CRUD、树形结构查询")
 public class MenuController {

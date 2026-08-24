@@ -62,7 +62,7 @@ import com.njydsz.literule.server.config.DecisionTableAdminService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/v1/rule-engine/rules")
+@RequestMapping("/api/v1/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "决策表管理", description = "决策表 CRUD、评估与 Excel 导入导出")

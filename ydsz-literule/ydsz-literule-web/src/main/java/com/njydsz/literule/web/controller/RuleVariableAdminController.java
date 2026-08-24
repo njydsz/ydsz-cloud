@@ -39,7 +39,7 @@ import com.njydsz.literule.server.expression.VariableRegistry;
  */
 @Slf4j
 @RestController
-@RequestMapping("/v1/rule-engine/variables")
+@RequestMapping("/api/v1/literule/variables")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则变量管理", description = "变量注册表 CRUD、变量分类查询")
