@@ -346,7 +346,11 @@ public class IdempotentAspect {
       md = MessageDigest.getInstance("SHA-256");
     } catch (NoSuchAlgorithmException e) {
       // 云顶规范 11 章：禁止裸抛 Exception，SHA-256 为 JDK 内置算法，不可用属环境异常
-      throw new BusinessException(CoreExceptionCode.SYSTEM_ERROR, "SHA-256 摘要算法不可用", e);
+      throw BusinessException.builder()
+          .resultCode(CoreExceptionCode.SYSTEM_ERROR)
+          .message("SHA-256 摘要算法不可用")
+          .cause(e)
+          .build();
     }
     byte[] digest = md.digest(source.getBytes(StandardCharsets.UTF_8));
     StringBuilder hex = new StringBuilder(digest.length * 2);
