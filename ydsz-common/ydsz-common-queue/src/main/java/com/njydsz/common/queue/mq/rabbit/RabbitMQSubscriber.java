@@ -161,7 +161,11 @@ public class RabbitMQSubscriber implements IMessageSubscriber {
       }
       MessageTracer.injectTraceId(message.getTraceId());
       if (handler != null) {
-        handler.onMessage(message);
+        try {
+          handler.onMessage(message);
+        } catch (Throwable t) {
+          throw new RuntimeException(t);
+        }
       }
       channel.basicAck(envelope.getDeliveryTag(), false);
       consumedCount.incrementAndGet();
@@ -171,7 +175,7 @@ public class RabbitMQSubscriber implements IMessageSubscriber {
           queueName,
           envelope.getDeliveryTag(),
           message.getTraceId());
-    } catch (Exception e) {
+    } catch (Throwable e) {
       lastError.set(e);
       int retryCount = getRetryCount(properties);
       log.error(
