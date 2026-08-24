@@ -180,7 +180,11 @@ public class RedisPubSubSubscriber implements IMessageSubscriber {
         queueMessage = QueueMessage.of(message);
       }
       if (handler != null) {
-        handler.onMessage(queueMessage);
+        try {
+          handler.onMessage(queueMessage);
+        } catch (Throwable t) {
+          throw new RuntimeException(t);
+        }
       }
       consumedCount.incrementAndGet();
       lastError.set(null);

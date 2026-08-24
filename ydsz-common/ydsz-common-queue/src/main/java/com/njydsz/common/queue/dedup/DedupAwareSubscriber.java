@@ -66,7 +66,11 @@ public class DedupAwareSubscriber implements IMessageSubscriber {
         log.debug("[DedupSubscriber] 重复消息已跳过，traceId={}", message.getTraceId());
         return;
       }
-      handler.onMessage(message);
+      try {
+        handler.onMessage(message);
+      } catch (Throwable t) {
+        throw new RuntimeException(t);
+      }
     };
   }
 

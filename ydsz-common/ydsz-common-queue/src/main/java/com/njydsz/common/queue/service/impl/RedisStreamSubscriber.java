@@ -329,7 +329,11 @@ public class RedisStreamSubscriber implements IMessageSubscriber {
     long startMillis = System.currentTimeMillis();
     try {
       if (handler != null) {
-        handler.onMessage(message);
+        try {
+          handler.onMessage(message);
+        } catch (Throwable t) {
+          throw new RuntimeException(t);
+        }
       }
       redisTemplate.opsForStream().acknowledge(channel, group, entry.getId());
       consumedCount.incrementAndGet();

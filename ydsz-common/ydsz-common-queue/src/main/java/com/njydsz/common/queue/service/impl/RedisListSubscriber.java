@@ -272,7 +272,11 @@ public class RedisListSubscriber implements IMessageSubscriber {
         return;
       }
       if (handler != null) {
-        handler.onMessage(queueMessage);
+        try {
+          handler.onMessage(queueMessage);
+        } catch (Throwable t) {
+          throw new RuntimeException(t);
+        }
       }
       ackSuccess = true;
       consumedCount.incrementAndGet();

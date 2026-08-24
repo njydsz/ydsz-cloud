@@ -218,7 +218,11 @@ public class KafkaMessageSubscriber implements IMessageSubscriber {
         message = QueueMessage.of(record.value());
       }
       if (handler != null) {
-        handler.onMessage(message);
+        try {
+          handler.onMessage(message);
+        } catch (Throwable t) {
+          throw new RuntimeException(t);
+        }
       }
       consumer.commitSync();
       consumedCount.incrementAndGet();

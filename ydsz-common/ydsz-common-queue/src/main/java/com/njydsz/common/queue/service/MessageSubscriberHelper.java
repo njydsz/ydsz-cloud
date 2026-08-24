@@ -73,8 +73,8 @@ public final class MessageSubscriberHelper {
     try {
       handler.onMessage(message);
       return message.getTraceId();
-    } catch (Exception e) {
-      throw SysException.builder().message("消息处理失败: " + e.getMessage()).cause(e).build();
+    } catch (Throwable t) {
+      throw SysException.builder().message("消息处理失败: " + t.getMessage()).cause(t).build();
     }
   }
 
