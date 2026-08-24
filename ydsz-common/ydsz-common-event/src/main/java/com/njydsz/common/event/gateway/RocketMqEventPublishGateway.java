@@ -134,7 +134,7 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
       for (List<OutboxMessage> batch : batches) {
         results.addAll(publishBatchInternal(batch));
       }
-    } catch (Exception e) {
+    } catch (Throwable e) {
       // 批量发送失败，降级为逐条投递
       LOG.warn(
           "RocketMQ batch publish failed, falling back to single publish: err={}", e.getMessage());

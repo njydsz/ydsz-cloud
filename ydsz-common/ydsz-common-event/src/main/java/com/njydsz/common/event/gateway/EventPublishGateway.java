@@ -39,7 +39,7 @@ public interface EventPublishGateway {
             msg -> {
               try {
                 return publish(msg);
-              } catch (Exception e) {
+              } catch (Throwable e) {
                 return false;
               }
             })

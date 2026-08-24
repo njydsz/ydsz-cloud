@@ -335,7 +335,7 @@ public class OutboxProcessor {
         }
       }
       recordTimer(batchPublishTimer, durationNanos);
-    } catch (Exception e) {
+    } catch (Throwable e) {
       recordTimer(batchPublishTimer, System.nanoTime() - startNanos);
       // 批量投递失败，降级为逐条投递
       LOG.warn("Batch publish failed, falling back to single publish", e);
@@ -363,7 +363,7 @@ public class OutboxProcessor {
       } else {
         handleFailure(message, "Gateway returned false");
       }
-    } catch (Exception e) {
+    } catch (Throwable e) {
       recordTimer(singlePublishTimer, System.nanoTime() - startNanos);
       handleFailure(message, e.getMessage());
     }
