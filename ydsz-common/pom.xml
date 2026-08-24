@@ -62,10 +62,11 @@
         <!-- ArchUnit 架构测试（P3-2: 编译期 enforce 禁止反模式） -->
         <archunit.version>1.4.2</archunit.version>
         <!--
-            L1 工具层纯度检查（enforce-l1-purity）：默认激活，
+            L1 工具层纯度检查（enforce-l1-purity）：默认跳过，
+            仅 L1 模块（json/util/cache/excel）通过 <l1.module.skip>false</l1.module.skip> 激活检查。
             禁止 L1 反向依赖 L2+ 内部模块，违反即构建失败。
         -->
-        <l1.module.skip>false</l1.module.skip>
+        <l1.module.skip>true</l1.module.skip>
     </properties>
 
     <modules>

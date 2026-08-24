@@ -13,6 +13,11 @@
     </parent>
 
     <dependencies>
+        <!-- ydsz-common-json -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
         <!--ydsz-common-core-->
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -39,12 +44,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
-        </dependency>
-
-        <!-- JSON 模块 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
         </dependency>
     </dependencies>
 
