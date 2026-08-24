@@ -2,7 +2,6 @@ package com.njydsz.common.queue.config;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
@@ -17,7 +16,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.queue.actuator.QueueEndpoint;
 import com.njydsz.common.queue.dedup.DedupCleanupScheduler;
@@ -137,32 +135,17 @@ public class QueueConfiguration {
   @ConditionalOnMissingBean(name = "queueConsumerExecutor")
   public ExecutorService queueConsumerExecutor(QueueProperties queueProperties) {
     int coreSize = queueProperties.getConsumerExecutorCoreSize();
-    int maxSize = queueProperties.getConsumerExecutorMaxSize();
     int queueCapacity = queueProperties.getConsumerExecutorQueueCapacity();
-    int awaitTerminationSeconds = queueProperties.getConsumerExecutorAwaitTerminationSeconds();
-    String threadNamePrefix = queueProperties.getConsumerExecutorThreadNamePrefix();
 
-    InternalExecutorFactory.newFixedThreadPool("queue-consumer", coreSize, queueCapacity);
-    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-    executor.setCorePoolSize(coreSize);
-    executor.setMaxPoolSize(maxSize);
-    executor.setQueueCapacity(queueCapacity);
+    ExecutorService executor = InternalExecutorFactory.newFixedThreadPool(
+        "queue-consumer", coreSize, queueCapacity);
 
-    // 符合云顶编码规范 15.4.4 命名约定：ydsz-{module}-{biz}-
-    executor.setThreadNamePrefix(
-        threadNamePrefix.startsWith("ydsz-") ? threadNamePrefix : "ydsz-" + threadNamePrefix);
-    executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-    executor.setWaitForTasksToCompleteOnShutdown(true);
-    executor.setAwaitTerminationSeconds(awaitTerminationSeconds);
-    executor.initialize();
     log.info(
-        "[Queue] 创建兜底异步消费者线程池，core={}, max={}, queue={}, prefix={} "
+        "[Queue] 创建兜底异步消费者线程池，threads={}, queue={}, prefix=ydsz-internal-queue-consumer- "
             + "(生产环境推荐使用 ydsz-common-thread 统一管理)",
         coreSize,
-        maxSize,
-        queueCapacity,
-        executor.getThreadNamePrefix());
-    return executor.getThreadPoolExecutor();
+        queueCapacity);
+    return executor;
   }
 
   /**
