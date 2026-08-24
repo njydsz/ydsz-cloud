@@ -752,7 +752,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       jobLogRepository.updateById(log0);
 
       // P1-2: 递减运行中任务数
-      lockHelper.decrementRunningTaskCount(shardCounter);
+      if (shardCounter != null) {
+        shardCounter.decrement();
+      }
 
       // 分片场景: 只更新统计, 不推进 next_fire_time（由 Scanner 控制）
       Long incFire = 1L;
@@ -762,13 +764,13 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
           job.getId(), null, null, incFire, incSucc, incFail, success ? null : "ERROR");
 
       // P0-A2: 释放分片锁（优先 JobLockManager，回退 Lua 脚本安全释放）
-      lockHelper.releaseLockQuietly(lockKey, job.getJobKey(), shardIndex, shardValue);
+      releaseLockQuietly(lockKey, job.getJobKey(), shardIndex, shardValue);
 
       // P0-2: 释放全局并发配额
-      lockHelper.releaseGlobalConcurrency();
+      releaseGlobalConcurrency();
 
       // P7-3: 记录执行结束（DECR 并发计数器）
-      quotaHelper.recordExecutionEnd(job.getTenantId());
+      recordExecutionEnd(job.getTenantId());
 
       notifyTaskComplete();
 
@@ -786,9 +788,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
           e.getMessage());
     }
     // P6-2: 记录分片执行指标
-    metricsHelper.recordJobMetrics(job, triggerType, success, log0);
+    recordJobMetrics(job, triggerType, success, log0);
     // P5: 触发告警（分片级别，失败告警 + 慢任务告警）
-    alertHelper.triggerAlerts(job, success, log0);
+    triggerAlerts(job, success, log0);
   }
 
   /**
@@ -1247,7 +1249,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       jobLogRepository.updateById(log0);
 
       // P1-2: 递减运行中任务数
-      lockHelper.decrementRunningTaskCount(runningTaskCounterProvider.getIfAvailable());
+      RunningTaskCounter counter = runningTaskCounterProvider.getIfAvailable();
+      if (counter != null) {
+        counter.decrement();
+      }
 
       // 更新任务统计
       Long incFire = 1L;
@@ -1265,16 +1270,16 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
           job.getId(), log0.getStartTime(), next, incFire, incSucc, incFail, statusOnError);
 
       // P1-6: 熔断计数（成功归零，失败递增 + 达到阈值自动暂停）
-      metricsHelper.updateCircuitBreaker(job, success);
+      updateCircuitBreaker(job, success);
 
       // 释放分布式锁（P0-A2: 优先 JobLockManager，回退 Lua 脚本安全释放）
-      lockHelper.releaseLockQuietly(lockKey, job.getJobKey(), null, lockValue);
+      releaseLockQuietly(lockKey, job.getJobKey(), null, lockValue);
 
       // P0-2: 释放全局并发配额
-      lockHelper.releaseGlobalConcurrency();
+      releaseGlobalConcurrency();
 
       // P7-3: 记录执行结束（DECR 并发计数器）
-      quotaHelper.recordExecutionEnd(job.getTenantId());
+      recordExecutionEnd(job.getTenantId());
 
       // 通知心跳组件：任务结束
       notifyTaskComplete();
@@ -1289,16 +1294,16 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       log.warn("[Dispatcher] 刷新在线日志失败(不影响主流程): key={} reason={}", job.getJobKey(), e.getMessage());
     }
     // P6-2: 记录任务执行指标
-    metricsHelper.recordJobMetrics(job, triggerType, success, log0);
+    recordJobMetrics(job, triggerType, success, log0);
     // P4: 发布任务完成事件，触发后继依赖任务（DagInstanceExecutor 异步监听）
-    alertHelper.publishTaskCompleted(job, success, log0.getId());
+    publishTaskCompleted(job, success, log0.getId());
     // P5: 触发告警（失败告警 + 慢任务告警）
-    alertHelper.triggerAlerts(job, success, log0);
+    triggerAlerts(job, success, log0);
     // P3-13: 推送 WebHook 事件通知
-    alertHelper.dispatchWebhookEvent(success ? "TASK_SUCCESS" : "TASK_FAILED", job, log0);
+    dispatchWebhookEvent(success ? "TASK_SUCCESS" : "TASK_FAILED", job, log0);
     // P0-2: 发布 Outbox 事件（跨模块可靠投递，消息中心据此发送告警通知）
     if (!success) {
-      alertHelper.publishJobFailureOutboxEvent(job, log0);
+      publishJobFailureOutboxEvent(job, log0);
     }
     // P1-1: 失败重试（非 RETRY 触发且 maxRetries > 0 且 retryCount < maxRetries）
     if (!success) {
@@ -1572,6 +1577,296 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
   }
 
+  /**
+   * P5: 触发告警。
+   *
+   * <p>根据任务执行结果触发相应告警：
+   *
+   * <ul>
+   *   <li>失败时触发 {@link AlertType#FAIL} 告警
+   *   <li>成功时触发 {@link AlertType#SLOW} 告警（triggerValue=耗时毫秒，由规则阈值判定是否实际告警）
+   * </ul>
+   *
+   * <p>使用 try-catch 包裹，确保告警触发失败不影响主流程。
+   *
+   * @param job 任务定义
+   * @param success 是否执行成功
+   * @param log0 任务日志（含耗时信息）
+   */
+  private void triggerAlerts(JobVO job, boolean success, JobLogVO log0) {
+    AlertTrigger alertTrigger = alertTriggerProvider.getIfAvailable();
+    if (alertTrigger == null) {
+      return;
+    }
+    try {
+      String triggerValue =
+          log0.getDurationMs() != null ? String.valueOf(log0.getDurationMs()) : null;
+      AlertContext context =
+          AlertContext.of(
+              success ? AlertType.SLOW : AlertType.FAIL,
+              job.getId(),
+              job.getJobKey(),
+              job.getJobName(),
+              log0.getId(),
+              triggerValue,
+              log0.getErrorMessage(),
+              log0.getTraceId(),
+              job.getTenantId());
+      alertTrigger.trigger(context);
+    } catch (Exception e) {
+      log.warn("[Dispatcher] 触发告警失败(不影响主流程): key={} reason={}", job.getJobKey(), e.getMessage());
+    }
+  }
+
+  /**
+   * P7-3: 记录任务执行开始（INCR 并发计数器 + 日执行计数器）。
+   *
+   * <p>TenantQuotaService 不可用时跳过；内部有容错，不会抛异常。
+   *
+   * @param tenantId 租户 ID
+   */
+  private void recordExecutionStart(String tenantId) {
+    TenantQuotaService quotaService = tenantQuotaServiceProvider.getIfAvailable();
+    if (quotaService == null || tenantId == null || tenantId.isBlank()) {
+      return;
+    }
+    try {
+      quotaService.recordExecutionStart(tenantId);
+    } catch (Exception e) {
+      log.debug(
+          "[Dispatcher] recordExecutionStart 失败(不影响主流程): tenant={} reason={}",
+          tenantId,
+          e.getMessage());
+    }
+  }
+
+  /**
+   * P7-3: 记录任务执行结束（DECR 并发计数器）。
+   *
+   * <p>TenantQuotaService 不可用时跳过；内部有容错，不会抛异常。
+   *
+   * @param tenantId 租户 ID
+   */
+  private void recordExecutionEnd(String tenantId) {
+    TenantQuotaService quotaService = tenantQuotaServiceProvider.getIfAvailable();
+    if (quotaService == null || tenantId == null || tenantId.isBlank()) {
+      return;
+    }
+    try {
+      quotaService.recordExecutionEnd(tenantId);
+    } catch (Exception e) {
+      log.debug(
+          "[Dispatcher] recordExecutionEnd 失败(不影响主流程): tenant={} reason={}",
+          tenantId,
+          e.getMessage());
+    }
+  }
+
+  /**
+   * P0-2: 尝试获取全局并发配额。
+   *
+   * <p>通过 {@link GlobalConcurrencyController#tryAcquire()} 原子递增全局并发计数器，
+   * 限制整个集群同时执行的任务总数。GlobalConcurrencyController 不可用时降级放行。
+   *
+   * @return true 获取成功或控制器不可用（降级放行）；false 全局并发已满
+   */
+  private boolean tryAcquireGlobalConcurrency() {
+    GlobalConcurrencyController controller = globalConcurrencyControllerProvider.getIfAvailable();
+    if (controller == null) {
+      return true;
+    }
+    return controller.tryAcquire();
+  }
+
+  /**
+   * P0-2: 释放全局并发配额。
+   *
+   * <p>通过 {@link GlobalConcurrencyController#release()} 原子递减全局并发计数器。 GlobalConcurrencyController
+   * 不可用时安全跳过。
+   */
+  private void releaseGlobalConcurrency() {
+    GlobalConcurrencyController controller = globalConcurrencyControllerProvider.getIfAvailable();
+    if (controller == null) {
+      return;
+    }
+    controller.release();
+  }
+
+  /**
+   * 安全释放任务持有的分布式锁。
+   *
+   * <p>在全局并发控制拒绝执行或需要提前退出时调用，避免锁泄漏。
+   *
+   * @param lockKey 锁 key（为 null 时跳过）
+   * @param jobKey 任务 KEY（JobLockManager 释放需要）
+   * @param shardIndex 分片索引（null=非分片任务）
+   * @param lockValue 锁持有者标识（{@code tryAcquireLock} 返回值；可能为 null）
+   */
+  private void releaseJobLock(String lockKey, String jobKey, Integer shardIndex, String lockValue) {
+    releaseLockQuietly(lockKey, jobKey, shardIndex, lockValue);
+  }
+
+  /**
+   * P0-A2: 统一锁释放入口。
+   *
+   * <p>优先使用 {@link JobLockManager}（common-lock 可重入锁，仅持有者可释放，WatchDog 自动停止）；
+   * JobLockManager 不可用或释放异常时回退 Lua 脚本（value 匹配删除）。Lua 仅做 value 相等判断，
+   * 与持锁者标识（INSTANCE_ID 或 clientId）无关，兼容两种获取路径。
+   */
+  private void releaseLockQuietly(
+      String lockKey, String jobKey, Integer shardIndex, String lockValue) {
+    if (lockKey == null) {
+      return;
+    }
+    JobLockManager lockManager = jobLockManager();
+    if (lockManager != null && lockValue != null) {
+      try {
+        lockManager.releaseLock(jobKey, shardIndex, lockValue);
+        return;
+      } catch (Exception e) {
+        log.warn(
+            "[Dispatcher] JobLockManager 释放锁失败, 回退 Lua 脚本: key={} reason={}",
+            lockKey,
+            e.getMessage());
+      }
+    }
+    try {
+      redisTemplate.execute(
+          RELEASE_LOCK_SCRIPT,
+          Collections.singletonList(lockKey),
+          lockValue != null ? lockValue : INSTANCE_ID);
+    } catch (Exception e) {
+      log.warn(
+          "[Dispatcher] 释放分布式锁失败(将等待 TTL 自动过期): key={} reason={}", lockKey, e.getMessage());
+    }
+  }
+
+  /**
+   * P1-5: 获取幂等锁 key。
+   *
+   * <p>基于 handler 的 {@link JobHandler#idempotentKey(String)} 方法生成， 用于防止相同参数的任务在集群中重复执行。
+   *
+   * @param handler 任务处理器
+   * @param job 任务定义
+   * @return 幂等锁 key；handler 为 null 时返回 null
+   */
+  private String buildIdempotentLockKey(JobHandler handler, JobVO job) {
+    if (handler == null) {
+      return null;
+    }
+    String idempotentKey = handler.idempotentKey(job.getParamsJson());
+    return IDEMPOTENT_LOCK_PREFIX + idempotentKey;
+  }
+
+  /**
+   * P1-5: 尝试获取幂等锁。
+   *
+   * <p>幂等锁与任务锁（job lock）互补：任务锁按 jobKey 去重，幂等锁按 handler+params 去重。 当同一 handler 以相同参数被多次触发时（如重复 cron
+   * 扫描、手动重试）， 幂等锁保证只有一个实例执行。
+   *
+   * <p>P0-A2: 优先使用 {@link JobLockManager}（通用 key 版本，WatchDog 续期），未配置时回退 RedisTemplate SETNX。
+   *
+   * @param idempotentLockKey 幂等锁 key
+   * @param ttl 锁 TTL
+   * @return 锁持有者标识；获取失败返回 null；异常降级返回空字符串（放行）
+   */
+  private String tryAcquireIdempotentLock(String idempotentLockKey, Duration ttl) {
+    if (idempotentLockKey == null) {
+      return "";
+    }
+    try {
+      JobLockManager lockManager = jobLockManager();
+      if (lockManager != null) {
+        return lockManager.tryAcquireLock(idempotentLockKey, ttl.toMillis());
+      }
+      Boolean acquired = redisTemplate.opsForValue().setIfAbsent(idempotentLockKey, INSTANCE_ID, ttl);
+      return Boolean.TRUE.equals(acquired) ? INSTANCE_ID : null;
+    } catch (Exception e) {
+      log.warn("[Dispatcher] 获取幂等锁异常, 降级放行: key={} reason={}", idempotentLockKey, e.getMessage());
+      return "";
+    }
+  }
+
+  /**
+   * P1-5: 释放幂等锁。
+   *
+   * <p>任务执行完成后释放，或等待 TTL 自动过期。
+   *
+   * @param idempotentLock 幂等锁句柄（key + value；为空或降级句柄时跳过）
+   */
+  private void releaseIdempotentLock(IdempotentLockHandle idempotentLock) {
+    if (idempotentLock == null
+        || idempotentLock.key() == null
+        || idempotentLock.key().isEmpty()) {
+      return;
+    }
+    try {
+      JobLockManager lockManager = jobLockManager();
+      if (lockManager != null
+          && idempotentLock.value() != null
+          && !idempotentLock.value().isEmpty()) {
+        lockManager.releaseLock(idempotentLock.key(), idempotentLock.value());
+        return;
+      }
+      redisTemplate.execute(
+          RELEASE_LOCK_SCRIPT,
+          Collections.singletonList(idempotentLock.key()),
+          idempotentLock.value() != null && !idempotentLock.value().isEmpty()
+              ? idempotentLock.value()
+              : INSTANCE_ID);
+    } catch (Exception e) {
+      log.warn(
+          "[Dispatcher] 释放幂等锁失败(将等待 TTL 自动过期): key={} reason={}",
+          idempotentLock.key(),
+          e.getMessage());
+    }
+  }
+
+  /**
+   * P6-2: 记录任务执行指标。
+   *
+   * <p>使用 try-catch 包裹，确保指标记录失败不影响主流程。
+   *
+   * @param job 任务定义
+   * @param triggerType 触发类型
+   * @param success 是否执行成功
+   * @param log0 任务日志（含耗时信息）
+   */
+  private void recordJobMetrics(JobVO job, String triggerType, boolean success, JobLogVO log0) {
+    CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
+    if (metrics == null) {
+      return;
+    }
+    try {
+      String status = success ? "SUCCESS" : "FAILED";
+      metrics.incJobDispatched(triggerType, status);
+      metrics.recordJobDuration(
+          job.getJobKey(), status, log0.getDurationMs() != null ? log0.getDurationMs() : 0L);
+      if (!success) {
+        metrics.incJobFailed(job.getJobKey());
+      }
+    } catch (Exception e) {
+      log.debug("[Dispatcher] 指标记录失败(不影响主流程): key={} reason={}", job.getJobKey(), e.getMessage());
+    }
+  }
+
+  /**
+   * 定时上报线程池活跃度指标（替代原 AdaptiveBatchScheduler 的 updatePoolActive 调用）。
+   *
+   * <p>每 10 秒采集一次任务执行线程池的活跃率，供系统负载评分计算使用。
+   */
+  @Scheduled(fixedDelay = 10_000L)
+  public void reportThreadPoolMetrics() {
+    if (taskExecutorPool == null) {
+      return;
+    }
+    CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
+    if (metrics == null) {
+      return;
+    }
+    metrics.updatePoolActive(taskExecutorPool.getActiveCount(), taskExecutorPool.getMaximumPoolSize());
+  }
+
   /** 解析任务实际使用的锁 TTL。 */
   private Duration resolveLockTtl(JobVO job) {
     Duration taskLevel = null;
@@ -1630,7 +1925,27 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param success 是否执行成功
    */
   private void updateCircuitBreaker(JobVO job, boolean success) {
-    metricsHelper.updateCircuitBreaker(job, success);
+    try {
+      if (success) {
+        jobRepository.resetConsecutiveFail(job.getId());
+      } else {
+        jobRepository.incrementConsecutiveFail(job.getId());
+        Integer maxFails = job.getMaxConsecutiveFails();
+        if (maxFails != null && maxFails > 0) {
+          Integer current = jobRepository.findConsecutiveFailCount(job.getId());
+          if (current != null && current >= maxFails) {
+            jobRepository.markAutoPaused(job.getId());
+            log.warn(
+                "[Dispatcher] 任务熔断, 自动暂停: key={} consecutiveFails={}/{}",
+                job.getJobKey(),
+                current,
+                maxFails);
+          }
+        }
+      }
+    } catch (Exception e) {
+      log.warn("[Dispatcher] 熔断计数更新失败(不影响主流程): key={} reason={}", job.getJobKey(), e.getMessage());
+    }
   }
 
   /**
