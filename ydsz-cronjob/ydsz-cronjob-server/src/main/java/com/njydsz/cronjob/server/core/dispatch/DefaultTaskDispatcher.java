@@ -6,14 +6,11 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -32,19 +29,13 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.publish.DomainEventPublisher;
-import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.RandomUtils;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.job.ExecutionContextScope;
-import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.domain.job.ProcessResult;
 import com.njydsz.cronjob.domain.job.ShardingContext;
@@ -57,15 +48,9 @@ import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.ExecutorConfig;
 import com.njydsz.cronjob.server.config.RemoteConfig;
-import com.njydsz.cronjob.server.core.JobLockManager;
 import com.njydsz.cronjob.server.core.LockKeyUtil;
-import com.njydsz.cronjob.server.core.TaskCompletedEvent;
-import com.njydsz.cronjob.server.core.alert.AlertContext;
-import com.njydsz.cronjob.server.core.alert.AlertTrigger;
-import com.njydsz.cronjob.server.core.alert.AlertType;
 import com.njydsz.cronjob.server.core.config.CronjobThreadPoolRegistry;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
-import com.njydsz.cronjob.server.core.executor.GlobalConcurrencyController;
 import com.njydsz.cronjob.server.core.executor.JobNodeHeartbeat;
 import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
 import com.njydsz.cronjob.server.core.executor.TenantAwareExecutorPool;
@@ -78,8 +63,6 @@ import com.njydsz.cronjob.server.core.map.MapTaskExecutor;
 import com.njydsz.cronjob.server.core.scheduler.NextFireTimeCalculator;
 import com.njydsz.cronjob.server.core.sharding.ShardAssignment;
 import com.njydsz.cronjob.server.core.sharding.ShardingStrategy;
-import com.njydsz.cronjob.server.metrics.CronjobMetrics;
-import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
 /**
@@ -116,6 +99,24 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /** 线程池空闲保活时间（秒） */
   private static final long KEEPALIVE_SECONDS = 60;
 
+  /** 当前实例标识（hostname:pid），用于锁值和安全释放 */
+  private static final String INSTANCE_ID = initInstanceId();
+
+  // ============================== 辅助类 ==============================
+
+  /** 锁管理辅助类 */
+  private final JobExecutionLockHelper lockHelper;
+
+  /** 配额管理辅助类 */
+  private final JobExecutionQuotaHelper quotaHelper;
+
+  /** 告警与事件辅助类 */
+  private final JobExecutionAlertHelper alertHelper;
+
+  /** 指标记录辅助类 */
+  private final JobExecutionMetricsHelper metricsHelper;
+
+  // ============================== 核心依赖 ==============================
 
   private final JobRepository jobRepository;
   private final JobLogRepository jobLogRepository;
@@ -1113,10 +1114,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     jobLogRepository.insert(log0);
 
     // P1-2: 递增运行中任务数（Redis 维护，供 Gauge 直接读取）
-    RunningTaskCounter counter = runningTaskCounterProvider.getIfAvailable();
-    if (counter != null) {
-      counter.increment();
-    }
+    lockHelper.incrementRunningTaskCount(runningTaskCounterProvider.getIfAvailable());
 
     // P0-2: 初始化在线日志器（在 handler.execute 之前设置 ThreadLocal）
     JobLoggerImpl jobLogger =
@@ -1132,25 +1130,26 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     shardingCtx.setLogId(log0.getId());
 
     // P1-5: 获取幂等锁（基于 handler + params），防止相同参数的任务重复执行
-    IdempotentLockHandle idempotentLock = acquireIdempotentLockForJob(job);
+    JobExecutionLockHelper.IdempotentLockHandle idempotentLock =
+        lockHelper.acquireIdempotentLock(resolveHandler(job), job.getParamsJson(), resolveLockTtl(job));
     if (idempotentLock == null) {
       // 幂等锁被持有，释放任务锁并跳过执行
-      releaseJobLock(lockKey, job.getJobKey(), null, lockValue);
+      lockHelper.releaseJobLock(lockKey, job.getJobKey(), null, lockValue);
       return null;
     }
 
     // P0-P1: 使用 try-with-resources 确保 ThreadLocal 必定清理，杜绝上下文串扰
     try (ExecutionContextScope scope = ExecutionContextScope.of(jobLogger, shardingCtx)) {
       // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
-      recordExecutionStart(job.getTenantId());
+      quotaHelper.recordExecutionStart(job.getTenantId());
 
       // P3-13: 推送 TASK_STARTED WebHook 事件
-      dispatchWebhookEvent("TASK_STARTED", job, log0);
+      alertHelper.dispatchWebhookEvent("TASK_STARTED", job, log0);
 
       executeAndFinalize(job, lockKey, lockValue, holdLock, triggerType, retryCount, log0, jobLogger, shardingCtx);
     } finally {
       // P1-5: 释放幂等锁（确保异常时也释放）
-      releaseIdempotentLock(idempotentLock);
+      lockHelper.releaseIdempotentLock(idempotentLock);
     }
     return log0.getId();
   }

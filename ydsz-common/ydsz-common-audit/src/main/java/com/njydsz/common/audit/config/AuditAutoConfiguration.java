@@ -158,12 +158,13 @@ public class AuditAutoConfiguration {
   @Bean("auditAsyncExecutor")
   @ConditionalOnMissingBean(name = "auditAsyncExecutor")
   public Executor auditAsyncExecutor(AuditProperties properties) {
-    // 通过 InternalExecutorFactory 将审计线程池纳入统一命名治理与监控
-    InternalExecutorFactory.newFixedThreadPool("audit-async", properties.getAsync().getThreadCoreSize());
-    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     int corePoolSize = properties.getAsync().getThreadCoreSize();
     int maxPoolSize = properties.getAsync().getThreadMaxSize();
     int queueCapacity = properties.getAsync().getQueueCapacity();
+    // CHECKSTYLE.OFF: RegexpSinglelineJava
+    // 兜底线程池：仅在外部未注入线程池时使用，生产环境由 ydsz.thread.pools.* 统一管理
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     executor.setCorePoolSize(corePoolSize);
     executor.setMaxPoolSize(maxPoolSize);
     executor.setQueueCapacity(queueCapacity);
