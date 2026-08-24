@@ -153,7 +153,11 @@ public class RocketMQSubscriber implements IMessageSubscriber {
       message.setTraceId(msgExt.getKeys() != null ? msgExt.getKeys() : message.getTraceId());
 
       if (handler != null) {
-        handler.onMessage(message);
+        try {
+          handler.onMessage(message);
+        } catch (Throwable t) {
+          throw new RuntimeException(t);
+        }
       }
       consumedCount.incrementAndGet();
       lastError.set(null);
