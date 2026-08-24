@@ -454,7 +454,7 @@ public class TccTransactionManager extends AbstractTransactionManager
       TccTransactionLog txLog,
       TccAction<T> tccAction,
       TccContext context)
-      throws Throwable {
+      throws Exception {
     if (logStore != null) {
       Optional<TccTransactionLog> existing = logStore.findByXidAndBranchId(xid, branchId);
       if (existing.isPresent() && existing.get().getStatus() == TccBranchStatus.CONFIRMED) {
@@ -503,7 +503,7 @@ public class TccTransactionManager extends AbstractTransactionManager
       TccTransactionLog txLog,
       TccAction<T> tccAction,
       TccContext context)
-      throws Throwable {
+      throws Exception {
     if (logStore != null) {
       Optional<TccTransactionLog> existing = logStore.findByXidAndBranchId(xid, branchId);
       if (existing.isPresent()) {
@@ -559,10 +559,10 @@ public class TccTransactionManager extends AbstractTransactionManager
    * <p>优先从本地缓存查找 Action，未命中时通过注册表查找。 注册表查找支持跨实例恢复。
    *
    * @param txLog 超时事务日志
-   * @throws Throwable Cancel 执行异常
+   * @throws Exception Cancel 执行异常
    */
   @Override
-  public void recoverCancel(TccTransactionLog txLog) throws Throwable {
+  public void recoverCancel(TccTransactionLog txLog) throws Exception {
     LOG.info("TCC recovery Cancel: xid={}, branch={}", txLog.getXid(), txLog.getBranchId());
 
     TccAction<?> action = resolveAction(txLog);

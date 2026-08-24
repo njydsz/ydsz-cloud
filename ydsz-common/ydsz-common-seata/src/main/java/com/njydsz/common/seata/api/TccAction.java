@@ -50,23 +50,23 @@ public interface TccAction<T> {
    *
    * @param context TCC 上下文
    * @return 业务返回值
-   * @throws Throwable 业务异常
+   * @throws Exception 业务异常
    */
-  T tryAction(TccContext context) throws Throwable;
+  T tryAction(TccContext context) throws Exception;
 
   /**
    * Confirm 阶段 - 确认提交
    *
    * @param context TCC 上下文
-   * @throws Throwable 业务异常
+   * @throws Exception 业务异常
    */
-  void confirmAction(TccContext context) throws Throwable;
+  void confirmAction(TccContext context) throws Exception;
 
   /**
    * Cancel 阶段 - 取消预留
    *
    * @param context TCC 上下文
-   * @throws Throwable 业务异常
+   * @throws Exception 业务异常
    */
-  void cancelAction(TccContext context) throws Throwable;
+  void cancelAction(TccContext context) throws Exception;
 }
