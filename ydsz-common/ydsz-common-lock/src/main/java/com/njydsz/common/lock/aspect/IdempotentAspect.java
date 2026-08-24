@@ -3,8 +3,6 @@ package com.njydsz.common.lock.aspect;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +19,7 @@ import com.njydsz.common.lock.exception.IdempotentException;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.util.LockExpressionUtils;
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * 接口幂等性 AOP 切面
@@ -341,18 +340,8 @@ public class IdempotentAspect {
    * @return 十六进制摘要
    */
   private String sha256Hex(String source) {
-    MessageDigest md;
-    try {
-      md = MessageDigest.getInstance("SHA-256");
-    } catch (NoSuchAlgorithmException e) {
-      // 云顶规范 11 章：禁止裸抛 Exception，SHA-256 为 JDK 内置算法，不可用属环境异常
-      throw BusinessException.builder()
-          .resultCode(CoreExceptionCode.SYSTEM_ERROR)
-          .message("SHA-256 摘要算法不可用")
-          .cause(e)
-          .build();
-    }
-    byte[] digest = md.digest(source.getBytes(StandardCharsets.UTF_8));
+    // 云顶规范 §22.5：复用 common-util 的 DigestUtils，禁止自建哈希
+    byte[] digest = DigestUtils.sha256(source.getBytes(StandardCharsets.UTF_8));
     StringBuilder hex = new StringBuilder(digest.length * 2);
     for (int i = 0; i < DIGEST_BYTES && i < digest.length; i++) {
       hex.append(String.format("%02x", digest[i]));

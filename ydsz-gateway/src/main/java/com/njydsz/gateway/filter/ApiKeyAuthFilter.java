@@ -1,10 +1,6 @@
 package com.njydsz.gateway.filter;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +22,7 @@ import reactor.core.publisher.Mono;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
 import com.njydsz.gateway.config.GatewayErrorWriter;
@@ -104,7 +101,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
     if (validKeyList != null) {
       for (String key : validKeyList) {
         if (key != null && !key.isBlank()) {
-          hashes.add(sha256Hex(key.trim()));
+          hashes.add(DigestUtils.sha256Hex(key.trim()));
         }
       }
     }
@@ -112,24 +109,8 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
     log.info("[ApiKeyAuth] 已加载 {} 个 API Key（SHA-256 摘要存储）", hashes.size());
   }
 
-  /**
-   * 计算字符串的 SHA-256 十六进制摘要。
-   *
-   * @param value 原始值
-   * @return 64 位小写十六进制摘要
-   */
-  private static String sha256Hex(String value) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
-      return HexFormat.of().formatHex(hash);
-    } catch (NoSuchAlgorithmException e) {
-      throw new IllegalStateException("SHA-256 不可用", e);
-    }
-  }
-
-  /**
-   * API Key 认证过滤器：为外部系统提供 JWT 之外的备选认证方式。
+    /**
+     * API Key 认证过滤器：为外部系统提供 JWT 之外的备选认证方式。
    *
    * <p>未启用 / 非受保护路径 / 已有 JWT 身份（X-User-Id 存在）时直接放行； 否则从 {@code X-API-Key} 头或 {@code api_key}
    * 查询参数提取并校验， 通过则注入 {@code X-API-Key-User} 标识后放行，缺失 / 无效分别返回 401 / 403。

@@ -1,8 +1,5 @@
 package com.njydsz.common.notify.dedup;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.HexFormat;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -11,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.notify.config.NotifyProperties;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * 通知去重与幂等服务（P3-13）
@@ -124,9 +122,7 @@ public class NotifyDedupService {
               + (title != null ? title : "")
               + "|"
               + (content != null ? content : "");
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      byte[] hash = digest.digest(raw.getBytes(StandardCharsets.UTF_8));
-      return HexFormat.of().formatHex(hash).substring(0, 32);
+      return DigestUtils.sha256Hex(raw).substring(0, 32);
     } catch (Exception e) {
       return String.valueOf((receiver + title + content).hashCode());
     }

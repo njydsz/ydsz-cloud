@@ -1,10 +1,7 @@
 package com.njydsz.agent.infra.llm;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +15,7 @@ import com.njydsz.agent.domain.model.MessageRole;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.security.DigestUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -190,24 +188,7 @@ public class SemanticLlmCache {
             + (systemPrompt != null ? systemPrompt : "")
             + SemanticCacheConfig.KEY_SEPARATOR
             + (userMessage != null ? userMessage : "");
-    return SemanticCacheConfig.CACHE_KEY_PREFIX + sha256(raw);
-  }
-
-  /**
-   * 计算 SHA-256 摘要。
-   *
-   * @param input 输入字符串
-   * @return 十六进制摘要（64 字符）
-   */
-  private String sha256(String input) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-      return HexFormat.of().formatHex(hash);
-    } catch (Exception e) {
-      // SHA-256 在 JDK 标准中必定可用，此处仅为防御
-      return String.valueOf(input.hashCode());
-    }
+      return SemanticCacheConfig.CACHE_KEY_PREFIX + DigestUtils.sha256Hex(raw);
   }
 
   /**

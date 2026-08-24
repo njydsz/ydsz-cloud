@@ -18,7 +18,14 @@ public final class AgentDefinition implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  /** Agent 类型枚举 */
+  /**
+   * Agent 类型枚举
+   *
+   * <p>定义 Agent 的执行模式，包括单轮对话、ReAct、RAG、计划执行、路由、工作流、主管协同和 DAG 编排。
+   *
+   * @author ydsz-team
+   * @since 1.0.0
+   */
   public enum Type {
     /** 单轮对话 */
     CHAT,

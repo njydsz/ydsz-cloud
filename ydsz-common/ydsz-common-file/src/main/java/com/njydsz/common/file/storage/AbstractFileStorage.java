@@ -47,6 +47,7 @@ import com.njydsz.common.file.util.FileTypeValidator;
 import com.njydsz.common.file.virus.VirusScanner;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.util.string.StringUtils;
+import com.njydsz.common.util.security.HexUtils;
 
 /**
  * 文件存储抽象基类
@@ -1030,7 +1031,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
       if (isChunkMd5CheckEnabled()) {
         MessageDigest digest = chunkedMd5DigestMap.get(uploadId);
         if (digest != null) {
-          String accumulatedMd5 = bytesToHex(digest.digest());
+          String accumulatedMd5 = HexUtils.encode(digest.digest());
           checkpointService.updateAccumulatedMd5(
               resolvedBucket, resolvedObjectName, accumulatedMd5);
           log.debug(
@@ -1629,19 +1630,11 @@ public abstract class AbstractFileStorage implements IFileStorage {
         md.update(buffer, 0, read);
       }
       byte[] digest = md.digest();
-      return bytesToHex(digest);
+      return HexUtils.encode(digest);
     } catch (Exception e) {
       log.warn("[Storage] computeMd5 failed, message={}", e.getMessage());
       return null;
     }
-  }
-
-  private static String bytesToHex(byte[] bytes) {
-    StringBuilder sb = new StringBuilder(bytes.length * 2);
-    for (byte b : bytes) {
-      sb.append(String.format("%02x", b));
-    }
-    return sb.toString();
   }
 
   // ==================== 抽象方法，子类必须实现 ====================

@@ -2,8 +2,6 @@ package com.njydsz.userinfo.server.auth;
 
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
@@ -21,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.userinfo.server.config.RememberMeProperties;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
@@ -414,18 +413,13 @@ public class RememberMeService {
    * @return 32 字节 AES 密钥
    */
   private byte[] deriveKey() {
-    try {
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      // 使用 Cookie 名称 + 固定盐派生密钥
-      String seed = rememberMeProperties.getCookieName() + ":ydsz-remember-me-aes-key";
-      byte[] hash = digest.digest(seed.getBytes(StandardCharsets.UTF_8));
-      // 取前 32 字节（256 位）作为 AES 密钥
-      byte[] key = new byte[AES_KEY_LENGTH];
-      System.arraycopy(hash, 0, key, 0, AES_KEY_LENGTH);
-      return key;
-    } catch (NoSuchAlgorithmException e) {
-      throw new IllegalStateException("SHA-256 algorithm not available", e);
-    }
+    // 复用 common-util 统一摘要能力（DigestUtils.sha256 返回原始字节），禁止业务自建 MessageDigest
+    String seed = rememberMeProperties.getCookieName() + ":ydsz-remember-me-aes-key";
+    byte[] hash = DigestUtils.sha256(seed.getBytes(StandardCharsets.UTF_8));
+    // 取前 32 字节（256 位）作为 AES 密钥
+    byte[] key = new byte[AES_KEY_LENGTH];
+    System.arraycopy(hash, 0, key, 0, AES_KEY_LENGTH);
+    return key;
   }
 
   /**

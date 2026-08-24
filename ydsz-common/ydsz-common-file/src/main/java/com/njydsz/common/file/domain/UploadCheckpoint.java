@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import com.njydsz.common.json.annotation.JsonIgnore;
+import com.njydsz.common.util.security.HexUtils;
 
 /**
  * 分片上传检查点信息
@@ -133,7 +134,7 @@ public class UploadCheckpoint {
     try {
       MessageDigest md = MessageDigest.getInstance("MD5");
       byte[] digest = md.digest(data);
-      String actualMd5 = bytesToHex(digest);
+      String actualMd5 = HexUtils.encode(digest);
       return actualMd5.equalsIgnoreCase(expectedMd5);
     } catch (Exception e) {
       return false;
@@ -153,17 +154,10 @@ public class UploadCheckpoint {
     try {
       MessageDigest md = MessageDigest.getInstance("MD5");
       byte[] digest = md.digest(data);
-      return bytesToHex(digest);
+      return HexUtils.encode(digest);
     } catch (Exception e) {
       return null;
     }
   }
 
-  private static String bytesToHex(byte[] bytes) {
-    StringBuilder sb = new StringBuilder(bytes.length * 2);
-    for (byte b : bytes) {
-      sb.append(String.format("%02x", b));
-    }
-    return sb.toString();
-  }
 }

@@ -1,14 +1,13 @@
 package com.njydsz.common.file.service;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -40,23 +39,9 @@ public class FileDedupService {
    * @param inputStream 输入流（方法会消费此流，调用者需自行重新获取）
    * @return 十六进制编码的 SHA-256 摘要字符串
    */
-  public String calculateHash(InputStream inputStream) throws NoSuchAlgorithmException {
-    MessageDigest digest = MessageDigest.getInstance("SHA-256");
-    byte[] buffer = new byte[8192];
-    int len;
-    try {
-      while ((len = inputStream.read(buffer)) != -1) {
-        digest.update(buffer, 0, len);
-      }
-    } catch (Exception e) {
-      throw SysException.builder().message("Failed to calculate SHA-256").cause(e).build();
-    }
-    byte[] digestBytes = digest.digest();
-    StringBuilder sb = new StringBuilder(digestBytes.length * 2);
-    for (byte b : digestBytes) {
-      sb.append(String.format("%02x", b));
-    }
-    return sb.toString();
+  public String calculateHash(InputStream inputStream) throws IOException {
+    // 云顶规范 §22.5：复用 common-util 的 DigestUtils，禁止自建哈希（支持流式计算）
+    return DigestUtils.sha256Hex(inputStream);
   }
 
   /**

@@ -116,6 +116,22 @@
         <jmh.version>1.37</jmh.version>
         <!-- Aviator 表达式引擎（工作流条件表达式求值） -->
         <aviator.version>5.4.3</aviator.version>
+
+        <!-- ============ 构建期守护（云顶规范红线：最小化外部依赖 + 绝对可控）============ -->
+        <!-- P0-1 SpotBugs + findsecbugs：字节码缺陷 / 安全反模式扫描。默认关闭，渐进启用。 -->
+        <spotbugs.version>4.8.6.4</spotbugs.version>
+        <findsecbugs.version>1.13.0</findsecbugs.version>
+        <spotbugs.skip>true</spotbugs.skip>
+        <!-- P0-2 OWASP Dependency-Check：依赖漏洞扫描。默认关闭，首次需联网下载 NVD 漏洞库。 -->
+        <owasp-dc.version>10.0.4</owasp-dc.version>
+        <owasp.skip>true</owasp.skip>
+        <!-- P0-3 CycloneDX SBOM：物料清单生成（合规产出，默认启用，产出 bom.json）。 -->
+        <cyclonedx.version>2.8.2</cyclonedx.version>
+        <sbom.skip>false</sbom.skip>
+        <!-- P0-4 JaCoCo 覆盖率门禁（§14.5：核心≥80% / 分支≥70%）。默认关闭，补测试后启用。 -->
+        <jacoco.version>0.8.12</jacoco.version>
+        <jacoco.skip>true</jacoco.skip>
+        <jacoco.enforce>false</jacoco.enforce>
     </properties>
 
     <dependencyManagement>
@@ -1331,6 +1347,150 @@
                                  （缺 BannedImports 类），故移除 enforcer 侧检查，保留 checkstyle 侧等价检查。 -->
                         </rules>
                         <fail>true</fail>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+
+        <!-- ============ P0-1 构建期守护：SpotBugs + findsecbugs ============ -->
+        <!-- 字节码缺陷 / 安全反模式扫描。默认 spotbugs.skip=true（渐进启用），
+             激活：mvn verify -Dspotbugs.skip=false；failOnError=true 表示发现缺陷即阻断构建。 -->
+        <plugin>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-maven-plugin</artifactId>
+            <version>${spotbugs.version}</version>
+            <dependencies>
+                <dependency>
+                    <groupId>com.h3xstream.findsecbugs</groupId>
+                    <artifactId>findsecbugs-plugin</artifactId>
+                    <version>${findsecbugs.version}</version>
+                </dependency>
+            </dependencies>
+            <configuration>
+                <skip>${spotbugs.skip}</skip>
+                <effort>Max</effort>
+                <threshold>Low</threshold>
+                <failOnError>true</failOnError>
+                <xmlOutput>true</xmlOutput>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>spotbugs-verify</id>
+                    <phase>verify</phase>
+                    <goals>
+                        <goal>check</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+
+        <!-- ============ P0-2 构建期守护：OWASP Dependency-Check ============ -->
+        <!-- 依赖漏洞扫描。默认 owasp.skip=true（首次需联网下载 NVD 漏洞库，渐进启用），
+             激活：mvn verify -Dowasp.skip=false；failBuildOnCVSS=11 表示默认不阻断，
+             清理基线后下调阈值（如 7）以强制门禁。 -->
+        <plugin>
+            <groupId>org.owasp</groupId>
+            <artifactId>dependency-check-maven</artifactId>
+            <version>${owasp-dc.version}</version>
+            <configuration>
+                <skip>${owasp.skip}</skip>
+                <failBuildOnCVSS>11</failBuildOnCVSS>
+                <suppressionFile>${maven.multiModuleProjectDirectory}/docs/owasp-suppressions.xml</suppressionFile>
+                <formats>
+                    <format>HTML</format>
+                    <format>JSON</format>
+                </formats>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>owasp-dependency-check</id>
+                    <phase>verify</phase>
+                    <goals>
+                        <goal>check</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+
+        <!-- ============ P0-3 构建期守护：CycloneDX SBOM ============ -->
+        <!-- 物料清单生成（合规产出），默认启用（sbom.skip=false），验证通过后产出 bom.json。
+             仅在聚合根生成一次（inherited=false），避免子模块重复生成。 -->
+        <plugin>
+            <groupId>org.cyclonedx</groupId>
+            <artifactId>cyclonedx-maven-plugin</artifactId>
+            <version>${cyclonedx.version}</version>
+            <inherited>false</inherited>
+            <configuration>
+                <skip>${sbom.skip}</skip>
+                <projectType>application</projectType>
+                <schemaVersion>1.6</schemaVersion>
+                <includeBomSerialNumber>true</includeBomSerialNumber>
+                <includeDependencies>true</includeDependencies>
+                <outputFormat>json</outputFormat>
+                <outputName>bom</outputName>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>make-aggregate-bom</id>
+                    <phase>verify</phase>
+                    <goals>
+                        <goal>makeAggregateBom</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+
+        <!-- ============ P0-4 构建期守护：JaCoCo 覆盖率门禁（云顶规范 §14.5）============ -->
+        <!-- 核心业务覆盖率≥80%、分支覆盖率≥70%。默认 jacoco.skip=true（不采集），
+             jacoco.enforce=false（不强制门禁）。补测试后两步启用：
+             mvn verify -Djacoco.skip=false -Djacoco.enforce=true -->
+        <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>${jacoco.version}</version>
+            <configuration>
+                <skip>${jacoco.skip}</skip>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>jacoco-prepare-agent</id>
+                    <phase>initialize</phase>
+                    <goals>
+                        <goal>prepare-agent</goal>
+                    </goals>
+                </execution>
+                <execution>
+                    <id>jacoco-report</id>
+                    <phase>verify</phase>
+                    <goals>
+                        <goal>report</goal>
+                    </goals>
+                </execution>
+                <execution>
+                    <id>jacoco-check</id>
+                    <phase>verify</phase>
+                    <goals>
+                        <goal>check</goal>
+                    </goals>
+                    <configuration>
+                        <skip>${jacoco.enforce}</skip>
+                        <rules>
+                            <rule>
+                                <element>BUNDLE</element>
+                                <limits>
+                                    <limit>
+                                        <counter>LINE</counter>
+                                        <value>COVEREDRATIO</value>
+                                        <minimum>0.80</minimum>
+                                    </limit>
+                                    <limit>
+                                        <counter>BRANCH</counter>
+                                        <value>COVEREDRATIO</value>
+                                        <minimum>0.70</minimum>
+                                    </limit>
+                                </limits>
+                            </rule>
+                        </rules>
                     </configuration>
                 </execution>
             </executions>

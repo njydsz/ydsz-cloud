@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.config.SearchProperties;
+import com.njydsz.common.util.security.HexUtils;
 
 /**
  * 搜索缓存服务接口。
@@ -171,7 +171,7 @@ public class SearchCacheService {
     try {
       MessageDigest md = MessageDigest.getInstance("MD5");
       byte[] digest = md.digest(input.getBytes(StandardCharsets.UTF_8));
-      return HexFormat.of().formatHex(digest);
+      return HexUtils.encode(digest);
     } catch (Exception e) {
       return Integer.toHexString(input.hashCode());
     }

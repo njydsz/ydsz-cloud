@@ -1,10 +1,7 @@
 package com.njydsz.common.notify.tracking;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.Duration;
 import java.util.HashMap;
-import java.util.HexFormat;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -18,6 +15,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.config.NotifyProperties;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * 邮件追踪与已读回执服务（P1-5 + P3-1 增强）
@@ -187,13 +185,8 @@ public class EmailTrackingService {
    * @return 16 字符的追踪 ID
    */
   private String generateTrackingId(String messageId) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      byte[] hash = digest.digest(messageId.getBytes(StandardCharsets.UTF_8));
-      return HexFormat.of().formatHex(hash).substring(0, 16);
-    } catch (Exception e) {
-      return messageId.length() > 16 ? messageId.substring(0, 16) : messageId;
-    }
+    // 云顶规范 §22.5：复用 common-util 的 DigestUtils，禁止自建哈希
+    return DigestUtils.sha256Hex(messageId).substring(0, 16);
   }
 
   // ==================== P3-1 增强事件追踪 ====================

@@ -2,7 +2,6 @@ package com.njydsz.userinfo.web.controller;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
@@ -35,6 +34,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.oauth2.OAuthCodeContext;
@@ -854,19 +854,12 @@ public class OAuth2Controller {
       log.warn("PKCE code_challenge_method not supported: {}", codeChallengeMethod);
       return false;
     }
-    try {
-      // 计算 SHA-256 哈希并 Base64URL 编码
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      byte[] hash = digest.digest(codeVerifier.getBytes(StandardCharsets.US_ASCII));
-      String computedChallenge =
-          Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
-      // 恒定时间比较（防时序攻击）
-      return MessageDigest.isEqual(
-          computedChallenge.getBytes(StandardCharsets.US_ASCII),
-          codeChallenge.getBytes(StandardCharsets.US_ASCII));
-    } catch (NoSuchAlgorithmException e) {
-      log.error("SHA-256 algorithm not available", e);
-      return false;
-    }
+    // 计算 SHA-256 哈希并 Base64URL 编码（复用 common-util 统一摘要能力，禁止自建 MessageDigest）
+    byte[] hash = DigestUtils.sha256(codeVerifier.getBytes(StandardCharsets.US_ASCII));
+    String computedChallenge = Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
+    // 恒定时间比较（防时序攻击，JDK 标准 API MessageDigest.isEqual，非自建哈希）
+    return MessageDigest.isEqual(
+        computedChallenge.getBytes(StandardCharsets.US_ASCII),
+        codeChallenge.getBytes(StandardCharsets.US_ASCII));
   }
 }

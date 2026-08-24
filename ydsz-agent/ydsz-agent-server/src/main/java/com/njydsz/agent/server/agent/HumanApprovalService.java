@@ -296,7 +296,14 @@ public class HumanApprovalService {
     return null;
   }
 
-  /** 审批状态枚举 */
+  /**
+   * 审批状态枚举
+   *
+   * <p>定义 Human-in-the-Loop 审批请求的生命周期状态：待审批、已通过、已拒绝、已过期。
+   *
+   * @author ydsz-team
+   * @since 1.0.0
+   */
   public enum ApprovalStatus {
     /** 待审批：Agent 已暂停等待人工决策 */
     PENDING,

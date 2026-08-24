@@ -83,6 +83,14 @@ import com.njydsz.common.jdbc.monitor.SqlFingerprint;
       method = "update",
       args = {MappedStatement.class, Object.class})
 })
+/**
+ * SQL 追踪内部拦截器
+ *
+ * <p>基于 MyBatis-Plus InnerInterceptor 实现 SQL 执行追踪、审计日志和 Micrometer 指标采集。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class SqlTraceInnerInterceptor
     implements InnerInterceptor, Ordered, MeterBinder, Interceptor {
 

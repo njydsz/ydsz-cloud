@@ -1,8 +1,5 @@
 package com.njydsz.common.safe.csrf.impl;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,10 +9,9 @@ import java.util.concurrent.TimeUnit;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.csrf.CsrfToken;
 import com.njydsz.common.safe.csrf.CsrfTokenRepository;
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * 基于内存的 CSRF 令牌存储库
@@ -119,28 +115,7 @@ public class InMemoryCsrfTokenRepository implements CsrfTokenRepository {
   }
 
   private String sha256(String input) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-      return bytesToHex(hash);
-    } catch (NoSuchAlgorithmException e) {
-      throw BusinessException.builder()
-          .code(CoreExceptionCode.FAIL.getCode())
-          .message("SHA-256 algorithm not available")
-          .cause(e)
-          .build();
-    }
-  }
-
-  private String bytesToHex(byte[] bytes) {
-    StringBuilder hexString = new StringBuilder();
-    for (byte b : bytes) {
-      String hex = Integer.toHexString(b & 0xff);
-      if (hex.length() == 1) {
-        hexString.append('0');
-      }
-      hexString.append(hex);
-    }
-    return hexString.toString();
+    // 云顶规范 §22.5：复用 common-util 的 DigestUtils，禁止自建哈希
+    return DigestUtils.sha256Hex(input);
   }
 }

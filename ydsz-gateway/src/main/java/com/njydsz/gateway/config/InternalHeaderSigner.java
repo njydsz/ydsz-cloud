@@ -1,9 +1,9 @@
 package com.njydsz.gateway.config;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HexFormat;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import com.njydsz.common.util.security.HexUtils;
 
 /**
  * 内部请求头签名工具。
@@ -110,7 +110,7 @@ public final class InternalHeaderSigner {
       SecretKeySpec keySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_SHA256);
       mac.init(keySpec);
       byte[] hmacBytes = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
-      return HexFormat.of().formatHex(hmacBytes);
+      return HexUtils.encode(hmacBytes);
     } catch (Exception e) {
       throw new IllegalStateException("生成内部头签名失败", e);
     }

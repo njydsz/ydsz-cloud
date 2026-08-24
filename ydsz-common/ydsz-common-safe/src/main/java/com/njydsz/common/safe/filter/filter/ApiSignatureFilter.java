@@ -26,6 +26,7 @@ import com.njydsz.common.safe.config.ApiSignatureProperties;
 import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.common.util.http.UrlPathUtils;
+import com.njydsz.common.util.security.HexUtils;
 
 /**
  * API 签名验证过滤器
@@ -282,7 +283,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
     try {
       MessageDigest digest = MessageDigest.getInstance(SHA_256);
       byte[] hash = digest.digest(data);
-      return bytesToHex(hash);
+      return HexUtils.encode(hash);
     } catch (Exception e) {
       return "";
     }
@@ -314,11 +315,4 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
     return result == 0;
   }
 
-  private static String bytesToHex(byte[] bytes) {
-    StringBuilder sb = new StringBuilder(bytes.length * 2);
-    for (byte b : bytes) {
-      sb.append(String.format("%02x", b & 0xff));
-    }
-    return sb.toString();
-  }
 }

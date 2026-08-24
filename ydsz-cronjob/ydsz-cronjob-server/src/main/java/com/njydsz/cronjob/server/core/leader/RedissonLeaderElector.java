@@ -42,6 +42,17 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * <h3>云顶规范 §22.5 报备（P1-2）</h3>
+ *
+ * <p>本类直接依赖 Redisson {@link RLock}，利用 <b>WatchDog 自动续期</b>（{@code tryLock(0, -1, MILLISECONDS)} 中
+ * leaseTime=-1 启用 Redisson 看门狗，每 10s 续期至 30s 租约）与<b>线程级持有判定</b>（{@code isHeldByCurrentThread()}）
+ * 实现 Leader 选举。经评估，{@code ydsz-common-lock} 的
+ * {@link com.njydsz.common.lock.core.DistributedLocker} 当前仅提供通用分布式锁契约（tryLock/unlock/isLocked/getRemainTime），
+ * <b>不具备选举语义所需的 WatchDog 续期与线程持有判定</b>，无法等价替换，否则会导致 Leader 身份漂移、多主风险。
+ *
+ * <p>依据《云顶编码规范》§22.5.3「评估必须自建时的报备机制」，此处临时保留 RLock 直用并报备：
+ * 待 {@code ydsz-common-lock} 补充 {@code LeaderElector} 选举封装能力（基于 Redisson 看门狗 + 线程持有语义）后迁移。
  */
 @Slf4j
 @Configuration

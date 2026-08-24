@@ -42,4 +42,12 @@ import com.njydsz.common.base.exporter.MarkdownDocExporter;
   DefaultDocExporter.class,
   MarkdownDocExporter.class
 })
+/**
+ * 文档自动配置
+ *
+ * <p>聚合 OpenAPI、Knife4j 和文档导出器的配置入口。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class DocAutoConfiguration {}

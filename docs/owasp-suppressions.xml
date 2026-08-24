@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  OWASP Dependency-Check 抑制文件（云顶规范 P0-2）
+  用途：对已知误报或已评估接受的风险做抑制，使 CI 门禁稳定。
+  激活方式：mvn verify -Dowasp.skip=false
+  抑制条目按需追加，每条需写明 cve / 依赖坐标 / 评估结论。
+  参考：https://jeremylong.github.io/dependency-check/general/suppression.html
+-->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- 示例模板（取消注释并按需填写）：
+    <suppress>
+        <notes><![CDATA[误报：xxx 库在 ydsz 场景下不可达，已评估接受。]]></notes>
+        <cve>CVE-YYYY-NNNN</cve>
+        <packageUrl regex="true">^pkg:maven/com\.example/foo@.*$</packageUrl>
+    </suppress>
+    -->
+</suppressions>
