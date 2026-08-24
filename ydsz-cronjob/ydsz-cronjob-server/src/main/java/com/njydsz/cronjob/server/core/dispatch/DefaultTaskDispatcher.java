@@ -1249,10 +1249,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       jobLogRepository.updateById(log0);
 
       // P1-2: 递减运行中任务数
-      RunningTaskCounter counter = runningTaskCounterProvider.getIfAvailable();
-      if (counter != null) {
-        counter.decrement();
-      }
+      lockHelper.decrementRunningTaskCount(runningTaskCounterProvider.getIfAvailable());
 
       // 更新任务统计
       Long incFire = 1L;
@@ -1270,16 +1267,16 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
           job.getId(), log0.getStartTime(), next, incFire, incSucc, incFail, statusOnError);
 
       // P1-6: 熔断计数（成功归零，失败递增 + 达到阈值自动暂停）
-      updateCircuitBreaker(job, success);
+      metricsHelper.updateCircuitBreaker(job, success);
 
       // 释放分布式锁（P0-A2: 优先 JobLockManager，回退 Lua 脚本安全释放）
-      releaseLockQuietly(lockKey, job.getJobKey(), null, lockValue);
+      lockHelper.releaseLockQuietly(lockKey, job.getJobKey(), null, lockValue);
 
       // P0-2: 释放全局并发配额
-      releaseGlobalConcurrency();
+      lockHelper.releaseGlobalConcurrency();
 
       // P7-3: 记录执行结束（DECR 并发计数器）
-      recordExecutionEnd(job.getTenantId());
+      quotaHelper.recordExecutionEnd(job.getTenantId());
 
       // 通知心跳组件：任务结束
       notifyTaskComplete();
@@ -1294,16 +1291,16 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       log.warn("[Dispatcher] 刷新在线日志失败(不影响主流程): key={} reason={}", job.getJobKey(), e.getMessage());
     }
     // P6-2: 记录任务执行指标
-    recordJobMetrics(job, triggerType, success, log0);
+    metricsHelper.recordJobMetrics(job, triggerType, success, log0);
     // P4: 发布任务完成事件，触发后继依赖任务（DagInstanceExecutor 异步监听）
-    publishTaskCompleted(job, success, log0.getId());
+    alertHelper.publishTaskCompleted(job, success, log0.getId());
     // P5: 触发告警（失败告警 + 慢任务告警）
-    triggerAlerts(job, success, log0);
+    alertHelper.triggerAlerts(job, success, log0);
     // P3-13: 推送 WebHook 事件通知
-    dispatchWebhookEvent(success ? "TASK_SUCCESS" : "TASK_FAILED", job, log0);
+    alertHelper.dispatchWebhookEvent(success ? "TASK_SUCCESS" : "TASK_FAILED", job, log0);
     // P0-2: 发布 Outbox 事件（跨模块可靠投递，消息中心据此发送告警通知）
     if (!success) {
-      publishJobFailureOutboxEvent(job, log0);
+      alertHelper.publishJobFailureOutboxEvent(job, log0);
     }
     // P1-1: 失败重试（非 RETRY 触发且 maxRetries > 0 且 retryCount < maxRetries）
     if (!success) {
