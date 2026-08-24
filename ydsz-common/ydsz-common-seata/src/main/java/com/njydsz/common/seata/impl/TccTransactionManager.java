@@ -454,7 +454,7 @@ public class TccTransactionManager extends AbstractTransactionManager
       TccTransactionLog txLog,
       TccAction<T> tccAction,
       TccContext context)
-      throws Exception {
+      throws TransactionException {
     if (logStore != null) {
       Optional<TccTransactionLog> existing = logStore.findByXidAndBranchId(xid, branchId);
       if (existing.isPresent() && existing.get().getStatus() == TccBranchStatus.CONFIRMED) {
@@ -477,7 +477,7 @@ public class TccTransactionManager extends AbstractTransactionManager
         tccAction.confirmAction(context);
         updateStatus(txLog, TccBranchStatus.CONFIRMED);
         return;
-      } catch (Exception e) {
+      } catch (TransactionException e) {
         lastException = e;
         txLog.setLastError(e.getMessage());
         LOG.warn("TCC Confirm attempt {} failed: xid={}, branch={}", attempt + 1, xid, branchId, e);
@@ -486,13 +486,14 @@ public class TccTransactionManager extends AbstractTransactionManager
             Thread.sleep(intervalMs);
           } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
-            throw ie;
+            throw new TransactionException("TCC Confirm interrupted", transactionName, xid, ie);
           }
         }
       }
     }
     updateStatus(txLog, TccBranchStatus.TRIED);
-    throw lastException;
+    throw new TransactionException(
+        "TCC Confirm failed after retries", transactionName, xid, lastException);
   }
 
   /** 执行 Cancel（带幂等检查 + 重试） */
@@ -503,7 +504,7 @@ public class TccTransactionManager extends AbstractTransactionManager
       TccTransactionLog txLog,
       TccAction<T> tccAction,
       TccContext context)
-      throws Exception {
+      throws TransactionException {
     if (logStore != null) {
       Optional<TccTransactionLog> existing = logStore.findByXidAndBranchId(xid, branchId);
       if (existing.isPresent()) {
@@ -534,7 +535,7 @@ public class TccTransactionManager extends AbstractTransactionManager
         tccAction.cancelAction(context);
         updateStatus(txLog, TccBranchStatus.CANCELLED);
         return;
-      } catch (Exception e) {
+      } catch (TransactionException e) {
         lastException = e;
         txLog.setLastError(e.getMessage());
         LOG.warn("TCC Cancel attempt {} failed: xid={}, branch={}", attempt + 1, xid, branchId, e);
@@ -543,12 +544,13 @@ public class TccTransactionManager extends AbstractTransactionManager
             Thread.sleep(intervalMs);
           } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
-            throw ie;
+            throw new TransactionException("TCC Cancel interrupted", transactionName, xid, ie);
           }
         }
       }
     }
-    throw lastException;
+    throw new TransactionException(
+        "TCC Cancel failed after retries", transactionName, xid, lastException);
   }
 
   // ============= 恢复回调 =============
