@@ -12,11 +12,14 @@ import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.util.message.MessageUtils;
-import com.njydsz.workflow.infra.entity.FlowTemplate;
-import com.njydsz.workflow.infra.mapper.FlowTemplateMapper;
+import com.njydsz.workflow.domain.repository.FlowTemplateRepository;
+import com.njydsz.workflow.domain.vo.FlowTemplateVO;
 
 /**
  * 工作流模板搜索提供者 — 将流程模板数据注册到统一搜索体系。
+ *
+ * <p><b>架构合规说明（1.0.0 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
+ * 禁止 server 层直接注入 infra Mapper（符合 §34.2.3）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,12 +27,12 @@ import com.njydsz.workflow.infra.mapper.FlowTemplateMapper;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class WorkflowSearchProvider implements SearchProvider<FlowTemplate> {
+public class WorkflowSearchProvider implements SearchProvider<FlowTemplateVO> {
 
     /** 模板名称匹配权重 */
   private static final float FIELD_WEIGHT = 3.0f;
 
-  private final FlowTemplateMapper flowTemplateMapper;
+  private final FlowTemplateRepository flowTemplateRepository;
 
   @Override
   public String getType() {
@@ -42,29 +45,29 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplate> {
   }
 
   @Override
-  public IndexDocument toIndexDocument(FlowTemplate entity) {
-    if (entity == null || entity.getId() == null) {
+  public IndexDocument toIndexDocument(FlowTemplateVO vo) {
+    if (vo == null || vo.getId() == null) {
       return null;
     }
     return IndexDocument.builder()
-        .id(entity.getId())
+        .id(vo.getId())
         .type("workflow")
-        .title(entity.getTemplateName())
-        .subtitle(entity.getCategory())
-        .content(entity.getDescription())
-        .snippet(entity.getTemplateCode())
-        .status(entity.getStatus())
-        .path("/workflow/template/" + entity.getId())
-        .tenantId(entity.getTenantId())
-        .createdBy(entity.getCreatedBy())
+        .title(vo.getTemplateName())
+        .subtitle(vo.getCategory())
+        .content(vo.getDescription())
+        .snippet(vo.getTemplateCode())
+        .status(vo.getStatus())
+        .path("/workflow/template/" + vo.getId())
+        .tenantId(vo.getTenantId())
+        .createdBy(vo.getCreatedBy())
         .createdAt(
-            entity.getCreatedAt() != null
-                ? entity.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()
+            vo.getCreatedAt() != null
+                ? vo.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()
                 : null)
-        .updatedBy(entity.getUpdatedBy())
+        .updatedBy(vo.getUpdatedBy())
         .updatedAt(
-            entity.getUpdatedAt() != null
-                ? entity.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant()
+            vo.getUpdatedAt() != null
+                ? vo.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant()
                 : null)
         .build();
   }
@@ -99,7 +102,7 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplate> {
   }
 
   @Override
-  public FlowTemplate loadById(String id) {
-    return flowTemplateMapper.selectById(id);
+  public FlowTemplateVO loadById(String id) {
+    return flowTemplateRepository.findById(id).orElse(null);
   }
 }

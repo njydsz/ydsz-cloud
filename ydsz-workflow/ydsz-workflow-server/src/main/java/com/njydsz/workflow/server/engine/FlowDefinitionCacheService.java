@@ -18,13 +18,10 @@ import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.repository.FlowSkipRepository;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowSkip;
-import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
-import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
 import com.njydsz.workflow.server.config.FlowProperties;
 
 /**

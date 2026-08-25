@@ -11,8 +11,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.server.health.FlowHealthIndicator;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowGroupResolver;
@@ -51,25 +51,25 @@ public class FlowAutoConfiguration {
       matchIfMissing = true)
   @ConditionalOnMissingBean(FlowHealthIndicator.class)
   public FlowHealthIndicator flowHealthIndicator(
-      FlowInstanceMapper instanceMapper,
-      FlowRunTaskMapper runTaskMapper,
+      FlowInstanceRepository instanceRepository,
+      FlowRunTaskRepository runTaskRepository,
       ObjectProvider<RedisStringOps> redisServiceProvider) {
-    return new FlowHealthIndicator(instanceMapper, runTaskMapper, redisServiceProvider);
+    return new FlowHealthIndicator(instanceRepository, runTaskRepository, redisServiceProvider);
   }
 
   /**
    * 工作流 Prometheus 指标收集器 Bean
    *
-   * @param instanceMapperProvider 参数说明
-   * @param taskMapperProvider 参数说明
+   * @param instanceRepository 参数说明
+   * @param taskRepository 参数说明
    * @return 返回值说明
    */
   @Bean
   @ConditionalOnMissingBean(FlowMetrics.class)
   public FlowMetrics flowMetrics(
-      ObjectProvider<FlowInstanceMapper> instanceMapperProvider,
-      ObjectProvider<FlowRunTaskMapper> taskMapperProvider) {
-    return new FlowMetrics(instanceMapperProvider, taskMapperProvider);
+      FlowInstanceRepository instanceRepository,
+      FlowRunTaskRepository taskRepository) {
+    return new FlowMetrics(instanceRepository, taskRepository);
   }
 
   /**

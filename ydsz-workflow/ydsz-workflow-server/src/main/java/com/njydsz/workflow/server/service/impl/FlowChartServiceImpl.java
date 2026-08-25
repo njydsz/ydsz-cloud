@@ -5,26 +5,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
 
-import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
-import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
-import com.njydsz.workflow.server.engine.BpmnDiagramParser;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.server.engine.BpmnModel.NodeCoordinate;
 import com.njydsz.workflow.server.service.FlowChartService;
 
 /**
  * 流程图渲染服务实现（P2-4）。
  *
- * <p>基于 BPMNDI 解析的节点/边坐标生成内联 SVG；无 BPMNDI 时使用简单自上而下自动布局。
- * 节点按状态着色：已完成=绿色、当前=蓝色、未到达=灰色。
+ * <p>基于节点 {@code coordinate} 字段（bpmn-js 设计器坐标 JSON）生成内联 SVG；
+ * 无坐标时使用简单自上而下自动布局。节点按状态着色：已完成=绿色、当前=蓝色、未到达=灰色。
  *
  * <p>PNG 依赖外部渲染能力（如 Batik / Playwright），本接口返回 null，由业务系统按需集成。
  *
@@ -59,10 +54,10 @@ public class FlowChartServiceImpl implements FlowChartService {
   /** 当前节点边框颜色 */
   private static final String COLOR_BORDER_ACTIVE = "#1890ff";
 
-  private final FlowDefinitionRepository definitionRepository;
-  private final BpmnDiagramParser diagramParser;
+  private final FlowNodeRepository nodeRepository;
 
   @Override
+  @SuppressWarnings("unchecked")
   public String generateSvg(
       String definitionId,
       Set<String> activeNodeCodes,
@@ -74,31 +69,51 @@ public class FlowChartServiceImpl implements FlowChartService {
     Set<String> active = activeNodeCodes != null ? activeNodeCodes : Set.of();
     Set<String> done = doneNodeCodes != null ? doneNodeCodes : Set.of();
 
-    FlowDefinitionVO def = definitionRepository.findById(definitionId).orElse(null);
-    if (def == null) {
-      log.warn("[Flow][Chart] 流程定义不存在: {}", definitionId);
+    List<FlowNodeVO> nodes = nodeRepository.findByDefinitionId(definitionId);
+    if (nodes == null || nodes.isEmpty()) {
+      log.info("[Flow][Chart] 流程定义无节点: definitionId={}", definitionId);
       return "";
     }
 
     Map<String, NodeCoordinate> nodeCoords = new HashMap<>();
-    Map<String, List<NodeCoordinate>> skipCoords = new HashMap<>();
-
-    // 解析 BPMNDI 获取坐标
-    if (def.getBpmnXml() != null && !def.getBpmnXml().isBlank()) {
-      parseBpmnCoordinates(def.getBpmnXml(), nodeCoords, skipCoords);
+    for (FlowNodeVO node : nodes) {
+      String nodeCode = node.getNodeCode();
+      String coordinate = node.getCoordinate();
+      if (coordinate != null && !coordinate.isBlank()) {
+        try {
+          Map<String, Object> coordMap = YdszJson.fromJson(coordinate, Map.class);
+          if (coordMap != null && coordMap.containsKey("x") && coordMap.containsKey("y")) {
+            double x = parseDouble(coordMap.get("x"));
+            double y = parseDouble(coordMap.get("y"));
+            double w = coordMap.containsKey("width") ? parseDouble(coordMap.get("width")) : NODE_WIDTH;
+            double h = coordMap.containsKey("height") ? parseDouble(coordMap.get("height")) : NODE_HEIGHT;
+            nodeCoords.put(nodeCode, new NodeCoordinate(x, y, w, h));
+          }
+        } catch (Exception e) {
+          log.debug("[Flow][Chart] 节点坐标解析失败: nodeCode={} err={}", nodeCode, e.getMessage());
+        }
+      }
     }
 
-    // 如果 BPMNDI 没有坐标，构建基于 node 列表的自动布局
-    if (nodeCoords.isEmpty() && def.getNodes() != null) {
-      buildAutoLayout(def.getNodes(), nodeCoords);
-    }
-
+    // 无坐标节点使用自动布局
     if (nodeCoords.isEmpty()) {
-      log.info("[Flow][Chart] 无可渲染的节点坐标: definitionId={}", definitionId);
-      return "";
+      double x = PADDING;
+      double y = PADDING;
+      int count = 0;
+      int nodesPerRow = 3;
+      for (FlowNodeVO node : nodes) {
+        String nodeCode = node.getNodeCode();
+        if (nodeCode == null) {
+          continue;
+        }
+        double dx = count % nodesPerRow * (NODE_WIDTH + NODE_GAP_X);
+        double dy = count / nodesPerRow * (NODE_HEIGHT + NODE_GAP_Y);
+        nodeCoords.put(nodeCode, new NodeCoordinate(dx + PADDING, dy + NODE_GAP_Y, NODE_WIDTH, NODE_HEIGHT));
+        count++;
+      }
     }
 
-    return renderSvg(nodeCoords, skipCoords, active, done);
+    return renderSvg(nodeCoords, active, done);
   }
 
   @Override
@@ -115,68 +130,15 @@ public class FlowChartServiceImpl implements FlowChartService {
   // ============================== 私有方法 ==============================
 
   /**
-   * 解析 BPMN XML 获取节点/边坐标。
-   *
-   * @param bpmnXml     BPMN XML 内容
-   * @param nodeCoords  输出：节点坐标
-   * @param skipCoords  输出：边坐标
-   */
-  private void parseBpmnCoordinates(
-      String bpmnXml,
-      Map<String, NodeCoordinate> nodeCoords,
-      Map<String, List<NodeCoordinate>> skipCoords) {
-    try {
-      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-      factory.setNamespaceAware(false);
-      DocumentBuilder builder = factory.newDocumentBuilder();
-      Document doc = builder.parse(new InputSource(new java.io.StringReader(bpmnXml)));
-      diagramParser.parseBpmnDiagram(doc.getDocumentElement(), nodeCoords, skipCoords);
-    } catch (Exception e) {
-      log.warn("[Flow][Chart] BPMN 坐标解析失败: err={}", e.getMessage());
-    }
-  }
-
-  /**
-   * 自动布局：基于节点 JSON 自上而下排列。
-   *
-   * @param nodes 节点 JSON 列表
-   * @param nodeCoords 输出：节点坐标
-   */
-  @SuppressWarnings("unchecked")
-  private void buildAutoLayout(List<?> nodes, Map<String, NodeCoordinate> nodeCoords) {
-    double x = PADDING;
-    double y = PADDING;
-    int count = 0;
-    int nodesPerRow = 3;
-    for (Object nodeObj : nodes) {
-      if (!(nodeObj instanceof Map)) {
-        continue;
-      }
-      Map<String, Object> nodeMap = (Map<String, Object>) nodeObj;
-      Object codeObj = nodeMap.get("nodeCode");
-      if (codeObj == null) {
-        continue;
-      }
-      String nodeCode = String.valueOf(codeObj);
-      double dx = count % nodesPerRow * (NODE_WIDTH + NODE_GAP_X);
-      double dy = count / nodesPerRow * (NODE_HEIGHT + NODE_GAP_Y);
-      nodeCoords.put(nodeCode, new NodeCoordinate(dx + PADDING, dy + NODE_GAP_Y, NODE_WIDTH, NODE_HEIGHT));
-      count++;
-    }
-  }
-
-  /**
    * 渲染 SVG。
    *
-   * @param nodeCoords 节点坐标映射
-   * @param skipCoords 边坐标映射
+   * @param nodeCoords  节点坐标映射
    * @param activeNodes 当前节点编码集合
    * @param doneNodes   已完成节点编码集合
    * @return SVG 字符串
    */
   private String renderSvg(
       Map<String, NodeCoordinate> nodeCoords,
-      Map<String, List<NodeCoordinate>> skipCoords,
       Set<String> activeNodes,
       Set<String> doneNodes) {
     double maxX = 0;
@@ -199,24 +161,6 @@ public class FlowChartServiceImpl implements FlowChartService {
         svgWidth, svgHeight, svgWidth, svgHeight));
     sb.append(String.format(
         "<rect width=\"%d\" height=\"%d\" fill=\"#fafafa\"/>%n", svgWidth, svgHeight));
-
-    // 绘制边（skip/flow）
-    for (Map.Entry<String, List<NodeCoordinate>> entry : skipCoords.entrySet()) {
-      List<NodeCoordinate> waypoints = entry.getValue();
-      if (waypoints == null || waypoints.size() < 2) {
-        continue;
-      }
-      StringBuilder path = new StringBuilder();
-      for (int i = 0; i < waypoints.size(); i++) {
-        NodeCoordinate wp = waypoints.get(i);
-        double px = wp.getX() + wp.getWidth() / 2;
-        double py = wp.getY() + wp.getHeight() / 2;
-        path.append(i == 0 ? "M" : "L").append(String.format("%.1f,%.1f ", px, py));
-      }
-      sb.append(String.format(
-          "<path d=\"%s\" stroke=\"%s\" stroke-width=\"1.5\" fill=\"none\" marker-end=\"url(#arrow)\"/>%n",
-          path.toString().trim(), COLOR_BORDER));
-    }
 
     // 绘制节点
     for (Map.Entry<String, NodeCoordinate> entry : nodeCoords.entrySet()) {
@@ -256,14 +200,28 @@ public class FlowChartServiceImpl implements FlowChartService {
           (activeNodes.contains(nodeCode) || doneNodes.contains(nodeCode)) ? "#fff" : "#595959",
           escapeXml(label)));
     }
-
-    // 箭头标记
-    sb.append("<defs><marker id=\"arrow\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" "
-        + "markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\">"
-        + "<path d=\"M0,0 L10,5 L0,10 z\" fill=\"" + COLOR_BORDER + "\"/>"
-        + "</marker></defs>%n");
     sb.append("</svg>");
     return sb.toString();
+  }
+
+  /**
+   * 解析数值（兼容 Integer/Long/Double/String）。
+   *
+   * @param obj 原始值
+   * @return double 值，解析失败返回 0
+   */
+  private double parseDouble(Object obj) {
+    if (obj == null) {
+      return 0;
+    }
+    if (obj instanceof Number n) {
+      return n.doubleValue();
+    }
+    try {
+      return Double.parseDouble(String.valueOf(obj));
+    } catch (NumberFormatException e) {
+      return 0;
+    }
   }
 
   /**
