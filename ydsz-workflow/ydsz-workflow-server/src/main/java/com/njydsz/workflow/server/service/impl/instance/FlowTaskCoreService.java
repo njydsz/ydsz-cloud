@@ -396,7 +396,7 @@ public class FlowTaskCoreService {
    */
   private void savePassAttachments(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
     attachmentService.saveBatch(task.getInstanceId(), task.getId(), task.getNodeCode(),
-        "TASK", dto.getUserId(), dto.getUserName(), dto.getAttachments(),
+        AUDIT_TYPE_TASK, dto.getUserId(), dto.getUserName(), dto.getAttachments(),
         task.getTenantId(), task.getProviderTraceId());
   }
 
@@ -408,7 +408,7 @@ public class FlowTaskCoreService {
    */
   private void saveRejectAttachments(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
     attachmentService.saveBatch(task.getInstanceId(), task.getId(), task.getNodeCode(),
-        "TASK", dto.getUserId(), dto.getUserName(), dto.getAttachments(),
+        AUDIT_TYPE_TASK, dto.getUserId(), dto.getUserName(), dto.getAttachments(),
         task.getTenantId(), task.getProviderTraceId());
   }
 
