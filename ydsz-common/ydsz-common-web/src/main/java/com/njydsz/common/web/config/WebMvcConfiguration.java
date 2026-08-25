@@ -17,10 +17,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
 import com.njydsz.common.auth.config.AuthFilterConfiguration;
-import com.njydsz.common.base.config.YdszAutoConfiguration;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
 import com.njydsz.common.base.config.ConditionalOnPlatform;
 import com.njydsz.common.base.config.PlatformMode;
+import com.njydsz.common.base.config.YdszAutoConfiguration;
 import com.njydsz.common.base.constant.InterceptorOrder;
 import com.njydsz.common.safe.config.SafeConfiguration;
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
