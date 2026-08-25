@@ -275,6 +275,21 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
   }
 
   /**
+   * P3-1: 重审已结束实例（对标 flowlong reopen）。
+   *
+   * @param instanceId    实例 ID
+   * @param operatorId    操作人 ID
+   * @param targetNodeCode 目标节点编码
+   * @param reason        重审原因
+   * @return 是否重审成功
+   */
+  @Override
+  public boolean reopen(
+      String instanceId, String operatorId, String targetNodeCode, String reason) {
+    return lifecycleManager.reopen(instanceId, operatorId, targetNodeCode, reason);
+  }
+
+  /**
    * P2-23: 实例多维分页查询
    *
    * @param query 分页查询参数对象（含筛选条件、分页信息）

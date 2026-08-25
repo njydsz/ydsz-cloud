@@ -32,12 +32,11 @@ import com.njydsz.workflow.server.config.FlowProperties;
  * <p>缓存策略：以 definitionId 为 key，缓存该定义下所有节点和 skip 列表， TTL 与容量通过 {@code
  * ydsz.flow.definition-cache.*} YAML 配置（{@link FlowProperties.DefinitionCache}），流程部署新版本时主动 evict。
  *
- * <p>设计说明：节点和 skip 的全量列表各自仅查库一次（{@code selectByDefinitionId}）， 其余按 nodeCode / nextNodeCode / 起始节点
+ * <p>设计说明：节点和 skip 的全量列表各自仅查库一次（{@code findByDefinitionId}）， 其余按 nodeCode / nextNodeCode / 起始节点
  * 等维度的查询均从缓存列表中派生， 将原本每次推进 5+ 次查库降为首次 2 次、后续 0 次。
  *
- * <p><b>分层规范：</b>engine 层对外返回 domain 层 VO（{@link FlowNodeVO} / {@link FlowSkipVO}），
- * 不暴露 infra 层 DO。DO → VO 转换在加载时一次性完成（{@link
- * FlowDefinitionCacheService#convertNodes} / {@link FlowDefinitionCacheService#convertSkips}）。
+ * <p><b>架构合规说明（1.0.0 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
+ * 禁止 server 层直接注入 infra Mapper（符合 §34.2.3）。Repository 返回领域 VO，无需 DO → VO 转换。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -46,10 +45,8 @@ import com.njydsz.workflow.server.config.FlowProperties;
 @Component
 public class FlowDefinitionCacheService {
 
-  private final FlowNodeMapper flowNodeMapper;
-  private final FlowSkipMapper flowSkipMapper;
-
-  private final WorkflowConverter workflowConverter;
+  private final FlowNodeRepository flowNodeRepository;
+  private final FlowSkipRepository flowSkipRepository;
 
   /** P0-3: 集群缓存失效广播器（@Lazy 避免循环依赖） */
   private final FlowDefinitionCacheBroadcaster broadcaster;
@@ -58,24 +55,21 @@ public class FlowDefinitionCacheService {
 
   /**
    * Spring 注入构造器，使用系统时钟。
-   * 
-   * <p>缓存 TTL 与容量从 {@link FlowProperties} 读取（P1-2: 硬编码值迁移至 YAML）。
-   * 
    *
+   * <p>缓存 TTL 与容量从 {@link FlowProperties} 读取（P1-2: 硬编码值迁移至 YAML）。
+   *
+   * @param flowNodeRepository 参数说明
+   * @param flowSkipRepository 参数说明
+   * @param broadcaster 参数说明
    * @param properties 参数说明
-   * @param flowNodeMapper 参数说明
-   * @param flowSkipMapper 参数说明
-   * @param workflowConverter 参数说明
-   * @param broadcaster 参数说明   */
+   */
   public FlowDefinitionCacheService(
-      FlowNodeMapper flowNodeMapper,
-      FlowSkipMapper flowSkipMapper,
-      WorkflowConverter workflowConverter,
+      FlowNodeRepository flowNodeRepository,
+      FlowSkipRepository flowSkipRepository,
       @Lazy FlowDefinitionCacheBroadcaster broadcaster,
       FlowProperties properties) {
-    this.flowNodeMapper = flowNodeMapper;
-    this.flowSkipMapper = flowSkipMapper;
-    this.workflowConverter = workflowConverter;
+    this.flowNodeRepository = flowNodeRepository;
+    this.flowSkipRepository = flowSkipRepository;
     this.broadcaster = broadcaster;
     this.metadataCache =
         YdszCache.<String, FlowDefinitionMetadata>newBuilder()
@@ -236,25 +230,23 @@ public class FlowDefinitionCacheService {
   private List<FlowNodeVO> loadNodes(String cacheKey) {
     // P0-3: cacheKey 格式为 tenantId:definitionId
     String definitionId = extractDefinitionId(cacheKey);
-    List<FlowNode> nodes = flowNodeMapper.selectByDefinitionId(definitionId);
-    List<FlowNodeVO> result = convertNodes(nodes);
+    List<FlowNodeVO> nodes = flowNodeRepository.findByDefinitionId(definitionId);
     log.debug(
         "[FlowCache] load nodes: definitionId={} count={}",
         definitionId,
-        result.size());
-    return result;
+        nodes.size());
+    return nodes;
   }
 
   private List<FlowSkipVO> loadSkips(String cacheKey) {
     // P0-3: cacheKey 格式为 tenantId:definitionId
     String definitionId = extractDefinitionId(cacheKey);
-    List<FlowSkip> skips = flowSkipMapper.selectByDefinitionId(definitionId);
-    List<FlowSkipVO> result = convertSkips(skips);
+    List<FlowSkipVO> skips = flowSkipRepository.findByDefinitionId(definitionId);
     log.debug(
         "[FlowCache] load skips: definitionId={} count={}",
         definitionId,
-        result.size());
-    return result;
+        skips.size());
+    return skips;
   }
 
   /**
@@ -324,34 +316,6 @@ public class FlowDefinitionCacheService {
 
   private String extractSourceRef(FlowSkipVO skip) {
     return FlowSkipUtils.extractSourceNodeCode(skip);
-  }
-
-  // ============================== DO → VO 转换 ==============================
-
-  /**
-   * 将 FlowNode 列表转换为 FlowNodeVO 列表（engine 层对外不暴露 DO）。
-   *
-   * @param nodes 参数说明
-   * @return 返回值说明
-   */
-  private List<FlowNodeVO> convertNodes(List<FlowNode> nodes) {
-    if (nodes == null || nodes.isEmpty()) {
-      return Collections.emptyList();
-    }
-    return workflowConverter.flowNodeListToVO(nodes);
-  }
-
-  /**
-   * 将 FlowSkip 列表转换为 FlowSkipVO 列表（engine 层对外不暴露 DO）。
-   *
-   * @param skips 参数说明
-   * @return 返回值说明
-   */
-  private List<FlowSkipVO> convertSkips(List<FlowSkip> skips) {
-    if (skips == null || skips.isEmpty()) {
-      return Collections.emptyList();
-    }
-    return workflowConverter.flowSkipListToVO(skips);
   }
 
   // ============================== 内部类 ==============================

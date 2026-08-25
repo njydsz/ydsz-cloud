@@ -251,6 +251,37 @@ public interface FlowInstanceService {
   boolean rollback(String instanceId, String operatorId, String reason, int maxRollbackDays);
 
   /**
+   * P3-1: 重审已结束实例（对标 flowlong reopen）。
+   *
+   * <p>将已完成（COMPLETED）的流程实例重新打开，回填到指定历史节点重新审批。
+   * 与 {@link #rollback} 的区别：rollback 是"撤销"（实例变为 ROLLED_BACK 终态），
+   * reopen 是"重审"（实例恢复为 RUNNING 态，继续推进）。
+   *
+   * <p><b>行为约定：</b>
+   *
+   * <ul>
+   *   <li>实例状态从 COMPLETED 回退为 RUNNING</li>
+   *   <li>在目标节点创建新的待办任务（目标节点的历史审批记录保留）</li>
+   *   <li>记录 REOPEN 审计日志</li>
+   * </ul>
+   *
+   * <p>校验规则：
+   *
+   * <ul>
+   *   <li>仅 COMPLETED 状态可重审</li>
+   *   <li>仅发起人或管理员可操作</li>
+   *   <li>目标节点必须是该实例已办过的历史节点</li>
+   * </ul>
+   *
+   * @param instanceId    实例 ID
+   * @param operatorId    操作人 ID（发起人或管理员）
+   * @param targetNodeCode 目标节点编码（回填到哪个节点）
+   * @param reason        重审原因
+   * @return 是否重审成功
+   */
+  boolean reopen(String instanceId, String operatorId, String targetNodeCode, String reason);
+
+  /**
    * P2-23: 实例多维分页查询
    *
    * @param query 分页查询参数对象（含筛选条件、分页信息）
