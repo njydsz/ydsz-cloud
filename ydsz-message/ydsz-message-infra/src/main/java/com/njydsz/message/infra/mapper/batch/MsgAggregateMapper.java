@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper.batch;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.infra.entity.MsgAggregateDO;
+import com.njydsz.message.infra.entity.MsgAggregate;
 
 /**
  * 聚合批次 Mapper
@@ -30,4 +30,4 @@ import com.njydsz.message.infra.entity.MsgAggregateDO;
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface MsgAggregateMapper extends BaseMapper<MsgAggregateDO> {}
+public interface MsgAggregateMapper extends BaseMapper<MsgAggregate> {}

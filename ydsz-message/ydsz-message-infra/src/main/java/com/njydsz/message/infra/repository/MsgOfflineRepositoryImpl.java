@@ -13,7 +13,7 @@ import com.njydsz.message.domain.query.MsgOfflineQuery;
 import com.njydsz.message.domain.repository.MsgOfflineRepository;
 import com.njydsz.message.domain.vo.MsgOfflineVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgOfflineDO;
+import com.njydsz.message.infra.entity.MsgOffline;
 import com.njydsz.message.infra.mapper.config.MsgOfflineMapper;
 
 /**
@@ -37,7 +37,7 @@ public class MsgOfflineRepositoryImpl implements MsgOfflineRepository {
     if (list == null || list.isEmpty()) {
       return false;
     }
-    List<MsgOfflineDO> entities = list.stream().map(this::voToDO).toList();
+    List<MsgOffline> entities = list.stream().map(this::voToDO).toList();
     return msgOfflineMapper.insertBatch(entities) > 0;
   }
 
@@ -53,22 +53,22 @@ public class MsgOfflineRepositoryImpl implements MsgOfflineRepository {
 
   @Override
   public List<MsgOfflineVO> findList(MsgOfflineQuery query) {
-    QueryWrapper<MsgOfflineDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgOffline> wrapper = buildWrapper(query);
     return converter.offlineDoListToVO(msgOfflineMapper.selectList(wrapper));
   }
 
   @Override
   public PageResponse<List<MsgOfflineVO>> findPage(MsgOfflineQuery query) {
-    Page<MsgOfflineDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    QueryWrapper<MsgOfflineDO> wrapper = buildWrapper(query);
+    Page<MsgOffline> page = new Page<>(query.getPageNum(), query.getPageSize());
+    QueryWrapper<MsgOffline> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
-    IPage<MsgOfflineDO> entityPage = msgOfflineMapper.selectPage(page, wrapper);
+    IPage<MsgOffline> entityPage = msgOfflineMapper.selectPage(page, wrapper);
     List<MsgOfflineVO> vos = converter.offlineDoListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
-  private QueryWrapper<MsgOfflineDO> buildWrapper(MsgOfflineQuery query) {
-    QueryWrapper<MsgOfflineDO> wrapper = new QueryWrapper<>();
+  private QueryWrapper<MsgOffline> buildWrapper(MsgOfflineQuery query) {
+    QueryWrapper<MsgOffline> wrapper = new QueryWrapper<>();
     if (query.getUserId() != null && !query.getUserId().isBlank()) {
       wrapper.eq("user_id", query.getUserId());
     }
@@ -82,11 +82,11 @@ public class MsgOfflineRepositoryImpl implements MsgOfflineRepository {
     return wrapper;
   }
 
-  private MsgOfflineDO voToDO(MsgOfflineVO vo) {
+  private MsgOffline voToDO(MsgOfflineVO vo) {
     if (vo == null) {
       return null;
     }
-    MsgOfflineDO entity = new MsgOfflineDO();
+    MsgOffline entity = new MsgOffline();
     entity.setId(vo.getId());
     entity.setUserId(vo.getUserId());
     entity.setMsgType(vo.getMsgType());

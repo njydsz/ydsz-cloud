@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.auth;
 
+import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 
 /**

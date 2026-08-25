@@ -10,7 +10,7 @@ import com.njydsz.message.domain.dto.MsgTenantConfigDTO;
 import com.njydsz.message.domain.repository.MsgTenantConfigRepository;
 import com.njydsz.message.domain.vo.MsgTenantConfigVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgTenantConfigDO;
+import com.njydsz.message.infra.entity.MsgTenantConfig;
 import com.njydsz.message.infra.mapper.MsgTenantConfigMapper;
 
 /**
@@ -39,13 +39,13 @@ public class MsgTenantConfigRepositoryImpl implements MsgTenantConfigRepository 
 
   @Override
   public boolean save(MsgTenantConfigDTO dto) {
-    MsgTenantConfigDO entity = converter.dtoToDO(dto);
+    MsgTenantConfig entity = converter.dtoToDO(dto);
     return msgTenantConfigMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean update(MsgTenantConfigDTO dto) {
-    MsgTenantConfigDO entity = converter.dtoToDO(dto);
+    MsgTenantConfig entity = converter.dtoToDO(dto);
     return msgTenantConfigMapper.updateById(entity) > 0;
   }
 
@@ -56,7 +56,7 @@ public class MsgTenantConfigRepositoryImpl implements MsgTenantConfigRepository 
 
   @Override
   public Optional<MsgTenantConfigVO> findByTenantId(String tenantId) {
-    QueryWrapper<MsgTenantConfigDO> wrapper = new QueryWrapper<>();
+    QueryWrapper<MsgTenantConfig> wrapper = new QueryWrapper<>();
     wrapper.eq("tenant_id", tenantId);
     return Optional.ofNullable(msgTenantConfigMapper.selectOne(wrapper)).map(converter::doToVO);
   }

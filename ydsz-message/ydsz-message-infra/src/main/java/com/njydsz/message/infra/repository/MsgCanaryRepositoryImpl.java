@@ -10,7 +10,7 @@ import com.njydsz.message.domain.dto.MsgCanaryDTO;
 import com.njydsz.message.domain.repository.MsgCanaryRepository;
 import com.njydsz.message.domain.vo.MsgCanaryVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgCanaryDO;
+import com.njydsz.message.infra.entity.MsgCanary;
 import com.njydsz.message.infra.mapper.MsgCanaryMapper;
 
 /**
@@ -39,13 +39,13 @@ public class MsgCanaryRepositoryImpl implements MsgCanaryRepository {
 
   @Override
   public boolean save(MsgCanaryDTO dto) {
-    MsgCanaryDO entity = converter.dtoToDO(dto);
+    MsgCanary entity = converter.dtoToDO(dto);
     return msgCanaryMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean update(MsgCanaryDTO dto) {
-    MsgCanaryDO entity = converter.dtoToDO(dto);
+    MsgCanary entity = converter.dtoToDO(dto);
     return msgCanaryMapper.updateById(entity) > 0;
   }
 
@@ -56,7 +56,7 @@ public class MsgCanaryRepositoryImpl implements MsgCanaryRepository {
 
   @Override
   public Optional<MsgCanaryVO> findByCanaryKey(String canaryKey) {
-    QueryWrapper<MsgCanaryDO> wrapper = new QueryWrapper<>();
+    QueryWrapper<MsgCanary> wrapper = new QueryWrapper<>();
     wrapper.eq("canary_key", canaryKey);
     return Optional.ofNullable(msgCanaryMapper.selectOne(wrapper)).map(converter::doToVO);
   }

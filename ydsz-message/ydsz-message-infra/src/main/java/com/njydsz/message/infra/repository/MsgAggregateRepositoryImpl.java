@@ -14,7 +14,7 @@ import com.njydsz.message.domain.query.MsgAggregateQuery;
 import com.njydsz.message.domain.repository.MsgAggregateRepository;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgAggregateDO;
+import com.njydsz.message.infra.entity.MsgAggregate;
 import com.njydsz.message.infra.mapper.batch.MsgAggregateMapper;
 
 /**
@@ -35,7 +35,7 @@ public class MsgAggregateRepositoryImpl implements MsgAggregateRepository {
 
   @Override
   public boolean save(MsgAggregateVO vo) {
-    MsgAggregateDO entity = voToDO(vo);
+    MsgAggregate entity = voToDO(vo);
     return msgAggregateMapper.insert(entity) > 0;
   }
 
@@ -46,28 +46,28 @@ public class MsgAggregateRepositoryImpl implements MsgAggregateRepository {
 
   @Override
   public boolean update(MsgAggregateVO vo) {
-    MsgAggregateDO entity = voToDO(vo);
+    MsgAggregate entity = voToDO(vo);
     return msgAggregateMapper.updateById(entity) > 0;
   }
 
   @Override
   public List<MsgAggregateVO> findList(MsgAggregateQuery query) {
-    QueryWrapper<MsgAggregateDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgAggregate> wrapper = buildWrapper(query);
     return converter.aggregateDoListToVO(msgAggregateMapper.selectList(wrapper));
   }
 
   @Override
   public PageResponse<List<MsgAggregateVO>> findPage(MsgAggregateQuery query) {
-    Page<MsgAggregateDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    QueryWrapper<MsgAggregateDO> wrapper = buildWrapper(query);
+    Page<MsgAggregate> page = new Page<>(query.getPageNum(), query.getPageSize());
+    QueryWrapper<MsgAggregate> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
-    IPage<MsgAggregateDO> entityPage = msgAggregateMapper.selectPage(page, wrapper);
+    IPage<MsgAggregate> entityPage = msgAggregateMapper.selectPage(page, wrapper);
     List<MsgAggregateVO> vos = converter.aggregateDoListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
-  private QueryWrapper<MsgAggregateDO> buildWrapper(MsgAggregateQuery query) {
-    QueryWrapper<MsgAggregateDO> wrapper = new QueryWrapper<>();
+  private QueryWrapper<MsgAggregate> buildWrapper(MsgAggregateQuery query) {
+    QueryWrapper<MsgAggregate> wrapper = new QueryWrapper<>();
     if (query.getAggregateGroup() != null && !query.getAggregateGroup().isBlank()) {
       wrapper.eq("aggregate_group", query.getAggregateGroup());
     }
@@ -84,11 +84,11 @@ public class MsgAggregateRepositoryImpl implements MsgAggregateRepository {
     return wrapper;
   }
 
-  private MsgAggregateDO voToDO(MsgAggregateVO vo) {
+  private MsgAggregate voToDO(MsgAggregateVO vo) {
     if (vo == null) {
       return null;
     }
-    MsgAggregateDO entity = new MsgAggregateDO();
+    MsgAggregate entity = new MsgAggregate();
     entity.setId(vo.getId());
     entity.setAggregateGroup(vo.getAggregateGroup());
     entity.setReceiver(vo.getReceiver());

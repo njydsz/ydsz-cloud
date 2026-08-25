@@ -14,7 +14,7 @@ import com.njydsz.message.domain.query.MsgRouteRuleQuery;
 import com.njydsz.message.domain.repository.MsgRouteRuleRepository;
 import com.njydsz.message.domain.vo.MsgRouteRuleVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgRouteRuleDO;
+import com.njydsz.message.infra.entity.MsgRouteRule;
 import com.njydsz.message.infra.mapper.config.MsgRouteRuleMapper;
 
 /**
@@ -43,7 +43,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
 
   @Override
   public boolean save(MsgRouteRuleVO vo) {
-    MsgRouteRuleDO entity = voToDO(vo);
+    MsgRouteRule entity = voToDO(vo);
     return msgRouteRuleMapper.insert(entity) > 0;
   }
 
@@ -54,7 +54,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
 
   @Override
   public boolean update(MsgRouteRuleVO vo) {
-    MsgRouteRuleDO entity = voToDO(vo);
+    MsgRouteRule entity = voToDO(vo);
     return msgRouteRuleMapper.updateById(entity) > 0;
   }
 
@@ -65,7 +65,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
 
   @Override
   public List<MsgRouteRuleVO> findList(MsgRouteRuleQuery query) {
-    QueryWrapper<MsgRouteRuleDO> wrapper = new QueryWrapper<>();
+    QueryWrapper<MsgRouteRule> wrapper = new QueryWrapper<>();
     if (query.getRuleCode() != null && !query.getRuleCode().isBlank()) {
       wrapper.eq("rule_code", query.getRuleCode());
     }
@@ -87,8 +87,8 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
 
   @Override
   public PageResponse<List<MsgRouteRuleVO>> findPage(MsgRouteRuleQuery query) {
-    Page<MsgRouteRuleDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    QueryWrapper<MsgRouteRuleDO> wrapper = new QueryWrapper<>();
+    Page<MsgRouteRule> page = new Page<>(query.getPageNum(), query.getPageSize());
+    QueryWrapper<MsgRouteRule> wrapper = new QueryWrapper<>();
     if (query.getRuleCode() != null && !query.getRuleCode().isBlank()) {
       wrapper.eq("rule_code", query.getRuleCode());
     }
@@ -106,16 +106,16 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
     }
     wrapper.eq("deleted", 0);
     wrapper.orderByAsc("sort_order");
-    IPage<MsgRouteRuleDO> entityPage = msgRouteRuleMapper.selectPage(page, wrapper);
+    IPage<MsgRouteRule> entityPage = msgRouteRuleMapper.selectPage(page, wrapper);
     List<MsgRouteRuleVO> vos = converter.routeRuleDoListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
-  private MsgRouteRuleDO voToDO(MsgRouteRuleVO vo) {
+  private MsgRouteRule voToDO(MsgRouteRuleVO vo) {
     if (vo == null) {
       return null;
     }
-    MsgRouteRuleDO entity = new MsgRouteRuleDO();
+    MsgRouteRule entity = new MsgRouteRule();
     entity.setId(vo.getId());
     entity.setRuleCode(vo.getRuleCode());
     entity.setRuleName(vo.getRuleName());

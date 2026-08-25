@@ -3,7 +3,7 @@
 <mapper namespace="com.njydsz.message.infra.mapper.OutboxEventMapper">
 
   <!-- 通用结果映射 -->
-  <resultMap id="BaseResultMap" type="com.njydsz.message.infra.entity.OutboxEventDO">
+  <resultMap id="BaseResultMap" type="com.njydsz.message.infra.entity.OutboxEvent">
     <id column="id" property="id"/>
     <result column="aggregate_type" property="aggregateType"/>
     <result column="aggregate_id" property="aggregateId"/>

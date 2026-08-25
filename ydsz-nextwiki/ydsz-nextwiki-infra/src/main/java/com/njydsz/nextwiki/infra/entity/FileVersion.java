@@ -30,7 +30,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("nw_file_version")
+@TableName("ydsz_nw_file_version")
 public class FileVersion extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

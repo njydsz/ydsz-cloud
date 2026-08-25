@@ -78,9 +78,6 @@ public class RememberMeService {
   /** AES-GCM Tag 长度（位） */
   private static final int GCM_TAG_LENGTH = 128;
 
-  /** AES 密钥长度（位） */
-  private static final int AES_KEY_LENGTH = 256;
-
   private final RememberMeProperties rememberMeProperties;
   private final UserInfoProperties userInfoProperties;
   private final SessionManager sessionManager;

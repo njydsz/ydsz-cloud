@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.message.infra.entity.MsgOfflineDO;
+import com.njydsz.message.infra.entity.MsgOffline;
 
 /**
  * P0-3: 离线消息持久化 Mapper
@@ -16,7 +16,7 @@ import com.njydsz.message.infra.entity.MsgOfflineDO;
  * @since 1.0.0
  */
 @Mapper
-public interface MsgOfflineMapper extends BaseMapper<MsgOfflineDO> {
+public interface MsgOfflineMapper extends BaseMapper<MsgOffline> {
 
   /**
    * P3-6: 批量插入离线消息（XML foreach 单条 INSERT VALUES (...), (...)）。
@@ -26,7 +26,7 @@ public interface MsgOfflineMapper extends BaseMapper<MsgOfflineDO> {
    * @param list 离线消息实体列表
    * @return 影响行数
    */
-  int insertBatch(@Param("list") List<MsgOfflineDO> list);
+  int insertBatch(@Param("list") List<MsgOffline> list);
 
   /**
    * 批量标记已推送。

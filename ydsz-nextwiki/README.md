@@ -62,7 +62,7 @@ ydsz-nextwiki/
 │       └── enums/                     # 枚举（NextwikiEnums / NextwikiExceptionCode）
 ├── ydsz-nextwiki-infra/               # 基础设施层：DO 实体 + Mapper + 仓储实现
 │   └── src/main/java/com/njydsz/nextwiki/infra/
-│       ├── entity/                    # 持久化实体（17 个 DO：FileNodeDO / FileVersionDO / FileAclDO / FileCommentDO / FileTagDO / SearchIndexDO / ShareLinkDO / ShareAccessLogDO / ShareRecipientDO / SpaceDO / SpaceMemberDO / SpaceTemplateDO / StorageQuotaDO / TagDO / TrashItemDO / UserFavoriteDO / UserRecentDO）
+│       ├── entity/                    # 持久化实体（17 个：FileNode / FileVersion / FileAcl / FileComment / FileTag / SearchIndex / ShareLink / ShareAccessLog / ShareRecipient / Space / SpaceMember / SpaceTemplate / StorageQuota / Tag / TrashItem / UserFavorite / UserRecent）
 │       ├── mapper/                    # MyBatis Mapper（16 个）
 │       ├── repository/                # 仓储实现（16 个）
 │       └── converter/                 # MapStruct 转换器（DO ↔ VO / DTO）
@@ -251,23 +251,23 @@ ydsz-nextwiki/
 
 | 表名 | 实体类 | 用途 |
 |---|---|---|
-| `nw_file_node` | `FileNodeDO` | 文件/目录节点聚合根 |
-| `nw_file_version` | `FileVersionDO` | 文件版本历史 |
-| `nw_file_acl` | `FileAclDO` | ACL 权限控制 |
-| `nw_file_comment` | `FileCommentDO` | 文件评论 |
-| `nw_file_tag` | `FileTagDO` | 文件-标签关联 |
-| `nw_search_index` | `SearchIndexDO` | 搜索索引 |
-| `nw_share_link` | `ShareLinkDO` | 分享链接 |
-| `nw_share_access_log` | `ShareAccessLogDO` | 分享访问日志 |
-| `nw_share_recipient` | `ShareRecipientDO` | 分享接收人 |
-| `nw_space` | `SpaceDO` | 知识库空间聚合根 |
-| `nw_space_member` | `SpaceMemberDO` | 空间成员（RBAC） |
-| `nw_space_template` | `SpaceTemplateDO` | 空间模板 |
-| `nw_storage_quota` | `StorageQuotaDO` | 存储配额 |
-| `nw_tag` | `TagDO` | 标签定义 |
-| `nw_trash_item` | `TrashItemDO` | 回收站 |
-| `nw_user_favorite` | `UserFavoriteDO` | 用户收藏夹 |
-| `nw_user_recent` | `UserRecentDO` | 用户最近访问 |
+| `ydsz_nw_file_node` | `FileNode` | 文件/目录节点聚合根 |
+| `ydsz_nw_file_version` | `FileVersion` | 文件版本历史 |
+| `ydsz_nw_file_acl` | `FileAcl` | ACL 权限控制 |
+| `ydsz_nw_file_comment` | `FileComment` | 文件评论 |
+| `ydsz_nw_file_tag` | `FileTag` | 文件-标签关联 |
+| `ydsz_nw_search_index` | `SearchIndex` | 搜索索引 |
+| `ydsz_nw_share_link` | `ShareLink` | 分享链接 |
+| `ydsz_nw_share_access_log` | `ShareAccessLog` | 分享访问日志 |
+| `ydsz_nw_share_recipient` | `ShareRecipient` | 分享接收人 |
+| `ydsz_nw_space` | `Space` | 知识库空间聚合根 |
+| `ydsz_nw_space_member` | `SpaceMember` | 空间成员（RBAC） |
+| `ydsz_nw_space_template` | `SpaceTemplate` | 空间模板 |
+| `ydsz_nw_storage_quota` | `StorageQuota` | 存储配额 |
+| `ydsz_nw_tag` | `Tag` | 标签定义 |
+| `ydsz_nw_trash_item` | `TrashItem` | 回收站 |
+| `ydsz_nw_user_favorite` | `UserFavorite` | 用户收藏夹 |
+| `ydsz_nw_user_recent` | `UserRecent` | 用户最近访问 |
 
 ## 配置项
 

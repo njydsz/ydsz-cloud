@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper.config;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.infra.entity.MsgTraceDO;
+import com.njydsz.message.infra.entity.MsgTrace;
 
 /**
  * 消息轨迹 Mapper
@@ -30,4 +30,4 @@ import com.njydsz.message.infra.entity.MsgTraceDO;
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface MsgTraceMapper extends BaseMapper<MsgTraceDO> {}
+public interface MsgTraceMapper extends BaseMapper<MsgTrace> {}

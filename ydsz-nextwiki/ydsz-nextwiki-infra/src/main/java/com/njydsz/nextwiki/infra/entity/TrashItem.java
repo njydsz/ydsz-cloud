@@ -22,7 +22,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("nw_trash_item")
+@TableName("ydsz_nw_trash_item")
 public class TrashItem extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

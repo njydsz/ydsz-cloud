@@ -13,7 +13,7 @@ import com.njydsz.message.domain.query.MsgFeedbackQuery;
 import com.njydsz.message.domain.repository.MsgFeedbackRepository;
 import com.njydsz.message.domain.vo.MsgFeedbackVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgFeedbackDO;
+import com.njydsz.message.infra.entity.MsgFeedback;
 import com.njydsz.message.infra.mapper.config.MsgFeedbackMapper;
 
 /**
@@ -34,28 +34,28 @@ public class MsgFeedbackRepositoryImpl implements MsgFeedbackRepository {
 
   @Override
   public boolean save(MsgFeedbackVO vo) {
-    MsgFeedbackDO entity = voToDO(vo);
+    MsgFeedback entity = voToDO(vo);
     return msgFeedbackMapper.insert(entity) > 0;
   }
 
   @Override
   public List<MsgFeedbackVO> findList(MsgFeedbackQuery query) {
-    QueryWrapper<MsgFeedbackDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgFeedback> wrapper = buildWrapper(query);
     return converter.feedbackDoListToVO(msgFeedbackMapper.selectList(wrapper));
   }
 
   @Override
   public PageResponse<List<MsgFeedbackVO>> findPage(MsgFeedbackQuery query) {
-    Page<MsgFeedbackDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    QueryWrapper<MsgFeedbackDO> wrapper = buildWrapper(query);
+    Page<MsgFeedback> page = new Page<>(query.getPageNum(), query.getPageSize());
+    QueryWrapper<MsgFeedback> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
-    IPage<MsgFeedbackDO> entityPage = msgFeedbackMapper.selectPage(page, wrapper);
+    IPage<MsgFeedback> entityPage = msgFeedbackMapper.selectPage(page, wrapper);
     List<MsgFeedbackVO> vos = converter.feedbackDoListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
-  private QueryWrapper<MsgFeedbackDO> buildWrapper(MsgFeedbackQuery query) {
-    QueryWrapper<MsgFeedbackDO> wrapper = new QueryWrapper<>();
+  private QueryWrapper<MsgFeedback> buildWrapper(MsgFeedbackQuery query) {
+    QueryWrapper<MsgFeedback> wrapper = new QueryWrapper<>();
     if (query.getMsgId() != null && !query.getMsgId().isBlank()) {
       wrapper.eq("msg_id", query.getMsgId());
     }
@@ -75,11 +75,11 @@ public class MsgFeedbackRepositoryImpl implements MsgFeedbackRepository {
     return wrapper;
   }
 
-  private MsgFeedbackDO voToDO(MsgFeedbackVO vo) {
+  private MsgFeedback voToDO(MsgFeedbackVO vo) {
     if (vo == null) {
       return null;
     }
-    MsgFeedbackDO entity = new MsgFeedbackDO();
+    MsgFeedback entity = new MsgFeedback();
     entity.setId(vo.getId());
     entity.setMsgId(vo.getMsgId());
     entity.setNotificationId(vo.getNotificationId());

@@ -11,7 +11,7 @@ import com.njydsz.message.domain.query.MsgPreferenceQuery;
 import com.njydsz.message.domain.repository.MsgPreferenceRepository;
 import com.njydsz.message.domain.vo.MsgPreferenceVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgPreferenceDO;
+import com.njydsz.message.infra.entity.MsgPreference;
 import com.njydsz.message.infra.mapper.config.MsgPreferenceMapper;
 
 /**
@@ -32,13 +32,13 @@ public class MsgPreferenceRepositoryImpl implements MsgPreferenceRepository {
 
   @Override
   public boolean save(MsgPreferenceVO vo) {
-    MsgPreferenceDO entity = voToDO(vo);
+    MsgPreference entity = voToDO(vo);
     return msgPreferenceMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean update(MsgPreferenceVO vo) {
-    MsgPreferenceDO entity = voToDO(vo);
+    MsgPreference entity = voToDO(vo);
     return msgPreferenceMapper.updateById(entity) > 0;
   }
 
@@ -49,18 +49,18 @@ public class MsgPreferenceRepositoryImpl implements MsgPreferenceRepository {
 
   @Override
   public Optional<MsgPreferenceVO> findOne(MsgPreferenceQuery query) {
-    QueryWrapper<MsgPreferenceDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgPreference> wrapper = buildWrapper(query);
     return Optional.ofNullable(msgPreferenceMapper.selectOne(wrapper)).map(converter::doToVO);
   }
 
   @Override
   public List<MsgPreferenceVO> findList(MsgPreferenceQuery query) {
-    QueryWrapper<MsgPreferenceDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgPreference> wrapper = buildWrapper(query);
     return converter.preferenceDoListToVO(msgPreferenceMapper.selectList(wrapper));
   }
 
-  private QueryWrapper<MsgPreferenceDO> buildWrapper(MsgPreferenceQuery query) {
-    QueryWrapper<MsgPreferenceDO> wrapper = new QueryWrapper<>();
+  private QueryWrapper<MsgPreference> buildWrapper(MsgPreferenceQuery query) {
+    QueryWrapper<MsgPreference> wrapper = new QueryWrapper<>();
     if (query.getUserId() != null && !query.getUserId().isBlank()) {
       wrapper.eq("user_id", query.getUserId());
     }
@@ -77,11 +77,11 @@ public class MsgPreferenceRepositoryImpl implements MsgPreferenceRepository {
     return wrapper;
   }
 
-  private MsgPreferenceDO voToDO(MsgPreferenceVO vo) {
+  private MsgPreference voToDO(MsgPreferenceVO vo) {
     if (vo == null) {
       return null;
     }
-    MsgPreferenceDO entity = new MsgPreferenceDO();
+    MsgPreference entity = new MsgPreference();
     entity.setId(vo.getId());
     entity.setUserId(vo.getUserId());
     entity.setChannel(vo.getChannel());

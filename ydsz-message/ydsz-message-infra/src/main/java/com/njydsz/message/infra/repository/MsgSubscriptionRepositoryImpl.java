@@ -14,7 +14,7 @@ import com.njydsz.message.domain.query.MsgSubscriptionQuery;
 import com.njydsz.message.domain.repository.MsgSubscriptionRepository;
 import com.njydsz.message.domain.vo.MsgSubscriptionVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgSubscriptionDO;
+import com.njydsz.message.infra.entity.MsgSubscription;
 import com.njydsz.message.infra.mapper.config.MsgSubscriptionMapper;
 
 /**
@@ -35,47 +35,47 @@ public class MsgSubscriptionRepositoryImpl implements MsgSubscriptionRepository 
 
   @Override
   public boolean save(MsgSubscriptionVO vo) {
-    MsgSubscriptionDO entity = voToDO(vo);
+    MsgSubscription entity = voToDO(vo);
     return msgSubscriptionMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean update(MsgSubscriptionVO vo) {
-    MsgSubscriptionDO entity = voToDO(vo);
+    MsgSubscription entity = voToDO(vo);
     return msgSubscriptionMapper.updateById(entity) > 0;
   }
 
   @Override
   public Optional<MsgSubscriptionVO> findOne(MsgSubscriptionQuery query) {
-    QueryWrapper<MsgSubscriptionDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgSubscription> wrapper = buildWrapper(query);
     return Optional.ofNullable(msgSubscriptionMapper.selectOne(wrapper)).map(converter::doToVO);
   }
 
   @Override
   public List<MsgSubscriptionVO> findList(MsgSubscriptionQuery query) {
-    QueryWrapper<MsgSubscriptionDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgSubscription> wrapper = buildWrapper(query);
     return converter.subscriptionDoListToVO(msgSubscriptionMapper.selectList(wrapper));
   }
 
   @Override
   public long count(MsgSubscriptionQuery query) {
-    QueryWrapper<MsgSubscriptionDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgSubscription> wrapper = buildWrapper(query);
     Long count = msgSubscriptionMapper.selectCount(wrapper);
     return count != null ? count : 0L;
   }
 
   @Override
   public PageResponse<List<MsgSubscriptionVO>> findPage(MsgSubscriptionQuery query) {
-    Page<MsgSubscriptionDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    QueryWrapper<MsgSubscriptionDO> wrapper = buildWrapper(query);
+    Page<MsgSubscription> page = new Page<>(query.getPageNum(), query.getPageSize());
+    QueryWrapper<MsgSubscription> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
-    IPage<MsgSubscriptionDO> entityPage = msgSubscriptionMapper.selectPage(page, wrapper);
+    IPage<MsgSubscription> entityPage = msgSubscriptionMapper.selectPage(page, wrapper);
     List<MsgSubscriptionVO> vos = converter.subscriptionDoListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
-  private QueryWrapper<MsgSubscriptionDO> buildWrapper(MsgSubscriptionQuery query) {
-    QueryWrapper<MsgSubscriptionDO> wrapper = new QueryWrapper<>();
+  private QueryWrapper<MsgSubscription> buildWrapper(MsgSubscriptionQuery query) {
+    QueryWrapper<MsgSubscription> wrapper = new QueryWrapper<>();
     if (query.getUserId() != null && !query.getUserId().isBlank()) {
       wrapper.eq("user_id", query.getUserId());
     }
@@ -92,11 +92,11 @@ public class MsgSubscriptionRepositoryImpl implements MsgSubscriptionRepository 
     return wrapper;
   }
 
-  private MsgSubscriptionDO voToDO(MsgSubscriptionVO vo) {
+  private MsgSubscription voToDO(MsgSubscriptionVO vo) {
     if (vo == null) {
       return null;
     }
-    MsgSubscriptionDO entity = new MsgSubscriptionDO();
+    MsgSubscription entity = new MsgSubscription();
     entity.setId(vo.getId());
     entity.setUserId(vo.getUserId());
     entity.setTopicCode(vo.getTopicCode());

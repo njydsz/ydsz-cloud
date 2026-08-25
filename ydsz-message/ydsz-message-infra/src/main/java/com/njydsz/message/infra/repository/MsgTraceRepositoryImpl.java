@@ -10,7 +10,7 @@ import com.njydsz.message.domain.query.MsgTraceQuery;
 import com.njydsz.message.domain.repository.MsgTraceRepository;
 import com.njydsz.message.domain.vo.MsgTraceVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgTraceDO;
+import com.njydsz.message.infra.entity.MsgTrace;
 import com.njydsz.message.infra.mapper.config.MsgTraceMapper;
 
 /**
@@ -31,13 +31,13 @@ public class MsgTraceRepositoryImpl implements MsgTraceRepository {
 
   @Override
   public boolean save(MsgTraceVO vo) {
-    MsgTraceDO entity = voToDO(vo);
+    MsgTrace entity = voToDO(vo);
     return msgTraceMapper.insert(entity) > 0;
   }
 
   @Override
   public List<MsgTraceVO> findList(MsgTraceQuery query) {
-    QueryWrapper<MsgTraceDO> wrapper = new QueryWrapper<>();
+    QueryWrapper<MsgTrace> wrapper = new QueryWrapper<>();
     if (query.getMsgId() != null && !query.getMsgId().isBlank()) {
       wrapper.eq("msg_id", query.getMsgId());
     }
@@ -55,11 +55,11 @@ public class MsgTraceRepositoryImpl implements MsgTraceRepository {
     return converter.traceDoListToVO(msgTraceMapper.selectList(wrapper));
   }
 
-  private MsgTraceDO voToDO(MsgTraceVO vo) {
+  private MsgTrace voToDO(MsgTraceVO vo) {
     if (vo == null) {
       return null;
     }
-    MsgTraceDO entity = new MsgTraceDO();
+    MsgTrace entity = new MsgTrace();
     entity.setId(vo.getId());
     entity.setMsgId(vo.getMsgId());
     entity.setTraceId(vo.getTraceId());

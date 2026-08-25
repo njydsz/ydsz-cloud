@@ -15,7 +15,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.event.OutboxEvent;
 import com.njydsz.message.domain.repository.OutboxEventRepository;
-import com.njydsz.message.infra.entity.OutboxEventDO;
+import com.njydsz.message.infra.entity.OutboxEvent;
 import com.njydsz.message.infra.mapper.OutboxEventMapper;
 
 /**
@@ -38,7 +38,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
 
   @Override
   public boolean save(OutboxEvent event) {
-    OutboxEventDO entity = toDO(event);
+    OutboxEvent entity = toDO(event);
     return outboxEventMapper.insert(entity) > 0;
   }
 
@@ -49,19 +49,19 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
 
   @Override
   public List<OutboxEvent> findPending(int limit, LocalDateTime beforeTime) {
-    Page<OutboxEventDO> page = new Page<>(1, limit);
-    LambdaQueryWrapper<OutboxEventDO> wrapper =
-        new LambdaQueryWrapper<OutboxEventDO>()
-            .eq(OutboxEventDO::getStatus, "PENDING")
-            .le(OutboxEventDO::getCreatedAt, beforeTime)
-            .orderByAsc(OutboxEventDO::getCreatedAt);
-    List<OutboxEventDO> records = outboxEventMapper.selectPage(page, wrapper).getRecords();
+    Page<OutboxEvent> page = new Page<>(1, limit);
+    LambdaQueryWrapper<OutboxEvent> wrapper =
+        new LambdaQueryWrapper<OutboxEvent>()
+            .eq(OutboxEvent::getStatus, "PENDING")
+            .le(OutboxEvent::getCreatedAt, beforeTime)
+            .orderByAsc(OutboxEvent::getCreatedAt);
+    List<OutboxEvent> records = outboxEventMapper.selectPage(page, wrapper).getRecords();
     return records.stream().map(this::toEvent).toList();
   }
 
   @Override
   public boolean markPublishing(String id) {
-    OutboxEventDO current = outboxEventMapper.selectById(id);
+    OutboxEvent current = outboxEventMapper.selectById(id);
     if (current == null) {
       return false;
     }
@@ -92,13 +92,13 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
 
   @Override
   public PageResponse<List<OutboxEvent>> findPage(String status, int pageNum, int pageSize) {
-    Page<OutboxEventDO> page = new Page<>(pageNum, Math.min(pageSize, 100));
-    LambdaQueryWrapper<OutboxEventDO> wrapper = new LambdaQueryWrapper<>();
+    Page<OutboxEvent> page = new Page<>(pageNum, Math.min(pageSize, 100));
+    LambdaQueryWrapper<OutboxEvent> wrapper = new LambdaQueryWrapper<>();
     if (status != null && !status.isBlank()) {
-      wrapper.eq(OutboxEventDO::getStatus, status);
+      wrapper.eq(OutboxEvent::getStatus, status);
     }
-    wrapper.orderByDesc(OutboxEventDO::getCreatedAt);
-    Page<OutboxEventDO> resultPage = outboxEventMapper.selectPage(page, wrapper);
+    wrapper.orderByDesc(OutboxEvent::getCreatedAt);
+    Page<OutboxEvent> resultPage = outboxEventMapper.selectPage(page, wrapper);
     List<OutboxEvent> events = resultPage.getRecords().stream().map(this::toEvent).toList();
     return PageResponse.success(
         resultPage.getTotal(),
@@ -108,7 +108,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
   }
 
   /** DO → Event 转换。 */
-  private OutboxEvent toEvent(OutboxEventDO entity) {
+  private OutboxEvent toEvent(OutboxEvent entity) {
     OutboxEvent event = new OutboxEvent();
     event.setId(entity.getId());
     event.setAggregateType(entity.getAggregateType());
@@ -124,8 +124,8 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
   }
 
   /** Event → DO 转换。 */
-  private OutboxEventDO toDO(OutboxEvent event) {
-    OutboxEventDO entity = new OutboxEventDO();
+  private OutboxEvent toDO(OutboxEvent event) {
+    OutboxEvent entity = new OutboxEvent();
     entity.setId(event.getId());
     entity.setAggregateType(event.getAggregateType());
     entity.setAggregateId(event.getAggregateId());

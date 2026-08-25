@@ -20,6 +20,7 @@ import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.repository.MsgNotificationRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.domain.vo.MsgNotificationVO;
+import com.njydsz.message.infra.entity.MsgTrace;
 import com.njydsz.message.server.channel.recall.RecallChannel;
 import com.njydsz.message.server.channel.recall.RecallChannelRouter;
 import com.njydsz.message.server.event.DomainEventPublisher;
@@ -136,7 +137,7 @@ public class RecallServiceImpl implements RecallService {
       // P0-2: 记录撤回轨迹
       messageTraceService.recordTrace(
           logDO.getMsgId(),
-          MsgTraceDO.Node.RECALLED,
+          MsgTrace.Node.RECALLED,
           "SUCCESS",
           logDO.getChannel(),
           "消息已撤回: logId=" + logId);

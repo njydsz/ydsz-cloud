@@ -21,7 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("nw_file_comment")
+@TableName("ydsz_nw_file_comment")
 public class FileComment extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

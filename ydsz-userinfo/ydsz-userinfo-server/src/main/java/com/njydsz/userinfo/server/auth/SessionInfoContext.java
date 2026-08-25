@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.server.auth;
 
+import com.njydsz.userinfo.domain.enums.DeviceType;
+
 /**
  * 会话 Hash 构建参数值对象。
  *

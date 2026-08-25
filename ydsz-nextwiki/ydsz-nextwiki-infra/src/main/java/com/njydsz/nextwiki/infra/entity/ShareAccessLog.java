@@ -22,7 +22,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("nw_share_access_log")
+@TableName("ydsz_nw_share_access_log")
 public class ShareAccessLog extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

@@ -26,7 +26,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@TableName("nw_user_recent")
+@TableName("ydsz_nw_user_recent")
 public class UserRecent implements Serializable {
 
   private static final long serialVersionUID = 1L;
