@@ -142,4 +142,12 @@
     <suppress files="ydsz-common-[a-z]+[\\/]src[\\/]main[\\/]"
               checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber"/>
 
+    <!-- ============================================ -->
+    <!-- 4. Logger 字段命名豁免                        -->
+    <!--    Logger 声明为 static final，但内部状态可变  -->
+    <!--    （日志级别/输出目标可动态调整），非真正常量，-->
+    <!--    业界惯例使用小写 log，豁免 ConstantName 检查 -->
+    <!-- ============================================ -->
+    <suppress checks="ConstantName" message="名称 'log' 必须匹配表达式"/>
+
 </suppressions>
