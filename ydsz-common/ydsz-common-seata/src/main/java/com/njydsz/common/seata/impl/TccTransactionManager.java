@@ -587,7 +587,7 @@ public class TccTransactionManager extends AbstractTransactionManager
   }
 
   /** 解析 TCC Action：优先本地缓存，其次注册表 */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // localActionCache 存储 TccAction<?>，取出时无法在编译期验证泛型参数 T；由 cacheAction 保证一致性
   private <T> TccAction<T> resolveAction(TccTransactionLog txLog) {
     // 1. 本地缓存（同实例快速路径）
     TccAction<T> action = (TccAction<T>) localActionCache.get(txLog.getXid());

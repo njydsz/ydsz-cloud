@@ -130,7 +130,6 @@ public class MultiLevelCacheProvider implements CacheProvider {
     return null;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public <T> T get(String key, Class<T> clazz) {
     Object value = get(key);
@@ -138,7 +137,7 @@ public class MultiLevelCacheProvider implements CacheProvider {
       return null;
     }
     if (clazz.isInstance(value)) {
-      return (T) value;
+      return clazz.cast(value);
     }
     // L2 返回的是 JSON 字符串，需要反序列化
     if (value instanceof String) {

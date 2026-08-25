@@ -57,7 +57,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
   private static final Comparator<TreeNode<?, ?>> DEFAULT_SORT_COMPARATOR =
       Comparator.comparing(TreeNode::getSort, Comparator.nullsLast(Integer::compareTo));
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // DEFAULT_SORT_COMPARATOR 类型为 Comparator<TreeNode<?, ?>>，无法在编译期验证与 Comparator<T> 的一致性；逻辑上所有 TreeNode 子类均可比较
   private static <T extends TreeNode<T, ?>> Comparator<T> defaultSortComparator() {
     return (Comparator<T>) DEFAULT_SORT_COMPARATOR;
   }

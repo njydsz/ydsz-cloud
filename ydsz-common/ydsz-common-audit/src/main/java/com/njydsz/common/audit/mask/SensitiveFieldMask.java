@@ -129,7 +129,6 @@ public final class SensitiveFieldMask {
    * @param patterns 敏感词集合
    * @return 脱敏后的值
    */
-  @SuppressWarnings("unchecked")
   private static Object maskValue(Object value, Set<String> patterns) {
     if (value == null) {
       return null;
@@ -137,11 +136,10 @@ public final class SensitiveFieldMask {
     if (value instanceof String str) {
       return maskString(str);
     }
-    if (value instanceof Map) {
-      Map<String, Object> map = (Map<String, Object>) value;
-      Map<String, Object> result = new HashMap<>(map.size());
-      for (Map.Entry<String, Object> entry : map.entrySet()) {
-        String key = entry.getKey();
+    if (value instanceof Map<?, ?> mapObj) {
+      Map<String, Object> result = new HashMap<>(mapObj.size());
+      for (Map.Entry<?, ?> entry : mapObj.entrySet()) {
+        String key = String.valueOf(entry.getKey());
         Object val = entry.getValue();
         if (isSensitiveKey(key, patterns)) {
           result.put(key, maskString(String.valueOf(val), key));

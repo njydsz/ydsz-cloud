@@ -215,7 +215,8 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
     try {
       // 已知 event 是 EnvironmentChangeEvent，直接调用 getKeys()
       Method getKeys = event.getClass().getMethod("getKeys");
-      @SuppressWarnings("unchecked")
+      // Method.invoke 返回 Object，编译期无法验证返回类型为 Set<String>；由 onApplicationEvent 类名检查 + @ConditionalOnClass 保证安全性
+      @SuppressWarnings("unchecked") // 反射调用 Method.invoke 返回 Object，无法在编译期验证泛型类型
       Set<String> keys = (Set<String>) getKeys.invoke(event);
       return keys != null ? keys : Set.of();
     } catch (Exception e) {

@@ -114,16 +114,17 @@ public final class ContextKey<T> {
   /**
    * 安全类型转换。
    *
+   * <p>使用 {@link Class#cast(Object)} 实现类型安全转换，避免未经检查的强转。 类型不匹配时抛出 {@link ClassCastException}。
+   *
    * @param value 原始值
    * @return 转换后的值
    */
-  @SuppressWarnings("unchecked")
   T cast(Object value) {
     if (value == null) {
       return null;
     }
     if (type.isInstance(value)) {
-      return (T) value;
+      return type.cast(value);
     }
     throw new ClassCastException(
         "ContextKey '"

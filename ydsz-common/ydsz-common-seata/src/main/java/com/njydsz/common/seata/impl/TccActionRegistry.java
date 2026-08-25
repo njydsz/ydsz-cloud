@@ -49,7 +49,7 @@ public class TccActionRegistry implements ApplicationContextAware, InitializingB
    * @param <T> TCC Action 业务类型
    * @return TccAction 实例，未找到时返回 null
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // actionMap 存储 TccAction<?>，取出时无法在编译期验证泛型参数 T；由 register 方法保证一致性
   public <T> TccAction<T> findByName(String beanName) {
     return (TccAction<T>) actionMap.get(beanName);
   }
